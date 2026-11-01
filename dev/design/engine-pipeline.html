@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f3989827.js";
+            window.path_to_searchindex_js = "../searchindex-a5aefe5b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -267,13 +267,15 @@ whatever comes next, and its <code>fill_method</code> picks the generator: the t
 reads the running stitch’s length and tolerance for its travel between rows (the first of the lengths,
 as a satin column does), under the rows from M5.5, and sews its underlay before its top rows from
 M5.6. A fill set to Ink/Stitch’s legacy fill is sewn as a tatami fill without underlay, with
-<code>SC-W0314</code>: StitchCraft does not build that method (<code>REQ-FILL-005</code>). The other stroke, satin and
+<code>SC-W0314</code>: StitchCraft does not build that method (<code>REQ-FILL-005</code>). Nor does it take pull compensation,
+random stitch lengths or gap-filling rows, which Ink/Stitch’s legacy fill has no use for. The other stroke, satin and
 fill methods are skipped with <code>SC-W0011</code> until their milestones. An element whose parameters are wrong
 (<code>SC-E0101</code>) is skipped too, and the rest of the design still plans.</p>
 <p>Each element is generated with the shortest stitch for it: the larger of the machine’s (the profile’s
 <code>min_stitch</code>) and the element’s <code>min_stitch_length_mm</code>, or the design’s shortest stitch when the element
 sets none. A satin column is given its longest stitch as well, the element’s <code>max_stitch_length_mm</code>,
-which its split stitches keep to.</p>
+which its split stitches keep to. A length shorter than twice the shortest stitch, a running stitch’s
+or a fill’s longest, is raised to it with <code>SC-W0402</code>: shorter, the plan would merge its stitches.</p>
 <p>A preview that cannot afford a fill’s stitches shows its top rows (<code>stitchcraft_engine::generate::rows</code>,
 from M6.3). The fill’s settings are read as for sewing it, and what they say is said the same, but only
 the region is built and the rows laid over it: no needle point is placed and no route is searched.</p>

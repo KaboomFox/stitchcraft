@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-f3989827.js";
+            window.path_to_searchindex_js = "searchindex-a5aefe5b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b793f3ad.js"></script>
@@ -411,7 +411,7 @@ strokes.svg
             4. unnamed (#00a000), shown as Brother PEC 37 "Leaf Green"
   preview   strokes.png (512 × 392 pixels)
   report    strokes.json
-warning SC-W0307 (svg:patch:fill): This fill's area falls into 2 parts that are sewn one after another, with a jump between each.
+warning SC-W0307 (svg:patch:fill): This fill's area falls into 2 parts, sewn one after another, each on its own.
   hint: To choose the order the parts are sewn in, break the fill apart into one element for each part.
 info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from a needle point next to it was left out.
 </code></pre>
@@ -1500,9 +1500,9 @@ borders. Good from about 1.5 mm to 8–10 mm wide.</li>
 row so no lines show.</li>
 </ul>
 <h2 id="the-fabric-fights-back-pull-and-push"><a class="header" href="#the-fabric-fights-back-pull-and-push">The fabric fights back: pull and push</a></h2>
-<p>Thread under tension <strong>pulls</strong> the fabric together across the stitch direction: a satin column ends up
-narrower than drawn, a fill shorter across its rows. The same stitches <strong>push</strong> fabric outward along the
-stitch direction, so columns grow at their ends. <strong>Pull compensation</strong> widens what is sewn so the result
+<p>Thread under tension <strong>pulls</strong> the fabric together along the stitch direction. A satin column’s stitches
+cross it, and the column ends up narrower than drawn. A fill’s rows come out shorter. The same stitches
+<strong>push</strong> fabric outward across the stitch direction, so columns grow at their ends. <strong>Pull compensation</strong> widens what is sewn so the result
 matches what was drawn. How much depends on fabric, stabilizer, density and thread — which is why machine
 test sheet TS-07 exists.</p>
 <h2 id="underlay-the-foundation"><a class="header" href="#underlay-the-foundation">Underlay: the foundation</a></h2>
@@ -2408,8 +2408,10 @@ way round.</p>
 <h2 id="sc-w0307"><a class="header" href="#sc-w0307">SC-W0307</a></h2>
 <p><strong>Warning</strong> — Fill in parts that are apart; each sewn on its own</p>
 <p>A fill whose area falls into separate parts, such as one drawn as several shapes side by side, or
-an outline that crosses itself, is sewn one part after another: each part’s rows on their own, with
-a jump to the next, which the plan may trim. Ink/Stitch warns about such fills too.</p>
+an outline that crosses itself, is sewn one part after another: each part’s rows on their own, then
+the next part’s. Where the next part starts far off, the needle jumps to it, and the plan may trim;
+where it starts near, as the halves of a bow tie do, the needle sews straight on. Ink/Stitch warns
+about such fills too.</p>
 <p>To choose the order the parts are sewn in, break the fill apart into one element for each part.</p>
 <h2 id="sc-i0308"><a class="header" href="#sc-i0308">SC-I0308</a></h2>
 <p><strong>Info</strong> — Fill underlay too thin for rows; sewn round the outline</p>
@@ -2452,7 +2454,8 @@ filled in Ink/Stitch.</p>
 <p><strong>Warning</strong> — Legacy fill sewn as a tatami fill without underlay</p>
 <p>Ink/Stitch’s legacy fill is its first fill method, which it keeps for its older files: it gives the
 method to a fill whose <code>auto_fill</code> is off. StitchCraft does not sew it, and sews such a fill as a
-tatami fill with the same settings and no underlay, as legacy fill sews none. Its rows and their
+tatami fill with the same settings and no underlay, as legacy fill sews none. Nor does it take pull
+compensation, random stitch lengths or gap-filling rows, which legacy fill has no use for. Its rows and their
 needle points are a tatami fill’s, as in Ink/Stitch. Ink/Stitch sews a legacy fill’s rows in
 stretches that join, each on its own and back and forth; its <code>flip</code> starts the rows from the other
 side, and its <code>reverse</code> sews the fill backwards. A tatami fill routes its rows and joins them with
@@ -3727,7 +3730,7 @@ other methods arrive in later versions; until then an element set to one is skip
 <li><strong>Default:</strong> <code>tatami_fill</code></li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
-<li><strong>DEV-FILL-014.</strong> A fill whose fill_method is legacy_fill is sewn as a tatami fill without underlay (SC-W0314), its rows routed and joined by travel stitches as a tatami fill’s are, from near the needle to near the next element. Ink/Stitch’s legacy fill sews each stretch of rows that join on its own, back and forth, with no travel stitches between stretches; its flip starts the rows from the other side, and its reverse sews the whole fill backwards. StitchCraft keeps both settings without reading them (SC-W0105).</li>
+<li><strong>DEV-FILL-014.</strong> A fill whose fill_method is legacy_fill is sewn as a tatami fill without underlay (SC-W0314), and without the pull compensation, random stitch lengths and gap-filling rows legacy fill takes none of, its rows routed and joined by travel stitches as a tatami fill’s are, from near the needle to near the next element. Ink/Stitch’s legacy fill sews each stretch of rows that join on its own, back and forth, with no travel stitches between stretches; its flip starts the rows from the other side, and its reverse sews the whole fill backwards. StitchCraft keeps both settings without reading them (SC-W0105).</li>
 </ul>
 </li>
 </ul>
@@ -3987,7 +3990,7 @@ sewing it doubles the stitches and stiffens the design. Off, it sews.</p>
 <tr><td><strong>PES / PEC</strong></td><td>Brother’s design format; the PEC block inside a PES file holds the stitches</td></tr>
 <tr><td><strong>Profile (machine profile)</strong></td><td>StitchCraft’s description of a machine: hoop, comfort zone, file format, stitch limits, trims, palette</td></tr>
 <tr><td><strong>Pull compensation</strong></td><td>Widening shapes so they come out the drawn size after thread tension pulls the fabric</td></tr>
-<tr><td><strong>Push</strong></td><td>Fabric moving outward along the stitch direction; columns grow at their ends</td></tr>
+<tr><td><strong>Push</strong></td><td>Fabric moving outward across the stitch direction; columns grow at their ends</td></tr>
 <tr><td><strong>Rail</strong></td><td>One of the two edges of a satin column</td></tr>
 <tr><td><strong>Row spacing</strong></td><td>Distance between rows of a fill</td></tr>
 <tr><td><strong>Rung</strong></td><td>A short line across a satin’s rails that fixes which points correspond</td></tr>
@@ -5583,13 +5586,15 @@ whatever comes next, and its <code>fill_method</code> picks the generator: the t
 reads the running stitch’s length and tolerance for its travel between rows (the first of the lengths,
 as a satin column does), under the rows from M5.5, and sews its underlay before its top rows from
 M5.6. A fill set to Ink/Stitch’s legacy fill is sewn as a tatami fill without underlay, with
-<code>SC-W0314</code>: StitchCraft does not build that method (<code>REQ-FILL-005</code>). The other stroke, satin and
+<code>SC-W0314</code>: StitchCraft does not build that method (<code>REQ-FILL-005</code>). Nor does it take pull compensation,
+random stitch lengths or gap-filling rows, which Ink/Stitch’s legacy fill has no use for. The other stroke, satin and
 fill methods are skipped with <code>SC-W0011</code> until their milestones. An element whose parameters are wrong
 (<code>SC-E0101</code>) is skipped too, and the rest of the design still plans.</p>
 <p>Each element is generated with the shortest stitch for it: the larger of the machine’s (the profile’s
 <code>min_stitch</code>) and the element’s <code>min_stitch_length_mm</code>, or the design’s shortest stitch when the element
 sets none. A satin column is given its longest stitch as well, the element’s <code>max_stitch_length_mm</code>,
-which its split stitches keep to.</p>
+which its split stitches keep to. A length shorter than twice the shortest stitch, a running stitch’s
+or a fill’s longest, is raised to it with <code>SC-W0402</code>: shorter, the plan would merge its stitches.</p>
 <p>A preview that cannot afford a fill’s stitches shows its top rows (<code>stitchcraft_engine::generate::rows</code>,
 from M6.3). The fill’s settings are read as for sewing it, and what they say is said the same, but only
 the region is built and the rows laid over it: no needle point is placed and no route is searched.</p>
@@ -6896,7 +6901,9 @@ them costs a small part of sewing the fill, since no needle point is placed and 
 <p>A row’s needle points lie on a grid along it, as Ink/Stitch places them
 (<code>stitchcraft_engine::generators::tatami::stitches</code>, since M5.3). The grid’s points are the longest
 stitch apart, <code>max_stitch_length_mm</code>. A fill always has one: 4 mm when it is not set or left empty, and
-0.1 mm, with <code>SC-W0102</code>, when it is 0 or less, as in Ink/Stitch. Measured along the rows from
+0.1 mm, with <code>SC-W0102</code>, when it is 0 or less, as in Ink/Stitch. One shorter than twice the shortest
+stitch is raised to that, with <code>SC-W0402</code>, as a running stitch’s length is, and so is the underlay’s: rows
+stitched shorter would sew stitches the plan merges. Ink/Stitch stitches them as set. Measured along the rows from
 the design’s origin, they lie at whole numbers of stitches plus the row’s offset (<code>REQ-FILL-TAT-003</code>). A
 row’s number is how far across the rows it lies from the origin, over <code>row_spacing_mm</code>, rounded to the
 nearest whole number, halves to the even one. Its offset is the fractional part of that number over
@@ -6937,7 +6944,8 @@ sews as rows (<code>DEV-FILL-006</code>).</li>
 beside it, and some nodes then meet an odd number of edges. Ink/Stitch adds paths between such nodes
 that may run along rows, and sews those rows a second time. StitchCraft pairs the odd nodes so that the
 needle’s way between pairs is shortest in all and joins each pair with an edge. Up to 16 nodes every
-pairing is weighed, and past that each node pairs with the nearest left. No row is sewn twice
+pairing is weighed, and past that each node pairs with the nearest left, its ways to the others found
+only as it pairs: memory then grows with the nodes, not with their pairs. No row is sewn twice
 (<code>DEV-FILL-006</code>). A pairing edge stands for the way between its 2 nodes that Ink/Stitch’s paths double:
 one edge where a row or a stretch of ring joins the 2, and several otherwise. Travel along it is never a
 handover between neighbouring rows for <code>skip_last</code>, and it ends a stretch for gap-fill rows only where it
@@ -7215,8 +7223,9 @@ points along them (<code>staggers</code>, <code>skip_last</code>), and it sews n
 join on its own, back and forth, with no travel stitches between stretches; <code>flip</code> starts its rows from
 the other side, and <code>reverse</code> sews the whole fill backwards.</p>
 <p>StitchCraft does not build it, since the method exists for Ink/Stitch’s older files. A fill set to it is
-sewn as a tatami fill with its settings and no underlay, and <code>SC-W0314</code> says so (<code>REQ-FILL-005</code>). It is a
-tatami fill in every other way too. The element before it ends near its area, and its rows are routed and
+sewn as a tatami fill with its settings and no underlay, and <code>SC-W0314</code> says so (<code>REQ-FILL-005</code>). Nor does
+it take pull compensation, random stitch lengths or gap-filling rows, which Ink/Stitch’s legacy fill has no
+use for, but its area grows by <code>expand_mm</code> as in Ink/Stitch. It is a tatami fill in every other way too. The element before it ends near its area, and its rows are routed and
 joined by travel stitches as a tatami fill’s are (<code>DEV-FILL-014</code>). <code>flip</code> and <code>reverse</code> are not planned,
 and a design that sets them gets <code>SC-W0105</code>. The VectorCraft plug-in’s fill dialog does not offer the
 method.</p>

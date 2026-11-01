@@ -12,6 +12,6 @@ strokes.svg
             4. unnamed (#00a000), shown as Brother PEC 37 "Leaf Green"
   preview   strokes.png (512 × 392 pixels)
   report    strokes.json
-warning SC-W0307 (svg:patch:fill): This fill's area falls into 2 parts that are sewn one after another, with a jump between each.
+warning SC-W0307 (svg:patch:fill): This fill's area falls into 2 parts, sewn one after another, each on its own.
   hint: To choose the order the parts are sewn in, break the fill apart into one element for each part.
 info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from a needle point next to it was left out.

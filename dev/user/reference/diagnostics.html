@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-f3989827.js";
+            window.path_to_searchindex_js = "../../searchindex-a5aefe5b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-b793f3ad.js"></script>
@@ -480,8 +480,10 @@ way round.</p>
 <h2 id="sc-w0307"><a class="header" href="#sc-w0307">SC-W0307</a></h2>
 <p><strong>Warning</strong> — Fill in parts that are apart; each sewn on its own</p>
 <p>A fill whose area falls into separate parts, such as one drawn as several shapes side by side, or
-an outline that crosses itself, is sewn one part after another: each part’s rows on their own, with
-a jump to the next, which the plan may trim. Ink/Stitch warns about such fills too.</p>
+an outline that crosses itself, is sewn one part after another: each part’s rows on their own, then
+the next part’s. Where the next part starts far off, the needle jumps to it, and the plan may trim;
+where it starts near, as the halves of a bow tie do, the needle sews straight on. Ink/Stitch warns
+about such fills too.</p>
 <p>To choose the order the parts are sewn in, break the fill apart into one element for each part.</p>
 <h2 id="sc-i0308"><a class="header" href="#sc-i0308">SC-I0308</a></h2>
 <p><strong>Info</strong> — Fill underlay too thin for rows; sewn round the outline</p>
@@ -524,7 +526,8 @@ filled in Ink/Stitch.</p>
 <p><strong>Warning</strong> — Legacy fill sewn as a tatami fill without underlay</p>
 <p>Ink/Stitch’s legacy fill is its first fill method, which it keeps for its older files: it gives the
 method to a fill whose <code>auto_fill</code> is off. StitchCraft does not sew it, and sews such a fill as a
-tatami fill with the same settings and no underlay, as legacy fill sews none. Its rows and their
+tatami fill with the same settings and no underlay, as legacy fill sews none. Nor does it take pull
+compensation, random stitch lengths or gap-filling rows, which legacy fill has no use for. Its rows and their
 needle points are a tatami fill’s, as in Ink/Stitch. Ink/Stitch sews a legacy fill’s rows in
 stretches that join, each on its own and back and forth; its <code>flip</code> starts the rows from the other
 side, and its <code>reverse</code> sews the fill backwards. A tatami fill routes its rows and joins them with
