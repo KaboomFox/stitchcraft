@@ -1107,6 +1107,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- Moved into VectorCraft's repository (ADR-0011), StitchCraft's `docs/src/plan/` would have been left out
+  of git: VectorCraft's `.gitignore` leaves out every folder named `plan`. StitchCraft's `.gitignore` keeps
+  it in, and the compatibility gate's move job fails on any file of ours VectorCraft's git would leave out.
 - A file an older Ink/Stitch saved is read as Ink/Stitch updates it (`REQ-SVG-007`). Before its file
   version 4, a fill's stitches were 3 mm long unless it set another length; Ink/Stitch writes that into such
   a file's shapes when it opens it, and StitchCraft sewed them 4 mm long. A shape with a fill and no longest
