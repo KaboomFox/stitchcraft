@@ -31,6 +31,7 @@ impl stitchcraft_vectorcraft::filter::Record
 pub fn stitchcraft_vectorcraft::filter::Record::family(&self) -> core::option::Option<stitchcraft_params::stitch_type::Family>
 pub fn stitchcraft_vectorcraft::filter::Record::is_stitchcraft(&self) -> bool
 pub fn stitchcraft_vectorcraft::filter::Record::ours(&str, &serde_json::map::Map<alloc::string::String, serde_json::value::Value>) -> core::result::Result<stitchcraft_vectorcraft::filter::Record, serde_json::error::Error>
+pub fn stitchcraft_vectorcraft::filter::Record::settings(&self) -> stitchcraft_params::set::ParamSet
 pub struct stitchcraft_vectorcraft::filter::Stroke
 pub stitchcraft_vectorcraft::filter::Stroke::cap: stitchcraft_engine::design::Cap
 pub stitchcraft_vectorcraft::filter::Stroke::join: stitchcraft_engine::design::Join

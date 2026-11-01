@@ -44,8 +44,9 @@
 //! **Push compensation** shortens or lengthens the rails at the column's start and end after they are
 //! turned and before they are cut, as in Ink/Stitch (the `compensation` module). A drawn rung's points come
 //! from the rails as drawn, and each cut is where its point lies along the compensated rail: a cut in a
-//! part taken off falls on the rail's end, and leaves its section out. An added rung is measured against
-//! the compensated rail.
+//! part taken off falls on the rail's end, and leaves its section out. A rung that misses a rail, and an
+//! added rung, are measured against the compensated rail, as Ink/Stitch measures every rung: one that misses
+//! a rail near an end that push compensation lengthens can come nearest the part it adds.
 
 use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Point};
@@ -54,7 +55,7 @@ use crate::generators::satin::SatinParams;
 use crate::generators::satin::compensation::pushed;
 use crate::normalize::along::Along;
 use crate::normalize::near::{Look, along_to_segment};
-use crate::normalize::satin::{Pairing, SAME_POINT, Satin, add_once, shared};
+use crate::normalize::satin::{Pairing, Rung, SAME_POINT, Satin, add_once, nearest, shared};
 
 /// How far along the line between a rail's 2 nodes the rung added across rails of 2 nodes meets it, in
 /// millimetres: 0.2 CSS pixels, Ink/Stitch's.
@@ -70,7 +71,8 @@ pub(crate) type Section = [Vec<Point>; 2];
 /// `satin`'s rails, swapped and turned as `params` say, with its push compensation, and cut into
 /// sections. What was paired by fewer nodes than drawn, and a push compensation too long for a rail, go to
 /// `warnings`. Measuring the rails costs `meter` a unit of work per point, projecting a drawn rung's point
-/// onto a rail one per side of it, and measuring an added rung against a rail 2 per side.
+/// onto a rail one per side of it, measuring a rung that misses a rail against it one per pair of their
+/// sides, and measuring an added rung against a rail 2 per side.
 pub(crate) fn sections(satin: &Satin, params: &SatinParams, warnings: &mut Vec<Diagnostic>, meter: &mut Meter) -> Result<Vec<Section>, Exhausted> {
     let (rails, turned) = oriented(satin, params, meter)?;
     let [first, second] = &rails;
@@ -83,10 +85,11 @@ pub(crate) fn sections(satin: &Satin, params: &SatinParams, warnings: &mut Vec<D
     let (mut cuts_a, mut cuts_b) = (Vec::new(), Vec::new());
     match &satin.pairing {
         Pairing::Rungs(rungs) => {
-            for &[a, b] in rungs {
+            for rung in rungs {
+                let [a, b] = sides(rung);
                 let [a, b] = if params.swap_satin_rails { [b, a] } else { [a, b] };
-                cuts_a.push(rail_a.project(a, meter)?);
-                cuts_b.push(rail_b.project(b, meter)?);
+                cuts_a.push(cut(a, &first, &rail_a, meter)?);
+                cuts_b.push(cut(b, &second, &rail_b, meter)?);
             }
         }
         Pairing::Nodes => {
@@ -102,6 +105,25 @@ pub(crate) fn sections(satin: &Satin, params: &SatinParams, warnings: &mut Vec<D
     }
     let (parts_a, parts_b) = (parts(&rail_a, &mut cuts_a), parts(&rail_b, &mut cuts_b));
     Ok(parts_a.into_iter().zip(parts_b).filter_map(|(a, b)| Some([a?, b?])).collect())
+}
+
+/// A rung's sides, the first rail's and the second's: on each, its point on the rail as drawn, and, where
+/// it misses that rail, the rung itself.
+fn sides(rung: &Rung) -> [(Point, Option<&[Point]>); 2] {
+    let [a, b] = rung.points;
+    let missed = |side: usize| rung.missed.as_ref().filter(|missed| missed.rails.get(side) == Some(&true)).map(|missed| missed.line.as_slice());
+    [(a, missed(0)), (b, missed(1))]
+}
+
+/// How far along the compensated `rail`, which `along` measures, a rung's `side` of it cuts it: where its
+/// point on the rail as drawn lies along it, or, where it misses the rail, where the rail comes nearest the
+/// rung, as Ink/Stitch measures every rung against the rails as compensated (`flattened_sections`).
+fn cut((point, missed): (Point, Option<&[Point]>), rail: &[Point], along: &Along, meter: &mut Meter) -> Result<f64, Exhausted> {
+    let point = match missed {
+        Some(line) => nearest(rail, line, meter)?.unwrap_or(point),
+        None => point,
+    };
+    along.project(point, meter)
 }
 
 /// Whether the rung added between `rung`'s 2 points meets the `rails` at more than 2 points, which doesn't
@@ -292,6 +314,7 @@ mod tests {
     use stitchcraft_core::Budget;
 
     use super::*;
+    use crate::normalize::satin::{Shape, recognize};
 
     fn p(x: f64, y: f64) -> Point {
         Point::new(x, y).unwrap()
@@ -362,6 +385,40 @@ mod tests {
         let t = (NEAR_START * 0.02 + 0.2) / (0.02 * 0.02 + 1.0);
         let [a, b] = [sewn[0][0].last().copied().unwrap(), sewn[0][1].last().copied().unwrap()];
         assert!(a.distance(p(0.02 * t, t)) < 1e-12 && b.distance(p(NEAR_START, -4.0)) < 1e-12, "{a:?} {b:?}");
+    }
+
+    #[test]
+    fn a_rung_that_misses_a_rail_cuts_it_where_the_compensated_rail_comes_nearest() {
+        // Rails along y = 0 and y = 4 from x = 0 to 10, rungs across them at x = 3, 5 and 8, and one from
+        // (-0.5, 1) to (0.5, 5), which crosses the second rail at (0.25, 4) and misses the first. Push
+        // compensation lengthens both rails to x = -2 at their start: the rung's lower end lies 1 mm above the
+        // first rail's new part, which it cuts at (-0.5, 0), where Ink/Stitch cuts it. Measured against the
+        // rail as drawn, the point nearest the rung is the rail's old start, (0, 0).
+        let line = |points: &[(f64, f64)]| {
+            let [start, rest @ ..] = points else { panic!("no points") };
+            let segments = rest.iter().map(|&(x, y)| crate::design::Segment::Line(p(x, y))).collect();
+            crate::design::Subpath { start: p(start.0, start.1), segments, closed: false }
+        };
+        let lines: [&[(f64, f64)]; 6] = [
+            &[(0.0, 0.0), (10.0, 0.0)],
+            &[(0.0, 4.0), (10.0, 4.0)],
+            &[(-0.5, 1.0), (0.5, 5.0)],
+            &[(3.0, -1.0), (3.0, 5.0)],
+            &[(5.0, -1.0), (5.0, 5.0)],
+            &[(8.0, -1.0), (8.0, 5.0)],
+        ];
+        let path = crate::design::Path { subpaths: lines.iter().map(|points| line(points)).collect() };
+        let meter = &mut Budget::DEFAULT.meter();
+        let Ok(Shape::Rails(satin)) = recognize(&path, meter).unwrap().shape else { panic!("not rails and rungs") };
+        let settings: stitchcraft_params::ParamSet = [("push_compensation_mm", "-2 0")].into_iter().collect();
+        let params = SatinParams::from_set(&settings).unwrap().params;
+        let sewn = sections(&satin, &params, &mut Vec::new(), meter).unwrap();
+        // The first section, from the rails' new starts: on the second rail, through its start as drawn.
+        let ends = |part: &[Point]| [part.first().copied().unwrap(), part.last().copied().unwrap()];
+        let [first, second] = &sewn[0];
+        let ([a0, a1], [b0, b1]) = (ends(first), ends(second));
+        assert!(a0.distance(p(-2.0, 0.0)) < 1e-12 && a1.distance(p(-0.5, 0.0)) < 1e-12, "{first:?}");
+        assert!(b0.distance(p(-2.0, 4.0)) < 1e-12 && b1.distance(p(0.25, 4.0)) < 1e-12, "{second:?}");
     }
 
     #[test]

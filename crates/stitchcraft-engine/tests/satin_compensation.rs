@@ -123,6 +123,29 @@ fn req_sat_008_a_rung_in_a_part_taken_off_leaves_its_section_out() {
 }
 
 #[test]
+fn req_sat_008_a_rung_that_misses_a_lengthened_rail_cuts_it_where_the_rail_comes_nearest() {
+    // Ink/Stitch at d59c9ab, run as a black box, sews these 2 columns alike. Rails from x = 0 to 10 that a
+    // push compensation of -2 mm lengthens to x = -2 at their start, with a rung that crosses the second
+    // rail at (0.25, 4) and misses the first, coming within 1 mm of its new part at (-0.5, 0); and rails
+    // drawn from x = -2, with a rung across those 2 points. A rung that crosses the first rail at (0, 0)
+    // instead, where the rail as drawn comes nearest the first rung, sews otherwise.
+    let rungs: [&[(f64, f64)]; 3] = [&[(3.0, -1.0), (3.0, 5.0)], &[(5.0, -1.0), (5.0, 5.0)], &[(8.0, -1.0), (8.0, 5.0)]];
+    let column = |rails: [f64; 2], first: [(f64, f64); 2]| {
+        let [from_a, from_b] = rails;
+        let ends: [&[(f64, f64)]; 3] = [&[(from_a, 0.0), (10.0, 0.0)], &[(from_b, 4.0), (10.0, 4.0)], &first];
+        polylines(&[&ends[..], &rungs[..]].concat())
+    };
+    let (lengthened, warnings) = sewn_satin(&column([0.0, 0.0], [(-0.5, 1.0), (0.5, 5.0)]), &[("push_compensation_mm", "-2 0")]);
+    assert!(warnings.is_empty(), "{warnings:?}");
+    let (drawn, warnings) = sewn_satin(&column([-2.0, -2.0], [(-0.6875, -1.0), (0.4375, 5.0)]), &[]);
+    assert!(warnings.is_empty(), "{warnings:?}");
+    let alike = |a: &[Point], b: &[Point]| a.len() == b.len() && a.iter().zip(b).all(|(p, q)| p.distance(*q) < 1e-9);
+    assert!(alike(&lengthened, &drawn), "{} stitches lengthened, {} drawn", lengthened.len(), drawn.len());
+    let (at_old_start, _) = sewn_satin(&column([-2.0, -2.0], [(-0.0625, -1.0), (0.3125, 5.0)]), &[]);
+    assert!(!alike(&at_old_start, &drawn));
+}
+
+#[test]
 fn diag_sc_w0211_push_compensation_longer_than_a_rail_is_named_and_left_out() {
     // 1 mm long: taking 0.5 mm off each end would leave nothing.
     let (points, warnings) = sewn_satin(&ladder(1.0, 4.0, &[]), &[("push_compensation_mm", "0.5")]);

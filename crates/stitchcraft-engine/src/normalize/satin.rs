@@ -20,7 +20,9 @@
 //!
 //! Each rung gives a pair of points, one on each rail, where it crosses them. Where a rung misses a rail,
 //! the point of that rail nearest the rung stands in (`SC-W0203`), as in Ink/Stitch, and of points as near
-//! the one shapely's nearest points give. A rung that crosses a rail more than once is left out
+//! the one shapely's nearest points give. Such a rung is kept with its point: push compensation moves the
+//! rails' ends before they are cut, and the column takes the point again from the rail as compensated, as
+//! Ink/Stitch takes it (`generators::satin::column`). A rung that crosses a rail more than once is left out
 //! (`SC-W0207`): it does not say which crossing is meant.
 //!
 //! Each subpath is flattened to a polyline within [`stroke::SHAPE_TOLERANCE`], as Ink/Stitch flattens a
@@ -66,12 +68,37 @@ pub struct Satin {
 /// What pairs the points of a satin column's rails.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Pairing {
-    /// The rungs, in the order the path draws them: the point on the first rail and the point on the
-    /// second rail that each says go together. Where a rung misses a rail, it is the point of the rail
-    /// nearest the rung. Empty when every rung drawn was left out.
-    Rungs(Vec<[Point; 2]>),
+    /// The rungs, in the order the path draws them. Empty when every rung drawn was left out.
+    Rungs(Vec<Rung>),
     /// The path draws no rungs, and the rails' nodes ([`Satin::nodes`]) pair up instead, as in Ink/Stitch.
     Nodes,
+}
+
+/// A rung: which point of the first rail goes with which point of the second.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Rung {
+    /// Its point on the first rail and its point on the second: where it crosses each, or, where it misses
+    /// a rail, the point of that rail nearest it.
+    pub points: [Point; 2],
+    /// Where it misses a rail, the rung itself, from which the column takes its point on that rail again,
+    /// from the rail as push compensation leaves it. `None` where it crosses both.
+    pub missed: Option<Missed>,
+}
+
+impl Rung {
+    /// The rung that crosses the first rail at the first of `points` and the second at the second.
+    pub fn crossing(points: [Point; 2]) -> Rung {
+        Rung { points, missed: None }
+    }
+}
+
+/// A rung that misses a rail.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Missed {
+    /// The rung, flattened.
+    pub line: Vec<Point>,
+    /// Which rails it misses: the first, the second.
+    pub rails: [bool; 2],
 }
 
 /// What a satin column's path is.
@@ -186,7 +213,7 @@ fn rails_and_rungs(lines: &[Line], warnings: &mut Vec<Diagnostic>, meter: &mut M
     for (k, rung) in lines.iter().enumerate().filter(|(k, _)| *k != first && *k != second) {
         let n = rung.number;
         match (at(k, first), at(k, second)) {
-            (&[a], &[b]) => rungs.push([a, b]),
+            (&[a], &[b]) => rungs.push(Rung::crossing([a, b])),
             (a, b) if a.len() > 1 || b.len() > 1 => {
                 let rail = if a.len() > 1 { rail_a.number } else { rail_b.number };
                 warnings.push(Diagnostic::new(
@@ -208,9 +235,12 @@ fn rails_and_rungs(lines: &[Line], warnings: &mut Vec<Diagnostic>, meter: &mut M
                     _ => missed(n, rail_b.number),
                 };
                 warnings.push(Diagnostic::new(Code::SatinRungDangling, message));
-                let on_a = a.first().copied().map_or_else(|| nearest(rail_a, rung, meter), Ok)?;
-                let on_b = b.first().copied().map_or_else(|| nearest(rail_b, rung, meter), Ok)?;
-                rungs.push([on_a, on_b]);
+                // Both have points: lines of fewer are left out above.
+                let near = |rail: &Line, meter: &mut Meter| nearest(&rail.points, &rung.points, meter).map(|on| on.unwrap_or(Point::ORIGIN));
+                let on_a = a.first().copied().map_or_else(|| near(rail_a, meter), Ok)?;
+                let on_b = b.first().copied().map_or_else(|| near(rail_b, meter), Ok)?;
+                let missed = Missed { line: rung.points.clone(), rails: [a.is_empty(), b.is_empty()] };
+                rungs.push(Rung { points: [on_a, on_b], missed: Some(missed) });
             }
         }
     }
@@ -273,9 +303,10 @@ pub(crate) fn add_once(found: &mut Vec<Point>, point: Point) {
 
 /// The point of `rail` nearest `rung`, which it does not meet: the second of shapely's nearest points of
 /// the rung and the rail, of equally near ones the first GEOS finds, which tries a side's ends before
-/// the other side's (`normalize::near`).
-fn nearest(rail: &Line, rung: &Line, meter: &mut Meter) -> Result<Point, Exhausted> {
-    Ok(nearest_pair(&[&rung.points], &[&rail.points], meter)?.map_or(Point::ORIGIN, |(_, on)| on))
+/// the other side's (`normalize::near`). A unit of `meter`'s work for each pair of their sides; `None` when
+/// either has no point.
+pub(crate) fn nearest(rail: &[Point], rung: &[Point], meter: &mut Meter) -> Result<Option<Point>, Exhausted> {
+    Ok(nearest_pair(&[rung], &[rail], meter)?.map(|(_, on)| on))
 }
 
 /// The points the segments `p1`–`p2` and `q1`–`q2` share, ends included: none, the one where they cross
@@ -422,9 +453,9 @@ mod tests {
     }
 
     #[test]
-    fn the_nearest_point_of_a_rail_with_no_segments_is_the_origin() {
-        let points = vec![p(1.0, 1.0), p(2.0, 2.0)];
-        let rung = Line { number: 1, points, nodes: Vec::new(), length: 2.0_f64.sqrt(), bounds: [1.0, 1.0, 2.0, 2.0], closed: false };
-        assert_eq!(nearest(&EMPTY, &rung, &mut stitchcraft_core::Budget::DEFAULT.meter()).unwrap(), Point::ORIGIN);
+    fn a_rail_with_no_points_has_none_nearest_a_rung() {
+        let (rung, meter) = ([p(1.0, 1.0), p(2.0, 2.0)], &mut stitchcraft_core::Budget::DEFAULT.meter());
+        assert_eq!(nearest(&EMPTY.points, &rung, meter).unwrap(), None);
+        assert_eq!(nearest(&[p(3.0, 1.0), p(3.0, 3.0)], &rung, meter).unwrap(), Some(p(3.0, 2.0)));
     }
 }

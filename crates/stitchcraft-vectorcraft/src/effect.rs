@@ -45,7 +45,7 @@ use stitchcraft_plan::{Rgb, Thread};
 use crate::PREVIEW_LEVEL;
 use crate::document::{ON_THE_OBJECT, stroke_style};
 use crate::geometry::{self, UNUSABLE_HINT};
-use crate::values::{sews, text};
+use crate::values::{settings, text};
 use crate::wire::{EffectInput, EffectObject, EffectStroke, Paint};
 use crate::writer::Geometry;
 
@@ -154,14 +154,8 @@ fn given(input: &[u8], params: &[u8], budget: &Budget) -> Result<Given, Diagnost
         }
         Err(_) => return Err(Diagnostic::new(Code::BudgetExhausted, "Reading the live effect's object needed more work than the budget allows.")),
     };
-    let mut set = ParamSet::new();
-    for (key, value) in params.iter().filter(|(key, _)| sews(key)) {
-        if let Some(text) = text(value) {
-            set.set(key.clone(), text);
-        }
-    }
     let rule = if fill_rule.as_deref() == Some("evenodd") { FillRule::EvenOdd } else { FillRule::NonZero };
-    Ok(Given { path, rule, fills, strokes, params: set, preview_level: params.get(PREVIEW_LEVEL).and_then(text) })
+    Ok(Given { path, rule, fills, strokes, params: settings(&params), preview_level: params.get(PREVIEW_LEVEL).and_then(text) })
 }
 
 /// A live effect's element `vc:effect:<what>`, of `shape` with `params`, automatic or not.
