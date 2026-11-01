@@ -146,11 +146,16 @@ pub fn recognize(path: &Path, meter: &mut Meter) -> Result<Recognition, Exhauste
 
 /// The rails and rungs of three or more subpaths.
 fn rails_and_rungs(lines: &[Line], warnings: &mut Vec<Diagnostic>, meter: &mut Meter) -> Result<Satin, Exhausted> {
-    // Where each pair of subpaths meets, by their positions in `lines`, the lesser first.
+    // Where each pair of subpaths that meets meets, by their positions in `lines`, the lesser first: a unit
+    // for each pair compared, whether or not their boxes meet.
     let mut shared: BTreeMap<(usize, usize), Vec<Point>> = BTreeMap::new();
     for (i, a) in lines.iter().enumerate() {
         for (j, b) in lines.iter().enumerate().skip(i + 1) {
-            shared.insert((i, j), meeting(a, b, meter)?);
+            meter.charge(1)?;
+            let points = meeting(a, b, meter)?;
+            if !points.is_empty() {
+                shared.insert((i, j), points);
+            }
         }
     }
     let at = |i: usize, j: usize| shared.get(&(i.min(j), i.max(j))).map_or(&[][..], Vec::as_slice);
@@ -260,7 +265,7 @@ fn meeting(a: &Line, b: &Line, meter: &mut Meter) -> Result<Vec<Point>, Exhauste
 
 /// Adds `point` to `found` unless one there is the same point: where segments meet end to end, both find
 /// the point they share.
-fn add_once(found: &mut Vec<Point>, point: Point) {
+pub(crate) fn add_once(found: &mut Vec<Point>, point: Point) {
     if !found.iter().any(|f| f.distance(point) < SAME_POINT) {
         found.push(point);
     }
@@ -275,7 +280,7 @@ fn nearest(rail: &Line, rung: &Line, meter: &mut Meter) -> Result<Point, Exhaust
 
 /// The points the segments `p1`–`p2` and `q1`–`q2` share, ends included: none, the one where they cross
 /// or touch, or the two ends of the part they share when they lie on one line.
-fn shared(p1: Point, p2: Point, q1: Point, q2: Point) -> Vec<Point> {
+pub(crate) fn shared(p1: Point, p2: Point, q1: Point, q2: Point) -> Vec<Point> {
     let (r, s) = ((p2.x() - p1.x(), p2.y() - p1.y()), (q2.x() - q1.x(), q2.y() - q1.y()));
     let qp = (q1.x() - p1.x(), q1.y() - p1.y());
     let cross = |u: (f64, f64), v: (f64, f64)| u.0 * v.1 - u.1 * v.0;

@@ -274,15 +274,19 @@ fn diag_sc_w0203_a_satin_column_of_every_method_names_what_recognition_finds() {
 
 #[test]
 fn req_sat_005_recognition_is_charged_to_the_budget() {
-    // A unit for each of the 5 segments flattened, one for each of the 5 pairs of segments whose boxes
-    // overlap (the rails' do not, nor the rungs'), and one for the pair looked at for the dangling rung's
-    // nearest point.
+    // A unit for each of the 5 segments flattened, one for each of the 10 pairs of subpaths compared and
+    // each of the 5 pairs of segments whose boxes overlap (the rails' do not, nor the rungs'), and one for
+    // the pair looked at for the dangling rung's nearest point.
     let path = polylines(&[LOWER, UPPER, &[(5.0, -1.0), (5.0, 5.0)], &[(10.0, -1.0), (10.0, 3.0)], &[(15.0, -1.0), (15.0, 5.0)]]);
     let mut meter = Budget::DEFAULT.meter();
     recognize(&path, &mut meter).unwrap();
-    assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 11);
-    assert!(recognize(&path, &mut Budget { max_stitches: 10, max_work: 11 }.meter()).is_ok());
-    assert!(recognize(&path, &mut Budget { max_stitches: 10, max_work: 10 }.meter()).is_err());
+    assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 21);
+    assert!(recognize(&path, &mut Budget { max_stitches: 10, max_work: 21 }.meter()).is_ok());
+    assert!(recognize(&path, &mut Budget { max_stitches: 10, max_work: 20 }.meter()).is_err());
+    // Subpaths far apart cost their pairs all the same: 2,000 lines are 1,999,000 pairs.
+    let apart: Vec<Vec<(f64, f64)>> = (0..2_000).map(|i| vec![(10.0 * f64::from(i), 0.0), (10.0 * f64::from(i) + 1.0, 0.0)]).collect();
+    let apart = polylines(&apart.iter().map(Vec::as_slice).collect::<Vec<_>>());
+    assert!(recognize(&apart, &mut Budget { max_stitches: 10, max_work: 1_000_000 }.meter()).is_err());
 }
 
 #[test]
