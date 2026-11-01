@@ -541,6 +541,17 @@ mod tests {
         assert_eq!((other.family(), other.is_stitchcraft()), (None, true));
     }
 
+    #[test]
+    fn a_record_s_settings_are_its_element_s_parameters_as_text() {
+        let record = |json: Value| Record::given(&to_raw_value(&json).unwrap()).settings();
+        let params = json!({"_context": {"item": "object"}, "push_compensation_mm": [-1, 0], "zigzag_spacing_mm": 0.4});
+        let set = record(json!({"id": "plugin.dev.stitchcraft.satin", "params": params}));
+        assert_eq!(set.iter().collect::<Vec<_>>(), [("push_compensation_mm", "-1 0"), ("zigzag_spacing_mm", "0.4")]);
+        // Parameters that aren't names and values, or none, are no settings.
+        assert_eq!(record(json!({"id": "plugin.dev.stitchcraft.satin", "params": 7})).iter().count(), 0);
+        assert_eq!(record(json!({"id": "plugin.dev.stitchcraft.satin"})).iter().count(), 0);
+    }
+
     /// `path` written, as the reader reads it back.
     fn round_trip(path: &Path) -> Path {
         let written = path_data(path).unwrap();
