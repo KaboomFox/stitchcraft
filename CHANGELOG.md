@@ -1117,6 +1117,27 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   The longest stitch's help no longer says an empty one sews every stitch whole, since finishing splits a
   stitch longer than the machine sews, and the locks page says which needle point Ink/Stitch's half
   stitch aims at.
+- A file an older Ink/Stitch saved is read as Ink/Stitch updates it (`REQ-SVG-007`). Before its file
+  version 4, a fill's stitches were 3 mm long unless it set another length; Ink/Stitch writes that into such
+  a file's shapes when it opens it, and StitchCraft sewed them 4 mm long. A shape with a fill and no longest
+  stitch of its own now sews 3 mm stitches in a file of version 1 to 3, and a polyline whose style sets a
+  stroke is a manual stitch in a file of version 1, as Ink/Stitch updates them, with `SC-I0818`. A file
+  with Ink/Stitch's settings and no version, which Ink/Stitch asks its user about, or from a newer
+  Ink/Stitch, is read as it is, with `SC-W0802`.
+- Ink/Stitch's command names from before its file version 3, such as `fill_start`, are its commands: they
+  were taken for clones, with a hint that got the command's symbol sewn.
+- Settings written as `embroider_` attributes, as Ink/Stitch's early versions wrote them, are Ink/Stitch
+  settings: the note on settings not read yet names them, and `--auto` leaves such a shape as it is set.
+- Ink/Stitch's design setting `rotate_on_export`, which turns the design as it is written, was ignored
+  without a word. `SC-W0802` names it until it is applied (M8), and any other Ink/Stitch element in the
+  metadata that StitchCraft doesn't know.
+- The deviations ledger records what Ink/Stitch, run as a black box, sews otherwise. It sews gradients
+  other than a fill's linear one, and patterns, in black (`DEV-SVG-013`), and the old commands as clones
+  where it doesn't update the file (`DEV-SVG-014`). A tatami fill's rows on a page whose viewBox doesn't
+  start at 0 lie elsewhere there (`DEV-SVG-015`). `context-fill` and `context-stroke` join `DEV-SVG-003`.
+- `conformance/inkstitch/check_params.py` reported the reads of Ink/Stitch's updater and extensions as
+  fallbacks that sew, 22 false differences in a full checkout. It now also checks the file version and the
+  renamed commands.
 - A fill's longest stitch, or its underlay's, shorter than twice the shortest stitch is raised to it with
   `SC-W0402`, as a running stitch's length is. At 0.2 mm on the reference machine, a fill sewed 0.4 mm
   stitches the plan merged, and said nothing. The review of 2026-10-31 found it.

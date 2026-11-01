@@ -4,8 +4,9 @@ The data file is the interoperability contract: every parameter an Ink/Stitch SV
 type, unit, default and the stitch types (or conditions) it applies to. Defaults are part of the contract,
 so a stale row would make a file sew differently in the two tools. This script compares every row with
 Ink/Stitch's own `@param` declarations, the method identifiers with its option lists, the lock
-identifiers with its lock definitions, the commands with its command lists and the other attributes with
-its attribute list, and prints each difference.
+identifiers with its lock definitions, the commands with its command lists, the other attributes with
+its attribute list, and the file version and renamed commands with its updater, and prints each
+difference.
 
 A declared default is what Ink/Stitch's settings window shows. What it sews for a file that sets no value
 is the fallback its code reads the attribute with, `self.get_..._param("name", fallback)`, and the two
@@ -41,6 +42,9 @@ ELEMENTS = {
 LOCKS = "lib/stitch_plan/lock_stitch.py"
 COMMANDS = "lib/commands.py"
 ATTRIBUTES = "lib/svg/tags.py"
+UPDATE = "lib/update.py"
+# Ink/Stitch's extensions: tools that read elements' settings to compare them, not to sew them.
+TOOLS = "lib/extensions/"
 
 # The parameters whose values are stitch types; every other condition is listed by its value alone.
 METHODS = {"stroke": "stroke_method", "satin": "satin_method", "fill": "fill_method"}
@@ -170,15 +174,20 @@ def as_read(getter, value):
 
 
 def getters(root, declared):
-    """{(section, name): [fallback]} for every getter call in Ink/Stitch's `lib` that reads a declared
-    parameter by its literal name. A call in an element's file reads that element's parameter where the
+    """{(section, name): [fallback]} for every getter call in Ink/Stitch's `lib`, but its updater's and
+    its extensions', that reads a declared parameter by its literal name. A call in an element's file reads that element's parameter where the
     element declares it, and a call elsewhere reads the parameter of every section that declares the name. A
     fallback is (value, None) for a literal, as its getter reads it, and (None, source) for a computed one."""
     implicit = implicit_fallbacks(root)
     files = {path: section for section, path in ELEMENTS.items()}
     found = {}
     for path in sorted((root / "lib").rglob("*.py")):
-        own = files.get(path.relative_to(root).as_posix())
+        relative = path.relative_to(root).as_posix()
+        # The updater reads what a file sets to tell whether to change it (`updater`), and the extensions'
+        # tools read it to compare elements: neither reads it to sew it.
+        if relative == UPDATE or relative.startswith(TOOLS):
+            continue
+        own = files.get(relative)
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
             if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.args and GETTER.fullmatch(node.func.attr)):
                 continue
@@ -248,6 +257,19 @@ def attributes(root):
     return []
 
 
+def updater(root):
+    """Ink/Stitch's current file version, and the commands its updater renames, each old name with the new."""
+    tree = ast.parse((root / UPDATE).read_text(encoding="utf-8"))
+    version, renamed = None, []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "INKSTITCH_SVG_VERSION" for t in node.targets):
+            version = literal(node.value)[0]
+        if isinstance(node, ast.Call) and getattr(node.func, "id", None) == "_rename_command" and len(node.args) == 4:
+            old, new = (literal(arg)[0] for arg in node.args[2:])
+            renamed.append((str(old).removeprefix("inkstitch_"), new))
+    return version, renamed
+
+
 def main(checkout):
     root = Path(checkout)
     data = tomllib.loads(DATA.read_text(encoding="utf-8"))
@@ -300,6 +322,13 @@ def main(checkout):
     others = sorted(a for a in attributes(root) if a not in params)
     if sorted(a["name"] for a in data.get("attribute", [])) != others:
         problems.append(f"attributes: {sorted(a['name'] for a in data.get('attribute', []))} here, {others} in Ink/Stitch")
+    version, renamed = updater(root)
+    here = [(r["old"], r["new"]) for r in data.get("renamed_command", [])]
+    if here != renamed:
+        problems.append(f"renamed commands: {here} here, {renamed} in Ink/Stitch")
+    newest = max((u["version"] for u in data.get("update", [])), default=None)
+    if newest != version:
+        problems.append(f"file version: the updates here reach {newest}, Ink/Stitch's is {version}")
     for problem in problems:
         print(problem)
     print(f"{len(ours)} parameters compared: {len(problems)} differences")

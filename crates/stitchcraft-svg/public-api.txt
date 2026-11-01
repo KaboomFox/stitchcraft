@@ -18,6 +18,10 @@ pub stitchcraft_svg::inkstitch::Command::does: stitchcraft_svg::inkstitch::Does
 pub stitchcraft_svg::inkstitch::Command::name: &'static str
 pub const stitchcraft_svg::inkstitch::COMMANDS: [stitchcraft_svg::inkstitch::Command; 12]
 pub const stitchcraft_svg::inkstitch::READ_ATTRIBUTES: &[&str]
+pub const stitchcraft_svg::inkstitch::RENAMED: [(&str, &str); 7]
+pub mod stitchcraft_svg::version
+pub const stitchcraft_svg::version::APPLIED: [(&str, &str); 3]
+pub const stitchcraft_svg::version::CURRENT: i64
 pub struct stitchcraft_svg::Svg
 pub stitchcraft_svg::Svg::design: stitchcraft_engine::design::Design
 pub stitchcraft_svg::Svg::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>

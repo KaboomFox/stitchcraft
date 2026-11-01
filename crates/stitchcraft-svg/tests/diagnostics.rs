@@ -107,6 +107,9 @@ fn diag_sc_w0802_what_is_not_stitched_is_named() {
     assert_eq!(
         warnings(&more),
         [
+            "warning SC-W0802: The file has Ink/Stitch's settings but no Ink/Stitch file version, so it is read as it is. Ink/Stitch asks \
+             first: it updates an old design, saved before Ink/Stitch numbered its files, to sew as it did, and leaves objects pasted into \
+             a new file as they are.",
             "warning SC-W0802: The root `<svg>` element's transform is not applied.",
             "warning SC-W0802: `arrow` has markers (arrowheads and the like), which are not stitched.",
             "warning SC-W0802: `masked` has a mask; masks are not applied, so all of it is stitched.",

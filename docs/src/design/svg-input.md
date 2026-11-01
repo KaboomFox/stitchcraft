@@ -34,8 +34,9 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
 - **Automatic elements.** Read with `--auto` (`Reading::auto`), a shape with no attribute in Ink/Stitch's
   namespace is an automatic element, whose stitches StitchCraft chooses by its width
   ([image to embroidery](image-to-embroidery.md#automatic-elements), `REQ-AUTO-001`). The trim and stop
-  of Ink/Stitch's commands attached to it still apply. A shape with any `inkstitch:` attribute is not
-  automatic: it sews as its settings say once they are read (M8), and with the defaults until then.
+  of Ink/Stitch's commands attached to it still apply. A shape with any `inkstitch:` attribute, or an
+  `embroider_` attribute as Ink/Stitch's early versions wrote its settings, is not automatic: it sews as
+  its settings say once they are read (M8), and with the defaults until then.
   Read with `--sort-colours` (`Reading::sort_colours`), the design's shapes with settings sew in the order
   StitchCraft chooses too ([image to embroidery](image-to-embroidery.md#sewing-order), `REQ-AUTO-011`).
 
@@ -46,6 +47,11 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
   height takes the other from its viewBox's shape, as SVG 2 sizes an image, and a percentage counts as
   missing. Ink/Stitch takes both sides from the viewBox, in pixels, when either is missing
   (`DEV-SVG-009`).
+- The page's top left corner is the design's origin, which a tatami fill lays its rows from
+  (`REQ-FILL-TAT-002`). Ink/Stitch maps a viewBox that does not start at 0 by scaling it first and then
+  moving it by its start in pixels. Its rows and their needle points lie a fraction of a row spacing
+  elsewhere then (`DEV-SVG-015`). Inkscape writes viewBoxes that start at 0, and with those they lie
+  alike.
 - A viewer ignores a root `width`, `height` or `viewBox` that is empty, and a `preserveAspectRatio` that
   does not read. The adapter ignores them too, and `SC-W0804` names each. A `width`, `height` or
   `viewBox` that does not read could put the design at any size, and the file is refused (`SC-E0801`).
@@ -110,7 +116,11 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
   that is `transparent` or has an alpha of 0, `currentColor` where `color` is such a colour, and a
   gradient whose stops a viewer doesn't show. Ink/Stitch leaves out only what `display` hides and a fill
   whose `fill-opacity` is written `0` (`DEV-SVG-003`). The insides of `<defs>`, `<symbol>`, `<marker>`,
-  `<pattern>`, `<clipPath>` and `<mask>` are never drawn.
+  `<pattern>`, `<clipPath>` and `<mask>` are never drawn, and `context-fill` and `context-stroke` paint
+  nothing, as they paint only a marker's or a clone's content. Ink/Stitch sews them black.
+- Ink/Stitch sews a fill's linear gradient in its first stop, and a swatch in its colour, like the
+  adapter, but every other gradient and every pattern in black, whatever colour is written after it
+  (`DEV-SVG-013`).
 
 ## Stroke width and join
 
@@ -155,7 +165,10 @@ them (`REQ-SVG-003`).
   `starting_point` and `ending_point` commands, which place where Ink/Stitch starts and ends a fill or a
   satin column, are not applied yet (`REQ-GEN-001`), and `SC-W0802` names each one on an object a viewer
   shows. The [command table](inkstitch-compat-contract.md#commands) gives what the adapter does with
-  each of the 12 commands.
+  each of the 12 commands. Before its file version 3, Ink/Stitch named 7 of them otherwise, such as
+  `fill_start` for `starting_point`: the adapter reads those as the commands they became in any file,
+  where Ink/Stitch renames them only in the files it updates and sews the old symbol elsewhere
+  (`DEV-SVG-014`).
 - **Connectors** tie a command to its object.
 - **Helper paths** have one of Ink/Stitch's start markers. They steer the stitches of other objects.
 
@@ -165,21 +178,52 @@ finds these objects, with the Ink/Stitch files they were read from.
 
 ## Design settings
 
-Ink/Stitch keeps 3 settings for the whole design in the file's first `<metadata>` element:
-`collapse_len_mm`, `min_stitch_len_mm` and `min_satin_stroke_width_mm`. Each is an element of
-Ink/Stitch's namespace whose text is the value in millimetres, and the first of each name counts. They
-become the design's collapse length, shortest stitch and narrowest satin stroke (`REQ-SVG-005`).
+Ink/Stitch keeps 4 settings for the whole design in the file's first `<metadata>` element. Each is an
+element of Ink/Stitch's namespace whose text is the value, and the first of each name counts. The lengths
+in millimetres, `collapse_len_mm`, `min_stitch_len_mm` and `min_satin_stroke_width_mm`, become the
+design's collapse length, shortest stitch and narrowest satin stroke (`REQ-SVG-005`).
 `SC-W0802` names a value that is not a number of 0 or more, and the design keeps its default. The
 defaults are in the [data model](data-model.md#engine-input-design-stitchcraft-engine). The settings'
 names, with the label and help a dialog shows, are listed once in `stitchcraft_engine::design::SETTINGS`,
 which a VectorCraft document's settings are read with too
 ([integration](vectorcraft-integration.md#design-settings-and-machine-kept-with-the-document)).
 
+The fourth, `rotate_on_export`, turns the design by 90° either way as Ink/Stitch writes it into a machine
+file, for machines that don't turn a design to fit their hoop. It is not applied yet (M8): `SC-W0802`
+names a value other than 0, and the design is written as drawn. Ink/Stitch also keeps `thread-palette`
+there, which names the threads in its own lists and print-outs and doesn't change what the adapter sews,
+and the file's version (below). `SC-W0802` names any other element of Ink/Stitch's there.
+
+## Files of older Ink/Stitch versions
+
+Ink/Stitch numbers the files it works on, `inkstitch_svg_version` in the metadata, 4 at the commit the
+contract checks. When it opens a file of an older version that has content of its own, an element or an
+attribute in its namespace or an `embroider_` attribute, it updates the file so that it sews as it did:
+the defaults that have changed since are written into the shapes that relied on them
+(`crates/stitchcraft-svg/src/version.rs` says how it was found). The adapter reads such a file as
+Ink/Stitch updates it (`REQ-SVG-007`), with the changed defaults as parameters of the shapes, and
+`SC-I0818` says how many shapes changed:
+
+- in a file of version 1 to 3, a shape whose fill is sewn, without a longest stitch of its own, sews
+  3 mm stitches, the default before version 4, where today's default is 4 mm;
+- in a file of version 1, a polyline whose `style` attribute sets a stroke is a manual stitch.
+
+A shape digitized automatically sews by the rules instead. Ink/Stitch asks its user whether a file with
+its content and no version is an old design, which it then updates, or objects pasted into a new file.
+The adapter can't ask. It reads such a file as it is and says so with `SC-W0802`, as it says that a file
+of a version above 4 is read as version 4. The other changes the update makes are to settings the adapter
+does not read yet; the [compatibility contract](inkstitch-compat-contract.md#file-versions) lists them
+all, with the milestone that applies them.
+
 ## Reports
 
 - `SC-W0802` reports a feature that is not stitched. Text, images, clones, nested `<svg>` elements and
   the style sheet rules that are not read are such features. So are clipping, masks, filters, markers
-  and the Ink/Stitch settings that are not read yet. Clipping is planned for M8.
+  and the Ink/Stitch settings that are not read yet. Clipping is planned for M8. It reports a file
+  Ink/Stitch would update, or warn about, that is read as it is: one with Ink/Stitch's content and no
+  file version, or of a newer version.
+- `SC-I0818` says how many shapes of a file an older Ink/Stitch saved are read as its update changes
+  them.
 - `SC-W0804` reports geometry that cannot be used:
   - path data or a list of points with an error, stitched up to the error
   - a transform that does not parse, or that flattens what it draws, left out with its contents
