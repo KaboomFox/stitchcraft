@@ -74,8 +74,9 @@ fn take(shot: &Value) -> Result<(), String> {
     let text = |key: &str| shot.get(key).and_then(Value::as_str).ok_or(format!("the job's shot has no `{key}`"));
     let id = text("id")?;
     let mut window = Window::open(Path::new(text("document")?), id)?;
-    for plugin in shot.get("plugins").and_then(Value::as_array).into_iter().flatten() {
-        window.call("engine.execute", json!({"command": "plugin.install", "params": {"path": plugin}}))?;
+    // Each module as the job installs it: its file, and `allowHeavy` for one that asks for a heavy budget.
+    for install in shot.get("plugins").and_then(Value::as_array).into_iter().flatten() {
+        window.call("engine.execute", json!({"command": "plugin.install", "params": install}))?;
     }
     window.call("engine.execute", json!({"command": "select.all", "params": {}}))?;
     let opened_at = size(&window.inspect()?)?;
