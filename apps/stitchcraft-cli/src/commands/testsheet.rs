@@ -88,7 +88,7 @@ fn report(
     let _ = writeln!(out, "{} · {}", sheet.id, sheet.title);
     describe_file(&mut out, output, format, bytes);
     let _ = writeln!(out, "  profile   {} ({})", profile.id, profile.name);
-    describe_plan(&mut out, back);
+    describe_plan(&mut out, back, Some(profile));
     describe_threads(&mut out, plan, format.palette().map(|id| id.palette()));
     let _ = writeln!(out, "after sewing, check:");
     for check in sheet.checks {
@@ -125,8 +125,9 @@ mod tests {
         assert!(out.stdout.starts_with("TS-01 · Orientation and scale\n"));
         assert!(out.stdout.contains(&format!("sha256    {}", hex(&Sha256::digest(&bytes)))));
         assert!(out.stdout.contains("size      120.0 × 120.0 mm"));
-        // The file's counts: the sheet's plan ends with a trim, which a PES file has no record for.
-        assert!(out.stdout.contains("stitches  274 stitches, 7 jumps, 6 trims, 0 colour changes, 0 stops"));
+        // The file's counts: the sheet's plan ends with a trim, which a PES file has no record for. The
+        // PE800 makes none of the trims (MC-1).
+        assert!(out.stdout.contains("stitches  274 stitches, 7 jumps, 6 trims, 0 colour changes, 0 stops\n  trims     the machine makes none of them: cut the jump threads by hand\n"), "{}", out.stdout);
         assert!(out.stdout.contains("  threads   1. Black (#000000), shown as Brother PEC 20 \"Black\"\n"));
         assert!(out.stdout.contains("after sewing, check:\n  - The F reads normally"));
     }

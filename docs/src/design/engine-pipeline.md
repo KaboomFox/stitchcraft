@@ -295,7 +295,7 @@ It writes a bug-report bundle that reproduces the failure (`REQ-CLI-002`). The c
 | Output | Produced by |
 |---|---|
 | Machine file | `stitchcraft-formats` writer chosen by the profile or the output extension |
-| Preview PNG | `stitchcraft-render`, from the *quantized* plan (`REQ-RND-001`) |
+| Preview PNG | `stitchcraft-render`, from the *quantized* plan (`REQ-RND-001`), cut where the profile's machine cuts the thread ([rendering](rendering.md)) |
 | Report JSON | The CLI's, with the counts and size of the machine file read back as a machine reads it, its SHA-256, the threads and the diagnostics |
 | Traced document | Of a picture, the document VectorCraft's command line traced it into, which `stitch plan --traced` writes ([image to embroidery](image-to-embroidery.md#pictures-from-the-command-line)) |
 | Plug-in preview geometry | `stitchcraft-vc-plugin`, from one element's groups, its top rows or its path, by the preview's level ([integration](vectorcraft-integration.md#live-effect-previews-within-v1-budgets)) |
