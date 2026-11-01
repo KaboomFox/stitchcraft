@@ -24,3 +24,8 @@ stitchcraft-svg = { workspace = true }
 stitchcraft-vectorcraft = { workspace = true }
 flate2 = { workspace = true }
 proptest = { workspace = true }
+
+[dev-dependencies]
+# The tests of `inkstitch.rs` read the files it writes as XML, for the parameters StitchCraft's SVG reader
+# doesn't read yet (M8).
+roxmltree = { workspace = true }

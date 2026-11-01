@@ -1,0 +1,9 @@
+id = "inkstitch-ts13a"
+requirements = ["REQ-AUTO-021"]
+kind = "inkstitch"
+sheet = "TS-13A"
+# Ink/Stitch jumps where the needle already is at some thread changes, and its PES writer flags each jump as a trim.
+
+[excused]
+trims = "DEV-FMT-001"
+jumps = "DEV-FMT-001"
