@@ -89,6 +89,12 @@ impl Affine {
         (x - y).abs() <= EVEN * x.max(y) && square <= EVEN * x * y
     }
 
+    /// Whether the map flattens the plane onto a line or a point: its determinant is 0, so it has no
+    /// inverse. A viewer shows nothing that such a map draws (CSS Transforms 1, transform function lists).
+    pub fn flattens(self) -> bool {
+        self.a * self.d - self.b * self.c == 0.0
+    }
+
     /// Whether every coefficient is a finite number.
     pub fn is_finite(self) -> bool {
         [self.a, self.b, self.c, self.d, self.e, self.f].iter().all(|v| v.is_finite())
@@ -163,7 +169,7 @@ pub fn root_to_mm(width: Option<Length>, height: Option<Length>, view_box: Optio
     };
     let (sx, sy) = (width / vb.w, height / vb.h);
     let (fx, fy) = match aspect.align {
-        Align::None => return Ok(Affine::translate(-vb.x * sx, -vb.y * sy).after(Affine::scale(sx, sy))),
+        Align::None => return usable(Affine::translate(-vb.x * sx, -vb.y * sy).after(Affine::scale(sx, sy))),
         Align::XMinYMin => (0.0, 0.0),
         Align::XMidYMin => (0.5, 0.0),
         Align::XMaxYMin => (1.0, 0.0),
@@ -176,7 +182,12 @@ pub fn root_to_mm(width: Option<Length>, height: Option<Length>, view_box: Optio
     };
     let s = if aspect.slice { sx.max(sy) } else { sx.min(sy) };
     let (tx, ty) = ((width - vb.w * s) * fx - vb.x * s, (height - vb.h * s) * fy - vb.y * s);
-    let map = Affine::translate(tx, ty).after(Affine::scale(s, s));
+    usable(Affine::translate(tx, ty).after(Affine::scale(s, s)))
+}
+
+/// `map`, when its numbers are finite: a size so large that the viewBox scales to no number gives none,
+/// however the viewBox is fitted to it.
+fn usable(map: Affine) -> Result<Affine, String> {
     if map.is_finite() { Ok(map) } else { Err("its size and viewBox give no usable scale".to_string()) }
 }
 
@@ -188,6 +199,16 @@ mod tests {
 
     fn close(a: (f64, f64), b: (f64, f64)) -> bool {
         (a.0 - b.0).abs() < 1e-9 && (a.1 - b.1).abs() < 1e-9
+    }
+
+    #[test]
+    fn a_map_flattens_when_it_has_no_inverse() {
+        for flat in ["scale(0 1)", "scale(1 0)", "scale(0)", "matrix(1 1 1 1 0 0)", "matrix(1 2 2 4 5 6)", "rotate(30) scale(0 1) skewX(10)"] {
+            assert!(parse(flat).unwrap().flattens(), "{flat}");
+        }
+        for kept in ["scale(-1 1)", "rotate(90)", "skewX(80)", "matrix(1 1 1 1.000001 0 0)", "scale(1e-100)"] {
+            assert!(!parse(kept).unwrap().flattens(), "{kept}");
+        }
     }
 
     #[test]

@@ -22,6 +22,10 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
   `<switch>` draws only its first child whose conditions pass, as a viewer does. Ink/Stitch sews every
   child of a switch, and drops the transforms of the switch and of the elements above it
   (`DEV-SVG-004`).
+- **Flattening transforms.** A transform that flattens an element to a line or a point, such as
+  `scale(0 1)` or `matrix(1 1 1 1 0 0)`, has no inverse, and a viewer doesn't show the element or what is
+  in it (CSS Transforms 1, transform function lists). They are left out with `SC-W0804`. Ink/Stitch
+  sews them flattened: a stroke along the line it becomes (`DEV-SVG-012`).
 - **Ids.** An element's id is `svg:<label>:fill` or `svg:<label>:stroke`. The label is the SVG
   element's `id`, or `<tag>@<n>` for the n-th element of that kind. A repeated id gets `~2`, `~3` and
   so on (`stitchcraft_core::Labels`, as in the VectorCraft adapter). The adapter's own diagnostics name
@@ -76,9 +80,10 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
 
 - `fill`, `stroke`, `color` and `currentColor` give the thread colour. A gradient gives its first colour
   and a pattern its fallback colour, each with a warning. A gradient of one colour, such as an Inkscape
-  swatch, gives that colour without one. A gradient without stops paints nothing, as in a viewer, and
-  so does a reference to an element the file does not have, unless a colour is written after it.
-  Ink/Stitch sews such a fill in black (`DEV-SVG-007`).
+  swatch, gives that colour without one. Its first colour is that of its first stop a viewer shows, one
+  not fully transparent and of a `stop-opacity` above 0. A gradient without stops paints nothing, as in a
+  viewer. So do one whose stops a viewer doesn't show and a reference to an element the file does not
+  have, unless a colour is written after it. Ink/Stitch sews such a fill in black (`DEV-SVG-007`).
 - Colours read as editors write them. Keywords such as `currentcolor` may be in any case. An ICC colour
   after the sRGB one, which Inkscape's colour-managed picker writes, is left for the sRGB colour.
 - Properties come from presentation attributes (`fill="red"`), the rules of style sheets and the `style`
@@ -102,7 +107,8 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
 - `display: none` hides an element and everything in it. A hidden or fully transparent paint is left
   out, as a viewer leaves it out. `visibility` hides a paint, and so does an `opacity` of 0 on its
   element or above it. A `fill-opacity` or `stroke-opacity` of 0 makes its paint clear, as does a colour
-  that is `transparent` or has an alpha of 0. Ink/Stitch leaves out only what `display` hides and a fill
+  that is `transparent` or has an alpha of 0, `currentColor` where `color` is such a colour, and a
+  gradient whose stops a viewer doesn't show. Ink/Stitch leaves out only what `display` hides and a fill
   whose `fill-opacity` is written `0` (`DEV-SVG-003`). The insides of `<defs>`, `<symbol>`, `<marker>`,
   `<pattern>`, `<clipPath>` and `<mask>` are never drawn.
 
@@ -176,14 +182,15 @@ which a VectorCraft document's settings are read with too
   and the Ink/Stitch settings that are not read yet. Clipping is planned for M8.
 - `SC-W0804` reports geometry that cannot be used:
   - path data or a list of points with an error, stitched up to the error
-  - a transform that does not parse, left out with its contents
+  - a transform that does not parse, or that flattens what it draws, left out with its contents
   - an element that draws nothing
   - a point more than 10 m from the origin
   - a stroke width, join or miter limit that does not read, and a stroke too wide to measure
   - an empty root `width`, `height` or `viewBox`, and a root `preserveAspectRatio` that does not read
 - `SC-E0801` refuses a file that is not SVG, or that is larger than the adapter reads. It refuses a file
   whose size cannot be used too: a root `width`, `height` or `viewBox` that does not read, a size of 0
-  or less, or a viewBox with no area.
+  or less, a viewBox with no area, or a size so large that the viewBox scales to no number, however
+  `preserveAspectRatio` fits it.
 
 ## Text and limits
 
@@ -199,4 +206,5 @@ entities: a declaration in a comment or in character data declares nothing. A na
 at its longer value. XML keeps the first declaration, and the limit must hold whichever the parser keeps.
 Reading charges the budget for each XML node, path segment and 8 bytes of a transform, point list or
 style sheet. Each element is charged for its classes, the style sheet rules tested against it and the
-declarations it takes ([budgets](data-model.md#budgets)).
+declarations it takes, and for 8 bytes of its `style` attribute each time it is read: a gradient's stops
+are read again for each shape the gradient paints ([budgets](data-model.md#budgets)).

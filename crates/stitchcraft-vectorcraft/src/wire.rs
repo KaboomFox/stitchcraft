@@ -214,14 +214,20 @@ pub(crate) struct Paint {
 }
 
 impl Paint {
-    /// Whether VectorCraft draws anything with it: it is not none, nor a gradient without stops.
+    /// Whether VectorCraft draws anything with it: it is not none, nor a gradient without a stop it shows.
     pub(crate) fn paints(&self) -> bool {
         match self.kind.as_str() {
             "none" => false,
-            "gradient" => self.gradient.as_ref().is_some_and(|gradient| !gradient.stops.is_empty()),
+            "gradient" => self.gradient.as_ref().is_some_and(|gradient| gradient.stops.iter().any(Stop::shown)),
             _ => true,
         }
     }
+}
+
+/// Whether VectorCraft shows what has the opacity `opacity`, 1 when the file omits it: an opacity of 0 shows
+/// nothing.
+pub(crate) fn shows(opacity: Option<f64>) -> bool {
+    opacity != Some(0.0)
 }
 
 /// A colour in its model: `rgb`, `cmyk` or `gray`, components from 0 to 1, or `lab`.
@@ -270,11 +276,20 @@ pub(crate) struct Gradient {
     pub stops: Vec<Stop>,
 }
 
-/// A gradient's stop: its colour.
+/// A gradient's stop: its colour, and its opacity, 1 when the file omits it.
 #[derive(Deserialize)]
 pub(crate) struct Stop {
     #[serde(default)]
     pub color: Option<Color>,
+    #[serde(default)]
+    pub opacity: Option<f64>,
+}
+
+impl Stop {
+    /// Whether VectorCraft shows it: its opacity is not 0.
+    pub(crate) fn shown(&self) -> bool {
+        shows(self.opacity)
+    }
 }
 
 /// A live effect in an appearance: its id, parameters and whether it is on.
