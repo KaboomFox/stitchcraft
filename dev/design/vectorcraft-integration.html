@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-e1f5e57d.js";
+            window.path_to_searchindex_js = "../searchindex-322dfafa.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -581,7 +581,9 @@ elsewhere across a shape, and the sheet looks the same. The threads lose their n
 palette, since VectorCraft unlinks the swatch of a paint a filter gives, and the PES file is the same.
 VectorCraft 0.15 keeps the records, but with an empty selection it looks to a filter as 0.14 does, which
 would drop them. Only the <code>documentData</code> every filter gets from 0.16 tells them apart, so before 0.16 the
-filter declines with <code>SC-E0813</code>. The sheets drawn stitch by stitch are plans, which no object holds. The
+filter declines with <code>SC-E0813</code>. It declines with <code>SC-E0817</code> where parts of the sheet would lie more than
+10 m from the document’s origin, farther than StitchCraft stitches (<code>Design::new</code>). The sheets
+drawn stitch by stitch are plans, which no object holds. The
 TS-13 sheets are designs whose shapes StitchCraft digitizes automatically (<code>TestSheet::digitized</code>): each
 such shape has the Auto effect’s record (M13.7, <code>REQ-VC-016</code>), and StitchCraft Auto must be installed for
 VectorCraft to keep it.</p>
@@ -740,8 +742,10 @@ MiB of any file (<code>REQ-CLI-005</code>), images included. A gzip stream is un
 further than the limit. Nesting deeper than the JSON reader allows (128 levels, about 40 levels of
 groups) refuses the file. VectorCraft itself keeps 32. The JSON is read into the few things the adapter
 uses, and the rest is skipped as it is read: images, previews and text runs are never kept. Every object,
-appearance item, effect and anchor charges the budget, and so does each element for its copy of the
-object’s path.</p>
+appearance item, effect and anchor charges the budget, and so does each element for its copies of the
+object’s path, name and settings. An object’s name goes into each element made of it, and a group’s
+StitchCraft settings into each element of the paths in it. Those copies come to at most 64 MiB, as much
+as the JSON read. A file whose copies come to more is refused with <code>SC-E0806</code>.</p>
 <p><strong>Coordinates.</strong> VectorCraft keeps every path in document coordinates. Moving or scaling a group moves
 its paths’ anchors, so layers, groups and compound paths have no transform. Coordinates are points, 1/72
 inch, with y down, and the adapter multiplies them by 25.4/72 into millimetres. The document’s origin
@@ -783,7 +787,9 @@ round or square caps. Of a line sewn across its width, the reader names the alig
 closed path and the width profile, which its stitches don’t follow (<code>SC-W0807</code>, <code>REQ-AUTO-005</code>). The
 thread’s colour is a solid paint’s colour, with CMYK and grey converted by
 VectorCraft’s formula without colour management ((1 − c)(1 − k) and 1 − k) and Lab through sRGB. A
-gradient gives its first stop’s colour, with <code>SC-W0807</code> unless every stop has that colour, and a pattern
+gradient gives the colour of its first stop VectorCraft shows, of an opacity other than 0, with <code>SC-W0807</code>
+unless every stop is shown in that colour. A gradient whose stops are all of opacity 0 paints nothing,
+as one without stops does. It is left out without a word. A pattern
 gives black, with <code>SC-W0807</code>. A stroke’s width, in points, and its join, with its miter limit (10 when
 the file omits it, as VectorCraft draws it), shape a satin column drawn as one path. A stroke drawn with
 a brush is stitched along its path, without the brush’s art, with <code>SC-W0807</code>.</p>

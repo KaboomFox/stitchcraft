@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-e1f5e57d.js";
+            window.path_to_searchindex_js = "../searchindex-322dfafa.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -201,6 +201,10 @@ When <code>paint-order</code> paints the stroke first, <code>SC-W0802</code> say
 <code>&lt;switch&gt;</code> draws only its first child whose conditions pass, as a viewer does. Ink/Stitch sews every
 child of a switch, and drops the transforms of the switch and of the elements above it
 (<code>DEV-SVG-004</code>).</li>
+<li><strong>Flattening transforms.</strong> A transform that flattens an element to a line or a point, such as
+<code>scale(0 1)</code> or <code>matrix(1 1 1 1 0 0)</code>, has no inverse, and a viewer doesn’t show the element or what is
+in it (CSS Transforms 1, transform function lists). They are left out with <code>SC-W0804</code>. Ink/Stitch
+sews them flattened: a stroke along the line it becomes (<code>DEV-SVG-012</code>).</li>
 <li><strong>Ids.</strong> An element’s id is <code>svg:&lt;label&gt;:fill</code> or <code>svg:&lt;label&gt;:stroke</code>. The label is the SVG
 element’s <code>id</code>, or <code>&lt;tag&gt;@&lt;n&gt;</code> for the n-th element of that kind. A repeated id gets <code>~2</code>, <code>~3</code> and
 so on (<code>stitchcraft_core::Labels</code>, as in the VectorCraft adapter). The adapter’s own diagnostics name
@@ -255,9 +259,10 @@ an <code>ex</code> 8, as with a viewer’s default font. inkex reads them as 0 i
 <ul>
 <li><code>fill</code>, <code>stroke</code>, <code>color</code> and <code>currentColor</code> give the thread colour. A gradient gives its first colour
 and a pattern its fallback colour, each with a warning. A gradient of one colour, such as an Inkscape
-swatch, gives that colour without one. A gradient without stops paints nothing, as in a viewer, and
-so does a reference to an element the file does not have, unless a colour is written after it.
-Ink/Stitch sews such a fill in black (<code>DEV-SVG-007</code>).</li>
+swatch, gives that colour without one. Its first colour is that of its first stop a viewer shows, one
+not fully transparent and of a <code>stop-opacity</code> above 0. A gradient without stops paints nothing, as in a
+viewer. So do one whose stops a viewer doesn’t show and a reference to an element the file does not
+have, unless a colour is written after it. Ink/Stitch sews such a fill in black (<code>DEV-SVG-007</code>).</li>
 <li>Colours read as editors write them. Keywords such as <code>currentcolor</code> may be in any case. An ICC colour
 after the sRGB one, which Inkscape’s colour-managed picker writes, is left for the sRGB colour.</li>
 <li>Properties come from presentation attributes (<code>fill="red"</code>), the rules of style sheets and the <code>style</code>
@@ -281,7 +286,8 @@ used. Ink/Stitch reads styles through inkex, which applies more kinds of selecto
 <li><code>display: none</code> hides an element and everything in it. A hidden or fully transparent paint is left
 out, as a viewer leaves it out. <code>visibility</code> hides a paint, and so does an <code>opacity</code> of 0 on its
 element or above it. A <code>fill-opacity</code> or <code>stroke-opacity</code> of 0 makes its paint clear, as does a colour
-that is <code>transparent</code> or has an alpha of 0. Ink/Stitch leaves out only what <code>display</code> hides and a fill
+that is <code>transparent</code> or has an alpha of 0, <code>currentColor</code> where <code>color</code> is such a colour, and a
+gradient whose stops a viewer doesn’t show. Ink/Stitch leaves out only what <code>display</code> hides and a fill
 whose <code>fill-opacity</code> is written <code>0</code> (<code>DEV-SVG-003</code>). The insides of <code>&lt;defs&gt;</code>, <code>&lt;symbol&gt;</code>, <code>&lt;marker&gt;</code>,
 <code>&lt;pattern&gt;</code>, <code>&lt;clipPath&gt;</code> and <code>&lt;mask&gt;</code> are never drawn.</li>
 </ul>
@@ -350,7 +356,7 @@ and the Ink/Stitch settings that are not read yet. Clipping is planned for M8.</
 <li><code>SC-W0804</code> reports geometry that cannot be used:
 <ul>
 <li>path data or a list of points with an error, stitched up to the error</li>
-<li>a transform that does not parse, left out with its contents</li>
+<li>a transform that does not parse, or that flattens what it draws, left out with its contents</li>
 <li>an element that draws nothing</li>
 <li>a point more than 10 m from the origin</li>
 <li>a stroke width, join or miter limit that does not read, and a stroke too wide to measure</li>
@@ -359,7 +365,8 @@ and the Ink/Stitch settings that are not read yet. Clipping is planned for M8.</
 </li>
 <li><code>SC-E0801</code> refuses a file that is not SVG, or that is larger than the adapter reads. It refuses a file
 whose size cannot be used too: a root <code>width</code>, <code>height</code> or <code>viewBox</code> that does not read, a size of 0
-or less, or a viewBox with no area.</li>
+or less, a viewBox with no area, or a size so large that the viewBox scales to no number, however
+<code>preserveAspectRatio</code> fits it.</li>
 </ul>
 <h2 id="text-and-limits"><a class="header" href="#text-and-limits">Text and limits</a></h2>
 <p>A file is UTF-8 text, or ISO-8859-1 when its XML declaration says so, which the adapter turns into UTF-8.
@@ -373,7 +380,8 @@ entities: a declaration in a comment or in character data declares nothing. A na
 at its longer value. XML keeps the first declaration, and the limit must hold whichever the parser keeps.
 Reading charges the budget for each XML node, path segment and 8 bytes of a transform, point list or
 style sheet. Each element is charged for its classes, the style sheet rules tested against it and the
-declarations it takes (<a href="data-model.html#budgets">budgets</a>).</p>
+declarations it takes, and for 8 bytes of its <code>style</code> attribute each time it is read: a gradient’s stops
+are read again for each shape the gradient paints (<a href="data-model.html#budgets">budgets</a>).</p>
 
                     </main>
 

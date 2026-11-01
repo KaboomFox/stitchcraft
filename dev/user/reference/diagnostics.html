@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-e1f5e57d.js";
+            window.path_to_searchindex_js = "../../searchindex-322dfafa.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-b793f3ad.js"></script>
@@ -258,6 +258,7 @@
 <tr><td><a href="#sc-e0814"><code>SC-E0814</code></a></td><td>Error</td><td>VectorCraft line not made into a satin column</td></tr>
 <tr><td><a href="#sc-e0815"><code>SC-E0815</code></a></td><td>Error</td><td>VectorCraft’s command line could not be started</td></tr>
 <tr><td><a href="#sc-e0816"><code>SC-E0816</code></a></td><td>Error</td><td>VectorCraft could not trace the picture</td></tr>
+<tr><td><a href="#sc-e0817"><code>SC-E0817</code></a></td><td>Error</td><td>VectorCraft test sheet not drawn</td></tr>
 <tr><td><a href="#sc-i0901"><code>SC-I0901</code></a></td><td>Info</td><td>Shapes digitized automatically</td></tr>
 <tr><td><a href="#sc-i0902"><code>SC-I0902</code></a></td><td>Info</td><td>Satin column can’t be made; filled</td></tr>
 <tr><td><a href="#sc-w0903"><code>SC-W0903</code></a></td><td>Warning</td><td>Line too wide to fill; left out</td></tr>
@@ -841,6 +842,14 @@ file named <code>.png</code> that holds something else. It fails too when it is 
 StitchCraft traces with: the user guide lists the versions the compatibility gate passed. Check that
 VectorCraft places the picture, or trace it with Image Trace in VectorCraft and plan the document you
 save.</p>
+<h2 id="sc-e0817"><a class="header" href="#sc-e0817">SC-E0817</a></h2>
+<p><strong>Error</strong> — VectorCraft test sheet not drawn</p>
+<p>StitchCraft’s Test Sheet filter draws a sheet in the middle of an artboard, the one under the
+selection or else the first. It drew nothing, because there parts of the sheet would lie more than
+10 m from the document’s origin, farther than StitchCraft stitches: a machine file can’t record a
+position past it, and the reader leaves objects there out (<code>SC-W0808</code>).</p>
+<p>The message names the sheet. Select an object on an artboard nearer the origin, or move the artboard
+nearer it, and draw the sheet again.</p>
 <h2 id="sc-i0901"><a class="header" href="#sc-i0901">SC-I0901</a></h2>
 <p><strong>Info</strong> — Shapes digitized automatically</p>
 <p><code>--auto</code>, or StitchCraft’s Auto effect in VectorCraft, digitized the design’s shapes that have no

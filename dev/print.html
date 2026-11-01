@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-e1f5e57d.js";
+            window.path_to_searchindex_js = "searchindex-322dfafa.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b793f3ad.js"></script>
@@ -2186,6 +2186,7 @@ Arguments:
 <tr><td><a href="#sc-e0814"><code>SC-E0814</code></a></td><td>Error</td><td>VectorCraft line not made into a satin column</td></tr>
 <tr><td><a href="#sc-e0815"><code>SC-E0815</code></a></td><td>Error</td><td>VectorCraft’s command line could not be started</td></tr>
 <tr><td><a href="#sc-e0816"><code>SC-E0816</code></a></td><td>Error</td><td>VectorCraft could not trace the picture</td></tr>
+<tr><td><a href="#sc-e0817"><code>SC-E0817</code></a></td><td>Error</td><td>VectorCraft test sheet not drawn</td></tr>
 <tr><td><a href="#sc-i0901"><code>SC-I0901</code></a></td><td>Info</td><td>Shapes digitized automatically</td></tr>
 <tr><td><a href="#sc-i0902"><code>SC-I0902</code></a></td><td>Info</td><td>Satin column can’t be made; filled</td></tr>
 <tr><td><a href="#sc-w0903"><code>SC-W0903</code></a></td><td>Warning</td><td>Line too wide to fill; left out</td></tr>
@@ -2769,6 +2770,14 @@ file named <code>.png</code> that holds something else. It fails too when it is 
 StitchCraft traces with: the user guide lists the versions the compatibility gate passed. Check that
 VectorCraft places the picture, or trace it with Image Trace in VectorCraft and plan the document you
 save.</p>
+<h2 id="sc-e0817"><a class="header" href="#sc-e0817">SC-E0817</a></h2>
+<p><strong>Error</strong> — VectorCraft test sheet not drawn</p>
+<p>StitchCraft’s Test Sheet filter draws a sheet in the middle of an artboard, the one under the
+selection or else the first. It drew nothing, because there parts of the sheet would lie more than
+10 m from the document’s origin, farther than StitchCraft stitches: a machine file can’t record a
+position past it, and the reader leaves objects there out (<code>SC-W0808</code>).</p>
+<p>The message names the sheet. Select an object on an artboard nearer the origin, or move the artboard
+nearer it, and draw the sheet again.</p>
 <h2 id="sc-i0901"><a class="header" href="#sc-i0901">SC-I0901</a></h2>
 <p><strong>Info</strong> — Shapes digitized automatically</p>
 <p><code>--auto</code>, or StitchCraft’s Auto effect in VectorCraft, digitized the design’s shapes that have no
@@ -5270,6 +5279,7 @@ another.</p>
 <tr><td><code>SC-E0814</code></td><td>Error</td><td>VectorCraft line not made into a satin column (Stroke to Satin refused a selection because it is empty or a path has no stroke, or because a line drawn with its rails and rungs would sew otherwise)</td><td>M6</td></tr>
 <tr><td><code>SC-E0815</code></td><td>Error</td><td>VectorCraft’s command line could not be started (<code>stitch plan</code> traces a picture with it: neither on the PATH nor where <code>--vectorcraft-cli</code> says)</td><td>M13</td></tr>
 <tr><td><code>SC-E0816</code></td><td>Error</td><td>VectorCraft could not trace the picture (its command line failed or didn’t save the document)</td><td>M13</td></tr>
+<tr><td><code>SC-E0817</code></td><td>Error</td><td>VectorCraft test sheet not drawn (in the middle of the artboard, parts of the sheet would lie more than 10 m from the document’s origin)</td><td>M6</td></tr>
 <tr><td><code>SC-I0901</code></td><td>Info</td><td>Shapes digitized automatically (<code>--auto</code>, or VectorCraft’s Auto effect), counted by their stitches (running stitches, satin columns or tatami fills)</td><td>M13</td></tr>
 <tr><td><code>SC-I0902</code></td><td>Info</td><td>Satin column can’t be made; filled (a part of an automatic line that turns more tightly than it is wide, is shorter than a CSS pixel or is a dot its cap draws, or a part of an automatic area whose triangles don’t make a column round one of its lines or whose column would be read back otherwise)</td><td>M13</td></tr>
 <tr><td><code>SC-W0903</code></td><td>Warning</td><td>Line too wide to fill; left out (an automatic line whose filled area would reach more than 10 m from the origin)</td><td>M13</td></tr>
@@ -5302,6 +5312,10 @@ When <code>paint-order</code> paints the stroke first, <code>SC-W0802</code> say
 <code>&lt;switch&gt;</code> draws only its first child whose conditions pass, as a viewer does. Ink/Stitch sews every
 child of a switch, and drops the transforms of the switch and of the elements above it
 (<code>DEV-SVG-004</code>).</li>
+<li><strong>Flattening transforms.</strong> A transform that flattens an element to a line or a point, such as
+<code>scale(0 1)</code> or <code>matrix(1 1 1 1 0 0)</code>, has no inverse, and a viewer doesn’t show the element or what is
+in it (CSS Transforms 1, transform function lists). They are left out with <code>SC-W0804</code>. Ink/Stitch
+sews them flattened: a stroke along the line it becomes (<code>DEV-SVG-012</code>).</li>
 <li><strong>Ids.</strong> An element’s id is <code>svg:&lt;label&gt;:fill</code> or <code>svg:&lt;label&gt;:stroke</code>. The label is the SVG
 element’s <code>id</code>, or <code>&lt;tag&gt;@&lt;n&gt;</code> for the n-th element of that kind. A repeated id gets <code>~2</code>, <code>~3</code> and
 so on (<code>stitchcraft_core::Labels</code>, as in the VectorCraft adapter). The adapter’s own diagnostics name
@@ -5356,9 +5370,10 @@ an <code>ex</code> 8, as with a viewer’s default font. inkex reads them as 0 i
 <ul>
 <li><code>fill</code>, <code>stroke</code>, <code>color</code> and <code>currentColor</code> give the thread colour. A gradient gives its first colour
 and a pattern its fallback colour, each with a warning. A gradient of one colour, such as an Inkscape
-swatch, gives that colour without one. A gradient without stops paints nothing, as in a viewer, and
-so does a reference to an element the file does not have, unless a colour is written after it.
-Ink/Stitch sews such a fill in black (<code>DEV-SVG-007</code>).</li>
+swatch, gives that colour without one. Its first colour is that of its first stop a viewer shows, one
+not fully transparent and of a <code>stop-opacity</code> above 0. A gradient without stops paints nothing, as in a
+viewer. So do one whose stops a viewer doesn’t show and a reference to an element the file does not
+have, unless a colour is written after it. Ink/Stitch sews such a fill in black (<code>DEV-SVG-007</code>).</li>
 <li>Colours read as editors write them. Keywords such as <code>currentcolor</code> may be in any case. An ICC colour
 after the sRGB one, which Inkscape’s colour-managed picker writes, is left for the sRGB colour.</li>
 <li>Properties come from presentation attributes (<code>fill="red"</code>), the rules of style sheets and the <code>style</code>
@@ -5382,7 +5397,8 @@ used. Ink/Stitch reads styles through inkex, which applies more kinds of selecto
 <li><code>display: none</code> hides an element and everything in it. A hidden or fully transparent paint is left
 out, as a viewer leaves it out. <code>visibility</code> hides a paint, and so does an <code>opacity</code> of 0 on its
 element or above it. A <code>fill-opacity</code> or <code>stroke-opacity</code> of 0 makes its paint clear, as does a colour
-that is <code>transparent</code> or has an alpha of 0. Ink/Stitch leaves out only what <code>display</code> hides and a fill
+that is <code>transparent</code> or has an alpha of 0, <code>currentColor</code> where <code>color</code> is such a colour, and a
+gradient whose stops a viewer doesn’t show. Ink/Stitch leaves out only what <code>display</code> hides and a fill
 whose <code>fill-opacity</code> is written <code>0</code> (<code>DEV-SVG-003</code>). The insides of <code>&lt;defs&gt;</code>, <code>&lt;symbol&gt;</code>, <code>&lt;marker&gt;</code>,
 <code>&lt;pattern&gt;</code>, <code>&lt;clipPath&gt;</code> and <code>&lt;mask&gt;</code> are never drawn.</li>
 </ul>
@@ -5451,7 +5467,7 @@ and the Ink/Stitch settings that are not read yet. Clipping is planned for M8.</
 <li><code>SC-W0804</code> reports geometry that cannot be used:
 <ul>
 <li>path data or a list of points with an error, stitched up to the error</li>
-<li>a transform that does not parse, left out with its contents</li>
+<li>a transform that does not parse, or that flattens what it draws, left out with its contents</li>
 <li>an element that draws nothing</li>
 <li>a point more than 10 m from the origin</li>
 <li>a stroke width, join or miter limit that does not read, and a stroke too wide to measure</li>
@@ -5460,7 +5476,8 @@ and the Ink/Stitch settings that are not read yet. Clipping is planned for M8.</
 </li>
 <li><code>SC-E0801</code> refuses a file that is not SVG, or that is larger than the adapter reads. It refuses a file
 whose size cannot be used too: a root <code>width</code>, <code>height</code> or <code>viewBox</code> that does not read, a size of 0
-or less, or a viewBox with no area.</li>
+or less, a viewBox with no area, or a size so large that the viewBox scales to no number, however
+<code>preserveAspectRatio</code> fits it.</li>
 </ul>
 <h2 id="text-and-limits"><a class="header" href="#text-and-limits">Text and limits</a></h2>
 <p>A file is UTF-8 text, or ISO-8859-1 when its XML declaration says so, which the adapter turns into UTF-8.
@@ -5474,7 +5491,8 @@ entities: a declaration in a comment or in character data declares nothing. A na
 at its longer value. XML keeps the first declaration, and the limit must hold whichever the parser keeps.
 Reading charges the budget for each XML node, path segment and 8 bytes of a transform, point list or
 style sheet. Each element is charged for its classes, the style sheet rules tested against it and the
-declarations it takes (<a href="#budgets">budgets</a>).</p>
+declarations it takes, and for 8 bytes of its <code>style</code> attribute each time it is read: a gradient’s stops
+are read again for each shape the gradient paints (<a href="#budgets">budgets</a>).</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="engine-pipeline"><a class="header" href="#engine-pipeline">Engine pipeline</a></h1>
 <!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/generators/next.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, apps/stitchcraft-cli/src/commands/plan.rs -->
@@ -8806,7 +8824,9 @@ elsewhere across a shape, and the sheet looks the same. The threads lose their n
 palette, since VectorCraft unlinks the swatch of a paint a filter gives, and the PES file is the same.
 VectorCraft 0.15 keeps the records, but with an empty selection it looks to a filter as 0.14 does, which
 would drop them. Only the <code>documentData</code> every filter gets from 0.16 tells them apart, so before 0.16 the
-filter declines with <code>SC-E0813</code>. The sheets drawn stitch by stitch are plans, which no object holds. The
+filter declines with <code>SC-E0813</code>. It declines with <code>SC-E0817</code> where parts of the sheet would lie more than
+10 m from the document’s origin, farther than StitchCraft stitches (<code>Design::new</code>). The sheets
+drawn stitch by stitch are plans, which no object holds. The
 TS-13 sheets are designs whose shapes StitchCraft digitizes automatically (<code>TestSheet::digitized</code>): each
 such shape has the Auto effect’s record (M13.7, <code>REQ-VC-016</code>), and StitchCraft Auto must be installed for
 VectorCraft to keep it.</p>
@@ -8965,8 +8985,10 @@ MiB of any file (<code>REQ-CLI-005</code>), images included. A gzip stream is un
 further than the limit. Nesting deeper than the JSON reader allows (128 levels, about 40 levels of
 groups) refuses the file. VectorCraft itself keeps 32. The JSON is read into the few things the adapter
 uses, and the rest is skipped as it is read: images, previews and text runs are never kept. Every object,
-appearance item, effect and anchor charges the budget, and so does each element for its copy of the
-object’s path.</p>
+appearance item, effect and anchor charges the budget, and so does each element for its copies of the
+object’s path, name and settings. An object’s name goes into each element made of it, and a group’s
+StitchCraft settings into each element of the paths in it. Those copies come to at most 64 MiB, as much
+as the JSON read. A file whose copies come to more is refused with <code>SC-E0806</code>.</p>
 <p><strong>Coordinates.</strong> VectorCraft keeps every path in document coordinates. Moving or scaling a group moves
 its paths’ anchors, so layers, groups and compound paths have no transform. Coordinates are points, 1/72
 inch, with y down, and the adapter multiplies them by 25.4/72 into millimetres. The document’s origin
@@ -9008,7 +9030,9 @@ round or square caps. Of a line sewn across its width, the reader names the alig
 closed path and the width profile, which its stitches don’t follow (<code>SC-W0807</code>, <code>REQ-AUTO-005</code>). The
 thread’s colour is a solid paint’s colour, with CMYK and grey converted by
 VectorCraft’s formula without colour management ((1 − c)(1 − k) and 1 − k) and Lab through sRGB. A
-gradient gives its first stop’s colour, with <code>SC-W0807</code> unless every stop has that colour, and a pattern
+gradient gives the colour of its first stop VectorCraft shows, of an opacity other than 0, with <code>SC-W0807</code>
+unless every stop is shown in that colour. A gradient whose stops are all of opacity 0 paints nothing,
+as one without stops does. It is left out without a word. A pattern
 gives black, with <code>SC-W0807</code>. A stroke’s width, in points, and its join, with its miter limit (10 when
 the file omits it, as VectorCraft draws it), shape a satin column drawn as one path. A stroke drawn with
 a brush is stitched along its path, without the brush’s art, with <code>SC-W0807</code>.</p>
