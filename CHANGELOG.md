@@ -5,6 +5,15 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M7.6: the offsetter meets the third criterion of ADR-0005 (NFR-PERF-3) before contour fill relies on it. A
+  region 150 mm across, of 1,000 points, shrinks 300 times, each inset from the last, in 65 to 160 ms
+  natively, from 141 to 356 ms: round or with 7 waves, by 0.25 mm and by 0.4 mm. Snap rounding keeps its hot
+  points in a sorted list and works out each edge once, and the arrangement numbers its points by their
+  places in that list and groups its edges by their lower points, where both kept tree maps and sets. The
+  parts, their points and the work charged are unchanged for all 4 regions. `cargo xtask perf` measures the
+  engine's new `insets` example beside `field`, with a record of its own in `conformance/perf.toml`, and
+  looks for the examples where `CARGO_TARGET_DIR` puts them: it looked in `target/`, and failed when that
+  was set. `normalize::offset::buffer` and `normalize::region::Unjoined` are public, for the example.
 - User pages with pictures for satin columns, tatami fills and automatic digitizing (M13.11), so every
   stitch type the engine sews has a page that shows it (`UNSHOWN` in `xtask/src/stitch_pages.rs` is empty).
   The satin column's page shows a column drawn as one path, its spacing and its 3 underlays. The tatami

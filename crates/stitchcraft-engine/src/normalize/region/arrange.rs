@@ -16,8 +16,6 @@
 //! smaller, is then worked out exactly, however thin the ring, and sides are decided exactly too
 //! ([`stitchcraft_core::exact::side`]).
 
-use std::collections::BTreeMap;
-
 use stitchcraft_core::{Exhausted, Meter, Point};
 
 use super::assemble::Unjoined;
@@ -56,35 +54,115 @@ pub(crate) fn cut(rings: &[Vec<Point>], meter: &mut Meter) -> Result<Result<Arra
     }
     // Rounding settles every drawing tried, so this return is a bug's. It stays on one line: coverage
     // counts a line that no test can reach as untested.
-    let Ok(paths) = snap::round(&on_grid, meter)? else { return Ok(Err(Unjoined)) };
-    let mut numbers: BTreeMap<Node, usize> = BTreeMap::new();
-    let mut nodes: Vec<Node> = Vec::new();
+    let Ok(snap::Rounded { paths, hot }) = snap::round(&on_grid, meter)? else { return Ok(Err(Unjoined)) };
     // The corners first, so that the rings of the parts start at a corner the drawing reaches first.
-    for &node in on_grid.iter().chain(&paths).flatten() {
-        numbers.entry(node).or_insert_with(|| {
-            nodes.push(node);
-            nodes.len() - 1
-        });
-    }
-    let number = |node: &Node| numbers.get(node).copied().unwrap_or(0);
-    let mut edges: Vec<(usize, usize)> = Vec::new();
-    let mut count: Vec<i64> = Vec::new();
-    let mut by_ends: BTreeMap<(usize, usize), usize> = BTreeMap::new();
+    // Paths that rounding didn't bend reach no point their corners don't, and are numbered as they are.
+    // Every point is hot, so this return is a bug's too.
+    let unbent = paths == on_grid;
+    let reached: Vec<Node> =
+        if unbent { on_grid.iter().flatten().copied().collect() } else { on_grid.iter().chain(&paths).flatten().copied().collect() };
+    let Some((nodes, number)) = numbered(&reached, &hot) else { return Ok(Err(Unjoined)) };
+    // The paths' points' numbers, in order: after the corners', or the corners' own. Each step from one
+    // point to the next, in the order the paths run.
+    let corners: usize = on_grid.iter().map(Vec::len).sum();
+    let mut at = if unbent { 0 } else { corners };
+    let mut steps: Vec<(usize, usize)> = Vec::new();
     for path in &paths {
         meter.charge(u64::try_from(path.len()).unwrap_or(u64::MAX))?;
-        for pair in path.windows(2) {
-            let (u, v) = (number(&pair[0]), number(&pair[1]));
-            let edge = *by_ends.entry((u.min(v), u.max(v))).or_insert_with(|| {
-                edges.push((u, v));
-                count.push(0);
-                edges.len() - 1
-            });
-            let step = if edges.get(edge).is_some_and(|&(from, _)| from == u) { 1 } else { -1 };
-            count.get_mut(edge).into_iter().for_each(|c| *c += step);
-        }
+        let numbers = number.get(at..at + path.len()).unwrap_or_default();
+        at += path.len();
+        steps.extend(numbers.windows(2).filter_map(|pair| Some((*pair.first()?, *pair.get(1)?))));
     }
+    let (edges, count) = edges(&steps, nodes.len());
     let points = nodes.iter().map(|node| node.point()).collect();
     Ok(Ok(Arrangement { points, nodes, edges, count }))
+}
+
+/// The edges the paths' `steps` run along, between points numbered below `points`, and for each, the steps
+/// along it less the steps back. Steps between the same 2 points, either way, are one edge, which runs the
+/// way the first of them is taken; the edges are numbered in the order they are first taken. The steps are
+/// grouped by their lower point, and a group is sorted by the higher point: a point has few steps, and those
+/// to the same point then lie side by side.
+fn edges(steps: &[(usize, usize)], points: usize) -> (Vec<(usize, usize)>, Vec<i64>) {
+    let high = |s: &usize| steps.get(*s).map(|&(u, v)| u.max(v));
+    let (offsets, mut grouped) = grouped(steps.iter().map(|&(u, v)| Some(u.min(v))), points);
+    // For each step, the first step between the same 2 points: in a group sorted alike, the first of a run.
+    let mut first: Vec<usize> = (0..steps.len()).collect();
+    for span in offsets.windows(2) {
+        let &[from, to] = span else { continue };
+        let Some(group) = grouped.get_mut(from..to) else { continue };
+        group.sort_by_key(high);
+        let mut run = None;
+        for &s in group.iter() {
+            match run {
+                Some((h, f)) if h == high(&s) => first.get_mut(s).into_iter().for_each(|slot| *slot = f),
+                _ => run = Some((high(&s), s)),
+            }
+        }
+    }
+    let (mut edges, mut count) = (Vec::new(), Vec::new());
+    let mut edge_of = vec![0; steps.len()];
+    for (s, (&(u, v), &f)) in steps.iter().zip(&first).enumerate() {
+        let edge = if f == s {
+            edges.push((u, v));
+            count.push(0);
+            edges.len() - 1
+        } else {
+            edge_of.get(f).copied().unwrap_or(0)
+        };
+        edge_of.get_mut(s).into_iter().for_each(|slot| *slot = edge);
+        let step = if edges.get(edge).is_some_and(|&(from, _)| from == u) { 1 } else { -1 };
+        count.get_mut(edge).into_iter().for_each(|c| *c += step);
+    }
+    (edges, count)
+}
+
+/// The items, numbered in the order `keys` gives their keys, grouped by key with a counting sort: those
+/// whose key is `k`, below `groups`, are `items[offsets[k]..offsets[k + 1]]`, in order. An item without a
+/// key is left out.
+fn grouped(keys: impl Iterator<Item = Option<usize>> + Clone, groups: usize) -> (Vec<usize>, Vec<usize>) {
+    let mut offsets = vec![0; groups + 1];
+    for key in keys.clone().flatten() {
+        if let Some(slot) = key.checked_add(1).and_then(|next| offsets.get_mut(next)) {
+            *slot += 1;
+        }
+    }
+    for i in 1..offsets.len() {
+        let before = offsets.get(i - 1).copied().unwrap_or(0);
+        offsets.get_mut(i).into_iter().for_each(|slot| *slot += before);
+    }
+    let mut placed = offsets.clone();
+    let mut items = vec![0; offsets.last().copied().unwrap_or(0)];
+    for (item, key) in keys.enumerate() {
+        if let Some(at) = key.and_then(|k| placed.get_mut(k))
+            && let Some(slot) = items.get_mut(*at)
+        {
+            *slot = item;
+            *at += 1;
+        }
+    }
+    (offsets, items)
+}
+
+/// No number yet.
+const NONE: usize = usize::MAX;
+
+/// The distinct points of `reached`, in the order it first reaches them, and the number each of its points
+/// has among them, each found in `hot`, every point reached in order, each once; `None` should one not be
+/// there, a bug.
+fn numbered(reached: &[Node], hot: &[Node]) -> Option<(Vec<Node>, Vec<usize>)> {
+    let mut number_of = vec![NONE; hot.len()];
+    let mut nodes = Vec::new();
+    let mut number = Vec::with_capacity(reached.len());
+    for &node in reached {
+        let slot = number_of.get_mut(hot.binary_search(&node).ok()?)?;
+        if *slot == NONE {
+            *slot = nodes.len();
+            nodes.push(node);
+        }
+        number.push(*slot);
+    }
+    Some((nodes, number))
 }
 
 /// The faces of an arrangement and their winding numbers.
@@ -118,16 +196,13 @@ impl Arrangement {
     /// lets through.
     pub(crate) fn stars(&self, keep: impl Fn(usize) -> bool) -> Vec<usize> {
         let halves = 2 * self.edges.len();
-        let mut at: Vec<Vec<usize>> = vec![Vec::new(); self.points.len()];
-        for half in (0..halves).filter(|&h| keep(h)) {
-            if let Some((from, _)) = self.ends(half)
-                && let Some(list) = at.get_mut(from)
-            {
-                list.push(half);
-            }
-        }
+        // The halves kept leaving each point, side by side in order of the points, each point's in order.
+        let starts = (0..halves).map(|h| if keep(h) { self.ends(h).map(|(from, _)| from) } else { None });
+        let (offsets, mut leaving) = grouped(starts, self.points.len());
         let mut next: Vec<usize> = (0..halves).collect();
-        for (point, star) in at.iter_mut().enumerate() {
+        for (point, span) in offsets.windows(2).enumerate() {
+            let &[from, to] = span else { continue };
+            let Some(star) = leaving.get_mut(from..to) else { continue };
             let origin = self.point(point);
             let toward = |h: usize| self.ends(h).map_or(origin, |(_, to)| self.point(to));
             star.sort_by(|&a, &b| compare_angle(origin, toward(a), toward(b)).then(a.cmp(&b)));
@@ -362,6 +437,23 @@ mod tests {
         let mut meter = Budget::DEFAULT.meter();
         arrangement.faces(&mut meter).unwrap();
         assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 16 + 4 * 5 + 2 * 2 + 3 * 5);
+    }
+
+    #[test]
+    fn points_are_numbered_in_the_order_they_are_first_reached() {
+        let [a, b, c] = [p(0.0, 0.0), p(2.0, 0.0), p(-2.0, 4.0)].map(|q| Node::of(q).unwrap());
+        let hot = [c, a, b];
+        assert_eq!(numbered(&[c, a, c, b, a], &hot), Some((vec![c, a, b], vec![0, 1, 0, 2, 1])));
+        assert_eq!(numbered(&[], &hot), Some((vec![], vec![])));
+        assert_eq!(numbered(&[a, b], &[a]), None, "a point that is not hot is a bug");
+        // Grouped by key, each group in order, those without a key left out.
+        let (offsets, items) = grouped([Some(2), None, Some(0), Some(2), Some(9)].into_iter(), 3);
+        assert_eq!((offsets, items), (vec![0, 1, 1, 3], vec![2, 0, 3]));
+        // Steps between the same 2 points are one edge, whichever way they run: the first taken gives its
+        // direction (`cut`).
+        let (arrangement, _) = arrange(&[vec![p(0.0, 0.0), p(2.0, 0.0), p(2.0, 2.0)], vec![p(2.0, 0.0), p(0.0, 0.0), p(0.0, -2.0)]]);
+        assert_eq!(arrangement.edges, [(0, 1), (1, 2), (2, 0), (0, 3), (3, 1)]);
+        assert_eq!(arrangement.count, [0, 1, 1, 1, 1], "the shared edge run both ways counts 0");
     }
 
     #[test]

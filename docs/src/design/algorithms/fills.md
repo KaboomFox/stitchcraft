@@ -63,6 +63,14 @@ against it, pair of edges whose spans along x overlap, half edge, ring compared 
 and point walked to find a ring's bounds or its place among the faces and outlines (`REQ-FILL-004`). Each
 ring's bounds are found once. A ring that bounds no face is located only in the faces whose bounds cover
 its own, and a hole apart from every outline only in the outlines whose bounds cover its own.
+
+The cuts cost the most where a region is shrunk again and again ([offset curves](offset.md#speed)). The
+hot points, the corners and the points where edges cross, are kept in a sorted list, and a segment seeks
+the cells it passes through among the points within its span along x. Each edge is worked out once,
+however many times the rings draw it. A ring is rebuilt when one of its edges is bent. A round's crossings
+join the hot points at once, merged into the sorted list. The arrangement finds each point's number by its
+place in that list, and groups the steps the rings take by their lower point. The steps between the same 2
+points, either way round, then lie side by side in a group, and are one edge.
 Property tests draw random rings on a grid, and random rings with float coordinates beside near-copies of
 themselves, moved or turned by a hair or drawn back, and count how many times they wind round points off
 the edges. Such a point lies in the region exactly when the fill rule fills it, unless it lies in a part
