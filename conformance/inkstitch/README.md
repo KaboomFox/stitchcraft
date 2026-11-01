@@ -7,8 +7,10 @@ which copies Ink/Stitch's code ([ADR-0001](../../docs/src/design/adr/0001-licens
   (`conformance/inkstitch-params.toml`). Its docstring says how to run it.
 - The **differential** (conformance level L3, [conformance](../../docs/src/design/conformance.md#l3--inkstitch-differential-nightly))
   runs Ink/Stitch as a black box on the designs of the `inkstitch` cases (`conformance/cases/inkstitch/`)
-  and compares its machine files with StitchCraft's by measures. CI runs it every night, and on a pull
-  request that changes it (`.github/workflows/differential.yml`).
+  and compares its machine files with StitchCraft's by measures. Its `centre-lines` cases compare the
+  lines Ink/Stitch's Fill to Stroke draws for narrow shapes with the lines automatic digitizing sews them
+  along. CI runs it every night, and on a pull request that changes it or automatic digitizing
+  (`.github/workflows/differential.yml`).
 
 ## What is here
 
@@ -34,9 +36,12 @@ STITCHCRAFT_INKSTITCH="$PWD/../inkstitch-pinned" STITCHCRAFT_INKSTITCH_PYTHON=ta
   cargo xtask conformance --differential
 ```
 
-The report is `target/conformance/differential.md`: for each case, the measures of both machine files.
-The SVG files written for test sheets are in `target/conformance/differential/`. The suite refuses a
-checkout at another commit, since the cases' excuses were written against this one.
+The report is `target/conformance/differential.md`, with a table for each case. An `inkstitch` case's
+rows are the measures of both machine files, and a `centre-lines` case's are its shapes. The SVG files written for test sheets are in
+`target/conformance/differential/`, with each `centre-lines` case's shapes and a picture of both
+programs' lines over them, Ink/Stitch's red and StitchCraft's blue. `--filter centre-lines` runs those
+cases alone. The suite refuses a checkout at another commit, since the cases' excuses were written against
+this one.
 
 ## Adding a case
 
@@ -61,6 +66,23 @@ sews the sheet as `stitch testsheet` writes it, and Ink/Stitch an SVG file of th
 sews it with, automatic digitizing's for its automatic shapes, each with its parameters
 (`stitchcraft_testkit::inkstitch`). That is how designs with parameters come into the corpus before M8,
 since StitchCraft's SVG reader doesn't read them yet.
+
+A `centre-lines` case names its shapes with `sheet`, `design` or a `[letters]` table, and has no
+excuses:
+
+```toml
+id = "inkstitch-centre-lines-letters"
+requirements = ["REQ-AUTO-022"]
+kind = "centre-lines"
+
+[letters]
+names = "THE"
+heights_mm = [3, 4, 5, 6, 8, 10]
+widths_mm = [0.3, 0.5, 0.7, 0.9]
+```
+
+Only the shapes that automatic digitizing sews wholly as running stitches are compared, and a case that
+has none fails.
 
 The [design](../../docs/src/design/conformance.md#l3--inkstitch-differential-nightly) gives the measures,
 their tolerances and what an excuse may do.

@@ -83,7 +83,8 @@ has 2 chords, a junction, where 3 strips meet, when it has 3, and an end when it
   reaches further than the junction is wide is an arm. Each arm of the bar of a T 4 mm tall reaches 1.6 mm,
   about twice the bar's width. Taken for a bump, one arm was left out and the other became a bend, so the T
   sewed as a Γ. Ink/Stitch's Fill to Stroke, run on the same letters with its threshold at the stroke's
-  width, keeps both arms. A branch reaches along its line and on through its end's cap, to the cap's
+  width, keeps both arms, and the differential compares the 2 programs' lines every night (`REQ-AUTO-022`,
+  [conformance](../conformance.md#l3--inkstitch-differential-nightly)). A branch reaches along its line and on through its end's cap, to the cap's
   farthest corner: the cap is part of the arm. Measured only to where its line ends, the arm of a T 4.8 mm
   tall in lines 0.8 mm wide reached 1.01 mm, under the 1.06 mm of its junction triangle's longest edge,
   and the T lost it. Through its cap it reaches 1.55 mm. A bump's cap is as tall as the bump, and a bump

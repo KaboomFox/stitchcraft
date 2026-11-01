@@ -14,19 +14,20 @@
 //! - `--filter <text>` runs only the cases whose id, test name or requirements contain the text.
 //! - `--bless <case>` rewrites the golden files of one data case instead of comparing them. A changed
 //!   golden file is a changed machine file: bless only on purpose, in a PR that says why.
-//! - `--differential` runs the Ink/Stitch differential instead (L3, [`differential`]): only the `inkstitch`
-//!   cases, which need a pinned Ink/Stitch, set up as `conformance/inkstitch/README.md` says, and judge
-//!   only the requirements of level L3. It writes `target/conformance/differential.md`, and fails when a case
+//! - `--differential` runs the Ink/Stitch differential instead (L3, [`differential`], [`centre_lines`]):
+//!   only the `inkstitch` and `centre-lines` cases, which need a pinned Ink/Stitch, set up as
+//!   `conformance/inkstitch/README.md` says, and judge only the requirements of level L3. It writes `target/conformance/differential.md`, and fails when a case
 //!   fails or doesn't run. The other runs leave those cases and requirements to it.
 
 mod cases;
+mod centre_lines;
 mod differential;
 mod oracle;
 mod report;
 mod runner;
 mod wasm;
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
 pub use cases::requirement_ids;
@@ -214,21 +215,31 @@ fn unindexed(root: &Path) -> Result<Vec<String>, String> {
 
 /// Whether `case` is one of the Ink/Stitch differential's.
 fn is_differential(case: &cases::DataCase) -> bool {
-    matches!(case.spec, cases::Spec::Inkstitch { .. })
+    matches!(case.spec, cases::Spec::Inkstitch { .. } | cases::Spec::CentreLines { .. })
 }
 
 /// What is wrong with the Ink/Stitch differential's cases: a design that isn't there, a sheet that isn't
 /// drawn as a design, and a measure excused that isn't one, or by an entry the deviations ledger doesn't have.
 fn check_differential(root: &Path, data: &[cases::DataCase], findings: &mut Findings) -> Result<(), String> {
     let ledger: BTreeSet<String> = crate::deviations::parse(&util::read(&root.join(crate::deviations::LEDGER))?)?.into_iter().map(|d| d.id).collect();
+    let empty = BTreeMap::new();
     for case in data {
-        let cases::Spec::Inkstitch { subject, excused } = &case.spec else { continue };
+        let (subject, excused) = match &case.spec {
+            cases::Spec::Inkstitch { subject, excused } => (subject, excused),
+            cases::Spec::CentreLines { subject } => (subject, &empty),
+            _ => continue,
+        };
         match subject {
             cases::Subject::File(design) if !root.join("conformance").join(design).is_file() => {
                 findings.error(format!("{}: the design `{design}` is not in conformance/", case.file));
             }
             cases::Subject::Sheet(id) if !stitchcraft_engine::testsheets::find(id).is_some_and(|sheet| sheet.designed()) => {
                 findings.error(format!("{}: `{id}` is no test sheet drawn as a design", case.file));
+            }
+            cases::Subject::Letters(letters) => {
+                if let Err(e) = centre_lines::drawn(letters) {
+                    findings.error(format!("{}: {e}", case.file));
+                }
             }
             cases::Subject::File(_) | cases::Subject::Sheet(_) => {}
         }
