@@ -1117,6 +1117,16 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - `SC-W0307` no longer promises a jump between a fill's parts: a bow tie's halves are sewn straight on.
 - The embroidery basics page and the glossary had pull and push the wrong way round. Thread pulls the fabric
   along the stitch direction, and pushes it out across it.
+- A satin column of 2 rails leaves out a rung added across their nodes that meets the rails at more than 2
+  points, as Ink/Stitch leaves it out (`REQ-SAT-005`). On rails `0,0 10,0 15,0 20,0` and `0,4 2,4 6,1 20,4`,
+  the rung across the 2nd nodes also crosses the second rail at (7.4, 1.3), and StitchCraft cut the column
+  there. Ink/Stitch at d59c9ab, run on the column with and without a drawn rung across the 3rd nodes alone,
+  sews both alike. The review of 2026-10-31 found it.
+- Telling a satin column's rails from its rungs costs a unit for each pair of subpaths compared. Pairs
+  whose boxes didn't meet weren't charged: 2,000 subpaths took 4 s under a budget of a million units.
+- `swap_satin_rails`'s help says the S-stitch starts on the second rail, and `REQ-SAT-002` says what 2 moves
+  give. They bring the pairs of a smooth curve within 5 % of the spacing, and leave a pair further off round
+  a sharp corner.
 - Automatic digitizing sews each element once, and moves none across an element kept in its place
   (`REQ-AUTO-012`). Where finding an element's neighbours needed more work than the budget, an element after
   it that one before it freed sewed before it, and could sew twice. The review of 2026-10-31 found it.

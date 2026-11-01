@@ -130,8 +130,8 @@ params! {
         reverse_rails: Choice = "automatic", label "Reverse rails",
             options ["automatic" => "Automatic", "none" => "Neither", "first" => "The first", "second" => "The second", "both" => "Both"];
 
-        /// Make the second rail the first. The column starts on its first rail, and each stitch across it
-        /// goes from the first rail to the second.
+        /// Make the second rail the first, which sews first in each pair and starts the column. An S-stitch
+        /// starts on the second rail instead, and sews every other stitch from it.
         swap_satin_rails: Toggle = "false", label "Swap rails";
     }
 
