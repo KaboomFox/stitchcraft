@@ -146,7 +146,7 @@ fn req_auto_016_an_end_along_an_edge_takes_the_whole_straight_edge() {
     // longer than twice the chord.
     let ring_points = [p(0.0, 0.0), p(10.0, 0.0), p(10.0, 1.5), p(10.0, 3.0), p(0.0, 3.0)];
     let triangulation = crate::normalize::triangulation::Triangulation { points: ring_points.to_vec(), triangles: Vec::new() };
-    let graph = super::super::Graph { points: Vec::new(), nodes: Vec::new(), links: Vec::new(), size: Vec::new(), inside: BTreeMap::new() };
+    let graph = super::super::Graph::new();
     let skeleton = Skeleton { triangulation, graph, walked: Vec::new() };
     let outline = Outline { rings: Vec::new(), triangle: BTreeMap::new() };
     let ring = [0, 1, 2, 3, 4];
@@ -593,7 +593,7 @@ fn a_rung_meets_the_edge_at_a_right_angle_to_the_way_or_at_its_nearer_end() {
 /// A skeleton of no triangles whose graph has the points `points`, each with its junction's size if it is a
 /// junction's middle, for the tests of what becomes of its lines.
 fn drawn(points: &[((f64, f64), Option<f64>)]) -> Skeleton {
-    let mut graph = Graph { points: Vec::new(), nodes: Vec::new(), links: Vec::new(), size: Vec::new(), inside: BTreeMap::new() };
+    let mut graph = Graph::new();
     for (i, &((x, y), size)) in points.iter().enumerate() {
         graph.add(p(x, y), size, Node::Junction(i));
     }
@@ -693,7 +693,7 @@ fn the_end_of_a_line_at_a_chord_lies_beyond_it() {
     // bends before it: its own end lies in 5, beyond the chord, and runs the way of its last piece. With 5
     // another line's, it ends under that line, at the chord. With only the chord and the bend, it has no chord
     // past the bend to end at, and ends at that chord.
-    let mut graph = Graph { points: Vec::new(), nodes: Vec::new(), links: Vec::new(), size: Vec::new(), inside: BTreeMap::new() };
+    let mut graph = Graph::new();
     let chord = graph.add(p(10.0, 0.0), None, Node::Chord { triangles: (5, 6), corners: (0, 1) });
     let bend = graph.add(p(8.0, 0.0), Some(1.0), Node::Junction(6));
     let before = graph.add(p(5.0, 1.0), None, Node::Chord { triangles: (6, 7), corners: (1, 2) });
@@ -716,7 +716,7 @@ fn the_end_of_a_line_takes_in_the_bends_on_its_way_up_to_the_lines_middle() {
     // beyond the chord there, the third. Where a third line branches off the second bend, the end stops
     // before it, beyond the second chord.
     let walked = |branch: bool| {
-        let mut graph = Graph { points: Vec::new(), nodes: Vec::new(), links: Vec::new(), size: Vec::new(), inside: BTreeMap::new() };
+        let mut graph = Graph::new();
         let nodes: Vec<usize> = (0..11_usize)
             .map(|k| {
                 let node = if k % 2 == 1 { Node::Chord { triangles: (k / 2, k / 2 + 1), corners: (k, k + 1) } } else { Node::Junction(k / 2) };
@@ -777,7 +777,7 @@ fn on_ring<R>(points: &[(f64, f64)], test: impl FnOnce(&Place) -> R) -> R {
 fn cut_ring<R>(points: &[(f64, f64)], cuts: &[[Point; 2]], test: impl FnOnce(&Place) -> R) -> R {
     let skeleton = Skeleton {
         triangulation: Triangulation { points: points.iter().map(|&(x, y)| p(x, y)).collect(), triangles: Vec::new() },
-        graph: Graph { points: Vec::new(), nodes: Vec::new(), links: Vec::new(), size: Vec::new(), inside: BTreeMap::new() },
+        graph: Graph::new(),
         walked: Vec::new(),
     };
     let outline = Outline { rings: Vec::new(), triangle: BTreeMap::new() };
