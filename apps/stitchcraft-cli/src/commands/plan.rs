@@ -407,7 +407,7 @@ mod tests {
         // What was said names its element, on the terminal and in the report.
         assert_eq!(
             out.stderr,
-            "warning SC-W0307 (svg:patch:fill): This fill's area falls into 2 parts that are sewn one after another, with a jump between each.\n  \
+            "warning SC-W0307 (svg:patch:fill): This fill's area falls into 2 parts, sewn one after another, each on its own.\n  \
              hint: To choose the order the parts are sewn in, break the fill apart into one element for each part.\n\
              info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from a needle point next to it was left out.\n"
         );

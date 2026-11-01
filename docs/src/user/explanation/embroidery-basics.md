@@ -23,9 +23,9 @@ stitches snag and sag.
 
 ## The fabric fights back: pull and push
 
-Thread under tension **pulls** the fabric together across the stitch direction: a satin column ends up
-narrower than drawn, a fill shorter across its rows. The same stitches **push** fabric outward along the
-stitch direction, so columns grow at their ends. **Pull compensation** widens what is sewn so the result
+Thread under tension **pulls** the fabric together along the stitch direction. A satin column's stitches
+cross it, and the column ends up narrower than drawn. A fill's rows come out shorter. The same stitches
+**push** fabric outward across the stitch direction, so columns grow at their ends. **Pull compensation** widens what is sewn so the result
 matches what was drawn. How much depends on fabric, stabilizer, density and thread — which is why machine
 test sheet TS-07 exists.
 

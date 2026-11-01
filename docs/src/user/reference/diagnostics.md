@@ -408,8 +408,10 @@ way round.
 **Warning** — Fill in parts that are apart; each sewn on its own
 
 A fill whose area falls into separate parts, such as one drawn as several shapes side by side, or
-an outline that crosses itself, is sewn one part after another: each part's rows on their own, with
-a jump to the next, which the plan may trim. Ink/Stitch warns about such fills too.
+an outline that crosses itself, is sewn one part after another: each part's rows on their own, then
+the next part's. Where the next part starts far off, the needle jumps to it, and the plan may trim;
+where it starts near, as the halves of a bow tie do, the needle sews straight on. Ink/Stitch warns
+about such fills too.
 
 To choose the order the parts are sewn in, break the fill apart into one element for each part.
 
@@ -476,7 +478,8 @@ To sew it alike in both, draw the outline round the empty part instead of a subp
 
 Ink/Stitch's legacy fill is its first fill method, which it keeps for its older files: it gives the
 method to a fill whose `auto_fill` is off. StitchCraft does not sew it, and sews such a fill as a
-tatami fill with the same settings and no underlay, as legacy fill sews none. Its rows and their
+tatami fill with the same settings and no underlay, as legacy fill sews none. Nor does it take pull
+compensation, random stitch lengths or gap-filling rows, which legacy fill has no use for. Its rows and their
 needle points are a tatami fill's, as in Ink/Stitch. Ink/Stitch sews a legacy fill's rows in
 stretches that join, each on its own and back and forth; its `flip` starts the rows from the other
 side, and its `reverse` sews the fill backwards. A tatami fill routes its rows and joins them with

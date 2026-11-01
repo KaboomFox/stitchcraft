@@ -48,6 +48,24 @@ fn req_fill_005_a_legacy_fill_is_sewn_as_a_tatami_fill_without_underlay() {
 }
 
 #[test]
+fn req_fill_005_a_legacy_fill_takes_no_pull_compensation_random_lengths_or_gap_rows() {
+    // Ink/Stitch's legacy fill takes its angle, row spacings, longest stitch, flip, reverse, staggers and
+    // skip_last, over the area grown by expand (`do_legacy_fill`, `fill_shape`, read at d59c9ab). The
+    // settings it has no use for change nothing; `expand_mm` grows the area as it does.
+    let plain = after_a_fill("legacy_fill", &[]);
+    let unused: [&[(&str, &str)]; 4] = [
+        &[("pull_compensation_mm", "1")],
+        &[("pull_compensation_percent", "20")],
+        &[("enable_random_stitch_length", "true"), ("random_stitch_length_jitter_percent", "30")],
+        &[("gap_fill_rows", "2")],
+    ];
+    for own in unused {
+        same(&after_a_fill("legacy_fill", own), &plain);
+    }
+    assert!(stitches(&after_a_fill("legacy_fill", &[("expand_mm", "1")])) > stitches(&plain));
+}
+
+#[test]
 fn diag_sc_w0314_a_legacy_fill_says_it_is_sewn_as_a_tatami_fill() {
     // `flip`, which Ink/Stitch's legacy fill reads, is kept and changes nothing.
     let flipped = after_a_fill("legacy_fill", &[("flip", "true")]);
