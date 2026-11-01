@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-77f79c70.js";
+            window.path_to_searchindex_js = "../searchindex-6ffd44c1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -751,7 +751,11 @@ uses, and the rest is skipped as it is read: images, previews and text runs are 
 appearance item, effect and anchor charges the budget, and so does each element for its copies of the
 object’s path, name and settings. An object’s name goes into each element made of it, and a group’s
 StitchCraft settings into each element of the paths in it. Those copies come to at most 64 MiB, as much
-as the JSON read. A file whose copies come to more is refused with <code>SC-E0806</code>.</p>
+as the JSON read. Each element’s copy of its object’s path takes 56 bytes a segment, and a long path under
+many paints would hold far more than the file: 4 MB drawing 2,500 fills on a path of 200,000 anchors would
+hold 28 GB before the budget ran out. So the copies of paths come to at most 32 bytes for each byte of
+JSON read, which an object’s fill and stroke on its most compact path keep well within. A file whose
+copies come to more is refused with <code>SC-E0806</code>.</p>
 <p><strong>Coordinates.</strong> VectorCraft keeps every path in document coordinates. Moving or scaling a group moves
 its paths’ anchors, so layers, groups and compound paths have no transform. Coordinates are points, 1/72
 inch, with y down, and the adapter multiplies them by 25.4/72 into millimetres. The document’s origin

@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-77f79c70.js";
+            window.path_to_searchindex_js = "../../searchindex-6ffd44c1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-b793f3ad.js"></script>
@@ -747,7 +747,9 @@ the Version in VectorCraft Options.</p>
 <p><strong>Error</strong> — VectorCraft file could not be read</p>
 <p>The <code>.vectorcraft</code> file could not be read: it is not a VectorCraft document (its JSON does not
 read, it names another format, or it holds no document), the data VectorCraft keeps after its JSON
-is damaged, or it unpacks to more JSON than StitchCraft reads. Nothing was stitched.</p>
+is damaged, it unpacks to more JSON than StitchCraft reads, or its objects’ names, settings or paths,
+copied into each fill and stroke made of them, come to more than StitchCraft holds. Nothing was
+stitched.</p>
 <p>A StitchCraft live effect or filter gives this message when what VectorCraft passes it does not read
 as VectorCraft’s plug-in ABI v1 says, which a VectorCraft with another plug-in ABI would do. The
 effect leaves the object as it is, and the filter changes nothing.</p>

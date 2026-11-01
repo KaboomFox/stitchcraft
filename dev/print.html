@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-77f79c70.js";
+            window.path_to_searchindex_js = "searchindex-6ffd44c1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b793f3ad.js"></script>
@@ -2679,7 +2679,9 @@ the Version in VectorCraft Options.</p>
 <p><strong>Error</strong> — VectorCraft file could not be read</p>
 <p>The <code>.vectorcraft</code> file could not be read: it is not a VectorCraft document (its JSON does not
 read, it names another format, or it holds no document), the data VectorCraft keeps after its JSON
-is damaged, or it unpacks to more JSON than StitchCraft reads. Nothing was stitched.</p>
+is damaged, it unpacks to more JSON than StitchCraft reads, or its objects’ names, settings or paths,
+copied into each fill and stroke made of them, come to more than StitchCraft holds. Nothing was
+stitched.</p>
 <p>A StitchCraft live effect or filter gives this message when what VectorCraft passes it does not read
 as VectorCraft’s plug-in ABI v1 says, which a VectorCraft with another plug-in ABI would do. The
 effect leaves the object as it is, and the filter changes nothing.</p>
@@ -5295,7 +5297,7 @@ another.</p>
 <tr><td><code>SC-W0803</code></td><td>Warning</td><td>VectorCraft file from a newer format version; read best-effort (a version newer than the newest the adapter reads)</td><td>M6</td></tr>
 <tr><td><code>SC-W0804</code></td><td>Warning</td><td>Element geometry invalid or out of range (path data error, invalid transform, draws nothing, beyond 10 m, a stroke’s width, join or miter limit that does not read); the usable part is stitched</td><td>M3</td></tr>
 <tr><td><code>SC-I0805</code></td><td>Info</td><td>Object left out, as the file asks (Ink/Stitch’s ignore commands and <code>ignore_object</code> setting)</td><td>M3</td></tr>
-<tr><td><code>SC-E0806</code></td><td>Error</td><td>VectorCraft file could not be read (not a VectorCraft document, or larger than the adapter reads)</td><td>M6</td></tr>
+<tr><td><code>SC-E0806</code></td><td>Error</td><td>VectorCraft file could not be read (not a VectorCraft document, or larger than the adapter reads). Its JSON counts, and so do the copies of names, settings and paths its elements would hold</td><td>M6</td></tr>
 <tr><td><code>SC-W0807</code></td><td>Warning</td><td>VectorCraft object or feature not stitched (text, images, symbols, live objects, clipping, VectorCraft’s own effects, brushes, gradients, patterns, a group’s own paints), StitchCraft effects from more than one level, a start or end marker, or a <code>stitch:</code> name StitchCraft doesn’t read</td><td>M6</td></tr>
 <tr><td><code>SC-W0808</code></td><td>Warning</td><td>VectorCraft geometry unusable (a number that does not read or a point beyond 10 m; a shape that draws nothing)</td><td>M6</td></tr>
 <tr><td><code>SC-I0809</code></td><td>Info</td><td>VectorCraft layer or guide left out, as it does not print (template layers, layers whose printing is off, guides)</td><td>M6</td></tr>
@@ -9095,7 +9097,11 @@ uses, and the rest is skipped as it is read: images, previews and text runs are 
 appearance item, effect and anchor charges the budget, and so does each element for its copies of the
 object’s path, name and settings. An object’s name goes into each element made of it, and a group’s
 StitchCraft settings into each element of the paths in it. Those copies come to at most 64 MiB, as much
-as the JSON read. A file whose copies come to more is refused with <code>SC-E0806</code>.</p>
+as the JSON read. Each element’s copy of its object’s path takes 56 bytes a segment, and a long path under
+many paints would hold far more than the file: 4 MB drawing 2,500 fills on a path of 200,000 anchors would
+hold 28 GB before the budget ran out. So the copies of paths come to at most 32 bytes for each byte of
+JSON read, which an object’s fill and stroke on its most compact path keep well within. A file whose
+copies come to more is refused with <code>SC-E0806</code>.</p>
 <p><strong>Coordinates.</strong> VectorCraft keeps every path in document coordinates. Moving or scaling a group moves
 its paths’ anchors, so layers, groups and compound paths have no transform. Coordinates are points, 1/72
 inch, with y down, and the adapter multiplies them by 25.4/72 into millimetres. The document’s origin
