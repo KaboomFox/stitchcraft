@@ -118,8 +118,9 @@ tie-in's last stitch into the anchor and a tie-off's first stitch out of it.
 Read at `d59c9ab` ([ADR-0012](../adr/0012-read-dont-copy.md)). The ids, how a custom lock's text is read,
 and which size parameter applies to which lock are the same. The shapes differ (`DEV-LCK-001`):
 
-- Ink/Stitch's half stitch goes towards the first needle point at least 0.5 mm away, in a straight line to
-  it, out and back by halves of that distance capped at 1.5 mm. StitchCraft's goes forth and back over
+- Ink/Stitch's half stitch goes towards the first of the next 15 needle points more than 0.5 mm away, in a
+  straight line to it, out and back by halves of that distance capped at 1.5 mm. With none, it goes 0.5
+  CSS pixels to the right. StitchCraft's goes forth and back over
   half the first stitch, which then covers it.
 - Ink/Stitch's back-and-forth lock goes two steps out and two back. StitchCraft's goes forth and back over
   one step, twice, like its half stitch.

@@ -65,6 +65,9 @@ These rules keep it that way:
   workspace denies what VectorCraft's does. A breach then fails our gate before the rehearsal finds it.
 - **Generated files never depend on where the folder is**: no absolute paths, no repository-relative
   paths outside it. `cargo xtask docs --check` and `shots --check` run in the rehearsal.
+- **VectorCraft's git keeps every file of ours.** Its `.gitignore` leaves out every folder named `plan`,
+  its local notes, which would take our `docs/src/plan/` with them. Our `.gitignore`, nearer the folder,
+  keeps it in, and the rehearsal fails on any file of ours VectorCraft's git would leave out.
 
 ## What stays with VectorCraft's maintainers
 
