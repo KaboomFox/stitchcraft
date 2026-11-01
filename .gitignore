@@ -7,3 +7,7 @@
 /compat/vc-contract/Cargo.lock
 *~
 .DS_Store
+# VectorCraft's .gitignore leaves out every folder named plan/, its local notes. Moved into its repository as
+# stitchcraft/ (ADR-0011), our docs' plan/ would be left out with them; this rule, nearer, keeps it. The
+# compatibility gate's move job checks that VectorCraft's git keeps every file of ours.
+!/docs/src/plan/
