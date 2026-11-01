@@ -33,11 +33,11 @@ pub(crate) struct Part {
     pub(crate) holes: Vec<Vec<usize>>,
 }
 
-/// A fill's area could not be built: the rings' edges did not settle on the grid ([`super::snap`]), or the
+/// A fill's area could not be built: the rings' edges did not settle on the grid (the `snap` module), or the
 /// kept edges could not be joined into rings, an edge having no edge to follow it. Neither happens to any
 /// drawing tried, and the arrangement's faces always join, so this is a bug.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct Unjoined;
+pub struct Unjoined;
 
 impl Unjoined {
     /// What to say when it happens (`SC-E0009`): the fill's region is left empty.

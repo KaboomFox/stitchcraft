@@ -131,6 +131,7 @@ The full milestone and step list is in [the roadmap](../plan/roadmap.md).
 | NFR-DET-1 | Same input and version ⇒ byte-identical output on every supported platform, including wasm32 |
 | NFR-PERF-1 | A 130 × 180 mm tatami fill at 0.4 mm spacing, the reference hoop's whole field, plans in ≤ 50 ms natively. Baseline set at M5.9: 29 ms on a 2.1 GHz Xeon, 282 million instructions, guarded by the instruction count (`cargo xtask perf`) |
 | NFR-PERF-2 | Live-effect previews fit VectorCraft's v1 budget (≤ 50 M instructions, ≤ 5 s) for a 130 × 180 mm design |
+| NFR-PERF-3 | The offsetter shrinks a region 150 mm across, of 1,000 points, 300 times, each inset from the last, in ≤ 200 ms natively: round or with 7 waves of 2 mm, by 0.25 mm and by 0.4 mm ([ADR-0005](adr/0005-geometry-stack.md), criterion 3). Met at M7.6: 65 to 160 ms on a 2.1 GHz Xeon, 5.46 billion instructions for the 4, guarded by the instruction count (`cargo xtask perf`) |
 | NFR-PORT-1 | Engine crates build for `wasm32-unknown-unknown` without WASI |
 | NFR-DOC-1 | 100 % of parameters, diagnostics, CLI commands and formats have generated reference pages |
 | NFR-TEST-1 | Every requirement in `conformance/requirements.toml` has ≥ 1 passing case before its milestone closes |

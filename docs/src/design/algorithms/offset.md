@@ -85,6 +85,22 @@ the loops where the curves fold over drop out of it. GEOS's rules for a ring the
 for a small ring whose curve turns inside out, are followed as the `buffer` module's docs say, and
 `conformance/oracle/buffer.py` checks the polygons against shapely's.
 
+## Speed
+
+Contour fill shrinks a part again and again, each inset from the last, so the offsetter has a budget of
+its own, NFR-PERF-3. A region 150 mm across, of 1,000 points, is shrunk 300 times in under 200 ms natively
+([ADR-0005](../adr/0005-geometry-stack.md), criterion 3). The engine's `insets` example shrinks 4 such
+regions, round or with 7 waves of 2 mm, by 0.25 mm and by 0.4 mm, 300 times or until nothing is left: the
+round region lasts 299 insets at 0.25 mm and 187 at 0.4 mm. `cargo xtask perf` times the example and
+counts its instructions against a record ([guardrails](../guardrails.md)).
+
+Most of the time goes to the region code that finds the area the curves wind round
+([fills](fills.md#region)). At M7.6 it put its hot points, edges and points in sorted lists, where it had
+kept them in tree maps and sets, and the 4 regions took 65 to 160 ms instead of 141 to 356 ms. The
+parts, their points and the work charged came out the same for all 4. The time left is spread out. The
+largest shares, each about an eighth, go to the parts being joined and to the raw curves being built
+(callgrind, at M7.6).
+
 ## Checking against shapely
 
 `conformance/oracle/offset.py` asks shapely 2.2.0, with the GEOS 3.14.1 its wheels bundle, for the

@@ -53,7 +53,7 @@ const NEARNESS: f64 = 0.99;
 /// order of least x, unless the edges of the area did not join into rings (a bug). No distance leaves the
 /// polygon as it is. One unit of `meter` for each point walked, and for the work of cutting the curves and
 /// joining the area.
-pub(crate) fn buffer(polygon: &Polygon, distance: f64, meter: &mut Meter) -> Result<Result<Vec<Polygon>, Unjoined>, Exhausted> {
+pub fn buffer(polygon: &Polygon, distance: f64, meter: &mut Meter) -> Result<Result<Vec<Polygon>, Unjoined>, Exhausted> {
     if distance == 0.0 {
         return Ok(Ok(vec![polygon.clone()]));
     }
