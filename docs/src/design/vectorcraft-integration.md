@@ -360,9 +360,10 @@ makes of such a column when it sews one (`REQ-SAT-016`, `REQ-SAT-017`), and draw
 each rung longer than the gap between the points it pairs by a hundredth of it at either end, so that it
 crosses the rails ([satin generators](algorithms/satin.md#drawn-with-its-rails-and-rungs)). Read back, the column
 pairs the same points, so it sews as the line did. A column of 2 rungs or none gets a rung at an end
-too, since Ink/Stitch's rule would read the 2 longest lines as its rails (`DEV-SAT-007`): at its start, or
-at its end where the satin effect's push compensation lengthens the start, since a rung across an end
-that push compensation lengthens cuts what it adds there off as a section of its own.
+too, since Ink/Stitch's rule would read the 2 longest lines as its rails (`DEV-SAT-007`). The rung goes
+across the column's start, or across its end where the satin effect's push compensation lengthens the
+start. Push compensation lengthens the rails before they are cut, so a rung across a lengthened end would
+make the part added there a section of its own.
 
 Each column is a compound path without fills. Its stroke is the line's paint one CSS pixel wide, which
 shows the rails and draws the satin effect's stitches thin. The first column takes the object's place,

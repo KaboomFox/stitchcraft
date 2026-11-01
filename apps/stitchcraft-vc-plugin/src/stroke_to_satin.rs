@@ -17,7 +17,7 @@
 //!
 //! **What it refuses** (`SC-E0814`): nothing selected, a path without a stroke, a path that can't be used,
 //! and a line that makes no column that sews as it does ([`Unmade`]), such as one whose satin effect's push
-//! compensation lengthens both its ends when the column needs a rung added at one ([`push`]). It then
+//! compensation lengthens both its ends when the column needs a rung added at one (`push`). It then
 //! changes nothing. Before VectorCraft 0.15, which keeps no effect record a filter gives, it declines with
 //! `SC-E0813`.
 //!

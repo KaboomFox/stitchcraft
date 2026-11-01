@@ -175,9 +175,9 @@ rungs. With none, a path of 2 lines is 2 rails whose nodes pair up. So such a co
 more rung, which pairs the rails' first points: the section it ends has no length, and the column sews as
 before. Rails that meet each other, as a pointed column's do at its tip, meet one more line, and only 2
 rungs or more tell them from the rungs: such a column with fewer is drawn with a rung pairing the rails'
-other ends. Push compensation lengthens the rails before they are cut, and a rung across an end it
-lengthens would cut what it adds there off as a section of its own, whose points pair otherwise. So where
-it lengthens the column's start, the rung pairs the rails' last points, and an end it lengthens takes the
+other ends. Push compensation lengthens the rails before they are cut. Across an end it lengthens, the
+rung would make the part added there a section of its own, whose points pair otherwise. So where it
+lengthens the column's start, the rung pairs the rails' last points, and an end it lengthens takes the
 rung only when no other can. Stroke to Satin refuses a line whose column would need one there
 (`SC-E0814`). Automatic digitizing draws the columns it finds in a part as wide as a satin column the same
 way, from their rails and rungs (`drawn::from_rails`, `REQ-AUTO-017`), and reads each back. One that
@@ -253,9 +253,9 @@ up for both as Ink/Stitch does.
   The points where a drawn rung crosses the rails come from the rails as drawn, so a rung in a part taken
   off cuts the rail at its end and leaves its section out. A rung that misses a rail, and a rung added
   across the nodes, are measured against the compensated rails, as Ink/Stitch measures every rung. Near
-  an end that push compensation lengthens, a rung that misses the rail can come nearest the part it adds,
-  and cuts the rail there: Ink/Stitch at d59c9ab, run as a black box, sews such a column as it sews one
-  drawn with longer rails and a rung across them there. A rail the shortening would leave shorter than half a CSS pixel keeps its length
+  an end that push compensation lengthens, a rung that misses the rail can come nearest the part it adds.
+  It then cuts the rail on that part. Ink/Stitch at d59c9ab, run as a black box, sews such a column as it
+  sews one drawn with longer rails and a rung across them there. A rail the shortening would leave shorter than half a CSS pixel keeps its length
   (`SC-W0211`), and a lengthening at its other end still applies.
 - **Pull compensation** acts on each pair as it is placed. Both ends move outward along the line through
   the pair, each by `pull_compensation_mm` plus `pull_compensation_percent` of the pair's width, and 2
