@@ -249,7 +249,9 @@ them. What is left to fit comes from joining groups and from settings the machin
    long. Each part counts against the design's stitch budget.
 3. **The hoop's centre.** The fitted plan is moved so the design's origin is at the hoop's centre
    ([origin](#origin-and-stop-position), `REQ-ASM-005`).
-4. **Colour limits:** colour changes and stops above what the profile's format records → `SC-E0601`.
+4. **Colour limits:** colour changes and stops above what the format the plan is written in records →
+   `SC-E0601`. That is the profile's own, or the one `--format` or an exporter writes, planned for with
+   `MachineProfile::writing`: a DST file records 999 colour changes, where the PE800's own PES records 255.
 5. **Hoop:** a design larger than the hoop → `SC-E0701`, with a rotate-to-fit fix when rotating 90° would
    fit. When a design's origin is far from its middle, a design smaller than the hoop can cross the
    hoop's edge. That is `SC-E0701` as well. So is a stop position past the edge, which the message names. The size is

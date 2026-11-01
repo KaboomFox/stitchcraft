@@ -16,8 +16,17 @@ lingua franca every machine and digitizer reads.
 - **Commands are explicit.** Each writer documents how it expresses `Jump`, `Trim`, `Stop`,
   `ColorChange` and `End`, and conformance checks every one of them per format (`REQ-FMT-003`).
 - **Readers are hostile-input parsers.** Every length, count and offset is checked before use; total
-  stitches are capped (default 2,000,000); allocation is proportional to verified sizes; the reader
-  returns the plan or a typed error, never a panic (fuzzed, `NFR-SEC-1`).
+  records are capped at the stitch budget (2,000,000) in a file of anyone's; allocation is proportional to
+  verified sizes; the reader returns the plan or a typed error, never a panic (fuzzed, `NFR-SEC-1`). A file
+  StitchCraft just wrote is read back whole (`read_back`), up to as many records as it has bytes, since a
+  plan within the stitch budget has more records than needle points.
+- **Positions are rounded once.** A writer rounds each absolute position to 0.1 mm, half to even, and
+  writes moves between rounded positions (`REQ-FMT-002`). A stitch in the file is then within 0.1 mm each
+  way of the plan's, up to 0.14 mm longer or shorter, and so past the machine's longest or shortest stitch
+  by as much: 11.95 mm from (0.04, 0.04) to (8.49, 8.49) is 12.02 mm in the file. The machine's limits hold
+  for the plan (`REQ-PLAN-002`). Fitting the file's stitches again would split some stitches at the longest
+  by where the grid falls, and leave out needle points of tatami fills and satin columns that their
+  generators spaced.
 - **Never write an empty file** (`SC-E0010`), and accept empty or zero-stitch files when reading
   (`REQ-FMT-004`).
 - **Facts are cited.** Format knowledge comes from public descriptions and MIT-licensed pyembroidery /

@@ -126,7 +126,8 @@ pub fn sew(source: Source, design: &[u8], reading: Reading, profile: &MachinePro
         Ok(read) => read,
         Err(unreadable) => return Sewn { diagnostics: vec![unreadable], plan: None, file: None, back: None },
     };
-    let outcome = stitchcraft_engine::plan(&design, profile, &Budget::DEFAULT);
+    // Planned for the format it is written in, whose limits the file then keeps.
+    let outcome = stitchcraft_engine::plan(&design, &profile.writing(format), &Budget::DEFAULT);
     let mut diagnostics = warnings;
     diagnostics.extend(outcome.diagnostics);
     let Some(plan) = outcome.plan else { return Sewn { diagnostics, plan: None, file: None, back: None } };
@@ -665,6 +666,25 @@ mod tests {
         let missing = run(&args(fixture("missing.svg"), dir.join("x.pes")));
         assert_eq!(missing.status, Status::Io);
         assert!(missing.stderr.starts_with("stitch: cannot read "));
+    }
+
+    #[test]
+    fn req_plan_006_a_file_is_held_to_its_own_formats_colour_changes() {
+        // 257 lines 0.5 mm apart, red and blue in turn: 256 thread changes, for the PE800, whose PES records
+        // at most 255.
+        let lines: String = (0..257)
+            .map(|i| format!(r#"<path d="M 0 {} H 10" stroke="{}" fill="none"/>"#, f64::from(i) * 0.5, if i % 2 == 0 { "red" } else { "blue" }))
+            .collect();
+        let svg = format!(r#"<svg xmlns="http://www.w3.org/2000/svg" width="20mm" height="140mm" viewBox="0 0 20 140">{lines}</svg>"#);
+        let sewn = |format| sew(Source::Svg, svg.as_bytes(), Reading::default(), REFERENCE, format, "many");
+        let errors = |sewn: &Sewn| sewn.diagnostics.iter().filter(|d| d.severity() == Severity::Error).map(ToString::to_string).collect::<Vec<_>>();
+        let pes = sewn(FormatId::PesV1);
+        assert_eq!(errors(&pes), ["error SC-E0601: The design has 256 colour changes and stops, but PES v1 records at most 255."]);
+        assert!(pes.file.is_none());
+        // DST records 999: the file is written.
+        let dst = sewn(FormatId::Dst);
+        assert_eq!(errors(&dst), Vec::<String>::new());
+        assert!(dst.file.is_some_and(|bytes| bytes.starts_with(b"LA:many")));
     }
 
     #[test]
