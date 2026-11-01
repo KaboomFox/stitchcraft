@@ -255,6 +255,8 @@ generated reference pages. A profile's values are *machine facts*: changing one 
 machine-testing record that justifies it ([machine testing](../plan/machine-testing.md)), and `evidence`
 says where each value comes from. Format limits that are not machine facts (the most colour changes a
 format records) live on `FormatId`, so the invariant checker and the encoders read the same number.
+`trims` decides where a preview cuts the thread and when a report says the machine makes none of a file's
+trims ([rendering](rendering.md)). The PE800's is `None`, from machine checkpoint MC-1.
 
 A profile is a machine with one hoop, so a machine with 3 hoops has 3 profiles. `profiles::REFERENCE` is
 the reference machine's, the Brother PE800 with its 5 × 7 in hoop

@@ -182,7 +182,10 @@ fn draw_difference(root: &Path, case: &str, golden: &str, before: &[u8], after: 
     let mut written = Vec::new();
     for (label, bytes) in [("golden", before), ("now", after)] {
         let Ok(decoded) = stitchcraft_formats::decode(bytes) else { continue };
-        let Ok(image) = stitchcraft_render::preview(&decoded.plan, settings, &mut Budget::DEFAULT.meter()) else { continue };
+        // As the reference machine sews it, which cuts no jump (MC-1).
+        let Ok(image) = stitchcraft_render::preview(&decoded.plan, profiles::REFERENCE.trims, settings, &mut Budget::DEFAULT.meter()) else {
+            continue;
+        };
         let path = dir.join(format!("{case}--{stem}--{label}.png"));
         if std::fs::create_dir_all(&dir).and_then(|()| std::fs::write(&path, &image.png)).is_ok() {
             written.push(util::rel(&path));

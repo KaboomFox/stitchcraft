@@ -1101,6 +1101,21 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- Previews cut the thread where the machine does. A stop cuts, as a thread change does, since PES and DST
+  write it as one. A trim cuts only on a machine that obeys the format's trim command, and a machine that
+  cuts long jumps by itself cuts those. The 3 PE800 profiles' trim support is now none, from machine
+  checkpoint MC-1's sew-out: the machine cut the thread between colours, and at no jump between places sewn
+  in one colour, trim-flagged or not. Their previews of a PES file, which flags every jump as a trim
+  (`REQ-FMT-010`), drew a cut at every jump. They draw the jump threads the operator cuts by hand now.
+  `stitch preview` takes `--profile`, the reference machine by default, and `stitch plan --preview` draws for
+  the profile it planned for. `stitch plan`, `stitch testsheet` and `stitch inspect --profile` say when the
+  machine makes none of a file's trims, and so does the test-sheets page.
+- TS-13A's and TS-13B's checks count the jumps their files hold. A jump that goes nowhere, which plan
+  assembly adds where a part starts at the needle, has no record in a file. TS-13A's half as drawn jumps 15
+  times, not 25, and its digitized half 16, once more where the check said 9 fewer. TS-13B's halves jump 16
+  and 41 times, not 19 and 42. TS-13A's check says the bar, sewn first, reaches under the square, where it
+  said the square reaches under the bar. The test-sheets page gives each sheet's size and counts as
+  `stitch testsheet` prints them, from the file read back.
 - CI: the desktop VectorCraft's window runs in is set up within time limits. Its `apt-get` ran for 49
   minutes on a pull request until the run was cancelled, and stalled again on the re-run. Each `apt-get`
   has a limit now, and a stalled install is tried 3 times. The jobs that open the window stop after 30
@@ -1743,6 +1758,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/render/sampler-simple.png` and `sampler-realistic.png` (`REQ-RND-002`): a stop
+  cuts the thread, so the stitch after the sampler's stop is drawn as travel after a cut. The test sheets'
+  pictures in the docs show the jump threads the PE800 leaves, and cut at their stops.
 - Added `conformance/golden/testsheets/TS-13A.pes`, `TS-13B.pes` and `TS-13C.pes` (M13.6), the TS-13 sheets
   that MC-8 sews: 24,286, 14,397 and 10,311 stitches.
 - Changed `conformance/golden/render/sampler-simple.png`, `sampler-realistic.png` and `TS-01-realistic.png`

@@ -8,20 +8,28 @@
 //!   definition of that), carried loose because the frame moved without a trim, or not at all because
 //!   the thread was cut. Jumps are not holes: the thread runs straight from hole to hole however the
 //!   frame travelled, so where a jump stopped on the way changes nothing on the fabric.
-//! - **Marks**, the trims and stops, where the needle is when they happen.
+//! - **Marks**, the trims the machine makes and the stops, where the needle is when they happen.
+//!
+//! **What cuts the thread is the machine's** ([`TrimSupport`], from its profile). A thread change cuts,
+//! and so does a stop, which PES and DST write as a thread change: the reference PE800 cuts at both
+//! (machine checkpoint MC-1). A trim cuts only on a machine that obeys the format's trim command. The
+//! PE800 doesn't: it cuts no jump, trim-flagged or not (MC-1), so its scene draws a jump thread where a
+//! plan or a file asks for a trim, and no trim mark. A machine that cuts long jumps by itself cuts where
+//! the next hole lies farther from the last than its setting, at the last hole.
 //!
 //! Every position is rounded with [`Point::to_tenths`], the writers' own rounding, so a scene shows the
 //! holes a machine file makes, not the ones the plan meant (REQ-RND-001). Like
 //! `stitchcraft_testkit::equivalence::events`, marks describe what the machine does rather than how a
 //! file spells it: two trims in a row cut once, the order of commands at one spot does not matter, and
 //! a trim after the last hole cuts nothing that is still sewn — so marks are a sorted set, and trailing
-//! trims are left out. A PES file spells a trim as a flag on the next move and so cannot even record
-//! one at the end; this is why its preview and its plan's preview are still the same.
+//! trims are left out. A PES file flags every jump as a trim (REQ-FMT-010), so on a machine that obeys the
+//! trim command its preview cuts at every jump, where its plan's preview carries jump threads; on the
+//! PE800 the two are the same.
 
 use std::collections::BTreeSet;
 
 use stitchcraft_core::{Meter, Point};
-use stitchcraft_plan::{Rgb, Role, StitchKind, StitchPlan};
+use stitchcraft_plan::{Rgb, Role, StitchKind, StitchPlan, TrimSupport};
 
 use crate::error::RenderError;
 
@@ -50,8 +58,8 @@ pub enum Arrival {
     /// The frame moved without sewing and the thread was not cut, so it lies loose from the previous
     /// hole: a jump thread, to be cut by hand.
     Loose,
-    /// The thread was cut since the previous hole (a trim or a thread change), or there is no previous
-    /// hole: nothing joins the two.
+    /// The thread was cut since the previous hole (a thread change, a stop, or a trim the machine
+    /// makes), or there is no previous hole: nothing joins the two.
     Cut,
 }
 
@@ -71,9 +79,9 @@ pub struct Hole {
 /// A command, where the needle is when it happens. Stops sort before trims, so trims are drawn on top.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Mark {
-    /// The machine pauses for the operator.
+    /// The machine pauses for the operator, and the thread is cut, as at a thread change.
     Stop(GridPoint),
-    /// The thread is cut.
+    /// The machine cuts the thread.
     Trim(GridPoint),
 }
 
@@ -96,14 +104,14 @@ pub struct Scene {
 }
 
 impl Scene {
-    /// The scene of `plan`; one unit of work per plan entry.
-    pub fn of(plan: &StitchPlan, meter: &mut Meter) -> Result<Scene, RenderError> {
+    /// The scene of `plan` on a machine that cuts as `trims` says; one unit of work per plan entry.
+    pub fn of(plan: &StitchPlan, trims: TrimSupport, meter: &mut Meter) -> Result<Scene, RenderError> {
         let mut scene = Scene::default();
         let sewn = plan.sewn_stitches();
         let mut sewn = sewn.iter().map(|s| (s.block, s.index)).peekable();
         // Before the first hole there is no thread to carry: the needle starts above the fabric.
         let mut cut = true;
-        let mut trims = Vec::new();
+        let (mut cuts, mut last) = (Vec::new(), None);
         for (b, block) in plan.blocks.iter().enumerate() {
             // A thread change cuts the old thread.
             cut |= b > 0;
@@ -112,23 +120,32 @@ impl Scene {
                 let at = GridPoint::of(stitch.at)?;
                 match stitch.kind {
                     StitchKind::Normal => {
-                        let arrival = match sewn.next_if_eq(&(b, i)) {
-                            Some(_) => Arrival::Sewn,
-                            None if cut => Arrival::Cut,
-                            None => Arrival::Loose,
+                        let sewn_here = sewn.next_if_eq(&(b, i)).is_some();
+                        let arrival = match last {
+                            _ if cut => Arrival::Cut,
+                            _ if sewn_here => Arrival::Sewn,
+                            Some(from) if cuts_itself(trims, from, at) => {
+                                cuts.push(from);
+                                Arrival::Cut
+                            }
+                            _ => Arrival::Loose,
                         };
                         let lock = stitch.origin.role == Role::Lock;
                         scene.holes.push(Hole { at, color: block.thread.color, arrival, lock });
-                        scene.marks.extend(trims.drain(..).map(Mark::Trim));
-                        cut = false;
+                        scene.marks.extend(cuts.drain(..).map(Mark::Trim));
+                        (cut, last) = (false, Some(at));
                     }
                     StitchKind::Jump => {}
-                    StitchKind::Trim => {
-                        trims.push(at);
+                    // A machine without the trim command sews on: the thread runs loose to the next hole.
+                    StitchKind::Trim if trims == TrimSupport::Command => {
+                        cuts.push(at);
                         cut = true;
                     }
+                    StitchKind::Trim => {}
+                    // Written as a thread change, which cuts.
                     StitchKind::Stop => {
                         scene.marks.insert(Mark::Stop(at));
+                        cut = true;
                     }
                 }
             }
@@ -147,6 +164,14 @@ impl Scene {
     }
 }
 
+/// Whether a machine that cuts as `trims` says cuts the thread itself on the way from the hole `from` to the
+/// hole `to`: one that cuts jumps longer than its setting, when `to` lies farther from `from` than that.
+fn cuts_itself(trims: TrimSupport, from: GridPoint, to: GridPoint) -> bool {
+    let TrimSupport::LongJumps(length) = trims else { return false };
+    let (dx, dy, tenths) = (f64::from(to.x - from.x), f64::from(to.y - from.y), length.get() * 10.0);
+    dx * dx + dy * dy > tenths * tenths
+}
+
 #[cfg(test)]
 mod tests {
     use stitchcraft_core::Budget;
@@ -162,8 +187,9 @@ mod tests {
         GridPoint { x, y }
     }
 
+    /// The scene of `plan` on a machine that obeys the trim command.
     fn scene(plan: &StitchPlan) -> Scene {
-        Scene::of(plan, &mut Budget::DEFAULT.meter()).unwrap()
+        Scene::of(plan, TrimSupport::Command, &mut Budget::DEFAULT.meter()).unwrap()
     }
 
     const RED: Rgb = Rgb::new(200, 0, 0);
@@ -194,8 +220,8 @@ mod tests {
                 // Two jumps, no trim: one loose thread straight from 2 mm to 6 mm.
                 (60, RED, Arrival::Loose, false),
                 (70, RED, Arrival::Cut, false),
-                // A stop keeps the run going.
-                (80, RED, Arrival::Sewn, false),
+                // A stop cuts, as a thread change does: PES and DST write it as one.
+                (80, RED, Arrival::Cut, false),
                 // A thread change cuts.
                 (90, BLUE, Arrival::Cut, false),
             ]
@@ -247,8 +273,48 @@ mod tests {
         let mut b = PlanBuilder::new(Thread::new(RED));
         b.stitch(p(20_000.0, 0.0), Provenance::plan(Role::Top));
         let far = b.finish();
-        assert_eq!(Scene::of(&far, &mut Budget::DEFAULT.meter()), Err(RenderError::OutOfRange));
+        assert_eq!(Scene::of(&far, TrimSupport::Command, &mut Budget::DEFAULT.meter()), Err(RenderError::OutOfRange));
         let tiny = Budget { max_stitches: 10, max_work: 0 };
-        assert!(matches!(Scene::of(&far, &mut tiny.meter()), Err(RenderError::Budget(_))));
+        assert!(matches!(Scene::of(&far, TrimSupport::Command, &mut tiny.meter()), Err(RenderError::Budget(_))));
+    }
+
+    /// A stitch at 1 mm, a trim, a jump to 20 mm and a stitch there; then a jump to 25 mm and a stitch there.
+    fn trimmed_and_jumped() -> StitchPlan {
+        let (top, travel) = (Provenance::plan(Role::Top), Provenance::plan(Role::Travel));
+        let mut b = PlanBuilder::new(Thread::new(RED));
+        b.stitch(p(1.0, 0.0), top);
+        b.trim(None);
+        b.jump(p(20.0, 0.0), travel);
+        b.stitch(p(20.0, 0.0), top);
+        b.jump(p(25.0, 0.0), travel);
+        b.stitch(p(25.0, 0.0), top);
+        b.finish()
+    }
+
+    /// How the thread reaches each hole of `plan` on a machine that cuts as `trims` says, and the marks.
+    fn arrivals(plan: &StitchPlan, trims: TrimSupport) -> (Vec<Arrival>, Vec<Mark>) {
+        let s = Scene::of(plan, trims, &mut Budget::DEFAULT.meter()).unwrap();
+        (s.holes.iter().map(|h| h.arrival).collect(), s.marks.into_iter().collect())
+    }
+
+    #[test]
+    fn a_machine_without_the_trim_command_leaves_a_jump_thread_where_a_trim_was_asked_for() {
+        // The reference PE800 cuts no jump, trim-flagged or not (MC-1): the thread runs loose from 1 mm to
+        // 20 mm, and no trim is marked.
+        let plan = trimmed_and_jumped();
+        assert_eq!(arrivals(&plan, TrimSupport::None), (vec![Arrival::Cut, Arrival::Loose, Arrival::Loose], vec![]));
+        // A machine that obeys the command cuts there.
+        assert_eq!(arrivals(&plan, TrimSupport::Command), (vec![Arrival::Cut, Arrival::Cut, Arrival::Loose], vec![Mark::Trim(g(10, 0))]));
+    }
+
+    #[test]
+    fn a_machine_that_cuts_long_jumps_cuts_where_the_next_hole_is_farther_than_its_setting() {
+        // Its setting 10 mm: it cuts the 19 mm jump at its start, and not the 5 mm one; it has no trim command.
+        let plan = trimmed_and_jumped();
+        let long = TrimSupport::LongJumps(stitchcraft_core::Mm::new(10.0).unwrap());
+        assert_eq!(arrivals(&plan, long), (vec![Arrival::Cut, Arrival::Cut, Arrival::Loose], vec![Mark::Trim(g(10, 0))]));
+        // A jump exactly as long as the setting is sewn on.
+        let exactly = TrimSupport::LongJumps(stitchcraft_core::Mm::new(5.0).unwrap());
+        assert_eq!(arrivals(&plan, exactly).0, [Arrival::Cut, Arrival::Cut, Arrival::Loose]);
     }
 }
