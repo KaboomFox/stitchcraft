@@ -245,6 +245,19 @@ StitchCraft's SVG adapter does with it (`stitchcraft_svg::inkstitch`). Their con
 | `origin` | the document | planned: noted as not applied (`SC-W0802`) |
 | `stop_position` | the document | planned: noted as not applied (`SC-W0802`) |
 
+Before its file version 3, Ink/Stitch named 7 commands otherwise. Its updater renames them in the files it updates, and
+StitchCraft reads them as the commands they became in any file (`DEV-SVG-014`).
+
+| Old name | Command |
+|---|---|
+| `fill_start` | `starting_point` |
+| `fill_end` | `ending_point` |
+| `satin_start` | `autoroute_start` |
+| `satin_end` | `autoroute_end` |
+| `run_start` | `autoroute_start` |
+| `run_end` | `autoroute_end` |
+| `ripple_target` | `target_point` |
+
 ## Other attributes
 
 The `inkstitch:*` attributes that declare no parameter: settings of an element, of Ink/Stitch's
@@ -266,5 +279,38 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrit
 | `e_stitch` | legacy | P2 (M8) | planned |
 | `manual_stitch` | legacy | P2 (M8) | planned |
 | `grid_size` | legacy | P2 (M8) | planned |
+
+## File versions
+
+Ink/Stitch numbers the files it works on (`inkstitch_svg_version` in the metadata, 4 at the commit above).
+When it opens a file of an older version that has content of its own (an element or an attribute in its namespace, or
+an `embroider_` attribute), it changes the file so that it sews as it did, version by version: a file of version 2
+gets the changes of versions 3 and 4. A file with its content and no version gets them all if its user says it is an
+old design. StitchCraft applies the changes that alter what it sews today as parameters of the shapes
+(`REQ-SVG-007`). A file without a version it reads as it is: version 1's changes don't apply. Each row is a
+change Ink/Stitch's updater makes (`lib/update.py`), in StitchCraft's words.
+
+| Version | Change | StitchCraft |
+|---|---|---|
+| 1 | each `embroider_<name>` attribute, as Ink/Stitch's early versions wrote their settings, becomes `inkstitch:<name>` if `<name>` is a setting Ink/Stitch knows. The others are removed | not planned |
+| 1 | `ties` written `True` becomes 0, and `False` becomes 3 | not planned |
+| 1 | a `fill_method` written as 0 to 3 becomes `auto_fill`, `contour_fill`, `guided_fill` or `legacy_fill`, in that order | not planned |
+| 1 | commas in `fill_underlay_angle` become spaces | not planned |
+| 1 | `e_stitch` on becomes `satin_method` `e_stitch` | not planned |
+| 1 | a satin column (`satin_column` on, or `stroke_method` 1) gets `reverse_rails` `none` | not planned |
+| 1 | an element with an `embroider_` attribute and without `fill_underlay` gets it off | not planned |
+| 1 | an element without `running_stitch_length_mm` that is not a satin column gets 1.5 | not planned |
+| 1 | a stroke with `manual_stitch` on gets `stroke_method` `manual_stitch`, unless it has `inkscape:connection-start` | not planned |
+| 1 | a stroke's `stroke_method` written as 0 or 1 becomes `running_stitch` or `ripple_stitch`, unless it has `inkscape:connection-start` | not planned |
+| 1 | a stroke with neither a method nor `satin_column`, whose `style` doesn't set `stroke-dasharray`, gets `zigzag_stitch`, unless it has `inkscape:connection-start` | not planned |
+| 1 | a stroke's `grid_size`, in pixels, becomes `grid_size_mm`, unless it has `inkscape:connection-start` | not planned |
+| 2 | a `<polyline>` whose `style` attribute sets a stroke other than `none` gets `stroke_method` `manual_stitch` | applied, unless digitized automatically |
+| 3 | a zigzag stroke's `pull_compensation_mm`, unless 0, is halved into `stroke_pull_compensation_mm`, which applies to each side | planned (M8) |
+| 3 | a satin column gets `start_at_nearest_point` and `end_at_nearest_point` off | planned (M8) |
+| 3 | the commands' old names become today's (the table under Commands) | applied, in any file (`DEV-SVG-014`) |
+| 3 | a `starting_point` or `ending_point` command is placed anew at its connector's end on its object | planned (M8) |
+| 4 | an element whose fill is not `none` (a fill not set is black), and whose `max_stitch_length_mm` is missing, empty, not a number or 0, gets 3 | applied to the shapes whose fill is sewn, unless digitized automatically |
+| 4 | a fill with `auto_fill` off gets `fill_method` `legacy_fill`, and `auto_fill` is removed | planned (M8) |
+| 4 | `fill_method` `auto_fill` becomes `tatami_fill` | planned (M8) |
 
 _145 parameter declarations, 92 registered in StitchCraft._

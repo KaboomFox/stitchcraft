@@ -19,6 +19,10 @@ pub const TRIM_AFTER: &str = "trim_after";
 /// several elements keeps it for the last.
 pub const STOP_AFTER: &str = "stop_after";
 
+/// The key of the longest stitch: a tatami fill sews its rows in stitches that long, and the stitch types
+/// that split stitches split longer ones.
+pub const MAX_STITCH_LENGTH: &str = "max_stitch_length_mm";
+
 /// The stitch types with a longest stitch: manual stitch and satin columns, whatever their method, split
 /// longer stitches, and a tatami fill sews its rows in stitches that long.
 const LONGEST: &[StitchType] =
@@ -158,7 +162,7 @@ mod tests {
 
     #[test]
     fn the_longest_stitch_applies_to_the_stitch_types_that_split_stitches_and_to_tatami_fills() {
-        let longest = CommonParams::SPECS.iter().find(|spec| spec.key == "max_stitch_length_mm").unwrap();
+        let longest = CommonParams::SPECS.iter().find(|spec| spec.key == MAX_STITCH_LENGTH).unwrap();
         let has = |t: &StitchType| matches!(t.family(), Family::Satin) || matches!(t, StitchType::ManualStitch | StitchType::TatamiFill);
         assert_eq!(longest.applies_to, StitchType::ALL.iter().copied().filter(has).collect::<Vec<_>>());
         // 4 mm for fills, as in Ink/Stitch, and none for the others.
@@ -166,7 +170,7 @@ mod tests {
             |stitch_type| CommonParams::from_set_as(&ParamSet::new(), stitch_type).unwrap().params.max_stitch_length_mm.map(|mm| mm.get());
         assert_eq!([StitchType::ManualStitch, StitchType::SatinColumn, StitchType::TatamiFill].map(longest_for), [None, None, Some(4.0)]);
         // A running stitch reads none, whatever the element sets.
-        let set: ParamSet = [("max_stitch_length_mm", "abc")].into_iter().collect();
+        let set: ParamSet = [(MAX_STITCH_LENGTH, "abc")].into_iter().collect();
         assert_eq!(CommonParams::from_set_as(&set, StitchType::RunningStitch).unwrap().params.max_stitch_length_mm, None);
     }
 

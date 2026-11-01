@@ -329,8 +329,8 @@ requirements = ["REQ-SVG-001"]
 [[deviation]]
 id = "DEV-SVG-003"
 area = "svg"
-summary = "A paint a viewer does not show is left out: one that visibility hides (hidden or collapse), one under an opacity of 0, one whose fill-opacity or stroke-opacity is 0 however it is written, such as 0.0 or 0%, one whose colour is transparent or has an alpha of 0, currentColor where color is such a colour, and a gradient whose stops are all such colours or of stop-opacity 0. Ink/Stitch leaves out what display hides and a fill whose fill-opacity is written as 0, and sews the rest: a fill in transparent, for one, it sews in black."
-reason = "Thread sewn where the drawing shows nothing is thread the designer never sees on screen (REQ-SVG-001). Ink/Stitch's tests were read at d59c9ab (lib/elements/utils/nodes.py: node_to_elements and iterate_nodes compare fill-opacity with the text 0 and test no other opacity, nor visibility), and inkex knows no colour named transparent (inkex 1.4.1, inkex/colors.py), so Ink/Stitch sews such a fill in its default black (lib/elements/element.py: fill_color)."
+summary = "A paint a viewer does not show is left out: one that visibility hides (hidden or collapse), one under an opacity of 0, one whose fill-opacity or stroke-opacity is 0 however it is written, such as 0.0 or 0%, one whose colour is transparent or has an alpha of 0, currentColor where color is such a colour, a gradient whose stops are all such colours or of stop-opacity 0, and context-fill or context-stroke, which paint only a marker's or a clone's content. Ink/Stitch leaves out what display hides and a fill whose fill-opacity is written as 0, and sews the rest: a fill in transparent, for one, it sews in black, and so a shape painted with context-fill and context-stroke."
+reason = "Thread sewn where the drawing shows nothing is thread the designer never sees on screen (REQ-SVG-001). Ink/Stitch's tests were read at d59c9ab (lib/elements/utils/nodes.py: node_to_elements and iterate_nodes compare fill-opacity with the text 0 and test no other opacity, nor visibility), and inkex knows no colour named transparent (inkex 1.4.1, inkex/colors.py), so Ink/Stitch sews such a fill in its default black (lib/elements/element.py: fill_color). Ink/Stitch at d59c9ab, run as a black box (ADR-0001, decision 6), sewed a rect painted with context-fill and context-stroke in black; SVG 2 (painting, specifying paint) has them paint nothing outside a context element."
 requirements = ["REQ-SVG-001"]
 
 [[deviation]]
@@ -395,3 +395,24 @@ area = "svg"
 summary = "An element whose transform flattens it to a line or a point, such as scale(0 1) or matrix(1 1 1 1 0 0), is left out with everything in it, and SC-W0804 says so. Ink/Stitch sews it flattened: run on a path under matrix(1 1 1 1 0 0), it sewed the path's stroke as a running stitch along the diagonal the transform folds the path onto."
 reason = "A viewer shows nothing of an element whose transform has no inverse (CSS Transforms 1, transform function lists, which the web platform test transform-singular-001 checks with that very matrix), and the drawing is sewn as a viewer shows it (REQ-SVG-001). Ink/Stitch at d59c9ab was run as a black box on such a file (ADR-0001, decision 6)."
 requirements = ["REQ-SVG-001"]
+
+[[deviation]]
+id = "DEV-SVG-013"
+area = "svg"
+summary = "A gradient paints in its first stop's colour, a radial one and a stroke's too, and a pattern in the colour written after it, or not at all when none is, each with SC-W0802. Ink/Stitch sews a fill's linear gradient in its first stop, and an Inkscape swatch, a gradient of one stop, in its colour, but every other gradient and every pattern in black, whatever colour is written after it."
+reason = "A thread of the colour the drawing shows most of is nearer the drawing than black, and a pattern's colours are many, so the designer chooses one (SC-W0802's hint). Ink/Stitch at d59c9ab, run as a black box (ADR-0001, decision 6), sewed a radial gradient's fill, a linear gradient's stroke and a pattern's fill, with a colour after it and without, in black; it reads them so in lib/elements/element.py (_get_color) and lib/elements/fill_stitch.py (color), and its thread colours take what is no colour as black (lib/threads/color.py)."
+requirements = ["REQ-SVG-001"]
+
+[[deviation]]
+id = "DEV-SVG-014"
+area = "svg"
+summary = "The 7 names Ink/Stitch's commands had before its file version 3, fill_start and the others, are read as the commands they became in any file. Ink/Stitch renames them only in a file it updates, one of version 1 or 2 with content of its own, or without a version when its user says it is an old design, and elsewhere sews the old command's symbol as a clone."
+reason = "A command's symbol is never part of the design, and read as a clone it would be named as one, with a hint that gets its drawing sewn. Ink/Stitch at d59c9ab, run as a black box (ADR-0001, decision 6), applied a fill_start command in a file of version 2 as a starting point, and sewed its symbol in a file of version 4 and in a file with nothing else of its own; its updater renames the commands in lib/update.py (update_legacy_commands)."
+requirements = ["REQ-SVG-003", "REQ-SVG-007"]
+
+[[deviation]]
+id = "DEV-SVG-015"
+area = "svg"
+summary = "A tatami fill's rows and needle points are laid from the design's origin, which for an SVG file is its page's top left corner, wherever the viewBox starts. Ink/Stitch maps a viewBox that does not start at 0 by scaling it first and then moving it by its start in pixels, so its rows are laid from another point: in a page 100 mm square with the viewBox 10 20 100 100, they lie 0.0417 mm further down, give or take whole row spacings, and the needle points along them differ too. A viewBox that starts at 0, as Inkscape writes it, lays them alike."
+reason = "The page is mapped as SVG maps it (REQ-SVG-001), and rows laid from its corner line up across fills side by side (REQ-FILL-TAT-002); Ink/Stitch's offset moves its row grid, which no sew-out shows. Ink/Stitch at d59c9ab, run as a black box (ADR-0001, decision 6), sewed one rect of such a page with its rows 0.0417 mm from its top edge, give or take whole row spacings, and the same rect of a page whose viewBox starts at 0 with its rows on its top edge; its mapping is read in lib/svg/units.py."
+requirements = ["REQ-SVG-001", "REQ-FILL-TAT-002"]

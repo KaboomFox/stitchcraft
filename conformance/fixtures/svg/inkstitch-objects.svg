@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Ink/Stitch's own objects, laid out as its extensions write them: command symbols (a <use> of an
      `inkstitch_<command>` symbol, tied to its object by a connector path), helper paths marked by their
-     start marker, and the ignore setting. Written for StitchCraft's tests; the symbols' drawings are
-     placeholders. -->
+     start marker, the ignore setting, and the file version Ink/Stitch stamps on a file whenever it works
+     on it. Written for StitchCraft's tests; the symbols' drawings are placeholders. -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
      xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
      xmlns:inkstitch="http://inkstitch.org/namespace"
      width="100mm" height="100mm" viewBox="0 0 100 100">
+  <metadata><inkstitch:inkstitch_svg_version>4</inkstitch:inkstitch_svg_version></metadata>
   <defs>
     <symbol id="inkstitch_trim"><circle r="2" fill="#808080"/></symbol>
     <symbol id="inkstitch_stop-2"><rect width="3" height="3" fill="#808080"/></symbol>
