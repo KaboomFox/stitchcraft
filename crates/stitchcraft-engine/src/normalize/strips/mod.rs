@@ -20,9 +20,9 @@
 //!    tip are joined: across each strip triangle from chord to chord, and from a junction's middle to its
 //!    chords outside the caps.
 //! 3. **Bumps.** A branch from a junction to a tip that is no longer than [`BUMP`] times the junction's
-//!    longest edge, or to any other end no longer than [`CAP_BUMP`] times that edge, is a bump of the
-//!    outline, or the corner of a sharp turn, and is left out, the shortest first, until no junction has
-//!    one. A junction left with 2 branches is a bend.
+//!    longest edge, or to any other end that reaches no further than [`CAP_BUMP`] times that edge, its cap
+//!    included, is a bump of the outline, or the corner of a sharp turn, and is left out, the shortest first,
+//!    until no junction has one. A junction left with 2 branches is a bend.
 //! 4. **Junctions.** At each junction the 2 branches that run on most nearly straight are one line, and the
 //!    third ends there. Each branch's direction is measured from the junction's middle to the first of its
 //!    points at least the junction's longest edge away, or to its end.
@@ -54,11 +54,13 @@ use super::triangulation::{self, Broken, Triangle, Triangulation};
 pub(crate) const BUMP: f64 = 2.0;
 
 /// How many times its junction triangle's longest edge a branch from a junction to an end that is no tip, a
-/// round or a square one, may be long and still be a bump of the outline. Such a bump reaches no further
-/// from the junction than the junction reaches across. A branch that reaches further is an arm, as each arm
-/// of the bar of a T 4 mm tall is, its line found with Ink/Stitch's Fill to Stroke too
-/// (`req_auto_014_a_small_t_keeps_both_arms_of_its_bar`). [`BUMP`] would take it for a bump, and the T would
-/// lose one arm and sew as a Γ.
+/// round or a square one, may reach and still be a bump of the outline: along its line, and on through its
+/// end's cap to the cap's farthest corner. Such a bump reaches no further from the junction than the junction
+/// reaches across. A branch that reaches further is an arm, as each arm of the bar of a T 4 mm tall is, its
+/// line found with Ink/Stitch's Fill to Stroke too (`req_auto_014_a_small_t_keeps_both_arms_of_its_bar`).
+/// [`BUMP`] would take it for a bump, and the T would lose one arm and sew as a Γ. So would a T 4.8 mm tall in
+/// lines 0.8 mm wide, its arms measured only to where their lines end, short of their caps
+/// (`req_auto_014_an_arm_reaches_through_its_cap`).
 pub(crate) const CAP_BUMP: f64 = 1.0;
 
 /// Which branches from a junction to an end no longer than [`BUMP`] times the junction triangle's longest
@@ -186,6 +188,25 @@ fn holds(points: &[Point], a: usize, b: usize, held: &[usize]) -> bool {
     held.iter().filter_map(|&h| points.get(h)).all(|h| (a.x() - h.x()) * (b.x() - h.x()) + (a.y() - h.y()) * (b.y() - h.y()) <= 0.0)
 }
 
+/// How far the part reaches from `at` through the caps among `touched`, triangles beside it: to the farthest
+/// corner of the triangles of each cap, found through the chords between its triangles. 0 when none of
+/// `touched` lies in a cap. A unit of `meter`'s work for each triangle.
+fn cap_reach(triangulation: &Triangulation, roles: &[Role], at: Point, touched: &[usize], meter: &mut Meter) -> Result<f64, Exhausted> {
+    let in_cap = |t: &usize| roles.get(*t) == Some(&Role::Cap);
+    let mut stack: Vec<usize> = touched.iter().copied().filter(in_cap).collect();
+    let mut seen: BTreeSet<usize> = BTreeSet::new();
+    let mut far = 0.0_f64;
+    while let Some(t) = stack.pop() {
+        let Some(triangle) = triangulation.triangles.get(t).filter(|_| seen.insert(t)) else { continue };
+        meter.charge(1)?;
+        for corner in triangle.corners.iter().filter_map(|&c| triangulation.points.get(c)) {
+            far = far.max(at.distance(*corner));
+        }
+        stack.extend(triangle.across.iter().flatten().copied().filter(in_cap).filter(|u| !seen.contains(u)));
+    }
+    Ok(far)
+}
+
 /// What each triangle of `triangulation` is to the centre line, with `meter`'s work: a unit for each triangle,
 /// and for each corner tested. An end is a cap when the circle on its chord holds its corner, and a tip when
 /// it doesn't. Each cap then grows across the chords while the circle on each holds every corner of the cap:
@@ -248,6 +269,9 @@ struct Graph {
     links: Vec<Vec<usize>>,
     /// For a junction's middle, its triangle's longest edge.
     size: Vec<Option<f64>>,
+    /// How far the part reaches beyond each point through the caps it touches, to the farthest corner of their
+    /// triangles: 0 for a point that touches none. A line's end beside a round or a square end touches its cap.
+    beyond: Vec<f64>,
     /// The triangle each piece of the line between 2 points crosses, by the 2 points ([`edge`]).
     inside: BTreeMap<(usize, usize), usize>,
 }
@@ -257,7 +281,7 @@ impl Graph {
     /// crosses: the middle of each chord of such a triangle, of each junction triangle, and each tip.
     fn of(triangulation: &Triangulation, roles: &[Role], meter: &mut Meter) -> Result<Graph, Exhausted> {
         let Triangulation { points, triangles } = triangulation;
-        let mut graph = Graph { points: Vec::new(), nodes: Vec::new(), links: Vec::new(), size: Vec::new(), inside: BTreeMap::new() };
+        let mut graph = Graph::new();
         // The point at the middle of each chord, by the 2 triangles it lies between.
         let mut at_chord: BTreeMap<(usize, usize), usize> = BTreeMap::new();
         let corner = |i: usize| points.get(i).copied();
@@ -307,7 +331,24 @@ impl Graph {
                 _ => {}
             }
         }
+        for node in 0..graph.points.len() {
+            // The caps beside the point: across its chord, or across its junction's chords.
+            let touched: Vec<usize> = match graph.nodes.get(node) {
+                Some(Node::Chord { triangles: (a, b), .. }) => vec![*a, *b],
+                Some(Node::Junction(t)) => triangles.get(*t).map(|t| t.across.iter().flatten().copied().collect()).unwrap_or_default(),
+                Some(Node::Tip { .. }) | None => Vec::new(),
+            };
+            let reach = cap_reach(triangulation, roles, graph.point(node), &touched, meter)?;
+            if let Some(slot) = graph.beyond.get_mut(node) {
+                *slot = reach;
+            }
+        }
         Ok(graph)
+    }
+
+    /// A graph with no points.
+    fn new() -> Graph {
+        Graph { points: Vec::new(), nodes: Vec::new(), links: Vec::new(), size: Vec::new(), beyond: Vec::new(), inside: BTreeMap::new() }
     }
 
     /// Adds point `p`, lying where `node` says, a junction's middle when it has a `size`, and gives its index.
@@ -316,6 +357,7 @@ impl Graph {
         self.nodes.push(node);
         self.links.push(Vec::new());
         self.size.push(size);
+        self.beyond.push(0.0);
         self.points.len() - 1
     }
 
@@ -378,13 +420,14 @@ impl Graph {
                 for &first in self.links.get(junction).cloned().unwrap_or_default().iter() {
                     let path = self.branch(junction, first, meter)?;
                     let end = path.last().copied().unwrap_or(first);
-                    let length = self.along(junction, &path);
+                    // How far the branch reaches: along its line, and on through the cap beyond its end.
+                    let reach = self.along(junction, &path) + self.beyond.get(end).copied().unwrap_or(0.0);
                     let ends_there = pairs.get(&junction).is_none_or(|&(a, b)| first != a && first != b);
                     let tip = matches!(self.nodes.get(end), Some(Node::Tip { .. }));
-                    let reach = if tip { BUMP } else { CAP_BUMP };
-                    let bump = self.degree(end) == 1 && length <= reach * size && (bumps == Bumps::All || tip && ends_there);
-                    if bump && shortest.as_ref().is_none_or(|(best, ..)| length < *best) {
-                        shortest = Some((length, junction, first, path));
+                    let times = if tip { BUMP } else { CAP_BUMP };
+                    let bump = self.degree(end) == 1 && reach <= times * size && (bumps == Bumps::All || tip && ends_there);
+                    if bump && shortest.as_ref().is_none_or(|(best, ..)| reach < *best) {
+                        shortest = Some((reach, junction, first, path));
                     }
                 }
             }
