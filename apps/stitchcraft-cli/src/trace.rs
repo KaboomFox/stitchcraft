@@ -11,9 +11,17 @@
 //! the tutorial: the machine's threads, as `stitch palette` writes them, loaded as a swatch library; the
 //! picture placed from its bytes; Image Trace in colour with that library's colours as they are, by the
 //! Abutting method, so that the shapes share their edges; and Expand, which keeps the paths. The picture is
-//! fitted, its aspect kept, inside a square `--size` millimetres across, or else inside the machine's hoop,
-//! so that any picture sews without a size given. Image Trace keeps at most `--colours` of the library's
-//! colours, [`COLOURS`] unless it says otherwise: Image Trace's own default.
+//! fitted, its aspect kept, inside a square `--size` millimetres across, or else inside the machine's hoop
+//! [`HOOP_MARGIN`] in from each side, so that any picture sews without a size given. Image Trace keeps at
+//! most `--colours` of the library's colours, [`COLOURS`] unless it says otherwise: Image Trace's own
+//! default.
+//!
+//! **Why the margin.** A picture's shapes reach its edge, and digitized automatically, a satin column along
+//! the edge sews past it: its stitches reach past its rails by their pull compensation, the overlap
+//! (`auto_overlap_mm`), and a rail may lie as far outside the shape as shapes still meet
+//! ([`TOUCHING`](stitchcraft_engine::auto::TOUCHING)). A picture fitted to the hoop itself would sew past
+//! the hoop, which refuses it (`SC-E0701`). The margin is that reach, rounded up to a tenth of a
+//! millimetre. A `--size` is the picture's own, as the user asks for it.
 //!
 //! **The program** is the one `--vectorcraft-cli` names, or else [`PROGRAM`] on the PATH, which
 //! [`Command`] looks for. `vectorcraft-cli run --commands -` reads the steps from standard input, where a
@@ -32,7 +40,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
 use serde_json::{Value, json};
-use stitchcraft_core::{Code, Diagnostic, Fix, Mm, Size};
+use stitchcraft_core::{Code, Diagnostic, Fix, Mm};
 use stitchcraft_plan::MachineProfile;
 
 use crate::commands::{palette, printable};
@@ -42,6 +50,9 @@ use crate::files::{self, Scratch};
 pub const EXTENSIONS: &[&str] = &["png", "jpg", "jpeg"];
 /// How many colours Image Trace keeps when `--colours` doesn't say: its own default.
 pub const COLOURS: u32 = 6;
+/// How far in from each side of the machine's hoop a picture given no size is fitted: as far as an automatic
+/// satin column along the picture's edge sews past it ([the module](self)).
+pub const HOOP_MARGIN: Mm = Mm::from_tenths(5);
 /// VectorCraft's command line, looked for on the PATH when `--vectorcraft-cli` names none.
 pub const PROGRAM: &str = "vectorcraft-cli";
 /// Where VectorCraft publishes its command line, with each release.
@@ -61,11 +72,17 @@ pub fn is_picture(path: &Path) -> bool {
 }
 
 /// The steps VectorCraft's command line runs to trace the picture `bytes`, named `name`, in the threads of
-/// `profile`: fitted inside a square `size` across, or else inside the machine's hoop, and traced in at most
-/// `colours` of them ([the module](self)).
+/// `profile`: fitted inside a square `size` across, or else inside the machine's hoop [`HOOP_MARGIN`] in from
+/// each side, and traced in at most `colours` of them ([the module](self)). `file.place` fits the picture
+/// inside its `rect`, `[x, y, width, height]` in points.
 pub fn steps(name: &str, bytes: &[u8], profile: &MachineProfile, size: Option<Mm>, colours: u32) -> Value {
-    let fitted = size.map_or(profile.hoop, |size| Size::new(size, size));
-    let rect = [0.0, 0.0, fitted.width.to_points(), fitted.height.to_points()];
+    let rect = match size {
+        Some(size) => [0.0, 0.0, size.to_points(), size.to_points()],
+        None => {
+            let (margin, hoop) = (HOOP_MARGIN.to_points(), profile.hoop);
+            [margin, margin, hoop.width.to_points() - 2.0 * margin, hoop.height.to_points() - 2.0 * margin]
+        }
+    };
     json!([
         {"command": "swatch.library.load", "params": {"name": LIBRARY, "data": palette::gpl(profile)}},
         {"command": "file.place", "params": {"name": name, "dataBase64": stitchcraft_vectorcraft::base64(bytes), "rect": rect}},
@@ -164,21 +181,32 @@ mod tests {
     fn req_cli_012_the_steps_load_the_threads_place_the_picture_fitted_and_trace_it_in_them() {
         let picture = b"\x89PNG\r\n\x1a\n and the rest";
         let given = steps("badge.png", picture, REFERENCE, None, COLOURS);
+        let rect = &given[1]["params"]["rect"];
         let expected = json!([
             {"command": "swatch.library.load", "params": {"name": "threads.gpl", "data": palette::gpl(REFERENCE)}},
-            {"command": "file.place", "params": {"name": "badge.png", "dataBase64": stitchcraft_vectorcraft::base64(picture), "rect": [0.0, 0.0, REFERENCE.hoop.width.to_points(), REFERENCE.hoop.height.to_points()]}},
+            {"command": "file.place", "params": {"name": "badge.png", "dataBase64": stitchcraft_vectorcraft::base64(picture), "rect": rect}},
             {"command": "imageTrace.make", "params": {"params": {"mode": "color", "palette": "documentLibrary", "library": "loaded/threads.gpl", "colors": 6, "method": "abutting"}}},
             {"command": "imageTrace.expand"},
         ]);
         assert_eq!(given, expected);
-        // The reference machine's hoop is 130 × 180 mm: 368.5 × 510.2 points.
-        assert_eq!(given[1]["params"]["rect"][2].as_f64().map(|w| (w * 10.0).round()), Some(3685.0));
+        // `[x, y, width, height]` in points: inside the reference machine's hoop, 130 × 180 mm, 0.5 mm in from
+        // each side.
+        let mm: Vec<f64> = rect.as_array().unwrap().iter().map(|points| Mm::from_points(points.as_f64().unwrap()).unwrap().get()).collect();
+        assert!(mm.iter().zip([0.5, 0.5, 129.0, 179.0]).all(|(got, want)| (got - want).abs() < 1e-9), "{mm:?}");
         // A size fits it inside a square that size across, and another machine traces in its own threads.
         let sized = steps("photo.jpg", picture, &BROTHER_PE800_4X4, Some(Mm::new(80.0).unwrap()), 4);
         let points = Mm::new(80.0).unwrap().to_points();
         assert_eq!(sized[1]["params"]["rect"], json!([0.0, 0.0, points, points]));
         assert_eq!((&sized[0]["params"]["data"], &sized[2]["params"]["params"]["colors"]), (&json!(palette::gpl(&BROTHER_PE800_4X4)), &json!(4)));
         assert_eq!(sized[1]["params"]["name"], "photo.jpg");
+    }
+
+    #[test]
+    fn req_cli_012_the_hoop_margin_is_as_far_as_an_automatic_satin_column_sews_past_a_pictures_edge() {
+        // The overlap that is a satin column's pull compensation, from rails as far outside the shape as
+        // shapes still meet, rounded up to a tenth of a millimetre.
+        let past = stitchcraft_testkit::designs::rules().auto_overlap_mm.get() + stitchcraft_engine::auto::TOUCHING;
+        assert_eq!(HOOP_MARGIN.get(), (past * 10.0).ceil() / 10.0, "{past}");
     }
 
     #[test]

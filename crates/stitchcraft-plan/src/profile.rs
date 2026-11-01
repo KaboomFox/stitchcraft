@@ -100,7 +100,8 @@ pub struct MachineProfile {
     pub hoop: Size,
     /// The area where the machine sews most accurately; larger designs get a warning.
     pub comfort: Option<Size>,
-    /// The file format the machine reads.
+    /// The file format the machine reads, and a plan is written in unless another is asked for
+    /// ([`MachineProfile::writing`]).
     pub format: FormatId,
     /// The longest stitch the machine sews cleanly.
     pub max_stitch: Mm,
@@ -115,6 +116,12 @@ pub struct MachineProfile {
 }
 
 impl MachineProfile {
+    /// This machine, with its plans written in `format`: the colour changes and stops that format records
+    /// are what a plan may have (REQ-PLAN-006). The machine's own limits stay its own.
+    pub fn writing(&self, format: FormatId) -> MachineProfile {
+        MachineProfile { format, ..self.clone() }
+    }
+
     /// The problems with this profile's values, empty when it is valid (REQ-PRF-001).
     pub fn problems(&self) -> Vec<String> {
         let mut problems = Vec::new();

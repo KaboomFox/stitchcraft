@@ -1035,10 +1035,12 @@ larger Noise in VectorCraft's Image Trace leaves such specks out of the trace.
 **Warning** — Background left out
 
 `--auto` takes the lowest shape of the design for the picture's background when it is an automatic
-area, other shapes are drawn on it, and it covers the whole design, its holes aside, to within 0.5 mm
-of each side. It is left out, unless it switches `auto_ignore_background` off. A background is usually
-the fabric's own colour, and sewing it doubles the stitches and stiffens the design. A background
-that needs more work to find than the budget allows is sewn, and the message says so.
+area, a shape on another path than its own is drawn on it, and it covers the whole design to within
+0.5 mm of each side, its holes aside, and the notches aside that the shapes drawn on it fill where
+they touch the picture's edge. It is left out, unless it switches `auto_ignore_background` off. A
+background is usually the fabric's own colour, and sewing it doubles the stitches and stiffens the
+design. A background that needs more work to find than the budget allows is sewn, and the message
+says so.
 
 To sew it, give it settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it.
 Ignore White in VectorCraft's Image Trace leaves a white background out of the trace.

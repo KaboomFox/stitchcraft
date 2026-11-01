@@ -162,7 +162,8 @@ fn sewn(
 ) -> Result<(Vec<u8>, Vec<Diagnostic>), Vec<Diagnostic>> {
     let read = stitchcraft_vectorcraft::read_with(input, &Budget::DEFAULT, reading).map_err(|unread| vec![unread])?;
     let profile = asked.or(read.machine).unwrap_or(REFERENCE);
-    let outcome = stitchcraft_engine::plan(&read.design, profile, &Budget::DEFAULT);
+    // Planned for the format it is written in, whose limits the file then keeps.
+    let outcome = stitchcraft_engine::plan(&read.design, &profile.writing(format), &Budget::DEFAULT);
     let mut said = read.warnings;
     said.extend(outcome.diagnostics);
     let Some(plan) = outcome.plan else { return Err(with_an_error(said)) };
