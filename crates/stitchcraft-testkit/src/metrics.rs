@@ -21,9 +21,10 @@
 //! the stitch sewn next to it, or before it, doesn't run straight on, within [`STRAIGHT_ON`]. So a row is
 //! pulled in at its ends, and its needle holes between them stay. A stitch that the pull shortens to
 //! nothing is pulled away. The edge is points a [`PIXEL`] apart along it, each covered when it lies within
-//! half of [`THREAD`] of a stitch so shortened. Underlay and locks are left out, as they are meant to be
-//! covered. Without pull it is the share of the edge's points that [`coverage`] would count covered by the
-//! top stitches.
+//! half of [`THREAD`] of a stitch so shortened. Locks are left out, as they are meant to be covered, and so
+//! is underlay that a plan marks as such. Plan assembly gives an element's underlay the top stitches' role
+//! for now, so a fill's or a column's underlay counts. Without pull it is the share of the edge's points
+//! that [`coverage`] would count covered by the top stitches.
 //!
 //! **Footprint overlap** is how nearly 2 sets of stitches put their thread in the same places, as the
 //! Ink/Stitch differential compares a design sewn by both programs (conformance L3). A set's footprint is

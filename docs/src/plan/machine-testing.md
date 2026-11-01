@@ -85,6 +85,10 @@ middle of the artboard (`REQ-VC-015`). A checkpoint can so sew a sheet through V
 | MC-9 | M14 | TS-14 | Do the fonts sew legibly across the heights they claim? |
 | MC-7 | M12 | all | Release regression |
 
+Before MC-8, cases answer the TS-13 checks that its stitches can, and count the jump threads that later
+stitches sew down ([image to embroidery › Testing](../design/image-to-embroidery.md#testing)). The sew-out
+answers the rest, and shows whether those threads show.
+
 ## Report template
 
 The GitHub issue form *Sew-out report* asks for these fields; this is the same template for notes kept

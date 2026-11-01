@@ -584,5 +584,21 @@ sew it unlike the tutorial's flow.
   block letters and lines traced as areas, and TS-13C a face drawn with lines and shapes in parts
   ([test sheets](../user/reference/test-sheets.md)). The PE800 cuts no jump, and the sew-out reports where a
   shape sews down the thread of a jump before it.
+- `tests/auto_sheets.rs` answers the TS-13 checks that the sheets' own stitches can, moved to where each sheet
+  draws its shapes (`stitchcraft_testkit::pictures::sheet`). Where the bar runs on beside the square, each
+  ends its rows at its own edge. The specks sew as the disc, and no shape sews over one drawn over it. A line
+  traced as an area runs to within its width of its ends, and its branch from the line it meets. The smile's
+  column ends where its round caps end, the columns' rungs lie within 10° of square to their strokes, and the
+  face's columns cover the edges of the areas under them. The sew-out shows what only the machine can: whether
+  fabric or a ridge shows once the thread pulls in, and how small a word still reads.
+- The same cases count the jump threads each half leaves on the PE800, snipped at each thread change and
+  stop, and how many a later stitch of their colour sews down (`stitchcraft_testkit::stitches`). Digitized,
+  the letters sew as columns with a jump between each 2:
+
+  | Sheet | As drawn: jump threads | sewn down | Digitized: jump threads | sewn down |
+  |---|---:|---:|---:|---:|
+  | TS-13A | 8 | 0 | 11 | 3 |
+  | TS-13B | 6 | 0 | 37 | 16 |
+  | TS-13C | 9 | 4 | 6 | 1 |
 
 Codes 0900 to 0999 are automatic digitizing's ([diagnostics](diagnostics.md)).
