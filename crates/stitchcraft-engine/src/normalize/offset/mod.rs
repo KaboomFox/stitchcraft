@@ -6,10 +6,10 @@
 //! to be the same curves, so that a column sews alike in both. GEOS builds an offset in 3 steps, and so
 //! does this module:
 //!
-//! 1. The raw curve: each segment moved sideways, the corners joined ([`generator`]).
+//! 1. The raw curve: each segment moved sideways, the corners joined (the `generator` module).
 //! 2. The edge of the stroke: the ring of raw curves around the whole polyline, both sides and round caps,
 //!    cut where it crosses itself, and the parts of it on the boundary of the area it covers kept
-//!    ([`boundary`]).
+//!    (the `boundary` module).
 //! 3. The sections: the parts of that boundary that lie on the raw curve, in order along it. Inside a
 //!    tight bend the raw curve loops back on itself, and the loop lies inside the stroke: the section
 //!    skips it. Where the line comes back close to itself, the stroke covers part of the raw curve, and
@@ -20,14 +20,14 @@
 //! answers are checked against shapely's for 1,050 random lines (`conformance/oracle/offset.py`).
 //!
 //! A fill's part is grown or shrunk the same way, as shapely's `buffer` does it for Ink/Stitch's inset
-//! underlay and `expand_mm` ([`buffer`](buffer::buffer)): each ring's raw curve, closed and with round
-//! corners, then the area those curves wind round, from the fill's own region code.
+//! underlay and `expand_mm` ([`buffer`]): each ring's raw curve, closed and with round corners, then the
+//! area those curves wind round, from the fill's own region code.
 
 mod boundary;
 mod buffer;
 mod generator;
 
-pub(crate) use buffer::buffer;
+pub use buffer::buffer;
 pub(crate) use generator::{Meet, segments_meet};
 
 use stitchcraft_core::{Exhausted, Meter, Point};

@@ -36,7 +36,7 @@ pub(crate) mod geom;
 pub(crate) mod ops;
 mod snap;
 
-pub(crate) use assemble::Unjoined;
+pub use assemble::Unjoined;
 
 use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Point};

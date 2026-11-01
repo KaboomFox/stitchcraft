@@ -1,10 +1,20 @@
 # The performance budget (`cargo xtask perf`, docs/src/design/guardrails.md): planning the reference hoop's
-# whole field, a 130 × 180 mm tatami fill at 0.4 mm (REQ-FILL-TAT-009, NFR-PERF-1).
+# whole field, a 130 × 180 mm tatami fill at 0.4 mm (REQ-FILL-TAT-009, NFR-PERF-1), and shrinking a region
+# 150 mm across, of 1,000 points, 300 times, as contour fill will (NFR-PERF-3).
 
 [field]
 # The most the median of 21 plans may take natively, in milliseconds (NFR-PERF-1). Over it is a warning.
 budget_ms = 50.0
-# The instructions one plan takes, counted by valgrind's callgrind. More than this plus 2 % fails.
+# The instructions one run takes, counted by valgrind's callgrind. More than this plus 2 % fails.
 # `cargo xtask perf --record` lowers it and never raises it: raise it by hand, in a pull request that
 # says why.
 instructions = 282000000
+
+[insets]
+# The most the median of 21 runs may take natively for the slowest of the 4 regions, in milliseconds
+# (NFR-PERF-3, ADR-0005's third criterion). Over it is a warning.
+budget_ms = 200.0
+# The instructions one run takes, counted by valgrind's callgrind. More than this plus 2 % fails.
+# `cargo xtask perf --record` lowers it and never raises it: raise it by hand, in a pull request that
+# says why.
+instructions = 5460000000
