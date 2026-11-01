@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-b52a3533.js";
+            window.path_to_searchindex_js = "searchindex-e6dc26fc.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b793f3ad.js"></script>
@@ -7536,7 +7536,8 @@ from where the middles meet than a bump of the outline does. A branch to a round
 reaches further than the junction is wide is an arm. Each arm of the bar of a T 4 mm tall reaches 1.6 mm,
 about twice the bar’s width. Taken for a bump, one arm was left out and the other became a bend, so the T
 sewed as a Γ. Ink/Stitch’s Fill to Stroke, run on the same letters with its threshold at the stroke’s
-width, keeps both arms. A branch reaches along its line and on through its end’s cap, to the cap’s
+width, keeps both arms, and the differential compares the 2 programs’ lines every night (<code>REQ-AUTO-022</code>,
+<a href="#l3--inkstitch-differential-nightly">conformance</a>). A branch reaches along its line and on through its end’s cap, to the cap’s
 farthest corner: the cap is part of the arm. Measured only to where its line ends, the arm of a T 4.8 mm
 tall in lines 0.8 mm wide reached 1.01 mm, under the 1.06 mm of its junction triangle’s longest edge,
 and the T lost it. Through its cap it reaches 1.55 mm. A bump’s cap is as tall as the bump, and a bump
@@ -8255,6 +8256,13 @@ shorter than the machine’s shortest (<code>DEV-FIN-001</code>): fitted to the 
 plans, Ink/Stitch’s files come within about 1 % of StitchCraft’s stitches. Ink/Stitch’s extra trims and
 jumps are jumps that go nowhere at thread changes, which a StitchCraft PES file has no record of
 (<code>DEV-FMT-001</code>), and without them the trims and jumps agree within 1.</p>
+</li>
+<li>
+<p>A wrong choice sews alike in both programs. So, every night too, the lines of each shape sewn wholly as
+running stitches are compared with the lines Ink/Stitch’s Fill to Stroke draws for it (<code>REQ-AUTO-022</code>).
+The shapes are TS-13B’s word 4 mm tall and its windows’ lines, and the letters T, H and E from 3 to 10 mm
+tall in lines from 0.3 to 0.9 mm wide. Each branch Ink/Stitch finds has one of StitchCraft’s, and away
+from their ends the lines lie within 0.15 of a width of each other.</p>
 </li>
 </ul>
 <p>Codes 0900 to 0999 are automatic digitizing’s (<a href="#diagnostics">diagnostics</a>).</p>
@@ -9920,8 +9928,8 @@ the difference as excused. An excuse for a measure that agrees fails the case, s
 the ledger is still true. Where the differential can undo a deviation in Ink/Stitch’s file, it measures
 the file again without it. The excuse then counts only if the measure agrees. Ink/Stitch’s jumps that go
 nowhere (<code>DEV-FMT-001</code>) excuse as many trims and jumps as there are of them, and no more.</p>
-<p><code>REQ-SVG-008</code> and <code>REQ-AUTO-021</code> are the requirements of level L3. The other runs of the suite leave
-them and their cases to this one. Until M8 reads every <code>inkstitch:</code> attribute, the corpus is the designs
+<p><code>REQ-SVG-008</code>, <code>REQ-AUTO-021</code> and <code>REQ-AUTO-022</code> are the requirements of level L3. The other runs of
+the suite leave them and their cases to this one. Until M8 reads every <code>inkstitch:</code> attribute, the corpus is the designs
 the SVG reader sews in full, at Ink/Stitch’s defaults, with trim and stop commands and the file version.
 A case may name a test sheet drawn as a design instead (<code>sheet</code>). StitchCraft sews the sheet, and
 Ink/Stitch an SVG file of the elements StitchCraft sews it with, written with their parameters
@@ -9929,6 +9937,34 @@ Ink/Stitch an SVG file of the elements StitchCraft sews it with, written with th
 parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check StitchCraft’s
 stitches of those choices against Ink/Stitch’s (<code>REQ-AUTO-021</code>). <code>conformance/inkstitch/README.md</code> says
 how to run it by hand and how to add a case.</p>
+<p><strong>Centre lines.</strong> Sewing what StitchCraft chose can’t find a choice that is wrong: TS-13B’s small T sewed
+a Γ, the left arm of its bar left out of its centre line, and the differential agreed by every measure.
+The <code>centre-lines</code> cases compare a step before the stitches (<code>REQ-AUTO-022</code>,
+<code>xtask/src/conformance/centre_lines.rs</code>). Each shape that automatic digitizing sews wholly as running
+stitches is digitized alone, and its lines are compared with the lines Ink/Stitch’s Fill to Stroke draws
+for it, with its threshold at the shape’s width. Fill to Stroke finds them another way, from a Voronoi
+diagram of the outline. Where one program leaves a branch out, or puts a line off the middle, the 2
+differ. With <code>reach</code> the width and 0.1 mm:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Measure</th><th>Tolerance</th></tr>
+</thead>
+<tbody>
+<tr><td>each end of Ink/Stitch’s lines</td><td>an end of StitchCraft’s within <code>reach</code></td></tr>
+<tr><td>each end of StitchCraft’s lines</td><td>within <code>reach</code> of Ink/Stitch’s lines</td></tr>
+<tr><td>each program’s lines, farther than <code>reach</code> from their ends</td><td>within a quarter of the width of the other’s</td></tr>
+</tbody>
+</table>
+</div>
+<p>The ends differ by design. StitchCraft’s line stops short of a round or square end (<code>REQ-AUTO-014</code>), and
+Fill to Stroke’s runs to the end’s middle. Fill to Stroke leaves out a branch shorter than its threshold,
+such as the stub up into the top of an A, which StitchCraft sews to cover the top. A case names a test
+sheet, an SVG file of shapes, or letters that <code>stitchcraft_testkit::designs::letter</code> draws (<code>[letters]</code>).
+The report has a row for each shape, and <code>target/conformance/differential/</code> the shapes as written for
+Ink/Stitch and a picture of both programs’ lines over them. Run on the code from before the T was fixed
+(<code>03f0ab69</code>), the letters case finds a branch missing in 3 letters 3 mm tall: the Ts in 0.5 and 0.7 mm
+lines, and the E in 0.7 mm lines.</p>
 <h3 id="l4--physical-milestone-gates"><a class="header" href="#l4--physical-milestone-gates">L4 — Physical (milestone gates)</a></h3>
 <p>Machine checkpoints sew generated test sheets on the target machine and record the results through the
 <strong>Sew-out report</strong> issue form (<a href="#machine-testing-protocol">machine testing</a>). A checkpoint result is
