@@ -7,12 +7,17 @@
 //! as VectorCraft's Abutting method traces it, each area with a hole where the next one is; or stacked, as
 //! its Overlapping method and Inkscape's Stack option trace it, each colour a whole shape over the ones
 //! under it. Every shape is automatic: a shape without settings, as `--auto` reads it.
+//!
+//! The TS-13 sheets themselves are here too, with their stitches where the sheet draws its shapes
+//! ([`sheet`]), so that a case can measure what a sheet sews against what it draws. A sheet's machine file
+//! has its origin at the middle of its stitches, which moves every stitch by the same amount.
 
-use stitchcraft_engine::testsheets::pictures;
+use stitchcraft_engine::design::{Design, DesignSettings};
 pub use stitchcraft_engine::testsheets::pictures::{Picture, Trace};
-use stitchcraft_plan::{Rgb, Thread};
+use stitchcraft_engine::testsheets::{find, pictures};
+use stitchcraft_plan::{Rgb, StitchPlan, Thread};
 
-use crate::designs::{BLUE, RED, automatic, fill, p};
+use crate::designs::{BLUE, RED, automatic, fill, p, planned_with};
 
 /// A gold thread.
 pub const GOLD: Thread = Thread::new(Rgb::new(230, 180, 30));
@@ -45,4 +50,19 @@ pub fn badge(trace: Trace) -> Picture {
 /// `trace` says, badge by badge ([`pictures::badges`]).
 pub fn badges(trace: Trace) -> Picture {
     pictures::badges((0.0, 0.0), 0.6, trace).unwrap()
+}
+
+/// The test sheet `id`'s design, and its plan for the reference machine with its stitches where the design
+/// draws them: planned with its origin at the middle of its shapes, which the hoop holds, and moved back by
+/// it.
+pub fn sheet(id: &str) -> (Design, StitchPlan) {
+    let design = find(id).and_then(|sheet| sheet.design()).unwrap_or_else(|| panic!("{id} is no designed sheet")).unwrap();
+    let bounds = design.bounds().unwrap();
+    let middle = p((bounds.min().x() + bounds.max().x()) / 2.0, (bounds.min().y() + bounds.max().y()) / 2.0);
+    let outcome = planned_with(design.elements().to_vec(), DesignSettings { origin: Some(middle), ..design.settings });
+    let mut plan = outcome.plan.unwrap_or_else(|| panic!("{id}: {:?}", outcome.diagnostics));
+    for stitch in plan.blocks.iter_mut().flat_map(|block| &mut block.stitches) {
+        stitch.at = p(stitch.at.x() + middle.x(), stitch.at.y() + middle.y());
+    }
+    (design, plan)
 }

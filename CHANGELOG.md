@@ -5,6 +5,15 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- MC-8's checks of the TS-13 sheets that their stitches can answer are cases now (`tests/auto_sheets.rs`),
+  measured on each sheet's own plan where it draws its shapes. Where the bar runs on beside the square, each
+  ends its rows at its own edge. The specks sew as the disc, and no shape sews over one drawn over it. A line
+  traced as an area runs to within its width of its ends, and the smile's column ends where its caps do. The
+  columns' rungs lie within 10° of square round rings, bends and a star's points, and the face's columns cover
+  the edges of the areas under them. The cases also count the jump threads each half leaves on the PE800 and
+  how many later stitches sew down: digitized, TS-13B leaves 37, 16 of them sewn down, where its letters as
+  drawn leave 6 and none. `stitchcraft-testkit::stitches` reads the needle points, rungs and jump threads back
+  from a plan.
 - Random designs check the automatic sewing order's rules together (`REQ-AUTO-010`, `REQ-AUTO-012`), 256
   of them on every run. Each is 2 to 6 squares and lines that overlap and meet on a half-millimetre grid.
   Each shape sews once or is said to sew nothing, and what overlaps keeps its paint order. A line that
