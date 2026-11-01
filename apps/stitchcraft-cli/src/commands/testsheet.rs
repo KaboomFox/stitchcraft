@@ -16,7 +16,9 @@ use stitchcraft_formats::{Encoded, read_back};
 use stitchcraft_plan::invariants;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan};
 
-use super::{Outcome, Status, asked_profile, describe_file, describe_plan, describe_threads, output_format, render_diagnostics, write_files};
+use super::{
+    Entries, Outcome, Status, asked_profile, describe_file, describe_plan, describe_threads, output_format, render_diagnostics, write_files,
+};
 use crate::cli::TestsheetArgs;
 
 /// Runs `stitch testsheet`.
@@ -89,7 +91,7 @@ fn report(
     describe_file(&mut out, output, format, bytes);
     let _ = writeln!(out, "  profile   {} ({})", profile.id, profile.name);
     describe_plan(&mut out, back, Some(profile));
-    describe_threads(&mut out, plan, format.palette().map(|id| id.palette()));
+    describe_threads(&mut out, plan, format.palette().map(|id| Entries::Written(id.palette())));
     let _ = writeln!(out, "after sewing, check:");
     for check in sheet.checks {
         let _ = writeln!(out, "  - {check}");

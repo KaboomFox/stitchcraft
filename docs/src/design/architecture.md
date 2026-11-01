@@ -144,8 +144,9 @@ A future in-tree VectorCraft crate would be a fifth adapter calling the same two
   the lints. The command line catches it and ends with exit status 4. For `stitch plan` it also writes a
   bug-report bundle that reproduces the bug ([determinism](determinism.md#bug-reports)). A VectorCraft
   exporter declines with it, so VectorCraft doesn't write the file.
-- **The command line's own promises.** A command refuses outputs that name the same file as each other,
-  or as a file it reads (`REQ-CLI-007`), and writes each file under a temporary name of its own, created
+- **The command line's own promises.** A command refuses outputs that name the same file as each other or
+  as a file it reads (`REQ-CLI-007`). `stitch plan` counts the bug-report bundle it would leave on a bug as
+  one of them. It writes each file under a temporary name of its own, created
   new and synced before it is renamed into place (`REQ-CLI-006`). Built for WASI, as
   `cargo xtask wasm --goldens` runs it, a program has no process id, so there the names count from 0. What it prints of a file it wrote is the
   file read back (`REQ-CLI-008`, `stitchcraft_formats::read_back`, which the VectorCraft exporters call too). A closed standard output keeps a command's exit status, any other error

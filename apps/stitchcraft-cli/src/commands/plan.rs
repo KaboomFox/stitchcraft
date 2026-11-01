@@ -45,7 +45,8 @@ use stitchcraft_render::{Image, Settings, Style};
 
 use super::bug_report::{self, Phase, Run};
 use super::{
-    Outcome, Status, asked_profile, describe_file, describe_plan, describe_threads, distinct, hex, output_format, render_diagnostics, write_files,
+    Entries, Outcome, Status, asked_profile, bundle_free, describe_file, describe_plan, describe_threads, distinct, hex, output_format,
+    render_diagnostics, write_files,
 };
 use crate::cli::PlanArgs;
 use crate::files::{self, Scratch, Unwritten};
@@ -182,6 +183,9 @@ pub fn run(args: &PlanArgs) -> Outcome {
     if let Err(outcome) = distinct(&[&args.design], &writes) {
         return outcome;
     }
+    if let Err(outcome) = bundle_free(&args.output, &args.design, writes.get(1..).unwrap_or_default()) {
+        return outcome;
+    }
     let bytes = match files::read_capped(&args.design) {
         Ok(bytes) => bytes,
         Err(e) => {
@@ -301,7 +305,7 @@ fn summary(args: &PlanArgs, profile: &MachineProfile, format: FormatId, (plan, b
     describe_file(&mut out, &args.output, format, machine_file);
     let _ = writeln!(out, "  profile   {} ({})", profile.id, profile.name);
     describe_plan(&mut out, back, Some(profile));
-    describe_threads(&mut out, plan, format.palette().map(|id| id.palette()));
+    describe_threads(&mut out, plan, format.palette().map(|id| Entries::Written(id.palette())));
     out
 }
 

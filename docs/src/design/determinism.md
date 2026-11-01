@@ -93,7 +93,8 @@ refuses a format it does not know by its number, whatever else the file holds.
 
 `stitch bug-report --replay` plans the design again through the same code as `stitch plan` and compares
 each record (`REQ-CLI-001`). `stitch plan` writes a bundle by itself when it finds a bug in StitchCraft
-(`REQ-CLI-002`). The user guide's [Report a bug](../user/how-to/report-a-bug.md) shows both.
+(`REQ-CLI-002`), next to its output, and refuses at the start another output of that name
+(`REQ-CLI-007`). The user guide's [Report a bug](../user/how-to/report-a-bug.md) shows both.
 
 The plan's digest is written out entry by entry rather than from the plan's `Debug` text, so that a
 compiler that prints numbers differently cannot change it.

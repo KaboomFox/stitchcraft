@@ -205,6 +205,11 @@ pub fn run(args: &BugReportArgs) -> Outcome {
     }
 }
 
+/// Where a bug in writing `output` leaves its bundle: next to it, named after it.
+pub fn bundle_path(output: &Path) -> PathBuf {
+    output.with_extension("bug-report.json")
+}
+
 /// Runs `run` — a command — and turns a panic in it, a bug in StitchCraft, into a report with exit
 /// status 4; for `stitch plan`, with a bug-report bundle next to the file it was asked for.
 pub fn guarded(command: &Command, run: impl FnOnce() -> Outcome + UnwindSafe) -> Outcome {
@@ -215,7 +220,7 @@ pub fn guarded(command: &Command, run: impl FnOnce() -> Outcome + UnwindSafe) ->
 /// `output`, the file `stitch plan` was asked to write, and says so after `outcome`, which ends with exit
 /// status 4.
 pub fn beside(output: &Path, run: &Run, sewn: Result<&Sewn, (&str, Phase)>, outcome: Outcome) -> Outcome {
-    let path = output.with_extension("bug-report.json");
+    let path = bundle_path(output);
     let mut stderr = outcome.stderr;
     match write(&path, &bundle(run, sewn)) {
         Ok(()) => {
