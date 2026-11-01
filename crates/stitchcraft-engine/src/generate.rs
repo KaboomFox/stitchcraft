@@ -427,13 +427,20 @@ fn fill(
 
 /// The tatami fill `sewing` describes, its settings read as its stitch type reads them; `None` when they
 /// cannot be read, or when its fill method is not sewn yet (`SC-W0011`), which `diagnostics` says. A fill
-/// set to Ink/Stitch's legacy fill sews no underlay, whatever its `fill_underlay` says (`REQ-FILL-005`).
+/// set to Ink/Stitch's legacy fill takes what Ink/Stitch's does: no underlay, pull compensation, random
+/// stitch lengths or gap-filling rows, whatever its settings say (`REQ-FILL-005`). A longest stitch, the
+/// rows' or the underlay's, shorter than twice the shortest stitch is raised to it (`SC-W0402`).
 fn fill_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Option<Fill> {
     let tatami = sewing.read(TatamiParams::from_set_as, diagnostics);
     let running = sewing.read(RunningParams::from_set_as, diagnostics);
     let pull = sewing.read(PullParams::from_set_as, diagnostics);
-    let (Some(mut tatami), Some(running), Some(pull), Some(shared)) = (tatami, running, pull, sewing.shared) else { return None };
-    tatami.fill_underlay &= !legacy(sewing.set);
+    let (Some(mut tatami), Some(mut running), Some(pull), Some(shared)) = (tatami, running, pull, sewing.shared) else { return None };
+    let legacy = legacy(sewing.set);
+    if legacy {
+        tatami.fill_underlay = false;
+        tatami.gap_fill_rows = 0;
+        running.enable_random_stitch_length = false;
+    }
     if sewing.stitch_type != StitchType::TatamiFill {
         let method = sewing.stitch_type.id();
         diagnostics.push(not_yet(&format!("This element's fill method, `{method}`, is not sewn by this version of StitchCraft yet")));
@@ -445,6 +452,14 @@ fn fill_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Option<F
         return None;
     };
     let min = shared.min_stitch.get();
+    // Rows stitched shorter than twice the shortest stitch sew stitches the plan merges, as a running stitch
+    // would. Raised, each is a length, as twice a shortest stitch is.
+    let longest = Mm::new(raised("max_stitch_length_mm", longest, min, diagnostics)).unwrap_or(longest);
+    if tatami.fill_underlay
+        && let Some(underlay) = tatami.fill_underlay_max_stitch_length_mm
+    {
+        tatami.fill_underlay_max_stitch_length_mm = Mm::new(raised("fill_underlay_max_stitch_length_mm", underlay, min, diagnostics)).ok();
+    }
     let travel = Travel {
         length: raised("running_stitch_length_mm", length, min, diagnostics),
         tolerance: running.running_stitch_tolerance_mm.get(),
@@ -452,7 +467,8 @@ fn fill_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Option<F
         underpath: tatami.underpath,
         jump: shared.jump.get(),
     };
-    Some(tatami.fill(longest, &running, travel, fill_pull(&pull, diagnostics), shared.force_locks))
+    let pull = if legacy { Pull::default() } else { fill_pull(&pull, diagnostics) };
+    Some(tatami.fill(longest, &running, travel, pull, shared.force_locks))
 }
 
 /// A fill's pull compensation, as its settings give it: Ink/Stitch reads a value below 0 as 0, and so does a
@@ -614,6 +630,48 @@ mod tests {
 
     fn codes(diagnostics: &[Diagnostic]) -> Vec<Code> {
         diagnostics.iter().map(|d| d.code).collect()
+    }
+
+    #[test]
+    fn diag_sc_w0402_a_fill_s_longest_stitch_below_twice_the_shortest_is_raised() {
+        // A 10 mm square on the reference machine, whose shortest stitch is 0.3 mm: rows stitched 0.2 mm
+        // long would sew stitches it merges. Its longest stitch is raised to 0.6 mm, and its underlay's
+        // with it, as a running stitch's length is.
+        let segments = [p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0)].map(Segment::Line).to_vec();
+        let square = Shape::Fill { path: Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments, closed: true }] }, rule: FillRule::NonZero };
+        let sewn = |params: &[(&str, &str)]| {
+            generate(
+                &element(square.clone(), params),
+                &DesignSettings::default(),
+                stitchcraft_plan::profiles::REFERENCE,
+                &Neighbours::default(),
+                &Budget::DEFAULT,
+            )
+        };
+        let raised = sewn(&[("max_stitch_length_mm", "0.2"), ("fill_underlay", "false")]);
+        let said: Vec<String> = raised.diagnostics.iter().map(ToString::to_string).collect();
+        assert_eq!(
+            said,
+            ["warning SC-W0402: The stitch length 0.2 mm (`max_stitch_length_mm`) is shorter than twice the shortest stitch (0.3 mm), so 0.6 mm \
+              is used."]
+        );
+        let points: Vec<Point> = raised.generated.unwrap().groups.concat();
+        let along: Vec<f64> = points.windows(2).filter(|w| (w[0].y() - w[1].y()).abs() < 1e-9).map(|w| w[0].distance(w[1])).collect();
+        // Of the stitches along the rows, all but their ends' and the needle's way in are 0.6 mm long.
+        let raised_ones = along.iter().filter(|length| (*length - 0.6).abs() < 1e-6).count();
+        assert!(raised_ones * 10 > along.len() * 9, "{raised_ones} of {}: {along:?}", along.len());
+        let underlay = sewn(&[("fill_underlay_max_stitch_length_mm", "0.25")]);
+        assert_eq!(
+            underlay.diagnostics.iter().map(ToString::to_string).collect::<Vec<_>>(),
+            ["warning SC-W0402: The stitch length 0.25 mm (`fill_underlay_max_stitch_length_mm`) is shorter than twice the shortest stitch \
+              (0.3 mm), so 0.6 mm is used."]
+        );
+        // Without underlay, its longest stitch says nothing; nor does a longest stitch of 3 mm. A legacy fill
+        // has no underlay whatever its settings say (`REQ-FILL-005`): it says only that it is sewn so.
+        assert!(sewn(&[("fill_underlay", "false"), ("fill_underlay_max_stitch_length_mm", "0.25")]).diagnostics.is_empty());
+        let legacy = sewn(&[("fill_method", "legacy_fill"), ("fill_underlay_max_stitch_length_mm", "0.25")]);
+        assert_eq!(codes(&legacy.diagnostics), [Code::FillLegacyAsTatami]);
+        assert!(sewn(&[("max_stitch_length_mm", "3")]).diagnostics.is_empty());
     }
 
     #[test]

@@ -166,7 +166,7 @@ fn built(area: Area, rule: FillRule) -> Built {
         );
     }
     if region.parts.len() > 1 {
-        let message = format!("This fill's area falls into {} parts that are sewn one after another, with a jump between each.", region.parts.len());
+        let message = format!("This fill's area falls into {} parts, sewn one after another, each on its own.", region.parts.len());
         diagnostics.push(
             Diagnostic::new(Code::FillPartsApart, message)
                 .with_fix(Fix::Hint("To choose the order the parts are sewn in, break the fill apart into one element for each part.".to_string())),
