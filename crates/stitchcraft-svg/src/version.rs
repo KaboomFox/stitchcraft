@@ -89,8 +89,8 @@ impl Version {
     pub(crate) fn of(text: Option<&str>, content: bool) -> Version {
         let number = text.and_then(|text| text.trim().parse::<i64>().ok()).unwrap_or(0);
         match number {
-            CURRENT => Version::Current,
             newer if newer > CURRENT => Version::Newer(newer),
+            CURRENT => Version::Current,
             _ if !content => Version::Current,
             older if older >= 1 => Version::Older(older),
             _ => Version::Unversioned,
