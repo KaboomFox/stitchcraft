@@ -4,7 +4,7 @@
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
         <title>Page not found - StitchCraft</title>
-        <base href="/">
+        <base href="/stitchcraft/dev/">
 
 
         <!-- Custom HTML head -->
@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-49be8619.js";
+            window.path_to_searchindex_js = "searchindex-76b304ac.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b793f3ad.js"></script>
@@ -178,8 +178,11 @@
 
                 <div id="mdbook-content" class="content">
                     <main>
-                        <h1 id="document-not-found-404"><a class="header" href="#document-not-found-404">Document not found (404)</a></h1>
-<p>This URL is invalid, sorry. Please use the navigation bar or search to continue.</p>
+                        <!-- The page the site shows for an address it has no page for (`input-404`, mdBook's default name). It has
+no heading: mdBook links each heading to itself, and this page's links start from the book's first page
+(`site-url`), so a heading's link would leave it. -->
+<p><strong>There is no page at this address.</strong> It may have moved: search the book, or start from its
+<a href="./">first page</a>.</p>
 
                     </main>
 

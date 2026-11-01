@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-49be8619.js";
+            window.path_to_searchindex_js = "searchindex-76b304ac.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b793f3ad.js"></script>
@@ -1114,6 +1114,7 @@ sets them from M6. Ink/Stitch’s trim and stop commands are read today.</p>
 <p>The pictures on these pages set parameters on the engine directly, to show what each one does.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="running-stitch"><a class="header" href="#running-stitch">Running stitch</a></h1>
+<!-- stitch-types: running_stitch, manual_stitch -->
 <p>A running stitch is a line of single stitches along a path. StitchCraft sews each stroke of an SVG design
 with it, unless the stroke’s <code>stroke_method</code> names another stitch. Use it for outlines, fine details and
 lettering at small sizes.</p>
@@ -1210,6 +1211,7 @@ stitch</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="zigzag-stroke"><a class="header" href="#zigzag-stroke">Zigzag stroke</a></h1>
+<!-- stitch-types: zigzag_stitch -->
 <p>A zigzag stroke crosses a path from side to side and back, as wide as the stroke’s line. Set an element’s
 <code>stroke_method</code> to <code>zigzag_stitch</code> for it. Use it for a light border, a couched look, or a stem too thin
 for a satin column.</p>
@@ -1269,6 +1271,7 @@ that is one point is left out, and <code>SC-W0401</code> names it.</p>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="e-stitch"><a class="header" href="#e-stitch">E-stitch</a></h1>
+<!-- stitch-types: e_stitch -->
 <p>An E-stitch edges appliqué. A row of stitches runs along one edge of a band, its spine, and at each step
 a spike reaches across the band and comes back, like a row of E’s laid end to end. It is the blanket
 stitch, which holds an appliqué’s raw edge down with far less thread than a satin column. Ink/Stitch’s
@@ -1320,6 +1323,7 @@ variation and where it starts and ends. The reference lists each one with its ra
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="s-stitch"><a class="header" href="#s-stitch">S-stitch</a></h1>
+<!-- stitch-types: s_stitch -->
 <p>An S-stitch is a satin column sewn one way at a time. At each step one stitch crosses the band, the next
 crosses back, and between them the needle runs a short way along an edge. Its thread draws S’s laid end
 to end. Split by a longest stitch, its stitches lie across the band in rows that follow it, the look
@@ -1368,6 +1372,7 @@ included. The reference gives each one’s range and default:</p>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="zigzag-satin"><a class="header" href="#zigzag-satin">Zigzag satin</a></h1>
+<!-- stitch-types: zigzag -->
 <p>A zigzag satin is a satin column sewn as a zigzag. Every stitch slants across the band, from a point on one
 edge to a point on the other half the spacing along, and the next slants back. Turn an element’s
 <code>satin_column</code> on and choose <code>zigzag</code> as its <code>satin_method</code>. It is drawn, and set up in VectorCraft, as an
@@ -10089,7 +10094,8 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 <tr><td>WebAssembly</td><td>L0 to L3 crates and the plug-in build for <code>wasm32-unknown-unknown</code>, and <code>stitch</code>, built for WASI and run by wasmtime, makes every golden file of the conformance cases byte for byte</td><td><code>xtask/src/wasm.rs</code>, <code>xtask/src/conformance/wasm.rs</code></td><td><code>cargo xtask wasm</code> · <code>cargo xtask wasm --goldens</code> · CI</td></tr>
 <tr><td><strong>Movable into VectorCraft</strong></td><td>Every package is <code>stitchcraft-*</code>; crates inherit only workspace keys VectorCraft defines; tooling works from its own folder on StitchCraft’s packages (<a href="#adr-0011-stitchcraft-can-move-into-vectorcrafts-repository">ADR-0011</a>)</td><td><code>xtask/src/layers.rs</code>, <code>xtask/src/util.rs</code>, <code>xtask/src/join.rs</code></td><td><code>move</code> job in <code>compat.yml</code> · daily and on PRs touching manifests or tooling</td></tr>
 <tr><td><strong>No GPL code</strong></td><td>No GPL/AGPL licence text, in any case, nor a module’s short GPL notice, and no pasted Python source anywhere in the repository: every text file, documents and files without an extension included (<a href="#adr-0012-read-inkstitchs-source-never-copy-it">ADR-0012</a>)</td><td><code>xtask/src/cleanroom.rs</code></td><td><code>cargo xtask cleanroom</code> · CI</td></tr>
-<tr><td>Docs</td><td>Generated pages fresh and none left over; links, anchors (as mdBook makes them) and included files valid; mentioned <code>cargo xtask</code> commands exist; <code>REQ-</code> and <code>DEV-</code> ids exist, and a code is registered once its milestone is done; no long sentence on two pages; every repository path named exists</td><td><code>xtask/src/docs.rs</code>, <code>xtask/src/docs_audit.rs</code>, <code>xtask/src/markdown.rs</code></td><td><code>cargo xtask docs --check</code> · CI</td></tr>
+<tr><td>Docs</td><td>Generated pages fresh and none left over; links, anchors (as mdBook makes them) and included files valid; mentioned <code>cargo xtask</code> commands exist; <code>REQ-</code> and <code>DEV-</code> ids exist, and a code is registered once its milestone is done; no long sentence on two pages; every repository path named exists; each stitch type the engine sews has a page with at least two pictures</td><td><code>xtask/src/docs.rs</code>, <code>xtask/src/docs_audit.rs</code>, <code>xtask/src/markdown.rs</code>, <code>xtask/src/stitch_pages.rs</code></td><td><code>cargo xtask docs --check</code> · CI</td></tr>
+<tr><td><strong>The published book</strong></td><td>The pages mdBook builds link only to files of the book and to ids on their pages. Their links to the repository’s files on <code>main</code>, each page’s edit link among them, name files of the checkout</td><td><code>xtask/src/book.rs</code>, <code>docs/book.toml</code></td><td><code>cargo xtask book</code> · <code>cargo xtask ci</code> · CI</td></tr>
 <tr><td><strong>Design pages follow the code</strong></td><td>Every source file of a crate or app is on a page’s <code>implements</code> comment, and a branch that changes those files changes the page too or records a <code>Design-reviewed:</code> line</td><td><code>xtask/src/design_map.rs</code>, <code>.claude/settings.json</code> (names the pages after each edit)</td><td><code>cargo xtask docs --check</code> · CI</td></tr>
 <tr><td>Docs images</td><td>Every image a page shows is one a shot in <code>docs/shots.toml</code> writes, with alt text, and regenerating to the committed file. VectorCraft’s own pictures, which its pinned release makes, regenerate to within a tolerance of theirs, and its plug-in dialogs show a label for each parameter</td><td><code>xtask/src/shots/</code>, <code>compat/vc-window/tests/shots.rs</code></td><td><code>cargo xtask shots --check</code> · CI; <code>cargo xtask shots --vectorcraft --check</code> · <code>shots-ui</code> job</td></tr>
 <tr><td>Conformance</td><td>Requirement/case consistency; every fixture has its row in the fixtures index; all cases pass; changed goldens need the <code>golden-change</code> label and a changelog line</td><td><code>xtask/src/conformance/</code>, <code>ci.yml</code>, <code>goldens.yml</code></td><td><code>cargo xtask conformance</code> · CI</td></tr>
@@ -10353,13 +10359,24 @@ which the site doesn’t have. A page links to the folder instead (<code>../stit
 The 14 such links on the site were broken until 2026-11-01. A doc that names a <code>cargo xtask</code> subcommand that does not exist
 fails it too: we found that drift in VectorCraft’s own <code>AGENTS.md</code>. Ids must be in their files, <code>REQ-…</code>
 and <code>DEV-…</code> alike, and an <code>SC-…</code> code registered once its milestone is done. An image must be one a shot
-writes, with alt text.</li>
+writes, with alt text. Each stitch type the engine sews needs one page in <code>docs/src/user/stitches/</code>
+that shows at least two pictures. The page claims its types by their Ink/Stitch ids, on a line of
+its own: <code>&lt;!-- stitch-types: running_stitch, manual_stitch --&gt;</code>. The check plans an element of each
+stitch type, and each type the engine sews needs its page, so a new stitch type brings one. <code>UNSHOWN</code>
+in <code>xtask/src/stitch_pages.rs</code> lists the types sewn before the check, whose pages roadmap step M13.11
+writes. Each is a warning until then, and an error once its page exists.</li>
 <li><code>cargo xtask conformance --check</code> fails when requirements and cases disagree, or a fixture has no row
 in the fixtures index.</li>
 <li><code>cargo xtask shots --check</code> fails for a declared image that is missing or has no alt text. It also
 regenerates each <code>stitch</code> image and compares it with the committed file, which must come out byte for
 byte the same. It checks VectorCraft’s shots’ declarations without running VectorCraft.</li>
-<li><code>mdbook build docs</code> fails when the book does not build.</li>
+<li><code>cargo xtask book</code> builds the book with mdBook and reads every page it made, <code>print.html</code> included.
+It fails when a link or an image leads to no file of the book, or an <code>#anchor</code> to no id of its page.
+A link to the repository’s files on GitHub, on <code>main</code>, must name a file or folder of the checkout. The
+“suggest an edit” link of each page is such a link, and until 2026-11-01 every one named
+<code>docs/src/src/&lt;page&gt;.md</code>, which isn’t a file. The links of the 404 page start from its <code>&lt;base href&gt;</code>, as
+a browser’s do. So the 404 page has no heading: mdBook links each heading to itself, and from the 404
+page that link would lead to the first page.</li>
 <li><code>cargo test --doc</code> fails when a Rust snippet does not compile. Command-line examples are generated
 pages, which <code>docs --check</code> covers.</li>
 <li><code>typos</code> fails on a misspelling (allow-list in <code>typos.toml</code>).</li>
@@ -10388,7 +10405,8 @@ other change.</p>
 per <code>stitch</code> shot of each sheet, so a new sheet gets its picture by declaring a shot.</p>
 <h2 id="publishing"><a class="header" href="#publishing">Publishing</a></h2>
 <ul>
-<li>Push to <code>main</code> → build and publish to <code>/dev/</code> on GitHub Pages.</li>
+<li>Push to <code>main</code> → build and publish to <code>/dev/</code> on GitHub Pages. The book is built with <code>site-url</code> set
+to where it is published, and its 404 page answers for every address of the site that has no page.</li>
 <li>Tag <code>vX.Y.Z</code> → publish to <code>/vX.Y/</code> and point <code>/latest/</code> at it. Older versions stay online.</li>
 <li>Every page shows the version it documents and links to the same page in <code>/dev/</code>.</li>
 </ul>
@@ -11655,6 +11673,7 @@ first, and the steps that make new kinds of shape into stitches follow.</p>
 <tr><td>M13.8</td><td>Automatic digitizing by default for VectorCraft documents</td><td>the end-to-end cases expect it</td></tr>
 <tr><td>M13.9 ✅ 🧪</td><td><code>stitch plan picture.png</code>: VectorCraft’s command line traces the picture, or StitchCraft reads and traces it itself</td><td>Decision recorded in the design, <a href="#adr-0015-pictures-are-traced-by-vectorcrafts-command-line">ADR-0015</a>: VectorCraft’s command line traces it, with the <code>trace</code> case’s steps (2026-10-31)</td></tr>
 <tr><td>M13.10 ✅</td><td><code>stitch plan picture.png</code> and <code>stitch export picture.png</code> trace a PNG or JPEG file with VectorCraft’s command line, in the machine’s threads, and sew it digitized automatically. A coded error when VectorCraft isn’t installed</td><td>a Level B case plans a picture through <code>stitch</code> on every track</td></tr>
+<tr><td>M13.11</td><td>Pictures for what sews without them. User pages for satin columns and tatami fills, the tatami fill’s page also saying how Ink/Stitch’s legacy fill sews, each with its pictures. A page on automatic digitizing, with pictures of shapes before and after, and screenshots in the how-to <a href="#satin-columns-and-presets-in-vectorcraft">Satin columns and presets in VectorCraft</a></td><td><code>UNSHOWN</code> in <code>xtask/src/stitch_pages.rs</code> empty, so every stitch type sewn has a page with pictures</td></tr>
 </tbody>
 </table>
 </div>
@@ -11992,8 +12011,11 @@ Keep files under 800 lines; split by concern (sampling, routing, compensation).<
 each).</li>
 <li><strong>Make the cases pass.</strong> Run <code>cargo xtask conformance --filter &lt;area&gt;</code>; switch the requirements to
 <code>active</code>.</li>
-<li><strong>Docs.</strong> <code>cargo xtask docs</code> regenerates the parameter pages; write the user-facing page in
-<code>docs/src/user/</code> (what it is for, when to use it, two or three declared shots); run <code>cargo xtask shots</code>.</li>
+<li><strong>Docs.</strong> <code>cargo xtask docs</code> regenerates the parameter pages. Write the user-facing page in
+<code>docs/src/user/stitches/</code> (what it is for, when to use it, two or three declared shots) and run
+<code>cargo xtask shots</code>. The page claims the type under its title with <code>&lt;!-- stitch-types: &lt;id&gt; --&gt;</code>.
+Once the engine sews the type, <code>cargo xtask docs --check</code> fails until one page claims it and shows
+at least two pictures.</li>
 <li><strong>Gate.</strong> <code>cargo xtask ci</code>, then open the PR with the roadmap step id.</li>
 <li><strong>Sew-out.</strong> If the type is new to the machine, list it for the next machine checkpoint (TS-11).</li>
 </ol>
