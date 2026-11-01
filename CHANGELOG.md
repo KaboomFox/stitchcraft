@@ -1107,6 +1107,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- Automatic digitizing sews each element once, and moves none across an element kept in its place
+  (`REQ-AUTO-012`). Where finding an element's neighbours needed more work than the budget, an element after
+  it that one before it freed sewed before it, and could sew twice. The review of 2026-10-31 found it.
+- A trim or a stop after an automatic area that the areas sewn after it cover whole is left out with
+  `SC-W0505`, as after any element that sews nothing. It was lost without a word. `SC-I0901` counts only the
+  shapes that sew, where it counted such an area too.
 - `stitch plan --format dst` and VectorCraft's DST exporter hold a design to DST's colour changes
   (`REQ-PLAN-006`). Planned for the format the machine reads, a PE800 design with 256 colour changes
   written as DST was refused with `SC-E0601`, which named PES v1 and its 255. Each plan is made for the

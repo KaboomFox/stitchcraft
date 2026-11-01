@@ -267,7 +267,8 @@ pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>
     // The picture's background is left out before anything is digitized, unless the lowest shape sews it.
     let background = neighbours::background(design, rules.first().and_then(Option::as_ref), budget);
     let lowest = background.as_ref().and_then(|(lowest, _)| *lowest);
-    let mut counts = Counts::default();
+    // How each shape digitized sews, by its place in the design.
+    let mut digitized = Vec::new();
     let mut sewn = Vec::with_capacity(elements.len());
     for (index, (element, rules)) in elements.iter().zip(&rules).enumerate() {
         if lowest == Some(index) {
@@ -287,7 +288,7 @@ pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>
                 continue;
             }
         };
-        counts.add(made.stitches);
+        digitized.push((index, made.stitches));
         diagnostics.extend(made.diagnostics);
         let part = |(element, part): (Element, Option<Polygon>)| Sewn {
             area: matches!(element.shape, Shape::Fill { .. }).then(|| rules.clone()),
@@ -298,11 +299,16 @@ pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>
         };
         sewn.extend(made.elements.into_iter().zip(made.parts).map(part));
     }
-    diagnostics.splice(0..0, counts.said());
     diagnostics.extend(background.map(|(_, said)| said));
-    let (out, said) = neighbours::beside(sewn, &design.settings, budget, design.sort_colours);
-    diagnostics.extend(said);
-    (Cow::Owned(out), diagnostics)
+    let beside = neighbours::beside(sewn, &design.settings, budget, design.sort_colours);
+    diagnostics.extend(beside.said);
+    // Of the shapes digitized, those that sew: the areas sewn after one may cover it whole.
+    let mut counts = Counts::default();
+    for (_, stitches) in digitized.into_iter().filter(|(index, _)| beside.sewing.contains(index)) {
+        counts.add(stitches);
+    }
+    diagnostics.splice(0..0, counts.said());
+    (Cow::Owned(beside.elements), diagnostics)
 }
 
 /// `made`, the parts of the automatic `element`, named for the plan with `meter`'s work: each keeps its id,

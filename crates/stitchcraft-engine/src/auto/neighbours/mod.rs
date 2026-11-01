@@ -52,12 +52,14 @@ mod under;
 
 pub(super) use background::background;
 
+use std::collections::BTreeSet;
+
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Meter, Point};
 use stitchcraft_params::{Family, StitchType, Validated};
 
 use super::{AutoParams, Style, outline, painted};
 use crate::design::{DesignSettings, Element, FillRule, Path, Shape};
-use crate::generate::stitch_type_of;
+use crate::generate::{stitch_type_of, trim_or_stop_left_out};
 use crate::generators::satin::{self, SatinParams};
 use crate::normalize::region::geom::{self, Envelope};
 use crate::normalize::region::ops::{self, Parts};
@@ -107,14 +109,26 @@ pub(super) struct Sewn {
 /// `sewn`, its specks merged into their neighbours, put in the order it sews in, every element moving when
 /// `sorted` and only the automatic ones otherwise, and its areas reaching under the shapes sewn after
 /// them; and what is said of them.
-pub(super) fn beside(sewn: Vec<Sewn>, settings: &DesignSettings, budget: &Budget, sorted: bool) -> (Vec<Element>, Vec<Diagnostic>) {
+pub(super) fn beside(sewn: Vec<Sewn>, settings: &DesignSettings, budget: &Budget, sorted: bool) -> Beside {
     let moving: Vec<order::Moving> = sewn.iter().map(|sewn| order::Moving { free: sorted || sewn.automatic, shape: sewn.shape }).collect();
     let mut shapes = Shapes::new(sewn, settings, budget);
     let mut said = specks::merged(&mut shapes, budget);
     said.extend(order::ordered(&mut shapes, &moving, budget));
     said.extend(under::reached(&mut shapes, budget));
     said.append(&mut shapes.said);
-    (shapes.into_elements(), said)
+    said.extend(shapes.unplaced());
+    let sewing = shapes.sewing();
+    Beside { elements: shapes.into_elements(), said, sewing }
+}
+
+/// What the neighbours make of the elements ([`beside`]).
+pub(super) struct Beside {
+    /// The elements as they are sewn.
+    pub(super) elements: Vec<Element>,
+    /// What is said of them.
+    pub(super) said: Vec<Diagnostic>,
+    /// The places in the design of the shapes that still sew: some element of each is left.
+    pub(super) sewing: BTreeSet<usize>,
 }
 
 /// What a shape paints, to the order and to an automatic area sewn before it.
@@ -187,6 +201,8 @@ type Painted = Option<(Kind, Vec<Polygon>)>;
 /// The elements of a design as automatic digitizing sews them, with the regions their neighbours need.
 struct Shapes {
     elements: Vec<Element>,
+    /// The place in the design of the shape each element is a part of ([`Sewn::shape`]).
+    of_shape: Vec<usize>,
     /// Each automatic area's settings of the rules; `None` for an element that is no automatic area.
     area: Vec<Option<AutoParams>>,
     /// Each automatic area's region as it now is: `None` when it could not be built, or bounds no area,
@@ -220,11 +236,12 @@ impl Shapes {
     /// drawn, and its fill says what it says of it then.
     fn new(sewn: Vec<Sewn>, settings: &DesignSettings, budget: &Budget) -> Self {
         let count = sewn.len();
-        let mut painted = Vec::with_capacity(count);
+        let (mut painted, mut of_shape) = (Vec::with_capacity(count), Vec::with_capacity(count));
         let (elements, area): (Vec<Element>, Vec<Option<AutoParams>>) = sewn
             .into_iter()
             .map(|sewn| {
                 painted.push(sewn.part.map(|part| Some((Kind::Part, vec![part]))));
+                of_shape.push(sewn.shape);
                 (sewn.element, sewn.area)
             })
             .unzip();
@@ -250,6 +267,7 @@ impl Shapes {
             .collect();
         Shapes {
             elements,
+            of_shape,
             area,
             regions,
             changed: vec![false; count],
@@ -402,6 +420,7 @@ impl Shapes {
         }
         use std::mem::take;
         self.elements = permuted(take(&mut self.elements), order);
+        self.of_shape = permuted(take(&mut self.of_shape), order);
         self.area = permuted(take(&mut self.area), order);
         self.regions = permuted(take(&mut self.regions), order);
         self.changed = permuted(take(&mut self.changed), order);
@@ -411,6 +430,18 @@ impl Shapes {
         self.grown = permuted(take(&mut self.grown), order);
         self.stitch_types = permuted(take(&mut self.stitch_types), order);
         self.kinds = permuted(take(&mut self.kinds), order);
+    }
+
+    /// `SC-W0505` for each element left out that sets a trim or a stop after it, which has no place there,
+    /// as after any element that sews nothing.
+    fn unplaced(&self) -> Vec<Diagnostic> {
+        let left_out = self.elements.iter().zip(&self.removed).filter(|(_, removed)| **removed);
+        left_out.filter_map(|(element, _)| trim_or_stop_left_out(element).map(|said| said.with_element(element.id.clone()))).collect()
+    }
+
+    /// The places in the design of the shapes that still sew: some element of each is left.
+    fn sewing(&self) -> BTreeSet<usize> {
+        self.of_shape.iter().zip(&self.removed).filter(|(_, removed)| !**removed).map(|(shape, _)| *shape).collect()
     }
 
     /// The elements as they are sewn: each automatic area whose region changed given its outline, and the
