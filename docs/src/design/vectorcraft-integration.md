@@ -272,9 +272,10 @@ channel, and an exporter no picture: `stitch export --preview` still draws what 
 
 ### Design settings and machine kept with the document
 
-Ink/Stitch keeps 3 settings for the whole design with an SVG file, `collapse_len_mm`, `min_stitch_len_mm`
+Ink/Stitch keeps 3 lengths for the whole design with an SVG file, `collapse_len_mm`, `min_stitch_len_mm`
 and `min_satin_stroke_width_mm` ([SVG input](svg-input.md#design-settings)), and a VectorCraft document has
-no place of its own for them. VectorCraft 0.16 keeps up to 1 MiB of JSON with a document for each filter,
+no place of its own for them. Its fourth such setting, `rotate_on_export`, which turns the design as it is
+written, is not kept yet (M8). VectorCraft 0.16 keeps up to 1 MiB of JSON with a document for each filter,
 the RFC's [P5](rfc-vectorcraft-abi-v2.md#p5-document-level-plug-in-data). The filter returns it as
 `documentData`, and the native file saves it in `document.unknown.pluginData` under the plug-in's id. An
 exporter reads every plug-in's in the document it is given, and a live effect isn't given it.

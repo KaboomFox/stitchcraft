@@ -62,6 +62,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0801`](#sc-e0801) | Error | SVG could not be read |
 | [`SC-W0802`](#sc-w0802) | Warning | SVG feature ignored |
 | [`SC-I0805`](#sc-i0805) | Info | Object left out, as the file asks |
+| [`SC-I0818`](#sc-i0818) | Info | Ink/Stitch file from an older version, read as Ink/Stitch updates it |
 | [`SC-W0804`](#sc-w0804) | Warning | Element geometry invalid or out of range |
 | [`SC-W0803`](#sc-w0803) | Warning | VectorCraft file from a newer format version; read best-effort |
 | [`SC-E0806`](#sc-e0806) | Error | VectorCraft file could not be read |
@@ -730,7 +731,10 @@ as a colour. Values that do not read are named too. A colour that does not read 
 viewer ignores it, and one of Ink/Stitch's design settings keeps its default. A line that `--auto`
 sews across its width, as a satin column or a fill, is as wide as its transforms stretch it on
 average, so a transform that stretches it more one way than the other, and draws it wider one way,
-is named too.
+is named too. So is what StitchCraft does not apply of an Ink/Stitch file: the settings of its
+elements, its design setting `rotate_on_export`, which turns the design as it is written, and the
+updates Ink/Stitch would make to a file with its settings and no file version, or from a newer
+Ink/Stitch, which is read as it is.
 
 The message names the element and what was done. Convert text and clones to paths in the editor
 (in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.
@@ -746,6 +750,21 @@ Ink/Stitch leaves them out too.
 
 The message names what was left out and why. To stitch it, delete the command's symbol, or turn the
 setting off in Ink/Stitch's parameters.
+
+## SC-I0818
+
+**Info** — Ink/Stitch file from an older version, read as Ink/Stitch updates it
+
+The SVG file was saved by an older Ink/Stitch, and is read as Ink/Stitch updates such a file when it
+opens it, so that it sews as it did: a default that has changed since is written into the shapes
+that relied on it. Ink/Stitch numbers the files it saves. Before its file version 4, a fill's
+stitches were 3 mm long unless it set another length, where they are 4 mm now; before version 2, a
+polyline whose style set a stroke was sewn as a manual stitch, with a needle point at each of its
+points. A shape digitized automatically (`--auto`) sews by StitchCraft's rules instead.
+
+The message gives the file's version, and how many shapes were updated and how. Nothing needs doing:
+the design sews as Ink/Stitch sews it. To sew a shape otherwise, set its longest stitch
+(`max_stitch_length_mm`) or its stitch type in Ink/Stitch.
 
 ## SC-W0804
 

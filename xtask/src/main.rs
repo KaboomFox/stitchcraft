@@ -19,6 +19,7 @@ mod cleanroom;
 mod compat;
 mod conformance;
 mod contract_page;
+mod contract_versions;
 mod coverage;
 mod design_map;
 mod deviations;
