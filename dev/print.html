@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-d35d2c23.js";
+            window.path_to_searchindex_js = "searchindex-a490d20c.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b793f3ad.js"></script>
@@ -2837,10 +2837,12 @@ larger Noise in VectorCraft’s Image Trace leaves such specks out of the trace.
 <h2 id="sc-w0906"><a class="header" href="#sc-w0906">SC-W0906</a></h2>
 <p><strong>Warning</strong> — Background left out</p>
 <p><code>--auto</code> takes the lowest shape of the design for the picture’s background when it is an automatic
-area, other shapes are drawn on it, and it covers the whole design, its holes aside, to within 0.5 mm
-of each side. It is left out, unless it switches <code>auto_ignore_background</code> off. A background is usually
-the fabric’s own colour, and sewing it doubles the stitches and stiffens the design. A background
-that needs more work to find than the budget allows is sewn, and the message says so.</p>
+area, a shape on another path than its own is drawn on it, and it covers the whole design to within
+0.5 mm of each side, its holes aside, and the notches aside that the shapes drawn on it fill where
+they touch the picture’s edge. It is left out, unless it switches <code>auto_ignore_background</code> off. A
+background is usually the fabric’s own colour, and sewing it doubles the stitches and stiffens the
+design. A background that needs more work to find than the budget allows is sewn, and the message
+says so.</p>
 <p>To sew it, give it settings: in VectorCraft, apply StitchCraft’s Fill, Stroke or Satin effect to it.
 Ignore White in VectorCraft’s Image Trace leaves a white background out of the trace.</p>
 <h2 id="sc-i0907"><a class="header" href="#sc-i0907">SC-I0907</a></h2>
@@ -7763,12 +7765,21 @@ colour whole, over the colours under it. Sewn as drawn, either sews badly where 
 mends it in 3 steps, in this order (<code>stitchcraft_engine::auto::neighbours</code>, M13.2).</p>
 <ol>
 <li><strong>Background</strong> (<code>REQ-AUTO-009</code>). The lowest shape is the picture’s background when it is an automatic
-area with other shapes drawn on it, and its outlines, its holes aside, cover the box around the design
-to within 0.5 mm of each side. The box is the one around the defining points of every shape’s path, the
-background’s own included. So a disc in the corner of a square, lowest but covering less of the box, is
-part of the picture. The background is left out with <code>SC-W0906</code> before anything is digitized.
-With a StitchCraft effect, it sews as that effect says. Finding it has the work budget to itself, and a
-background that needs more is sewn, which <code>SC-W0906</code> says.</li>
+area with a shape on another path drawn on it, and its outlines cover the box around the design to within
+0.5 mm of each side, its holes and notches aside. The box is the one around the defining points of every
+shape’s path, the background’s own included. So a disc in the corner of a square, lowest but covering
+less of the box, is part of the picture. A shape on its own path is the same object’s: the readers make a
+fill and its stroke 2 elements on one path, and a design of one shape with a stroke sews it. Where a
+shape of a tightly cropped picture touches its edge, the Abutting method cuts a notch in the background
+instead of a hole. A part of the box its outlines leave is a notch when the areas drawn on it fill it, to
+within twice the shapes’ tolerance, and it runs along the outlines at least as far as along the box’s
+sides, measured 0.5 mm inside them. A part that runs further along the sides is no notch. A disc or a
+rounded square that reaches the sides leaves such parts in its corners, and sews as the picture, though
+the shapes in its corners fill the rest. The cost of this rule is a background cut away along a whole
+side, by a bar down the side say, or cut in two by a band from side to side, which is sewn. The
+background is left out with <code>SC-W0906</code> before anything is digitized. With a StitchCraft effect, it sews
+as that effect says. Finding it has the work budget to itself, and a background that needs more is sewn,
+which <code>SC-W0906</code> says.</li>
 <li><strong>Specks</strong> (<code>REQ-AUTO-008</code>). An automatic area, or a part of one, smaller than 1 mm² is too small to sew:
 it would sew a knot. It is merged into the automatic area it shares the longest edge with, which may be
 its own. A speck that fills a hole goes into the area around it, and no hole shows where it was. One that
@@ -7990,7 +8001,7 @@ picture. VectorCraft publishes <code>vectorcraft-cli</code> with each release, a
 <ol>
 <li><code>swatch.library.load</code> loads the threads <code>stitch palette</code> writes for the machine as a swatch library.</li>
 <li><code>file.place</code> places the picture’s bytes, fitted inside a square <code>--size</code> millimetres across, or else
-inside the machine’s hoop, its aspect kept.</li>
+inside the machine’s hoop 0.5 mm in from each side, its aspect kept.</li>
 <li><code>imageTrace.make</code> traces it in colour with the library’s colours as they are, at most <code>--colours</code> of
 them, by the Abutting method, so that the shapes share their edges.</li>
 <li><code>imageTrace.expand</code> keeps the paths, without the picture.</li>
@@ -8005,7 +8016,11 @@ replay doesn’t need VectorCraft.</p>
 <p><strong>The picture’s size.</strong> VectorCraft places a picture at its own resolution, or 72 pixels to the inch when
 its file says none, so a logo a few hundred pixels across would sew larger than any hoop. <code>stitch</code> fits the
 picture into the machine’s hoop unless <code>--size</code> gives the length of its longer side. The size is the
-picture’s, its background included, and the shapes left once the background is out sew smaller.</p>
+picture’s, its background included, and the shapes left once the background is out sew smaller. Fitted to
+the hoop, the picture keeps 0.5 mm from each side: a shape along its edge sews as a satin column, whose
+stitches reach 0.4 mm past its rails, its pull compensation, from rails that may lie up to the tolerance
+shapes meet within outside the shape. Fitted to the hoop itself, a picture whose shapes reach its sides
+would sew past the hoop, which <code>SC-E0701</code> refuses.</p>
 <p><strong>How many colours.</strong> Image Trace keeps at most <code>--colours</code> of the library’s colours, 6 unless it says
 otherwise, as in its own panel. The count takes in the background’s colour. A picture with smooth edges, or a
 JPEG file, has colours between its shapes’ colours, which may trace as threads of their own. A <code>--colours</code>
