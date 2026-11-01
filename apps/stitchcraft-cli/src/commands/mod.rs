@@ -294,4 +294,28 @@ mod tests {
         assert!(Outcome::unwritten(said, &unwritten(&["design.pes"])).stderr.ends_with("design.json: denied\nonly design.pes was written\n"));
         assert!(Outcome::unwritten("", &unwritten(&["design.pes", "design.png"])).stderr.ends_with("\nonly design.pes, design.png were written\n"));
     }
+
+    #[test]
+    fn a_report_says_so_only_of_trims_the_machine_does_not_make() {
+        use stitchcraft_core::Point;
+        use stitchcraft_plan::profiles::REFERENCE;
+        use stitchcraft_plan::{PlanBuilder, Provenance, Rgb, Role, Thread};
+        let plan = |trimmed: bool| {
+            let mut b = PlanBuilder::new(Thread::new(Rgb::new(0, 0, 0)));
+            b.stitch(Point::new(1.0, 0.0).unwrap(), Provenance::plan(Role::Top));
+            if trimmed {
+                b.trim(None);
+            }
+            b.stitch(Point::new(2.0, 0.0).unwrap(), Provenance::plan(Role::Top));
+            b.finish()
+        };
+        let obeying = MachineProfile { trims: TrimSupport::Command, ..REFERENCE.clone() };
+        // The PE800 makes no trim (MC-1): a file's trims are said to be left to the person sewing.
+        assert!(trims_unmade(&plan(true), REFERENCE).is_some());
+        // Nothing to say of a file without trims, or to a machine that makes them.
+        assert_eq!((trims_unmade(&plan(false), REFERENCE), trims_unmade(&plan(true), &obeying)), (None, None));
+        let mut out = String::new();
+        describe_plan(&mut out, &plan(true), Some(&obeying));
+        assert!(!out.contains("trims     "), "{out}");
+    }
 }

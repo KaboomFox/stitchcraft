@@ -317,4 +317,16 @@ mod tests {
         let exactly = TrimSupport::LongJumps(stitchcraft_core::Mm::new(5.0).unwrap());
         assert_eq!(arrivals(&plan, exactly).0, [Arrival::Cut, Arrival::Cut, Arrival::Loose]);
     }
+
+    #[test]
+    fn a_long_jump_is_measured_straight_from_hole_to_hole() {
+        // From (1, 2) to (7, 10) mm: 6 mm across and 8 down, 10 mm straight.
+        let mut b = PlanBuilder::new(Thread::new(RED));
+        b.stitch(p(1.0, 2.0), Provenance::plan(Role::Top));
+        b.jump(p(7.0, 10.0), Provenance::plan(Role::Travel));
+        b.stitch(p(7.0, 10.0), Provenance::plan(Role::Top));
+        let plan = b.finish();
+        let after = |setting: f64| arrivals(&plan, TrimSupport::LongJumps(stitchcraft_core::Mm::new(setting).unwrap())).0[1];
+        assert_eq!((after(9.9), after(10.0)), (Arrival::Cut, Arrival::Loose));
+    }
 }
