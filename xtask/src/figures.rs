@@ -26,6 +26,16 @@ pub fn has_figures(text: &str) -> bool {
     text.lines().any(|line| line.trim_start().starts_with(OPEN))
 }
 
+/// The ids of the shots whose figures `text` shows, in order.
+pub fn shown(text: &str) -> Vec<&str> {
+    text.lines().filter_map(opened).collect()
+}
+
+/// The id of the shot whose figure `line` opens, if it opens one.
+fn opened(line: &str) -> Option<&str> {
+    line.trim().strip_prefix(OPEN)?.strip_suffix("-->").map(str::trim)
+}
+
 /// `text`, the page at `page` (a path from the repository root, under `docs/src`), with every figure
 /// written anew from `shots`.
 pub fn refresh(page: &str, text: &str, shots: &[Shot]) -> Result<String, String> {
@@ -33,7 +43,7 @@ pub fn refresh(page: &str, text: &str, shots: &[Shot]) -> Result<String, String>
     let mut lines = text.split_inclusive('\n').enumerate();
     while let Some((index, line)) = lines.next() {
         out.push_str(line);
-        let Some(id) = line.trim().strip_prefix(OPEN).and_then(|rest| rest.strip_suffix("-->")).map(str::trim) else { continue };
+        let Some(id) = opened(line) else { continue };
         let at = format!("{page}:{}", index + 1);
         let shot = shots.iter().find(|s| s.id == id).ok_or_else(|| format!("{at}: there is no shot `{id}` in docs/shots.toml"))?;
         let close = lines.by_ref().map(|(_, old)| old).find(|old| old.trim() == CLOSE);

@@ -13,8 +13,9 @@ create-missing = false
 default-theme = "light"
 preferred-dark-theme = "navy"
 git-repository-url = "https://github.com/KaboomFox/stitchcraft"
-# Every page gets a "suggest an edit" link straight to its source.
-edit-url-template = "https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/{path}"
+# Every page gets a "suggest an edit" link straight to its source. mdBook puts the page's path from this
+# folder for `{path}`, `src/` included; `cargo xtask book` checks that each link names a file.
+edit-url-template = "https://github.com/KaboomFox/stitchcraft/edit/main/docs/{path}"
 smart-punctuation = true
 
 [output.html.search]

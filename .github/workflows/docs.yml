@@ -50,8 +50,8 @@ jobs:
           name: stale-images
           path: target/shots/
           if-no-files-found: ignore
-      - name: Build the book
-        run: mdbook build docs
+      - name: The book builds, and every link of its pages leads somewhere
+        run: cargo xtask book
       - name: Rust snippets in rustdoc compile
         run: cargo test --doc --workspace --locked
       - name: Spelling
@@ -100,7 +100,6 @@ jobs:
       - uses: ./.github/actions/tools
         with:
           tools: mdbook
-      - run: mdbook build docs
       - name: Choose the destination directory
         id: dest
         run: |
@@ -110,12 +109,23 @@ jobs:
           else
             echo "dir=dev" >> "$GITHUB_OUTPUT"
           fi
+      # The 404 page's links start from `site-url`, which must be where the book is published: on the
+      # project's Pages site, /<repository>/<destination>/.
+      - name: Build the book for its address
+        run: mdbook build docs
+        env:
+          MDBOOK_OUTPUT__HTML__SITE_URL: /${{ github.event.repository.name }}/${{ steps.dest.outputs.dir }}/
       - uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: docs/book
           destination_dir: ${{ steps.dest.outputs.dir }}
           keep_files: true
+      # GitHub Pages answers an address it has no file for with the site's 404.html, so a stale link anywhere on
+      # the site gets the book's 404 page, with its search and its table of contents.
+      - name: The book's 404 page answers for the whole site
+        if: steps.dest.outputs.dir == 'dev'
+        run: cp docs/book/404.html docs/site-root/404.html
       - name: Site root (a page that sends visitors to the docs)
         if: steps.dest.outputs.dir == 'dev'
         uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4.1.0

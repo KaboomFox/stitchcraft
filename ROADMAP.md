@@ -49,7 +49,8 @@ a traced group digitizes it automatically, with those settings in its dialog. It
 stitches, or its outline when digitizing it costs more than a live effect may spend, and the Test Sheet
 filter draws TS-13 too. `stitch plan picture.png` traces a PNG or JPEG file with VectorCraft's command line
 in the machine's threads, fitted into the hoop, and sews it digitized automatically (M13.10). Next is MC-8's
-sew-out, then M13.8. M7.6 to M7.9 follow M13.
+sew-out, then M13.8, and M13.11 gives satin columns, tatami fills and automatic digitizing their pages with
+pictures. M7.6 to M7.9 follow M13.
 The repository is
 [KaboomFox/stitchcraft](https://github.com/KaboomFox/stitchcraft), with the docs published at
 [kaboomfox.github.io/stitchcraft](https://kaboomfox.github.io/stitchcraft/) and `main` protected; the
