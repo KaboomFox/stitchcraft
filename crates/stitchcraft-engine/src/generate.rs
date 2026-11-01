@@ -666,8 +666,11 @@ mod tests {
             ["warning SC-W0402: The stitch length 0.25 mm (`fill_underlay_max_stitch_length_mm`) is shorter than twice the shortest stitch \
               (0.3 mm), so 0.6 mm is used."]
         );
-        // Without underlay, its longest stitch says nothing; nor does a longest stitch of 3 mm.
+        // Without underlay, its longest stitch says nothing; nor does a longest stitch of 3 mm. A legacy fill
+        // has no underlay whatever its settings say (`REQ-FILL-005`): it says only that it is sewn so.
         assert!(sewn(&[("fill_underlay", "false"), ("fill_underlay_max_stitch_length_mm", "0.25")]).diagnostics.is_empty());
+        let legacy = sewn(&[("fill_method", "legacy_fill"), ("fill_underlay_max_stitch_length_mm", "0.25")]);
+        assert_eq!(codes(&legacy.diagnostics), [Code::FillLegacyAsTatami]);
         assert!(sewn(&[("max_stitch_length_mm", "3")]).diagnostics.is_empty());
     }
 
