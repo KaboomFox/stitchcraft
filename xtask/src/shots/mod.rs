@@ -232,19 +232,22 @@ pub fn stitch(root: &Path, shot: &Shot) -> Result<Vec<Vec<u8>>, String> {
     let scale = shot.scale.unwrap_or(Settings::DEFAULT_SCALE);
     let settings = Settings::new(style, scale)
         .ok_or_else(|| format!("scale {scale} is outside {} to {} pixels per millimetre", Settings::MIN_SCALE, Settings::MAX_SCALE))?;
-    let plans = match (shot.sheet.as_deref(), shot.fixture.as_deref()) {
+    // Each picture shows what the machine its plan is for sews: the sheet's hoop, or the reference machine.
+    let (plans, machine) = match (shot.sheet.as_deref(), shot.fixture.as_deref()) {
         // A sheet is drawn as it is: panels would name images that are never drawn.
         (Some(_), None) if !shot.panels.is_empty() => return Err("a test sheet is drawn as it is: panels are for designs (`fixture`)".to_string()),
         (Some(id), None) => {
             let sheet = testsheets::find(id).ok_or_else(|| format!("there is no test sheet `{id}`"))?;
-            vec![sheet.plan().map_err(|e| format!("{id} could not be drawn: {e}"))?]
+            (vec![sheet.plan().map_err(|e| format!("{id} could not be drawn: {e}"))?], sheet.profile)
         }
-        (None, Some(fixture)) => designs(root, fixture, shot)?,
+        (None, Some(fixture)) => (designs(root, fixture, shot)?, REFERENCE),
         _ => return Err("a stitch shot names a test sheet (`sheet = \"TS-01\"`) or a design (`fixture = \"…\"`)".to_string()),
     };
     plans
         .iter()
-        .map(|plan| stitchcraft_render::preview(plan, settings, &mut Budget::DEFAULT.meter()).map(|image| image.png).map_err(|e| e.to_string()))
+        .map(|plan| {
+            stitchcraft_render::preview(plan, machine.trims, settings, &mut Budget::DEFAULT.meter()).map(|image| image.png).map_err(|e| e.to_string())
+        })
         .collect()
 }
 
