@@ -27,7 +27,7 @@ use stitchcraft_engine::design::{FillRule, Reading, Segment, Shape};
 use stitchcraft_engine::testsheets::pictures::{self, Picture, Trace};
 use stitchcraft_plan::FormatId;
 use stitchcraft_plan::profiles::REFERENCE;
-use stitchcraft_vc_plugin::export::base64;
+use stitchcraft_vectorcraft::base64;
 use tiny_skia::{Color, Paint, PathBuilder, Pixmap, Transform};
 
 /// How many pixels across the picture of the badge is.
@@ -48,13 +48,20 @@ pub(super) fn generated(value: Value) -> Result<Value, String> {
     })
 }
 
-/// The data StitchCraft makes of `name`, or why it makes none.
+/// The data StitchCraft makes of `name` for a step's parameter, or why it makes none: text as it is, and a
+/// file that isn't text, such as a picture, in base64, as `file.place` takes it.
 fn data(name: &str) -> Result<Value, String> {
+    Ok(Value::String(String::from_utf8(made(name)?).unwrap_or_else(|binary| base64(binary.as_bytes()))))
+}
+
+/// The file StitchCraft makes of `name`, or why it makes none: `palette`, the reference machine's threads as
+/// `stitch palette` writes them, and `badge.png`, the badge drawn flat.
+pub(super) fn made(name: &str) -> Result<Vec<u8>, String> {
     match name {
-        "palette" => Ok(Value::String(palette::gpl(REFERENCE))),
+        "palette" => Ok(palette::gpl(REFERENCE).into_bytes()),
         "badge.png" => {
             let badge = pictures::badge((25.0, 25.0), 1.0, Trace::Stacked).map_err(|e| e.to_string())?;
-            Ok(Value::String(base64(&drawn(&badge, 50.0)?)))
+            drawn(&badge, 50.0)
         }
         other => Err(format!("StitchCraft makes no data called `{other}`: it makes `palette` and `badge.png`")),
     }

@@ -82,7 +82,10 @@ says, with `fails`. VectorCraft stops a run at a step that fails, so that export
 names its file. A run installs a module whose manifest sets a heavy budget, Stroke to Satin's, with
 `allowHeavy`, as the user allows it. A step's parameter written `{ stitchcraft = "…" }` is replaced by what
 StitchCraft makes of the name, the threads `stitch palette` writes or a test picture drawn flat as a PNG, so
-that what VectorCraft traces is StitchCraft's own. The checks are StitchCraft's, since VectorCraft's pictures change from version to
+that what VectorCraft traces is StitchCraft's own. A run can be `stitch plan` with its arguments instead,
+which traces a picture with the `vectorcraft-cli` under test. It runs in the gate's own process, its files in
+the scenario's folder, and must end well. A run's `files` are written there first, made by StitchCraft from
+their names, and the files `stitch` writes count as exported. The checks are StitchCraft's, since VectorCraft's pictures change from version to
 version and what sews must not:
 
 | Scenario | Steps | Checks |
@@ -96,6 +99,7 @@ version and what sews must not:
 | `settings` | a 1 in square given the fill effect and exported to PES, then the Design Settings filter run with the 4 × 4 in hoop and a shortest stitch of 1.5 mm, and the square saved and exported to PES and DST; then the filter run with the small hoop, and the square saved and exported to PES | each document keeps what the filter was run with, each file is the one `stitch export` writes, the PES file differs from the one before the filter, and the small hoop's export fails with `SC-E0701` (`REQ-VC-013`) |
 | `stroke-to-satin` | an S curve, a V and a circle with strokes 3 mm wide and the satin effect, saved and drawn, then made into columns by Stroke to Satin, saved, drawn and exported to PES | the columns sew as the lines did, 3 satin columns in the strokes' colour, and the file is the one `stitch export` writes (`REQ-VC-014`) |
 | `testsheets` | each sheet drawn as a design, drawn by Test Sheet into a new document, then saved and exported to PES; the TS-13 sheets with StitchCraft Auto installed | each document sews as the sheet's design moved by whole millimetres to the middle of its artboard, and each file is the one `stitch export` writes. The Auto effect digitizes the TS-13 sheets' shapes automatically (`REQ-VC-015`, `REQ-VC-016`) |
+| `picture` | the badge drawn flat as a PNG, which `stitch plan badge.png --traced traced.vectorcraft` traces with VectorCraft's command line, its steps on standard input. With the reference machine's threads loaded as a swatch library, the picture is fitted into the hoop and traced in colour with the library's colours by the Abutting method, and its paths are kept and saved | `stitch` ends well, and the document it traced, read with `--auto`, sews the badge's 3 threads, each a thread of the palette, the white round the badge left out as the background (`REQ-CLI-012`, `REQ-AUTO-001`, `REQ-AUTO-009`) |
 | `trace` | the reference machine's threads, as `stitch palette` writes them, loaded as a swatch library, a badge drawn flat in 3 of them on white placed, traced in colour with the library's colours by the Abutting method, its paths kept, and saved; then StitchCraft's Auto effect applied to the traced group, saved, and drawn | read with `--auto`, every shape is automatic, the white round the badge is left out as the background, and the badge sews its 3 threads, each a thread of the palette; with the Auto effect, so without `--auto`, and drawing it doesn't leave a last error (`REQ-CLI-011`, `REQ-AUTO-001`, `REQ-AUTO-009`, `REQ-VC-016`) |
 
 *As sent*: the saved file sews as it does with the StitchCraft records of the objects the effects were

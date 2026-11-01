@@ -146,6 +146,32 @@ mod tests {
     }
 
     #[test]
+    fn req_cli_013_a_size_and_a_colour_count_out_of_range_are_usage_errors() {
+        let plan = |option: &str, value: &str| parse(&["plan", "badge.png", "-o", "badge.pes", option, value]);
+        for (option, value) in [("--size", "0"), ("--size", "-5"), ("--size", "big"), ("--size", "inf"), ("--colours", "1"), ("--colours", "257")] {
+            assert!(plan(option, value).unwrap_err().use_stderr(), "{option} {value}");
+        }
+        let Command::Plan(args) = parse(&["plan", "badge.png", "-o", "badge.pes", "--size", "80.5", "--colours", "256"]).unwrap().command else {
+            panic!("`stitch plan`")
+        };
+        assert_eq!((args.tracing.size.map(stitchcraft_core::Mm::get), args.tracing.colours), (Some(80.5), Some(256)));
+        assert!(args.tracing.given());
+        let Command::Plan(args) = parse(&["plan", "badge.png", "-o", "badge.pes"]).unwrap().command else { panic!("`stitch plan`") };
+        assert!(!args.tracing.given());
+    }
+
+    #[test]
+    fn the_colours_help_says_the_default_a_trace_takes() {
+        use clap::CommandFactory;
+        let mut cli = Cli::command();
+        let help = cli
+            .find_subcommand_mut("plan")
+            .and_then(|plan| plan.get_arguments().find(|arg| arg.get_id() == "colours").and_then(|arg| arg.get_help()).map(ToString::to_string));
+        let default = format!("by default {}", stitchcraft_cli::trace::COLOURS);
+        assert!(help.as_deref().is_some_and(|help| help.contains(&default)), "{help:?}");
+    }
+
+    #[test]
     fn subcommands_dispatch() {
         let out = run(&parse(&["explain", "SC-E0701"]).unwrap());
         assert_eq!(out.status, Status::Done);

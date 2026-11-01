@@ -194,7 +194,7 @@ fn make(root: &Path, shots: &[&Shot], check_only: bool, findings: &mut Findings)
         let mut steps = shot.steps.clone();
         steps.push(Step::exporting(&document));
         steps.push(Step::exporting(if shot.kind == RENDER { &picture } else { CANVAS }));
-        let run = Run { open: None, plugins: shot.plugins.clone(), steps, scale: shot.scale.map(f64::from) };
+        let run = Run { plugins: shot.plugins.clone(), steps, scale: shot.scale.map(f64::from), ..Run::default() };
         if let Err(e) = scenario::draw(&run, &fetched.root.join("bin/vectorcraft-cli"), &modules, &dir) {
             findings.error(format!("shot `{}`: {e}", shot.id));
         } else if shot.kind == RENDER {

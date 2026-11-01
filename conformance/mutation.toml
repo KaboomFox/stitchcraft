@@ -265,8 +265,8 @@ why = "adding a term of 0 never wraps, so the sign is read only for terms that a
 
 [[equivalent]]
 file = "apps/stitchcraft-cli/src/files.rs"
-mutant = "replace match guard e.kind() == io::ErrorKind::AlreadyExists with true in staged"
-line = "Err(e) if e.kind() == io::ErrorKind::AlreadyExists => {"
+mutant = "replace match guard e.kind() == io::ErrorKind::AlreadyExists with true in first_free"
+line = "Err(e) if e.kind() == io::ErrorKind::AlreadyExists => last = e,"
 why = "a temporary name that fails for any other reason fails for every name in the same folder, so trying the other names ends in the same error, only later"
 
 [[equivalent]]

@@ -6,7 +6,7 @@ use serde_json::Value;
 use stitchcraft_testkit::temp::TempDir;
 
 use super::*;
-use crate::cli::{Format, PlanArgs, ReadingArgs};
+use crate::cli::{Format, PlanArgs, ReadingArgs, TracingArgs};
 
 fn conformance(name: &str) -> PathBuf {
     PathBuf::from(format!("{}/../../conformance/{name}", env!("CARGO_MANIFEST_DIR")))
@@ -215,6 +215,7 @@ fn req_cli_002_a_bug_found_while_planning_writes_a_bundle() {
         preview: None,
         report: None,
         reading: ReadingArgs::default(),
+        tracing: TracingArgs::default(),
     };
     let out = guarded(&Command::Plan(plan), || panic!("a test of the panic guard"));
     assert_eq!(out.status, Status::Bug);
@@ -432,4 +433,37 @@ fn diag_sc_e0012_a_file_that_is_not_a_bundle_is_not_replayed() {
         assert_eq!(out.stderr, format!("error SC-E0012: {} {says}\n  more: stitch explain SC-E0012\n", path.display()), "{name}");
     }
     assert_eq!((unhex("3c7E"), unhex("3c7"), unhex("zz")), (Some(vec![0x3c, 0x7e]), None, None));
+}
+
+#[test]
+fn req_cli_013_a_picture_is_bundled_as_the_document_vectorcraft_traces() {
+    let dir = TempDir::new("bundle-picture");
+    let picture = dir.join("badge.png");
+    std::fs::write(&picture, b"\x89PNG\r\n\x1a\n").unwrap();
+    let out = run(&args(Some(picture.clone())));
+    assert_eq!(out.status, Status::Usage);
+    assert_eq!(
+        out.stderr,
+        format!(
+            "stitch: {0} is a picture, which VectorCraft traces: write the document it traces with `stitch plan {0} -o FILE --traced \
+             DOCUMENT`, and bundle the document with --auto\n",
+            picture.display()
+        )
+    );
+    assert!(!picture.with_extension("bug-report.json").exists());
+    // A panic before a picture is traced leaves no design to bundle, so it is reported without one.
+    let plan = PlanArgs {
+        design: picture,
+        output: dir.join("badge.pes"),
+        profile: None,
+        format: None,
+        preview: None,
+        report: None,
+        reading: ReadingArgs::default(),
+        tracing: TracingArgs::default(),
+    };
+    let out = guarded(&Command::Plan(plan), || panic!("a test of the panic guard"));
+    assert_eq!(out.status, Status::Bug);
+    assert!(out.stderr.ends_with(&format!("Please report it at {ISSUES}, with the command you ran and the files it read.\n")), "{}", out.stderr);
+    assert!(!dir.join("badge.bug-report.json").exists());
 }

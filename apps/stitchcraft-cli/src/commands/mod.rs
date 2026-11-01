@@ -233,6 +233,18 @@ pub fn describe_threads(out: &mut String, plan: &StitchPlan, palette: Option<&Pa
     }
 }
 
+/// `text` another program wrote, or a bug-report bundle holds, as it can be printed: each character a
+/// terminal would act on or not show as itself (control characters, line breaks among them, and invisible
+/// format characters) as its escape, `\u{1b}` (`REQ-CLI-004`).
+pub fn printable(text: &str) -> String {
+    text.chars()
+        .map(|c| {
+            let escaped = c.escape_debug().to_string();
+            if c.is_control() || escaped.starts_with("\\u") { escaped } else { c.to_string() }
+        })
+        .collect()
+}
+
 /// Diagnostics as people read them: each one's headline ([`Diagnostic::headline`]), then its fix indented.
 pub fn render_diagnostics(diagnostics: &[Diagnostic]) -> String {
     let mut out = String::new();

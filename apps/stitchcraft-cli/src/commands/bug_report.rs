@@ -13,7 +13,10 @@
 //!
 //! Of a VectorCraft document, a bundle keeps the part its reader reads: its JSON, without the images and
 //! other data VectorCraft keeps after it. That part reads as the whole file does, keeps a bundle small
-//! enough to attach to an issue, and leaves the pictures a design was traced from out of it.
+//! enough to attach to an issue, and leaves the pictures a design was traced from out of it. Of a picture
+//! `stitch plan` traced with VectorCraft's command line, it keeps the document traced, read with `--auto`,
+//! so that a replay needs no VectorCraft. `stitch bug-report` takes that document, which `--traced` writes,
+//! and refuses a picture.
 //!
 //! `stitch plan` writes a bundle by itself when it finds a bug in StitchCraft — a failed plan check
 //! (`SC-E0009`) or a panic, which it catches with the design in hand, and `main` with [`guarded`] before
@@ -45,9 +48,10 @@ use stitchcraft_engine::design::Reading;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan, profiles};
 
 use super::plan::{Sewn, Source, design_name, machine_for, picture, sew};
-use super::{Outcome, Status, asked_profile, counts, distinct, hex, output_format, render_diagnostics, unhex};
+use super::{Outcome, Status, asked_profile, counts, distinct, hex, output_format, printable, render_diagnostics, unhex};
 use crate::cli::{BugReportArgs, Command};
 use crate::files;
+use crate::trace;
 
 /// The bundle format this StitchCraft writes and replays.
 const BUNDLE_FORMAT: u32 = 1;
@@ -230,7 +234,10 @@ pub fn beside(output: &Path, run: &Run, sewn: Result<&Sewn, (&str, Phase)>, outc
 fn after_panic(command: &Command, message: &str) -> Outcome {
     let said = format!("stitch: StitchCraft stopped on a bug in itself: {message}\n");
     let stopped = Outcome { stdout: String::new(), stderr: said.clone(), status: Status::Bug };
+    // A picture's design is the document VectorCraft traced it into, which a panic before planning leaves in
+    // no hand: `plan::run` bundles a panic once it has it.
     if let Command::Plan(args) = command
+        && !trace::is_picture(&args.design)
         && let (Ok(asked), Ok(format), Ok(design)) =
             (asked_profile(args.profile.as_deref()), output_format(args.format, &args.output), files::read_capped(&args.design))
     {
@@ -254,6 +261,13 @@ pub fn panic_message(payload: &(dyn Any + Send)) -> String {
 
 /// `stitch bug-report DESIGN`.
 fn make(args: &BugReportArgs, design_path: &Path) -> Outcome {
+    if trace::is_picture(design_path) {
+        return Outcome::usage(format!(
+            "{} is a picture, which VectorCraft traces: write the document it traces with `stitch plan {0} -o FILE --traced DOCUMENT`, \
+             and bundle the document with --auto",
+            design_path.display()
+        ));
+    }
     let asked = match asked_profile(args.profile.as_deref()) {
         Ok(asked) => asked,
         Err(outcome) => return outcome,
@@ -508,17 +522,6 @@ impl Phase {
             Phase::Writing => "writing",
         }
     }
-}
-
-/// `text` from a bundle as it can be printed: each character a terminal would act on or not show as itself
-/// (control characters, line breaks among them, and invisible format characters) as its escape, `\u{1b}`.
-fn printable(text: &str) -> String {
-    text.chars()
-        .map(|c| {
-            let escaped = c.escape_debug().to_string();
-            if c.is_control() || escaped.starts_with("\\u") { escaped } else { c.to_string() }
-        })
-        .collect()
 }
 
 /// One line comparing `what` then and now, shown by `show`; whether they are the same.

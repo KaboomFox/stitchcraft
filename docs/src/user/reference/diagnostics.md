@@ -73,6 +73,8 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0812`](#sc-w0812) | Warning | VectorCraft design setting ignored |
 | [`SC-E0813`](#sc-e0813) | Error | VectorCraft too old for the filter |
 | [`SC-E0814`](#sc-e0814) | Error | VectorCraft line not made into a satin column |
+| [`SC-E0815`](#sc-e0815) | Error | VectorCraft's command line could not be started |
+| [`SC-E0816`](#sc-e0816) | Error | VectorCraft could not trace the picture |
 | [`SC-I0901`](#sc-i0901) | Info | Shapes digitized automatically |
 | [`SC-I0902`](#sc-i0902) | Info | Satin column can't be made; filled |
 | [`SC-W0903`](#sc-w0903) | Warning | Line too wide to fill; left out |
@@ -902,6 +904,33 @@ or rungs, as one whose rails cross each other is.
 
 The message names the object. Select the lines, give the path a stroke as wide as the column, draw
 that column with its 2 rails, or leave the object out of the selection.
+
+## SC-E0815
+
+**Error** — VectorCraft's command line could not be started
+
+`stitch plan` and `stitch export` trace a picture, a PNG or JPEG file, with VectorCraft's command
+line, `vectorcraft-cli`, which VectorCraft publishes with each release. It could not be started: it
+isn't on the `PATH`, or the program `--vectorcraft-cli` names isn't there or can't be run. Nothing was
+written but the report.
+
+The message names the program and why it didn't start. Install VectorCraft's command line from
+VectorCraft's releases, and put it on the `PATH` or name it with `--vectorcraft-cli`. Or trace the
+picture with Image Trace in VectorCraft, as the tutorial "From a picture to a machine file" does, and
+plan the document you save.
+
+## SC-E0816
+
+**Error** — VectorCraft could not trace the picture
+
+VectorCraft's command line ran to trace a picture for `stitch plan` or `stitch export`, and it failed
+or saved no document. Nothing was written but the report.
+
+The message ends with what VectorCraft said. It fails on a file it can't read as a picture, such as a
+file named `.png` that holds something else. It fails too when it is a version without the commands
+StitchCraft traces with: the user guide lists the versions the compatibility gate passed. Check that
+VectorCraft places the picture, or trace it with Image Trace in VectorCraft and plan the document you
+save.
 
 ## SC-I0901
 
