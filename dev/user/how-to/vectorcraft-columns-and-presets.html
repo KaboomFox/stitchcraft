@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-e6dc26fc.js";
+            window.path_to_searchindex_js = "../../searchindex-7240caef.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-b793f3ad.js"></script>
+        <script src="../../toc-cba97263.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -192,8 +192,13 @@ its stitches in VectorCraft then, draw the column with 2 rails:</p>
 <ol>
 <li>Draw the column’s 2 edges as 2 paths.</li>
 <li>Select both and choose <strong>Object › Compound Path › Make</strong> (Cmd+8).</li>
-<li>With the compound path selected, choose <strong>Effect › Plug-ins › StitchCraft Satin</strong>.</li>
+<li>With the compound path selected, choose <strong>Effect › Plug-ins › StitchCraft Satin</strong>, and set the column
+up in its dialog (<a href="../tutorials/vectorcraft-patch.html#3-draw-the-border">the whole dialog</a>).</li>
 </ol>
+<p>VectorCraft then shows the column’s stitches between its rails:</p>
+<!-- shot: vectorcraft-satin-rails -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/vectorcraft-satin-rails.png" alt="A gold satin column in VectorCraft’s canvas, its stitches across the band between 2 curved rails that make one compound path, as StitchCraft Satin shows them."><span class="img-wrapper"><img src="../../images/generated/vectorcraft-satin-rails.png" alt="A gold satin column in VectorCraft’s canvas, its stitches across the band between 2 curved rails that make one compound path, as StitchCraft Satin shows them."></span></label></p>
+<!-- /shot -->
 <p>Apply the effect after joining the rails. VectorCraft 0.10.0 and later keep the appearance of the path at
 the back, and earlier versions that of the path in front, which may not be the one with the effect. From
 0.10.0, VectorCraft may also reverse the front path, and always does for 2 straight rails. The column
@@ -216,6 +221,9 @@ can then be edited.</p>
 <li>Give each line a stroke as wide as the column.</li>
 <li>Select the lines, and choose <strong>Object › Plug-ins › StitchCraft Stroke to Satin</strong>.</li>
 </ol>
+<!-- shot: vectorcraft-stroke-to-satin-menu -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/vectorcraft-stroke-to-satin-menu.png" alt="VectorCraft’s Object menu, open at Plug-ins, which lists StitchCraft Stroke to Satin, over a curved blue line 3 mm wide."><span class="img-wrapper"><img src="../../images/generated/vectorcraft-stroke-to-satin-menu.png" alt="VectorCraft’s Object menu, open at Plug-ins, which lists StitchCraft Stroke to Satin, over a curved blue line 3 mm wide."></span></label></p>
+<!-- /shot -->
 <p>Each line becomes a compound path of its rails and rungs, without a fill, its stroke the line’s colour,
 one pixel wide. It has StitchCraft Satin with the line’s satin settings, or the defaults, in the place of
 the line’s StitchCraft effects, and keeps the line’s other effects. A path of several lines makes a

@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-e6dc26fc.js";
+            window.path_to_searchindex_js = "../../searchindex-7240caef.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-b793f3ad.js"></script>
+        <script src="../../toc-cba97263.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -193,17 +193,18 @@ stroke or the fill of a shape, and each sews in its own thread colour.</p>
 <tr><td><a href="running.html#bean-stitch-and-repeats">Bean stitch</a></td><td>strokes, each stitch sewn 3 times or more</td><td>now</td></tr>
 <tr><td><a href="running.html#manual-stitch">Manual stitch</a></td><td>strokes whose nodes are the needle points</td><td>now</td></tr>
 <tr><td><a href="zigzag.html">Zigzag stroke</a></td><td>strokes as wide as their line: light borders, couched looks</td><td>now</td></tr>
-<tr><td>Satin column</td><td>wide strokes and borders</td><td>now</td></tr>
+<tr><td><a href="satin-column.html">Satin column</a></td><td>wide strokes and borders</td><td>now</td></tr>
 <tr><td><a href="e-stitch.html">E-stitch</a></td><td>satin columns as appliqué edges: a spine along one rail, with spikes to the other</td><td>now</td></tr>
 <tr><td><a href="s-stitch.html">S-stitch</a></td><td>satin columns sewn one way at a time: a stitch across at each step, joined along the edges</td><td>now</td></tr>
 <tr><td><a href="zigzag-satin.html">Zigzag satin</a></td><td>satin columns sewn as a zigzag, every stitch slanting from one edge to the other</td><td>now</td></tr>
-<tr><td>Tatami fill</td><td>areas, in rows of running stitches</td><td>now</td></tr>
+<tr><td><a href="tatami-fill.html">Tatami fill</a></td><td>areas, in rows of running stitches, Ink/Stitch’s legacy fill among them</td><td>now</td></tr>
 </tbody>
 </table>
 </div>
 <p>Every element also gets <a href="locks.html">lock stitches</a> where its stitching starts and ends, and a trim or a
-stop after it when it asks for one. An element of a type that is not sewn yet is left out, and <code>SC-W0011</code>
-names it. The <a href="../../plan/roadmap.html">roadmap</a> says what each milestone adds.</p>
+stop after it when it asks for one. A shape without settings can have its stitch type chosen by its width
+instead (<a href="automatic.html">automatic digitizing</a>). An element of a type that is not sewn yet is left out, and
+<code>SC-W0011</code> names it. The <a href="../../plan/roadmap.html">roadmap</a> says what each milestone adds.</p>
 <h2 id="setting-parameters"><a class="header" href="#setting-parameters">Setting parameters</a></h2>
 <p>A parameter belongs to one element. Ink/Stitch stores parameters in the SVG file as attributes, such as
 <code>inkstitch:running_stitch_length_mm="1.5"</code>, and StitchCraft’s parameters have the same names and

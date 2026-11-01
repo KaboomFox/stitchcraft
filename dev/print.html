@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-e6dc26fc.js";
+            window.path_to_searchindex_js = "searchindex-7240caef.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-b793f3ad.js"></script>
+        <script src="toc-cba97263.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -813,7 +813,7 @@ holds Ink/Stitch’s settings for that kind of stitch, and the object shows its 
 art. The thread is the colour of the object’s fill for a fill, and of its stroke for a stroke or a satin
 column.</p>
 <p>From VectorCraft 0.14 each setting has a label and its unit, in the sections of the
-<a href="#parameters-6">parameter reference</a>. Rest the pointer on a label for its help, or press the
+<a href="#parameters-8">parameter reference</a>. Rest the pointer on a label for its help, or press the
 button after the field for its page in the reference. A setting shows only when it applies: a satin’s
 staggers show for staggered splits. VectorCraft before 0.14 lists every setting, each under its Ink/Stitch
 name.</p>
@@ -952,8 +952,13 @@ its stitches in VectorCraft then, draw the column with 2 rails:</p>
 <ol>
 <li>Draw the column’s 2 edges as 2 paths.</li>
 <li>Select both and choose <strong>Object › Compound Path › Make</strong> (Cmd+8).</li>
-<li>With the compound path selected, choose <strong>Effect › Plug-ins › StitchCraft Satin</strong>.</li>
+<li>With the compound path selected, choose <strong>Effect › Plug-ins › StitchCraft Satin</strong>, and set the column
+up in its dialog (<a href="#3-draw-the-border">the whole dialog</a>).</li>
 </ol>
+<p>VectorCraft then shows the column’s stitches between its rails:</p>
+<!-- shot: vectorcraft-satin-rails -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/vectorcraft-satin-rails.png" alt="A gold satin column in VectorCraft’s canvas, its stitches across the band between 2 curved rails that make one compound path, as StitchCraft Satin shows them."><span class="img-wrapper"><img src="images/generated/vectorcraft-satin-rails.png" alt="A gold satin column in VectorCraft’s canvas, its stitches across the band between 2 curved rails that make one compound path, as StitchCraft Satin shows them."></span></label></p>
+<!-- /shot -->
 <p>Apply the effect after joining the rails. VectorCraft 0.10.0 and later keep the appearance of the path at
 the back, and earlier versions that of the path in front, which may not be the one with the effect. From
 0.10.0, VectorCraft may also reverse the front path, and always does for 2 straight rails. The column
@@ -976,6 +981,9 @@ can then be edited.</p>
 <li>Give each line a stroke as wide as the column.</li>
 <li>Select the lines, and choose <strong>Object › Plug-ins › StitchCraft Stroke to Satin</strong>.</li>
 </ol>
+<!-- shot: vectorcraft-stroke-to-satin-menu -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/vectorcraft-stroke-to-satin-menu.png" alt="VectorCraft’s Object menu, open at Plug-ins, which lists StitchCraft Stroke to Satin, over a curved blue line 3 mm wide."><span class="img-wrapper"><img src="images/generated/vectorcraft-stroke-to-satin-menu.png" alt="VectorCraft’s Object menu, open at Plug-ins, which lists StitchCraft Stroke to Satin, over a curved blue line 3 mm wide."></span></label></p>
+<!-- /shot -->
 <p>Each line becomes a compound path of its rails and rungs, without a fill, its stroke the line’s colour,
 one pixel wide. It has StitchCraft Satin with the line’s satin settings, or the defaults, in the place of
 the line’s StitchCraft effects, and keeps the line’s other effects. A path of several lines makes a
@@ -1093,17 +1101,18 @@ stroke or the fill of a shape, and each sews in its own thread colour.</p>
 <tr><td><a href="#bean-stitch-and-repeats">Bean stitch</a></td><td>strokes, each stitch sewn 3 times or more</td><td>now</td></tr>
 <tr><td><a href="#manual-stitch">Manual stitch</a></td><td>strokes whose nodes are the needle points</td><td>now</td></tr>
 <tr><td><a href="#zigzag-stroke">Zigzag stroke</a></td><td>strokes as wide as their line: light borders, couched looks</td><td>now</td></tr>
-<tr><td>Satin column</td><td>wide strokes and borders</td><td>now</td></tr>
+<tr><td><a href="#satin-column">Satin column</a></td><td>wide strokes and borders</td><td>now</td></tr>
 <tr><td><a href="#e-stitch">E-stitch</a></td><td>satin columns as appliqué edges: a spine along one rail, with spikes to the other</td><td>now</td></tr>
 <tr><td><a href="#s-stitch">S-stitch</a></td><td>satin columns sewn one way at a time: a stitch across at each step, joined along the edges</td><td>now</td></tr>
 <tr><td><a href="#zigzag-satin">Zigzag satin</a></td><td>satin columns sewn as a zigzag, every stitch slanting from one edge to the other</td><td>now</td></tr>
-<tr><td>Tatami fill</td><td>areas, in rows of running stitches</td><td>now</td></tr>
+<tr><td><a href="#tatami-fill">Tatami fill</a></td><td>areas, in rows of running stitches, Ink/Stitch’s legacy fill among them</td><td>now</td></tr>
 </tbody>
 </table>
 </div>
 <p>Every element also gets <a href="#lock-stitches-trims-and-stops">lock stitches</a> where its stitching starts and ends, and a trim or a
-stop after it when it asks for one. An element of a type that is not sewn yet is left out, and <code>SC-W0011</code>
-names it. The <a href="#roadmap-small-steps-to-the-final-project">roadmap</a> says what each milestone adds.</p>
+stop after it when it asks for one. A shape without settings can have its stitch type chosen by its width
+instead (<a href="#automatic-digitizing">automatic digitizing</a>). An element of a type that is not sewn yet is left out, and
+<code>SC-W0011</code> names it. The <a href="#roadmap-small-steps-to-the-final-project">roadmap</a> says what each milestone adds.</p>
 <h2 id="setting-parameters"><a class="header" href="#setting-parameters">Setting parameters</a></h2>
 <p>A parameter belongs to one element. Ink/Stitch stores parameters in the SVG file as attributes, such as
 <code>inkstitch:running_stitch_length_mm="1.5"</code>, and StitchCraft’s parameters have the same names and
@@ -1270,6 +1279,95 @@ that is one point is left out, and <code>SC-W0401</code> names it.</p>
 <li><a href="#stroke-parameters">the stroke method</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="satin-column"><a class="header" href="#satin-column">Satin column</a></h1>
+<!-- stitch-types: satin_column -->
+<p>A satin column sews a band with stitches straight across it, close side by side, so that the thread lies
+smooth and catches the light. The needle crosses the band, comes back across slanting a little to where
+the next stitch starts, and so on to the band’s end. It is the stitch of borders, lettering and outlines
+too wide for a running stitch. Past about 7 mm its stitches lie loose and can snag
+(<a href="#embroidery-basics">embroidery basics</a>), so a wider band is split or filled.</p>
+<p>Turn an element’s <code>satin_column</code> on, and draw the band in one of 2 ways:</p>
+<ul>
+<li><strong>One path with a stroke.</strong> The path is the column’s middle, and the column is as wide as the stroke.
+The stroke’s joins and caps shape its corners and ends.</li>
+<li><strong>2 rails.</strong> 2 subpaths along the band’s edges, and rungs, short lines across both, where the band turns.
+The stitches run between the rails, at the angle the rungs give them.
+<a href="#satin-columns-and-presets-in-vectorcraft">Satin columns and presets in VectorCraft</a> shows how to
+draw both in VectorCraft, and how to make a line into rails and rungs.</li>
+</ul>
+<p><code>satin_method</code> chooses how the band is sewn. A satin column is the default, and each other method has a
+page of its own among the <a href="user/stitches">stitch types</a>. The VectorCraft plug-in sets these settings, and
+StitchCraft reads them from an SVG file from milestone M8 (<a href="user/stitches#setting-parameters">setting parameters</a>).</p>
+<p>The pictures are drawn from <code>docs/fixtures/zigzag.svg</code>, a wave drawn 3 mm wide as one path, and
+<code>docs/fixtures/s-stitch.svg</code>, a curved band 6 mm wide between 2 rails.</p>
+<h2 id="drawn-as-one-path"><a class="header" href="#drawn-as-one-path">Drawn as one path</a></h2>
+<p>A path with a stroke sews as a column as wide as the stroke, its middle along the path. Its rails lie
+half the stroke’s width to each side of the path, and rungs cross it at the path’s nodes and on either
+side of each sharp corner, where the stitches fan round it. Automatic digitizing sews a stroke this way
+when it is wider than the design’s narrowest satin stroke and no wider than the widest satin column
+(<a href="#automatic-digitizing">automatic digitizing</a>).</p>
+<!-- shot: satin-column-one-path -->
+<p><strong>Running stitch, as a stroke sews by default</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/satin-column-one-path-1.png" alt="A wave 36 mm long drawn 3 mm wide as one path, Running stitch, as a stroke sews by default"><span class="img-wrapper"><img src="images/generated/satin-column-one-path-1.png" alt="A wave 36 mm long drawn 3 mm wide as one path, Running stitch, as a stroke sews by default"></span></label></p>
+<p><strong>Satin column</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/satin-column-one-path-2.png" alt="A wave 36 mm long drawn 3 mm wide as one path, Satin column"><span class="img-wrapper"><img src="images/generated/satin-column-one-path-2.png" alt="A wave 36 mm long drawn 3 mm wide as one path, Satin column"></span></label></p>
+<!-- /shot -->
+<h2 id="spacing-1"><a class="header" href="#spacing-1">Spacing</a></h2>
+<p><code>zigzag_spacing_mm</code> is how far apart the stitches across are, along the band, 0.4 mm by default. The
+needle comes back slanting to where the next stitch across starts, a spacing along. A finer spacing covers
+the band more closely, and a wider one lets the fabric show through.</p>
+<!-- shot: satin-column-spacing -->
+<p><strong>1 mm</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/satin-column-spacing-1.png" alt="A curved band 36 mm long and 6 mm wide between 2 rails, sewn as a satin column, every stitch across it square to the band and every stitch back slanting to the next, 1 mm"><span class="img-wrapper"><img src="images/generated/satin-column-spacing-1.png" alt="A curved band 36 mm long and 6 mm wide between 2 rails, sewn as a satin column, every stitch across it square to the band and every stitch back slanting to the next, 1 mm"></span></label></p>
+<p><strong>0.4 mm</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/satin-column-spacing-2.png" alt="A curved band 36 mm long and 6 mm wide between 2 rails, sewn as a satin column, every stitch across it square to the band and every stitch back slanting to the next, 0.4 mm"><span class="img-wrapper"><img src="images/generated/satin-column-spacing-2.png" alt="A curved band 36 mm long and 6 mm wide between 2 rails, sewn as a satin column, every stitch across it square to the band and every stitch back slanting to the next, 0.4 mm"></span></label></p>
+<!-- /shot -->
+<h2 id="underlays"><a class="header" href="#underlays">Underlays</a></h2>
+<p>An underlay is a few stitches sewn first, under the column. It holds the fabric still, so that the top
+stitches sew where they are drawn, and lifts them so that they cover the fabric. A satin column has 3,
+each off by default, and sews those that are on in this order:</p>
+<ul>
+<li><strong>Centre walk</strong> (<code>center_walk_underlay</code>): a running stitch along the middle of the column, there and
+back. It suits a narrow column.</li>
+<li><strong>Contour</strong> (<code>contour_underlay</code>): a running stitch along each edge, a little inside it. It keeps the
+edges crisp.</li>
+<li><strong>Zigzag</strong> (<code>zigzag_underlay</code>): a sparse zigzag across the column, to its end and back. It makes a wide
+column look fuller.</li>
+</ul>
+<p>Automatic digitizing chooses them by the column’s width
+(<a href="#settings-by-width">automatic digitizing</a>). The pictures sew the band’s top stitches 1 mm
+apart, so that the underlay shows between them.</p>
+<!-- shot: satin-column-underlays -->
+<p><strong>No underlay</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/satin-column-underlays-1.png" alt="The band sewn as a satin column at 1 mm spacing over each underlay, No underlay"><span class="img-wrapper"><img src="images/generated/satin-column-underlays-1.png" alt="The band sewn as a satin column at 1 mm spacing over each underlay, No underlay"></span></label></p>
+<p><strong>Centre walk</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/satin-column-underlays-2.png" alt="The band sewn as a satin column at 1 mm spacing over each underlay, Centre walk"><span class="img-wrapper"><img src="images/generated/satin-column-underlays-2.png" alt="The band sewn as a satin column at 1 mm spacing over each underlay, Centre walk"></span></label></p>
+<p><strong>Contour</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/satin-column-underlays-3.png" alt="The band sewn as a satin column at 1 mm spacing over each underlay, Contour"><span class="img-wrapper"><img src="images/generated/satin-column-underlays-3.png" alt="The band sewn as a satin column at 1 mm spacing over each underlay, Contour"></span></label></p>
+<p><strong>Zigzag</strong></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/satin-column-underlays-4.png" alt="The band sewn as a satin column at 1 mm spacing over each underlay, Zigzag"><span class="img-wrapper"><img src="images/generated/satin-column-underlays-4.png" alt="The band sewn as a satin column at 1 mm spacing over each underlay, Zigzag"></span></label></p>
+<!-- /shot -->
+<h2 id="compensation"><a class="header" href="#compensation">Compensation</a></h2>
+<p>As it sews, the thread pulls the fabric in across the stitches and pushes it out along the column. A
+column then comes out narrower and longer than drawn. <code>pull_compensation_mm</code> lengthens each stitch past
+the rails, and <code>push_compensation_mm</code> shortens the column at its ends. Each takes 2 values, one for each
+side or end. Automatic digitizing gives its columns 0.4 mm of pull compensation.</p>
+<h2 id="long-and-short-stitches"><a class="header" href="#long-and-short-stitches">Long and short stitches</a></h2>
+<p>With <code>max_stitch_length_mm</code> set, a stitch longer than it is split, and <code>split_method</code> says where the
+splits go. The <a href="#split-stitches">S-stitch page</a> shows the split methods. On the inside of a
+tight curve, the needle points along a rail crowd together and the thread piles up. A satin column moves
+some of them in along their stitches, by default, to spread them out: <code>short_stitch_inset</code> says how far,
+and <code>short_stitch_distance_mm</code> which points crowd.</p>
+<p>Every satin method warns of stitches that lean far along the band and of stitches long enough to snag,
+as the <a href="#leaning-and-long-stitches">S-stitch page</a> describes.</p>
+<h2 id="parameters-2"><a class="header" href="#parameters-2">Parameters</a></h2>
+<p>The reference gives each setting’s range and default:</p>
+<ul>
+<li><a href="#satin-parameters">satin column</a>, the underlays and split stitches included</li>
+<li><a href="#pull-parameters">pull compensation</a></li>
+<li><a href="#common-parameters">the settings every element shares</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="e-stitch"><a class="header" href="#e-stitch">E-stitch</a></h1>
 <!-- stitch-types: e_stitch -->
 <p>An E-stitch edges appliqué. A row of stitches runs along one edge of a band, its spine, and at each step
@@ -1285,7 +1383,7 @@ effect to them, with its <code>satin_method</code> set to <code>e_stitch</code>.
 <code>stitch export</code> sews them. An SVG file’s Ink/Stitch settings are read from milestone M8
 (<a href="user/stitches#setting-parameters">setting parameters</a>).</p>
 <p>The pictures are drawn from <code>docs/fixtures/e-stitch.svg</code>, a curved band 4 mm wide.</p>
-<h2 id="spacing-1"><a class="header" href="#spacing-1">Spacing</a></h2>
+<h2 id="spacing-2"><a class="header" href="#spacing-2">Spacing</a></h2>
 <p><code>zigzag_spacing_mm</code> is how far apart the spikes are, 0.4 mm by default as for a satin column. An E-stitch
 wants it wider: 2 or 3 mm leaves the fabric between the spikes showing.</p>
 <!-- shot: e-stitch-spacing -->
@@ -1314,7 +1412,7 @@ may snag, and <code>SC-W0209</code> names it.</p>
 <p>Without enough rungs, the points of the 2 rails pair up by length alone, and where one rail runs on ahead
 of the other the spikes lean along the band. Where they lean more than 45° from square to it, <code>SC-W0208</code>
 names the place to add a rung. Every satin method gives both warnings.</p>
-<h2 id="parameters-2"><a class="header" href="#parameters-2">Parameters</a></h2>
+<h2 id="parameters-3"><a class="header" href="#parameters-3">Parameters</a></h2>
 <p>An E-stitch reads every setting of a satin column, from its underlays and compensation to its random
 variation and where it starts and ends. The reference lists each one with its range and default:</p>
 <ul>
@@ -1336,7 +1434,7 @@ Satin effect, and set the effect’s <code>satin_method</code> to <code>s_stitch
 <code>stitch export</code> sews them. StitchCraft reads the same settings from an SVG file’s Ink/Stitch attributes
 from milestone M8 (<a href="user/stitches#setting-parameters">setting parameters</a>).</p>
 <p>The pictures are drawn from <code>docs/fixtures/s-stitch.svg</code>, a curved band 6 mm wide.</p>
-<h2 id="spacing-2"><a class="header" href="#spacing-2">Spacing</a></h2>
+<h2 id="spacing-3"><a class="header" href="#spacing-3">Spacing</a></h2>
 <p><code>zigzag_spacing_mm</code> is how far apart the stitches across are, 0.4 mm by default. Each goes the other way
 from the one before. A satin column at the same spacing crosses the band twice as often, as its needle
 comes back across between its stitches. A finer spacing covers the band more closely.</p>
@@ -1363,7 +1461,7 @@ longest stitch, the steps are longer than it.</p>
 <p>Where the stitches lean more than 45° from square to the band, without enough rungs, <code>SC-W0208</code> names the
 place to add one, and <code>SC-W0209</code> names a top stitch longer than 12 mm, which may snag. Every satin method
 gives both.</p>
-<h2 id="parameters-3"><a class="header" href="#parameters-3">Parameters</a></h2>
+<h2 id="parameters-4"><a class="header" href="#parameters-4">Parameters</a></h2>
 <p>Every satin column setting applies to an S-stitch too, its underlays, compensation and random variation
 included. The reference gives each one’s range and default:</p>
 <ul>
@@ -1379,7 +1477,7 @@ edge to a point on the other half the spacing along, and the next slants back. T
 <a href="#s-stitch">S-stitch</a> is, with <code>zigzag</code> in place of <code>s_stitch</code>. Its first stitch goes from the first rail
 to the second, and <code>swap_satin_rails</code> starts it from the other.</p>
 <p>The pictures use the S-stitch’s band, <code>docs/fixtures/s-stitch.svg</code>.</p>
-<h2 id="spacing-3"><a class="header" href="#spacing-3">Spacing</a></h2>
+<h2 id="spacing-4"><a class="header" href="#spacing-4">Spacing</a></h2>
 <p><code>zigzag_spacing_mm</code> is how far apart the zigzag’s points are along each edge, 0.4 mm by default, as for a
 satin column. The 2 edges take turns, half the spacing apart, and the needle crosses the band as often as
 a satin column’s does. A finer spacing covers the band more closely.</p>
@@ -1402,7 +1500,7 @@ across. Every stitch of a zigzag satin slants, half as far along the band as a s
 <p>With <code>max_stitch_length_mm</code> set, a stitch longer than it is split, as a satin column’s stitches are, and
 <code>split_method</code> says where the splits go. By default each stitch splits into its own fewest equal parts,
 where a satin column’s stitch back splits into as many as the stitch across before it, as in Ink/Stitch.</p>
-<h2 id="underlays"><a class="header" href="#underlays">Underlays</a></h2>
+<h2 id="underlays-1"><a class="header" href="#underlays-1">Underlays</a></h2>
 <p>A zigzag satin sews a satin column’s underlays. Its contour underlay stops where the zigzag’s points stop
 on each edge, so that it stays under the stitches, as Ink/Stitch’s does. After an odd centre walk
 Ink/Stitch’s stops elsewhere, as the <a href="#contour_underlay"><code>contour_underlay</code></a>
@@ -1412,13 +1510,215 @@ reference says.</p>
 <a href="#leaning-and-long-stitches">S-stitch page</a> describes. <code>SC-W0208</code> measures how the rails pair
 up, where a satin column’s stitches across would go. The slant every zigzag stitch has by design, the
 more the wider the spacing and the narrower the band, is left out of it.</p>
-<h2 id="parameters-4"><a class="header" href="#parameters-4">Parameters</a></h2>
+<h2 id="parameters-5"><a class="header" href="#parameters-5">Parameters</a></h2>
 <p>Every satin column setting applies to a zigzag satin too, its underlays, compensation and random variation
 included. The reference gives each one’s range and default:</p>
 <ul>
 <li><a href="#satin-parameters">satin column</a></li>
 <li><a href="#common-parameters">the settings every element shares</a></li>
 </ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="tatami-fill"><a class="header" href="#tatami-fill">Tatami fill</a></h1>
+<!-- stitch-types: tatami_fill, legacy_fill -->
+<p>A tatami fill covers an area with rows of running stitches, sewn back and forth across it. The needle
+points of each row lie a little along from the row before’s, so that they never line up into furrows. An
+area without settings sews as one, unless it is <a href="#automatic-digitizing">digitized automatically</a>: a fill’s
+<code>fill_method</code> is <code>tatami_fill</code> by default.</p>
+<p>The rows go round holes, and each part of the area is filled by itself. Between rows, the needle moves
+inside the fill, under rows sewn after it, which hide those stitches (<code>underpath</code>). StitchCraft reads a
+fill’s settings from an SVG file from milestone M8 (<a href="user/stitches#setting-parameters">setting parameters</a>), and the
+VectorCraft plug-in sets them today.</p>
+<p>The pictures are drawn from <code>docs/fixtures/fill.svg</code>, a green patch 32 mm by 20 mm with rounded corners
+and a round hole. As it sews by default:</p>
+<!-- shot: tatami-fill -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/tatami-fill.png" alt="A green patch 32 mm by 20 mm with rounded corners and a round hole, sewn as a tatami fill: rows across it 0.25 mm apart, round the hole"><span class="img-wrapper"><img src="images/generated/tatami-fill.png" alt="A green patch 32 mm by 20 mm with rounded corners and a round hole, sewn as a tatami fill: rows across it 0.25 mm apart, round the hole"></span></label></p>
+<!-- /shot -->
+<h2 id="angle-1"><a class="header" href="#angle-1">Angle</a></h2>
+<p><code>angle</code> turns the rows, in degrees counter-clockwise from horizontal: at 0° they run left to right, at
+90° up and down. Fills side by side at the same angle and spacing share their rows, which line up where
+they meet. These pictures and the next ones space the rows 1 mm apart, and draw a dot at each needle
+point, to show them.</p>
+<!-- shot: tatami-angle -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: center">0°</th><th style="text-align: center">45°</th><th style="text-align: center">90°</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/tatami-angle-1.png" alt="The patch sewn as a tatami fill with its rows 1 mm apart, to show them, 0°"><span class="img-wrapper"><img src="images/generated/tatami-angle-1.png" alt="The patch sewn as a tatami fill with its rows 1 mm apart, to show them, 0°"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/tatami-angle-2.png" alt="The patch sewn as a tatami fill with its rows 1 mm apart, to show them, 45°"><span class="img-wrapper"><img src="images/generated/tatami-angle-2.png" alt="The patch sewn as a tatami fill with its rows 1 mm apart, to show them, 45°"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/tatami-angle-3.png" alt="The patch sewn as a tatami fill with its rows 1 mm apart, to show them, 90°"><span class="img-wrapper"><img src="images/generated/tatami-angle-3.png" alt="The patch sewn as a tatami fill with its rows 1 mm apart, to show them, 90°"></span></label></td></tr>
+</tbody>
+</table>
+</div>
+<!-- /shot -->
+<h2 id="row-spacing"><a class="header" href="#row-spacing">Row spacing</a></h2>
+<p><code>row_spacing_mm</code> is how far apart the rows are, 0.25 mm by default. Rows further apart let the fabric
+show through, and closer rows cover it but stiffen it. <code>end_row_spacing_mm</code> changes the spacing from the
+first rows to the last, for a fill that fades.</p>
+<h2 id="stitch-length-and-staggers"><a class="header" href="#stitch-length-and-staggers">Stitch length and staggers</a></h2>
+<p>A row sews in stitches as long as <code>max_stitch_length_mm</code>, 4 mm by default for a fill. <code>staggers</code> is how
+many rows the needle points take to come back in line: each row’s lie a stitch divided by <code>staggers</code>
+along from the row before’s. With 1, every row’s needle points line up, and the fill shows furrows across
+its rows.</p>
+<!-- shot: tatami-staggers -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: center">4 staggers</th><th style="text-align: center">1 stagger</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/tatami-staggers-1.png" alt="The patch sewn as a tatami fill with its rows 1 mm apart, a dot at each needle point, 4 staggers"><span class="img-wrapper"><img src="images/generated/tatami-staggers-1.png" alt="The patch sewn as a tatami fill with its rows 1 mm apart, a dot at each needle point, 4 staggers"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/tatami-staggers-2.png" alt="The patch sewn as a tatami fill with its rows 1 mm apart, a dot at each needle point, 1 stagger"><span class="img-wrapper"><img src="images/generated/tatami-staggers-2.png" alt="The patch sewn as a tatami fill with its rows 1 mm apart, a dot at each needle point, 1 stagger"></span></label></td></tr>
+</tbody>
+</table>
+</div>
+<!-- /shot -->
+<h2 id="underlay"><a class="header" href="#underlay">Underlay</a></h2>
+<p>Before its rows, a tatami fill sews an underlay (<code>fill_underlay</code>, on by default). It is a sparser fill
+square to the top rows, which holds the fabric still and lifts them. <code>fill_underlay_angle</code>,
+<code>fill_underlay_row_spacing_mm</code> and <code>fill_underlay_inset_mm</code> change its angle, its spacing and how far
+inside the edges it stays.</p>
+<!-- shot: tatami-underlay -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: center">Underlay</th><th style="text-align: center">No underlay</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/tatami-underlay-1.png" alt="The patch sewn as a tatami fill with its rows 1 mm apart, Underlay"><span class="img-wrapper"><img src="images/generated/tatami-underlay-1.png" alt="The patch sewn as a tatami fill with its rows 1 mm apart, Underlay"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/tatami-underlay-2.png" alt="The patch sewn as a tatami fill with its rows 1 mm apart, No underlay"><span class="img-wrapper"><img src="images/generated/tatami-underlay-2.png" alt="The patch sewn as a tatami fill with its rows 1 mm apart, No underlay"></span></label></td></tr>
+</tbody>
+</table>
+</div>
+<!-- /shot -->
+<h2 id="pull-compensation-and-expanding"><a class="header" href="#pull-compensation-and-expanding">Pull compensation and expanding</a></h2>
+<p>As it sews, the thread pulls the fabric in along the rows, and a fill comes out shorter along them than
+drawn. <code>pull_compensation_mm</code> lengthens each row past the outline at its ends, and <code>expand_mm</code> grows
+every part of the area before its rows are laid. Automatic digitizing makes up for the pull another
+way: each area reaches 0.4 mm under the shapes sewn after it
+(<a href="#neighbours">automatic digitizing</a>).</p>
+<h2 id="inkstitchs-legacy-fill"><a class="header" href="#inkstitchs-legacy-fill">Ink/Stitch’s legacy fill</a></h2>
+<p>Ink/Stitch’s legacy fill is its older fill. It sews each stretch of rows that join on its own, back and
+forth, with no stitches inside the fill between stretches. StitchCraft sews a fill set to <code>legacy_fill</code>
+as a tatami fill without underlay, and says so (<code>SC-W0314</code>). Its rows are routed and joined as a tatami
+fill’s are.
+Its flip and reverse settings are kept, and not read (<code>SC-W0105</code>). Set <code>fill_method</code> to <code>tatami_fill</code> to
+sew the fill with its underlay.</p>
+<h2 id="parameters-6"><a class="header" href="#parameters-6">Parameters</a></h2>
+<p>The reference gives each setting’s range and default:</p>
+<ul>
+<li><a href="#fill-parameters">fill</a>, which chooses the fill method</li>
+<li><a href="#tatami-parameters">tatami fill</a>, its underlay included</li>
+<li><a href="#pull-parameters">pull compensation</a></li>
+<li><a href="#common-parameters">the settings every element shares</a>, the stitch length among them</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="automatic-digitizing"><a class="header" href="#automatic-digitizing">Automatic digitizing</a></h1>
+<p>StitchCraft can choose a shape’s stitches itself. A shape without settings sews by its width, at the size
+it sews (<a href="#stitches-by-width">stitches by width</a>). Digitizing also mends where shapes meet, and chooses an
+order with few thread changes. A picture traced in VectorCraft then becomes a machine file without a
+setting on any shape.</p>
+<p>To digitize the shapes without settings:</p>
+<ul>
+<li>on the command line, add <code>--auto</code> to <a href="#command-line"><code>stitch plan</code></a> or <code>stitch export</code>, or give
+<code>stitch plan</code> a picture, which it traces first
+(<a href="#from-a-picture-to-a-machine-file">from a picture to a machine file</a>);</li>
+<li>in VectorCraft, give the shapes StitchCraft’s Auto effect, whose dialog sets the rules’ settings.</li>
+</ul>
+<p>A shape with settings sews as they say. Each picture below shows shapes sewn as drawn, as a design sews
+without <code>--auto</code>, and then digitized automatically.
+<a href="#image-to-embroidery">Image to embroidery</a> gives every rule in full.</p>
+<h2 id="stitches-by-width"><a class="header" href="#stitches-by-width">Stitches by width</a></h2>
+<p>A shape’s width at a place is the diameter of the largest circle that fits inside it there:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Width</th><th>Sewn as</th></tr>
+</thead>
+<tbody>
+<tr><td>Up to the design’s narrowest satin stroke, <code>min_satin_stroke_width_mm</code>, 1 mm unless the design sets it</td><td>A running stitch along the middle, tripled from 0.5 mm wide (<code>auto_min_triple_run_width_mm</code>)</td></tr>
+<tr><td>Wider, up to the widest satin column, 7 mm (<code>auto_max_satin_width_mm</code>)</td><td>Satin columns between the shape’s own edges</td></tr>
+<tr><td>Wider</td><td>A tatami fill</td></tr>
+</tbody>
+</table>
+</div>
+<p>A stroke is a line as wide as it is drawn, and its width chooses its stitches the same way: one as wide
+as a satin column sews as a <a href="#drawn-as-one-path">satin column drawn as one path</a>. The
+pictures are drawn from <code>docs/fixtures/widths.svg</code>, a line 0.6 mm wide, a letter C 3 mm wide and a disc
+16 mm across, each traced as an area.</p>
+<p><strong>As drawn</strong></p>
+<!-- shot: auto-widths-drawn -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/auto-widths-drawn.png" alt="A blue line 0.6 mm wide, a red letter C 3 mm wide and a gold disc 16 mm across, each traced as an area and sewn as drawn: a tatami fill each"><span class="img-wrapper"><img src="images/generated/auto-widths-drawn.png" alt="A blue line 0.6 mm wide, a red letter C 3 mm wide and a gold disc 16 mm across, each traced as an area and sewn as drawn: a tatami fill each"></span></label></p>
+<!-- /shot -->
+<p><strong>Digitized</strong></p>
+<!-- shot: auto-widths -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/auto-widths.png" alt="The same shapes digitized automatically. The line runs along its middle, tripled, and the C sews as a satin column between its edges. The disc is still a tatami fill."><span class="img-wrapper"><img src="images/generated/auto-widths.png" alt="The same shapes digitized automatically. The line runs along its middle, tripled, and the C sews as a satin column between its edges. The disc is still a tatami fill."></span></label></p>
+<!-- /shot -->
+<h2 id="shapes-in-parts"><a class="header" href="#shapes-in-parts">Shapes in parts</a></h2>
+<p>A shape can be broad in one place and narrow in another, such as a letter with thin serifs or a balloon
+on a string. Its broad parts are filled, and its narrow parts sew as columns and lines that reach into
+the fill. The pictures are drawn from <code>docs/fixtures/parts.svg</code>, a lollipop on a stick 2.4 mm wide and a
+balloon on a string 0.8 mm wide, each one area.</p>
+<p><strong>As drawn</strong></p>
+<!-- shot: auto-parts-drawn -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/auto-parts-drawn.png" alt="A red lollipop, a disc 14 mm across on a stick 2.4 mm wide, and a blue balloon 12 mm by 15 mm on a string 0.8 mm wide, each one area, sewn as drawn: a tatami fill each"><span class="img-wrapper"><img src="images/generated/auto-parts-drawn.png" alt="A red lollipop, a disc 14 mm across on a stick 2.4 mm wide, and a blue balloon 12 mm by 15 mm on a string 0.8 mm wide, each one area, sewn as drawn: a tatami fill each"></span></label></p>
+<!-- /shot -->
+<p><strong>Digitized</strong></p>
+<!-- shot: auto-parts -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/auto-parts.png" alt="The same shapes digitized automatically. The discs are tatami fills as before, and the stick sews as a satin column and the string as a triple run, each into its fill."><span class="img-wrapper"><img src="images/generated/auto-parts.png" alt="The same shapes digitized automatically. The discs are tatami fills as before, and the stick sews as a satin column and the string as a triple run, each into its fill."></span></label></p>
+<!-- /shot -->
+<h2 id="neighbours"><a class="header" href="#neighbours">Neighbours</a></h2>
+<p>The shapes of a traced picture meet, and sewn as drawn they sew badly there. Digitizing mends that in 3
+steps:</p>
+<ol>
+<li><strong>The background.</strong> The lowest shape, when it covers the whole picture with the other shapes drawn
+on it, is the background, the fabric’s own colour, and is left out (<code>SC-W0906</code>, and
+<code>auto_ignore_background</code> to keep it).</li>
+<li><strong>Specks.</strong> A shape or a part of one smaller than 1 mm² would sew a knot. It is merged into the shape
+it shares the longest edge with (<code>SC-I0905</code>, <code>auto_min_area_mm2</code>).</li>
+<li><strong>Overlaps.</strong> The thread pulls stitches in from the edges of their shape, so shapes that only meet show
+fabric between them once sewn. Each area reaches 0.4 mm under the shapes sewn after it that it
+touches (<code>SC-I0904</code>, <code>auto_overlap_mm</code>). An area stacked under another is cut away under it, so that
+each place sews once.</li>
+</ol>
+<p>The pictures are drawn from <code>docs/fixtures/traced-badge.svg</code>, a badge traced on white: as drawn, the white
+is sewn too.</p>
+<p><strong>As drawn</strong></p>
+<!-- shot: traced-badge-drawn -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/traced-badge-drawn.png" alt="The traced badge sewn as drawn. Its white background sews too, and each colour is a tatami fill over the colours under it."><span class="img-wrapper"><img src="images/generated/traced-badge-drawn.png" alt="The traced badge sewn as drawn. Its white background sews too, and each colour is a tatami fill over the colours under it."></span></label></p>
+<!-- /shot -->
+<p><strong>Digitized</strong></p>
+<!-- shot: auto-badge -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/auto-badge.png" alt="The same badge digitized automatically. Its white background is left out, and each colour sews under the edges of the colours sewn on it."><span class="img-wrapper"><img src="images/generated/auto-badge.png" alt="The same badge digitized automatically. Its white background is left out, and each colour sews under the edges of the colours sewn on it."></span></label></p>
+<!-- /shot -->
+<h2 id="sewing-order"><a class="header" href="#sewing-order">Sewing order</a></h2>
+<p>The shapes sew in an order StitchCraft chooses. 4 rules decide it, each where the rules before it leave a
+choice:</p>
+<ol>
+<li>Of 2 shapes that overlap, the lower sews first, as drawn.</li>
+<li>A column or a line sews after a fill it borders, and covers its edge.</li>
+<li>The thread stays the same as long as a shape of that thread may sew next. The machine then changes
+thread as seldom as it can.</li>
+<li>Of those shapes, the nearest sews next.</li>
+</ol>
+<h2 id="settings-by-width"><a class="header" href="#settings-by-width">Settings by width</a></h2>
+<p>Each satin column digitizing makes has the underlay of its width, and 0.4 mm of pull compensation:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Column width</th><th>Underlay</th></tr>
+</thead>
+<tbody>
+<tr><td>Below 2 mm</td><td>Centre walk</td></tr>
+<tr><td>2 to 4 mm</td><td>Contour</td></tr>
+<tr><td>Above 4 mm</td><td>Contour and zigzag</td></tr>
+</tbody>
+</table>
+</div>
+<p>Fills keep a tatami fill’s defaults, their underlay included. These are starting values, which the next
+sew-out at the machine checkpoint confirms or changes.</p>
+<h2 id="settings"><a class="header" href="#settings">Settings</a></h2>
+<p>Each rule goes by the settings of the shape it digitizes, and a shape that sets none takes the defaults,
+as every shape does with <code>--auto</code>. VectorCraft’s Auto effect sets them, and the
+<a href="#auto-parameters">reference</a> gives each one’s range and default. The narrowest satin column
+is the design’s <code>min_satin_stroke_width_mm</code>, and the underlay of a column’s width is no setting.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="lock-stitches-trims-and-stops"><a class="header" href="#lock-stitches-trims-and-stops">Lock stitches, trims and stops</a></h1>
 <p>A lock, or tie, is a few small stitches where stitching starts (the tie-in) or ends (the tie-off). It
@@ -1485,7 +1785,7 @@ work. When the design has a stop position, the frame moves there before each sto
 test sheet TS-02 checks what the reference machine does. DST has no trim command. StitchCraft writes a trim
 there as 3 short jumps that end where they started, and a DST machine set to cut at 3 jumps in a row
 cuts there. The <a href="#machine-formats">machine formats</a> design says how each format records a trim.</p>
-<h2 id="parameters-5"><a class="header" href="#parameters-5">Parameters</a></h2>
+<h2 id="parameters-7"><a class="header" href="#parameters-7">Parameters</a></h2>
 <p><a href="#common-parameters">Common parameters</a> lists each of these settings with its range and
 default.</p>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -1553,7 +1853,7 @@ it plans for, and warns beyond a profile’s comfort zone where the profile has 
 <tr><td><a href="#diagnostic-codes">Diagnostic codes</a></td><td>generated from the diagnostics registry</td><td>available</td></tr>
 <tr><td><a href="#glossary">Glossary</a></td><td>hand-written</td><td>available</td></tr>
 <tr><td><a href="#vectorcraft-compatibility">VectorCraft compatibility</a></td><td>generated from the compatibility gate’s record, <code>compat/supported.toml</code></td><td>available</td></tr>
-<tr><td><a href="#parameters-6">Parameters</a> (one page per stitch type)</td><td>generated from the parameter registry</td><td>available</td></tr>
+<tr><td><a href="#parameters-8">Parameters</a> (one page per stitch type)</td><td>generated from the parameter registry</td><td>available</td></tr>
 <tr><td><a href="#inkstitch-compatibility-contract">Ink/Stitch compatibility contract</a></td><td>generated from <code>conformance/inkstitch-params.toml</code> and the parameter registry</td><td>available</td></tr>
 </tbody>
 </table>
@@ -2902,7 +3202,7 @@ And it names the elements left in paint order when choosing the order needs more
 allows. To keep shapes in their paint order among themselves, give them settings and leave
 <code>--sort-colours</code> off: in VectorCraft, apply StitchCraft’s Fill, Stroke or Satin effect to each.</p>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from the parameter registry (`stitchcraft-engine/src/registry.rs`) and the deviations ledger. Edit the declaration, not this page. -->
-<h1 id="parameters-6"><a class="header" href="#parameters-6">Parameters</a></h1>
+<h1 id="parameters-8"><a class="header" href="#parameters-8">Parameters</a></h1>
 <p>Every setting a design element can carry, by the key a design stores it under. A parameter that Ink/Stitch
 also has keeps Ink/Stitch’s key, meaning and default, so files move between the two tools unchanged
 (<a href="#inkstitch-compatibility-contract">compatibility contract</a>). Where StitchCraft reads or sews one
@@ -2968,7 +3268,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><th>Key</th><th>Label</th><th>Group</th></tr>
 </thead>
 <tbody>
-<tr><td><a href="#angle-1"><code>angle</code></a></td><td>Angle</td><td>Tatami parameters</td></tr>
+<tr><td><a href="#angle-2"><code>angle</code></a></td><td>Angle</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#auto_ignore_background"><code>auto_ignore_background</code></a></td><td>Leave out the background</td><td>Auto parameters</td></tr>
 <tr><td><a href="#auto_max_satin_width_mm"><code>auto_max_satin_width_mm</code></a></td><td>Widest satin column</td><td>Auto parameters</td></tr>
 <tr><td><a href="#auto_min_area_mm2"><code>auto_min_area_mm2</code></a></td><td>Smallest area</td><td>Auto parameters</td></tr>
@@ -3372,7 +3672,7 @@ drawing shows it. On a curve the turned stitches point like the spokes of a whee
 <h1 id="satin-parameters"><a class="header" href="#satin-parameters">Satin parameters</a></h1>
 <p>Satin column: a band of stitches between two rails.</p>
 <p>Applies to Satin column, E-stitch, S-stitch, Zigzag satin.</p>
-<h2 id="satin-column"><a class="header" href="#satin-column">Satin column</a></h2>
+<h2 id="satin-column-1"><a class="header" href="#satin-column-1">Satin column</a></h2>
 <h3 id="satin_column"><a class="header" href="#satin_column"><code>satin_column</code></a></h3>
 <p><strong>Satin column.</strong> Sew the path as a satin column. Two of its subpaths are the rails, the column’s edges, and the
 others are rungs across both, which say which point of one rail goes with which of the other.
@@ -3452,7 +3752,7 @@ the first rail to the second: 50 is the middle.</p>
 <li><strong>Default:</strong> <code>50</code></li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
-<h2 id="compensation"><a class="header" href="#compensation">Compensation</a></h2>
+<h2 id="compensation-1"><a class="header" href="#compensation-1">Compensation</a></h2>
 <h3 id="push_compensation_mm"><a class="header" href="#push_compensation_mm"><code>push_compensation_mm</code></a></h3>
 <p><strong>Push compensation.</strong> How much shorter the column is made at its start and its end. Satin stitches push the fabric out
 along the column, so it comes out longer than drawn, and this makes up for it. Negative values
@@ -3768,7 +4068,7 @@ other methods arrive in later versions; until then an element set to one is skip
 offset so that they never line up. Ink/Stitch’s default fill.</p>
 <p>Applies to Tatami fill.</p>
 <h2 id="rows"><a class="header" href="#rows">Rows</a></h2>
-<h3 id="angle-1"><a class="header" href="#angle-1"><code>angle</code></a></h3>
+<h3 id="angle-2"><a class="header" href="#angle-2"><code>angle</code></a></h3>
 <p><strong>Angle.</strong> The direction of the rows, in degrees counter-clockwise from horizontal: 0 sews horizontal rows
 and 90 upright ones.</p>
 <ul>
@@ -3863,7 +4163,7 @@ needle travels along the fill’s outline, where the travel can show along the e
 </ul>
 </li>
 </ul>
-<h2 id="underlay"><a class="header" href="#underlay">Underlay</a></h2>
+<h2 id="underlay-1"><a class="header" href="#underlay-1">Underlay</a></h2>
 <h3 id="fill_underlay"><a class="header" href="#fill_underlay"><code>fill_underlay</code></a></h3>
 <p><strong>Underlay.</strong> Sew underlay before the top rows: rows of stitches farther apart than the top rows, square to
 them unless set otherwise. It holds the fabric still while the fill is sewn and lifts the top
@@ -3940,7 +4240,7 @@ by its width. Each rule goes by the settings of the shape it digitizes, and a sh
 takes the defaults, as every shape does with <code>--auto</code>. The machine checkpoint MC-8 confirms the
 defaults or changes them.</p>
 <p>Applies to automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type.</p>
-<h2 id="stitches-by-width"><a class="header" href="#stitches-by-width">Stitches by width</a></h2>
+<h2 id="stitches-by-width-1"><a class="header" href="#stitches-by-width-1">Stitches by width</a></h2>
 <h3 id="auto_max_satin_width_mm"><a class="header" href="#auto_max_satin_width_mm"><code>auto_max_satin_width_mm</code></a></h3>
 <p><strong>Widest satin column.</strong> The widest a line or a part of an area sews as a satin column: satin stitches any longer lie
 loose. A line up to this wide is a satin column as wide as the line, and a wider one fills the
@@ -3964,7 +4264,7 @@ circles that fit inside it along its centre line.</p>
 <li><strong>Ink/Stitch:</strong> none; this is StitchCraft’s own</li>
 <li><strong>Experimental:</strong> designs that use it may stitch differently in a later version</li>
 </ul>
-<h2 id="neighbours"><a class="header" href="#neighbours">Neighbours</a></h2>
+<h2 id="neighbours-1"><a class="header" href="#neighbours-1">Neighbours</a></h2>
 <h3 id="auto_overlap_mm"><a class="header" href="#auto_overlap_mm"><code>auto_overlap_mm</code></a></h3>
 <p><strong>Overlap.</strong> How far an area reaches under each shape sewn after it that it touches, and how far inside the
 edge of an area sewn after it that covers it the area is cut away. The thread pulls stitches in
@@ -4331,7 +4631,7 @@ check the hoop and colour limits.</li>
 <tbody>
 <tr><td>Running, bean, manual, random-length</td><td>P1</td><td><a href="#stroke-generators">strokes</a></td></tr>
 <tr><td>Satin column (+ E, S, zigzag variants)</td><td>P1/P2</td><td><a href="#satin-generators">satin</a></td></tr>
-<tr><td>Tatami fill</td><td>P1</td><td><a href="#tatami-fill">fills</a></td></tr>
+<tr><td>Tatami fill</td><td>P1</td><td><a href="#tatami-fill-1">fills</a></td></tr>
 <tr><td>Contour, meander, circular</td><td>P2</td><td><a href="#fill-generators">fills</a></td></tr>
 <tr><td>Guided, linear gradient, tartan, cross stitch</td><td>P3</td><td><a href="#fill-generators">fills</a></td></tr>
 <tr><td>Ripple, zigzag stroke</td><td>P2/P3</td><td><a href="#stroke-generators">strokes</a></td></tr>
@@ -4697,7 +4997,7 @@ pub struct Subpath { pub start: Point, pub segments: Vec&lt;Segment&gt;, pub clo
 pub enum Segment { Line(Point), Quad(Point, Point), Cubic(Point, Point, Point) }</code></pre>
 <p>Elements are in the host’s paint order, bottom first. They sew in that order unless the design has
 automatic elements or <code>sort_colours</code> is set: since M13.3 automatic digitizing then chooses the order
-(<a href="#sewing-order">image to embroidery</a>). Curves keep their control points, and the
+(<a href="#sewing-order-1">image to embroidery</a>). Curves keep their control points, and the
 generators flatten them with the tolerance their parameters give.</p>
 <p>A host reads 3 of the settings by Ink/Stitch’s names, <code>collapse_len_mm</code>, <code>min_stitch_len_mm</code> and
 <code>min_satin_stroke_width_mm</code>: an SVG file’s metadata, and since M6.11 the data a VectorCraft document keeps
@@ -4744,7 +5044,7 @@ every ring. Parts of 3 square CSS pixels (0.21 mm²) or less are left out, with 
 <p>A centre line is made into a <code>Satin</code> of its own, its rails offset from the line by the stroke’s width and
 join (<code>stitchcraft_engine::normalize::centre_line</code>, since M4.9). How rails and rungs are recognised from
 a host path, and made from a centre line, is part of the <a href="#satin-generators">satin design</a>.</p>
-<h2 id="parameters-7"><a class="header" href="#parameters-7">Parameters</a></h2>
+<h2 id="parameters-9"><a class="header" href="#parameters-9">Parameters</a></h2>
 <p><code>ParamSet</code> maps registry keys to typed values; generators receive <em>typed views</em>
 (<code>TatamiParams { row_spacing: Mm, angle: Deg, … }</code>) produced by the registry. See
 <a href="#parameter-registry">parameter registry</a>.</p>
@@ -5038,7 +5338,7 @@ reads only the declarations of the families it shows: the satin column’s decla
 <code>zigzag_spacing_mm</code> cannot read a zigzag stroke’s 2 spacings (rule 7).</p>
 <h3 id="settings-of-automatic-digitizing"><a class="header" href="#settings-of-automatic-digitizing">Settings of automatic digitizing</a></h3>
 <p>Automatic digitizing’s rules have settings of their own, the widest satin column and the others
-(<a href="#settings">image to embroidery</a>, <code>REQ-AUTO-020</code>). An automatic element reads them
+(<a href="#settings-1">image to embroidery</a>, <code>REQ-AUTO-020</code>). An automatic element reads them
 before it is sewn as any stitch type, and the ordinary elements it becomes don’t. So their declaration
 applies to no stitch type: <code>pub struct AutoParams for AUTOMATIC;</code>, <code>stitchcraft_params::AUTOMATIC</code> being
 the empty list, which <code>ParamGroup::automatic</code> tells. No family’s declaration of a key is theirs
@@ -5123,7 +5423,7 @@ chooses between the two.</p>
 <tr><th style="text-align: left">Output</th><th style="text-align: left">Generated by</th><th style="text-align: left">Checked by</th><th style="text-align: left">Since</th></tr>
 </thead>
 <tbody>
-<tr><td style="text-align: left">The reference pages, the <a href="#parameters-6">index</a> and one page per declaration (<code>docs/src/user/reference/params/*.md</code>), with the deviations ledger’s entries</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left"><code>cargo xtask docs --check</code>, which fails on a stale page and on a page left from a declaration since removed (<code>cargo xtask docs</code> deletes those)</td><td style="text-align: left">M3.1</td></tr>
+<tr><td style="text-align: left">The reference pages, the <a href="#parameters-8">index</a> and one page per declaration (<code>docs/src/user/reference/params/*.md</code>), with the deviations ledger’s entries</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left"><code>cargo xtask docs --check</code>, which fails on a stale page and on a page left from a declaration since removed (<code>cargo xtask docs</code> deletes those)</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left"><code>docs/src/user/reference/params.schema.json</code>: the parameters as JSON values (numbers, booleans, strings, arrays, <code>null</code> for empty), for editors, presets and JSON hosts</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left">same</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left">The <em>StitchCraft</em> column of the <a href="#inkstitch-compatibility-contract">Ink/Stitch compatibility contract</a></td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left">same, plus the cross-checks above</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left">VectorCraft manifests, one for each stitch family’s module, with each parameter’s label, unit, section, help, help page and the values that show it</td><td style="text-align: left">at runtime from the registry, when VectorCraft asks a module for its manifest (<code>stitchcraft-vc-plugin</code>’s <code>manifest</code> and <code>dialog</code>)</td><td style="text-align: left">plug-in tests validate them against VectorCraft’s manifest rules, <code>cargo xtask docs --check</code> finds each help page, the contract tests install them in VectorCraft’s host, and the window probe checks the dialogs’ rows</td><td style="text-align: left">M6.2, and the dialogs M6.10</td></tr>
@@ -5363,7 +5663,7 @@ of Ink/Stitch’s commands attached to it still apply. A shape with any <code>in
 <code>embroider_</code> attribute as Ink/Stitch’s early versions wrote its settings, is not automatic: it sews as
 its settings say once they are read (M8), and with the defaults until then.
 Read with <code>--sort-colours</code> (<code>Reading::sort_colours</code>), the design’s shapes with settings sew in the order
-StitchCraft chooses too (<a href="#sewing-order">image to embroidery</a>, <code>REQ-AUTO-011</code>).</li>
+StitchCraft chooses too (<a href="#sewing-order-1">image to embroidery</a>, <code>REQ-AUTO-011</code>).</li>
 </ul>
 <h2 id="geometry-and-units"><a class="header" href="#geometry-and-units">Geometry and units</a></h2>
 <ul>
@@ -5603,7 +5903,7 @@ budget’s work to itself, naming its parts included, and one that needs more is
 width says is sewn otherwise or left out with a warning.</p>
 <p>The digitized elements are then sewn as neighbours, in an order of their own. What overlaps keeps its
 paint order, and a line sews after the fill it borders. Then each thread sews as long as it can, the
-nearest element next (<a href="#sewing-order">image to embroidery</a>, <code>SC-I0907</code>). Elements
+nearest element next (<a href="#sewing-order-1">image to embroidery</a>, <code>SC-I0907</code>). Elements
 with settings keep their order among themselves, unless <code>--sort-colours</code> is given. The switch brings a
 design without automatic elements through this stage too.</p>
 <h2 id="1-normalize"><a class="header" href="#1-normalize">1. Normalize</a></h2>
@@ -5805,7 +6105,7 @@ first point always stays. A stitch into or out of a lock point is a lock stitch,
 function, which a generator that joins pieces of its own also applies, as a tatami fill does to its
 rows and the travel between them, so that finalize finds nothing of its stitches to thin. A satin
 column joins its parts by rules of its own instead, since the end of a top stitch must not move
-(<a href="#underlays-1">satin</a>).</li>
+(<a href="#underlays-2">satin</a>).</li>
 <li><strong>The longest stitch.</strong> A stitch longer than <code>profile.max_stitch</code> is split into the fewest equal parts
 no longer than it (<code>SC-I0703</code>, <code>REQ-FIN-001</code>). Such a stitch comes from a stitch placed by hand, a
 custom lock’s long step, a satin column wider than the machine’s longest stitch, a tatami fill whose
@@ -5999,7 +6299,7 @@ every platform places the same stitches.</p>
 documented ways, <code>DEV-RUN-001</code> to <code>DEV-RUN-004</code> in the deviations ledger (<code>conformance/deviations.toml</code>),
 and random length draws and places its lengths in other ways (<code>DEV-RUN-005</code>).</p>
 <p><strong>Satin underlays</strong> walk lines made point by point by the satin generator
-(<a href="#underlays-1">satin</a>), and steps 2 to 5 place their stitches, with each walk’s own length and
+(<a href="#underlays-2">satin</a>), and steps 2 to 5 place their stitches, with each walk’s own length and
 tolerance. Such a line is a polyline already, and each join that turns by more than 30° is a corner. A
 line too small for a stitch of the shortest length is sewn as its 2 ends, as Ink/Stitch sews it, and
 finalizing merges what is too short.</p>
@@ -6209,7 +6509,7 @@ a third rung step 3 finds them.</li>
 in step 3.</li>
 <li>Every other subpath is a rung. A rung joins the point where it crosses the first rail to the point
 where it crosses the second. Where it misses a rail, the point of that rail nearest the rung is used,
-with <code>SC-W0203</code>, measured against the rail as push compensation leaves it (<a href="#compensation-1">Compensation</a>).
+with <code>SC-W0203</code>, measured against the rail as push compensation leaves it (<a href="#compensation-2">Compensation</a>).
 Of points as near as each other, it is the one shapely’s nearest points of the rung and the rail give
 (see <em>Equally near points</em>). A rung that crosses a rail more than once does not say
 which crossing it means. It is left out, with <code>SC-W0207</code>, and the satin is sewn without it.</li>
@@ -6373,7 +6673,7 @@ compensation leaves them, at more than 2 points doesn’t say which points pair,
 Ink/Stitch leaves it out. Such a rung crosses a node whose rail turns back across it.</p>
 <p>Where the pairing leaves stitches leaning far along the column, <code>SC-W0208</code> names the place to add a rung
 (<a href="#leaning-and-long-stitches-2">Leaning and long stitches</a>).</p>
-<h2 id="compensation-1"><a class="header" href="#compensation-1">Compensation</a></h2>
+<h2 id="compensation-2"><a class="header" href="#compensation-2">Compensation</a></h2>
 <p>Thread under tension pulls the fabric in across a satin column, which then sews narrower than it is
 drawn. The stitches also push the fabric out at the column’s ends, and it sews longer. StitchCraft makes
 up for both as Ink/Stitch does.</p>
@@ -6554,7 +6854,7 @@ Ink/Stitch’s.</li>
 (<code>lib/elements/satin_column/underlay.py</code>, <code>_do_contour_underlay</code>). The zigzag’s points, as inset, mark
 where it stops on each rail: its last point on the first rail, and its first and last on the second.
 Each side is cut at its points nearest those on its rail, and then stops short of the column’s ends by
-the insets (<a href="#underlays-1">Underlays</a>). A cut that would leave less than half a CSS pixel of a side is
+the insets (<a href="#underlays-2">Underlays</a>). A cut that would leave less than half a CSS pixel of a side is
 not made, as for the insets. Such a cut comes from a zigzag of one stitch. After an odd centre walk
 the sides stop at the same places. Ink/Stitch looks for the points in the run as sewn, turned round,
 and so cuts its first side nowhere and its second to a stub (<code>DEV-SAT-011</code>).</li>
@@ -6584,7 +6884,7 @@ stitch. The underlays and the needle’s travel are left out. Setting <code>max_
 stitches, and a shape that wide may sew better as a fill. Finalize splits a stitch longer than the
 machine’s longest stitch anyway (<code>SC-I0703</code>).</li>
 </ul>
-<h2 id="underlays-1"><a class="header" href="#underlays-1">Underlays</a></h2>
+<h2 id="underlays-2"><a class="header" href="#underlays-2">Underlays</a></h2>
 <p>Underlays are sewn before the top stitches, as Ink/Stitch sews them. The centre walk comes first, then the
 contour and the zigzag, each one the element turns on, and all of them go into one run with the top
 stitches.</p>
@@ -6642,7 +6942,7 @@ reversal. Tatami fills offer their area, their parts.</p>
 <code>running_stitch_position</code> percent of the way from the first rail to the second (50 is the middle). It is
 built as the centre walk’s is. Pairs are placed every <code>running_stitch_tolerance_mm</code> and moved in until
 their ends meet the line. A running stitch of the column’s travel length
-(<a href="#underlays-1">Underlays</a>) goes through them within the same tolerance.</p>
+(<a href="#underlays-2">Underlays</a>) goes through them within the same tolerance.</p>
 <p><strong>Cuts.</strong> A place on the column is found by its cut, one of the pairs placed at the zigzag spacing with
 no compensation and nothing random. The cut is the pair with the point nearest the place. Where the
 needle enters the line for a place is the line’s point nearest that cut. A part of the column is cut in 2
@@ -6934,13 +7234,13 @@ only at their ends. Drawings of shapes that share corners and edges, written wit
 Inkscape writes them, fill their shapes’ area, in 1 part where the shapes share edges.</p>
 <p>Regions are combined by the same cuts and faces (<code>stitchcraft_engine::normalize::region::ops</code>), as
 automatic digitizing combines the shapes of a picture where they meet
-(<a href="#neighbours-1">Neighbours</a>). A region’s parts never overlap and its outlines turn
+(<a href="#neighbours-2">Neighbours</a>). A region’s parts never overlap and its outlines turn
 clockwise. Its rings then wind -1 times round each point inside it and 0 times round every other point. Of
 the faces that the rings of 2 regions bound, the union keeps those some ring winds round and the
 intersection those wound -2 times. The difference first reverses the second region’s rings, then keeps the
 faces wound -1 times. A region grows or shrinks by each part’s offset curves, with round corners
 (<code>normalize::offset</code>), and the parts grown are joined, since they may then overlap.</p>
-<h2 id="tatami-fill"><a class="header" href="#tatami-fill">Tatami fill</a></h2>
+<h2 id="tatami-fill-1"><a class="header" href="#tatami-fill-1">Tatami fill</a></h2>
 <p>Parallel rows of running stitches across the region, with the needle points of neighbouring rows offset
 so they never line up into visible furrows. Most fills in most designs are tatami. Each step below sews
 as Ink/Stitch sews, on StitchCraft’s region, unless it says where it differs. The roadmap’s M5 steps
@@ -7695,7 +7995,7 @@ Trace’s Document Library palette then traces the picture in the threads’ col
 <li>each path with the StitchCraft Auto effect, on the path itself or on a group or a layer around it, with
 or without <code>--auto</code> (M13.7, <code>REQ-VC-016</code>). A path nearer to a StitchCraft stitch effect, its own or a
 group’s, sews as that says. The effect’s parameters are the shape’s settings of the rules
-(<a href="#settings">below</a>). A stitch effect says how an object sews, so an Auto effect beside one isn’t used,
+(<a href="#settings-1">below</a>). A stitch effect says how an object sews, so an Auto effect beside one isn’t used,
 and <code>SC-W0807</code> says so;</li>
 <li>each SVG element without <code>inkstitch:</code> settings, with <code>--auto</code>.</li>
 </ul>
@@ -7762,7 +8062,7 @@ dot that a round or square cap draws. A dot with a butt cap draws nothing, and i
 half the stroke’s width to each side, with its corners joined as the stroke’s join joins them and its
 open ends capped with its cap. It is the stroke’s area within the shapes’ tolerance. A miter longer
 than its limit is cut square. Those pieces, joined into one area, are the fill’s outline. A part of it smaller than 1 mm²
-is a speck, merged into a neighbour or left out as specks are (<a href="#neighbours-1">Neighbours</a>). An area that would reach more
+is a speck, merged into a neighbour or left out as specks are (<a href="#neighbours-2">Neighbours</a>). An area that would reach more
 than 10 m from the origin is left out (<code>SC-W0903</code>). No design lies there.</p>
 <p>The pieces are not handed to the area code one by one, which would cost many times the work of their
 outline. Each open subpath is one ring instead. It follows the right side forward, the end cap, the left
@@ -7779,14 +8079,14 @@ thread, and a line drawn half a millimetre wide or wider sews bolder tripled. A 
 drawn, and a narrow part (below) as wide as the circles that fit inside it along the middle. Widths are
 compared to the micrometre, and MC-8 confirms or changes the bound.</p>
 <p>Every automatic satin column, a stroke’s as well as a shape’s, has the settings of its width (M13.5,
-<a href="#settings-by-width">below</a>). A shape’s area is a tatami fill apart from its narrow parts (M13.4), its
+<a href="#settings-by-width-1">below</a>). A shape’s area is a tatami fill apart from its narrow parts (M13.4), its
 parts as wide as a satin column (M13.5) and the narrow parts of its broad ones (M13.6).</p>
 <p><strong>Narrow parts</strong> (M13.4, <code>REQ-AUTO-013</code>). A part of a shape that is narrower than
 <code>min_satin_stroke_width_mm</code> everywhere sews as a running stitch along its centre line, as a stroke that
 narrow does. No circle that wide fits inside such a part: shrunk by half the width with the polygon buffer
 of M5.7, nothing of it is left. The width is taken half a micrometre wider, so that a part as wide as the
 bound, give or take a rounding error, is narrow, as a stroke is. Before that, a part smaller than 1 mm² is a
-speck (<a href="#neighbours-1">Neighbours</a>), and stays in the area. So does a part whose centre line has no length, a
+speck (<a href="#neighbours-2">Neighbours</a>), and stays in the area. So does a part whose centre line has no length, a
 dot.</p>
 <ul>
 <li><strong>What sews.</strong> The rest of the shape is a tatami fill, and each narrow part’s line sews after it, in the
@@ -7798,7 +8098,7 @@ corner, it says whether the part is a triple run
 (<a href="#width-along-the-line">centre lines</a>). A strip as wide all along as a stroke
 is as wide as the stroke.</li>
 <li><strong>To its neighbours</strong> a narrow part’s line paints the part. It sews after a fill it borders, and the
-areas sewn before it reach under it as under a satin column (<a href="#neighbours-1">Neighbours</a>).</li>
+areas sewn before it reach under it as under a satin column (<a href="#neighbours-2">Neighbours</a>).</li>
 <li><strong>As drawn.</strong> A shape’s narrow parts are found as it is drawn, before its neighbours. A part that only
 the areas sewn after it leave narrow is cut away round them and filled with the rest of its shape. A
 stacked trace’s dark outline under the colours inside it is often such a part. M13.6 keeps finding
@@ -7863,7 +8163,7 @@ star’s points end along the star’s middle.</li>
 <li><strong>What sews.</strong> Each narrow part sews as a part of its own. One narrower than
 <code>min_satin_stroke_width_mm</code> everywhere runs along its centre line, and one no wider than 7 mm sews as
 satin columns. Any other stays in the fill. The fill is the shape without its narrow parts. It sews
-first, and reaches 0.4 mm under the lines and columns sewn over it (<a href="#neighbours-1">Neighbours</a>).</li>
+first, and reaches 0.4 mm under the lines and columns sewn over it (<a href="#neighbours-2">Neighbours</a>).</li>
 </ul>
 <p><strong>Centre lines.</strong> A narrow part’s centre line, its width along it and the rungs across it come from a
 constrained Delaunay triangulation of its outline, with points added along its long edges so that no
@@ -7887,7 +8187,7 @@ part’s outline on either side, and its rungs come from the triangles across it
 lines that run on most nearly straight, and the column of the third ends under theirs. A ring, such as a
 letter O, is a closed column between its outer and inner outlines. The satin generator sews these columns
 as it sews columns drawn with rails and rungs.</p>
-<h3 id="settings-by-width"><a class="header" href="#settings-by-width">Settings by width</a></h3>
+<h3 id="settings-by-width-1"><a class="header" href="#settings-by-width-1">Settings by width</a></h3>
 <p>Every automatic satin column, a stroke’s or a part’s, has the underlay of its width (<code>REQ-AUTO-018</code>),
 compared to the micrometre. These are starting values, and MC-8 confirms or changes them:</p>
 <div class="table-wrapper">
@@ -7908,7 +8208,7 @@ column in from its rails as it pulls an area in from its edges, and stitches tha
 the rails meet the shapes beside them with no fabric between. A column ends at its rails’ ends rather
 than at the point nearest the next shape, which would join its ends to the next shape with a straight run
 across it. Fills keep the tatami fill’s defaults, underlay included.</p>
-<h2 id="neighbours-1"><a class="header" href="#neighbours-1">Neighbours</a></h2>
+<h2 id="neighbours-2"><a class="header" href="#neighbours-2">Neighbours</a></h2>
 <p>The shapes of a traced picture meet. VectorCraft’s Abutting method traces each area with a hole where the
 next one lies, and its Overlapping method, like Inkscape’s Trace Bitmap with its Stack option, traces each
 colour whole, over the colours under it. Sewn as drawn, either sews badly where shapes meet, and digitizing
@@ -7962,7 +8262,7 @@ whole, which sews nothing. The areas are named in the order they are sewn.</li>
 </ol>
 <p>Only automatic areas change. A shape with settings is sewn as they say, and a satin column or a line
 digitized from a stroke or a part keeps its stitches: a column is sewn past its rails by its pull
-compensation, 0.4 mm, as an area is grown under the shapes sewn after it (<a href="#settings-by-width">Settings by
+compensation, 0.4 mm, as an area is grown under the shapes sewn after it (<a href="#settings-by-width-1">Settings by
 width</a>). A fill that bounds no area is left to its fill, which says so.
 The areas are taken from the last sewn to the first, so that each meets the shapes after it as they are
 sewn. Each area has the work budget to itself for its specks and for its overlaps, and costs the work of the
@@ -7999,7 +8299,7 @@ the badge at three fifths of its size and sewn in the order below, covers its ed
 stacked it sews within 16 stitches of the abutting row. Without pull, every edge is covered as drawn and
 digitized alike, to within a hundredth. <code>tests/auto_pictures.rs</code> keeps the numbers
 from falling back, and MC-8 tells whether 0.4 mm is the pull on the machine.</p>
-<h2 id="sewing-order"><a class="header" href="#sewing-order">Sewing order</a></h2>
+<h2 id="sewing-order-1"><a class="header" href="#sewing-order-1">Sewing order</a></h2>
 <p>Automatic elements sew in an order StitchCraft chooses (<code>stitchcraft_engine::auto::neighbours::order</code>,
 M13.3). The order is chosen after specks are merged, so that a speck merged into an area is no element of
 its own, and before areas reach under their neighbours, which follows it. VectorCraft’s Auto Grouping
@@ -8016,7 +8316,7 @@ tolerance between edges drawn as one, and shapes overlap only where their overla
 0.1 mm wide cross, they overlap.</li>
 <li><strong>A line after the fill it borders.</strong> A satin column or a line that touches a fill without overlapping
 it sews after the fill and covers its edge, and the fill reaches under a column
-(<a href="#neighbours-1">Neighbours</a>). Rule 1 comes first. A line that rule 1 already sews before the fill, through
+(<a href="#neighbours-2">Neighbours</a>). Rule 1 comes first. A line that rule 1 already sews before the fill, through
 the shapes it overlaps, keeps its place.</li>
 <li><strong>Few thread changes.</strong> The next element has the thread that is sewing, as long as an element of that
 thread is free to sew: every element that must sew before it has. Otherwise the thread changes to that
@@ -8057,7 +8357,7 @@ placed. An order that needs more sews the elements not placed by then in paint o
 <code>SC-I0907</code> says each. <code>SC-I0904</code> says it of a satin column instead, whose area the areas sewn before it
 then don’t reach under either. A fill’s generator needs the work of its region too, and says it of a fill
 (<code>SC-E0004</code>).</p>
-<p><strong>Measured.</strong> The test pictures, sewn as drawn and digitized as <a href="#neighbours-1">Neighbours</a> sews them.</p>
+<p><strong>Measured.</strong> The test pictures, sewn as drawn and digitized as <a href="#neighbours-2">Neighbours</a> sews them.</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -8078,7 +8378,7 @@ as Auto Grouping draws it. It changes thread 8 times as drawn. Digitized, each t
 after another, and the row changes thread twice. Its red discs touch, and the needle sews on from one to
 the next without a jump. The row jumps 7 times instead of 9. <code>tests/auto_pictures.rs</code> keeps the numbers
 from falling back.</p>
-<h2 id="settings"><a class="header" href="#settings">Settings</a></h2>
+<h2 id="settings-1"><a class="header" href="#settings-1">Settings</a></h2>
 <p>The rules’ values are StitchCraft’s own parameters, registered as any other
 (<a href="#parameter-registry">parameter registry</a>, <a href="#auto-parameters">reference</a>), since M13.7
 (<code>REQ-AUTO-020</code>). Each rule goes by the settings of the shape it digitizes (<code>stitchcraft_engine::auto::AutoParams</code>):</p>
@@ -8855,7 +9155,7 @@ Reading the file back, as <code>stitch export</code> does, stops it at a writer�
 <code>stitch export</code>’s own too. Its <code>auto</code> option digitizes the objects without StitchCraft effects, as
 <code>--auto</code> does, and sews them in the order StitchCraft chooses. The exporters have no switch like
 <code>--sort-colours</code>, and the objects with effects keep their order among themselves
-(<a href="#sewing-order">image to embroidery</a>). Level B of the <a href="#vectorcraft-compatibility-gate">compatibility gate</a> exports a document with
+(<a href="#sewing-order-1">image to embroidery</a>). Level B of the <a href="#vectorcraft-compatibility-gate">compatibility gate</a> exports a document with
 VectorCraft’s command line and checks that the files are <code>stitch export</code>’s, byte for byte.</li>
 <li>What <code>stitch export</code> says, the export says as its warnings, one line each, naming the object and with
 the hint after it. VectorCraft shows 100 of at most 500 characters each, so of more the last says how
@@ -10498,7 +10798,7 @@ a parameter declared with an Ink/Stitch origin must be listed here with a compat
 default must be the value Ink/Stitch sews.</li>
 <li><strong>Default</strong> is the value Ink/Stitch’s settings window shows. For a few parameters its code sews another
 value when a file sets none, and the cell gives that value after the default, as in <code>0.1 (0.2 when unset)</code>. <code>—</code> means no default: the value is derived from another parameter or the shape.</li>
-<li><strong>StitchCraft</strong> says whether the <a href="#parameters-6">parameter registry</a> declares the
+<li><strong>StitchCraft</strong> says whether the <a href="#parameters-8">parameter registry</a> declares the
 parameter. <em>planned</em>: not yet; a design that sets it keeps it unchanged and gets <code>SC-W0105</code>. <em>not
 planned</em>: never, and a design that sets it gets the same.
 <em>registered</em>: StitchCraft reads and checks it under the same key, meaning and default; it changes the
@@ -10645,7 +10945,7 @@ planned.</li>
 <tr><td><code>smoothness_mm</code></td><td>float</td><td>mm</td><td>0</td><td><code>contour_fill</code>, <code>guided_fill</code>, <code>meander_fill</code></td><td>P2 (M7)</td><td>planned</td></tr>
 <tr><td><code>expand_mm</code></td><td>float</td><td>mm</td><td>0</td><td>all</td><td>P1 (M5)</td><td><a href="#expand_mm">registered</a></td></tr>
 <tr><td><code>gap_fill_rows</code></td><td>int</td><td>rows</td><td>0</td><td><code>tatami_fill</code></td><td>P1 (M5)</td><td><a href="#gap_fill_rows">registered</a></td></tr>
-<tr><td><code>angle</code></td><td>float</td><td>deg</td><td>0</td><td><code>tatami_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="#angle-1">registered</a></td></tr>
+<tr><td><code>angle</code></td><td>float</td><td>deg</td><td>0</td><td><code>tatami_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="#angle-2">registered</a></td></tr>
 <tr><td><code>guided_fill_angle</code></td><td>float</td><td>deg</td><td>—</td><td><code>guided_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>tartan_angle</code></td><td>float</td><td>deg</td><td>-45</td><td><code>tartan_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>max_stitch_length_mm</code></td><td>float</td><td>mm</td><td>4.0</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="#max_stitch_length_mm">registered</a></td></tr>
@@ -11732,7 +12032,7 @@ first, and the steps that make new kinds of shape into stitches follow.</p>
 <tr><td>M13.8</td><td>Automatic digitizing by default for VectorCraft documents</td><td>the end-to-end cases expect it</td></tr>
 <tr><td>M13.9 ✅ 🧪</td><td><code>stitch plan picture.png</code>: VectorCraft’s command line traces the picture, or StitchCraft reads and traces it itself</td><td>Decision recorded in the design, <a href="#adr-0015-pictures-are-traced-by-vectorcrafts-command-line">ADR-0015</a>: VectorCraft’s command line traces it, with the <code>trace</code> case’s steps (2026-10-31)</td></tr>
 <tr><td>M13.10 ✅</td><td><code>stitch plan picture.png</code> and <code>stitch export picture.png</code> trace a PNG or JPEG file with VectorCraft’s command line, in the machine’s threads, and sew it digitized automatically. A coded error when VectorCraft isn’t installed</td><td>a Level B case plans a picture through <code>stitch</code> on every track</td></tr>
-<tr><td>M13.11</td><td>Pictures for what sews without them. User pages for satin columns and tatami fills, the tatami fill’s page also saying how Ink/Stitch’s legacy fill sews, each with its pictures. A page on automatic digitizing, with pictures of shapes before and after, and screenshots in the how-to <a href="#satin-columns-and-presets-in-vectorcraft">Satin columns and presets in VectorCraft</a></td><td><code>UNSHOWN</code> in <code>xtask/src/stitch_pages.rs</code> empty, so every stitch type sewn has a page with pictures</td></tr>
+<tr><td>M13.11 ✅</td><td>Pictures for what sews without them. User pages for satin columns and tatami fills, the tatami fill’s page also saying how Ink/Stitch’s legacy fill sews, each with its pictures. A page on automatic digitizing, with pictures of shapes before and after, and screenshots in the how-to <a href="#satin-columns-and-presets-in-vectorcraft">Satin columns and presets in VectorCraft</a></td><td><code>UNSHOWN</code> in <code>xtask/src/stitch_pages.rs</code> empty, so every stitch type sewn has a page with pictures</td></tr>
 </tbody>
 </table>
 </div>
