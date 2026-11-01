@@ -1107,6 +1107,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- The copies of an object's path the VectorCraft reader makes, one for each of its fills and strokes, come
+  to at most 32 bytes for each byte of JSON read, and a file whose copies come to more is refused with
+  `SC-E0806`. The budget counted each copy as work, so 4 MB drawing 2,500 fills on a path of 200,000
+  anchors could take 28 GB.
 - `stitch plan` refuses another output named as the bug-report bundle it leaves next to its output on a
   bug (`REQ-CLI-007`). With `--report x.bug-report.json` and `-o x.pes`, the bundle replaced the report.
 - `stitch inspect` names a thread index outside the palette as itself, "not one of Brother PEC's

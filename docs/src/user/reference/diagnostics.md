@@ -799,7 +799,9 @@ the Version in VectorCraft Options.
 
 The `.vectorcraft` file could not be read: it is not a VectorCraft document (its JSON does not
 read, it names another format, or it holds no document), the data VectorCraft keeps after its JSON
-is damaged, or it unpacks to more JSON than StitchCraft reads. Nothing was stitched.
+is damaged, it unpacks to more JSON than StitchCraft reads, or its objects' names, settings or paths,
+copied into each fill and stroke made of them, come to more than StitchCraft holds. Nothing was
+stitched.
 
 A StitchCraft live effect or filter gives this message when what VectorCraft passes it does not read
 as VectorCraft's plug-in ABI v1 says, which a VectorCraft with another plug-in ABI would do. The
