@@ -18,6 +18,7 @@ Commands:
   preview     Draw a machine file (PES, PEC or DST) as a picture of what it will sew (PNG)
   convert     Write a machine file (PES, PEC or DST) in another format
   profiles    List the built-in machine profiles
+  palette     Write a machine's threads as a GIMP palette (.gpl), which VectorCraft loads as a swatch library, so that Image Trace traces a picture in them
   explain     Explain a diagnostic code, such as SC-W0702
   bug-report  Write a bug-report bundle that reproduces what StitchCraft does with a design, or replay one
   help        Print this message or the help of the given subcommand(s)
@@ -193,6 +194,24 @@ List the built-in machine profiles
 Usage: stitch profiles
 
 Options:
+  -h, --help
+          Print help
+```
+
+## stitch palette
+
+```text
+Write a machine's threads as a GIMP palette (.gpl), which VectorCraft loads as a swatch library, so that Image Trace traces a picture in them
+
+Usage: stitch palette [OPTIONS]
+
+Options:
+  -p, --profile <PROFILE>
+          The machine profile whose threads to write (see `stitch profiles`); by default the reference machine's
+
+  -o, --output <OUTPUT>
+          The file to write; by default the palette goes to standard output
+
   -h, --help
           Print help
 ```

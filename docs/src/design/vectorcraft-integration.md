@@ -390,7 +390,7 @@ the filter stops with `SC-E0004` before VectorCraft would. A VectorCraft before 
 filter, which almost every curved line outruns, and stops it with its own error.
 
 **Test Sheet** (`REQ-VC-015`, `apps/stitchcraft-vc-plugin/src/testsheet.rs`) draws one of the sheets drawn
-as designs, TS-02B to TS-09, into the document: the sheet's design moved by whole millimetres so that its
+as designs, TS-02B to TS-09 and TS-13A to TS-13C, into the document: the sheet's design moved by whole millimetres so that its
 middle is nearest the middle of the artboard `_context` names (`Design::moved`). Each element is an object
 named by its id, with its path and its thread as the paint its family sews with. Its settings are its
 family's effect record, each the value its dialog row takes, which reads back as the setting it was. The
@@ -401,8 +401,9 @@ palette, since VectorCraft unlinks the swatch of a paint a filter gives, and the
 VectorCraft 0.15 keeps the records, but with an empty selection it looks to a filter as 0.14 does, which
 would drop them. Only the `documentData` every filter gets from 0.16 tells them apart, so before 0.16 the
 filter declines with `SC-E0813`. The sheets drawn stitch by stitch are plans, which no object holds. The
-TS-13 sheets are designs whose shapes StitchCraft digitizes automatically (`TestSheet::digitized`), which
-no object can say before the Auto effect (M13.7), so the filter doesn't offer them either.
+TS-13 sheets are designs whose shapes StitchCraft digitizes automatically (`TestSheet::digitized`): each
+such shape has the Auto effect's record (M13.7, `REQ-VC-016`), and StitchCraft Auto must be installed for
+VectorCraft to keep it.
 
 The contract test `req_vc_015_each_test_sheet_draws_into_a_document_that_exports_within_vectorcraft_s_limits`
 draws each sheet into a new document in VectorCraft 0.17.0's and 0.18.0's hosts alike, and exports it with
@@ -470,6 +471,33 @@ when VectorCraft stops a run that must finish. It prints what each run takes, wh
 are measured from. `hello_reads_and_writes_json_within_the_recorded_budget` still measures what JSON
 costs. The real stitches are always available from the CLI preview, and the RFC's overlay channel (P3, in
 review upstream) would remove this limitation.
+
+**The Auto effect's previews** (M13.7, `REQ-VC-016`). The Auto effect reads its object as automatic
+elements, an area when a fill paints it and a line along its topmost stroke. It digitizes them, then shows
+each element they become as auto shows its family's: a fill's top rows, and a satin column's and a running
+stitch's every stitch. VectorCraft draws what it returns with all of the object's paints. The stitches
+come back as ribbons for the fill when a fill paints the object, and as lines for the stroke otherwise.
+Digitizing is most of the work. Measured in VectorCraft 0.18.0's host with the contract crate's runs
+(2026-10-31), a unit of it takes about 1,450 instructions for a filled square or an L. Finding the centre
+lines of a line traced as an area takes up to 2,260, as for TS-13B's thinnest window line. The plug-in
+prices a unit at 2,700:
+
+| Shape, filled | Units of digitizing | Auto shows | Instructions, auto | Instructions, outline |
+|---|---|---|---|---|
+| A square 14 mm a side | 12,900 | its rows | 20 million | 1.1 million |
+| A square 56 mm a side | 12,800 | its outline | 22 million | 1.2 million |
+| An L 40 mm tall, its arm 5 mm wide | 21,000 | its outline | 22 million | 1.3 million |
+| A ring 30 mm across, 4 mm wide | 31,800 | its outline | 33 million | 7.2 million |
+| A line traced as an area 0.3 mm wide, with a branch | 23,100 | its outline | 31 million | 1.3 million |
+
+Auto digitizes within eight tenths of the budget and keeps the rest for the outline it falls back on. A
+small simple shape shows its stitches. A larger one, an L, a ring and most traced letters show their
+outlines: digitizing them leaves too little for their stitches, or needs more than there is. Exact digitizes and sews within
+all that VectorCraft allows, which a filled shape's fill outruns. The command line's preview shows every
+stitch, and the RFC's budget classes ([P4](rfc-vectorcraft-abi-v2.md#p4-budget-classes-for-live-effects))
+would give these previews room. `req_vc_003_every_preview_level_finishes_within_vectorcraft_s_limits` runs
+the Auto effect's levels on these shapes and on lines too, and fails if VectorCraft stops one that must
+finish.
 
 Paint caveat: a live effect changes only geometry. A fill preview's ribbons are painted with the object's
 own fill, and a stroke preview with its stroke. From 0.14 a stroke or a satin effect reads its stroke's
@@ -554,7 +582,10 @@ shape. Its visible fills are filled, in the appearance's order, and its visible 
 stitch each. Since M13.1, read with `--auto` (`stitchcraft_vectorcraft::read_with`), the elements of an
 object are automatic instead when neither it nor a group or layer around it has a StitchCraft effect
 ([image to embroidery](image-to-embroidery.md), `REQ-AUTO-001`). StitchCraft then chooses their stitches by
-their width. Read with `--sort-colours`, the objects with effects sew in the order StitchCraft chooses too
+their width. Since M13.7 StitchCraft's Auto effect makes them automatic without the switch (`REQ-VC-016`).
+It is read where a stitch effect is read, on the object or on a group or a layer around it, the nearest
+first, and its parameters are the object's settings of the rules. A stitch effect says how an object sews,
+so an Auto effect beside one on the same object or group isn't used, and `SC-W0807` says so. Read with `--sort-colours`, the objects with effects sew in the order StitchCraft chooses too
 (`REQ-AUTO-011`). A stroke's cap is read with its width and join, and an automatic line's stitches follow its
 round or square caps. Of a line sewn across its width, the reader names the alignment inside or outside a
 closed path and the width profile, which its stitches don't follow (`SC-W0807`, `REQ-AUTO-005`). The

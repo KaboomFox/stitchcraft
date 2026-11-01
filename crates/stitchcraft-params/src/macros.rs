@@ -162,6 +162,9 @@ macro_rules! __param_kind {
     (Number; $min:expr, $max:expr; ;) => {
         $crate::Kind::Number { min: $min, max: $max }
     };
+    (Area; $min:expr, $max:expr; ;) => {
+        $crate::Kind::Area { min: $min, max: $max }
+    };
     (Count; $min:expr, $max:expr; ;) => {
         $crate::Kind::Count { min: $min, max: $max }
     };

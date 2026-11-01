@@ -7,7 +7,7 @@ use std::fmt::Write as _;
 
 use serde_json::{Value as Json, json};
 use stitchcraft_engine::registry::PARAMETERS;
-use stitchcraft_params::{ChoiceOption, Empty, Kind, MAX_LIST, Origin, ParamGroup, ParamSpec, Stability, StitchType, Value};
+use stitchcraft_params::{AUTOMATIC, ChoiceOption, Empty, Kind, MAX_LIST, Origin, ParamGroup, ParamSpec, Stability, StitchType, Value};
 
 use crate::deviations::{self, Deviation};
 
@@ -210,8 +210,16 @@ fn either(values: &[&str]) -> String {
     }
 }
 
+/// The stitch types `types` names, for people: automatic elements for none, the settings of automatic
+/// digitizing ([`AUTOMATIC`]).
 fn applies_to(types: &[StitchType]) -> String {
-    if types == StitchType::ALL { "every stitch type".to_string() } else { types.iter().map(|t| t.name()).collect::<Vec<_>>().join(", ") }
+    if types == StitchType::ALL {
+        "every stitch type".to_string()
+    } else if types == AUTOMATIC {
+        "automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type".to_string()
+    } else {
+        types.iter().map(|t| t.name()).collect::<Vec<_>>().join(", ")
+    }
 }
 
 /// The JSON Schema of an element's parameters as JSON values, for programs: editors, presets, hosts.
@@ -263,7 +271,7 @@ fn property(spec: &ParamSpec, specs: &[ParamSpec]) -> Result<Json, String> {
             json!({"type": if empty == Empty::Never { json!("number") } else { json!(["number", "null"]) }, "minimum": min, "maximum": max})
         }
         Kind::Angle => json!({"type": "number"}),
-        Kind::BoundedAngle { min, max } | Kind::Percent { min, max } | Kind::Number { min, max } => {
+        Kind::BoundedAngle { min, max } | Kind::Percent { min, max } | Kind::Number { min, max } | Kind::Area { min, max } => {
             json!({"type": "number", "minimum": min, "maximum": max})
         }
         Kind::Count { min, max } => json!({"type": "integer", "minimum": min, "maximum": max}),
@@ -290,7 +298,9 @@ fn property(spec: &ParamSpec, specs: &[ParamSpec]) -> Result<Json, String> {
     if !spec.kind.unit().is_empty() {
         extra["unit"] = json!(spec.kind.unit());
     }
-    if spec.applies_to != StitchType::ALL {
+    if spec.applies_to == AUTOMATIC {
+        extra["automatic"] = json!(true);
+    } else if spec.applies_to != StitchType::ALL {
         extra["applies_to"] = json!(spec.applies_to.iter().map(|t| t.id()).collect::<Vec<_>>());
     }
     if let Some(condition) = spec.visible_when {
@@ -344,7 +354,7 @@ fn json_value(value: &Value) -> Json {
     match value {
         Value::Length(Some(mm)) => json!(mm.get()),
         Value::Length(None) | Value::Seed(None) | Value::LengthPair(None) | Value::PercentPair(None) | Value::Angles(None) => Json::Null,
-        Value::Angle(v) | Value::Percent(v) | Value::Number(v) => json!(v),
+        Value::Angle(v) | Value::Percent(v) | Value::Number(v) | Value::Area(v) => json!(v),
         Value::Count(n) => json!(n),
         Value::Toggle(on) => json!(on),
         Value::Choice(id) => json!(id),

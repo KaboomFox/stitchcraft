@@ -89,8 +89,9 @@ fn conditions<S: Serializer>(visible_when: &[(&'static str, Vec<Value>)], serial
 
 /// How `family`'s dialog shows `spec`, a parameter of the declaration `group` that the manifest declares as
 /// `schema`, after the parameters `before`; or `None` when nothing the dialog can show would show it,
-/// such as a parameter of no method the dialog offers.
-pub fn registry_ui(spec: &ParamSpec, schema: &Schema, group: &ParamGroup, family: Family, before: &[(&'static str, Param)]) -> Option<Ui> {
+/// such as a parameter of no method the dialog offers. The Auto effect's dialog is no family's (`None`),
+/// and has no method.
+pub fn registry_ui(spec: &ParamSpec, schema: &Schema, group: &ParamGroup, family: Option<Family>, before: &[(&'static str, Param)]) -> Option<Ui> {
     Some(Ui {
         label: Some(spec.label),
         unit: unit(spec.kind),
@@ -156,11 +157,13 @@ fn cut(text: &str, room: usize) -> String {
 /// When `family`'s dialog shows `spec`, given the parameters `before` it: while the method parameter has
 /// one of the methods it applies to, unless it applies to all the dialog offers, and while the setting its
 /// registry entry names has one of the values that show it. `None` when no value shows it.
-fn visible_when(spec: &ParamSpec, family: Family, before: &[(&'static str, Param)]) -> Option<Vec<(&'static str, Vec<Value>)>> {
+fn visible_when(spec: &ParamSpec, family: Option<Family>, before: &[(&'static str, Param)]) -> Option<Vec<(&'static str, Vec<Value>)>> {
     let declared = |key: &str| before.iter().find(|(k, _)| *k == key).map(|(_, param)| &param.schema);
     let mut conditions = Vec::new();
-    let method = family.method_param();
-    if let (true, Some(Schema::Choice { options, .. })) = (spec.key != method, declared(method)) {
+    if let Some(family) = family
+        && let method = family.method_param()
+        && let (true, Some(Schema::Choice { options, .. })) = (spec.key != method, declared(method))
+    {
         let applied = |id: &str| StitchType::from_id(family, id).is_some_and(|t| spec.applies_to.contains(&t));
         let methods: Vec<Value> = options.iter().copied().filter(|id| applied(id)).map(Value::from).collect();
         if methods.is_empty() {
@@ -409,26 +412,29 @@ mod tests {
             ui: Ui::default(),
         };
         let before = |methods, splits| vec![("satin_method", choice(methods)), ("split_method", choice(splits))];
-        let ui = registry_ui(&SPEC, &PERCENT, &group, Family::Satin, &before(vec!["satin_column", "e_stitch"], vec!["default", "staggered"]));
+        let ui = registry_ui(&SPEC, &PERCENT, &group, Some(Family::Satin), &before(vec!["satin_column", "e_stitch"], vec!["default", "staggered"]));
         let conditions = ui.map(|ui| ui.visible_when);
         assert_eq!(conditions, Some(vec![("satin_method", vec![json!("satin_column")]), ("split_method", vec![json!("default")])]));
         // Shown for every method offered, it says nothing of the method.
-        let ui = registry_ui(&SPEC, &PERCENT, &group, Family::Satin, &before(vec!["satin_column"], vec!["default"]));
+        let ui = registry_ui(&SPEC, &PERCENT, &group, Some(Family::Satin), &before(vec!["satin_column"], vec!["default"]));
         assert_eq!(ui.map(|ui| ui.visible_when), Some(vec![("split_method", vec![json!("default")])]));
         // No method offered, or no value of its setting, shows it.
-        assert_eq!(registry_ui(&SPEC, &PERCENT, &group, Family::Satin, &before(vec!["e_stitch"], vec!["default"])), None);
-        assert_eq!(registry_ui(&SPEC, &PERCENT, &group, Family::Satin, &before(vec!["satin_column"], vec!["staggered"])), None);
+        assert_eq!(registry_ui(&SPEC, &PERCENT, &group, Some(Family::Satin), &before(vec!["e_stitch"], vec!["default"])), None);
+        assert_eq!(registry_ui(&SPEC, &PERCENT, &group, Some(Family::Satin), &before(vec!["satin_column"], vec!["staggered"])), None);
         // A setting the dialog doesn't show before it: the row shows.
         let ui = registry_ui(
             &SPEC,
             &PERCENT,
             &group,
-            Family::Satin,
+            Some(Family::Satin),
             &before(vec!["satin_column"], vec!["default"]).into_iter().take(1).collect::<Vec<_>>(),
         );
         assert_eq!(ui.map(|ui| ui.visible_when), Some(Vec::new()));
+        // A dialog of no family, the Auto effect's, has no method, and only the setting shows it.
+        let ui = registry_ui(&SPEC, &PERCENT, &group, None, &before(vec!["e_stitch"], vec!["default"]));
+        assert_eq!(ui.map(|ui| ui.visible_when), Some(vec![("split_method", vec![json!("default")])]));
         let length = ParamSpec { kind: Kind::Length { min: 0.0, max: 9.0, empty: Empty::Never }, visible_when: None, ..SPEC };
-        let ui = registry_ui(&length, &PERCENT, &group, Family::Satin, &[]).unwrap();
+        let ui = registry_ui(&length, &PERCENT, &group, Some(Family::Satin), &[]).unwrap();
         assert_eq!((ui.unit, ui.help.as_deref()), (Some("mm"), Some("How much a split moves.")));
         assert_eq!(ui.help_url.as_deref(), Some("https://kaboomfox.github.io/stitchcraft/dev/user/reference/params/satin.html#split_jitter"));
     }

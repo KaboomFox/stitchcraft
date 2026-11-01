@@ -9,12 +9,12 @@
 
 use stitchcraft_core::{Budget, Code, Mm, Point, math};
 use stitchcraft_engine::PlanOutcome;
-use stitchcraft_engine::auto::{OVERLAP, SATIN_MAX_WIDTH, Stitches, digitize, digitized, underlay};
+use stitchcraft_engine::auto::{Stitches, digitize, digitized, underlay};
 use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule, Join, Path, Segment, Shape, Subpath};
 use stitchcraft_engine::normalize::region;
 use stitchcraft_engine::normalize::stroke::SHAPE_TOLERANCE;
 use stitchcraft_params::ParamSet;
-use stitchcraft_testkit::designs::{RED, along, automatic, capped, fill, messages, p, planned, polylines, widened};
+use stitchcraft_testkit::designs::{RED, along, automatic, capped, fill, messages, p, planned, polylines, rules, widened};
 
 /// The needle points the design sews, in order.
 fn needle_points(outcome: &PlanOutcome) -> Vec<Point> {
@@ -40,7 +40,7 @@ fn with(element: Element, params: &[(&str, &str)]) -> Element {
 /// element.
 fn satin(width: f64) -> Vec<(&'static str, String)> {
     let mut params =
-        vec![("satin_column", "true".to_string()), ("pull_compensation_mm", OVERLAP.to_string()), ("end_at_nearest_point", "false".to_string())];
+        vec![("satin_column", "true".to_string()), ("pull_compensation_mm", overlap().to_string()), ("end_at_nearest_point", "false".to_string())];
     params.extend(underlay(Mm::new(width).unwrap()).iter().map(|&key| (key, "true".to_string())));
     params
 }
@@ -71,7 +71,12 @@ fn area(element: &Element) -> f64 {
 
 /// The stitches of a stroke `width` millimetres wide, in a design with the default settings.
 fn stitches(width: f64) -> Stitches {
-    Stitches::of_stroke(Mm::new(width).unwrap(), &DesignSettings::default())
+    Stitches::of_stroke(Mm::new(width).unwrap(), &DesignSettings::default(), &rules())
+}
+
+/// The overlap an automatic area reaches under its neighbours with by default, in millimetres.
+fn overlap() -> f64 {
+    rules().auto_overlap_mm.get()
 }
 
 #[test]
@@ -90,13 +95,13 @@ fn req_auto_002_an_area_fills_and_a_line_up_to_the_narrowest_satin_runs() {
     }
     // The design's own narrowest satin stroke moves the bound.
     let settings = DesignSettings { min_satin_stroke_width: Mm::new(2.0).unwrap(), ..DesignSettings::default() };
-    assert_eq!(Stitches::of_stroke(Mm::new(1.5).unwrap(), &settings), Stitches::Running);
-    assert_eq!(Stitches::of_stroke(Mm::new(2.5).unwrap(), &settings), Stitches::Satin);
+    assert_eq!(Stitches::of_stroke(Mm::new(1.5).unwrap(), &settings, &rules()), Stitches::Running);
+    assert_eq!(Stitches::of_stroke(Mm::new(2.5).unwrap(), &settings, &rules()), Stitches::Satin);
 }
 
 #[test]
 fn req_auto_003_a_line_up_to_7_mm_is_a_satin_column_as_wide_as_it_is_drawn() {
-    assert_eq!(SATIN_MAX_WIDTH, Mm::new(7.0).unwrap());
+    assert_eq!(rules().auto_max_satin_width_mm, Mm::new(7.0).unwrap());
     assert_eq!(
         (stitches(1.01), stitches(3.0), stitches(7.0), stitches(7.01)),
         (Stitches::Satin, Stitches::Satin, Stitches::Satin, Stitches::FilledStroke)
@@ -111,7 +116,7 @@ fn req_auto_003_a_line_up_to_7_mm_is_a_satin_column_as_wide_as_it_is_drawn() {
     // As wide as drawn once the thread pulls it in: its stitches cross the line from one edge to the other
     // and reach the overlap past each, 1.9 mm each side of it (REQ-AUTO-018).
     let off_the_first_leg = sewn.iter().filter(|q| q.x() < 15.0).map(|q| q.y().abs()).fold(0.0, f64::max);
-    assert!((off_the_first_leg - 1.5 - OVERLAP).abs() < 0.05, "{off_the_first_leg}");
+    assert!((off_the_first_leg - 1.5 - overlap()).abs() < 0.05, "{off_the_first_leg}");
 }
 
 #[test]
