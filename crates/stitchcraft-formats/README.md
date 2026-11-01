@@ -30,7 +30,9 @@ PEC block) for Brother and DST for everything else come first.
   `conformance/golden/formats/` byte for byte (`tests/golden.rs`; bless with `STITCHCRAFT_BLESS=1`).
 - Readers treat every byte as hostile: lengths and offsets checked, records capped at the stitch budget,
   typed errors (`DecodeError`, `SC-E0603`); every truncation and byte flip of the golden files is tested;
-  `indexing_slicing` is denied in this crate.
+  `indexing_slicing` is denied in this crate. `read_back` reads a file just written whole, up to as many
+  records as it has bytes, since a plan within the stitch budget has more records than needle points.
+- Writers round each position once (`REQ-FMT-002`): a stitch in the file is within 0.14 mm of the plan's.
 - Format facts cite their sources (public descriptions; pystitch output observed as a black box) in the
   module docs and in `NOTICE`.
 

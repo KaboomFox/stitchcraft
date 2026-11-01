@@ -40,10 +40,15 @@ pub struct Encoded {
 
 /// Reads a machine file, recognising PES, PEC and DST by their first bytes.
 pub fn decode(bytes: &[u8]) -> Result<Decoded, DecodeError> {
+    decode_up_to(bytes, decode::MAX_RECORDS)
+}
+
+/// The machine file `bytes`, as [`decode()`] reads it, of at most `max` records.
+fn decode_up_to(bytes: &[u8], max: usize) -> Result<Decoded, DecodeError> {
     if bytes.starts_with(b"#PES") || bytes.starts_with(b"#PEC") {
-        pes::decode(bytes)
+        pes::decode_up_to(bytes, max)
     } else if bytes.starts_with(b"LA:") {
-        dst::decode(bytes)
+        dst::decode_up_to(bytes, max)
     } else {
         Err(DecodeError::UnknownFormat)
     }
@@ -63,9 +68,11 @@ pub fn encode(plan: &StitchPlan, format: FormatId, name: &str) -> Result<Encoded
 /// takes the thread of the plan's entry it starts at, the plan's threads counted again after each stop. A
 /// file that joins 2 of the plan's blocks into one, as PES joins blocks a palette shows alike, keeps the
 /// first one's thread. A file StitchCraft wrote that it cannot read is a bug in it (`SC-E0009`), so every
-/// host that writes one reads it back first: the command line and the VectorCraft exporters.
+/// host that writes one reads it back first: the command line and the VectorCraft exporters. It is read
+/// whole, as many records as it has: no record is shorter than a byte, and a plan within the stitch budget
+/// can have more records than needle points, its jumps, trims and thread changes, and DST's long moves.
 pub fn read_back(bytes: &[u8], plan: &StitchPlan) -> Result<StitchPlan, Diagnostic> {
-    let mut back = decode(bytes)
+    let mut back = decode_up_to(bytes, bytes.len())
         .map_err(|e| {
             Diagnostic::new(Code::InternalCheckFailed, format!("The machine file StitchCraft wrote does not read: {}", e.diagnostic().message))
         })?
@@ -83,10 +90,46 @@ pub fn read_back(bytes: &[u8], plan: &StitchPlan) -> Result<StitchPlan, Diagnost
 
 #[cfg(test)]
 mod tests {
-    use stitchcraft_core::Point;
+    use stitchcraft_core::{Budget, Point};
     use stitchcraft_plan::{PlanBuilder, Provenance, Rgb, Role, Thread};
 
     use super::*;
+
+    #[test]
+    fn req_cli_008_a_file_read_back_is_read_however_many_records_it_has() {
+        // A plan as large as the stitch budget, after a jump: a record more than a reader takes from a
+        // file of anyone's, and a file StitchCraft wrote, which it reads back whole. Every format reads
+        // back through the same cap, so one is enough, and the test stays quick.
+        let mut plan = PlanBuilder::new(Thread::new(Rgb::new(0, 0, 0)));
+        plan.jump(Point::new(1.0, 0.0).unwrap(), Provenance::plan(Role::Travel));
+        for i in 0..Budget::DEFAULT.max_stitches {
+            plan.stitch(Point::new(if i % 2 == 0 { 1.0 } else { 2.0 }, 0.0).unwrap(), Provenance::plan(Role::Top));
+        }
+        let plan = plan.finish();
+        let bytes = encode(&plan, FormatId::PesV1, "budget").unwrap().bytes;
+        assert_eq!(decode(&bytes).map(|_| ()), Err(DecodeError::TooLong { max: decode::MAX_RECORDS }));
+        let back = read_back(&bytes, &plan).unwrap();
+        assert_eq!(back.stats().stitches, plan.stats().stitches);
+    }
+
+    #[test]
+    fn a_reader_takes_as_many_records_as_it_is_asked_to() {
+        // Stitches either side of a 30 mm jump, which DST spells as jump records in a row: a reader takes
+        // the records the file reads back as, one entry each, and no fewer.
+        let mut plan = PlanBuilder::new(Thread::new(Rgb::new(0, 0, 0)));
+        plan.jump(Point::new(1.0, 0.0).unwrap(), Provenance::plan(Role::Travel));
+        plan.stitch(Point::new(1.0, 0.0).unwrap(), Provenance::plan(Role::Top));
+        plan.jump(Point::new(31.0, 0.0).unwrap(), Provenance::plan(Role::Travel));
+        plan.stitch(Point::new(31.0, 0.0).unwrap(), Provenance::plan(Role::Top));
+        plan.stitch(Point::new(33.0, 0.0).unwrap(), Provenance::plan(Role::Top));
+        let plan = plan.finish();
+        for format in FormatId::ALL {
+            let bytes = encode(&plan, *format, "few").unwrap().bytes;
+            let records = decode(&bytes).unwrap().plan.stitches().count();
+            assert!(decode_up_to(&bytes, records).is_ok(), "{}", format.name());
+            assert_eq!(decode_up_to(&bytes, records - 1).map(|_| ()), Err(DecodeError::TooLong { max: records - 1 }), "{}", format.name());
+        }
+    }
 
     #[test]
     fn req_cli_008_a_file_read_back_takes_the_plan_s_threads_after_a_stop_too() {
