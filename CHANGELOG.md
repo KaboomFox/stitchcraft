@@ -1142,6 +1142,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   each link pointing at `README.html`. The pages link to the folder now, and `cargo xtask docs --check`
   fails a page of the book that links to a `README.md`, checking a folder's anchors against its
   `README.md`.
+- A narrow part's centre line sews a short arm (`REQ-AUTO-014`). A branch from a junction to a round or a
+  square end counted as a bump of the outline when it was no longer than twice the junction's longest edge,
+  as each arm of the bar of a T 4 mm tall is. One arm was left out, and the T sewed as a Γ, TS-13B's among
+  them. Such a branch is now a bump only when no longer than that edge, and a branch to a tip, the corner
+  of a sharp turn, keeps the old limit. Found by comparing the centre lines with Ink/Stitch's Fill to Stroke
+  on TS-13B's letters and lines, which agree elsewhere to within 0.2 mm on average.
 - The copies of an object's path the VectorCraft reader makes, one for each of its fills and strokes, come
   to at most 32 bytes for each byte of JSON read, and a file whose copies come to more is refused with
   `SC-E0806`. The budget counted each copy as work, so 4 MB drawing 2,500 fills on a path of 200,000
@@ -1919,6 +1925,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-13B.pes` (`REQ-AUTO-014`): its digitized T 4 mm tall sews both
+  arms of its bar, 4 stitches more, 14,401 in all.
 - Changed `conformance/golden/render/sampler-simple.png` and `sampler-realistic.png` (`REQ-RND-002`): a stop
   cuts the thread, so the stitch after the sampler's stop is drawn as travel after a cut. The test sheets'
   pictures in the docs show the jump threads the PE800 leaves, and cut at their stops.
