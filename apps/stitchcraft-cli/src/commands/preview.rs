@@ -4,20 +4,27 @@
 //! (`docs/src/design/rendering.md`). The realistic style shows the finished embroidery, including jump
 //! threads the machine leaves for you to cut; the simple style shows every stitch, needle hole, trim and
 //! stop, for checking a design. Either way the picture is drawn from the file's own 0.1 mm positions, so
-//! it shows what the machine will sew.
+//! it shows what the machine will sew. Which machine decides where the thread is cut: `--profile`, or the
+//! reference machine, which cuts at thread changes and stops and at no jump (MC-1), so a PES file's
+//! trim-flagged jumps are drawn as the jump threads it leaves.
 
 use std::fmt::Write as _;
 
 use stitchcraft_core::Budget;
+use stitchcraft_plan::profiles;
 use stitchcraft_render::Settings;
 
-use super::{Outcome, Status, distinct, read_machine_file, reader_warnings, render_diagnostics, unknown_colors, write_files};
+use super::{Outcome, Status, asked_profile, distinct, read_machine_file, reader_warnings, render_diagnostics, unknown_colors, write_files};
 use crate::cli::PreviewArgs;
 
 /// Runs `stitch preview`.
 pub fn run(args: &PreviewArgs) -> Outcome {
     let Some(settings) = Settings::new(args.style.into(), args.scale) else {
         return Outcome::usage(format!("the scale must be from {} to {} pixels per millimetre", Settings::MIN_SCALE, Settings::MAX_SCALE));
+    };
+    let profile = match asked_profile(args.profile.as_deref()) {
+        Ok(asked) => asked.unwrap_or(profiles::REFERENCE),
+        Err(outcome) => return outcome,
     };
     if let Err(outcome) = distinct(&[&args.file], &[&args.output]) {
         return outcome;
@@ -28,7 +35,7 @@ pub fn run(args: &PreviewArgs) -> Outcome {
     };
     let warnings = reader_warnings(&decoded);
     let diagnostics: Vec<_> = unknown_colors(&decoded).into_iter().collect();
-    let image = match stitchcraft_render::preview(&decoded.plan, settings, &mut Budget::DEFAULT.meter()) {
+    let image = match stitchcraft_render::preview(&decoded.plan, profile.trims, settings, &mut Budget::DEFAULT.meter()) {
         Ok(image) => image,
         Err(e) => return Outcome::refuse(warnings + &render_diagnostics(&diagnostics), &[e.diagnostic()]),
     };
@@ -41,6 +48,7 @@ pub fn run(args: &PreviewArgs) -> Outcome {
     let name = if decoded.name.is_empty() { String::new() } else { format!(" · \"{}\"", decoded.name) };
     let _ = writeln!(out, "  from      {} · {}{name}", args.file.display(), decoded.format);
     let _ = writeln!(out, "  style     {}, {} pixels per millimetre", settings.style().name(), settings.scale());
+    let _ = writeln!(out, "  profile   {} ({})", profile.id, profile.name);
     Outcome { stdout: out, stderr: said, status: Status::Done }
 }
 
@@ -58,7 +66,7 @@ mod tests {
     }
 
     fn preview(file: PathBuf, output: PathBuf, style: PreviewStyle, scale: f32) -> Outcome {
-        run(&PreviewArgs { file, output, style, scale })
+        run(&PreviewArgs { file, output, style, scale, profile: None })
     }
 
     #[test]
@@ -70,8 +78,32 @@ mod tests {
         // 120 × 70 mm plus 2 mm margins, at 4 pixels per millimetre.
         assert!(out.stdout.starts_with(&format!("{} · 496 × 296 pixels\n", output.display())), "{}", out.stdout);
         assert!(out.stdout.contains("  style     simple, 4 pixels per millimetre\n"));
+        assert!(out.stdout.contains("  profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)\n"), "{}", out.stdout);
         assert!(out.stderr.is_empty(), "{}", out.stderr);
         assert!(std::fs::read(&output).unwrap().starts_with(b"\x89PNG"));
+    }
+
+    #[test]
+    fn the_picture_cuts_the_thread_where_the_machine_does() {
+        // TS-02's PES file flags every jump as a trim. The reference PE800 cuts none (MC-1), so its picture
+        // has the jump threads that a machine obeying the trim command would cut.
+        let dir = TempDir::new("preview");
+        let file = golden("testsheets/TS-02.pes");
+        let decoded = stitchcraft_formats::decode(&std::fs::read(&file).unwrap()).unwrap();
+        let settings = Settings::new(stitchcraft_render::Style::Simple, 4.0).unwrap();
+        let drawn = |trims| stitchcraft_render::preview(&decoded.plan, trims, settings, &mut Budget::DEFAULT.meter()).unwrap().png;
+        let output = dir.join("TS-02.png");
+        assert_eq!(preview(file, output.clone(), PreviewStyle::Simple, 4.0).status, Status::Done);
+        assert_eq!(std::fs::read(&output).unwrap(), drawn(profiles::REFERENCE.trims));
+        assert_ne!(drawn(profiles::REFERENCE.trims), drawn(stitchcraft_plan::TrimSupport::Command));
+        let out = run(&PreviewArgs {
+            file: dir.join("TS-02.png"),
+            output: dir.join("x.png"),
+            style: PreviewStyle::Simple,
+            scale: 4.0,
+            profile: Some("pe800".to_string()),
+        });
+        assert_eq!(out.status, Status::Usage, "{}", out.stderr);
     }
 
     #[test]

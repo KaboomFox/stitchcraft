@@ -55,7 +55,7 @@ pub fn run(args: &ConvertArgs) -> Outcome {
     let mut out = String::new();
     let _ = writeln!(out, "{} · {} → {}", args.file.display(), decoded.format, format.name());
     describe_file(&mut out, &args.output, format, &bytes);
-    describe_plan(&mut out, &back);
+    describe_plan(&mut out, &back, None);
     describe_threads(&mut out, &decoded.plan, format.palette().map(|id| id.palette()));
     if let Err(unwritten) = write_files(&[(&args.output, &bytes)], &said) {
         return unwritten;

@@ -30,7 +30,7 @@ use flate2::write::GzEncoder;
 use stitchcraft_core::{Budget, Code, Severity, units::MACHINE_LIMIT};
 use stitchcraft_formats::decode::MAX_RECORDS;
 use stitchcraft_formats::{decode, dst, encode, pes};
-use stitchcraft_plan::{FormatId, StitchPlan};
+use stitchcraft_plan::{FormatId, StitchPlan, TrimSupport};
 use stitchcraft_render::raster::MARGIN_MM;
 use stitchcraft_render::{Scene, Settings, Style};
 
@@ -62,7 +62,8 @@ pub fn read_write_preview(data: &[u8]) {
     // Both styles, at a scale that keeps the image near 96 pixels so each input stays fast: filling and
     // encoding cost one step per pixel, whatever the stitches. Refusing (budget spent) is fine.
     let mut meter = Budget { max_stitches: 100_000, max_work: 2_000_000 }.meter();
-    let Ok(scene) = Scene::of(&decoded.plan, &mut meter) else { return };
+    // A machine that obeys the trim command marks every trim the file holds.
+    let Ok(scene) = Scene::of(&decoded.plan, TrimSupport::Command, &mut meter) else { return };
     let Some((lo, hi)) = scene.bounds() else { return };
     let extent_mm = f64::from(hi.x.abs_diff(lo.x).max(hi.y.abs_diff(lo.y))) / 10.0 + 2.0 * f64::from(MARGIN_MM);
     #[allow(clippy::cast_possible_truncation)] // A ratio clamped to the scale range.

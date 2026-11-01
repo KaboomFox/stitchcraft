@@ -317,7 +317,7 @@ fn guarded_sew(run: &Run, phase: Phase) -> Result<Sewn, (String, Phase)> {
         .map_err(|payload| (panic_message(payload.as_ref()), Phase::Plan))?;
     if let (Phase::Picture, Some(back)) = (phase, &sewn.back) {
         // What the picture comes to is the run's, which the bundle does not record: only whether it panics.
-        let _ = catch_unwind(|| picture(back)).map_err(|payload| (panic_message(payload.as_ref()), Phase::Picture))?;
+        let _ = catch_unwind(|| picture(back, run.profile.trims)).map_err(|payload| (panic_message(payload.as_ref()), Phase::Picture))?;
     }
     Ok(sewn)
 }

@@ -52,7 +52,7 @@ mod tests {
         // Each names its hoop, and its evidence gives the hoop's field.
         for (p, (hoop, field)) in BUILTIN.iter().zip([("5 × 7 in", "130 × 180 mm"), ("4 × 4 in", "100 × 100 mm"), ("small", "2 × 6 cm")]) {
             assert_eq!(p.name, format!("Brother PE800 with its {hoop} hoop"));
-            assert!(p.evidence.contains(&format!("Field: Brother's {hoop}")) && p.evidence.contains(field), "{}", p.evidence);
+            assert!(p.evidence.contains(&format!("Field: the {hoop} hoop Brother makes")) && p.evidence.contains(field), "{}", p.evidence);
         }
         // The hoops differ, and nothing else.
         for p in [&BROTHER_PE800_4X4, &BROTHER_PE800_SMALL] {

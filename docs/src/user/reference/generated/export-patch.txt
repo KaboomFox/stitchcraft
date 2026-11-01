@@ -5,6 +5,7 @@ patch.vectorcraft
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
   size      50.0 × 54.0 mm
   stitches  2466 stitches, 5 jumps, 4 trims, 3 colour changes, 0 stops
+  trims     the machine makes none of them: cut the jump threads by hand
   threads   1. unnamed (#bf0000), shown as Brother PEC 5 "Red"
             2. unnamed (#0033b3), shown as Brother PEC 21 "Ultramarine"
             3. unnamed (#008033), shown as Brother PEC 56 "Moss Green"
