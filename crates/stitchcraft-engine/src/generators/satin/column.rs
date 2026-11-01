@@ -111,11 +111,9 @@ pub(crate) fn sections(satin: &Satin, params: &SatinParams, warnings: &mut Vec<D
 fn meets_more_than_twice((a, b): (Point, Point), rails: [&[Point]; 2], meter: &mut Meter) -> Result<bool, Exhausted> {
     let mut found = Vec::new();
     for rail in rails {
-        for segment in rail.windows(2) {
+        for (p, q) in rail.iter().zip(rail.iter().skip(1)) {
             meter.charge(1)?;
-            if let [p, q] = segment {
-                shared(a, b, *p, *q).into_iter().for_each(|point| add_once(&mut found, point));
-            }
+            shared(a, b, *p, *q).into_iter().for_each(|point| add_once(&mut found, point));
         }
     }
     Ok(found.len() > 2)
