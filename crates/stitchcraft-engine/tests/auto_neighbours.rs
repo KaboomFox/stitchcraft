@@ -416,6 +416,24 @@ fn req_auto_009_a_background_notched_where_a_shape_touches_the_pictures_edge_is_
 }
 
 #[test]
+fn req_auto_009_a_background_whose_side_leans_across_the_margins_edge_is_left_out() {
+    // A border line half a millimetre past the background's left side sets the box, so that side lies on
+    // the margin's edge, and leans 40 nm over 20 mm across it. The sliver it leaves inside the margin runs
+    // along the box's side a little further than along the background, and has no area: it is no corner of
+    // the picture. A logo fills the notch in the right side.
+    let lean = 4e-8;
+    let background = [(0.5, 0.0), (0.5 + lean, 20.0), (30.0, 20.0), (30.0, 15.0), (20.0, 15.0), (20.0, 5.0), (30.0, 5.0), (30.0, 0.0)];
+    let elements = vec![
+        automatic(fill("background", &[&background], &BLUE, &[])),
+        rect("logo", (20.0, 5.0), (30.0, 15.0)),
+        line("border", &[(0.0, 0.0), (0.0, 20.0)], 0.35),
+    ];
+    let (out, diagnostics) = sewn(elements);
+    assert_eq!(ids(&out), ["logo", "border"]);
+    assert_eq!(said(&diagnostics, Code::AutoBackground).len(), 1);
+}
+
+#[test]
 fn req_auto_009_a_lowest_shape_that_leaves_the_corners_to_the_shapes_in_them_is_sewn() {
     // An octagon, a rectangle with its corners cut 4 mm along each side, reaches the box's sides, and an
     // abutting trace makes each corner a shape of its own. Inside the margin, a corner runs 6 mm along the
