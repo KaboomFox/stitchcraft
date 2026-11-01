@@ -267,8 +267,8 @@ the ledger is still true. Where the differential can undo a deviation in Ink/Sti
 the file again without it. The excuse then counts only if the measure agrees. Ink/Stitch's jumps that go
 nowhere (`DEV-FMT-001`) excuse as many trims and jumps as there are of them, and no more.
 
-`REQ-SVG-008` and `REQ-AUTO-021` are the requirements of level L3. The other runs of the suite leave
-them and their cases to this one. Until M8 reads every `inkstitch:` attribute, the corpus is the designs
+`REQ-SVG-008`, `REQ-AUTO-021` and `REQ-AUTO-022` are the requirements of level L3. The other runs of
+the suite leave them and their cases to this one. Until M8 reads every `inkstitch:` attribute, the corpus is the designs
 the SVG reader sews in full, at Ink/Stitch's defaults, with trim and stop commands and the file version.
 A case may name a test sheet drawn as a design instead (`sheet`). StitchCraft sews the sheet, and
 Ink/Stitch an SVG file of the elements StitchCraft sews it with, written with their parameters
@@ -276,6 +276,30 @@ Ink/Stitch an SVG file of the elements StitchCraft sews it with, written with th
 parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check StitchCraft's
 stitches of those choices against Ink/Stitch's (`REQ-AUTO-021`). `conformance/inkstitch/README.md` says
 how to run it by hand and how to add a case.
+
+**Centre lines.** Sewing what StitchCraft chose can't find a choice that is wrong: TS-13B's small T sewed
+a Γ, the left arm of its bar left out of its centre line, and the differential agreed by every measure.
+The `centre-lines` cases compare a step before the stitches (`REQ-AUTO-022`,
+`xtask/src/conformance/centre_lines.rs`). Each shape that automatic digitizing sews wholly as running
+stitches is digitized alone, and its lines are compared with the lines Ink/Stitch's Fill to Stroke draws
+for it, with its threshold at the shape's width. Fill to Stroke finds them another way, from a Voronoi
+diagram of the outline. Where one program leaves a branch out, or puts a line off the middle, the 2
+differ. With `reach` the width and 0.1 mm:
+
+| Measure | Tolerance |
+|---|---|
+| each end of Ink/Stitch's lines | an end of StitchCraft's within `reach` |
+| each end of StitchCraft's lines | within `reach` of Ink/Stitch's lines |
+| each program's lines, farther than `reach` from their ends | within a quarter of the width of the other's |
+
+The ends differ by design. StitchCraft's line stops short of a round or square end (`REQ-AUTO-014`), and
+Fill to Stroke's runs to the end's middle. Fill to Stroke leaves out a branch shorter than its threshold,
+such as the stub up into the top of an A, which StitchCraft sews to cover the top. A case names a test
+sheet, an SVG file of shapes, or letters that `stitchcraft_testkit::designs::letter` draws (`[letters]`).
+The report has a row for each shape, and `target/conformance/differential/` the shapes as written for
+Ink/Stitch and a picture of both programs' lines over them. Run on the code from before the T was fixed
+(`03f0ab69`), the letters case finds a branch missing in 3 letters 3 mm tall: the Ts in 0.5 and 0.7 mm
+lines, and the E in 0.7 mm lines.
 
 ### L4 — Physical (milestone gates)
 

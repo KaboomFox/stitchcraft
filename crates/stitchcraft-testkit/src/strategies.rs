@@ -24,7 +24,7 @@ pub fn config(cases: u32) -> Config {
 /// in tenths of a millimetre: narrow lines up to 0.9 mm, and columns from 1.1 mm, no wider than a fifth of
 /// the letter's height, so that it reads as its letter.
 pub fn letters() -> impl Strategy<Value = (char, f64, f64)> {
-    (prop::sample::select(vec!['T', 'H', 'E']), 30u32..=200)
+    (prop::sample::select(crate::designs::LETTERS.to_vec()), 30u32..=200)
         .prop_flat_map(|(letter, height)| {
             let widest = (height / 5).min(70);
             let widths = prop_oneof![3u32..=9, 11u32..=widest.max(11)];

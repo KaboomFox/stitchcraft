@@ -613,5 +613,10 @@ sew it unlike the tutorial's flow.
   plans, Ink/Stitch's files come within about 1 % of StitchCraft's stitches. Ink/Stitch's extra trims and
   jumps are jumps that go nowhere at thread changes, which a StitchCraft PES file has no record of
   (`DEV-FMT-001`), and without them the trims and jumps agree within 1.
+- A wrong choice sews alike in both programs. So, every night too, the lines of each shape sewn wholly as
+  running stitches are compared with the lines Ink/Stitch's Fill to Stroke draws for it (`REQ-AUTO-022`).
+  The shapes are TS-13B's word 4 mm tall and its windows' lines, and the letters T, H and E from 3 to 10 mm
+  tall in lines from 0.3 to 0.9 mm wide. Each branch Ink/Stitch finds has one of StitchCraft's, and away
+  from their ends the lines lie within 0.15 of a width of each other.
 
 Codes 0900 to 0999 are automatic digitizing's ([diagnostics](diagnostics.md)).

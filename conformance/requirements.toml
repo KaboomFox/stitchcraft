@@ -1457,3 +1457,12 @@ statement = "The elements StitchCraft sews each TS-13 sheet with, automatic digi
 rationale = "Automatic digitizing chooses ordinary stitch types and Ink/Stitch's parameters, and the stitches StitchCraft sews of them should be the stitches another program sews of the same choices. Ink/Stitch can't choose for a picture, but it can sew what StitchCraft chose."
 milestone = "M13"
 status = "active"
+
+[[req]]
+id = "REQ-AUTO-022"
+area = "auto"
+level = "L3"
+statement = "Where automatic digitizing sews a shape wholly as running stitches, the lines it sews along agree with the lines Fill to Stroke draws for the shape in the Ink/Stitch that conformance/inkstitch/pin.toml names, run as a black box with its threshold at the shape's width: each end of Ink/Stitch's lines has an end of StitchCraft's within the width and 0.1 mm, each end of StitchCraft's lies that near Ink/Stitch's lines, and farther than that from their ends each program's lines lie within a quarter of the width of the other's."
+rationale = "Fill to Stroke finds a shape's centre lines another way, from a Voronoi diagram of its outline, so a branch either program leaves out, or a line that strays from the middle, shows as a difference. The lines are compared before they become stitches: TS-13B's small T sewed a Γ, the left arm of its bar left out, and the differential of the stitches StitchCraft chose agreed by every measure."
+milestone = "M13"
+status = "active"

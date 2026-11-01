@@ -71,6 +71,8 @@ struct CaseFile {
     files: Option<Vec<String>>,
     #[serde(default)]
     excused: Option<BTreeMap<String, String>>,
+    #[serde(default)]
+    letters: Option<Letters>,
 }
 
 /// What a test-sheet or plan case expects.
@@ -111,10 +113,14 @@ pub enum Spec {
     /// (L3, the Ink/Stitch differential). `excused` names the measures a deviation explains, each with the
     /// deviation's id.
     Inkstitch { subject: Subject, excused: BTreeMap<String, String> },
+    /// Compare the centre lines of `subject`'s shapes that automatic digitizing sews wholly as running
+    /// stitches with the lines a pinned Ink/Stitch's Fill to Stroke draws (L3, the Ink/Stitch differential,
+    /// `centre_lines`).
+    CentreLines { subject: Subject },
 }
 
-/// What an Ink/Stitch differential case sews in both programs.
-#[derive(Clone, Debug, PartialEq, Eq)]
+/// What an Ink/Stitch differential case gives both programs.
+#[derive(Clone, Debug, PartialEq)]
 pub enum Subject {
     /// An SVG file, relative to `conformance/`, that both programs read (`design`).
     File(String),
@@ -123,6 +129,21 @@ pub enum Subject {
     /// parameters (`stitchcraft_testkit::inkstitch`), since StitchCraft's SVG reader reads no parameters
     /// until M8.
     Sheet(String),
+    /// Letters drawn for the case (`[letters]`), for its centre lines.
+    Letters(Letters),
+}
+
+/// Letters a case draws (`[letters]`): each of `names` at each of `heights_mm`, drawn in lines of each of
+/// `widths_mm`, as `stitchcraft_testkit::designs::letter` draws them.
+#[derive(Clone, Debug, PartialEq, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Letters {
+    /// The letters, a character each.
+    pub names: String,
+    /// Their heights, in millimetres.
+    pub heights_mm: Vec<f64>,
+    /// The widths of their lines, in millimetres.
+    pub widths_mm: Vec<f64>,
 }
 
 /// The data cases; problems with a file are recorded in `findings` and the file is skipped.
@@ -139,6 +160,23 @@ pub fn load_cases(root: &Path, findings: &mut Findings) -> Vec<DataCase> {
             }
         };
         let excused = case.excused;
+        if case.kind == "centre-lines" {
+            let subject = match (case.sheet, case.design, case.letters, case.profile, case.expect, case.files, excused) {
+                (Some(sheet), None, None, None, None, None, None) => Subject::Sheet(sheet),
+                (None, Some(design), None, None, None, None, None) => Subject::File(design),
+                (None, None, Some(letters), None, None, None, None) => Subject::Letters(letters),
+                _ => {
+                    findings.error(format!("{file}: a centre-lines case needs one of `sheet`, `design` and `[letters]`, and nothing else"));
+                    continue;
+                }
+            };
+            cases.push(DataCase { id: case.id, requirements: case.requirements, file, spec: Spec::CentreLines { subject } });
+            continue;
+        }
+        if case.letters.is_some() {
+            findings.error(format!("{file}: only a centre-lines case draws `[letters]`"));
+            continue;
+        }
         let spec = match (case.kind.as_str(), case.sheet, case.design, case.profile, case.expect, case.files) {
             ("testsheet", Some(sheet), None, Some(profile), Some(expect), None) if excused.is_none() => Spec::Testsheet { sheet, profile, expect },
             ("plan", None, Some(design), Some(profile), Some(expect), None) if excused.is_none() => Spec::Plan { design, profile, expect },
@@ -166,7 +204,7 @@ pub fn load_cases(root: &Path, findings: &mut Findings) -> Vec<DataCase> {
                 continue;
             }
             (other, ..) => {
-                findings.error(format!("{file}: unknown case kind `{other}` (known: testsheet, plan, oracle, inkstitch)"));
+                findings.error(format!("{file}: unknown case kind `{other}` (known: testsheet, plan, oracle, inkstitch, centre-lines)"));
                 continue;
             }
         };
