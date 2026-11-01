@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-ce2be5b9.js";
+            window.path_to_searchindex_js = "searchindex-a15ec758.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b793f3ad.js"></script>
@@ -2078,7 +2078,7 @@ Arguments:
 <li>The machine cuts the thread at thread changes and at the stop, but at no jump, and the pictures sew as any design does: a shape sewn after a jump may sew its thread down. Snip the jump threads at each stop and after sewing. Where is one sewn down, and does it show?</li>
 </ul>
 <h2 id="ts-13b--pictures-digitized-automatically-letters-and-lines-traced-as-areas"><a class="header" href="#ts-13b--pictures-digitized-automatically-letters-and-lines-traced-as-areas">TS-13B — Pictures digitized automatically: letters and lines traced as areas</a></h2>
-<p>110.4 × 148.4 mm · 14397 stitches, 57 jumps, 56 trims, 16 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>110.4 × 148.4 mm · 14401 stitches, 57 jumps, 56 trims, 16 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p>Drawn as a design whose shapes StitchCraft digitizes automatically, as <code>--auto</code> does a shape without settings. VectorCraft’s Test Sheet filter draws it too, those shapes with the Auto effect.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-13b.png" alt="TS-13B as it will sew: the word MATCH in black block letters of 4 sizes, and 3 windows of red, blue and gold areas between black lines, twice. At the top, digitized, the letters are satin columns and the smallest thin runs, and the lines thin runs. At the bottom, in paint order, every letter and line is filled."><span class="img-wrapper"><img src="images/generated/testsheet-ts-13b.png" alt="TS-13B as it will sew: the word MATCH in black block letters of 4 sizes, and 3 windows of red, blue and gold areas between black lines, twice. At the top, digitized, the letters are satin columns and the smallest thin runs, and the lines thin runs. At the bottom, in paint order, every letter and line is filled."></span></label></p>
@@ -7523,9 +7523,15 @@ ends there, on the part’s middle.</li>
 from chord to chord, and runs to each of a junction’s chords outside the caps from the junction’s middle,
 the average of its corners.</li>
 <li><strong>Bumps.</strong> A traced outline has small bumps, and a sharp turn has a corner beyond where the middles of its
-strips meet. Each gives a junction and a short branch to an end. A branch from a junction to an end that
-is no longer than twice the junction triangle’s longest edge is left out, the shortest first, until no
-junction has one. A junction left with 2 branches is a bend of the line.</li>
+strips meet. Each gives a junction and a short branch to an end. A branch from a junction to a tip that
+is no longer than twice the junction triangle’s longest edge is left out, and so is a branch to a round
+or a square end no longer than that edge, the shortest first, until no junction has one. A junction left
+with 2 branches is a bend of the line. A sharp turn’s corner is a tip, and reaches further from where the
+middles meet than a bump of the outline does. A branch to a round or a square end that reaches further
+than the junction is wide is an arm. Each arm of the bar of a T 4 mm tall reaches 1.6 mm, about twice
+the bar’s width. Taken for a bump, one arm was left out and the other became a bend, so the T sewed as
+a Γ. Ink/Stitch’s Fill to Stroke, run on the same letters with its threshold at the stroke’s width, keeps
+both arms.</li>
 <li><strong>Junctions.</strong> At each junction left, the 2 branches that run on most nearly straight are one line, and
 the third ends there. A branch’s direction runs from the junction’s middle to the first of its points
 that lies at least as far away as the junction triangle’s longest edge, or to its end if none does. The 2
@@ -7853,7 +7859,8 @@ there.</li>
 </ul>
 <p>The centre line joins the middles of the chords (M13.4, <code>REQ-AUTO-014</code>). A round end stops it about half
 its width from the end, on its middle, and a sharp point draws it on to the point. The small bumps of a traced outline, and
-the corner past a sharp turn, would branch it, and are left out. At each junction left, the 2 branches that
+the corner past a sharp turn, would branch it, and are left out. A branch longer than its junction is
+wide is an arm, and has a line, as each arm of a small T’s bar has. At each junction left, the 2 branches that
 run on most nearly straight are one line and the third ends there, and a ring has a closed line. No piece
 of the line is sewn twice. A part’s lines sew one after another, the longest first, each from its end
 nearest where the last one ended. The <a href="#centre-lines">centre lines</a> page has the rules in
@@ -11825,7 +11832,9 @@ middle of the artboard (<code>REQ-VC-015</code>). A checkpoint can so sew a shee
 </div>
 <p>Before MC-8, cases answer the TS-13 checks that its stitches can, and count the jump threads that later
 stitches sew down (<a href="#testing">image to embroidery › Testing</a>). The sew-out
-answers the rest, and shows whether those threads show.</p>
+answers the rest, and shows whether those threads show. On 2026-11-01 TS-13B’s digitized T 4 mm tall
+gained the arm of its bar that it had lost, so a TS-13B file written before then sews it as a Γ: write the
+sheet again before sewing it.</p>
 <h2 id="report-template"><a class="header" href="#report-template">Report template</a></h2>
 <p>The GitHub issue form <em>Sew-out report</em> asks for these fields; this is the same template for notes kept
 elsewhere:</p>

@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-ce2be5b9.js";
+            window.path_to_searchindex_js = "../../searchindex-a15ec758.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-b793f3ad.js"></script>
@@ -248,9 +248,15 @@ ends there, on the part’s middle.</li>
 from chord to chord, and runs to each of a junction’s chords outside the caps from the junction’s middle,
 the average of its corners.</li>
 <li><strong>Bumps.</strong> A traced outline has small bumps, and a sharp turn has a corner beyond where the middles of its
-strips meet. Each gives a junction and a short branch to an end. A branch from a junction to an end that
-is no longer than twice the junction triangle’s longest edge is left out, the shortest first, until no
-junction has one. A junction left with 2 branches is a bend of the line.</li>
+strips meet. Each gives a junction and a short branch to an end. A branch from a junction to a tip that
+is no longer than twice the junction triangle’s longest edge is left out, and so is a branch to a round
+or a square end no longer than that edge, the shortest first, until no junction has one. A junction left
+with 2 branches is a bend of the line. A sharp turn’s corner is a tip, and reaches further from where the
+middles meet than a bump of the outline does. A branch to a round or a square end that reaches further
+than the junction is wide is an arm. Each arm of the bar of a T 4 mm tall reaches 1.6 mm, about twice
+the bar’s width. Taken for a bump, one arm was left out and the other became a bend, so the T sewed as
+a Γ. Ink/Stitch’s Fill to Stroke, run on the same letters with its threshold at the stroke’s width, keeps
+both arms.</li>
 <li><strong>Junctions.</strong> At each junction left, the 2 branches that run on most nearly straight are one line, and
 the third ends there. A branch’s direction runs from the junction’s middle to the first of its points
 that lies at least as far away as the junction triangle’s longest edge, or to its end if none does. The 2
