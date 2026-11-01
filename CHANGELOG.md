@@ -1107,6 +1107,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- `stitch plan` refuses another output named as the bug-report bundle it leaves next to its output on a
+  bug (`REQ-CLI-007`). With `--report x.bug-report.json` and `-o x.pes`, the bundle replaced the report.
+- `stitch inspect` names a thread index outside the palette as itself, "not one of Brother PEC's
+  colours" (`REQ-THREAD-002`). It said the thread was shown as the entry nearest the grey it is drawn in,
+  which the file doesn't hold.
 - A file an older Ink/Stitch saved is read as Ink/Stitch updates it (`REQ-SVG-007`). Before its file
   version 4, a fill's stitches were 3 mm long unless it set another length; Ink/Stitch writes that into such
   a file's shapes when it opens it, and StitchCraft sewed them 4 mm long. A shape with a fill and no longest

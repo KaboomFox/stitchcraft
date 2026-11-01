@@ -18,7 +18,7 @@ use std::process::ExitCode;
 use sha2::{Digest, Sha256};
 use stitchcraft_core::{Code, Diagnostic, Fix, Severity};
 use stitchcraft_formats::Decoded;
-use stitchcraft_plan::palette::Palette;
+use stitchcraft_plan::palette::{Palette, PaletteEntry};
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan, TrimSupport};
 
 use crate::files::{self, Unwritten};
@@ -138,6 +138,29 @@ pub fn distinct(reads: &[&Path], writes: &[&Path]) -> Result<(), Outcome> {
     Ok(())
 }
 
+/// A usage error when the bundle a bug in writing `output` would leave ([`bug_report::bundle_path`],
+/// `REQ-CLI-002`) is `read`, the file the command reads, or one of `writes`, the other files it writes: the
+/// bundle would replace it (`REQ-CLI-007`).
+pub fn bundle_free(output: &Path, read: &Path, writes: &[&Path]) -> Result<(), Outcome> {
+    let bundle = bug_report::bundle_path(output);
+    let Some(at) = resolved(&bundle) else { return Ok(()) };
+    if resolved(read).as_ref() == Some(&at) {
+        return Err(Outcome::usage(format!(
+            "a bug-report bundle for {} would replace {}, which it is made from: name the output another file",
+            output.display(),
+            read.display()
+        )));
+    }
+    match writes.iter().find(|write| resolved(write).as_ref() == Some(&at)) {
+        Some(write) => Err(Outcome::usage(format!(
+            "{} is where a bug-report bundle for {} would be written: name it another file",
+            write.display(),
+            output.display()
+        ))),
+        None => Ok(()),
+    }
+}
+
 /// Where `path` leads: the file itself, or a file of that name in its folder when the file does not exist.
 fn resolved(path: &Path) -> Option<PathBuf> {
     std::fs::canonicalize(path).ok().or_else(|| {
@@ -223,18 +246,44 @@ pub fn counts(plan: &StitchPlan) -> String {
         .join(", ")
 }
 
-/// The threads the machine asks for, one line each, with the palette entry a machine shows for each
-/// thread when the format stores palette indices: the entry the file has, or is written with
-/// ([`Palette::assign`]).
-pub fn describe_threads(out: &mut String, plan: &StitchPlan, palette: Option<&Palette>) {
-    let entries = plan.color_entries();
-    let assigned = palette.and_then(|p| p.assign(entries.iter().map(|entry| entry.thread)));
-    for (i, entry) in entries.iter().enumerate() {
+/// What a palette says of the threads a report lists, for a format that stores palette indices.
+#[derive(Clone, Copy)]
+pub enum Entries<'p> {
+    /// The entries a file holds, read with this palette: a thread that is none of them, an index the
+    /// palette doesn't have, is named as it is.
+    Held(&'p Palette),
+    /// The entries a writer gives the threads ([`Palette::assign`], `REQ-THREAD-002`).
+    Written(&'p Palette),
+}
+
+/// The threads the machine asks for, one line each, with the palette entry a machine shows for each: the
+/// entry the file has, or is written with, as `entries` says.
+pub fn describe_threads(out: &mut String, plan: &StitchPlan, entries: Option<Entries<'_>>) {
+    let colors = plan.color_entries();
+    let assigned = match entries {
+        Some(Entries::Written(palette)) => palette.assign(colors.iter().map(|entry| entry.thread)),
+        Some(Entries::Held(_)) | None => None,
+    };
+    for (i, entry) in colors.iter().enumerate() {
         let thread = entry.thread;
         let name = thread.name.as_deref().unwrap_or("unnamed");
         let mut line = format!("{}. {name} ({})", i + 1, thread.color);
-        if let (Some(palette), Some(matched)) = (palette, assigned.as_ref().and_then(|a| a.entries.get(i))) {
-            let _ = write!(line, ", shown as {} {} \"{}\"", palette.name, matched.index, matched.name);
+        let shown = |line: &mut String, palette: &Palette, entry: &PaletteEntry| {
+            let _ = write!(line, ", shown as {} {} \"{}\"", palette.name, entry.index, entry.name);
+        };
+        match entries {
+            Some(Entries::Held(palette)) => match palette.entry_of(thread) {
+                Some(held) => shown(&mut line, palette, held),
+                None => {
+                    let _ = write!(line, ", not one of {}'s colours", palette.name);
+                }
+            },
+            Some(Entries::Written(palette)) => {
+                if let Some(written) = assigned.as_ref().and_then(|a| a.entries.get(i)) {
+                    shown(&mut line, palette, written);
+                }
+            }
+            None => {}
         }
         if entry.stop {
             line.push_str(" — a stop: keep the same thread");
