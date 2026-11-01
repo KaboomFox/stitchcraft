@@ -126,7 +126,8 @@ pub fn sew(source: Source, design: &[u8], reading: Reading, profile: &MachinePro
         Ok(read) => read,
         Err(unreadable) => return Sewn { diagnostics: vec![unreadable], plan: None, file: None, back: None },
     };
-    let outcome = stitchcraft_engine::plan(&design, profile, &Budget::DEFAULT);
+    // Planned for the format it is written in, whose limits the file then keeps.
+    let outcome = stitchcraft_engine::plan(&design, &profile.writing(format), &Budget::DEFAULT);
     let mut diagnostics = warnings;
     diagnostics.extend(outcome.diagnostics);
     let Some(plan) = outcome.plan else { return Sewn { diagnostics, plan: None, file: None, back: None } };
@@ -548,6 +549,45 @@ mod tests {
         assert!(!dir.join("strokes.pes").exists() && !dir.join("traced.vectorcraft").exists());
     }
 
+    /// Red bars 3 mm wide down the sides of the rectangle `[x, y, width, height]`, in millimetres, as a
+    /// picture placed there traces: an SVG drawing of the reference machine's hoop.
+    fn sides([x, y, wide, tall]: [f64; 4]) -> String {
+        let (width, height, right) = (REFERENCE.hoop.width.get(), REFERENCE.hoop.height.get(), x + wide - 3.0);
+        format!(
+            r#"<svg xmlns="http://www.w3.org/2000/svg" width="{width}mm" height="{height}mm" viewBox="0 0 {width} {height}"><rect id="left" x="{x}" y="{y}" width="3" height="{tall}" fill="red"/><rect id="right" x="{right}" y="{y}" width="3" height="{tall}" fill="red"/></svg>"#
+        )
+    }
+
+    #[test]
+    fn req_cli_012_shapes_along_the_sides_of_a_picture_fitted_to_the_hoop_sew_in_it() {
+        let dir = TempDir::new("plan-sides");
+        let planned = |rect: [f64; 4]| {
+            let design = dir.join("sides.svg");
+            std::fs::write(&design, sides(rect)).unwrap();
+            let report = dir.join("sides.json");
+            let out = run(&PlanArgs {
+                report: Some(report.clone()),
+                reading: ReadingArgs { auto: true, ..ReadingArgs::default() },
+                ..args(design, dir.join("sides.pes"))
+            });
+            let report: Value = serde_json::from_slice(&std::fs::read(report).unwrap()).unwrap();
+            (out, report["size_mm"].clone())
+        };
+        // Each bar sews as a satin column whose stitches reach past its rails by their pull compensation, the
+        // overlap, 0.4 mm: bars at the hoop's own sides sew past them.
+        let (width, height) = (REFERENCE.hoop.width.get(), REFERENCE.hoop.height.get());
+        let (out, _) = planned([0.0, 0.0, width, height]);
+        assert_eq!(out.status, Status::DesignErrors);
+        assert!(out.stderr.contains("\nerror SC-E0701: The design is 130.8 × 180.0 mm, "), "{}", out.stderr);
+        // Where VectorCraft places a picture given no size, `file.place`'s `[x, y, width, height]`, they sew in
+        // the hoop.
+        let steps = trace::steps("sides.png", b"", REFERENCE, None, trace::COLOURS);
+        let placed: [f64; 4] = serde_json::from_value(steps[1]["params"]["rect"].clone()).unwrap();
+        let (out, size) = planned(placed.map(|points| Mm::from_points(points).unwrap().get()));
+        assert_eq!(out.status, Status::Done, "{}", out.stderr);
+        assert_eq!(size, json!([129.8, 179.0]));
+    }
+
     #[test]
     fn req_cli_013_without_vectorcraft_s_command_line_nothing_is_written_but_the_report() {
         let dir = TempDir::new("plan-no-vectorcraft");
@@ -670,6 +710,25 @@ mod tests {
         let missing = run(&args(fixture("missing.svg"), dir.join("x.pes")));
         assert_eq!(missing.status, Status::Io);
         assert!(missing.stderr.starts_with("stitch: cannot read "));
+    }
+
+    #[test]
+    fn req_plan_006_a_file_is_held_to_its_own_formats_colour_changes() {
+        // 257 lines 0.5 mm apart, red and blue in turn: 256 thread changes, for the PE800, whose PES records
+        // at most 255.
+        let lines: String = (0..257)
+            .map(|i| format!(r#"<path d="M 0 {} H 10" stroke="{}" fill="none"/>"#, f64::from(i) * 0.5, if i % 2 == 0 { "red" } else { "blue" }))
+            .collect();
+        let svg = format!(r#"<svg xmlns="http://www.w3.org/2000/svg" width="20mm" height="140mm" viewBox="0 0 20 140">{lines}</svg>"#);
+        let sewn = |format| sew(Source::Svg, svg.as_bytes(), Reading::default(), REFERENCE, format, "many");
+        let errors = |sewn: &Sewn| sewn.diagnostics.iter().filter(|d| d.severity() == Severity::Error).map(ToString::to_string).collect::<Vec<_>>();
+        let pes = sewn(FormatId::PesV1);
+        assert_eq!(errors(&pes), ["error SC-E0601: The design has 256 colour changes and stops, but PES v1 records at most 255."]);
+        assert!(pes.file.is_none());
+        // DST records 999: the file is written.
+        let dst = sewn(FormatId::Dst);
+        assert_eq!(errors(&dst), Vec::<String>::new());
+        assert!(dst.file.is_some_and(|bytes| bytes.starts_with(b"LA:many")));
     }
 
     #[test]

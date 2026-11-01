@@ -926,6 +926,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- The machine's stitch limits hold for the plan, and a machine file's stitches are within 0.14 mm of the
+  plan's (`REQ-PLAN-002`, `REQ-FMT-002`). A writer rounds each position to 0.1 mm, so 11.95 mm from
+  (0.04, 0.04) to (8.49, 8.49) is 12.02 mm in the file, past the PE800's 12 mm, and 0.3 mm on half-tenths
+  is 0.2 mm. The review of 2026-10-31 found it. Fitting the file's stitches again was tried. It left out 70
+  needle points of one test sheet, and points of tatami fills and satin columns that their tests keep, and
+  it would split stitches at the longest by where the grid falls. A test now pins the bound.
 - An automatic satin column digitized from a stroke (M13.1) has the underlay of its width, a pull
   compensation of 0.4 mm and ends at its rails' ends (`REQ-AUTO-018`). It had a satin column's defaults
   before, without underlay or pull compensation. It ended at the points nearest the shapes before and after
@@ -1120,6 +1126,28 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   the copies come to at most 64 MiB (`SC-E0806`). A 1 MiB name on an object of 200 fills held 200 MiB.
 - The Test Sheet filter declines with `SC-E0817` on an artboard so far from the origin that the sheet would
   reach more than 10 m from it. It answered with `SC-E0009`, a bug report.
+- `stitch plan --format dst` and VectorCraft's DST exporter hold a design to DST's colour changes
+  (`REQ-PLAN-006`). Planned for the format the machine reads, a PE800 design with 256 colour changes
+  written as DST was refused with `SC-E0601`, which named PES v1 and its 255. Each plan is made for the
+  format it is written in now (`MachineProfile::writing`).
+- A machine file StitchCraft wrote is read back whole (`REQ-CLI-008`). A plan as large as the stitch budget
+  has more records than needle points, and reading it back stopped at 2,000,000 records with `SC-E0009`, as
+  a bug. A file of anyone's is still read up to 2,000,000 records.
+- `stitch plan picture.png` fits the picture into the machine's hoop 0.5 mm in from each side
+  (`REQ-CLI-012`). Fitted to the hoop itself, a picture whose shapes reach its sides was refused with
+  `SC-E0701`. A shape along the edge sews as a satin column, whose stitches reach 0.4 mm past it, their pull
+  compensation, so a picture 130 mm wide sewed 130.8 mm wide. Bars down the sides of a picture VectorCraft
+  0.18.0 traced now sew 129.8 mm wide in the 130 mm hoop.
+- `--auto` leaves out the background of a picture whose shapes touch its edge (`REQ-AUTO-009`). The
+  Abutting method cuts a notch in the background where a shape touches the edge, and only holes were set
+  aside, so the background was sewn whole around the shapes. A notch is set aside now when the shapes drawn
+  on the background fill it and it runs along the background at least as far as along the picture's sides.
+  The corners beside a disc or a rounded square that reaches the sides are no notches, and such a shape
+  still sews as the picture.
+- `--auto` sews a design of one shape with a fill and a stroke (`REQ-AUTO-009`). The readers make the fill and the
+  stroke 2 elements on one path, and the stroke counted as a shape drawn on the fill, which was then left
+  out as the picture's background. VectorCraft's default graphic style is a fill and a 1 pt stroke. Only
+  shapes on other paths count now.
 - Previews cut the thread where the machine does. A stop cuts, as a thread change does, since PES and DST
   write it as one. A trim cuts only on a machine that obeys the format's trim command, and a machine that
   cuts long jumps by itself cuts those. The 3 PE800 profiles' trim support is now none, from machine

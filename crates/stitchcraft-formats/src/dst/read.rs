@@ -30,8 +30,13 @@ const LONGEST_TRIM: usize = 8;
 /// The largest move (0.1 mm units, per axis) of a jump in a trim's spelling.
 const TRIM_JUMP_MAX: i32 = 10;
 
-/// Reads a DST file.
+/// Reads a DST file of at most [`MAX_RECORDS`] records.
 pub fn decode(bytes: &[u8]) -> Result<Decoded, DecodeError> {
+    decode_up_to(bytes, MAX_RECORDS)
+}
+
+/// Reads a DST file of at most `max` records.
+pub(crate) fn decode_up_to(bytes: &[u8], max: usize) -> Result<Decoded, DecodeError> {
     let header = bytes.get(..HEADER_LEN).ok_or(DecodeError::Truncated { part: "DST header" })?;
     if !header.starts_with(b"LA:") {
         return Err(DecodeError::UnknownFormat);
@@ -39,7 +44,7 @@ pub fn decode(bytes: &[u8]) -> Result<Decoded, DecodeError> {
     let name = label_text(header.get(3..19).unwrap_or_default());
     let records = bytes.get(HEADER_LEN..).unwrap_or_default();
     let mut blocks = 1;
-    let mut recorder = Recorder::new(placeholder(blocks));
+    let mut recorder = Recorder::new(placeholder(blocks), max);
     let mut jumps: Vec<Delta> = Vec::new();
     // Whether a stitch was sewn since the thread was last cut or changed.
     let mut sewn = false;
@@ -66,8 +71,8 @@ pub fn decode(bytes: &[u8]) -> Result<Decoded, DecodeError> {
                 sewn = false;
             }
             0x80 => {
-                if jumps.len() >= MAX_RECORDS {
-                    return Err(DecodeError::TooLong { max: MAX_RECORDS });
+                if jumps.len() >= recorder.max() {
+                    return Err(DecodeError::TooLong { max: recorder.max() });
                 }
                 jumps.push(delta);
             }
@@ -207,7 +212,7 @@ mod tests {
         // are real moves, not a trim's spelling.
         for sewn in [true, false] {
             let mut jumps = vec![Delta { dx: -118, dy: 39 }, Delta { dx: 118, dy: -39 }, Delta { dx: 50, dy: 0 }];
-            let (mut recorder, mut after) = (Recorder::new(placeholder(1)), sewn);
+            let (mut recorder, mut after) = (Recorder::new(placeholder(1), MAX_RECORDS), sewn);
             flush(&mut jumps, &mut after, &mut recorder).unwrap();
             let plan = recorder.finish();
             assert_eq!((plan.stats().trims, plan.stats().jumps), (usize::from(sewn), 3));

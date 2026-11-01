@@ -23,7 +23,7 @@
 use stitchcraft_plan::palette::BROTHER_PEC;
 use stitchcraft_plan::{PaletteId, Thread};
 
-use crate::decode::{Decoded, Recorder, label_text};
+use crate::decode::{Decoded, MAX_RECORDS, Recorder, label_text};
 use crate::error::DecodeError;
 use crate::quantize::Delta;
 
@@ -39,8 +39,13 @@ const NO_ORIGIN_FIELD: &str = "The PEC stitch data has no origin field (the 4 by
     stitch), as pyembroidery 1.4.32 to 1.5.1 write PEC. It was read from its first record. Brother machines expect the field: \
     `stitch convert` writes the file again with it.";
 
-/// Reads a PES or PEC file.
+/// Reads a PES or PEC file of at most [`MAX_RECORDS`] records.
 pub fn decode(bytes: &[u8]) -> Result<Decoded, DecodeError> {
+    decode_up_to(bytes, MAX_RECORDS)
+}
+
+/// Reads a PES or PEC file of at most `max` records.
+pub(crate) fn decode_up_to(bytes: &[u8], max: usize) -> Result<Decoded, DecodeError> {
     let (format, pec_at) = if let Some(version) = bytes.strip_prefix(b"#PES") {
         let version = version.get(..4).ok_or(DecodeError::Truncated { part: "PES header" })?;
         let offset = bytes.get(8..12).and_then(|b| <[u8; 4]>::try_from(b).ok()).ok_or(DecodeError::Truncated { part: "PES header" })?;
@@ -53,13 +58,14 @@ pub fn decode(bytes: &[u8]) -> Result<Decoded, DecodeError> {
     };
     // Every PEC block starts with its label field: anything else means the offset is wrong.
     let block = bytes.get(pec_at..).filter(|b| b.starts_with(b"LA:")).ok_or(DecodeError::BadOffset { what: "PEC offset" })?;
-    let mut decoded = read_pec(block, pec_at)?;
+    let mut decoded = read_pec(block, pec_at, max)?;
     decoded.format = format;
     Ok(decoded)
 }
 
-/// Reads the PEC block `block`, which starts at byte `base` of the file (for error positions).
-fn read_pec(block: &[u8], base: usize) -> Result<Decoded, DecodeError> {
+/// Reads the PEC block `block`, which starts at byte `base` of the file (for error positions), of at most
+/// `max` records.
+fn read_pec(block: &[u8], base: usize, max: usize) -> Result<Decoded, DecodeError> {
     let header = block.get(..DATA_AT).ok_or(DecodeError::Truncated { part: "PEC header" })?;
     let name = label_text(header.get(3..19).unwrap_or_default());
     let entries = usize::from(header.get(48).copied().unwrap_or(0)) + 1;
@@ -93,7 +99,7 @@ fn read_pec(block: &[u8], base: usize) -> Result<Decoded, DecodeError> {
     };
     let mut entry = 0;
     let mut current = indices.first().copied().unwrap_or(0);
-    let mut recorder = Recorder::new(thread(current, &mut warnings));
+    let mut recorder = Recorder::new(thread(current, &mut warnings), max);
 
     let mut i = 0;
     while let Some((record, next)) = record(data, i, base + start + i)? {
