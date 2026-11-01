@@ -47,7 +47,9 @@ the line's StitchCraft effects, and keeps the line's other effects. A path of se
 column of each. A satin column already drawn with rails is left as it is. When a line can't be made into a
 column, nothing changes, and VectorCraft says why (`SC-E0814`), for a path without a stroke, or a line
 whose column would sew less than the line: one too short or tight for its width, or one that crosses
-itself.
+itself. A line whose satin effect lengthens both its ends, with a push compensation below 0 at each, can
+be refused too, when its column needs a rung across one end to tell its rails from its rungs: that rung
+would sew the end's extra length apart. Set the push compensation to 0 or more at one end first.
 
 Making the rails of a curved line takes more work than a filter usually may do. So Stroke to Satin asks
 for more when it is installed, and VectorCraft asks you first, then runs it in the background with

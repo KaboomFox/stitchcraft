@@ -52,7 +52,7 @@ fn read(element: &Element) -> ([Vec<Point>; 2], Vec<[Point; 2]>) {
     assert!(found.warnings.is_empty(), "{:?}", found.warnings);
     let Ok(Read::Rails(satin)) = found.shape else { panic!("{:?}", found.shape) };
     let Pairing::Rungs(rungs) = satin.pairing else { panic!("{:?}", satin.pairing) };
-    (satin.rails, rungs)
+    (satin.rails, rungs.into_iter().map(|rung| rung.points).collect())
 }
 
 /// The area the fill `element` sews, in square millimetres.

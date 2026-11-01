@@ -114,6 +114,26 @@ fn req_vc_014_a_line_with_the_satin_effect_sews_as_the_column_made_of_it() {
 }
 
 #[test]
+fn req_vc_014_a_column_keeps_the_push_compensation_of_the_line_s_satin_effect_and_sews_alike() {
+    // An L 3 mm wide, whose column has no rungs of its own and gets one to tell its rails from them. Its
+    // satin effect lengthens it at its start, where a rung would cut what that adds off as a section of its
+    // own: the column pairs the rails' last points instead.
+    let l = data(&polyline(&[(0.0, 0.0), (2.0, 0.0), (2.0, 20.0)]));
+    for push in [json!([-1, 0]), json!("0 -1")] {
+        let line = object(2, &l, &json!([stroke(3.0)]), &json!([record("satin", &json!({"push_compensation_mm": push}))]));
+        let before = document(&[kept(&line, 2)]);
+        let after = kept_all(&ran(&[line]));
+        let ((a, said_a), (b, said_b)) = (stitches(&before), stitches(&after));
+        assert_eq!(said_b, said_a, "{push}");
+        let alike = a.len() == b.len() && a.iter().zip(&b).all(|((k, p), (l, q))| k == l && p.distance(*q) < 1e-6);
+        assert!(alike, "{push}: {} stitches as a line, {} as a column", a.len(), b.len());
+    }
+    // Lengthened at both ends, it would sew otherwise, and is refused.
+    let line = object(3, &l, &json!([stroke(3.0)]), &json!([record("satin", &json!({"push_compensation_mm": [-1, -1]}))]));
+    assert_eq!(declined(&[line]), format!("error SC-E0814: The selected line {}. {}", Unmade::Lengthened, LENGTHENED));
+}
+
+#[test]
 fn req_vc_014_the_column_has_the_line_s_paint_thin_and_its_satin_effect_in_the_place_of_its_stitchcraft_effects() {
     let line = data(&polyline(&[(0.0, 0.0), (20.0, 0.0)]));
     let roughen = json!({"id": "distort.roughen", "params": {"size": 5}, "visible": true});

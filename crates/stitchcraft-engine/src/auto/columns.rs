@@ -18,7 +18,9 @@
 //!   reaches under the shapes sewn after it.
 //! - **Drawn.** Each column is drawn with its rails and rungs, and read back as a satin column is read, it
 //!   must give them ([`drawn::from_rails`]). A part whose triangles make no column round each line, or one of
-//!   whose columns can't be drawn so, stays in the area's fill, and `SC-I0902` says so.
+//!   whose columns can't be drawn so, stays in the area's fill, and `SC-I0902` says so. A rung added to tell
+//!   the rails from the rungs goes across an end that doesn't reach under another column where one can take
+//!   it; across one that does, the overlap sews as a section of its own.
 //!
 //! Every step costs a unit of work, a part's columns being part of the work of digitizing its area.
 
@@ -85,8 +87,8 @@ pub(super) fn columns(part: &Polygon, narrowest: Mm, rules: &AutoParams, cuts: &
             sewn.push(Sewn::Running { line: column.walked, width });
             continue;
         }
-        let Ok(drawn) = drawn::from_rails(column.rails, column.rungs, meter)? else { return Ok(Made::Unmade) };
         let push = column.under.map(|under| if under.is_some() { -rules.auto_overlap_mm.get() } else { 0.0 });
+        let Ok(drawn) = drawn::from_rails(column.rails, column.rungs, push, meter)? else { return Ok(Made::Unmade) };
         sewn.push(Sewn::Satin { path: drawn.path(), width, push });
     }
     Ok(Made::Columns(sewn))
