@@ -102,20 +102,23 @@ impl<'r> Processor<'r> {
     }
 }
 
+/// Which ends of a column push compensation of `push` millimetres, at its start and its end, lengthens: those
+/// where it is negative.
+pub(crate) fn lengthened(push: [f64; 2]) -> [bool; 2] {
+    push.map(|mm| mm < 0.0)
+}
+
 /// `rail` with push compensation, `start` millimetres off its start and `end` off its end, or added along
 /// its first or last segment where negative, and whether taking it off would have left less than half a
 /// CSS pixel of the rail, which then keeps its length. Measuring the rail costs `meter` a unit of work
 /// per point.
 pub(crate) fn pushed(rail: &[Point], [start, end]: [f64; 2], meter: &mut Meter) -> Result<(Vec<Point>, bool), Exhausted> {
     let mut points = rail.to_vec();
-    if start < 0.0
-        && let Some(before) = beyond(points.iter(), -start)
-    {
+    let [longer_before, longer_after] = lengthened([start, end]);
+    if longer_before && let Some(before) = beyond(points.iter(), -start) {
         points.insert(0, before);
     }
-    if end < 0.0
-        && let Some(after) = beyond(points.iter().rev(), -end)
-    {
+    if longer_after && let Some(after) = beyond(points.iter().rev(), -end) {
         points.push(after);
     }
     let (start, end) = (start.max(0.0), end.max(0.0));

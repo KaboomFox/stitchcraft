@@ -16,8 +16,10 @@
 //! the satin effect already reads as a column drawn with rails is left as it is.
 //!
 //! **What it refuses** (`SC-E0814`): nothing selected, a path without a stroke, a path that can't be used,
-//! and a line that makes no column that sews as it does ([`Unmade`]). It then changes nothing. Before
-//! VectorCraft 0.15, which keeps no effect record a filter gives, it declines with `SC-E0813`.
+//! and a line that makes no column that sews as it does ([`Unmade`]), such as one whose satin effect's push
+//! compensation lengthens both its ends when the column needs a rung added at one (`push`). It then
+//! changes nothing. Before VectorCraft 0.15, which keeps no effect record a filter gives, it declines with
+//! `SC-E0813`.
 //!
 //! **Its budget.** Making the rails of a curved line took up to 162 million instructions in VectorCraft's
 //! host (M6.4, `docs/src/design/vectorcraft-integration.md`), more than the 50 million a light filter's run
@@ -29,9 +31,10 @@
 
 use serde_json::Map;
 use stitchcraft_core::{Code, Diagnostic, Fix, Meter, Mm};
+use stitchcraft_engine::generators::satin::SatinParams;
 use stitchcraft_engine::generators::satin::drawn::{Unmade, from_line};
 use stitchcraft_engine::normalize::satin::{Shape as Column, recognize};
-use stitchcraft_params::Family;
+use stitchcraft_params::{Family, StitchType};
 use stitchcraft_vectorcraft::effect_error;
 use stitchcraft_vectorcraft::filter::{self, Object, Out, Record};
 
@@ -75,7 +78,7 @@ fn columns(objects: &[Object], meter: &mut Meter) -> Result<Vec<Out>, Diagnostic
         };
         let path = match object.path(meter).map_err(|_| exhausted())? {
             Ok(path) => path,
-            Err(why) => return Err(not_made(format!("{} can't be made into a satin column. {why}.", sentence(&called("path"))))),
+            Err(why) => return Err(not_made(format!("{} can't be made into a satin column. {why}.", sentence(&called("path"))), NOT_MADE)),
         };
         let satin = effects.iter().find(|record| record.visible && record.family() == Some(Family::Satin)).cloned();
         if satin.is_some() && path.subpaths.len() > 1 && matches!(recognize(&path, meter).map_err(|_| exhausted())?.shape, Ok(Column::Rails(_))) {
@@ -84,15 +87,17 @@ fn columns(objects: &[Object], meter: &mut Meter) -> Result<Vec<Out>, Diagnostic
         }
         let Some(stroke) = object.stroke() else {
             let message = format!("{} has no stroke that paints, which a satin column takes its width from.", sentence(&called("path")));
-            return Err(not_made(message));
+            return Err(not_made(message, NOT_MADE));
         };
+        let push = push(satin.as_ref());
         let effects = with_satin(effects, satin)?;
         let drawn = stroke.as_wide_as(Mm::SVG_PX).map_err(|e| unwritten(&e))?;
         let parts = path.subpaths.len();
         for (k, line) in path.subpaths.iter().enumerate() {
-            let column = from_line(line, stroke.width, stroke.join, meter).map_err(|_| exhausted())?.map_err(|why: Unmade| {
+            let column = from_line(line, stroke.width, stroke.join, push, meter).map_err(|_| exhausted())?.map_err(|why: Unmade| {
                 let line = if parts > 1 { format!("part {} of {}", k + 1, called("line")) } else { called("line") };
-                not_made(format!("{} {why}.", sentence(&line)))
+                let hint = if why == Unmade::Lengthened { LENGTHENED } else { NOT_MADE };
+                not_made(format!("{} {why}.", sentence(&line)), hint)
             })?;
             let made = if k == 0 { Out::given(object) } else { Out::default().with_opacity_of(object) };
             let made = made.with_path(&column.path(), true).map_err(|e| unwritten(&e))?;
@@ -100,6 +105,14 @@ fn columns(objects: &[Object], meter: &mut Meter) -> Result<Vec<Out>, Diagnostic
         }
     }
     Ok(out)
+}
+
+/// The push compensation of `satin`, the line's satin effect, at the column's start and its end, in
+/// millimetres, which the column keeps; 0 for a new effect at the defaults. Settings that don't read leave
+/// the line unsewn, and the column, which keeps them, too, so they push nothing here.
+fn push(satin: Option<&Record>) -> [f64; 2] {
+    let read = satin.map(|record| SatinParams::from_set_as(&record.settings(), StitchType::SatinColumn));
+    read.and_then(Result::ok).map_or([0.0; 2], |read| read.params.push_compensation_mm.map(Mm::get))
 }
 
 /// `effects` with `satin`, or a new satin effect at the defaults, in the place of the first StitchCraft
@@ -137,9 +150,14 @@ fn sentence(text: &str) -> String {
     chars.next().map(|first| first.to_uppercase().chain(chars).collect()).unwrap_or_default()
 }
 
-/// `SC-E0814` for a line `message` says can't be made into a satin column.
-fn not_made(message: String) -> Diagnostic {
-    let hint = "Give the path a stroke as wide as the column, draw that column with its 2 rails, or leave the object out of the selection.";
+/// `SC-E0814`'s hint for a line that can't be made into a satin column.
+const NOT_MADE: &str = "Give the path a stroke as wide as the column, draw that column with its 2 rails, or leave the object out of the selection.";
+
+/// `SC-E0814`'s hint for a line whose column would need a rung across an end its push compensation lengthens.
+const LENGTHENED: &str = "Set the satin effect's push compensation to 0 or more at one end, or draw the column with its 2 rails.";
+
+/// `SC-E0814` for a line `message` says can't be made into a satin column, with `hint`.
+fn not_made(message: String, hint: &str) -> Diagnostic {
     Diagnostic::new(Code::VcNotConverted, message).with_fix(Fix::Hint(hint.into()))
 }
 

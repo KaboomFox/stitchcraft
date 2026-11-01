@@ -4,7 +4,8 @@
 //! hold the same JSON values, which designs store as text (`stitchcraft_params::ParamSet`). The reader and
 //! the live effect write them the same way, so an object sews the same from a file as in its preview.
 
-use serde_json::{Number, Value};
+use serde_json::{Map, Number, Value};
+use stitchcraft_params::ParamSet;
 
 use crate::PREVIEW_LEVEL;
 
@@ -31,6 +32,12 @@ pub fn text(value: &Value) -> Option<String> {
     }
 }
 
+/// The settings of the element an effect with `params` sews: each value as [`text`] writes it, but those
+/// that aren't the element's ([`sews`]) and those of another kind, which take their defaults.
+pub(crate) fn settings(params: &Map<String, Value>) -> ParamSet {
+    params.iter().filter(|(key, _)| sews(key)).filter_map(|(key, value)| Some((key.as_str(), text(value)?))).collect()
+}
+
 /// A JSON number as the parameters read it: whole numbers without a point, so that a count reads.
 fn number(n: &Number) -> String {
     match n.as_f64() {
@@ -44,6 +51,15 @@ fn number(n: &Number) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn an_effect_s_settings_are_its_element_s_values_as_text() {
+        let params = serde_json::json!({"_context": {"item": "object"}, "zigzag_spacing_mm": 0.4, "push_compensation_mm": [-1, 0], "x": {}});
+        let Value::Object(params) = params else { panic!("an object") };
+        let set = settings(&params);
+        assert_eq!((set.get("zigzag_spacing_mm"), set.get("push_compensation_mm")), (Some("0.4"), Some("-1 0")));
+        assert_eq!((set.get("_context"), set.get("x")), (None, None));
+    }
 
     #[test]
     fn a_number_is_written_as_the_parameters_read_it() {

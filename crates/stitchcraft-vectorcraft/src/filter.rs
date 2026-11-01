@@ -32,12 +32,13 @@ use serde_json::{Map, Value, json};
 use stitchcraft_core::units::MM_PER_POINT;
 use stitchcraft_core::{Diagnostic, Exhausted, Meter, Mm, Point};
 use stitchcraft_engine::design::{Cap, FillRule, Join, Path, Segment};
-use stitchcraft_params::Family;
+use stitchcraft_params::{Family, ParamSet};
 use stitchcraft_plan::Rgb;
 
 use crate::document::quoted;
 use crate::effect::{followed, refused_plugin};
 use crate::geometry::{self, Unusable};
+use crate::values::settings;
 use crate::wire::{EffectStroke, PathData, yes};
 use crate::{color, effect_id, effect_name};
 
@@ -219,6 +220,18 @@ impl Record {
     /// Whether it is one of StitchCraft's effects: a stitch family's, or one a newer StitchCraft has.
     pub fn is_stitchcraft(&self) -> bool {
         effect_name(&self.id).is_some()
+    }
+
+    /// The settings of the element its effect sews, read from its parameters as a live effect reads them
+    /// (`values::settings`). A record whose parameters aren't names and values has none.
+    pub fn settings(&self) -> ParamSet {
+        /// What a record holds of its parameters.
+        #[derive(Deserialize)]
+        struct Held {
+            #[serde(default)]
+            params: Map<String, Value>,
+        }
+        serde_json::from_str::<Held>(self.raw.get()).map(|held| settings(&held.params)).unwrap_or_default()
     }
 }
 
@@ -526,6 +539,17 @@ mod tests {
         // Another StitchCraft effect, from a newer StitchCraft, is StitchCraft's, of no family.
         let other = Record::given(&to_raw_value(&json!({"id": "plugin.dev.stitchcraft.auto"})).unwrap());
         assert_eq!((other.family(), other.is_stitchcraft()), (None, true));
+    }
+
+    #[test]
+    fn a_record_s_settings_are_its_element_s_parameters_as_text() {
+        let record = |json: Value| Record::given(&to_raw_value(&json).unwrap()).settings();
+        let params = json!({"_context": {"item": "object"}, "push_compensation_mm": [-1, 0], "zigzag_spacing_mm": 0.4});
+        let set = record(json!({"id": "plugin.dev.stitchcraft.satin", "params": params}));
+        assert_eq!(set.iter().collect::<Vec<_>>(), [("push_compensation_mm", "-1 0"), ("zigzag_spacing_mm", "0.4")]);
+        // Parameters that aren't names and values, or none, are no settings.
+        assert_eq!(record(json!({"id": "plugin.dev.stitchcraft.satin", "params": 7})).iter().count(), 0);
+        assert_eq!(record(json!({"id": "plugin.dev.stitchcraft.satin"})).iter().count(), 0);
     }
 
     /// `path` written, as the reader reads it back.
