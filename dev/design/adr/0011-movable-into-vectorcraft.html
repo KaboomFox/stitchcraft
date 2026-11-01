@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-18b0f297.js";
+            window.path_to_searchindex_js = "../../searchindex-264061e4.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-b793f3ad.js"></script>
@@ -240,6 +240,9 @@ keep our <code>clippy.toml</code>, so its thresholds must match VectorCraft’s:
 workspace denies what VectorCraft’s does. A breach then fails our gate before the rehearsal finds it.</li>
 <li><strong>Generated files never depend on where the folder is</strong>: no absolute paths, no repository-relative
 paths outside it. <code>cargo xtask docs --check</code> and <code>shots --check</code> run in the rehearsal.</li>
+<li><strong>VectorCraft’s git keeps every file of ours.</strong> Its <code>.gitignore</code> leaves out every folder named <code>plan</code>,
+its local notes, which would take our <code>docs/src/plan/</code> with them. Our <code>.gitignore</code>, nearer the folder,
+keeps it in, and the rehearsal fails on any file of ours VectorCraft’s git would leave out.</li>
 </ul>
 <h2 id="what-stays-with-vectorcrafts-maintainers"><a class="header" href="#what-stays-with-vectorcrafts-maintainers">What stays with VectorCraft’s maintainers</a></h2>
 <ul>

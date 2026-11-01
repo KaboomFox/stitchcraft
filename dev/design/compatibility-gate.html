@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-18b0f297.js";
+            window.path_to_searchindex_js = "../searchindex-264061e4.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -332,7 +332,9 @@ cancelled run, whose tracks may have stopped before writing their results.</li>
 The <code>move</code> job rehearses it against the latest stable release and <code>main</code> (pull requests that touch
 manifests or tooling: the pinned stable release):</p>
 <ol>
-<li>Check out VectorCraft and put this repository into it as the folder <code>stitchcraft/</code>.</li>
+<li>Check out VectorCraft and put this repository into it as the folder <code>stitchcraft/</code>, and check that
+VectorCraft’s git would keep every file of ours: its <code>.gitignore</code> leaves out every folder named <code>plan</code>,
+and ours keeps <code>docs/src/plan/</code> in.</li>
 <li><strong>Nested:</strong> <code>cargo xtask compat join --nested ..</code>, then build a throwaway VectorCraft crate that depends
 on <code>stitchcraft-engine</code> by path.</li>
 <li><strong>Joined:</strong> <code>cargo xtask compat join ..</code>, then run <code>cargo xtask ci</code> from the folder: StitchCraft’s
