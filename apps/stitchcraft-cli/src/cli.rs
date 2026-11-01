@@ -238,6 +238,10 @@ pub struct PreviewArgs {
     /// Pixels per millimetre.
     #[arg(long, default_value_t = Settings::DEFAULT_SCALE)]
     pub scale: f32,
+    /// The machine the picture is for, which decides where the thread is cut (see `stitch profiles`); by
+    /// default the reference machine.
+    #[arg(long, short)]
+    pub profile: Option<String>,
 }
 
 /// Preview styles on the command line.

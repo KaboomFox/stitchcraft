@@ -5,6 +5,7 @@ traced-badge.svg
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
   size      50.0 × 50.0 mm
   stitches  3770 stitches, 3 jumps, 2 trims, 2 colour changes, 0 stops
+  trims     the machine makes none of them: cut the jump threads by hand
   threads   1. unnamed (#ed171f), shown as Brother PEC 5 "Red"
             2. unnamed (#0a55a3), shown as Brother PEC 2 "Blue"
             3. unnamed (#e8a900), shown as Brother PEC 11 "Deep Gold"

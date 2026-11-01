@@ -13,7 +13,17 @@ docs, and for conformance diffs. Two promises shape it:
   settings, so documentation images can be compared byte for byte on every pull request.
 
 `stitch plan --preview` draws the machine file it wrote, read back as `stitch preview` reads it, in the
-design's colours. A DST machine's cut before a long jump then shows as a cut (`REQ-CLI-008`).
+design's colours (`REQ-CLI-008`).
+
+**What cuts the thread is the machine's.** A preview is drawn for a machine, whose profile says how it
+trims (`TrimSupport`): `stitch plan --preview` for the profile it planned for, `stitch preview` for
+`--profile` or the reference machine, a test sheet's picture for its hoop. A thread change cuts, and so
+does a stop, which PES and DST write as a thread change. A trim cuts only on a machine that obeys the
+format's trim command, and a machine that cuts long jumps by itself cuts where the next hole lies farther
+from the last than its setting. The reference PE800 obeys no trim command: at machine checkpoint MC-1 it
+cut the thread between colours, and at no jump between places sewn in one colour, trim-flagged or not.
+Its previews draw a jump thread where a plan or a file has a trim, and PES flags every jump as one
+(`REQ-FMT-010`), so they draw the jump threads the operator cuts by hand.
 
 ## Two steps: scene, then pixels
 
@@ -29,8 +39,8 @@ differs; only the golden files compare pixels.
 | Hole | A place where the needle goes down, in sewing order, with the thread's colour |
 | Arrival `Sewn` | A stitch laid from the previous hole (`StitchPlan::sewn_stitches`, the single definition of "sewing") |
 | Arrival `Loose` | The frame moved without sewing and the thread was not cut: a jump thread that lies loose until cut by hand |
-| Arrival `Cut` | The thread was cut since the previous hole (a trim or a thread change), or this is the first hole |
-| Mark `Trim`, `Stop` | Where the needle is when the machine cuts or pauses |
+| Arrival `Cut` | The thread was cut since the previous hole (a thread change, a stop, or a trim the machine makes), or this is the first hole |
+| Mark `Trim`, `Stop` | Where the needle is when the machine cuts, or pauses and cuts |
 
 Jumps are not in the scene. The thread runs straight from hole to hole however the frame travelled, so a
 place where a jump paused changes nothing on the fabric, and machine files split long jumps into pieces
@@ -38,8 +48,10 @@ anyway. Marks describe what the machine does, not how a file spells it, in the s
 oracle (`stitchcraft_testkit::equivalence`): two trims in a row cut once, the order of commands at one
 spot does not matter, and a trim after the last hole cuts nothing that stays. So marks are a sorted set
 and trailing trims are left out. The test for `REQ-RND-001` relies on this: for every test sheet and for
-random plans, the scene of a plan equals the scene of its PES file read back. The only differences
-allowed are the ones PES cannot record: palette colours instead of chosen colours, and no stitch roles.
+random plans, on a machine that obeys the trim command, the scene of a plan with a trim before every jump
+equals the scene of its PES file read back. The only differences allowed are the ones PES cannot record:
+palette colours instead of chosen colours, and no stitch roles. On the reference machine, a test sheet's
+PES file shows the jump threads its plan does.
 
 ## Styles
 
@@ -56,8 +68,7 @@ allowed are the ones PES cannot record: palette colours instead of chosen colour
 
 Everything is drawn in sewing order, so later stitches lie on earlier ones as they do on the fabric. The
 realistic style draws loose jump threads because they *are* on the fabric when the hoop comes off the
-machine; a design that should have trims shows them, which is what test sheet TS-02 is about. (A machine
-that cuts long jumps by itself would remove some of them; previews do not model that yet.)
+machine; a design whose machine trims shows its cuts, which is what test sheet TS-02 is about.
 
 ## Size and scale
 
