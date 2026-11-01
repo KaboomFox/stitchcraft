@@ -27,7 +27,7 @@ fn arguments(spec: &Spec, conformance: &Path, out: &Path) -> Option<Vec<OsString
     let (command, profile): ([OsString; 2], &str) = match spec {
         Spec::Testsheet { sheet, profile, .. } => (["testsheet".into(), sheet.into()], profile),
         Spec::Plan { design, profile, .. } => (["plan".into(), conformance.join(design).into()], profile),
-        Spec::Oracle { .. } | Spec::Inkstitch { .. } => return None,
+        Spec::Oracle { .. } | Spec::Inkstitch { .. } | Spec::CentreLines { .. } => return None,
     };
     Some(command.into_iter().chain(["--profile".into(), profile.into(), "-o".into(), out.into()]).collect())
 }

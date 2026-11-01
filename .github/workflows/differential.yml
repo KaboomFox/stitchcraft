@@ -1,7 +1,9 @@
 # Conformance L3, the Ink/Stitch differential (docs/src/design/conformance.md): every night, and on a pull
-# request that changes the differential itself, a pinned Ink/Stitch and StitchCraft sew the design of each
-# `inkstitch` case, and their machine files are compared by measures. The report is the job's summary, and
-# an artifact with the SVG files written for test sheets.
+# request that changes the differential itself or automatic digitizing, a pinned Ink/Stitch and StitchCraft
+# sew the design of each `inkstitch` case, and their machine files are compared by measures. The
+# `centre-lines` cases compare the lines Ink/Stitch's Fill to Stroke draws for narrow shapes with the lines
+# automatic digitizing sews them along. The report is the job's summary, and an artifact with the SVG files
+# written for test sheets and the pictures of both programs' lines.
 name: differential
 
 on:
@@ -17,6 +19,9 @@ on:
       - xtask/src/conformance/**
       - crates/stitchcraft-testkit/src/metrics.rs
       - crates/stitchcraft-testkit/src/inkstitch.rs
+      - crates/stitchcraft-testkit/src/designs.rs
+      - crates/stitchcraft-engine/src/auto/**
+      - crates/stitchcraft-engine/src/normalize/strips/**
       - .github/actions/inkstitch/**
       - .github/workflows/differential.yml
 

@@ -1,0 +1,6 @@
+id = "inkstitch-centre-lines-ts13b"
+requirements = ["REQ-AUTO-022"]
+kind = "centre-lines"
+# TS-13B's automatic shapes that sew wholly as running stitches: the word MATCH 4 mm tall, and the lines of
+# its 3 windows, 0.3, 0.6 and 0.9 mm wide.
+sheet = "TS-13B"

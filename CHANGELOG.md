@@ -5,6 +5,14 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- The Ink/Stitch differential compares centre lines (`REQ-AUTO-022`, the `centre-lines` cases,
+  `xtask/src/conformance/centre_lines.rs`). Each shape that automatic digitizing sews wholly as running
+  stitches is compared with the lines Ink/Stitch's Fill to Stroke draws for it, with its threshold at the
+  shape's width. No branch may be left out or added, and away from their ends the lines must lie within a
+  quarter of a width of each other. TS-13B's 8 narrow shapes and 71 letters T, H and E, 3 to 10 mm tall in
+  lines 0.3 to 0.9 mm wide, agree. On the code from before the T's arms were fixed (#191), the comparison
+  finds 3 letters with a branch missing. The differential also runs on a pull request that changes
+  automatic digitizing now.
 - Changed designs are checked to sew the same stitches changed the same way (`tests/transformed.rs`,
   `stitchcraft-testkit::transformed`). A change (`Change::ALL`) moves the whole design (a mirror image or a
   half turn) or draws each of its shapes again with the same outline. The checks compare where each
