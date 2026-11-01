@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-a15ec758.js";
+            window.path_to_searchindex_js = "searchindex-49be8619.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b793f3ad.js"></script>
@@ -195,9 +195,9 @@ every pull request.</li>
 </ul>
 <h2 id="where-to-go"><a class="header" href="#where-to-go">Where to go</a></h2>
 <ul>
-<li><strong>Embroidering?</strong> Start with the <a href="user/README.html">user guide</a> and <a href="#embroidery-basics">embroidery basics</a>.</li>
+<li><strong>Embroidering?</strong> Start with the <a href="user">user guide</a> and <a href="#embroidery-basics">embroidery basics</a>.</li>
 <li><strong>Building StitchCraft?</strong> Read the <a href="#stitchcraft--technical-design-document">technical design</a>, then the <a href="#roadmap-small-steps-to-the-final-project">roadmap</a>.</li>
-<li><strong>Contributing?</strong> See <a href="contributing/README.html">contributing</a>.</li>
+<li><strong>Contributing?</strong> See <a href="contributing">contributing</a>.</li>
 </ul>
 <blockquote>
 <p><strong>Status:</strong> StitchCraft sews the strokes of an SVG design and writes PES and DST files. A stroke is
@@ -219,9 +219,9 @@ with a section for each stitch type.</p>
 <tbody>
 <tr><td><a href="#install-stitchcraft">Install</a></td><td>Build the <code>stitch</code> command</td><td></td></tr>
 <tr><td>Tutorials</td><td>Learn by doing, start to finish</td><td><a href="#your-first-sew-out-on-a-brother">Your first sew-out on a Brother</a>, <a href="#turn-an-svg-into-a-pes-file">Turn an SVG into a PES file</a>, <a href="#a-patch-in-vectorcraft">A patch in VectorCraft</a>, <a href="#from-a-picture-to-a-machine-file">From a picture to a machine file</a></td></tr>
-<tr><td><a href="user/how-to/README.html">How-to guides</a></td><td>Solve one problem</td><td>Check a file, convert it, fit the hoop, report a bug</td></tr>
-<tr><td><a href="user/stitches/README.html">Stitch types</a></td><td>See what each stitch does and what its parameters change</td><td>Running stitch, lock stitches</td></tr>
-<tr><td><a href="user/reference/README.html">Reference</a></td><td>Look up commands, parameters, messages and machines</td><td></td></tr>
+<tr><td><a href="user/how-to">How-to guides</a></td><td>Solve one problem</td><td>Check a file, convert it, fit the hoop, report a bug</td></tr>
+<tr><td><a href="user/stitches">Stitch types</a></td><td>See what each stitch does and what its parameters change</td><td>Running stitch, lock stitches</td></tr>
+<tr><td><a href="user/reference">Reference</a></td><td>Look up commands, parameters, messages and machines</td><td></td></tr>
 <tr><td>Explanation</td><td>Understand why embroidery behaves as it does</td><td><a href="#embroidery-basics">Embroidery basics</a></td></tr>
 </tbody>
 </table>
@@ -423,7 +423,7 @@ info SC-I0504: A needle point less than the shortest stitch (0.3 mm) from a need
 them all. <code>--report</code> writes the file’s counts, size and SHA-256, the threads and the messages as JSON, for
 scripts.</p>
 <h2 id="next-1"><a class="header" href="#next-1">Next</a></h2>
-<p><a href="user/stitches/README.html">Stitch types</a> shows what each stitch type does and the parameters that change it.</p>
+<p><a href="user/stitches">Stitch types</a> shows what each stitch type does and the parameters that change it.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="a-patch-in-vectorcraft"><a class="header" href="#a-patch-in-vectorcraft">A patch in VectorCraft</a></h1>
 <p>In this tutorial you draw a round patch in VectorCraft and choose how each part of it sews, with the
@@ -1119,7 +1119,7 @@ with it, unless the stroke’s <code>stroke_method</code> names another stitch. 
 lettering at small sizes.</p>
 <p>The pictures on this page are drawn by StitchCraft’s own engine and renderer, from the designs in
 <code>docs/fixtures/</code>. Each dot is a needle point, and orange rings mark the lock stitches at each end. Each
-parameter is set per element, and <a href="user/stitches/README.html#setting-parameters">setting parameters</a> says what
+parameter is set per element, and <a href="user/stitches#setting-parameters">setting parameters</a> says what
 <code>stitch plan</code> reads today.</p>
 <h2 id="stitch-length"><a class="header" href="#stitch-length">Stitch length</a></h2>
 <p><code>running_stitch_length_mm</code> sets how long each stitch is, 2.5 mm by default. Between 2 corners the stitches
@@ -1217,7 +1217,7 @@ for a satin column.</p>
 sews it. From VectorCraft 0.14, the live effect shows the zigzag’s stitches as wide as the object’s stroke.
 An object without a stroke it leaves as it is drawn (<code>SC-I0810</code>): give it a stroke as wide as the zigzag.
 <code>stitch plan</code> reads Ink/Stitch’s settings from SVG files from milestone M8
-(<a href="user/stitches/README.html#setting-parameters">setting parameters</a>).</p>
+(<a href="user/stitches#setting-parameters">setting parameters</a>).</p>
 <p>The pictures are drawn as the <a href="#running-stitch">running stitch’s</a> are, from <code>docs/fixtures/zigzag.svg</code>, a wave
 drawn 3 mm wide.</p>
 <h2 id="spacing"><a class="header" href="#spacing">Spacing</a></h2>
@@ -1280,7 +1280,7 @@ the band.</p>
 <p>In VectorCraft, join the 2 rails with Object › Compound Path › Make and apply the StitchCraft Satin
 effect to them, with its <code>satin_method</code> set to <code>e_stitch</code>. The effect shows its stitches, and
 <code>stitch export</code> sews them. An SVG file’s Ink/Stitch settings are read from milestone M8
-(<a href="user/stitches/README.html#setting-parameters">setting parameters</a>).</p>
+(<a href="user/stitches#setting-parameters">setting parameters</a>).</p>
 <p>The pictures are drawn from <code>docs/fixtures/e-stitch.svg</code>, a curved band 4 mm wide.</p>
 <h2 id="spacing-1"><a class="header" href="#spacing-1">Spacing</a></h2>
 <p><code>zigzag_spacing_mm</code> is how far apart the spikes are, 0.4 mm by default as for a satin column. An E-stitch
@@ -1330,7 +1330,7 @@ first stitch goes from the second rail to the first, and <code>swap_satin_rails<
 <p>In VectorCraft, make the 2 rails one path with Object › Compound Path › Make, give it the StitchCraft
 Satin effect, and set the effect’s <code>satin_method</code> to <code>s_stitch</code>: VectorCraft draws the stitches, and
 <code>stitch export</code> sews them. StitchCraft reads the same settings from an SVG file’s Ink/Stitch attributes
-from milestone M8 (<a href="user/stitches/README.html#setting-parameters">setting parameters</a>).</p>
+from milestone M8 (<a href="user/stitches#setting-parameters">setting parameters</a>).</p>
 <p>The pictures are drawn from <code>docs/fixtures/s-stitch.svg</code>, a curved band 6 mm wide.</p>
 <h2 id="spacing-2"><a class="header" href="#spacing-2">Spacing</a></h2>
 <p><code>zigzag_spacing_mm</code> is how far apart the stitches across are, 0.4 mm by default. Each goes the other way
@@ -4058,7 +4058,7 @@ our own words and never carry Ink/Stitch’s code (<a href="#adr-0012-read-inkst
 <li><a href="#stitchcraft--technical-design-document">Technical design document</a> — the whole system in 25 minutes.</li>
 <li><a href="#architecture">Architecture</a> — crates, layers, where code goes.</li>
 <li><a href="#data-model">Data model</a>, <a href="#parameter-registry">parameter registry</a>, <a href="#diagnostics">diagnostics</a>.</li>
-<li><a href="#engine-pipeline">Engine pipeline</a>, the <a href="design/algorithms/README.html">stitch generators</a> and
+<li><a href="#engine-pipeline">Engine pipeline</a>, the <a href="design/algorithms">stitch generators</a> and
 <a href="#image-to-embroidery">image to embroidery</a>.</li>
 <li><a href="#machine-formats">Machine formats</a> and <a href="#rendering-previews">rendering previews</a>.</li>
 <li><a href="#vectorcraft-integration">VectorCraft integration</a>, the <a href="#rfc-vectorcraft-plug-in-features">plug-in features RFC</a>
@@ -4067,7 +4067,7 @@ and the <a href="#vectorcraft-compatibility-gate">compatibility gate</a>.</li>
 <a href="#documentation-pipeline">docs pipeline</a>.</li>
 <li>File compatibility: <a href="#svg-input">SVG input</a> and the
 <a href="#inkstitch-compatibility-contract">Ink/Stitch compatibility contract</a>.</li>
-<li>Decisions: <a href="design/adr/README.html">ADRs</a>.</li>
+<li>Decisions: <a href="design/adr">ADRs</a>.</li>
 </ol>
 <h2 id="keeping-these-pages-true"><a class="header" href="#keeping-these-pages-true">Keeping these pages true</a></h2>
 <ul>
@@ -5695,7 +5695,7 @@ stitches as lock. The jumps between groups are travel. Previews draw the lock st
 generator hands assembly its needle points without roles, so an element’s underlay, and the running
 stitches between its rows, are tagged top as well, until generators tag their own.</li>
 </ul>
-<p>Generators are listed in <a href="design/algorithms/README.html">algorithms</a>.</p>
+<p>Generators are listed in <a href="design/algorithms">algorithms</a>.</p>
 <h2 id="4-plan-assembly"><a class="header" href="#4-plan-assembly">4. Plan assembly</a></h2>
 <p>Groups are joined into colour blocks in the order the elements sew (host paint order, bottom first, or the
 order stage 0 chose), by <code>stitchcraft_engine::assemble</code>.</p>
@@ -9826,7 +9826,7 @@ cargo +nightly fuzz run read_pes fuzz/artifacts/read_pes/crash-…   # reproduce
 </code></pre>
 <p>A crash becomes a regression test next to the code it found a bug in, before the fix.</p>
 <h3 id="l2--generator-properties-every-pr"><a class="header" href="#l2--generator-properties-every-pr">L2 — Generator properties (every PR)</a></h3>
-<p>Property tests per generator (<a href="design/algorithms/README.html">algorithms</a>), run over:</p>
+<p>Property tests per generator (<a href="design/algorithms">algorithms</a>), run over:</p>
 <ul>
 <li>hand-written cases (the shapes people actually draw: letters, circles, leaves, rings, stars);</li>
 <li>the <strong>degenerate corpus</strong> (zero-area, hair-thin, self-touching, collinear, duplicate points, single
@@ -10347,7 +10347,10 @@ written again. Pages show what the command prints today.</p>
 <ul>
 <li><code>cargo xtask docs --check</code> fails for a generated page that is stale or left over, and a page missing
 from <code>SUMMARY.md</code>. A broken relative link, <code>#anchor</code> or included file fails it, with ids made as mdBook
-makes them, smart punctuation included. A doc that names a <code>cargo xtask</code> subcommand that does not exist
+makes them, smart punctuation included. So does a page of the book that links to a <code>README.md</code>. mdBook
+publishes a folder’s <code>README.md</code> as its <code>index.html</code>, but leaves the link pointing at <code>README.html</code>,
+which the site doesn’t have. A page links to the folder instead (<code>../stitches/</code>, <code>./#setting-parameters</code>).
+The 14 such links on the site were broken until 2026-11-01. A doc that names a <code>cargo xtask</code> subcommand that does not exist
 fails it too: we found that drift in VectorCraft’s own <code>AGENTS.md</code>. Ids must be in their files, <code>REQ-…</code>
 and <code>DEV-…</code> alike, and an <code>SC-…</code> code registered once its milestone is done. An image must be one a shot
 writes, with alt text.</li>

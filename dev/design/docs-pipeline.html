@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a15ec758.js";
+            window.path_to_searchindex_js = "../searchindex-49be8619.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -363,7 +363,10 @@ written again. Pages show what the command prints today.</p>
 <ul>
 <li><code>cargo xtask docs --check</code> fails for a generated page that is stale or left over, and a page missing
 from <code>SUMMARY.md</code>. A broken relative link, <code>#anchor</code> or included file fails it, with ids made as mdBook
-makes them, smart punctuation included. A doc that names a <code>cargo xtask</code> subcommand that does not exist
+makes them, smart punctuation included. So does a page of the book that links to a <code>README.md</code>. mdBook
+publishes a folder’s <code>README.md</code> as its <code>index.html</code>, but leaves the link pointing at <code>README.html</code>,
+which the site doesn’t have. A page links to the folder instead (<code>../stitches/</code>, <code>./#setting-parameters</code>).
+The 14 such links on the site were broken until 2026-11-01. A doc that names a <code>cargo xtask</code> subcommand that does not exist
 fails it too: we found that drift in VectorCraft’s own <code>AGENTS.md</code>. Ids must be in their files, <code>REQ-…</code>
 and <code>DEV-…</code> alike, and an <code>SC-…</code> code registered once its milestone is done. An image must be one a shot
 writes, with alt text.</li>
