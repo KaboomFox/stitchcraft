@@ -138,6 +138,13 @@ desktop of their own, with an X server (Xvfb) and a D-Bus session that nothing e
 The compat workflow's `window` job runs the command daily, and on pull requests that touch the plug-in,
 `compat/`, the tooling or a manifest. It keeps the screenshots, the trees and the app's logs.
 
+The jobs that open the window set up its desktop with `.github/actions/desktop`, whose `apt-get` can
+stall without failing. On 2026-11-01 its install ran for 49 minutes until it was cancelled, where it
+takes under 2. So each `apt-get` has a time limit, 3 minutes to update the package lists and 5 to
+install, and an install that stalls or fails is tried again, 3 times in all. A desktop that can't be
+installed fails its job with an error that says so. The jobs that use the action stop after 30 minutes,
+or 45 for the refresh, where GitHub's limit is 6 hours.
+
 **Screenshots: the same pixels, but for the frame timings.** The window opens at 1440 × 900 pixels,
 drawn by llvmpipe, and a screenshot takes about 0.65 s. Above the status bar, screenshots of one window
 match to the pixel. The screenshots of two starts of the app match there too, and so did two runs on

@@ -1082,6 +1082,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- CI: the desktop VectorCraft's window runs in is set up within time limits. Its `apt-get` ran for 49
+  minutes on a pull request until the run was cancelled, and stalled again on the re-run. Each `apt-get`
+  has a limit now, and a stalled install is tried 3 times. The jobs that open the window stop after 30
+  minutes.
 - The install page named VectorCraft's preferences pane for the plug-ins folder as it was up to 0.14,
   Performance & Storage. From 0.15 it is Plug-ins & Scratch Disks, as VectorCraft's
   `crates/engine/src/cmd/prefscmds.rs` names it at each tag.
