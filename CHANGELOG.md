@@ -926,6 +926,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- The machine's stitch limits hold for the plan, and a machine file's stitches are within 0.14 mm of the
+  plan's (`REQ-PLAN-002`, `REQ-FMT-002`). A writer rounds each position to 0.1 mm, so 11.95 mm from
+  (0.04, 0.04) to (8.49, 8.49) is 12.02 mm in the file, past the PE800's 12 mm, and 0.3 mm on half-tenths
+  is 0.2 mm. The review of 2026-10-31 found it. Fitting the file's stitches again was tried. It left out 70
+  needle points of one test sheet, and points of tatami fills and satin columns that their tests keep, and
+  it would split stitches at the longest by where the grid falls. A test now pins the bound.
 - An automatic satin column digitized from a stroke (M13.1) has the underlay of its width, a pull
   compensation of 0.4 mm and ends at its rails' ends (`REQ-AUTO-018`). It had a satin column's defaults
   before, without underlay or pull compensation. It ended at the points nearest the shapes before and after
@@ -1101,6 +1107,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- `stitch plan --format dst` and VectorCraft's DST exporter hold a design to DST's colour changes
+  (`REQ-PLAN-006`). Planned for the format the machine reads, a PE800 design with 256 colour changes
+  written as DST was refused with `SC-E0601`, which named PES v1 and its 255. Each plan is made for the
+  format it is written in now (`MachineProfile::writing`).
+- A machine file StitchCraft wrote is read back whole (`REQ-CLI-008`). A plan as large as the stitch budget
+  has more records than needle points, and reading it back stopped at 2,000,000 records with `SC-E0009`, as
+  a bug. A file of anyone's is still read up to 2,000,000 records.
 - `stitch plan picture.png` fits the picture into the machine's hoop 0.5 mm in from each side
   (`REQ-CLI-012`). Fitted to the hoop itself, a picture whose shapes reach its sides was refused with
   `SC-E0701`. A shape along the edge sews as a satin column, whose stitches reach 0.4 mm past it, their pull

@@ -160,6 +160,7 @@ pub stitchcraft_plan::profile::MachineProfile::trims: stitchcraft_plan::profile:
 impl stitchcraft_plan::profile::MachineProfile
 pub fn stitchcraft_plan::profile::MachineProfile::check_fit(&self, stitchcraft_core::rect::Rect) -> core::option::Option<stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_plan::profile::MachineProfile::problems(&self) -> alloc::vec::Vec<alloc::string::String>
+pub fn stitchcraft_plan::profile::MachineProfile::writing(&self, stitchcraft_plan::profile::FormatId) -> stitchcraft_plan::profile::MachineProfile
 pub mod stitchcraft_plan::profiles
 pub static stitchcraft_plan::profiles::BROTHER_PE800_4X4: stitchcraft_plan::profile::MachineProfile
 pub static stitchcraft_plan::profiles::BROTHER_PE800_5X7: stitchcraft_plan::profile::MachineProfile
@@ -240,6 +241,7 @@ pub stitchcraft_plan::MachineProfile::trims: stitchcraft_plan::profile::TrimSupp
 impl stitchcraft_plan::profile::MachineProfile
 pub fn stitchcraft_plan::profile::MachineProfile::check_fit(&self, stitchcraft_core::rect::Rect) -> core::option::Option<stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_plan::profile::MachineProfile::problems(&self) -> alloc::vec::Vec<alloc::string::String>
+pub fn stitchcraft_plan::profile::MachineProfile::writing(&self, stitchcraft_plan::profile::FormatId) -> stitchcraft_plan::profile::MachineProfile
 pub struct stitchcraft_plan::PlanBuilder
 impl stitchcraft_plan::builder::PlanBuilder
 pub fn stitchcraft_plan::builder::PlanBuilder::change_thread(&mut self, stitchcraft_plan::thread::Thread)

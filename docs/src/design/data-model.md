@@ -195,8 +195,12 @@ built the plan: the command line reports it as `SC-E0009` and writes nothing. "W
 previous movement was a `Normal` stitch with no trim since — the stitch lays thread between two holes,
 and its length is what the machine and fabric feel; the first stitch after a jump, a trim or a thread
 change starts a new run. A length or a position within `LENGTH_SLACK` (10⁻⁹ mm) of a limit counts as at
-it, at the hoop's edge as for a stitch's length, so rounding cannot push a stitch placed exactly at a limit
-past it. Generators place stitches by the same test, and so does the check that a design fits the hoop.
+it, at the hoop's edge as for a stitch's length, so floating-point rounding cannot push a stitch placed
+exactly at a limit past it. Generators place stitches by the same test, and so does the check that a design
+fits the hoop. The rules hold for the plan. A machine file rounds its positions to 0.1 mm, and its
+stitches are within 0.14 mm of the plan's ([formats](formats.md), `REQ-FMT-002`). The colour changes a plan may
+have are those of the format it is written in: `MachineProfile::writing` gives the machine's profile for
+another format than its own (`REQ-PLAN-006`).
 
 | Requirement | Rule | Since |
 |---|---|---|

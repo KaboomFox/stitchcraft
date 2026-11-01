@@ -2,9 +2,11 @@
 //!
 //! Every reader feeds the same `Recorder`, which turns machine events — a sewn move, a jump, a trim, a
 //! stop, a thread change — into a [`StitchPlan`]. The recorder owns the limits every reader needs: at
-//! most [`MAX_RECORDS`] records (the stitch budget's limit, so a hostile file cannot exhaust memory) and
-//! positions within ±10 m. Readers are literal: each record becomes one plan entry, so `stitch inspect`
-//! shows what is in the file, not a cleaned-up version of it.
+//! most [`MAX_RECORDS`] records from a file of anyone's (the stitch budget's limit, so a hostile file
+//! cannot exhaust memory) and positions within ±10 m. A file StitchCraft wrote is read back whole: its
+//! records number no more than its bytes, and a plan within the stitch budget can have more records than
+//! needle points (`crate::read_back`). Readers are literal: each record becomes one plan entry, so
+//! `stitch inspect` shows what is in the file, not a cleaned-up version of it.
 
 use stitchcraft_core::units::MACHINE_LIMIT;
 use stitchcraft_core::{Budget, Point};
@@ -13,7 +15,7 @@ use stitchcraft_plan::{PaletteId, PlanBuilder, Provenance, Role, StitchPlan, Thr
 use crate::error::DecodeError;
 use crate::quantize::{Delta, Units};
 
-/// The most records a reader accepts: the stitch budget of one design.
+/// The most records a reader accepts from a file of anyone's: the stitch budget of one design.
 pub const MAX_RECORDS: usize = Budget::DEFAULT.max_stitches as usize;
 
 /// A machine file, read.
@@ -38,12 +40,20 @@ pub(crate) struct Recorder {
     builder: PlanBuilder,
     at: Units,
     records: usize,
+    /// The most records it takes.
+    max: usize,
 }
 
 impl Recorder {
-    /// A recorder whose first block is sewn with `thread`, the needle at the origin.
-    pub fn new(thread: Thread) -> Self {
-        Recorder { builder: PlanBuilder::new(thread), at: Units::default(), records: 0 }
+    /// A recorder whose first block is sewn with `thread`, the needle at the origin, that takes at most
+    /// `max` records.
+    pub fn new(thread: Thread, max: usize) -> Self {
+        Recorder { builder: PlanBuilder::new(thread), at: Units::default(), records: 0, max }
+    }
+
+    /// The most records it takes.
+    pub fn max(&self) -> usize {
+        self.max
     }
 
     /// A sewn move.
@@ -88,7 +98,7 @@ impl Recorder {
 
     fn count(&mut self) -> Result<(), DecodeError> {
         self.records += 1;
-        if self.records > MAX_RECORDS { Err(DecodeError::TooLong { max: MAX_RECORDS }) } else { Ok(()) }
+        if self.records > self.max { Err(DecodeError::TooLong { max: self.max }) } else { Ok(()) }
     }
 
     fn advance(&mut self, delta: Delta) -> Result<Point, DecodeError> {
