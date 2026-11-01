@@ -39,7 +39,8 @@
 //! Work is charged to the budget: two units per XML node (one to find its id, style sheets and Ink/Stitch's
 //! commands, one to read it), one per path segment, one per 8 bytes of a transform, point list or style
 //! sheet, and for each element, one per class, per style sheet rule tested against it and per declaration
-//! it takes ([`crate::sheet`]).
+//! it takes ([`crate::sheet`]), and one per 8 bytes of its `style` attribute each time it is read: a
+//! gradient's stops are read again for each shape the gradient paints.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::str::FromStr;
@@ -52,13 +53,14 @@ use stitchcraft_params::ParamSet;
 use stitchcraft_plan::{Rgb, Thread};
 use svgtypes::{Color, Length};
 
+use crate::BYTES_PER_UNIT;
 use crate::inkstitch::{
     self, Does, Helper, IGNORE_OBJECT, INKSCAPE_NS, INKSTITCH_NS, Objects, Place, READ_ATTRIBUTES, STOP_AFTER, TRIM_AFTER, Unapplied, place,
 };
 use crate::path::{self, Seg, Sub};
 use crate::settings;
 use crate::sheet::{self, Sheet};
-use crate::style::{Declared, Paint, Style, rgb, without_icc};
+use crate::style::{self, Declared, Paint, Style, painted, without_icc};
 use crate::text::{self, unreadable};
 use crate::transform::{self, Affine, user_units};
 
@@ -66,10 +68,6 @@ mod root;
 
 /// The most XML nodes a file may have.
 const MAX_NODES: u32 = 1_000_000;
-
-/// A transform, point list or style sheet costs one work unit per this many bytes, about one per number
-/// pair.
-const BYTES_PER_UNIT: usize = 8;
 
 /// How many `href`s a gradient may follow to find its colour stops.
 const MAX_HOPS: u32 = 16;
@@ -383,13 +381,19 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             None => map,
             Some(text) => {
                 self.charge_text(text)?;
-                match transform::parse(text) {
-                    Ok(own) => map.after(own),
-                    Err(reason) => {
-                        self.unusable(
-                            &label,
-                            format!("The transform of `{label}` cannot be used ({reason}), so it is left out with everything inside it."),
+                let inside = if matches!(kind, Kind::Group | Kind::Switch) { " with everything inside it" } else { "" };
+                match transform::parse(text).map(|own| map.after(own)) {
+                    // The map around it has an inverse, or it would not be drawn: its own flattened it.
+                    Ok(map) if map.flattens() => {
+                        let message = format!(
+                            "The transform of `{label}` flattens it to a line or a point, which a viewer doesn't show, so it is left out{inside}."
                         );
+                        self.unusable(&label, message);
+                        return Ok(Context::Hidden);
+                    }
+                    Ok(map) => map,
+                    Err(reason) => {
+                        self.unusable(&label, format!("The transform of `{label}` cannot be used ({reason}), so it is left out{inside}."));
                         return Ok(Context::Hidden);
                     }
                 }
@@ -674,7 +678,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
 
     /// The colour `label`'s `part` is sewn in, if it paints. A paint server is replaced by a colour, with
     /// a warning: a gradient by its first colour, a pattern by the fallback colour written after it.
-    fn colour(&mut self, label: &str, part: &str, paint: Paint<'a>, current: Rgb) -> Result<Option<Rgb>, Diagnostic> {
+    fn colour(&mut self, label: &str, part: &str, paint: Paint<'a>, current: Option<Rgb>) -> Result<Option<Rgb>, Diagnostic> {
         let (id, fallback) = match paint {
             Paint::Plain(plain) => return Ok(plain.colour(current)),
             Paint::Server { id, fallback } => (id, fallback.and_then(|f| f.colour(current))),
@@ -685,15 +689,16 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         if kind == "linearGradient" || kind == "radialGradient" {
             let stops = self.stops(server)?;
             // A gradient of one colour, such as an Inkscape swatch, is that colour, as in a viewer.
-            if let Some((colour, false)) = stops {
+            if let Some((Some(colour), false)) = stops {
                 self.note(
                     Some(label),
                     format!("The {part} of `{label}` is a gradient; it is stitched in the gradient's first colour, {colour}."),
                     None,
                 );
             }
-            // A gradient without stops paints nothing, in a viewer too.
-            return Ok(stops.map(|(colour, _)| colour));
+            // A gradient without stops paints nothing, in a viewer too, nor does one whose stops a viewer
+            // shows none of.
+            return Ok(stops.and_then(|(colour, _)| colour));
         }
         let message = match fallback {
             Some(colour) => {
@@ -705,17 +710,21 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         Ok(fallback)
     }
 
-    /// The colour of a gradient's first stop, and whether every stop has that colour, read as it is
-    /// written, following `href`s to the gradient that has the stops.
-    fn stops(&mut self, gradient: Node<'a, 'input>) -> Result<Option<(Rgb, bool)>, Diagnostic> {
+    /// The colour of a gradient's first stop that a viewer shows, `None` when it shows none of them, and
+    /// whether every stop is shown in that colour, read as it is written, following `href`s to the gradient
+    /// that has the stops; `None` when none has any.
+    fn stops(&mut self, gradient: Node<'a, 'input>) -> Result<Option<(Option<Rgb>, bool)>, Diagnostic> {
         let mut current = gradient;
         for _ in 0..MAX_HOPS {
-            let mut found: Option<(Rgb, bool)> = None;
+            let mut found: Option<(Option<Rgb>, bool)> = None;
             for child in current.children() {
                 self.charge(1)?;
                 if self.is_svg(child) && child.tag_name().name() == "stop" {
                     let (colour, read) = self.stop_colour(child)?;
-                    found = Some(found.map_or((colour, read), |(first, same)| (first, same && read && colour == first)));
+                    found = Some(match found {
+                        None => (colour, read),
+                        Some((first, same)) => (first.or(colour), same && read && colour == first),
+                    });
                 }
             }
             if found.is_some() {
@@ -731,18 +740,23 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
     }
 
     /// A stop's `stop-color`, its `color` for `currentColor`, and whether it reads: black when it says
-    /// nothing usable, as in a viewer.
-    fn stop_colour(&mut self, stop: Node<'a, 'input>) -> Result<(Rgb, bool), Diagnostic> {
-        let black = Rgb::new(0, 0, 0);
-        let value = self.declared(stop)?.get("stop-color").map(without_icc).unwrap_or("black");
+    /// nothing usable, as in a viewer, and `None` when a viewer doesn't show it, its colour fully
+    /// transparent or its `stop-opacity` 0.
+    fn stop_colour(&mut self, stop: Node<'a, 'input>) -> Result<(Option<Rgb>, bool), Diagnostic> {
+        let black = Some(Rgb::new(0, 0, 0));
+        let declared = self.declared(stop)?;
+        if declared.get("stop-opacity").and_then(style::zero) == Some(true) {
+            return Ok((None, true));
+        }
+        let value = declared.get("stop-color").map(without_icc).unwrap_or("black");
         if !value.eq_ignore_ascii_case("currentColor") {
-            return Ok(Color::from_str(value).map_or((black, false), |color| (rgb(color), true)));
+            return Ok(Color::from_str(value).map_or((black, false), |color| (painted(color), true)));
         }
         // `color` inherits: the nearest element from the stop up that sets it.
         for node in stop.ancestors() {
             self.charge(1)?;
             if let Some(color) = self.declared(node)?.get("color").and_then(|v| Color::from_str(without_icc(v)).ok()) {
-                return Ok((rgb(color), true));
+                return Ok((painted(color), true));
             }
         }
         Ok((black, true))

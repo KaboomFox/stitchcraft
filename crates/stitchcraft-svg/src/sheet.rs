@@ -423,8 +423,8 @@ mod tests {
         let declared = sheet.declared(rect, &mut meter).unwrap();
         assert_eq!((declared.get("fill"), declared.get("stroke")), (Some("red"), Some("green")));
         // 2 classes; tested `#x`, `.a`, `.a.b` (by `a`; `b` keys nothing) and `*`, and `rect.zz` not, keyed
-        // by its class; 3 declarations from the rules and 1 from the style attribute.
-        assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 2 + 4 + 4);
+        // by its class; 3 declarations from the rules and 1 from the style attribute, whose 12 bytes cost 1.
+        assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 2 + 4 + 4 + 1);
     }
 
     #[test]

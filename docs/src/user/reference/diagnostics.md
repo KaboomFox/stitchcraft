@@ -75,6 +75,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0814`](#sc-e0814) | Error | VectorCraft line not made into a satin column |
 | [`SC-E0815`](#sc-e0815) | Error | VectorCraft's command line could not be started |
 | [`SC-E0816`](#sc-e0816) | Error | VectorCraft could not trace the picture |
+| [`SC-E0817`](#sc-e0817) | Error | VectorCraft test sheet not drawn |
 | [`SC-I0901`](#sc-i0901) | Info | Shapes digitized automatically |
 | [`SC-I0902`](#sc-i0902) | Info | Satin column can't be made; filled |
 | [`SC-W0903`](#sc-w0903) | Warning | Line too wide to fill; left out |
@@ -931,6 +932,18 @@ file named `.png` that holds something else. It fails too when it is a version w
 StitchCraft traces with: the user guide lists the versions the compatibility gate passed. Check that
 VectorCraft places the picture, or trace it with Image Trace in VectorCraft and plan the document you
 save.
+
+## SC-E0817
+
+**Error** — VectorCraft test sheet not drawn
+
+StitchCraft's Test Sheet filter draws a sheet in the middle of an artboard, the one under the
+selection or else the first. It drew nothing, because there parts of the sheet would lie more than
+10 m from the document's origin, farther than StitchCraft stitches: a machine file can't record a
+position past it, and the reader leaves objects there out (`SC-W0808`).
+
+The message names the sheet. Select an object on an artboard nearer the origin, or move the artboard
+nearer it, and draw the sheet again.
 
 ## SC-I0901
 

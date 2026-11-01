@@ -38,3 +38,7 @@ mod transform;
 
 pub use document::{Svg, read, read_with};
 pub use text::MAX_BYTES;
+
+/// Reading text costs a work unit per this many bytes, about one per number pair: a transform, a point list,
+/// a style sheet and a `style` attribute, each time it is read.
+const BYTES_PER_UNIT: usize = 8;
