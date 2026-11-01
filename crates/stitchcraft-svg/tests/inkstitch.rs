@@ -15,12 +15,14 @@ fn setting<'s>(svg: &'s stitchcraft_svg::Svg, key: &str) -> Vec<(&'s str, Option
     svg.design.elements().iter().map(|e| (e.id.as_str(), e.params.get(key))).collect()
 }
 
-/// A drawing in millimetres with the namespaces Ink/Stitch's files declare, around `body`.
+/// A drawing in millimetres with the namespaces Ink/Stitch's files declare and its current file version,
+/// as Ink/Stitch saves it (`REQ-SVG-007`), around `body`.
 fn drawing(body: &str) -> String {
     format!(
         r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
              xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:inkstitch="http://inkstitch.org/namespace"
-             width="100mm" height="100mm" viewBox="0 0 100 100">{body}</svg>"#
+             width="100mm" height="100mm" viewBox="0 0 100 100">
+             <metadata><inkstitch:inkstitch_svg_version>4</inkstitch:inkstitch_svg_version></metadata>{body}</svg>"#
     )
 }
 
@@ -152,6 +154,36 @@ fn req_svg_003_only_ink_stitch_symbols_are_commands() {
             "warning SC-W0802: `picture` is a raster image, which is not stitched; it is left out.",
         ]
     );
+}
+
+#[test]
+fn req_svg_003_ink_stitch_2_command_symbols_are_commands() {
+    // Before its file version 3, Ink/Stitch named 7 commands otherwise; its updater renames them in the
+    // files it updates, and they work as the commands they became. Read as clones, they would be named as
+    // such, with a hint that gets the symbol's drawing sewn; Ink/Stitch at d59c9ab, run as a black box,
+    // sewed the symbol where it did not update the file (`DEV-SVG-014`).
+    let starting = "warning SC-W0802: `patch` has an Ink/Stitch `starting_point` command, which StitchCraft does not apply yet. Ink/Stitch \
+                    applies it to fills and satin columns.";
+    let ending = starting.replace("starting_point", "ending_point");
+    for (old, said) in [
+        ("fill_start", Some(starting)),
+        ("fill_end-2", Some(ending.as_str())),
+        ("satin_start", None),
+        ("satin_end", None),
+        ("run_start", None),
+        ("run_end", None),
+        ("ripple_target", None),
+    ] {
+        let file = svg(drawing(&format!(
+            r##"<defs><symbol id="inkstitch_{old}"><path d="M0,0 L2,0 L1,2 Z" fill="#000"/></symbol></defs>
+                <rect id="patch" x="10" y="10" width="50" height="30" fill="red"/>
+                <path id="conn" d="M 70,60 L 40,30" style="fill:none;stroke:#000;stroke-opacity:0.5" inkscape:connector-type="polyline"
+                      inkscape:connection-start="#cmd" inkscape:connection-end="#patch"/>
+                <use id="cmd" xlink:href="#inkstitch_{old}" x="70" y="60"/>"##
+        )));
+        assert_eq!(ids(&file), ["svg:patch:fill"], "{old}");
+        assert_eq!(warnings(&file), said.into_iter().collect::<Vec<_>>(), "{old}");
+    }
 }
 
 #[test]
