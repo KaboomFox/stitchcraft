@@ -360,4 +360,4 @@ half the contour's. 2 values set the first rail's side, then the second's.
 - **Accepts:** a length from 0.1 to 25 mm, or empty (0 or less counts as empty)
 - **Default:** empty
 - **Ink/Stitch:** same key and default; StitchCraft differs:
-  - **DEV-PRM-003.** An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.
+  - **DEV-PRM-003.** An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column's deviates so. Ink/Stitch reads a manual stitch's as not set at 0 or below too, and doesn't warn.
