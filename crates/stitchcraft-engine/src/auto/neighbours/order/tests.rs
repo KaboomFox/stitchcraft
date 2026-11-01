@@ -208,6 +208,22 @@ fn a_line_waits_for_no_fill_it_borders_beyond_an_element_kept_in_its_place() {
 }
 
 #[test]
+fn req_auto_012_nothing_moves_across_an_element_kept_in_its_place_and_each_sews_once() {
+    // 0 overlaps 2 across 1, which keeps its place, and 2 and 3 both overlap 4, drawn after them: placing 0
+    // frees 2, which waits for its run all the same, after 1; and 4 waits for 3.
+    let facts: Vec<Facts> = [RED, RED, RED, BLUE, RED].iter().map(|thread| Facts { colour: thread.color, stop: false, reach: None }).collect();
+    let moving: Vec<Moving> = (0..5).map(|shape| Moving { free: true, shape }).collect();
+    let mut graph = Graph::new(5);
+    for (from, to) in [(0, 2), (2, 4), (3, 4)] {
+        graph.add(from, to);
+    }
+    let mut order = Order { facts: &facts, moving: &moving, graph, borders: Vec::new(), kept: BTreeSet::from([1]) };
+    let mut sewing = Sewing::default();
+    order.sew(&[vec![0], vec![1], vec![2, 3, 4]], &mut sewing, &mut Budget::DEFAULT.meter()).unwrap();
+    assert_eq!(sewing.order, [0, 1, 2, 3, 4]);
+}
+
+#[test]
 fn the_graph_says_what_must_sew_before_what() {
     let mut graph = Graph::new(4);
     graph.add(0, 1);
