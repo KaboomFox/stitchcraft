@@ -278,12 +278,21 @@ colour whole, over the colours under it. Sewn as drawn, either sews badly where 
 mends it in 3 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.2).
 
 1. **Background** (`REQ-AUTO-009`). The lowest shape is the picture's background when it is an automatic
-   area with other shapes drawn on it, and its outlines, its holes aside, cover the box around the design
-   to within 0.5 mm of each side. The box is the one around the defining points of every shape's path, the
-   background's own included. So a disc in the corner of a square, lowest but covering less of the box, is
-   part of the picture. The background is left out with `SC-W0906` before anything is digitized.
-   With a StitchCraft effect, it sews as that effect says. Finding it has the work budget to itself, and a
-   background that needs more is sewn, which `SC-W0906` says.
+   area with a shape on another path drawn on it, and its outlines cover the box around the design to within
+   0.5 mm of each side, its holes and notches aside. The box is the one around the defining points of every
+   shape's path, the background's own included. So a disc in the corner of a square, lowest but covering
+   less of the box, is part of the picture. A shape on its own path is the same object's: the readers make a
+   fill and its stroke 2 elements on one path, and a design of one shape with a stroke sews it. Where a
+   shape of a tightly cropped picture touches its edge, the Abutting method cuts a notch in the background
+   instead of a hole. A part of the box its outlines leave is a notch when the areas drawn on it fill it, to
+   within twice the shapes' tolerance, and it runs along the outlines at least as far as along the box's
+   sides, measured 0.5 mm inside them. A part that runs further along the sides is no notch. A disc or a
+   rounded square that reaches the sides leaves such parts in its corners, and sews as the picture, though
+   the shapes in its corners fill the rest. The cost of this rule is a background cut away along a whole
+   side, by a bar down the side say, or cut in two by a band from side to side, which is sewn. The
+   background is left out with `SC-W0906` before anything is digitized. With a StitchCraft effect, it sews
+   as that effect says. Finding it has the work budget to itself, and a background that needs more is sewn,
+   which `SC-W0906` says.
 2. **Specks** (`REQ-AUTO-008`). An automatic area, or a part of one, smaller than 1 mm² is too small to sew:
    it would sew a knot. It is merged into the automatic area it shares the longest edge with, which may be
    its own. A speck that fills a hole goes into the area around it, and no hole shows where it was. One that
@@ -510,7 +519,7 @@ It gives it 4 steps on standard input, where a picture of any size fits. They ar
 
 1. `swatch.library.load` loads the threads `stitch palette` writes for the machine as a swatch library.
 2. `file.place` places the picture's bytes, fitted inside a square `--size` millimetres across, or else
-   inside the machine's hoop, its aspect kept.
+   inside the machine's hoop 0.5 mm in from each side, its aspect kept.
 3. `imageTrace.make` traces it in colour with the library's colours as they are, at most `--colours` of
    them, by the Abutting method, so that the shapes share their edges.
 4. `imageTrace.expand` keeps the paths, without the picture.
@@ -526,7 +535,11 @@ replay doesn't need VectorCraft.
 **The picture's size.** VectorCraft places a picture at its own resolution, or 72 pixels to the inch when
 its file says none, so a logo a few hundred pixels across would sew larger than any hoop. `stitch` fits the
 picture into the machine's hoop unless `--size` gives the length of its longer side. The size is the
-picture's, its background included, and the shapes left once the background is out sew smaller.
+picture's, its background included, and the shapes left once the background is out sew smaller. Fitted to
+the hoop, the picture keeps 0.5 mm from each side: a shape along its edge sews as a satin column, whose
+stitches reach 0.4 mm past its rails, its pull compensation, from rails that may lie up to the tolerance
+shapes meet within outside the shape. Fitted to the hoop itself, a picture whose shapes reach its sides
+would sew past the hoop, which `SC-E0701` refuses.
 
 **How many colours.** Image Trace keeps at most `--colours` of the library's colours, 6 unless it says
 otherwise, as in its own panel. The count takes in the background's colour. A picture with smooth edges, or a

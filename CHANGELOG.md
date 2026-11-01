@@ -1101,6 +1101,21 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- `stitch plan picture.png` fits the picture into the machine's hoop 0.5 mm in from each side
+  (`REQ-CLI-012`). Fitted to the hoop itself, a picture whose shapes reach its sides was refused with
+  `SC-E0701`. A shape along the edge sews as a satin column, whose stitches reach 0.4 mm past it, their pull
+  compensation, so a picture 130 mm wide sewed 130.8 mm wide. Bars down the sides of a picture VectorCraft
+  0.18.0 traced now sew 129.8 mm wide in the 130 mm hoop.
+- `--auto` leaves out the background of a picture whose shapes touch its edge (`REQ-AUTO-009`). The
+  Abutting method cuts a notch in the background where a shape touches the edge, and only holes were set
+  aside, so the background was sewn whole around the shapes. A notch is set aside now when the shapes drawn
+  on the background fill it and it runs along the background at least as far as along the picture's sides.
+  The corners beside a disc or a rounded square that reaches the sides are no notches, and such a shape
+  still sews as the picture.
+- `--auto` sews a design of one shape with a fill and a stroke (`REQ-AUTO-009`). The readers make the fill and the
+  stroke 2 elements on one path, and the stroke counted as a shape drawn on the fill, which was then left
+  out as the picture's background. VectorCraft's default graphic style is a fill and a 1 pt stroke. Only
+  shapes on other paths count now.
 - CI: the desktop VectorCraft's window runs in is set up within time limits. Its `apt-get` ran for 49
   minutes on a pull request until the run was cancelled, and stalled again on the re-run. Each `apt-get`
   has a limit now, and a stalled install is tried 3 times. The jobs that open the window stop after 30

@@ -9,7 +9,7 @@ use stitchcraft_core::{Budget, Code, Diagnostic};
 use stitchcraft_engine::auto::digitized;
 use stitchcraft_engine::design::{Design, DesignSettings, Element, Shape};
 use stitchcraft_engine::normalize::region::{self, Region};
-use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, messages, planned, polylines, widened};
+use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, messages, planned, polylines, rings, widened};
 
 /// An automatic rectangle `id` from `(x0, y0)` to `(x1, y1)`.
 fn rect(id: &str, (x0, y0): (f64, f64), (x1, y1): (f64, f64)) -> Element {
@@ -385,6 +385,70 @@ fn req_auto_009_a_background_with_settings_or_alone_or_not_lowest_is_sewn() {
         assert!(ids(&out).contains(&"background"), "{case}");
         assert!(said(&diagnostics, Code::AutoBackground).is_empty(), "{case}");
     }
+}
+
+#[test]
+fn req_auto_009_a_background_notched_where_a_shape_touches_the_pictures_edge_is_left_out() {
+    let message = "warning SC-W0906: This area covers the whole design under the other shapes, so it is left out as the picture's background.";
+    // A logo touches the left side, and an abutting trace cuts the background there. Inside the margin, the
+    // notch runs 10 mm along the side and 29 mm along the background.
+    let notched = || {
+        let outline = [(0.0, 0.0), (30.0, 0.0), (30.0, 20.0), (0.0, 20.0), (0.0, 15.0), (10.0, 15.0), (10.0, 5.0), (0.0, 5.0)];
+        automatic(fill("background", &[&outline], &BLUE, &[]))
+    };
+    let (out, diagnostics) = sewn(vec![notched(), rect("logo", (0.0, 5.0), (10.0, 15.0))]);
+    assert_eq!(ids(&out), ["logo"]);
+    assert_eq!(said(&diagnostics, Code::AutoBackground), [message]);
+    // A logo that fills it but for a gap narrower than shapes still meet across, as rounding leaves between
+    // edges drawn as one, fills it; one with a wider gap doesn't.
+    for (gap, background) in [(0.5 * TOUCHING, false), (2.0 * TOUCHING, true)] {
+        let (out, _) = sewn(vec![notched(), rect("logo", (0.0, 5.0 + gap), (10.0 - gap, 15.0 - gap))]);
+        assert_eq!(ids(&out).contains(&"background"), background, "a gap of {gap} mm: {:?}", ids(&out));
+    }
+    // A logo in a corner runs as far along the box's sides as along the background: 17 mm each.
+    let cornered = automatic(fill("background", &[&[(10.0, 0.0), (30.0, 0.0), (30.0, 20.0), (0.0, 20.0), (0.0, 8.0), (10.0, 8.0)]], &BLUE, &[]));
+    let (out, _) = sewn(vec![cornered, rect("logo", (0.0, 0.0), (10.0, 8.0))]);
+    assert_eq!(ids(&out), ["logo"]);
+    // A notch that no area drawn on the shape fills is part of the shape, which sews.
+    let (out, diagnostics) = sewn(vec![notched(), rect("logo", (15.0, 5.0), (25.0, 15.0))]);
+    assert!(ids(&out).contains(&"background"), "{:?}", ids(&out));
+    assert!(said(&diagnostics, Code::AutoBackground).is_empty());
+}
+
+#[test]
+fn req_auto_009_a_lowest_shape_that_leaves_the_corners_to_the_shapes_in_them_is_sewn() {
+    // An octagon, a rectangle with its corners cut 4 mm along each side, reaches the box's sides, and an
+    // abutting trace makes each corner a shape of its own. Inside the margin, a corner runs 6 mm along the
+    // sides and 4.2 mm along the octagon: the octagon is part of the picture, as a disc or a rounded square
+    // is.
+    let octagon = [(4.0, 0.0), (26.0, 0.0), (30.0, 4.0), (30.0, 16.0), (26.0, 20.0), (4.0, 20.0), (0.0, 16.0), (0.0, 4.0)];
+    let corner = |id: &str, corner: [(f64, f64); 3]| automatic(fill(id, &[&corner], &RED, &[]));
+    let elements = vec![
+        automatic(fill("badge", &[&octagon], &BLUE, &[])),
+        corner("top left", [(0.0, 0.0), (4.0, 0.0), (0.0, 4.0)]),
+        corner("top right", [(30.0, 0.0), (30.0, 4.0), (26.0, 0.0)]),
+        corner("bottom right", [(30.0, 20.0), (26.0, 20.0), (30.0, 16.0)]),
+        corner("bottom left", [(0.0, 20.0), (0.0, 16.0), (4.0, 20.0)]),
+    ];
+    let (out, diagnostics) = sewn(elements);
+    assert!(ids(&out).contains(&"badge"), "{:?}", ids(&out));
+    assert!(said(&diagnostics, Code::AutoBackground).is_empty());
+}
+
+#[test]
+fn req_auto_009_a_design_of_one_area_with_its_own_stroke_sews_it() {
+    // A shape with a fill and a stroke is 2 elements on one path, as the readers make it: its stroke is no
+    // shape drawn on its fill.
+    let outline: &[(f64, f64)] = &[(0.0, 0.0), (30.0, 0.0), (30.0, 20.0), (0.0, 20.0)];
+    let patch = || automatic(fill("patch:fill", &[outline], &BLUE, &[]));
+    let stroke = || automatic(widened(along("patch:stroke", rings(&[outline]), &RED, &[]), 0.35));
+    let (out, diagnostics) = sewn(vec![patch(), stroke()]);
+    assert!(ids(&out).contains(&"patch:fill"), "{:?}", ids(&out));
+    assert!(said(&diagnostics, Code::AutoBackground).is_empty());
+    // A shape on a path of its own drawn on it makes it the background, and its stroke sews.
+    let (out, diagnostics) = sewn(vec![patch(), stroke(), rect("logo", (5.0, 5.0), (15.0, 15.0))]);
+    assert!(!ids(&out).contains(&"patch:fill") && ids(&out).contains(&"patch:stroke"), "{:?}", ids(&out));
+    assert_eq!(said(&diagnostics, Code::AutoBackground).len(), 1);
 }
 
 #[test]
