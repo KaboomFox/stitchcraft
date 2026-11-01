@@ -13,6 +13,8 @@
 //! - the ADR index disagrees with the ADR files;
 //! - an image has no alt text, or is not an image a shot in `docs/shots.toml` declares
 //!   (`docs/src/design/docs-pipeline.md`);
+//! - a stitch type the engine sews has no page in the user's guide that shows it in pictures
+//!   ([`crate::stitch_pages`]);
 //! - a help page a VectorCraft dialog links to is not a page of the book, or has no heading its anchor names
 //!   ([`help_pages`], `REQ-VC-012`);
 //! - a long sentence is on two pages, or a path of the repository named in inline code does not exist
@@ -27,7 +29,9 @@ use stitchcraft_vc_plugin::{Module, dialog};
 
 use crate::markdown::{self, Link};
 use crate::util::{self, Findings};
-use crate::{conformance, contract_page, design_map, deviations, docs_audit, examples, figures, param_pages, reference_pages, shots};
+use crate::{
+    book, conformance, contract_page, design_map, deviations, docs_audit, examples, figures, param_pages, reference_pages, shots, stitch_pages,
+};
 
 const DOCS_SRC: &str = "docs/src";
 const DIAGNOSTICS_PAGE: &str = "docs/src/design/diagnostics.md";
@@ -62,6 +66,7 @@ pub fn run(check_only: bool) -> Result<(), String> {
     allocations(&root, &mut findings)?;
     adr_index(&root, &mut findings)?;
     images(&root, &pages, &mut findings)?;
+    stitch_pages::check(&root, &pages, &mut findings)?;
     help_pages(&root, &mut findings);
     docs_audit::check(&root, &pages, &mut findings);
     design_map::check(&root, &pages, &mut findings);
@@ -126,7 +131,8 @@ fn generated_pages(root: &Path, check_only: bool, findings: &mut Findings) -> Re
     Ok(())
 }
 
-/// Every page under `docs/src` is linked from `SUMMARY.md`, and every link there exists.
+/// Every page under `docs/src` is linked from `SUMMARY.md`, and every link there exists. The page for an
+/// address the site has no page for is the exception: mdBook makes `404.html` from it, and it is no chapter.
 fn summary(root: &Path, findings: &mut Findings) -> Result<(), String> {
     let src = root.join(DOCS_SRC);
     let summary = util::read(&src.join("SUMMARY.md"))?;
@@ -136,8 +142,9 @@ fn summary(root: &Path, findings: &mut Findings) -> Result<(), String> {
             findings.error(format!("SUMMARY.md links to a missing page: {}", util::rel(path)));
         }
     }
+    let not_found = book::Settings::read(root)?.not_found;
     for page in util::files(&src, &["md"]) {
-        if page.file_name().is_some_and(|n| n == "SUMMARY.md") {
+        if page.file_name().is_some_and(|n| n == "SUMMARY.md") || page == not_found {
             continue;
         }
         if !listed.contains(&page) {

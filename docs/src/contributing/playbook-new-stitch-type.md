@@ -17,7 +17,10 @@ gates catch anything you miss.
    each).
 6. **Make the cases pass.** Run `cargo xtask conformance --filter <area>`; switch the requirements to
    `active`.
-7. **Docs.** `cargo xtask docs` regenerates the parameter pages; write the user-facing page in
-   `docs/src/user/` (what it is for, when to use it, two or three declared shots); run `cargo xtask shots`.
+7. **Docs.** `cargo xtask docs` regenerates the parameter pages. Write the user-facing page in
+   `docs/src/user/stitches/` (what it is for, when to use it, two or three declared shots) and run
+   `cargo xtask shots`. The page claims the type under its title with `<!-- stitch-types: <id> -->`.
+   Once the engine sews the type, `cargo xtask docs --check` fails until one page claims it and shows
+   at least two pictures.
 8. **Gate.** `cargo xtask ci`, then open the PR with the roadmap step id.
 9. **Sew-out.** If the type is new to the machine, list it for the next machine checkpoint (TS-11).

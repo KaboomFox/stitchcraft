@@ -1,5 +1,7 @@
 # S-stitch
 
+<!-- stitch-types: s_stitch -->
+
 An S-stitch is a satin column sewn one way at a time. At each step one stitch crosses the band, the next
 crosses back, and between them the needle runs a short way along an edge. Its thread draws S's laid end
 to end. Split by a longest stitch, its stitches lie across the band in rows that follow it, the look

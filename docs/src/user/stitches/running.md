@@ -1,5 +1,7 @@
 # Running stitch
 
+<!-- stitch-types: running_stitch, manual_stitch -->
+
 A running stitch is a line of single stitches along a path. StitchCraft sews each stroke of an SVG design
 with it, unless the stroke's `stroke_method` names another stitch. Use it for outlines, fine details and
 lettering at small sizes.

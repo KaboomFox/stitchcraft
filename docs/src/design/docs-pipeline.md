@@ -200,13 +200,24 @@ written again. Pages show what the command prints today.
   The 14 such links on the site were broken until 2026-11-01. A doc that names a `cargo xtask` subcommand that does not exist
   fails it too: we found that drift in VectorCraft's own `AGENTS.md`. Ids must be in their files, `REQ-…`
   and `DEV-…` alike, and an `SC-…` code registered once its milestone is done. An image must be one a shot
-  writes, with alt text.
+  writes, with alt text. Each stitch type the engine sews needs one page in `docs/src/user/stitches/`
+  that shows at least two pictures. The page claims its types by their Ink/Stitch ids, on a line of
+  its own: `<!-- stitch-types: running_stitch, manual_stitch -->`. The check plans an element of each
+  stitch type, and each type the engine sews needs its page, so a new stitch type brings one. `UNSHOWN`
+  in `xtask/src/stitch_pages.rs` lists the types sewn before the check, whose pages roadmap step M13.11
+  writes. Each is a warning until then, and an error once its page exists.
 - `cargo xtask conformance --check` fails when requirements and cases disagree, or a fixture has no row
   in the fixtures index.
 - `cargo xtask shots --check` fails for a declared image that is missing or has no alt text. It also
   regenerates each `stitch` image and compares it with the committed file, which must come out byte for
   byte the same. It checks VectorCraft's shots' declarations without running VectorCraft.
-- `mdbook build docs` fails when the book does not build.
+- `cargo xtask book` builds the book with mdBook and reads every page it made, `print.html` included.
+  It fails when a link or an image leads to no file of the book, or an `#anchor` to no id of its page.
+  A link to the repository's files on GitHub, on `main`, must name a file or folder of the checkout. The
+  "suggest an edit" link of each page is such a link, and until 2026-11-01 every one named
+  `docs/src/src/<page>.md`, which isn't a file. The links of the 404 page start from its `<base href>`, as
+  a browser's do. So the 404 page has no heading: mdBook links each heading to itself, and from the 404
+  page that link would lead to the first page.
 - `cargo test --doc` fails when a Rust snippet does not compile. Command-line examples are generated
   pages, which `docs --check` covers.
 - `typos` fails on a misspelling (allow-list in `typos.toml`).
@@ -241,7 +252,8 @@ per `stitch` shot of each sheet, so a new sheet gets its picture by declaring a 
 
 ## Publishing
 
-- Push to `main` → build and publish to `/dev/` on GitHub Pages.
+- Push to `main` → build and publish to `/dev/` on GitHub Pages. The book is built with `site-url` set
+  to where it is published, and its 404 page answers for every address of the site that has no page.
 - Tag `vX.Y.Z` → publish to `/vX.Y/` and point `/latest/` at it. Older versions stay online.
 - Every page shows the version it documents and links to the same page in `/dev/`.
 

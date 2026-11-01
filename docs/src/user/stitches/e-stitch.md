@@ -1,5 +1,7 @@
 # E-stitch
 
+<!-- stitch-types: e_stitch -->
+
 An E-stitch edges appliqué. A row of stitches runs along one edge of a band, its spine, and at each step
 a spike reaches across the band and comes back, like a row of E's laid end to end. It is the blanket
 stitch, which holds an appliqué's raw edge down with far less thread than a satin column. Ink/Stitch's

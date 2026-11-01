@@ -5,6 +5,17 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- `cargo xtask book` builds the book with mdBook and checks the pages it made, which are what the site
+  publishes. A link or an image must lead to a file of the book, and an `#anchor` to an id of its page. A link
+  to the repository's files on GitHub, on `main`, must name a file of the checkout, as each page's edit link
+  does. The docs workflow and the `book` gate of `cargo xtask ci` run it. On the site as published from
+  ce2fcf2f it reports 104 problems, all fixed now: the edit links of the 96 pages, the links to 7 folders'
+  `README.html` and the 404 page's link to its own heading.
+- Each stitch type the engine sews has a page in the user's guide that shows it in at least two pictures, or
+  `cargo xtask docs --check` fails. A page claims its types with `<!-- stitch-types: … -->`. The check plans
+  an element of each stitch type, and each type the engine sews needs its page, so a new stitch type brings
+  one. Satin columns and tatami fills, sewn before the check, wait for theirs in roadmap step M13.11, and
+  the check lists them as warnings until then.
 - The Ink/Stitch differential sews the TS-13 sheets (`REQ-AUTO-021`). Ink/Stitch can't choose a picture's
   stitches, but it can sew what StitchCraft chose. An `inkstitch` case may name a test sheet now. Ink/Stitch
   then sews the elements StitchCraft sews it with, written as an SVG file with their parameters
@@ -1137,6 +1148,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- The "suggest an edit" link of each page of the docs site opens the page's file on GitHub. mdBook puts the
+  page's path from `docs/` for `{path}` in `edit-url-template`, `src/` included, and the template added
+  another `src/`, so each of the 96 links named `docs/src/src/<page>.md`, which isn't a file.
+- The docs site's 404 page works where it is published. Its links start from `site-url`, which was `/`, the
+  root of the Pages domain, and is now set to the book's folder when the book is published. It answers for
+  every address of the site without a page, not only those under `dev/`, and has no heading, whose link
+  to itself would have led to the first page.
 - The docs site's links to a section's first page work (14 of them, such as the user guide's links to its
   stitch types, how-tos and reference). mdBook publishes a folder's `README.md` as its `index.html` but left
   each link pointing at `README.html`. The pages link to the folder now, and `cargo xtask docs --check`
