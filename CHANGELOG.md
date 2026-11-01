@@ -1137,6 +1137,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- The docs site's links to a section's first page work (14 of them, such as the user guide's links to its
+  stitch types, how-tos and reference). mdBook publishes a folder's `README.md` as its `index.html` but left
+  each link pointing at `README.html`. The pages link to the folder now, and `cargo xtask docs --check`
+  fails a page of the book that links to a `README.md`, checking a folder's anchors against its
+  `README.md`.
 - The copies of an object's path the VectorCraft reader makes, one for each of its fills and strokes, come
   to at most 32 bytes for each byte of JSON read, and a file whose copies come to more is refused with
   `SC-E0806`. The budget counted each copy as work, so 4 MB drawing 2,500 fills on a path of 200,000

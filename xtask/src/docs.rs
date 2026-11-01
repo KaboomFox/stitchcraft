@@ -149,9 +149,15 @@ fn summary(root: &Path, findings: &mut Findings) -> Result<(), String> {
 
 /// Relative links and anchors resolve, pages inside `docs/src` link only inside it, and included files
 /// exist (mdBook leaves a missing one's directive in the page and builds anyway).
+///
+/// A page of the book links to a section's first page by its folder, never by its `README.md`. mdBook
+/// publishes a folder's `README.md` as its `index.html`, but leaves a link that names `README.md` pointing at
+/// `README.html`, which the site doesn't have. A link to the folder is the folder's `README.md` on GitHub and
+/// its `index.html` in the book, so its anchor is checked against the `README.md`, which it must have.
+/// `SUMMARY.md` names each section's `README.md`, as mdBook needs, and a page outside the book may too.
 fn check_links(root: &Path, path: &Path, text: &str, findings: &mut Findings) {
     let src = root.join(DOCS_SRC);
-    let in_book = path.starts_with(&src);
+    let in_book = path.starts_with(&src) && path.file_name().is_none_or(|name| name != "SUMMARY.md");
     let dir = path.parent().unwrap_or(root);
     for Link { line, target, .. } in markdown::links(text) {
         let here = format!("{}:{line}", util::rel(path));
@@ -170,12 +176,26 @@ fn check_links(root: &Path, path: &Path, text: &str, findings: &mut Findings) {
         if in_book && !normalized(&resolved).starts_with(normalized(&src)) {
             findings.error(format!("{here}: `{target}` leaves docs/src; the published book cannot follow it"));
         }
+        if in_book && resolved.file_name().is_some_and(|name| name == "README.md") {
+            let folder = file_part.strip_suffix("README.md").filter(|f| !f.is_empty()).unwrap_or("./");
+            let folder = anchor.map_or_else(|| folder.to_string(), |a| format!("{folder}#{a}"));
+            findings.error(format!(
+                "{here}: `{target}` names a README.md, which the book publishes as its folder's index.html, and the link would point \
+                 at README.html: link to its folder, `{folder}`"
+            ));
+        }
+        // The page a link to a folder shows.
+        let page = normalized(&if resolved.is_dir() { resolved.join("README.md") } else { resolved });
+        if in_book && !page.is_file() {
+            findings.error(format!("{here}: `{target}` is a folder without a README.md, so the book has no page there"));
+            continue;
+        }
         if let Some(anchor) = anchor
-            && resolved.extension().is_some_and(|e| e == "md")
+            && page.extension().is_some_and(|e| e == "md")
         {
-            let target_text = if resolved == path { text.to_string() } else { std::fs::read_to_string(&resolved).unwrap_or_default() };
+            let target_text = if page == normalized(path) { text.to_string() } else { std::fs::read_to_string(&page).unwrap_or_default() };
             if !markdown::heading_ids(&target_text).contains(anchor) {
-                findings.error(format!("{here}: no heading for anchor `#{anchor}` in {}", util::rel(&resolved)));
+                findings.error(format!("{here}: no heading for anchor `#{anchor}` in {}", util::rel(&page)));
             }
         }
     }
@@ -434,6 +454,41 @@ fn help_page(root: &Path, url: &str) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_page_of_the_book_links_to_a_sections_first_page_by_its_folder() {
+        // mdBook publishes a folder's README.md as its index.html, and leaves a link that names README.md
+        // pointing at README.html, which isn't there. A link to the folder works in the book and on GitHub.
+        let root = util::root();
+        let page = root.join(DOCS_SRC).join("user/stitches/running.md");
+        let found = |text: &str| {
+            let mut findings = Findings::default();
+            check_links(&root, &page, text, &mut findings);
+            findings.errors
+        };
+        let readme = found("[parameters](README.md#setting-parameters) and [how-tos](../how-to/README.md)");
+        assert_eq!(readme.len(), 2, "{readme:?}");
+        assert!(
+            readme[0].contains("`README.md#setting-parameters` names a README.md")
+                && readme[0].ends_with("link to its folder, `./#setting-parameters`"),
+            "{readme:?}"
+        );
+        assert!(readme[1].ends_with("link to its folder, `../how-to/`"), "{readme:?}");
+        // A folder's link is checked as its README.md: its anchors, and that it has one.
+        assert_eq!(found("[parameters](./#setting-parameters) and [how-tos](../how-to/)"), Vec::<String>::new());
+        let anchor = found("[parameters](./#no-such-heading)");
+        assert!(
+            anchor.len() == 1 && anchor[0].contains("no heading for anchor `#no-such-heading` in docs/src/user/stitches/README.md"),
+            "{anchor:?}"
+        );
+        let bare = found("[pictures](../../images/)");
+        assert!(bare.len() == 1 && bare[0].contains("is a folder without a README.md"), "{bare:?}");
+        // SUMMARY.md names each section's README.md, as mdBook needs, and a page outside the book may too.
+        let mut findings = Findings::default();
+        check_links(&root, &root.join(DOCS_SRC).join("SUMMARY.md"), "[Stitch types](user/stitches/README.md)", &mut findings);
+        check_links(&root, &root.join("README.md"), "[docs](docs/src/README.md)", &mut findings);
+        assert_eq!(findings.errors, Vec::<String>::new());
+    }
 
     #[test]
     fn req_vc_012_each_help_page_a_dialog_links_to_is_a_heading_of_the_book() {

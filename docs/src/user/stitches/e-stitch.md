@@ -13,7 +13,7 @@ the band.
 In VectorCraft, join the 2 rails with Object › Compound Path › Make and apply the StitchCraft Satin
 effect to them, with its `satin_method` set to `e_stitch`. The effect shows its stitches, and
 `stitch export` sews them. An SVG file's Ink/Stitch settings are read from milestone M8
-([setting parameters](README.md#setting-parameters)).
+([setting parameters](./#setting-parameters)).
 
 The pictures are drawn from `docs/fixtures/e-stitch.svg`, a curved band 4 mm wide.
 

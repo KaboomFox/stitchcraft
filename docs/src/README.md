@@ -17,9 +17,9 @@ How it is built:
 
 ## Where to go
 
-- **Embroidering?** Start with the [user guide](user/README.md) and [embroidery basics](user/explanation/embroidery-basics.md).
+- **Embroidering?** Start with the [user guide](user/) and [embroidery basics](user/explanation/embroidery-basics.md).
 - **Building StitchCraft?** Read the [technical design](design/tdd.md), then the [roadmap](plan/roadmap.md).
-- **Contributing?** See [contributing](contributing/README.md).
+- **Contributing?** See [contributing](contributing/).
 
 > **Status:** StitchCraft sews the strokes of an SVG design and writes PES and DST files. A stroke is
 > sewn in running stitch or manual stitch, with bean stitch where it is set. Milestone M4 is under way:

@@ -194,7 +194,7 @@ A crash becomes a regression test next to the code it found a bug in, before the
 
 ### L2 — Generator properties (every PR)
 
-Property tests per generator ([algorithms](algorithms/README.md)), run over:
+Property tests per generator ([algorithms](algorithms/)), run over:
 
 - hand-written cases (the shapes people actually draw: letters, circles, leaves, rings, stars);
 - the **degenerate corpus** (zero-area, hair-thin, self-touching, collinear, duplicate points, single

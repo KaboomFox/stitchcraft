@@ -194,7 +194,10 @@ written again. Pages show what the command prints today.
 
 - `cargo xtask docs --check` fails for a generated page that is stale or left over, and a page missing
   from `SUMMARY.md`. A broken relative link, `#anchor` or included file fails it, with ids made as mdBook
-  makes them, smart punctuation included. A doc that names a `cargo xtask` subcommand that does not exist
+  makes them, smart punctuation included. So does a page of the book that links to a `README.md`. mdBook
+  publishes a folder's `README.md` as its `index.html`, but leaves the link pointing at `README.html`,
+  which the site doesn't have. A page links to the folder instead (`../stitches/`, `./#setting-parameters`).
+  The 14 such links on the site were broken until 2026-11-01. A doc that names a `cargo xtask` subcommand that does not exist
   fails it too: we found that drift in VectorCraft's own `AGENTS.md`. Ids must be in their files, `REQ-…`
   and `DEV-…` alike, and an `SC-…` code registered once its milestone is done. An image must be one a shot
   writes, with alt text.

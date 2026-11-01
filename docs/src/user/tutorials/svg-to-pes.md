@@ -74,4 +74,4 @@ scripts.
 
 ## Next
 
-[Stitch types](../stitches/README.md) shows what each stitch type does and the parameters that change it.
+[Stitch types](../stitches/) shows what each stitch type does and the parameters that change it.
