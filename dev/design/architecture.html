@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9fb437c8.js";
+            window.path_to_searchindex_js = "../searchindex-12ec9719.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -227,7 +227,7 @@ tools: stitchcraft-xtask (`xtask/`, run as `cargo xtask`)
 <tr><td><code>stitchcraft-svg</code></td><td>L3</td><td>SVG → <code>Design</code> (geometry, styles, <code>inkstitch:*</code> attributes, commands), plan → SVG</td><td>contain stitch logic</td></tr>
 <tr><td><code>stitchcraft-vectorcraft</code></td><td>L3</td><td><code>.vectorcraft</code> → <code>Design</code> (commands in names included), effect records ↔ <code>ParamSet</code>, plug-in JSON objects</td><td>contain stitch logic</td></tr>
 <tr><td><code>stitchcraft-testkit</code></td><td>test</td><td>fixtures, <code>proptest</code> strategies (from the registry), invariant assertions</td><td>be a normal dependency</td></tr>
-<tr><td><code>stitchcraft-cli</code></td><td>app</td><td>the <code>stitch</code> command; all filesystem access</td><td>contain engine logic</td></tr>
+<tr><td><code>stitchcraft-cli</code></td><td>app</td><td>the <code>stitch</code> command; all filesystem access, and the one program StitchCraft starts, VectorCraft’s command line, which traces a picture (<a href="adr/0015-pictures-traced-by-vectorcraft.html">ADR-0015</a>)</td><td>contain engine logic</td></tr>
 <tr><td><code>stitchcraft-vc-plugin</code></td><td>app</td><td>VectorCraft ABI v1 shim + plug-in manifests</td><td>contain engine logic; <code>unsafe</code> outside <code>abi.rs</code></td></tr>
 <tr><td><code>stitchcraft-xtask</code></td><td>tools</td><td>gates (<code>ci</code>, <code>layers</code>, <code>docs</code>, <code>cleanroom</code>, …), generators, compatibility runs; works from its own folder, on StitchCraft’s packages only (<a href="adr/0011-movable-into-vectorcraft.html">ADR-0011</a>)</td><td>ship to users</td></tr>
 </tbody>
@@ -303,7 +303,7 @@ pub struct Generation {
 <tr><td><code>stitchcraft-svg</code></td><td>SVG document (+ <code>inkstitch:*</code> attributes, command symbols)</td><td><code>Design</code></td></tr>
 <tr><td><code>stitchcraft-vectorcraft</code></td><td><code>.vectorcraft</code> JSON (+ commands in names), plug-in input objects, effect records</td><td><code>Design</code> / <code>Element</code></td></tr>
 <tr><td><code>stitchcraft-vc-plugin</code></td><td>ABI v1 call (JSON in linear memory)</td><td><code>generate</code> → preview geometry JSON</td></tr>
-<tr><td><code>stitchcraft-cli</code></td><td>files and flags</td><td><code>plan</code> → formats/render/report</td></tr>
+<tr><td><code>stitchcraft-cli</code></td><td>files and flags, a picture traced by VectorCraft’s command line</td><td><code>plan</code> → formats/render/report</td></tr>
 </tbody>
 </table>
 </div>

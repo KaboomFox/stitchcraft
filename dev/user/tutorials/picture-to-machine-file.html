@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-9fb437c8.js";
+            window.path_to_searchindex_js = "../../searchindex-12ec9719.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-b793f3ad.js"></script>
@@ -252,6 +252,18 @@ shows. The document now says it is digitized automatically, so <strong>File › 
 machine file without <strong>Digitize automatically</strong>, as does <code>stitch export</code> without <code>--auto</code>
 (<a href="../how-to/embroider-a-vectorcraft-design.html">how</a>). Trace again and the group is new, without the
 effect: apply it after the last trace.</p>
+<h3 id="from-the-command-line"><a class="header" href="#from-the-command-line">From the command line</a></h3>
+<p>With VectorCraft’s command line installed (<a href="../install.html#vectorcrafts-command-line">install</a>), <code>stitch</code>
+takes the steps above itself:</p>
+<pre><code class="language-sh">stitch plan badge.png -o badge.pes --traced badge.vectorcraft
+</code></pre>
+<p>It traces the picture in your machine’s threads with VectorCraft’s command line, as you do in steps 1 and
+2. Then it digitizes the shapes as <code>--auto</code> does. It fits the picture into your hoop unless <code>--size</code> gives the
+length of its longer side in millimetres, background included. Image Trace keeps at most <code>--colours</code> colours,
+6 unless you say otherwise. Count the background’s colour too: the badge has 3 colours on white, so 4 keeps
+any colour between them out. <code>--traced</code> keeps the document VectorCraft traced, which you can open in
+VectorCraft to correct the trace and then digitize as above. When <code>stitch</code> can’t start VectorCraft’s command
+line, it says so with <code>SC-E0815</code>, and you trace the picture in VectorCraft instead.</p>
 <h2 id="4-sew-it"><a class="header" href="#4-sew-it">4. Sew it</a></h2>
 <p>Load <code>traced-badge.pes</code> and sew it as in <a href="first-sew-out.html#3-load-it-on-the-machine">your first sew-out</a>.
 Thread each colour as the machine names it, when it stops for it.</p>

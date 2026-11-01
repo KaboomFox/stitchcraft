@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9fb437c8.js";
+            window.path_to_searchindex_js = "../searchindex-12ec9719.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -259,7 +259,10 @@ says, with <code>fails</code>. VectorCraft stops a run at a step that fails, so 
 names its file. A run installs a module whose manifest sets a heavy budget, Stroke to Satin’s, with
 <code>allowHeavy</code>, as the user allows it. A step’s parameter written <code>{ stitchcraft = "…" }</code> is replaced by what
 StitchCraft makes of the name, the threads <code>stitch palette</code> writes or a test picture drawn flat as a PNG, so
-that what VectorCraft traces is StitchCraft’s own. The checks are StitchCraft’s, since VectorCraft’s pictures change from version to
+that what VectorCraft traces is StitchCraft’s own. A run can be <code>stitch plan</code> with its arguments instead,
+which traces a picture with the <code>vectorcraft-cli</code> under test. It runs in the gate’s own process, its files in
+the scenario’s folder, and must end well. A run’s <code>files</code> are written there first, made by StitchCraft from
+their names, and the files <code>stitch</code> writes count as exported. The checks are StitchCraft’s, since VectorCraft’s pictures change from version to
 version and what sews must not:</p>
 <div class="table-wrapper">
 <table>
@@ -276,6 +279,7 @@ version and what sews must not:</p>
 <tr><td><code>settings</code></td><td>a 1 in square given the fill effect and exported to PES, then the Design Settings filter run with the 4 × 4 in hoop and a shortest stitch of 1.5 mm, and the square saved and exported to PES and DST; then the filter run with the small hoop, and the square saved and exported to PES</td><td>each document keeps what the filter was run with, each file is the one <code>stitch export</code> writes, the PES file differs from the one before the filter, and the small hoop’s export fails with <code>SC-E0701</code> (<code>REQ-VC-013</code>)</td></tr>
 <tr><td><code>stroke-to-satin</code></td><td>an S curve, a V and a circle with strokes 3 mm wide and the satin effect, saved and drawn, then made into columns by Stroke to Satin, saved, drawn and exported to PES</td><td>the columns sew as the lines did, 3 satin columns in the strokes’ colour, and the file is the one <code>stitch export</code> writes (<code>REQ-VC-014</code>)</td></tr>
 <tr><td><code>testsheets</code></td><td>each sheet drawn as a design, drawn by Test Sheet into a new document, then saved and exported to PES; the TS-13 sheets with StitchCraft Auto installed</td><td>each document sews as the sheet’s design moved by whole millimetres to the middle of its artboard, and each file is the one <code>stitch export</code> writes. The Auto effect digitizes the TS-13 sheets’ shapes automatically (<code>REQ-VC-015</code>, <code>REQ-VC-016</code>)</td></tr>
+<tr><td><code>picture</code></td><td>the badge drawn flat as a PNG, which <code>stitch plan badge.png --traced traced.vectorcraft</code> traces with VectorCraft’s command line, its steps on standard input. With the reference machine’s threads loaded as a swatch library, the picture is fitted into the hoop and traced in colour with the library’s colours by the Abutting method, and its paths are kept and saved</td><td><code>stitch</code> ends well, and the document it traced, read with <code>--auto</code>, sews the badge’s 3 threads, each a thread of the palette, the white round the badge left out as the background (<code>REQ-CLI-012</code>, <code>REQ-AUTO-001</code>, <code>REQ-AUTO-009</code>)</td></tr>
 <tr><td><code>trace</code></td><td>the reference machine’s threads, as <code>stitch palette</code> writes them, loaded as a swatch library, a badge drawn flat in 3 of them on white placed, traced in colour with the library’s colours by the Abutting method, its paths kept, and saved; then StitchCraft’s Auto effect applied to the traced group, saved, and drawn</td><td>read with <code>--auto</code>, every shape is automatic, the white round the badge is left out as the background, and the badge sews its 3 threads, each a thread of the palette; with the Auto effect, so without <code>--auto</code>, and drawing it doesn’t leave a last error (<code>REQ-CLI-011</code>, <code>REQ-AUTO-001</code>, <code>REQ-AUTO-009</code>, <code>REQ-VC-016</code>)</td></tr>
 </tbody>
 </table>

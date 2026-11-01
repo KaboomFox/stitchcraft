@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-9fb437c8.js";
+            window.path_to_searchindex_js = "../../searchindex-12ec9719.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-b793f3ad.js"></script>
@@ -256,6 +256,8 @@
 <tr><td><a href="#sc-w0812"><code>SC-W0812</code></a></td><td>Warning</td><td>VectorCraft design setting ignored</td></tr>
 <tr><td><a href="#sc-e0813"><code>SC-E0813</code></a></td><td>Error</td><td>VectorCraft too old for the filter</td></tr>
 <tr><td><a href="#sc-e0814"><code>SC-E0814</code></a></td><td>Error</td><td>VectorCraft line not made into a satin column</td></tr>
+<tr><td><a href="#sc-e0815"><code>SC-E0815</code></a></td><td>Error</td><td>VectorCraft’s command line could not be started</td></tr>
+<tr><td><a href="#sc-e0816"><code>SC-E0816</code></a></td><td>Error</td><td>VectorCraft could not trace the picture</td></tr>
 <tr><td><a href="#sc-i0901"><code>SC-I0901</code></a></td><td>Info</td><td>Shapes digitized automatically</td></tr>
 <tr><td><a href="#sc-i0902"><code>SC-I0902</code></a></td><td>Info</td><td>Satin column can’t be made; filled</td></tr>
 <tr><td><a href="#sc-w0903"><code>SC-W0903</code></a></td><td>Warning</td><td>Line too wide to fill; left out</td></tr>
@@ -820,6 +822,25 @@ from, or can’t be used, its rails can’t be made or would leave parts of it o
 or rungs, as one whose rails cross each other is.</p>
 <p>The message names the object. Select the lines, give the path a stroke as wide as the column, draw
 that column with its 2 rails, or leave the object out of the selection.</p>
+<h2 id="sc-e0815"><a class="header" href="#sc-e0815">SC-E0815</a></h2>
+<p><strong>Error</strong> — VectorCraft’s command line could not be started</p>
+<p><code>stitch plan</code> and <code>stitch export</code> trace a picture, a PNG or JPEG file, with VectorCraft’s command
+line, <code>vectorcraft-cli</code>, which VectorCraft publishes with each release. It could not be started: it
+isn’t on the <code>PATH</code>, or the program <code>--vectorcraft-cli</code> names isn’t there or can’t be run. Nothing was
+written but the report.</p>
+<p>The message names the program and why it didn’t start. Install VectorCraft’s command line from
+VectorCraft’s releases, and put it on the <code>PATH</code> or name it with <code>--vectorcraft-cli</code>. Or trace the
+picture with Image Trace in VectorCraft, as the tutorial “From a picture to a machine file” does, and
+plan the document you save.</p>
+<h2 id="sc-e0816"><a class="header" href="#sc-e0816">SC-E0816</a></h2>
+<p><strong>Error</strong> — VectorCraft could not trace the picture</p>
+<p>VectorCraft’s command line ran to trace a picture for <code>stitch plan</code> or <code>stitch export</code>, and it failed
+or saved no document. Nothing was written but the report.</p>
+<p>The message ends with what VectorCraft said. It fails on a file it can’t read as a picture, such as a
+file named <code>.png</code> that holds something else. It fails too when it is a version without the commands
+StitchCraft traces with: the user guide lists the versions the compatibility gate passed. Check that
+VectorCraft places the picture, or trace it with Image Trace in VectorCraft and plan the document you
+save.</p>
 <h2 id="sc-i0901"><a class="header" href="#sc-i0901">SC-I0901</a></h2>
 <p><strong>Info</strong> — Shapes digitized automatically</p>
 <p><code>--auto</code>, or StitchCraft’s Auto effect in VectorCraft, digitized the design’s shapes that have no

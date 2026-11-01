@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9fb437c8.js";
+            window.path_to_searchindex_js = "../searchindex-12ec9719.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -406,7 +406,9 @@ one for a path with the extension it lists. VectorCraft gives the exporter the d
 <code>.vectorcraft</code> file’s JSON, as <code>document.save</code> writes it but without the data of images of 8 KiB or more,
 with the parameters of the dialog it shows when the file is picked, and the file’s extension and name. The
 exporter returns the file in base64, with warnings for the user, or declines with a message, and then
-nothing is written (VectorCraft’s <code>docs/plugins.md</code>, Exporters).</p>
+nothing is written (VectorCraft’s <code>docs/plugins.md</code>, Exporters). The VectorCraft adapter’s encoder
+(<code>stitchcraft_vectorcraft::base64</code>) writes it, as it writes the picture <code>stitch plan</code> gives VectorCraft’s
+command line to trace (<a href="image-to-embroidery.html#pictures-from-the-command-line">image to embroidery</a>).</p>
 <p>M6.9 makes StitchCraft’s formats exporters (<code>REQ-VC-011</code>, <code>apps/stitchcraft-vc-plugin/src/export.rs</code>).
 There are two, <em>PES embroidery (StitchCraft)</em> and <em>DST embroidery (StitchCraft)</em>, each a module of its
 own, and a VectorCraft before 0.14 refuses to install them. An exporter writes the file <code>stitch export</code>

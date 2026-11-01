@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-9fb437c8.js";
+            window.path_to_searchindex_js = "searchindex-12ec9719.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b793f3ad.js"></script>
@@ -271,6 +271,13 @@ once you allow it, keeps it and installs it again when it starts. The effects ar
 Export › Export As</strong>, and the filters under <strong>Object › Plug-ins</strong>. In VectorCraft on the web, open each
 file with <strong>File › Open</strong> instead, once each time VectorCraft is opened. <a href="#embroider-a-vectorcraft-design">Embroider a VectorCraft
 design</a> shows how to use them.</p>
+<h2 id="vectorcrafts-command-line"><a class="header" href="#vectorcrafts-command-line">VectorCraft’s command line</a></h2>
+<p><code>stitch plan</code> traces a picture, a PNG or JPEG file, with VectorCraft’s command line, <code>vectorcraft-cli</code>
+(<a href="#from-the-command-line">from a picture to a machine file</a>). VectorCraft
+publishes it with each <a href="https://github.com/storytold/vectorcraft/releases">release</a>: beside the app in the
+Windows and Linux downloads, and as a zip of its own for macOS. Put it in a folder on your <code>PATH</code>, or name it
+with <code>stitch plan --vectorcraft-cli</code>. Check it with <code>vectorcraft-cli --version</code>. Only <code>stitch plan</code> uses it,
+to trace a picture.</p>
 <h2 id="next"><a class="header" href="#next">Next</a></h2>
 <p><a href="#your-first-sew-out-on-a-brother">Sew your first test sheet</a>, or <a href="#turn-an-svg-into-a-pes-file">turn an SVG into a PES
 file</a>. The <a href="#command-line">command line</a> reference lists every command.</p>
@@ -588,6 +595,18 @@ shows. The document now says it is digitized automatically, so <strong>File › 
 machine file without <strong>Digitize automatically</strong>, as does <code>stitch export</code> without <code>--auto</code>
 (<a href="#embroider-a-vectorcraft-design">how</a>). Trace again and the group is new, without the
 effect: apply it after the last trace.</p>
+<h3 id="from-the-command-line"><a class="header" href="#from-the-command-line">From the command line</a></h3>
+<p>With VectorCraft’s command line installed (<a href="#vectorcrafts-command-line">install</a>), <code>stitch</code>
+takes the steps above itself:</p>
+<pre><code class="language-sh">stitch plan badge.png -o badge.pes --traced badge.vectorcraft
+</code></pre>
+<p>It traces the picture in your machine’s threads with VectorCraft’s command line, as you do in steps 1 and
+2. Then it digitizes the shapes as <code>--auto</code> does. It fits the picture into your hoop unless <code>--size</code> gives the
+length of its longer side in millimetres, background included. Image Trace keeps at most <code>--colours</code> colours,
+6 unless you say otherwise. Count the background’s colour too: the badge has 3 colours on white, so 4 keeps
+any colour between them out. <code>--traced</code> keeps the document VectorCraft traced, which you can open in
+VectorCraft to correct the trace and then digitize as above. When <code>stitch</code> can’t start VectorCraft’s command
+line, it says so with <code>SC-E0815</code>, and you trace the picture in VectorCraft instead.</p>
 <h2 id="4-sew-it-1"><a class="header" href="#4-sew-it-1">4. Sew it</a></h2>
 <p>Load <code>traced-badge.pes</code> and sew it as in <a href="#3-load-it-on-the-machine">your first sew-out</a>.
 Thread each colour as the machine names it, when it stops for it.</p>
@@ -1530,7 +1549,7 @@ it plans for, and warns beyond a profile’s comfort zone where the profile has 
 Usage: stitch &lt;COMMAND&gt;
 
 Commands:
-  plan        Plan a design, an SVG file or a VectorCraft document, for a machine and write the machine file, with a picture and a report if asked [alias: export]
+  plan        Plan a design, an SVG file or a VectorCraft document, for a machine and write the machine file, with a picture and a report if asked. A picture, a PNG or JPEG file, is traced with VectorCraft's command line first [alias: export]
   testsheet   Write a machine-checkpoint test sheet (docs/src/plan/machine-testing.md)
   inspect     Read a machine file (PES, PEC or DST) and describe it: size, stitches, threads, stitch lengths
   preview     Draw a machine file (PES, PEC or DST) as a picture of what it will sew (PNG)
@@ -1553,13 +1572,13 @@ error · 3 a file could not be read or written · 4 a bug in StitchCraft (a bug-
 where it can be: see `stitch bug-report`).
 </code></pre>
 <h2 id="stitch-plan"><a class="header" href="#stitch-plan">stitch plan</a></h2>
-<pre><code class="language-text">Plan a design, an SVG file or a VectorCraft document, for a machine and write the machine file, with a picture and a report if asked
+<pre><code class="language-text">Plan a design, an SVG file or a VectorCraft document, for a machine and write the machine file, with a picture and a report if asked. A picture, a PNG or JPEG file, is traced with VectorCraft's command line first
 
 Usage: stitch plan [OPTIONS] --output &lt;OUTPUT&gt; &lt;DESIGN&gt;
 
 Arguments:
   &lt;DESIGN&gt;
-          The design: an SVG file, or a VectorCraft document (.vectorcraft)
+          The design: an SVG file, a VectorCraft document (.vectorcraft), or a picture (.png, .jpg or .jpeg), which VectorCraft's command line traces in the machine's threads and StitchCraft digitizes automatically
 
 Options:
   -o, --output &lt;OUTPUT&gt;
@@ -1586,6 +1605,18 @@ Options:
 
       --sort-colours
           Sew the shapes with settings in the order StitchCraft chooses too, as --auto sews the shapes it digitizes: shapes that overlap keep their paint order, and each thread then sews as long as it can, the nearest shape next (docs/src/design/image-to-embroidery.md)
+
+      --vectorcraft-cli &lt;PROGRAM&gt;
+          VectorCraft's command line, which traces a picture; by default `vectorcraft-cli` on the PATH
+
+      --size &lt;MM&gt;
+          How large a picture is sewn: its longer side, in millimetres, its background included; by default as large as the machine's hoop holds
+
+      --colours &lt;N&gt;
+          How many colours a picture has, its background included: Image Trace traces it in at most that many of the machine's threads, 2 to 256; by default 6
+
+      --traced &lt;FILE&gt;
+          Also write the document VectorCraft traced a picture into (.vectorcraft), to correct the trace in VectorCraft
 
   -h, --help
           Print help (see a summary with '-h')
@@ -2141,6 +2172,8 @@ Arguments:
 <tr><td><a href="#sc-w0812"><code>SC-W0812</code></a></td><td>Warning</td><td>VectorCraft design setting ignored</td></tr>
 <tr><td><a href="#sc-e0813"><code>SC-E0813</code></a></td><td>Error</td><td>VectorCraft too old for the filter</td></tr>
 <tr><td><a href="#sc-e0814"><code>SC-E0814</code></a></td><td>Error</td><td>VectorCraft line not made into a satin column</td></tr>
+<tr><td><a href="#sc-e0815"><code>SC-E0815</code></a></td><td>Error</td><td>VectorCraft’s command line could not be started</td></tr>
+<tr><td><a href="#sc-e0816"><code>SC-E0816</code></a></td><td>Error</td><td>VectorCraft could not trace the picture</td></tr>
 <tr><td><a href="#sc-i0901"><code>SC-I0901</code></a></td><td>Info</td><td>Shapes digitized automatically</td></tr>
 <tr><td><a href="#sc-i0902"><code>SC-I0902</code></a></td><td>Info</td><td>Satin column can’t be made; filled</td></tr>
 <tr><td><a href="#sc-w0903"><code>SC-W0903</code></a></td><td>Warning</td><td>Line too wide to fill; left out</td></tr>
@@ -2705,6 +2738,25 @@ from, or can’t be used, its rails can’t be made or would leave parts of it o
 or rungs, as one whose rails cross each other is.</p>
 <p>The message names the object. Select the lines, give the path a stroke as wide as the column, draw
 that column with its 2 rails, or leave the object out of the selection.</p>
+<h2 id="sc-e0815"><a class="header" href="#sc-e0815">SC-E0815</a></h2>
+<p><strong>Error</strong> — VectorCraft’s command line could not be started</p>
+<p><code>stitch plan</code> and <code>stitch export</code> trace a picture, a PNG or JPEG file, with VectorCraft’s command
+line, <code>vectorcraft-cli</code>, which VectorCraft publishes with each release. It could not be started: it
+isn’t on the <code>PATH</code>, or the program <code>--vectorcraft-cli</code> names isn’t there or can’t be run. Nothing was
+written but the report.</p>
+<p>The message names the program and why it didn’t start. Install VectorCraft’s command line from
+VectorCraft’s releases, and put it on the <code>PATH</code> or name it with <code>--vectorcraft-cli</code>. Or trace the
+picture with Image Trace in VectorCraft, as the tutorial “From a picture to a machine file” does, and
+plan the document you save.</p>
+<h2 id="sc-e0816"><a class="header" href="#sc-e0816">SC-E0816</a></h2>
+<p><strong>Error</strong> — VectorCraft could not trace the picture</p>
+<p>VectorCraft’s command line ran to trace a picture for <code>stitch plan</code> or <code>stitch export</code>, and it failed
+or saved no document. Nothing was written but the report.</p>
+<p>The message ends with what VectorCraft said. It fails on a file it can’t read as a picture, such as a
+file named <code>.png</code> that holds something else. It fails too when it is a version without the commands
+StitchCraft traces with: the user guide lists the versions the compatibility gate passed. Check that
+VectorCraft places the picture, or trace it with Image Trace in VectorCraft and plan the document you
+save.</p>
 <h2 id="sc-i0901"><a class="header" href="#sc-i0901">SC-I0901</a></h2>
 <p><strong>Info</strong> — Shapes digitized automatically</p>
 <p><code>--auto</code>, or StitchCraft’s Auto effect in VectorCraft, digitized the design’s shapes that have no
@@ -4388,7 +4440,7 @@ tools: stitchcraft-xtask (`xtask/`, run as `cargo xtask`)
 <tr><td><code>stitchcraft-svg</code></td><td>L3</td><td>SVG → <code>Design</code> (geometry, styles, <code>inkstitch:*</code> attributes, commands), plan → SVG</td><td>contain stitch logic</td></tr>
 <tr><td><code>stitchcraft-vectorcraft</code></td><td>L3</td><td><code>.vectorcraft</code> → <code>Design</code> (commands in names included), effect records ↔ <code>ParamSet</code>, plug-in JSON objects</td><td>contain stitch logic</td></tr>
 <tr><td><code>stitchcraft-testkit</code></td><td>test</td><td>fixtures, <code>proptest</code> strategies (from the registry), invariant assertions</td><td>be a normal dependency</td></tr>
-<tr><td><code>stitchcraft-cli</code></td><td>app</td><td>the <code>stitch</code> command; all filesystem access</td><td>contain engine logic</td></tr>
+<tr><td><code>stitchcraft-cli</code></td><td>app</td><td>the <code>stitch</code> command; all filesystem access, and the one program StitchCraft starts, VectorCraft’s command line, which traces a picture (<a href="#adr-0015-pictures-are-traced-by-vectorcrafts-command-line">ADR-0015</a>)</td><td>contain engine logic</td></tr>
 <tr><td><code>stitchcraft-vc-plugin</code></td><td>app</td><td>VectorCraft ABI v1 shim + plug-in manifests</td><td>contain engine logic; <code>unsafe</code> outside <code>abi.rs</code></td></tr>
 <tr><td><code>stitchcraft-xtask</code></td><td>tools</td><td>gates (<code>ci</code>, <code>layers</code>, <code>docs</code>, <code>cleanroom</code>, …), generators, compatibility runs; works from its own folder, on StitchCraft’s packages only (<a href="#adr-0011-stitchcraft-can-move-into-vectorcrafts-repository">ADR-0011</a>)</td><td>ship to users</td></tr>
 </tbody>
@@ -4464,7 +4516,7 @@ pub struct Generation {
 <tr><td><code>stitchcraft-svg</code></td><td>SVG document (+ <code>inkstitch:*</code> attributes, command symbols)</td><td><code>Design</code></td></tr>
 <tr><td><code>stitchcraft-vectorcraft</code></td><td><code>.vectorcraft</code> JSON (+ commands in names), plug-in input objects, effect records</td><td><code>Design</code> / <code>Element</code></td></tr>
 <tr><td><code>stitchcraft-vc-plugin</code></td><td>ABI v1 call (JSON in linear memory)</td><td><code>generate</code> → preview geometry JSON</td></tr>
-<tr><td><code>stitchcraft-cli</code></td><td>files and flags</td><td><code>plan</code> → formats/render/report</td></tr>
+<tr><td><code>stitchcraft-cli</code></td><td>files and flags, a picture traced by VectorCraft’s command line</td><td><code>plan</code> → formats/render/report</td></tr>
 </tbody>
 </table>
 </div>
@@ -5196,6 +5248,8 @@ another.</p>
 <tr><td><code>SC-W0812</code></td><td>Warning</td><td>VectorCraft design setting ignored (a length that isn’t a number of 0 or more, or a machine StitchCraft doesn’t have, which the Design Settings filter keeps with the document)</td><td>M6</td></tr>
 <tr><td><code>SC-E0813</code></td><td>Error</td><td>VectorCraft too old for the filter (the Design Settings filter run by a VectorCraft before 0.16, which doesn’t keep a filter’s data, Stroke to Satin by one before 0.15, which doesn’t keep a filter’s effect records, and Test Sheet by one before 0.16, which doesn’t say it keeps them)</td><td>M6</td></tr>
 <tr><td><code>SC-E0814</code></td><td>Error</td><td>VectorCraft line not made into a satin column (Stroke to Satin refused a selection because it is empty or a path has no stroke, or because a line drawn with its rails and rungs would sew otherwise)</td><td>M6</td></tr>
+<tr><td><code>SC-E0815</code></td><td>Error</td><td>VectorCraft’s command line could not be started (<code>stitch plan</code> traces a picture with it: neither on the PATH nor where <code>--vectorcraft-cli</code> says)</td><td>M13</td></tr>
+<tr><td><code>SC-E0816</code></td><td>Error</td><td>VectorCraft could not trace the picture (its command line failed or didn’t save the document)</td><td>M13</td></tr>
 <tr><td><code>SC-I0901</code></td><td>Info</td><td>Shapes digitized automatically (<code>--auto</code>, or VectorCraft’s Auto effect), counted by their stitches (running stitches, satin columns or tatami fills)</td><td>M13</td></tr>
 <tr><td><code>SC-I0902</code></td><td>Info</td><td>Satin column can’t be made; filled (a part of an automatic line that turns more tightly than it is wide, is shorter than a CSS pixel or is a dot its cap draws, or a part of an automatic area whose triangles don’t make a column round one of its lines or whose column would be read back otherwise)</td><td>M13</td></tr>
 <tr><td><code>SC-W0903</code></td><td>Warning</td><td>Line too wide to fill; left out (an automatic line whose filled area would reach more than 10 m from the origin)</td><td>M13</td></tr>
@@ -5682,6 +5736,7 @@ plug-in stays single-threaded.</li>
 <tr><td>Machine file</td><td><code>stitchcraft-formats</code> writer chosen by the profile or the output extension</td></tr>
 <tr><td>Preview PNG</td><td><code>stitchcraft-render</code>, from the <em>quantized</em> plan (<code>REQ-RND-001</code>)</td></tr>
 <tr><td>Report JSON</td><td>The CLI’s, with the counts and size of the machine file read back as a machine reads it, its SHA-256, the threads and the diagnostics</td></tr>
+<tr><td>Traced document</td><td>Of a picture, the document VectorCraft’s command line traced it into, which <code>stitch plan --traced</code> writes (<a href="#pictures-from-the-command-line">image to embroidery</a>)</td></tr>
 <tr><td>Plug-in preview geometry</td><td><code>stitchcraft-vc-plugin</code>, from one element’s groups, its top rows or its path, by the preview’s level (<a href="#live-effect-previews-within-v1-budgets">integration</a>)</td></tr>
 </tbody>
 </table>
@@ -7423,7 +7478,7 @@ breaking ties between points on one circle by perturbing them symbolically.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="image-to-embroidery"><a class="header" href="#image-to-embroidery">Image to embroidery</a></h1>
-<!-- implements: crates/stitchcraft-engine/src/auto/**, apps/stitchcraft-cli/src/commands/palette.rs -->
+<!-- implements: crates/stitchcraft-engine/src/auto/**, apps/stitchcraft-cli/src/commands/palette.rs, apps/stitchcraft-cli/src/trace.rs -->
 <p>Automatic digitizing makes a design that sews well from a picture of flat colours, such as a logo, clip
 art or a drawing, once it is traced into shapes. Settings on the shapes are optional. StitchCraft chooses
 the stitches of each shape by its width at the size it sews. Neighbouring shapes overlap where they meet.
@@ -7437,6 +7492,8 @@ sewn in blended colours need another technique, outside the roadmap.</p>
 Trace › Make.</li>
 <li>Run <code>stitch export picture.vectorcraft --auto -o picture.pes --preview picture.png</code>.</li>
 </ol>
+<p>With VectorCraft installed, <code>stitch export picture.png -o picture.pes</code> takes both steps itself
+(<a href="#pictures-from-the-command-line">below</a>).</p>
 <p>An Image Trace object is a group of the traced paths, with the source image hidden beside them
 (<code>imageTrace.make</code> in VectorCraft’s <code>crates/engine</code>, <code>main</code> at <code>0842941</code>). <code>stitch export</code> already reads
 those paths, and Expand is optional. Without <code>--auto</code> it sews each of them as Ink/Stitch sews an SVG
@@ -7907,17 +7964,45 @@ Smaller letters need lettering in an embroidery font, made to sew at small sizes
 traced letters inside a marked area with lettering of the marker’s text, as tall as they were. Spike M14.6
 looks for a way to find and read the text without a marker.</p>
 <h2 id="pictures-from-the-command-line"><a class="header" href="#pictures-from-the-command-line">Pictures from the command line</a></h2>
-<p><code>stitch plan picture.png</code> traces the picture with VectorCraft’s command line, as spike M13.9 decided
-(<a href="#adr-0015-pictures-are-traced-by-vectorcrafts-command-line">ADR-0015</a>). VectorCraft publishes <code>vectorcraft-cli</code> with each
-release. Its <code>run</code> command runs the steps of the compatibility gate’s <code>trace</code> case without a window. The
-machine’s threads, as <code>stitch palette</code> writes them, become a swatch library, and the picture is placed and
-traced in their colours by the Abutting method. Expand keeps the paths, and the document is saved. <code>stitch</code>
-then reads the saved document with <code>--auto</code>. Without VectorCraft installed, it fails with a coded error
-that says how to install it, or to trace the picture in VectorCraft.</p>
+<p><code>stitch plan picture.png</code> and <code>stitch export picture.png</code> trace the picture with VectorCraft’s command line,
+as spike M13.9 decided (<a href="#adr-0015-pictures-are-traced-by-vectorcrafts-command-line">ADR-0015</a>) and M13.10 built
+(<code>REQ-CLI-012</code>, <code>REQ-CLI-013</code>). A design whose extension is <code>.png</code>, <code>.jpg</code> or <code>.jpeg</code>, in any case, is a
+picture. VectorCraft publishes <code>vectorcraft-cli</code> with each release, and <code>stitch</code> runs the one
+<code>--vectorcraft-cli</code> names, or else the one on the <code>PATH</code>:</p>
+<pre><code class="language-sh">vectorcraft-cli run --commands - --export FOLDER/traced.vectorcraft
+</code></pre>
+<p>It gives it 4 steps on standard input, where a picture of any size fits. They are the compatibility gate’s
+<code>trace</code> case’s:</p>
+<ol>
+<li><code>swatch.library.load</code> loads the threads <code>stitch palette</code> writes for the machine as a swatch library.</li>
+<li><code>file.place</code> places the picture’s bytes, fitted inside a square <code>--size</code> millimetres across, or else
+inside the machine’s hoop, its aspect kept.</li>
+<li><code>imageTrace.make</code> traces it in colour with the library’s colours as they are, at most <code>--colours</code> of
+them, by the Abutting method, so that the shapes share their edges.</li>
+<li><code>imageTrace.expand</code> keeps the paths, without the picture.</li>
+</ol>
+<p>VectorCraft saves the document into a folder of the command’s own beside the machine file, named as
+<code>stitch</code>’s temporary files are, and the folder is removed once the document is read. It runs with
+<code>VECTORCRAFT_NO_PREFS</code> set, so that it neither reads nor writes the user’s VectorCraft preferences, and a
+picture traces the same for everyone. The document is then the design. It is read with <code>--auto</code>, planned for
+the machine <code>--profile</code> names or else the reference machine, and named after the picture. <code>--traced</code> writes
+it beside the machine file, to correct the trace in VectorCraft. A bug-report bundle keeps it too, so that a
+replay doesn’t need VectorCraft.</p>
+<p><strong>The picture’s size.</strong> VectorCraft places a picture at its own resolution, or 72 pixels to the inch when
+its file says none, so a logo a few hundred pixels across would sew larger than any hoop. <code>stitch</code> fits the
+picture into the machine’s hoop unless <code>--size</code> gives the length of its longer side. The size is the
+picture’s, its background included, and the shapes left once the background is out sew smaller.</p>
+<p><strong>How many colours.</strong> Image Trace keeps at most <code>--colours</code> of the library’s colours, 6 unless it says
+otherwise, as in its own panel. The count takes in the background’s colour. A picture with smooth edges, or a
+JPEG file, has colours between its shapes’ colours, which may trace as threads of their own. A <code>--colours</code>
+equal to the number of colours the picture has keeps them out. A badge in 3 colours on white traces in 4.</p>
+<p><strong>When VectorCraft can’t trace.</strong> A command line that can’t be started, missing from the <code>PATH</code> or from
+the path named, is <code>SC-E0815</code>, which says how to install it, or to trace the picture in VectorCraft. One
+that fails or doesn’t save the document is <code>SC-E0816</code>, which ends with what it said. Then nothing is written but
+the report.</p>
 <p>StitchCraft traces nothing itself. A tracer of its own would repeat VectorCraft’s, which a harness
 measures. It would also trace a picture otherwise than VectorCraft does, and the command line would then
-sew it unlike the tutorial’s flow. M13.10 builds the command, and settles the picture’s size and how many
-threads the trace may use.</p>
+sew it unlike the tutorial’s flow.</p>
 <h2 id="testing"><a class="header" href="#testing">Testing</a></h2>
 <ul>
 <li>Each rule gets its requirements and failing cases before its code (<a href="#adr-0008-conformance-first-development">ADR-0008</a>).</li>
@@ -7929,7 +8014,9 @@ trims, stitches, and how much of each shape and of each shared edge the stitches
 places them.</li>
 <li>Level B of the <a href="#vectorcraft-compatibility-gate">compatibility gate</a> has a case, <code>trace</code>, in which VectorCraft’s
 command line traces a picture drawn in the threads <code>stitch palette</code> writes, and StitchCraft sews the
-document it saved, on every track.</li>
+document it saved, on every track. In its case <code>picture</code>, <code>stitch plan</code> traces the picture itself.</li>
+<li><code>stitch plan</code>’s own tests run it with a stand-in for VectorCraft’s command line, the test program itself,
+which saves a document VectorCraft 0.18.0 traced (<code>apps/stitchcraft-cli/tests/picture.rs</code>).</li>
 <li>TS-13 sews the test pictures at MC-8 (<a href="#machine-testing-protocol">machine testing</a>), each twice. A
 sheet’s top half is digitized automatically, and its bottom half is sewn as drawn, in paint order. The
 bottom half sews first and stops, so that nothing digitized moves into it, and each half’s thread
@@ -8490,7 +8577,9 @@ one for a path with the extension it lists. VectorCraft gives the exporter the d
 <code>.vectorcraft</code> file’s JSON, as <code>document.save</code> writes it but without the data of images of 8 KiB or more,
 with the parameters of the dialog it shows when the file is picked, and the file’s extension and name. The
 exporter returns the file in base64, with warnings for the user, or declines with a message, and then
-nothing is written (VectorCraft’s <code>docs/plugins.md</code>, Exporters).</p>
+nothing is written (VectorCraft’s <code>docs/plugins.md</code>, Exporters). The VectorCraft adapter’s encoder
+(<code>stitchcraft_vectorcraft::base64</code>) writes it, as it writes the picture <code>stitch plan</code> gives VectorCraft’s
+command line to trace (<a href="#pictures-from-the-command-line">image to embroidery</a>).</p>
 <p>M6.9 makes StitchCraft’s formats exporters (<code>REQ-VC-011</code>, <code>apps/stitchcraft-vc-plugin/src/export.rs</code>).
 There are two, <em>PES embroidery (StitchCraft)</em> and <em>DST embroidery (StitchCraft)</em>, each a module of its
 own, and a VectorCraft before 0.14 refuses to install them. An exporter writes the file <code>stitch export</code>
@@ -9191,7 +9280,10 @@ says, with <code>fails</code>. VectorCraft stops a run at a step that fails, so 
 names its file. A run installs a module whose manifest sets a heavy budget, Stroke to Satin’s, with
 <code>allowHeavy</code>, as the user allows it. A step’s parameter written <code>{ stitchcraft = "…" }</code> is replaced by what
 StitchCraft makes of the name, the threads <code>stitch palette</code> writes or a test picture drawn flat as a PNG, so
-that what VectorCraft traces is StitchCraft’s own. The checks are StitchCraft’s, since VectorCraft’s pictures change from version to
+that what VectorCraft traces is StitchCraft’s own. A run can be <code>stitch plan</code> with its arguments instead,
+which traces a picture with the <code>vectorcraft-cli</code> under test. It runs in the gate’s own process, its files in
+the scenario’s folder, and must end well. A run’s <code>files</code> are written there first, made by StitchCraft from
+their names, and the files <code>stitch</code> writes count as exported. The checks are StitchCraft’s, since VectorCraft’s pictures change from version to
 version and what sews must not:</p>
 <div class="table-wrapper">
 <table>
@@ -9208,6 +9300,7 @@ version and what sews must not:</p>
 <tr><td><code>settings</code></td><td>a 1 in square given the fill effect and exported to PES, then the Design Settings filter run with the 4 × 4 in hoop and a shortest stitch of 1.5 mm, and the square saved and exported to PES and DST; then the filter run with the small hoop, and the square saved and exported to PES</td><td>each document keeps what the filter was run with, each file is the one <code>stitch export</code> writes, the PES file differs from the one before the filter, and the small hoop’s export fails with <code>SC-E0701</code> (<code>REQ-VC-013</code>)</td></tr>
 <tr><td><code>stroke-to-satin</code></td><td>an S curve, a V and a circle with strokes 3 mm wide and the satin effect, saved and drawn, then made into columns by Stroke to Satin, saved, drawn and exported to PES</td><td>the columns sew as the lines did, 3 satin columns in the strokes’ colour, and the file is the one <code>stitch export</code> writes (<code>REQ-VC-014</code>)</td></tr>
 <tr><td><code>testsheets</code></td><td>each sheet drawn as a design, drawn by Test Sheet into a new document, then saved and exported to PES; the TS-13 sheets with StitchCraft Auto installed</td><td>each document sews as the sheet’s design moved by whole millimetres to the middle of its artboard, and each file is the one <code>stitch export</code> writes. The Auto effect digitizes the TS-13 sheets’ shapes automatically (<code>REQ-VC-015</code>, <code>REQ-VC-016</code>)</td></tr>
+<tr><td><code>picture</code></td><td>the badge drawn flat as a PNG, which <code>stitch plan badge.png --traced traced.vectorcraft</code> traces with VectorCraft’s command line, its steps on standard input. With the reference machine’s threads loaded as a swatch library, the picture is fitted into the hoop and traced in colour with the library’s colours by the Abutting method, and its paths are kept and saved</td><td><code>stitch</code> ends well, and the document it traced, read with <code>--auto</code>, sews the badge’s 3 threads, each a thread of the palette, the white round the badge left out as the background (<code>REQ-CLI-012</code>, <code>REQ-AUTO-001</code>, <code>REQ-AUTO-009</code>)</td></tr>
 <tr><td><code>trace</code></td><td>the reference machine’s threads, as <code>stitch palette</code> writes them, loaded as a swatch library, a badge drawn flat in 3 of them on white placed, traced in colour with the library’s colours by the Abutting method, its paths kept, and saved; then StitchCraft’s Auto effect applied to the traced group, saved, and drawn</td><td>read with <code>--auto</code>, every shape is automatic, the white round the badge is left out as the background, and the badge sews its 3 threads, each a thread of the palette; with the Auto effect, so without <code>--auto</code>, and drawing it doesn’t leave a last error (<code>REQ-CLI-011</code>, <code>REQ-AUTO-001</code>, <code>REQ-AUTO-009</code>, <code>REQ-VC-016</code>)</td></tr>
 </tbody>
 </table>
@@ -9658,7 +9751,9 @@ settings sew, and <code>--sort-colours</code> whether its shapes with settings s
 <code>stitch bug-report</code> writes them into one JSON file, with the design itself in place of a path to it, and
 each switch only when it was on. A bundle of a run without them is as it always was. The design is an SVG
 file whole, or the part of a VectorCraft document its reader reads, which
-reads as the whole document does. The file also records what came of them:</p>
+reads as the whole document does. Of a picture, it is the document VectorCraft’s command line traced, read
+with <code>--auto</code>: VectorCraft’s trace is not StitchCraft’s to replay, and the replay doesn’t need VectorCraft. The
+file also records what came of them:</p>
 <ul>
 <li>a SHA-256 of each entry of the plan, from each coordinate’s bits, its kind, role and element, and each
 block’s thread</li>
@@ -9913,7 +10008,7 @@ Through GSettings it would reach the person’s own settings, and GNOME would st
 their next login.</li>
 </ul>
 <p>The compat workflow’s <code>window</code> job runs the command daily, and on pull requests that touch the plug-in,
-<code>compat/</code>, the tooling or a manifest. It keeps the screenshots, the trees and the app’s logs.</p>
+the command line, <code>compat/</code>, the tooling or a manifest. It keeps the screenshots, the trees and the app’s logs.</p>
 <p><strong>Screenshots: the same pixels, but for the frame timings.</strong> The window opens at 1440 × 900 pixels,
 drawn by llvmpipe, and a screenshot takes about 0.65 s. Above the status bar, screenshots of one window
 match to the pixel. The screenshots of two starts of the app match there too, and so did two runs on
@@ -11202,7 +11297,7 @@ first, and the steps that make new kinds of shape into stitches follow.</p>
 <tr><td>MC-8 🧵</td><td><strong>TS-13</strong> (test pictures digitized automatically, beside the same shapes sewn in paint order); kit: <code>stitch testsheet</code></td><td>report filed; the rules’ values confirmed or changed</td></tr>
 <tr><td>M13.8</td><td>Automatic digitizing by default for VectorCraft documents</td><td>the end-to-end cases expect it</td></tr>
 <tr><td>M13.9 ✅ 🧪</td><td><code>stitch plan picture.png</code>: VectorCraft’s command line traces the picture, or StitchCraft reads and traces it itself</td><td>Decision recorded in the design, <a href="#adr-0015-pictures-are-traced-by-vectorcrafts-command-line">ADR-0015</a>: VectorCraft’s command line traces it, with the <code>trace</code> case’s steps (2026-10-31)</td></tr>
-<tr><td>M13.10</td><td><code>stitch plan picture.png</code> and <code>stitch export picture.png</code> trace a PNG or JPEG file with VectorCraft’s command line, in the machine’s threads, and sew it digitized automatically. A coded error when VectorCraft isn’t installed</td><td>a Level B case plans a picture through <code>stitch</code> on every track</td></tr>
+<tr><td>M13.10 ✅</td><td><code>stitch plan picture.png</code> and <code>stitch export picture.png</code> trace a PNG or JPEG file with VectorCraft’s command line, in the machine’s threads, and sew it digitized automatically. A coded error when VectorCraft isn’t installed</td><td>a Level B case plans a picture through <code>stitch</code> on every track</td></tr>
 </tbody>
 </table>
 </div>

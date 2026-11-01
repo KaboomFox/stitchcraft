@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9fb437c8.js";
+            window.path_to_searchindex_js = "../searchindex-12ec9719.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -251,7 +251,9 @@ settings sew, and <code>--sort-colours</code> whether its shapes with settings s
 <code>stitch bug-report</code> writes them into one JSON file, with the design itself in place of a path to it, and
 each switch only when it was on. A bundle of a run without them is as it always was. The design is an SVG
 file whole, or the part of a VectorCraft document its reader reads, which
-reads as the whole document does. The file also records what came of them:</p>
+reads as the whole document does. Of a picture, it is the document VectorCraft’s command line traced, read
+with <code>--auto</code>: VectorCraft’s trace is not StitchCraft’s to replay, and the replay doesn’t need VectorCraft. The
+file also records what came of them:</p>
 <ul>
 <li>a SHA-256 of each entry of the plan, from each coordinate’s bits, its kind, role and element, and each
 block’s thread</li>
