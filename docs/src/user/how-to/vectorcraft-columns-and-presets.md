@@ -13,7 +13,14 @@ its stitches in VectorCraft then, draw the column with 2 rails:
 
 1. Draw the column's 2 edges as 2 paths.
 2. Select both and choose **Object › Compound Path › Make** (Cmd+8).
-3. With the compound path selected, choose **Effect › Plug-ins › StitchCraft Satin**.
+3. With the compound path selected, choose **Effect › Plug-ins › StitchCraft Satin**, and set the column
+   up in its dialog ([the whole dialog](../tutorials/vectorcraft-patch.md#3-draw-the-border)).
+
+VectorCraft then shows the column's stitches between its rails:
+
+<!-- shot: vectorcraft-satin-rails -->
+![A gold satin column in VectorCraft's canvas, its stitches across the band between 2 curved rails that make one compound path, as StitchCraft Satin shows them.](../../images/generated/vectorcraft-satin-rails.png)
+<!-- /shot -->
 
 Apply the effect after joining the rails. VectorCraft 0.10.0 and later keep the appearance of the path at
 the back, and earlier versions that of the path in front, which may not be the one with the effect. From
@@ -40,6 +47,10 @@ can then be edited.
 
 1. Give each line a stroke as wide as the column.
 2. Select the lines, and choose **Object › Plug-ins › StitchCraft Stroke to Satin**.
+
+<!-- shot: vectorcraft-stroke-to-satin-menu -->
+![VectorCraft's Object menu, open at Plug-ins, which lists StitchCraft Stroke to Satin, over a curved blue line 3 mm wide.](../../images/generated/vectorcraft-stroke-to-satin-menu.png)
+<!-- /shot -->
 
 Each line becomes a compound path of its rails and rungs, without a fill, its stroke the line's colour,
 one pixel wide. It has StitchCraft Satin with the line's satin settings, or the defaults, in the place of

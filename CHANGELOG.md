@@ -5,6 +5,15 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- User pages with pictures for satin columns, tatami fills and automatic digitizing (M13.11), so every
+  stitch type the engine sews has a page that shows it (`UNSHOWN` in `xtask/src/stitch_pages.rs` is empty).
+  The satin column's page shows a column drawn as one path, its spacing and its 3 underlays. The tatami
+  fill's shows its angle, staggers and underlay, and how Ink/Stitch's legacy fill sews. The automatic
+  digitizing page shows shapes sewn as drawn beside the same shapes digitized, in 3 pairs of pictures. The
+  how-to for satin columns in VectorCraft shows a column of 2 rails and the Stroke to Satin menu. New
+  fixtures: `docs/fixtures/fill.svg`, `widths.svg` and `parts.svg`. A VectorCraft picture installs a
+  module with a heavy budget as a scenario does, with `allowHeavy` (`compat::install`). Without it
+  VectorCraft refused Stroke to Satin's module, so its menu had no picture.
 - The Ink/Stitch differential compares centre lines (`REQ-AUTO-022`, the `centre-lines` cases,
   `xtask/src/conformance/centre_lines.rs`). Each shape that automatic digitizing sews wholly as running
   stitches is compared with the lines Ink/Stitch's Fill to Stroke draws for it, with its threshold at the

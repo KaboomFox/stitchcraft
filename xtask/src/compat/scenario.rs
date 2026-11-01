@@ -81,7 +81,7 @@ use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_vc_plugin::testsheet;
 use stitchcraft_vectorcraft::{EXTENSIONS, effect_id, effect_name, param_text, plugin_id};
 
-use super::{heavy, kind};
+use super::{install, kind};
 use crate::util;
 
 /// Where the scenarios are.
@@ -528,11 +528,7 @@ fn arguments(run: &Run, plugins: &Path, out: &Path) -> Result<Vec<String>, Strin
         args.extend(["--scale".to_string(), scale.to_string()]);
     }
     for module in &run.plugins {
-        let mut install = json!({ "path": path(plugins, &format!("{module}.wasm")) });
-        if heavy(module) {
-            install["allowHeavy"] = json!(true);
-        }
-        args.extend(command("plugin.install", install));
+        args.extend(command("plugin.install", install(module, &path(plugins, &format!("{module}.wasm")))));
     }
     for step in &run.steps {
         match step.action()? {
