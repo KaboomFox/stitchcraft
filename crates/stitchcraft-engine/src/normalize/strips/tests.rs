@@ -112,6 +112,32 @@ fn req_auto_014_an_arm_reaches_through_its_cap() {
 }
 
 #[test]
+fn req_auto_014_a_line_ends_beside_its_cap_which_reaches_to_the_farthest_corner_of_the_end() {
+    // A strip 6 mm long and 0.6 mm wide, cut into pieces 0.15 mm long: each square end's cap is several
+    // triangles deep. Each end of the line reaches on through its cap to the end's corners, and no further.
+    let strip = part(&[(0.0, 0.0), (6.0, 0.0), (6.0, 0.6), (0.0, 0.6)], &[]);
+    let triangulation = triangulation::triangulate(&strip, 0.15, &mut meter()).unwrap().unwrap();
+    let roles = roles(&triangulation, &mut meter()).unwrap();
+    let caps = |left: bool| {
+        roles
+            .iter()
+            .zip(&triangulation.triangles)
+            .filter(|(role, t)| **role == Role::Cap && t.corners.iter().all(|&c| (triangulation.points[c].x() < 3.0) == left))
+            .count()
+    };
+    assert!(caps(true) > 2 && caps(false) > 2, "{} and {} cap triangles", caps(true), caps(false));
+    let graph = Graph::of(&triangulation, &roles, &mut meter()).unwrap();
+    let ends: Vec<usize> = (0..graph.points.len()).filter(|&node| graph.degree(node) == 1).collect();
+    assert_eq!(ends.len(), 2);
+    for end in ends {
+        let at = graph.point(end);
+        let x = if at.x() < 3.0 { 0.0 } else { 6.0 };
+        let farthest = at.distance(p(x, 0.0)).max(at.distance(p(x, 0.6)));
+        assert!((graph.beyond[end] - farthest).abs() < 1e-9, "{at:?}: {} instead of {farthest}", graph.beyond[end]);
+    }
+}
+
+#[test]
 fn req_auto_014_a_bump_of_the_outline_is_left_out() {
     // A strip with bumps 0.2 to 0.3 mm high on its sides: a round one, within the circle on the chord across
     // it, is a cap, and 2 sharp ones are tips, whose branches are left out. The line runs along the middle.
