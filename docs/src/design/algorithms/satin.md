@@ -227,7 +227,9 @@ the turning leaves them, go without a partner.
 Each rung added is a tenth longer than the line between its points, half at each end, and cuts each
 rail where it comes nearest it, measured as at the start and end (see *Equally near points*). That is
 the node itself, or on a curved rail of 2 nodes, where the rung crosses the curve, or the curve's point
-nearest the rung when the rung does not reach it.
+nearest the rung when the rung does not reach it. A rung added that meets the rails, as push
+compensation leaves them, at more than 2 points doesn't say which points pair, and is left out, as
+Ink/Stitch leaves it out. Such a rung crosses a node whose rail turns back across it.
 
 Where the pairing leaves stitches leaning far along the column, `SC-W0208` names the place to add a rung
 ([Leaning and long stitches](#leaning-and-long-stitches)).
@@ -272,7 +274,10 @@ along the column as it was.
    previous pair has no length, it is the distance from that pair's point.
    - Within a section, a pair is placed the spacing's share of the section's longer part past the one
      before. A pair that lands more than 5 % off the spacing moves by its step scaled by how far off it
-     is. It moves at most twice, and the first move stops at the section's end.
+     is. It moves at most twice, and the first move stops at the section's end. That brings the pairs of
+     a smooth curve within 5 % of the spacing. Round a sharp corner, where the next pair turns far from
+     the one before, a pair can end further off: one 17.5 % off on rails that bend by 63° and 72° and
+     back (`req_sat_002_on_a_curve_the_outer_edge_is_sewn_at_the_spacing`).
    - The first pair of a section after the first goes as far past the section's start as the previous
      pair is short of the spacing.
    - The column starts with a pair at its start and ends with one at its end, unless the last pair is
@@ -591,7 +596,7 @@ end command, read from M8, would replace the needle point or the next stitch.
 | Requirement | Property |
 |---|---|
 | `REQ-SAT-001` | Pull compensation moves both ends of every top stitch outward along it, by `pull_compensation_mm` plus `pull_compensation_percent` of its width (± 0.01 mm). Ends moved past each other meet |
-| `REQ-SAT-002` | Consecutive pairs are the zigzag spacing apart, measured across the previous pair at its farther end, exactly so between straight parallel rails and within 5 % on curves. The last pair is at most a spacing on |
+| `REQ-SAT-002` | Consecutive pairs are the zigzag spacing apart, measured across the previous pair at its farther end, exactly so between straight parallel rails. A pair more than 5 % off moves at most twice, which brings a smooth curve's pairs within 5 %. Round a sharp corner a pair can end further off. The last pair is at most a spacing on |
 | `REQ-SAT-003` | With a longest stitch, a longer top stitch is split as `split_method` says. By default it splits into the fewest equal parts, and the stitch back into as many as the stitch across before. Simple and staggered splits fall at whole multiples of the longest stitch, from a start that `staggered` moves along |
 | `REQ-SAT-004` | Underlays come before the top stitches and leave them as they were: the centre walk, then the contour and the zigzag. Straight stitches of one length join them, no longer than the running stitch's length raised to twice the shortest stitch. A part that starts within the shortest stitch of the needle takes the place of an underlay's last point, and the needle's way gives way to it. Beside a top stitch's point the part's points give way instead. After an odd centre walk the rest runs from the column's end |
 | `REQ-SAT-005` | Rails and rungs are told apart as Ink/Stitch tells them, in any drawing order. A path with no subpath longer than a point produces `SC-E0201` and no stitches, and a rung that misses a rail joins the rail's nearest point (`SC-W0203`), the one shapely gives of points as near. A column with no section to sew produces `SC-E0216` and no stitches |

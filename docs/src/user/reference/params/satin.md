@@ -60,8 +60,8 @@ reverses the second rail when it runs against the first.
 
 ### `swap_satin_rails`
 
-**Swap rails.** Make the second rail the first. The column starts on its first rail, and each stitch across it
-goes from the first rail to the second.
+**Swap rails.** Make the second rail the first, which sews first in each pair and starts the column. An S-stitch
+starts on the second rail instead, and sews every other stitch from it.
 
 - **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `false`
