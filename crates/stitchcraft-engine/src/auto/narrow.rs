@@ -224,25 +224,40 @@ fn perimeter(part: &Polygon) -> f64 {
 
 /// The width of a part along `lines`, its centre lines, whose edges `edges` holds: the diameter of the largest
 /// circle that fits inside it centred on each of their points, twice the point's distance from the nearest
-/// edge of its outline and holes, averaged along the lines. `None` for lines of no length, a dot's. A unit of
-/// `meter`'s work for each point and edge.
+/// edge of its outline and holes, averaged along the lines. A line that ends at a tip runs on into the
+/// corner so that its stitches reach it, where the circle shrinks to nothing: the piece that leads into it
+/// is left out, unless the lines have no other. Counted, it pulled a leg of a letter A 1.08 mm wide under
+/// 1 mm, and the leg sewed as a line beside the other leg's satin column
+/// (`req_auto_016_a_letters_legs_sew_alike`). `None` for lines of no length, a dot's. A unit of `meter`'s
+/// work for each point and edge.
 pub(super) fn width(edges: &Edges, lines: &[Line], meter: &mut Meter) -> Result<Option<Mm>, Exhausted> {
-    let (mut sum, mut length) = (0.0, 0.0);
+    // The width times the length, and the length, of the pieces that lead into no tip, then of all of them.
+    let (mut kept, mut all) = ((0.0, 0.0), (0.0, 0.0));
     for line in lines {
         let mut across = Vec::with_capacity(line.points.len());
         for &p in &line.points {
             across.push(2.0 * edges.nearest(p, meter)?);
         }
-        let closing = line.closed.then(|| (line.points.len().saturating_sub(1), 0));
+        let last = line.points.len().saturating_sub(1);
+        let closing = line.closed.then_some((last, 0));
         for (i, j) in (1..line.points.len()).map(|j| (j - 1, j)).chain(closing) {
             let (Some(a), Some(b), Some(wa), Some(wb)) = (line.points.get(i), line.points.get(j), across.get(i), across.get(j)) else { continue };
             let piece = a.distance(*b);
-            sum += piece * (wa + wb) / 2.0;
-            length += piece;
+            let area = piece * (wa + wb) / 2.0;
+            all = (all.0 + area, all.1 + piece);
+            let into_tip = !line.closed && ((i == 0 && *wa <= TIP) || (j == last && *wb <= TIP));
+            if !into_tip {
+                kept = (kept.0 + area, kept.1 + piece);
+            }
         }
     }
+    let (sum, length) = if kept.1 > 0.0 { kept } else { all };
     Ok(if length > 0.0 { Mm::new(sum / length).ok() } else { None })
 }
+
+/// How wide a line's end may measure and still be a tip, a corner of its part's outline, in millimetres:
+/// a corner lies on the outline, and measures nothing but a rounding error.
+const TIP: f64 = 1e-9;
 
 /// The edges of a part in the cells of a square grid, each cut into pieces no longer than a cell, so that
 /// the edge nearest a point is found among the cells round it.
@@ -560,6 +575,21 @@ mod tests {
             }
             assert!((length - perimeter(&part)).abs() < 1e-9, "{length} {}", perimeter(&part));
         }
+    }
+
+    #[test]
+    fn a_line_into_a_tip_is_measured_without_its_piece_into_the_corner() {
+        // A strip 1 mm wide and a line along its middle to a corner of its end: 1 mm wide for 4 mm, and the
+        // piece of 0.5 mm into the corner, 0.5 mm wide on average, is left out. Alone, it is the width.
+        let strip = outline(&[(0.0, 0.0), (10.0, 0.0), (10.0, 1.0), (0.0, 1.0)]);
+        let measured = |points: &[(f64, f64)]| {
+            let line = Line { points: points.iter().map(|&(x, y)| Point::new(x, y).unwrap()).collect(), closed: false };
+            let edges = Edges::of(&strip, piece(&strip), &mut Budget::DEFAULT.meter()).unwrap();
+            width(&edges, &[line], &mut Budget::DEFAULT.meter()).unwrap().unwrap().get()
+        };
+        assert!((measured(&[(5.5, 0.5), (9.5, 0.5), (10.0, 1.0)]) - 1.0).abs() < 1e-12);
+        assert!((measured(&[(10.0, 1.0), (9.5, 0.5), (5.5, 0.5)]) - 1.0).abs() < 1e-12);
+        assert!((measured(&[(9.5, 0.5), (10.0, 1.0)]) - 0.5).abs() < 1e-12);
     }
 
     #[test]

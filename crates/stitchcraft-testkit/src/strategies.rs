@@ -20,6 +20,20 @@ pub fn config(cases: u32) -> Config {
     if std::env::var_os("PROPTEST_RNG_SEED").is_some() { config } else { Config { rng_seed: RngSeed::Fixed(SEED), ..config } }
 }
 
+/// A letter for [`crate::designs::letter`], T, H or E, its height from 3 to 20 mm and its strokes' width, drawn
+/// in tenths of a millimetre: narrow lines up to 0.9 mm, and columns from 1.1 mm, no wider than a fifth of
+/// the letter's height, so that it reads as its letter.
+pub fn letters() -> impl Strategy<Value = (char, f64, f64)> {
+    (prop::sample::select(vec!['T', 'H', 'E']), 30u32..=200)
+        .prop_flat_map(|(letter, height)| {
+            let widest = (height / 5).min(70);
+            let widths = prop_oneof![3u32..=9, 11u32..=widest.max(11)];
+            (Just(letter), Just(height), widths)
+        })
+        .prop_filter("a letter's strokes no wider than a fifth of its height", |(_, height, width)| width * 5 <= *height)
+        .prop_map(|(letter, height, width)| (letter, f64::from(height) / 10.0, f64::from(width) / 10.0))
+}
+
 #[derive(Clone, Debug)]
 enum Op {
     Stitch(f64, f64),

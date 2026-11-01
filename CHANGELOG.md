@@ -5,6 +5,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- Changed designs are checked to sew the same stitches changed the same way (`tests/transformed.rs`,
+  `stitchcraft-testkit::transformed`). A change (`Change::ALL`) moves the whole design (a mirror image or a
+  half turn) or draws each of its shapes again with the same outline. The checks compare where each
+  element's thread lies, within 0.3 mm (`stitchcraft-testkit::metrics::footprint_within`), so they don't
+  need an expected answer. Every element of every test sheet drawn as a design is checked, and so are random
+  letters digitized automatically. The checks found TS-13B's letter A sewing its legs differently.
 - Each part that automatic digitizing sews along its middle is checked for reach (`tests/auto_reach.rs`,
   `REQ-AUTO-014`, `REQ-AUTO-016`). A narrow part's line must come within 1.5 times the part's width of every
   point of its outline, and the columns of a part must have all of its outline along their sides and ends.
@@ -1153,6 +1159,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- TS-13B's letter A, 6 mm tall, sews both legs as satin columns (`REQ-AUTO-015`, `REQ-AUTO-016`). Its legs
+  are 1.08 mm wide, over the narrowest satin stroke, 1 mm. The line along one leg runs on into the corner at
+  its foot, where the part is 0 mm wide, and averaged with that piece its width came out under 1 mm:
+  that leg sewed as a line beside the other leg's column, and mirrored the other way round. The piece into a
+  tip's corner is now left out of a line's width.
 - A T 4.8 mm tall in lines 0.8 mm wide sews both arms of its bar (`REQ-AUTO-014`). Its arm was measured
   only to where its line ends, 1.01 mm from the junction, short of the cap of its square end. The
   junction's triangle leans, and its longest edge is 1.06 mm, so the arm counted as a bump of the outline
@@ -1954,6 +1965,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-13B.pes` (`REQ-AUTO-015`, `REQ-AUTO-016`): its digitized letter A
+  6 mm tall sews both legs as satin columns, 18 stitches more, 14,419 in all. Nothing else on the sheet, and
+  nothing on TS-13A or TS-13C, changes.
 - Changed `conformance/golden/testsheets/TS-13B.pes` (`REQ-AUTO-014`): its digitized T 4 mm tall sews both
   arms of its bar, 4 stitches more, 14,401 in all.
 - Changed `conformance/golden/render/sampler-simple.png` and `sampler-realistic.png` (`REQ-RND-002`): a stop

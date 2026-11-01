@@ -17,6 +17,7 @@ use stitchcraft_engine::generators::satin::{
 };
 use stitchcraft_engine::normalize::region;
 use stitchcraft_engine::normalize::satin::{Pairing, Shape as Read, recognize};
+use stitchcraft_engine::testsheets::find;
 use stitchcraft_plan::{Role, StitchKind};
 use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, messages, planned, polylines, rules, widened};
 
@@ -148,6 +149,22 @@ fn req_auto_016_a_column_too_narrow_for_satin_runs_along_its_line() {
     assert!((width.get() - 1.5).abs() < 0.1, "{width:?}");
     assert_eq!((setting(stem, SATIN_COLUMN), setting(stem, BEAN_STITCH_REPEATS)), (None, Some("1")));
     assert_eq!(setting(bar, SATIN_COLUMN), Some("true"));
+}
+
+#[test]
+fn req_auto_016_a_letters_legs_sew_alike() {
+    // TS-13B's letter A 6 mm tall, its legs 1.08 mm wide: wider than the narrowest satin stroke, 1 mm, so both
+    // sew as satin columns, as its crossbar does. The line along one leg ran on into the corner at its foot,
+    // where it measures nothing, and its width, averaged along it, came out under 1 mm: that leg sewed as a
+    // line beside the other's column, whose line took in the junction at the top. Which leg did turned with
+    // the drawing (`tests/transformed.rs`). Measured without its piece into the corner, each leg is a column.
+    let design = find("TS-13B").unwrap().design().unwrap().unwrap();
+    let a = design.elements().iter().find(|element| element.id.as_str() == "ts13b:auto:word-6:a").unwrap();
+    let out = digitize(a, &design.settings, &mut Budget::DEFAULT.meter()).unwrap();
+    assert_eq!(out.elements.len(), 3, "{:?}", out.elements);
+    for column in &out.elements {
+        assert_eq!(setting(column, SATIN_COLUMN), Some("true"), "{}", column.id);
+    }
 }
 
 #[test]
