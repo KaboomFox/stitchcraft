@@ -30,7 +30,9 @@
 //! Ink/Stitch differential compares a design sewn by both programs (conformance L3). A set's footprint is
 //! the pixels, on one grid over both sets, whose centres lie within half of [`THREAD`] of one of its
 //! stitches, as for coverage. The overlap is the pixels in both footprints as a share of those in either,
-//! intersection over union: 1 for the same stitches, 0 for stitches far apart.
+//! intersection over union: 1 for the same stitches, 0 for stitches far apart. **Footprint within** a
+//! tolerance is the share of one set's footprint that the other's covers once grown by the tolerance: it
+//! overlooks stitches that run a little apart, where the overlap would count them.
 
 use std::collections::BTreeMap;
 
@@ -59,13 +61,35 @@ pub fn footprint_overlap(a: &[[Point; 2]], b: &[[Point; 2]]) -> f64 {
     overlap_share(a, b, THREAD / 2.0, PIXEL)
 }
 
+/// How nearly the thread of `a`'s stitches lies where `b`'s does, `b`'s grown by `tolerance` millimetres: the
+/// share of the pixels `a`'s thread covers that `b`'s thread covers once grown, 1 when `a` covers none. Unlike
+/// [`footprint_overlap`], it overlooks stitches that run a little apart, as the needle points of a line sewn
+/// from its other end do, and still counts a satin column that becomes a line along its middle. The pixels
+/// are a third of the tolerance wide, or [`PIXEL`] if that is wider: finer pixels would measure no better.
+pub fn footprint_within(a: &[[Point; 2]], b: &[[Point; 2]], tolerance: f64) -> f64 {
+    let (in_a, in_b) = footprints(a, b, THREAD / 2.0, THREAD / 2.0 + tolerance, PIXEL.max(tolerance / 3.0));
+    let (inside, all) =
+        in_a.iter().zip(&in_b).fold((0_usize, 0_usize), |(inside, all), (&x, &y)| (inside + usize::from(x && y), all + usize::from(x)));
+    if all == 0 { 1.0 } else { inside as f64 / all as f64 }
+}
+
 /// The share `footprint_overlap` gives, the thread reaching `reach` either side of a stitch, on pixels
 /// `pixel` wide.
 fn overlap_share(a: &[[Point; 2]], b: &[[Point; 2]], reach: f64, pixel: f64) -> f64 {
-    let Some(ends) = Rect::around(a.iter().chain(b).flatten().copied()) else { return 1.0 };
+    let (in_a, in_b) = footprints(a, b, reach, reach, pixel);
+    let (both, either) =
+        in_a.iter().zip(&in_b).fold((0_usize, 0_usize), |(both, either), (&x, &y)| (both + usize::from(x && y), either + usize::from(x || y)));
+    if either == 0 { 1.0 } else { both as f64 / either as f64 }
+}
+
+/// The footprints of `a`'s and `b`'s threads, reaching `reach_a` and `reach_b` either side of a stitch, on one
+/// grid of pixels `pixel` wide around both: for each pixel, whether its centre lies within reach of a stitch.
+fn footprints(a: &[[Point; 2]], b: &[[Point; 2]], reach_a: f64, reach_b: f64, pixel: f64) -> (Vec<bool>, Vec<bool>) {
+    let Some(ends) = Rect::around(a.iter().chain(b).flatten().copied()) else { return (Vec::new(), Vec::new()) };
+    let reach = reach_a.max(reach_b);
     let grow = |q: Point, by: f64| Point::new(q.x() + by, q.y() + by).unwrap_or(q);
     let grid = Grid::new(ends.include(grow(ends.min(), -reach)).include(grow(ends.max(), reach)), pixel);
-    let footprint = |stitches: &[[Point; 2]]| {
+    let footprint = |stitches: &[[Point; 2]], reach: f64| {
         let mut covered = vec![false; grid.columns * grid.rows];
         for &[from, to] in stitches {
             for row in grid.rows_within(from.y().min(to.y()) - reach, from.y().max(to.y()) + reach) {
@@ -77,10 +101,7 @@ fn overlap_share(a: &[[Point; 2]], b: &[[Point; 2]], reach: f64, pixel: f64) -> 
         }
         covered
     };
-    let (in_a, in_b) = (footprint(a), footprint(b));
-    let (both, either) =
-        in_a.iter().zip(&in_b).fold((0_usize, 0_usize), |(both, either), (&x, &y)| (both + usize::from(x && y), either + usize::from(x || y)));
-    if either == 0 { 1.0 } else { both as f64 / either as f64 }
+    (footprint(a, reach_a), footprint(b, reach_b))
 }
 
 /// The share of `edges`, polylines where 2 shapes meet, that the thread of `plan`'s top stitches covers once

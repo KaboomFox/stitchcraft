@@ -107,10 +107,14 @@ Dots have no line, since the caps of their ends meet.
 
 A part's width at a point of its centre line is the diameter of the largest circle centred there that fits
 inside the part: twice the distance from the point to the nearest edge of its outline and holes. Automatic
-digitizing averages it along the line, and a part from 0.5 mm wide is a triple run. The edges are put in the
-cells of a grid as fine as the pieces the part was cut into. A point's nearest edge is looked for in the
-cells round it, ring by ring, until no edge farther out could be nearer. A narrow part's edges lie a cell or
-so from its middle. Each point then costs a few units of work.
+digitizing averages it along the line, and a part from 0.5 mm wide is a triple run. A line that ends at a
+tip runs on into the corner, where the circle shrinks to a point, for its stitches to cover the corner. The
+piece that leads into the corner is left out of the average, unless the part's lines have no other. With
+it, a leg of a letter A 1.08 mm wide measured under 1 mm and sewed as a line, beside the other leg's satin
+column, whose line took in the junction at the top. The edges are put in the cells of a grid as fine as
+the pieces the part was cut into. A point's nearest edge is looked for in the cells round it, ring by
+ring, until no edge farther out could be nearer. A narrow part's edges lie a cell or so from its middle.
+Each point then costs a few units of work.
 
 ## Columns
 
