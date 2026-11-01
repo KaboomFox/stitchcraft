@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a490d20c.js";
+            window.path_to_searchindex_js = "../searchindex-e1f5e57d.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -416,7 +416,9 @@ custom lock’s long step, a satin column wider than the machine’s longest sti
 long. Each part counts against the design’s stitch budget.</li>
 <li><strong>The hoop’s centre.</strong> The fitted plan is moved so the design’s origin is at the hoop’s centre
 (<a href="#origin-and-stop-position">origin</a>, <code>REQ-ASM-005</code>).</li>
-<li><strong>Colour limits:</strong> colour changes and stops above what the profile’s format records → <code>SC-E0601</code>.</li>
+<li><strong>Colour limits:</strong> colour changes and stops above what the format the plan is written in records →
+<code>SC-E0601</code>. That is the profile’s own, or the one <code>--format</code> or an exporter writes, planned for with
+<code>MachineProfile::writing</code>: a DST file records 999 colour changes, where the PE800’s own PES records 255.</li>
 <li><strong>Hoop:</strong> a design larger than the hoop → <code>SC-E0701</code>, with a rotate-to-fit fix when rotating 90° would
 fit. When a design’s origin is far from its middle, a design smaller than the hoop can cross the
 hoop’s edge. That is <code>SC-E0701</code> as well. So is a stop position past the edge, which the message names. The size is

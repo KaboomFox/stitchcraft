@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-a490d20c.js";
+            window.path_to_searchindex_js = "searchindex-e1f5e57d.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b793f3ad.js"></script>
@@ -4749,8 +4749,12 @@ built the plan: the command line reports it as <code>SC-E0009</code> and writes 
 previous movement was a <code>Normal</code> stitch with no trim since — the stitch lays thread between two holes,
 and its length is what the machine and fabric feel; the first stitch after a jump, a trim or a thread
 change starts a new run. A length or a position within <code>LENGTH_SLACK</code> (10⁻⁹ mm) of a limit counts as at
-it, at the hoop’s edge as for a stitch’s length, so rounding cannot push a stitch placed exactly at a limit
-past it. Generators place stitches by the same test, and so does the check that a design fits the hoop.</p>
+it, at the hoop’s edge as for a stitch’s length, so floating-point rounding cannot push a stitch placed
+exactly at a limit past it. Generators place stitches by the same test, and so does the check that a design
+fits the hoop. The rules hold for the plan. A machine file rounds its positions to 0.1 mm, and its
+stitches are within 0.14 mm of the plan’s (<a href="#machine-formats">formats</a>, <code>REQ-FMT-002</code>). The colour changes a plan may
+have are those of the format it is written in: <code>MachineProfile::writing</code> gives the machine’s profile for
+another format than its own (<code>REQ-PLAN-006</code>).</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -5708,7 +5712,9 @@ custom lock’s long step, a satin column wider than the machine’s longest sti
 long. Each part counts against the design’s stitch budget.</li>
 <li><strong>The hoop’s centre.</strong> The fitted plan is moved so the design’s origin is at the hoop’s centre
 (<a href="#origin-and-stop-position">origin</a>, <code>REQ-ASM-005</code>).</li>
-<li><strong>Colour limits:</strong> colour changes and stops above what the profile’s format records → <code>SC-E0601</code>.</li>
+<li><strong>Colour limits:</strong> colour changes and stops above what the format the plan is written in records →
+<code>SC-E0601</code>. That is the profile’s own, or the one <code>--format</code> or an exporter writes, planned for with
+<code>MachineProfile::writing</code>: a DST file records 999 colour changes, where the PE800’s own PES records 255.</li>
 <li><strong>Hoop:</strong> a design larger than the hoop → <code>SC-E0701</code>, with a rotate-to-fit fix when rotating 90° would
 fit. When a design’s origin is far from its middle, a design smaller than the hoop can cross the
 hoop’s edge. That is <code>SC-E0701</code> as well. So is a stop position past the edge, which the message names. The size is
@@ -8071,8 +8077,17 @@ splits long moves into several jump records; the engine never needs to know.</li
 <li><strong>Commands are explicit.</strong> Each writer documents how it expresses <code>Jump</code>, <code>Trim</code>, <code>Stop</code>,
 <code>ColorChange</code> and <code>End</code>, and conformance checks every one of them per format (<code>REQ-FMT-003</code>).</li>
 <li><strong>Readers are hostile-input parsers.</strong> Every length, count and offset is checked before use; total
-stitches are capped (default 2,000,000); allocation is proportional to verified sizes; the reader
-returns the plan or a typed error, never a panic (fuzzed, <code>NFR-SEC-1</code>).</li>
+records are capped at the stitch budget (2,000,000) in a file of anyone’s; allocation is proportional to
+verified sizes; the reader returns the plan or a typed error, never a panic (fuzzed, <code>NFR-SEC-1</code>). A file
+StitchCraft just wrote is read back whole (<code>read_back</code>), up to as many records as it has bytes, since a
+plan within the stitch budget has more records than needle points.</li>
+<li><strong>Positions are rounded once.</strong> A writer rounds each absolute position to 0.1 mm, half to even, and
+writes moves between rounded positions (<code>REQ-FMT-002</code>). A stitch in the file is then within 0.1 mm each
+way of the plan’s, up to 0.14 mm longer or shorter, and so past the machine’s longest or shortest stitch
+by as much: 11.95 mm from (0.04, 0.04) to (8.49, 8.49) is 12.02 mm in the file. The machine’s limits hold
+for the plan (<code>REQ-PLAN-002</code>). Fitting the file’s stitches again would split some stitches at the longest
+by where the grid falls, and leave out needle points of tatami fills and satin columns that their
+generators spaced.</li>
 <li><strong>Never write an empty file</strong> (<code>SC-E0010</code>), and accept empty or zero-stitch files when reading
 (<code>REQ-FMT-004</code>).</li>
 <li><strong>Facts are cited.</strong> Format knowledge comes from public descriptions and MIT-licensed pyembroidery /
@@ -8625,7 +8640,8 @@ own, and a VectorCraft before 0.14 refuses to install them. An exporter writes t
 writes of the document:</p>
 <ul>
 <li>It reads the document with the same reader and plans it with the engine for the machine its <code>profile</code>
-option names, and the design takes the file’s name. The option’s default, <code>document</code>,
+option names, written in its own format, whose colour changes the plan keeps to (<code>REQ-PLAN-006</code>). The
+design takes the file’s name. The option’s default, <code>document</code>,
 is the machine the document keeps, or <code>brother-pe800-5x7</code> when it keeps none, as <code>stitch export</code> plans
 it without <code>--profile</code> (<a href="#design-settings-and-machine-kept-with-the-document">below</a>).
 Reading the file back, as <code>stitch export</code> does, stops it at a writer’s bug (<code>SC-E0009</code>). The budget is

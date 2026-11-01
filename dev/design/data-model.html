@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a490d20c.js";
+            window.path_to_searchindex_js = "../searchindex-e1f5e57d.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -341,8 +341,12 @@ built the plan: the command line reports it as <code>SC-E0009</code> and writes 
 previous movement was a <code>Normal</code> stitch with no trim since — the stitch lays thread between two holes,
 and its length is what the machine and fabric feel; the first stitch after a jump, a trim or a thread
 change starts a new run. A length or a position within <code>LENGTH_SLACK</code> (10⁻⁹ mm) of a limit counts as at
-it, at the hoop’s edge as for a stitch’s length, so rounding cannot push a stitch placed exactly at a limit
-past it. Generators place stitches by the same test, and so does the check that a design fits the hoop.</p>
+it, at the hoop’s edge as for a stitch’s length, so floating-point rounding cannot push a stitch placed
+exactly at a limit past it. Generators place stitches by the same test, and so does the check that a design
+fits the hoop. The rules hold for the plan. A machine file rounds its positions to 0.1 mm, and its
+stitches are within 0.14 mm of the plan’s (<a href="formats.html">formats</a>, <code>REQ-FMT-002</code>). The colour changes a plan may
+have are those of the format it is written in: <code>MachineProfile::writing</code> gives the machine’s profile for
+another format than its own (<code>REQ-PLAN-006</code>).</p>
 <div class="table-wrapper">
 <table>
 <thead>
