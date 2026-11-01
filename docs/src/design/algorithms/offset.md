@@ -97,7 +97,9 @@ counts its instructions against a record ([guardrails](../guardrails.md)).
 Most of the time goes to the region code that finds the area the curves wind round
 ([fills](fills.md#region)). At M7.6 it put its hot points, edges and points in sorted lists, where it had
 kept them in tree maps and sets, and the 4 regions took 65 to 160 ms instead of 141 to 356 ms. The
-parts, their points and the work charged came out the same for all 4.
+parts, their points and the work charged came out the same for all 4. The time left is spread out. The
+largest shares, each about an eighth, go to the parts being joined and to the raw curves being built
+(callgrind, at M7.6).
 
 ## Checking against shapely
 
