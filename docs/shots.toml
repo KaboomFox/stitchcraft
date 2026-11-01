@@ -288,6 +288,92 @@ panels = [
 ]
 
 [[shot]]
+id = "satin-column-one-path"
+kind = "stitch"
+fixture = "docs/fixtures/zigzag.svg"
+style = "realistic"
+scale = 12.0
+layout = "rows"
+alt = "A wave 36 mm long drawn 3 mm wide as one path"
+panels = [
+  { caption = "Running stitch, as a stroke sews by default", params = {} },
+  { caption = "Satin column", params = { satin_column = "true" } },
+]
+
+[[shot]]
+id = "satin-column-spacing"
+kind = "stitch"
+fixture = "docs/fixtures/s-stitch.svg"
+style = "simple"
+scale = 20.0
+layout = "rows"
+alt = "A curved band 36 mm long and 6 mm wide between 2 rails, sewn as a satin column, every stitch across it square to the band and every stitch back slanting to the next"
+panels = [
+  { caption = "1 mm", params = { satin_column = "true", zigzag_spacing_mm = "1" } },
+  { caption = "0.4 mm", params = { satin_column = "true" } },
+]
+
+[[shot]]
+id = "satin-column-underlays"
+kind = "stitch"
+fixture = "docs/fixtures/s-stitch.svg"
+style = "simple"
+scale = 20.0
+layout = "rows"
+alt = "The band sewn as a satin column at 1 mm spacing over each underlay"
+panels = [
+  { caption = "No underlay", params = { satin_column = "true", zigzag_spacing_mm = "1" } },
+  { caption = "Centre walk", params = { satin_column = "true", zigzag_spacing_mm = "1", center_walk_underlay = "true" } },
+  { caption = "Contour", params = { satin_column = "true", zigzag_spacing_mm = "1", contour_underlay = "true" } },
+  { caption = "Zigzag", params = { satin_column = "true", zigzag_spacing_mm = "1", zigzag_underlay = "true" } },
+]
+
+[[shot]]
+id = "tatami-fill"
+kind = "stitch"
+fixture = "docs/fixtures/fill.svg"
+style = "realistic"
+scale = 12.0
+alt = "A green patch 32 mm by 20 mm with rounded corners and a round hole, sewn as a tatami fill: rows across it 0.25 mm apart, round the hole"
+
+[[shot]]
+id = "tatami-angle"
+kind = "stitch"
+fixture = "docs/fixtures/fill.svg"
+style = "simple"
+scale = 12.0
+alt = "The patch sewn as a tatami fill with its rows 1 mm apart, to show them"
+panels = [
+  { caption = "0°", params = { row_spacing_mm = "1", fill_underlay = "false" } },
+  { caption = "45°", params = { row_spacing_mm = "1", fill_underlay = "false", angle = "45" } },
+  { caption = "90°", params = { row_spacing_mm = "1", fill_underlay = "false", angle = "90" } },
+]
+
+[[shot]]
+id = "tatami-staggers"
+kind = "stitch"
+fixture = "docs/fixtures/fill.svg"
+style = "simple"
+scale = 12.0
+alt = "The patch sewn as a tatami fill with its rows 1 mm apart, a dot at each needle point"
+panels = [
+  { caption = "4 staggers", params = { row_spacing_mm = "1", fill_underlay = "false" } },
+  { caption = "1 stagger", params = { row_spacing_mm = "1", fill_underlay = "false", staggers = "1" } },
+]
+
+[[shot]]
+id = "tatami-underlay"
+kind = "stitch"
+fixture = "docs/fixtures/fill.svg"
+style = "simple"
+scale = 12.0
+alt = "The patch sewn as a tatami fill with its rows 1 mm apart"
+panels = [
+  { caption = "Underlay", params = { row_spacing_mm = "1" } },
+  { caption = "No underlay", params = { row_spacing_mm = "1", fill_underlay = "false" } },
+]
+
+[[shot]]
 id = "running-tolerance"
 kind = "stitch"
 fixture = "docs/fixtures/half-disc.svg"
@@ -373,6 +459,60 @@ scale = 6.0
 allow = ["SC-I0901", "SC-W0906", "SC-I0907", "SC-I0904"]
 alt = "The traced badge digitized automatically. A red disc with a blue square on it and a gold disc in the middle sew as tatami fills, with no white round them."
 
+
+[[shot]]
+id = "auto-badge"
+kind = "stitch"
+fixture = "docs/fixtures/traced-badge.svg"
+auto = true
+style = "realistic"
+scale = 6.0
+allow = ["SC-I0901", "SC-W0906", "SC-I0907", "SC-I0904"]
+alt = "The same badge digitized automatically. Its white background is left out, and each colour sews under the edges of the colours sewn on it."
+
+[[shot]]
+id = "traced-badge-drawn"
+kind = "stitch"
+fixture = "docs/fixtures/traced-badge.svg"
+style = "realistic"
+scale = 6.0
+alt = "The traced badge sewn as drawn. Its white background sews too, and each colour is a tatami fill over the colours under it."
+
+[[shot]]
+id = "auto-widths-drawn"
+kind = "stitch"
+fixture = "docs/fixtures/widths.svg"
+style = "realistic"
+scale = 10.0
+alt = "A blue line 0.6 mm wide, a red letter C 3 mm wide and a gold disc 16 mm across, each traced as an area and sewn as drawn: a tatami fill each"
+
+[[shot]]
+id = "auto-widths"
+kind = "stitch"
+fixture = "docs/fixtures/widths.svg"
+auto = true
+style = "realistic"
+scale = 10.0
+allow = ["SC-I0901"]
+alt = "The same shapes digitized automatically. The line runs along its middle, tripled, and the C sews as a satin column between its edges. The disc is still a tatami fill."
+
+[[shot]]
+id = "auto-parts-drawn"
+kind = "stitch"
+fixture = "docs/fixtures/parts.svg"
+style = "realistic"
+scale = 8.0
+alt = "A red lollipop, a disc 14 mm across on a stick 2.4 mm wide, and a blue balloon 12 mm by 15 mm on a string 0.8 mm wide, each one area, sewn as drawn: a tatami fill each"
+
+[[shot]]
+id = "auto-parts"
+kind = "stitch"
+fixture = "docs/fixtures/parts.svg"
+auto = true
+style = "realistic"
+scale = 8.0
+allow = ["SC-I0901", "SC-I0904"]
+alt = "The same shapes digitized automatically. The discs are tatami fills as before, and the stick sews as a satin column and the string as a triple run, each into its fill."
 [[shot]]
 id = "badge-simple"
 kind = "stitch"
@@ -475,6 +615,39 @@ steps = [
 menu = ["Effect", "Plug-ins"]
 dialog = "stroke"
 alt = "The StitchCraft Stroke dialog in VectorCraft, its settings in sections, from Stroke, with Method, to Shortest stitch and jump and Preview. Each row has a label, a field with its unit, and a button that opens the setting's help page. Under them are the Preview checkbox, checked, and the Cancel and OK buttons."
+
+[[shot]]
+id = "vectorcraft-satin-rails"
+kind = "vectorcraft-render"
+plugins = ["satin"]
+scale = 4.0
+# The how-to's satin column of 2 rails (docs/src/user/how-to/vectorcraft-columns-and-presets.md): 2 curves
+# 3 mm apart, joined into a compound path and given StitchCraft Satin. Coordinates are points.
+steps = [
+  { cmd = "file.new", params = { width = 128, height = 72 } },
+  { cmd = "path.create", params = { d = "M 14 46 C 40 12 88 12 114 46" } },
+  { cmd = "path.create", params = { d = "M 14 54.5 C 40 20.5 88 20.5 114 54.5" } },
+  { cmd = "select.all" },
+  { cmd = "object.compoundPath.make" },
+  { cmd = "paint.setFill", params = { none = true } },
+  { cmd = "paint.setStroke", params = { color = "#d9a400" } },
+  { apply = "satin" },
+]
+alt = "A gold satin column in VectorCraft's canvas, its stitches across the band between 2 curved rails that make one compound path, as StitchCraft Satin shows them."
+
+[[shot]]
+id = "vectorcraft-stroke-to-satin-menu"
+kind = "vectorcraft-ui"
+plugins = ["satin", "stroke-to-satin"]
+steps = [
+  { cmd = "file.new", params = { width = 144, height = 144 } },
+  { cmd = "path.create", params = { d = "M 18 90 C 46 40 98 40 126 90" } },
+  { cmd = "paint.setFill", params = { none = true } },
+  { cmd = "paint.setStroke", params = { color = "#1a4e9c" } },
+  { cmd = "stroke.set", params = { weight = 8.5 } },
+]
+menu = ["Object", "Plug-ins"]
+alt = "VectorCraft's Object menu, open at Plug-ins, which lists StitchCraft Stroke to Satin, over a curved blue line 3 mm wide."
 
 [[shot]]
 id = "vectorcraft-patch"
