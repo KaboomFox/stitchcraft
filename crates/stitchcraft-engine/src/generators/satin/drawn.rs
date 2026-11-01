@@ -144,6 +144,8 @@ pub fn from_rails(rails: [Vec<Point>; 2], rungs: Vec<[Point; 2]>, push: [f64; 2]
     let meet = ends.iter().any(Option::is_none);
     let known = |count: usize| if meet { count >= 2 } else { count == 1 || count >= 3 };
     let (mut pairs, mut cuts_lengthened_end) = (rungs, false);
+    // Ends push compensation leaves as they are, then ends it lengthens, which only the last rung added can
+    // be across.
     for lengthening in [false, true] {
         for (at, (end, lengthened)) in ends.into_iter().zip(lengthened(push)).enumerate() {
             let Some(end) = end.filter(|_| lengthened == lengthening && !known(pairs.len())) else { continue };
@@ -152,7 +154,7 @@ pub fn from_rails(rails: [Vec<Point>; 2], rungs: Vec<[Point; 2]>, push: [f64; 2]
             } else {
                 pairs.push(end);
             }
-            cuts_lengthened_end |= lengthening;
+            cuts_lengthened_end = lengthening;
         }
     }
     let Some(drawn) = pairs.iter().copied().map(reaching).collect::<Option<Vec<_>>>() else { return Ok(Err(Unmade::ReadOtherwise)) };
