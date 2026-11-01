@@ -5,9 +5,10 @@
 //! case runs the real one on every track, and here `stitch` is given this program as `--vectorcraft-cli`.
 //! Run with [`STAND_IN`] in its environment, which `stitch` passes on, it does what `vectorcraft-cli run
 //! --commands - --export FILE` does as far as `stitch` can tell. It reads the steps on standard input, keeps
-//! them with its arguments in the file the variable names, and saves to `FILE` a document VectorCraft traced:
-//! the fixture `traced-badge.vectorcraft`, which VectorCraft 0.18.0 traced when the `picture` case ran. With
-//! [`FAILS`] it fails as VectorCraft does, saying why, and with [`SAVES_NOTHING`] it ends without saving.
+//! the text it read with its arguments in the file the variable names, and saves to `FILE` a document
+//! VectorCraft traced: the fixture `traced-badge.vectorcraft`, which VectorCraft 0.18.0 traced when the
+//! `picture` case ran. With [`FAILS`] it fails as VectorCraft does, saying why, and with [`SAVES_NOTHING`] it
+//! ends without saving.
 //!
 //! **Why a harness of its own.** A program that stands in for another must start as that one does, and the
 //! standard test harness reads its arguments first. So `main` runs the tests itself, and prints for each the
@@ -110,7 +111,8 @@ fn stand_in(keeps: &Path) -> ExitCode {
     let mut steps = String::new();
     std::io::stdin().read_to_string(&mut steps).unwrap();
     let no_prefs = std::env::var("VECTORCRAFT_NO_PREFS").ok();
-    let kept = json!({"args": args, "no_prefs": no_prefs, "steps": serde_json::from_str::<Value>(&steps).unwrap()});
+    // The text it read, as VectorCraft reads it: a number parsed and written again may differ in its last digit.
+    let kept = json!({"args": args, "no_prefs": no_prefs, "steps": steps});
     std::fs::write(keeps, kept.to_string()).unwrap();
     if std::env::var_os(FAILS).is_some() {
         eprintln!("{SAID}");
@@ -166,7 +168,7 @@ fn req_cli_012_stitch_plan_traces_a_picture_with_vectorcraft_s_command_line_and_
     // VectorCraft runs the steps from standard input, without the user's preferences, and saves the document
     // into a folder of the command's own beside the machine file, which is gone.
     let kept = kept.unwrap();
-    assert_eq!(kept["steps"], steps("badge.png", PICTURE, REFERENCE, None, COLOURS));
+    assert_eq!(kept["steps"], steps("badge.png", PICTURE, REFERENCE, None, COLOURS).to_string());
     assert_eq!(kept["no_prefs"], "1");
     let given: Vec<&str> = kept["args"].as_array().unwrap().iter().map(|arg| arg.as_str().unwrap()).collect();
     assert_eq!(given[..4], ["run", "--commands", "-", "--export"]);
@@ -200,7 +202,7 @@ fn req_cli_012_the_picture_is_traced_for_the_machine_at_the_size_and_in_the_colo
     let args = ["plan", "photo.JPG", "-o", "photo.pes", "--profile", BROTHER_PE800_4X4.id, "--size", "80", "--colours", "4"];
     let (out, kept) = stitch(dir.path(), &args, None);
     assert_eq!(out.status.code(), Some(0), "{}", text(&out.stderr));
-    assert_eq!(kept.unwrap()["steps"], steps("photo.JPG", PICTURE, &BROTHER_PE800_4X4, Some(Mm::new(80.0).unwrap()), 4));
+    assert_eq!(kept.unwrap()["steps"], steps("photo.JPG", PICTURE, &BROTHER_PE800_4X4, Some(Mm::new(80.0).unwrap()), 4).to_string());
     assert!(text(&out.stdout).contains(&format!("  profile   {} (", BROTHER_PE800_4X4.id)), "{}", text(&out.stdout));
 }
 

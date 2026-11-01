@@ -285,17 +285,77 @@ fn a_speck_shares_the_stretch_of_an_areas_rings_that_lies_within_its_zone() {
 
 #[test]
 fn a_design_less_than_twice_the_margin_across_has_no_background() {
-    // Whether a rectangle `width` by `height`, the whole design, covers it.
+    // Whether a rectangle `width` by `height`, the whole design, covers it under a dot drawn on it.
     let covers = |width: f64, height: f64| {
         let path = outline(&[square((0.0, 0.0), (width, height))]);
+        let dot = filled("dot", &[square((0.0, 0.0), (0.1, 0.1))]);
         let bounds = stitchcraft_core::Rect::around([p(0.0, 0.0), p(width, height)]).unwrap();
-        matches!(background::covers(&path, FillRule::NonZero, bounds, &mut Budget::DEFAULT.meter()), Ok(true))
+        matches!(background::covers(&path, FillRule::NonZero, &[dot], bounds, &mut Budget::DEFAULT.meter()), Ok(true))
     };
-    // A little less than twice the margin across either way, the margins leave no box; a little more, they
-    // leave one, which the rectangle covers.
+    // Up to twice the margin across either way, the margins leave no box; a little more, they leave one,
+    // which the rectangle covers.
     let twice = 2.0 * background::BACKGROUND_MARGIN;
-    assert!(!covers(0.9 * twice, 10.0) && !covers(10.0, 0.9 * twice));
+    assert!(!covers(0.9 * twice, 10.0) && !covers(10.0, 0.9 * twice) && !covers(twice, 10.0) && !covers(10.0, twice));
     assert!(covers(1.1 * twice, 10.0) && covers(10.0, 1.1 * twice));
+}
+
+#[test]
+fn a_sliver_beside_a_side_runs_along_it_further_than_along_the_background_and_has_no_area() {
+    // The sliver a background whose left side leans 40 nm over 20 mm across the margin's edge leaves inside
+    // the margin (`req_auto_009_a_background_whose_side_leans_across_the_margins_edge_is_left_out`): were it
+    // measured as a notch, it would make the background part of the picture.
+    let lean = 4e-8;
+    let sliver = Polygon {
+        outline: [(0.5, 0.5), (0.5, 19.5), (0.5 + 0.975 * lean, 19.5), (0.5 + 0.025 * lean, 0.5), (0.5, 0.5)].map(|(x, y)| p(x, y)).to_vec(),
+        holes: Vec::new(),
+    };
+    let sides = Envelope { min_x: 0.5, min_y: 0.5, max_x: 29.5, max_y: 19.5 };
+    let (along_sides, along_outlines) = background::lengths(&sliver, &sides, &mut Budget::DEFAULT.meter()).unwrap();
+    assert!(along_sides > along_outlines && no_area(sliver.area()), "{along_sides} {along_outlines} {}", sliver.area());
+}
+
+#[test]
+fn a_part_the_background_leaves_runs_along_the_sides_its_edges_lie_on_and_along_the_outlines_elsewhere() {
+    let sides = Envelope { min_x: 0.0, min_y: 0.0, max_x: 30.0, max_y: 20.0 };
+    let lengths = |part: &Polygon| background::lengths(part, &sides, &mut Budget::DEFAULT.meter()).unwrap();
+    let triangle = |a: (f64, f64), b: (f64, f64), c: (f64, f64)| Polygon {
+        outline: vec![p(a.0, a.1), p(b.0, b.1), p(c.0, c.1), p(a.0, a.1)],
+        holes: Vec::new(),
+    };
+    // In each corner, 3 and 4 mm along the 2 sides it lies on, and the 5 mm between them along the outlines.
+    for corner in [
+        triangle((0.0, 0.0), (0.0, 4.0), (3.0, 0.0)),
+        triangle((30.0, 0.0), (27.0, 0.0), (30.0, 4.0)),
+        triangle((30.0, 20.0), (30.0, 16.0), (27.0, 20.0)),
+        triangle((0.0, 20.0), (3.0, 20.0), (0.0, 16.0)),
+    ] {
+        let (along_sides, along_outlines) = lengths(&corner);
+        assert!((along_sides - 7.0).abs() < 1e-9 && (along_outlines - 5.0).abs() < 1e-9, "{corner:?}: {along_sides} {along_outlines}");
+    }
+    // A square in the middle of each side, 2 mm along it and 6 along the outlines, and 4 more with a hole
+    // 1 mm across in its middle.
+    for (from, to) in [((0.0, 9.0), (2.0, 11.0)), ((28.0, 9.0), (30.0, 11.0)), ((14.0, 0.0), (16.0, 2.0)), ((14.0, 18.0), (16.0, 20.0))] {
+        let (along_sides, along_outlines) = lengths(&square(from, to));
+        assert!((along_sides - 2.0).abs() < 1e-9 && (along_outlines - 6.0).abs() < 1e-9, "{from:?}: {along_sides} {along_outlines}");
+        let middle = ((from.0 + to.0) / 2.0, (from.1 + to.1) / 2.0);
+        let hole = square((middle.0 - 0.5, middle.1 - 0.5), (middle.0 + 0.5, middle.1 + 0.5)).outline;
+        let (_, around_hole) = lengths(&Polygon { holes: vec![hole], ..square(from, to) });
+        assert!((around_hole - 10.0).abs() < 1e-9, "{from:?}: {around_hole}");
+    }
+}
+
+#[test]
+fn comparing_shapes_with_the_areas_path_costs_a_unit_for_each_of_its_subpaths_and_segments() {
+    // 2 closed subpaths of 3 segments each: 8 units for each shape compared with the path.
+    let parts = [square((0.0, 0.0), (10.0, 10.0)), square((20.0, 0.0), (30.0, 10.0))];
+    let own = filled("own", &parts);
+    let drawn = [own.clone(), own.clone(), filled("other", &[square((2.0, 2.0), (4.0, 4.0))])];
+    let others =
+        |work: u64, drawn: &[Element]| background::others(own.shape.path(), drawn, &mut Budget { max_work: work, ..Budget::DEFAULT }.meter());
+    assert_eq!(others(16, &drawn[..2]), Ok(false));
+    assert!(others(15, &drawn[..2]).is_err());
+    assert_eq!(others(24, &drawn), Ok(true));
+    assert!(others(23, &drawn).is_err());
 }
 
 #[test]
