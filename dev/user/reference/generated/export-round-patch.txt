@@ -5,6 +5,7 @@ round-patch.vectorcraft
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
   size      29.6 × 29.6 mm
   stitches  1633 stitches, 3 jumps, 2 trims, 2 colour changes, 0 stops
+  trims     the machine makes none of them: cut the jump threads by hand
   threads   1. unnamed (#1f4e9c), shown as Brother PEC 2 "Blue"
             2. unnamed (#ffffff), shown as Brother PEC 29 "White"
             3. unnamed (#d9a400), shown as Brother PEC 11 "Deep Gold"

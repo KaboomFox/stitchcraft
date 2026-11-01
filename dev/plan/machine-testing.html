@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f18b9336.js";
+            window.path_to_searchindex_js = "../searchindex-d35d2c23.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -192,7 +192,8 @@ sheets test them (<a href="../design/adr/0013-brother-pe800-reference-machine.ht
 checks it against the profile of the hoop it is for. It prints that profile, the file’s SHA-256, its
 size and counts, the threads in the order they are sewn (with the Brother palette name the machine
 shows for each) and what to check after sewing. Its size and counts are the file’s, read back as the
-machine reads it. <code>stitch preview TS-xx.pes -o TS-xx.png</code> draws a picture of what the file sews.
+machine reads it. <code>stitch preview TS-xx.pes -o TS-xx.png</code> draws a picture of what the file sews on the
+reference machine, with the jump threads it leaves.
 <code>stitch testsheet --list</code> lists the sheets. The MC-1 sheets are drawn stitch by stitch, to test the
 machine and the file formats; from MC-2, sheets are drawn as designs and planned by the engine, so
 sewing them tests its stitches, locks and plan assembly too.</li>

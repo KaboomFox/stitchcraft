@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f18b9336.js";
+            window.path_to_searchindex_js = "../searchindex-d35d2c23.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -193,7 +193,16 @@ anything.</li>
 settings, so documentation images can be compared byte for byte on every pull request.</li>
 </ul>
 <p><code>stitch plan --preview</code> draws the machine file it wrote, read back as <code>stitch preview</code> reads it, in the
-design’s colours. A DST machine’s cut before a long jump then shows as a cut (<code>REQ-CLI-008</code>).</p>
+design’s colours (<code>REQ-CLI-008</code>).</p>
+<p><strong>What cuts the thread is the machine’s.</strong> A preview is drawn for a machine, whose profile says how it
+trims (<code>TrimSupport</code>): <code>stitch plan --preview</code> for the profile it planned for, <code>stitch preview</code> for
+<code>--profile</code> or the reference machine, a test sheet’s picture for its hoop. A thread change cuts, and so
+does a stop, which PES and DST write as a thread change. A trim cuts only on a machine that obeys the
+format’s trim command, and a machine that cuts long jumps by itself cuts where the next hole lies farther
+from the last than its setting. The reference PE800 obeys no trim command: at machine checkpoint MC-1 it
+cut the thread between colours, and at no jump between places sewn in one colour, trim-flagged or not.
+Its previews draw a jump thread where a plan or a file has a trim, and PES flags every jump as one
+(<code>REQ-FMT-010</code>), so they draw the jump threads the operator cuts by hand.</p>
 <h2 id="two-steps-scene-then-pixels"><a class="header" href="#two-steps-scene-then-pixels">Two steps: scene, then pixels</a></h2>
 <pre><code class="language-text">StitchPlan ──Scene::of──▶ Scene (machine units, plain data) ──Scene::render──▶ PNG
 </code></pre>
@@ -208,8 +217,8 @@ differs; only the golden files compare pixels.</p>
 <tr><td>Hole</td><td>A place where the needle goes down, in sewing order, with the thread’s colour</td></tr>
 <tr><td>Arrival <code>Sewn</code></td><td>A stitch laid from the previous hole (<code>StitchPlan::sewn_stitches</code>, the single definition of “sewing”)</td></tr>
 <tr><td>Arrival <code>Loose</code></td><td>The frame moved without sewing and the thread was not cut: a jump thread that lies loose until cut by hand</td></tr>
-<tr><td>Arrival <code>Cut</code></td><td>The thread was cut since the previous hole (a trim or a thread change), or this is the first hole</td></tr>
-<tr><td>Mark <code>Trim</code>, <code>Stop</code></td><td>Where the needle is when the machine cuts or pauses</td></tr>
+<tr><td>Arrival <code>Cut</code></td><td>The thread was cut since the previous hole (a thread change, a stop, or a trim the machine makes), or this is the first hole</td></tr>
+<tr><td>Mark <code>Trim</code>, <code>Stop</code></td><td>Where the needle is when the machine cuts, or pauses and cuts</td></tr>
 </tbody>
 </table>
 </div>
@@ -219,8 +228,10 @@ anyway. Marks describe what the machine does, not how a file spells it, in the s
 oracle (<code>stitchcraft_testkit::equivalence</code>): two trims in a row cut once, the order of commands at one
 spot does not matter, and a trim after the last hole cuts nothing that stays. So marks are a sorted set
 and trailing trims are left out. The test for <code>REQ-RND-001</code> relies on this: for every test sheet and for
-random plans, the scene of a plan equals the scene of its PES file read back. The only differences
-allowed are the ones PES cannot record: palette colours instead of chosen colours, and no stitch roles.</p>
+random plans, on a machine that obeys the trim command, the scene of a plan with a trim before every jump
+equals the scene of its PES file read back. The only differences allowed are the ones PES cannot record:
+palette colours instead of chosen colours, and no stitch roles. On the reference machine, a test sheet’s
+PES file shows the jump threads its plan does.</p>
 <h2 id="styles"><a class="header" href="#styles">Styles</a></h2>
 <div class="table-wrapper">
 <table>
@@ -241,8 +252,7 @@ allowed are the ones PES cannot record: palette colours instead of chosen colour
 </div>
 <p>Everything is drawn in sewing order, so later stitches lie on earlier ones as they do on the fabric. The
 realistic style draws loose jump threads because they <em>are</em> on the fabric when the hoop comes off the
-machine; a design that should have trims shows them, which is what test sheet TS-02 is about. (A machine
-that cuts long jumps by itself would remove some of them; previews do not model that yet.)</p>
+machine; a design whose machine trims shows its cuts, which is what test sheet TS-02 is about.</p>
 <h2 id="size-and-scale"><a class="header" href="#size-and-scale">Size and scale</a></h2>
 <p>The scale is in pixels per millimetre (default 8, about 200 dpi; 0.1 to 50), so a design looks the same
 at every scale, only sharper. The image is the design’s extent plus a 2 mm margin on each side. Images

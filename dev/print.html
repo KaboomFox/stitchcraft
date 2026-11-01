@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-f18b9336.js";
+            window.path_to_searchindex_js = "searchindex-d35d2c23.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b793f3ad.js"></script>
@@ -302,6 +302,7 @@ TS-01 · Orientation and scale
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
   size      120.0 × 120.0 mm
   stitches  274 stitches, 7 jumps, 6 trims, 0 colour changes, 0 stops
+  trims     the machine makes none of them: cut the jump threads by hand
   threads   1. Black (#000000), shown as Brother PEC 20 "Black"
 after sewing, check:
   - The F reads normally: not mirrored, not upside down, not turned.
@@ -318,6 +319,7 @@ them too.</p>
 TS-01.png · 992 × 992 pixels
   from      TS-01.pes · PES (#PES0001) · "TS-01"
   style     realistic, 8 pixels per millimetre
+  profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
 </code></pre>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-01.png" alt="TS-01 as it will sew: a cross with ticks, an upright F at the top left and four corner squares, in black thread."><span class="img-wrapper"><img src="images/generated/testsheet-ts-01.png" alt="TS-01 as it will sew: a cross with ticks, an upright F at the top left and four corner squares, in black thread."></span></label></p>
 <p>The picture is drawn from the file itself, at the exact positions the machine will use, so this is what
@@ -367,6 +369,7 @@ badge.svg
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
   size      44.0 × 44.0 mm
   stitches  124 stitches, 2 jumps, 1 trim, 1 colour change, 0 stops
+  trims     the machine makes none of them: cut the jump threads by hand
   threads   1. unnamed (#c8102e), shown as Brother PEC 5 "Red"
             2. unnamed (#1f4e9c), shown as Brother PEC 2 "Blue"
   preview   badge.png (384 × 384 pixels)
@@ -401,6 +404,7 @@ strokes.svg
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
   size      60.0 × 45.0 mm
   stitches  556 stitches, 6 jumps, 5 trims, 3 colour changes, 0 stops
+  trims     the machine makes none of them: cut the jump threads by hand
   threads   1. unnamed (#c00000), shown as Brother PEC 5 "Red"
             2. unnamed (#0040c0), shown as Brother PEC 21 "Ultramarine"
             3. unnamed (#c00000), shown as Brother PEC 5 "Red"
@@ -499,6 +503,7 @@ round-patch.vectorcraft
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
   size      29.6 × 29.6 mm
   stitches  1633 stitches, 3 jumps, 2 trims, 2 colour changes, 0 stops
+  trims     the machine makes none of them: cut the jump threads by hand
   threads   1. unnamed (#1f4e9c), shown as Brother PEC 2 "Blue"
             2. unnamed (#ffffff), shown as Brother PEC 29 "White"
             3. unnamed (#d9a400), shown as Brother PEC 11 "Deep Gold"
@@ -562,6 +567,7 @@ traced-badge.svg
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
   size      50.0 × 50.0 mm
   stitches  3770 stitches, 3 jumps, 2 trims, 2 colour changes, 0 stops
+  trims     the machine makes none of them: cut the jump threads by hand
   threads   1. unnamed (#ed171f), shown as Brother PEC 5 "Red"
             2. unnamed (#0a55a3), shown as Brother PEC 2 "Blue"
             3. unnamed (#e8a900), shown as Brother PEC 11 "Deep Gold"
@@ -653,6 +659,7 @@ TS-02.pes · PES (#PES0001) · "TS-02"
   sha256    7c9e1a79353ef17172d1125172635b7f37bce80a1328c936c5eafa436bfff90b
   size      120.0 × 70.0 mm
   stitches  93 stitches, 17 jumps, 16 trims, 2 colour changes, 1 stop
+  trims     the machine makes none of them: cut the jump threads by hand
   extent    x -60.0 to 60.0 mm, y -35.0 to 35.0 mm from where the machine starts
   lengths   stitches from 2.50 to 2.50 mm
   threads   1. Red (#ed171f), shown as Brother PEC 5 "Red"
@@ -680,6 +687,7 @@ also counts the short stitches 0.2 mm or longer, which may be locks.</li>
 TS-02.png · 992 × 592 pixels
   from      TS-02.pes · PES (#PES0001) · "TS-02"
   style     simple, 8 pixels per millimetre
+  profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
 </code></pre>
 <p>The simple style draws each stitch as a thin line with a dot at each needle point. A red cross marks a
 trim and a blue square a stop. Grey dashes show where the frame travels after a cut, and dashes in the
@@ -864,6 +872,7 @@ patch.vectorcraft
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
   size      50.0 × 54.0 mm
   stitches  2466 stitches, 5 jumps, 4 trims, 3 colour changes, 0 stops
+  trims     the machine makes none of them: cut the jump threads by hand
   threads   1. unnamed (#bf0000), shown as Brother PEC 5 "Red"
             2. unnamed (#0033b3), shown as Brother PEC 21 "Ultramarine"
             3. unnamed (#008033), shown as Brother PEC 56 "Moss Green"
@@ -1693,6 +1702,9 @@ Options:
           
           [default: 8]
 
+  -p, --profile &lt;PROFILE&gt;
+          The machine the picture is for, which decides where the thread is cut (see `stitch profiles`); by default the reference machine
+
   -h, --help
           Print help (see a summary with '-h')
 </code></pre>
@@ -1819,12 +1831,12 @@ Arguments:
 <tr><td>Hoop (sewing field)</td><td>130 × 180 mm</td></tr>
 <tr><td>File format</td><td>PES v1</td></tr>
 <tr><td>Stitch length</td><td>0.3 mm to 12 mm (lock stitches from 0.2 mm)</td></tr>
-<tr><td>Trims</td><td>the format’s trim command</td></tr>
+<tr><td>Trims</td><td>none: cut jump threads by hand</td></tr>
 <tr><td>Thread palette</td><td>Brother PEC</td></tr>
 </tbody>
 </table>
 </div>
-<p><strong>Evidence.</strong> Machine: the owner of the reference machine (2026-10-10). Field: Brother’s 5 × 7 in hoop for the PE800, 130 × 180 mm. Stitch limits and trim support: common Brother home-machine values, to be confirmed by machine checkpoints MC-1 and MC-2 (test sheets TS-01 to TS-04 and TS-10).</p>
+<p><strong>Evidence.</strong> Machine: the owner of the reference machine (2026-10-10). Field: the 5 × 7 in hoop Brother makes for the PE800, 130 × 180 mm. Trims: from machine checkpoint MC-1’s sew-out, which the owner reported (2026-10-31). The machine cut the thread between colours. It cut no jump between places in one colour, whether flagged as a trim or not. Stitch limits: common Brother home-machine values, to be confirmed by machine checkpoints MC-1 and MC-2 (test sheets TS-01 to TS-04 and TS-10).</p>
 <h2 id="brother-pe800-4x4"><a class="header" href="#brother-pe800-4x4"><code>brother-pe800-4x4</code></a></h2>
 <p>Brother PE800 with its 4 × 4 in hoop</p>
 <div class="table-wrapper">
@@ -1836,12 +1848,12 @@ Arguments:
 <tr><td>Hoop (sewing field)</td><td>100 × 100 mm</td></tr>
 <tr><td>File format</td><td>PES v1</td></tr>
 <tr><td>Stitch length</td><td>0.3 mm to 12 mm (lock stitches from 0.2 mm)</td></tr>
-<tr><td>Trims</td><td>the format’s trim command</td></tr>
+<tr><td>Trims</td><td>none: cut jump threads by hand</td></tr>
 <tr><td>Thread palette</td><td>Brother PEC</td></tr>
 </tbody>
 </table>
 </div>
-<p><strong>Evidence.</strong> Hoop: the owner’s (2026-10-10). Field: Brother’s 4 × 4 in hoop, 100 × 100 mm. The rest as for brother-pe800-5x7.</p>
+<p><strong>Evidence.</strong> Hoop: the owner’s (2026-10-10). Field: the 4 × 4 in hoop Brother makes, 100 × 100 mm. The rest as for brother-pe800-5x7.</p>
 <h2 id="brother-pe800-small"><a class="header" href="#brother-pe800-small"><code>brother-pe800-small</code></a></h2>
 <p>Brother PE800 with its small hoop</p>
 <div class="table-wrapper">
@@ -1853,12 +1865,12 @@ Arguments:
 <tr><td>Hoop (sewing field)</td><td>20 × 60 mm</td></tr>
 <tr><td>File format</td><td>PES v1</td></tr>
 <tr><td>Stitch length</td><td>0.3 mm to 12 mm (lock stitches from 0.2 mm)</td></tr>
-<tr><td>Trims</td><td>the format’s trim command</td></tr>
+<tr><td>Trims</td><td>none: cut jump threads by hand</td></tr>
 <tr><td>Thread palette</td><td>Brother PEC</td></tr>
 </tbody>
 </table>
 </div>
-<p><strong>Evidence.</strong> Hoop: the owner’s, sold as 1 × 2.5 in (2026-10-10). Field: Brother’s small hoop, 2 × 6 cm, upright as the 5 × 7 in’s until test sheet TS-10C confirms it. The rest as for brother-pe800-5x7.</p>
+<p><strong>Evidence.</strong> Hoop: the owner’s, sold as 1 × 2.5 in (2026-10-10). Field: the small hoop Brother makes, 2 × 6 cm. It stands upright here, as the 5 × 7 in’s does, until test sheet TS-10C shows which way the machine holds it. The rest as for brother-pe800-5x7.</p>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from `FormatId` in `stitchcraft-plan` and the writers in `stitchcraft-formats`. Edit the source, not this page. -->
 <h1 id="file-formats"><a class="header" href="#file-formats">File formats</a></h1>
 <p>The machine-file formats StitchCraft writes. How each is encoded, and why, is in the <a href="#machine-formats">machine formats design</a>.</p>
@@ -1877,7 +1889,7 @@ Arguments:
 <h1 id="test-sheets"><a class="header" href="#test-sheets">Test sheets</a></h1>
 <p>Designs drawn in code for the <a href="#machine-testing-protocol">machine checkpoints</a>, each for one hoop of the reference machine. Write one with <code>stitch testsheet &lt;id&gt; -o &lt;id&gt;.pes</code>. The command checks it against the profile of that hoop, or the one <code>--profile</code> names, and prints what to check after sewing it, as listed here. The pictures are previews: they show what the machine will sew, including jump threads it leaves for you to cut. In VectorCraft, the Test Sheet filter draws the sheets that say so into a document (<a href="#draw-a-test-sheet">how</a>).</p>
 <h2 id="ts-01--orientation-and-scale"><a class="header" href="#ts-01--orientation-and-scale">TS-01 — Orientation and scale</a></h2>
-<p>120.0 × 120.0 mm · 274 stitches, 7 jumps, 7 trims, 0 colour changes, 0 stops</p>
+<p>120.0 × 120.0 mm · 274 stitches, 7 jumps, 6 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-01.png" alt="TS-01 as it will sew, in black: a cross with arms 100 mm long and a tick every 10 mm, an upright F in the top-left quarter, and a 10 mm square in each corner."><span class="img-wrapper"><img src="images/generated/testsheet-ts-01.png" alt="TS-01 as it will sew, in black: a cross with arms 100 mm long and a tick every 10 mm, an upright F in the top-left quarter, and a 10 mm square in each corner."></span></label></p>
 <p>Threads: Black.</p>
@@ -1889,7 +1901,7 @@ Arguments:
 <li>Ticks are 10 mm apart; the long ticks mark the ends and the centre.</li>
 </ul>
 <h2 id="ts-02--colour-changes-a-stop-jumps-and-trims"><a class="header" href="#ts-02--colour-changes-a-stop-jumps-and-trims">TS-02 — Colour changes, a stop, jumps and trims</a></h2>
-<p>120.0 × 70.0 mm · 93 stitches, 17 jumps, 8 trims, 2 colour changes, 1 stop</p>
+<p>120.0 × 70.0 mm · 93 stitches, 17 jumps, 16 trims, 2 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-02.png" alt="TS-02 as it will sew if the machine leaves plain jumps uncut: four red rows of two dashes with nothing between them, four blue rows whose dashes and rows are joined by loose threads, and a green line underneath."><span class="img-wrapper"><img src="images/generated/testsheet-ts-02.png" alt="TS-02 as it will sew if the machine leaves plain jumps uncut: four red rows of two dashes with nothing between them, four blue rows whose dashes and rows are joined by loose threads, and a green line underneath."></span></label></p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-02-simple.png" alt="TS-02 in the simple style. A red cross marks the trim after the first dash of each red row, and a blue square marks the stop in the middle of the green line. Grey dashes show moves after a cut, and blue dashes show jump threads left in place."><span class="img-wrapper"><img src="images/generated/testsheet-ts-02-simple.png" alt="TS-02 in the simple style. A red cross marks the trim after the first dash of each red row, and a blue square marks the stop in the middle of the green line. Grey dashes show moves after a cut, and blue dashes show jump threads left in place."></span></label></p>
@@ -1902,7 +1914,7 @@ Arguments:
 <li>Any loose loops, knots or bird’s nests on the back, and where.</li>
 </ul>
 <h2 id="ts-02b--ts-02-drawn-as-a-design-trims-elements-ask-for"><a class="header" href="#ts-02b--ts-02-drawn-as-a-design-trims-elements-ask-for">TS-02B — TS-02 drawn as a design: trims elements ask for</a></h2>
-<p>120.0 × 70.0 mm · 230 stitches, 17 jumps, 8 trims, 2 colour changes, 1 stop</p>
+<p>120.0 × 70.0 mm · 230 stitches, 17 jumps, 16 trims, 2 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-02b.png" alt="TS-02B as it will sew if the machine leaves plain jumps uncut: four red rows of two dashes with nothing between them, four blue rows whose top row is one line and whose other dashes and rows are joined by loose threads, and a green line underneath."><span class="img-wrapper"><img src="images/generated/testsheet-ts-02b.png" alt="TS-02B as it will sew if the machine leaves plain jumps uncut: four red rows of two dashes with nothing between them, four blue rows whose top row is one line and whose other dashes and rows are joined by loose threads, and a green line underneath."></span></label></p>
@@ -1917,7 +1929,7 @@ Arguments:
 <li>Any loose loops, knots or bird’s nests on the back, and where.</li>
 </ul>
 <h2 id="ts-03--running-stitch-lengths-bean-stitch-curves-the-shortest-stitch"><a class="header" href="#ts-03--running-stitch-lengths-bean-stitch-curves-the-shortest-stitch">TS-03 — Running stitch: lengths, bean stitch, curves, the shortest stitch</a></h2>
-<p>60.0 × 78.0 mm · 588 stitches, 15 jumps, 15 trims, 0 colour changes, 0 stops</p>
+<p>60.0 × 78.0 mm · 588 stitches, 15 jumps, 14 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-03.png" alt="TS-03 as it will sew, in blue: five long lines with stitches from 1.5 to 4 mm, two bolder bean-stitch lines, three small circles, the right-hand one visibly many-sided, and five short lines of tiny stitches growing longer towards the bottom."><span class="img-wrapper"><img src="images/generated/testsheet-ts-03.png" alt="TS-03 as it will sew, in blue: five long lines with stitches from 1.5 to 4 mm, two bolder bean-stitch lines, three small circles, the right-hand one visibly many-sided, and five short lines of tiny stitches growing longer towards the bottom."></span></label></p>
@@ -1930,7 +1942,7 @@ Arguments:
 <li>Short stitches placed by hand (bottom five; 0.3, 0.4, 0.5, 0.7 and 1.0 mm, each with a small back-and-forth lock at both ends): which lines sew cleanly, with no thread breaks, knots or bunching on the back? The shortest clean one is the machine’s shortest stitch; if the 0.3 mm line is clean, it is 0.3 mm or less: the sheet has no shorter line.</li>
 </ul>
 <h2 id="ts-04--lock-stitches-do-they-hold-and-do-they-show"><a class="header" href="#ts-04--lock-stitches-do-they-hold-and-do-they-show">TS-04 — Lock stitches: do they hold, and do they show?</a></h2>
-<p>110.0 × 64.5 mm · 623 stitches, 27 jumps, 27 trims, 0 colour changes, 0 stops</p>
+<p>110.0 × 64.6 mm · 623 stitches, 27 jumps, 26 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-04.png" alt="TS-04 as it will sew, in red: nine rows of three lines, each line ending in a small lock at both ends, the locks’ shapes differing from row to row and growing from left to right."><span class="img-wrapper"><img src="images/generated/testsheet-ts-04.png" alt="TS-04 as it will sew, in red: nine rows of three lines, each line ending in a small lock at both ends, the locks’ shapes differing from row to row and growing from left to right."></span></label></p>
@@ -1944,7 +1956,7 @@ Arguments:
 <li>Any thread breaks or knots at the locks, and where.</li>
 </ul>
 <h2 id="ts-05--satin-width-ladder-spacing-width-and-pull"><a class="header" href="#ts-05--satin-width-ladder-spacing-width-and-pull">TS-05 — Satin width ladder: spacing, width and pull</a></h2>
-<p>91.0 × 76.0 mm · 3440 stitches, 30 jumps, 30 trims, 0 colour changes, 0 stops</p>
+<p>91.0 × 76.0 mm · 3440 stitches, 30 jumps, 29 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-05.png" alt="TS-05 as it will sew, in blue: three rows of ten solid satin columns, each row’s columns growing from 1 to 10 mm wide left to right, the top row densest and the bottom row the most open."><span class="img-wrapper"><img src="images/generated/testsheet-ts-05.png" alt="TS-05 as it will sew, in blue: three rows of ten solid satin columns, each row’s columns growing from 1 to 10 mm wide left to right, the top row densest and the bottom row the most open."></span></label></p>
@@ -1958,7 +1970,7 @@ Arguments:
 <li>Any puckering round the columns, thread breaks, or loops on the back, and where.</li>
 </ul>
 <h2 id="ts-06--satin-underlays-side-by-side"><a class="header" href="#ts-06--satin-underlays-side-by-side">TS-06 — Satin underlays side by side</a></h2>
-<p>62.0 × 30.0 mm · 966 stitches, 5 jumps, 5 trims, 0 colour changes, 0 stops</p>
+<p>62.0 × 30.0 mm · 966 stitches, 5 jumps, 4 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-06.png" alt="TS-06 as it will sew, in red: five satin columns 6 mm wide side by side, which look alike from above because their underlays lie beneath the top stitches."><span class="img-wrapper"><img src="images/generated/testsheet-ts-06.png" alt="TS-06 as it will sew, in red: five satin columns 6 mm wide side by side, which look alike from above because their underlays lie beneath the top stitches."></span></label></p>
@@ -1972,7 +1984,7 @@ Arguments:
 <li>Measure each column across, halfway down, and note any puckering round it.</li>
 </ul>
 <h2 id="ts-07--fill-and-outline-registration-at-3-pull-compensations"><a class="header" href="#ts-07--fill-and-outline-registration-at-3-pull-compensations">TS-07 — Fill and outline registration at 3 pull compensations</a></h2>
-<p>126.2 × 126.0 mm · 13527 stitches, 6 jumps, 6 trims, 1 colour change, 0 stops</p>
+<p>126.2 × 126.0 mm · 13527 stitches, 6 jumps, 5 trims, 1 colour change, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-07.png" alt="TS-07 as it will sew: three red tatami circles, two side by side and one below them, each with a thin black outline along its edge."><span class="img-wrapper"><img src="images/generated/testsheet-ts-07.png" alt="TS-07 as it will sew: three red tatami circles, two side by side and one below them, each with a thin black outline along its edge."></span></label></p>
@@ -1985,7 +1997,7 @@ Arguments:
 <li>Any puckering round the circles, and where.</li>
 </ul>
 <h2 id="ts-08--fill-density-and-angle"><a class="header" href="#ts-08--fill-density-and-angle">TS-08 — Fill density and angle</a></h2>
-<p>100.0 × 170.0 mm · 16248 stitches, 15 jumps, 15 trims, 0 colour changes, 0 stops</p>
+<p>100.0 × 170.0 mm · 16248 stitches, 15 jumps, 14 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-08.png" alt="TS-08 as it will sew, in blue: fifteen tatami squares in five rows of three, their rows level, slanting and upright from left to right, the top squares dense and the bottom ones open enough to show the underlay and travel beneath them."><span class="img-wrapper"><img src="images/generated/testsheet-ts-08.png" alt="TS-08 as it will sew, in blue: fifteen tatami squares in five rows of three, their rows level, slanting and upright from left to right, the top squares dense and the bottom ones open enough to show the underlay and travel beneath them."></span></label></p>
@@ -1999,7 +2011,7 @@ Arguments:
 <li>Measure the 0° and the 90° square at 0.4 mm across, both ways. How much less than 30 mm are they?</li>
 </ul>
 <h2 id="ts-09--fill-underlay-travel-and-gap-filling-rows-round-holes"><a class="header" href="#ts-09--fill-underlay-travel-and-gap-filling-rows-round-holes">TS-09 — Fill underlay, travel and gap-filling rows round holes</a></h2>
-<p>66.0 × 114.0 mm · 7780 stitches, 6 jumps, 3 trims, 0 colour changes, 0 stops</p>
+<p>66.0 × 114.0 mm · 7780 stitches, 6 jumps, 5 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-09.png" alt="TS-09 as it will sew, in green: the same shape three times, top to bottom, a rectangle with a square hole and a round hole and a bar to its right, which a jump thread along the bottom joins to it."><span class="img-wrapper"><img src="images/generated/testsheet-ts-09.png" alt="TS-09 as it will sew, in green: the same shape three times, top to bottom, a rectangle with a square hole and a round hole and a bar to its right, which a jump thread along the bottom joins to it."></span></label></p>
@@ -2014,7 +2026,7 @@ Arguments:
 <li>How the 3 copies differ in stiffness, and any puckering.</li>
 </ul>
 <h2 id="ts-10a--hoop-size-the-4--4-in-hoop-a-100--100-mm-frame"><a class="header" href="#ts-10a--hoop-size-the-4--4-in-hoop-a-100--100-mm-frame">TS-10A — Hoop size: the 4 × 4 in hoop, a 100 × 100 mm frame</a></h2>
-<p>100.0 × 100.0 mm · 195 stitches, 4 jumps, 4 trims, 0 colour changes, 0 stops</p>
+<p>100.0 × 100.0 mm · 195 stitches, 4 jumps, 3 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 4 × 4 in hoop, profile <a href="#brother-pe800-4x4"><code>brother-pe800-4x4</code></a>.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-10a.png" alt="TS-10A as it will sew: a blue square frame 100 mm on each side, the 4 × 4 in hoop’s field, with an F at the top left and a small cross in the centre."><span class="img-wrapper"><img src="images/generated/testsheet-ts-10a.png" alt="TS-10A as it will sew: a blue square frame 100 mm on each side, the 4 × 4 in hoop’s field, with an F at the top left and a small cross in the centre."></span></label></p>
 <p>Threads: Blue.</p>
@@ -2024,7 +2036,7 @@ Arguments:
 <li>The frame measures 100.0 × 100.0 mm (± 0.5 mm), the F at the top left.</li>
 </ul>
 <h2 id="ts-10b--hoop-size-the-5--7-in-hoop-a-130--180-mm-frame"><a class="header" href="#ts-10b--hoop-size-the-5--7-in-hoop-a-130--180-mm-frame">TS-10B — Hoop size: the 5 × 7 in hoop, a 130 × 180 mm frame</a></h2>
-<p>130.0 × 180.0 mm · 283 stitches, 4 jumps, 4 trims, 0 colour changes, 0 stops</p>
+<p>130.0 × 180.0 mm · 283 stitches, 4 jumps, 3 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-10b.png" alt="TS-10B as it will sew: a blue frame 130 mm wide and 180 mm high, the 5 × 7 in hoop’s field, with an F at the top left and a small cross in the centre."><span class="img-wrapper"><img src="images/generated/testsheet-ts-10b.png" alt="TS-10B as it will sew: a blue frame 130 mm wide and 180 mm high, the 5 × 7 in hoop’s field, with an F at the top left and a small cross in the centre."></span></label></p>
 <p>Threads: Blue.</p>
@@ -2034,7 +2046,7 @@ Arguments:
 <li>The frame measures 130.0 × 180.0 mm (± 0.5 mm), tall side top to bottom, the F at the top left.</li>
 </ul>
 <h2 id="ts-10c--hoop-size-the-small-hoop-a-20--60-mm-frame"><a class="header" href="#ts-10c--hoop-size-the-small-hoop-a-20--60-mm-frame">TS-10C — Hoop size: the small hoop, a 20 × 60 mm frame</a></h2>
-<p>20.0 × 60.0 mm · 92 stitches, 4 jumps, 4 trims, 0 colour changes, 0 stops</p>
+<p>20.0 × 60.0 mm · 92 stitches, 4 jumps, 3 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its small hoop, profile <a href="#brother-pe800-small"><code>brother-pe800-small</code></a>.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-10c.png" alt="TS-10C as it will sew: a blue frame 20 mm wide and 60 mm high, the small hoop’s field, with a small F at the top left and a small cross in the middle."><span class="img-wrapper"><img src="images/generated/testsheet-ts-10c.png" alt="TS-10C as it will sew: a blue frame 20 mm wide and 60 mm high, the small hoop’s field, with a small F at the top left and a small cross in the middle."></span></label></p>
 <p>Threads: Blue.</p>
@@ -2045,7 +2057,7 @@ Arguments:
 <li>The frame measures 20.0 × 60.0 mm (± 0.5 mm), tall side top to bottom, the F at the top left.</li>
 </ul>
 <h2 id="ts-13a--pictures-digitized-automatically-neighbours-and-sewing-order"><a class="header" href="#ts-13a--pictures-digitized-automatically-neighbours-and-sewing-order">TS-13A — Pictures digitized automatically: neighbours and sewing order</a></h2>
-<p>126.0 × 168.0 mm · 24286 stitches, 41 jumps, 0 trims, 20 colour changes, 1 stop</p>
+<p>126.0 × 168.0 mm · 24286 stitches, 31 jumps, 30 trims, 20 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p>Drawn as a design whose shapes StitchCraft digitizes automatically, as <code>--auto</code> does a shape without settings. VectorCraft’s Test Sheet filter draws it too, those shapes with the Auto effect.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-13a.png" alt="TS-13A as it will sew: the same pictures twice, digitized at the top and in paint order at the bottom. Each half has 2 red badges with a blue square and a gold disc on them, a blue disc with specks round it, a row of 3 smaller badges, and a gold square beside a blue bar. At the top the specks are blue bumps on the disc’s edge, and at the bottom red knots."><span class="img-wrapper"><img src="images/generated/testsheet-ts-13a.png" alt="TS-13A as it will sew: the same pictures twice, digitized at the top and in paint order at the bottom. Each half has 2 red badges with a blue square and a gold disc on them, a blue disc with specks round it, a row of 3 smaller badges, and a gold square beside a blue bar. At the top the specks are blue bumps on the disc’s edge, and at the bottom red knots."></span></label></p>
@@ -2053,16 +2065,16 @@ Arguments:
 <p>After sewing, check:</p>
 <ul>
 <li>The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Top row, left to right: a badge traced abutting and one traced stacked, each 40 mm across, and a blue disc with 7 red specks round it. Bottom row: 3 badges drawn badge by badge, and a gold square with a blue bar beside it.</li>
-<li>The bottom half changes thread 16 times and jumps 25 times, the top half 4 and 16 times. How long does each half take?</li>
+<li>The bottom half changes thread 16 times and jumps 15 times, the top half 4 and 16 times. How long does each half take?</li>
 <li>Does fabric show between colours, on either half? On the top half, each area reaches 0.4 mm under the next: does that cover the gap, or show as a ridge?</li>
 <li>On the top half, the stacked badge’s lower colours are cut away under the upper ones. Does it sew as flat as the abutting badge beside it? On the bottom half, it sews its lower colours whole, under the upper ones.</li>
 <li>On the bottom half, each speck round the disc sews a red knot. On the top half, the 6 specks that touch the disc are blue, part of it, and the one apart is left out. Does the disc’s edge show where they were?</li>
-<li>The blue bar meets the gold square along the top half of its side, and runs on 0.5 mm from it below. On the top half, the square reaches under the bar only where they meet. Does the fabric that shows below read as a gap drawn there?</li>
+<li>The blue bar meets the gold square along the top half of its side, and runs on 0.5 mm from it below. On the top half, the bar, sewn first, reaches under the square only where they meet. Does the fabric that shows below read as a gap drawn there?</li>
 <li>Does any shape cover one drawn over it? The order must never let that happen.</li>
 <li>The machine cuts the thread at thread changes and at the stop, but at no jump, and the pictures sew as any design does: a shape sewn after a jump may sew its thread down. Snip the jump threads at each stop and after sewing. Where is one sewn down, and does it show?</li>
 </ul>
 <h2 id="ts-13b--pictures-digitized-automatically-letters-and-lines-traced-as-areas"><a class="header" href="#ts-13b--pictures-digitized-automatically-letters-and-lines-traced-as-areas">TS-13B — Pictures digitized automatically: letters and lines traced as areas</a></h2>
-<p>110.5 × 148.4 mm · 14397 stitches, 61 jumps, 0 trims, 16 colour changes, 1 stop</p>
+<p>110.4 × 148.4 mm · 14397 stitches, 57 jumps, 56 trims, 16 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p>Drawn as a design whose shapes StitchCraft digitizes automatically, as <code>--auto</code> does a shape without settings. VectorCraft’s Test Sheet filter draws it too, those shapes with the Auto effect.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-13b.png" alt="TS-13B as it will sew: the word MATCH in black block letters of 4 sizes, and 3 windows of red, blue and gold areas between black lines, twice. At the top, digitized, the letters are satin columns and the smallest thin runs, and the lines thin runs. At the bottom, in paint order, every letter and line is filled."><span class="img-wrapper"><img src="images/generated/testsheet-ts-13b.png" alt="TS-13B as it will sew: the word MATCH in black block letters of 4 sizes, and 3 windows of red, blue and gold areas between black lines, twice. At the top, digitized, the letters are satin columns and the smallest thin runs, and the lines thin runs. At the bottom, in paint order, every letter and line is filled."></span></label></p>
@@ -2070,7 +2082,7 @@ Arguments:
 <p>After sewing, check:</p>
 <ul>
 <li>The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left: the word MATCH in block letters 15, 10, 6 and 4 mm tall, top to bottom, each letter traced as an area. Right: 3 windows, top to bottom, whose black lines, traced as areas, are 0.3, 0.6 and 0.9 mm wide. One line runs down each window, and a branch runs across to its right side from it.</li>
-<li>The bottom half changes thread 12 times and jumps 19 times, the top half 4 and 42 times. A letter filled sews in one piece, and digitized it is columns and lines with jumps between them. How long does each half take?</li>
+<li>The bottom half changes thread 12 times and jumps 16 times, the top half 4 and 41 times. A letter filled sews in one piece, and digitized it is columns and lines with jumps between them. How long does each half take?</li>
 <li>Which is the smallest word that reads, on each half?</li>
 <li>On the top half, the letters from 6 mm tall sew as satin columns between their own edges, and the 4 mm ones as triple runs along their middles. Do the columns’ stitches lie square to their strokes, round the C’s bend and the A’s hole?</li>
 <li>Where a column ends under another, 0.4 mm longer, as the T’s stem does under its bar, does fabric show there, or a ridge? Does a crossbar sewn as a column of its own, as the H’s is, read as one stroke with its stems? The M’s and the A’s feet should end flat along the baseline, and the C’s ends round.</li>
@@ -2080,7 +2092,7 @@ Arguments:
 <li>The machine cuts the thread at thread changes and at the stop, but at no jump, and the pictures sew as any design does: a shape sewn after a jump may sew its thread down. Snip the jump threads at each stop and after sewing. Where is one sewn down, and does it show?</li>
 </ul>
 <h2 id="ts-13c--pictures-digitized-automatically-lines-and-shapes-in-parts"><a class="header" href="#ts-13c--pictures-digitized-automatically-lines-and-shapes-in-parts">TS-13C — Pictures digitized automatically: lines, and shapes in parts</a></h2>
-<p>111.4 × 107.7 mm · 10311 stitches, 25 jumps, 0 trims, 8 colour changes, 1 stop</p>
+<p>111.4 × 107.8 mm · 10311 stitches, 25 jumps, 24 trims, 8 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p>Drawn as a design whose shapes StitchCraft digitizes automatically, as <code>--auto</code> does a shape without settings. VectorCraft’s Test Sheet filter draws it too, those shapes with the Auto effect.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-13c.png" alt="TS-13C as it will sew: a pink face drawn with black lines, a gold star and a red balloon on its string, twice. At the top, digitized, the face’s outlines are wide satin columns, and the star’s points and the string are columns over their fill. At the bottom, in paint order, the lines are thin running stitches."><span class="img-wrapper"><img src="images/generated/testsheet-ts-13c.png" alt="TS-13C as it will sew: a pink face drawn with black lines, a gold star and a red balloon on its string, twice. At the top, digitized, the face’s outlines are wide satin columns, and the star’s points and the string are columns over their fill. At the bottom, in paint order, the lines are thin running stitches."></span></label></p>
@@ -4788,7 +4800,9 @@ REQ-CLI-011), which VectorCraft loads as a swatch library for Image Trace to tra
 generated reference pages. A profile’s values are <em>machine facts</em>: changing one requires a
 machine-testing record that justifies it (<a href="#machine-testing-protocol">machine testing</a>), and <code>evidence</code>
 says where each value comes from. Format limits that are not machine facts (the most colour changes a
-format records) live on <code>FormatId</code>, so the invariant checker and the encoders read the same number.</p>
+format records) live on <code>FormatId</code>, so the invariant checker and the encoders read the same number.
+<code>trims</code> decides where a preview cuts the thread and when a report says the machine makes none of a file’s
+trims (<a href="#rendering-previews">rendering</a>). The PE800’s is <code>None</code>, from machine checkpoint MC-1.</p>
 <p>A profile is a machine with one hoop, so a machine with 3 hoops has 3 profiles. <code>profiles::REFERENCE</code> is
 the reference machine’s, the Brother PE800 with its 5 × 7 in hoop
 (<a href="#adr-0013-the-reference-machine-is-a-brother-pe800-with-a-profile-for-each-of-its-hoops">ADR 0013</a>). Code that means the machine the checkpoints
@@ -5734,7 +5748,7 @@ plug-in stays single-threaded.</li>
 </thead>
 <tbody>
 <tr><td>Machine file</td><td><code>stitchcraft-formats</code> writer chosen by the profile or the output extension</td></tr>
-<tr><td>Preview PNG</td><td><code>stitchcraft-render</code>, from the <em>quantized</em> plan (<code>REQ-RND-001</code>)</td></tr>
+<tr><td>Preview PNG</td><td><code>stitchcraft-render</code>, from the <em>quantized</em> plan (<code>REQ-RND-001</code>), cut where the profile’s machine cuts the thread (<a href="#rendering-previews">rendering</a>)</td></tr>
 <tr><td>Report JSON</td><td>The CLI’s, with the counts and size of the machine file read back as a machine reads it, its SHA-256, the threads and the diagnostics</td></tr>
 <tr><td>Traced document</td><td>Of a picture, the document VectorCraft’s command line traced it into, which <code>stitch plan --traced</code> writes (<a href="#pictures-from-the-command-line">image to embroidery</a>)</td></tr>
 <tr><td>Plug-in preview geometry</td><td><code>stitchcraft-vc-plugin</code>, from one element’s groups, its top rows or its path, by the preview’s level (<a href="#live-effect-previews-within-v1-budgets">integration</a>)</td></tr>
@@ -8111,7 +8125,7 @@ list with RGB and codes.</p>
 <ol>
 <li><strong>Trims ignored</strong> on some Brother machines. Test sheet TS-02 sews jumps with and without a trim
 before them. At MC-1 the PE800 cut none of them: on that machine the operator cuts the jump
-threads. The MC-1 sew-out report sets the profile’s trim support.</li>
+threads. Its profiles’ trim support is none, from MC-1’s sew-out, and previews draw those threads.</li>
 <li><strong>Large designs hidden</strong> by an older Brother-family machine for PES v1 files beyond about 130 ×
 180 mm (root cause unknown). The PES v1 section carries a hoop indication, and pystitch sets it to
 the 130 × 180 mm class, which is our unconfirmed hypothesis for that report. The reference PE800’s
@@ -8270,7 +8284,16 @@ anything.</li>
 settings, so documentation images can be compared byte for byte on every pull request.</li>
 </ul>
 <p><code>stitch plan --preview</code> draws the machine file it wrote, read back as <code>stitch preview</code> reads it, in the
-design’s colours. A DST machine’s cut before a long jump then shows as a cut (<code>REQ-CLI-008</code>).</p>
+design’s colours (<code>REQ-CLI-008</code>).</p>
+<p><strong>What cuts the thread is the machine’s.</strong> A preview is drawn for a machine, whose profile says how it
+trims (<code>TrimSupport</code>): <code>stitch plan --preview</code> for the profile it planned for, <code>stitch preview</code> for
+<code>--profile</code> or the reference machine, a test sheet’s picture for its hoop. A thread change cuts, and so
+does a stop, which PES and DST write as a thread change. A trim cuts only on a machine that obeys the
+format’s trim command, and a machine that cuts long jumps by itself cuts where the next hole lies farther
+from the last than its setting. The reference PE800 obeys no trim command: at machine checkpoint MC-1 it
+cut the thread between colours, and at no jump between places sewn in one colour, trim-flagged or not.
+Its previews draw a jump thread where a plan or a file has a trim, and PES flags every jump as one
+(<code>REQ-FMT-010</code>), so they draw the jump threads the operator cuts by hand.</p>
 <h2 id="two-steps-scene-then-pixels"><a class="header" href="#two-steps-scene-then-pixels">Two steps: scene, then pixels</a></h2>
 <pre><code class="language-text">StitchPlan ──Scene::of──▶ Scene (machine units, plain data) ──Scene::render──▶ PNG
 </code></pre>
@@ -8285,8 +8308,8 @@ differs; only the golden files compare pixels.</p>
 <tr><td>Hole</td><td>A place where the needle goes down, in sewing order, with the thread’s colour</td></tr>
 <tr><td>Arrival <code>Sewn</code></td><td>A stitch laid from the previous hole (<code>StitchPlan::sewn_stitches</code>, the single definition of “sewing”)</td></tr>
 <tr><td>Arrival <code>Loose</code></td><td>The frame moved without sewing and the thread was not cut: a jump thread that lies loose until cut by hand</td></tr>
-<tr><td>Arrival <code>Cut</code></td><td>The thread was cut since the previous hole (a trim or a thread change), or this is the first hole</td></tr>
-<tr><td>Mark <code>Trim</code>, <code>Stop</code></td><td>Where the needle is when the machine cuts or pauses</td></tr>
+<tr><td>Arrival <code>Cut</code></td><td>The thread was cut since the previous hole (a thread change, a stop, or a trim the machine makes), or this is the first hole</td></tr>
+<tr><td>Mark <code>Trim</code>, <code>Stop</code></td><td>Where the needle is when the machine cuts, or pauses and cuts</td></tr>
 </tbody>
 </table>
 </div>
@@ -8296,8 +8319,10 @@ anyway. Marks describe what the machine does, not how a file spells it, in the s
 oracle (<code>stitchcraft_testkit::equivalence</code>): two trims in a row cut once, the order of commands at one
 spot does not matter, and a trim after the last hole cuts nothing that stays. So marks are a sorted set
 and trailing trims are left out. The test for <code>REQ-RND-001</code> relies on this: for every test sheet and for
-random plans, the scene of a plan equals the scene of its PES file read back. The only differences
-allowed are the ones PES cannot record: palette colours instead of chosen colours, and no stitch roles.</p>
+random plans, on a machine that obeys the trim command, the scene of a plan with a trim before every jump
+equals the scene of its PES file read back. The only differences allowed are the ones PES cannot record:
+palette colours instead of chosen colours, and no stitch roles. On the reference machine, a test sheet’s
+PES file shows the jump threads its plan does.</p>
 <h2 id="styles"><a class="header" href="#styles">Styles</a></h2>
 <div class="table-wrapper">
 <table>
@@ -8318,8 +8343,7 @@ allowed are the ones PES cannot record: palette colours instead of chosen colour
 </div>
 <p>Everything is drawn in sewing order, so later stitches lie on earlier ones as they do on the fabric. The
 realistic style draws loose jump threads because they <em>are</em> on the fabric when the hoop comes off the
-machine; a design that should have trims shows them, which is what test sheet TS-02 is about. (A machine
-that cuts long jumps by itself would remove some of them; previews do not model that yet.)</p>
+machine; a design whose machine trims shows its cuts, which is what test sheet TS-02 is about.</p>
 <h2 id="size-and-scale"><a class="header" href="#size-and-scale">Size and scale</a></h2>
 <p>The scale is in pixels per millimetre (default 8, about 200 dpi; 0.1 to 50), so a design looks the same
 at every scale, only sharper. The image is the design’s extent plus a 2 mm margin on each side. Images
@@ -11389,7 +11413,8 @@ sheets test them (<a href="#adr-0013-the-reference-machine-is-a-brother-pe800-wi
 checks it against the profile of the hoop it is for. It prints that profile, the file’s SHA-256, its
 size and counts, the threads in the order they are sewn (with the Brother palette name the machine
 shows for each) and what to check after sewing. Its size and counts are the file’s, read back as the
-machine reads it. <code>stitch preview TS-xx.pes -o TS-xx.png</code> draws a picture of what the file sews.
+machine reads it. <code>stitch preview TS-xx.pes -o TS-xx.png</code> draws a picture of what the file sews on the
+reference machine, with the jump threads it leaves.
 <code>stitch testsheet --list</code> lists the sheets. The MC-1 sheets are drawn stitch by stitch, to test the
 machine and the file formats; from MC-2, sheets are drawn as designs and planned by the engine, so
 sewing them tests its stitches, locks and plan assembly too.</li>

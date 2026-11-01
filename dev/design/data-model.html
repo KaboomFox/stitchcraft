@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f18b9336.js";
+            window.path_to_searchindex_js = "../searchindex-d35d2c23.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -394,7 +394,9 @@ REQ-CLI-011), which VectorCraft loads as a swatch library for Image Trace to tra
 generated reference pages. A profile’s values are <em>machine facts</em>: changing one requires a
 machine-testing record that justifies it (<a href="../plan/machine-testing.html">machine testing</a>), and <code>evidence</code>
 says where each value comes from. Format limits that are not machine facts (the most colour changes a
-format records) live on <code>FormatId</code>, so the invariant checker and the encoders read the same number.</p>
+format records) live on <code>FormatId</code>, so the invariant checker and the encoders read the same number.
+<code>trims</code> decides where a preview cuts the thread and when a report says the machine makes none of a file’s
+trims (<a href="rendering.html">rendering</a>). The PE800’s is <code>None</code>, from machine checkpoint MC-1.</p>
 <p>A profile is a machine with one hoop, so a machine with 3 hoops has 3 profiles. <code>profiles::REFERENCE</code> is
 the reference machine’s, the Brother PE800 with its 5 × 7 in hoop
 (<a href="adr/0013-brother-pe800-reference-machine.html">ADR 0013</a>). Code that means the machine the checkpoints
