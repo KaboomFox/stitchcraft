@@ -300,22 +300,11 @@ fn a_design_less_than_twice_the_margin_across_has_no_background() {
 }
 
 #[test]
-fn a_sliver_beside_a_side_is_no_part_the_background_leaves() {
-    // The background's left side leans 40 nm over 20 mm, just inside the margin, and a logo notches its
-    // right side. Inside the margin, the sliver between the lean and the box runs along the box's side a
-    // little further than along the background, and is no area: it is no corner of the picture.
+fn a_sliver_beside_a_side_runs_along_it_further_than_along_the_background_and_has_no_area() {
+    // The sliver a background whose left side leans 40 nm over 20 mm across the margin's edge leaves inside
+    // the margin (`req_auto_009_a_background_whose_side_leans_across_the_margins_edge_is_left_out`): were it
+    // measured as a notch, it would make the background part of the picture.
     let lean = 4e-8;
-    let background = Polygon {
-        outline: [(0.5, 0.0), (0.5 + lean, 20.0), (30.0, 20.0), (30.0, 15.0), (20.0, 15.0), (20.0, 5.0), (30.0, 5.0), (30.0, 0.0), (0.5, 0.0)]
-            .map(|(x, y)| p(x, y))
-            .to_vec(),
-        holes: Vec::new(),
-    };
-    let logo = filled("logo", &[square((20.0, 5.0), (30.0, 15.0))]);
-    let bounds = stitchcraft_core::Rect::around([p(0.0, 0.0), p(30.0, 20.0)]).unwrap();
-    let path = outline(std::slice::from_ref(&background));
-    assert_eq!(background::covers(&path, FillRule::NonZero, &[logo], bounds, &mut Budget::DEFAULT.meter()).ok(), Some(true));
-    // The sliver itself, measured as a part.
     let sliver = Polygon {
         outline: [(0.5, 0.5), (0.5, 19.5), (0.5 + 0.975 * lean, 19.5), (0.5 + 0.025 * lean, 0.5), (0.5, 0.5)].map(|(x, y)| p(x, y)).to_vec(),
         holes: Vec::new(),
