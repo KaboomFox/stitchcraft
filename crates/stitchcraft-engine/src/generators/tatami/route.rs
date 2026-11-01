@@ -245,25 +245,25 @@ impl Built {
             return Ok(());
         }
         let network = Network::new(&self.nodes, rings, &self.rows(segments.len()), meter)?;
-        let mut cost = Vec::with_capacity(odd.len());
-        for &a in &odd {
+        // The travel from the `i`-th odd node to each odd node: along their ring when they share one, and
+        // otherwise across the network.
+        let costs = |i: usize, meter: &mut Meter| -> Result<Vec<f64>, Exhausted> {
+            let Some(&a) = odd.get(i) else { return Ok(Vec::new()) };
             let across = network.distances(a, meter)?;
-            cost.push(
-                odd.iter()
-                    .map(|&b| {
-                        let (pa, pb) = (self.place(a), self.place(b));
-                        if pa.ring == pb.ring {
-                            rings.way_length(pa.ring, pa.at, pb.at, rings.forwards(pa.ring, pa.at, pb.at))
-                        } else {
-                            across.get(b).copied().unwrap_or(f64::INFINITY)
-                        }
-                    })
-                    .collect::<Vec<f64>>(),
-            );
-        }
-        for (i, j) in matching(&cost, meter)? {
+            let cost = |&b: &NodeId| {
+                let (pa, pb) = (self.place(a), self.place(b));
+                if pa.ring == pb.ring {
+                    rings.way_length(pa.ring, pa.at, pb.at, rings.forwards(pa.ring, pa.at, pb.at))
+                } else {
+                    across.get(b).copied().unwrap_or(f64::INFINITY)
+                }
+            };
+            Ok(odd.iter().map(cost).collect())
+        };
+        let pairs = matching(odd.len(), costs, meter)?;
+        for (i, j, cost) in pairs {
             let (Some(&a), Some(&b)) = (odd.get(i), odd.get(j)) else { continue };
-            if cost.get(i).and_then(|row| row.get(j)).is_some_and(|c| c.is_finite()) {
+            if cost.is_finite() {
                 let joined = self.graph.beside(a, b);
                 self.graph.add(a, b, Kind::Paired { joined });
             }
@@ -291,24 +291,33 @@ fn nearest(nodes: &[Node], p: Point, meter: &mut Meter) -> Result<Option<NodeId>
     Ok(nodes.iter().enumerate().min_by(|(_, a), (_, b)| a.point.distance(p).total_cmp(&b.point.distance(p))).map(|(id, _)| id))
 }
 
-/// The pairs of `cost`'s rows that make the least total, each row in one pair, the first found on a tie.
-/// Up to [`PAIRED_IN_FULL`] rows every pairing is weighed; past that each row in turn pairs with the
-/// nearest row left. One unit of `meter` for each row of each set of rows weighed, or past
-/// [`PAIRED_IN_FULL`] rows, for each row a row is weighed against.
-fn matching(cost: &[Vec<f64>], meter: &mut Meter) -> Result<Vec<(usize, usize)>, Exhausted> {
-    let n = cost.len();
-    let c = |i: usize, j: usize| cost.get(i).and_then(|row| row.get(j)).copied().unwrap_or(f64::INFINITY);
+/// The pairs of `n` rows that make the least total, each row in one pair, the first found on a tie, each
+/// with what it costs. `costs` gives a row's costs to every row, with its own work. Up to
+/// [`PAIRED_IN_FULL`] rows every pairing is weighed, with all their costs. Past that each row in turn pairs
+/// with the nearest row left, and only its own costs are found, as it pairs: they hold as much memory as
+/// one row's, where all of them would grow with the square of the rows (a fill with 1,600 holes held 40 MB
+/// of them). One unit of `meter` for each row of each set of rows weighed, or past [`PAIRED_IN_FULL`] rows,
+/// for each row a row is weighed against.
+fn matching(
+    n: usize,
+    mut costs: impl FnMut(usize, &mut Meter) -> Result<Vec<f64>, Exhausted>,
+    meter: &mut Meter,
+) -> Result<Vec<(usize, usize, f64)>, Exhausted> {
     let mut pairs = Vec::new();
     if n > PAIRED_IN_FULL {
         let mut left: Vec<usize> = (0..n).collect();
         while let Some((&i, rest)) = left.split_first() {
             meter.charge(u64::try_from(rest.len()).unwrap_or(u64::MAX))?;
-            let Some(&j) = rest.iter().min_by(|&&a, &&b| c(i, a).total_cmp(&c(i, b))) else { break };
-            pairs.push((i, j));
+            let row = costs(i, meter)?;
+            let c = |j: usize| row.get(j).copied().unwrap_or(f64::INFINITY);
+            let Some(&j) = rest.iter().min_by(|&&a, &&b| c(a).total_cmp(&c(b))) else { break };
+            pairs.push((i, j, c(j)));
             left.retain(|&k| k != i && k != j);
         }
         return Ok(pairs);
     }
+    let cost = (0..n).map(|i| costs(i, meter)).collect::<Result<Vec<Vec<f64>>, Exhausted>>()?;
+    let c = |i: usize, j: usize| cost.get(i).and_then(|row| row.get(j)).copied().unwrap_or(f64::INFINITY);
     // best[mask]: the least total pairing the rows in `mask`, and the row the lowest one pairs with.
     let full = (1usize << n) - 1;
     let mut best: Vec<Option<(f64, usize)>> = vec![None; full + 1];
@@ -340,7 +349,7 @@ fn matching(cost: &[Vec<f64>], meter: &mut Meter) -> Result<Vec<(usize, usize)>,
     while mask != 0 {
         let i = mask.trailing_zeros() as usize;
         let Some(Some((_, j))) = best.get(mask).copied() else { break };
-        pairs.push((i, j));
+        pairs.push((i, j, c(i, j)));
         mask &= !(1 << i) & !(1 << j);
     }
     Ok(pairs)
@@ -715,9 +724,15 @@ mod tests {
         (0..count).flat_map(|k| [2.0, 0.0, 3.0, 5.0].map(|x| x + 100.0 * f64::from(k))).collect()
     }
 
+    /// The pairs `matching` finds of the rows of `cost`, with `meter`'s work, without their costs.
+    fn paired(cost: &[Vec<f64>], meter: &mut Meter) -> Result<Vec<(usize, usize)>, Exhausted> {
+        let pairs = matching(cost.len(), |i, _| Ok(cost.get(i).cloned().unwrap_or_default()), meter)?;
+        Ok(pairs.into_iter().map(|(i, j, _)| (i, j)).collect())
+    }
+
     #[test]
     fn up_to_16_rows_pair_for_the_least_total_and_more_each_with_the_nearest_left() {
-        let pairing = |cost: &[Vec<f64>]| matching(cost, &mut Budget { max_stitches: 1, max_work: 1_000_000 }.meter()).unwrap();
+        let pairing = |cost: &[Vec<f64>]| paired(cost, &mut Budget { max_stitches: 1, max_work: 1_000_000 }.meter()).unwrap();
         assert_eq!(pairing(&costs(&blocks(1))), [(0, 1), (2, 3)]);
         assert_eq!(pairing(&costs(&[0.0, 5.0, 1.0, 6.0])), [(0, 2), (1, 3)]);
         assert_eq!(pairing(&costs(&blocks(4))), (0..8).map(|k| (2 * k, 2 * k + 1)).collect::<Vec<_>>());
@@ -734,13 +749,24 @@ mod tests {
     fn pairing_is_charged_to_the_budget() {
         // 6 pairs of 4 rows at 2 units each, and all 4 rows at 4.
         let mut meter = Budget::DEFAULT.meter();
-        matching(&costs(&[0.0, 1.0, 2.0, 3.0]), &mut meter).unwrap();
+        paired(&costs(&[0.0, 1.0, 2.0, 3.0]), &mut meter).unwrap();
         assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 16);
         // 18 rows: 17 weighed against the first, then 15, and so on down to 1.
         let mut meter = Budget::DEFAULT.meter();
-        matching(&costs(&(0u8..18).map(f64::from).collect::<Vec<_>>()), &mut meter).unwrap();
+        paired(&costs(&(0u8..18).map(f64::from).collect::<Vec<_>>()), &mut meter).unwrap();
         assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 81);
-        assert!(matching(&costs(&[0.0, 1.0, 2.0, 3.0]), &mut Budget { max_stitches: 1, max_work: 15 }.meter()).is_err());
+        assert!(paired(&costs(&[0.0, 1.0, 2.0, 3.0]), &mut Budget { max_stitches: 1, max_work: 15 }.meter()).is_err());
+        // Past 16 rows, only the costs of the rows that pair in turn are asked for: here the 9 first of
+        // their pairs, 0, 1, 4, 5, 8, 9, 12, 13 and 16.
+        let mut xs = blocks(4);
+        xs.extend([400.0, 401.0]);
+        let (matrix, mut asked) = (costs(&xs), Vec::new());
+        let row = |i: usize, _: &mut Meter| {
+            asked.push(i);
+            Ok(matrix.get(i).cloned().unwrap_or_default())
+        };
+        matching(xs.len(), row, &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(asked, [0, 1, 4, 5, 8, 9, 12, 13, 16]);
     }
 
     #[test]

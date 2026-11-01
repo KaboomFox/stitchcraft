@@ -1107,6 +1107,16 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- A fill's longest stitch, or its underlay's, shorter than twice the shortest stitch is raised to it with
+  `SC-W0402`, as a running stitch's length is. At 0.2 mm on the reference machine, a fill sewed 0.4 mm
+  stitches the plan merged, and said nothing. The review of 2026-10-31 found it.
+- A legacy fill leaves out pull compensation, random stitch lengths and gap-filling rows, as Ink/Stitch's
+  legacy fill does (`REQ-FILL-005`). StitchCraft applied them.
+- Routing a fill's rows finds each odd node's ways to the others only as it pairs, past 16 of them, instead
+  of a table of every pair: a fill with 1,600 holes peaks at 22 MB instead of 51 MB, and sews the same.
+- `SC-W0307` no longer promises a jump between a fill's parts: a bow tie's halves are sewn straight on.
+- The embroidery basics page and the glossary had pull and push the wrong way round. Thread pulls the fabric
+  along the stitch direction, and pushes it out across it.
 - The readers leave out more paints a viewer doesn't show (`DEV-SVG-003`). They sewed an SVG gradient
   whose stops are all fully transparent or of `stop-opacity` 0, `currentColor` where `color` is
   transparent, and a VectorCraft gradient whose stops are all of opacity 0, in black or in the first stop's

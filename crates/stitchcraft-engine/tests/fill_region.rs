@@ -244,10 +244,14 @@ fn diag_sc_i0313_a_part_left_empty_beside_a_stretch_drawn_twice_is_said() {
 
 #[test]
 fn diag_sc_w0307_a_fill_in_parts_is_said_to_be_sewn_part_by_part() {
-    assert_eq!(
-        said(fill("parts", rings(&[&square(0.0, 0.0, 10.0), &square(20.0, 0.0, 10.0)]), FillRule::NonZero)),
-        ["warning SC-W0307: This fill's area falls into 2 parts that are sewn one after another, with a jump between each.",]
-    );
+    let message = "warning SC-W0307: This fill's area falls into 2 parts, sewn one after another, each on its own.";
+    assert_eq!(said(fill("parts", rings(&[&square(0.0, 0.0, 10.0), &square(20.0, 0.0, 10.0)]), FillRule::NonZero)), [message]);
+    // A bow tie's 2 halves meet at its crossing: the second is sewn straight on from the first, with no
+    // jump between them, which the message doesn't promise.
+    let bow = planned(vec![fill("bow", rings(&[&[(0.0, 0.0), (10.0, 10.0), (10.0, 0.0), (0.0, 10.0)]]), FillRule::NonZero)]);
+    let jumps = bow.plan.as_ref().unwrap().stitches().filter(|s| s.kind == stitchcraft_plan::StitchKind::Jump).count();
+    assert_eq!(jumps, 1, "the plan's first, to the start");
+    assert_eq!(messages(&bow).iter().filter(|m| m.contains("SC-W0307")).collect::<Vec<_>>(), [message]);
     // One part says nothing.
     assert_eq!(said(fill("one", rings(&[&square(0.0, 0.0, 10.0)]), FillRule::NonZero)), Vec::<String>::new());
 }

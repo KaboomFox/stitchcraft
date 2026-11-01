@@ -16,7 +16,7 @@
 | **PES / PEC** | Brother's design format; the PEC block inside a PES file holds the stitches |
 | **Profile (machine profile)** | StitchCraft's description of a machine: hoop, comfort zone, file format, stitch limits, trims, palette |
 | **Pull compensation** | Widening shapes so they come out the drawn size after thread tension pulls the fabric |
-| **Push** | Fabric moving outward along the stitch direction; columns grow at their ends |
+| **Push** | Fabric moving outward across the stitch direction; columns grow at their ends |
 | **Rail** | One of the two edges of a satin column |
 | **Row spacing** | Distance between rows of a fill |
 | **Rung** | A short line across a satin's rails that fixes which points correspond |
