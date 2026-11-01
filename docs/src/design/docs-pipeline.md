@@ -124,6 +124,12 @@ desktop of their own, with an X server (Xvfb) and a D-Bus session that nothing e
 - Mesa draws the window in software, through OpenGL (`WGPU_BACKEND=gl`), with its OpenGL renderer,
   llvmpipe. Left to choose, the app would take Mesa's Vulkan renderer wherever that one is installed, and
   the pixels would depend on the runner.
+- The app starts without reaching GitHub. As it starts, VectorCraft asks GitHub for its releases, and
+  once one newer than the pinned release is out, it offers the update in a dialog over the window. It did
+  in some starts and not in others once 0.19.0 was out. Then 2 starts' screenshots differ, the menus don't
+  open under the dialog, and a picture shows it. The check takes the proxy the environment names. The
+  probe names one that nothing listens on (`ALL_PROXY=http://127.0.0.1:9`), where the check fails at once,
+  and a check at start that fails says nothing.
 - The accessibility bus is told that a screen reader is on, since AccessKit, VectorCraft's accessibility
   layer, builds the tree only then. The flag stays in the session's memory (`GSETTINGS_BACKEND=memory`).
   Through GSettings it would reach the person's own settings, and GNOME would start a screen reader at

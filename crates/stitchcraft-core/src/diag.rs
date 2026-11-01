@@ -609,20 +609,20 @@ registry! {
     /// again. For a plug-in, install the StitchCraft plug-ins made for that version of VectorCraft.
     VcUnreadable = "SC-E0806", Error, "VectorCraft file could not be read";
 
-    /// Part of the VectorCraft document is not stitched: text, images, symbols, objects VectorCraft
-    /// computes as it draws them (blends, envelopes, meshes, repeats, placed documents and Intertwine
-    /// objects), a kind of object StitchCraft does not read, clipping and opacity masks, VectorCraft's own
-    /// effects, a brush's art, a StitchCraft effect it cannot use, or a group's or a layer's own fills and
-    /// strokes. A gradient is sewn in its first colour, and a pattern, or a colour that does not read, in
-    /// black. An object that StitchCraft effects reach from more than one level, its own and a group's
-    /// around it, or 2 groups', sews as the nearest say: VectorCraft runs each on the stitches the one
-    /// before drew, which no machine sews. A start or end marker, an object named `stitch:start` or
-    /// `stitch:end`, is never stitched, and StitchCraft does not yet start or end a shape where one says.
-    /// A name that begins with `stitch:` and names no marker StitchCraft reads is said too, as is a group or
-    /// a layer named as a marker, which only a shape can be: the name is ignored. A satin column, a zigzag
-    /// or a fill made of a stroke is as wide as the stroke all along and centred on its path, so a stroke
-    /// aligned inside or outside a closed path is said, as is a width profile, and round or square caps
-    /// where the stitches end at the path's end.
+    /// Part of the VectorCraft document is not stitched: text, images, symbols, objects VectorCraft computes
+    /// as it draws them (blends, envelopes, meshes, repeats, placed documents and Intertwine objects), a kind
+    /// of object StitchCraft does not read, clipping and opacity masks, VectorCraft's own effects, a brush's
+    /// art, a StitchCraft effect it cannot use, such as an Auto effect beside a stitch effect, which says how
+    /// the object sews, or a group's or a layer's own fills and strokes. A gradient is sewn in its first
+    /// colour, and a pattern, or a colour that does not read, in black. An object that StitchCraft effects
+    /// reach from more than one level, its own and a group's around it, or 2 groups', sews as the nearest say:
+    /// VectorCraft runs each on the stitches the one before drew, which no machine sews. A start or end
+    /// marker, an object named `stitch:start` or `stitch:end`, is never stitched, and StitchCraft does not yet
+    /// start or end a shape where one says. A name that begins with `stitch:` and names no marker StitchCraft
+    /// reads is said too, as is a group or a layer named as a marker, which only a shape can be: the name is
+    /// ignored. A satin column, a zigzag or a fill made of a stroke is as wide as the stroke all along and
+    /// centred on its path, so a stroke aligned inside or outside a closed path is said, as is a width
+    /// profile, and round or square caps where the stitches end at the path's end.
     ///
     /// The message names the object and what was done. In VectorCraft, Type › Create Outlines makes paths
     /// of text, and Object › Expand of blends, envelopes, repeats and placed documents. Break Link to Symbol
@@ -646,14 +646,15 @@ registry! {
     /// Print option on, in VectorCraft's Layer Options.
     VcNotPrinted = "SC-I0809", Info, "VectorCraft layer or guide left out, as it does not print";
 
-    /// A StitchCraft live effect draws the object it is applied to as its stitches, or as much of them as
-    /// its preview level shows. It leaves the object as it is when it cannot show them, and VectorCraft
-    /// shows this message as the plug-in's last error. The object sews no stitch, or its preview level needs
-    /// more work than VectorCraft lets a live effect do. Or it is as wide as its stroke, a satin column
-    /// drawn as one path or a zigzag stroke, and VectorCraft gives the effect no stroke: before 0.14, for an
-    /// object without one, or where the stroke is a group's. Or the effect sits on one of the object's fills
-    /// or strokes, which `stitch export` doesn't use. When another message says why an object sews no
-    /// stitch, the effect shows that message instead.
+    /// A StitchCraft live effect draws the object it is applied to as its stitches, or as much of them as its
+    /// preview level shows. It leaves the object as it is when it cannot show them, and VectorCraft shows this
+    /// message as the plug-in's last error. The object sews no stitch, or its preview level needs more work
+    /// than VectorCraft lets a live effect do. Or it is as wide as its stroke, a satin column drawn as one
+    /// path or a zigzag stroke, and VectorCraft gives the effect no stroke: before 0.14, for an object without
+    /// one, or where the stroke is a group's. The Auto effect sews an object by its fill and its stroke, and
+    /// leaves it as it is when VectorCraft gives it neither. Or the effect sits on one of the object's fills
+    /// or strokes, which `stitch export` doesn't use. When another message says why an object sews no stitch,
+    /// the effect shows that message instead.
     ///
     /// The message says which. A satin column drawn as one path, and a zigzag stroke, sew as wide as the
     /// stroke that paints them when exported with `stitch export`. To see their stitches in VectorCraft, give
@@ -705,78 +706,84 @@ registry! {
     /// that column with its 2 rails, or leave the object out of the selection.
     VcNotConverted = "SC-E0814", Error, "VectorCraft line not made into a satin column";
 
-    /// `--auto` digitized the design's shapes that have no settings: StitchCraft chose each one's
-    /// stitches by its width, measured to the micrometre. An area is a tatami fill; a part of it narrower
-    /// than the design's narrowest satin stroke (`min_satin_stroke_width_mm`, 1 mm unless the design sets
-    /// it) everywhere is a running stitch along its centre line, and a part nowhere wider than 7 mm sews
-    /// satin columns along its centre lines. A line no wider than that narrowest stroke is a running
-    /// stitch, a line up to 7 mm wide a satin column as wide as the line, and a wider line a tatami fill of
-    /// the area it paints. A running stitch is tripled from 0.5 mm wide. A line whose every part a satin
-    /// column cannot follow is filled too (`SC-I0902`), and counted as a fill. An area whose every part runs
-    /// is counted as a running stitch, one none of which is filled and one of whose parts sews a satin
-    /// column as satin columns, and any other as a fill.
+    /// `--auto`, or StitchCraft's Auto effect in VectorCraft, digitized the design's shapes that have no
+    /// settings: StitchCraft chose each one's stitches by its width, measured to the micrometre. An area is a
+    /// tatami fill; a part of it narrower than the design's narrowest satin stroke
+    /// (`min_satin_stroke_width_mm`, 1 mm unless the design sets it) everywhere is a running stitch along its
+    /// centre line, and a part nowhere wider than the widest satin column sews satin columns along its centre
+    /// lines. A line no wider than that narrowest stroke is a running stitch, a line up to the widest satin
+    /// column a satin column as wide as the line, and a wider line a tatami fill of the area it paints. A
+    /// running stitch is tripled from the narrowest triple run. The widest satin column is 7 mm and the
+    /// narrowest triple run 0.5 mm, unless the shape sets others (`auto_max_satin_width_mm`,
+    /// `auto_min_triple_run_width_mm`). A line whose every part a satin column cannot follow is filled too
+    /// (`SC-I0902`), and counted as a fill. An area whose every part runs is counted as a running stitch, one
+    /// none of which is filled and one of whose parts sews a satin column as satin columns, and any other as a
+    /// fill.
     ///
     /// The message counts the shapes by the stitches they sew as. To sew a shape another way, give it
-    /// settings: in VectorCraft, apply a StitchCraft effect to it. A shape with settings is not digitized
-    /// automatically.
+    /// settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it. A shape with settings
+    /// is not digitized automatically.
     AutoDigitized = "SC-I0901", Info, "Shapes digitized automatically";
 
-    /// `--auto` sews a line up to 7 mm wide as a satin column along its path, and a part of an area nowhere
-    /// wider than 7 mm as satin columns along its centre lines, but it can't make a satin column of this
-    /// one. A column cannot follow a part of a line that turns more tightly than the line is wide, so the
+    /// `--auto` sews a line up to the widest satin column as a satin column along its path, and a part of an
+    /// area nowhere wider than that as satin columns along its centre lines, but it can't make a satin column
+    /// of this one. The widest satin column is 7 mm unless the shape sets another (`auto_max_satin_width_mm`).
+    /// A column cannot follow a part of a line that turns more tightly than the line is wide, so the
     /// column's edges would fold over themselves, or that is shorter than a CSS pixel, or that is a dot the
-    /// line's round or square cap draws. The area it paints is filled instead, as a line wider than 7 mm is.
-    /// A part of an area doesn't make columns where the triangles round one of its centre lines don't make a
-    /// column with 2 sides, or where one of its columns, drawn with its rails and rungs, would be read back
+    /// line's round or square cap draws. The area it paints is filled instead, as a wider line is. A part of
+    /// an area doesn't make columns where the triangles round one of its centre lines don't make a column
+    /// with 2 sides, or where one of its columns, drawn with its rails and rungs, would be read back
     /// otherwise. It stays in the area's fill.
     ///
     /// The message says which. To sew it as satin columns, draw the line with gentler turns or narrower, or
     /// the part with smoother edges, or draw the columns with 2 rails each and give them settings.
     AutoSatinFilled = "SC-I0902", Info, "Satin column can't be made; filled";
 
-    /// `--auto` fills the area a line paints when the line is wider than 7 mm, or when a satin column cannot
-    /// follow it, and the area this line paints would reach more than 10 metres from the design's origin,
-    /// beyond what machine files can record. It is left out. A stroke that wide is usually a mistake in
-    /// the file.
+    /// `--auto` fills the area a line paints when the line is wider than the widest satin column, 7 mm unless
+    /// it sets another (`auto_max_satin_width_mm`), or when a satin column cannot follow it, and the area this
+    /// line paints would reach more than 10 metres from the design's origin, beyond what machine files can
+    /// record. It is left out. A stroke that wide is usually a mistake in the file.
     ///
     /// The message gives the line's width. Check the line's stroke width.
     AutoAreaTooLarge = "SC-W0903", Warning, "Line too wide to fill; left out";
 
-    /// `--auto` makes each automatic area reach 0.4 mm under the shapes sewn after it, from where it touches
-    /// them. The thread pulls stitches in from the edges of their shape, and without the overlap fabric shows
-    /// between shapes that only meet. Where an area sewn after it covers part of it, as in a trace that stacks
-    /// its colours, the covered part is cut away, 0.4 mm inside the covering area's edge, and sewn once. A
-    /// satin column or a line sewn after an area goes over it, and the area is sewn whole under it. The
-    /// running stitch along a narrow part of an area covers that part: the areas sewn before it reach
-    /// under it, and when the areas sewn after it cover the part whole it sews nothing.
+    /// `--auto` makes each automatic area reach its overlap, 0.4 mm unless it sets another
+    /// (`auto_overlap_mm`), under the shapes sewn after it, from where it touches them. The thread pulls
+    /// stitches in from the edges of their shape, and without the overlap fabric shows between shapes that
+    /// only meet. Where an area sewn after it covers part of it, as in a trace that stacks its colours, the
+    /// covered part is cut away, its overlap inside the covering area's edge, and sewn once. A satin column
+    /// or a line sewn after an area goes over it, and the area is sewn whole under it. The running stitch
+    /// along a narrow part of an area covers that part: the areas sewn before it reach under it, and when
+    /// the areas sewn after it cover the part whole it sews nothing.
     ///
     /// The message counts the areas that reach under others and those cut away. An area that the areas sewn
     /// after it cover whole sews nothing, and the message names it, as it does a narrow part's line. It also
     /// names an area whose neighbours need more work to find than the budget allows it, which neither reaches
     /// under them nor is cut away, and a satin column whose area needs more, which the areas before it don't
     /// reach under, and which keeps its place in paint order beside the shapes near it. To sew a shape as it
-    /// is drawn, give it settings: in VectorCraft, apply a StitchCraft effect to it.
+    /// is drawn, give it settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it.
     AutoUnder = "SC-I0904", Info, "Areas reach under the shapes sewn after them";
 
-    /// `--auto` takes an automatic area smaller than 1 mm², or a part of one that small, for a speck the trace
-    /// left. It is too small to sew, and would sew a knot. It is merged into the automatic area it shares the
-    /// longest edge with, which may be the rest of its own area, and no hole shows where it was. A speck that
-    /// shares no edge with an automatic area is left out.
+    /// `--auto` takes an automatic area smaller than its smallest area, 1 mm² unless it sets another
+    /// (`auto_min_area_mm2`), or a part of one that small, for a speck the trace left. It is too small to
+    /// sew, and would sew a knot. It is merged into the automatic area it shares the longest edge with,
+    /// which may be the rest of its own area, and no hole shows where it was. A speck that shares no edge
+    /// with an automatic area is left out.
     ///
     /// The message gives the speck's area and says where it went: into a neighbour, back to the rest of its
     /// area, or nowhere, as when finding its neighbours needs more work than the budget allows it. To sew it
-    /// as it is, give it settings: in VectorCraft, apply a StitchCraft effect to it. A larger Noise in
-    /// VectorCraft's Image Trace leaves such specks out of the trace.
+    /// as it is, give it settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it. A
+    /// larger Noise in VectorCraft's Image Trace leaves such specks out of the trace.
     AutoSpeck = "SC-I0905", Info, "Speck merged into a neighbour";
 
     /// `--auto` takes the lowest shape of the design for the picture's background when it is an automatic
     /// area, other shapes are drawn on it, and it covers the whole design, its holes aside, to within 0.5 mm
-    /// of each side. It is left out. A background is usually the fabric's own colour, and sewing it doubles
-    /// the stitches and stiffens the design. A background that needs more work to find than the budget
-    /// allows is sewn, and the message says so.
+    /// of each side. It is left out, unless it switches `auto_ignore_background` off. A background is usually
+    /// the fabric's own colour, and sewing it doubles the stitches and stiffens the design. A background
+    /// that needs more work to find than the budget allows is sewn, and the message says so.
     ///
-    /// To sew it, give it settings: in VectorCraft, apply a StitchCraft effect to it. Ignore White in
-    /// VectorCraft's Image Trace leaves a white background out of the trace.
+    /// To sew it, give it settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it.
+    /// Ignore White in VectorCraft's Image Trace leaves a white background out of the trace.
     AutoBackground = "SC-W0906", Warning, "Background left out";
 
     /// `--auto` sews the automatic elements in an order of its own, and `--sort-colours` every element.
@@ -791,7 +798,7 @@ registry! {
     /// keeps its place beside the shapes near it. SC-I0904 names a satin column whose paint can't be found.
     /// And it names the elements left in paint order when choosing the order needs more work than the budget
     /// allows. To keep shapes in their paint order among themselves, give them settings and leave
-    /// `--sort-colours` off: in VectorCraft, apply a StitchCraft effect to each.
+    /// `--sort-colours` off: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to each.
     AutoOrder = "SC-I0907", Info, "Elements sewn in an order of their own";
 }
 

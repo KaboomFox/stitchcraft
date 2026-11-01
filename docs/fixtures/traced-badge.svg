@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="60mm" height="60mm" viewBox="0 0 60 60">
+  <!-- A badge as Image Trace traces it by the Abutting method in the Brother threads that `stitch palette`
+       writes, lowest first: the white round it, with a hole where the badge is; a red disc 50 mm across,
+       with a hole where a blue square 20 mm wide is; the square, with a hole where a gold disc 10 mm across
+       is; and the gold disc. No shape has StitchCraft's settings. -->
+  <path id="white" fill="#f0f0f0" fill-rule="evenodd" d="M0 0H60V60H0Z M55 30A25 25 0 1 0 5 30A25 25 0 1 0 55 30Z"/>
+  <path id="red" fill="#ed171f" fill-rule="evenodd" d="M55 30A25 25 0 1 0 5 30A25 25 0 1 0 55 30Z M20 20H40V40H20Z"/>
+  <path id="blue" fill="#0a55a3" fill-rule="evenodd" d="M20 20H40V40H20Z M35 30A5 5 0 1 0 25 30A5 5 0 1 0 35 30Z"/>
+  <path id="gold" fill="#e8a900" d="M35 30A5 5 0 1 0 25 30A5 5 0 1 0 35 30Z"/>
+</svg>

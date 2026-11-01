@@ -18,6 +18,78 @@
         "unit": "°"
       }
     },
+    "auto_ignore_background": {
+      "default": true,
+      "description": "Whether the lowest shape is left out when it is the picture's background: an area under the other shapes that covers the whole design. A background is usually the fabric's own colour, and sewing it doubles the stitches and stiffens the design. Off, it sews.",
+      "title": "Leave out the background",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "automatic": true,
+        "group": "Neighbours",
+        "origin": "stitchcraft",
+        "stability": "experimental"
+      }
+    },
+    "auto_max_satin_width_mm": {
+      "default": 7.0,
+      "description": "The widest a line or a part of an area sews as a satin column: satin stitches any longer lie loose. A line up to this wide is a satin column as wide as the line, and a wider one fills the area it paints. A part of an area no wider than this everywhere sews as satin columns between its outlines, and a part wider somewhere is filled, with its narrow parts sewn over the fill as lines and columns.",
+      "maximum": 12.0,
+      "minimum": 1.0,
+      "title": "Widest satin column",
+      "type": "number",
+      "x-stitchcraft": {
+        "automatic": true,
+        "group": "Stitches by width",
+        "origin": "stitchcraft",
+        "stability": "experimental",
+        "unit": "mm"
+      }
+    },
+    "auto_min_area_mm2": {
+      "default": 1.0,
+      "description": "The smallest area sewn. An area, or a part of one, smaller than this is a speck, which would sew a knot: it is merged into the area beside it that it shares the longest edge with, or left out when it shares none.",
+      "maximum": 10.0,
+      "minimum": 0.0,
+      "title": "Smallest area",
+      "type": "number",
+      "x-stitchcraft": {
+        "automatic": true,
+        "group": "Neighbours",
+        "origin": "stitchcraft",
+        "stability": "experimental",
+        "unit": "mm²"
+      }
+    },
+    "auto_min_triple_run_width_mm": {
+      "default": 0.5,
+      "description": "The narrowest running stitch sewn as a triple run, each stitch sewn 3 times (bean stitch 1). A line no wider than the design's narrowest satin stroke runs, and from this width it sews bolder than one stitch, which is as fine as the thread. A narrow part of an area is as wide as the circles that fit inside it along its centre line.",
+      "maximum": 10.0,
+      "minimum": 0.0,
+      "title": "Narrowest triple run",
+      "type": "number",
+      "x-stitchcraft": {
+        "automatic": true,
+        "group": "Stitches by width",
+        "origin": "stitchcraft",
+        "stability": "experimental",
+        "unit": "mm"
+      }
+    },
+    "auto_overlap_mm": {
+      "default": 0.4,
+      "description": "How far an area reaches under each shape sewn after it that it touches, and how far inside the edge of an area sewn after it that covers it the area is cut away. The thread pulls stitches in from the edges of their shape, and without the overlap fabric shows between shapes that only meet. A satin column reaches as far past its rails, by its pull compensation.",
+      "maximum": 2.0,
+      "minimum": 0.0,
+      "title": "Overlap",
+      "type": "number",
+      "x-stitchcraft": {
+        "automatic": true,
+        "group": "Neighbours",
+        "origin": "stitchcraft",
+        "stability": "experimental",
+        "unit": "mm"
+      }
+    },
     "bean_stitch_repeats": {
       "default": [
         0
@@ -1809,6 +1881,17 @@
         ],
         "name": "TatamiParams",
         "title": "Tatami parameters"
+      },
+      {
+        "keys": [
+          "auto_max_satin_width_mm",
+          "auto_min_triple_run_width_mm",
+          "auto_overlap_mm",
+          "auto_min_area_mm2",
+          "auto_ignore_background"
+        ],
+        "name": "AutoParams",
+        "title": "Auto parameters"
       }
     ]
   }

@@ -8,19 +8,23 @@
 //!
 //! 1. **The background** ([`background()`]). The lowest shape is often the picture's background, the
 //!    fabric's own colour. It is left out before anything is digitized (`SC-W0906`).
-//! 2. **Specks** ([`specks`]). Noise in the picture leaves areas of a pixel or two. A fill smaller than
-//!    [`SMALLEST_AREA`] sews a knot, and a hole where it was shows fabric. Each speck goes into the
-//!    automatic area it shares the longest edge with, or is left out when it shares none (`SC-I0905`).
+//! 2. **Specks** ([`specks`]). Noise in the picture leaves areas of a pixel or two. A fill smaller than the
+//!    smallest area sews a knot, and a hole where it was shows fabric. Each speck goes into the automatic
+//!    area it shares the longest edge with, or is left out when it shares none (`SC-I0905`).
 //! 3. **The order** ([`order`]). Paint order changes thread far more often than the picture needs. The
 //!    elements are put in an order of their own: what overlaps keeps its paint order, a line sews after the
 //!    fill it borders, and then each thread sews as long as it can, the nearest element next (`SC-I0907`).
 //!    The order comes after the specks, so that a speck merged into an area doesn't count as an element
 //!    of its own, and before the overlaps, which follow it.
 //! 4. **Overlaps** ([`under`]). Thread pulls stitches in from the edges of their shape, so shapes that
-//!    only meet show fabric between them. Each automatic area reaches [`OVERLAP`] under the shapes sewn
+//!    only meet show fabric between them. Each automatic area reaches the overlap under the shapes sewn
 //!    after it, where it touches them. Where an area sewn after it covers it, as a stacked trace's upper
-//!    colours cover the lower ones, it is cut away instead, [`OVERLAP`] inside that area's edge, so that it
+//!    colours cover the lower ones, it is cut away instead, the overlap inside that area's edge, so that it
 //!    is sewn once (`SC-I0904`).
+//!
+//! Each area goes by its own settings of the rules (`AutoParams`, `REQ-AUTO-020`): its overlap, its
+//! smallest area, and for the lowest shape whether the background is left out. A shape with settings has
+//! none, and is never an automatic area.
 //!
 //! Only automatic areas change shape: the fills automatic digitizing made, of shapes without settings. A
 //! shape with settings is sewn as they say, and a column or a line sewn after an area goes over it. A
@@ -51,7 +55,7 @@ pub(super) use background::background;
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Meter, Point};
 use stitchcraft_params::{Family, StitchType, Validated};
 
-use super::{Style, outline, painted};
+use super::{AutoParams, Style, outline, painted};
 use crate::design::{DesignSettings, Element, FillRule, Path, Shape};
 use crate::generate::stitch_type_of;
 use crate::generators::satin::{self, SatinParams};
@@ -60,19 +64,10 @@ use crate::normalize::region::ops::{self, Parts};
 use crate::normalize::region::{self, Polygon};
 use crate::normalize::stroke;
 
-/// How far an automatic area reaches under the shapes sewn after it that it touches, and how far inside the
-/// edge of an area sewn after it that covers it the area is cut away, in millimetres. MC-8 confirms or
-/// changes it on the machine (`docs/src/plan/machine-testing.md`).
-pub const OVERLAP: f64 = 0.4;
-
-/// The smallest area sewn, in square millimetres: an automatic area, or a part of one, smaller than this
-/// is a speck. MC-8 confirms or changes it.
-pub const SMALLEST_AREA: f64 = 1.0;
-
 /// Whether an automatic area, or a part or a piece of one, `area` square millimetres large is a speck:
-/// smaller than [`SMALLEST_AREA`]. One exactly that large is sewn.
-pub(super) fn speck(area: f64) -> bool {
-    area < SMALLEST_AREA
+/// smaller than `smallest`, the area's smallest area (`auto_min_area_mm2`). One exactly that large is sewn.
+pub(super) fn speck(area: f64, smallest: f64) -> bool {
+    area < smallest
 }
 
 /// How far apart 2 shapes may be and still touch, in millimetres: twice the tolerance their curves are
@@ -95,8 +90,9 @@ pub(super) fn no_area(area: f64) -> bool {
 pub(super) struct Sewn {
     /// The element.
     pub(super) element: Element,
-    /// Whether it is an automatic area: a fill that automatic digitizing made.
-    pub(super) area: bool,
+    /// Its settings of the rules when it is an automatic area, a fill that automatic digitizing made, which
+    /// goes by them beside its neighbours; `None` for any other element.
+    pub(super) area: Option<AutoParams>,
     /// Whether automatic digitizing made it, so that it moves in the order whether or not the design asks
     /// for every element ordered.
     pub(super) automatic: bool,
@@ -191,8 +187,8 @@ type Painted = Option<(Kind, Vec<Polygon>)>;
 /// The elements of a design as automatic digitizing sews them, with the regions their neighbours need.
 struct Shapes {
     elements: Vec<Element>,
-    /// Whether each element is an automatic area.
-    area: Vec<bool>,
+    /// Each automatic area's settings of the rules; `None` for an element that is no automatic area.
+    area: Vec<Option<AutoParams>>,
     /// Each automatic area's region as it now is: `None` when it could not be built, or bounds no area,
     /// which leaves the area as it is drawn.
     regions: Vec<Option<Vec<Polygon>>>,
@@ -225,7 +221,7 @@ impl Shapes {
     fn new(sewn: Vec<Sewn>, settings: &DesignSettings, budget: &Budget) -> Self {
         let count = sewn.len();
         let mut painted = Vec::with_capacity(count);
-        let (elements, area): (Vec<Element>, Vec<bool>) = sewn
+        let (elements, area): (Vec<Element>, Vec<Option<AutoParams>>) = sewn
             .into_iter()
             .map(|sewn| {
                 painted.push(sewn.part.map(|part| Some((Kind::Part, vec![part]))));
@@ -235,8 +231,10 @@ impl Shapes {
         let regions = elements
             .iter()
             .zip(&area)
-            .map(|(element, &area)| match &element.shape {
-                Shape::Fill { path, rule } if area => parts_of(path, *rule, &mut budget.meter()).ok()?.ok().filter(|parts| !parts.is_empty()),
+            .map(|(element, area)| match &element.shape {
+                Shape::Fill { path, rule } if area.is_some() => {
+                    parts_of(path, *rule, &mut budget.meter()).ok()?.ok().filter(|parts| !parts.is_empty())
+                }
                 _ => None,
             })
             .collect();
@@ -274,6 +272,16 @@ impl Shapes {
     /// The id of element `index`.
     fn id(&self, index: usize) -> Option<ElementId> {
         self.elements.get(index).map(|element| element.id.clone())
+    }
+
+    /// The settings of the rules of element `index` when it is an automatic area.
+    fn rules(&self, index: usize) -> Option<&AutoParams> {
+        self.area.get(index)?.as_ref()
+    }
+
+    /// Whether element `index` is an automatic area.
+    fn is_area(&self, index: usize) -> bool {
+        self.rules(index).is_some()
     }
 
     /// Whether element `index` is left out: an automatic area whose every part went into its neighbours, or
@@ -316,7 +324,7 @@ impl Shapes {
     /// shape whose region cannot be built. A part's line or column left out still paints its part, which the areas
     /// sewn after it cover whole: an area sewn before it that reaches under the part reaches under them.
     fn paint(&self, index: usize) -> Option<(Kind, &[Polygon])> {
-        if self.area.get(index).copied().unwrap_or(false) {
+        if self.is_area(index) {
             return self.region(index).map(|parts| (Kind::Area, parts));
         }
         // Of the other elements only parts' lines and columns are left out, and what they paint stays known.
@@ -333,7 +341,7 @@ impl Shapes {
     /// What element `index` paints when that is known without work: an automatic area's region, and the
     /// part a part's line or column sews along.
     fn known(&self, index: usize) -> Option<&[Polygon]> {
-        if self.area.get(index).copied().unwrap_or(false) {
+        if self.is_area(index) {
             return self.region(index);
         }
         match self.kind(index)? {
@@ -345,7 +353,7 @@ impl Shapes {
     /// Finds what element `index` paints, with the budget's work to itself, unless it is an automatic area,
     /// whose region is known, or was found before, or its settings can't be read.
     fn find(&mut self, index: usize) {
-        if self.area.get(index).copied().unwrap_or(true) || self.painted.get(index).is_some_and(Option::is_some) {
+        if self.area.get(index).is_none_or(Option::is_some) || self.painted.get(index).is_some_and(Option::is_some) {
             return;
         }
         let (Some(element), Some(&Some(stitch_type))) = (self.elements.get(index), self.stitch_types.get(index)) else { return };

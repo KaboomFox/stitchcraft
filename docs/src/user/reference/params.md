@@ -58,12 +58,18 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Pull parameters](params/pull.md) | 2 | Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill |
 | [Fill parameters](params/fill.md) | 2 | Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill |
 | [Tatami parameters](params/tatami.md) | 15 | Tatami fill |
+| [Auto parameters](params/auto.md) | 5 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
 
 ## Every parameter
 
 | Key | Label | Group |
 |---|---|---|
 | [`angle`](params/tatami.md#angle) | Angle | Tatami parameters |
+| [`auto_ignore_background`](params/auto.md#auto_ignore_background) | Leave out the background | Auto parameters |
+| [`auto_max_satin_width_mm`](params/auto.md#auto_max_satin_width_mm) | Widest satin column | Auto parameters |
+| [`auto_min_area_mm2`](params/auto.md#auto_min_area_mm2) | Smallest area | Auto parameters |
+| [`auto_min_triple_run_width_mm`](params/auto.md#auto_min_triple_run_width_mm) | Narrowest triple run | Auto parameters |
+| [`auto_overlap_mm`](params/auto.md#auto_overlap_mm) | Overlap | Auto parameters |
 | [`bean_stitch_repeats`](params/repeat.md#bean_stitch_repeats) | Bean stitch | Repeat parameters |
 | [`center_walk_underlay`](params/satin.md#center_walk_underlay) | Centre walk underlay | Satin parameters |
 | [`center_walk_underlay_position`](params/satin.md#center_walk_underlay_position) | Centre walk position | Satin parameters |

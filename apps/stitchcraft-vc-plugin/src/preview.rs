@@ -28,13 +28,26 @@
 //! the outline of a centre line that bends, and its exact preview is the user's to pick: 12.6 million
 //! instructions for one bend, 25 million for a quarter circle of 17 points.
 //!
-//! **Where the numbers come from.** Spike M0.6 measured reading JSON at 512 instructions a byte, and M6.3
-//! the rest, in VectorCraft's host, on the shapes the contract tests run. Each constant here is the
-//! largest measured, with a margin. The contract tests fail when a level takes more than VectorCraft
-//! allows, which is when a constant needs measuring again (`docs/src/design/vectorcraft-integration.md`,
-//! live-effect previews).
+//! **The Auto effect** (`REQ-VC-016`). Its auto level shows the stitches automatic digitizing chooses for
+//! the object: it digitizes the object's area and line ([`stitchcraft_engine::auto::digitize`]), then shows
+//! each element they become as auto shows one of its family, a fill by its rows and the others exactly,
+//! and the outline when that costs too much. Exact shows every stitch, with all that VectorCraft allows.
+//! VectorCraft draws what it returns with every paint of the object, so it returns ribbons when a fill
+//! paints the object, and lines for its stroke otherwise. Digitizing is most of the work, from about
+//! 1,450 instructions a unit for a filled square to 2,260 for a line traced as an area 0.3 mm wide,
+//! measured in VectorCraft's host and priced at 2,700 (`DIGITIZE_PER_UNIT`): a square's takes 12,900
+//! units, an L's 21,000 and a ring's 31,800, of the 50 million instructions a live effect has. So a small
+//! square shows its rows, and a larger one, an L, a ring and most traced letters show their outlines:
+//! digitizing them leaves too little for their stitches, or needs more than there is.
+//!
+//! **Where the numbers come from.** Spike M0.6 measured reading JSON at 512 instructions a byte, M6.3 the
+//! rest and M13.7 digitizing, in VectorCraft's host, on the shapes the contract tests run. Each constant
+//! here is the largest measured, with a margin. The contract tests fail when a level takes more than
+//! VectorCraft allows, which is when a constant needs measuring again
+//! (`docs/src/design/vectorcraft-integration.md`, live-effect previews).
 
-use stitchcraft_core::{Budget, Code, Diagnostic, Fix};
+use stitchcraft_core::{Budget, Code, Diagnostic, Fix, Point};
+use stitchcraft_engine::auto::digitize;
 use stitchcraft_engine::design::{DesignSettings, Element, Shape};
 use stitchcraft_engine::generate::{generate, rows, stitch_type_of};
 use stitchcraft_engine::generators::Neighbours;
@@ -42,7 +55,7 @@ use stitchcraft_engine::normalize::satin::{Shape as Column, recognize};
 use stitchcraft_engine::normalize::stroke::{SHAPE_TOLERANCE, flatten};
 use stitchcraft_params::{Family, StitchType};
 use stitchcraft_plan::profiles::REFERENCE;
-use stitchcraft_vectorcraft::{Effect, effect_error, effect_lines, effect_output, effect_ribbons};
+use stitchcraft_vectorcraft::{AutoEffect, Effect, effect_drawn, effect_error, effect_lines, effect_output, effect_ribbons};
 
 use crate::dialog::own;
 use crate::manifest::{Param, Schema};
@@ -106,11 +119,25 @@ impl Level {
     }
 }
 
-/// How a family's manifest declares `preview_level`: a choice of the levels its previews offer, auto by
-/// default, in a section of its own, with its help and the page that explains the levels.
+/// The levels the Auto effect's previews offer, the default first. Its auto level already shows the rows of
+/// each fill it makes.
+pub(crate) const AUTO_LEVELS: &[Level] = &[Level::Auto, Level::Exact, Level::Outline];
+
+/// How a family's manifest declares `preview_level`: a choice of the levels its previews offer.
 pub(crate) fn param(family: Family) -> Param {
-    let schema = Schema::Choice { options: Level::offered(family).iter().map(|level| level.id()).collect(), default: Level::Auto.id() };
-    let mut param = own(schema, "Preview", HELP, PAGE);
+    level_param(Level::offered(family), HELP)
+}
+
+/// How the Auto effect's manifest declares `preview_level`: a choice of [`AUTO_LEVELS`].
+pub(crate) fn auto_param() -> Param {
+    level_param(AUTO_LEVELS, AUTO_HELP)
+}
+
+/// `preview_level` as a choice of `levels`, auto by default, in a section of its own, with `help` and the
+/// page that explains the levels.
+fn level_param(levels: &[Level], help: &str) -> Param {
+    let schema = Schema::Choice { options: levels.iter().map(|level| level.id()).collect(), default: Level::Auto.id() };
+    let mut param = own(schema, "Preview", help, PAGE);
     param.ui.group = Some("Preview");
     param
 }
@@ -119,6 +146,12 @@ pub(crate) fn param(family: Family) -> Param {
 const HELP: &str = "How much of the stitches the effect shows. Exact shows every stitch, rows a fill's top rows, and outline the \
                     object's path, hatched across a fill, which costs least. Auto shows as much as VectorCraft lets a live effect \
                     work out. The machine file has every stitch, whichever is chosen.";
+
+/// What the Auto effect's `preview_level` does, for its help.
+const AUTO_HELP: &str = "How much of the stitches the effect shows. Exact shows every stitch automatic digitizing chooses, and outline \
+                         the object's path, hatched across a fill, which costs least. Auto shows as much as VectorCraft lets a live \
+                         effect work out: the stitches of each satin column and running stitch, and the top rows of each fill. The \
+                         machine file has every stitch, whichever is chosen.";
 
 /// The page that explains the levels.
 const PAGE: &str = "design/vectorcraft-integration.html#live-effect-previews-within-v1-budgets";
@@ -147,10 +180,22 @@ enum Shown {
 /// The preview of `effect`, of `family`, within `spend` instructions: the geometry VectorCraft draws, or
 /// why it draws the object as it is.
 pub fn show(family: Family, effect: &Effect, spend: u64) -> Vec<u8> {
-    match preview(family, effect, spend) {
+    written(preview(family, effect, spend), effect.preview_level.as_deref(), Level::offered(family))
+}
+
+/// The preview of `effect`, the Auto effect's, within `spend` instructions (`REQ-VC-016`), as [`show`]
+/// shows a family's.
+pub fn show_auto(effect: &AutoEffect, spend: u64) -> Vec<u8> {
+    written(auto_preview(effect, Spend(spend)), effect.preview_level.as_deref(), AUTO_LEVELS)
+}
+
+/// What VectorCraft is given for `shown`, a preview at the level `asked` names among those `offered`: the
+/// geometry, or why the object is drawn as it is.
+fn written(shown: Shown, asked: Option<&str>, offered: &[Level]) -> Vec<u8> {
+    match shown {
         Shown::Drawn(_, json) => json,
         Shown::Unsewn(why) => effect_error(&why),
-        Shown::TooCostly => effect_error(&too_costly(Level::read(effect.preview_level.as_deref()), family)),
+        Shown::TooCostly => effect_error(&too_costly(Level::read(asked), offered)),
     }
 }
 
@@ -185,6 +230,12 @@ impl Spend {
         Spend(self.0.saturating_mul(n) / 10)
     }
 
+    /// What each of `count` parts may spend of eight tenths of it, shared out equally: all eight tenths
+    /// for one part, or for none.
+    fn shared(self, count: usize) -> Spend {
+        Spend(self.tenths(8).0 / u64::try_from(count).unwrap_or(u64::MAX).max(1))
+    }
+
     /// A budget of the engine's work it buys, at `per_unit` instructions a unit, and of any number of
     /// needle points.
     fn work(self, per_unit: u64) -> Budget {
@@ -213,30 +264,52 @@ impl Shown {
 fn exact(family: Family, element: &Element, spend: Option<Spend>) -> Shown {
     let priced = spend.zip(per_unit(family));
     let budget = priced.map_or(Budget::DEFAULT, |(spend, per_unit)| spend.tenths(9).work(per_unit));
-    let generation = generate(element, &DesignSettings::default(), REFERENCE, &Neighbours::default(), &budget);
-    if spent(&generation.diagnostics) {
-        return Shown::TooCostly;
-    }
-    let groups = generation.generated.map(|generated| generated.groups).unwrap_or_default();
+    let (groups, said) = match stitched(element, &budget) {
+        Ok(stitched) => stitched,
+        Err(shown) => return shown,
+    };
     // A stroke's and a satin column's needle points are an anchor each. Sewing them does not count them.
     if priced.is_some_and(|(spend, _)| !spend.tenths(1).writes(groups.iter().map(Vec::len).sum(), anchors(family))) {
         return Shown::TooCostly;
     }
-    effect_output(family, &groups).map_or_else(|| Shown::Unsewn(no_stitch(generation.diagnostics)), |json| Shown::Drawn(Level::Exact, json))
+    effect_output(family, &groups).map_or_else(|| Shown::Unsewn(no_stitch(said)), |json| Shown::Drawn(Level::Exact, json))
+}
+
+/// What a step of a preview drew, and what working it out said; or what the preview shows instead.
+type Worked<T> = Result<(T, Vec<Diagnostic>), Shown>;
+
+/// Every stitch of `element` within `budget`, as runs of needle points, and what sewing it said; or
+/// [`Shown::TooCostly`] when the budget ran out.
+fn stitched(element: &Element, budget: &Budget) -> Worked<Vec<Vec<Point>>> {
+    let generation = generate(element, &DesignSettings::default(), REFERENCE, &Neighbours::default(), budget);
+    if spent(&generation.diagnostics) {
+        return Err(Shown::TooCostly);
+    }
+    Ok((generation.generated.map(|generated| generated.groups).unwrap_or_default(), generation.diagnostics))
 }
 
 /// The top rows of `element`, a fill, within `spend`, a ribbon for each segment: nine tenths for laying
 /// them, and a tenth for writing them.
 fn fill_rows(element: &Element, spend: Spend) -> Shown {
-    let laid = rows(element, &DesignSettings::default(), REFERENCE, &spend.tenths(9).work(ROWS_PER_UNIT));
-    let Some(segments) = laid.segments.filter(|_| !spent(&laid.diagnostics)) else {
-        return if spent(&laid.diagnostics) { Shown::TooCostly } else { Shown::Unsewn(no_stitch(laid.diagnostics)) };
+    let (segments, said) = match rowed(element, &spend.tenths(9).work(ROWS_PER_UNIT)) {
+        Ok(rowed) => rowed,
+        Err(shown) => return shown,
     };
     if !spend.tenths(1).writes(segments.len(), RIBBON_ANCHORS) {
         return Shown::TooCostly;
     }
-    effect_ribbons(segments.iter().map(|segment| (segment.start, segment.end)))
-        .map_or_else(|| Shown::Unsewn(no_stitch(laid.diagnostics)), |json| Shown::Drawn(Level::Rows, json))
+    effect_ribbons(segments).map_or_else(|| Shown::Unsewn(no_stitch(said)), |json| Shown::Drawn(Level::Rows, json))
+}
+
+/// The top rows of `element`, a fill, laid within `budget`, as their segments, and what laying them said;
+/// none when it has no rows, and [`Shown::TooCostly`] when the budget ran out.
+fn rowed(element: &Element, budget: &Budget) -> Worked<Vec<(Point, Point)>> {
+    let laid = rows(element, &DesignSettings::default(), REFERENCE, budget);
+    if spent(&laid.diagnostics) {
+        return Err(Shown::TooCostly);
+    }
+    let segments = laid.segments.unwrap_or_default().iter().map(|segment| (segment.start, segment.end)).collect();
+    Ok((segments, laid.diagnostics))
 }
 
 /// The path of `element`, of `family`, within `spend`: a stroke's and a satin column's as lines, a fill's
@@ -343,11 +416,11 @@ pub(crate) fn no_stitch(diagnostics: Vec<Diagnostic>) -> Diagnostic {
 }
 
 /// `SC-I0810` for a preview at `level` that needs more work than VectorCraft lets a live effect do, with
-/// the cheaper levels to pick instead. Auto has tried them all.
-fn too_costly(level: Level, family: Family) -> Diagnostic {
+/// the cheaper levels among those `offered` to pick instead. Auto has tried them all.
+fn too_costly(level: Level, offered: &[Level]) -> Diagnostic {
     let cheaper: Vec<&str> = match level {
         Level::Auto => Vec::new(),
-        _ => Level::offered(family).iter().skip_while(|offered| **offered != level).skip(1).map(|offered| offered.id()).collect(),
+        _ => offered.iter().skip_while(|offered| **offered != level).skip(1).map(|offered| offered.id()).collect(),
     };
     let message = format!("Its {} preview needs more work than VectorCraft lets a live effect do, so the effect leaves it as it is.", level.id());
     let hint = match cheaper.as_slice() {
@@ -358,15 +431,95 @@ fn too_costly(level: Level, family: Family) -> Diagnostic {
     Diagnostic::new(Code::VcEffectUnchanged, message).with_fix(Fix::Hint(hint))
 }
 
+/// The instructions the engine runs for each unit of work automatic digitizing charges, in VectorCraft's
+/// host, with a margin: measured in VectorCraft 0.18.0's host, about 1,450 for a filled square or an L, and
+/// 2,260 for a line traced as an area 0.3 mm wide, whose centre lines digitizing finds. The contract tests
+/// check that the previews it bounds finish there, these shapes' among them.
+const DIGITIZE_PER_UNIT: u64 = 2_700;
+
+/// What [`show_auto`] shows of `effect`, and at which level: at auto, the stitches automatic digitizing
+/// chooses within eight tenths of `spend` ([`digitized`]), or else the outline within the rest.
+fn auto_preview(effect: &AutoEffect, spend: Spend) -> Shown {
+    match Level::read(effect.preview_level.as_deref()) {
+        Level::Exact => digitized(effect, None),
+        Level::Outline => auto_outline(effect, spend),
+        // The manifest offers no rows: VectorCraft never passes them.
+        Level::Auto | Level::Rows => digitized(effect, Some(spend.tenths(8))).or(|| auto_outline(effect, spend.tenths(2))),
+    }
+}
+
+/// Whether a fill paints `effect`'s object, which then fills what the effect returns: its area comes first.
+fn filled(effect: &AutoEffect) -> bool {
+    effect.elements.first().is_some_and(|element| matches!(element.shape, Shape::Fill { .. }))
+}
+
+/// The stitches automatic digitizing chooses for `effect`'s object, as auto shows each element it becomes:
+/// a fill's top rows, and a satin column's and a running stitch's every stitch. Within `spend`, digitizing
+/// first, since it is most of the work, then the elements within eight tenths of what it leaves, shared out
+/// equally, and writing them within two. Without, at the exact level, every stitch of each, within all that
+/// VectorCraft allows, which stops a run that needs more.
+fn digitized(effect: &AutoEffect, spend: Option<Spend>) -> Shown {
+    let settings = DesignSettings::default();
+    let budget = spend.map_or(Budget::DEFAULT, |spend| spend.work(DIGITIZE_PER_UNIT));
+    let mut meter = budget.meter();
+    let (mut made, mut said) = (Vec::new(), Vec::new());
+    for element in &effect.elements {
+        let Ok(digitized) = digitize(element, &settings, &mut meter) else { return Shown::TooCostly };
+        made.extend(digitized.elements);
+        said.extend(digitized.diagnostics);
+    }
+    let digitizing = budget.max_work.saturating_sub(meter.work_left()).saturating_mul(DIGITIZE_PER_UNIT);
+    let left = spend.map(|spend| Spend(spend.0.saturating_sub(digitizing)));
+    let share = left.map(|left| left.shared(made.len()));
+    let mut runs: Vec<Vec<Point>> = Vec::new();
+    for element in &made {
+        let family = stitch_type_of(element, &settings).map_or(Family::Stroke, StitchType::family);
+        let drawn = match (family, share) {
+            (Family::Fill, Some(share)) => rowed(element, &share.work(ROWS_PER_UNIT))
+                .map(|(segments, said)| (segments.into_iter().map(|(start, end)| vec![start, end]).collect(), said)),
+            (_, share) => stitched(element, &share.zip(per_unit(family)).map_or(Budget::DEFAULT, |(share, per_unit)| share.work(per_unit))),
+        };
+        match drawn {
+            Ok((drawn, diagnostics)) => {
+                runs.extend(drawn);
+                said.extend(diagnostics);
+            }
+            Err(shown) => return shown,
+        }
+    }
+    let ribbons = filled(effect);
+    let (count, anchors) = to_write(&runs, ribbons);
+    if left.is_some_and(|left| !left.tenths(2).writes(count, anchors)) {
+        return Shown::TooCostly;
+    }
+    let level = if spend.is_some() { Level::Auto } else { Level::Exact };
+    effect_drawn(&runs, ribbons).map_or_else(|| Shown::Unsewn(no_stitch(said)), |json| Shown::Drawn(level, json))
+}
+
+/// What [`effect_drawn`] writes of `runs`, as [`Spend::writes`] prices it: with `ribbons`, a ribbon for
+/// each of their segments, of [`RIBBON_ANCHORS`] anchors, and else a point, an anchor, for each point.
+fn to_write(runs: &[Vec<Point>], ribbons: bool) -> (usize, u64) {
+    if ribbons { (runs.iter().map(|run| run.len().saturating_sub(1)).sum(), RIBBON_ANCHORS) } else { (runs.iter().map(Vec::len).sum(), 1) }
+}
+
+/// The outline of `effect`'s object within `spend`, as a fill's when a fill paints it, hatched, and as a
+/// stroke's otherwise ([`outline`]).
+fn auto_outline(effect: &AutoEffect, spend: Spend) -> Shown {
+    match effect.elements.first() {
+        Some(element) => outline(if filled(effect) { Family::Fill } else { Family::Stroke }, element, spend),
+        None => Shown::Unsewn(no_stitch(Vec::new())),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use serde_json::{Value, json};
     use stitchcraft_engine::registry::PARAMETERS;
     use stitchcraft_params::Kind;
-    use stitchcraft_vectorcraft::read_effect;
+    use stitchcraft_vectorcraft::{read_auto_effect, read_effect};
 
     use super::*;
-    use crate::testing::{input, params, rails, square};
+    use crate::testing::{auto_params, input, line, painted, params, rails, square};
 
     /// `family`'s parameters at their defaults, at preview `level`.
     fn params_with(family: Family, level: &str) -> Vec<u8> {
@@ -423,7 +576,7 @@ mod tests {
 
     #[test]
     fn diag_sc_i0810_a_preview_that_needs_more_than_vectorcraft_allows_names_a_cheaper_level() {
-        let said = |family: Family, level: Level| effect_error(&too_costly(level, family));
+        let said = |family: Family, level: Level| effect_error(&too_costly(level, Level::offered(family)));
         let text = |json: Vec<u8>| serde_json::from_slice::<Value>(&json).unwrap()["error"].as_str().unwrap().to_string();
         let start = |level: &str| {
             format!("info SC-I0810: Its {level} preview needs more work than VectorCraft lets a live effect do, so the effect leaves it as it is.")
@@ -441,6 +594,58 @@ mod tests {
         assert_eq!(text(show(Family::Fill, &auto, 0)), text(said(Family::Fill, Level::Auto)));
     }
 
+    /// What the Auto effect shows of the object VectorCraft gives as `input`, at `level`, with what
+    /// VectorCraft would let it spend.
+    fn shown_auto(input: &[u8], level: &str) -> Shown {
+        let params = auto_params(&[("preview_level", json!(level))]);
+        let effect = read_auto_effect(input, &params, &Budget::DEFAULT).unwrap();
+        auto_preview(&effect, Spend(spendable(FUEL_BASE, input.len(), params.len())))
+    }
+
+    /// The subpaths of a preview drawn, and whether each is closed.
+    fn closed(shown: &Shown) -> Vec<bool> {
+        let Shown::Drawn(_, json) = shown else { panic!("nothing drawn: {shown:?}") };
+        let drawn: Value = serde_json::from_slice(json).unwrap();
+        drawn["objects"][0]["path"]["subpaths"].as_array().unwrap().iter().map(|subpath| subpath["closed"].as_bool().unwrap_or(false)).collect()
+    }
+
+    #[test]
+    fn req_vc_016_auto_shows_the_stitches_automatic_digitizing_chooses_drawn_with_the_object_s_paints() {
+        // A filled square 14 mm a side is filled: its top rows, as ribbons for its fill to fill.
+        let filled = painted(&square(40.0), true, None);
+        let rows = shown_auto(&filled, "auto");
+        assert_eq!(level(&rows), Some(Level::Auto));
+        assert!(closed(&rows).len() > 10 && closed(&rows).iter().all(|closed| *closed), "{rows:?}");
+        // A line 3 mm wide is a satin column: its stitches, as lines for its stroke to draw.
+        let stroked = painted(&line(&[(0.0, 0.0), (100.0, 0.0)]), false, Some(3.0 * 72.0 / 25.4));
+        let column = shown_auto(&stroked, "auto");
+        assert_eq!(level(&column), Some(Level::Auto));
+        assert!(!closed(&column).is_empty() && closed(&column).iter().all(|closed| !closed), "{column:?}");
+        // The same line with a fill too: its stitches as ribbons, which the fill fills, after the area's rows.
+        let both = shown_auto(&painted(&line(&[(0.0, 0.0), (100.0, 0.0)]), true, Some(3.0 * 72.0 / 25.4)), "auto");
+        assert!(closed(&both).iter().all(|closed| *closed), "{both:?}");
+        // Exact shows every stitch, and the outline the object's path, hatched across a fill every 3 mm.
+        assert_eq!((level(&shown_auto(&filled, "exact")), level(&shown_auto(&stroked, "exact"))), (Some(Level::Exact), Some(Level::Exact)));
+        let outline = shown_auto(&filled, "outline");
+        assert_eq!((level(&outline), closed(&outline).len()), (Some(Level::Outline), 4 + 5));
+        assert_eq!(closed(&shown_auto(&stroked, "outline")), [false]);
+    }
+
+    #[test]
+    fn req_vc_016_auto_shows_the_outline_of_what_costs_more_than_the_budget_allows() {
+        // A filled square 90 cm a side, whose rows cost more than auto's share.
+        let filled = painted(&square(2560.0), true, None);
+        assert_eq!(level(&shown_auto(&filled, "auto")), Some(Level::Outline));
+        // With nothing to spend, auto says why it shows nothing, and names no cheaper level.
+        let params = auto_params(&[]);
+        let effect = read_auto_effect(&filled, &params, &Budget::DEFAULT).unwrap();
+        let said: Value = serde_json::from_slice(&show_auto(&effect, 0)).unwrap();
+        let start = "info SC-I0810: Its auto preview needs more work than VectorCraft lets a live effect do";
+        assert!(said["error"].as_str().is_some_and(|error| error.starts_with(start)), "{said}");
+        let text = |level: Level| too_costly(level, AUTO_LEVELS).fix.map(|fix| fix.describe()).unwrap_or_default();
+        assert_eq!(text(Level::Exact), "Set its preview level to `outline`.");
+    }
+
     #[test]
     fn spending_is_shared_out_in_tenths_and_priced_in_units_and_anchors() {
         let spend = Spend(32_000);
@@ -453,6 +658,11 @@ mod tests {
         assert!(!Spend(u64::MAX - 1).writes(usize::MAX, RIBBON_ANCHORS), "saturating, not wrapping");
         assert_eq!(reading(320_000), Budget { max_work: 10, max_stitches: u32::MAX });
         assert_eq!((anchors(Family::Fill), anchors(Family::Stroke), anchors(Family::Satin)), (4, 1, 1));
+        // The Auto effect's elements share eight tenths of what digitizing leaves equally.
+        assert_eq!((spend.shared(4), spend.shared(1), spend.shared(0)), (Spend(6_400), Spend(25_600), Spend(25_600)));
+        // A run of 3 needle points is 2 ribbons, or 3 anchors of a line.
+        let run = |n: u32| (0..n).map(|x| Point::new(f64::from(x), 0.0).unwrap()).collect::<Vec<_>>();
+        assert_eq!((to_write(&[run(3), run(1)], true), to_write(&[run(3), run(1)], false)), ((2, RIBBON_ANCHORS), (4, 1)));
     }
 
     #[test]
@@ -473,6 +683,8 @@ mod tests {
         assert!(per_unit(Family::Satin).is_some_and(|price| price > 4_730));
         // From 1,900 to 5,300 for a fill's, by the part of the work: no one price.
         assert_eq!(per_unit(Family::Fill), None);
+        // Digitizing's, from 1,450 for a filled square to 2,260 for a line traced as an area 0.3 mm wide.
+        const { assert!(DIGITIZE_PER_UNIT > 2_260 && DIGITIZE_PER_UNIT < 2 * 2_260) };
         // Above, but not far above: a price twice what was measured would show half the stitches it could.
         assert!(per_unit(Family::Stroke).is_some_and(|price| price < 2 * 880));
         assert!(per_unit(Family::Satin).is_some_and(|price| price < 2 * 4_730));

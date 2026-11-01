@@ -45,6 +45,7 @@ use crate::generators::satin::column::Section;
 pub(crate) use crate::generators::satin::column::{first_point, sewn_rails};
 use crate::generators::satin::compensation::Processor;
 use crate::generators::satin::ends::Guides;
+pub(crate) use crate::generators::satin::lie::LONG_STITCH;
 use crate::generators::satin::pairs::Pair;
 use crate::generators::satin::split::Splitter;
 use crate::generators::satin::underlay::Peaks;

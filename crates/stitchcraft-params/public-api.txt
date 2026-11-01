@@ -9,6 +9,10 @@ pub struct stitchcraft_params::kinds::Angle
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Angle
 pub type stitchcraft_params::kinds::Angle::Value = f64
 pub fn stitchcraft_params::kinds::Angle::take(stitchcraft_params::value::Value) -> core::option::Option<f64>
+pub struct stitchcraft_params::kinds::Area
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Area
+pub type stitchcraft_params::kinds::Area::Value = f64
+pub fn stitchcraft_params::kinds::Area::take(stitchcraft_params::value::Value) -> core::option::Option<f64>
 pub struct stitchcraft_params::kinds::BoundedAngle
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::BoundedAngle
 pub type stitchcraft_params::kinds::BoundedAngle::Value = f64
@@ -91,6 +95,9 @@ pub fn stitchcraft_params::kinds::ParamKind::take(stitchcraft_params::value::Val
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Angle
 pub type stitchcraft_params::kinds::Angle::Value = f64
 pub fn stitchcraft_params::kinds::Angle::take(stitchcraft_params::value::Value) -> core::option::Option<f64>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Area
+pub type stitchcraft_params::kinds::Area::Value = f64
+pub fn stitchcraft_params::kinds::Area::take(stitchcraft_params::value::Value) -> core::option::Option<f64>
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::BoundedAngle
 pub type stitchcraft_params::kinds::BoundedAngle::Value = f64
 pub fn stitchcraft_params::kinds::BoundedAngle::take(stitchcraft_params::value::Value) -> core::option::Option<f64>
@@ -175,6 +182,9 @@ pub enum stitchcraft_params::spec::Kind
 pub stitchcraft_params::spec::Kind::Angle
 pub stitchcraft_params::spec::Kind::AngleList
 pub stitchcraft_params::spec::Kind::AngleList::optional: bool
+pub stitchcraft_params::spec::Kind::Area
+pub stitchcraft_params::spec::Kind::Area::max: f64
+pub stitchcraft_params::spec::Kind::Area::min: f64
 pub stitchcraft_params::spec::Kind::BoundedAngle
 pub stitchcraft_params::spec::Kind::BoundedAngle::max: f64
 pub stitchcraft_params::spec::Kind::BoundedAngle::min: f64
@@ -245,6 +255,7 @@ pub stitchcraft_params::spec::ParamGroup::help: &'static str
 pub stitchcraft_params::spec::ParamGroup::name: &'static str
 pub stitchcraft_params::spec::ParamGroup::specs: &'static [stitchcraft_params::spec::ParamSpec]
 impl stitchcraft_params::spec::ParamGroup
+pub fn stitchcraft_params::spec::ParamGroup::automatic(&self) -> bool
 pub fn stitchcraft_params::spec::ParamGroup::help(&self) -> alloc::string::String
 pub fn stitchcraft_params::spec::ParamGroup::slug(&self) -> alloc::string::String
 pub fn stitchcraft_params::spec::ParamGroup::title(&self) -> alloc::string::String
@@ -267,6 +278,7 @@ pub fn stitchcraft_params::spec::ParamSpec::in_family(&self, stitchcraft_params:
 pub fn stitchcraft_params::spec::ParamSpec::read_by(&self, stitchcraft_params::stitch_type::StitchType, &stitchcraft_params::set::ParamSet, &[stitchcraft_params::spec::ParamSpec]) -> bool
 impl stitchcraft_params::spec::ParamSpec
 pub fn stitchcraft_params::spec::ParamSpec::read(&self, &str) -> core::result::Result<(stitchcraft_params::value::Value, core::option::Option<stitchcraft_core::diag::Diagnostic>), stitchcraft_core::diag::Diagnostic>
+pub const stitchcraft_params::spec::AUTOMATIC: &[stitchcraft_params::stitch_type::StitchType]
 pub const stitchcraft_params::spec::MAX_LIST: usize
 pub const stitchcraft_params::spec::MAX_TEXT: usize
 pub mod stitchcraft_params::stitch_type
@@ -307,6 +319,7 @@ pub mod stitchcraft_params::value
 pub enum stitchcraft_params::value::Value
 pub stitchcraft_params::value::Value::Angle(f64)
 pub stitchcraft_params::value::Value::Angles(core::option::Option<alloc::vec::Vec<f64>>)
+pub stitchcraft_params::value::Value::Area(f64)
 pub stitchcraft_params::value::Value::Choice(&'static str)
 pub stitchcraft_params::value::Value::Count(u32)
 pub stitchcraft_params::value::Value::Counts(alloc::vec::Vec<u32>)
@@ -342,6 +355,9 @@ pub enum stitchcraft_params::Kind
 pub stitchcraft_params::Kind::Angle
 pub stitchcraft_params::Kind::AngleList
 pub stitchcraft_params::Kind::AngleList::optional: bool
+pub stitchcraft_params::Kind::Area
+pub stitchcraft_params::Kind::Area::max: f64
+pub stitchcraft_params::Kind::Area::min: f64
 pub stitchcraft_params::Kind::BoundedAngle
 pub stitchcraft_params::Kind::BoundedAngle::max: f64
 pub stitchcraft_params::Kind::BoundedAngle::min: f64
@@ -423,6 +439,7 @@ pub const fn stitchcraft_params::stitch_type::StitchType::name(self) -> &'static
 pub enum stitchcraft_params::Value
 pub stitchcraft_params::Value::Angle(f64)
 pub stitchcraft_params::Value::Angles(core::option::Option<alloc::vec::Vec<f64>>)
+pub stitchcraft_params::Value::Area(f64)
 pub stitchcraft_params::Value::Choice(&'static str)
 pub stitchcraft_params::Value::Count(u32)
 pub stitchcraft_params::Value::Counts(alloc::vec::Vec<u32>)
@@ -454,6 +471,7 @@ pub stitchcraft_params::ParamGroup::help: &'static str
 pub stitchcraft_params::ParamGroup::name: &'static str
 pub stitchcraft_params::ParamGroup::specs: &'static [stitchcraft_params::spec::ParamSpec]
 impl stitchcraft_params::spec::ParamGroup
+pub fn stitchcraft_params::spec::ParamGroup::automatic(&self) -> bool
 pub fn stitchcraft_params::spec::ParamGroup::help(&self) -> alloc::string::String
 pub fn stitchcraft_params::spec::ParamGroup::slug(&self) -> alloc::string::String
 pub fn stitchcraft_params::spec::ParamGroup::title(&self) -> alloc::string::String
@@ -487,6 +505,7 @@ pub fn stitchcraft_params::spec::ParamSpec::read(&self, &str) -> core::result::R
 pub struct stitchcraft_params::Validated<T>
 pub stitchcraft_params::Validated::params: T
 pub stitchcraft_params::Validated::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
+pub const stitchcraft_params::AUTOMATIC: &[stitchcraft_params::stitch_type::StitchType]
 pub const stitchcraft_params::MAX_LIST: usize
 pub const stitchcraft_params::MAX_TEXT: usize
 pub trait stitchcraft_params::ParamKind
@@ -495,6 +514,9 @@ pub fn stitchcraft_params::ParamKind::take(stitchcraft_params::value::Value) -> 
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Angle
 pub type stitchcraft_params::kinds::Angle::Value = f64
 pub fn stitchcraft_params::kinds::Angle::take(stitchcraft_params::value::Value) -> core::option::Option<f64>
+impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::Area
+pub type stitchcraft_params::kinds::Area::Value = f64
+pub fn stitchcraft_params::kinds::Area::take(stitchcraft_params::value::Value) -> core::option::Option<f64>
 impl stitchcraft_params::kinds::ParamKind for stitchcraft_params::kinds::BoundedAngle
 pub type stitchcraft_params::kinds::BoundedAngle::Value = f64
 pub fn stitchcraft_params::kinds::BoundedAngle::take(stitchcraft_params::value::Value) -> core::option::Option<f64>

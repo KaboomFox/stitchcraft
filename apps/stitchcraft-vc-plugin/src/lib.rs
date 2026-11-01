@@ -1,13 +1,14 @@
 //! StitchCraft plug-ins for VectorCraft's WebAssembly plug-in ABI v1.
 //!
 //! One `.wasm` module for each stitch family, so that each dialog holds only its family's parameters and
-//! stays within VectorCraft's 64 (`docs/src/design/vectorcraft-integration.md`), one for each machine
-//! format, an exporter (VectorCraft 0.14), and one for each filter: Design Settings (VectorCraft 0.16),
-//! Stroke to Satin, a heavy filter (VectorCraft 0.17), and Test Sheet. Which plug-in a module is is chosen
-//! when it is built, by a feature: `stroke`, `satin` or `fill` for a family's live effect, `pes` or `dst`
-//! for an exporter, and `settings`, `stroke-to-satin` or `testsheet` for a filter ([`MODULE`]). Without one
-//! it is the M0.6 *hello* effect, which the contract tests measure the host's costs with. Everything a
-//! module does is ordinary code, built into every module and tested natively, whichever it is.
+//! stays within VectorCraft's 64 (`docs/src/design/vectorcraft-integration.md`), one for the Auto effect,
+//! which chooses the stitches by width (M13.7), one for each machine format, an exporter (VectorCraft
+//! 0.14), and one for each filter: Design Settings (VectorCraft 0.16), Stroke to Satin, a heavy filter
+//! (VectorCraft 0.17), and Test Sheet. Which plug-in a module is is chosen when it is built, by a feature:
+//! `stroke`, `satin`, `fill` or `auto` for a live effect, `pes` or `dst` for an exporter, and `settings`,
+//! `stroke-to-satin` or `testsheet` for a filter ([`MODULE`]). Without one it is the M0.6 *hello* effect,
+//! which the contract tests measure the host's costs with. Everything a module does is ordinary code,
+//! built into every module and tested natively, whichever it is.
 //!
 //! Layout:
 //! - [`manifest`]: plug-in ids and manifests, made from the parameter registry and checked with
@@ -42,6 +43,7 @@ mod abi;
 
 use stitchcraft_params::Family;
 use stitchcraft_plan::FormatId;
+use stitchcraft_vectorcraft::AUTO;
 use stitchcraft_vectorcraft::settings::SETTINGS_FILTER;
 
 /// What a module is: a stitch family's live effect, a machine format's exporter, a filter, or *hello*.
@@ -51,6 +53,9 @@ pub enum Module {
     Hello,
     /// The live effect that sews an object as the family.
     Family(Family),
+    /// The Auto effect, which makes the object, or each path inside the group, automatic, and previews the
+    /// stitches automatic digitizing chooses (`REQ-VC-016`).
+    Auto,
     /// The exporter that writes the document in the format, as `stitch export` writes it.
     Exporter(FormatId),
     /// The Design Settings filter, which keeps a document's design settings and machine with it.
@@ -62,14 +67,16 @@ pub enum Module {
     TestSheet,
 }
 
-/// What this build of the module is, by its features: the first of `fill`, `satin`, `stroke`, `pes`, `dst`,
-/// `settings`, `stroke-to-satin` and `testsheet`, or *hello* without any.
+/// What this build of the module is, by its features: the first of `fill`, `satin`, `stroke`, `auto`, `pes`,
+/// `dst`, `settings`, `stroke-to-satin` and `testsheet`, or *hello* without any.
 pub const MODULE: Module = if cfg!(feature = "fill") {
     Module::Family(Family::Fill)
 } else if cfg!(feature = "satin") {
     Module::Family(Family::Satin)
 } else if cfg!(feature = "stroke") {
     Module::Family(Family::Stroke)
+} else if cfg!(feature = "auto") {
+    Module::Auto
 } else if cfg!(feature = "pes") {
     Module::Exporter(FormatId::PesV1)
 } else if cfg!(feature = "dst") {
@@ -85,21 +92,22 @@ pub const MODULE: Module = if cfg!(feature = "fill") {
 };
 
 impl Module {
-    /// Every module: *hello*, the live effect of each stitch family, the exporter of each machine format, and
-    /// the filters.
+    /// Every module: *hello*, the live effect of each stitch family, the Auto effect, the exporter of each
+    /// machine format, and the filters.
     pub fn all() -> Vec<Module> {
         let families = Family::ALL.iter().map(|family| Module::Family(*family));
         let exporters = FormatId::ALL.iter().map(|format| Module::Exporter(*format));
         let filters = [Module::Settings, Module::StrokeToSatin, Module::TestSheet];
-        std::iter::once(Module::Hello).chain(families).chain(exporters).chain(filters).collect()
+        std::iter::once(Module::Hello).chain(families).chain([Module::Auto]).chain(exporters).chain(filters).collect()
     }
 
-    /// The module's name, which is also the feature that builds it ([`MODULE`]): `hello`, the family's id, the
-    /// format's extension or the filter's.
+    /// The module's name, which is also the feature that builds it ([`MODULE`]): `hello`, the family's id,
+    /// `auto`, the format's extension or the filter's.
     pub fn name(self) -> &'static str {
         match self {
             Module::Hello => "hello",
             Module::Family(family) => family.id(),
+            Module::Auto => AUTO,
             Module::Exporter(format) => format.extension(),
             Module::Settings => SETTINGS_FILTER,
             Module::StrokeToSatin => stroke_to_satin::STROKE_TO_SATIN,
@@ -112,6 +120,7 @@ impl Module {
         match self {
             Module::Hello => manifest::hello(),
             Module::Family(family) => manifest::family(family),
+            Module::Auto => manifest::auto(),
             Module::Exporter(format) => manifest::exporter(format),
             Module::Settings => manifest::settings(),
             Module::StrokeToSatin => manifest::stroke_to_satin(),
@@ -126,6 +135,7 @@ impl Module {
         match self {
             Module::Hello => effect::hello(input, params),
             Module::Family(family) => effect::sew(family, input, params),
+            Module::Auto => effect::auto(input, params),
             Module::Exporter(format) => export::export(format, input, params),
             Module::Settings => settings::run(input, params),
             Module::StrokeToSatin => stroke_to_satin::run(input, params),
@@ -145,6 +155,7 @@ mod tests {
         feature = "stroke",
         feature = "satin",
         feature = "fill",
+        feature = "auto",
         feature = "pes",
         feature = "dst",
         feature = "settings",
@@ -166,9 +177,13 @@ mod tests {
         assert_eq!(read(Module::Hello.run(&input, b"{}")), json!({"objects": [{"path": square}]}));
         let stitches = read(Module::Family(Family::Stroke).run(&input, b"{}"));
         assert!(stitches["objects"][0]["path"]["subpaths"][0]["anchors"].as_array().is_some_and(|anchors| anchors.len() > 4), "{stitches}");
+        // The Auto effect previews a painted object's stitches.
+        assert_eq!(Module::Auto.manifest(), manifest::auto());
+        let rows = read(Module::Auto.run(&testing::painted(&square, true, None), b"{}"));
+        assert!(rows["objects"][0]["path"]["subpaths"].as_array().is_some_and(|ribbons| ribbons.len() > 4), "{rows}");
         assert_eq!(
             Module::all().into_iter().map(Module::name).collect::<Vec<_>>(),
-            ["hello", "stroke", "satin", "fill", "pes", "dst", "settings", "stroke-to-satin", "testsheet"]
+            ["hello", "stroke", "satin", "fill", "auto", "pes", "dst", "settings", "stroke-to-satin", "testsheet"]
         );
         // An exporter is given a whole document, and returns a machine file.
         for format in FormatId::ALL {

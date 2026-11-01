@@ -15,21 +15,34 @@ pub stitchcraft_engine::auto::Stitches::Running
 pub stitchcraft_engine::auto::Stitches::Satin
 impl stitchcraft_engine::auto::Stitches
 pub const fn stitchcraft_engine::auto::Stitches::across(self) -> bool
-pub fn stitchcraft_engine::auto::Stitches::of_stroke(stitchcraft_core::units::Mm, &stitchcraft_engine::design::DesignSettings) -> stitchcraft_engine::auto::Stitches
+pub fn stitchcraft_engine::auto::Stitches::of_stroke(stitchcraft_core::units::Mm, &stitchcraft_engine::design::DesignSettings, &stitchcraft_engine::auto::AutoParams) -> stitchcraft_engine::auto::Stitches
+pub struct stitchcraft_engine::auto::AutoParams
+pub stitchcraft_engine::auto::AutoParams::auto_ignore_background: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_max_satin_width_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_min_area_mm2: <stitchcraft_params::kinds::Area as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_min_triple_run_width_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_overlap_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
+impl stitchcraft_engine::auto::AutoParams
+pub const stitchcraft_engine::auto::AutoParams::GROUP: stitchcraft_params::spec::ParamGroup
+pub const stitchcraft_engine::auto::AutoParams::SPECS: &'static [stitchcraft_params::spec::ParamSpec]
+pub fn stitchcraft_engine::auto::AutoParams::from_set(&stitchcraft_params::set::ParamSet) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
+pub fn stitchcraft_engine::auto::AutoParams::from_set_as(&stitchcraft_params::set::ParamSet, stitchcraft_params::stitch_type::StitchType) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
 pub struct stitchcraft_engine::auto::Digitized
 pub stitchcraft_engine::auto::Digitized::diagnostics: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
 pub stitchcraft_engine::auto::Digitized::elements: alloc::vec::Vec<stitchcraft_engine::design::Element>
 pub stitchcraft_engine::auto::Digitized::parts: alloc::vec::Vec<core::option::Option<stitchcraft_engine::normalize::region::Polygon>>
 pub stitchcraft_engine::auto::Digitized::stitches: core::option::Option<stitchcraft_engine::auto::Stitches>
 pub const stitchcraft_engine::auto::CONTOUR_FROM: stitchcraft_core::units::Mm
-pub const stitchcraft_engine::auto::OVERLAP: f64
-pub const stitchcraft_engine::auto::SATIN_MAX_WIDTH: stitchcraft_core::units::Mm
-pub const stitchcraft_engine::auto::SMALLEST_AREA: f64
+pub const stitchcraft_engine::auto::IGNORE_BACKGROUND: &str
+pub const stitchcraft_engine::auto::MAX_SATIN_WIDTH: &str
+pub const stitchcraft_engine::auto::MIN_AREA: &str
+pub const stitchcraft_engine::auto::MIN_TRIPLE_RUN_WIDTH: &str
+pub const stitchcraft_engine::auto::OVERLAP: &str
 pub const stitchcraft_engine::auto::TOUCHING: f64
-pub const stitchcraft_engine::auto::TRIPLE_RUN_WIDTH: stitchcraft_core::units::Mm
 pub const stitchcraft_engine::auto::ZIGZAG_ABOVE: stitchcraft_core::units::Mm
 pub fn stitchcraft_engine::auto::digitize(&stitchcraft_engine::design::Element, &stitchcraft_engine::design::DesignSettings, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::auto::Digitized, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_engine::auto::digitized<'d>(&'d stitchcraft_engine::design::Design, &stitchcraft_core::budget::Budget) -> (alloc::borrow::Cow<'d, [stitchcraft_engine::design::Element]>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>)
+pub fn stitchcraft_engine::auto::rules(&stitchcraft_params::set::ParamSet) -> core::option::Option<stitchcraft_engine::auto::AutoParams>
 pub fn stitchcraft_engine::auto::underlay(stitchcraft_core::units::Mm) -> &'static [&'static str]
 pub mod stitchcraft_engine::common
 pub struct stitchcraft_engine::common::CommonParams

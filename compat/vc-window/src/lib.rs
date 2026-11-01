@@ -83,6 +83,11 @@ impl Window {
             // OpenGL, which Mesa draws in software (llvmpipe) wherever there is no GPU. The app would take
             // Mesa's Vulkan renderer first where it is installed, and the pixels would depend on that.
             .env("WGPU_BACKEND", "gl")
+            // The app asks GitHub for its releases as it starts, and once one newer than the pinned
+            // release is out, it offers the update in a dialog over the window, in some starts and not
+            // others. The check takes the proxy the environment names: one that nothing listens on fails
+            // it at once, and a check at start that fails says nothing.
+            .env("ALL_PROXY", "http://127.0.0.1:9")
             .stdin(Stdio::null())
             .stdout(also)
             .stderr(written)
