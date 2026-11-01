@@ -9,15 +9,16 @@ stroke or the fill of a shape, and each sews in its own thread colour.
 | [Bean stitch](running.md#bean-stitch-and-repeats) | strokes, each stitch sewn 3 times or more | now |
 | [Manual stitch](running.md#manual-stitch) | strokes whose nodes are the needle points | now |
 | [Zigzag stroke](zigzag.md) | strokes as wide as their line: light borders, couched looks | now |
-| Satin column | wide strokes and borders | now |
+| [Satin column](satin-column.md) | wide strokes and borders | now |
 | [E-stitch](e-stitch.md) | satin columns as appliqué edges: a spine along one rail, with spikes to the other | now |
 | [S-stitch](s-stitch.md) | satin columns sewn one way at a time: a stitch across at each step, joined along the edges | now |
 | [Zigzag satin](zigzag-satin.md) | satin columns sewn as a zigzag, every stitch slanting from one edge to the other | now |
-| Tatami fill | areas, in rows of running stitches | now |
+| [Tatami fill](tatami-fill.md) | areas, in rows of running stitches, Ink/Stitch's legacy fill among them | now |
 
 Every element also gets [lock stitches](locks.md) where its stitching starts and ends, and a trim or a
-stop after it when it asks for one. An element of a type that is not sewn yet is left out, and `SC-W0011`
-names it. The [roadmap](../../plan/roadmap.md) says what each milestone adds.
+stop after it when it asks for one. A shape without settings can have its stitch type chosen by its width
+instead ([automatic digitizing](automatic.md)). An element of a type that is not sewn yet is left out, and
+`SC-W0011` names it. The [roadmap](../../plan/roadmap.md) says what each milestone adds.
 
 ## Setting parameters
 

@@ -28,7 +28,7 @@ pub mod scenario;
 use std::cmp::Ordering;
 use std::path::{Path, PathBuf};
 
-use serde_json::json;
+use serde_json::{Value, json};
 use stitchcraft_vc_plugin::Module;
 use stitchcraft_vc_plugin::manifest::BudgetClass;
 
@@ -332,6 +332,17 @@ pub(crate) fn kind(name: &str) -> &'static str {
 /// allows it (`allowHeavy`): Stroke to Satin's.
 pub(crate) fn heavy(name: &str) -> bool {
     Module::all().into_iter().find(|module| module.name() == name).is_some_and(|module| module.manifest().budget == BudgetClass::Heavy)
+}
+
+/// The parameters of VectorCraft's `plugin.install` for the module `name`, built at `path`: with
+/// `allowHeavy` for a module that asks for a heavy budget ([`heavy`]), as a person allows it when
+/// VectorCraft asks. A scenario's run and a `vectorcraft-ui` shot install modules so.
+pub(crate) fn install(name: &str, path: &str) -> Value {
+    let mut install = json!({ "path": path });
+    if heavy(name) {
+        install["allowHeavy"] = json!(true);
+    }
+    install
 }
 
 /// Builds each of the plug-in's modules for wasm32 into `target/compat/plugins/<name>.wasm`, and prints

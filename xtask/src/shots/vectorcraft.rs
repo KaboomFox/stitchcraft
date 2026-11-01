@@ -255,11 +255,12 @@ fn kept(root: &Path, ui: &[(&Shot, Value)], check_only: bool, findings: &mut Fin
 }
 
 /// The window probe's job for the `vectorcraft-ui` shot `shot` (`compat/vc-window/tests/shots.rs`): the
-/// document, the modules' files, the menu path, and for a dialog the window's size, the family's row, and
+/// document, how to install the modules (`plugin.install`'s parameters, [`compat::install`]), the menu path, and for a dialog the window's size, the family's row, and
 /// the label and control of each row it shows at the defaults, which its manifest gives; and where the
 /// picture goes.
 fn job(shot: &Shot, document: &Path, modules: &Path, picture: &Path) -> Result<Value, String> {
-    let plugins: Vec<String> = shot.plugins.iter().map(|module| modules.join(format!("{module}.wasm")).to_string_lossy().into_owned()).collect();
+    let plugins: Vec<Value> =
+        shot.plugins.iter().map(|module| compat::install(module, &modules.join(format!("{module}.wasm")).to_string_lossy())).collect();
     let (window, dialog) = match shot.dialog.as_deref() {
         None => (Value::Null, Value::Null),
         Some(name) => {

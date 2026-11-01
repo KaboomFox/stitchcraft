@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64mm" height="24mm" viewBox="0 0 64 24">
+  <path id="line" fill="#1f4e9c" d="M 2 11.7 H 20 V 12.3 H 2 Z"/>
+  <path id="letter" fill="#c8102e" d="M 38.128 6.858 A 8 8 0 1 0 38.128 17.142 L 35.83 15.214 A 5 5 0 1 1 35.83 8.786 Z"/>
+  <path id="disc" fill="#e8a900" d="M 44 12 A 8 8 0 1 0 60 12 A 8 8 0 1 0 44 12 Z"/>
+</svg>
