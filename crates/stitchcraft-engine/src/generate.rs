@@ -153,7 +153,7 @@ pub(crate) fn generate_with(
     let over = matches!(sewn, Err(Exhausted::Stitches));
     let generated = within(element, budget, &mut diagnostics, sewn);
     if !generated.as_ref().is_some_and(|g| g.groups.iter().any(|group| !group.is_empty())) {
-        diagnostics.extend(left_out(element));
+        diagnostics.extend(trim_or_stop_left_out(element));
     }
     let diagnostics = named(element, diagnostics);
     if over { Err(diagnostics) } else { Ok(Generation { generated, diagnostics }) }
@@ -194,7 +194,8 @@ fn named(element: &Element, diagnostics: Vec<Diagnostic>) -> Vec<Diagnostic> {
 
 /// `SC-W0505` for the trim and stop that `element`, which sews nothing, sets after it: assembly has no
 /// place for them. Its settings were read once already; a setting that cannot be read was reported then.
-fn left_out(element: &Element) -> Option<Diagnostic> {
+/// Automatic digitizing says it of an element it leaves out (`crate::auto`).
+pub(crate) fn trim_or_stop_left_out(element: &Element) -> Option<Diagnostic> {
     let set = &element.params;
     let trim = setting::<Toggle>(set, CommonParams::SPECS, TRIM_AFTER, &mut Vec::new())?;
     let stop = setting::<Toggle>(set, CommonParams::SPECS, STOP_AFTER, &mut Vec::new())?;

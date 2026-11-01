@@ -171,7 +171,8 @@ distance from where the needle is to the next group's first needle point:
 | After the design's last group | Tie-off |
 
 An element that sews nothing, because it is skipped or too small for a stitch, has no place for its trim
-or stop. Both are left out, as Ink/Stitch leaves them out, and `SC-W0505` says so.
+or stop. Both are left out, as Ink/Stitch leaves them out, and `SC-W0505` says so. So does automatic
+digitizing of an area it leaves out, which the areas sewn after it cover whole.
 
 A jump lands where sewing resumes, on the tie-in's first point or on the group's first point when it has
 no tie-in, and the needle goes down there before the first stitch. The jump's own thread is the
