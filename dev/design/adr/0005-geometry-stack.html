@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-7240caef.js";
+            window.path_to_searchindex_js = "../../searchindex-d022bb0a.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-cba97263.js"></script>
@@ -220,24 +220,28 @@ them.</p>
 <tbody>
 <tr><td>1. Booleans and offsets of 10,000 random polygons with holes, and of a degenerate corpus, give valid output without panicking or hanging</td><td><strong>Met.</strong> The property test <code>any_polygon_with_holes_grows_and_shrinks_into_valid_parts</code> grew and shrank 10,000 random polygons with holes, and every part it got was valid. It ran with <code>PROPTEST_CASES=10000</code>, where CI runs 256 each time. The offsets agree with shapely’s for 1,050 random lines, and the grown and shrunk polygons for 330. The region code’s tests take random rings, and rings with copies of themselves a rounding error apart. Every loop charges the work budget, so a plan that runs too long ends with <code>SC-E0004</code></td></tr>
 <tr><td>2. The same output bytes on Linux, macOS, Windows and wasm32</td><td><strong>Met.</strong> The tests run on the 3 systems, and the <code>wasm-goldens</code> gate makes every golden file of the conformance cases with <code>stitch</code> built for WASI and run by wasmtime (<a href="../determinism.html#cross-platform-check">determinism</a>): 16 files, byte for byte</td></tr>
-<tr><td>3. Offsetting a 150 mm region with 1,000 vertices inward 300 times in under 200 ms natively</td><td><strong>Not met</strong>: 218 to 448 ms, against GEOS’s 104 to 149 ms for the same parts and points (below). Contour fill is the first stitch type to need it. The offsetter meets this criterion in M7, before contour fill relies on it</td></tr>
+<tr><td>3. Offsetting a 150 mm region with 1,000 vertices inward 300 times in under 200 ms natively</td><td><strong>Met at M7.6</strong>: 65 to 160 ms (below). At M0.7 it was not: 218 to 448 ms, against GEOS’s 104 to 149 ms for the same parts and points. Contour fill is the first stitch type to need it, and <code>cargo xtask perf</code> keeps the offsetter within it (NFR-PERF-3)</td></tr>
 <tr><td>4. Building for wasm32 adds under 300 KiB to the plug-in</td><td><strong>Met for the geometry</strong>: no geometry crate is linked, so none adds to the plug-in. The engine, linked into the plug-in by M6.2, adds 844 KiB. A stitch family’s module is 1,014 KiB, and <em>hello</em>’s, with the ABI shim and the JSON reader alone, is 171 KiB (a release build with thin LTO, at <code>opt-level</code> 3, in the compatibility gate’s contract job). The engine’s own geometry is part of the 844 KiB and isn’t measured apart. VectorCraft takes modules of up to 32 MiB</td></tr>
 </tbody>
 </table>
 </div>
 <p>Criterion 3, measured on a 2.1 GHz Xeon in an optimized build: a ring 150 mm across, of 1,000 points, round
 or with 7 waves of 2 mm, shrunk 300 times in steps of 0.25 mm, and of 0.4 mm. shapely 2.2.0, with the GEOS
-3.14.1 its wheels bundle, ran on the same machine, and its parts and points came out the same as the engine’s.</p>
+3.14.1 its wheels bundle, ran on the same machine, and its parts and points came out the same as the engine’s.
+M7.6 measured the engine again on a 2.1 GHz Xeon, with the <code>insets</code> example of the
+<a href="../guardrails.html">performance budget</a>. By then the region code put the rings on its grid, and the 4 took
+141 to 356 ms. Sorted lists in place of tree maps and sets brought them within the criterion, with the same
+parts, points and work (<a href="../algorithms/offset.html#speed">offset curves</a>).</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>Ring</th><th>Step</th><th>Engine</th><th>GEOS</th></tr>
+<tr><th>Ring</th><th>Step</th><th>Engine at M0.7</th><th>Engine before M7.6</th><th>Engine at M7.6</th><th>GEOS</th></tr>
 </thead>
 <tbody>
-<tr><td>Round</td><td>0.25 mm</td><td>218 ms</td><td>104 ms</td></tr>
-<tr><td>Round</td><td>0.4 mm</td><td>135 ms</td><td>61 ms</td></tr>
-<tr><td>7 waves</td><td>0.25 mm</td><td>448 ms</td><td>149 ms</td></tr>
-<tr><td>7 waves</td><td>0.4 mm</td><td>261 ms</td><td>115 ms</td></tr>
+<tr><td>Round</td><td>0.25 mm</td><td>218 ms</td><td>311 ms</td><td>105 ms</td><td>104 ms</td></tr>
+<tr><td>Round</td><td>0.4 mm</td><td>135 ms</td><td>141 ms</td><td>65 ms</td><td>61 ms</td></tr>
+<tr><td>7 waves</td><td>0.25 mm</td><td>448 ms</td><td>356 ms</td><td>160 ms</td><td>149 ms</td></tr>
+<tr><td>7 waves</td><td>0.4 mm</td><td>261 ms</td><td>206 ms</td><td>96 ms</td><td>115 ms</td></tr>
 </tbody>
 </table>
 </div>
@@ -246,8 +250,9 @@ or with 7 waves of 2 mm, shrunk 300 times in steps of 0.25 mm, and of 0.4 mm. sh
 <li>No geometry crate is there to vet, update or replace. The conformance suite and the shapely oracles
 (<code>conformance/oracle/</code>) check the engine’s geometry, and a change to it is a change of the engine.</li>
 <li>CI makes the golden files again as WebAssembly. A plan the plug-in makes is one the command line makes.</li>
-<li>The offsetter is 2 to 3 times slower than GEOS on large regions. Until M7, a fill offsets each part at
-most twice, for its inset underlay and its grown rows. Contour fill offsets hundreds of times.</li>
+<li>At M0.7 the offsetter was 2 to 3 times slower than GEOS on large regions, when a fill offset each part
+at most twice, for its inset underlay and its grown rows. Contour fill offsets hundreds of times, and
+from M7.6 the offsetter’s times are close to GEOS’s above.</li>
 </ul>
 
                     </main>

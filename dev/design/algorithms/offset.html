@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-7240caef.js";
+            window.path_to_searchindex_js = "../../searchindex-d022bb0a.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-cba97263.js"></script>
@@ -250,6 +250,19 @@ and 3, the area the curves wind round clockwise at least once comes from the fil
 the loops where the curves fold over drop out of it. GEOS’s rules for a ring the buffer wears away, and
 for a small ring whose curve turns inside out, are followed as the <code>buffer</code> module’s docs say, and
 <code>conformance/oracle/buffer.py</code> checks the polygons against shapely’s.</p>
+<h2 id="speed"><a class="header" href="#speed">Speed</a></h2>
+<p>Contour fill shrinks a part again and again, each inset from the last, so the offsetter has a budget of
+its own, NFR-PERF-3. A region 150 mm across, of 1,000 points, is shrunk 300 times in under 200 ms natively
+(<a href="../adr/0005-geometry-stack.html">ADR-0005</a>, criterion 3). The engine’s <code>insets</code> example shrinks 4 such
+regions, round or with 7 waves of 2 mm, by 0.25 mm and by 0.4 mm, 300 times or until nothing is left: the
+round region lasts 299 insets at 0.25 mm and 187 at 0.4 mm. <code>cargo xtask perf</code> times the example and
+counts its instructions against a record (<a href="../guardrails.html">guardrails</a>).</p>
+<p>Most of the time goes to the region code that finds the area the curves wind round
+(<a href="fills.html#region">fills</a>). At M7.6 it put its hot points, edges and points in sorted lists, where it had
+kept them in tree maps and sets, and the 4 regions took 65 to 160 ms instead of 141 to 356 ms. The
+parts, their points and the work charged came out the same for all 4. The time left is spread out. The
+largest shares, each about an eighth, go to the parts being joined and to the raw curves being built
+(callgrind, at M7.6).</p>
 <h2 id="checking-against-shapely"><a class="header" href="#checking-against-shapely">Checking against shapely</a></h2>
 <p><code>conformance/oracle/offset.py</code> asks shapely 2.2.0, with the GEOS 3.14.1 its wheels bundle, for the
 offset curves of 1,050 random lines: gentle and wild walks, arcs, spirals, waves and zigzags, walks on a

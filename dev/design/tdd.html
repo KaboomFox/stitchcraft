@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-7240caef.js";
+            window.path_to_searchindex_js = "../searchindex-d022bb0a.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-cba97263.js"></script>
@@ -323,6 +323,7 @@ identical to Ink/Stitch’s SVG attributes because that is the interoperability 
 <tr><td>NFR-DET-1</td><td>Same input and version ⇒ byte-identical output on every supported platform, including wasm32</td></tr>
 <tr><td>NFR-PERF-1</td><td>A 130 × 180 mm tatami fill at 0.4 mm spacing, the reference hoop’s whole field, plans in ≤ 50 ms natively. Baseline set at M5.9: 29 ms on a 2.1 GHz Xeon, 282 million instructions, guarded by the instruction count (<code>cargo xtask perf</code>)</td></tr>
 <tr><td>NFR-PERF-2</td><td>Live-effect previews fit VectorCraft’s v1 budget (≤ 50 M instructions, ≤ 5 s) for a 130 × 180 mm design</td></tr>
+<tr><td>NFR-PERF-3</td><td>The offsetter shrinks a region 150 mm across, of 1,000 points, 300 times, each inset from the last, in ≤ 200 ms natively: round or with 7 waves of 2 mm, by 0.25 mm and by 0.4 mm (<a href="adr/0005-geometry-stack.html">ADR-0005</a>, criterion 3). Met at M7.6: 65 to 160 ms on a 2.1 GHz Xeon, 5.46 billion instructions for the 4, guarded by the instruction count (<code>cargo xtask perf</code>)</td></tr>
 <tr><td>NFR-PORT-1</td><td>Engine crates build for <code>wasm32-unknown-unknown</code> without WASI</td></tr>
 <tr><td>NFR-DOC-1</td><td>100 % of parameters, diagnostics, CLI commands and formats have generated reference pages</td></tr>
 <tr><td>NFR-TEST-1</td><td>Every requirement in <code>conformance/requirements.toml</code> has ≥ 1 passing case before its milestone closes</td></tr>

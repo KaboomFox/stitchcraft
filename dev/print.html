@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-7240caef.js";
+            window.path_to_searchindex_js = "searchindex-d022bb0a.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-cba97263.js"></script>
@@ -4527,6 +4527,7 @@ identical to Ink/Stitch’s SVG attributes because that is the interoperability 
 <tr><td>NFR-DET-1</td><td>Same input and version ⇒ byte-identical output on every supported platform, including wasm32</td></tr>
 <tr><td>NFR-PERF-1</td><td>A 130 × 180 mm tatami fill at 0.4 mm spacing, the reference hoop’s whole field, plans in ≤ 50 ms natively. Baseline set at M5.9: 29 ms on a 2.1 GHz Xeon, 282 million instructions, guarded by the instruction count (<code>cargo xtask perf</code>)</td></tr>
 <tr><td>NFR-PERF-2</td><td>Live-effect previews fit VectorCraft’s v1 budget (≤ 50 M instructions, ≤ 5 s) for a 130 × 180 mm design</td></tr>
+<tr><td>NFR-PERF-3</td><td>The offsetter shrinks a region 150 mm across, of 1,000 points, 300 times, each inset from the last, in ≤ 200 ms natively: round or with 7 waves of 2 mm, by 0.25 mm and by 0.4 mm (<a href="#adr-0005-geometry-stack">ADR-0005</a>, criterion 3). Met at M7.6: 65 to 160 ms on a 2.1 GHz Xeon, 5.46 billion instructions for the 4, guarded by the instruction count (<code>cargo xtask perf</code>)</td></tr>
 <tr><td>NFR-PORT-1</td><td>Engine crates build for <code>wasm32-unknown-unknown</code> without WASI</td></tr>
 <tr><td>NFR-DOC-1</td><td>100 % of parameters, diagnostics, CLI commands and formats have generated reference pages</td></tr>
 <tr><td>NFR-TEST-1</td><td>Every requirement in <code>conformance/requirements.toml</code> has ≥ 1 passing case before its milestone closes</td></tr>
@@ -7140,6 +7141,19 @@ and 3, the area the curves wind round clockwise at least once comes from the fil
 the loops where the curves fold over drop out of it. GEOS’s rules for a ring the buffer wears away, and
 for a small ring whose curve turns inside out, are followed as the <code>buffer</code> module’s docs say, and
 <code>conformance/oracle/buffer.py</code> checks the polygons against shapely’s.</p>
+<h2 id="speed"><a class="header" href="#speed">Speed</a></h2>
+<p>Contour fill shrinks a part again and again, each inset from the last, so the offsetter has a budget of
+its own, NFR-PERF-3. A region 150 mm across, of 1,000 points, is shrunk 300 times in under 200 ms natively
+(<a href="#adr-0005-geometry-stack">ADR-0005</a>, criterion 3). The engine’s <code>insets</code> example shrinks 4 such
+regions, round or with 7 waves of 2 mm, by 0.25 mm and by 0.4 mm, 300 times or until nothing is left: the
+round region lasts 299 insets at 0.25 mm and 187 at 0.4 mm. <code>cargo xtask perf</code> times the example and
+counts its instructions against a record (<a href="#guardrails">guardrails</a>).</p>
+<p>Most of the time goes to the region code that finds the area the curves wind round
+(<a href="#region-1">fills</a>). At M7.6 it put its hot points, edges and points in sorted lists, where it had
+kept them in tree maps and sets, and the 4 regions took 65 to 160 ms instead of 141 to 356 ms. The
+parts, their points and the work charged came out the same for all 4. The time left is spread out. The
+largest shares, each about an eighth, go to the parts being joined and to the raw curves being built
+(callgrind, at M7.6).</p>
 <h2 id="checking-against-shapely"><a class="header" href="#checking-against-shapely">Checking against shapely</a></h2>
 <p><code>conformance/oracle/offset.py</code> asks shapely 2.2.0, with the GEOS 3.14.1 its wheels bundle, for the
 offset curves of 1,050 random lines: gentle and wild walks, arcs, spirals, waves and zigzags, walks on a
@@ -7225,7 +7239,14 @@ Ink/Stitch warns of it. A fill in parts gets <code>SC-W0307</code>, since each p
 against it, pair of edges whose spans along x overlap, half edge, ring compared with a face or an outline,
 and point walked to find a ring’s bounds or its place among the faces and outlines (<code>REQ-FILL-004</code>). Each
 ring’s bounds are found once. A ring that bounds no face is located only in the faces whose bounds cover
-its own, and a hole apart from every outline only in the outlines whose bounds cover its own.
+its own, and a hole apart from every outline only in the outlines whose bounds cover its own.</p>
+<p>The cuts cost the most where a region is shrunk again and again (<a href="#speed">offset curves</a>). The
+hot points, the corners and the points where edges cross, are kept in a sorted list, and a segment seeks
+the cells it passes through among the points within its span along x. Each edge is worked out once,
+however many times the rings draw it. A ring is rebuilt when one of its edges is bent. A round’s crossings
+join the hot points at once, merged into the sorted list. The arrangement finds each point’s number by its
+place in that list, and groups the steps the rings take by their lower point. The steps between the same 2
+points, either way round, then lie side by side in a group, and are one edge.
 Property tests draw random rings on a grid, and random rings with float coordinates beside near-copies of
 themselves, moved or turned by a hair or drawn back, and count how many times they wind round points off
 the edges. Such a point lies in the region exactly when the fill rule fills it, unless it lies in a part
@@ -7944,7 +7965,7 @@ breaking ties between points on one circle by perturbing them symbolically.</li>
 art or a drawing, once it is traced into shapes. Settings on the shapes are optional. StitchCraft chooses
 the stitches of each shape by its width at the size it sews. Neighbouring shapes overlap where they meet.
 Specks and the background are left out, and the sewing is ordered for few colour changes and short jumps.
-Milestone M13 of the <a href="#roadmap-small-steps-to-the-final-project">roadmap</a> builds it, after M7.5 and before M7.6. Photographs
+Milestone M13 of the <a href="#roadmap-small-steps-to-the-final-project">roadmap</a> builds it, after M7.5 and before M7.7. Photographs
 sewn in blended colours need another technique, outside the roadmap.</p>
 <h2 id="the-flow"><a class="header" href="#the-flow">The flow</a></h2>
 <p>A picture becomes a machine file in 2 steps:</p>
@@ -10466,7 +10487,7 @@ so the rules hold without anyone having to remember them. Most are adopted from 
 <tr><td>API docs</td><td>Rustdoc builds without warnings: no broken, ambiguous or private intra-doc links</td><td><code>cargo xtask ci</code> (<code>RUSTDOCFLAGS=-D warnings</code>)</td><td><code>cargo xtask ci</code> · CI</td></tr>
 <tr><td><strong>Public API review</strong></td><td>Changes to a library crate’s public API show in the PR diff, as a change to its <code>public-api.txt</code></td><td><code>xtask/src/api.rs</code> (cargo-public-api, pinned)</td><td><code>cargo xtask api --check</code> · CI</td></tr>
 <tr><td><strong>Coverage ratchet</strong></td><td>No crate’s line coverage drops below its floor, and floors only go up. A crate below its floor has its untested lines named on the pull request, those only another build of a function or a closure on the line runs included</td><td><code>conformance/coverage.toml</code>, <code>xtask/src/coverage.rs</code> (cargo-llvm-cov)</td><td><code>cargo xtask coverage</code> · CI job</td></tr>
-<tr><td><strong>Performance budget</strong></td><td>Planning the reference hoop’s whole field (<code>REQ-FILL-TAT-009</code>) takes at most 2 % more instructions than recorded. Records only go down. A count below half the record fails too: the counted function was lost. Its time is reported against NFR-PERF-1’s 50 ms, with a warning above it</td><td><code>conformance/perf.toml</code>, <code>xtask/src/perf.rs</code> (valgrind’s callgrind), the engine’s <code>field</code> example</td><td><code>cargo xtask perf</code> · CI job</td></tr>
+<tr><td><strong>Performance budget</strong></td><td>Planning the reference hoop’s whole field (<code>REQ-FILL-TAT-009</code>) takes at most 2 % more instructions than recorded, and so does shrinking a region 150 mm across 300 times, as contour fill will. Records only go down. A count below half the record fails too: the counted function was lost. The times are reported against NFR-PERF-1’s 50 ms and NFR-PERF-3’s 200 ms, with a warning above them</td><td><code>conformance/perf.toml</code>, <code>xtask/src/perf.rs</code> (valgrind’s callgrind), the engine’s <code>field</code> and <code>insets</code> examples</td><td><code>cargo xtask perf</code> · CI job</td></tr>
 <tr><td><strong>Release build</strong></td><td>The build <code>stitch</code> and the plug-ins are published as plans as the tests’ debug build does: the engine’s release tests pass in it too. A release build is compiled more aggressively, and Rust 1.97.0 got one wrong there</td><td><code>crates/stitchcraft-engine/tests/release.rs</code>, <code>rust-toolchain.toml</code></td><td><code>perf</code> CI job</td></tr>
 <tr><td><strong>Mutation testing</strong></td><td>Tests notice changed behaviour: every mutant in the lines a pull request changes is noticed or a listed equivalent; no crate gets more mutants no test notices than recorded, and records only go down. A weekly part whose unmutated tree failed its tests, or a recorded crate with no mutant tried, fails</td><td><code>.cargo/mutants.toml</code>, <code>conformance/mutation.toml</code>, <code>xtask/src/mutants.rs</code></td><td><code>mutants.yml</code> · changed lines every PR, in 8 parts · everything weekly</td></tr>
 <tr><td><strong>Fuzzing</strong></td><td>Readers never panic, respect their caps and terminate; anything read round-trips and previews</td><td><code>fuzz/</code>, <code>stitchcraft-testkit::fuzz</code> (<a href="#fuzzing">conformance</a>)</td><td>bodies every PR · an hour nightly</td></tr>
@@ -11345,24 +11366,28 @@ them.</p>
 <tbody>
 <tr><td>1. Booleans and offsets of 10,000 random polygons with holes, and of a degenerate corpus, give valid output without panicking or hanging</td><td><strong>Met.</strong> The property test <code>any_polygon_with_holes_grows_and_shrinks_into_valid_parts</code> grew and shrank 10,000 random polygons with holes, and every part it got was valid. It ran with <code>PROPTEST_CASES=10000</code>, where CI runs 256 each time. The offsets agree with shapely’s for 1,050 random lines, and the grown and shrunk polygons for 330. The region code’s tests take random rings, and rings with copies of themselves a rounding error apart. Every loop charges the work budget, so a plan that runs too long ends with <code>SC-E0004</code></td></tr>
 <tr><td>2. The same output bytes on Linux, macOS, Windows and wasm32</td><td><strong>Met.</strong> The tests run on the 3 systems, and the <code>wasm-goldens</code> gate makes every golden file of the conformance cases with <code>stitch</code> built for WASI and run by wasmtime (<a href="#cross-platform-check">determinism</a>): 16 files, byte for byte</td></tr>
-<tr><td>3. Offsetting a 150 mm region with 1,000 vertices inward 300 times in under 200 ms natively</td><td><strong>Not met</strong>: 218 to 448 ms, against GEOS’s 104 to 149 ms for the same parts and points (below). Contour fill is the first stitch type to need it. The offsetter meets this criterion in M7, before contour fill relies on it</td></tr>
+<tr><td>3. Offsetting a 150 mm region with 1,000 vertices inward 300 times in under 200 ms natively</td><td><strong>Met at M7.6</strong>: 65 to 160 ms (below). At M0.7 it was not: 218 to 448 ms, against GEOS’s 104 to 149 ms for the same parts and points. Contour fill is the first stitch type to need it, and <code>cargo xtask perf</code> keeps the offsetter within it (NFR-PERF-3)</td></tr>
 <tr><td>4. Building for wasm32 adds under 300 KiB to the plug-in</td><td><strong>Met for the geometry</strong>: no geometry crate is linked, so none adds to the plug-in. The engine, linked into the plug-in by M6.2, adds 844 KiB. A stitch family’s module is 1,014 KiB, and <em>hello</em>’s, with the ABI shim and the JSON reader alone, is 171 KiB (a release build with thin LTO, at <code>opt-level</code> 3, in the compatibility gate’s contract job). The engine’s own geometry is part of the 844 KiB and isn’t measured apart. VectorCraft takes modules of up to 32 MiB</td></tr>
 </tbody>
 </table>
 </div>
 <p>Criterion 3, measured on a 2.1 GHz Xeon in an optimized build: a ring 150 mm across, of 1,000 points, round
 or with 7 waves of 2 mm, shrunk 300 times in steps of 0.25 mm, and of 0.4 mm. shapely 2.2.0, with the GEOS
-3.14.1 its wheels bundle, ran on the same machine, and its parts and points came out the same as the engine’s.</p>
+3.14.1 its wheels bundle, ran on the same machine, and its parts and points came out the same as the engine’s.
+M7.6 measured the engine again on a 2.1 GHz Xeon, with the <code>insets</code> example of the
+<a href="#guardrails">performance budget</a>. By then the region code put the rings on its grid, and the 4 took
+141 to 356 ms. Sorted lists in place of tree maps and sets brought them within the criterion, with the same
+parts, points and work (<a href="#speed">offset curves</a>).</p>
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>Ring</th><th>Step</th><th>Engine</th><th>GEOS</th></tr>
+<tr><th>Ring</th><th>Step</th><th>Engine at M0.7</th><th>Engine before M7.6</th><th>Engine at M7.6</th><th>GEOS</th></tr>
 </thead>
 <tbody>
-<tr><td>Round</td><td>0.25 mm</td><td>218 ms</td><td>104 ms</td></tr>
-<tr><td>Round</td><td>0.4 mm</td><td>135 ms</td><td>61 ms</td></tr>
-<tr><td>7 waves</td><td>0.25 mm</td><td>448 ms</td><td>149 ms</td></tr>
-<tr><td>7 waves</td><td>0.4 mm</td><td>261 ms</td><td>115 ms</td></tr>
+<tr><td>Round</td><td>0.25 mm</td><td>218 ms</td><td>311 ms</td><td>105 ms</td><td>104 ms</td></tr>
+<tr><td>Round</td><td>0.4 mm</td><td>135 ms</td><td>141 ms</td><td>65 ms</td><td>61 ms</td></tr>
+<tr><td>7 waves</td><td>0.25 mm</td><td>448 ms</td><td>356 ms</td><td>160 ms</td><td>149 ms</td></tr>
+<tr><td>7 waves</td><td>0.4 mm</td><td>261 ms</td><td>206 ms</td><td>96 ms</td><td>115 ms</td></tr>
 </tbody>
 </table>
 </div>
@@ -11371,8 +11396,9 @@ or with 7 waves of 2 mm, shrunk 300 times in steps of 0.25 mm, and of 0.4 mm. sh
 <li>No geometry crate is there to vet, update or replace. The conformance suite and the shapely oracles
 (<code>conformance/oracle/</code>) check the engine’s geometry, and a change to it is a change of the engine.</li>
 <li>CI makes the golden files again as WebAssembly. A plan the plug-in makes is one the command line makes.</li>
-<li>The offsetter is 2 to 3 times slower than GEOS on large regions. Until M7, a fill offsets each part at
-most twice, for its inset underlay and its grown rows. Contour fill offsets hundreds of times.</li>
+<li>At M0.7 the offsetter was 2 to 3 times slower than GEOS on large regions, when a fill offset each part
+at most twice, for its inset underlay and its grown rows. Contour fill offsets hundreds of times, and
+from M7.6 the offsetter’s times are close to GEOS’s above.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="adr-0006-mdbook-diátaxis-generated-reference-ci-regenerated-images"><a class="header" href="#adr-0006-mdbook-diátaxis-generated-reference-ci-regenerated-images">ADR-0006: mdBook, Diátaxis, generated reference, CI-regenerated images</a></h1>
@@ -11987,7 +12013,8 @@ M13.7, whose Auto effect uses them.</p>
 </div>
 <h2 id="m7--more-stitch-types-i"><a class="header" href="#m7--more-stitch-types-i">M7 — More stitch types I</a></h2>
 <p>One step for each stitch type, with its requirements, cases and docs
-(<a href="#playbook-add-a-stitch-type">playbook</a>). M7.6 to M7.9 come after M13.</p>
+(<a href="#playbook-add-a-stitch-type">playbook</a>). M7.6 was done while M13 waited for MC-8’s
+sew-out, and M7.7 to M7.9 come after M13.</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -11999,7 +12026,7 @@ M13.7, whose Auto effect uses them.</p>
 <tr><td>M7.3 ✅</td><td>E-stitch, sewn as Ink/Stitch sews it. Every satin method warns where stitches lean more than 45° from square to their column (<code>SC-W0208</code>) and where a top stitch is longer than 12 mm (<code>SC-W0209</code>)</td><td><code>REQ-SAT-020</code> to <code>REQ-SAT-023</code>, and the type listed for MC-6</td></tr>
 <tr><td>M7.4 ✅</td><td>S-stitch, sewn as Ink/Stitch sews it</td><td><code>REQ-SAT-024</code> and <code>REQ-SAT-025</code>, and the type listed for MC-6</td></tr>
 <tr><td>M7.5 ✅</td><td>Zigzag satin, sewn as Ink/Stitch sews it</td><td><code>REQ-SAT-026</code> to <code>REQ-SAT-028</code>, and the type listed for MC-6</td></tr>
-<tr><td>M7.6</td><td>The offsetter meets the third criterion of <a href="#adr-0005-geometry-stack">ADR-0005</a> before contour fill relies on it: 300 insets of a region 150 mm across, of 1,000 points, in under 200 ms. At M0.7 they took 218 to 448 ms, against GEOS’s 104 to 149 ms</td><td><code>cargo xtask perf</code> guards the criterion</td></tr>
+<tr><td>M7.6 ✅</td><td>The offsetter meets the third criterion of <a href="#adr-0005-geometry-stack">ADR-0005</a> before contour fill relies on it: 300 insets of a region 150 mm across, of 1,000 points, in under 200 ms. They take 65 to 160 ms. At M0.7 they took 218 to 448 ms, against GEOS’s 104 to 149 ms</td><td><code>cargo xtask perf</code> guards the criterion (NFR-PERF-3)</td></tr>
 <tr><td>M7.7</td><td>Contour fill, with its three strategies, as Ink/Stitch sews them</td><td>its requirements active and the type listed for MC-6</td></tr>
 <tr><td>M7.8</td><td>Meander fill with generated tiles. A node’s meander fill may meet a <code>zigzag_spacing_mm</code> only its zigzag stroke can read, which Ink/Stitch sews as the fill’s default. The step chooses whether StitchCraft does too (<a href="#naming-rules">rule 7</a>)</td><td>same</td></tr>
 <tr><td>M7.9</td><td>Circular fill</td><td>same</td></tr>
@@ -12012,8 +12039,8 @@ M13.7, whose Auto effect uses them.</p>
 <h2 id="m13--image-to-embroidery"><a class="header" href="#m13--image-to-embroidery">M13 — Image to embroidery</a></h2>
 <!-- vale ai-tells.EmDashUsage = YES -->
 <p>Goal: a picture traced in VectorCraft sews well from one command, with no settings on its shapes
-(<a href="#image-to-embroidery">design</a>). M13 comes after M7.5 and before M7.6 (decided on
-2026-10-19). The steps that make every traced shape sew better with the generators StitchCraft has come
+(<a href="#image-to-embroidery">design</a>). M13 comes after M7.5 and before M7.7 (decided on
+2026-10-19). M7.6, the offsetter’s speed for contour fill, was done while MC-8’s sew-out was awaited. The steps that make every traced shape sew better with the generators StitchCraft has come
 first, and the steps that make new kinds of shape into stitches follow.</p>
 <div class="table-wrapper">
 <table>
