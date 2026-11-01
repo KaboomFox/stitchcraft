@@ -81,6 +81,21 @@ fn req_auto_014_at_a_junction_the_straightest_branches_are_one_line() {
 }
 
 #[test]
+fn req_auto_014_a_small_t_keeps_both_arms_of_its_bar() {
+    // TS-13B's T 4 mm tall: a bar 3.2 mm long, and a stem below its middle, both 0.72 mm wide. Each arm of the
+    // bar reaches 1.6 mm from the stem's middle, more than twice as far as the bar is wide: an arm, not a
+    // bump. The bar is one line from end to end, and the stem a line of its own.
+    let (w, l, h) = (0.72, 3.2, 4.0);
+    let t = part(&[(0.0, 0.0), (l, 0.0), (l, w), ((l + w) / 2.0, w), ((l + w) / 2.0, h), ((l - w) / 2.0, h), ((l - w) / 2.0, w), (0.0, w)], &[]);
+    let found = lines(&t, w);
+    assert_eq!(found.len(), 2, "{found:?}");
+    let (bar, stem): (Vec<&Line>, Vec<&Line>) = found.iter().partition(|line| line.points.iter().all(|q| q.y() < w));
+    let xs: Vec<f64> = bar.iter().flat_map(|line| line.points.iter().map(|q| q.x())).collect();
+    assert!(xs.iter().copied().fold(f64::INFINITY, f64::min) < w && xs.iter().copied().fold(f64::NEG_INFINITY, f64::max) > l - w, "{found:?}");
+    assert!(stem.iter().flat_map(|line| line.points.iter().map(|q| q.y())).fold(f64::NEG_INFINITY, f64::max) > h - w, "{found:?}");
+}
+
+#[test]
 fn req_auto_014_a_bump_of_the_outline_is_left_out() {
     // A strip with bumps 0.2 to 0.3 mm high on its sides: a round one, within the circle on the chord across
     // it, is a cap, and 2 sharp ones are tips, whose branches are left out. The line runs along the middle.
@@ -157,11 +172,15 @@ fn req_auto_014_a_junctions_bumps_are_left_out_the_shortest_first() {
     assert_eq!(pruned([(0.0, 0.3), (0.0, -0.5)]), [1, 3]);
     assert_eq!(pruned([(0.0, 0.5), (0.0, -0.3)]), [1, 2]);
     assert_eq!(pruned([(0.0, 0.4), (0.0, -0.4)]), [1, 3]);
-    // A bump reaches no further than twice the junction's longest edge: at a junction 0.5 mm across, a branch
-    // 1.5 mm long is no bump.
-    let mut long = graph(&[((0.0, 0.0), Some(0.5)), ((10.0, 0.0), None), ((-10.0, 0.0), None), ((0.0, 1.5), None)], &[(0, 1), (0, 2), (0, 3)]);
-    long.prune(Bumps::All, &mut meter()).unwrap();
-    assert_eq!(long.links[0], [1, 2, 3]);
+    // A bump to an end that is no tip reaches no further than the junction's longest edge: at a junction 0.5 mm
+    // across, a branch 0.5 mm long is a bump, and one 0.6 mm long an arm.
+    let reaching = |length: f64| {
+        let mut arm = graph(&[((0.0, 0.0), Some(0.5)), ((10.0, 0.0), None), ((-10.0, 0.0), None), ((0.0, length), None)], &[(0, 1), (0, 2), (0, 3)]);
+        arm.prune(Bumps::All, &mut meter()).unwrap();
+        arm.links[0].clone()
+    };
+    assert_eq!(reaching(0.5), [1, 2]);
+    assert_eq!(reaching(0.6), [1, 2, 3]);
 }
 
 #[test]
