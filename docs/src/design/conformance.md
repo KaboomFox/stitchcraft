@@ -227,6 +227,19 @@ Edge coverage pulls each top stitch in where the thread turns, as thread pulls a
 needle holes along a straight run stay where they are. Underlay and locks are left out, as they are
 meant to be covered (`stitchcraft_testkit::metrics`).
 
+**Transformations.** A design mirrored or turned half round must sew its stitches mirrored or turned with
+it (`stitchcraft-testkit::transformed`, `tests/transformed.rs`), and a shape drawn again the other way
+round, from another point or with points added along its edges must sew the same thread. Since the checks
+don't need an expected answer, they run on every element of every test sheet drawn as a design, and on
+random letters digitized automatically. They compare the share of each element's top stitches and
+underlay that lies within 0.3 mm of the other plan's, which overlooks needle points placed a little apart
+but still tells a column from a line sewn along its middle. A fill lays out its rows from the point (0, 0).
+So a design is mirrored and turned about that point, its fill angles with it, and a move is left out of
+the changes. A rule that depends on a tie broken by coordinates fails the checks: TS-13B's letter A 6 mm
+tall sewed one leg as a satin column and the other as a line, and its mirror image the other way round.
+Each element of the sheets keeps 0.993 or more of its thread where the change takes it, against a bound
+of 0.98.
+
 ### L3 — Ink/Stitch differential (nightly)
 
 A pinned Ink/Stitch runs as a black box on a corpus of SVG files written for StitchCraft, and writes

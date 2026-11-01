@@ -88,8 +88,11 @@ middle of the artboard (`REQ-VC-015`). A checkpoint can so sew a sheet through V
 Before MC-8, cases answer the TS-13 checks that its stitches can, and count the jump threads that later
 stitches sew down ([image to embroidery › Testing](../design/image-to-embroidery.md#testing)). The sew-out
 answers the rest, and shows whether those threads show. On 2026-11-01 TS-13B's digitized T 4 mm tall
-gained the arm of its bar that it had lost, so a TS-13B file written before then sews it as a Γ: write the
-sheet again before sewing it.
+gained the arm of its bar that it had lost, and the leg of its A 6 mm tall that sewed as a line became a
+column like the other. A TS-13B file written before then sews them as they were: write the sheet again
+before sewing it, and check that its stitches number as the
+[test-sheet reference](../user/reference/test-sheets.md#ts-13b--pictures-digitized-automatically-letters-and-lines-traced-as-areas)
+says.
 
 ## Report template
 
