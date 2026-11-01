@@ -181,6 +181,39 @@ fn req_vc_001_reading_is_bounded_by_the_budget() {
 }
 
 #[test]
+fn diag_sc_e0806_names_and_settings_copied_past_the_json_read_are_refused() {
+    // An object's name goes into each element made of it, and a group's StitchCraft settings into each
+    // element of the paths in it. Copied, they may come to as much JSON as is read, 64 MiB, and no more.
+    let mib = "x".repeat(1 << 20);
+    let red = r#"{"kind": "fill", "paint": {"type": "solid", "color": {"model": "rgb", "r": 1, "g": 0, "b": 0}}}"#;
+    let named = |fills: usize| {
+        format!(
+            r#"{{"id": 2, "name": "{mib}", "appearance": {{"items": [{}]}}, "kind": {{"type": "path", "path": {{"subpaths": [{{"closed": true, "anchors": [{{"p": [0, 0]}}, {{"p": [36, 0]}}, {{"p": [36, 36]}}]}}]}}}}}}"#,
+            vec![red; fills].join(",")
+        )
+    };
+    let message = "error SC-E0806: The file could not be read as a VectorCraft document. Its objects' names and StitchCraft settings, \
+                   copied into each fill and stroke they apply to, come to more than the 64 MiB StitchCraft reads.";
+    assert_eq!(read_ok(&document(4, &named(64))).design.elements().len(), 64);
+    assert_eq!(refusal(&document(4, &named(65))).to_string(), message);
+    // A stroke effect's settings in a group: its 1 MiB note, and the satin_column = false of a stroke, a
+    // little over 1 MiB for each path in it.
+    let black = r#"{"type": "solid", "color": {"model": "rgb", "r": 0, "g": 0, "b": 0}}"#;
+    let group = |paths: u32| {
+        let paths: Vec<String> = (10..10 + paths).map(|id| line(id, "", "{}")).collect();
+        format!(
+            r#"{{"id": 2, "appearance": {{"items": [{{"kind": "stroke", "width": 1, "paint": {black}}}], "effects": [{{"id": "plugin.dev.stitchcraft.stroke", "params": {{"note": "{mib}"}}}}]}}, "kind": {{"type": "group", "children": [{}]}}}}"#,
+            paths.join(",")
+        )
+    };
+    assert_eq!(read_ok(&document(4, &group(63))).design.elements().len(), 63);
+    assert_eq!(refusal(&document(4, &group(64))).to_string(), message);
+    // Each copy costs a unit for every 64 bytes, so that a budget bounds the time copying takes too.
+    let small = Budget { max_stitches: 1, max_work: 64 * (1 << 20) / 64 };
+    assert_eq!(read(&document(4, &named(64)), &small).unwrap_err().code, Code::BudgetExhausted);
+}
+
+#[test]
 fn req_vc_001_reading_costs_what_the_adapter_documents() {
     let gray = r#""paint": {"type": "solid", "color": {"model": "gray", "k": 1}}"#;
     // An object of 3 paints and 1 effect, an open subpath of 3 anchors and 3 elements of 2 segments: 5, 4
@@ -260,13 +293,15 @@ fn req_vc_004_without_effects_an_object_sews_its_fills_then_its_strokes() {
 
 #[test]
 fn req_vc_004_an_effect_s_thread_is_a_paint_vectorcraft_draws() {
-    // A gradient without stops and a stroke of width 0 draw nothing, so the thread is the next paint's.
+    // A gradient without stops, one whose stops are all of opacity 0 and a stroke of width 0, drawn above a
+    // blue fill, draw nothing, so the thread is the blue fill's.
     let blue = r#"{"kind": "fill", "paint": {"type": "solid", "color": {"model": "rgb", "r": 0, "g": 0, "b": 1}}}"#;
     let nothing = r#"{"kind": "fill", "paint": {"type": "gradient", "gradient": {"kind": "Linear", "stops": []}}},
+        {"kind": "fill", "paint": {"type": "gradient", "gradient": {"kind": "Linear", "stops": [{"offset": 0, "color": {"model": "rgb", "r": 1, "g": 0, "b": 0}, "opacity": 0}]}}},
         {"kind": "stroke", "width": 0, "paint": {"type": "solid", "color": {"model": "rgb", "r": 1, "g": 0, "b": 0}}}"#;
     // A record may leave its parameters out, which leaves them all at their defaults, without a word.
     let effects = r#"[{"id": "plugin.dev.stitchcraft.fill"}, {"id": "plugin.dev.stitchcraft.stroke", "params": {}}]"#;
-    let object = square(2, 0.0, 0.0, &format!(r#"{{"items": [{nothing}, {blue}], "effects": {effects}}}"#));
+    let object = square(2, 0.0, 0.0, &format!(r#"{{"items": [{blue}, {nothing}], "effects": {effects}}}"#));
     let read = read_ok(&document(4, &object));
     assert_eq!(ids(&read), ["vc:2:fill", "vc:2:stroke"]);
     assert!(read.design.elements().iter().all(|e| e.thread.color == Rgb::new(0, 0, 255)), "{:?}", read.design.elements());
@@ -274,6 +309,27 @@ fn req_vc_004_an_effect_s_thread_is_a_paint_vectorcraft_draws() {
     // Nothing is said, but that VectorCraft draws its 2 effects one on the other.
     assert_eq!(said(&read), [(Code::VcFeatureIgnored, "vc:2".to_string())]);
     assert!(read.warnings[0].message.contains("has 2 StitchCraft effects"), "{}", read.warnings[0]);
+}
+
+#[test]
+fn req_vc_004_a_gradient_whose_stops_vectorcraft_shows_none_of_paints_nothing() {
+    // A gradient whose stops are all of opacity 0 paints nothing, as one without stops does, and is left
+    // out without a word. One that fades in is sewn in the first colour VectorCraft shows of it, as a
+    // gradient of 2 colours is, though the stop it fades in from has that colour.
+    let stop = |rgb: &str, opacity: f64| format!(r#"{{"offset": 0, "color": {{"model": "rgb", {rgb}}}, "opacity": {opacity}}}"#);
+    let gradient = |stops: &[String]| {
+        let paint = format!(r#"{{"type": "gradient", "gradient": {{"kind": "Linear", "stops": [{}]}}}}"#, stops.join(","));
+        format!(r#"{{"items": [{{"kind": "fill", "paint": {paint}}}]}}"#)
+    };
+    let (red, blue) = (r#""r": 1, "g": 0, "b": 0"#, r#""r": 0, "g": 0, "b": 1"#);
+    let clear = square(2, 0.0, 0.0, &gradient(&[stop(red, 0.0), stop(blue, 0.0)]));
+    let fading = square(3, 50.0, 0.0, &gradient(&[stop(blue, 0.0), stop(red, 1.0)]));
+    let red_in = square(4, 100.0, 0.0, &gradient(&[stop(red, 0.0), stop(red, 1.0)]));
+    let read = read_ok(&document(4, &[clear, fading, red_in].join(",")));
+    assert_eq!(ids(&read), ["vc:3:fill", "vc:4:fill"]);
+    assert!(read.design.elements().iter().all(|e| e.thread.color == Rgb::new(255, 0, 0)), "{:?}", read.design.elements());
+    assert_eq!(said(&read), [(Code::VcFeatureIgnored, "vc:3".to_string()), (Code::VcFeatureIgnored, "vc:4".to_string())]);
+    assert!(read.warnings.iter().all(|w| w.message.contains("A gradient is sewn in its first colour.")), "{:?}", read.warnings);
 }
 
 #[test]

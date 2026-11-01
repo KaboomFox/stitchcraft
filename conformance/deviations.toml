@@ -329,7 +329,7 @@ requirements = ["REQ-SVG-001"]
 [[deviation]]
 id = "DEV-SVG-003"
 area = "svg"
-summary = "A paint a viewer does not show is left out: one that visibility hides (hidden or collapse), one under an opacity of 0, one whose fill-opacity or stroke-opacity is 0 however it is written, such as 0.0 or 0%, and one whose colour is transparent or has an alpha of 0. Ink/Stitch leaves out what display hides and a fill whose fill-opacity is written as 0, and sews the rest: a fill in transparent, for one, it sews in black."
+summary = "A paint a viewer does not show is left out: one that visibility hides (hidden or collapse), one under an opacity of 0, one whose fill-opacity or stroke-opacity is 0 however it is written, such as 0.0 or 0%, one whose colour is transparent or has an alpha of 0, currentColor where color is such a colour, and a gradient whose stops are all such colours or of stop-opacity 0. Ink/Stitch leaves out what display hides and a fill whose fill-opacity is written as 0, and sews the rest: a fill in transparent, for one, it sews in black."
 reason = "Thread sewn where the drawing shows nothing is thread the designer never sees on screen (REQ-SVG-001). Ink/Stitch's tests were read at d59c9ab (lib/elements/utils/nodes.py: node_to_elements and iterate_nodes compare fill-opacity with the text 0 and test no other opacity, nor visibility), and inkex knows no colour named transparent (inkex 1.4.1, inkex/colors.py), so Ink/Stitch sews such a fill in its default black (lib/elements/element.py: fill_color)."
 requirements = ["REQ-SVG-001"]
 
@@ -388,3 +388,10 @@ area = "svg"
 summary = "A path has the subpaths SVG draws. A move-to with nothing drawn after it is no subpath, and a command that draws after a closepath starts a new subpath where the closed one started. inkex, which Ink/Stitch reads paths with, keeps such a move-to as a subpath of 1 point. It also runs the commands after a closepath on in the closed subpath. Ink/Stitch then counts other subpaths than StitchCraft, and they decide how it sews the path. It tells a satin column's rails from its rungs by them and sews a stroke one subpath at a time. A path of more than 1 is a satin column there however narrow its stroke."
 reason = "The drawing is read as a viewer draws it (REQ-SVG-001), and a point that nothing draws is no part of it. inkex was read in inkex 1.4.1 (inkex/paths/path.py: CubicSuperPath.append_path_command), and Ink/Stitch at d59c9ab (lib/elements/element.py: path; lib/elements/utils/nodes.py; lib/elements/stroke.py: to_stitch_groups)."
 requirements = ["REQ-SVG-001", "REQ-SAT-005", "REQ-SAT-015"]
+
+[[deviation]]
+id = "DEV-SVG-012"
+area = "svg"
+summary = "An element whose transform flattens it to a line or a point, such as scale(0 1) or matrix(1 1 1 1 0 0), is left out with everything in it, and SC-W0804 says so. Ink/Stitch sews it flattened: run on a path under matrix(1 1 1 1 0 0), it sewed the path's stroke as a running stitch along the diagonal the transform folds the path onto."
+reason = "A viewer shows nothing of an element whose transform has no inverse (CSS Transforms 1, transform function lists, which the web platform test transform-singular-001 checks with that very matrix), and the drawing is sewn as a viewer shows it (REQ-SVG-001). Ink/Stitch at d59c9ab was run as a black box on such a file (ADR-0001, decision 6)."
+requirements = ["REQ-SVG-001"]
