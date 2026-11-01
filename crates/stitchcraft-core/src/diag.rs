@@ -721,10 +721,12 @@ registry! {
     /// selected, or one of the lines can't be made so: its path has no stroke to take the column's width
     /// from, or can't be used, its rails can't be made or would leave parts of it out, as `SC-E0214` and
     /// `SC-W0213` say of a satin column drawn as one path, or the column would be read back with other rails
-    /// or rungs, as one whose rails cross each other is.
+    /// or rungs, as one whose rails cross each other is, or would need a rung across an end that its satin
+    /// effect's push compensation lengthens, which would sew what that adds apart.
     ///
     /// The message names the object. Select the lines, give the path a stroke as wide as the column, draw
-    /// that column with its 2 rails, or leave the object out of the selection.
+    /// that column with its 2 rails, set the satin effect's push compensation to 0 or more at one end, or
+    /// leave the object out of the selection.
     VcNotConverted = "SC-E0814", Error, "VectorCraft line not made into a satin column";
 
     /// `stitch plan` and `stitch export` trace a picture, a PNG or JPEG file, with VectorCraft's command

@@ -23,7 +23,7 @@ fn recognized(parts: &[&[(f64, f64)]]) -> Recognition {
 fn ladder(parts: &[&[(f64, f64)]]) -> (Ladder, Vec<String>) {
     let Recognition { shape, warnings } = recognized(parts);
     let Ok(Shape::Rails(Satin { rails, pairing: Pairing::Rungs(rungs), .. })) = shape else { panic!("not rails and rungs: {shape:?}") };
-    (Ladder { rails, rungs }, warnings.iter().map(ToString::to_string).collect())
+    (Ladder { rails, rungs: rungs.into_iter().map(|rung| rung.points).collect() }, warnings.iter().map(ToString::to_string).collect())
 }
 
 /// A satin column's rails and the rungs between them.
@@ -354,7 +354,7 @@ proptest! {
                 let lines: Vec<Vec<Point>> = parts.iter().map(|part| points(part)).collect();
                 prop_assert!(rails.iter().all(|rail| lines.contains(rail)), "each rail is a subpath as drawn");
                 let rungs = match pairing {
-                    Pairing::Rungs(rungs) => rungs,
+                    Pairing::Rungs(rungs) => rungs.into_iter().map(|rung| rung.points).collect(),
                     Pairing::Nodes => {
                         prop_assert_eq!((usable, &nodes), (2, &rails), "the nodes of straight rails are their points");
                         Vec::new()
