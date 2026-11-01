@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-4a0f3cd7.js";
+            window.path_to_searchindex_js = "searchindex-18b0f297.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b793f3ad.js"></script>
@@ -1050,8 +1050,9 @@ got, and attach the bundle. GitHub takes <code>.json</code> files up to 25 MB. Z
 <h2 id="when-stitchcraft-finds-the-bug-itself"><a class="header" href="#when-stitchcraft-finds-the-bug-itself">When StitchCraft finds the bug itself</a></h2>
 <p>StitchCraft checks each plan before writing a machine file. If a check fails (<code>SC-E0009</code>) or StitchCraft
 crashes, <code>stitch plan</code> (or <code>stitch export</code>) writes the bundle for you in place of the machine file. The
-bundle goes next to the file you named, as <code>design.bug-report.json</code> for <code>design.pes</code>. The command says
-where it is and ends with exit status 4. Attach that bundle to an issue.</p>
+bundle goes next to the file you named, as <code>design.bug-report.json</code> for <code>design.pes</code>, and <code>stitch plan</code>
+refuses to write a report or a preview of that name. The command says where it is and ends with exit
+status 4. Attach that bundle to an issue.</p>
 <h2 id="for-maintainers-replay-a-bundle"><a class="header" href="#for-maintainers-replay-a-bundle">For maintainers: replay a bundle</a></h2>
 <pre><code class="language-sh">stitch bug-report --replay design.bug-report.json
 </code></pre>
@@ -4578,8 +4579,9 @@ or exit codes.</li>
 the lints. The command line catches it and ends with exit status 4. For <code>stitch plan</code> it also writes a
 bug-report bundle that reproduces the bug (<a href="#bug-reports">determinism</a>). A VectorCraft
 exporter declines with it, so VectorCraft doesn’t write the file.</li>
-<li><strong>The command line’s own promises.</strong> A command refuses outputs that name the same file as each other,
-or as a file it reads (<code>REQ-CLI-007</code>), and writes each file under a temporary name of its own, created
+<li><strong>The command line’s own promises.</strong> A command refuses outputs that name the same file as each other or
+as a file it reads (<code>REQ-CLI-007</code>). <code>stitch plan</code> counts the bug-report bundle it would leave on a bug as
+one of them. It writes each file under a temporary name of its own, created
 new and synced before it is renamed into place (<code>REQ-CLI-006</code>). Built for WASI, as
 <code>cargo xtask wasm --goldens</code> runs it, a program has no process id, so there the names count from 0. What it prints of a file it wrote is the
 file read back (<code>REQ-CLI-008</code>, <code>stitchcraft_formats::read_back</code>, which the VectorCraft exporters call too). A closed standard output keeps a command’s exit status, any other error
@@ -8246,7 +8248,9 @@ PES file is an entry, by its colour and name, and is written back as it, Brother
 included. The other threads are given the 61 thread colours, one each while they last, the nearest pairs
 first by CIEDE2000. A thread gets its nearest entry unless a thread nearer to it took it. Equal threads
 share one. With more different threads than that, the rest share their nearest entries, and <code>SC-W0606</code>
-says how many. <code>stitch plan</code>, <code>convert</code> and <code>inspect</code> name each thread by the entry the file has.
+says how many. <code>stitch plan</code>, <code>convert</code> and <code>inspect</code> name each thread by the entry the file has. A PES
+file’s index that is none of Brother’s entries is read as a grey thread named after it, with a warning, and
+<code>inspect</code> says it is not one of the palette’s colours rather than naming the entry nearest that grey.
 Catalogue numbers from other brands cannot survive PES v1. A PES v6 writer (below) could store a thread
 list with RGB and codes.</p>
 <h3 id="risks-found-in-the-field-and-how-we-test-them"><a class="header" href="#risks-found-in-the-field-and-how-we-test-them">Risks found in the field, and how we test them</a></h3>
@@ -9928,7 +9932,8 @@ git checkout add their commit, which bundles record too. A replay reads the bund
 refuses a format it does not know by its number, whatever else the file holds.</p>
 <p><code>stitch bug-report --replay</code> plans the design again through the same code as <code>stitch plan</code> and compares
 each record (<code>REQ-CLI-001</code>). <code>stitch plan</code> writes a bundle by itself when it finds a bug in StitchCraft
-(<code>REQ-CLI-002</code>). The user guide’s <a href="#report-a-bug">Report a bug</a> shows both.</p>
+(<code>REQ-CLI-002</code>), next to its output, and refuses at the start another output of that name
+(<code>REQ-CLI-007</code>). The user guide’s <a href="#report-a-bug">Report a bug</a> shows both.</p>
 <p>The plan’s digest is written out entry by entry rather than from the plan’s <code>Debug</code> text, so that a
 compiler that prints numbers differently cannot change it.</p>
 <h2 id="what-is-not-promised"><a class="header" href="#what-is-not-promised">What is <em>not</em> promised</a></h2>
