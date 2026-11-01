@@ -27,6 +27,19 @@ use stitchcraft_testkit::satins::{NO_SHORT_STITCHES, across, gaps, ladder, quart
 const LEANING: &str = "warning SC-W0208: 23 stitches of this satin column lean along it, up to 67.8°, more than 45° from square to the column.";
 
 #[test]
+fn req_sat_005_a_rung_added_across_the_nodes_that_meets_the_rails_more_than_twice_is_left_out() {
+    // The rung across the 2nd nodes, (10, 0) and (2, 4), meets the second rail again on its way, at
+    // (7.4, 1.3). Ink/Stitch leaves out a rung that meets the rails at more than 2 points, so the column
+    // sews as one drawn with only the rung across the 3rd nodes, (15, 0) and (6, 1), a tenth longer as a
+    // rung added is. Ink/Stitch at d59c9ab, run on both, sews them alike to within 1e-12 mm.
+    let rails: [&[(f64, f64)]; 2] = [&[(0.0, 0.0), (10.0, 0.0), (15.0, 0.0), (20.0, 0.0)], &[(0.0, 4.0), (2.0, 4.0), (6.0, 1.0), (20.0, 4.0)]];
+    let (added, _) = sewn_satin(&polylines(&rails), &[]);
+    let (drawn, _) = sewn_satin(&polylines(&[rails[0], rails[1], &[(15.45, -0.05), (5.55, 1.05)]]), &[]);
+    assert_eq!(added.len(), drawn.len());
+    assert!(added.iter().zip(&drawn).all(|(a, b)| a.distance(*b) < 1e-9), "{added:?}\n{drawn:?}");
+}
+
+#[test]
 fn req_sat_002_a_straight_column_is_sewn_rail_to_rail_at_the_spacing() {
     let (points, warnings) = sewn_satin(&ladder(10.0, 4.0, &[]), &[]);
     assert!(warnings.is_empty(), "{warnings:?}");
@@ -65,6 +78,12 @@ fn req_sat_002_on_a_curve_the_outer_edge_is_sewn_at_the_spacing() {
     assert!(*last <= 0.42, "the end pair, at most a spacing on: {last}");
     // The outer edge is about a quarter of a 20 mm circle long: 79 steps of 0.4 mm.
     assert!((pairs.len() as f64 - (20.0 * FRAC_PI_2 / 0.4 + 1.0)).abs() <= 1.0, "{}", pairs.len());
+    // Round sharp corners, where the rails bend by 63° and 72° and back, a pair moved twice may stay
+    // further off than 5 %, as Ink/Stitch leaves it: here one, 17.5 % off.
+    let zig = polylines(&[&[(0.0, 0.0), (5.0, 0.0), (6.0, 3.0), (12.0, 0.0)], &[(0.0, 4.0), (5.0, 4.0), (6.0, 6.0), (12.0, 4.0)]]);
+    let cornered = stitchcraft_testkit::satins::gaps(&across(&sewn_satin(&zig, &[]).0));
+    let off: Vec<f64> = cornered.split_last().unwrap().1.iter().map(|gap| (gap / 0.4 - 1.0).abs()).filter(|off| *off > 0.05).collect();
+    assert!(matches!(off.as_slice(), [one] if (one - 0.175).abs() < 0.001), "{off:?}");
 }
 
 #[test]
@@ -176,10 +195,11 @@ fn req_sat_002_where_the_rails_converge_a_pair_moves_to_lie_at_the_spacing() {
     let inside = &gaps[..gaps.len() - 1];
     assert!(inside.iter().all(|gap| (gap - 0.4).abs() <= 0.02), "within 5 %: {gaps:?}");
     assert!(inside[1..].iter().all(|gap| (gap - 0.4).abs() < 1e-6), "each moved to the spacing: {gaps:?}");
-    // The work pins how many places the pairs were tried at: a unit per point measured and per place, and
-    // 2 per side of each rail for where the rung added near the rails' starts comes nearest it. The pairs
-    // that cut the column, which SC-W0208 reads, are placed again with nothing compensated: 58 units more.
-    assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 128);
+    // The work pins how many places the pairs were tried at: a unit per point measured and per place, a
+    // unit per segment of the rails to see that the rung added near the rails' starts meets them twice, and
+    // 2 per side of each rail for where it comes nearest it. The pairs that cut the column, which SC-W0208
+    // reads, are placed again with nothing compensated: 58 units more.
+    assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 130);
 }
 
 #[test]
