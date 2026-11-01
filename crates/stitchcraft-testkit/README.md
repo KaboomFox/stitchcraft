@@ -22,6 +22,12 @@ containment, row spacing, furrows, topology) and invariant assertions.
 coverage, the share of a fill's area that the thread of a plan's stitches covers, rasterized at 0.05 mm
 with a 0.4 mm thread. `designs` builds the small designs the engine's cases plan.
 
-**Status:** grows with M1–M5. Design: `docs/src/design/conformance.md`.
+**Since M13:** `pictures` places the TS-13 sheets' stitches where the sheets draw their shapes. `stitches`
+reads back each element's needle points, a satin column's rungs and the jump threads the PE800 leaves.
+`inkstitch` writes a design's elements as an SVG file Ink/Stitch reads, with their parameters, so the
+Ink/Stitch differential can sew a test sheet in both programs. Its tests read the file as XML, the one use of
+the dev-dependency `roxmltree`.
+
+**Status:** grows with the milestones M1 to M5 and M13. Design: `docs/src/design/conformance.md`.
 
 Tests may unwrap and panic; this crate opts out of the no-panic lints at its root.

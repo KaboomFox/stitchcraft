@@ -107,10 +107,22 @@ pub enum Spec {
     /// Read machine files with an independent reader (pinned pyembroidery) and with ours, and compare what
     /// the machine would do. `files` are relative to `conformance/`.
     Oracle { files: Vec<String> },
-    /// Sew an SVG file (relative to `conformance/`) with a pinned Ink/Stitch and with StitchCraft, and compare
-    /// the machine files by measures (L3, the Ink/Stitch differential). `excused` names the measures a
-    /// deviation explains, each with the deviation's id.
-    Inkstitch { design: String, excused: BTreeMap<String, String> },
+    /// Sew `subject` with a pinned Ink/Stitch and with StitchCraft, and compare the machine files by measures
+    /// (L3, the Ink/Stitch differential). `excused` names the measures a deviation explains, each with the
+    /// deviation's id.
+    Inkstitch { subject: Subject, excused: BTreeMap<String, String> },
+}
+
+/// What an Ink/Stitch differential case sews in both programs.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Subject {
+    /// An SVG file, relative to `conformance/`, that both programs read (`design`).
+    File(String),
+    /// A test sheet drawn as a design (`sheet`): StitchCraft sews the sheet, and Ink/Stitch the elements
+    /// StitchCraft sews it with, automatic digitizing's for its automatic shapes, written with their
+    /// parameters (`stitchcraft_testkit::inkstitch`), since StitchCraft's SVG reader reads no parameters
+    /// until M8.
+    Sheet(String),
 }
 
 /// The data cases; problems with a file are recorded in `findings` and the file is skipped.
@@ -131,7 +143,12 @@ pub fn load_cases(root: &Path, findings: &mut Findings) -> Vec<DataCase> {
             ("testsheet", Some(sheet), None, Some(profile), Some(expect), None) if excused.is_none() => Spec::Testsheet { sheet, profile, expect },
             ("plan", None, Some(design), Some(profile), Some(expect), None) if excused.is_none() => Spec::Plan { design, profile, expect },
             ("oracle", None, None, None, None, Some(files)) if !files.is_empty() && excused.is_none() => Spec::Oracle { files },
-            ("inkstitch", None, Some(design), None, None, None) => Spec::Inkstitch { design, excused: excused.unwrap_or_default() },
+            ("inkstitch", None, Some(design), None, None, None) => {
+                Spec::Inkstitch { subject: Subject::File(design), excused: excused.unwrap_or_default() }
+            }
+            ("inkstitch", Some(sheet), None, None, None, None) => {
+                Spec::Inkstitch { subject: Subject::Sheet(sheet), excused: excused.unwrap_or_default() }
+            }
             ("testsheet", ..) => {
                 findings.error(format!("{file}: a testsheet case needs `sheet`, `profile` and `[expect]`, and nothing else"));
                 continue;
@@ -145,7 +162,7 @@ pub fn load_cases(root: &Path, findings: &mut Findings) -> Vec<DataCase> {
                 continue;
             }
             ("inkstitch", ..) => {
-                findings.error(format!("{file}: an inkstitch case needs `design`, and may have `[excused]`, and nothing else"));
+                findings.error(format!("{file}: an inkstitch case needs `design` or `sheet`, and may have `[excused]`, and nothing else"));
                 continue;
             }
             (other, ..) => {

@@ -65,7 +65,7 @@ pub fn run_data_case(root: &Path, case: &DataCase, bless: bool) -> Outcome {
         Spec::Testsheet { sheet, profile, expect } => testsheet(root, sheet, profile, expect, bless, &mut outcome),
         Spec::Plan { design, profile, expect } => planned(root, design, profile, expect, bless, &mut outcome),
         Spec::Oracle { files } => oracle::run(root, files, &mut outcome),
-        Spec::Inkstitch { design, excused } => differential::run(root, design, excused, &mut outcome),
+        Spec::Inkstitch { subject, excused } => differential::run(root, subject, excused, &mut outcome),
     }
     outcome
 }

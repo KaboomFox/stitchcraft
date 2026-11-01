@@ -5,6 +5,14 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- The Ink/Stitch differential sews the TS-13 sheets (`REQ-AUTO-021`). Ink/Stitch can't choose a picture's
+  stitches, but it can sew what StitchCraft chose. An `inkstitch` case may name a test sheet now. Ink/Stitch
+  then sews the elements StitchCraft sews it with, written as an SVG file with their parameters
+  (`stitchcraft-testkit::inkstitch`). Their PES files agree with StitchCraft's by every measure. Ink/Stitch's
+  extra trims and jumps are jumps that go nowhere at thread changes, which a StitchCraft PES file has no record
+  of (`DEV-FMT-001`). Where the differential can undo a deviation in Ink/Stitch's file, an excuse counts only
+  if the measure then agrees. The jumps that go nowhere excuse as many trims and jumps as there are of them,
+  and no more.
 - MC-8's checks of the TS-13 sheets that their stitches can answer are cases now (`tests/auto_sheets.rs`),
   measured on each sheet's own plan where it draws its shapes. Where the bar runs on beside the square, each
   ends its rows at its own edge. The specks sew as the disc, and no shape sews over one drawn over it. A line

@@ -17,6 +17,7 @@ pub struct stitchcraft_svg::inkstitch::Command
 pub stitchcraft_svg::inkstitch::Command::does: stitchcraft_svg::inkstitch::Does
 pub stitchcraft_svg::inkstitch::Command::name: &'static str
 pub const stitchcraft_svg::inkstitch::COMMANDS: [stitchcraft_svg::inkstitch::Command; 12]
+pub const stitchcraft_svg::inkstitch::INKSTITCH_NS: &str
 pub const stitchcraft_svg::inkstitch::READ_ATTRIBUTES: &[&str]
 pub const stitchcraft_svg::inkstitch::RENAMED: [(&str, &str); 7]
 pub mod stitchcraft_svg::version

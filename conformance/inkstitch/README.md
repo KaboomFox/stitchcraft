@@ -35,7 +35,8 @@ STITCHCRAFT_INKSTITCH="$PWD/../inkstitch-pinned" STITCHCRAFT_INKSTITCH_PYTHON=ta
 ```
 
 The report is `target/conformance/differential.md`: for each case, the measures of both machine files.
-The suite refuses a checkout at another commit, since the cases' excuses were written against this one.
+The SVG files written for test sheets are in `target/conformance/differential/`. The suite refuses a
+checkout at another commit, since the cases' excuses were written against this one.
 
 ## Adding a case
 
@@ -54,6 +55,12 @@ design = "fixtures/inkstitch/fill-rect.svg"
 [excused]
 threads = "DEV-THREAD-001"
 ```
+
+A case may name a test sheet drawn as a design, `sheet = "TS-13A"`, in place of `design`. StitchCraft
+sews the sheet as `stitch testsheet` writes it, and Ink/Stitch an SVG file of the elements StitchCraft
+sews it with, automatic digitizing's for its automatic shapes, each with its parameters
+(`stitchcraft_testkit::inkstitch`). That is how designs with parameters come into the corpus before M8,
+since StitchCraft's SVG reader doesn't read them yet.
 
 The [design](../../docs/src/design/conformance.md#l3--inkstitch-differential-nightly) gives the measures,
 their tolerances and what an excuse may do.

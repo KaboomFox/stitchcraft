@@ -1448,3 +1448,12 @@ statement = "Each rule of automatic digitizing goes by the settings of the autom
 rationale = "MC-8 confirms the rules' values on the machine or changes them, and a picture can need others: a noisy trace leaves larger specks, and a stretchy fabric pulls shapes further apart. As parameters, the values are documented and checked as every other is, and the Auto effect's dialog sets them in VectorCraft (M13.7)."
 milestone = "M13"
 status = "active"
+
+[[req]]
+id = "REQ-AUTO-021"
+area = "auto"
+level = "L3"
+statement = "The elements StitchCraft sews each TS-13 sheet with, automatic digitizing's for its automatic shapes, written as an SVG file with their Ink/Stitch parameters, sew in the Ink/Stitch that conformance/inkstitch/pin.toml names, run as a black box, as StitchCraft sews the sheet, by the measures of REQ-SVG-008 and within their tolerances. A measure that a case excuses with an entry of the deviations ledger may differ."
+rationale = "Automatic digitizing chooses ordinary stitch types and Ink/Stitch's parameters, and the stitches StitchCraft sews of them should be the stitches another program sews of the same choices. Ink/Stitch can't choose for a picture, but it can sew what StitchCraft chose."
+milestone = "M13"
+status = "active"
