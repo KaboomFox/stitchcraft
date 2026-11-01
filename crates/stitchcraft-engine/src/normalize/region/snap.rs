@@ -277,9 +277,7 @@ fn through(a: Node, b: Node, hot: &Hot, meter: &mut Meter, points: &mut Vec<Node
     let across = hot.across(a.x.min(b.x), a.x.max(b.x));
     meter.charge(across.len() as u64)?;
     points.extend(across.iter().copied().filter(|&c| c != a && c != b && (bottom..=top).contains(&c.y) && touches(a, b, c)));
-    if let Some(found) = points.get_mut(start..) {
-        found.sort_by_key(|&c| along(a, b, c));
-    }
+    points.get_mut(start..).into_iter().for_each(|found| found.sort_by_key(|&c| along(a, b, c)));
     Ok(())
 }
 
