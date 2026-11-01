@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-fa84b8aa.js";
+            window.path_to_searchindex_js = "searchindex-bc2345b2.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b793f3ad.js"></script>
@@ -8000,6 +8000,8 @@ the box of the element sewn last. On a tie it is the one whose box’s centre li
 one drawn first. Each element then starts and ends at its points nearest its neighbours
 (<code>REQ-GEN-003</code>).</li>
 </ol>
+<p><code>tests/auto_order.rs</code> checks rules 1 to 3 together on random designs of squares and lines, wherever the
+shapes fall.</p>
 <p>Elements with settings keep their order among themselves, and automatic elements move round them within
 the rules. The parts of a shape sewn as several elements, such as a line’s satin columns, keep their order
 too, so that a trim after the shape still comes after its last part. <code>--sort-colours</code> lets the elements
