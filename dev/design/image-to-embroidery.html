@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-fe15eb06.js";
+            window.path_to_searchindex_js = "../searchindex-b52a3533.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -335,7 +335,8 @@ dot.</p>
 order of the parts. It is named after the shape with <code>#2</code>, <code>#3</code> and so on, or with the shape’s own name
 when nothing of it is filled. A trim or a stop after the shape follows its last part.</li>
 <li><strong>Its width.</strong> A part’s width at a point of its centre line is the diameter of the largest circle centred
-there that fits inside it. Averaged along the line, it says whether the part is a triple run
+there that fits inside it. Averaged along the line, leaving out the piece that runs on into a tip’s
+corner, it says whether the part is a triple run
 (<a href="algorithms/centre-lines.html#width-along-the-line">centre lines</a>). A strip as wide all along as a stroke
 is as wide as the stroke.</li>
 <li><strong>To its neighbours</strong> a narrow part’s line paints the part. It sews after a fill it borders, and the
@@ -371,7 +372,8 @@ next column is the one with an end nearest where the last one ended, sewn from t
 at its rung nearest. Where the columns that end under each other go round, as a pinwheel’s bars do, the
 first in that order sews first, and the last ends on top of it.</li>
 <li><strong>Their width.</strong> A column is as wide as the circles that fit inside the part along its line, as a narrow
-part is. One no wider than the design’s narrowest satin stroke runs along its line as a triple run.</li>
+part is, without the piece of its line into a tip’s corner. One no wider than the design’s narrowest
+satin stroke runs along its line as a triple run.</li>
 <li><strong>What sews.</strong> The columns sew after the rest of the shape’s area, named as a narrow part’s lines are,
 and paint the part to its neighbours. <code>SC-I0901</code> counts a shape as satin columns when none of it is
 filled and one of its parts sews a satin column.</li>
@@ -780,7 +782,7 @@ the letters sew as columns with a jump between each 2:</p>
 </thead>
 <tbody>
 <tr><td>TS-13A</td><td style="text-align: right">8</td><td style="text-align: right">0</td><td style="text-align: right">11</td><td style="text-align: right">3</td></tr>
-<tr><td>TS-13B</td><td style="text-align: right">6</td><td style="text-align: right">0</td><td style="text-align: right">37</td><td style="text-align: right">16</td></tr>
+<tr><td>TS-13B</td><td style="text-align: right">6</td><td style="text-align: right">0</td><td style="text-align: right">37</td><td style="text-align: right">15</td></tr>
 <tr><td>TS-13C</td><td style="text-align: right">9</td><td style="text-align: right">4</td><td style="text-align: right">6</td><td style="text-align: right">1</td></tr>
 </tbody>
 </table>

@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-fe15eb06.js";
+            window.path_to_searchindex_js = "../searchindex-b52a3533.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -203,7 +203,9 @@ each).</li>
 <code>cargo xtask shots</code>. The page claims the type under its title with <code>&lt;!-- stitch-types: &lt;id&gt; --&gt;</code>.
 Once the engine sews the type, <code>cargo xtask docs --check</code> fails until one page claims it and shows
 at least two pictures.</li>
-<li><strong>Gate.</strong> <code>cargo xtask ci</code>, then open the PR with the roadmap step id.</li>
+<li><strong>Gate.</strong> <code>cargo xtask ci</code>, then open the PR with the roadmap step id. A test sheet drawn as a design is
+checked mirrored, turned and drawn again too (<code>tests/transformed.rs</code>). The type’s sheet must sew the same
+whichever way it is drawn.</li>
 <li><strong>Sew-out.</strong> If the type is new to the machine, list it for the next machine checkpoint (TS-11).</li>
 </ol>
 

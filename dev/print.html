@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-fe15eb06.js";
+            window.path_to_searchindex_js = "searchindex-b52a3533.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b793f3ad.js"></script>
@@ -2083,7 +2083,7 @@ Arguments:
 <li>The machine cuts the thread at thread changes and at the stop, but at no jump, and the pictures sew as any design does: a shape sewn after a jump may sew its thread down. Snip the jump threads at each stop and after sewing. Where is one sewn down, and does it show?</li>
 </ul>
 <h2 id="ts-13b--pictures-digitized-automatically-letters-and-lines-traced-as-areas"><a class="header" href="#ts-13b--pictures-digitized-automatically-letters-and-lines-traced-as-areas">TS-13B — Pictures digitized automatically: letters and lines traced as areas</a></h2>
-<p>110.4 × 148.4 mm · 14401 stitches, 57 jumps, 56 trims, 16 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>110.4 × 148.4 mm · 14419 stitches, 57 jumps, 56 trims, 16 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p>Drawn as a design whose shapes StitchCraft digitizes automatically, as <code>--auto</code> does a shape without settings. VectorCraft’s Test Sheet filter draws it too, those shapes with the Auto effect.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-13b.png" alt="TS-13B as it will sew: the word MATCH in black block letters of 4 sizes, and 3 windows of red, blue and gold areas between black lines, twice. At the top, digitized, the letters are satin columns and the smallest thin runs, and the lines thin runs. At the bottom, in paint order, every letter and line is filled."><span class="img-wrapper"><img src="images/generated/testsheet-ts-13b.png" alt="TS-13B as it will sew: the word MATCH in black block letters of 4 sizes, and 3 windows of red, blue and gold areas between black lines, twice. At the top, digitized, the letters are satin columns and the smallest thin runs, and the lines thin runs. At the bottom, in paint order, every letter and line is filled."></span></label></p>
@@ -7558,10 +7558,14 @@ nearest where the last one ended, sewn from that end. A closed line starts at it
 <h2 id="width-along-the-line"><a class="header" href="#width-along-the-line">Width along the line</a></h2>
 <p>A part’s width at a point of its centre line is the diameter of the largest circle centred there that fits
 inside the part: twice the distance from the point to the nearest edge of its outline and holes. Automatic
-digitizing averages it along the line, and a part from 0.5 mm wide is a triple run. The edges are put in the
-cells of a grid as fine as the pieces the part was cut into. A point’s nearest edge is looked for in the
-cells round it, ring by ring, until no edge farther out could be nearer. A narrow part’s edges lie a cell or
-so from its middle. Each point then costs a few units of work.</p>
+digitizing averages it along the line, and a part from 0.5 mm wide is a triple run. A line that ends at a
+tip runs on into the corner, where the circle shrinks to a point, for its stitches to cover the corner. The
+piece that leads into the corner is left out of the average, unless the part’s lines have no other. With
+it, a leg of a letter A 1.08 mm wide measured under 1 mm and sewed as a line, beside the other leg’s satin
+column, whose line took in the junction at the top. The edges are put in the cells of a grid as fine as
+the pieces the part was cut into. A point’s nearest edge is looked for in the cells round it, ring by
+ring, until no edge farther out could be nearer. A narrow part’s edges lie a cell or so from its middle.
+Each point then costs a few units of work.</p>
 <h2 id="columns"><a class="header" href="#columns">Columns</a></h2>
 <p>A part no wider than a satin column sews a satin column along each of its lines, over the triangles round
 the line and between the part’s own outlines (<code>REQ-AUTO-016</code> and <code>REQ-AUTO-017</code>, in <code>strips::columns</code>). Its
@@ -7788,7 +7792,8 @@ dot.</p>
 order of the parts. It is named after the shape with <code>#2</code>, <code>#3</code> and so on, or with the shape’s own name
 when nothing of it is filled. A trim or a stop after the shape follows its last part.</li>
 <li><strong>Its width.</strong> A part’s width at a point of its centre line is the diameter of the largest circle centred
-there that fits inside it. Averaged along the line, it says whether the part is a triple run
+there that fits inside it. Averaged along the line, leaving out the piece that runs on into a tip’s
+corner, it says whether the part is a triple run
 (<a href="#width-along-the-line">centre lines</a>). A strip as wide all along as a stroke
 is as wide as the stroke.</li>
 <li><strong>To its neighbours</strong> a narrow part’s line paints the part. It sews after a fill it borders, and the
@@ -7824,7 +7829,8 @@ next column is the one with an end nearest where the last one ended, sewn from t
 at its rung nearest. Where the columns that end under each other go round, as a pinwheel’s bars do, the
 first in that order sews first, and the last ends on top of it.</li>
 <li><strong>Their width.</strong> A column is as wide as the circles that fit inside the part along its line, as a narrow
-part is. One no wider than the design’s narrowest satin stroke runs along its line as a triple run.</li>
+part is, without the piece of its line into a tip’s corner. One no wider than the design’s narrowest
+satin stroke runs along its line as a triple run.</li>
 <li><strong>What sews.</strong> The columns sew after the rest of the shape’s area, named as a narrow part’s lines are,
 and paint the part to its neighbours. <code>SC-I0901</code> counts a shape as satin columns when none of it is
 filled and one of its parts sews a satin column.</li>
@@ -8233,7 +8239,7 @@ the letters sew as columns with a jump between each 2:</p>
 </thead>
 <tbody>
 <tr><td>TS-13A</td><td style="text-align: right">8</td><td style="text-align: right">0</td><td style="text-align: right">11</td><td style="text-align: right">3</td></tr>
-<tr><td>TS-13B</td><td style="text-align: right">6</td><td style="text-align: right">0</td><td style="text-align: right">37</td><td style="text-align: right">16</td></tr>
+<tr><td>TS-13B</td><td style="text-align: right">6</td><td style="text-align: right">0</td><td style="text-align: right">37</td><td style="text-align: right">15</td></tr>
 <tr><td>TS-13C</td><td style="text-align: right">9</td><td style="text-align: right">4</td><td style="text-align: right">6</td><td style="text-align: right">1</td></tr>
 </tbody>
 </table>
@@ -9872,6 +9878,18 @@ stitches times the pixels.</p>
 <p>Edge coverage pulls each top stitch in where the thread turns, as thread pulls a row in at its ends. The
 needle holes along a straight run stay where they are. Underlay and locks are left out, as they are
 meant to be covered (<code>stitchcraft_testkit::metrics</code>).</p>
+<p><strong>Transformations.</strong> A design mirrored or turned half round must sew its stitches mirrored or turned with
+it (<code>stitchcraft-testkit::transformed</code>, <code>tests/transformed.rs</code>), and a shape drawn again the other way
+round, from another point or with points added along its edges must sew the same thread. Since the checks
+don’t need an expected answer, they run on every element of every test sheet drawn as a design, and on
+random letters digitized automatically. They compare the share of each element’s top stitches and
+underlay that lies within 0.3 mm of the other plan’s, which overlooks needle points placed a little apart
+but still tells a column from a line sewn along its middle. A fill lays out its rows from the point (0, 0).
+So a design is mirrored and turned about that point, its fill angles with it, and a move is left out of
+the changes. A rule that depends on a tie broken by coordinates fails the checks: TS-13B’s letter A 6 mm
+tall sewed one leg as a satin column and the other as a line, and its mirror image the other way round.
+Each element of the sheets keeps 0.993 or more of its thread where the change takes it, against a bound
+of 0.98.</p>
 <h3 id="l3--inkstitch-differential-nightly"><a class="header" href="#l3--inkstitch-differential-nightly">L3 — Ink/Stitch differential (nightly)</a></h3>
 <p>A pinned Ink/Stitch runs as a black box on a corpus of SVG files written for StitchCraft, and writes
 machine files. Running Ink/Stitch as an oracle uses it and doesn’t copy it
@@ -11860,8 +11878,11 @@ middle of the artboard (<code>REQ-VC-015</code>). A checkpoint can so sew a shee
 <p>Before MC-8, cases answer the TS-13 checks that its stitches can, and count the jump threads that later
 stitches sew down (<a href="#testing">image to embroidery › Testing</a>). The sew-out
 answers the rest, and shows whether those threads show. On 2026-11-01 TS-13B’s digitized T 4 mm tall
-gained the arm of its bar that it had lost, so a TS-13B file written before then sews it as a Γ: write the
-sheet again before sewing it.</p>
+gained the arm of its bar that it had lost, and the leg of its A 6 mm tall that sewed as a line became a
+column like the other. A TS-13B file written before then sews them as they were: write the sheet again
+before sewing it, and check that its stitches number as the
+<a href="#ts-13b--pictures-digitized-automatically-letters-and-lines-traced-as-areas">test-sheet reference</a>
+says.</p>
 <h2 id="report-template"><a class="header" href="#report-template">Report template</a></h2>
 <p>The GitHub issue form <em>Sew-out report</em> asks for these fields; this is the same template for notes kept
 elsewhere:</p>
@@ -12021,7 +12042,9 @@ each).</li>
 <code>cargo xtask shots</code>. The page claims the type under its title with <code>&lt;!-- stitch-types: &lt;id&gt; --&gt;</code>.
 Once the engine sews the type, <code>cargo xtask docs --check</code> fails until one page claims it and shows
 at least two pictures.</li>
-<li><strong>Gate.</strong> <code>cargo xtask ci</code>, then open the PR with the roadmap step id.</li>
+<li><strong>Gate.</strong> <code>cargo xtask ci</code>, then open the PR with the roadmap step id. A test sheet drawn as a design is
+checked mirrored, turned and drawn again too (<code>tests/transformed.rs</code>). The type’s sheet must sew the same
+whichever way it is drawn.</li>
 <li><strong>Sew-out.</strong> If the type is new to the machine, list it for the next machine checkpoint (TS-11).</li>
 </ol>
 <div style="break-before: page; page-break-before: always;"></div>

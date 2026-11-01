@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-fe15eb06.js";
+            window.path_to_searchindex_js = "../searchindex-b52a3533.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -393,6 +393,18 @@ stitches times the pixels.</p>
 <p>Edge coverage pulls each top stitch in where the thread turns, as thread pulls a row in at its ends. The
 needle holes along a straight run stay where they are. Underlay and locks are left out, as they are
 meant to be covered (<code>stitchcraft_testkit::metrics</code>).</p>
+<p><strong>Transformations.</strong> A design mirrored or turned half round must sew its stitches mirrored or turned with
+it (<code>stitchcraft-testkit::transformed</code>, <code>tests/transformed.rs</code>), and a shape drawn again the other way
+round, from another point or with points added along its edges must sew the same thread. Since the checks
+don’t need an expected answer, they run on every element of every test sheet drawn as a design, and on
+random letters digitized automatically. They compare the share of each element’s top stitches and
+underlay that lies within 0.3 mm of the other plan’s, which overlooks needle points placed a little apart
+but still tells a column from a line sewn along its middle. A fill lays out its rows from the point (0, 0).
+So a design is mirrored and turned about that point, its fill angles with it, and a move is left out of
+the changes. A rule that depends on a tie broken by coordinates fails the checks: TS-13B’s letter A 6 mm
+tall sewed one leg as a satin column and the other as a line, and its mirror image the other way round.
+Each element of the sheets keeps 0.993 or more of its thread where the change takes it, against a bound
+of 0.98.</p>
 <h3 id="l3--inkstitch-differential-nightly"><a class="header" href="#l3--inkstitch-differential-nightly">L3 — Ink/Stitch differential (nightly)</a></h3>
 <p>A pinned Ink/Stitch runs as a black box on a corpus of SVG files written for StitchCraft, and writes
 machine files. Running Ink/Stitch as an oracle uses it and doesn’t copy it
