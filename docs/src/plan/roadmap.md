@@ -130,7 +130,8 @@ M13.7, whose Auto effect uses them.
 ## M7 — More stitch types I
 
 One step for each stitch type, with its requirements, cases and docs
-([playbook](../contributing/playbook-new-stitch-type.md)). M7.6 to M7.9 come after M13.
+([playbook](../contributing/playbook-new-stitch-type.md)). M7.6 was done while M13 waited for MC-8's
+sew-out, and M7.7 to M7.9 come after M13.
 
 | Step | Deliverable | Done when |
 |---|---|---|
@@ -139,7 +140,7 @@ One step for each stitch type, with its requirements, cases and docs
 | M7.3 ✅ | E-stitch, sewn as Ink/Stitch sews it. Every satin method warns where stitches lean more than 45° from square to their column (`SC-W0208`) and where a top stitch is longer than 12 mm (`SC-W0209`) | `REQ-SAT-020` to `REQ-SAT-023`, and the type listed for MC-6 |
 | M7.4 ✅ | S-stitch, sewn as Ink/Stitch sews it | `REQ-SAT-024` and `REQ-SAT-025`, and the type listed for MC-6 |
 | M7.5 ✅ | Zigzag satin, sewn as Ink/Stitch sews it | `REQ-SAT-026` to `REQ-SAT-028`, and the type listed for MC-6 |
-| M7.6 | The offsetter meets the third criterion of [ADR-0005](../design/adr/0005-geometry-stack.md) before contour fill relies on it: 300 insets of a region 150 mm across, of 1,000 points, in under 200 ms. At M0.7 they took 218 to 448 ms, against GEOS's 104 to 149 ms | `cargo xtask perf` guards the criterion |
+| M7.6 ✅ | The offsetter meets the third criterion of [ADR-0005](../design/adr/0005-geometry-stack.md) before contour fill relies on it: 300 insets of a region 150 mm across, of 1,000 points, in under 200 ms. They take 65 to 160 ms. At M0.7 they took 218 to 448 ms, against GEOS's 104 to 149 ms | `cargo xtask perf` guards the criterion (NFR-PERF-3) |
 | M7.7 | Contour fill, with its three strategies, as Ink/Stitch sews them | its requirements active and the type listed for MC-6 |
 | M7.8 | Meander fill with generated tiles. A node's meander fill may meet a `zigzag_spacing_mm` only its zigzag stroke can read, which Ink/Stitch sews as the fill's default. The step chooses whether StitchCraft does too ([rule 7](../design/params.md#naming-rules)) | same |
 | M7.9 | Circular fill | same |
@@ -151,8 +152,8 @@ One step for each stitch type, with its requirements, cases and docs
 <!-- vale ai-tells.EmDashUsage = YES -->
 
 Goal: a picture traced in VectorCraft sews well from one command, with no settings on its shapes
-([design](../design/image-to-embroidery.md)). M13 comes after M7.5 and before M7.6 (decided on
-2026-10-19). The steps that make every traced shape sew better with the generators StitchCraft has come
+([design](../design/image-to-embroidery.md)). M13 comes after M7.5 and before M7.7 (decided on
+2026-10-19). M7.6, the offsetter's speed for contour fill, was done while MC-8's sew-out was awaited. The steps that make every traced shape sew better with the generators StitchCraft has come
 first, and the steps that make new kinds of shape into stitches follow.
 
 | Step | Deliverable | Done when |

@@ -5,11 +5,12 @@
 //! and the plan's stitch count: `median 37.3 ms, 20755 stitches`. `field 0` plans it once and prints its
 //! stitch count, for valgrind's callgrind to count the instructions one plan takes, in `plan` below.
 
-// A binary prints what it measured; it times a benchmark, which library code never may (clippy.toml).
-#![allow(clippy::print_stdout, clippy::print_stderr, clippy::disallowed_types)]
+// A binary prints what it measured, which library code never may (clippy.toml).
+#![allow(clippy::print_stdout, clippy::print_stderr)]
+
+mod timing;
 
 use std::process::ExitCode;
-use std::time::Instant;
 
 use stitchcraft_engine::PlanOutcome;
 use stitchcraft_testkit::designs::{RED, fill, planned};
@@ -40,15 +41,7 @@ fn main() -> ExitCode {
         println!("{stitches} stitches");
         return ExitCode::SUCCESS;
     }
-    let mut times: Vec<f64> = (0..runs)
-        .map(|_| {
-            let start = Instant::now();
-            std::hint::black_box(plan());
-            start.elapsed().as_secs_f64() * 1000.0
-        })
-        .collect();
-    times.sort_by(f64::total_cmp);
-    let median = times.get(times.len() / 2).copied().unwrap_or_default();
+    let median = timing::median_ms(runs, plan);
     println!("median {median:.1} ms, {stitches} stitches");
     ExitCode::SUCCESS
 }

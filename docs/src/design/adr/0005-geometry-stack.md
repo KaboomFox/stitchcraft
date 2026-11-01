@@ -37,24 +37,29 @@ them.
 |---|---|
 | 1. Booleans and offsets of 10,000 random polygons with holes, and of a degenerate corpus, give valid output without panicking or hanging | **Met.** The property test `any_polygon_with_holes_grows_and_shrinks_into_valid_parts` grew and shrank 10,000 random polygons with holes, and every part it got was valid. It ran with `PROPTEST_CASES=10000`, where CI runs 256 each time. The offsets agree with shapely's for 1,050 random lines, and the grown and shrunk polygons for 330. The region code's tests take random rings, and rings with copies of themselves a rounding error apart. Every loop charges the work budget, so a plan that runs too long ends with `SC-E0004` |
 | 2. The same output bytes on Linux, macOS, Windows and wasm32 | **Met.** The tests run on the 3 systems, and the `wasm-goldens` gate makes every golden file of the conformance cases with `stitch` built for WASI and run by wasmtime ([determinism](../determinism.md#cross-platform-check)): 16 files, byte for byte |
-| 3. Offsetting a 150 mm region with 1,000 vertices inward 300 times in under 200 ms natively | **Not met**: 218 to 448 ms, against GEOS's 104 to 149 ms for the same parts and points (below). Contour fill is the first stitch type to need it. The offsetter meets this criterion in M7, before contour fill relies on it |
+| 3. Offsetting a 150 mm region with 1,000 vertices inward 300 times in under 200 ms natively | **Met at M7.6**: 65 to 160 ms (below). At M0.7 it was not: 218 to 448 ms, against GEOS's 104 to 149 ms for the same parts and points. Contour fill is the first stitch type to need it, and `cargo xtask perf` keeps the offsetter within it (NFR-PERF-3) |
 | 4. Building for wasm32 adds under 300 KiB to the plug-in | **Met for the geometry**: no geometry crate is linked, so none adds to the plug-in. The engine, linked into the plug-in by M6.2, adds 844 KiB. A stitch family's module is 1,014 KiB, and *hello*'s, with the ABI shim and the JSON reader alone, is 171 KiB (a release build with thin LTO, at `opt-level` 3, in the compatibility gate's contract job). The engine's own geometry is part of the 844 KiB and isn't measured apart. VectorCraft takes modules of up to 32 MiB |
 
 Criterion 3, measured on a 2.1 GHz Xeon in an optimized build: a ring 150 mm across, of 1,000 points, round
 or with 7 waves of 2 mm, shrunk 300 times in steps of 0.25 mm, and of 0.4 mm. shapely 2.2.0, with the GEOS
 3.14.1 its wheels bundle, ran on the same machine, and its parts and points came out the same as the engine's.
+M7.6 measured the engine again on a 2.1 GHz Xeon, with the `insets` example of the
+[performance budget](../guardrails.md). By then the region code put the rings on its grid, and the 4 took
+141 to 356 ms. Sorted lists in place of tree maps and sets brought them within the criterion, with the same
+parts, points and work ([offset curves](../algorithms/offset.md#speed)).
 
-| Ring | Step | Engine | GEOS |
-|---|---|---|---|
-| Round | 0.25 mm | 218 ms | 104 ms |
-| Round | 0.4 mm | 135 ms | 61 ms |
-| 7 waves | 0.25 mm | 448 ms | 149 ms |
-| 7 waves | 0.4 mm | 261 ms | 115 ms |
+| Ring | Step | Engine at M0.7 | Engine before M7.6 | Engine at M7.6 | GEOS |
+|---|---|---|---|---|---|
+| Round | 0.25 mm | 218 ms | 311 ms | 105 ms | 104 ms |
+| Round | 0.4 mm | 135 ms | 141 ms | 65 ms | 61 ms |
+| 7 waves | 0.25 mm | 448 ms | 356 ms | 160 ms | 149 ms |
+| 7 waves | 0.4 mm | 261 ms | 206 ms | 96 ms | 115 ms |
 
 ## Consequences
 
 - No geometry crate is there to vet, update or replace. The conformance suite and the shapely oracles
   (`conformance/oracle/`) check the engine's geometry, and a change to it is a change of the engine.
 - CI makes the golden files again as WebAssembly. A plan the plug-in makes is one the command line makes.
-- The offsetter is 2 to 3 times slower than GEOS on large regions. Until M7, a fill offsets each part at
-  most twice, for its inset underlay and its grown rows. Contour fill offsets hundreds of times.
+- At M0.7 the offsetter was 2 to 3 times slower than GEOS on large regions, when a fill offset each part
+  at most twice, for its inset underlay and its grown rows. Contour fill offsets hundreds of times, and
+  from M7.6 the offsetter's times are close to GEOS's above.
