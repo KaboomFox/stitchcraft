@@ -299,7 +299,7 @@ mod tests {
     }
 
     #[test]
-    fn a_tie_takes_the_first_stitchs_place_and_a_lone_stitch_has_no_rung() {
+    fn a_tie_takes_the_place_of_the_first_stitch_and_a_lone_stitch_has_no_rung() {
         // Rails 10 mm apart, each stitch advancing half a millimetre more than the one before: 2 votes each
         // way.
         let needles = points(&[(0.0, 0.0), (0.0, 10.0), (0.5, 0.0), (1.5, 10.0), (3.0, 0.0), (5.0, 10.0)]);
