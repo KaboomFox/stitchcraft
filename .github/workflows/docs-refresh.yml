@@ -29,6 +29,8 @@ jobs:
     name: refresh documentation images
     if: github.event.label.name == 'docs:refresh-shots'
     runs-on: ubuntu-24.04
+    # It takes under 6 minutes. A stalled step ends here, not at GitHub's 6 hours.
+    timeout-minutes: 45
     env:
       GH_TOKEN: ${{ github.token }}
       PR: ${{ github.event.pull_request.number }}

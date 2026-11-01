@@ -8,8 +8,33 @@ runs:
   using: composite
   steps:
     # libxkbcommon-dev links xa11y's keyboard maps; the rest is what VectorCraft's window loads.
+    #
+    # apt-get can stall without failing: on 2026-11-01 this step ran for 49 minutes until it was
+    # cancelled, and its re-run for 8 until the next push cancelled it, where it takes under 2. So each
+    # apt-get has a time limit, 3 minutes to update the package lists and 5 to install, and an install
+    # that stalls or fails is tried again, 3 times in all, after dpkg finishes what a stopped install left
+    # half done. apt's own timeout drops a connection that has sent nothing for 30 seconds, and its
+    # retries try that download again.
     - shell: bash
-      run: |
-        sudo apt-get update
-        sudo apt-get install --yes --no-install-recommends xvfb xauth dbus at-spi2-core libxkbcommon-dev \
+      env:
+        PACKAGES: >-
+          xvfb xauth dbus at-spi2-core libxkbcommon-dev
           libegl1 libegl-mesa0 libgl1-mesa-dri libxkbcommon-x11-0 libxcursor1 libxrandr2 libxi6
+      run: |
+        apt() {
+          local limit=$1
+          shift
+          sudo timeout --kill-after=15 "$limit" apt-get -q -o Acquire::Retries=3 \
+            -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 "$@"
+        }
+        for attempt in 1 2 3; do
+          # shellcheck disable=SC2086 # PACKAGES is a list of words
+          if apt 180 update && apt 300 install --yes --no-install-recommends $PACKAGES; then
+            exit 0
+          fi
+          echo "::warning::apt-get stalled or failed (attempt $attempt of 3)"
+          sudo dpkg --configure -a || true
+          sleep 10
+        done
+        echo "::error::The desktop's packages could not be installed: apt-get stalled or failed 3 times. Re-run the job."
+        exit 1
