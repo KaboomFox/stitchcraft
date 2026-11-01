@@ -54,6 +54,15 @@ fn req_cli_007_an_output_that_is_another_output_or_an_input_is_refused() {
     };
     refused(&["plan", "strokes.svg", "-o", "x.pes", "--report", "x.pes"], "x.pes and x.pes are the same file");
     refused(&["plan", "strokes.svg", "-o", "x.pes", "--preview", "./x.pes"], "are the same file");
+    // A bug's bundle goes next to the file asked for (`REQ-CLI-002`), so no other file may be there.
+    refused(
+        &["plan", "strokes.svg", "-o", "x.pes", "--report", "x.bug-report.json"],
+        "x.bug-report.json is where a bug-report bundle for x.pes would be written: name it another file",
+    );
+    refused(
+        &["plan", "x.bug-report.json", "-o", "x.pes"],
+        "a bug-report bundle for x.pes would replace x.bug-report.json, which it is made from: name the output another file",
+    );
     refused(&["plan", "strokes.svg", "-o", "strokes.svg", "--format", "pes"], "would replace strokes.svg, which it is made from");
     refused(&["bug-report", "strokes.svg", "-o", "strokes.svg"], "would replace strokes.svg");
     assert!(!dir.join("x.pes").exists());
