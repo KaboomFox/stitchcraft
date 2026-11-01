@@ -359,8 +359,10 @@ stroke a satin effect on it would follow, with that stroke's join. The engine ma
 makes of such a column when it sews one (`REQ-SAT-016`, `REQ-SAT-017`), and draws them as straight lines,
 each rung longer than the gap between the points it pairs by a hundredth of it at either end, so that it
 crosses the rails ([satin generators](algorithms/satin.md#drawn-with-its-rails-and-rungs)). Read back, the column
-pairs the same points, so it sews as the line did. A column of 2 rungs or none gets a rung at its start
-too, since Ink/Stitch's rule would read the 2 longest lines as its rails (`DEV-SAT-007`).
+pairs the same points, so it sews as the line did. A column of 2 rungs or none gets a rung at an end
+too, since Ink/Stitch's rule would read the 2 longest lines as its rails (`DEV-SAT-007`): at its start, or
+at its end where the satin effect's push compensation lengthens the start, since a rung across an end
+that push compensation lengthens cuts what it adds there off as a section of its own.
 
 Each column is a compound path without fills. Its stroke is the line's paint one CSS pixel wide, which
 shows the rails and draws the satin effect's stitches thin. The first column takes the object's place,
@@ -369,7 +371,9 @@ StitchCraft effect, with the line's satin settings or the defaults. The object's
 are left out, and its other effects kept. An object the satin effect already reads as rails is given back
 as it is. The filter refuses with `SC-E0814`, and the document stays as it was, when the selection is
 empty, a path has no stroke that paints or can't be used, or a line can't be made into a column that sews
-as it does. Such a line's rails can't be made whole (`SC-E0214`, `SC-W0213`), or they cross each other.
+as it does. Such a line's rails can't be made whole (`SC-E0214`, `SC-W0213`), or they cross each other,
+or the satin effect's push compensation lengthens both of the line's ends when its column needs a rung at
+one.
 Before 0.15, which drops the records a filter gives, it declines with `SC-E0813`.
 
 M6.4 measured making the rails inside VectorCraft's host at up to 162 million instructions, where a light

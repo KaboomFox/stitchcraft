@@ -32,12 +32,13 @@ use serde_json::{Map, Value, json};
 use stitchcraft_core::units::MM_PER_POINT;
 use stitchcraft_core::{Diagnostic, Exhausted, Meter, Mm, Point};
 use stitchcraft_engine::design::{Cap, FillRule, Join, Path, Segment};
-use stitchcraft_params::Family;
+use stitchcraft_params::{Family, ParamSet};
 use stitchcraft_plan::Rgb;
 
 use crate::document::quoted;
 use crate::effect::{followed, refused_plugin};
 use crate::geometry::{self, Unusable};
+use crate::values::settings;
 use crate::wire::{EffectStroke, PathData, yes};
 use crate::{color, effect_id, effect_name};
 
@@ -219,6 +220,18 @@ impl Record {
     /// Whether it is one of StitchCraft's effects: a stitch family's, or one a newer StitchCraft has.
     pub fn is_stitchcraft(&self) -> bool {
         effect_name(&self.id).is_some()
+    }
+
+    /// The settings of the element its effect sews, read from its parameters as a live effect reads them
+    /// (`values::settings`). A record whose parameters aren't names and values has none.
+    pub fn settings(&self) -> ParamSet {
+        /// What a record holds of its parameters.
+        #[derive(Deserialize)]
+        struct Held {
+            #[serde(default)]
+            params: Map<String, Value>,
+        }
+        serde_json::from_str::<Held>(self.raw.get()).map(|held| settings(&held.params)).unwrap_or_default()
     }
 }
 

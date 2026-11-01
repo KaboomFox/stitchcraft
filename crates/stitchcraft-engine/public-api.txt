@@ -238,19 +238,21 @@ pub fn stitchcraft_engine::generators::running::running_stitch(&stitchcraft_engi
 pub mod stitchcraft_engine::generators::satin
 pub mod stitchcraft_engine::generators::satin::drawn
 pub enum stitchcraft_engine::generators::satin::drawn::Unmade
+pub stitchcraft_engine::generators::satin::drawn::Unmade::Lengthened
 pub stitchcraft_engine::generators::satin::drawn::Unmade::NoRails
 pub stitchcraft_engine::generators::satin::drawn::Unmade::PartsLeftOut(usize)
 pub stitchcraft_engine::generators::satin::drawn::Unmade::ReadOtherwise
 impl core::fmt::Display for stitchcraft_engine::generators::satin::drawn::Unmade
 pub fn stitchcraft_engine::generators::satin::drawn::Unmade::fmt(&self, &mut core::fmt::Formatter<'_>) -> core::fmt::Result
 pub struct stitchcraft_engine::generators::satin::drawn::Column
+pub stitchcraft_engine::generators::satin::drawn::Column::cuts_lengthened_end: bool
 pub stitchcraft_engine::generators::satin::drawn::Column::rails: [alloc::vec::Vec<stitchcraft_core::units::Point>; 2]
 pub stitchcraft_engine::generators::satin::drawn::Column::rungs: alloc::vec::Vec<[stitchcraft_core::units::Point; 2]>
 impl stitchcraft_engine::generators::satin::drawn::Column
 pub fn stitchcraft_engine::generators::satin::drawn::Column::path(&self) -> stitchcraft_engine::design::Path
 pub const stitchcraft_engine::generators::satin::drawn::REACH: f64
-pub fn stitchcraft_engine::generators::satin::drawn::from_line(&stitchcraft_engine::design::Subpath, stitchcraft_core::units::Mm, stitchcraft_engine::design::Join, &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::result::Result<stitchcraft_engine::generators::satin::drawn::Column, stitchcraft_engine::generators::satin::drawn::Unmade>, stitchcraft_core::budget::Exhausted>
-pub fn stitchcraft_engine::generators::satin::drawn::from_rails([alloc::vec::Vec<stitchcraft_core::units::Point>; 2], alloc::vec::Vec<[stitchcraft_core::units::Point; 2]>, &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::result::Result<stitchcraft_engine::generators::satin::drawn::Column, stitchcraft_engine::generators::satin::drawn::Unmade>, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_engine::generators::satin::drawn::from_line(&stitchcraft_engine::design::Subpath, stitchcraft_core::units::Mm, stitchcraft_engine::design::Join, [f64; 2], &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::result::Result<stitchcraft_engine::generators::satin::drawn::Column, stitchcraft_engine::generators::satin::drawn::Unmade>, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_engine::generators::satin::drawn::from_rails([alloc::vec::Vec<stitchcraft_core::units::Point>; 2], alloc::vec::Vec<[stitchcraft_core::units::Point; 2]>, [f64; 2], &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::result::Result<stitchcraft_engine::generators::satin::drawn::Column, stitchcraft_engine::generators::satin::drawn::Unmade>, stitchcraft_core::budget::Exhausted>
 pub struct stitchcraft_engine::generators::satin::SatinLengths
 pub stitchcraft_engine::generators::satin::SatinLengths::jump: stitchcraft_core::units::Mm
 pub stitchcraft_engine::generators::satin::SatinLengths::max_stitch: core::option::Option<stitchcraft_core::units::Mm>
@@ -427,15 +429,23 @@ pub fn stitchcraft_engine::normalize::region::build(&stitchcraft_engine::design:
 pub mod stitchcraft_engine::normalize::satin
 pub enum stitchcraft_engine::normalize::satin::Pairing
 pub stitchcraft_engine::normalize::satin::Pairing::Nodes
-pub stitchcraft_engine::normalize::satin::Pairing::Rungs(alloc::vec::Vec<[stitchcraft_core::units::Point; 2]>)
+pub stitchcraft_engine::normalize::satin::Pairing::Rungs(alloc::vec::Vec<stitchcraft_engine::normalize::satin::Rung>)
 pub enum stitchcraft_engine::normalize::satin::Shape
 pub stitchcraft_engine::normalize::satin::Shape::CentreLine
 pub stitchcraft_engine::normalize::satin::Shape::CentreLine::closed: bool
 pub stitchcraft_engine::normalize::satin::Shape::CentreLine::line: alloc::vec::Vec<stitchcraft_core::units::Point>
 pub stitchcraft_engine::normalize::satin::Shape::Rails(stitchcraft_engine::normalize::satin::Satin)
+pub struct stitchcraft_engine::normalize::satin::Missed
+pub stitchcraft_engine::normalize::satin::Missed::line: alloc::vec::Vec<stitchcraft_core::units::Point>
+pub stitchcraft_engine::normalize::satin::Missed::rails: [bool; 2]
 pub struct stitchcraft_engine::normalize::satin::Recognition
 pub stitchcraft_engine::normalize::satin::Recognition::shape: core::result::Result<stitchcraft_engine::normalize::satin::Shape, stitchcraft_core::diag::Diagnostic>
 pub stitchcraft_engine::normalize::satin::Recognition::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
+pub struct stitchcraft_engine::normalize::satin::Rung
+pub stitchcraft_engine::normalize::satin::Rung::missed: core::option::Option<stitchcraft_engine::normalize::satin::Missed>
+pub stitchcraft_engine::normalize::satin::Rung::points: [stitchcraft_core::units::Point; 2]
+impl stitchcraft_engine::normalize::satin::Rung
+pub fn stitchcraft_engine::normalize::satin::Rung::crossing([stitchcraft_core::units::Point; 2]) -> stitchcraft_engine::normalize::satin::Rung
 pub struct stitchcraft_engine::normalize::satin::Satin
 pub stitchcraft_engine::normalize::satin::Satin::nodes: [alloc::vec::Vec<stitchcraft_core::units::Point>; 2]
 pub stitchcraft_engine::normalize::satin::Satin::pairing: stitchcraft_engine::normalize::satin::Pairing

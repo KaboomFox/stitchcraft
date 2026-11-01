@@ -1107,6 +1107,16 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- A satin column's rung that misses a rail cuts it where the rail comes nearest the rung once push
+  compensation has lengthened or shortened it, as Ink/Stitch cuts it (`REQ-SAT-008`). On rails lengthened
+  2 mm at their start, a rung that ends 1 mm above the first rail's new part cut it at the rail's old start,
+  0.5 mm past where Ink/Stitch at d59c9ab, run as a black box, cuts it.
+- Stroke to Satin's column sews as the line did when the line's satin effect lengthens its start (`REQ-VC-014`).
+  The rung it adds to tell the rails from the rungs pairs the rails' last points there, and a line
+  lengthened at both ends is refused with `SC-E0814`. A rung across a lengthened start cut what push
+  compensation adds off as a section of its own: the column of an L 3 mm wide, -1 mm at its start, paired
+  its stitches otherwise. A column digitized automatically that reaches under another at one end takes
+  the rung at its other end too.
 - A file an older Ink/Stitch saved is read as Ink/Stitch updates it (`REQ-SVG-007`). Before its file
   version 4, a fill's stitches were 3 mm long unless it set another length; Ink/Stitch writes that into such
   a file's shapes when it opens it, and StitchCraft sewed them 4 mm long. A shape with a fill and no longest
