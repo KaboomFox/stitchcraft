@@ -88,7 +88,9 @@ PES file is an entry, by its colour and name, and is written back as it, Brother
 included. The other threads are given the 61 thread colours, one each while they last, the nearest pairs
 first by CIEDE2000. A thread gets its nearest entry unless a thread nearer to it took it. Equal threads
 share one. With more different threads than that, the rest share their nearest entries, and `SC-W0606`
-says how many. `stitch plan`, `convert` and `inspect` name each thread by the entry the file has.
+says how many. `stitch plan`, `convert` and `inspect` name each thread by the entry the file has. A PES
+file's index that is none of Brother's entries is read as a grey thread named after it, with a warning, and
+`inspect` says it is not one of the palette's colours rather than naming the entry nearest that grey.
 Catalogue numbers from other brands cannot survive PES v1. A PES v6 writer (below) could store a thread
 list with RGB and codes.
 

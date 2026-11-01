@@ -38,8 +38,9 @@ got, and attach the bundle. GitHub takes `.json` files up to 25 MB. Zip a larger
 
 StitchCraft checks each plan before writing a machine file. If a check fails (`SC-E0009`) or StitchCraft
 crashes, `stitch plan` (or `stitch export`) writes the bundle for you in place of the machine file. The
-bundle goes next to the file you named, as `design.bug-report.json` for `design.pes`. The command says
-where it is and ends with exit status 4. Attach that bundle to an issue.
+bundle goes next to the file you named, as `design.bug-report.json` for `design.pes`, and `stitch plan`
+refuses to write a report or a preview of that name. The command says where it is and ends with exit
+status 4. Attach that bundle to an issue.
 
 ## For maintainers: replay a bundle
 

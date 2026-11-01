@@ -1107,6 +1107,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- `stitch plan` refuses another output named as the bug-report bundle it leaves next to its output on a
+  bug (`REQ-CLI-007`). With `--report x.bug-report.json` and `-o x.pes`, the bundle replaced the report.
+- `stitch inspect` names a thread index outside the palette as itself, "not one of Brother PEC's
+  colours" (`REQ-THREAD-002`). It said the thread was shown as the entry nearest the grey it is drawn in,
+  which the file doesn't hold.
 - `SC-W0405` counts a closed zigzag's stitches as they are sewn, after its last needle point moves onto its
   first. Round a 10 mm square 0.3 mm wide it said 6 stitches were short, at 0.27 mm, where 7 are, at
   0.16 mm, and of a teardrop whose only short stitch is the closing one it said nothing.
