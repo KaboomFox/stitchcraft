@@ -2,15 +2,20 @@
 //! order, a line sews after the fill it borders, each thread sews as long as it can and the nearest element
 //! next; the elements with settings keep their order unless the design asks for every element ordered
 //! (`--sort-colours`), and nothing moves across a stop.
+//!
+//! The examples show each rule on a design drawn for it. Random designs of squares and lines then check the
+//! rules together, wherever the shapes fall: each shape sews once, what overlaps keeps its paint order, a
+//! line follows the fill it borders, and the thread changes only when none of its elements is free to sew.
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
 
-use stitchcraft_core::{Budget, Code, Diagnostic};
-use stitchcraft_engine::auto::digitized;
+use proptest::prelude::*;
+use stitchcraft_core::{Budget, Code, Diagnostic, math};
+use stitchcraft_engine::auto::{TOUCHING, digitized};
 use stitchcraft_engine::design::{Design, DesignSettings, Element};
 use stitchcraft_plan::Thread;
-use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, polylines, widened};
+use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, polylines, rules, widened};
 use stitchcraft_testkit::pictures::GOLD;
 
 /// An automatic square `id`, `size` millimetres wide, from `(x, y)`, sewn with `thread`.
@@ -277,4 +282,168 @@ fn req_auto_010_a_speck_left_out_has_no_place_in_the_order() {
     ]);
     assert_eq!(ids, ["first", "left", "right"]);
     assert_eq!(said, ["info SC-I0907: The elements are sewn in an order of their own, with 0 thread changes where paint order has 0."]);
+}
+
+/// A shape of a random design, on a half-millimetre grid: from `(x, y)` halves of a millimetre, `size`
+/// millimetres across, an automatic square when `tenths` is 0, and otherwise a line along x, or up y when
+/// `upright`, `tenths` tenths of a millimetre wide. `thread` picks red, blue or gold.
+type Drawn = (i32, i32, i32, i32, bool, usize);
+
+/// How far from the order's own bound, [`TOUCHING`], a measure of 2 shapes must lie for a random design to
+/// tell how they lie, in millimetres. Edges on its grid lie 0.05 mm apart or more, and rounding far closer.
+const CLEAR: f64 = 0.02;
+
+/// A shape of a random design ([`Drawn`]): its element, whether it sews as a fill, and the box it paints,
+/// `[min x, min y, max x, max y]`. A square wider than the widest satin column is a fill, and a narrower one
+/// sews as a column (`REQ-AUTO-016`), which sews after a fill it borders as a line does. A line is a running
+/// stitch up to 1 mm wide and a satin column up to 7 mm. Each paints its box: a square itself, and a line,
+/// with butt caps, the rectangle its stroke paints, between its rails as a satin column (`REQ-AUTO-010`).
+struct Random {
+    element: Element,
+    area: bool,
+    paints: [f64; 4],
+}
+
+impl Random {
+    /// The shape `drawn`, the `index`th of its design.
+    fn new((x, y, size, tenths, upright, thread): Drawn, index: usize) -> Random {
+        let id = format!("s{index}");
+        let thread = match thread {
+            0 => RED,
+            1 => BLUE,
+            _ => GOLD,
+        };
+        let (x, y, size) = (f64::from(x) / 2.0, f64::from(y) / 2.0, f64::from(size));
+        if tenths == 0 {
+            let area = size > rules().auto_max_satin_width_mm.get();
+            return Random { element: square(&id, (x, y), size, &thread), area, paints: [x, y, x + size, y + size] };
+        }
+        let half = f64::from(tenths) / 20.0;
+        let (end, paints) =
+            if upright { ((x, y + size), [x - half, y, x + half, y + size]) } else { ((x + size, y), [x, y - half, x + size, y + half]) };
+        Random { element: line(&id, &[(x, y), end], 2.0 * half, &thread), area: false, paints }
+    }
+
+    /// How what this shape and `other` paint lie, as far as a random design can tell: whether they overlap
+    /// by more than [`TOUCHING`] both ways, and whether they come within it of each other; `None` where a
+    /// measure lies within [`CLEAR`] of that bound. The order finds the lines a fill touches by growing the
+    /// fill by [`TOUCHING`], which reaches at least that far in every direction and no further along either
+    /// axis: boxes touch when they are nearer than that, and don't when they lie further apart along an axis.
+    fn beside(&self, other: &Random) -> (Option<bool>, Option<bool>) {
+        let [a, b] = [&self.paints, &other.paints];
+        // How far they overlap along each axis, less than 0 where they lie apart.
+        let [x, y] = [0, 1].map(|axis| a[axis + 2].min(b[axis + 2]) - a[axis].max(b[axis]));
+        let called = |surely: bool, maybe: bool| {
+            if surely {
+                Some(true)
+            } else if maybe {
+                None
+            } else {
+                Some(false)
+            }
+        };
+        let overlaps = called(x.min(y) >= TOUCHING + CLEAR, x.min(y) > TOUCHING - CLEAR);
+        let (distance, along_an_axis) = (math::hypot((-x).max(0.0), (-y).max(0.0)), (-x).max(-y));
+        let touches = called(distance <= TOUCHING - CLEAR, along_an_axis < TOUCHING + CLEAR);
+        (overlaps, touches)
+    }
+}
+
+/// Whether shape `a` of `shapes` may have to sew before shape `b`, as far as a random design can tell:
+/// drawn before it, what they paint may overlap, or `a` is an area and `b` a line that may touch it. Where
+/// a rule of the order puts `a` before `b`, this is true, and it is true in some places where none does.
+fn may_hold(shapes: &[Random], a: usize, b: usize) -> bool {
+    let (overlaps, touches) = shapes[a].beside(&shapes[b]);
+    (a < b && overlaps != Some(false)) || (shapes[a].area && !shapes[b].area && touches != Some(false))
+}
+
+/// Whether a chain of the shapes of `shapes`, each of which may have to sew before the next
+/// ([`may_hold`]), leads from shape `from` to shape `to`.
+fn may_lead(shapes: &[Random], from: usize, to: usize) -> bool {
+    let mut reached = vec![false; shapes.len()];
+    let mut next = vec![from];
+    while let Some(at) = next.pop() {
+        for later in (0..shapes.len()).filter(|&later| may_hold(shapes, at, later)) {
+            if later == to {
+                return true;
+            }
+            if !std::mem::replace(&mut reached[later], true) {
+                next.push(later);
+            }
+        }
+    }
+    false
+}
+
+/// The shapes of a random design ([`Drawn`]): 2 to 6 of them, within 16 mm of each other so that they
+/// often overlap and meet. 2 in 5 are squares, and at least a third of the lines are drawn a whole number
+/// of millimetres wide, so that their sides meet the squares' edges on the grid.
+fn drawn() -> impl Strategy<Value = Vec<Drawn>> {
+    let tenths = prop_oneof![2 => Just(0), 1 => 1i32..=10, 1 => 11i32..=70, 1 => (1i32..=7).prop_map(|mm| 10 * mm)];
+    prop::collection::vec((0i32..=32, 0i32..=32, 4i32..=12, tenths, any::<bool>(), 0usize..3), 2..=6)
+}
+
+proptest! {
+    #![proptest_config(stitchcraft_testkit::strategies::config(256))]
+
+    #[test]
+    fn req_auto_010_random_designs_keep_the_rules_of_the_order(drawn in drawn()) {
+        let shapes: Vec<Random> = drawn.into_iter().enumerate().map(|(index, drawn)| Random::new(drawn, index)).collect();
+        let design = Design::new(shapes.iter().map(|shape| shape.element.clone()).collect(), DesignSettings::default()).unwrap();
+        let (out, said) = digitized(&design, &Budget::DEFAULT);
+        // The shapes in the order they sew, each by its place in the design, and where each sews in that
+        // order: `None` for a shape that sews nothing.
+        let sewn: Vec<usize> =
+            out.iter().filter_map(|element| shapes.iter().position(|shape| shape.element.id == element.id)).collect();
+        let at: Vec<Option<usize>> = (0..shapes.len()).map(|index| sewn.iter().position(|&s| s == index)).collect();
+        let said_of = |index: usize, code: Option<Code>| {
+            said.iter().any(|d| d.element.as_ref() == Some(&shapes[index].element.id) && code.is_none_or(|code| d.code == code))
+        };
+
+        // Each shape sews once, as an element of its own (`REQ-AUTO-012`), or is said to sew nothing.
+        let mut once = sewn.clone();
+        once.sort_unstable();
+        once.dedup();
+        prop_assert_eq!((sewn.len(), once.len()), (out.len(), out.len()), "{:?}", out.iter().map(|e| e.id.as_str()).collect::<Vec<_>>());
+        for (index, at) in at.iter().enumerate() {
+            prop_assert!(at.is_some() || said_of(index, None), "s{} sews nothing, unsaid: {:?}", index, said);
+        }
+        // An order that isn't paint order is said (`SC-I0907`).
+        if sewn.windows(2).any(|pair| pair[0] > pair[1]) {
+            prop_assert!(said.iter().any(|d| d.code == Code::AutoOrder), "{:?}, unsaid", sewn);
+        }
+        // What overlaps keeps its paint order.
+        for upper in 0..shapes.len() {
+            for lower in 0..upper {
+                if let ((Some(true), _), Some(first), Some(second)) = (shapes[lower].beside(&shapes[upper]), at[lower], at[upper]) {
+                    prop_assert!(first < second, "s{} lies on s{}, and sews first: {:?}", upper, lower, sewn);
+                }
+            }
+        }
+        // A line that touches a fill without overlapping it sews after it, unless what overlaps puts it
+        // first.
+        for fill in (0..shapes.len()).filter(|&index| shapes[index].area) {
+            for line in (0..shapes.len()).filter(|&index| !shapes[index].area) {
+                if let ((Some(false), Some(true)), Some(first), Some(second)) = (shapes[fill].beside(&shapes[line]), at[fill], at[line]) {
+                    prop_assert!(first < second || may_lead(&shapes, line, fill), "s{} borders s{}, and sews first: {:?}", line, fill, sewn);
+                }
+            }
+        }
+        // The thread changes only when none of its elements is free: each sewn later waits for one not
+        // sewn yet. A shape left out after the order is found, covered whole by the areas sewn after it,
+        // had a place in the order that the elements no longer show, and so did its thread. So this is
+        // checked when every shape sews, but for the background, which is left out before the order.
+        let colour = |index: usize| shapes[index].element.thread.color;
+        if (0..shapes.len()).all(|index| at[index].is_some() || said_of(index, Some(Code::AutoBackground))) {
+            for (k, pair) in sewn.windows(2).enumerate().filter(|(_, pair)| colour(pair[0]) != colour(pair[1])) {
+                let unsewn = &sewn[k + 1..];
+                for &waiting in unsewn.iter().filter(|&&index| colour(index) == colour(pair[0])) {
+                    prop_assert!(
+                        unsewn.iter().any(|&before| may_hold(&shapes, before, waiting)),
+                        "the thread of s{} changes, while s{} is free: {:?}", pair[0], waiting, sewn
+                    );
+                }
+            }
+        }
+    }
 }
