@@ -10,7 +10,7 @@ use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan, invariants, profile
 use stitchcraft_render::{Settings, Style};
 
 use super::cases::{DataCase, RustCase, SheetExpect, Spec};
-use super::oracle;
+use super::{differential, oracle};
 use crate::util;
 
 /// How one case went.
@@ -30,6 +30,10 @@ pub struct Outcome {
     pub outputs: Vec<String>,
     /// Why the case could not run here (a tool is missing), if it did not.
     pub skipped: Option<String>,
+    /// Differences a deviation excuses, which don't fail it (the Ink/Stitch differential).
+    pub notes: Vec<String>,
+    /// What it measured, for its report (the Ink/Stitch differential).
+    pub details: Vec<String>,
 }
 
 impl Outcome {
@@ -54,11 +58,14 @@ pub fn run_data_case(root: &Path, case: &DataCase, bless: bool) -> Outcome {
         failures: Vec::new(),
         outputs: Vec::new(),
         skipped: None,
+        notes: Vec::new(),
+        details: Vec::new(),
     };
     match &case.spec {
         Spec::Testsheet { sheet, profile, expect } => testsheet(root, sheet, profile, expect, bless, &mut outcome),
         Spec::Plan { design, profile, expect } => planned(root, design, profile, expect, bless, &mut outcome),
         Spec::Oracle { files } => oracle::run(root, files, &mut outcome),
+        Spec::Inkstitch { design, excused } => differential::run(root, design, excused, &mut outcome),
     }
     outcome
 }
@@ -237,6 +244,8 @@ pub fn run_rust_cases(root: &Path, cases: &[RustCase]) -> Result<Vec<Outcome>, S
                 failures,
                 outputs: Vec::new(),
                 skipped: None,
+                notes: Vec::new(),
+                details: Vec::new(),
             }
         })
         .collect())

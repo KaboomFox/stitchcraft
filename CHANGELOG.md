@@ -5,6 +5,14 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- The Ink/Stitch differential, conformance level L3 (`REQ-SVG-008`). `cargo xtask conformance --differential`
+  sews each design of its corpus with StitchCraft and with Ink/Stitch at the commit
+  `conformance/inkstitch/pin.toml` names, run as a black box, and compares the PES files by measures:
+  stitches, size, threads, trims, jumps and how much the thread's footprints overlap. A case excuses a
+  measure with the deviation that explains it, such as the thread named for pure red (`DEV-THREAD-001`).
+  CI runs it every night, and on pull requests that change it (`differential.yml`). The corpus is the
+  designs the SVG reader sews in full until M8: fills, a running stitch, colours, a trim command and a file
+  of version 3.
 - M13.10: `stitch plan picture.png` and `stitch export picture.png` trace a PNG or JPEG file with
   VectorCraft's command line and sew it digitized automatically (`REQ-CLI-012`, `REQ-CLI-013`).
   - `stitch` runs `vectorcraft-cli run` with 4 steps on standard input. The first loads the threads

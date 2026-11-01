@@ -1,0 +1,8 @@
+# The Ink/Stitch the differential cases are measured against (conformance L3,
+# docs/src/design/conformance.md): its repository and the commit to check out, the one the compatibility
+# contract was read at. The `inkstitch` action fetches it in CI, and `cargo xtask conformance --differential`
+# refuses a checkout at another commit. Move it on with the contract, and record what then sews
+# otherwise in conformance/deviations.toml.
+repository = "https://github.com/inkstitch/inkstitch"
+commit = "d59c9ab1e390285a6c67822436ffd9ba9843d8b4"
+date = "2026-09-17"

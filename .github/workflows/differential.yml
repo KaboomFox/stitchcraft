@@ -1,0 +1,45 @@
+# Conformance L3, the Ink/Stitch differential (docs/src/design/conformance.md): every night, and on a pull
+# request that changes the differential itself, a pinned Ink/Stitch and StitchCraft sew the design of each
+# `inkstitch` case, and their machine files are compared by measures. The report is the job's summary, and
+# an artifact.
+name: differential
+
+on:
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - conformance/inkstitch/**
+      - conformance/cases/inkstitch/**
+      - conformance/fixtures/inkstitch/**
+      - conformance/deviations.toml
+      - xtask/src/conformance/**
+      - crates/stitchcraft-testkit/src/metrics.rs
+      - .github/actions/inkstitch/**
+      - .github/workflows/differential.yml
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+
+jobs:
+  inkstitch:
+    name: Ink/Stitch differential (L3)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install --profile minimal
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - uses: ./.github/actions/inkstitch
+      - run: cargo xtask conformance --differential
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: inkstitch-differential
+          path: target/conformance/differential.md
+          if-no-files-found: ignore

@@ -197,6 +197,8 @@ mod tests {
             failures: failures.iter().map(|s| (*s).to_string()).collect(),
             outputs: Vec::new(),
             skipped: None,
+            notes: Vec::new(),
+            details: Vec::new(),
         }
     }
 
