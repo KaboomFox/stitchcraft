@@ -549,6 +549,45 @@ mod tests {
         assert!(!dir.join("strokes.pes").exists() && !dir.join("traced.vectorcraft").exists());
     }
 
+    /// Red bars 3 mm wide down the sides of the rectangle `[x, y, width, height]`, in millimetres, as a
+    /// picture placed there traces: an SVG drawing of the reference machine's hoop.
+    fn sides([x, y, wide, tall]: [f64; 4]) -> String {
+        let (width, height, right) = (REFERENCE.hoop.width.get(), REFERENCE.hoop.height.get(), x + wide - 3.0);
+        format!(
+            r#"<svg xmlns="http://www.w3.org/2000/svg" width="{width}mm" height="{height}mm" viewBox="0 0 {width} {height}"><rect id="left" x="{x}" y="{y}" width="3" height="{tall}" fill="red"/><rect id="right" x="{right}" y="{y}" width="3" height="{tall}" fill="red"/></svg>"#
+        )
+    }
+
+    #[test]
+    fn req_cli_012_shapes_along_the_sides_of_a_picture_fitted_to_the_hoop_sew_in_it() {
+        let dir = TempDir::new("plan-sides");
+        let planned = |rect: [f64; 4]| {
+            let design = dir.join("sides.svg");
+            std::fs::write(&design, sides(rect)).unwrap();
+            let report = dir.join("sides.json");
+            let out = run(&PlanArgs {
+                report: Some(report.clone()),
+                reading: ReadingArgs { auto: true, ..ReadingArgs::default() },
+                ..args(design, dir.join("sides.pes"))
+            });
+            let report: Value = serde_json::from_slice(&std::fs::read(report).unwrap()).unwrap();
+            (out, report["size_mm"].clone())
+        };
+        // Each bar sews as a satin column whose stitches reach past its rails by their pull compensation, the
+        // overlap, 0.4 mm: bars at the hoop's own sides sew past them.
+        let (width, height) = (REFERENCE.hoop.width.get(), REFERENCE.hoop.height.get());
+        let (out, _) = planned([0.0, 0.0, width, height]);
+        assert_eq!(out.status, Status::DesignErrors);
+        assert!(out.stderr.contains("\nerror SC-E0701: The design is 130.8 × 180.0 mm, "), "{}", out.stderr);
+        // Where VectorCraft places a picture given no size, `file.place`'s `[x, y, width, height]`, they sew in
+        // the hoop.
+        let steps = trace::steps("sides.png", b"", REFERENCE, None, trace::COLOURS);
+        let placed: [f64; 4] = serde_json::from_value(steps[1]["params"]["rect"].clone()).unwrap();
+        let (out, size) = planned(placed.map(|points| Mm::from_points(points).unwrap().get()));
+        assert_eq!(out.status, Status::Done, "{}", out.stderr);
+        assert_eq!(size, json!([129.8, 179.0]));
+    }
+
     #[test]
     fn req_cli_013_without_vectorcraft_s_command_line_nothing_is_written_but_the_report() {
         let dir = TempDir::new("plan-no-vectorcraft");
