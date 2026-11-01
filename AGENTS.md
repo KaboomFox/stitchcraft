@@ -64,6 +64,7 @@ cargo xtask shots --check          # docs images declared, reproducible and curr
 cargo xtask conformance            # run the suite; report in target/conformance/report.md
 cargo xtask conformance --check    # requirements and cases consistent (no run)
 cargo xtask conformance --bless ID # rewrite one data case's golden files, on purpose
+cargo xtask conformance --differential  # the Ink/Stitch differential (L3): conformance/inkstitch/README.md
 cargo xtask cleanroom              # no GPL licence text or pasted Python source anywhere, docs included
 cargo xtask compat join [--nested] DIR  # make this folder, copied into a VectorCraft checkout, part of its build
 cargo xtask unsafe-audit           # unsafe only in the ABI shim, always with SAFETY comments

@@ -339,6 +339,15 @@ rationale = "Ink/Stitch's defaults change: a fill's stitches were 3 mm long befo
 milestone = "M3"
 status = "active"
 
+[[req]]
+id = "REQ-SVG-008"
+area = "svg"
+level = "L3"
+statement = "Each SVG file of the Ink/Stitch differential's corpus sews as the Ink/Stitch that conformance/inkstitch/pin.toml names sews it, run as a black box, measured on the PES files both write: as many stitches within 10 percent, the same size within 0.5 mm on each side, the same threads in the same order, as many trims and as many jumps within 1, and thread footprints that overlap by 0.9 at least once their centres are made one. A measure that a case excuses with an entry of the deviations ledger may differ."
+rationale = "A file must sew the same in both programs. Measures, not stitches: each program places its own needle points, and the tolerances are what shows on the fabric. Where StitchCraft sews otherwise on purpose, the ledger says why, and the case names the entry."
+milestone = "M8"
+status = "active"
+
 # ── Generators: shared ─────────────────────────────────────────────────────────────────────────────
 
 [[req]]

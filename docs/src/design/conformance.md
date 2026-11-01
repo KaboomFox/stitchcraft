@@ -227,13 +227,31 @@ meant to be covered (`stitchcraft_testkit::metrics`).
 
 ### L3 — Ink/Stitch differential (nightly)
 
-A pinned Ink/Stitch release runs as a black box on a corpus of Ink/Stitch-authored SVGs (our own or
-CC0), in a container, producing stitch files. We compare **metrics, not stitches**: stitch count
-(±10 %), bounds (±0.5 mm), colour sequence (exact), trims and jumps (±1), coverage IoU (≥ 0.9). Running
-Ink/Stitch as an oracle uses it, it does not copy it; implementers see metric reports, not Ink/Stitch
-code. Differences we intend are recorded in the **deviations ledger** (`conformance/deviations.toml`),
-each with a reason and a link to the requirement that motivates it (for example `DEV-LCK-001`: the
-lock shapes are StitchCraft's own). Starts in M8.
+A pinned Ink/Stitch runs as a black box on a corpus of SVG files written for StitchCraft, and writes
+machine files. Running Ink/Stitch as an oracle uses it and doesn't copy it
+([ADR-0001](adr/0001-license-and-clean-room.md), decision 6). The job fetches it at the commit
+`conformance/inkstitch/pin.toml` names, and implementers see measures instead of Ink/Stitch's code.
+`cargo xtask conformance --differential` runs the `inkstitch` cases (`conformance/cases/inkstitch/`):
+for each, Ink/Stitch and StitchCraft, planning on the reference machine, each write a PES file, and
+StitchCraft's reader reads both back, so that both are measured on PES's 0.1 mm grid
+(`xtask/src/conformance/differential.rs`). We compare **measures, not stitches**:
+
+| Measure | Tolerance |
+|---|---|
+| stitches, the needle-downs | within 10 % |
+| size, the bounds of the needle points | each side within 0.5 mm |
+| threads, in order | the same |
+| trims, and jumps | each within 1 |
+| overlap of the thread's footprints, once their centres are made one (`stitchcraft_testkit::metrics`) | 0.9 at least |
+
+Differences we intend are recorded in the **deviations ledger** (`conformance/deviations.toml`), each
+with a reason and a link to the requirement that motivates it (`DEV-LCK-001`, say: the lock shapes
+are StitchCraft's own). A case excuses a measure with the entry that explains it, and the report shows
+the difference as excused. An excuse for a measure that agrees fails the case, so that every reason in
+the ledger is still true. `REQ-SVG-008` is the requirement, and the only one of level L3. The other runs
+of the suite leave it and its cases to this one. Until M8 reads every `inkstitch:` attribute, the corpus
+is the designs the SVG reader sews in full, at Ink/Stitch's defaults, with trim and stop commands and the
+file version. `conformance/inkstitch/README.md` says how to run it by hand and how to add a case.
 
 ### L4 — Physical (milestone gates)
 
@@ -270,7 +288,7 @@ will let users validate a machine profile with the same cases.
 | When | What must pass |
 |---|---|
 | Every PR | L0, L1 (no fuzzing), L2 with fixed seeds, `--check` rules, the data cases' golden files on Linux, macOS and Windows ([cross-platform check](determinism.md#cross-platform-check)), coverage floors, mutants in the changed lines |
-| Nightly | L1 fuzzing, L2 fresh seeds, L3 differential |
+| Nightly | L1 fuzzing, L2 fresh seeds, L3 differential (also on a pull request that changes it) |
 | Weekly | Mutation testing of every shipped crate, against the recorded counts |
 | Milestone close | All requirements of the milestone `active` and green; its machine checkpoint signed off |
 | Release | Everything above, plus the compatibility gate green on VectorCraft `stable` |
