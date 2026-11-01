@@ -1,5 +1,7 @@
 # Zigzag stroke
 
+<!-- stitch-types: zigzag_stitch -->
+
 A zigzag stroke crosses a path from side to side and back, as wide as the stroke's line. Set an element's
 `stroke_method` to `zigzag_stitch` for it. Use it for a light border, a couched look, or a stem too thin
 for a satin column.

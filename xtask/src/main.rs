@@ -14,6 +14,7 @@
 #![allow(clippy::print_stdout, clippy::print_stderr, clippy::disallowed_methods)]
 
 mod api;
+mod book;
 mod ci;
 mod cleanroom;
 mod compat;
@@ -37,6 +38,7 @@ mod perf;
 mod prose;
 mod reference_pages;
 mod shots;
+mod stitch_pages;
 mod unsafe_audit;
 mod util;
 mod wasm;
@@ -73,6 +75,12 @@ enum Command {
         check: bool,
         #[command(subcommand)]
         pages: Option<Docs>,
+    },
+    /// Build the book with mdBook, and check every link of the pages it made
+    Book {
+        /// Check the book already built in docs/book instead of building it
+        #[arg(long)]
+        no_build: bool,
     },
     /// Lint the Markdown lines a branch adds with Vale (house style and ai-tells)
     Prose {
@@ -258,6 +266,7 @@ fn run(command: Command) -> Result<(), String> {
         Command::Layers => layers::run(),
         Command::Docs { pages: Some(Docs::For { hook, paths }), .. } => design_map::run_for(hook, &paths),
         Command::Docs { check, pages: None } => docs::run(check),
+        Command::Book { no_build } => book::run(no_build),
         Command::Prose { base } => prose::run(&base),
         Command::Conformance { check, filter, bless, differential } => conformance::run(check, filter.as_deref(), bless.as_deref(), differential),
         Command::Cleanroom => cleanroom::run(),

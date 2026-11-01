@@ -60,6 +60,7 @@ cargo xtask layers                 # crate dependency rules
 cargo xtask docs --check           # docs fresh, links, anchors, ids and paths valid, no fact on two pages
 cargo xtask prose                  # Vale on the Markdown lines this branch adds (writing style)
 cargo xtask docs                   # regenerate generated docs pages
+cargo xtask book                   # build the book and check every link of the pages it made
 cargo xtask shots --check          # docs images declared, reproducible and current
 cargo xtask conformance            # run the suite; report in target/conformance/report.md
 cargo xtask conformance --check    # requirements and cases consistent (no run)
