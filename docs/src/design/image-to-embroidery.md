@@ -313,7 +313,9 @@ mends it in 3 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.
    area between its rails as they are sewn, turned to run the same way. Where an area sewn after it covers
    part of it, it is cut away under that area, 0.4 mm inside the area's edge, and that part is sewn once: a
    stacked trace then sews the areas of an abutting one. A part that the areas sewn after it cover whole
-   sews nothing, however near their edge it lies. A narrow part's line covers its part, and isn't cut away.
+   sews nothing, however near their edge it lies. So does an area they cover whole. A trim or a stop after
+   such an area has no place, as after any element that sews nothing (`SC-W0505`). `SC-I0901` counts only
+   the shapes that sew. A narrow part's line covers its part, and isn't cut away.
    It sews nothing when the areas sewn after it cover the part whole, and sews whole when they cover the
    part in places. A column or a line sewn after an area goes over it, and
    the area is sewn whole under it. Cutting a fill round small letters adds stitches and can leave gaps
@@ -408,7 +410,8 @@ shape's paint only when the shape is near an element that moves.
 
 **Work** (`REQ-AUTO-012`). Each element has the work budget to itself to find how it lies beside the
 shapes drawn after it. It costs a unit for each of them, and the work of those near it. One that needs
-more keeps its place in paint order as an element with a stop after it does: nothing moves across it. A
+more keeps its place in paint order as an element with a stop after it does: nothing moves across it.
+An element after it that one before it frees still waits its turn after it, and each element sews once. A
 shape whose paint can't be found within the budget keeps its place beside the shapes near it. Choosing the
 order has the budget once more, and costs a unit for each free element looked at each time an element is
 placed. An order that needs more sews the elements not placed by then in paint order, after the others.
