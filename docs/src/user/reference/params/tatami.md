@@ -38,7 +38,7 @@ row is the row spacing from the next.
 - **Default:** empty
 - **Ink/Stitch:** same key; StitchCraft differs:
   - **DEV-FILL-003.** With end_row_spacing_mm, the step from row to row changes from the row spacing to the end spacing over the part's height, measured from the first row, and stays at the end spacing beyond it. Ink/Stitch carries the change on past the height, which reaches the rows within a row spacing of the part's far side when the first row lies before the part. With an end spacing smaller than the row spacing, over a part a few rows tall, the steps then shrink towards 0 and the rows pile up short of the far side without end.
-  - **DEV-PRM-003.** An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.
+  - **DEV-PRM-003.** An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column's deviates so. Ink/Stitch reads a manual stitch's as not set at 0 or below too, and doesn't warn.
 
 ### `expand_mm`
 
@@ -128,7 +128,7 @@ the top rows, at the fill's angle plus 90°.
 - **Accepts:** a length from 0.1 to 100 mm, or empty (0 or less counts as empty)
 - **Default:** empty
 - **Ink/Stitch:** same key and default; StitchCraft differs:
-  - **DEV-PRM-003.** An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.
+  - **DEV-PRM-003.** An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column's deviates so. Ink/Stitch reads a manual stitch's as not set at 0 or below too, and doesn't warn.
 
 ### `fill_underlay_max_stitch_length_mm`
 
@@ -138,7 +138,7 @@ the top rows, at the fill's angle plus 90°.
 - **Accepts:** a length from 0.1 to 25 mm, or empty (0 or less counts as empty)
 - **Default:** empty
 - **Ink/Stitch:** same key and default; StitchCraft differs:
-  - **DEV-PRM-003.** An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.
+  - **DEV-PRM-003.** An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column's deviates so. Ink/Stitch reads a manual stitch's as not set at 0 or below too, and doesn't warn.
 
 ### `fill_underlay_inset_mm`
 

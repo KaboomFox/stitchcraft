@@ -145,8 +145,8 @@ hammer one hole. Empty: the larger of the document's setting and the machine's m
 - **Accepts:** a length from 0 to 10 mm, or empty (0 or less counts as empty)
 - **Default:** empty
 - **Ink/Stitch:** same key and default; StitchCraft differs:
-  - **DEV-PRM-003.** An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.
-  - **DEV-FIN-001.** StitchCraft fits every stitch to the machine: it leaves out needle points less than their element's shortest stitch from the one before, never less than the machine's (0.3 mm on the Brother), keeping the ends of each run of stitches and its lock points unless a stitch to one would fall short, and splits stitches longer than the machine's longest. Ink/Stitch drops stitches no longer than the element's own shortest stitch, else 0.1 mm, and splits nothing. Along an edge square to them, a tatami fill's rows nearer each other than the shortest stitch hand over in a stitch too short, so the next row's first needle point is left out and a sliver at its start shows: a bar 5 mm wide at 0.25 mm on the Brother is 97 % covered. Along an edge at 45°, their ends lie 0.35 mm apart, and the handovers stay.
+  - **DEV-PRM-003.** An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column's deviates so. Ink/Stitch reads a manual stitch's as not set at 0 or below too, and doesn't warn.
+  - **DEV-FIN-001.** StitchCraft fits every stitch to the machine. It leaves out a needle point nearer the one before than its element's shortest stitch, and never nearer than the machine's (0.3 mm on the Brother). It keeps the ends of each run of stitches and its lock points, unless a stitch to one would be too short, and it splits stitches longer than the machine's longest. Ink/Stitch drops stitches no longer than the element's own shortest stitch, else the document's min_stitch_len_mm, 0.1 mm unless the file sets it, and splits nothing. Along an edge square to them, a tatami fill's rows nearer each other than the shortest stitch hand over in a stitch too short. The next row's first needle point is then left out, and a sliver at its start is bare. A bar 5 mm wide at 0.25 mm on the Brother is 97 % covered. Along an edge at 45°, their ends lie 0.35 mm apart, and the handovers stay.
 
 ### `min_jump_stitch_length_mm`
 
@@ -156,21 +156,21 @@ jump. Empty: the document's setting.
 - **Accepts:** a length from 0 to 20 mm, or empty (0 or less counts as empty)
 - **Default:** empty
 - **Ink/Stitch:** same key and default; StitchCraft differs:
-  - **DEV-PRM-003.** An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.
+  - **DEV-PRM-003.** An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column's deviates so. Ink/Stitch reads a manual stitch's as not set at 0 or below too, and doesn't warn.
 
 ## Longest stitch
 
 ### `max_stitch_length_mm`
 
 **Longest stitch.** Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as
-its split method says. Empty, every stitch is sewn whole. A tatami fill sews its rows in
-stitches this long.
+its split method says. Empty, a stitch is split only where it is longer than the machine sews. A
+tatami fill sews its rows in stitches this long.
 
 - **Accepts:** a length from 0.1 to 25 mm, or empty (0 or less counts as empty); for fills, a length from 0.1 to 25 mm, empty being the default
 - **Default:** empty, and `4` for fills
 - **Applies to:** Manual stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill
 - **Ink/Stitch:** same key and default; StitchCraft differs:
-  - **DEV-PRM-003.** An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives: with a min_jump_stitch_length_mm below 0, it ties off, jumps and ties in between every 2 groups of stitches.
+  - **DEV-PRM-003.** An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column's deviates so. Ink/Stitch reads a manual stitch's as not set at 0 or below too, and doesn't warn.
   - **DEV-RUN-006.** No hand-placed stitch is shorter than the shortest stitch. A node closer than that to the needle point before it is left out (SC-W0403), and a stitch longer than max_stitch_length_mm is split into no more parts than keep each at the shortest stitch or longer (SC-W0404). Ink/Stitch splits such a stitch into the fewest equal parts no longer than max_stitch_length_mm, however short they are, and its plan later leaves out stitches of at most 0.1 mm (its default), without a word.
 
 ## Random variation
