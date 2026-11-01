@@ -136,7 +136,7 @@ desktop of their own, with an X server (Xvfb) and a D-Bus session that nothing e
   their next login.
 
 The compat workflow's `window` job runs the command daily, and on pull requests that touch the plug-in,
-`compat/`, the tooling or a manifest. It keeps the screenshots, the trees and the app's logs.
+the command line, `compat/`, the tooling or a manifest. It keeps the screenshots, the trees and the app's logs.
 
 **Screenshots: the same pixels, but for the frame timings.** The window opens at 1440 × 900 pixels,
 drawn by llvmpipe, and a screenshot takes about 0.65 s. Above the status bar, screenshots of one window

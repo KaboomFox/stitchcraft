@@ -58,6 +58,15 @@ Export › Export As**, and the filters under **Object › Plug-ins**. In Vector
 file with **File › Open** instead, once each time VectorCraft is opened. [Embroider a VectorCraft
 design](how-to/embroider-a-vectorcraft-design.md) shows how to use them.
 
+## VectorCraft's command line
+
+`stitch plan` traces a picture, a PNG or JPEG file, with VectorCraft's command line, `vectorcraft-cli`
+([from a picture to a machine file](tutorials/picture-to-machine-file.md#from-the-command-line)). VectorCraft
+publishes it with each [release](https://github.com/storytold/vectorcraft/releases): beside the app in the
+Windows and Linux downloads, and as a zip of its own for macOS. Put it in a folder on your `PATH`, or name it
+with `stitch plan --vectorcraft-cli`. Check it with `vectorcraft-cli --version`. Only `stitch plan` uses it,
+to trace a picture.
+
 ## Next
 
 [Sew your first test sheet](tutorials/first-sew-out.md), or [turn an SVG into a PES

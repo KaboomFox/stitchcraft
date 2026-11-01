@@ -1,6 +1,6 @@
 # Image to embroidery
 
-<!-- implements: crates/stitchcraft-engine/src/auto/**, apps/stitchcraft-cli/src/commands/palette.rs -->
+<!-- implements: crates/stitchcraft-engine/src/auto/**, apps/stitchcraft-cli/src/commands/palette.rs, apps/stitchcraft-cli/src/trace.rs -->
 
 Automatic digitizing makes a design that sews well from a picture of flat colours, such as a logo, clip
 art or a drawing, once it is traced into shapes. Settings on the shapes are optional. StitchCraft chooses
@@ -16,6 +16,9 @@ A picture becomes a machine file in 2 steps:
 1. In VectorCraft, place the picture, scale it to the size it will sew, and trace it with Object › Image
    Trace › Make.
 2. Run `stitch export picture.vectorcraft --auto -o picture.pes --preview picture.png`.
+
+With VectorCraft installed, `stitch export picture.png -o picture.pes` takes both steps itself
+([below](#pictures-from-the-command-line)).
 
 An Image Trace object is a group of the traced paths, with the source image hidden beside them
 (`imageTrace.make` in VectorCraft's `crates/engine`, `main` at `0842941`). `stitch export` already reads
@@ -492,18 +495,52 @@ looks for a way to find and read the text without a marker.
 
 ## Pictures from the command line
 
-`stitch plan picture.png` traces the picture with VectorCraft's command line, as spike M13.9 decided
-([ADR-0015](adr/0015-pictures-traced-by-vectorcraft.md)). VectorCraft publishes `vectorcraft-cli` with each
-release. Its `run` command runs the steps of the compatibility gate's `trace` case without a window. The
-machine's threads, as `stitch palette` writes them, become a swatch library, and the picture is placed and
-traced in their colours by the Abutting method. Expand keeps the paths, and the document is saved. `stitch`
-then reads the saved document with `--auto`. Without VectorCraft installed, it fails with a coded error
-that says how to install it, or to trace the picture in VectorCraft.
+`stitch plan picture.png` and `stitch export picture.png` trace the picture with VectorCraft's command line,
+as spike M13.9 decided ([ADR-0015](adr/0015-pictures-traced-by-vectorcraft.md)) and M13.10 built
+(`REQ-CLI-012`, `REQ-CLI-013`). A design whose extension is `.png`, `.jpg` or `.jpeg`, in any case, is a
+picture. VectorCraft publishes `vectorcraft-cli` with each release, and `stitch` runs the one
+`--vectorcraft-cli` names, or else the one on the `PATH`:
+
+```sh
+vectorcraft-cli run --commands - --export FOLDER/traced.vectorcraft
+```
+
+It gives it 4 steps on standard input, where a picture of any size fits. They are the compatibility gate's
+`trace` case's:
+
+1. `swatch.library.load` loads the threads `stitch palette` writes for the machine as a swatch library.
+2. `file.place` places the picture's bytes, fitted inside a square `--size` millimetres across, or else
+   inside the machine's hoop, its aspect kept.
+3. `imageTrace.make` traces it in colour with the library's colours as they are, at most `--colours` of
+   them, by the Abutting method, so that the shapes share their edges.
+4. `imageTrace.expand` keeps the paths, without the picture.
+
+VectorCraft saves the document into a folder of the command's own beside the machine file, named as
+`stitch`'s temporary files are, and the folder is removed once the document is read. It runs with
+`VECTORCRAFT_NO_PREFS` set, so that it neither reads nor writes the user's VectorCraft preferences, and a
+picture traces the same for everyone. The document is then the design. It is read with `--auto`, planned for
+the machine `--profile` names or else the reference machine, and named after the picture. `--traced` writes
+it beside the machine file, to correct the trace in VectorCraft. A bug-report bundle keeps it too, so that a
+replay doesn't need VectorCraft.
+
+**The picture's size.** VectorCraft places a picture at its own resolution, or 72 pixels to the inch when
+its file says none, so a logo a few hundred pixels across would sew larger than any hoop. `stitch` fits the
+picture into the machine's hoop unless `--size` gives the length of its longer side. The size is the
+picture's, its background included, and the shapes left once the background is out sew smaller.
+
+**How many colours.** Image Trace keeps at most `--colours` of the library's colours, 6 unless it says
+otherwise, as in its own panel. The count takes in the background's colour. A picture with smooth edges, or a
+JPEG file, has colours between its shapes' colours, which may trace as threads of their own. A `--colours`
+equal to the number of colours the picture has keeps them out. A badge in 3 colours on white traces in 4.
+
+**When VectorCraft can't trace.** A command line that can't be started, missing from the `PATH` or from
+the path named, is `SC-E0815`, which says how to install it, or to trace the picture in VectorCraft. One
+that fails or doesn't save the document is `SC-E0816`, which ends with what it said. Then nothing is written but
+the report.
 
 StitchCraft traces nothing itself. A tracer of its own would repeat VectorCraft's, which a harness
 measures. It would also trace a picture otherwise than VectorCraft does, and the command line would then
-sew it unlike the tutorial's flow. M13.10 builds the command, and settles the picture's size and how many
-threads the trace may use.
+sew it unlike the tutorial's flow.
 
 ## Testing
 
@@ -516,7 +553,9 @@ threads the trace may use.
   places them.
 - Level B of the [compatibility gate](compatibility-gate.md) has a case, `trace`, in which VectorCraft's
   command line traces a picture drawn in the threads `stitch palette` writes, and StitchCraft sews the
-  document it saved, on every track.
+  document it saved, on every track. In its case `picture`, `stitch plan` traces the picture itself.
+- `stitch plan`'s own tests run it with a stand-in for VectorCraft's command line, the test program itself,
+  which saves a document VectorCraft 0.18.0 traced (`apps/stitchcraft-cli/tests/picture.rs`).
 - TS-13 sews the test pictures at MC-8 ([machine testing](../plan/machine-testing.md)), each twice. A
   sheet's top half is digitized automatically, and its bottom half is sewn as drawn, in paint order. The
   bottom half sews first and stops, so that nothing digitized moves into it, and each half's thread

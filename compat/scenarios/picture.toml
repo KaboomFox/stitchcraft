@@ -1,0 +1,16 @@
+# Level B: `stitch plan picture.png` traces a picture with VectorCraft's command line and sews it, as ADR-0015
+# decides (docs/src/design/image-to-embroidery.md › Pictures from the command line). `stitch` runs
+# `vectorcraft-cli run` with its own steps on standard input: the reference machine's threads loaded as a
+# swatch library, the badge drawn flat in 3 of them on white placed and fitted into the hoop, traced in colour
+# with the library's colours by the Abutting method, and its paths kept. It sews the document VectorCraft saves
+# digitized automatically, and `--traced` writes that document, which sews in the badge's 3 threads with
+# `--auto`, the white round it left out as the picture's background (xtask/src/compat/scenario/trace.rs).
+description = "`stitch plan` traces a picture with VectorCraft's command line in the machine's threads, and sews it digitized automatically, its background left out."
+requirements = ["REQ-CLI-012", "REQ-AUTO-001", "REQ-AUTO-009"]
+
+[[run]]
+files = ["badge.png"]
+stitch = ["plan", "badge.png", "-o", "badge.pes", "--traced", "traced.vectorcraft"]
+
+[expect]
+traced = [{ file = "traced.vectorcraft", threads = ["#ed171f", "#0a55a3", "#e8a900"] }]

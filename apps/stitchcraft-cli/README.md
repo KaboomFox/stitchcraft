@@ -1,11 +1,12 @@
 # stitchcraft-cli (`stitch`)
 
 The command-line tool: the only StitchCraft component that touches the file system, the terminal and
-(optionally) threads.
+(optionally) threads, and the only one that starts another program: VectorCraft's command line, which
+traces a picture (ADR-0015).
 
 | Command | Since | What it does |
 |---|---|---|
-| `stitch plan design.svg -o design.pes --preview design.png --report design.json` | M3.9 | Plans a design for the machine `--profile` names, `brother-pe800-5x7` by default, and writes the machine file (`--format pes\|dst` overrides the extension). `--preview` adds a picture of what it will sew, and `--report` a JSON report. Prints what was said about the design, element by element. The design is an SVG file, or from M6.5 a VectorCraft document (`.vectorcraft`, `.drawcraft` from before VectorCraft's rename, or a `.vctemplate` template), and `stitch export` is another name for the command. From M13.1, `--auto` digitizes automatically the shapes that have no settings |
+| `stitch plan design.svg -o design.pes --preview design.png --report design.json` | M3.9 | Plans a design for the machine `--profile` names, `brother-pe800-5x7` by default, and writes the machine file (`--format pes\|dst` overrides the extension). `--preview` adds a picture of what it will sew, and `--report` a JSON report. Prints what was said about the design, element by element. The design is an SVG file, or from M6.5 a VectorCraft document (`.vectorcraft`, `.drawcraft` from before VectorCraft's rename, or a `.vctemplate` template), and `stitch export` is another name for the command. From M13.1, `--auto` digitizes automatically the shapes that have no settings. From M13.10 a picture (a PNG or JPEG file) is traced by VectorCraft's command line in the machine's threads (`--vectorcraft-cli`, `--size`, `--colours`), and StitchCraft digitizes it automatically. `--traced` also writes the document VectorCraft traced |
 | `stitch testsheet TS-01 -o TS-01.pes` | M1.8 | Writes a machine-checkpoint test sheet, checked against the profile of the hoop it is for unless `--profile` names another (`--list` lists them, and `--format pes\|dst` overrides the extension). Prints its SHA-256, size and counts, its threads in the order they are sewn, and what to check after sewing |
 | `stitch inspect design.pes --profile brother-pe800-5x7` | M2.1 | Reads any PES, PEC or DST file and describes it: size, counts, extent, stitch lengths, threads; with `--profile`, the hoop check and stitches outside the machine's limits |
 | `stitch preview design.pes -o design.png` | M2.7 | Draws any PES, PEC or DST file as it will sew (`--style realistic\|simple`, `--scale` in pixels per millimetre) |
@@ -31,7 +32,12 @@ Coming with their milestones: `import-inkstitch` (M8), `conformance run`.
   printing, so commands are tested without a terminal. `commands/mod.rs` holds what several share:
   reading a machine file, writing a file, the report lines and the diagnostics' rendering.
 - `files.rs` — files are written under a temporary name and renamed into place, so a machine never sees
-  half a file, and reads stop past a cap.
+  half a file, and reads stop past a cap. A file another program writes for `stitch` goes into a folder of
+  its own beside the output, removed once read.
+- `trace.rs` has VectorCraft's command line trace a picture, with the steps it runs and the
+  program it runs.
+- `tests/picture.rs` runs `stitch plan picture.png` with the test program itself in place of VectorCraft's
+  command line, under a harness of its own.
 
 ## Invariants
 
@@ -43,6 +49,10 @@ Coming with their milestones: `import-inkstitch` (M8), `conformance run`.
   reads it. When a check fails or an error is said, the machine file is not written, and `stitch plan`
   still writes its report to say why.
 - Never panics on bad arguments (arguments that are not valid Unicode included); exit codes are documented.
+- Runs VectorCraft's command line only to trace a picture: the one `--vectorcraft-cli` names or else
+  `vectorcraft-cli` on the PATH, with `VECTORCRAFT_NO_PREFS` set. One that can't be started is `SC-E0815`,
+  and one that fails or doesn't save the document is `SC-E0816`. Then nothing is written but the report
+  (`REQ-CLI-012`, `REQ-CLI-013`).
 - Writes the files a command was asked for all or none, each under a temporary name of its own, created
   new and synced before it is renamed into place, and prints what was said about the design even when one
   cannot be written, with the file and why (`REQ-CLI-006`). Refuses outputs that name the same file as

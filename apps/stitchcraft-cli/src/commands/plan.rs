@@ -6,6 +6,11 @@
 //! ([`Source`], `REQ-VC-008`). Both are read into the engine's design model by their adapters, and all
 //! that follows is the same for both: one way through the engine, so a document sews as its SVG would.
 //!
+//! **Pictures.** A PNG or JPEG file is a picture, which VectorCraft's command line traces in the machine's
+//! threads ([`trace`], ADR-0015). From then on the document it saves is the design: read with `--auto`, so
+//! that StitchCraft chooses every shape's stitches, written with `--traced` beside the other files, and
+//! kept in a bug-report bundle in the picture's place.
+//!
 //! The engine does the planning (`stitchcraft_engine::plan`): it fits the plan to the machine and checks
 //! it, so what comes back is written as it is. This command reads the design, prints what was said about
 //! the design — element by element, and what the file format adds, such as DST's cuts before long jumps
@@ -43,7 +48,8 @@ use super::{
     Outcome, Status, asked_profile, describe_file, describe_plan, describe_threads, distinct, hex, output_format, render_diagnostics, write_files,
 };
 use crate::cli::PlanArgs;
-use crate::files;
+use crate::files::{self, Scratch, Unwritten};
+use crate::trace;
 
 /// What a design file is, which decides how it is read: a VectorCraft document by its extension, in any
 /// case ([`stitchcraft_vectorcraft::EXTENSIONS`]), and an SVG file otherwise.
@@ -166,7 +172,12 @@ pub fn run(args: &PlanArgs) -> Outcome {
         Ok(format) => format,
         Err(outcome) => return outcome,
     };
-    let writes: Vec<&Path> = [Some(&args.output), args.preview.as_ref(), args.report.as_ref()].into_iter().flatten().map(|p| p.as_path()).collect();
+    let picture = trace::is_picture(&args.design);
+    if !picture && args.tracing.given() {
+        return Outcome::usage("--vectorcraft-cli, --size, --colours and --traced are for a picture, a PNG or JPEG file");
+    }
+    let writes = [Some(&args.output), args.preview.as_ref(), args.report.as_ref(), args.tracing.traced.as_ref()];
+    let writes: Vec<&Path> = writes.into_iter().flatten().map(|p| p.as_path()).collect();
     if let Err(outcome) = distinct(&[&args.design], &writes) {
         return outcome;
     }
@@ -176,10 +187,18 @@ pub fn run(args: &PlanArgs) -> Outcome {
             return Outcome { stdout: String::new(), stderr: format!("stitch: cannot read {}: {e}\n", args.design.display()), status: Status::Io };
         }
     };
-    let source = Source::of(&args.design);
     let reading = Reading::from(&args.reading);
-    let profile = machine_for(asked, source, &bytes);
-    let run = Run { design_path: &args.design, source, reading, name: design_name(&args.design), design: &bytes, profile, format, says: None };
+    // A picture is the document VectorCraft traces it into, every shape of it digitized automatically.
+    let (source, design, reading) = if picture {
+        match traced(args, asked.unwrap_or(profiles::REFERENCE), &bytes) {
+            Ok(document) => (Source::VectorCraft, document, Reading { auto: true, ..reading }),
+            Err(outcome) => return outcome,
+        }
+    } else {
+        (Source::of(&args.design), bytes, reading)
+    };
+    let profile = machine_for(asked, source, &design);
+    let run = Run { design_path: &args.design, source, reading, name: design_name(&args.design), design: &design, profile, format, says: None };
     // A panic is a bug in StitchCraft: with the design's bytes in hand, and where it came, a bundle can
     // reproduce it (`REQ-CLI-002`).
     let phase = Cell::new(Phase::Plan);
@@ -191,6 +210,18 @@ pub fn run(args: &PlanArgs) -> Outcome {
     })
 }
 
+/// The document VectorCraft's command line traces the picture `bytes` into, for `profile`, as `args` ask
+/// ([`trace`]); or what `stitch plan` ends with when it doesn't: `SC-E0815` or `SC-E0816` and the report,
+/// or the folder VectorCraft saves into that can't be made beside the machine file.
+fn traced(args: &PlanArgs, profile: &MachineProfile, bytes: &[u8]) -> Result<Vec<u8>, Outcome> {
+    let tracing = &args.tracing;
+    let name = args.design.file_name().map_or_else(String::new, |name| name.to_string_lossy().into_owned());
+    let steps = trace::steps(&name, bytes, profile, tracing.size, tracing.colours.unwrap_or(trace::COLOURS));
+    let scratch = Scratch::beside(&args.output)
+        .map_err(|error| Outcome::unwritten("", &Unwritten { path: args.output.clone(), error, written: Vec::new() }))?;
+    trace::traced(tracing.vectorcraft_cli.as_deref(), &name, &steps, &scratch).map_err(|untraced| refuse(args, profile, &[untraced]))
+}
+
 /// `stitch plan` once the design is read: planned and, unless StitchCraft found a bug in itself, written.
 /// `phase` follows where it is, for a bundle.
 fn planned(args: &PlanArgs, run: &Run, phase: &Cell<Phase>) -> Outcome {
@@ -199,13 +230,14 @@ fn planned(args: &PlanArgs, run: &Run, phase: &Cell<Phase>) -> Outcome {
         let refused = refuse(args, run.profile, &sewn.diagnostics);
         return bug_report::beside(&args.output, run, Ok(&sewn), refused);
     }
-    written(args, run.profile, run.format, sewn, phase)
+    written(args, run, sewn, phase)
 }
 
-/// What `stitch plan` writes for the design `sewn`: the machine file, and the picture and the report asked
-/// for, all or none (`REQ-CLI-006`), each made, with what is printed, before any is written. When anything
-/// said is an error, only the report (`REQ-CLI-003`).
-fn written(args: &PlanArgs, profile: &MachineProfile, format: FormatId, sewn: Sewn, phase: &Cell<Phase>) -> Outcome {
+/// What `stitch plan` writes for the design `sewn`, of `run`: the machine file, and the picture, the report
+/// and the traced document asked for, all or none (`REQ-CLI-006`), each made, with what is printed, before
+/// any is written. When anything said is an error, only the report (`REQ-CLI-003`).
+fn written(args: &PlanArgs, run: &Run, sewn: Sewn, phase: &Cell<Phase>) -> Outcome {
+    let (profile, format) = (run.profile, run.format);
     let Sewn { mut diagnostics, plan: Some(plan), file: Some(machine_file), back: Some(back) } = sewn else {
         return refuse(args, profile, &sewn.diagnostics);
     };
@@ -234,9 +266,15 @@ fn written(args: &PlanArgs, profile: &MachineProfile, format: FormatId, sewn: Se
     if let Some((path, _)) = &report {
         let _ = writeln!(stdout, "  report    {}", path.display());
     }
+    // Only a picture takes `--traced`, and its design is the document VectorCraft traced it into.
+    let traced = args.tracing.traced.as_ref().map(|path| (path.as_path(), run.design));
+    if let Some((path, _)) = traced {
+        let _ = writeln!(stdout, "  traced    {}", path.display());
+    }
     let mut files: Vec<(&Path, &[u8])> = vec![(&args.output, &machine_file)];
     files.extend(image.as_ref().map(|(path, image)| (path.as_path(), image.png.as_slice())));
     files.extend(report.as_ref().map(|(path, text)| (path.as_path(), text.as_bytes())));
+    files.extend(traced);
     let said = render_diagnostics(&diagnostics);
     if let Err(unwritten) = write_files(&files, &said) {
         return unwritten;
@@ -331,7 +369,7 @@ mod tests {
     use stitchcraft_vectorcraft::settings::{SETTINGS_FILTER, kept_data};
 
     use super::*;
-    use crate::cli::{Format, ReadingArgs};
+    use crate::cli::{Format, ReadingArgs, TracingArgs};
 
     fn fixture(name: &str) -> PathBuf {
         PathBuf::from(format!("{}/../../conformance/fixtures/svg/{name}", env!("CARGO_MANIFEST_DIR")))
@@ -342,7 +380,16 @@ mod tests {
     }
 
     fn args(design: PathBuf, output: PathBuf) -> PlanArgs {
-        PlanArgs { design, output, profile: None, format: None, preview: None, report: None, reading: ReadingArgs::default() }
+        PlanArgs {
+            design,
+            output,
+            profile: None,
+            format: None,
+            preview: None,
+            report: None,
+            reading: ReadingArgs::default(),
+            tracing: TracingArgs::default(),
+        }
     }
 
     #[test]
@@ -485,6 +532,58 @@ mod tests {
     }
 
     #[test]
+    fn req_cli_013_the_tracing_options_are_for_a_picture_only() {
+        let dir = TempDir::new("plan-tracing-options");
+        let given = [
+            TracingArgs { vectorcraft_cli: Some(PathBuf::from("vectorcraft-cli")), ..TracingArgs::default() },
+            TracingArgs { size: Some(Mm::new(80.0).unwrap()), ..TracingArgs::default() },
+            TracingArgs { colours: Some(4), ..TracingArgs::default() },
+            TracingArgs { traced: Some(dir.join("traced.vectorcraft")), ..TracingArgs::default() },
+        ];
+        for tracing in given {
+            let out = run(&PlanArgs { tracing, ..args(fixture("strokes.svg"), dir.join("strokes.pes")) });
+            let usage = "stitch: --vectorcraft-cli, --size, --colours and --traced are for a picture, a PNG or JPEG file\n";
+            assert_eq!((out.status, out.stderr.as_str()), (Status::Usage, usage));
+        }
+        assert!(!dir.join("strokes.pes").exists() && !dir.join("traced.vectorcraft").exists());
+    }
+
+    #[test]
+    fn req_cli_013_without_vectorcraft_s_command_line_nothing_is_written_but_the_report() {
+        let dir = TempDir::new("plan-no-vectorcraft");
+        let picture = dir.join("badge.png");
+        std::fs::write(&picture, b"\x89PNG\r\n\x1a\n").unwrap();
+        let (output, report, traced) = (dir.join("badge.pes"), dir.join("badge.json"), dir.join("traced.vectorcraft"));
+        let tracing = TracingArgs { vectorcraft_cli: Some(dir.join("no-vectorcraft-cli")), traced: Some(traced.clone()), ..TracingArgs::default() };
+        let out = run(&PlanArgs { report: Some(report.clone()), tracing, ..args(picture.clone(), output.clone()) });
+        assert_eq!(out.status, Status::DesignErrors);
+        assert!(
+            out.stderr.starts_with("error SC-E0815: VectorCraft's command line, ") && out.stderr.ends_with("nothing was written\n"),
+            "{}",
+            out.stderr
+        );
+        assert!(!output.exists() && !traced.exists());
+        let said: Value = serde_json::from_slice(&std::fs::read(&report).unwrap()).unwrap();
+        assert_eq!((said["diagnostics"][0]["code"].as_str(), said.get("file")), (Some("SC-E0815"), None));
+        // The folder VectorCraft would have saved into is gone too.
+        let mut left: Vec<String> = std::fs::read_dir(dir.path()).unwrap().map(|entry| entry.unwrap().file_name().into_string().unwrap()).collect();
+        left.sort();
+        assert_eq!(left, ["badge.json", "badge.png"]);
+        // A machine file in a folder that doesn't exist can't have VectorCraft's folder beside it.
+        let nowhere = dir.join("no-such-folder").join("badge.pes");
+        let out = run(&PlanArgs {
+            tracing: TracingArgs { vectorcraft_cli: Some(dir.join("no-vectorcraft-cli")), ..TracingArgs::default() },
+            ..args(picture, nowhere.clone())
+        });
+        assert_eq!(out.status, Status::Io);
+        assert!(
+            out.stderr.starts_with(&format!("stitch: cannot write {}: ", nowhere.display())) && out.stderr.ends_with("nothing was written\n"),
+            "{}",
+            out.stderr
+        );
+    }
+
+    #[test]
     fn req_cli_008_the_picture_is_of_the_file_as_written() {
         let dir = TempDir::new("plan");
         // DST machines cut the thread before the 47 mm jump, where the plan leaves a jump thread: the picture
@@ -535,13 +634,15 @@ mod tests {
         // The engine leaves out an element whose planning runs past its work budget, with `SC-E0004`, and plans
         // the rest (`REQ-GEN-002`), as it does for a fill of 2,000 spikes after 12 s.
         let (output, preview, report) = (dir.join("left-out.pes"), dir.join("left-out.png"), dir.join("left-out.json"));
-        let mut sewn =
-            sew(Source::Svg, &std::fs::read(fixture("strokes.svg")).unwrap(), Reading::default(), profiles::REFERENCE, FormatId::PesV1, "strokes");
+        let design = std::fs::read(fixture("strokes.svg")).unwrap();
+        let mut sewn = sew(Source::Svg, &design, Reading::default(), profiles::REFERENCE, FormatId::PesV1, "strokes");
         let fill = ElementId::new("svg:patch:fill").unwrap();
         sewn.diagnostics.push(Budget::DEFAULT.meter().charge(u64::MAX).unwrap_err().diagnostic(&Budget::DEFAULT, Some(fill)));
         assert!(sewn.plan.is_some() && sewn.file.is_some());
         let asked = PlanArgs { preview: Some(preview.clone()), report: Some(report.clone()), ..args(fixture("strokes.svg"), output.clone()) };
-        let out = written(&asked, profiles::REFERENCE, FormatId::PesV1, sewn, &Cell::new(Phase::Plan));
+        let (path, reading, profile, format) = (fixture("strokes.svg"), Reading::default(), profiles::REFERENCE, FormatId::PesV1);
+        let run = Run { design_path: &path, source: Source::Svg, reading, name: "strokes", design: &design, profile, format, says: None };
+        let out = written(&asked, &run, sewn, &Cell::new(Phase::Plan));
         assert_eq!(out.status, Status::DesignErrors);
         assert!(out.stderr.contains("\nerror SC-E0004 (svg:patch:fill): ") && out.stderr.ends_with("nothing was written\n"), "{}", out.stderr);
         assert!(!output.exists() && !preview.exists());

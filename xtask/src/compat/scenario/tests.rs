@@ -33,6 +33,7 @@ fn every_scenario_checks_only_what_its_runs_export() {
             "graphic-style",
             "install-and-list",
             "missing-plugin",
+            "picture",
             "settings",
             "stroke-to-satin",
             "testsheets",
@@ -99,6 +100,53 @@ fn a_scenario_that_doesn_t_hold_together_is_refused() {
             "there is no requirement REQ-VC-999".to_string(),
         ]
     );
+}
+
+#[test]
+fn req_cli_012_a_run_of_stitch_plans_with_its_files_and_writes_what_later_runs_and_checks_read() {
+    let good = scenario(
+        r##"description = "d"
+        requirements = ["REQ-CLI-012"]
+        [[run]]
+        files = ["badge.png"]
+        stitch = ["plan", "badge.png", "-o", "badge.pes", "--traced", "traced.vectorcraft", "--report", "badge.json"]
+        [[run]]
+        open = "traced.vectorcraft"
+        steps = [{ export = "again.vectorcraft" }]
+        [expect]
+        traced = [{ file = "traced.vectorcraft", threads = ["#ed171f"] }]
+        same = [["traced.vectorcraft", "again.vectorcraft"]]
+        "##,
+    );
+    assert_eq!(problems(&good, &modules(), &requirement_ids().unwrap()), Vec::<String>::new());
+    let bad = scenario(
+        r#"description = "d"
+        [[run]]
+        files = ["logo.png"]
+        stitch = ["palette"]
+        [[run]]
+        plugins = ["fill"]
+        stitch = ["plan", "nothing.png", "-o", "x.pes", "--vectorcraft-cli", "elsewhere"]
+        [[run]]
+        stitch = ["plan", "badge.png", "--sew-it"]
+        [expect]
+        traced = [{ file = "x.vectorcraft", threads = [] }]
+        "#,
+    );
+    let found = problems(&bad, &modules(), &requirement_ids().unwrap());
+    let starts = [
+        "run 1: StitchCraft makes no data called `logo.png`",
+        "run 1: `stitch palette` isn't `stitch plan`",
+        "run 2: a run of `stitch` has no `open`, `plugins`, `steps` or `scale`",
+        "run 2: a run of `stitch` traces with the `vectorcraft-cli` under test, and names none",
+        "run 2: `stitch` reads `nothing.png`, which no file before it is",
+        "run 3: `stitch plan badge.png --sew-it`: error: ",
+        "it checks `x.vectorcraft`, which no run exports",
+    ];
+    assert_eq!(found.len(), starts.len(), "{found:#?}");
+    for (problem, start) in found.iter().zip(starts) {
+        assert!(problem.starts_with(start), "{problem}");
+    }
 }
 
 #[test]
@@ -402,6 +450,7 @@ shift
 while [ $# -gt 0 ]; do
   case "$1" in
     --in) echo '{"step":"open","result":{}}'; shift 2 ;;
+    --commands) cat > /dev/null; echo '{"step":"cmd","result":{}}'; shift 2 ;;
     --export)
       case "$2" in
         */fail.*) echo "vectorcraft-cli: step 3: export $2: plug-in failed: error SC-E0701: The design is 50 mm wide." >&2; exit 1 ;;
@@ -517,4 +566,22 @@ fn a_scenario_runs_and_its_checks_say_what_fails() {
     assert_eq!(failures.len(), 1, "{failures:?}");
     assert!(failures[0].starts_with("a.vectorcraft: it sews otherwise than TS-03's design moved: "), "{failures:?}");
     assert_eq!(holds_sheet(&patch(), "TS-01"), Err("the Test Sheet filter doesn't draw TS-01".to_string()));
+    // A run of `stitch` traces the picture made for it with the stand-in, which saves the patch: the run ends
+    // well, and the document it traced, whose shapes have settings, is no traced picture.
+    let picture = r##"description = "d"
+        [[run]]
+        files = ["badge.png"]
+        stitch = ["plan", "badge.png", "-o", "badge.pes", "--traced", "traced.vectorcraft"]
+        [expect]
+        traced = [{ file = "traced.vectorcraft", threads = ["#ed171f"] }]
+        "##;
+    let failures = run_with(picture, "null", "picture");
+    assert_eq!(failures.len(), 1, "{failures:?}");
+    assert!(failures[0].starts_with("traced.vectorcraft: ") && failures[0].contains(", and these are not automatic: ["), "{failures:?}");
+    assert!(dir.join("picture/out/badge.png").is_file() && dir.join("picture/out/badge.pes").is_file());
+    // A run of `stitch` that doesn't end well stops the scenario, with what it said.
+    let failures = run_with(&picture.replace("\"badge.pes\"", "\"missing/badge.pes\""), "null", "unwritten");
+    assert_eq!(failures.len(), 1, "{failures:?}");
+    let start = "run 1: `stitch plan badge.png -o missing/badge.pes --traced traced.vectorcraft` ended with Io: stitch: cannot write ";
+    assert!(failures[0].starts_with(start) && failures[0].ends_with("nothing was written"), "{failures:?}");
 }

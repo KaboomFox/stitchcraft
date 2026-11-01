@@ -76,7 +76,9 @@ settings sew, and `--sort-colours` whether its shapes with settings sew in the o
 `stitch bug-report` writes them into one JSON file, with the design itself in place of a path to it, and
 each switch only when it was on. A bundle of a run without them is as it always was. The design is an SVG
 file whole, or the part of a VectorCraft document its reader reads, which
-reads as the whole document does. The file also records what came of them:
+reads as the whole document does. Of a picture, it is the document VectorCraft's command line traced, read
+with `--auto`: VectorCraft's trace is not StitchCraft's to replay, and the replay doesn't need VectorCraft. The
+file also records what came of them:
 
 - a SHA-256 of each entry of the plan, from each coordinate's bits, its kind, role and element, and each
   block's thread

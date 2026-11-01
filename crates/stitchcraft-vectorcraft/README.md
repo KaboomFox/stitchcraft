@@ -44,7 +44,8 @@ tells a document from an SVG file. `read_part` is the part of a file the reader 
 bundle keeps: a plain file's JSON, without the images and other data after it. `plugin_id`, `effect_id`
 and `effect_name` are the plug-ins' ids and their live effects', one definition for the plug-in, this
 reader and the compatibility gate. `param_text` writes a parameter's value as an element holds it, which
-the gate compares settings with.
+the gate compares settings with. `base64` writes a file's bytes as VectorCraft takes them in JSON: an
+exporter's file, and the picture `stitch plan` gives VectorCraft's command line to trace (M13.10).
 Design: `docs/src/design/vectorcraft-integration.md#reading-vectorcraft-files-stitchcraft-vectorcraft`.
 The VectorCraft versions it reads are proven by `docs/src/design/compatibility-gate.md`.
 
