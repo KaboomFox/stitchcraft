@@ -250,10 +250,19 @@ Differences we intend are recorded in the **deviations ledger** (`conformance/de
 with a reason and a link to the requirement that motivates it (`DEV-LCK-001`, say: the lock shapes
 are StitchCraft's own). A case excuses a measure with the entry that explains it, and the report shows
 the difference as excused. An excuse for a measure that agrees fails the case, so that every reason in
-the ledger is still true. `REQ-SVG-008` is the requirement, and the only one of level L3. The other runs
-of the suite leave it and its cases to this one. Until M8 reads every `inkstitch:` attribute, the corpus
-is the designs the SVG reader sews in full, at Ink/Stitch's defaults, with trim and stop commands and the
-file version. `conformance/inkstitch/README.md` says how to run it by hand and how to add a case.
+the ledger is still true. Where the differential can undo a deviation in Ink/Stitch's file, it measures
+the file again without it. The excuse then counts only if the measure agrees. Ink/Stitch's jumps that go
+nowhere (`DEV-FMT-001`) excuse as many trims and jumps as there are of them, and no more.
+
+`REQ-SVG-008` and `REQ-AUTO-021` are the requirements of level L3. The other runs of the suite leave
+them and their cases to this one. Until M8 reads every `inkstitch:` attribute, the corpus is the designs
+the SVG reader sews in full, at Ink/Stitch's defaults, with trim and stop commands and the file version.
+A case may name a test sheet drawn as a design instead (`sheet`). StitchCraft sews the sheet, and
+Ink/Stitch an SVG file of the elements StitchCraft sews it with, written with their parameters
+(`stitchcraft_testkit::inkstitch`). Automatic digitizing chooses ordinary elements with Ink/Stitch's
+parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check StitchCraft's
+stitches of those choices against Ink/Stitch's (`REQ-AUTO-021`). `conformance/inkstitch/README.md` says
+how to run it by hand and how to add a case.
 
 ### L4 — Physical (milestone gates)
 

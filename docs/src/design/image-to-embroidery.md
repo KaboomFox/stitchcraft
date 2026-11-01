@@ -601,4 +601,14 @@ sew it unlike the tutorial's flow.
   | TS-13B | 6 | 0 | 37 | 16 |
   | TS-13C | 9 | 4 | 6 | 1 |
 
+- Ink/Stitch sews the TS-13 sheets too, every night ([conformance](conformance.md#l3--inkstitch-differential-nightly),
+  `REQ-AUTO-021`). Ink/Stitch can't choose a picture's stitches, but it can sew what StitchCraft chose:
+  the elements StitchCraft sews a sheet with, written as an SVG file with their parameters. Its machine
+  files then agree with StitchCraft's by every measure of the differential. Their thread footprints overlap
+  StitchCraft's by 0.97 or more. StitchCraft sews 6 to 10 % fewer stitches, as it leaves out stitches
+  shorter than the machine's shortest (`DEV-FIN-001`): fitted to the machine as StitchCraft fits its own
+  plans, Ink/Stitch's files come within about 1 % of StitchCraft's stitches. Ink/Stitch's extra trims and
+  jumps are jumps that go nowhere at thread changes, which a StitchCraft PES file has no record of
+  (`DEV-FMT-001`), and without them the trims and jumps agree within 1.
+
 Codes 0900 to 0999 are automatic digitizing's ([diagnostics](diagnostics.md)).

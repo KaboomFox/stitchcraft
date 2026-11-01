@@ -15,6 +15,14 @@
 //! writes PES. Both files are then read by StitchCraft's reader, so that both are measured on the 0.1 mm
 //! grid PES keeps.
 //!
+//! **A test sheet** drawn as a design is a case's subject too (`sheet`). StitchCraft sews the sheet, as
+//! `stitch testsheet` does, and Ink/Stitch the SVG file of the elements StitchCraft sews it with, automatic
+//! digitizing's for its automatic shapes, written with their parameters (`stitchcraft_testkit::inkstitch`)
+//! to [`WRITTEN`], where a reviewer can open it. Ink/Stitch then sews the stitch types StitchCraft chose,
+//! with StitchCraft's settings, so the stitches StitchCraft makes of its own choices are checked against
+//! Ink/Stitch's (`REQ-AUTO-021`). StitchCraft's SVG reader reads no element's parameters until M8, which
+//! is why StitchCraft sews the sheet itself, not the file.
+//!
 //! **The measures** ([`Measure`]): each file's stitches, the needle-downs; its size, the bounds of its needle
 //! points; its threads, in order; its trims; its jumps; and how nearly their thread's footprints overlap
 //! once their bounds' centres are made one (`stitchcraft_testkit::metrics::footprint_overlap`). Each has the
@@ -22,16 +30,23 @@
 //! order, trims and jumps within 1, footprints overlapping by 0.9 at least. A case may excuse a measure
 //! with an entry of the deviations ledger that explains the difference: it is reported as excused, not
 //! failed.
+//!
+//! **Explained, not only excused.** Where the differential can undo a deviation in Ink/Stitch's file
+//! ([`undone`]), a measure the deviation excuses is measured again on the file undone, and the excuse holds
+//! only when the measure then agrees. So an excuse can't hide a difference of another kind: Ink/Stitch's
+//! jumps that go nowhere (`DEV-FMT-001`) excuse as many trims and jumps as there are of them, and no more.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use stitchcraft_cli::commands::plan::Source;
 use stitchcraft_core::{Budget, Point};
-use stitchcraft_plan::{FormatId, Rgb, StitchPlan, profiles};
+use stitchcraft_engine::testsheets;
+use stitchcraft_plan::{FormatId, Rgb, Stitch, StitchKind, StitchPlan, profiles};
 use stitchcraft_testkit::metrics::footprint_overlap;
 
+use super::cases::Subject;
 use super::runner::Outcome;
 use crate::util;
 
@@ -39,6 +54,8 @@ use crate::util;
 pub const PIN: &str = "conformance/inkstitch/pin.toml";
 /// The stand-ins put first on Ink/Stitch's module path, relative to the repository root.
 pub const STUBS: &str = "conformance/inkstitch/stubs";
+/// Where the SVG files written for test sheets go, relative to the repository root.
+pub const WRITTEN: &str = "target/conformance/differential";
 
 /// What is measured, by the name a case's `excused` table gives it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -109,9 +126,12 @@ impl Measured {
     }
 }
 
-/// How `ours` and `theirs` compare: for each measure, both values as the report shows them (the overlap, a
-/// measure of the pair, once), and whether they lie within its tolerance.
-pub fn compare(ours: &Measured, theirs: &Measured) -> Vec<(Measure, String, String, bool)> {
+/// A measure compared: both values as the report shows them (the overlap, a measure of the pair, once), and
+/// whether they lie within its tolerance.
+pub type Compared = (Measure, String, String, bool);
+
+/// How `ours` and `theirs` compare, measure by measure.
+pub fn compare(ours: &Measured, theirs: &Measured) -> Vec<Compared> {
     let count = |n: usize| n.to_string();
     let size = |s: [f64; 2]| format!("{:.1} × {:.1} mm", s[0], s[1]);
     let threads = |t: &[Rgb]| t.iter().map(|c| format!("#{:02x}{:02x}{:02x}", c.r, c.g, c.b)).collect::<Vec<_>>().join(" ");
@@ -173,11 +193,11 @@ pub fn pinned(root: &Path) -> Result<String, String> {
     pin.get("commit").and_then(toml::Value::as_str).map(str::to_string).ok_or_else(|| format!("{PIN}: no `commit`"))
 }
 
-/// Runs the case whose design is `design` (relative to `conformance/`), with the measures `excused` excuses
-/// by a deviation's id: what differs goes to `outcome`'s failures, or, excused, to its notes, and each
-/// measure to its details, a row of the report's table. A deviation excusing a measure that agrees fails
-/// the case too, so that the ledger's reasons stay true.
-pub fn run(root: &Path, design: &str, excused: &BTreeMap<String, String>, outcome: &mut Outcome) {
+/// Runs the case that sews `subject`, with the measures `excused` excuses by a deviation's id: what differs
+/// goes to `outcome`'s failures, or, excused, to its notes, and each measure to its details, a row of the
+/// report's table. A deviation excusing a measure that agrees fails the case too, so that the ledger's
+/// reasons stay true.
+pub fn run(root: &Path, subject: &Subject, excused: &BTreeMap<String, String>, outcome: &mut Outcome) {
     let Some(inkstitch) = Inkstitch::from_env() else {
         outcome.skipped = Some("Ink/Stitch is not set up: set STITCHCRAFT_INKSTITCH (conformance/inkstitch/README.md)".to_string());
         return;
@@ -190,35 +210,108 @@ pub fn run(root: &Path, design: &str, excused: &BTreeMap<String, String>, outcom
         }
         (Err(e), _) => return outcome.failures.push(e),
     }
-    let path = root.join("conformance").join(design);
-    let measured = |bytes: &[u8], who: &str| -> Result<Measured, String> {
-        let plan = stitchcraft_formats::decode(bytes).map_err(|e| format!("{who}'s PES file doesn't read: {e}"))?.plan;
-        Measured::of(&plan).ok_or_else(|| format!("{who}'s PES file has no needle point"))
+    let (theirs, ours) = match subject {
+        Subject::File(design) => {
+            let path = root.join("conformance").join(design);
+            (inkstitch.pes(root, &path), sewn(&path, design))
+        }
+        Subject::Sheet(id) => match sheet(root, id) {
+            Ok((path, plan)) => (inkstitch.pes(root, &path), encoded(&plan, id)),
+            Err(e) => return outcome.failures.push(e),
+        },
     };
-    let theirs = inkstitch.pes(root, &path).and_then(|bytes| measured(&bytes, "Ink/Stitch"));
-    let ours = sewn(&path, design).and_then(|bytes| measured(&bytes, "StitchCraft"));
-    let (ours, theirs) = match (ours, theirs) {
+    let measured = |bytes: &[u8], who: &str| -> Result<(StitchPlan, Measured), String> {
+        let plan = stitchcraft_formats::decode(bytes).map_err(|e| format!("{who}'s PES file doesn't read: {e}"))?.plan;
+        let measured = Measured::of(&plan).ok_or_else(|| format!("{who}'s PES file has no needle point"))?;
+        Ok((plan, measured))
+    };
+    let theirs = theirs.and_then(|bytes| measured(&bytes, "Ink/Stitch"));
+    let ours = ours.and_then(|bytes| measured(&bytes, "StitchCraft"));
+    let ((_, ours), (their_plan, theirs)) = match (ours, theirs) {
         (Ok(ours), Ok(theirs)) => (ours, theirs),
         (ours, theirs) => {
             outcome.failures.extend(ours.err().into_iter().chain(theirs.err()));
             return;
         }
     };
-    judge(compare(&ours, &theirs), excused, outcome);
+    // Each deviation an excuse names, once, undone in Ink/Stitch's file where the differential can undo it,
+    // and the file measured again.
+    let again: BTreeMap<String, Vec<Compared>> = excused
+        .values()
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .filter_map(|deviation| Some((deviation.clone(), compare(&ours, &Measured::of(&undone(deviation, &their_plan)?)?))))
+        .collect();
+    judge(compare(&ours, &theirs), excused, &again, outcome);
 }
 
-/// Judges the `compared` measures, with those `excused` excuses: what differs goes to `outcome`'s failures,
-/// or, excused, to its notes, an excuse for a measure that agrees to its failures, and each measure to its
-/// details, a row of the report's table.
-fn judge(compared: Vec<(Measure, String, String, bool)>, excused: &BTreeMap<String, String>, outcome: &mut Outcome) {
+/// The deviation by which pystitch, writing Ink/Stitch's PES files, writes jumps that go nowhere.
+pub const NOWHERE: &str = "DEV-FMT-001";
+
+/// Ink/Stitch's file `plan` with the deviation `deviation` undone, as the file would read had Ink/Stitch
+/// done as StitchCraft does; `None` for a deviation the differential can't undo, which excuses its
+/// measures as they are.
+///
+/// - [`NOWHERE`]: each jump that goes nowhere at the start of a colour block or right after a stop, where
+///   Ink/Stitch's plan has no trim, and the trim it carries, as every jump of a PES file does. StitchCraft
+///   writes no such record (`REQ-FMT-010`).
+pub fn undone(deviation: &str, plan: &StitchPlan) -> Option<StitchPlan> {
+    (deviation == NOWHERE).then(|| without_jumps_nowhere(plan))
+}
+
+/// `plan` without the jumps that go nowhere at the start of a colour block or right after a stop, nor the
+/// trims they carry ([`undone`]).
+fn without_jumps_nowhere(plan: &StitchPlan) -> StitchPlan {
+    let mut plan = plan.clone();
+    let mut needle = None;
+    for block in &mut plan.blocks {
+        let mut kept: Vec<Stitch> = Vec::with_capacity(block.stitches.len());
+        for &stitch in &block.stitches {
+            if stitch.kind == StitchKind::Jump && needle == Some(stitch.at) {
+                // The trim a PES file's jump carries, and what comes before it.
+                let carried = kept.last().is_some_and(|before| before.kind == StitchKind::Trim);
+                let before = kept.len().saturating_sub(usize::from(carried));
+                if kept.get(..before).and_then(<[_]>::last).is_none_or(|before| before.kind == StitchKind::Stop) {
+                    kept.truncate(before);
+                    continue;
+                }
+            }
+            if !stitch.kind.is_command() {
+                needle = Some(stitch.at);
+            }
+            kept.push(stitch);
+        }
+        block.stitches = kept;
+    }
+    plan
+}
+
+/// Judges the `compared` measures, with those `excused` excuses, and the measures compared `again` with
+/// each deviation undone that the differential can undo: what differs goes to `outcome`'s failures, or,
+/// excused, to its notes, an excuse for a measure that agrees to its failures, and so does one whose
+/// deviation, undone, leaves the measure differing. Each measure goes to its details, a row of the report's
+/// table.
+fn judge(compared: Vec<Compared>, excused: &BTreeMap<String, String>, again: &BTreeMap<String, Vec<Compared>>, outcome: &mut Outcome) {
     for (measure, mine, other, within) in compared {
         let name = measure.name();
         let mark = match (within, excused.get(name)) {
             (true, None) => "✅".to_string(),
-            (false, Some(deviation)) => {
-                outcome.notes.push(format!("{name} differ, as {deviation} says"));
-                format!("excused by `{deviation}`")
-            }
+            (false, Some(deviation)) => match again.get(deviation).and_then(|rows| rows.iter().find(|row| row.0 == measure)) {
+                None => {
+                    outcome.notes.push(format!("{name} differ, as {deviation} says"));
+                    format!("excused by `{deviation}`")
+                }
+                Some((_, mine, undone, true)) => {
+                    outcome.notes.push(format!("{name} differ, as {deviation} says, and agree without it: StitchCraft {mine}, Ink/Stitch {undone}"));
+                    format!("explained by `{deviation}`: Ink/Stitch {undone} without it")
+                }
+                Some((_, mine, undone, false)) => {
+                    outcome
+                        .failures
+                        .push(format!("{name} differ by more than {deviation} explains: without it, StitchCraft {mine}, Ink/Stitch {undone}"));
+                    format!("❌ Ink/Stitch {undone} without `{deviation}`")
+                }
+            },
             (false, None) => {
                 outcome.failures.push(format!("{name} differ: StitchCraft {mine}, Ink/Stitch {other}"));
                 "❌".to_string()
@@ -239,8 +332,27 @@ fn sewn(path: &Path, file: &str) -> Result<Vec<u8>, String> {
     let (design, _) = Source::of(path).read(&bytes, stitchcraft_engine::design::Reading::default()).map_err(|e| format!("{file}: {e}"))?;
     let planned = stitchcraft_engine::plan(&design, profiles::REFERENCE, &Budget::DEFAULT);
     let plan = planned.plan.ok_or_else(|| format!("{file}: StitchCraft planned nothing: {:?}", planned.diagnostics))?;
-    let name = path.file_stem().and_then(|s| s.to_str()).unwrap_or("design");
-    stitchcraft_formats::encode(&plan, FormatId::PesV1, name).map(|encoded| encoded.bytes).map_err(|e| format!("{file}: {e}"))
+    encoded(&plan, path.file_stem().and_then(|s| s.to_str()).unwrap_or(file))
+}
+
+/// `plan` as a PES file, labelled `name`.
+fn encoded(plan: &StitchPlan, name: &str) -> Result<Vec<u8>, String> {
+    stitchcraft_formats::encode(plan, FormatId::PesV1, name).map(|encoded| encoded.bytes).map_err(|e| format!("{name}: {e}"))
+}
+
+/// The test sheet `id` as each program is given it: the SVG file for Ink/Stitch, written to [`WRITTEN`], of
+/// the elements StitchCraft sews the sheet with, automatic digitizing's for its automatic shapes, with their
+/// parameters; and StitchCraft's plan of the sheet, on the reference machine, as `stitch testsheet` writes it.
+fn sheet(root: &Path, id: &str) -> Result<(PathBuf, StitchPlan), String> {
+    let sheet = testsheets::find(id).ok_or_else(|| format!("there is no test sheet `{id}`"))?;
+    let design =
+        sheet.design().ok_or_else(|| format!("{id} is drawn stitch by stitch, and is no design to write"))?.map_err(|e| format!("{id}: {e}"))?;
+    let (elements, _) = stitchcraft_engine::auto::digitized(&design, &Budget::DEFAULT);
+    let svg = stitchcraft_testkit::inkstitch::svg(&elements, &design.settings).map_err(|e| format!("{id}: {e}"))?;
+    let path = root.join(WRITTEN).join(format!("{}.svg", id.to_ascii_lowercase()));
+    let written = path.parent().map_or(Ok(()), std::fs::create_dir_all).and_then(|()| std::fs::write(&path, svg));
+    written.map_err(|e| format!("{}: {e}", util::rel(&path)))?;
+    Ok((path, sheet.plan().map_err(|e| format!("{id}: {e}"))?))
 }
 
 /// The differential report, Markdown: each case's measures for both programs, failures first. `commit` is
@@ -352,7 +464,7 @@ mod tests {
         let excused = BTreeMap::from([("threads".to_string(), "DEV-THREAD-001".to_string()), ("trims".to_string(), "DEV-X-001".to_string())]);
         let mut judged = outcome("case");
         let compared = vec![row(Measure::Stitches, true), row(Measure::Size, false), row(Measure::Threads, false), row(Measure::Trims, true)];
-        judge(compared, &excused, &mut judged);
+        judge(compared, &excused, &BTreeMap::new(), &mut judged);
         assert_eq!(
             judged.failures,
             ["size differ: StitchCraft 1, Ink/Stitch 2", "trims agree, and DEV-X-001 excuses a difference no longer there: drop it from the case"]
@@ -367,6 +479,71 @@ mod tests {
                 "| trims | 1 | 2 | ❌ agree |"
             ]
         );
+    }
+
+    #[test]
+    fn an_excuse_whose_deviation_can_be_undone_holds_only_when_the_measure_then_agrees() {
+        let row = |measure: Measure, mine: &str, other: &str, within: bool| (measure, mine.to_string(), other.to_string(), within);
+        let excused = BTreeMap::from([("trims".to_string(), NOWHERE.to_string()), ("jumps".to_string(), NOWHERE.to_string())]);
+        let again = BTreeMap::from([(NOWHERE.to_string(), vec![row(Measure::Trims, "30", "30", true), row(Measure::Jumps, "31", "35", false)])]);
+        let mut judged = outcome("case");
+        judge(vec![row(Measure::Trims, "30", "40", false), row(Measure::Jumps, "31", "41", false)], &excused, &again, &mut judged);
+        assert_eq!(judged.notes, [format!("trims differ, as {NOWHERE} says, and agree without it: StitchCraft 30, Ink/Stitch 30")]);
+        assert_eq!(judged.failures, [format!("jumps differ by more than {NOWHERE} explains: without it, StitchCraft 31, Ink/Stitch 35")]);
+        assert_eq!(
+            judged.details,
+            [
+                format!("| trims | 30 | 40 | explained by `{NOWHERE}`: Ink/Stitch 30 without it |"),
+                format!("| jumps | 31 | 41 | ❌ Ink/Stitch 35 without `{NOWHERE}` |")
+            ]
+        );
+    }
+
+    #[test]
+    fn jumps_that_go_nowhere_where_the_plan_has_no_trim_are_undone_with_the_trims_they_carry() {
+        use stitchcraft_plan::{PlanBuilder, Provenance, Role, Thread};
+        let (red, blue) = (Thread::new(Rgb::new(237, 23, 31)), Thread::new(Rgb::new(11, 61, 145)));
+        let (top, travel) = (Provenance::plan(Role::Top), Provenance::plan(Role::Travel));
+        // As StitchCraft reads Ink/Stitch's PES files back: every jump but the first carries a trim.
+        let mut builder = PlanBuilder::new(red.clone());
+        builder.jump(p(0.0, 0.0), travel);
+        builder.stitch(p(0.0, 0.0), top);
+        builder.stitch(p(10.0, 0.0), top);
+        // A thread change where the needle is: undone.
+        builder.change_thread(blue);
+        builder.trim(None);
+        builder.jump(p(10.0, 0.0), travel);
+        builder.stitch(p(10.0, 5.0), top);
+        // A stop where the needle is: undone.
+        builder.stop(None);
+        builder.trim(None);
+        builder.jump(p(10.0, 5.0), travel);
+        builder.stitch(p(10.0, 9.0), top);
+        // A trim the plan asked for, and a jump that goes nowhere after it: StitchCraft writes it too.
+        builder.trim(None);
+        builder.jump(p(10.0, 9.0), travel);
+        builder.stitch(p(14.0, 9.0), top);
+        // A thread change that moves: kept.
+        builder.change_thread(red);
+        builder.trim(None);
+        builder.jump(p(20.0, 9.0), travel);
+        builder.stitch(p(20.0, 12.0), top);
+        let plan = builder.finish();
+        assert_eq!((plan.stats().trims, plan.stats().jumps), (4, 5));
+        let without = undone(NOWHERE, &plan).unwrap();
+        assert_eq!((without.stats().trims, without.stats().jumps), (2, 3));
+        let kinds = |block: &stitchcraft_plan::ColorBlock| block.stitches.iter().map(|s| s.kind).collect::<Vec<_>>();
+        let (n, j, t, s) = (StitchKind::Normal, StitchKind::Jump, StitchKind::Trim, StitchKind::Stop);
+        assert_eq!(without.blocks.iter().map(kinds).collect::<Vec<_>>(), [vec![j, n, n], vec![n, s, n, t, j, n], vec![t, j, n]]);
+        assert_eq!(without.stats().stitches, plan.stats().stitches);
+        // A deviation the differential can't undo excuses as it is.
+        assert_eq!(undone("DEV-THREAD-001", &plan), None);
+    }
+
+    #[test]
+    fn every_deviation_the_differential_undoes_is_in_the_ledger() {
+        let ledger = crate::deviations::parse(&util::read(&util::root().join(crate::deviations::LEDGER)).unwrap()).unwrap();
+        assert!(ledger.iter().any(|d| d.id == NOWHERE && d.requirements.iter().any(|r| r == "REQ-FMT-010")));
     }
 
     #[test]

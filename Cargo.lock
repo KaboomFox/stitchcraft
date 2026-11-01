@@ -785,6 +785,7 @@ version = "0.0.1"
 dependencies = [
  "flate2",
  "proptest",
+ "roxmltree",
  "stitchcraft-core",
  "stitchcraft-engine",
  "stitchcraft-formats",
