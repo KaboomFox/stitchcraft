@@ -21,7 +21,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Command, ExitCode, Output};
 
 use serde_json::{Value, json};
-use stitchcraft_cli::commands::plan::trace::{COLOURS, steps};
+use stitchcraft_cli::trace::{COLOURS, steps};
 use stitchcraft_core::Mm;
 use stitchcraft_plan::profiles::{BROTHER_PE800_4X4, REFERENCE};
 use stitchcraft_testkit::temp::TempDir;

@@ -212,9 +212,11 @@ mod tests {
             said(many.as_bytes()).as_deref(),
             Some("line 4 | line 5 | line 6 | line 7 | line 8 | line 9 | line 10 | line 11 | line 12 | \\u{1b}[31mred\\u{7}")
         );
-        // A long tail keeps its end.
+        // A long tail keeps its end, and one as long as is kept stays whole.
         let long = "x".repeat(SAID_CHARS) + "the end";
         let kept = said(long.as_bytes()).unwrap();
         assert!(kept.starts_with('…') && kept.ends_with("the end") && kept.chars().count() == SAID_CHARS + 1, "{kept}");
+        let whole = "y".repeat(SAID_CHARS);
+        assert_eq!(said(whole.as_bytes()), Some(whole));
     }
 }

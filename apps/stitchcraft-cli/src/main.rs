@@ -167,7 +167,7 @@ mod tests {
         let help = cli
             .find_subcommand_mut("plan")
             .and_then(|plan| plan.get_arguments().find(|arg| arg.get_id() == "colours").and_then(|arg| arg.get_help()).map(ToString::to_string));
-        let default = format!("by default {}", commands::plan::trace::COLOURS);
+        let default = format!("by default {}", stitchcraft_cli::trace::COLOURS);
         assert!(help.as_deref().is_some_and(|help| help.contains(&default)), "{help:?}");
     }
 

@@ -34,7 +34,7 @@ Coming with their milestones: `import-inkstitch` (M8), `conformance run`.
 - `files.rs` — files are written under a temporary name and renamed into place, so a machine never sees
   half a file, and reads stop past a cap. A file another program writes for `stitch` goes into a folder of
   its own beside the output, removed once read.
-- `commands/plan/trace.rs` has VectorCraft's command line trace a picture, with the steps it runs and the
+- `trace.rs` has VectorCraft's command line trace a picture, with the steps it runs and the
   program it runs.
 - `tests/picture.rs` runs `stitch plan picture.png` with the test program itself in place of VectorCraft's
   command line, under a harness of its own.

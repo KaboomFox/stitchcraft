@@ -47,10 +47,11 @@ use stitchcraft_core::{Code, Diagnostic};
 use stitchcraft_engine::design::Reading;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan, profiles};
 
-use super::plan::{Sewn, Source, design_name, machine_for, picture, sew, trace};
+use super::plan::{Sewn, Source, design_name, machine_for, picture, sew};
 use super::{Outcome, Status, asked_profile, counts, distinct, hex, output_format, printable, render_diagnostics, unhex};
 use crate::cli::{BugReportArgs, Command};
 use crate::files;
+use crate::trace;
 
 /// The bundle format this StitchCraft writes and replays.
 const BUNDLE_FORMAT: u32 = 1;
