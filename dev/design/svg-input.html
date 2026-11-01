@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-96039274.js";
+            window.path_to_searchindex_js = "../searchindex-ce2be5b9.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -361,6 +361,10 @@ defaults are in the <a href="data-model.html#engine-input-design-stitchcraft-eng
 names, with the label and help a dialog shows, are listed once in <code>stitchcraft_engine::design::SETTINGS</code>,
 which a VectorCraft document’s settings are read with too
 (<a href="vectorcraft-integration.html#design-settings-and-machine-kept-with-the-document">integration</a>).</p>
+<p>The test kit writes such files too, so that Ink/Stitch can sew the differential’s test sheets. It writes a
+design’s elements with their parameters, and the settings that aren’t StitchCraft’s defaults
+(<code>stitchcraft_testkit::inkstitch</code>). It names Ink/Stitch’s namespace by the reader’s own constant,
+<code>stitchcraft_svg::inkstitch::INKSTITCH_NS</code>.</p>
 <p>The fourth, <code>rotate_on_export</code>, turns the design by 90° either way as Ink/Stitch writes it into a machine
 file, for machines that don’t turn a design to fit their hoop. It is not applied yet (M8): <code>SC-W0802</code>
 names a value other than 0, and the design is written as drawn. Ink/Stitch also keeps <code>thread-palette</code>

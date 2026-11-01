@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-96039274.js";
+            window.path_to_searchindex_js = "searchindex-ce2be5b9.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b793f3ad.js"></script>
@@ -5502,6 +5502,10 @@ defaults are in the <a href="#engine-input-design-stitchcraft-engine">data model
 names, with the label and help a dialog shows, are listed once in <code>stitchcraft_engine::design::SETTINGS</code>,
 which a VectorCraft document’s settings are read with too
 (<a href="#design-settings-and-machine-kept-with-the-document">integration</a>).</p>
+<p>The test kit writes such files too, so that Ink/Stitch can sew the differential’s test sheets. It writes a
+design’s elements with their parameters, and the settings that aren’t StitchCraft’s defaults
+(<code>stitchcraft_testkit::inkstitch</code>). It names Ink/Stitch’s namespace by the reader’s own constant,
+<code>stitchcraft_svg::inkstitch::INKSTITCH_NS</code>.</p>
 <p>The fourth, <code>rotate_on_export</code>, turns the design by 90° either way as Ink/Stitch writes it into a machine
 file, for machines that don’t turn a design to fit their hoop. It is not applied yet (M8): <code>SC-W0802</code>
 names a value other than 0, and the design is written as drawn. Ink/Stitch also keeps <code>thread-palette</code>
@@ -8218,6 +8222,17 @@ the letters sew as columns with a jump between each 2:</p>
 </table>
 </div>
 </li>
+<li>
+<p>Ink/Stitch sews the TS-13 sheets too, every night (<a href="#l3--inkstitch-differential-nightly">conformance</a>,
+<code>REQ-AUTO-021</code>). Ink/Stitch can’t choose a picture’s stitches, but it can sew what StitchCraft chose:
+the elements StitchCraft sews a sheet with, written as an SVG file with their parameters. Its machine
+files then agree with StitchCraft’s by every measure of the differential. Their thread footprints overlap
+StitchCraft’s by 0.97 or more. StitchCraft sews 6 to 10 % fewer stitches, as it leaves out stitches
+shorter than the machine’s shortest (<code>DEV-FIN-001</code>): fitted to the machine as StitchCraft fits its own
+plans, Ink/Stitch’s files come within about 1 % of StitchCraft’s stitches. Ink/Stitch’s extra trims and
+jumps are jumps that go nowhere at thread changes, which a StitchCraft PES file has no record of
+(<code>DEV-FMT-001</code>), and without them the trims and jumps agree within 1.</p>
+</li>
 </ul>
 <p>Codes 0900 to 0999 are automatic digitizing’s (<a href="#diagnostics">diagnostics</a>).</p>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -9867,10 +9882,18 @@ StitchCraft’s reader reads both back, so that both are measured on PES’s 0.1
 with a reason and a link to the requirement that motivates it (<code>DEV-LCK-001</code>, say: the lock shapes
 are StitchCraft’s own). A case excuses a measure with the entry that explains it, and the report shows
 the difference as excused. An excuse for a measure that agrees fails the case, so that every reason in
-the ledger is still true. <code>REQ-SVG-008</code> is the requirement, and the only one of level L3. The other runs
-of the suite leave it and its cases to this one. Until M8 reads every <code>inkstitch:</code> attribute, the corpus
-is the designs the SVG reader sews in full, at Ink/Stitch’s defaults, with trim and stop commands and the
-file version. <code>conformance/inkstitch/README.md</code> says how to run it by hand and how to add a case.</p>
+the ledger is still true. Where the differential can undo a deviation in Ink/Stitch’s file, it measures
+the file again without it. The excuse then counts only if the measure agrees. Ink/Stitch’s jumps that go
+nowhere (<code>DEV-FMT-001</code>) excuse as many trims and jumps as there are of them, and no more.</p>
+<p><code>REQ-SVG-008</code> and <code>REQ-AUTO-021</code> are the requirements of level L3. The other runs of the suite leave
+them and their cases to this one. Until M8 reads every <code>inkstitch:</code> attribute, the corpus is the designs
+the SVG reader sews in full, at Ink/Stitch’s defaults, with trim and stop commands and the file version.
+A case may name a test sheet drawn as a design instead (<code>sheet</code>). StitchCraft sews the sheet, and
+Ink/Stitch an SVG file of the elements StitchCraft sews it with, written with their parameters
+(<code>stitchcraft_testkit::inkstitch</code>). Automatic digitizing chooses ordinary elements with Ink/Stitch’s
+parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check StitchCraft’s
+stitches of those choices against Ink/Stitch’s (<code>REQ-AUTO-021</code>). <code>conformance/inkstitch/README.md</code> says
+how to run it by hand and how to add a case.</p>
 <h3 id="l4--physical-milestone-gates"><a class="header" href="#l4--physical-milestone-gates">L4 — Physical (milestone gates)</a></h3>
 <p>Machine checkpoints sew generated test sheets on the target machine and record the results through the
 <strong>Sew-out report</strong> issue form (<a href="#machine-testing-protocol">machine testing</a>). A checkpoint result is

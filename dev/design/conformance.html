@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-96039274.js";
+            window.path_to_searchindex_js = "../searchindex-ce2be5b9.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b793f3ad.js"></script>
@@ -420,10 +420,18 @@ StitchCraft’s reader reads both back, so that both are measured on PES’s 0.1
 with a reason and a link to the requirement that motivates it (<code>DEV-LCK-001</code>, say: the lock shapes
 are StitchCraft’s own). A case excuses a measure with the entry that explains it, and the report shows
 the difference as excused. An excuse for a measure that agrees fails the case, so that every reason in
-the ledger is still true. <code>REQ-SVG-008</code> is the requirement, and the only one of level L3. The other runs
-of the suite leave it and its cases to this one. Until M8 reads every <code>inkstitch:</code> attribute, the corpus
-is the designs the SVG reader sews in full, at Ink/Stitch’s defaults, with trim and stop commands and the
-file version. <code>conformance/inkstitch/README.md</code> says how to run it by hand and how to add a case.</p>
+the ledger is still true. Where the differential can undo a deviation in Ink/Stitch’s file, it measures
+the file again without it. The excuse then counts only if the measure agrees. Ink/Stitch’s jumps that go
+nowhere (<code>DEV-FMT-001</code>) excuse as many trims and jumps as there are of them, and no more.</p>
+<p><code>REQ-SVG-008</code> and <code>REQ-AUTO-021</code> are the requirements of level L3. The other runs of the suite leave
+them and their cases to this one. Until M8 reads every <code>inkstitch:</code> attribute, the corpus is the designs
+the SVG reader sews in full, at Ink/Stitch’s defaults, with trim and stop commands and the file version.
+A case may name a test sheet drawn as a design instead (<code>sheet</code>). StitchCraft sews the sheet, and
+Ink/Stitch an SVG file of the elements StitchCraft sews it with, written with their parameters
+(<code>stitchcraft_testkit::inkstitch</code>). Automatic digitizing chooses ordinary elements with Ink/Stitch’s
+parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check StitchCraft’s
+stitches of those choices against Ink/Stitch’s (<code>REQ-AUTO-021</code>). <code>conformance/inkstitch/README.md</code> says
+how to run it by hand and how to add a case.</p>
 <h3 id="l4--physical-milestone-gates"><a class="header" href="#l4--physical-milestone-gates">L4 — Physical (milestone gates)</a></h3>
 <p>Machine checkpoints sew generated test sheets on the target machine and record the results through the
 <strong>Sew-out report</strong> issue form (<a href="../plan/machine-testing.html">machine testing</a>). A checkpoint result is
