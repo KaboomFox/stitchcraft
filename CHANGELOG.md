@@ -5,6 +5,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- Random designs check the automatic sewing order's rules together (`REQ-AUTO-010`, `REQ-AUTO-012`), 256
+  of them on every run. Each is 2 to 6 squares and lines that overlap and meet on a half-millimetre grid.
+  Each shape sews once or is said to sew nothing, and what overlaps keeps its paint order. A line that
+  borders a fill sews after it unless an overlap puts it first, and the thread changes only when none of
+  its elements is free to sew. Each of these rules, dropped from the order's code, fails the test.
 - The Ink/Stitch differential, conformance level L3 (`REQ-SVG-008`). `cargo xtask conformance --differential`
   sews each design of its corpus with StitchCraft and with Ink/Stitch at the commit
   `conformance/inkstitch/pin.toml` names, run as a black box, and compares the PES files by measures:

@@ -391,6 +391,9 @@ rules.
    one drawn first. Each element then starts and ends at its points nearest its neighbours
    (`REQ-GEN-003`).
 
+`tests/auto_order.rs` checks rules 1 to 3 together on random designs of squares and lines, wherever the
+shapes fall.
+
 Elements with settings keep their order among themselves, and automatic elements move round them within
 the rules. The parts of a shape sewn as several elements, such as a line's satin columns, keep their order
 too, so that a trim after the shape still comes after its last part. `--sort-colours` lets the elements
