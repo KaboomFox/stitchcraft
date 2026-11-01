@@ -19,7 +19,7 @@ use sha2::{Digest, Sha256};
 use stitchcraft_core::{Code, Diagnostic, Fix, Severity};
 use stitchcraft_formats::Decoded;
 use stitchcraft_plan::palette::Palette;
-use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan};
+use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan, TrimSupport};
 
 use crate::files::{self, Unwritten};
 
@@ -194,12 +194,22 @@ pub fn unhex(text: &str) -> Option<Vec<u8>> {
     digits.chunks(2).map(|pair| std::str::from_utf8(pair).ok().and_then(|pair| u8::from_str_radix(pair, 16).ok())).collect()
 }
 
-/// The plan's size and counts, as report lines (`  size      …`, `  stitches  …`).
-pub fn describe_plan(out: &mut String, plan: &StitchPlan) {
+/// The plan's size and counts, as report lines (`  size      …`, `  stitches  …`). When it has trims and
+/// the `machine` it is for makes none, a line that says so: PES flags every jump as a trim
+/// (`REQ-FMT-010`), and such a machine, the reference PE800 among them (MC-1), sews on over each.
+pub fn describe_plan(out: &mut String, plan: &StitchPlan, machine: Option<&MachineProfile>) {
     if let Some(b) = plan.bounds() {
         let _ = writeln!(out, "  size      {:.1} × {:.1} mm", b.width(), b.height());
     }
     let _ = writeln!(out, "  stitches  {}", counts(plan));
+    if let Some(note) = machine.and_then(|machine| trims_unmade(plan, machine)) {
+        let _ = writeln!(out, "  trims     {note}");
+    }
+}
+
+/// When `plan` has trims that `machine` doesn't make, what that means for the person sewing it.
+pub fn trims_unmade(plan: &StitchPlan, machine: &MachineProfile) -> Option<&'static str> {
+    (machine.trims == TrimSupport::None && plan.stats().trims > 0).then_some("the machine makes none of them: cut the jump threads by hand")
 }
 
 /// "274 stitches, 7 jumps, 7 trims, 0 colour changes, 1 stop": the plan's counts, as people say them.

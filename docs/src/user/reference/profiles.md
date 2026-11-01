@@ -13,10 +13,10 @@ Brother PE800 with its 5 × 7 in hoop
 | Hoop (sewing field) | 130 × 180 mm |
 | File format | PES v1 |
 | Stitch length | 0.3 mm to 12 mm (lock stitches from 0.2 mm) |
-| Trims | the format's trim command |
+| Trims | none: cut jump threads by hand |
 | Thread palette | Brother PEC |
 
-**Evidence.** Machine: the owner of the reference machine (2026-10-10). Field: Brother's 5 × 7 in hoop for the PE800, 130 × 180 mm. Stitch limits and trim support: common Brother home-machine values, to be confirmed by machine checkpoints MC-1 and MC-2 (test sheets TS-01 to TS-04 and TS-10).
+**Evidence.** Machine: the owner of the reference machine (2026-10-10). Field: the 5 × 7 in hoop Brother makes for the PE800, 130 × 180 mm. Trims: from machine checkpoint MC-1's sew-out, which the owner reported (2026-10-31). The machine cut the thread between colours. It cut no jump between places in one colour, whether flagged as a trim or not. Stitch limits: common Brother home-machine values, to be confirmed by machine checkpoints MC-1 and MC-2 (test sheets TS-01 to TS-04 and TS-10).
 
 ## `brother-pe800-4x4`
 
@@ -27,10 +27,10 @@ Brother PE800 with its 4 × 4 in hoop
 | Hoop (sewing field) | 100 × 100 mm |
 | File format | PES v1 |
 | Stitch length | 0.3 mm to 12 mm (lock stitches from 0.2 mm) |
-| Trims | the format's trim command |
+| Trims | none: cut jump threads by hand |
 | Thread palette | Brother PEC |
 
-**Evidence.** Hoop: the owner's (2026-10-10). Field: Brother's 4 × 4 in hoop, 100 × 100 mm. The rest as for brother-pe800-5x7.
+**Evidence.** Hoop: the owner's (2026-10-10). Field: the 4 × 4 in hoop Brother makes, 100 × 100 mm. The rest as for brother-pe800-5x7.
 
 ## `brother-pe800-small`
 
@@ -41,7 +41,7 @@ Brother PE800 with its small hoop
 | Hoop (sewing field) | 20 × 60 mm |
 | File format | PES v1 |
 | Stitch length | 0.3 mm to 12 mm (lock stitches from 0.2 mm) |
-| Trims | the format's trim command |
+| Trims | none: cut jump threads by hand |
 | Thread palette | Brother PEC |
 
-**Evidence.** Hoop: the owner's, sold as 1 × 2.5 in (2026-10-10). Field: Brother's small hoop, 2 × 6 cm, upright as the 5 × 7 in's until test sheet TS-10C confirms it. The rest as for brother-pe800-5x7.
+**Evidence.** Hoop: the owner's, sold as 1 × 2.5 in (2026-10-10). Field: the small hoop Brother makes, 2 × 6 cm. It stands upright here, as the 5 × 7 in's does, until test sheet TS-10C shows which way the machine holds it. The rest as for brother-pe800-5x7.

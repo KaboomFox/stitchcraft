@@ -35,7 +35,7 @@ pub fn run(args: &InspectArgs) -> Outcome {
     let name = if decoded.name.is_empty() { String::new() } else { format!(" · \"{}\"", decoded.name) };
     let _ = writeln!(out, "{} · {}{name}", args.file.display(), decoded.format);
     let _ = writeln!(out, "  sha256    {}", hex(&Sha256::digest(&bytes)));
-    describe_plan(&mut out, plan);
+    describe_plan(&mut out, plan, profile);
     if let Some(b) = plan.bounds() {
         let (min, max) = (b.min(), b.max());
         let _ =

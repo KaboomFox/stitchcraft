@@ -40,7 +40,7 @@ use stitchcraft_core::{Budget, Code, Diagnostic, Severity};
 use stitchcraft_engine::design::{Design, Reading};
 use stitchcraft_formats::{Encoded, read_back};
 use stitchcraft_plan::profiles;
-use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan};
+use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan, TrimSupport};
 use stitchcraft_render::{Image, Settings, Style};
 
 use super::bug_report::{self, Phase, Run};
@@ -143,12 +143,12 @@ pub fn sew(source: Source, design: &[u8], reading: Reading, profile: &MachinePro
     }
 }
 
-/// The picture `stitch plan --preview` draws of the file read back, `back`: the realistic style at the
-/// default scale.
-pub fn picture(back: &StitchPlan) -> Result<Image, Diagnostic> {
+/// The picture `stitch plan --preview` draws of the file read back, `back`, on a machine that cuts as
+/// `trims` says, the profile's: the realistic style at the default scale.
+pub fn picture(back: &StitchPlan, trims: TrimSupport) -> Result<Image, Diagnostic> {
     let settings = Settings::new(Style::Realistic, Settings::DEFAULT_SCALE)
         .ok_or_else(|| Diagnostic::new(Code::InternalCheckFailed, "The picture's default settings are out of range."))?;
-    stitchcraft_render::preview(back, settings, &mut Budget::DEFAULT.meter()).map_err(|e| e.diagnostic())
+    stitchcraft_render::preview(back, trims, settings, &mut Budget::DEFAULT.meter()).map_err(|e| e.diagnostic())
 }
 
 /// The design name machines show for the design at `path`: its file name without the extension.
@@ -243,7 +243,7 @@ fn written(args: &PlanArgs, run: &Run, sewn: Sewn, phase: &Cell<Phase>) -> Outco
     };
     // The picture is drawn before anything is written, so that one that cannot be drawn stops the rest too.
     phase.set(Phase::Picture);
-    let image = match args.preview.as_ref().map(|path| (path, picture(&back))) {
+    let image = match args.preview.as_ref().map(|path| (path, picture(&back, profile.trims))) {
         Some((path, Ok(image))) => Some((path, image)),
         Some((_, Err(e))) => {
             diagnostics.push(e);
@@ -299,7 +299,7 @@ fn summary(args: &PlanArgs, profile: &MachineProfile, format: FormatId, (plan, b
     let _ = writeln!(out, "{}", args.design.display());
     describe_file(&mut out, &args.output, format, machine_file);
     let _ = writeln!(out, "  profile   {} ({})", profile.id, profile.name);
-    describe_plan(&mut out, back);
+    describe_plan(&mut out, back, Some(profile));
     describe_threads(&mut out, plan, format.palette().map(|id| id.palette()));
     out
 }
@@ -586,16 +586,21 @@ mod tests {
     #[test]
     fn req_cli_008_the_picture_is_of_the_file_as_written() {
         let dir = TempDir::new("plan");
-        // DST machines cut the thread before the 47 mm jump, where the plan leaves a jump thread: the picture
-        // draws the cut, as `stitch preview` of the file does, in the design's colours.
+        // The picture is of the file read back, as `stitch preview` of the file draws it, for the machine and
+        // in the design's colours. A DST file cuts the thread before the 47 mm jump, where the plan leaves a
+        // jump thread: a machine that obeys the trim command cuts there, and the reference PE800 cuts no
+        // jump (MC-1).
         let (output, preview) = (dir.join("picture.dst"), dir.join("picture.png"));
         let out = run(&PlanArgs { preview: Some(preview.clone()), ..args(fixture("strokes.svg"), output) });
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
         let sewn =
             sew(Source::Svg, &std::fs::read(fixture("strokes.svg")).unwrap(), Reading::default(), profiles::REFERENCE, FormatId::Dst, "picture");
         let drawn = std::fs::read(&preview).unwrap();
-        assert_eq!(drawn, picture(sewn.back.as_ref().unwrap()).unwrap().png);
-        assert_ne!(drawn, picture(sewn.plan.as_ref().unwrap()).unwrap().png, "the plan's jump thread, where the file cuts");
+        let (back, plan) = (sewn.back.as_ref().unwrap(), sewn.plan.as_ref().unwrap());
+        assert_eq!(drawn, picture(back, profiles::REFERENCE.trims).unwrap().png);
+        assert_eq!(drawn, picture(plan, profiles::REFERENCE.trims).unwrap().png, "the jump thread the PE800 leaves");
+        let cutting = |plan| picture(plan, TrimSupport::Command).unwrap().png;
+        assert_ne!(cutting(back), cutting(plan), "the plan's jump thread, where the file cuts");
         let back = sewn.back.unwrap();
         assert_eq!(
             back.blocks.iter().map(|b| &b.thread).collect::<Vec<_>>(),
