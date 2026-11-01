@@ -168,6 +168,9 @@ Options:
           
           [default: 8]
 
+  -p, --profile <PROFILE>
+          The machine the picture is for, which decides where the thread is cut (see `stitch profiles`); by default the reference machine
+
   -h, --help
           Print help (see a summary with '-h')
 ```

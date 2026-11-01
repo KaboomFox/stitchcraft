@@ -89,7 +89,7 @@ Embroiderers report these with files from other software:
 
 1. **Trims ignored** on some Brother machines. Test sheet TS-02 sews jumps with and without a trim
    before them. At MC-1 the PE800 cut none of them: on that machine the operator cuts the jump
-   threads. The MC-1 sew-out report sets the profile's trim support.
+   threads. Its profiles' trim support is none, from MC-1's sew-out, and previews draw those threads.
 2. **Large designs hidden** by an older Brother-family machine for PES v1 files beyond about 130 ×
    180 mm (root cause unknown). The PES v1 section carries a hoop indication, and pystitch sets it to
    the 130 × 180 mm class, which is our unconfirmed hypothesis for that report. The reference PE800's

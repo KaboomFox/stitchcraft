@@ -3,6 +3,7 @@ TS-02.pes · PES (#PES0001) · "TS-02"
   sha256    7c9e1a79353ef17172d1125172635b7f37bce80a1328c936c5eafa436bfff90b
   size      120.0 × 70.0 mm
   stitches  93 stitches, 17 jumps, 16 trims, 2 colour changes, 1 stop
+  trims     the machine makes none of them: cut the jump threads by hand
   extent    x -60.0 to 60.0 mm, y -35.0 to 35.0 mm from where the machine starts
   lengths   stitches from 2.50 to 2.50 mm
   threads   1. Red (#ed171f), shown as Brother PEC 5 "Red"

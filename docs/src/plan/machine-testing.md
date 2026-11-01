@@ -13,7 +13,8 @@ sheets test them ([ADR 0013](../design/adr/0013-brother-pe800-reference-machine.
   checks it against the profile of the hoop it is for. It prints that profile, the file's SHA-256, its
   size and counts, the threads in the order they are sewn (with the Brother palette name the machine
   shows for each) and what to check after sewing. Its size and counts are the file's, read back as the
-  machine reads it. `stitch preview TS-xx.pes -o TS-xx.png` draws a picture of what the file sews.
+  machine reads it. `stitch preview TS-xx.pes -o TS-xx.png` draws a picture of what the file sews on the
+  reference machine, with the jump threads it leaves.
   `stitch testsheet --list` lists the sheets. The MC-1 sheets are drawn stitch by stitch, to test the
   machine and the file formats; from MC-2, sheets are drawn as designs and planned by the engine, so
   sewing them tests its stitches, locks and plan assembly too.

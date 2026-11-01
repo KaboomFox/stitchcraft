@@ -137,6 +137,7 @@ fn halves(sheet: &'static str, below: f64, pictures: Pictures) -> Result<Drawing
 
 #[cfg(test)]
 mod tests {
+    use stitchcraft_core::units::to_tenths;
     use stitchcraft_plan::{StitchKind, StitchPlan};
 
     use super::super::find;
@@ -187,20 +188,24 @@ mod tests {
         }
     }
 
-    /// Each half of `plan`'s thread changes and jumps: the half as drawn, up to its stop, and then the
-    /// digitized one. A colour block the stop falls in is sewn by both, its thread changed by neither.
+    /// Each half of `plan`'s thread changes and jumps, as the machine file has them: the half as drawn, up to
+    /// its stop, and then the digitized one. A colour block the stop falls in is sewn by both, its thread
+    /// changed by neither. A jump counts when it moves the needle on the machine's 0.1 mm grid: the writers
+    /// leave out a jump that goes nowhere, which plan assembly adds where a part starts at the needle.
     fn halves(plan: &StitchPlan) -> [(usize, usize); 2] {
-        let (mut blocks, mut jumps, mut half) = ([Vec::new(), Vec::new()], [0, 0], 0);
+        let (mut blocks, mut jumps, mut half, mut needle) = ([Vec::new(), Vec::new()], [0, 0], 0, None);
         for (k, block) in plan.blocks.iter().enumerate() {
             for s in &block.stitches {
                 if !blocks[half].contains(&k) {
                     blocks[half].push(k);
                 }
+                let at = Some((to_tenths(s.at.x()), to_tenths(s.at.y())));
                 match s.kind {
                     StitchKind::Stop => half = 1,
-                    StitchKind::Jump => jumps[half] += 1,
+                    StitchKind::Jump if at != needle => jumps[half] += 1,
                     _ => {}
                 }
+                needle = at;
             }
         }
         [0, 1].map(|h| (blocks[h].len() - 1, jumps[h]))
@@ -221,9 +226,34 @@ mod tests {
             let said = format!("The bottom half changes thread {a} times and jumps {b} times, the top half {c} and {d} times.");
             assert!(sheet.checks.iter().any(|check| check.contains(&said)), "{id}: {said}");
             // Digitized, no sheet changes thread more often. A letter digitized is columns, with jumps between
-            // them, where a letter filled sews in one piece: TS-13B jumps more often digitized.
+            // them, where a letter filled sews in one piece: TS-13B jumps more than twice as often digitized.
             assert!(c <= a, "{id}: {said}");
-            assert_eq!(d > b, id == "TS-13B", "{id}: {said}");
+            assert_eq!(d > 2 * b, id == "TS-13B", "{id}: {said}");
         }
+    }
+
+    #[test]
+    fn ts13a_says_which_of_the_square_and_the_bar_reaches_under_the_other() {
+        // Digitized, the bar sews first, in the blue the half as drawn ends with, and reaches 0.4 mm under the
+        // square where they meet. The square, sewn after it, keeps its edge (REQ-AUTO-007). As drawn, neither
+        // reaches under the other.
+        let sheet = find("TS-13A").unwrap();
+        let plan = sheet.plan().unwrap();
+        // The first stitch of the element `name`, and the least and the greatest x of its stitches.
+        let extent = |name: &str| {
+            let sewn = plan.stitches().enumerate().filter(|(_, s)| s.kind == StitchKind::Normal);
+            let mine: Vec<(usize, f64)> = sewn
+                .filter(|(_, s)| s.origin.element.is_some_and(|e| plan.elements[e.index()].as_str() == name))
+                .map(|(i, s)| (i, s.at.x()))
+                .collect();
+            let (first, xs) = (mine.first().unwrap().0, mine.iter().map(|&(_, x)| x));
+            (first, xs.clone().fold(f64::INFINITY, f64::min), xs.fold(f64::NEG_INFINITY, f64::max))
+        };
+        let (bar, square) = (extent("ts13a:auto:parted:bar"), extent("ts13a:auto:parted:square"));
+        let (drawn_bar, drawn_square) = (extent("ts13a:drawn:parted:bar"), extent("ts13a:drawn:parted:square"));
+        assert!(bar.0 < square.0, "the bar sews first");
+        assert!((drawn_bar.1 - bar.1 - 0.4).abs() < 1e-6, "the bar reaches 0.4 mm under the square: {bar:?}, drawn {drawn_bar:?}");
+        assert!((square.1 - drawn_square.1).abs() < 1e-6 && (square.2 - drawn_square.2).abs() < 1e-6, "{square:?}, drawn {drawn_square:?}");
+        assert!(sheet.checks.iter().any(|check| check.contains("the bar, sewn first, reaches under the square only where they meet")));
     }
 }

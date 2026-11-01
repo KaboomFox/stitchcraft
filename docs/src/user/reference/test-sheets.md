@@ -6,7 +6,7 @@ Designs drawn in code for the [machine checkpoints](../../plan/machine-testing.m
 
 ## TS-01 — Orientation and scale
 
-120.0 × 120.0 mm · 274 stitches, 7 jumps, 7 trims, 0 colour changes, 0 stops
+120.0 × 120.0 mm · 274 stitches, 7 jumps, 6 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -23,7 +23,7 @@ After sewing, check:
 
 ## TS-02 — Colour changes, a stop, jumps and trims
 
-120.0 × 70.0 mm · 93 stitches, 17 jumps, 8 trims, 2 colour changes, 1 stop
+120.0 × 70.0 mm · 93 stitches, 17 jumps, 16 trims, 2 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -42,7 +42,7 @@ After sewing, check:
 
 ## TS-02B — TS-02 drawn as a design: trims elements ask for
 
-120.0 × 70.0 mm · 230 stitches, 17 jumps, 8 trims, 2 colour changes, 1 stop
+120.0 × 70.0 mm · 230 stitches, 17 jumps, 16 trims, 2 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -64,7 +64,7 @@ After sewing, check:
 
 ## TS-03 — Running stitch: lengths, bean stitch, curves, the shortest stitch
 
-60.0 × 78.0 mm · 588 stitches, 15 jumps, 15 trims, 0 colour changes, 0 stops
+60.0 × 78.0 mm · 588 stitches, 15 jumps, 14 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -83,7 +83,7 @@ After sewing, check:
 
 ## TS-04 — Lock stitches: do they hold, and do they show?
 
-110.0 × 64.5 mm · 623 stitches, 27 jumps, 27 trims, 0 colour changes, 0 stops
+110.0 × 64.6 mm · 623 stitches, 27 jumps, 26 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -103,7 +103,7 @@ After sewing, check:
 
 ## TS-05 — Satin width ladder: spacing, width and pull
 
-91.0 × 76.0 mm · 3440 stitches, 30 jumps, 30 trims, 0 colour changes, 0 stops
+91.0 × 76.0 mm · 3440 stitches, 30 jumps, 29 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -123,7 +123,7 @@ After sewing, check:
 
 ## TS-06 — Satin underlays side by side
 
-62.0 × 30.0 mm · 966 stitches, 5 jumps, 5 trims, 0 colour changes, 0 stops
+62.0 × 30.0 mm · 966 stitches, 5 jumps, 4 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -143,7 +143,7 @@ After sewing, check:
 
 ## TS-07 — Fill and outline registration at 3 pull compensations
 
-126.2 × 126.0 mm · 13527 stitches, 6 jumps, 6 trims, 1 colour change, 0 stops
+126.2 × 126.0 mm · 13527 stitches, 6 jumps, 5 trims, 1 colour change, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -162,7 +162,7 @@ After sewing, check:
 
 ## TS-08 — Fill density and angle
 
-100.0 × 170.0 mm · 16248 stitches, 15 jumps, 15 trims, 0 colour changes, 0 stops
+100.0 × 170.0 mm · 16248 stitches, 15 jumps, 14 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -182,7 +182,7 @@ After sewing, check:
 
 ## TS-09 — Fill underlay, travel and gap-filling rows round holes
 
-66.0 × 114.0 mm · 7780 stitches, 6 jumps, 3 trims, 0 colour changes, 0 stops
+66.0 × 114.0 mm · 7780 stitches, 6 jumps, 5 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -203,7 +203,7 @@ After sewing, check:
 
 ## TS-10A — Hoop size: the 4 × 4 in hoop, a 100 × 100 mm frame
 
-100.0 × 100.0 mm · 195 stitches, 4 jumps, 4 trims, 0 colour changes, 0 stops
+100.0 × 100.0 mm · 195 stitches, 4 jumps, 3 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 4 × 4 in hoop, profile [`brother-pe800-4x4`](profiles.md#brother-pe800-4x4).
 
@@ -218,7 +218,7 @@ After sewing, check:
 
 ## TS-10B — Hoop size: the 5 × 7 in hoop, a 130 × 180 mm frame
 
-130.0 × 180.0 mm · 283 stitches, 4 jumps, 4 trims, 0 colour changes, 0 stops
+130.0 × 180.0 mm · 283 stitches, 4 jumps, 3 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -233,7 +233,7 @@ After sewing, check:
 
 ## TS-10C — Hoop size: the small hoop, a 20 × 60 mm frame
 
-20.0 × 60.0 mm · 92 stitches, 4 jumps, 4 trims, 0 colour changes, 0 stops
+20.0 × 60.0 mm · 92 stitches, 4 jumps, 3 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its small hoop, profile [`brother-pe800-small`](profiles.md#brother-pe800-small).
 
@@ -249,7 +249,7 @@ After sewing, check:
 
 ## TS-13A — Pictures digitized automatically: neighbours and sewing order
 
-126.0 × 168.0 mm · 24286 stitches, 41 jumps, 0 trims, 20 colour changes, 1 stop
+126.0 × 168.0 mm · 24286 stitches, 31 jumps, 30 trims, 20 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -262,17 +262,17 @@ Threads: Red, Blue, Deep Gold, Red, Blue, Deep Gold, Blue, Red, Blue, Deep Gold,
 After sewing, check:
 
 - The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Top row, left to right: a badge traced abutting and one traced stacked, each 40 mm across, and a blue disc with 7 red specks round it. Bottom row: 3 badges drawn badge by badge, and a gold square with a blue bar beside it.
-- The bottom half changes thread 16 times and jumps 25 times, the top half 4 and 16 times. How long does each half take?
+- The bottom half changes thread 16 times and jumps 15 times, the top half 4 and 16 times. How long does each half take?
 - Does fabric show between colours, on either half? On the top half, each area reaches 0.4 mm under the next: does that cover the gap, or show as a ridge?
 - On the top half, the stacked badge's lower colours are cut away under the upper ones. Does it sew as flat as the abutting badge beside it? On the bottom half, it sews its lower colours whole, under the upper ones.
 - On the bottom half, each speck round the disc sews a red knot. On the top half, the 6 specks that touch the disc are blue, part of it, and the one apart is left out. Does the disc's edge show where they were?
-- The blue bar meets the gold square along the top half of its side, and runs on 0.5 mm from it below. On the top half, the square reaches under the bar only where they meet. Does the fabric that shows below read as a gap drawn there?
+- The blue bar meets the gold square along the top half of its side, and runs on 0.5 mm from it below. On the top half, the bar, sewn first, reaches under the square only where they meet. Does the fabric that shows below read as a gap drawn there?
 - Does any shape cover one drawn over it? The order must never let that happen.
 - The machine cuts the thread at thread changes and at the stop, but at no jump, and the pictures sew as any design does: a shape sewn after a jump may sew its thread down. Snip the jump threads at each stop and after sewing. Where is one sewn down, and does it show?
 
 ## TS-13B — Pictures digitized automatically: letters and lines traced as areas
 
-110.5 × 148.4 mm · 14397 stitches, 61 jumps, 0 trims, 16 colour changes, 1 stop
+110.4 × 148.4 mm · 14397 stitches, 57 jumps, 56 trims, 16 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -285,7 +285,7 @@ Threads: Black, Red, Blue, Deep Gold, Black, Red, Blue, Deep Gold, Black, Red, B
 After sewing, check:
 
 - The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left: the word MATCH in block letters 15, 10, 6 and 4 mm tall, top to bottom, each letter traced as an area. Right: 3 windows, top to bottom, whose black lines, traced as areas, are 0.3, 0.6 and 0.9 mm wide. One line runs down each window, and a branch runs across to its right side from it.
-- The bottom half changes thread 12 times and jumps 19 times, the top half 4 and 42 times. A letter filled sews in one piece, and digitized it is columns and lines with jumps between them. How long does each half take?
+- The bottom half changes thread 12 times and jumps 16 times, the top half 4 and 41 times. A letter filled sews in one piece, and digitized it is columns and lines with jumps between them. How long does each half take?
 - Which is the smallest word that reads, on each half?
 - On the top half, the letters from 6 mm tall sew as satin columns between their own edges, and the 4 mm ones as triple runs along their middles. Do the columns' stitches lie square to their strokes, round the C's bend and the A's hole?
 - Where a column ends under another, 0.4 mm longer, as the T's stem does under its bar, does fabric show there, or a ridge? Does a crossbar sewn as a column of its own, as the H's is, read as one stroke with its stems? The M's and the A's feet should end flat along the baseline, and the C's ends round.
@@ -296,7 +296,7 @@ After sewing, check:
 
 ## TS-13C — Pictures digitized automatically: lines, and shapes in parts
 
-111.4 × 107.7 mm · 10311 stitches, 25 jumps, 0 trims, 8 colour changes, 1 stop
+111.4 × 107.8 mm · 10311 stitches, 25 jumps, 24 trims, 8 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
