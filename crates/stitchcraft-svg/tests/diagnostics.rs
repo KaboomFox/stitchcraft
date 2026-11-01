@@ -57,6 +57,11 @@ fn diag_sc_e0801_a_file_that_is_not_svg_says_why() {
     let flat = format!(r#"<!DOCTYPE svg [<!ENTITY a "{}">]><svg>{}</svg>"#, "a".repeat(1 << 20), "&a;".repeat(100));
     assert_eq!(says(flat.as_bytes()), "The file's XML entities would make it 102 MB long; StitchCraft reads SVG files of up to 64 MB.");
     assert_eq!(says(br#"<svg width="0" height="10"/>"#), "The drawing's size cannot be used: its width is zero or negative.");
+    // A size too large to scale the viewBox to, however the viewBox is fitted to it.
+    for fitted in ["", r#" preserveAspectRatio="none""#, r#" preserveAspectRatio="xMinYMin slice""#] {
+        let huge = format!(r#"<svg width="1e308mm" height="10mm" viewBox="0 0 10 10"{fitted}/>"#);
+        assert_eq!(says(huge.as_bytes()), "The drawing's size cannot be used: its size and viewBox give no usable scale.", "{fitted}");
+    }
     assert_eq!(says(br#"<svg viewBox="0 0 10"/>"#), "The root element's viewBox, \"0 0 10\", is not four numbers.");
     assert_eq!(says(&vec![b' '; stitchcraft_svg::MAX_BYTES + 1]), "The file is 65 MB; StitchCraft reads SVG files of up to 64 MB.");
     assert!(says(&vec![b' '; stitchcraft_svg::MAX_BYTES]).starts_with("The file is not well-formed XML"), "the limit itself is allowed");

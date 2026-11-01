@@ -1117,6 +1117,25 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - `swap_satin_rails`'s help says the S-stitch starts on the second rail, and `REQ-SAT-002` says what 2 moves
   give. They bring the pairs of a smooth curve within 5 % of the spacing, and leave a pair further off round
   a sharp corner.
+- The readers leave out more paints a viewer doesn't show (`DEV-SVG-003`). They sewed an SVG gradient
+  whose stops are all fully transparent or of `stop-opacity` 0, `currentColor` where `color` is
+  transparent, and a VectorCraft gradient whose stops are all of opacity 0, in black or in the first stop's
+  colour. Where a gradient fades in, its thread is the first colour it shows. The review of 2026-10-31 found
+  these.
+- An SVG element whose transform flattens it to a line or a point, such as `scale(0 1)`, is left out with
+  everything in it, with `SC-W0804`, as a viewer doesn't show it (`DEV-SVG-012`). Its fill and stroke were
+  sewn along the line.
+- An SVG root with `preserveAspectRatio="none"` and a size too large to scale to is refused with
+  `SC-E0801`, as with the other alignments. It was read, and every shape left out as more than 10 m away.
+- Reading a compressed VectorCraft file whose JSON starts with a NUL byte refuses it with `SC-E0806`. A debug
+  build, the fuzzer's and the tests', panicked there.
+- Reading charges what it reads again and what it copies. An SVG `style` attribute costs a unit per 8 bytes
+  each time it is read, and a gradient's stops are read for each shape it paints: 64 KiB of style on a stop
+  that 5,000 shapes share took 2.8 s within a budget of a million units. A VectorCraft object's name and a
+  group's StitchCraft settings go into each element they apply to. Each copy costs a unit per 64 bytes, and
+  the copies come to at most 64 MiB (`SC-E0806`). A 1 MiB name on an object of 200 fills held 200 MiB.
+- The Test Sheet filter declines with `SC-E0817` on an artboard so far from the origin that the sheet would
+  reach more than 10 m from it. It answered with `SC-E0009`, a bug report.
 - `stitch plan --format dst` and VectorCraft's DST exporter hold a design to DST's colour changes
   (`REQ-PLAN-006`). Planned for the format the machine reads, a PE800 design with 256 colour changes
   written as DST was refused with `SC-E0601`, which named PES v1 and its 255. Each plan is made for the

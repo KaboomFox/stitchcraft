@@ -727,6 +727,15 @@ registry! {
     /// save.
     VcTraceFailed = "SC-E0816", Error, "VectorCraft could not trace the picture";
 
+    /// StitchCraft's Test Sheet filter draws a sheet in the middle of an artboard, the one under the
+    /// selection or else the first. It drew nothing, because there parts of the sheet would lie more than
+    /// 10 m from the document's origin, farther than StitchCraft stitches: a machine file can't record a
+    /// position past it, and the reader leaves objects there out (`SC-W0808`).
+    ///
+    /// The message names the sheet. Select an object on an artboard nearer the origin, or move the artboard
+    /// nearer it, and draw the sheet again.
+    VcSheetNotDrawn = "SC-E0817", Error, "VectorCraft test sheet not drawn";
+
     /// `--auto`, or StitchCraft's Auto effect in VectorCraft, digitized the design's shapes that have no
     /// settings: StitchCraft chose each one's stitches by its width, measured to the micrometre. An area is a
     /// tatami fill; a part of it narrower than the design's narrowest satin stroke
