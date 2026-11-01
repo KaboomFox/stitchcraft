@@ -48,8 +48,9 @@ StitchCraft tells rails from rungs as Ink/Stitch does, and a file sews the same 
    in step 3.
 6. Every other subpath is a rung. A rung joins the point where it crosses the first rail to the point
    where it crosses the second. Where it misses a rail, the point of that rail nearest the rung is used,
-   with `SC-W0203`. Of points as near as each other, it is the one shapely's nearest points of the rung
-   and the rail give (see *Equally near points*). A rung that crosses a rail more than once does not say
+   with `SC-W0203`, measured against the rail as push compensation leaves it ([Compensation](#compensation)).
+   Of points as near as each other, it is the one shapely's nearest points of the rung and the rail give
+   (see *Equally near points*). A rung that crosses a rail more than once does not say
    which crossing it means. It is left out, with `SC-W0207`, and the satin is sewn without it.
 
 Recognition runs before any stitch is computed. The generator only ever gets rails, and odd geometry is
@@ -174,8 +175,14 @@ rungs. With none, a path of 2 lines is 2 rails whose nodes pair up. So such a co
 more rung, which pairs the rails' first points: the section it ends has no length, and the column sews as
 before. Rails that meet each other, as a pointed column's do at its tip, meet one more line, and only 2
 rungs or more tell them from the rungs: such a column with fewer is drawn with a rung pairing the rails'
-other ends. Automatic digitizing draws the columns it finds in a part as wide as a satin column the same
-way, from their rails and rungs (`drawn::from_rails`, `REQ-AUTO-017`), and reads each back. A line whose
+other ends. Push compensation lengthens the rails before they are cut, and a rung across an end it
+lengthens would cut what it adds there off as a section of its own, whose points pair otherwise. So where
+it lengthens the column's start, the rung pairs the rails' last points, and an end it lengthens takes the
+rung only when no other can. Stroke to Satin refuses a line whose column would need one there
+(`SC-E0814`). Automatic digitizing draws the columns it finds in a part as wide as a satin column the same
+way, from their rails and rungs (`drawn::from_rails`, `REQ-AUTO-017`), and reads each back. One that
+reaches under other columns at both ends then sews the overlap at the end that takes the rung as a section
+of its own. A line whose
 rails can't be made (`SC-E0214`), or leave parts of it out (`SC-W0213`), isn't made into a column, since the
 column would sew less than the line. Rails that cross each other aren't drawn
 either, since their column reads back with other rails. A line no wider than the design's narrowest satin stroke sews as a
@@ -243,9 +250,12 @@ up for both as Ink/Stitch does.
 - **Push compensation** (`push_compensation_mm`) acts on the rails after any reversal, before they are
   cut into sections. It takes its length off each rail at the column's start and end, or adds it where
   negative, straight on from the rail's first or last segment. 2 values set the start, then the end.
-  The points where a drawn rung cuts come from the rails as drawn, so a rung in a part taken off cuts the
-  rail at its end and leaves its section out. A rung added across the nodes is measured against the
-  compensated rails. A rail the shortening would leave shorter than half a CSS pixel keeps its length
+  The points where a drawn rung crosses the rails come from the rails as drawn, so a rung in a part taken
+  off cuts the rail at its end and leaves its section out. A rung that misses a rail, and a rung added
+  across the nodes, are measured against the compensated rails, as Ink/Stitch measures every rung. Near
+  an end that push compensation lengthens, a rung that misses the rail can come nearest the part it adds,
+  and cuts the rail there: Ink/Stitch at d59c9ab, run as a black box, sews such a column as it sews one
+  drawn with longer rails and a rung across them there. A rail the shortening would leave shorter than half a CSS pixel keeps its length
   (`SC-W0211`), and a lengthening at its other end still applies.
 - **Pull compensation** acts on each pair as it is placed. Both ends move outward along the line through
   the pair, each by `pull_compensation_mm` plus `pull_compensation_percent` of the pair's width, and 2
@@ -599,10 +609,10 @@ end command, read from M8, would replace the needle point or the next stitch.
 | `REQ-SAT-002` | Consecutive pairs are the zigzag spacing apart, measured across the previous pair at its farther end, exactly so between straight parallel rails. A pair more than 5 % off moves at most twice, which brings a smooth curve's pairs within 5 %. Round a sharp corner a pair can end further off. The last pair is at most a spacing on |
 | `REQ-SAT-003` | With a longest stitch, a longer top stitch is split as `split_method` says. By default it splits into the fewest equal parts, and the stitch back into as many as the stitch across before. Simple and staggered splits fall at whole multiples of the longest stitch, from a start that `staggered` moves along |
 | `REQ-SAT-004` | Underlays come before the top stitches and leave them as they were: the centre walk, then the contour and the zigzag. Straight stitches of one length join them, no longer than the running stitch's length raised to twice the shortest stitch. A part that starts within the shortest stitch of the needle takes the place of an underlay's last point, and the needle's way gives way to it. Beside a top stitch's point the part's points give way instead. After an odd centre walk the rest runs from the column's end |
-| `REQ-SAT-005` | Rails and rungs are told apart as Ink/Stitch tells them, in any drawing order. A path with no subpath longer than a point produces `SC-E0201` and no stitches, and a rung that misses a rail joins the rail's nearest point (`SC-W0203`), the one shapely gives of points as near. A column with no section to sew produces `SC-E0216` and no stitches |
+| `REQ-SAT-005` | Rails and rungs are told apart as Ink/Stitch tells them, in any drawing order. A path with no subpath longer than a point produces `SC-E0201` and no stitches, and a rung that misses a rail joins the rail's nearest point (`SC-W0203`), the one shapely gives of points as near, once push compensation has moved the rail's ends. A column with no section to sew produces `SC-E0216` and no stitches |
 | `REQ-SAT-006` | A parameter with a value for each side changes only its own side: a rail's stitch ends, or the column's start or end |
 | `REQ-SAT-007` | Random widths and spacing are reproducible from the element and its seed, and stay within their ranges |
-| `REQ-SAT-008` | Push compensation shortens the rails at the column's start and end before they are cut, or lengthens them where negative. A rail it would leave shorter than half a CSS pixel keeps its length (`SC-W0211`) |
+| `REQ-SAT-008` | Push compensation shortens the rails at the column's start and end before they are cut, or lengthens them where negative. A rung that misses a rail cuts it where the rail so compensated comes nearest the rung. A rail it would leave shorter than half a CSS pixel keeps its length (`SC-W0211`) |
 | `REQ-SAT-009` | On each rail, a top stitch end closer than `short_stitch_distance_mm` to the last end left in place moves in along its stitch by the next `short_stitch_inset` percentage. Ends far enough from it stay |
 | `REQ-SAT-010` | The centre walk follows the line at its position between the rails within its tolerance, in stitches no longer than its length, there and back its repeats |
 | `REQ-SAT-011` | The contour runs along each rail at its insets, towards the end on the first rail's side and back on the second's. It stops short of the column's start and end by the rails' insets in millimetres |

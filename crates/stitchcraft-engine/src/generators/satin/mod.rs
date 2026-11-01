@@ -51,7 +51,7 @@ use crate::generators::satin::split::Splitter;
 use crate::generators::satin::underlay::Peaks;
 use crate::generators::{Neighbours, Stitched, method, mm, settled};
 use crate::normalize::centre_line::{Made, rails_and_rungs};
-use crate::normalize::satin::{Pairing, Recognition, Satin, Shape, recognize};
+use crate::normalize::satin::{Pairing, Recognition, Rung, Satin, Shape, recognize};
 
 /// The satin methods `satin_method` offers, in Ink/Stitch's order, which its files count on: Ink/Stitch
 /// gives the parameter's default as the first one's place in this list.
@@ -333,6 +333,7 @@ fn from_centre_line(
         )));
     }
     // Made from a centre line, the rails start together as made, and have no nodes drawn.
+    let rungs = rungs.into_iter().map(Rung::crossing).collect();
     Ok(Some(Satin { rails, nodes: [Vec::new(), Vec::new()], pairing: Pairing::Rungs(rungs) }))
 }
 

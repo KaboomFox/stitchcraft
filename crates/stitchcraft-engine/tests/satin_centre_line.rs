@@ -58,7 +58,7 @@ fn near(found: &[Point], expected: &[(f64, f64)]) -> bool {
 /// Whether `pairing` is the rungs `expected`, each the points it pairs on the first and second rail.
 fn rungs_near(pairing: &Pairing, expected: &[[(f64, f64); 2]]) -> bool {
     let Pairing::Rungs(rungs) = pairing else { return false };
-    rungs.len() == expected.len() && rungs.iter().zip(expected).all(|(found, wanted)| near(found, wanted))
+    rungs.len() == expected.len() && rungs.iter().zip(expected).all(|(found, wanted)| near(&found.points, wanted))
 }
 
 #[test]

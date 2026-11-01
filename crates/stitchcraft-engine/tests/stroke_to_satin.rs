@@ -13,10 +13,16 @@ use stitchcraft_testkit::designs::{RED, along, p, planned, polylines, widened};
 /// The setting that makes a stroke a satin column.
 const SATIN: [(&str, &str); 1] = [("satin_column", "true")];
 
-/// What Stroke to Satin makes of the one subpath of `line`, a column `width` mm wide.
-fn converted(line: &Path, width: f64) -> Result<Column, Unmade> {
+/// What Stroke to Satin makes of the one subpath of `line`, a column `width` mm wide whose push compensation
+/// is `push` millimetres at its start and its end.
+fn made(line: &Path, width: f64, push: [f64; 2]) -> Result<Column, Unmade> {
     let [subpath] = line.subpaths.as_slice() else { panic!("a line is one subpath") };
-    from_line(subpath, Mm::new(width).unwrap(), Join::UNSET, &mut Budget::DEFAULT.meter()).unwrap()
+    from_line(subpath, Mm::new(width).unwrap(), Join::UNSET, push, &mut Budget::DEFAULT.meter()).unwrap()
+}
+
+/// What Stroke to Satin makes of `line`, a column `width` mm wide without push compensation.
+fn converted(line: &Path, width: f64) -> Result<Column, Unmade> {
+    made(line, width, [0.0; 2])
 }
 
 /// The needle points of `outcome`, with what each stitch is.
@@ -24,13 +30,16 @@ fn sewn(outcome: &PlanOutcome) -> Vec<(String, Point)> {
     outcome.plan.as_ref().unwrap().stitches().map(|s| (format!("{:?}", s.kind), s.at)).collect()
 }
 
-/// Checks that the column Stroke to Satin makes of `line`, `width` mm wide, sews as `line` does with the
-/// satin effect: the same stitches, each within a millionth of a millimetre.
-fn sews_alike(name: &str, line: Path, width: f64) {
-    let column = converted(&line, width).unwrap_or_else(|why| panic!("{name}: {why}"));
+/// Checks that the column Stroke to Satin makes of `line`, `width` mm wide with push compensation `push`
+/// millimetres at its start and its end, sews as `line` does with the satin effect and that push
+/// compensation, which the column keeps: the same stitches, each within a millionth of a millimetre.
+fn sews_alike(name: &str, line: Path, width: f64, push: [f64; 2]) {
+    let column = made(&line, width, push).unwrap_or_else(|why| panic!("{name}: {why}"));
     assert_eq!(column.path().subpaths.len(), 2 + column.rungs.len(), "{name}");
-    let as_line = planned(vec![widened(along("c", line, &RED, &SATIN), width)]);
-    let as_drawn = planned(vec![along("c", column.path(), &RED, &SATIN)]);
+    let push = format!("{} {}", push[0], push[1]);
+    let params: Vec<(&str, &str)> = SATIN.iter().copied().chain([("push_compensation_mm", push.as_str())]).collect();
+    let as_line = planned(vec![widened(along("c", line, &RED, &params), width)]);
+    let as_drawn = planned(vec![along("c", column.path(), &RED, &params)]);
     // Both say the same, such as stitches that lean far along the column at a sharp corner.
     let said = |outcome: &PlanOutcome| outcome.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>();
     assert_eq!(said(&as_drawn), said(&as_line), "{name}");
@@ -64,16 +73,16 @@ fn circle((x, y): (f64, f64), radius: f64) -> Path {
 
 #[test]
 fn req_vc_014_a_line_made_into_rails_and_rungs_sews_as_it_did() {
-    sews_alike("a straight line", polylines(&[&[(0.0, 0.0), (30.0, 0.0)]]), 3.0);
-    sews_alike("a V", polylines(&[&[(0.0, 0.0), (15.0, 20.0), (30.0, 0.0)]]), 3.0);
+    sews_alike("a straight line", polylines(&[&[(0.0, 0.0), (30.0, 0.0)]]), 3.0, [0.0; 2]);
+    sews_alike("a V", polylines(&[&[(0.0, 0.0), (15.0, 20.0), (30.0, 0.0)]]), 3.0, [0.0; 2]);
     let zigzag: Vec<(f64, f64)> = (0..12).map(|k| (f64::from(k) * 5.0, if k % 2 == 0 { 0.0 } else { 4.0 })).collect();
-    sews_alike("a zigzag of 10 corners", polylines(&[&zigzag]), 3.0);
+    sews_alike("a zigzag of 10 corners", polylines(&[&zigzag]), 3.0, [0.0; 2]);
     let s = curves((0.0, 0.0), &[[(5.0, -8.0), (10.0, -8.0), (15.0, 0.0)], [(20.0, 8.0), (25.0, 8.0), (30.0, 0.0)]], false);
-    sews_alike("an S curve 30 mm long", s.clone(), 3.0);
-    sews_alike("the S curve, 6 mm wide", s, 6.0);
-    sews_alike("a circle 10 mm across", circle((0.0, 0.0), 5.0), 3.0);
-    sews_alike("a circle 30 mm across", circle((0.0, 0.0), 15.0), 3.0);
-    sews_alike("a circle 50 mm across", circle((0.0, 0.0), 25.0), 3.0);
+    sews_alike("an S curve 30 mm long", s.clone(), 3.0, [0.0; 2]);
+    sews_alike("the S curve, 6 mm wide", s, 6.0, [0.0; 2]);
+    sews_alike("a circle 10 mm across", circle((0.0, 0.0), 5.0), 3.0, [0.0; 2]);
+    sews_alike("a circle 30 mm across", circle((0.0, 0.0), 15.0), 3.0, [0.0; 2]);
+    sews_alike("a circle 50 mm across", circle((0.0, 0.0), 25.0), 3.0, [0.0; 2]);
 }
 
 #[test]
@@ -101,8 +110,27 @@ fn req_vc_014_a_column_of_2_rungs_or_none_is_drawn_with_one_more_at_its_start() 
         let [a, b] = column.rungs[0];
         let [first, second] = column.rails.each_ref().map(|rail| rail[0]);
         assert!(a.distance(first) < 0.011 * width && b.distance(second) < 0.011 * width, "{name}: {:?}", column.rungs);
-        sews_alike(name, line, width);
+        sews_alike(name, line, width, [0.0; 2]);
     }
+}
+
+#[test]
+fn req_vc_014_a_rung_added_goes_across_an_end_that_push_compensation_does_not_lengthen() {
+    // An L 3 mm wide whose rungs all miss its inner rail, so that its column has none of them, and one is
+    // added to tell its rails from its rungs. Push compensation lengthens the rails along their first or
+    // last segments before they are cut, so a rung across an end it lengthens would cut what it adds off as
+    // a section of its own, and the outer rail's first part is longer than the inner's.
+    let l = polylines(&[&[(0.0, 0.0), (2.0, 0.0), (2.0, 20.0)]]);
+    assert_eq!(converted(&l, 3.0).unwrap().rungs.len(), 1, "one rung added");
+    for push in [[-1.0, 0.0], [0.0, -1.0], [1.0, 1.0], [-1.0, 0.5]] {
+        sews_alike(&format!("an L with push compensation {push:?}"), l.clone(), 3.0, push);
+    }
+    // Lengthened at its start, the rung pairs the rails' last points, at the L's end, y = 20.
+    let [[a, b]] = made(&l, 3.0, [-1.0, 0.0]).unwrap().rungs[..] else { panic!("one rung") };
+    assert!(a.y() > 20.0 - 1e-9 && b.y() > 20.0 - 1e-9, "{a:?} {b:?}");
+    // Lengthened at both ends, no end takes the rung without cutting off what is added there.
+    assert_eq!(made(&l, 3.0, [-1.0, -1.0]), Err(Unmade::Lengthened));
+    assert!(Unmade::Lengthened.to_string().contains("needs a rung across an end its push compensation lengthens"));
 }
 
 #[test]

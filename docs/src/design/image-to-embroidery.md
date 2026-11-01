@@ -204,7 +204,9 @@ part sews a satin column along each of its centre lines, between its own outline
 - **Drawn.** Each column is drawn with its rails and rungs, as the Stroke to Satin filter draws one, and
   read back it must give them. A part whose triangles don't make a column round one of its lines, or one
   of whose columns is read otherwise, stays in the fill, and `SC-I0902` says so. A dot, whose line has no
-  length, stays in the fill too.
+  length, stays in the fill too. A rung added to tell a column's rails from its rungs goes across an end
+  that doesn't reach under another column where one can take it ([satin
+  columns](algorithms/satin.md#drawn-with-its-rails-and-rungs)).
 
 **Shapes in parts** (M13.6, `REQ-AUTO-019`). A shape wider than 7 mm in places and narrower in others sews
 in parts. Its broad parts are a tatami fill, and its narrow parts sew over the fill as lines and columns,
