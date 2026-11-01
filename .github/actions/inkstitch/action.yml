@@ -1,0 +1,22 @@
+# The Ink/Stitch the differential cases are measured against (conformance L3): fetched at the commit
+# conformance/inkstitch/pin.toml names, run by a Python with conformance/inkstitch/requirements.txt, pinned
+# by hash, and named by STITCHCRAFT_INKSTITCH and STITCHCRAFT_INKSTITCH_PYTHON for `cargo xtask conformance
+# --differential`. Ink/Stitch is GPL-3.0 and runs only as a black box (ADR-0001, decision 6), outside the
+# checkout: nothing of it is kept in the repository.
+name: Ink/Stitch oracle
+description: Fetch the pinned Ink/Stitch and point the differential at it.
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        repository=$(sed -n 's/^repository = "\(.*\)"$/\1/p' conformance/inkstitch/pin.toml)
+        commit=$(sed -n 's/^commit = "\(.*\)"$/\1/p' conformance/inkstitch/pin.toml)
+        checkout="$RUNNER_TEMP/inkstitch"
+        git init -q "$checkout"
+        git -C "$checkout" fetch -q --depth 1 "$repository" "$commit"
+        git -C "$checkout" checkout -q FETCH_HEAD
+        python3 -m venv "$RUNNER_TEMP/inkstitch-venv"
+        "$RUNNER_TEMP/inkstitch-venv/bin/pip" install -q --no-deps --require-hashes -r conformance/inkstitch/requirements.txt
+        echo "STITCHCRAFT_INKSTITCH=$checkout" >> "$GITHUB_ENV"
+        echo "STITCHCRAFT_INKSTITCH_PYTHON=$RUNNER_TEMP/inkstitch-venv/bin/python" >> "$GITHUB_ENV"

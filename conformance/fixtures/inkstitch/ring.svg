@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A ring in the ultramarine of Brother's palette, 60 mm across round a hole 30 mm across, filled at the defaults. Written for StitchCraft's Ink/Stitch differential cases (conformance L3). -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkstitch="http://inkstitch.org/namespace"
+     width="100mm" height="100mm" viewBox="0 0 100 100">
+  <metadata><inkstitch:inkstitch_svg_version>4</inkstitch:inkstitch_svg_version></metadata>
+  <path id="ring" fill="#0b3d91" fill-rule="evenodd"
+        d="M 80,50 A 30,30 0 1 1 20,50 A 30,30 0 1 1 80,50 Z M 65,50 A 15,15 0 1 0 35,50 A 15,15 0 1 0 65,50 Z"/>
+</svg>

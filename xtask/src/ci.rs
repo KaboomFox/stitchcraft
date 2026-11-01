@@ -116,7 +116,7 @@ pub fn run(skip: &[String]) -> Result<(), String> {
         ("unsafe-audit", Box::new(|| outcome(unsafe_audit::run()))),
         ("docs", Box::new(|| outcome(docs::run(true)))),
         ("shots", Box::new(|| outcome(shots::run(true, false)))),
-        ("conformance", Box::new(|| outcome(conformance::run(false, None, None)))),
+        ("conformance", Box::new(|| outcome(conformance::run(false, None, None, false)))),
         ("wasm", optional(wasm::target_installed, "rustup target add wasm32-unknown-unknown", guest, Box::new(|| outcome(wasm::run())))),
         ("wasm-goldens", optional(wasm::wasi_ready, wasm::WASI_INSTALL, guest, Box::new(|| outcome(wasm::goldens())))),
         ("api", optional(api::available, api::INSTALL, guest, Box::new(|| outcome(api::run(true))))),

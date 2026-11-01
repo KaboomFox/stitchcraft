@@ -24,6 +24,12 @@
 //! half of [`THREAD`] of a stitch so shortened. Underlay and locks are left out, as they are meant to be
 //! covered. Without pull it is the share of the edge's points that [`coverage`] would count covered by the
 //! top stitches.
+//!
+//! **Footprint overlap** is how nearly 2 sets of stitches put their thread in the same places, as the
+//! Ink/Stitch differential compares a design sewn by both programs (conformance L3). A set's footprint is
+//! the pixels, on one grid over both sets, whose centres lie within half of [`THREAD`] of one of its
+//! stitches, as for coverage. The overlap is the pixels in both footprints as a share of those in either,
+//! intersection over union: 1 for the same stitches, 0 for stitches far apart.
 
 use std::collections::BTreeMap;
 
@@ -44,6 +50,36 @@ pub const STRAIGHT_ON: f64 = 10.0;
 pub fn coverage(region: &Region, plan: &StitchPlan) -> f64 {
     let stitches: Vec<[Point; 2]> = plan.sewn_stitches().iter().map(|stitch| [stitch.from, stitch.to]).collect();
     covered_share(region, &stitches, THREAD / 2.0, PIXEL)
+}
+
+/// The overlap of the footprints of the thread of `a`'s and `b`'s stitches, each from a needle point to the
+/// next: the pixels both cover as a share of those either covers, 1 when neither covers any.
+pub fn footprint_overlap(a: &[[Point; 2]], b: &[[Point; 2]]) -> f64 {
+    overlap_share(a, b, THREAD / 2.0, PIXEL)
+}
+
+/// The share `footprint_overlap` gives, the thread reaching `reach` either side of a stitch, on pixels
+/// `pixel` wide.
+fn overlap_share(a: &[[Point; 2]], b: &[[Point; 2]], reach: f64, pixel: f64) -> f64 {
+    let Some(ends) = Rect::around(a.iter().chain(b).flatten().copied()) else { return 1.0 };
+    let grow = |q: Point, by: f64| Point::new(q.x() + by, q.y() + by).unwrap_or(q);
+    let grid = Grid::new(ends.include(grow(ends.min(), -reach)).include(grow(ends.max(), reach)), pixel);
+    let footprint = |stitches: &[[Point; 2]]| {
+        let mut covered = vec![false; grid.columns * grid.rows];
+        for &[from, to] in stitches {
+            for row in grid.rows_within(from.y().min(to.y()) - reach, from.y().max(to.y()) + reach) {
+                let Some((low, high)) = crossing(from, to, reach, grid.y(row)) else { continue };
+                for column in grid.columns_within(low, high) {
+                    covered[row * grid.columns + column] = true;
+                }
+            }
+        }
+        covered
+    };
+    let (in_a, in_b) = (footprint(a), footprint(b));
+    let (both, either) =
+        in_a.iter().zip(&in_b).fold((0_usize, 0_usize), |(both, either), (&x, &y)| (both + usize::from(x && y), either + usize::from(x || y)));
+    if either == 0 { 1.0 } else { both as f64 / either as f64 }
 }
 
 /// The share of `edges`, polylines where 2 shapes meet, that the thread of `plan`'s top stitches covers once
@@ -319,6 +355,25 @@ mod tests {
         // A stitch of no length is its disc: π 2.5² of the square's 100, to within the pixels' steps.
         let dot = covered_share(&region, &[[p(5.0, 5.0), p(5.0, 5.0)]], 2.5, PIXEL);
         assert!((dot - std::f64::consts::PI * 6.25 / 100.0).abs() < 0.002, "{dot}");
+    }
+
+    #[test]
+    fn footprints_overlap_as_the_share_of_their_union_both_cover() {
+        let row = |y: f64| [p(0.0, y), p(10.0, y)];
+        // The same stitches, and none at all: wholly.
+        assert_eq!(footprint_overlap(&[row(0.0)], &[row(0.0)]), 1.0);
+        assert_eq!(footprint_overlap(&[], &[]), 1.0);
+        // Threads 0.4 mm wide, 0.2 mm apart: half of each lies under the other, a third of the union.
+        let half = footprint_overlap(&[row(0.0)], &[row(0.2)]);
+        assert!((half - 1.0 / 3.0).abs() < 0.02, "{half}");
+        // Far apart, or one set empty: not at all.
+        assert_eq!(footprint_overlap(&[row(0.0)], &[row(5.0)]), 0.0);
+        assert_eq!(footprint_overlap(&[row(0.0)], &[]), 0.0);
+        // Reaching 1 either side on pixels 0.5 wide: a dot's disc, which a band 2 wide through it covers.
+        let dot = [[p(0.0, 0.0), p(0.0, 0.0)]];
+        let band = [[p(-1.0, 0.0), p(1.0, 0.0)]];
+        let share = overlap_share(&dot, &band, 1.0, 0.5);
+        assert!(share > 0.3 && share < 1.0, "{share}");
     }
 
     #[test]

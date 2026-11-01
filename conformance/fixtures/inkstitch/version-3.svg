@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The rectangle in a file of version 3, in the red of Brother's palette: Ink/Stitch updates its fill to stitches 3 mm long. Written for StitchCraft's Ink/Stitch differential cases (conformance L3). -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkstitch="http://inkstitch.org/namespace"
+     width="100mm" height="100mm" viewBox="0 0 100 100">
+  <metadata><inkstitch:inkstitch_svg_version>3</inkstitch:inkstitch_svg_version></metadata>
+  <rect id="patch" x="10" y="10" width="50" height="30" fill="#ed171f"/>
+</svg>

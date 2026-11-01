@@ -1,6 +1,6 @@
 # Nightly checks that are too slow or too noisy for every pull request: the newest Rust, property tests
-# with fresh seeds, an hour of coverage-guided fuzzing, external links. Mutation testing, coverage and the
-# Ink/Stitch differential run are added with their roadmap steps (M2.8, M8).
+# with fresh seeds, an hour of coverage-guided fuzzing, external links. The Ink/Stitch differential runs
+# every night too, in differential.yml, which pull requests that change it run as well.
 name: nightly
 
 on:

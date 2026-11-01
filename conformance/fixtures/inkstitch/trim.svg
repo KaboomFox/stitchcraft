@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Two red discs of one thread, the first trimmed after by Ink/Stitch's trim command, its symbol tied to the
+     disc by a connector, as Ink/Stitch's Attach Commands extension draws it; the symbol's drawing is a
+     placeholder. Written for StitchCraft's Ink/Stitch differential cases (conformance L3). -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+     xmlns:inkstitch="http://inkstitch.org/namespace"
+     width="100mm" height="100mm" viewBox="0 0 100 100">
+  <metadata><inkstitch:inkstitch_svg_version>4</inkstitch:inkstitch_svg_version></metadata>
+  <defs>
+    <symbol id="inkstitch_trim"><circle r="2" fill="#808080"/></symbol>
+  </defs>
+  <circle id="first" cx="20" cy="20" r="8" fill="#ed171f"/>
+  <g id="command_group1">
+    <path id="command_connector1" d="M 35,35 25,25" style="fill:none;stroke:#000000;stroke-opacity:0.5"
+          inkscape:connection-start="#use1" inkscape:connection-end="#first" inkscape:connector-type="polyline"/>
+    <use id="use1" xlink:href="#inkstitch_trim" x="35" y="35"/>
+  </g>
+  <circle id="second" cx="70" cy="60" r="8" fill="#ed171f"/>
+</svg>

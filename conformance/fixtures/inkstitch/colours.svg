@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Three discs in 3 colours of Brother's palette, red, moss green and ultramarine, filled at the defaults. Written for StitchCraft's Ink/Stitch differential cases (conformance L3). -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkstitch="http://inkstitch.org/namespace"
+     width="100mm" height="100mm" viewBox="0 0 100 100">
+  <metadata><inkstitch:inkstitch_svg_version>4</inkstitch:inkstitch_svg_version></metadata>
+  <circle id="red" cx="20" cy="20" r="8" fill="#ed171f"/>
+  <circle id="green" cx="50" cy="20" r="8" fill="#2f7e20"/>
+  <circle id="blue" cx="80" cy="20" r="8" fill="#0b3d91"/>
+</svg>
