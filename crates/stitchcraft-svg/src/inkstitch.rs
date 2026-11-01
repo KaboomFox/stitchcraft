@@ -43,7 +43,8 @@ use crate::version;
 
 pub(crate) const INKSCAPE_NS: &str = "http://www.inkscape.org/namespaces/inkscape";
 pub(crate) const XLINK_NS: &str = "http://www.w3.org/1999/xlink";
-pub(crate) const INKSTITCH_NS: &str = "http://inkstitch.org/namespace";
+/// Ink/Stitch's XML namespace, of its settings and its metadata.
+pub const INKSTITCH_NS: &str = "http://inkstitch.org/namespace";
 
 // The settings the `trim` and `stop` commands turn on.
 pub(crate) use stitchcraft_engine::common::{STOP_AFTER, TRIM_AFTER};

@@ -188,6 +188,11 @@ names, with the label and help a dialog shows, are listed once in `stitchcraft_e
 which a VectorCraft document's settings are read with too
 ([integration](vectorcraft-integration.md#design-settings-and-machine-kept-with-the-document)).
 
+The test kit writes such files too, so that Ink/Stitch can sew the differential's test sheets. It writes a
+design's elements with their parameters, and the settings that aren't StitchCraft's defaults
+(`stitchcraft_testkit::inkstitch`). It names Ink/Stitch's namespace by the reader's own constant,
+`stitchcraft_svg::inkstitch::INKSTITCH_NS`.
+
 The fourth, `rotate_on_export`, turns the design by 90° either way as Ink/Stitch writes it into a machine
 file, for machines that don't turn a design to fit their hoop. It is not applied yet (M8): `SC-W0802`
 names a value other than 0, and the design is written as drawn. Ink/Stitch also keeps `thread-palette`

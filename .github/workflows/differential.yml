@@ -1,7 +1,7 @@
 # Conformance L3, the Ink/Stitch differential (docs/src/design/conformance.md): every night, and on a pull
 # request that changes the differential itself, a pinned Ink/Stitch and StitchCraft sew the design of each
 # `inkstitch` case, and their machine files are compared by measures. The report is the job's summary, and
-# an artifact.
+# an artifact with the SVG files written for test sheets.
 name: differential
 
 on:
@@ -16,6 +16,7 @@ on:
       - conformance/deviations.toml
       - xtask/src/conformance/**
       - crates/stitchcraft-testkit/src/metrics.rs
+      - crates/stitchcraft-testkit/src/inkstitch.rs
       - .github/actions/inkstitch/**
       - .github/workflows/differential.yml
 
@@ -41,5 +42,7 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: inkstitch-differential
-          path: target/conformance/differential.md
+          path: |
+            target/conformance/differential.md
+            target/conformance/differential/
           if-no-files-found: ignore

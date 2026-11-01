@@ -320,6 +320,13 @@ reason = "CIEDE2000 picks the colour people see as nearest (REQ-THREAD-001, data
 requirements = ["REQ-THREAD-001", "REQ-THREAD-002"]
 
 [[deviation]]
+id = "DEV-FMT-001"
+area = "formats/pes"
+summary = "A PES file has no record for a jump that goes nowhere, unless a trim rides on it (REQ-FMT-010). Ink/Stitch jumps to the first needle point of each colour block, and of the stitches after a stop, even where the needle already is. pystitch, which writes Ink/Stitch's PES files, writes every jump as a record flagged as a trim, one of no length too. Read back, Ink/Stitch's file has a trim and a jump more at each thread change and stop where the needle doesn't move. The differential leaves those out of Ink/Stitch's file, and the excuse holds only when the trims and the jumps then agree."
+reason = "A record that moves nothing asks for a cut the plan doesn't ask for, and the reference machine cuts the thread at every thread change and stop anyway (MC-1). Ink/Stitch was read at d59c9ab (lib/stitch_plan/stitch_plan.py: a new colour block, or the stitches after a stop, start with a jump to their tie-in), and so was pystitch 1.0.1, which conformance/inkstitch/requirements.txt pins (EmbEncoder.py: a jump is written whatever its length; PecWriter.py: every jump after the first record is trim-flagged). Both were run as a black box on the TS-13 sheets (REQ-AUTO-021)."
+requirements = ["REQ-FMT-010"]
+
+[[deviation]]
 id = "DEV-SVG-002"
 area = "svg"
 summary = "An arc that turns by a whole number of quarter turns is cut into one piece more than those quarters, and so is one that turns by a nanoradian less. inkex works its count out in floating point, from angles found with arc cosines, so where its rounding falls short it cuts such an arc into one piece fewer, of a whole quarter turn each."

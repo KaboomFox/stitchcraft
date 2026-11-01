@@ -217,14 +217,20 @@ fn is_differential(case: &cases::DataCase) -> bool {
     matches!(case.spec, cases::Spec::Inkstitch { .. })
 }
 
-/// What is wrong with the Ink/Stitch differential's cases: a design that isn't there, and a measure excused
-/// that isn't one, or by an entry the deviations ledger doesn't have.
+/// What is wrong with the Ink/Stitch differential's cases: a design that isn't there, a sheet that isn't
+/// drawn as a design, and a measure excused that isn't one, or by an entry the deviations ledger doesn't have.
 fn check_differential(root: &Path, data: &[cases::DataCase], findings: &mut Findings) -> Result<(), String> {
     let ledger: BTreeSet<String> = crate::deviations::parse(&util::read(&root.join(crate::deviations::LEDGER))?)?.into_iter().map(|d| d.id).collect();
     for case in data {
-        let cases::Spec::Inkstitch { design, excused } = &case.spec else { continue };
-        if !root.join("conformance").join(design).is_file() {
-            findings.error(format!("{}: the design `{design}` is not in conformance/", case.file));
+        let cases::Spec::Inkstitch { subject, excused } = &case.spec else { continue };
+        match subject {
+            cases::Subject::File(design) if !root.join("conformance").join(design).is_file() => {
+                findings.error(format!("{}: the design `{design}` is not in conformance/", case.file));
+            }
+            cases::Subject::Sheet(id) if !stitchcraft_engine::testsheets::find(id).is_some_and(|sheet| sheet.designed()) => {
+                findings.error(format!("{}: `{id}` is no test sheet drawn as a design", case.file));
+            }
+            cases::Subject::File(_) | cases::Subject::Sheet(_) => {}
         }
         for (measure, deviation) in excused {
             if differential::Measure::named(measure).is_none() {
