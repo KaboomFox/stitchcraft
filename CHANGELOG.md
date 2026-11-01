@@ -5,6 +5,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- Each part that automatic digitizing sews along its middle is checked for reach (`tests/auto_reach.rs`,
+  `REQ-AUTO-014`, `REQ-AUTO-016`). A narrow part's line must come within 1.5 times the part's width of every
+  point of its outline, and the columns of a part must have all of its outline along their sides and ends.
+  The check runs on the TS-13 sheets' automatic shapes, and on 256 random letters T, H and E 3 to 20 mm
+  tall, in strokes 0.3 to 4 mm wide. A centre line that leaves a branch out fails it, as the small T's did.
 - `cargo xtask book` builds the book with mdBook and checks the pages it made, which are what the site
   publishes. A link or an image must lead to a file of the book, and an `#anchor` to an id of its page. A link
   to the repository's files on GitHub, on `main`, must name a file of the checkout, as each page's edit link
@@ -1148,6 +1153,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- A T 4.8 mm tall in lines 0.8 mm wide sews both arms of its bar (`REQ-AUTO-014`). Its arm was measured
+  only to where its line ends, 1.01 mm from the junction, short of the cap of its square end. The
+  junction's triangle leans, and its longest edge is 1.06 mm, so the arm counted as a bump of the outline
+  and was left out, and the T sewed as a Γ. A branch now reaches on through its end's cap, to the cap's
+  farthest corner, and this arm reaches 1.55 mm. Ts 3 and 5 mm tall in lines 0.5 and 0.8 mm wide lost an
+  arm the same way. The new check of each part's outline found all three. The TS-13 sheets sew as before.
 - The "suggest an edit" link of each page of the docs site opens the page's file on GitHub. mdBook puts the
   page's path from `docs/` for `{path}` in `edit-url-template`, `src/` included, and the template added
   another `src/`, so each of the 96 links named `docs/src/src/<page>.md`, which isn't a file.

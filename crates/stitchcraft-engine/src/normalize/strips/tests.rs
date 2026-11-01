@@ -80,19 +80,61 @@ fn req_auto_014_at_a_junction_the_straightest_branches_are_one_line() {
     assert!(stem.points[0].y() < 1.0, "{stem:?}");
 }
 
-#[test]
-fn req_auto_014_a_small_t_keeps_both_arms_of_its_bar() {
-    // TS-13B's T 4 mm tall: a bar 3.2 mm long, and a stem below its middle, both 0.72 mm wide. Each arm of the
-    // bar reaches 1.6 mm from the stem's middle, more than twice as far as the bar is wide: an arm, not a
-    // bump. The bar is one line from end to end, and the stem a line of its own.
-    let (w, l, h) = (0.72, 3.2, 4.0);
+/// Asserts that the centre lines of a T `h` mm tall, its bar `l` mm long and both its strokes `w` mm wide, cut
+/// into pieces no longer than `longest`, are its bar from end to end and its stem, each a line of its own.
+fn keeps_both_arms(w: f64, l: f64, h: f64, longest: f64) {
     let t = part(&[(0.0, 0.0), (l, 0.0), (l, w), ((l + w) / 2.0, w), ((l + w) / 2.0, h), ((l - w) / 2.0, h), ((l - w) / 2.0, w), (0.0, w)], &[]);
-    let found = lines(&t, w);
+    let found = lines(&t, longest);
     assert_eq!(found.len(), 2, "{found:?}");
     let (bar, stem): (Vec<&Line>, Vec<&Line>) = found.iter().partition(|line| line.points.iter().all(|q| q.y() < w));
     let xs: Vec<f64> = bar.iter().flat_map(|line| line.points.iter().map(|q| q.x())).collect();
     assert!(xs.iter().copied().fold(f64::INFINITY, f64::min) < w && xs.iter().copied().fold(f64::NEG_INFINITY, f64::max) > l - w, "{found:?}");
     assert!(stem.iter().flat_map(|line| line.points.iter().map(|q| q.y())).fold(f64::NEG_INFINITY, f64::max) > h - w, "{found:?}");
+}
+
+#[test]
+fn req_auto_014_a_small_t_keeps_both_arms_of_its_bar() {
+    // TS-13B's T 4 mm tall: a bar 3.2 mm long, and a stem below its middle, both 0.72 mm wide. Each arm of the
+    // bar reaches 1.6 mm from the stem's middle, more than twice as far as the bar is wide: an arm, not a
+    // bump.
+    keeps_both_arms(0.72, 3.2, 4.0, 0.72);
+}
+
+#[test]
+fn req_auto_014_an_arm_reaches_through_its_cap() {
+    // A T 4.8 mm tall in lines 0.8 mm wide, its bar 2.88 mm long, cut into pieces as long as a narrow part's,
+    // twice its area over its perimeter. Its junction's triangle leans, its longest edge 1.06 mm, and the line
+    // along the left arm ends 1.01 mm from the triangle's middle, where the cap of the arm's square end
+    // begins. Measured that far, the arm was no longer than the junction is across, a bump, and the T sewed
+    // as a Γ (found by `tests/auto_reach.rs`). Through its cap the arm reaches 0.54 mm further: an arm.
+    let (w, l, h) = (0.8, 2.88, 4.8);
+    keeps_both_arms(w, l, h, 2.0 * (l * w + (h - w) * w) / (2.0 * l + 2.0 * h));
+}
+
+#[test]
+fn req_auto_014_a_line_ends_beside_its_cap_which_reaches_to_the_farthest_corner_of_the_end() {
+    // A strip 6 mm long and 0.6 mm wide, cut into pieces 0.15 mm long: each square end's cap is several
+    // triangles deep. Each end of the line reaches on through its cap to the end's corners, and no further.
+    let strip = part(&[(0.0, 0.0), (6.0, 0.0), (6.0, 0.6), (0.0, 0.6)], &[]);
+    let triangulation = triangulation::triangulate(&strip, 0.15, &mut meter()).unwrap().unwrap();
+    let roles = roles(&triangulation, &mut meter()).unwrap();
+    let caps = |left: bool| {
+        roles
+            .iter()
+            .zip(&triangulation.triangles)
+            .filter(|(role, t)| **role == Role::Cap && t.corners.iter().all(|&c| (triangulation.points[c].x() < 3.0) == left))
+            .count()
+    };
+    assert!(caps(true) > 2 && caps(false) > 2, "{} and {} cap triangles", caps(true), caps(false));
+    let graph = Graph::of(&triangulation, &roles, &mut meter()).unwrap();
+    let ends: Vec<usize> = (0..graph.points.len()).filter(|&node| graph.degree(node) == 1).collect();
+    assert_eq!(ends.len(), 2);
+    for end in ends {
+        let at = graph.point(end);
+        let x = if at.x() < 3.0 { 0.0 } else { 6.0 };
+        let farthest = at.distance(p(x, 0.0)).max(at.distance(p(x, 0.6)));
+        assert!((graph.beyond[end] - farthest).abs() < 1e-9, "{at:?}: {} instead of {farthest}", graph.beyond[end]);
+    }
 }
 
 #[test]
@@ -139,7 +181,7 @@ fn req_auto_014_a_sharp_turn_is_one_line() {
 /// A graph of `points`, each a junction's middle when it has a size, joined as `links` says, in turn. Where
 /// each point lies, and the triangle each link crosses, are made up: only the points and links count here.
 fn graph(points: &[((f64, f64), Option<f64>)], links: &[(usize, usize)]) -> Graph {
-    let mut graph = Graph { points: Vec::new(), nodes: Vec::new(), links: Vec::new(), size: Vec::new(), inside: BTreeMap::new() };
+    let mut graph = Graph::new();
     for (i, &((x, y), size)) in points.iter().enumerate() {
         graph.add(p(x, y), size, Node::Junction(i));
     }
