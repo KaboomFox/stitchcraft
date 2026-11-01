@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-6ffd44c1.js";
+            window.path_to_searchindex_js = "searchindex-fa84b8aa.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-b793f3ad.js"></script>
@@ -9799,13 +9799,36 @@ stitches times the pixels.</p>
 needle holes along a straight run stay where they are. Underlay and locks are left out, as they are
 meant to be covered (<code>stitchcraft_testkit::metrics</code>).</p>
 <h3 id="l3--inkstitch-differential-nightly"><a class="header" href="#l3--inkstitch-differential-nightly">L3 — Ink/Stitch differential (nightly)</a></h3>
-<p>A pinned Ink/Stitch release runs as a black box on a corpus of Ink/Stitch-authored SVGs (our own or
-CC0), in a container, producing stitch files. We compare <strong>metrics, not stitches</strong>: stitch count
-(±10 %), bounds (±0.5 mm), colour sequence (exact), trims and jumps (±1), coverage IoU (≥ 0.9). Running
-Ink/Stitch as an oracle uses it, it does not copy it; implementers see metric reports, not Ink/Stitch
-code. Differences we intend are recorded in the <strong>deviations ledger</strong> (<code>conformance/deviations.toml</code>),
-each with a reason and a link to the requirement that motivates it (for example <code>DEV-LCK-001</code>: the
-lock shapes are StitchCraft’s own). Starts in M8.</p>
+<p>A pinned Ink/Stitch runs as a black box on a corpus of SVG files written for StitchCraft, and writes
+machine files. Running Ink/Stitch as an oracle uses it and doesn’t copy it
+(<a href="#adr-0001-mit-or-apache-20-clean-room-from-inkstitch">ADR-0001</a>, decision 6). The job fetches it at the commit
+<code>conformance/inkstitch/pin.toml</code> names, and implementers see measures instead of Ink/Stitch’s code.
+<code>cargo xtask conformance --differential</code> runs the <code>inkstitch</code> cases (<code>conformance/cases/inkstitch/</code>):
+for each, Ink/Stitch and StitchCraft, planning on the reference machine, each write a PES file, and
+StitchCraft’s reader reads both back, so that both are measured on PES’s 0.1 mm grid
+(<code>xtask/src/conformance/differential.rs</code>). We compare <strong>measures, not stitches</strong>:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Measure</th><th>Tolerance</th></tr>
+</thead>
+<tbody>
+<tr><td>stitches, the needle-downs</td><td>within 10 %</td></tr>
+<tr><td>size, the bounds of the needle points</td><td>each side within 0.5 mm</td></tr>
+<tr><td>threads, in order</td><td>the same</td></tr>
+<tr><td>trims, and jumps</td><td>each within 1</td></tr>
+<tr><td>overlap of the thread’s footprints, once their centres are made one (<code>stitchcraft_testkit::metrics</code>)</td><td>0.9 at least</td></tr>
+</tbody>
+</table>
+</div>
+<p>Differences we intend are recorded in the <strong>deviations ledger</strong> (<code>conformance/deviations.toml</code>), each
+with a reason and a link to the requirement that motivates it (<code>DEV-LCK-001</code>, say: the lock shapes
+are StitchCraft’s own). A case excuses a measure with the entry that explains it, and the report shows
+the difference as excused. An excuse for a measure that agrees fails the case, so that every reason in
+the ledger is still true. <code>REQ-SVG-008</code> is the requirement, and the only one of level L3. The other runs
+of the suite leave it and its cases to this one. Until M8 reads every <code>inkstitch:</code> attribute, the corpus
+is the designs the SVG reader sews in full, at Ink/Stitch’s defaults, with trim and stop commands and the
+file version. <code>conformance/inkstitch/README.md</code> says how to run it by hand and how to add a case.</p>
 <h3 id="l4--physical-milestone-gates"><a class="header" href="#l4--physical-milestone-gates">L4 — Physical (milestone gates)</a></h3>
 <p>Machine checkpoints sew generated test sheets on the target machine and record the results through the
 <strong>Sew-out report</strong> issue form (<a href="#machine-testing-protocol">machine testing</a>). A checkpoint result is
@@ -9838,7 +9861,7 @@ will let users validate a machine profile with the same cases.</p>
 </thead>
 <tbody>
 <tr><td>Every PR</td><td>L0, L1 (no fuzzing), L2 with fixed seeds, <code>--check</code> rules, the data cases’ golden files on Linux, macOS and Windows (<a href="#cross-platform-check">cross-platform check</a>), coverage floors, mutants in the changed lines</td></tr>
-<tr><td>Nightly</td><td>L1 fuzzing, L2 fresh seeds, L3 differential</td></tr>
+<tr><td>Nightly</td><td>L1 fuzzing, L2 fresh seeds, L3 differential (also on a pull request that changes it)</td></tr>
 <tr><td>Weekly</td><td>Mutation testing of every shipped crate, against the recorded counts</td></tr>
 <tr><td>Milestone close</td><td>All requirements of the milestone <code>active</code> and green; its machine checkpoint signed off</td></tr>
 <tr><td>Release</td><td>Everything above, plus the compatibility gate green on VectorCraft <code>stable</code></td></tr>
@@ -11580,7 +11603,9 @@ the groups around it, with the region code from M5.1. Until then the adapter sew
 <li>custom locks drawn as SVG paths, which the adapter reads for the engine. Until then they sew the half
 stitch, with <code>SC-W0503</code>.</li>
 <li><code>stitch import-inkstitch file.svg -o file.vectorcraft</code></li>
-<li>L3 differential conformance against a pinned Ink/Stitch with the deviations ledger</li>
+<li>L3 differential conformance against a pinned Ink/Stitch with the deviations ledger. Its runner and its
+nightly job came first (<code>cargo xtask conformance --differential</code>, <code>REQ-SVG-008</code>), with designs the SVG
+reader sews in full; each setting the adapter learns to read brings its designs into the corpus</li>
 </ul>
 <p>Ink/Stitch’s font
 library is part of that corpus: hundreds of real Ink/Stitch files, mostly satin, downloaded at a pinned
