@@ -369,6 +369,10 @@ fn req_auto_009_the_lowest_area_that_covers_the_design_is_the_background_and_is_
         assert_eq!(ids(&out), ["logo"]);
         assert_eq!(named(&out, "logo").shape, logo().shape);
         assert_eq!(said(&diagnostics, Code::AutoBackground), [message]);
+        // Nothing else is said of it: left out, it is no area that the logo covers.
+        let of_it: Vec<String> =
+            diagnostics.iter().filter(|d| d.element.as_ref().is_some_and(|id| id.as_str() == "background")).map(ToString::to_string).collect();
+        assert_eq!(of_it, [message]);
     }
     // It covers the box around the design's paths to within 0.5 mm of each side, here a line's.
     let corners = || line("corners", &[(0.0, 0.0), (30.0, 20.0)], 0.5);
@@ -556,6 +560,12 @@ fn req_auto_009_what_shows_of_the_background_inside_the_picture_is_sewn() {
         assert_eq!(ids(&out), ["frame", white]);
         assert!(near(area(named(&out, white)), shows, 1e-6), "{white}: {}", area(named(&out, white)));
         assert_eq!(said(&diagnostics, Code::AutoBackground), [message]);
+        // The background, left out but for what shows of it, isn't counted among the areas that sew only what
+        // shows of them.
+        assert_eq!(
+            said(&diagnostics, Code::AutoLayers),
+            ["info SC-I0908: 1 area is digitized whole under the areas that fill its holes, which sew after it."]
+        );
     }
 }
 
@@ -679,6 +689,14 @@ fn req_auto_023_an_area_moves_back_past_no_stop_and_no_shape_on_it() {
     };
     // A stop after the detail: nothing moves across it, so the square keeps its place and its hole.
     kept(vec![detail(&[("stop_after", "true")]), square(), far()], &["detail"]);
+    // A stop after the square: an element with a stop after it keeps its place, and the square its hole.
+    let stopped = automatic(fill(
+        "square",
+        &[&[(0.0, 0.0), (30.0, 0.0), (30.0, 30.0), (0.0, 30.0)], &[(10.0, 10.0), (10.0, 20.0), (20.0, 20.0), (20.0, 10.0)]],
+        &BLUE,
+        &[("stop_after", "true")],
+    ));
+    kept(vec![detail(&[]), stopped, far()], &["detail"]);
     // A line drawn across the square between them: the square can't move back past it, which it covers.
     kept(vec![detail(&[]), line("across", &[(-5.0, 25.0), (35.0, 25.0)], 2.0), square(), far()], &["detail", "across"]);
     // A line far from the square, between them: the square moves back past it.
@@ -719,6 +737,30 @@ fn req_auto_023_an_area_and_one_in_its_hole_round_a_part_of_it_both_sew() {
     assert_eq!(ids(&out)[..2], ["white", "red"], "{:?}", said(&diagnostics, Code::AutoUnder));
     assert!(near(area(named(&out, "red")), 3600.0 - 900.0 + 100.0, 1e-6), "{}", area(named(&out, "red")));
     assert!(area(named(&out, "white")) > 900.0 - 9.2 * 9.2 - 1e-6, "{}", area(named(&out, "white")));
+}
+
+#[test]
+fn req_auto_023_a_hole_that_areas_and_a_part_of_the_area_fill_together_closes() {
+    // The same red square under a ring in 2 halves: what shows of the red is a frame round the ring and the
+    // middle inside it, which no hole of either half holds. The halves and the red's own middle fill the
+    // frame's hole, which closes under the halves: the red sews whole, as drawn, and is cut away under them,
+    // and the half sewn first reaches under the other.
+    let half = |id: &str, side: f64, inner: f64| {
+        let ring = [(side, 15.0), (30.0, 15.0), (30.0, 25.0), (inner, 25.0), (inner, 35.0), (30.0, 35.0), (30.0, 45.0), (side, 45.0)];
+        automatic(fill(id, &[&ring], &BLUE, &[]))
+    };
+    let (out, diagnostics) =
+        sewn(vec![rect("red", (0.0, 0.0), (60.0, 60.0)), half("left", 15.0, 25.0), half("right", 45.0, 35.0), rect("far", (70.0, 0.0), (75.0, 5.0))]);
+    assert_eq!(ids(&out)[0], "red");
+    assert_eq!(
+        said(&diagnostics, Code::AutoLayers),
+        ["info SC-I0908: 1 area is digitized whole under the areas that fill its holes, which sew after it."]
+    );
+    assert_eq!(
+        said(&diagnostics, Code::AutoUnder),
+        ["info SC-I0904: 1 area reaches 0.4 mm under the shapes sewn after it that it touches. 1 area is cut away under the areas sewn after \
+          it, 0.4 mm inside their edges."]
+    );
 }
 
 #[test]

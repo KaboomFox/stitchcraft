@@ -157,3 +157,79 @@ fn an_area_whose_move_needs_more_work_than_its_budget_allows_keeps_its_place_and
     assert_eq!(said.message, format!("Finding where this area sews needed more than the work budget of {} units, so it keeps its place.", least - 1));
     assert!(matches!(flat.elements.last(), Some((13, Cow::Borrowed(_)))));
 }
+
+#[test]
+fn an_area_whose_part_that_shows_needs_more_work_than_its_budget_allows_is_sewn_as_drawn_or_left_out() {
+    // A square and 300 squares far from it drawn after it: finding what of it shows looks past each, a unit
+    // each, the most work of any step, twice what a square sews. With a unit less, it is sewn as it is drawn,
+    // in its place, which is said; or, the picture's background, it is left out whole.
+    let mut elements = vec![automatic("square", &[square((0.0, 0.0), (10.0, 10.0))])];
+    elements.extend((0..300_u32).map(|k| {
+        let x = 20.0 + 10.0 * f64::from(k);
+        automatic(&format!("far-{k}"), &[square((x, 0.0), (x + 5.0, 5.0))])
+    }));
+    let design = Design::new(elements, DesignSettings::default()).unwrap();
+    let rules: Vec<Option<AutoParams>> = design.elements().iter().map(|_| Some(AutoParams::defaults())).collect();
+    for (background, consequence, first) in
+        [(false, "it is sewn as it is drawn, in its place", 0), (true, "it is left out whole as the picture's background", 1)]
+    {
+        let least = least_work(|budget| flattened(&design, &rules, background, budget).said);
+        let flat = flattened(&design, &rules, background, &Budget { max_work: least - 1, ..Budget::DEFAULT });
+        let [said] = flat.said.as_slice() else { panic!("{:?}", flat.said) };
+        assert_eq!((said.code, said.element.as_ref().map(ElementId::as_str)), (Code::AutoLayers, Some("square")));
+        assert_eq!(
+            said.message,
+            format!("Finding what of this area shows needed more than the work budget of {} units, so {consequence}.", least - 1)
+        );
+        assert!(matches!(flat.elements.first(), Some((index, Cow::Borrowed(_))) if *index == first), "{background}");
+    }
+}
+
+#[test]
+fn the_lowest_shape_told_to_be_the_background_is_left_out_though_it_is_no_layer() {
+    // Told that the lowest shape is the picture's background, `flattened` leaves it out whatever it is: here a
+    // shape with settings, no automatic area, of which nothing is kept.
+    let design =
+        Design::new(vec![filled("background", &[square((0.0, 0.0), (40.0, 40.0))]), automatic("square", &[small()])], DesignSettings::default())
+            .unwrap();
+    let flat = flattened(&design, &[None, Some(AutoParams::defaults())], true, &Budget::DEFAULT);
+    assert_eq!((flat.elements.iter().map(|(index, _)| *index).collect::<Vec<_>>(), flat.kept), (vec![1], 0));
+}
+
+#[test]
+fn a_part_in_a_hole_is_a_detail_wider_than_touching() {
+    // A hole 10 mm wide and 30 mm tall, and a strip along its left side in it, as large as the smallest area
+    // or larger: 0.04 mm wide, no wider than TOUCHING, a hairline, it is no detail; 0.1 mm wide, it is. A
+    // square beside the hole, whose box meets the hole's, lies outside it, and is no detail.
+    let hole = [square((10.0, 10.0), (20.0, 40.0))];
+    let is_detail = |part: Polygon| detail(&hole, &[part], 1.0, &mut Budget::DEFAULT.meter()).unwrap();
+    assert!(!is_detail(square((10.0, 10.0), (10.04, 40.0))));
+    assert!(is_detail(square((10.0, 10.0), (10.1, 40.0))));
+    assert!(!is_detail(square((20.0, 10.0), (25.0, 15.0))));
+}
+
+#[test]
+fn a_hole_closes_when_its_details_leave_no_gap_in_it_wider_than_touching() {
+    // A square with a hole 20 mm wide, and a square in the hole drawn after it, a gap all round between them:
+    // 0.02 mm wide, a hairline that rounding leaves, the hole closes under it; 0.1 mm wide, fabric shows
+    // through, and the hole stays open.
+    let closes = |gap: f64| {
+        let holed = part(&[(0.0, 0.0), (40.0, 0.0), (40.0, 40.0), (0.0, 40.0)], &[&[(10.0, 10.0), (10.0, 30.0), (30.0, 30.0), (30.0, 10.0)]]);
+        let layers = [Some(layer_of(vec![holed])), Some(layer_of(vec![square((10.0 + gap, 10.0 + gap), (30.0 - gap, 30.0 - gap))]))];
+        !details(&layers, &boxes(&layers), 0, &mut Budget::DEFAULT.meter()).unwrap().is_empty()
+    };
+    assert!(closes(0.02));
+    assert!(!closes(0.1));
+}
+
+#[test]
+fn an_area_with_no_hole_closed_has_no_move_to_make_and_costs_no_work() {
+    // 2 squares side by side, neither with a hole closed: without any work, they keep their places, and
+    // nothing is said.
+    let parts = [square((0.0, 0.0), (10.0, 10.0)), square((10.0, 0.0), (20.0, 10.0))];
+    let elements: Vec<Element> = parts.iter().enumerate().map(|(k, part)| automatic(&format!("square-{k}"), std::slice::from_ref(part))).collect();
+    let mut layers: Vec<Option<Layer>> = parts.iter().map(|part| Some(layer_of(vec![part.clone()]))).collect();
+    let (mut order, mut said) = (vec![0, 1], Vec::new());
+    moved(&elements, &mut layers, &mut order, &Budget { max_work: 0, ..Budget::DEFAULT }, &mut said);
+    assert_eq!((order, said), (vec![0, 1], Vec::new()));
+}
