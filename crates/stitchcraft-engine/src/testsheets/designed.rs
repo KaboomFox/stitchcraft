@@ -246,11 +246,12 @@ mod tests {
     }
 
     #[test]
-    fn a_stop_or_positions_before_any_element_change_nothing() {
+    fn a_stop_or_positions_or_a_clip_before_any_element_change_nothing() {
         // Each is for the last element drawn so far, and there is none yet.
         let mut d = Drawing::new("none");
         d.stop();
         assert!(d.positions((0.0, 0.0), (1.0, 1.0)).is_ok());
+        d.clip(vec![polygon(&[(0.0, 0.0), (1.0, 0.0), (1.0, 1.0)]).unwrap()]);
         assert!(d.elements.is_empty());
     }
 

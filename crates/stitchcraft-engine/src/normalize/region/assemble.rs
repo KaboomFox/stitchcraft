@@ -413,6 +413,10 @@ mod tests {
         let grown = unjoined.grown();
         assert_eq!(grown.code, Code::InternalCheckFailed);
         assert!(grown.message.contains("sewn at its own size"), "{}", grown.message);
+        // Of a clip's area, or of what it leaves of a fill: the element isn't sewn.
+        let clipped = unjoined.clip();
+        assert_eq!(clipped.code, Code::InternalCheckFailed);
+        assert!(clipped.message.contains("clip paths") && clipped.message.contains("it is not sewn"), "{}", clipped.message);
     }
 
     /// A square `side` wide from (`x`, `y`), each side cut into `cuts` segments: counter-clockwise in y-up

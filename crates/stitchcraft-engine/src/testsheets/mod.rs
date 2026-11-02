@@ -593,7 +593,12 @@ mod tests {
         assert!(quarter.iter().any(|q| q.distance(corner) > radius - 1.0), "it reaches its round edge");
         let zigzag: Vec<_> = sewn("TS-16", "zigzag").iter().map(drawn).collect();
         assert!(zigzag.iter().all(|q| q.x() <= 15.05 || q.x() >= 24.95), "{zigzag:?}");
-        assert!(zigzag.iter().any(|q| q.x() < 1.0) && zigzag.iter().any(|q| q.x() > 39.0));
+        // It starts and ends where it is drawn to, which the clip path's outer edges leave inside it.
+        let at = |(x, y): (f64, f64)| stitchcraft_core::Point::new(x, y).unwrap();
+        let (Some(first), Some(last), Some(&start), Some(&end)) = (zigzag.first(), zigzag.last(), ts16::ZIGZAG.first(), ts16::ZIGZAG.last()) else {
+            panic!("{zigzag:?}")
+        };
+        assert!(first.distance(at(start)) < 0.06 && last.distance(at(end)) < 0.06, "{zigzag:?}");
     }
 
     #[test]
