@@ -247,26 +247,28 @@ After sewing, check:
 - If it asks for a larger hoop, turn the design a quarter turn on the machine's screen. Does it take it then?
 - The frame measures 20.0 × 60.0 mm (± 0.5 mm), tall side top to bottom, the F at the top left.
 
-## TS-11B — New fills: contour fills
+## TS-11B — New fills: contour and circular fills
 
-125.0 × 116.0 mm · 10611 stitches, 9 jumps, 8 trims, 2 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
+125.0 × 166.0 mm · 15314 stitches, 12 jumps, 11 trims, 3 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
 Drawn as a design, which VectorCraft's Test Sheet filter draws too.
 
-![TS-11B as it will sew: 9 contour fills in 3 rows. At the top, in green, 3 discs: one round a hole set off its middle, a single spiral and a double spiral. In the middle, in blue, 3 five-pointed stars whose rings have round, mitred and bevelled corners. At the bottom, in red, 2 squares joined by a narrow neck, a rectangle, and a leaf. Jump threads join the samples in each row.](../../images/generated/testsheet-ts-11b.png)
+![TS-11B as it will sew: 9 contour fills in 3 rows and 3 circular fills under them. At the top, in green, 3 discs: one round a hole set off its middle, a single spiral and a double spiral. In the second row, in blue, 3 five-pointed stars whose rings have round, mitred and bevelled corners. In the third, in red, 2 squares joined by a narrow neck, a rectangle, and a leaf. At the bottom, in gold, a spiral round the middle of a disc with a hole, of a star and of a rectangle whose rings fade. Jump threads join the samples in each row.](../../images/generated/testsheet-ts-11b.png)
 
-Threads: Emerald Green, Blue, Red.
+Threads: Emerald Green, Blue, Red, Deep Gold.
 
 After sewing, check:
 
-- Each sample is a contour fill: rings that follow its outline inward, a row spacing apart, sewn as one line over the default underlay. Top row, in green, left to right: a disc 36 mm across sewn inner to outer round a hole, then a single spiral and a double spiral, the rings 0.25 mm apart. Middle row, in blue: stars 40 mm across with round, mitred and bevelled corners, the rings 0.4 mm apart. Bottom row, in red: 2 squares joined by a neck 3 mm wide, a rectangle whose rings alternate direction, and a leaf smoothed by 0.5 mm.
+- The top 3 rows are contour fills: rings that follow the outline inward, a row spacing apart, sewn as one line over the default underlay. Top row, in green, left to right: a disc 36 mm across sewn inner to outer round a hole, then a single spiral and a double spiral, the rings 0.25 mm apart. Second row, in blue: stars 40 mm across with round, mitred and bevelled corners, the rings 0.4 mm apart. Third row, in red: 2 squares joined by a neck 3 mm wide, a rectangle whose rings alternate direction, and a leaf smoothed by 0.5 mm.
+- The bottom row, in gold, is circular fills: a spiral round the middle of each shape, cut by its outline, over the default underlay. Left to right: the disc round its hole, the star, and a rectangle whose circles fade from 0.25 mm apart at its middle to 1 mm at its corners. Where the spiral leaves the shape and comes back, the needle travels inside it under the spiral sewn later.
 - Does fabric show between the rings, or does a fill pucker? Measure the discs: do they sew 36 mm across?
 - Inner to outer steps in from ring to ring and sews each on its way out. Do the steps show as a line across the rings? On the rectangle, whose rings alternate, the steps don't cross: does it look calmer than the disc?
 - Where do the spirals end in the middle, and the double spiral on its outline? Is there a knot or a bump there?
 - On the stars, do the mitred rings reach into the points, and the round and bevelled ones leave a gap at each tip? Which star looks best?
 - Does the neck between the 2 squares fill, where the rings part to each side? Does the smoothed leaf's line run evenly, without kinks?
+- Do the circular fills' circles look round and even, and does fabric show between them? Does the travel between the pieces of a spiral show anywhere, on the star's points or round the disc's hole? Does the fading rectangle look denser at its middle and lighter at its corners, as it should?
 - How long does the sheet take? A contour fill sews as one line, with no travel between rows.
 
 ## TS-11C — New fills: meander fills

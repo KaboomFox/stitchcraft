@@ -11,8 +11,10 @@ with its updater, and prints each difference.
 A row's `read_by` lists the fill methods that read it as they sew, though the window doesn't show it for
 them: the tatami fill's underlay, which every fill method but those `to_stitch_groups` leaves out sews,
 reads `angle`, `running_stitch_length_mm`, `running_stitch_tolerance_mm` and `staggers`, and
-`row_spacing_mm` and `max_stitch_length_mm` where its own are not set (`UNDERLAY_READS`). The script
-finds those methods and what the underlay reads in Ink/Stitch's code, and compares each row with them.
+`row_spacing_mm` and `max_stitch_length_mm` where its own are not set (`UNDERLAY_READS`). A method's own
+sewing, its `do_<method>` function, reads the properties it takes from the element, as the circular fill
+reads `skip_last` (`method_reads`). The script finds those methods and what each reads in Ink/Stitch's
+code, and compares each row with them.
 
 A declared default is what Ink/Stitch's settings window shows. What it sews for a file that sets no value
 is the fallback its code reads the attribute with, `self.get_..._param("name", fallback)`, and the two
@@ -159,6 +161,7 @@ def declarations(root, locks):
                             problems.append(f"{section} {name}: cannot compare the computed condition `{source}`")
                             conditions = []
                 found[(section, name)] = {
+                    "property": getattr(node, "name", None),
                     "type": literal(kw["type"])[0] if "type" in kw else None,
                     "unit": gettext(kw["unit"]) if "unit" in kw else None,
                     "default": default,
@@ -317,6 +320,21 @@ def underlay(root):
     return sewn, read
 
 
+def method_reads(root, theirs):
+    """{fill method: the parameters it reads as it sews}: the element's properties that its `do_<method>`
+    function reads as `self.<property>`, each the parameter whose `@param` declares it. A method that hands
+    the element to a function of its own reads there too, which this doesn't follow."""
+    properties = {fact["property"]: name for (section, name), fact in theirs.items() if section == "fill" and fact["property"]}
+    methods = methods_of(root, "fill")
+    tree = ast.parse((root / ELEMENTS["fill"]).read_text(encoding="utf-8"))
+    reads = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name.removeprefix("do_") in methods and node.name.startswith("do_"):
+            used = {n.attr for n in ast.walk(node) if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name) and n.value.id == "self"}
+            reads[node.name.removeprefix("do_")] = {properties[attr] for attr in used if attr in properties}
+    return reads
+
+
 def meander_tiles(root):
     """The meander tiles' ids, in the order the settings window lists them: sorted by name."""
     tiles = []
@@ -334,6 +352,7 @@ def main(checkout):
     reads = getters(root, theirs)
     ours = {(p["element"], p["name"]): p for p in data["param"]}
     with_underlay, underlay_reads = underlay(root)
+    sewn_reads = method_reads(root, theirs)
     if with_underlay is None:
         problems.append(f"fill: {', '.join(UNDERLAY_FUNCTIONS)} no longer show which methods sew the underlay")
     for key in sorted(set(ours) | set(theirs)):
@@ -367,11 +386,14 @@ def main(checkout):
         declared = sorted(c for c in fact["applies_to"] if (key[0], key[1], c) not in OMITTED)
         if sorted(row["applies_to"]) != declared:
             problems.append(f"{key[0]} {key[1]}: applies to {sorted(row['applies_to'])} here, {declared} in Ink/Stitch")
-        unshown = []
+        unshown = set()
         if key[0] == "fill" and key[1] in UNDERLAY_READS and with_underlay is not None:
             if UNDERLAY_READS[key[1]] not in underlay_reads:
                 problems.append(f"{key[0]} {key[1]}: the underlay no longer reads self.{UNDERLAY_READS[key[1]]}")
-            unshown = sorted(m for m in with_underlay if m not in declared)
+            unshown |= {m for m in with_underlay if m not in declared}
+        if key[0] == "fill":
+            unshown |= {m for m, read in sewn_reads.items() if key[1] in read and m not in declared}
+        unshown = sorted(unshown)
         if sorted(row.get("read_by", [])) != unshown:
             problems.append(f"{key[0]} {key[1]}: read by {sorted(row.get('read_by', []))} here, {unshown} in Ink/Stitch")
     start, end, _ = locks

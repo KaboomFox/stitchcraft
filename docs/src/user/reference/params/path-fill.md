@@ -2,11 +2,11 @@
 
 # Path fill parameters
 
-A fill sewn as one path, a contour fill's or a meander fill's: how the path is smoothed, and its
+A fill sewn as a path, a contour, meander or circular fill's: how the path is smoothed, and its
 repeats and bean stitch, which Ink/Stitch declares for its fills apart from a stroke's. Bean stitch
 comes first, and each repeat then sews everything sewn so far again, the other way round.
 
-Applies to Contour fill, Meander fill.
+Applies to Contour fill, Meander fill, Circular fill.
 
 ## Path
 
@@ -18,6 +18,7 @@ path as it is. A contour fill's spirals are not smoothed.
 
 - **Accepts:** a length from 0 to 100 mm
 - **Default:** `0`
+- **Applies to:** Contour fill, Meander fill
 - **Ink/Stitch:** same key and default; StitchCraft differs:
   - **DEV-FILL-017.** Before inner to outer's path is smoothed, StitchCraft's running stitch cuts it into points 5 times smoothness_mm apart, a point on each corner, where Ink/Stitch's evenly spaced points may cut a corner by up to twice the smoothness, as for a tatami fill's travel (DEV-FILL-007). The smoothed path is then cut where its rings began, at the same share of its length, and each piece is a span of the running stitch. The path lies where Ink/Stitch's does but takes more stitches: TS-11B's leaf, smoothed by 0.5 mm, takes 973 where its rings unsmoothed take 903, against Ink/Stitch's 830 and 828, 17 % more than Ink/Stitch's where the sheet's samples that are not smoothed take 2 to 12 % more.
 
@@ -38,6 +39,7 @@ twice, 4 there and back 4 times.
 **Bean stitch.** How many times to go back and forth over each stitch of the fill's path, before its repeats: 1
 sews every stitch three times (there, back and there again), 2 five times. Several numbers
 separated by spaces are taken in turn along the stitches: "1 0" makes every other stitch bold.
+A circular fill's travel between the pieces of its spiral is sewn once, and takes its turn.
 
 - **Accepts:** 1 to 16 whole numbers from 0 to 10, separated by spaces
 - **Default:** `0`

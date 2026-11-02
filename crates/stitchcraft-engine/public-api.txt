@@ -197,6 +197,20 @@ pub const fn stitchcraft_engine::generate::sewn_as(stitchcraft_params::stitch_ty
 pub fn stitchcraft_engine::generate::shortest_stitch(core::option::Option<stitchcraft_core::units::Mm>, &stitchcraft_engine::design::DesignSettings, &stitchcraft_plan::profile::MachineProfile) -> stitchcraft_core::units::Mm
 pub fn stitchcraft_engine::generate::stitch_type_of(&stitchcraft_engine::design::Element, &stitchcraft_engine::design::DesignSettings) -> core::option::Option<stitchcraft_params::stitch_type::StitchType>
 pub mod stitchcraft_engine::generators
+pub mod stitchcraft_engine::generators::circular
+pub struct stitchcraft_engine::generators::circular::Circular
+pub stitchcraft_engine::generators::circular::Circular::angle: f64
+pub stitchcraft_engine::generators::circular::Circular::end_spacing: core::option::Option<f64>
+pub stitchcraft_engine::generators::circular::Circular::expand: f64
+pub stitchcraft_engine::generators::circular::Circular::force_locks: bool
+pub stitchcraft_engine::generators::circular::Circular::inset: f64
+pub stitchcraft_engine::generators::circular::Circular::skip_last: bool
+pub stitchcraft_engine::generators::circular::Circular::spacing: f64
+pub stitchcraft_engine::generators::circular::Circular::stitching: stitchcraft_engine::generators::contour::Stitching
+pub stitchcraft_engine::generators::circular::Circular::travel: stitchcraft_engine::generators::tatami::sew::Travel
+pub stitchcraft_engine::generators::circular::Circular::underlay: alloc::vec::Vec<stitchcraft_engine::generators::tatami::sew::Layer>
+pub fn stitchcraft_engine::generators::circular::circular_fill(&stitchcraft_engine::normalize::region::Region, &stitchcraft_engine::generators::circular::Circular, core::option::Option<stitchcraft_core::units::Point>, core::option::Option<&stitchcraft_engine::generators::Approach>, &mut stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_engine::generators::circular::top_path(&stitchcraft_engine::normalize::region::Region, &stitchcraft_engine::generators::circular::Circular, &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::vec::Vec<stitchcraft_engine::generators::tatami::rows::Segment>, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::generators::contour
 pub enum stitchcraft_engine::generators::contour::Strategy
 pub stitchcraft_engine::generators::contour::Strategy::DoubleSpiral
@@ -296,6 +310,7 @@ pub fn stitchcraft_engine::generators::passes::RepeatParams::from_set(&stitchcra
 pub fn stitchcraft_engine::generators::passes::RepeatParams::from_set_as(&stitchcraft_params::set::ParamSet, stitchcraft_params::stitch_type::StitchType) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
 pub const stitchcraft_engine::generators::passes::BEAN_STITCH_REPEATS: &str
 pub const stitchcraft_engine::generators::passes::PATH_FILLS: &[stitchcraft_params::stitch_type::StitchType]
+pub fn stitchcraft_engine::generators::passes::beaned(&[stitchcraft_core::units::Point], &[u32], &[bool], &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::vec::Vec<stitchcraft_core::units::Point>, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_engine::generators::passes::doubled(alloc::vec::Vec<stitchcraft_core::units::Point>, u32, &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::vec::Vec<stitchcraft_core::units::Point>, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_engine::generators::passes::sew(&[stitchcraft_core::units::Point], u32, &[u32], stitchcraft_engine::generators::passes::Turn, &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::vec::Vec<stitchcraft_core::units::Point>, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::generators::pull

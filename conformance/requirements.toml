@@ -1133,6 +1133,69 @@ rationale = "Ink/Stitch's meander fill takes the tatami fill's underlay, start a
 milestone = "M7"
 status = "active"
 
+[[req]]
+id = "REQ-FILL-CIR-001"
+area = "fill/circular"
+level = "L2"
+statement = "A circular fill lays circles round the middle of each part grown by expand_mm, its centroid: one of 0.1 CSS pixel radius, then from row_spacing_mm out, each a row spacing past the last, until one lies 2 spacings past the part's farthest point, end_row_spacing_mm's where it is set. With end_row_spacing_mm, the step from a circle to the next is the row spacing plus the share of the way to the end spacing that the circle's radius is of the farthest point's distance, and the end spacing past the farthest point (DEV-FILL-021). Each circle has 64 sides, from its right-hand point, turning up as drawn first."
+rationale = "Ink/Stitch's circular fill, read at d59c9ab (lib/stitches/circular_fill.py: circular_fill; lib/elements/fill_stitch.py: do_circular_fill), and GEOS's buffer of a point, which it draws its circles with: checked with shapely 2.2 on GEOS 3.14."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CIR-002"
+area = "fill/circular"
+level = "L2"
+statement = "The spiral is the contour fill's double spiral through the circles (REQ-FILL-CON-004), from the outermost circle's first point, its turns cut into points by the running stitch's first length. The part cuts it where it meets the part's rings, and its pieces are the stretches inside the part, a stretch along a ring among them, in order along the spiral and running its way. 2 stretches that meet where the spiral touches a ring from inside are 2 pieces, and a point where it touches the part from outside is none."
+rationale = "Ink/Stitch's circular fill joins its circles with its contour fill's double spiral and cuts it with the shape, which GEOS does so, read at d59c9ab (lib/stitches/circular_fill.py: circular_fill; lib/stitches/contour_fill.py: _make_fermat_spiral) and checked with shapely 2.2 on GEOS 3.14."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CIR-003"
+area = "fill/circular"
+level = "L2"
+statement = "A spiral of one piece is sewn as a running stitch of running_stitch_length_mm, within running_stitch_tolerance_mm and at random lengths when they are on: from the needle along the outline to where the piece starts, along the piece, and from where it ends along the outline to the end, the next part's nearest point or the next element's offer, each way along the outline the shorter way round (DEV-FILL-022). Without a needle or an end, that way is left out. Each turn of the spiral, and each step between turns, is a span of the running stitch."
+rationale = "Ink/Stitch sews a circular fill whose spiral the shape cuts once so, read at d59c9ab (lib/stitches/circular_fill.py: circular_fill, _apply_start_end_commands)."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CIR-004"
+area = "fill/circular"
+level = "L2"
+statement = "A spiral of several pieces is sewn as a tatami fill routes its rows (REQ-FILL-TAT-001), each piece a row between its ends: each sewn once, every needle point a running stitch along it puts, from the end the route enters it by, and without its last needle point with skip_last. Between pieces the needle travels as a tatami fill's does (REQ-FILL-TAT-005): under the pieces not sewn yet, along lines at 45° and square to the fill's angle, or with underpath off along the rings and along the pieces themselves."
+rationale = "Ink/Stitch routes and sews a circular fill's pieces with its tatami fill's graph and travel, read at d59c9ab (lib/stitches/circular_fill.py: circular_fill, path_to_stitches; lib/stitches/tatami_fill.py)."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CIR-005"
+area = "fill/circular"
+level = "L2"
+statement = "A part that lies within its row spacing of its middle is sewn as one circle with a radius of the row spacing round its middle, a running stitch of even lengths from its right-hand point, and SC-W0318 says so. A part the spiral misses, which lies between 2 of its turns, is sewn as a running stitch round its outline from the outline's start, with no bean stitch or repeats, and SC-W0305 says so."
+rationale = "Ink/Stitch sews such parts so, read at d59c9ab (lib/stitches/circular_fill.py: circular_fill; lib/stitches/tatami_fill.py: fallback). The circle can reach past a part so small, and is worth a warning."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CIR-006"
+area = "fill/circular"
+level = "L2"
+statement = "Each part of a circular fill sews the tatami fill's underlay first (REQ-FILL-TAT-011), then its spiral over the part grown by expand_mm, nearest the needle first, each part ending nearest the next and the last nearest the next element. Bean stitch sews each stitch 2b + 1 times, b taken in turn from bean_stitch_repeats, but each stitch the needle travels between pieces once, which still takes its turn in the list. k repeats then sew 2^(k − 1) passes, each the other way from the one before (REQ-FILL-CON-006)."
+rationale = "Ink/Stitch's circular fill takes the tatami fill's underlay, start and end, and leaves its travel out of bean stitch, read at d59c9ab (lib/elements/fill_stitch.py: to_stitch_groups; lib/stitches/circular_fill.py: _apply_bean_stitch_and_repeats; lib/stitches/running_stitch.py: bean_stitch)."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CIR-007"
+area = "fill/circular"
+level = "L3"
+statement = "The circular fills StitchCraft sews TS-11B with, round a hole, on a star and fading, written as an SVG file with their Ink/Stitch parameters, sew in the Ink/Stitch that conformance/inkstitch/pin.toml names, run as a black box, as StitchCraft sews the sheet, by the measures of REQ-SVG-008 and within their tolerances. A measure that a case excuses with an entry of the deviations ledger may differ."
+rationale = "The circular fill is built from Ink/Stitch's behaviour, and the differential is how a file is shown to sew the same in both."
+milestone = "M7"
+status = "active"
+
 # ── VectorCraft ────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]

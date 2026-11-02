@@ -164,7 +164,8 @@ them (`REQ-SVG-003`).
   reads too, and `SC-I0805` lists each object left out. The
   `starting_point` and `ending_point` commands, which place where Ink/Stitch starts and ends a fill or a
   satin column, are not applied yet (`REQ-GEN-001`), and `SC-W0802` names each one on an object a viewer
-  shows. The [command table](inkstitch-compat-contract.md#commands) gives what the adapter does with
+  shows. The `target_point` command centres a circular fill and aims a ripple, and changes nothing the
+  adapter sews until it reads the settings that make a shape one, in M8. The [command table](inkstitch-compat-contract.md#commands) gives what the adapter does with
   each of the 12 commands. Before its file version 3, Ink/Stitch named 7 of them otherwise, such as
   `fill_start` for `starting_point`: the adapter reads those as the commands they became in any file,
   where Ink/Stitch renames them only in the files it updates and sews the old symbol elsewhere

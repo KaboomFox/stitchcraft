@@ -10,7 +10,7 @@ Vector art in, machine files out — PES for Brother first, then DST and more.</
 </p>
 
 StitchCraft brings machine embroidery — running and bean stitch, satin columns with underlay, tatami,
-contour and meander fills, and more — to VectorCraft, ArtCraft's open-source Illustrator, as sandboxed
+contour, meander and circular fills, and more — to VectorCraft, ArtCraft's open-source Illustrator, as sandboxed
 WebAssembly plug-ins plus a command-line tool. It reads the embroidery parameters Ink/Stitch stores in
 SVG files, so designs move between the tools.
 
