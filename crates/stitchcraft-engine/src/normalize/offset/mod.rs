@@ -27,7 +27,7 @@ mod boundary;
 mod buffer;
 mod generator;
 
-pub use buffer::buffer;
+pub use buffer::{buffer, buffer_with};
 pub(crate) use generator::{Meet, segments_meet};
 
 use stitchcraft_core::{Exhausted, Meter, Point};
@@ -38,6 +38,22 @@ use crate::normalize::near::to_side;
 /// A raw curve's segment and a boundary piece match when both of the piece's ends lie within this
 /// fraction of the distance of the segment.
 const MATCH: f64 = 1e-4;
+
+/// The corners a buffer turns, as GEOS's buffer parameters give them: the join, and for a round one how
+/// many segments approximate a quarter circle.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Corners {
+    /// How a corner is turned.
+    pub join: Join,
+    /// How many segments make a quarter circle of a round join.
+    pub quadrant_segments: u32,
+}
+
+impl Corners {
+    /// Round corners of 16 segments to a quarter circle, shapely's default, with which Ink/Stitch grows and
+    /// shrinks a tatami fill's parts.
+    pub const ROUND: Corners = Corners { join: Join::Round, quadrant_segments: generator::QUADRANT_SEGMENTS };
+}
 
 /// What offsetting a line gives.
 #[derive(Clone, Debug, PartialEq)]
@@ -333,17 +349,7 @@ mod tests {
             seen += 1;
             let line = words.polyline();
             let distance = words.number();
-            let join = match words.word() {
-                "mitre" => Join::Miter { limit: words.number() },
-                "round" => {
-                    words.number();
-                    Join::Round
-                }
-                _ => {
-                    words.number();
-                    Join::Bevel
-                }
-            };
+            let join = words.join();
             let expected = words.polylines();
             // Offset makes no curve Empty, 1 a Line and more Apart; every arm here runs for some case.
             let found = match offset(&line, distance, join, &mut Budget::DEFAULT.meter()).unwrap() {

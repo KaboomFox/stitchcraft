@@ -3,16 +3,18 @@
 # Tatami parameters
 
 Tatami fill: rows of running stitches across the fill's area, the needle points of neighbouring rows
-offset so that they never line up. Ink/Stitch's default fill.
+offset so that they never line up. Ink/Stitch's default fill. A contour fill takes its row spacing,
+its expand and its underlay from these settings too.
 
-Applies to Tatami fill.
+Applies to Tatami fill, Contour fill.
 
 ## Rows
 
 ### `angle`
 
 **Angle.** The direction of the rows, in degrees counter-clockwise from horizontal: 0 sews horizontal rows
-and 90 upright ones.
+and 90 upright ones. A contour fill's rings follow its outline, and its angle turns only its
+underlay.
 
 - **Accepts:** an angle in degrees
 - **Default:** `0`
@@ -20,13 +22,14 @@ and 90 upright ones.
 
 ### `row_spacing_mm`
 
-**Row spacing.** How far apart the rows are, measured square to them. Rows closer together cover the fabric more
-fully, and pull it in more.
+**Row spacing.** How far apart the rows are, measured square to them, or a contour fill's rings. Rows closer
+together cover the fabric more fully, and pull it in more.
 
 - **Accepts:** a length from 0.1 to 100 mm
 - **Default:** `0.25`
 - **Ink/Stitch:** same key and default; StitchCraft differs:
   - **DEV-FILL-012.** A point of a part's outline within 1e-9 mm of a row lies on it, and a row within 1e-9 mm of the part's far side lies on that side and is left out. Each row lies a whole number of row spacings past the part's first row, multiplied out. Ink/Stitch adds the row spacing in CSS pixels from row to row, and cuts each row with the part exactly, once the part is put on a grid of 1e-10 pixels. So a row on a side runs along it, crosses the part a hair beside it or misses it as the numbers round, and a part can have a row a hair inside its far side.
+  - **DEV-FILL-015.** A contour fill's hole rings grown by the row spacing are joined where they overlap. Ink/Stitch repairs the grown holes as one set of polygons, which keeps what 2 overlapping growths share as an island of material, a small ring of its own in the tree, where a spiral can end and which inner to outer sews when it is within reach.
 
 ### `end_row_spacing_mm`
 
@@ -36,6 +39,7 @@ row is the row spacing from the next.
 
 - **Accepts:** a length from 0.1 to 100 mm, or empty (0 or less counts as empty)
 - **Default:** empty
+- **Applies to:** Tatami fill
 - **Ink/Stitch:** same key; StitchCraft differs:
   - **DEV-FILL-003.** With end_row_spacing_mm, the step from row to row changes from the row spacing to the end spacing over the part's height, measured from the first row, and stays at the end spacing beyond it. Ink/Stitch carries the change on past the height, which reaches the rows within a row spacing of the part's far side when the first row lies before the part. With an end spacing smaller than the row spacing, over a part a few rows tall, the steps then shrink towards 0 and the rows pile up short of the far side without end.
   - **DEV-PRM-003.** An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column's deviates so. Ink/Stitch reads a manual stitch's as not set at 0 or below too, and doesn't warn.
@@ -43,8 +47,8 @@ row is the row spacing from the next.
 ### `expand_mm`
 
 **Expand.** How far past the drawn edge the top rows reach: each part is grown by this much, with round
-corners, before its rows are laid. The thread's pull opens gaps between fills sewn side by side,
-and this closes them. Negative values pull the rows in from the edge.
+corners, before its rows or rings are laid. The thread's pull opens gaps between fills sewn side
+by side, and this closes them. Negative values pull the rows in from the edge.
 
 - **Accepts:** a length from -10 to 10 mm
 - **Default:** `0`
@@ -60,6 +64,7 @@ Rounded up to an even number, so the needle comes back to where the stretch ende
 
 - **Accepts:** a whole number from 0 to 100
 - **Default:** `0`
+- **Applies to:** Tatami fill
 - **Ink/Stitch:** same key and default; StitchCraft differs:
   - **DEV-FILL-010.** Each gap-fill row is the next row of the grid past the stretch's last row, the stretch of its segment beside the gap-fill row before it, or the last row for the first, so it stops at the part's edge, and the rows stop where the part ends. Ink/Stitch repeats the last row, moved a spacing further each time and keeping its length, so a repeat can run outside the part; its spacing is the distance between the last 2 rows, where the grid's rows follow the end row spacing. The hops between gap-fill rows and the way back are running stitches kept inside the part as travel is, where Ink/Stitch stitches them as rows, straight.
 
@@ -71,7 +76,7 @@ Rounded up to an even number, so the needle comes back to where the stretch ende
 the longest stitch (`max_stitch_length_mm`) apart, a `staggers`-th of a stitch along from the
 row before's, so that neighbouring rows never line them up. A fraction draws diagonals that show
 less than whole numbers do. A negative number staggers the rows the other way, and 0 counts as 1,
-which lines every row's points up, as in Ink/Stitch.
+which lines every row's points up, as in Ink/Stitch. A contour fill staggers its underlay's rows so.
 
 - **Accepts:** a number from -100 to 100
 - **Default:** `4`
@@ -84,6 +89,7 @@ and leaving it out lowers the stitch count and the density along the fill's edge
 
 - **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `false`
+- **Applies to:** Tatami fill
 - **Ink/Stitch:** same key, meaning and default
 
 ## Travel
@@ -95,6 +101,7 @@ needle travels along the fill's outline, where the travel can show along the edg
 
 - **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `true`
+- **Applies to:** Tatami fill
 - **Ink/Stitch:** same key and default; StitchCraft differs:
   - **DEV-FILL-011.** With underpath off, or in a part the gratings of lines miss, the needle travels between 2 points of one ring the shorter way round it, by length, and on a tie the way that does not pass the ring's start. Ink/Stitch's travel along the outline counts nodes instead: its graph has a node every CSS pixel along the outline's sides, and at their corners and the rows' ends, and its edges carry no length, so the way with fewer nodes is taken. That is about the shorter way, but a way past many short sides, as round a curve drawn in short pieces, has more nodes for its length, and the way with fewer nodes can be the longer.
   - **DEV-FILL-013.** In a part the gratings of lines miss, with underpath on, the needle travels along the part's rings, as with underpath off. Ink/Stitch also travels along the outline there, but it smooths every way it travels with underpath on, as it smooths a way under the rows: the way cuts the outline's corners inside the part, and is kept inside it where it leaves it.
@@ -103,9 +110,9 @@ needle travels along the fill's outline, where the travel can show along the edg
 
 ### `fill_underlay`
 
-**Underlay.** Sew underlay before the top rows: rows of stitches farther apart than the top rows, square to
-them unless set otherwise. It holds the fabric still while the fill is sewn and lifts the top
-rows, so less fabric shows between them.
+**Underlay.** Sew underlay before the top rows, or a contour fill's rings: rows of stitches farther apart than
+the top rows, square to them unless set otherwise. It holds the fabric still while the fill is
+sewn and lifts the top rows, so less fabric shows between them.
 
 - **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `true`

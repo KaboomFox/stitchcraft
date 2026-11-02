@@ -33,8 +33,9 @@ use stitchcraft_plan::MachineProfile;
 
 use crate::common::{CommonParams, STOP_AFTER, TRIM_AFTER};
 use crate::design::{DesignSettings, Element, Join, Path, Shape};
+use crate::generators::contour::{Contour, ContourParams, Stitching, contour_fill, top_path};
 use crate::generators::manual::manual_stitch;
-use crate::generators::passes::RepeatParams;
+use crate::generators::passes::{FillRepeatParams, RepeatParams};
 use crate::generators::pull::PullParams;
 use crate::generators::running::raised;
 use crate::generators::running::{RunningParams, running_stitch};
@@ -88,10 +89,10 @@ params! {
         /// its stroke settings say. The element before it still ends near it, as Ink/Stitch's does.
         fill: Toggle = "true", label "Sew the fill";
 
-        /// The stitch the area is filled with. A tatami fill sews rows of running stitches across it, and a
-        /// fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without underlay (`SC-W0314`). The
-        /// other methods arrive in later versions; until then an element set to one is skipped
-        /// (`SC-W0011`).
+        /// The stitch the area is filled with. A tatami fill sews rows of running stitches across it, a
+        /// contour fill rings that follow its outline inward, and a fill set to Ink/Stitch's legacy fill is
+        /// sewn as a tatami fill without underlay (`SC-W0314`). The other methods arrive in later versions;
+        /// until then an element set to one is skipped (`SC-W0011`).
         fill_method: Choice = "tatami_fill", label "Fill method", choices FILL_METHODS;
     }
 }
@@ -162,7 +163,8 @@ pub(crate) fn generate_with(
 /// What a preview shows of a fill too costly to sew: where its top stitches lie ([`rows`]).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Rows {
-    /// The segments of its top rows, in millimetres; `None` when it is skipped, or is not a fill.
+    /// The segments of its top rows, or of a contour fill's path, in millimetres; `None` when it is skipped,
+    /// or is not a fill.
     pub segments: Option<Vec<Segment>>,
     /// What was changed, left out or wrong, each naming the element.
     pub diagnostics: Vec<Diagnostic>,
@@ -170,8 +172,9 @@ pub struct Rows {
 
 /// The segments of the top rows of `element`, a fill, in a design with `settings` on the machine `profile`
 /// describes, with the budget's work: where [`generate`] lays its top stitches, without the stitches, the
-/// underlay or the needle's travel, for a small part of the work. Its settings are read as `generate`
-/// reads them, and what they say is said the same.
+/// underlay or the needle's travel, for a small part of the work. A contour fill has no rows, and gives the
+/// segments of its path round its rings. Its settings are read as `generate` reads them, and what they say
+/// is said the same.
 pub fn rows(element: &Element, settings: &DesignSettings, profile: &MachineProfile, budget: &Budget) -> Rows {
     let mut diagnostics = unknown_keys(&element.params, PARAMETERS);
     let laid = top_rows_of(element, settings, profile, &mut diagnostics, &mut budget.meter());
@@ -320,6 +323,11 @@ fn top_rows_of(
     }
     let neighbours = Neighbours::default();
     let Some(Prepared { region, sewing, .. }) = prepare(element, settings, profile, &neighbours, diagnostics, meter)? else { return Ok(None) };
+    // A contour fill has no rows: the preview shows its path round its rings.
+    if sewing.stitch_type == StitchType::ContourFill {
+        let Some(contour) = contour_settings(&sewing, diagnostics) else { return Ok(None) };
+        return top_path(&region, &contour, meter).map(Some);
+    }
     let Some(fill) = fill_settings(&sewing, diagnostics) else { return Ok(None) };
     top_rows(&region, &fill, meter).map(Some)
 }
@@ -412,7 +420,8 @@ fn too_narrow(path: &Path, width: Mm, settings: &DesignSettings) -> bool {
 /// A fill's stitches over its `region` as `sewing` says, varied at random by its `rng`, or `None` when it
 /// is skipped. Its `fill_method` picks the generator. A tatami fill's needle travels in the first of the
 /// running stitch's lengths, at least twice the shortest stitch, and within its tolerance, between its top
-/// rows and between the rows of its underlay (`DEV-SAT-005`).
+/// rows and between the rows of its underlay (`DEV-SAT-005`), and a contour fill's between the rows of its
+/// underlay.
 fn fill(
     sewing: &Sewing,
     region: &Region,
@@ -420,9 +429,48 @@ fn fill(
     diagnostics: &mut Vec<Diagnostic>,
     meter: &mut Meter,
 ) -> Result<Option<Stitched>, Exhausted> {
-    let Some(fill) = fill_settings(sewing, diagnostics) else { return Ok(None) };
     let neighbours = sewing.neighbours;
+    if sewing.stitch_type == StitchType::ContourFill {
+        let Some(contour) = contour_settings(sewing, diagnostics) else { return Ok(None) };
+        return Ok(Some(contour_fill(region, &contour, neighbours.needle, rng, meter)?));
+    }
+    let Some(fill) = fill_settings(sewing, diagnostics) else { return Ok(None) };
     Ok(Some(tatami_fill(region, &fill, neighbours.needle, neighbours.next.as_ref(), rng, meter)?))
+}
+
+/// The contour fill `sewing` describes, its settings read as a contour fill reads them: its rings the row
+/// spacing apart, over each part grown by `expand_mm`, after the tatami fill's underlay. `None` when they
+/// cannot be read, which `diagnostics` says. Its longest stitch is raised as a tatami fill's is.
+fn contour_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Option<Contour> {
+    let tatami = sewing.read(TatamiParams::from_set_as, diagnostics);
+    let running = sewing.read(RunningParams::from_set_as, diagnostics);
+    let contour = sewing.read(ContourParams::from_set_as, diagnostics);
+    let repeats = sewing.read(FillRepeatParams::from_set_as, diagnostics);
+    let (Some(mut tatami), Some(running), Some(contour), Some(repeats), Some(shared)) = (tatami, running, contour, repeats, sewing.shared) else {
+        return None;
+    };
+    let (longest, travel) = fill_lengths(&mut tatami, &running, shared, diagnostics)?;
+    let jitter = running.enable_random_stitch_length.then_some(running.random_stitch_length_jitter_percent / 100.0);
+    Some(Contour {
+        strategy: contour.strategy(),
+        spacing: tatami.row_spacing_mm.get(),
+        corners: contour.corners(),
+        clockwise: contour.clockwise,
+        avoid_self_crossing: contour.avoid_self_crossing,
+        smoothness: contour.smoothness_mm.get(),
+        stitching: Stitching {
+            length: longest.get(),
+            tolerance: running.running_stitch_tolerance_mm.get(),
+            jitter,
+            beans: repeats.bean_stitch_repeats,
+            repeats: repeats.repeats,
+        },
+        underlay: tatami.underlay(longest, travel),
+        inset: tatami.fill_underlay_inset_mm.get(),
+        expand: tatami.expand_mm.get(),
+        force_locks: shared.force_locks,
+        travel,
+    })
 }
 
 /// The tatami fill `sewing` describes, its settings read as its stitch type reads them; `None` when they
@@ -446,6 +494,16 @@ fn fill_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Option<F
         diagnostics.push(not_yet(&format!("This element's fill method, `{method}`, is not sewn by this version of StitchCraft yet")));
         return None;
     }
+    let (longest, travel) = fill_lengths(&mut tatami, &running, shared, diagnostics)?;
+    let pull = if legacy { Pull::default() } else { fill_pull(&pull, diagnostics) };
+    Some(tatami.fill(longest, &running, travel, pull, shared.force_locks))
+}
+
+/// A fill's longest stitch, and its underlay's, raised to twice the shortest stitch with `SC-W0402` where
+/// shorter, and how its needle travels between rows: in the first of the running stitch's lengths, raised
+/// so too, within its tolerance. `None`, saying so, should the longest stitch or the length be missing,
+/// which the registry never leaves them.
+fn fill_lengths(tatami: &mut TatamiParams, running: &RunningParams, shared: Shared, diagnostics: &mut Vec<Diagnostic>) -> Option<(Mm, Travel)> {
     // A fill's longest stitch has a default of its own, so it is never empty; the registry reads it so.
     let (Some(longest), Some(&length)) = (shared.max_stitch, running.running_stitch_length_mm.first()) else {
         diagnostics.push(Diagnostic::new(Code::InternalCheckFailed, "A fill's longest stitch or travel stitch length is missing."));
@@ -467,8 +525,7 @@ fn fill_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Option<F
         underpath: tatami.underpath,
         jump: shared.jump.get(),
     };
-    let pull = if legacy { Pull::default() } else { fill_pull(&pull, diagnostics) };
-    Some(tatami.fill(longest, &running, travel, pull, shared.force_locks))
+    Some((longest, travel))
 }
 
 /// A fill's pull compensation, as its settings give it: Ink/Stitch reads a value below 0 as 0, and so does a
@@ -547,10 +604,10 @@ fn stroke(
 /// What `element` offers the element before it to end near, read from its shape, its settings and the
 /// design's `settings` alone, with the budget's work to itself (`REQ-GEN-003`): a stroke its first point,
 /// a satin column its rails as they are sewn when it starts at its nearest point and otherwise its first
-/// rail's start. A satin column too narrow to stitch across is a stroke (`REQ-SAT-015`). A tatami fill, and
-/// a fill set to Ink/Stitch's legacy fill, which is sewn as one (`REQ-FILL-005`), starts at its point
-/// nearest the needle and offers its area, its parts, even when it is set not to be sewn, as Ink/Stitch's
-/// next element is the next in the drawing. Where its stitch type is known, an
+/// rail's start. A satin column too narrow to stitch across is a stroke (`REQ-SAT-015`). A tatami fill, a
+/// fill set to Ink/Stitch's legacy fill, which is sewn as one (`REQ-FILL-005`), and a contour fill start at
+/// their point nearest the needle and offer their area, their parts, even when set not to be sewn, as
+/// Ink/Stitch's next element is the next in the drawing. Where its stitch type is known, an
 /// element offers what Ink/Stitch's would, even of a method StitchCraft does not sew yet (ADR 0014): a
 /// stroke of any method its first point, as Ink/Stitch's strokes all do, and a satin column of any method
 /// its rails. A fill of a method StitchCraft does not sew offers nothing, since what it would offer is not
@@ -559,7 +616,7 @@ fn stroke(
 pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -> Option<Approach> {
     let stitch_type = stitch_type_of(element, settings)?;
     let (path, width, join) = match &element.shape {
-        Shape::Fill { .. } if stitch_type != StitchType::TatamiFill => return None,
+        Shape::Fill { .. } if !matches!(stitch_type, StitchType::TatamiFill | StitchType::ContourFill) => return None,
         Shape::Fill { path, rule } => {
             let parts = region::build(path, *rule, &mut budget.meter()).ok()?.region.parts;
             return (!parts.is_empty()).then_some(Approach::Area(parts));
@@ -701,13 +758,23 @@ mod tests {
         let on_a_row = |q: &Point| tops.iter().any(|s| (q.y() - s.start.y()).abs() < 1e-9 && q.x() >= -1e-9 && q.x() <= 10.0 + 1e-9);
         let points: Vec<Point> = sewn.generated.unwrap().groups.into_iter().flatten().collect();
         assert!(points.iter().filter(|q| on_a_row(q)).count() * 10 > points.len() * 9, "most needle points lie on the rows");
+        // A contour fill has no rows: its path round its rings, 1 mm apart here, squares 10, 8, 6, 4 and 2 mm
+        // across, each sewn round to 1 mm short of where it was entered, the outline from its corner at the
+        // origin, and the steps between them.
+        let contour = laid(&square, &[("fill_method", "contour_fill"), ("row_spacing_mm", "1")], &Budget::DEFAULT);
+        let path = contour.segments.unwrap_or_default();
+        let long: f64 = path.iter().map(|s| s.start.distance(s.end)).sum();
+        assert!((115.0..130.0).contains(&long) && contour.diagnostics.is_empty(), "{long} mm: {:?}", contour.diagnostics);
+        assert_eq!(path.first().map(|s| s.start), Some(p(0.0, 0.0)));
+        assert!(path.iter().all(|s| [s.start, s.end].iter().all(|q| (0.0..=10.0).contains(&q.x()) && (0.0..=10.0).contains(&q.y()))));
+        assert!(path.windows(2).all(|w| w[0].end == w[1].start), "one path");
         // Not a fill, a fill not sewn, a method not sewn yet, and a budget spent: no rows, and the same words
         // as generating it.
         let line = Shape::stroke(Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0))], closed: false }] });
         assert_eq!(laid(&line, &[], &Budget::DEFAULT), Rows { segments: None, diagnostics: vec![] });
         assert_eq!(laid(&square, &[("fill", "false")], &Budget::DEFAULT), Rows { segments: None, diagnostics: vec![] });
-        let contour = laid(&square, &[("fill_method", "contour_fill")], &Budget::DEFAULT);
-        assert_eq!((contour.segments, codes(&contour.diagnostics)), (None, vec![Code::StitchTypeNotYet]));
+        let meander = laid(&square, &[("fill_method", "meander_fill")], &Budget::DEFAULT);
+        assert_eq!((meander.segments, codes(&meander.diagnostics)), (None, vec![Code::StitchTypeNotYet]));
         let spent = laid(&square, &[], &Budget { max_stitches: 1, max_work: 10 });
         assert_eq!((spent.segments, codes(&spent.diagnostics)), (None, vec![Code::BudgetExhausted]));
         assert!(spent.diagnostics.iter().all(|d| d.element.as_ref().map(ElementId::as_str) == Some("e")));
@@ -727,10 +794,17 @@ mod tests {
         let mut diagnostics = Vec::new();
         let sewn = sew(&ParamSet::new(), StitchType::TatamiFill, shared(Mm::new(4.0).ok()), &mut diagnostics);
         assert_eq!((sewn.is_some(), codes(&diagnostics)), (true, vec![]));
+        // A contour fill, by its own generator.
+        let sewn = sew(&ParamSet::new(), StitchType::ContourFill, shared(Mm::new(4.0).ok()), &mut diagnostics);
+        assert_eq!((sewn.is_some_and(|s| !s.runs.is_empty()), codes(&diagnostics)), (true, vec![]));
         // A method not sewn yet, whose settings it does not read, wrong as they are here.
         let tatami = [("row_spacing_mm", "wide")].into_iter().collect();
-        let sewn = sew(&tatami, StitchType::ContourFill, shared(Mm::new(4.0).ok()), &mut diagnostics);
+        let sewn = sew(&tatami, StitchType::MeanderFill, shared(Mm::new(4.0).ok()), &mut diagnostics);
         assert_eq!((sewn.is_none(), codes(&diagnostics)), (true, vec![Code::StitchTypeNotYet]));
+        // A contour fill without a longest stitch is the same bug as a tatami fill's.
+        let mut diagnostics = Vec::new();
+        assert!(sew(&ParamSet::new(), StitchType::ContourFill, shared(None), &mut diagnostics).is_none());
+        assert_eq!(codes(&diagnostics), [Code::InternalCheckFailed]);
         // The registry gives a fill a longest stitch of its own (`ParamSpec::in_family`), so only a bug in
         // StitchCraft can leave it out.
         let mut diagnostics = Vec::new();

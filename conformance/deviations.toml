@@ -306,6 +306,30 @@ requirements = ["REQ-FILL-005"]
 params = ["fill_method"]
 
 [[deviation]]
+id = "DEV-FILL-015"
+area = "fill/contour"
+summary = "A contour fill's hole rings grown by the row spacing are joined where they overlap. Ink/Stitch repairs the grown holes as one set of polygons, which keeps what 2 overlapping growths share as an island of material, a small ring of its own in the tree, where a spiral can end and which inner to outer sews when it is within reach."
+reason = "What 2 holes' growths share lies nearer each hole than the row spacing, and sewing it as a ring sews twice where the rings round the holes already pass. Ink/Stitch's rings were read at d59c9ab (lib/stitches/contour_fill.py: _offset_polygon_and_holes, where the grown holes go through make_valid), and shapely 2.2 with GEOS 3.14.1 was run as a black box on 2 overlapping square holes: make_valid gave their symmetric difference."
+requirements = ["REQ-FILL-CON-001"]
+params = ["row_spacing_mm"]
+
+[[deviation]]
+id = "DEV-FILL-016"
+area = "fill/contour"
+summary = "A part whose chain of rings is too short for a turn of its spiral, one ring for the single spiral or 2 or fewer for the double, is sewn inner to outer, and SC-I0315 says so. At d59c9ab Ink/Stitch fails on such a part with an internal error, and stitches nothing more; at 6555892 it sews nothing of it, without a word."
+reason = "A part as narrow as 2 row spacings is still a part of the shape, and sewing nothing of it leaves fabric showing where the design has thread. Ink/Stitch's spirals were read at d59c9ab and 6555892 (lib/stitches/contour_fill.py: _spiral_fill, _make_spiral, _make_fermat_spiral; lib/elements/fill_stitch.py: do_contour_fill, where 6555892 returns no stitch group for an empty path)."
+requirements = ["REQ-FILL-CON-005"]
+params = ["contour_strategy"]
+
+[[deviation]]
+id = "DEV-FILL-017"
+area = "fill/contour"
+summary = "Before inner to outer's path is smoothed, StitchCraft's running stitch cuts it into points 5 times smoothness_mm apart, a point on each corner, where Ink/Stitch's evenly spaced points may cut a corner by up to twice the smoothness, as for a tatami fill's travel (DEV-FILL-007). The smoothed path is then cut where its rings began, at the same share of its length, and each piece is a span of the running stitch. The path lies where Ink/Stitch's does but takes more stitches: TS-11B's leaf, smoothed by 0.5 mm, takes 973 where its rings unsmoothed take 903, against Ink/Stitch's 830 and 828, 17 % more than Ink/Stitch's where the sheet's samples that are not smoothed take 2 to 12 % more."
+reason = "The running stitch is StitchCraft's own (DEV-RUN-001, DEV-RUN-002), and so is the smoothing a tatami fill's travel takes. A span for each ring keeps a span's curve about as tight all along, as it does for the rings not smoothed. Ink/Stitch's smoothing was read at d59c9ab (lib/utils/smoothing.py: smooth_path; lib/stitches/contour_fill.py: inner_to_outer), and TS-11B was sewn by both, Ink/Stitch run as a black box, with the leaf's smoothness at 0.5 mm and at 0."
+requirements = ["REQ-FILL-CON-003"]
+params = ["smoothness_mm"]
+
+[[deviation]]
 id = "DEV-SVG-001"
 area = "svg"
 summary = "A stroke-width in percent, em or ex is read as a viewer reads it: a percentage of the viewport's diagonal over √2, an em as 16 user units and an ex as 8. A stroke-linejoin keyword is read in any case. Ink/Stitch reads such a width as 0, which sews a satin column drawn as one path as a stroke, and reads a join that is not written in lower case as unset."

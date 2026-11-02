@@ -14,7 +14,8 @@ use stitchcraft_params::ParamGroup;
 use crate::auto::AutoParams;
 use crate::common::CommonParams;
 use crate::generate::{FillParams, StrokeParams};
-use crate::generators::passes::RepeatParams;
+use crate::generators::contour::ContourParams;
+use crate::generators::passes::{FillRepeatParams, RepeatParams};
 use crate::generators::pull::PullParams;
 use crate::generators::running::RunningParams;
 use crate::generators::satin::SatinParams;
@@ -32,6 +33,8 @@ pub const PARAMETERS: &[&ParamGroup] = &[
     &PullParams::GROUP,
     &FillParams::GROUP,
     &TatamiParams::GROUP,
+    &ContourParams::GROUP,
+    &FillRepeatParams::GROUP,
     &AutoParams::GROUP,
 ];
 

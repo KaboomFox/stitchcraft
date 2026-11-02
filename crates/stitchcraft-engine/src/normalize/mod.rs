@@ -16,6 +16,7 @@ pub(crate) mod near;
 pub mod offset;
 pub mod region;
 pub mod satin;
+pub(crate) mod simplify;
 pub(crate) mod strips;
 pub mod stroke;
 pub(crate) mod triangulation;

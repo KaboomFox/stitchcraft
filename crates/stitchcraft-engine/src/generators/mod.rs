@@ -18,12 +18,14 @@
 //! start and end by them; the other stitch types do not yet. Both end near the next stitch, found as
 //! Ink/Stitch's geometry library finds it, by the rules of the `next` module.
 
+pub mod contour;
 pub mod manual;
 mod next;
 pub mod passes;
 pub mod pull;
 pub mod running;
 pub mod satin;
+pub(crate) mod smoothing;
 pub mod tatami;
 pub mod zigzag;
 

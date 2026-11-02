@@ -4,7 +4,11 @@
 # `applies_to` lists stitch types, or the values of the setting that shows the parameter (a lock shape,
 # a split method). `default` is the value Ink/Stitch's settings window shows. A row has a `fallback` where
 # Ink/Stitch's code sews another value for a file that sets none, and the registry's default is compared
-# with that. `phase` and `milestone` are StitchCraft's plan for it, both `—` when it has none. Checked
+# with that. A row has `read_by` where stitch types the window does not show it for read it as they sew:
+# every fill method but legacy fill and cross stitch sews the tatami fill's underlay, which reads `angle`
+# (its default angle is 90° from it), `running_stitch_length_mm` and `staggers` (lib/elements/
+# fill_stitch.py at d59c9ab: fill_underlay_angle, do_underlay, to_stitch_groups). `phase` and `milestone`
+# are StitchCraft's plan for it, both `—` when it has none. Checked
 # field by field against that commit's declarations and getters with
 # `python3 -I conformance/inkstitch/check_params.py PATH/TO/INKSTITCH`; run it again when moving to a
 # newer commit.
@@ -1030,6 +1034,7 @@ type = "float"
 unit = "deg"
 default = "0"
 applies_to = ["tatami_fill", "legacy_fill"]
+read_by = ["circular_fill", "contour_fill", "guided_fill", "linear_gradient_fill", "meander_fill", "tartan_fill"]
 phase = "P1"
 milestone = "M5"
 
@@ -1100,6 +1105,7 @@ type = "int"
 unit = "—"
 default = "4"
 applies_to = ["tatami_fill", "guided_fill", "linear_gradient_fill", "tartan_fill", "legacy_fill"]
+read_by = ["circular_fill", "contour_fill", "meander_fill"]
 phase = "P1"
 milestone = "M5"
 
@@ -1160,6 +1166,7 @@ type = "float"
 unit = "mm"
 default = "2.5"
 applies_to = ["tatami_fill", "guided_fill", "meander_fill", "circular_fill", "linear_gradient_fill", "tartan_fill"]
+read_by = ["contour_fill"]
 phase = "P1"
 milestone = "M5"
 

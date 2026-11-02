@@ -30,6 +30,7 @@ mod ts07;
 mod ts08;
 mod ts09;
 mod ts10;
+mod ts11;
 mod ts13;
 
 use designed::Drawing;
@@ -275,6 +276,21 @@ pub static SHEETS: &[TestSheet] = &[
         drawn: Drawn::Sketched(|| ts10::build("ts10c", &BROTHER_PE800_SMALL)),
     },
     TestSheet {
+        id: "TS-11B",
+        title: "New fills: contour fills",
+        checks: &[
+            "Each sample is a contour fill: rings that follow its outline inward, a row spacing apart, sewn as one line over the default underlay. Top row, in green, left to right: a disc 36 mm across sewn inner to outer round a hole, then a single spiral and a double spiral, the rings 0.25 mm apart. Middle row, in blue: stars 40 mm across with round, mitred and bevelled corners, the rings 0.4 mm apart. Bottom row, in red: 2 squares joined by a neck 3 mm wide, a rectangle whose rings alternate direction, and a leaf smoothed by 0.5 mm.",
+            "Does fabric show between the rings, or does a fill pucker? Measure the discs: do they sew 36 mm across?",
+            "Inner to outer steps in from ring to ring and sews each on its way out. Do the steps show as a line across the rings? On the rectangle, whose rings alternate, the steps don't cross: does it look calmer than the disc?",
+            "Where do the spirals end in the middle, and the double spiral on its outline? Is there a knot or a bump there?",
+            "On the stars, do the mitred rings reach into the points, and the round and bevelled ones leave a gap at each tip? Which star looks best?",
+            "Does the neck between the 2 squares fill, where the rings part to each side? Does the smoothed leaf's line run evenly, without kinks?",
+            "How long does the sheet take? A contour fill sews as one line, with no travel between rows.",
+        ],
+        profile: REFERENCE,
+        drawn: Drawn::Designed(ts11::fills, &[]),
+    },
+    TestSheet {
         id: "TS-13A",
         title: "Pictures digitized automatically: neighbours and sewing order",
         checks: &[
@@ -366,7 +382,10 @@ mod tests {
             designed.push(sheet.id);
         }
         // The sheets drawn stitch by stitch have no design.
-        assert_eq!(designed, ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-13A", "TS-13B", "TS-13C", "TS-13D"]);
+        assert_eq!(
+            designed,
+            ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D"]
+        );
         // The TS-13 sheets' shapes are digitized automatically, and no other sheet's are.
         let digitized: Vec<&str> = SHEETS.iter().filter(|sheet| sheet.digitized()).map(|sheet| sheet.id).collect();
         assert_eq!(digitized, ["TS-13A", "TS-13B", "TS-13C", "TS-13D"]);
@@ -404,6 +423,8 @@ mod tests {
         assert_eq!(about("TS-07"), [126.2, 126.0, 0.0, 0.0]);
         assert_eq!(about("TS-08"), [100.0, 170.0, 0.0, 0.0]);
         assert_eq!(about("TS-09"), [66.0, 114.0, 0.0, 0.0]);
+        // The right-hand star's upper point on its right lies 20 mm from its middle, 18° above the level.
+        assert_eq!(about("TS-11B"), [125.021130326, 116.0, 0.0, 0.0]);
         // Each TS-10 frame is its hoop's whole field, as its title and checks say, and fits no smaller hoop.
         let hoops = [("ts-10a", "4 × 4 in", &BROTHER_PE800_4X4), ("TS-10B", "5 × 7 in", REFERENCE), ("TS-10C", "small", &BROTHER_PE800_SMALL)];
         for (id, hoop, profile) in hoops {

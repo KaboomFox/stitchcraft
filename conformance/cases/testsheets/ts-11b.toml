@@ -1,0 +1,14 @@
+# The contour fills of M7.7: the 3 strategies on discs, the 3 join styles on stars, rings that part at a
+# neck, rings that alternate their direction, and a smoothed leaf, each over the default underlay. The sheet
+# draws only as the engine sews it without a word; the diagnostics here are the hoop's, of which there are
+# none. The invariants (REQ-PLAN-…) run on the sheet's plan; the golden file is the bytes MC-6 sews.
+id = "ts-11b"
+requirements = ["REQ-PLAN-001", "REQ-PLAN-002", "REQ-PLAN-003", "REQ-PLAN-005", "REQ-PLAN-006", "REQ-PLAN-007", "REQ-PRF-002", "REQ-FMT-001"]
+kind = "testsheet"
+sheet = "TS-11B"
+profile = "brother-pe800-5x7"
+
+[expect]
+size_mm = [125.021130326, 116.0]
+diagnostics = []
+golden = ["golden/testsheets/TS-11B.pes"]

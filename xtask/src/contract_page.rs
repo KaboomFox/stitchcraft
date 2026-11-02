@@ -79,6 +79,10 @@ struct Param {
     #[serde(default)]
     fallback: Option<String>,
     applies_to: Vec<String>,
+    /// Stitch types whose sewing reads the parameter though the settings window doesn't show it for them,
+    /// as a contour fill's underlay reads the tatami fill's angle: they are given the key all the same.
+    #[serde(default)]
+    read_by: Vec<String>,
     phase: String,
     milestone: String,
 }
@@ -99,15 +103,15 @@ impl Param {
         }
     }
 
-    /// The stitch types the row covers: the ones it lists, or every type of its element when it lists
-    /// none (all of them for the common settings, none for clones). Some rows list another parameter's
-    /// values instead, such as `custom` for the custom lock shapes; those do not narrow the stitch types.
-    /// Only an id of the row's own family names a stitch type, because ids are unique only within a
-    /// family: `zigzag` is a lock shape as well as a satin method.
+    /// The stitch types the row covers: the ones it lists, and those that read it without showing it, or
+    /// every type of its element when it lists none (all of them for the common settings, none for clones).
+    /// Some rows list another parameter's values instead, such as `custom` for the custom lock shapes;
+    /// those do not narrow the stitch types. Only an id of the row's own family names a stitch type,
+    /// because ids are unique only within a family: `zigzag` is a lock shape as well as a satin method.
     fn scope(&self) -> BTreeSet<StitchType> {
         let listed: BTreeSet<StitchType> = self.applies_to.iter().filter_map(|a| self.stitch_type(a)).collect();
         if !listed.is_empty() {
-            return listed;
+            return listed.into_iter().chain(self.read_by.iter().filter_map(|a| self.stitch_type(a))).collect();
         }
         StitchType::ALL.iter().copied().filter(|t| self.element == "common" || self.family() == Some(t.family())).collect()
     }
@@ -166,6 +170,9 @@ registry uses these names as its keys so files move between the tools unchanged
   *registered*: StitchCraft reads and checks it under the same key, meaning and default; it changes the
   stitches once its stitch type or feature lands (see *Phase* and the parameter's reference entry).
   *deviates*: registered, with a meaning that differs as its reference entry describes.
+- **Applies to** lists the stitch types Ink/Stitch's settings window shows the parameter for. *Read by*
+  adds those whose sewing reads it without showing it, as a contour fill's underlay reads the tatami
+  fill's `angle`, and StitchCraft's registry gives it those too.
 - **Phase** is when the parameter's stitch type lands ([roadmap](../plan/roadmap.md)); `—` when it is not
   planned.
 ";
@@ -184,10 +191,11 @@ impl Contract {
                 "\n## {title}\n\n| Attribute | Type | Unit | Default | Applies to | Phase | StitchCraft |\n|---|---|---|---|---|---|---|\n"
             ));
             for p in self.param.iter().filter(|p| p.element == *key) {
-                let applies = if p.applies_to.is_empty() {
-                    "all".to_string()
-                } else {
-                    p.applies_to.iter().map(|a| format!("`{a}`")).collect::<Vec<_>>().join(", ")
+                let listed = |values: &[String]| values.iter().map(|a| format!("`{a}`")).collect::<Vec<_>>().join(", ");
+                let applies = match (p.applies_to.is_empty(), p.read_by.is_empty()) {
+                    (true, _) => "all".to_string(),
+                    (false, true) => listed(&p.applies_to),
+                    (false, false) => format!("{}; read by {}", listed(&p.applies_to), listed(&p.read_by)),
                 };
                 let default = match &p.fallback {
                     Some(fallback) => format!("{} ({fallback} when unset)", p.default),
@@ -614,6 +622,17 @@ mod tests {
     }
 
     #[test]
+    fn a_stitch_type_that_reads_the_key_without_showing_it_is_given_the_key() {
+        // Ink/Stitch's window shows the key for tatami fills only, and a contour fill's sewing reads it too.
+        const WIDER: &[ParamSpec] = &[ParamSpec { applies_to: &[StitchType::TatamiFill, StitchType::ContourFill], ..ROW_SPACING }];
+        let group = registry(WIDER);
+        let data = data("0.25").replacen("applies_to = [\"tatami_fill\"]", "applies_to = [\"tatami_fill\"]\nread_by = [\"contour_fill\"]", 1);
+        let contract = Contract::parse(&data).unwrap();
+        assert_eq!(contract.check(&[&group]), Vec::<String>::new());
+        assert!(contract.render(&[&group]).contains("| `tatami_fill`; read by `contour_fill` |"), "{}", contract.render(&[&group]));
+    }
+
+    #[test]
     fn agreeing_registries_have_no_problems_and_numbers_compare_as_numbers() {
         let group = registry(&[ROW_SPACING]);
         assert_eq!(Contract::parse(&data("0.25")).unwrap().check(&[&group]), Vec::<String>::new());
@@ -714,6 +733,7 @@ mod tests {
             default: "100".to_string(),
             fallback: None,
             applies_to: vec!["arrow".to_string(), "zigzag".to_string()],
+            read_by: Vec::new(),
             phase: "P1".to_string(),
             milestone: "M3".to_string(),
         };

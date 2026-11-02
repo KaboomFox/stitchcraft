@@ -247,6 +247,28 @@ After sewing, check:
 - If it asks for a larger hoop, turn the design a quarter turn on the machine's screen. Does it take it then?
 - The frame measures 20.0 × 60.0 mm (± 0.5 mm), tall side top to bottom, the F at the top left.
 
+## TS-11B — New fills: contour fills
+
+125.0 × 116.0 mm · 10611 stitches, 9 jumps, 8 trims, 2 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
+
+Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
+
+Drawn as a design, which VectorCraft's Test Sheet filter draws too.
+
+![TS-11B as it will sew: 9 contour fills in 3 rows. At the top, in green, 3 discs: one round a hole set off its middle, a single spiral and a double spiral. In the middle, in blue, 3 five-pointed stars whose rings have round, mitred and bevelled corners. At the bottom, in red, 2 squares joined by a narrow neck, a rectangle, and a leaf. Jump threads join the samples in each row.](../../images/generated/testsheet-ts-11b.png)
+
+Threads: Emerald Green, Blue, Red.
+
+After sewing, check:
+
+- Each sample is a contour fill: rings that follow its outline inward, a row spacing apart, sewn as one line over the default underlay. Top row, in green, left to right: a disc 36 mm across sewn inner to outer round a hole, then a single spiral and a double spiral, the rings 0.25 mm apart. Middle row, in blue: stars 40 mm across with round, mitred and bevelled corners, the rings 0.4 mm apart. Bottom row, in red: 2 squares joined by a neck 3 mm wide, a rectangle whose rings alternate direction, and a leaf smoothed by 0.5 mm.
+- Does fabric show between the rings, or does a fill pucker? Measure the discs: do they sew 36 mm across?
+- Inner to outer steps in from ring to ring and sews each on its way out. Do the steps show as a line across the rings? On the rectangle, whose rings alternate, the steps don't cross: does it look calmer than the disc?
+- Where do the spirals end in the middle, and the double spiral on its outline? Is there a knot or a bump there?
+- On the stars, do the mitred rings reach into the points, and the round and bevelled ones leave a gap at each tip? Which star looks best?
+- Does the neck between the 2 squares fill, where the rings part to each side? Does the smoothed leaf's line run evenly, without kinks?
+- How long does the sheet take? A contour fill sews as one line, with no travel between rows.
+
 ## TS-13A — Pictures digitized automatically: neighbours and sewing order
 
 126.0 × 168.0 mm · 24396 stitches, 31 jumps, 30 trims, 19 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
