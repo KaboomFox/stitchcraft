@@ -604,8 +604,9 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             self.unusable(label, format!("`{label}` draws nothing: all of its points are in the same place. It is left out."));
             return Ok(());
         }
-        let mut clips = self.chain(clipped)?;
-        clips.extend(self.clips(label, declared, map, path::bounds(&subs))?);
+        // Its own clips, then those round it, nearest first.
+        let mut clips = self.clips(label, declared, map, path::bounds(&subs))?;
+        clips.extend(self.chain(clipped)?);
         let name = node.attribute((INKSCAPE_NS, "label")).map(str::trim).filter(|s| !s.is_empty()).map(str::to_string);
         // Each of Ink/Stitch's settings of the shape is a parameter of every element it makes, by its own name,
         // but those the reader applies itself (`REQ-SVG-009`). Its trim and stop commands then turn on the same

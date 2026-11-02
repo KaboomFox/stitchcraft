@@ -119,6 +119,20 @@ summary = "A zigzag stroke closes when one of its subpaths moves, with its ends 
 reason = "A subpath that draws nothing is no part of the drawing (REQ-SVG-001, DEV-SVG-011). It is not stitched (SC-W0401), and does not open the ring the drawing shows. Ink/Stitch's behaviour was read at 6555892 (lib/elements/stroke.py: _is_closed, as_multi_line_string; lib/elements/element.py: flatten, which keeps a repeated node)."
 requirements = ["REQ-RUN-011"]
 
+
+[[deviation]]
+id = "DEV-RUN-009"
+area = "strokes/zigzag"
+summary = "A closed zigzag stroke that its clips cut into pieces sews each piece open. Ink/Stitch closes each piece as it would close the stroke, its last needle point moved onto its first: a stitch across the piece, 24.5 mm long on a circle of radius 20 mm cut 5 mm above its middle."
+reason = "A piece of a ring is no ring, and the stitch across it is no part of the drawing. Ink/Stitch checks whether the stroke's path before the cut is closed (lib/elements/stroke.py, read at d59c9ab), and sews that stitch (inkstitch-clip-zigzag)."
+requirements = ["REQ-GEN-005"]
+
+[[deviation]]
+id = "DEV-RUN-010"
+area = "strokes"
+summary = "A stroke that crosses its clip and also touches the clip's outline at a point is cut as any other, at its crossings. Ink/Stitch's cut then gives a point as well as lines, which it doesn't take, and it sews the stroke whole: 60 mm of a line where 20 mm show."
+reason = "The point adds nothing a viewer shows. Ink/Stitch sews the stroke unclipped when the intersection is not lines alone (lib/elements/stroke.py: _get_clipped_path, read at d59c9ab), as inkstitch-clip-touch shows."
+requirements = ["REQ-GEN-005"]
 [[deviation]]
 id = "DEV-SAT-001"
 area = "satin"
@@ -503,27 +517,34 @@ requirements = ["REQ-SVG-001", "REQ-FILL-TAT-002"]
 [[deviation]]
 id = "DEV-SVG-016"
 area = "svg"
-summary = "A clip's area is the union of its children's areas, each filled by its clip-rule, as a viewer clips. Ink/Stitch pools the subpaths of all the children and repairs them as it repairs a fill's outline: the largest subpath is the outline and every other one a hole, whatever the clip-rule, so where 2 children overlap the overlap is left out, and a child inside another is a hole. A child path whose data starts with a relative m is placed, in Ink/Stitch, from where the child before ended."
-reason = "A clip sews what the drawing shows (REQ-SVG-011). Chromium, rendering each case as a viewer, keeps the overlap of 2 children and places each child's path from its own origin; Ink/Stitch's area was read in lib/svg/clip.py (_clip_paths) at d59c9ab, with inkex's path joining, and is a fill's (DEV-FILL-001)."
+summary = "A clip path's area is its children's together, each filled by its clip-rule, as a viewer clips. Ink/Stitch pools the subpaths of all the children and repairs them as it repairs a fill's outline: the largest subpath is the outline and every other a hole, whatever the clip-rule, so where 2 children overlap the overlap is left out, and a child inside another is a hole. A child path whose data starts with a relative m is placed, in Ink/Stitch, from where the child before it ended."
+reason = "A clip sews what the drawing shows (REQ-SVG-011). Chromium, drawing each case as a viewer, keeps the overlap of 2 children and places each child's path from its own origin. Ink/Stitch's area was read in lib/svg/clip.py (_clip_paths) at d59c9ab, with inkex's path joining, and is a fill's (DEV-FILL-001). On 2 squares 30 mm a side that overlap by 15 mm, Ink/Stitch's footprint is 14 % smaller (inkstitch-clip-overlap)."
 requirements = ["REQ-SVG-011"]
 
 [[deviation]]
 id = "DEV-SVG-017"
 area = "svg"
-summary = "What a clip takes in follows SVG: its children that are displayed, not groups, a use at its x and y, the clipPath's transform, the box of the element it clips with clipPathUnits objectBoundingBox, and a clip-path on the clipPath or on a child, which cuts it in turn. Ink/Stitch takes in children not displayed and the groups' children, leaves out a use's x and y and the clipPath's transform, which it replaces with the clipped element's, reads objectBoundingBox as user space, applies the transforms of the elements the clipPath lies in, and ignores a clip-path on a clipPath or a child."
-reason = "Each was rendered in Chromium as a viewer draws it, and read in Ink/Stitch's lib/svg/clip.py and inkex 1.4 at d59c9ab. A clip that shows one thing and sews another would sew where the drawing shows nothing."
+summary = "What a clip path takes in follows SVG: its children that are displayed, a use at its x and y, the clip path's own transform, the box of the shape it clips with clipPathUnits objectBoundingBox, and a clip-path on the clip path, which cuts it in turn. Ink/Stitch takes in children that aren't displayed, leaves out a use's x and y and the clip path's transform, which it replaces with the clipped element's, reads objectBoundingBox as user space, applies the transforms of the elements the clip path lies in, and ignores a clip-path on a clip path."
+reason = "Each was drawn in Chromium as a viewer draws it, and read in Ink/Stitch's lib/svg/clip.py and inkex 1.4 at d59c9ab. A clip that shows one thing and sews another sews where the drawing shows nothing: a clip path scaled by half sews a 30 mm square in StitchCraft and a 60 mm one in Ink/Stitch (inkstitch-clip-transform). Both take in a group's children, as Inkscape draws them, where a browser leaves a group in a clip path out, and neither applies a clip-path on a clip path's child, which SC-W0802 names."
 requirements = ["REQ-SVG-011"]
 
 [[deviation]]
 id = "DEV-SVG-018"
 area = "svg"
-summary = "The clip paths of the a, switch and nested svg elements above a shape cut it, as a viewer clips them. Ink/Stitch reads only the clip paths of the shape and of the groups and layers above it."
-reason = "Chromium clips what an a, a switch or a nested svg holds to its clip path. Ink/Stitch's get_clip_path walks the g elements above the shape alone (lib/svg/clip.py, read at d59c9ab)."
+summary = "The clip paths of the a and switch elements round a shape cut it, as a viewer clips them. Ink/Stitch reads only the clip paths of the shape and of the groups and layers round it."
+reason = "Chromium clips what an a or a switch holds to its clip path. Ink/Stitch's get_clip_path walks the g elements round the shape alone (lib/svg/clip.py, read at d59c9ab)."
 requirements = ["REQ-SVG-011"]
 
 [[deviation]]
 id = "DEV-SVG-019"
 area = "svg"
-summary = "A clip with no area, such as an empty clipPath or one of text or lines alone, hides the shape: it sews nothing, and SC-W0802 names it. Ink/Stitch takes such a clip for no clip at all and sews the shape whole, and where nested clips meet nowhere it takes the next clip in their stead."
-reason = "A viewer shows nothing of a shape whose clip has no area, and the design sews what it shows (REQ-SVG-011). Ink/Stitch treats an empty geometry as no clip (lib/svg/clip.py: get_clip_path, read at d59c9ab)."
+summary = "A clip path with no area, empty or of lines or text alone, leaves nothing of the shape, which sews nothing, and SC-W0013 names it. Ink/Stitch takes such a clip path for none and sews the shape whole, and where nested clip paths meet nowhere it takes the next one in their stead."
+reason = "A viewer shows nothing of a shape whose clip path has no area, and the design sews what it shows (REQ-SVG-011). Ink/Stitch treats an empty geometry as no clip (lib/svg/clip.py: get_clip_path, read at d59c9ab), and sews a square that a viewer hides (inkstitch-clip-empty)."
 requirements = ["REQ-SVG-011", "REQ-GEN-005"]
+
+[[deviation]]
+id = "DEV-SVG-020"
+area = "svg"
+summary = "An Inkscape power clip is read from the clip path the file holds, as a viewer draws it. Ink/Stitch reads the path effect's settings instead: hidden or flattened, it applies no clip, and inverse, it takes the first path of class powerclip in the clip path, by the even-odd rule."
+reason = "The file holds what Inkscape draws of the effect, which a viewer shows, and StitchCraft reads no path effects. Ink/Stitch's reading of the effect was read in lib/svg/clip.py (_get_path_effects) at d59c9ab."
+requirements = ["REQ-SVG-011"]

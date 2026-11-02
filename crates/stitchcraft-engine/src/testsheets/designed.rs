@@ -18,7 +18,7 @@ use stitchcraft_plan::{StitchPlan, Thread};
 use super::pictures::Picture;
 use super::sketch::SheetError;
 use crate::common::{STOP_AFTER, TRIM_AFTER};
-use crate::design::{Design, DesignSettings, Element, FillRule, Hints, Path, Segment, Shape, Subpath};
+use crate::design::{Clip, Design, DesignSettings, Element, FillRule, Hints, Path, Segment, Shape, Subpath};
 use crate::generators::satin::{END_AT_NEAREST_POINT, START_AT_NEAREST_POINT};
 
 /// The settings that sew a sheet's satin column as drawn, from its start to its end whatever is around it,
@@ -96,6 +96,14 @@ impl Drawing {
             last.hints = Hints { start: Some(point(start)?), end: Some(point(end)?), target: None };
         }
         Ok(())
+    }
+
+    /// A clip for the last element drawn so far, as a clip path round it cuts it (`REQ-GEN-005`): the area its
+    /// closed `rings` bound by the nonzero rule.
+    pub fn clip(&mut self, rings: Vec<Subpath>) {
+        if let Some(last) = self.elements.last_mut() {
+            last.clips.push(Clip::of(Path { subpaths: rings }, FillRule::NonZero));
+        }
     }
 
     fn stroke(&mut self, name: &str, subpaths: Vec<Subpath>, thread: &Thread, params: &[(&str, &str)]) -> Result<(), SheetError> {

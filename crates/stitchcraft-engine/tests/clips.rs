@@ -92,7 +92,7 @@ fn req_gen_005_a_fill_is_cut_before_expand_mm_grows_it() {
 }
 
 #[test]
-fn req_gen_005_an_element_its_clips_leave_nothing_of_sews_nothing() {
+fn diag_sc_w0013_an_element_its_clips_leave_nothing_of_sews_nothing() {
     // A clip beside the square, a clip with no area, and 2 clips that don't meet: the fill sews nothing, and
     // its trim with it. The line after it still sews.
     let after = along("after", polylines(&[&[(-10.0, 30.0), (10.0, 30.0)]]), &RED, &[]);
@@ -152,7 +152,7 @@ fn req_gen_005_a_subpath_its_clips_leave_whole_sews_as_drawn() {
 }
 
 #[test]
-fn req_gen_005_a_satin_column_is_sewn_whole_and_named() {
+fn diag_sc_w0217_a_clipped_satin_column_is_sewn_whole() {
     let rails = polylines(&[&[(-20.0, 0.0), (20.0, 0.0)], &[(-20.0, 6.0), (20.0, 6.0)]]);
     let column = along("column", rails, &RED, &[("satin_column", "true")]);
     let whole = sewn_by(&planned(vec![column.clone()]), "column");
