@@ -196,6 +196,9 @@ the same way, a zig and a zag together, 0.4 mm by default; `stroke_pull_compensa
 out than half the stroke's width each side's needle points go, one value for both sides or 2; and
 `zigzag_angle`, which turns every stitch away from square to the path, from −89° to 89°. `repeats` and
 `bean_stitch_repeats` apply. The width is the stroke's, read as a satin column drawn as one path reads it.
+Before Ink/Stitch's file version 3 a zigzag stroke read `pull_compensation_mm`, shared by its 2 sides, and
+in a file of version 1 or 2 the SVG reader halves it into `stroke_pull_compensation_mm`, as Ink/Stitch's
+update does (`REQ-SVG-007`).
 
 Strokes, satin columns and fills each read `zigzag_spacing_mm` their own way
 ([parameter registry](../params.md#naming-rules), rule 7). A stroke reads a list, as Ink/Stitch does.

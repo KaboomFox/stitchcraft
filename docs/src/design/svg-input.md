@@ -230,26 +230,27 @@ the defaults that have changed since are written into the shapes that relied on 
 Ink/Stitch updates it (`REQ-SVG-007`), with the changed defaults as parameters of the shapes, and
 `SC-I0818` says how many shapes changed:
 
+- in a file of version 1, a polyline whose `style` attribute sets a stroke is a manual stitch;
+- in a file of version 1 or 2, a zigzag stroke's `pull_compensation_mm`, unless 0, is halved into
+  `stroke_pull_compensation_mm`, which applies to each side from version 3 (M8.3);
+- in a file of version 1 or 2, a satin column starts and ends where it is drawn, with
+  `start_at_nearest_point` and `end_at_nearest_point` off (M8.3);
 - in a file of version 1 to 3, a shape whose fill is sewn, without a longest stitch of its own, sews
   3 mm stitches, the default before version 4, where today's default is 4 mm;
-- in a file of version 1, a polyline whose `style` attribute sets a stroke is a manual stitch.
+- in a file of version 1 to 3, a fill with `auto_fill` off is a legacy fill, sewn as a tatami fill without
+  underlay (`DEV-FILL-014`), and `fill_method` `auto_fill`, the tatami fill's name before version 4, is a
+  tatami fill (M8.3).
 
-A shape digitized automatically sews by the rules instead. Ink/Stitch asks its user whether a file with
-its content and no version is an old design, which it then updates, or objects pasted into a new file.
-The adapter can't ask. It reads such a file as it is and says so with `SC-W0802`, as it says that a file
-of a version above 4 is read as version 4.
+Each shape gets the updates of each version after its file's, in the order of the versions, over the
+settings it has, as Ink/Stitch updates it. One digitized automatically sews by the rules instead.
+Ink/Stitch asks its user whether a file with its content and no version is an old design, which it then
+updates, or objects pasted into a new file. The adapter can't ask. It reads such a file as it is and says
+so with `SC-W0802`, as it says that a file of a version above 4 is read as version 4.
 
-The adapter doesn't make 3 of the update's other changes yet (M8.3), and each changes what a shape sews:
-
-- in a file of version 1 or 2, a zigzag stroke's `pull_compensation_mm` other than 0 is halved into
-  `stroke_pull_compensation_mm`;
-- in a file of version 1 or 2, a satin column starts and ends where it is drawn, with
-  `start_at_nearest_point` and `end_at_nearest_point` off;
-- in a file of version 1 to 3, a fill with `auto_fill` off is a legacy fill, sewn without underlay.
-
-`SC-W0802` counts the shapes each would change, and those shapes sew as the file sets them. The other
-changes alter nothing the adapter sews. The [compatibility contract](inkstitch-compat-contract.md#file-versions)
-lists them all, with the milestone that applies them.
+Of the update's other changes, the start and end commands it moves onto their objects wait for M8.4, and
+the rest alter nothing the adapter sews. The
+[compatibility contract](inkstitch-compat-contract.md#file-versions) lists them all, with the milestone
+that applies them.
 
 ## Reports
 
@@ -257,10 +258,9 @@ lists them all, with the milestone that applies them.
   the style sheet rules that are not read are such features. So are clipping, masks, filters and
   markers, a group's Ink/Stitch settings, and the settings of Ink/Stitch's early versions (`embroider_`
   attributes). Clipping is planned for M8.5. It reports a file Ink/Stitch would update, or warn about,
-  that is read as it is: one with Ink/Stitch's content and no file version, or of a newer version. It
-  counts the shapes of an older file that the update would change in ways the adapter doesn't make yet.
+  that is read as it is: one with Ink/Stitch's content and no file version, or of a newer version.
 - `SC-I0818` says how many shapes of a file an older Ink/Stitch saved are read as its update changes
-  them.
+  them, for each change.
 - `SC-W0804` reports geometry that cannot be used:
   - path data or a list of points with an error, stitched up to the error
   - a transform that does not parse, or that flattens what it draws, left out with its contents
