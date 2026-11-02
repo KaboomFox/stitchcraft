@@ -135,7 +135,7 @@ preview starts and ends where `stitch export` does. Other plug-ins use the conte
 ### P9: Type as glyph outlines
 
 Proposed by StitchCraft, and not yet raised upstream. A filter is also given each selected type object, and a
-live effect on type its type object, read only. Each comes as its glyph outlines in the path form, subpaths of
+live effect the type object it is applied to, read only. Each comes as its glyph outlines in the path form, subpaths of
 anchors, with its text, its font and its fills and strokes. The outlines are the ones VectorCraft shows on the
 canvas and makes with Type › Create Outlines. An exporter's document has each type object's outlines beside its
 text record. A plug-in's sandbox can't read font files, and a plug-in can't shape or outline type itself.
