@@ -6,7 +6,7 @@ Automatic digitizing makes a design that sews well from a picture of flat colour
 art or a drawing, once it is traced into shapes. Settings on the shapes are optional. StitchCraft chooses
 the stitches of each shape by its width at the size it sews. Neighbouring shapes overlap where they meet.
 Specks and the background are left out, and the sewing is ordered for few colour changes and short jumps.
-Milestone M13 of the [roadmap](../plan/roadmap.md) builds it, after M7.5 and before M7.7. Photographs
+Milestone M13 of the [roadmap](../plan/roadmap.md) builds it, after M7.5. Photographs
 sewn in blended colours need another technique, outside the roadmap.
 
 ## The flow
