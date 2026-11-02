@@ -145,7 +145,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_engine_sews_the_stitch_types_of_m1_to_m7_7() {
+    fn the_engine_sews_the_stitch_types_of_m1_to_m7_8() {
         let ids: Vec<&str> = sewn().unwrap().iter().map(|t| t.id()).collect();
         assert_eq!(
             ids,
@@ -159,6 +159,7 @@ mod tests {
                 "zigzag",
                 "tatami_fill",
                 "contour_fill",
+                "meander_fill",
                 "legacy_fill"
             ]
         );
@@ -192,11 +193,12 @@ mod tests {
             &[
                 ("running.md", &page("running_stitch, manual_stitch", &["running-length", "manual"])),
                 ("zigzag.md", &page("zigzag_stitch", &["testsheet-ts-01"])),
-                ("e-stitch.md", &page("e_stitch, meander_fill, no_such_type", &["e-stitch-spacing", "e-stitch-swapped"])),
+                ("e-stitch.md", &page("e_stitch, tartan_fill, no_such_type", &["e-stitch-spacing", "e-stitch-swapped"])),
                 ("s-stitch.md", &page("s_stitch", &["s-stitch-spacing", "s-stitch-split"])),
                 ("s-stitch-again.md", &page("s_stitch", &["s-stitch-spacing", "s-stitch-split"])),
                 ("tatami.md", &page("tatami_fill", &["testsheet-ts-01", "testsheet-ts-02"])),
                 ("contour-fill.md", &page("contour_fill", &["contour-strategies", "contour-joins"])),
+                ("meander-fill.md", &page("meander_fill", &["meander-tiles", "meander-scale"])),
             ],
             &[(StitchType::SatinColumn, "M13.11"), (StitchType::TatamiFill, "M13.11"), (StitchType::LegacyFill, "M13.11")],
         );
@@ -204,7 +206,7 @@ mod tests {
         let pictures = found.errors.iter().find(|e| e.contains("zigzag.md")).unwrap();
         assert_eq!(*pictures, format!("{folder}/zigzag.md: a stitch type's page shows at least 2 pictures, and this one shows 1"));
         for expected in [
-            format!("{folder}/e-stitch.md:3: `meander_fill` is not sewn yet, so the page of Meander fill comes with it"),
+            format!("{folder}/e-stitch.md:3: `tartan_fill` is not sewn yet, so the page of Tartan fill comes with it"),
             format!("{folder}/e-stitch.md:3: `no_such_type` is no stitch type's id"),
             "Zigzag satin (`zigzag`) is sewn, and no page in docs/src/user/stitches claims it with `<!-- stitch-types: zigzag -->`".to_string(),
             format!("S-stitch (`s_stitch`) is claimed by more than one page: {folder}/s-stitch.md, {folder}/s-stitch-again.md"),

@@ -15,6 +15,7 @@ stroke or the fill of a shape, and each sews in its own thread colour.
 | [Zigzag satin](zigzag-satin.md) | satin columns sewn as a zigzag, every stitch slanting from one edge to the other | now |
 | [Tatami fill](tatami-fill.md) | areas, in rows of running stitches, Ink/Stitch's legacy fill among them | now |
 | [Contour fill](contour-fill.md) | areas, in rings that follow the outline inward, sewn as one line | now |
+| [Meander fill](meander-fill.md) | areas, in one line that wanders along the sides of a tiling | now |
 
 Every element also gets [lock stitches](locks.md) where its stitching starts and ends, and a trim or a
 stop after it when it asks for one. A shape without settings can have its stitch type chosen by its width

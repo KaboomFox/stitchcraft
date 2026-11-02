@@ -26,16 +26,21 @@
 //! even when its settings cannot be used, and its `fill_method` then picks the generator: a tatami fill
 //! ([`crate::generators::tatami`]), the only one sewn so far.
 
+use std::borrow::Cow;
+
 use stitchcraft_core::{Budget, Code, Diagnostic, Exhausted, Meter, Mm, Point, SplitMix64};
 use stitchcraft_params::kinds::{Choice, Toggle};
-use stitchcraft_params::{ChoiceOption, Family, ParamKind, ParamSet, ParamSpec, StitchType, Validated, params, read_param, unknown_keys};
+use stitchcraft_params::{
+    ChoiceOption, Family, ParamKind, ParamSet, ParamSpec, StitchType, Validated, left_to_others, params, read_param, unknown_keys,
+};
 use stitchcraft_plan::MachineProfile;
 
 use crate::common::{CommonParams, STOP_AFTER, TRIM_AFTER};
 use crate::design::{DesignSettings, Element, Join, Path, Shape};
-use crate::generators::contour::{Contour, ContourParams, Stitching, contour_fill, top_path};
+use crate::generators::contour::{self, Contour, ContourParams, Stitching, contour_fill};
 use crate::generators::manual::manual_stitch;
-use crate::generators::passes::{FillRepeatParams, RepeatParams};
+use crate::generators::meander::{self, Meander, MeanderParams, meander_fill};
+use crate::generators::passes::{PathFillParams, RepeatParams};
 use crate::generators::pull::PullParams;
 use crate::generators::running::raised;
 use crate::generators::running::{RunningParams, running_stitch};
@@ -322,11 +327,20 @@ fn top_rows_of(
         return Ok(None);
     }
     let neighbours = Neighbours::default();
-    let Some(Prepared { region, sewing, .. }) = prepare(element, settings, profile, &neighbours, diagnostics, meter)? else { return Ok(None) };
-    // A contour fill has no rows: the preview shows its path round its rings.
-    if sewing.stitch_type == StitchType::ContourFill {
-        let Some(contour) = contour_settings(&sewing, diagnostics) else { return Ok(None) };
-        return top_path(&region, &contour, meter).map(Some);
+    let Some(Prepared { region, common, sewing }) = prepare(element, settings, profile, &neighbours, diagnostics, meter)? else { return Ok(None) };
+    // A contour fill and a meander fill have no rows: the preview shows their path, round the rings or
+    // through the tile, as the element's seed lays it.
+    match sewing.stitch_type {
+        StitchType::ContourFill => {
+            let Some(contour) = contour_settings(&sewing, diagnostics) else { return Ok(None) };
+            return contour::top_path(&region, &contour, meter).map(Some);
+        }
+        StitchType::MeanderFill => {
+            let Some(meander) = meander_settings(&sewing, diagnostics) else { return Ok(None) };
+            let rng = SplitMix64::for_element(element.id.as_str(), common.as_ref().and_then(|common| common.random_seed));
+            return meander::top_path(&region, &meander, &rng, meter).map(Some);
+        }
+        _ => {}
     }
     let Some(fill) = fill_settings(&sewing, diagnostics) else { return Ok(None) };
     top_rows(&region, &fill, meter).map(Some)
@@ -363,7 +377,19 @@ fn prepare<'a>(
         Shape::Stroke { .. } => Region::default(),
     };
     let Some(stitch_type) = stitch_type(element, settings, diagnostics) else { return Ok(None) };
-    let common = kept(CommonParams::from_set_as(set, stitch_type), diagnostics);
+    // A value only the node's other stitch type reads is left to it, and this element takes its default.
+    let left = left_to_others(set, stitch_type, PARAMETERS);
+    let set: Cow<'a, ParamSet> = if left.is_empty() {
+        Cow::Borrowed(set)
+    } else {
+        let mut own = set.clone();
+        for (key, said) in left {
+            own.remove(&key);
+            diagnostics.push(said);
+        }
+        Cow::Owned(own)
+    };
+    let common = kept(CommonParams::from_set_as(&set, stitch_type), diagnostics);
     let shared = common.as_ref().map(|common| Shared {
         min_stitch: shortest_stitch(common.min_stitch_length_mm, settings, profile),
         max_stitch: common.max_stitch_length_mm,
@@ -388,8 +414,8 @@ struct Shared {
 
 /// An element as its generator reads it.
 struct Sewing<'a> {
-    /// Its settings.
-    set: &'a ParamSet,
+    /// Its settings, but those it leaves to the node's other stitch type (`REQ-PRM-006`).
+    set: Cow<'a, ParamSet>,
     /// The stitch type that sews it, which its settings are read as.
     stitch_type: StitchType,
     /// What the settings every stitch type shares give it; `None` when they cannot be read, which was
@@ -406,7 +432,7 @@ impl Sewing<'_> {
     /// The parameters of one declaration, read as the element's stitch type reads them, keeping their
     /// warnings and errors in `diagnostics`; `None` when they cannot be read.
     fn read<T>(&self, from_set_as: FromSetAs<T>, diagnostics: &mut Vec<Diagnostic>) -> Option<T> {
-        kept(from_set_as(self.set, self.stitch_type), diagnostics)
+        kept(from_set_as(&self.set, self.stitch_type), diagnostics)
     }
 }
 
@@ -434,6 +460,10 @@ fn fill(
         let Some(contour) = contour_settings(sewing, diagnostics) else { return Ok(None) };
         return Ok(Some(contour_fill(region, &contour, neighbours.needle, rng, meter)?));
     }
+    if sewing.stitch_type == StitchType::MeanderFill {
+        let Some(meander) = meander_settings(sewing, diagnostics) else { return Ok(None) };
+        return Ok(Some(meander_fill(region, &meander, neighbours.needle, neighbours.next.as_ref(), rng, meter)?));
+    }
     let Some(fill) = fill_settings(sewing, diagnostics) else { return Ok(None) };
     Ok(Some(tatami_fill(region, &fill, neighbours.needle, neighbours.next.as_ref(), rng, meter)?))
 }
@@ -445,8 +475,8 @@ fn contour_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Optio
     let tatami = sewing.read(TatamiParams::from_set_as, diagnostics);
     let running = sewing.read(RunningParams::from_set_as, diagnostics);
     let contour = sewing.read(ContourParams::from_set_as, diagnostics);
-    let repeats = sewing.read(FillRepeatParams::from_set_as, diagnostics);
-    let (Some(mut tatami), Some(running), Some(contour), Some(repeats), Some(shared)) = (tatami, running, contour, repeats, sewing.shared) else {
+    let path = sewing.read(PathFillParams::from_set_as, diagnostics);
+    let (Some(mut tatami), Some(running), Some(contour), Some(path), Some(shared)) = (tatami, running, contour, path, sewing.shared) else {
         return None;
     };
     let (longest, travel) = fill_lengths(&mut tatami, &running, shared, diagnostics)?;
@@ -457,14 +487,53 @@ fn contour_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Optio
         corners: contour.corners(),
         clockwise: contour.clockwise,
         avoid_self_crossing: contour.avoid_self_crossing,
-        smoothness: contour.smoothness_mm.get(),
+        smoothness: path.smoothness_mm.get(),
         stitching: Stitching {
             length: longest.get(),
             tolerance: running.running_stitch_tolerance_mm.get(),
             jitter,
-            beans: repeats.bean_stitch_repeats,
-            repeats: repeats.repeats,
+            beans: path.bean_stitch_repeats,
+            repeats: path.repeats,
         },
+        underlay: tatami.underlay(longest, travel),
+        inset: tatami.fill_underlay_inset_mm.get(),
+        expand: tatami.expand_mm.get(),
+        force_locks: shared.force_locks,
+        travel,
+    })
+}
+
+/// The meander fill `sewing` describes, its settings read as a meander fill reads them: its tile laid over
+/// each part grown by `expand_mm`, after the tatami fill's underlay, its path sewn in the running stitch's
+/// length and tolerance. `None` when they cannot be read, which `diagnostics` says, and `SC-W0316` when its
+/// pattern is one of Ink/Stitch's tiles, for which it takes the default. Its longest stitch, its underlay's,
+/// is raised as a tatami fill's is.
+fn meander_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Option<Meander> {
+    let tatami = sewing.read(TatamiParams::from_set_as, diagnostics);
+    let running = sewing.read(RunningParams::from_set_as, diagnostics);
+    let meander = sewing.read(MeanderParams::from_set_as, diagnostics);
+    let path = sewing.read(PathFillParams::from_set_as, diagnostics);
+    let (Some(mut tatami), Some(running), Some(meander), Some(path), Some(shared)) = (tatami, running, meander, path, sewing.shared) else {
+        return None;
+    };
+    let (longest, travel) = fill_lengths(&mut tatami, &running, shared, diagnostics)?;
+    let (tile, theirs) = meander.tile();
+    if theirs {
+        let message = format!(
+            "This meander fill's pattern, `{}`, is one of Ink/Stitch's tiles, which StitchCraft doesn't have, so it wanders through the {tile} \
+             tile instead.",
+            meander.meander_pattern
+        );
+        diagnostics.push(Diagnostic::new(Code::FillMeanderTileNotOurs, message));
+    }
+    Some(Meander {
+        tile,
+        placement: meander.placement(),
+        smoothness: path.smoothness_mm.get(),
+        zigzag: meander.zigzag(),
+        clip: meander.clip,
+        beans: path.bean_stitch_repeats,
+        repeats: path.repeats,
         underlay: tatami.underlay(longest, travel),
         inset: tatami.fill_underlay_inset_mm.get(),
         expand: tatami.expand_mm.get(),
@@ -483,7 +552,7 @@ fn fill_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Option<F
     let running = sewing.read(RunningParams::from_set_as, diagnostics);
     let pull = sewing.read(PullParams::from_set_as, diagnostics);
     let (Some(mut tatami), Some(mut running), Some(pull), Some(shared)) = (tatami, running, pull, sewing.shared) else { return None };
-    let legacy = legacy(sewing.set);
+    let legacy = legacy(&sewing.set);
     if legacy {
         tatami.fill_underlay = false;
         tatami.gap_fill_rows = 0;
@@ -616,7 +685,7 @@ fn stroke(
 pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -> Option<Approach> {
     let stitch_type = stitch_type_of(element, settings)?;
     let (path, width, join) = match &element.shape {
-        Shape::Fill { .. } if !matches!(stitch_type, StitchType::TatamiFill | StitchType::ContourFill) => return None,
+        Shape::Fill { .. } if !matches!(stitch_type, StitchType::TatamiFill | StitchType::ContourFill | StitchType::MeanderFill) => return None,
         Shape::Fill { path, rule } => {
             let parts = region::build(path, *rule, &mut budget.meter()).ok()?.region.parts;
             return (!parts.is_empty()).then_some(Approach::Area(parts));
@@ -773,8 +842,8 @@ mod tests {
         let line = Shape::stroke(Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0))], closed: false }] });
         assert_eq!(laid(&line, &[], &Budget::DEFAULT), Rows { segments: None, diagnostics: vec![] });
         assert_eq!(laid(&square, &[("fill", "false")], &Budget::DEFAULT), Rows { segments: None, diagnostics: vec![] });
-        let meander = laid(&square, &[("fill_method", "meander_fill")], &Budget::DEFAULT);
-        assert_eq!((meander.segments, codes(&meander.diagnostics)), (None, vec![Code::StitchTypeNotYet]));
+        let tartan = laid(&square, &[("fill_method", "tartan_fill")], &Budget::DEFAULT);
+        assert_eq!((tartan.segments, codes(&tartan.diagnostics)), (None, vec![Code::StitchTypeNotYet]));
         let spent = laid(&square, &[], &Budget { max_stitches: 1, max_work: 10 });
         assert_eq!((spent.segments, codes(&spent.diagnostics)), (None, vec![Code::BudgetExhausted]));
         assert!(spent.diagnostics.iter().all(|d| d.element.as_ref().map(ElementId::as_str) == Some("e")));
@@ -789,17 +858,19 @@ mod tests {
         let neighbours = Neighbours::default();
         let sew = |set: &ParamSet, stitch_type, shared, diagnostics: &mut Vec<Diagnostic>| {
             let (rng, meter) = (&mut SplitMix64::new(1), &mut Budget::DEFAULT.meter());
-            fill(&Sewing { set, stitch_type, shared, neighbours: &neighbours }, &region, rng, diagnostics, meter).unwrap()
+            fill(&Sewing { set: Cow::Borrowed(set), stitch_type, shared, neighbours: &neighbours }, &region, rng, diagnostics, meter).unwrap()
         };
         let mut diagnostics = Vec::new();
         let sewn = sew(&ParamSet::new(), StitchType::TatamiFill, shared(Mm::new(4.0).ok()), &mut diagnostics);
         assert_eq!((sewn.is_some(), codes(&diagnostics)), (true, vec![]));
-        // A contour fill, by its own generator.
-        let sewn = sew(&ParamSet::new(), StitchType::ContourFill, shared(Mm::new(4.0).ok()), &mut diagnostics);
-        assert_eq!((sewn.is_some_and(|s| !s.runs.is_empty()), codes(&diagnostics)), (true, vec![]));
+        // A contour fill and a meander fill, each by its own generator.
+        for stitch_type in [StitchType::ContourFill, StitchType::MeanderFill] {
+            let sewn = sew(&ParamSet::new(), stitch_type, shared(Mm::new(4.0).ok()), &mut diagnostics);
+            assert_eq!((sewn.is_some_and(|s| !s.runs.is_empty()), codes(&diagnostics)), (true, vec![]), "{stitch_type:?}");
+        }
         // A method not sewn yet, whose settings it does not read, wrong as they are here.
         let tatami = [("row_spacing_mm", "wide")].into_iter().collect();
-        let sewn = sew(&tatami, StitchType::MeanderFill, shared(Mm::new(4.0).ok()), &mut diagnostics);
+        let sewn = sew(&tatami, StitchType::TartanFill, shared(Mm::new(4.0).ok()), &mut diagnostics);
         assert_eq!((sewn.is_none(), codes(&diagnostics)), (true, vec![Code::StitchTypeNotYet]));
         // A contour fill without a longest stitch is the same bug as a tatami fill's.
         let mut diagnostics = Vec::new();
