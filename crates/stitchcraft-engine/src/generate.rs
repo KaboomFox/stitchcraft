@@ -445,11 +445,8 @@ fn contour_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Optio
     let tatami = sewing.read(TatamiParams::from_set_as, diagnostics);
     let running = sewing.read(RunningParams::from_set_as, diagnostics);
     let contour = sewing.read(ContourParams::from_set_as, diagnostics);
-    let beans = sewing.read(RepeatParams::from_set_as, diagnostics);
     let repeats = sewing.read(FillRepeatParams::from_set_as, diagnostics);
-    let (Some(mut tatami), Some(running), Some(contour), Some(beans), Some(repeats), Some(shared)) =
-        (tatami, running, contour, beans, repeats, sewing.shared)
-    else {
+    let (Some(mut tatami), Some(running), Some(contour), Some(repeats), Some(shared)) = (tatami, running, contour, repeats, sewing.shared) else {
         return None;
     };
     let (longest, travel) = fill_lengths(&mut tatami, &running, shared, diagnostics)?;
@@ -465,7 +462,7 @@ fn contour_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Optio
             length: longest.get(),
             tolerance: running.running_stitch_tolerance_mm.get(),
             jitter,
-            beans: beans.bean_stitch_repeats,
+            beans: repeats.bean_stitch_repeats,
             repeats: repeats.repeats,
         },
         underlay: tatami.underlay(longest, travel),

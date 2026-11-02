@@ -167,7 +167,7 @@ registry uses these names as its keys so files move between the tools unchanged
 | `enable_random_stitch_length` | boolean | — | false | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill` | P1 (M5) | [registered](../user/reference/params/running.md#enable_random_stitch_length) |
 | `random_stitch_length_jitter_percent` | float | ± % | 10 | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill` | P1 (M5) | [registered](../user/reference/params/running.md#random_stitch_length_jitter_percent) |
 | `repeats` | int | — | 1 | `meander_fill`, `contour_fill`, `circular_fill` | P2 (M7) | [registered](../user/reference/params/fill-repeat.md#repeats) |
-| `bean_stitch_repeats` | str | — | 0 | `meander_fill`, `circular_fill`, `contour_fill`, `guided_fill`, `tartan_fill` | P2 (M7) | [registered](../user/reference/params/repeat.md#bean_stitch_repeats) |
+| `bean_stitch_repeats` | str | — | 0 | `meander_fill`, `circular_fill`, `contour_fill`, `guided_fill`, `tartan_fill` | P2 (M7) | [registered](../user/reference/params/fill-repeat.md#bean_stitch_repeats) |
 | `zigzag_spacing_mm` | float | mm | 0 | `meander_fill` | P2 (M7) | planned |
 | `zigzag_width_mm` | float | mm | 3 | `meander_fill` | P2 (M7) | planned |
 | `rows_per_thread` | int | — | 2 | `tartan_fill` | P3 (M10) | planned |

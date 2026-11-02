@@ -34,14 +34,14 @@ params! {
         /// How many times to go back and forth over each stitch: 1 sews every stitch three times (there,
         /// back and there again), 2 five times. Several numbers separated by spaces are taken in turn along
         /// the stitches: "1 0" makes every other stitch bold.
-        bean_stitch_repeats: CountList = "0", label "Bean stitch", range (0, 10),
-            applies &[StitchType::RunningStitch, StitchType::RippleStitch, StitchType::ZigzagStitch, StitchType::ManualStitch, StitchType::ContourFill];
+        bean_stitch_repeats: CountList = "0", label "Bean stitch", range (0, 10);
     }
 }
 
 params! {
-    /// Repeats of a fill sewn as one path: each repeat sews everything sewn so far again, the other way
-    /// round, as Ink/Stitch repeats a contour fill.
+    /// Repeats and bean stitch of a fill sewn as one path, which Ink/Stitch declares for its fills apart
+    /// from a stroke's: bean stitch comes first, and each repeat then sews everything sewn so far again,
+    /// the other way round, as Ink/Stitch repeats a contour fill.
     pub struct FillRepeatParams for &[StitchType::ContourFill];
 
     "Repeats" {
@@ -49,6 +49,11 @@ params! {
         /// the other way round, so the passes double: 1 sews it once, 2 there and back, 3 there and back
         /// twice, 4 there and back 4 times.
         repeats: Count = "1", label "Repeats", range (1, 8);
+
+        /// How many times to go back and forth over each stitch of the fill's path, before its repeats: 1
+        /// sews every stitch three times (there, back and there again), 2 five times. Several numbers
+        /// separated by spaces are taken in turn along the stitches: "1 0" makes every other stitch bold.
+        bean_stitch_repeats: CountList = "0", label "Bean stitch", range (0, 10);
     }
 }
 

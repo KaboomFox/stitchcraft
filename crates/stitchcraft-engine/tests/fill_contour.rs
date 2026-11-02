@@ -4,7 +4,7 @@
 //! tested in the generator's modules (`generators::contour`); these cases sew whole designs.
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
-#![allow(clippy::unwrap_used, clippy::indexing_slicing)]
+#![allow(clippy::unwrap_used, clippy::indexing_slicing, clippy::panic)]
 
 use stitchcraft_core::{Code, Point};
 use stitchcraft_engine::PlanOutcome;
@@ -61,7 +61,7 @@ fn req_fill_con_001_rings_run_clockwise_as_drawn_or_the_other_way() {
     let turning = |own: &[(&str, &str)]| {
         let points: Vec<Point> =
             needles(&contour(&[&disc(30.0, 10.0)], own)).into_iter().filter(|q| (q.distance(p(30.0, 0.0)) - 10.0).abs() < 0.05).collect();
-        let angle = |q: &Point| (q.y()).atan2(q.x() - 30.0);
+        let angle = |q: &Point| stitchcraft_core::math::atan2(q.y(), q.x() - 30.0);
         let turns: f64 = points
             .windows(2)
             .map(|w| (angle(&w[1]) - angle(&w[0]) + 3.0 * std::f64::consts::PI) % std::f64::consts::TAU - std::f64::consts::PI)
