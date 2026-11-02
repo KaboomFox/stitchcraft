@@ -39,11 +39,6 @@ impl ParamSet {
         self.values.insert(key.into(), text.into())
     }
 
-    /// Leaves `key` unset; returns the text it had.
-    pub fn remove(&mut self, key: &str) -> Option<String> {
-        self.values.remove(key)
-    }
-
     /// The text of `key`, if the design sets it.
     pub fn get(&self, key: &str) -> Option<&str> {
         self.values.get(key).map(String::as_str)
@@ -197,15 +192,6 @@ mod tests {
 
     fn codes(problems: &[Diagnostic]) -> Vec<Code> {
         problems.iter().map(|d| d.code).collect()
-    }
-
-    #[test]
-    fn a_key_removed_is_no_longer_set_and_gives_back_its_text() {
-        let mut set: ParamSet = [("auto_fill", "false"), ("row_spacing_mm", "0.3")].into_iter().collect();
-        assert_eq!(set.remove("auto_fill"), Some("false".to_string()));
-        assert_eq!(set.get("auto_fill"), None);
-        assert_eq!(set.remove("auto_fill"), None);
-        assert_eq!(set.iter().collect::<Vec<_>>(), [("row_spacing_mm", "0.3")]);
     }
 
     #[test]
