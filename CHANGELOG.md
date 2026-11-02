@@ -1076,6 +1076,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- Mutation testing on a pull request runs in 16 parts instead of 8. The lines M7.7 changes hold 654
+  mutants, and 5 of 8 parts ran past the jobs' limit of an hour and a half.
 - The machine's stitch limits hold for the plan, and a machine file's stitches are within 0.14 mm of the
   plan's (`REQ-PLAN-002`, `REQ-FMT-002`). A writer rounds each position to 0.1 mm, so 11.95 mm from
   (0.04, 0.04) to (8.49, 8.49) is 12.02 mm in the file, past the PE800's 12 mm, and 0.3 mm on half-tenths
