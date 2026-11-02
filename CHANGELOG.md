@@ -10,8 +10,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   part's farthest point, or fade towards `end_row_spacing_mm` there. It turns in on every other ring and
   back out between them, and the part's outline and holes cut it into pieces, sewn after the tatami fill's
   underlay.
-  - The pieces are routed as a tatami fill's rows are, each sewn once, the needle travelling between them
-    under the pieces sewn later, at the fill's `angle`, or along the outline with `underpath` off.
+  - The pieces are routed as a tatami fill's rows are, each sewn once. The needle runs between them under
+    the pieces sewn later, at the fill's `angle`, or along the outline with `underpath` off.
     `skip_last` leaves out each piece's last needle point, as Ink/Stitch's circular fill does though its
     settings window doesn't show it. A round part's spiral, cut once, is joined to the needle and to the
     end along the outline, the shorter way round (`DEV-FILL-022`).
