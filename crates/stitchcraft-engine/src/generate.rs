@@ -837,6 +837,17 @@ mod tests {
         assert_eq!(path.first().map(|s| s.start), Some(p(0.0, 0.0)));
         assert!(path.iter().all(|s| [s.start, s.end].iter().all(|q| (0.0..=10.0).contains(&q.x()) && (0.0..=10.0).contains(&q.y()))));
         assert!(path.windows(2).all(|w| w[0].end == w[1].start), "one path");
+        // Nor has a meander fill: its path through its tile, one path in the square, as the element's seed
+        // lays it, so that another seed lays another over a square 20 mm a side.
+        let segments = [p(20.0, 0.0), p(20.0, 20.0), p(0.0, 20.0)].map(Segment::Line).to_vec();
+        let large = Shape::Fill { path: Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments, closed: true }] }, rule: FillRule::NonZero };
+        let meander = |seed: &str| laid(&large, &[("fill_method", "meander_fill"), ("random_seed", seed)], &Budget::DEFAULT);
+        let wandered = meander("1");
+        let path = wandered.segments.clone().unwrap_or_default();
+        assert!(path.len() > 50 && wandered.diagnostics.is_empty(), "{} segments: {:?}", path.len(), wandered.diagnostics);
+        assert!(path.windows(2).all(|w| w[0].end == w[1].start), "one path");
+        assert!(path.iter().all(|s| [s.start, s.end].iter().all(|q| (0.0..=20.0).contains(&q.x()) && (0.0..=20.0).contains(&q.y()))));
+        assert_ne!(meander("2").segments, wandered.segments);
         // Not a fill, a fill not sewn, a method not sewn yet, and a budget spent: no rows, and the same words
         // as generating it.
         let line = Shape::stroke(Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0))], closed: false }] });

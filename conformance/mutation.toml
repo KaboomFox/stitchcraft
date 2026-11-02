@@ -520,3 +520,81 @@ file = "crates/stitchcraft-engine/src/generators/contour/spiral.rs"
 mutant = "replace > with >= in resampled"
 line = "let step = if n > 1 { long / (n - 1) as f64 } else { 0.0 };"
 why = "with 1 point, the only point is the last, which lies at the ring's whole length, so the step is never used"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/network.rs"
+mutant = "replace + with - in Laid<'t>::cells"
+line = "let reach = 1 + self.tile.lines.iter().map(|l| l.cell.0.abs().max(l.cell.1.abs())).max().unwrap_or(0);"
+why = "no tile's line reaches past the next cell, so the reach is then 0 instead of 2: a line is kept only where its first corner lies in the part, and a corner lies within its own cell, which the part's bounds rounded out to whole cells take in already. The cells left out hold the first corner of no line kept, so only the work charged shrinks"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/network.rs"
+mutant = "replace + with * in Laid<'t>::cells"
+line = "let reach = 1 + self.tile.lines.iter().map(|l| l.cell.0.abs().max(l.cell.1.abs())).max().unwrap_or(0);"
+why = "no tile's line reaches past the next cell, so the reach is then 1 instead of 2: a line is kept only where its first corner lies in the part, and a corner lies within its own cell, which the part's bounds rounded out to whole cells take in already. The cells left out hold the first corner of no line kept, so only the work charged shrinks"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/network.rs"
+mutant = "replace + with * in Laid<'t>::cells"
+line = "((cell(low.0, false) - reach, cell(low.1, false) - reach), (cell(high.0, true) + reach, cell(high.1, true) + reach))"
+why = "the last cell along a step is then twice the bounds' last instead of 2 past it: the middle of the bounds, where both steps count 0, lies in the hull of the outline, so the bounds' last cell is 0 or more and twice it is no less. The cells still take in the part's bounds, where every line kept starts, so only the work charged changes"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/network.rs"
+mutant = "replace || with && in contains"
+line = "if p == q || !rings.covers(p, meter)? || !rings.covers(q, meter)? {"
+why = "the early answer for a line with an end outside the part only saves work: the line leaves the part through a side, which the crossing test finds, or through a corner, a cut beyond which the piece to that end lies outside, so its middle is found outside, and the answer is no either way"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/network.rs"
+mutant = "replace && with || in contains"
+line = "if on == Side::On && t > 0.0 && t < 1.0 {"
+why = "a cut at a corner off the line only splits a piece lying wholly inside, outside or along a ring into pieces of the same kind, and a cut before the start or past the end adds a piece whose middle Point::lerp holds at that end, which is covered, and inside only where the piece next to it is already: the answer is the same"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/network.rs"
+mutant = "replace > with >= in contains"
+line = "if on == Side::On && t > 0.0 && t < 1.0 {"
+why = "a corner on the line where it starts adds a cut at 0, where the cuts have one already, and the copy goes with the duplicates: the pieces are the same"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/network.rs"
+mutant = "replace < with <= in contains"
+line = "if on == Side::On && t > 0.0 && t < 1.0 {"
+why = "a corner on the line where it ends adds a cut at 1, where the cuts have one already, and the copy goes with the duplicates: the pieces are the same"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/network.rs"
+mutant = "replace + with * in joined"
+line = "for (b, second) in pieces.iter().enumerate().skip(a + 1) {"
+why = "each piece is then also weighed against itself, whose nearest points are a point and itself, 0 apart: that join is sorted first and passed over, the piece being joined to itself already, so the same joins are made and only the work charged grows"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/tiles.rs"
+mutant = "replace < with > in lines"
+line = "let once = from < to || (from == to && (i, j) > (0, 0));"
+why = "a line between 2 corners is then kept from the higher corner, in the cell at its other end: the same line found from its other end, so every corner meets the same lines and the network joins the same points"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/tiles.rs"
+mutant = "replace > with < in lines"
+line = "let once = from < to || (from == to && (i, j) > (0, 0));"
+why = "a corner joined to itself is then kept from the cell before it instead of the cell after: the same line found from its other end, so every corner meets the same lines and the network joins the same points"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/tiles.rs"
+mutant = "replace > with >= in lines"
+line = "let once = from < to || (from == to && (i, j) > (0, 0));"
+why = "it also weighs a corner against itself in its own cell, 0 apart, which is no side: no line is added"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/tiles.rs"
+mutant = "replace < with <= in lines"
+line = "if once && (a.distance(there) - 1.0).abs() < SIDE {"
+why = "only 2 corners exactly 1e-9 sides nearer or farther than a side apart tell the 2 apart, and a tile's corners lie a side apart to within rounding, or much farther from it than that"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/tiles.rs"
+mutant = "replace < with <= in same"
+line = "(-1..=1).any(|i| (-1..=1).any(|j| a.distance(plus(b, offset(steps, i, j))) < SIDE))"
+why = "only 2 corners exactly 1e-9 sides apart tell the 2 apart, and a tile's corners are one corner to within rounding, or a good part of a side apart"
