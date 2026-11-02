@@ -382,6 +382,13 @@ default budget, more than a CI runner has, and the job ends without a result whe
 memory. So in the mutants jobs each test binary runs with at most 4 GiB of address space, through
 `prlimit` as Cargo's runner: such a mutant aborts at the cap, which counts as noticed.
 
+Each mutant builds its crate again and runs the crate's tests, and the tests take most of the time. So
+the mutants jobs build without debug information, and with the workspace's own code optimized a little
+(`opt-level` 1, where its dependencies are at 2 in every build). On 2 cores an engine mutant then takes
+157 s against 267 s: its build 114 s against 47 s, and its tests 43 s against 220 s. The results stay the
+same. Rust keeps floating-point arithmetic as written at every level, and debug assertions and overflow
+checks stay on.
+
 Mutation testing runs the tests hundreds of times for one pull request. A test that writes files puts
 them in a folder of its own (`stitchcraft_testkit::temp::TempDir`), which goes with everything in it
 when the test ends, whether it passed or failed. Until October 2026 the command line's tests left their
