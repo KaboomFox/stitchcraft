@@ -136,13 +136,19 @@ is drawn, with the VectorCraft command that makes it sewable, such as **Type ›
 (`SC-W0807`). The [diagnostic codes](../reference/diagnostics.md) page explains each code, as
 `stitch explain SC-W0807` does.
 
-## Start and end markers
+## Start, end, origin and stop position markers
 
 A small path named `stitch:start` or `stitch:end`, grouped with a fill or a satin column, marks where the
 fill or the column starts or ends, as Ink/Stitch's start and end commands do. The patch's red fill starts
 at its start marker. A marker is never sewn, and a group or a layer is never a marker. Put one of each in
 a group: StitchCraft names a second one, and uses the first. The middle of the marker counts, so draw it
 small, such as a dot or a short line, where the needle is to go in or come out.
+
+A small path named `stitch:origin`, anywhere in the document, is the design's origin, which goes to the
+hoop's centre, as Ink/Stitch's origin command is. Without one, the middle of the design goes there. One named
+`stitch:stop-position` is where the frame moves before each stop, clear of the needle, so you can place an
+appliqué or check the work. Draw at most one of each. StitchCraft doesn't write a file of a design with 2
+origins, or with 2 stop positions and a stop (`SC-E0819`), and neither does Ink/Stitch.
 
 ## When it sews wrong
 

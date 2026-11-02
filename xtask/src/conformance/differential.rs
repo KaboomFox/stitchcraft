@@ -28,10 +28,11 @@
 //! `stitch testsheet` sews (`REQ-PRM-003`).
 //!
 //! **The measures** ([`Measure`]): each file's stitches, the needle-downs; its size, the bounds of its needle
-//! points; its threads, in order; its trims; its jumps; and how nearly their thread's footprints overlap
+//! points; its place, the middle of those bounds from where the machine starts, which the design's origin
+//! moves; its threads, in order; its trims; its jumps; and how nearly their thread's footprints overlap
 //! once their bounds' centres are made one (`stitchcraft_testkit::metrics::footprint_overlap`). Each has the
-//! tolerance the design gives: stitches within 10 %, each side within 0.5 mm, the same threads in the same
-//! order, trims and jumps within 1, footprints overlapping by 0.9 at least. A case may excuse a measure
+//! tolerance the design gives: stitches within 10 %, each side and the place each way within 0.5 mm, the
+//! same threads in the same order, trims and jumps within 1, footprints overlapping by 0.9 at least. A case may excuse a measure
 //! with an entry of the deviations ledger that explains the difference: it is reported as excused, not
 //! failed.
 //!
@@ -68,6 +69,9 @@ pub enum Measure {
     Stitches,
     /// The bounds of the needle points, each side: within 0.5 mm.
     Size,
+    /// The middle of those bounds, from where the machine starts, which the design's origin sets: within
+    /// 0.5 mm each way (`REQ-ASM-005`).
+    Place,
     /// The threads, in order: the same.
     Threads,
     /// The trims: within 1.
@@ -80,13 +84,15 @@ pub enum Measure {
 
 impl Measure {
     /// Every measure, in the order the report gives them.
-    pub const ALL: [Measure; 6] = [Measure::Stitches, Measure::Size, Measure::Threads, Measure::Trims, Measure::Jumps, Measure::Overlap];
+    pub const ALL: [Measure; 7] =
+        [Measure::Stitches, Measure::Size, Measure::Place, Measure::Threads, Measure::Trims, Measure::Jumps, Measure::Overlap];
 
     /// Its name in a case file and the report.
     pub fn name(self) -> &'static str {
         match self {
             Measure::Stitches => "stitches",
             Measure::Size => "size",
+            Measure::Place => "place",
             Measure::Threads => "threads",
             Measure::Trims => "trims",
             Measure::Jumps => "jumps",
@@ -105,6 +111,8 @@ impl Measure {
 pub struct Measured {
     stitches: usize,
     size: [f64; 2],
+    /// The middle of the needle points' bounds, from where the machine starts.
+    place: [f64; 2],
     threads: Vec<Rgb>,
     trims: usize,
     jumps: usize,
@@ -122,6 +130,7 @@ impl Measured {
         Some(Measured {
             stitches: stats.stitches,
             size: [bounds.width(), bounds.height()],
+            place: [centre.x(), centre.y()],
             threads: plan.blocks.iter().map(|block| block.thread.color).collect(),
             trims: stats.trims,
             jumps: stats.jumps,
@@ -138,12 +147,15 @@ pub type Compared = (Measure, String, String, bool);
 pub fn compare(ours: &Measured, theirs: &Measured) -> Vec<Compared> {
     let count = |n: usize| n.to_string();
     let size = |s: [f64; 2]| format!("{:.1} × {:.1} mm", s[0], s[1]);
+    let place = |p: [f64; 2]| format!("{:.1}, {:.1} mm", p[0] + 0.0, p[1] + 0.0);
+    let near = |a: [f64; 2], b: [f64; 2]| a.iter().zip(b).all(|(a, b)| (a - b).abs() <= 0.5);
     let threads = |t: &[Rgb]| t.iter().map(|c| format!("#{:02x}{:02x}{:02x}", c.r, c.g, c.b)).collect::<Vec<_>>().join(" ");
     let within = |a: usize, b: usize, by: usize| a.abs_diff(b) <= by;
     let overlap = footprint_overlap(&ours.sewn, &theirs.sewn);
     vec![
         (Measure::Stitches, count(ours.stitches), count(theirs.stitches), ours.stitches.abs_diff(theirs.stitches) * 10 <= theirs.stitches),
-        (Measure::Size, size(ours.size), size(theirs.size), ours.size.iter().zip(theirs.size).all(|(a, b)| (a - b).abs() <= 0.5)),
+        (Measure::Size, size(ours.size), size(theirs.size), near(ours.size, theirs.size)),
+        (Measure::Place, place(ours.place), place(theirs.place), near(ours.place, theirs.place)),
         (Measure::Threads, threads(&ours.threads), threads(&theirs.threads), ours.threads == theirs.threads),
         (Measure::Trims, count(ours.trims), count(theirs.trims), within(ours.trims, theirs.trims, 1)),
         (Measure::Jumps, count(ours.jumps), count(theirs.jumps), within(ours.jumps, theirs.jumps, 1)),
@@ -427,8 +439,14 @@ pub fn report(outcomes: &[Outcome], commit: &str, pin: &str) -> String {
 mod tests {
     use super::*;
 
+    /// A file measured so, centred where the machine starts.
     fn measured(stitches: usize, size: [f64; 2], threads: &[Rgb], trims: usize, jumps: usize, sewn: &[[Point; 2]]) -> Measured {
-        Measured { stitches, size, threads: threads.to_vec(), trims, jumps, sewn: sewn.to_vec() }
+        Measured { stitches, size, place: [0.0, 0.0], threads: threads.to_vec(), trims, jumps, sewn: sewn.to_vec() }
+    }
+
+    /// `measured` placed with its middle at `place`.
+    fn placed(measured: Measured, place: [f64; 2]) -> Measured {
+        Measured { place, ..measured }
     }
 
     fn p(x: f64, y: f64) -> Point {
@@ -453,18 +471,19 @@ mod tests {
         let row = [[p(0.0, 0.0), p(10.0, 0.0)]];
         let theirs = measured(100, [50.0, 30.0], &[red, blue], 2, 3, &row);
         let within = |ours: &Measured| compare(ours, &theirs).into_iter().map(|(m, .., ok)| (m, ok)).collect::<Vec<_>>();
-        let all = |ok: [bool; 6]| Measure::ALL.into_iter().zip(ok).collect::<Vec<_>>();
+        let all = |ok: [bool; 7]| Measure::ALL.into_iter().zip(ok).collect::<Vec<_>>();
         // At the edge of each tolerance: 10 stitches of 100, 0.5 mm, a trim and a jump.
-        assert_eq!(within(&measured(110, [50.5, 29.5], &[red, blue], 3, 2, &row)), all([true; 6]));
-        assert_eq!(within(&measured(90, [49.5, 30.5], &[red, blue], 1, 4, &row)), all([true; 6]));
+        assert_eq!(within(&placed(measured(110, [50.5, 29.5], &[red, blue], 3, 2, &row), [0.5, -0.5])), all([true; 7]));
+        assert_eq!(within(&placed(measured(90, [49.5, 30.5], &[red, blue], 1, 4, &row), [-0.5, 0.5])), all([true; 7]));
         // Just past each.
-        let past = measured(111, [50.0, 30.6], &[blue, red], 4, 1, &[[p(0.0, 5.0), p(10.0, 5.0)]]);
-        assert_eq!(within(&past), all([false; 6]));
-        assert_eq!(within(&measured(89, [50.6, 30.0], &[red], 2, 5, &row)), all([false, false, false, true, false, true]));
+        let past = placed(measured(111, [50.0, 30.6], &[blue, red], 4, 1, &[[p(0.0, 5.0), p(10.0, 5.0)]]), [0.0, 0.6]);
+        assert_eq!(within(&past), all([false; 7]));
+        let others = placed(measured(89, [50.6, 30.0], &[red], 2, 5, &row), [-0.6, 0.0]);
+        assert_eq!(within(&others), all([false, false, false, false, true, false, true]));
     }
 
     #[test]
-    fn a_plan_is_measured_by_its_needle_downs_bounds_threads_trims_and_jumps() {
+    fn a_plan_is_measured_by_its_needle_downs_bounds_place_threads_trims_and_jumps() {
         use stitchcraft_plan::{PlanBuilder, Provenance, Role, Thread};
         let (red, blue) = (Rgb::new(237, 23, 31), Rgb::new(11, 61, 145));
         let mut builder = PlanBuilder::new(Thread::new(red));
@@ -479,8 +498,8 @@ mod tests {
         builder.stitch(p(20.0, 8.0), top);
         let measured = Measured::of(&builder.finish()).unwrap();
         assert_eq!(
-            (measured.stitches, measured.size, measured.threads.clone(), measured.trims, measured.jumps),
-            (5, [20.0, 8.0], vec![red, blue], 1, 1)
+            (measured.stitches, measured.size, measured.place, measured.threads.clone(), measured.trims, measured.jumps),
+            (5, [20.0, 8.0], [10.0, 4.0], vec![red, blue], 1, 1)
         );
         // The thread runs from each needle point to the next, its bounds' centre, (10, 4), at the origin.
         assert_eq!(measured.sewn.first(), Some(&[p(-10.0, -4.0), p(0.0, -4.0)]));

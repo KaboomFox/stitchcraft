@@ -5,6 +5,23 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M8.8: the design's origin and stop position (`REQ-ASM-005`). Ink/Stitch's `origin` command gives the
+  design its origin, which goes to the hoop's centre, and its `stop_position` command the stop position,
+  which the frame moves to before each stop. Each is the point where its symbol is placed, wherever it is,
+  in `<defs>` and hidden layers too, as Ink/Stitch finds them (`REQ-SVG-003`). In a VectorCraft document,
+  objects named `stitch:origin` and `stitch:stop-position` mark them, each at the middle of its anchors
+  (`REQ-VC-009`).
+  - 2 origins, or 2 stop positions in a design with a stop, end planning with `SC-E0819` (new). Ink/Stitch
+    doesn't write a machine file of them either. A command or a marker whose place doesn't read is named and
+    left out (`SC-W0802`, `SC-W0807`).
+  - The differential measures each file's place too, within 0.5 mm each way. The place is the middle of
+    the file's box, from where the machine starts. Its new case sews an origin in a moved and scaled group
+    and a stop position in a hidden layer, which both programs sew alike by every measure.
+  - The test kit writes a design's origin and stop position as Ink/Stitch's commands (`REQ-PRM-003`).
+  - TS-16 gains its M8.8 part for MC-11. Its origin lies on the red fill's bottom edge, 10 mm in from its
+    left side. A stop after the blue column sends the frame to a stop position 20 mm right of the fill and
+    10 mm above it. Ink/Stitch sews the sheet as StitchCraft does by every measure of the differential,
+    the place among them.
 - M8.5: clip paths (`REQ-SVG-011`, `REQ-GEN-005`). A shape that a `clip-path` cuts sews only what shows of
   it. The SVG reader reads the clip paths of a shape and of the groups, links and switches round it, each
   a clip of its elements (`Element::clips`), and the engine cuts them for every reader.
@@ -2205,6 +2222,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - Changed `conformance/golden/plans/patch.pes` and `patch.dst` (M8.4, `REQ-GEN-001`): the patch's red fill
   starts nearest its start marker, in its top-left corner. `SC-W0807` no longer names the marker. The
   patch sews 2,483 stitches, 17 more.
+- Changed `conformance/golden/testsheets/TS-16.pes` (M8.8). The sheet's origin, 10 mm in from the red
+  fill's left side on its bottom edge, goes to the hoop's centre, and a stop after the blue column moves the
+  frame to the stop position first. The plan spans 60 × 110 mm, and sews the same 3,026 stitches.
 - Changed `conformance/golden/testsheets/TS-16.pes` (M8.5). The sheet gains its clip part, which makes it
   40 × 100 mm, and sews 3,026 stitches, 930 more.
 - Added `conformance/golden/testsheets/TS-16.pes` (M8.4), the first part of the Ink/Stitch file MC-11

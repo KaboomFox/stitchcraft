@@ -1,0 +1,8 @@
+id = "inkstitch-origin-stop"
+requirements = ["REQ-SVG-003", "REQ-ASM-005"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/origin-stop.svg"
+# The origin command's symbol lies at (40, 50), under its layer's move and its group's doubling, below the
+# discs: both programs put it at the hoop's centre, which the place shows. The stop_position command counts in
+# a hidden layer too, and the frame moves to (90, 45) before each of the 2 stops, which the size and the jumps
+# show.

@@ -127,7 +127,9 @@ artboard with it (`REQ-VC-015`).
 **Commands.** Ink/Stitch's start, end and target commands, and VectorCraft's start and end markers, are
 an element's hints (M8.4), its points checked and moved with the rest. Clip paths are an element's clips
 (M8.5), checked and moved with it too, which the engine cuts it to ([engine pipeline](engine-pipeline.md)). Trims and stops are the element
-parameters `trim_after` and `stop_after`, and the origin and stop position are design settings (M3.8).
+parameters `trim_after` and `stop_after`, and the origin and stop position are design settings (M3.8), which
+Ink/Stitch's `origin` and `stop_position` commands and VectorCraft's `stitch:origin` and `stitch:stop-position`
+markers give (M8.8).
 
 ### Region
 

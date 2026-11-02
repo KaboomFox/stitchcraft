@@ -7,7 +7,8 @@
 //! holds, and only `stitch testsheet` writes them. So does TS-11C, a design whose meander fills wander as
 //! their elements' ids draw: the objects drawn have ids of their own, and would wander other ways
 //! ([`TestSheet::drawable`]). So does TS-16, whose elements start and end at positions and are cut by clips,
-//! which the filter would draw as `stitch:start` and `stitch:end` markers grouped with them and as clip groups
+//! which the filter would draw as `stitch:start` and `stitch:end` markers grouped with them and as clip groups,
+//! and whose origin and stop position it would draw as `stitch:origin` and `stitch:stop-position` markers
 //! ([`TestSheet::uses_file_features`]).
 //!
 //! **What it draws.** The sheet's design moved by whole millimetres, so that the middle of its bounds is as

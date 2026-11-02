@@ -248,8 +248,8 @@ StitchCraft's SVG adapter does with it (`stitchcraft_svg::inkstitch`). Their con
 | `ignore_object` | the object a connector ties it to | applied: the object is left out and listed (`SC-I0805`) |
 | `satin_cut_point` | the object a connector ties it to | nothing to sew: input to Ink/Stitch's tools |
 | `ignore_layer` | every layer it is in | applied: every layer it is in is left out and listed (`SC-I0805`) |
-| `origin` | the document | planned: noted as not applied (`SC-W0802`) |
-| `stop_position` | the document | planned: noted as not applied (`SC-W0802`) |
+| `origin` | the document | applied: the design's origin, which goes to the hoop's centre; 2 end planning (`SC-E0819`) |
+| `stop_position` | the document | applied: where the frame moves before each stop; 2 in a design with a stop end planning (`SC-E0819`) |
 
 Before its file version 3, Ink/Stitch named 7 commands otherwise. Its updater renames them in the files it updates, and
 StitchCraft reads them as the commands they became in any file (`DEV-SVG-014`).
