@@ -128,9 +128,7 @@ impl TestSheet {
     /// [`DesignSettings::origin`]: crate::design::DesignSettings::origin
     /// [`DesignSettings::stop_position`]: crate::design::DesignSettings::stop_position
     pub fn uses_file_features(&self) -> bool {
-        let filed = |element: &crate::design::Element| element.hints != Hints::default() || !element.clips.is_empty();
-        let placed = |design: &Design| design.settings.origin.is_some() || design.settings.stop_position.is_some();
-        self.design().and_then(Result::ok).is_some_and(|design| placed(&design) || design.elements().iter().any(filed))
+        self.design().and_then(Result::ok).is_some_and(|design| filed(&design))
     }
 
     /// Whether the sheet's design has shapes that StitchCraft digitizes automatically ([`Element::automatic`]),
@@ -149,6 +147,12 @@ impl TestSheet {
             Drawn::Designed(drawing, _) | Drawn::DesignedById(drawing, _) | Drawn::FromFile(drawing, _) => Some(drawing().and_then(Drawing::design)),
         }
     }
+}
+
+/// Whether `design` holds any of what an Ink/Stitch file gives it ([`TestSheet::uses_file_features`]).
+fn filed(design: &Design) -> bool {
+    let marked = |element: &crate::design::Element| element.hints != Hints::default() || !element.clips.is_empty();
+    design.settings.origin.is_some() || design.settings.stop_position.is_some() || design.elements().iter().any(marked)
 }
 
 /// Every test sheet, in protocol order.
@@ -432,7 +436,7 @@ pub fn find(id: &str) -> Option<&'static TestSheet> {
 #[cfg(test)]
 mod tests {
     use stitchcraft_plan::invariants::check;
-    use stitchcraft_plan::{Role, StitchKind};
+    use stitchcraft_plan::{Rgb, Role, StitchKind};
 
     use super::*;
 
@@ -597,6 +601,26 @@ mod tests {
         assert_eq!(stops, [(StitchKind::Jump, stitchcraft_core::Point::new(sx - ox, sy - oy).unwrap())]);
         // It stops at the end of the blue column, the second element, whose thread's block it ends.
         assert!(shape("TS-16")[1].ends_with("llllJP"), "{:?}", shape("TS-16"));
+    }
+
+    #[test]
+    fn a_design_holds_what_a_file_gives_it_with_any_one_of_the_file_s_features() {
+        // Each alone, as a host would draw it: start and end positions, a clip, an origin, a stop position.
+        let line = || {
+            let mut d = Drawing::new("test");
+            d.polyline("line", &[(0.0, 0.0), (10.0, 0.0)], &Thread::new(Rgb::new(0, 0, 0)), &[]).unwrap();
+            d
+        };
+        assert!(!filed(&line().design().unwrap()));
+        let mut positioned = line();
+        positioned.positions((0.0, 0.0), (10.0, 0.0)).unwrap();
+        let mut clipped = line();
+        clipped.clip(vec![designed::polygon(&[(0.0, -1.0), (5.0, -1.0), (5.0, 1.0)]).unwrap()]);
+        assert!(filed(&positioned.design().unwrap()) && filed(&clipped.design().unwrap()));
+        let at = Some(stitchcraft_core::Point::new(5.0, 0.0).unwrap());
+        let (mut placed, mut stopped) = (line().design().unwrap(), line().design().unwrap());
+        (placed.settings.origin, stopped.settings.stop_position) = (at, at);
+        assert!(filed(&placed) && filed(&stopped));
     }
 
     #[test]
