@@ -58,6 +58,8 @@ pub const PIN: &str = "conformance/inkstitch/pin.toml";
 pub const STUBS: &str = "conformance/inkstitch/stubs";
 /// Where the SVG files written for test sheets go, relative to the repository root.
 pub const WRITTEN: &str = "target/conformance/differential";
+/// The least overlap of the two programs' thread footprints.
+pub const LEAST_OVERLAP: f64 = 0.9;
 
 /// What is measured, by the name a case's `excused` table gives it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -72,7 +74,7 @@ pub enum Measure {
     Trims,
     /// The jumps: within 1.
     Jumps,
-    /// The overlap of the thread's footprints: 0.9 at least.
+    /// The overlap of the thread's footprints: [`LEAST_OVERLAP`] at least.
     Overlap,
 }
 
@@ -145,7 +147,7 @@ pub fn compare(ours: &Measured, theirs: &Measured) -> Vec<Compared> {
         (Measure::Threads, threads(&ours.threads), threads(&theirs.threads), ours.threads == theirs.threads),
         (Measure::Trims, count(ours.trims), count(theirs.trims), within(ours.trims, theirs.trims, 1)),
         (Measure::Jumps, count(ours.jumps), count(theirs.jumps), within(ours.jumps, theirs.jumps, 1)),
-        (Measure::Overlap, format!("{overlap:.3}"), String::new(), overlap >= 0.9),
+        (Measure::Overlap, format!("{overlap:.3}"), String::new(), overlap >= LEAST_OVERLAP),
     ]
 }
 
@@ -333,7 +335,11 @@ fn judge(compared: Vec<Compared>, excused: &BTreeMap<String, String>, again: &BT
                 }
             },
             (false, None) => {
-                outcome.failures.push(format!("{name} differ: StitchCraft {mine}, Ink/Stitch {other}"));
+                outcome.failures.push(match measure {
+                    // A measure of the pair, with one value.
+                    Measure::Overlap => format!("{name} {mine}, below {LEAST_OVERLAP}"),
+                    _ => format!("{name} differ: StitchCraft {mine}, Ink/Stitch {other}"),
+                });
                 "❌".to_string()
             }
             (true, Some(deviation)) => {
@@ -499,6 +505,15 @@ mod tests {
                 "| trims | 1 | 2 | ❌ agree |"
             ]
         );
+    }
+
+    #[test]
+    fn an_overlap_too_small_is_given_with_the_least_it_may_be() {
+        // The overlap is a measure of the pair: one value, which a failure gives with its tolerance.
+        let mut judged = outcome("case");
+        judge(vec![(Measure::Overlap, "0.564".to_string(), String::new(), false)], &BTreeMap::new(), &BTreeMap::new(), &mut judged);
+        assert_eq!(judged.failures, ["overlap 0.564, below 0.9"]);
+        assert_eq!(judged.details, ["| overlap | 0.564 |  | ❌ |"]);
     }
 
     #[test]
