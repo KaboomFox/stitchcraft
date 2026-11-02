@@ -15,7 +15,8 @@ use stitchcraft_plan::{Role, StitchKind};
 
 /// A file of `body`, 100 mm square, drawn in millimetres.
 fn file(body: &str) -> String {
-    let head = r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100mm" height="100mm" viewBox="0 0 100 100">"#;
+    let head =
+        r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="100mm" height="100mm" viewBox="0 0 100 100">"#;
     format!("{head}{body}</svg>")
 }
 
@@ -79,8 +80,8 @@ fn req_svg_011_a_shape_is_cut_to_the_clip_path_it_names() {
 
 #[test]
 fn req_svg_011_the_clip_paths_of_the_groups_links_and_switches_round_a_shape_cut_it_too() {
-    // Each in the user space of the element that names it, here moved 10 mm right by the group, and the
-    // shape's own last: the switch's, the link's, the group's, then the shape's.
+    // Each in the user space of the element that names it, here moved 10 mm right by the group, nearest
+    // first: the shape's own, the switch's, the link's, then the group's.
     let read = svg(file(
         r#"<defs><clipPath id="c"><rect width="50" height="50"/></clipPath><clipPath id="d"><rect x="20" y="20" width="50" height="50"/></clipPath></defs>
         <g clip-path="url(#c)" transform="translate(10 0)"><a clip-path="url(#d)"><switch clip-path="url(#c)">
@@ -90,7 +91,7 @@ fn req_svg_011_the_clip_paths_of_the_groups_links_and_switches_round_a_shape_cut
     ));
     let elements = read.design.elements();
     let (c, d) = ([10.0, 0.0, 60.0, 50.0], [30.0, 20.0, 80.0, 70.0]);
-    assert_eq!(boxes(&elements[0]), [[c], [d], [c], [d]]);
+    assert_eq!(boxes(&elements[0]), [[d], [c], [d], [c]]);
     assert!(elements[1].clips.is_empty(), "a shape after the group isn't in it");
 }
 
@@ -119,7 +120,9 @@ fn req_svg_011_object_bounding_box_units_are_shares_of_the_shape_s_box() {
     assert!(elements[1].clips.is_empty());
     assert_eq!(
         warnings(&read),
-        ["warning SC-W0802: The clip path `c` of `g` is in units of the box round what `g` holds, which StitchCraft doesn't measure; it is not applied."]
+        [
+            "warning SC-W0802: The clip path `c` of `g` is in units of the box round what `g` holds, which StitchCraft doesn't measure; it is not applied."
+        ]
     );
 }
 
@@ -187,7 +190,9 @@ fn req_svg_011_a_clip_path_s_own_clip_path_cuts_it_in_turn_and_a_reference_to_no
 #[test]
 fn req_svg_011_an_empty_clip_path_leaves_nothing_and_the_root_s_clip_path_is_named() {
     // A viewer shows nothing of a shape whose clip path has no area: it sews nothing, and the engine says so.
-    let read = svg(r#"<svg xmlns="http://www.w3.org/2000/svg" clip-path="url(#c)"><defs><clipPath id="c"/></defs><rect id="r" width="10" height="10" clip-path="url(#c)"/></svg>"#);
+    let read = svg(
+        r#"<svg xmlns="http://www.w3.org/2000/svg" clip-path="url(#c)"><defs><clipPath id="c"/></defs><rect id="r" width="10" height="10" clip-path="url(#c)"/></svg>"#,
+    );
     assert_eq!(read.design.elements()[0].clips, [Clip::default()]);
     assert_eq!(warnings(&read), ["warning SC-W0802: The root `<svg>` element's clip path is not applied."]);
     let planned = stitchcraft_engine::plan(&read.design, REFERENCE, &Budget::DEFAULT);

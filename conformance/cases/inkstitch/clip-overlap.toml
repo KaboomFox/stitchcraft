@@ -1,0 +1,10 @@
+id = "inkstitch-clip-overlap"
+requirements = ["REQ-SVG-008", "REQ-SVG-011", "REQ-GEN-005"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/clip-overlap.svg"
+# A viewer shows both squares of the clip path, their overlap too, and so does StitchCraft. Ink/Stitch takes the
+# first square as the outline and the second as a hole, and leaves the 15 mm square where they overlap out: the
+# same size and nearly the same count of stitches, a footprint 14 % smaller.
+
+[excused]
+overlap = "DEV-SVG-016"
