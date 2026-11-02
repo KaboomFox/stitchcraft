@@ -40,6 +40,9 @@ use crate::generators::tatami::stitches::Stitching;
 /// The stitch types a tatami fill's own settings apply to.
 const TATAMI: &[StitchType] = &[StitchType::TatamiFill];
 
+/// The key of the angle of a fill's rows ([`TatamiParams::angle`]), which an SVG file's clone turns with it.
+pub const ANGLE: &str = "angle";
+
 /// The stitch types whose rows are routed as a tatami fill's are: its own, and a circular fill's pieces of
 /// spiral, which its end spacing spaces, its `skip_last` shortens and its `underpath` travels under.
 const ROUTED: &[StitchType] = &[StitchType::TatamiFill, StitchType::CircularFill];

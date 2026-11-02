@@ -19,6 +19,12 @@ pub const TRIM_AFTER: &str = "trim_after";
 /// several elements keeps it for the last.
 pub const STOP_AFTER: &str = "stop_after";
 
+/// The key of the shortest stitch, which an SVG file's clone gives everything it sews when it sets one.
+pub const MIN_STITCH_LENGTH: &str = "min_stitch_length_mm";
+
+/// The key of the shortest jump, which an SVG file's clone gives everything it sews when it sets one.
+pub const MIN_JUMP_STITCH_LENGTH: &str = "min_jump_stitch_length_mm";
+
 /// The key of the longest stitch: a tatami fill sews its rows in stitches that long, a contour fill its
 /// rings, a meander fill its underlay's rows, and the stitch types that split stitches split longer ones.
 pub const MAX_STITCH_LENGTH: &str = "max_stitch_length_mm";
@@ -173,6 +179,17 @@ mod tests {
         assert_eq!((p.lock_start_scale_mm.get(), p.lock_end_scale_percent), (0.7, 100.0));
         assert_eq!((p.trim_after, p.stop_after, p.min_stitch_length_mm, p.min_jump_stitch_length_mm), (false, false, None, None));
         assert_eq!((p.lock_custom_start.as_str(), p.random_seed), ("", None));
+    }
+
+    #[test]
+    fn the_keys_named_here_are_the_settings_of_every_stitch_type() {
+        for key in [TRIM_AFTER, STOP_AFTER, MIN_STITCH_LENGTH, MIN_JUMP_STITCH_LENGTH] {
+            let spec = CommonParams::SPECS.iter().find(|spec| spec.key == key).unwrap();
+            assert_eq!(spec.applies_to, StitchType::ALL, "{key}");
+        }
+        // A fill's angle is the tatami fill's, which the other fill methods read too.
+        let angle = crate::generators::tatami::TatamiParams::SPECS.iter().find(|spec| spec.key == crate::generators::tatami::ANGLE);
+        assert!(angle.is_some_and(|spec| spec.applies_to.contains(&StitchType::TatamiFill)));
     }
 
     #[test]
