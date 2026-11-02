@@ -328,6 +328,42 @@ mod tests {
         assert_eq!(cut_at(&line, &[0.5]), [vec![p(0.0, 0.0), p(4.0, 0.0), p(4.0, 0.0)], vec![p(4.0, 0.0), p(4.0, 4.0)]]);
         assert_eq!(cut_at(&line, &[0.0, 1.0]), [line.to_vec()]);
         assert_eq!(cut_at(&line, &[]), [line.to_vec()]);
+        // A cut on the first side.
+        assert_eq!(cut_at(&line, &[0.25]), [vec![p(0.0, 0.0), p(2.0, 0.0)], vec![p(2.0, 0.0), p(4.0, 0.0), p(4.0, 4.0)]]);
+        // A path of no length has nowhere to cut.
+        assert_eq!(starts(&[vec![p(1.0, 1.0)], vec![p(1.0, 1.0)]]), Vec::<f64>::new());
+    }
+
+    #[test]
+    fn a_segment_enters_a_capsule_where_it_first_comes_within_reach() {
+        // Segments and sides in every direction, off the origin: the place `entry` gives lies within reach of
+        // the side, and no place before it does; where it gives none, no place along the segment does.
+        let mut rng = stitchcraft_core::rng::SplitMix64::new(11);
+        let mut draw = || Point::new(16.0 * rng.next_f64() - 5.0, 16.0 * rng.next_f64() - 5.0).unwrap();
+        let (mut entered, mut missed) = (0, 0);
+        for _ in 0..400 {
+            let (a, b, c, d) = (draw(), draw(), draw(), draw());
+            let reach = 0.5 + a.distance(c) / 8.0;
+            let distance = |t: f64| distance_to_segment(a.lerp(b, t), c, d);
+            match entry(a, b, c, d, reach) {
+                Some(t) => {
+                    entered += 1;
+                    assert!(distance(t) <= reach + 1e-9, "{a:?} {b:?} {c:?} {d:?} {reach}: {t} lies {} away", distance(t));
+                    let before = |i: u32| distance(t * f64::from(i) / 100.0) >= reach - 1e-6;
+                    assert!(t == 0.0 || (0..100).all(before), "{a:?} {b:?} {c:?} {d:?} {reach}: within reach before {t}");
+                }
+                None => {
+                    missed += 1;
+                    assert!((0..=1000).all(|i| distance(f64::from(i) / 1000.0) > reach), "{a:?} {b:?} {c:?} {d:?} {reach}");
+                }
+            }
+        }
+        assert!(entered > 50 && missed > 50, "{entered} entered, {missed} missed");
+        // A segment along the side's line at the reach, either way, is in its band; one past it is not.
+        let (c, d) = (p(0.0, 0.0), p(4.0, 0.0));
+        assert_eq!(band(p(-3.0, 1.0), p(7.0, 1.0), c, d, 1.0), Some(0.3));
+        assert_eq!(band(p(-3.0, -1.0), p(7.0, -1.0), c, d, 1.0), Some(0.3));
+        assert_eq!(band(p(-3.0, -2.0), p(7.0, -2.0), c, d, 1.0), None);
     }
 
     #[test]
