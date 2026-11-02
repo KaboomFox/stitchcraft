@@ -330,6 +330,29 @@ requirements = ["REQ-FILL-CON-003"]
 params = ["smoothness_mm"]
 
 [[deviation]]
+id = "DEV-FILL-018"
+area = "fill/meander"
+summary = "StitchCraft's meander tiles are its own, made in code: 7 of the regular and semiregular tilings of the plane, honeycomb by default. Ink/Stitch's tiles are pictures it ships, and a meander_pattern that names one of them, such as N3-11a, sews StitchCraft's default tile, which SC-W0316 says. A meander fill that sets no pattern sews the honeycomb, where Ink/Stitch sews its N3-11a."
+reason = "Ink/Stitch's tiles are drawings in its repository (tiles/, at d59c9ab), which StitchCraft does not copy (ADR-0001). A tiling's sides make a network with no free end, which a meander can wander through, and a honeycomb's points meet 3 lines, as N3-11a's do."
+requirements = ["REQ-FILL-MEA-001", "REQ-FILL-MEA-005"]
+
+[[deviation]]
+id = "DEV-FILL-019"
+area = "fill/meander"
+summary = "A part of a meander fill too small for any line of its tile, or whose lines all have free ends, is sewn as a running stitch round its outline, and SC-W0317 says so. Ink/Stitch stops the whole fill with an error there, and sews nothing of it."
+reason = "A part too small for the tile is still part of the shape, and a tatami fill sews a part too thin for its rows round its outline too (SC-W0305). Ink/Stitch's meander fill was read at d59c9ab (lib/stitches/meander_fill.py: meander_fill, which calls fill.fatal when the graph is empty)."
+requirements = ["REQ-FILL-MEA-002"]
+params = ["meander_scale_percent"]
+
+[[deviation]]
+id = "DEV-FILL-020"
+area = "fill/meander"
+summary = "A meander's path draws its lines and pairs from StitchCraft's generator (SplitMix64, seeded from random_seed, or from the element's id when it has none), and its search for a detour tries the points farthest from the detour's end first, so the path differs from Ink/Stitch's for the same seed. The network's points lie where the tile puts them, where Ink/Stitch rounds each to a whole CSS pixel."
+reason = "Ink/Stitch draws from a generator keyed by its seed and the part's place (lib/stitches/meander_fill.py and lib/utils/prng.py at d59c9ab), and searches in the order its graph library stores the points, which follows how the tile's lines were added. StitchCraft's generator is its own, for every platform alike (docs/src/design/determinism.md), and trying the farthest points first takes each detour the long way round, which keeps the path from hemming itself in (docs/src/design/algorithms/fills.md, Meander fill)."
+requirements = ["REQ-FILL-MEA-003"]
+params = ["random_seed"]
+
+[[deviation]]
 id = "DEV-SVG-001"
 area = "svg"
 summary = "A stroke-width in percent, em or ex is read as a viewer reads it: a percentage of the viewport's diagonal over √2, an em as 16 user units and an ex as 8. A stroke-linejoin keyword is read in any case. Ink/Stitch reads such a width as 0, which sews a satin column drawn as one path as a stroke, and reads a join that is not written in lower case as unset."

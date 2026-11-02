@@ -66,8 +66,10 @@ Adapters have already applied transforms and converted units, so normalization n
 
 - Parameters are read by the registry as the element's stitch type reads them. Blank text takes the
   default, and a setting the stitch type does not use, or that its other settings hide, is kept unread
-  ([parameters](params.md#the-parameters-an-element-reads-req-prm-004)). The rest are checked for type and range,
-  and the generator receives a typed struct or nothing.
+  ([parameters](params.md#the-parameters-an-element-reads-req-prm-004)). A value that only the node's
+  other stitch type can read, such as a zigzag stroke's 2 spacings under a meander fill, is left to it:
+  the element takes the default, and `SC-I0106` says so (`REQ-PRM-006`). The rest are checked for type
+  and range, and the generator receives a typed struct or nothing.
 - Shapes are checked against the stitch type. A satin needs a subpath longer than a point (`SC-E0201`),
   a fill needs a non-empty region, and a running stitch needs a path longer than the minimum stitch
   length.
@@ -101,7 +103,9 @@ not build that method (`REQ-FILL-005`). Nor does it take pull compensation, rand
 gap-filling rows, which Ink/Stitch's legacy fill has no use for. A contour fill, sewn from M7.7, lays its
 rings with the tatami fill's row spacing and sews them as one running stitch after the tatami fill's
 underlay, reading the running stitch's tolerance and random lengths for its path
-([fills](algorithms/fills.md#contour-fill)). The other stroke, satin and fill methods are skipped with
+([fills](algorithms/fills.md#contour-fill)). A meander fill, sewn from M7.8, lays a tile over each part
+and sews one path through it after the same underlay ([fills](algorithms/fills.md#meander-fill)). The
+other stroke, satin and fill methods are skipped with
 `SC-W0011` until their milestones. An element whose parameters are wrong (`SC-E0101`) is skipped too, and
 the rest of the design still plans.
 
@@ -114,7 +118,8 @@ or a fill's longest, is raised to it with `SC-W0402`: shorter, the plan would me
 A preview that cannot afford a fill's stitches shows its top rows (`stitchcraft_engine::generate::rows`,
 from M6.3). The fill's settings are read as for sewing it, and what they say is said the same, but only
 the region is built and the rows laid over it: no needle point is placed and no route is searched. A
-contour fill has no rows, and shows its path round its rings, from M7.7.
+contour fill has no rows, and shows its path round its rings, from M7.7. Nor has a meander fill, which
+shows its path through its tile as the element's seed lays it, from M7.8.
 
 Rules every generator follows:
 

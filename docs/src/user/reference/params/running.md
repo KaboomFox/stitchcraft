@@ -13,11 +13,11 @@ Applies to Running stitch, Ripple stitch.
 **Stitch length.** How long each stitch is. Between corners the stitches are spread evenly, so each one is at most
 this long. Several lengths separated by spaces sew as a repeating pattern: "2.5 1" sews long,
 short, long, short. The stitches that join a satin column's underlays are no longer than the
-first length.
+first length, and a meander fill's path is sewn in stitches of the first length.
 
 - **Accepts:** 1 to 16 lengths from 0.1 to 25 mm, separated by spaces
 - **Default:** `2.5`
-- **Applies to:** Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill
+- **Applies to:** Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill
 - **Ink/Stitch:** same key and default; StitchCraft differs:
   - **DEV-RUN-003.** No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column's travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Where a satin column's parts meet nearer than the shortest stitch, the needle's way between them gives way to the next part's first point, and so does an underlay's last point or the column's start, which moves there; beside a top stitch's end, which stays where it is, the next part's points that near it give way instead. Ink/Stitch's running stitch has no shortest stitch, and it joins a satin column's parts as they are; its plan later drops stitches of at most 0.1 mm (its default), keeping the stitch before.
   - **DEV-SAT-005.** A satin column's travel, and a tatami fill's, take the first of the lengths running_stitch_length_mm gives. Ink/Stitch reads a satin's or a fill's value as one number, and sews a value of several with 2.5 mm, the default.
@@ -30,7 +30,7 @@ do a contour fill's rings.
 
 - **Accepts:** a length from 0.01 to 5 mm
 - **Default:** `0.2`
-- **Applies to:** Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill
+- **Applies to:** Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill
 - **Ink/Stitch:** same key; StitchCraft differs:
   - **DEV-SAT-006.** A satin column's and a tatami fill's running_stitch_tolerance_mm defaults to 0.2 mm, the value Ink/Stitch sews when a file sets none. Ink/Stitch's settings window shows 0.1 mm.
 
