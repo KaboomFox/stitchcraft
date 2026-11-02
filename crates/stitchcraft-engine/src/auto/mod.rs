@@ -59,10 +59,13 @@
 //! is left out with `SC-E0004`, and the rest of the design still plans (`REQ-GEN-002`).
 //!
 //! The shapes of a traced picture meet, and [`digitized`] then sews them as neighbours (`auto::neighbours`):
-//! the lowest shape is left out when it is the picture's background (`REQ-AUTO-009`), specks merge into
-//! the areas beside them (`REQ-AUTO-008`), the elements sew in an order of their own, with few thread
-//! changes (`REQ-AUTO-010`), and each automatic area reaches under the shapes sewn after it, or is cut away
-//! under the areas that cover it (`REQ-AUTO-007`). A design that asks for its threads sorted
+//! the lowest shape is left out when it is the picture's background (`REQ-AUTO-009`), but for what shows of
+//! it inside the picture, and before anything is digitized the layers are flattened (`REQ-AUTO-023`): each
+//! area is given what shows of it, an area wider than a satin column somewhere is given whole under the
+//! details that fill its holes, and it moves back before them. Specks then merge into the areas beside them
+//! (`REQ-AUTO-008`), the elements sew in an order of their own, with few thread changes (`REQ-AUTO-010`), and
+//! each automatic area reaches under the shapes sewn after it, or is cut away under the shapes that cover it
+//! (`REQ-AUTO-007`). A design that asks for its threads sorted
 //! (`--sort-colours`, [`Design::sort_colours`]) has every element ordered so, its elements with settings
 //! too, with automatic elements or without (`REQ-AUTO-011`). A part's line or column paints the part to its
 //! neighbours, and the areas sewn before it reach under it.
@@ -75,7 +78,7 @@ mod params;
 mod split;
 
 pub use neighbours::TOUCHING;
-use neighbours::{Sewn, no_area, parts_of, speck};
+use neighbours::{Background, Sewn, no_area, parts_of, speck};
 pub use params::{AutoParams, IGNORE_BACKGROUND, MAX_SATIN_WIDTH, MIN_AREA, MIN_TRIPLE_RUN_WIDTH, OVERLAP};
 
 use std::borrow::Cow;
@@ -245,9 +248,9 @@ impl Digitized {
 /// then sewn as neighbours (`auto::neighbours`); and what was said of them: `SC-I0901` for the shapes
 /// digitized, what [`digitize`] says of each, its settings of the rules first, `SC-E0004` for each one left
 /// out because digitizing and naming it needs more work than `budget` allows an element, and what is said of
-/// the background, the specks, the order and the overlaps (`SC-W0906`, `SC-I0905`, `SC-I0907`,
-/// `SC-I0904`). A design without automatic elements that doesn't ask for its threads sorted comes back as
-/// it is.
+/// the background, the layers, the specks, the order and the overlaps (`SC-W0906`, `SC-I0908`, `SC-I0905`,
+/// `SC-I0907`, `SC-I0904`). A design without automatic elements that doesn't ask for its threads sorted
+/// comes back as it is.
 pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>, Vec<Diagnostic>) {
     let elements = design.elements();
     if !design.sort_colours && !elements.iter().any(|element| element.automatic) {
@@ -264,24 +267,22 @@ pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>
     for element in elements {
         let _ = taken.claim(element.id.as_str().to_string(), &mut budget.meter());
     }
-    // The picture's background is left out before anything is digitized, unless the lowest shape sews it.
+    // The picture's background is left out before anything is digitized, unless the lowest shape sews it, and
+    // the layers are flattened: what shows of the background inside the picture is sewn.
     let background = neighbours::background(design, rules.first().and_then(Option::as_ref), budget);
-    let lowest = background.as_ref().and_then(|(lowest, _)| *lowest);
+    let layers = neighbours::flattened(design, &rules, matches!(background, Some(Background::Found)), budget);
     // How each shape digitized sews, by its place in the design.
     let mut digitized = Vec::new();
-    let mut sewn = Vec::with_capacity(elements.len());
-    for (index, (element, rules)) in elements.iter().zip(&rules).enumerate() {
-        if lowest == Some(index) {
-            continue;
-        }
+    let mut sewn = Vec::with_capacity(layers.elements.len());
+    for (index, element) in layers.elements {
         if !element.automatic {
-            sewn.push(Sewn { element: element.clone(), area: None, automatic: false, shape: index, part: None });
+            sewn.push(Sewn { element: element.into_owned(), area: None, automatic: false, shape: index, part: None });
             continue;
         }
         // An automatic element with a setting that doesn't read sews nothing, as `SC-E0101` said.
-        let Some(rules) = rules else { continue };
+        let Some(rules) = rules.get(index).and_then(Option::as_ref) else { continue };
         let mut meter = budget.meter();
-        let made = match made_by(element, &design.settings, rules, &mut meter).and_then(|made| named(made, element, &mut taken, &mut meter)) {
+        let made = match made_by(&element, &design.settings, rules, &mut meter).and_then(|made| named(made, &element, &mut taken, &mut meter)) {
             Ok(made) => made,
             Err(exhausted) => {
                 diagnostics.push(exhausted.diagnostic(budget, Some(element.id.clone())));
@@ -299,7 +300,12 @@ pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>
         };
         sewn.extend(made.elements.into_iter().zip(made.parts).map(part));
     }
-    diagnostics.extend(background.map(|(_, said)| said));
+    match (background, elements.first()) {
+        (Some(Background::Found), Some(lowest)) => diagnostics.push(neighbours::left_out(lowest, layers.kept)),
+        (Some(Background::Unknown(said)), _) => diagnostics.push(said),
+        _ => {}
+    }
+    diagnostics.extend(layers.said);
     let beside = neighbours::beside(sewn, &design.settings, budget, design.sort_colours);
     diagnostics.extend(beside.said);
     // Of the shapes digitized, those that sew: the areas sewn after one may cover it whole.
@@ -776,6 +782,7 @@ mod tests {
             (Code::AutoUnder, &[OVERLAP]),
             (Code::AutoSpeck, &[MIN_AREA]),
             (Code::AutoBackground, &[IGNORE_BACKGROUND]),
+            (Code::AutoLayers, &[MAX_SATIN_WIDTH]),
         ];
         for (code, keys) in explained {
             let text = code.explanation();
