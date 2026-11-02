@@ -54,7 +54,10 @@ tests and the integration tests use separate builds, a generic function has one 
 and a closure is a function of its own. So a line can count as untested though the lcov report counts it
 run. Only the other kind of test runs it, or only a closure on the line runs, as with a `?` after a
 closure argument whose error the tests never bring. The coverage job names these lines and the function
-they count against. Run them from the kind of test that runs most of the function.
+they count against. Run them from the kind of test that runs most of the function. A closure is an
+untested line of its own until a test calls it, even where the code around it runs. So a path that only
+a bug takes passes its error on without one: `said.extend(result.as_ref().err().cloned())`, then
+`result.ok()?`.
 
 `cargo xtask coverage` runs the job locally. It needs cargo-llvm-cov and rustup's `llvm-tools`. Without
 the latter, `LLVM_COV` and `LLVM_PROFDATA` can name another LLVM's llvm-cov and llvm-profdata that read
