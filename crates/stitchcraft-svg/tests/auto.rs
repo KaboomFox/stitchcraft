@@ -31,8 +31,8 @@ fn automatic(svg: &Svg) -> Vec<(&str, bool)> {
 #[test]
 fn req_auto_001_a_shape_with_embroider_settings_is_not_automatic() {
     // Ink/Stitch's early versions wrote its settings as `embroider_` attributes, which its updater turns
-    // into its own (`lib/update.py` at d59c9ab): such a shape has settings, which StitchCraft does not read
-    // yet, and says so, as for Ink/Stitch's own attributes.
+    // into its own (`lib/update.py` at d59c9ab): such a shape has settings, which StitchCraft doesn't read,
+    // and says so.
     let shapes = document(
         r#"<path id="old" d="M 10 10 L 90 10 M 10 20 L 90 20" stroke="red" fill="none" embroider_satin_column="yes"/>
            <path id="plain" d="M 10 30 L 90 30" stroke="red" fill="none"/>"#,
@@ -42,8 +42,8 @@ fn req_auto_001_a_shape_with_embroider_settings_is_not_automatic() {
     let said: Vec<String> = with.warnings.iter().map(ToString::to_string).collect();
     assert!(
         said.contains(
-            &"warning SC-W0802: The file has Ink/Stitch embroidery settings, which this version does not read yet: every element uses the \
-              default settings."
+            &"warning SC-W0802: The file has settings as early versions of Ink/Stitch wrote them (`embroider_` attributes), which Ink/Stitch \
+              reads only once its update has renamed them, and which StitchCraft doesn't read: the shapes that have them sew without them."
                 .to_string()
         ),
         "{said:?}"

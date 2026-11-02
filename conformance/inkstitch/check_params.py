@@ -5,8 +5,8 @@ type, unit, default and the stitch types (or conditions) it applies to. Defaults
 so a stale row would make a file sew differently in the two tools. This script compares every row with
 Ink/Stitch's own `@param` declarations, the method identifiers with its option lists, the lock
 identifiers with its lock definitions, the meander tiles with its tiles' folders, the commands with its
-command lists, the other attributes with its attribute list, and the file version and renamed commands
-with its updater, and prints each difference.
+command lists, the other attributes with its attribute list and those its code reads or writes by name
+outside it, and the file version and renamed commands with its updater, and prints each difference.
 
 A row's `read_by` lists the fill methods that read it as they sew, though the window doesn't show it for
 them: the tatami fill's underlay, which every fill method but those `to_stitch_groups` leaves out sews,
@@ -276,12 +276,22 @@ def commands(root):
 
 
 def attributes(root):
-    """Every `inkstitch:*` attribute name Ink/Stitch reads."""
+    """Every `inkstitch:*` attribute name Ink/Stitch reads: its attribute list's, and those its code reads or
+    writes by name outside the list, as `node.get("inkstitch:name", ...)` or `node.set("inkstitch:name", ...)`."""
     tree = ast.parse((root / ATTRIBUTES).read_text(encoding="utf-8"))
+    listed = []
     for node in tree.body:
         if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id == "inkstitch_attribs" for t in node.targets):
-            return literal(node.value)[0] or []
-    return []
+            listed = literal(node.value)[0] or []
+    named = set()
+    for path in sorted((root / "lib").rglob("*.py")):
+        for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+            if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr in ("get", "set") and node.args):
+                continue
+            name = literal(node.args[0])[0]
+            if isinstance(name, str) and name.startswith("inkstitch:"):
+                named.add(name.removeprefix("inkstitch:"))
+    return sorted(set(listed) | named)
 
 
 def updater(root):

@@ -1,0 +1,4 @@
+id = "inkstitch-settings"
+requirements = ["REQ-SVG-008", "REQ-SVG-009", "REQ-SVG-010"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/settings.svg"

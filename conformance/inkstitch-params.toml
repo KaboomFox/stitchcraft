@@ -1675,9 +1675,12 @@ new = "autoroute_end"
 old = "ripple_target"
 new = "target_point"
 
-# The other `inkstitch:*` attributes Ink/Stitch reads (`lib/svg/tags.py`), which declare no parameter:
-# settings of an element, of patterns, of the stitch plan or of the sew stack, and legacy names that
-# Ink/Stitch's updater rewrites in older files. `—` for the phase: not planned.
+# The other `inkstitch:*` attributes Ink/Stitch reads, which declare no parameter: those of its attribute
+# list (`lib/svg/tags.py`), and those its code reads or writes by name outside it (`node.get` and
+# `node.set`): settings of an element, of patterns, of lettering, of its tools, of the stitch plan or of
+# the sew stack, and legacy names that Ink/Stitch's updater rewrites in older files. `—` for the phase:
+# not planned. The SVG adapter keeps any of a shape that it doesn't apply as a parameter of the shape's
+# elements, and the registry names it (`SC-W0105`, `REQ-SVG-009`).
 
 [[attribute]]
 name = "ignore_object"
@@ -1734,10 +1737,55 @@ phase = "—"
 milestone = "—"
 
 [[attribute]]
+name = "tartan"
+kind = "element"
+phase = "P3"
+milestone = "M10"
+
+[[attribute]]
+name = "color_sort_index"
+kind = "lettering"
+phase = "P3"
+milestone = "M14"
+
+[[attribute]]
+name = "letter-group"
+kind = "lettering"
+phase = "P3"
+milestone = "M14"
+
+[[attribute]]
+name = "lettering"
+kind = "lettering"
+phase = "P3"
+milestone = "M14"
+
+[[attribute]]
+name = "path_type"
+kind = "tool"
+phase = "—"
+milestone = "—"
+
+[[attribute]]
+name = "start"
+kind = "tool"
+phase = "—"
+milestone = "—"
+
+[[attribute]]
+name = "end"
+kind = "tool"
+phase = "—"
+milestone = "—"
+
+# Ink/Stitch reads `polyline`, `e_stitch`, `manual_stitch` and `grid_size` only to update a file without a
+# version, which StitchCraft reads as it is (`REQ-SVG-007`): in a file with one they change nothing in either
+# program. `auto_fill` changes a fill of a file of version 1 to 3 (M8.3).
+[[attribute]]
 name = "polyline"
 kind = "legacy"
-phase = "P2"
-milestone = "M8"
+phase = "—"
+milestone = "—"
 
 [[attribute]]
 name = "auto_fill"
@@ -1748,20 +1796,20 @@ milestone = "M8"
 [[attribute]]
 name = "e_stitch"
 kind = "legacy"
-phase = "P2"
-milestone = "M8"
+phase = "—"
+milestone = "—"
 
 [[attribute]]
 name = "manual_stitch"
 kind = "legacy"
-phase = "P2"
-milestone = "M8"
+phase = "—"
+milestone = "—"
 
 [[attribute]]
 name = "grid_size"
 kind = "legacy"
-phase = "P2"
-milestone = "M8"
+phase = "—"
+milestone = "—"
 
 # What Ink/Stitch's updater changes in a file of an older version (`lib/update.py`), in StitchCraft's words,
 # by the version each change brings: a file of version 2 gets those of versions 3 and 4. `id` names the
