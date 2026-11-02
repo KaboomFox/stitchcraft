@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A blue satin column 50 mm long in a file of version 2, between 2 red running stitches that end and start beside its middle. Ink/Stitch's update turns the column's nearest points off: it starts and ends where it is drawn, where a column of a file of today's version would start and end at its middle, nearest the needle. Written for StitchCraft's Ink/Stitch differential cases (conformance L3). -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkstitch="http://inkstitch.org/namespace"
+     width="100mm" height="100mm" viewBox="0 0 100 100">
+  <metadata><inkstitch:inkstitch_svg_version>2</inkstitch:inkstitch_svg_version></metadata>
+  <path id="before" fill="none" stroke="#ed171f" stroke-width="0.2" d="M 10,10 L 45,34"/>
+  <path id="satin" fill="none" stroke="#0b3d91" stroke-width="0.2" d="M 20,40 L 70,40 M 20,44 L 70,44"
+        inkstitch:satin_column="true" inkstitch:zigzag_spacing_mm="1"/>
+  <path id="after" fill="none" stroke="#ed171f" stroke-width="0.2" d="M 45,50 L 80,70"/>
+</svg>

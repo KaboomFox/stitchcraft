@@ -75,6 +75,10 @@ pub const ZIGZAG_UNDERLAY: &str = "zigzag_underlay";
 /// automatic digitizing makes a column that ends under another reach under it.
 pub const PUSH_COMPENSATION: &str = "push_compensation_mm";
 
+/// The key of the setting that starts a satin column near where the needle is, which Ink/Stitch's update of
+/// a file older than its version 3 turns off, as it does [`END_AT_NEAREST_POINT`].
+pub const START_AT_NEAREST_POINT: &str = "start_at_nearest_point";
+
 /// The key of the setting that ends a satin column near where the next element starts, which automatic
 /// digitizing turns off: its order starts the next element near the column's end already.
 pub const END_AT_NEAREST_POINT: &str = "end_at_nearest_point";
@@ -550,7 +554,9 @@ mod tests {
         }
         let push = SatinParams::SPECS.iter().find(|spec| spec.key == PUSH_COMPENSATION);
         assert!(push.is_some_and(|spec| matches!(spec.kind, stitchcraft_params::Kind::LengthPair { .. })));
-        let end = SatinParams::SPECS.iter().find(|spec| spec.key == END_AT_NEAREST_POINT);
-        assert!(end.is_some_and(|spec| spec.kind == stitchcraft_params::Kind::Toggle));
+        for key in [START_AT_NEAREST_POINT, END_AT_NEAREST_POINT] {
+            let spec = SatinParams::SPECS.iter().find(|spec| spec.key == key);
+            assert!(spec.is_some_and(|spec| spec.kind == stitchcraft_params::Kind::Toggle), "{key}");
+        }
     }
 }
