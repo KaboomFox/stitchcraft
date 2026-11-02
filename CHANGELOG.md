@@ -5,6 +5,21 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- MC-6: TS-11A, the sampler of M7's new strokes and satins, so every sheet MC-6 sews is drawn. A band to a
+  thread, most samples hooks, straight and then turning a quarter circle, in rows that turn back on each
+  other so the needle never comes to a sample where it would sew a jump's thread down. Zigzag strokes 1, 2
+  and 4 mm wide at spacings of 0.4, 1 and 2 mm, and a line whose stitches turn 45°. E-stitches 3 and 5 mm
+  wide at spacings of 2 and 3 mm round an appliqué square and 4 circles, the fabric laid at one stop and
+  trimmed at the next. S-stitches 6 and 10 mm wide at spacings of 0.4 and 0.6 mm, the 10 mm ones split at
+  3 mm by the default and the staggered methods. Zigzag satins 4 and 8 mm wide at spacings of 0.4 and 1 mm,
+  each beside a satin column of the same width and spacing, and one over a contour underlay. The Test
+  Sheet filter draws it in VectorCraft.
+  - Sewn by Ink/Stitch at `d59c9ab` as a black box, the sheet agrees with StitchCraft by every measure of
+    the differential (`REQ-RUN-013`, `REQ-SAT-029`): 4,632 stitches against 4,709, the same size, threads,
+    trims and jumps, and footprints that overlap by 0.993.
+  - The checks that sew every sheet mirrored, turned and drawn again leave out what a zigzag stroke and an
+    E-stitch don't keep by design, as Ink/Stitch sews them: a zigzag mirrored or drawn from its end
+    zigzags from the other side, and an E-stitch drawn from its end spikes elsewhere along it.
 - M7.9: circular fill, sewn as Ink/Stitch sews it (`REQ-FILL-CIR-001` to `REQ-FILL-CIR-007`). A double
   spiral turns round each part's centroid. Its rings lie `row_spacing_mm` apart out to 2 spacings past the
   part's farthest point, or fade towards `end_row_spacing_mm` there. It turns in on every other ring and
@@ -2114,6 +2129,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Added `conformance/golden/testsheets/TS-11A.pes` (MC-6), the new strokes and satins' test sheet that MC-6
+  sews: 4,632 stitches.
 - Changed `conformance/golden/testsheets/TS-11B.pes` (M7.9): the sheet gains a row of 3 circular fills
   under its contour fills, and grows to 125 × 166 mm. It sews 15,314 stitches, 4,703 more, and its contour
   fills sew as before.

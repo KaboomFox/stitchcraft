@@ -286,6 +286,22 @@ pub static SHEETS: &[TestSheet] = &[
         drawn: Drawn::Sketched(|| ts10::build("ts10c", &BROTHER_PE800_SMALL)),
     },
     TestSheet {
+        id: "TS-11A",
+        title: "New strokes and satins: zigzag strokes, E-stitches, S-stitches and zigzag satins",
+        checks: &[
+            "4 bands, a thread to each, every sample trimmed after. Most samples are hooks, straight and then turning a quarter circle. Top band, in green: zigzag strokes 1, 2 and 4 mm wide down the rows, at spacings of 0.4, 1 and 2 mm across them, and beside the last row a straight line 4 mm wide at 1 mm whose stitches turn 45°.",
+            "Second band, in red: E-stitches for appliqué, round a square 26 mm a side and 4 circles 18 mm across. The machine sews a line 1 mm inside each edge and stops: lay the appliqué fabric over the lines. It sews them again to tack the fabric down and stops: trim the fabric 1 mm outside the lines. Clockwise from the top, the square's sides are 3 mm wide at spacings of 2 and 3 mm, then 5 mm wide at 2 and 3 mm. The rings, left to right, are the same 4.",
+            "Third band, in blue: S-stitches 6 mm wide, then 10 mm wide split at 3 mm by the default method and by the staggered one. The first row is at a spacing of 0.4 mm and the second at 0.6 mm.",
+            "Bottom band, in gold: zigzag satins, each followed by a satin column of the same width and spacing, 4 mm wide in the first row and 8 mm in the second, at spacings of 0.4 and 1 mm. Under them, after a stop, a zigzag satin 8 mm wide at 1 mm over a contour underlay: go on with the same thread.",
+            "Measure the zigzag strokes: how much narrower than drawn does each sew? Are their sides even round the curves? Note the narrowest width that sews cleanly, and the spacing that looks best. The line at 45° should sew as wide as the hooks beside it, its stitches slanting.",
+            "Does each E-stitch's spine cover the fabric's cut edge, and do its spikes hold the fabric flat, without puckering? Compare the widths of 3 and 5 mm, and the spacings of 2 and 3 mm, on the straight sides and round the circles.",
+            "Do the S-stitches cover their bands at 0.4 mm, with even steps along their edges? On the 10 mm bands, do the default method's splits leave a furrow along the band that the staggered ones don't? Round the curves, the inside of each S-stitch packs its steps closer than the machine's shortest stitch, and StitchCraft leaves those needle points out (SC-I0504): does the inner edge still look even?",
+            "Does each zigzag satin cover its band at 0.4 mm as the satin column beside it does? Measure both: does the zigzag satin sew narrower? On the last one, does the contour underlay show past the zigzag at either end?",
+        ],
+        profile: REFERENCE,
+        drawn: Drawn::Designed(ts11::strokes, &[Code::StitchesMerged]),
+    },
+    TestSheet {
         id: "TS-11B",
         title: "New fills: contour and circular fills",
         checks: &[
@@ -410,7 +426,10 @@ mod tests {
         // The sheets drawn stitch by stitch have no design.
         assert_eq!(
             designed,
-            ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11B", "TS-11C", "TS-13A", "TS-13B", "TS-13C", "TS-13D"]
+            [
+                "TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-11C", "TS-13A", "TS-13B", "TS-13C",
+                "TS-13D"
+            ]
         );
         // The TS-13 sheets' shapes are digitized automatically, and no other sheet's are.
         let digitized: Vec<&str> = SHEETS.iter().filter(|sheet| sheet.digitized()).map(|sheet| sheet.id).collect();
@@ -441,7 +460,7 @@ mod tests {
         }
         assert_eq!(
             drawable,
-            ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D"]
+            ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D"]
         );
     }
 
@@ -477,6 +496,10 @@ mod tests {
         assert_eq!(about("TS-07"), [126.2, 126.0, 0.0, 0.0]);
         assert_eq!(about("TS-08"), [100.0, 170.0, 0.0, 0.0]);
         assert_eq!(about("TS-09"), [66.0, 114.0, 0.0, 0.0]);
+        // TS-11A runs from x = -1, where the last hook of its 2 mm zigzags ends 1 mm either side of x = 0, to 126,
+        // where its first S-stitches end, and from just below y = 3.5, the top of its 1 mm zigzags, which sew a
+        // little narrower than drawn, to 148, where its last hook ends.
+        assert_eq!(about("TS-11A"), [126.997970829, 144.458917156, 0.0, 0.0]);
         // The right-hand star's upper point on its right lies 20 mm from its middle, 18° above the level.
         assert_eq!(about("TS-11B"), [125.021130326, 165.993678599, 0.0, 0.0]);
         // TS-11C's star, in its bottom row, reaches 20 sin 54° mm below its middle, and the discs of its top row

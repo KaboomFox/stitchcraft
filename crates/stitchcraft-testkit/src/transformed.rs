@@ -12,6 +12,10 @@
 //! each sews. The tolerance overlooks needle points placed a little apart, as along a line sewn from its
 //! other end, and still counts a column sewn as a line along its middle, or a branch left out.
 //!
+//! Some stitch types are laid by design from where a shape is drawn from, or to one side of the way it runs,
+//! as Ink/Stitch lays them: a zigzag stroke and an E-stitch. [`Change::keeps`] says which changes leave their
+//! stitches alone, and [`compare`] measures only those.
+//!
 //! A design is mirrored and turned about the point (0, 0) of its coordinates, from which a fill lays out
 //! its rows and their needle points (`REQ-FILL-TAT-003`), so that the rows of the changed design lie where
 //! the changed rows do. Moved, a fill's rows would lie elsewhere across it, as Ink/Stitch's do, so a move is
@@ -24,10 +28,12 @@ use std::collections::BTreeMap;
 
 use stitchcraft_core::{Budget, Point};
 use stitchcraft_engine::design::{Design, Element, Path, Segment, Shape, Subpath};
+use stitchcraft_engine::generate::stitch_type_of;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::normalize::region::{self, Region};
 use stitchcraft_engine::normalize::stroke::distance_to_segment;
 use stitchcraft_engine::plan;
+use stitchcraft_params::StitchType;
 use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::{ElementRef, Role, StitchKind, StitchPlan};
 
@@ -71,6 +77,18 @@ impl Change {
     /// Whether the change mirrors the design, which turns its directions the other way.
     pub const fn mirrors(self) -> bool {
         matches!(self, Change::MirrorX | Change::MirrorY)
+    }
+
+    /// Whether the change must leave the stitches of an element that `stitch_type` sews the same, changed with
+    /// it. A zigzag stroke's needle points move to the right of its way and then to the left in turn
+    /// (`REQ-RUN-010`), as Ink/Stitch's do, so mirrored or drawn from its end it zigzags across the same band
+    /// from the other side. An E-stitch's spikes lie at the pairs a satin column places a spacing apart from
+    /// its start (`REQ-SAT-020`), and the spacing is wide, so drawn from its end they lie elsewhere along it.
+    pub const fn keeps(self, stitch_type: Option<StitchType>) -> bool {
+        !matches!(
+            (self, stitch_type),
+            (Change::MirrorX | Change::MirrorY | Change::Reverse, Some(StitchType::ZigzagStitch)) | (Change::Reverse, Some(StitchType::EStitch))
+        )
     }
 
     /// Where the change takes `q`, a point of a design, or of its plan, which it measures from the design's
@@ -224,15 +242,17 @@ pub struct Compared {
 
 /// How each element of `design` sews in it and in it changed by each of `changes`, all planned for the
 /// reference machine, the design once: for each change, the elements by their ids. An element that sews in
-/// neither plan is left out.
+/// neither plan is left out, and so is one whose stitches the change doesn't keep ([`Change::keeps`]).
 pub fn compare(design: &Design, changes: &[Change]) -> Vec<(Change, Vec<Compared>)> {
     let original = anchored(design);
     let before = stitches(&original, &planned(&original));
+    let sewn_by = |id: &str| original.elements().iter().find(|e| e.id.as_str() == id).and_then(|e| stitch_type_of(e, &original.settings));
     changes
         .iter()
         .map(|&change| {
             let changed = change.design(&original);
-            (change, compared(&before, &stitches(&changed, &planned(&changed)), change))
+            let compared = compared(&before, &stitches(&changed, &planned(&changed)), change);
+            (change, compared.into_iter().filter(|c| change.keeps(sewn_by(&c.element))).collect())
         })
         .collect()
 }
@@ -322,7 +342,7 @@ fn near(area: &Region, q: Point, reach: f64) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::designs::{RED, fill, rings};
+    use crate::designs::{RED, fill, line, rings, widened};
 
     /// A design of one fill, an L, its origin where it is drawn from.
     fn l_shape() -> Design {
@@ -357,5 +377,19 @@ mod tests {
                 assert!(element.shared > 0.99, "{change:?}: {element:?}");
             }
         }
+    }
+
+    #[test]
+    fn a_zigzag_stroke_is_measured_only_where_its_way_keeps_its_sides() {
+        // A zigzag 4 mm wide at a spacing of 2 mm: turned half round it sews its stitches turned, but mirrored or
+        // drawn from its end it zigzags from the other side, and is left out.
+        let zigzag = widened(line("zigzag", (0.0, 0.0), 20.0, &RED, &[("stroke_method", "zigzag_stitch"), ("zigzag_spacing_mm", "2")]), 4.0);
+        let design = Design::new(vec![zigzag], stitchcraft_engine::design::DesignSettings::default()).unwrap();
+        let compared = compare(&design, &Change::ALL);
+        let measured = |change| compared.iter().find(|(c, _)| *c == change).map(|(_, elements)| elements.len());
+        assert_eq!([Change::MirrorX, Change::MirrorY, Change::Reverse].map(measured), [Some(0); 3]);
+        let turned = compared.iter().find(|(c, _)| *c == Change::HalfTurn).map(|(_, elements)| elements[0].shared);
+        assert!(turned.is_some_and(|shared| shared > 0.98), "{turned:?}");
+        assert!(Change::Reverse.keeps(Some(StitchType::SatinColumn)) && !Change::Reverse.keeps(Some(StitchType::EStitch)));
     }
 }

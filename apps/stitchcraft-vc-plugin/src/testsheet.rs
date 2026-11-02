@@ -2,7 +2,7 @@
 //! into the document (`REQ-VC-015`). A machine checkpoint can then start from VectorCraft: the sheet's
 //! objects show their stitches, the exporters write it, and the dialogs show its settings.
 //!
-//! **Which sheets.** Those drawn as designs, TS-02B to TS-09, TS-11B and the TS-13 sheets, whose elements
+//! **Which sheets.** Those drawn as designs, TS-02B to TS-09, TS-11A, TS-11B and the TS-13 sheets, whose elements
 //! are shapes ([`TestSheet::design`]). The others are drawn stitch by stitch, as plans, which no object
 //! holds, and only `stitch testsheet` writes them. So does TS-11C, a design whose meander fills wander as
 //! their elements' ids draw: the objects drawn have ids of their own, and would wander other ways
