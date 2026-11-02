@@ -158,6 +158,22 @@ fn req_svg_011_a_clip_path_is_the_area_of_its_children_as_a_viewer_takes_them_in
 }
 
 #[test]
+fn req_svg_011_groups_in_a_clip_path_count_down_to_16_deep_and_deeper_ones_are_named() {
+    // A square in 16 groups counts; one in 17 adds nothing, and the note says so, once.
+    let nested = |depth: usize, x: u32| format!("{}<rect x=\"{x}\" width=\"10\" height=\"10\"/>{}", "<g>".repeat(depth), "</g>".repeat(depth));
+    let read = svg(file(&format!(
+        r##"<defs><clipPath id="c">{}{}</clipPath></defs><rect id="r" width="100" height="100" clip-path="url(#c)"/>"##,
+        nested(16, 0),
+        nested(17, 50)
+    )));
+    assert_eq!(boxes(&read.design.elements()[0]), [[[0.0, 0.0, 10.0, 10.0]]]);
+    assert_eq!(
+        warnings(&read),
+        ["warning SC-W0802: The clip path `c` of `r` holds groups more than 16 deep, and what lies deeper adds nothing to the clip."]
+    );
+}
+
+#[test]
 fn req_svg_011_a_clip_path_s_own_clip_path_cuts_it_in_turn_and_a_reference_to_nothing_clips_nothing() {
     // c's own clip path, d, is a clip of the shape too. A loop of clip paths is named and cut no further. A
     // reference to nothing clips nothing, as in a viewer, and so does one to an element that isn't a clip

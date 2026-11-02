@@ -37,17 +37,13 @@ pub(crate) fn stroke<'p>(
     if clips.is_empty() {
         return Ok(Some(Cow::Borrowed(path)));
     }
-    match self::path(path, clips, line, meter)? {
-        Ok(kept) if kept.subpaths.is_empty() => {
-            diagnostics.push(Diagnostic::new(Code::ClippedAway, "Its clip paths leave nothing of this stroke, so it sews nothing."));
-            Ok(None)
-        }
-        Ok(kept) => Ok(Some(Cow::Owned(kept))),
-        Err(unjoined) => {
-            diagnostics.push(unjoined.clip());
-            Ok(None)
-        }
+    // Clips whose area doesn't join into rings are a bug ([`Unjoined`]), which no drawing tried makes.
+    let Some(kept) = self::path(path, clips, line, meter)?.map_err(|unjoined| diagnostics.push(unjoined.clip())).ok() else { return Ok(None) };
+    if kept.subpaths.is_empty() {
+        diagnostics.push(Diagnostic::new(Code::ClippedAway, "Its clip paths leave nothing of this stroke, so it sews nothing."));
+        return Ok(None);
     }
+    Ok(Some(Cow::Owned(kept)))
 }
 
 /// `path`, a stroke's, cut to `clips` (`REQ-GEN-005`): of each subpath, taken as the line `line` makes of
@@ -55,10 +51,7 @@ pub(crate) fn stroke<'p>(
 /// and one that is a point is kept when the point lies inside them. `Err` with [`Unjoined`] when the
 /// clips' area can't be built, a bug. The work of building their area, of each line and of each cut.
 pub(crate) fn path(path: &Path, clips: &[Clip], line: Line, meter: &mut Meter) -> Result<Result<Path, Unjoined>, Exhausted> {
-    let parts = match clipped(clips, meter)? {
-        Ok(parts) => parts,
-        Err(unjoined) => return Ok(Err(unjoined)),
-    };
+    let Ok(parts) = clipped(clips, meter)? else { return Ok(Err(Unjoined)) };
     let mut subpaths = Vec::with_capacity(path.subpaths.len());
     for subpath in &path.subpaths {
         let points = line(subpath, meter)?;
@@ -169,6 +162,13 @@ mod tests {
         // Wholly inside, it is kept as it is, its points all; wholly outside, nothing.
         assert_eq!(cut(&[p(1.0, 1.0), p(5.0, 2.0), p(9.0, 9.0)], &parts), [vec![p(1.0, 1.0), p(5.0, 2.0), p(9.0, 9.0)]]);
         assert!(cut(&[p(11.0, -5.0), p(19.0, 15.0)], &parts).is_empty());
+    }
+
+    #[test]
+    fn a_point_repeated_along_a_line_adds_nothing_to_its_pieces() {
+        // A manual stitch's nodes may repeat a point: the step between them goes nowhere and is passed over.
+        let parts = [square(0.0, 0.0, 10.0)];
+        assert_eq!(cut(&[p(1.0, 1.0), p(1.0, 1.0), p(5.0, 1.0), p(15.0, 1.0)], &parts), [vec![p(1.0, 1.0), p(5.0, 1.0), p(10.0, 1.0)]]);
     }
 
     #[test]

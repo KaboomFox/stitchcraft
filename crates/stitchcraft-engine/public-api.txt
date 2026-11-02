@@ -630,7 +630,7 @@ impl stitchcraft_engine::testsheets::TestSheet
 pub fn stitchcraft_engine::testsheets::TestSheet::design(&self) -> core::option::Option<core::result::Result<stitchcraft_engine::design::Design, stitchcraft_engine::testsheets::SheetError>>
 pub const fn stitchcraft_engine::testsheets::TestSheet::designed(&self) -> bool
 pub fn stitchcraft_engine::testsheets::TestSheet::digitized(&self) -> bool
-pub fn stitchcraft_engine::testsheets::TestSheet::drawable(&self) -> bool
+pub const fn stitchcraft_engine::testsheets::TestSheet::drawable(&self) -> bool
 pub fn stitchcraft_engine::testsheets::TestSheet::plan(&self) -> core::result::Result<stitchcraft_plan::plan::StitchPlan, stitchcraft_engine::testsheets::SheetError>
 pub fn stitchcraft_engine::testsheets::TestSheet::uses_file_features(&self) -> bool
 pub const stitchcraft_engine::testsheets::STITCH_LEN: f64

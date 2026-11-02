@@ -425,6 +425,13 @@ mod tests {
         let line = Sub { start: (3.0, 4.0), segs: vec![Seg::Line((1.0, 9.0))], closed: false };
         assert_eq!(bounds(&[line]), Some((1.0, 4.0, 2.0, 5.0)));
         assert_eq!(bounds(&[]), None);
+        // Off the axes, each coordinate of each point counts: a curve from (2, 1) to (2, 9) through (12, 5)
+        // reaches x 7, and one on from there to (4, 9) through (5, 19) reaches y 14.
+        let quads = Sub { start: (2.0, 1.0), segs: vec![Seg::Quad((12.0, 5.0), (2.0, 9.0)), Seg::Quad((5.0, 19.0), (4.0, 9.0))], closed: false };
+        assert_eq!(bounds(&[quads]), Some((2.0, 1.0, 5.0, 13.0)));
+        // A cubic curve from (1, 2) to (11, 2) through (1, 12) and (11, 12) reaches y 9.5, halfway along.
+        let cubic = Sub { start: (1.0, 2.0), segs: vec![Seg::Cubic((1.0, 12.0), (11.0, 12.0), (11.0, 2.0))], closed: false };
+        assert_eq!(bounds(&[cubic]), Some((1.0, 2.0, 10.0, 7.5)));
     }
 
     fn outline(data: &str) -> Outline {
