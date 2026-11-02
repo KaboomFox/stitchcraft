@@ -1,8 +1,8 @@
 # stitchcraft-svg
 
 Layer **L3**. Reads SVG documents into the engine's `Design`: `stitchcraft_svg::read(bytes, budget)`
-returns the design and warnings about what was left out or simplified. Ink/Stitch's remaining commands,
-clip paths and clones follow in M8 (M8.5 to M8.10).
+returns the design and warnings about what was left out or simplified. Ink/Stitch's remaining commands
+and clones follow in M8 (M8.8 to M8.10).
 
 **Status:** v1 (M3.3) reads paths and the basic shapes, groups and `<switch>`, transforms, the root's
 size and viewBox (so positions come out in millimetres), fill and stroke colours with `currentColor`, and
@@ -23,6 +23,12 @@ them (`SC-I0805`, `REQ-ASM-004`). Since M8.4 its start, end and target commands 
 shape they are tied to their hints, at the symbol's place (`REQ-GEN-001`, `REQ-FILL-CIR-008`); the first
 connector in the file counts, and a command whose place doesn't read is named and left out
 (`SC-W0802`).
+
+Since M8.5 clip paths cut the shapes they clip (`REQ-SVG-011`, `src/document/clip.rs`). The clip path of a
+shape, and that of each group round it, is a clip of the shape's elements, which the engine cuts them to
+(`REQ-GEN-005`). A clip path is its children's areas together, each by its `clip-rule`, in the user space
+of what it clips or in shares of a shape's box. A group's children count, as Inkscape draws them, and a
+clip path's own `clip-path` cuts it too. `SC-W0802` names what isn't applied.
 
 Since M8.1 each `inkstitch:*` setting of a shape is a parameter of the elements it makes, by its own name
 (`REQ-SVG-009`): an Ink/Stitch file sews with its stitch types, spacings, underlays and locks. The

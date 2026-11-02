@@ -6,6 +6,9 @@ A satin column is a band of closely spaced stitches that swing from one edge to 
 signature look of lettering and borders, and the stitch type where pull compensation and underlay
 matter most. Phase P1 (M4); the E, S and zigzag variants are P2 (M7).
 
+A satin column of any method is sewn whole whatever clip paths cut it, as Ink/Stitch sews it, and
+`SC-W0217` says so (`REQ-GEN-005`).
+
 ## Shape
 
 ```text

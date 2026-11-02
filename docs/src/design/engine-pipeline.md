@@ -59,6 +59,14 @@ Per element, independent of the others:
   them from a column's centre line ([single-path satin](algorithms/satin.md#single-path-satin)).
 - **Strokes:** each subpath becomes its own path piece, in document order.
 - **Commands** become hints (start/end/target points) on the element.
+- **Clips:** an element's clips cut it, each the areas of its shapes together by their rules
+  (`REQ-GEN-005`). A fill's region is cut when it is built (`region::build_clipped`), before its underlay,
+  `expand_mm` and its method see it. For a stroke, the subpaths are cut at their crossings with a clip's
+  outline (`region::cut`), as in Ink/Stitch. A manual stitch's run from node to node, and other strokes'
+  are flattened as a shape's outline is. Left whole, a subpath keeps its curves and sews as drawn, and each piece of a cut one sews
+  on its own. Satin columns are sewn whole (`SC-W0217`), and an element wholly outside its clips isn't
+  sewn (`SC-W0013`). Automatic digitizing cuts its shapes first, so that what shows of them is digitized
+  (`auto::clips`).
 
 Adapters have already applied transforms and converted units, so normalization never sees host types.
 
