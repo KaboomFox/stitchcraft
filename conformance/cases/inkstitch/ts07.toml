@@ -1,0 +1,4 @@
+id = "inkstitch-ts07"
+requirements = ["REQ-SVG-008"]
+kind = "inkstitch"
+sheet = "TS-07"
