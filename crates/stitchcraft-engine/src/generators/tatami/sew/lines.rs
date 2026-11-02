@@ -257,4 +257,15 @@ mod tests {
         let given = Given { travel: TRAVEL, angle: 0.0, skip_last: false };
         assert_eq!(lines_sewn(&part, &rings, &[], &given, None, None, meter, &mut Vec::new()).unwrap(), None);
     }
+
+    #[test]
+    fn a_closed_line_is_sewn_as_it_runs() {
+        // A line round a triangle in the rectangle, from (2, 1) back to it: the route enters it at (2, 1),
+        // where both its ends lie, as near the one as the other, and it is sewn from its first point as it
+        // runs, not turned round.
+        let part = rectangle(4.0);
+        let closed = [vec![p(2.0, 1.0), p(4.0, 1.0), p(3.0, 3.0), p(2.0, 1.0)]];
+        let (runs, _) = sewn(&part, &closed, &Given { travel: TRAVEL, angle: 0.0, skip_last: false });
+        assert!(runs[0].points.ends_with(&closed[0]), "{:?}", runs[0].points);
+    }
 }
