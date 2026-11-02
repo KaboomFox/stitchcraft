@@ -8,7 +8,9 @@
 //! their elements' ids draw: the objects drawn have ids of their own, and would wander other ways
 //! ([`TestSheet::drawable`]). So does TS-16, whose elements start and end at positions and are cut by clips,
 //! which the filter would draw as `stitch:start` and `stitch:end` markers grouped with them and as clip groups
-//! ([`TestSheet::uses_file_features`]).
+//! ([`TestSheet::uses_file_features`]). Which sheets it draws is known without drawing them
+//! ([`TestSheet::drawable`]): a run that drew every sheet's design to find its own went past the work
+//! VectorCraft allows a filter.
 //!
 //! **What it draws.** The sheet's design moved by whole millimetres, so that the middle of its bounds is as
 //! near the middle of the artboard VectorCraft names as that allows: the artboard under the selection, or
