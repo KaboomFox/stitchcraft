@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-28e57a3c.js";
+            window.path_to_searchindex_js = "searchindex-9d185cea.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-0c202e0a.js"></script>
@@ -1121,9 +1121,11 @@ instead (<a href="#automatic-digitizing">automatic digitizing</a>). An element o
 <p>A parameter belongs to one element. Ink/Stitch stores parameters in the SVG file as attributes, such as
 <code>inkstitch:running_stitch_length_mm="1.5"</code>, and StitchCraft’s parameters have the same names and
 defaults.</p>
-<p><code>stitch plan</code> does not read these attributes yet, and every element sews with the defaults. <code>SC-W0802</code>
-says so when a file has them. The SVG reader reads them from milestone M8, and the VectorCraft plug-in
-sets them from M6. Ink/Stitch’s trim and stop commands are read today.</p>
+<p><code>stitch plan</code> reads these attributes from each shape of an SVG file, and the VectorCraft plug-in sets them.
+A shape with a fill and a stroke gives both the same settings, as in Ink/Stitch, and
+<code>inkstitch:stroke_first</code> sews the stroke first. A setting of a stitch type StitchCraft doesn’t sew yet is
+kept, and <code>SC-W0105</code> names it. Settings on a group don’t change what sews, as in Ink/Stitch, and
+<code>SC-W0802</code> says so. Ink/Stitch’s trim and stop commands are read too.</p>
 <p>The pictures on these pages set parameters on the engine directly, to show what each one does.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="running-stitch"><a class="header" href="#running-stitch">Running stitch</a></h1>
@@ -1231,7 +1233,7 @@ for a satin column.</p>
 <p>In VectorCraft, set the StitchCraft Stroke effect’s <code>stroke_method</code> to <code>zigzag_stitch</code>, and <code>stitch export</code>
 sews it. From VectorCraft 0.14, the live effect shows the zigzag’s stitches as wide as the object’s stroke.
 An object without a stroke it leaves as it is drawn (<code>SC-I0810</code>): give it a stroke as wide as the zigzag.
-<code>stitch plan</code> reads Ink/Stitch’s settings from SVG files from milestone M8
+In an SVG file, Ink/Stitch’s attributes of the line set the same settings for <code>stitch plan</code>
 (<a href="user/stitches#setting-parameters">setting parameters</a>).</p>
 <p>The pictures are drawn as the <a href="#running-stitch">running stitch’s</a> are, from <code>docs/fixtures/zigzag.svg</code>, a wave
 drawn 3 mm wide.</p>
@@ -1301,7 +1303,7 @@ draw both in VectorCraft, and how to make a line into rails and rungs.</li>
 </ul>
 <p><code>satin_method</code> chooses how the band is sewn. A satin column is the default, and each other method has a
 page of its own among the <a href="user/stitches">stitch types</a>. The VectorCraft plug-in sets these settings, and
-StitchCraft reads them from an SVG file from milestone M8 (<a href="user/stitches#setting-parameters">setting parameters</a>).</p>
+StitchCraft reads them from an SVG file’s Ink/Stitch attributes (<a href="user/stitches#setting-parameters">setting parameters</a>).</p>
 <p>The pictures are drawn from <code>docs/fixtures/zigzag.svg</code>, a wave drawn 3 mm wide as one path, and
 <code>docs/fixtures/s-stitch.svg</code>, a curved band 6 mm wide between 2 rails.</p>
 <h2 id="drawn-as-one-path"><a class="header" href="#drawn-as-one-path">Drawn as one path</a></h2>
@@ -1384,7 +1386,7 @@ the spikes go across to the second. Rungs across the rails, where they turn, kee
 the band.</p>
 <p>In VectorCraft, join the 2 rails with Object › Compound Path › Make and apply the StitchCraft Satin
 effect to them, with its <code>satin_method</code> set to <code>e_stitch</code>. The effect shows its stitches, and
-<code>stitch export</code> sews them. An SVG file’s Ink/Stitch settings are read from milestone M8
+<code>stitch export</code> sews them. <code>stitch plan</code> reads the same settings from an SVG file’s Ink/Stitch attributes
 (<a href="user/stitches#setting-parameters">setting parameters</a>).</p>
 <p>The pictures are drawn from <code>docs/fixtures/e-stitch.svg</code>, a curved band 4 mm wide.</p>
 <h2 id="spacing-2"><a class="header" href="#spacing-2">Spacing</a></h2>
@@ -1436,7 +1438,7 @@ first stitch goes from the second rail to the first, and <code>swap_satin_rails<
 <p>In VectorCraft, make the 2 rails one path with Object › Compound Path › Make, give it the StitchCraft
 Satin effect, and set the effect’s <code>satin_method</code> to <code>s_stitch</code>: VectorCraft draws the stitches, and
 <code>stitch export</code> sews them. StitchCraft reads the same settings from an SVG file’s Ink/Stitch attributes
-from milestone M8 (<a href="user/stitches#setting-parameters">setting parameters</a>).</p>
+(<a href="user/stitches#setting-parameters">setting parameters</a>).</p>
 <p>The pictures are drawn from <code>docs/fixtures/s-stitch.svg</code>, a curved band 6 mm wide.</p>
 <h2 id="spacing-3"><a class="header" href="#spacing-3">Spacing</a></h2>
 <p><code>zigzag_spacing_mm</code> is how far apart the stitches across are, 0.4 mm by default. Each goes the other way
@@ -1530,8 +1532,8 @@ area without settings sews as one, unless it is <a href="#automatic-digitizing">
 <code>fill_method</code> is <code>tatami_fill</code> by default.</p>
 <p>The rows go round holes, and each part of the area is filled by itself. Between rows, the needle moves
 inside the fill, under rows sewn after it, which hide those stitches (<code>underpath</code>). StitchCraft reads a
-fill’s settings from an SVG file from milestone M8 (<a href="user/stitches#setting-parameters">setting parameters</a>), and the
-VectorCraft plug-in sets them today.</p>
+fill’s settings from an SVG file’s Ink/Stitch attributes, and the VectorCraft plug-in sets them
+(<a href="user/stitches#setting-parameters">setting parameters</a>).</p>
 <p>The pictures are drawn from <code>docs/fixtures/fill.svg</code>, a green patch 32 mm by 20 mm with rounded corners
 and a round hole. As it sews by default:</p>
 <!-- shot: tatami-fill -->
@@ -5961,7 +5963,7 @@ namespace is an automatic element, whose stitches StitchCraft chooses by its wid
 (<a href="#automatic-elements">image to embroidery</a>, <code>REQ-AUTO-001</code>). The trim and stop
 of Ink/Stitch’s commands attached to it still apply. A shape with any <code>inkstitch:</code> attribute, or an
 <code>embroider_</code> attribute as Ink/Stitch’s early versions wrote its settings, is not automatic: it sews as
-its settings say once they are read (M8), and with the defaults until then.
+its settings say (<a href="#settings-of-a-shape">below</a>).
 Read with <code>--sort-colours</code> (<code>Reading::sort_colours</code>), the design’s shapes with settings sew in the order
 StitchCraft chooses too (<a href="#sewing-order-1">image to embroidery</a>, <code>REQ-AUTO-011</code>).</li>
 </ul>
@@ -6076,6 +6078,22 @@ wide to measure, such as <code>1e308in</code>, is left out with <code>SC-W0804</
 </ul>
 <p>Ink/Stitch reads a width in <code>%</code>, <code>em</code> or <code>ex</code> as 0, and a join written in capitals as no join at all. The
 adapter reads them as a viewer draws them (<code>DEV-SVG-001</code>).</p>
+<h2 id="settings-of-a-shape"><a class="header" href="#settings-of-a-shape">Settings of a shape</a></h2>
+<p>Ink/Stitch keeps how each shape sews in attributes of its namespace on the shape’s own node, each named
+after its setting: <code>inkstitch:fill_method</code>, <code>inkstitch:row_spacing_mm</code>, <code>inkstitch:satin_column</code> and the
+rest. Each is a parameter of every element the shape makes, under its own name and with its own text
+(<code>REQ-SVG-009</code>). A shape with a fill and a stroke gives both elements the same parameters, as Ink/Stitch
+gives them to both of its own. The registry reads them as it reads a VectorCraft effect’s (<code>REQ-PRM-002</code>).
+It strips the white space round a value and names a value it can’t read. A setting it doesn’t declare,
+such as one of a stitch type of M10, is kept, and <code>SC-W0105</code> names it.</p>
+<p>The adapter applies 2 settings itself, and they are parameters of neither element. <code>ignore_object</code> leaves
+the shape out (<a href="#inkstitch-objects">below</a>). <code>stroke_first</code>, when it says yes in one of Ink/Stitch’s
+words, sews the stroke before the fill (<code>REQ-SVG-010</code>). Otherwise the fill sews first, whatever SVG’s
+<code>paint-order</code> says. Ink/Stitch’s trim and stop commands turn on <code>trim_after</code> and <code>stop_after</code> over the
+shape’s own settings, as Ink/Stitch adds them.</p>
+<p>Ink/Stitch doesn’t read a group’s settings, but for <code>ignore_object</code>. <code>SC-W0802</code> names the others a group
+has, which don’t change what sews. The <a href="#inkstitch-compatibility-contract">compatibility contract</a> lists every setting, with
+the milestone in which StitchCraft reads it.</p>
 <h2 id="inkstitch-objects"><a class="header" href="#inkstitch-objects">Ink/Stitch objects</a></h2>
 <p>An Ink/Stitch SVG has 3 kinds of object that Ink/Stitch reads and does not sew. The adapter sews none of
 them (<code>REQ-SVG-003</code>).</p>
@@ -6132,16 +6150,26 @@ Ink/Stitch updates it (<code>REQ-SVG-007</code>), with the changed defaults as p
 <p>A shape digitized automatically sews by the rules instead. Ink/Stitch asks its user whether a file with
 its content and no version is an old design, which it then updates, or objects pasted into a new file.
 The adapter can’t ask. It reads such a file as it is and says so with <code>SC-W0802</code>, as it says that a file
-of a version above 4 is read as version 4. The other changes the update makes are to settings the adapter
-does not read yet; the <a href="#file-versions">compatibility contract</a> lists them
-all, with the milestone that applies them.</p>
+of a version above 4 is read as version 4.</p>
+<p>The adapter doesn’t make 3 of the update’s other changes yet (M8.3), and each changes what a shape sews:</p>
+<ul>
+<li>in a file of version 1 or 2, a zigzag stroke’s <code>pull_compensation_mm</code> other than 0 is halved into
+<code>stroke_pull_compensation_mm</code>;</li>
+<li>in a file of version 1 or 2, a satin column starts and ends where it is drawn, with
+<code>start_at_nearest_point</code> and <code>end_at_nearest_point</code> off;</li>
+<li>in a file of version 1 to 3, a fill with <code>auto_fill</code> off is a legacy fill, sewn without underlay.</li>
+</ul>
+<p><code>SC-W0802</code> counts the shapes each would change, and those shapes sew as the file sets them. The other
+changes alter nothing the adapter sews. The <a href="#file-versions">compatibility contract</a>
+lists them all, with the milestone that applies them.</p>
 <h2 id="reports"><a class="header" href="#reports">Reports</a></h2>
 <ul>
 <li><code>SC-W0802</code> reports a feature that is not stitched. Text, images, clones, nested <code>&lt;svg&gt;</code> elements and
-the style sheet rules that are not read are such features. So are clipping, masks, filters, markers
-and the Ink/Stitch settings that are not read yet. Clipping is planned for M8. It reports a file
-Ink/Stitch would update, or warn about, that is read as it is: one with Ink/Stitch’s content and no
-file version, or of a newer version.</li>
+the style sheet rules that are not read are such features. So are clipping, masks, filters and
+markers, a group’s Ink/Stitch settings, and the settings of Ink/Stitch’s early versions (<code>embroider_</code>
+attributes). Clipping is planned for M8.5. It reports a file Ink/Stitch would update, or warn about,
+that is read as it is: one with Ink/Stitch’s content and no file version, or of a newer version. It
+counts the shapes of an older file that the update would change in ways the adapter doesn’t make yet.</li>
 <li><code>SC-I0818</code> says how many shapes of a file an older Ink/Stitch saved are read as its update changes
 them.</li>
 <li><code>SC-W0804</code> reports geometry that cannot be used:
@@ -8175,7 +8203,7 @@ half the first stitch, which then covers it.</li>
 <li>Ink/Stitch’s back-and-forth lock goes two steps out and two back. StitchCraft’s goes forth and back over
 one step, twice, like its half stitch.</li>
 <li>The drawn shapes are StitchCraft’s own designs.</li>
-<li>Ink/Stitch draws custom SVG paths. StitchCraft sews the half stitch with <code>SC-W0503</code> until M8.</li>
+<li>Ink/Stitch draws custom SVG paths. StitchCraft sews the half stitch with <code>SC-W0503</code> until M8.13.</li>
 </ul>
 <p>Both follow the stitching with custom steps. They differ in 5 places (<code>DEV-LCK-002</code>):</p>
 <ul>
@@ -8441,8 +8469,7 @@ and <code>SC-W0807</code> says so;</li>
 </ul>
 <p>An element with settings is not digitized automatically, whether or not the switch is given: it sews as
 its settings say, as far as its reader reads them. So a picture can be digitized automatically and one of
-its shapes then set by hand. (The SVG reader reads no <code>inkstitch:</code> settings but <code>ignore_object</code> until M8,
-and says so with <code>SC-W0802</code>, so such a shape sews with the defaults until then.) A shape’s fill gives its
+its shapes then set by hand. A shape’s fill gives its
 area and its stroke gives its line, each with its thread, width, join and cap, as for any element. A trim
 or a stop that an Ink/Stitch command asks for is not a setting of the stitches, and an automatic element
 keeps it. An element sewn as several elements keeps it for the last of them.</p>
@@ -11026,11 +11053,11 @@ the ledger is still true. Where the differential can undo a deviation in Ink/Sti
 the file again without it. The excuse then counts only if the measure agrees. Ink/Stitch’s jumps that go
 nowhere (<code>DEV-FMT-001</code>) excuse as many trims and jumps as there are of them, and no more.</p>
 <p><code>REQ-SVG-008</code>, <code>REQ-AUTO-021</code>, <code>REQ-AUTO-022</code> and <code>REQ-FILL-CON-008</code> are the requirements of level L3.
-The other runs of the suite leave them and their cases to this one. Until M8 reads every <code>inkstitch:</code>
-attribute, the corpus is the designs the SVG reader sews in full, at Ink/Stitch’s defaults, with trim and
-stop commands and the file version. A case may name a test sheet drawn as a design instead (<code>sheet</code>).
-StitchCraft sews the sheet, and Ink/Stitch an SVG file of the elements StitchCraft sews it with, written
-with their parameters (<code>stitchcraft_testkit::inkstitch</code>). Automatic digitizing chooses ordinary elements
+The other runs of the suite leave them and their cases to this one. The corpus is designs the SVG reader
+sews in full, with their settings (<code>REQ-SVG-009</code>), trim and stop commands and the file version. A case may
+name a test sheet drawn as a design instead (<code>sheet</code>). Both programs sew an SVG file of the elements
+StitchCraft sews the sheet with, written with their parameters (<code>stitchcraft_testkit::inkstitch</code>), which
+StitchCraft’s reader reads back unchanged (<code>REQ-PRM-003</code>). Automatic digitizing chooses ordinary elements
 with Ink/Stitch’s parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check
 StitchCraft’s stitches of those choices against Ink/Stitch’s (<code>REQ-AUTO-021</code>). TS-11B checks the contour
 fills so, each strategy and join style among them (<code>REQ-FILL-CON-008</code>). <code>conformance/inkstitch/README.md</code>
@@ -11879,7 +11906,9 @@ StitchCraft reads them as the commands they became in any file (<code>DEV-SVG-01
 </div>
 <h2 id="other-attributes"><a class="header" href="#other-attributes">Other attributes</a></h2>
 <p>The <code>inkstitch:*</code> attributes that declare no parameter: settings of an element, of Ink/Stitch’s
-patterns, stitch plan or sew stack, and legacy names Ink/Stitch’s updater rewrites in older files.</p>
+patterns, lettering, tools, stitch plan or sew stack, and legacy names Ink/Stitch’s updater rewrites in older files.
+The SVG adapter reads those marked read itself. It keeps any other of a shape as a parameter of the shape’s
+elements, which the registry names (<code>SC-W0105</code>).</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -11887,7 +11916,7 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch’s updater rewr
 </thead>
 <tbody>
 <tr><td><code>ignore_object</code></td><td>element</td><td>P1 (M3)</td><td>read</td></tr>
-<tr><td><code>stroke_first</code></td><td>element</td><td>P1 (M8)</td><td>planned</td></tr>
+<tr><td><code>stroke_first</code></td><td>element</td><td>P1 (M8)</td><td>read</td></tr>
 <tr><td><code>cutwork_needle</code></td><td>element</td><td>—</td><td>not planned</td></tr>
 <tr><td><code>pattern_interval</code></td><td>pattern</td><td>—</td><td>not planned</td></tr>
 <tr><td><code>pattern_offset</code></td><td>pattern</td><td>—</td><td>not planned</td></tr>
@@ -11895,11 +11924,18 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch’s updater rewr
 <tr><td><code>layer_visibility</code></td><td>stitch plan</td><td>—</td><td>not planned</td></tr>
 <tr><td><code>sew_stack</code></td><td>sew stack</td><td>—</td><td>not planned</td></tr>
 <tr><td><code>sew_stack_only</code></td><td>sew stack</td><td>—</td><td>not planned</td></tr>
-<tr><td><code>polyline</code></td><td>legacy</td><td>P2 (M8)</td><td>planned</td></tr>
+<tr><td><code>tartan</code></td><td>element</td><td>P3 (M10)</td><td>planned</td></tr>
+<tr><td><code>color_sort_index</code></td><td>lettering</td><td>P3 (M14)</td><td>planned</td></tr>
+<tr><td><code>letter-group</code></td><td>lettering</td><td>P3 (M14)</td><td>planned</td></tr>
+<tr><td><code>lettering</code></td><td>lettering</td><td>P3 (M14)</td><td>planned</td></tr>
+<tr><td><code>path_type</code></td><td>tool</td><td>—</td><td>not planned</td></tr>
+<tr><td><code>start</code></td><td>tool</td><td>—</td><td>not planned</td></tr>
+<tr><td><code>end</code></td><td>tool</td><td>—</td><td>not planned</td></tr>
+<tr><td><code>polyline</code></td><td>legacy</td><td>—</td><td>not planned</td></tr>
 <tr><td><code>auto_fill</code></td><td>legacy</td><td>P2 (M8)</td><td>planned</td></tr>
-<tr><td><code>e_stitch</code></td><td>legacy</td><td>P2 (M8)</td><td>planned</td></tr>
-<tr><td><code>manual_stitch</code></td><td>legacy</td><td>P2 (M8)</td><td>planned</td></tr>
-<tr><td><code>grid_size</code></td><td>legacy</td><td>P2 (M8)</td><td>planned</td></tr>
+<tr><td><code>e_stitch</code></td><td>legacy</td><td>—</td><td>not planned</td></tr>
+<tr><td><code>manual_stitch</code></td><td>legacy</td><td>—</td><td>not planned</td></tr>
+<tr><td><code>grid_size</code></td><td>legacy</td><td>—</td><td>not planned</td></tr>
 </tbody>
 </table>
 </div>
@@ -12866,7 +12902,7 @@ needle points to the other shapes in their group or take some out, are not plann
 <tr><th>Step</th><th>Deliverable</th><th>Done when</th></tr>
 </thead>
 <tbody>
-<tr><td>M8.1</td><td>Ink/Stitch’s settings. Each <code>inkstitch:*</code> attribute of a shape is a parameter of every element the shape makes, under its own name, and the registry reads it as it reads a VectorCraft effect’s parameters (<code>REQ-PRM-002</code>). An Ink/Stitch file then sews with its satin columns, fill methods, underlays, locks and the rest of its settings, and <code>SC-W0802</code> no longer says that every element sews at the defaults. A setting the registry doesn’t declare yet, such as a setting of a stitch type of M10, is kept and named (<code>SC-W0105</code>). A setting on a group, where Ink/Stitch reads only <code>ignore_object</code>, is named too. <code>stroke_first</code> sews a shape’s stroke before its fill. Of the legacy attributes, <code>auto_fill</code> changes a fill through the update (M8.3). <code>e_stitch</code>, <code>manual_stitch</code>, <code>grid_size</code> and <code>polyline</code> don’t change what sews, as in Ink/Stitch, which reads the first 3 only to update a file without a version. The contract adds the attributes Ink/Stitch reads outside its list of them, which <code>conformance/inkstitch/check_params.py</code> finds in its code, each with its milestone: the tartan fill’s settings, <code>tartan</code> (M10), lettering’s <code>color_sort_index</code> and <code>letter-group</code> (M14), and <code>path_type</code>, which its tools write and nothing sews</td><td>Requirements written. A case of <code>REQ-PRM-003</code> for SVG: a file the test kit writes for Ink/Stitch reads back with the same parameters. The differential’s sheet cases sew the file Ink/Stitch sews, in both programs, and a fixture of each family’s settings joins them</td></tr>
+<tr><td>M8.1 ✅</td><td>Ink/Stitch’s settings. Each <code>inkstitch:*</code> attribute of a shape is a parameter of every element the shape makes, under its own name, and the registry reads it as it reads a VectorCraft effect’s parameters (<code>REQ-PRM-002</code>). An Ink/Stitch file then sews with its satin columns, fill methods, underlays, locks and the rest of its settings, and <code>SC-W0802</code> no longer says that every element sews at the defaults. A setting the registry doesn’t declare yet, such as a setting of a stitch type of M10, is kept and named (<code>SC-W0105</code>). A setting on a group, where Ink/Stitch reads only <code>ignore_object</code>, is named too. <code>stroke_first</code> sews a shape’s stroke before its fill. Of the legacy attributes, <code>auto_fill</code> changes a fill through the update (M8.3). <code>e_stitch</code>, <code>manual_stitch</code>, <code>grid_size</code> and <code>polyline</code> don’t change what sews, as in Ink/Stitch, which reads the first 3 only to update a file without a version. The contract adds the attributes Ink/Stitch reads outside its list of them, which <code>conformance/inkstitch/check_params.py</code> finds in its code, each with its milestone: the tartan fill’s settings, <code>tartan</code> (M10), lettering’s <code>color_sort_index</code> and <code>letter-group</code> (M14), and <code>path_type</code>, which its tools write and nothing sews</td><td>Requirements written. A case of <code>REQ-PRM-003</code> for SVG: a file the test kit writes for Ink/Stitch reads back with the same parameters. The differential’s sheet cases sew the file Ink/Stitch sews, in both programs, and a fixture of each family’s settings joins them</td></tr>
 <tr><td>M8.2</td><td>Every test sheet drawn as a design in the differential. TS-02B to TS-09 and TS-11A join TS-11B and the TS-13 sheets, each written as an Ink/Stitch file of its elements and their settings, which both programs sew</td><td>Each sheet’s case passes, or excuses a measure with the ledger entry that says why (<code>REQ-SVG-008</code>)</td></tr>
 <tr><td>M8.3</td><td>Older files updated. The changes Ink/Stitch’s update makes to the settings of a file of an older version apply, now that those settings are read (<a href="#file-versions">file versions</a>). In a file of version 1 or 2, a zigzag stroke’s <code>pull_compensation_mm</code> is halved into <code>stroke_pull_compensation_mm</code>. A satin column there starts and ends where it is drawn, with <code>start_at_nearest_point</code> and <code>end_at_nearest_point</code> off. In a file of version 1 to 3, a fill with <code>auto_fill</code> off is a legacy fill, and the method <code>auto_fill</code> is a tatami fill. 167 of the 178 glyph files of Ink/Stitch’s fonts are of versions 1 to 3</td><td><code>REQ-SVG-007</code> extended, <code>SC-I0818</code> counting the shapes changed, and a differential case for each change</td></tr>
 <tr><td>M8.4</td><td>Start and end positions. Ink/Stitch’s <code>starting_point</code> and <code>ending_point</code> commands place where the element tied to them starts and ends. The markers <code>stitch:start</code> and <code>stitch:end</code> do the same in a VectorCraft document. A fill’s parts start nearest the start position, and its last part ends nearest the end position, with every fill method but 2. The legacy fill doesn’t use them, and the contour fill uses the start alone. A satin column starts at its start position and runs along its centre line to its first stitch. It ends at its end position, unless that lies within 5 px (1.32 mm) of the column’s end. Strokes don’t use them, as in Ink/Stitch. In a file of version 1 or 2, each of these commands is first moved to its connector’s end on the object, as the update moves it. 2,548 such commands start or end the elements of glyphs in 14 of Ink/Stitch’s fonts. From this step the <code>target_point</code> command centres a circular fill (M7.9), and from M10.8 it aims a ripple stitch</td><td><code>REQ-GEN-001</code> rewritten for these stitch types and active, <code>REQ-VC-009</code> updated, differential cases, and TS-16’s part drawn for MC-11</td></tr>

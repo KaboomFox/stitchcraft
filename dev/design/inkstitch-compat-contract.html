@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-28e57a3c.js";
+            window.path_to_searchindex_js = "../searchindex-9d185cea.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-0c202e0a.js"></script>
@@ -479,7 +479,9 @@ StitchCraft reads them as the commands they became in any file (<code>DEV-SVG-01
 </div>
 <h2 id="other-attributes"><a class="header" href="#other-attributes">Other attributes</a></h2>
 <p>The <code>inkstitch:*</code> attributes that declare no parameter: settings of an element, of Ink/Stitch’s
-patterns, stitch plan or sew stack, and legacy names Ink/Stitch’s updater rewrites in older files.</p>
+patterns, lettering, tools, stitch plan or sew stack, and legacy names Ink/Stitch’s updater rewrites in older files.
+The SVG adapter reads those marked read itself. It keeps any other of a shape as a parameter of the shape’s
+elements, which the registry names (<code>SC-W0105</code>).</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -487,7 +489,7 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch’s updater rewr
 </thead>
 <tbody>
 <tr><td><code>ignore_object</code></td><td>element</td><td>P1 (M3)</td><td>read</td></tr>
-<tr><td><code>stroke_first</code></td><td>element</td><td>P1 (M8)</td><td>planned</td></tr>
+<tr><td><code>stroke_first</code></td><td>element</td><td>P1 (M8)</td><td>read</td></tr>
 <tr><td><code>cutwork_needle</code></td><td>element</td><td>—</td><td>not planned</td></tr>
 <tr><td><code>pattern_interval</code></td><td>pattern</td><td>—</td><td>not planned</td></tr>
 <tr><td><code>pattern_offset</code></td><td>pattern</td><td>—</td><td>not planned</td></tr>
@@ -495,11 +497,18 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch’s updater rewr
 <tr><td><code>layer_visibility</code></td><td>stitch plan</td><td>—</td><td>not planned</td></tr>
 <tr><td><code>sew_stack</code></td><td>sew stack</td><td>—</td><td>not planned</td></tr>
 <tr><td><code>sew_stack_only</code></td><td>sew stack</td><td>—</td><td>not planned</td></tr>
-<tr><td><code>polyline</code></td><td>legacy</td><td>P2 (M8)</td><td>planned</td></tr>
+<tr><td><code>tartan</code></td><td>element</td><td>P3 (M10)</td><td>planned</td></tr>
+<tr><td><code>color_sort_index</code></td><td>lettering</td><td>P3 (M14)</td><td>planned</td></tr>
+<tr><td><code>letter-group</code></td><td>lettering</td><td>P3 (M14)</td><td>planned</td></tr>
+<tr><td><code>lettering</code></td><td>lettering</td><td>P3 (M14)</td><td>planned</td></tr>
+<tr><td><code>path_type</code></td><td>tool</td><td>—</td><td>not planned</td></tr>
+<tr><td><code>start</code></td><td>tool</td><td>—</td><td>not planned</td></tr>
+<tr><td><code>end</code></td><td>tool</td><td>—</td><td>not planned</td></tr>
+<tr><td><code>polyline</code></td><td>legacy</td><td>—</td><td>not planned</td></tr>
 <tr><td><code>auto_fill</code></td><td>legacy</td><td>P2 (M8)</td><td>planned</td></tr>
-<tr><td><code>e_stitch</code></td><td>legacy</td><td>P2 (M8)</td><td>planned</td></tr>
-<tr><td><code>manual_stitch</code></td><td>legacy</td><td>P2 (M8)</td><td>planned</td></tr>
-<tr><td><code>grid_size</code></td><td>legacy</td><td>P2 (M8)</td><td>planned</td></tr>
+<tr><td><code>e_stitch</code></td><td>legacy</td><td>—</td><td>not planned</td></tr>
+<tr><td><code>manual_stitch</code></td><td>legacy</td><td>—</td><td>not planned</td></tr>
+<tr><td><code>grid_size</code></td><td>legacy</td><td>—</td><td>not planned</td></tr>
 </tbody>
 </table>
 </div>

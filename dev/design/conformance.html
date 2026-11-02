@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-28e57a3c.js";
+            window.path_to_searchindex_js = "../searchindex-9d185cea.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-0c202e0a.js"></script>
@@ -444,11 +444,11 @@ the ledger is still true. Where the differential can undo a deviation in Ink/Sti
 the file again without it. The excuse then counts only if the measure agrees. Ink/Stitch’s jumps that go
 nowhere (<code>DEV-FMT-001</code>) excuse as many trims and jumps as there are of them, and no more.</p>
 <p><code>REQ-SVG-008</code>, <code>REQ-AUTO-021</code>, <code>REQ-AUTO-022</code> and <code>REQ-FILL-CON-008</code> are the requirements of level L3.
-The other runs of the suite leave them and their cases to this one. Until M8 reads every <code>inkstitch:</code>
-attribute, the corpus is the designs the SVG reader sews in full, at Ink/Stitch’s defaults, with trim and
-stop commands and the file version. A case may name a test sheet drawn as a design instead (<code>sheet</code>).
-StitchCraft sews the sheet, and Ink/Stitch an SVG file of the elements StitchCraft sews it with, written
-with their parameters (<code>stitchcraft_testkit::inkstitch</code>). Automatic digitizing chooses ordinary elements
+The other runs of the suite leave them and their cases to this one. The corpus is designs the SVG reader
+sews in full, with their settings (<code>REQ-SVG-009</code>), trim and stop commands and the file version. A case may
+name a test sheet drawn as a design instead (<code>sheet</code>). Both programs sew an SVG file of the elements
+StitchCraft sews the sheet with, written with their parameters (<code>stitchcraft_testkit::inkstitch</code>), which
+StitchCraft’s reader reads back unchanged (<code>REQ-PRM-003</code>). Automatic digitizing chooses ordinary elements
 with Ink/Stitch’s parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check
 StitchCraft’s stitches of those choices against Ink/Stitch’s (<code>REQ-AUTO-021</code>). TS-11B checks the contour
 fills so, each strategy and join style among them (<code>REQ-FILL-CON-008</code>). <code>conformance/inkstitch/README.md</code>

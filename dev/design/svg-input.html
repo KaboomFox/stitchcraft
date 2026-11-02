@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-28e57a3c.js";
+            window.path_to_searchindex_js = "../searchindex-9d185cea.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-0c202e0a.js"></script>
@@ -215,7 +215,7 @@ namespace is an automatic element, whose stitches StitchCraft chooses by its wid
 (<a href="image-to-embroidery.html#automatic-elements">image to embroidery</a>, <code>REQ-AUTO-001</code>). The trim and stop
 of Ink/Stitch’s commands attached to it still apply. A shape with any <code>inkstitch:</code> attribute, or an
 <code>embroider_</code> attribute as Ink/Stitch’s early versions wrote its settings, is not automatic: it sews as
-its settings say once they are read (M8), and with the defaults until then.
+its settings say (<a href="#settings-of-a-shape">below</a>).
 Read with <code>--sort-colours</code> (<code>Reading::sort_colours</code>), the design’s shapes with settings sew in the order
 StitchCraft chooses too (<a href="image-to-embroidery.html#sewing-order">image to embroidery</a>, <code>REQ-AUTO-011</code>).</li>
 </ul>
@@ -330,6 +330,22 @@ wide to measure, such as <code>1e308in</code>, is left out with <code>SC-W0804</
 </ul>
 <p>Ink/Stitch reads a width in <code>%</code>, <code>em</code> or <code>ex</code> as 0, and a join written in capitals as no join at all. The
 adapter reads them as a viewer draws them (<code>DEV-SVG-001</code>).</p>
+<h2 id="settings-of-a-shape"><a class="header" href="#settings-of-a-shape">Settings of a shape</a></h2>
+<p>Ink/Stitch keeps how each shape sews in attributes of its namespace on the shape’s own node, each named
+after its setting: <code>inkstitch:fill_method</code>, <code>inkstitch:row_spacing_mm</code>, <code>inkstitch:satin_column</code> and the
+rest. Each is a parameter of every element the shape makes, under its own name and with its own text
+(<code>REQ-SVG-009</code>). A shape with a fill and a stroke gives both elements the same parameters, as Ink/Stitch
+gives them to both of its own. The registry reads them as it reads a VectorCraft effect’s (<code>REQ-PRM-002</code>).
+It strips the white space round a value and names a value it can’t read. A setting it doesn’t declare,
+such as one of a stitch type of M10, is kept, and <code>SC-W0105</code> names it.</p>
+<p>The adapter applies 2 settings itself, and they are parameters of neither element. <code>ignore_object</code> leaves
+the shape out (<a href="#inkstitch-objects">below</a>). <code>stroke_first</code>, when it says yes in one of Ink/Stitch’s
+words, sews the stroke before the fill (<code>REQ-SVG-010</code>). Otherwise the fill sews first, whatever SVG’s
+<code>paint-order</code> says. Ink/Stitch’s trim and stop commands turn on <code>trim_after</code> and <code>stop_after</code> over the
+shape’s own settings, as Ink/Stitch adds them.</p>
+<p>Ink/Stitch doesn’t read a group’s settings, but for <code>ignore_object</code>. <code>SC-W0802</code> names the others a group
+has, which don’t change what sews. The <a href="inkstitch-compat-contract.html">compatibility contract</a> lists every setting, with
+the milestone in which StitchCraft reads it.</p>
 <h2 id="inkstitch-objects"><a class="header" href="#inkstitch-objects">Ink/Stitch objects</a></h2>
 <p>An Ink/Stitch SVG has 3 kinds of object that Ink/Stitch reads and does not sew. The adapter sews none of
 them (<code>REQ-SVG-003</code>).</p>
@@ -386,16 +402,26 @@ Ink/Stitch updates it (<code>REQ-SVG-007</code>), with the changed defaults as p
 <p>A shape digitized automatically sews by the rules instead. Ink/Stitch asks its user whether a file with
 its content and no version is an old design, which it then updates, or objects pasted into a new file.
 The adapter can’t ask. It reads such a file as it is and says so with <code>SC-W0802</code>, as it says that a file
-of a version above 4 is read as version 4. The other changes the update makes are to settings the adapter
-does not read yet; the <a href="inkstitch-compat-contract.html#file-versions">compatibility contract</a> lists them
-all, with the milestone that applies them.</p>
+of a version above 4 is read as version 4.</p>
+<p>The adapter doesn’t make 3 of the update’s other changes yet (M8.3), and each changes what a shape sews:</p>
+<ul>
+<li>in a file of version 1 or 2, a zigzag stroke’s <code>pull_compensation_mm</code> other than 0 is halved into
+<code>stroke_pull_compensation_mm</code>;</li>
+<li>in a file of version 1 or 2, a satin column starts and ends where it is drawn, with
+<code>start_at_nearest_point</code> and <code>end_at_nearest_point</code> off;</li>
+<li>in a file of version 1 to 3, a fill with <code>auto_fill</code> off is a legacy fill, sewn without underlay.</li>
+</ul>
+<p><code>SC-W0802</code> counts the shapes each would change, and those shapes sew as the file sets them. The other
+changes alter nothing the adapter sews. The <a href="inkstitch-compat-contract.html#file-versions">compatibility contract</a>
+lists them all, with the milestone that applies them.</p>
 <h2 id="reports"><a class="header" href="#reports">Reports</a></h2>
 <ul>
 <li><code>SC-W0802</code> reports a feature that is not stitched. Text, images, clones, nested <code>&lt;svg&gt;</code> elements and
-the style sheet rules that are not read are such features. So are clipping, masks, filters, markers
-and the Ink/Stitch settings that are not read yet. Clipping is planned for M8. It reports a file
-Ink/Stitch would update, or warn about, that is read as it is: one with Ink/Stitch’s content and no
-file version, or of a newer version.</li>
+the style sheet rules that are not read are such features. So are clipping, masks, filters and
+markers, a group’s Ink/Stitch settings, and the settings of Ink/Stitch’s early versions (<code>embroider_</code>
+attributes). Clipping is planned for M8.5. It reports a file Ink/Stitch would update, or warn about,
+that is read as it is: one with Ink/Stitch’s content and no file version, or of a newer version. It
+counts the shapes of an older file that the update would change in ways the adapter doesn’t make yet.</li>
 <li><code>SC-I0818</code> says how many shapes of a file an older Ink/Stitch saved are read as its update changes
 them.</li>
 <li><code>SC-W0804</code> reports geometry that cannot be used:
