@@ -65,13 +65,14 @@ use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, 
 use stitchcraft_engine::auto::{self, Stitches};
 use stitchcraft_engine::common::MAX_STITCH_LENGTH;
 use stitchcraft_engine::design::{Design, Element, Hints, Reading, Shape, within_working_limit};
+use stitchcraft_engine::generate::stops_after;
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::{Rgb, Thread};
 use svgtypes::{Color, Length};
 
 use crate::BYTES_PER_UNIT;
 use crate::inkstitch::{
-    self, Does, Helper, IGNORE_OBJECT, INKSCAPE_NS, INKSTITCH_NS, Objects, Place, READ_ATTRIBUTES, STOP_AFTER, STROKE_FIRST, TRIM_AFTER, Unapplied,
+    self, Does, Global, Helper, IGNORE_OBJECT, INKSCAPE_NS, INKSTITCH_NS, Objects, Place, READ_ATTRIBUTES, STOP_AFTER, STROKE_FIRST, TRIM_AFTER,
     place,
 };
 use crate::path::{self, Seg, Sub};
@@ -337,6 +338,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             }
         }
         self.command_notes();
+        self.global_settings();
         if let Some(message) = self.version.note(self.updated) {
             self.warnings.insert(0, self.diagnostic(Code::SvgInkStitchUpdated, None, message, None));
         }
@@ -365,17 +367,51 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             };
             notes.push((target, self.diagnostic(Code::SvgFeatureIgnored, Some(&label), message, None)));
         }
-        for &(symbol, command, why) in self.objects.unapplied() {
+        for &(symbol, command) in self.objects.unapplied() {
             let label = self.labels.get(&symbol).cloned().unwrap_or_default();
-            let message = match why {
-                Unapplied::NotYet => format!("`{label}` is Ink/Stitch's `{}` command, which StitchCraft does not apply yet.", command.name),
-                Unapplied::NoLayer => format!("`{label}` is Ink/Stitch's `{}` command, which is not applied: it is not in a layer.", command.name),
-            };
+            let message = format!("`{label}` is Ink/Stitch's `{}` command, which is not applied: it is not in a layer.", command.name);
             notes.push((symbol, self.diagnostic(Code::SvgFeatureIgnored, Some(&label), message, None)));
         }
         // Stable: two notes on one object keep the order above.
         notes.sort_by_key(|(node, _)| *node);
         self.warnings.extend(notes.into_iter().map(|(_, note)| note));
+    }
+
+    /// The design's origin and stop position, from Ink/Stitch's `origin` and `stop_position` commands, each at
+    /// its symbol's place, wherever it is, as Ink/Stitch's `global_command` finds it (`REQ-ASM-005`). One whose
+    /// place doesn't read, or lies beyond the design's reach, is named and left out. 2 origins, or 2 stop
+    /// positions in a design with a stop, are an error (`SC-E0819`): Ink/Stitch writes no file of them either.
+    fn global_settings(&mut self) {
+        let stops = self.elements.iter().any(stops_after);
+        for does in [Does::Origin, Does::StopPosition] {
+            let found: Vec<Global> = self.objects.globals().iter().filter(|global| global.command.does == does).copied().collect();
+            let Some((first, rest)) = found.split_first() else { continue };
+            let name = first.command.name;
+            if !rest.is_empty() {
+                if does == Does::Origin || stops {
+                    let has = if does == Does::Origin { String::new() } else { ", and the design stops".to_string() };
+                    let message = format!(
+                        "The file has {} Ink/Stitch `{name}` commands{has}, and Ink/Stitch writes no file of it: which one counts isn't known.",
+                        found.len()
+                    );
+                    self.warn(Code::OriginOrStopPositionTwice, None, message, Some("Delete all but one."));
+                }
+                continue;
+            }
+            let label = self.labels.get(&first.place).cloned().unwrap_or_default();
+            let at = first.symbol.map(|(x, y)| self.root.apply(x, y)).and_then(|(x, y)| Point::new(x, y).ok()).filter(|p| within_working_limit(*p));
+            match (does, at) {
+                (Does::Origin, Some(at)) => self.settings.settings.origin = Some(at),
+                (_, Some(at)) => self.settings.settings.stop_position = Some(at),
+                (_, None) => {
+                    let message = format!(
+                        "`{label}` is Ink/Stitch's `{name}` command, whose place doesn't read: a coordinate or a transform is not a number, or \
+                         it lies more than 10 m from the origin. It is left out."
+                    );
+                    self.note(Some(&label), message, None);
+                }
+            }
+        }
     }
 
     /// File-wide notes, where the reader meets their subject: the style sheet rules not read, at the first
