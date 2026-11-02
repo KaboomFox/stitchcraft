@@ -406,33 +406,112 @@ to tune pull compensation ([machine testing](../../plan/machine-testing.md)).
 
 ## Contour fill
 
-Rings that follow the region's outline inward, like growth rings (P2, M7.7), as Ink/Stitch sews its
-contour fill (read at `6555892`). The outline and the holes are offset inward by `row_spacing_mm`, again
-and again, with the corners `join_style` gives them, round, mitred or bevelled, until nothing is left.
-Each ring lies inside the one it was offset from, and the rings form a tree. Where the shape narrows, a
-ring parts into several, and a hole's ring joins the outline's where they meet. `clockwise` sets which way
-the rings run. `contour_strategy` sews the tree:
+Rings that follow the region's outline inward, like growth rings (P2, M7.7), as Ink/Stitch sews its contour
+fill (read at `d59c9ab`, the commit the differential pins, and at `6555892`). Each part of the region is
+filled on its own, with `row_spacing_mm` between its rings, d below.
 
-- **Inner to outer** (`0`). The needle goes round the outline from its point nearest the fill's start.
-  At the first point within 1.5 row spacings of a ring inside it, or within 2.05 if no point is that
-  near, it goes on to that ring and sews it, and the rings inside it, the same way, back to where it
-  entered. It then goes on round the outer ring, a row spacing past where it left. A ring that no point
-  of the ring outside it comes within 2.05 row spacings of is not sewn. Each innermost ring is sewn the
-  other way round, or with `avoid_self_crossing` every other level of rings is. `smoothness_mm` smooths
-  the path, which is then kept inside the region.
-- **Single spiral** (`1`). One spiral from the outline in to the centre, each turn running from a ring to
-  the next one inside it. Where a ring parts into several, the spiral goes on into the one whose centre
-  lies nearest its own, and the others are not sewn.
-- **Double spiral** (`2`). The same rings, every other one on a spiral in and the rest on a spiral back
-  out.
+### Rings
 
-The path is sewn as a running stitch of `max_stitch_length_mm` within `running_stitch_tolerance_mm`,
-with bean stitch and repeats. Ink/Stitch leaves out the rings it does not reach without a word.
-StitchCraft names them (`SC-W0311`). Ink/Stitch's repeats double the stitching each time, so that `k`
-repeats sew `2^(k−1)` passes. Whether StitchCraft's do too is settled with the fill.
+The rings come in levels. Level 0 is the part's outline and its holes, as drawn. Each level after it comes
+from the one before, in 3 steps.
 
-Properties: rings lie the row spacing apart (± 5 %), and neighbouring rings never cross. Each strategy
-sews one unbroken path per part.
+1. The outline ring is shrunk by d, without its holes.
+2. Each hole ring is grown by d, and the outer edge of its growth is kept. A hole whose growth
+   closes on itself loses what it encloses, which gets no more rings. The arms of a C-shaped hole meet
+   that way.
+3. The grown holes are joined and taken from the shrunk outline. What is left falls into pieces, each an
+   outline with its holes, and the pieces make the next level.
+
+Shrinking and growing are GEOS's buffer ([offset curves](offset.md#buffers-a-fills-part-grown-or-shrunk)),
+with the corners `join_style` gives. Round corners, `0` and the default, have 8 segments to a quarter
+circle. Mitred corners, `1`, have a limit of 10 times the distance, and bevelled corners, `2`, are cut
+straight across. An outline shrinks with joins at its inward corners only, and a hole grows with them at
+its outward corners. With mitred corners, a ring lies
+farther than d from the one before at a joined corner: √2 d at a right angle. Each ring is simplified
+within 0.01 CSS pixel. A piece smaller than 0.1 square CSS pixel, 0.007 mm², is dropped with its holes. The
+levels end when nothing is left.
+
+Ink/Stitch repairs the grown holes as a set of polygons, which keeps what 2 overlapping growths share as
+an island of material: a small ring of its own, where a spiral can end. StitchCraft joins them
+(`DEV-FILL-015`).
+
+The rings make a tree. An outline ring's children are the outline rings shrunk from it, several where the
+part narrows and parts in two. A hole works the other way: the ring grown from a hole is the parent of
+the ring it grew from. A hole's largest ring hangs under the outline ring of the level where its growth
+met the outline, or where nothing was left. So the tree runs from the part's outline in to its middles, and
+out again to each hole. With `clockwise` on, the default, every ring runs clockwise as the drawing shows
+it (y down), and the other way with it off.
+
+### Inner to outer
+
+`contour_strategy` `0`, the default, sews one path through the tree, ring by ring and depth first. It
+starts on the outline at its point nearest the needle.
+
+- **In.** For each child of a ring, the needle takes the first point along the ring within 1.5 d of the
+  child, from where the ring starts and in its direction, or within 2.05 d where no point is that near.
+  A child farther than 2.05 d from every point of the ring is not sewn, and neither is any ring under it
+  (`SC-W0311`). The children are sewn in the order of their points along the ring, and the needle steps
+  across to each child's point nearest its own.
+- **Out.** A child is sewn round, its own children the same way, to one row spacing short of where it
+  was entered. The needle steps back to the ring a row spacing past the point it left, and goes on to the
+  next child's point. After its last child, a ring is sewn round to one row spacing short of its start,
+  or whole when what is left of it is no longer than d. The fill ends on the outline, a row spacing short
+  of where it began.
+- **Directions.** A ring with a child sewn runs in its direction. A ring with none runs the other way,
+  as the middles do, and the outlines of the holes and of a part too thin for a second level. The step
+  out of a
+  ring with children of its own then crosses the step into it. With `avoid_self_crossing` on, the
+  directions alternate level by level down the tree instead, the outline in its direction, and the steps
+  don't cross.
+- **Smoothing.** A `smoothness_mm` above 0 smooths the path. It is spaced as a running stitch 5 times the
+  smoothness long, within 2 times it, and its corners are cut 5 times, each point replaced by the points
+  a quarter and three quarters along its sides, its ends kept. The path is then kept inside the part, as
+  a tatami fill's travel is ([section 4](#4-travel-under-the-rows)).
+
+### Single and double spiral
+
+`contour_strategy` `1` sews one spiral in from the outline, and `2` two, one in and one back out. Both
+follow a chain of rings from the outline inward. Each ring goes on to its one child, or to the child whose
+middle lies nearest its own, the middle of a ring being that of its line, weighted by length. The rings
+not chosen are not sewn, nor any ring under them (`SC-W0311`). At a hole, the next outline ring is
+usually the nearer, and the rings round the hole are then not sewn.
+
+- **A turn** goes from a ring to the next in the chain. Both rings are cut into N points, 20 to each
+  `max_stitch_length_mm` of the outer ring's length. The points lie evenly along each ring from its start,
+  and each list then starts again at its point nearest the needle. Point i of the turn lies on the line from the outer
+  ring's point i to the inner ring's point i, i/(N − 1) of the way. Each turn is simplified within 0.1
+  CSS pixel, and the turns are joined end to end, each without its last point but the last.
+- **With `1`**, the spiral turns from the outline in to the last ring of the chain. It ends near the
+  points nearest the needle.
+- **With `2`**, the spiral turns in on the chain's rings 0, 2, 4 and on, and back out on rings 1, 3, 5 and
+  on, reversed. It ends on ring 1 near where it began. With 3 rings it is one turn, and ring 1 is not
+  sewn.
+- Neither smooths, nor is kept inside the part. A turn between rings of different shapes can cut across.
+- A chain too short for a turn, of one ring with `1` or of 2 or fewer with `2`, is sewn inner to outer,
+  with `SC-I0315`. Ink/Stitch fails on such a part at `d59c9ab`, and sews nothing of it
+  at `6555892` (`DEV-FILL-016`).
+
+### Stitches
+
+The path is sewn as a running stitch of `max_stitch_length_mm`, within `running_stitch_tolerance_mm`,
+at random lengths when `enable_random_stitch_length` is on ([running stitch](strokes.md#running-stitch)).
+Bean stitch comes next, then the repeats. Each repeat adds a copy of everything sewn so far, the other way
+round, as Ink/Stitch's does, and `k` repeats sew 2^(k−1) passes. A stroke's repeats sew `k` passes.
+
+### Start, end and underlay
+
+Each part sews the tatami fill's underlay first ([section 6](#6-underlay)), on by default, at `angle` +
+90° with 3 row spacings between its rows. Each part starts nearest the needle, at the start command's
+point or else at the last stitch before, the underlay's, or at the origin without either. The parts go
+in order of their distance from the first part's start. The end command is read but not used, and the
+fill ends where its strategy ends.
+
+### Properties (conformance)
+
+- With round corners, each ring lies d from the ring it was offset from, ± 5 %, and rings of one level
+  never cross.
+- Each part sews one path of running stitches, with no jump inside it.
+- Traced either way round or started elsewhere, a part sews rings of the same shape.
 
 ## Meander fill
 

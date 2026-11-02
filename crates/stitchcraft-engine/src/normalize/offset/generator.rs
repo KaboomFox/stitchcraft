@@ -29,6 +29,7 @@
 use stitchcraft_core::exact::{self, Side};
 use stitchcraft_core::{Exhausted, Meter, Point, math};
 
+use super::Corners;
 use crate::design::Join;
 use crate::normalize::near::{length, to_side};
 
@@ -177,7 +178,13 @@ struct Generator {
 
 impl Generator {
     fn new(distance: f64, join: Join, start: Point, next: Point) -> Self {
-        let quantum = std::f64::consts::FRAC_PI_2 / f64::from(QUADRANT_SEGMENTS);
+        Generator::with(distance, Corners { join, quadrant_segments: QUADRANT_SEGMENTS }, start, next)
+    }
+
+    /// A generator with `corners`, whose round joins have their own number of segments to a quarter circle.
+    fn with(distance: f64, corners: Corners, start: Point, next: Point) -> Self {
+        let Corners { join, quadrant_segments } = corners;
+        let quantum = std::f64::consts::FRAC_PI_2 / f64::from(quadrant_segments.max(1));
         let closing = if join == Join::Round { ROUND_CLOSING } else { 1.0 };
         let first = moved(start, next, distance);
         Generator { distance, join, quantum, closing, curve: Curve::new(distance), s: [start, start, next], moved: [first, first] }
@@ -442,13 +449,13 @@ fn side_curve(walk: &[Point], d: f64, join: Join, with_first: bool, meter: &mut 
 
 /// The raw curve round the closed ring `points` (its first point repeated at its end, none repeated in a
 /// row) at `distance`, to its left for a positive distance and to its right for a negative one (y-up axes),
-/// with round corners, as GEOS offsets a polygon's ring to buffer it: the ring simplified towards that
-/// side, then walked from the segment back to its start, so that every corner is joined, and closed. Empty
-/// for a ring of fewer than 3 points.
-pub(super) fn ring_curve(points: &[Point], distance: f64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+/// with `corners`, as GEOS offsets a polygon's ring to buffer it: the ring simplified towards that side,
+/// then walked from the segment back to its start, so that every corner is joined, and closed. Empty for a
+/// ring of fewer than 3 points.
+pub(super) fn ring_curve(points: &[Point], distance: f64, corners: Corners, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
     leftward(points, distance, meter, |walk, d, meter| {
         let (Some(&first), Some(&[before, _]), 4..) = (walk.first(), walk.last_chunk::<2>(), walk.len()) else { return Ok(Vec::new()) };
-        let mut walker = Generator::new(d, Join::Round, before, first);
+        let mut walker = Generator::with(d, corners, before, first);
         for &p in walk.iter().skip(1) {
             meter.charge(1)?;
             walker.next(p);
@@ -657,7 +664,7 @@ mod tests {
         let meter = &mut Budget::DEFAULT.meter();
         for ring in [&[][..], &[(0.0, 0.0)], &[(0.0, 0.0), (1.0, 0.0), (0.0, 0.0)]] {
             for distance in [1.0, -1.0] {
-                assert_eq!(ring_curve(&points(ring), distance, meter).unwrap(), Vec::new(), "{ring:?} by {distance}");
+                assert_eq!(ring_curve(&points(ring), distance, Corners::ROUND, meter).unwrap(), Vec::new(), "{ring:?} by {distance}");
             }
         }
     }
