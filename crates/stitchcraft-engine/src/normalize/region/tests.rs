@@ -455,9 +455,12 @@ fn req_fill_cir_001_a_part_s_centroid_is_the_middle_of_its_area_whichever_way_it
     let near = |a: Point, b: Point| a.distance(b) < 1e-12;
     let plain = Polygon { outline: rectangle.clone(), holes: Vec::new() };
     assert!(near(plain.centroid(meter).unwrap(), p(5.0, 2.0)));
+    // Each ring either way round, the hole against the outline, as a part's holes run, or the same way: the
+    // hole takes its area away all the same.
     let reversed = |ring: &[Point]| ring.iter().rev().copied().collect::<Vec<_>>();
-    for (outline, hole) in [(rectangle.clone(), hole.clone()), (reversed(&rectangle), reversed(&hole))] {
-        let part = Polygon { outline, holes: vec![hole] };
+    let (back, hole_back) = (reversed(&rectangle), reversed(&hole));
+    for (outline, hole) in [(&rectangle, &hole), (&back, &hole_back), (&rectangle, &hole_back), (&back, &hole)] {
+        let part = Polygon { outline: outline.clone(), holes: vec![hole.clone()] };
         assert!(near(part.centroid(meter).unwrap(), p(172.0 / 36.0, 2.0)), "{:?}", part.centroid(meter));
     }
     // No area: the outline's first point.
