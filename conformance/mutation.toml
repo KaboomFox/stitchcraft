@@ -451,12 +451,6 @@ why = "when the area moves back no place, taking it out of the order and putting
 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/generators/contour/line.rs"
-mutant = "replace > with >= in point_at"
-line = "if start + length > at {"
-why = "a distance that falls exactly at the end of a side is the end of that side, at a fraction of 1, or the start of the next, at a fraction of 0, and `lerp` gives each end exactly: the same point. A side of no length there gives its one point, as the next side's start"
-
-[[equivalent]]
-file = "crates/stitchcraft-engine/src/generators/contour/line.rs"
 mutant = "replace > with >= in cut"
 line = "if traveled > at {"
 why = "a distance equal to how far the sides reach has returned on the line before, which cuts the line at that point, so this test never meets one"

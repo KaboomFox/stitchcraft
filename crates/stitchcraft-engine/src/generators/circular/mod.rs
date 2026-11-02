@@ -336,7 +336,8 @@ fn circle(middle: Point, radius: f64) -> Vec<Point> {
 /// `farthest`, the end spacing's where there is one, and the circle at the middle last. Without `end` each
 /// lies `spacing` past the last. With it, each step is `spacing` plus the share of the way from `spacing` to
 /// `end` that the circle's radius is of `farthest`, as Ink/Stitch grades them, and `end` past the farthest
-/// point (`DEV-FILL-021`). One unit of `meter` for each point of a circle.
+/// point (`DEV-FILL-021`). One unit of `meter` for each point of a circle but the one at the middle, whose
+/// number of points is fixed.
 fn circles(middle: Point, farthest: f64, spacing: f64, end: Option<f64>, meter: &mut Meter) -> Result<Vec<Vec<Point>>, Exhausted> {
     let stop = farthest + 2.0 * end.unwrap_or(spacing);
     let mut circles = vec![circle(middle, MIDDLE)];
