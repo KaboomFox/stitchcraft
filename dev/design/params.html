@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9d185cea.js";
+            window.path_to_searchindex_js = "../searchindex-412cc20a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-0c202e0a.js"></script>
+        <script src="../toc-6628e580.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -407,8 +407,9 @@ origin. The reference pages show a ledger entry that names the key with each dec
 StitchCraft’s own, even for a family Ink/Stitch does not give it, because that family would read a
 value written for Ink/Stitch’s meaning. A node’s fill may also read a value that only its stroke’s
 declaration can read, such as a zigzag stroke’s 2 spacings read by a meander fill. Ink/Stitch sews that
-fill with its default, and StitchCraft would refuse it (<code>DEV-PRM-001</code>). The meander fill’s step (M7.8)
-chooses between the two.</p>
+fill with its default, and so does StitchCraft, since M7.8: the value is the other declaration’s, and
+<code>SC-I0106</code> says the element left it (<code>REQ-PRM-006</code>). A value no declaration of the key can read is
+refused (<code>DEV-PRM-001</code>).</p>
 </li>
 </ol>
 <h2 id="generated-outputs"><a class="header" href="#generated-outputs">Generated outputs</a></h2>

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9d185cea.js";
+            window.path_to_searchindex_js = "../searchindex-412cc20a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-0c202e0a.js"></script>
+        <script src="../toc-6628e580.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -272,6 +272,7 @@ another.</p>
 <tr><td><code>SC-E0101</code></td><td>Error</td><td>Parameter has the wrong type or an unknown choice</td><td>M3</td></tr>
 <tr><td><code>SC-W0102</code></td><td>Warning</td><td>Parameter clamped to its allowed range</td><td>M3</td></tr>
 <tr><td><code>SC-W0105</code></td><td>Warning</td><td>Unknown parameter preserved but ignored</td><td>M3</td></tr>
+<tr><td><code>SC-I0106</code></td><td>Info</td><td>Value only the node’s other stitch type reads; default used here (as in Ink/Stitch)</td><td>M7</td></tr>
 <tr><td><code>SC-E0201</code></td><td>Error</td><td>Satin column has no rails (no subpath longer than a point)</td><td>M4</td></tr>
 <tr><td><code>SC-W0202</code></td><td>Warning</td><td>Satin rails taken as the two longest subpaths (where the subpaths meet does not say)</td><td>M4</td></tr>
 <tr><td><code>SC-W0203</code></td><td>Warning</td><td>Satin rung does not cross both rails (dangling rung); the rail’s nearest point is used</td><td>M4</td></tr>
@@ -300,6 +301,8 @@ another.</p>
 <tr><td><code>SC-I0313</code></td><td>Info</td><td>Fill drawn twice along its edge; Ink/Stitch fills the part left empty (its repair merges the stretch)</td><td>M5</td></tr>
 <tr><td><code>SC-W0314</code></td><td>Warning</td><td>Legacy fill sewn as a tatami fill without underlay (Ink/Stitch’s legacy fill is not built)</td><td>M7</td></tr>
 <tr><td><code>SC-I0315</code></td><td>Info</td><td>Contour fill’s part too narrow for its spiral; sewn inner to outer (Ink/Stitch fails or sews nothing)</td><td>M7</td></tr>
+<tr><td><code>SC-W0316</code></td><td>Warning</td><td>Meander pattern is one of Ink/Stitch’s tiles; sewn with StitchCraft’s default tile</td><td>M7</td></tr>
+<tr><td><code>SC-W0317</code></td><td>Warning</td><td>Meander fill part too small for its tile; sewn round its outline (Ink/Stitch stops with an error)</td><td>M7</td></tr>
 <tr><td><code>SC-W0401</code></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td><td>M3</td></tr>
 <tr><td><code>SC-W0402</code></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest</td><td>M3</td></tr>
 <tr><td><code>SC-W0403</code></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td><td>M3</td></tr>

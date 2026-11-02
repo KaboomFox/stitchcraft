@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-9d185cea.js";
+            window.path_to_searchindex_js = "../../searchindex-412cc20a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-0c202e0a.js"></script>
+        <script src="../../toc-6628e580.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -198,6 +198,7 @@
 <tr><td><a href="#sc-e0101"><code>SC-E0101</code></a></td><td>Error</td><td>Parameter has the wrong type or an unknown choice</td></tr>
 <tr><td><a href="#sc-w0102"><code>SC-W0102</code></a></td><td>Warning</td><td>Parameter clamped to its allowed range</td></tr>
 <tr><td><a href="#sc-w0105"><code>SC-W0105</code></a></td><td>Warning</td><td>Unknown parameter preserved but ignored</td></tr>
+<tr><td><a href="#sc-i0106"><code>SC-I0106</code></a></td><td>Info</td><td>Value only the node’s other stitch type reads; default used here</td></tr>
 <tr><td><a href="#sc-e0201"><code>SC-E0201</code></a></td><td>Error</td><td>Satin column has no rails</td></tr>
 <tr><td><a href="#sc-w0202"><code>SC-W0202</code></a></td><td>Warning</td><td>Satin rails taken as the two longest subpaths</td></tr>
 <tr><td><a href="#sc-w0203"><code>SC-W0203</code></a></td><td>Warning</td><td>Satin rung does not cross both rails</td></tr>
@@ -226,6 +227,8 @@
 <tr><td><a href="#sc-i0313"><code>SC-I0313</code></a></td><td>Info</td><td>Fill drawn twice along its edge; Ink/Stitch fills the part left empty</td></tr>
 <tr><td><a href="#sc-w0314"><code>SC-W0314</code></a></td><td>Warning</td><td>Legacy fill sewn as a tatami fill without underlay</td></tr>
 <tr><td><a href="#sc-i0315"><code>SC-I0315</code></a></td><td>Info</td><td>Contour fill’s part too narrow for its spiral; sewn inner to outer</td></tr>
+<tr><td><a href="#sc-w0316"><code>SC-W0316</code></a></td><td>Warning</td><td>Meander pattern is one of Ink/Stitch’s tiles; sewn with StitchCraft’s default tile</td></tr>
+<tr><td><a href="#sc-w0317"><code>SC-W0317</code></a></td><td>Warning</td><td>Meander fill part too small for its tile; sewn round its outline</td></tr>
 <tr><td><a href="#sc-w0401"><code>SC-W0401</code></a></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td></tr>
 <tr><td><a href="#sc-w0402"><code>SC-W0402</code></a></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised</td></tr>
 <tr><td><a href="#sc-w0403"><code>SC-W0403</code></a></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td></tr>
@@ -340,6 +343,14 @@ warning.</p>
 or Ink/Stitch, or one for a stitch type StitchCraft does not support yet. It was kept, so saving
 the design does not lose it, but it does not change the stitches.</p>
 <p>The Ink/Stitch compatibility page says when each Ink/Stitch parameter is supported.</p>
+<h2 id="sc-i0106"><a class="header" href="#sc-i0106">SC-I0106</a></h2>
+<p><strong>Info</strong> — Value only the node’s other stitch type reads; default used here</p>
+<p>An SVG node’s fill and its stroke read the same settings, and some keys mean different things to
+each: a zigzag stroke keeps 2 spacings in <code>zigzag_spacing_mm</code>, where a meander fill reads one. A
+value this element can’t read but the node’s other stitch type can is that one’s, so this element
+sews with its own default, as Ink/Stitch does.</p>
+<p>The message names the key and the value. To give this element a value of its own, set it on a
+node of its own.</p>
 <h2 id="sc-e0201"><a class="header" href="#sc-e0201">SC-E0201</a></h2>
 <p><strong>Error</strong> — Satin column has no rails</p>
 <p>A satin column’s path has no subpath longer than a point, so it has no rails to sew between. The
@@ -554,6 +565,18 @@ with one ring for the single spiral or 2 or fewer for the double, is sewn inner 
 round its rings. Ink/Stitch fails on such a part or sews nothing of it, as its version decides.</p>
 <p>The message counts the parts. To sew them in a spiral, widen them to more than 2 row spacings for the
 single spiral, or 4 for the double, or make <code>row_spacing_mm</code> smaller.</p>
+<h2 id="sc-w0316"><a class="header" href="#sc-w0316">SC-W0316</a></h2>
+<p><strong>Warning</strong> — Meander pattern is one of Ink/Stitch’s tiles; sewn with StitchCraft’s default tile</p>
+<p>The meander fill’s pattern names one of Ink/Stitch’s tiles. Those are drawings that ship with
+Ink/Stitch, which StitchCraft doesn’t copy, so the fill wanders through StitchCraft’s default tile,
+the honeycomb, instead.</p>
+<p>Choose one of StitchCraft’s tiles for <code>meander_pattern</code> to remove the warning.</p>
+<h2 id="sc-w0317"><a class="header" href="#sc-w0317">SC-W0317</a></h2>
+<p><strong>Warning</strong> — Meander fill part too small for its tile; sewn round its outline</p>
+<p>A part of a meander fill is too small for any line of its tile, or none of its lines join up, so it
+has nothing to wander through. It is sewn as a running stitch round its outline. Ink/Stitch stops
+the whole fill with an error there.</p>
+<p>The message counts the parts. Make <code>meander_scale_percent</code> smaller to fit the tile into them.</p>
 <h2 id="sc-w0401"><a class="header" href="#sc-w0401">SC-W0401</a></h2>
 <p><strong>Warning</strong> — Path too small for the shortest stitch; skipped</p>
 <p>A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:

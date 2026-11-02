@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-9d185cea.js";
+            window.path_to_searchindex_js = "../../searchindex-412cc20a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-0c202e0a.js"></script>
+        <script src="../../toc-6628e580.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -235,9 +235,10 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/satin.html">Satin parameters</a></td><td>34</td><td>Satin column, E-stitch, S-stitch, Zigzag satin</td></tr>
 <tr><td><a href="params/pull.html">Pull parameters</a></td><td>2</td><td>Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill</td></tr>
 <tr><td><a href="params/fill.html">Fill parameters</a></td><td>2</td><td>Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill</td></tr>
-<tr><td><a href="params/tatami.html">Tatami parameters</a></td><td>15</td><td>Tatami fill, Contour fill</td></tr>
-<tr><td><a href="params/contour.html">Contour parameters</a></td><td>5</td><td>Contour fill</td></tr>
-<tr><td><a href="params/fill-repeat.html">Fill repeat parameters</a></td><td>2</td><td>Contour fill</td></tr>
+<tr><td><a href="params/tatami.html">Tatami parameters</a></td><td>15</td><td>Tatami fill, Contour fill, Meander fill</td></tr>
+<tr><td><a href="params/contour.html">Contour parameters</a></td><td>4</td><td>Contour fill</td></tr>
+<tr><td><a href="params/meander.html">Meander parameters</a></td><td>6</td><td>Meander fill</td></tr>
+<tr><td><a href="params/path-fill.html">Path fill parameters</a></td><td>3</td><td>Contour fill, Meander fill</td></tr>
 <tr><td><a href="params/auto.html">Auto parameters</a></td><td>5</td><td>automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type</td></tr>
 </tbody>
 </table>
@@ -257,12 +258,13 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/auto.html#auto_overlap_mm"><code>auto_overlap_mm</code></a></td><td>Overlap</td><td>Auto parameters</td></tr>
 <tr><td><a href="params/contour.html#avoid_self_crossing"><code>avoid_self_crossing</code></a></td><td>Avoid self-crossing</td><td>Contour parameters</td></tr>
 <tr><td><a href="params/repeat.html#bean_stitch_repeats"><code>bean_stitch_repeats</code></a></td><td>Bean stitch</td><td>Repeat parameters</td></tr>
-<tr><td><a href="params/fill-repeat.html#bean_stitch_repeats"><code>bean_stitch_repeats</code></a></td><td>Bean stitch</td><td>Fill repeat parameters</td></tr>
+<tr><td><a href="params/path-fill.html#bean_stitch_repeats"><code>bean_stitch_repeats</code></a></td><td>Bean stitch</td><td>Path fill parameters</td></tr>
 <tr><td><a href="params/satin.html#center_walk_underlay"><code>center_walk_underlay</code></a></td><td>Centre walk underlay</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#center_walk_underlay_position"><code>center_walk_underlay_position</code></a></td><td>Centre walk position</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#center_walk_underlay_repeats"><code>center_walk_underlay_repeats</code></a></td><td>Centre walk repeats</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#center_walk_underlay_stitch_length_mm"><code>center_walk_underlay_stitch_length_mm</code></a></td><td>Centre walk stitch length</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#center_walk_underlay_stitch_tolerance_mm"><code>center_walk_underlay_stitch_tolerance_mm</code></a></td><td>Centre walk tolerance</td><td>Satin parameters</td></tr>
+<tr><td><a href="params/meander.html#clip"><code>clip</code></a></td><td>Clip to the shape</td><td>Meander parameters</td></tr>
 <tr><td><a href="params/contour.html#clockwise"><code>clockwise</code></a></td><td>Clockwise</td><td>Contour parameters</td></tr>
 <tr><td><a href="params/contour.html#contour_strategy"><code>contour_strategy</code></a></td><td>Strategy</td><td>Contour parameters</td></tr>
 <tr><td><a href="params/satin.html#contour_underlay"><code>contour_underlay</code></a></td><td>Contour underlay</td><td>Satin parameters</td></tr>
@@ -294,6 +296,9 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/common.html#lock_start_scale_mm"><code>lock_start_scale_mm</code></a></td><td>Start lock size</td><td>Common parameters</td></tr>
 <tr><td><a href="params/common.html#lock_start_scale_percent"><code>lock_start_scale_percent</code></a></td><td>Start lock scale</td><td>Common parameters</td></tr>
 <tr><td><a href="params/common.html#max_stitch_length_mm"><code>max_stitch_length_mm</code></a></td><td>Longest stitch</td><td>Common parameters</td></tr>
+<tr><td><a href="params/meander.html#meander_angle"><code>meander_angle</code></a></td><td>Pattern angle</td><td>Meander parameters</td></tr>
+<tr><td><a href="params/meander.html#meander_pattern"><code>meander_pattern</code></a></td><td>Pattern</td><td>Meander parameters</td></tr>
+<tr><td><a href="params/meander.html#meander_scale_percent"><code>meander_scale_percent</code></a></td><td>Pattern scale</td><td>Meander parameters</td></tr>
 <tr><td><a href="params/common.html#min_jump_stitch_length_mm"><code>min_jump_stitch_length_mm</code></a></td><td>Shortest jump</td><td>Common parameters</td></tr>
 <tr><td><a href="params/satin.html#min_random_split_length_mm"><code>min_random_split_length_mm</code></a></td><td>Shortest split stitch</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/common.html#min_stitch_length_mm"><code>min_stitch_length_mm</code></a></td><td>Shortest stitch</td><td>Common parameters</td></tr>
@@ -308,7 +313,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/satin.html#random_width_increase_percent"><code>random_width_increase_percent</code></a></td><td>Random width increase</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#random_zigzag_spacing_percent"><code>random_zigzag_spacing_percent</code></a></td><td>Random zigzag spacing</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/repeat.html#repeats"><code>repeats</code></a></td><td>Repeats</td><td>Repeat parameters</td></tr>
-<tr><td><a href="params/fill-repeat.html#repeats"><code>repeats</code></a></td><td>Repeats</td><td>Fill repeat parameters</td></tr>
+<tr><td><a href="params/path-fill.html#repeats"><code>repeats</code></a></td><td>Repeats</td><td>Path fill parameters</td></tr>
 <tr><td><a href="params/satin.html#reverse_rails"><code>reverse_rails</code></a></td><td>Reverse rails</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/tatami.html#row_spacing_mm"><code>row_spacing_mm</code></a></td><td>Row spacing</td><td>Tatami parameters</td></tr>
 <tr><td><a href="params/running.html#running_stitch_length_mm"><code>running_stitch_length_mm</code></a></td><td>Stitch length</td><td>Running parameters</td></tr>
@@ -319,7 +324,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/satin.html#short_stitch_distance_mm"><code>short_stitch_distance_mm</code></a></td><td>Short stitch distance</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#short_stitch_inset"><code>short_stitch_inset</code></a></td><td>Short stitch inset</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/tatami.html#skip_last"><code>skip_last</code></a></td><td>Skip last stitch</td><td>Tatami parameters</td></tr>
-<tr><td><a href="params/contour.html#smoothness_mm"><code>smoothness_mm</code></a></td><td>Smoothness</td><td>Contour parameters</td></tr>
+<tr><td><a href="params/path-fill.html#smoothness_mm"><code>smoothness_mm</code></a></td><td>Smoothness</td><td>Path fill parameters</td></tr>
 <tr><td><a href="params/satin.html#split_method"><code>split_method</code></a></td><td>Split method</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#split_staggers"><code>split_staggers</code></a></td><td>Staggers</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/tatami.html#staggers"><code>staggers</code></a></td><td>Staggers</td><td>Tatami parameters</td></tr>
@@ -335,11 +340,13 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/zigzag-stroke.html#zigzag_angle"><code>zigzag_angle</code></a></td><td>Zigzag angle</td><td>Zigzag stroke parameters</td></tr>
 <tr><td><a href="params/zigzag-stroke.html#zigzag_spacing_mm"><code>zigzag_spacing_mm</code></a></td><td>Zigzag spacing</td><td>Zigzag stroke parameters</td></tr>
 <tr><td><a href="params/satin.html#zigzag_spacing_mm"><code>zigzag_spacing_mm</code></a></td><td>Zigzag spacing</td><td>Satin parameters</td></tr>
+<tr><td><a href="params/meander.html#zigzag_spacing_mm"><code>zigzag_spacing_mm</code></a></td><td>Zigzag spacing</td><td>Meander parameters</td></tr>
 <tr><td><a href="params/satin.html#zigzag_underlay"><code>zigzag_underlay</code></a></td><td>Zigzag underlay</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#zigzag_underlay_inset_mm"><code>zigzag_underlay_inset_mm</code></a></td><td>Zigzag underlay inset</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#zigzag_underlay_inset_percent"><code>zigzag_underlay_inset_percent</code></a></td><td>Zigzag underlay inset (% of width)</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#zigzag_underlay_max_stitch_length_mm"><code>zigzag_underlay_max_stitch_length_mm</code></a></td><td>Zigzag underlay longest stitch</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#zigzag_underlay_spacing_mm"><code>zigzag_underlay_spacing_mm</code></a></td><td>Zigzag underlay spacing</td><td>Satin parameters</td></tr>
+<tr><td><a href="params/meander.html#zigzag_width_mm"><code>zigzag_width_mm</code></a></td><td>Zigzag width</td><td>Meander parameters</td></tr>
 </tbody>
 </table>
 </div>

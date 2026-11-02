@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-9d185cea.js";
+            window.path_to_searchindex_js = "searchindex-412cc20a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-0c202e0a.js"></script>
+        <script src="toc-6628e580.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -816,7 +816,7 @@ holds Ink/Stitch’s settings for that kind of stitch, and the object shows its 
 art. The thread is the colour of the object’s fill for a fill, and of its stroke for a stroke or a satin
 column.</p>
 <p>From VectorCraft 0.14 each setting has a label and its unit, in the sections of the
-<a href="#parameters-9">parameter reference</a>. Rest the pointer on a label for its help, or press the
+<a href="#parameters-10">parameter reference</a>. Rest the pointer on a label for its help, or press the
 button after the field for its page in the reference. A setting shows only when it applies: a satin’s
 staggers show for staggered splits. VectorCraft before 0.14 lists every setting, each under its Ink/Stitch
 name.</p>
@@ -1110,6 +1110,7 @@ stroke or the fill of a shape, and each sews in its own thread colour.</p>
 <tr><td><a href="#zigzag-satin">Zigzag satin</a></td><td>satin columns sewn as a zigzag, every stitch slanting from one edge to the other</td><td>now</td></tr>
 <tr><td><a href="#tatami-fill">Tatami fill</a></td><td>areas, in rows of running stitches, Ink/Stitch’s legacy fill among them</td><td>now</td></tr>
 <tr><td><a href="#contour-fill">Contour fill</a></td><td>areas, in rings that follow the outline inward, sewn as one line</td><td>now</td></tr>
+<tr><td><a href="#meander-fill">Meander fill</a></td><td>areas, in one line that wanders along the sides of a tiling</td><td>now</td></tr>
 </tbody>
 </table>
 </div>
@@ -1714,11 +1715,123 @@ underlay here. <code>expand_mm</code> grows the area before its rings are laid.<
 <p>The reference gives each setting’s range and default:</p>
 <ul>
 <li><a href="#fill-parameters">fill</a>, which chooses the fill method</li>
-<li><a href="#contour-parameters">contour fill</a>, its strategy and corners, direction and smoothing</li>
+<li><a href="#contour-parameters">contour fill</a>, its strategy and corners and its direction</li>
 <li><a href="#tatami-parameters">tatami fill</a>, its row spacing, underlay and expanding</li>
-<li><a href="#fill-repeat-parameters">fill repeats</a>, its repeats and bean stitch</li>
+<li><a href="#path-fill-parameters">path fills</a>, its smoothing, repeats and bean stitch</li>
 <li><a href="#running-parameters">running stitch</a>, its tolerance and random lengths</li>
 <li><a href="#common-parameters">the settings every element shares</a>, the stitch length among them</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="meander-fill"><a class="header" href="#meander-fill">Meander fill</a></h1>
+<!-- stitch-types: meander_fill -->
+<p>A meander fill covers an area with one line that wanders through it and never crosses itself, as a
+quilter’s meander does. The line runs along the sides of a tiling, hexagons by default, turning where
+they meet, and passes no point twice, so it fills the area evenly with turns of the tiling’s shape. Set a
+fill’s <code>fill_method</code> to <code>meander_fill</code> for it.</p>
+<p>Its settings are set as every stitch type’s are (<a href="user/stitches#setting-parameters">setting parameters</a>).</p>
+<p>The first picture is drawn from <code>docs/fixtures/fill.svg</code>, the green patch 32 mm by 20 mm with a round
+hole that the <a href="#tatami-fill">tatami fill</a>’s pictures show, and the others from
+<code>docs/fixtures/meander.svg</code>, a square 30 mm a side with rounded corners. As the patch sews:</p>
+<!-- shot: meander-fill -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: center">Meander fill</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/meander-fill-1.png" alt="A green patch 32 mm by 20 mm with rounded corners and a round hole, sewn as a meander fill. One line wanders round the hole along the sides of hexagons 2 mm a side, and never crosses itself, Meander fill"><span class="img-wrapper"><img src="images/generated/meander-fill-1.png" alt="A green patch 32 mm by 20 mm with rounded corners and a round hole, sewn as a meander fill. One line wanders round the hole along the sides of hexagons 2 mm a side, and never crosses itself, Meander fill"></span></label></td></tr>
+</tbody>
+</table>
+</div>
+<!-- /shot -->
+<h2 id="tiles"><a class="header" href="#tiles">Tiles</a></h2>
+<p><code>meander_pattern</code> chooses the tiling whose sides the line wanders along. Each side is 2 mm long at a
+<code>meander_scale_percent</code> of 100. These pictures leave the underlay out and draw a dot at each needle
+point, to show the line.</p>
+<!-- shot: meander-tiles -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: center">Honeycomb</th><th style="text-align: center">Squares</th><th style="text-align: center">Triangles</th><th style="text-align: center">Octagons and squares</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/meander-tiles-1.png" alt="A rounded square 30 mm a side sewn as a meander fill without underlay: one line along the sides of a tiling, Honeycomb"><span class="img-wrapper"><img src="images/generated/meander-tiles-1.png" alt="A rounded square 30 mm a side sewn as a meander fill without underlay: one line along the sides of a tiling, Honeycomb"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/meander-tiles-2.png" alt="A rounded square 30 mm a side sewn as a meander fill without underlay: one line along the sides of a tiling, Squares"><span class="img-wrapper"><img src="images/generated/meander-tiles-2.png" alt="A rounded square 30 mm a side sewn as a meander fill without underlay: one line along the sides of a tiling, Squares"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/meander-tiles-3.png" alt="A rounded square 30 mm a side sewn as a meander fill without underlay: one line along the sides of a tiling, Triangles"><span class="img-wrapper"><img src="images/generated/meander-tiles-3.png" alt="A rounded square 30 mm a side sewn as a meander fill without underlay: one line along the sides of a tiling, Triangles"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/meander-tiles-4.png" alt="A rounded square 30 mm a side sewn as a meander fill without underlay: one line along the sides of a tiling, Octagons and squares"><span class="img-wrapper"><img src="images/generated/meander-tiles-4.png" alt="A rounded square 30 mm a side sewn as a meander fill without underlay: one line along the sides of a tiling, Octagons and squares"></span></label></td></tr>
+</tbody>
+</table>
+</div>
+<!-- /shot -->
+<!-- shot: meander-tiles-more -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: center">Hexagons and triangles</th><th style="text-align: center">Hexagons, squares and triangles</th><th style="text-align: center">Squares and triangles</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/meander-tiles-more-1.png" alt="A rounded square 30 mm a side sewn as a meander fill without underlay: one line along the sides of a tiling of 2 or 3 kinds of polygon, Hexagons and triangles"><span class="img-wrapper"><img src="images/generated/meander-tiles-more-1.png" alt="A rounded square 30 mm a side sewn as a meander fill without underlay: one line along the sides of a tiling of 2 or 3 kinds of polygon, Hexagons and triangles"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/meander-tiles-more-2.png" alt="A rounded square 30 mm a side sewn as a meander fill without underlay: one line along the sides of a tiling of 2 or 3 kinds of polygon, Hexagons, squares and triangles"><span class="img-wrapper"><img src="images/generated/meander-tiles-more-2.png" alt="A rounded square 30 mm a side sewn as a meander fill without underlay: one line along the sides of a tiling of 2 or 3 kinds of polygon, Hexagons, squares and triangles"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/meander-tiles-more-3.png" alt="A rounded square 30 mm a side sewn as a meander fill without underlay: one line along the sides of a tiling of 2 or 3 kinds of polygon, Squares and triangles"><span class="img-wrapper"><img src="images/generated/meander-tiles-more-3.png" alt="A rounded square 30 mm a side sewn as a meander fill without underlay: one line along the sides of a tiling of 2 or 3 kinds of polygon, Squares and triangles"></span></label></td></tr>
+</tbody>
+</table>
+</div>
+<!-- /shot -->
+<p>Ink/Stitch’s meander tiles are drawings that come with it, which StitchCraft doesn’t have. A fill set to
+one of them, such as <code>N3-11a</code>, Ink/Stitch’s default, wanders through the honeycomb instead, and
+<code>SC-W0316</code> names the tile. Set <code>meander_pattern</code> to one of the tiles above to choose another.</p>
+<h2 id="scale-and-angle"><a class="header" href="#scale-and-angle">Scale and angle</a></h2>
+<p><code>meander_scale_percent</code> scales the tiling: 50 halves its sides to 1 mm, and 200 doubles them. 2
+percentages separated by a space scale it across and down apart. <code>meander_angle</code> turns it, in degrees
+clockwise as the drawing shows it.</p>
+<!-- shot: meander-scale -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: center">50 %</th><th style="text-align: center">200 % across, 100 % down</th><th style="text-align: center">Turned 30°</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/meander-scale-1.png" alt="A rounded square 30 mm a side sewn as a meander fill of hexagons without underlay, the tiling scaled and turned, 50 %"><span class="img-wrapper"><img src="images/generated/meander-scale-1.png" alt="A rounded square 30 mm a side sewn as a meander fill of hexagons without underlay, the tiling scaled and turned, 50 %"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/meander-scale-2.png" alt="A rounded square 30 mm a side sewn as a meander fill of hexagons without underlay, the tiling scaled and turned, 200 % across, 100 % down"><span class="img-wrapper"><img src="images/generated/meander-scale-2.png" alt="A rounded square 30 mm a side sewn as a meander fill of hexagons without underlay, the tiling scaled and turned, 200 % across, 100 % down"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/meander-scale-3.png" alt="A rounded square 30 mm a side sewn as a meander fill of hexagons without underlay, the tiling scaled and turned, Turned 30°"><span class="img-wrapper"><img src="images/generated/meander-scale-3.png" alt="A rounded square 30 mm a side sewn as a meander fill of hexagons without underlay, the tiling scaled and turned, Turned 30°"></span></label></td></tr>
+</tbody>
+</table>
+</div>
+<!-- /shot -->
+<p>A part too small for the tiling, with no ring of its sides inside it, is sewn as a running stitch round
+its outline, and <code>SC-W0317</code> says so. A smaller scale lets the line in.</p>
+<h2 id="the-line-1"><a class="header" href="#the-line-1">The line</a></h2>
+<p>The line starts at the point of the tiling nearest the needle. It ends nearest where the next part, or
+the next element, starts, or else half way round the outline from where it began. It first takes the
+way of fewest sides between the two, then swaps sides, and pairs of sides, picked at random, for longer
+ways round through points it hasn’t passed, until it can swap none. <code>random_seed</code> picks them: another
+seed wanders another way.</p>
+<p><code>smoothness_mm</code> rounds the line’s turns off over about 5 times that length. <code>zigzag_spacing_mm</code> sews it
+as a zigzag across it, from one side to the other every half spacing, <code>zigzag_width_mm</code> wide. Smoothing
+and the zigzag may take the line out of the shape, and <code>clip</code> keeps it inside the shape as drawn.</p>
+<!-- shot: meander-line -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: center">Smoothed by 1 mm</th><th style="text-align: center">Zigzag</th><th style="text-align: center">Zigzag, clipped</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/meander-line-1.png" alt="A rounded square 30 mm a side sewn as a meander fill of squares without underlay, its line sewn another way, Smoothed by 1 mm"><span class="img-wrapper"><img src="images/generated/meander-line-1.png" alt="A rounded square 30 mm a side sewn as a meander fill of squares without underlay, its line sewn another way, Smoothed by 1 mm"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/meander-line-2.png" alt="A rounded square 30 mm a side sewn as a meander fill of squares without underlay, its line sewn another way, Zigzag"><span class="img-wrapper"><img src="images/generated/meander-line-2.png" alt="A rounded square 30 mm a side sewn as a meander fill of squares without underlay, its line sewn another way, Zigzag"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/meander-line-3.png" alt="A rounded square 30 mm a side sewn as a meander fill of squares without underlay, its line sewn another way, Zigzag, clipped"><span class="img-wrapper"><img src="images/generated/meander-line-3.png" alt="A rounded square 30 mm a side sewn as a meander fill of squares without underlay, its line sewn another way, Zigzag, clipped"></span></label></td></tr>
+</tbody>
+</table>
+</div>
+<!-- /shot -->
+<h2 id="stitches-underlay-and-repeats-1"><a class="header" href="#stitches-underlay-and-repeats-1">Stitches, underlay and repeats</a></h2>
+<p>The line sews in stitches as long as <code>running_stitch_length_mm</code>, within <code>running_stitch_tolerance_mm</code>
+of it, as a running stitch sews a stroke. A zigzag sews each of its points, unless clipped. Bean stitch
+and <code>repeats</code> work as they do for a contour fill
+(<a href="#stitches-underlay-and-repeats">contour fill</a>).</p>
+<p>Before its line, each part of the fill sews the tatami fill’s underlay, on by default
+(<a href="#underlay">tatami fill</a>): rows square to the fill’s <code>angle</code>, which turns only the
+underlay here. <code>expand_mm</code> grows the area before the tiling is laid over it.</p>
+<h2 id="parameters-8"><a class="header" href="#parameters-8">Parameters</a></h2>
+<p>The reference gives each setting’s range and default:</p>
+<ul>
+<li><a href="#fill-parameters">fill</a>, which chooses the fill method</li>
+<li><a href="#meander-parameters">meander fill</a>, its tiling with its scale and angle, and its zigzag
+and clipping</li>
+<li><a href="#path-fill-parameters">path fills</a>, its smoothing, repeats and bean stitch</li>
+<li><a href="#tatami-parameters">tatami fill</a>, its underlay and expanding</li>
+<li><a href="#running-parameters">running stitch</a>, its stitch length and tolerance</li>
+<li><a href="#common-parameters">the settings every element shares</a>, the random seed among them</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="automatic-digitizing"><a class="header" href="#automatic-digitizing">Automatic digitizing</a></h1>
@@ -1905,7 +2018,7 @@ work. When the design has a stop position, the frame moves there before each sto
 test sheet TS-02 checks what the reference machine does. DST has no trim command. StitchCraft writes a trim
 there as 3 short jumps that end where they started, and a DST machine set to cut at 3 jumps in a row
 cuts there. The <a href="#machine-formats">machine formats</a> design says how each format records a trim.</p>
-<h2 id="parameters-8"><a class="header" href="#parameters-8">Parameters</a></h2>
+<h2 id="parameters-9"><a class="header" href="#parameters-9">Parameters</a></h2>
 <p><a href="#common-parameters">Common parameters</a> lists each of these settings with its range and
 default.</p>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -1973,7 +2086,7 @@ it plans for, and warns beyond a profile’s comfort zone where the profile has 
 <tr><td><a href="#diagnostic-codes">Diagnostic codes</a></td><td>generated from the diagnostics registry</td><td>available</td></tr>
 <tr><td><a href="#glossary">Glossary</a></td><td>hand-written</td><td>available</td></tr>
 <tr><td><a href="#vectorcraft-compatibility">VectorCraft compatibility</a></td><td>generated from the compatibility gate’s record, <code>compat/supported.toml</code></td><td>available</td></tr>
-<tr><td><a href="#parameters-9">Parameters</a> (one page per stitch type)</td><td>generated from the parameter registry</td><td>available</td></tr>
+<tr><td><a href="#parameters-10">Parameters</a> (one page per stitch type)</td><td>generated from the parameter registry</td><td>available</td></tr>
 <tr><td><a href="#inkstitch-compatibility-contract">Ink/Stitch compatibility contract</a></td><td>generated from <code>conformance/inkstitch-params.toml</code> and the parameter registry</td><td>available</td></tr>
 </tbody>
 </table>
@@ -2501,6 +2614,20 @@ Arguments:
 <li>Does the neck between the 2 squares fill, where the rings part to each side? Does the smoothed leaf’s line run evenly, without kinks?</li>
 <li>How long does the sheet take? A contour fill sews as one line, with no travel between rows.</li>
 </ul>
+<h2 id="ts-11c--new-fills-meander-fills"><a class="header" href="#ts-11c--new-fills-meander-fills">TS-11C — New fills: meander fills</a></h2>
+<p>123.0 × 120.2 mm · 5880 stitches, 11 jumps, 10 trims, 2 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-11c.png" alt="TS-11C as it will sew: 9 meander fills in 3 rows, each a line that wanders along the sides of a tiling over the underlay’s rows. At the top, in green, 3 discs in hexagons, squares and triangles. In the middle, in blue, 3 discs in octagons and squares, hexagons and triangles, and hexagons, squares and triangles. At the bottom, in red, a five-pointed star in squares and triangles, a rectangle in large hexagons sewn as a zigzag, and a leaf in small hexagons, turned. Jump threads join the samples in each row."><span class="img-wrapper"><img src="images/generated/testsheet-ts-11c.png" alt="TS-11C as it will sew: 9 meander fills in 3 rows, each a line that wanders along the sides of a tiling over the underlay’s rows. At the top, in green, 3 discs in hexagons, squares and triangles. In the middle, in blue, 3 discs in octagons and squares, hexagons and triangles, and hexagons, squares and triangles. At the bottom, in red, a five-pointed star in squares and triangles, a rectangle in large hexagons sewn as a zigzag, and a leaf in small hexagons, turned. Jump threads join the samples in each row."></span></label></p>
+<p>Threads: Emerald Green, Blue, Red.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>Each sample is a meander fill: one line that wanders along the sides of a tiling without crossing itself, over the default underlay. Top row, in green, left to right: discs 36 mm across in hexagons, squares and triangles, each side 2 mm long. Middle row, in blue: discs in octagons and squares, hexagons and triangles, and hexagons, squares and triangles. Bottom row, in red: a star 40 mm across in squares and triangles, a rectangle in hexagons twice as large sewn as a zigzag 2.5 mm wide, and a leaf in hexagons half as large, turned by 30° and smoothed by 0.5 mm.</li>
+<li>Does each tiling show in the stitches? Does the line look even, or do bare patches show where it didn’t reach? Which tile looks best, and at which size?</li>
+<li>Does the underlay show between the line’s turns? A meander covers the area lightly: is it too light to hide the fabric, or the underlay?</li>
+<li>On the rectangle, does the zigzag stay inside its outline, and lie flat? Is 2.5 mm too wide?</li>
+<li>On the leaf, does the smoothed line run evenly round its turns, without kinks? Do the 1 mm sides sew cleanly, or do the stitches bunch?</li>
+<li>Does any sample pucker, or the line pull the fabric where it turns?</li>
+</ul>
 <h2 id="ts-13a--pictures-digitized-automatically-neighbours-and-sewing-order"><a class="header" href="#ts-13a--pictures-digitized-automatically-neighbours-and-sewing-order">TS-13A — Pictures digitized automatically: neighbours and sewing order</a></h2>
 <p>126.0 × 168.0 mm · 24396 stitches, 31 jumps, 30 trims, 19 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
@@ -2587,6 +2714,7 @@ Arguments:
 <tr><td><a href="#sc-e0101"><code>SC-E0101</code></a></td><td>Error</td><td>Parameter has the wrong type or an unknown choice</td></tr>
 <tr><td><a href="#sc-w0102"><code>SC-W0102</code></a></td><td>Warning</td><td>Parameter clamped to its allowed range</td></tr>
 <tr><td><a href="#sc-w0105"><code>SC-W0105</code></a></td><td>Warning</td><td>Unknown parameter preserved but ignored</td></tr>
+<tr><td><a href="#sc-i0106"><code>SC-I0106</code></a></td><td>Info</td><td>Value only the node’s other stitch type reads; default used here</td></tr>
 <tr><td><a href="#sc-e0201"><code>SC-E0201</code></a></td><td>Error</td><td>Satin column has no rails</td></tr>
 <tr><td><a href="#sc-w0202"><code>SC-W0202</code></a></td><td>Warning</td><td>Satin rails taken as the two longest subpaths</td></tr>
 <tr><td><a href="#sc-w0203"><code>SC-W0203</code></a></td><td>Warning</td><td>Satin rung does not cross both rails</td></tr>
@@ -2615,6 +2743,8 @@ Arguments:
 <tr><td><a href="#sc-i0313"><code>SC-I0313</code></a></td><td>Info</td><td>Fill drawn twice along its edge; Ink/Stitch fills the part left empty</td></tr>
 <tr><td><a href="#sc-w0314"><code>SC-W0314</code></a></td><td>Warning</td><td>Legacy fill sewn as a tatami fill without underlay</td></tr>
 <tr><td><a href="#sc-i0315"><code>SC-I0315</code></a></td><td>Info</td><td>Contour fill’s part too narrow for its spiral; sewn inner to outer</td></tr>
+<tr><td><a href="#sc-w0316"><code>SC-W0316</code></a></td><td>Warning</td><td>Meander pattern is one of Ink/Stitch’s tiles; sewn with StitchCraft’s default tile</td></tr>
+<tr><td><a href="#sc-w0317"><code>SC-W0317</code></a></td><td>Warning</td><td>Meander fill part too small for its tile; sewn round its outline</td></tr>
 <tr><td><a href="#sc-w0401"><code>SC-W0401</code></a></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td></tr>
 <tr><td><a href="#sc-w0402"><code>SC-W0402</code></a></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised</td></tr>
 <tr><td><a href="#sc-w0403"><code>SC-W0403</code></a></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td></tr>
@@ -2729,6 +2859,14 @@ warning.</p>
 or Ink/Stitch, or one for a stitch type StitchCraft does not support yet. It was kept, so saving
 the design does not lose it, but it does not change the stitches.</p>
 <p>The Ink/Stitch compatibility page says when each Ink/Stitch parameter is supported.</p>
+<h2 id="sc-i0106"><a class="header" href="#sc-i0106">SC-I0106</a></h2>
+<p><strong>Info</strong> — Value only the node’s other stitch type reads; default used here</p>
+<p>An SVG node’s fill and its stroke read the same settings, and some keys mean different things to
+each: a zigzag stroke keeps 2 spacings in <code>zigzag_spacing_mm</code>, where a meander fill reads one. A
+value this element can’t read but the node’s other stitch type can is that one’s, so this element
+sews with its own default, as Ink/Stitch does.</p>
+<p>The message names the key and the value. To give this element a value of its own, set it on a
+node of its own.</p>
 <h2 id="sc-e0201"><a class="header" href="#sc-e0201">SC-E0201</a></h2>
 <p><strong>Error</strong> — Satin column has no rails</p>
 <p>A satin column’s path has no subpath longer than a point, so it has no rails to sew between. The
@@ -2943,6 +3081,18 @@ with one ring for the single spiral or 2 or fewer for the double, is sewn inner 
 round its rings. Ink/Stitch fails on such a part or sews nothing of it, as its version decides.</p>
 <p>The message counts the parts. To sew them in a spiral, widen them to more than 2 row spacings for the
 single spiral, or 4 for the double, or make <code>row_spacing_mm</code> smaller.</p>
+<h2 id="sc-w0316"><a class="header" href="#sc-w0316">SC-W0316</a></h2>
+<p><strong>Warning</strong> — Meander pattern is one of Ink/Stitch’s tiles; sewn with StitchCraft’s default tile</p>
+<p>The meander fill’s pattern names one of Ink/Stitch’s tiles. Those are drawings that ship with
+Ink/Stitch, which StitchCraft doesn’t copy, so the fill wanders through StitchCraft’s default tile,
+the honeycomb, instead.</p>
+<p>Choose one of StitchCraft’s tiles for <code>meander_pattern</code> to remove the warning.</p>
+<h2 id="sc-w0317"><a class="header" href="#sc-w0317">SC-W0317</a></h2>
+<p><strong>Warning</strong> — Meander fill part too small for its tile; sewn round its outline</p>
+<p>A part of a meander fill is too small for any line of its tile, or none of its lines join up, so it
+has nothing to wander through. It is sewn as a running stitch round its outline. Ink/Stitch stops
+the whole fill with an error there.</p>
+<p>The message counts the parts. Make <code>meander_scale_percent</code> smaller to fit the tile into them.</p>
 <h2 id="sc-w0401"><a class="header" href="#sc-w0401">SC-W0401</a></h2>
 <p><strong>Warning</strong> — Path too small for the shortest stitch; skipped</p>
 <p>A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
@@ -3396,7 +3546,7 @@ background; one whose holes can’t be found keeps them open; one that can’t b
 and one whose region can’t be given is sewn as it is drawn. To sew a shape as it is drawn, give it
 settings: in VectorCraft, apply StitchCraft’s Fill, Stroke or Satin effect to it.</p>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from the parameter registry (`stitchcraft-engine/src/registry.rs`) and the deviations ledger. Edit the declaration, not this page. -->
-<h1 id="parameters-9"><a class="header" href="#parameters-9">Parameters</a></h1>
+<h1 id="parameters-10"><a class="header" href="#parameters-10">Parameters</a></h1>
 <p>Every setting a design element can carry, by the key a design stores it under. A parameter that Ink/Stitch
 also has keeps Ink/Stitch’s key, meaning and default, so files move between the two tools unchanged
 (<a href="#inkstitch-compatibility-contract">compatibility contract</a>). Where StitchCraft reads or sews one
@@ -3450,9 +3600,10 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#satin-parameters">Satin parameters</a></td><td>34</td><td>Satin column, E-stitch, S-stitch, Zigzag satin</td></tr>
 <tr><td><a href="#pull-parameters">Pull parameters</a></td><td>2</td><td>Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill</td></tr>
 <tr><td><a href="#fill-parameters">Fill parameters</a></td><td>2</td><td>Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill</td></tr>
-<tr><td><a href="#tatami-parameters">Tatami parameters</a></td><td>15</td><td>Tatami fill, Contour fill</td></tr>
-<tr><td><a href="#contour-parameters">Contour parameters</a></td><td>5</td><td>Contour fill</td></tr>
-<tr><td><a href="#fill-repeat-parameters">Fill repeat parameters</a></td><td>2</td><td>Contour fill</td></tr>
+<tr><td><a href="#tatami-parameters">Tatami parameters</a></td><td>15</td><td>Tatami fill, Contour fill, Meander fill</td></tr>
+<tr><td><a href="#contour-parameters">Contour parameters</a></td><td>4</td><td>Contour fill</td></tr>
+<tr><td><a href="#meander-parameters">Meander parameters</a></td><td>6</td><td>Meander fill</td></tr>
+<tr><td><a href="#path-fill-parameters">Path fill parameters</a></td><td>3</td><td>Contour fill, Meander fill</td></tr>
 <tr><td><a href="#auto-parameters">Auto parameters</a></td><td>5</td><td>automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type</td></tr>
 </tbody>
 </table>
@@ -3472,12 +3623,13 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#auto_overlap_mm"><code>auto_overlap_mm</code></a></td><td>Overlap</td><td>Auto parameters</td></tr>
 <tr><td><a href="#avoid_self_crossing"><code>avoid_self_crossing</code></a></td><td>Avoid self-crossing</td><td>Contour parameters</td></tr>
 <tr><td><a href="#bean_stitch_repeats"><code>bean_stitch_repeats</code></a></td><td>Bean stitch</td><td>Repeat parameters</td></tr>
-<tr><td><a href="#bean_stitch_repeats-1"><code>bean_stitch_repeats</code></a></td><td>Bean stitch</td><td>Fill repeat parameters</td></tr>
+<tr><td><a href="#bean_stitch_repeats-1"><code>bean_stitch_repeats</code></a></td><td>Bean stitch</td><td>Path fill parameters</td></tr>
 <tr><td><a href="#center_walk_underlay"><code>center_walk_underlay</code></a></td><td>Centre walk underlay</td><td>Satin parameters</td></tr>
 <tr><td><a href="#center_walk_underlay_position"><code>center_walk_underlay_position</code></a></td><td>Centre walk position</td><td>Satin parameters</td></tr>
 <tr><td><a href="#center_walk_underlay_repeats"><code>center_walk_underlay_repeats</code></a></td><td>Centre walk repeats</td><td>Satin parameters</td></tr>
 <tr><td><a href="#center_walk_underlay_stitch_length_mm"><code>center_walk_underlay_stitch_length_mm</code></a></td><td>Centre walk stitch length</td><td>Satin parameters</td></tr>
 <tr><td><a href="#center_walk_underlay_stitch_tolerance_mm"><code>center_walk_underlay_stitch_tolerance_mm</code></a></td><td>Centre walk tolerance</td><td>Satin parameters</td></tr>
+<tr><td><a href="#clip"><code>clip</code></a></td><td>Clip to the shape</td><td>Meander parameters</td></tr>
 <tr><td><a href="#clockwise"><code>clockwise</code></a></td><td>Clockwise</td><td>Contour parameters</td></tr>
 <tr><td><a href="#contour_strategy"><code>contour_strategy</code></a></td><td>Strategy</td><td>Contour parameters</td></tr>
 <tr><td><a href="#contour_underlay"><code>contour_underlay</code></a></td><td>Contour underlay</td><td>Satin parameters</td></tr>
@@ -3509,6 +3661,9 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#lock_start_scale_mm"><code>lock_start_scale_mm</code></a></td><td>Start lock size</td><td>Common parameters</td></tr>
 <tr><td><a href="#lock_start_scale_percent"><code>lock_start_scale_percent</code></a></td><td>Start lock scale</td><td>Common parameters</td></tr>
 <tr><td><a href="#max_stitch_length_mm"><code>max_stitch_length_mm</code></a></td><td>Longest stitch</td><td>Common parameters</td></tr>
+<tr><td><a href="#meander_angle"><code>meander_angle</code></a></td><td>Pattern angle</td><td>Meander parameters</td></tr>
+<tr><td><a href="#meander_pattern"><code>meander_pattern</code></a></td><td>Pattern</td><td>Meander parameters</td></tr>
+<tr><td><a href="#meander_scale_percent"><code>meander_scale_percent</code></a></td><td>Pattern scale</td><td>Meander parameters</td></tr>
 <tr><td><a href="#min_jump_stitch_length_mm"><code>min_jump_stitch_length_mm</code></a></td><td>Shortest jump</td><td>Common parameters</td></tr>
 <tr><td><a href="#min_random_split_length_mm"><code>min_random_split_length_mm</code></a></td><td>Shortest split stitch</td><td>Satin parameters</td></tr>
 <tr><td><a href="#min_stitch_length_mm"><code>min_stitch_length_mm</code></a></td><td>Shortest stitch</td><td>Common parameters</td></tr>
@@ -3523,7 +3678,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#random_width_increase_percent"><code>random_width_increase_percent</code></a></td><td>Random width increase</td><td>Satin parameters</td></tr>
 <tr><td><a href="#random_zigzag_spacing_percent"><code>random_zigzag_spacing_percent</code></a></td><td>Random zigzag spacing</td><td>Satin parameters</td></tr>
 <tr><td><a href="#repeats"><code>repeats</code></a></td><td>Repeats</td><td>Repeat parameters</td></tr>
-<tr><td><a href="#repeats-2"><code>repeats</code></a></td><td>Repeats</td><td>Fill repeat parameters</td></tr>
+<tr><td><a href="#repeats-2"><code>repeats</code></a></td><td>Repeats</td><td>Path fill parameters</td></tr>
 <tr><td><a href="#reverse_rails"><code>reverse_rails</code></a></td><td>Reverse rails</td><td>Satin parameters</td></tr>
 <tr><td><a href="#row_spacing_mm"><code>row_spacing_mm</code></a></td><td>Row spacing</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#running_stitch_length_mm"><code>running_stitch_length_mm</code></a></td><td>Stitch length</td><td>Running parameters</td></tr>
@@ -3534,7 +3689,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#short_stitch_distance_mm"><code>short_stitch_distance_mm</code></a></td><td>Short stitch distance</td><td>Satin parameters</td></tr>
 <tr><td><a href="#short_stitch_inset"><code>short_stitch_inset</code></a></td><td>Short stitch inset</td><td>Satin parameters</td></tr>
 <tr><td><a href="#skip_last"><code>skip_last</code></a></td><td>Skip last stitch</td><td>Tatami parameters</td></tr>
-<tr><td><a href="#smoothness_mm"><code>smoothness_mm</code></a></td><td>Smoothness</td><td>Contour parameters</td></tr>
+<tr><td><a href="#smoothness_mm"><code>smoothness_mm</code></a></td><td>Smoothness</td><td>Path fill parameters</td></tr>
 <tr><td><a href="#split_method"><code>split_method</code></a></td><td>Split method</td><td>Satin parameters</td></tr>
 <tr><td><a href="#split_staggers"><code>split_staggers</code></a></td><td>Staggers</td><td>Satin parameters</td></tr>
 <tr><td><a href="#staggers"><code>staggers</code></a></td><td>Staggers</td><td>Tatami parameters</td></tr>
@@ -3550,11 +3705,13 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#zigzag_angle"><code>zigzag_angle</code></a></td><td>Zigzag angle</td><td>Zigzag stroke parameters</td></tr>
 <tr><td><a href="#zigzag_spacing_mm"><code>zigzag_spacing_mm</code></a></td><td>Zigzag spacing</td><td>Zigzag stroke parameters</td></tr>
 <tr><td><a href="#zigzag_spacing_mm-1"><code>zigzag_spacing_mm</code></a></td><td>Zigzag spacing</td><td>Satin parameters</td></tr>
+<tr><td><a href="#zigzag_spacing_mm-2"><code>zigzag_spacing_mm</code></a></td><td>Zigzag spacing</td><td>Meander parameters</td></tr>
 <tr><td><a href="#zigzag_underlay"><code>zigzag_underlay</code></a></td><td>Zigzag underlay</td><td>Satin parameters</td></tr>
 <tr><td><a href="#zigzag_underlay_inset_mm"><code>zigzag_underlay_inset_mm</code></a></td><td>Zigzag underlay inset</td><td>Satin parameters</td></tr>
 <tr><td><a href="#zigzag_underlay_inset_percent"><code>zigzag_underlay_inset_percent</code></a></td><td>Zigzag underlay inset (% of width)</td><td>Satin parameters</td></tr>
 <tr><td><a href="#zigzag_underlay_max_stitch_length_mm"><code>zigzag_underlay_max_stitch_length_mm</code></a></td><td>Zigzag underlay longest stitch</td><td>Satin parameters</td></tr>
 <tr><td><a href="#zigzag_underlay_spacing_mm"><code>zigzag_underlay_spacing_mm</code></a></td><td>Zigzag underlay spacing</td><td>Satin parameters</td></tr>
+<tr><td><a href="#zigzag_width_mm"><code>zigzag_width_mm</code></a></td><td>Zigzag width</td><td>Meander parameters</td></tr>
 </tbody>
 </table>
 </div>
@@ -3719,11 +3876,12 @@ jump. Empty: the document’s setting.</p>
 <h3 id="max_stitch_length_mm"><a class="header" href="#max_stitch_length_mm"><code>max_stitch_length_mm</code></a></h3>
 <p><strong>Longest stitch.</strong> Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as
 its split method says. Empty, a stitch is split only where it is longer than the machine sews. A
-tatami fill sews its rows in stitches this long, and a contour fill its rings.</p>
+tatami fill sews its rows in stitches this long, and a contour fill its rings. A meander fill’s
+underlay sews its rows so.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from 0.1 to 25 mm, or empty (0 or less counts as empty); for fills, a length from 0.1 to 25 mm, empty being the default</li>
 <li><strong>Default:</strong> empty, and <code>4</code> for fills</li>
-<li><strong>Applies to:</strong> Manual stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill</li>
+<li><strong>Applies to:</strong> Manual stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
 <li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column’s deviates so. Ink/Stitch reads a manual stitch’s as not set at 0 or below too, and doesn’t warn.</li>
@@ -3740,12 +3898,13 @@ gets its own.</p>
 <ul>
 <li><strong>Accepts:</strong> a number or any text, or empty to derive it from the element</li>
 <li><strong>Default:</strong> empty</li>
-<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill</li>
+<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
 <li><strong>DEV-RUN-005.</strong> A running stitch’s random lengths are drawn from StitchCraft’s generator (SplitMix64, seeded from random_seed, or from the element’s id when it has none), so the values differ from Ink/Stitch’s for the same seed. They are placed otherwise too. StitchCraft draws a stitch’s length and its span’s phase from 2 numbers, starts a phase only where a span starts, and scales each span’s stitches to end on its corner. Ink/Stitch draws one number for both a stitch’s length and its phase, starts a new phase after each stitch the tolerance shortened as well, and leaves what is left before a corner as the last stitch. Both key each span’s draws by its place in its subpath; StitchCraft’s keys hold the subpath’s place in the path too, where Ink/Stitch’s start again in each subpath, so subpaths drawn alike sew alike there.</li>
 <li><strong>DEV-SAT-002.</strong> Random satin widths, spacing and splits are drawn from StitchCraft’s generator (SplitMix64, seeded from random_seed, or from the element’s id when it has none), so the values differ from Ink/Stitch’s for the same seed. The ranges are Ink/Stitch’s, and so is when a width or a spacing is drawn. Ink/Stitch draws each stitch’s splits from a generator of the stitch’s own, where StitchCraft draws them from the element’s, in the order the stitches are sewn.</li>
 <li><strong>DEV-FILL-004.</strong> A tatami fill’s random stitch lengths are drawn from StitchCraft’s generator (SplitMix64, seeded from random_seed, or from the element’s id when it has none), in the order its row segments are sewn, so the values differ from Ink/Stitch’s for the same seed. The ranges are Ink/Stitch’s: the first point a share of the longest stitch from the segment’s start, and each next one a stitch on, longer or shorter by up to the jitter.</li>
+<li><strong>DEV-FILL-020.</strong> A meander’s path draws its lines and pairs from StitchCraft’s generator (SplitMix64, seeded from random_seed, or from the element’s id when it has none), and its search for a detour tries the points farthest from the detour’s end first, so the path differs from Ink/Stitch’s for the same seed. The network’s points lie where the tile puts them, where Ink/Stitch rounds each to a whole CSS pixel.</li>
 </ul>
 </li>
 </ul>
@@ -3772,11 +3931,11 @@ until then an element set to it is skipped (<code>SC-W0011</code>).</p>
 <p><strong>Stitch length.</strong> How long each stitch is. Between corners the stitches are spread evenly, so each one is at most
 this long. Several lengths separated by spaces sew as a repeating pattern: “2.5 1” sews long,
 short, long, short. The stitches that join a satin column’s underlays are no longer than the
-first length.</p>
+first length, and a meander fill’s path is sewn in stitches of the first length.</p>
 <ul>
 <li><strong>Accepts:</strong> 1 to 16 lengths from 0.1 to 25 mm, separated by spaces</li>
 <li><strong>Default:</strong> <code>2.5</code></li>
-<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill</li>
+<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
 <li><strong>DEV-RUN-003.</strong> No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column’s travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Where a satin column’s parts meet nearer than the shortest stitch, the needle’s way between them gives way to the next part’s first point, and so does an underlay’s last point or the column’s start, which moves there; beside a top stitch’s end, which stays where it is, the next part’s points that near it give way instead. Ink/Stitch’s running stitch has no shortest stitch, and it joins a satin column’s parts as they are; its plan later drops stitches of at most 0.1 mm (its default), keeping the stitch before.</li>
@@ -3791,7 +3950,7 @@ do a contour fill’s rings.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from 0.01 to 5 mm</li>
 <li><strong>Default:</strong> <code>0.2</code></li>
-<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill</li>
+<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill</li>
 <li><strong>Ink/Stitch:</strong> same key; StitchCraft differs:
 <ul>
 <li><strong>DEV-SAT-006.</strong> A satin column’s and a tatami fill’s running_stitch_tolerance_mm defaults to 0.2 mm, the value Ink/Stitch sews when a file sets none. Ink/Stitch’s settings window shows 0.1 mm.</li>
@@ -4270,13 +4429,13 @@ until then an element set to one is skipped (<code>SC-W0011</code>).</p>
 <h1 id="tatami-parameters"><a class="header" href="#tatami-parameters">Tatami parameters</a></h1>
 <p>Tatami fill: rows of running stitches across the fill’s area, the needle points of neighbouring rows
 offset so that they never line up. Ink/Stitch’s default fill. A contour fill takes its row spacing,
-its expand and its underlay from these settings too.</p>
-<p>Applies to Tatami fill, Contour fill.</p>
+its expand and its underlay from these settings too, and a meander fill its expand and its underlay.</p>
+<p>Applies to Tatami fill, Contour fill, Meander fill.</p>
 <h2 id="rows"><a class="header" href="#rows">Rows</a></h2>
 <h3 id="angle-2"><a class="header" href="#angle-2"><code>angle</code></a></h3>
 <p><strong>Angle.</strong> The direction of the rows, in degrees counter-clockwise from horizontal: 0 sews horizontal rows
-and 90 upright ones. A contour fill’s rings follow its outline, and its angle turns only its
-underlay.</p>
+and 90 upright ones. A contour fill’s rings follow its outline, and a meander fill’s path its tile,
+and their angle turns only their underlay.</p>
 <ul>
 <li><strong>Accepts:</strong> an angle in degrees</li>
 <li><strong>Default:</strong> <code>0</code></li>
@@ -4284,7 +4443,8 @@ underlay.</p>
 </ul>
 <h3 id="row_spacing_mm"><a class="header" href="#row_spacing_mm"><code>row_spacing_mm</code></a></h3>
 <p><strong>Row spacing.</strong> How far apart the rows are, measured square to them, or a contour fill’s rings. Rows closer
-together cover the fabric more fully, and pull it in more.</p>
+together cover the fabric more fully, and pull it in more. A meander fill’s underlay rows lie 3
+of them apart.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from 0.1 to 100 mm</li>
 <li><strong>Default:</strong> <code>0.25</code></li>
@@ -4312,7 +4472,7 @@ row is the row spacing from the next.</p>
 </ul>
 <h3 id="expand_mm"><a class="header" href="#expand_mm"><code>expand_mm</code></a></h3>
 <p><strong>Expand.</strong> How far past the drawn edge the top rows reach: each part is grown by this much, with round
-corners, before its rows or rings are laid. The thread’s pull opens gaps between fills sewn side
+corners, before its rows, rings or path are laid. The thread’s pull opens gaps between fills sewn side
 by side, and this closes them. Negative values pull the rows in from the edge.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from -10 to 10 mm</li>
@@ -4344,7 +4504,8 @@ Rounded up to an even number, so the needle comes back to where the stretch ende
 the longest stitch (<code>max_stitch_length_mm</code>) apart, a <code>staggers</code>-th of a stitch along from the
 row before’s, so that neighbouring rows never line them up. A fraction draws diagonals that show
 less than whole numbers do. A negative number staggers the rows the other way, and 0 counts as 1,
-which lines every row’s points up, as in Ink/Stitch. A contour fill staggers its underlay’s rows so.</p>
+which lines every row’s points up, as in Ink/Stitch. A contour or meander fill staggers its
+underlay’s rows so.</p>
 <ul>
 <li><strong>Accepts:</strong> a number from -100 to 100</li>
 <li><strong>Default:</strong> <code>4</code></li>
@@ -4376,9 +4537,9 @@ needle travels along the fill’s outline, where the travel can show along the e
 </ul>
 <h2 id="underlay-1"><a class="header" href="#underlay-1">Underlay</a></h2>
 <h3 id="fill_underlay"><a class="header" href="#fill_underlay"><code>fill_underlay</code></a></h3>
-<p><strong>Underlay.</strong> Sew underlay before the top rows, or a contour fill’s rings: rows of stitches farther apart than
-the top rows, square to them unless set otherwise. It holds the fabric still while the fill is
-sewn and lifts the top rows, so less fabric shows between them.</p>
+<p><strong>Underlay.</strong> Sew underlay before the top rows, a contour fill’s rings or a meander fill’s path: rows of stitches
+farther apart than the top rows, square to them unless set otherwise. It holds the fabric still
+while the fill is sewn and lifts the top rows, so less fabric shows between them.</p>
 <ul>
 <li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
 <li><strong>Default:</strong> <code>true</code></li>
@@ -4486,9 +4647,79 @@ one ring to the next don’t cross. Off, only the middles run the other way.</p>
 <li><strong>Default:</strong> <code>true</code></li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
+<div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from `MeanderParams` in the parameter registry. Edit the declaration, not this page. -->
+<h1 id="meander-parameters"><a class="header" href="#meander-parameters">Meander parameters</a></h1>
+<p>Meander fill: a line that wanders through a network of short lines, the sides of a tiling, without
+passing a point twice, as a quilter’s meander does. It covers the area evenly with one line that
+never crosses itself.</p>
+<p>Applies to Meander fill.</p>
+<h2 id="meander"><a class="header" href="#meander">Meander</a></h2>
+<h3 id="meander_pattern"><a class="header" href="#meander_pattern"><code>meander_pattern</code></a></h3>
+<p><strong>Pattern.</strong> The tiling whose sides the line wanders along: hexagons, squares, triangles, or 2 or 3 kinds of
+polygon. Its sides are 2 mm long at a scale of 100 %. A fill set to one of Ink/Stitch’s tiles,
+which StitchCraft doesn’t have, wanders through the honeycomb (<code>SC-W0316</code>).</p>
+<ul>
+<li><strong>Accepts:</strong> one of <code>honeycomb</code> (Honeycomb), <code>squares</code> (Squares), <code>triangles</code> (Triangles), <code>octagons-squares</code> (Octagons and squares), <code>hexagons-triangles</code> (Hexagons and triangles), <code>hexagons-squares-triangles</code> (Hexagons, squares and triangles), <code>squares-triangles</code> (Squares and triangles), or one of the 75 other values kept for designs that name them, each sewn as another: <code>N3-11a</code>, <code>N3-12</code>, <code>N3-16a</code>, <code>N3-17</code>, <code>N3-18</code>, <code>N3-18-modified</code>, <code>N3-20</code>, <code>N3-23b</code>, <code>N3-25c</code>, <code>N3-26b</code>, <code>N3-27</code>, <code>N3-30a</code>, <code>N3-51b</code>, <code>N3-57f-modified</code>, <code>N3-58b</code>, <code>N3-6</code>, <code>N3-7</code>, <code>N3-8a</code>, <code>N3-8a-modified</code>, <code>N3-8b</code>, <code>N4-13b</code>, <code>N4-13c</code>, <code>N4-13d</code>, <code>N4-13e</code>, <code>N4-13f</code>, <code>N4-16a</code>, <code>N4-19</code>, <code>N4-20</code>, <code>N4-21c</code>, <code>N4-22</code>, <code>N4-23a</code>, <code>N4-23c</code>, <code>N4-27</code>, <code>N4-29e</code>, <code>N4-29f</code>, <code>N4-31</code>, <code>N4-38</code>, <code>N4-42e</code>, <code>N4-44</code>, <code>N4-52</code>, <code>N4-54d</code>, <code>N4-5a</code>, <code>N4-5a-2</code>, <code>N4-82</code>, <code>N4-85d</code>, <code>N5-1e1</code>, <code>N5-1q2</code>, <code>N5-1t</code>, <code>N6-1</code>, <code>N6-2</code>, <code>N6-5b</code>, <code>N6-6a</code>, <code>N6-6c</code>, <code>NC5-11a</code>, <code>NC5-20a</code>, <code>P3-1</code>, <code>P3-12</code>, <code>P4-1</code>, <code>P4-10</code>, <code>P4-15</code>, <code>P4-19</code>, <code>P4-23</code>, <code>P4-24</code>, <code>P4-25</code>, <code>P4-43</code>, <code>P4-43-modified</code>, <code>P4-47</code>, <code>P5-10_11</code>, <code>P5-19</code>, <code>P5-23_24</code>, <code>P5-4</code>, <code>P6-6_11</code>, <code>diamond-square</code>, <code>hexagon</code>, <code>weird-one</code></li>
+<li><strong>Default:</strong> <code>honeycomb</code></li>
+<li><strong>Ink/Stitch:</strong> same key; StitchCraft differs:
+<ul>
+<li><strong>DEV-FILL-018.</strong> StitchCraft’s meander tiles are its own, made in code: 7 of the regular and semiregular tilings of the plane, honeycomb by default. Ink/Stitch’s tiles are pictures it ships, and a meander_pattern that names one of them, such as N3-11a, sews StitchCraft’s default tile, which SC-W0316 says. A meander fill that sets no pattern sews the honeycomb, where Ink/Stitch sews its N3-11a.</li>
+</ul>
+</li>
+</ul>
+<h3 id="meander_angle"><a class="header" href="#meander_angle"><code>meander_angle</code></a></h3>
+<p><strong>Pattern angle.</strong> How far the tiling is turned, in degrees clockwise as the drawing shows it.</p>
+<ul>
+<li><strong>Accepts:</strong> an angle in degrees</li>
+<li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="meander_scale_percent"><a class="header" href="#meander_scale_percent"><code>meander_scale_percent</code></a></h3>
+<p><strong>Pattern scale.</strong> How large the tiling is, in percent: 100 makes its sides 2 mm long. 2 percentages separated by a
+space scale it across and down apart. Each is at least 1.</p>
+<ul>
+<li><strong>Accepts:</strong> a percentage from 1 to 10000, or 2 separated by a space</li>
+<li><strong>Default:</strong> <code>100</code></li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-FILL-019.</strong> A part of a meander fill too small for any line of its tile, or whose lines all have free ends, is sewn as a running stitch round its outline, and SC-W0317 says so. Ink/Stitch stops the whole fill with an error there, and sews nothing of it.</li>
+</ul>
+</li>
+</ul>
+<h3 id="clip"><a class="header" href="#clip"><code>clip</code></a></h3>
+<p><strong>Clip to the shape.</strong> Keep the line inside the shape as drawn, before <code>expand_mm</code> grew it, where smoothing or the zigzag
+would take it out.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
+<li><strong>Default:</strong> <code>false</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="zigzag_spacing_mm-2"><a class="header" href="#zigzag_spacing_mm-2"><code>zigzag_spacing_mm</code></a></h3>
+<p><strong>Zigzag spacing.</strong> Sew the line as a zigzag across it, the needle going this far along the line from one side to the
+other and back. 0 sews it as a running stitch.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0 to 100 mm</li>
+<li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="zigzag_width_mm"><a class="header" href="#zigzag_width_mm"><code>zigzag_width_mm</code></a></h3>
+<p><strong>Zigzag width.</strong> How wide the zigzag is, from one side of the line to the other.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0 to 100 mm</li>
+<li><strong>Default:</strong> <code>3</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from `PathFillParams` in the parameter registry. Edit the declaration, not this page. -->
+<h1 id="path-fill-parameters"><a class="header" href="#path-fill-parameters">Path fill parameters</a></h1>
+<p>A fill sewn as one path, a contour fill’s or a meander fill’s: how the path is smoothed, and its
+repeats and bean stitch, which Ink/Stitch declares for its fills apart from a stroke’s. Bean stitch
+comes first, and each repeat then sews everything sewn so far again, the other way round.</p>
+<p>Applies to Contour fill, Meander fill.</p>
+<h2 id="path"><a class="header" href="#path">Path</a></h2>
 <h3 id="smoothness_mm"><a class="header" href="#smoothness_mm"><code>smoothness_mm</code></a></h3>
-<p><strong>Smoothness.</strong> How much inner to outer’s path is smoothed: its corners are cut round over about 5 times this, and
-it is kept inside the fill. 0 leaves the rings as they are. The spirals are not smoothed.</p>
+<p><strong>Smoothness.</strong> How much the path is smoothed: its corners are cut round over about 5 times this. A contour fill
+sewn inner to outer is then kept inside the fill, and a meander fill with <code>clip</code> on. 0 leaves the
+path as it is. A contour fill’s spirals are not smoothed.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from 0 to 100 mm</li>
 <li><strong>Default:</strong> <code>0</code></li>
@@ -4498,12 +4729,6 @@ it is kept inside the fill. 0 leaves the rings as they are. The spirals are not 
 </ul>
 </li>
 </ul>
-<div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from `FillRepeatParams` in the parameter registry. Edit the declaration, not this page. -->
-<h1 id="fill-repeat-parameters"><a class="header" href="#fill-repeat-parameters">Fill repeat parameters</a></h1>
-<p>Repeats and bean stitch of a fill sewn as one path, which Ink/Stitch declares for its fills apart
-from a stroke’s: bean stitch comes first, and each repeat then sews everything sewn so far again,
-the other way round, as Ink/Stitch repeats a contour fill.</p>
-<p>Applies to Contour fill.</p>
 <h2 id="repeats-2"><a class="header" href="#repeats-2">Repeats</a></h2>
 <h3 id="repeats-1-1"><a class="header" href="#repeats-1-1"><code>repeats</code></a></h3>
 <p><strong>Repeats.</strong> How often to sew the fill’s path. Each repeat after the first sews everything sewn so far again,
@@ -5340,7 +5565,7 @@ every ring. Parts of 3 square CSS pixels (0.21 mm²) or less are left out, with 
 <p>A centre line is made into a <code>Satin</code> of its own, its rails offset from the line by the stroke’s width and
 join (<code>stitchcraft_engine::normalize::centre_line</code>, since M4.9). How rails and rungs are recognised from
 a host path, and made from a centre line, is part of the <a href="#satin-generators">satin design</a>.</p>
-<h2 id="parameters-10"><a class="header" href="#parameters-10">Parameters</a></h2>
+<h2 id="parameters-11"><a class="header" href="#parameters-11">Parameters</a></h2>
 <p><code>ParamSet</code> maps registry keys to typed values; generators receive <em>typed views</em>
 (<code>TatamiParams { row_spacing: Mm, angle: Deg, … }</code>) produced by the registry. See
 <a href="#parameter-registry">parameter registry</a>.</p>
@@ -5712,8 +5937,9 @@ origin. The reference pages show a ledger entry that names the key with each dec
 StitchCraft’s own, even for a family Ink/Stitch does not give it, because that family would read a
 value written for Ink/Stitch’s meaning. A node’s fill may also read a value that only its stroke’s
 declaration can read, such as a zigzag stroke’s 2 spacings read by a meander fill. Ink/Stitch sews that
-fill with its default, and StitchCraft would refuse it (<code>DEV-PRM-001</code>). The meander fill’s step (M7.8)
-chooses between the two.</p>
+fill with its default, and so does StitchCraft, since M7.8: the value is the other declaration’s, and
+<code>SC-I0106</code> says the element left it (<code>REQ-PRM-006</code>). A value no declaration of the key can read is
+refused (<code>DEV-PRM-001</code>).</p>
 </li>
 </ol>
 <h2 id="generated-outputs"><a class="header" href="#generated-outputs">Generated outputs</a></h2>
@@ -5723,7 +5949,7 @@ chooses between the two.</p>
 <tr><th style="text-align: left">Output</th><th style="text-align: left">Generated by</th><th style="text-align: left">Checked by</th><th style="text-align: left">Since</th></tr>
 </thead>
 <tbody>
-<tr><td style="text-align: left">The reference pages, the <a href="#parameters-9">index</a> and one page per declaration (<code>docs/src/user/reference/params/*.md</code>), with the deviations ledger’s entries</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left"><code>cargo xtask docs --check</code>, which fails on a stale page and on a page left from a declaration since removed (<code>cargo xtask docs</code> deletes those)</td><td style="text-align: left">M3.1</td></tr>
+<tr><td style="text-align: left">The reference pages, the <a href="#parameters-10">index</a> and one page per declaration (<code>docs/src/user/reference/params/*.md</code>), with the deviations ledger’s entries</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left"><code>cargo xtask docs --check</code>, which fails on a stale page and on a page left from a declaration since removed (<code>cargo xtask docs</code> deletes those)</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left"><code>docs/src/user/reference/params.schema.json</code>: the parameters as JSON values (numbers, booleans, strings, arrays, <code>null</code> for empty), for editors, presets and JSON hosts</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left">same</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left">The <em>StitchCraft</em> column of the <a href="#inkstitch-compatibility-contract">Ink/Stitch compatibility contract</a></td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left">same, plus the cross-checks above</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left">VectorCraft manifests, one for each stitch family’s module, with each parameter’s label, unit, section, help, help page and the values that show it</td><td style="text-align: left">at runtime from the registry, when VectorCraft asks a module for its manifest (<code>stitchcraft-vc-plugin</code>’s <code>manifest</code> and <code>dialog</code>)</td><td style="text-align: left">plug-in tests validate them against VectorCraft’s manifest rules, <code>cargo xtask docs --check</code> finds each help page, the contract tests install them in VectorCraft’s host, and the window probe checks the dialogs’ rows</td><td style="text-align: left">M6.2, and the dialogs M6.10</td></tr>
@@ -5852,6 +6078,7 @@ another.</p>
 <tr><td><code>SC-E0101</code></td><td>Error</td><td>Parameter has the wrong type or an unknown choice</td><td>M3</td></tr>
 <tr><td><code>SC-W0102</code></td><td>Warning</td><td>Parameter clamped to its allowed range</td><td>M3</td></tr>
 <tr><td><code>SC-W0105</code></td><td>Warning</td><td>Unknown parameter preserved but ignored</td><td>M3</td></tr>
+<tr><td><code>SC-I0106</code></td><td>Info</td><td>Value only the node’s other stitch type reads; default used here (as in Ink/Stitch)</td><td>M7</td></tr>
 <tr><td><code>SC-E0201</code></td><td>Error</td><td>Satin column has no rails (no subpath longer than a point)</td><td>M4</td></tr>
 <tr><td><code>SC-W0202</code></td><td>Warning</td><td>Satin rails taken as the two longest subpaths (where the subpaths meet does not say)</td><td>M4</td></tr>
 <tr><td><code>SC-W0203</code></td><td>Warning</td><td>Satin rung does not cross both rails (dangling rung); the rail’s nearest point is used</td><td>M4</td></tr>
@@ -5880,6 +6107,8 @@ another.</p>
 <tr><td><code>SC-I0313</code></td><td>Info</td><td>Fill drawn twice along its edge; Ink/Stitch fills the part left empty (its repair merges the stretch)</td><td>M5</td></tr>
 <tr><td><code>SC-W0314</code></td><td>Warning</td><td>Legacy fill sewn as a tatami fill without underlay (Ink/Stitch’s legacy fill is not built)</td><td>M7</td></tr>
 <tr><td><code>SC-I0315</code></td><td>Info</td><td>Contour fill’s part too narrow for its spiral; sewn inner to outer (Ink/Stitch fails or sews nothing)</td><td>M7</td></tr>
+<tr><td><code>SC-W0316</code></td><td>Warning</td><td>Meander pattern is one of Ink/Stitch’s tiles; sewn with StitchCraft’s default tile</td><td>M7</td></tr>
+<tr><td><code>SC-W0317</code></td><td>Warning</td><td>Meander fill part too small for its tile; sewn round its outline (Ink/Stitch stops with an error)</td><td>M7</td></tr>
 <tr><td><code>SC-W0401</code></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td><td>M3</td></tr>
 <tr><td><code>SC-W0402</code></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest</td><td>M3</td></tr>
 <tr><td><code>SC-W0403</code></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td><td>M3</td></tr>
@@ -6260,8 +6489,10 @@ them from a column’s centre line (<a href="#single-path-satin">single-path sat
 <ul>
 <li>Parameters are read by the registry as the element’s stitch type reads them. Blank text takes the
 default, and a setting the stitch type does not use, or that its other settings hide, is kept unread
-(<a href="#the-parameters-an-element-reads-req-prm-004">parameters</a>). The rest are checked for type and range,
-and the generator receives a typed struct or nothing.</li>
+(<a href="#the-parameters-an-element-reads-req-prm-004">parameters</a>). A value that only the node’s
+other stitch type can read, such as a zigzag stroke’s 2 spacings under a meander fill, is left to it:
+the element takes the default, and <code>SC-I0106</code> says so (<code>REQ-PRM-006</code>). The rest are checked for type
+and range, and the generator receives a typed struct or nothing.</li>
 <li>Shapes are checked against the stitch type. A satin needs a subpath longer than a point (<code>SC-E0201</code>),
 a fill needs a non-empty region, and a running stitch needs a path longer than the minimum stitch
 length.</li>
@@ -6293,7 +6524,9 @@ not build that method (<code>REQ-FILL-005</code>). Nor does it take pull compens
 gap-filling rows, which Ink/Stitch’s legacy fill has no use for. A contour fill, sewn from M7.7, lays its
 rings with the tatami fill’s row spacing and sews them as one running stitch after the tatami fill’s
 underlay, reading the running stitch’s tolerance and random lengths for its path
-(<a href="#contour-fill-1">fills</a>). The other stroke, satin and fill methods are skipped with
+(<a href="#contour-fill-1">fills</a>). A meander fill, sewn from M7.8, lays a tile over each part
+and sews one path through it after the same underlay (<a href="#meander-fill-1">fills</a>). The
+other stroke, satin and fill methods are skipped with
 <code>SC-W0011</code> until their milestones. An element whose parameters are wrong (<code>SC-E0101</code>) is skipped too, and
 the rest of the design still plans.</p>
 <p>Each element is generated with the shortest stitch for it: the larger of the machine’s (the profile’s
@@ -6304,7 +6537,8 @@ or a fill’s longest, is raised to it with <code>SC-W0402</code>: shorter, the 
 <p>A preview that cannot afford a fill’s stitches shows its top rows (<code>stitchcraft_engine::generate::rows</code>,
 from M6.3). The fill’s settings are read as for sewing it, and what they say is said the same, but only
 the region is built and the rows laid over it: no needle point is placed and no route is searched. A
-contour fill has no rows, and shows its path round its rings, from M7.7.</p>
+contour fill has no rows, and shows its path round its rings, from M7.7. Nor has a meander fill, which
+shows its path through its tile as the element’s seed lays it, from M7.8.</p>
 <p>Rules every generator follows:</p>
 <ul>
 <li><strong>Pure:</strong> output depends only on (normalized shape, typed params, neighbours, seed, budget).</li>
@@ -6661,8 +6895,8 @@ treatment on every pass.</li>
 <li>A zigzag’s turnaround takes no step of the list, as in Ink/Stitch (<a href="#zigzag-stroke-p2-m7">zigzag stroke</a>).</li>
 <li>Repeats apply to running, ripple and zigzag strokes; bean stitch to those and to manual stitch (the
 <a href="#inkstitch-compatibility-contract">compatibility contract</a> lists each parameter’s stitch types).</li>
-<li>A contour fill has repeats and bean stitch of its own, which Ink/Stitch declares for its fills apart
-from a stroke’s. Bean stitch comes first, and each repeat then sews everything sewn so far again, the
+<li>The fills sewn as one path, a contour fill and a meander fill, have repeats and bean stitch of their
+own, which Ink/Stitch declares for its fills apart from a stroke’s. Bean stitch comes first, and each repeat then sews everything sewn so far again, the
 other way round, so <code>k</code> repeats sew 2^(k−1) passes (<a href="#stitches-1">fills</a>).</li>
 </ul>
 <h3 id="random-length"><a class="header" href="#random-length">Random length</a></h3>
@@ -7528,7 +7762,7 @@ against every other, and its winding against every segment of the ring. A line o
 to about 17 million units of work for each offset.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="fill-generators"><a class="header" href="#fill-generators">Fill generators</a></h1>
-<!-- implements: crates/stitchcraft-engine/src/normalize/region/**, crates/stitchcraft-engine/src/normalize/simplify.rs, crates/stitchcraft-engine/src/generators/tatami/**, crates/stitchcraft-engine/src/generators/contour/**, crates/stitchcraft-engine/src/generators/smoothing.rs, crates/stitchcraft-engine/src/generators/pull.rs -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/region/**, crates/stitchcraft-engine/src/normalize/simplify.rs, crates/stitchcraft-engine/src/generators/tatami/**, crates/stitchcraft-engine/src/generators/contour/**, crates/stitchcraft-engine/src/generators/meander/**, crates/stitchcraft-engine/src/generators/smoothing.rs, crates/stitchcraft-engine/src/generators/pull.rs -->
 <p>A fill covers the area its path bounds, its <a href="#region-1">region</a>, with rows of stitches. Tatami is P1 (M5);
 contour, meander and circular are P2 (M7); guided, linear gradient, tartan and cross stitch are P3 (M10).
 Ink/Stitch’s legacy fill is not planned, and is sewn as a tatami fill (<a href="#legacy-fill-not-planned">below</a>).</p>
@@ -8025,25 +8259,106 @@ fill ends where its strategy ends.</p>
 </table>
 </div>
 <p>Like every test sheet’s, TS-11B’s fills sew the same mirrored, turned half round, or drawn again the other way round or from another point.</p>
-<h2 id="meander-fill"><a class="header" href="#meander-fill">Meander fill</a></h2>
-<p>A path that wanders through a pattern (P2, M7.8), as Ink/Stitch sews its meander fill (read at
-<code>6555892</code>). A tile’s lines are repeated over each part of the region, scaled by <code>meander_scale_percent</code>
-and turned by <code>meander_angle</code>. The lines that lie wholly inside the part make a graph of their ends.
-Lines with a free end, one that meets no other line, are taken away, again and again, until none is
-left, and the graph’s pieces are joined where they lie nearest. The
-path starts at the graph’s point nearest the fill’s start and ends at the one nearest the next element,
-or else nearest the point of the outline across from the start. It begins as the shortest way between
-the 2. Then, in an order the random seed sets, each of its steps is replaced by a detour of up to 7 steps
-through points the path has not passed, and each 2 steps in a row by one of up to 10, until no detour is
-found. The path never passes a point twice. It is smoothed by <code>smoothness_mm</code> and sewn as a running
-stitch of <code>running_stitch_length_mm</code>, or, where <code>zigzag_spacing_mm</code> is above 0, as a zigzag
-<code>zigzag_width_mm</code> wide. <code>clip</code> keeps it inside the part. Bean stitch and repeats follow, and the repeats
-double the stitching each time, as the contour fill’s do. Its random numbers are StitchCraft’s own, as for
-a tatami fill’s random lengths (<code>DEV-FILL-004</code>), and the path differs from Ink/Stitch’s for the same
-seed.</p>
-<p>Tiles are StitchCraft’s own, <strong>generated in code</strong> (Hilbert, Peano, Truchet-style arcs, waves, pebbles…),
-never copied from other projects. <code>meander_pattern</code> takes our tile ids, and Ink/Stitch’s tile names map
-to the closest of ours as a recorded deviation.</p>
+<h2 id="meander-fill-1"><a class="header" href="#meander-fill-1">Meander fill</a></h2>
+<p>A line that wanders through a network of short lines without passing a point twice, as a quilter’s
+meander does (P2, M7.8), as Ink/Stitch sews its meander fill (read at <code>d59c9ab</code>). Each part of the region
+is sewn on its own, after the tatami fill’s underlay (<a href="#6-underlay">section 6</a>), grown by <code>expand_mm</code>, as
+a contour fill’s is (<a href="#start-end-and-underlay">start, end and underlay</a>).</p>
+<h3 id="tiles-1"><a class="header" href="#tiles-1">Tiles</a></h3>
+<p>A tile is a network that repeats. It is given by a cell and the 2 steps that repeat it, with the lines of
+one cell, each from a point of the cell to a point of the cell or of a cell beside it. StitchCraft’s tiles
+are its own, made in code: 7 of the 11 regular and semiregular tilings of the plane by polygons. A
+tiling’s sides are its lines, each 2 mm long at a <code>meander_scale_percent</code> of 100 %.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Tile (<code>meander_pattern</code>)</th><th>Polygons round each point</th><th>Lines that meet</th></tr>
+</thead>
+<tbody>
+<tr><td><code>honeycomb</code>, the default</td><td>3 hexagons</td><td>3</td></tr>
+<tr><td><code>squares</code></td><td>4 squares</td><td>4</td></tr>
+<tr><td><code>triangles</code></td><td>6 triangles</td><td>6</td></tr>
+<tr><td><code>octagons-squares</code></td><td>2 octagons and a square</td><td>3</td></tr>
+<tr><td><code>hexagons-triangles</code></td><td>a triangle, a hexagon, a triangle and a hexagon</td><td>4</td></tr>
+<tr><td><code>hexagons-squares-triangles</code></td><td>a triangle, a square, a hexagon and a square</td><td>4</td></tr>
+<tr><td><code>squares-triangles</code></td><td>3 triangles and 2 squares</td><td>5</td></tr>
+</tbody>
+</table>
+</div>
+<p>The 2 tilings with dodecagons are left out. Every way round a dodecagon is 11 lines, more than the 7 of a
+detour (<a href="#the-path">the path</a>). Over a square 100 mm a side, the path left out 91 % of the network of
+dodecagons and triangles. It left out 32 % of the network that adds hexagons and squares to dodecagons.
+The 2 snub tilings are not made yet.</p>
+<p>Ink/Stitch’s tiles are pictures in its repository, which StitchCraft does not copy. A meander fill set to
+one of their ids, such as its default <code>N3-11a</code>, sews StitchCraft’s default tile, and <code>SC-W0316</code> names the
+tile it stood for (<code>DEV-FILL-018</code>).</p>
+<h3 id="the-network"><a class="header" href="#the-network">The network</a></h3>
+<p>The tile is scaled by <code>meander_scale_percent</code>, one percentage or 2 for across and down, each at least
+1 %. It is turned by <code>meander_angle</code> clockwise as the drawing shows it, and repeated so that a point of it
+lies at the middle of the part’s bounds. Each line that lies wholly inside the part, touching its outline
+at most, joins its 2 ends. A line with a free end, one no other line meets, is taken away, and then again,
+until every point meets 2 lines or more. Where the lines left fall into pieces, the pieces are joined by
+the shortest straight lines between their points that join them all, as few as join them (a minimum
+spanning tree of the pieces, measured between their nearest points).</p>
+<p>A part too small for any line, or whose lines all have free ends, has no network. It is sewn as a running
+stitch round its outline, as a tatami fill’s part too thin for rows is, and <code>SC-W0317</code> says so
+(<code>DEV-FILL-019</code>). Ink/Stitch stops the whole fill with an error there.</p>
+<h3 id="the-path"><a class="header" href="#the-path">The path</a></h3>
+<p>The path runs from the point of the network nearest the needle, or else the outline’s first point, to
+the point nearest where it is to end. That is the point of the part nearest the next part, or for the
+last part the next element’s offer, or else the point of the outline half way round it from the start.
+Where the 2 are one point, it ends at the point next nearest.</p>
+<ol>
+<li>It begins as the path of fewest lines between them.</li>
+<li>Its lines are kept in a list and drawn from it at random, the seed’s draw choosing a place in the list
+(its last line moved to the place of the one drawn). Where the network allows, each line drawn is
+replaced by the first detour of 2 to 7 lines that a search finds through points the path has not
+passed. The detour’s lines go into the list.</li>
+<li>When the list is empty, the pairs of lines one after the other along the path are drawn from at random
+in the same way, and a pair is replaced by a detour of 3 to 10 lines that leaves out the point between
+them. The first pair replaced puts its detour’s lines in the list, and step 2 goes on.</li>
+<li>The path is done when no pair can be replaced.</li>
+</ol>
+<p>The search for a detour goes depth first from the detour’s first point, trying the points farthest from
+its last point first, and takes the first detour it finds. That is the long way round where there is one,
+which reaches into the points not passed. Taken the short way first, the detour of a line of a triangle
+passes the triangle’s third point, and a path of such detours hems itself in. Over a square 100 mm a
+side, the path through the tiling of hexagons and triangles passed 69 % of its points that way and 94 %
+with the long way first, for a third of the search’s work. Ink/Stitch’s search tries the points as its
+graph stores them, and its random numbers differ from StitchCraft’s. The 2 programs’ paths differ for
+one seed (<code>DEV-FILL-020</code>).</p>
+<h3 id="stitches-1-1"><a class="header" href="#stitches-1-1">Stitches</a></h3>
+<p>The path is smoothed by <code>smoothness_mm</code> as inner to outer’s is (<a href="#inner-to-outer">smoothing</a>). With
+<code>zigzag_spacing_mm</code> above 0, it is cut into points half the spacing apart. Each point but the last is
+moved half <code>zigzag_width_mm</code> across the path. The first goes to the right of the way to the next point as
+the drawing shows it, and the next to the left, one side and then the other. With <code>clip</code> on, the path is kept inside the part as
+drawn, before it was grown by <code>expand_mm</code>, as a tatami fill’s travel is
+(<a href="#4-travel-under-the-rows">section 4</a>). The path, unless it zigzags and is not clipped, is sewn as a
+running stitch of <code>running_stitch_length_mm</code> within <code>running_stitch_tolerance_mm</code>. Bean stitch comes
+next, then the repeats, which double the stitching each time, as the contour fill’s do.</p>
+<p>A node’s fill and stroke read the same settings, and a zigzag stroke keeps 2 spacings in
+<code>zigzag_spacing_mm</code>, which a meander fill cannot read as its one. The fill sews without a zigzag, as
+Ink/Stitch’s does, and <code>SC-I0106</code> says that it left the value to the stroke (<code>REQ-PRM-006</code>).</p>
+<h3 id="test-sheet"><a class="header" href="#test-sheet">Test sheet</a></h3>
+<p>TS-11C, the meander fills’ test sheet, sews 6 tiles on discs and the seventh on a star, with a zigzag
+kept inside a rectangle and a leaf whose tile is turned and whose path is smoothed. Its tiles are
+StitchCraft’s own, so Ink/Stitch can’t sew it to compare.</p>
+<h3 id="properties-conformance-2-1"><a class="header" href="#properties-conformance-2-1">Properties (conformance)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Requirement</th><th>Property</th></tr>
+</thead>
+<tbody>
+<tr><td><code>REQ-FILL-MEA-001</code></td><td>Each tile’s points meet as many lines as its tiling has polygons round them, every line a side long; the lines sew 2 mm long at 100 %, scaled across and down apart and turned as set, with a point at the middle of the part</td></tr>
+<tr><td><code>REQ-FILL-MEA-002</code></td><td>Each line of the network lies inside the part and out of its holes, and each of its points meets 2 lines or more; pieces apart are joined by their nearest points; a part with no network is sewn round its outline, with <code>SC-W0317</code></td></tr>
+<tr><td><code>REQ-FILL-MEA-003</code></td><td>The path passes no point twice. It runs from the point nearest the start to the point nearest the end, with no line or pair left that a detour could replace, as the seed draws it</td></tr>
+<tr><td><code>REQ-FILL-MEA-004</code></td><td>A zigzag sews 2 points to each millimetre of the path, and clipped stays inside the part; <code>k</code> repeats sew 2^(k−1) passes and bean stitch sews each stitch 3 times; a smoothed path turns less sharply</td></tr>
+<tr><td><code>REQ-FILL-MEA-005</code></td><td>The underlay’s rows come first and the path goes on from them, with no jump; each part ends near the next; one of Ink/Stitch’s tiles sews the honeycomb, with <code>SC-W0316</code></td></tr>
+<tr><td><code>REQ-PRM-006</code></td><td>A meander fill or a satin column given a zigzag stroke’s 2 spacings sews with its own default, with <code>SC-I0106</code></td></tr>
+</tbody>
+</table>
+</div>
 <h2 id="circular-fill"><a class="header" href="#circular-fill">Circular fill</a></h2>
 <p>A double spiral round a centre (P2, M7.9), as Ink/Stitch sews its circular fill (read at <code>6555892</code>): the
 point of a <code>target_point</code> command, or else the centre of each part’s area. Circles round it lie
@@ -10120,10 +10435,11 @@ gives, and the PES file is the same. VectorCraft 0.15 keeps the records, but wit
 looks to a filter as 0.14 does, which would drop them. Only the <code>documentData</code> every filter gets from
 0.16 tells them apart, so before 0.16 the filter declines with <code>SC-E0813</code>. It declines with <code>SC-E0817</code>
 where parts of the sheet would lie more than 10 m from the document’s origin, farther than StitchCraft
-stitches (<code>Design::new</code>). The sheets drawn stitch by stitch are plans, which no object holds. The TS-13
-sheets are designs whose shapes StitchCraft digitizes automatically (<code>TestSheet::digitized</code>): each such
-shape has the Auto effect’s record (M13.7, <code>REQ-VC-016</code>), and StitchCraft Auto must be installed for
-VectorCraft to keep it.</p>
+stitches (<code>Design::new</code>). The sheets drawn stitch by stitch are plans, which no object holds. TS-11C’s
+meander fills wander as their elements’ ids draw, and the objects drawn would have ids of their own, so
+the filter doesn’t draw it either (<code>TestSheet::drawable</code>). The TS-13 sheets are designs whose shapes
+StitchCraft digitizes automatically (<code>TestSheet::digitized</code>): each such shape has the Auto effect’s
+record (M13.7, <code>REQ-VC-016</code>), and StitchCraft Auto must be installed for VectorCraft to keep it.</p>
 <p>The contract test <code>req_vc_015_each_test_sheet_draws_into_a_document_that_exports_within_vectorcraft_s_limits</code>
 draws each sheet into a new document in VectorCraft 0.17.0’s and 0.18.0’s hosts alike, and exports it with
 the PES exporter (2026-10-29). Drawing takes 14 to 25 million instructions, at most half of a light filter’s run.
@@ -11623,7 +11939,7 @@ a parameter declared with an Ink/Stitch origin must be listed here with a compat
 default must be the value Ink/Stitch sews.</li>
 <li><strong>Default</strong> is the value Ink/Stitch’s settings window shows. For a few parameters its code sews another
 value when a file sets none, and the cell gives that value after the default, as in <code>0.1 (0.2 when unset)</code>. <code>—</code> means no default: the value is derived from another parameter or the shape.</li>
-<li><strong>StitchCraft</strong> says whether the <a href="#parameters-9">parameter registry</a> declares the
+<li><strong>StitchCraft</strong> says whether the <a href="#parameters-10">parameter registry</a> declares the
 parameter. <em>planned</em>: not yet; a design that sets it keeps it unchanged and gets <code>SC-W0105</code>. <em>not
 planned</em>: never, and a design that sets it gets the same.
 <em>registered</em>: StitchCraft reads and checks it under the same key, meaning and default; it changes the
@@ -11766,18 +12082,18 @@ planned.</li>
 <tr><td><code>join_style</code></td><td>dropdown</td><td>—</td><td>0</td><td><code>contour_fill</code></td><td>P2 (M7)</td><td><a href="#join_style">registered</a></td></tr>
 <tr><td><code>avoid_self_crossing</code></td><td>boolean</td><td>—</td><td>false</td><td><code>contour_fill</code></td><td>P2 (M7)</td><td><a href="#avoid_self_crossing">registered</a></td></tr>
 <tr><td><code>clockwise</code></td><td>boolean</td><td>—</td><td>true</td><td><code>contour_fill</code></td><td>P2 (M7)</td><td><a href="#clockwise">registered</a></td></tr>
-<tr><td><code>meander_pattern</code></td><td>combo</td><td>—</td><td>0</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td>planned</td></tr>
-<tr><td><code>meander_angle</code></td><td>float</td><td>degrees</td><td>0</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td>planned</td></tr>
-<tr><td><code>meander_scale_percent</code></td><td>float</td><td>%</td><td>100</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td>planned</td></tr>
-<tr><td><code>clip</code></td><td>boolean</td><td>—</td><td>false</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td>planned</td></tr>
+<tr><td><code>meander_pattern</code></td><td>combo</td><td>—</td><td>0</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td><a href="#meander_pattern">deviates</a></td></tr>
+<tr><td><code>meander_angle</code></td><td>float</td><td>degrees</td><td>0</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td><a href="#meander_angle">registered</a></td></tr>
+<tr><td><code>meander_scale_percent</code></td><td>float</td><td>%</td><td>100</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td><a href="#meander_scale_percent">registered</a></td></tr>
+<tr><td><code>clip</code></td><td>boolean</td><td>—</td><td>false</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td><a href="#clip">registered</a></td></tr>
 <tr><td><code>smoothness_mm</code></td><td>float</td><td>mm</td><td>0</td><td><code>contour_fill</code>, <code>guided_fill</code>, <code>meander_fill</code></td><td>P2 (M7)</td><td><a href="#smoothness_mm">registered</a></td></tr>
 <tr><td><code>expand_mm</code></td><td>float</td><td>mm</td><td>0</td><td>all</td><td>P1 (M5)</td><td><a href="#expand_mm">registered</a></td></tr>
 <tr><td><code>gap_fill_rows</code></td><td>int</td><td>rows</td><td>0</td><td><code>tatami_fill</code></td><td>P1 (M5)</td><td><a href="#gap_fill_rows">registered</a></td></tr>
 <tr><td><code>angle</code></td><td>float</td><td>deg</td><td>0</td><td><code>tatami_fill</code>, <code>legacy_fill</code>; read by <code>circular_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>meander_fill</code>, <code>tartan_fill</code></td><td>P1 (M5)</td><td><a href="#angle-2">registered</a></td></tr>
 <tr><td><code>guided_fill_angle</code></td><td>float</td><td>deg</td><td>—</td><td><code>guided_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>tartan_angle</code></td><td>float</td><td>deg</td><td>-45</td><td><code>tartan_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>max_stitch_length_mm</code></td><td>float</td><td>mm</td><td>4.0</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="#max_stitch_length_mm">registered</a></td></tr>
-<tr><td><code>row_spacing_mm</code></td><td>float</td><td>mm</td><td>0.25</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="#row_spacing_mm">registered</a></td></tr>
+<tr><td><code>max_stitch_length_mm</code></td><td>float</td><td>mm</td><td>4.0</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code>; read by <code>circular_fill</code>, <code>meander_fill</code></td><td>P1 (M5)</td><td><a href="#max_stitch_length_mm">registered</a></td></tr>
+<tr><td><code>row_spacing_mm</code></td><td>float</td><td>mm</td><td>0.25</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code>; read by <code>meander_fill</code></td><td>P1 (M5)</td><td><a href="#row_spacing_mm">registered</a></td></tr>
 <tr><td><code>end_row_spacing_mm</code></td><td>float</td><td>mm</td><td>—</td><td><code>tatami_fill</code>, <code>circular_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="#end_row_spacing_mm">deviates</a></td></tr>
 <tr><td><code>stitch_position_method</code></td><td>combo</td><td>—</td><td>0</td><td><code>guided_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>staggers</code></td><td>int</td><td>—</td><td>4</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code>; read by <code>circular_fill</code>, <code>contour_fill</code>, <code>meander_fill</code></td><td>P1 (M5)</td><td><a href="#staggers">registered</a></td></tr>
@@ -11792,8 +12108,8 @@ planned.</li>
 <tr><td><code>random_stitch_length_jitter_percent</code></td><td>float</td><td>± %</td><td>10</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code></td><td>P1 (M5)</td><td><a href="#random_stitch_length_jitter_percent">registered</a></td></tr>
 <tr><td><code>repeats</code></td><td>int</td><td>—</td><td>1</td><td><code>meander_fill</code>, <code>contour_fill</code>, <code>circular_fill</code></td><td>P2 (M7)</td><td><a href="#repeats-2">registered</a></td></tr>
 <tr><td><code>bean_stitch_repeats</code></td><td>str</td><td>—</td><td>0</td><td><code>meander_fill</code>, <code>circular_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>tartan_fill</code></td><td>P2 (M7)</td><td><a href="#bean_stitch_repeats-1">registered</a></td></tr>
-<tr><td><code>zigzag_spacing_mm</code></td><td>float</td><td>mm</td><td>0</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td>planned</td></tr>
-<tr><td><code>zigzag_width_mm</code></td><td>float</td><td>mm</td><td>3</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td>planned</td></tr>
+<tr><td><code>zigzag_spacing_mm</code></td><td>float</td><td>mm</td><td>0</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td><a href="#zigzag_spacing_mm-2">registered</a></td></tr>
+<tr><td><code>zigzag_width_mm</code></td><td>float</td><td>mm</td><td>3</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td><a href="#zigzag_width_mm">registered</a></td></tr>
 <tr><td><code>rows_per_thread</code></td><td>int</td><td>—</td><td>2</td><td><code>tartan_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>herringbone_width_mm</code></td><td>int</td><td>mm</td><td>0</td><td><code>tartan_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>pull_compensation_mm</code></td><td>float</td><td>mm (each side)</td><td>0</td><td><code>tatami_fill</code></td><td>P1 (M5)</td><td><a href="#pull_compensation_mm">registered</a></td></tr>
@@ -11862,6 +12178,8 @@ value of phase <code>—</code> is not planned as a method of its own, and the d
 </div>
 <p>Lock stitch identifiers (<code>lock_start</code>, <code>lock_end</code>): <code>half_stitch</code>, <code>arrow</code>, <code>back_forth</code>, <code>bowtie</code>, <code>cross</code>, <code>star</code>, <code>simple</code>, <code>triangle</code>, <code>zigzag</code>, <code>custom</code>. StitchCraft accepts every identifier; the shapes are its own
 designs with the same intent, a deviation recorded in the deviations ledger (<code>conformance/deviations.toml</code>).</p>
+<p>Meander tiles (<code>meander_pattern</code>), in the order Ink/Stitch’s settings window lists them: <code>N3-11a</code>, <code>N3-12</code>, <code>N3-16a</code>, <code>N3-17</code>, <code>N3-18</code>, <code>N3-18-modified</code>, <code>N3-20</code>, <code>N3-23b</code>, <code>N3-25c</code>, <code>N3-26b</code>, <code>N3-27</code>, <code>N3-30a</code>, <code>N3-51b</code>, <code>N3-57f-modified</code>, <code>N3-58b</code>, <code>N3-6</code>, <code>N3-7</code>, <code>N3-8a</code>, <code>N3-8a-modified</code>, <code>N3-8b</code>, <code>N4-13b</code>, <code>N4-13c</code>, <code>N4-13d</code>, <code>N4-13e</code>, <code>N4-13f</code>, <code>N4-16a</code>, <code>N4-19</code>, <code>N4-20</code>, <code>N4-21c</code>, <code>N4-22</code>, <code>N4-23a</code>, <code>N4-23c</code>, <code>N4-27</code>, <code>N4-29e</code>, <code>N4-29f</code>, <code>N4-31</code>, <code>N4-38</code>, <code>N4-42e</code>, <code>N4-44</code>, <code>N4-52</code>, <code>N4-54d</code>, <code>N4-5a</code>, <code>N4-5a-2</code>, <code>N4-82</code>, <code>N4-85d</code>, <code>N5-1e1</code>, <code>N5-1q2</code>, <code>N5-1t</code>, <code>N6-1</code>, <code>N6-2</code>, <code>N6-5b</code>, <code>N6-6a</code>, <code>N6-6c</code>, <code>NC5-11a</code>, <code>NC5-20a</code>, <code>P3-1</code>, <code>P3-12</code>, <code>P4-1</code>, <code>P4-10</code>, <code>P4-15</code>, <code>P4-19</code>, <code>P4-23</code>, <code>P4-24</code>, <code>P4-25</code>, <code>P4-43</code>, <code>P4-43-modified</code>, <code>P4-47</code>, <code>P5-10_11</code>, <code>P5-19</code>, <code>P5-23_24</code>, <code>P5-4</code>, <code>P6-6_11</code>, <code>diamond-square</code>, <code>hexagon</code>, <code>weird-one</code>. StitchCraft accepts
+every one and sews its own default tile for it, with a warning (<code>DEV-FILL-018</code>).</p>
 <h2 id="commands-1"><a class="header" href="#commands-1">Commands</a></h2>
 <p>Ink/Stitch’s command symbols (a <code>&lt;use&gt;</code> of the symbol <code>inkstitch_&lt;name&gt;</code>), where each applies, and what
 StitchCraft’s SVG adapter does with it (<code>stitchcraft_svg::inkstitch</code>). Their connectors are never stitched.</p>
@@ -11976,7 +12294,7 @@ change Ink/Stitch’s updater makes (<code>lib/update.py</code>), in StitchCraft
 </tbody>
 </table>
 </div>
-<p><em>145 parameter declarations, 99 registered in StitchCraft.</em></p>
+<p><em>145 parameter declarations, 105 registered in StitchCraft.</em></p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="architecture-decision-records"><a class="header" href="#architecture-decision-records">Architecture decision records</a></h1>
 <p>Short records of decisions that shape the code, with their context and the alternatives we rejected.
@@ -12844,7 +13162,7 @@ MC-8’s sew-out (decided on 2026-11-01).</p>
 <tr><td>M7.5 ✅</td><td>Zigzag satin, sewn as Ink/Stitch sews it</td><td><code>REQ-SAT-026</code> to <code>REQ-SAT-028</code>, and the type listed for MC-6</td></tr>
 <tr><td>M7.6 ✅</td><td>The offsetter meets the third criterion of <a href="#adr-0005-geometry-stack">ADR-0005</a> before contour fill relies on it: 300 insets of a region 150 mm across, of 1,000 points, in under 200 ms. They take 65 to 160 ms. At M0.7 they took 218 to 448 ms, against GEOS’s 104 to 149 ms</td><td><code>cargo xtask perf</code> guards the criterion (NFR-PERF-3)</td></tr>
 <tr><td>M7.7 ✅</td><td>Contour fill, with its three strategies, as Ink/Stitch sews them. Inner to outer, single and double spiral, with round, mitred and bevelled corners, rings that part and alternate, a smoothed path, the tatami fill’s underlay, and repeats that double. TS-11B, its test sheet, sews in Ink/Stitch as in StitchCraft by every measure of the differential. Ink/Stitch’s contract says which fill methods read the tatami fill’s <code>angle</code>, <code>staggers</code> and running stitch length for their underlay without showing them (<code>read_by</code>)</td><td><code>REQ-FILL-CON-001</code> to <code>REQ-FILL-CON-008</code>, and the type listed for MC-6 (TS-11B)</td></tr>
-<tr><td>M7.8</td><td>Meander fill with generated tiles. A node’s meander fill may meet a <code>zigzag_spacing_mm</code> only its zigzag stroke can read, which Ink/Stitch sews as the fill’s default. The step chooses whether StitchCraft does too (<a href="#naming-rules">rule 7</a>)</td><td>same</td></tr>
+<tr><td>M7.8 ✅</td><td>Meander fill with generated tiles, 7 of the regular and semiregular tilings, as Ink/Stitch wanders through its own tiles. Ink/Stitch’s tile ids are kept and sew the honeycomb (<code>SC-W0316</code>), and a part too small for its tile is sewn round its outline (<code>SC-W0317</code>). A value only a node’s other stitch type reads, such as a zigzag stroke’s 2 spacings that its meander fill meets, is left to that stitch type, and the element takes its default as Ink/Stitch’s does (<code>SC-I0106</code>, <a href="#naming-rules">rule 7</a>). TS-11C samples the tiles for MC-6</td><td><code>REQ-FILL-MEA-001</code> to <code>REQ-FILL-MEA-005</code>, <code>REQ-PRM-006</code>, and the type listed for MC-6 (TS-11C)</td></tr>
 <tr><td>M7.9</td><td>Circular fill</td><td>same</td></tr>
 <tr><td>MC-6 🧵</td><td><strong>TS-11A</strong> and <strong>TS-11B</strong> (samplers of the new strokes and satins, and of the new fills); kit: <code>stitch testsheet</code></td><td>report filed; the new types’ defaults confirmed</td></tr>
 </tbody>
@@ -13113,7 +13431,8 @@ middle of the artboard (<code>REQ-VC-015</code>). A checkpoint can so sew a shee
 <tr><td><strong>TS-09</strong> Fill underlay &amp; travel</td><td>A rectangle 50 × 30 mm with a square hole and a round hole, and a bar 6 mm to its right, all one fill, sewn 3 times (66 × 114 mm). The top copy has no underlay. The others have the default underlay, and the bottom one 2 gap-filling rows too. Each copy is trimmed after</td><td>Travel hidden? Does the fill hold at both ends of the jump to the bar? Holes clean? A gap where the rows round a hole meet?</td><td>MC-4</td></tr>
 <tr><td><strong>TS-10A/B/C</strong> Hoop size</td><td>Frames of 100 × 100 mm (A, the 4 × 4 in hoop), 130 × 180 mm (B, the 5 × 7 in) and 20 × 60 mm (C, the small hoop), each as large as its hoop’s field, with a centre cross and an “F” in the top-left corner</td><td>The machine takes each design in its hoop without asking for a larger one, and sews it to size. The small hoop’s field is the right way round</td><td>MC-1, MC-5</td></tr>
 <tr><td><strong>TS-11A</strong> New strokes and satins</td><td>Samples of M7’s new strokes and satins, drawn before MC-6. Zigzag strokes (M7.2), straight and curved, at spacings of 0.4, 1 and 2 mm and widths of 1, 2 and 4 mm, and one at 45°. E-stitches (M7.3) 3 and 5 mm wide at spacings of 2 and 3 mm, along a straight edge and round a circle, on appliqué fabric. S-stitches (M7.4) 6 and 10 mm wide at spacings of 0.4 and 0.6 mm, straight and curved, the 10 mm ones split at 3 mm by the default and the staggered methods. Zigzag satins (M7.5) 4 and 8 mm wide at spacings of 0.4 and 1 mm, straight and curved, beside satin columns of the same widths and spacings, and one 8 mm wide at 1 mm over a contour underlay</td><td>Per type, as listed on its expected-result sheet. A zigzag sews narrower than drawn, and the report says by how much, whether its sides are even round curves and which is the narrowest width that sews cleanly. The E-stitch’s spine should cover the appliqué’s raw edge, and its spikes hold it without puckering. The S-stitch should cover its band at 0.4 mm with its steps along the edges even, and the report says whether the default method’s splits leave a furrow along the band that the staggered ones do not. The zigzag satin should cover its band at 0.4 mm as its satin column does, and the report says whether it sews narrower than the satin column beside it. Its contour underlay should not show past the zigzag at either end</td><td>MC-6</td></tr>
-<tr><td><strong>TS-11B</strong> New fills</td><td>Contour fills (M7.7), each over the default underlay and trimmed after, a row to a thread (125 × 116 mm). Top row: discs 36 mm across with rings 0.25 mm apart, sewn inner to outer round a hole 12 mm across set off its middle, as a spiral and as a double spiral. Middle row: stars 40 mm across with rings 0.4 mm apart and round, mitred and bevelled corners. Bottom row: 2 squares joined by a neck 3 mm wide, where the rings part. Beside them, a rectangle whose rings alternate their direction and a leaf smoothed by 0.5 mm. Meander and circular fills join it in M7.8 and M7.9</td><td>Fabric showing between the rings, puckering, and whether the discs sew 36 mm across. Whether inner to outer’s steps show as a line across the rings, and whether the alternating rectangle looks calmer. A knot or a bump where the spirals end. Whether the mitred star’s rings reach into its points where the round and bevelled ones leave a gap at each tip, and which looks best. The neck should fill, and the smoothed leaf’s line should run without kinks. The time the sheet takes</td><td>MC-6</td></tr>
+<tr><td><strong>TS-11B</strong> New fills</td><td>Contour fills (M7.7), each over the default underlay and trimmed after, a row to a thread (125 × 116 mm). Top row: discs 36 mm across with rings 0.25 mm apart, sewn inner to outer round a hole 12 mm across set off its middle, as a spiral and as a double spiral. Middle row: stars 40 mm across with rings 0.4 mm apart and round, mitred and bevelled corners. Bottom row: 2 squares joined by a neck 3 mm wide, where the rings part. Beside them, a rectangle whose rings alternate their direction and a leaf smoothed by 0.5 mm. Circular fills join it in M7.9</td><td>Fabric showing between the rings, puckering, and whether the discs sew 36 mm across. Whether inner to outer’s steps show as a line across the rings, and whether the alternating rectangle looks calmer. A knot or a bump where the spirals end. Whether the mitred star’s rings reach into its points where the round and bevelled ones leave a gap at each tip, and which looks best. The neck should fill, and the smoothed leaf’s line should run without kinks. The time the sheet takes</td><td>MC-6</td></tr>
+<tr><td><strong>TS-11C</strong> Meander fills</td><td>Meander fills (M7.8), each over the default underlay and trimmed after, a row to a thread (123 × 120 mm). The top row’s discs, 36 mm across, are in hexagons, squares and triangles 2 mm a side. The middle row’s discs are in octagons and squares, in hexagons and triangles, and in hexagons with squares and triangles. In the bottom row a star 40 mm across is in squares and triangles. Beside it a rectangle in hexagons twice as large sews as a zigzag 2.5 mm wide kept inside it, and a leaf in hexagons half as large is turned by 30° and smoothed by 0.5 mm</td><td>Whether each tiling shows in the stitches and the line looks even, or bare patches show where it didn’t reach, and which tile looks best at which size. Does the underlay show between the line’s turns, or is the fill too light to hide the fabric? The zigzag should stay inside the rectangle and lie flat. On the smoothed leaf, a line without kinks and 1 mm sides sewn cleanly. Puckering where the line turns</td><td>MC-6</td></tr>
 <tr><td><strong>TS-12</strong> Real design</td><td>A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours, its PES file written by VectorCraft’s File › Export › Export As (M6.9)</td><td>Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden? Satin columns drawn as one path: are they as wide as their strokes, and do their corners sew clean? A graphic style applied to a group: do the paths inside sew as VectorCraft shows them, with the style’s settings and colour? A satin border of 2 circles joined by Make Compound Path: do its stitches go straight across all the way round? A satin column that Stroke to Satin made of a line (M6.12): does it sew as the line did with the satin effect?</td><td>MC-5, MC-7</td></tr>
 <tr><td><strong>TS-13</strong> Pictures digitized automatically (M13)</td><td>Test pictures drawn in code (<code>stitchcraft_engine::testsheets::pictures</code>), digitized automatically in the top half of each sheet and sewn as drawn, in paint order, in the bottom half, which sews first and stops. TS-13A has a badge traced abutting and one traced stacked, specks round a disc, a row of badges drawn badge by badge, and a bar that runs on beside a square without touching it (126 × 168 mm). TS-13B has the word MATCH in block letters 15, 10, 6 and 4 mm tall, and windows whose lines, traced as areas, are 0.3, 0.6 and 0.9 mm wide (110 × 148 mm). TS-13C has a cartoon face drawn with black lines 1, 2 and 4 mm wide, a star, and a balloon on its string (111 × 108 mm). TS-13D has an emblem 42 mm wide, a navy square with a white disc, a red star on the disc and 3 gold bars, and a button 23 mm across, a yellow disc with 7 orange dots in a black rim, each traced abutting and traced stacked (115 × 108 mm)</td><td>Fabric showing between colours, on both halves, and on the digitized half whether each area’s 0.4 mm overlap under the next covers the gap or shows as a ridge (M13.2). Whether a stacked trace’s digitized half, its covered parts cut away, sews as flat as the abutting one, and what became of the specks round the disc (M13.2). Where a shape runs on beside an area without touching it, whether the fabric that shows there as drawn reads as a gap (M13.2). The smallest letters that read. Whether each outline’s columns cover the edges of the fills beside them, and whether the triple runs show as wide as their lines. A column’s square end past the end of a line with round caps (M13.1), and how far it shows past the round end. Small traced rings and hairpins, filled because no satin column can follow them (M13.1), and how solid they sew beside their columns’ neighbours. Colour changes, jumps, trims and time against the half in paint order, on a row of badges drawn badge by badge too, as Auto Grouping draws them (M13.3). Whether any shape covers one drawn over it, which the order must never let happen, and whether each line sewn after the fill it borders covers the fill’s edge (M13.3). Lines traced as areas, 0.3, 0.6 and 0.9 mm wide, sewn along their middles (M13.4): whether each reaches as far as the line drawn, whether the 0.6 and 0.9 mm lines’ triple runs show as wide as they are drawn and the 0.3 mm line’s single run doesn’t look thin, and whether the fills beside a line, reaching under it, leave fabric showing along it. Whether a junction’s third branch, which ends at the line it meets, leaves a gap or a knot there (M13.4). Letters and outlines as wide as a satin column, sewn as satin columns between their own edges (M13.5): whether each column’s stitches lie square to its stroke, round a ring and through a bend. Where a column ends under another, 0.4 mm longer, does fabric show, or a ridge? A slanted terminal should end flat along its edge as drawn, and a round one at its farthest point. Whether a crossbar sewn as a column of its own across a stem reads as one stroke. The underlays by width should hold the columns up, and 0.4 mm of pull compensation keep them as wide as drawn. The stitches that lean where strokes meet at sharp angles, as in an M or a W (<code>SC-W0208</code>), and the jumps between a letter’s columns. Shapes broad in places and narrow in others (M13.6). The star’s points and the balloon’s string sew as columns over the fill of the star’s middle and of the balloon. Do their flat ends cover the fill’s edge, or leave fabric or a ridge there? Do each point’s stitches lie square to it from its tip to its cut? Pictures traced in layers (M13.12). Whether the stacked emblem, its layers flattened, sews as the abutting one beside it, and how stiff it sews as drawn on the bottom half, each colour whole under the colours over it. Which sews better between the bars, the navy filled whole under the white disc and the bars or the navy sewn round them as drawn? Whether the gold bars keep their height, 2.1 mm as drawn, and their square ends. Which sews better between the dots, the button’s yellow filled whole under them or sewn round them as drawn, and does the rim’s column cover the yellow’s edge? Whether fabric or a ridge shows round the bars, the disc, the star and the dots. Small discs no wider than a satin column are dots, filled (M13.12), as the gold discs of the row of badges and the button’s dots are. Do they sew round, and does fabric show at their edges? Which jump threads a shape sews down, since the PE800 cuts none</td><td>MC-8</td></tr>
 <tr><td><strong>TS-14</strong> Lettering (M14)</td><td>3 embroidery fonts, a block, a script and a small one, each at the least and the greatest heights it sews at, and a name along an arc</td><td>Whether every glyph reads at its least height, satin coverage at its greatest, and whether the locks of small glyphs hold after the trims</td><td>MC-9</td></tr>
@@ -13138,7 +13457,7 @@ middle of the artboard (<code>REQ-VC-015</code>). A checkpoint can so sew a shee
 <tr><td>MC-4</td><td>M5</td><td>TS-07, TS-08, TS-09</td><td>Fill spacing, pull compensation, gap-filling rows, underlay and travel defaults</td></tr>
 <tr><td>MC-5</td><td>M6</td><td>TS-12, TS-10</td><td>Is the VectorCraft workflow complete and correct? Does a test sheet drawn by the Test Sheet filter sew as <code>stitch testsheet</code> writes it?</td></tr>
 <tr><td>MC-8</td><td>M13.12</td><td>TS-13, from <code>stitch testsheet</code> or drawn in VectorCraft by the Test Sheet filter with the Auto effect</td><td>Do pictures digitized automatically sew better than the same shapes in paint order? Are the widest satin column, the narrowest triple run, the overlap, the underlays by width and the columns’ pull compensation right?</td></tr>
-<tr><td>MC-6</td><td>M7</td><td>TS-11A, TS-11B, from <code>stitch testsheet</code> or drawn in VectorCraft by the Test Sheet filter</td><td>New stitch types acceptable? Are their defaults right?</td></tr>
+<tr><td>MC-6</td><td>M7</td><td>TS-11A and TS-11B, from <code>stitch testsheet</code> or drawn in VectorCraft by the Test Sheet filter, and TS-11C from <code>stitch testsheet</code></td><td>New stitch types acceptable? Are their defaults right?</td></tr>
 <tr><td>MC-11</td><td>M8</td><td>TS-16, from <code>stitch testsheet</code>, beside Ink/Stitch’s machine file of it from the differential</td><td>Does an Ink/Stitch file sew from StitchCraft’s machine file as it does from Ink/Stitch’s?</td></tr>
 <tr><td>MC-12</td><td>M10</td><td>TS-17A, TS-17B, TS-17C, from <code>stitch testsheet</code> or drawn in VectorCraft by the Test Sheet filter</td><td>New stitch types acceptable, and their defaults right? Do the routed designs leave fewer jump threads than the same elements as drawn?</td></tr>
 <tr><td>MC-9</td><td>M14</td><td>TS-14</td><td>Do the fonts sew legibly across the heights they claim?</td></tr>

@@ -35,10 +35,10 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-9d185cea.js";
+            window.path_to_searchindex_js = "../../../searchindex-412cc20a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../toc-0c202e0a.js"></script>
+        <script src="../../../toc-6628e580.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -184,13 +184,13 @@
 <h1 id="tatami-parameters"><a class="header" href="#tatami-parameters">Tatami parameters</a></h1>
 <p>Tatami fill: rows of running stitches across the fill’s area, the needle points of neighbouring rows
 offset so that they never line up. Ink/Stitch’s default fill. A contour fill takes its row spacing,
-its expand and its underlay from these settings too.</p>
-<p>Applies to Tatami fill, Contour fill.</p>
+its expand and its underlay from these settings too, and a meander fill its expand and its underlay.</p>
+<p>Applies to Tatami fill, Contour fill, Meander fill.</p>
 <h2 id="rows"><a class="header" href="#rows">Rows</a></h2>
 <h3 id="angle"><a class="header" href="#angle"><code>angle</code></a></h3>
 <p><strong>Angle.</strong> The direction of the rows, in degrees counter-clockwise from horizontal: 0 sews horizontal rows
-and 90 upright ones. A contour fill’s rings follow its outline, and its angle turns only its
-underlay.</p>
+and 90 upright ones. A contour fill’s rings follow its outline, and a meander fill’s path its tile,
+and their angle turns only their underlay.</p>
 <ul>
 <li><strong>Accepts:</strong> an angle in degrees</li>
 <li><strong>Default:</strong> <code>0</code></li>
@@ -198,7 +198,8 @@ underlay.</p>
 </ul>
 <h3 id="row_spacing_mm"><a class="header" href="#row_spacing_mm"><code>row_spacing_mm</code></a></h3>
 <p><strong>Row spacing.</strong> How far apart the rows are, measured square to them, or a contour fill’s rings. Rows closer
-together cover the fabric more fully, and pull it in more.</p>
+together cover the fabric more fully, and pull it in more. A meander fill’s underlay rows lie 3
+of them apart.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from 0.1 to 100 mm</li>
 <li><strong>Default:</strong> <code>0.25</code></li>
@@ -226,7 +227,7 @@ row is the row spacing from the next.</p>
 </ul>
 <h3 id="expand_mm"><a class="header" href="#expand_mm"><code>expand_mm</code></a></h3>
 <p><strong>Expand.</strong> How far past the drawn edge the top rows reach: each part is grown by this much, with round
-corners, before its rows or rings are laid. The thread’s pull opens gaps between fills sewn side
+corners, before its rows, rings or path are laid. The thread’s pull opens gaps between fills sewn side
 by side, and this closes them. Negative values pull the rows in from the edge.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from -10 to 10 mm</li>
@@ -258,7 +259,8 @@ Rounded up to an even number, so the needle comes back to where the stretch ende
 the longest stitch (<code>max_stitch_length_mm</code>) apart, a <code>staggers</code>-th of a stitch along from the
 row before’s, so that neighbouring rows never line them up. A fraction draws diagonals that show
 less than whole numbers do. A negative number staggers the rows the other way, and 0 counts as 1,
-which lines every row’s points up, as in Ink/Stitch. A contour fill staggers its underlay’s rows so.</p>
+which lines every row’s points up, as in Ink/Stitch. A contour or meander fill staggers its
+underlay’s rows so.</p>
 <ul>
 <li><strong>Accepts:</strong> a number from -100 to 100</li>
 <li><strong>Default:</strong> <code>4</code></li>
@@ -290,9 +292,9 @@ needle travels along the fill’s outline, where the travel can show along the e
 </ul>
 <h2 id="underlay"><a class="header" href="#underlay">Underlay</a></h2>
 <h3 id="fill_underlay"><a class="header" href="#fill_underlay"><code>fill_underlay</code></a></h3>
-<p><strong>Underlay.</strong> Sew underlay before the top rows, or a contour fill’s rings: rows of stitches farther apart than
-the top rows, square to them unless set otherwise. It holds the fabric still while the fill is
-sewn and lifts the top rows, so less fabric shows between them.</p>
+<p><strong>Underlay.</strong> Sew underlay before the top rows, a contour fill’s rings or a meander fill’s path: rows of stitches
+farther apart than the top rows, square to them unless set otherwise. It holds the fabric still
+while the fill is sewn and lifts the top rows, so less fabric shows between them.</p>
 <ul>
 <li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
 <li><strong>Default:</strong> <code>true</code></li>

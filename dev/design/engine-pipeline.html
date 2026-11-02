@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9d185cea.js";
+            window.path_to_searchindex_js = "../searchindex-412cc20a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-0c202e0a.js"></script>
+        <script src="../toc-6628e580.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -238,8 +238,10 @@ them from a column’s centre line (<a href="algorithms/satin.html#single-path-s
 <ul>
 <li>Parameters are read by the registry as the element’s stitch type reads them. Blank text takes the
 default, and a setting the stitch type does not use, or that its other settings hide, is kept unread
-(<a href="params.html#the-parameters-an-element-reads-req-prm-004">parameters</a>). The rest are checked for type and range,
-and the generator receives a typed struct or nothing.</li>
+(<a href="params.html#the-parameters-an-element-reads-req-prm-004">parameters</a>). A value that only the node’s
+other stitch type can read, such as a zigzag stroke’s 2 spacings under a meander fill, is left to it:
+the element takes the default, and <code>SC-I0106</code> says so (<code>REQ-PRM-006</code>). The rest are checked for type
+and range, and the generator receives a typed struct or nothing.</li>
 <li>Shapes are checked against the stitch type. A satin needs a subpath longer than a point (<code>SC-E0201</code>),
 a fill needs a non-empty region, and a running stitch needs a path longer than the minimum stitch
 length.</li>
@@ -271,7 +273,9 @@ not build that method (<code>REQ-FILL-005</code>). Nor does it take pull compens
 gap-filling rows, which Ink/Stitch’s legacy fill has no use for. A contour fill, sewn from M7.7, lays its
 rings with the tatami fill’s row spacing and sews them as one running stitch after the tatami fill’s
 underlay, reading the running stitch’s tolerance and random lengths for its path
-(<a href="algorithms/fills.html#contour-fill">fills</a>). The other stroke, satin and fill methods are skipped with
+(<a href="algorithms/fills.html#contour-fill">fills</a>). A meander fill, sewn from M7.8, lays a tile over each part
+and sews one path through it after the same underlay (<a href="algorithms/fills.html#meander-fill">fills</a>). The
+other stroke, satin and fill methods are skipped with
 <code>SC-W0011</code> until their milestones. An element whose parameters are wrong (<code>SC-E0101</code>) is skipped too, and
 the rest of the design still plans.</p>
 <p>Each element is generated with the shortest stitch for it: the larger of the machine’s (the profile’s
@@ -282,7 +286,8 @@ or a fill’s longest, is raised to it with <code>SC-W0402</code>: shorter, the 
 <p>A preview that cannot afford a fill’s stitches shows its top rows (<code>stitchcraft_engine::generate::rows</code>,
 from M6.3). The fill’s settings are read as for sewing it, and what they say is said the same, but only
 the region is built and the rows laid over it: no needle point is placed and no route is searched. A
-contour fill has no rows, and shows its path round its rings, from M7.7.</p>
+contour fill has no rows, and shows its path round its rings, from M7.7. Nor has a meander fill, which
+shows its path through its tile as the element’s seed lays it, from M7.8.</p>
 <p>Rules every generator follows:</p>
 <ul>
 <li><strong>Pure:</strong> output depends only on (normalized shape, typed params, neighbours, seed, budget).</li>
