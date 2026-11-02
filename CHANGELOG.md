@@ -28,6 +28,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - Differential cases: TS-16, and 3 squares whose start and end commands make the needle jump between
     them, with a satin column that starts and ends at commands below it. The same squares in a file of
     version 2 check the update's move, and a circular fill turns round its target point.
+- M8.11, a spike: `stitch import-inkstitch` will bring Ink/Stitch files into VectorCraft as documents
+  whose objects have StitchCraft's effects. ADR-0016 records why. VectorCraft keeps an SVG file's
+  `inkstitch:*` attributes from import to export since 0.17, but doesn't give a filter or a live effect
+  any of them. Its import drops the connectors that tie commands to objects, the design settings, the
+  file's version and the settings of a clone's source, so a document opened that way would sew otherwise
+  than `stitch plan` sews the file. From M8.12 the VectorCraft adapter names an object that keeps
+  Ink/Stitch's attributes, with `stitch import-inkstitch` as the hint.
 - M7.9: circular fill, sewn as Ink/Stitch sews it (`REQ-FILL-CIR-001` to `REQ-FILL-CIR-007`). A double
   spiral turns round each part's centroid. Its rings lie `row_spacing_mm` apart out to 2 spacings past the
   part's farthest point, or fade towards `end_row_spacing_mm` there. It turns in on every other ring and
