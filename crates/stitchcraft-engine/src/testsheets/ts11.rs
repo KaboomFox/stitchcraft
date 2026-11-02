@@ -341,18 +341,11 @@ pub(super) fn meanders() -> Result<Drawing, SheetError> {
     // leaf.
     d.fill("squares-triangles", vec![polygon(&star((left, bottom)))?], &red, &with(&[("meander_pattern", "squares-triangles")]))?;
     let (x, y) = (middle - 18.0, bottom - 12.0);
-    d.fill(
-        "zigzag",
-        vec![polygon(&[(x, y), (x + 36.0, y), (x + 36.0, y + 24.0), (x, y + 24.0)])?],
-        &red,
-        &with(&[("meander_scale_percent", "200"), ("zigzag_spacing_mm", "0.6"), ("zigzag_width_mm", "2.5"), ("clip", "true")]),
-    )?;
-    d.fill(
-        "turned",
-        vec![polygon(&leaf((right, bottom), 19.0, 10.0))?],
-        &red,
-        &with(&[("meander_scale_percent", "50"), ("meander_angle", "30"), ("smoothness_mm", "0.5")]),
-    )?;
+    let rectangle = polygon(&[(x, y), (x + 36.0, y), (x + 36.0, y + 24.0), (x, y + 24.0)])?;
+    let zigzag = with(&[("meander_scale_percent", "200"), ("zigzag_spacing_mm", "0.6"), ("zigzag_width_mm", "2.5"), ("clip", "true")]);
+    d.fill("zigzag", vec![rectangle], &red, &zigzag)?;
+    let turned = with(&[("meander_scale_percent", "50"), ("meander_angle", "30"), ("smoothness_mm", "0.5")]);
+    d.fill("turned", vec![polygon(&leaf((right, bottom), 19.0, 10.0))?], &red, &turned)?;
     Ok(d)
 }
 
@@ -455,6 +448,44 @@ mod tests {
         for (name, (x0, y0)) in [("inner-to-outer", (left + hx, top + hy)), ("circular", (left + hx, CIRCLES + hy))] {
             let nearest = sewn(name).iter().map(|&(x, y)| ((x - x0) * (x - x0) + (y - y0) * (y - y0)).sqrt()).fold(f64::INFINITY, f64::min);
             assert!((nearest - hole).abs() < 0.1, "{name}: {nearest}");
+        }
+    }
+
+    #[test]
+    fn ts11c_sews_each_sample_where_its_drawing_puts_it() {
+        // The sheet is planned with its middle on the hoop's: its drawing spans x from the star's left point to the
+        // leaf's tip, and y from the top discs to the star's lower points. Each sample's needle points lie in its
+        // shape's bounds, its underlay reaching to within a millimetre of each side of them.
+        let plan = crate::testsheets::find("TS-11C").unwrap().plan().unwrap();
+        let [left, middle, right] = ACROSS;
+        let [top, centre, bottom] = DOWN;
+        let (star, leaf) = (bounds(star((left, bottom))), bounds(leaf((right, bottom), 19.0, 10.0)));
+        let mid = plan.bounds().unwrap().center();
+        let (dx, dy) = (mid.x() - (star[0] + leaf[2]) / 2.0, mid.y() - (top - DISC + star[3]) / 2.0);
+        let sewn = |name: &str| -> Vec<(f64, f64)> {
+            let element = plan.elements.iter().position(|e| e.as_str() == format!("ts11c:{name}")).unwrap();
+            let mine = |s: &&stitchcraft_plan::Stitch| {
+                s.kind == StitchKind::Normal && s.origin.role != Role::Lock && s.origin.element.map(|e| e.index()) == Some(element)
+            };
+            plan.stitches().filter(mine).map(|s| (s.at.x() - dx, s.at.y() - dy)).collect()
+        };
+        let disc = |x: f64, y: f64| [x - DISC, y - DISC, x + DISC, y + DISC];
+        let expected = [
+            ("honeycomb", disc(left, top)),
+            ("squares", disc(middle, top)),
+            ("triangles", disc(right, top)),
+            ("octagons-squares", disc(left, centre)),
+            ("hexagons-triangles", disc(middle, centre)),
+            ("hexagons-squares-triangles", disc(right, centre)),
+            ("squares-triangles", star),
+            ("zigzag", [middle - 18.0, bottom - 12.0, middle + 18.0, bottom + 12.0]),
+            ("turned", leaf),
+        ];
+        for (name, drawn) in expected {
+            let [x0, y0, x1, y1] = bounds(sewn(name));
+            let inside = x0 > drawn[0] - 0.1 && y0 > drawn[1] - 0.1 && x1 < drawn[2] + 0.1 && y1 < drawn[3] + 0.1;
+            let reaching = x0 < drawn[0] + 1.0 && y0 < drawn[1] + 1.0 && x1 > drawn[2] - 1.0 && y1 > drawn[3] - 1.0;
+            assert!(inside && reaching, "{name}: sewn {:?}, drawn {drawn:?}", [x0, y0, x1, y1]);
         }
     }
 }

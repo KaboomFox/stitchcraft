@@ -9,10 +9,10 @@ Vector art in, machine files out — PES for Brother first, then DST and more.</
   <img alt="License: MIT OR Apache-2.0" src="https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-555555">
 </p>
 
-StitchCraft brings machine embroidery — running and bean stitch, satin columns with underlay, tatami,
-contour, meander and circular fills, and more — to VectorCraft, ArtCraft's open-source Illustrator, as sandboxed
-WebAssembly plug-ins plus a command-line tool. It reads the embroidery parameters Ink/Stitch stores in
-SVG files, so designs move between the tools.
+StitchCraft brings machine embroidery to VectorCraft, ArtCraft's open-source Illustrator, as sandboxed
+WebAssembly plug-ins plus a command-line tool. It sews running and bean stitch, satin columns with
+underlay, and tatami, contour, meander and circular fills, among other stitch types. It reads the
+embroidery parameters Ink/Stitch stores in SVG files, so designs move between the tools.
 
 How it is built:
 

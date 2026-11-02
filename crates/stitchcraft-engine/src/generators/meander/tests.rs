@@ -120,6 +120,12 @@ fn the_same_seed_sews_the_same_path_and_another_seed_another() {
 }
 
 #[test]
+fn a_tile_stitchcraft_does_not_have_is_sewn_as_the_default() {
+    let square = region(vec![square(0.0, 20.0)]);
+    assert_eq!(sewn(&square, &meander("N3-11a")), sewn(&square, &meander(tiles::DEFAULT)));
+}
+
+#[test]
 fn diag_sc_w0317_a_part_too_small_for_its_tile_is_sewn_round_its_outline() {
     let tiny = region(vec![square(0.0, 1.0)]);
     let stitched = sewn(&tiny, &meander(tiles::DEFAULT));
@@ -171,6 +177,10 @@ fn a_zigzag_moves_each_point_across_the_line_to_one_side_and_then_the_other() {
     assert_eq!(zigzag(&line, 2.0), [at(0.0, 1.0), at(0.5, -1.0), at(1.0, 1.0), at(1.5, 0.0)]);
     // A point where the line has no length stays where it is.
     assert_eq!(zigzag(&[at(0.0, 0.0), at(0.0, 0.0), at(1.0, 0.0)], 2.0), [at(0.0, 0.0), at(0.0, -1.0), at(1.0, 0.0)]);
+    // Along (0.6, 0.8), 5 mm a step, 1 mm wide: (−0.8, 0.6) half a millimetre one way, then the other.
+    let slanting = zigzag(&[at(1.0, 2.0), at(4.0, 6.0), at(7.0, 10.0), at(10.0, 14.0)], 1.0);
+    let expected = [at(0.6, 2.3), at(4.4, 5.7), at(6.6, 10.3), at(10.0, 14.0)];
+    assert!(slanting.iter().zip(&expected).all(|(a, b)| a.distance(*b) < 1e-12) && slanting.len() == 4, "{slanting:?}");
 }
 
 #[test]

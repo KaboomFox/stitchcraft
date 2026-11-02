@@ -51,7 +51,8 @@ automatically by `stitchcraft-testkit` for every generator registered:
    point of the shape to the hint (`REQ-GEN-001`).
 5. **Degenerate inputs:** the shared degenerate corpus (zero-area, hair-thin, self-touching, collinear,
    duplicate points, 1-point paths, huge coordinates, 10⁶-vertex paths) never fails and never exceeds the
-   budget without `SC-E0004`.
+   budget without `SC-E0004`. `tests/degenerate.rs` sews it, and random paths that tend to degenerate, by
+   every method ([conformance](../conformance.md#l2--generator-properties-every-pr)).
 6. **Monotonicity where meaningful:** denser spacing never yields fewer stitches; larger shapes never
    yield fewer stitches.
 

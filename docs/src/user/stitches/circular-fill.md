@@ -5,7 +5,7 @@
 A circular fill covers an area with a spiral round its middle, as ripples spread round a stone dropped in
 water. Its rings lie a row spacing apart. The spiral turns in on every other ring and back out between
 them, so it ends near where it began. The area's outline cuts it into pieces, which are sewn one after
-another, the needle travelling between them under the pieces not sewn yet. Set a fill's `fill_method` to
+another, the needle running between them under the pieces not sewn yet. Set a fill's `fill_method` to
 `circular_fill` for it.
 
 Its settings are set as every stitch type's are ([setting parameters](./#setting-parameters)).
@@ -42,12 +42,12 @@ Where the part isn't round, the spiral leaves it and comes back at every turn pa
 inside the outline, and the part cuts it into pieces. Each is sewn once, in the order a
 [tatami fill](tatami-fill.md) would sew rows with the same ends. The needle runs between them under the
 pieces sewn later, which hide it. `underpath` off, it runs along the outline, where it can show.
-`angle` turns the lines it travels along, and `skip_last` leaves out the last needle point of each piece.
+`angle` turns the lines it runs along, and `skip_last` leaves out the last needle point of each piece.
 
 <!-- shot: circular-travel -->
 | Underpath | Along the outline |
 |:-:|:-:|
-| ![A rounded square 30 mm a side sewn as a circular fill without underlay, its rings 1.5 mm apart, the needle travelling between the pieces of the spiral, Underpath](../../images/generated/circular-travel-1.png) | ![A rounded square 30 mm a side sewn as a circular fill without underlay, its rings 1.5 mm apart, the needle travelling between the pieces of the spiral, Along the outline](../../images/generated/circular-travel-2.png) |
+| ![A rounded square 30 mm a side sewn as a circular fill without underlay, its rings 1.5 mm apart, the needle running between the pieces of the spiral, Underpath](../../images/generated/circular-travel-1.png) | ![A rounded square 30 mm a side sewn as a circular fill without underlay, its rings 1.5 mm apart, the needle running between the pieces of the spiral, Along the outline](../../images/generated/circular-travel-2.png) |
 <!-- /shot -->
 
 A round part's spiral may enter it once and leave it once. It is then sewn from the needle along the
@@ -55,9 +55,9 @@ outline to where the spiral enters, and from where it leaves along the outline t
 element starts, each the shorter way round.
 
 A part that lies within its row spacing of its middle, too small for a spiral, is sewn as one circle with
-a radius of the row spacing round its middle, and `SC-W0318` says so: the circle may reach past so small a
-part. A part that the spiral misses, lying between 2 of its turns, is sewn as a running stitch round its
-outline, and `SC-W0305` says so.
+a radius of the row spacing round its middle, and `SC-W0318` says so: the circle may lie partly outside
+so small a part. A part that the spiral misses, lying between 2 of its turns, is sewn as a running stitch
+round its outline, and `SC-W0305` says so.
 
 ## Stitches, underlay and repeats
 

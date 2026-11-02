@@ -73,8 +73,9 @@ pub(crate) fn network(part: &Polygon, rings: &Rings<'_>, tile: &Tile, placement:
             for line in &tile.lines {
                 meter.charge(1)?;
                 let (from, to) = ((i, j, line.from), (i + line.cell.0, j + line.cell.1, line.to));
+                // As found: the tile lists each line once, and each point's neighbours are a set.
                 if contains(rings, laid.at(from), laid.at(to), meter)? {
-                    edges.insert(if from < to { (from, to) } else { (to, from) });
+                    edges.insert((from, to));
                 }
             }
         }
@@ -326,6 +327,7 @@ mod tests {
 
     use super::*;
     use crate::generators::meander::tiles::tile;
+    use crate::generators::tatami::rings::distance_to_side;
     use crate::normalize::fixture::part;
 
     fn p(x: f64, y: f64) -> Point {
@@ -406,6 +408,78 @@ mod tests {
     }
 
     #[test]
+    fn req_fill_mea_002_every_corner_of_the_tiling_well_inside_the_part_is_a_point_of_its_network() {
+        // Over a square and a right triangle 4 mm a side away from the origin, under sides of 0.2 mm, level and
+        // turned: a corner of the tiling more than 2 sides inside the part meets only lines inside it, so it is
+        // a point of the network, however the part lies over the tile's cells.
+        let square = [(0.0, 0.0), (4.0, 0.0), (4.0, 4.0), (0.0, 4.0)];
+        let triangle = [(0.0, 0.0), (4.0, 0.0), (0.0, 4.0)];
+        let tenth = |angle: f64| Placement { scale: (0.1, 0.1), angle };
+        let laid_out = [("squares", tenth(0.0)), ("honeycomb", tenth(0.5)), ("honeycomb", tenth(1.0)), ("triangles", tenth(-1.0))];
+        let meter = &mut Budget::DEFAULT.meter();
+        for outline in [&square[..], &triangle[..]] {
+            let part = part(outline, &[]);
+            let rings = Rings::new(&part, meter).unwrap();
+            let deep = |q: Point, meter: &mut Meter| {
+                let near = |v: f64| (0.4..3.6).contains(&v);
+                near(q.x())
+                    && near(q.y())
+                    && part.outline.windows(2).all(|side| distance_to_side(q, side[0], side[1]) > 0.4)
+                    && rings.inside(q, meter).unwrap()
+            };
+            for (id, placement) in laid_out {
+                let tile = tile(id).unwrap();
+                let network = network(&part, &rings, &tile, placement, meter).unwrap().unwrap();
+                let laid = Laid::new(&part, &tile, placement);
+                let mut found = 0;
+                for i in -60..=60 {
+                    for j in -60..=60 {
+                        for corner in 0..tile.corners.len() {
+                            let q = laid.at((i, j, corner));
+                            if deep(q, meter) {
+                                found += 1;
+                                assert!(network.points.contains(&q), "{id}, {placement:?}: {q:?} is no point of the network");
+                            }
+                        }
+                    }
+                }
+                assert!(found > 50, "{id}, {placement:?}: {found} corners well inside");
+            }
+        }
+    }
+
+    #[test]
+    fn every_line_of_the_tiling_in_the_part_starts_in_a_cell_the_network_looks_at() {
+        // Hexagons with sides of 10 mm over a rectangle 300 mm by 30 mm and one 30 mm by 300 mm, level and
+        // turned: each line of the tiling that lies in the part starts in a cell between the first and the last
+        // that `network` looks at, however far the part reaches along either step.
+        let meter = &mut Budget::DEFAULT.meter();
+        let tile = tile("honeycomb").unwrap();
+        for outline in [[(0.0, 0.0), (300.0, 0.0), (300.0, 30.0), (0.0, 30.0)], [(0.0, 0.0), (30.0, 0.0), (30.0, 300.0), (0.0, 300.0)]] {
+            let part = part(&outline, &[]);
+            let rings = Rings::new(&part, meter).unwrap();
+            for angle in [0.0, 0.3] {
+                let laid = Laid::new(&part, &tile, Placement { scale: (5.0, 5.0), angle });
+                let ((i0, j0), (i1, j1)) = laid.cells(&part);
+                let mut found = 0;
+                for (i, j) in (-40..=40).flat_map(|i| (-40..=40).map(move |j| (i, j))) {
+                    for line in &tile.lines {
+                        let (from, to) = ((i, j, line.from), (i + line.cell.0, j + line.cell.1, line.to));
+                        if contains(&rings, laid.at(from), laid.at(to), meter).unwrap() {
+                            found += 1;
+                            assert!(
+                                i0 <= i && i <= i1 && j0 <= j && j <= j1,
+                                "{outline:?}, {angle}: a line from ({i}, {j}), past ({i0}, {j0}) to ({i1}, {j1})"
+                            );
+                        }
+                    }
+                }
+                assert!(found > 20, "{outline:?}, {angle}: {found} lines");
+            }
+        }
+    }
+
+    #[test]
     fn a_line_touching_the_outline_from_inside_is_in_and_one_leaving_it_is_out() {
         let meter = &mut Budget::DEFAULT.meter();
         // A notch at the top: its corner at (0, 1) points into the square.
@@ -415,5 +489,116 @@ mod tests {
         assert!(!contains(&rings, p(0.0, 1.5), p(0.0, 0.0), meter).unwrap(), "from inside the notch, outside");
         assert!(!contains(&rings, p(-2.0, -2.0), p(2.0, -2.0), meter).unwrap(), "along the outline only");
         assert!(contains(&rings, p(-2.0, -2.0), p(2.0, 2.0), meter).unwrap(), "corner to corner, across");
+        // Along the top from one side of the notch to the other, the middle lies in the notch.
+        assert!(!contains(&rings, p(-1.5, 2.0), p(1.5, 2.0), meter).unwrap(), "across the notch");
+        assert!(!contains(&rings, p(1.0, 0.0), p(1.0, 0.0), meter).unwrap(), "a line of no length");
+    }
+
+    #[test]
+    fn a_line_from_a_ring_inwards_is_in_and_one_across_a_hole_is_out() {
+        let meter = &mut Budget::DEFAULT.meter();
+        let hole = [(-0.5, -0.5), (0.5, -0.5), (0.5, 0.5), (-0.5, 0.5)];
+        let holed = part(&[(-2.0, -2.0), (2.0, -2.0), (2.0, 2.0), (-2.0, 2.0)], &[&hole]);
+        let rings = Rings::new(&holed, meter).unwrap();
+        assert!(contains(&rings, p(-2.0, 1.0), p(0.0, 1.0), meter).unwrap(), "from the outline");
+        assert!(contains(&rings, p(0.0, 1.0), p(2.0, 1.0), meter).unwrap(), "to the outline");
+        assert!(!contains(&rings, p(-1.0, 0.0), p(1.0, 0.0), meter).unwrap(), "across the hole");
+        // Short of the long side of a triangle, which runs across the line's way on beyond its end: in.
+        let triangle = part(&[(0.0, 0.0), (3.0, 0.0), (0.0, 3.0)], &[]);
+        assert!(contains(&Rings::new(&triangle, meter).unwrap(), p(1.0, 1.0), p(1.4, 1.4), meter).unwrap(), "short of a side");
+        // From a side of a triangular hole, whose corner opposite lies on the line behind its start: in, the
+        // line not reaching back through the hole to that corner.
+        let triangle = [(-1.0, 0.0), (0.0, 1.0), (0.0, -1.0)];
+        let holed = part(&[(-3.0, -3.0), (3.0, -3.0), (3.0, 3.0), (-3.0, 3.0)], &[&triangle]);
+        let rings = Rings::new(&holed, meter).unwrap();
+        assert!(contains(&rings, p(0.0, 0.0), p(2.0, 0.0), meter).unwrap(), "from the hole");
+    }
+
+    #[test]
+    fn a_line_is_cut_where_a_corner_of_a_ring_lies_on_it() {
+        // A notch from the right whose corner touches the line up the middle at its middle: in, cut there into
+        // 2 halves inside, however long the line.
+        let meter = &mut Budget::DEFAULT.meter();
+        let notched = part(&[(-3.0, -3.0), (3.0, -3.0), (3.0, -1.0), (0.0, 0.0), (3.0, 1.0), (3.0, 3.0), (-3.0, 3.0)], &[]);
+        let rings = Rings::new(&notched, meter).unwrap();
+        assert!(contains(&rings, p(0.0, -2.0), p(0.0, 2.0), meter).unwrap());
+        assert!(contains(&rings, p(0.0, -0.5), p(0.0, 0.5), meter).unwrap());
+        // A step: inside for a quarter of a millimetre, then along a side to its far corner, cut where the
+        // line meets the side, so that a piece of it lies inside.
+        let step = part(&[(-3.0, -3.0), (-1.0, -3.0), (-1.0, -1.0), (3.0, -1.0), (3.0, 3.0), (-3.0, 3.0)], &[]);
+        let rings = Rings::new(&step, meter).unwrap();
+        assert!(contains(&rings, p(-1.25, -1.0), p(3.0, -1.0), meter).unwrap());
+    }
+
+    #[test]
+    fn a_line_is_found_in_or_out_or_the_work_runs_out() {
+        let part = part(&[(-2.0, -2.0), (2.0, -2.0), (2.0, 2.0), (1.0, 2.0), (0.0, 1.0), (-1.0, 2.0), (-2.0, 2.0)], &[]);
+        let rings = Rings::new(&part, &mut Budget::DEFAULT.meter()).unwrap();
+        let (from, to) = (p(-1.0, 1.0), p(1.0, 1.0));
+        let meter = &mut Budget::DEFAULT.meter();
+        assert!(contains(&rings, from, to, meter).unwrap());
+        // Any less work runs out somewhere on the way: at an end, among the sides, or at a piece's middle.
+        let needed = Budget::DEFAULT.max_work - meter.work_left();
+        for work in 0..needed {
+            let short = &mut Budget { max_stitches: 0, max_work: work }.meter();
+            assert_eq!(contains(&rings, from, to, short), Err(Exhausted::Work), "{work} of {needed} units");
+        }
+    }
+
+    #[test]
+    fn free_ends_go_one_after_another_and_the_points_left_are_numbered_again() {
+        // A triangle, points 1, 3 and 4, with a tail of 2 lines off point 4: its tip, point 0, goes, and then
+        // point 2, whose only line is left.
+        let points = vec![p(-2.0, 1.0), p(0.0, 0.0), p(-1.0, 1.0), p(1.0, 0.0), p(0.0, 1.0)];
+        let lines: [&[usize]; 5] = [&[2], &[3, 4], &[0, 4], &[1, 4], &[1, 2, 3]];
+        let next = lines.iter().map(|n| n.iter().copied().collect()).collect();
+        let kept = without_free_ends(Network { points, next }, &mut Budget::DEFAULT.meter()).unwrap();
+        let triangle = [[1, 2], [0, 2], [0, 1]].iter().map(|n| n.iter().copied().collect()).collect();
+        assert_eq!(kept, Network { points: vec![p(0.0, 0.0), p(1.0, 0.0), p(0.0, 1.0)], next: triangle });
+    }
+
+    #[test]
+    fn a_line_on_its_own_goes_whole_though_its_second_end_is_found_free_twice() {
+        // Both ends of a lone line are free from the start. Taking the first frees the second again, so the
+        // second is waiting twice, and the second time it is gone already.
+        let next = vec![[1].into_iter().collect(), [0].into_iter().collect()];
+        let kept = without_free_ends(Network { points: vec![p(0.0, 0.0), p(1.0, 0.0)], next }, &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(kept, Network::default());
+    }
+
+    #[test]
+    fn three_pieces_in_a_row_are_joined_by_the_2_shortest_joins() {
+        // 3 squares 6 mm high in a row, joined by necks no line of the grid runs along: the middle one is
+        // joined to each of the others, and the 2 ends, farther apart, are not joined to each other.
+        let outline = [
+            (-15.0, -3.0),
+            (-5.0, -3.0),
+            (-5.0, 0.5),
+            (-3.0, 0.5),
+            (-3.0, -3.0),
+            (3.0, -3.0),
+            (3.0, 0.5),
+            (5.0, 0.5),
+            (5.0, -3.0),
+            (15.0, -3.0),
+            (15.0, 3.0),
+            (5.0, 3.0),
+            (5.0, 1.5),
+            (3.0, 1.5),
+            (3.0, 3.0),
+            (-3.0, 3.0),
+            (-3.0, 1.5),
+            (-5.0, 1.5),
+            (-5.0, 3.0),
+            (-15.0, 3.0),
+        ];
+        let network = laid(&outline, &[], "squares", FLAT).unwrap();
+        let apart = |a: Point, b: Point| (a.x() + 4.0).signum() != (b.x() + 4.0).signum() || (a.x() - 4.0).signum() != (b.x() - 4.0).signum();
+        let joins: Vec<(Point, Point)> = (0..network.len())
+            .flat_map(|a| network.neighbours(a).map(move |b| (a, b)))
+            .filter(|&(a, b)| a < b && apart(network.point(a), network.point(b)))
+            .map(|(a, b)| (network.point(a), network.point(b)))
+            .collect();
+        assert_eq!(joins, [(p(-6.0, -2.0), p(-2.0, -2.0)), (p(2.0, -2.0), p(6.0, -2.0))]);
     }
 }
