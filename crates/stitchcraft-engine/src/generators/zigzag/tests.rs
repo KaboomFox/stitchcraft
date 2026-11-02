@@ -7,6 +7,12 @@ fn p(x: f64, y: f64) -> Point {
 }
 
 #[test]
+fn the_stroke_pull_compensation_key_is_a_pair_of_lengths() {
+    let spec = ZigzagStrokeParams::SPECS.iter().find(|spec| spec.key == STROKE_PULL_COMPENSATION);
+    assert!(spec.is_some_and(|spec| matches!(spec.kind, stitchcraft_params::Kind::LengthPair { .. })));
+}
+
+#[test]
 fn a_part_takes_an_even_count_of_half_spacings_of_at_least_2() {
     let counts = [halves(10.0, 0.2), halves(12.625, 0.25), halves(13.125, 0.25), halves(2.75, 0.25), halves(0.1, 0.25), halves(0.0, 0.25)];
     assert_eq!(counts, [50, 50, 52, 12, 2, 2]);
