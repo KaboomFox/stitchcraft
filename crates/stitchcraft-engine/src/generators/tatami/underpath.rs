@@ -527,6 +527,45 @@ mod tests {
         assert!(!crosses(&closed), "{closed:?}");
     }
 
+    /// A line from (0, 2) by (5, 1) to (10, 2), and 5 upright edges by it, each between 2 points of its own:
+    /// across the line's first side at x = 2, through its bend, ending on its first side at (2.5, 1.5), and
+    /// through its 2 ends.
+    fn edges_by_a_line() -> (Vec<Vec<Point>>, Vec<Point>, Vec<Edge>) {
+        let line = vec![p(0.0, 2.0), p(5.0, 1.0), p(10.0, 2.0)];
+        let upright = [(2.0, 0.0, 3.0), (5.0, 0.0, 3.0), (2.5, 0.0, 1.5), (0.0, 1.0, 3.0), (10.0, 1.0, 3.0)];
+        let points: Vec<Point> = upright.iter().flat_map(|&(x, from, to)| [p(x, from), p(x, to)]).collect();
+        let edges = (0..upright.len()).map(|k| Edge { ends: [2 * k, 2 * k + 1], cost: 1.0, open: true }).collect();
+        (vec![line], points, edges)
+    }
+
+    #[test]
+    fn an_edge_crosses_a_line_where_their_insides_meet() {
+        // Across a side, or through the bend between the line's ends: sewing the line closes the edge. An edge
+        // that ends on the line, or passes through one of the line's ends, meets it only where one of them
+        // ends, and stays open.
+        let (lines, points, edges) = edges_by_a_line();
+        let closes = closing_lines(&points, &edges, &[0, 1, 2, 3, 4], &lines, &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(closes, [vec![0, 1]]);
+    }
+
+    #[test]
+    fn finding_the_edges_across_lines_charges_for_each_side_looked_at() {
+        // Filing the line's sides and looking in each edge's box cost what they cost, and each side found there
+        // costs a unit more: 6, one for each edge but the one through the bend, whose box meets both sides.
+        let (lines, points, edges) = edges_by_a_line();
+        let mut meter = Budget::DEFAULT.meter();
+        closing_lines(&points, &edges, &[0, 1, 2, 3, 4], &lines, &mut meter).unwrap();
+        let mut search = Budget::DEFAULT.meter();
+        let sides = Sides::new(lines.iter().map(Vec::as_slice).collect(), &mut search).unwrap();
+        let mut looked = 0_u64;
+        for edge in &edges {
+            let (a, b) = (points[edge.ends[0]], points[edge.ends[1]]);
+            sides.in_box(a.x().min(b.x()), a.y().min(b.y()), a.x().max(b.x()), a.y().max(b.y()), &mut search, |_| looked += 1).unwrap();
+        }
+        assert_eq!(looked, 6);
+        assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), Budget::DEFAULT.max_work - search.work_left() + looked);
+    }
+
     #[test]
     fn a_part_under_700_mm2_gets_its_lines_half_as_far_apart() {
         // 10,000 square CSS pixels is 700.03 mm²: a square 26.45 mm across is under it, and one 26.47 mm
