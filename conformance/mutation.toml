@@ -598,3 +598,9 @@ file = "crates/stitchcraft-engine/src/generators/meander/tiles.rs"
 mutant = "replace < with <= in same"
 line = "(-1..=1).any(|i| (-1..=1).any(|j| a.distance(plus(b, offset(steps, i, j))) < SIDE))"
 why = "only 2 corners exactly 1e-9 sides apart tell the 2 apart, and a tile's corners are one corner to within rounding, or a good part of a side apart"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/contour/spiral.rs"
+mutant = "replace <= with < in resampled"
+line = "if at <= 0.0 {"
+why = "no distance along the ring is below 0, and at 0 the walk stops at the start of the first side that has a length, which is the ring's first point, or at the ring's last point when no side has one, which is then its first"
