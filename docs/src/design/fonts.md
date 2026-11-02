@@ -56,8 +56,9 @@ for `precious`, whose licence file is the GPL-3.0 with a ban on selling the font
 Reserved Font Names.
 
 **Lettering.** Ink/Stitch's lettering (`lib/lettering` at `d59c9ab`) advances each glyph by its own advance,
-less the kerning of its pair, and each word by the space's advance. Letter spacing, word spacing and line
-height add millimetres of their own. Lines align left, centre or right, or are justified as a block. A trim
+less the kerning of its pair, and each word by the space's advance. The user can widen the spacing of
+letters, of words and of lines by a number of millimetres. Lines align left, centre or right, or are
+justified as a block. A trim
 can follow each letter, word or line. Lines sew back and forth in a font with a variant for the other
 direction, and a sortable font's colours sew in order. Batch lettering clamps the scale to the font's range.
 
