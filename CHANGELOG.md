@@ -5,6 +5,20 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M8.2: every test sheet drawn as a design in the Ink/Stitch differential (`REQ-SVG-008`). TS-02B to
+  TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills' sheet, are cases, as TS-11B and the
+  TS-13 sheets are. Sewn by Ink/Stitch at `d59c9ab`, each agrees by every measure or excuses a measure
+  with the ledger entry that says why.
+  - TS-04 excuses the size and the overlap with `DEV-LCK-001`. Its drawn locks are StitchCraft's own
+    shapes, which lie on the line they secure. Ink/Stitch's cross and star reach past the line's end, and
+    the sheet is 1.6 mm wider in Ink/Stitch.
+  - TS-11C excuses the stitches and the overlap with `DEV-FILL-018`. Its tiles are StitchCraft's own, and
+    Ink/Stitch sews each sample with one of its own tiles. Ink/Stitch sews 7,340 stitches to
+    StitchCraft's 5,883, and the footprints overlap by 0.743. The size and threads are the same, and the
+    trims and jumps within 1.
+  - An overlap below the least is reported as `overlap 0.564, below 0.9`. The report gave it as a
+    difference, with a blank for Ink/Stitch. The least is a constant the comparison shares
+    (`LEAST_OVERLAP`).
 - M8.3: the settings of older Ink/Stitch files updated as Ink/Stitch updates them (`REQ-SVG-007`). Now that
   the SVG reader reads the shapes' settings, the updates that change what they sew apply too. In a file of
   version 1 or 2, a zigzag stroke's pull compensation is halved for each side into
