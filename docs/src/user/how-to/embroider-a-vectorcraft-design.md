@@ -112,7 +112,7 @@ and `stitch export` says so (`SC-W0812`).
 
 ## Draw a test sheet
 
-The [test sheets](../reference/test-sheets.md) drawn as designs, TS-02B to TS-09 and TS-13A to TS-13C,
+The [test sheets](../reference/test-sheets.md) drawn as designs, TS-02B to TS-09 and the TS-13 sheets,
 can start from VectorCraft 0.16 and later. With the [plug-ins installed](../install.md#the-vectorcraft-plug-ins), choose
 **Object › Plug-ins › StitchCraft Test Sheet**, pick the sheet, and press OK. Rest the pointer on
 **Sheet** for what each one tests. The sheet is drawn in the middle of the artboard, each shape with its

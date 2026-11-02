@@ -94,6 +94,14 @@ steps = [
   { export = "ts-13c.pes" },
 ]
 
+[[run]]
+plugins = ["stroke", "satin", "fill", "auto", "testsheet", "pes"]
+steps = [
+  { cmd = "plugin.run", params = { id = "dev.stitchcraft.testsheet", params = { sheet = "TS-13D" } } },
+  { export = "ts-13d.vectorcraft" },
+  { export = "ts-13d.pes" },
+]
+
 [expect]
 exported = [
   ["ts-02b.vectorcraft", "ts-02b.pes"],
@@ -107,6 +115,7 @@ exported = [
   ["ts-13a.vectorcraft", "ts-13a.pes"],
   ["ts-13b.vectorcraft", "ts-13b.pes"],
   ["ts-13c.vectorcraft", "ts-13c.pes"],
+  ["ts-13d.vectorcraft", "ts-13d.pes"],
 ]
 sheets = [
   { file = "ts-02b.vectorcraft", sheet = "TS-02B" },
@@ -120,4 +129,5 @@ sheets = [
   { file = "ts-13a.vectorcraft", sheet = "TS-13A" },
   { file = "ts-13b.vectorcraft", sheet = "TS-13B" },
   { file = "ts-13c.vectorcraft", sheet = "TS-13C" },
+  { file = "ts-13d.vectorcraft", sheet = "TS-13D" },
 ]

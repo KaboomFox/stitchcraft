@@ -1,0 +1,12 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 81267867a1ec371ca3ad14792a7fa108a3b4426f9f11bea1256915d41fc84f60 # shrinks to drawn = [(0, 16, 7, 0, false, 0), (0, 17, 8, 0, false, 0)]
+cc b4a2441badc27e57fab45a216b1bdd9f61dfd58db494de2ab59f7d141b1fc609 # shrinks to drawn = [(21, 8, 8, 0, false, 1), (1, 0, 4, 0, false, 1), (8, 9, 8, 0, false, 0)]
+cc 8a5728282d027a8c96b8a9a032475a02782cbea6b52130c45a1dfcc2f6b7c059 # shrinks to drawn = [(31, 6, 11, 10, true, 0), (7, 26, 12, 0, false, 0), (30, 8, 10, 0, false, 0)]
+cc 82d3f459dbb3b7e3ff09e34f1312fe86a59145ea7d0b8274eb8385b10e6b4604 # shrinks to drawn = [(9, 8, 11, 0, false, 0), (0, 0, 4, 0, false, 0), (10, 23, 4, 0, false, 0), (23, 16, 4, 0, false, 0), (3, 0, 10, 0, false, 0)]
+cc 30f06467772c7755342dff576d4237444618bcd2be572a2cbe9382bf3f48c764 # shrinks to drawn = [(5, 13, 7, 0, false, 0), (6, 3, 12, 0, false, 2), (7, 27, 8, 0, false, 0)]
+cc a98d17889cdd1abb9ccedc502a76b72e733fe80f47b3375650c1cfb18f1ba5cd # shrinks to drawn = [(20, 28, 4, 39, true, 1), (15, 0, 4, 0, false, 0), (1, 0, 4, 0, false, 1), (8, 20, 4, 0, false, 2)]

@@ -131,7 +131,7 @@ fn reach(shapes: &Shapes, index: usize) -> Option<Envelope> {
 /// limited to `L` reaches `L` times half the width from its corner, and clipped there, as a satin column's
 /// rails clip it, its corners up to √(L² + 1) times. Any other corner or cap reaches no further than a square
 /// cap's corner, √2 times, which a miter limited to 1 reaches too.
-fn drawn(element: &Element) -> Option<Envelope> {
+pub(super) fn drawn(element: &Element) -> Option<Envelope> {
     let points: Vec<Point> = element.shape.path().points().collect();
     let grown = match element.shape {
         Shape::Stroke { width, join: Join::Miter { limit }, .. } => width.get() / 2.0 * (limit * limit + 1.0).sqrt(),
@@ -331,7 +331,7 @@ fn lie(shapes: &mut Shapes, first: usize, second: usize, meter: &mut Meter) -> R
 /// as a sliver of rounding is nowhere, so that something of it is left shrunk by half that on every side.
 /// Where they overlap is measured, not either shape, so that a part of a shape thinner than [`TOUCHING`]
 /// that lies across the other overlaps it too.
-fn overlap(first: &[Polygon], second: &[Polygon], meter: &mut Meter) -> Result<bool, Failed> {
+pub(super) fn overlap(first: &[Polygon], second: &[Polygon], meter: &mut Meter) -> Result<bool, Failed> {
     let both = joined(intersection(first, second, meter))?;
     if no_area(area_of(&both)) {
         return Ok(false);
