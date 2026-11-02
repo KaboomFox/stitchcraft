@@ -375,6 +375,15 @@ rationale = "Ink/Stitch's stroke_first lets a design sew a shape's outline under
 milestone = "M8"
 status = "active"
 
+[[req]]
+id = "REQ-SVG-011"
+area = "svg"
+level = "L2"
+statement = "A shape is cut to its clip paths as a viewer clips it: the clipPath its clip-path property names, as an attribute, in its style or by a style sheet, and those named on the elements above it but the root, each of which it must lie inside. A clip's area is the union of its children's: each path, basic shape, or use of one at its x and y, filled by its clip-rule, under its own transform and the clipPath's, in the user space of the element it clips, or of that element's box with clipPathUnits objectBoundingBox. A child not displayed, a group, a line and text add nothing, and SC-W0802 names text. A clip-path on the clipPath, or on a child, cuts its area in turn. A clip with no area hides the shape, which SC-W0802 names; a clip-path naming no clipPath clips nothing. An Inkscape power clip that is hidden or flattened clips nothing, and an inverse one keeps what lies outside the shape it was made from, as Ink/Stitch reads them. Masks are not applied, as in Ink/Stitch, and SC-W0802 names them."
+rationale = "A design clipped in Inkscape, and the glyphs of 5 of Ink/Stitch's fonts, sew only what shows. Ink/Stitch builds a clip's area otherwise in places, which the ledger lists (DEV-SVG-016 to DEV-SVG-019); behaviour checked against Chromium's rendering of each case and Ink/Stitch's lib/svg/clip.py read at d59c9ab."
+milestone = "M8"
+status = "planned"
+
 # ── Generators: shared ─────────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -412,6 +421,15 @@ statement = "A generator spends a stitch of the design's limit for each needle p
 rationale = "Work bounds time, not memory, and a few settings multiply needle points: 10 mm of zigzag at the smallest spacing with 100 repeats and bean stitch 10 is 4.2 million, and a metre of it 420 million, gigabytes. The stitch limit must stop them before they are made, not refuse them after."
 milestone = "M7"
 status = "active"
+
+[[req]]
+id = "REQ-GEN-005"
+area = "generators"
+level = "L2"
+statement = "An element's clips cut what it sews. A fill's area is the part of its region inside every clip, before its underlay, expand_mm and its method see it, and what it offers the element before it is that area. A stroke's lines are cut where they cross a clip's outline, and each piece inside is sewn as a line of its own, in order along the line, as Ink/Stitch sews them; its width is not cut. A satin column is sewn whole, as in Ink/Stitch, and SC-W0217 names it. An element its clips leave nothing of sews nothing, and SC-W0013 names it."
+rationale = "Ink/Stitch cuts a fill's shape and a stroke's centre line to the clip before sewing them, and sews a satin column whole (lib/elements/fill_stitch.py: shape, lib/elements/stroke.py: _get_clipped_path, read at d59c9ab). The engine cuts them for every reader, the SVG file's clip paths now and VectorCraft's clip groups from M8.7."
+milestone = "M8"
+status = "planned"
 
 # ── Running stitch family ──────────────────────────────────────────────────────────────────────────
 
