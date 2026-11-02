@@ -5,6 +5,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M8.3: the settings of older Ink/Stitch files updated as Ink/Stitch updates them (`REQ-SVG-007`). Now that
+  the SVG reader reads the shapes' settings, the updates that change what they sew apply too. In a file of
+  version 1 or 2, a zigzag stroke's pull compensation is halved for each side into
+  `stroke_pull_compensation_mm`, and a satin column starts and ends where it is drawn. In a file of version
+  1 to 3, a fill with `auto_fill` off is a legacy fill, and `fill_method` `auto_fill` is a tatami fill. A
+  shape gets them over its own settings, version by version, and `SC-I0818` counts the shapes each changed.
+  A differential case for each change sews a file of the older version in both programs.
 - M7.8: meander fill with generated tiles (`REQ-FILL-MEA-001` to `REQ-FILL-MEA-005`). One line wanders
   through the sides of a tiling inside each part, after the tatami fill's underlay, and never passes a
   point twice, as Ink/Stitch's meander fill wanders through its tiles. It starts nearest the needle and ends
@@ -39,9 +46,6 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     names it when the design is planned. A group's settings don't change what sews, as in Ink/Stitch, and
     `SC-W0802` names them. A file's `embroider_` attributes, as early versions of Ink/Stitch wrote their
     settings, are named as unread.
-  - In a file of an older version, `SC-W0802` counts the shapes whose settings Ink/Stitch's update changes
-    and StitchCraft doesn't update yet (M8.3): zigzag strokes' pull compensation and satin columns'
-    nearest points before version 3, and fills with `auto_fill` off before version 4.
   - The Ink/Stitch differential sews each test sheet from the SVG file it writes, in both programs, and
     the file reads back with every element's parameters (`REQ-PRM-003`). A new case,
     `inkstitch-settings`, sews shapes of each family with settings other than the defaults: 3,558

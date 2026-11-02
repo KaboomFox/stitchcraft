@@ -2,7 +2,7 @@
 
 Layer **L3**. Reads SVG documents into the engine's `Design`: `stitchcraft_svg::read(bytes, budget)`
 returns the design and warnings about what was left out or simplified. Ink/Stitch's remaining commands,
-clip paths and clones follow in M8 (M8.3 to M8.10).
+clip paths and clones follow in M8 (M8.4 to M8.10).
 
 **Status:** v1 (M3.3) reads paths and the basic shapes, groups and `<switch>`, transforms, the root's
 size and viewBox (so positions come out in millimetres), fill and stroke colours with `currentColor`, and
@@ -28,10 +28,11 @@ change nothing in Ink/Stitch either. `stroke_first` sews a shape's stroke before
 
 A file an older Ink/Stitch saved is read as Ink/Stitch updates it (`src/version.rs`, `REQ-SVG-007`).
 Before file version 4, for one, a fill's stitches were 3 mm long, and a shape of such a file gets that
-length as a parameter. `SC-I0818` counts them. A file with Ink/Stitch's content and no version, which
-Ink/Stitch asks its user about, and one from a newer Ink/Stitch are read as they are, with `SC-W0802`.
-The updates of an older file's settings that StitchCraft doesn't make yet (M8.3) are counted with
-`SC-W0802` too.
+length as a parameter. Since M8.3 the reader makes the updates of the shapes' settings too. In a file
+before version 3, a zigzag stroke's pull compensation is halved for each side and a satin column starts
+and ends where it is drawn. In a file before version 4, a fill with `auto_fill` off is a legacy fill. `SC-I0818` counts the shapes each
+update changed. A file with Ink/Stitch's content and no version, which Ink/Stitch asks its user about,
+and one from a newer Ink/Stitch are read as they are, with `SC-W0802`.
 
 Style sheets set properties as in a viewer (`src/sheet.rs`, `REQ-SVG-006`). Their rules with element,
 class and id selectors, the ones Illustrator and CorelDRAW write, are read, in the order of CSS's cascade.

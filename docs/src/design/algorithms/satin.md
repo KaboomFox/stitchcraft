@@ -541,6 +541,9 @@ short stitches. A zigzag satin's runs through pairs at the full spacing (*Zigzag
 start, the needle enters the line where the start's cut says and follows it to
 where the first stitch's cut says, and the column goes on from its first stitch as before.
 
+Both are on by default. A satin column of a file of Ink/Stitch's version 1 or 2 started and ended where it
+was drawn, and the SVG reader turns both off there, as Ink/Stitch's update does (`REQ-SVG-007`).
+
 **Ending at the nearest point** (`end_at_nearest_point`). With an element after it, the column ends at
 the point of its compensated outline nearest the next stitch. The next stitch is the point of the
 column's rails nearest the next element's first point, or nearest its rails when it offers them. Before
