@@ -1,0 +1,4 @@
+id = "inkstitch-ts11a"
+requirements = ["REQ-RUN-013", "REQ-SAT-029"]
+kind = "inkstitch"
+sheet = "TS-11A"

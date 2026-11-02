@@ -58,7 +58,8 @@ dot, which stays in the fill. TS-13D sews an emblem and a button traced both way
 as Ink/Stitch sews them, inner to outer or in a spiral or double spiral, and TS-11B samples them for MC-6
 (M7.7). A meander fill wanders through the sides of a tiling made in code, and TS-11C samples its 7 tiles
 (M7.8). A circular fill sews a spiral round each part's middle, its pieces routed as a tatami fill's rows,
-and TS-11B samples it too (M7.9). Next is MC-8's sew-out, then M13.8, and MC-6. M10 comes before
+and TS-11B samples it too (M7.9). TS-11A samples the new strokes and satins, so MC-6's sheets are all
+drawn. Next is MC-8's sew-out, then M13.8, and MC-6. M10 comes before
 M14, since lettering's fonts use its stitch types. M15, planned after M14, ports TrueType and
 OpenType fonts for lettering automatically.
 The repository is
