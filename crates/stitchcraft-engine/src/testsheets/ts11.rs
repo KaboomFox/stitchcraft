@@ -104,6 +104,8 @@ fn leaf((x, y): (f64, f64), half: f64, bulge: f64) -> Vec<(f64, f64)> {
 
 #[cfg(test)]
 mod tests {
+    use stitchcraft_plan::{Role, StitchKind};
+
     use super::*;
 
     #[test]
@@ -112,10 +114,59 @@ mod tests {
         assert_eq!(star.len(), 10);
         assert!((star[0].0).abs() < 1e-9 && (star[0].1 + 20.0).abs() < 1e-9, "the first point is up: {:?}", star[0]);
         assert!(star.iter().skip(1).step_by(2).all(|&(x, y)| ((x * x + y * y).sqrt() - 8.0).abs() < 1e-9));
+        // Round its middle from the top point towards +x: the corner after it lies 36° past the top, at
+        // (5 + 8 cos 54°, -8 sin 54°) round (5, 0).
+        let (x, y) = super::star((5.0, 0.0))[1];
+        assert!((x - 9.702282).abs() < 1e-6 && (y + 6.472136).abs() < 1e-6, "{x} {y}");
         let leaf = leaf((0.0, 0.0), 19.0, 10.0);
         assert_eq!(leaf.len(), 48);
         assert_eq!(leaf[0], (-19.0, 0.0));
         assert!((leaf[24].0 - 19.0).abs() < 1e-9 && leaf[24].1.abs() < 1e-9, "{:?}", leaf[24]);
         assert!(leaf.iter().all(|&(_, y)| y.abs() <= 10.0 + 1e-9));
+    }
+
+    /// The least x and y of `points`, then the greatest.
+    fn bounds(points: impl IntoIterator<Item = (f64, f64)>) -> [f64; 4] {
+        let start = [f64::INFINITY, f64::INFINITY, f64::NEG_INFINITY, f64::NEG_INFINITY];
+        points.into_iter().fold(start, |[x0, y0, x1, y1], (x, y)| [x0.min(x), y0.min(y), x1.max(x), y1.max(y)])
+    }
+
+    #[test]
+    fn ts11b_sews_each_sample_where_its_drawing_puts_it() {
+        // The sheet is planned with its middle on the hoop's: its drawing spans x 0 to 125.02 (the stars' points)
+        // and y 2 to 118. Each sample's needle points span its shape to within half a millimetre: a spiral turns
+        // in from the outline as it goes round, and the smoothed leaf, left out here, is rounded off at its tips.
+        let plan = crate::testsheets::find("TS-11B").unwrap().plan().unwrap();
+        let mid = plan.bounds().unwrap().center();
+        let (dx, dy) = (mid.x() - 125.021130326 / 2.0, mid.y() - 60.0);
+        let sewn = |name: &str| -> Vec<(f64, f64)> {
+            let element = plan.elements.iter().position(|e| e.as_str() == format!("ts11b:{name}")).unwrap();
+            let mine = |s: &&stitchcraft_plan::Stitch| {
+                s.kind == StitchKind::Normal && s.origin.role != Role::Lock && s.origin.element.map(|e| e.index()) == Some(element)
+            };
+            plan.stitches().filter(mine).map(|s| (s.at.x() - dx, s.at.y() - dy)).collect()
+        };
+        let [left, middle, right] = ACROSS;
+        let [top, centre, bottom] = DOWN;
+        let disc = |x: f64| [x - DISC, top - DISC, x + DISC, top + DISC];
+        let expected = [
+            ("inner-to-outer", disc(left)),
+            ("single-spiral", disc(middle)),
+            ("double-spiral", disc(right)),
+            ("round", bounds(star((left, centre)))),
+            ("mitred", bounds(star((middle, centre)))),
+            ("bevelled", bounds(star((right, centre)))),
+            ("parting", [left - 20.0, bottom - 8.0, left + 20.0, bottom + 8.0]),
+            ("alternating", [middle - 18.0, bottom - 12.0, middle + 18.0, bottom + 12.0]),
+        ];
+        for (name, drawn) in expected {
+            let found = bounds(sewn(name));
+            assert!(found.iter().zip(drawn).all(|(f, d)| (f - d).abs() < 0.5), "{name}: sewn {found:?}, drawn {drawn:?}");
+        }
+        // The hole of inner to outer, 12 mm across, lies 4 mm right of the disc's middle and 3 mm above it: no
+        // needle point inside it, and its own ring round it.
+        let (hx, hy) = (left + 4.0, top - 3.0);
+        let nearest = sewn("inner-to-outer").iter().map(|&(x, y)| ((x - hx) * (x - hx) + (y - hy) * (y - hy)).sqrt()).fold(f64::INFINITY, f64::min);
+        assert!((nearest - 6.0).abs() < 0.1, "{nearest}");
     }
 }
