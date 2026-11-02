@@ -558,6 +558,15 @@ mod tests {
     }
 
     #[test]
+    fn a_line_on_its_own_goes_whole_though_its_second_end_is_found_free_twice() {
+        // Both ends of a lone line are free from the start. Taking the first frees the second again, so the
+        // second is waiting twice, and the second time it is gone already.
+        let next = vec![[1].into_iter().collect(), [0].into_iter().collect()];
+        let kept = without_free_ends(Network { points: vec![p(0.0, 0.0), p(1.0, 0.0)], next }, &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(kept, Network::default());
+    }
+
+    #[test]
     fn three_pieces_in_a_row_are_joined_by_the_2_shortest_joins() {
         // 3 squares 6 mm high in a row, joined by necks no line of the grid runs along: the middle one is
         // joined to each of the others, and the 2 ends, farther apart, are not joined to each other.
