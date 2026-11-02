@@ -616,3 +616,21 @@ file = "crates/stitchcraft-engine/src/normalize/region/mod.rs"
 mutant = "replace < with > in Polygon::centroid"
 line = "let sign = if (a < 0.0) == (k == 0) { -1.0 } else { 1.0 };"
 why = "it turns the sign of every ring whose area does not add up to 0, so the area and both moments all change sign, exactly, and the centroid, their quotient, is the same to the last bit. A ring whose area adds up to 0 keeps its sign, but the rings of a part, grown or not, each wind round some area, the others being left out when they are joined, so only a coincidence of rounding could make one, and no case can aim at that"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/region/mod.rs"
+mutant = "replace == with != in Polygon::centroid"
+line = "let sign = if (a < 0.0) == (k == 0) { -1.0 } else { 1.0 };"
+why = "either == turned to != turns the test's answer for every ring, whatever its area, so every ring's sign turns: the area and both moments all change sign exactly, as rounding to nearest is the same either side of 0, and the centroid, their quotient, is the same point"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/region/mod.rs"
+mutant = "replace < with <= in Polygon::centroid"
+line = "let sign = if (a < 0.0) == (k == 0) { -1.0 } else { 1.0 };"
+why = "the 2 tests differ only for a ring whose doubled area adds up to exactly 0, which then takes the other sign, and no part has one: rings join a part, grown or not, only as an outline whose exact area on the grid winds clockwise or a hole whose area winds counter-clockwise, and pass no point twice, so each winds round some area and only a coincidence of rounding could make its sum 0. A ring drawn by hand whose area adds up to 0 bounds nothing, or crosses itself as a figure 8 does and runs neither way: it has no way round for the sign to set right"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/tatami/route.rs"
+mutant = "replace < with <= in Rows<'_>::network"
+line = "if from.point.distance(last) < from.point.distance(first) {"
+why = "the nodes a row joins are its line's ends, at their very coordinates, so the first lies 0 from one end, and the 2 tests differ only when it lies 0 from both: a closed line, which <= turns round. No way runs along a closed line, which leaves its node and comes back to it: a step from a node to itself never makes the node nearer, so the search never takes one, and the network's distances and ways are the same whichever way round the line runs"
