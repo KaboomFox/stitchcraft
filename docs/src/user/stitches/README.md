@@ -27,8 +27,10 @@ A parameter belongs to one element. Ink/Stitch stores parameters in the SVG file
 `inkstitch:running_stitch_length_mm="1.5"`, and StitchCraft's parameters have the same names and
 defaults.
 
-`stitch plan` does not read these attributes yet, and every element sews with the defaults. `SC-W0802`
-says so when a file has them. The SVG reader reads them from milestone M8, and the VectorCraft plug-in
-sets them from M6. Ink/Stitch's trim and stop commands are read today.
+`stitch plan` reads these attributes from each shape of an SVG file, and the VectorCraft plug-in sets them.
+A shape with a fill and a stroke gives both the same settings, as in Ink/Stitch, and
+`inkstitch:stroke_first` sews the stroke first. A setting of a stitch type StitchCraft doesn't sew yet is
+kept, and `SC-W0105` names it. Settings on a group don't change what sews, as in Ink/Stitch, and
+`SC-W0802` says so. Ink/Stitch's trim and stop commands are read too.
 
 The pictures on these pages set parameters on the engine directly, to show what each one does.

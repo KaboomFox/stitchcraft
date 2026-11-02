@@ -46,10 +46,10 @@ this one.
 ## Adding a case
 
 Each case is a design in `conformance/fixtures/inkstitch/`, with its row in the fixtures index, and a file
-in `conformance/cases/inkstitch/` naming the design and the requirements it covers. Until M8 reads every
-`inkstitch:` attribute, the designs keep to what the SVG reader reads in full, at Ink/Stitch's defaults,
-with trim and stop commands and the file version. Where StitchCraft sews otherwise on purpose, the case
-excuses the measure with the deviation that says why:
+in `conformance/cases/inkstitch/` naming the design and the requirements it covers. The SVG reader reads
+each shape's `inkstitch:` settings (`REQ-SVG-009`), so a design may set them. Until M8's later steps apply
+them, a design leaves out what the reader names as not applied (`SC-W0802`), such as clip paths and clones.
+Where StitchCraft sews otherwise on purpose, the case excuses the measure with the deviation that says why:
 
 ```toml
 id = "inkstitch-fill-rect"
@@ -61,11 +61,10 @@ design = "fixtures/inkstitch/fill-rect.svg"
 threads = "DEV-THREAD-001"
 ```
 
-A case may name a test sheet drawn as a design, `sheet = "TS-13A"`, in place of `design`. StitchCraft
-sews the sheet as `stitch testsheet` writes it, and Ink/Stitch an SVG file of the elements StitchCraft
-sews it with, automatic digitizing's for its automatic shapes, each with its parameters
-(`stitchcraft_testkit::inkstitch`). That is how designs with parameters come into the corpus before M8,
-since StitchCraft's SVG reader doesn't read them yet.
+A case may name a test sheet drawn as a design, `sheet = "TS-13A"`, in place of `design`. Both programs
+sew an SVG file of the elements StitchCraft sews the sheet with, automatic digitizing's for its automatic
+shapes, each with its parameters (`stitchcraft_testkit::inkstitch`), which StitchCraft's SVG reader reads
+as they were written (`REQ-SVG-009`).
 
 A `centre-lines` case names its shapes with `sheet`, `design` or a `[letters]` table, and has no
 excuses:
