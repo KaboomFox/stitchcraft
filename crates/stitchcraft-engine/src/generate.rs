@@ -37,6 +37,7 @@ use stitchcraft_plan::MachineProfile;
 
 use crate::common::{CommonParams, STOP_AFTER, TRIM_AFTER};
 use crate::design::{DesignSettings, Element, Join, Path, Shape};
+use crate::generators::circular::{self, Circular, circular_fill};
 use crate::generators::contour::{self, Contour, ContourParams, Stitching, contour_fill};
 use crate::generators::manual::manual_stitch;
 use crate::generators::meander::{self, Meander, MeanderParams, meander_fill};
@@ -95,7 +96,8 @@ params! {
         fill: Toggle = "true", label "Sew the fill";
 
         /// The stitch the area is filled with. A tatami fill sews rows of running stitches across it, a
-        /// contour fill rings that follow its outline inward, and a fill set to Ink/Stitch's legacy fill is
+        /// contour fill rings that follow its outline inward, a meander fill one line that wanders through a
+        /// tiling, and a circular fill a spiral round its middle. A fill set to Ink/Stitch's legacy fill is
         /// sewn as a tatami fill without underlay (`SC-W0314`). The other methods arrive in later versions;
         /// until then an element set to one is skipped (`SC-W0011`).
         fill_method: Choice = "tatami_fill", label "Fill method", choices FILL_METHODS;
@@ -328,12 +330,16 @@ fn top_rows_of(
     }
     let neighbours = Neighbours::default();
     let Some(Prepared { region, common, sewing }) = prepare(element, settings, profile, &neighbours, diagnostics, meter)? else { return Ok(None) };
-    // A contour fill and a meander fill have no rows: the preview shows their path, round the rings or
-    // through the tile, as the element's seed lays it.
+    // A contour, meander or circular fill has no rows: the preview shows its path, round the rings, through
+    // the tile as the element's seed lays it, or along the spiral's pieces.
     match sewing.stitch_type {
         StitchType::ContourFill => {
             let Some(contour) = contour_settings(&sewing, diagnostics) else { return Ok(None) };
             return contour::top_path(&region, &contour, meter).map(Some);
+        }
+        StitchType::CircularFill => {
+            let Some(circular) = circular_settings(&sewing, diagnostics) else { return Ok(None) };
+            return circular::top_path(&region, &circular, meter).map(Some);
         }
         StitchType::MeanderFill => {
             let Some(meander) = meander_settings(&sewing, diagnostics) else { return Ok(None) };
@@ -464,6 +470,10 @@ fn fill(
         let Some(meander) = meander_settings(sewing, diagnostics) else { return Ok(None) };
         return Ok(Some(meander_fill(region, &meander, neighbours.needle, neighbours.next.as_ref(), rng, meter)?));
     }
+    if sewing.stitch_type == StitchType::CircularFill {
+        let Some(circular) = circular_settings(sewing, diagnostics) else { return Ok(None) };
+        return Ok(Some(circular_fill(region, &circular, neighbours.needle, neighbours.next.as_ref(), rng, meter)?));
+    }
     let Some(fill) = fill_settings(sewing, diagnostics) else { return Ok(None) };
     Ok(Some(tatami_fill(region, &fill, neighbours.needle, neighbours.next.as_ref(), rng, meter)?))
 }
@@ -534,6 +544,32 @@ fn meander_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Optio
         clip: meander.clip,
         beans: path.bean_stitch_repeats,
         repeats: path.repeats,
+        underlay: tatami.underlay(longest, travel),
+        inset: tatami.fill_underlay_inset_mm.get(),
+        expand: tatami.expand_mm.get(),
+        force_locks: shared.force_locks,
+        travel,
+    })
+}
+
+/// The circular fill `sewing` describes, its settings read as a circular fill reads them: its circles the row
+/// spacing apart, or fading to the end spacing, over each part grown by `expand_mm`, after the tatami fill's
+/// underlay, its spiral sewn and its needle travelling in the running stitch's length and tolerance, routed
+/// as the tatami fill's rows are. `None` when they cannot be read, which `diagnostics` says. Its longest
+/// stitch, its underlay's, and its running stitch's length are raised as a tatami fill's are.
+fn circular_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Option<Circular> {
+    let tatami = sewing.read(TatamiParams::from_set_as, diagnostics);
+    let running = sewing.read(RunningParams::from_set_as, diagnostics);
+    let path = sewing.read(PathFillParams::from_set_as, diagnostics);
+    let (Some(mut tatami), Some(running), Some(path), Some(shared)) = (tatami, running, path, sewing.shared) else { return None };
+    let (longest, travel) = fill_lengths(&mut tatami, &running, shared, diagnostics)?;
+    let jitter = running.enable_random_stitch_length.then_some(running.random_stitch_length_jitter_percent / 100.0);
+    Some(Circular {
+        spacing: tatami.row_spacing_mm.get(),
+        end_spacing: tatami.end_row_spacing_mm.map(Mm::get),
+        stitching: Stitching { length: travel.length, tolerance: travel.tolerance, jitter, beans: path.bean_stitch_repeats, repeats: path.repeats },
+        skip_last: tatami.skip_last,
+        angle: tatami.angle,
         underlay: tatami.underlay(longest, travel),
         inset: tatami.fill_underlay_inset_mm.get(),
         expand: tatami.expand_mm.get(),
@@ -674,8 +710,8 @@ fn stroke(
 /// design's `settings` alone, with the budget's work to itself (`REQ-GEN-003`): a stroke its first point,
 /// a satin column its rails as they are sewn when it starts at its nearest point and otherwise its first
 /// rail's start. A satin column too narrow to stitch across is a stroke (`REQ-SAT-015`). A tatami fill, a
-/// fill set to Ink/Stitch's legacy fill, which is sewn as one (`REQ-FILL-005`), and a contour fill start at
-/// their point nearest the needle and offer their area, their parts, even when set not to be sewn, as
+/// fill set to Ink/Stitch's legacy fill, which is sewn as one (`REQ-FILL-005`), and a contour, meander or
+/// circular fill start at their point nearest the needle and offer their area, their parts, even when set not to be sewn, as
 /// Ink/Stitch's next element is the next in the drawing. Where its stitch type is known, an
 /// element offers what Ink/Stitch's would, even of a method StitchCraft does not sew yet (ADR 0014): a
 /// stroke of any method its first point, as Ink/Stitch's strokes all do, and a satin column of any method
@@ -685,7 +721,11 @@ fn stroke(
 pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -> Option<Approach> {
     let stitch_type = stitch_type_of(element, settings)?;
     let (path, width, join) = match &element.shape {
-        Shape::Fill { .. } if !matches!(stitch_type, StitchType::TatamiFill | StitchType::ContourFill | StitchType::MeanderFill) => return None,
+        Shape::Fill { .. }
+            if !matches!(stitch_type, StitchType::TatamiFill | StitchType::ContourFill | StitchType::MeanderFill | StitchType::CircularFill) =>
+        {
+            return None;
+        }
         Shape::Fill { path, rule } => {
             let parts = region::build(path, *rule, &mut budget.meter()).ok()?.region.parts;
             return (!parts.is_empty()).then_some(Approach::Area(parts));

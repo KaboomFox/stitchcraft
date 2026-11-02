@@ -5,14 +5,15 @@
   "properties": {
     "angle": {
       "default": 0.0,
-      "description": "The direction of the rows, in degrees counter-clockwise from horizontal: 0 sews horizontal rows and 90 upright ones. A contour fill's rings follow its outline, and a meander fill's path its tile, and their angle turns only their underlay.",
+      "description": "The direction of the rows, in degrees counter-clockwise from horizontal: 0 sews horizontal rows and 90 upright ones. A contour fill's rings follow its outline, and a meander fill's path its tile, and their angle turns only their underlay. A circular fill's angle turns its underlay and the lines its needle travels along under its spiral.",
       "title": "Angle",
       "type": "number",
       "x-stitchcraft": {
         "applies_to": [
           "tatami_fill",
           "contour_fill",
-          "meander_fill"
+          "meander_fill",
+          "circular_fill"
         ],
         "group": "Rows",
         "origin": "inkstitch",
@@ -138,7 +139,7 @@
           "default": [
             0
           ],
-          "description": "How many times to go back and forth over each stitch of the fill's path, before its repeats: 1 sews every stitch three times (there, back and there again), 2 five times. Several numbers separated by spaces are taken in turn along the stitches: \"1 0\" makes every other stitch bold.",
+          "description": "How many times to go back and forth over each stitch of the fill's path, before its repeats: 1 sews every stitch three times (there, back and there again), 2 five times. Several numbers separated by spaces are taken in turn along the stitches: \"1 0\" makes every other stitch bold. A circular fill's travel between the pieces of its spiral is sewn once, and takes its turn.",
           "items": {
             "maximum": 10,
             "minimum": 0,
@@ -151,7 +152,8 @@
           "x-stitchcraft": {
             "applies_to": [
               "contour_fill",
-              "meander_fill"
+              "meander_fill",
+              "circular_fill"
             ],
             "group": "Repeats",
             "origin": "inkstitch",
@@ -425,7 +427,8 @@
           "running_stitch",
           "ripple_stitch",
           "tatami_fill",
-          "contour_fill"
+          "contour_fill",
+          "circular_fill"
         ],
         "group": "Running stitch",
         "origin": "inkstitch",
@@ -451,7 +454,7 @@
     },
     "end_row_spacing_mm": {
       "default": null,
-      "description": "The spacing of the last rows, for a fill that fades: from the first row the spacing changes steadily towards it, reaching it the part's height away, in each part of the fill. Empty, every row is the row spacing from the next.",
+      "description": "The spacing of the last rows, for a fill that fades: from the first row the spacing changes steadily towards it, reaching it the part's height away, in each part of the fill. A circular fill's circles go from the row spacing at the middle to it at the part's farthest point. Empty, every row is the row spacing from the next.",
       "maximum": 100.0,
       "minimum": 0.1,
       "title": "End row spacing",
@@ -461,7 +464,8 @@
       ],
       "x-stitchcraft": {
         "applies_to": [
-          "tatami_fill"
+          "tatami_fill",
+          "circular_fill"
         ],
         "deviation": "DEV-FILL-003",
         "group": "Rows",
@@ -481,7 +485,8 @@
         "applies_to": [
           "tatami_fill",
           "contour_fill",
-          "meander_fill"
+          "meander_fill",
+          "circular_fill"
         ],
         "group": "Rows",
         "origin": "inkstitch",
@@ -513,7 +518,7 @@
     },
     "fill_method": {
       "default": "tatami_fill",
-      "description": "The stitch the area is filled with. A tatami fill sews rows of running stitches across it, a contour fill rings that follow its outline inward, and a fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without underlay (`SC-W0314`). The other methods arrive in later versions; until then an element set to one is skipped (`SC-W0011`).",
+      "description": "The stitch the area is filled with. A tatami fill sews rows of running stitches across it, a contour fill rings that follow its outline inward, a meander fill one line that wanders through a tiling, and a circular fill a spiral round its middle. A fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without underlay (`SC-W0314`). The other methods arrive in later versions; until then an element set to one is skipped (`SC-W0011`).",
       "enum": [
         "tatami_fill",
         "circular_fill",
@@ -546,14 +551,15 @@
     },
     "fill_underlay": {
       "default": true,
-      "description": "Sew underlay before the top rows, a contour fill's rings or a meander fill's path: rows of stitches farther apart than the top rows, square to them unless set otherwise. It holds the fabric still while the fill is sewn and lifts the top rows, so less fabric shows between them.",
+      "description": "Sew underlay before the top rows, a contour fill's rings, a meander fill's path or a circular fill's spiral: rows of stitches farther apart than the top rows, square to them unless set otherwise. It holds the fabric still while the fill is sewn and lifts the top rows, so less fabric shows between them.",
       "title": "Underlay",
       "type": "boolean",
       "x-stitchcraft": {
         "applies_to": [
           "tatami_fill",
           "contour_fill",
-          "meander_fill"
+          "meander_fill",
+          "circular_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -577,7 +583,8 @@
         "applies_to": [
           "tatami_fill",
           "contour_fill",
-          "meander_fill"
+          "meander_fill",
+          "circular_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -596,7 +603,8 @@
         "applies_to": [
           "tatami_fill",
           "contour_fill",
-          "meander_fill"
+          "meander_fill",
+          "circular_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -618,7 +626,8 @@
         "applies_to": [
           "tatami_fill",
           "contour_fill",
-          "meander_fill"
+          "meander_fill",
+          "circular_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -640,7 +649,8 @@
         "applies_to": [
           "tatami_fill",
           "contour_fill",
-          "meander_fill"
+          "meander_fill",
+          "circular_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -657,7 +667,8 @@
         "applies_to": [
           "tatami_fill",
           "contour_fill",
-          "meander_fill"
+          "meander_fill",
+          "circular_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -894,7 +905,7 @@
     },
     "max_stitch_length_mm": {
       "default": null,
-      "description": "Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as its split method says. Empty, a stitch is split only where it is longer than the machine sews. A tatami fill sews its rows in stitches this long, and a contour fill its rings. A meander fill's underlay sews its rows so.",
+      "description": "Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as its split method says. Empty, a stitch is split only where it is longer than the machine sews. A tatami fill sews its rows in stitches this long, and a contour fill its rings. A meander or circular fill's underlay sews its rows so.",
       "maximum": 25.0,
       "minimum": 0.1,
       "title": "Longest stitch",
@@ -911,7 +922,8 @@
           "zigzag",
           "tatami_fill",
           "contour_fill",
-          "meander_fill"
+          "meander_fill",
+          "circular_fill"
         ],
         "family_defaults": {
           "fill": 4.0
@@ -1226,7 +1238,8 @@
           "zigzag",
           "tatami_fill",
           "contour_fill",
-          "meander_fill"
+          "meander_fill",
+          "circular_fill"
         ],
         "group": "Random variation",
         "origin": "inkstitch",
@@ -1294,7 +1307,8 @@
           "running_stitch",
           "ripple_stitch",
           "tatami_fill",
-          "contour_fill"
+          "contour_fill",
+          "circular_fill"
         ],
         "group": "Running stitch",
         "origin": "inkstitch",
@@ -1412,7 +1426,8 @@
           "x-stitchcraft": {
             "applies_to": [
               "contour_fill",
-              "meander_fill"
+              "meander_fill",
+              "circular_fill"
             ],
             "group": "Repeats",
             "origin": "inkstitch",
@@ -1447,7 +1462,7 @@
     },
     "row_spacing_mm": {
       "default": 0.25,
-      "description": "How far apart the rows are, measured square to them, or a contour fill's rings. Rows closer together cover the fabric more fully, and pull it in more. A meander fill's underlay rows lie 3 of them apart.",
+      "description": "How far apart the rows are, measured square to them, or a contour fill's rings, or a circular fill's circles. Rows closer together cover the fabric more fully, and pull it in more. A meander fill's underlay rows lie 3 of them apart.",
       "maximum": 100.0,
       "minimum": 0.1,
       "title": "Row spacing",
@@ -1456,7 +1471,8 @@
         "applies_to": [
           "tatami_fill",
           "contour_fill",
-          "meander_fill"
+          "meander_fill",
+          "circular_fill"
         ],
         "group": "Rows",
         "origin": "inkstitch",
@@ -1468,7 +1484,7 @@
       "default": [
         2.5
       ],
-      "description": "How long each stitch is. Between corners the stitches are spread evenly, so each one is at most this long. Several lengths separated by spaces sew as a repeating pattern: \"2.5 1\" sews long, short, long, short. The stitches that join a satin column's underlays are no longer than the first length, and a meander fill's path is sewn in stitches of the first length.",
+      "description": "How long each stitch is. Between corners the stitches are spread evenly, so each one is at most this long. Several lengths separated by spaces sew as a repeating pattern: \"2.5 1\" sews long, short, long, short. The stitches that join a satin column's underlays are no longer than the first length, and a meander fill's path and a circular fill's spiral are sewn in stitches of the first length.",
       "items": {
         "maximum": 25.0,
         "minimum": 0.1,
@@ -1488,7 +1504,8 @@
           "zigzag",
           "tatami_fill",
           "contour_fill",
-          "meander_fill"
+          "meander_fill",
+          "circular_fill"
         ],
         "group": "Running stitch",
         "origin": "inkstitch",
@@ -1533,7 +1550,8 @@
           "zigzag",
           "tatami_fill",
           "contour_fill",
-          "meander_fill"
+          "meander_fill",
+          "circular_fill"
         ],
         "deviation": "DEV-SAT-006",
         "group": "Running stitch",
@@ -1635,12 +1653,13 @@
     },
     "skip_last": {
       "default": false,
-      "description": "Leave out the needle point at the end of each row. It lies close to the start of the next row, and leaving it out lowers the stitch count and the density along the fill's edge.",
+      "description": "Leave out the needle point at the end of each row, or of each piece of a circular fill's spiral. It lies close to the start of the next, and leaving it out lowers the stitch count and the density along the fill's edge.",
       "title": "Skip last stitch",
       "type": "boolean",
       "x-stitchcraft": {
         "applies_to": [
-          "tatami_fill"
+          "tatami_fill",
+          "circular_fill"
         ],
         "group": "Stitches",
         "origin": "inkstitch",
@@ -1723,7 +1742,8 @@
         "applies_to": [
           "tatami_fill",
           "contour_fill",
-          "meander_fill"
+          "meander_fill",
+          "circular_fill"
         ],
         "group": "Stitches",
         "origin": "inkstitch",
@@ -1859,7 +1879,8 @@
         "applies_to": [
           "tatami_fill",
           "contour_fill",
-          "meander_fill"
+          "meander_fill",
+          "circular_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -1868,12 +1889,13 @@
     },
     "underpath": {
       "default": true,
-      "description": "Travel between rows runs inside the fill, under rows sewn after it, which hide it. Off, the needle travels along the fill's outline, where the travel can show along the edge.",
+      "description": "Travel between rows, or a circular fill's pieces of spiral, runs inside the fill, under those sewn after it, which hide it. Off, the needle travels along the fill's outline, where the travel can show along the edge.",
       "title": "Underpath",
       "type": "boolean",
       "x-stitchcraft": {
         "applies_to": [
-          "tatami_fill"
+          "tatami_fill",
+          "circular_fill"
         ],
         "group": "Travel",
         "origin": "inkstitch",

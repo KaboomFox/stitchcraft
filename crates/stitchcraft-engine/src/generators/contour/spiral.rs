@@ -60,8 +60,9 @@ pub(super) fn single(rings: &[&[Point]], longest: f64, start: Point, meter: &mut
     spiral(rings, longest, start, meter)
 }
 
-/// The double spiral along `rings`: in on the even ones, back out on the odd ones.
-pub(super) fn double(rings: &[&[Point]], longest: f64, start: Point, meter: &mut Meter) -> Result<Vec<Vec<Point>>, Exhausted> {
+/// The double spiral along `rings`: in on the even ones, back out on the odd ones. A circular fill sews its
+/// circles so.
+pub(crate) fn double(rings: &[&[Point]], longest: f64, start: Point, meter: &mut Meter) -> Result<Vec<Vec<Point>>, Exhausted> {
     let even: Vec<&[Point]> = rings.iter().step_by(2).copied().collect();
     let odd: Vec<&[Point]> = rings.iter().skip(1).step_by(2).copied().collect();
     let mut path = spiral(&even, longest, start, meter)?;

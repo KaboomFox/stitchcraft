@@ -1,6 +1,6 @@
-//! TS-11 — new stitch types (M7), for MC-6. TS-11B sews the contour fills (M7.7), and circular fills join
-//! it as M7.9 sews them; TS-11C sews the meander fills (M7.8). TS-11A, the new strokes and satins of M7.2
-//! to M7.5, is drawn before MC-6.
+//! TS-11 — new stitch types (M7), for MC-6. TS-11B sews the contour fills (M7.7) and the circular fills
+//! (M7.9); TS-11C sews the meander fills (M7.8). TS-11A, the new strokes and satins of M7.2 to M7.5, is
+//! drawn before MC-6.
 //!
 //! Drawn as designs (`designed`), so the engine sews each sample as a design's element, with Ink/Stitch's
 //! defaults but for what the sample sets, over the default underlay. Each sample is trimmed after, and each
@@ -15,6 +15,9 @@
 //!   bevelled corners.
 //! - **Bottom row**: 2 squares joined by a neck 3 mm wide, where the rings part; a rectangle whose rings
 //!   alternate their direction, so the steps between them don't cross; and a leaf smoothed by 0.5 mm.
+//!
+//! - **Fourth row**, circular fills: the disc round its hole set off its middle, the star, and a rectangle
+//!   whose circles fade from 0.25 mm apart at its middle to 1 mm at its corners.
 //!
 //! No sample's hole grows to meet its outline at the same ring all round: there the rings that are left
 //! turn on the last bits of the arithmetic, in Ink/Stitch's as in StitchCraft's.
@@ -32,7 +35,7 @@ use stitchcraft_core::math::sin_cos;
 
 use super::designed::{Drawing, polygon, round};
 use super::sketch::SheetError;
-use super::{BLUE, EMERALD_GREEN, RED, thread};
+use super::{BLUE, DEEP_GOLD, EMERALD_GREEN, RED, thread};
 
 /// The settings every sample shares: a contour fill, trimmed after.
 const CONTOUR: [(&str, &str); 2] = [("fill_method", "contour_fill"), ("trim_after", "true")];
@@ -44,6 +47,10 @@ const DISC: f64 = 18.0;
 const HOLE: (f64, (f64, f64)) = (6.0, (4.0, -3.0));
 /// The stars' outer and inner radius (mm).
 const STAR: (f64, f64) = (20.0, 8.0);
+/// The settings every circular sample shares: a circular fill, trimmed after.
+const CIRCULAR: [(&str, &str); 2] = [("fill_method", "circular_fill"), ("trim_after", "true")];
+/// The middle of TS-11B's row of circular fills, down the sheet (mm).
+const CIRCLES: f64 = 150.0;
 
 /// Draws TS-11B.
 pub(super) fn contours() -> Result<Drawing, SheetError> {
@@ -83,7 +90,22 @@ pub(super) fn contours() -> Result<Drawing, SheetError> {
     let rectangle = polygon(&[(x, y), (x + 36.0, y), (x + 36.0, y + 24.0), (x, y + 24.0)])?;
     d.fill("alternating", vec![rectangle], &red, &with(&[("avoid_self_crossing", "true")]))?;
     d.fill("smoothed", vec![polygon(&leaf((right, bottom), 19.0, 10.0))?], &red, &with(&[("smoothness_mm", "0.5")]))?;
+    circulars(&mut d)?;
     Ok(d)
+}
+
+/// TS-11B's row of circular fills: the disc round its hole, the star, and a rectangle whose circles fade.
+fn circulars(d: &mut Drawing) -> Result<(), SheetError> {
+    let gold = thread(DEEP_GOLD)?;
+    let [left, middle, right] = ACROSS;
+    let with = |own: &[(&'static str, &'static str)]| [&CIRCULAR[..], own].concat();
+    let (hole, (dx, dy)) = HOLE;
+    d.fill("circular", vec![round((left, CIRCLES), DISC)?, round((left + dx, CIRCLES + dy), hole)?], &gold, &with(&[]))?;
+    d.fill("circular-star", vec![polygon(&star((middle, CIRCLES)))?], &gold, &with(&[]))?;
+    let (x, y) = (right - 18.0, CIRCLES - 12.0);
+    let rectangle = polygon(&[(x, y), (x + 36.0, y), (x + 36.0, y + 24.0), (x, y + 24.0)])?;
+    d.fill("circular-fading", vec![rectangle], &gold, &with(&[("end_row_spacing_mm", "1")]))?;
+    Ok(())
 }
 
 /// The settings every meander sample shares: a meander fill, trimmed after.

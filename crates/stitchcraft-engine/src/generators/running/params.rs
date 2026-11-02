@@ -4,16 +4,18 @@
 //! column's underlays are no longer than the running stitch's length, and its way to its start and from
 //! its end keeps to the running stitch's length and tolerance, which Ink/Stitch stores under the same keys.
 //! A tatami fill's needle travels between its rows in running stitches of the same length and tolerance,
-//! and a contour or meander fill's between the rows of its underlay; a contour fill's rings keep to the
-//! tolerance, and a meander fill's path is sewn in running stitches of the length.
+//! and a contour, meander or circular fill's between the rows of its underlay; a contour fill's rings keep
+//! to the tolerance, and a meander fill's path and a circular fill's spiral are sewn in running stitches of
+//! the length, a circular fill's travel between the pieces of its spiral too.
 
 use stitchcraft_params::{Origin, StitchType, params};
 
 /// The stitch types that sew stitches of the running stitch's length and tolerance: running and ripple
 /// stitch along their lines, satin columns, whatever their method, between their underlays and on their
 /// way to their start and from their end, tatami fills between their rows, contour fills between the
-/// rows of their underlay and, keeping to the tolerance, along their rings, and meander fills between the
-/// rows of their underlay and along their path.
+/// rows of their underlay and, keeping to the tolerance, along their rings, meander fills between the
+/// rows of their underlay and along their path, and circular fills along their spiral and between its
+/// pieces.
 const RUNS: &[StitchType] = &[
     StitchType::RunningStitch,
     StitchType::RippleStitch,
@@ -24,11 +26,13 @@ const RUNS: &[StitchType] = &[
     StitchType::TatamiFill,
     StitchType::ContourFill,
     StitchType::MeanderFill,
+    StitchType::CircularFill,
 ];
 
 /// The stitch types whose stitches may vary in length at random: running and ripple stitch along their
-/// lines, a tatami fill along its rows and a contour fill along its rings.
-const RANDOM_LENGTHS: &[StitchType] = &[StitchType::RunningStitch, StitchType::RippleStitch, StitchType::TatamiFill, StitchType::ContourFill];
+/// lines, a tatami fill along its rows, a contour fill along its rings and a circular fill along its spiral.
+const RANDOM_LENGTHS: &[StitchType] =
+    &[StitchType::RunningStitch, StitchType::RippleStitch, StitchType::TatamiFill, StitchType::ContourFill, StitchType::CircularFill];
 
 params! {
     /// Running stitch: single stitches along the path, for outlines, details and travel.
@@ -38,7 +42,8 @@ params! {
         /// How long each stitch is. Between corners the stitches are spread evenly, so each one is at most
         /// this long. Several lengths separated by spaces sew as a repeating pattern: "2.5 1" sews long,
         /// short, long, short. The stitches that join a satin column's underlays are no longer than the
-        /// first length, and a meander fill's path is sewn in stitches of the first length.
+        /// first length, and a meander fill's path and a circular fill's spiral are sewn in stitches of the
+        /// first length.
         running_stitch_length_mm: LengthList = "2.5", label "Stitch length", range (0.1, 25.0), applies RUNS;
 
         /// How far a stitch may stray from a curve. A smaller tolerance follows curves more closely, with

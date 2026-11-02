@@ -287,14 +287,16 @@ pub static SHEETS: &[TestSheet] = &[
     },
     TestSheet {
         id: "TS-11B",
-        title: "New fills: contour fills",
+        title: "New fills: contour and circular fills",
         checks: &[
-            "Each sample is a contour fill: rings that follow its outline inward, a row spacing apart, sewn as one line over the default underlay. Top row, in green, left to right: a disc 36 mm across sewn inner to outer round a hole, then a single spiral and a double spiral, the rings 0.25 mm apart. Middle row, in blue: stars 40 mm across with round, mitred and bevelled corners, the rings 0.4 mm apart. Bottom row, in red: 2 squares joined by a neck 3 mm wide, a rectangle whose rings alternate direction, and a leaf smoothed by 0.5 mm.",
+            "The top 3 rows are contour fills: rings that follow the outline inward, a row spacing apart, sewn as one line over the default underlay. Top row, in green, left to right: a disc 36 mm across sewn inner to outer round a hole, then a single spiral and a double spiral, the rings 0.25 mm apart. Second row, in blue: stars 40 mm across with round, mitred and bevelled corners, the rings 0.4 mm apart. Third row, in red: 2 squares joined by a neck 3 mm wide, a rectangle whose rings alternate direction, and a leaf smoothed by 0.5 mm.",
+            "The bottom row, in gold, is circular fills: a spiral round the middle of each shape, cut by its outline, over the default underlay. Left to right: the disc round its hole, the star, and a rectangle whose circles fade from 0.25 mm apart at its middle to 1 mm at its corners. Where the spiral leaves the shape and comes back, the needle travels inside it under the spiral sewn later.",
             "Does fabric show between the rings, or does a fill pucker? Measure the discs: do they sew 36 mm across?",
             "Inner to outer steps in from ring to ring and sews each on its way out. Do the steps show as a line across the rings? On the rectangle, whose rings alternate, the steps don't cross: does it look calmer than the disc?",
             "Where do the spirals end in the middle, and the double spiral on its outline? Is there a knot or a bump there?",
             "On the stars, do the mitred rings reach into the points, and the round and bevelled ones leave a gap at each tip? Which star looks best?",
             "Does the neck between the 2 squares fill, where the rings part to each side? Does the smoothed leaf's line run evenly, without kinks?",
+            "Do the circular fills' circles look round and even, and does fabric show between them? Does the travel between the pieces of a spiral show anywhere, on the star's points or round the disc's hole? Does the fading rectangle look denser at its middle and lighter at its corners, as it should?",
             "How long does the sheet take? A contour fill sews as one line, with no travel between rows.",
         ],
         profile: REFERENCE,
@@ -476,7 +478,7 @@ mod tests {
         assert_eq!(about("TS-08"), [100.0, 170.0, 0.0, 0.0]);
         assert_eq!(about("TS-09"), [66.0, 114.0, 0.0, 0.0]);
         // The right-hand star's upper point on its right lies 20 mm from its middle, 18° above the level.
-        assert_eq!(about("TS-11B"), [125.021130326, 116.0, 0.0, 0.0]);
+        assert_eq!(about("TS-11B"), [125.021130326, 165.993678599, 0.0, 0.0]);
         // TS-11C's star, in its bottom row, reaches 20 sin 54° mm below its middle, and the discs of its top row
         // 18 mm above theirs.
         assert_eq!(about("TS-11C"), [123.0, 120.176369967, 0.0, 0.0]);

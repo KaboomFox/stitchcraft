@@ -462,7 +462,7 @@ share, instead of being stopped (`apps/stitchcraft-vc-plugin/src/preview.rs`):
 | Level | Geometry returned | Auto shows it |
 |---|---|---|
 | Exact | The stitch polyline (strokes, satins) or one thin closed ribbon per stitch (fills) | For a stroke or a satin column, within nine tenths of the budget |
-| Rows | One ribbon per row segment of a fill's top rows, or per side of a contour fill's path round its rings (from M7.7): where its stitches lie and which way they run | For a fill, within eight tenths |
+| Rows | One ribbon per row segment of a fill's top rows, or per side of a contour fill's path round its rings (from M7.7), a meander fill's path (from M7.8) or a circular fill's pieces of spiral (from M7.9): where its stitches lie and which way they run | For a fill, within eight tenths |
 | Outline | The object's path as lines for a stroke or a satin column, and as ribbons for a fill, which are hatched every 3 mm in its direction | When the others cost too much |
 
 The `preview_level` parameter, `auto` by default, lets the user pick a level (VectorCraft reserves the

@@ -46,6 +46,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-I0315`](#sc-i0315) | Info | Contour fill's part too narrow for its spiral; sewn inner to outer |
 | [`SC-W0316`](#sc-w0316) | Warning | Meander pattern is one of Ink/Stitch's tiles; sewn with StitchCraft's default tile |
 | [`SC-W0317`](#sc-w0317) | Warning | Meander fill part too small for its tile; sewn round its outline |
+| [`SC-W0318`](#sc-w0318) | Warning | Circular fill part within its row spacing of its middle; sewn as one circle |
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
 | [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
@@ -550,6 +551,17 @@ has nothing to wander through. It is sewn as a running stitch round its outline.
 the whole fill with an error there.
 
 The message counts the parts. Make `meander_scale_percent` smaller to fit the tile into them.
+
+## SC-W0318
+
+**Warning** — Circular fill part within its row spacing of its middle; sewn as one circle
+
+A part of a circular fill lies within its row spacing of its middle, too small for a spiral, so it is
+sewn as one circle with a radius of the row spacing round its middle, as Ink/Stitch sews it. The
+circle may reach past the part.
+
+The message counts the parts. Make `row_spacing_mm` smaller for a spiral, or sew so small a part as a
+running stitch or a satin column.
 
 ## SC-W0401
 

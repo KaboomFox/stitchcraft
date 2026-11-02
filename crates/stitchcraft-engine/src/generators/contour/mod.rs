@@ -31,7 +31,7 @@
 
 mod inner;
 pub(crate) mod line;
-mod spiral;
+pub(crate) mod spiral;
 mod tree;
 
 use stitchcraft_core::rng::SplitMix64;
@@ -94,7 +94,7 @@ pub enum Strategy {
     DoubleSpiral,
 }
 
-/// How a contour fill's path is stitched: its running stitch, bean stitch and repeats.
+/// How a contour or circular fill's path is stitched: its running stitch, bean stitch and repeats.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Stitching {
     /// The longest stitch, in millimetres.
