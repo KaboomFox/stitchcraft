@@ -39,7 +39,9 @@ pub(super) fn cut(design: &Design, budget: &Budget, said: &mut Vec<Diagnostic>) 
         said.extend(told.into_iter().map(|d| d.with_element(element.id.clone())));
     }
     // Each point of a cut shape lies on its shape or on a clip, which the design checked, so an error is a bug.
-    let mut cut = Design::new(elements, design.settings).map_err(|bug| said.push(bug)).ok()?;
+    let cut = Design::new(elements, design.settings);
+    said.extend(cut.as_ref().err().cloned());
+    let mut cut = cut.ok()?;
     cut.sort_colours = design.sort_colours;
     Some(cut)
 }
