@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-b0b29ef2.js";
+            window.path_to_searchindex_js = "../../searchindex-721fe96e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-0c202e0a.js"></script>
@@ -232,7 +232,8 @@ compensation parameters plus 0.05 mm.</li>
 point of the shape to the hint (<code>REQ-GEN-001</code>).</li>
 <li><strong>Degenerate inputs:</strong> the shared degenerate corpus (zero-area, hair-thin, self-touching, collinear,
 duplicate points, 1-point paths, huge coordinates, 10⁶-vertex paths) never fails and never exceeds the
-budget without <code>SC-E0004</code>.</li>
+budget without <code>SC-E0004</code>. <code>tests/degenerate.rs</code> sews it, and random paths that tend to degenerate, by
+every method (<a href="../conformance.html#l2--generator-properties-every-pr">conformance</a>).</li>
 <li><strong>Monotonicity where meaningful:</strong> denser spacing never yields fewer stitches; larger shapes never
 yield fewer stitches.</li>
 </ol>
