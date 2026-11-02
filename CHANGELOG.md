@@ -5,6 +5,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M8.11, a spike: `stitch import-inkstitch` will bring Ink/Stitch files into VectorCraft as documents
+  whose objects have StitchCraft's effects. ADR-0016 records why. VectorCraft keeps an SVG file's
+  `inkstitch:*` attributes from import to export since 0.17, but doesn't give a filter or a live effect
+  any of them. Its import drops the connectors that tie commands to objects, the design settings, the
+  file's version and the settings of a clone's source, so a document opened that way would sew otherwise
+  than `stitch plan` sews the file. From M8.12 the VectorCraft adapter names an object that keeps
+  Ink/Stitch's attributes, with `stitch import-inkstitch` as the hint.
 - MC-6: TS-11A, the sampler of M7's new strokes and satins, so every sheet MC-6 sews is drawn. A band to a
   thread, most samples hooks, straight and then turning a quarter circle, in rows that turn back on each
   other so the needle never comes to a sample where it would sew a jump's thread down. Zigzag strokes 1, 2
