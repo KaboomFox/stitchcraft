@@ -81,7 +81,6 @@ fn diag_sc_w0802_what_is_not_stitched_is_named() {
             "warning SC-W0802: `photo` is a raster image, which is not stitched; it is left out.",
             "warning SC-W0802: `clone` is a clone (`<use>`), which is not stitched yet; it is left out.",
             "warning SC-W0802: The fill of `patterned` is a `<pattern>`, which is not stitched; it is stitched in the fallback colour, #000080.",
-            "warning SC-W0802: `clipped` is clipped (`clip-path`); clipping is not applied, so all of it is stitched.",
             "warning SC-W0802: `inner` is a nested `<svg>` element, which is not read yet; it is left out.",
         ]
     );
@@ -90,8 +89,8 @@ fn diag_sc_w0802_what_is_not_stitched_is_named() {
     assert_eq!(text.element.as_ref().map(ToString::to_string).as_deref(), Some("svg:title"));
     assert_eq!(text.fix.as_ref().map(|f| f.describe()).as_deref(), Some("Convert the text to paths first (in Inkscape: Path › Object to Path)."));
     // What can be stitched still is, the style sheet's class included.
-    assert_eq!(ids(&file), ["svg:patterned:fill", "svg:clipped:fill", "svg:styled:fill"]);
-    assert_eq!(file.design.elements()[2].thread.color.to_string(), "#ff0000");
+    assert_eq!(ids(&file), ["svg:patterned:fill", "svg:styled:fill"]);
+    assert_eq!(file.design.elements()[1].thread.color.to_string(), "#ff0000");
 
     let more = svg(r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkstitch="http://inkstitch.org/namespace" transform="scale(2)">
           <path id="arrow" d="M 0 0 L 10 0" stroke="red" fill="none" marker-end="url(#head)"/>
