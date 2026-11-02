@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A green rectangle 60 × 40 mm in a file of version 3, filled by the method auto_fill, the tatami fill's name before version 4, at 45°, which Ink/Stitch's update renames tatami_fill. Written for StitchCraft's Ink/Stitch differential cases (conformance L3). -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkstitch="http://inkstitch.org/namespace"
+     width="100mm" height="100mm" viewBox="0 0 100 100">
+  <metadata><inkstitch:inkstitch_svg_version>3</inkstitch:inkstitch_svg_version></metadata>
+  <rect id="tatami" x="10" y="10" width="60" height="40" fill="#2f7e20" inkstitch:fill_method="auto_fill" inkstitch:angle="45"/>
+</svg>

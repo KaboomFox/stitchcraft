@@ -26,6 +26,10 @@ mod params;
 mod tests;
 
 pub use params::ZigzagStrokeParams;
+
+/// The key of a zigzag stroke's own pull compensation, which Ink/Stitch's update of a file older than its
+/// version 3 makes from the pull compensation the stroke shared with fills and satin columns.
+pub const STROKE_PULL_COMPENSATION: &str = "stroke_pull_compensation_mm";
 use stitchcraft_core::units::{MM_PER_SVG_PX, at_least};
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Mm, Point, math};
 

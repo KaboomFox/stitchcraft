@@ -267,12 +267,14 @@ StitchCraft reads them as the commands they became in any file (`DEV-SVG-014`).
 ## Other attributes
 
 The `inkstitch:*` attributes that declare no parameter: settings of an element, of Ink/Stitch's
-patterns, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrites in older files.
+patterns, lettering, tools, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrites in older files.
+The SVG adapter reads those marked read itself. It keeps any other of a shape as a parameter of the shape's
+elements, which the registry names (`SC-W0105`).
 
 | Attribute | Kind | Phase | StitchCraft |
 |---|---|---|---|
 | `ignore_object` | element | P1 (M3) | read |
-| `stroke_first` | element | P1 (M8) | planned |
+| `stroke_first` | element | P1 (M8) | read |
 | `cutwork_needle` | element | — | not planned |
 | `pattern_interval` | pattern | — | not planned |
 | `pattern_offset` | pattern | — | not planned |
@@ -280,11 +282,18 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrit
 | `layer_visibility` | stitch plan | — | not planned |
 | `sew_stack` | sew stack | — | not planned |
 | `sew_stack_only` | sew stack | — | not planned |
-| `polyline` | legacy | P2 (M8) | planned |
+| `tartan` | element | P3 (M10) | planned |
+| `color_sort_index` | lettering | P3 (M14) | planned |
+| `letter-group` | lettering | P3 (M14) | planned |
+| `lettering` | lettering | P3 (M14) | planned |
+| `path_type` | tool | — | not planned |
+| `start` | tool | — | not planned |
+| `end` | tool | — | not planned |
+| `polyline` | legacy | — | not planned |
 | `auto_fill` | legacy | P2 (M8) | planned |
-| `e_stitch` | legacy | P2 (M8) | planned |
-| `manual_stitch` | legacy | P2 (M8) | planned |
-| `grid_size` | legacy | P2 (M8) | planned |
+| `e_stitch` | legacy | — | not planned |
+| `manual_stitch` | legacy | — | not planned |
+| `grid_size` | legacy | — | not planned |
 
 ## File versions
 
@@ -311,12 +320,12 @@ change Ink/Stitch's updater makes (`lib/update.py`), in StitchCraft's words.
 | 1 | a stroke with neither a method nor `satin_column`, whose `style` doesn't set `stroke-dasharray`, gets `zigzag_stitch`, unless it has `inkscape:connection-start` | not planned |
 | 1 | a stroke's `grid_size`, in pixels, becomes `grid_size_mm`, unless it has `inkscape:connection-start` | not planned |
 | 2 | a `<polyline>` whose `style` attribute sets a stroke other than `none` gets `stroke_method` `manual_stitch` | applied, unless digitized automatically |
-| 3 | a zigzag stroke's `pull_compensation_mm`, unless 0, is halved into `stroke_pull_compensation_mm`, which applies to each side | planned (M8) |
-| 3 | a satin column gets `start_at_nearest_point` and `end_at_nearest_point` off | planned (M8) |
+| 3 | a zigzag stroke's `pull_compensation_mm`, unless 0, is halved into `stroke_pull_compensation_mm`, which applies to each side | applied, unless digitized automatically |
+| 3 | a satin column gets `start_at_nearest_point` and `end_at_nearest_point` off | applied, unless digitized automatically |
 | 3 | the commands' old names become today's (the table under Commands) | applied, in any file (`DEV-SVG-014`) |
 | 3 | a `starting_point` or `ending_point` command is placed anew at its connector's end on its object | planned (M8) |
 | 4 | an element whose fill is not `none` (a fill not set is black), and whose `max_stitch_length_mm` is missing, empty, not a number or 0, gets 3 | applied to the shapes whose fill is sewn, unless digitized automatically |
-| 4 | a fill with `auto_fill` off gets `fill_method` `legacy_fill`, and `auto_fill` is removed | planned (M8) |
-| 4 | `fill_method` `auto_fill` becomes `tatami_fill` | planned (M8) |
+| 4 | a fill with `auto_fill` off gets `fill_method` `legacy_fill`, and `auto_fill` is removed | applied to the shapes whose fill is sewn, unless digitized automatically (`DEV-FILL-014` says how a legacy fill sews) |
+| 4 | `fill_method` `auto_fill` becomes `tatami_fill` | applied to the shapes whose fill is sewn, unless digitized automatically |
 
 _145 parameter declarations, 105 registered in StitchCraft._

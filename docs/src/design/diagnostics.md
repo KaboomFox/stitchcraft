@@ -164,7 +164,7 @@ another.
 | `SC-E0815` | Error | VectorCraft's command line could not be started (`stitch plan` traces a picture with it: neither on the PATH nor where `--vectorcraft-cli` says) | M13 |
 | `SC-E0816` | Error | VectorCraft could not trace the picture (its command line failed or didn't save the document) | M13 |
 | `SC-E0817` | Error | VectorCraft test sheet not drawn (in the middle of the artboard, parts of the sheet would lie more than 10 m from the document's origin) | M6 |
-| `SC-I0818` | Info | Ink/Stitch file from an older version, read as Ink/Stitch updates it (the shapes given a default that has changed since, such as a fill's 3 mm stitches before its file version 4, counted) | M3 |
+| `SC-I0818` | Info | Ink/Stitch file from an older version, read as Ink/Stitch updates it (the shapes given a default or a setting whose meaning has changed since, such as a fill's 3 mm stitches before its file version 4, counted for each change) | M3 |
 | `SC-I0901` | Info | Shapes digitized automatically (`--auto`, or VectorCraft's Auto effect), counted by their stitches (running stitches, satin columns or tatami fills) | M13 |
 | `SC-I0902` | Info | Satin column can't be made; filled (a part of an automatic line that turns more tightly than it is wide, is shorter than a CSS pixel or is a dot its cap draws, or a part of an automatic area whose triangles don't make a column round one of its lines or whose column would be read back otherwise) | M13 |
 | `SC-W0903` | Warning | Line too wide to fill; left out (an automatic line whose filled area would reach more than 10 m from the origin) | M13 |

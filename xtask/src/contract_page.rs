@@ -249,7 +249,9 @@ impl Contract {
         md.push_str(&contract_versions::render_renamed(&self.renamed_command));
         md.push_str(
             "\n## Other attributes\n\nThe `inkstitch:*` attributes that declare no parameter: settings of an element, of Ink/Stitch's\n\
-             patterns, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrites in older files.\n\n\
+             patterns, lettering, tools, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrites in older files.\n\
+             The SVG adapter reads those marked read itself. It keeps any other of a shape as a parameter of the shape's\n\
+             elements, which the registry names (`SC-W0105`).\n\n\
              | Attribute | Kind | Phase | StitchCraft |\n|---|---|---|---|\n",
         );
         for a in &self.attribute {
@@ -819,13 +821,15 @@ mod tests {
         assert_eq!(problems.len(), 2, "{problems:?}");
         assert!(problems[0].starts_with("the SVG adapter knows the commands {"), "{problems:?}");
         assert_eq!(problems[1], "the SVG adapter reads `ignore_object`, which conformance/inkstitch-params.toml does not list as an attribute");
-        // Attributes not read: planned, or not planned at all.
+        // Attributes the adapter reads, and those it doesn't: planned, or not planned at all.
         let more = format!(
-            "{data}[[attribute]]\nname = \"stroke_first\"\nkind = \"element\"\nphase = \"P1\"\nmilestone = \"M5\"\n\
+            "{data}[[attribute]]\nname = \"stroke_first\"\nkind = \"element\"\nphase = \"P1\"\nmilestone = \"M8\"\n\
+                            [[attribute]]\nname = \"tartan\"\nkind = \"element\"\nphase = \"P3\"\nmilestone = \"M10\"\n\
                             [[attribute]]\nname = \"sew_stack\"\nkind = \"sew_stack\"\nphase = \"—\"\nmilestone = \"—\"\n"
         );
         let page = Contract::parse(&more).unwrap().render(&[]);
-        assert!(page.contains("| `stroke_first` | element | P1 (M5) | planned |"), "{page}");
+        assert!(page.contains("| `stroke_first` | element | P1 (M8) | read |"), "{page}");
+        assert!(page.contains("| `tartan` | element | P3 (M10) | planned |"), "{page}");
         assert!(page.contains("| `sew_stack` | sew stack | — | not planned |"), "{page}");
     }
 

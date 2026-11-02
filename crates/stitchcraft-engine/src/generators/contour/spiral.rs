@@ -19,7 +19,7 @@
 use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Exhausted, Meter, Point};
 
-use super::line::{length, point_at};
+use super::line::length;
 use super::tree::{ROOT, Tree};
 use crate::generators::made;
 use crate::normalize::simplify::simplify;
@@ -116,11 +116,32 @@ fn blend(a: Point, b: Point, w: f64) -> Point {
     Point::new(a.x() * (1.0 - w) + b.x() * w, a.y() * (1.0 - w) + b.y() * w).unwrap_or(a)
 }
 
-/// `n` points evenly along `ring` from its start to its end, both included.
+/// `n` points evenly along `ring` from its start to its end, both included, each where
+/// [`point_at`](super::line::point_at) puts it. The distances only grow, so the ring is walked once, its
+/// sides added up as `point_at` adds them. A turn resamples 2 rings into some 20 points to each stitch, and
+/// looking for each point from the ring's start cost the whole ring for each: in VectorCraft, a test sheet
+/// of contour and circular fills ran its export out of instructions.
 fn resampled(ring: &[Point], n: usize) -> Vec<Point> {
+    let Some(&first) = ring.first() else { return Vec::new() };
+    let last = ring.last().copied().unwrap_or(first);
     let long = length(ring);
     let step = if n > 1 { long / (n - 1) as f64 } else { 0.0 };
-    (0..n).map(|i| if i + 1 == n { long } else { i as f64 * step }).filter_map(|at| point_at(ring, at)).collect()
+    let mut sides = ring.iter().zip(ring.iter().skip(1)).map(|(&a, &b)| (a, b, a.distance(b)));
+    let (mut side, mut start) = (sides.next(), 0.0);
+    let mut along = |at: f64| {
+        if at <= 0.0 {
+            return first;
+        }
+        while let Some((a, b, length)) = side {
+            if start + length > at {
+                return a.lerp(b, (at - start) / length);
+            }
+            start += length;
+            side = sides.next();
+        }
+        last
+    };
+    (0..n).map(|i| along(if i + 1 == n { long } else { i as f64 * step })).collect()
 }
 
 /// `points` started again at the one nearest `start`, the first of equally near ones.
@@ -184,6 +205,29 @@ mod tests {
         assert_eq!(turn.len(), 3, "{turn:?}");
         assert!((turn[1].y() - 0.0568).abs() < 0.001, "{turn:?}");
         assert_eq!(from_nearest(vec![p(0.0, 0.0), p(4.0, 0.0), p(4.0, 4.0)], p(5.0, 5.0)), [p(4.0, 4.0), p(0.0, 0.0), p(4.0, 0.0)]);
+    }
+
+    #[test]
+    fn a_ring_walked_once_is_resampled_at_the_very_points_point_at_finds() {
+        // A circle of 64 sides, a ring with a side of no length, a line and a point, each into 1 to 200
+        // points: the points of looking for each from the ring's start, to the last bit.
+        use super::super::line::point_at;
+        let circle: Vec<Point> = (0..=64)
+            .map(|k| {
+                let (sin, cos) = stitchcraft_core::math::sin_cos(std::f64::consts::TAU * f64::from(k) / 64.0);
+                p(3.0 + 7.5 * cos, -2.0 + 7.5 * sin)
+            })
+            .collect();
+        let doubled = [p(0.0, 0.0), p(1.0, 0.0), p(1.0, 0.0), p(1.0, 2.5), p(0.0, 0.0)];
+        for ring in [&circle[..], &doubled[..], &[p(0.0, 0.0), p(0.3, 0.7)][..], &[p(2.0, 2.0)][..]] {
+            let long = length(ring);
+            for n in [1, 2, 3, 7, 64, 65, 200] {
+                let step = if n > 1 { long / (n - 1) as f64 } else { 0.0 };
+                let looked_for: Vec<Point> = (0..n).filter_map(|i| point_at(ring, if i + 1 == n { long } else { i as f64 * step })).collect();
+                assert_eq!(resampled(ring, n), looked_for, "{n} points along {ring:?}");
+            }
+        }
+        assert!(resampled(&[], 5).is_empty());
     }
 
     #[test]

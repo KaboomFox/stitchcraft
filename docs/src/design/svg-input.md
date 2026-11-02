@@ -36,7 +36,7 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
   ([image to embroidery](image-to-embroidery.md#automatic-elements), `REQ-AUTO-001`). The trim and stop
   of Ink/Stitch's commands attached to it still apply. A shape with any `inkstitch:` attribute, or an
   `embroider_` attribute as Ink/Stitch's early versions wrote its settings, is not automatic: it sews as
-  its settings say once they are read (M8), and with the defaults until then.
+  its settings say ([below](#settings-of-a-shape)).
   Read with `--sort-colours` (`Reading::sort_colours`), the design's shapes with settings sew in the order
   StitchCraft chooses too ([image to embroidery](image-to-embroidery.md#sewing-order), `REQ-AUTO-011`).
 
@@ -153,6 +153,26 @@ the line as it is drawn (`REQ-AUTO-003`).
 Ink/Stitch reads a width in `%`, `em` or `ex` as 0, and a join written in capitals as no join at all. The
 adapter reads them as a viewer draws them (`DEV-SVG-001`).
 
+## Settings of a shape
+
+Ink/Stitch keeps how each shape sews in attributes of its namespace on the shape's own node, each named
+after its setting: `inkstitch:fill_method`, `inkstitch:row_spacing_mm`, `inkstitch:satin_column` and the
+rest. Each is a parameter of every element the shape makes, under its own name and with its own text
+(`REQ-SVG-009`). A shape with a fill and a stroke gives both elements the same parameters, as Ink/Stitch
+gives them to both of its own. The registry reads them as it reads a VectorCraft effect's (`REQ-PRM-002`).
+It strips the white space round a value and names a value it can't read. A setting it doesn't declare,
+such as one of a stitch type of M10, is kept, and `SC-W0105` names it.
+
+The adapter applies 2 settings itself, and they are parameters of neither element. `ignore_object` leaves
+the shape out ([below](#inkstitch-objects)). `stroke_first`, when it says yes in one of Ink/Stitch's
+words, sews the stroke before the fill (`REQ-SVG-010`). Otherwise the fill sews first, whatever SVG's
+`paint-order` says. Ink/Stitch's trim and stop commands turn on `trim_after` and `stop_after` over the
+shape's own settings, as Ink/Stitch adds them.
+
+Ink/Stitch doesn't read a group's settings, but for `ignore_object`. `SC-W0802` names the others a group
+has, which don't change what sews. The [compatibility contract](inkstitch-compat-contract.md) lists every setting, with
+the milestone in which StitchCraft reads it.
+
 ## Ink/Stitch objects
 
 An Ink/Stitch SVG has 3 kinds of object that Ink/Stitch reads and does not sew. The adapter sews none of
@@ -210,26 +230,37 @@ the defaults that have changed since are written into the shapes that relied on 
 Ink/Stitch updates it (`REQ-SVG-007`), with the changed defaults as parameters of the shapes, and
 `SC-I0818` says how many shapes changed:
 
+- in a file of version 1, a polyline whose `style` attribute sets a stroke is a manual stitch;
+- in a file of version 1 or 2, a zigzag stroke's `pull_compensation_mm`, unless 0, is halved into
+  `stroke_pull_compensation_mm`, which applies to each side from version 3 (M8.3);
+- in a file of version 1 or 2, a satin column starts and ends where it is drawn, with
+  `start_at_nearest_point` and `end_at_nearest_point` off (M8.3);
 - in a file of version 1 to 3, a shape whose fill is sewn, without a longest stitch of its own, sews
   3 mm stitches, the default before version 4, where today's default is 4 mm;
-- in a file of version 1, a polyline whose `style` attribute sets a stroke is a manual stitch.
+- in a file of version 1 to 3, a fill with `auto_fill` off is a legacy fill, sewn as a tatami fill without
+  underlay (`DEV-FILL-014`), and `fill_method` `auto_fill`, the tatami fill's name before version 4, is a
+  tatami fill (M8.3).
 
-A shape digitized automatically sews by the rules instead. Ink/Stitch asks its user whether a file with
-its content and no version is an old design, which it then updates, or objects pasted into a new file.
-The adapter can't ask. It reads such a file as it is and says so with `SC-W0802`, as it says that a file
-of a version above 4 is read as version 4. The other changes the update makes are to settings the adapter
-does not read yet; the [compatibility contract](inkstitch-compat-contract.md#file-versions) lists them
-all, with the milestone that applies them.
+Each shape gets the updates of each version after its file's, in the order of the versions, over the
+settings it has, as Ink/Stitch updates it. One digitized automatically sews by the rules instead.
+Ink/Stitch asks its user whether a file with its content and no version is an old design, which it then
+updates, or objects pasted into a new file. The adapter can't ask. It reads such a file as it is and says
+so with `SC-W0802`, as it says that a file of a version above 4 is read as version 4.
+
+Of the update's other changes, the start and end commands it moves onto their objects wait for M8.4, and
+the rest alter nothing the adapter sews. The
+[compatibility contract](inkstitch-compat-contract.md#file-versions) lists them all, with the milestone
+that applies them.
 
 ## Reports
 
 - `SC-W0802` reports a feature that is not stitched. Text, images, clones, nested `<svg>` elements and
-  the style sheet rules that are not read are such features. So are clipping, masks, filters, markers
-  and the Ink/Stitch settings that are not read yet. Clipping is planned for M8. It reports a file
-  Ink/Stitch would update, or warn about, that is read as it is: one with Ink/Stitch's content and no
-  file version, or of a newer version.
+  the style sheet rules that are not read are such features. So are clipping, masks, filters and
+  markers, a group's Ink/Stitch settings, and the settings of Ink/Stitch's early versions (`embroider_`
+  attributes). Clipping is planned for M8.5. It reports a file Ink/Stitch would update, or warn about,
+  that is read as it is: one with Ink/Stitch's content and no file version, or of a newer version.
 - `SC-I0818` says how many shapes of a file an older Ink/Stitch saved are read as its update changes
-  them.
+  them, for each change.
 - `SC-W0804` reports geometry that cannot be used:
   - path data or a list of points with an error, stitched up to the error
   - a transform that does not parse, or that flattens what it draws, left out with its contents

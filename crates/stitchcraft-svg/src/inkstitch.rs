@@ -51,9 +51,12 @@ pub const INKSTITCH_NS: &str = "http://inkstitch.org/namespace";
 pub(crate) use stitchcraft_engine::common::{STOP_AFTER, TRIM_AFTER};
 /// Ink/Stitch's own setting for leaving an object out; not a parameter, so it is read here.
 pub(crate) const IGNORE_OBJECT: &str = "ignore_object";
-/// The `inkstitch:*` attributes, other than parameters, that this reader reads; any other attribute
-/// means the file has settings it does not read yet. The compatibility contract lists them all.
-pub const READ_ATTRIBUTES: &[&str] = &[IGNORE_OBJECT];
+/// Ink/Stitch's own setting for sewing a shape's stroke before its fill (`lib/elements/utils/nodes.py`);
+/// it orders the shape's elements and is a parameter of neither, so it is read here.
+pub(crate) const STROKE_FIRST: &str = "stroke_first";
+/// The `inkstitch:*` attributes that this reader applies itself. Every other one of a shape is a parameter
+/// of the elements the shape makes. The compatibility contract lists them all.
+pub const READ_ATTRIBUTES: &[&str] = &[IGNORE_OBJECT, STROKE_FIRST];
 
 /// What StitchCraft does with an Ink/Stitch command.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

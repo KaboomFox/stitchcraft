@@ -17,12 +17,13 @@ use stitchcraft_plan::{StitchPlan, Thread};
 
 use super::pictures::Picture;
 use super::sketch::SheetError;
-use crate::common::STOP_AFTER;
+use crate::common::{STOP_AFTER, TRIM_AFTER};
 use crate::design::{Cap, Design, DesignSettings, Element, FillRule, Join, Path, Segment, Shape, Subpath};
+use crate::generators::satin::{END_AT_NEAREST_POINT, START_AT_NEAREST_POINT};
 
 /// The settings that sew a sheet's satin column as drawn, from its start to its end whatever is around it,
 /// and trim after it, so the columns stand apart.
-pub(super) const AS_DRAWN: [(&str, &str); 3] = [("start_at_nearest_point", "false"), ("end_at_nearest_point", "false"), ("trim_after", "true")];
+pub(super) const AS_DRAWN: [(&str, &str); 3] = [(START_AT_NEAREST_POINT, "false"), (END_AT_NEAREST_POINT, "false"), (TRIM_AFTER, "true")];
 
 /// A test sheet as a design: its elements, in sewing order.
 pub(super) struct Drawing {

@@ -598,3 +598,21 @@ file = "crates/stitchcraft-engine/src/generators/meander/tiles.rs"
 mutant = "replace < with <= in same"
 line = "(-1..=1).any(|i| (-1..=1).any(|j| a.distance(plus(b, offset(steps, i, j))) < SIDE))"
 why = "only 2 corners exactly 1e-9 sides apart tell the 2 apart, and a tile's corners are one corner to within rounding, or a good part of a side apart"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/contour/spiral.rs"
+mutant = "replace <= with < in resampled"
+line = "if at <= 0.0 {"
+why = "no distance along the ring is below 0, and at 0 the walk stops at the start of the first side that has a length, which is the ring's first point, or at the ring's last point when no side has one, which is then its first"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/region/mod.rs"
+mutant = "replace || with && in Polygon::centroid"
+line = "if area == 0.0 || !area.is_finite() {"
+why = "the early return only spares a division whose answer is the outline's first point all the same: dividing the moments by an area of 0 makes a coordinate infinite or not a number, which Point::new refuses, so the first point is taken; and dividing them by an area that is not finite makes one not a number too, or adds 0 to each of the first point's"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/region/mod.rs"
+mutant = "replace < with > in Polygon::centroid"
+line = "let sign = if (a < 0.0) == (k == 0) { -1.0 } else { 1.0 };"
+why = "it turns the sign of every ring whose area does not add up to 0, so the area and both moments all change sign, exactly, and the centroid, their quotient, is the same to the last bit. A ring whose area adds up to 0 keeps its sign, but the rings of a part, grown or not, each wind round some area, the others being left out when they are joined, so only a coincidence of rounding could make one, and no case can aim at that"

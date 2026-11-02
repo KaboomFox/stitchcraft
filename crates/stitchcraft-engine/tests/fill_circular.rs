@@ -100,6 +100,16 @@ fn req_fill_cir_003_a_round_part_cut_once_is_one_run_from_its_outline() {
 }
 
 #[test]
+fn req_fill_cir_003_random_lengths_vary_by_their_share_of_the_stitch_length() {
+    // At 10 %, each stitch of a disc's spiral, cut once, is drawn from the 2.5 mm running stitch ± 0.25 mm:
+    // some are longer than 2.5 mm, and none is longer than 2.75 mm.
+    let random = [("row_spacing_mm", "5"), ("enable_random_stitch_length", "true"), ("random_stitch_length_jitter_percent", "10")];
+    let points = needles(&circular(&[&disc((20.0, 20.0), 10.0)], &random));
+    let longest = points.windows(2).map(|w| w[0].distance(w[1])).fold(0.0, f64::max);
+    assert!(longest > 2.5 && longest <= 2.75 + 1e-9, "{longest}");
+}
+
+#[test]
 fn req_fill_cir_004_the_pieces_are_routed_in_one_run_and_skip_last_leaves_their_ends_out() {
     // A star-like square: past its inscribed circle the spiral is many pieces, routed in one run.
     let square = square(0.0, 20.0);
