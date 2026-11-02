@@ -12,6 +12,55 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   1 to 3, a fill with `auto_fill` off is a legacy fill, and `fill_method` `auto_fill` is a tatami fill. A
   shape gets them over its own settings, version by version, and `SC-I0818` counts the shapes each changed.
   A differential case for each change sews a file of the older version in both programs.
+- M7.9: circular fill, sewn as Ink/Stitch sews it (`REQ-FILL-CIR-001` to `REQ-FILL-CIR-007`). A double
+  spiral turns round each part's centroid. Its rings lie `row_spacing_mm` apart out to 2 spacings past the
+  part's farthest point, or fade towards `end_row_spacing_mm` there. It turns in on every other ring and
+  back out between them, and the part's outline and holes cut it into pieces, sewn after the tatami fill's
+  underlay.
+  - The pieces are routed as a tatami fill's rows are, each sewn once. The needle runs between them under
+    the pieces sewn later, at the fill's `angle`, or along the outline with `underpath` off.
+    `skip_last` leaves out each piece's last needle point, as Ink/Stitch's circular fill does though its
+    settings window doesn't show it. A round part's spiral, cut once, is joined to the needle and to the
+    end along the outline, the shorter way round (`DEV-FILL-022`).
+  - Bean stitch leaves the travel between pieces out, and `repeats` double the stitching, as for a contour
+    fill. A part within its row spacing of its middle is sewn as one circle that size (`SC-W0318`), and one
+    the spiral misses round its outline (`SC-W0305`), as Ink/Stitch sews them. Past the farthest point
+    fading circles stay the end spacing apart, where Ink/Stitch's can crowd without end (`DEV-FILL-021`).
+  - Tatami's routing takes rows that run along lines of any shape: the route, the travel under the rows
+    and the ways along the rings and rows follow a piece of spiral as they follow a straight row.
+  - TS-11B gains a row of circular fills for MC-6: round a hole, on a star and fading. Sewn by Ink/Stitch
+    at `d59c9ab` as a black box, the sheet agrees with StitchCraft by every measure of the differential:
+    15,314 stitches against 14,535, the same size, threads, trims and jumps, and footprints that overlap by
+    0.99. Its 3 circular fills take 2,132, 1,409 and 1,162 stitches against Ink/Stitch's 2,063, 1,494 and
+    1,093, and the same thread within 2 %.
+  - `check_params.py` finds what each fill method's own sewing reads, as well as its underlay, and the
+    contract lists `skip_last` as read by the circular fill (`read_by`).
+  - A circular fill's preview shows its pieces of spiral, and the user's guide has a page for it.
+- M7.8: meander fill with generated tiles (`REQ-FILL-MEA-001` to `REQ-FILL-MEA-005`). One line wanders
+  through the sides of a tiling inside each part, after the tatami fill's underlay, and never passes a
+  point twice, as Ink/Stitch's meander fill wanders through its tiles. It starts nearest the needle and ends
+  nearest the next part or element. Between them, the way of fewest sides grows by detours drawn at random
+  through points it hasn't passed. `random_seed` chooses them.
+  - The tiles are StitchCraft's own, made in code: 7 of the regular and semiregular tilings, with the
+    honeycomb by default. `meander_scale_percent` scales them and `meander_angle` turns them. Ink/Stitch's
+    tiles are drawings StitchCraft doesn't copy. Their 75 ids are kept, and a fill set to one sews the
+    honeycomb with `SC-W0316` (`DEV-FILL-018`). Dialogs and the reference offer only the 7 tiles.
+  - A part too small for its tile is sewn round its outline with `SC-W0317`, where Ink/Stitch stops the
+    whole fill (`DEV-FILL-019`). The path differs from Ink/Stitch's for one seed (`DEV-FILL-020`). Its
+    search takes each detour the long way round, which covers more of the network than the short way.
+  - `smoothness_mm` rounds the line off, `zigzag_spacing_mm` and `zigzag_width_mm` sew it as a zigzag, and
+    `clip` keeps it inside the shape as drawn. Bean stitch and `repeats` work as for a contour fill, whose
+    smoothing and repeats the 2 fills share (`PathFillParams`).
+  - A value only a node's other stitch type reads is left to it (`REQ-PRM-006`). A meander fill on a node
+    whose zigzag stroke keeps 2 spacings sews without a zigzag, and a satin column given them sews at its
+    own 0.4 mm, as Ink/Stitch's do, with `SC-I0106`.
+  - TS-11C, the meander fills' test sheet for MC-6, sews 6 tiles on discs and the seventh on a star, with
+    a zigzag kept inside a rectangle and a leaf turned and smoothed. Its meanders wander as their
+    elements' ids draw, so VectorCraft's Test Sheet filter, whose objects have ids of their own, doesn't
+    draw it. A meander fill's preview shows its path, and the user's guide has a page for it.
+  - Ink/Stitch's compatibility contract lists its meander tiles in the order its settings window does, and
+    `check_params.py` compares them with Ink/Stitch's tiles. It finds that the underlay reads
+    `row_spacing_mm` and `max_stitch_length_mm` too, where its own are not set (`read_by`).
 - M8.1: the settings of Ink/Stitch files (`REQ-SVG-009`, `REQ-SVG-010`). Each `inkstitch:*` attribute of a shape in an
   SVG file is a parameter of every element the shape makes, under its own name, so an Ink/Stitch file sews
   with its stitch types, spacings, underlays, locks and the rest of its settings, where every element
@@ -2103,6 +2152,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-11B.pes` (M7.9): the sheet gains a row of 3 circular fills
+  under its contour fills, and grows to 125 × 166 mm. It sews 15,314 stitches, 4,703 more, and its contour
+  fills sew as before.
+- Added `conformance/golden/testsheets/TS-11C.pes` (M7.8), the meander fills' test sheet that MC-6 sews:
+  5,880 stitches.
 - Added `conformance/golden/testsheets/TS-11B.pes` (M7.7), the contour fills' test sheet that MC-6 sews:
   10,611 stitches.
 - Changed `conformance/golden/testsheets/TS-13A.pes` and `TS-13B.pes` (`REQ-AUTO-023`, `REQ-AUTO-007`,

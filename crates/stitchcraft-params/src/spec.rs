@@ -155,9 +155,23 @@ pub struct ChoiceOption {
     pub id: &'static str,
     /// What a user interface shows.
     pub label: &'static str,
+    /// Whether dialogs and the reference offer it. An option they don't is kept so that a design that
+    /// names it still reads, and the element sews another option, and says so: one of Ink/Stitch's
+    /// meander tiles, say, which StitchCraft doesn't have.
+    pub offered: bool,
 }
 
 impl ChoiceOption {
+    /// An option dialogs and the reference offer.
+    pub const fn new(id: &'static str, label: &'static str) -> ChoiceOption {
+        ChoiceOption { id, label, offered: true }
+    }
+
+    /// An option kept for the designs that name it, which dialogs and the reference don't offer.
+    pub const fn kept(id: &'static str, label: &'static str) -> ChoiceOption {
+        ChoiceOption { id, label, offered: false }
+    }
+
     /// `options` for people, as the reference pages and VectorCraft's dialogs list them: each id in code,
     /// and its label in brackets after it.
     pub fn list<'a>(options: impl IntoIterator<Item = &'a ChoiceOption>) -> String {
@@ -379,8 +393,14 @@ impl Kind {
             Kind::Count { min, max } => format!("a whole number from {min} to {max}"),
             Kind::Toggle => format!("true or false, in any case, or {} for true and {} for false", listed(&ON[1..], "or"), listed(&OFF[1..], "or")),
             Kind::Choice { options } => {
-                let ids: Vec<&str> = options.iter().map(|o| o.id).collect();
-                format!("one of {}", ids.join(", "))
+                let ids: Vec<&str> = options.iter().filter(|o| o.offered).map(|o| o.id).collect();
+                let kept = options.iter().filter(|o| !o.offered).count();
+                let others = match kept {
+                    0 => String::new(),
+                    1 => ", or the 1 other value kept for designs that name it".to_string(),
+                    n => format!(", or one of the {n} other values kept for designs that name them"),
+                };
+                format!("one of {}{others}", ids.join(", "))
             }
             Kind::Seed => "a number or any text, or empty to derive it from the element".to_string(),
             Kind::LengthList { min, max } => format!("1 to {MAX_LIST} lengths from {min} to {max} mm, separated by spaces"),
@@ -439,9 +459,20 @@ mod tests {
 
     #[test]
     fn a_choice_s_options_are_listed_by_id_with_their_labels() {
-        let options = [ChoiceOption { id: "0", label: "At the start and the end" }, ChoiceOption { id: "3", label: "None" }];
+        let options = [ChoiceOption::new("0", "At the start and the end"), ChoiceOption::new("3", "None")];
         assert_eq!(ChoiceOption::list(&options), "`0` (At the start and the end), `3` (None)");
         assert_eq!(ChoiceOption::list(options.iter().skip(1)), "`3` (None)");
+    }
+
+    #[test]
+    fn a_choice_names_the_options_it_offers_and_counts_those_kept_for_designs() {
+        const OFFERED: &[ChoiceOption] = &[ChoiceOption::new("a", "A"), ChoiceOption::new("b", "B")];
+        const ONE_KEPT: &[ChoiceOption] = &[ChoiceOption::new("a", "A"), ChoiceOption::kept("z", "Z")];
+        const TWO_KEPT: &[ChoiceOption] = &[ChoiceOption::kept("y", "Y"), ChoiceOption::new("a", "A"), ChoiceOption::kept("z", "Z")];
+        assert_eq!(Kind::Choice { options: OFFERED }.describe(), "one of a, b");
+        assert_eq!(Kind::Choice { options: ONE_KEPT }.describe(), "one of a, or the 1 other value kept for designs that name it");
+        assert_eq!(Kind::Choice { options: TWO_KEPT }.describe(), "one of a, or one of the 2 other values kept for designs that name them");
+        assert!(OFFERED.iter().all(|o| o.offered) && !ONE_KEPT[1].offered);
     }
 
     #[test]

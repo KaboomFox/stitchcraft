@@ -147,7 +147,15 @@ kind = "stitch"
 sheet = "TS-11B"
 style = "realistic"
 scale = 3.0
-alt = "TS-11B as it will sew: 9 contour fills in 3 rows. At the top, in green, 3 discs: one round a hole set off its middle, a single spiral and a double spiral. In the middle, in blue, 3 five-pointed stars whose rings have round, mitred and bevelled corners. At the bottom, in red, 2 squares joined by a narrow neck, a rectangle, and a leaf. Jump threads join the samples in each row."
+alt = "TS-11B as it will sew: 9 contour fills in 3 rows and 3 circular fills under them. At the top, in green, 3 discs: one round a hole set off its middle, a single spiral and a double spiral. In the second row, in blue, 3 five-pointed stars whose rings have round, mitred and bevelled corners. In the third, in red, 2 squares joined by a narrow neck, a rectangle, and a leaf. At the bottom, in gold, a spiral round the middle of a disc with a hole, of a star and of a rectangle whose rings fade. Jump threads join the samples in each row."
+
+[[shot]]
+id = "testsheet-ts-11c"
+kind = "stitch"
+sheet = "TS-11C"
+style = "realistic"
+scale = 3.0
+alt = "TS-11C as it will sew: 9 meander fills in 3 rows, each a line that wanders along the sides of a tiling over the underlay's rows. At the top, in green, 3 discs in hexagons, squares and triangles. In the middle, in blue, 3 discs in octagons and squares, hexagons and triangles, and hexagons, squares and triangles. At the bottom, in red, a five-pointed star in squares and triangles, a rectangle in large hexagons sewn as a zigzag, and a leaf in small hexagons, turned. Jump threads join the samples in each row."
 
 [[shot]]
 id = "testsheet-ts-13a"
@@ -437,6 +445,106 @@ panels = [
   { caption = "Steps crossing", params = { fill_method = "contour_fill", row_spacing_mm = "1", fill_underlay = "false" } },
   { caption = "Alternating", params = { fill_method = "contour_fill", row_spacing_mm = "1", fill_underlay = "false", avoid_self_crossing = "true" } },
   { caption = "Smoothed by 1 mm", params = { fill_method = "contour_fill", row_spacing_mm = "1", fill_underlay = "false", smoothness_mm = "1" } },
+]
+
+[[shot]]
+id = "meander-fill"
+kind = "stitch"
+fixture = "docs/fixtures/fill.svg"
+style = "realistic"
+scale = 12.0
+alt = "A green patch 32 mm by 20 mm with rounded corners and a round hole, sewn as a meander fill. One line wanders round the hole along the sides of hexagons 2 mm a side, and never crosses itself"
+panels = [
+  { caption = "Meander fill", params = { fill_method = "meander_fill" } },
+]
+
+[[shot]]
+id = "meander-tiles"
+kind = "stitch"
+fixture = "docs/fixtures/meander.svg"
+style = "simple"
+scale = 8.0
+alt = "A rounded square 30 mm a side sewn as a meander fill without underlay: one line along the sides of a tiling"
+panels = [
+  { caption = "Honeycomb", params = { fill_method = "meander_fill", fill_underlay = "false" } },
+  { caption = "Squares", params = { fill_method = "meander_fill", fill_underlay = "false", meander_pattern = "squares" } },
+  { caption = "Triangles", params = { fill_method = "meander_fill", fill_underlay = "false", meander_pattern = "triangles" } },
+  { caption = "Octagons and squares", params = { fill_method = "meander_fill", fill_underlay = "false", meander_pattern = "octagons-squares" } },
+]
+
+[[shot]]
+id = "meander-tiles-more"
+kind = "stitch"
+fixture = "docs/fixtures/meander.svg"
+style = "simple"
+scale = 8.0
+alt = "A rounded square 30 mm a side sewn as a meander fill without underlay: one line along the sides of a tiling of 2 or 3 kinds of polygon"
+panels = [
+  { caption = "Hexagons and triangles", params = { fill_method = "meander_fill", fill_underlay = "false", meander_pattern = "hexagons-triangles" } },
+  { caption = "Hexagons, squares and triangles", params = { fill_method = "meander_fill", fill_underlay = "false", meander_pattern = "hexagons-squares-triangles" } },
+  { caption = "Squares and triangles", params = { fill_method = "meander_fill", fill_underlay = "false", meander_pattern = "squares-triangles" } },
+]
+
+[[shot]]
+id = "meander-scale"
+kind = "stitch"
+fixture = "docs/fixtures/meander.svg"
+style = "simple"
+scale = 8.0
+alt = "A rounded square 30 mm a side sewn as a meander fill of hexagons without underlay, the tiling scaled and turned"
+panels = [
+  { caption = "50 %", params = { fill_method = "meander_fill", fill_underlay = "false", meander_scale_percent = "50" } },
+  { caption = "200 % across, 100 % down", params = { fill_method = "meander_fill", fill_underlay = "false", meander_scale_percent = "200 100" } },
+  { caption = "Turned 30°", params = { fill_method = "meander_fill", fill_underlay = "false", meander_angle = "30" } },
+]
+
+[[shot]]
+id = "meander-line"
+kind = "stitch"
+fixture = "docs/fixtures/meander.svg"
+style = "simple"
+scale = 8.0
+alt = "A rounded square 30 mm a side sewn as a meander fill of squares without underlay, its line sewn another way"
+panels = [
+  { caption = "Smoothed by 1 mm", params = { fill_method = "meander_fill", fill_underlay = "false", meander_pattern = "squares", smoothness_mm = "1" } },
+  { caption = "Zigzag", params = { fill_method = "meander_fill", fill_underlay = "false", meander_pattern = "squares", zigzag_spacing_mm = "0.5", zigzag_width_mm = "1.5" } },
+  { caption = "Zigzag, clipped", params = { fill_method = "meander_fill", fill_underlay = "false", meander_pattern = "squares", zigzag_spacing_mm = "0.5", zigzag_width_mm = "1.5", clip = "true" } },
+]
+
+[[shot]]
+id = "circular-fill"
+kind = "stitch"
+fixture = "docs/fixtures/fill.svg"
+style = "realistic"
+scale = 12.0
+alt = "A green patch 32 mm by 20 mm with rounded corners and a round hole, sewn as a circular fill. A spiral of rings 0.25 mm apart turns round the middle of the patch, cut by its edges and the hole"
+panels = [
+  { caption = "Circular fill", params = { fill_method = "circular_fill" } },
+]
+
+[[shot]]
+id = "circular-spacing"
+kind = "stitch"
+fixture = "docs/fixtures/meander.svg"
+style = "simple"
+scale = 8.0
+alt = "A rounded square 30 mm a side sewn without underlay as a circular fill, a spiral round its middle whose rings the corners cut"
+panels = [
+  { caption = "1 mm apart", params = { fill_method = "circular_fill", fill_underlay = "false", row_spacing_mm = "1" } },
+  { caption = "2 mm apart", params = { fill_method = "circular_fill", fill_underlay = "false", row_spacing_mm = "2" } },
+  { caption = "1 mm, fading to 3 mm", params = { fill_method = "circular_fill", fill_underlay = "false", row_spacing_mm = "1", end_row_spacing_mm = "3" } },
+]
+
+[[shot]]
+id = "circular-travel"
+kind = "stitch"
+fixture = "docs/fixtures/meander.svg"
+style = "simple"
+scale = 8.0
+alt = "A rounded square 30 mm a side sewn as a circular fill without underlay, its rings 1.5 mm apart, the needle running between the pieces of the spiral"
+panels = [
+  { caption = "Underpath", params = { fill_method = "circular_fill", fill_underlay = "false", row_spacing_mm = "1.5" } },
+  { caption = "Along the outline", params = { fill_method = "circular_fill", fill_underlay = "false", row_spacing_mm = "1.5", underpath = "false" } },
 ]
 
 [[shot]]

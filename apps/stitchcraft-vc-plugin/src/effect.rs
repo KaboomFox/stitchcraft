@@ -229,7 +229,7 @@ mod tests {
     #[test]
     fn what_cannot_be_sewn_is_the_live_effect_s_error() {
         // A method that arrives in a later version is said, rather than the object vanishing.
-        assert!(error(&run(Family::Fill, &square(), &[("fill_method", json!("meander_fill"))])).starts_with("warning SC-W0011: "));
+        assert!(error(&run(Family::Fill, &square(), &[("fill_method", json!("tartan_fill"))])).starts_with("warning SC-W0011: "));
         assert!(error(&run(Family::Fill, &square(), &[("fill_method", json!("plaid"))])).starts_with("error SC-E0101: "));
         assert!(error(&run(Family::Stroke, &json!({"subpaths": []}), &[])).starts_with("warning SC-W0808: It draws nothing"));
     }

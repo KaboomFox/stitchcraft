@@ -173,7 +173,17 @@ fn ink_stitch(spec: &ParamSpec, ledger: &[Deviation]) -> String {
 /// what a family that needs a value accepts instead (`ParamSpec::in_family`).
 fn accepts(spec: &ParamSpec) -> String {
     let describe = |kind: Kind| match kind {
-        Kind::Choice { options } => format!("one of {}", ChoiceOption::list(options)),
+        Kind::Choice { options } => {
+            let offered = ChoiceOption::list(options.iter().filter(|o| o.offered));
+            let kept: Vec<String> = options.iter().filter(|o| !o.offered).map(|o| format!("`{}`", o.id)).collect();
+            match kept.len() {
+                0 => format!("one of {offered}"),
+                n => format!(
+                    "one of {offered}, or one of the {n} other values kept for designs that name them, each sewn as another: {}",
+                    kept.join(", ")
+                ),
+            }
+        }
         other => other.describe(),
     };
     let mut text = describe(spec.kind);

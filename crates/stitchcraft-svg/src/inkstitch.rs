@@ -24,7 +24,8 @@
 //! The other commands: `trim` and `stop` turn on the object's `trim_after` and `stop_after`, exactly as
 //! the settings would. `starting_point` and `ending_point` place where Ink/Stitch starts and ends a fill
 //! or a satin column; they, `origin` and `stop_position` are not applied yet (`SC-W0802`). `target_point`
-//! aims circular fills and ripples, which StitchCraft does not sew yet, and the rest feed Ink/Stitch's own
+//! centres a circular fill and aims a ripple, and this reader reads none of the settings that make a shape
+//! one until M8, so it changes nothing StitchCraft sews from a file yet. The rest feed Ink/Stitch's own
 //! tools, so they change nothing StitchCraft sews. Before its file version 3, Ink/Stitch named 7 commands
 //! otherwise ([`RENAMED`]); they are read as the commands they became.
 //!
@@ -73,7 +74,8 @@ pub enum Does {
     /// Nothing yet, and says so on the object it is tied to: it places where Ink/Stitch starts or ends a
     /// fill or a satin column.
     StartOrEnd,
-    /// Nothing: it aims a circular fill or a ripple, stitch types StitchCraft does not sew yet.
+    /// Nothing yet: it centres a circular fill and aims a ripple, and this reader reads none of the settings
+    /// that make a shape one until M8 reads Ink/Stitch's attributes.
     Positions,
     /// Nothing: it is input to Ink/Stitch's own tools, not to sewing.
     ToolInput,

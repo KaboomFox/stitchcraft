@@ -260,7 +260,7 @@ pub fn toggle(text: &str) -> Option<bool> {
 }
 
 /// `raw` in quotes for a message: whole, or its first [`QUOTED`] characters and how long it is.
-fn quoted(raw: &str) -> String {
+pub(crate) fn quoted(raw: &str) -> String {
     match raw.char_indices().nth(QUOTED) {
         Some((end, _)) => format!("\"{}…\" ({} bytes)", raw.get(..end).unwrap_or_default(), raw.len()),
         None => format!("\"{raw}\""),
@@ -494,7 +494,8 @@ mod tests {
         assert_eq!(Kind::Toggle.parse("True"), Some((Value::Toggle(true), false)));
         assert_eq!(Kind::Toggle.parse("off"), Some((Value::Toggle(false), false)));
         assert_eq!(Kind::Toggle.parse("maybe"), None);
-        let choice = Kind::Choice { options: &[ChoiceOption { id: "a", label: "A" }, ChoiceOption { id: "b", label: "B" }] };
+        const OPTIONS: &[ChoiceOption] = &[ChoiceOption::new("a", "A"), ChoiceOption::new("b", "B")];
+        let choice = Kind::Choice { options: OPTIONS };
         assert_eq!(choice.parse("b"), Some((Value::Choice("b"), false)));
         assert_eq!(choice.parse("c"), None);
         assert_eq!(Kind::Seed.parse(""), Some((Value::Seed(None), false)));

@@ -411,10 +411,11 @@ gives, and the PES file is the same. VectorCraft 0.15 keeps the records, but wit
 looks to a filter as 0.14 does, which would drop them. Only the `documentData` every filter gets from
 0.16 tells them apart, so before 0.16 the filter declines with `SC-E0813`. It declines with `SC-E0817`
 where parts of the sheet would lie more than 10 m from the document's origin, farther than StitchCraft
-stitches (`Design::new`). The sheets drawn stitch by stitch are plans, which no object holds. The TS-13
-sheets are designs whose shapes StitchCraft digitizes automatically (`TestSheet::digitized`): each such
-shape has the Auto effect's record (M13.7, `REQ-VC-016`), and StitchCraft Auto must be installed for
-VectorCraft to keep it.
+stitches (`Design::new`). The sheets drawn stitch by stitch are plans, which no object holds. TS-11C's
+meander fills wander as their elements' ids draw, and the objects drawn would have ids of their own, so
+the filter doesn't draw it either (`TestSheet::drawable`). The TS-13 sheets are designs whose shapes
+StitchCraft digitizes automatically (`TestSheet::digitized`): each such shape has the Auto effect's
+record (M13.7, `REQ-VC-016`), and StitchCraft Auto must be installed for VectorCraft to keep it.
 
 The contract test `req_vc_015_each_test_sheet_draws_into_a_document_that_exports_within_vectorcraft_s_limits`
 draws each sheet into a new document in VectorCraft 0.17.0's and 0.18.0's hosts alike, and exports it with
@@ -461,7 +462,7 @@ share, instead of being stopped (`apps/stitchcraft-vc-plugin/src/preview.rs`):
 | Level | Geometry returned | Auto shows it |
 |---|---|---|
 | Exact | The stitch polyline (strokes, satins) or one thin closed ribbon per stitch (fills) | For a stroke or a satin column, within nine tenths of the budget |
-| Rows | One ribbon per row segment of a fill's top rows, or per side of a contour fill's path round its rings (from M7.7): where its stitches lie and which way they run | For a fill, within eight tenths |
+| Rows | One ribbon per row segment of a fill's top rows, or per side of a contour fill's path round its rings (from M7.7), a meander fill's path (from M7.8) or a circular fill's pieces of spiral (from M7.9): where its stitches lie and which way they run | For a fill, within eight tenths |
 | Outline | The object's path as lines for a stroke or a satin column, and as ribbons for a fill, which are hatched every 3 mm in its direction | When the others cost too much |
 
 The `preview_level` parameter, `auto` by default, lets the user pick a level (VectorCraft reserves the
