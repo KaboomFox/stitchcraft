@@ -13,8 +13,11 @@ changes the code — people and AI agents alike. `CLAUDE.md` points here; there 
    describe a file. In Claude Code, a hook in `.claude/settings.json` names them after each edit.
 3. Work conformance-first: add requirements and failing cases, then the code that makes them pass, then
    the docs. A Rust test named `req_<area>_<nnn>_<what>` is a case for `REQ-<AREA>-<NNN>`, and one named
-   `diag_sc_<e|w|i><nnnn>_<what>` is the case that produces diagnostic `SC-<E|W|I><NNNN>`. Finish with
-   `cargo xtask ci`.
+   `diag_sc_<e|w|i><nnnn>_<what>` is the case that produces diagnostic `SC-<E|W|I><NNNN>`.
+4. Before you push, run the quick checks: `cargo fmt`, `cargo clippy --all-targets -- -D warnings` and the
+   tests of the code you changed, and regenerate what the change touches (`cargo xtask docs`, `shots`,
+   `api`). CI runs every gate (`cargo xtask ci`) on the pull request, side by side on machines of its own,
+   and its checks decide the merge. Watch them, and run a gate locally only to reproduce a failure.
 
 ## Non-negotiables
 
