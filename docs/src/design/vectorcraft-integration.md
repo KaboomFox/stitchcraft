@@ -693,7 +693,9 @@ Because VectorCraft up to 0.16 drops `inkstitch:*` attributes on SVG import, pha
 `stitch import-inkstitch design.svg -o design.vectorcraft`: our SVG adapter reads the Ink/Stitch file
 and writes a VectorCraft document with the same art and the parameters as live-effect records (M8).
 From 0.17 VectorCraft keeps the attributes from SVG import to SVG export, but its live effects read none
-of them.
+of them. [ADR-0016](adr/0016-inkstitch-files-imported-by-stitchcraft.md) keeps `stitch import-inkstitch`
+as the way in, after spike M8.11: VectorCraft gives a plug-in no attribute of another application, and
+its import loses what Ink/Stitch's settings depend on.
 
 ## 5. Phase 2: plug-in features proposed upstream (summary)
 
