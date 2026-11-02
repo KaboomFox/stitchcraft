@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-d4d7797e.js";
+            window.path_to_searchindex_js = "searchindex-95dbadc4.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-cba97263.js"></script>
+        <script src="toc-ee9d300a.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -4418,8 +4418,8 @@ our own words and never carry Ink/Stitch’s code (<a href="#adr-0012-read-inkst
 <li><a href="#stitchcraft--technical-design-document">Technical design document</a> — the whole system in 25 minutes.</li>
 <li><a href="#architecture">Architecture</a> — crates, layers, where code goes.</li>
 <li><a href="#data-model">Data model</a>, <a href="#parameter-registry">parameter registry</a>, <a href="#diagnostics">diagnostics</a>.</li>
-<li><a href="#engine-pipeline">Engine pipeline</a>, the <a href="design/algorithms">stitch generators</a> and
-<a href="#image-to-embroidery">image to embroidery</a>.</li>
+<li><a href="#engine-pipeline">Engine pipeline</a>, the <a href="design/algorithms">stitch generators</a>,
+<a href="#image-to-embroidery">image to embroidery</a> and <a href="#fonts">fonts</a>.</li>
 <li><a href="#machine-formats">Machine formats</a> and <a href="#rendering-previews">rendering previews</a>.</li>
 <li><a href="#vectorcraft-integration">VectorCraft integration</a>, the <a href="#rfc-vectorcraft-plug-in-features">plug-in features RFC</a>
 and the <a href="#vectorcraft-compatibility-gate">compatibility gate</a>.</li>
@@ -4563,6 +4563,7 @@ identical to Ink/Stitch’s SVG attributes because that is the interoperability 
 <tr><td>Ink/Stitch SVG import (attributes, commands, clones) and differential testing</td><td>P2</td><td>M8</td></tr>
 <tr><td>Guided, gradient, ripple, tartan, cross stitch; auto-run/auto-satin</td><td>P3</td><td>M10</td></tr>
 <tr><td>Lettering in embroidery fonts, and text in pictures set again as lettering</td><td>P3</td><td>M14</td></tr>
+<tr><td>TrueType and OpenType fonts ported automatically, digitized at the height set and written as embroidery fonts</td><td>P3</td><td>M15, after M14</td></tr>
 <tr><td>EXP, JEF, VP3, XXX, U01 formats; thread catalogues</td><td>P3</td><td>M11</td></tr>
 <tr><td>1.0 hardening, translations, release automation</td><td>—</td><td>M12</td></tr>
 <tr><td>VectorCraft plug-in features still proposed upstream (RFC), for previews drawn as overlays, heavy live effects and the objects beside a live effect</td><td>after 1.0</td><td>M9, last</td></tr>
@@ -8725,6 +8726,257 @@ from their ends the lines lie within 0.15 of a width of each other.</p>
 </ul>
 <p>Codes 0900 to 0999 are automatic digitizing’s (<a href="#diagnostics">diagnostics</a>).</p>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="fonts"><a class="header" href="#fonts">Fonts</a></h1>
+<p>Lettering sews text in a font. M14 sets text in embroidery fonts, digitized glyph by glyph in Ink/Stitch’s
+font format. M15 ports an ordinary TrueType or OpenType font automatically. It reads each glyph’s outline at
+the height the text is set and works out how the glyph sews (<a href="#roadmap-small-steps-to-the-final-project">roadmap</a>). This page
+records the research both milestones rest on, counted and read on 2026-11-02. The sources are listed at the
+end.</p>
+<h2 id="inkstitchs-fonts"><a class="header" href="#inkstitchs-fonts">Ink/Stitch’s fonts</a></h2>
+<p>Ink/Stitch’s fonts are a repository of their own,
+<a href="https://github.com/inkstitch/embroidery-fonts">inkstitch/embroidery-fonts</a>, which Ink/Stitch includes as its
+<code>fonts</code> folder. At commit <code>c7e3a05</code> it has 142 fonts. Ink/Stitch’s tutorial on making a font and its page on
+the font tools document the format. The numbers below were counted from the font files.</p>
+<ul>
+<li><strong>A font is a folder.</strong> <code>font.json</code> gives the font’s settings, and a glyph file gives its glyphs for each
+direction it sews in. 137 fonts sew left to right (<code>ltr.svg</code>) and 17 right to left (<code>rtl.svg</code>), 12 of
+them both ways. One font also sews top to bottom and bottom to top. 5 large fonts split a direction into
+several files, in a folder of that name. The folder also has a licence file and a preview picture.</li>
+<li><strong>A glyph file</strong> has a layer for each glyph, labelled <code>GlyphLayer-</code> followed by the character, and a guide
+named <code>baseline</code>. A layer can be named for several characters, as for a ligature. An Arabic letter has a
+layer for each of its forms.</li>
+<li><strong>The settings</strong> name the font, its licence and the font it was made from, with that font’s address.
+<code>size</code> is the height of a reference capital in millimetres, and <code>min_scale</code> and <code>max_scale</code> bound the
+heights the font sews at. <code>horiz_adv_x</code> gives each glyph’s advance, with a default and the space’s.
+<code>kerning_pairs</code> gives each pair’s adjustment, which is subtracted from the advance. Further keys force
+upper or lower case, name the glyph sewn for a missing one, and say whether the font sews lines back and
+forth, sorts its colours or is routed by auto-satin.</li>
+<li><strong>Heights.</strong> A font sews from <code>size</code> × <code>min_scale</code> to <code>size</code> × <code>max_scale</code>. The least heights range from
+2.8 mm (Glacial Tiny) to 144 mm and the greatest from 6.9 to 468 mm. Their medians are 20 and 45 mm. 21
+fonts are tagged <code>tiny</code>.</li>
+<li><strong>Stitch types.</strong> 94 fonts sew satin columns, 73,422 of them. 119 fonts sew running stitches, 67 tatami
+fills and 25 cross stitch.</li>
+</ul>
+<p><strong>How they are made.</strong> 134 of the fonts name the font they were made from, 36 of them from Google Fonts. The
+tutorial starts from a TrueType or OpenType file. FontForge writes it as an SVG font, and an Ink/Stitch tool
+splits that into glyph layers at a chosen height. Each glyph is then digitized by hand, with its satin
+columns and rungs, where it starts and ends, its trims and its settings. The tutorial calls each letter “a
+small embroidery in itself” and ends with “real stitchouts are the ultimate test”.</p>
+<p><strong>Small sizes</strong> are separate fonts. Pacificlo tiny sews Pacifico from 4.2 to 9.4 mm, and Pacificlo from 13.6
+to 23.8 mm. Pacificlo tiny, Amitaclo small and Chicken Little KOR Small keep their larger fonts’ columns with
+lighter settings. Their satin spacing is 0.25 mm, without a zigzag underlay, and their pull compensation is
+0.05 to 0.1 mm in place of 0.2 to 0.3 mm. Venezia small also sews satin columns where Venezia sews running
+stitches. At their least heights, the median satin column of 4 small fonts is 0.47 to 0.61 mm wide, and a
+tenth of their columns are narrower than 0.3 to 0.5 mm. The 4 are Ink/Stitch Small Font, Glacial Tiny,
+Pacificlo tiny and Venezia small. Automatic digitizing sews a line narrower than 1 mm
+(<code>min_satin_stroke_width_mm</code>) as a run, and compensates every satin column by 0.4 mm.</p>
+<p><strong>Licences.</strong> By their licence files, 102 fonts are under the OFL, 25 under CC BY-SA, 1 under CC BY, and 3
+in the public domain or under CC0. 8 are under CC BY-NC-SA, 1 under CC Attribution-NoDerivatives and 1 under
+the GPL-3.0. NickAinley, the 142nd, is under a free font’s licence, with its authors’ permission for
+Ink/Stitch. The licence field of <code>font.json</code> disagrees with the licence file for 3 fonts. It names the OFL
+for <code>precious</code>, whose licence file is the GPL-3.0 with a ban on selling the font. It names CC BY-SA for
+<code>cogs_KOR</code>, under CC BY, and for <code>nick_ainley</code>. Ink/Stitch 3.3.0 renamed 14 fonts to respect the OFL’s
+Reserved Font Names.</p>
+<p><strong>Lettering.</strong> Ink/Stitch’s lettering (<code>lib/lettering</code> at <code>d59c9ab</code>) advances each glyph by its own advance,
+less the kerning of its pair, and each word by the space’s advance. The user can widen the spacing of
+letters, of words and of lines by a number of millimetres. Lines align left, centre or right, or are
+justified as a block. A trim
+can follow each letter, word or line. Lines sew back and forth in a font with a variant for the other
+direction, and a sortable font’s colours sew in order. Batch lettering clamps the scale to the font’s range.</p>
+<h2 id="fonts-ported-by-other-programs"><a class="header" href="#fonts-ported-by-other-programs">Fonts ported by other programs</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Program</th><th>With a TrueType or OpenType font</th><th>Reported results</th></tr>
+</thead>
+<tbody>
+<tr><td>Wilcom EmbroideryStudio</td><td>Converts an installed font as text is typed, or a whole font into an embroidery font. It cuts letters into column objects and sets their stitch angles. It finds where strokes overlap and the order they sew in. Turning strokes follow each stroke, and a complex fill sews at one angle. Options turn stitches parallel to slanted ends (K, X, Y), make serifs broader than 0.8 mm strokes of their own, cap sharp angles (A, V) and overlap strokes at T and O junctions. Converted letters can be edited and the font saved</td><td>Comparable to fonts digitized by hand, though “the quality may not be quite as good”. Narrower serif fonts convert better than blocked ones</td></tr>
+<tr><td>BERNINA Embroidery Software</td><td>Stitches text in the TrueType and OpenType fonts installed on the computer</td><td>“Not all TrueType fonts are suitable”</td></tr>
+<tr><td>Hatch Embroidery</td><td>Generates stitches from an installed font’s outlines</td><td>Test-stitch each, since not all suit embroidery. Its digitized fonts state ranges, such as 6 to 30 mm for a serif, 12 to 50 mm for a script and 4 to 6 mm for a block font in running stitch</td></tr>
+<tr><td>Embird Font Engine</td><td>Fills letters with satin columns (“auto column”) or fills, from about 5 mm to 30 cm tall. It replaces each satin stitch longer than 12 mm</td><td>Its maker claims lettering “almost as if it was digitized by a human digitizer”</td></tr>
+<tr><td>SewWhat-Pro, Stitch Era</td><td>Convert text in installed fonts</td><td>A reviewer found SewWhat-Pro’s results “abysmal”. A test of Stitch Era found its TrueType lettering best at 8 to 10 mm, and smaller letters poor</td></tr>
+<tr><td>Brother PE-Design 11, Embrilliance</td><td>Tools to digitize letters by hand. Embrilliance’s BX fonts are digitized letters</td><td>None</td></tr>
+</tbody>
+</table>
+</div>
+<p>Trade articles on small lettering ask for capitals at least 6.4 mm tall, mixed case at least 5 mm and all
+capitals at least 3.8 mm (<a href="https://www.piworld.com/embroidery-digitizing-tips-on-creating-designs-with-letters/all">PI World</a>).
+Its other minimums are 0.8 mm for a column’s width, 0.9 mm across a counter and 0.5 mm between letters.
+Another article puts small letters on a centre walk with pull compensation, and satin columns at least as
+wide as the needle. It advises against serifs and strokes of varying width under about half an inch
+(<a href="https://members.asicentral.com/news/how-to/may-2018/keep-your-small-letters-crisp/">ASI</a>).</p>
+<p><strong>Published methods.</strong> VSM’s patent US 6,934,599 (priority 2002, expired 2023) describes porting a font
+automatically. A glyph’s contours are grouped and cut at sharp corners and at nodes of a thinned skeleton
+until each part is simple. Each part sews as a straight or curved satin column or as a running stitch, its
+stitches square to the skeleton. The parts are ordered by how they connect. Neighbouring columns are merged,
+with jumps between the rest. M13’s <a href="#centre-lines">centre lines</a> and columns are a pipeline of
+that kind. Brother’s US 5,559,711 (expired 2014) chooses satin or another stitch by a region’s roundness, its
+area over its perimeter squared. StrokeStyles (Berio and others, 2022) splits glyphs of many scripts into
+overlapping strokes, from the medial axis, the outline’s convex and concave parts and 7 kinds of junction,
+without training data. Balashova and others (2019) fit a model of strokes to existing fonts. A thesis of 1998
+at National Taiwan Normal University digitized embroidery from medial axes, a neural network classifying the
+junctions.</p>
+<h2 id="font-files"><a class="header" href="#font-files">Font files</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Crate</th><th>Licence</th><th>What it gives</th></tr>
+</thead>
+<tbody>
+<tr><td>skrifa 0.49</td><td>MIT OR Apache-2.0</td><td>Glyph outlines of TrueType and CFF fonts, unhinted at any size or hinted, at any point of a variable font’s axes. VectorCraft’s text uses 0.47</td></tr>
+<tr><td>read-fonts 0.46</td><td>MIT OR Apache-2.0</td><td>The tables that skrifa and harfrust read</td></tr>
+<tr><td>harfrust 0.15</td><td>MIT</td><td>HarfBuzz’s shaping in Rust, with advances, kerning from <code>kern</code> and GPOS, ligatures, marks and Arabic forms. VectorCraft’s text uses 0.13</td></tr>
+<tr><td>write-fonts 0.55</td><td>MIT OR Apache-2.0</td><td>Fonts built in code for tests, as VectorCraft’s tests build theirs</td></tr>
+<tr><td>ttf-parser 0.25 and rustybuzz 0.20</td><td>MIT OR Apache-2.0, and MIT</td><td>The older pair, last released in November 2024</td></tr>
+<tr><td>fontdb 0.24 or fontique 0.12</td><td>MIT, and Apache-2.0 OR MIT</td><td>Installed fonts found by family name, for the command line</td></tr>
+</tbody>
+</table>
+</div>
+<p>Each licence is on the allow-list of <code>deny.toml</code>. At the versions VectorCraft uses, skrifa, read-fonts and
+harfrust forbid <code>unsafe</code> code and build without the standard library, and VectorCraft builds them for its
+web app. A font file is never committed to StitchCraft. Tests build their fonts in code with write-fonts and
+read a corpus downloaded at pinned commits.</p>
+<ul>
+<li><strong>Hinting</strong> moves an outline’s points onto a screen’s pixels at small sizes, which means nothing to a
+needle. A port reads outlines unhinted, in font units, and scales them with StitchCraft’s own arithmetic
+(<a href="#determinism-1">determinism</a>).</li>
+<li><strong>Composite glyphs</strong>, such as most accented letters, are placed from their components. A port can
+digitize a base letter once for every glyph made from it.</li>
+<li><strong>Overlapping contours</strong> are common in composites and in variable fonts, where each stroke is often a
+contour of its own. A viewer fills a glyph by the nonzero rule, and so does the region code of M5.1. Text
+typed in an installed font fails in Ink/Stitch as a fill whose border crosses itself
+(<a href="#how-people-use-inkstitch">how people use Ink/Stitch</a>).</li>
+<li><strong>Variable fonts</strong> are set at a named instance or at axis values. A weight axis can thicken a font’s
+strokes at small heights, and an optical size axis gives the font’s design for small text.</li>
+</ul>
+<p><strong>Stroke widths.</strong> In Source Sans 3 Regular, a stem is 83 units at a cap height of 660 (12.6 %). At capitals
+8.0 mm tall its stems are 1 mm wide, the narrowest satin column of automatic digitizing. At 4.0 mm they are
+0.5 mm wide, where a run is tripled. Inter Regular’s stems are 1 mm wide at 7.8 mm, and Source Sans 3 Bold’s
+at 4.5 mm. Source Serif 4 Regular’s stems are 1 mm wide at 7.1 mm and its hairlines at 14.9 mm. Between
+those heights its letters mix satin columns and runs. A stem is 7 mm wide, where automatic digitizing fills,
+at capitals 56 mm tall in Source Sans 3 Regular and 31 mm tall in its Bold.</p>
+<p><strong>Dots.</strong> At capitals 6 mm tall, Source Sans 3 Regular’s i-dot covers 0.79 mm², its full stop 0.99 mm² and
+each dot of an ä 0.65 mm². Inter Regular’s i-dot covers 0.76 mm². M13 takes a part under 1 mm² for a speck,
+and merges it into a neighbour or leaves it out.</p>
+<h2 id="licences-of-ported-fonts"><a class="header" href="#licences-of-ported-fonts">Licences of ported fonts</a></h2>
+<p>A font ported into an embroidery font is a modified version of the font. A design sewn in it is a document
+made with the font.</p>
+<ul>
+<li><strong>OFL.</strong> A “Modified Version” includes one made “by changing formats or by porting the Font Software to a
+new environment”, and the licence’s site counts a conversion to SVG as one. It is distributed under the
+OFL only, never sold by itself, and named without the font’s Reserved Font Names. “The requirement for
+fonts to remain under this license does not apply to any document created using the Font Software.”</li>
+<li><strong>UFL 1.0</strong>, the Ubuntu font licence, counts a change of format as a modification too. A version changed
+substantially takes a new name, and another adds “derivative” to the name. The licence “does not affect
+any document created using the Font Software”.</li>
+<li><strong>Apache-2.0</strong> allows modified versions with the licence, its NOTICE file and a note of the changes.</li>
+<li><strong>Creative Commons.</strong> BY and BY-SA allow adaptations with credit, under the same licence for SA.
+NoDerivatives doesn’t allow sharing adaptations, and NonCommercial doesn’t allow commercial use.</li>
+<li><strong>Proprietary fonts</strong> follow their licences. Rare Bird’s desktop licence doesn’t allow derivative works,
+and requires a supplemental licence for “embroidering or sewing machines”. KG Fonts sells an embroidery
+licence for embroidery font files.</li>
+</ul>
+<p>A font’s name table gives its copyright notice, trademark, licence description and licence URL (name IDs 0,
+7, 13 and 14), which a port can read and report. Google Fonts’ fonts are under the OFL, the UFL or
+Apache-2.0, in a folder for each in its repository.</p>
+<p><strong>Where fonts live.</strong> VectorCraft’s shared fonts are in
+<a href="https://github.com/storytold/craft-fonts">storytold/craft-fonts</a>, an optional build input
+(<code>CRAFT_FONTS_DIR</code>), with each font’s licence text beside it (VectorCraft’s <code>docs/development.md</code> at
+<code>1505384</code>). Embroidery fonts in Ink/Stitch’s format come from a repository of their own (M14.1). A ported
+font is made on the user’s computer from a font the user has.</p>
+<h2 id="glyph-rules"><a class="header" href="#glyph-rules">Glyph rules</a></h2>
+<p>M13 digitizes a traced shape by its width at the size it sews (<a href="#image-to-embroidery">image to embroidery</a>).
+A glyph is such a shape, and M13’s rules do most of the work, from centre lines and junctions to rings and
+the fills of broad parts. The table lists what glyphs need beyond them, with the step of M15 that adds it.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Need</th><th>M13 today</th><th>Step</th></tr>
+</thead>
+<tbody>
+<tr><td>Every contour sews</td><td>A part under 1 mm² is a speck, and the lowest shape can be the background</td><td>M15.3</td></tr>
+<tr><td>Dots and marks</td><td>A dot’s centre line has no length, and the dot is filled, or merged as a speck</td><td>M15.5</td></tr>
+<tr><td>Ends on the baseline, the x-height and the capitals’ height</td><td>A column’s end is flat when the edge lies within 20° of square to it, and pointed otherwise</td><td>M15.6</td></tr>
+<tr><td>Serifs</td><td>A serif is an arm with a column of its own, or a bump</td><td>M15.6</td></tr>
+<tr><td>Thin strokes</td><td>A part narrower than 1 mm runs along its centre line. Small fonts digitized by hand sew satin columns half as wide</td><td>M15.7</td></tr>
+<tr><td>Counters and the settings of small letters</td><td>Columns are compensated by 0.4 mm at every height, and a counter that closes isn’t named. Small fonts digitized by hand compensate by 0.05 to 0.1 mm</td><td>M15.7</td></tr>
+<tr><td>Jumps inside a glyph</td><td>Columns sew longest first, and a jump joins each 2. TS-13B’s digitized letters leave 37 jump threads</td><td>M15.8</td></tr>
+<tr><td>Joined letters and overlapping strokes</td><td>Contours are united before their centre lines are found</td><td>M15.9</td></tr>
+<tr><td>Heights</td><td>A shape is digitized at the size it sews</td><td>M15.10</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>Correcting a glyph.</strong> A ported font can be written in Ink/Stitch’s format (M15.11), with its satin columns
+drawn with their rails and rungs as Stroke to Satin draws them. A user then corrects a glyph in its layer, in
+VectorCraft or in Inkscape with Ink/Stitch, and M14’s lettering sews the corrected font. VectorCraft keeps
+<code>inkstitch:*</code> attributes from SVG import to SVG export (<a href="#rfc-vectorcraft-plug-in-features">RFC</a>, P7). The writer
+puts the baselines at 0, where a reader puts a baseline when the file lacks a <code>baseline</code> guide. Wilcom’s
+converted letters are corrected the same way, as letters of the saved font.</p>
+<p><strong>Testing.</strong> 36 of Ink/Stitch’s fonts were digitized by hand from fonts on Google Fonts, all 36 under the OFL.
+The corpus pairs each original with the Ink/Stitch font made from it. A port at that font’s heights is
+measured against it, by the share of each glyph’s area sewn as satin columns, fills and runs, and by jumps,
+coverage and stitches. TS-15 sews 3 ported fonts beside the fonts digitized by hand from them, at MC-10
+(<a href="#machine-testing-protocol">machine testing</a>).</p>
+<h2 id="decisions-for-the-owner"><a class="header" href="#decisions-for-the-owner">Decisions for the owner</a></h2>
+<ul>
+<li><strong>When M15 comes.</strong> The roadmap places it after M14 and before M11 and 1.0. M15.1 and M15.2 can go ahead
+beside M14. Moving M15 after 1.0 brings 1.0 sooner.</li>
+<li><strong>Which ported fonts are written.</strong> Text in any installed font can be sewn as a design, as Wilcom and Hatch
+sew it. The font’s licence is reported. Writing a ported font is making a modified version of the font.
+The plan writes one for a font under the OFL, the UFL, Apache-2.0, CC0, CC BY or CC BY-SA, and for another
+font only when the user says they hold a licence that allows it. The owner can make that stricter or
+looser.</li>
+<li><strong>Ported fonts in the font repository.</strong> Ports of OFL fonts, corrected by hand and sewn out, could join
+StitchCraft’s font repository under new names, as Ink/Stitch’s library grew from such fonts.</li>
+<li><strong>The narrowest satin column in lettering.</strong> Automatic digitizing runs a line narrower than 1 mm, and
+Ink/Stitch’s small fonts sew columns about 0.5 mm wide. TS-15 sews both, and MC-10 chooses.</li>
+<li><strong>Raising P9.</strong> The RFC’s <a href="#p9-type-as-glyph-outlines">P9</a> proposes that
+VectorCraft give plug-ins type as glyph outlines, which its plans don’t cover. Without it, the exporter
+plug-in can’t sew type, since it can’t read font files. Whether to raise P9 on VectorCraft’s own
+repository, and when, is the owner’s choice.</li>
+</ul>
+<h2 id="sources-2"><a class="header" href="#sources-2">Sources</a></h2>
+<ul>
+<li>Ink/Stitch’s tutorial <a href="https://inkstitch.org/tutorials/font-creation/">Fonts for Ink/Stitch</a></li>
+<li>Ink/Stitch’s <a href="https://inkstitch.org/docs/font-tools/">font tools</a></li>
+<li>Ink/Stitch’s <a href="https://inkstitch.org/docs/lettering/">lettering</a></li>
+<li>Ink/Stitch’s <a href="https://inkstitch.org/docs/satin-tools/">satin tools</a> and <a href="https://inkstitch.org/docs/stroke-tools/">stroke tools</a></li>
+<li>The page of Ink/Stitch’s <a href="https://inkstitch.org/fonts/ink_stitch">Small Font and Medium Font</a></li>
+<li>Ink/Stitch’s release notes for <a href="https://inkstitch.org/en/2026-07-31-v3.3.0">v3.3.0</a></li>
+<li>The font files of <a href="https://github.com/inkstitch/embroidery-fonts">inkstitch/embroidery-fonts</a> at <code>c7e3a05</code></li>
+<li>Wilcom’s <a href="https://docs.wilcom.com/embroiderystudio/28/en/OnlineHelp/Lettering/lettering_custom/lettering_custom-2.htm">Converting TrueType fonts to embroidery</a>
+and <a href="https://docs.wilcom.com/embroiderystudio/28/en/OnlineHelp/Lettering/lettering_custom/lettering_custom-4.htm">Convert TrueType fonts</a></li>
+<li>Wilcom’s <a href="https://docs.wilcom.com/embroiderystudio/27/en/OnlineHelp/Management/custom_fonts/custom_fonts-4.htm">Experiment with conversion settings</a>
+and <a href="https://docs.wilcom.com/embroiderystudio/28/en/OnlineHelp/Management/custom_fonts/custom_fonts-5.htm">Refine turning stroke options</a></li>
+<li>BERNINA’s <a href="https://softwarehelp.bernina.com/en/MainHelp/PART_Lettering/special_lettering/special_lettering-4.htm">Convert fonts to embroidery</a></li>
+<li>Hatch’s <a href="https://hatchembroidery.com/resources/blog/choosing-the-right-size-embroidery-lettering-for-your-project">lettering sizes</a>
+and its <a href="https://help.hatchembroidery.com/portal/en/kb/hatch/tech-talk/articles/what-should-i-know-about-hatch-fonts-truetype-fonts-and-third-party-fonts">note on TrueType fonts</a></li>
+<li>Embird’s <a href="https://embird.net/font-engine">Font Engine</a> and its <a href="https://www.embird.net/sw/embird/tutorial/feparam/feparam.htm">parameters</a></li>
+<li>Machine Embroidery Geek on <a href="https://www.machineembroiderygeek.com/?p=19511">converting TTF fonts</a> and on
+<a href="https://www.machineembroiderygeek.com/what-are-bx-fonts-for-machine-embroidery/">BX fonts</a></li>
+<li>A shop’s page on <a href="https://www.mulqueen.com/shop/Embroidery-Supplies/Software/Embrilliance-Software/p/Embrilliance-StitchArtist-Level-3.htm">Embrilliance StitchArtist Level 3</a></li>
+<li>EduTech Wiki on <a href="https://edutechwiki.unige.ch/en/Stitch_Era_-_lettering">Stitch Era’s lettering</a></li>
+<li>Impressions on <a href="https://impressionsmagazine.com/process-technique/understanding-alphabet-and-font-options/16203/">alphabet and font options</a></li>
+<li>The patents <a href="https://patents.google.com/patent/US6934599">US 6,934,599</a> and <a href="https://patents.google.com/patent/US5559711">US 5,559,711</a></li>
+<li>D. Berio and others, <a href="https://doc.gold.ac.uk/autograff/post/papers/strokestyles_2022/">StrokeStyles</a>, ACM
+Transactions on Graphics (2022)</li>
+<li>E. Balashova and others, <a href="https://cris.tau.ac.il/en/publications/learning-a-stroke-based-representation-for-fonts/">Learning a stroke-based representation for fonts</a>,
+Computer Graphics Forum 38 (2019)</li>
+<li>The thesis <a href="https://openaccess.library.uitm.edu.my/Record/ndltd-TW-087NTNU0395026">Automatic embroidery digitizing based on skeletonization and backpropagation neural network</a>,
+National Taiwan Normal University</li>
+<li>The crates’ pages on crates.io on 2026-11-02, and the source of skrifa 0.47, read-fonts 0.44 and harfrust 0.13</li>
+<li>The <a href="https://openfontlicense.org/open-font-license-official-text/">OFL</a>, its pages on
+<a href="https://openfontlicense.org/ofl-reserved-font-names/">Reserved Font Names</a> and on
+<a href="https://openfontlicense.org/webfonts-and-reserved-font-names/">webfonts</a>, and an
+<a href="https://ctan.math.washington.edu/tex-archive/fonts/cm-unicode/doc/OFL-FAQ.txt">OFL FAQ</a></li>
+<li>The <a href="https://spdx.org/licenses/Ubuntu-font-1.0.html">UFL 1.0</a></li>
+<li><a href="https://fontspring.com/lic/rare-bird-font-foundry/desktop">Rare Bird’s desktop licence</a> and
+<a href="https://kimberlygeswein.com//kg-font-licensing-information/">KG Fonts’ licences</a></li>
+<li>Google Fonts’ <a href="https://googlefonts.github.io/gf-guide/googlefonts.html">repository guide</a></li>
+<li>Stroke widths and dots measured with fontTools on the OFL fonts that VectorCraft bundles, and satin widths
+measured on Ink/Stitch’s font files</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="machine-formats"><a class="header" href="#machine-formats">Machine formats</a></h1>
 <!-- implements: crates/stitchcraft-formats/src/**, apps/stitchcraft-cli/src/commands/convert.rs, apps/stitchcraft-cli/src/commands/inspect.rs -->
 <p><code>stitchcraft-formats</code> encodes a <code>StitchPlan</code> into machine files and decodes machine files into plans.
@@ -9802,7 +10054,7 @@ See <a href="#adr-0009-adopt-vectorcrafts-conventions-improve-the-ones-that-drif
 </thead>
 <tbody>
 <tr><td><strong>Audience</strong></td><td>ArtCraft / VectorCraft maintainers</td></tr>
-<tr><td><strong>Status</strong></td><td>Mostly adopted (<a href="#status">status</a>): 7 proposals in VectorCraft 0.14.0 to 0.17.0. P3 is in review, and the rest of P4 and P6 is open</td></tr>
+<tr><td><strong>Status</strong></td><td>Mostly adopted (<a href="#status">status</a>): 7 proposals in VectorCraft 0.14.0 to 0.17.0. P3 is in review, and the rest of P4 and P6 is open. P9 is proposed here and not yet raised upstream</td></tr>
 <tr><td><strong>Compatibility</strong></td><td>Additive. Every plug-in written for ABI v1 keeps working, and <code>vc_abi_version</code> still returns 1</td></tr>
 <tr><td><strong>Author’s interest</strong></td><td>StitchCraft (machine embroidery), but every proposal serves other plug-ins too</td></tr>
 </tbody>
@@ -9815,7 +10067,8 @@ plug-in that uses none of them installs anywhere. VectorCraft’s
 <a href="https://github.com/storytold/vectorcraft/blob/main/docs/plugins.md">plug-in documentation</a> is the contract.
 This page records what was adopted and when, and what StitchCraft still proposes. Its path keeps the old
 name, which links point at. The <a href="#roadmap-small-steps-to-the-final-project">roadmap</a> plans StitchCraft’s use of the adopted
-features in M6.8 to M6.12, and proposes the open ones in M9.</p>
+features in M6.8 to M6.12, and proposes the open parts of P4 and P6 in M9. Raising P9 upstream is the
+owner’s choice (<a href="#decisions-for-the-owner">fonts</a>).</p>
 <h2 id="status"><a class="header" href="#status">Status</a></h2>
 <p>Checked against VectorCraft’s <code>docs/plugins.md</code> and its history, in the 0.18.0 release (2026-10-28):</p>
 <div class="table-wrapper">
@@ -9832,6 +10085,7 @@ features in M6.8 to M6.12, and proposes the open ones in M9.</p>
 <tr><td><a href="#p6-the-paints-of-a-live-effects-object">P6</a>, context for live effects</td><td>Fills and strokes adopted, neighbours open</td><td>0.14.0, a stroke’s style 0.15.0</td><td><a href="https://github.com/storytold/vectorcraft/pull/3173">#3173</a></td></tr>
 <tr><td><a href="#p7-preserve-foreign-svg-attributes">P7</a>, foreign SVG attributes</td><td>Adopted</td><td>0.17.0</td><td><a href="https://github.com/storytold/vectorcraft/pull/3758">#3758</a></td></tr>
 <tr><td><a href="#p8-effects-and-stroke-style-in-filter-objects">P8</a>, effects and stroke style in filters</td><td>Adopted</td><td>0.15.0</td><td><a href="https://github.com/storytold/vectorcraft/pull/3174">#3174</a></td></tr>
+<tr><td><a href="#p9-type-as-glyph-outlines">P9</a>, type as glyph outlines</td><td>Proposed by StitchCraft, not yet raised upstream</td><td></td><td></td></tr>
 </tbody>
 </table>
 </div>
@@ -9848,6 +10102,7 @@ features in M6.8 to M6.12, and proposes the open ones in M9.</p>
 <tr><td>Heavy but legitimate computation (routing, packing, simulation)</td><td>Heavy filters (P4), and an export’s own budget. A live effect still has a light run’s budget</td></tr>
 <tr><td>Plug-ins with document-wide settings (machine profile, plotter pens)</td><td>Data kept with the document (P5)</td></tr>
 <tr><td>Tools that set up objects for a live effect (a satin column from a line, a test sheet)</td><td>Filters read and return effect records and a stroke’s style (P8)</td></tr>
+<tr><td>Plug-ins that work on text (lettering, engraving, cutting type)</td><td>Filters and live effects receive paths alone, and an exporter only a type object’s text and its font’s name (P9)</td></tr>
 </tbody>
 </table>
 </div>
@@ -9915,10 +10170,23 @@ instructions, and a larger fill’s stops at the light budget’s 50 million.</p
 <p>The live-effect input holds, optionally, the objects in the same group whose names start with a prefix the
 manifest declares (<code>"contextPrefixes": ["stitch:"]</code>). Embroidery reads start and end markers from it, so a
 preview starts and ends where <code>stitch export</code> does. Other plug-ins use the context for guides and anchors.</p>
+<h3 id="p9-type-as-glyph-outlines"><a class="header" href="#p9-type-as-glyph-outlines">P9: Type as glyph outlines</a></h3>
+<p>Proposed by StitchCraft, and not yet raised upstream. A filter is also given each selected type object, and a
+live effect the type object it is applied to, read only. Each comes as its glyph outlines in the path form, subpaths of
+anchors, with its text, its font and its fills and strokes. The outlines are the ones VectorCraft shows on the
+canvas and makes with Type › Create Outlines. An exporter’s document has each type object’s outlines beside its
+text record. A plug-in’s sandbox can’t read font files, and a plug-in can’t shape or outline type itself.
+Today a user runs Create Outlines first, and the text is then no longer editable. StitchCraft would sew
+lettering typed in VectorCraft from the outlines, in M14 and M15 (<a href="#fonts">fonts</a>).</p>
+<p>Nothing in VectorCraft’s plans covers it, at <code>3f8d7a0</code> (2026-10-25). Its <code>docs/plugins.md</code> gives a filter
+the selected paths and compound paths alone, and a live effect one object’s geometry. An exporter is given the
+document’s JSON, where a type object is its text and a font’s name. The plug-ins still missing in G17 of its
+<code>docs/gaps.md</code> are tool and panel plug-ins, importers and a plug-in directory. Its roadmaps leave type out.</p>
 <h2 id="security-and-determinism"><a class="header" href="#security-and-determinism">Security and determinism</a></h2>
 <p>The proposals leave the sandbox as it is: plug-ins still cannot touch files, the network, clocks or
 randomness. Exporters return bytes, which the host writes. Overlays are plain data, and heavy budgets are
-opt-in and still bounded. Results are still deterministic functions of their inputs, which a host may
+opt-in and still bounded. The outlines of type (P9) are data the host gives, and the budget charges for
+their points as for any input. Results are still deterministic functions of their inputs, which a host may
 cache.</p>
 <h2 id="implementation-sketch-and-tests"><a class="header" href="#implementation-sketch-and-tests">Implementation sketch and tests</a></h2>
 <div class="table-wrapper">
@@ -9930,6 +10198,7 @@ cache.</p>
 <tr><td>P3</td><td><code>crates/plugins/src/effect.rs</code>, canvas drawing in <code>crates/ui-egui/src/canvas.rs</code></td><td>a fuzz test of overlay decoding, a cache key test</td></tr>
 <tr><td>P4, live effects</td><td><code>crates/plugins/src/{effect,runtime}.rs</code>, the install flow</td><td>fuel accounting tests, a drawing that waits for a heavy result</td></tr>
 <tr><td>P6, objects beside</td><td><code>crates/plugins/src/objects.rs</code></td><td>ABI tests</td></tr>
+<tr><td>P9</td><td><code>crates/plugins/src/objects.rs</code>, with the text outliner of <code>crates/effects/src/live.rs</code></td><td>ABI tests of type sent to filters, live effects and exporters</td></tr>
 </tbody>
 </table>
 </div>
@@ -12227,8 +12496,8 @@ reader sews in full; each setting the adapter learns to read brings its designs 
 </ul>
 <p>Ink/Stitch’s font
 library is part of that corpus: hundreds of real Ink/Stitch files, mostly satin, downloaded at a pinned
-commit by <code>cargo xtask corpus</code> and never committed, using only fonts whose licence allows it (OFL, CC0,
-CC-BY, CC-BY-SA; 132 of the 142 fonts on 2026-10-08).</p>
+commit by <code>cargo xtask corpus</code> and never committed. It takes only the fonts whose licence file is the OFL,
+CC0, CC BY or CC BY-SA, 131 of the 142 fonts on 2026-11-02 (<a href="#inkstitchs-fonts">fonts</a>).</p>
 <!-- vale ai-tells.EmDashUsage = NO -->
 <h2 id="m10--more-stitch-types-ii"><a class="header" href="#m10--more-stitch-types-ii">M10 — More stitch types II</a></h2>
 <!-- vale ai-tells.EmDashUsage = YES -->
@@ -12240,26 +12509,61 @@ Satin, is M6.12. M10 comes before M14, since lettering’s fonts use its stitch 
 <h2 id="m14--lettering"><a class="header" href="#m14--lettering">M14 — Lettering</a></h2>
 <!-- vale ai-tells.EmDashUsage = YES -->
 <p>Goal: names, monograms and words sewn in embroidery fonts, set as Ink/Stitch’s lettering sets them
-(<a href="#how-people-use-inkstitch">review</a>). M14 comes after M8, whose SVG adapter reads the files that Ink/Stitch’s
-fonts are made of, and after M10. Of the 142 fonts in Ink/Stitch’s library, 107 use only stitch types
+(<a href="#how-people-use-inkstitch">review</a>, <a href="#fonts">fonts</a>). M14 comes after M8, whose SVG adapter reads the
+files that Ink/Stitch’s fonts are made of, and after M10. Of the 142 fonts in Ink/Stitch’s library, 107 use only stitch types
 StitchCraft sews. The other 35 need cross stitch (25 fonts), tartan fill (4), ripple stitch (3), guided fill
 (1) or meander fill (1), counted on 2026-11-01, and 2 ask for M10’s auto-satin. Fonts come from a repository of their own, as VectorCraft’s do. They are StitchCraft’s
 own fonts, Ink/Stitch’s fonts whose licence allows it (OFL, CC0, CC-BY, CC-BY-SA, each with its licence
 file and an <code>ASSETS.md</code> row, never NC, GPL or unclear terms), and the fonts a user has installed for
-Ink/Stitch, read in their own format.</p>
+Ink/Stitch, read in their own format. Ink/Stitch’s fonts come from their repository,
+<a href="https://github.com/inkstitch/embroidery-fonts">inkstitch/embroidery-fonts</a>, and a font’s licence is the one
+its licence file states. M15 ports ordinary fonts into the same format.</p>
 <div class="table-wrapper">
 <table>
 <thead>
 <tr><th>Step</th><th>Deliverable</th><th>Done when</th></tr>
 </thead>
 <tbody>
-<tr><td>M14.1 🧪</td><td>The font repository, the licences it takes, and a reader for a font in Ink/Stitch’s format, from Ink/Stitch’s public documentation of it</td><td>ADR-0001 amended for fonts; one font read, its glyphs sewn</td></tr>
-<tr><td>M14.2</td><td><code>stitch lettering</code> sets text in a font. Its glyphs are placed by the font’s advances and kerning, with the spacing of letters, words and lines and the alignment the user sets. The scale stays within the heights the font sews at, and a warning names the font’s range outside them</td><td>its requirements active</td></tr>
-<tr><td>M14.3</td><td>Lettering along a path. The colours of a multicolour font sorted, a trim after each letter, word or line as chosen, and lines sewn back and forth</td><td>same</td></tr>
-<tr><td>M14.4</td><td>Lettering in VectorCraft: a text object sews in the embroidery font its StitchCraft setting names, read from the document’s text. The step chooses how the setting is given, as an effect or a name. A preview of the font in VectorCraft waits for a live effect to be given more than its object’s geometry and paints (<a href="#rfc-vectorcraft-plug-in-features">RFC</a>, P6)</td><td>a Level B case</td></tr>
+<tr><td>M14.1 🧪</td><td>The font repository, the licences it takes, and a reader for a font in Ink/Stitch’s format (<a href="#fonts">fonts</a>), from Ink/Stitch’s public documentation of it and its font files</td><td>ADR-0001 amended for fonts; one font read, its glyphs sewn</td></tr>
+<tr><td>M14.2</td><td><code>stitch lettering</code> sets text in a font. Its glyphs are placed by the font’s advances and kerning, with the spacing of letters, words and lines and the alignment the user sets. The scale stays within the heights the font sews at, and a warning names the font’s range outside them. A character the font lacks sews as the font’s default glyph, and a warning names it</td><td>its requirements active</td></tr>
+<tr><td>M14.3</td><td>Lettering along a path, on its top, its baseline or its bottom, or stretched along it. The colours of a multicolour font sorted, a trim after each letter, word or line as chosen, and lines sewn back and forth</td><td>same</td></tr>
+<tr><td>M14.4</td><td>Lettering in VectorCraft: a text object sews in the embroidery font its StitchCraft setting names, read from the document’s text. The step chooses how the setting is given, as an effect or a name. It also chooses where the plug-ins find the fonts, since a plug-in can’t read files. They can be built in from the font repository, as VectorCraft builds in craft-fonts. A preview of the font in VectorCraft waits for a live effect to be given more than its object’s geometry and paints (<a href="#rfc-vectorcraft-plug-in-features">RFC</a>, P6)</td><td>a Level B case</td></tr>
 <tr><td>MC-9 🧵</td><td><strong>TS-14</strong> (3 fonts at the least and the greatest heights they sew at); kit: <code>stitch testsheet</code></td><td>report filed</td></tr>
 <tr><td>M14.5</td><td>Text in pictures: the traced shapes inside an area marked <code>stitch:text</code> are replaced by lettering of the marker’s text, as tall as the traced letters (<a href="#text-in-pictures">design</a>)</td><td>its requirements active</td></tr>
 <tr><td>M14.6 🧪</td><td>Text in pictures found and read without a marker</td><td>decision recorded in the design</td></tr>
+</tbody>
+</table>
+</div>
+<!-- The milestones' headings all name them this way. -->
+<!-- vale ai-tells.EmDashUsage = NO -->
+<h2 id="m15--fonts-ported-automatically"><a class="header" href="#m15--fonts-ported-automatically">M15 — Fonts ported automatically</a></h2>
+<!-- vale ai-tells.EmDashUsage = YES -->
+<p>Goal: lettering sewn in any suitable TrueType or OpenType font without digitizing the font by hand
+(<a href="#fonts">design</a>). The font can be one installed on the computer or one from Google Fonts.
+StitchCraft reads each glyph’s outline at the height the text is set, and sews it by M13’s rules and by
+rules for glyphs. The font’s advances and kerning space the glyphs. A ported font can be written in
+Ink/Stitch’s font format, where a user corrects a glyph by hand and M14’s lettering sews it. M15 comes after
+M14, whose lettering sets the glyphs, and after M10, whose auto-satin routing joins a glyph’s columns. M15.1
+and M15.2 don’t depend on M14, and can go ahead beside it.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Step</th><th>Deliverable</th><th>Done when</th></tr>
+</thead>
+<tbody>
+<tr><td>M15.1 🧪</td><td>Font files and a corpus. The step compares the crates that read and shape fonts, skrifa with harfrust as in VectorCraft and ttf-parser with rustybuzz. Each is checked against <code>deny.toml</code>, the wasm build and the budget. A corpus of the 36 OFL fonts on Google Fonts that Ink/Stitch’s fonts were digitized from, each with the Ink/Stitch font made from it, fetched by <code>cargo xtask corpus</code> at pinned commits and never committed</td><td>Decision recorded in an ADR, with each crate’s cost measured: the instructions to outline and shape a line of text, and the plug-in’s size with them</td></tr>
+<tr><td>M15.2</td><td>Glyph outlines. A crate of its own, <code>stitchcraft-fonts</code>, reads TrueType, OpenType and collection files, with a variable font at its default, at a named instance or at axis values. It shapes text with the font’s advances, kerning, ligatures and marks. It gives each glyph’s outline unhinted, in font units, with its components placed. A character the font lacks is named by a warning. Fonts are untrusted input, read within the budget and fuzzed, and test fonts are built in code</td><td>its requirements active, a fuzz target, and every font of the corpus read</td></tr>
+<tr><td>M15.3</td><td>Glyphs digitized. <code>stitch lettering --font Font.ttf</code> sets text in a font file, with M14.2’s spacing, alignment and trims, at a height given as the capitals’ height. Each glyph is an automatic element, its contours filled by the nonzero rule and digitized by M13’s rules at that height. M13’s rules for specks and the background don’t apply to glyphs, and every contour sews</td><td>its requirements active. The corpus’s glyphs digitized at 3 heights, with their jumps, filled parts and columns shorter than 1 mm counted as the baseline the next steps are measured against</td></tr>
+<tr><td>M15.4</td><td>A sample sheet. <code>stitch font sample</code> sews a font’s glyphs at its least and greatest heights, with pangrams and the font’s kerning pairs. It reports each glyph’s stitch types, jumps and warnings. TS-15 is drawn</td><td>the docs show a sample sheet in pictures</td></tr>
+<tr><td>M15.5</td><td>Dots and marks. A part of a glyph whose centre line has no length, such as an i-dot, a full stop or an umlaut’s dot, sews as one satin column across it. A part too small for a column sews as stitches back and forth inside it, with its locks inside it</td><td>its requirements active, and every dot of the corpus’s glyphs sewn at the least heights measured</td></tr>
+<tr><td>M15.6</td><td>Ends and serifs. A stroke cut by the baseline, the x-height, the capitals’ height or the descenders’ line ends flat along that line, its stitches turning to lie along the cut. A serif narrower than 0.8 mm sews as part of its stem’s column, and a broader one as a column of its own under the stem</td><td>its requirements active, and fewer columns shorter than 1 mm in the corpus’s serif fonts than at M15.3</td></tr>
+<tr><td>M15.7</td><td>Thin strokes, counters and small letters. A stretch of a column narrower than the narrowest satin column in lettering is widened to it, or runs along its centre line, as the step’s cases and MC-10 decide. That width is a setting of its own, its default chosen at MC-10. Columns in small letters take lighter settings, as small fonts digitized by hand do: denser satin, a lighter underlay and less pull compensation. Pull compensation leaves each counter at least 0.9 mm across, and a warning names the glyphs whose counters close at the height set</td><td>its requirements active</td></tr>
+<tr><td>M15.8</td><td>Routing inside a glyph. A glyph’s columns and lines are joined by runs under the columns sewn after them, as M10’s auto-satin routing joins columns. Each glyph starts at its lower left and ends nearest the next glyph. Jumps are left only where a run can’t be hidden, and they have locks at both ends</td><td>its requirements active, and the jumps inside the corpus’s glyphs counted against M15.3’s</td></tr>
+<tr><td>M15.9 🧪</td><td>Scripts and overlapping strokes. The letters of a joined script sewn as one shape per word, or glyph by glyph with each join ending under the next letter. A variable font’s overlapping contours sewn as strokes of their own, or united. Both measured on the corpus’s script fonts</td><td>decision recorded in the design</td></tr>
+<tr><td>M15.10</td><td>Heights. For each glyph, the heights over which its stitch types don’t change. For a font, the range in which its narrowest strokes sew and its widest are satin columns. <code>stitch lettering</code> warns outside the range, as for an embroidery font. The step also chooses whether the height sets a variable font’s weight or optical size</td><td>its requirements active, and the corpus’s ranges recorded beside those of the Ink/Stitch fonts made from the same fonts</td></tr>
+<tr><td>M15.11</td><td>Ported fonts written in Ink/Stitch’s format. <code>stitch font port Font.ttf</code> writes a font folder digitized at a height. Each glyph has a layer of its own, in which satin columns are drawn with their rails and rungs. The settings give the font’s advances, its kerning and its range of heights. The folder has the font’s copyright and licence, and names the font it was made from. It is written only for a font whose licence allows a modified version, or one whose licence the user confirms. Its name leaves out the font’s Reserved Font Names</td><td>read back by M14’s reader, the folder sews as the port did, and Ink/Stitch sews it in the nightly differential</td></tr>
+<tr><td>M15.12</td><td>VectorCraft. A text object without StitchCraft’s effects sews in its own font, ported automatically, in <code>stitch export --auto</code>. Its font is found among the fonts installed and those of craft-fonts, as VectorCraft finds them. A font that isn’t found is a coded error that suggests Type › Create Outlines, whose outlines the Auto effect digitizes. The exporter plug-in can’t read font files, and its text waits for VectorCraft to give plug-ins type as glyph outlines (<a href="#p9-type-as-glyph-outlines">RFC</a>, P9)</td><td>a Level B case, in which a document with text exports through <code>stitch export</code> and sews its text ported</td></tr>
+<tr><td>MC-10 🧵</td><td><strong>TS-15</strong> (3 fonts from Google Fonts, a sans, a serif and a script, ported at 3 heights each beside the fonts digitized by hand from them, and a word in satin columns 0.4 to 1 mm wide beside the same word in triple runs). Its kit is made by <code>stitch testsheet</code> with the corpus’s fonts</td><td>report filed. The glyph rules’ values confirmed or changed, and the narrowest satin column in lettering chosen</td></tr>
 </tbody>
 </table>
 </div>
@@ -12286,7 +12590,7 @@ start and end their previews at the markers.</p>
 <h1 id="machine-testing-protocol"><a class="header" href="#machine-testing-protocol">Machine testing protocol</a></h1>
 <!-- implements: crates/stitchcraft-engine/src/testsheets/**, apps/stitchcraft-cli/src/commands/testsheet.rs -->
 <p>Automated tests prove the files are what we intend. Only a machine proves they sew well. This page is
-the protocol for <strong>machine checkpoints</strong> (MC-1 … MC-9) on the reference machine: a Brother PE800, whose
+the protocol for <strong>machine checkpoints</strong> (MC-1 … MC-10) on the reference machine: a Brother PE800, whose
 5 × 7 in hoop sews at most 130 × 180 mm. Its 4 × 4 in and small hoops have profiles too, and the TS-10
 sheets test them (<a href="#adr-0013-the-reference-machine-is-a-brother-pe800-with-a-profile-for-each-of-its-hoops">ADR 0013</a>).</p>
 <h2 id="roles"><a class="header" href="#roles">Roles</a></h2>
@@ -12358,6 +12662,7 @@ middle of the artboard (<code>REQ-VC-015</code>). A checkpoint can so sew a shee
 <tr><td><strong>TS-12</strong> Real design</td><td>A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours, its PES file written by VectorCraft’s File › Export › Export As (M6.9)</td><td>Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden? Satin columns drawn as one path: are they as wide as their strokes, and do their corners sew clean? A graphic style applied to a group: do the paths inside sew as VectorCraft shows them, with the style’s settings and colour? A satin border of 2 circles joined by Make Compound Path: do its stitches go straight across all the way round? A satin column that Stroke to Satin made of a line (M6.12): does it sew as the line did with the satin effect?</td><td>MC-5, MC-7</td></tr>
 <tr><td><strong>TS-13</strong> Pictures digitized automatically (M13)</td><td>Test pictures drawn in code (<code>stitchcraft_engine::testsheets::pictures</code>), digitized automatically in the top half of each sheet and sewn as drawn, in paint order, in the bottom half, which sews first and stops. TS-13A has a badge traced abutting and one traced stacked, specks round a disc, a row of badges drawn badge by badge, and a bar that runs on beside a square without touching it (126 × 168 mm). TS-13B has the word MATCH in block letters 15, 10, 6 and 4 mm tall, and windows whose lines, traced as areas, are 0.3, 0.6 and 0.9 mm wide (110 × 148 mm). TS-13C has a cartoon face drawn with black lines 1, 2 and 4 mm wide, a star, and a balloon on its string (111 × 108 mm). TS-13D has an emblem 42 mm wide, a navy square with a white disc, a red star on the disc and 3 gold bars, and a button 23 mm across, a yellow disc with 7 orange dots in a black rim, each traced abutting and traced stacked (115 × 108 mm)</td><td>Fabric showing between colours, on both halves, and on the digitized half whether each area’s 0.4 mm overlap under the next covers the gap or shows as a ridge (M13.2). Whether a stacked trace’s digitized half, its covered parts cut away, sews as flat as the abutting one, and what became of the specks round the disc (M13.2). Where a shape runs on beside an area without touching it, whether the fabric that shows there as drawn reads as a gap (M13.2). The smallest letters that read. Whether each outline’s columns cover the edges of the fills beside them, and whether the triple runs show as wide as their lines. A column’s square end past the end of a line with round caps (M13.1), and how far it shows past the round end. Small traced rings and hairpins, filled because no satin column can follow them (M13.1), and how solid they sew beside their columns’ neighbours. Colour changes, jumps, trims and time against the half in paint order, on a row of badges drawn badge by badge too, as Auto Grouping draws them (M13.3). Whether any shape covers one drawn over it, which the order must never let happen, and whether each line sewn after the fill it borders covers the fill’s edge (M13.3). Lines traced as areas, 0.3, 0.6 and 0.9 mm wide, sewn along their middles (M13.4): whether each reaches as far as the line drawn, whether the 0.6 and 0.9 mm lines’ triple runs show as wide as they are drawn and the 0.3 mm line’s single run doesn’t look thin, and whether the fills beside a line, reaching under it, leave fabric showing along it. Whether a junction’s third branch, which ends at the line it meets, leaves a gap or a knot there (M13.4). Letters and outlines as wide as a satin column, sewn as satin columns between their own edges (M13.5): whether each column’s stitches lie square to its stroke, round a ring and through a bend. Where a column ends under another, 0.4 mm longer, does fabric show, or a ridge? A slanted terminal should end flat along its edge as drawn, and a round one at its farthest point. Whether a crossbar sewn as a column of its own across a stem reads as one stroke. The underlays by width should hold the columns up, and 0.4 mm of pull compensation keep them as wide as drawn. The stitches that lean where strokes meet at sharp angles, as in an M or a W (<code>SC-W0208</code>), and the jumps between a letter’s columns. Shapes broad in places and narrow in others (M13.6). The star’s points and the balloon’s string sew as columns over the fill of the star’s middle and of the balloon. Do their flat ends cover the fill’s edge, or leave fabric or a ridge there? Do each point’s stitches lie square to it from its tip to its cut? Pictures traced in layers (M13.12). Whether the stacked emblem, its layers flattened, sews as the abutting one beside it, and how stiff it sews as drawn on the bottom half, each colour whole under the colours over it. Which sews better between the bars, the navy filled whole under the white disc and the bars or the navy sewn round them as drawn? Whether the gold bars keep their height, 2.1 mm as drawn, and their square ends. Which sews better between the dots, the button’s yellow filled whole under them or sewn round them as drawn, and does the rim’s column cover the yellow’s edge? Whether fabric or a ridge shows round the bars, the disc, the star and the dots. Small discs no wider than a satin column are dots, filled (M13.12), as the gold discs of the row of badges and the button’s dots are. Do they sew round, and does fabric show at their edges? Which jump threads a shape sews down, since the PE800 cuts none</td><td>MC-8</td></tr>
 <tr><td><strong>TS-14</strong> Lettering (M14)</td><td>3 embroidery fonts, a block, a script and a small one, each at the least and the greatest heights it sews at, and a name along an arc</td><td>Whether every glyph reads at its least height, satin coverage at its greatest, and whether the locks of small glyphs hold after the trims</td><td>MC-9</td></tr>
+<tr><td><strong>TS-15</strong> Fonts ported automatically (M15)</td><td>3 fonts from Google Fonts, a sans, a serif and a script, each ported at 3 heights beside the font Ink/Stitch digitized by hand from it, at the same heights. A word in satin columns 0.4, 0.6, 0.8 and 1 mm wide beside the same word in triple runs. <code>stitch testsheet</code> draws it with the fonts of the corpus</td><td>Whether every ported glyph reads at the least height, with its dots, serifs and counters. The jump threads inside letters and between them. Whether the ported letters read as well as the letters digitized by hand beside them, and the narrowest satin column that sews a letter cleanly</td><td>MC-10</td></tr>
 </tbody>
 </table>
 </div>
@@ -12376,6 +12681,7 @@ middle of the artboard (<code>REQ-VC-015</code>). A checkpoint can so sew a shee
 <tr><td>MC-8</td><td>M13.12</td><td>TS-13, from <code>stitch testsheet</code> or drawn in VectorCraft by the Test Sheet filter with the Auto effect</td><td>Do pictures digitized automatically sew better than the same shapes in paint order? Are the widest satin column, the narrowest triple run, the overlap, the underlays by width and the columns’ pull compensation right?</td></tr>
 <tr><td>MC-6</td><td>M7</td><td>TS-11</td><td>New stitch types acceptable?</td></tr>
 <tr><td>MC-9</td><td>M14</td><td>TS-14</td><td>Do the fonts sew legibly across the heights they claim?</td></tr>
+<tr><td>MC-10</td><td>M15</td><td>TS-15</td><td>Do fonts ported automatically sew as legibly as fonts digitized by hand, from the least height of their range?</td></tr>
 <tr><td>MC-7</td><td>M12</td><td>all</td><td>Release regression</td></tr>
 </tbody>
 </table>
@@ -12421,7 +12727,7 @@ new value; the docs’ parameter pages show the evidence link.</li>
 StitchCraft. The most frequent come first, as far as the sources show. It was made on 2026-10-19 to look
 for major uses the roadmap lacked, after automatic digitizing of pictures turned out to be missing from
 it. It changed the roadmap in 4 places (<a href="#changes-to-the-roadmap">changes</a>).</p>
-<h2 id="sources-2"><a class="header" href="#sources-2">Sources</a></h2>
+<h2 id="sources-3"><a class="header" href="#sources-3">Sources</a></h2>
 <ul>
 <li>Ink/Stitch’s documentation and tutorials, at <a href="https://inkstitch.org/docs/workflow/">inkstitch.org</a>:
 the workflow, the Params dialog, the tools, lettering, thread colours, troubleshooting, and import and
@@ -12445,7 +12751,7 @@ about, which can differ from what they do most.</p>
 <tbody>
 <tr><td>Shapes drawn by hand, their stitches set one by one</td><td>Ink/Stitch’s <a href="https://inkstitch.org/docs/basic-usage/">basic use</a> and <a href="https://inkstitch.org/docs/workflow/">workflow</a> are to draw, set the stitches, and save a machine file. The <a href="https://inkstitch.org/docs/params/">Params</a> dialog sets each element’s stitches, with a preview</td><td>M6’s effects in VectorCraft. Their dialogs show the parameters’ names alone until M6.10 labels and groups them, with the richer parameters VectorCraft 0.14 adopted</td></tr>
 <tr><td>Pictures made into embroidery</td><td>The workflow’s way from a picture is Trace Bitmap, Simplify and Cleanup Document, with the stitches then set by hand. Tutorial videos trace <a href="https://www.youtube.com/watch?v=46kfuQWOPW0">a cartoon</a> and <a href="https://www.youtube.com/watch?v=fx0Fn2tqtQ0">text and logos</a>. An article calls the result finicky (<a href="https://www.machineembroiderygeek.com/?p=21980">Machine Embroidery Geek</a>). A traced logo showed yellow behind its black lettering and sewed too many stitches, and Ink/Stitch crashed when its letters were made satin (<a href="https://inkscape.org/forums/embroidery/logo-help/">Inkscape forum</a>). A logo 3 inches wide came out muddled, with its letters filled where satin was needed. Its owner then paid a digitizer 5 dollars (<a href="https://www.reddit.com/r/Machine_Embroidery/comments/1iyrjkx/need_helpadvice/">Reddit</a>)</td><td>M13 (<a href="#image-to-embroidery">design</a>)</td></tr>
-<tr><td>Lettering in embroidery fonts</td><td><a href="https://inkstitch.org/docs/lettering/">Lettering</a> has a menu of its own, with lettering along a path and batch lettering for lists of names. The <a href="https://inkstitch.org/fonts/font-library/">font library</a> lists 93 fonts, each with the heights it sews at, and Ink/Stitch Create sets lettering on the web. The advice for small text is to use Ink/Stitch’s fonts (<a href="https://www.reddit.com/r/Machine_Embroidery/comments/1iyrjkx/need_helpadvice/">Reddit</a>). Text typed in an installed font fails as a fill whose border crosses itself (<a href="https://inkscape.org/forums/questions/path855-error-fill-shape-is-not-valid-this-can-happen-if-the-border-crosses-over-itself/">Inkscape forum</a>)</td><td>M14, before 1.0. Large text in any font, made into paths with Type › Create Outlines in VectorCraft, sews by M13’s rules</td></tr>
+<tr><td>Lettering in embroidery fonts</td><td><a href="https://inkstitch.org/docs/lettering/">Lettering</a> has a menu of its own, with lettering along a path and batch lettering for lists of names. The <a href="https://inkstitch.org/fonts/font-library/">font library</a> lists 93 fonts, each with the heights it sews at, and Ink/Stitch Create sets lettering on the web. The advice for small text is to use Ink/Stitch’s fonts (<a href="https://www.reddit.com/r/Machine_Embroidery/comments/1iyrjkx/need_helpadvice/">Reddit</a>). Text typed in an installed font fails as a fill whose border crosses itself (<a href="https://inkscape.org/forums/questions/path855-error-fill-shape-is-not-valid-this-can-happen-if-the-border-crosses-over-itself/">Inkscape forum</a>)</td><td>M14, before 1.0. Large text in any font, made into paths with Type › Create Outlines in VectorCraft, sews by M13’s rules. M15 ports a TrueType or OpenType font automatically (<a href="#fonts">fonts</a>)</td></tr>
 <tr><td>Patches and appliqué</td><td>Searches for tutorials find many patches, from <a href="https://www.youtube.com/watch?v=-UDSsuB44Ao">a beginners’ guide</a> to patch shapes with a merrow-like edge. Ink/Stitch has an <a href="https://inkstitch.org/tutorials/applique/">appliqué tutorial</a> and the E-stitch for appliqué</td><td>Fills, satin borders, the E-stitch and stops sew patches today. An appliqué tool with placement and tack-down lines stays after 1.0</td></tr>
 <tr><td>Fewer colour changes and a good order</td><td>The FAQ’s “Too many color changes” (<a href="https://inkstitch.org/docs/faq/">help</a>), and issues such as <a href="https://github.com/inkstitch/inkstitch/issues/1337">#1337</a>, “Despite two colors I have 6 color changes”, and <a href="https://github.com/inkstitch/inkstitch/issues/378">#378</a>, “reorder by color”. The <a href="https://inkstitch.org/tutorials/routing/">routing tutorial</a> leaves the order to the user. Its tools restack elements and route satin columns and running stitches, and Jump to Stroke turns a jump into a running stitch</td><td>M13.3 orders automatic elements, and with <code>--sort-colours</code> any design. M10 has the routing tools</td></tr>
 <tr><td>The colours of real threads</td><td>Thread palettes installed into Inkscape, and <a href="https://inkstitch.org/docs/thread-color/">Apply Palette</a> for the nearest thread. A <a href="https://www.sandiego.gov/sites/default/files/2025-09/embroidery_inkstitch-guide.pdf">guide from the City of San Diego</a> picks Ink/Stitch’s Brother palette before anything is drawn</td><td>The nearest colour of the PEC palette (M1.6), <code>stitch palette</code> for tracing (M13.7), thread catalogues (M11)</td></tr>

@@ -1,0 +1,490 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Fonts - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex-95dbadc4.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc-ee9d300a.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/design/fonts.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="fonts"><a class="header" href="#fonts">Fonts</a></h1>
+<p>Lettering sews text in a font. M14 sets text in embroidery fonts, digitized glyph by glyph in Ink/Stitch’s
+font format. M15 ports an ordinary TrueType or OpenType font automatically. It reads each glyph’s outline at
+the height the text is set and works out how the glyph sews (<a href="../plan/roadmap.html">roadmap</a>). This page
+records the research both milestones rest on, counted and read on 2026-11-02. The sources are listed at the
+end.</p>
+<h2 id="inkstitchs-fonts"><a class="header" href="#inkstitchs-fonts">Ink/Stitch’s fonts</a></h2>
+<p>Ink/Stitch’s fonts are a repository of their own,
+<a href="https://github.com/inkstitch/embroidery-fonts">inkstitch/embroidery-fonts</a>, which Ink/Stitch includes as its
+<code>fonts</code> folder. At commit <code>c7e3a05</code> it has 142 fonts. Ink/Stitch’s tutorial on making a font and its page on
+the font tools document the format. The numbers below were counted from the font files.</p>
+<ul>
+<li><strong>A font is a folder.</strong> <code>font.json</code> gives the font’s settings, and a glyph file gives its glyphs for each
+direction it sews in. 137 fonts sew left to right (<code>ltr.svg</code>) and 17 right to left (<code>rtl.svg</code>), 12 of
+them both ways. One font also sews top to bottom and bottom to top. 5 large fonts split a direction into
+several files, in a folder of that name. The folder also has a licence file and a preview picture.</li>
+<li><strong>A glyph file</strong> has a layer for each glyph, labelled <code>GlyphLayer-</code> followed by the character, and a guide
+named <code>baseline</code>. A layer can be named for several characters, as for a ligature. An Arabic letter has a
+layer for each of its forms.</li>
+<li><strong>The settings</strong> name the font, its licence and the font it was made from, with that font’s address.
+<code>size</code> is the height of a reference capital in millimetres, and <code>min_scale</code> and <code>max_scale</code> bound the
+heights the font sews at. <code>horiz_adv_x</code> gives each glyph’s advance, with a default and the space’s.
+<code>kerning_pairs</code> gives each pair’s adjustment, which is subtracted from the advance. Further keys force
+upper or lower case, name the glyph sewn for a missing one, and say whether the font sews lines back and
+forth, sorts its colours or is routed by auto-satin.</li>
+<li><strong>Heights.</strong> A font sews from <code>size</code> × <code>min_scale</code> to <code>size</code> × <code>max_scale</code>. The least heights range from
+2.8 mm (Glacial Tiny) to 144 mm and the greatest from 6.9 to 468 mm. Their medians are 20 and 45 mm. 21
+fonts are tagged <code>tiny</code>.</li>
+<li><strong>Stitch types.</strong> 94 fonts sew satin columns, 73,422 of them. 119 fonts sew running stitches, 67 tatami
+fills and 25 cross stitch.</li>
+</ul>
+<p><strong>How they are made.</strong> 134 of the fonts name the font they were made from, 36 of them from Google Fonts. The
+tutorial starts from a TrueType or OpenType file. FontForge writes it as an SVG font, and an Ink/Stitch tool
+splits that into glyph layers at a chosen height. Each glyph is then digitized by hand, with its satin
+columns and rungs, where it starts and ends, its trims and its settings. The tutorial calls each letter “a
+small embroidery in itself” and ends with “real stitchouts are the ultimate test”.</p>
+<p><strong>Small sizes</strong> are separate fonts. Pacificlo tiny sews Pacifico from 4.2 to 9.4 mm, and Pacificlo from 13.6
+to 23.8 mm. Pacificlo tiny, Amitaclo small and Chicken Little KOR Small keep their larger fonts’ columns with
+lighter settings. Their satin spacing is 0.25 mm, without a zigzag underlay, and their pull compensation is
+0.05 to 0.1 mm in place of 0.2 to 0.3 mm. Venezia small also sews satin columns where Venezia sews running
+stitches. At their least heights, the median satin column of 4 small fonts is 0.47 to 0.61 mm wide, and a
+tenth of their columns are narrower than 0.3 to 0.5 mm. The 4 are Ink/Stitch Small Font, Glacial Tiny,
+Pacificlo tiny and Venezia small. Automatic digitizing sews a line narrower than 1 mm
+(<code>min_satin_stroke_width_mm</code>) as a run, and compensates every satin column by 0.4 mm.</p>
+<p><strong>Licences.</strong> By their licence files, 102 fonts are under the OFL, 25 under CC BY-SA, 1 under CC BY, and 3
+in the public domain or under CC0. 8 are under CC BY-NC-SA, 1 under CC Attribution-NoDerivatives and 1 under
+the GPL-3.0. NickAinley, the 142nd, is under a free font’s licence, with its authors’ permission for
+Ink/Stitch. The licence field of <code>font.json</code> disagrees with the licence file for 3 fonts. It names the OFL
+for <code>precious</code>, whose licence file is the GPL-3.0 with a ban on selling the font. It names CC BY-SA for
+<code>cogs_KOR</code>, under CC BY, and for <code>nick_ainley</code>. Ink/Stitch 3.3.0 renamed 14 fonts to respect the OFL’s
+Reserved Font Names.</p>
+<p><strong>Lettering.</strong> Ink/Stitch’s lettering (<code>lib/lettering</code> at <code>d59c9ab</code>) advances each glyph by its own advance,
+less the kerning of its pair, and each word by the space’s advance. The user can widen the spacing of
+letters, of words and of lines by a number of millimetres. Lines align left, centre or right, or are
+justified as a block. A trim
+can follow each letter, word or line. Lines sew back and forth in a font with a variant for the other
+direction, and a sortable font’s colours sew in order. Batch lettering clamps the scale to the font’s range.</p>
+<h2 id="fonts-ported-by-other-programs"><a class="header" href="#fonts-ported-by-other-programs">Fonts ported by other programs</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Program</th><th>With a TrueType or OpenType font</th><th>Reported results</th></tr>
+</thead>
+<tbody>
+<tr><td>Wilcom EmbroideryStudio</td><td>Converts an installed font as text is typed, or a whole font into an embroidery font. It cuts letters into column objects and sets their stitch angles. It finds where strokes overlap and the order they sew in. Turning strokes follow each stroke, and a complex fill sews at one angle. Options turn stitches parallel to slanted ends (K, X, Y), make serifs broader than 0.8 mm strokes of their own, cap sharp angles (A, V) and overlap strokes at T and O junctions. Converted letters can be edited and the font saved</td><td>Comparable to fonts digitized by hand, though “the quality may not be quite as good”. Narrower serif fonts convert better than blocked ones</td></tr>
+<tr><td>BERNINA Embroidery Software</td><td>Stitches text in the TrueType and OpenType fonts installed on the computer</td><td>“Not all TrueType fonts are suitable”</td></tr>
+<tr><td>Hatch Embroidery</td><td>Generates stitches from an installed font’s outlines</td><td>Test-stitch each, since not all suit embroidery. Its digitized fonts state ranges, such as 6 to 30 mm for a serif, 12 to 50 mm for a script and 4 to 6 mm for a block font in running stitch</td></tr>
+<tr><td>Embird Font Engine</td><td>Fills letters with satin columns (“auto column”) or fills, from about 5 mm to 30 cm tall. It replaces each satin stitch longer than 12 mm</td><td>Its maker claims lettering “almost as if it was digitized by a human digitizer”</td></tr>
+<tr><td>SewWhat-Pro, Stitch Era</td><td>Convert text in installed fonts</td><td>A reviewer found SewWhat-Pro’s results “abysmal”. A test of Stitch Era found its TrueType lettering best at 8 to 10 mm, and smaller letters poor</td></tr>
+<tr><td>Brother PE-Design 11, Embrilliance</td><td>Tools to digitize letters by hand. Embrilliance’s BX fonts are digitized letters</td><td>None</td></tr>
+</tbody>
+</table>
+</div>
+<p>Trade articles on small lettering ask for capitals at least 6.4 mm tall, mixed case at least 5 mm and all
+capitals at least 3.8 mm (<a href="https://www.piworld.com/embroidery-digitizing-tips-on-creating-designs-with-letters/all">PI World</a>).
+Its other minimums are 0.8 mm for a column’s width, 0.9 mm across a counter and 0.5 mm between letters.
+Another article puts small letters on a centre walk with pull compensation, and satin columns at least as
+wide as the needle. It advises against serifs and strokes of varying width under about half an inch
+(<a href="https://members.asicentral.com/news/how-to/may-2018/keep-your-small-letters-crisp/">ASI</a>).</p>
+<p><strong>Published methods.</strong> VSM’s patent US 6,934,599 (priority 2002, expired 2023) describes porting a font
+automatically. A glyph’s contours are grouped and cut at sharp corners and at nodes of a thinned skeleton
+until each part is simple. Each part sews as a straight or curved satin column or as a running stitch, its
+stitches square to the skeleton. The parts are ordered by how they connect. Neighbouring columns are merged,
+with jumps between the rest. M13’s <a href="algorithms/centre-lines.html">centre lines</a> and columns are a pipeline of
+that kind. Brother’s US 5,559,711 (expired 2014) chooses satin or another stitch by a region’s roundness, its
+area over its perimeter squared. StrokeStyles (Berio and others, 2022) splits glyphs of many scripts into
+overlapping strokes, from the medial axis, the outline’s convex and concave parts and 7 kinds of junction,
+without training data. Balashova and others (2019) fit a model of strokes to existing fonts. A thesis of 1998
+at National Taiwan Normal University digitized embroidery from medial axes, a neural network classifying the
+junctions.</p>
+<h2 id="font-files"><a class="header" href="#font-files">Font files</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Crate</th><th>Licence</th><th>What it gives</th></tr>
+</thead>
+<tbody>
+<tr><td>skrifa 0.49</td><td>MIT OR Apache-2.0</td><td>Glyph outlines of TrueType and CFF fonts, unhinted at any size or hinted, at any point of a variable font’s axes. VectorCraft’s text uses 0.47</td></tr>
+<tr><td>read-fonts 0.46</td><td>MIT OR Apache-2.0</td><td>The tables that skrifa and harfrust read</td></tr>
+<tr><td>harfrust 0.15</td><td>MIT</td><td>HarfBuzz’s shaping in Rust, with advances, kerning from <code>kern</code> and GPOS, ligatures, marks and Arabic forms. VectorCraft’s text uses 0.13</td></tr>
+<tr><td>write-fonts 0.55</td><td>MIT OR Apache-2.0</td><td>Fonts built in code for tests, as VectorCraft’s tests build theirs</td></tr>
+<tr><td>ttf-parser 0.25 and rustybuzz 0.20</td><td>MIT OR Apache-2.0, and MIT</td><td>The older pair, last released in November 2024</td></tr>
+<tr><td>fontdb 0.24 or fontique 0.12</td><td>MIT, and Apache-2.0 OR MIT</td><td>Installed fonts found by family name, for the command line</td></tr>
+</tbody>
+</table>
+</div>
+<p>Each licence is on the allow-list of <code>deny.toml</code>. At the versions VectorCraft uses, skrifa, read-fonts and
+harfrust forbid <code>unsafe</code> code and build without the standard library, and VectorCraft builds them for its
+web app. A font file is never committed to StitchCraft. Tests build their fonts in code with write-fonts and
+read a corpus downloaded at pinned commits.</p>
+<ul>
+<li><strong>Hinting</strong> moves an outline’s points onto a screen’s pixels at small sizes, which means nothing to a
+needle. A port reads outlines unhinted, in font units, and scales them with StitchCraft’s own arithmetic
+(<a href="determinism.html">determinism</a>).</li>
+<li><strong>Composite glyphs</strong>, such as most accented letters, are placed from their components. A port can
+digitize a base letter once for every glyph made from it.</li>
+<li><strong>Overlapping contours</strong> are common in composites and in variable fonts, where each stroke is often a
+contour of its own. A viewer fills a glyph by the nonzero rule, and so does the region code of M5.1. Text
+typed in an installed font fails in Ink/Stitch as a fill whose border crosses itself
+(<a href="../plan/inkstitch-usage.html">how people use Ink/Stitch</a>).</li>
+<li><strong>Variable fonts</strong> are set at a named instance or at axis values. A weight axis can thicken a font’s
+strokes at small heights, and an optical size axis gives the font’s design for small text.</li>
+</ul>
+<p><strong>Stroke widths.</strong> In Source Sans 3 Regular, a stem is 83 units at a cap height of 660 (12.6 %). At capitals
+8.0 mm tall its stems are 1 mm wide, the narrowest satin column of automatic digitizing. At 4.0 mm they are
+0.5 mm wide, where a run is tripled. Inter Regular’s stems are 1 mm wide at 7.8 mm, and Source Sans 3 Bold’s
+at 4.5 mm. Source Serif 4 Regular’s stems are 1 mm wide at 7.1 mm and its hairlines at 14.9 mm. Between
+those heights its letters mix satin columns and runs. A stem is 7 mm wide, where automatic digitizing fills,
+at capitals 56 mm tall in Source Sans 3 Regular and 31 mm tall in its Bold.</p>
+<p><strong>Dots.</strong> At capitals 6 mm tall, Source Sans 3 Regular’s i-dot covers 0.79 mm², its full stop 0.99 mm² and
+each dot of an ä 0.65 mm². Inter Regular’s i-dot covers 0.76 mm². M13 takes a part under 1 mm² for a speck,
+and merges it into a neighbour or leaves it out.</p>
+<h2 id="licences-of-ported-fonts"><a class="header" href="#licences-of-ported-fonts">Licences of ported fonts</a></h2>
+<p>A font ported into an embroidery font is a modified version of the font. A design sewn in it is a document
+made with the font.</p>
+<ul>
+<li><strong>OFL.</strong> A “Modified Version” includes one made “by changing formats or by porting the Font Software to a
+new environment”, and the licence’s site counts a conversion to SVG as one. It is distributed under the
+OFL only, never sold by itself, and named without the font’s Reserved Font Names. “The requirement for
+fonts to remain under this license does not apply to any document created using the Font Software.”</li>
+<li><strong>UFL 1.0</strong>, the Ubuntu font licence, counts a change of format as a modification too. A version changed
+substantially takes a new name, and another adds “derivative” to the name. The licence “does not affect
+any document created using the Font Software”.</li>
+<li><strong>Apache-2.0</strong> allows modified versions with the licence, its NOTICE file and a note of the changes.</li>
+<li><strong>Creative Commons.</strong> BY and BY-SA allow adaptations with credit, under the same licence for SA.
+NoDerivatives doesn’t allow sharing adaptations, and NonCommercial doesn’t allow commercial use.</li>
+<li><strong>Proprietary fonts</strong> follow their licences. Rare Bird’s desktop licence doesn’t allow derivative works,
+and requires a supplemental licence for “embroidering or sewing machines”. KG Fonts sells an embroidery
+licence for embroidery font files.</li>
+</ul>
+<p>A font’s name table gives its copyright notice, trademark, licence description and licence URL (name IDs 0,
+7, 13 and 14), which a port can read and report. Google Fonts’ fonts are under the OFL, the UFL or
+Apache-2.0, in a folder for each in its repository.</p>
+<p><strong>Where fonts live.</strong> VectorCraft’s shared fonts are in
+<a href="https://github.com/storytold/craft-fonts">storytold/craft-fonts</a>, an optional build input
+(<code>CRAFT_FONTS_DIR</code>), with each font’s licence text beside it (VectorCraft’s <code>docs/development.md</code> at
+<code>1505384</code>). Embroidery fonts in Ink/Stitch’s format come from a repository of their own (M14.1). A ported
+font is made on the user’s computer from a font the user has.</p>
+<h2 id="glyph-rules"><a class="header" href="#glyph-rules">Glyph rules</a></h2>
+<p>M13 digitizes a traced shape by its width at the size it sews (<a href="image-to-embroidery.html">image to embroidery</a>).
+A glyph is such a shape, and M13’s rules do most of the work, from centre lines and junctions to rings and
+the fills of broad parts. The table lists what glyphs need beyond them, with the step of M15 that adds it.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Need</th><th>M13 today</th><th>Step</th></tr>
+</thead>
+<tbody>
+<tr><td>Every contour sews</td><td>A part under 1 mm² is a speck, and the lowest shape can be the background</td><td>M15.3</td></tr>
+<tr><td>Dots and marks</td><td>A dot’s centre line has no length, and the dot is filled, or merged as a speck</td><td>M15.5</td></tr>
+<tr><td>Ends on the baseline, the x-height and the capitals’ height</td><td>A column’s end is flat when the edge lies within 20° of square to it, and pointed otherwise</td><td>M15.6</td></tr>
+<tr><td>Serifs</td><td>A serif is an arm with a column of its own, or a bump</td><td>M15.6</td></tr>
+<tr><td>Thin strokes</td><td>A part narrower than 1 mm runs along its centre line. Small fonts digitized by hand sew satin columns half as wide</td><td>M15.7</td></tr>
+<tr><td>Counters and the settings of small letters</td><td>Columns are compensated by 0.4 mm at every height, and a counter that closes isn’t named. Small fonts digitized by hand compensate by 0.05 to 0.1 mm</td><td>M15.7</td></tr>
+<tr><td>Jumps inside a glyph</td><td>Columns sew longest first, and a jump joins each 2. TS-13B’s digitized letters leave 37 jump threads</td><td>M15.8</td></tr>
+<tr><td>Joined letters and overlapping strokes</td><td>Contours are united before their centre lines are found</td><td>M15.9</td></tr>
+<tr><td>Heights</td><td>A shape is digitized at the size it sews</td><td>M15.10</td></tr>
+</tbody>
+</table>
+</div>
+<p><strong>Correcting a glyph.</strong> A ported font can be written in Ink/Stitch’s format (M15.11), with its satin columns
+drawn with their rails and rungs as Stroke to Satin draws them. A user then corrects a glyph in its layer, in
+VectorCraft or in Inkscape with Ink/Stitch, and M14’s lettering sews the corrected font. VectorCraft keeps
+<code>inkstitch:*</code> attributes from SVG import to SVG export (<a href="rfc-vectorcraft-abi-v2.html">RFC</a>, P7). The writer
+puts the baselines at 0, where a reader puts a baseline when the file lacks a <code>baseline</code> guide. Wilcom’s
+converted letters are corrected the same way, as letters of the saved font.</p>
+<p><strong>Testing.</strong> 36 of Ink/Stitch’s fonts were digitized by hand from fonts on Google Fonts, all 36 under the OFL.
+The corpus pairs each original with the Ink/Stitch font made from it. A port at that font’s heights is
+measured against it, by the share of each glyph’s area sewn as satin columns, fills and runs, and by jumps,
+coverage and stitches. TS-15 sews 3 ported fonts beside the fonts digitized by hand from them, at MC-10
+(<a href="../plan/machine-testing.html">machine testing</a>).</p>
+<h2 id="decisions-for-the-owner"><a class="header" href="#decisions-for-the-owner">Decisions for the owner</a></h2>
+<ul>
+<li><strong>When M15 comes.</strong> The roadmap places it after M14 and before M11 and 1.0. M15.1 and M15.2 can go ahead
+beside M14. Moving M15 after 1.0 brings 1.0 sooner.</li>
+<li><strong>Which ported fonts are written.</strong> Text in any installed font can be sewn as a design, as Wilcom and Hatch
+sew it. The font’s licence is reported. Writing a ported font is making a modified version of the font.
+The plan writes one for a font under the OFL, the UFL, Apache-2.0, CC0, CC BY or CC BY-SA, and for another
+font only when the user says they hold a licence that allows it. The owner can make that stricter or
+looser.</li>
+<li><strong>Ported fonts in the font repository.</strong> Ports of OFL fonts, corrected by hand and sewn out, could join
+StitchCraft’s font repository under new names, as Ink/Stitch’s library grew from such fonts.</li>
+<li><strong>The narrowest satin column in lettering.</strong> Automatic digitizing runs a line narrower than 1 mm, and
+Ink/Stitch’s small fonts sew columns about 0.5 mm wide. TS-15 sews both, and MC-10 chooses.</li>
+<li><strong>Raising P9.</strong> The RFC’s <a href="rfc-vectorcraft-abi-v2.html#p9-type-as-glyph-outlines">P9</a> proposes that
+VectorCraft give plug-ins type as glyph outlines, which its plans don’t cover. Without it, the exporter
+plug-in can’t sew type, since it can’t read font files. Whether to raise P9 on VectorCraft’s own
+repository, and when, is the owner’s choice.</li>
+</ul>
+<h2 id="sources"><a class="header" href="#sources">Sources</a></h2>
+<ul>
+<li>Ink/Stitch’s tutorial <a href="https://inkstitch.org/tutorials/font-creation/">Fonts for Ink/Stitch</a></li>
+<li>Ink/Stitch’s <a href="https://inkstitch.org/docs/font-tools/">font tools</a></li>
+<li>Ink/Stitch’s <a href="https://inkstitch.org/docs/lettering/">lettering</a></li>
+<li>Ink/Stitch’s <a href="https://inkstitch.org/docs/satin-tools/">satin tools</a> and <a href="https://inkstitch.org/docs/stroke-tools/">stroke tools</a></li>
+<li>The page of Ink/Stitch’s <a href="https://inkstitch.org/fonts/ink_stitch">Small Font and Medium Font</a></li>
+<li>Ink/Stitch’s release notes for <a href="https://inkstitch.org/en/2026-07-31-v3.3.0">v3.3.0</a></li>
+<li>The font files of <a href="https://github.com/inkstitch/embroidery-fonts">inkstitch/embroidery-fonts</a> at <code>c7e3a05</code></li>
+<li>Wilcom’s <a href="https://docs.wilcom.com/embroiderystudio/28/en/OnlineHelp/Lettering/lettering_custom/lettering_custom-2.htm">Converting TrueType fonts to embroidery</a>
+and <a href="https://docs.wilcom.com/embroiderystudio/28/en/OnlineHelp/Lettering/lettering_custom/lettering_custom-4.htm">Convert TrueType fonts</a></li>
+<li>Wilcom’s <a href="https://docs.wilcom.com/embroiderystudio/27/en/OnlineHelp/Management/custom_fonts/custom_fonts-4.htm">Experiment with conversion settings</a>
+and <a href="https://docs.wilcom.com/embroiderystudio/28/en/OnlineHelp/Management/custom_fonts/custom_fonts-5.htm">Refine turning stroke options</a></li>
+<li>BERNINA’s <a href="https://softwarehelp.bernina.com/en/MainHelp/PART_Lettering/special_lettering/special_lettering-4.htm">Convert fonts to embroidery</a></li>
+<li>Hatch’s <a href="https://hatchembroidery.com/resources/blog/choosing-the-right-size-embroidery-lettering-for-your-project">lettering sizes</a>
+and its <a href="https://help.hatchembroidery.com/portal/en/kb/hatch/tech-talk/articles/what-should-i-know-about-hatch-fonts-truetype-fonts-and-third-party-fonts">note on TrueType fonts</a></li>
+<li>Embird’s <a href="https://embird.net/font-engine">Font Engine</a> and its <a href="https://www.embird.net/sw/embird/tutorial/feparam/feparam.htm">parameters</a></li>
+<li>Machine Embroidery Geek on <a href="https://www.machineembroiderygeek.com/?p=19511">converting TTF fonts</a> and on
+<a href="https://www.machineembroiderygeek.com/what-are-bx-fonts-for-machine-embroidery/">BX fonts</a></li>
+<li>A shop’s page on <a href="https://www.mulqueen.com/shop/Embroidery-Supplies/Software/Embrilliance-Software/p/Embrilliance-StitchArtist-Level-3.htm">Embrilliance StitchArtist Level 3</a></li>
+<li>EduTech Wiki on <a href="https://edutechwiki.unige.ch/en/Stitch_Era_-_lettering">Stitch Era’s lettering</a></li>
+<li>Impressions on <a href="https://impressionsmagazine.com/process-technique/understanding-alphabet-and-font-options/16203/">alphabet and font options</a></li>
+<li>The patents <a href="https://patents.google.com/patent/US6934599">US 6,934,599</a> and <a href="https://patents.google.com/patent/US5559711">US 5,559,711</a></li>
+<li>D. Berio and others, <a href="https://doc.gold.ac.uk/autograff/post/papers/strokestyles_2022/">StrokeStyles</a>, ACM
+Transactions on Graphics (2022)</li>
+<li>E. Balashova and others, <a href="https://cris.tau.ac.il/en/publications/learning-a-stroke-based-representation-for-fonts/">Learning a stroke-based representation for fonts</a>,
+Computer Graphics Forum 38 (2019)</li>
+<li>The thesis <a href="https://openaccess.library.uitm.edu.my/Record/ndltd-TW-087NTNU0395026">Automatic embroidery digitizing based on skeletonization and backpropagation neural network</a>,
+National Taiwan Normal University</li>
+<li>The crates’ pages on crates.io on 2026-11-02, and the source of skrifa 0.47, read-fonts 0.44 and harfrust 0.13</li>
+<li>The <a href="https://openfontlicense.org/open-font-license-official-text/">OFL</a>, its pages on
+<a href="https://openfontlicense.org/ofl-reserved-font-names/">Reserved Font Names</a> and on
+<a href="https://openfontlicense.org/webfonts-and-reserved-font-names/">webfonts</a>, and an
+<a href="https://ctan.math.washington.edu/tex-archive/fonts/cm-unicode/doc/OFL-FAQ.txt">OFL FAQ</a></li>
+<li>The <a href="https://spdx.org/licenses/Ubuntu-font-1.0.html">UFL 1.0</a></li>
+<li><a href="https://fontspring.com/lic/rare-bird-font-foundry/desktop">Rare Bird’s desktop licence</a> and
+<a href="https://kimberlygeswein.com//kg-font-licensing-information/">KG Fonts’ licences</a></li>
+<li>Google Fonts’ <a href="https://googlefonts.github.io/gf-guide/googlefonts.html">repository guide</a></li>
+<li>Stroke widths and dots measured with fontTools on the OFL fonts that VectorCraft bundles, and satin widths
+measured on Ink/Stitch’s font files</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../design/image-to-embroidery.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../design/formats.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../design/image-to-embroidery.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../design/formats.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../mark-09e88c2c.min.js"></script>
+        <script src="../searcher-09f2665d.js"></script>
+
+        <script src="../clipboard-1626706a.min.js"></script>
+        <script src="../highlight-abc7f01d.js"></script>
+        <script src="../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>
