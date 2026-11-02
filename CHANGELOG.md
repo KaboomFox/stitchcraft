@@ -72,13 +72,6 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - Differential cases: TS-16, and 3 squares whose start and end commands make the needle jump between
     them, with a satin column that starts and ends at commands below it. The same squares in a file of
     version 2 check the update's move, and a circular fill turns round its target point.
-- M8.3: the settings of older Ink/Stitch files updated as Ink/Stitch updates them (`REQ-SVG-007`). Now that
-  the SVG reader reads the shapes' settings, the updates that change what they sew apply too. In a file of
-  version 1 or 2, a zigzag stroke's pull compensation is halved for each side into
-  `stroke_pull_compensation_mm`, and a satin column starts and ends where it is drawn. In a file of version
-  1 to 3, a fill with `auto_fill` off is a legacy fill, and `fill_method` `auto_fill` is a tatami fill. A
-  shape gets them over its own settings, version by version, and `SC-I0818` counts the shapes each changed.
-  A differential case for each change sews a file of the older version in both programs.
 - M7.9: circular fill, sewn as Ink/Stitch sews it (`REQ-FILL-CIR-001` to `REQ-FILL-CIR-007`). A double
   spiral turns round each part's centroid. Its rings lie `row_spacing_mm` apart out to 2 spacings past the
   part's farthest point, or fade towards `end_row_spacing_mm` there. It turns in on every other ring and
@@ -103,6 +96,27 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - `check_params.py` finds what each fill method's own sewing reads, as well as its underlay, and the
     contract lists `skip_last` as read by the circular fill (`read_by`).
   - A circular fill's preview shows its pieces of spiral, and the user's guide has a page for it.
+- M8.2: every test sheet drawn as a design in the Ink/Stitch differential (`REQ-SVG-008`). TS-02B to
+  TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills' sheet, are cases, as TS-11B and the
+  TS-13 sheets are. Sewn by Ink/Stitch at `d59c9ab`, each agrees by every measure or excuses a measure
+  with the ledger entry that says why.
+  - TS-04 excuses the size and the overlap with `DEV-LCK-001`. Its drawn locks are StitchCraft's own
+    shapes, which lie on the line they secure. Ink/Stitch's cross and star reach past the line's end, and
+    the sheet is 1.6 mm wider in Ink/Stitch.
+  - TS-11C excuses the stitches and the overlap with `DEV-FILL-018`. Its tiles are StitchCraft's own, and
+    Ink/Stitch sews each sample with one of its own tiles. Ink/Stitch sews 7,340 stitches to
+    StitchCraft's 5,883, and the footprints overlap by 0.743. The size and threads are the same, and the
+    trims and jumps within 1.
+  - An overlap below the least is reported as `overlap 0.564, below 0.9`. The report gave it as a
+    difference, with a blank for Ink/Stitch. The least is a constant the comparison shares
+    (`LEAST_OVERLAP`).
+- M8.3: the settings of older Ink/Stitch files updated as Ink/Stitch updates them (`REQ-SVG-007`). Now that
+  the SVG reader reads the shapes' settings, the updates that change what they sew apply too. In a file of
+  version 1 or 2, a zigzag stroke's pull compensation is halved for each side into
+  `stroke_pull_compensation_mm`, and a satin column starts and ends where it is drawn. In a file of version
+  1 to 3, a fill with `auto_fill` off is a legacy fill, and `fill_method` `auto_fill` is a tatami fill. A
+  shape gets them over its own settings, version by version, and `SC-I0818` counts the shapes each changed.
+  A differential case for each change sews a file of the older version in both programs.
 - M7.8: meander fill with generated tiles (`REQ-FILL-MEA-001` to `REQ-FILL-MEA-005`). One line wanders
   through the sides of a tiling inside each part, after the tatami fill's underlay, and never passes a
   point twice, as Ink/Stitch's meander fill wanders through its tiles. It starts nearest the needle and ends

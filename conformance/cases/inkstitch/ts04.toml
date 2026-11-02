@@ -1,0 +1,12 @@
+id = "inkstitch-ts04"
+requirements = ["REQ-SVG-008"]
+kind = "inkstitch"
+sheet = "TS-04"
+# The drawn locks are StitchCraft's own shapes, which lie on the line ahead of its ends. Ink/Stitch's cross and
+# star reach up to 1.1 mm past a line's ends, which makes the sheet 1.6 mm wider and moves its centre, and the
+# other drawn locks lie elsewhere. Aligned on the lines, the half stitch's and back and forth's rows overlap by
+# 1.000 and the drawn locks' rows by 0.64 to 0.95.
+
+[excused]
+size = "DEV-LCK-001"
+overlap = "DEV-LCK-001"
