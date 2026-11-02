@@ -1762,7 +1762,7 @@ milestone = "—"
 
 # Ink/Stitch reads `polyline`, `e_stitch`, `manual_stitch` and `grid_size` only to update a file without a
 # version, which StitchCraft reads as it is (`REQ-SVG-007`): in a file with one they change nothing in either
-# program. `auto_fill` changes a fill of a file of version 1 to 3 (M8.3).
+# program. `auto_fill` changes a fill of a file of version 1 to 3, through the update (`REQ-SVG-007`).
 [[attribute]]
 name = "polyline"
 kind = "legacy"

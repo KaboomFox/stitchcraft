@@ -1,0 +1,4 @@
+id = "inkstitch-version-2-zigzag"
+requirements = ["REQ-SVG-007", "REQ-SVG-008"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/version-2-zigzag.svg"

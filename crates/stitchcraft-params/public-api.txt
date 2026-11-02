@@ -162,6 +162,7 @@ impl stitchcraft_params::set::ParamSet
 pub fn stitchcraft_params::set::ParamSet::get(&self, &str) -> core::option::Option<&str>
 pub fn stitchcraft_params::set::ParamSet::iter(&self) -> impl core::iter::traits::iterator::Iterator<Item = (&str, &str)>
 pub fn stitchcraft_params::set::ParamSet::new() -> Self
+pub fn stitchcraft_params::set::ParamSet::remove(&mut self, &str) -> core::option::Option<alloc::string::String>
 pub fn stitchcraft_params::set::ParamSet::set(&mut self, impl core::convert::Into<alloc::string::String>, impl core::convert::Into<alloc::string::String>) -> core::option::Option<alloc::string::String>
 impl<K: core::convert::Into<alloc::string::String>, V: core::convert::Into<alloc::string::String>> core::iter::traits::collect::FromIterator<(K, V)> for stitchcraft_params::set::ParamSet
 pub fn stitchcraft_params::set::ParamSet::from_iter<I: core::iter::traits::collect::IntoIterator<Item = (K, V)>>(I) -> Self
@@ -480,6 +481,7 @@ impl stitchcraft_params::set::ParamSet
 pub fn stitchcraft_params::set::ParamSet::get(&self, &str) -> core::option::Option<&str>
 pub fn stitchcraft_params::set::ParamSet::iter(&self) -> impl core::iter::traits::iterator::Iterator<Item = (&str, &str)>
 pub fn stitchcraft_params::set::ParamSet::new() -> Self
+pub fn stitchcraft_params::set::ParamSet::remove(&mut self, &str) -> core::option::Option<alloc::string::String>
 pub fn stitchcraft_params::set::ParamSet::set(&mut self, impl core::convert::Into<alloc::string::String>, impl core::convert::Into<alloc::string::String>) -> core::option::Option<alloc::string::String>
 impl<K: core::convert::Into<alloc::string::String>, V: core::convert::Into<alloc::string::String>> core::iter::traits::collect::FromIterator<(K, V)> for stitchcraft_params::set::ParamSet
 pub fn stitchcraft_params::set::ParamSet::from_iter<I: core::iter::traits::collect::IntoIterator<Item = (K, V)>>(I) -> Self
