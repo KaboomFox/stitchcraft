@@ -1005,6 +1005,80 @@ statement = "A 130 x 180 mm rectangle at 0.4 mm spacing, the reference hoop's wh
 milestone = "M5"
 status = "active"
 
+# ── Contour fill ───────────────────────────────────────────────────────────────────────────────────
+
+[[req]]
+id = "REQ-FILL-CON-001"
+area = "fill/contour"
+level = "L2"
+statement = "A contour fill fills each part of its region with rings row_spacing_mm apart, d below. Level 0 is the part's outline and holes as drawn. Each next level shrinks the outline ring of the one before by d, without its holes, grows each of its hole rings by d and keeps the outer edge of each growth, joins the grown holes and takes them from the shrunk outline; the pieces left make the next level, until none is left. Shrinking and growing are GEOS's buffer with the corners join_style gives, round with 8 segments to a quarter circle (0), mitred with a limit of 10 (1) or bevelled (2), and agree with shapely's within a nanometre. Each ring is simplified within 0.01 CSS pixel, and a piece smaller than 0.1 square CSS pixel is dropped with its holes. With clockwise on every ring runs clockwise as drawn, and the other way with it off. The rings make a tree: an outline ring's children are the outline rings shrunk from it; a ring grown from a hole is the parent of the ring it grew from, and a hole's largest ring hangs under the outline ring of the level where its growth met the outline or where nothing was left."
+rationale = "Ink/Stitch's contour fill, read at d59c9ab: a file sews the same rings in both, but where 2 holes' growths overlap (DEV-FILL-015)."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CON-002"
+area = "fill/contour"
+level = "L2"
+statement = "Inner to outer (contour_strategy 0, the default) sews one path through the tree, depth first, from the outline's point nearest the needle. For each child of a ring, it takes the first point along the ring, from its start and in its direction, within 1.5 d of the child, or within 2.05 d where none is that near, and sews the children in the order of those points, stepping to each child's point nearest its own. A child is sewn round, its own children the same way, to d short of where it was entered, and the needle steps back to the ring d past the point it left. A ring is sewn round to d short of its start, or whole when what is left of it is no longer than d, so the fill ends on the outline d short of where it began. A ring with a child sewn runs in its direction and one with none the other way; with avoid_self_crossing on, the directions alternate level by level down the tree. A child farther than 2.05 d from every point of its ring is not sewn, nor any ring under it, which SC-W0311 says."
+rationale = "Ink/Stitch's contour fill, read at d59c9ab (lib/stitches/contour_fill.py, inner_to_outer): a file sews the same path in both."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CON-003"
+area = "fill/contour"
+level = "L2"
+statement = "With smoothness_mm above 0, inner to outer's path is spaced as a running stitch 5 times the smoothness long, within twice it, and its corners are cut 5 times, each point replaced by the points a quarter and three quarters along its sides, its ends kept. The path is then kept inside the part, as a tatami fill's travel is (REQ-FILL-TAT-005). The spirals are neither smoothed nor kept inside. StitchCraft's smoothed path takes more stitches than Ink/Stitch's (DEV-FILL-017)."
+rationale = "Ink/Stitch smooths inner to outer's path, and only its, read at d59c9ab (lib/utils/smoothing.py, lib/utils/clamp_path.py)."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CON-004"
+area = "fill/contour"
+level = "L2"
+statement = "The spirals (contour_strategy 1 and 2) follow a chain of rings from the outline inward: each ring goes on to its one child, or to the child whose ring's middle, weighted by its length, lies nearest its own. A turn from a ring to the next cuts both into N points, 20 to each max_stitch_length_mm of the outer ring's length, evenly from each ring's start, each list starting again at its point nearest the needle; point i of the turn lies i/(N − 1) of the way from the outer ring's point i to the inner ring's point i, and the turn is simplified within 0.1 CSS pixel. The turns join end to end, each without its last point but the last. The single spiral turns from the outline in to the chain's last ring. The double spiral turns in on the chain's rings 0, 2, 4 and on, and back out on rings 1, 3, 5 and on, reversed, ending on ring 1. The rings not on the chain are not sewn, nor any ring under them, which SC-W0311 says."
+rationale = "Ink/Stitch's spirals, read at d59c9ab (lib/stitches/contour_fill.py: single_spiral, double_spiral, _interpolate_linear_rings): a file sews the same spirals in both."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CON-005"
+area = "fill/contour"
+level = "L2"
+statement = "A part whose chain of rings is too short for a turn, one ring for the single spiral or 2 or fewer for the double, is sewn inner to outer (REQ-FILL-CON-002), and SC-I0315 says so (DEV-FILL-016)."
+rationale = "A part 2 row spacings narrow is still part of the shape. Ink/Stitch fails on it at d59c9ab and sews nothing of it at 6555892."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CON-006"
+area = "fill/contour"
+level = "L2"
+statement = "A contour fill's path is sewn as a running stitch of max_stitch_length_mm within running_stitch_tolerance_mm, spread as a running stitch's are (REQ-RUN-001, REQ-RUN-002), at random lengths when enable_random_stitch_length is on (REQ-RUN-007), then bean stitch (bean_stitch_repeats, REQ-RUN-004), then repeats: each repeat adds a copy of everything sewn so far, the other way round, so that repeats k sew 2^(k − 1) passes."
+rationale = "Ink/Stitch sews a contour fill's path as a stroke's running stitch and doubles it for each repeat, read at d59c9ab (lib/elements/fill_stitch.py, do_contour_fill): a file sews the same stitches in both."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CON-007"
+area = "fill/contour"
+level = "L2"
+statement = "Each part of a contour fill sews the tatami fill's underlay first (REQ-FILL-TAT-011), on by default, at angle + 90° with 3 row spacings between its rows. Each part starts nearest the needle: the start command's point, else the last stitch before it, else the origin. The parts go in order of their distance from the first part's start. The end command is read but not used."
+rationale = "Ink/Stitch's contour fill takes the tatami fill's underlay and start, read at d59c9ab (lib/elements/fill_stitch.py: contour_fill, do_underlay)."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CON-008"
+area = "fill/contour"
+level = "L3"
+statement = "The contour fills StitchCraft sews TS-11B with, each strategy, each join style, a shape with a hole, rings that part and rings that alternate, and a smoothed path, written as an SVG file with their Ink/Stitch parameters, sew in the Ink/Stitch that conformance/inkstitch/pin.toml names, run as a black box, as StitchCraft sews the sheet, by the measures of REQ-SVG-008 and within their tolerances. A measure that a case excuses with an entry of the deviations ledger may differ."
+rationale = "The contour fill is built from Ink/Stitch's behaviour, and the differential is how a file is shown to sew the same in both."
+milestone = "M7"
+status = "active"
+
 # ── VectorCraft ────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -1136,7 +1210,7 @@ status = "active"
 id = "REQ-VC-015"
 area = "vectorcraft"
 level = "L2"
-statement = "From VectorCraft 0.16, StitchCraft's Test Sheet filter draws one of `stitch testsheet`'s sheets drawn as designs, TS-02B to TS-09, into the document, moved by whole millimetres so that its middle is nearest the middle of the artboard. Each element is an object with its path, its thread as the paint its family sews with, and its settings as the record of its family's StitchCraft effect, each the value its dialog row takes. The document sews as the sheet's design sews, moved as the filter moved it, and exports within an export's budget. The objects selected stay as they are. A VectorCraft before 0.16 doesn't tell the filter that it keeps the effect records a filter gives, and there the filter declines with SC-E0813. Where parts of the sheet would lie more than 10 m from the document's origin, farther than StitchCraft stitches, it declines with SC-E0817. The sheets drawn stitch by stitch, TS-01, TS-02 and TS-10A to TS-10C, are not designs, and only `stitch testsheet` writes them. Nor does the filter draw the TS-13 sheets, whose shapes are digitized automatically, which no object can say before VectorCraft's Auto effect (M13.7)."
+statement = "From VectorCraft 0.16, StitchCraft's Test Sheet filter draws one of `stitch testsheet`'s sheets drawn as designs, TS-02B to TS-09, TS-11B and the TS-13 sheets, into the document, moved by whole millimetres so that its middle is nearest the middle of the artboard. Each element is an object with its path, its thread as the paint its family sews with, and its settings as the record of its family's StitchCraft effect, each the value its dialog row takes. The document sews as the sheet's design sews, moved as the filter moved it, and exports within an export's budget. The objects selected stay as they are. A VectorCraft before 0.16 doesn't tell the filter that it keeps the effect records a filter gives, and there the filter declines with SC-E0813. Where parts of the sheet would lie more than 10 m from the document's origin, farther than StitchCraft stitches, it declines with SC-E0817. The sheets drawn stitch by stitch, TS-01, TS-02 and TS-10A to TS-10C, are not designs, and only `stitch testsheet` writes them. The TS-13 sheets' shapes digitized automatically have the Auto effect's record (REQ-VC-016)."
 rationale = "A machine checkpoint can then start from VectorCraft: the sheet's objects show their stitches, the exporters write it, and the dialogs show its settings. The sheets are the same designs the command line plans, so a sew-out from either answers the same questions."
 milestone = "M6"
 status = "active"

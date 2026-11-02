@@ -23,6 +23,9 @@ registry uses these names as its keys so files move between the tools unchanged
   *registered*: StitchCraft reads and checks it under the same key, meaning and default; it changes the
   stitches once its stitch type or feature lands (see *Phase* and the parameter's reference entry).
   *deviates*: registered, with a meaning that differs as its reference entry describes.
+- **Applies to** lists the stitch types Ink/Stitch's settings window shows the parameter for. *Read by*
+  adds those whose sewing reads it without showing it, as a contour fill's underlay reads the tatami
+  fill's `angle`, and StitchCraft's registry gives it those too.
 - **Phase** is when the parameter's stitch type lands ([roadmap](../plan/roadmap.md)); `—` when it is not
   planned.
 
@@ -135,36 +138,36 @@ registry uses these names as its keys so files move between the tools unchanged
 | `fill` | toggle | — | true | all | P1 (M5) | [registered](../user/reference/params/fill.md#fill) |
 | `fill_method` | combo | — | 0 | all | P1 (M5) | [registered](../user/reference/params/fill.md#fill_method) |
 | `guided_fill_strategy` | dropdown | — | 0 | `guided_fill` | P3 (M10) | planned |
-| `contour_strategy` | dropdown | — | 0 | `contour_fill` | P2 (M7) | planned |
-| `join_style` | dropdown | — | 0 | `contour_fill` | P2 (M7) | planned |
-| `avoid_self_crossing` | boolean | — | false | `contour_fill` | P2 (M7) | planned |
-| `clockwise` | boolean | — | true | `contour_fill` | P2 (M7) | planned |
+| `contour_strategy` | dropdown | — | 0 | `contour_fill` | P2 (M7) | [registered](../user/reference/params/contour.md#contour_strategy) |
+| `join_style` | dropdown | — | 0 | `contour_fill` | P2 (M7) | [registered](../user/reference/params/contour.md#join_style) |
+| `avoid_self_crossing` | boolean | — | false | `contour_fill` | P2 (M7) | [registered](../user/reference/params/contour.md#avoid_self_crossing) |
+| `clockwise` | boolean | — | true | `contour_fill` | P2 (M7) | [registered](../user/reference/params/contour.md#clockwise) |
 | `meander_pattern` | combo | — | 0 | `meander_fill` | P2 (M7) | planned |
 | `meander_angle` | float | degrees | 0 | `meander_fill` | P2 (M7) | planned |
 | `meander_scale_percent` | float | % | 100 | `meander_fill` | P2 (M7) | planned |
 | `clip` | boolean | — | false | `meander_fill` | P2 (M7) | planned |
-| `smoothness_mm` | float | mm | 0 | `contour_fill`, `guided_fill`, `meander_fill` | P2 (M7) | planned |
+| `smoothness_mm` | float | mm | 0 | `contour_fill`, `guided_fill`, `meander_fill` | P2 (M7) | [registered](../user/reference/params/contour.md#smoothness_mm) |
 | `expand_mm` | float | mm | 0 | all | P1 (M5) | [registered](../user/reference/params/tatami.md#expand_mm) |
 | `gap_fill_rows` | int | rows | 0 | `tatami_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#gap_fill_rows) |
-| `angle` | float | deg | 0 | `tatami_fill`, `legacy_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#angle) |
+| `angle` | float | deg | 0 | `tatami_fill`, `legacy_fill`; read by `circular_fill`, `contour_fill`, `guided_fill`, `linear_gradient_fill`, `meander_fill`, `tartan_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#angle) |
 | `guided_fill_angle` | float | deg | — | `guided_fill` | P3 (M10) | planned |
 | `tartan_angle` | float | deg | -45 | `tartan_fill` | P3 (M10) | planned |
 | `max_stitch_length_mm` | float | mm | 4.0 | `tatami_fill`, `contour_fill`, `guided_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill` | P1 (M5) | [registered](../user/reference/params/common.md#max_stitch_length_mm) |
 | `row_spacing_mm` | float | mm | 0.25 | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#row_spacing_mm) |
 | `end_row_spacing_mm` | float | mm | — | `tatami_fill`, `circular_fill`, `legacy_fill` | P1 (M5) | [deviates](../user/reference/params/tatami.md#end_row_spacing_mm) |
 | `stitch_position_method` | combo | — | 0 | `guided_fill` | P3 (M10) | planned |
-| `staggers` | int | — | 4 | `tatami_fill`, `guided_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#staggers) |
+| `staggers` | int | — | 4 | `tatami_fill`, `guided_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill`; read by `circular_fill`, `contour_fill`, `meander_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#staggers) |
 | `skip_last` | boolean | — | false | `tatami_fill`, `guided_fill`, `linear_gradient_fill`, `legacy_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#skip_last) |
 | `flip` | boolean | — | false | `legacy_fill` | — | not planned |
 | `reverse` | boolean | — | false | `legacy_fill` | — | not planned |
 | `stop_at_ending_point` | boolean | — | false | `linear_gradient_fill`, `tartan_fill` | P3 (M10) | planned |
 | `underpath` | boolean | — | true | `tatami_fill`, `guided_fill`, `circular_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#underpath) |
-| `running_stitch_length_mm` | float | mm | 2.5 | `tatami_fill`, `guided_fill`, `meander_fill`, `circular_fill`, `linear_gradient_fill`, `tartan_fill` | P1 (M5) | [registered](../user/reference/params/running.md#running_stitch_length_mm) |
+| `running_stitch_length_mm` | float | mm | 2.5 | `tatami_fill`, `guided_fill`, `meander_fill`, `circular_fill`, `linear_gradient_fill`, `tartan_fill`; read by `contour_fill` | P1 (M5) | [registered](../user/reference/params/running.md#running_stitch_length_mm) |
 | `running_stitch_tolerance_mm` | float | mm | 0.1 (0.2 when unset) | `tatami_fill`, `contour_fill`, `guided_fill`, `meander_fill`, `circular_fill`, `linear_gradient_fill`, `tartan_fill` | P1 (M5) | [deviates](../user/reference/params/running.md#running_stitch_tolerance_mm) |
 | `enable_random_stitch_length` | boolean | — | false | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill` | P1 (M5) | [registered](../user/reference/params/running.md#enable_random_stitch_length) |
 | `random_stitch_length_jitter_percent` | float | ± % | 10 | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill` | P1 (M5) | [registered](../user/reference/params/running.md#random_stitch_length_jitter_percent) |
-| `repeats` | int | — | 1 | `meander_fill`, `contour_fill`, `circular_fill` | P2 (M7) | planned |
-| `bean_stitch_repeats` | str | — | 0 | `meander_fill`, `circular_fill`, `contour_fill`, `guided_fill`, `tartan_fill` | P2 (M7) | planned |
+| `repeats` | int | — | 1 | `meander_fill`, `contour_fill`, `circular_fill` | P2 (M7) | [registered](../user/reference/params/fill-repeat.md#repeats) |
+| `bean_stitch_repeats` | str | — | 0 | `meander_fill`, `circular_fill`, `contour_fill`, `guided_fill`, `tartan_fill` | P2 (M7) | [registered](../user/reference/params/fill-repeat.md#bean_stitch_repeats) |
 | `zigzag_spacing_mm` | float | mm | 0 | `meander_fill` | P2 (M7) | planned |
 | `zigzag_width_mm` | float | mm | 3 | `meander_fill` | P2 (M7) | planned |
 | `rows_per_thread` | int | — | 2 | `tartan_fill` | P3 (M10) | planned |
@@ -313,4 +316,4 @@ change Ink/Stitch's updater makes (`lib/update.py`), in StitchCraft's words.
 | 4 | a fill with `auto_fill` off gets `fill_method` `legacy_fill`, and `auto_fill` is removed | planned (M8) |
 | 4 | `fill_method` `auto_fill` becomes `tatami_fill` | planned (M8) |
 
-_145 parameter declarations, 92 registered in StitchCraft._
+_145 parameter declarations, 99 registered in StitchCraft._

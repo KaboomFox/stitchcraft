@@ -19,10 +19,10 @@ its stroke settings say. The element before it still ends near it, as Ink/Stitch
 
 ### `fill_method`
 
-**Fill method.** The stitch the area is filled with. A tatami fill sews rows of running stitches across it, and a
-fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without underlay (`SC-W0314`). The
-other methods arrive in later versions; until then an element set to one is skipped
-(`SC-W0011`).
+**Fill method.** The stitch the area is filled with. A tatami fill sews rows of running stitches across it, a
+contour fill rings that follow its outline inward, and a fill set to Ink/Stitch's legacy fill is
+sewn as a tatami fill without underlay (`SC-W0314`). The other methods arrive in later versions;
+until then an element set to one is skipped (`SC-W0011`).
 
 - **Accepts:** one of `tatami_fill` (Tatami fill), `circular_fill` (Circular fill), `contour_fill` (Contour fill), `cross_stitch` (Cross stitch), `guided_fill` (Guided fill), `linear_gradient_fill` (Linear gradient fill), `meander_fill` (Meander fill), `tartan_fill` (Tartan fill), `legacy_fill` (Legacy fill)
 - **Default:** `tatami_fill`

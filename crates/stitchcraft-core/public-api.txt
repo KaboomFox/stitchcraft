@@ -36,6 +36,8 @@ pub stitchcraft_core::diag::Code::AutoUnder
 pub stitchcraft_core::diag::Code::BudgetExhausted
 pub stitchcraft_core::diag::Code::BundleUnreadable
 pub stitchcraft_core::diag::Code::CustomLockUnusable
+pub stitchcraft_core::diag::Code::FillContourRingsLeftOut
+pub stitchcraft_core::diag::Code::FillContourSpiralTooShort
 pub stitchcraft_core::diag::Code::FillExpandShrinksAway
 pub stitchcraft_core::diag::Code::FillLegacyAsTatami
 pub stitchcraft_core::diag::Code::FillPartsApart
@@ -256,6 +258,8 @@ pub stitchcraft_core::Code::AutoUnder
 pub stitchcraft_core::Code::BudgetExhausted
 pub stitchcraft_core::Code::BundleUnreadable
 pub stitchcraft_core::Code::CustomLockUnusable
+pub stitchcraft_core::Code::FillContourRingsLeftOut
+pub stitchcraft_core::Code::FillContourSpiralTooShort
 pub stitchcraft_core::Code::FillExpandShrinksAway
 pub stitchcraft_core::Code::FillLegacyAsTatami
 pub stitchcraft_core::Code::FillPartsApart

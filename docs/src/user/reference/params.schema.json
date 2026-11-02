@@ -5,12 +5,13 @@
   "properties": {
     "angle": {
       "default": 0.0,
-      "description": "The direction of the rows, in degrees counter-clockwise from horizontal: 0 sews horizontal rows and 90 upright ones.",
+      "description": "The direction of the rows, in degrees counter-clockwise from horizontal: 0 sews horizontal rows and 90 upright ones. A contour fill's rings follow its outline, and its angle turns only its underlay.",
       "title": "Angle",
       "type": "number",
       "x-stitchcraft": {
         "applies_to": [
-          "tatami_fill"
+          "tatami_fill",
+          "contour_fill"
         ],
         "group": "Rows",
         "origin": "inkstitch",
@@ -90,31 +91,72 @@
         "unit": "mm"
       }
     },
-    "bean_stitch_repeats": {
-      "default": [
-        0
-      ],
-      "description": "How many times to go back and forth over each stitch: 1 sews every stitch three times (there, back and there again), 2 five times. Several numbers separated by spaces are taken in turn along the stitches: \"1 0\" makes every other stitch bold.",
-      "items": {
-        "maximum": 10,
-        "minimum": 0,
-        "type": "integer"
-      },
-      "maxItems": 16,
-      "minItems": 1,
-      "title": "Bean stitch",
-      "type": "array",
+    "avoid_self_crossing": {
+      "default": false,
+      "description": "With inner to outer, the rings run the other way at every other level, so that the steps from one ring to the next don't cross. Off, only the middles run the other way.",
+      "title": "Avoid self-crossing",
+      "type": "boolean",
       "x-stitchcraft": {
         "applies_to": [
-          "running_stitch",
-          "ripple_stitch",
-          "zigzag_stitch",
-          "manual_stitch"
+          "contour_fill"
         ],
-        "group": "Repeats",
+        "group": "Contour",
         "origin": "inkstitch",
         "stability": "stable"
       }
+    },
+    "bean_stitch_repeats": {
+      "anyOf": [
+        {
+          "default": [
+            0
+          ],
+          "description": "How many times to go back and forth over each stitch: 1 sews every stitch three times (there, back and there again), 2 five times. Several numbers separated by spaces are taken in turn along the stitches: \"1 0\" makes every other stitch bold.",
+          "items": {
+            "maximum": 10,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maxItems": 16,
+          "minItems": 1,
+          "title": "Bean stitch",
+          "type": "array",
+          "x-stitchcraft": {
+            "applies_to": [
+              "running_stitch",
+              "ripple_stitch",
+              "zigzag_stitch",
+              "manual_stitch"
+            ],
+            "group": "Repeats",
+            "origin": "inkstitch",
+            "stability": "stable"
+          }
+        },
+        {
+          "default": [
+            0
+          ],
+          "description": "How many times to go back and forth over each stitch of the fill's path, before its repeats: 1 sews every stitch three times (there, back and there again), 2 five times. Several numbers separated by spaces are taken in turn along the stitches: \"1 0\" makes every other stitch bold.",
+          "items": {
+            "maximum": 10,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maxItems": 16,
+          "minItems": 1,
+          "title": "Bean stitch",
+          "type": "array",
+          "x-stitchcraft": {
+            "applies_to": [
+              "contour_fill"
+            ],
+            "group": "Repeats",
+            "origin": "inkstitch",
+            "stability": "stable"
+          }
+        }
+      ]
     },
     "center_walk_underlay": {
       "default": false,
@@ -211,6 +253,39 @@
         "origin": "inkstitch-deviates",
         "stability": "stable",
         "unit": "mm"
+      }
+    },
+    "clockwise": {
+      "default": true,
+      "description": "The rings run clockwise as the drawing shows them. Off, counter-clockwise.",
+      "title": "Clockwise",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "applies_to": [
+          "contour_fill"
+        ],
+        "group": "Contour",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
+    "contour_strategy": {
+      "default": "0",
+      "description": "How the path runs through the rings. Inner to outer steps in to the middle first and sews each ring round on the way back out. Single spiral turns in from the outline to the middle. Double spiral turns in, and back out between the turns it made.",
+      "enum": [
+        "0",
+        "1",
+        "2"
+      ],
+      "title": "Strategy",
+      "type": "string",
+      "x-stitchcraft": {
+        "applies_to": [
+          "contour_fill"
+        ],
+        "group": "Contour",
+        "origin": "inkstitch",
+        "stability": "stable"
       }
     },
     "contour_underlay": {
@@ -333,7 +408,8 @@
         "applies_to": [
           "running_stitch",
           "ripple_stitch",
-          "tatami_fill"
+          "tatami_fill",
+          "contour_fill"
         ],
         "group": "Running stitch",
         "origin": "inkstitch",
@@ -380,14 +456,15 @@
     },
     "expand_mm": {
       "default": 0.0,
-      "description": "How far past the drawn edge the top rows reach: each part is grown by this much, with round corners, before its rows are laid. The thread's pull opens gaps between fills sewn side by side, and this closes them. Negative values pull the rows in from the edge.",
+      "description": "How far past the drawn edge the top rows reach: each part is grown by this much, with round corners, before its rows or rings are laid. The thread's pull opens gaps between fills sewn side by side, and this closes them. Negative values pull the rows in from the edge.",
       "maximum": 10.0,
       "minimum": -10.0,
       "title": "Expand",
       "type": "number",
       "x-stitchcraft": {
         "applies_to": [
-          "tatami_fill"
+          "tatami_fill",
+          "contour_fill"
         ],
         "group": "Rows",
         "origin": "inkstitch",
@@ -419,7 +496,7 @@
     },
     "fill_method": {
       "default": "tatami_fill",
-      "description": "The stitch the area is filled with. A tatami fill sews rows of running stitches across it, and a fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without underlay (`SC-W0314`). The other methods arrive in later versions; until then an element set to one is skipped (`SC-W0011`).",
+      "description": "The stitch the area is filled with. A tatami fill sews rows of running stitches across it, a contour fill rings that follow its outline inward, and a fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without underlay (`SC-W0314`). The other methods arrive in later versions; until then an element set to one is skipped (`SC-W0011`).",
       "enum": [
         "tatami_fill",
         "circular_fill",
@@ -452,12 +529,13 @@
     },
     "fill_underlay": {
       "default": true,
-      "description": "Sew underlay before the top rows: rows of stitches farther apart than the top rows, square to them unless set otherwise. It holds the fabric still while the fill is sewn and lifts the top rows, so less fabric shows between them.",
+      "description": "Sew underlay before the top rows, or a contour fill's rings: rows of stitches farther apart than the top rows, square to them unless set otherwise. It holds the fabric still while the fill is sewn and lifts the top rows, so less fabric shows between them.",
       "title": "Underlay",
       "type": "boolean",
       "x-stitchcraft": {
         "applies_to": [
-          "tatami_fill"
+          "tatami_fill",
+          "contour_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -479,7 +557,8 @@
       ],
       "x-stitchcraft": {
         "applies_to": [
-          "tatami_fill"
+          "tatami_fill",
+          "contour_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -496,7 +575,8 @@
       "type": "number",
       "x-stitchcraft": {
         "applies_to": [
-          "tatami_fill"
+          "tatami_fill",
+          "contour_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -516,7 +596,8 @@
       ],
       "x-stitchcraft": {
         "applies_to": [
-          "tatami_fill"
+          "tatami_fill",
+          "contour_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -536,7 +617,8 @@
       ],
       "x-stitchcraft": {
         "applies_to": [
-          "tatami_fill"
+          "tatami_fill",
+          "contour_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -551,7 +633,8 @@
       "type": "boolean",
       "x-stitchcraft": {
         "applies_to": [
-          "tatami_fill"
+          "tatami_fill",
+          "contour_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -581,6 +664,25 @@
           "tatami_fill"
         ],
         "group": "Rows",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
+    "join_style": {
+      "default": "0",
+      "description": "How the rings turn at the shape's corners, as they move in a row spacing at a time: round, mitred (pointed, cut off 10 row spacings out) or bevelled (cut straight across).",
+      "enum": [
+        "0",
+        "1",
+        "2"
+      ],
+      "title": "Join style",
+      "type": "string",
+      "x-stitchcraft": {
+        "applies_to": [
+          "contour_fill"
+        ],
+        "group": "Contour",
         "origin": "inkstitch",
         "stability": "stable"
       }
@@ -769,7 +871,7 @@
     },
     "max_stitch_length_mm": {
       "default": null,
-      "description": "Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as its split method says. Empty, a stitch is split only where it is longer than the machine sews. A tatami fill sews its rows in stitches this long.",
+      "description": "Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as its split method says. Empty, a stitch is split only where it is longer than the machine sews. A tatami fill sews its rows in stitches this long, and a contour fill its rings.",
       "maximum": 25.0,
       "minimum": 0.1,
       "title": "Longest stitch",
@@ -784,7 +886,8 @@
           "e_stitch",
           "s_stitch",
           "zigzag",
-          "tatami_fill"
+          "tatami_fill",
+          "contour_fill"
         ],
         "family_defaults": {
           "fill": 4.0
@@ -943,7 +1046,7 @@
     },
     "random_seed": {
       "default": null,
-      "description": "Where random variation starts: a running stitch's random lengths, a satin column's random widths and spacing, and a tatami fill's random lengths. The same seed gives the same stitches, another seed others, and elements alike given one seed vary alike. Empty, each element gets its own.",
+      "description": "Where random variation starts: a running stitch's random lengths, a satin column's random widths and spacing, and a tatami or contour fill's random lengths. The same seed gives the same stitches, another seed others, and elements alike given one seed vary alike. Empty, each element gets its own.",
       "minimum": 0,
       "title": "Random seed",
       "type": [
@@ -959,7 +1062,8 @@
           "e_stitch",
           "s_stitch",
           "zigzag",
-          "tatami_fill"
+          "tatami_fill",
+          "contour_fill"
         ],
         "group": "Random variation",
         "origin": "inkstitch",
@@ -1017,7 +1121,7 @@
     },
     "random_stitch_length_jitter_percent": {
       "default": 10.0,
-      "description": "How much each stitch may be longer or shorter than the stitch length, in percent of it. A tatami fill's stitch length is its longest stitch. Where the random lengths start is the element's `random_seed`.",
+      "description": "How much each stitch may be longer or shorter than the stitch length, in percent of it. A tatami or contour fill's stitch length is its longest stitch. Where the random lengths start is the element's `random_seed`.",
       "maximum": 100.0,
       "minimum": 0.0,
       "title": "Length variation",
@@ -1026,7 +1130,8 @@
         "applies_to": [
           "running_stitch",
           "ripple_stitch",
-          "tatami_fill"
+          "tatami_fill",
+          "contour_fill"
         ],
         "group": "Running stitch",
         "origin": "inkstitch",
@@ -1115,22 +1220,42 @@
       }
     },
     "repeats": {
-      "default": 1,
-      "description": "How many times to sew along the path: 2 goes there and back, 3 there, back and there again. An even number ends where the path starts, which suits a line that must come back.",
-      "maximum": 100,
-      "minimum": 1,
-      "title": "Repeats",
-      "type": "integer",
-      "x-stitchcraft": {
-        "applies_to": [
-          "running_stitch",
-          "ripple_stitch",
-          "zigzag_stitch"
-        ],
-        "group": "Repeats",
-        "origin": "inkstitch",
-        "stability": "stable"
-      }
+      "anyOf": [
+        {
+          "default": 1,
+          "description": "How many times to sew along the path: 2 goes there and back, 3 there, back and there again. An even number ends where the path starts, which suits a line that must come back.",
+          "maximum": 100,
+          "minimum": 1,
+          "title": "Repeats",
+          "type": "integer",
+          "x-stitchcraft": {
+            "applies_to": [
+              "running_stitch",
+              "ripple_stitch",
+              "zigzag_stitch"
+            ],
+            "group": "Repeats",
+            "origin": "inkstitch",
+            "stability": "stable"
+          }
+        },
+        {
+          "default": 1,
+          "description": "How often to sew the fill's path. Each repeat after the first sews everything sewn so far again, the other way round, so the passes double: 1 sews it once, 2 there and back, 3 there and back twice, 4 there and back 4 times.",
+          "maximum": 8,
+          "minimum": 1,
+          "title": "Repeats",
+          "type": "integer",
+          "x-stitchcraft": {
+            "applies_to": [
+              "contour_fill"
+            ],
+            "group": "Repeats",
+            "origin": "inkstitch",
+            "stability": "stable"
+          }
+        }
+      ]
     },
     "reverse_rails": {
       "default": "automatic",
@@ -1158,14 +1283,15 @@
     },
     "row_spacing_mm": {
       "default": 0.25,
-      "description": "How far apart the rows are, measured square to them. Rows closer together cover the fabric more fully, and pull it in more.",
+      "description": "How far apart the rows are, measured square to them, or a contour fill's rings. Rows closer together cover the fabric more fully, and pull it in more.",
       "maximum": 100.0,
       "minimum": 0.1,
       "title": "Row spacing",
       "type": "number",
       "x-stitchcraft": {
         "applies_to": [
-          "tatami_fill"
+          "tatami_fill",
+          "contour_fill"
         ],
         "group": "Rows",
         "origin": "inkstitch",
@@ -1195,7 +1321,8 @@
           "e_stitch",
           "s_stitch",
           "zigzag",
-          "tatami_fill"
+          "tatami_fill",
+          "contour_fill"
         ],
         "group": "Running stitch",
         "origin": "inkstitch",
@@ -1225,7 +1352,7 @@
     },
     "running_stitch_tolerance_mm": {
       "default": 0.2,
-      "description": "How far a stitch may stray from a curve. A smaller tolerance follows curves more closely, with more and shorter stitches. A satin column's way to its start and from its end keeps to it too.",
+      "description": "How far a stitch may stray from a curve. A smaller tolerance follows curves more closely, with more and shorter stitches. A satin column's way to its start and from its end keeps to it too, as do a contour fill's rings.",
       "maximum": 5.0,
       "minimum": 0.01,
       "title": "Curve tolerance",
@@ -1238,7 +1365,8 @@
           "e_stitch",
           "s_stitch",
           "zigzag",
-          "tatami_fill"
+          "tatami_fill",
+          "contour_fill"
         ],
         "deviation": "DEV-SAT-006",
         "group": "Running stitch",
@@ -1352,6 +1480,23 @@
         "stability": "stable"
       }
     },
+    "smoothness_mm": {
+      "default": 0.0,
+      "description": "How much inner to outer's path is smoothed: its corners are cut round over about 5 times this, and it is kept inside the fill. 0 leaves the rings as they are. The spirals are not smoothed.",
+      "maximum": 100.0,
+      "minimum": 0.0,
+      "title": "Smoothness",
+      "type": "number",
+      "x-stitchcraft": {
+        "applies_to": [
+          "contour_fill"
+        ],
+        "group": "Contour",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "mm"
+      }
+    },
     "split_method": {
       "default": "default",
       "description": "How stitches longer than the longest stitch (`max_stitch_length_mm`) are split. Default splits each into the fewest equal parts no longer than it. Simple splits at whole multiples of it from the stitch's start. Staggered moves those splits along from one stitch to the next, so the needle holes of neighbouring stitches do not line up in a row.",
@@ -1401,14 +1546,15 @@
     },
     "staggers": {
       "default": 4.0,
-      "description": "How many rows the needle points take to come back to where they started. Along each row they lie the longest stitch (`max_stitch_length_mm`) apart, a `staggers`-th of a stitch along from the row before's, so that neighbouring rows never line them up. A fraction draws diagonals that show less than whole numbers do. A negative number staggers the rows the other way, and 0 counts as 1, which lines every row's points up, as in Ink/Stitch.",
+      "description": "How many rows the needle points take to come back to where they started. Along each row they lie the longest stitch (`max_stitch_length_mm`) apart, a `staggers`-th of a stitch along from the row before's, so that neighbouring rows never line them up. A fraction draws diagonals that show less than whole numbers do. A negative number staggers the rows the other way, and 0 counts as 1, which lines every row's points up, as in Ink/Stitch. A contour fill staggers its underlay's rows so.",
       "maximum": 100.0,
       "minimum": -100.0,
       "title": "Staggers",
       "type": "number",
       "x-stitchcraft": {
         "applies_to": [
-          "tatami_fill"
+          "tatami_fill",
+          "contour_fill"
         ],
         "group": "Stitches",
         "origin": "inkstitch",
@@ -1542,7 +1688,8 @@
       "type": "boolean",
       "x-stitchcraft": {
         "applies_to": [
-          "tatami_fill"
+          "tatami_fill",
+          "contour_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -1881,6 +2028,25 @@
         ],
         "name": "TatamiParams",
         "title": "Tatami parameters"
+      },
+      {
+        "keys": [
+          "contour_strategy",
+          "join_style",
+          "avoid_self_crossing",
+          "clockwise",
+          "smoothness_mm"
+        ],
+        "name": "ContourParams",
+        "title": "Contour parameters"
+      },
+      {
+        "keys": [
+          "repeats",
+          "bean_stitch_repeats"
+        ],
+        "name": "FillRepeatParams",
+        "title": "Fill repeat parameters"
       },
       {
         "keys": [

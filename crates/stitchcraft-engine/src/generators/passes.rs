@@ -38,6 +38,25 @@ params! {
     }
 }
 
+params! {
+    /// Repeats and bean stitch of a fill sewn as one path, which Ink/Stitch declares for its fills apart
+    /// from a stroke's: bean stitch comes first, and each repeat then sews everything sewn so far again,
+    /// the other way round, as Ink/Stitch repeats a contour fill.
+    pub struct FillRepeatParams for &[StitchType::ContourFill];
+
+    "Repeats" {
+        /// How often to sew the fill's path. Each repeat after the first sews everything sewn so far again,
+        /// the other way round, so the passes double: 1 sews it once, 2 there and back, 3 there and back
+        /// twice, 4 there and back 4 times.
+        repeats: Count = "1", label "Repeats", range (1, 8);
+
+        /// How many times to go back and forth over each stitch of the fill's path, before its repeats: 1
+        /// sews every stitch three times (there, back and there again), 2 five times. Several numbers
+        /// separated by spaces are taken in turn along the stitches: "1 0" makes every other stitch bold.
+        bean_stitch_repeats: CountList = "0", label "Bean stitch", range (0, 10);
+    }
+}
+
 /// The key of the setting that sews each stitch back and forth, which automatic digitizing sets for a triple
 /// run (`crate::auto`).
 pub const BEAN_STITCH_REPEATS: &str = "bean_stitch_repeats";
@@ -93,6 +112,20 @@ pub fn sew(run: &[Point], repeats: u32, beans: &[u32], turn: Turn, meter: &mut M
         }
     }
     Ok(out)
+}
+
+/// `run` sewn over as `repeats` doubles it, as Ink/Stitch repeats a fill sewn as one path: each repeat
+/// after the first adds everything sewn so far again, reversed for the second, fourth and every other
+/// repeat, so that `repeats` sews `2^(repeats − 1)` passes, each the other way from the one before. A stitch
+/// for each point added.
+pub fn doubled(run: Vec<Point>, repeats: u32, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+    let mut sewn = run;
+    for repeat in 1..repeats.max(1) {
+        made(meter, sewn.len())?;
+        let again: Vec<Point> = if repeat % 2 == 1 { sewn.iter().rev().copied().collect() } else { sewn.clone() };
+        sewn.extend(again);
+    }
+    Ok(sewn)
 }
 
 #[cfg(test)]

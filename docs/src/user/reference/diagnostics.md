@@ -38,9 +38,11 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-I0308`](#sc-i0308) | Info | Fill underlay too thin for rows; sewn round the outline |
 | [`SC-W0309`](#sc-w0309) | Warning | Fill's expand shrinks a part away; sewn at its own size |
 | [`SC-W0310`](#sc-w0310) | Warning | Fill's underlay inset shrinks a part away; underlay over all of it |
+| [`SC-W0311`](#sc-w0311) | Warning | Contour fill leaves out rings it does not reach |
 | [`SC-W0312`](#sc-w0312) | Warning | Fill's pull compensation below 0; read as 0 |
 | [`SC-I0313`](#sc-i0313) | Info | Fill drawn twice along its edge; Ink/Stitch fills the part left empty |
 | [`SC-W0314`](#sc-w0314) | Warning | Legacy fill sewn as a tatami fill without underlay |
+| [`SC-I0315`](#sc-i0315) | Info | Contour fill's part too narrow for its spiral; sewn inner to outer |
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
 | [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
@@ -450,6 +452,20 @@ Ink/Stitch sews it, and Ink/Stitch warns of it too.
 
 The message counts the parts. Set a smaller `fill_underlay_inset_mm`, or turn `fill_underlay` off.
 
+## SC-W0311
+
+**Warning** — Contour fill leaves out rings it does not reach
+
+A contour fill sews rings that follow the shape's outline inward, a row spacing apart. Some of its
+rings are not sewn, and fabric shows where they lie. Inner to outer, the default strategy, leaves out
+a ring that no point of the ring round it comes within 2.05 row spacings of, where the shape narrows
+or rings lie far apart at a mitred corner. A spiral follows one chain of rings inward, and leaves out
+the rings off it: the other side where the shape parts, and usually the rings round a hole. Ink/Stitch
+leaves out the same rings without a word.
+
+The message counts the rings left out. Sew the shape with inner to outer, or draw its parts as
+shapes of their own; a round `join_style` keeps the rings a row spacing apart at corners.
+
 ## SC-W0312
 
 **Warning** — Fill's pull compensation below 0; read as 0
@@ -488,6 +504,17 @@ side, and its `reverse` sews the fill backwards. A tatami fill routes its rows a
 travel stitches, and StitchCraft keeps `flip` and `reverse` without reading them (`SC-W0105`).
 
 To sew the fill alike in both, set its fill method to tatami fill and turn `fill_underlay` off.
+
+## SC-I0315
+
+**Info** — Contour fill's part too narrow for its spiral; sewn inner to outer
+
+A contour fill's spiral turns from each ring to the next inside it. A part too narrow for a turn,
+with one ring for the single spiral or 2 or fewer for the double, is sewn inner to outer instead,
+round its rings. Ink/Stitch fails on such a part or sews nothing of it, as its version decides.
+
+The message counts the parts. To sew them in a spiral, widen them to more than 2 row spacings for the
+single spiral, or 4 for the double, or make `row_spacing_mm` smaller.
 
 ## SC-W0401
 

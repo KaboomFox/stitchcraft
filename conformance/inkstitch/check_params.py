@@ -8,6 +8,11 @@ identifiers with its lock definitions, the commands with its command lists, the 
 its attribute list, and the file version and renamed commands with its updater, and prints each
 difference.
 
+A row's `read_by` lists the fill methods that read it as they sew, though the window doesn't show it for
+them: the tatami fill's underlay, which every fill method but those `to_stitch_groups` leaves out sews,
+reads `angle`, `running_stitch_length_mm` and `staggers` (`UNDERLAY_READS`). The script finds those
+methods and what the underlay reads in Ink/Stitch's code, and compares each row with them.
+
 A declared default is what Ink/Stitch's settings window shows. What it sews for a file that sets no value
 is the fallback its code reads the attribute with, `self.get_..._param("name", fallback)`, and the two
 can differ. A row records the fallback (`fallback`) where it sews differently from the default, and the
@@ -48,6 +53,13 @@ TOOLS = "lib/extensions/"
 
 # The parameters whose values are stitch types; every other condition is listed by its value alone.
 METHODS = {"stroke": "stroke_method", "satin": "satin_method", "fill": "fill_method"}
+
+# The fill parameters the tatami fill's underlay reads, by the property it reads each through: every fill
+# method that sews the underlay reads them, whether or not the settings window shows them for it, and the
+# row lists those methods as `read_by`. The underlay's angle is 90° from `angle` unless set.
+UNDERLAY_READS = {"angle": "angle", "running_stitch_length_mm": "running_stitch_length", "staggers": "staggers"}
+# Where the fill element sews its underlay and what it reads there.
+UNDERLAY_FUNCTIONS = ("to_stitch_groups", "do_underlay", "fill_underlay_angle")
 
 # The methods Ink/Stitch reads a parameter with (`get_param`, `get_float_param`, `get_split_mm_param_as_px`
 # and the like), defined in the common section's file.
@@ -270,6 +282,29 @@ def updater(root):
     return version, renamed
 
 
+def underlay(root):
+    """The fill methods that sew the tatami fill's underlay, and the `self.` properties the underlay reads:
+    the methods are those that `to_stitch_groups` doesn't leave out where it tests `self.fill_underlay`
+    (`self.fill_method not in [...]`), and the properties those `do_underlay` and `fill_underlay_angle`
+    read."""
+    tree = ast.parse((root / ELEMENTS["fill"]).read_text(encoding="utf-8"))
+    functions = {n.name: n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name in UNDERLAY_FUNCTIONS}
+    if sorted(functions) != sorted(UNDERLAY_FUNCTIONS):
+        return None, set()
+    left_out = None
+    for node in ast.walk(functions["to_stitch_groups"]):
+        if isinstance(node, ast.BoolOp) and any(getattr(v, "attr", None) == "fill_underlay" for v in node.values):
+            for test in node.values:
+                if isinstance(test, ast.Compare) and getattr(test.left, "attr", None) == "fill_method" and isinstance(test.ops[0], ast.NotIn):
+                    left_out = literal(test.comparators[0])[0]
+    if left_out is None:
+        return None, set()
+    sewn = [m for m in methods_of(root, "fill") if m not in left_out]
+    read = {n.attr for name in ("do_underlay", "fill_underlay_angle") for n in ast.walk(functions[name])
+            if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name) and n.value.id == "self"}
+    return sewn, read
+
+
 def main(checkout):
     root = Path(checkout)
     data = tomllib.loads(DATA.read_text(encoding="utf-8"))
@@ -277,6 +312,9 @@ def main(checkout):
     theirs, problems = declarations(root, locks)
     reads = getters(root, theirs)
     ours = {(p["element"], p["name"]): p for p in data["param"]}
+    with_underlay, underlay_reads = underlay(root)
+    if with_underlay is None:
+        problems.append(f"fill: {', '.join(UNDERLAY_FUNCTIONS)} no longer show which methods sew the underlay")
     for key in sorted(set(ours) | set(theirs)):
         if key not in ours:
             problems.append(f"{key[0]} {key[1]}: declared by Ink/Stitch, missing from the data file")
@@ -308,6 +346,13 @@ def main(checkout):
         declared = sorted(c for c in fact["applies_to"] if (key[0], key[1], c) not in OMITTED)
         if sorted(row["applies_to"]) != declared:
             problems.append(f"{key[0]} {key[1]}: applies to {sorted(row['applies_to'])} here, {declared} in Ink/Stitch")
+        unshown = []
+        if key[0] == "fill" and key[1] in UNDERLAY_READS and with_underlay is not None:
+            if UNDERLAY_READS[key[1]] not in underlay_reads:
+                problems.append(f"{key[0]} {key[1]}: the underlay no longer reads self.{UNDERLAY_READS[key[1]]}")
+            unshown = sorted(m for m in with_underlay if m not in declared)
+        if sorted(row.get("read_by", [])) != unshown:
+            problems.append(f"{key[0]} {key[1]}: read by {sorted(row.get('read_by', []))} here, {unshown} in Ink/Stitch")
     start, end, _ = locks
     if data["lock_ids"] != start or sorted(start) != sorted(end):
         problems.append(f"lock ids: {data['lock_ids']} here, start {start} and end {end} in Ink/Stitch")

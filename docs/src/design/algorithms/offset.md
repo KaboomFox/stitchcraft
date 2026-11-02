@@ -77,13 +77,19 @@ which splits the offset there.
 ## Buffers: a fill's part grown or shrunk
 
 The same module grows or shrinks a fill's part, as shapely's `buffer` does for Ink/Stitch's inset
-underlay and `expand_mm` ([fills](fills.md#6-underlay), `REQ-FILL-TAT-012`). Each ring's raw curve is
-built as in step 1, closed, with round corners of 16 segments to a quarter circle. It runs to the ring's
-left, outside an outline and inside a hole: a positive distance grows the part. In place of steps 2
-and 3, the area the curves wind round clockwise at least once comes from the fill's own region code, and
-the loops where the curves fold over drop out of it. GEOS's rules for a ring the buffer wears away, and
-for a small ring whose curve turns inside out, are followed as the `buffer` module's docs say, and
-`conformance/oracle/buffer.py` checks the polygons against shapely's.
+underlay and `expand_mm` ([fills](fills.md#6-underlay), `REQ-FILL-TAT-012`), and for a contour fill's
+rings ([fills](fills.md#rings), `REQ-FILL-CON-001`). Each ring's raw curve is built as in step 1, closed,
+with the corners the caller asks for: round with 16 segments to a quarter circle, shapely's default, for
+a tatami fill, and for a contour fill the corners its `join_style` gives, round with 8 segments, mitred
+with a limit of 10 or bevelled. The join applies at each corner that points the way its ring moves, such
+as an outline's inward corners as it shrinks or a hole's outward ones as it grows. At the other corners the
+curve's sides cross, and meet there, whatever the join. It runs to the ring's left, outside an outline
+and inside a hole: a positive distance grows the part. In place of steps 2 and 3, the area the curves
+wind round clockwise at least once comes from the fill's own region code, and the loops where the curves
+fold over drop out of it. GEOS's rules for a ring the buffer wears away, and for a small ring whose curve
+turns inside out, are followed as the `buffer` module's docs say, and `conformance/oracle/buffer.py`
+checks the polygons against shapely's: 538 of them, 330 with a tatami fill's corners and 208 with a
+contour fill's.
 
 ## Speed
 

@@ -31,6 +31,10 @@ stretch of rows (`generators::tatami`). Since M7.2 a zigzag stroke is sewn as In
 rail. Every satin method then names stitches that lean far along the column, and top stitches longer than
 12 mm (`generators::satin`). Since M7.4 an S-stitch sews each pair once across, every other one back the
 other way, and since M7.5 a zigzag satin sews a zigzag between the rails, its pairs at half the spacing.
+Since M7.7 a contour fill sews rings that follow each part's outline inward, offset with the corners its
+`join_style` gives, as one line of running stitches after the tatami fill's underlay, inner to outer or in
+a spiral or double spiral (`generators::contour`). Its smoothed path shares `generators::smoothing` with a
+tatami fill's travel.
 Since M13.1 a shape without settings, read with `--auto`, is digitized automatically before anything else
 (`auto`). A line no wider than the design's narrowest satin stroke runs, a line up to 7 mm wide becomes
 satin columns along its centre line, and a wider line becomes the tatami fill of the area it paints
@@ -86,4 +90,4 @@ points (`docs/src/design/engine-pipeline.md` › Normalize), and a fill's region
 
 The `field` example uses `stitchcraft-testkit` too. It plans the reference hoop's whole field for
 `cargo xtask perf` (NFR-PERF-1). The `insets` example shrinks a region 150 mm across 300 times with
-`normalize::offset::buffer`, as contour fill will, for the same check (NFR-PERF-3).
+`normalize::offset::buffer`, as contour fill does, for the same check (NFR-PERF-3).

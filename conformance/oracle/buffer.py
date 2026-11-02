@@ -1,5 +1,5 @@
 """Record shapely's buffers of polygons, for a fill's inset underlay and its expanded top rows
-(REQ-FILL-TAT-012).
+(REQ-FILL-TAT-012), and for a contour fill's rings (REQ-FILL-CON-001).
 
 Ink/Stitch sews a fill's underlay on each part shrunk by `fill_underlay_inset_mm`, and its top rows on the
 part grown by `expand_mm`, both with shapely's `buffer`, which is GEOS's: round corners, 16 segments to a
@@ -8,9 +8,17 @@ blocks of grid squares and half squares, whose points often lie in line and whic
 rings with dense points, dumbbells whose neck a shrinking cuts, and squares with holes near each other and
 the edge, which a growing merges or fills. Each is buffered at several distances, shrinking and growing.
 Then come small regular polygons shrunk just past nothing, which GEOS's rules for curves turned inside out
-decide. Last come the edges of its rules for rings that a shrinking wears away: triangles shrunk by about
+decide. Next come the edges of its rules for rings that a shrinking wears away: triangles shrunk by about
 the radius of their inscribed circle, and regular polygons of 9 to 13 corners shrunk by exactly half their
 box's least width, which GEOS still offsets.
+
+Last come the corners of a contour fill's rings. Ink/Stitch offsets each ring with shapely's
+`offset_curve` of the ring's polygon, which is the boundary of the polygon's buffer, with the corners its
+`join_style` gives: round, mitred with a limit of 10 times the distance, or bevelled. It asks for 5
+segments to a quarter circle, and GEOS raises that to 8, its least for offset curves (checked: the curve
+equals the boundary of a buffer with 8 segments, not 5). The same random polygons, and notched squares and
+darts whose sharp corners pass the mitre limit, are buffered with each of those corners, and with round
+corners of 4 segments, whose arcs differ from those of 8.
 The tests of `crates/stitchcraft-engine/src/normalize/offset/` check that the engine builds the same
 polygons. shapely runs as a black box: only its public API is used and only its answers are kept.
 
@@ -21,11 +29,12 @@ Regenerate the fixture (shapely 2.2.0's wheels bundle GEOS 3.14.1):
     target/geometry-venv/bin/python -I conformance/oracle/buffer.py \\
         > conformance/fixtures/geometry/shapely-buffer.txt
 
-Each case is one line of numbers, whitespace apart: the polygon, the distance, and the answer. A polygon is
-a count of rings, its outline and then its holes, each a count of points and their coordinates, closed. The
-answer is a count of polygons, in shapely's order, each written as the input is. Outlines run clockwise and
-holes counter-clockwise in y-up axes, in the input as in the engine's regions, and in the answer as shapely
-gives them.
+Each case is one line of words, whitespace apart: the polygon, the distance, the corners, and the answer.
+A polygon is a count of rings, its outline and then its holes, each a count of points and their
+coordinates, closed. The corners are the join (`round`, `mitre` or `bevel`, as the offset fixture writes
+it), the mitre limit and the segments to a quarter circle. The answer is a count of polygons, in shapely's
+order, each written as the input is. Outlines run clockwise and holes counter-clockwise in y-up axes, in
+the input as in the engine's regions, and in the answer as shapely gives them.
 """
 
 import math
@@ -38,6 +47,11 @@ import shapely.ops
 
 SEED = 20261011
 DISTANCES = [0.05, 0.1, 0.25, 0.5, 1.0, 2.0]
+# Corners: the join, the mitre limit and the segments to a quarter circle. A tatami fill's are shapely's
+# defaults, and a contour fill's are those its join_style gives, with GEOS's 8 segments.
+TATAMI = ("round", 5.0, 16)
+CONTOUR = [("round", 10.0, 8), ("mitre", 10.0, 8), ("bevel", 10.0, 8)]
+FEW_SEGMENTS = ("round", 10.0, 4)
 
 
 def oriented(polygon):
@@ -145,6 +159,23 @@ def level(rng):
     return polygon, -min(maxx - minx, maxy - miny) / 2
 
 
+def spike(rng):
+    """A square with a narrow notch cut into its top, or a thin dart, turned at random. Shrinking turns the
+    notch's tip, and growing turns the dart's point, by more than a mitre limit of 10 allows when its angle
+    is less than about 11.5 degrees, where GEOS cuts the mitre off at the limit."""
+    turn = rng.uniform(0, 180)
+    if rng.random() < 0.5:
+        size, depth, half = rng.uniform(6, 12), rng.uniform(2, 5), rng.uniform(0.05, 0.6)
+        middle = size / 2
+        shape = shapely.Polygon([(0, 0), (size, 0), (size, size), (middle + half, size), (middle, size - depth),
+                                 (middle - half, size), (0, size)])
+    else:
+        length, half = rng.uniform(4, 10), rng.uniform(0.1, 0.8)
+        shape = shapely.Polygon([(0, 0), (length, -half), (length, half)])
+    shape = shapely.affinity.rotate(shape, turn, origin=(0, 0))
+    return [shapely.Polygon([(round(x, 6), round(y, 6)) for x, y in shape.exterior.coords])]
+
+
 def numbers(polygon):
     words = [str(1 + len(polygon.interiors))]
     for r in [polygon.exterior, *polygon.interiors]:
@@ -153,12 +184,13 @@ def numbers(polygon):
     return words
 
 
-def case(rng, polygon, distance=None):
+def case(rng, polygon, distance=None, corners=TATAMI):
     if distance is None:
         distance = rng.choice(DISTANCES) * rng.choice([1, -1])
-    found = polygon.buffer(distance)
+    join, limit, segments = corners
+    found = polygon.buffer(distance, quad_segs=segments, join_style=join, mitre_limit=limit)
     answer = [] if found.is_empty else list(getattr(found, "geoms", [found]))
-    words = numbers(polygon) + [repr(distance), str(len(answer))]
+    words = numbers(polygon) + [repr(distance), join, repr(limit), str(segments), str(len(answer))]
     for p in answer:
         words += numbers(p)
     return " ".join(words)
@@ -182,6 +214,15 @@ def main():
         for _ in range(count):
             polygon, distance = make(rng)
             print(case(rng, oriented(polygon), distance))
+    for corners in [*CONTOUR, FEW_SEGMENTS]:
+        for make, count in [(star, 12), (blocks, 12), (dumbbell, 8), (holed, 8), (spike, 12)]:
+            written = 0
+            while written < count:
+                for polygon in make(rng):
+                    polygon = oriented(polygon)
+                    if polygon.is_valid and written < count:
+                        print(case(rng, polygon, corners=corners))
+                        written += 1
 
 
 if __name__ == "__main__":

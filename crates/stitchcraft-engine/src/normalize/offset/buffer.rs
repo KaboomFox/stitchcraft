@@ -1,5 +1,6 @@
 //! A part of a fill grown or shrunk by a distance, with round corners, as GEOS buffers a polygon
-//! (`REQ-FILL-TAT-012`).
+//! (`REQ-FILL-TAT-012`), or with the corners a contour fill's `join_style` gives its rings
+//! (`REQ-FILL-CON-001`): mitred, bevelled, or round with fewer segments ([`buffer_with`]).
 //!
 //! Ink/Stitch sews a fill's underlay on each part shrunk by `fill_underlay_inset_mm`, and its top rows on
 //! the part grown by `expand_mm`, with shapely's `buffer`, which is GEOS's. The polygons here are built
@@ -36,6 +37,7 @@
 
 use stitchcraft_core::{Exhausted, Meter, Point};
 
+use super::Corners;
 use super::generator::ring_curve;
 use crate::normalize::near::{length, to_side};
 use crate::normalize::region::geom::{Envelope, signed_area};
@@ -49,11 +51,18 @@ const CURVE_POINTS: usize = 4;
 /// A curve point nearer its ring than this fraction of the distance has not moved out to it.
 const NEARNESS: f64 = 0.99;
 
-/// `polygon` grown by `distance`, or shrunk by a negative distance, as GEOS buffers it: the parts left, in
-/// order of least x, unless the edges of the area did not join into rings (a bug). No distance leaves the
-/// polygon as it is. One unit of `meter` for each point walked, and for the work of cutting the curves and
-/// joining the area.
+/// `polygon` grown by `distance`, or shrunk by a negative distance, with round corners, as GEOS buffers it:
+/// the parts left, in order of least x, unless the edges of the area did not join into rings (a bug). No
+/// distance leaves the polygon as it is. One unit of `meter` for each point walked, and for the work of
+/// cutting the curves and joining the area.
 pub fn buffer(polygon: &Polygon, distance: f64, meter: &mut Meter) -> Result<Result<Vec<Polygon>, Unjoined>, Exhausted> {
+    buffer_with(polygon, distance, Corners::ROUND, meter)
+}
+
+/// [`buffer`] with `corners`, as GEOS buffers with them. A shrinking joins an outline's inward corners and
+/// a growing a hole's outward ones; the corners the curve turns the other way meet where its sides cross,
+/// whatever the join.
+pub fn buffer_with(polygon: &Polygon, distance: f64, corners: Corners, meter: &mut Meter) -> Result<Result<Vec<Polygon>, Unjoined>, Exhausted> {
     if distance == 0.0 {
         return Ok(Ok(vec![polygon.clone()]));
     }
@@ -66,7 +75,7 @@ pub fn buffer(polygon: &Polygon, distance: f64, meter: &mut Meter) -> Result<Res
         if i > 0 && distance > 0.0 && worn_away(ring, d) {
             continue;
         }
-        let curve = ring_curve(ring, distance, meter)?;
+        let curve = ring_curve(ring, distance, corners, meter)?;
         if !inside_out(ring, d, &curve, meter)? {
             curves.push(curve);
         }
@@ -142,13 +151,19 @@ mod tests {
     use super::*;
     use crate::normalize::fixture::cases;
 
-    /// Shapely's buffers of random polygons (`conformance/fixtures/geometry/shapely-buffer.txt`, written by
-    /// `conformance/oracle/buffer.py`).
+    /// Shapely's buffers of random polygons, with a tatami fill's corners and a contour fill's
+    /// (`conformance/fixtures/geometry/shapely-buffer.txt`, written by `conformance/oracle/buffer.py`).
     const SHAPELY: &str = include_str!("../../../../../conformance/fixtures/geometry/shapely-buffer.txt");
 
     /// Points this close are the same: GEOS computes crossings in extended precision and arcs with the
     /// platform's sine and cosine, which can differ from the engine's in their last bits.
     const CLOSE: f64 = 1e-9;
+
+    /// The fixture's polygons whose buffer is not shapely's: a dumbbell shrunk with mitred corners, where 2
+    /// raw segments lie along each other, about 3e-8 apart, and cross at a tiny angle. Where they cross
+    /// turns on the last bits of their ends, and the engine's point lies 5 µm along the edge from GEOS's.
+    /// The rings lie within 2e-11 of each other, and cover the same area within 2e-11.
+    const ALONG_EACH_OTHER: [usize; 1] = [413];
 
     fn close(p: Point, q: Point) -> bool {
         (p.x() - q.x()).abs() <= CLOSE && (p.y() - q.y()).abs() <= CLOSE
@@ -186,6 +201,7 @@ mod tests {
             let rings = words.polylines();
             let polygon = Polygon { outline: rings[0].clone(), holes: rings[1..].to_vec() };
             let distance = words.number();
+            let corners = Corners { join: words.join(), quadrant_segments: u32::try_from(words.count()).unwrap() };
             let count = words.count();
             let expected: Vec<Polygon> = (0..count)
                 .map(|_| {
@@ -193,12 +209,15 @@ mod tests {
                     Polygon { outline: rings[0].clone(), holes: rings[1..].to_vec() }
                 })
                 .collect();
-            let found = buffer(&polygon, distance, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+            let found = buffer_with(&polygon, distance, corners, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+            if corners == Corners::ROUND {
+                assert_eq!(buffer(&polygon, distance, &mut Budget::DEFAULT.meter()).unwrap().unwrap(), found, "line {number}");
+            }
             let agrees = found.len() == expected.len() && found.iter().zip(&expected).all(|(a, b)| same(a, b));
             differ.extend((!agrees).then_some(number));
         }
-        assert_eq!(seen, 330, "every case of the fixture is read");
-        assert_eq!(differ, Vec::<usize>::new(), "the fixture's polygons whose buffer differs");
+        assert_eq!(seen, 538, "every case of the fixture is read");
+        assert_eq!(differ, ALONG_EACH_OTHER, "the fixture's polygons whose buffer differs");
     }
 
     #[test]

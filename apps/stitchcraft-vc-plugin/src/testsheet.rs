@@ -2,9 +2,9 @@
 //! into the document (`REQ-VC-015`). A machine checkpoint can then start from VectorCraft: the sheet's
 //! objects show their stitches, the exporters write it, and the dialogs show its settings.
 //!
-//! **Which sheets.** Those drawn as designs, TS-02B to TS-09 and the TS-13 sheets, whose elements are
-//! shapes ([`TestSheet::design`]). The others are drawn stitch by stitch, as plans, which no object holds,
-//! and only `stitch testsheet` writes them.
+//! **Which sheets.** Those drawn as designs, TS-02B to TS-09, TS-11B and the TS-13 sheets, whose elements
+//! are shapes ([`TestSheet::design`]). The others are drawn stitch by stitch, as plans, which no object
+//! holds, and only `stitch testsheet` writes them.
 //!
 //! **What it draws.** The sheet's design moved by whole millimetres, so that the middle of its bounds is as
 //! near the middle of the artboard VectorCraft names as that allows: the artboard under the selection, or
