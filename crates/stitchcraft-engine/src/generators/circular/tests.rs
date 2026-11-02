@@ -88,6 +88,15 @@ fn req_fill_cir_001_circles_lie_a_spacing_apart_out_to_2_spacings_past_the_farth
 }
 
 #[test]
+fn req_fill_cir_001_the_spiral_turns_round_its_middle_0_1_css_pixel_from_it() {
+    // A disc 10 mm round, circles 1 mm apart: the spiral turns in to the circle 0.1 CSS pixel round its
+    // middle, 0.026 mm, and back out, so its needle point nearest the middle lies on that circle.
+    let run = sew(&disc((0.0, 0.0), 10.0), &circular(1.0), None).runs.concat();
+    let nearest = run.iter().map(|q| q.distance(Point::ORIGIN)).fold(f64::INFINITY, f64::min);
+    assert!((nearest - 0.1 * MM_PER_SVG_PX).abs() < 1e-9, "{nearest}");
+}
+
+#[test]
 fn req_fill_cir_005_a_part_within_a_row_spacing_of_its_middle_is_sewn_as_one_circle_that_size() {
     // A disc 1 mm round, circles 2 mm apart: one circle 2 mm round its middle, from its right-hand point,
     // and SC-W0318.
@@ -227,6 +236,18 @@ fn req_fill_cir_006_repeats_double_the_stitching_and_bean_stitch_triples_the_spi
     assert_eq!(twice[once.len()..], once.iter().rev().skip(1).copied().collect::<Vec<_>>()[..]);
     let beaned = sew(&part, &Circular { stitching: Stitching { beans: vec![1], ..circular(5.0).stitching }, ..circular(5.0) }, None).runs.concat();
     assert_eq!(beaned.len(), 3 * once.len() - 2);
+}
+
+#[test]
+fn each_span_draws_its_own_random_lengths() {
+    // 2 stretches alike, 30 mm along x and 1 mm apart, at random lengths: each is a span of its own, its
+    // draws keyed by its number, so their needle points fall at other places along them.
+    let random = Circular { stitching: Stitching { jitter: Some(0.5), ..circular(1.0).stitching }, ..circular(1.0) };
+    let line = Spanned::joined(&[vec![p(0.0, 0.0), p(30.0, 0.0)], vec![p(0.0, 1.0), p(30.0, 1.0)]]);
+    let run = Tally::default().stitched(&line, &random, &SplitMix64::new(7), &mut Budget::DEFAULT.meter()).unwrap();
+    let along = |y: f64| run.iter().filter(|q| (q.y() - y).abs() < 1e-9).map(|q| q.x()).collect::<Vec<_>>();
+    assert!(along(0.0).len() > 5, "{run:?}");
+    assert_ne!(along(0.0), along(1.0));
 }
 
 #[test]

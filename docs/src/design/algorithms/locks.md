@@ -124,8 +124,11 @@ and which size parameter applies to which lock are the same. The shapes differ (
   half the first stitch, which then covers it.
 - Ink/Stitch's back-and-forth lock goes two steps out and two back. StitchCraft's goes forth and back over
   one step, twice, like its half stitch.
-- The drawn shapes are StitchCraft's own designs.
-- Ink/Stitch draws custom SVG paths. StitchCraft sews the half stitch with `SC-W0503` until M8.
+- The drawn shapes are StitchCraft's own designs, which lie on the stitching they secure. Ink/Stitch's
+  cross and star are centred on the anchor, and reach 1.1 mm past the end of the stitching at 150 %.
+  TS-04, whose lines end at the sheet's edges, is 1.6 mm wider in Ink/Stitch, and its differential case
+  excuses the size and the overlap.
+- Ink/Stitch draws custom SVG paths. StitchCraft sews the half stitch with `SC-W0503` until M8.13.
 
 Both follow the stitching with custom steps. They differ in 5 places (`DEV-LCK-002`):
 

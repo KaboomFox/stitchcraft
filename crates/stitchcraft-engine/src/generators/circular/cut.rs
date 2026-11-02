@@ -247,6 +247,29 @@ mod tests {
     }
 
     #[test]
+    fn a_line_extended_by_one_point_starts_no_span_there() {
+        // By the point it ends at, a line is extended by nothing. By a point elsewhere, the step to it is the
+        // line's last span, which starts where the line ended: the point itself starts none.
+        let mut a = line(&[(0.0, 0.0), (1.0, 0.0), (2.0, 0.0)]);
+        let before = a.clone();
+        a.extend(&line(&[(2.0, 0.0)]));
+        assert_eq!(a, before);
+        a.extend(&line(&[(3.0, 1.0)]));
+        assert_eq!((a.points.len(), a.starts), (4, vec![2]));
+    }
+
+    #[test]
+    fn a_piece_starts_no_span_at_its_last_point() {
+        // Inside the rectangle, a line whose spans start at (5, 1) and at its last point, (6, 1): a span from
+        // the last point would be that point alone, so its piece starts only the first.
+        let part = rectangle(4.0);
+        let meter = &mut Budget::DEFAULT.meter();
+        let rings = Rings::new(&part, meter).unwrap();
+        let spanned = Spanned { starts: vec![1, 2], ..line(&[(1.0, 1.0), (5.0, 1.0), (6.0, 1.0)]) };
+        assert_eq!(cut(&spanned, &rings, meter).unwrap(), [Spanned { starts: vec![1], ..spanned.clone() }]);
+    }
+
+    #[test]
     fn lines_extend_with_their_spans() {
         let mut a = line(&[(0.0, 0.0), (1.0, 0.0)]);
         a.extend(&Spanned { points: vec![p(1.0, 0.0), p(2.0, 0.0), p(3.0, 0.0)], starts: vec![1] });

@@ -44,6 +44,27 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - `check_params.py` finds what each fill method's own sewing reads, as well as its underlay, and the
     contract lists `skip_last` as read by the circular fill (`read_by`).
   - A circular fill's preview shows its pieces of spiral, and the user's guide has a page for it.
+- M8.2: every test sheet drawn as a design in the Ink/Stitch differential (`REQ-SVG-008`). TS-02B to
+  TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills' sheet, are cases, as TS-11B and the
+  TS-13 sheets are. Sewn by Ink/Stitch at `d59c9ab`, each agrees by every measure or excuses a measure
+  with the ledger entry that says why.
+  - TS-04 excuses the size and the overlap with `DEV-LCK-001`. Its drawn locks are StitchCraft's own
+    shapes, which lie on the line they secure. Ink/Stitch's cross and star reach past the line's end, and
+    the sheet is 1.6 mm wider in Ink/Stitch.
+  - TS-11C excuses the stitches and the overlap with `DEV-FILL-018`. Its tiles are StitchCraft's own, and
+    Ink/Stitch sews each sample with one of its own tiles. Ink/Stitch sews 7,340 stitches to
+    StitchCraft's 5,883, and the footprints overlap by 0.743. The size and threads are the same, and the
+    trims and jumps within 1.
+  - An overlap below the least is reported as `overlap 0.564, below 0.9`. The report gave it as a
+    difference, with a blank for Ink/Stitch. The least is a constant the comparison shares
+    (`LEAST_OVERLAP`).
+- M8.3: the settings of older Ink/Stitch files updated as Ink/Stitch updates them (`REQ-SVG-007`). Now that
+  the SVG reader reads the shapes' settings, the updates that change what they sew apply too. In a file of
+  version 1 or 2, a zigzag stroke's pull compensation is halved for each side into
+  `stroke_pull_compensation_mm`, and a satin column starts and ends where it is drawn. In a file of version
+  1 to 3, a fill with `auto_fill` off is a legacy fill, and `fill_method` `auto_fill` is a tatami fill. A
+  shape gets them over its own settings, version by version, and `SC-I0818` counts the shapes each changed.
+  A differential case for each change sews a file of the older version in both programs.
 - M7.8: meander fill with generated tiles (`REQ-FILL-MEA-001` to `REQ-FILL-MEA-005`). One line wanders
   through the sides of a tiling inside each part, after the tatami fill's underlay, and never passes a
   point twice, as Ink/Stitch's meander fill wanders through its tiles. It starts nearest the needle and ends
@@ -69,6 +90,23 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - Ink/Stitch's compatibility contract lists its meander tiles in the order its settings window does, and
     `check_params.py` compares them with Ink/Stitch's tiles. It finds that the underlay reads
     `row_spacing_mm` and `max_stitch_length_mm` too, where its own are not set (`read_by`).
+- M8.1: the settings of Ink/Stitch files (`REQ-SVG-009`, `REQ-SVG-010`). Each `inkstitch:*` attribute of a shape in an
+  SVG file is a parameter of every element the shape makes, under its own name, so an Ink/Stitch file sews
+  with its stitch types, spacings, underlays, locks and the rest of its settings, where every element
+  sewed at the defaults before. A shape with a fill and a stroke gives both the same settings, as in
+  Ink/Stitch, and `stroke_first` sews its stroke first.
+  - A setting the registry doesn't declare, such as one of a stitch type of M10, is kept, and `SC-W0105`
+    names it when the design is planned. A group's settings don't change what sews, as in Ink/Stitch, and
+    `SC-W0802` names them. A file's `embroider_` attributes, as early versions of Ink/Stitch wrote their
+    settings, are named as unread.
+  - The Ink/Stitch differential sews each test sheet from the SVG file it writes, in both programs, and
+    the file reads back with every element's parameters (`REQ-PRM-003`). A new case,
+    `inkstitch-settings`, sews shapes of each family with settings other than the defaults: 3,558
+    stitches against Ink/Stitch's 3,550, its 5 threads in the same order.
+  - The compatibility contract lists the attributes Ink/Stitch reads or writes by name outside its
+    attribute list, which `check_params.py` now finds: `tartan` (M10), `lettering`, `color_sort_index`
+    and `letter-group` (M14), and `path_type`, `start` and `end`, which its tools write. The legacy names
+    Ink/Stitch reads only to update a file without a version are not planned.
 - The degenerate corpus that the design promised (`stitchcraft_testkit::degenerate`), and
   `tests/degenerate.rs`, which runs it through every fill, stroke and satin method, the fills under both
   fill rules. Its 23 shapes include a point, a line of no length, a ring along one line, a hair-thin
