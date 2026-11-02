@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-9984f53e.js";
+            window.path_to_searchindex_js = "searchindex-3f207eeb.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-cba97263.js"></script>
@@ -12358,7 +12358,8 @@ changes follow playbooks, and every behaviour has a requirement and a test.</p>
 <li>Set up: install Rust (the toolchain in <code>rust-toolchain.toml</code> installs itself), then
 <code>rustup target add wasm32-unknown-unknown</code>. The <code>wasm-goldens</code> gate needs <code>wasm32-wasip1</code> too, and
 <a href="https://wasmtime.dev/">wasmtime</a>, and <code>cargo xtask ci</code> skips it without them.</li>
-<li>Before every push: <code>cargo xtask ci</code>.</li>
+<li>Before every push, the quick checks <code>AGENTS.md</code> names. The pull request’s CI runs every gate
+(<code>cargo xtask ci</code>).</li>
 </ol>
 <h2 id="playbooks"><a class="header" href="#playbooks">Playbooks</a></h2>
 <div class="table-wrapper">
