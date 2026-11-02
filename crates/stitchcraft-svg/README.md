@@ -2,8 +2,7 @@
 
 Layer **L3**. Reads SVG documents into the engine's `Design`: `stitchcraft_svg::read(bytes, budget)`
 returns the design and warnings about what was left out or simplified. Ink/Stitch's other `inkstitch:*`
-settings, its remaining commands and clones follow in M8, and so does writing plans back as SVG for
-inspection.
+settings, its remaining commands, clip paths and clones follow in M8 (M8.1 to M8.10).
 
 **Status:** v1 (M3.3) reads paths and the basic shapes, groups and `<switch>`, transforms, the root's
 size and viewBox (so positions come out in millimetres), fill and stroke colours with `currentColor`, and
