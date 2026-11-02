@@ -23,6 +23,11 @@
 //! of a square say, is a part of the picture and is sewn. A background with settings is sewn as they say,
 //! and so is one whose `auto_ignore_background` is off (`REQ-AUTO-020`).
 //!
+//! What shows of the background inside the picture, once the layers are flattened (`layers`), is sewn: its
+//! parts that come no nearer than [`BACKGROUND_MARGIN`] to the box's sides. A trace that stacks its colours
+//! draws the background whole under the picture, a white disc on a badge included, which a trace whose
+//! colours abut draws as a shape of its own ([`left_out`]).
+//!
 //! The background is found before anything is digitized, with the budget's work to itself. One whose
 //! region its fill can't build within that work, or at all, is sewn, and its fill says why. One whose
 //! outlines and notches need more work than that to compare with the box, or that the region code fails to
@@ -42,11 +47,18 @@ use crate::normalize::region::{Polygon, SAME};
 /// what tracing leaves between the picture's edge and the background's.
 pub(super) const BACKGROUND_MARGIN: f64 = 0.5;
 
+/// Whether the lowest shape is the picture's background.
+pub(in crate::auto) enum Background {
+    /// It is, and is left out but for what shows of it inside the picture ([`left_out`]).
+    Found,
+    /// Finding out needed more work than the budget allows, or the region code failed to join a region (a
+    /// bug), as `SC-W0906` or `SC-E0009` says: it is sewn.
+    Unknown(Diagnostic),
+}
+
 /// The picture's background in `design`, whose lowest shape's settings of the rules are `rules`, none for a
-/// shape with settings: `SC-W0906` with the index of the lowest shape, which is the background and is left
-/// out, or without an index when finding out failed, so that it is sewn; `None` when the lowest shape is not
-/// the background, or sews it.
-pub(in crate::auto) fn background(design: &Design, rules: Option<&AutoParams>, budget: &Budget) -> Option<(Option<usize>, Diagnostic)> {
+/// shape with settings; `None` when the lowest shape is not the background, or sews it.
+pub(in crate::auto) fn background(design: &Design, rules: Option<&AutoParams>, budget: &Budget) -> Option<Background> {
     let [lowest, drawn @ ..] = design.elements() else { return None };
     let Shape::Fill { path, rule } = &lowest.shape else { return None };
     if !rules.is_some_and(|rules| rules.auto_ignore_background) {
@@ -54,17 +66,26 @@ pub(in crate::auto) fn background(design: &Design, rules: Option<&AutoParams>, b
     }
     let bounds = design.bounds()?;
     match covers(path, *rule, drawn, bounds, &mut budget.meter()) {
-        Ok(true) => {
-            let message = "This area covers the whole design under the other shapes, so it is left out as the picture's background.";
-            let fix = Fix::Hint("To sew it, give it settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it.".to_string());
-            Some((Some(0), Diagnostic::new(Code::AutoBackground, message).with_element(lowest.id.clone()).with_fix(fix)))
-        }
+        Ok(true) => Some(Background::Found),
         Ok(false) => None,
         Err(failed) => {
             let finding = "whether this area is the picture's background";
-            Some((None, failed.said(Code::AutoBackground, finding, "it is sewn", budget.max_work, lowest.id.clone())))
+            Some(Background::Unknown(failed.said(Code::AutoBackground, finding, "it is sewn", budget.max_work, lowest.id.clone())))
         }
     }
+}
+
+/// `SC-W0906` for `lowest`, the picture's background, left out but for its `kept` parts that show inside the
+/// picture, which are sewn.
+pub(in crate::auto) fn left_out(lowest: &Element, kept: usize) -> Diagnostic {
+    let left = "This area covers the whole design under the other shapes, so it is left out as the picture's background";
+    let message = match kept {
+        0 => format!("{left}."),
+        1 => format!("{left}, but for the part of it that shows inside the picture, which is sewn."),
+        n => format!("{left}, but for the {n} parts of it that show inside the picture, which are sewn."),
+    };
+    let fix = Fix::Hint("To sew it, give it settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it.".to_string());
+    Diagnostic::new(Code::AutoBackground, message).with_element(lowest.id.clone()).with_fix(fix)
 }
 
 /// Whether the area `path` bounds under `rule`, under the elements `drawn`, is the background of a design
@@ -115,7 +136,7 @@ pub(super) fn others(path: &Path, drawn: &[Element], meter: &mut Meter) -> Resul
 
 /// The box `bounds` less `by` on each side, wound clockwise in y-up axes as a part is; `None` when that
 /// leaves nothing.
-fn inside(bounds: Rect, by: f64) -> Option<Polygon> {
+pub(super) fn inside(bounds: Rect, by: f64) -> Option<Polygon> {
     let (low, high) = (bounds.min(), bounds.max());
     let (x0, y0, x1, y1) = (low.x() + by, low.y() + by, high.x() - by, high.y() - by);
     if x0 >= x1 || y0 >= y1 {

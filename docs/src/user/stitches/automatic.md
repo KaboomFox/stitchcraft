@@ -26,6 +26,9 @@ A shape's width at a place is the diameter of the largest circle that fits insid
 | Wider, up to the widest satin column, 7 mm (`auto_max_satin_width_mm`) | Satin columns between the shape's own edges |
 | Wider | A tatami fill |
 
+A small disc or square, no wider than a satin column, is a dot with no length for a column to run along,
+and sews as a tatami fill too. A rectangle 3 mm wide sews as a satin column once it is 3.5 mm long.
+
 A stroke is a line as wide as it is drawn, and its width chooses its stitches the same way: one as wide
 as a satin column sews as a [satin column drawn as one path](satin-column.md#drawn-as-one-path). The
 pictures are drawn from `docs/fixtures/widths.svg`, a line 0.6 mm wide, a letter C 3 mm wide and a disc
@@ -64,18 +67,25 @@ balloon on a string 0.8 mm wide, each one area.
 
 ## Neighbours
 
-The shapes of a traced picture meet, and sewn as drawn they sew badly there. Digitizing mends that in 3
+The shapes of a traced picture meet, and sewn as drawn they sew badly there. Digitizing mends that in 4
 steps:
 
 1. **The background.** The lowest shape, when it covers the whole picture with the other shapes drawn
    on it, is the background, the fabric's own colour, and is left out (`SC-W0906`, and
-   `auto_ignore_background` to keep it).
-2. **Specks.** A shape or a part of one smaller than 1 mm² would sew a knot. It is merged into the shape
+   `auto_ignore_background` to keep it). What shows of it inside the picture still sews, such as a white
+   disc on a badge whose colours are stacked.
+2. **Layers.** VectorCraft's Image Trace draws a picture's colours abutting, each area with a hole where
+   the next one lies, or stacked, each colour whole under the colours drawn over it. Each shape sews only
+   what shows of it, and a picture sews alike whichever way it was traced. A broad area with details on it,
+   such as dots on a flower's middle, is filled whole. It sews first, and its details sew on top. Outlines
+   and letters, no wider than a satin column (`auto_max_satin_width_mm`), keep their holes, and the shapes
+   inside them sew beside them (`SC-I0908`).
+3. **Specks.** A shape or a part of one smaller than 1 mm² would sew a knot. It is merged into the shape
    it shares the longest edge with (`SC-I0905`, `auto_min_area_mm2`).
-3. **Overlaps.** The thread pulls stitches in from the edges of their shape, so shapes that only meet show
+4. **Overlaps.** The thread pulls stitches in from the edges of their shape, so shapes that only meet show
    fabric between them once sewn. Each area reaches 0.4 mm under the shapes sewn after it that it
-   touches (`SC-I0904`, `auto_overlap_mm`). An area stacked under another is cut away under it, so that
-   each place sews once.
+   touches (`SC-I0904`, `auto_overlap_mm`). An area filled whole under its details is cut away under them,
+   0.4 mm inside their edges, so that each place sews once.
 
 The pictures are drawn from `docs/fixtures/traced-badge.svg`, a badge traced on white: as drawn, the white
 is sewn too.

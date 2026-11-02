@@ -37,7 +37,8 @@ satin columns along its centre line, and a wider line becomes the tatami fill of
 (`auto::area`). Digitizing doesn't add an error of its own. Since M13.2 the automatic areas are then sewn
 as neighbours (`auto::neighbours`). The picture's background is left out and specks merge into the areas
 beside them. Each area reaches 0.4 mm under the shapes sewn after it from where it touches them, or is cut
-away under the areas that cover it. Regions are combined, grown and shrunk with `normalize::region::ops`.
+away under the areas and parts that cover it. Regions are combined, grown and shrunk with
+`normalize::region::ops`.
 Since M13.3 the elements sew in an order of their own (`auto::neighbours::order`), chosen between the
 specks and the overlaps. Shapes that overlap keep their paint order, and a line sews after the fill it
 borders. Each thread then sews as long as it can, the nearest element next. Elements with settings keep
@@ -56,7 +57,12 @@ the same shapes in paint order, are drawn here too (`testsheets::pictures`), so 
 what the machine sews. Since M13.7 the rules' values, 7 mm, 0.5 mm, 0.4 mm and 1 mm² above, and whether
 the background is left out, are each shape's own settings, the defaults when it sets none
 (`auto::AutoParams`, registered last in `registry::PARAMETERS`). Automatic elements read them before they
-sew as any stitch type.
+sew as any stitch type. Since M13.12 a traced picture's layers are flattened before anything is digitized
+(`auto::neighbours::layers`). Each automatic area sews what shows of it, the background only inside the
+picture. An area wider than a satin column somewhere is digitized whole under the areas in its holes, sews
+before them and is cut away under them. TS-13D sews such pictures traced both ways. A part no wider than a
+satin column whose centre lines are each shorter than half its width, a disc or a square, is a dot, which
+stays in the fill (`auto::columns::DOT`).
 Since M6.12 a column drawn as one path can be drawn with its rails and rungs instead, for a host's Stroke
 to Satin tool (`generators::satin::drawn`). They sew as the column does. A design can be moved
 (`Design::moved`), as a host draws a test sheet (`testsheets`, `TestSheet::design`).

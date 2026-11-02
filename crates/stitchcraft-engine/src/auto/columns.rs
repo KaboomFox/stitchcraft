@@ -16,6 +16,12 @@
 //! - **Settings.** Each column's underlay is its width's ([`super::underlay`]). One that ends under another
 //!   is its area's overlap longer at that end, by its push compensation, and so reaches under it, as an area
 //!   reaches under the shapes sewn after it.
+//! - **A dot.** A part whose every line is shorter than half its width there is a dot, which stays in the
+//!   fill, as one with no line does. Such a part has no way to run, as a disc or a square has none, and its
+//!   lines are only what its triangles leave of its middle: corners that lie on one circle tie, and how each
+//!   tie breaks depends on where the part lies and how it is drawn, so that of 2 dots alike one would sew a
+//!   column across and the other a fill. A disc's or a square's lines are 0.4 times as long as it is wide,
+//!   and a rectangle 3 mm wide is a column from 3.5 mm long ([`DOT`]).
 //! - **Drawn.** Each column is drawn with its rails and rungs, and read back as a satin column is read, it
 //!   must give them ([`drawn::from_rails`]). A part whose triangles make no column round each line, or one of
 //!   whose columns can't be drawn so, stays in the area's fill, and `SC-I0902` says so. A rung added to tell
@@ -33,6 +39,11 @@ use crate::generators::mm;
 use crate::generators::satin::drawn;
 use crate::normalize::region::Polygon;
 use crate::normalize::strips::{self, Column, Line};
+
+/// How long, at the least, a part's line is for a column, as a share of the part's width along it: a part
+/// whose every line is shorter is a dot, which stays in the fill. Of a disc or a square, which tie, the lines
+/// are 0.4 times as long as it is wide, and of a rectangle 3 mm wide, half as long from 3.5 mm long.
+pub(super) const DOT: f64 = 0.5;
 
 /// A part sewn as columns, and its columns.
 #[derive(Clone, Debug, PartialEq)]
@@ -79,6 +90,9 @@ pub(super) fn columns(part: &Polygon, narrowest: Mm, rules: &AutoParams, cuts: &
     for column in &found {
         let Some(width) = width(&edges, std::slice::from_ref(&column.line), meter)? else { return Ok(Made::Unmade) };
         widths.push(width);
+    }
+    if found.iter().zip(&widths).all(|(column, width)| column.walked.length() < DOT * width.get()) {
+        return Ok(Made::Dot);
     }
     let mut sewn = Vec::with_capacity(found.len());
     for (index, column) in ordered(&found, meter)? {
