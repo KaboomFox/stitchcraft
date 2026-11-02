@@ -99,7 +99,7 @@ impl Drawing {
     }
 
     /// Start and end positions for the last element drawn so far, as Ink/Stitch's start and end commands
-    /// give them (`REQ-GEN-001`).
+    /// give them (`REQ-GEN-001`); none before the first.
     pub fn positions(&mut self, start: (f64, f64), end: (f64, f64)) -> Result<(), SheetError> {
         if let Some(last) = self.elements.last_mut() {
             last.hints = Hints { start: Some(point(start)?), end: Some(point(end)?), target: None };
@@ -252,6 +252,16 @@ mod tests {
         twice.polyline("a", &[(0.0, 5.0), (10.0, 5.0)], &thread, &[]).unwrap();
         let Err(SheetError::Said(said)) = twice.plan_saying(&[]) else { panic!("drawn with one id twice") };
         assert!(said.contains("Two elements of the design have the id `twice:a`."), "{said}");
+    }
+
+    #[test]
+    fn a_stop_or_positions_or_a_clip_before_any_element_change_nothing() {
+        // Each is for the last element drawn so far, and there is none yet.
+        let mut d = Drawing::new("none");
+        d.stop();
+        assert!(d.positions((0.0, 0.0), (1.0, 1.0)).is_ok());
+        d.clip(vec![polygon(&[(0.0, 0.0), (1.0, 0.0), (1.0, 1.0)]).unwrap()]);
+        assert!(d.elements.is_empty());
     }
 
     #[test]

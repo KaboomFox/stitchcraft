@@ -176,6 +176,12 @@ impl<'a, 'input> Reader<'_, 'a, 'input> {
             let Some(map) = self.transformed(child, id, label, map)? else { continue };
             match (tag, Kind::of(tag)) {
                 ("g" | "a", _) if depth < MAX_HOPS => self.shapes_in(child, (id, label), map, &style, shapes, depth + 1)?,
+                ("g" | "a", _) => {
+                    let message = format!(
+                        "The clip path `{id}` of `{label}` holds groups more than {MAX_HOPS} deep, and what lies deeper adds nothing to the clip."
+                    );
+                    self.note(Some(label), message, None);
+                }
                 (_, Some(Kind::Shape(geometry))) => self.clip_shape(child, geometry, (id, label), map, &style, &declared, shapes)?,
                 ("use", _) => self.used(child, (id, label), map, &style, shapes)?,
                 ("text" | "flowRoot", _) if style.visible => {
