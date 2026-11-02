@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d022bb0a.js";
+            window.path_to_searchindex_js = "../searchindex-9984f53e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-cba97263.js"></script>
@@ -339,8 +339,8 @@ M13.7, whose Auto effect uses them.</p>
 </div>
 <h2 id="m7--more-stitch-types-i"><a class="header" href="#m7--more-stitch-types-i">M7 — More stitch types I</a></h2>
 <p>One step for each stitch type, with its requirements, cases and docs
-(<a href="../contributing/playbook-new-stitch-type.html">playbook</a>). M7.6 was done while M13 waited for MC-8’s
-sew-out, and M7.7 to M7.9 come after M13.</p>
+(<a href="../contributing/playbook-new-stitch-type.html">playbook</a>). M7.6 to M7.9 go ahead while M13 waits for
+MC-8’s sew-out (decided on 2026-11-01).</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -365,9 +365,9 @@ sew-out, and M7.7 to M7.9 come after M13.</p>
 <h2 id="m13--image-to-embroidery"><a class="header" href="#m13--image-to-embroidery">M13 — Image to embroidery</a></h2>
 <!-- vale ai-tells.EmDashUsage = YES -->
 <p>Goal: a picture traced in VectorCraft sews well from one command, with no settings on its shapes
-(<a href="../design/image-to-embroidery.html">design</a>). M13 comes after M7.5 and before M7.7 (decided on
-2026-10-19). M7.6, the offsetter’s speed for contour fill, was done while MC-8’s sew-out was awaited. The steps that make every traced shape sew better with the generators StitchCraft has come
-first, and the steps that make new kinds of shape into stitches follow.</p>
+(<a href="../design/image-to-embroidery.html">design</a>). M13 comes after M7.5 (decided on 2026-10-19), and M7.6 to
+M7.9 go ahead while MC-8’s sew-out is awaited. The steps that make every traced shape sew better with the
+generators StitchCraft has come first, and the steps that make new kinds of shape into stitches follow.</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -417,13 +417,21 @@ reader sews in full; each setting the adapter learns to read brings its designs 
 library is part of that corpus: hundreds of real Ink/Stitch files, mostly satin, downloaded at a pinned
 commit by <code>cargo xtask corpus</code> and never committed, using only fonts whose licence allows it (OFL, CC0,
 CC-BY, CC-BY-SA; 132 of the 142 fonts on 2026-10-08).</p>
+<!-- vale ai-tells.EmDashUsage = NO -->
+<h2 id="m10--more-stitch-types-ii"><a class="header" href="#m10--more-stitch-types-ii">M10 — More stitch types II</a></h2>
+<!-- vale ai-tells.EmDashUsage = YES -->
+<p>Guided fill, linear gradient fill, ripple stitch, tartan fill, cross stitch; auto-run and auto-satin
+routing tools; per-layer ordering (underlay now, top later). VectorCraft’s tools filter, with Convert Line to
+Satin, is M6.12. M10 comes before M14, since lettering’s fonts use its stitch types (decided on 2026-11-01).</p>
 <!-- The milestones' headings all name them this way. -->
 <!-- vale ai-tells.EmDashUsage = NO -->
 <h2 id="m14--lettering"><a class="header" href="#m14--lettering">M14 — Lettering</a></h2>
 <!-- vale ai-tells.EmDashUsage = YES -->
 <p>Goal: names, monograms and words sewn in embroidery fonts, set as Ink/Stitch’s lettering sets them
 (<a href="inkstitch-usage.html">review</a>). M14 comes after M8, whose SVG adapter reads the files that Ink/Stitch’s
-fonts are made of. Fonts come from a repository of their own, as VectorCraft’s do. They are StitchCraft’s
+fonts are made of, and after M10. Of the 142 fonts in Ink/Stitch’s library, 107 use only stitch types
+StitchCraft sews. The other 35 need cross stitch (25 fonts), tartan fill (4), ripple stitch (3), guided fill
+(1) or meander fill (1), counted on 2026-11-01, and 2 ask for M10’s auto-satin. Fonts come from a repository of their own, as VectorCraft’s do. They are StitchCraft’s
 own fonts, Ink/Stitch’s fonts whose licence allows it (OFL, CC0, CC-BY, CC-BY-SA, each with its licence
 file and an <code>ASSETS.md</code> row, never NC, GPL or unclear terms), and the fonts a user has installed for
 Ink/Stitch, read in their own format.</p>
@@ -443,10 +451,6 @@ Ink/Stitch, read in their own format.</p>
 </tbody>
 </table>
 </div>
-<h2 id="m10--more-stitch-types-ii"><a class="header" href="#m10--more-stitch-types-ii">M10 — More stitch types II</a></h2>
-<p>Guided fill, linear gradient fill, ripple stitch, tartan fill, cross stitch; auto-run and auto-satin
-routing tools; per-layer ordering (underlay now, top later). VectorCraft’s tools filter, with Convert Line to
-Satin, is M6.12.</p>
 <h2 id="m11--formats-ii"><a class="header" href="#m11--formats-ii">M11 — Formats II</a></h2>
 <p>EXP, JEF, VP3, XXX, U01 writers and readers with goldens and oracle checks; thread catalogues
 (Madeira, Isacord, Robison-Anton, …) with sourced tables; PES v6 thread lists if not done in M1.</p>
