@@ -128,14 +128,10 @@ pub(in crate::auto) fn flattened<'d>(design: &'d Design, rules: &[Option<AutoPar
     let holes: Vec<Result<Vec<Hole>, Failed>> = (0..layers.len()).map(|index| details(&layers, &boxes, index, &mut budget.meter())).collect();
     for ((index, layer), holes) in layers.iter_mut().enumerate().zip(holes) {
         let Some(layer) = layer.as_mut().filter(|layer| !layer.unfound) else { continue };
-        match holes {
-            Ok(holes) => layer.closed = holes,
-            Err(failed) => {
-                said.extend(
-                    id(elements, index).map(|id| failed.said(Code::AutoLayers, "the holes of this area", "it keeps them", budget.max_work, id)),
-                );
-            }
-        }
+        layer.closed = holes.unwrap_or_else(|failed| {
+            said.extend(id(elements, index).map(|id| failed.said(Code::AutoLayers, "the holes of this area", "it keeps them", budget.max_work, id)));
+            Vec::new()
+        });
     }
     // The elements that sew, in paint order: an area covered whole sews nothing, and so does the background
     // when nothing of it shows inside the picture.
@@ -164,18 +160,19 @@ pub(in crate::auto) fn flattened<'d>(design: &'d Design, rules: &[Option<AutoPar
             continue;
         };
         let given = given(layer, &mut budget.meter());
-        // An area whose holes are closed is digitized whole under its details, drawn whole or not.
+        // An area whose holes are closed is digitized whole under its details, drawn whole or not; one that
+        // can't be given what it sews is sewn as it is drawn.
         whole += usize::from(given.is_ok() && !layer.closed.is_empty());
+        let given = given.unwrap_or_else(|failed| {
+            said.push(failed.said(Code::AutoLayers, "what this area sews", "it is sewn as it is drawn", budget.max_work, element.id.clone()));
+            Given::Drawn
+        });
         match given {
-            Ok(Given::Drawn) => sewing.push((index, Cow::Borrowed(element))),
-            Ok(Given::Region { parts, hidden }) => {
+            Given::Drawn => sewing.push((index, Cow::Borrowed(element))),
+            Given::Region { parts, hidden } => {
                 flattened += usize::from(hidden && !(background && index == 0));
                 let shape = Shape::Fill { path: outline(&parts), rule: FillRule::NonZero };
                 sewing.push((index, Cow::Owned(Element { shape, ..element.clone() })));
-            }
-            Err(failed) => {
-                said.push(failed.said(Code::AutoLayers, "what this area sews", "it is sewn as it is drawn", budget.max_work, element.id.clone()));
-                sewing.push((index, Cow::Borrowed(element)));
             }
         }
     }
