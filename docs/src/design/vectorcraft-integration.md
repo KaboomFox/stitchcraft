@@ -318,9 +318,10 @@ and not in the preview.
 
 The contract test `req_vc_013_the_settings_filter_keeps_the_machine_each_exporter_plans_for` has
 VectorCraft's host run the filter as `plugin.run` runs it, then exports the document with what it kept. Level B's `settings`
-scenario does the same with VectorCraft's command line: a shortest stitch of 1.5 mm changes the PES file,
-the exports are `stitch export`'s, and with the small hoop kept the export of a 1 in square fails with
-`SC-E0701`.
+scenario does the same with VectorCraft's command line: a shortest stitch of 1.5 mm and a quarter turn
+right change the PES file, the exports are `stitch export`'s, and with the small hoop kept the export of a
+1 in square fails with `SC-E0701`. The filter keeps the turn as its number of degrees, where its dialog
+offers it as a choice.
 
 ### Tools: VectorCraft's own commands
 
