@@ -88,6 +88,16 @@ fn req_fill_cir_001_circles_lie_a_spacing_apart_out_to_2_spacings_past_the_farth
 }
 
 #[test]
+fn req_fill_cir_001_a_circle_on_the_farthest_point_is_followed_by_one_the_end_spacing_past_it() {
+    // A piece exactly a row spacing round, 0.3 mm, its circles fading to 0.9 mm: its first circle lies on its
+    // farthest point, so the step from there is the end spacing itself. The row spacing plus all of the way
+    // to the end spacing is the same step, but 0.3 + (0.9 - 0.3) rounds to 0.9000000000000001.
+    let rings = circles(Point::ORIGIN, 0.3, 0.3, Some(0.9), &mut Budget::DEFAULT.meter()).unwrap();
+    let radii: Vec<f64> = rings.iter().map(|ring| ring[0].x()).collect();
+    assert_eq!(radii[..2], [0.3 + 0.9, 0.3]);
+}
+
+#[test]
 fn req_fill_cir_001_the_spiral_turns_round_its_middle_0_1_css_pixel_from_it() {
     // A disc 10 mm round, circles 1 mm apart: the spiral turns in to the circle 0.1 CSS pixel round its
     // middle, 0.026 mm, and back out, so its needle point nearest the middle lies on that circle.
@@ -261,4 +271,17 @@ fn the_spiral_is_charged_to_the_budget() {
         let meter = &mut Budget { max_stitches: u32::MAX, max_work: short }.meter();
         assert!(circular_fill(&region, &circular(0.5), None, None, &mut SplitMix64::new(7), meter).is_err());
     }
+}
+
+#[test]
+fn each_circle_costs_a_unit_for_each_of_its_points() {
+    // The farthest point 2 mm away, circles 0.5 mm apart: 2 circles more than with it 1 mm away, 2 mm and
+    // 2.5 mm round, and 2 × 65 units more, one for each point of each, its first again after its 64 sides.
+    let made = |farthest: f64| {
+        let mut meter = Budget::DEFAULT.meter();
+        let rings = circles(Point::ORIGIN, farthest, 0.5, None, &mut meter).unwrap();
+        (rings.len(), Budget::DEFAULT.max_work - meter.work_left())
+    };
+    let ((wide, more), (narrow, less)) = (made(2.0), made(1.0));
+    assert_eq!((wide - narrow, more - less), (2, 2 * 65));
 }
