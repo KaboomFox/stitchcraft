@@ -266,6 +266,7 @@ mod tests {
 
     use super::*;
     use crate::generators::tatami::fixture::{frame, p};
+    use crate::generators::tatami::route::Rows;
 
     /// The ends of 2 rows across the frame at y = 1.5, one on each side of the hole, as nodes where they
     /// lie on `rings`: (0, 1.5) and (10, 1.5) on the outline, 1.5 and 16.5 along it, and (4, 1.5) and
@@ -340,6 +341,38 @@ mod tests {
         assert_eq!(between(&nodes, &rings, &network, 0, 1, meter).unwrap(), Some(bent.clone()));
         assert_eq!(between(&nodes, &rings, &network, 1, 0, meter).unwrap(), Some(bent.iter().rev().copied().collect()));
         assert_eq!(between(&nodes, &rings, &network, 2, 3, meter).unwrap(), Some(vec![p(6.0, 1.5), p(10.0, 1.5)]));
+    }
+
+    #[test]
+    fn a_row_s_line_runs_from_the_first_node_the_row_joins() {
+        // The bent left row, joined from its end on the outline and from its end on the hole: either way, the
+        // way from the first node to the second follows the line from that node.
+        let part = frame();
+        let meter = &mut Budget::DEFAULT.meter();
+        let rings = Rings::new(&part, meter).unwrap();
+        let nodes = nodes(&rings)[..2].to_vec();
+        let bent = vec![p(0.0, 1.5), p(2.0, 1.5), p(2.0, 3.5), p(4.0, 3.5), p(4.0, 1.5)];
+        let lines = [bent.clone()];
+        let back: Vec<Point> = bent.iter().rev().copied().collect();
+        for ([a, b], way) in [([0, 1], &bent), ([1, 0], &back)] {
+            let network = Rows::Lines(&lines).network(&nodes, &rings, &[(0, [a, b])], meter).unwrap();
+            assert_eq!(between(&nodes, &rings, &network, a, b, meter).unwrap().as_ref(), Some(way), "from node {a}");
+        }
+    }
+
+    #[test]
+    fn a_network_along_lines_costs_a_unit_for_each_row_and_each_point_of_its_line() {
+        // The bent left row, 5 points, and the right row, 2: 9 units more than the rings alone, one for each
+        // row and one for each point of its line.
+        let part = frame();
+        let meter = &mut Budget::DEFAULT.meter();
+        let rings = Rings::new(&part, meter).unwrap();
+        let nodes = nodes(&rings);
+        let bent = vec![p(0.0, 1.5), p(2.0, 1.5), p(2.0, 3.5), p(4.0, 3.5), p(4.0, 1.5)];
+        let (mut alone, mut along) = (Budget::DEFAULT.meter(), Budget::DEFAULT.meter());
+        Network::new(&nodes, &rings, &[], &mut alone).unwrap();
+        Network::along(&nodes, &rings, vec![([0, 1], bent), ([2, 3], vec![p(6.0, 1.5), p(10.0, 1.5)])], &mut along).unwrap();
+        assert_eq!(alone.work_left() - along.work_left(), 9);
     }
 
     #[test]
