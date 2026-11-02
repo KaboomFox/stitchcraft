@@ -203,7 +203,8 @@ Property tests per generator ([algorithms](algorithms/)), run over:
   and fresh seeds nightly (with failing seeds saved as new cases).
 
 Every stitch type sews the degenerate corpus, and random paths whose points lie on a coarse grid so that
-they coincide, lie in line and cross often (`tests/degenerate.rs`). Each shape is a fill by each fill
+they coincide, lie in line and cross often (`tests/degenerate.rs`): 64 on every PR, and 2,000 with a fresh
+seed every night. Each shape is a fill by each fill
 method under each fill rule, a stroke by each stroke method 0.5 and 3 mm wide, and a satin column by each
 satin method. None may report a bug (`SC-E0009`), or give no plan without an error that says why. Each
 sews the same planned again, and its plan keeps the machine's invariants. A method not built yet says so
