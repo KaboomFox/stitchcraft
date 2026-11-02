@@ -277,6 +277,15 @@ status = "active"
 
 # ── SVG adapter ────────────────────────────────────────────────────────────────────────────────────
 
+
+[[req]]
+id = "REQ-PRM-006"
+area = "params"
+level = "L2"
+statement = "A value that an element's own declaration of a key cannot read, but another family's declaration of the key can, is that family's: an SVG node's fill and its stroke read the same settings. The element sews with its own default, and SC-I0106 says which value it left to the other declaration. A meander fill on a node whose zigzag stroke has 2 spacings sews without a zigzag."
+rationale = "Ink/Stitch sews such a fill with its default (DEV-PRM-001's rule refuses a value nothing can read). A value written for the node's stroke is the stroke's, and refusing the fill for it would leave out a part of the design that has nothing wrong."
+milestone = "M7"
+status = "active"
 [[req]]
 id = "REQ-SVG-001"
 area = "svg"
@@ -1097,6 +1106,114 @@ rationale = "The contour fill is built from Ink/Stitch's behaviour, and the diff
 milestone = "M7"
 status = "active"
 
+[[req]]
+id = "REQ-FILL-MEA-001"
+area = "fill/meander"
+level = "L2"
+statement = "Each of StitchCraft's 7 meander tiles is a network that repeats: the sides of a regular or semiregular tiling of the plane, none with dodecagons, 2 mm long at meander_scale_percent 100, each point meeting as many lines as the tiling has polygons round it. The tile is scaled by meander_scale_percent, one percentage or 2 for across and down, each at least 1, turned by meander_angle clockwise as drawn, and repeated so that a point of it lies at the middle of the part's bounds."
+rationale = "StitchCraft's tiles are its own, made in code, where Ink/Stitch's are pictures it ships (DEV-FILL-018): a tiling's sides make a network with no free end, which a meander can wander through."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-MEA-002"
+area = "fill/meander"
+level = "L2"
+statement = "A part's network keeps each line of the tile that lies wholly inside the part, touching its outline at most, and then takes away a line with a free end until none is left. Pieces of what is left are joined by the shortest straight lines between their points that join them all, as few as join them. A part with no network is sewn as a running stitch round its outline, and SC-W0317 says so (DEV-FILL-019)."
+rationale = "Ink/Stitch's meander fill, read at d59c9ab (lib/tiles.py: to_graph, _remove_dead_ends; lib/stitches/meander_fill.py: ensure_connected), but where it stops with an error on a part too small for its tile."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-MEA-003"
+area = "fill/meander"
+level = "L2"
+statement = "The path runs through the network from its point nearest the needle, or else the outline's first point, to its point nearest the end: the part's point nearest the next part, the next element's offer for the last part, or else the outline's point half way round from the start, the next nearest where that is the start. It begins as a path of fewest lines and is lengthened by detours through points it has not passed, a line at a time (2 to 7 lines) and then 2 lines at a time (3 to 10 lines), the lines and pairs drawn at random, each detour the first a depth-first search finds trying the points farthest from its end first, until no line or pair can be replaced. It passes no point twice. The same element and seed give the same path on every platform, and another seed another path."
+rationale = "Ink/Stitch's meander path, read at d59c9ab (lib/stitches/meander_fill.py: find_starting_and_ending_nodes, generate_meander_path, replace_edge, replace_edge_pair). Its random numbers and its search's order are its own, so its path differs for one seed (DEV-FILL-020)."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-MEA-004"
+area = "fill/meander"
+level = "L2"
+statement = "The path is smoothed by smoothness_mm as a contour fill's is (REQ-FILL-CON-003). With zigzag_spacing_mm above 0, it is cut into points half the spacing apart, and each but the last is moved half zigzag_width_mm to the right of the way to the next point as drawn, and the next to the left, in turn. With clip on, it is kept inside the part as drawn, before expand_mm. Unless it zigzags without clip, it is sewn as a running stitch of running_stitch_length_mm within running_stitch_tolerance_mm. Bean stitch comes next, then repeats, each of which sews everything so far again the other way round (REQ-FILL-CON-006)."
+rationale = "Ink/Stitch sews a meander path so, read at d59c9ab (lib/stitches/meander_fill.py: post_process, zigzag_stitch)."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-MEA-005"
+area = "fill/meander"
+level = "L2"
+statement = "Each part of a meander fill sews the tatami fill's underlay first (REQ-FILL-TAT-011), and then its path over the part grown by expand_mm, nearest the needle first, each part ending nearest the next and the last nearest the next element. A meander_pattern that names one of Ink/Stitch's tiles sews StitchCraft's default tile, and SC-W0316 names it (DEV-FILL-018)."
+rationale = "Ink/Stitch's meander fill takes the tatami fill's underlay, start and end, read at d59c9ab (lib/elements/fill_stitch.py: to_stitch_groups, do_meander_fill)."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CIR-001"
+area = "fill/circular"
+level = "L2"
+statement = "A circular fill lays circles round the middle of each part grown by expand_mm, its centroid: one of 0.1 CSS pixel radius, then from row_spacing_mm out, each a row spacing past the last, until one lies 2 spacings past the part's farthest point, end_row_spacing_mm's where it is set. With end_row_spacing_mm, the step from a circle to the next is the row spacing plus the share of the way to the end spacing that the circle's radius is of the farthest point's distance, and the end spacing past the farthest point (DEV-FILL-021). Each circle has 64 sides, from its right-hand point, turning up as drawn first."
+rationale = "Ink/Stitch's circular fill, read at d59c9ab (lib/stitches/circular_fill.py: circular_fill; lib/elements/fill_stitch.py: do_circular_fill), and GEOS's buffer of a point, which it draws its circles with: checked with shapely 2.2 on GEOS 3.14."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CIR-002"
+area = "fill/circular"
+level = "L2"
+statement = "The spiral is the contour fill's double spiral through the circles (REQ-FILL-CON-004), from the outermost circle's first point, its turns cut into points by the running stitch's first length. The part cuts it where it meets the part's rings, and its pieces are the stretches inside the part, a stretch along a ring among them, in order along the spiral and running its way. 2 stretches that meet where the spiral touches a ring from inside are 2 pieces, and a point where it touches the part from outside is none."
+rationale = "Ink/Stitch's circular fill joins its circles with its contour fill's double spiral and cuts it with the shape, which GEOS does so, read at d59c9ab (lib/stitches/circular_fill.py: circular_fill; lib/stitches/contour_fill.py: _make_fermat_spiral) and checked with shapely 2.2 on GEOS 3.14."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CIR-003"
+area = "fill/circular"
+level = "L2"
+statement = "A spiral of one piece is sewn as a running stitch of running_stitch_length_mm, within running_stitch_tolerance_mm and at random lengths when they are on: from the needle along the outline to where the piece starts, along the piece, and from where it ends along the outline to the end, the next part's nearest point or the next element's offer, each way along the outline the shorter way round (DEV-FILL-022). Without a needle or an end, that way is left out. Each turn of the spiral, and each step between turns, is a span of the running stitch."
+rationale = "Ink/Stitch sews a circular fill whose spiral the shape cuts once so, read at d59c9ab (lib/stitches/circular_fill.py: circular_fill, _apply_start_end_commands)."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CIR-004"
+area = "fill/circular"
+level = "L2"
+statement = "A spiral of several pieces is sewn as a tatami fill routes its rows (REQ-FILL-TAT-001), each piece a row between its ends: each sewn once, every needle point a running stitch along it puts, from the end the route enters it by, and without its last needle point with skip_last. Between pieces the needle travels as a tatami fill's does (REQ-FILL-TAT-005): under the pieces not sewn yet, along lines at 45° and square to the fill's angle, or with underpath off along the rings and along the pieces themselves."
+rationale = "Ink/Stitch routes and sews a circular fill's pieces with its tatami fill's graph and travel, read at d59c9ab (lib/stitches/circular_fill.py: circular_fill, path_to_stitches; lib/stitches/tatami_fill.py)."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CIR-005"
+area = "fill/circular"
+level = "L2"
+statement = "A part that lies within its row spacing of its middle is sewn as one circle with a radius of the row spacing round its middle, a running stitch of even lengths from its right-hand point, and SC-W0318 says so. A part the spiral misses, which lies between 2 of its turns, is sewn as a running stitch round its outline from the outline's start, with no bean stitch or repeats, and SC-W0305 says so."
+rationale = "Ink/Stitch sews such parts so, read at d59c9ab (lib/stitches/circular_fill.py: circular_fill; lib/stitches/tatami_fill.py: fallback). The circle can reach past a part so small, and is worth a warning."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CIR-006"
+area = "fill/circular"
+level = "L2"
+statement = "Each part of a circular fill sews the tatami fill's underlay first (REQ-FILL-TAT-011), then its spiral over the part grown by expand_mm, nearest the needle first, each part ending nearest the next and the last nearest the next element. Bean stitch sews each stitch 2b + 1 times, b taken in turn from bean_stitch_repeats, but each stitch the needle travels between pieces once, which still takes its turn in the list. k repeats then sew 2^(k − 1) passes, each the other way from the one before (REQ-FILL-CON-006)."
+rationale = "Ink/Stitch's circular fill takes the tatami fill's underlay, start and end, and leaves its travel out of bean stitch, read at d59c9ab (lib/elements/fill_stitch.py: to_stitch_groups; lib/stitches/circular_fill.py: _apply_bean_stitch_and_repeats; lib/stitches/running_stitch.py: bean_stitch)."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CIR-007"
+area = "fill/circular"
+level = "L3"
+statement = "The circular fills StitchCraft sews TS-11B with, round a hole, on a star and fading, written as an SVG file with their Ink/Stitch parameters, sew in the Ink/Stitch that conformance/inkstitch/pin.toml names, run as a black box, as StitchCraft sews the sheet, by the measures of REQ-SVG-008 and within their tolerances. A measure that a case excuses with an entry of the deviations ledger may differ."
+rationale = "The circular fill is built from Ink/Stitch's behaviour, and the differential is how a file is shown to sew the same in both."
+milestone = "M7"
+status = "active"
+
 # ── VectorCraft ────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -1228,7 +1345,7 @@ status = "active"
 id = "REQ-VC-015"
 area = "vectorcraft"
 level = "L2"
-statement = "From VectorCraft 0.16, StitchCraft's Test Sheet filter draws one of `stitch testsheet`'s sheets drawn as designs, TS-02B to TS-09, TS-11B and the TS-13 sheets, into the document, moved by whole millimetres so that its middle is nearest the middle of the artboard. Each element is an object with its path, its thread as the paint its family sews with, and its settings as the record of its family's StitchCraft effect, each the value its dialog row takes. The document sews as the sheet's design sews, moved as the filter moved it, and exports within an export's budget. The objects selected stay as they are. A VectorCraft before 0.16 doesn't tell the filter that it keeps the effect records a filter gives, and there the filter declines with SC-E0813. Where parts of the sheet would lie more than 10 m from the document's origin, farther than StitchCraft stitches, it declines with SC-E0817. The sheets drawn stitch by stitch, TS-01, TS-02 and TS-10A to TS-10C, are not designs, and only `stitch testsheet` writes them. The TS-13 sheets' shapes digitized automatically have the Auto effect's record (REQ-VC-016)."
+statement = "From VectorCraft 0.16, StitchCraft's Test Sheet filter draws one of `stitch testsheet`'s sheets drawn as designs, TS-02B to TS-09, TS-11B and the TS-13 sheets, into the document, moved by whole millimetres so that its middle is nearest the middle of the artboard. Each element is an object with its path, its thread as the paint its family sews with, and its settings as the record of its family's StitchCraft effect, each the value its dialog row takes. The document sews as the sheet's design sews, moved as the filter moved it, and exports within an export's budget. The objects selected stay as they are. A VectorCraft before 0.16 doesn't tell the filter that it keeps the effect records a filter gives, and there the filter declines with SC-E0813. Where parts of the sheet would lie more than 10 m from the document's origin, farther than StitchCraft stitches, it declines with SC-E0817. The sheets drawn stitch by stitch, TS-01, TS-02 and TS-10A to TS-10C, are not designs, and only `stitch testsheet` writes them. Nor does it draw TS-11C, whose meander fills wander as their elements' ids draw: a document's objects have ids of their own, and would wander other ways. The TS-13 sheets' shapes digitized automatically have the Auto effect's record (REQ-VC-016)."
 rationale = "A machine checkpoint can then start from VectorCraft: the sheet's objects show their stitches, the exporters write it, and the dialogs show its settings. The sheets are the same designs the command line plans, so a sew-out from either answers the same questions."
 milestone = "M6"
 status = "active"

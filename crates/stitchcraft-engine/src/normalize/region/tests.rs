@@ -444,3 +444,24 @@ fn req_fill_001_shapes_sharing_a_curved_edge_fill_both() {
         }
     }
 }
+
+#[test]
+fn req_fill_cir_001_a_part_s_centroid_is_the_middle_of_its_area_whichever_way_its_rings_run() {
+    // A 10 × 4 rectangle has its middle at (5, 2). A 2 × 2 hole from (6, 1) takes 4 of its 40 square
+    // millimetres from round (7, 2): (40 × 5 − 4 × 7) / 36 across, and still 2 down.
+    let rectangle = vec![p(0.0, 0.0), p(0.0, 4.0), p(10.0, 4.0), p(10.0, 0.0), p(0.0, 0.0)];
+    let hole = vec![p(6.0, 1.0), p(8.0, 1.0), p(8.0, 3.0), p(6.0, 3.0), p(6.0, 1.0)];
+    let meter = &mut Budget::DEFAULT.meter();
+    let near = |a: Point, b: Point| a.distance(b) < 1e-12;
+    let plain = Polygon { outline: rectangle.clone(), holes: Vec::new() };
+    assert!(near(plain.centroid(meter).unwrap(), p(5.0, 2.0)));
+    let reversed = |ring: &[Point]| ring.iter().rev().copied().collect::<Vec<_>>();
+    for (outline, hole) in [(rectangle.clone(), hole.clone()), (reversed(&rectangle), reversed(&hole))] {
+        let part = Polygon { outline, holes: vec![hole] };
+        assert!(near(part.centroid(meter).unwrap(), p(172.0 / 36.0, 2.0)), "{:?}", part.centroid(meter));
+    }
+    // No area: the outline's first point.
+    let flat = Polygon { outline: vec![p(1.0, 1.0), p(3.0, 1.0), p(1.0, 1.0)], holes: Vec::new() };
+    assert_eq!(flat.centroid(meter).unwrap(), p(1.0, 1.0));
+    assert!(plain.centroid(&mut Budget { max_stitches: 1, max_work: 4 }.meter()).is_err());
+}

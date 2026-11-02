@@ -330,6 +330,44 @@ requirements = ["REQ-FILL-CON-003"]
 params = ["smoothness_mm"]
 
 [[deviation]]
+id = "DEV-FILL-018"
+area = "fill/meander"
+summary = "StitchCraft's meander tiles are its own, made in code: 7 of the regular and semiregular tilings of the plane, honeycomb by default. Ink/Stitch's tiles are pictures it ships, and a meander_pattern that names one of them, such as N3-11a, sews StitchCraft's default tile, which SC-W0316 says. A meander fill that sets no pattern sews the honeycomb, where Ink/Stitch sews its N3-11a."
+reason = "Ink/Stitch's tiles are drawings in its repository (tiles/, at d59c9ab), which StitchCraft does not copy (ADR-0001). A tiling's sides make a network with no free end, which a meander can wander through, and a honeycomb's points meet 3 lines, as N3-11a's do."
+requirements = ["REQ-FILL-MEA-001", "REQ-FILL-MEA-005"]
+
+[[deviation]]
+id = "DEV-FILL-019"
+area = "fill/meander"
+summary = "A part of a meander fill too small for any line of its tile, or whose lines all have free ends, is sewn as a running stitch round its outline, and SC-W0317 says so. Ink/Stitch stops the whole fill with an error there, and sews nothing of it."
+reason = "A part too small for the tile is still part of the shape, and a tatami fill sews a part too thin for its rows round its outline too (SC-W0305). Ink/Stitch's meander fill was read at d59c9ab (lib/stitches/meander_fill.py: meander_fill, which calls fill.fatal when the graph is empty)."
+requirements = ["REQ-FILL-MEA-002"]
+params = ["meander_scale_percent"]
+
+[[deviation]]
+id = "DEV-FILL-020"
+area = "fill/meander"
+summary = "A meander's path draws its lines and pairs from StitchCraft's generator (SplitMix64, seeded from random_seed, or from the element's id when it has none), and its search for a detour tries the points farthest from the detour's end first, so the path differs from Ink/Stitch's for the same seed. The network's points lie where the tile puts them, where Ink/Stitch rounds each to a whole CSS pixel."
+reason = "Ink/Stitch draws from a generator keyed by its seed and the part's place (lib/stitches/meander_fill.py and lib/utils/prng.py at d59c9ab), and searches in the order its graph library stores the points, which follows how the tile's lines were added. StitchCraft's generator is its own, for every platform alike (docs/src/design/determinism.md), and trying the farthest points first takes each detour the long way round, which keeps the path from hemming itself in (docs/src/design/algorithms/fills.md, Meander fill)."
+requirements = ["REQ-FILL-MEA-003"]
+params = ["random_seed"]
+
+[[deviation]]
+id = "DEV-FILL-021"
+area = "fill/circular"
+summary = "With end_row_spacing_mm, a circular fill's circles past the part's farthest point lie the end spacing apart. Ink/Stitch's step goes on changing with the radius past it, and where the end spacing is under half the row spacing, over a part a few row spacings across, its steps shrink towards 0 before the circles reach their last radius, and it adds circles without end."
+reason = "Every fill's circles end, as its rows do (DEV-FILL-003). The circles past the farthest point lie outside the part, and only the spiral's outermost turns, which the part mostly cuts away, differ. Ink/Stitch's step formula was read at d59c9ab (lib/stitches/circular_fill.py: circular_fill), and worked through for a part whose farthest point is 1.5 row spacings out, fading to a tenth of the spacing: its circles crowd towards 1.67 row spacings, short of the 1.7 they stop at."
+requirements = ["REQ-FILL-CIR-001"]
+params = ["end_row_spacing_mm"]
+
+[[deviation]]
+id = "DEV-FILL-022"
+area = "fill/circular"
+summary = "A circular fill whose spiral the part cuts into one piece joins it to the needle, and to the end, along the outline the shorter way round. Ink/Stitch's way runs along the outline from where it starts, without passing its start, which is the longer way round when the outline's start lies between."
+reason = "Where an outline starts depends on how it was drawn, and the shorter way puts less of a line on the fill's edge. Travel along a ring takes the shorter way too (DEV-FILL-011). Ink/Stitch's join was read at d59c9ab (lib/stitches/circular_fill.py: _apply_start_end_commands, _get_start_end_sequence, which takes shapely's substring of the outline)."
+requirements = ["REQ-FILL-CIR-003"]
+
+[[deviation]]
 id = "DEV-SVG-001"
 area = "svg"
 summary = "A stroke-width in percent, em or ex is read as a viewer reads it: a percentage of the viewport's diagonal over √2, an em as 16 user units and an ex as 8. A stroke-linejoin keyword is read in any case. Ink/Stitch reads such a width as 0, which sews a satin column drawn as one path as a stroke, and reads a join that is not written in lower case as unset."

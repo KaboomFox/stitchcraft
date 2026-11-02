@@ -4,7 +4,9 @@
 //!
 //! **Which sheets.** Those drawn as designs, TS-02B to TS-09, TS-11B and the TS-13 sheets, whose elements
 //! are shapes ([`TestSheet::design`]). The others are drawn stitch by stitch, as plans, which no object
-//! holds, and only `stitch testsheet` writes them.
+//! holds, and only `stitch testsheet` writes them. So does TS-11C, a design whose meander fills wander as
+//! their elements' ids draw: the objects drawn have ids of their own, and would wander other ways
+//! ([`TestSheet::drawable`]).
 //!
 //! **What it draws.** The sheet's design moved by whole millimetres, so that the middle of its bounds is as
 //! near the middle of the artboard VectorCraft names as that allows: the artboard under the selection, or
@@ -54,7 +56,7 @@ const PAGE: &str = "user/how-to/embroider-a-vectorcraft-design.html#draw-a-test-
 
 /// The sheets drawn as designs, which the filter draws, in protocol order.
 pub fn sheets() -> impl Iterator<Item = &'static TestSheet> {
-    SHEETS.iter().filter(|sheet| sheet.designed())
+    SHEETS.iter().filter(|sheet| sheet.drawable())
 }
 
 /// The filter's dialog: a choice of the sheets, by their ids, the first by default, with what each tests.

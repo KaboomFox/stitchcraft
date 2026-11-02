@@ -57,9 +57,10 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Satin parameters](params/satin.md) | 34 | Satin column, E-stitch, S-stitch, Zigzag satin |
 | [Pull parameters](params/pull.md) | 2 | Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill |
 | [Fill parameters](params/fill.md) | 2 | Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill |
-| [Tatami parameters](params/tatami.md) | 15 | Tatami fill, Contour fill |
-| [Contour parameters](params/contour.md) | 5 | Contour fill |
-| [Fill repeat parameters](params/fill-repeat.md) | 2 | Contour fill |
+| [Tatami parameters](params/tatami.md) | 15 | Tatami fill, Contour fill, Meander fill, Circular fill |
+| [Contour parameters](params/contour.md) | 4 | Contour fill |
+| [Meander parameters](params/meander.md) | 6 | Meander fill |
+| [Path fill parameters](params/path-fill.md) | 3 | Contour fill, Meander fill, Circular fill |
 | [Auto parameters](params/auto.md) | 5 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
 
 ## Every parameter
@@ -74,12 +75,13 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`auto_overlap_mm`](params/auto.md#auto_overlap_mm) | Overlap | Auto parameters |
 | [`avoid_self_crossing`](params/contour.md#avoid_self_crossing) | Avoid self-crossing | Contour parameters |
 | [`bean_stitch_repeats`](params/repeat.md#bean_stitch_repeats) | Bean stitch | Repeat parameters |
-| [`bean_stitch_repeats`](params/fill-repeat.md#bean_stitch_repeats) | Bean stitch | Fill repeat parameters |
+| [`bean_stitch_repeats`](params/path-fill.md#bean_stitch_repeats) | Bean stitch | Path fill parameters |
 | [`center_walk_underlay`](params/satin.md#center_walk_underlay) | Centre walk underlay | Satin parameters |
 | [`center_walk_underlay_position`](params/satin.md#center_walk_underlay_position) | Centre walk position | Satin parameters |
 | [`center_walk_underlay_repeats`](params/satin.md#center_walk_underlay_repeats) | Centre walk repeats | Satin parameters |
 | [`center_walk_underlay_stitch_length_mm`](params/satin.md#center_walk_underlay_stitch_length_mm) | Centre walk stitch length | Satin parameters |
 | [`center_walk_underlay_stitch_tolerance_mm`](params/satin.md#center_walk_underlay_stitch_tolerance_mm) | Centre walk tolerance | Satin parameters |
+| [`clip`](params/meander.md#clip) | Clip to the shape | Meander parameters |
 | [`clockwise`](params/contour.md#clockwise) | Clockwise | Contour parameters |
 | [`contour_strategy`](params/contour.md#contour_strategy) | Strategy | Contour parameters |
 | [`contour_underlay`](params/satin.md#contour_underlay) | Contour underlay | Satin parameters |
@@ -111,6 +113,9 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`lock_start_scale_mm`](params/common.md#lock_start_scale_mm) | Start lock size | Common parameters |
 | [`lock_start_scale_percent`](params/common.md#lock_start_scale_percent) | Start lock scale | Common parameters |
 | [`max_stitch_length_mm`](params/common.md#max_stitch_length_mm) | Longest stitch | Common parameters |
+| [`meander_angle`](params/meander.md#meander_angle) | Pattern angle | Meander parameters |
+| [`meander_pattern`](params/meander.md#meander_pattern) | Pattern | Meander parameters |
+| [`meander_scale_percent`](params/meander.md#meander_scale_percent) | Pattern scale | Meander parameters |
 | [`min_jump_stitch_length_mm`](params/common.md#min_jump_stitch_length_mm) | Shortest jump | Common parameters |
 | [`min_random_split_length_mm`](params/satin.md#min_random_split_length_mm) | Shortest split stitch | Satin parameters |
 | [`min_stitch_length_mm`](params/common.md#min_stitch_length_mm) | Shortest stitch | Common parameters |
@@ -125,7 +130,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`random_width_increase_percent`](params/satin.md#random_width_increase_percent) | Random width increase | Satin parameters |
 | [`random_zigzag_spacing_percent`](params/satin.md#random_zigzag_spacing_percent) | Random zigzag spacing | Satin parameters |
 | [`repeats`](params/repeat.md#repeats) | Repeats | Repeat parameters |
-| [`repeats`](params/fill-repeat.md#repeats) | Repeats | Fill repeat parameters |
+| [`repeats`](params/path-fill.md#repeats) | Repeats | Path fill parameters |
 | [`reverse_rails`](params/satin.md#reverse_rails) | Reverse rails | Satin parameters |
 | [`row_spacing_mm`](params/tatami.md#row_spacing_mm) | Row spacing | Tatami parameters |
 | [`running_stitch_length_mm`](params/running.md#running_stitch_length_mm) | Stitch length | Running parameters |
@@ -136,7 +141,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`short_stitch_distance_mm`](params/satin.md#short_stitch_distance_mm) | Short stitch distance | Satin parameters |
 | [`short_stitch_inset`](params/satin.md#short_stitch_inset) | Short stitch inset | Satin parameters |
 | [`skip_last`](params/tatami.md#skip_last) | Skip last stitch | Tatami parameters |
-| [`smoothness_mm`](params/contour.md#smoothness_mm) | Smoothness | Contour parameters |
+| [`smoothness_mm`](params/path-fill.md#smoothness_mm) | Smoothness | Path fill parameters |
 | [`split_method`](params/satin.md#split_method) | Split method | Satin parameters |
 | [`split_staggers`](params/satin.md#split_staggers) | Staggers | Satin parameters |
 | [`staggers`](params/tatami.md#staggers) | Staggers | Tatami parameters |
@@ -152,8 +157,10 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`zigzag_angle`](params/zigzag-stroke.md#zigzag_angle) | Zigzag angle | Zigzag stroke parameters |
 | [`zigzag_spacing_mm`](params/zigzag-stroke.md#zigzag_spacing_mm) | Zigzag spacing | Zigzag stroke parameters |
 | [`zigzag_spacing_mm`](params/satin.md#zigzag_spacing_mm) | Zigzag spacing | Satin parameters |
+| [`zigzag_spacing_mm`](params/meander.md#zigzag_spacing_mm) | Zigzag spacing | Meander parameters |
 | [`zigzag_underlay`](params/satin.md#zigzag_underlay) | Zigzag underlay | Satin parameters |
 | [`zigzag_underlay_inset_mm`](params/satin.md#zigzag_underlay_inset_mm) | Zigzag underlay inset | Satin parameters |
 | [`zigzag_underlay_inset_percent`](params/satin.md#zigzag_underlay_inset_percent) | Zigzag underlay inset (% of width) | Satin parameters |
 | [`zigzag_underlay_max_stitch_length_mm`](params/satin.md#zigzag_underlay_max_stitch_length_mm) | Zigzag underlay longest stitch | Satin parameters |
 | [`zigzag_underlay_spacing_mm`](params/satin.md#zigzag_underlay_spacing_mm) | Zigzag underlay spacing | Satin parameters |
+| [`zigzag_width_mm`](params/meander.md#zigzag_width_mm) | Zigzag width | Meander parameters |

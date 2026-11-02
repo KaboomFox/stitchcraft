@@ -36,10 +36,13 @@ pub stitchcraft_core::diag::Code::AutoUnder
 pub stitchcraft_core::diag::Code::BudgetExhausted
 pub stitchcraft_core::diag::Code::BundleUnreadable
 pub stitchcraft_core::diag::Code::CustomLockUnusable
+pub stitchcraft_core::diag::Code::FillCircularTooSmall
 pub stitchcraft_core::diag::Code::FillContourRingsLeftOut
 pub stitchcraft_core::diag::Code::FillContourSpiralTooShort
 pub stitchcraft_core::diag::Code::FillExpandShrinksAway
 pub stitchcraft_core::diag::Code::FillLegacyAsTatami
+pub stitchcraft_core::diag::Code::FillMeanderTileNotOurs
+pub stitchcraft_core::diag::Code::FillMeanderTooSmall
 pub stitchcraft_core::diag::Code::FillPartsApart
 pub stitchcraft_core::diag::Code::FillPartsTooSmall
 pub stitchcraft_core::diag::Code::FillPullCompensationNegative
@@ -58,6 +61,7 @@ pub stitchcraft_core::diag::Code::NothingToStitch
 pub stitchcraft_core::diag::Code::OutsideComfortZone
 pub stitchcraft_core::diag::Code::OutsideHoop
 pub stitchcraft_core::diag::Code::ParamClamped
+pub stitchcraft_core::diag::Code::ParamForOtherFamily
 pub stitchcraft_core::diag::Code::ParamInvalid
 pub stitchcraft_core::diag::Code::ParamUnknown
 pub stitchcraft_core::diag::Code::PreviewTooLarge
@@ -258,10 +262,13 @@ pub stitchcraft_core::Code::AutoUnder
 pub stitchcraft_core::Code::BudgetExhausted
 pub stitchcraft_core::Code::BundleUnreadable
 pub stitchcraft_core::Code::CustomLockUnusable
+pub stitchcraft_core::Code::FillCircularTooSmall
 pub stitchcraft_core::Code::FillContourRingsLeftOut
 pub stitchcraft_core::Code::FillContourSpiralTooShort
 pub stitchcraft_core::Code::FillExpandShrinksAway
 pub stitchcraft_core::Code::FillLegacyAsTatami
+pub stitchcraft_core::Code::FillMeanderTileNotOurs
+pub stitchcraft_core::Code::FillMeanderTooSmall
 pub stitchcraft_core::Code::FillPartsApart
 pub stitchcraft_core::Code::FillPartsTooSmall
 pub stitchcraft_core::Code::FillPullCompensationNegative
@@ -280,6 +287,7 @@ pub stitchcraft_core::Code::NothingToStitch
 pub stitchcraft_core::Code::OutsideComfortZone
 pub stitchcraft_core::Code::OutsideHoop
 pub stitchcraft_core::Code::ParamClamped
+pub stitchcraft_core::Code::ParamForOtherFamily
 pub stitchcraft_core::Code::ParamInvalid
 pub stitchcraft_core::Code::ParamUnknown
 pub stitchcraft_core::Code::PreviewTooLarge

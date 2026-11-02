@@ -17,7 +17,7 @@
 
 pub(crate) mod clamp;
 #[cfg(test)]
-mod fixture;
+pub(crate) mod fixture;
 mod gaps;
 mod graph;
 pub(crate) mod rings;
@@ -40,34 +40,44 @@ use crate::generators::tatami::stitches::Stitching;
 /// The stitch types a tatami fill's own settings apply to.
 const TATAMI: &[StitchType] = &[StitchType::TatamiFill];
 
+/// The stitch types whose rows are routed as a tatami fill's are: its own, and a circular fill's pieces of
+/// spiral, which its end spacing spaces, its `skip_last` shortens and its `underpath` travels under.
+const ROUTED: &[StitchType] = &[StitchType::TatamiFill, StitchType::CircularFill];
+
 /// The stitch types its rows, its expand and its underlay apply to: a contour fill takes them as Ink/Stitch's
-/// does, sewing its rings the row spacing apart over the part expanded, after the same underlay.
-const TATAMI_AND_CONTOUR: &[StitchType] = &[StitchType::TatamiFill, StitchType::ContourFill];
+/// does, sewing its rings the row spacing apart over the part expanded, after the same underlay, a meander
+/// fill sews its path over the part expanded after the same underlay, and a circular fill its spiral, its
+/// circles the row spacing apart.
+const UNDERLAID: &[StitchType] = &[StitchType::TatamiFill, StitchType::ContourFill, StitchType::MeanderFill, StitchType::CircularFill];
 
 params! {
     /// Tatami fill: rows of running stitches across the fill's area, the needle points of neighbouring rows
     /// offset so that they never line up. Ink/Stitch's default fill. A contour fill takes its row spacing,
-    /// its expand and its underlay from these settings too.
-    pub struct TatamiParams for TATAMI_AND_CONTOUR;
+    /// its expand and its underlay from these settings too, a meander fill its expand and its underlay, and a
+    /// circular fill all but its gap-filling rows.
+    pub struct TatamiParams for UNDERLAID;
 
     "Rows" {
         /// The direction of the rows, in degrees counter-clockwise from horizontal: 0 sews horizontal rows
-        /// and 90 upright ones. A contour fill's rings follow its outline, and its angle turns only its
-        /// underlay.
+        /// and 90 upright ones. A contour fill's rings follow its outline, and a meander fill's path its tile,
+        /// and their angle turns only their underlay. A circular fill's angle turns its underlay and the lines
+        /// its needle travels along under its spiral.
         angle: Angle = "0", label "Angle";
 
-        /// How far apart the rows are, measured square to them, or a contour fill's rings. Rows closer
-        /// together cover the fabric more fully, and pull it in more.
+        /// How far apart the rows are, measured square to them, or a contour fill's rings, or a circular
+        /// fill's circles. Rows closer together cover the fabric more fully, and pull it in more. A meander
+        /// fill's underlay rows lie 3 of them apart.
         row_spacing_mm: Length = "0.25", label "Row spacing", range (0.1, 100.0);
 
         /// The spacing of the last rows, for a fill that fades: from the first row the spacing changes
-        /// steadily towards it, reaching it the part's height away, in each part of the fill. Empty, every
-        /// row is the row spacing from the next.
-        end_row_spacing_mm: OptionalLength = "", label "End row spacing", range (0.1, 100.0), applies TATAMI,
+        /// steadily towards it, reaching it the part's height away, in each part of the fill. A circular
+        /// fill's circles go from the row spacing at the middle to it at the part's farthest point. Empty,
+        /// every row is the row spacing from the next.
+        end_row_spacing_mm: OptionalLength = "", label "End row spacing", range (0.1, 100.0), applies ROUTED,
             origin Origin::InkStitchDeviates { deviation: "DEV-FILL-003" };
 
         /// How far past the drawn edge the top rows reach: each part is grown by this much, with round
-        /// corners, before its rows or rings are laid. The thread's pull opens gaps between fills sewn side
+        /// corners, before its rows, rings or path are laid. The thread's pull opens gaps between fills sewn side
         /// by side, and this closes them. Negative values pull the rows in from the edge.
         expand_mm: Length = "0", label "Expand", range (-10.0, 10.0);
 
@@ -83,24 +93,28 @@ params! {
         /// the longest stitch (`max_stitch_length_mm`) apart, a `staggers`-th of a stitch along from the
         /// row before's, so that neighbouring rows never line them up. A fraction draws diagonals that show
         /// less than whole numbers do. A negative number staggers the rows the other way, and 0 counts as 1,
-        /// which lines every row's points up, as in Ink/Stitch. A contour fill staggers its underlay's rows so.
+        /// which lines every row's points up, as in Ink/Stitch. A contour or meander fill staggers its
+        /// underlay's rows so.
         staggers: Number = "4", label "Staggers", range (-100.0, 100.0);
 
-        /// Leave out the needle point at the end of each row. It lies close to the start of the next row,
-        /// and leaving it out lowers the stitch count and the density along the fill's edge.
-        skip_last: Toggle = "false", label "Skip last stitch", applies TATAMI;
+        /// Leave out the needle point at the end of each row, or of each piece of a circular fill's spiral. It
+        /// lies close to the start of the next, and leaving it out lowers the stitch count and the density
+        /// along the fill's edge.
+        skip_last: Toggle = "false", label "Skip last stitch", applies ROUTED;
     }
 
     "Travel" {
-        /// Travel between rows runs inside the fill, under rows sewn after it, which hide it. Off, the
-        /// needle travels along the fill's outline, where the travel can show along the edge.
-        underpath: Toggle = "true", label "Underpath", applies TATAMI;
+        /// Travel between rows, or a circular fill's pieces of spiral, runs inside the fill, under those sewn
+        /// after it, which hide it. Off, the needle travels along the fill's outline, where the travel can
+        /// show along the edge.
+        underpath: Toggle = "true", label "Underpath", applies ROUTED;
     }
 
     "Underlay" {
-        /// Sew underlay before the top rows, or a contour fill's rings: rows of stitches farther apart than
-        /// the top rows, square to them unless set otherwise. It holds the fabric still while the fill is
-        /// sewn and lifts the top rows, so less fabric shows between them.
+        /// Sew underlay before the top rows, a contour fill's rings, a meander fill's path or a circular fill's
+        /// spiral: rows of stitches farther apart than the top rows, square to them unless set otherwise. It
+        /// holds the fabric still while the fill is sewn and lifts the top rows, so less fabric shows between
+        /// them.
         fill_underlay: Toggle = "true", label "Underlay";
 
         /// The direction of the underlay's rows, in degrees counter-clockwise from horizontal. Several

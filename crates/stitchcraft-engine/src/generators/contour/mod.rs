@@ -30,8 +30,8 @@
 //! origin. The end command is read but not used: the path ends where its strategy ends it.
 
 mod inner;
-mod line;
-mod spiral;
+pub(crate) mod line;
+pub(crate) mod spiral;
 mod tree;
 
 use stitchcraft_core::rng::SplitMix64;
@@ -80,10 +80,6 @@ params! {
 
         /// The rings run clockwise as the drawing shows them. Off, counter-clockwise.
         clockwise: Toggle = "true", label "Clockwise";
-
-        /// How much inner to outer's path is smoothed: its corners are cut round over about 5 times this, and
-        /// it is kept inside the fill. 0 leaves the rings as they are. The spirals are not smoothed.
-        smoothness_mm: Length = "0", label "Smoothness", range (0.0, 100.0);
     }
 }
 
@@ -98,7 +94,7 @@ pub enum Strategy {
     DoubleSpiral,
 }
 
-/// How a contour fill's path is stitched: its running stitch, bean stitch and repeats.
+/// How a contour or circular fill's path is stitched: its running stitch, bean stitch and repeats.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Stitching {
     /// The longest stitch, in millimetres.
@@ -180,12 +176,13 @@ pub fn contour_fill(
 /// [`contour_fill`], before its stitches are settled.
 fn sewn(region: &Region, contour: &Contour, needle: Option<Point>, rng: &mut SplitMix64, meter: &mut Meter) -> Result<Stitched, Exhausted> {
     let mut tally = Tally::default();
-    let mut top = |piece: &Polygon, needle: Option<Point>, _: Option<Point>, rng: &mut SplitMix64, meter: &mut Meter, _: &mut Vec<Diagnostic>| {
-        let stretches = tally.path(piece, contour, needle.unwrap_or(Point::ORIGIN), meter)?;
-        let run = tally.stitched(&stretches, contour, rng, meter)?;
-        let run = passes::sew(&run, 1, &contour.stitching.beans, Turn::Listed, meter)?;
-        Ok(vec![passes::doubled(run, contour.stitching.repeats, meter)?])
-    };
+    let mut top =
+        |piece: &Polygon, _: &Polygon, needle: Option<Point>, _: Option<Point>, rng: &mut SplitMix64, meter: &mut Meter, _: &mut Vec<Diagnostic>| {
+            let stretches = tally.path(piece, contour, needle.unwrap_or(Point::ORIGIN), meter)?;
+            let run = tally.stitched(&stretches, contour, rng, meter)?;
+            let run = passes::sew(&run, 1, &contour.stitching.beans, Turn::Listed, meter)?;
+            Ok(vec![passes::doubled(run, contour.stitching.repeats, meter)?])
+        };
     let parts = Parts {
         underlay: &contour.underlay,
         inset: contour.inset,

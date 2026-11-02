@@ -89,8 +89,9 @@ fn req_svg_003_a_command_on_something_not_stitched_says_so() {
 fn req_svg_003_start_and_end_commands_are_noted() {
     // Ink/Stitch starts a fill or a satin column at its `starting_point` command and ends it at its
     // `ending_point`. StitchCraft does not apply them yet, and says so for each object a viewer shows: on a
-    // shape it sews, and, as for a trim, on anything else. A `target_point` aims stitch types StitchCraft
-    // does not sew, so it changes nothing sewn here, and a command on a hidden object is quiet.
+    // shape it sews, and, as for a trim, on anything else. A `target_point` centres a circular fill and aims
+    // a ripple, which no setting this reader reads makes a shape yet, so it changes nothing sewn here, and a
+    // command on a hidden object is quiet.
     let svg = svg(drawing(
         r##"<defs><symbol id="inkstitch_starting_point"><circle r="1"/></symbol><symbol id="inkstitch_ending_point-2"><circle r="1"/></symbol>
               <symbol id="inkstitch_target_point"><circle r="1"/></symbol></defs>

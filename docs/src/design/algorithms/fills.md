@@ -1,6 +1,6 @@
 # Fill generators
 
-<!-- implements: crates/stitchcraft-engine/src/normalize/region/**, crates/stitchcraft-engine/src/normalize/simplify.rs, crates/stitchcraft-engine/src/generators/tatami/**, crates/stitchcraft-engine/src/generators/contour/**, crates/stitchcraft-engine/src/generators/smoothing.rs, crates/stitchcraft-engine/src/generators/pull.rs -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/region/**, crates/stitchcraft-engine/src/normalize/simplify.rs, crates/stitchcraft-engine/src/generators/tatami/**, crates/stitchcraft-engine/src/generators/contour/**, crates/stitchcraft-engine/src/generators/meander/**, crates/stitchcraft-engine/src/generators/circular/**, crates/stitchcraft-engine/src/generators/smoothing.rs, crates/stitchcraft-engine/src/generators/pull.rs -->
 
 A fill covers the area its path bounds, its [region](#region), with rows of stitches. Tatami is P1 (M5);
 contour, meander and circular are P2 (M7); guided, linear gradient, tartan and cross stitch are P3 (M10).
@@ -545,38 +545,199 @@ Like every test sheet's, TS-11B's fills sew the same mirrored, turned half round
 
 ## Meander fill
 
-A path that wanders through a pattern (P2, M7.8), as Ink/Stitch sews its meander fill (read at
-`6555892`). A tile's lines are repeated over each part of the region, scaled by `meander_scale_percent`
-and turned by `meander_angle`. The lines that lie wholly inside the part make a graph of their ends.
-Lines with a free end, one that meets no other line, are taken away, again and again, until none is
-left, and the graph's pieces are joined where they lie nearest. The
-path starts at the graph's point nearest the fill's start and ends at the one nearest the next element,
-or else nearest the point of the outline across from the start. It begins as the shortest way between
-the 2. Then, in an order the random seed sets, each of its steps is replaced by a detour of up to 7 steps
-through points the path has not passed, and each 2 steps in a row by one of up to 10, until no detour is
-found. The path never passes a point twice. It is smoothed by `smoothness_mm` and sewn as a running
-stitch of `running_stitch_length_mm`, or, where `zigzag_spacing_mm` is above 0, as a zigzag
-`zigzag_width_mm` wide. `clip` keeps it inside the part. Bean stitch and repeats follow, and the repeats
-double the stitching each time, as the contour fill's do. Its random numbers are StitchCraft's own, as for
-a tatami fill's random lengths (`DEV-FILL-004`), and the path differs from Ink/Stitch's for the same
-seed.
+A line that wanders through a network of short lines without passing a point twice, as a quilter's
+meander does (P2, M7.8), as Ink/Stitch sews its meander fill (read at `d59c9ab`). Each part of the region
+is sewn on its own, after the tatami fill's underlay ([section 6](#6-underlay)), grown by `expand_mm`, as
+a contour fill's is ([start, end and underlay](#start-end-and-underlay)).
 
-Tiles are StitchCraft's own, **generated in code** (Hilbert, Peano, Truchet-style arcs, waves, pebbles…),
-never copied from other projects. `meander_pattern` takes our tile ids, and Ink/Stitch's tile names map
-to the closest of ours as a recorded deviation.
+### Tiles
+
+A tile is a network that repeats. It is given by a cell and the 2 steps that repeat it, with the lines of
+one cell, each from a point of the cell to a point of the cell or of a cell beside it. StitchCraft's tiles
+are its own, made in code: 7 of the 11 regular and semiregular tilings of the plane by polygons. A
+tiling's sides are its lines, each 2 mm long at a `meander_scale_percent` of 100 %.
+
+| Tile (`meander_pattern`) | Polygons round each point | Lines that meet |
+|---|---|---|
+| `honeycomb`, the default | 3 hexagons | 3 |
+| `squares` | 4 squares | 4 |
+| `triangles` | 6 triangles | 6 |
+| `octagons-squares` | 2 octagons and a square | 3 |
+| `hexagons-triangles` | a triangle, a hexagon, a triangle and a hexagon | 4 |
+| `hexagons-squares-triangles` | a triangle, a square, a hexagon and a square | 4 |
+| `squares-triangles` | 3 triangles and 2 squares | 5 |
+
+The 2 tilings with dodecagons are left out. Every way round a dodecagon is 11 lines, more than the 7 of a
+detour ([the path](#the-path)). Over a square 100 mm a side, the path left out 91 % of the network of
+dodecagons and triangles. It left out 32 % of the network that adds hexagons and squares to dodecagons.
+The 2 snub tilings are not made yet.
+
+Ink/Stitch's tiles are pictures in its repository, which StitchCraft does not copy. A meander fill set to
+one of their ids, such as its default `N3-11a`, sews StitchCraft's default tile, and `SC-W0316` names the
+tile it stood for (`DEV-FILL-018`).
+
+### The network
+
+The tile is scaled by `meander_scale_percent`, one percentage or 2 for across and down, each at least
+1 %. It is turned by `meander_angle` clockwise as the drawing shows it, and repeated so that a point of it
+lies at the middle of the part's bounds. Each line that lies wholly inside the part, touching its outline
+at most, joins its 2 ends. A line with a free end, one no other line meets, is taken away, and then again,
+until every point meets 2 lines or more. Where the lines left fall into pieces, the pieces are joined by
+the shortest straight lines between their points that join them all, as few as join them (a minimum
+spanning tree of the pieces, measured between their nearest points).
+
+A part too small for any line, or whose lines all have free ends, has no network. It is sewn as a running
+stitch round its outline, as a tatami fill's part too thin for rows is, and `SC-W0317` says so
+(`DEV-FILL-019`). Ink/Stitch stops the whole fill with an error there.
+
+### The path
+
+The path runs from the point of the network nearest the needle, or else the outline's first point, to
+the point nearest where it is to end. That is the point of the part nearest the next part, or for the
+last part the next element's offer, or else the point of the outline half way round it from the start.
+Where the 2 are one point, it ends at the point next nearest.
+
+1. It begins as the path of fewest lines between them.
+2. Its lines are kept in a list and drawn from it at random, the seed's draw choosing a place in the list
+   (its last line moved to the place of the one drawn). Where the network allows, each line drawn is
+   replaced by the first detour of 2 to 7 lines that a search finds through points the path has not
+   passed. The detour's lines go into the list.
+3. When the list is empty, the pairs of lines one after the other along the path are drawn from at random
+   in the same way, and a pair is replaced by a detour of 3 to 10 lines that leaves out the point between
+   them. The first pair replaced puts its detour's lines in the list, and step 2 goes on.
+4. The path is done when no pair can be replaced.
+
+The search for a detour goes depth first from the detour's first point, trying the points farthest from
+its last point first, and takes the first detour it finds. That is the long way round where there is one,
+which reaches into the points not passed. Taken the short way first, the detour of a line of a triangle
+passes the triangle's third point, and a path of such detours hems itself in. Over a square 100 mm a
+side, the path through the tiling of hexagons and triangles passed 69 % of its points that way and 94 %
+with the long way first, for a third of the search's work. Ink/Stitch's search tries the points as its
+graph stores them, and its random numbers differ from StitchCraft's. The 2 programs' paths differ for
+one seed (`DEV-FILL-020`).
+
+### Stitches
+
+The path is smoothed by `smoothness_mm` as inner to outer's is ([smoothing](#inner-to-outer)). With
+`zigzag_spacing_mm` above 0, it is cut into points half the spacing apart. Each point but the last is
+moved half `zigzag_width_mm` across the path. The first goes to the right of the way to the next point as
+the drawing shows it, and the next to the left, one side and then the other. With `clip` on, the path is kept inside the part as
+drawn, before it was grown by `expand_mm`, as a tatami fill's travel is
+([section 4](#4-travel-under-the-rows)). The path, unless it zigzags and is not clipped, is sewn as a
+running stitch of `running_stitch_length_mm` within `running_stitch_tolerance_mm`. Bean stitch comes
+next, then the repeats, which double the stitching each time, as the contour fill's do.
+
+A node's fill and stroke read the same settings, and a zigzag stroke keeps 2 spacings in
+`zigzag_spacing_mm`, which a meander fill cannot read as its one. The fill sews without a zigzag, as
+Ink/Stitch's does, and `SC-I0106` says that it left the value to the stroke (`REQ-PRM-006`).
+
+### Test sheet
+
+TS-11C, the meander fills' test sheet, sews 6 tiles on discs and the seventh on a star, with a zigzag
+kept inside a rectangle and a leaf whose tile is turned and whose path is smoothed. Its tiles are
+StitchCraft's own, so Ink/Stitch can't sew it to compare.
+
+### Properties (conformance)
+
+| Requirement | Property |
+|---|---|
+| `REQ-FILL-MEA-001` | Each tile's points meet as many lines as its tiling has polygons round them, every line a side long; the lines sew 2 mm long at 100 %, scaled across and down apart and turned as set, with a point at the middle of the part |
+| `REQ-FILL-MEA-002` | Each line of the network lies inside the part and out of its holes, and each of its points meets 2 lines or more; pieces apart are joined by their nearest points; a part with no network is sewn round its outline, with `SC-W0317` |
+| `REQ-FILL-MEA-003` | The path passes no point twice. It runs from the point nearest the start to the point nearest the end, with no line or pair left that a detour could replace, as the seed draws it |
+| `REQ-FILL-MEA-004` | A zigzag sews 2 points to each millimetre of the path, and clipped stays inside the part; `k` repeats sew 2^(k−1) passes and bean stitch sews each stitch 3 times; a smoothed path turns less sharply |
+| `REQ-FILL-MEA-005` | The underlay's rows come first and the path goes on from them, with no jump; each part ends near the next; one of Ink/Stitch's tiles sews the honeycomb, with `SC-W0316` |
+| `REQ-PRM-006` | A meander fill or a satin column given a zigzag stroke's 2 spacings sews with its own default, with `SC-I0106` |
 
 ## Circular fill
 
-A double spiral round a centre (P2, M7.9), as Ink/Stitch sews its circular fill (read at `6555892`): the
-point of a `target_point` command, or else the centre of each part's area. Circles round it lie
-`row_spacing_mm` apart, or graded towards `end_row_spacing_mm` with their distance from the centre, out
-to 2 spacings past the part's farthest point, with one of 0.1 CSS pixel radius at the centre. Alternate
-circles are joined into a spiral in, and the rest into one back out, as the contour fill's double spiral
-is, and the part cuts the spiral into pieces. One piece is sewn as a running stitch, joined along the outline
-to where the fill starts and ends. Several are routed as tatami rows are, with the travel under them at
-`angle` and `skip_last`. A part that lies within a row spacing of its centre is sewn as one circle of that
-radius. Bean stitch leaves the travel out, and the repeats double the stitching, as the contour fill's
-do.
+A spiral round the middle of each part, cut by the part's outline (P2, M7.9), as Ink/Stitch sews its
+circular fill (read at `d59c9ab`). Each part of the region is sewn on its own, after the tatami fill's
+underlay ([section 6](#6-underlay)), grown by `expand_mm`, nearest the needle first, each ending near the
+next part and the last near the next element, as a meander fill's are.
+
+### Circles
+
+The circles lie round the middle of the part, its centroid. Ink/Stitch's `target_point` command moves
+the middle, and StitchCraft reads it with Ink/Stitch's other commands in M8. The first circle has a radius
+of 0.1 CSS pixel, so that the spiral ends at the middle. From `row_spacing_mm` out, each circle lies a row
+spacing past the last, until one lies 2 spacings past the part's farthest point. That point is the one
+farthest from the middle, as the discrete Hausdorff distance Ink/Stitch takes finds it.
+
+With `end_row_spacing_mm`, the circles fade. The step from a circle to the next is the row spacing plus a
+share of the way to the end spacing: the share the circle's radius is of the farthest point's distance.
+The circles then lie the row spacing apart at the middle and the end spacing apart at the farthest point.
+They stop 2 end spacings past it, and past the farthest point the step stays at the end spacing.
+Ink/Stitch's goes on changing there. Fading to under half the row spacing over a small part, its steps
+shrink towards 0 short of the last circle, which it never reaches (`DEV-FILL-021`).
+
+Each circle has 64 sides, as GEOS buffers a point for Ink/Stitch. It starts at its right-hand point and
+turns up first as the drawing shows it.
+
+### The spiral and its pieces
+
+The spiral is the contour fill's double spiral through the circles, from the outermost circle's first
+point ([single and double spiral](#single-and-double-spiral)). It turns in on every other circle and back
+out on the others, and the running stitch's first length cuts each turn into points. It starts and ends
+outside the part, past its farthest point.
+
+The part cuts the spiral wherever it meets one of the part's rings. There the spiral crosses a ring or
+touches one, or starts or stops running along one. Each stretch between 2 such points lies inside the
+part or outside it, and the stretches inside are the spiral's pieces, a stretch along a ring among them.
+They keep the spiral's order and direction. 2 stretches that meet where the spiral touches a ring from
+inside stay 2 pieces. GEOS leaves them so when it cuts a line by a polygon for Ink/Stitch. Only the sides of the
+rings near each side of the spiral are looked at.
+
+A round part's spiral may enter it once and leave it once, one piece. Any other's leaves and enters again
+at each turn past the circle inside the outline, in many pieces.
+
+### Sewing
+
+Each piece is sewn as a running stitch of `running_stitch_length_mm` within
+`running_stitch_tolerance_mm`, at random lengths when they are on. Each turn of the spiral is a span of the
+running stitch, and each step between turns another, as for the contour fill's spiral
+([stitches](#stitches)).
+
+- **One piece** is sewn after the way along the outline from the needle to where the piece starts. Then
+  comes the way along the outline from where it ends to the end, as Ink/Stitch sews it. Each way runs
+  the shorter way round the outline. Ink/Stitch's runs along the outline from where the outline starts,
+  without passing its start, which depends on how the outline was drawn (`DEV-FILL-022`). A way whose
+  needle or end isn't known is left out.
+- **Several pieces** are routed as a tatami fill's rows are ([section 3](#3-routing-every-segment-once)),
+  each piece a row between its ends. Each is sewn once from the end the route enters it by, every needle
+  point of its running stitch, but its last with `skip_last`. Between pieces the needle moves as a tatami
+  fill's does between rows ([section 4](#4-travel-under-the-rows)). It runs under the pieces not sewn yet
+  along lines at 45° and square to the fill's `angle`, and with `underpath` off along the rings and the
+  pieces. A way along a piece follows its curve, which lies inside the part where the straight line
+  between its ends need not.
+- **No piece**: a part that lies between 2 turns of the spiral sews a running stitch round its outline
+  from the outline's start. Ink/Stitch's falls back to the same, and `SC-W0305` says so.
+
+A part that lies within its row spacing of its middle is too small for the spiral. It is sewn as one
+circle with a radius of the row spacing round its middle, from the circle's right-hand point, as Ink/Stitch
+sews it. `SC-W0318` says so, as the circle may stick out of so small a part.
+
+Bean stitch then sews each stitch back and forth, but the travel between pieces, which Ink/Stitch's
+leaves out of it. Each stitch of travel still takes its turn in `bean_stitch_repeats`'s list. The repeats
+double the stitching each time, as the contour fill's do. Circular fills have no `smoothness_mm`, as in
+Ink/Stitch.
+
+### Test sheet
+
+TS-11B's bottom row sews 3 circular fills. The disc round its hole set off its middle and the star are the
+contour rows' shapes, and a rectangle's circles fade from 0.25 mm at its middle to 1 mm at its corners.
+The differential compares the sheet with Ink/Stitch's sewing of it (`REQ-FILL-CIR-007`).
+
+### Properties (conformance)
+
+| Requirement | Property |
+|---|---|
+| `REQ-FILL-CIR-001` | The circles lie round the part's centroid, from 0.1 CSS pixel and then a row spacing apart, or fading as Ink/Stitch grades them and at the end spacing past the farthest point, out to 2 spacings past it, each of 64 sides from its right-hand point, turning up as drawn |
+| `REQ-FILL-CIR-002` | The double spiral through them is cut where it meets the part's rings, and its pieces are the stretches inside, in order along it and running its way |
+| `REQ-FILL-CIR-003` | One piece is joined to the needle and the end along the outline the shorter way round, all a running stitch with a span for each turn |
+| `REQ-FILL-CIR-004` | Several pieces are routed as a tatami fill's rows, each sewn once as stitched, without its last point with `skip_last`, the needle travelling under the pieces not sewn yet |
+| `REQ-FILL-CIR-005` | A part within a row spacing of its middle is one circle that size, with `SC-W0318`, and the outline of a part the spiral misses is sewn round, with `SC-W0305` |
+| `REQ-FILL-CIR-006` | The underlay comes first, each part ends near the next, bean stitch leaves the travel out but counts it, and `k` repeats sew 2^(k−1) passes |
+| `REQ-FILL-CIR-007` | TS-11B's circular fills sew in Ink/Stitch as in StitchCraft by the differential's measures |
 
 ## Guided fill (P3)
 
