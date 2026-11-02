@@ -6,11 +6,12 @@
 // Test code may unwrap, index and panic (clippy.toml allows the first 2 in tests).
 #![allow(clippy::unwrap_used, clippy::indexing_slicing, clippy::panic)]
 
-use stitchcraft_core::{Budget, Point};
+use stitchcraft_core::{Budget, Code, Point};
 use stitchcraft_engine::PlanOutcome;
-use stitchcraft_engine::design::{Clip, ClipShape, DesignSettings, Element, FillRule, Path, Segment, Subpath};
+use stitchcraft_engine::design::{Clip, ClipShape, Design, DesignSettings, Element, FillRule, Path, Segment, Subpath};
 use stitchcraft_engine::generate::approach;
 use stitchcraft_engine::generators::Approach;
+use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::{Role, Stitch, StitchKind};
 use stitchcraft_testkit::designs::{RED, along, automatic, clipped, fill, messages, p, planned, polylines, rings, widened};
 
@@ -205,6 +206,17 @@ fn req_gen_005_a_clipped_element_offers_what_its_clips_leave_of_it() {
     assert_eq!(offer(&clipped(axis(&[]), &squares)), Some(Approach::Point(p(-20.0, 0.0))));
     assert_eq!(offer(&clipped(axis(&[]), &[&rect(-5.0, 10.0, 5.0, 20.0)])), None);
     assert_eq!(offer(&clipped(square(&[]), &[&rect(20.0, 0.0, 40.0, 20.0)])), None);
+}
+
+#[test]
+fn req_gen_005_an_automatic_shape_whose_clips_need_more_work_than_there_is_is_left_out_and_said() {
+    // Cutting a shape to its clips is the first work automatic digitizing does for it, within the budget's
+    // work: with almost none to spend, the square is left out for it, by name.
+    let area = automatic(clipped(square(&[]), &[&rect(0.0, 5.0, 30.0, 15.0)]));
+    let design = Design::new(vec![area], DesignSettings::default()).unwrap();
+    let outcome = stitchcraft_engine::plan(&design, REFERENCE, &Budget { max_stitches: 1_000, max_work: 5 });
+    let named = |d: &&stitchcraft_core::Diagnostic| d.code == Code::BudgetExhausted && d.element.as_ref().is_some_and(|e| e.as_str() == "square");
+    assert!(outcome.diagnostics.iter().any(|d| named(&d)), "{:?}", messages(&outcome));
 }
 
 #[test]

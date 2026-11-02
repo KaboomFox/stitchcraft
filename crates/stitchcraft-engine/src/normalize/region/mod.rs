@@ -158,20 +158,14 @@ pub fn build_clipped(path: &Path, rule: FillRule, clips: &[Clip], meter: &mut Me
         return Ok(built(area, rule));
     }
     let not_sewn = |diagnostic| Built { region: Region::default(), diagnostics: vec![diagnostic] };
-    let cut = match clipped(clips, meter)? {
-        Ok(clip) => ops::intersection(parts, &clip, meter)?,
-        Err(unjoined) => return Ok(not_sewn(unjoined.clip())),
-    };
-    match cut {
-        Ok(cut) if cut.is_empty() => {
-            Ok(not_sewn(Diagnostic::new(Code::ClippedAway, "Its clip paths leave nothing of this fill, so it sews nothing.")))
-        }
-        Ok(cut) => {
-            area.parts = Ok(cut);
-            Ok(built(area, rule))
-        }
-        Err(unjoined) => Ok(not_sewn(unjoined.clip())),
+    // An area that doesn't join into rings is a bug ([`Unjoined`]), which no drawing tried makes.
+    let Ok(clip) = clipped(clips, meter)? else { return Ok(not_sewn(Unjoined.clip())) };
+    let Ok(cut) = ops::intersection(parts, &clip, meter)? else { return Ok(not_sewn(Unjoined.clip())) };
+    if cut.is_empty() {
+        return Ok(not_sewn(Diagnostic::new(Code::ClippedAway, "Its clip paths leave nothing of this fill, so it sews nothing.")));
     }
+    area.parts = Ok(cut);
+    Ok(built(area, rule))
 }
 
 /// The area every one of `clips` covers, each the union of its shapes' regions, each shape's the region its
@@ -182,21 +176,16 @@ pub(crate) fn clipped(clips: &[Clip], meter: &mut Meter) -> Result<Result<Vec<Po
     for clip in clips {
         let mut shapes = Vec::with_capacity(clip.shapes.len());
         for shape in &clip.shapes {
-            match area(&rings(&shape.path, meter)?, |w| fills(shape.rule, w), meter)?.parts {
-                Ok(parts) => shapes.push(parts),
-                Err(unjoined) => return Ok(Err(unjoined)),
-            }
+            let Ok(parts) = area(&rings(&shape.path, meter)?, |w| fills(shape.rule, w), meter)?.parts else { return Ok(Err(Unjoined)) };
+            shapes.push(parts);
         }
-        let parts = match ops::union(shapes.iter().map(Vec::as_slice), meter)? {
-            Ok(parts) => parts,
-            Err(unjoined) => return Ok(Err(unjoined)),
-        };
+        let Ok(parts) = ops::union(shapes.iter().map(Vec::as_slice), meter)? else { return Ok(Err(Unjoined)) };
         common = Some(match common {
             None => parts,
-            Some(before) => match ops::intersection(&before, &parts, meter)? {
-                Ok(both) => both,
-                Err(unjoined) => return Ok(Err(unjoined)),
-            },
+            Some(before) => {
+                let Ok(both) = ops::intersection(&before, &parts, meter)? else { return Ok(Err(Unjoined)) };
+                both
+            }
         });
     }
     Ok(Ok(common.unwrap_or_default()))

@@ -156,7 +156,8 @@ adapter reads each clip path into a clip of the shape's elements, and the engine
 - **Exceptions.** A `clip-path` that names nothing, or an element that isn't a clip path, clips nothing,
   as in a viewer. `SC-W0802` names the rest: a CSS shape such as `circle(50%)`, clip paths that name each
   other in a loop, `objectBoundingBox` on a group, whose box the adapter doesn't measure, a `clip-path` on
-  a clip path's child, which neither program applies, and the root's. An Inkscape power clip is read from
+  a clip path's child, which neither program applies, what lies in more than 16 groups in a clip path,
+  and the root's. An Inkscape power clip is read from
   the clip path the file holds, as a viewer draws it, where Ink/Stitch reads the path effect's settings
   (`DEV-SVG-020`). Masks are not applied, as in Ink/Stitch.
 

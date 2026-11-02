@@ -652,7 +652,8 @@ Ink/Stitch's does, and `SC-I0106` says that it left the value to the stroke (`RE
 
 TS-11C, the meander fills' test sheet, sews 6 tiles on discs and the seventh on a star, with a zigzag
 kept inside a rectangle and a leaf whose tile is turned and whose path is smoothed. Its tiles are
-StitchCraft's own, so Ink/Stitch can't sew it to compare.
+StitchCraft's own. Ink/Stitch has no tile with their ids and sews each sample with one of its own tiles,
+so the sheet's differential case excuses the stitches and the overlap (`DEV-FILL-018`).
 
 ### Properties (conformance)
 

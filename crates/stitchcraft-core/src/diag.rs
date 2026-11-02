@@ -644,7 +644,7 @@ registry! {
     /// its parts start and end. Of clip paths, which cut the shapes they clip,
     /// what isn't applied is named: text in one, which adds nothing to it, a clip path on a clip path's
     /// shape, one that isn't a reference, such as a CSS shape, clip paths that name each other in a loop,
-    /// `objectBoundingBox` units on a group, and the root's.
+    /// `objectBoundingBox` units on a group, groups in a clip path more than 16 deep, and the root's.
     ///
     /// The message names the element and what was done. Convert text and clones to paths in the editor
     /// (in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.
