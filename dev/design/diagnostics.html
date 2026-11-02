@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-3f207eeb.js";
+            window.path_to_searchindex_js = "../searchindex-d4d7797e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-cba97263.js"></script>
@@ -338,10 +338,11 @@ another.</p>
 <tr><td><code>SC-I0901</code></td><td>Info</td><td>Shapes digitized automatically (<code>--auto</code>, or VectorCraft’s Auto effect), counted by their stitches (running stitches, satin columns or tatami fills)</td><td>M13</td></tr>
 <tr><td><code>SC-I0902</code></td><td>Info</td><td>Satin column can’t be made; filled (a part of an automatic line that turns more tightly than it is wide, is shorter than a CSS pixel or is a dot its cap draws, or a part of an automatic area whose triangles don’t make a column round one of its lines or whose column would be read back otherwise)</td><td>M13</td></tr>
 <tr><td><code>SC-W0903</code></td><td>Warning</td><td>Line too wide to fill; left out (an automatic line whose filled area would reach more than 10 m from the origin)</td><td>M13</td></tr>
-<tr><td><code>SC-I0904</code></td><td>Info</td><td>Areas reach under the shapes sewn after them (automatic areas grown under the shapes sewn after them that they touch, or cut away under areas sewn after them, by an overlap of 0.4 mm unless an area sets another)</td><td>M13</td></tr>
+<tr><td><code>SC-I0904</code></td><td>Info</td><td>Areas reach under the shapes sewn after them (automatic areas grown under the shapes sewn after them that they touch, or cut away under the areas and parts’ lines and columns sewn after them that cover them, by an overlap of 0.4 mm unless an area sets another)</td><td>M13</td></tr>
 <tr><td><code>SC-I0905</code></td><td>Info</td><td>Speck merged into a neighbour (an automatic area or a part of one smaller than its smallest area, 1 mm² unless it sets another, merged into the area it shares the longest edge with, or left out)</td><td>M13</td></tr>
-<tr><td><code>SC-W0906</code></td><td>Warning</td><td>Background left out (the lowest shape, an automatic area that covers the whole design under the other shapes, unless it switches <code>auto_ignore_background</code> off)</td><td>M13</td></tr>
+<tr><td><code>SC-W0906</code></td><td>Warning</td><td>Background left out (the lowest shape, an automatic area that covers the whole design under the other shapes, unless it switches <code>auto_ignore_background</code> off; what shows of it inside the picture is sewn)</td><td>M13</td></tr>
 <tr><td><code>SC-I0907</code></td><td>Info</td><td>Elements sewn in an order of their own (automatic elements, and with <code>--sort-colours</code> every element, sewn in the order StitchCraft chooses, with the thread changes of each order; an element or an order that needs more work than the budget allows keeps paint order)</td><td>M13</td></tr>
+<tr><td><code>SC-I0908</code></td><td>Info</td><td>Layers flattened (each automatic area sews what shows of it under the automatic areas drawn over it, and an area wider than a satin column somewhere is digitized whole under the areas that fill its holes, which sew after it)</td><td>M13</td></tr>
 </tbody>
 </table>
 </div>

@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-3f207eeb.js";
+            window.path_to_searchindex_js = "../searchindex-d4d7797e.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-cba97263.js"></script>
@@ -184,10 +184,10 @@
 <!-- implements: crates/stitchcraft-engine/src/auto/**, apps/stitchcraft-cli/src/commands/palette.rs, apps/stitchcraft-cli/src/trace.rs -->
 <p>Automatic digitizing makes a design that sews well from a picture of flat colours, such as a logo, clip
 art or a drawing, once it is traced into shapes. Settings on the shapes are optional. StitchCraft chooses
-the stitches of each shape by its width at the size it sews. Neighbouring shapes overlap where they meet.
-Specks and the background are left out, and the sewing is ordered for few colour changes and short jumps.
-Milestone M13 of the <a href="../plan/roadmap.html">roadmap</a> builds it, after M7.5. Photographs
-sewn in blended colours need another technique, outside the roadmap.</p>
+the stitches of each shape by its width at the size it sews. A colour drawn under others sews what shows of
+it, and neighbouring shapes overlap where they meet. Specks and the background are left out, and the
+sewing is ordered for few colour changes and short jumps. Milestone M13 of the <a href="../plan/roadmap.html">roadmap</a>
+builds it, after M7.5. Photographs sewn in blended colours need another technique, outside the roadmap.</p>
 <h2 id="the-flow"><a class="header" href="#the-flow">The flow</a></h2>
 <p>A picture becomes a machine file in 2 steps:</p>
 <ol>
@@ -339,14 +339,15 @@ there that fits inside it. Averaged along the line, leaving out the piece that r
 corner, it says whether the part is a triple run
 (<a href="algorithms/centre-lines.html#width-along-the-line">centre lines</a>). A strip as wide all along as a stroke
 is as wide as the stroke.</li>
-<li><strong>To its neighbours</strong> a narrow part’s line paints the part. It sews after a fill it borders, and the
-areas sewn before it reach under it as under a satin column (<a href="#neighbours">Neighbours</a>).</li>
-<li><strong>As drawn.</strong> A shape’s narrow parts are found as it is drawn, before its neighbours. A part that only
-the areas sewn after it leave narrow is cut away round them and filled with the rest of its shape. A
-stacked trace’s dark outline under the colours inside it is often such a part. M13.6 keeps finding
-parts as drawn. An abutting trace draws such an outline as the ring it shows, which sews as lines and
-columns. Finding parts again after the cut would digitize each shape a second time, after its
-neighbours.</li>
+<li><strong>To its neighbours</strong> a narrow part’s line paints the part. It sews after a fill it borders. An area
+sewn before it reaches under it, and is cut away under the part where the part covers it, as under an
+area (<a href="#neighbours">Neighbours</a>).</li>
+<li><strong>Once the layers are flattened.</strong> A shape’s parts are found in what it sews once the layers are
+flattened (<a href="#neighbours">Neighbours</a>): what shows of it, with the holes its details fill closed. A
+stacked trace’s dark outline under the colours inside it shows as a ring, and sews as lines and columns,
+as an abutting trace’s outline does. A broad area’s holes under its details are closed, so the strips of
+it between the details are part of its fill. The parts are found before specks merge and before each
+area reaches under its neighbours.</li>
 <li><code>SC-I0901</code> counts a shape whose every part runs as a running stitch, and any other as a tatami fill.
 Finding a part’s width and centre line is part of the work of digitizing its shape. A part whose width
 or centre line can’t be found, a bug, stays in the fill, and <code>SC-E0009</code> names its shape.</li>
@@ -374,15 +375,21 @@ first in that order sews first, and the last ends on top of it.</li>
 <li><strong>Their width.</strong> A column is as wide as the circles that fit inside the part along its line, as a narrow
 part is, without the piece of its line into a tip’s corner. One no wider than the design’s narrowest
 satin stroke runs along its line as a triple run.</li>
+<li><strong>A dot.</strong> A part whose every line is shorter than half its width along it is a dot, and stays in the
+fill, as a part whose line has no length does. A disc or a square has no way to run, and its lines are
+only what its triangles leave of its middle. Its corners lie on one circle, where the triangulation
+ties, and how each tie breaks depends on where the part lies and how it is drawn. Without the rule, of 2
+dots alike one could sew a column across and the other a fill. A disc’s or a square’s lines are 0.4
+times as long as it is wide, and discs and squares no wider than a satin column are fills wherever they
+lie. A rectangle 3 mm wide is a column from 3.5 mm long.</li>
 <li><strong>What sews.</strong> The columns sew after the rest of the shape’s area, named as a narrow part’s lines are,
 and paint the part to its neighbours. <code>SC-I0901</code> counts a shape as satin columns when none of it is
 filled and one of its parts sews a satin column.</li>
 <li><strong>Drawn.</strong> Each column is drawn with its rails and rungs, as the Stroke to Satin filter draws one, and
 read back it must give them. A part whose triangles don’t make a column round one of its lines, or one
-of whose columns is read otherwise, stays in the fill, and <code>SC-I0902</code> says so. A dot, whose line has no
-length, stays in the fill too. A rung added to tell a column’s rails from its rungs goes across an end
-that doesn’t reach under another column where one can take it (<a href="algorithms/satin.html#drawn-with-its-rails-and-rungs">satin
-columns</a>).</li>
+of whose columns is read otherwise, stays in the fill, and <code>SC-I0902</code> says so. A rung added to tell a
+column’s rails from its rungs goes across an end that doesn’t reach under another column where one can
+take it (<a href="algorithms/satin.html#drawn-with-its-rails-and-rungs">satin columns</a>).</li>
 </ul>
 <p><strong>Shapes in parts</strong> (M13.6, <code>REQ-AUTO-019</code>). A shape wider than 7 mm in places and narrower in others sews
 in parts. Its broad parts are a tatami fill, and its narrow parts sew over the fill as lines and columns,
@@ -454,9 +461,10 @@ across it. Fills keep the tatami fill’s defaults, underlay included.</p>
 <p>The shapes of a traced picture meet. VectorCraft’s Abutting method traces each area with a hole where the
 next one lies, and its Overlapping method, like Inkscape’s Trace Bitmap with its Stack option, traces each
 colour whole, over the colours under it. Sewn as drawn, either sews badly where shapes meet, and digitizing
-mends it in 3 steps, in this order (<code>stitchcraft_engine::auto::neighbours</code>, M13.2).</p>
+mends it in 4 steps, in this order (<code>stitchcraft_engine::auto::neighbours</code>, M13.2 and M13.12).</p>
 <ol>
-<li><strong>Background</strong> (<code>REQ-AUTO-009</code>). The lowest shape is the picture’s background when it is an automatic
+<li>
+<p><strong>Background</strong> (<code>REQ-AUTO-009</code>). The lowest shape is the picture’s background when it is an automatic
 area with a shape on another path drawn on it, and its outlines cover the box around the design to within
 0.5 mm of each side, its holes and notches aside. The box is the one around the defining points of every
 shape’s path, the background’s own included. So a disc in the corner of a square, lowest but covering
@@ -471,8 +479,71 @@ the shapes in its corners fill the rest. The cost of this rule is a background c
 side, by a bar down the side say, or cut in two by a band from side to side, which is sewn. The
 background is left out with <code>SC-W0906</code> before anything is digitized. With a StitchCraft effect, it sews
 as that effect says. Finding it has the work budget to itself, and a background that needs more is sewn,
-which <code>SC-W0906</code> says.</li>
-<li><strong>Specks</strong> (<code>REQ-AUTO-008</code>). An automatic area, or a part of one, smaller than 1 mm² is too small to sew:
+which <code>SC-W0906</code> says. What shows of the background inside the picture once the layers are flattened
+(step 2) is sewn: its parts that come no nearer than 0.5 mm to the box’s sides. A trace that stacks its
+colours draws the background whole under the picture, a white disc on a badge included, which a trace
+whose colours abut draws as a shape of its own. Such a part sews as the background’s own area, and
+<code>SC-W0906</code> counts it.</p>
+</li>
+<li>
+<p><strong>Layers</strong> (<code>REQ-AUTO-023</code>, M13.12). Digitized as drawn, a stacked colour’s stitches would be chosen for
+its whole shape, though most of it is hidden. Taken as it shows, a broad area with details on it splits
+into narrow columns between them, traced either way, as a flower’s middle does round its dots. A
+digitizer fills such an area whole and sews the details on top. So before anything is digitized, the
+layers are flattened, in 3 parts (<code>auto::neighbours::layers</code>).</p>
+<ul>
+<li><strong>What shows.</strong> The automatic areas drawn after an area are taken from it where they overlap it by
+more than twice the shapes’ tolerance, as the order measures an overlap (<a href="#sewing-order">Sewing
+order</a>). Rounding leaves hairlines where edges drawn as one meet, as round a disc drawn
+a hair larger than the disc on it. A part of what is left that is narrower than twice the shapes’
+tolerance everywhere, measured as a narrow part is, is such a hairline and is dropped. An area that
+they cover whole sews nothing (<code>SC-I0904</code>), and so does one of which only hairlines are left.</li>
+<li><strong>Details.</strong> Where what shows of an area is wider than its widest satin column somewhere
+(<code>auto_max_satin_width_mm</code>), the area is digitized whole under its details, the automatic areas that
+fill one of its holes. They fill the hole when what they leave of it is no wider than twice the shapes’
+tolerance, or smaller than the area’s smallest area. The hole is closed, and the area’s stitches are
+chosen by its width with the hole closed (<a href="#stitch-types-by-width">Stitch types by width</a>). An area,
+or a part of one, no wider than a satin column everywhere, such as a letter or an outline, keeps its
+holes, and the shapes in them sew beside it. Closed, it would be a broad fill under them. Specks in a
+hole aren’t details. When only specks fill a hole, the hole is left open, and the specks merge into the
+area round them (step 3), which closes it. A hole is filled from the parts whose boxes meet its own, and costs
+the work of those parts alone.</li>
+<li><strong>Moved back.</strong> The area sews before its details, so that they lie on it. It moves back in paint
+order past them, past the automatic areas whose part that shows doesn’t overlap it, and past the
+other shapes whose boxes don’t come within twice the shapes’ tolerance of its box. It never moves
+across a stop, nor when it has a stop after it. The areas move the largest first, so that an area
+moves before the areas inside it. Once all have moved, a hole whose details don’t all sew after its
+area is left open: sewn after them, the area would cover them. The area couldn’t move back past them,
+or another area that has one of them for a detail moved back past it. On a red square with a white
+ring on it and the red showing again as a bullseye in the ring’s hole, the ring moves back before the
+red, the bullseye being its detail, and the red’s hole is opened again round the ring.</li>
+</ul>
+<p>The overlaps (step 4) then cut the area away under its details, 0.4 mm inside their edges. So a trace
+that stacks its colours sews as one whose colours abut. An area whose region changed is given its new
+outline, and one whose region is what it was keeps its path as drawn. <code>SC-I0908</code> counts the areas that
+sew only what shows of them and those digitized whole under their details.</p>
+<p>Each area has the work budget to itself at each step of the flattening, and again when it is given
+what it sews. It costs a unit for each shape and each part it looks past, and the work of those near
+it. An area that needs more work for a step does without it. One that needs more to find what shows of
+it is sewn as it is drawn, in its place, but for the background, which is left out whole. The other
+areas’ holes are found without it. When finding an area’s details needs more work, its holes are kept
+open. When its move does, it keeps its place, and the holes whose details then sew before it are opened
+again. When giving it its region does, it is sewn as it is drawn, and isn’t counted as digitized whole.
+<code>SC-I0908</code> names each. <code>SC-E0009</code> names an area whose region the region code fails to join, a bug,
+which is treated the same way.</p>
+<p>The test pictures (<a href="#testing">Testing</a>) sew alike traced either way. An emblem 60 mm wide, a navy
+square with a white disc, a red star on the disc and 3 gold bars, on white, sews the same shapes with
+each thread. The navy square is one tatami fill of 1,848.5 mm², sewn first. The white disc is one fill
+of 380.7 mm², sewn after it: the disc’s 531 mm² less the star, which it reaches 0.4 mm under. The bars
+sew as satin columns 3.00 mm wide, as drawn, and the star as one fill. The stitches of the 2 traces
+differ by about 1 %, because the traces draw their colours in different orders. A button, a yellow disc
+24 mm across with 7 orange dots in a black rim 2.5 mm wide, sews the same shapes with each thread either
+way, and as many stitches, 1,925, 1,845 of them in the same places. Its yellow
+is one fill of 445.9 mm² under the dots, each dot a fill too, and its rim a satin column 2.50 mm wide.
+<code>tests/auto_pictures.rs</code> keeps the pictures sewing so.</p>
+</li>
+<li>
+<p><strong>Specks</strong> (<code>REQ-AUTO-008</code>). An automatic area, or a part of one, smaller than 1 mm² is too small to sew:
 it would sew a knot. It is merged into the automatic area it shares the longest edge with, which may be
 its own. A speck that fills a hole goes into the area around it, and no hole shows where it was. One that
 rounding left a hair from the rest of its own area rejoins that. On a tie, it goes into the area drawn
@@ -481,26 +552,31 @@ of the speck. A speck that doesn’t share an edge with an automatic area is lef
 neighbours need more work to find than the budget allows it: put back as drawn, it could overlap a speck
 merged in beside it. <code>SC-I0905</code> names each speck, by its area rounded to a hundredth of a square millimetre and
 kept under 1 mm², and where it went. A line filled because it is too wide for a column (M13.1) is an area
-too, so a part of it that small is a speck.</li>
-<li><strong>Overlaps</strong> (<code>REQ-AUTO-007</code>). Pull draws stitches in from the edges of their shape, so shapes that only
+too, so a part of it that small is a speck.</p>
+</li>
+<li>
+<p><strong>Overlaps</strong> (<code>REQ-AUTO-007</code>). Pull draws stitches in from the edges of their shape, so shapes that only
 meet show fabric between them. Each automatic area reaches 0.4 mm under each area, satin
-column, filled line or narrow part’s line sewn after it, from where it touches that shape, and no
+column, filled line or part’s line or column sewn after it, from where it touches that shape, and no
 further than that shape.
 Shapes touch where their edges meet within twice the shapes’ tolerance, so a gap that rounding left
 between edges drawn as one closes too. Along an edge where a shape runs on near the area without
 touching it, the area doesn’t reach, and fabric shows between them as drawn. A satin column covers the
-area between its rails as they are sewn, turned to run the same way. Where an area sewn after it covers
-part of it, it is cut away under that area, 0.4 mm inside the area’s edge, and that part is sewn once: a
-stacked trace then sews the areas of an abutting one. A part that the areas sewn after it cover whole
-sews nothing, however near their edge it lies. So does an area they cover whole. A trim or a stop after
+area between its rails as they are sewn, turned to run the same way. Where an area or a part’s line or
+column sewn after the area covers part of it, as the details on an area digitized whole do, the area is
+cut away under that shape, 0.4 mm inside the shape’s edge, and that part is sewn once. Sewn whole, it
+would sew twice there, stiff and thick. A part of the area that such shapes cover whole sews nothing,
+however near their edge it lies. So does an area they cover whole. A trim or a stop after
 such an area has no place, as after any element that sews nothing (<code>SC-W0505</code>). <code>SC-I0901</code> counts only
-the shapes that sew. A narrow part’s line covers its part, and isn’t cut away.
-It sews nothing when the areas sewn after it cover the part whole, and sews whole when they cover the
-part in places. A column or a line sewn after an area goes over it, and
-the area is sewn whole under it. Cutting a fill round small letters adds stitches and can leave gaps
+the shapes that sew. A part’s line or column covers its part, and isn’t cut away itself. It sews
+nothing when the areas, and the lines and columns of other shapes’ parts, sewn after it cover the part
+whole, and it sews whole when they cover the part in places. A satin column or a line digitized from a
+stroke and sewn after an area goes over it, and the area is sewn whole under it. Cutting a fill round
+small letters adds stitches and can leave gaps
 (<a href="https://inkscape.org/forums/embroidery/techniques-for-making-text-on-top-of-a-fill-more-crisp/">Inkscape forum</a>).
 <code>SC-I0904</code> counts the areas that reach under others and those cut away. It also names each area cut away
-whole, which sews nothing. The areas are named in the order they are sewn.</li>
+whole, which sews nothing. The areas are named in the order they are sewn.</p>
+</li>
 </ol>
 <p>Only automatic areas change. A shape with settings is sewn as they say, and a satin column or a line
 digitized from a stroke or a part keeps its stitches: a column is sewn past its rails by its pull
@@ -525,20 +601,20 @@ once each is pulled in where the thread turns (edge coverage, <code>stitchcraft_
 </thead>
 <tbody>
 <tr><td>Stripes, 3 abutting</td><td>98.9 %</td><td>100 %</td><td>2,994</td><td>3,221</td></tr>
-<tr><td>Badge, abutting</td><td>89.1 %</td><td>98.7 %</td><td>3,761</td><td>3,773</td></tr>
+<tr><td>Badge, abutting</td><td>89.1 %</td><td>97.2 %</td><td>3,761</td><td>3,764</td></tr>
 <tr><td>Badge, stacked</td><td>100 %</td><td>97.2 %</td><td>3,981</td><td>3,764</td></tr>
-<tr><td>Badges in a row, abutting</td><td>94.2 %</td><td>99.8 %</td><td>4,947</td><td>4,918</td></tr>
-<tr><td>Badges in a row, stacked</td><td>100 %</td><td>99.9 %</td><td>4,872</td><td>4,934</td></tr>
+<tr><td>Badges in a row, abutting</td><td>94.2 %</td><td>99.9 %</td><td>4,947</td><td>4,867</td></tr>
+<tr><td>Badges in a row, stacked</td><td>100 %</td><td>99.9 %</td><td>4,872</td><td>4,867</td></tr>
 </tbody>
 </table>
 </div>
 <p>The abutting badge’s shapes, sewn as drawn, leave a tenth of their edges bare. Digitized, they overlap, and
-98.7 % is covered. The stripes’ edges are covered as drawn too, but by the running stitches the fills travel
+97.2 % is covered. The stripes’ edges are covered as drawn too, but by the running stitches the fills travel
 on along them, under their rows, not by the rows: digitized, the rows themselves overlap. The stacked badge as
 drawn sews its lower colours whole under the upper ones, which covers its edges with 217 more stitches,
-6 %, sewn twice. Digitized, it sews the abutting badge’s areas, within 9 stitches. The row of badges, each
+6 %, sewn twice. Digitized, it sews the abutting badge’s stitches, every one. The row of badges, each
 the badge at three fifths of its size and sewn in the order below, covers its edges as the badge does, and
-stacked it sews within 16 stitches of the abutting row. Without pull, every edge is covered as drawn and
+stacked it sews the abutting row’s stitches. Without pull, every edge is covered as drawn and
 digitized alike, to within a hundredth. <code>tests/auto_pictures.rs</code> keeps the numbers
 from falling back, and MC-8 tells whether 0.4 mm is the pull on the machine.</p>
 <h2 id="sewing-order"><a class="header" href="#sewing-order">Sewing order</a></h2>
@@ -550,9 +626,10 @@ thread at nearly every shape, and each change is a stop to rethread a home machi
 rules.</p>
 <ol>
 <li><strong>What overlaps keeps its paint order</strong> (<code>REQ-AUTO-010</code>). Of 2 shapes whose paint overlaps, the lower
-sews first, or it would cover the upper one. An area paints its region, and a satin column the area
-between its rails as they are sewn. Lines paint the areas their strokes paint as drawn, and a narrow
-part’s line the part. Shapes that only meet, as
+sews first, or it would cover the upper one. Paint order is the design’s, with each area digitized whole
+moved back before its details (<a href="#neighbours">Neighbours</a>). An area paints the region it sews once the
+layers are flattened, and a satin column the area between its rails as they are sewn. Lines paint the
+areas their strokes paint as drawn, and a part’s line or column the part. Shapes that only meet, as
 abutting paths do, may sew in either order. Rounding leaves a sliver no wider than twice the shapes’
 tolerance between edges drawn as one, and shapes overlap only where their overlap is wider. Where 2 lines
 0.1 mm wide cross, they overlap.</li>
@@ -630,10 +707,10 @@ from falling back.</p>
 <tr><th>Setting</th><th>Key</th><th>Default</th><th>Rules</th></tr>
 </thead>
 <tbody>
-<tr><td>Widest satin column</td><td><code>auto_max_satin_width_mm</code></td><td>7 mm</td><td>a line’s stitches, a part’s columns, the split of a part into broad and narrow parts</td></tr>
+<tr><td>Widest satin column</td><td><code>auto_max_satin_width_mm</code></td><td>7 mm</td><td>a line’s stitches, a part’s columns, the split of a part into broad and narrow parts, an area digitized whole under its details</td></tr>
 <tr><td>Narrowest triple run</td><td><code>auto_min_triple_run_width_mm</code></td><td>0.5 mm</td><td>a running stitch tripled</td></tr>
 <tr><td>Overlap</td><td><code>auto_overlap_mm</code></td><td>0.4 mm</td><td>an area reaching under its neighbours and cut away under them, a satin column’s pull compensation</td></tr>
-<tr><td>Smallest area</td><td><code>auto_min_area_mm2</code></td><td>1 mm²</td><td>specks, and the narrow parts too small to cut from a broad part</td></tr>
+<tr><td>Smallest area</td><td><code>auto_min_area_mm2</code></td><td>1 mm²</td><td>specks, the narrow parts too small to cut from a broad part, and what details may leave of a hole they fill</td></tr>
 <tr><td>Leave out the background</td><td><code>auto_ignore_background</code></td><td>on</td><td>the background, read of the lowest shape</td></tr>
 </tbody>
 </table>
@@ -758,9 +835,12 @@ which saves a document VectorCraft 0.18.0 traced (<code>apps/stitchcraft-cli/tes
 sheet’s top half is digitized automatically, and its bottom half is sewn as drawn, in paint order. The
 bottom half sews first and stops, so that nothing digitized moves into it, and each half’s thread
 changes, jumps and time can be read. TS-13A sews the pictures of neighbours and sewing order, TS-13B
-block letters and lines traced as areas, and TS-13C a face drawn with lines and shapes in parts
-(<a href="../user/reference/test-sheets.html">test sheets</a>). The PE800 cuts no jump, and the sew-out reports where a
-shape sews down the thread of a jump before it.</p>
+block letters and lines traced as areas, TS-13C a face drawn with lines and shapes in parts, and TS-13D
+the emblem and the button, each traced abutting and stacked
+(<a href="../user/reference/test-sheets.html">test sheets</a>). TS-13D sews the emblem 42 mm wide, at 0.7 times its
+size. There the white round each star is narrower than a satin column, and sews as a column round the
+star, while the navy is one fill under the disc and the bars. The PE800 cuts no jump, and the sew-out
+reports where a shape sews down the thread of a jump before it.</p>
 </li>
 <li>
 <p><code>tests/auto_sheets.rs</code> answers the TS-13 checks that the sheets’ own stitches can, moved to where each sheet
@@ -781,9 +861,10 @@ the letters sew as columns with a jump between each 2:</p>
 <tr><th>Sheet</th><th style="text-align: right">As drawn: jump threads</th><th style="text-align: right">sewn down</th><th style="text-align: right">Digitized: jump threads</th><th style="text-align: right">sewn down</th></tr>
 </thead>
 <tbody>
-<tr><td>TS-13A</td><td style="text-align: right">8</td><td style="text-align: right">0</td><td style="text-align: right">11</td><td style="text-align: right">3</td></tr>
+<tr><td>TS-13A</td><td style="text-align: right">8</td><td style="text-align: right">0</td><td style="text-align: right">12</td><td style="text-align: right">4</td></tr>
 <tr><td>TS-13B</td><td style="text-align: right">6</td><td style="text-align: right">0</td><td style="text-align: right">37</td><td style="text-align: right">15</td></tr>
 <tr><td>TS-13C</td><td style="text-align: right">9</td><td style="text-align: right">4</td><td style="text-align: right">6</td><td style="text-align: right">1</td></tr>
+<tr><td>TS-13D</td><td style="text-align: right">1</td><td style="text-align: right">0</td><td style="text-align: right">10</td><td style="text-align: right">3</td></tr>
 </tbody>
 </table>
 </div>
