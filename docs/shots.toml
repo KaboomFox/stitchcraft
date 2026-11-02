@@ -541,7 +541,7 @@ kind = "stitch"
 fixture = "docs/fixtures/meander.svg"
 style = "simple"
 scale = 8.0
-alt = "A rounded square 30 mm a side sewn as a circular fill without underlay, its rings 1.5 mm apart, the needle travelling between the pieces of the spiral"
+alt = "A rounded square 30 mm a side sewn as a circular fill without underlay, its rings 1.5 mm apart, the needle running between the pieces of the spiral"
 panels = [
   { caption = "Underpath", params = { fill_method = "circular_fill", fill_underlay = "false", row_spacing_mm = "1.5" } },
   { caption = "Along the outline", params = { fill_method = "circular_fill", fill_underlay = "false", row_spacing_mm = "1.5", underpath = "false" } },

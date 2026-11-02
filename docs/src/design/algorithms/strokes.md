@@ -110,8 +110,8 @@ Where 2 segments meet smoothly nothing more is needed.
 - The fills sewn as one path have repeats and bean stitch of their own, which Ink/Stitch declares for
   its fills apart from a stroke's. Bean stitch comes first, and each repeat then sews everything sewn so
   far again, the other way round, so `k` repeats sew 2^(k−1) passes ([fills](fills.md#stitches)).
-- A circular fill's bean stitch leaves out the needle's travel between the pieces of its spiral, but
-  each stitch of that travel takes a step of the list, as in Ink/Stitch
+- A circular fill's bean stitch leaves out the stitches that run between the pieces of its spiral, but
+  each of those stitches takes a step of the list, as in Ink/Stitch
   ([circular fill](fills.md#circular-fill)).
 
 ### Random length

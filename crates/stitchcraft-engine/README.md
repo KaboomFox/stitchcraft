@@ -37,8 +37,8 @@ a spiral or double spiral (`generators::contour`). Its smoothed path shares `gen
 tatami fill's travel. Since M7.8 a meander fill wanders through the sides of a tiling made in code inside
 each part, never passing a point twice, as one line after the same underlay (`generators::meander`).
 Since M7.9 a circular fill sews a double spiral round each part's middle, cut by the part, its pieces
-routed as a tatami fill's rows after the same underlay (`generators::circular`), the needle travelling
-between them as between rows (`generators::tatami::sew::lines`).
+routed as a tatami fill's rows after the same underlay (`generators::circular`). The needle runs between
+them as it runs between rows (`generators::tatami::sew::lines`).
 Since M13.1 a shape without settings, read with `--auto`, is digitized automatically before anything else
 (`auto`). A line no wider than the design's narrowest satin stroke runs, a line up to 7 mm wide becomes
 satin columns along its centre line, and a wider line becomes the tatami fill of the area it paints
