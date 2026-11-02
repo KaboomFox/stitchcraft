@@ -17,13 +17,13 @@
 //! writes PES. Both files are then read by StitchCraft's reader, so that both are measured on the 0.1 mm
 //! grid PES keeps.
 //!
-//! **A test sheet** drawn as a design is a case's subject too (`sheet`). StitchCraft sews the sheet, as
-//! `stitch testsheet` does, and Ink/Stitch the SVG file of the elements StitchCraft sews it with, automatic
-//! digitizing's for its automatic shapes, written with their parameters (`stitchcraft_testkit::inkstitch`)
-//! to [`WRITTEN`], where a reviewer can open it. Ink/Stitch then sews the stitch types StitchCraft chose,
-//! with StitchCraft's settings, so the stitches StitchCraft makes of its own choices are checked against
-//! Ink/Stitch's (`REQ-AUTO-021`). StitchCraft's SVG reader reads no element's parameters until M8, which
-//! is why StitchCraft sews the sheet itself, not the file.
+//! **A test sheet** drawn as a design is a case's subject too (`sheet`). Both programs sew the SVG file of
+//! the elements StitchCraft sews the sheet with, automatic digitizing's for its automatic shapes, written
+//! with their parameters (`stitchcraft_testkit::inkstitch`) to [`WRITTEN`], where a reviewer can open it.
+//! Ink/Stitch then sews the stitch types StitchCraft chose, with StitchCraft's settings, so the stitches
+//! StitchCraft makes of its own choices are checked against Ink/Stitch's (`REQ-AUTO-021`), and StitchCraft
+//! reads the same file as Ink/Stitch does (`REQ-SVG-009`): what its SVG reader keeps of a sheet is what
+//! `stitch testsheet` sews (`REQ-PRM-003`).
 //!
 //! **The measures** ([`Measure`]): each file's stitches, the needle-downs; its size, the bounds of its needle
 //! points; its threads, in order; its trims; its jumps; and how nearly their thread's footprints overlap
@@ -234,7 +234,7 @@ pub fn run(root: &Path, subject: &Subject, excused: &BTreeMap<String, String>, o
             (inkstitch.pes(root, &path), sewn(&path, design))
         }
         Subject::Sheet(id) => match sheet(root, id) {
-            Ok((path, plan)) => (inkstitch.pes(root, &path), encoded(&plan, id)),
+            Ok(path) => (inkstitch.pes(root, &path), sewn(&path, id)),
             Err(e) => return outcome.failures.push(e),
         },
         // `load_cases` draws letters for centre-lines cases alone.
@@ -360,10 +360,10 @@ fn encoded(plan: &StitchPlan, name: &str) -> Result<Vec<u8>, String> {
     stitchcraft_formats::encode(plan, FormatId::PesV1, name).map(|encoded| encoded.bytes).map_err(|e| format!("{name}: {e}"))
 }
 
-/// The test sheet `id` as each program is given it: the SVG file for Ink/Stitch, written to [`WRITTEN`], of
-/// the elements StitchCraft sews the sheet with, automatic digitizing's for its automatic shapes, with their
-/// parameters; and StitchCraft's plan of the sheet, on the reference machine, as `stitch testsheet` writes it.
-fn sheet(root: &Path, id: &str) -> Result<(PathBuf, StitchPlan), String> {
+/// The test sheet `id` as both programs are given it: the SVG file, written to [`WRITTEN`], of the elements
+/// StitchCraft sews the sheet with, automatic digitizing's for its automatic shapes, with their parameters,
+/// which StitchCraft's SVG reader reads as they were written (`REQ-SVG-009`).
+fn sheet(root: &Path, id: &str) -> Result<PathBuf, String> {
     let sheet = testsheets::find(id).ok_or_else(|| format!("there is no test sheet `{id}`"))?;
     let design =
         sheet.design().ok_or_else(|| format!("{id} is drawn stitch by stitch, and is no design to write"))?.map_err(|e| format!("{id}: {e}"))?;
@@ -372,7 +372,7 @@ fn sheet(root: &Path, id: &str) -> Result<(PathBuf, StitchPlan), String> {
     let path = root.join(WRITTEN).join(format!("{}.svg", id.to_ascii_lowercase()));
     let written = path.parent().map_or(Ok(()), std::fs::create_dir_all).and_then(|()| std::fs::write(&path, svg));
     written.map_err(|e| format!("{}: {e}", util::rel(&path)))?;
-    Ok((path, sheet.plan().map_err(|e| format!("{id}: {e}"))?))
+    Ok(path)
 }
 
 /// The differential report, Markdown: each case's measures for both programs, failures first. `commit` is

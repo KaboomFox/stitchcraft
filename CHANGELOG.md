@@ -30,6 +30,26 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - Ink/Stitch's compatibility contract lists its meander tiles in the order its settings window does, and
     `check_params.py` compares them with Ink/Stitch's tiles. It finds that the underlay reads
     `row_spacing_mm` and `max_stitch_length_mm` too, where its own are not set (`read_by`).
+- M8.1: the settings of Ink/Stitch files (`REQ-SVG-009`, `REQ-SVG-010`). Each `inkstitch:*` attribute of a shape in an
+  SVG file is a parameter of every element the shape makes, under its own name, so an Ink/Stitch file sews
+  with its stitch types, spacings, underlays, locks and the rest of its settings, where every element
+  sewed at the defaults before. A shape with a fill and a stroke gives both the same settings, as in
+  Ink/Stitch, and `stroke_first` sews its stroke first.
+  - A setting the registry doesn't declare, such as one of a stitch type of M10, is kept, and `SC-W0105`
+    names it when the design is planned. A group's settings don't change what sews, as in Ink/Stitch, and
+    `SC-W0802` names them. A file's `embroider_` attributes, as early versions of Ink/Stitch wrote their
+    settings, are named as unread.
+  - In a file of an older version, `SC-W0802` counts the shapes whose settings Ink/Stitch's update changes
+    and StitchCraft doesn't update yet (M8.3): zigzag strokes' pull compensation and satin columns'
+    nearest points before version 3, and fills with `auto_fill` off before version 4.
+  - The Ink/Stitch differential sews each test sheet from the SVG file it writes, in both programs, and
+    the file reads back with every element's parameters (`REQ-PRM-003`). A new case,
+    `inkstitch-settings`, sews shapes of each family with settings other than the defaults: 3,558
+    stitches against Ink/Stitch's 3,550, its 5 threads in the same order.
+  - The compatibility contract lists the attributes Ink/Stitch reads or writes by name outside its
+    attribute list, which `check_params.py` now finds: `tartan` (M10), `lettering`, `color_sort_index`
+    and `letter-group` (M14), and `path_type`, `start` and `end`, which its tools write. The legacy names
+    Ink/Stitch reads only to update a file without a version are not planned.
 - The degenerate corpus that the design promised (`stitchcraft_testkit::degenerate`), and
   `tests/degenerate.rs`, which runs it through every fill, stroke and satin method, the fills under both
   fill rules. Its 23 shapes include a point, a line of no length, a ring along one line, a hair-thin

@@ -9,7 +9,7 @@ for a satin column.
 In VectorCraft, set the StitchCraft Stroke effect's `stroke_method` to `zigzag_stitch`, and `stitch export`
 sews it. From VectorCraft 0.14, the live effect shows the zigzag's stitches as wide as the object's stroke.
 An object without a stroke it leaves as it is drawn (`SC-I0810`): give it a stroke as wide as the zigzag.
-`stitch plan` reads Ink/Stitch's settings from SVG files from milestone M8
+In an SVG file, Ink/Stitch's attributes of the line set the same settings for `stitch plan`
 ([setting parameters](./#setting-parameters)).
 
 The pictures are drawn as the [running stitch's](running.md) are, from `docs/fixtures/zigzag.svg`, a wave

@@ -277,11 +277,11 @@ the file again without it. The excuse then counts only if the measure agrees. In
 nowhere (`DEV-FMT-001`) excuse as many trims and jumps as there are of them, and no more.
 
 `REQ-SVG-008`, `REQ-AUTO-021`, `REQ-AUTO-022` and `REQ-FILL-CON-008` are the requirements of level L3.
-The other runs of the suite leave them and their cases to this one. Until M8 reads every `inkstitch:`
-attribute, the corpus is the designs the SVG reader sews in full, at Ink/Stitch's defaults, with trim and
-stop commands and the file version. A case may name a test sheet drawn as a design instead (`sheet`).
-StitchCraft sews the sheet, and Ink/Stitch an SVG file of the elements StitchCraft sews it with, written
-with their parameters (`stitchcraft_testkit::inkstitch`). Automatic digitizing chooses ordinary elements
+The other runs of the suite leave them and their cases to this one. The corpus is designs the SVG reader
+sews in full, with their settings (`REQ-SVG-009`), trim and stop commands and the file version. A case may
+name a test sheet drawn as a design instead (`sheet`). Both programs sew an SVG file of the elements
+StitchCraft sews the sheet with, written with their parameters (`stitchcraft_testkit::inkstitch`), which
+StitchCraft's reader reads back unchanged (`REQ-PRM-003`). Automatic digitizing chooses ordinary elements
 with Ink/Stitch's parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check
 StitchCraft's stitches of those choices against Ink/Stitch's (`REQ-AUTO-021`). TS-11B checks the contour
 fills so, each strategy and join style among them (`REQ-FILL-CON-008`). `conformance/inkstitch/README.md`
