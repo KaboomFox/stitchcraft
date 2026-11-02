@@ -217,6 +217,66 @@ mod tests {
             vec![p(0.0, 1.0), p(0.0, 4.0), p(4.0, 4.0), p(4.0, 0.0), p(1.0, 0.0)],
         ];
         assert_eq!(path, Path { stretches: expected.to_vec(), left_out: 0 });
+        // With the rings alternating, the child runs the other way from the outline as it stands, as the
+        // middle it is would anyway: the same path.
+        assert_eq!(inner_to_outer(&tree, 1.0, p(0.0, 0.0), true, &mut Budget::DEFAULT.meter()).unwrap(), path);
+    }
+
+    #[test]
+    fn a_ring_is_sewn_from_child_to_child_a_row_spacing_past_each() {
+        // A square 0..10 with 2 children: a box 1 from its left side, entered at y = 4 - √1.25, and one 1 below
+        // its top side, entered at x = 4 - √1.25. Between them the ring runs from a row spacing past the first
+        // entry to the second, and after the second from a row spacing past it round to 1 short of its start.
+        let near_left = vec![p(1.0, 4.0), p(2.0, 4.0), p(2.0, 5.0), p(1.0, 5.0), p(1.0, 4.0)];
+        let near_top = vec![p(4.0, 8.0), p(5.0, 8.0), p(5.0, 9.0), p(4.0, 9.0), p(4.0, 8.0)];
+        let tree = Tree {
+            nodes: vec![
+                Node { ring: square(0.0, 10.0), children: vec![1, 2] },
+                Node { ring: near_left, children: Vec::new() },
+                Node { ring: near_top, children: Vec::new() },
+            ],
+        };
+        let path = inner_to_outer(&tree, 1.0, p(0.0, 0.0), false, &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(path.stretches.len(), 6, "{path:?}");
+        let s = 4.0 - 1.25_f64.sqrt();
+        let near = |stretch: &[Point], expected: &[Point]| {
+            stretch.len() == expected.len() && stretch.iter().zip(expected).all(|(q, e)| q.distance(*e) < 1e-9)
+        };
+        assert!(near(&path.stretches[1], &[p(0.0, 0.0), p(0.0, s)]), "{:?}", path.stretches[1]);
+        assert!(near(&path.stretches[3], &[p(0.0, s + 1.0), p(0.0, 10.0), p(s, 10.0)]), "{:?}", path.stretches[3]);
+        assert!(near(&path.stretches[5], &[p(s + 1.0, 10.0), p(10.0, 10.0), p(10.0, 0.0), p(1.0, 0.0)]), "{:?}", path.stretches[5]);
+    }
+
+    #[test]
+    fn what_is_left_of_a_ring_no_longer_than_a_row_spacing_is_sewn_whole() {
+        // From (5, 0), the square 0..10 runs left, round, and back along its bottom side from (10, 0). Its
+        // child, a box whose lower side lies 1.5 above that side from x = 6 to 7, is entered at (7, 0), 2 short
+        // of the end. Back from the child a row spacing on, at (6, 0), the 1 left is sewn whole.
+        let child = vec![p(6.0, 1.5), p(7.0, 1.5), p(7.0, 2.5), p(6.0, 2.5), p(6.0, 1.5)];
+        let tree = Tree { nodes: vec![Node { ring: square(0.0, 10.0), children: vec![1] }, Node { ring: child, children: Vec::new() }] };
+        let path = inner_to_outer(&tree, 1.0, p(5.0, 0.0), false, &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(path.stretches.last(), Some(&vec![p(6.0, 0.0), p(5.0, 0.0)]), "{path:?}");
+        // A lone ring a row spacing round is sewn whole too.
+        let small = Tree { nodes: vec![Node { ring: square(0.0, 0.25), children: Vec::new() }] };
+        let path = inner_to_outer(&small, 1.0, p(0.0, 0.0), false, &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(path.stretches, [vec![p(0.0, 0.0), p(0.25, 0.0), p(0.25, 0.25), p(0.0, 0.25), p(0.0, 0.0)]]);
+    }
+
+    #[test]
+    fn a_child_is_entered_within_reaches_that_scale_with_the_row_spacing() {
+        // Rows 2 apart, so a child is entered within 3, or else within 4.1: a box 2.5 from the left side of the
+        // square 0..20 is entered within 3 of its corner (2.5, 10), and one 3.5 from it within 4.1 of (3.5, 10).
+        let entered = |x: f64| {
+            let child = vec![p(x, 10.0), p(x + 1.5, 10.0), p(x + 1.5, 12.0), p(x, 12.0), p(x, 10.0)];
+            let tree = Tree { nodes: vec![Node { ring: square(0.0, 20.0), children: vec![1] }, Node { ring: child, children: Vec::new() }] };
+            let path = inner_to_outer(&tree, 2.0, p(0.0, 0.0), false, &mut Budget::DEFAULT.meter()).unwrap();
+            assert_eq!(path.left_out, 0);
+            path.stretches.get(1).and_then(|stretch| stretch.last().copied())
+        };
+        let at = entered(2.5).unwrap();
+        assert!(at.distance(p(0.0, 10.0 - 2.75_f64.sqrt())) < 1e-9, "{at:?}");
+        let at = entered(3.5).unwrap();
+        assert!(at.distance(p(0.0, 10.0 - 4.56_f64.sqrt())) < 1e-9, "{at:?}");
     }
 
     #[test]

@@ -157,6 +157,17 @@ fn req_fill_con_006_repeats_double_the_path_and_bean_stitch_triples_each_stitch(
 }
 
 #[test]
+fn req_fill_con_006_random_lengths_vary_by_their_share_of_the_longest_stitch() {
+    // At 10 %, each stitch along a square's straight rings is drawn from the 4 mm longest stitch ± 0.4 mm:
+    // some are longer than 4 mm, and none is longer than 4.4 mm.
+    let square = [(0.0, 0.0), (40.0, 0.0), (40.0, 40.0), (0.0, 40.0)];
+    let random = [("enable_random_stitch_length", "true"), ("random_stitch_length_jitter_percent", "10")];
+    let points = needles(&contour(&[&square], &random));
+    let longest = points.windows(2).map(|w| w[0].distance(w[1])).fold(0.0, f64::max);
+    assert!(longest > 4.0 && longest <= 4.4 + 1e-9, "{longest}");
+}
+
+#[test]
 fn req_fill_con_007_the_tatami_fill_s_underlay_comes_first_and_the_rings_go_on_from_it() {
     // With the default underlay, rows square to the fill's angle of 0, 3 mm apart, then the rings, in one
     // run: the only jump is the one to the fill's start, as without underlay.

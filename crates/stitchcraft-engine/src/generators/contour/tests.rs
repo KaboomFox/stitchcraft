@@ -58,9 +58,63 @@ fn diag_sc_i0315_a_part_too_narrow_for_a_spiral_is_sewn_inner_to_outer() {
     for strategy in [Strategy::SingleSpiral, Strategy::DoubleSpiral] {
         let stitched = sewn(&strip, &contour(strategy), None);
         assert_eq!(codes(&stitched), [Code::FillContourSpiralTooShort], "{strategy:?}");
+        // The fill has one part, so the message speaks of the fill.
+        assert_eq!(stitched.warnings[0].message, "This contour fill is too narrow for its spiral, so it is sewn inner to outer.");
         let inner = sewn(&strip, &contour(Strategy::InnerToOuter), None);
         assert_eq!(stitched.runs, inner.runs, "{strategy:?}");
     }
+    // A spiral of one turn of 2 points, a stitch, is sewn as a spiral: a strip 0.3 mm wide with one ring
+    // inside its outline, 0.1 mm in, and 3.6 mm round, 2.4 points to a longest stitch of 30 mm.
+    let narrow = part(&[(0.0, 0.0), (1.5, 0.0), (1.5, 0.3), (0.0, 0.3)], &[]);
+    let mut spiral = contour(Strategy::SingleSpiral);
+    spiral.spacing = 0.1;
+    spiral.stitching.length = 30.0;
+    let mut tally = Tally::default();
+    let path = tally.path(&narrow, &spiral, Point::ORIGIN, &mut Budget::DEFAULT.meter()).unwrap();
+    assert_eq!((path.concat().len(), tally.short), (2, 0), "{path:?}");
+}
+
+#[test]
+fn diag_sc_e0009_a_level_whose_edges_do_not_join_is_said() {
+    // A square 70 m from the origin, past the region grid's reach: its rings cannot be found, and the fill
+    // says so, sewing its outline alone.
+    let far = Region { parts: vec![part(&[(70_000.0, 0.0), (70_010.0, 0.0), (70_010.0, 10.0), (70_000.0, 10.0)], &[])] };
+    let stitched = sewn(&far, &contour(Strategy::InnerToOuter), None);
+    assert_eq!(codes(&stitched), [Code::InternalCheckFailed]);
+    assert!(stitched.runs[0].iter().all(|q| q.x() >= 70_000.0 - 1e-9));
+}
+
+#[test]
+fn diag_sc_w0311_rings_inner_to_outer_cannot_reach_are_said() {
+    // A tree whose child lies 3 row spacings inside its parent: inner to outer cannot step to it, and leaves
+    // it out with the ring under it.
+    let ring = |a: f64, b: f64| [(a, a), (b, a), (b, b), (a, b), (a, a)].map(|(x, y)| Point::new(x, y).unwrap()).to_vec();
+    let rings = tree::Tree {
+        nodes: vec![
+            tree::Node { ring: ring(0.0, 10.0), children: vec![1] },
+            tree::Node { ring: ring(3.0, 7.0), children: vec![2] },
+            tree::Node { ring: ring(4.0, 6.0), children: Vec::new() },
+        ],
+    };
+    let mut tally = Tally::default();
+    let piece = part(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)], &[]);
+    tally.inner(&rings, &piece, &contour(Strategy::InnerToOuter), Point::ORIGIN, &mut Budget::DEFAULT.meter()).unwrap();
+    let said: Vec<(Code, String)> = tally.said().map(|d| (d.code, d.message)).collect();
+    assert_eq!(said, [(Code::FillContourRingsLeftOut, "This contour fill leaves out 2 of its rings, which its path does not reach.".to_string())]);
+}
+
+#[test]
+fn each_span_draws_its_own_random_lengths() {
+    // 2 stretches alike, 30 mm along x and 1 mm apart, at random lengths: each is a span of its own, its
+    // draws keyed by its number, so their needle points fall at other places along them.
+    let mut random = contour(Strategy::InnerToOuter);
+    random.stitching.jitter = Some(0.5);
+    let p = |x: f64, y: f64| Point::new(x, y).unwrap();
+    let stretches = [vec![p(0.0, 0.0), p(30.0, 0.0)], vec![p(0.0, 1.0), p(30.0, 1.0)]];
+    let run = Tally::default().stitched(&stretches, &random, &SplitMix64::new(7), &mut Budget::DEFAULT.meter()).unwrap();
+    let along = |y: f64| run.iter().filter(|q| (q.y() - y).abs() < 1e-9).map(|q| q.x()).collect::<Vec<_>>();
+    assert!(along(0.0).len() > 5, "{run:?}");
+    assert_ne!(along(0.0), along(1.0));
 }
 
 #[test]
