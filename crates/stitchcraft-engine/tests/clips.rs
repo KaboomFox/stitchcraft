@@ -140,6 +140,37 @@ fn req_gen_005_a_stroke_is_cut_where_it_crosses_its_clips_and_each_piece_sews_on
 }
 
 #[test]
+fn req_gen_005_a_manual_stitch_is_cut_from_node_to_node_and_another_stroke_along_its_curves() {
+    // A curve from (-30, 0) to (30, 0) that bulges 7.5 mm up, cut to x from -10 to 10. A manual stitch sews
+    // its nodes, so its line runs straight between them and is cut there, on the x axis. A running stitch
+    // follows the curve, so it is cut on the bulge, and every needle point lies on it, well above the axis.
+    let bulge = Path {
+        subpaths: vec![Subpath {
+            start: p(-30.0, 0.0),
+            segments: vec![Segment::Cubic(p(-20.0, -10.0), p(20.0, -10.0), p(30.0, 0.0))],
+            closed: false,
+        }],
+    };
+    let clip = [&rect(-10.0, -20.0, 10.0, 5.0)[..]];
+    let manual = clipped(along("manual", bulge.clone(), &RED, &[("stroke_method", "manual_stitch")]), &clip);
+    // The machine's longest stitch splits its 20 mm in 2, on the axis too.
+    assert_eq!(sewn_by(&planned(vec![manual]), "manual"), [p(-10.0, 0.0), p(0.0, 0.0), p(10.0, 0.0)]);
+    let running = sewn_by(&planned(vec![clipped(along("running", bulge, &RED, &[]), &clip)]), "running");
+    assert!(running.len() > 3 && running.iter().all(|q| q.y() < -5.0 && q.x().abs() <= 10.0 + EDGE), "{running:?}");
+}
+
+#[test]
+fn req_gen_005_a_clipped_fill_that_bounds_no_area_says_so_as_an_unclipped_one_does() {
+    // A ring that runs out and back along one line bounds no area, clipped or not: the fill says that, not
+    // that its clips leave nothing of it.
+    let flat = fill("flat", &[&[(-10.0, 0.0), (10.0, 0.0)]], &RED, &[]);
+    let outcome =
+        planned(vec![clipped(flat, &[&rect(-20.0, -20.0, 20.0, 20.0)]), along("after", polylines(&[&[(0.0, 30.0), (10.0, 30.0)]]), &RED, &[])]);
+    let said = messages(&outcome);
+    assert!(said.iter().any(|m| m.contains("SC-W0303")) && !said.iter().any(|m| m.contains("SC-W0013")), "{said:?}");
+}
+
+#[test]
 fn req_gen_005_a_subpath_its_clips_leave_whole_sews_as_drawn() {
     // A curve inside its clip, and a second subpath outside it: the curve sews as it does unclipped, its
     // points flattened as a running stitch flattens them, not as the cut would.
