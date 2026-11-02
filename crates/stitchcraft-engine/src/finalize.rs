@@ -14,9 +14,10 @@
 //!    when elements sewn over each other bring a tie-off within a lock stitch of a tie-in, is left out
 //!    itself, and a trim or stop after it happens where the needle now is; so is a point where the
 //!    needle already is. Only a run's first point never goes. A stitch into or out of a lock point is a
-//!    lock stitch, whose shortest is 0.2 mm. `SC-I0504` says how many were left out. The rule is one
-//!    function, `thin`, which the generators that join pieces of their own share, so that they leave
-//!    finalize nothing to thin.
+//!    lock stitch, whose shortest is 0.2 mm. A stitch is kept only if it is still long enough once the
+//!    plan is moved to the hoop's centre (step 3), whose rounding may shorten it by a few billionths of a
+//!    millimetre. `SC-I0504` says how many were left out. The rule is one function, `thin`, which the
+//!    generators that join pieces of their own share, so that they leave finalize nothing to thin.
 //! 2. **The longest stitch.** A stitch longer than the machine's is split into equal parts: a hand-placed
 //!    stitch, say, or a custom lock's long step (`SC-I0703`). Each part counts against the stitch budget.
 //! 3. **The hoop's centre.** The fitted plan is moved so the design's origin, or else the centre of the
@@ -105,6 +106,14 @@ fn centred(mut plan: StitchPlan, origin: Option<Point>) -> StitchPlan {
     plan
 }
 
+/// How much moving the plan to the hoop's centre ([`centred`]) may shorten a stitch, at most, in
+/// millimetres. Each point rounds to the nearest double as it moves, a few units in the last place of a
+/// coordinate within the working limit, 10 m: about 2e-12 mm. A run keeps a stitch only if it is this much
+/// longer than [`at_least`] asks, so that the check of the moved plan, which asks the same, finds it long
+/// enough. A tie-off whose first stitch was 1e-9 mm short of its 0.2 mm, at the edge of what counts as 0.2
+/// mm, once fell past that edge as the plan moved, and the plan was refused as a bug (`SC-E0009`).
+const MOVED: f64 = 1e-10;
+
 /// The plan as it is fitted, and what fitting it changed.
 struct Fitted<'s> {
     /// Each element's shortest stitch, by its place in the plan's element table.
@@ -161,7 +170,7 @@ impl<'s> Fitted<'s> {
         let mut short_of = Vec::new();
         let kept = thin(
             std::mem::take(run),
-            |from, to| !at_least(from.at.distance(to.at), self.floor(from, to)),
+            |from, to| !at_least(from.at.distance(to.at) - MOVED, self.floor(from, to)),
             |point| point.origin.role == Role::Lock,
             |from, to| short_of.push(self.floor(from, to)),
         );
