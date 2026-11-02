@@ -604,3 +604,27 @@ file = "crates/stitchcraft-engine/src/generators/contour/spiral.rs"
 mutant = "replace <= with < in resampled"
 line = "if at <= 0.0 {"
 why = "no distance along the ring is below 0, and at 0 the walk stops at the start of the first side that has a length, which is the ring's first point, or at the ring's last point when no side has one, which is then its first"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/region/mod.rs"
+mutant = "replace || with && in Polygon::centroid"
+line = "if area == 0.0 || !area.is_finite() {"
+why = "the early return only spares a division whose answer is the outline's first point all the same: dividing the moments by an area of 0 makes a coordinate infinite or not a number, which Point::new refuses, so the first point is taken; and dividing them by an area that is not finite makes one not a number too, or adds 0 to each of the first point's"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/region/mod.rs"
+mutant = "replace < with > in Polygon::centroid"
+line = "let sign = if (a < 0.0) == (k == 0) { -1.0 } else { 1.0 };"
+why = "it turns the sign of every ring whose area does not add up to 0, so the area and both moments all change sign, exactly, and the centroid, their quotient, is the same to the last bit. A ring whose area adds up to 0 keeps its sign, but the rings of a part, grown or not, each wind round some area, the others being left out when they are joined, so only a coincidence of rounding could make one, and no case can aim at that"
+
+[[equivalent]]
+file = "crates/stitchcraft-svg/src/path.rs"
+mutant = "replace < with == in turns"
+line = "if disc < 0.0 {"
+why = "for a negative discriminant the square root is not a number, and so are both roots, which the filter that keeps roots between 0 and 1 drops, as the early return does; for a discriminant of 0, which the mutant passes over, the derivative is a square that touches 0 without changing sign, so the curve doesn't turn there, and its point lies between the curve's ends along that axis, inside the box"
+
+[[equivalent]]
+file = "crates/stitchcraft-svg/src/path.rs"
+mutant = "replace < with <= in turns"
+line = "all.into_iter().filter(|t| *t > 0.0 && *t < 1.0)"
+why = "a root at 1 is the curve's end, which the box takes in as the segment's end in any case, exactly: at 1 the curve's point is its end point to the last bit"
