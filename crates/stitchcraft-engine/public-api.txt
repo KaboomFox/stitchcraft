@@ -106,6 +106,14 @@ pub stitchcraft_engine::design::Shape::Stroke::width: stitchcraft_core::units::M
 impl stitchcraft_engine::design::Shape
 pub fn stitchcraft_engine::design::Shape::path(&self) -> &stitchcraft_engine::design::Path
 pub fn stitchcraft_engine::design::Shape::stroke(stitchcraft_engine::design::Path) -> stitchcraft_engine::design::Shape
+pub struct stitchcraft_engine::design::Clip
+pub stitchcraft_engine::design::Clip::shapes: alloc::vec::Vec<stitchcraft_engine::design::ClipShape>
+impl stitchcraft_engine::design::Clip
+pub fn stitchcraft_engine::design::Clip::of(stitchcraft_engine::design::Path, stitchcraft_engine::design::FillRule) -> stitchcraft_engine::design::Clip
+pub fn stitchcraft_engine::design::Clip::points(&self) -> impl core::iter::traits::iterator::Iterator<Item = stitchcraft_core::units::Point> + '_
+pub struct stitchcraft_engine::design::ClipShape
+pub stitchcraft_engine::design::ClipShape::path: stitchcraft_engine::design::Path
+pub stitchcraft_engine::design::ClipShape::rule: stitchcraft_engine::design::FillRule
 pub struct stitchcraft_engine::design::Design
 pub stitchcraft_engine::design::Design::settings: stitchcraft_engine::design::DesignSettings
 pub stitchcraft_engine::design::Design::sort_colours: bool
@@ -128,6 +136,7 @@ impl core::default::Default for stitchcraft_engine::design::DesignSettings
 pub fn stitchcraft_engine::design::DesignSettings::default() -> Self
 pub struct stitchcraft_engine::design::Element
 pub stitchcraft_engine::design::Element::automatic: bool
+pub stitchcraft_engine::design::Element::clips: alloc::vec::Vec<stitchcraft_engine::design::Clip>
 pub stitchcraft_engine::design::Element::hints: stitchcraft_engine::design::Hints
 pub stitchcraft_engine::design::Element::id: stitchcraft_core::element::ElementId
 pub stitchcraft_engine::design::Element::name: core::option::Option<alloc::string::String>
@@ -546,6 +555,7 @@ pub struct stitchcraft_engine::normalize::region::Unjoined
 pub const stitchcraft_engine::normalize::region::SMALL_FILL: f64
 pub const stitchcraft_engine::normalize::region::TINY_PART: f64
 pub fn stitchcraft_engine::normalize::region::build(&stitchcraft_engine::design::Path, stitchcraft_engine::design::FillRule, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::normalize::region::Built, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_engine::normalize::region::build_clipped(&stitchcraft_engine::design::Path, stitchcraft_engine::design::FillRule, &[stitchcraft_engine::design::Clip], &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::normalize::region::Built, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::normalize::satin
 pub enum stitchcraft_engine::normalize::satin::Pairing
 pub stitchcraft_engine::normalize::satin::Pairing::Nodes
@@ -622,7 +632,7 @@ pub const fn stitchcraft_engine::testsheets::TestSheet::designed(&self) -> bool
 pub fn stitchcraft_engine::testsheets::TestSheet::digitized(&self) -> bool
 pub fn stitchcraft_engine::testsheets::TestSheet::drawable(&self) -> bool
 pub fn stitchcraft_engine::testsheets::TestSheet::plan(&self) -> core::result::Result<stitchcraft_plan::plan::StitchPlan, stitchcraft_engine::testsheets::SheetError>
-pub fn stitchcraft_engine::testsheets::TestSheet::positioned(&self) -> bool
+pub fn stitchcraft_engine::testsheets::TestSheet::uses_file_features(&self) -> bool
 pub const stitchcraft_engine::testsheets::STITCH_LEN: f64
 pub static stitchcraft_engine::testsheets::SHEETS: &[stitchcraft_engine::testsheets::TestSheet]
 pub fn stitchcraft_engine::testsheets::find(&str) -> core::option::Option<&'static stitchcraft_engine::testsheets::TestSheet>

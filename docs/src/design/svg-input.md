@@ -122,6 +122,44 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
   adapter, but every other gradient and every pattern in black, whatever colour is written after it
   (`DEV-SVG-013`).
 
+## Clip paths
+
+A shape that a `clip-path` cuts shows only inside it, and sews only what shows (`REQ-SVG-011`). The
+adapter reads each clip path into a clip of the shape's elements, and the engine cuts them to it
+(`REQ-GEN-005`, [engine pipeline](engine-pipeline.md)). The code is in `crates/stitchcraft-svg/src/document/clip.rs`.
+
+- **Which clip paths.** The `clip-path` property of the shape, and of each group, link (`<a>`) and
+  `<switch>` round it, as an attribute, in a `style` or by a style sheet's rule, names a `<clipPath>` by
+  `url(#id)`. The shape must lie inside every one. A clip path's own `clip-path` cuts it too, as
+  another clip. Ink/Stitch reads only the shape's and its groups' (`DEV-SVG-018`), and no clip path's own
+  (`DEV-SVG-017`).
+- **Its area.** A clip path is its children's areas together, each filled by its `clip-rule`, which they
+  inherit from the clip path: a path or basic shape, or a `<use>` of one at the use's `x` and `y`. A
+  group's children count, as Inkscape draws them, because Inkscape puts the group it clips with in the
+  clip path as it is. SVG doesn't allow a group there, and a browser leaves one out. Children that aren't
+  displayed (`display: none`, `visibility: hidden`) are left out, as are lines, which have no inside, and
+  text, which the adapter doesn't read. A child's paint doesn't matter. Ink/Stitch pools every
+  child's subpaths and takes the largest for the outline and the rest for holes, whatever their rules,
+  so where 2 children overlap it leaves the overlap out (`DEV-SVG-016`).
+- **Where it lies.** In the user space of the element it clips, that element's own transform included,
+  after the clip path's transform and each child's. With `clipPathUnits="objectBoundingBox"`, its
+  coordinates are shares of the box round the shape, curves bounded where they turn. The transforms of
+  the elements the clip path itself lies in don't move it. Ink/Stitch puts the clipped element's
+  transform in place of the clip path's, reads `objectBoundingBox` as user space and applies the
+  transforms round the clip path (`DEV-SVG-017`).
+- **What it leaves.** A fill's area is cut before its underlay, `expand_mm` and its method see it, so
+  `expand_mm` grows the cut area past the clip's edge, as in Ink/Stitch. A stroke's line is cut where it
+  crosses the clip's outline, and each piece sews on its own, in order along it. A satin column is sewn
+  whole, as Ink/Stitch sews it (`SC-W0217`). A clip path with no area, empty or of lines or text alone,
+  hides the whole shape in a viewer. The shape isn't sewn then (`SC-W0013`). Ink/Stitch takes such
+  a clip path for none and sews the shape whole (`DEV-SVG-019`).
+- **Exceptions.** A `clip-path` that names nothing, or an element that isn't a clip path, clips nothing,
+  as in a viewer. `SC-W0802` names the rest: a CSS shape such as `circle(50%)`, clip paths that name each
+  other in a loop, `objectBoundingBox` on a group, whose box the adapter doesn't measure, a `clip-path` on
+  a clip path's child, which neither program applies, and the root's. An Inkscape power clip is read from
+  the clip path the file holds, as a viewer draws it, where Ink/Stitch reads the path effect's settings
+  (`DEV-SVG-020`). Masks are not applied, as in Ink/Stitch.
+
 ## Stroke width and join
 
 A stroke's width and join give a satin column drawn as one path its width and its corners
@@ -261,10 +299,11 @@ that applies them.
 ## Reports
 
 - `SC-W0802` reports a feature that is not stitched. Text, images, clones, nested `<svg>` elements and
-  the style sheet rules that are not read are such features. So are clipping, masks, filters and
-  markers, a group's Ink/Stitch settings, and the settings of Ink/Stitch's early versions (`embroider_`
-  attributes). Clipping is planned for M8.5. It reports a file Ink/Stitch would update, or warn about,
-  that is read as it is: one with Ink/Stitch's content and no file version, or of a newer version.
+  the style sheet rules that are not read are such features. So are masks, filters and markers, a
+  group's Ink/Stitch settings, the settings of Ink/Stitch's early versions (`embroider_` attributes),
+  and what is not applied of a clip path ([Clip paths](#clip-paths)). It reports a file Ink/Stitch would
+  update, or warn about, that is read as it is: one with Ink/Stitch's content and no file version, or of
+  a newer version.
 - `SC-I0818` says how many shapes of a file an older Ink/Stitch saved are read as its update changes
   them, for each change.
 - `SC-W0804` reports geometry that cannot be used:

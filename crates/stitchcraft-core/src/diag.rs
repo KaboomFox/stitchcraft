@@ -148,7 +148,7 @@ registry! {
     /// (`DEV-SVG-019`).
     ///
     /// Move the element or its clip paths, or delete the element if it is hidden on purpose.
-    ClippedAway = "SC-W0013", Warning, "Clip paths leave nothing of this element; it sews nothing";
+    ClippedAway = "SC-W0013", Warning, "Element outside its clip paths; left out";
 
     /// A parameter's value could not be understood: a number where a word was expected, a choice that
     /// is not one of the parameter's options, or a list with the wrong number of values. The element was
@@ -638,7 +638,10 @@ registry! {
     /// Ink/Stitch would make to a file with its settings and no file version, or from a newer Ink/Stitch,
     /// which is read as it is. Of its commands, one on an object that is not stitched is named, and so is a
     /// start, end or target command whose place doesn't read, and one on a shape digitized automatically
-    /// (`--auto`), which places where its parts start and end.
+    /// (`--auto`), which places where its parts start and end. Of clip paths, which cut the shapes they clip,
+    /// what isn't applied is named: text in one, which adds nothing to it, a clip path on a clip path's
+    /// shape, one that isn't a reference, such as a CSS shape, clip paths that name each other in a loop,
+    /// `objectBoundingBox` units on a group, and the root's.
     ///
     /// The message names the element and what was done. Convert text and clones to paths in the editor
     /// (in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.
