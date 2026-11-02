@@ -445,7 +445,16 @@ fn line(id: &str, subpaths: Vec<Subpath>, width: f64, cap: Cap, thread: &Thread)
 /// An automatic element named `id`, of `shape`, sewn with `thread`.
 fn automatic(id: &str, shape: Shape, thread: &Thread) -> Result<Element, SheetError> {
     let id = ElementId::new(id)?;
-    Ok(Element { id, name: None, shape, thread: thread.clone(), params: ParamSet::default(), automatic: true, hints: Hints::default() })
+    Ok(Element {
+        id,
+        name: None,
+        shape,
+        thread: thread.clone(),
+        params: ParamSet::default(),
+        automatic: true,
+        hints: Hints::default(),
+        clips: Vec::new(),
+    })
 }
 
 /// The rectangle from `(x0, y0)` to `(x1, y1)`, its corners in order.

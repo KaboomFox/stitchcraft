@@ -32,6 +32,7 @@
 
 mod arrange;
 mod assemble;
+pub(crate) mod cut;
 pub(crate) mod geom;
 pub(crate) mod ops;
 mod snap;
@@ -41,7 +42,7 @@ pub use assemble::Unjoined;
 use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Point};
 
-use crate::design::{FillRule, Path};
+use crate::design::{Clip, FillRule, Path};
 use crate::normalize::stroke;
 
 /// Points this near each other, in millimetres, are one point to the code that sews a region: a row's
@@ -143,10 +144,68 @@ pub struct Built {
 /// each ring compared with a face or an outline, and each point walked to find a ring's bounds or its place
 /// among the faces and outlines (`REQ-FILL-004`).
 pub fn build(path: &Path, rule: FillRule, meter: &mut Meter) -> Result<Built, Exhausted> {
+    build_clipped(path, rule, &[], meter)
+}
+
+/// The region [`build`] builds of `path` under `rule`, cut to `clips`: the part of it inside every one
+/// (`REQ-GEN-005`). What is said of it is said of the region once cut, its parts, size and pieces, and a
+/// fill its clips leave nothing of says so (`SC-W0013`) and sews nothing. The same work as [`build`], and the
+/// work of building each clip and of each cut ([`ops::intersection`]).
+pub fn build_clipped(path: &Path, rule: FillRule, clips: &[Clip], meter: &mut Meter) -> Result<Built, Exhausted> {
+    let mut area = area(&rings(path, meter)?, |w| fills(rule, w), meter)?;
+    let Ok(parts) = &area.parts else { return Ok(built(area, rule)) };
+    if clips.is_empty() || parts.is_empty() {
+        return Ok(built(area, rule));
+    }
+    let not_sewn = |diagnostic| Built { region: Region::default(), diagnostics: vec![diagnostic] };
+    let cut = match clipped(clips, meter)? {
+        Ok(clip) => ops::intersection(parts, &clip, meter)?,
+        Err(unjoined) => return Ok(not_sewn(unjoined.clip())),
+    };
+    match cut {
+        Ok(cut) if cut.is_empty() => {
+            Ok(not_sewn(Diagnostic::new(Code::ClippedAway, "Its clip paths leave nothing of this fill, so it sews nothing.")))
+        }
+        Ok(cut) => {
+            area.parts = Ok(cut);
+            Ok(built(area, rule))
+        }
+        Err(unjoined) => Ok(not_sewn(unjoined.clip())),
+    }
+}
+
+/// The area every one of `clips` covers, each the union of its shapes' regions, each shape's the region its
+/// path bounds under its rule: their parts' common part, or [`Unjoined`] (a bug). None leaves nothing: a
+/// caller with no clips cuts nothing.
+pub(crate) fn clipped(clips: &[Clip], meter: &mut Meter) -> Result<Result<Vec<Polygon>, Unjoined>, Exhausted> {
+    let mut common: Option<Vec<Polygon>> = None;
+    for clip in clips {
+        let mut shapes = Vec::with_capacity(clip.shapes.len());
+        for shape in &clip.shapes {
+            match area(&rings(&shape.path, meter)?, |w| fills(shape.rule, w), meter)?.parts {
+                Ok(parts) => shapes.push(parts),
+                Err(unjoined) => return Ok(Err(unjoined)),
+            }
+        }
+        let parts = match ops::union(shapes.iter().map(Vec::as_slice), meter)? {
+            Ok(parts) => parts,
+            Err(unjoined) => return Ok(Err(unjoined)),
+        };
+        common = Some(match common {
+            None => parts,
+            Some(before) => match ops::intersection(&before, &parts, meter)? {
+                Ok(both) => both,
+                Err(unjoined) => return Ok(Err(unjoined)),
+            },
+        });
+    }
+    Ok(Ok(common.unwrap_or_default()))
+}
+
+/// The closed rings of `path`'s subpaths, flattened as a fill's outline is, those that bound nothing left out.
+fn rings(path: &Path, meter: &mut Meter) -> Result<Vec<Vec<Point>>, Exhausted> {
     let flat = stroke::flatten(path, stroke::SHAPE_TOLERANCE, meter)?;
-    let rings: Vec<Vec<Point>> =
-        flat.pieces.into_iter().map(|piece| geom::closed(&piece.points)).filter(|ring| geom::without_repeats(ring).len() >= 4).collect();
-    Ok(built(area(&rings, |w| fills(rule, w), meter)?, rule))
+    Ok(flat.pieces.into_iter().map(|piece| geom::closed(&piece.points)).filter(|ring| geom::without_repeats(ring).len() >= 4).collect())
 }
 
 /// `p` on the grid a region's points lie on ([`snap::GRID`]), where coordinates' differences are exact

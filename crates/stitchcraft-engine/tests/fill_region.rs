@@ -38,6 +38,7 @@ fn fill(id: &str, path: Path, rule: FillRule) -> Element {
         params: ParamSet::default(),
         automatic: false,
         hints: Default::default(),
+        clips: Vec::new(),
     }
 }
 

@@ -179,6 +179,12 @@ fn turns(previous: (f64, f64), next: (f64, f64)) -> bool {
     dot < CORNER_COS * lengths
 }
 
+/// The points of `subpath` flattened as a shape's outline is, within [`SHAPE_TOLERANCE`]: the line a running
+/// stitch or a zigzag stroke cut to its clips is cut along (`crate::normalize::region::cut`).
+pub(crate) fn flattened(subpath: &Subpath, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+    Ok(piece(subpath, SHAPE_TOLERANCE, meter)?.points)
+}
+
 fn piece(subpath: &Subpath, tolerance: f64, meter: &mut Meter) -> Result<Piece, Exhausted> {
     // The segments that do not move are dropped, so what is left starts where the subpath does.
     let mut points = vec![subpath.start];

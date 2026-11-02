@@ -637,7 +637,16 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             };
             let id = ElementId::new(format!("svg:{label}:{part}"))
                 .map_err(|e| Diagnostic::new(Code::InternalCheckFailed, format!("The SVG reader made an element id that cannot be used: {e}.")))?;
-            self.elements.push(Element { id, name: name.clone(), shape, thread: Thread::new(colour), params: params.clone(), automatic, hints });
+            self.elements.push(Element {
+                id,
+                name: name.clone(),
+                shape,
+                thread: Thread::new(colour),
+                params: params.clone(),
+                automatic,
+                hints,
+                clips: Vec::new(),
+            });
             self.stitched_targets.insert(place(node));
         }
         Ok(())

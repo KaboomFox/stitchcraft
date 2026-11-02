@@ -5,7 +5,7 @@
 
 use stitchcraft_core::{Budget, ElementId, Mm, Point};
 use stitchcraft_engine::auto::{self, AutoParams};
-use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule, Hints, Path, Segment, Shape, Subpath};
+use stitchcraft_engine::design::{Cap, Clip, Design, DesignSettings, Element, FillRule, Hints, Path, Segment, Shape, Subpath};
 use stitchcraft_engine::{PlanOutcome, plan};
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::profiles::REFERENCE;
@@ -44,6 +44,7 @@ pub fn along(id: &str, path: Path, thread: &Thread, params: &[(&str, &str)]) -> 
         params: params.iter().copied().collect::<ParamSet>(),
         automatic: false,
         hints: Hints::default(),
+        clips: Vec::new(),
     }
 }
 
@@ -57,6 +58,14 @@ pub fn widened(element: Element, width: f64) -> Element {
 pub fn capped(element: Element, cap: Cap) -> Element {
     let Shape::Stroke { path, width, join, .. } = element.shape else { panic!("`{}` is not a stroke", element.id) };
     Element { shape: Shape::Stroke { path, width, join, cap }, ..element }
+}
+
+/// `element` cut to one clip more: the area the rings `parts` bound by the nonzero rule, as a clip path
+/// round it cuts it (`REQ-GEN-005`).
+pub fn clipped(element: Element, parts: &[&[(f64, f64)]]) -> Element {
+    let mut clips = element.clips;
+    clips.push(Clip::of(rings(parts), FillRule::NonZero));
+    Element { clips, ..element }
 }
 
 /// `element` as a shape without settings that StitchCraft digitizes ([`Element::automatic`]).
@@ -153,6 +162,7 @@ pub fn fill(id: &str, parts: &[&[(f64, f64)]], thread: &Thread, params: &[(&str,
         params: params.iter().copied().collect::<ParamSet>(),
         automatic: false,
         hints: Hints::default(),
+        clips: Vec::new(),
     }
 }
 
