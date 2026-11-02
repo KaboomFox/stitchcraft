@@ -45,8 +45,10 @@ Auto effect ([below](#in-vectorcraft-the-auto-effect)).
 `--auto` digitizes each shape without settings by its width (`SC-I0901`). A line runs, a band as wide as a
 satin column sews as satin columns, and a broader area sews as a tatami fill. The white round the badge was
 traced lowest, and covers the whole picture. It is the picture's background, the fabric's own colour, and is
-left out (`SC-W0906`). Each area reaches 0.4 mm under the shapes sewn after it that it touches
-(`SC-I0904`), so that no fabric shows where they meet once the thread pulls in. The example plans
+left out (`SC-W0906`). The red disc and the blue square are broader than a satin column, and each is
+filled whole under the shape in its hole, which sews on top (`SC-I0908`). Each is then cut away under that
+shape, 0.4 mm inside its edge (`SC-I0904`), so that no fabric shows where they meet once the thread pulls
+in, and nothing sews twice. The example plans
 `traced-badge.svg`, a badge drawn as Image Trace traces one, and a document that VectorCraft saved plans the
 same way.
 

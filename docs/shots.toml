@@ -165,6 +165,14 @@ style = "realistic"
 scale = 3.0
 alt = "TS-13C as it will sew: a pink face drawn with black lines, a gold star and a red balloon on its string, twice. At the top, digitized, the face's outlines are wide satin columns, and the star's points and the string are columns over their fill. At the bottom, in paint order, the lines are thin running stitches."
 
+[[shot]]
+id = "testsheet-ts-13d"
+kind = "stitch"
+sheet = "TS-13D"
+style = "realistic"
+scale = 3.0
+alt = "TS-13D as it will sew: 2 emblems, a navy square in a white frame with a red star on a white disc and 3 gold bars, traced abutting and stacked, and 2 buttons, a yellow disc with 7 orange dots in a black rim, twice. At the top, digitized, both emblems sew alike: one navy fill under the disc and the bars, the bars satin columns, and the white round each star a satin column. Each button's rim is a satin column round one yellow fill under its dots. At the bottom, in paint order, every shape is a fill."
+
 # ── Stitch types (designs from docs/fixtures/, planned by the engine; one image per panel) ──────────
 
 [[shot]]
@@ -456,7 +464,7 @@ fixture = "docs/fixtures/traced-badge.svg"
 auto = true
 style = "realistic"
 scale = 6.0
-allow = ["SC-I0901", "SC-W0906", "SC-I0907", "SC-I0904"]
+allow = ["SC-I0901", "SC-W0906", "SC-I0907", "SC-I0904", "SC-I0908"]
 alt = "The traced badge digitized automatically. A red disc with a blue square on it and a gold disc in the middle sew as tatami fills, with no white round them."
 
 
@@ -467,7 +475,7 @@ fixture = "docs/fixtures/traced-badge.svg"
 auto = true
 style = "realistic"
 scale = 6.0
-allow = ["SC-I0901", "SC-W0906", "SC-I0907", "SC-I0904"]
+allow = ["SC-I0901", "SC-W0906", "SC-I0907", "SC-I0904", "SC-I0908"]
 alt = "The same badge digitized automatically. Its white background is left out, and each colour sews under the edges of the colours sewn on it."
 
 [[shot]]

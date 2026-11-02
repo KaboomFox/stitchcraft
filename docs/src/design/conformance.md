@@ -140,7 +140,7 @@ check where a warning points. The cases of a satin method sew a straight column 
 The cases of automatic digitizing sew the test pictures, which `stitchcraft_engine::testsheets::pictures`
 draws in code and the TS-13 sheets sew too, each with the edges where its shapes meet.
 `stitchcraft_testkit::pictures` places them where the cases measure them. There are 3 stripes side by side,
-and a badge and a row of badges, each traced abutting or stacked
+and a badge, a row of badges, an emblem and a button, each traced abutting or stacked
 ([image to embroidery](image-to-embroidery.md#testing)).
 
 ## Levels

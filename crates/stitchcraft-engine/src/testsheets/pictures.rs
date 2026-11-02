@@ -21,6 +21,8 @@
 //! - [`face`]: a cartoon face drawn with lines 1, 2 and 4 mm wide, one with round caps, and small rings and
 //!   hairpins (M13.1).
 //! - [`star`] and [`balloon`]: shapes broad in places and narrow in others (M13.6).
+//! - [`emblem`] and [`button`]: pictures traced in layers, as VectorCraft 0.19.0's Image Trace traces such
+//!   pictures by either method, details on broad areas and an outline round one (M13.12).
 
 use std::f64::consts::{FRAC_PI_2, PI, TAU};
 
@@ -31,7 +33,7 @@ use stitchcraft_plan::Thread;
 
 use super::designed::{open, polygon, round};
 use super::sketch::SheetError;
-use super::{BLACK, BLUE, DEEP_GOLD, FLESH_PINK, RED, WHITE, thread};
+use super::{BLACK, BLUE, DEEP_GOLD, FLESH_PINK, PRUSSIAN_BLUE, RED, TANGERINE, WHITE, YELLOW, thread};
 use crate::design::{Cap, Element, FillRule, Join, Path, Segment, Shape, Subpath};
 
 /// A ring of a shape: its corners, in order.
@@ -63,11 +65,7 @@ pub struct Picture {
 /// upright, and the gold disc's circle, at every angle to a fill's rows.
 pub fn badge(centre: (f64, f64), scale: f64, trace: Trace) -> Result<Picture, SheetError> {
     let (elements, edges) = badge_at("", centre, scale, trace)?;
-    let name = match trace {
-        Trace::Abutting => "badge-abutting",
-        Trace::Stacked => "badge-stacked",
-    };
-    Ok(Picture { name: name.into(), elements, edges })
+    Ok(Picture { name: traced("badge", trace), elements, edges })
 }
 
 /// 3 badges in a row round `centre`, each the badge of [`badge`] at `scale`, their red discs touching,
@@ -81,11 +79,16 @@ pub fn badges((cx, cy): (f64, f64), scale: f64, trace: Trace) -> Result<Picture,
         elements.extend(shapes);
         edges.extend(meet);
     }
-    let name = match trace {
-        Trace::Abutting => "badges-abutting",
-        Trace::Stacked => "badges-stacked",
+    Ok(Picture { name: traced("badges", trace), elements, edges })
+}
+
+/// The name of the picture `name` traced as `trace` says (`badge-abutting`).
+fn traced(name: &str, trace: Trace) -> String {
+    let how = match trace {
+        Trace::Abutting => "abutting",
+        Trace::Stacked => "stacked",
     };
-    Ok(Picture { name: name.into(), elements, edges })
+    format!("{name}-{how}")
 }
 
 /// A badge round `(cx, cy)`, `scale` times 50 mm across, traced as `trace` says, its shapes named `red`,
@@ -310,15 +313,91 @@ pub fn face((cx, cy): (f64, f64)) -> Result<Picture, SheetError> {
 
 /// A gold star of 5 points round `centre`, its points `radius` mm from it and the corners between them 0.4
 /// times as far: its middle broad and its points narrow, tapering to a tip.
-pub fn star((cx, cy): (f64, f64), radius: f64) -> Result<Picture, SheetError> {
-    let ring: Ring = (0..10_u32)
+pub fn star(centre: (f64, f64), radius: f64) -> Result<Picture, SheetError> {
+    let ring = star_ring(centre, radius, 0.4 * radius);
+    Ok(Picture { name: "star".into(), elements: vec![area("star", &[&ring], &thread(DEEP_GOLD)?)?], edges: Vec::new() })
+}
+
+/// The ring of a star of 5 points round `(cx, cy)`, its points `outer` mm from it and the corners between
+/// them `inner` mm, from its top point.
+fn star_ring((cx, cy): (f64, f64), outer: f64, inner: f64) -> Ring {
+    (0..10_u32)
         .map(|k| {
-            let r = if k % 2 == 0 { radius } else { 0.4 * radius };
+            let r = if k % 2 == 0 { outer } else { inner };
             let (sin, cos) = sin_cos(-FRAC_PI_2 + PI * f64::from(k) / 5.0);
             (cx + r * cos, cy + r * sin)
         })
+        .collect()
+}
+
+/// An emblem `scale` times 60 mm wide round `(cx, cy)`, a logo on white traced as `trace` says, as
+/// VectorCraft 0.19.0's Image Trace traces such a picture: a navy square 50 mm wide, a white disc 26 mm
+/// across in its upper part, a red star on the disc, and 3 gold bars 3 mm tall below the disc, 2 mm apart.
+/// The bars are as narrow as satin columns, and the navy between them narrower. Abutting, each region is a
+/// shape of its own: the white round the square, with a hole where the square is, lowest, then the white
+/// disc, with a hole where the star is, the square, with holes where the disc and the bars are, the star and
+/// each bar. Stacked, each colour is a whole shape under the colours drawn over it, in the order VectorCraft
+/// stacks them: a white rectangle under the whole picture, the gold, a square with a hole where the disc
+/// is, the star, and the navy square over them, with holes where the disc and the bars show through.
+pub fn emblem((cx, cy): (f64, f64), scale: f64, trace: Trace) -> Result<Picture, SheetError> {
+    let at = |x: f64, y: f64| (cx + x * scale, cy + y * scale);
+    let (white, square) = (rectangle(at(-30.0, -30.0), at(30.0, 30.0)), rectangle(at(-25.0, -25.0), at(25.0, 25.0)));
+    let (disc, star) = (circle(at(0.0, -6.0), 13.0 * scale, 96), star_ring(at(0.0, -6.0), 11.0 * scale, 5.5 * scale));
+    let bars: Vec<Ring> = [(11.0, 16.0), (16.0, 12.0), (21.0, 8.0)].map(|(top, half)| rectangle(at(-half, top), at(half, top + 3.0))).into();
+    let (ivory, navy, red, gold) = (thread(WHITE)?, thread(PRUSSIAN_BLUE)?, thread(RED)?, thread(DEEP_GOLD)?);
+    // A hole is drawn the other way round from its outline, so that the nonzero rule leaves it empty.
+    let holes: Vec<Ring> = [&disc].into_iter().chain(&bars).map(|ring| reversed(ring)).collect();
+    let navy_rings: Vec<&[(f64, f64)]> = std::iter::once(square.as_slice()).chain(holes.iter().map(Vec::as_slice)).collect();
+    let elements = match trace {
+        Trace::Abutting => {
+            let mut elements = vec![
+                area("white", &[&white, &reversed(&square)], &ivory)?,
+                area("disc", &[&disc, &reversed(&star)], &ivory)?,
+                area("navy", &navy_rings, &navy)?,
+                area("star", &[&star], &red)?,
+            ];
+            for (n, bar) in bars.iter().enumerate() {
+                elements.push(area(&format!("bar-{}", n + 1), &[bar], &gold)?);
+            }
+            elements
+        }
+        Trace::Stacked => vec![
+            area("white", &[&white], &ivory)?,
+            area("gold", &[&square, &reversed(&disc)], &gold)?,
+            area("star", &[&star], &red)?,
+            area("navy", &navy_rings, &navy)?,
+        ],
+    };
+    Ok(Picture { name: traced("emblem", trace), elements, edges: Vec::new() })
+}
+
+/// A button `scale` times 29 mm across round `(cx, cy)`, a flower's middle traced as `trace` says, as
+/// VectorCraft 0.19.0's Image Trace traces such a picture: a yellow disc 24 mm across in a black rim 2.5 mm
+/// wide, and 7 orange dots 3.4 mm across on the disc, round its middle, the first at the top. The rim is an
+/// outline as narrow as a satin column, and the yellow between the dots narrower still, while its middle is
+/// broader. Abutting, the rim has a hole where the disc is and the disc a hole where each dot is; stacked,
+/// the rim is a whole disc under the yellow one, and the yellow a whole disc under the dots.
+pub fn button((cx, cy): (f64, f64), scale: f64, trace: Trace) -> Result<Picture, SheetError> {
+    let (rim, disc) = (circle((cx, cy), 14.5 * scale, 96), circle((cx, cy), 12.0 * scale, 96));
+    let dots: Vec<Ring> = (0..7_u32)
+        .map(|k| {
+            let (sin, cos) = sin_cos(-FRAC_PI_2 + TAU * f64::from(k) / 7.0);
+            circle((cx + 7.0 * scale * cos, cy + 7.0 * scale * sin), 1.7 * scale, 32)
+        })
         .collect();
-    Ok(Picture { name: "star".into(), elements: vec![area("star", &[&ring], &thread(DEEP_GOLD)?)?], edges: Vec::new() })
+    let (black, yellow, orange) = (thread(BLACK)?, thread(YELLOW)?, thread(TANGERINE)?);
+    let mut elements = match trace {
+        Trace::Abutting => {
+            let holes: Vec<Ring> = dots.iter().map(|dot| reversed(dot)).collect();
+            let disc_rings: Vec<&[(f64, f64)]> = std::iter::once(disc.as_slice()).chain(holes.iter().map(Vec::as_slice)).collect();
+            vec![area("rim", &[&rim, &reversed(&disc)], &black)?, area("disc", &disc_rings, &yellow)?]
+        }
+        Trace::Stacked => vec![area("rim", &[&rim], &black)?, area("disc", &[&disc], &yellow)?],
+    };
+    for (n, dot) in dots.iter().enumerate() {
+        elements.push(area(&format!("dot-{}", n + 1), &[dot], &orange)?);
+    }
+    Ok(Picture { name: traced("button", trace), elements, edges: Vec::new() })
 }
 
 /// A red balloon 18 mm wide and 22 mm tall round `centre`, on a string 1.4 mm wide of the same red that waves

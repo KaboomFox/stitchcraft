@@ -139,13 +139,16 @@ fn req_auto_020_an_area_reaches_its_own_overlap_under_the_shapes_sewn_after_it()
 
 #[test]
 fn req_auto_020_an_area_s_specks_are_its_parts_smaller_than_its_own_smallest_area() {
-    // A square with a part of 1.44 mm² far from it, which sews, as a satin column, unless the area's
-    // smallest area is larger: then it is a speck that shares no edge with an area, and is left out.
+    // A square with a part of 1.44 mm² far from it, which sews, a dot filled with the rest of the area
+    // (REQ-AUTO-016), unless the area's smallest area is larger: then it is a speck that shares no edge with an
+    // area, and is left out.
     let area =
         fill("area", &[&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)], &[(30.0, 0.0), (31.2, 0.0), (31.2, 1.2), (30.0, 1.2)]], &RED, &[]);
     let (out, said) = sewn(vec![area.clone()]);
     assert!(messages(&said, Code::AutoSpeck).is_empty(), "{said:?}");
-    assert_eq!(out.iter().map(|element| element.id.as_str()).collect::<Vec<_>>(), ["area", "area#2"]);
+    assert_eq!(out.iter().map(|element| element.id.as_str()).collect::<Vec<_>>(), ["area"]);
+    let (low, high) = across(&out[0]);
+    assert!(low == 0.0 && (high - 31.2).abs() < 1e-9, "{low} {high}");
     let (out, said) = sewn(vec![with(area, &[(MIN_AREA, "2")])]);
     assert_eq!(
         messages(&said, Code::AutoSpeck),

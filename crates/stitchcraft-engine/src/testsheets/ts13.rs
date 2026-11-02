@@ -12,6 +12,8 @@
 //! - **TS-13C**, lines and shapes in parts (M13.1, M13.6): a cartoon face drawn with lines 1, 2 and 4 mm
 //!   wide, with round caps, small rings and hairpins, and a star and a balloon on its string, broad in places
 //!   and narrow in others.
+//! - **TS-13D**, pictures traced in layers (M13.12): an emblem and a button, each traced abutting and traced
+//!   stacked, as VectorCraft's Image Trace traces them by either method.
 //!
 //! The half in paint order is drawn first, and its last shape stops the machine: nothing moves across a
 //! stop, so the digitized half sews after it in the order automatic digitizing chooses for it alone, and
@@ -20,19 +22,21 @@
 //! its pictures: which shapes it digitized, what it did with the specks and the stacked badge, and so on.
 
 use stitchcraft_core::Code::{
-    self, AutoDigitized, AutoOrder, AutoSatinFilled, AutoSpeck, AutoUnder, FillPartsApart, SatinStitchesLean, StitchesMerged,
+    self, AutoDigitized, AutoLayers, AutoOrder, AutoSatinFilled, AutoSpeck, AutoUnder, FillPartsApart, SatinStitchesLean, StitchesMerged,
 };
 
 use super::designed::Drawing;
 use super::pictures::{self, Picture, Trace};
 use super::sketch::SheetError;
 
-/// What the engine says of TS-13A, in order: how many shapes it digitized; each speck round the disc, 6
-/// merged into it and 1 left out; the order; the areas that reach under others and the 2 cut away under the
-/// stacked badge's upper colours; the specks in paint order, sewn in parts; and the needle points left out
-/// where rows end close together.
-pub(super) const NEIGHBOURS_SAY: [Code; 12] = [
+/// What the engine says of TS-13A, in order: how many shapes it digitized; the stacked badge's blue square,
+/// which sews what shows of it, and the badges' red discs, digitized whole under the shapes in their holes;
+/// each speck round the disc, 6 merged into it and 1 left out; the order; the areas that reach under others
+/// and the red discs cut away under the shapes on them; the specks in paint order, sewn in parts; and the
+/// needle points left out where rows end close together.
+pub(super) const NEIGHBOURS_SAY: [Code; 13] = [
     AutoDigitized,
+    AutoLayers,
     AutoSpeck,
     AutoSpeck,
     AutoSpeck,
@@ -63,21 +67,28 @@ pub(super) const LETTERS_SAY: [Code; 10] = [
 ];
 
 /// What the engine says of TS-13C, in order: how many shapes it digitized, the pupils and hairs that no
-/// satin column can follow, filled; the order; the areas that reach under others; the eyes, sewn in parts in
-/// both halves; and the needle points left out.
-pub(super) const LINES_AND_PARTS_SAY: [Code; 11] = [
+/// satin column can follow, filled; the face, digitized whole under the eyes in its holes; the order; the
+/// areas that reach under others; the eyes, sewn in parts in both halves; and the needle points left out.
+pub(super) const LINES_AND_PARTS_SAY: [Code; 12] = [
     AutoDigitized,
     AutoSatinFilled,
     AutoSatinFilled,
     AutoSatinFilled,
     AutoSatinFilled,
     AutoSatinFilled,
+    AutoLayers,
     AutoOrder,
     AutoUnder,
     FillPartsApart,
     FillPartsApart,
     StitchesMerged,
 ];
+
+/// What the engine says of TS-13D, in order: how many shapes it digitized; the white round each emblem, a
+/// square ring along which no satin column can be drawn, filled; the areas that sew only what shows of them
+/// and those digitized whole under their details; the order; and the areas that reach under others and those
+/// cut away under their details.
+pub(super) const LAYERS_SAY: [Code; 6] = [AutoDigitized, AutoSatinFilled, AutoSatinFilled, AutoLayers, AutoOrder, AutoUnder];
 
 /// The check of every TS-13 sheet that asks where a jump thread is sewn down: the reference machine cuts
 /// none (MC-1), and the sheets sew their pictures as the engine plans any design.
@@ -121,6 +132,18 @@ pub(super) fn lines_and_parts() -> Result<Drawing, SheetError> {
     })
 }
 
+/// Draws TS-13D: pictures traced in layers, each by either method.
+pub(super) fn layers() -> Result<Drawing, SheetError> {
+    halves("ts13d", 58.0, |top| {
+        Ok(vec![
+            pictures::emblem((21.0, top + 21.0), 0.7, Trace::Abutting)?,
+            pictures::emblem((67.0, top + 21.0), 0.7, Trace::Stacked)?,
+            pictures::button((103.0, top + 11.6), 0.8, Trace::Abutting)?,
+            pictures::button((103.0, top + 38.4), 0.8, Trace::Stacked)?,
+        ])
+    })
+}
+
 /// The sheet `sheet` of `pictures`: drawn as they are, in paint order, `below` mm below the top, and stopped
 /// after; then digitized automatically at the top.
 fn halves(sheet: &'static str, below: f64, pictures: Pictures) -> Result<Drawing, SheetError> {
@@ -144,15 +167,18 @@ mod tests {
     use crate::common::STOP_AFTER;
 
     /// The TS-13 sheets.
-    const SHEETS: [&str; 3] = ["TS-13A", "TS-13B", "TS-13C"];
+    const SHEETS: [&str; 4] = ["TS-13A", "TS-13B", "TS-13C", "TS-13D"];
 
     #[test]
     fn ts13_sheets_have_the_sizes_and_stitches_their_cases_and_the_changelog_give() {
         // Each sheet's size, its conformance case's to the micrometre, and its stitches: what MC-8 sews, which
         // changes with any change to what a picture sews.
-        for (id, size, stitches) in
-            [("TS-13A", [125.992, 168.0], 24_286), ("TS-13B", [110.453, 148.4], 14_419), ("TS-13C", [111.391, 107.74], 10_311)]
-        {
+        for (id, size, stitches) in [
+            ("TS-13A", [125.992, 168.0], 24_396),
+            ("TS-13B", [110.453, 148.4], 14_421),
+            ("TS-13C", [111.391, 107.74], 10_311),
+            ("TS-13D", [115.0, 108.386], 26_816),
+        ] {
             let plan = find(id).unwrap().plan().unwrap();
             let bounds = plan.bounds().unwrap();
             assert_eq!([bounds.width(), bounds.height()].map(|v| (v * 1e3).round() / 1e3), size, "{id}");
