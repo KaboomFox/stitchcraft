@@ -39,7 +39,7 @@ use super::graph::NodeId;
 use super::rings::{Place, Rings, stretches};
 use super::route::{Node, Rows};
 use super::rows::{Grid, axes, rows};
-use super::sides::Sides;
+use super::sides::{Side, Sides};
 use super::travel::{search, way_to};
 use crate::normalize::near::{Snap, apart, key};
 use crate::normalize::region::Polygon;
@@ -375,7 +375,7 @@ fn closing_lines(points: &[Point], edges: &[Edge], inside: &[usize], lines: &[Ve
         let (Some(&p), Some(&q)) = (points.get(edge.ends[0]), points.get(edge.ends[1])) else { continue };
         let mut crossed = Vec::new();
         let mut looked = 0_u64;
-        sides.in_box(p.x().min(q.x()), p.y().min(q.y()), p.x().max(q.x()), p.y().max(q.y()), meter, |side| {
+        let look = |side: Side| {
             looked += 1;
             let Some(line) = lines.get(side.ring) else { return };
             let inner = |x: Point| x != p && x != q && line.first() != Some(&x) && line.last() != Some(&x);
@@ -387,7 +387,9 @@ fn closing_lines(points: &[Point], edges: &[Edge], inside: &[usize], lines: &[Ve
             if crosses && crossed.last() != Some(&side.ring) {
                 crossed.push(side.ring);
             }
-        })?;
+        };
+        // Named, so that the search and the `?` after it share a line that every search runs (`xtask/src/coverage.rs`).
+        sides.in_box(p.x().min(q.x()), p.y().min(q.y()), p.x().max(q.x()), p.y().max(q.y()), meter, look)?;
         meter.charge(looked)?;
         for line in crossed {
             if let Some(list) = closes.get_mut(line) {
