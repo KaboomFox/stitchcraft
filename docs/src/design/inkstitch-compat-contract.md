@@ -157,7 +157,7 @@ registry uses these names as its keys so files move between the tools unchanged
 | `end_row_spacing_mm` | float | mm | — | `tatami_fill`, `circular_fill`, `legacy_fill` | P1 (M5) | [deviates](../user/reference/params/tatami.md#end_row_spacing_mm) |
 | `stitch_position_method` | combo | — | 0 | `guided_fill` | P3 (M10) | planned |
 | `staggers` | int | — | 4 | `tatami_fill`, `guided_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill`; read by `circular_fill`, `contour_fill`, `meander_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#staggers) |
-| `skip_last` | boolean | — | false | `tatami_fill`, `guided_fill`, `linear_gradient_fill`, `legacy_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#skip_last) |
+| `skip_last` | boolean | — | false | `tatami_fill`, `guided_fill`, `linear_gradient_fill`, `legacy_fill`; read by `circular_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#skip_last) |
 | `flip` | boolean | — | false | `legacy_fill` | — | not planned |
 | `reverse` | boolean | — | false | `legacy_fill` | — | not planned |
 | `stop_at_ending_point` | boolean | — | false | `linear_gradient_fill`, `tartan_fill` | P3 (M10) | planned |

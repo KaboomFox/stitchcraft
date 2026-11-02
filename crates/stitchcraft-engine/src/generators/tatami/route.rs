@@ -98,23 +98,73 @@ pub(crate) struct Route {
     pub steps: Vec<Step>,
 }
 
-/// The route through `segments`, given in the order the rows are taken, each from its start to its end,
-/// on `rings`: from the point nearest `start` to the point nearest `end`. `None` when there is no
-/// segment. One unit of `meter` for each segment, node, edge looked at or copied, and step.
+/// A part's rows, in the order they are taken, each from its first end to its last: a tatami fill's straight
+/// segments, or lines of any shape, as a circular fill's pieces of spiral are. The route joins a row's ends
+/// whatever its shape, and the needle's ways along a row follow it.
+#[derive(Clone, Copy, Debug)]
+pub(crate) enum Rows<'a> {
+    /// Straight segments, each from its start to its end.
+    Straight(&'a [(Point, Point)]),
+    /// Lines, each from its first point to its last.
+    Lines(&'a [Vec<Point>]),
+}
+
+impl Rows<'_> {
+    /// How many rows there are.
+    pub fn len(&self) -> usize {
+        match self {
+            Rows::Straight(segments) => segments.len(),
+            Rows::Lines(lines) => lines.len(),
+        }
+    }
+
+    /// The first and last ends of row `row`; `None` for a line with no point.
+    pub fn ends(&self, row: usize) -> Option<(Point, Point)> {
+        match self {
+            Rows::Straight(segments) => segments.get(row).copied(),
+            Rows::Lines(lines) => lines.get(row).and_then(|line| Some((*line.first()?, *line.last()?))),
+        }
+    }
+
+    /// The network of `nodes` on `rings` with the rows `joined`, each a row's number and the 2 nodes it
+    /// joins, in the order the way along it runs: straight between them, or along the row's line, turned to
+    /// run from the first node, the end of the line it lies nearer, to the second. Costs as [`Network::new`]
+    /// and [`Network::along`] do.
+    pub fn network(&self, nodes: &[Node], rings: &Rings<'_>, joined: &[(usize, [NodeId; 2])], meter: &mut Meter) -> Result<Network, Exhausted> {
+        let lines = match self {
+            Rows::Straight(_) => return Network::new(nodes, rings, &joined.iter().map(|&(_, ends)| ends).collect::<Vec<_>>(), meter),
+            Rows::Lines(lines) => lines,
+        };
+        let mut along = Vec::with_capacity(joined.len());
+        for &(row, [a, b]) in joined {
+            let (Some(line), Some(from)) = (lines.get(row), nodes.get(a)) else { continue };
+            let (Some(&first), Some(&last)) = (line.first(), line.last()) else { continue };
+            let mut line = line.clone();
+            if from.point.distance(last) < from.point.distance(first) {
+                line.reverse();
+            }
+            along.push(([a, b], line));
+        }
+        Network::along(nodes, rings, along, meter)
+    }
+}
+
+/// The route through `rows` on `rings`: from the point nearest `start` to the point nearest `end`. `None`
+/// when there is no row. One unit of `meter` for each row, node, edge looked at or copied, and step.
 pub(crate) fn route(
     rings: &Rings<'_>,
-    segments: &[(Point, Point)],
+    rows: Rows<'_>,
     start: Option<Point>,
     end: Option<Point>,
     meter: &mut Meter,
 ) -> Result<Option<Route>, Exhausted> {
-    let mut built = Built::new(rings, segments, meter)?;
+    let mut built = Built::new(rings, rows, meter)?;
     let Some(first) = built.nodes.first().map(|n| n.point) else { return Ok(None) };
     built.join_rings();
     for p in [start, end].into_iter().flatten() {
         built.insert(rings, p, meter)?;
     }
-    built.pair_odd_nodes(rings, segments, meter)?;
+    built.pair_odd_nodes(rings, rows, meter)?;
     // The nodes nearest the start and the end, which are almost always those just added there.
     let starting = nearest(&built.nodes, start.unwrap_or(first), meter)?.unwrap_or(0);
     let ending = match end {
@@ -146,12 +196,13 @@ struct Built {
 }
 
 impl Built {
-    /// A node at each end of `segments` on `rings`, and an edge for each segment. One unit of `meter` for
-    /// each segment, and for each side of a ring a new node is looked for on.
-    fn new(rings: &Rings<'_>, segments: &[(Point, Point)], meter: &mut Meter) -> Result<Built, Exhausted> {
+    /// A node at each end of `rows` on `rings`, and an edge for each row. One unit of `meter` for each row,
+    /// and for each side of a ring a new node is looked for on.
+    fn new(rings: &Rings<'_>, rows: Rows<'_>, meter: &mut Meter) -> Result<Built, Exhausted> {
         let mut built = Built { nodes: Vec::new(), index: BTreeMap::new(), graph: Graph::default() };
-        for (i, &(a, b)) in segments.iter().enumerate() {
+        for i in 0..rows.len() {
             meter.charge(1)?;
+            let Some((a, b)) = rows.ends(i) else { continue };
             let (a, b) = (built.node(rings, a, meter)?, built.node(rings, b, meter)?);
             built.graph.add(a, b, Kind::Row(i));
         }
@@ -239,12 +290,12 @@ impl Built {
 
     /// Joins the nodes with an odd number of edges in pairs, so that the travel between pairs is shortest in
     /// all: along their ring when 2 share one, and otherwise along rows and rings.
-    fn pair_odd_nodes(&mut self, rings: &Rings<'_>, segments: &[(Point, Point)], meter: &mut Meter) -> Result<(), Exhausted> {
+    fn pair_odd_nodes(&mut self, rings: &Rings<'_>, rows: Rows<'_>, meter: &mut Meter) -> Result<(), Exhausted> {
         let odd: Vec<NodeId> = (0..self.nodes.len()).filter(|&n| self.graph.degree(n) % 2 == 1).collect();
         if odd.len() < 2 {
             return Ok(());
         }
-        let network = Network::new(&self.nodes, rings, &self.rows(segments.len()), meter)?;
+        let network = rows.network(&self.nodes, rings, &self.rows(rows.len()), meter)?;
         // The travel from the `i`-th odd node to each odd node: along their ring when they share one, and
         // otherwise across the network.
         let costs = |i: usize, meter: &mut Meter| -> Result<Vec<f64>, Exhausted> {
@@ -271,14 +322,14 @@ impl Built {
         Ok(())
     }
 
-    /// Each row's 2 nodes, by the row's place.
-    fn rows(&self, count: usize) -> Vec<[NodeId; 2]> {
-        let mut rows = vec![[0, 0]; count];
+    /// Each row's number and its 2 nodes, the first at its first end.
+    fn rows(&self, count: usize) -> Vec<(usize, [NodeId; 2])> {
+        let mut rows: Vec<(usize, [NodeId; 2])> = (0..count).map(|i| (i, [0, 0])).collect();
         for (_, id) in self.graph.all() {
             if let Some(Edge { ends, kind: Kind::Row(i) }) = self.graph.edge(id)
                 && let Some(slot) = rows.get_mut(i)
             {
-                *slot = ends;
+                slot.1 = ends;
             }
         }
         rows
@@ -482,7 +533,7 @@ mod tests {
 
     /// The graph of `segments` on `rings`, its rings joined.
     fn joined(rings: &Rings<'_>, segments: &[(Point, Point)]) -> Built {
-        let mut built = Built::new(rings, segments, &mut Budget::DEFAULT.meter()).unwrap();
+        let mut built = Built::new(rings, Rows::Straight(segments), &mut Budget::DEFAULT.meter()).unwrap();
         built.join_rings();
         built
     }
@@ -493,7 +544,7 @@ mod tests {
     }
 
     fn routed(part: &Polygon, segments: &[(Point, Point)], start: Option<Point>, end: Option<Point>) -> Route {
-        route(&rings_of(part), segments, start, end, &mut Budget::DEFAULT.meter()).unwrap().unwrap()
+        route(&rings_of(part), Rows::Straight(segments), start, end, &mut Budget::DEFAULT.meter()).unwrap().unwrap()
     }
 
     #[test]
@@ -690,7 +741,7 @@ mod tests {
     fn a_point_given_at_minus_0_is_the_node_at_0() {
         let part = rectangle();
         let segments = [(p(0.0, 0.0), p(10.0, 3.0)), (p(-0.0, 3.0), p(10.0, -0.0)), (p(0.0, 3.0), p(10.0, 0.0))];
-        let built = Built::new(&rings_of(&part), &segments, &mut Budget::DEFAULT.meter()).unwrap();
+        let built = Built::new(&rings_of(&part), Rows::Straight(&segments), &mut Budget::DEFAULT.meter()).unwrap();
         assert_eq!(built.nodes.len(), 4);
     }
 
@@ -705,8 +756,8 @@ mod tests {
         let rings = rings_of(&part);
         let segments = [(p(14.0, 4.5), p(14.0, 5.5)), (p(16.0, 4.5), p(16.0, 5.5))];
         let meter = &mut Budget::DEFAULT.meter();
-        let mut built = Built::new(&rings, &segments, meter).unwrap();
-        built.pair_odd_nodes(&rings, &segments, meter).unwrap();
+        let mut built = Built::new(&rings, Rows::Straight(&segments), meter).unwrap();
+        built.pair_odd_nodes(&rings, Rows::Straight(&segments), meter).unwrap();
         assert_eq!(kinds(&built.graph, 0, 2), [Kind::Paired { joined: false }]);
         assert_eq!(kinds(&built.graph, 1, 3), [Kind::Paired { joined: false }]);
         assert_eq!(kinds(&built.graph, 0, 1), [Kind::Row(0)]);
@@ -784,7 +835,7 @@ mod tests {
 
     #[test]
     fn no_segment_has_no_route() {
-        assert_eq!(route(&rings_of(&rectangle()), &[], Some(p(1.0, 1.0)), None, &mut Budget::DEFAULT.meter()).unwrap(), None);
+        assert_eq!(route(&rings_of(&rectangle()), Rows::Straight(&[]), Some(p(1.0, 1.0)), None, &mut Budget::DEFAULT.meter()).unwrap(), None);
     }
 
     #[test]

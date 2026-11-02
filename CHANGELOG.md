@@ -5,6 +5,30 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M7.9: circular fill, sewn as Ink/Stitch sews it (`REQ-FILL-CIR-001` to `REQ-FILL-CIR-007`). A double
+  spiral turns round each part's centroid. Its rings lie `row_spacing_mm` apart out to 2 spacings past the
+  part's farthest point, or fade towards `end_row_spacing_mm` there. It turns in on every other ring and
+  back out between them, and the part's outline and holes cut it into pieces, sewn after the tatami fill's
+  underlay.
+  - The pieces are routed as a tatami fill's rows are, each sewn once. The needle runs between them under
+    the pieces sewn later, at the fill's `angle`, or along the outline with `underpath` off.
+    `skip_last` leaves out each piece's last needle point, as Ink/Stitch's circular fill does though its
+    settings window doesn't show it. A round part's spiral, cut once, is joined to the needle and to the
+    end along the outline, the shorter way round (`DEV-FILL-022`).
+  - Bean stitch leaves the travel between pieces out, and `repeats` double the stitching, as for a contour
+    fill. A part within its row spacing of its middle is sewn as one circle that size (`SC-W0318`), and one
+    the spiral misses round its outline (`SC-W0305`), as Ink/Stitch sews them. Past the farthest point
+    fading circles stay the end spacing apart, where Ink/Stitch's can crowd without end (`DEV-FILL-021`).
+  - Tatami's routing takes rows that run along lines of any shape: the route, the travel under the rows
+    and the ways along the rings and rows follow a piece of spiral as they follow a straight row.
+  - TS-11B gains a row of circular fills for MC-6: round a hole, on a star and fading. Sewn by Ink/Stitch
+    at `d59c9ab` as a black box, the sheet agrees with StitchCraft by every measure of the differential:
+    15,314 stitches against 14,535, the same size, threads, trims and jumps, and footprints that overlap by
+    0.99. Its 3 circular fills take 2,132, 1,409 and 1,162 stitches against Ink/Stitch's 2,063, 1,494 and
+    1,093, and the same thread within 2 %.
+  - `check_params.py` finds what each fill method's own sewing reads, as well as its underlay, and the
+    contract lists `skip_last` as read by the circular fill (`read_by`).
+  - A circular fill's preview shows its pieces of spiral, and the user's guide has a page for it.
 - M8.2: every test sheet drawn as a design in the Ink/Stitch differential (`REQ-SVG-008`). TS-02B to
   TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills' sheet, are cases, as TS-11B and the
   TS-13 sheets are. Sewn by Ink/Stitch at `d59c9ab`, each agrees by every measure or excuses a measure
@@ -2142,6 +2166,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-11B.pes` (M7.9): the sheet gains a row of 3 circular fills
+  under its contour fills, and grows to 125 × 166 mm. It sews 15,314 stitches, 4,703 more, and its contour
+  fills sew as before.
 - Added `conformance/golden/testsheets/TS-11C.pes` (M7.8), the meander fills' test sheet that MC-6 sews:
   5,880 stitches.
 - Added `conformance/golden/testsheets/TS-11B.pes` (M7.7), the contour fills' test sheet that MC-6 sews:

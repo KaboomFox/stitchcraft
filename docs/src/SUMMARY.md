@@ -27,6 +27,7 @@
     - [Tatami fill](user/stitches/tatami-fill.md)
     - [Contour fill](user/stitches/contour-fill.md)
     - [Meander fill](user/stitches/meander-fill.md)
+    - [Circular fill](user/stitches/circular-fill.md)
     - [Automatic digitizing](user/stitches/automatic.md)
     - [Lock stitches, trims and stops](user/stitches/locks.md)
   - [Embroidery basics](user/explanation/embroidery-basics.md)

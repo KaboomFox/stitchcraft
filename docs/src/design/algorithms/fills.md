@@ -1,6 +1,6 @@
 # Fill generators
 
-<!-- implements: crates/stitchcraft-engine/src/normalize/region/**, crates/stitchcraft-engine/src/normalize/simplify.rs, crates/stitchcraft-engine/src/generators/tatami/**, crates/stitchcraft-engine/src/generators/contour/**, crates/stitchcraft-engine/src/generators/meander/**, crates/stitchcraft-engine/src/generators/smoothing.rs, crates/stitchcraft-engine/src/generators/pull.rs -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/region/**, crates/stitchcraft-engine/src/normalize/simplify.rs, crates/stitchcraft-engine/src/generators/tatami/**, crates/stitchcraft-engine/src/generators/contour/**, crates/stitchcraft-engine/src/generators/meander/**, crates/stitchcraft-engine/src/generators/circular/**, crates/stitchcraft-engine/src/generators/smoothing.rs, crates/stitchcraft-engine/src/generators/pull.rs -->
 
 A fill covers the area its path bounds, its [region](#region), with rows of stitches. Tatami is P1 (M5);
 contour, meander and circular are P2 (M7); guided, linear gradient, tartan and cross stitch are P3 (M10).
@@ -651,16 +651,94 @@ so the sheet's differential case excuses the stitches and the overlap (`DEV-FILL
 
 ## Circular fill
 
-A double spiral round a centre (P2, M7.9), as Ink/Stitch sews its circular fill (read at `6555892`): the
-point of a `target_point` command, or else the centre of each part's area. Circles round it lie
-`row_spacing_mm` apart, or graded towards `end_row_spacing_mm` with their distance from the centre, out
-to 2 spacings past the part's farthest point, with one of 0.1 CSS pixel radius at the centre. Alternate
-circles are joined into a spiral in, and the rest into one back out, as the contour fill's double spiral
-is, and the part cuts the spiral into pieces. One piece is sewn as a running stitch, joined along the outline
-to where the fill starts and ends. Several are routed as tatami rows are, with the travel under them at
-`angle` and `skip_last`. A part that lies within a row spacing of its centre is sewn as one circle of that
-radius. Bean stitch leaves the travel out, and the repeats double the stitching, as the contour fill's
-do.
+A spiral round the middle of each part, cut by the part's outline (P2, M7.9), as Ink/Stitch sews its
+circular fill (read at `d59c9ab`). Each part of the region is sewn on its own, after the tatami fill's
+underlay ([section 6](#6-underlay)), grown by `expand_mm`, nearest the needle first, each ending near the
+next part and the last near the next element, as a meander fill's are.
+
+### Circles
+
+The circles lie round the middle of the part, its centroid. Ink/Stitch's `target_point` command moves
+the middle, and StitchCraft reads it with Ink/Stitch's other commands in M8. The first circle has a radius
+of 0.1 CSS pixel, so that the spiral ends at the middle. From `row_spacing_mm` out, each circle lies a row
+spacing past the last, until one lies 2 spacings past the part's farthest point. That point is the one
+farthest from the middle, as the discrete Hausdorff distance Ink/Stitch takes finds it.
+
+With `end_row_spacing_mm`, the circles fade. The step from a circle to the next is the row spacing plus a
+share of the way to the end spacing: the share the circle's radius is of the farthest point's distance.
+The circles then lie the row spacing apart at the middle and the end spacing apart at the farthest point.
+They stop 2 end spacings past it, and past the farthest point the step stays at the end spacing.
+Ink/Stitch's goes on changing there. Fading to under half the row spacing over a small part, its steps
+shrink towards 0 short of the last circle, which it never reaches (`DEV-FILL-021`).
+
+Each circle has 64 sides, as GEOS buffers a point for Ink/Stitch. It starts at its right-hand point and
+turns up first as the drawing shows it.
+
+### The spiral and its pieces
+
+The spiral is the contour fill's double spiral through the circles, from the outermost circle's first
+point ([single and double spiral](#single-and-double-spiral)). It turns in on every other circle and back
+out on the others, and the running stitch's first length cuts each turn into points. It starts and ends
+outside the part, past its farthest point.
+
+The part cuts the spiral wherever it meets one of the part's rings. There the spiral crosses a ring or
+touches one, or starts or stops running along one. Each stretch between 2 such points lies inside the
+part or outside it, and the stretches inside are the spiral's pieces, a stretch along a ring among them.
+They keep the spiral's order and direction. 2 stretches that meet where the spiral touches a ring from
+inside stay 2 pieces. GEOS leaves them so when it cuts a line by a polygon for Ink/Stitch. Only the sides of the
+rings near each side of the spiral are looked at.
+
+A round part's spiral may enter it once and leave it once, one piece. Any other's leaves and enters again
+at each turn past the circle inside the outline, in many pieces.
+
+### Sewing
+
+Each piece is sewn as a running stitch of `running_stitch_length_mm` within
+`running_stitch_tolerance_mm`, at random lengths when they are on. Each turn of the spiral is a span of the
+running stitch, and each step between turns another, as for the contour fill's spiral
+([stitches](#stitches)).
+
+- **One piece** is sewn after the way along the outline from the needle to where the piece starts. Then
+  comes the way along the outline from where it ends to the end, as Ink/Stitch sews it. Each way runs
+  the shorter way round the outline. Ink/Stitch's runs along the outline from where the outline starts,
+  without passing its start, which depends on how the outline was drawn (`DEV-FILL-022`). A way whose
+  needle or end isn't known is left out.
+- **Several pieces** are routed as a tatami fill's rows are ([section 3](#3-routing-every-segment-once)),
+  each piece a row between its ends. Each is sewn once from the end the route enters it by, every needle
+  point of its running stitch, but its last with `skip_last`. Between pieces the needle moves as a tatami
+  fill's does between rows ([section 4](#4-travel-under-the-rows)). It runs under the pieces not sewn yet
+  along lines at 45° and square to the fill's `angle`, and with `underpath` off along the rings and the
+  pieces. A way along a piece follows its curve, which lies inside the part where the straight line
+  between its ends need not.
+- **No piece**: a part that lies between 2 turns of the spiral sews a running stitch round its outline
+  from the outline's start. Ink/Stitch's falls back to the same, and `SC-W0305` says so.
+
+A part that lies within its row spacing of its middle is too small for the spiral. It is sewn as one
+circle with a radius of the row spacing round its middle, from the circle's right-hand point, as Ink/Stitch
+sews it. `SC-W0318` says so, as the circle may stick out of so small a part.
+
+Bean stitch then sews each stitch back and forth, but the travel between pieces, which Ink/Stitch's
+leaves out of it. Each stitch of travel still takes its turn in `bean_stitch_repeats`'s list. The repeats
+double the stitching each time, as the contour fill's do. Circular fills have no `smoothness_mm`, as in
+Ink/Stitch.
+
+### Test sheet
+
+TS-11B's bottom row sews 3 circular fills. The disc round its hole set off its middle and the star are the
+contour rows' shapes, and a rectangle's circles fade from 0.25 mm at its middle to 1 mm at its corners.
+The differential compares the sheet with Ink/Stitch's sewing of it (`REQ-FILL-CIR-007`).
+
+### Properties (conformance)
+
+| Requirement | Property |
+|---|---|
+| `REQ-FILL-CIR-001` | The circles lie round the part's centroid, from 0.1 CSS pixel and then a row spacing apart, or fading as Ink/Stitch grades them and at the end spacing past the farthest point, out to 2 spacings past it, each of 64 sides from its right-hand point, turning up as drawn |
+| `REQ-FILL-CIR-002` | The double spiral through them is cut where it meets the part's rings, and its pieces are the stretches inside, in order along it and running its way |
+| `REQ-FILL-CIR-003` | One piece is joined to the needle and the end along the outline the shorter way round, all a running stitch with a span for each turn |
+| `REQ-FILL-CIR-004` | Several pieces are routed as a tatami fill's rows, each sewn once as stitched, without its last point with `skip_last`, the needle travelling under the pieces not sewn yet |
+| `REQ-FILL-CIR-005` | A part within a row spacing of its middle is one circle that size, with `SC-W0318`, and the outline of a part the spiral misses is sewn round, with `SC-W0305` |
+| `REQ-FILL-CIR-006` | The underlay comes first, each part ends near the next, bean stitch leaves the travel out but counts it, and `k` repeats sew 2^(k−1) passes |
+| `REQ-FILL-CIR-007` | TS-11B's circular fills sew in Ink/Stitch as in StitchCraft by the differential's measures |
 
 ## Guided fill (P3)
 

@@ -128,6 +128,7 @@ another.
 | `SC-I0315` | Info | Contour fill's part too narrow for its spiral; sewn inner to outer (Ink/Stitch fails or sews nothing) | M7 |
 | `SC-W0316` | Warning | Meander pattern is one of Ink/Stitch's tiles; sewn with StitchCraft's default tile | M7 |
 | `SC-W0317` | Warning | Meander fill part too small for its tile; sewn round its outline (Ink/Stitch stops with an error) | M7 |
+| `SC-W0318` | Warning | Circular fill part within its row spacing of its middle; sewn as one circle (as Ink/Stitch sews it) | M7 |
 | `SC-W0401` | Warning | Path too small for the shortest stitch; skipped | M3 |
 | `SC-W0402` | Warning | Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest | M3 |
 | `SC-W0403` | Warning | Hand-placed stitch shorter than the shortest stitch; point left out | M3 |

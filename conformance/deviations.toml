@@ -353,6 +353,21 @@ requirements = ["REQ-FILL-MEA-003"]
 params = ["random_seed"]
 
 [[deviation]]
+id = "DEV-FILL-021"
+area = "fill/circular"
+summary = "With end_row_spacing_mm, a circular fill's circles past the part's farthest point lie the end spacing apart. Ink/Stitch's step goes on changing with the radius past it, and where the end spacing is under half the row spacing, over a part a few row spacings across, its steps shrink towards 0 before the circles reach their last radius, and it adds circles without end."
+reason = "Every fill's circles end, as its rows do (DEV-FILL-003). The circles past the farthest point lie outside the part, and only the spiral's outermost turns, which the part mostly cuts away, differ. Ink/Stitch's step formula was read at d59c9ab (lib/stitches/circular_fill.py: circular_fill), and worked through for a part whose farthest point is 1.5 row spacings out, fading to a tenth of the spacing: its circles crowd towards 1.67 row spacings, short of the 1.7 they stop at."
+requirements = ["REQ-FILL-CIR-001"]
+params = ["end_row_spacing_mm"]
+
+[[deviation]]
+id = "DEV-FILL-022"
+area = "fill/circular"
+summary = "A circular fill whose spiral the part cuts into one piece joins it to the needle, and to the end, along the outline the shorter way round. Ink/Stitch's way runs along the outline from where it starts, without passing its start, which is the longer way round when the outline's start lies between."
+reason = "Where an outline starts depends on how it was drawn, and the shorter way puts less of a line on the fill's edge. Travel along a ring takes the shorter way too (DEV-FILL-011). Ink/Stitch's join was read at d59c9ab (lib/stitches/circular_fill.py: _apply_start_end_commands, _get_start_end_sequence, which takes shapely's substring of the outline)."
+requirements = ["REQ-FILL-CIR-003"]
+
+[[deviation]]
 id = "DEV-SVG-001"
 area = "svg"
 summary = "A stroke-width in percent, em or ex is read as a viewer reads it: a percentage of the viewport's diagonal over √2, an em as 16 user units and an ex as 8. A stroke-linejoin keyword is read in any case. Ink/Stitch reads such a width as 0, which sews a satin column drawn as one path as a stroke, and reads a join that is not written in lower case as unset."
