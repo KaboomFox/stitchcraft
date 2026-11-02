@@ -91,7 +91,7 @@ impl Spanned {
 }
 
 /// The pieces of `line` inside the part whose rings are `rings`, in order along it, each running its way
-/// with its spans. A piece shorter than [`SAME`] is left out. Costs as [`Rings::meeting`] and
+/// with its spans. A piece no longer than [`SAME`] is left out. Costs as [`Rings::meeting`] and
 /// [`Rings::covers`] do, and one unit of `meter` for each side of the line and each point where it meets
 /// a ring.
 pub(super) fn cut(line: &Spanned, rings: &Rings<'_>, meter: &mut Meter) -> Result<Vec<Spanned>, Exhausted> {
@@ -162,7 +162,8 @@ impl Cutting {
         piece.points.push(to);
     }
 
-    /// The piece the line is in ends, and is kept if it has any length.
+    /// The piece the line is in ends, and is kept if it is longer than [`SAME`], the length below which
+    /// points are one.
     fn end(&mut self) {
         let Some(mut piece) = self.piece.take() else { return };
         piece.starts.retain(|&start| start + 1 < piece.points.len());
