@@ -178,10 +178,29 @@ fn req_asm_005_origin_and_stop_position_markers_place_the_design_s_origin_and_st
     let near = |got: Option<Point>, want: Option<Point>| got.zip(want).is_some_and(|(got, want)| got.distance(want) < 1e-9);
     assert!(near(read.design.settings.origin, at(100.0, 0.0)) && near(read.design.settings.stop_position, at(200.0, 0.0)));
     // A group so named is no marker, and the name is ignored.
-    let group = format!(r#"{{"id": 3, "name": "stitch:origin", "kind": {{"type": "group", "children": [{}]}}}}"#, square(4, 0.0, 0.0, RED));
-    let read = read_ok(&document(4, &group));
-    assert_eq!((ids(&read), read.design.settings.origin), (vec!["vc:4:fill"], None));
-    assert_eq!(said(&read), [about(NAMED, 3)]);
+    for name in ["stitch:origin", "stitch:stop-position"] {
+        let group = format!(r#"{{"id": 3, "name": "{name}", "kind": {{"type": "group", "children": [{}]}}}}"#, square(4, 0.0, 0.0, RED));
+        let read = read_ok(&document(4, &group));
+        let settings = read.design.settings;
+        assert_eq!((ids(&read), settings.origin, settings.stop_position), (vec!["vc:4:fill"], None, None));
+        assert_eq!(said(&read), [about(NAMED, 3)]);
+        let message = &read.warnings[0].message;
+        assert!(message.ends_with(&format!(" is named {name}, which a group can't be, and the name is ignored.")), "{message}");
+        let hint = read.warnings[0].fix.as_ref().map(stitchcraft_core::Fix::describe);
+        assert_eq!(hint, Some(format!("Name a small path {name}.")));
+    }
+}
+
+#[test]
+fn req_asm_005_an_origin_or_stop_position_marker_with_no_point_that_reads_places_nothing_and_is_named() {
+    for name in ["stitch:origin", "stitch:stop-position"] {
+        let empty =
+            format!(r#"{{"id": 5, "name": "{name}", "appearance": {{"items": []}}, "kind": {{"type": "path", "path": {{"subpaths": []}}}}}}"#);
+        let read = read_ok(&document(4, &[square(2, 0.0, 0.0, RED), empty].join(",")));
+        assert_eq!((read.design.settings.origin, read.design.settings.stop_position), (None, None));
+        assert_eq!(said(&read), [about(NAMED, 5)]);
+        assert_eq!(read.warnings[0].message, format!("The object named {name} has no point that reads, so it places nothing."));
+    }
 }
 
 #[test]
@@ -194,10 +213,10 @@ fn diag_sc_e0819_two_origin_markers_or_two_stop_position_markers_and_a_stop_end_
         let shape = square(2, 0.0, 0.0, if stop { stops } else { RED });
         read_ok(&document(4, &[shape, named(&square(4, 50.0, 0.0, RED), name), named(&square(5, 60.0, 0.0, RED), name)].join(",")))
     };
-    for (name, stop) in [("stitch:origin", false), ("stitch:stop-position", true)] {
+    for (name, stop, has) in [("stitch:origin", false, ""), ("stitch:stop-position", true, ", and the design stops")] {
         let read = twice(name, stop);
         let error = read.warnings.iter().find(|d| d.code == Code::OriginOrStopPositionTwice).unwrap_or_else(|| panic!("{name}: {:?}", read.warnings));
-        assert!(error.message.starts_with(&format!("The document has 2 objects named {name}")), "{}", error.message);
+        assert_eq!(error.message, format!("The document has 2 objects named {name}{has}: which one counts isn't known."));
         assert_eq!(read.design.settings.origin.or(read.design.settings.stop_position), None);
     }
     assert!(twice("stitch:stop-position", false).warnings.is_empty());
