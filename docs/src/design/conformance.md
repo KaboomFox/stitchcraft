@@ -198,9 +198,18 @@ Property tests per generator ([algorithms](algorithms/)), run over:
 
 - hand-written cases (the shapes people actually draw: letters, circles, leaves, rings, stars);
 - the **degenerate corpus** (zero-area, hair-thin, self-touching, collinear, duplicate points, single
-  points, near-coincident rings, huge coordinates, 10⁶ vertices);
+  points, near-coincident rings, huge coordinates, 10⁶ vertices) in `stitchcraft_testkit::degenerate`;
 - random shapes from `stitchcraft-testkit` strategies, with fixed seeds in PR CI (fast, reproducible)
   and fresh seeds nightly (with failing seeds saved as new cases).
+
+Every stitch type sews the degenerate corpus, and random paths whose points lie on a coarse grid so that
+they coincide, lie in line and cross often (`tests/degenerate.rs`): 64 on every PR, and 2,000 with a fresh
+seed every night. Each shape is a fill by each fill method under each fill rule, a stroke by each stroke
+method 0.5 and 3 mm wide, and a satin column by each satin method. None may report a bug (`SC-E0009`),
+and each gives a plan or an error that says why it doesn't. Each sews the same planned again, and its plan keeps the machine's invariants. A method not built yet says so
+(`SC-W0011`) and is run as soon as it is built. The path of 10⁶ points is sewn within a thousandth of the
+default budget, so that every way of sewing it shows that it runs out of work only by saying so
+(`SC-E0004`).
 
 Metrics are defined once in `stitchcraft-testkit::metrics` so every case measures the same way:
 

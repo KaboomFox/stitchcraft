@@ -248,4 +248,12 @@ mod tests {
         assert_eq!(read_param::<Toggle>(&ParamSet::new(), Some(&spec("0.25")), None, &[], &mut problems), None);
         assert_eq!(codes(&problems), [Code::InternalCheckFailed, Code::InternalCheckFailed]);
     }
+
+    #[test]
+    fn a_key_taken_out_gives_its_text_and_is_gone() {
+        let mut set: ParamSet = [("row_spacing_mm", "0.25"), ("angle", "45")].into_iter().collect();
+        assert_eq!(set.remove("row_spacing_mm"), Some("0.25".to_string()));
+        assert_eq!(set.remove("row_spacing_mm"), None);
+        assert_eq!(set.iter().collect::<Vec<_>>(), [("angle", "45")]);
+    }
 }

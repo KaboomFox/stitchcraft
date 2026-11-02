@@ -54,6 +54,14 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - Ink/Stitch's compatibility contract lists its meander tiles in the order its settings window does, and
     `check_params.py` compares them with Ink/Stitch's tiles. It finds that the underlay reads
     `row_spacing_mm` and `max_stitch_length_mm` too, where its own are not set (`read_by`).
+- The degenerate corpus that the design promised (`stitchcraft_testkit::degenerate`), and
+  `tests/degenerate.rs`, which runs it through every fill, stroke and satin method, the fills under both
+  fill rules. Its 23 shapes include a point, a line of no length, a ring along one line, a hair-thin
+  rectangle, a figure eight, a ring twice over, rails that cross and a square near the edge of where a
+  design may lie. With them come a path of 10⁶ points, sewn within a thousandth of the budget, and random
+  paths on a coarse grid, where points coincide and lie in line often. None may report a bug (`SC-E0009`),
+  and each gives a plan or says why it doesn't. A plan keeps the machine's invariants, and planned again it
+  sews the same. A method not built yet is run as soon as it is built.
 - M7.7: contour fill, sewn as Ink/Stitch sews it (`REQ-FILL-CON-001` to `REQ-FILL-CON-008`). Rings follow
   each part's outline inward, a row spacing apart, with round, mitred or bevelled corners (`join_style`),
   and round its holes. One line of running stitches sews them after the tatami fill's underlay, in the
@@ -1308,6 +1316,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- A stitch at the very edge of what counts as long enough could fall past that edge as finalize moved the
+  plan to the hoop's centre, which rounds each point. The check then refused the plan as a bug (`SC-E0009`),
+  and nothing was written. The degenerate corpus's random paths found it in a satin column whose rails
+  start 1e-9 mm apart. Its last stitch across is 1e-9 mm long. Once finalize left that stitch's last point
+  out, the tie-off's first stitch was 1e-9 mm short of a lock stitch's 0.2 mm. Finalize now keeps a stitch only if it is still long
+  enough once the plan is moved, at least 1e-10 mm past the edge.
 - TS-13B's letter A, 6 mm tall, sews both legs as satin columns (`REQ-AUTO-015`, `REQ-AUTO-016`). Its legs
   are 1.08 mm wide, over the narrowest satin stroke, 1 mm. The line along one leg runs on into the corner at
   its foot, where the part is 0 mm wide, and averaged with that piece its width came out under 1 mm:

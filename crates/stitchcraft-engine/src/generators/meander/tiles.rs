@@ -277,6 +277,40 @@ mod tests {
     }
 
     #[test]
+    fn req_fill_mea_001_the_sides_of_each_tile_meet_only_at_its_corners() {
+        // Over 5 by 5 cells, no 2 lines of a tile cross, as no 2 sides of a tiling do.
+        use stitchcraft_core::exact::{Side, side};
+        for id in PATTERNS.iter().filter(|t| t.offered).map(|t| t.id) {
+            let tile = tile(id).unwrap();
+            let mut sides = Vec::new();
+            for (i, j) in (-2..=2).flat_map(|i| (-2..=2).map(move |j| (i, j))) {
+                for line in &tile.lines {
+                    let a = plus(tile.corners[line.from], offset(&tile.steps, i, j));
+                    sides.push((a, plus(tile.corners[line.to], offset(&tile.steps, i + line.cell.0, j + line.cell.1))));
+                }
+            }
+            let apart = |p: Point, q: Point, a: Point, b: Point| {
+                let (sa, sb) = (side(p, q, a), side(p, q, b));
+                sa == Side::On || sb == Side::On || sa == sb
+            };
+            for (k, &(p, q)) in sides.iter().enumerate() {
+                for &(a, b) in &sides[k + 1..] {
+                    assert!(apart(p, q, a, b) || apart(a, b, p, q), "{id}: {p:?} to {q:?} crosses {a:?} to {b:?}");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn a_polygon_s_corners_go_round_from_the_first_towards_y() {
+        // 4 corners 1 from the origin, the first level with it, then each a quarter turn on towards +y.
+        let p = |x: f64, y: f64| Point::new(x, y).unwrap();
+        let square = round(4, 0.0, 1.0, p);
+        let expected = [p(1.0, 0.0), p(0.0, 1.0), p(-1.0, 0.0), p(0.0, -1.0)];
+        assert!(square.len() == 4 && square.iter().zip(&expected).all(|(a, b)| a.distance(*b) < 1e-12), "{square:?}");
+    }
+
+    #[test]
     fn a_corner_on_the_cell_s_edge_is_kept_once() {
         let steps = [Point::new(1.0, 0.0).unwrap(), Point::new(0.0, 1.0).unwrap()];
         let points = vec![Point::new(0.0, 0.0).unwrap(), Point::new(1.0, 1.0).unwrap(), Point::new(0.5, 2.0).unwrap()];

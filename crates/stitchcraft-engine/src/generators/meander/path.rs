@@ -310,10 +310,39 @@ mod tests {
         assert_eq!(walk.detour(0, 3, None, (2, 3), meter).unwrap(), Some(vec![0, 1, 4, 3]));
         // Allowed only 2 lines, there is none.
         assert_eq!(walk.detour(0, 3, None, (2, 2), meter).unwrap(), None);
-        let mut items = vec![1, 2, 3, 4];
-        let mut rng = SplitMix64::new(1);
-        let taken = pop_random(&mut items, &mut rng).unwrap();
-        assert_eq!(items.len(), 3);
-        assert!(!items.contains(&taken));
+    }
+
+    #[test]
+    fn an_item_is_taken_at_the_draw_s_place_along_the_list_and_the_last_moved_there() {
+        // Seed 1's first draw is 0.567, 2.27 places along a list of 5: the item at place 2 is taken.
+        let mut items = vec![10, 11, 12, 13, 14];
+        assert_eq!(pop_random(&mut items, &mut SplitMix64::new(1)), Some(12));
+        assert_eq!(items, [10, 11, 14, 13]);
+        assert_eq!(pop_random(&mut Vec::<usize>::new(), &mut SplitMix64::new(1)), None);
+    }
+
+    #[test]
+    fn the_nearest_point_is_the_first_of_those_as_near_but_the_one_left_out() {
+        // On a 3 by 3 grid, (0.5, 0) is as near (0, 0), point 0, as (1, 0), point 3: the first is taken.
+        let network = grid(3, 3);
+        assert_eq!(nearest(&network, p(0.5, 0.0), None), Some(0));
+        // Leaving (0, 0) out, its neighbours (0, 1) and (1, 0) are as near it: (0, 1), point 1, is taken.
+        assert_eq!(nearest(&network, p(0.0, 0.0), Some(0)), Some(1));
+        assert_eq!(nearest(&Network::default(), p(0.0, 0.0), None), None);
+    }
+
+    #[test]
+    fn where_no_path_joins_the_ends_the_path_is_the_start_s_point() {
+        // 2 squares of 4 points 10 apart, neither joined to the other: from one to the other, no way.
+        let mut network = grid(2, 2);
+        for i in 0..4 {
+            let (point, next) = (network.points[i], network.next[i].clone());
+            network.points.push(p(point.x() + 10.0, point.y()));
+            network.next.push(next.into_iter().map(|n| n + 4).collect());
+        }
+        let meter = &mut Budget::DEFAULT.meter();
+        assert_eq!(path(&network, p(0.0, 0.0), p(11.0, 1.0), &mut SplitMix64::new(1), meter).unwrap(), [p(0.0, 0.0)]);
+        assert_eq!(fewest_lines(&network, 0, 7, meter).unwrap(), None);
+        assert_eq!(fewest_lines(&network, 0, 3, meter).unwrap(), Some(vec![0, 1, 3]));
     }
 }
