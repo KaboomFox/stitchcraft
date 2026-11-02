@@ -22,10 +22,11 @@
 //! between them. Each clip path is one shape, which both programs take in alike (`DEV-SVG-016`).
 //!
 //! M8.8's part: the design's origin and stop position, which Ink/Stitch's `origin` and `stop_position`
-//! commands give (`REQ-ASM-005`), and a stop after the blue column. The origin lies 10 mm in from the red
-//! fill's left side, on its bottom edge, off the design's middle, so the needle starts there, at the hoop's
+//! commands give (`REQ-ASM-005`), and a stop after the blue column. The origin lies on the blue column's top
+//! edge, 10 mm in from its left end, off the design's middle, so the needle starts there, at the hoop's
 //! centre. Before the stop the frame moves to the stop position, 20 mm right of the red fill's top-right
-//! corner and 10 mm above it.
+//! corner and 10 mm above it. The origin lies 60 mm above the sheet's bottom edge, so that the sheet still
+//! fits the 5 × 7 in hoop when M8.9 turns it about the origin.
 //!
 //! The later parts, the rotation on export (M8.9) and clones (M8.10), are features of the file. Each step that
 //! adds one decides how the sheet holds it: in the design, which the differential then writes into the file,
@@ -46,9 +47,9 @@ pub const CIRCLE: ((f64, f64), f64) = ((30.0, 85.0), 25.0);
 /// The black zigzag's points, between y = 95 and y = 100 from x = 0 to x = 40 (mm).
 pub const ZIGZAG: [(f64, f64); 9] =
     [(0.0, 95.0), (5.0, 100.0), (10.0, 95.0), (15.0, 100.0), (20.0, 95.0), (25.0, 100.0), (30.0, 95.0), (35.0, 100.0), (40.0, 95.0)];
-/// The design's origin, 10 mm in from the red fill's left side on its bottom edge, and the stop position, 20 mm
+/// The design's origin, on the blue column's top edge 10 mm in from its left end, and the stop position, 20 mm
 /// right of the fill's top-right corner and 10 mm above it (mm).
-pub const ORIGIN_AND_STOP_POSITION: [(f64, f64); 2] = [(10.0, 30.0), (60.0, -10.0)];
+pub const ORIGIN_AND_STOP_POSITION: [(f64, f64); 2] = [(10.0, 40.0), (60.0, -10.0)];
 /// The clip path that cuts it, a U upside down whose legs reach x = 15 and x = 25 from the outside: it leaves
 /// the zigzag from x = 0 to 15 and from 25 to 40 (mm).
 pub const GAP: [(f64, f64); 8] = [(-2.0, 90.0), (42.0, 90.0), (42.0, 105.0), (25.0, 105.0), (25.0, 92.0), (15.0, 92.0), (15.0, 105.0), (-2.0, 105.0)];

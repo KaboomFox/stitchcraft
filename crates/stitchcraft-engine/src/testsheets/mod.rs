@@ -408,7 +408,7 @@ pub static SHEETS: &[TestSheet] = &[
             "The blue satin column below it, 40 mm long and 5 mm wide, starts in its middle, where its start command is: the needle runs under the column to its left end, sews it to three quarters along, runs on under it to its right end and sews back. It ends three quarters along, at its end command. Is the needle's way under the column hidden?",
             "The green fill is a quarter of a disc, 25 mm round its bottom-right corner: what its clip path, a circle, leaves of a 30 mm square. Is its round edge smooth, with no row past it?",
             "The black zigzag at the bottom sews its first 15 mm and its last 15 mm, and nothing between, where its clip path leaves a gap: the needle jumps it. Does each piece end where the gap begins?",
-            "The design's origin, 10 mm in from the red fill's left side on its bottom edge, goes to the hoop's centre, where the needle waits before it sews. Does the machine put the design there, or its middle?",
+            "The design's origin, on the blue column's top edge 10 mm in from its left end, goes to the hoop's centre, where the needle waits before it sews. Does the machine put the design there, or its middle?",
             "The machine stops after the blue column. Before it stops, the frame moves to the stop position, 20 mm right of the red fill's top-right corner and 10 mm above it. Does the frame wait there, and does the needle come back for the green fill?",
             "Any difference between the 2 sew-outs, and where.",
         ],
@@ -525,8 +525,8 @@ mod tests {
         // 18 mm above theirs.
         assert_eq!(about("TS-11C"), [123.0, 120.176369967, 0.0, 0.0]);
         // TS-16's shapes, 40 × 100 mm as drawn, and the frame's move to its stop position, 20 mm right of them and
-        // 10 mm above, round its origin, which lies 10 mm from their left side and 30 mm from their top.
-        assert_eq!(about("TS-16"), [60.0, 110.0, 20.0, 15.0]);
+        // 10 mm above, round its origin, which lies 10 mm from their left side and 40 mm from their top.
+        assert_eq!(about("TS-16"), [60.0, 110.0, 20.0, 5.0]);
         // Each TS-10 frame is its hoop's whole field, as its title and checks say, and fits no smaller hoop.
         let hoops = [("ts-10a", "4 × 4 in", &BROTHER_PE800_4X4), ("TS-10B", "5 × 7 in", REFERENCE), ("TS-10C", "small", &BROTHER_PE800_SMALL)];
         for (id, hoop, profile) in hoops {
