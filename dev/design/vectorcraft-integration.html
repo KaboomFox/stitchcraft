@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-6736f96b.js";
+            window.path_to_searchindex_js = "../searchindex-fc8f2e00.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-d59cbed3.js"></script>
+        <script src="../toc-0e01f503.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -872,7 +872,9 @@ tests write files for the adapter to read back (Level B, M6.6).</p>
 <code>stitch import-inkstitch design.svg -o design.vectorcraft</code>: our SVG adapter reads the Ink/Stitch file
 and writes a VectorCraft document with the same art and the parameters as live-effect records (M8).
 From 0.17 VectorCraft keeps the attributes from SVG import to SVG export, but its live effects read none
-of them.</p>
+of them. <a href="adr/0016-inkstitch-files-imported-by-stitchcraft.html">ADR-0016</a> keeps <code>stitch import-inkstitch</code>
+as the way in, after spike M8.11: VectorCraft gives a plug-in no attribute of another application, and
+its import loses what Ink/Stitch’s settings depend on.</p>
 <h2 id="5-phase-2-plug-in-features-proposed-upstream-summary"><a class="header" href="#5-phase-2-plug-in-features-proposed-upstream-summary">5. Phase 2: plug-in features proposed upstream (summary)</a></h2>
 <p>Detailed in <a href="rfc-vectorcraft-abi-v2.html">the RFC</a>, which began as a proposal for an ABI v2. VectorCraft
 took most of it into ABI v1 instead, each as an addition older hosts ignore or refuse to install. Every

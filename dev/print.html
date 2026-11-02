@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-6736f96b.js";
+            window.path_to_searchindex_js = "searchindex-fc8f2e00.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-d59cbed3.js"></script>
+        <script src="toc-0e01f503.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -10917,7 +10917,9 @@ tests write files for the adapter to read back (Level B, M6.6).</p>
 <code>stitch import-inkstitch design.svg -o design.vectorcraft</code>: our SVG adapter reads the Ink/Stitch file
 and writes a VectorCraft document with the same art and the parameters as live-effect records (M8).
 From 0.17 VectorCraft keeps the attributes from SVG import to SVG export, but its live effects read none
-of them.</p>
+of them. <a href="#adr-0016-inkstitch-files-come-into-vectorcraft-through-stitch-import-inkstitch">ADR-0016</a> keeps <code>stitch import-inkstitch</code>
+as the way in, after spike M8.11: VectorCraft gives a plug-in no attribute of another application, and
+its import loses what Ink/Stitch’s settings depend on.</p>
 <h2 id="5-phase-2-plug-in-features-proposed-upstream-summary"><a class="header" href="#5-phase-2-plug-in-features-proposed-upstream-summary">5. Phase 2: plug-in features proposed upstream (summary)</a></h2>
 <p>Detailed in <a href="#rfc-vectorcraft-plug-in-features">the RFC</a>, which began as a proposal for an ABI v2. VectorCraft
 took most of it into ABI v1 instead, each as an addition older hosts ignore or refuse to install. Every
@@ -12523,6 +12525,7 @@ supersedes the old one.</p>
 <tr><td><a href="#adr-0013-the-reference-machine-is-a-brother-pe800-with-a-profile-for-each-of-its-hoops">0013</a></td><td>The reference machine is a Brother PE800, with a profile for each of its hoops</td><td>Accepted</td></tr>
 <tr><td><a href="#adr-0014-generators-see-their-neighbours-the-needle-before-the-next-element-after">0014</a></td><td>Generators see their neighbours: the needle before, the next element after</td><td>Accepted</td></tr>
 <tr><td><a href="#adr-0015-pictures-are-traced-by-vectorcrafts-command-line">0015</a></td><td>Pictures are traced by VectorCraft’s command line</td><td>Accepted (spike M13.9)</td></tr>
+<tr><td><a href="#adr-0016-inkstitch-files-come-into-vectorcraft-through-stitch-import-inkstitch">0016</a></td><td>Ink/Stitch files come into VectorCraft through <code>stitch import-inkstitch</code></td><td>Accepted (spike M8.11)</td></tr>
 </tbody>
 </table>
 </div>
@@ -13190,6 +13193,126 @@ rules that out: StitchCraft depends on the ABI and the format alone. Each Vector
 would be a change StitchCraft has to follow, without the gate’s commands in between.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="adr-0016-inkstitch-files-come-into-vectorcraft-through-stitch-import-inkstitch"><a class="header" href="#adr-0016-inkstitch-files-come-into-vectorcraft-through-stitch-import-inkstitch">ADR-0016: Ink/Stitch files come into VectorCraft through <code>stitch import-inkstitch</code></a></h1>
+<!-- The status line, a label and its value, which the ADR index is checked against. -->
+<!-- vale ai-tells.ColonUsage = NO -->
+<p><strong>Status:</strong> Accepted · 2026-11-02, after spike M8.11</p>
+<!-- vale ai-tells.ColonUsage = YES -->
+<h2 id="context-15"><a class="header" href="#context-15">Context</a></h2>
+<p>An Ink/Stitch file should preview and sew in VectorCraft as its settings say (M8.12).
+<code>stitch import-inkstitch</code> was planned while VectorCraft dropped <code>inkstitch:*</code> attributes on SVG import.
+Since 0.17.0 VectorCraft keeps attributes in other applications’ namespaces from SVG import to SVG
+export (<a href="#p7-preserve-foreign-svg-attributes">P7</a>). Spike M8.11 compared 2
+ways:</p>
+<ol>
+<li><strong>StitchCraft writes the document.</strong> <code>stitch import-inkstitch file.svg -o file.vectorcraft</code> reads the
+file with the SVG adapter and writes a document whose objects carry StitchCraft’s effects.</li>
+<li><strong>VectorCraft’s SVG import keeps the attributes.</strong> The VectorCraft adapter reads them from the saved
+document, and a filter makes them into StitchCraft’s effects.</li>
+</ol>
+<p>What was checked, on 2026-11-02, in VectorCraft’s source at <code>v0.17.0</code>, <code>v0.18.0</code> and <code>main</code> at
+<code>c733ae97f</code>, and in usvg 0.48.1, the SVG parser VectorCraft’s import uses:</p>
+<ul>
+<li><strong>Where the attributes are.</strong> In each object’s and layer’s attributes, <code>ObjectAttributes::foreign</code>.
+The native file writes them on the node as <code>"attrs": {"foreign": [{"ns", "prefix", "name", "value"}]}</code> (#3758, in 0.17.0). Import keeps them on paths, basic shapes, groups, links, <code>&lt;use&gt;</code>
+elements and images. It keeps none on the root <code>&lt;svg&gt;</code>, and nothing reads <code>&lt;metadata&gt;</code>. Inkscape’s
+and Sodipodi’s attributes are never kept as another application’s.</li>
+<li><strong>Who is given them.</strong> An exporter, which is given the native file’s JSON, and <code>stitch export</code>, which
+reads the file. A filter is given each path’s id, name, geometry, paints, effect records and opacity,
+and a live effect its geometry and paints, so neither is given them. No proposal of StitchCraft’s
+RFC, adopted or open, gives them. The document data of G17 (P5) holds what a filter writes, 1 MiB
+for the whole document, and nothing of the SVG file.</li>
+<li><strong>What the import loses besides.</strong> A connector’s <code>inkscape:connection-start</code> and
+<code>inkscape:connection-end</code>, which tie a command to its object, are Inkscape’s. The import drops them,
+and the connector stays as a stroked path. A command’s <code>&lt;use&gt;</code> becomes an instance of a VectorCraft
+symbol. The design settings and the file’s version are elements of <code>&lt;metadata&gt;</code>, which is dropped. A
+clone is expanded into a group with a copy of its source. usvg drops every id inside a <code>&lt;use&gt;</code>, so the
+copy has none of its source’s settings. A helper path’s marker becomes geometry beside the path.</li>
+<li><strong>What edits do to them.</strong> Moving, turning and scaling keep them as they are, and so do copies.
+Pathfinder’s results have none. They take their sources’ appearance and its effect records, but not
+their attributes. Make Compound Path leaves them on the member paths, and Ungroup drops a group’s.
+Nothing in VectorCraft shows or edits them, and a filter can’t remove them.</li>
+<li><strong>What StitchCraft has.</strong> The SVG adapter reads every setting and updates older files. With M8.4 to
+M8.10 it applies commands, clip paths, design settings and clones. The VectorCraft adapter cuts a clip
+group’s art from M8.7. It already writes objects with effect records for filters, and Test Sheet draws
+designs as objects whose records read back as their settings (<code>REQ-VC-015</code>). The Design Settings filter
+keeps a document’s settings in its <code>pluginData</code> (<code>REQ-VC-013</code>). StitchCraft depends on VectorCraft only
+through the plug-in ABI and the documented <code>.vectorcraft</code> format (<code>AGENTS.md</code>), and nothing before M9
+waits on ArtCraft (<a href="#roadmap-small-steps-to-the-final-project">roadmap</a>).</li>
+</ul>
+<h2 id="decision-15"><a class="header" href="#decision-15">Decision</a></h2>
+<ol>
+<li>Ink/Stitch files come into VectorCraft through
+<code>stitch import-inkstitch file.svg -o file.vectorcraft</code>, as M8.12 plans it. The SVG adapter reads
+the file as <code>stitch plan</code> reads it, an older version updated. A document writer writes each element
+as an object with its family’s StitchCraft effect, Ink/Stitch’s commands as the names a VectorCraft document uses, clip paths as
+clip groups and clones as copies. It keeps the design settings as the Design Settings filter keeps
+them.</li>
+<li>The document it writes doesn’t keep <code>inkstitch:*</code> attributes. Its effect records are its only
+settings.</li>
+<li>The VectorCraft adapter doesn’t read a document’s foreign attributes as settings. From M8.12 it names
+an object that has an attribute of Ink/Stitch’s namespace with a coded warning, whose hint is to import
+the SVG file with <code>stitch import-inkstitch</code>. The object sews as its effects and paints say.</li>
+<li>StitchCraft proposes no VectorCraft change for this.</li>
+</ol>
+<h2 id="consequences-15"><a class="header" href="#consequences-15">Consequences</a></h2>
+<ul>
+<li>An imported file previews at once, as each object has its family’s live effect. <code>stitch export</code> and
+File › Export write what <code>stitch plan</code> writes of the SVG file, which M8.12’s Level B case checks on
+every track.</li>
+<li>The settings are effect records. The Appearance panel shows them, the plug-in’s dialog edits them, and
+Pathfinder, Graphic Styles and copies keep them. The preview follows each edit.</li>
+<li>The document is a snapshot of what StitchCraft reads. A setting the registry doesn’t declare yet,
+such as one of an M10 stitch type, is named with <code>SC-W0105</code> and not written. Importing the file again
+after M10 brings it in. Images and text, which the SVG adapter doesn’t sew, are not written. The SVG
+file stays the whole drawing.</li>
+<li>The document has no way back to an Ink/Stitch file: VectorCraft’s SVG export doesn’t write Ink/Stitch
+settings for effect records. A writer of Ink/Stitch files from a document, as the test kit writes them
+for the differential, would be a roadmap step of its own.</li>
+<li>A file opened with VectorCraft’s own SVG import keeps its settings on its objects for SVG export, as
+P7 intends. <code>stitch export</code> names those objects instead of sewing them by settings it could read
+only in part.</li>
+<li>M8.12 comes after M8.7 and M8.10, so that the clip groups it writes sew cut and its clones are what
+the SVG adapter reads of them. It gives Ink/Stitch’s target point a name in VectorCraft documents,
+which have none for it yet, or names the command it leaves out. The writer serves
+<code>stitch import design.pes</code> after 1.0 too.</li>
+<li>Revisit this if VectorCraft gives plug-ins the foreign attributes and its SVG import keeps the
+connectors’ ties, the metadata and the clones’ links. VectorCraft could then open an Ink/Stitch file
+with the same result. Revisit it too if VectorCraft adds importer plug-ins, as an importer would run
+this writer.</li>
+</ul>
+<h2 id="alternatives-considered-9"><a class="header" href="#alternatives-considered-9">Alternatives considered</a></h2>
+<ul>
+<li><strong>VectorCraft’s SVG import keeps the attributes, and a filter makes them into effects.</strong> It previews
+nothing with ABI v1, as no filter or live effect is given the attributes, and giving them is an
+upstream change M8 would wait on. Even then the document has lost the commands’ ties, the design
+settings, the file’s version and the settings of the clones’ sources. A file that uses any of them
+sews otherwise than <code>stitch plan</code> sews it, and a connector may sew as a running stitch. Once a filter
+has made the effects, each setting is in the document twice, as an attribute nobody sees and as an
+effect record. The first edit leaves the attribute stale, and SVG export writes the stale value.
+Rejected.</li>
+<li><strong>The VectorCraft adapter reads the attributes, with no filter.</strong> <code>stitch export</code> would sew each
+object’s settings with no VectorCraft change. Nothing would preview, though, and the losses above stay.
+It would be a third place for settings, beside effect records and the SVG file. Rejected. Its one gain,
+keeping settings StitchCraft can’t read yet, the SVG file gives too.</li>
+<li><strong>Write the effects and keep the attributes as well.</strong> VectorCraft’s SVG export would write the
+settings back for Ink/Stitch, but the 2 copies part at the first edit. Rejected.</li>
+</ul>
+<h2 id="references-1"><a class="header" href="#references-1">References</a></h2>
+<ul>
+<li>VectorCraft #3758, “SVG: keep other applications’ attributes from import to export” (<code>8906abf30</code>),
+and #3720, “Plug-ins: filters keep data with the document (G17)” (<code>150538450</code>).</li>
+<li>VectorCraft at <code>v0.18.0</code>: <code>docs/plugins.md</code> (Input, Output, Not in v1),
+<code>crates/doc/src/node/attributes.rs</code> and <code>node/wire.rs</code>, <code>crates/svg/src/import.rs</code>,
+<code>import/prepass.rs</code>, <code>import/importer.rs</code> and <code>export/output.rs</code>, <code>crates/plugins/src/objects.rs</code>
+and <code>effect.rs</code>, <code>crates/engine/src/cmd/fileio/encode.rs</code>, <code>cmd/pathops.rs</code> and
+<code>cmd/object/compound.rs</code>.</li>
+<li>usvg 0.48.1: <code>src/parser/svgtree/parse.rs</code>, <code>src/parser/use_node.rs</code> and <code>src/parser/converter.rs</code>.</li>
+<li><a href="#p7-preserve-foreign-svg-attributes">RFC P7</a>,
+<a href="#importing-inkstitch-svgs-into-vectorcraft">VectorCraft integration</a>
+and <a href="#inkstitch-objects">SVG input</a>.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="roadmap-small-steps-to-the-final-project"><a class="header" href="#roadmap-small-steps-to-the-final-project">Roadmap: small steps to the final project</a></h1>
 <p>Each <strong>step</strong> is one pull request: small, reviewable, with its tests, conformance cases and docs. Each
 <strong>milestone</strong> ends with green gates and, where it produces something sewable, a <strong>machine checkpoint</strong>
@@ -13432,8 +13555,8 @@ needle points to the other shapes in their group or take some out, are not plann
 <tr><td>M8.8</td><td>Origin and stop position. Ink/Stitch’s <code>origin</code> command gives the design’s origin, which goes to the hoop’s centre. Its <code>stop_position</code> command gives the stop position, which the frame moves to before each stop (<code>REQ-ASM-005</code>). Each is the point where its symbol is placed. Planning a design with 2 origins, or with 2 stop positions and a stop, ends with an error. Ink/Stitch doesn’t write a machine file of it either. In a VectorCraft document, objects named <code>stitch:origin</code> and <code>stitch:stop-position</code> mark them, as <code>stitch:start</code> marks a start</td><td>Requirements written, differential cases, and TS-16’s part drawn for MC-11</td></tr>
 <tr><td>M8.9</td><td>Rotation on export. The design setting <code>rotate_on_export</code> turns the plan about the hoop’s centre once the origin is there, before the hoop is checked, as Ink/Stitch turns the machine file it writes. <code>90</code> turns it right, and <code>-90</code> left. The SVG adapter reads it from the file’s metadata, and VectorCraft’s Design Settings filter keeps it with a document</td><td><code>REQ-SVG-005</code> and <code>REQ-VC-013</code> updated, a differential case, and TS-16 turned for MC-11</td></tr>
 <tr><td>M8.10</td><td>Clones (<code>&lt;use&gt;</code>). A clone sews the elements of what it shows, in its place in the document’s order, as Ink/Stitch sews a clone. They keep the source’s settings and the commands tied to it, under the clone’s transform and position. Clones inside it are sewn the same way. A fill’s angle turns with the clone, unless the clone’s <code>angle</code> gives one, and <code>flip_angle</code> reverses it. A clone whose <code>clone</code> setting is off sews nothing. A clone that shows itself, directly or through other clones, is left out, as a viewer leaves it out. Where a viewer draws a clone otherwise, as for a symbol’s viewBox, the ledger says how</td><td>Requirements written, the contract’s clone settings supported, differential cases, and TS-16’s part drawn for MC-11</td></tr>
-<tr><td>M8.11 🧪</td><td>Ink/Stitch files in VectorCraft. <code>stitch import-inkstitch</code> was planned while VectorCraft dropped <code>inkstitch:*</code> attributes on SVG import. Since 0.17 it keeps them to SVG export (<a href="#p7-preserve-foreign-svg-attributes">P7</a>). The step finds where a <code>.vectorcraft</code> document saves them, and whether a filter is given them. It then compares 2 ways for an Ink/Stitch file to preview and sew in VectorCraft. <code>stitch import-inkstitch</code> writes a document with StitchCraft’s effects. VectorCraft’s own SVG import keeps the attributes, which the VectorCraft adapter would read and a filter would make into effects</td><td>Decision recorded in an ADR</td></tr>
-<tr><td>M8.12</td><td>Ink/Stitch files made into VectorCraft documents whose objects preview and sew as the file’s settings say, as M8.11 decided. In the plan as it stands, <code>stitch import-inkstitch file.svg -o file.vectorcraft</code> reads the file with the SVG adapter and writes the same art with a document writer. Each element’s settings become a StitchCraft effect of its family, and Ink/Stitch’s commands the names a VectorCraft document uses. The writer makes clip paths into clip groups and clones into copies. It keeps the design settings as the Design Settings filter keeps them. <code>stitch import design.pes</code> reuses the writer after 1.0</td><td><code>REQ-PRM-003</code> active, a file’s settings read back unchanged from the document. A Level B case in which VectorCraft opens the document, and <code>stitch export</code> and the exporters write what <code>stitch plan</code> writes of the SVG file</td></tr>
+<tr><td>M8.11 ✅ 🧪</td><td>Ink/Stitch files in VectorCraft. <code>stitch import-inkstitch</code> was planned while VectorCraft dropped <code>inkstitch:*</code> attributes on SVG import. Since 0.17 it keeps them to SVG export (<a href="#p7-preserve-foreign-svg-attributes">P7</a>). The step finds where a <code>.vectorcraft</code> document saves them, and whether a filter is given them. It then compares 2 ways for an Ink/Stitch file to preview and sew in VectorCraft. <code>stitch import-inkstitch</code> writes a document with StitchCraft’s effects. VectorCraft’s own SVG import keeps the attributes, which the VectorCraft adapter would read and a filter would make into effects</td><td>Decision recorded in the design, <a href="#adr-0016-inkstitch-files-come-into-vectorcraft-through-stitch-import-inkstitch">ADR-0016</a>: <code>stitch import-inkstitch</code> writes the document, its effects the only settings it keeps, and the VectorCraft adapter names an object that keeps Ink/Stitch’s attributes. VectorCraft gives a filter none of them, and its import drops the commands’ ties, the design settings and the clones’ settings (2026-11-02)</td></tr>
+<tr><td>M8.12</td><td>Ink/Stitch files made into VectorCraft documents whose objects preview and sew as the file’s settings say, as <a href="#adr-0016-inkstitch-files-come-into-vectorcraft-through-stitch-import-inkstitch">ADR-0016</a> decided. <code>stitch import-inkstitch file.svg -o file.vectorcraft</code> reads the file with the SVG adapter and writes the same art with a document writer. Each element’s settings become a StitchCraft effect of its family, and Ink/Stitch’s commands the names a VectorCraft document uses. The writer makes clip paths into clip groups and clones into copies. It keeps the design settings as the Design Settings filter keeps them, and no <code>inkstitch:*</code> attribute. The VectorCraft adapter names an object that keeps one, as VectorCraft’s own SVG import keeps them. <code>stitch import design.pes</code> reuses the writer after 1.0</td><td><code>REQ-PRM-003</code> active, a file’s settings read back unchanged from the document. A Level B case in which VectorCraft opens the document, and <code>stitch export</code> and the exporters write what <code>stitch plan</code> writes of the SVG file</td></tr>
 <tr><td>M8.13</td><td>Custom locks drawn as paths. A <code>lock_custom_start</code> or <code>lock_custom_end</code> written as SVG path data sews as <a href="https://inkstitch.org/docs/stitches/lock-stitches/">Ink/Stitch’s documentation</a> describes it. The path is drawn in millimetres and scaled by <code>lock_start_scale_percent</code> or <code>lock_end_scale_percent</code>. Its last segment is turned along the first stitch from where the stitching starts and then left out, and the lock is sewn backwards at the end. The engine reads the path’s nodes from the setting’s text, as it reads a lock’s numbers. A drawn lock then sews from a VectorCraft document too (<a href="#custom-locks">locks</a>)</td><td>Requirements written, <code>DEV-LCK-001</code> updated, a differential case, and TS-16’s part drawn for MC-11</td></tr>
 <tr><td>MC-11 🧵</td><td><strong>TS-16</strong> (an Ink/Stitch file with start and end positions, clip paths, a clone, an origin and a stop position, drawn locks and a turn on export), sewn from StitchCraft’s machine file beside the one Ink/Stitch writes of it; kit: <code>stitch testsheet</code></td><td>report filed, and each difference between the 2 sew-outs explained or reproduced as a bug</td></tr>
 </tbody>
