@@ -86,6 +86,31 @@ impl Polygon {
     pub fn area(&self) -> f64 {
         geom::signed_area(&self.outline).abs() - self.holes.iter().map(|hole| geom::signed_area(hole).abs()).sum::<f64>()
     }
+
+    /// The middle of its area, its centroid: the outline's area and its first moments less its holes', each
+    /// ring's taken from triangles of its sides and the outline's first point, as GEOS finds a polygon's
+    /// centroid, which Ink/Stitch centres a circular fill on. A part of no area has its outline's first
+    /// point. One unit of `meter` for each point of its rings.
+    pub(crate) fn centroid(&self, meter: &mut Meter) -> Result<Point, Exhausted> {
+        let Some(&base) = self.outline.first() else { return Ok(Point::ORIGIN) };
+        let (mut area, mut x, mut y) = (0.0, 0.0, 0.0);
+        for (k, ring) in self.rings().enumerate() {
+            meter.charge(u64::try_from(ring.len()).unwrap_or(u64::MAX))?;
+            let (mut a, mut mx, mut my) = (0.0, 0.0, 0.0);
+            for side in ring.windows(2) {
+                let (px, py, qx, qy) = (side[0].x() - base.x(), side[0].y() - base.y(), side[1].x() - base.x(), side[1].y() - base.y());
+                let cross = px * qy - qx * py;
+                (a, mx, my) = (a + cross, mx + cross * (px + qx), my + cross * (py + qy));
+            }
+            // The outline counts its area whichever way it runs, and a hole takes its own away.
+            let sign = if (a < 0.0) == (k == 0) { -1.0 } else { 1.0 };
+            (area, x, y) = (area + sign * a, x + sign * mx, y + sign * my);
+        }
+        if area == 0.0 || !area.is_finite() {
+            return Ok(base);
+        }
+        Ok(Point::new(base.x() + x / (3.0 * area), base.y() + y / (3.0 * area)).unwrap_or(base))
+    }
 }
 
 /// A fill's area, as parts.

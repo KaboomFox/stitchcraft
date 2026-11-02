@@ -426,6 +426,14 @@ registry! {
     /// The message counts the parts. Make `meander_scale_percent` smaller to fit the tile into them.
     FillMeanderTooSmall = "SC-W0317", Warning, "Meander fill part too small for its tile; sewn round its outline";
 
+    /// A part of a circular fill lies within its row spacing of its middle, too small for a spiral, so it is
+    /// sewn as one circle with a radius of the row spacing round its middle, as Ink/Stitch sews it. The
+    /// circle may reach past the part.
+    ///
+    /// The message counts the parts. Make `row_spacing_mm` smaller for a spiral, or sew so small a part as a
+    /// running stitch or a satin column.
+    FillCircularTooSmall = "SC-W0318", Warning, "Circular fill part within its row spacing of its middle; sewn as one circle";
+
     /// A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
     /// one stitch that short would hammer one spot of the fabric and could break the thread. The part is
     /// a single point (a stray node), shorter than the shortest stitch, or longer but curled up so that

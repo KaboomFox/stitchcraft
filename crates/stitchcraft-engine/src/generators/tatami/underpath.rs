@@ -15,7 +15,9 @@
 //! nearest of them all.
 //!
 //! **Sewn rows close the lines across them.** Once a row is sewn, the edges that cross it close, and no later
-//! travel runs over it: travel runs under rows sewn after it, which hide it.
+//! travel runs over it: travel runs under rows sewn after it, which hide it. A row that runs along a line, as
+//! a circular fill's pieces of spiral do, closes the edges that cross the line, where Ink/Stitch's crossing
+//! test finds them: through a side, or through one of the line's points between its ends.
 //!
 //! **The way.** The cheapest way between 2 nodes ([`super::travel::search`]), smoothed as Ink/Stitch smooths
 //! it, then kept inside the part ([`super::clamp`]). Ink/Stitch travels between 2 rings only from the
@@ -35,9 +37,9 @@ use stitchcraft_core::{Exhausted, Meter, Point};
 
 use super::graph::NodeId;
 use super::rings::{Place, Rings, stretches};
-use super::route::Node;
+use super::route::{Node, Rows};
 use super::rows::{Grid, axes, rows};
-use super::sides::Sides;
+use super::sides::{Side, Sides};
 use super::travel::{search, way_to};
 use crate::normalize::near::{Snap, apart, key};
 use crate::normalize::region::Polygon;
@@ -91,16 +93,16 @@ pub(crate) struct Underpath {
 
 impl Underpath {
     /// The lines travel may follow across `part`, whose rings are `rings`, between the route's `nodes`, for
-    /// the fill's row `segments` at `angle` degrees. `None` when a diagonal grating misses the part, which
-    /// then travels along its rings, as Ink/Stitch's does, though Ink/Stitch smooths that way
+    /// the fill's rows `across`, the gratings turned from `angle` degrees. `None` when a diagonal grating misses the
+    /// part, which then travels along its rings, as Ink/Stitch's does, though Ink/Stitch smooths that way
     /// (`DEV-FILL-013`). One unit of `meter` for each line, each pair of lines looked at for a crossing,
-    /// each edge, each cell and side looked at for its distance, and each row looked at for crossing an
-    /// edge.
+    /// each edge, each cell and side looked at for its distance, and each row or side of a row looked at
+    /// for crossing an edge.
     pub(crate) fn new(
         part: &Polygon,
         rings: &Rings<'_>,
         nodes: &[Node],
-        segments: &[(Point, Point)],
+        across: Rows<'_>,
         angle: f64,
         meter: &mut Meter,
     ) -> Result<Option<Underpath>, Exhausted> {
@@ -171,7 +173,10 @@ impl Underpath {
                 }
             }
         }
-        let closes = closing(&built.points, &built.edges, &inside, segments, angle, meter)?;
+        let closes = match across {
+            Rows::Straight(segments) => closing(&built.points, &built.edges, &inside, segments, angle, meter)?,
+            Rows::Lines(lines) => closing_lines(&built.points, &built.edges, &inside, lines, meter)?,
+        };
         Ok(Some(Underpath { points: built.points, around: built.around, edges: built.edges, closes }))
     }
 
@@ -357,6 +362,44 @@ fn closing(
     Ok(closes)
 }
 
+/// For each of the fill's rows that run along `lines`, the `inside` edges that cross its line: through one of
+/// its sides, or through one of its points between its ends without ending there, as an edge crosses a line
+/// for Ink/Stitch where both lines' insides meet. The lines' sides are filed by where they lie, and each
+/// edge looks only at those near it. Costs as [`Sides::new`] and [`Sides::in_box`] do, and one unit of
+/// `meter` for each side looked at.
+fn closing_lines(points: &[Point], edges: &[Edge], inside: &[usize], lines: &[Vec<Point>], meter: &mut Meter) -> Result<Vec<Vec<usize>>, Exhausted> {
+    let mut closes: Vec<Vec<usize>> = vec![Vec::new(); lines.len()];
+    let sides = Sides::new(lines.iter().map(Vec::as_slice).collect(), meter)?;
+    for &id in inside {
+        let Some(edge) = edges.get(id) else { continue };
+        let (Some(&p), Some(&q)) = (points.get(edge.ends[0]), points.get(edge.ends[1])) else { continue };
+        let mut crossed = Vec::new();
+        let mut looked = 0_u64;
+        let look = |side: Side| {
+            looked += 1;
+            let Some(line) = lines.get(side.ring) else { return };
+            let inner = |x: Point| x != p && x != q && line.first() != Some(&x) && line.last() != Some(&x);
+            let crosses = match hit(p, q, side.a, side.b) {
+                Hit::Cross(_) => true,
+                Hit::Touch(x) => inner(x),
+                Hit::Apart | Hit::Overlap(..) => false,
+            };
+            if crosses && crossed.last() != Some(&side.ring) {
+                crossed.push(side.ring);
+            }
+        };
+        // Named, so that the search and the `?` after it share a line that every search runs (`xtask/src/coverage.rs`).
+        sides.in_box(p.x().min(q.x()), p.y().min(q.y()), p.x().max(q.x()), p.y().max(q.y()), meter, look)?;
+        meter.charge(looked)?;
+        for line in crossed {
+            if let Some(list) = closes.get_mut(line) {
+                list.push(id);
+            }
+        }
+    }
+    Ok(closes)
+}
+
 #[cfg(test)]
 mod tests {
     use stitchcraft_core::Budget;
@@ -368,7 +411,7 @@ mod tests {
     fn underpath(part: &Polygon, segments: &[(Point, Point)], angle: f64) -> Option<Underpath> {
         let meter = &mut Budget::DEFAULT.meter();
         let rings = Rings::new(part, meter).unwrap();
-        Underpath::new(part, &rings, &[], segments, angle, meter).unwrap()
+        Underpath::new(part, &rings, &[], Rows::Straight(segments), angle, meter).unwrap()
     }
 
     #[test]
@@ -448,7 +491,7 @@ mod tests {
         let meter = &mut Budget::DEFAULT.meter();
         let rings = Rings::new(&part, meter).unwrap();
         let nodes: Vec<Node> = [row.0, row.1].iter().map(|&q| Node { point: q, place: rings.locate(q, |_| true, meter).unwrap().unwrap() }).collect();
-        let mut u = Underpath::new(&part, &rings, &nodes, &[row], 0.0, meter).unwrap().unwrap();
+        let mut u = Underpath::new(&part, &rings, &nodes, Rows::Straight(&[row]), 0.0, meter).unwrap().unwrap();
         let below = u.points.iter().position(|q| q.y() > 2.5 && q.y() < 4.0 && q.x() > 4.0 && q.x() < 6.0).unwrap();
         let above = u.points.iter().position(|q| q.y() < 1.5 && q.y() > 0.0 && q.x() > 4.0 && q.x() < 6.0).unwrap();
         let crosses = |way: &[Point]| way.windows(2).any(|w| matches!(hit(w[0], w[1], row.0, row.1), Hit::Cross(_)));
@@ -460,6 +503,67 @@ mod tests {
         // A segment the fill does not have closes nothing.
         u.sew(7);
         assert_eq!(u.way(above, below, meter).unwrap(), Some(closed));
+    }
+
+    #[test]
+    fn a_sewn_line_closes_the_edges_across_it_wherever_it_bends() {
+        // A row bent up and down across the middle of the rectangle, from (0, 2) to (10, 2) by (5, 1): once
+        // sewn, no way crosses it, and the way between its 2 sides goes round its ends.
+        let part = rectangle(4.0);
+        let line = vec![p(0.0, 2.0), p(5.0, 1.0), p(10.0, 2.0)];
+        let meter = &mut Budget::DEFAULT.meter();
+        let rings = Rings::new(&part, meter).unwrap();
+        let nodes: Vec<Node> =
+            [line[0], line[2]].iter().map(|&q| Node { point: q, place: rings.locate(q, |_| true, meter).unwrap().unwrap() }).collect();
+        let lines = [line.clone()];
+        let mut u = Underpath::new(&part, &rings, &nodes, Rows::Lines(&lines), 0.0, meter).unwrap().unwrap();
+        let below = u.points.iter().position(|q| q.y() > 3.0 && q.y() < 4.0 && q.x() > 4.0 && q.x() < 6.0).unwrap();
+        let above = u.points.iter().position(|q| q.y() < 0.8 && q.y() > 0.0 && q.x() > 4.0 && q.x() < 6.0).unwrap();
+        let crosses = |way: &[Point]| way.windows(2).any(|w| line.windows(2).any(|side| matches!(hit(w[0], w[1], side[0], side[1]), Hit::Cross(_))));
+        let open = u.way(above, below, meter).unwrap().unwrap();
+        assert!(crosses(&open), "straight across while the line is not sewn: {open:?}");
+        u.sew(0);
+        let closed = u.way(above, below, meter).unwrap().unwrap();
+        assert!(!crosses(&closed), "{closed:?}");
+    }
+
+    /// A line from (0, 2) by (5, 1) to (10, 2), and 5 upright edges by it, each between 2 points of its own:
+    /// across the line's first side at x = 2, through its bend, ending on its first side at (2.5, 1.5), and
+    /// through its 2 ends.
+    fn edges_by_a_line() -> (Vec<Vec<Point>>, Vec<Point>, Vec<Edge>) {
+        let line = vec![p(0.0, 2.0), p(5.0, 1.0), p(10.0, 2.0)];
+        let upright = [(2.0, 0.0, 3.0), (5.0, 0.0, 3.0), (2.5, 0.0, 1.5), (0.0, 1.0, 3.0), (10.0, 1.0, 3.0)];
+        let points: Vec<Point> = upright.iter().flat_map(|&(x, from, to)| [p(x, from), p(x, to)]).collect();
+        let edges = (0..upright.len()).map(|k| Edge { ends: [2 * k, 2 * k + 1], cost: 1.0, open: true }).collect();
+        (vec![line], points, edges)
+    }
+
+    #[test]
+    fn an_edge_crosses_a_line_where_their_insides_meet() {
+        // Across a side, or through the bend between the line's ends: sewing the line closes the edge. An edge
+        // that ends on the line, or passes through one of the line's ends, meets it only where one of them
+        // ends, and stays open.
+        let (lines, points, edges) = edges_by_a_line();
+        let closes = closing_lines(&points, &edges, &[0, 1, 2, 3, 4], &lines, &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(closes, [vec![0, 1]]);
+    }
+
+    #[test]
+    fn finding_the_edges_across_lines_charges_for_each_side_looked_at() {
+        // Filing the line's sides and looking in each edge's box cost what they cost, and each side found there
+        // costs a unit more: 6, one for each edge but the one through the bend, whose box meets both sides.
+        let (lines, points, edges) = edges_by_a_line();
+        let mut meter = Budget::DEFAULT.meter();
+        closing_lines(&points, &edges, &[0, 1, 2, 3, 4], &lines, &mut meter).unwrap();
+        let mut search = Budget::DEFAULT.meter();
+        let sides = Sides::new(lines.iter().map(Vec::as_slice).collect(), &mut search).unwrap();
+        let mut looked = 0_u64;
+        for edge in &edges {
+            let (a, b) = (points[edge.ends[0]], points[edge.ends[1]]);
+            sides.in_box(a.x().min(b.x()), a.y().min(b.y()), a.x().max(b.x()), a.y().max(b.y()), &mut search, |_| looked += 1).unwrap();
+        }
+        assert_eq!(looked, 6);
+        assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), Budget::DEFAULT.max_work - search.work_left() + looked);
     }
 
     #[test]
@@ -514,10 +618,18 @@ mod tests {
         let meter = &mut Budget::DEFAULT.meter();
         let rings = Rings::new(&part, meter).unwrap();
         let mut used = Budget::DEFAULT.meter();
-        Underpath::new(&part, &rings, &[], &[], 0.0, &mut used).unwrap().unwrap();
+        Underpath::new(&part, &rings, &[], Rows::Straight(&[]), 0.0, &mut used).unwrap().unwrap();
         let work = Budget::DEFAULT.max_work - used.work_left();
         for short in [1, work / 2, work - 1] {
-            assert!(Underpath::new(&part, &rings, &[], &[], 0.0, &mut Budget { max_stitches: 1, max_work: short }.meter()).is_err());
+            assert!(Underpath::new(&part, &rings, &[], Rows::Straight(&[]), 0.0, &mut Budget { max_stitches: 1, max_work: short }.meter()).is_err());
+        }
+        // Rows along a line: so is finding the edges that cross it, whichever unit of work runs out.
+        let lines = [vec![p(0.0, 2.0), p(5.0, 1.0), p(10.0, 2.0)]];
+        let mut used = Budget::DEFAULT.meter();
+        Underpath::new(&part, &rings, &[], Rows::Lines(&lines), 0.0, &mut used).unwrap().unwrap();
+        let work = Budget::DEFAULT.max_work - used.work_left();
+        for short in 1..work {
+            assert!(Underpath::new(&part, &rings, &[], Rows::Lines(&lines), 0.0, &mut Budget { max_stitches: 1, max_work: short }.meter()).is_err());
         }
     }
 }

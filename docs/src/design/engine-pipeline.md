@@ -104,9 +104,10 @@ gap-filling rows, which Ink/Stitch's legacy fill has no use for. A contour fill,
 rings with the tatami fill's row spacing and sews them as one running stitch after the tatami fill's
 underlay, reading the running stitch's tolerance and random lengths for its path
 ([fills](algorithms/fills.md#contour-fill)). A meander fill, sewn from M7.8, lays a tile over each part
-and sews one path through it after the same underlay ([fills](algorithms/fills.md#meander-fill)). The
-other stroke, satin and fill methods are skipped with
-`SC-W0011` until their milestones. An element whose parameters are wrong (`SC-E0101`) is skipped too, and
+and sews one path through it after the same underlay ([fills](algorithms/fills.md#meander-fill)). A
+circular fill, sewn from M7.9, sews a spiral round the middle of each part after that underlay too, and
+routes the spiral's pieces as a tatami fill routes its rows ([fills](algorithms/fills.md#circular-fill)).
+The other stroke, satin and fill methods are skipped with `SC-W0011` until their milestones. An element whose parameters are wrong (`SC-E0101`) is skipped too, and
 the rest of the design still plans.
 
 Each element is generated with the shortest stitch for it: the larger of the machine's (the profile's
@@ -118,8 +119,9 @@ or a fill's longest, is raised to it with `SC-W0402`: shorter, the plan would me
 A preview that cannot afford a fill's stitches shows its top rows (`stitchcraft_engine::generate::rows`,
 from M6.3). The fill's settings are read as for sewing it, and what they say is said the same, but only
 the region is built and the rows laid over it: no needle point is placed and no route is searched. A
-contour fill has no rows, and shows its path round its rings, from M7.7. Nor has a meander fill, which
-shows its path through its tile as the element's seed lays it, from M7.8.
+contour fill has no rows, and shows its path round its rings, from M7.7. A meander fill shows its path
+through its tile as the element's seed lays it, from M7.8, and a circular fill the pieces of its spiral,
+from M7.9.
 
 Rules every generator follows:
 
@@ -225,7 +227,7 @@ is clear of the needle for an appliqué or a check, and sewing resumes with a ju
 | Command | Effect | From |
 |---|---|---|
 | Start / end point | Entry/exit hints for the generator (`REQ-GEN-001`). The VectorCraft adapter reads them from markers named `stitch:start` and `stitch:end`, which it names until then | M8 |
-| Target point | Centre for circular fills and ripple targets | M7, M10 |
+| Target point | Centre for circular fills and ripple targets. A circular fill turns round its part's centroid until the adapter reads the command | M8, M10 |
 | Trim after, stop after | `trim_after` and `stop_after` on the element's last group (see the connection table). The SVG adapter reads Ink/Stitch's trim and stop commands as these settings. | M3.8 (engine), M3 (adapter) |
 | Ignore object / ignore layer | The adapter drops the element and says so in the report (`REQ-ASM-004`). The VectorCraft adapter reads them from the name `stitch:ignore` | M3 (SVG), M6 (VectorCraft) |
 | Origin | The design setting `origin` | M3.8 (engine), M8 (adapter) |

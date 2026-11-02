@@ -11,7 +11,9 @@
 //! them is covered by the rows when they are sewn after it. Ink/Stitch, travelling along the outline
 //! only, sews the rows on such a way a second time, as rows (`DEV-FILL-006`). These are travel's ways with
 //! `underpath` off, and in a part the lines travel under the rows follows miss ([`super::underpath`]).
-//! Where no way joins the 2 points, the needle jumps.
+//! Where no way joins the 2 points, the needle jumps. A row is straight, or runs along a line of its own,
+//! as a circular fill's pieces of spiral do ([`super::route::Rows`]): the way then follows the line, which
+//! lies inside the part where the straight line between its ends need not.
 //!
 //! Distances are compared exactly as computed, and of 2 nodes as near the lower-numbered goes first, so
 //! every platform finds the same way. The search is shared with travel under the rows.
@@ -25,7 +27,7 @@ use super::graph::NodeId;
 use super::rings::{Rings, stretches};
 use super::route::Node;
 
-/// How a step of a way runs: along a ring, in its direction or against it, or along a row's line.
+/// How a step of a way runs: along a ring, in its direction or against it, or along a row.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum Along {
     /// Along ring `ring`, in its own direction when `forwards`.
@@ -37,12 +39,21 @@ pub(crate) enum Along {
     },
     /// Straight along a row.
     Row,
+    /// Along the network's line `line`, from its first point to its last when `forwards`.
+    Line {
+        /// The line.
+        line: usize,
+        /// Whether from its first point to its last.
+        forwards: bool,
+    },
 }
 
 /// The ways between a route's nodes: along each ring from each node to the next, and along each row.
 #[derive(Clone, Debug)]
 pub(crate) struct Network {
     around: Vec<Vec<(NodeId, f64, Along)>>,
+    /// The lines rows run along where they are not straight, each from its row's first node to its second.
+    lines: Vec<Vec<Point>>,
 }
 
 /// What a search finds: each node's distance from where it started, and the step that reaches it.
@@ -67,23 +78,45 @@ impl Ord for Distance {
 }
 
 impl Network {
-    /// The network of `nodes` on `rings`, with the rows joining the 2 nodes of each of `rows`. One unit of
-    /// `meter` for each node and row.
+    /// The network of `nodes` on `rings`, with the straight rows joining the 2 nodes of each of `rows`. One
+    /// unit of `meter` for each node and row.
     pub fn new(nodes: &[Node], rings: &Rings<'_>, rows: &[[NodeId; 2]], meter: &mut Meter) -> Result<Network, Exhausted> {
+        let mut network = Network::of_rings(nodes, rings, meter)?;
+        for &[a, b] in rows {
+            meter.charge(1)?;
+            let (Some(na), Some(nb)) = (nodes.get(a), nodes.get(b)) else { continue };
+            let length = na.point.distance(nb.point);
+            link(&mut network.around, a, b, length, Along::Row);
+            link(&mut network.around, b, a, length, Along::Row);
+        }
+        Ok(network)
+    }
+
+    /// The network of `nodes` on `rings`, with rows that run along lines: each joins its 2 nodes along its
+    /// line, which runs from the first node to the second. One unit of `meter` for each node, row and
+    /// point of a line.
+    pub fn along(nodes: &[Node], rings: &Rings<'_>, rows: Vec<([NodeId; 2], Vec<Point>)>, meter: &mut Meter) -> Result<Network, Exhausted> {
+        let mut network = Network::of_rings(nodes, rings, meter)?;
+        for ([a, b], line) in rows {
+            meter.charge(1 + u64::try_from(line.len()).unwrap_or(u64::MAX))?;
+            let length: f64 = line.windows(2).map(|side| side[0].distance(side[1])).sum();
+            let id = network.lines.len();
+            network.lines.push(line);
+            link(&mut network.around, a, b, length, Along::Line { line: id, forwards: true });
+            link(&mut network.around, b, a, length, Along::Line { line: id, forwards: false });
+        }
+        Ok(network)
+    }
+
+    /// The network of `nodes` along `rings` alone: each node joined to the next along its ring, both ways.
+    fn of_rings(nodes: &[Node], rings: &Rings<'_>, meter: &mut Meter) -> Result<Network, Exhausted> {
         let mut around = vec![Vec::new(); nodes.len()];
         for [(a, pa), (b, pb)] in stretches(nodes.iter().map(|n| n.place).enumerate().collect(), meter)? {
             let length = rings.way_length(pa.ring, pa.at, pb.at, true);
             link(&mut around, a, b, length, Along::Ring { ring: pa.ring, forwards: true });
             link(&mut around, b, a, length, Along::Ring { ring: pa.ring, forwards: false });
         }
-        for &[a, b] in rows {
-            meter.charge(1)?;
-            let (Some(na), Some(nb)) = (nodes.get(a), nodes.get(b)) else { continue };
-            let length = na.point.distance(nb.point);
-            link(&mut around, a, b, length, Along::Row);
-            link(&mut around, b, a, length, Along::Row);
-        }
-        Ok(Network { around })
+        Ok(Network { around, lines: Vec::new() })
     }
 
     /// How far each node is from `from` along the network: infinite where no way leads. One unit of
@@ -198,6 +231,17 @@ pub(crate) fn between(
                 points.extend(way.into_iter().skip(1));
             }
             Along::Row => points.push(n.point),
+            Along::Line { line, forwards } => {
+                let Some(line) = network.lines.get(line) else { return Ok(None) };
+                meter.charge(u64::try_from(line.len()).unwrap_or(u64::MAX))?;
+                let inner = line.len().saturating_sub(1);
+                if forwards {
+                    points.extend(line.iter().take(inner).skip(1));
+                } else {
+                    points.extend(line.iter().rev().take(inner).skip(1));
+                }
+                points.push(n.point);
+            }
         }
         at = *n;
     }
@@ -222,6 +266,7 @@ mod tests {
 
     use super::*;
     use crate::generators::tatami::fixture::{frame, p};
+    use crate::generators::tatami::route::Rows;
 
     /// The ends of 2 rows across the frame at y = 1.5, one on each side of the hole, as nodes where they
     /// lie on `rings`: (0, 1.5) and (10, 1.5) on the outline, 1.5 and 16.5 along it, and (4, 1.5) and
@@ -278,6 +323,56 @@ mod tests {
         assert_eq!(network.distances(0, meter).unwrap(), [0.0, f64::INFINITY, f64::INFINITY, 13.0]);
         assert_eq!(network.way(0, 1, meter).unwrap(), None);
         assert_eq!(between(&nodes, &rings, &network, 0, 1, meter).unwrap(), None);
+    }
+
+    #[test]
+    fn a_way_along_a_row_s_line_follows_its_bends() {
+        // The left row bent down and round: from (0, 1.5) to (2, 1.5), down to (2, 3.5), and up to the hole at
+        // (4, 1.5), 8 long where the straight row is 4. The way from the outline to the hole follows it, both
+        // ways, and the right row is a line of 2 points. The outline's right end is nearer round the outline,
+        // 13, than along the bent row, the hole and the right row, 15.
+        let part = frame();
+        let meter = &mut Budget::DEFAULT.meter();
+        let rings = Rings::new(&part, meter).unwrap();
+        let nodes = nodes(&rings);
+        let bent = vec![p(0.0, 1.5), p(2.0, 1.5), p(2.0, 3.5), p(4.0, 3.5), p(4.0, 1.5)];
+        let network = Network::along(&nodes, &rings, vec![([0, 1], bent.clone()), ([2, 3], vec![p(6.0, 1.5), p(10.0, 1.5)])], meter).unwrap();
+        assert_eq!(network.distances(0, meter).unwrap(), [0.0, 8.0, 11.0, 13.0]);
+        assert_eq!(between(&nodes, &rings, &network, 0, 1, meter).unwrap(), Some(bent.clone()));
+        assert_eq!(between(&nodes, &rings, &network, 1, 0, meter).unwrap(), Some(bent.iter().rev().copied().collect()));
+        assert_eq!(between(&nodes, &rings, &network, 2, 3, meter).unwrap(), Some(vec![p(6.0, 1.5), p(10.0, 1.5)]));
+    }
+
+    #[test]
+    fn a_row_s_line_runs_from_the_first_node_the_row_joins() {
+        // The bent left row, joined from its end on the outline and from its end on the hole: either way, the
+        // way from the first node to the second follows the line from that node.
+        let part = frame();
+        let meter = &mut Budget::DEFAULT.meter();
+        let rings = Rings::new(&part, meter).unwrap();
+        let nodes = nodes(&rings)[..2].to_vec();
+        let bent = vec![p(0.0, 1.5), p(2.0, 1.5), p(2.0, 3.5), p(4.0, 3.5), p(4.0, 1.5)];
+        let lines = [bent.clone()];
+        let back: Vec<Point> = bent.iter().rev().copied().collect();
+        for ([a, b], way) in [([0, 1], &bent), ([1, 0], &back)] {
+            let network = Rows::Lines(&lines).network(&nodes, &rings, &[(0, [a, b])], meter).unwrap();
+            assert_eq!(between(&nodes, &rings, &network, a, b, meter).unwrap().as_ref(), Some(way), "from node {a}");
+        }
+    }
+
+    #[test]
+    fn a_network_along_lines_costs_a_unit_for_each_row_and_each_point_of_its_line() {
+        // The bent left row, 5 points, and the right row, 2: 9 units more than the rings alone, one for each
+        // row and one for each point of its line.
+        let part = frame();
+        let meter = &mut Budget::DEFAULT.meter();
+        let rings = Rings::new(&part, meter).unwrap();
+        let nodes = nodes(&rings);
+        let bent = vec![p(0.0, 1.5), p(2.0, 1.5), p(2.0, 3.5), p(4.0, 3.5), p(4.0, 1.5)];
+        let (mut alone, mut along) = (Budget::DEFAULT.meter(), Budget::DEFAULT.meter());
+        Network::new(&nodes, &rings, &[], &mut alone).unwrap();
+        Network::along(&nodes, &rings, vec![([0, 1], bent), ([2, 3], vec![p(6.0, 1.5), p(10.0, 1.5)])], &mut along).unwrap();
+        assert_eq!(alone.work_left() - along.work_left(), 9);
     }
 
     #[test]

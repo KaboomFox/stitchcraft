@@ -38,11 +38,15 @@ params! {
     }
 }
 
-/// The fills sewn as one path: a contour fill's through its rings, and a meander fill's through its tile.
-pub const PATH_FILLS: &[StitchType] = &[StitchType::ContourFill, StitchType::MeanderFill];
+/// The fills sewn as a path: a contour fill's through its rings, a meander fill's through its tile, and a
+/// circular fill's spiral round its middle.
+pub const PATH_FILLS: &[StitchType] = &[StitchType::ContourFill, StitchType::MeanderFill, StitchType::CircularFill];
+
+/// The path fills whose path can be smoothed: a circular fill's spiral cannot, as in Ink/Stitch.
+const SMOOTHED: &[StitchType] = &[StitchType::ContourFill, StitchType::MeanderFill];
 
 params! {
-    /// A fill sewn as one path, a contour fill's or a meander fill's: how the path is smoothed, and its
+    /// A fill sewn as a path, a contour, meander or circular fill's: how the path is smoothed, and its
     /// repeats and bean stitch, which Ink/Stitch declares for its fills apart from a stroke's. Bean stitch
     /// comes first, and each repeat then sews everything sewn so far again, the other way round.
     pub struct PathFillParams for PATH_FILLS;
@@ -51,7 +55,7 @@ params! {
         /// How much the path is smoothed: its corners are cut round over about 5 times this. A contour fill
         /// sewn inner to outer is then kept inside the fill, and a meander fill with `clip` on. 0 leaves the
         /// path as it is. A contour fill's spirals are not smoothed.
-        smoothness_mm: Length = "0", label "Smoothness", range (0.0, 100.0);
+        smoothness_mm: Length = "0", label "Smoothness", range (0.0, 100.0), applies SMOOTHED;
     }
 
     "Repeats" {
@@ -63,6 +67,7 @@ params! {
         /// How many times to go back and forth over each stitch of the fill's path, before its repeats: 1
         /// sews every stitch three times (there, back and there again), 2 five times. Several numbers
         /// separated by spaces are taken in turn along the stitches: "1 0" makes every other stitch bold.
+        /// A circular fill's travel between the pieces of its spiral is sewn once, and takes its turn.
         bean_stitch_repeats: CountList = "0", label "Bean stitch", range (0, 10);
     }
 }
@@ -89,7 +94,7 @@ pub enum Turn {
 /// stitch, a stitch: those of the run were spent as it was made.
 pub fn sew(run: &[Point], repeats: u32, beans: &[u32], turn: Turn, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
     let Some((&start, rest)) = run.split_first() else { return Ok(Vec::new()) };
-    let mut out = vec![start];
+    let mut out = Needle::at(start);
     let mut step = 0_usize;
     for pass in 0..repeats.max(1) {
         // A pass after the first starts with the point the last ended at, or the one after it; the way back
@@ -105,23 +110,62 @@ pub fn sew(run: &[Point], repeats: u32, beans: &[u32], turn: Turn, meter: &mut M
             made(meter, rest.len())?;
         }
         for to in points {
-            let from = out.last().copied().unwrap_or(start);
-            let bean = step.checked_rem(beans.len()).and_then(|i| beans.get(i)).copied().unwrap_or(0);
+            out.stitch(to, nth(beans, step), meter)?;
             step += 1;
-            meter.charge(1)?;
-            if to == from {
-                continue;
-            }
-            out.push(to);
-            for _ in 0..bean {
-                meter.charge(2)?;
-                meter.charge_stitches(2)?;
-                out.push(from);
-                out.push(to);
-            }
         }
     }
-    Ok(out)
+    Ok(out.sewn)
+}
+
+/// `run` with each stitch sewn 2b + 1 times, b taken in turn from `beans` as [`sew`] takes it for one pass,
+/// but each stitch to a point that `travel` marks sewn once: a circular fill's travel between its pieces,
+/// which Ink/Stitch's bean stitch leaves out. Such a stitch still takes its step of the list, as Ink/Stitch
+/// counts it. Costs as [`sew`] does.
+pub fn beaned(run: &[Point], beans: &[u32], travel: &[bool], meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+    let Some((&start, rest)) = run.split_first() else { return Ok(Vec::new()) };
+    let mut out = Needle::at(start);
+    for (step, &to) in rest.iter().enumerate() {
+        let travels = travel.get(step + 1).copied().unwrap_or(false);
+        out.stitch(to, if travels { 0 } else { nth(beans, step) }, meter)?;
+    }
+    Ok(out.sewn)
+}
+
+/// The `step`-th value of `beans`, taken in turn; 0 when there is none.
+fn nth(beans: &[u32], step: usize) -> u32 {
+    step.checked_rem(beans.len()).and_then(|i| beans.get(i)).copied().unwrap_or(0)
+}
+
+/// The needle points sewn so far, from the first, and where the needle is: the last of them.
+struct Needle {
+    sewn: Vec<Point>,
+    at: Point,
+}
+
+impl Needle {
+    /// The needle at `start`, which it has sewn.
+    fn at(start: Point) -> Self {
+        Needle { sewn: vec![start], at: start }
+    }
+
+    /// Sews the stitch from where the needle is to `to`, then `bean` times back and on to `to` again; nothing
+    /// where the needle already is. A unit of `meter`'s work for the point, and 2 and 2 stitches for each
+    /// time back and on.
+    fn stitch(&mut self, to: Point, bean: u32, meter: &mut Meter) -> Result<(), Exhausted> {
+        meter.charge(1)?;
+        if to == self.at {
+            return Ok(());
+        }
+        self.sewn.push(to);
+        for _ in 0..bean {
+            meter.charge(2)?;
+            meter.charge_stitches(2)?;
+            self.sewn.push(self.at);
+            self.sewn.push(to);
+        }
+        self.at = to;
+        Ok(())
+    }
 }
 
 /// `run` sewn over as `repeats` doubles it, as Ink/Stitch repeats a fill sewn as one path: each repeat
@@ -180,6 +224,20 @@ mod tests {
         // Two passes: steps 0 and 1 there, the turnaround step 2, steps 3 and 4 back; step 3 takes the
         // list's first value again, so the first stitch back is the bold one.
         assert_eq!(sewn(&[0.0, 1.0, 2.0], 2, &[1, 0, 0]), [0.0, 1.0, 0.0, 1.0, 2.0, 1.0, 2.0, 1.0, 0.0]);
+    }
+
+    #[test]
+    fn req_fill_cir_006_bean_stitch_leaves_travel_out_and_counts_its_steps() {
+        let beaned = |xs_: &[f64], beans: &[u32], travel: &[bool]| xs(&beaned(&run(xs_), beans, travel, &mut Budget::DEFAULT.meter()).unwrap());
+        // The stitch to 2, travel, is sewn once; the others 3 times.
+        assert_eq!(beaned(&[0.0, 1.0, 2.0, 3.0], &[1], &[false, false, true, false]), [0.0, 1.0, 0.0, 1.0, 2.0, 3.0, 2.0, 3.0]);
+        // Travel takes its step of the list: the stitch after it takes the list's third value.
+        assert_eq!(beaned(&[0.0, 1.0, 2.0, 3.0], &[0, 0, 1], &[false, false, true, false]), [0.0, 1.0, 2.0, 3.0, 2.0, 3.0]);
+        // A point listed twice sews nothing, and takes its step.
+        assert_eq!(beaned(&[0.0, 1.0, 1.0, 2.0], &[1, 0, 1], &[false; 4]), [0.0, 1.0, 0.0, 1.0, 2.0, 1.0, 2.0]);
+        // No marks: as one pass of `sew`.
+        assert_eq!(beaned(&[0.0, 1.0, 2.0], &[0, 2], &[]), sewn(&[0.0, 1.0, 2.0], 1, &[0, 2]));
+        assert_eq!(beaned(&[], &[1], &[]), Vec::<f64>::new());
     }
 
     #[test]

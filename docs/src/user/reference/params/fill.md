@@ -20,7 +20,8 @@ its stroke settings say. The element before it still ends near it, as Ink/Stitch
 ### `fill_method`
 
 **Fill method.** The stitch the area is filled with. A tatami fill sews rows of running stitches across it, a
-contour fill rings that follow its outline inward, and a fill set to Ink/Stitch's legacy fill is
+contour fill rings that follow its outline inward, a meander fill one line that wanders through a
+tiling, and a circular fill a spiral round its middle. A fill set to Ink/Stitch's legacy fill is
 sewn as a tatami fill without underlay (`SC-W0314`). The other methods arrive in later versions;
 until then an element set to one is skipped (`SC-W0011`).
 

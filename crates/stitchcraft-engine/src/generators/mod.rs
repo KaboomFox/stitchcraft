@@ -18,6 +18,7 @@
 //! start and end by them; the other stitch types do not yet. Both end near the next stitch, found as
 //! Ink/Stitch's geometry library finds it, by the rules of the `next` module.
 
+pub mod circular;
 pub mod contour;
 pub mod manual;
 pub mod meander;
