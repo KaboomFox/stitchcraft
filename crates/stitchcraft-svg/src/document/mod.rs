@@ -40,9 +40,8 @@
 //! **Nothing is dropped silently.** `SC-W0802` reports SVG features that StitchCraft does not stitch:
 //! text, images, clones, nested `<svg>`, style sheet rules it does not read, clipping, masks, filters,
 //! markers, gradients, patterns, a group's Ink/Stitch settings, the settings of Ink/Stitch's early versions
-//! (`embroider_` attributes), a file Ink/Stitch would update or warn about that is read as it is (one with
-//! its settings and no file version, or from a newer Ink/Stitch), and the updates of an older file's
-//! settings that are not applied yet.
+//! (`embroider_` attributes), and a file Ink/Stitch would update or warn about that is read as it is (one
+//! with its settings and no file version, or from a newer Ink/Stitch).
 //! `SC-W0804` reports geometry that cannot be used,
 //! and `SC-E0801` a file that cannot be read at all, or whose size cannot be read. What a viewer would not
 //! show either is left out without a word: `display: none`, hidden or fully transparent elements, and the
@@ -81,7 +80,7 @@ use crate::sheet::{self, Sheet};
 use crate::style::{self, Declared, Paint, Style, painted, without_icc};
 use crate::text::{self, unreadable};
 use crate::transform::{self, Affine, user_units};
-use crate::version::{self, Pending, Updated, Version};
+use crate::version::{self, Updated, Version};
 
 mod root;
 
@@ -223,11 +222,9 @@ struct Reader<'b, 'a, 'input> {
     noted_inkstitch: bool,
     /// Ink/Stitch's design settings.
     settings: settings::Found,
-    /// The Ink/Stitch file version the file is read as, what its update changed, and what it would change
-    /// that is not applied yet.
+    /// The Ink/Stitch file version the file is read as, and what its update changed.
     version: Version,
     updated: Updated,
-    pending: Pending,
     /// Whether a shape with no `inkstitch:` attribute is an automatic element (`--auto`).
     auto: bool,
 }
@@ -253,7 +250,6 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             settings: settings::Found::default(),
             version: Version::Current,
             updated: Updated::default(),
-            pending: Pending::default(),
             auto: reading.auto,
         }
     }
@@ -328,9 +324,6 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         self.command_notes();
         if let Some(message) = self.version.note(self.updated) {
             self.warnings.insert(0, self.diagnostic(Code::SvgInkStitchUpdated, None, message, None));
-        }
-        if let Some((message, hint)) = self.version.unapplied(self.pending) {
-            self.note(None, message, Some(hint));
         }
         let design = Design::new(self.elements, self.settings.settings)?;
         Ok(Svg { design, warnings: self.warnings })
@@ -615,7 +608,6 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 styled_polyline: geometry == Geometry::Polyline && styled_stroke,
             };
             self.version.update(&shape, &mut params, &mut self.updated);
-            self.version.pending(fill.is_some(), &params, &mut self.pending);
         }
         // Ink/Stitch's own setting sews the stroke first (`REQ-SVG-010`), and SVG's `paint-order` doesn't.
         let stroke_first = node.attribute((INKSTITCH_NS, STROKE_FIRST)).is_some_and(inkstitch::yes);

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A red rectangle 60 × 40 mm in a file of version 3, with auto_fill off and a pull compensation of 2 mm. Ink/Stitch's update makes it a legacy fill: rows of stitches 3 mm long, no underlay and no pull compensation, where a file of today's version reads no auto_fill and would sew a tatami fill over its underlay, its rows 2 mm longer at each end. Written for StitchCraft's Ink/Stitch differential cases (conformance L3). -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkstitch="http://inkstitch.org/namespace"
+     width="100mm" height="100mm" viewBox="0 0 100 100">
+  <metadata><inkstitch:inkstitch_svg_version>3</inkstitch:inkstitch_svg_version></metadata>
+  <rect id="legacy" x="10" y="10" width="60" height="40" fill="#ed171f" inkstitch:auto_fill="false"
+        inkstitch:pull_compensation_mm="2"/>
+</svg>
