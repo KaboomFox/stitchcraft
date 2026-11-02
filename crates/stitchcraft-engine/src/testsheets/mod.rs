@@ -42,12 +42,15 @@ use stitchcraft_plan::{MachineProfile, StitchPlan, Thread};
 use crate::design::Design;
 
 /// Brother PEC indices of the threads the sheets use.
+const PRUSSIAN_BLUE: u8 = 1;
 const RED: u8 = 5;
 const BLUE: u8 = 2;
 const DEEP_GOLD: u8 = 11;
+const YELLOW: u8 = 13;
 const BLACK: u8 = 20;
 const WHITE: u8 = 29;
 const FLESH_PINK: u8 = 42;
+const TANGERINE: u8 = 52;
 const EMERALD_GREEN: u8 = 54;
 
 /// The thread with Brother PEC index `index`, named as the machine names it.
@@ -276,9 +279,9 @@ pub static SHEETS: &[TestSheet] = &[
         title: "Pictures digitized automatically: neighbours and sewing order",
         checks: &[
             "The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Top row, left to right: a badge traced abutting and one traced stacked, each 40 mm across, and a blue disc with 7 red specks round it. Bottom row: 3 badges drawn badge by badge, and a gold square with a blue bar beside it.",
-            "The bottom half changes thread 16 times and jumps 15 times, the top half 4 and 16 times. How long does each half take?",
+            "The bottom half changes thread 16 times and jumps 15 times, the top half 3 and 16 times. How long does each half take?",
             "Does fabric show between colours, on either half? On the top half, each area reaches 0.4 mm under the next: does that cover the gap, or show as a ridge?",
-            "On the top half, the stacked badge's lower colours are cut away under the upper ones. Does it sew as flat as the abutting badge beside it? On the bottom half, it sews its lower colours whole, under the upper ones.",
+            "On the top half, the stacked badge sews only what shows of each colour, as the abutting badge beside it does: the red disc whole, cut away under the square, and the blue square's ring round the gold disc. Does it sew as flat as the abutting badge? On the bottom half, it sews its lower colours whole, under the upper ones.",
             "On the bottom half, each speck round the disc sews a red knot. On the top half, the 6 specks that touch the disc are blue, part of it, and the one apart is left out. Does the disc's edge show where they were?",
             "The blue bar meets the gold square along the top half of its side, and runs on 0.5 mm from it below. On the top half, the bar, sewn first, reaches under the square only where they meet. Does the fabric that shows below read as a gap drawn there?",
             "Does any shape cover one drawn over it? The order must never let that happen.",
@@ -320,6 +323,21 @@ pub static SHEETS: &[TestSheet] = &[
         profile: REFERENCE,
         drawn: Drawn::Designed(ts13::lines_and_parts, &ts13::LINES_AND_PARTS_SAY),
     },
+    TestSheet {
+        id: "TS-13D",
+        title: "Pictures digitized automatically: pictures traced in layers",
+        checks: &[
+            "The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left to right: an emblem traced abutting and the same emblem traced stacked, each 42 mm wide, a navy square with a white disc, a red star on the disc and 3 gold bars, on white; and a button traced abutting above the same button traced stacked, a yellow disc 19 mm across with 7 orange dots, in a black rim.",
+            "The bottom half changes thread 13 times and jumps 12 times, the top half 7 and 18 times. How long does each half take?",
+            "On the bottom half, the stacked emblem sews each colour whole under the colours drawn over it, the white under everything. How stiff is it beside the abutting one? On the top half, it sews only what shows of each colour: does it sew as the abutting emblem beside it?",
+            "On the top half, each navy square is one fill under the white disc and the bars, which sew after it, cut away 0.4 mm inside their edges. The white round each star, narrower than a satin column there, is a satin column round it. On the bottom half, the abutting emblem's navy sews round the disc and between the bars as drawn. Which sews better between the bars? Does fabric or a ridge show round the bars, the disc and the star?",
+            "On the top half, the gold bars sew as satin columns, 2.1 mm tall as drawn. Do they keep their height, and do their ends stay square?",
+            "On the top half, each button's yellow is one fill under the dots, which sew after it, and its black rim a satin column round it. On the bottom half, the abutting button's yellow sews round the dots as drawn. Which sews better between the dots? Does the rim cover the yellow's edge?",
+            ts13::JUMP_THREADS,
+        ],
+        profile: REFERENCE,
+        drawn: Drawn::Designed(ts13::layers, &ts13::LAYERS_SAY),
+    },
 ];
 
 /// The sheet with id `id` (any case).
@@ -348,10 +366,10 @@ mod tests {
             designed.push(sheet.id);
         }
         // The sheets drawn stitch by stitch have no design.
-        assert_eq!(designed, ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-13A", "TS-13B", "TS-13C"]);
+        assert_eq!(designed, ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-13A", "TS-13B", "TS-13C", "TS-13D"]);
         // The TS-13 sheets' shapes are digitized automatically, and no other sheet's are.
         let digitized: Vec<&str> = SHEETS.iter().filter(|sheet| sheet.digitized()).map(|sheet| sheet.id).collect();
-        assert_eq!(digitized, ["TS-13A", "TS-13B", "TS-13C"]);
+        assert_eq!(digitized, ["TS-13A", "TS-13B", "TS-13C", "TS-13D"]);
     }
 
     #[test]
@@ -744,7 +762,7 @@ mod tests {
     const SEWN_AT_MC1: [&str; 5] = ["TS-01", "TS-02", "TS-10A", "TS-10B", "TS-10C"];
     /// The sheets that sew pictures as the engine plans any design, jump threads and all: which jump threads
     /// their shapes sew down is one of their checks.
-    const SEWN_AS_PLANNED: [&str; 3] = ["TS-13A", "TS-13B", "TS-13C"];
+    const SEWN_AS_PLANNED: [&str; 4] = ["TS-13A", "TS-13B", "TS-13C", "TS-13D"];
 
     /// How near a needle may come down to a thread on the fabric without catching it (mm): about half a 75/11
     /// needle, 0.75 mm across, and half a 40 wt thread.

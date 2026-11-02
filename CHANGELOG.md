@@ -5,6 +5,55 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.12: traced layers flattened before digitizing. With `--auto`, the layers of a traced picture are
+  flattened before anything is digitized (`REQ-AUTO-023`), so that a picture traced with its colours
+  stacked sews as one traced with its colours abutting.
+  - Each automatic area sews what shows of it. The automatic areas drawn after it are taken from it where
+    they overlap it, a hairline that rounding leaves along their edges shows nothing, and one they cover
+    whole sews nothing (`SC-I0904`). A stacked colour's stitches were
+    chosen for its whole shape, most of it hidden. The stacked emblem's gold is a square under the navy, and
+    it sewed as a large fill cut down to its 3 bars. It sews them as satin columns 3 mm wide now, as the
+    abutting emblem does.
+  - An automatic area wider than its widest satin column somewhere is digitized whole under its details,
+    the automatic areas that fill its holes. Its stitches are chosen with those holes closed. It moves back
+    in paint order before its details, never across a stop, and is then cut away under them, 0.4 mm inside
+    their edges. A hole whose details don't all sew after it, once every area has moved, stays open. A broad area with details on it split into narrow columns between them, traced either way,
+    as a flower's middle did round its dots, and it is one fill now. An area no wider than a satin column
+    everywhere, such as a letter or an outline, keeps its holes.
+  - What shows of the picture's background inside the picture is sewn (`REQ-AUTO-009`): its parts that come
+    no nearer than 0.5 mm to the sides of the box round the design. A trace that stacks its colours draws a
+    white disc on a badge as part of the background, and the disc was left out with it. `SC-W0906` adds
+    that the part of the background that shows inside the picture is sewn, or counts the parts.
+  - An automatic area is cut away under a part's line or column sewn after it that covers it, as under an
+    area (`REQ-AUTO-007`). A satin column or a line digitized from a stroke still goes over an area, which is
+    sewn whole under it.
+  - `SC-I0908`, *Layers flattened*, counts the areas that sew only what shows of them and those digitized
+    whole under their details. It names an area whose layers need more work to find than the budget
+    allows, which does without that step: sewn as it is drawn, in its place, when what shows of it can't be
+    found, with its holes open when they can't be found, and in its place when it can't be moved.
+  - The test pictures `emblem` and `button` (`stitchcraft_engine::testsheets::pictures`) are traced each
+    way, as VectorCraft 0.19.0's Image Trace traces such pictures. The emblem, 60 mm wide, sews the same
+    shapes with each thread either way: its navy square one tatami fill of 1,848.5 mm², sewn first, its white
+    disc one fill of 380.7 mm² after it, its 3 gold bars satin columns 3.00 mm wide and its star one fill.
+    The 2 traces' stitches differ by about 1 %. The button's yellow is one fill of 445.9 mm² under its 7
+    dots and its black rim a satin column 2.50 mm wide, and both traces sew as many stitches.
+  - A part of an area no wider than a satin column whose every centre line is shorter than half its width
+    along it is a dot, and stays in the fill, as one whose line has no length does (`REQ-AUTO-016`). A
+    disc's or a square's corners lie on one circle, where the triangulation ties, and how each tie broke
+    depended on where the part lay and how it was drawn. Of the button's 7 dots alike, one sewed a satin
+    column across and the others fills. TS-13D failed the check that each sheet sews the same stitches
+    mirrored, turned and drawn again (`tests/transformed.rs`). A disc's or a square's lines are 0.4 times
+    as long as it is wide, and discs and squares no wider than a satin column are fills now wherever they
+    lie, as TS-13A's gold discs 6 mm across in its row of badges are. A rectangle 3 mm wide is a column
+    from 3.5 mm long.
+  - TS-13D, for MC-8 (`stitch testsheet`), sews pictures traced in layers. The emblem, 42 mm wide there,
+    and the button, 23 mm across, are each traced abutting and stacked. They are digitized in the top half
+    and sewn as drawn in the bottom half. The sheet is 115.0 × 108.4 mm, with 26,816 stitches. The bottom
+    half changes thread 13 times and jumps 12 times, and the top half 7 and 18 times. As drawn it leaves 1
+    jump thread, which nothing sews down. Digitized it leaves 10, and sews down 3 of them.
+  - TS-13A's digitized half changes thread 3 times instead of 4, and still jumps 16 times. It leaves 12 jump
+    threads, 4 of them sewn down, where it left 11 and 3. TS-13A sews 24,396 stitches, 110 more, TS-13B
+    14,421, 2 more, and TS-13C 10,311, as before.
 - M7.6: the offsetter meets the third criterion of ADR-0005 (NFR-PERF-3) before contour fill relies on it. A
   region 150 mm across, of 1,000 points, shrinks 300 times, each inset from the last, in 65 to 160 ms
   natively, from 141 to 356 ms: round or with 7 waves, by 0.25 mm and by 0.4 mm. Snap rounding keeps its hot
@@ -1991,6 +2040,14 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-13A.pes` and `TS-13B.pes` (`REQ-AUTO-023`, `REQ-AUTO-007`,
+  `REQ-AUTO-016`): their digitized halves sew each picture as its layers are flattened. TS-13A's stacked
+  badge sews only what shows of each colour, and the badges' red discs are digitized whole under the
+  shapes in their holes. The gold discs 6 mm across in its row of badges are dots, filled. It sews 24,396
+  stitches, 110 more. TS-13B sews 14,421, 2 more, from regions rebuilt beside a line. TS-13C's file is
+  unchanged: its face is digitized whole under its eyes, and sews the same 10,311 stitches.
+- Added `conformance/golden/testsheets/TS-13D.pes` (M13.12), the TS-13 sheet of pictures traced in layers
+  that MC-8 sews: 26,816 stitches.
 - Changed `conformance/golden/testsheets/TS-13B.pes` (`REQ-AUTO-015`, `REQ-AUTO-016`): its digitized letter A
   6 mm tall sews both legs as satin columns, 18 stitches more, 14,419 in all. Nothing else on the sheet, and
   nothing on TS-13A or TS-13C, changes.

@@ -399,7 +399,7 @@ the filter stops with `SC-E0004` before VectorCraft would. A VectorCraft before 
 filter, which almost every curved line outruns, and stops it with its own error.
 
 **Test Sheet** (`REQ-VC-015`, `apps/stitchcraft-vc-plugin/src/testsheet.rs`) draws one of the sheets drawn
-as designs, TS-02B to TS-09 and TS-13A to TS-13C, into the document: the sheet's design moved by whole millimetres so that its
+as designs, TS-02B to TS-09 and the TS-13 sheets, into the document: the sheet's design moved by whole millimetres so that its
 middle is nearest the middle of the artboard `_context` names (`Design::moved`). Each element is an object
 named by its id, with its path and its thread as the paint its family sews with. Its settings are its
 family's effect record, each the value its dialog row takes, which reads back as the setting it was. The

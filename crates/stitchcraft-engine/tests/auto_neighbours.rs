@@ -155,14 +155,13 @@ fn req_auto_007_an_area_covered_by_an_area_sewn_after_it_is_cut_away_0_4_mm_insi
     // Traced with its colours abutting, the lower area has a hole where the upper one is, 10 mm from its
     // edges, wider than a satin column: so it has no narrow parts (REQ-AUTO-019).
     let (abutting, abutting_said) = sewn(vec![holed("under", (0.0, 0.0), (30.0, 30.0), (10.0, 10.0), (20.0, 20.0)), over(), far()]);
-    // Either way, the lower area is sewn up to 0.4 mm inside the upper one's edge: 900 mm² less a 9.2 mm
-    // square.
-    for out in [&stacked, &abutting] {
+    // Either way, the upper area fills a hole of the lower one, which is digitized whole under it
+    // (REQ-AUTO-023) and sewn up to 0.4 mm inside its edge: 900 mm² less a 9.2 mm square.
+    for (out, said_of) in [(&stacked, &stacked_said), (&abutting, &abutting_said)] {
         assert!(near(area(named(out, "under")), 900.0 - 9.2 * 9.2, 0.05), "{}", area(named(out, "under")));
         assert_eq!(named(out, "over").shape, over().shape);
+        assert_eq!(said(said_of, Code::AutoUnder), ["info SC-I0904: 1 area is cut away under the areas sewn after it, 0.4 mm inside their edges."]);
     }
-    assert_eq!(said(&stacked_said, Code::AutoUnder), ["info SC-I0904: 1 area is cut away under the areas sewn after it, 0.4 mm inside their edges."]);
-    assert_eq!(said(&abutting_said, Code::AutoUnder), ["info SC-I0904: 1 area reaches 0.4 mm under the shapes sewn after it that it touches."]);
     // So the stacked trace sews the stitches of the abutting one.
     let stitches = |elements: Vec<Element>| planned(elements).plan.unwrap().stitches().count();
     let stacked_stitches = stitches(vec![rect("under", (0.0, 0.0), (30.0, 30.0)), over(), far()]);
@@ -174,8 +173,8 @@ fn req_auto_007_an_area_covered_by_an_area_sewn_after_it_is_cut_away_0_4_mm_insi
 #[test]
 fn req_auto_007_an_area_covered_whole_by_an_area_sewn_after_it_sews_nothing() {
     // It stops the machine after it, which it can't where it sews nothing: the stop is left out, as after
-    // any element that sews nothing, and of the shapes digitized the 2 that sew are counted, `far` narrow
-    // enough for a satin column.
+    // any element that sews nothing, and of the shapes digitized the 2 that sew are counted, `far` a square
+    // narrower than a satin column, a dot, filled (REQ-AUTO-016).
     let hidden = automatic(fill("hidden", &[&[(5.0, 5.0), (8.0, 5.0), (8.0, 8.0), (5.0, 8.0)]], &RED, &[("stop_after", "true")]));
     let (out, diagnostics) = sewn(vec![hidden, rect("cover", (0.0, 0.0), (20.0, 20.0)), rect("far", (30.0, 0.0), (35.0, 5.0))]);
     assert_eq!(ids(&out), ["cover", "far"]);
@@ -185,10 +184,7 @@ fn req_auto_007_an_area_covered_whole_by_an_area_sewn_after_it_sews_nothing() {
     let stop = diagnostics.iter().find(|d| d.code == Code::TrimOrStopLeftOut).unwrap();
     assert_eq!(stop.to_string(), "warning SC-W0505: This element sews no stitch, so the stop after it is left out.");
     assert_eq!(stop.element.as_ref().map(|id| id.as_str()), Some("hidden"));
-    assert_eq!(
-        said(&diagnostics, Code::AutoDigitized),
-        ["info SC-I0901: 2 shapes are digitized automatically: 1 sews as a satin column and 1 as a tatami fill."]
-    );
+    assert_eq!(said(&diagnostics, Code::AutoDigitized), ["info SC-I0901: 2 shapes are digitized automatically: both sew as tatami fills."]);
 }
 
 #[test]
@@ -212,9 +208,10 @@ fn req_auto_007_an_area_covered_whole_sews_nothing_however_near_the_edge_of_what
         rect("far", (30.0, 0.0), (35.0, 5.0)),
     ]);
     assert!(near(area(named(&out, "parts")), 90.0, 1e-9), "{}", area(named(&out, "parts")));
-    // The band round the part left out, under the cover's edge, touches nothing left of the area: it
-    // reaches under nothing.
-    assert_eq!(said(&diagnostics, Code::AutoUnder), ["info SC-I0904: 1 area is cut away under the areas sewn after it, 0.4 mm inside their edges."]);
+    // The part under the cover sews nothing as the layers are flattened (REQ-AUTO-023), and the rest, 1 mm
+    // from the cover, neither reaches under it nor is cut away.
+    assert!(said(&diagnostics, Code::AutoUnder).is_empty(), "{:?}", said(&diagnostics, Code::AutoUnder));
+    assert_eq!(said(&diagnostics, Code::AutoLayers), ["info SC-I0908: 1 area sews only what shows of it under the areas drawn over it."]);
 }
 
 #[test]
@@ -515,16 +512,226 @@ fn req_auto_009_a_background_that_needs_more_work_to_find_than_the_budget_allows
 }
 
 #[test]
+fn req_auto_009_what_shows_of_the_background_inside_the_picture_is_sewn() {
+    // A frame on a white picture, with a hole where the white shows through. Stacked, the white is the
+    // background, whole under the frame; abutting, the white round the frame is the background, and the white
+    // in its hole a shape of its own. Either way the white in the hole sews, after the frame, which is
+    // digitized whole under it (REQ-AUTO-023).
+    let frame = || holed("frame", (5.0, 5.0), (35.0, 25.0), (15.0, 10.0), (25.0, 20.0));
+    let left = "warning SC-W0906: This area covers the whole design under the other shapes, so it is left out as the picture's background";
+    for (elements, white, message) in [
+        (
+            vec![rect("background", (0.0, 0.0), (40.0, 30.0)), frame()],
+            "background",
+            format!("{left}, but for the part of it that shows inside the picture, which is sewn."),
+        ),
+        (
+            vec![holed("background", (0.0, 0.0), (40.0, 30.0), (5.0, 5.0), (35.0, 25.0)), rect("inside", (15.0, 10.0), (25.0, 20.0)), frame()],
+            "inside",
+            format!("{left}."),
+        ),
+    ] {
+        let (out, diagnostics) = sewn(elements);
+        assert_eq!(ids(&out), ["frame", white]);
+        assert!(near(area(named(&out, white)), 100.0, 1e-6), "{white}: {}", area(named(&out, white)));
+        assert_eq!(said(&diagnostics, Code::AutoBackground), [message]);
+    }
+}
+
+#[test]
+fn req_auto_023_an_area_drawn_under_others_sews_what_shows_of_it() {
+    // A bar along the bottom, a square drawn over its middle: what shows of the bar is its 2 ends, which sew
+    // first and reach 0.4 mm under the square along the edges they share with it, and round the corners at
+    // their ends, a quarter of a circle as wide as the overlap each (REQ-AUTO-007).
+    let (out, diagnostics) =
+        sewn(vec![rect("bar", (0.0, 0.0), (30.0, 10.0)), rect("square", (10.0, -5.0), (20.0, 15.0)), rect("far", (40.0, 0.0), (45.0, 5.0))]);
+    let bar = named(&out, "bar");
+    assert_eq!(region_of(bar).parts.len(), 2);
+    let corners = std::f64::consts::PI * 0.4 * 0.4;
+    assert!(near(area(bar), 200.0 + 2.0 * 0.4 * 10.0 + corners, 4.0 * PAST_ENDS), "{}", area(bar));
+    assert_eq!(named(&out, "square").shape, rect("square", (10.0, -5.0), (20.0, 15.0)).shape);
+    assert_eq!(said(&diagnostics, Code::AutoLayers), ["info SC-I0908: 1 area sews only what shows of it under the areas drawn over it."]);
+    assert_eq!(said(&diagnostics, Code::AutoUnder), ["info SC-I0904: 1 area reaches 0.4 mm under the shapes sewn after it that it touches."]);
+}
+
+#[test]
+fn req_auto_023_an_area_moves_back_under_the_details_that_fill_its_holes() {
+    // An abutting trace drew the detail first, then the square with a hole where it lies: the square is
+    // digitized whole, sews first, and is cut away under the detail, 0.4 mm inside its edge.
+    let square = || holed("square", (0.0, 0.0), (30.0, 30.0), (10.0, 10.0), (20.0, 20.0));
+    let (out, diagnostics) = sewn(vec![rect("detail", (10.0, 10.0), (20.0, 20.0)), square(), rect("far", (40.0, 0.0), (45.0, 5.0))]);
+    assert_eq!(ids(&out), ["square", "detail", "far"]);
+    let whole = named(&out, "square");
+    assert!(near(area(whole), 900.0 - 9.2 * 9.2, 0.05) && region_of(whole).parts[0].holes.len() == 1, "{}", area(whole));
+    assert_eq!(
+        said(&diagnostics, Code::AutoLayers),
+        ["info SC-I0908: 1 area is digitized whole under the areas that fill its holes, which sew after it."]
+    );
+    assert_eq!(said(&diagnostics, Code::AutoUnder), ["info SC-I0904: 1 area is cut away under the areas sewn after it, 0.4 mm inside their edges."]);
+}
+
+#[test]
+fn req_auto_023_holes_that_fabric_shows_through_or_that_only_specks_fill_stay_open() {
+    let square = || holed("square", (0.0, 0.0), (30.0, 30.0), (10.0, 10.0), (20.0, 20.0));
+    let far = || rect("far", (40.0, 0.0), (45.0, 5.0));
+    // Nothing fills the hole, or a shape fills half of it: fabric shows through, and the square keeps it.
+    for inside in [vec![], vec![rect("half", (10.0, 10.0), (15.0, 20.0))]] {
+        let (out, diagnostics) = sewn([vec![square()], inside, vec![far()]].concat());
+        assert_eq!(region_of(named(&out, "square")).parts[0].holes.len(), 1, "{:?}", ids(&out));
+        assert!(said(&diagnostics, Code::AutoLayers).is_empty(), "{:?}", said(&diagnostics, Code::AutoLayers));
+    }
+}
+
+#[test]
+fn req_auto_023_an_outline_keeps_its_hole() {
+    // A ring 3 mm wide round a square that fills its hole: no wider than a satin column anywhere, it is an
+    // outline, which sews as satin columns round the square, not a fill under it.
+    let (out, diagnostics) = sewn(vec![
+        holed("ring", (0.0, 0.0), (16.0, 16.0), (3.0, 3.0), (13.0, 13.0)),
+        rect("inside", (3.0, 3.0), (13.0, 13.0)),
+        rect("far", (30.0, 0.0), (35.0, 5.0)),
+    ]);
+    let ring: Vec<usize> = (0..out.len()).filter(|&at| out[at].id.as_str().starts_with("ring")).collect();
+    assert!(!ring.is_empty() && ring.iter().all(|&at| matches!(out[at].shape, Shape::Stroke { .. })), "{:?}", ids(&out));
+    // The square is a fill, sewn first, and the ring's columns over its edge.
+    let inside = ids(&out).iter().position(|&id| id == "inside").unwrap();
+    assert!(matches!(out[inside].shape, Shape::Fill { .. }) && ring.iter().all(|&at| at > inside), "{:?}", ids(&out));
+    assert!(said(&diagnostics, Code::AutoLayers).is_empty(), "{:?}", said(&diagnostics, Code::AutoLayers));
+}
+
+#[test]
+fn req_auto_023_an_area_moves_back_past_no_stop_and_no_shape_on_it() {
+    let square = || holed("square", (0.0, 0.0), (30.0, 30.0), (10.0, 10.0), (20.0, 20.0));
+    let detail = |params: &[(&str, &str)]| automatic(fill("detail", &[&[(10.0, 10.0), (20.0, 10.0), (20.0, 20.0), (10.0, 20.0)]], &RED, params));
+    let far = || rect("far", (40.0, 0.0), (45.0, 5.0));
+    // The square sews after the shapes `before` it and keeps its hole, its details' place unchanged.
+    let kept = |elements: Vec<Element>, before: &[&str]| {
+        let (out, diagnostics) = sewn(elements);
+        let at = |id: &str| ids(&out).iter().position(|&sewn| sewn == id).unwrap();
+        assert!(before.iter().all(|id| at(id) < at("square")), "{:?}", ids(&out));
+        assert_eq!(region_of(named(&out, "square")).parts[0].holes.len(), 1, "{:?}", ids(&out));
+        assert!(said(&diagnostics, Code::AutoLayers).is_empty(), "{:?}", said(&diagnostics, Code::AutoLayers));
+    };
+    // A stop after the detail: nothing moves across it, so the square keeps its place and its hole.
+    kept(vec![detail(&[("stop_after", "true")]), square(), far()], &["detail"]);
+    // A line drawn across the square between them: the square can't move back past it, which it covers.
+    kept(vec![detail(&[]), line("across", &[(-5.0, 25.0), (35.0, 25.0)], 2.0), square(), far()], &["detail", "across"]);
+    // A line far from the square, between them: the square moves back past it.
+    let (out, _) = sewn(vec![detail(&[]), line("away", &[(50.0, 25.0), (60.0, 25.0)], 2.0), square(), far()]);
+    let at = |id: &str| ids(&out).iter().position(|&sewn| sewn == id).unwrap();
+    assert!(at("square") < at("detail"), "{:?}", ids(&out));
+}
+
+#[test]
+fn req_auto_023_areas_move_back_the_largest_first() {
+    // An abutting trace drew 3 nested squares from the middle out, each but the middle with a hole where the
+    // next lies: the outer one moves back before both, and the middle one before the inner one.
+    let (out, diagnostics) = sewn(vec![
+        rect("inner", (25.0, 25.0), (35.0, 35.0)),
+        holed("middle", (15.0, 15.0), (45.0, 45.0), (25.0, 25.0), (35.0, 35.0)),
+        holed("outer", (0.0, 0.0), (60.0, 60.0), (15.0, 15.0), (45.0, 45.0)),
+        rect("far", (70.0, 0.0), (75.0, 5.0)),
+    ]);
+    assert_eq!(ids(&out), ["outer", "middle", "inner", "far"]);
+    assert_eq!(
+        said(&diagnostics, Code::AutoLayers),
+        ["info SC-I0908: 2 areas are digitized whole under the areas that fill their holes, which sew after them."]
+    );
+}
+
+#[test]
+fn req_auto_023_an_area_and_one_in_its_hole_round_a_part_of_it_both_sew() {
+    // A red square with a white ring on it and a red bullseye in the ring's hole, the red one shape, as a
+    // trace that stacks its colours draws it: what shows of the red is a frame round the ring and the
+    // bullseye in it, each in a hole of the other. The ring moves back before the red, the bullseye in its
+    // hole, and the red keeps its hole, which the ring now sews before: the red sews its frame and its
+    // bullseye, and the ring sews whole under the bullseye.
+    let (out, diagnostics) = sewn(vec![
+        rect("red", (0.0, 0.0), (60.0, 60.0)),
+        holed("white", (15.0, 15.0), (45.0, 45.0), (25.0, 25.0), (35.0, 35.0)),
+        rect("far", (70.0, 0.0), (75.0, 5.0)),
+    ]);
+    assert_eq!(ids(&out)[..2], ["white", "red"], "{:?}", said(&diagnostics, Code::AutoUnder));
+    assert!(near(area(named(&out, "red")), 3600.0 - 900.0 + 100.0, 1e-6), "{}", area(named(&out, "red")));
+    assert!(area(named(&out, "white")) > 900.0 - 9.2 * 9.2 - 1e-6, "{}", area(named(&out, "white")));
+}
+
+#[test]
+fn req_auto_023_an_area_that_moves_back_past_one_whose_hole_holds_a_part_of_it_opens_that_hole() {
+    // A square with a hole, and a shape of 2 parts drawn after it: a square in the hole, and a ring away from
+    // it round a detail drawn first. The shape moves back before its detail, past the square, so the square's
+    // hole, which the shape's part fills, now sews after it: it stays open, and the part sews in it.
+    let two = automatic(fill(
+        "two",
+        &[
+            &[(15.0, 15.0), (25.0, 15.0), (25.0, 25.0), (15.0, 25.0)],
+            &[(50.0, 0.0), (80.0, 0.0), (80.0, 30.0), (50.0, 30.0)],
+            &[(60.0, 10.0), (60.0, 20.0), (70.0, 20.0), (70.0, 10.0)],
+        ],
+        &BLUE,
+        &[],
+    ));
+    let (out, _) = sewn(vec![rect("detail", (60.0, 10.0), (70.0, 20.0)), holed("square", (0.0, 0.0), (40.0, 40.0), (15.0, 15.0), (25.0, 25.0)), two]);
+    let at = |id: &str| ids(&out).iter().position(|&sewn| sewn == id).unwrap();
+    assert!(at("two") < at("detail") && at("two") < at("square"), "{:?}", ids(&out));
+    let square = named(&out, "square");
+    assert_eq!(region_of(square).parts[0].holes.len(), 1, "{:?}", ids(&out));
+    assert!(near(area(square), 1500.0, 1e-6), "{}", area(square));
+    assert!(area(named(&out, "two")) > 100.0 + 800.0 - 1e-6, "{}", area(named(&out, "two")));
+}
+
+#[test]
+fn req_auto_023_a_hairline_that_rounding_leaves_shows_nothing() {
+    // A red disc a hair larger than the blue disc drawn on it: the ring left, 0.05 mm wide, is no wider than
+    // rounding leaves where edges drawn as one meet, and the red sews nothing.
+    let disc = |id: &str, r: f64, thread| {
+        let ring: Vec<(f64, f64)> = (0..96_u32)
+            .map(|k| stitchcraft_core::math::sin_cos(std::f64::consts::TAU * f64::from(k) / 96.0))
+            .map(|(s, c)| (20.0 + r * c, 20.0 + r * s))
+            .collect();
+        automatic(fill(id, &[&ring], thread, &[]))
+    };
+    let (out, diagnostics) = sewn(vec![disc("red", 10.05, &RED), disc("blue", 10.0, &BLUE), rect("far", (40.0, 0.0), (45.0, 5.0))]);
+    assert_eq!(ids(&out), ["blue", "far"]);
+    assert_eq!(said(&diagnostics, Code::AutoUnder)[0], "info SC-I0904: This area is covered by the areas sewn after it, so it sews nothing.");
+}
+
+#[test]
+fn diag_sc_i0908_the_layers_are_flattened() {
+    // A bar drawn under a square, and a frame with a detail in its hole.
+    let (_, diagnostics) = sewn(vec![
+        rect("bar", (0.0, 0.0), (30.0, 10.0)),
+        rect("square", (10.0, -5.0), (20.0, 15.0)),
+        holed("frame", (40.0, 0.0), (70.0, 30.0), (50.0, 10.0), (60.0, 20.0)),
+        rect("detail", (50.0, 10.0), (60.0, 20.0)),
+    ]);
+    let layers: Vec<&Diagnostic> = diagnostics.iter().filter(|d| d.code == Code::AutoLayers).collect();
+    let [summary] = layers.as_slice() else { panic!("{layers:?}") };
+    assert_eq!(
+        (summary.to_string(), summary.element.clone(), summary.fix.clone()),
+        (
+            "info SC-I0908: 1 area sews only what shows of it under the areas drawn over it. 1 area is digitized whole under the areas that \
+             fill its holes, which sew after it."
+                .to_string(),
+            None,
+            None
+        )
+    );
+    assert_eq!(Code::AutoLayers.id(), "SC-I0908");
+}
+
+#[test]
 fn diag_sc_i0904_areas_reach_under_the_shapes_sewn_after_them_or_are_cut_away() {
-    // 2 areas reach under the next, and the lowest of 3 stacked areas is cut away under the 2 above it, each
-    // wider than a satin column, which a part as narrow as that sews as (REQ-AUTO-016).
+    // 2 areas reach under the next, and the lowest of 3 stacked areas is cut away under the 2 above it, which
+    // fill holes of what shows of it, wider than a satin column between them (REQ-AUTO-023), and are each
+    // wider than one, which a part as narrow as that sews as (REQ-AUTO-016).
     let (_, diagnostics) = sewn(vec![
         rect("a", (0.0, 0.0), (10.0, 10.0)),
         rect("b", (10.0, 0.0), (20.0, 10.0)),
         rect("c", (20.0, 0.0), (30.0, 10.0)),
-        rect("under", (0.0, 20.0), (30.0, 40.0)),
-        rect("over1", (4.0, 25.0), (12.0, 35.0)),
-        rect("over2", (18.0, 25.0), (26.0, 35.0)),
+        rect("under", (0.0, 20.0), (40.0, 50.0)),
+        rect("over1", (5.0, 30.0), (13.0, 40.0)),
+        rect("over2", (27.0, 30.0), (35.0, 40.0)),
     ]);
     let [summary] = said(&diagnostics, Code::AutoUnder).try_into().unwrap();
     assert_eq!(
