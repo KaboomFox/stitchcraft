@@ -340,7 +340,7 @@ impl Tally {
 /// The pieces `polygon` grown by `distance` falls into, or `polygon` itself where that leaves nothing, as
 /// Ink/Stitch sews it; and whether it left nothing. Where the grown area's edges do not join into rings, a
 /// bug that `warnings` gets, `polygon` itself.
-fn pieces(polygon: &Polygon, distance: f64, warnings: &mut Vec<Diagnostic>, meter: &mut Meter) -> Result<(Vec<Polygon>, bool), Exhausted> {
+pub(crate) fn pieces(polygon: &Polygon, distance: f64, warnings: &mut Vec<Diagnostic>, meter: &mut Meter) -> Result<(Vec<Polygon>, bool), Exhausted> {
     let grown = buffer(polygon, distance, meter)?;
     let joined = grown.is_ok();
     warnings.extend(grown.as_ref().err().copied().map(Unjoined::grown));

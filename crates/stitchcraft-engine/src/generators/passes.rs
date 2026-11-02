@@ -45,8 +45,9 @@ params! {
     pub struct FillRepeatParams for &[StitchType::ContourFill];
 
     "Repeats" {
-        /// How many times to sew the fill's path, doubling each time: 2 sews it there and back, 3 there and
-        /// back twice, 4 four times. Each repeat sews everything sewn so far again, the other way round.
+        /// How often to sew the fill's path. Each repeat after the first sews everything sewn so far again,
+        /// the other way round, so the passes double: 1 sews it once, 2 there and back, 3 there and back
+        /// twice, 4 there and back 4 times.
         repeats: Count = "1", label "Repeats", range (1, 8);
     }
 }

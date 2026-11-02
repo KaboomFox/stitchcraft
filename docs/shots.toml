@@ -142,6 +142,14 @@ scale = 8.0
 alt = "TS-10C as it will sew: a blue frame 20 mm wide and 60 mm high, the small hoop's field, with a small F at the top left and a small cross in the middle."
 
 [[shot]]
+id = "testsheet-ts-11b"
+kind = "stitch"
+sheet = "TS-11B"
+style = "realistic"
+scale = 3.0
+alt = "TS-11B as it will sew: 9 contour fills in 3 rows. At the top, in green, 3 discs: one round a hole set off its middle, a single spiral and a double spiral. In the middle, in blue, 3 five-pointed stars whose rings have round, mitred and bevelled corners. At the bottom, in red, 2 squares joined by a narrow neck, a rectangle, and a leaf. Jump threads join the samples in each row."
+
+[[shot]]
 id = "testsheet-ts-13a"
 kind = "stitch"
 sheet = "TS-13A"
@@ -379,6 +387,56 @@ alt = "The patch sewn as a tatami fill with its rows 1 mm apart"
 panels = [
   { caption = "Underlay", params = { row_spacing_mm = "1" } },
   { caption = "No underlay", params = { row_spacing_mm = "1", fill_underlay = "false" } },
+]
+
+[[shot]]
+id = "contour-fill"
+kind = "stitch"
+fixture = "docs/fixtures/fill.svg"
+style = "realistic"
+scale = 12.0
+alt = "A green patch 32 mm by 20 mm with rounded corners and a round hole, sewn as a contour fill: rings 0.25 mm apart that follow its outline in and round the hole"
+panels = [
+  { caption = "Contour fill", params = { fill_method = "contour_fill" } },
+]
+
+[[shot]]
+id = "contour-strategies"
+kind = "stitch"
+fixture = "docs/fixtures/star.svg"
+style = "simple"
+scale = 12.0
+alt = "A blue star sewn as a contour fill with its rings 1 mm apart, to show them"
+panels = [
+  { caption = "Inner to outer", params = { fill_method = "contour_fill", row_spacing_mm = "1", fill_underlay = "false" } },
+  { caption = "Single spiral", params = { fill_method = "contour_fill", row_spacing_mm = "1", fill_underlay = "false", contour_strategy = "1" } },
+  { caption = "Double spiral", params = { fill_method = "contour_fill", row_spacing_mm = "1", fill_underlay = "false", contour_strategy = "2" } },
+]
+
+[[shot]]
+id = "contour-joins"
+kind = "stitch"
+fixture = "docs/fixtures/star.svg"
+style = "simple"
+scale = 12.0
+alt = "The star sewn as a contour fill with its rings 1 mm apart, their corners"
+panels = [
+  { caption = "Round", params = { fill_method = "contour_fill", row_spacing_mm = "1", fill_underlay = "false" } },
+  { caption = "Mitred", params = { fill_method = "contour_fill", row_spacing_mm = "1", fill_underlay = "false", join_style = "1" } },
+  { caption = "Bevelled", params = { fill_method = "contour_fill", row_spacing_mm = "1", fill_underlay = "false", join_style = "2" } },
+]
+
+[[shot]]
+id = "contour-path"
+kind = "stitch"
+fixture = "docs/fixtures/fill.svg"
+style = "simple"
+scale = 12.0
+alt = "The patch sewn as a contour fill with its rings 1 mm apart, inner to outer"
+panels = [
+  { caption = "Steps crossing", params = { fill_method = "contour_fill", row_spacing_mm = "1", fill_underlay = "false" } },
+  { caption = "Alternating", params = { fill_method = "contour_fill", row_spacing_mm = "1", fill_underlay = "false", avoid_self_crossing = "true" } },
+  { caption = "Smoothed by 1 mm", params = { fill_method = "contour_fill", row_spacing_mm = "1", fill_underlay = "false", smoothness_mm = "1" } },
 ]
 
 [[shot]]

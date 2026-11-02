@@ -33,7 +33,7 @@ use stitchcraft_plan::MachineProfile;
 
 use crate::common::{CommonParams, STOP_AFTER, TRIM_AFTER};
 use crate::design::{DesignSettings, Element, Join, Path, Shape};
-use crate::generators::contour::{Contour, ContourParams, Stitching, contour_fill};
+use crate::generators::contour::{Contour, ContourParams, Stitching, contour_fill, top_path};
 use crate::generators::manual::manual_stitch;
 use crate::generators::passes::{FillRepeatParams, RepeatParams};
 use crate::generators::pull::PullParams;
@@ -163,7 +163,8 @@ pub(crate) fn generate_with(
 /// What a preview shows of a fill too costly to sew: where its top stitches lie ([`rows`]).
 #[derive(Clone, Debug, PartialEq)]
 pub struct Rows {
-    /// The segments of its top rows, in millimetres; `None` when it is skipped, or is not a fill.
+    /// The segments of its top rows, or of a contour fill's path, in millimetres; `None` when it is skipped,
+    /// or is not a fill.
     pub segments: Option<Vec<Segment>>,
     /// What was changed, left out or wrong, each naming the element.
     pub diagnostics: Vec<Diagnostic>,
@@ -171,8 +172,9 @@ pub struct Rows {
 
 /// The segments of the top rows of `element`, a fill, in a design with `settings` on the machine `profile`
 /// describes, with the budget's work: where [`generate`] lays its top stitches, without the stitches, the
-/// underlay or the needle's travel, for a small part of the work. Its settings are read as `generate`
-/// reads them, and what they say is said the same.
+/// underlay or the needle's travel, for a small part of the work. A contour fill has no rows, and gives the
+/// segments of its path round its rings. Its settings are read as `generate` reads them, and what they say
+/// is said the same.
 pub fn rows(element: &Element, settings: &DesignSettings, profile: &MachineProfile, budget: &Budget) -> Rows {
     let mut diagnostics = unknown_keys(&element.params, PARAMETERS);
     let laid = top_rows_of(element, settings, profile, &mut diagnostics, &mut budget.meter());
@@ -321,9 +323,10 @@ fn top_rows_of(
     }
     let neighbours = Neighbours::default();
     let Some(Prepared { region, sewing, .. }) = prepare(element, settings, profile, &neighbours, diagnostics, meter)? else { return Ok(None) };
-    // A contour fill has rings, not rows: the preview shows none.
+    // A contour fill has no rows: the preview shows its path round its rings.
     if sewing.stitch_type == StitchType::ContourFill {
-        return Ok(None);
+        let Some(contour) = contour_settings(&sewing, diagnostics) else { return Ok(None) };
+        return top_path(&region, &contour, meter).map(Some);
     }
     let Some(fill) = fill_settings(&sewing, diagnostics) else { return Ok(None) };
     top_rows(&region, &fill, meter).map(Some)
@@ -758,13 +761,23 @@ mod tests {
         let on_a_row = |q: &Point| tops.iter().any(|s| (q.y() - s.start.y()).abs() < 1e-9 && q.x() >= -1e-9 && q.x() <= 10.0 + 1e-9);
         let points: Vec<Point> = sewn.generated.unwrap().groups.into_iter().flatten().collect();
         assert!(points.iter().filter(|q| on_a_row(q)).count() * 10 > points.len() * 9, "most needle points lie on the rows");
+        // A contour fill has no rows: its path round its rings, 1 mm apart here, squares 10, 8, 6, 4 and 2 mm
+        // across, each sewn round to 1 mm short of where it was entered, the outline from its corner at the
+        // origin, and the steps between them.
+        let contour = laid(&square, &[("fill_method", "contour_fill"), ("row_spacing_mm", "1")], &Budget::DEFAULT);
+        let path = contour.segments.unwrap_or_default();
+        let long: f64 = path.iter().map(|s| s.start.distance(s.end)).sum();
+        assert!((115.0..130.0).contains(&long) && contour.diagnostics.is_empty(), "{long} mm: {:?}", contour.diagnostics);
+        assert_eq!(path.first().map(|s| s.start), Some(p(0.0, 0.0)));
+        assert!(path.iter().all(|s| [s.start, s.end].iter().all(|q| (0.0..=10.0).contains(&q.x()) && (0.0..=10.0).contains(&q.y()))));
+        assert!(path.windows(2).all(|w| w[0].end == w[1].start), "one path");
         // Not a fill, a fill not sewn, a method not sewn yet, and a budget spent: no rows, and the same words
         // as generating it.
         let line = Shape::stroke(Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0))], closed: false }] });
         assert_eq!(laid(&line, &[], &Budget::DEFAULT), Rows { segments: None, diagnostics: vec![] });
         assert_eq!(laid(&square, &[("fill", "false")], &Budget::DEFAULT), Rows { segments: None, diagnostics: vec![] });
-        let contour = laid(&square, &[("fill_method", "contour_fill")], &Budget::DEFAULT);
-        assert_eq!((contour.segments, codes(&contour.diagnostics)), (None, vec![Code::StitchTypeNotYet]));
+        let meander = laid(&square, &[("fill_method", "meander_fill")], &Budget::DEFAULT);
+        assert_eq!((meander.segments, codes(&meander.diagnostics)), (None, vec![Code::StitchTypeNotYet]));
         let spent = laid(&square, &[], &Budget { max_stitches: 1, max_work: 10 });
         assert_eq!((spent.segments, codes(&spent.diagnostics)), (None, vec![Code::BudgetExhausted]));
         assert!(spent.diagnostics.iter().all(|d| d.element.as_ref().map(ElementId::as_str) == Some("e")));
@@ -784,10 +797,17 @@ mod tests {
         let mut diagnostics = Vec::new();
         let sewn = sew(&ParamSet::new(), StitchType::TatamiFill, shared(Mm::new(4.0).ok()), &mut diagnostics);
         assert_eq!((sewn.is_some(), codes(&diagnostics)), (true, vec![]));
+        // A contour fill, by its own generator.
+        let sewn = sew(&ParamSet::new(), StitchType::ContourFill, shared(Mm::new(4.0).ok()), &mut diagnostics);
+        assert_eq!((sewn.is_some_and(|s| !s.runs.is_empty()), codes(&diagnostics)), (true, vec![]));
         // A method not sewn yet, whose settings it does not read, wrong as they are here.
         let tatami = [("row_spacing_mm", "wide")].into_iter().collect();
-        let sewn = sew(&tatami, StitchType::ContourFill, shared(Mm::new(4.0).ok()), &mut diagnostics);
+        let sewn = sew(&tatami, StitchType::MeanderFill, shared(Mm::new(4.0).ok()), &mut diagnostics);
         assert_eq!((sewn.is_none(), codes(&diagnostics)), (true, vec![Code::StitchTypeNotYet]));
+        // A contour fill without a longest stitch is the same bug as a tatami fill's.
+        let mut diagnostics = Vec::new();
+        assert!(sew(&ParamSet::new(), StitchType::ContourFill, shared(None), &mut diagnostics).is_none());
+        assert_eq!(codes(&diagnostics), [Code::InternalCheckFailed]);
         // The registry gives a fill a longest stitch of its own (`ParamSpec::in_family`), so only a bug in
         // StitchCraft can leave it out.
         let mut diagnostics = Vec::new();

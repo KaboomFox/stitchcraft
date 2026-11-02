@@ -44,7 +44,8 @@ use crate::generators::running::along_line_varied;
 use crate::generators::smoothing::smooth;
 use crate::generators::tatami::clamp::clamp;
 use crate::generators::tatami::rings::Rings;
-use crate::generators::tatami::sew::{Layer, Parts, Travel, parts_sewn};
+use crate::generators::tatami::rows::Segment;
+use crate::generators::tatami::sew::{Layer, Parts, Travel, parts_sewn, pieces};
 use crate::generators::{Stitched, settled};
 use crate::normalize::offset::Corners;
 use crate::normalize::region::{Polygon, Region};
@@ -198,6 +199,25 @@ fn sewn(region: &Region, contour: &Contour, needle: Option<Point>, rng: &mut Spl
     warnings.extend(tally.said());
     warnings.extend(sewn.tally.said());
     Ok(Stitched { runs: sewn.runs, warnings })
+}
+
+/// The path of the `contour` fill over `region`, each part grown by its `expand` as [`contour_fill`] grows
+/// it, as the segments it runs along: round its rings and across between them, or along a spiral's turns,
+/// each piece's from its point nearest the origin, without the stitches, the underlay or the needle's
+/// travel between parts. A preview too costly to sew shows it, as it shows a tatami fill's top rows. Work
+/// is charged to `meter` as for sewing.
+pub fn top_path(region: &Region, contour: &Contour, meter: &mut Meter) -> Result<Vec<Segment>, Exhausted> {
+    let (mut tally, mut segments) = (Tally::default(), Vec::new());
+    for polygon in &region.parts {
+        for piece in &pieces(polygon, contour.expand, &mut Vec::new(), meter)?.0 {
+            let path = tally.path(piece, contour, Point::ORIGIN, meter)?.concat();
+            segments.extend(path.windows(2).filter_map(|side| match *side {
+                [start, end] => Some(Segment { start, end }),
+                _ => None,
+            }));
+        }
+    }
+    Ok(segments)
 }
 
 /// A spiral's stretches, one for each turn.

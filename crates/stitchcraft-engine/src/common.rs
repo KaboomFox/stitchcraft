@@ -169,14 +169,17 @@ mod tests {
     }
 
     #[test]
-    fn the_longest_stitch_applies_to_the_stitch_types_that_split_stitches_and_to_tatami_fills() {
+    fn the_longest_stitch_applies_to_the_stitch_types_that_split_stitches_and_to_tatami_and_contour_fills() {
         let longest = CommonParams::SPECS.iter().find(|spec| spec.key == MAX_STITCH_LENGTH).unwrap();
-        let has = |t: &StitchType| matches!(t.family(), Family::Satin) || matches!(t, StitchType::ManualStitch | StitchType::TatamiFill);
+        let has = |t: &StitchType| {
+            matches!(t.family(), Family::Satin) || matches!(t, StitchType::ManualStitch | StitchType::TatamiFill | StitchType::ContourFill)
+        };
         assert_eq!(longest.applies_to, StitchType::ALL.iter().copied().filter(has).collect::<Vec<_>>());
         // 4 mm for fills, as in Ink/Stitch, and none for the others.
         let longest_for =
             |stitch_type| CommonParams::from_set_as(&ParamSet::new(), stitch_type).unwrap().params.max_stitch_length_mm.map(|mm| mm.get());
-        assert_eq!([StitchType::ManualStitch, StitchType::SatinColumn, StitchType::TatamiFill].map(longest_for), [None, None, Some(4.0)]);
+        let types = [StitchType::ManualStitch, StitchType::SatinColumn, StitchType::TatamiFill, StitchType::ContourFill];
+        assert_eq!(types.map(longest_for), [None, None, Some(4.0), Some(4.0)]);
         // A running stitch reads none, whatever the element sets.
         let set: ParamSet = [(MAX_STITCH_LENGTH, "abc")].into_iter().collect();
         assert_eq!(CommonParams::from_set_as(&set, StitchType::RunningStitch).unwrap().params.max_stitch_length_mm, None);
@@ -186,7 +189,8 @@ mod tests {
     fn the_seed_applies_to_the_stitch_types_that_vary_at_random() {
         let seed = CommonParams::SPECS.iter().find(|spec| spec.key == "random_seed").unwrap();
         let varies = |t: &StitchType| {
-            matches!(t.family(), Family::Satin) || matches!(t, StitchType::RunningStitch | StitchType::RippleStitch | StitchType::TatamiFill)
+            matches!(t.family(), Family::Satin)
+                || matches!(t, StitchType::RunningStitch | StitchType::RippleStitch | StitchType::TatamiFill | StitchType::ContourFill)
         };
         assert_eq!(seed.applies_to, StitchType::ALL.iter().copied().filter(varies).collect::<Vec<_>>());
     }

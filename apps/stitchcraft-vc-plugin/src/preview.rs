@@ -8,8 +8,9 @@
 //! it would write costs more than its share, rather than be stopped.
 //!
 //! **Levels** (`preview_level`, [`Level`]). *Exact* shows every stitch. *Rows* shows a fill's top rows,
-//! one ribbon for each row segment: where its stitches lie and which way they run, without the stitches,
-//! the underlay or the needle's travel, for a small part of the work. *Outline* shows the object's path,
+//! one ribbon for each row segment, or a contour fill's path round its rings: where its stitches lie and
+//! which way they run, without the stitches, the underlay or the needle's travel, for a small part of the
+//! work. *Outline* shows the object's path,
 //! as lines for a stroke or a satin column and as ribbons for a fill, hatched in the fill's direction every
 //! few millimetres. *Auto*, the default, shows a stroke or a satin column exactly and a fill by its rows,
 //! and the outline when that costs too much. A level the user picks gets the whole budget, and when that
@@ -87,7 +88,7 @@ pub enum Level {
     Auto,
     /// Every stitch.
     Exact,
-    /// A fill's top rows, one ribbon for each row segment.
+    /// A fill's top rows, one ribbon for each row segment, or a contour fill's path round its rings.
     Rows,
     /// The object's path, hatched across a fill in the fill's direction.
     Outline,
@@ -143,9 +144,10 @@ fn level_param(levels: &[Level], help: &str) -> Param {
 }
 
 /// What `preview_level` does, for its help.
-const HELP: &str = "How much of the stitches the effect shows. Exact shows every stitch, rows a fill's top rows, and outline the \
-                    object's path, hatched across a fill, which costs least. Auto shows as much as VectorCraft lets a live effect \
-                    work out. The machine file has every stitch, whichever is chosen.";
+const HELP: &str = "How much of the stitches the effect shows. Exact shows every stitch, rows a fill's top rows or a contour \
+                    fill's path round its rings, and outline the object's path, hatched across a fill, which costs least. Auto \
+                    shows as much as VectorCraft lets a live effect work out. The machine file has every stitch, whichever is \
+                    chosen.";
 
 /// What the Auto effect's `preview_level` does, for its help.
 const AUTO_HELP: &str = "How much of the stitches the effect shows. Exact shows every stitch automatic digitizing chooses, and outline \

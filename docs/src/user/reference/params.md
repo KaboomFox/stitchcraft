@@ -57,7 +57,9 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Satin parameters](params/satin.md) | 34 | Satin column, E-stitch, S-stitch, Zigzag satin |
 | [Pull parameters](params/pull.md) | 2 | Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill |
 | [Fill parameters](params/fill.md) | 2 | Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill |
-| [Tatami parameters](params/tatami.md) | 15 | Tatami fill |
+| [Tatami parameters](params/tatami.md) | 15 | Tatami fill, Contour fill |
+| [Contour parameters](params/contour.md) | 5 | Contour fill |
+| [Fill repeat parameters](params/fill-repeat.md) | 1 | Contour fill |
 | [Auto parameters](params/auto.md) | 5 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
 
 ## Every parameter
@@ -70,12 +72,15 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`auto_min_area_mm2`](params/auto.md#auto_min_area_mm2) | Smallest area | Auto parameters |
 | [`auto_min_triple_run_width_mm`](params/auto.md#auto_min_triple_run_width_mm) | Narrowest triple run | Auto parameters |
 | [`auto_overlap_mm`](params/auto.md#auto_overlap_mm) | Overlap | Auto parameters |
+| [`avoid_self_crossing`](params/contour.md#avoid_self_crossing) | Avoid self-crossing | Contour parameters |
 | [`bean_stitch_repeats`](params/repeat.md#bean_stitch_repeats) | Bean stitch | Repeat parameters |
 | [`center_walk_underlay`](params/satin.md#center_walk_underlay) | Centre walk underlay | Satin parameters |
 | [`center_walk_underlay_position`](params/satin.md#center_walk_underlay_position) | Centre walk position | Satin parameters |
 | [`center_walk_underlay_repeats`](params/satin.md#center_walk_underlay_repeats) | Centre walk repeats | Satin parameters |
 | [`center_walk_underlay_stitch_length_mm`](params/satin.md#center_walk_underlay_stitch_length_mm) | Centre walk stitch length | Satin parameters |
 | [`center_walk_underlay_stitch_tolerance_mm`](params/satin.md#center_walk_underlay_stitch_tolerance_mm) | Centre walk tolerance | Satin parameters |
+| [`clockwise`](params/contour.md#clockwise) | Clockwise | Contour parameters |
+| [`contour_strategy`](params/contour.md#contour_strategy) | Strategy | Contour parameters |
 | [`contour_underlay`](params/satin.md#contour_underlay) | Contour underlay | Satin parameters |
 | [`contour_underlay_inset_mm`](params/satin.md#contour_underlay_inset_mm) | Contour inset | Satin parameters |
 | [`contour_underlay_inset_percent`](params/satin.md#contour_underlay_inset_percent) | Contour inset (% of width) | Satin parameters |
@@ -95,6 +100,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`fill_underlay_skip_last`](params/tatami.md#fill_underlay_skip_last) | Skip last underlay stitch | Tatami parameters |
 | [`force_lock_stitches`](params/common.md#force_lock_stitches) | Always lock | Common parameters |
 | [`gap_fill_rows`](params/tatami.md#gap_fill_rows) | Gap-filling rows | Tatami parameters |
+| [`join_style`](params/contour.md#join_style) | Join style | Contour parameters |
 | [`lock_custom_end`](params/common.md#lock_custom_end) | Custom end lock | Common parameters |
 | [`lock_custom_start`](params/common.md#lock_custom_start) | Custom start lock | Common parameters |
 | [`lock_end`](params/common.md#lock_end) | End lock | Common parameters |
@@ -118,6 +124,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`random_width_increase_percent`](params/satin.md#random_width_increase_percent) | Random width increase | Satin parameters |
 | [`random_zigzag_spacing_percent`](params/satin.md#random_zigzag_spacing_percent) | Random zigzag spacing | Satin parameters |
 | [`repeats`](params/repeat.md#repeats) | Repeats | Repeat parameters |
+| [`repeats`](params/fill-repeat.md#repeats) | Repeats | Fill repeat parameters |
 | [`reverse_rails`](params/satin.md#reverse_rails) | Reverse rails | Satin parameters |
 | [`row_spacing_mm`](params/tatami.md#row_spacing_mm) | Row spacing | Tatami parameters |
 | [`running_stitch_length_mm`](params/running.md#running_stitch_length_mm) | Stitch length | Running parameters |
@@ -128,6 +135,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`short_stitch_distance_mm`](params/satin.md#short_stitch_distance_mm) | Short stitch distance | Satin parameters |
 | [`short_stitch_inset`](params/satin.md#short_stitch_inset) | Short stitch inset | Satin parameters |
 | [`skip_last`](params/tatami.md#skip_last) | Skip last stitch | Tatami parameters |
+| [`smoothness_mm`](params/contour.md#smoothness_mm) | Smoothness | Contour parameters |
 | [`split_method`](params/satin.md#split_method) | Split method | Satin parameters |
 | [`split_staggers`](params/satin.md#split_staggers) | Staggers | Satin parameters |
 | [`staggers`](params/tatami.md#staggers) | Staggers | Tatami parameters |

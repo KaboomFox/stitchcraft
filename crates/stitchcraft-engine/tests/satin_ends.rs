@@ -424,7 +424,7 @@ fn req_gen_003_elements_see_the_needle_before_and_the_next_element() {
     assert!(sewn_by(&outcome, 1)[0].distance(p(0.0, 13.0)) < 1e-9);
     // An element that sews nothing leaves the needle where it was, and offers nothing to end near: here a
     // fill of a method not sewn yet.
-    let fill = as_fill(along("fill", polylines(&[&[(0.0, 30.0), (1.0, 30.0)]]), &RED, &[("fill_method", "contour_fill")]));
+    let fill = as_fill(along("fill", polylines(&[&[(0.0, 30.0), (1.0, 30.0)]]), &RED, &[("fill_method", "meander_fill")]));
     let outcome = planned(vec![satin("a", 0.0, &RED, &[]), fill, satin("b", 10.0, &RED, &[])]);
     let (a, b) = (sewn_by(&outcome, 0), sewn_by(&outcome, 1));
     assert_eq!(a, sewn_satin(&ladder(10.0, 6.0, &[]), &[]).0, "it ends as it does alone");
@@ -456,15 +456,14 @@ fn req_gen_003_what_an_element_offers_comes_from_its_shape_and_settings() {
     assert_eq!(first(&[]), Some(Approach::Point(p(0.0, 0.0))));
     assert_eq!(first(&[("swap_satin_rails", "true")]), Some(Approach::Point(p(0.0, 6.0))));
     assert_eq!(first(&[("reverse_rails", "first")]), Some(Approach::Point(p(10.0, 0.0))));
-    // A tatami fill offers its area, its outline from the drawing's first point; a fill of a method not
-    // sewn yet offers nothing.
+    // A tatami fill offers its area, its outline from the drawing's first point, and so does a contour fill,
+    // which starts nearest the needle too; a fill of a method not sewn yet offers nothing.
     let outline = vec![p(2.0, 3.0), p(2.0, 13.0), p(12.0, 13.0), p(12.0, 3.0), p(2.0, 3.0)];
-    assert_eq!(
-        approach(&as_fill(stroke.clone()), &DesignSettings::default(), &Budget::DEFAULT),
-        Some(Approach::Area(vec![Polygon { outline, holes: Vec::new() }]))
-    );
-    let contour = Element { params: [("fill_method", "contour_fill")].into_iter().collect(), ..as_fill(stroke.clone()) };
-    assert_eq!(approach(&contour, &DesignSettings::default(), &Budget::DEFAULT), None);
+    let area = Some(Approach::Area(vec![Polygon { outline, holes: Vec::new() }]));
+    assert_eq!(approach(&as_fill(stroke.clone()), &DesignSettings::default(), &Budget::DEFAULT), area);
+    let method = |method: &str| Element { params: [("fill_method", method)].into_iter().collect(), ..as_fill(stroke.clone()) };
+    assert_eq!(approach(&method("contour_fill"), &DesignSettings::default(), &Budget::DEFAULT), area);
+    assert_eq!(approach(&method("meander_fill"), &DesignSettings::default(), &Budget::DEFAULT), None);
     // A stroke of a method not sewn yet still offers its first point, as Ink/Stitch's strokes of every
     // method do (ADR 0014), so the element before it ends as it does in Ink/Stitch. So does a stroke whose
     // running stitch settings cannot be read: its offer does not depend on them.
