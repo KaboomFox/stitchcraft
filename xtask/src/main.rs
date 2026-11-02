@@ -289,7 +289,7 @@ fn run(command: Command) -> Result<(), String> {
         Command::Coverage { record } => coverage::run(record),
         Command::Mutants { record, changed, dirs } => mutants::run(record, changed, &dirs),
         Command::Perf { record } => perf::run(record),
-        Command::Corpus => Err("`corpus` arrives with roadmap step M8".to_string()),
+        Command::Corpus => Err("`corpus` arrives with roadmap step M8.6".to_string()),
     }
 }
 
