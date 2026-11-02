@@ -116,6 +116,7 @@ identical to Ink/Stitch's SVG attributes because that is the interoperability co
 | Ink/Stitch SVG import (attributes, commands, clones) and differential testing | P2 | M8 |
 | Guided, gradient, ripple, tartan, cross stitch; auto-run/auto-satin | P3 | M10 |
 | Lettering in embroidery fonts, and text in pictures set again as lettering | P3 | M14 |
+| TrueType and OpenType fonts ported automatically, digitized at the height set and written as embroidery fonts | P3 | M15, after M14 |
 | EXP, JEF, VP3, XXX, U01 formats; thread catalogues | P3 | M11 |
 | 1.0 hardening, translations, release automation | — | M12 |
 | VectorCraft plug-in features still proposed upstream (RFC), for previews drawn as overlays, heavy live effects and the objects beside a live effect | after 1.0 | M9, last |
