@@ -66,6 +66,7 @@
     - [Lock stitches](design/algorithms/locks.md)
     - [Centre lines](design/algorithms/centre-lines.md)
   - [Image to embroidery](design/image-to-embroidery.md)
+  - [Fonts](design/fonts.md)
   - [Machine formats](design/formats.md)
   - [Rendering previews](design/rendering.md)
   - [VectorCraft integration](design/vectorcraft-integration.md)
