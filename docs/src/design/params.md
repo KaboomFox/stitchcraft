@@ -208,10 +208,10 @@ entries, and the lock and method identifiers must equal Ink/Stitch's.
    contract is per key and stitch type, so the contract page matches a declaration with the rows for the
    stitch types it applies to, and a declaration for a stitch type Ink/Stitch does not give the key is
    reported. A stitch type that reads a key as it sews, though Ink/Stitch's settings window doesn't show
-   the key for it, is given the key all the same, and the contract lists it under the row's `read_by`:
-   every fill method with an underlay reads the tatami fill's `angle`, `staggers` and
-   `running_stitch_length_mm` for it, and `check_params.py` finds those methods in Ink/Stitch's code. A key
-   is declared once for a family (rule 7), and a family whose default differs gets its own
+   the key for it, is given the key all the same, and the contract lists it under the row's `read_by`.
+   Every fill method with an underlay reads the tatami fill's `angle`, `staggers` and
+   `running_stitch_length_mm` for it, and `check_params.py` finds those methods in Ink/Stitch's code. Each
+   family declares a key once (rule 7), and a family whose default differs gets its own
    with `defaults`, as fills do for `max_stitch_length_mm`. A family with a
    default of its own needs a value (`ParamSpec::in_family`). There an empty value means its default. A
    length of 0 or less is raised to the least the key accepts instead of counting as empty, as Ink/Stitch

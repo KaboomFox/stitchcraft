@@ -4,7 +4,7 @@
 
 A contour fill covers an area with rings that follow its outline inward, a row spacing apart, like the
 growth rings of a tree, and with rings round its holes. It sews them all as one line of running
-stitches, with no travel between the rings, so it suits round and flowing shapes. Set a fill's
+stitches that runs from ring to ring with no travel, so it suits round and flowing shapes. Set a fill's
 `fill_method` to `contour_fill` for it.
 
 Its settings come from the VectorCraft plug-in today, and from an SVG file's Ink/Stitch attributes once
@@ -26,7 +26,7 @@ As the patch sews:
 the rings 1 mm apart and leave the underlay out, and draw a dot at each needle point, to show them.
 
 - **Inner to outer**, `0` and the default, starts on the outline nearest the needle and steps in, ring by
-  ring, to the middle. It sews each ring round on its way back out, and ends on the outline beside where
+  ring, to the middle. It sews each ring round as it comes back out, and ends on the outline beside where
   it began.
 - **Single spiral**, `1`, turns from the outline in to the middle, where it ends.
 - **Double spiral**, `2`, turns in on every other ring and back out between those turns, and ends near
@@ -38,16 +38,16 @@ the rings 1 mm apart and leave the underlay out, and draw a dot at each needle p
 | ![A blue star sewn as a contour fill with its rings 1 mm apart, to show them, Inner to outer](../../images/generated/contour-strategies-1.png) | ![A blue star sewn as a contour fill with its rings 1 mm apart, to show them, Single spiral](../../images/generated/contour-strategies-2.png) | ![A blue star sewn as a contour fill with its rings 1 mm apart, to show them, Double spiral](../../images/generated/contour-strategies-3.png) |
 <!-- /shot -->
 
-Where the rings part, at a neck or round a hole, inner to outer goes into each part in turn. A spiral
-follows one chain of rings, and leaves the others out: `SC-W0311` says how many. Sew such a shape inner
-to outer. A part too narrow for its spiral is sewn inner to outer, and `SC-I0315` says so.
+Where the rings part, at a neck or round a hole, inner to outer goes into each part, one after the
+other. A spiral follows one chain of rings, and leaves the others out: `SC-W0311` says how many. Sew such
+a shape inner to outer. A part too narrow for its spiral is sewn inner to outer, and `SC-I0315` says so.
 
 ## Corners
 
 `join_style` shapes the rings' corners: round, `0` and the default, mitred, `1`, or bevelled, `2`. They
-differ where the rings bend round a corner that juts into the shape, such as the star's between its
-points, or a hole's. Mitred rings keep the corner sharp all the way in, and round and bevelled ones round
-it off or cut it across, more on each ring.
+differ where the rings bend round a corner that juts into the shape, such as the star's corners between
+its points or a hole's. Mitred rings have a sharp corner there all the way in, and round and bevelled ones
+round it off or cut it across, more on each ring.
 
 <!-- shot: contour-joins -->
 | Round | Mitred | Bevelled |
@@ -87,8 +87,8 @@ underlay here. `expand_mm` grows the area before its rings are laid.
 The reference gives each setting's range and default:
 
 - [fill](../reference/params/fill.md), which chooses the fill method
-- [contour fill](../reference/params/contour.md): the strategy, the corners, the direction and smoothing
-- [tatami fill](../reference/params/tatami.md): the row spacing, the underlay and expanding
-- [fill repeats](../reference/params/fill-repeat.md): its repeats and bean stitch
-- [running stitch](../reference/params/running.md): the tolerance and random lengths
+- [contour fill](../reference/params/contour.md), its strategy and corners, direction and smoothing
+- [tatami fill](../reference/params/tatami.md), its row spacing, underlay and expanding
+- [fill repeats](../reference/params/fill-repeat.md), its repeats and bean stitch
+- [running stitch](../reference/params/running.md), its tolerance and random lengths
 - [the settings every element shares](../reference/params/common.md), the stitch length among them

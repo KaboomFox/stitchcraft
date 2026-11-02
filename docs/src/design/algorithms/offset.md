@@ -81,8 +81,8 @@ underlay and `expand_mm` ([fills](fills.md#6-underlay), `REQ-FILL-TAT-012`), and
 rings ([fills](fills.md#rings), `REQ-FILL-CON-001`). Each ring's raw curve is built as in step 1, closed,
 with the corners the caller asks for: round with 16 segments to a quarter circle, shapely's default, for
 a tatami fill, and for a contour fill the corners its `join_style` gives, round with 8 segments, mitred
-with a limit of 10 or bevelled. The join shapes each corner that points the way its ring moves, such as
-an outline's inward corners as it shrinks or a hole's outward ones as it grows. At the other corners the
+with a limit of 10 or bevelled. The join applies at each corner that points the way its ring moves, such
+as an outline's inward corners as it shrinks or a hole's outward ones as it grows. At the other corners the
 curve's sides cross, and meet there, whatever the join. It runs to the ring's left, outside an outline
 and inside a hole: a positive distance grows the part. In place of steps 2 and 3, the area the curves
 wind round clockwise at least once comes from the fill's own region code, and the loops where the curves
