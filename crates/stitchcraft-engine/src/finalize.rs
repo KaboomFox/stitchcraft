@@ -124,10 +124,11 @@ fn turned(mut plan: StitchPlan, turn: Turn) -> StitchPlan {
 /// How much moving the plan to the hoop's centre ([`centred`]) and turning it ([`turned`]) may shorten a
 /// stitch, at most, in millimetres. Each point rounds to the nearest double as it moves, a few units in the
 /// last place of a coordinate within the working limit, 10 m: about 2e-12 mm. A turn by other than a
-/// whole number of quarter turns rounds each product and sum and its sine and cosine, some 1e-11 mm more. A run keeps a stitch only if it is this much
-/// longer than [`at_least`] asks, so that the check of the moved plan, which asks the same, finds it long
-/// enough. A tie-off whose first stitch was 1e-9 mm short of its 0.2 mm, at the edge of what counts as 0.2
-/// mm, once fell past that edge as the plan moved, and the plan was refused as a bug (`SC-E0009`).
+/// whole number of quarter turns rounds each product and sum and its sine and cosine, some 1e-11 mm more.
+/// A run keeps a stitch only if it is this much longer than [`at_least`] asks, so that the check of the
+/// moved plan, which asks the same, finds it long enough. A tie-off whose first stitch was 1e-9 mm short of
+/// its 0.2 mm, at the edge of what counts as 0.2 mm, once fell past that edge as the plan moved, and the
+/// plan was refused as a bug (`SC-E0009`).
 const MOVED: f64 = 1e-10;
 
 /// The plan as it is fitted, and what fitting it changed.
