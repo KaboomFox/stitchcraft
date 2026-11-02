@@ -38,7 +38,9 @@ pub(crate) fn stroke<'p>(
         return Ok(Some(Cow::Borrowed(path)));
     }
     // Clips whose area doesn't join into rings are a bug ([`Unjoined`]), which no drawing tried makes.
-    let Some(kept) = self::path(path, clips, line, meter)?.map_err(|unjoined| diagnostics.push(unjoined.clip())).ok() else { return Ok(None) };
+    let kept = self::path(path, clips, line, meter)?;
+    diagnostics.extend(kept.as_ref().err().copied().map(Unjoined::clip));
+    let Ok(kept) = kept else { return Ok(None) };
     if kept.subpaths.is_empty() {
         diagnostics.push(Diagnostic::new(Code::ClippedAway, "Its clip paths leave nothing of this stroke, so it sews nothing."));
         return Ok(None);
