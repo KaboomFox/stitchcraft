@@ -582,5 +582,13 @@ mod tests {
         for short in [1, work / 2, work - 1] {
             assert!(Underpath::new(&part, &rings, &[], Rows::Straight(&[]), 0.0, &mut Budget { max_stitches: 1, max_work: short }.meter()).is_err());
         }
+        // Rows along a line: so is finding the edges that cross it, whichever unit of work runs out.
+        let lines = [vec![p(0.0, 2.0), p(5.0, 1.0), p(10.0, 2.0)]];
+        let mut used = Budget::DEFAULT.meter();
+        Underpath::new(&part, &rings, &[], Rows::Lines(&lines), 0.0, &mut used).unwrap().unwrap();
+        let work = Budget::DEFAULT.max_work - used.work_left();
+        for short in 1..work {
+            assert!(Underpath::new(&part, &rings, &[], Rows::Lines(&lines), 0.0, &mut Budget { max_stitches: 1, max_work: short }.meter()).is_err());
+        }
     }
 }

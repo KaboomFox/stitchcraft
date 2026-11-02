@@ -168,6 +168,34 @@ fn req_fill_cir_003_one_piece_is_joined_to_the_needle_along_the_outline() {
 }
 
 #[test]
+fn req_fill_cir_003_one_piece_ends_along_the_outline_nearest_the_next_part() {
+    // 2 discs 10 mm round, 30 mm apart, circles 5 mm apart: each spiral is one piece. The first disc's run
+    // goes on from where its spiral leaves along the outline, the shorter way round, to its point nearest the
+    // second disc.
+    let region = Region { parts: vec![disc((0.0, 0.0), 10.0), disc((30.0, 0.0), 10.0)] };
+    let stitched = circular_fill(&region, &circular(5.0), None, None, &mut SplitMix64::new(7), &mut Budget::DEFAULT.meter()).unwrap();
+    assert_eq!(codes(&stitched), Vec::<Code>::new());
+    let first = &stitched.runs[0];
+    let last = first[first.len() - 1];
+    assert!(last.distance(p(10.0, 0.0)) < 0.05, "{last:?}");
+    assert!(first[first.len() - 2].distance(Point::ORIGIN) > 9.9, "along the outline: {:?}", first[first.len() - 2]);
+}
+
+#[test]
+fn the_preview_shows_the_pieces_of_the_spiral_or_the_circle_a_small_part_is_sewn_as() {
+    // A disc 10 mm round, circles 1 mm apart: segments inside the disc, along the spiral. A disc 1 mm round,
+    // circles 2 mm apart: one circle 2 mm round its middle, 64 sides.
+    let meter = &mut Budget::DEFAULT.meter();
+    let spiral = top_path(&Region { parts: vec![disc((0.0, 0.0), 10.0)] }, &circular(1.0), meter).unwrap();
+    assert!(
+        spiral.len() > 64 && spiral.iter().all(|s| s.start.distance(Point::ORIGIN) <= 10.0 + 1e-9 && s.end.distance(Point::ORIGIN) <= 10.0 + 1e-9)
+    );
+    let small = top_path(&Region { parts: vec![disc((0.0, 0.0), 1.0)] }, &circular(2.0), meter).unwrap();
+    assert_eq!(small.len(), 64);
+    assert!(small.iter().all(|s| (s.start.distance(Point::ORIGIN) - 2.0).abs() < 1e-9), "{small:?}");
+}
+
+#[test]
 fn req_fill_cir_004_several_pieces_are_each_sewn_once_inside_the_part() {
     // A square 20 mm a side round its middle, circles 0.5 mm apart: past its inscribed circle the spiral
     // leaves and enters it again and again, so it is many pieces, routed in one run.

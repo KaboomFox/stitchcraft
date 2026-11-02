@@ -955,4 +955,22 @@ mod tests {
         let said: Vec<String> = diagnostics.iter().map(ToString::to_string).collect();
         assert_eq!(said, ["error SC-E0009: `stroke_method` offers `tatami_fill`, which is not a stitch type of strokes."]);
     }
+
+    #[test]
+    fn a_circular_fill_s_preview_is_the_pieces_of_its_spiral() {
+        // A circular fill has no rows either: a preview that can't afford its stitches shows the pieces of its
+        // spiral, circles 1 mm apart round the middle of the 10 mm square, cut by its sides.
+        let segments = [p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0)].map(Segment::Line).to_vec();
+        let square = Shape::Fill { path: Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments, closed: true }] }, rule: FillRule::NonZero };
+        let params = [("fill_method", "circular_fill"), ("row_spacing_mm", "1")];
+        let laid = rows(&element(square, &params), &DesignSettings::default(), stitchcraft_plan::profiles::REFERENCE, &Budget::DEFAULT);
+        assert_eq!(laid.diagnostics, Vec::new());
+        let path = laid.segments.unwrap_or_default();
+        let inside = |q: Point| (-1e-9..=10.0 + 1e-9).contains(&q.x()) && (-1e-9..=10.0 + 1e-9).contains(&q.y());
+        assert!(path.iter().all(|s| inside(s.start) && inside(s.end)), "{path:?}");
+        // About as long as the circles inside the square: those 1 to 5 mm round its middle whole, 94 mm, and
+        // what its sides leave of those 6 and 7 mm round, 10 mm.
+        let long: f64 = path.iter().map(|s| s.start.distance(s.end)).sum();
+        assert!((95.0..110.0).contains(&long), "{long} mm");
+    }
 }
