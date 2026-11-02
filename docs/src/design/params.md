@@ -236,8 +236,9 @@ entries, and the lock and method identifiers must equal Ink/Stitch's.
    StitchCraft's own, even for a family Ink/Stitch does not give it, because that family would read a
    value written for Ink/Stitch's meaning. A node's fill may also read a value that only its stroke's
    declaration can read, such as a zigzag stroke's 2 spacings read by a meander fill. Ink/Stitch sews that
-   fill with its default, and StitchCraft would refuse it (`DEV-PRM-001`). The meander fill's step (M7.8)
-   chooses between the two.
+   fill with its default, and so does StitchCraft, since M7.8: the value is the other declaration's, and
+   `SC-I0106` says the element left it (`REQ-PRM-006`). A value no declaration of the key can read is
+   refused (`DEV-PRM-001`).
 
 ## Generated outputs
 

@@ -162,6 +162,7 @@ impl stitchcraft_params::set::ParamSet
 pub fn stitchcraft_params::set::ParamSet::get(&self, &str) -> core::option::Option<&str>
 pub fn stitchcraft_params::set::ParamSet::iter(&self) -> impl core::iter::traits::iterator::Iterator<Item = (&str, &str)>
 pub fn stitchcraft_params::set::ParamSet::new() -> Self
+pub fn stitchcraft_params::set::ParamSet::remove(&mut self, &str) -> core::option::Option<alloc::string::String>
 pub fn stitchcraft_params::set::ParamSet::set(&mut self, impl core::convert::Into<alloc::string::String>, impl core::convert::Into<alloc::string::String>) -> core::option::Option<alloc::string::String>
 impl<K: core::convert::Into<alloc::string::String>, V: core::convert::Into<alloc::string::String>> core::iter::traits::collect::FromIterator<(K, V)> for stitchcraft_params::set::ParamSet
 pub fn stitchcraft_params::set::ParamSet::from_iter<I: core::iter::traits::collect::IntoIterator<Item = (K, V)>>(I) -> Self
@@ -171,6 +172,7 @@ pub stitchcraft_params::set::Validated::warnings: alloc::vec::Vec<stitchcraft_co
 pub fn stitchcraft_params::set::declarations<'a>(&'a [&stitchcraft_params::spec::ParamGroup], &'a str) -> impl core::iter::traits::iterator::Iterator<Item = &'static stitchcraft_params::spec::ParamSpec> + 'a
 pub fn stitchcraft_params::set::find(&[&stitchcraft_params::spec::ParamGroup], &str) -> core::option::Option<&'static stitchcraft_params::spec::ParamSpec>
 pub fn stitchcraft_params::set::find_for(&[&stitchcraft_params::spec::ParamGroup], &str, stitchcraft_params::stitch_type::Family) -> core::option::Option<&'static stitchcraft_params::spec::ParamSpec>
+pub fn stitchcraft_params::set::left_to_others(&stitchcraft_params::set::ParamSet, stitchcraft_params::stitch_type::StitchType, &[&stitchcraft_params::spec::ParamGroup]) -> alloc::vec::Vec<(alloc::string::String, stitchcraft_core::diag::Diagnostic)>
 pub fn stitchcraft_params::set::read_param<K: stitchcraft_params::kinds::ParamKind>(&stitchcraft_params::set::ParamSet, core::option::Option<&stitchcraft_params::spec::ParamSpec>, core::option::Option<stitchcraft_params::stitch_type::StitchType>, &[stitchcraft_params::spec::ParamSpec], &mut alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>) -> core::option::Option<<K as stitchcraft_params::kinds::ParamKind>::Value>
 pub fn stitchcraft_params::set::unknown_keys(&stitchcraft_params::set::ParamSet, &[&stitchcraft_params::spec::ParamGroup]) -> alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
 pub mod stitchcraft_params::spec
@@ -242,8 +244,11 @@ pub stitchcraft_params::spec::Stability::Stable
 pub struct stitchcraft_params::spec::ChoiceOption
 pub stitchcraft_params::spec::ChoiceOption::id: &'static str
 pub stitchcraft_params::spec::ChoiceOption::label: &'static str
+pub stitchcraft_params::spec::ChoiceOption::offered: bool
 impl stitchcraft_params::spec::ChoiceOption
+pub const fn stitchcraft_params::spec::ChoiceOption::kept(&'static str, &'static str) -> stitchcraft_params::spec::ChoiceOption
 pub fn stitchcraft_params::spec::ChoiceOption::list<'a>(impl core::iter::traits::collect::IntoIterator<Item = &'a stitchcraft_params::spec::ChoiceOption>) -> alloc::string::String
+pub const fn stitchcraft_params::spec::ChoiceOption::new(&'static str, &'static str) -> stitchcraft_params::spec::ChoiceOption
 pub struct stitchcraft_params::spec::Condition
 pub stitchcraft_params::spec::Condition::any_of: &'static [&'static str]
 pub stitchcraft_params::spec::Condition::key: &'static str
@@ -458,8 +463,11 @@ pub fn stitchcraft_params::value::Value::to_raw(&self) -> alloc::string::String
 pub struct stitchcraft_params::ChoiceOption
 pub stitchcraft_params::ChoiceOption::id: &'static str
 pub stitchcraft_params::ChoiceOption::label: &'static str
+pub stitchcraft_params::ChoiceOption::offered: bool
 impl stitchcraft_params::spec::ChoiceOption
+pub const fn stitchcraft_params::spec::ChoiceOption::kept(&'static str, &'static str) -> stitchcraft_params::spec::ChoiceOption
 pub fn stitchcraft_params::spec::ChoiceOption::list<'a>(impl core::iter::traits::collect::IntoIterator<Item = &'a stitchcraft_params::spec::ChoiceOption>) -> alloc::string::String
+pub const fn stitchcraft_params::spec::ChoiceOption::new(&'static str, &'static str) -> stitchcraft_params::spec::ChoiceOption
 pub struct stitchcraft_params::Condition
 pub stitchcraft_params::Condition::any_of: &'static [&'static str]
 pub stitchcraft_params::Condition::key: &'static str
@@ -480,6 +488,7 @@ impl stitchcraft_params::set::ParamSet
 pub fn stitchcraft_params::set::ParamSet::get(&self, &str) -> core::option::Option<&str>
 pub fn stitchcraft_params::set::ParamSet::iter(&self) -> impl core::iter::traits::iterator::Iterator<Item = (&str, &str)>
 pub fn stitchcraft_params::set::ParamSet::new() -> Self
+pub fn stitchcraft_params::set::ParamSet::remove(&mut self, &str) -> core::option::Option<alloc::string::String>
 pub fn stitchcraft_params::set::ParamSet::set(&mut self, impl core::convert::Into<alloc::string::String>, impl core::convert::Into<alloc::string::String>) -> core::option::Option<alloc::string::String>
 impl<K: core::convert::Into<alloc::string::String>, V: core::convert::Into<alloc::string::String>> core::iter::traits::collect::FromIterator<(K, V)> for stitchcraft_params::set::ParamSet
 pub fn stitchcraft_params::set::ParamSet::from_iter<I: core::iter::traits::collect::IntoIterator<Item = (K, V)>>(I) -> Self
@@ -578,6 +587,7 @@ pub fn stitchcraft_params::audit(&[&stitchcraft_params::spec::ParamGroup]) -> al
 pub fn stitchcraft_params::declarations<'a>(&'a [&stitchcraft_params::spec::ParamGroup], &'a str) -> impl core::iter::traits::iterator::Iterator<Item = &'static stitchcraft_params::spec::ParamSpec> + 'a
 pub fn stitchcraft_params::find(&[&stitchcraft_params::spec::ParamGroup], &str) -> core::option::Option<&'static stitchcraft_params::spec::ParamSpec>
 pub fn stitchcraft_params::find_for(&[&stitchcraft_params::spec::ParamGroup], &str, stitchcraft_params::stitch_type::Family) -> core::option::Option<&'static stitchcraft_params::spec::ParamSpec>
+pub fn stitchcraft_params::left_to_others(&stitchcraft_params::set::ParamSet, stitchcraft_params::stitch_type::StitchType, &[&stitchcraft_params::spec::ParamGroup]) -> alloc::vec::Vec<(alloc::string::String, stitchcraft_core::diag::Diagnostic)>
 pub fn stitchcraft_params::normalized_angle(f64) -> f64
 pub fn stitchcraft_params::read_param<K: stitchcraft_params::kinds::ParamKind>(&stitchcraft_params::set::ParamSet, core::option::Option<&stitchcraft_params::spec::ParamSpec>, core::option::Option<stitchcraft_params::stitch_type::StitchType>, &[stitchcraft_params::spec::ParamSpec], &mut alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>) -> core::option::Option<<K as stitchcraft_params::kinds::ParamKind>::Value>
 pub fn stitchcraft_params::toggle(&str) -> core::option::Option<bool>

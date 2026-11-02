@@ -172,7 +172,7 @@ macro_rules! __param_kind {
         $crate::Kind::Toggle
     };
     (Choice; ; $($id:literal => $option:literal),+;) => {
-        $crate::Kind::Choice { options: &[$($crate::ChoiceOption { id: $id, label: $option }),+] }
+        $crate::Kind::Choice { options: &[$($crate::ChoiceOption::new($id, $option)),+] }
     };
     (Choice; ; ; $choices:path) => {
         $crate::Kind::Choice { options: $choices }

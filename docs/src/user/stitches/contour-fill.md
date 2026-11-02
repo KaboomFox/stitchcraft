@@ -87,8 +87,8 @@ underlay here. `expand_mm` grows the area before its rings are laid.
 The reference gives each setting's range and default:
 
 - [fill](../reference/params/fill.md), which chooses the fill method
-- [contour fill](../reference/params/contour.md), its strategy and corners, direction and smoothing
+- [contour fill](../reference/params/contour.md), its strategy and corners and its direction
 - [tatami fill](../reference/params/tatami.md), its row spacing, underlay and expanding
-- [fill repeats](../reference/params/fill-repeat.md), its repeats and bean stitch
+- [path fills](../reference/params/path-fill.md), its smoothing, repeats and bean stitch
 - [running stitch](../reference/params/running.md), its tolerance and random lengths
 - [the settings every element shares](../reference/params/common.md), the stitch length among them

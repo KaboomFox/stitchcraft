@@ -57,42 +57,39 @@ struct Design {
 /// Every lock, in the order Ink/Stitch offers them for the start. Its list for the end puts the cross
 /// before the bowtie; a file stores the lock's id, so the order changes only a settings window.
 const TABLE: &[Design] = &[
-    Design { option: ChoiceOption { id: "half_stitch", label: "Half stitch" }, shape: Shape::HalfStitch },
+    Design { option: ChoiceOption::new("half_stitch", "Half stitch"), shape: Shape::HalfStitch },
     // A shaft along the stitching to the tip of a small arrowhead, round the head and back down the shaft.
     Design {
-        option: ChoiceOption { id: "arrow", label: "Arrow" },
+        option: ChoiceOption::new("arrow", "Arrow"),
         shape: Shape::Drawn(&[(0.0, 0.0), (1.4, 0.0), (0.9, 0.4), (0.9, -0.4), (1.4, 0.0), (0.0, 0.0)]),
     },
     // Forth and back over one step, twice: the same rhythm as the half stitch, at a size the user sets.
-    Design { option: ChoiceOption { id: "back_forth", label: "Back and forth" }, shape: Shape::Steps(&[1.0, -1.0, 1.0, -1.0]) },
+    Design { option: ChoiceOption::new("back_forth", "Back and forth"), shape: Shape::Steps(&[1.0, -1.0, 1.0, -1.0]) },
     // Two triangles meeting tip to tip across the stitching: the long stitches cross in the middle.
     Design {
-        option: ChoiceOption { id: "bowtie", label: "Bowtie" },
+        option: ChoiceOption::new("bowtie", "Bowtie"),
         shape: Shape::Drawn(&[(0.0, 0.0), (0.2, 0.45), (1.2, -0.45), (1.2, 0.45), (0.2, -0.45), (0.0, 0.0)]),
     },
     // An X: one diagonal, back to its middle, then the whole other diagonal through it.
     Design {
-        option: ChoiceOption { id: "cross", label: "Cross" },
+        option: ChoiceOption::new("cross", "Cross"),
         shape: Shape::Drawn(&[(0.0, 0.0), (0.3, 0.4), (1.1, -0.4), (0.7, 0.0), (1.1, 0.4), (0.3, -0.4), (0.0, 0.0)]),
     },
     // A five-pointed star (a pentagram 1.2 mm across), one of its points where the stitching ends.
     Design {
-        option: ChoiceOption { id: "star", label: "Star" },
+        option: ChoiceOption::new("star", "Star"),
         shape: Shape::Drawn(&[(0.0, 0.0), (1.0854, -0.3527), (0.4146, 0.5706), (0.4146, -0.5706), (1.0854, 0.3527), (0.0, 0.0)]),
     },
     // The plainest loop round the stitching: a small diamond of four equal stitches.
-    Design {
-        option: ChoiceOption { id: "simple", label: "Simple" },
-        shape: Shape::Drawn(&[(0.0, 0.0), (0.5, 0.3), (1.0, 0.0), (0.5, -0.3), (0.0, 0.0)]),
-    },
+    Design { option: ChoiceOption::new("simple", "Simple"), shape: Shape::Drawn(&[(0.0, 0.0), (0.5, 0.3), (1.0, 0.0), (0.5, -0.3), (0.0, 0.0)]) },
     // A triangle opening ahead, its tip where the stitching ends.
-    Design { option: ChoiceOption { id: "triangle", label: "Triangle" }, shape: Shape::Drawn(&[(0.0, 0.0), (1.2, 0.5), (1.2, -0.5), (0.0, 0.0)]) },
+    Design { option: ChoiceOption::new("triangle", "Triangle"), shape: Shape::Drawn(&[(0.0, 0.0), (1.2, 0.5), (1.2, -0.5), (0.0, 0.0)]) },
     // Zigzag across the stitching on the way out, then straight back along it.
     Design {
-        option: ChoiceOption { id: "zigzag", label: "Zigzag" },
+        option: ChoiceOption::new("zigzag", "Zigzag"),
         shape: Shape::Drawn(&[(0.0, 0.0), (0.3, 0.35), (0.6, -0.35), (0.9, 0.35), (1.2, 0.0), (0.0, 0.0)]),
     },
-    Design { option: ChoiceOption { id: "custom", label: "Custom" }, shape: Shape::Custom },
+    Design { option: ChoiceOption::new("custom", "Custom"), shape: Shape::Custom },
 ];
 
 /// The lock ids and labels `lock_start` and `lock_end` offer, in Ink/Stitch's order.
@@ -112,7 +109,7 @@ pub(crate) fn shape(id: &str) -> Shape {
 
 /// The table's options. (`const` functions cannot use iterators yet, hence the loops below.)
 const fn options<const N: usize>() -> [ChoiceOption; N] {
-    let mut out = [ChoiceOption { id: "", label: "" }; N];
+    let mut out = [ChoiceOption::new("", ""); N];
     let mut i = 0;
     while i < N {
         out[i] = TABLE[i].option;

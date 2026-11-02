@@ -107,8 +107,8 @@ Where 2 segments meet smoothly nothing more is needed.
 - A zigzag's turnaround takes no step of the list, as in Ink/Stitch ([zigzag stroke](#zigzag-stroke-p2-m7)).
 - Repeats apply to running, ripple and zigzag strokes; bean stitch to those and to manual stitch (the
   [compatibility contract](../inkstitch-compat-contract.md) lists each parameter's stitch types).
-- A contour fill has repeats and bean stitch of its own, which Ink/Stitch declares for its fills apart
-  from a stroke's. Bean stitch comes first, and each repeat then sews everything sewn so far again, the
+- The fills sewn as one path, a contour fill and a meander fill, have repeats and bean stitch of their
+  own, which Ink/Stitch declares for its fills apart from a stroke's. Bean stitch comes first, and each repeat then sews everything sewn so far again, the
   other way round, so `k` repeats sew 2^(k−1) passes ([fills](fills.md#stitches)).
 
 ### Random length
