@@ -130,8 +130,8 @@ M13.7, whose Auto effect uses them.
 ## M7 — More stitch types I
 
 One step for each stitch type, with its requirements, cases and docs
-([playbook](../contributing/playbook-new-stitch-type.md)). M7.6 was done while M13 waited for MC-8's
-sew-out, and M7.7 to M7.9 come after M13.
+([playbook](../contributing/playbook-new-stitch-type.md)). M7.6 to M7.9 go ahead while M13 waits for
+MC-8's sew-out (decided on 2026-11-01).
 
 | Step | Deliverable | Done when |
 |---|---|---|
@@ -152,9 +152,9 @@ sew-out, and M7.7 to M7.9 come after M13.
 <!-- vale ai-tells.EmDashUsage = YES -->
 
 Goal: a picture traced in VectorCraft sews well from one command, with no settings on its shapes
-([design](../design/image-to-embroidery.md)). M13 comes after M7.5 and before M7.7 (decided on
-2026-10-19). M7.6, the offsetter's speed for contour fill, was done while MC-8's sew-out was awaited. The steps that make every traced shape sew better with the generators StitchCraft has come
-first, and the steps that make new kinds of shape into stitches follow.
+([design](../design/image-to-embroidery.md)). M13 comes after M7.5 (decided on 2026-10-19), and M7.6 to
+M7.9 go ahead while MC-8's sew-out is awaited. The steps that make every traced shape sew better with the
+generators StitchCraft has come first, and the steps that make new kinds of shape into stitches follow.
 
 | Step | Deliverable | Done when |
 |---|---|---|
@@ -201,6 +201,14 @@ library is part of that corpus: hundreds of real Ink/Stitch files, mostly satin,
 commit by `cargo xtask corpus` and never committed, using only fonts whose licence allows it (OFL, CC0,
 CC-BY, CC-BY-SA; 132 of the 142 fonts on 2026-10-08).
 
+<!-- vale ai-tells.EmDashUsage = NO -->
+## M10 — More stitch types II
+<!-- vale ai-tells.EmDashUsage = YES -->
+
+Guided fill, linear gradient fill, ripple stitch, tartan fill, cross stitch; auto-run and auto-satin
+routing tools; per-layer ordering (underlay now, top later). VectorCraft's tools filter, with Convert Line to
+Satin, is M6.12. M10 comes before M14, since lettering's fonts use its stitch types (decided on 2026-11-01).
+
 <!-- The milestones' headings all name them this way. -->
 <!-- vale ai-tells.EmDashUsage = NO -->
 ## M14 — Lettering
@@ -208,7 +216,9 @@ CC-BY, CC-BY-SA; 132 of the 142 fonts on 2026-10-08).
 
 Goal: names, monograms and words sewn in embroidery fonts, set as Ink/Stitch's lettering sets them
 ([review](inkstitch-usage.md)). M14 comes after M8, whose SVG adapter reads the files that Ink/Stitch's
-fonts are made of. Fonts come from a repository of their own, as VectorCraft's do. They are StitchCraft's
+fonts are made of, and after M10. Of the 142 fonts in Ink/Stitch's library, 107 use only stitch types
+StitchCraft sews. The other 35 need cross stitch (25 fonts), tartan fill (4), ripple stitch (3), guided fill
+(1) or meander fill (1), counted on 2026-11-01, and 2 ask for M10's auto-satin. Fonts come from a repository of their own, as VectorCraft's do. They are StitchCraft's
 own fonts, Ink/Stitch's fonts whose licence allows it (OFL, CC0, CC-BY, CC-BY-SA, each with its licence
 file and an `ASSETS.md` row, never NC, GPL or unclear terms), and the fonts a user has installed for
 Ink/Stitch, read in their own format.
@@ -222,12 +232,6 @@ Ink/Stitch, read in their own format.
 | MC-9 🧵 | **TS-14** (3 fonts at the least and the greatest heights they sew at); kit: `stitch testsheet` | report filed |
 | M14.5 | Text in pictures: the traced shapes inside an area marked `stitch:text` are replaced by lettering of the marker's text, as tall as the traced letters ([design](../design/image-to-embroidery.md#text-in-pictures)) | its requirements active |
 | M14.6 🧪 | Text in pictures found and read without a marker | decision recorded in the design |
-
-## M10 — More stitch types II
-
-Guided fill, linear gradient fill, ripple stitch, tartan fill, cross stitch; auto-run and auto-satin
-routing tools; per-layer ordering (underlay now, top later). VectorCraft's tools filter, with Convert Line to
-Satin, is M6.12.
 
 ## M11 — Formats II
 
