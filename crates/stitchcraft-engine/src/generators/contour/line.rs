@@ -22,13 +22,13 @@ use crate::normalize::near::nearest_to_point;
 use crate::normalize::stroke::distance_to_segment;
 
 /// How long `line` is: the lengths of its sides added up.
-pub(super) fn length(line: &[Point]) -> f64 {
+pub(crate) fn length(line: &[Point]) -> f64 {
     line.windows(2).map(|side| side[0].distance(side[1])).sum()
 }
 
 /// How far along `line` its point nearest `p` lies: on the first of the sides as near as any, at the foot
 /// of `p` on it, or at its nearer end. 0 for a line of fewer than 2 points.
-pub(super) fn project(line: &[Point], p: Point) -> f64 {
+pub(crate) fn project(line: &[Point], p: Point) -> f64 {
     let (mut best, mut at, mut start) = (f64::INFINITY, 0.0, 0.0);
     for side in line.windows(2) {
         let (a, b) = (side[0], side[1]);
@@ -56,7 +56,7 @@ fn fraction(p: Point, a: Point, b: Point) -> f64 {
 
 /// The point `at` along `line`: on the side where the distance falls, the end of a line it is not shorter
 /// than, or its start for a distance of 0 or less.
-pub(super) fn point_at(line: &[Point], at: f64) -> Option<Point> {
+pub(crate) fn point_at(line: &[Point], at: f64) -> Option<Point> {
     let first = *line.first()?;
     if at <= 0.0 {
         return Some(first);

@@ -41,23 +41,25 @@ use crate::generators::tatami::stitches::Stitching;
 const TATAMI: &[StitchType] = &[StitchType::TatamiFill];
 
 /// The stitch types its rows, its expand and its underlay apply to: a contour fill takes them as Ink/Stitch's
-/// does, sewing its rings the row spacing apart over the part expanded, after the same underlay.
-const TATAMI_AND_CONTOUR: &[StitchType] = &[StitchType::TatamiFill, StitchType::ContourFill];
+/// does, sewing its rings the row spacing apart over the part expanded, after the same underlay, and a
+/// meander fill sews its path over the part expanded after the same underlay.
+const UNDERLAID: &[StitchType] = &[StitchType::TatamiFill, StitchType::ContourFill, StitchType::MeanderFill];
 
 params! {
     /// Tatami fill: rows of running stitches across the fill's area, the needle points of neighbouring rows
     /// offset so that they never line up. Ink/Stitch's default fill. A contour fill takes its row spacing,
-    /// its expand and its underlay from these settings too.
-    pub struct TatamiParams for TATAMI_AND_CONTOUR;
+    /// its expand and its underlay from these settings too, and a meander fill its expand and its underlay.
+    pub struct TatamiParams for UNDERLAID;
 
     "Rows" {
         /// The direction of the rows, in degrees counter-clockwise from horizontal: 0 sews horizontal rows
-        /// and 90 upright ones. A contour fill's rings follow its outline, and its angle turns only its
-        /// underlay.
+        /// and 90 upright ones. A contour fill's rings follow its outline, and a meander fill's path its tile,
+        /// and their angle turns only their underlay.
         angle: Angle = "0", label "Angle";
 
         /// How far apart the rows are, measured square to them, or a contour fill's rings. Rows closer
-        /// together cover the fabric more fully, and pull it in more.
+        /// together cover the fabric more fully, and pull it in more. A meander fill's underlay rows lie 3
+        /// of them apart.
         row_spacing_mm: Length = "0.25", label "Row spacing", range (0.1, 100.0);
 
         /// The spacing of the last rows, for a fill that fades: from the first row the spacing changes
@@ -67,7 +69,7 @@ params! {
             origin Origin::InkStitchDeviates { deviation: "DEV-FILL-003" };
 
         /// How far past the drawn edge the top rows reach: each part is grown by this much, with round
-        /// corners, before its rows or rings are laid. The thread's pull opens gaps between fills sewn side
+        /// corners, before its rows, rings or path are laid. The thread's pull opens gaps between fills sewn side
         /// by side, and this closes them. Negative values pull the rows in from the edge.
         expand_mm: Length = "0", label "Expand", range (-10.0, 10.0);
 
@@ -83,7 +85,8 @@ params! {
         /// the longest stitch (`max_stitch_length_mm`) apart, a `staggers`-th of a stitch along from the
         /// row before's, so that neighbouring rows never line them up. A fraction draws diagonals that show
         /// less than whole numbers do. A negative number staggers the rows the other way, and 0 counts as 1,
-        /// which lines every row's points up, as in Ink/Stitch. A contour fill staggers its underlay's rows so.
+        /// which lines every row's points up, as in Ink/Stitch. A contour or meander fill staggers its
+        /// underlay's rows so.
         staggers: Number = "4", label "Staggers", range (-100.0, 100.0);
 
         /// Leave out the needle point at the end of each row. It lies close to the start of the next row,
@@ -98,9 +101,9 @@ params! {
     }
 
     "Underlay" {
-        /// Sew underlay before the top rows, or a contour fill's rings: rows of stitches farther apart than
-        /// the top rows, square to them unless set otherwise. It holds the fabric still while the fill is
-        /// sewn and lifts the top rows, so less fabric shows between them.
+        /// Sew underlay before the top rows, a contour fill's rings or a meander fill's path: rows of stitches
+        /// farther apart than the top rows, square to them unless set otherwise. It holds the fabric still
+        /// while the fill is sewn and lifts the top rows, so less fabric shows between them.
         fill_underlay: Toggle = "true", label "Underlay";
 
         /// The direction of the underlay's rows, in degrees counter-clockwise from horizontal. Several

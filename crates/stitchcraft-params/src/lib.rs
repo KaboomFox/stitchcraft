@@ -29,7 +29,7 @@ pub mod value;
 
 pub use audit::audit;
 pub use kinds::ParamKind;
-pub use set::{ParamSet, Validated, declarations, find, find_for, read_param, unknown_keys};
+pub use set::{ParamSet, Validated, declarations, find, find_for, left_to_others, read_param, unknown_keys};
 pub use spec::{AUTOMATIC, ChoiceOption, Condition, Empty, Kind, MAX_LIST, MAX_TEXT, Origin, ParamGroup, ParamSpec, Stability};
 pub use stitch_type::{Family, StitchType};
 pub use stitchcraft_core::Diagnostic;

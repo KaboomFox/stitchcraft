@@ -15,7 +15,8 @@ use crate::auto::AutoParams;
 use crate::common::CommonParams;
 use crate::generate::{FillParams, StrokeParams};
 use crate::generators::contour::ContourParams;
-use crate::generators::passes::{FillRepeatParams, RepeatParams};
+use crate::generators::meander::MeanderParams;
+use crate::generators::passes::{PathFillParams, RepeatParams};
 use crate::generators::pull::PullParams;
 use crate::generators::running::RunningParams;
 use crate::generators::satin::SatinParams;
@@ -34,7 +35,8 @@ pub const PARAMETERS: &[&ParamGroup] = &[
     &FillParams::GROUP,
     &TatamiParams::GROUP,
     &ContourParams::GROUP,
-    &FillRepeatParams::GROUP,
+    &MeanderParams::GROUP,
+    &PathFillParams::GROUP,
     &AutoParams::GROUP,
 ];
 

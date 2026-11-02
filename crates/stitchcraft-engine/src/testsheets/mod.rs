@@ -81,6 +81,10 @@ enum Drawn {
     Sketched(fn() -> Result<StitchPlan, SheetError>),
     /// As a design the engine plans (`designed`), which says exactly the diagnostics of these codes.
     Designed(fn() -> Result<Drawing, SheetError>, &'static [Code]),
+    /// As [`Drawn::Designed`], but the elements' ids choose some of its stitches: a meander fill without a
+    /// `random_seed` wanders as its id draws. A host's objects have ids of their own, so the sheet drawn into
+    /// a document would sew otherwise, and only `stitch testsheet` writes it.
+    DesignedById(fn() -> Result<Drawing, SheetError>, &'static [Code]),
 }
 
 impl TestSheet {
@@ -88,12 +92,18 @@ impl TestSheet {
     pub fn plan(&self) -> Result<StitchPlan, SheetError> {
         match self.drawn {
             Drawn::Sketched(build) => build(),
-            Drawn::Designed(drawing, said) => drawing()?.plan_saying(said),
+            Drawn::Designed(drawing, said) | Drawn::DesignedById(drawing, said) => drawing()?.plan_saying(said),
         }
     }
 
     /// Whether the sheet is drawn as a design, which [`TestSheet::design`] gives, rather than stitch by stitch.
     pub const fn designed(&self) -> bool {
+        matches!(self.drawn, Drawn::Designed(..) | Drawn::DesignedById(..))
+    }
+
+    /// Whether a host can draw the sheet into a document that sews as the sheet does: a design whose
+    /// elements' ids choose none of its stitches (`REQ-VC-015`).
+    pub const fn drawable(&self) -> bool {
         matches!(self.drawn, Drawn::Designed(..))
     }
 
@@ -110,7 +120,7 @@ impl TestSheet {
     pub fn design(&self) -> Option<Result<Design, SheetError>> {
         match self.drawn {
             Drawn::Sketched(_) => None,
-            Drawn::Designed(drawing, _) => Some(drawing().and_then(Drawing::design)),
+            Drawn::Designed(drawing, _) | Drawn::DesignedById(drawing, _) => Some(drawing().and_then(Drawing::design)),
         }
     }
 }
@@ -288,7 +298,21 @@ pub static SHEETS: &[TestSheet] = &[
             "How long does the sheet take? A contour fill sews as one line, with no travel between rows.",
         ],
         profile: REFERENCE,
-        drawn: Drawn::Designed(ts11::fills, &[]),
+        drawn: Drawn::Designed(ts11::contours, &[]),
+    },
+    TestSheet {
+        id: "TS-11C",
+        title: "New fills: meander fills",
+        checks: &[
+            "Each sample is a meander fill: one line that wanders along the sides of a tiling without crossing itself, over the default underlay. Top row, in green, left to right: discs 36 mm across in hexagons, squares and triangles, each side 2 mm long. Middle row, in blue: discs in octagons and squares, hexagons and triangles, and hexagons, squares and triangles. Bottom row, in red: a star 40 mm across in squares and triangles, a rectangle in hexagons twice as large sewn as a zigzag 2.5 mm wide, and a leaf in hexagons half as large, turned by 30° and smoothed by 0.5 mm.",
+            "Does each tiling show in the stitches? Does the line look even, or do bare patches show where it didn't reach? Which tile looks best, and at which size?",
+            "Does the underlay show between the line's turns? A meander covers the area lightly: is it too light to hide the fabric, or the underlay?",
+            "On the rectangle, does the zigzag stay inside its outline, and lie flat? Is 2.5 mm too wide?",
+            "On the leaf, does the smoothed line run evenly round its turns, without kinks? Do the 1 mm sides sew cleanly, or do the stitches bunch?",
+            "Does any sample pucker, or the line pull the fabric where it turns?",
+        ],
+        profile: REFERENCE,
+        drawn: Drawn::DesignedById(ts11::meanders, &[]),
     },
     TestSheet {
         id: "TS-13A",
@@ -384,11 +408,39 @@ mod tests {
         // The sheets drawn stitch by stitch have no design.
         assert_eq!(
             designed,
-            ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D"]
+            ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11B", "TS-11C", "TS-13A", "TS-13B", "TS-13C", "TS-13D"]
         );
         // The TS-13 sheets' shapes are digitized automatically, and no other sheet's are.
         let digitized: Vec<&str> = SHEETS.iter().filter(|sheet| sheet.digitized()).map(|sheet| sheet.id).collect();
         assert_eq!(digitized, ["TS-13A", "TS-13B", "TS-13C", "TS-13D"]);
+    }
+
+    #[test]
+    fn req_vc_015_a_host_draws_the_sheets_whose_stitches_their_elements_ids_dont_choose() {
+        // Each element renamed, as a host's objects are: the same stitches, but for TS-11C's meander fills,
+        // which wander as their ids draw.
+        let stitches = |design: &crate::design::Design| {
+            let plan = crate::plan(design, REFERENCE, &stitchcraft_core::Budget::DEFAULT).plan.unwrap();
+            plan.stitches().map(|s| (s.at, s.kind)).collect::<Vec<_>>()
+        };
+        let mut drawable = Vec::new();
+        for sheet in SHEETS.iter().filter(|sheet| sheet.designed()) {
+            let design = sheet.design().unwrap().unwrap();
+            let renamed: Vec<crate::design::Element> = design
+                .elements()
+                .iter()
+                .map(|e| crate::design::Element { id: stitchcraft_core::ElementId::new(format!("host:{}", e.id.as_str())).unwrap(), ..e.clone() })
+                .collect();
+            let renamed = crate::design::Design::new(renamed, design.settings).unwrap();
+            assert_eq!(stitches(&renamed) == stitches(&design), sheet.drawable(), "{}", sheet.id);
+            if sheet.drawable() {
+                drawable.push(sheet.id);
+            }
+        }
+        assert_eq!(
+            drawable,
+            ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D"]
+        );
     }
 
     #[test]
@@ -425,6 +477,9 @@ mod tests {
         assert_eq!(about("TS-09"), [66.0, 114.0, 0.0, 0.0]);
         // The right-hand star's upper point on its right lies 20 mm from its middle, 18° above the level.
         assert_eq!(about("TS-11B"), [125.021130326, 116.0, 0.0, 0.0]);
+        // TS-11C's star, in its bottom row, reaches 20 sin 54° mm below its middle, and the discs of its top row
+        // 18 mm above theirs.
+        assert_eq!(about("TS-11C"), [123.0, 120.176369967, 0.0, 0.0]);
         // Each TS-10 frame is its hoop's whole field, as its title and checks say, and fits no smaller hoop.
         let hoops = [("ts-10a", "4 × 4 in", &BROTHER_PE800_4X4), ("TS-10B", "5 × 7 in", REFERENCE), ("TS-10C", "small", &BROTHER_PE800_SMALL)];
         for (id, hoop, profile) in hoops {

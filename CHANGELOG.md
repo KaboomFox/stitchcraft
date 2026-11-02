@@ -5,6 +5,31 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M7.8: meander fill with generated tiles (`REQ-FILL-MEA-001` to `REQ-FILL-MEA-005`). One line wanders
+  through the sides of a tiling inside each part, after the tatami fill's underlay, and never passes a
+  point twice, as Ink/Stitch's meander fill wanders through its tiles. It starts nearest the needle and ends
+  nearest the next part or element. Between them, the way of fewest sides grows by detours drawn at random
+  through points it hasn't passed. `random_seed` chooses them.
+  - The tiles are StitchCraft's own, made in code: 7 of the regular and semiregular tilings, with the
+    honeycomb by default. `meander_scale_percent` scales them and `meander_angle` turns them. Ink/Stitch's
+    tiles are drawings StitchCraft doesn't copy. Their 75 ids are kept, and a fill set to one sews the
+    honeycomb with `SC-W0316` (`DEV-FILL-018`). Dialogs and the reference offer only the 7 tiles.
+  - A part too small for its tile is sewn round its outline with `SC-W0317`, where Ink/Stitch stops the
+    whole fill (`DEV-FILL-019`). The path differs from Ink/Stitch's for one seed (`DEV-FILL-020`). Its
+    search takes each detour the long way round, which covers more of the network than the short way.
+  - `smoothness_mm` rounds the line off, `zigzag_spacing_mm` and `zigzag_width_mm` sew it as a zigzag, and
+    `clip` keeps it inside the shape as drawn. Bean stitch and `repeats` work as for a contour fill, whose
+    smoothing and repeats the 2 fills share (`PathFillParams`).
+  - A value only a node's other stitch type reads is left to it (`REQ-PRM-006`). A meander fill on a node
+    whose zigzag stroke keeps 2 spacings sews without a zigzag, and a satin column given them sews at its
+    own 0.4 mm, as Ink/Stitch's do, with `SC-I0106`.
+  - TS-11C, the meander fills' test sheet for MC-6, sews 6 tiles on discs and the seventh on a star, with
+    a zigzag kept inside a rectangle and a leaf turned and smoothed. Its meanders wander as their
+    elements' ids draw, so VectorCraft's Test Sheet filter, whose objects have ids of their own, doesn't
+    draw it. A meander fill's preview shows its path, and the user's guide has a page for it.
+  - Ink/Stitch's compatibility contract lists its meander tiles in the order its settings window does, and
+    `check_params.py` compares them with Ink/Stitch's tiles. It finds that the underlay reads
+    `row_spacing_mm` and `max_stitch_length_mm` too, where its own are not set (`read_by`).
 - M7.7: contour fill, sewn as Ink/Stitch sews it (`REQ-FILL-CON-001` to `REQ-FILL-CON-008`). Rings follow
   each part's outline inward, a row spacing apart, with round, mitred or bevelled corners (`join_style`),
   and round its holes. One line of running stitches sews them after the tatami fill's underlay, in the
@@ -2065,6 +2090,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Added `conformance/golden/testsheets/TS-11C.pes` (M7.8), the meander fills' test sheet that MC-6 sews:
+  5,880 stitches.
 - Added `conformance/golden/testsheets/TS-11B.pes` (M7.7), the contour fills' test sheet that MC-6 sews:
   10,611 stitches.
 - Changed `conformance/golden/testsheets/TS-13A.pes` and `TS-13B.pes` (`REQ-AUTO-023`, `REQ-AUTO-007`,

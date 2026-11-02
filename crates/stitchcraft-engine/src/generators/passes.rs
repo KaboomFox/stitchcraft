@@ -38,11 +38,21 @@ params! {
     }
 }
 
+/// The fills sewn as one path: a contour fill's through its rings, and a meander fill's through its tile.
+pub const PATH_FILLS: &[StitchType] = &[StitchType::ContourFill, StitchType::MeanderFill];
+
 params! {
-    /// Repeats and bean stitch of a fill sewn as one path, which Ink/Stitch declares for its fills apart
-    /// from a stroke's: bean stitch comes first, and each repeat then sews everything sewn so far again,
-    /// the other way round, as Ink/Stitch repeats a contour fill.
-    pub struct FillRepeatParams for &[StitchType::ContourFill];
+    /// A fill sewn as one path, a contour fill's or a meander fill's: how the path is smoothed, and its
+    /// repeats and bean stitch, which Ink/Stitch declares for its fills apart from a stroke's. Bean stitch
+    /// comes first, and each repeat then sews everything sewn so far again, the other way round.
+    pub struct PathFillParams for PATH_FILLS;
+
+    "Path" {
+        /// How much the path is smoothed: its corners are cut round over about 5 times this. A contour fill
+        /// sewn inner to outer is then kept inside the fill, and a meander fill with `clip` on. 0 leaves the
+        /// path as it is. A contour fill's spirals are not smoothed.
+        smoothness_mm: Length = "0", label "Smoothness", range (0.0, 100.0);
+    }
 
     "Repeats" {
         /// How often to sew the fill's path. Each repeat after the first sews everything sewn so far again,

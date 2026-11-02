@@ -5,13 +5,14 @@
   "properties": {
     "angle": {
       "default": 0.0,
-      "description": "The direction of the rows, in degrees counter-clockwise from horizontal: 0 sews horizontal rows and 90 upright ones. A contour fill's rings follow its outline, and its angle turns only its underlay.",
+      "description": "The direction of the rows, in degrees counter-clockwise from horizontal: 0 sews horizontal rows and 90 upright ones. A contour fill's rings follow its outline, and a meander fill's path its tile, and their angle turns only their underlay.",
       "title": "Angle",
       "type": "number",
       "x-stitchcraft": {
         "applies_to": [
           "tatami_fill",
-          "contour_fill"
+          "contour_fill",
+          "meander_fill"
         ],
         "group": "Rows",
         "origin": "inkstitch",
@@ -149,7 +150,8 @@
           "type": "array",
           "x-stitchcraft": {
             "applies_to": [
-              "contour_fill"
+              "contour_fill",
+              "meander_fill"
             ],
             "group": "Repeats",
             "origin": "inkstitch",
@@ -253,6 +255,20 @@
         "origin": "inkstitch-deviates",
         "stability": "stable",
         "unit": "mm"
+      }
+    },
+    "clip": {
+      "default": false,
+      "description": "Keep the line inside the shape as drawn, before `expand_mm` grew it, where smoothing or the zigzag would take it out.",
+      "title": "Clip to the shape",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "applies_to": [
+          "meander_fill"
+        ],
+        "group": "Meander",
+        "origin": "inkstitch",
+        "stability": "stable"
       }
     },
     "clockwise": {
@@ -456,7 +472,7 @@
     },
     "expand_mm": {
       "default": 0.0,
-      "description": "How far past the drawn edge the top rows reach: each part is grown by this much, with round corners, before its rows or rings are laid. The thread's pull opens gaps between fills sewn side by side, and this closes them. Negative values pull the rows in from the edge.",
+      "description": "How far past the drawn edge the top rows reach: each part is grown by this much, with round corners, before its rows, rings or path are laid. The thread's pull opens gaps between fills sewn side by side, and this closes them. Negative values pull the rows in from the edge.",
       "maximum": 10.0,
       "minimum": -10.0,
       "title": "Expand",
@@ -464,7 +480,8 @@
       "x-stitchcraft": {
         "applies_to": [
           "tatami_fill",
-          "contour_fill"
+          "contour_fill",
+          "meander_fill"
         ],
         "group": "Rows",
         "origin": "inkstitch",
@@ -529,13 +546,14 @@
     },
     "fill_underlay": {
       "default": true,
-      "description": "Sew underlay before the top rows, or a contour fill's rings: rows of stitches farther apart than the top rows, square to them unless set otherwise. It holds the fabric still while the fill is sewn and lifts the top rows, so less fabric shows between them.",
+      "description": "Sew underlay before the top rows, a contour fill's rings or a meander fill's path: rows of stitches farther apart than the top rows, square to them unless set otherwise. It holds the fabric still while the fill is sewn and lifts the top rows, so less fabric shows between them.",
       "title": "Underlay",
       "type": "boolean",
       "x-stitchcraft": {
         "applies_to": [
           "tatami_fill",
-          "contour_fill"
+          "contour_fill",
+          "meander_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -558,7 +576,8 @@
       "x-stitchcraft": {
         "applies_to": [
           "tatami_fill",
-          "contour_fill"
+          "contour_fill",
+          "meander_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -576,7 +595,8 @@
       "x-stitchcraft": {
         "applies_to": [
           "tatami_fill",
-          "contour_fill"
+          "contour_fill",
+          "meander_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -597,7 +617,8 @@
       "x-stitchcraft": {
         "applies_to": [
           "tatami_fill",
-          "contour_fill"
+          "contour_fill",
+          "meander_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -618,7 +639,8 @@
       "x-stitchcraft": {
         "applies_to": [
           "tatami_fill",
-          "contour_fill"
+          "contour_fill",
+          "meander_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -634,7 +656,8 @@
       "x-stitchcraft": {
         "applies_to": [
           "tatami_fill",
-          "contour_fill"
+          "contour_fill",
+          "meander_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -871,7 +894,7 @@
     },
     "max_stitch_length_mm": {
       "default": null,
-      "description": "Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as its split method says. Empty, a stitch is split only where it is longer than the machine sews. A tatami fill sews its rows in stitches this long, and a contour fill its rings.",
+      "description": "Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as its split method says. Empty, a stitch is split only where it is longer than the machine sews. A tatami fill sews its rows in stitches this long, and a contour fill its rings. A meander fill's underlay sews its rows so.",
       "maximum": 25.0,
       "minimum": 0.1,
       "title": "Longest stitch",
@@ -887,7 +910,8 @@
           "s_stitch",
           "zigzag",
           "tatami_fill",
-          "contour_fill"
+          "contour_fill",
+          "meander_fill"
         ],
         "family_defaults": {
           "fill": 4.0
@@ -896,6 +920,144 @@
         "origin": "inkstitch",
         "stability": "stable",
         "unit": "mm"
+      }
+    },
+    "meander_angle": {
+      "default": 0.0,
+      "description": "How far the tiling is turned, in degrees clockwise as the drawing shows it.",
+      "title": "Pattern angle",
+      "type": "number",
+      "x-stitchcraft": {
+        "applies_to": [
+          "meander_fill"
+        ],
+        "group": "Meander",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "°"
+      }
+    },
+    "meander_pattern": {
+      "default": "honeycomb",
+      "description": "The tiling whose sides the line wanders along: hexagons, squares, triangles, or 2 or 3 kinds of polygon. Its sides are 2 mm long at a scale of 100 %. A fill set to one of Ink/Stitch's tiles, which StitchCraft doesn't have, wanders through the honeycomb (`SC-W0316`).",
+      "enum": [
+        "honeycomb",
+        "squares",
+        "triangles",
+        "octagons-squares",
+        "hexagons-triangles",
+        "hexagons-squares-triangles",
+        "squares-triangles",
+        "N3-11a",
+        "N3-12",
+        "N3-16a",
+        "N3-17",
+        "N3-18",
+        "N3-18-modified",
+        "N3-20",
+        "N3-23b",
+        "N3-25c",
+        "N3-26b",
+        "N3-27",
+        "N3-30a",
+        "N3-51b",
+        "N3-57f-modified",
+        "N3-58b",
+        "N3-6",
+        "N3-7",
+        "N3-8a",
+        "N3-8a-modified",
+        "N3-8b",
+        "N4-13b",
+        "N4-13c",
+        "N4-13d",
+        "N4-13e",
+        "N4-13f",
+        "N4-16a",
+        "N4-19",
+        "N4-20",
+        "N4-21c",
+        "N4-22",
+        "N4-23a",
+        "N4-23c",
+        "N4-27",
+        "N4-29e",
+        "N4-29f",
+        "N4-31",
+        "N4-38",
+        "N4-42e",
+        "N4-44",
+        "N4-52",
+        "N4-54d",
+        "N4-5a",
+        "N4-5a-2",
+        "N4-82",
+        "N4-85d",
+        "N5-1e1",
+        "N5-1q2",
+        "N5-1t",
+        "N6-1",
+        "N6-2",
+        "N6-5b",
+        "N6-6a",
+        "N6-6c",
+        "NC5-11a",
+        "NC5-20a",
+        "P3-1",
+        "P3-12",
+        "P4-1",
+        "P4-10",
+        "P4-15",
+        "P4-19",
+        "P4-23",
+        "P4-24",
+        "P4-25",
+        "P4-43",
+        "P4-43-modified",
+        "P4-47",
+        "P5-10_11",
+        "P5-19",
+        "P5-23_24",
+        "P5-4",
+        "P6-6_11",
+        "diamond-square",
+        "hexagon",
+        "weird-one"
+      ],
+      "title": "Pattern",
+      "type": "string",
+      "x-stitchcraft": {
+        "applies_to": [
+          "meander_fill"
+        ],
+        "deviation": "DEV-FILL-018",
+        "group": "Meander",
+        "origin": "inkstitch-deviates",
+        "stability": "stable"
+      }
+    },
+    "meander_scale_percent": {
+      "default": [
+        100.0
+      ],
+      "description": "How large the tiling is, in percent: 100 makes its sides 2 mm long. 2 percentages separated by a space scale it across and down apart. Each is at least 1.",
+      "items": {
+        "maximum": 10000.0,
+        "minimum": 1.0,
+        "type": "number"
+      },
+      "maxItems": 2,
+      "minItems": 1,
+      "title": "Pattern scale",
+      "type": "array",
+      "x-stitchcraft": {
+        "applies_to": [
+          "meander_fill"
+        ],
+        "group": "Meander",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "%"
       }
     },
     "min_jump_stitch_length_mm": {
@@ -1063,7 +1225,8 @@
           "s_stitch",
           "zigzag",
           "tatami_fill",
-          "contour_fill"
+          "contour_fill",
+          "meander_fill"
         ],
         "group": "Random variation",
         "origin": "inkstitch",
@@ -1248,7 +1411,8 @@
           "type": "integer",
           "x-stitchcraft": {
             "applies_to": [
-              "contour_fill"
+              "contour_fill",
+              "meander_fill"
             ],
             "group": "Repeats",
             "origin": "inkstitch",
@@ -1283,7 +1447,7 @@
     },
     "row_spacing_mm": {
       "default": 0.25,
-      "description": "How far apart the rows are, measured square to them, or a contour fill's rings. Rows closer together cover the fabric more fully, and pull it in more.",
+      "description": "How far apart the rows are, measured square to them, or a contour fill's rings. Rows closer together cover the fabric more fully, and pull it in more. A meander fill's underlay rows lie 3 of them apart.",
       "maximum": 100.0,
       "minimum": 0.1,
       "title": "Row spacing",
@@ -1291,7 +1455,8 @@
       "x-stitchcraft": {
         "applies_to": [
           "tatami_fill",
-          "contour_fill"
+          "contour_fill",
+          "meander_fill"
         ],
         "group": "Rows",
         "origin": "inkstitch",
@@ -1303,7 +1468,7 @@
       "default": [
         2.5
       ],
-      "description": "How long each stitch is. Between corners the stitches are spread evenly, so each one is at most this long. Several lengths separated by spaces sew as a repeating pattern: \"2.5 1\" sews long, short, long, short. The stitches that join a satin column's underlays are no longer than the first length.",
+      "description": "How long each stitch is. Between corners the stitches are spread evenly, so each one is at most this long. Several lengths separated by spaces sew as a repeating pattern: \"2.5 1\" sews long, short, long, short. The stitches that join a satin column's underlays are no longer than the first length, and a meander fill's path is sewn in stitches of the first length.",
       "items": {
         "maximum": 25.0,
         "minimum": 0.1,
@@ -1322,7 +1487,8 @@
           "s_stitch",
           "zigzag",
           "tatami_fill",
-          "contour_fill"
+          "contour_fill",
+          "meander_fill"
         ],
         "group": "Running stitch",
         "origin": "inkstitch",
@@ -1366,7 +1532,8 @@
           "s_stitch",
           "zigzag",
           "tatami_fill",
-          "contour_fill"
+          "contour_fill",
+          "meander_fill"
         ],
         "deviation": "DEV-SAT-006",
         "group": "Running stitch",
@@ -1482,16 +1649,17 @@
     },
     "smoothness_mm": {
       "default": 0.0,
-      "description": "How much inner to outer's path is smoothed: its corners are cut round over about 5 times this, and it is kept inside the fill. 0 leaves the rings as they are. The spirals are not smoothed.",
+      "description": "How much the path is smoothed: its corners are cut round over about 5 times this. A contour fill sewn inner to outer is then kept inside the fill, and a meander fill with `clip` on. 0 leaves the path as it is. A contour fill's spirals are not smoothed.",
       "maximum": 100.0,
       "minimum": 0.0,
       "title": "Smoothness",
       "type": "number",
       "x-stitchcraft": {
         "applies_to": [
-          "contour_fill"
+          "contour_fill",
+          "meander_fill"
         ],
-        "group": "Contour",
+        "group": "Path",
         "origin": "inkstitch",
         "stability": "stable",
         "unit": "mm"
@@ -1546,7 +1714,7 @@
     },
     "staggers": {
       "default": 4.0,
-      "description": "How many rows the needle points take to come back to where they started. Along each row they lie the longest stitch (`max_stitch_length_mm`) apart, a `staggers`-th of a stitch along from the row before's, so that neighbouring rows never line them up. A fraction draws diagonals that show less than whole numbers do. A negative number staggers the rows the other way, and 0 counts as 1, which lines every row's points up, as in Ink/Stitch. A contour fill staggers its underlay's rows so.",
+      "description": "How many rows the needle points take to come back to where they started. Along each row they lie the longest stitch (`max_stitch_length_mm`) apart, a `staggers`-th of a stitch along from the row before's, so that neighbouring rows never line them up. A fraction draws diagonals that show less than whole numbers do. A negative number staggers the rows the other way, and 0 counts as 1, which lines every row's points up, as in Ink/Stitch. A contour or meander fill staggers its underlay's rows so.",
       "maximum": 100.0,
       "minimum": -100.0,
       "title": "Staggers",
@@ -1554,7 +1722,8 @@
       "x-stitchcraft": {
         "applies_to": [
           "tatami_fill",
-          "contour_fill"
+          "contour_fill",
+          "meander_fill"
         ],
         "group": "Stitches",
         "origin": "inkstitch",
@@ -1689,7 +1858,8 @@
       "x-stitchcraft": {
         "applies_to": [
           "tatami_fill",
-          "contour_fill"
+          "contour_fill",
+          "meander_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -1768,6 +1938,23 @@
               "zigzag"
             ],
             "group": "Satin column",
+            "origin": "inkstitch",
+            "stability": "stable",
+            "unit": "mm"
+          }
+        },
+        {
+          "default": 0.0,
+          "description": "Sew the line as a zigzag across it, the needle going this far along the line from one side to the other and back. 0 sews it as a running stitch.",
+          "maximum": 100.0,
+          "minimum": 0.0,
+          "title": "Zigzag spacing",
+          "type": "number",
+          "x-stitchcraft": {
+            "applies_to": [
+              "meander_fill"
+            ],
+            "group": "Meander",
             "origin": "inkstitch",
             "stability": "stable",
             "unit": "mm"
@@ -1886,6 +2073,23 @@
           "zigzag"
         ],
         "group": "Zigzag underlay",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "mm"
+      }
+    },
+    "zigzag_width_mm": {
+      "default": 3.0,
+      "description": "How wide the zigzag is, from one side of the line to the other.",
+      "maximum": 100.0,
+      "minimum": 0.0,
+      "title": "Zigzag width",
+      "type": "number",
+      "x-stitchcraft": {
+        "applies_to": [
+          "meander_fill"
+        ],
+        "group": "Meander",
         "origin": "inkstitch",
         "stability": "stable",
         "unit": "mm"
@@ -2034,19 +2238,31 @@
           "contour_strategy",
           "join_style",
           "avoid_self_crossing",
-          "clockwise",
-          "smoothness_mm"
+          "clockwise"
         ],
         "name": "ContourParams",
         "title": "Contour parameters"
       },
       {
         "keys": [
+          "meander_pattern",
+          "meander_angle",
+          "meander_scale_percent",
+          "clip",
+          "zigzag_spacing_mm",
+          "zigzag_width_mm"
+        ],
+        "name": "MeanderParams",
+        "title": "Meander parameters"
+      },
+      {
+        "keys": [
+          "smoothness_mm",
           "repeats",
           "bean_stitch_repeats"
         ],
-        "name": "FillRepeatParams",
-        "title": "Fill repeat parameters"
+        "name": "PathFillParams",
+        "title": "Path fill parameters"
       },
       {
         "keys": [

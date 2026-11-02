@@ -21,6 +21,7 @@ shows one thing, but for `round-patch.vectorcraft`, which VectorCraft writes. Te
 | `wide.svg` | A 210 mm border, wider than the reference hoop | the `plan-too-wide` example |
 | `fill.svg` | A patch 32 mm by 20 mm with rounded corners and a round hole | the tatami fill's angle, staggers and underlay; the contour fill's path |
 | `star.svg` | A star, its points 15 mm from its middle and its inner corners 6 mm | the contour fill's strategies and corners |
+| `meander.svg` | A square 30 mm a side with rounded corners | the meander fill's tiles, scale, angle and line |
 | `widths.svg` | A line 0.6 mm wide, a letter C 3 mm wide and a disc 16 mm across, each traced as an area | automatic digitizing's stitches by width |
 | `parts.svg` | A lollipop on a stick 2.4 mm wide and a balloon on a string 0.8 mm wide, each one area | automatic digitizing's shapes in parts |
 | `round-patch.vectorcraft` | The VectorCraft tutorial's patch, as VectorCraft saves the `vectorcraft-patch` shot's steps, which are the tutorial's (`cargo xtask shots --vectorcraft` writes it). A disc and a star have StitchCraft Fill and Stroke, and a border of 2 rails has StitchCraft Satin | the VectorCraft tutorial: the `vectorcraft-patch-sewn` shot and the `export-round-patch` example |

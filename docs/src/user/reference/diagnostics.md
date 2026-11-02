@@ -15,6 +15,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0101`](#sc-e0101) | Error | Parameter has the wrong type or an unknown choice |
 | [`SC-W0102`](#sc-w0102) | Warning | Parameter clamped to its allowed range |
 | [`SC-W0105`](#sc-w0105) | Warning | Unknown parameter preserved but ignored |
+| [`SC-I0106`](#sc-i0106) | Info | Value only the node's other stitch type reads; default used here |
 | [`SC-E0201`](#sc-e0201) | Error | Satin column has no rails |
 | [`SC-W0202`](#sc-w0202) | Warning | Satin rails taken as the two longest subpaths |
 | [`SC-W0203`](#sc-w0203) | Warning | Satin rung does not cross both rails |
@@ -43,6 +44,8 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-I0313`](#sc-i0313) | Info | Fill drawn twice along its edge; Ink/Stitch fills the part left empty |
 | [`SC-W0314`](#sc-w0314) | Warning | Legacy fill sewn as a tatami fill without underlay |
 | [`SC-I0315`](#sc-i0315) | Info | Contour fill's part too narrow for its spiral; sewn inner to outer |
+| [`SC-W0316`](#sc-w0316) | Warning | Meander pattern is one of Ink/Stitch's tiles; sewn with StitchCraft's default tile |
+| [`SC-W0317`](#sc-w0317) | Warning | Meander fill part too small for its tile; sewn round its outline |
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
 | [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
@@ -190,6 +193,18 @@ or Ink/Stitch, or one for a stitch type StitchCraft does not support yet. It was
 the design does not lose it, but it does not change the stitches.
 
 The Ink/Stitch compatibility page says when each Ink/Stitch parameter is supported.
+
+## SC-I0106
+
+**Info** — Value only the node's other stitch type reads; default used here
+
+An SVG node's fill and its stroke read the same settings, and some keys mean different things to
+each: a zigzag stroke keeps 2 spacings in `zigzag_spacing_mm`, where a meander fill reads one. A
+value this element can't read but the node's other stitch type can is that one's, so this element
+sews with its own default, as Ink/Stitch does.
+
+The message names the key and the value. To give this element a value of its own, set it on a
+node of its own.
 
 ## SC-E0201
 
@@ -515,6 +530,26 @@ round its rings. Ink/Stitch fails on such a part or sews nothing of it, as its v
 
 The message counts the parts. To sew them in a spiral, widen them to more than 2 row spacings for the
 single spiral, or 4 for the double, or make `row_spacing_mm` smaller.
+
+## SC-W0316
+
+**Warning** — Meander pattern is one of Ink/Stitch's tiles; sewn with StitchCraft's default tile
+
+The meander fill's pattern names one of Ink/Stitch's tiles. Those are drawings that ship with
+Ink/Stitch, which StitchCraft doesn't copy, so the fill wanders through StitchCraft's default tile,
+the honeycomb, instead.
+
+Choose one of StitchCraft's tiles for `meander_pattern` to remove the warning.
+
+## SC-W0317
+
+**Warning** — Meander fill part too small for its tile; sewn round its outline
+
+A part of a meander fill is too small for any line of its tile, or none of its lines join up, so it
+has nothing to wander through. It is sewn as a running stitch round its outline. Ink/Stitch stops
+the whole fill with an error there.
+
+The message counts the parts. Make `meander_scale_percent` smaller to fit the tile into them.
 
 ## SC-W0401
 
