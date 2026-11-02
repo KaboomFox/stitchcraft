@@ -3,8 +3,11 @@
 # shape by a connector. Both programs start and end them there (REQ-GEN-001). M8.5's: a fill cut by a circle
 # and a zigzag running stitch cut into 2 pieces, written as clip paths, which both programs cut them to
 # (REQ-SVG-011, REQ-GEN-005). Unclipped, the fill would be the 30 mm square, nearly twice the quarter disc,
-# which the stitches would show.
+# which the stitches would show. M8.8's: the design's origin and stop position, written as Ink/Stitch's
+# origin and stop_position commands, and a stop after the column (REQ-SVG-003, REQ-ASM-005). Both programs
+# put the origin at the hoop's centre, which the place shows, and move the frame to the stop position before
+# the stop, which the size and the jumps show.
 id = "inkstitch-ts16"
-requirements = ["REQ-SVG-008", "REQ-GEN-001", "REQ-SVG-011", "REQ-GEN-005"]
+requirements = ["REQ-SVG-008", "REQ-GEN-001", "REQ-SVG-011", "REQ-GEN-005", "REQ-SVG-003", "REQ-ASM-005"]
 kind = "inkstitch"
 sheet = "TS-16"
