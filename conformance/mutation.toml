@@ -424,3 +424,27 @@ file = "crates/stitchcraft-engine/src/testsheets/pictures.rs"
 mutant = "replace - with + in balloon"
 line = "let (top, length, steps) = (around(FRAC_PI_2 - meet).1, 26.0, 24_u32);"
 why = "the sine is as high either side of a quarter turn, so the string's top is as high, give or take a rounding far below the 0.1 mm a machine file records"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/columns.rs"
+mutant = "replace < with <= in columns"
+line = "if found.iter().zip(&widths).all(|(column, width)| column.walked.length() < DOT * width.get()) {"
+why = "only a part whose every line is at most half as long as it is wide, one exactly half, tells the 2 apart, and no case can aim at that: a line runs through the centres of the part's triangles and the width averages the circles centred on it, so the 2 meet exactly only by a coincidence of rounding. The parts near the bound fall well to either side of it: a disc's or a square's lines are 0.4 times as long as it is wide, and a rectangle's, once its corners don't tie, more than 0.75 times"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/neighbours/layers.rs"
+mutant = "replace > with >= in details"
+line = "if other != index && filling.len() > first {"
+why = "an area near the hole none of whose parts' boxes meet the hole's is then weighed as a detail with no parts, which fill none of it: the hole's intersection with no parts is empty and costs no work, so the area is no detail either way"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/neighbours/layers.rs"
+mutant = "replace > with >= in moved"
+line = "layer.closed.retain(|hole| hole.details.iter().all(|&detail| sews(detail) > sews(index)));"
+why = "an area is never a detail of its own holes, and an area with a hole closed and each of its details have parts that show, so each sews, at a place of its own: the 2 places are never equal"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/auto/neighbours/layers.rs"
+mutant = "replace < with <= in move_back"
+line = "if to < from {"
+why = "when the area moves back no place, taking it out of the order and putting it back at the same place leaves the order as it was"

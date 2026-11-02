@@ -705,7 +705,7 @@ fn req_vc_015_each_test_sheet_draws_into_a_document_that_exports_within_vectorcr
         Some(ParamSpec::Choice { options, .. }) => options.clone(),
         other => panic!("no choice of sheets: {other:?}"),
     };
-    assert_eq!(sheets, ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-13A", "TS-13B", "TS-13C"]);
+    assert_eq!(sheets, ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-13A", "TS-13B", "TS-13C", "TS-13D"]);
     // VectorCraft admits StitchCraft's effect records only while their plug-ins are installed: the families',
     // and the Auto effect's, which the TS-13 sheets' shapes digitized automatically have.
     for family in FAMILIES.into_iter().chain([AUTO]) {

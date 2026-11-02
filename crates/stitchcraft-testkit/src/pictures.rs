@@ -52,6 +52,17 @@ pub fn badges(trace: Trace) -> Picture {
     pictures::badges((0.0, 0.0), 0.6, trace).unwrap()
 }
 
+/// The emblem, 60 mm wide round (30, 30), traced as `trace` says ([`pictures::emblem`]): its white is the
+/// lowest shape and covers the design, the picture's background.
+pub fn emblem(trace: Trace) -> Picture {
+    pictures::emblem((30.0, 30.0), 1.0, trace).unwrap()
+}
+
+/// The button, 29 mm across round (15, 15), traced as `trace` says ([`pictures::button`]).
+pub fn button(trace: Trace) -> Picture {
+    pictures::button((15.0, 15.0), 1.0, trace).unwrap()
+}
+
 /// The test sheet `id`'s design, and its plan for the reference machine with its stitches where the design
 /// draws them: planned with its origin at the middle of its shapes, which the hoop holds, and moved back by
 /// it.

@@ -3,28 +3,28 @@
 //!
 //! Thread pulls stitches in from the edges of their shape, so shapes that only meet show fabric between
 //! them. An automatic area therefore grows by its overlap into each area, satin column or filled line sewn
-//! after it, where it touches that shape, and no further than that shape. A stacked trace's lower colour runs
-//! on under the upper ones, and sewn whole it would be sewn twice there, stiff and thick. So where an area
-//! sewn after it covers it, it is cut away instead, its overlap inside that area's edge, and a part of it
-//! that such areas cover whole sews nothing. A stacked trace then sews the areas of an abutting one. A
-//! column or a line sewn after an area goes over it, and the area is sewn whole under it. Each area's
-//! overlap is its own setting, `auto_overlap_mm` (`REQ-AUTO-020`).
+//! after it, where it touches that shape, and no further than that shape. An area digitized whole under its
+//! details (`layers`) runs on under them, and sewn whole it would be sewn twice there, stiff and thick. So
+//! where an area or a part's line or column sewn after it covers it, it is cut away instead, its overlap
+//! inside that shape's edge, and a part of it that such shapes cover whole sews nothing. A satin column or a
+//! line digitized from a stroke and sewn after an area goes over it, and the area is sewn whole under it.
+//! Each area's overlap is its own setting, `auto_overlap_mm` (`REQ-AUTO-020`).
 //!
 //! The areas are taken from the last to the first, so that each one meets the shapes sewn after it as they
 //! are sewn, with their own overlaps. For the area `a`:
 //!
-//! - **Cut away.** The areas sewn after it that come near it are joined. A part of `a` that they cover
-//!   whole is left out, and they are shrunk by the overlap and taken from the rest. An area that only meets
-//!   `a` is shrunk away from it and takes nothing.
+//! - **Cut away.** The areas and the parts' lines and columns sewn after it that come near it are joined. A
+//!   part of `a` that they cover whole is left out, and they are shrunk by the overlap and taken from the
+//!   rest. A shape that only meets `a` is shrunk away from it and takes nothing.
 //! - **Reaching under.** The shapes sewn after it are grown by [`TOUCHING`], so that a gap rounding left
 //!   between edges drawn as one is bridged, and where `a` lies within them it touches them. `a` reaches
 //!   into them within the overlap of there, outside what was cut away. So it reaches under a shape that
 //!   comes near it without touching it only within the overlap of where it touches another, and a piece of
 //!   that reach that doesn't touch what is left of `a` is left out, so that `a` gains no part of its own.
 //!
-//! A part's line or column (`auto::narrow`, `auto::columns`) is reached under as a satin column is. It isn't
-//! cut away: one that the areas sewn after it cover whole sews nothing, as such an area doesn't, and one they
-//! cover in part sews whole.
+//! A part's line or column (`auto::narrow`, `auto::columns`) paints its part, which covers the areas sewn
+//! before it as an area does. It isn't cut away itself: one that the shapes sewn after it cover whole sews
+//! nothing, as such an area doesn't, and one they cover in part sews whole.
 //!
 //! Only the shapes whose bounds come within [`TOUCHING`] of `a`'s are looked at, each for a unit of work, so
 //! an area costs the work of its neighbours, not of the whole design. The areas are named in the order they
@@ -83,7 +83,7 @@ pub(super) fn reached(shapes: &mut Shapes, budget: &Budget) -> Vec<Diagnostic> {
 }
 
 /// `SC-I0904` for the shape `id`, covered whole by the areas sewn after it, which sews nothing.
-fn covered(id: ElementId) -> Diagnostic {
+pub(super) fn covered(id: ElementId) -> Diagnostic {
     let fix =
         Fix::Hint("To sew it as it is drawn, give it settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it.".to_string());
     Diagnostic::new(Code::AutoUnder, "This area is covered by the areas sewn after it, so it sews nothing.").with_element(id).with_fix(fix)
@@ -103,8 +103,8 @@ fn hidden(shapes: &mut Shapes, index: usize, budget: &Budget) -> Option<Diagnost
     }
 }
 
-/// Whether the areas sewn after the part's line or column `index` of `shapes` cover the part whole, with
-/// `meter`'s work.
+/// Whether the areas and the parts' lines and columns sewn after the part's line or column `index` of
+/// `shapes` cover the part whole, with `meter`'s work.
 fn covered_whole(shapes: &mut Shapes, index: usize, meter: &mut Meter) -> Result<bool, Failed> {
     let Some(part) = shapes.paint(index).map(|(_, parts)| parts.to_vec()) else { return Ok(false) };
     let Some(bounds) = envelope(&part) else { return Ok(false) };
@@ -112,9 +112,11 @@ fn covered_whole(shapes: &mut Shapes, index: usize, meter: &mut Meter) -> Result
     Ok(!covering.is_empty() && no_area(area_of(&uncovered(&part, &covering, meter)?)))
 }
 
-/// The areas sewn after element `index` of `shapes` that come within [`TOUCHING`] of `bounds`, and when
-/// `grown`, every area, column and part's line or column that does, grown to meet it, with `meter`'s work: a
-/// unit for each shape looked at, and the work of growing those near.
+/// The areas and the parts' lines and columns sewn after element `index` of `shapes` that come within
+/// [`TOUCHING`] of `bounds`, what they paint, and when `grown`, every area, column and part's line or column
+/// that does, grown to meet it, with `meter`'s work: a unit for each shape looked at, and the work of growing
+/// those near. A part's line or column covers no element of its own shape: each column of a part paints the
+/// whole part, and the fill of the area's broad parts only meets it.
 fn later(shapes: &mut Shapes, index: usize, bounds: &Envelope, grown: bool, meter: &mut Meter) -> Result<(Vec<Polygon>, Vec<Polygon>), Failed> {
     let (mut covering, mut touching) = (Vec::new(), Vec::new());
     for later in index + 1..shapes.len() {
@@ -124,8 +126,11 @@ fn later(shapes: &mut Shapes, index: usize, bounds: &Envelope, grown: bool, mete
         if shapes.kind(later) == Some(Kind::Line) || !shapes.bounds(later).is_some_and(|other| near(bounds, TOUCHING, &other)) {
             continue;
         }
-        if let Some((Kind::Area, parts)) = shapes.paint(later) {
-            covering.extend_from_slice(parts);
+        let apart = shapes.of_shape.get(later) != shapes.of_shape.get(index);
+        match shapes.paint(later) {
+            Some((Kind::Area, parts)) => covering.extend_from_slice(parts),
+            Some((Kind::Part, parts)) if apart => covering.extend_from_slice(parts),
+            _ => {}
         }
         if grown {
             touching.extend(shapes.grown(later, meter)?.into_iter().flatten());
@@ -155,14 +160,14 @@ struct Found {
 fn beside(shapes: &mut Shapes, index: usize, overlap: f64, meter: &mut Meter) -> Result<Option<Found>, Failed> {
     let area = shapes.region(index).map(<[Polygon]>::to_vec).unwrap_or_default();
     let Some(bounds) = envelope(&area) else { return Ok(Some(Found { parts: area, reaching: false, cut: false })) };
-    // The areas sewn after it that come near it, and every area, column and part's line or column that does,
-    // grown to meet it.
+    // The areas and the parts' lines and columns sewn after it that come near it, and every area, column and
+    // part's line or column that does, grown to meet it.
     let (covering, touching) = later(shapes, index, &bounds, true, meter)?;
-    // Every shape that comes near it is in `touching`, and the areas among them in `covering` too.
+    // Every shape that comes near it is in `touching`, and the areas and parts among them in `covering` too.
     if touching.is_empty() {
         return Ok(Some(Found { parts: area, reaching: false, cut: false }));
     }
-    // What the areas sewn after it leave of it uncovered: none, and it sews nothing.
+    // What the shapes sewn after it leave of it uncovered: none, and it sews nothing.
     let covered = joined(union([covering.as_slice()], meter))?;
     let uncovered = joined(difference(&area, &covered, meter))?;
     if no_area(area_of(&uncovered)) {
