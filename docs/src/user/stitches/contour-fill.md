@@ -4,8 +4,8 @@
 
 A contour fill covers an area with rings that follow its outline inward, a row spacing apart, like the
 growth rings of a tree, and with rings round its holes. It sews them all as one line of running
-stitches, with no travel between rows, so it suits round and flowing shapes. Set a fill's `fill_method`
-to `contour_fill` for it.
+stitches, with no travel between the rings, so it suits round and flowing shapes. Set a fill's
+`fill_method` to `contour_fill` for it.
 
 Its settings come from the VectorCraft plug-in today, and from an SVG file's Ink/Stitch attributes once
 the SVG reader reads them ([setting parameters](./#setting-parameters)).
@@ -89,7 +89,6 @@ The reference gives each setting's range and default:
 - [fill](../reference/params/fill.md), which chooses the fill method
 - [contour fill](../reference/params/contour.md): the strategy, the corners, the direction and smoothing
 - [tatami fill](../reference/params/tatami.md): the row spacing, the underlay and expanding
-- [fill repeats](../reference/params/fill-repeat.md)
+- [fill repeats](../reference/params/fill-repeat.md): its repeats and bean stitch
 - [running stitch](../reference/params/running.md): the tolerance and random lengths
-- [repeats and bean stitch](../reference/params/repeat.md)
 - [the settings every element shares](../reference/params/common.md), the stitch length among them

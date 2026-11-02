@@ -106,31 +106,57 @@
       }
     },
     "bean_stitch_repeats": {
-      "default": [
-        0
-      ],
-      "description": "How many times to go back and forth over each stitch: 1 sews every stitch three times (there, back and there again), 2 five times. Several numbers separated by spaces are taken in turn along the stitches: \"1 0\" makes every other stitch bold.",
-      "items": {
-        "maximum": 10,
-        "minimum": 0,
-        "type": "integer"
-      },
-      "maxItems": 16,
-      "minItems": 1,
-      "title": "Bean stitch",
-      "type": "array",
-      "x-stitchcraft": {
-        "applies_to": [
-          "running_stitch",
-          "ripple_stitch",
-          "zigzag_stitch",
-          "manual_stitch",
-          "contour_fill"
-        ],
-        "group": "Repeats",
-        "origin": "inkstitch",
-        "stability": "stable"
-      }
+      "anyOf": [
+        {
+          "default": [
+            0
+          ],
+          "description": "How many times to go back and forth over each stitch: 1 sews every stitch three times (there, back and there again), 2 five times. Several numbers separated by spaces are taken in turn along the stitches: \"1 0\" makes every other stitch bold.",
+          "items": {
+            "maximum": 10,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maxItems": 16,
+          "minItems": 1,
+          "title": "Bean stitch",
+          "type": "array",
+          "x-stitchcraft": {
+            "applies_to": [
+              "running_stitch",
+              "ripple_stitch",
+              "zigzag_stitch",
+              "manual_stitch"
+            ],
+            "group": "Repeats",
+            "origin": "inkstitch",
+            "stability": "stable"
+          }
+        },
+        {
+          "default": [
+            0
+          ],
+          "description": "How many times to go back and forth over each stitch of the fill's path, before its repeats: 1 sews every stitch three times (there, back and there again), 2 five times. Several numbers separated by spaces are taken in turn along the stitches: \"1 0\" makes every other stitch bold.",
+          "items": {
+            "maximum": 10,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "maxItems": 16,
+          "minItems": 1,
+          "title": "Bean stitch",
+          "type": "array",
+          "x-stitchcraft": {
+            "applies_to": [
+              "contour_fill"
+            ],
+            "group": "Repeats",
+            "origin": "inkstitch",
+            "stability": "stable"
+          }
+        }
+      ]
     },
     "center_walk_underlay": {
       "default": false,
@@ -2016,7 +2042,8 @@
       },
       {
         "keys": [
-          "repeats"
+          "repeats",
+          "bean_stitch_repeats"
         ],
         "name": "FillRepeatParams",
         "title": "Fill repeat parameters"

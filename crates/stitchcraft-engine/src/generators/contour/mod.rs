@@ -7,7 +7,7 @@
 //!
 //! **Steps.** A contour fill sews its parts as a tatami fill sews them, nearest the needle first, each with
 //! the tatami fill's underlay first and grown by `expand_mm` for its top (the shared part loop,
-//! [`parts_sewn`]). Over each piece of a part:
+//! `tatami::sew::parts_sewn`). Over each piece of a part:
 //!
 //! 1. Its rings are found, a row spacing apart, with the corners `join_style` gives, and make a tree
 //!    (`tree`).

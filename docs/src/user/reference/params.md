@@ -59,7 +59,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Fill parameters](params/fill.md) | 2 | Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill |
 | [Tatami parameters](params/tatami.md) | 15 | Tatami fill, Contour fill |
 | [Contour parameters](params/contour.md) | 5 | Contour fill |
-| [Fill repeat parameters](params/fill-repeat.md) | 1 | Contour fill |
+| [Fill repeat parameters](params/fill-repeat.md) | 2 | Contour fill |
 | [Auto parameters](params/auto.md) | 5 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
 
 ## Every parameter
@@ -74,6 +74,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`auto_overlap_mm`](params/auto.md#auto_overlap_mm) | Overlap | Auto parameters |
 | [`avoid_self_crossing`](params/contour.md#avoid_self_crossing) | Avoid self-crossing | Contour parameters |
 | [`bean_stitch_repeats`](params/repeat.md#bean_stitch_repeats) | Bean stitch | Repeat parameters |
+| [`bean_stitch_repeats`](params/fill-repeat.md#bean_stitch_repeats) | Bean stitch | Fill repeat parameters |
 | [`center_walk_underlay`](params/satin.md#center_walk_underlay) | Centre walk underlay | Satin parameters |
 | [`center_walk_underlay_position`](params/satin.md#center_walk_underlay_position) | Centre walk position | Satin parameters |
 | [`center_walk_underlay_repeats`](params/satin.md#center_walk_underlay_repeats) | Centre walk repeats | Satin parameters |

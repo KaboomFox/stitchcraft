@@ -5,6 +5,27 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M7.7: contour fill, sewn as Ink/Stitch sews it (`REQ-FILL-CON-001` to `REQ-FILL-CON-008`). Rings follow
+  each part's outline inward, a row spacing apart, with round, mitred or bevelled corners (`join_style`),
+  and round its holes. They are sewn as one line of running stitches after the tatami fill's underlay:
+  inner to outer, stepping in to the middle and sewing each ring on the way out, or as a single or a
+  double spiral (`contour_strategy`). `avoid_self_crossing` alternates the rings' direction, `clockwise`
+  turns them, and `smoothness_mm` rounds inner to outer's path off inside the shape. Bean stitch and
+  random lengths work as on a stroke, and the fill's own `repeats` double the path.
+  - A part too narrow for its spiral is sewn inner to outer (`SC-I0315`, `DEV-FILL-016`), rings the path
+    can't reach are named (`SC-W0311`), and the grown holes are joined where they overlap
+    (`DEV-FILL-015`). The smoothed path takes more stitches than Ink/Stitch's (`DEV-FILL-017`).
+  - The offsetter takes a contour fill's corners, checked against shapely on 538 polygons.
+  - TS-11B, the contour fills' test sheet for MC-6, sews each strategy, each join style, a hole, rings
+    that part and alternate, and a smoothed leaf. Sewn by Ink/Stitch at `d59c9ab` as a black box, it
+    agrees with StitchCraft by every measure of the differential: 10,611 stitches against 9,885, the
+    same size, threads, trims and jumps, and footprints that overlap by 0.99. The Test Sheet filter draws
+    it in VectorCraft.
+  - Ink/Stitch's compatibility contract lists, for `angle`, `staggers` and `running_stitch_length_mm`, the
+    fill methods that read them for their underlay without showing them (`read_by`), and
+    `check_params.py` finds those methods in Ink/Stitch's code. A contour fill reads all 3.
+  - A contour fill's preview shows its path round its rings, as a tatami fill's shows its rows. The user's
+    guide has a page for it, with pictures of its strategies, its corners and its path.
 - M13.12: traced layers flattened before digitizing. With `--auto`, the layers of a traced picture are
   flattened before anything is digitized (`REQ-AUTO-023`), so that a picture traced with its colours
   stacked sews as one traced with its colours abutting.
@@ -2041,6 +2062,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Added `conformance/golden/testsheets/TS-11B.pes` (M7.7), the contour fills' test sheet that MC-6 sews:
+  10,611 stitches.
 - Changed `conformance/golden/testsheets/TS-13A.pes` and `TS-13B.pes` (`REQ-AUTO-023`, `REQ-AUTO-007`,
   `REQ-AUTO-016`): their digitized halves sew each picture as its layers are flattened. TS-13A's stacked
   badge sews only what shows of each colour, and the badges' red discs are digitized whole under the

@@ -26,5 +26,4 @@ the stitches: "1 0" makes every other stitch bold.
 
 - **Accepts:** 1 to 16 whole numbers from 0 to 10, separated by spaces
 - **Default:** `0`
-- **Applies to:** Running stitch, Ripple stitch, Zigzag stitch, Manual stitch, Contour fill
 - **Ink/Stitch:** same key, meaning and default

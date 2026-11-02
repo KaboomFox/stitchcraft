@@ -2,8 +2,9 @@
 
 # Fill repeat parameters
 
-Repeats of a fill sewn as one path: each repeat sews everything sewn so far again, the other way
-round, as Ink/Stitch repeats a contour fill.
+Repeats and bean stitch of a fill sewn as one path, which Ink/Stitch declares for its fills apart
+from a stroke's: bean stitch comes first, and each repeat then sews everything sewn so far again,
+the other way round, as Ink/Stitch repeats a contour fill.
 
 Applies to Contour fill.
 
@@ -17,4 +18,14 @@ twice, 4 there and back 4 times.
 
 - **Accepts:** a whole number from 1 to 8
 - **Default:** `1`
+- **Ink/Stitch:** same key, meaning and default
+
+### `bean_stitch_repeats`
+
+**Bean stitch.** How many times to go back and forth over each stitch of the fill's path, before its repeats: 1
+sews every stitch three times (there, back and there again), 2 five times. Several numbers
+separated by spaces are taken in turn along the stitches: "1 0" makes every other stitch bold.
+
+- **Accepts:** 1 to 16 whole numbers from 0 to 10, separated by spaces
+- **Default:** `0`
 - **Ink/Stitch:** same key, meaning and default
