@@ -1,0 +1,6 @@
+id = "inkstitch-turn-45"
+requirements = ["REQ-SVG-005", "REQ-ASM-005"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/turn-45.svg"
+# rotate_on_export 45, which Ink/Stitch's preferences don't offer, as a file can hold it: its writer turns
+# the design 45 degrees right about its origin, and so does StitchCraft, by the sine and cosine of the angle.

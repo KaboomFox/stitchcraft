@@ -30,7 +30,8 @@
 //! Commands draws them.
 //!
 //! The metadata gives Ink/Stitch's current file version ([`stitchcraft_svg::version::CURRENT`]), so its
-//! updater changes nothing, and each design setting that isn't StitchCraft's default. One that is stays
+//! updater changes nothing, and each design setting that isn't StitchCraft's default, the turn on export
+//! (`rotate_on_export`) among them, in degrees. One that is stays
 //! unset, and Ink/Stitch takes its own default, StitchCraft's too but for the shortest stitch, which
 //! StitchCraft leaves to the machine and Ink/Stitch takes as 0.1 mm (`DEV-FIN-001`).
 //!
@@ -41,7 +42,7 @@
 use stitchcraft_core::{Point, Rect};
 #[cfg(test)]
 use stitchcraft_engine::design::Clip;
-use stitchcraft_engine::design::{Cap, DesignSettings, Element, FillRule, Hints, Join, Path, SETTINGS, Segment, Shape};
+use stitchcraft_engine::design::{Cap, DesignSettings, Element, FillRule, Hints, Join, Path, SETTINGS, Segment, Shape, Turn};
 use stitchcraft_engine::registry::PARAMETERS;
 use stitchcraft_params::{Origin, ParamGroup};
 use stitchcraft_svg::inkstitch::INKSTITCH_NS;
@@ -69,6 +70,9 @@ pub fn svg(elements: &[Element], settings: &DesignSettings) -> Result<String, St
     let defaults = DesignSettings::default();
     for setting in SETTINGS.iter().filter(|setting| setting.get(settings) != setting.get(&defaults)) {
         out.push_str(&format!("    <inkstitch:{0}>{1}</inkstitch:{0}>\n", setting.name, setting.get(settings).get()));
+    }
+    if settings.rotate_on_export != Turn::NONE {
+        out.push_str(&format!("    <inkstitch:{0}>{1}</inkstitch:{0}>\n", Turn::NAME, settings.rotate_on_export.degrees()));
     }
     out.push_str("  </metadata>\n");
     // A symbol for each command the elements' hints and the design's origin and stop position are written as,
@@ -358,13 +362,23 @@ mod tests {
     }
 
     #[test]
-    fn req_prm_003_the_design_s_origin_and_stop_position_are_written_as_ink_stitch_s_commands() {
+    fn req_prm_003_the_design_s_origin_stop_position_and_turn_are_written_as_ink_stitch_keeps_them() {
         let line = along("ring", rings(&[&[(0.0, 0.0), (4.0, 0.0), (4.0, 4.0)]]), &RED, &[("stop_after", "true")]);
         let settings = DesignSettings { origin: Some(p(1.0, 2.0)), stop_position: Some(p(30.5, -4.0)), ..DesignSettings::default() };
         let text = svg(std::slice::from_ref(&line), &settings).unwrap();
         assert!(text.contains(r##"<use id="origin" xlink:href="#inkstitch_origin" x="1" y="2"/>"##), "{text}");
         assert!(text.contains(r##"<symbol id="inkstitch_stop_position">"##), "{text}");
-        assert_eq!(read(&text), (kept(&[line]), settings));
+        assert_eq!(read(&text), (kept(std::slice::from_ref(&line)), settings));
+        // The turn on export is a design setting in the metadata, in degrees.
+        for (turn, written) in [(Turn::LEFT, Some("-90")), (Turn::new(45.5).unwrap(), Some("45.5")), (Turn::NONE, None)] {
+            let settings = DesignSettings { rotate_on_export: turn, ..DesignSettings::default() };
+            let text = svg(std::slice::from_ref(&line), &settings).unwrap();
+            match written {
+                Some(degrees) => assert!(text.contains(&format!("<inkstitch:rotate_on_export>{degrees}</inkstitch:rotate_on_export>")), "{text}"),
+                None => assert!(!text.contains("rotate_on_export"), "{text}"),
+            }
+            assert_eq!(read(&text).1, settings);
+        }
     }
 
     #[test]

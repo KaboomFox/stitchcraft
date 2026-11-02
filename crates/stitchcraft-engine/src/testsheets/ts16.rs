@@ -28,13 +28,17 @@
 //! corner and 10 mm above it. The origin lies 60 mm above the sheet's bottom edge, so that the sheet still
 //! fits the 5 × 7 in hoop when M8.9 turns it about the origin.
 //!
-//! The later parts, the rotation on export (M8.9) and clones (M8.10), are features of the file. Each step that
-//! adds one decides how the sheet holds it: in the design, which the differential then writes into the file,
-//! or in the file itself.
+//! M8.9's part: the sheet is written turned right ([`TURN`]), as Ink/Stitch's `rotate_on_export` turns it,
+//! about its origin, so it sews 100 mm wide and 40 mm tall, the red fill at the right and the zigzag at the
+//! left. Turned, it reaches 60 mm left of the hoop's centre and 50 mm right, 10 mm above and 50 mm below.
+//!
+//! The last part, clones (M8.10), is a feature of the file. The step decides how the sheet holds it: in the
+//! design, which the differential then writes into the file, or in the file itself.
 
 use super::designed::{Drawing, polygon, round};
 use super::sketch::SheetError;
 use super::{BLACK, BLUE, EMERALD_GREEN, RED, thread};
+use crate::design::Turn;
 
 /// The fill's corners, left, top, right and bottom (mm).
 pub const FILL: [f64; 4] = [0.0, 0.0, 40.0, 30.0];
@@ -50,6 +54,8 @@ pub const ZIGZAG: [(f64, f64); 9] =
 /// The design's origin, on the blue column's top edge 10 mm in from its left end, and the stop position, 20 mm
 /// right of the fill's top-right corner and 10 mm above it (mm).
 pub const ORIGIN_AND_STOP_POSITION: [(f64, f64); 2] = [(10.0, 40.0), (60.0, -10.0)];
+/// The turn the sheet is written at: a quarter turn right, clockwise as it is seen.
+pub const TURN: Turn = Turn::RIGHT;
 /// The clip path that cuts it, a U upside down whose legs reach x = 15 and x = 25 from the outside: it leaves
 /// the zigzag from x = 0 to 15 and from 25 to 40 (mm).
 pub const GAP: [(f64, f64); 8] = [(-2.0, 90.0), (42.0, 90.0), (42.0, 105.0), (25.0, 105.0), (25.0, 92.0), (15.0, 92.0), (15.0, 105.0), (-2.0, 105.0)];
@@ -67,6 +73,7 @@ pub(super) fn drawing() -> Result<Drawing, SheetError> {
     d.stop();
     let [origin, stop_position] = ORIGIN_AND_STOP_POSITION;
     d.origin_and_stop_position(origin, stop_position)?;
+    d.turned(TURN);
     let [left, top, right, bottom] = SQUARE;
     d.fill("quarter", vec![polygon(&[(left, top), (right, top), (right, bottom), (left, bottom)])?], &thread(EMERALD_GREEN)?, &[])?;
     let (centre, radius) = CIRCLE;

@@ -22,7 +22,9 @@
 //!    stitch, say, or a custom lock's long step (`SC-I0703`). Each part counts against the stitch budget.
 //! 3. **The hoop's centre.** The fitted plan is moved so the design's origin, or else the centre of the
 //!    box around its stitches, is at the hoop's centre (`REQ-ASM-005`). The box is the finished plan's,
-//!    as in Ink/Stitch, so a point left out above does not move the design.
+//!    as in Ink/Stitch, so a point left out above does not move the design. Then the design's turn on export
+//!    turns it about the hoop's centre ([`Turn`]), as Ink/Stitch turns the machine file it writes, so the
+//!    hoop is checked as the machine is given the design.
 //! 4. **The machine.** Too many colour changes and stops for the machine's format is `SC-E0601`. A design
 //!    larger than the hoop, reaching past its edge from an origin far from the design's middle, or with a
 //!    stop position past the edge is `SC-E0701`, whatever else is true of it. Otherwise a design larger
@@ -35,7 +37,7 @@ use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Mm, Point, Rect}
 use stitchcraft_plan::invariants::{self, LOCK_MIN_STITCH};
 use stitchcraft_plan::{MachineProfile, Role, Stitch, StitchKind, StitchPlan};
 
-use crate::design::DesignSettings;
+use crate::design::{DesignSettings, Turn};
 use crate::generate::shortest_stitch;
 use crate::generators::mm;
 use crate::thin::thin;
@@ -64,7 +66,7 @@ pub fn finalize(
     for block in &mut plan.blocks {
         block.stitches = fitted.block(&block.stitches, meter)?;
     }
-    let plan = centred(plan, settings.origin);
+    let plan = turned(centred(plan, settings.origin), settings.rotate_on_export);
     let mut diagnostics = fitted.diagnostics();
     let changes = plan.stats().changes_including_stops();
     let max = profile.format.max_color_changes();
@@ -106,9 +108,23 @@ fn centred(mut plan: StitchPlan, origin: Option<Point>) -> StitchPlan {
     plan
 }
 
-/// How much moving the plan to the hoop's centre ([`centred`]) may shorten a stitch, at most, in
-/// millimetres. Each point rounds to the nearest double as it moves, a few units in the last place of a
-/// coordinate within the working limit, 10 m: about 2e-12 mm. A run keeps a stitch only if it is this much
+/// `plan` turned by `turn` about the hoop's centre, where its origin now is. A position the turn would take
+/// past the data model's reach would stay where it is, as in [`centred`]; a turn keeps each position as far
+/// from the centre as it was, so none does.
+fn turned(mut plan: StitchPlan, turn: Turn) -> StitchPlan {
+    if !turn.turns() {
+        return plan;
+    }
+    for stitch in plan.blocks.iter_mut().flat_map(|b| b.stitches.iter_mut()) {
+        stitch.at = turn.apply(stitch.at).unwrap_or(stitch.at);
+    }
+    plan
+}
+
+/// How much moving the plan to the hoop's centre ([`centred`]) and turning it ([`turned`]) may shorten a
+/// stitch, at most, in millimetres. Each point rounds to the nearest double as it moves, a few units in the
+/// last place of a coordinate within the working limit, 10 m: about 2e-12 mm. A turn by other than a
+/// whole number of quarter turns rounds each product and sum and its sine and cosine, some 1e-11 mm more. A run keeps a stitch only if it is this much
 /// longer than [`at_least`] asks, so that the check of the moved plan, which asks the same, finds it long
 /// enough. A tie-off whose first stitch was 1e-9 mm short of its 0.2 mm, at the edge of what counts as 0.2
 /// mm, once fell past that edge as the plan moved, and the plan was refused as a bug (`SC-E0009`).
