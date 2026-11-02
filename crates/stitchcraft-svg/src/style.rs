@@ -224,7 +224,7 @@ impl LineJoin {
 const MARKERS: [&str; 3] = ["marker-start", "marker-mid", "marker-end"];
 
 /// Whether a clip path, mask, filter or marker value names one: it is set to something other than `none`.
-fn names_something(value: &str) -> bool {
+pub fn names_something(value: &str) -> bool {
     !value.is_empty() && !value.eq_ignore_ascii_case("none")
 }
 
@@ -374,19 +374,25 @@ impl<'a> Paint<'a> {
     /// parse: a paint server reference with the plain paint after it, or a plain paint.
     fn parse(value: &'a str) -> Option<Paint<'a>> {
         let value = value.trim();
-        let is_reference = value.get(..4).is_some_and(|start| start.eq_ignore_ascii_case("url("));
-        if !is_reference {
-            return plain(value).map(Paint::Plain);
-        }
-        // `url(#id)`, the function name in any case, the reference quoted or not.
-        let end = value.find(')')?;
-        let inside = value.get(4..end)?.trim();
-        let unquoted = ['"', '\''].iter().find_map(|&q| inside.strip_prefix(q)?.strip_suffix(q)).unwrap_or(inside);
-        let id = unquoted.trim().strip_prefix('#').filter(|id| !id.is_empty())?;
-        let rest = value.get(end + 1..)?.trim();
+        let Some((id, rest)) = reference(value) else { return plain(value).map(Paint::Plain) };
         let fallback = if rest.is_empty() { None } else { Some(plain(rest)?) };
         Some(Paint::Server { id, fallback })
     }
+}
+
+/// The id a `url(#id)` reference at the start of `value` names, the function name in any case and the
+/// reference quoted or not, and what is written after it, trimmed: how a paint names its server and
+/// `clip-path` its clip path. `None` when `value` doesn't start with one.
+pub fn reference(value: &str) -> Option<(&str, &str)> {
+    let value = value.trim();
+    if !value.get(..4).is_some_and(|start| start.eq_ignore_ascii_case("url(")) {
+        return None;
+    }
+    let end = value.find(')')?;
+    let inside = value.get(4..end)?.trim();
+    let unquoted = ['"', '\''].iter().find_map(|&q| inside.strip_prefix(q)?.strip_suffix(q)).unwrap_or(inside);
+    let id = unquoted.trim().strip_prefix('#').filter(|id| !id.is_empty())?;
+    Some((id, value.get(end + 1..)?.trim()))
 }
 
 /// A paint that is not a server, in any case: `none` (or `context-fill` and `context-stroke`, which
@@ -438,6 +444,8 @@ pub struct Style<'a> {
     pub stroke: Paint<'a>,
     /// The `fill-rule` property.
     pub fill_rule: FillRule,
+    /// The `clip-rule` property, which says what is inside a clip path's child (`crate::document`).
+    pub clip_rule: FillRule,
     /// The `color` property, which `currentColor` means: `None` when it is fully transparent, and
     /// `currentColor` then paints nothing.
     pub color: Option<Rgb>,
@@ -472,6 +480,7 @@ impl Default for Style<'_> {
             fill: Paint::Plain(Plain::Color(Rgb::new(0, 0, 0))),
             stroke: Paint::Plain(Plain::None),
             fill_rule: FillRule::NonZero,
+            clip_rule: FillRule::NonZero,
             color: Some(Rgb::new(0, 0, 0)),
             fill_clear: false,
             stroke_clear: false,
@@ -505,10 +514,12 @@ impl<'a> Style<'a> {
         if let Declaration::Set(color) = declared.value("color", |v| Color::from_str(without_icc(v)).ok()) {
             style.color = painted(color);
         }
-        match get("fill-rule") {
-            Some(v) if v.eq_ignore_ascii_case("evenodd") => style.fill_rule = FillRule::EvenOdd,
-            Some(v) if v.eq_ignore_ascii_case("nonzero") => style.fill_rule = FillRule::NonZero,
-            _ => {}
+        for (property, rule) in [("fill-rule", &mut style.fill_rule), ("clip-rule", &mut style.clip_rule)] {
+            match get(property) {
+                Some(v) if v.eq_ignore_ascii_case("evenodd") => *rule = FillRule::EvenOdd,
+                Some(v) if v.eq_ignore_ascii_case("nonzero") => *rule = FillRule::NonZero,
+                _ => {}
+            }
         }
         if let Some(clear) = get("fill-opacity").and_then(zero) {
             style.fill_clear = clear;
@@ -717,6 +728,10 @@ mod tests {
                 assert_eq!(p.unwrap().fill_rule, FillRule::NonZero);
             },
         );
+        // `clip-rule` inherits on its own, as `fill-rule` does.
+        let rules = r#"<svg><g clip-rule="evenodd"><path id="c"/><path id="d" clip-rule="nonzero" fill-rule="evenodd"/></g></svg>"#;
+        with_style(rules, "c", |c| assert_eq!(c.map(|c| (c.clip_rule, c.fill_rule)), Some((FillRule::EvenOdd, FillRule::NonZero))));
+        with_style(rules, "d", |d| assert_eq!(d.map(|d| (d.clip_rule, d.fill_rule)), Some((FillRule::NonZero, FillRule::EvenOdd))));
         with_style(r#"<svg fill-rule="evenodd"><g fill-rule="bogus" visibility="bogus"><path id="q"/></g></svg>"#, "q", |q| {
             let q = q.unwrap();
             assert_eq!((q.fill_rule, q.visible), (FillRule::EvenOdd, true), "values that do not parse change nothing");
