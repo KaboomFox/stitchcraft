@@ -5,7 +5,7 @@
 //! shape that paints becomes one design element per paint: its fill (an area), then its stroke (an
 //! outline), each sewn in its paint's colour. Ink/Stitch sews them in that order whatever the shape's
 //! `paint-order` says, and so does StitchCraft: in embroidery the outline covers the edge of the fill.
-//! Ink/Stitch's `stroke_first` setting, which turns them round, is read with the other settings (M8).
+//! Ink/Stitch's own `stroke_first` setting turns them round (`REQ-SVG-010`).
 //!
 //! **Ids.** A design element is `svg:<label>:fill` or `svg:<label>:stroke`. The label is the SVG
 //! element's `id`, or `<tag>@<n>` (the n-th `<tag>` in the file) when it has none. A repeated id gets
@@ -22,6 +22,14 @@
 //! its width more one way than the other is named (`SC-W0802`, `REQ-AUTO-005`). Ink/Stitch's design
 //! settings, in the file's first `<metadata>`, become the design's ([`crate::settings`]).
 //!
+//! **A shape's settings.** Each of Ink/Stitch's settings of a shape, an attribute in its namespace, is a
+//! parameter of every element the shape makes, under its own name and with its own text (`REQ-SVG-009`):
+//! the stitch type, its spacing, underlay, locks and the rest, as Ink/Stitch reads them from the shape's
+//! node (`lib/elements/element.py`). The registry reads them as it reads a VectorCraft effect's, and names a
+//! setting it doesn't declare, which is kept (`SC-W0105`). The reader applies 2 of them itself
+//! ([`crate::inkstitch::READ_ATTRIBUTES`]): `ignore_object` and `stroke_first`. Ink/Stitch reads no setting
+//! from a group but `ignore_object`, and `SC-W0802` names the others a group has, which change nothing.
+//!
 //! **Ink/Stitch's own objects are not the design** ([`crate::inkstitch`]): its command symbols and their
 //! connectors, connector-tool lines and its helper paths are never stitched. Its trim and stop commands
 //! become the shape's `trim_after` and `stop_after`, and what its ignore commands and setting leave out is
@@ -31,8 +39,10 @@
 //!
 //! **Nothing is dropped silently.** `SC-W0802` reports SVG features that StitchCraft does not stitch:
 //! text, images, clones, nested `<svg>`, style sheet rules it does not read, clipping, masks, filters,
-//! markers, gradients, patterns, Ink/Stitch's settings, and a file Ink/Stitch would update or warn about
-//! that is read as it is: one with its settings and no file version, or from a newer Ink/Stitch.
+//! markers, gradients, patterns, a group's Ink/Stitch settings, the settings of Ink/Stitch's early versions
+//! (`embroider_` attributes), a file Ink/Stitch would update or warn about that is read as it is (one with
+//! its settings and no file version, or from a newer Ink/Stitch), and the updates of an older file's
+//! settings that are not applied yet.
 //! `SC-W0804` reports geometry that cannot be used,
 //! and `SC-E0801` a file that cannot be read at all, or whose size cannot be read. What a viewer would not
 //! show either is left out without a word: `display: none`, hidden or fully transparent elements, and the
@@ -44,8 +54,9 @@
 //! commands, one to read it), one per node searched for Ink/Stitch's file version and per step up from an
 //! element of the version's name ([`crate::inkstitch::find`]), one per path segment, one per 8 bytes of a transform, point list or style
 //! sheet, and for each element, one per class, per style sheet rule tested against it and per declaration
-//! it takes ([`crate::sheet`]), and one per 8 bytes of its `style` attribute each time it is read: a
-//! gradient's stops are read again for each shape the gradient paints.
+//! it takes ([`crate::sheet`]), one per 8 bytes of its `style` attribute each time it is read (a
+//! gradient's stops are read again for each shape the gradient paints), and one per Ink/Stitch setting of a
+//! shape or a group.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::str::FromStr;
@@ -61,7 +72,8 @@ use svgtypes::{Color, Length};
 
 use crate::BYTES_PER_UNIT;
 use crate::inkstitch::{
-    self, Does, Helper, IGNORE_OBJECT, INKSCAPE_NS, INKSTITCH_NS, Objects, Place, READ_ATTRIBUTES, STOP_AFTER, TRIM_AFTER, Unapplied, place,
+    self, Does, Helper, IGNORE_OBJECT, INKSCAPE_NS, INKSTITCH_NS, Objects, Place, READ_ATTRIBUTES, STOP_AFTER, STROKE_FIRST, TRIM_AFTER, Unapplied,
+    place,
 };
 use crate::path::{self, Seg, Sub};
 use crate::settings;
@@ -69,7 +81,7 @@ use crate::sheet::{self, Sheet};
 use crate::style::{self, Declared, Paint, Style, painted, without_icc};
 use crate::text::{self, unreadable};
 use crate::transform::{self, Affine, user_units};
-use crate::version::{self, Updated, Version};
+use crate::version::{self, Pending, Updated, Version};
 
 mod root;
 
@@ -211,9 +223,11 @@ struct Reader<'b, 'a, 'input> {
     noted_inkstitch: bool,
     /// Ink/Stitch's design settings.
     settings: settings::Found,
-    /// The Ink/Stitch file version the file is read as, and what its update changed.
+    /// The Ink/Stitch file version the file is read as, what its update changed, and what it would change
+    /// that is not applied yet.
     version: Version,
     updated: Updated,
+    pending: Pending,
     /// Whether a shape with no `inkstitch:` attribute is an automatic element (`--auto`).
     auto: bool,
 }
@@ -239,6 +253,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             settings: settings::Found::default(),
             version: Version::Current,
             updated: Updated::default(),
+            pending: Pending::default(),
             auto: reading.auto,
         }
     }
@@ -314,6 +329,9 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         if let Some(message) = self.version.note(self.updated) {
             self.warnings.insert(0, self.diagnostic(Code::SvgInkStitchUpdated, None, message, None));
         }
+        if let Some((message, hint)) = self.version.unapplied(self.pending) {
+            self.note(None, message, Some(hint));
+        }
         let design = Design::new(self.elements, self.settings.settings)?;
         Ok(Svg { design, warnings: self.warnings })
     }
@@ -369,16 +387,14 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 self.note(None, message, Some(sheet::UNREAD_HINT));
             }
         }
-        // The `embroider_` settings of Ink/Stitch's early versions count too, unread whatever their names.
-        let unread = |a: &roxmltree::Attribute<'_, '_>| inkstitch::is_setting(a) && !(a.namespace().is_some() && READ_ATTRIBUTES.contains(&a.name()));
-        if !self.noted_inkstitch && node.attributes().any(|a| unread(&a)) {
+        // The `embroider_` settings of Ink/Stitch's early versions, which only its update of a file without a
+        // version renames as its own (`crate::version`): neither program reads them as they are.
+        let early = |a: &roxmltree::Attribute<'_, '_>| a.namespace().is_none() && inkstitch::is_setting(a);
+        if !self.noted_inkstitch && node.attributes().any(|a| early(&a)) {
             self.noted_inkstitch = true;
-            self.note(
-                None,
-                "The file has Ink/Stitch embroidery settings, which this version does not read yet: every element uses the default settings."
-                    .to_string(),
-                None,
-            );
+            let message = "The file has settings as early versions of Ink/Stitch wrote them (`embroider_` attributes), which Ink/Stitch reads \
+                           only once its update has renamed them, and which StitchCraft doesn't read: the shapes that have them sew without them.";
+            self.note(None, message.to_string(), Some("Open the file in Ink/Stitch, choose Update, and save it."));
         }
     }
 
@@ -435,10 +451,12 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         match kind {
             Kind::Group => {
                 effects(self, &label);
+                self.group_settings(node, &label)?;
                 Ok(Context::Shown { map, style })
             }
             Kind::Switch => {
                 effects(self, &label);
+                self.group_settings(node, &label)?;
                 Ok(Context::Switch { chosen: self.chosen(node).map(|c| c.id()), map, style })
             }
             Kind::Shape(geometry) => {
@@ -456,6 +474,25 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 Ok(Context::Hidden)
             }
         }
+    }
+
+    /// `SC-W0802` naming the Ink/Stitch settings of the group `node`, `label`, which change nothing:
+    /// Ink/Stitch reads no setting from a group but `ignore_object` (`REQ-SVG-009`). One unit of work for each.
+    fn group_settings(&mut self, node: Node<'a, 'input>, label: &str) -> Result<(), Diagnostic> {
+        let names: Vec<String> = node
+            .attributes()
+            .filter(|a| a.namespace() == Some(INKSTITCH_NS) && a.name() != IGNORE_OBJECT)
+            .map(|a| format!("`{}`", a.name()))
+            .collect();
+        self.charge(names.len() as u64)?;
+        if !names.is_empty() {
+            let message = format!(
+                "The group `{label}` has Ink/Stitch settings, {}, which Ink/Stitch reads only from shapes: they change nothing.",
+                names.join(", ")
+            );
+            self.note(Some(label), message, Some("Set them on the shapes in the group."));
+        }
+        Ok(())
     }
 
     /// Names what an element that is shown declares and a viewer ignores because it does not read: a paint
@@ -554,9 +591,12 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             return Ok(());
         }
         let name = node.attribute((INKSCAPE_NS, "label")).map(str::trim).filter(|s| !s.is_empty()).map(str::to_string);
-        // Ink/Stitch's trim and stop commands turn on the same settings as the shape's own would, for
-        // each of its parts (`lib/elements/element.py`).
-        let mut params = ParamSet::new();
+        // Each of Ink/Stitch's settings of the shape is a parameter of every element it makes, by its own name,
+        // but those the reader applies itself (`REQ-SVG-009`). Its trim and stop commands then turn on the same
+        // settings as the shape's own would, for each of its parts (`lib/elements/element.py`).
+        let settings: Vec<_> = node.attributes().filter(|a| a.namespace() == Some(INKSTITCH_NS) && !READ_ATTRIBUTES.contains(&a.name())).collect();
+        self.charge(settings.len() as u64)?;
+        let mut params: ParamSet = settings.iter().map(|a| (a.name(), a.value())).collect();
         for command in self.objects.on(node) {
             match command.does {
                 Does::Trim => params.set(TRIM_AFTER, "true"),
@@ -575,12 +615,16 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 styled_polyline: geometry == Geometry::Polyline && styled_stroke,
             };
             self.version.update(&shape, &mut params, &mut self.updated);
+            self.version.pending(fill.is_some(), &params, &mut self.pending);
         }
-        if style.stroke_first && fill.is_some() && stroke.is_some() {
+        // Ink/Stitch's own setting sews the stroke first (`REQ-SVG-010`), and SVG's `paint-order` doesn't.
+        let stroke_first = node.attribute((INKSTITCH_NS, STROKE_FIRST)).is_some_and(inkstitch::yes);
+        if style.stroke_first && !stroke_first && fill.is_some() && stroke.is_some() {
             let message = format!("`{label}` paints its stroke first (`paint-order`); its fill is sewn first, as Ink/Stitch sews them.");
             self.note(Some(label), message, None);
         }
-        for (part, colour) in [("fill", fill), ("stroke", stroke)] {
+        let parts = if stroke_first { [("stroke", stroke), ("fill", fill)] } else { [("fill", fill), ("stroke", stroke)] };
+        for (part, colour) in parts {
             let Some(colour) = colour else { continue };
             let shape = if part == "fill" {
                 Shape::Fill { path: path.clone(), rule: style.fill_rule }
