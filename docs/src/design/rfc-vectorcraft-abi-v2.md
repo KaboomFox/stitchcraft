@@ -3,7 +3,7 @@
 | | |
 |---|---|
 | **Audience** | ArtCraft / VectorCraft maintainers |
-| **Status** | Mostly adopted ([status](#status)): 7 proposals in VectorCraft 0.14.0 to 0.17.0. P3 is in review, and the rest of P4 and P6 is open |
+| **Status** | Mostly adopted ([status](#status)): 7 proposals in VectorCraft 0.14.0 to 0.17.0. P3 is in review, and the rest of P4 and P6 is open. P9 is proposed here and not yet raised upstream |
 | **Compatibility** | Additive. Every plug-in written for ABI v1 keeps working, and `vc_abi_version` still returns 1 |
 | **Author's interest** | StitchCraft (machine embroidery), but every proposal serves other plug-ins too |
 
@@ -14,7 +14,8 @@ plug-in that uses none of them installs anywhere. VectorCraft's
 [plug-in documentation](https://github.com/storytold/vectorcraft/blob/main/docs/plugins.md) is the contract.
 This page records what was adopted and when, and what StitchCraft still proposes. Its path keeps the old
 name, which links point at. The [roadmap](../plan/roadmap.md) plans StitchCraft's use of the adopted
-features in M6.8 to M6.12, and proposes the open ones in M9.
+features in M6.8 to M6.12, and proposes the open parts of P4 and P6 in M9. Raising P9 upstream is the
+owner's choice ([fonts](fonts.md#decisions-for-the-owner)).
 
 ## Status
 
@@ -30,6 +31,7 @@ Checked against VectorCraft's `docs/plugins.md` and its history, in the 0.18.0 r
 | [P6](#p6-the-paints-of-a-live-effects-object), context for live effects | Fills and strokes adopted, neighbours open | 0.14.0, a stroke's style 0.15.0 | [#3173](https://github.com/storytold/vectorcraft/pull/3173) |
 | [P7](#p7-preserve-foreign-svg-attributes), foreign SVG attributes | Adopted | 0.17.0 | [#3758](https://github.com/storytold/vectorcraft/pull/3758) |
 | [P8](#p8-effects-and-stroke-style-in-filter-objects), effects and stroke style in filters | Adopted | 0.15.0 | [#3174](https://github.com/storytold/vectorcraft/pull/3174) |
+| [P9](#p9-type-as-glyph-outlines), type as glyph outlines | Proposed by StitchCraft, not yet raised upstream | | |
 
 The plug-in classes this RFC was for, and what VectorCraft serves of them now:
 
@@ -41,6 +43,7 @@ The plug-in classes this RFC was for, and what VectorCraft serves of them now:
 | Heavy but legitimate computation (routing, packing, simulation) | Heavy filters (P4), and an export's own budget. A live effect still has a light run's budget |
 | Plug-ins with document-wide settings (machine profile, plotter pens) | Data kept with the document (P5) |
 | Tools that set up objects for a live effect (a satin column from a line, a test sheet) | Filters read and return effect records and a stroke's style (P8) |
+| Plug-ins that work on text (lettering, engraving, cutting type) | Filters and live effects receive paths alone, and an exporter only a type object's text and its font's name (P9) |
 
 ## Adopted
 
@@ -129,11 +132,27 @@ The live-effect input holds, optionally, the objects in the same group whose nam
 manifest declares (`"contextPrefixes": ["stitch:"]`). Embroidery reads start and end markers from it, so a
 preview starts and ends where `stitch export` does. Other plug-ins use the context for guides and anchors.
 
+### P9: Type as glyph outlines
+
+Proposed by StitchCraft, and not yet raised upstream. A filter is also given each selected type object, and a
+live effect the type object it is applied to, read only. Each comes as its glyph outlines in the path form, subpaths of
+anchors, with its text, its font and its fills and strokes. The outlines are the ones VectorCraft shows on the
+canvas and makes with Type › Create Outlines. An exporter's document has each type object's outlines beside its
+text record. A plug-in's sandbox can't read font files, and a plug-in can't shape or outline type itself.
+Today a user runs Create Outlines first, and the text is then no longer editable. StitchCraft would sew
+lettering typed in VectorCraft from the outlines, in M14 and M15 ([fonts](fonts.md)).
+
+Nothing in VectorCraft's plans covers it, at `3f8d7a0` (2026-10-25). Its `docs/plugins.md` gives a filter
+the selected paths and compound paths alone, and a live effect one object's geometry. An exporter is given the
+document's JSON, where a type object is its text and a font's name. The plug-ins still missing in G17 of its
+`docs/gaps.md` are tool and panel plug-ins, importers and a plug-in directory. Its roadmaps leave type out.
+
 ## Security and determinism
 
 The proposals leave the sandbox as it is: plug-ins still cannot touch files, the network, clocks or
 randomness. Exporters return bytes, which the host writes. Overlays are plain data, and heavy budgets are
-opt-in and still bounded. Results are still deterministic functions of their inputs, which a host may
+opt-in and still bounded. The outlines of type (P9) are data the host gives, and the budget charges for
+their points as for any input. Results are still deterministic functions of their inputs, which a host may
 cache.
 
 ## Implementation sketch and tests
@@ -143,6 +162,7 @@ cache.
 | P3 | `crates/plugins/src/effect.rs`, canvas drawing in `crates/ui-egui/src/canvas.rs` | a fuzz test of overlay decoding, a cache key test |
 | P4, live effects | `crates/plugins/src/{effect,runtime}.rs`, the install flow | fuel accounting tests, a drawing that waits for a heavy result |
 | P6, objects beside | `crates/plugins/src/objects.rs` | ABI tests |
+| P9 | `crates/plugins/src/objects.rs`, with the text outliner of `crates/effects/src/live.rs` | ABI tests of type sent to filters, live effects and exporters |
 
 We would contribute implementations and tests following VectorCraft's `AGENTS.md`, one proposal per PR.
 StitchCraft's compatibility gate already runs a third-party contract test against every VectorCraft
