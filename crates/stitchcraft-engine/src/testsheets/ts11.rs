@@ -206,11 +206,12 @@ mod tests {
     #[test]
     fn ts11b_sews_each_sample_where_its_drawing_puts_it() {
         // The sheet is planned with its middle on the hoop's: its drawing spans x 0 to 125.02 (the stars' points)
-        // and y 2 to 118. Each sample's needle points span its shape to within half a millimetre: a spiral turns
-        // in from the outline as it goes round, and the smoothed leaf, left out here, is rounded off at its tips.
+        // and y 2 to 168 (the circular disc). Each sample's needle points span its shape to within half a
+        // millimetre: a spiral turns in from the outline as it goes round, and the smoothed leaf, left out here,
+        // is rounded off at its tips.
         let plan = crate::testsheets::find("TS-11B").unwrap().plan().unwrap();
         let mid = plan.bounds().unwrap().center();
-        let (dx, dy) = (mid.x() - 125.021130326 / 2.0, mid.y() - 60.0);
+        let (dx, dy) = (mid.x() - 125.021130326 / 2.0, mid.y() - 85.0);
         let sewn = |name: &str| -> Vec<(f64, f64)> {
             let element = plan.elements.iter().position(|e| e.as_str() == format!("ts11b:{name}")).unwrap();
             let mine = |s: &&stitchcraft_plan::Stitch| {
@@ -230,15 +231,21 @@ mod tests {
             ("bevelled", bounds(star((right, centre)))),
             ("parting", [left - 20.0, bottom - 8.0, left + 20.0, bottom + 8.0]),
             ("alternating", [middle - 18.0, bottom - 12.0, middle + 18.0, bottom + 12.0]),
+            ("circular", [left - DISC, CIRCLES - DISC, left + DISC, CIRCLES + DISC]),
+            ("circular-star", bounds(star((middle, CIRCLES)))),
+            ("circular-fading", [right - 18.0, CIRCLES - 12.0, right + 18.0, CIRCLES + 12.0]),
         ];
         for (name, drawn) in expected {
             let found = bounds(sewn(name));
             assert!(found.iter().zip(drawn).all(|(f, d)| (f - d).abs() < 0.5), "{name}: sewn {found:?}, drawn {drawn:?}");
         }
         // The hole of inner to outer, 12 mm across, lies 4 mm right of the disc's middle and 3 mm above it: no
-        // needle point inside it, and its own ring round it.
-        let (hx, hy) = (left + 4.0, top - 3.0);
-        let nearest = sewn("inner-to-outer").iter().map(|&(x, y)| ((x - hx) * (x - hx) + (y - hy) * (y - hy)).sqrt()).fold(f64::INFINITY, f64::min);
-        assert!((nearest - 6.0).abs() < 0.1, "{nearest}");
+        // needle point inside it, and its own ring round it. The circular disc's hole lies as far from its
+        // middle, and the spiral's pieces end on it.
+        let (hole, (hx, hy)) = HOLE;
+        for (name, (x0, y0)) in [("inner-to-outer", (left + hx, top + hy)), ("circular", (left + hx, CIRCLES + hy))] {
+            let nearest = sewn(name).iter().map(|&(x, y)| ((x - x0) * (x - x0) + (y - y0) * (y - y0)).sqrt()).fold(f64::INFINITY, f64::min);
+            assert!((nearest - hole).abs() < 0.1, "{name}: {nearest}");
+        }
     }
 }
