@@ -124,10 +124,9 @@ pub enum Spec {
 pub enum Subject {
     /// An SVG file, relative to `conformance/`, that both programs read (`design`).
     File(String),
-    /// A test sheet drawn as a design (`sheet`): StitchCraft sews the sheet, and Ink/Stitch the elements
-    /// StitchCraft sews it with, automatic digitizing's for its automatic shapes, written with their
-    /// parameters (`stitchcraft_testkit::inkstitch`), since StitchCraft's SVG reader reads no parameters
-    /// until M8.
+    /// A test sheet drawn as a design (`sheet`): both programs sew the elements StitchCraft sews it with,
+    /// automatic digitizing's for its automatic shapes, written with their parameters as an SVG file
+    /// (`stitchcraft_testkit::inkstitch`).
     Sheet(String),
     /// Letters drawn for the case (`[letters]`), for its centre lines.
     Letters(Letters),

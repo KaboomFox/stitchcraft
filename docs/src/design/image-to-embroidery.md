@@ -73,8 +73,7 @@ An automatic element is a shape whose stitches StitchCraft chooses. The readers 
 
 An element with settings is not digitized automatically, whether or not the switch is given: it sews as
 its settings say, as far as its reader reads them. So a picture can be digitized automatically and one of
-its shapes then set by hand. (The SVG reader reads no `inkstitch:` settings but `ignore_object` until M8,
-and says so with `SC-W0802`, so such a shape sews with the defaults until then.) A shape's fill gives its
+its shapes then set by hand. A shape's fill gives its
 area and its stroke gives its line, each with its thread, width, join and cap, as for any element. A trim
 or a stop that an Ink/Stitch command asks for is not a setting of the stitches, and an automatic element
 keeps it. An element sewn as several elements keeps it for the last of them.
