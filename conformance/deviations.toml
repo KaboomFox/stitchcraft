@@ -548,3 +548,31 @@ area = "svg"
 summary = "An Inkscape power clip is read from the clip path the file holds, as a viewer draws it. Ink/Stitch reads the path effect's settings instead: hidden or flattened, it applies no clip, and inverse, it takes the first path of class powerclip in the clip path, by the even-odd rule."
 reason = "The file holds what Inkscape draws of the effect, which a viewer shows, and StitchCraft reads no path effects. Ink/Stitch's reading of the effect was read in lib/svg/clip.py (_get_path_effects) at d59c9ab."
 requirements = ["REQ-SVG-011"]
+
+[[deviation]]
+id = "DEV-SVG-021"
+area = "svg"
+summary = "What a clone shows takes its style as a viewer gives it: it inherits the use's presentation attributes and style, which the source's own declarations override, a style sheet's rules select it by its own id, and the use's clip-path attribute cuts it. Ink/Stitch copies the source beside the use with the use's style attribute under the source's own, so it drops the use's presentation attributes, lets the use's style override the source's presentation attributes, and loses the rules that select the source by its id. It applies a clone's clip path only when the use's style attribute sets it."
+reason = "A clone sews what the drawing shows (REQ-SVG-012). Ink/Stitch at d59c9ab, run as a black box (ADR-0001, decision 6), sewed in black a rect whose clone sets its fill as an attribute and one a rule colours by its id, sewed in the clone's style a rect whose own fill attribute is red, and sewed whole a rect that its clone clips with the clip-path attribute. It copies a clone's source in lib/elements/clone.py (resolve_clone), and inkex 1.4.1 renames the copy's id."
+requirements = ["REQ-SVG-012"]
+
+[[deviation]]
+id = "DEV-SVG-022"
+area = "svg"
+summary = "A symbol is drawn in the viewport its clone gives it, as a viewer draws it: its viewBox is fitted by its preserveAspectRatio to the use's width and height, the symbol's own, or else the page's. Ink/Stitch sews a symbol's content in its own units at the use's x and y, so a symbol whose viewBox is 0 0 10 10, shown 40 mm wide, sews 10 mm wide there and 40 mm here. Neither cuts what lies outside that viewport, as Inkscape draws it, where a browser cuts it off."
+reason = "The design sews at the size the drawing shows (REQ-SVG-012). Ink/Stitch at d59c9ab, run as a black box (ADR-0001, decision 6), sewed such a symbol 10 mm wide; it gives a symbol's children the use's transform alone (lib/elements/clone.py: resolve_clone). Inkscape 1.2.2 draws a symbol's content outside its viewport (gitlab.com/inkscape/inbox/-/issues/11611)."
+requirements = ["REQ-SVG-012"]
+
+[[deviation]]
+id = "DEV-SVG-023"
+area = "svg"
+summary = "A clone that shows itself, directly or through other clones, is left out with SC-W0804, as a viewer leaves it out, and the rest of the design is sewn. Ink/Stitch fails on such a file and writes no machine file. It also fails on a use's x or y written with a unit, which StitchCraft reads as a viewer reads it. A use of a command's symbol whose id carries a copy's -n is the command alone here, where Ink/Stitch applies the command and also sews the symbol's drawing as a clone, and a link with spaces round it is read without them, where Ink/Stitch finds nothing."
+reason = "A file a viewer draws is sewn (REQ-SVG-012), and a command's symbol is never part of the design (REQ-SVG-003). Ink/Stitch at d59c9ab, run as a black box (ADR-0001, decision 6), failed with a RecursionError on a use of itself, on a use in the group it shows and on 2 uses of each other, and with a ValueError on x=\"10mm\", and sewed nothing of a clone whose link has a space before its #. It tells a command's symbol from a clone by the whole id after xlink:href (lib/commands.py: is_command_symbol) and the command by the id before a hyphen (BaseCommand.parse_symbol), so it applied a starting_point-2 command and sewed its symbol's circle."
+requirements = ["REQ-SVG-012", "REQ-SVG-003"]
+
+[[deviation]]
+id = "DEV-SVG-024"
+area = "svg"
+summary = "Each clone applies its own settings and copies its source's commands wherever it is drawn. Ink/Stitch resolves the clones in a clone's source first, each in its own place, and then applies only their angle settings: there a clone sews though its clone setting is off, its trim, stop and shortest stitch and jump don't apply, and the commands it copies stay where it moves them, not where the clone round it moves their shapes. It also copies a command whose connector is a child of the root, not in a group, to its old place. And it gives everything a clone sews the clone's shortest stitch and jump, the design's when the clone sets none, where StitchCraft keeps the source's."
+reason = "A clone sews as its source sews, with the settings it sets itself, and a clone of a clone as a clone of that, moved again (REQ-SVG-012). Ink/Stitch at d59c9ab, run as a black box (ADR-0001, decision 6), sewed an inner clone whose clone setting is off inside another, started a clone of a clone at the start command its inner clone moved, left a command written at the root where its source is, and jumped after a clone of a line whose shortest jump of 20 mm sews the same move on. It resolves clones in lib/elements/clone.py and sets every stitch group of a clone to the clone's shortest stitch and jump in lib/elements/element.py (embroider), where it keeps their trims and stops."
+requirements = ["REQ-SVG-012"]

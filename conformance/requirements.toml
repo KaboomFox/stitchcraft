@@ -384,6 +384,24 @@ rationale = "A design clipped in Inkscape, and the glyphs of 5 of Ink/Stitch's f
 milestone = "M8"
 status = "active"
 
+[[req]]
+id = "REQ-SVG-012"
+area = "svg"
+level = "L2"
+statement = "A clone, a use element that names an element other than a command's symbol, sews what it shows in its place in the document's order, as Ink/Stitch sews a clone. What it shows is drawn as a viewer draws it: under the use's transform, then its x and y, then the source's own transform, with the style it inherits from the use, which the source's own declarations override, and cut to the use's clip path. A symbol's viewBox is fitted by its preserveAspectRatio to the use's width and height, the symbol's own, or else the page's, and nothing is cut to that viewport, as Inkscape draws it. Clones in what it shows are drawn the same way. The commands tied to its source, and those in its source whose connector is in it too, apply to what it sews, at their places moved with it. The clone's own trim_after and stop_after, and the trim and stop commands tied to it, trim or stop after the last of what it sews, and its min_stitch_length_mm and min_jump_stitch_length_mm apply to all of it. Its other Ink/Stitch settings change nothing, which SC-W0802 says. A clone that shows itself, directly or through other clones, is left out, with SC-W0804, and so is one inside more than 16 others, with SC-W0802. A link to nothing shows nothing."
+rationale = "Inkscape repeats a motif as clones and symbols, and Ink/Stitch sews them where they are, so a design made of them sews only when they are read. A viewer and Ink/Stitch draw a clone otherwise in places, which the ledger lists (DEV-SVG-021 to DEV-SVG-024). Ink/Stitch's clones were read in lib/elements/clone.py at d59c9ab and sewn as a black box."
+milestone = "M8"
+status = "active"
+
+[[req]]
+id = "REQ-SVG-013"
+area = "svg"
+level = "L2"
+statement = "A clone turns the angle of each fill it shows with it, as Ink/Stitch turns it: the direction of the fill's rows at its angle, 0 when it sets none, is taken through the map from where its source is drawn to where the clone draws it, and from where the clone's parent is for a symbol's content, and the angle is rounded to 6 decimal places. Clones inside clones turn it each in its own place, the innermost first. A clone's own angle gives every fill it shows that angle instead, and flip_angle reverses it. A clone whose clone setting is any text but blank or one of Ink/Stitch's words for yes sews nothing, which SC-I0805 lists. An angle of a clone that doesn't read is named with SC-W0802, and the fills' angles are turned. A shape digitized automatically keeps the angle digitizing chooses, and SC-W0802 names a clone's angle or flip_angle there."
+rationale = "A fill's angle is fixed to the page in Ink/Stitch, not to its shape, so a clone that turns a fill without its angle would sew its rows at another angle to the shape. Ink/Stitch's clone settings, clone, angle and flip_angle, are the interoperability contract (conformance/inkstitch-params.toml)."
+milestone = "M8"
+status = "active"
+
 # ── Generators: shared ─────────────────────────────────────────────────────────────────────────────
 
 [[req]]
