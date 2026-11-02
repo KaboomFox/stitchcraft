@@ -97,9 +97,10 @@ impl Change {
         changed
     }
 
-    /// `element`, changed.
+    /// `element`, changed: its shape, and its start, end and target positions (`REQ-GEN-001`) with it.
     fn element(self, element: &Element) -> Element {
         let mut changed = element.clone();
+        changed.hints = element.hints.map(|q| Ok::<Point, ()>(self.point(q))).unwrap();
         let fill = matches!(element.shape, Shape::Fill { .. });
         let satin = element.params.iter().any(|(key, value)| key == SATIN_COLUMN && value == "true");
         let mut path = self.path(element.shape.path(), fill);
@@ -339,6 +340,11 @@ mod tests {
         assert_eq!(element.params.iter().find(|(k, _)| *k == "angle").map(|(_, v)| v), Some("-30"));
         assert_eq!(Change::HalfTurn.point(p(1.0, 2.0)), p(-1.0, -2.0));
         assert_eq!(Change::Split.point(p(1.0, 2.0)), p(1.0, 2.0));
+        // Its start, end and target positions go with it.
+        let hints = stitchcraft_engine::design::Hints { start: Some(p(1.0, 2.0)), end: None, target: Some(p(3.0, 4.0)) };
+        let hinted = Element { hints, ..l_shape().elements()[0].clone() };
+        let mirrored = stitchcraft_engine::design::Hints { start: Some(p(-1.0, 2.0)), end: None, target: Some(p(-3.0, 4.0)) };
+        assert_eq!(Change::MirrorX.element(&hinted).hints, mirrored);
     }
 
     #[test]
