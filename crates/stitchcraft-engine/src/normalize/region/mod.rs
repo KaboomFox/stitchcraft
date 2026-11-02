@@ -150,7 +150,7 @@ pub fn build(path: &Path, rule: FillRule, meter: &mut Meter) -> Result<Built, Ex
 /// The region [`build`] builds of `path` under `rule`, cut to `clips`: the part of it inside every one
 /// (`REQ-GEN-005`). What is said of it is said of the region once cut, its parts, size and pieces, and a
 /// fill its clips leave nothing of says so (`SC-W0013`) and sews nothing. The same work as [`build`], and the
-/// work of building each clip and of each cut ([`ops::intersection`]).
+/// work of building each clip and of each cut (`ops::intersection`).
 pub fn build_clipped(path: &Path, rule: FillRule, clips: &[Clip], meter: &mut Meter) -> Result<Built, Exhausted> {
     let mut area = area(&rings(path, meter)?, |w| fills(rule, w), meter)?;
     let Ok(parts) = &area.parts else { return Ok(built(area, rule)) };
