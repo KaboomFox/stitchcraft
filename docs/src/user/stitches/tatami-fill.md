@@ -9,8 +9,8 @@ area without settings sews as one, unless it is [digitized automatically](automa
 
 The rows go round holes, and each part of the area is filled by itself. Between rows, the needle moves
 inside the fill, under rows sewn after it, which hide those stitches (`underpath`). StitchCraft reads a
-fill's settings from an SVG file from milestone M8 ([setting parameters](./#setting-parameters)), and the
-VectorCraft plug-in sets them today.
+fill's settings from an SVG file's Ink/Stitch attributes, and the VectorCraft plug-in sets them
+([setting parameters](./#setting-parameters)).
 
 The pictures are drawn from `docs/fixtures/fill.svg`, a green patch 32 mm by 20 mm with rounded corners
 and a round hole. As it sews by default:

@@ -11,12 +11,9 @@
 
 mod common;
 
-use std::collections::BTreeMap;
-
-use common::{svg, warnings};
+use common::{svg, usual_stitch, warnings};
 use stitchcraft_core::{Budget, Code};
 use stitchcraft_engine::design::Reading;
-use stitchcraft_plan::{Role, Stitch, StitchKind, profiles};
 use stitchcraft_svg::{Svg, read_with};
 
 /// A drawing in millimetres with the namespaces Ink/Stitch's files declare, `metadata` and then `body`.
@@ -35,20 +32,6 @@ fn version(text: &str) -> String {
 /// Each element's id and the value it gives `key`.
 fn set<'s>(svg: &'s Svg, key: &str) -> Vec<(&'s str, Option<&'s str>)> {
     svg.design.elements().iter().map(|e| (e.id.as_str(), e.params.get(key))).collect()
-}
-
-/// The length most of the top stitches of `svg`'s design have, in millimetres to the micrometre, planned on
-/// the reference machine: a fill's longest stitch, along its rows.
-fn usual_stitch(svg: &Svg) -> String {
-    let outcome = stitchcraft_engine::plan(&svg.design, profiles::REFERENCE, &Budget::DEFAULT);
-    let plan = outcome.plan.unwrap();
-    let stitches: Vec<&Stitch> = plan.blocks.iter().flat_map(|b| &b.stitches).collect();
-    let top = |s: &Stitch| s.kind == StitchKind::Normal && s.origin.role == Role::Top;
-    let mut counts = BTreeMap::new();
-    for w in stitches.windows(2).filter(|w| top(w[0]) && top(w[1])) {
-        *counts.entry(format!("{:.3}", w[0].at.distance(w[1].at))).or_insert(0) += 1;
-    }
-    counts.into_iter().max_by_key(|(_, n)| *n).map(|(length, _)| length).unwrap()
 }
 
 const PATCH: &str = r#"<rect id="patch" x="10" y="10" width="50" height="30" fill="red"/>"#;
@@ -87,7 +70,7 @@ fn req_svg_007_a_shape_that_sets_its_own_longest_stitch_keeps_it() {
         assert_eq!(
             set(&old, "max_stitch_length_mm"),
             [
-                ("svg:own:fill", None),
+                ("svg:own:fill", Some("2.5")),
                 ("svg:zero:fill", Some("3")),
                 ("svg:word:fill", Some("3")),
                 ("svg:empty:fill", Some("3")),
@@ -171,11 +154,10 @@ fn req_svg_007_a_file_without_a_version_or_from_a_newer_ink_stitch_is_read_as_it
                        Ink/Stitch asks first: it updates an old design, saved before Ink/Stitch numbered its files, to sew as it did, and \
                        leaves objects pasted into a new file as they are.";
     let set_here = r#"<rect id="set" x="0" y="50" width="10" height="10" fill="red" inkstitch:fill_underlay="true"/>"#;
-    let settings_note = "warning SC-W0802: The file has Ink/Stitch embroidery settings, which this version does not read yet: every element uses the default settings.";
     for metadata in [String::new(), version("3.0"), version("0"), version("")] {
         let read = svg(drawing(&metadata, &format!("{PATCH}{set_here}")));
         assert_eq!(set(&read, "max_stitch_length_mm"), [("svg:patch:fill", None), ("svg:set:fill", None)], "{metadata}");
-        assert_eq!(warnings(&read), [unversioned, settings_note], "{metadata}");
+        assert_eq!(warnings(&read), [unversioned], "{metadata}");
         assert_eq!(read.warnings[0].fix.as_ref().unwrap().describe(), "If it is an old design, open it in Ink/Stitch, choose Update, and save it.");
     }
     // A newer Ink/Stitch's file is read as version 4.
@@ -202,4 +184,44 @@ fn diag_sc_i0818_a_file_an_older_ink_stitch_saved_is_read_as_ink_stitch_updates_
     assert_eq!((note.code, note.element.as_ref(), note.fix.as_ref()), (Code::SvgInkStitchUpdated, None, None));
     // Nothing to update, nothing said: a version 3 file of strokes only.
     assert!(svg(drawing(&version("3"), r#"<path d="M 0 0 L 9 0" stroke="red" fill="none"/>"#)).warnings.is_empty());
+}
+
+#[test]
+fn req_svg_009_the_updates_of_an_older_file_s_settings_that_are_not_applied_yet_are_named() {
+    // Ink/Stitch's update of a file of version 1 or 2 halves a zigzag stroke's pull compensation, unless 0,
+    // into `stroke_pull_compensation_mm`, and makes a satin column start and end where it is drawn. Its
+    // update of a file of version 1 to 3 makes a fill with `auto_fill` off a legacy fill; a blank setting is
+    // none. StitchCraft reads these shapes' settings as the file has them until it applies those updates, and
+    // says so, counting the shapes.
+    let body = r#"<path id="zigzag" d="M 10 50 L 60 50" fill="none" stroke="blue" inkstitch:stroke_method="zigzag_stitch"
+              inkstitch:pull_compensation_mm="1"/>
+        <path id="pulled" d="M 10 55 L 60 55" fill="none" stroke="blue" inkstitch:stroke_method=" zigzag_stitch "
+              inkstitch:pull_compensation_mm="-0.5"/>
+        <path id="unpulled" d="M 10 60 L 60 60" fill="none" stroke="blue" inkstitch:stroke_method="zigzag_stitch"
+              inkstitch:pull_compensation_mm="0"/>
+        <path id="satin" d="M 10 70 L 60 70 M 10 74 L 60 74" fill="none" stroke="blue" inkstitch:satin_column="yes"/>
+        <path id="twice" d="M 10 80 L 60 80 M 10 84 L 60 84" fill="none" stroke="blue" inkstitch:satin_column="True"/>
+        <rect id="legacy" x="70" y="10" width="20" height="20" fill="red" inkstitch:auto_fill="false" inkstitch:max_stitch_length_mm="3"/>
+        <rect id="blank" x="70" y="40" width="20" height="20" fill="red" inkstitch:auto_fill=" " inkstitch:max_stitch_length_mm="3"/>"#;
+    let unapplied = |v: &str| {
+        let read = svg(drawing(&version(v), body));
+        let notes: Vec<_> = read.warnings.iter().filter(|w| w.message.contains("doesn't apply")).cloned().collect();
+        assert!(notes.iter().all(|w| w.code == Code::SvgFeatureIgnored && w.element.is_none()), "{notes:?}");
+        notes
+    };
+    let [two] = &unapplied("2")[..] else { panic!() };
+    assert_eq!(
+        two.message,
+        "The file was saved by an older Ink/Stitch (file version 2). Ink/Stitch's update also changes the pull compensation of 2 zigzag \
+         strokes, which it halves into `stroke_pull_compensation_mm`, and 2 satin columns, which it makes start and end where they are \
+         drawn, and 1 fill with `auto_fill` off, which it makes a legacy fill, sewn without underlay. StitchCraft doesn't apply these \
+         changes yet, so those shapes sew as the file sets them."
+    );
+    assert_eq!(
+        two.fix.as_ref().unwrap().describe(),
+        "To sew them as Ink/Stitch does, run any Ink/Stitch extension on the file and save it: that updates it."
+    );
+    let [three] = &unapplied("3")[..] else { panic!() };
+    assert!(three.message.contains("(file version 3). Ink/Stitch's update also changes 1 fill with `auto_fill` off, which it makes a legacy"));
+    assert!(unapplied("4").is_empty());
 }

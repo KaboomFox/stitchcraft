@@ -19,7 +19,7 @@ Turn an element's `satin_column` on, and draw the band in one of 2 ways:
 
 `satin_method` chooses how the band is sewn. A satin column is the default, and each other method has a
 page of its own among the [stitch types](./). The VectorCraft plug-in sets these settings, and
-StitchCraft reads them from an SVG file from milestone M8 ([setting parameters](./#setting-parameters)).
+StitchCraft reads them from an SVG file's Ink/Stitch attributes ([setting parameters](./#setting-parameters)).
 
 The pictures are drawn from `docs/fixtures/zigzag.svg`, a wave drawn 3 mm wide as one path, and
 `docs/fixtures/s-stitch.svg`, a curved band 6 mm wide between 2 rails.

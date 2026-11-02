@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Shapes with Ink/Stitch settings of each family, none at its default: a red rectangle filled at 30° in rows 0.3 mm apart with stitches 3 mm long and no underlay, a green disc filled as one spiral, a blue wave sewn as a triple run of 1.5 mm stitches, an ultramarine satin column 0.5 mm a stitch over a centre walk, and a red square whose black outline sews first. Written for StitchCraft's Ink/Stitch differential cases (conformance L3). -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkstitch="http://inkstitch.org/namespace"
+     width="100mm" height="100mm" viewBox="0 0 100 100">
+  <metadata><inkstitch:inkstitch_svg_version>4</inkstitch:inkstitch_svg_version></metadata>
+  <rect id="tatami" x="10" y="10" width="40" height="25" fill="#ed171f"
+        inkstitch:fill_method="tatami_fill" inkstitch:angle="30" inkstitch:row_spacing_mm="0.3"
+        inkstitch:max_stitch_length_mm="3" inkstitch:fill_underlay="false"/>
+  <circle id="spiral" cx="75" cy="22" r="13" fill="#2f7e20"
+          inkstitch:fill_method="contour_fill" inkstitch:contour_strategy="1"/>
+  <path id="wave" fill="none" stroke="#0b3d91" stroke-width="0.2"
+        d="M 10,55 C 20,40 30,40 40,55 C 50,70 60,70 70,55"
+        inkstitch:running_stitch_length_mm="1.5" inkstitch:bean_stitch_repeats="1"/>
+  <path id="satin" fill="none" stroke="#0b3d91" stroke-width="0.2"
+        d="M 15,75 C 30,68 45,68 60,75 M 15,81 C 30,74 45,74 60,81 M 35,69 L 35,79"
+        inkstitch:satin_column="true" inkstitch:zigzag_spacing_mm="0.5" inkstitch:center_walk_underlay="true"/>
+  <rect id="outlined" x="70" y="62" width="20" height="20" fill="#ed171f" stroke="#000000" stroke-width="0.2"
+        inkstitch:stroke_first="true"/>
+</svg>
