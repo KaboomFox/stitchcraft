@@ -11,7 +11,8 @@ changes follow playbooks, and every behaviour has a requirement and a test.
 3. Set up: install Rust (the toolchain in `rust-toolchain.toml` installs itself), then
    `rustup target add wasm32-unknown-unknown`. The `wasm-goldens` gate needs `wasm32-wasip1` too, and
    [wasmtime](https://wasmtime.dev/), and `cargo xtask ci` skips it without them.
-4. Before every push: `cargo xtask ci`.
+4. Before every push, the quick checks `AGENTS.md` names. The pull request's CI runs every gate
+   (`cargo xtask ci`).
 
 ## Playbooks
 
