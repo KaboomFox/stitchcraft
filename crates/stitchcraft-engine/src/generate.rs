@@ -227,7 +227,7 @@ pub(crate) fn trim_or_stop_left_out(element: &Element) -> Option<Diagnostic> {
 /// Whether `element` sets a stop after it, read alone, whatever stitch type uses it: the sewing order moves
 /// nothing across one (`crate::auto`). A stop that can't be read stops nothing, and that is said when the
 /// element's settings are read for sewing.
-pub(crate) fn stops_after(element: &Element) -> bool {
+pub fn stops_after(element: &Element) -> bool {
     setting::<Toggle>(&element.params, CommonParams::SPECS, STOP_AFTER, &mut Vec::new()).unwrap_or(false)
 }
 

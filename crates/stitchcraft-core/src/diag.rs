@@ -671,6 +671,15 @@ registry! {
     /// names in Ink/Stitch.
     SvgInkStitchUpdated = "SC-I0818", Info, "Ink/Stitch file from an older version, read as Ink/Stitch updates it";
 
+    /// The file gives the design 2 origins, or 2 stop positions where the design has a stop: Ink/Stitch's
+    /// `origin` or `stop_position` command more than once, or more than one object named `stitch:origin` or
+    /// `stitch:stop-position` in a VectorCraft document. Which one counts isn't known, so no machine file is
+    /// written, as Ink/Stitch writes none (`REQ-ASM-005`). 2 stop positions in a design without a stop
+    /// change nothing.
+    ///
+    /// The message names the command or marker and counts them. Delete all but one.
+    OriginOrStopPositionTwice = "SC-E0819", Error, "More than one origin or stop position";
+
     /// An element's geometry cannot be used: its path data or its list of points has an error (the path is
     /// stitched up to the error, as SVG viewers draw it), its transform is not valid (it is skipped with
     /// everything inside it), it draws nothing, or it lies more than 10 metres from the document's origin,
