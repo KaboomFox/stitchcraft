@@ -87,6 +87,11 @@ enum Drawn {
     /// `random_seed` wanders as its id draws. A host's objects have ids of their own, so the sheet drawn into
     /// a document would sew otherwise, and only `stitch testsheet` writes it.
     DesignedById(fn() -> Result<Drawing, SheetError>, &'static [Code]),
+    /// As [`Drawn::Designed`], but the design holds what an Ink/Stitch file gives its elements, which a host
+    /// would draw as objects of their own: start and end positions and clips
+    /// ([`TestSheet::uses_file_features`]), as TS-16's. Only `stitch testsheet` and the differential's SVG file
+    /// draw it.
+    FromFile(fn() -> Result<Drawing, SheetError>, &'static [Code]),
 }
 
 impl TestSheet {
@@ -94,26 +99,28 @@ impl TestSheet {
     pub fn plan(&self) -> Result<StitchPlan, SheetError> {
         match self.drawn {
             Drawn::Sketched(build) => build(),
-            Drawn::Designed(drawing, said) | Drawn::DesignedById(drawing, said) => drawing()?.plan_saying(said),
+            Drawn::Designed(drawing, said) | Drawn::DesignedById(drawing, said) | Drawn::FromFile(drawing, said) => drawing()?.plan_saying(said),
         }
     }
 
     /// Whether the sheet is drawn as a design, which [`TestSheet::design`] gives, rather than stitch by stitch.
     pub const fn designed(&self) -> bool {
-        matches!(self.drawn, Drawn::Designed(..) | Drawn::DesignedById(..))
+        matches!(self.drawn, Drawn::Designed(..) | Drawn::DesignedById(..) | Drawn::FromFile(..))
     }
 
     /// Whether a host can draw the sheet into a document that sews as the sheet does: a design whose
-    /// elements' ids choose none of its stitches (`REQ-VC-015`), and which uses none of an Ink/Stitch file's
-    /// features ([`TestSheet::uses_file_features`]).
-    pub fn drawable(&self) -> bool {
-        matches!(self.drawn, Drawn::Designed(..)) && !self.uses_file_features()
+    /// elements' ids choose none of its stitches (`REQ-VC-015`), and which holds nothing only an Ink/Stitch
+    /// file gives, as a sheet drawn from a file does. It is known from how the sheet is drawn, without drawing
+    /// it, so a host can list the sheets it draws within the little work a plug-in may do.
+    pub const fn drawable(&self) -> bool {
+        matches!(self.drawn, Drawn::Designed(..))
     }
 
     /// Whether the sheet's design gives elements what an Ink/Stitch file gives them, as TS-16's does: start or
     /// end positions or target points ([`Element::hints`]), which a host would draw as markers grouped with
     /// their shapes, or clips ([`Element::clips`]), which it would draw as clip groups. VectorCraft's Test
-    /// Sheet filter draws neither.
+    /// Sheet filter draws neither. The sheets that do are those drawn from a file, which
+    /// [`TestSheet::drawable`] leaves out, as the tests check.
     ///
     /// [`Element::hints`]: crate::design::Element::hints
     /// [`Element::clips`]: crate::design::Element::clips
@@ -135,7 +142,7 @@ impl TestSheet {
     pub fn design(&self) -> Option<Result<Design, SheetError>> {
         match self.drawn {
             Drawn::Sketched(_) => None,
-            Drawn::Designed(drawing, _) | Drawn::DesignedById(drawing, _) => Some(drawing().and_then(Drawing::design)),
+            Drawn::Designed(drawing, _) | Drawn::DesignedById(drawing, _) | Drawn::FromFile(drawing, _) => Some(drawing().and_then(Drawing::design)),
         }
     }
 }
@@ -407,7 +414,7 @@ pub static SHEETS: &[TestSheet] = &[
             "Any difference between the 2 sew-outs, and where.",
         ],
         profile: REFERENCE,
-        drawn: Drawn::Designed(ts16::drawing, &[]),
+        drawn: Drawn::FromFile(ts16::drawing, &[]),
     },
 ];
 
@@ -447,9 +454,12 @@ mod tests {
         // The TS-13 sheets' shapes are digitized automatically, and no other sheet's are.
         let digitized: Vec<&str> = SHEETS.iter().filter(|sheet| sheet.digitized()).map(|sheet| sheet.id).collect();
         assert_eq!(digitized, ["TS-13A", "TS-13B", "TS-13C", "TS-13D"]);
-        // TS-16 alone places and clips its elements, as an Ink/Stitch file does.
+        // TS-16 alone places and clips its elements, as an Ink/Stitch file does, and it alone is drawn from a
+        // file.
         let filed: Vec<&str> = SHEETS.iter().filter(|sheet| sheet.uses_file_features()).map(|sheet| sheet.id).collect();
         assert_eq!(filed, ["TS-16"]);
+        let from_file: Vec<&str> = SHEETS.iter().filter(|sheet| matches!(sheet.drawn, Drawn::FromFile(..))).map(|sheet| sheet.id).collect();
+        assert_eq!(from_file, filed);
     }
 
     #[test]
