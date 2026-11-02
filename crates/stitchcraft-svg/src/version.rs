@@ -36,7 +36,7 @@
 //! the shapes' settings (M8.1): in a file of version 1 or 2, a zigzag stroke's pull compensation is halved
 //! into `stroke_pull_compensation_mm`, and a satin column starts and ends where it is drawn; in a file of
 //! version 1 to 3, a fill with `auto_fill` off is Ink/Stitch's legacy fill, which StitchCraft sews without
-//! underlay. M8.3 applies them; until then `SC-W0802` counts the shapes they would change ([`Pending`]),
+//! underlay. M8.3 applies them; until then `SC-W0802` counts the shapes they would change (`Pending`),
 //! which sew as the file sets them. The others change nothing StitchCraft sews: `fill_method` `auto_fill`,
 //! which the update renames `tatami_fill`, is not a fill method StitchCraft knows, and a fill set to it sews
 //! the default, a tatami fill, and says so (`SC-W0102`). The compatibility contract lists every update, with
@@ -259,6 +259,19 @@ mod tests {
             version.pending(true, &params, &mut pending);
         }
         assert_eq!(pending, Pending::default());
+    }
+
+    #[test]
+    fn a_fill_with_auto_fill_off_is_counted_and_a_blank_one_is_not() {
+        // Ink/Stitch reads a blank setting as none, which leaves `auto_fill` on, its default, and any text but
+        // one of its words for yes as off. Only a shape that sews a fill counts.
+        for (text, fill, counted) in
+            [("false", true, 1), (" no ", true, 1), ("0", true, 1), ("", true, 0), ("  ", true, 0), ("Yes", true, 0), ("false", false, 0)]
+        {
+            let (mut pending, params) = (Pending::default(), [("auto_fill", text)].into_iter().collect::<ParamSet>());
+            Version::Older(3).pending(fill, &params, &mut pending);
+            assert_eq!(pending, Pending { legacy_fills: counted, ..Pending::default() }, "{text:?} {fill}");
+        }
     }
 
     #[test]
