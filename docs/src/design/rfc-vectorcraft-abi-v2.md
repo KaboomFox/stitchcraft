@@ -43,7 +43,7 @@ The plug-in classes this RFC was for, and what VectorCraft serves of them now:
 | Heavy but legitimate computation (routing, packing, simulation) | Heavy filters (P4), and an export's own budget. A live effect still has a light run's budget |
 | Plug-ins with document-wide settings (machine profile, plotter pens) | Data kept with the document (P5) |
 | Tools that set up objects for a live effect (a satin column from a line, a test sheet) | Filters read and return effect records and a stroke's style (P8) |
-| Plug-ins that work on text (lettering, engraving, cutting type) | Filters and live effects are given paths alone, and an exporter only a type object's text and its font's name (P9) |
+| Plug-ins that work on text (lettering, engraving, cutting type) | Filters and live effects receive paths alone, and an exporter only a type object's text and its font's name (P9) |
 
 ## Adopted
 
@@ -162,7 +162,7 @@ cache.
 | P3 | `crates/plugins/src/effect.rs`, canvas drawing in `crates/ui-egui/src/canvas.rs` | a fuzz test of overlay decoding, a cache key test |
 | P4, live effects | `crates/plugins/src/{effect,runtime}.rs`, the install flow | fuel accounting tests, a drawing that waits for a heavy result |
 | P6, objects beside | `crates/plugins/src/objects.rs` | ABI tests |
-| P9 | `crates/plugins/src/objects.rs`, with the text outliner of `crates/effects/src/live.rs` | ABI tests of a filter and a live effect given type, and of an export of a document with type |
+| P9 | `crates/plugins/src/objects.rs`, with the text outliner of `crates/effects/src/live.rs` | ABI tests of type sent to filters, live effects and exporters |
 
 We would contribute implementations and tests following VectorCraft's `AGENTS.md`, one proposal per PR.
 StitchCraft's compatibility gate already runs a third-party contract test against every VectorCraft
