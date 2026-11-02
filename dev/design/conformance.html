@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-71b1e278.js";
+            window.path_to_searchindex_js = "../searchindex-2cc47b58.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-6628e580.js"></script>
@@ -451,8 +451,9 @@ StitchCraft sews the sheet with, written with their parameters (<code>stitchcraf
 StitchCraft’s reader reads back unchanged (<code>REQ-PRM-003</code>). Automatic digitizing chooses ordinary elements
 with Ink/Stitch’s parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check
 StitchCraft’s stitches of those choices against Ink/Stitch’s (<code>REQ-AUTO-021</code>). TS-11B checks the contour
-fills so, each strategy and join style among them (<code>REQ-FILL-CON-008</code>). <code>conformance/inkstitch/README.md</code>
-says how to run it by hand and how to add a case.</p>
+fills so, each strategy and join style among them (<code>REQ-FILL-CON-008</code>). TS-02B to TS-09, the sheets of
+MC-2 to MC-4, and TS-11C, the meander fills’ sheet, are cases of <code>REQ-SVG-008</code> (M8.2).
+<code>conformance/inkstitch/README.md</code> says how to run it by hand and how to add a case.</p>
 <p><strong>Centre lines.</strong> Sewing what StitchCraft chose can’t find a choice that is wrong: TS-13B’s small T sewed
 a Γ, the left arm of its bar left out of its centre line, and the differential agreed by every measure.
 The <code>centre-lines</code> cases compare a step before the stitches (<code>REQ-AUTO-022</code>,
