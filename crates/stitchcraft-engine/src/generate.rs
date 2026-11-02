@@ -28,7 +28,7 @@
 //!
 //! An element is cut to its clips, the clip paths round it, before its generator sees it (`REQ-GEN-005`): a
 //! fill's area when it is built ([`region::build_clipped`]), and a stroke's subpaths where they cross a
-//! clip's outline ([`region::cut`]). A satin column is sewn whole, as in Ink/Stitch (`SC-W0217`), and an
+//! clip's outline (`region::cut`). A satin column is sewn whole, as in Ink/Stitch (`SC-W0217`), and an
 //! element its clips leave nothing of sews nothing (`SC-W0013`).
 
 use std::borrow::Cow;
