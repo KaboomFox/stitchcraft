@@ -55,6 +55,13 @@ jobs:
           echo "PROPTEST_RNG_SEED=$seed"
           PROPTEST_RNG_SEED=$seed PROPTEST_CASES=5000 cargo test --locked -p stitchcraft-render --test preview
           PROPTEST_RNG_SEED=$seed PROPTEST_CASES=20000 cargo test --locked -p stitchcraft-testkit fuzz
+      - name: Every stitch type sews 2,000 random paths that tend to degenerate, with a fresh seed
+        # The degenerate corpus's random paths (tests/degenerate.rs), 64 on every PR with the fixed seed. A
+        # failure prints the seed and the shrunk path: add it as a regression case.
+        run: |
+          seed=$(od -An -N8 -tu8 /dev/urandom | tr -d ' ')
+          echo "PROPTEST_RNG_SEED=$seed"
+          PROPTEST_RNG_SEED=$seed PROPTEST_CASES=2000 cargo test --locked -p stitchcraft-engine --test degenerate -- random_path
 
   fuzz:
     # REQ-FMT-006 and REQ-SVG-002: coverage-guided fuzzing every night, 20 minutes per target. The bodies

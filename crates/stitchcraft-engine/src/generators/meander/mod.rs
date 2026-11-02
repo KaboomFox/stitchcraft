@@ -190,10 +190,7 @@ pub fn top_path(region: &Region, meander: &Meander, rng: &SplitMix64, meter: &mu
     for polygon in &region.parts {
         for piece in &pieces(polygon, meander.expand, &mut Vec::new(), meter)?.0 {
             let points = tally.path(piece, meander, None, None, rng, meter)?.unwrap_or_default();
-            segments.extend(points.windows(2).filter_map(|side| match *side {
-                [start, end] => Some(Segment { start, end }),
-                _ => None,
-            }));
+            segments.extend(points.iter().zip(points.iter().skip(1)).map(|(&start, &end)| Segment { start, end }));
         }
     }
     Ok(segments)
@@ -224,11 +221,9 @@ impl Tally {
     ) -> Result<Option<Vec<Point>>, Exhausted> {
         self.pieces += 1;
         let rings = Rings::new(piece, meter)?;
+        // A tile StitchCraft doesn't have is sewn as the default, as `MeanderParams::tile` reads one.
         let tile = tiles::tile(meander.tile).or_else(|| tiles::tile(tiles::DEFAULT));
-        let network = match tile {
-            Some(tile) => network::network(piece, &rings, &tile, meander.placement, meter)?,
-            None => None,
-        };
+        let network = tile.map(|tile| network::network(piece, &rings, &tile, meander.placement, meter)).transpose()?.flatten();
         let Some(network) = network else {
             self.outlined += 1;
             return Ok(None);

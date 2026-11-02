@@ -263,7 +263,7 @@ area = "params"
 level = "L2"
 statement = "Parameters round-trip unchanged through every adapter (SVG attributes, VectorCraft effect records)."
 rationale = "Settings that change or vanish after saving lose the user's work."
-milestone = "M3"
+milestone = "M8"
 status = "planned"
 
 [[req]]

@@ -465,6 +465,17 @@ mod tests {
     }
 
     #[test]
+    fn a_choice_names_the_options_it_offers_and_counts_those_kept_for_designs() {
+        const OFFERED: &[ChoiceOption] = &[ChoiceOption::new("a", "A"), ChoiceOption::new("b", "B")];
+        const ONE_KEPT: &[ChoiceOption] = &[ChoiceOption::new("a", "A"), ChoiceOption::kept("z", "Z")];
+        const TWO_KEPT: &[ChoiceOption] = &[ChoiceOption::kept("y", "Y"), ChoiceOption::new("a", "A"), ChoiceOption::kept("z", "Z")];
+        assert_eq!(Kind::Choice { options: OFFERED }.describe(), "one of a, b");
+        assert_eq!(Kind::Choice { options: ONE_KEPT }.describe(), "one of a, or the 1 other value kept for designs that name it");
+        assert_eq!(Kind::Choice { options: TWO_KEPT }.describe(), "one of a, or one of the 2 other values kept for designs that name them");
+        assert!(OFFERED.iter().all(|o| o.offered) && !ONE_KEPT[1].offered);
+    }
+
+    #[test]
     fn units_name_what_values_are_in() {
         let kinds = [
             Kind::Length { min: 0.0, max: 1.0, empty: Empty::Never },

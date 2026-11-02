@@ -700,8 +700,8 @@ running stitch, and each step between turns another, as for the contour fill's s
 - **One piece** is sewn after the way along the outline from the needle to where the piece starts. Then
   comes the way along the outline from where it ends to the end, as Ink/Stitch sews it. Each way runs
   the shorter way round the outline. Ink/Stitch's runs along the outline from where the outline starts,
-  without passing its start, which depends on how the outline was drawn (`DEV-FILL-022`). Without a
-  needle or an end, that way is left out.
+  without passing its start, which depends on how the outline was drawn (`DEV-FILL-022`). A way whose
+  needle or end isn't known is left out.
 - **Several pieces** are routed as a tatami fill's rows are ([section 3](#3-routing-every-segment-once)),
   each piece a row between its ends. Each is sewn once from the end the route enters it by, every needle
   point of its running stitch, but its last with `skip_last`. Between pieces the needle moves as a tatami
