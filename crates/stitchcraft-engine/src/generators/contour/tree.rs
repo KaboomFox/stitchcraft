@@ -159,12 +159,11 @@ impl Building {
             let Ok(growth) = moved(&reversed, d, corners, meter)? else { return Ok(Err(Unjoined)) };
             grown.extend(growth.into_iter().take(1));
         }
-        let joined = match grown.len() {
-            0 | 1 => grown,
-            _ => match union([grown.as_slice()], meter)? {
-                Ok(parts) => parts,
-                Err(unjoined) => return Ok(Err(unjoined)),
-            },
+        let joined = if grown.len() < 2 {
+            grown
+        } else {
+            let Ok(parts) = union([grown.as_slice()], meter)? else { return Ok(Err(Unjoined)) };
+            parts
         };
         let Ok(pieces) = difference(&shrunk, &joined, meter)? else { return Ok(Err(Unjoined)) };
         let mut found = Vec::new();
@@ -281,6 +280,31 @@ mod tests {
         // 0 the outline, 1 the hole; 2 the outline at 16 mm with 3 its hole at 6 mm; 4 at 12 mm with 5 at 10 mm.
         assert_eq!(shape(&tree), [vec![2], vec![], vec![4], vec![1], vec![5], vec![3]]);
         assert_eq!(tree.count(ROOT), 6);
+    }
+
+    #[test]
+    fn the_growths_of_2_holes_that_overlap_are_joined_into_one_hole_ring() {
+        // A 20 mm square with 2 holes 2 mm across and 1 mm apart, rings 1 mm apart. Grown by 1 mm, the holes
+        // overlap, and the first level's piece has one hole ring round both: the parent of each (DEV-FILL-015).
+        let holed = part(
+            &[(0.0, 0.0), (20.0, 0.0), (20.0, 20.0), (0.0, 20.0)],
+            &[&[(7.0, 9.0), (9.0, 9.0), (9.0, 11.0), (7.0, 11.0)], &[(10.0, 9.0), (12.0, 9.0), (12.0, 11.0), (10.0, 11.0)]],
+        );
+        let tree = rings_of(&holed, 1.0, Corners::ROUND);
+        // 0 the outline, 1 and 2 the holes; 3 the outline shrunk by 1 mm, 4 the hole ring round both.
+        assert_eq!(tree.children(ROOT)[0], 3);
+        assert_eq!(tree.children(4), [1, 2]);
+        assert_eq!(tree.nodes.iter().filter(|n| n.children.contains(&1) || n.children.contains(&2)).count(), 1);
+    }
+
+    #[test]
+    fn a_level_whose_edges_do_not_join_leaves_out_what_lies_inside_it() {
+        // A square 70 m from the origin lies past the 65.536 m the region's grid reaches, so its first level
+        // cannot be cut into rings: the tree is the part's outline alone, and says the level failed.
+        let far = part(&[(70_000.0, 0.0), (70_010.0, 0.0), (70_010.0, 10.0), (70_000.0, 10.0)], &[]);
+        let (tree, failed) = tree(&far, 1.0, Corners::ROUND, true, &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(failed, Some(Unjoined));
+        assert_eq!(tree.nodes.len(), 1);
     }
 
     #[test]

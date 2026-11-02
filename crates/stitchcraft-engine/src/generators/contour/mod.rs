@@ -211,10 +211,7 @@ pub fn top_path(region: &Region, contour: &Contour, meter: &mut Meter) -> Result
     for polygon in &region.parts {
         for piece in &pieces(polygon, contour.expand, &mut Vec::new(), meter)?.0 {
             let path = tally.path(piece, contour, Point::ORIGIN, meter)?.concat();
-            segments.extend(path.windows(2).filter_map(|side| match *side {
-                [start, end] => Some(Segment { start, end }),
-                _ => None,
-            }));
+            segments.extend(path.windows(2).map(|side| Segment { start: side[0], end: side[1] }));
         }
     }
     Ok(segments)

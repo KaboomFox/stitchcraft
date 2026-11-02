@@ -69,12 +69,8 @@ pub(super) fn fills() -> Result<Drawing, SheetError> {
     let parts: Vec<(f64, f64)> = parts.iter().map(|&(px, py)| (x + px, y + py)).collect();
     d.fill("parting", vec![polygon(&parts)?], &red, &with(&[]))?;
     let (x, y) = (middle - 18.0, bottom - 12.0);
-    d.fill(
-        "alternating",
-        vec![polygon(&[(x, y), (x + 36.0, y), (x + 36.0, y + 24.0), (x, y + 24.0)])?],
-        &red,
-        &with(&[("avoid_self_crossing", "true")]),
-    )?;
+    let rectangle = polygon(&[(x, y), (x + 36.0, y), (x + 36.0, y + 24.0), (x, y + 24.0)])?;
+    d.fill("alternating", vec![rectangle], &red, &with(&[("avoid_self_crossing", "true")]))?;
     d.fill("smoothed", vec![polygon(&leaf((right, bottom), 19.0, 10.0))?], &red, &with(&[("smoothness_mm", "0.5")]))?;
     Ok(d)
 }

@@ -262,6 +262,9 @@ mod tests {
         // Past a corner the foot is the corner.
         assert_eq!(project(&ring, p(5.0, -1.0)), 4.0);
         assert_eq!(project(&[p(1.0, 1.0)], p(0.0, 0.0)), 0.0);
+        // A side of no length is measured from its point, at a fraction of 0.
+        assert_eq!(fraction(p(3.0, 1.0), p(2.0, 2.0), p(2.0, 2.0)), 0.0);
+        assert_eq!(project(&[p(0.0, 0.0), p(0.0, 0.0), p(4.0, 0.0)], p(-1.0, 0.0)), 0.0);
     }
 
     #[test]
@@ -276,6 +279,8 @@ mod tests {
         assert_eq!(point_at(&ring, 9.0), Some(p(3.0, 4.0)));
         assert_eq!(point_at(&ring, 20.0), Some(p(0.0, 0.0)));
         assert_eq!(point_at(&[], 1.0), None);
+        // A distance that is no number lies neither before the start nor along the line: it cuts nothing off.
+        assert_eq!(cut(&ring, f64::NAN), (Some(ring.clone()), None));
     }
 
     #[test]
@@ -306,6 +311,9 @@ mod tests {
         let y = 4.0 + 0.75_f64.sqrt();
         assert!((at - (9.5 + 10.0 - y)).abs() < 1e-12 && point.distance(p(9.5, y)) < 1e-12, "{at} {point:?}");
         assert_eq!(nearest(&[&other], p(12.0, 9.0), meter).unwrap(), Some(p(10.0, 4.0)));
+        // A unit of work for the line's first side, and none left for the side of the other near it.
+        let short = &mut Budget { max_stitches: 1, max_work: 1 }.meter();
+        assert!(first_within(&[p(0.0, 2.0), p(20.0, 2.0)], &sides, 1.0, short).is_err());
     }
 
     #[test]
