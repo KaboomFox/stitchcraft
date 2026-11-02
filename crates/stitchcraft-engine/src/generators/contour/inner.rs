@@ -220,6 +220,23 @@ mod tests {
     }
 
     #[test]
+    fn a_ring_left_within_a_row_spacing_of_its_end_by_its_last_child_is_done() {
+        // The square 0..10 from the middle of its bottom side, (5, 0): left to (0, 0), round, and back along
+        // the bottom from (10, 0). Its child, a box inside it whose corner (5.6, 1.45) lies 1.53 from (5, 0),
+        // first comes within 1.5 of the ring on that last side, 0.98 short of its end. The needle comes back
+        // from the child a row spacing on, past the ring's end, and nothing of the ring is left to sew.
+        let child = vec![p(5.5, 1.45), p(5.6, 1.45), p(5.6, 1.5), p(5.5, 1.5), p(5.5, 1.45)];
+        let tree = Tree { nodes: vec![Node { ring: square(0.0, 10.0), children: vec![1] }, Node { ring: child, children: Vec::new() }] };
+        let path = inner_to_outer(&tree, 1.0, p(5.0, 0.0), false, &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(path.left_out, 0);
+        // The ring's start alone, the ring to where the child is entered, and the child: nothing after it.
+        assert_eq!(path.stretches.len(), 3, "{path:?}");
+        let entered = *path.stretches[1].last().unwrap();
+        assert!(entered.distance(p(5.6 + 0.1475_f64.sqrt(), 0.0)) < 1e-9, "{entered:?}");
+        assert!(path.stretches[2].iter().all(|q| q.y() > 1.4), "{:?}", path.stretches[2]);
+    }
+
+    #[test]
     fn a_child_out_of_reach_is_left_out_with_the_rings_under_it() {
         // A child 3 away from its parent everywhere, more than 2.05 row spacings of 1: it and its own child
         // are left out, and the parent is sewn alone.

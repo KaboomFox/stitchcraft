@@ -83,10 +83,10 @@ fn spiral(rings: &[&[Point]], longest: f64, start: Point, meter: &mut Meter) -> 
             stretches.push(turn);
         }
     }
-    match (end, stretches.last_mut()) {
-        (Some(end), Some(last)) => last.push(end),
-        (Some(end), None) => stretches.push(vec![end]),
-        (None, _) => {}
+    // A turn is empty or has its 2 ends at least, so a last turn with a last point has left the stretch it
+    // goes on.
+    if let (Some(end), Some(last)) = (end, stretches.last_mut()) {
+        last.push(end);
     }
     Ok(stretches)
 }

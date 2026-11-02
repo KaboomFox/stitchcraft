@@ -120,6 +120,18 @@ fn req_fill_con_004_a_single_spiral_ends_in_the_middle_and_a_double_one_near_whe
 }
 
 #[test]
+fn a_contour_fill_whose_settings_cannot_be_read_sews_nothing() {
+    // A setting a contour fill reads refuses the element when it cannot be read, as any fill's does: its
+    // strategy, or how far the tatami fill's `expand_mm` grows its area.
+    for wrong in [("contour_strategy", "lots"), ("expand_mm", "lots")] {
+        let outcome = contour(&[&disc(30.0, 10.0)], &[wrong]);
+        assert!(codes(&outcome).contains(&Code::ParamInvalid), "{wrong:?}: {:?}", messages(&outcome));
+        let sewn = outcome.plan.as_ref().map_or(0, |plan| plan.stitches().filter(|s| s.kind == StitchKind::Normal).count());
+        assert_eq!(sewn, 0, "{wrong:?}");
+    }
+}
+
+#[test]
 fn req_fill_con_005_a_part_too_narrow_for_its_spiral_is_sewn_inner_to_outer() {
     // A strip 1.5 mm wide has no ring inside its outline to turn to.
     let strip = [(0.0, 0.0), (30.0, 0.0), (30.0, 1.5), (0.0, 1.5)];
