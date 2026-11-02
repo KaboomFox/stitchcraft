@@ -212,11 +212,13 @@ fn without_free_ends(network: Network, meter: &mut Meter) -> Result<Network, Exh
         let neighbours: Vec<usize> = next.get_mut(i).map(std::mem::take).into_iter().flatten().collect();
         for n in neighbours {
             meter.charge(1)?;
-            if let Some(theirs) = next.get_mut(n) {
+            // Every neighbour is a point of the network, so `next` has its lines.
+            let freed = next.get_mut(n).is_some_and(|theirs| {
                 theirs.remove(&i);
-                if theirs.len() < 2 && !gone.get(n).copied().unwrap_or(true) {
-                    free.push_back(n);
-                }
+                theirs.len() < 2
+            });
+            if freed && !gone.get(n).copied().unwrap_or(true) {
+                free.push_back(n);
             }
         }
     }
