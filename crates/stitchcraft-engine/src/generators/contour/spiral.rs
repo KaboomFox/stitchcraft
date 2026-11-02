@@ -175,6 +175,14 @@ mod tests {
         assert!(super::turn(&outer, &inner, 200.0, p(0.0, 0.0), meter).unwrap().is_empty());
         assert_eq!(super::turn(&outer, &inner, 160.0, p(0.0, 0.0), meter).unwrap().len(), 2);
         assert_eq!(resampled(&outer, 5), [p(0.0, 0.0), p(4.0, 0.0), p(4.0, 4.0), p(0.0, 4.0), p(0.0, 0.0)]);
+        // The last point is the line's end, though 49 steps of a 49th fall short of it.
+        assert_eq!(resampled(&[p(0.0, 0.0), p(1.0, 0.0)], 50).last(), Some(&p(1.0, 0.0)));
+        // A turn is simplified within 0.1 CSS pixel, 0.026 mm: a bump of 0.06 mm stays, the line straight
+        // either side of it does not.
+        let bump = [p(0.0, 0.0), p(5.0, 0.06), p(10.0, 0.0)];
+        let turn = super::turn(&bump, &bump, length(&bump), p(0.0, 0.0), meter).unwrap();
+        assert_eq!(turn.len(), 3, "{turn:?}");
+        assert!((turn[1].y() - 0.0568).abs() < 0.001, "{turn:?}");
         assert_eq!(from_nearest(vec![p(0.0, 0.0), p(4.0, 0.0), p(4.0, 4.0)], p(5.0, 5.0)), [p(4.0, 4.0), p(0.0, 0.0), p(4.0, 0.0)]);
     }
 
@@ -211,6 +219,16 @@ mod tests {
             ],
         };
         assert_eq!(chain(&tree, &mut Budget::DEFAULT.meter()).unwrap(), (vec![0, 3], 2));
+        // Of 2 children whose middles lie as near, 2 mm either side of the middle, the chain takes the first.
+        let box_round = |x: f64| vec![p(x - 1.0, 4.0), p(x + 1.0, 4.0), p(x + 1.0, 6.0), p(x - 1.0, 6.0), p(x - 1.0, 4.0)];
+        let tie = Tree {
+            nodes: vec![
+                Node { ring: square(0.0, 10.0), children: vec![1, 2] },
+                Node { ring: box_round(3.0), children: Vec::new() },
+                Node { ring: box_round(7.0), children: Vec::new() },
+            ],
+        };
+        assert_eq!(chain(&tie, &mut Budget::DEFAULT.meter()).unwrap(), (vec![0, 1], 1));
         assert_eq!(middle(&square(0.0, 2.0)), p(1.0, 1.0));
         assert_eq!(middle(&[p(3.0, 3.0), p(3.0, 3.0)]), p(3.0, 3.0));
     }

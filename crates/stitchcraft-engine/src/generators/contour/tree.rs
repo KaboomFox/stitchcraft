@@ -298,6 +298,32 @@ mod tests {
     }
 
     #[test]
+    fn each_hole_ring_is_the_parent_of_the_holes_it_holds() {
+        // 2 holes 2 mm across and 8 mm apart: grown by 1 mm they stay apart, and each grown ring is the parent
+        // of its own hole.
+        let holed = part(
+            &[(0.0, 0.0), (20.0, 0.0), (20.0, 20.0), (0.0, 20.0)],
+            &[&[(4.0, 9.0), (6.0, 9.0), (6.0, 11.0), (4.0, 11.0)], &[(14.0, 9.0), (16.0, 9.0), (16.0, 11.0), (14.0, 11.0)]],
+        );
+        let tree = rings_of(&holed, 1.0, Corners::ROUND);
+        let parent = |hole: usize| tree.nodes.iter().position(|n| n.children.contains(&hole)).unwrap();
+        assert_ne!(parent(1), parent(2));
+        for hole in [1, 2] {
+            assert!(holds(tree.ring(parent(hole)), tree.ring(hole)), "{hole}");
+        }
+    }
+
+    #[test]
+    fn a_ring_is_simplified_within_a_hundredth_of_a_pixel() {
+        // A square whose top side bends up 0.01 mm at its middle: shrunk, the ring keeps the bend, which lies
+        // farther than 0.0026 mm from the line between its corners.
+        let bent = part(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (5.0, 10.01), (0.0, 10.0)], &[]);
+        assert_eq!(rings_of(&bent, 1.0, Corners::ROUND).ring(1).len(), 6);
+        let straight = part(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (5.0, 10.0), (0.0, 10.0)], &[]);
+        assert_eq!(rings_of(&straight, 1.0, Corners::ROUND).ring(1).len(), 5);
+    }
+
+    #[test]
     fn a_level_whose_edges_do_not_join_leaves_out_what_lies_inside_it() {
         // A square 70 m from the origin lies past the 65.536 m the region's grid reaches, so its first level
         // cannot be cut into rings: the tree is the part's outline alone, and says the level failed.
