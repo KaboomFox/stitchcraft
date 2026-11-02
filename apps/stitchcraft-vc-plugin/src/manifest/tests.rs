@@ -230,7 +230,7 @@ fn each_kind_is_declared_as_one_value_or_left_out() {
     assert_eq!(schema(&spec(Kind::Seed, ""), &[]), None);
     assert_eq!(schema(&spec(Kind::Text { max_bytes: 9 }, ""), &[]), None);
     // A choice leaves out an option a text is shown for alone, and is left out when that is its default.
-    const OPTIONS: &[ChoiceOption] = &[ChoiceOption { id: "half", label: "Half" }, ChoiceOption { id: "custom", label: "Custom" }];
+    const OPTIONS: &[ChoiceOption] = &[ChoiceOption::new("half", "Half"), ChoiceOption::new("custom", "Custom")];
     let choice = spec(Kind::Choice { options: OPTIONS }, "half");
     let shape = ParamSpec { key: "shape", visible_when: Some(Condition { key: "p", any_of: &["custom"] }), ..spec(Kind::Text { max_bytes: 9 }, "") };
     assert_eq!(schema(&choice, &[choice, shape]), Some(Schema::Choice { options: vec!["half"], default: "half" }));

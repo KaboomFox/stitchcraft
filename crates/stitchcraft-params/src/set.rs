@@ -48,6 +48,11 @@ impl ParamSet {
     pub fn iter(&self) -> impl Iterator<Item = (&str, &str)> {
         self.values.iter().map(|(k, v)| (k.as_str(), v.as_str()))
     }
+
+    /// Takes `key` out; returns the text it had.
+    pub fn remove(&mut self, key: &str) -> Option<String> {
+        self.values.remove(key)
+    }
 }
 
 impl<K: Into<String>, V: Into<String>> FromIterator<(K, V)> for ParamSet {
@@ -107,6 +112,33 @@ pub fn read_param<K: ParamKind>(
             None
         }
     }
+}
+
+/// The keys of `set` an element of `stitch_type` leaves to another stitch type, each with `SC-I0106`: a value
+/// its own declaration of the key can't read, but another family's declaration can. An SVG node's
+/// fill and its stroke read the same settings, so the value is the node's other stitch type's, and the
+/// element takes its own default for it, as Ink/Stitch's does (`REQ-PRM-006`): a meander fill on a node
+/// whose zigzag stroke keeps 2 spacings in `zigzag_spacing_mm`. A value no declaration can read is the
+/// element's, and refused (`SC-E0101`).
+pub fn left_to_others(set: &ParamSet, stitch_type: StitchType, registry: &[&ParamGroup]) -> Vec<(String, Diagnostic)> {
+    let family = stitch_type.family();
+    set.iter()
+        .filter_map(|(key, raw)| {
+            let own = find_for(registry, key, family)?.in_family(family);
+            if !own.applies_to.contains(&stitch_type) || own.read(raw).is_ok() {
+                return None;
+            }
+            let other = declarations(registry, key).find(|spec| !spec.applies_to.iter().any(|t| t.family() == family) && spec.read(raw).is_ok())?;
+            let whose = other.applies_to.first().map_or("stroke", |t| t.name()).to_lowercase();
+            let default = if own.default.is_empty() { "none".to_string() } else { own.default.to_string() };
+            let message = format!(
+                "`{key}` is {}, which only a {whose} reads, so this {} takes its default, {default}, as Ink/Stitch's does.",
+                crate::value::quoted(raw),
+                stitch_type.name().to_lowercase()
+            );
+            Some((key.to_string(), Diagnostic::new(Code::ParamForOtherFamily, message)))
+        })
+        .collect()
 }
 
 /// `SC-W0105` for every key in `set` that no group of `registry` declares: kept, but ignored.
@@ -215,5 +247,13 @@ mod tests {
         assert_eq!(read_param::<Length>(&ParamSet::new(), None, None, &[], &mut problems), None);
         assert_eq!(read_param::<Toggle>(&ParamSet::new(), Some(&spec("0.25")), None, &[], &mut problems), None);
         assert_eq!(codes(&problems), [Code::InternalCheckFailed, Code::InternalCheckFailed]);
+    }
+
+    #[test]
+    fn a_key_taken_out_gives_its_text_and_is_gone() {
+        let mut set: ParamSet = [("row_spacing_mm", "0.25"), ("angle", "45")].into_iter().collect();
+        assert_eq!(set.remove("row_spacing_mm"), Some("0.25".to_string()));
+        assert_eq!(set.remove("row_spacing_mm"), None);
+        assert_eq!(set.iter().collect::<Vec<_>>(), [("angle", "45")]);
     }
 }

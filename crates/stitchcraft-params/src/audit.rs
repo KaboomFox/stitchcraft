@@ -162,7 +162,7 @@ mod tests {
             ParamSpec {
                 key: "method",
                 label: "Method",
-                kind: Kind::Choice { options: &[ChoiceOption { id: "a", label: "A" }, ChoiceOption { id: "b", label: "B" }] },
+                kind: Kind::Choice { options: &[ChoiceOption::new("a", "A"), ChoiceOption::new("b", "B")] },
                 default: "a",
                 ..GOOD
             },
@@ -193,7 +193,7 @@ mod tests {
             ParamSpec {
                 key: "c",
                 label: "C",
-                kind: Kind::Choice { options: &[ChoiceOption { id: "x", label: "X" }, ChoiceOption { id: "x", label: "" }] },
+                kind: Kind::Choice { options: &[ChoiceOption::new("x", "X"), ChoiceOption::new("x", "")] },
                 default: "y",
                 ..GOOD
             },

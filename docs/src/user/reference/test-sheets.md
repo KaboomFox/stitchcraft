@@ -269,6 +269,25 @@ After sewing, check:
 - Does the neck between the 2 squares fill, where the rings part to each side? Does the smoothed leaf's line run evenly, without kinks?
 - How long does the sheet take? A contour fill sews as one line, with no travel between rows.
 
+## TS-11C — New fills: meander fills
+
+123.0 × 120.2 mm · 5880 stitches, 11 jumps, 10 trims, 2 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
+
+Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
+
+![TS-11C as it will sew: 9 meander fills in 3 rows, each a line that wanders along the sides of a tiling over the underlay's rows. At the top, in green, 3 discs in hexagons, squares and triangles. In the middle, in blue, 3 discs in octagons and squares, hexagons and triangles, and hexagons, squares and triangles. At the bottom, in red, a five-pointed star in squares and triangles, a rectangle in large hexagons sewn as a zigzag, and a leaf in small hexagons, turned. Jump threads join the samples in each row.](../../images/generated/testsheet-ts-11c.png)
+
+Threads: Emerald Green, Blue, Red.
+
+After sewing, check:
+
+- Each sample is a meander fill: one line that wanders along the sides of a tiling without crossing itself, over the default underlay. Top row, in green, left to right: discs 36 mm across in hexagons, squares and triangles, each side 2 mm long. Middle row, in blue: discs in octagons and squares, hexagons and triangles, and hexagons, squares and triangles. Bottom row, in red: a star 40 mm across in squares and triangles, a rectangle in hexagons twice as large sewn as a zigzag 2.5 mm wide, and a leaf in hexagons half as large, turned by 30° and smoothed by 0.5 mm.
+- Does each tiling show in the stitches? Does the line look even, or do bare patches show where it didn't reach? Which tile looks best, and at which size?
+- Does the underlay show between the line's turns? A meander covers the area lightly: is it too light to hide the fabric, or the underlay?
+- On the rectangle, does the zigzag stay inside its outline, and lie flat? Is 2.5 mm too wide?
+- On the leaf, does the smoothed line run evenly round its turns, without kinks? Do the 1 mm sides sew cleanly, or do the stitches bunch?
+- Does any sample pucker, or the line pull the fabric where it turns?
+
 ## TS-13A — Pictures digitized automatically: neighbours and sewing order
 
 126.0 × 168.0 mm · 24396 stitches, 31 jumps, 30 trims, 19 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand

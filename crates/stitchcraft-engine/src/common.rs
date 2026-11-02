@@ -20,11 +20,12 @@ pub const TRIM_AFTER: &str = "trim_after";
 pub const STOP_AFTER: &str = "stop_after";
 
 /// The key of the longest stitch: a tatami fill sews its rows in stitches that long, a contour fill its
-/// rings, and the stitch types that split stitches split longer ones.
+/// rings, a meander fill its underlay's rows, and the stitch types that split stitches split longer ones.
 pub const MAX_STITCH_LENGTH: &str = "max_stitch_length_mm";
 
 /// The stitch types with a longest stitch: manual stitch and satin columns, whatever their method, split
-/// longer stitches, a tatami fill sews its rows in stitches that long, and a contour fill its rings.
+/// longer stitches, a tatami fill sews its rows in stitches that long, and a contour fill its rings. A
+/// meander fill's underlay sews its rows so, its path sewn in the running stitch's length.
 const LONGEST: &[StitchType] = &[
     StitchType::ManualStitch,
     StitchType::SatinColumn,
@@ -33,11 +34,12 @@ const LONGEST: &[StitchType] = &[
     StitchType::SatinZigzag,
     StitchType::TatamiFill,
     StitchType::ContourFill,
+    StitchType::MeanderFill,
 ];
 
 /// The stitch types that vary at random, and so take a seed: running stitch's random lengths (ripple
 /// stitch sews its lines with them), a satin column's random widths and spacing, whatever its method, and
-/// a tatami or contour fill's random stitch lengths.
+/// a tatami or contour fill's random stitch lengths, and a meander fill's path.
 const RANDOMIZED: &[StitchType] = &[
     StitchType::RunningStitch,
     StitchType::RippleStitch,
@@ -47,6 +49,7 @@ const RANDOMIZED: &[StitchType] = &[
     StitchType::SatinZigzag,
     StitchType::TatamiFill,
     StitchType::ContourFill,
+    StitchType::MeanderFill,
 ];
 
 params! {
@@ -126,7 +129,8 @@ params! {
     "Longest stitch" {
         /// Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as
         /// its split method says. Empty, a stitch is split only where it is longer than the machine sews. A
-        /// tatami fill sews its rows in stitches this long, and a contour fill its rings.
+        /// tatami fill sews its rows in stitches this long, and a contour fill its rings. A meander fill's
+        /// underlay sews its rows so.
         max_stitch_length_mm: OptionalLength = "", label "Longest stitch", range (0.1, 25.0), applies LONGEST,
             defaults [Family::Fill => "4"];
     }
@@ -169,17 +173,18 @@ mod tests {
     }
 
     #[test]
-    fn the_longest_stitch_applies_to_the_stitch_types_that_split_stitches_and_to_tatami_and_contour_fills() {
+    fn the_longest_stitch_applies_to_the_stitch_types_that_split_stitches_and_to_the_fills_sewn() {
         let longest = CommonParams::SPECS.iter().find(|spec| spec.key == MAX_STITCH_LENGTH).unwrap();
         let has = |t: &StitchType| {
-            matches!(t.family(), Family::Satin) || matches!(t, StitchType::ManualStitch | StitchType::TatamiFill | StitchType::ContourFill)
+            matches!(t.family(), Family::Satin)
+                || matches!(t, StitchType::ManualStitch | StitchType::TatamiFill | StitchType::ContourFill | StitchType::MeanderFill)
         };
         assert_eq!(longest.applies_to, StitchType::ALL.iter().copied().filter(has).collect::<Vec<_>>());
         // 4 mm for fills, as in Ink/Stitch, and none for the others.
         let longest_for =
             |stitch_type| CommonParams::from_set_as(&ParamSet::new(), stitch_type).unwrap().params.max_stitch_length_mm.map(|mm| mm.get());
-        let types = [StitchType::ManualStitch, StitchType::SatinColumn, StitchType::TatamiFill, StitchType::ContourFill];
-        assert_eq!(types.map(longest_for), [None, None, Some(4.0), Some(4.0)]);
+        let types = [StitchType::ManualStitch, StitchType::SatinColumn, StitchType::TatamiFill, StitchType::ContourFill, StitchType::MeanderFill];
+        assert_eq!(types.map(longest_for), [None, None, Some(4.0), Some(4.0), Some(4.0)]);
         // A running stitch reads none, whatever the element sets.
         let set: ParamSet = [(MAX_STITCH_LENGTH, "abc")].into_iter().collect();
         assert_eq!(CommonParams::from_set_as(&set, StitchType::RunningStitch).unwrap().params.max_stitch_length_mm, None);
@@ -190,7 +195,10 @@ mod tests {
         let seed = CommonParams::SPECS.iter().find(|spec| spec.key == "random_seed").unwrap();
         let varies = |t: &StitchType| {
             matches!(t.family(), Family::Satin)
-                || matches!(t, StitchType::RunningStitch | StitchType::RippleStitch | StitchType::TatamiFill | StitchType::ContourFill)
+                || matches!(
+                    t,
+                    StitchType::RunningStitch | StitchType::RippleStitch | StitchType::TatamiFill | StitchType::ContourFill | StitchType::MeanderFill
+                )
         };
         assert_eq!(seed.applies_to, StitchType::ALL.iter().copied().filter(varies).collect::<Vec<_>>());
     }
