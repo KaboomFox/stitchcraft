@@ -204,10 +204,10 @@ coverage and stitches. TS-15 sews 3 ported fonts beside the fonts digitized by h
   StitchCraft's font repository under new names, as Ink/Stitch's library grew from such fonts.
 - **The narrowest satin column in lettering.** Automatic digitizing runs a line narrower than 1 mm, and
   Ink/Stitch's small fonts sew columns about 0.5 mm wide. TS-15 sews both, and MC-10 chooses.
-- **Type in VectorCraft's plug-ins.** VectorCraft doesn't give plug-ins its type objects (its
-  `docs/plugins.md` at `1505384`), and the exporter plug-in can't read font files. Proposing that VectorCraft
-  give plug-ins type as glyph outlines is an addition to the [RFC](rfc-vectorcraft-abi-v2.md), for M9 or
-  earlier.
+- **Raising P9.** The RFC's [P9](rfc-vectorcraft-abi-v2.md#p9-type-as-glyph-outlines) proposes that
+  VectorCraft give plug-ins type as glyph outlines, which its plans don't cover. Without it, the exporter
+  plug-in can't sew type, since it can't read font files. Whether to raise P9 on VectorCraft's own
+  repository, and when, is the owner's choice.
 
 ## Sources
 
