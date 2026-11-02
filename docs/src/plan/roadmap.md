@@ -198,8 +198,8 @@ SVG adapter v2:
 
 Ink/Stitch's font
 library is part of that corpus: hundreds of real Ink/Stitch files, mostly satin, downloaded at a pinned
-commit by `cargo xtask corpus` and never committed, using only fonts whose licence allows it (OFL, CC0,
-CC-BY, CC-BY-SA; 132 of the 142 fonts on 2026-10-08).
+commit by `cargo xtask corpus` and never committed. It takes only the fonts whose licence file is the OFL,
+CC0, CC BY or CC BY-SA, 131 of the 142 fonts on 2026-11-02 ([fonts](../design/fonts.md#inkstitchs-fonts)).
 
 <!-- vale ai-tells.EmDashUsage = NO -->
 ## M10 — More stitch types II
@@ -215,23 +215,54 @@ Satin, is M6.12. M10 comes before M14, since lettering's fonts use its stitch ty
 <!-- vale ai-tells.EmDashUsage = YES -->
 
 Goal: names, monograms and words sewn in embroidery fonts, set as Ink/Stitch's lettering sets them
-([review](inkstitch-usage.md)). M14 comes after M8, whose SVG adapter reads the files that Ink/Stitch's
-fonts are made of, and after M10. Of the 142 fonts in Ink/Stitch's library, 107 use only stitch types
+([review](inkstitch-usage.md), [fonts](../design/fonts.md)). M14 comes after M8, whose SVG adapter reads the
+files that Ink/Stitch's fonts are made of, and after M10. Of the 142 fonts in Ink/Stitch's library, 107 use only stitch types
 StitchCraft sews. The other 35 need cross stitch (25 fonts), tartan fill (4), ripple stitch (3), guided fill
 (1) or meander fill (1), counted on 2026-11-01, and 2 ask for M10's auto-satin. Fonts come from a repository of their own, as VectorCraft's do. They are StitchCraft's
 own fonts, Ink/Stitch's fonts whose licence allows it (OFL, CC0, CC-BY, CC-BY-SA, each with its licence
 file and an `ASSETS.md` row, never NC, GPL or unclear terms), and the fonts a user has installed for
-Ink/Stitch, read in their own format.
+Ink/Stitch, read in their own format. Ink/Stitch's fonts come from their repository,
+[inkstitch/embroidery-fonts](https://github.com/inkstitch/embroidery-fonts), and a font's licence is the one
+its licence file states. M15 ports ordinary fonts into the same format.
 
 | Step | Deliverable | Done when |
 |---|---|---|
-| M14.1 🧪 | The font repository, the licences it takes, and a reader for a font in Ink/Stitch's format, from Ink/Stitch's public documentation of it | ADR-0001 amended for fonts; one font read, its glyphs sewn |
-| M14.2 | `stitch lettering` sets text in a font. Its glyphs are placed by the font's advances and kerning, with the spacing of letters, words and lines and the alignment the user sets. The scale stays within the heights the font sews at, and a warning names the font's range outside them | its requirements active |
-| M14.3 | Lettering along a path. The colours of a multicolour font sorted, a trim after each letter, word or line as chosen, and lines sewn back and forth | same |
-| M14.4 | Lettering in VectorCraft: a text object sews in the embroidery font its StitchCraft setting names, read from the document's text. The step chooses how the setting is given, as an effect or a name. A preview of the font in VectorCraft waits for a live effect to be given more than its object's geometry and paints ([RFC](../design/rfc-vectorcraft-abi-v2.md), P6) | a Level B case |
+| M14.1 🧪 | The font repository, the licences it takes, and a reader for a font in Ink/Stitch's format ([fonts](../design/fonts.md)), from Ink/Stitch's public documentation of it and its font files | ADR-0001 amended for fonts; one font read, its glyphs sewn |
+| M14.2 | `stitch lettering` sets text in a font. Its glyphs are placed by the font's advances and kerning, with the spacing of letters, words and lines and the alignment the user sets. The scale stays within the heights the font sews at, and a warning names the font's range outside them. A character the font lacks sews as the font's default glyph, and a warning names it | its requirements active |
+| M14.3 | Lettering along a path, on its top, its baseline or its bottom, or stretched along it. The colours of a multicolour font sorted, a trim after each letter, word or line as chosen, and lines sewn back and forth | same |
+| M14.4 | Lettering in VectorCraft: a text object sews in the embroidery font its StitchCraft setting names, read from the document's text. The step chooses how the setting is given, as an effect or a name. It also chooses where the plug-ins find the fonts, since a plug-in can't read files. They can be built in from the font repository, as VectorCraft builds in craft-fonts. A preview of the font in VectorCraft waits for a live effect to be given more than its object's geometry and paints ([RFC](../design/rfc-vectorcraft-abi-v2.md), P6) | a Level B case |
 | MC-9 🧵 | **TS-14** (3 fonts at the least and the greatest heights they sew at); kit: `stitch testsheet` | report filed |
 | M14.5 | Text in pictures: the traced shapes inside an area marked `stitch:text` are replaced by lettering of the marker's text, as tall as the traced letters ([design](../design/image-to-embroidery.md#text-in-pictures)) | its requirements active |
 | M14.6 🧪 | Text in pictures found and read without a marker | decision recorded in the design |
+
+<!-- The milestones' headings all name them this way. -->
+<!-- vale ai-tells.EmDashUsage = NO -->
+## M15 — Fonts ported automatically
+<!-- vale ai-tells.EmDashUsage = YES -->
+
+Goal: lettering sewn in any suitable TrueType or OpenType font without digitizing the font by hand
+([design](../design/fonts.md)). The font can be one installed on the computer or one from Google Fonts.
+StitchCraft reads each glyph's outline at the height the text is set, and sews it by M13's rules and by
+rules for glyphs. The font's advances and kerning space the glyphs. A ported font can be written in
+Ink/Stitch's font format, where a user corrects a glyph by hand and M14's lettering sews it. M15 comes after
+M14, whose lettering sets the glyphs, and after M10, whose auto-satin routing joins a glyph's columns. M15.1
+and M15.2 don't depend on M14, and can go ahead beside it.
+
+| Step | Deliverable | Done when |
+|---|---|---|
+| M15.1 🧪 | Font files and a corpus. The step compares the crates that read and shape fonts, skrifa with harfrust as in VectorCraft and ttf-parser with rustybuzz. Each is checked against `deny.toml`, the wasm build and the budget. A corpus of the 36 OFL fonts on Google Fonts that Ink/Stitch's fonts were digitized from, each with the Ink/Stitch font made from it, fetched by `cargo xtask corpus` at pinned commits and never committed | Decision recorded in an ADR, with each crate's cost measured: the instructions to outline and shape a line of text, and the plug-in's size with them |
+| M15.2 | Glyph outlines. A crate of its own, `stitchcraft-fonts`, reads TrueType, OpenType and collection files, with a variable font at its default, at a named instance or at axis values. It shapes text with the font's advances, kerning, ligatures and marks. It gives each glyph's outline unhinted, in font units, with its components placed. A character the font lacks is named by a warning. Fonts are untrusted input, read within the budget and fuzzed, and test fonts are built in code | its requirements active, a fuzz target, and every font of the corpus read |
+| M15.3 | Glyphs digitized. `stitch lettering --font Font.ttf` sets text in a font file, with M14.2's spacing, alignment and trims, at a height given as the capitals' height. Each glyph is an automatic element, its contours filled by the nonzero rule and digitized by M13's rules at that height. M13's rules for specks and the background don't apply to glyphs, and every contour sews | its requirements active. The corpus's glyphs digitized at 3 heights, with their jumps, filled parts and columns shorter than 1 mm counted as the baseline the next steps are measured against |
+| M15.4 | A sample sheet. `stitch font sample` sews a font's glyphs at its least and greatest heights, with pangrams and the font's kerning pairs. It reports each glyph's stitch types, jumps and warnings. TS-15 is drawn | the docs show a sample sheet in pictures |
+| M15.5 | Dots and marks. A part of a glyph whose centre line has no length, such as an i-dot, a full stop or an umlaut's dot, sews as one satin column across it. A part too small for a column sews as stitches back and forth inside it, with its locks inside it | its requirements active, and every dot of the corpus's glyphs sewn at the least heights measured |
+| M15.6 | Ends and serifs. A stroke cut by the baseline, the x-height, the capitals' height or the descenders' line ends flat along that line, its stitches turning to lie along the cut. A serif narrower than 0.8 mm sews as part of its stem's column, and a broader one as a column of its own under the stem | its requirements active, and fewer columns shorter than 1 mm in the corpus's serif fonts than at M15.3 |
+| M15.7 | Thin strokes, counters and small letters. A stretch of a column narrower than the narrowest satin column in lettering is widened to it, or runs along its centre line, as the step's cases and MC-10 decide. That width is a setting of its own, its default chosen at MC-10. Columns in small letters take lighter settings, as small fonts digitized by hand do: denser satin, a lighter underlay and less pull compensation. Pull compensation leaves each counter at least 0.9 mm across, and a warning names the glyphs whose counters close at the height set | its requirements active |
+| M15.8 | Routing inside a glyph. A glyph's columns and lines are joined by runs under the columns sewn after them, as M10's auto-satin routing joins columns. Each glyph starts at its lower left and ends nearest the next glyph. Jumps are left only where a run can't be hidden, and they have locks at both ends | its requirements active, and the jumps inside the corpus's glyphs counted against M15.3's |
+| M15.9 🧪 | Scripts and overlapping strokes. The letters of a joined script sewn as one shape per word, or glyph by glyph with each join ending under the next letter. A variable font's overlapping contours sewn as strokes of their own, or united. Both measured on the corpus's script fonts | decision recorded in the design |
+| M15.10 | Heights. For each glyph, the heights over which its stitch types don't change. For a font, the range in which its narrowest strokes sew and its widest are satin columns. `stitch lettering` warns outside the range, as for an embroidery font. The step also chooses whether the height sets a variable font's weight or optical size | its requirements active, and the corpus's ranges recorded beside those of the Ink/Stitch fonts made from the same fonts |
+| M15.11 | Ported fonts written in Ink/Stitch's format. `stitch font port Font.ttf` writes a font folder digitized at a height. Each glyph has a layer of its own, in which satin columns are drawn with their rails and rungs. The settings give the font's advances, its kerning and its range of heights. The folder has the font's copyright and licence, and names the font it was made from. It is written only for a font whose licence allows a modified version, or one whose licence the user confirms. Its name leaves out the font's Reserved Font Names | read back by M14's reader, the folder sews as the port did, and Ink/Stitch sews it in the nightly differential |
+| M15.12 | VectorCraft. A text object without StitchCraft's effects sews in its own font, ported automatically, in `stitch export --auto`. Its font is found among the fonts installed and those of craft-fonts, as VectorCraft finds them. A font that isn't found is a coded error that suggests Type › Create Outlines, whose outlines the Auto effect digitizes. The exporter plug-in can't read font files, and its text waits for VectorCraft to give plug-ins type as outlines, an RFC proposal for M9 | a Level B case, in which a document with text exports through `stitch export` and sews its text ported |
+| MC-10 🧵 | **TS-15** (3 fonts from Google Fonts, a sans, a serif and a script, ported at 3 heights each beside the fonts digitized by hand from them, and a word in satin columns 0.4 to 1 mm wide beside the same word in triple runs). Its kit is made by `stitch testsheet` with the corpus's fonts | report filed. The glyph rules' values confirmed or changed, and the narrowest satin column in lettering chosen |
 
 ## M11 — Formats II
 

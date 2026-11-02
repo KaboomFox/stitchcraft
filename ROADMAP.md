@@ -52,7 +52,8 @@ in the machine's threads, fitted into the hoop, and sews it digitized automatica
 tatami fills and automatic digitizing have their user pages with pictures, so every stitch type sewn has
 one (M13.11). The offsetter shrinks a region 150 mm across 300 times in under 200 ms, ready for contour
 fill (M7.6). Next is MC-8's sew-out, then M13.8, and M7.7 to M7.9 go ahead meanwhile. M10 comes before
-M14, since lettering's fonts use its stitch types.
+M14, since lettering's fonts use its stitch types. M15, planned after M14, ports TrueType and OpenType fonts
+for lettering automatically.
 The repository is
 [KaboomFox/stitchcraft](https://github.com/KaboomFox/stitchcraft), with the docs published at
 [kaboomfox.github.io/stitchcraft](https://kaboomfox.github.io/stitchcraft/) and `main` protected; the
@@ -72,6 +73,7 @@ open owner action from M0.5 is the code-of-conduct contact.
 | M8 | Ink/Stitch SVG interoperability, differential testing | ⚪ | — |
 | M10 | Guided, gradient, ripple, tartan, cross stitch; routing tools | ⚪ | — |
 | M14 | Lettering in embroidery fonts, and text in pictures | ⚪ | MC-9 ⚪ |
+| M15 | Fonts ported automatically, any suitable TrueType or OpenType font sewn without digitizing it by hand | ⚪ | MC-10 ⚪ |
 | M11 | EXP, JEF, VP3, XXX, U01; thread catalogues | ⚪ | — |
 | M12 | 1.0: performance, docs audit, translations, release automation | ⚪ | MC-7 ⚪ |
 | M9 | VectorCraft plug-in features still proposed upstream (RFC), for previews drawn as overlays, heavy live effects and the objects beside a live effect, last: after 1.0 and the work after it | ⚪ | none |
