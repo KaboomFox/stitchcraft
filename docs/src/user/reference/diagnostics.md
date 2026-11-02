@@ -84,6 +84,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-I0905`](#sc-i0905) | Info | Speck merged into a neighbour |
 | [`SC-W0906`](#sc-w0906) | Warning | Background left out |
 | [`SC-I0907`](#sc-i0907) | Info | Elements sewn in an order of their own |
+| [`SC-I0908`](#sc-i0908) | Info | Layers flattened |
 
 ## SC-E0004
 
@@ -1030,14 +1031,16 @@ The message gives the line's width. Check the line's stroke width.
 `--auto` makes each automatic area reach its overlap, 0.4 mm unless it sets another
 (`auto_overlap_mm`), under the shapes sewn after it, from where it touches them. The thread pulls
 stitches in from the edges of their shape, and without the overlap fabric shows between shapes that
-only meet. Where an area sewn after it covers part of it, as in a trace that stacks its colours, the
-covered part is cut away, its overlap inside the covering area's edge, and sewn once. A satin column
-or a line sewn after an area goes over it, and the area is sewn whole under it. The running stitch
-along a narrow part of an area covers that part: the areas sewn before it reach under it, and when
-the areas sewn after it cover the part whole it sews nothing.
+only meet. Where an area sewn after it covers part of it, as the details on an area digitized whole
+under them do (SC-I0908), the covered part is cut away, its overlap inside the covering area's edge,
+and sewn once. The running stitch or the satin column along a narrow part of an area covers that part
+as an area does: the areas of other shapes sewn before it are cut away under it, and when the shapes
+sewn after it cover the part whole it sews nothing. A satin column or a line digitized from a stroke
+and sewn after an area goes over it, and the area is sewn whole under it.
 
-The message counts the areas that reach under others and those cut away. An area that the areas sewn
-after it cover whole sews nothing, and the message names it, as it does a narrow part's line. It also
+The message counts the areas that reach under others and those cut away. An area that the areas drawn
+or sewn after it cover whole sews nothing, and the message names it, as it does a narrow part's line.
+It also
 names an area whose neighbours need more work to find than the budget allows it, which neither reaches
 under them nor is cut away, and a satin column whose area needs more, which the areas before it don't
 reach under, and which keeps its place in paint order beside the shapes near it. To sew a shape as it
@@ -1065,10 +1068,12 @@ larger Noise in VectorCraft's Image Trace leaves such specks out of the trace.
 `--auto` takes the lowest shape of the design for the picture's background when it is an automatic
 area, a shape on another path than its own is drawn on it, and it covers the whole design to within
 0.5 mm of each side, its holes aside, and the notches aside that the shapes drawn on it fill where
-they touch the picture's edge. It is left out, unless it switches `auto_ignore_background` off. A
-background is usually the fabric's own colour, and sewing it doubles the stitches and stiffens the
-design. A background that needs more work to find than the budget allows is sewn, and the message
-says so.
+they touch the picture's edge. It is left out, unless it switches `auto_ignore_background` off, but
+for what shows of it inside the picture once the layers are flattened (SC-I0908): its parts that come
+no nearer than 0.5 mm to the design's sides, such as a white disc on a badge traced with its colours
+stacked, which sew, and which the message counts. A background is usually the fabric's own colour, and
+sewing it doubles the stitches and stiffens the design. A background that needs more work to find than
+the budget allows is sewn, and the message says so.
 
 To sew it, give it settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it.
 Ignore White in VectorCraft's Image Trace leaves a white background out of the trace.
@@ -1090,3 +1095,25 @@ keeps its place beside the shapes near it. SC-I0904 names a satin column whose p
 And it names the elements left in paint order when choosing the order needs more work than the budget
 allows. To keep shapes in their paint order among themselves, give them settings and leave
 `--sort-colours` off: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to each.
+
+## SC-I0908
+
+**Info** — Layers flattened
+
+`--auto` flattens the layers of a traced picture before it digitizes them. Each automatic area sews
+only what shows of it: the automatic areas drawn over it are taken from it, a hairline that rounding
+leaves along their edges shows nothing, and one they cover whole sews nothing (SC-I0904). An automatic
+area wider than a satin column somewhere, 7 mm unless it sets
+another (`auto_max_satin_width_mm`), is digitized whole under its details, the automatic areas that
+fill its holes: its stitches are chosen with those holes closed, it sews before its details, and it
+is cut away under them, its overlap inside their edges. So a picture traced with its colours stacked
+sews as one traced with its colours abutting, and a broad area with details on it is one fill, not
+narrow columns between the details. An area no wider than a satin column everywhere, such as a letter
+or an outline, keeps its holes, and the shapes in them sew beside it.
+
+The message counts the areas that sew only what shows of them and those digitized whole under their
+details. It also names an area whose layers need more work to find than the budget allows: one whose
+part that shows can't be found is sewn as it is drawn, in its place, or left out whole when it is the
+background; one whose holes can't be found keeps them open; one that can't be moved keeps its place;
+and one whose region can't be given is sewn as it is drawn. To sew a shape as it is drawn, give it
+settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it.

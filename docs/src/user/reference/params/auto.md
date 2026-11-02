@@ -17,7 +17,8 @@ Applies to automatic elements, the shapes whose stitches StitchCraft chooses by 
 loose. A line up to this wide is a satin column as wide as the line, and a wider one fills the
 area it paints. A part of an area no wider than this everywhere sews as satin columns between its
 outlines, and a part wider somewhere is filled, with its narrow parts sewn over the fill as lines
-and columns.
+and columns. As a traced picture's layers are flattened, an area wider than this somewhere is filled
+whole under the areas that fill its holes, and one no wider keeps its holes.
 
 - **Accepts:** a length from 1 to 12 mm
 - **Default:** `7`
@@ -41,7 +42,8 @@ circles that fit inside it along its centre line.
 ### `auto_overlap_mm`
 
 **Overlap.** How far an area reaches under each shape sewn after it that it touches, and how far inside the
-edge of an area sewn after it that covers it the area is cut away. The thread pulls stitches in
+edge of an area, or of a part sewn as a line or a column, that is sewn after it and covers it the
+area is cut away. The thread pulls stitches in
 from the edges of their shape, and without the overlap fabric shows between shapes that only
 meet. A satin column reaches as far past its rails, by its pull compensation.
 
@@ -65,7 +67,9 @@ when it shares none.
 
 **Leave out the background.** Whether the lowest shape is left out when it is the picture's background: an area under the
 other shapes that covers the whole design. A background is usually the fabric's own colour, and
-sewing it doubles the stitches and stiffens the design. Off, it sews.
+sewing it doubles the stitches and stiffens the design. What shows of it inside the picture sews
+still, as a white disc on a badge traced with its colours stacked does. Off, all of it that shows
+sews, as of any area.
 
 - **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `true`

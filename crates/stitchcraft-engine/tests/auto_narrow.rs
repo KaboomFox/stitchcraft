@@ -168,9 +168,14 @@ fn req_auto_013_a_narrow_part_that_the_areas_sewn_after_it_cover_whole_sews_noth
     assert_eq!(out.iter().map(|e| e.id.as_str()).collect::<Vec<_>>(), ["cover"]);
     let said: Vec<String> = said.iter().map(ToString::to_string).collect();
     assert!(said.contains(&"info SC-I0904: This area is covered by the areas sewn after it, so it sews nothing.".to_string()), "{said:?}");
+    // One that runs out from under the square sews what shows of it, as the layers are flattened
+    // (REQ-AUTO-023): its line, from the square's edge, sews after the square it borders.
     let showing = automatic(shape("showing", &[rectangle((5.0, 15.0), (5.6, 30.0))], &[]));
     let (out, _) = sewn(vec![showing, cover()]);
-    assert_eq!(out.iter().map(|e| e.id.as_str()).collect::<Vec<_>>(), ["showing", "cover"]);
+    assert_eq!(out.iter().map(|e| e.id.as_str()).collect::<Vec<_>>(), ["cover", "showing"]);
+    let Shape::Stroke { path, .. } = &out[1].shape else { panic!("{:?}", out[1].shape) };
+    let ys: Vec<f64> = path.points().map(|p| p.y()).collect();
+    assert!(ys.iter().all(|&y| y > 19.9) && ys.iter().any(|&y| y > 29.0), "{ys:?}");
 }
 
 #[test]

@@ -1,0 +1,4 @@
+id = "inkstitch-ts13d"
+requirements = ["REQ-AUTO-021"]
+kind = "inkstitch"
+sheet = "TS-13D"

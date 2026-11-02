@@ -1,7 +1,7 @@
 //! The neighbours' parts the cases in `tests/auto_neighbours.rs` can't reach: what an area becomes whose
 //! neighbours need more work than its budget allows, how much work shapes far from it cost it, how long an
 //! edge a speck shares with an area, the area between a column's rails, and the bounds the shapes are found
-//! near by.
+//! near by. The layers' own tests (`layers::tests`) share its shapes and `least_work`.
 
 use stitchcraft_core::math::sin_cos;
 use stitchcraft_core::{Budget, Code, Diagnostic, Mm};
@@ -16,12 +16,12 @@ fn p(x: f64, y: f64) -> Point {
 }
 
 /// The square from `(x0, y0)` to `(x1, y1)`, wound clockwise in y-up axes as a part is.
-fn square((x0, y0): (f64, f64), (x1, y1): (f64, f64)) -> Polygon {
+pub(super) fn square((x0, y0): (f64, f64), (x1, y1): (f64, f64)) -> Polygon {
     Polygon { outline: vec![p(x0, y0), p(x0, y1), p(x1, y1), p(x1, y0), p(x0, y0)], holes: Vec::new() }
 }
 
 /// A circle round `(cx, cy)` of radius `r` as a part of `n` points.
-fn circle((cx, cy): (f64, f64), r: f64, n: u32) -> Polygon {
+pub(super) fn circle((cx, cy): (f64, f64), r: f64, n: u32) -> Polygon {
     let mut outline: Vec<Point> = (0..n)
         .map(|k| {
             let (sin, cos) = sin_cos(-std::f64::consts::TAU * f64::from(k) / f64::from(n));
@@ -33,7 +33,7 @@ fn circle((cx, cy): (f64, f64), r: f64, n: u32) -> Polygon {
 }
 
 /// A fill `id` of `parts`, without settings.
-fn filled(id: &str, parts: &[Polygon]) -> Element {
+pub(super) fn filled(id: &str, parts: &[Polygon]) -> Element {
     Element {
         id: ElementId::new(id).unwrap(),
         name: None,
@@ -51,7 +51,7 @@ fn area(id: &str, from: (f64, f64), to: (f64, f64)) -> Sewn {
 
 /// The least work with which `step` says what it says with the default budget, found by halving: with a
 /// unit less, it says something else.
-fn least_work(step: impl Fn(&Budget) -> Vec<Diagnostic>) -> u64 {
+pub(super) fn least_work(step: impl Fn(&Budget) -> Vec<Diagnostic>) -> u64 {
     let full = step(&Budget::DEFAULT);
     let enough = |work: u64| step(&Budget { max_work: work, ..Budget::DEFAULT }) == full;
     let (mut low, mut high) = (0, 1 << 24);

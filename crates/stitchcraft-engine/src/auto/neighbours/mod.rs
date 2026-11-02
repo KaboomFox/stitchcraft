@@ -4,23 +4,28 @@
 //!
 //! A traced picture is shapes of flat colour that meet: abutting, as VectorCraft's Abutting method traces
 //! them, each area with a hole where the next is, or stacked, each colour a whole shape over the ones under
-//! it. Sewn as drawn, they sew badly in 4 ways, and digitizing mends each in its own step, in this order:
+//! it. Sewn as drawn, they sew badly in 5 ways, and digitizing mends each in its own step, in this order:
 //!
 //! 1. **The background** ([`background()`]). The lowest shape is often the picture's background, the
-//!    fabric's own colour. It is left out before anything is digitized (`SC-W0906`).
-//! 2. **Specks** ([`specks`]). Noise in the picture leaves areas of a pixel or two. A fill smaller than the
+//!    fabric's own colour. It is left out before anything is digitized (`SC-W0906`), but for what shows of
+//!    it inside the picture.
+//! 2. **Layers** ([`layers`]). A stacked colour is hidden in part by the colours over it, and an area with
+//!    details on it would split into narrow columns between them. Before anything is digitized, each area is
+//!    given what shows of it, and an area wider than a satin column somewhere is given whole under the
+//!    details in its holes and moved back before them in paint order (`SC-I0908`).
+//! 3. **Specks** ([`specks`]). Noise in the picture leaves areas of a pixel or two. A fill smaller than the
 //!    smallest area sews a knot, and a hole where it was shows fabric. Each speck goes into the automatic
 //!    area it shares the longest edge with, or is left out when it shares none (`SC-I0905`).
-//! 3. **The order** ([`order`]). Paint order changes thread far more often than the picture needs. The
+//! 4. **The order** ([`order`]). Paint order changes thread far more often than the picture needs. The
 //!    elements are put in an order of their own: what overlaps keeps its paint order, a line sews after the
 //!    fill it borders, and then each thread sews as long as it can, the nearest element next (`SC-I0907`).
 //!    The order comes after the specks, so that a speck merged into an area doesn't count as an element
 //!    of its own, and before the overlaps, which follow it.
-//! 4. **Overlaps** ([`under`]). Thread pulls stitches in from the edges of their shape, so shapes that
+//! 5. **Overlaps** ([`under`]). Thread pulls stitches in from the edges of their shape, so shapes that
 //!    only meet show fabric between them. Each automatic area reaches the overlap under the shapes sewn
-//!    after it, where it touches them. Where an area sewn after it covers it, as a stacked trace's upper
-//!    colours cover the lower ones, it is cut away instead, the overlap inside that area's edge, so that it
-//!    is sewn once (`SC-I0904`).
+//!    after it, where it touches them. Where an area or a part's line or column sewn after it covers it, as
+//!    its details do, it is cut away instead, the overlap inside that shape's edge, so that it is sewn once
+//!    (`SC-I0904`).
 //!
 //! Each area goes by its own settings of the rules (`AutoParams`, `REQ-AUTO-020`): its overlap, its
 //! smallest area, and for the lowest shape whether the background is left out. A shape with settings has
@@ -46,11 +51,13 @@
 //! neighbours' to find, and are said when they can't be.
 
 mod background;
+mod layers;
 mod order;
 mod specks;
 mod under;
 
-pub(super) use background::background;
+pub(super) use background::{Background, background, left_out};
+pub(super) use layers::flattened;
 
 use std::collections::BTreeSet;
 
@@ -137,14 +144,15 @@ enum Kind {
     /// An area: the automatic area is cut away under it where it covers the automatic area, and reaches
     /// under it where they meet.
     Area,
-    /// A satin column: the automatic area reaches under it where they meet, and is sewn whole under it.
+    /// A satin column of a stroke: the automatic area reaches under it where they meet, and is sewn whole
+    /// under it.
     Column,
     /// A line: the area its stroke paints as drawn, which only the order needs. An automatic area is sewn
     /// whole under it, and reaches under none.
     Line,
     /// A running stitch or a satin column along the middle of a part of an automatic area, a narrow part's
-    /// line or a column: it paints the part, and an automatic area reaches under it where they meet, as under
-    /// a satin column, and is sewn whole under it.
+    /// line or a column: it paints the part, and an automatic area sewn before it reaches under it where they
+    /// meet and is cut away under it where it covers it, as under an area.
     Part,
 }
 
