@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-412cc20a.js";
+            window.path_to_searchindex_js = "../../searchindex-71b1e278.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-6628e580.js"></script>
@@ -349,7 +349,10 @@ border, a couched look or a stem too thin for a satin column.</p>
 the same way, a zig and a zag together, 0.4 mm by default; <code>stroke_pull_compensation_mm</code>, how much further
 out than half the stroke’s width each side’s needle points go, one value for both sides or 2; and
 <code>zigzag_angle</code>, which turns every stitch away from square to the path, from −89° to 89°. <code>repeats</code> and
-<code>bean_stitch_repeats</code> apply. The width is the stroke’s, read as a satin column drawn as one path reads it.</p>
+<code>bean_stitch_repeats</code> apply. The width is the stroke’s, read as a satin column drawn as one path reads it.
+Before Ink/Stitch’s file version 3 a zigzag stroke read <code>pull_compensation_mm</code>, shared by its 2 sides, and
+in a file of version 1 or 2 the SVG reader halves it into <code>stroke_pull_compensation_mm</code>, as Ink/Stitch’s
+update does (<code>REQ-SVG-007</code>).</p>
 <p>Strokes, satin columns and fills each read <code>zigzag_spacing_mm</code> their own way
 (<a href="../params.html#naming-rules">parameter registry</a>, rule 7). A stroke reads a list, as Ink/Stitch does.
 Only its first value counts.</p>

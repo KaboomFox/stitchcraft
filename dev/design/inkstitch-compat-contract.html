@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-412cc20a.js";
+            window.path_to_searchindex_js = "../searchindex-71b1e278.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-6628e580.js"></script>
@@ -541,13 +541,13 @@ change Ink/Stitch’s updater makes (<code>lib/update.py</code>), in StitchCraft
 <tr><td>1</td><td>a stroke with neither a method nor <code>satin_column</code>, whose <code>style</code> doesn’t set <code>stroke-dasharray</code>, gets <code>zigzag_stitch</code>, unless it has <code>inkscape:connection-start</code></td><td>not planned</td></tr>
 <tr><td>1</td><td>a stroke’s <code>grid_size</code>, in pixels, becomes <code>grid_size_mm</code>, unless it has <code>inkscape:connection-start</code></td><td>not planned</td></tr>
 <tr><td>2</td><td>a <code>&lt;polyline&gt;</code> whose <code>style</code> attribute sets a stroke other than <code>none</code> gets <code>stroke_method</code> <code>manual_stitch</code></td><td>applied, unless digitized automatically</td></tr>
-<tr><td>3</td><td>a zigzag stroke’s <code>pull_compensation_mm</code>, unless 0, is halved into <code>stroke_pull_compensation_mm</code>, which applies to each side</td><td>planned (M8)</td></tr>
-<tr><td>3</td><td>a satin column gets <code>start_at_nearest_point</code> and <code>end_at_nearest_point</code> off</td><td>planned (M8)</td></tr>
+<tr><td>3</td><td>a zigzag stroke’s <code>pull_compensation_mm</code>, unless 0, is halved into <code>stroke_pull_compensation_mm</code>, which applies to each side</td><td>applied, unless digitized automatically</td></tr>
+<tr><td>3</td><td>a satin column gets <code>start_at_nearest_point</code> and <code>end_at_nearest_point</code> off</td><td>applied, unless digitized automatically</td></tr>
 <tr><td>3</td><td>the commands’ old names become today’s (the table under Commands)</td><td>applied, in any file (<code>DEV-SVG-014</code>)</td></tr>
 <tr><td>3</td><td>a <code>starting_point</code> or <code>ending_point</code> command is placed anew at its connector’s end on its object</td><td>planned (M8)</td></tr>
 <tr><td>4</td><td>an element whose fill is not <code>none</code> (a fill not set is black), and whose <code>max_stitch_length_mm</code> is missing, empty, not a number or 0, gets 3</td><td>applied to the shapes whose fill is sewn, unless digitized automatically</td></tr>
-<tr><td>4</td><td>a fill with <code>auto_fill</code> off gets <code>fill_method</code> <code>legacy_fill</code>, and <code>auto_fill</code> is removed</td><td>planned (M8)</td></tr>
-<tr><td>4</td><td><code>fill_method</code> <code>auto_fill</code> becomes <code>tatami_fill</code></td><td>planned (M8)</td></tr>
+<tr><td>4</td><td>a fill with <code>auto_fill</code> off gets <code>fill_method</code> <code>legacy_fill</code>, and <code>auto_fill</code> is removed</td><td>applied to the shapes whose fill is sewn, unless digitized automatically (<code>DEV-FILL-014</code> says how a legacy fill sews)</td></tr>
+<tr><td>4</td><td><code>fill_method</code> <code>auto_fill</code> becomes <code>tatami_fill</code></td><td>applied to the shapes whose fill is sewn, unless digitized automatically</td></tr>
 </tbody>
 </table>
 </div>

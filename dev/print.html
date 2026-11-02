@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-412cc20a.js";
+            window.path_to_searchindex_js = "searchindex-71b1e278.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-6628e580.js"></script>
@@ -3258,10 +3258,11 @@ as a colour. Values that do not read are named too. A colour that does not read 
 viewer ignores it, and one of Ink/Stitch’s design settings keeps its default. A line that <code>--auto</code>
 sews across its width, as a satin column or a fill, is as wide as its transforms stretch it on
 average, so a transform that stretches it more one way than the other, and draws it wider one way,
-is named too. So is what StitchCraft does not apply of an Ink/Stitch file: the settings of its
-elements, its design setting <code>rotate_on_export</code>, which turns the design as it is written, and the
-updates Ink/Stitch would make to a file with its settings and no file version, or from a newer
-Ink/Stitch, which is read as it is.</p>
+is named too. So is what StitchCraft does not apply of an Ink/Stitch file: the settings of a group,
+which Ink/Stitch doesn’t read either, those of its early versions (<code>embroider_</code> attributes), its
+design setting <code>rotate_on_export</code>, which turns the design as it is written, and the updates
+Ink/Stitch would make to a file with its settings and no file version, or from a newer Ink/Stitch,
+which is read as it is.</p>
 <p>The message names the element and what was done. Convert text and clones to paths in the editor
 (in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.</p>
 <h2 id="sc-i0805"><a class="header" href="#sc-i0805">SC-I0805</a></h2>
@@ -3275,14 +3276,17 @@ setting off in Ink/Stitch’s parameters.</p>
 <h2 id="sc-i0818"><a class="header" href="#sc-i0818">SC-I0818</a></h2>
 <p><strong>Info</strong> — Ink/Stitch file from an older version, read as Ink/Stitch updates it</p>
 <p>The SVG file was saved by an older Ink/Stitch, and is read as Ink/Stitch updates such a file when it
-opens it, so that it sews as it did: a default that has changed since is written into the shapes
-that relied on it. Ink/Stitch numbers the files it saves. Before its file version 4, a fill’s
-stitches were 3 mm long unless it set another length, where they are 4 mm now; before version 2, a
-polyline whose style set a stroke was sewn as a manual stitch, with a needle point at each of its
-points. A shape digitized automatically (<code>--auto</code>) sews by StitchCraft’s rules instead.</p>
+opens it, so that it sews as it did: a default or a setting whose meaning has changed since is
+written into the shapes that relied on it. Ink/Stitch numbers the files it saves. Before its file
+version 4, a fill’s stitches were 3 mm long unless it set another length, where they are 4 mm now,
+and a fill with <code>auto_fill</code> off was a legacy fill; before version 3, a zigzag stroke’s pull
+compensation was shared by its 2 sides, and a satin column started and ended where it was drawn;
+before version 2, a polyline whose style set a stroke was sewn as a manual stitch, with a needle
+point at each of its points. A shape digitized automatically (<code>--auto</code>) sews by StitchCraft’s rules
+instead.</p>
 <p>The message gives the file’s version, and how many shapes were updated and how. Nothing needs doing:
-the design sews as Ink/Stitch sews it. To sew a shape otherwise, set its longest stitch
-(<code>max_stitch_length_mm</code>) or its stitch type in Ink/Stitch.</p>
+the design sews as Ink/Stitch sews it. To sew a shape otherwise, change the setting the message
+names in Ink/Stitch.</p>
 <h2 id="sc-w0804"><a class="header" href="#sc-w0804">SC-W0804</a></h2>
 <p><strong>Warning</strong> — Element geometry invalid or out of range</p>
 <p>An element’s geometry cannot be used: its path data or its list of points has an error (the path is
@@ -6144,7 +6148,7 @@ another.</p>
 <tr><td><code>SC-E0815</code></td><td>Error</td><td>VectorCraft’s command line could not be started (<code>stitch plan</code> traces a picture with it: neither on the PATH nor where <code>--vectorcraft-cli</code> says)</td><td>M13</td></tr>
 <tr><td><code>SC-E0816</code></td><td>Error</td><td>VectorCraft could not trace the picture (its command line failed or didn’t save the document)</td><td>M13</td></tr>
 <tr><td><code>SC-E0817</code></td><td>Error</td><td>VectorCraft test sheet not drawn (in the middle of the artboard, parts of the sheet would lie more than 10 m from the document’s origin)</td><td>M6</td></tr>
-<tr><td><code>SC-I0818</code></td><td>Info</td><td>Ink/Stitch file from an older version, read as Ink/Stitch updates it (the shapes given a default that has changed since, such as a fill’s 3 mm stitches before its file version 4, counted)</td><td>M3</td></tr>
+<tr><td><code>SC-I0818</code></td><td>Info</td><td>Ink/Stitch file from an older version, read as Ink/Stitch updates it (the shapes given a default or a setting whose meaning has changed since, such as a fill’s 3 mm stitches before its file version 4, counted for each change)</td><td>M3</td></tr>
 <tr><td><code>SC-I0901</code></td><td>Info</td><td>Shapes digitized automatically (<code>--auto</code>, or VectorCraft’s Auto effect), counted by their stitches (running stitches, satin columns or tatami fills)</td><td>M13</td></tr>
 <tr><td><code>SC-I0902</code></td><td>Info</td><td>Satin column can’t be made; filled (a part of an automatic line that turns more tightly than it is wide, is shorter than a CSS pixel or is a dot its cap draws, or a part of an automatic area whose triangles don’t make a column round one of its lines or whose column would be read back otherwise)</td><td>M13</td></tr>
 <tr><td><code>SC-W0903</code></td><td>Warning</td><td>Line too wide to fill; left out (an automatic line whose filled area would reach more than 10 m from the origin)</td><td>M13</td></tr>
@@ -6372,35 +6376,35 @@ the defaults that have changed since are written into the shapes that relied on 
 Ink/Stitch updates it (<code>REQ-SVG-007</code>), with the changed defaults as parameters of the shapes, and
 <code>SC-I0818</code> says how many shapes changed:</p>
 <ul>
+<li>in a file of version 1, a polyline whose <code>style</code> attribute sets a stroke is a manual stitch;</li>
+<li>in a file of version 1 or 2, a zigzag stroke’s <code>pull_compensation_mm</code>, unless 0, is halved into
+<code>stroke_pull_compensation_mm</code>, which applies to each side from version 3 (M8.3);</li>
+<li>in a file of version 1 or 2, a satin column starts and ends where it is drawn, with
+<code>start_at_nearest_point</code> and <code>end_at_nearest_point</code> off (M8.3);</li>
 <li>in a file of version 1 to 3, a shape whose fill is sewn, without a longest stitch of its own, sews
 3 mm stitches, the default before version 4, where today’s default is 4 mm;</li>
-<li>in a file of version 1, a polyline whose <code>style</code> attribute sets a stroke is a manual stitch.</li>
+<li>in a file of version 1 to 3, a fill with <code>auto_fill</code> off is a legacy fill, sewn as a tatami fill without
+underlay (<code>DEV-FILL-014</code>), and <code>fill_method</code> <code>auto_fill</code>, the tatami fill’s name before version 4, is a
+tatami fill (M8.3).</li>
 </ul>
-<p>A shape digitized automatically sews by the rules instead. Ink/Stitch asks its user whether a file with
-its content and no version is an old design, which it then updates, or objects pasted into a new file.
-The adapter can’t ask. It reads such a file as it is and says so with <code>SC-W0802</code>, as it says that a file
-of a version above 4 is read as version 4.</p>
-<p>The adapter doesn’t make 3 of the update’s other changes yet (M8.3), and each changes what a shape sews:</p>
-<ul>
-<li>in a file of version 1 or 2, a zigzag stroke’s <code>pull_compensation_mm</code> other than 0 is halved into
-<code>stroke_pull_compensation_mm</code>;</li>
-<li>in a file of version 1 or 2, a satin column starts and ends where it is drawn, with
-<code>start_at_nearest_point</code> and <code>end_at_nearest_point</code> off;</li>
-<li>in a file of version 1 to 3, a fill with <code>auto_fill</code> off is a legacy fill, sewn without underlay.</li>
-</ul>
-<p><code>SC-W0802</code> counts the shapes each would change, and those shapes sew as the file sets them. The other
-changes alter nothing the adapter sews. The <a href="#file-versions">compatibility contract</a>
-lists them all, with the milestone that applies them.</p>
+<p>Each shape gets the updates of each version after its file’s, in the order of the versions, over the
+settings it has, as Ink/Stitch updates it. One digitized automatically sews by the rules instead.
+Ink/Stitch asks its user whether a file with its content and no version is an old design, which it then
+updates, or objects pasted into a new file. The adapter can’t ask. It reads such a file as it is and says
+so with <code>SC-W0802</code>, as it says that a file of a version above 4 is read as version 4.</p>
+<p>Of the update’s other changes, the start and end commands it moves onto their objects wait for M8.4, and
+the rest alter nothing the adapter sews. The
+<a href="#file-versions">compatibility contract</a> lists them all, with the milestone
+that applies them.</p>
 <h2 id="reports"><a class="header" href="#reports">Reports</a></h2>
 <ul>
 <li><code>SC-W0802</code> reports a feature that is not stitched. Text, images, clones, nested <code>&lt;svg&gt;</code> elements and
 the style sheet rules that are not read are such features. So are clipping, masks, filters and
 markers, a group’s Ink/Stitch settings, and the settings of Ink/Stitch’s early versions (<code>embroider_</code>
 attributes). Clipping is planned for M8.5. It reports a file Ink/Stitch would update, or warn about,
-that is read as it is: one with Ink/Stitch’s content and no file version, or of a newer version. It
-counts the shapes of an older file that the update would change in ways the adapter doesn’t make yet.</li>
+that is read as it is: one with Ink/Stitch’s content and no file version, or of a newer version.</li>
 <li><code>SC-I0818</code> says how many shapes of a file an older Ink/Stitch saved are read as its update changes
-them.</li>
+them, for each change.</li>
 <li><code>SC-W0804</code> reports geometry that cannot be used:
 <ul>
 <li>path data or a list of points with an error, stitched up to the error</li>
@@ -6967,7 +6971,10 @@ border, a couched look or a stem too thin for a satin column.</p>
 the same way, a zig and a zag together, 0.4 mm by default; <code>stroke_pull_compensation_mm</code>, how much further
 out than half the stroke’s width each side’s needle points go, one value for both sides or 2; and
 <code>zigzag_angle</code>, which turns every stitch away from square to the path, from −89° to 89°. <code>repeats</code> and
-<code>bean_stitch_repeats</code> apply. The width is the stroke’s, read as a satin column drawn as one path reads it.</p>
+<code>bean_stitch_repeats</code> apply. The width is the stroke’s, read as a satin column drawn as one path reads it.
+Before Ink/Stitch’s file version 3 a zigzag stroke read <code>pull_compensation_mm</code>, shared by its 2 sides, and
+in a file of version 1 or 2 the SVG reader halves it into <code>stroke_pull_compensation_mm</code>, as Ink/Stitch’s
+update does (<code>REQ-SVG-007</code>).</p>
 <p>Strokes, satin columns and fills each read <code>zigzag_spacing_mm</code> their own way
 (<a href="#naming-rules">parameter registry</a>, rule 7). A stroke reads a list, as Ink/Stitch does.
 Only its first value counts.</p>
@@ -7541,6 +7548,8 @@ polylines through the ends of the top stitches’ pairs, after pull compensation
 short stitches. A zigzag satin’s runs through pairs at the full spacing (<em>Zigzag satin</em>, step 5). From its
 start, the needle enters the line where the start’s cut says and follows it to
 where the first stitch’s cut says, and the column goes on from its first stitch as before.</p>
+<p>Both are on by default. A satin column of a file of Ink/Stitch’s version 1 or 2 started and ended where it
+was drawn, and the SVG reader turns both off there, as Ink/Stitch’s update does (<code>REQ-SVG-007</code>).</p>
 <p><strong>Ending at the nearest point</strong> (<code>end_at_nearest_point</code>). With an element after it, the column ends at
 the point of its compensated outline nearest the next stitch. The next stitch is the point of the
 column’s rails nearest the next element’s first point, or nearest its rails when it offers them. Before
@@ -12284,13 +12293,13 @@ change Ink/Stitch’s updater makes (<code>lib/update.py</code>), in StitchCraft
 <tr><td>1</td><td>a stroke with neither a method nor <code>satin_column</code>, whose <code>style</code> doesn’t set <code>stroke-dasharray</code>, gets <code>zigzag_stitch</code>, unless it has <code>inkscape:connection-start</code></td><td>not planned</td></tr>
 <tr><td>1</td><td>a stroke’s <code>grid_size</code>, in pixels, becomes <code>grid_size_mm</code>, unless it has <code>inkscape:connection-start</code></td><td>not planned</td></tr>
 <tr><td>2</td><td>a <code>&lt;polyline&gt;</code> whose <code>style</code> attribute sets a stroke other than <code>none</code> gets <code>stroke_method</code> <code>manual_stitch</code></td><td>applied, unless digitized automatically</td></tr>
-<tr><td>3</td><td>a zigzag stroke’s <code>pull_compensation_mm</code>, unless 0, is halved into <code>stroke_pull_compensation_mm</code>, which applies to each side</td><td>planned (M8)</td></tr>
-<tr><td>3</td><td>a satin column gets <code>start_at_nearest_point</code> and <code>end_at_nearest_point</code> off</td><td>planned (M8)</td></tr>
+<tr><td>3</td><td>a zigzag stroke’s <code>pull_compensation_mm</code>, unless 0, is halved into <code>stroke_pull_compensation_mm</code>, which applies to each side</td><td>applied, unless digitized automatically</td></tr>
+<tr><td>3</td><td>a satin column gets <code>start_at_nearest_point</code> and <code>end_at_nearest_point</code> off</td><td>applied, unless digitized automatically</td></tr>
 <tr><td>3</td><td>the commands’ old names become today’s (the table under Commands)</td><td>applied, in any file (<code>DEV-SVG-014</code>)</td></tr>
 <tr><td>3</td><td>a <code>starting_point</code> or <code>ending_point</code> command is placed anew at its connector’s end on its object</td><td>planned (M8)</td></tr>
 <tr><td>4</td><td>an element whose fill is not <code>none</code> (a fill not set is black), and whose <code>max_stitch_length_mm</code> is missing, empty, not a number or 0, gets 3</td><td>applied to the shapes whose fill is sewn, unless digitized automatically</td></tr>
-<tr><td>4</td><td>a fill with <code>auto_fill</code> off gets <code>fill_method</code> <code>legacy_fill</code>, and <code>auto_fill</code> is removed</td><td>planned (M8)</td></tr>
-<tr><td>4</td><td><code>fill_method</code> <code>auto_fill</code> becomes <code>tatami_fill</code></td><td>planned (M8)</td></tr>
+<tr><td>4</td><td>a fill with <code>auto_fill</code> off gets <code>fill_method</code> <code>legacy_fill</code>, and <code>auto_fill</code> is removed</td><td>applied to the shapes whose fill is sewn, unless digitized automatically (<code>DEV-FILL-014</code> says how a legacy fill sews)</td></tr>
+<tr><td>4</td><td><code>fill_method</code> <code>auto_fill</code> becomes <code>tatami_fill</code></td><td>applied to the shapes whose fill is sewn, unless digitized automatically</td></tr>
 </tbody>
 </table>
 </div>
@@ -13222,7 +13231,7 @@ needle points to the other shapes in their group or take some out, are not plann
 <tbody>
 <tr><td>M8.1 ✅</td><td>Ink/Stitch’s settings. Each <code>inkstitch:*</code> attribute of a shape is a parameter of every element the shape makes, under its own name, and the registry reads it as it reads a VectorCraft effect’s parameters (<code>REQ-PRM-002</code>). An Ink/Stitch file then sews with its satin columns, fill methods, underlays, locks and the rest of its settings, and <code>SC-W0802</code> no longer says that every element sews at the defaults. A setting the registry doesn’t declare yet, such as a setting of a stitch type of M10, is kept and named (<code>SC-W0105</code>). A setting on a group, where Ink/Stitch reads only <code>ignore_object</code>, is named too. <code>stroke_first</code> sews a shape’s stroke before its fill. Of the legacy attributes, <code>auto_fill</code> changes a fill through the update (M8.3). <code>e_stitch</code>, <code>manual_stitch</code>, <code>grid_size</code> and <code>polyline</code> don’t change what sews, as in Ink/Stitch, which reads the first 3 only to update a file without a version. The contract adds the attributes Ink/Stitch reads outside its list of them, which <code>conformance/inkstitch/check_params.py</code> finds in its code, each with its milestone: the tartan fill’s settings, <code>tartan</code> (M10), lettering’s <code>color_sort_index</code> and <code>letter-group</code> (M14), and <code>path_type</code>, which its tools write and nothing sews</td><td>Requirements written. A case of <code>REQ-PRM-003</code> for SVG: a file the test kit writes for Ink/Stitch reads back with the same parameters. The differential’s sheet cases sew the file Ink/Stitch sews, in both programs, and a fixture of each family’s settings joins them</td></tr>
 <tr><td>M8.2</td><td>Every test sheet drawn as a design in the differential. TS-02B to TS-09 and TS-11A join TS-11B and the TS-13 sheets, each written as an Ink/Stitch file of its elements and their settings, which both programs sew</td><td>Each sheet’s case passes, or excuses a measure with the ledger entry that says why (<code>REQ-SVG-008</code>)</td></tr>
-<tr><td>M8.3</td><td>Older files updated. The changes Ink/Stitch’s update makes to the settings of a file of an older version apply, now that those settings are read (<a href="#file-versions">file versions</a>). In a file of version 1 or 2, a zigzag stroke’s <code>pull_compensation_mm</code> is halved into <code>stroke_pull_compensation_mm</code>. A satin column there starts and ends where it is drawn, with <code>start_at_nearest_point</code> and <code>end_at_nearest_point</code> off. In a file of version 1 to 3, a fill with <code>auto_fill</code> off is a legacy fill, and the method <code>auto_fill</code> is a tatami fill. 167 of the 178 glyph files of Ink/Stitch’s fonts are of versions 1 to 3</td><td><code>REQ-SVG-007</code> extended, <code>SC-I0818</code> counting the shapes changed, and a differential case for each change</td></tr>
+<tr><td>M8.3 ✅</td><td>Older files updated. The changes Ink/Stitch’s update makes to the settings of a file of an older version apply, now that those settings are read (<a href="#file-versions">file versions</a>). In a file of version 1 or 2, a zigzag stroke’s <code>pull_compensation_mm</code> is halved into <code>stroke_pull_compensation_mm</code>. A satin column there starts and ends where it is drawn, with <code>start_at_nearest_point</code> and <code>end_at_nearest_point</code> off. In a file of version 1 to 3, a fill with <code>auto_fill</code> off is a legacy fill, and the method <code>auto_fill</code> is a tatami fill. 167 of the 178 glyph files of Ink/Stitch’s fonts are of versions 1 to 3</td><td><code>REQ-SVG-007</code> extended, <code>SC-I0818</code> counting the shapes changed, and a differential case for each change</td></tr>
 <tr><td>M8.4</td><td>Start and end positions. Ink/Stitch’s <code>starting_point</code> and <code>ending_point</code> commands place where the element tied to them starts and ends. The markers <code>stitch:start</code> and <code>stitch:end</code> do the same in a VectorCraft document. A fill’s parts start nearest the start position, and its last part ends nearest the end position, with every fill method but 2. The legacy fill doesn’t use them, and the contour fill uses the start alone. A satin column starts at its start position and runs along its centre line to its first stitch. It ends at its end position, unless that lies within 5 px (1.32 mm) of the column’s end. Strokes don’t use them, as in Ink/Stitch. In a file of version 1 or 2, each of these commands is first moved to its connector’s end on the object, as the update moves it. 2,548 such commands start or end the elements of glyphs in 14 of Ink/Stitch’s fonts. From this step the <code>target_point</code> command centres a circular fill (M7.9), and from M10.8 it aims a ripple stitch</td><td><code>REQ-GEN-001</code> rewritten for these stitch types and active, <code>REQ-VC-009</code> updated, differential cases, and TS-16’s part drawn for MC-11</td></tr>
 <tr><td>M8.5</td><td>Clip paths. Fills and strokes are cut to the clip paths of the shape and of the groups around it, as Ink/Stitch cuts them, with the region code of M5.1. A clip path’s area is the one a viewer clips to, by its <code>clip-rule</code>. Where Ink/Stitch’s area differs, as when it takes the largest subpath for the outline and every other subpath for a hole, the ledger says how. A satin column is sewn whole, as in Ink/Stitch, and a warning names it. An Inkscape power clip that is hidden or flattened clips nothing, and an inverse one keeps what lies outside its shape, as Ink/Stitch reads them. Masks stay unapplied, as in Ink/Stitch. The glyphs of 5 of Ink/Stitch’s fonts are clipped 187 times, mostly running stitches and guided fills</td><td>Requirements written, and <code>SC-W0802</code> no longer naming the clip paths applied. Differential cases, and TS-16’s part drawn for MC-11</td></tr>
 <tr><td>M8.6</td><td>Ink/Stitch’s fonts as a corpus. <code>cargo xtask corpus</code> downloads inkstitch/embroidery-fonts at a commit this repository pins, and checks its SHA-256. The files are never committed. The corpus takes the fonts whose licence file is the OFL, CC0, CC BY or CC BY-SA, 131 of the 142 fonts at <code>c7e3a05</code> (<a href="#inkstitchs-fonts">fonts</a>). The differential sews each glyph as a design of its own, its layer shown and the others left out, in both programs. The glyphs of stitch types StitchCraft doesn’t sew yet are listed, and join the corpus with M10’s steps</td><td>A pinned sample of each font’s glyphs runs every night, and every glyph every week. Each glyph sews as in Ink/Stitch, or its difference is excused by the ledger or reproduced as a bug by a case of its own</td></tr>

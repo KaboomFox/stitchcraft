@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-412cc20a.js";
+            window.path_to_searchindex_js = "../searchindex-71b1e278.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-6628e580.js"></script>
@@ -395,35 +395,35 @@ the defaults that have changed since are written into the shapes that relied on 
 Ink/Stitch updates it (<code>REQ-SVG-007</code>), with the changed defaults as parameters of the shapes, and
 <code>SC-I0818</code> says how many shapes changed:</p>
 <ul>
+<li>in a file of version 1, a polyline whose <code>style</code> attribute sets a stroke is a manual stitch;</li>
+<li>in a file of version 1 or 2, a zigzag stroke’s <code>pull_compensation_mm</code>, unless 0, is halved into
+<code>stroke_pull_compensation_mm</code>, which applies to each side from version 3 (M8.3);</li>
+<li>in a file of version 1 or 2, a satin column starts and ends where it is drawn, with
+<code>start_at_nearest_point</code> and <code>end_at_nearest_point</code> off (M8.3);</li>
 <li>in a file of version 1 to 3, a shape whose fill is sewn, without a longest stitch of its own, sews
 3 mm stitches, the default before version 4, where today’s default is 4 mm;</li>
-<li>in a file of version 1, a polyline whose <code>style</code> attribute sets a stroke is a manual stitch.</li>
+<li>in a file of version 1 to 3, a fill with <code>auto_fill</code> off is a legacy fill, sewn as a tatami fill without
+underlay (<code>DEV-FILL-014</code>), and <code>fill_method</code> <code>auto_fill</code>, the tatami fill’s name before version 4, is a
+tatami fill (M8.3).</li>
 </ul>
-<p>A shape digitized automatically sews by the rules instead. Ink/Stitch asks its user whether a file with
-its content and no version is an old design, which it then updates, or objects pasted into a new file.
-The adapter can’t ask. It reads such a file as it is and says so with <code>SC-W0802</code>, as it says that a file
-of a version above 4 is read as version 4.</p>
-<p>The adapter doesn’t make 3 of the update’s other changes yet (M8.3), and each changes what a shape sews:</p>
-<ul>
-<li>in a file of version 1 or 2, a zigzag stroke’s <code>pull_compensation_mm</code> other than 0 is halved into
-<code>stroke_pull_compensation_mm</code>;</li>
-<li>in a file of version 1 or 2, a satin column starts and ends where it is drawn, with
-<code>start_at_nearest_point</code> and <code>end_at_nearest_point</code> off;</li>
-<li>in a file of version 1 to 3, a fill with <code>auto_fill</code> off is a legacy fill, sewn without underlay.</li>
-</ul>
-<p><code>SC-W0802</code> counts the shapes each would change, and those shapes sew as the file sets them. The other
-changes alter nothing the adapter sews. The <a href="inkstitch-compat-contract.html#file-versions">compatibility contract</a>
-lists them all, with the milestone that applies them.</p>
+<p>Each shape gets the updates of each version after its file’s, in the order of the versions, over the
+settings it has, as Ink/Stitch updates it. One digitized automatically sews by the rules instead.
+Ink/Stitch asks its user whether a file with its content and no version is an old design, which it then
+updates, or objects pasted into a new file. The adapter can’t ask. It reads such a file as it is and says
+so with <code>SC-W0802</code>, as it says that a file of a version above 4 is read as version 4.</p>
+<p>Of the update’s other changes, the start and end commands it moves onto their objects wait for M8.4, and
+the rest alter nothing the adapter sews. The
+<a href="inkstitch-compat-contract.html#file-versions">compatibility contract</a> lists them all, with the milestone
+that applies them.</p>
 <h2 id="reports"><a class="header" href="#reports">Reports</a></h2>
 <ul>
 <li><code>SC-W0802</code> reports a feature that is not stitched. Text, images, clones, nested <code>&lt;svg&gt;</code> elements and
 the style sheet rules that are not read are such features. So are clipping, masks, filters and
 markers, a group’s Ink/Stitch settings, and the settings of Ink/Stitch’s early versions (<code>embroider_</code>
 attributes). Clipping is planned for M8.5. It reports a file Ink/Stitch would update, or warn about,
-that is read as it is: one with Ink/Stitch’s content and no file version, or of a newer version. It
-counts the shapes of an older file that the update would change in ways the adapter doesn’t make yet.</li>
+that is read as it is: one with Ink/Stitch’s content and no file version, or of a newer version.</li>
 <li><code>SC-I0818</code> says how many shapes of a file an older Ink/Stitch saved are read as its update changes
-them.</li>
+them, for each change.</li>
 <li><code>SC-W0804</code> reports geometry that cannot be used:
 <ul>
 <li>path data or a list of points with an error, stitched up to the error</li>
