@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2cc47b58.js";
+            window.path_to_searchindex_js = "../searchindex-6736f96b.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-6628e580.js"></script>
+        <script src="../toc-d59cbed3.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -356,7 +356,8 @@ them (<code>REQ-SVG-003</code>).</p>
 reads too, and <code>SC-I0805</code> lists each object left out. The
 <code>starting_point</code> and <code>ending_point</code> commands, which place where Ink/Stitch starts and ends a fill or a
 satin column, are not applied yet (<code>REQ-GEN-001</code>), and <code>SC-W0802</code> names each one on an object a viewer
-shows. The <a href="inkstitch-compat-contract.html#commands">command table</a> gives what the adapter does with
+shows. The <code>target_point</code> command centres a circular fill and aims a ripple. The adapter doesn’t apply
+it until M8, which reads the settings that make a shape one. The <a href="inkstitch-compat-contract.html#commands">command table</a> gives what the adapter does with
 each of the 12 commands. Before its file version 3, Ink/Stitch named 7 of them otherwise, such as
 <code>fill_start</code> for <code>starting_point</code>: the adapter reads those as the commands they became in any file,
 where Ink/Stitch renames them only in the files it updates and sews the old symbol elsewhere

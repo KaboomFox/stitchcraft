@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-2cc47b58.js";
+            window.path_to_searchindex_js = "../../searchindex-6736f96b.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-6628e580.js"></script>
+        <script src="../../toc-d59cbed3.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -277,9 +277,12 @@ treatment on every pass.</li>
 <li>A zigzag’s turnaround takes no step of the list, as in Ink/Stitch (<a href="#zigzag-stroke-p2-m7">zigzag stroke</a>).</li>
 <li>Repeats apply to running, ripple and zigzag strokes; bean stitch to those and to manual stitch (the
 <a href="../inkstitch-compat-contract.html">compatibility contract</a> lists each parameter’s stitch types).</li>
-<li>The fills sewn as one path, a contour fill and a meander fill, have repeats and bean stitch of their
-own, which Ink/Stitch declares for its fills apart from a stroke’s. Bean stitch comes first, and each repeat then sews everything sewn so far again, the
-other way round, so <code>k</code> repeats sew 2^(k−1) passes (<a href="fills.html#stitches">fills</a>).</li>
+<li>The fills sewn as one path have repeats and bean stitch of their own, which Ink/Stitch declares for
+its fills apart from a stroke’s. Bean stitch comes first, and each repeat then sews everything sewn so
+far again, the other way round, so <code>k</code> repeats sew 2^(k−1) passes (<a href="fills.html#stitches">fills</a>).</li>
+<li>A circular fill’s bean stitch leaves out the stitches that run between the pieces of its spiral, but
+each of those stitches takes a step of the list, as in Ink/Stitch
+(<a href="fills.html#circular-fill">circular fill</a>).</li>
 </ul>
 <h3 id="random-length"><a class="header" href="#random-length">Random length</a></h3>
 <p>Ink/Stitch draws each stitch from <code>s × (1 ± jitter)</code> and starts each stretch between corners at a random

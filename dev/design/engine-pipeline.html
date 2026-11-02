@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2cc47b58.js";
+            window.path_to_searchindex_js = "../searchindex-6736f96b.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-6628e580.js"></script>
+        <script src="../toc-d59cbed3.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -274,9 +274,10 @@ gap-filling rows, which Ink/Stitch’s legacy fill has no use for. A contour fil
 rings with the tatami fill’s row spacing and sews them as one running stitch after the tatami fill’s
 underlay, reading the running stitch’s tolerance and random lengths for its path
 (<a href="algorithms/fills.html#contour-fill">fills</a>). A meander fill, sewn from M7.8, lays a tile over each part
-and sews one path through it after the same underlay (<a href="algorithms/fills.html#meander-fill">fills</a>). The
-other stroke, satin and fill methods are skipped with
-<code>SC-W0011</code> until their milestones. An element whose parameters are wrong (<code>SC-E0101</code>) is skipped too, and
+and sews one path through it after the same underlay (<a href="algorithms/fills.html#meander-fill">fills</a>). A
+circular fill, sewn from M7.9, sews a spiral round the middle of each part after that underlay too, and
+routes the spiral’s pieces as a tatami fill routes its rows (<a href="algorithms/fills.html#circular-fill">fills</a>).
+The other stroke, satin and fill methods are skipped with <code>SC-W0011</code> until their milestones. An element whose parameters are wrong (<code>SC-E0101</code>) is skipped too, and
 the rest of the design still plans.</p>
 <p>Each element is generated with the shortest stitch for it: the larger of the machine’s (the profile’s
 <code>min_stitch</code>) and the element’s <code>min_stitch_length_mm</code>, or the design’s shortest stitch when the element
@@ -286,8 +287,9 @@ or a fill’s longest, is raised to it with <code>SC-W0402</code>: shorter, the 
 <p>A preview that cannot afford a fill’s stitches shows its top rows (<code>stitchcraft_engine::generate::rows</code>,
 from M6.3). The fill’s settings are read as for sewing it, and what they say is said the same, but only
 the region is built and the rows laid over it: no needle point is placed and no route is searched. A
-contour fill has no rows, and shows its path round its rings, from M7.7. Nor has a meander fill, which
-shows its path through its tile as the element’s seed lays it, from M7.8.</p>
+contour fill has no rows, and shows its path round its rings, from M7.7. A meander fill shows its path
+through its tile as the element’s seed lays it, from M7.8, and a circular fill the pieces of its spiral,
+from M7.9.</p>
 <p>Rules every generator follows:</p>
 <ul>
 <li><strong>Pure:</strong> output depends only on (normalized shape, typed params, neighbours, seed, budget).</li>
@@ -391,7 +393,7 @@ is clear of the needle for an appliqué or a check, and sewing resumes with a ju
 </thead>
 <tbody>
 <tr><td>Start / end point</td><td>Entry/exit hints for the generator (<code>REQ-GEN-001</code>). The VectorCraft adapter reads them from markers named <code>stitch:start</code> and <code>stitch:end</code>, which it names until then</td><td>M8</td></tr>
-<tr><td>Target point</td><td>Centre for circular fills and ripple targets</td><td>M7, M10</td></tr>
+<tr><td>Target point</td><td>Centre for circular fills and ripple targets. A circular fill turns round its part’s centroid until the adapter reads the command</td><td>M8, M10</td></tr>
 <tr><td>Trim after, stop after</td><td><code>trim_after</code> and <code>stop_after</code> on the element’s last group (see the connection table). The SVG adapter reads Ink/Stitch’s trim and stop commands as these settings.</td><td>M3.8 (engine), M3 (adapter)</td></tr>
 <tr><td>Ignore object / ignore layer</td><td>The adapter drops the element and says so in the report (<code>REQ-ASM-004</code>). The VectorCraft adapter reads them from the name <code>stitch:ignore</code></td><td>M3 (SVG), M6 (VectorCraft)</td></tr>
 <tr><td>Origin</td><td>The design setting <code>origin</code></td><td>M3.8 (engine), M8 (adapter)</td></tr>

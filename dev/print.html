@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-2cc47b58.js";
+            window.path_to_searchindex_js = "searchindex-6736f96b.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-6628e580.js"></script>
+        <script src="toc-d59cbed3.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -816,7 +816,7 @@ holds Ink/Stitch’s settings for that kind of stitch, and the object shows its 
 art. The thread is the colour of the object’s fill for a fill, and of its stroke for a stroke or a satin
 column.</p>
 <p>From VectorCraft 0.14 each setting has a label and its unit, in the sections of the
-<a href="#parameters-10">parameter reference</a>. Rest the pointer on a label for its help, or press the
+<a href="#parameters-11">parameter reference</a>. Rest the pointer on a label for its help, or press the
 button after the field for its page in the reference. A setting shows only when it applies: a satin’s
 staggers show for staggered splits. VectorCraft before 0.14 lists every setting, each under its Ink/Stitch
 name.</p>
@@ -1111,6 +1111,7 @@ stroke or the fill of a shape, and each sews in its own thread colour.</p>
 <tr><td><a href="#tatami-fill">Tatami fill</a></td><td>areas, in rows of running stitches, Ink/Stitch’s legacy fill among them</td><td>now</td></tr>
 <tr><td><a href="#contour-fill">Contour fill</a></td><td>areas, in rings that follow the outline inward, sewn as one line</td><td>now</td></tr>
 <tr><td><a href="#meander-fill">Meander fill</a></td><td>areas, in one line that wanders along the sides of a tiling</td><td>now</td></tr>
+<tr><td><a href="#circular-fill">Circular fill</a></td><td>areas, in a spiral round their middle</td><td>now</td></tr>
 </tbody>
 </table>
 </div>
@@ -1834,6 +1835,93 @@ and clipping</li>
 <li><a href="#common-parameters">the settings every element shares</a>, the random seed among them</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="circular-fill"><a class="header" href="#circular-fill">Circular fill</a></h1>
+<!-- stitch-types: circular_fill -->
+<p>A circular fill covers an area with a spiral round its middle, as ripples spread round a stone dropped in
+water. Its rings lie a row spacing apart. The spiral turns in on every other ring and back out between
+them, so it ends near where it began. The area’s outline cuts it into pieces, which are sewn one after
+another, the needle running between them under the pieces not sewn yet. Set a fill’s <code>fill_method</code> to
+<code>circular_fill</code> for it.</p>
+<p>Its settings are set as every stitch type’s are (<a href="user/stitches#setting-parameters">setting parameters</a>).</p>
+<p>Here is the green patch of <code>docs/fixtures/fill.svg</code> that the <a href="#tatami-fill">tatami fill</a>’s pictures
+show, 32 mm by 20 mm with a round hole, sewn as a circular fill. The pictures further down show the square
+with rounded corners of <code>docs/fixtures/meander.svg</code>, 30 mm a side.</p>
+<!-- shot: circular-fill -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: center">Circular fill</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/circular-fill-1.png" alt="A green patch 32 mm by 20 mm with rounded corners and a round hole, sewn as a circular fill. A spiral of rings 0.25 mm apart turns round the middle of the patch, cut by its edges and the hole, Circular fill"><span class="img-wrapper"><img src="images/generated/circular-fill-1.png" alt="A green patch 32 mm by 20 mm with rounded corners and a round hole, sewn as a circular fill. A spiral of rings 0.25 mm apart turns round the middle of the patch, cut by its edges and the hole, Circular fill"></span></label></td></tr>
+</tbody>
+</table>
+</div>
+<!-- /shot -->
+<h2 id="the-spiral"><a class="header" href="#the-spiral">The spiral</a></h2>
+<p>The spiral turns round the middle of each part of the area, its centroid. Its rings lie <code>row_spacing_mm</code>
+apart, out to 2 spacings past the part’s farthest point. With <code>end_row_spacing_mm</code> they fade: from the row
+spacing at the middle to the end spacing at the part’s farthest point, a fill denser at its heart. These
+pictures leave the underlay out.</p>
+<!-- shot: circular-spacing -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: center">1 mm apart</th><th style="text-align: center">2 mm apart</th><th style="text-align: center">1 mm, fading to 3 mm</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/circular-spacing-1.png" alt="A rounded square 30 mm a side sewn without underlay as a circular fill, a spiral round its middle whose rings the corners cut, 1 mm apart"><span class="img-wrapper"><img src="images/generated/circular-spacing-1.png" alt="A rounded square 30 mm a side sewn without underlay as a circular fill, a spiral round its middle whose rings the corners cut, 1 mm apart"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/circular-spacing-2.png" alt="A rounded square 30 mm a side sewn without underlay as a circular fill, a spiral round its middle whose rings the corners cut, 2 mm apart"><span class="img-wrapper"><img src="images/generated/circular-spacing-2.png" alt="A rounded square 30 mm a side sewn without underlay as a circular fill, a spiral round its middle whose rings the corners cut, 2 mm apart"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/circular-spacing-3.png" alt="A rounded square 30 mm a side sewn without underlay as a circular fill, a spiral round its middle whose rings the corners cut, 1 mm, fading to 3 mm"><span class="img-wrapper"><img src="images/generated/circular-spacing-3.png" alt="A rounded square 30 mm a side sewn without underlay as a circular fill, a spiral round its middle whose rings the corners cut, 1 mm, fading to 3 mm"></span></label></td></tr>
+</tbody>
+</table>
+</div>
+<!-- /shot -->
+<p>Ink/Stitch’s <code>target_point</code> command moves the middle. StitchCraft reads it with Ink/Stitch’s other
+commands in a later version, and until then the spiral turns round the centroid.</p>
+<h2 id="pieces-and-travel"><a class="header" href="#pieces-and-travel">Pieces and travel</a></h2>
+<p>Where the part isn’t round, the spiral leaves it and comes back at every turn past the largest circle
+inside the outline, and the part cuts it into pieces. Each is sewn once, in the order a
+<a href="#tatami-fill">tatami fill</a> would sew rows with the same ends. The needle runs between them under the
+pieces sewn later, which hide it. <code>underpath</code> off, it runs along the outline, where it can show.
+<code>angle</code> turns the lines it runs along, and <code>skip_last</code> leaves out the last needle point of each piece.</p>
+<!-- shot: circular-travel -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: center">Underpath</th><th style="text-align: center">Along the outline</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/circular-travel-1.png" alt="A rounded square 30 mm a side sewn as a circular fill without underlay, its rings 1.5 mm apart, the needle running between the pieces of the spiral, Underpath"><span class="img-wrapper"><img src="images/generated/circular-travel-1.png" alt="A rounded square 30 mm a side sewn as a circular fill without underlay, its rings 1.5 mm apart, the needle running between the pieces of the spiral, Underpath"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/circular-travel-2.png" alt="A rounded square 30 mm a side sewn as a circular fill without underlay, its rings 1.5 mm apart, the needle running between the pieces of the spiral, Along the outline"><span class="img-wrapper"><img src="images/generated/circular-travel-2.png" alt="A rounded square 30 mm a side sewn as a circular fill without underlay, its rings 1.5 mm apart, the needle running between the pieces of the spiral, Along the outline"></span></label></td></tr>
+</tbody>
+</table>
+</div>
+<!-- /shot -->
+<p>A round part’s spiral may enter it once and leave it once. It is then sewn from the needle along the
+outline to where the spiral enters, and from where it leaves along the outline to where the next part or
+element starts, each the shorter way round.</p>
+<p>A part that lies within its row spacing of its middle, too small for a spiral, is sewn as one circle with
+a radius of the row spacing round its middle, and <code>SC-W0318</code> says so: the circle may lie partly outside
+so small a part. A part that the spiral misses, lying between 2 of its turns, is sewn as a running stitch
+round its outline, and <code>SC-W0305</code> says so.</p>
+<h2 id="stitches-underlay-and-repeats-2"><a class="header" href="#stitches-underlay-and-repeats-2">Stitches, underlay and repeats</a></h2>
+<p>The spiral sews in stitches as long as <code>running_stitch_length_mm</code>, within <code>running_stitch_tolerance_mm</code>
+of it, as a running stitch sews a stroke, and with <code>enable_random_stitch_length</code> at random lengths, which
+<code>random_seed</code> chooses. Bean stitch sews each of its stitches back and forth, but not the travel between
+pieces. The repeats work as they do for a contour fill
+(<a href="#stitches-underlay-and-repeats">contour fill</a>).</p>
+<p>Before its spiral, each part of the fill sews the tatami fill’s underlay, on by default
+(<a href="#underlay">tatami fill</a>): rows square to the fill’s <code>angle</code>. <code>expand_mm</code> grows the area
+before the spiral is laid over it.</p>
+<h2 id="parameters-9"><a class="header" href="#parameters-9">Parameters</a></h2>
+<p>The reference gives each setting’s range and default:</p>
+<ul>
+<li><a href="#fill-parameters">fill</a>, which chooses the fill method</li>
+<li><a href="#tatami-parameters">tatami fill</a>, its row spacing and end spacing, the needle’s way between
+pieces, and its underlay and expanding</li>
+<li><a href="#path-fill-parameters">path fills</a>, its repeats and bean stitch</li>
+<li><a href="#running-parameters">running stitch</a>, its stitch length and tolerance, and random lengths</li>
+<li><a href="#common-parameters">the settings every element shares</a>, the random seed among them</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="automatic-digitizing"><a class="header" href="#automatic-digitizing">Automatic digitizing</a></h1>
 <p>StitchCraft can choose a shape’s stitches itself. A shape without settings sews by its width, at the size
 it sews (<a href="#stitches-by-width">stitches by width</a>). Digitizing also mends where shapes meet, and chooses an
@@ -2018,7 +2106,7 @@ work. When the design has a stop position, the frame moves there before each sto
 test sheet TS-02 checks what the reference machine does. DST has no trim command. StitchCraft writes a trim
 there as 3 short jumps that end where they started, and a DST machine set to cut at 3 jumps in a row
 cuts there. The <a href="#machine-formats">machine formats</a> design says how each format records a trim.</p>
-<h2 id="parameters-9"><a class="header" href="#parameters-9">Parameters</a></h2>
+<h2 id="parameters-10"><a class="header" href="#parameters-10">Parameters</a></h2>
 <p><a href="#common-parameters">Common parameters</a> lists each of these settings with its range and
 default.</p>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -2086,7 +2174,7 @@ it plans for, and warns beyond a profile’s comfort zone where the profile has 
 <tr><td><a href="#diagnostic-codes">Diagnostic codes</a></td><td>generated from the diagnostics registry</td><td>available</td></tr>
 <tr><td><a href="#glossary">Glossary</a></td><td>hand-written</td><td>available</td></tr>
 <tr><td><a href="#vectorcraft-compatibility">VectorCraft compatibility</a></td><td>generated from the compatibility gate’s record, <code>compat/supported.toml</code></td><td>available</td></tr>
-<tr><td><a href="#parameters-10">Parameters</a> (one page per stitch type)</td><td>generated from the parameter registry</td><td>available</td></tr>
+<tr><td><a href="#parameters-11">Parameters</a> (one page per stitch type)</td><td>generated from the parameter registry</td><td>available</td></tr>
 <tr><td><a href="#inkstitch-compatibility-contract">Ink/Stitch compatibility contract</a></td><td>generated from <code>conformance/inkstitch-params.toml</code> and the parameter registry</td><td>available</td></tr>
 </tbody>
 </table>
@@ -2598,20 +2686,22 @@ Arguments:
 <li>If it asks for a larger hoop, turn the design a quarter turn on the machine’s screen. Does it take it then?</li>
 <li>The frame measures 20.0 × 60.0 mm (± 0.5 mm), tall side top to bottom, the F at the top left.</li>
 </ul>
-<h2 id="ts-11b--new-fills-contour-fills"><a class="header" href="#ts-11b--new-fills-contour-fills">TS-11B — New fills: contour fills</a></h2>
-<p>125.0 × 116.0 mm · 10611 stitches, 9 jumps, 8 trims, 2 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<h2 id="ts-11b--new-fills-contour-and-circular-fills"><a class="header" href="#ts-11b--new-fills-contour-and-circular-fills">TS-11B — New fills: contour and circular fills</a></h2>
+<p>125.0 × 166.0 mm · 15314 stitches, 12 jumps, 11 trims, 3 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
-<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-11b.png" alt="TS-11B as it will sew: 9 contour fills in 3 rows. At the top, in green, 3 discs: one round a hole set off its middle, a single spiral and a double spiral. In the middle, in blue, 3 five-pointed stars whose rings have round, mitred and bevelled corners. At the bottom, in red, 2 squares joined by a narrow neck, a rectangle, and a leaf. Jump threads join the samples in each row."><span class="img-wrapper"><img src="images/generated/testsheet-ts-11b.png" alt="TS-11B as it will sew: 9 contour fills in 3 rows. At the top, in green, 3 discs: one round a hole set off its middle, a single spiral and a double spiral. In the middle, in blue, 3 five-pointed stars whose rings have round, mitred and bevelled corners. At the bottom, in red, 2 squares joined by a narrow neck, a rectangle, and a leaf. Jump threads join the samples in each row."></span></label></p>
-<p>Threads: Emerald Green, Blue, Red.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-11b.png" alt="TS-11B as it will sew: 9 contour fills in 3 rows and 3 circular fills under them. At the top, in green, 3 discs: one round a hole set off its middle, a single spiral and a double spiral. In the second row, in blue, 3 five-pointed stars whose rings have round, mitred and bevelled corners. In the third, in red, 2 squares joined by a narrow neck, a rectangle, and a leaf. At the bottom, in gold, a spiral round the middle of a disc with a hole, of a star and of a rectangle whose rings fade. Jump threads join the samples in each row."><span class="img-wrapper"><img src="images/generated/testsheet-ts-11b.png" alt="TS-11B as it will sew: 9 contour fills in 3 rows and 3 circular fills under them. At the top, in green, 3 discs: one round a hole set off its middle, a single spiral and a double spiral. In the second row, in blue, 3 five-pointed stars whose rings have round, mitred and bevelled corners. In the third, in red, 2 squares joined by a narrow neck, a rectangle, and a leaf. At the bottom, in gold, a spiral round the middle of a disc with a hole, of a star and of a rectangle whose rings fade. Jump threads join the samples in each row."></span></label></p>
+<p>Threads: Emerald Green, Blue, Red, Deep Gold.</p>
 <p>After sewing, check:</p>
 <ul>
-<li>Each sample is a contour fill: rings that follow its outline inward, a row spacing apart, sewn as one line over the default underlay. Top row, in green, left to right: a disc 36 mm across sewn inner to outer round a hole, then a single spiral and a double spiral, the rings 0.25 mm apart. Middle row, in blue: stars 40 mm across with round, mitred and bevelled corners, the rings 0.4 mm apart. Bottom row, in red: 2 squares joined by a neck 3 mm wide, a rectangle whose rings alternate direction, and a leaf smoothed by 0.5 mm.</li>
+<li>The top 3 rows are contour fills: rings that follow the outline inward, a row spacing apart, sewn as one line over the default underlay. Top row, in green, left to right: a disc 36 mm across sewn inner to outer round a hole, then a single spiral and a double spiral, the rings 0.25 mm apart. Second row, in blue: stars 40 mm across with round, mitred and bevelled corners, the rings 0.4 mm apart. Third row, in red: 2 squares joined by a neck 3 mm wide, a rectangle whose rings alternate direction, and a leaf smoothed by 0.5 mm.</li>
+<li>The bottom row, in gold, is circular fills: a spiral round the middle of each shape, cut by its outline, over the default underlay. Left to right: the disc round its hole, the star, and a rectangle whose circles fade from 0.25 mm apart at its middle to 1 mm at its corners. Where the spiral leaves the shape and comes back, the needle travels inside it under the spiral sewn later.</li>
 <li>Does fabric show between the rings, or does a fill pucker? Measure the discs: do they sew 36 mm across?</li>
 <li>Inner to outer steps in from ring to ring and sews each on its way out. Do the steps show as a line across the rings? On the rectangle, whose rings alternate, the steps don’t cross: does it look calmer than the disc?</li>
 <li>Where do the spirals end in the middle, and the double spiral on its outline? Is there a knot or a bump there?</li>
 <li>On the stars, do the mitred rings reach into the points, and the round and bevelled ones leave a gap at each tip? Which star looks best?</li>
 <li>Does the neck between the 2 squares fill, where the rings part to each side? Does the smoothed leaf’s line run evenly, without kinks?</li>
+<li>Do the circular fills’ circles look round and even, and does fabric show between them? Does the travel between the pieces of a spiral show anywhere, on the star’s points or round the disc’s hole? Does the fading rectangle look denser at its middle and lighter at its corners, as it should?</li>
 <li>How long does the sheet take? A contour fill sews as one line, with no travel between rows.</li>
 </ul>
 <h2 id="ts-11c--new-fills-meander-fills"><a class="header" href="#ts-11c--new-fills-meander-fills">TS-11C — New fills: meander fills</a></h2>
@@ -2745,6 +2835,7 @@ Arguments:
 <tr><td><a href="#sc-i0315"><code>SC-I0315</code></a></td><td>Info</td><td>Contour fill’s part too narrow for its spiral; sewn inner to outer</td></tr>
 <tr><td><a href="#sc-w0316"><code>SC-W0316</code></a></td><td>Warning</td><td>Meander pattern is one of Ink/Stitch’s tiles; sewn with StitchCraft’s default tile</td></tr>
 <tr><td><a href="#sc-w0317"><code>SC-W0317</code></a></td><td>Warning</td><td>Meander fill part too small for its tile; sewn round its outline</td></tr>
+<tr><td><a href="#sc-w0318"><code>SC-W0318</code></a></td><td>Warning</td><td>Circular fill part within its row spacing of its middle; sewn as one circle</td></tr>
 <tr><td><a href="#sc-w0401"><code>SC-W0401</code></a></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td></tr>
 <tr><td><a href="#sc-w0402"><code>SC-W0402</code></a></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised</td></tr>
 <tr><td><a href="#sc-w0403"><code>SC-W0403</code></a></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td></tr>
@@ -3093,6 +3184,13 @@ the honeycomb, instead.</p>
 has nothing to wander through. It is sewn as a running stitch round its outline. Ink/Stitch stops
 the whole fill with an error there.</p>
 <p>The message counts the parts. Make <code>meander_scale_percent</code> smaller to fit the tile into them.</p>
+<h2 id="sc-w0318"><a class="header" href="#sc-w0318">SC-W0318</a></h2>
+<p><strong>Warning</strong> — Circular fill part within its row spacing of its middle; sewn as one circle</p>
+<p>A part of a circular fill lies within its row spacing of its middle, too small for a spiral, so it is
+sewn as one circle with a radius of the row spacing round its middle, as Ink/Stitch sews it. The
+circle may reach past the part.</p>
+<p>The message counts the parts. Make <code>row_spacing_mm</code> smaller for a spiral, or sew so small a part as a
+running stitch or a satin column.</p>
 <h2 id="sc-w0401"><a class="header" href="#sc-w0401">SC-W0401</a></h2>
 <p><strong>Warning</strong> — Path too small for the shortest stitch; skipped</p>
 <p>A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
@@ -3550,7 +3648,7 @@ background; one whose holes can’t be found keeps them open; one that can’t b
 and one whose region can’t be given is sewn as it is drawn. To sew a shape as it is drawn, give it
 settings: in VectorCraft, apply StitchCraft’s Fill, Stroke or Satin effect to it.</p>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from the parameter registry (`stitchcraft-engine/src/registry.rs`) and the deviations ledger. Edit the declaration, not this page. -->
-<h1 id="parameters-10"><a class="header" href="#parameters-10">Parameters</a></h1>
+<h1 id="parameters-11"><a class="header" href="#parameters-11">Parameters</a></h1>
 <p>Every setting a design element can carry, by the key a design stores it under. A parameter that Ink/Stitch
 also has keeps Ink/Stitch’s key, meaning and default, so files move between the two tools unchanged
 (<a href="#inkstitch-compatibility-contract">compatibility contract</a>). Where StitchCraft reads or sews one
@@ -3604,10 +3702,10 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#satin-parameters">Satin parameters</a></td><td>34</td><td>Satin column, E-stitch, S-stitch, Zigzag satin</td></tr>
 <tr><td><a href="#pull-parameters">Pull parameters</a></td><td>2</td><td>Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill</td></tr>
 <tr><td><a href="#fill-parameters">Fill parameters</a></td><td>2</td><td>Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill</td></tr>
-<tr><td><a href="#tatami-parameters">Tatami parameters</a></td><td>15</td><td>Tatami fill, Contour fill, Meander fill</td></tr>
+<tr><td><a href="#tatami-parameters">Tatami parameters</a></td><td>15</td><td>Tatami fill, Contour fill, Meander fill, Circular fill</td></tr>
 <tr><td><a href="#contour-parameters">Contour parameters</a></td><td>4</td><td>Contour fill</td></tr>
 <tr><td><a href="#meander-parameters">Meander parameters</a></td><td>6</td><td>Meander fill</td></tr>
-<tr><td><a href="#path-fill-parameters">Path fill parameters</a></td><td>3</td><td>Contour fill, Meander fill</td></tr>
+<tr><td><a href="#path-fill-parameters">Path fill parameters</a></td><td>3</td><td>Contour fill, Meander fill, Circular fill</td></tr>
 <tr><td><a href="#auto-parameters">Auto parameters</a></td><td>5</td><td>automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type</td></tr>
 </tbody>
 </table>
@@ -3880,12 +3978,12 @@ jump. Empty: the document’s setting.</p>
 <h3 id="max_stitch_length_mm"><a class="header" href="#max_stitch_length_mm"><code>max_stitch_length_mm</code></a></h3>
 <p><strong>Longest stitch.</strong> Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as
 its split method says. Empty, a stitch is split only where it is longer than the machine sews. A
-tatami fill sews its rows in stitches this long, and a contour fill its rings. A meander fill’s
-underlay sews its rows so.</p>
+tatami fill sews its rows in stitches this long, and a contour fill its rings. A meander or
+circular fill’s underlay sews its rows so.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from 0.1 to 25 mm, or empty (0 or less counts as empty); for fills, a length from 0.1 to 25 mm, empty being the default</li>
 <li><strong>Default:</strong> empty, and <code>4</code> for fills</li>
-<li><strong>Applies to:</strong> Manual stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill</li>
+<li><strong>Applies to:</strong> Manual stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill, Circular fill</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
 <li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column’s deviates so. Ink/Stitch reads a manual stitch’s as not set at 0 or below too, and doesn’t warn.</li>
@@ -3902,7 +4000,7 @@ gets its own.</p>
 <ul>
 <li><strong>Accepts:</strong> a number or any text, or empty to derive it from the element</li>
 <li><strong>Default:</strong> empty</li>
-<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill</li>
+<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill, Circular fill</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
 <li><strong>DEV-RUN-005.</strong> A running stitch’s random lengths are drawn from StitchCraft’s generator (SplitMix64, seeded from random_seed, or from the element’s id when it has none), so the values differ from Ink/Stitch’s for the same seed. They are placed otherwise too. StitchCraft draws a stitch’s length and its span’s phase from 2 numbers, starts a phase only where a span starts, and scales each span’s stitches to end on its corner. Ink/Stitch draws one number for both a stitch’s length and its phase, starts a new phase after each stitch the tolerance shortened as well, and leaves what is left before a corner as the last stitch. Both key each span’s draws by its place in its subpath; StitchCraft’s keys hold the subpath’s place in the path too, where Ink/Stitch’s start again in each subpath, so subpaths drawn alike sew alike there.</li>
@@ -3935,11 +4033,12 @@ until then an element set to it is skipped (<code>SC-W0011</code>).</p>
 <p><strong>Stitch length.</strong> How long each stitch is. Between corners the stitches are spread evenly, so each one is at most
 this long. Several lengths separated by spaces sew as a repeating pattern: “2.5 1” sews long,
 short, long, short. The stitches that join a satin column’s underlays are no longer than the
-first length, and a meander fill’s path is sewn in stitches of the first length.</p>
+first length, and a meander fill’s path and a circular fill’s spiral are sewn in stitches of the
+first length.</p>
 <ul>
 <li><strong>Accepts:</strong> 1 to 16 lengths from 0.1 to 25 mm, separated by spaces</li>
 <li><strong>Default:</strong> <code>2.5</code></li>
-<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill</li>
+<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill, Circular fill</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
 <li><strong>DEV-RUN-003.</strong> No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column’s travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Where a satin column’s parts meet nearer than the shortest stitch, the needle’s way between them gives way to the next part’s first point, and so does an underlay’s last point or the column’s start, which moves there; beside a top stitch’s end, which stays where it is, the next part’s points that near it give way instead. Ink/Stitch’s running stitch has no shortest stitch, and it joins a satin column’s parts as they are; its plan later drops stitches of at most 0.1 mm (its default), keeping the stitch before.</li>
@@ -3954,7 +4053,7 @@ do a contour fill’s rings.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from 0.01 to 5 mm</li>
 <li><strong>Default:</strong> <code>0.2</code></li>
-<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill</li>
+<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill, Circular fill</li>
 <li><strong>Ink/Stitch:</strong> same key; StitchCraft differs:
 <ul>
 <li><strong>DEV-SAT-006.</strong> A satin column’s and a tatami fill’s running_stitch_tolerance_mm defaults to 0.2 mm, the value Ink/Stitch sews when a file sets none. Ink/Stitch’s settings window shows 0.1 mm.</li>
@@ -3968,7 +4067,7 @@ line their needle holes up, which avoids moiré patterns.</p>
 <ul>
 <li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
 <li><strong>Default:</strong> <code>false</code></li>
-<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Tatami fill, Contour fill</li>
+<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Tatami fill, Contour fill, Circular fill</li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <h3 id="random_stitch_length_jitter_percent"><a class="header" href="#random_stitch_length_jitter_percent"><code>random_stitch_length_jitter_percent</code></a></h3>
@@ -3979,7 +4078,7 @@ element’s <code>random_seed</code>.</p>
 <li><strong>Accepts:</strong> a percentage from 0 to 100</li>
 <li><strong>Default:</strong> <code>10</code></li>
 <li><strong>Shown when</strong> <a href="#enable_random_stitch_length"><code>enable_random_stitch_length</code></a> is <code>true</code></li>
-<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Tatami fill, Contour fill</li>
+<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Tatami fill, Contour fill, Circular fill</li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from `RepeatParams` in the parameter registry. Edit the declaration, not this page. -->
@@ -4417,7 +4516,8 @@ its stroke settings say. The element before it still ends near it, as Ink/Stitch
 </ul>
 <h3 id="fill_method"><a class="header" href="#fill_method"><code>fill_method</code></a></h3>
 <p><strong>Fill method.</strong> The stitch the area is filled with. A tatami fill sews rows of running stitches across it, a
-contour fill rings that follow its outline inward, and a fill set to Ink/Stitch’s legacy fill is
+contour fill rings that follow its outline inward, a meander fill one line that wanders through a
+tiling, and a circular fill a spiral round its middle. A fill set to Ink/Stitch’s legacy fill is
 sewn as a tatami fill without underlay (<code>SC-W0314</code>). The other methods arrive in later versions;
 until then an element set to one is skipped (<code>SC-W0011</code>).</p>
 <ul>
@@ -4433,22 +4533,24 @@ until then an element set to one is skipped (<code>SC-W0011</code>).</p>
 <h1 id="tatami-parameters"><a class="header" href="#tatami-parameters">Tatami parameters</a></h1>
 <p>Tatami fill: rows of running stitches across the fill’s area, the needle points of neighbouring rows
 offset so that they never line up. Ink/Stitch’s default fill. A contour fill takes its row spacing,
-its expand and its underlay from these settings too, and a meander fill its expand and its underlay.</p>
-<p>Applies to Tatami fill, Contour fill, Meander fill.</p>
+its expand and its underlay from these settings too, a meander fill its expand and its underlay, and a
+circular fill all but its gap-filling rows.</p>
+<p>Applies to Tatami fill, Contour fill, Meander fill, Circular fill.</p>
 <h2 id="rows"><a class="header" href="#rows">Rows</a></h2>
 <h3 id="angle-2"><a class="header" href="#angle-2"><code>angle</code></a></h3>
 <p><strong>Angle.</strong> The direction of the rows, in degrees counter-clockwise from horizontal: 0 sews horizontal rows
 and 90 upright ones. A contour fill’s rings follow its outline, and a meander fill’s path its tile,
-and their angle turns only their underlay.</p>
+and their angle turns only their underlay. A circular fill’s angle turns its underlay and the lines
+its needle travels along under its spiral.</p>
 <ul>
 <li><strong>Accepts:</strong> an angle in degrees</li>
 <li><strong>Default:</strong> <code>0</code></li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <h3 id="row_spacing_mm"><a class="header" href="#row_spacing_mm"><code>row_spacing_mm</code></a></h3>
-<p><strong>Row spacing.</strong> How far apart the rows are, measured square to them, or a contour fill’s rings. Rows closer
-together cover the fabric more fully, and pull it in more. A meander fill’s underlay rows lie 3
-of them apart.</p>
+<p><strong>Row spacing.</strong> How far apart the rows are, measured square to them, or a contour fill’s rings, or a circular
+fill’s circles. Rows closer together cover the fabric more fully, and pull it in more. A meander
+fill’s underlay rows lie 3 of them apart.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from 0.1 to 100 mm</li>
 <li><strong>Default:</strong> <code>0.25</code></li>
@@ -4461,16 +4563,18 @@ of them apart.</p>
 </ul>
 <h3 id="end_row_spacing_mm"><a class="header" href="#end_row_spacing_mm"><code>end_row_spacing_mm</code></a></h3>
 <p><strong>End row spacing.</strong> The spacing of the last rows, for a fill that fades: from the first row the spacing changes
-steadily towards it, reaching it the part’s height away, in each part of the fill. Empty, every
-row is the row spacing from the next.</p>
+steadily towards it, reaching it the part’s height away, in each part of the fill. A circular
+fill’s circles go from the row spacing at the middle to it at the part’s farthest point. Empty,
+every row is the row spacing from the next.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from 0.1 to 100 mm, or empty (0 or less counts as empty)</li>
 <li><strong>Default:</strong> empty</li>
-<li><strong>Applies to:</strong> Tatami fill</li>
+<li><strong>Applies to:</strong> Tatami fill, Circular fill</li>
 <li><strong>Ink/Stitch:</strong> same key; StitchCraft differs:
 <ul>
 <li><strong>DEV-FILL-003.</strong> With end_row_spacing_mm, the step from row to row changes from the row spacing to the end spacing over the part’s height, measured from the first row, and stays at the end spacing beyond it. Ink/Stitch carries the change on past the height, which reaches the rows within a row spacing of the part’s far side when the first row lies before the part. With an end spacing smaller than the row spacing, over a part a few rows tall, the steps then shrink towards 0 and the rows pile up short of the far side without end.</li>
 <li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column’s deviates so. Ink/Stitch reads a manual stitch’s as not set at 0 or below too, and doesn’t warn.</li>
+<li><strong>DEV-FILL-021.</strong> With end_row_spacing_mm, a circular fill’s circles past the part’s farthest point lie the end spacing apart. Ink/Stitch’s step goes on changing with the radius past it, and where the end spacing is under half the row spacing, over a part a few row spacings across, its steps shrink towards 0 before the circles reach their last radius, and it adds circles without end.</li>
 </ul>
 </li>
 </ul>
@@ -4516,22 +4620,24 @@ underlay’s rows so.</p>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <h3 id="skip_last"><a class="header" href="#skip_last"><code>skip_last</code></a></h3>
-<p><strong>Skip last stitch.</strong> Leave out the needle point at the end of each row. It lies close to the start of the next row,
-and leaving it out lowers the stitch count and the density along the fill’s edge.</p>
+<p><strong>Skip last stitch.</strong> Leave out the needle point at the end of each row, or of each piece of a circular fill’s spiral. It
+lies close to the start of the next, and leaving it out lowers the stitch count and the density
+along the fill’s edge.</p>
 <ul>
 <li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
 <li><strong>Default:</strong> <code>false</code></li>
-<li><strong>Applies to:</strong> Tatami fill</li>
+<li><strong>Applies to:</strong> Tatami fill, Circular fill</li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <h2 id="travel"><a class="header" href="#travel">Travel</a></h2>
 <h3 id="underpath"><a class="header" href="#underpath"><code>underpath</code></a></h3>
-<p><strong>Underpath.</strong> Travel between rows runs inside the fill, under rows sewn after it, which hide it. Off, the
-needle travels along the fill’s outline, where the travel can show along the edge.</p>
+<p><strong>Underpath.</strong> Travel between rows, or a circular fill’s pieces of spiral, runs inside the fill, under those sewn
+after it, which hide it. Off, the needle travels along the fill’s outline, where the travel can
+show along the edge.</p>
 <ul>
 <li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
 <li><strong>Default:</strong> <code>true</code></li>
-<li><strong>Applies to:</strong> Tatami fill</li>
+<li><strong>Applies to:</strong> Tatami fill, Circular fill</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
 <li><strong>DEV-FILL-011.</strong> With underpath off, or in a part the gratings of lines miss, the needle travels between 2 points of one ring the shorter way round it, by length, and on a tie the way that does not pass the ring’s start. Ink/Stitch’s travel along the outline counts nodes instead: its graph has a node every CSS pixel along the outline’s sides, and at their corners and the rows’ ends, and its edges carry no length, so the way with fewer nodes is taken. That is about the shorter way, but a way past many short sides, as round a curve drawn in short pieces, has more nodes for its length, and the way with fewer nodes can be the longer.</li>
@@ -4541,9 +4647,10 @@ needle travels along the fill’s outline, where the travel can show along the e
 </ul>
 <h2 id="underlay-1"><a class="header" href="#underlay-1">Underlay</a></h2>
 <h3 id="fill_underlay"><a class="header" href="#fill_underlay"><code>fill_underlay</code></a></h3>
-<p><strong>Underlay.</strong> Sew underlay before the top rows, a contour fill’s rings or a meander fill’s path: rows of stitches
-farther apart than the top rows, square to them unless set otherwise. It holds the fabric still
-while the fill is sewn and lifts the top rows, so less fabric shows between them.</p>
+<p><strong>Underlay.</strong> Sew underlay before the top rows, a contour fill’s rings, a meander fill’s path or a circular fill’s
+spiral: rows of stitches farther apart than the top rows, square to them unless set otherwise. It
+holds the fabric still while the fill is sewn and lifts the top rows, so less fabric shows between
+them.</p>
 <ul>
 <li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
 <li><strong>Default:</strong> <code>true</code></li>
@@ -4715,10 +4822,10 @@ other and back. 0 sews it as a running stitch.</p>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from `PathFillParams` in the parameter registry. Edit the declaration, not this page. -->
 <h1 id="path-fill-parameters"><a class="header" href="#path-fill-parameters">Path fill parameters</a></h1>
-<p>A fill sewn as one path, a contour fill’s or a meander fill’s: how the path is smoothed, and its
+<p>A fill sewn as a path, a contour, meander or circular fill’s: how the path is smoothed, and its
 repeats and bean stitch, which Ink/Stitch declares for its fills apart from a stroke’s. Bean stitch
 comes first, and each repeat then sews everything sewn so far again, the other way round.</p>
-<p>Applies to Contour fill, Meander fill.</p>
+<p>Applies to Contour fill, Meander fill, Circular fill.</p>
 <h2 id="path"><a class="header" href="#path">Path</a></h2>
 <h3 id="smoothness_mm"><a class="header" href="#smoothness_mm"><code>smoothness_mm</code></a></h3>
 <p><strong>Smoothness.</strong> How much the path is smoothed: its corners are cut round over about 5 times this. A contour fill
@@ -4727,6 +4834,7 @@ path as it is. A contour fill’s spirals are not smoothed.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from 0 to 100 mm</li>
 <li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Applies to:</strong> Contour fill, Meander fill</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
 <li><strong>DEV-FILL-017.</strong> Before inner to outer’s path is smoothed, StitchCraft’s running stitch cuts it into points 5 times smoothness_mm apart, a point on each corner, where Ink/Stitch’s evenly spaced points may cut a corner by up to twice the smoothness, as for a tatami fill’s travel (DEV-FILL-007). The smoothed path is then cut where its rings began, at the same share of its length, and each piece is a span of the running stitch. The path lies where Ink/Stitch’s does but takes more stitches: TS-11B’s leaf, smoothed by 0.5 mm, takes 973 where its rings unsmoothed take 903, against Ink/Stitch’s 830 and 828, 17 % more than Ink/Stitch’s where the sheet’s samples that are not smoothed take 2 to 12 % more.</li>
@@ -4746,7 +4854,8 @@ twice, 4 there and back 4 times.</p>
 <h3 id="bean_stitch_repeats-1"><a class="header" href="#bean_stitch_repeats-1"><code>bean_stitch_repeats</code></a></h3>
 <p><strong>Bean stitch.</strong> How many times to go back and forth over each stitch of the fill’s path, before its repeats: 1
 sews every stitch three times (there, back and there again), 2 five times. Several numbers
-separated by spaces are taken in turn along the stitches: “1 0” makes every other stitch bold.</p>
+separated by spaces are taken in turn along the stitches: “1 0” makes every other stitch bold.
+A circular fill’s travel between the pieces of its spiral is sewn once, and takes its turn.</p>
 <ul>
 <li><strong>Accepts:</strong> 1 to 16 whole numbers from 0 to 10, separated by spaces</li>
 <li><strong>Default:</strong> <code>0</code></li>
@@ -5569,7 +5678,7 @@ every ring. Parts of 3 square CSS pixels (0.21 mm²) or less are left out, with 
 <p>A centre line is made into a <code>Satin</code> of its own, its rails offset from the line by the stroke’s width and
 join (<code>stitchcraft_engine::normalize::centre_line</code>, since M4.9). How rails and rungs are recognised from
 a host path, and made from a centre line, is part of the <a href="#satin-generators">satin design</a>.</p>
-<h2 id="parameters-11"><a class="header" href="#parameters-11">Parameters</a></h2>
+<h2 id="parameters-12"><a class="header" href="#parameters-12">Parameters</a></h2>
 <p><code>ParamSet</code> maps registry keys to typed values; generators receive <em>typed views</em>
 (<code>TatamiParams { row_spacing: Mm, angle: Deg, … }</code>) produced by the registry. See
 <a href="#parameter-registry">parameter registry</a>.</p>
@@ -5953,7 +6062,7 @@ refused (<code>DEV-PRM-001</code>).</p>
 <tr><th style="text-align: left">Output</th><th style="text-align: left">Generated by</th><th style="text-align: left">Checked by</th><th style="text-align: left">Since</th></tr>
 </thead>
 <tbody>
-<tr><td style="text-align: left">The reference pages, the <a href="#parameters-10">index</a> and one page per declaration (<code>docs/src/user/reference/params/*.md</code>), with the deviations ledger’s entries</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left"><code>cargo xtask docs --check</code>, which fails on a stale page and on a page left from a declaration since removed (<code>cargo xtask docs</code> deletes those)</td><td style="text-align: left">M3.1</td></tr>
+<tr><td style="text-align: left">The reference pages, the <a href="#parameters-11">index</a> and one page per declaration (<code>docs/src/user/reference/params/*.md</code>), with the deviations ledger’s entries</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left"><code>cargo xtask docs --check</code>, which fails on a stale page and on a page left from a declaration since removed (<code>cargo xtask docs</code> deletes those)</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left"><code>docs/src/user/reference/params.schema.json</code>: the parameters as JSON values (numbers, booleans, strings, arrays, <code>null</code> for empty), for editors, presets and JSON hosts</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left">same</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left">The <em>StitchCraft</em> column of the <a href="#inkstitch-compatibility-contract">Ink/Stitch compatibility contract</a></td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left">same, plus the cross-checks above</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left">VectorCraft manifests, one for each stitch family’s module, with each parameter’s label, unit, section, help, help page and the values that show it</td><td style="text-align: left">at runtime from the registry, when VectorCraft asks a module for its manifest (<code>stitchcraft-vc-plugin</code>’s <code>manifest</code> and <code>dialog</code>)</td><td style="text-align: left">plug-in tests validate them against VectorCraft’s manifest rules, <code>cargo xtask docs --check</code> finds each help page, the contract tests install them in VectorCraft’s host, and the window probe checks the dialogs’ rows</td><td style="text-align: left">M6.2, and the dialogs M6.10</td></tr>
@@ -6113,6 +6222,7 @@ another.</p>
 <tr><td><code>SC-I0315</code></td><td>Info</td><td>Contour fill’s part too narrow for its spiral; sewn inner to outer (Ink/Stitch fails or sews nothing)</td><td>M7</td></tr>
 <tr><td><code>SC-W0316</code></td><td>Warning</td><td>Meander pattern is one of Ink/Stitch’s tiles; sewn with StitchCraft’s default tile</td><td>M7</td></tr>
 <tr><td><code>SC-W0317</code></td><td>Warning</td><td>Meander fill part too small for its tile; sewn round its outline (Ink/Stitch stops with an error)</td><td>M7</td></tr>
+<tr><td><code>SC-W0318</code></td><td>Warning</td><td>Circular fill part within its row spacing of its middle; sewn as one circle (as Ink/Stitch sews it)</td><td>M7</td></tr>
 <tr><td><code>SC-W0401</code></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td><td>M3</td></tr>
 <tr><td><code>SC-W0402</code></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest</td><td>M3</td></tr>
 <tr><td><code>SC-W0403</code></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td><td>M3</td></tr>
@@ -6337,7 +6447,8 @@ them (<code>REQ-SVG-003</code>).</p>
 reads too, and <code>SC-I0805</code> lists each object left out. The
 <code>starting_point</code> and <code>ending_point</code> commands, which place where Ink/Stitch starts and ends a fill or a
 satin column, are not applied yet (<code>REQ-GEN-001</code>), and <code>SC-W0802</code> names each one on an object a viewer
-shows. The <a href="#commands-1">command table</a> gives what the adapter does with
+shows. The <code>target_point</code> command centres a circular fill and aims a ripple. The adapter doesn’t apply
+it until M8, which reads the settings that make a shape one. The <a href="#commands-1">command table</a> gives what the adapter does with
 each of the 12 commands. Before its file version 3, Ink/Stitch named 7 of them otherwise, such as
 <code>fill_start</code> for <code>starting_point</code>: the adapter reads those as the commands they became in any file,
 where Ink/Stitch renames them only in the files it updates and sews the old symbol elsewhere
@@ -6529,9 +6640,10 @@ gap-filling rows, which Ink/Stitch’s legacy fill has no use for. A contour fil
 rings with the tatami fill’s row spacing and sews them as one running stitch after the tatami fill’s
 underlay, reading the running stitch’s tolerance and random lengths for its path
 (<a href="#contour-fill-1">fills</a>). A meander fill, sewn from M7.8, lays a tile over each part
-and sews one path through it after the same underlay (<a href="#meander-fill-1">fills</a>). The
-other stroke, satin and fill methods are skipped with
-<code>SC-W0011</code> until their milestones. An element whose parameters are wrong (<code>SC-E0101</code>) is skipped too, and
+and sews one path through it after the same underlay (<a href="#meander-fill-1">fills</a>). A
+circular fill, sewn from M7.9, sews a spiral round the middle of each part after that underlay too, and
+routes the spiral’s pieces as a tatami fill routes its rows (<a href="#circular-fill-1">fills</a>).
+The other stroke, satin and fill methods are skipped with <code>SC-W0011</code> until their milestones. An element whose parameters are wrong (<code>SC-E0101</code>) is skipped too, and
 the rest of the design still plans.</p>
 <p>Each element is generated with the shortest stitch for it: the larger of the machine’s (the profile’s
 <code>min_stitch</code>) and the element’s <code>min_stitch_length_mm</code>, or the design’s shortest stitch when the element
@@ -6541,8 +6653,9 @@ or a fill’s longest, is raised to it with <code>SC-W0402</code>: shorter, the 
 <p>A preview that cannot afford a fill’s stitches shows its top rows (<code>stitchcraft_engine::generate::rows</code>,
 from M6.3). The fill’s settings are read as for sewing it, and what they say is said the same, but only
 the region is built and the rows laid over it: no needle point is placed and no route is searched. A
-contour fill has no rows, and shows its path round its rings, from M7.7. Nor has a meander fill, which
-shows its path through its tile as the element’s seed lays it, from M7.8.</p>
+contour fill has no rows, and shows its path round its rings, from M7.7. A meander fill shows its path
+through its tile as the element’s seed lays it, from M7.8, and a circular fill the pieces of its spiral,
+from M7.9.</p>
 <p>Rules every generator follows:</p>
 <ul>
 <li><strong>Pure:</strong> output depends only on (normalized shape, typed params, neighbours, seed, budget).</li>
@@ -6646,7 +6759,7 @@ is clear of the needle for an appliqué or a check, and sewing resumes with a ju
 </thead>
 <tbody>
 <tr><td>Start / end point</td><td>Entry/exit hints for the generator (<code>REQ-GEN-001</code>). The VectorCraft adapter reads them from markers named <code>stitch:start</code> and <code>stitch:end</code>, which it names until then</td><td>M8</td></tr>
-<tr><td>Target point</td><td>Centre for circular fills and ripple targets</td><td>M7, M10</td></tr>
+<tr><td>Target point</td><td>Centre for circular fills and ripple targets. A circular fill turns round its part’s centroid until the adapter reads the command</td><td>M8, M10</td></tr>
 <tr><td>Trim after, stop after</td><td><code>trim_after</code> and <code>stop_after</code> on the element’s last group (see the connection table). The SVG adapter reads Ink/Stitch’s trim and stop commands as these settings.</td><td>M3.8 (engine), M3 (adapter)</td></tr>
 <tr><td>Ignore object / ignore layer</td><td>The adapter drops the element and says so in the report (<code>REQ-ASM-004</code>). The VectorCraft adapter reads them from the name <code>stitch:ignore</code></td><td>M3 (SVG), M6 (VectorCraft)</td></tr>
 <tr><td>Origin</td><td>The design setting <code>origin</code></td><td>M3.8 (engine), M8 (adapter)</td></tr>
@@ -6899,9 +7012,12 @@ treatment on every pass.</li>
 <li>A zigzag’s turnaround takes no step of the list, as in Ink/Stitch (<a href="#zigzag-stroke-p2-m7">zigzag stroke</a>).</li>
 <li>Repeats apply to running, ripple and zigzag strokes; bean stitch to those and to manual stitch (the
 <a href="#inkstitch-compatibility-contract">compatibility contract</a> lists each parameter’s stitch types).</li>
-<li>The fills sewn as one path, a contour fill and a meander fill, have repeats and bean stitch of their
-own, which Ink/Stitch declares for its fills apart from a stroke’s. Bean stitch comes first, and each repeat then sews everything sewn so far again, the
-other way round, so <code>k</code> repeats sew 2^(k−1) passes (<a href="#stitches-1">fills</a>).</li>
+<li>The fills sewn as one path have repeats and bean stitch of their own, which Ink/Stitch declares for
+its fills apart from a stroke’s. Bean stitch comes first, and each repeat then sews everything sewn so
+far again, the other way round, so <code>k</code> repeats sew 2^(k−1) passes (<a href="#stitches-1">fills</a>).</li>
+<li>A circular fill’s bean stitch leaves out the stitches that run between the pieces of its spiral, but
+each of those stitches takes a step of the list, as in Ink/Stitch
+(<a href="#circular-fill-1">circular fill</a>).</li>
 </ul>
 <h3 id="random-length"><a class="header" href="#random-length">Random length</a></h3>
 <p>Ink/Stitch draws each stitch from <code>s × (1 ± jitter)</code> and starts each stretch between corners at a random
@@ -7771,7 +7887,7 @@ against every other, and its winding against every segment of the ring. A line o
 to about 17 million units of work for each offset.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="fill-generators"><a class="header" href="#fill-generators">Fill generators</a></h1>
-<!-- implements: crates/stitchcraft-engine/src/normalize/region/**, crates/stitchcraft-engine/src/normalize/simplify.rs, crates/stitchcraft-engine/src/generators/tatami/**, crates/stitchcraft-engine/src/generators/contour/**, crates/stitchcraft-engine/src/generators/meander/**, crates/stitchcraft-engine/src/generators/smoothing.rs, crates/stitchcraft-engine/src/generators/pull.rs -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/region/**, crates/stitchcraft-engine/src/normalize/simplify.rs, crates/stitchcraft-engine/src/generators/tatami/**, crates/stitchcraft-engine/src/generators/contour/**, crates/stitchcraft-engine/src/generators/meander/**, crates/stitchcraft-engine/src/generators/circular/**, crates/stitchcraft-engine/src/generators/smoothing.rs, crates/stitchcraft-engine/src/generators/pull.rs -->
 <p>A fill covers the area its path bounds, its <a href="#region-1">region</a>, with rows of stitches. Tatami is P1 (M5);
 contour, meander and circular are P2 (M7); guided, linear gradient, tartan and cross stitch are P3 (M10).
 Ink/Stitch’s legacy fill is not planned, and is sewn as a tatami fill (<a href="#legacy-fill-not-planned">below</a>).</p>
@@ -8369,17 +8485,87 @@ so the sheet’s differential case excuses the stitches and the overlap (<code>D
 </tbody>
 </table>
 </div>
-<h2 id="circular-fill"><a class="header" href="#circular-fill">Circular fill</a></h2>
-<p>A double spiral round a centre (P2, M7.9), as Ink/Stitch sews its circular fill (read at <code>6555892</code>): the
-point of a <code>target_point</code> command, or else the centre of each part’s area. Circles round it lie
-<code>row_spacing_mm</code> apart, or graded towards <code>end_row_spacing_mm</code> with their distance from the centre, out
-to 2 spacings past the part’s farthest point, with one of 0.1 CSS pixel radius at the centre. Alternate
-circles are joined into a spiral in, and the rest into one back out, as the contour fill’s double spiral
-is, and the part cuts the spiral into pieces. One piece is sewn as a running stitch, joined along the outline
-to where the fill starts and ends. Several are routed as tatami rows are, with the travel under them at
-<code>angle</code> and <code>skip_last</code>. A part that lies within a row spacing of its centre is sewn as one circle of that
-radius. Bean stitch leaves the travel out, and the repeats double the stitching, as the contour fill’s
-do.</p>
+<h2 id="circular-fill-1"><a class="header" href="#circular-fill-1">Circular fill</a></h2>
+<p>A spiral round the middle of each part, cut by the part’s outline (P2, M7.9), as Ink/Stitch sews its
+circular fill (read at <code>d59c9ab</code>). Each part of the region is sewn on its own, after the tatami fill’s
+underlay (<a href="#6-underlay">section 6</a>), grown by <code>expand_mm</code>, nearest the needle first, each ending near the
+next part and the last near the next element, as a meander fill’s are.</p>
+<h3 id="circles"><a class="header" href="#circles">Circles</a></h3>
+<p>The circles lie round the middle of the part, its centroid. Ink/Stitch’s <code>target_point</code> command moves
+the middle, and StitchCraft reads it with Ink/Stitch’s other commands in M8. The first circle has a radius
+of 0.1 CSS pixel, so that the spiral ends at the middle. From <code>row_spacing_mm</code> out, each circle lies a row
+spacing past the last, until one lies 2 spacings past the part’s farthest point. That point is the one
+farthest from the middle, as the discrete Hausdorff distance Ink/Stitch takes finds it.</p>
+<p>With <code>end_row_spacing_mm</code>, the circles fade. The step from a circle to the next is the row spacing plus a
+share of the way to the end spacing: the share the circle’s radius is of the farthest point’s distance.
+The circles then lie the row spacing apart at the middle and the end spacing apart at the farthest point.
+They stop 2 end spacings past it, and past the farthest point the step stays at the end spacing.
+Ink/Stitch’s goes on changing there. Fading to under half the row spacing over a small part, its steps
+shrink towards 0 short of the last circle, which it never reaches (<code>DEV-FILL-021</code>).</p>
+<p>Each circle has 64 sides, as GEOS buffers a point for Ink/Stitch. It starts at its right-hand point and
+turns up first as the drawing shows it.</p>
+<h3 id="the-spiral-and-its-pieces"><a class="header" href="#the-spiral-and-its-pieces">The spiral and its pieces</a></h3>
+<p>The spiral is the contour fill’s double spiral through the circles, from the outermost circle’s first
+point (<a href="#single-and-double-spiral">single and double spiral</a>). It turns in on every other circle and back
+out on the others, and the running stitch’s first length cuts each turn into points. It starts and ends
+outside the part, past its farthest point.</p>
+<p>The part cuts the spiral wherever it meets one of the part’s rings. There the spiral crosses a ring or
+touches one, or starts or stops running along one. Each stretch between 2 such points lies inside the
+part or outside it, and the stretches inside are the spiral’s pieces, a stretch along a ring among them.
+They keep the spiral’s order and direction. 2 stretches that meet where the spiral touches a ring from
+inside stay 2 pieces. GEOS leaves them so when it cuts a line by a polygon for Ink/Stitch. Only the sides of the
+rings near each side of the spiral are looked at.</p>
+<p>A round part’s spiral may enter it once and leave it once, one piece. Any other’s leaves and enters again
+at each turn past the circle inside the outline, in many pieces.</p>
+<h3 id="sewing"><a class="header" href="#sewing">Sewing</a></h3>
+<p>Each piece is sewn as a running stitch of <code>running_stitch_length_mm</code> within
+<code>running_stitch_tolerance_mm</code>, at random lengths when they are on. Each turn of the spiral is a span of the
+running stitch, and each step between turns another, as for the contour fill’s spiral
+(<a href="#stitches-1">stitches</a>).</p>
+<ul>
+<li><strong>One piece</strong> is sewn after the way along the outline from the needle to where the piece starts. Then
+comes the way along the outline from where it ends to the end, as Ink/Stitch sews it. Each way runs
+the shorter way round the outline. Ink/Stitch’s runs along the outline from where the outline starts,
+without passing its start, which depends on how the outline was drawn (<code>DEV-FILL-022</code>). A way whose
+needle or end isn’t known is left out.</li>
+<li><strong>Several pieces</strong> are routed as a tatami fill’s rows are (<a href="#3-routing-every-segment-once">section 3</a>),
+each piece a row between its ends. Each is sewn once from the end the route enters it by, every needle
+point of its running stitch, but its last with <code>skip_last</code>. Between pieces the needle moves as a tatami
+fill’s does between rows (<a href="#4-travel-under-the-rows">section 4</a>). It runs under the pieces not sewn yet
+along lines at 45° and square to the fill’s <code>angle</code>, and with <code>underpath</code> off along the rings and the
+pieces. A way along a piece follows its curve, which lies inside the part where the straight line
+between its ends need not.</li>
+<li><strong>No piece</strong>: a part that lies between 2 turns of the spiral sews a running stitch round its outline
+from the outline’s start. Ink/Stitch’s falls back to the same, and <code>SC-W0305</code> says so.</li>
+</ul>
+<p>A part that lies within its row spacing of its middle is too small for the spiral. It is sewn as one
+circle with a radius of the row spacing round its middle, from the circle’s right-hand point, as Ink/Stitch
+sews it. <code>SC-W0318</code> says so, as the circle may stick out of so small a part.</p>
+<p>Bean stitch then sews each stitch back and forth, but the travel between pieces, which Ink/Stitch’s
+leaves out of it. Each stitch of travel still takes its turn in <code>bean_stitch_repeats</code>’s list. The repeats
+double the stitching each time, as the contour fill’s do. Circular fills have no <code>smoothness_mm</code>, as in
+Ink/Stitch.</p>
+<h3 id="test-sheet-1"><a class="header" href="#test-sheet-1">Test sheet</a></h3>
+<p>TS-11B’s bottom row sews 3 circular fills. The disc round its hole set off its middle and the star are the
+contour rows’ shapes, and a rectangle’s circles fade from 0.25 mm at its middle to 1 mm at its corners.
+The differential compares the sheet with Ink/Stitch’s sewing of it (<code>REQ-FILL-CIR-007</code>).</p>
+<h3 id="properties-conformance-3-1"><a class="header" href="#properties-conformance-3-1">Properties (conformance)</a></h3>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Requirement</th><th>Property</th></tr>
+</thead>
+<tbody>
+<tr><td><code>REQ-FILL-CIR-001</code></td><td>The circles lie round the part’s centroid, from 0.1 CSS pixel and then a row spacing apart, or fading as Ink/Stitch grades them and at the end spacing past the farthest point, out to 2 spacings past it, each of 64 sides from its right-hand point, turning up as drawn</td></tr>
+<tr><td><code>REQ-FILL-CIR-002</code></td><td>The double spiral through them is cut where it meets the part’s rings, and its pieces are the stretches inside, in order along it and running its way</td></tr>
+<tr><td><code>REQ-FILL-CIR-003</code></td><td>One piece is joined to the needle and the end along the outline the shorter way round, all a running stitch with a span for each turn</td></tr>
+<tr><td><code>REQ-FILL-CIR-004</code></td><td>Several pieces are routed as a tatami fill’s rows, each sewn once as stitched, without its last point with <code>skip_last</code>, the needle travelling under the pieces not sewn yet</td></tr>
+<tr><td><code>REQ-FILL-CIR-005</code></td><td>A part within a row spacing of its middle is one circle that size, with <code>SC-W0318</code>, and the outline of a part the spiral misses is sewn round, with <code>SC-W0305</code></td></tr>
+<tr><td><code>REQ-FILL-CIR-006</code></td><td>The underlay comes first, each part ends near the next, bean stitch leaves the travel out but counts it, and <code>k</code> repeats sew 2^(k−1) passes</td></tr>
+<tr><td><code>REQ-FILL-CIR-007</code></td><td>TS-11B’s circular fills sew in Ink/Stitch as in StitchCraft by the differential’s measures</td></tr>
+</tbody>
+</table>
+</div>
 <h2 id="guided-fill-p3"><a class="header" href="#guided-fill-p3">Guided fill (P3)</a></h2>
 <p>Rows that follow a guide line instead of a straight angle: the guide is copied (<code>Copy</code>) or offset
 (<code>Parallel Offset</code>, <code>Buffer</code>) across the region at <code>row_spacing_mm</code>, each copy clipped to the region and
@@ -10509,7 +10695,7 @@ share, instead of being stopped (<code>apps/stitchcraft-vc-plugin/src/preview.rs
 </thead>
 <tbody>
 <tr><td>Exact</td><td>The stitch polyline (strokes, satins) or one thin closed ribbon per stitch (fills)</td><td>For a stroke or a satin column, within nine tenths of the budget</td></tr>
-<tr><td>Rows</td><td>One ribbon per row segment of a fill’s top rows, or per side of a contour fill’s path round its rings (from M7.7): where its stitches lie and which way they run</td><td>For a fill, within eight tenths</td></tr>
+<tr><td>Rows</td><td>One ribbon per row segment of a fill’s top rows, or per side of a contour fill’s path round its rings (from M7.7), a meander fill’s path (from M7.8) or a circular fill’s pieces of spiral (from M7.9): where its stitches lie and which way they run</td><td>For a fill, within eight tenths</td></tr>
 <tr><td>Outline</td><td>The object’s path as lines for a stroke or a satin column, and as ribbons for a fill, which are hatched every 3 mm in its direction</td><td>When the others cost too much</td></tr>
 </tbody>
 </table>
@@ -11381,7 +11567,8 @@ the difference as excused. An excuse for a measure that agrees fails the case, s
 the ledger is still true. Where the differential can undo a deviation in Ink/Stitch’s file, it measures
 the file again without it. The excuse then counts only if the measure agrees. Ink/Stitch’s jumps that go
 nowhere (<code>DEV-FMT-001</code>) excuse as many trims and jumps as there are of them, and no more.</p>
-<p><code>REQ-SVG-008</code>, <code>REQ-AUTO-021</code>, <code>REQ-AUTO-022</code> and <code>REQ-FILL-CON-008</code> are the requirements of level L3.
+<p><code>REQ-SVG-008</code>, <code>REQ-AUTO-021</code>, <code>REQ-AUTO-022</code>, <code>REQ-FILL-CON-008</code> and <code>REQ-FILL-CIR-007</code> are the
+requirements of level L3.
 The other runs of the suite leave them and their cases to this one. The corpus is designs the SVG reader
 sews in full, with their settings (<code>REQ-SVG-009</code>), trim and stop commands and the file version. A case may
 name a test sheet drawn as a design instead (<code>sheet</code>). Both programs sew an SVG file of the elements
@@ -11389,9 +11576,10 @@ StitchCraft sews the sheet with, written with their parameters (<code>stitchcraf
 StitchCraft’s reader reads back unchanged (<code>REQ-PRM-003</code>). Automatic digitizing chooses ordinary elements
 with Ink/Stitch’s parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check
 StitchCraft’s stitches of those choices against Ink/Stitch’s (<code>REQ-AUTO-021</code>). TS-11B checks the contour
-fills so, each strategy and join style among them (<code>REQ-FILL-CON-008</code>). TS-02B to TS-09, the sheets of
-MC-2 to MC-4, and TS-11C, the meander fills’ sheet, are cases of <code>REQ-SVG-008</code> (M8.2).
-<code>conformance/inkstitch/README.md</code> says how to run it by hand and how to add a case.</p>
+fills so, each strategy and join style among them (<code>REQ-FILL-CON-008</code>), and its circular fills
+(<code>REQ-FILL-CIR-007</code>). TS-02B to TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills’ sheet,
+are cases of <code>REQ-SVG-008</code> (M8.2). <code>conformance/inkstitch/README.md</code> says how to run it by hand and how to
+add a case.</p>
 <p><strong>Centre lines.</strong> Sewing what StitchCraft chose can’t find a choice that is wrong: TS-13B’s small T sewed
 a Γ, the left arm of its bar left out of its centre line, and the differential agreed by every measure.
 The <code>centre-lines</code> cases compare a step before the stitches (<code>REQ-AUTO-022</code>,
@@ -11953,7 +12141,7 @@ a parameter declared with an Ink/Stitch origin must be listed here with a compat
 default must be the value Ink/Stitch sews.</li>
 <li><strong>Default</strong> is the value Ink/Stitch’s settings window shows. For a few parameters its code sews another
 value when a file sets none, and the cell gives that value after the default, as in <code>0.1 (0.2 when unset)</code>. <code>—</code> means no default: the value is derived from another parameter or the shape.</li>
-<li><strong>StitchCraft</strong> says whether the <a href="#parameters-10">parameter registry</a> declares the
+<li><strong>StitchCraft</strong> says whether the <a href="#parameters-11">parameter registry</a> declares the
 parameter. <em>planned</em>: not yet; a design that sets it keeps it unchanged and gets <code>SC-W0105</code>. <em>not
 planned</em>: never, and a design that sets it gets the same.
 <em>registered</em>: StitchCraft reads and checks it under the same key, meaning and default; it changes the
@@ -12111,7 +12299,7 @@ planned.</li>
 <tr><td><code>end_row_spacing_mm</code></td><td>float</td><td>mm</td><td>—</td><td><code>tatami_fill</code>, <code>circular_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="#end_row_spacing_mm">deviates</a></td></tr>
 <tr><td><code>stitch_position_method</code></td><td>combo</td><td>—</td><td>0</td><td><code>guided_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>staggers</code></td><td>int</td><td>—</td><td>4</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code>; read by <code>circular_fill</code>, <code>contour_fill</code>, <code>meander_fill</code></td><td>P1 (M5)</td><td><a href="#staggers">registered</a></td></tr>
-<tr><td><code>skip_last</code></td><td>boolean</td><td>—</td><td>false</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="#skip_last">registered</a></td></tr>
+<tr><td><code>skip_last</code></td><td>boolean</td><td>—</td><td>false</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>legacy_fill</code>; read by <code>circular_fill</code></td><td>P1 (M5)</td><td><a href="#skip_last">registered</a></td></tr>
 <tr><td><code>flip</code></td><td>boolean</td><td>—</td><td>false</td><td><code>legacy_fill</code></td><td>—</td><td>not planned</td></tr>
 <tr><td><code>reverse</code></td><td>boolean</td><td>—</td><td>false</td><td><code>legacy_fill</code></td><td>—</td><td>not planned</td></tr>
 <tr><td><code>stop_at_ending_point</code></td><td>boolean</td><td>—</td><td>false</td><td><code>linear_gradient_fill</code>, <code>tartan_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
@@ -13177,7 +13365,7 @@ MC-8’s sew-out (decided on 2026-11-01).</p>
 <tr><td>M7.6 ✅</td><td>The offsetter meets the third criterion of <a href="#adr-0005-geometry-stack">ADR-0005</a> before contour fill relies on it: 300 insets of a region 150 mm across, of 1,000 points, in under 200 ms. They take 65 to 160 ms. At M0.7 they took 218 to 448 ms, against GEOS’s 104 to 149 ms</td><td><code>cargo xtask perf</code> guards the criterion (NFR-PERF-3)</td></tr>
 <tr><td>M7.7 ✅</td><td>Contour fill, with its three strategies, as Ink/Stitch sews them. Inner to outer, single and double spiral, with round, mitred and bevelled corners, rings that part and alternate, a smoothed path, the tatami fill’s underlay, and repeats that double. TS-11B, its test sheet, sews in Ink/Stitch as in StitchCraft by every measure of the differential. Ink/Stitch’s contract says which fill methods read the tatami fill’s <code>angle</code>, <code>staggers</code> and running stitch length for their underlay without showing them (<code>read_by</code>)</td><td><code>REQ-FILL-CON-001</code> to <code>REQ-FILL-CON-008</code>, and the type listed for MC-6 (TS-11B)</td></tr>
 <tr><td>M7.8 ✅</td><td>Meander fill with generated tiles, 7 of the regular and semiregular tilings, as Ink/Stitch wanders through its own tiles. Ink/Stitch’s tile ids are kept and sew the honeycomb (<code>SC-W0316</code>), and a part too small for its tile is sewn round its outline (<code>SC-W0317</code>). A value only a node’s other stitch type reads, such as a zigzag stroke’s 2 spacings that its meander fill meets, is left to that stitch type, and the element takes its default as Ink/Stitch’s does (<code>SC-I0106</code>, <a href="#naming-rules">rule 7</a>). TS-11C samples the tiles for MC-6</td><td><code>REQ-FILL-MEA-001</code> to <code>REQ-FILL-MEA-005</code>, <code>REQ-PRM-006</code>, and the type listed for MC-6 (TS-11C)</td></tr>
-<tr><td>M7.9</td><td>Circular fill</td><td>same</td></tr>
+<tr><td>M7.9 ✅</td><td>Circular fill, as Ink/Stitch sews it: a double spiral round each part’s centroid, its rings a row spacing apart or fading to the end spacing. The part cuts it into pieces that are routed as a tatami fill’s rows, the needle travelling under them. A round part’s spiral, cut once, is joined to the needle along the outline. TS-11B gains a row of circular fills, which sew in Ink/Stitch as in StitchCraft by every measure of the differential</td><td><code>REQ-FILL-CIR-001</code> to <code>REQ-FILL-CIR-007</code>, and the type listed for MC-6 (TS-11B)</td></tr>
 <tr><td>MC-6 🧵</td><td><strong>TS-11A</strong> and <strong>TS-11B</strong> (samplers of the new strokes and satins, and of the new fills); kit: <code>stitch testsheet</code></td><td>report filed; the new types’ defaults confirmed</td></tr>
 </tbody>
 </table>
@@ -13445,7 +13633,7 @@ middle of the artboard (<code>REQ-VC-015</code>). A checkpoint can so sew a shee
 <tr><td><strong>TS-09</strong> Fill underlay &amp; travel</td><td>A rectangle 50 × 30 mm with a square hole and a round hole, and a bar 6 mm to its right, all one fill, sewn 3 times (66 × 114 mm). The top copy has no underlay. The others have the default underlay, and the bottom one 2 gap-filling rows too. Each copy is trimmed after</td><td>Travel hidden? Does the fill hold at both ends of the jump to the bar? Holes clean? A gap where the rows round a hole meet?</td><td>MC-4</td></tr>
 <tr><td><strong>TS-10A/B/C</strong> Hoop size</td><td>Frames of 100 × 100 mm (A, the 4 × 4 in hoop), 130 × 180 mm (B, the 5 × 7 in) and 20 × 60 mm (C, the small hoop), each as large as its hoop’s field, with a centre cross and an “F” in the top-left corner</td><td>The machine takes each design in its hoop without asking for a larger one, and sews it to size. The small hoop’s field is the right way round</td><td>MC-1, MC-5</td></tr>
 <tr><td><strong>TS-11A</strong> New strokes and satins</td><td>Samples of M7’s new strokes and satins, drawn before MC-6. Zigzag strokes (M7.2), straight and curved, at spacings of 0.4, 1 and 2 mm and widths of 1, 2 and 4 mm, and one at 45°. E-stitches (M7.3) 3 and 5 mm wide at spacings of 2 and 3 mm, along a straight edge and round a circle, on appliqué fabric. S-stitches (M7.4) 6 and 10 mm wide at spacings of 0.4 and 0.6 mm, straight and curved, the 10 mm ones split at 3 mm by the default and the staggered methods. Zigzag satins (M7.5) 4 and 8 mm wide at spacings of 0.4 and 1 mm, straight and curved, beside satin columns of the same widths and spacings, and one 8 mm wide at 1 mm over a contour underlay</td><td>Per type, as listed on its expected-result sheet. A zigzag sews narrower than drawn, and the report says by how much, whether its sides are even round curves and which is the narrowest width that sews cleanly. The E-stitch’s spine should cover the appliqué’s raw edge, and its spikes hold it without puckering. The S-stitch should cover its band at 0.4 mm with its steps along the edges even, and the report says whether the default method’s splits leave a furrow along the band that the staggered ones do not. The zigzag satin should cover its band at 0.4 mm as its satin column does, and the report says whether it sews narrower than the satin column beside it. Its contour underlay should not show past the zigzag at either end</td><td>MC-6</td></tr>
-<tr><td><strong>TS-11B</strong> New fills</td><td>Contour fills (M7.7), each over the default underlay and trimmed after, a row to a thread (125 × 116 mm). Top row: discs 36 mm across with rings 0.25 mm apart, sewn inner to outer round a hole 12 mm across set off its middle, as a spiral and as a double spiral. Middle row: stars 40 mm across with rings 0.4 mm apart and round, mitred and bevelled corners. Bottom row: 2 squares joined by a neck 3 mm wide, where the rings part. Beside them, a rectangle whose rings alternate their direction and a leaf smoothed by 0.5 mm. Circular fills join it in M7.9</td><td>Fabric showing between the rings, puckering, and whether the discs sew 36 mm across. Whether inner to outer’s steps show as a line across the rings, and whether the alternating rectangle looks calmer. A knot or a bump where the spirals end. Whether the mitred star’s rings reach into its points where the round and bevelled ones leave a gap at each tip, and which looks best. The neck should fill, and the smoothed leaf’s line should run without kinks. The time the sheet takes</td><td>MC-6</td></tr>
+<tr><td><strong>TS-11B</strong> New fills</td><td>Contour fills (M7.7) and circular fills (M7.9), each over the default underlay and trimmed after, a row to a thread (125 × 166 mm). Top row: discs 36 mm across with rings 0.25 mm apart, sewn inner to outer round a hole 12 mm across set off its middle, as a spiral and as a double spiral. Middle row: stars 40 mm across with rings 0.4 mm apart and round, mitred and bevelled corners. Third row: 2 squares joined by a neck 3 mm wide, where the rings part. Beside them, a rectangle whose rings alternate their direction and a leaf smoothed by 0.5 mm. Bottom row, circular fills: the disc round its hole and the star again, and a rectangle whose circles fade from 0.25 mm apart at its middle to 1 mm at its corners</td><td>Fabric showing between the rings, puckering, and whether the discs sew 36 mm across. Whether inner to outer’s steps show as a line across the rings, and whether the alternating rectangle looks calmer. A knot or a bump where the spirals end. Whether the mitred star’s rings reach into its points where the round and bevelled ones leave a gap at each tip, and which looks best. The neck should fill, and the smoothed leaf’s line should run without kinks. Whether the circular fills’ rings look round and even, whether the travel between pieces of a spiral shows on the star’s points or round the hole, and whether the fading rectangle is denser at its middle. The time the sheet takes</td><td>MC-6</td></tr>
 <tr><td><strong>TS-11C</strong> Meander fills</td><td>Meander fills (M7.8), each over the default underlay and trimmed after, a row to a thread (123 × 120 mm). The top row’s discs, 36 mm across, are in hexagons, squares and triangles 2 mm a side. The middle row’s discs are in octagons and squares, in hexagons and triangles, and in hexagons with squares and triangles. In the bottom row a star 40 mm across is in squares and triangles. Beside it a rectangle in hexagons twice as large sews as a zigzag 2.5 mm wide kept inside it, and a leaf in hexagons half as large is turned by 30° and smoothed by 0.5 mm</td><td>Whether each tiling shows in the stitches and the line looks even, or bare patches show where it didn’t reach, and which tile looks best at which size. Does the underlay show between the line’s turns, or is the fill too light to hide the fabric? The zigzag should stay inside the rectangle and lie flat. On the smoothed leaf, a line without kinks and 1 mm sides sewn cleanly. Puckering where the line turns</td><td>MC-6</td></tr>
 <tr><td><strong>TS-12</strong> Real design</td><td>A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours, its PES file written by VectorCraft’s File › Export › Export As (M6.9)</td><td>Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden? Satin columns drawn as one path: are they as wide as their strokes, and do their corners sew clean? A graphic style applied to a group: do the paths inside sew as VectorCraft shows them, with the style’s settings and colour? A satin border of 2 circles joined by Make Compound Path: do its stitches go straight across all the way round? A satin column that Stroke to Satin made of a line (M6.12): does it sew as the line did with the satin effect?</td><td>MC-5, MC-7</td></tr>
 <tr><td><strong>TS-13</strong> Pictures digitized automatically (M13)</td><td>Test pictures drawn in code (<code>stitchcraft_engine::testsheets::pictures</code>), digitized automatically in the top half of each sheet and sewn as drawn, in paint order, in the bottom half, which sews first and stops. TS-13A has a badge traced abutting and one traced stacked, specks round a disc, a row of badges drawn badge by badge, and a bar that runs on beside a square without touching it (126 × 168 mm). TS-13B has the word MATCH in block letters 15, 10, 6 and 4 mm tall, and windows whose lines, traced as areas, are 0.3, 0.6 and 0.9 mm wide (110 × 148 mm). TS-13C has a cartoon face drawn with black lines 1, 2 and 4 mm wide, a star, and a balloon on its string (111 × 108 mm). TS-13D has an emblem 42 mm wide, a navy square with a white disc, a red star on the disc and 3 gold bars, and a button 23 mm across, a yellow disc with 7 orange dots in a black rim, each traced abutting and traced stacked (115 × 108 mm)</td><td>Fabric showing between colours, on both halves, and on the digitized half whether each area’s 0.4 mm overlap under the next covers the gap or shows as a ridge (M13.2). Whether a stacked trace’s digitized half, its covered parts cut away, sews as flat as the abutting one, and what became of the specks round the disc (M13.2). Where a shape runs on beside an area without touching it, whether the fabric that shows there as drawn reads as a gap (M13.2). The smallest letters that read. Whether each outline’s columns cover the edges of the fills beside them, and whether the triple runs show as wide as their lines. A column’s square end past the end of a line with round caps (M13.1), and how far it shows past the round end. Small traced rings and hairpins, filled because no satin column can follow them (M13.1), and how solid they sew beside their columns’ neighbours. Colour changes, jumps, trims and time against the half in paint order, on a row of badges drawn badge by badge too, as Auto Grouping draws them (M13.3). Whether any shape covers one drawn over it, which the order must never let happen, and whether each line sewn after the fill it borders covers the fill’s edge (M13.3). Lines traced as areas, 0.3, 0.6 and 0.9 mm wide, sewn along their middles (M13.4): whether each reaches as far as the line drawn, whether the 0.6 and 0.9 mm lines’ triple runs show as wide as they are drawn and the 0.3 mm line’s single run doesn’t look thin, and whether the fills beside a line, reaching under it, leave fabric showing along it. Whether a junction’s third branch, which ends at the line it meets, leaves a gap or a knot there (M13.4). Letters and outlines as wide as a satin column, sewn as satin columns between their own edges (M13.5): whether each column’s stitches lie square to its stroke, round a ring and through a bend. Where a column ends under another, 0.4 mm longer, does fabric show, or a ridge? A slanted terminal should end flat along its edge as drawn, and a round one at its farthest point. Whether a crossbar sewn as a column of its own across a stem reads as one stroke. The underlays by width should hold the columns up, and 0.4 mm of pull compensation keep them as wide as drawn. The stitches that lean where strokes meet at sharp angles, as in an M or a W (<code>SC-W0208</code>), and the jumps between a letter’s columns. Shapes broad in places and narrow in others (M13.6). The star’s points and the balloon’s string sew as columns over the fill of the star’s middle and of the balloon. Do their flat ends cover the fill’s edge, or leave fabric or a ridge there? Do each point’s stitches lie square to it from its tip to its cut? Pictures traced in layers (M13.12). Whether the stacked emblem, its layers flattened, sews as the abutting one beside it, and how stiff it sews as drawn on the bottom half, each colour whole under the colours over it. Which sews better between the bars, the navy filled whole under the white disc and the bars or the navy sewn round them as drawn? Whether the gold bars keep their height, 2.1 mm as drawn, and their square ends. Which sews better between the dots, the button’s yellow filled whole under them or sewn round them as drawn, and does the rim’s column cover the yellow’s edge? Whether fabric or a ridge shows round the bars, the disc, the star and the dots. Small discs no wider than a satin column are dots, filled (M13.12), as the gold discs of the row of badges and the button’s dots are. Do they sew round, and does fabric show at their edges? Which jump threads a shape sews down, since the PE800 cuts none</td><td>MC-8</td></tr>
