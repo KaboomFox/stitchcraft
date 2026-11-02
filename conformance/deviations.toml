@@ -499,3 +499,31 @@ area = "svg"
 summary = "A tatami fill's rows and needle points are laid from the design's origin, which for an SVG file is its page's top left corner, wherever the viewBox starts. Ink/Stitch maps a viewBox that does not start at 0 by scaling it first and then moving it by its start in pixels, so its rows are laid from another point: in a page 100 mm square with the viewBox 10 20 100 100, they lie 0.0417 mm further down, give or take whole row spacings, and the needle points along them differ too. A viewBox that starts at 0, as Inkscape writes it, lays them alike."
 reason = "The page is mapped as SVG maps it (REQ-SVG-001), and rows laid from its corner line up across fills side by side (REQ-FILL-TAT-002); Ink/Stitch's offset moves its row grid, which no sew-out shows. Ink/Stitch at d59c9ab, run as a black box (ADR-0001, decision 6), sewed one rect of such a page with its rows 0.0417 mm from its top edge, give or take whole row spacings, and the same rect of a page whose viewBox starts at 0 with its rows on its top edge; its mapping is read in lib/svg/units.py."
 requirements = ["REQ-SVG-001", "REQ-FILL-TAT-002"]
+
+[[deviation]]
+id = "DEV-SVG-016"
+area = "svg"
+summary = "A clip's area is the union of its children's areas, each filled by its clip-rule, as a viewer clips. Ink/Stitch pools the subpaths of all the children and repairs them as it repairs a fill's outline: the largest subpath is the outline and every other one a hole, whatever the clip-rule, so where 2 children overlap the overlap is left out, and a child inside another is a hole. A child path whose data starts with a relative m is placed, in Ink/Stitch, from where the child before ended."
+reason = "A clip sews what the drawing shows (REQ-SVG-011). Chromium, rendering each case as a viewer, keeps the overlap of 2 children and places each child's path from its own origin; Ink/Stitch's area was read in lib/svg/clip.py (_clip_paths) at d59c9ab, with inkex's path joining, and is a fill's (DEV-FILL-001)."
+requirements = ["REQ-SVG-011"]
+
+[[deviation]]
+id = "DEV-SVG-017"
+area = "svg"
+summary = "What a clip takes in follows SVG: its children that are displayed, not groups, a use at its x and y, the clipPath's transform, the box of the element it clips with clipPathUnits objectBoundingBox, and a clip-path on the clipPath or on a child, which cuts it in turn. Ink/Stitch takes in children not displayed and the groups' children, leaves out a use's x and y and the clipPath's transform, which it replaces with the clipped element's, reads objectBoundingBox as user space, applies the transforms of the elements the clipPath lies in, and ignores a clip-path on a clipPath or a child."
+reason = "Each was rendered in Chromium as a viewer draws it, and read in Ink/Stitch's lib/svg/clip.py and inkex 1.4 at d59c9ab. A clip that shows one thing and sews another would sew where the drawing shows nothing."
+requirements = ["REQ-SVG-011"]
+
+[[deviation]]
+id = "DEV-SVG-018"
+area = "svg"
+summary = "The clip paths of the a, switch and nested svg elements above a shape cut it, as a viewer clips them. Ink/Stitch reads only the clip paths of the shape and of the groups and layers above it."
+reason = "Chromium clips what an a, a switch or a nested svg holds to its clip path. Ink/Stitch's get_clip_path walks the g elements above the shape alone (lib/svg/clip.py, read at d59c9ab)."
+requirements = ["REQ-SVG-011"]
+
+[[deviation]]
+id = "DEV-SVG-019"
+area = "svg"
+summary = "A clip with no area, such as an empty clipPath or one of text or lines alone, hides the shape: it sews nothing, and SC-W0802 names it. Ink/Stitch takes such a clip for no clip at all and sews the shape whole, and where nested clips meet nowhere it takes the next clip in their stead."
+reason = "A viewer shows nothing of a shape whose clip has no area, and the design sews what it shows (REQ-SVG-011). Ink/Stitch treats an empty geometry as no clip (lib/svg/clip.py: get_clip_path, read at d59c9ab)."
+requirements = ["REQ-SVG-011", "REQ-GEN-005"]
