@@ -142,7 +142,7 @@ fn req_auto_014_a_t_reaches_the_ends_of_both_arms_of_its_bar() {
 
 #[test]
 fn req_auto_014_ts13_every_part_sewn_along_its_middle_is_reached() {
-    for id in ["TS-13A", "TS-13B", "TS-13C"] {
+    for id in ["TS-13A", "TS-13B", "TS-13C", "TS-13D"] {
         let design = find(id).and_then(|sheet| sheet.design()).unwrap().unwrap();
         for element in design.elements().iter().filter(|element| element.automatic) {
             let far = unreached_by(element, &design.settings);

@@ -1,0 +1,14 @@
+# An emblem and a button, each traced abutting and traced stacked as VectorCraft's Image Trace traces them,
+# digitized automatically above and sewn in paint order below. The sheet draws only as the engine says what
+# it digitized, flattened, filled and reordered; the diagnostics here are the hoop's, of which there are none.
+# The invariants (REQ-PLAN-…) run on the sheet's plan; the golden file is the bytes MC-8 sews.
+id = "ts-13d"
+requirements = ["REQ-PLAN-001", "REQ-PLAN-002", "REQ-PLAN-003", "REQ-PLAN-005", "REQ-PLAN-006", "REQ-PLAN-007", "REQ-PRF-002", "REQ-FMT-001"]
+kind = "testsheet"
+sheet = "TS-13D"
+profile = "brother-pe800-5x7"
+
+[expect]
+size_mm = [114.999756, 108.385558]
+diagnostics = []
+golden = ["golden/testsheets/TS-13D.pes"]

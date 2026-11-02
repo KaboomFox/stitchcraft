@@ -194,7 +194,7 @@ fn lines(part: &Polygon, narrowest: Mm, rules: &AutoParams, meter: &mut Meter) -
 /// Whether `part` is narrower than `width` everywhere, measured to the micrometre: shrunk by half of the
 /// width taken half a micrometre wider, it leaves no area. `None` when the shrunk part can't be joined, a
 /// bug.
-fn within(part: &Polygon, width: Mm, meter: &mut Meter) -> Result<Option<bool>, Exhausted> {
+pub(super) fn within(part: &Polygon, width: Mm, meter: &mut Meter) -> Result<Option<bool>, Exhausted> {
     let half = half(width);
     let holes = part.holes.len().saturating_sub(1) as f64;
     if part.area() > perimeter(part) * half + std::f64::consts::PI * holes * half * half {
