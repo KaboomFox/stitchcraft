@@ -90,17 +90,20 @@ that join its underlays are no longer than the first value. For any other stroke
 `stroke_method`. `running_stitch` (the default) and `manual_stitch` are sewn from M3, and `zigzag_stitch`
 from M7.2, as wide as the stroke. A satin column drawn as one path no wider than the design's
 `min_satin_stroke_width` is sewn as a stroke, with `SC-W0212`, as in Ink/Stitch (`REQ-SAT-015`). Wider,
-it is sewn between rails made from its line from M4.9 (`REQ-SAT-016`). A fill whose `fill` setting is
-off sews nothing, and nothing is said of it (`REQ-FILL-003`). Another fill's region is built first, so
-what it leaves out and how it will be sewn are said (`SC-W0303`, `SC-W0304`, `SC-I0306`, `SC-W0307`)
-whatever comes next, and its `fill_method` picks the generator: the tatami fill, sewn from M5.4, which
-reads the running stitch's length and tolerance for its travel between rows (the first of the lengths,
-as a satin column does), under the rows from M5.5, and sews its underlay before its top rows from
-M5.6. A fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without underlay, with
-`SC-W0314`: StitchCraft does not build that method (`REQ-FILL-005`). Nor does it take pull compensation,
-random stitch lengths or gap-filling rows, which Ink/Stitch's legacy fill has no use for. The other stroke, satin and
-fill methods are skipped with `SC-W0011` until their milestones. An element whose parameters are wrong
-(`SC-E0101`) is skipped too, and the rest of the design still plans.
+it is sewn between rails made from its line from M4.9 (`REQ-SAT-016`). A fill whose `fill` setting is off
+sews nothing, and nothing is said of it (`REQ-FILL-003`). Another fill's region is built first, so what
+it leaves out and how it will be sewn are said (`SC-W0303`, `SC-W0304`, `SC-I0306`, `SC-W0307`) whatever
+comes next, and its `fill_method` picks the generator: the tatami fill, sewn from M5.4, which reads the
+running stitch's length and tolerance for its travel between rows (the first of the lengths, as a satin
+column does), under the rows from M5.5, and sews its underlay before its top rows from M5.6. A fill set
+to Ink/Stitch's legacy fill is sewn as a tatami fill without underlay, with `SC-W0314`: StitchCraft does
+not build that method (`REQ-FILL-005`). Nor does it take pull compensation, random stitch lengths or
+gap-filling rows, which Ink/Stitch's legacy fill has no use for. A contour fill, sewn from M7.7, lays its
+rings with the tatami fill's row spacing and sews them as one running stitch after the tatami fill's
+underlay, reading the running stitch's tolerance and random lengths for its path
+([fills](algorithms/fills.md#contour-fill)). The other stroke, satin and fill methods are skipped with
+`SC-W0011` until their milestones. An element whose parameters are wrong (`SC-E0101`) is skipped too, and
+the rest of the design still plans.
 
 Each element is generated with the shortest stitch for it: the larger of the machine's (the profile's
 `min_stitch`) and the element's `min_stitch_length_mm`, or the design's shortest stitch when the element
@@ -110,7 +113,8 @@ or a fill's longest, is raised to it with `SC-W0402`: shorter, the plan would me
 
 A preview that cannot afford a fill's stitches shows its top rows (`stitchcraft_engine::generate::rows`,
 from M6.3). The fill's settings are read as for sewing it, and what they say is said the same, but only
-the region is built and the rows laid over it: no needle point is placed and no route is searched.
+the region is built and the rows laid over it: no needle point is placed and no route is searched. A
+contour fill has no rows, and shows its path round its rings, from M7.7.
 
 Rules every generator follows:
 

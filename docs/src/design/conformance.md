@@ -267,15 +267,16 @@ the ledger is still true. Where the differential can undo a deviation in Ink/Sti
 the file again without it. The excuse then counts only if the measure agrees. Ink/Stitch's jumps that go
 nowhere (`DEV-FMT-001`) excuse as many trims and jumps as there are of them, and no more.
 
-`REQ-SVG-008`, `REQ-AUTO-021` and `REQ-AUTO-022` are the requirements of level L3. The other runs of
-the suite leave them and their cases to this one. Until M8 reads every `inkstitch:` attribute, the corpus is the designs
-the SVG reader sews in full, at Ink/Stitch's defaults, with trim and stop commands and the file version.
-A case may name a test sheet drawn as a design instead (`sheet`). StitchCraft sews the sheet, and
-Ink/Stitch an SVG file of the elements StitchCraft sews it with, written with their parameters
-(`stitchcraft_testkit::inkstitch`). Automatic digitizing chooses ordinary elements with Ink/Stitch's
-parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check StitchCraft's
-stitches of those choices against Ink/Stitch's (`REQ-AUTO-021`). `conformance/inkstitch/README.md` says
-how to run it by hand and how to add a case.
+`REQ-SVG-008`, `REQ-AUTO-021`, `REQ-AUTO-022` and `REQ-FILL-CON-008` are the requirements of level L3.
+The other runs of the suite leave them and their cases to this one. Until M8 reads every `inkstitch:`
+attribute, the corpus is the designs the SVG reader sews in full, at Ink/Stitch's defaults, with trim and
+stop commands and the file version. A case may name a test sheet drawn as a design instead (`sheet`).
+StitchCraft sews the sheet, and Ink/Stitch an SVG file of the elements StitchCraft sews it with, written
+with their parameters (`stitchcraft_testkit::inkstitch`). Automatic digitizing chooses ordinary elements
+with Ink/Stitch's parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check
+StitchCraft's stitches of those choices against Ink/Stitch's (`REQ-AUTO-021`). TS-11B checks the contour
+fills so, each strategy and join style among them (`REQ-FILL-CON-008`). `conformance/inkstitch/README.md`
+says how to run it by hand and how to add a case.
 
 **Centre lines.** Sewing what StitchCraft chose can't find a choice that is wrong: TS-13B's small T sewed
 a Γ, the left arm of its bar left out of its centre line, and the differential agreed by every measure.

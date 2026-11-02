@@ -1,6 +1,6 @@
 # Fill generators
 
-<!-- implements: crates/stitchcraft-engine/src/normalize/region/**, crates/stitchcraft-engine/src/generators/tatami/**, crates/stitchcraft-engine/src/generators/pull.rs -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/region/**, crates/stitchcraft-engine/src/normalize/simplify.rs, crates/stitchcraft-engine/src/generators/tatami/**, crates/stitchcraft-engine/src/generators/contour/**, crates/stitchcraft-engine/src/generators/smoothing.rs, crates/stitchcraft-engine/src/generators/pull.rs -->
 
 A fill covers the area its path bounds, its [region](#region), with rows of stitches. Tatami is P1 (M5);
 contour, meander and circular are P2 (M7); guided, linear gradient, tartan and cross stitch are P3 (M10).
@@ -466,7 +466,10 @@ starts on the outline at its point nearest the needle.
 - **Smoothing.** A `smoothness_mm` above 0 smooths the path. It is spaced as a running stitch 5 times the
   smoothness long, within 2 times it, and its corners are cut 5 times, each point replaced by the points
   a quarter and three quarters along its sides, its ends kept. The path is then kept inside the part, as
-  a tatami fill's travel is ([section 4](#4-travel-under-the-rows)).
+  a tatami fill's travel is ([section 4](#4-travel-under-the-rows)), and cut again where its rings began,
+  at the same share of its length. StitchCraft's running stitch keeps a point on each corner of the path
+  it spaces, where Ink/Stitch's evenly spaced points may cut one, and the smoothed path takes more
+  stitches than Ink/Stitch's (`DEV-FILL-017`).
 
 ### Single and double spiral
 
@@ -498,6 +501,25 @@ at random lengths when `enable_random_stitch_length` is on ([running stitch](str
 Bean stitch comes next, then the repeats. Each repeat adds a copy of everything sewn so far, the other way
 round, as Ink/Stitch's does, and `k` repeats sew 2^(k−1) passes. A stroke's repeats sew `k` passes.
 
+The path is kept as its stretches: along one ring between steps, or one turn of a spiral. Each stretch,
+and each step between 2 of them, is stitched as a span of its own. The running stitch spreads a span's
+stitches evenly, and splits those that stray from a curve too tight for them (`DEV-RUN-002`). Over a
+whole spiral, from its wide outer turns to its tight middle, that halved the inner stitches and sewed some
+30 % more stitches than Ink/Stitch, whose stitches each shorten to fit. A ring, or a turn, curves about as
+tightly all along.
+
+### How it compares with Ink/Stitch
+
+TS-11B, the contour fills' test sheet, sews each strategy, each join style, a hole, rings that part and
+rings that alternate, and a smoothed path. Sewn by both programs, Ink/Stitch run as a black box
+(`REQ-FILL-CON-008`), the sheet takes 10,611 stitches against Ink/Stitch's 9,885, 7 % more, its size,
+threads, trims and jumps are the same, and the thread footprints overlap by 0.99. Sample by sample, the
+rings lie where Ink/Stitch's lie, and the stitches along them differ as a running stitch's do
+(`DEV-RUN-001`, `DEV-RUN-002`): 2 to 12 % more of them, and 68 to 96 % of each program's thread within
+0.05 mm of the other's, the most on the mitred star's straight sides and the least on the discs, where 2
+stitches along one curve, placed differently, lie farthest apart. The smoothed leaf takes 17 % more
+(`DEV-FILL-017`).
+
 ### Start, end and underlay
 
 Each part sews the tatami fill's underlay first ([section 6](#6-underlay)), on by default, at `angle` +
@@ -508,10 +530,18 @@ fill ends where its strategy ends.
 
 ### Properties (conformance)
 
-- With round corners, each ring lies d from the ring it was offset from, ± 5 %, and rings of one level
-  never cross.
-- Each part sews one path of running stitches, with no jump inside it.
-- Traced either way round or started elsewhere, a part sews rings of the same shape.
+| Requirement | Property |
+|---|---|
+| `REQ-FILL-CON-001` | A disc's rings lie a row spacing apart (± 5 %) down to its middle, every one sewn, clockwise as drawn or the other way with `clockwise` off; the outlines shrunk and the holes grown agree with shapely's buffer within a nanometre, for each join style, on 538 polygons |
+| `REQ-FILL-CON-002` | Inner to outer starts at the outline's point nearest the needle, steps in to the middle first, and ends on the outline a row spacing short of where it began |
+| `REQ-FILL-CON-003` | A smoothed path stays inside the part, out of its holes |
+| `REQ-FILL-CON-004` | A single spiral starts at the outline's point nearest the needle and ends in the middle; a double one ends on the ring inside the outline, near where it began |
+| `REQ-FILL-CON-005` | A part too narrow for its spiral is sewn inner to outer, with `SC-I0315` |
+| `REQ-FILL-CON-006` | `k` repeats sew 2^(k−1) passes, bean stitch sews each stitch 3 times, and random lengths follow the seed |
+| `REQ-FILL-CON-007` | The underlay's rows come first and the rings go on from them, with no jump |
+| `REQ-FILL-CON-008` | TS-11B sews in Ink/Stitch as in StitchCraft, by the differential's measures |
+
+Like every test sheet's, TS-11B's fills sew the same mirrored, turned half round, or drawn again the other way round or from another point.
 
 ## Meander fill
 

@@ -322,6 +322,14 @@ requirements = ["REQ-FILL-CON-005"]
 params = ["contour_strategy"]
 
 [[deviation]]
+id = "DEV-FILL-017"
+area = "fill/contour"
+summary = "Before inner to outer's path is smoothed, StitchCraft's running stitch cuts it into points 5 times smoothness_mm apart, a point on each corner, where Ink/Stitch's evenly spaced points may cut a corner by up to twice the smoothness, as for a tatami fill's travel (DEV-FILL-007). The smoothed path is then cut where its rings began, at the same share of its length, and each piece is a span of the running stitch. The path lies where Ink/Stitch's does but takes more stitches: TS-11B's leaf, smoothed by 0.5 mm, takes 973 where its rings unsmoothed take 903, against Ink/Stitch's 830 and 828, 17 % more than Ink/Stitch's where the sheet's samples that are not smoothed take 2 to 12 % more."
+reason = "The running stitch is StitchCraft's own (DEV-RUN-001, DEV-RUN-002), and so is the smoothing a tatami fill's travel takes. A span for each ring keeps a span's curve about as tight all along, as it does for the rings not smoothed. Ink/Stitch's smoothing was read at d59c9ab (lib/utils/smoothing.py: smooth_path; lib/stitches/contour_fill.py: inner_to_outer), and TS-11B was sewn by both, Ink/Stitch run as a black box, with the leaf's smoothness at 0.5 mm and at 0."
+requirements = ["REQ-FILL-CON-003"]
+params = ["smoothness_mm"]
+
+[[deviation]]
 id = "DEV-SVG-001"
 area = "svg"
 summary = "A stroke-width in percent, em or ex is read as a viewer reads it: a percentage of the viewport's diagonal over √2, an em as 16 user units and an ex as 8. A stroke-linejoin keyword is read in any case. Ink/Stitch reads such a width as 0, which sews a satin column drawn as one path as a stroke, and reads a join that is not written in lower case as unset."
