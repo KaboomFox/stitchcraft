@@ -519,23 +519,88 @@ fn req_auto_009_what_shows_of_the_background_inside_the_picture_is_sewn() {
     // digitized whole under it (REQ-AUTO-023).
     let frame = || holed("frame", (5.0, 5.0), (35.0, 25.0), (15.0, 10.0), (25.0, 20.0));
     let left = "warning SC-W0906: This area covers the whole design under the other shapes, so it is left out as the picture's background";
-    for (elements, white, message) in [
+    for (elements, white, shows, message) in [
         (
             vec![rect("background", (0.0, 0.0), (40.0, 30.0)), frame()],
             "background",
+            100.0,
             format!("{left}, but for the part of it that shows inside the picture, which is sewn."),
         ),
         (
             vec![holed("background", (0.0, 0.0), (40.0, 30.0), (5.0, 5.0), (35.0, 25.0)), rect("inside", (15.0, 10.0), (25.0, 20.0)), frame()],
             "inside",
+            100.0,
             format!("{left}."),
+        ),
+        // A frame with 2 windows, stacked: the white shows in both, 2 parts of 100 mm² each, which are filled.
+        (
+            vec![
+                rect("background", (0.0, 0.0), (60.0, 30.0)),
+                automatic(fill(
+                    "frame",
+                    &[
+                        &[(5.0, 5.0), (55.0, 5.0), (55.0, 25.0), (5.0, 25.0)],
+                        &[(10.0, 10.0), (10.0, 20.0), (20.0, 20.0), (20.0, 10.0)],
+                        &[(40.0, 10.0), (40.0, 20.0), (50.0, 20.0), (50.0, 10.0)],
+                    ],
+                    &BLUE,
+                    &[],
+                )),
+            ],
+            "background",
+            200.0,
+            format!("{left}, but for the 2 parts of it that show inside the picture, which are sewn."),
         ),
     ] {
         let (out, diagnostics) = sewn(elements);
         assert_eq!(ids(&out), ["frame", white]);
-        assert!(near(area(named(&out, white)), 100.0, 1e-6), "{white}: {}", area(named(&out, white)));
+        assert!(near(area(named(&out, white)), shows, 1e-6), "{white}: {}", area(named(&out, white)));
         assert_eq!(said(&diagnostics, Code::AutoBackground), [message]);
     }
+}
+
+#[test]
+fn req_auto_023_an_area_closes_only_the_holes_its_details_fill() {
+    // A square with 2 holes: a square drawn after it fills one, and fabric shows through the other. The square
+    // is digitized whole under its detail, cut away under it 0.4 mm inside its edge, and keeps the other hole
+    // as drawn.
+    let square = automatic(fill(
+        "square",
+        &[
+            &[(0.0, 0.0), (40.0, 0.0), (40.0, 40.0), (0.0, 40.0)],
+            &[(5.0, 5.0), (5.0, 15.0), (15.0, 15.0), (15.0, 5.0)],
+            &[(24.0, 24.0), (24.0, 32.0), (32.0, 32.0), (32.0, 24.0)],
+        ],
+        &BLUE,
+        &[],
+    ));
+    let (out, diagnostics) = sewn(vec![square, rect("detail", (5.0, 5.0), (15.0, 15.0)), rect("far", (50.0, 0.0), (55.0, 5.0))]);
+    assert_eq!(ids(&out)[..2], ["square", "detail"]);
+    assert_eq!(
+        said(&diagnostics, Code::AutoLayers),
+        ["info SC-I0908: 1 area is digitized whole under the areas that fill its holes, which sew after it."]
+    );
+    let holes: Vec<f64> = region_of(named(&out, "square")).parts[0]
+        .holes
+        .iter()
+        .map(|ring| region::Polygon { outline: ring.clone(), holes: Vec::new() }.area())
+        .collect();
+    assert!(
+        holes.len() == 2 && holes.iter().any(|&hole| near(hole, 64.0, 1e-6)) && holes.iter().any(|&hole| near(hole, 9.2 * 9.2, 1e-6)),
+        "{holes:?}"
+    );
+}
+
+#[test]
+fn req_auto_008_a_speck_left_out_leaves_out_the_stop_after_it() {
+    // A speck away from every area, which would stop the machine after it: left out, it sews nothing, and so
+    // the stop after it has no place, as after any element that sews nothing.
+    let lone = automatic(fill("lone", &[&[(30.0, 30.0), (30.5, 30.0), (30.5, 30.5), (30.0, 30.5)]], &RED, &[("stop_after", "true")]));
+    let (out, diagnostics) = sewn(vec![rect("square", (0.0, 0.0), (10.0, 10.0)), lone]);
+    assert_eq!(ids(&out), ["square"]);
+    let stop = diagnostics.iter().find(|d| d.code == Code::TrimOrStopLeftOut).unwrap();
+    assert_eq!(stop.to_string(), "warning SC-W0505: This element sews no stitch, so the stop after it is left out.");
+    assert_eq!(stop.element.as_ref().map(|id| id.as_str()), Some("lone"));
 }
 
 #[test]
