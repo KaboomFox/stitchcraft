@@ -17,6 +17,12 @@ A fill whose `fill` setting is off sews nothing, and nothing is said of it, as i
 (`REQ-FILL-003`). The path's outline, if it has one, is sewn as its stroke settings say, and the element
 before it still ends near its area, as Ink/Stitch's does.
 
+A fill starts nearest the needle, where the elements before it left it, and ends nearest what the next
+element offers ([section 5](#5-parts)). Its start and end positions take their place, which a design
+places with Ink/Stitch's start and end commands or VectorCraft's start and end markers, and the element
+before a fill with a start position ends nearest that (`REQ-GEN-001`). Every method uses them but the
+contour fill's end, which lies where its rings end.
+
 ## Region
 
 A fill's region is the area an SVG renderer paints for its path, in parts with holes
@@ -182,7 +188,7 @@ Each part's segments are sewn once each, in the order Ink/Stitch routes them
    even number of edges. Ink/Stitch's graph knows an edge between 2 nodes by its kind, so a ring of 2
    nodes doubles only one of its 2 stretches. This graph does the same.
 3. **Start and end.** The fill starts at the point of its rings nearest the needle and ends at the point
-   nearest its next stitch, which the next element's shape gives (section 5). Each of the 2 points gets a
+   nearest its next stitch, which its end position or else the next element's shape gives (section 5). Each of the 2 points gets a
    node, which splits the stretch of that ring whose chord passes nearest it. Then the node nearest the
    needle is where the fill starts, and the one nearest the next stitch where it ends. Without a needle
    the fill starts at its first segment's start, and without a next element it ends where it starts. Only
@@ -294,6 +300,10 @@ rails, the start of the first that lies in the fill is the next stitch, and of a
 outline's start that does. Failing those, for a fill after a fill, it is the first start of this fill's
 outlines that lies in the next, and otherwise the fill's point nearest the next element. Ink/Stitch's
 geometry library finds it so ([satin](satin.md#start-and-end)).
+A start position is the needle the parts are ordered by, and the first part starts nearest it. Each part
+after starts nearest where the part before ended, as without one, where Ink/Stitch starts each part
+nearest its start command (`DEV-FILL-023`). An end position is the last part's next stitch
+(`REQ-GEN-001`).
 Each part is a group of its own, which assembly joins to the next as it joins any 2 groups:
 straight on within the collapse length, and otherwise with a jump and the ties and trims the element's
 settings give. `SC-W0307` says the fill is in parts.
@@ -523,10 +533,11 @@ stitches along one curve, placed differently, lie farthest apart. The smoothed l
 ### Start, end and underlay
 
 Each part sews the tatami fill's underlay first ([section 6](#6-underlay)), on by default, at `angle` +
-90° with 3 row spacings between its rows. Each part starts nearest the needle, at the start command's
-point or else at the last stitch before, the underlay's, or at the origin without either. The parts go
-in order of their distance from the first part's start. The end command is read but not used, and the
-fill ends where its strategy ends.
+90° with 3 row spacings between its rows. Each part's underlay starts nearest the stitch before it, and
+its rings nearest the underlay's last stitch. Before the first part, that stitch is the fill's start
+position where it has one (`REQ-GEN-001`), and otherwise the last stitch of the elements before, or the
+origin. The parts go in order of their distance from the first part's start. An end
+position has nothing to replace, as in Ink/Stitch: the fill ends where its strategy ends.
 
 ### Properties (conformance)
 
@@ -594,7 +605,8 @@ stitch round its outline, as a tatami fill's part too thin for rows is, and `SC-
 
 The path runs from the point of the network nearest the needle, or else the outline's first point, to
 the point nearest where it is to end. That is the point of the part nearest the next part, or for the
-last part the next element's offer, or else the point of the outline half way round it from the start.
+last part its end position or else the next element's offer, or else the point of the outline half way
+round it from the start.
 Where the 2 are one point, it ends at the point next nearest.
 
 1. It begins as the path of fewest lines between them.
@@ -657,8 +669,9 @@ next part and the last near the next element, as a meander fill's are.
 
 ### Circles
 
-The circles lie round the middle of the part, its centroid. Ink/Stitch's `target_point` command moves
-the middle, and StitchCraft reads it with Ink/Stitch's other commands in M8. The first circle has a radius
+The circles lie round the middle of the part. That is the fill's target point where its design places one
+with Ink/Stitch's `target_point` command (`REQ-FILL-CIR-008`), and otherwise the part's centroid. Every
+part turns round the same target point, as in Ink/Stitch, and it may lie outside the part. The first circle has a radius
 of 0.1 CSS pixel, so that the spiral ends at the middle. From `row_spacing_mm` out, each circle lies a row
 spacing past the last, until one lies 2 spacings past the part's farthest point. That point is the one
 farthest from the middle, as the discrete Hausdorff distance Ink/Stitch takes finds it.
@@ -774,8 +787,10 @@ the other side, and `reverse` sews the whole fill backwards.
 StitchCraft does not build it, since the method exists for Ink/Stitch's older files. A fill set to it is
 sewn as a tatami fill with its settings and no underlay, and `SC-W0314` says so (`REQ-FILL-005`). Nor does
 it take pull compensation, random stitch lengths or gap-filling rows, which Ink/Stitch's legacy fill has no
-use for, but its area grows by `expand_mm` as in Ink/Stitch. It is a tatami fill in every other way too. The element before it ends near its area, and its rows are routed and
-joined by travel stitches as a tatami fill's are (`DEV-FILL-014`). `flip` and `reverse` are not planned,
+use for, but its area grows by `expand_mm` as in Ink/Stitch. It is a tatami fill in every other way too.
+The element before it ends near its area, and its rows are routed and joined by travel stitches as a
+tatami fill's are, between its start and end positions where it has them. Ink/Stitch's legacy fill takes
+its parts in order of their distance from its start command and uses it no further (`DEV-FILL-014`). `flip` and `reverse` are not planned,
 and a design that sets them gets `SC-W0105`. The VectorCraft plug-in's fill dialog does not offer the
 method.
 

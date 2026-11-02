@@ -14,6 +14,7 @@ use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Budget, Code, Fix, Point};
 use stitchcraft_engine::PlanOutcome;
+use stitchcraft_engine::design::Hints;
 use stitchcraft_engine::generators::Neighbours;
 use stitchcraft_engine::generators::pull::PullParams;
 use stitchcraft_engine::generators::satin::{SatinParams, satin_stitch};
@@ -190,7 +191,10 @@ fn req_sat_002_where_the_rails_converge_a_pair_moves_to_lie_at_the_spacing() {
     let pull = PullParams::from_set(&ParamSet::default()).unwrap().params;
     let mut meter = Budget::DEFAULT.meter();
     let lengths = satin_lengths(&ParamSet::default());
-    let pairs = across(&satin_stitch(&satin, &params, &pull, lengths, &Neighbours::default(), &mut SplitMix64::new(0), &mut meter).unwrap().runs[0]);
+    let pairs = across(
+        &satin_stitch(&satin, &params, &pull, lengths, &Neighbours::default(), &Hints::default(), &mut SplitMix64::new(0), &mut meter).unwrap().runs
+            [0],
+    );
     let gaps = gaps(&pairs);
     let inside = &gaps[..gaps.len() - 1];
     assert!(inside.iter().all(|gap| (gap - 0.4).abs() <= 0.02), "within 5 %: {gaps:?}");
@@ -272,7 +276,7 @@ fn sewn_alone(path: &stitchcraft_engine::design::Path, params: &[(&str, &str)]) 
     let set: ParamSet = params.iter().copied().collect();
     let (params, pull) = (SatinParams::from_set(&set).unwrap().params, PullParams::from_set(&set).unwrap().params);
     let rng = &mut SplitMix64::new(0);
-    let stitched = satin_stitch(&satin, &params, &pull, satin_lengths(&set), &Neighbours::default(), rng, &mut meter).unwrap();
+    let stitched = satin_stitch(&satin, &params, &pull, satin_lengths(&set), &Neighbours::default(), &Hints::default(), rng, &mut meter).unwrap();
     (stitched.runs.concat(), stitched.warnings.iter().map(ToString::to_string).collect())
 }
 
@@ -321,12 +325,25 @@ fn req_sat_002_satin_stitches_are_charged_to_the_budget() {
             &pull,
             lengths,
             &Neighbours::default(),
+            &Hints::default(),
             &mut SplitMix64::new(0),
             &mut Budget { max_stitches: 10, max_work: 20 }.meter()
         )
         .is_err()
     );
-    assert!(satin_stitch(&satin, &params, &pull, lengths, &Neighbours::default(), &mut SplitMix64::new(0), &mut Budget::DEFAULT.meter()).is_ok());
+    assert!(
+        satin_stitch(
+            &satin,
+            &params,
+            &pull,
+            lengths,
+            &Neighbours::default(),
+            &Hints::default(),
+            &mut SplitMix64::new(0),
+            &mut Budget::DEFAULT.meter()
+        )
+        .is_ok()
+    );
 }
 
 proptest! {

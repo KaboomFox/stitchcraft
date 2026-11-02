@@ -38,7 +38,10 @@ tatami fill's travel. Since M7.8 a meander fill wanders through the sides of a t
 each part, never passing a point twice, as one line after the same underlay (`generators::meander`).
 Since M7.9 a circular fill sews a double spiral round each part's middle, cut by the part, its pieces
 routed as a tatami fill's rows after the same underlay (`generators::circular`). The needle runs between
-them as it runs between rows (`generators::tatami::sew::lines`).
+them as it runs between rows (`generators::tatami::sew::lines`). Since M8.4 an element's start and end
+positions and its target point (`design::Hints`), which Ink/Stitch's commands and VectorCraft's markers
+give, take the place of the needle before it, of the next element's offer and of a circular fill's
+centroid, for the stitch types that use them (`generate`).
 Since M13.1 a shape without settings, read with `--auto`, is digitized automatically before anything else
 (`auto`). A line no wider than the design's narrowest satin stroke runs, a line up to 7 mm wide becomes
 satin columns along its centre line, and a wider line becomes the tatami fill of the area it paints

@@ -569,6 +569,15 @@ second from its start. The centre walk's halves are its part from the cut to the
 the cut to the start, each sewn its repeats. The first pass begins at the cut. Between the passes the
 needle goes to the line at the cut, where the second pass begins.
 
+**Start and end positions** (`REQ-GEN-001`). A design places them with Ink/Stitch's start and end
+commands or VectorCraft's markers, and they apply whatever `start_at_nearest_point` and
+`end_at_nearest_point` say. The start position takes the needle's place: it is the column's first needle
+point, from which the needle enters the line where the position's cut says and follows it to where the
+first stitch's cut says. The end position takes the place of the end above and is the column's last
+needle point, unless it lies less than 5 CSS pixels from the line's end, where the column ends as if it
+were the last element. Ink/Stitch does the same. The element before a column with a start position ends
+nearest it (`DEV-SAT-012`).
+
 **A point inside an area.** An area is 0 away from every point in it or on its rings, so before it
 measures between lines, Ink/Stitch's geometry library looks for such a point. It tests the next
 element's points first, then the element's own, each against every part of the other's area before the
@@ -593,8 +602,7 @@ point of the line within the shortest stitch of the needle, or of the next piece
 routes it, and is left out. An end within
 the shortest stitch of the column's last needle point moves that point to the end. The column's last
 stitch, often a top stitch, then goes to the end in one stitch. Ink/Stitch sews the end as a stitch of
-its own, which its stitch plan drops when it is no longer than its shortest stitch. An explicit start or
-end command, read from M8, would replace the needle point or the next stitch.
+its own, which its stitch plan drops when it is no longer than its shortest stitch.
 
 ## Variants (P2, M7)
 

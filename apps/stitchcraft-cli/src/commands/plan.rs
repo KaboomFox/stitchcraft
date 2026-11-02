@@ -514,9 +514,10 @@ mod tests {
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
         assert!(std::fs::read(&output).unwrap().starts_with(b"#PES0001"));
         assert!(std::fs::read(&preview).unwrap().starts_with(b"\x89PNG"));
-        // What the reader said comes first: the placement line left out by its name, and the start marker,
-        // which is not applied yet.
-        assert!(out.stderr.starts_with("info SC-I0811 (vc:10): ") && out.stderr.contains("\nwarning SC-W0807 (vc:4): "), "{}", out.stderr);
+        // What the reader said comes first: the placement line left out by its name, and the paint of the
+        // group of dots. The start marker is used, and says nothing.
+        assert!(out.stderr.starts_with("info SC-I0811 (vc:10): ") && out.stderr.contains("\nwarning SC-W0807 (vc:7): "), "{}", out.stderr);
+        assert!(!out.stderr.contains("(vc:4)"), "{}", out.stderr);
         let report: Value = serde_json::from_slice(&std::fs::read(&report).unwrap()).unwrap();
         let codes: Vec<&str> = report["diagnostics"].as_array().unwrap().iter().filter_map(|d| d["code"].as_str()).collect();
         assert!(codes.starts_with(&["SC-I0811", "SC-W0807"]), "{codes:?}");

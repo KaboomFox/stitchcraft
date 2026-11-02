@@ -128,11 +128,19 @@ impl core::default::Default for stitchcraft_engine::design::DesignSettings
 pub fn stitchcraft_engine::design::DesignSettings::default() -> Self
 pub struct stitchcraft_engine::design::Element
 pub stitchcraft_engine::design::Element::automatic: bool
+pub stitchcraft_engine::design::Element::hints: stitchcraft_engine::design::Hints
 pub stitchcraft_engine::design::Element::id: stitchcraft_core::element::ElementId
 pub stitchcraft_engine::design::Element::name: core::option::Option<alloc::string::String>
 pub stitchcraft_engine::design::Element::params: stitchcraft_params::set::ParamSet
 pub stitchcraft_engine::design::Element::shape: stitchcraft_engine::design::Shape
 pub stitchcraft_engine::design::Element::thread: stitchcraft_plan::thread::Thread
+pub struct stitchcraft_engine::design::Hints
+pub stitchcraft_engine::design::Hints::end: core::option::Option<stitchcraft_core::units::Point>
+pub stitchcraft_engine::design::Hints::start: core::option::Option<stitchcraft_core::units::Point>
+pub stitchcraft_engine::design::Hints::target: core::option::Option<stitchcraft_core::units::Point>
+impl stitchcraft_engine::design::Hints
+pub fn stitchcraft_engine::design::Hints::map<E>(&self, impl core::ops::function::Fn(stitchcraft_core::units::Point) -> core::result::Result<stitchcraft_core::units::Point, E>) -> core::result::Result<stitchcraft_engine::design::Hints, E>
+pub fn stitchcraft_engine::design::Hints::points(&self) -> impl core::iter::traits::iterator::Iterator<Item = stitchcraft_core::units::Point>
 pub struct stitchcraft_engine::design::Path
 pub stitchcraft_engine::design::Path::subpaths: alloc::vec::Vec<stitchcraft_engine::design::Subpath>
 impl stitchcraft_engine::design::Path
@@ -207,6 +215,7 @@ pub stitchcraft_engine::generators::circular::Circular::inset: f64
 pub stitchcraft_engine::generators::circular::Circular::skip_last: bool
 pub stitchcraft_engine::generators::circular::Circular::spacing: f64
 pub stitchcraft_engine::generators::circular::Circular::stitching: stitchcraft_engine::generators::contour::Stitching
+pub stitchcraft_engine::generators::circular::Circular::target: core::option::Option<stitchcraft_core::units::Point>
 pub stitchcraft_engine::generators::circular::Circular::travel: stitchcraft_engine::generators::tatami::sew::Travel
 pub stitchcraft_engine::generators::circular::Circular::underlay: alloc::vec::Vec<stitchcraft_engine::generators::tatami::sew::Layer>
 pub fn stitchcraft_engine::generators::circular::circular_fill(&stitchcraft_engine::normalize::region::Region, &stitchcraft_engine::generators::circular::Circular, core::option::Option<stitchcraft_core::units::Point>, core::option::Option<&stitchcraft_engine::generators::Approach>, &mut stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
@@ -408,7 +417,7 @@ pub const stitchcraft_engine::generators::satin::SATIN_METHODS: &[stitchcraft_pa
 pub const stitchcraft_engine::generators::satin::START_AT_NEAREST_POINT: &str
 pub const stitchcraft_engine::generators::satin::ZIGZAG_UNDERLAY: &str
 pub fn stitchcraft_engine::generators::satin::rails(&stitchcraft_engine::design::Path, stitchcraft_core::units::Mm, stitchcraft_engine::design::Join, &mut alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>, &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::option::Option<stitchcraft_engine::normalize::satin::Satin>, stitchcraft_core::budget::Exhausted>
-pub fn stitchcraft_engine::generators::satin::satin_stitch(&stitchcraft_engine::normalize::satin::Satin, &stitchcraft_engine::generators::satin::SatinParams, &stitchcraft_engine::generators::pull::PullParams, stitchcraft_engine::generators::satin::SatinLengths, &stitchcraft_engine::generators::Neighbours, &mut stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_engine::generators::satin::satin_stitch(&stitchcraft_engine::normalize::satin::Satin, &stitchcraft_engine::generators::satin::SatinParams, &stitchcraft_engine::generators::pull::PullParams, stitchcraft_engine::generators::satin::SatinLengths, &stitchcraft_engine::generators::Neighbours, &stitchcraft_engine::design::Hints, &mut stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::generators::tatami
 pub mod stitchcraft_engine::generators::tatami::rows
 pub struct stitchcraft_engine::generators::tatami::rows::Grid
@@ -611,8 +620,9 @@ impl stitchcraft_engine::testsheets::TestSheet
 pub fn stitchcraft_engine::testsheets::TestSheet::design(&self) -> core::option::Option<core::result::Result<stitchcraft_engine::design::Design, stitchcraft_engine::testsheets::SheetError>>
 pub const fn stitchcraft_engine::testsheets::TestSheet::designed(&self) -> bool
 pub fn stitchcraft_engine::testsheets::TestSheet::digitized(&self) -> bool
-pub const fn stitchcraft_engine::testsheets::TestSheet::drawable(&self) -> bool
+pub fn stitchcraft_engine::testsheets::TestSheet::drawable(&self) -> bool
 pub fn stitchcraft_engine::testsheets::TestSheet::plan(&self) -> core::result::Result<stitchcraft_plan::plan::StitchPlan, stitchcraft_engine::testsheets::SheetError>
+pub fn stitchcraft_engine::testsheets::TestSheet::positioned(&self) -> bool
 pub const stitchcraft_engine::testsheets::STITCH_LEN: f64
 pub static stitchcraft_engine::testsheets::SHEETS: &[stitchcraft_engine::testsheets::TestSheet]
 pub fn stitchcraft_engine::testsheets::find(&str) -> core::option::Option<&'static stitchcraft_engine::testsheets::TestSheet>

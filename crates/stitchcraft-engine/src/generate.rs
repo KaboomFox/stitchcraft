@@ -36,7 +36,7 @@ use stitchcraft_params::{
 use stitchcraft_plan::MachineProfile;
 
 use crate::common::{CommonParams, STOP_AFTER, TRIM_AFTER};
-use crate::design::{DesignSettings, Element, Join, Path, Shape};
+use crate::design::{DesignSettings, Element, Hints, Join, Path, Shape};
 use crate::generators::circular::{self, Circular, circular_fill};
 use crate::generators::contour::{self, Contour, ContourParams, Stitching, contour_fill};
 use crate::generators::manual::manual_stitch;
@@ -402,7 +402,7 @@ fn prepare<'a>(
         jump: common.jump_length(settings.collapse_len),
         force_locks: common.force_lock_stitches,
     });
-    Ok(Some(Prepared { region, common, sewing: Sewing { set, stitch_type, shared, neighbours } }))
+    Ok(Some(Prepared { region, common, sewing: Sewing { set, stitch_type, shared, neighbours, hints: element.hints } }))
 }
 
 /// What the settings every stitch type shares give an element's generator.
@@ -429,6 +429,8 @@ struct Sewing<'a> {
     shared: Option<Shared>,
     /// Where the elements before it left the needle, and what the next one offers to end near.
     neighbours: &'a Neighbours,
+    /// Where its design says it starts and ends, and the point it aims at (`REQ-GEN-001`).
+    hints: Hints,
 }
 
 /// A declaration's `from_set_as`, which reads its parameters as an element of a stitch type reads them.
@@ -461,21 +463,24 @@ fn fill(
     diagnostics: &mut Vec<Diagnostic>,
     meter: &mut Meter,
 ) -> Result<Option<Stitched>, Exhausted> {
-    let neighbours = sewing.neighbours;
+    // Its start and end positions take the place of the needle and the next element's offer
+    // (`REQ-GEN-001`). The contour fill, which ends where its rings end, uses the start alone.
+    let end = sewing.hints.end.map(Approach::Point);
+    let (needle, next) = (sewing.hints.start.or(sewing.neighbours.needle), end.as_ref().or(sewing.neighbours.next.as_ref()));
     if sewing.stitch_type == StitchType::ContourFill {
         let Some(contour) = contour_settings(sewing, diagnostics) else { return Ok(None) };
-        return Ok(Some(contour_fill(region, &contour, neighbours.needle, rng, meter)?));
+        return Ok(Some(contour_fill(region, &contour, needle, rng, meter)?));
     }
     if sewing.stitch_type == StitchType::MeanderFill {
         let Some(meander) = meander_settings(sewing, diagnostics) else { return Ok(None) };
-        return Ok(Some(meander_fill(region, &meander, neighbours.needle, neighbours.next.as_ref(), rng, meter)?));
+        return Ok(Some(meander_fill(region, &meander, needle, next, rng, meter)?));
     }
     if sewing.stitch_type == StitchType::CircularFill {
         let Some(circular) = circular_settings(sewing, diagnostics) else { return Ok(None) };
-        return Ok(Some(circular_fill(region, &circular, neighbours.needle, neighbours.next.as_ref(), rng, meter)?));
+        return Ok(Some(circular_fill(region, &circular, needle, next, rng, meter)?));
     }
     let Some(fill) = fill_settings(sewing, diagnostics) else { return Ok(None) };
-    Ok(Some(tatami_fill(region, &fill, neighbours.needle, neighbours.next.as_ref(), rng, meter)?))
+    Ok(Some(tatami_fill(region, &fill, needle, next, rng, meter)?))
 }
 
 /// The contour fill `sewing` describes, its settings read as a contour fill reads them: its rings the row
@@ -575,6 +580,7 @@ fn circular_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Opti
         expand: tatami.expand_mm.get(),
         force_locks: shared.force_locks,
         travel,
+        target: sewing.hints.target,
     })
 }
 
@@ -670,7 +676,7 @@ fn satin_column(
     // The registry reads a list of 1 length or more.
     let Some(&travel) = running.running_stitch_length_mm.first() else { return Ok(None) };
     let lengths = SatinLengths { min_stitch, max_stitch, travel, tolerance: running.running_stitch_tolerance_mm, jump };
-    Ok(Some(satin_stitch(&rails, &params, &pull, lengths, sewing.neighbours, rng, meter)?))
+    Ok(Some(satin_stitch(&rails, &params, &pull, lengths, sewing.neighbours, &sewing.hints, rng, meter)?))
 }
 
 /// A stroke's stitches as `sewing` says, varied at random by streams of its `rng`, or `None` when it is
@@ -717,9 +723,15 @@ fn stroke(
 /// stroke of any method its first point, as Ink/Stitch's strokes all do, and a satin column of any method
 /// its rails. A fill of a method StitchCraft does not sew offers nothing, since what it would offer is not
 /// known. Neither does an element whose shape cannot be read, or the settings its offer depends on: those
-/// that choose its stitch type, and a satin column's. They are read as its stitch type reads them.
+/// that choose its stitch type, and a satin column's. They are read as its stitch type reads them. A fill
+/// of any method, or a satin column, with a start position offers that, where it starts (`REQ-GEN-001`).
 pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -> Option<Approach> {
     let stitch_type = stitch_type_of(element, settings)?;
+    if let Some(start) = element.hints.start
+        && (matches!(element.shape, Shape::Fill { .. }) || stitch_type.family() == Family::Satin)
+    {
+        return Some(Approach::Point(start));
+    }
     let (path, width, join) = match &element.shape {
         Shape::Fill { .. }
             if !matches!(stitch_type, StitchType::TatamiFill | StitchType::ContourFill | StitchType::MeanderFill | StitchType::CircularFill) =>
@@ -787,7 +799,15 @@ mod tests {
 
     fn element(shape: Shape, params: &[(&str, &str)]) -> Element {
         let thread = Thread::new(Rgb::new(0, 0, 0));
-        Element { id: ElementId::new("e").unwrap(), name: None, shape, thread, params: params.iter().copied().collect(), automatic: false }
+        Element {
+            id: ElementId::new("e").unwrap(),
+            name: None,
+            shape,
+            thread,
+            params: params.iter().copied().collect(),
+            automatic: false,
+            hints: Default::default(),
+        }
     }
 
     fn p(x: f64, y: f64) -> Point {
@@ -909,7 +929,8 @@ mod tests {
         let neighbours = Neighbours::default();
         let sew = |set: &ParamSet, stitch_type, shared, diagnostics: &mut Vec<Diagnostic>| {
             let (rng, meter) = (&mut SplitMix64::new(1), &mut Budget::DEFAULT.meter());
-            fill(&Sewing { set: Cow::Borrowed(set), stitch_type, shared, neighbours: &neighbours }, &region, rng, diagnostics, meter).unwrap()
+            let sewing = Sewing { set: Cow::Borrowed(set), stitch_type, shared, neighbours: &neighbours, hints: Hints::default() };
+            fill(&sewing, &region, rng, diagnostics, meter).unwrap()
         };
         let mut diagnostics = Vec::new();
         let sewn = sew(&ParamSet::new(), StitchType::TatamiFill, shared(Mm::new(4.0).ok()), &mut diagnostics);
