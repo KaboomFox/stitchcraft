@@ -480,6 +480,42 @@ line = "if qa == 0.0 || discriminant < 0.0 {"
 why = "either case alone makes t no number, 0 divided by 0 for a segment of no length or the square root of a negative discriminant, and no range holds it, so the disc gives none either way"
 
 [[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/contour/tree.rs"
+mutant = "replace > with >= in tree"
+line = "if (signed_area(&node.ring) > 0.0) != clockwise {"
+why = "only a ring of no area tells the 2 apart, and every ring of the tree bounds one: a part's outline and holes, and the outlines and holes of pieces of at least 0.1 square pixel"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/contour/tree.rs"
+mutant = "replace < with <= in Building::level"
+line = "let joined = if grown.len() < 2 {"
+why = "the difference keeps where the shrunk outline winds -1 and no growth turns it: a point in 2 growths that overlap winds +1, and one in their union 0, so taking 2 growths away apart or joined leaves the same area"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/contour/tree.rs"
+mutant = "replace < with == in Building::level"
+line = "let joined = if grown.len() < 2 {"
+why = "it joins no growth or one, which is the growth itself, and takes 2 away apart; the difference keeps where the shrunk outline winds -1 and no growth turns it, so each of these leaves the same area"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/contour/tree.rs"
+mutant = "replace < with > in Building::level"
+line = "let joined = if grown.len() < 2 {"
+why = "it joins no growth, one or 2, and takes 3 or more away apart; the difference keeps where the shrunk outline winds -1 and no growth turns it, a point in overlapping growths winding above 0, so each of these leaves the same area"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/contour/tree.rs"
+mutant = "replace < with <= in Building::level"
+line = "if piece.area() < SMALLEST || !valid(&piece.outline) {"
+why = "only a piece of exactly 0.1 square pixel, to the last bit, tells the 2 apart, and no case can aim at that: a piece is a ring buffered on the region's grid, and its area falls on that number only by a coincidence of rounding"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/contour/tree.rs"
+mutant = "replace Building::unadopted -> bool with true"
+line = "self.parents.get(node).is_some_and(Option::is_none)"
+why = "a level's holes are unadopted when it starts, and a hole is held by a new hole ring only when its first point lies inside it: the new hole rings are apart, so none holds a hole another has adopted, and the check never turns one away"
+
+[[equivalent]]
 file = "crates/stitchcraft-engine/src/generators/contour/spiral.rs"
 mutant = "replace > with >= in resampled"
 line = "let step = if n > 1 { long / (n - 1) as f64 } else { 0.0 };"
