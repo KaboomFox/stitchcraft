@@ -99,6 +99,7 @@
     - [0013 Brother PE800](design/adr/0013-brother-pe800-reference-machine.md)
     - [0014 Generators see their neighbours](design/adr/0014-generators-see-their-neighbours.md)
     - [0015 Pictures traced by VectorCraft](design/adr/0015-pictures-traced-by-vectorcraft.md)
+    - [0016 Ink/Stitch files imported into VectorCraft](design/adr/0016-inkstitch-files-imported-by-stitchcraft.md)
 
 # Plan
 
