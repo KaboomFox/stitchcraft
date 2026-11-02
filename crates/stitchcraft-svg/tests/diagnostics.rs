@@ -116,7 +116,6 @@ fn diag_sc_w0802_what_is_not_stitched_is_named() {
             "warning SC-W0802: `shadowed` has filter effects (blurs, shadows and the like), which are not stitched.",
             "warning SC-W0802: `html` holds content that is not SVG (`<foreignObject>`), which is not stitched; it is left out.",
             "warning SC-W0802: `flowed` is text, which is not stitched; it is left out.",
-            "warning SC-W0802: The file has Ink/Stitch embroidery settings, which this version does not read yet: every element uses the default settings.",
             "warning SC-W0802: `text@1` is text, which is not stitched; it is left out.",
         ]
     );

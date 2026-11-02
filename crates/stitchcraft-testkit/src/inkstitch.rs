@@ -4,10 +4,9 @@
 //! **Why.** Automatic digitizing ends in ordinary elements whose settings are Ink/Stitch's parameters:
 //! `satin_column`, `pull_compensation_mm`, the underlays, `bean_stitch_repeats`. Written with them, the
 //! elements are a design Ink/Stitch sews with the same stitch types, so the stitches StitchCraft makes of
-//! its own choices can be checked against another program's (`REQ-AUTO-021`). StitchCraft's SVG reader
-//! reads no element's parameters until M8, so the differential has StitchCraft sew the sheet itself, and
-//! Ink/Stitch the file. The tests read the file back: its shapes and colours as StitchCraft's reader reads
-//! them, and its parameters as XML.
+//! its own choices can be checked against another program's (`REQ-AUTO-021`), and both programs sew the
+//! same file. The tests read the file back with StitchCraft's SVG reader, which reads each element's
+//! shape, colour and parameters as they were written (`REQ-PRM-003`, `REQ-SVG-009`).
 //!
 //! **The file.** Each element is a `<path>`, in the order given, which is the order both programs sew them
 //! in. A fill is painted with its thread's colour by its fill rule, and a stroke with its colour, width,
@@ -150,25 +149,15 @@ mod tests {
     /// What a file keeps of an element: its shape, its thread's colour and its parameters.
     type Kept = (Shape, Rgb, Vec<(String, String)>);
 
-    /// What the file `text` keeps of each element, and the design settings StitchCraft reads from it: the
-    /// shapes and colours as StitchCraft's SVG reader reads them, and the parameters as the `inkstitch:`
-    /// attributes of each `<path>`, read as XML. The reader reads no element's parameters until M8, and
-    /// says so once.
+    /// What the file `text` keeps of each element, and the design settings StitchCraft reads from it, as
+    /// StitchCraft's SVG reader reads them, which says nothing of a file the test kit writes: the shapes,
+    /// colours and parameters (`REQ-PRM-003`).
     fn read(text: &str) -> (Vec<Kept>, DesignSettings) {
         let read = stitchcraft_svg::read(text.as_bytes(), &Budget::DEFAULT).unwrap();
-        assert!(read.warnings.len() <= 1 && read.warnings.iter().all(|w| w.message.contains("does not read yet")), "{:?}", read.warnings);
-        let xml = roxmltree::Document::parse(text).unwrap();
-        let attributes: Vec<Vec<(String, String)>> = xml
-            .descendants()
-            .filter(|node| node.has_tag_name("path"))
-            .map(|node| {
-                node.attributes().filter(|a| a.namespace() == Some(INKSTITCH_NS)).map(|a| (a.name().to_string(), a.value().to_string())).collect()
-            })
-            .collect();
+        assert!(read.warnings.is_empty(), "{:?}", read.warnings);
         let elements = read.design.elements();
-        assert_eq!(elements.len(), attributes.len(), "an element for each path");
-        let kept = elements.iter().zip(attributes).map(|(element, params)| (element.shape.clone(), element.thread.color, params)).collect();
-        (kept, read.design.settings)
+        assert_eq!(elements.len(), text.matches("<path ").count(), "an element for each path");
+        (kept(elements), read.design.settings)
     }
 
     /// What a file should keep of `elements`.
@@ -178,7 +167,7 @@ mod tests {
     }
 
     #[test]
-    fn the_file_keeps_each_elements_shape_thread_and_parameters() {
+    fn req_prm_003_the_file_keeps_each_elements_shape_thread_and_parameters() {
         // A red square with a hole cut by the even-odd rule, and a blue curve 2 mm wide with round joins and
         // square caps, each with parameters.
         let square = fill(
@@ -250,12 +239,16 @@ mod tests {
     }
 
     #[test]
-    fn the_file_of_each_ts13_sheet_keeps_the_elements_automatic_digitizing_makes_of_it() {
-        for sheet in testsheets::SHEETS.iter().filter(|sheet| sheet.digitized()) {
+    fn req_prm_003_the_file_of_each_sheet_drawn_as_a_design_keeps_the_elements_it_sews() {
+        // The TS-13 sheets' shapes as automatic digitizing makes them, each sheet's other elements as they are.
+        let mut checked = 0;
+        for sheet in testsheets::SHEETS.iter().filter(|sheet| sheet.designed()) {
             let (id, design) = (sheet.id, sheet.design().unwrap().unwrap());
             let (digitized, _) = stitchcraft_engine::auto::digitized(&design, &Budget::DEFAULT);
             let text = svg(&digitized, &design.settings).unwrap();
             assert_eq!(read(&text), (kept(&digitized), design.settings), "{id}");
+            checked += usize::from(sheet.digitized());
         }
+        assert!(checked >= 4, "the TS-13 sheets are drawn as designs");
     }
 }
