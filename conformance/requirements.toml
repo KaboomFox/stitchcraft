@@ -348,6 +348,24 @@ rationale = "A file must sew the same in both programs. Measures, not stitches: 
 milestone = "M8"
 status = "active"
 
+[[req]]
+id = "REQ-SVG-009"
+area = "svg"
+level = "L2"
+statement = "Each attribute in Ink/Stitch's namespace on a shape is a parameter of each element the shape makes, named as the attribute is and with its text, but ignore_object and stroke_first, which the reader applies itself. The registry reads the parameters as it reads a VectorCraft effect's (REQ-PRM-002), and SC-W0105 names one it doesn't declare, which is kept. Ink/Stitch's trim and stop commands turn on trim_after and stop_after over the shape's own settings, and the updates StitchCraft applies to a file of an older version are made over them (REQ-SVG-007). SC-W0802 counts the shapes of such a file whose settings Ink/Stitch's update changes and StitchCraft doesn't update yet: a zigzag stroke's pull compensation other than 0 and a satin column's nearest points before version 3, and a fill with auto_fill off before version 4. Ink/Stitch reads no setting from a group but ignore_object, and SC-W0802 names the other settings of a group, which change nothing. Reading costs a unit of work for each setting of a shape or a group."
+rationale = "A file made with Ink/Stitch keeps how each shape sews in these attributes: its stitch type, spacing, underlay, locks and the rest. Read without them, every element would sew at the defaults, and a file would sew otherwise in each program."
+milestone = "M8"
+status = "active"
+
+[[req]]
+id = "REQ-SVG-010"
+area = "svg"
+level = "L2"
+statement = "A shape whose Ink/Stitch setting stroke_first is one of Ink/Stitch's words for yes sews its stroke before its fill, and SVG's paint-order is then not named. Otherwise the fill is sewn first."
+rationale = "Ink/Stitch's stroke_first lets a design sew a shape's outline under its fill. A file that sets it sews in the same order in both programs."
+milestone = "M8"
+status = "active"
+
 # ── Generators: shared ─────────────────────────────────────────────────────────────────────────────
 
 [[req]]

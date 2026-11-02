@@ -264,12 +264,14 @@ StitchCraft reads them as the commands they became in any file (`DEV-SVG-014`).
 ## Other attributes
 
 The `inkstitch:*` attributes that declare no parameter: settings of an element, of Ink/Stitch's
-patterns, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrites in older files.
+patterns, lettering, tools, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrites in older files.
+The SVG adapter reads those marked read itself. It keeps any other of a shape as a parameter of the shape's
+elements, which the registry names (`SC-W0105`).
 
 | Attribute | Kind | Phase | StitchCraft |
 |---|---|---|---|
 | `ignore_object` | element | P1 (M3) | read |
-| `stroke_first` | element | P1 (M8) | planned |
+| `stroke_first` | element | P1 (M8) | read |
 | `cutwork_needle` | element | — | not planned |
 | `pattern_interval` | pattern | — | not planned |
 | `pattern_offset` | pattern | — | not planned |
@@ -277,11 +279,18 @@ patterns, stitch plan or sew stack, and legacy names Ink/Stitch's updater rewrit
 | `layer_visibility` | stitch plan | — | not planned |
 | `sew_stack` | sew stack | — | not planned |
 | `sew_stack_only` | sew stack | — | not planned |
-| `polyline` | legacy | P2 (M8) | planned |
+| `tartan` | element | P3 (M10) | planned |
+| `color_sort_index` | lettering | P3 (M14) | planned |
+| `letter-group` | lettering | P3 (M14) | planned |
+| `lettering` | lettering | P3 (M14) | planned |
+| `path_type` | tool | — | not planned |
+| `start` | tool | — | not planned |
+| `end` | tool | — | not planned |
+| `polyline` | legacy | — | not planned |
 | `auto_fill` | legacy | P2 (M8) | planned |
-| `e_stitch` | legacy | P2 (M8) | planned |
-| `manual_stitch` | legacy | P2 (M8) | planned |
-| `grid_size` | legacy | P2 (M8) | planned |
+| `e_stitch` | legacy | — | not planned |
+| `manual_stitch` | legacy | — | not planned |
+| `grid_size` | legacy | — | not planned |
 
 ## File versions
 
