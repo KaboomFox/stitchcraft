@@ -10,9 +10,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   fill rules. Its 23 shapes include a point, a line of no length, a ring along one line, a hair-thin
   rectangle, a figure eight, a ring twice over, rails that cross and a square near the edge of where a
   design may lie. With them come a path of 10⁶ points, sewn within a thousandth of the budget, and random
-  paths on a coarse grid, where points coincide and lie in line often. None may report a bug (`SC-E0009`)
-  or give no plan without saying why, and each sews the same twice and keeps the machine's invariants. A
-  method not built yet is run as soon as it is built.
+  paths on a coarse grid, where points coincide and lie in line often. None may report a bug (`SC-E0009`),
+  and each gives a plan or says why it doesn't. A plan keeps the machine's invariants, and planned again it
+  sews the same. A method not built yet is run as soon as it is built.
 - M7.7: contour fill, sewn as Ink/Stitch sews it (`REQ-FILL-CON-001` to `REQ-FILL-CON-008`). Rings follow
   each part's outline inward, a row spacing apart, with round, mitred or bevelled corners (`join_style`),
   and round its holes. One line of running stitches sews them after the tatami fill's underlay, in the
