@@ -251,8 +251,8 @@ mod tests {
 
     #[test]
     fn the_file_of_each_ts13_sheet_keeps_the_elements_automatic_digitizing_makes_of_it() {
-        for id in ["TS-13A", "TS-13B", "TS-13C"] {
-            let design = testsheets::find(id).and_then(|sheet| sheet.design()).unwrap().unwrap();
+        for sheet in testsheets::SHEETS.iter().filter(|sheet| sheet.digitized()) {
+            let (id, design) = (sheet.id, sheet.design().unwrap().unwrap());
             let (digitized, _) = stitchcraft_engine::auto::digitized(&design, &Budget::DEFAULT);
             let text = svg(&digitized, &design.settings).unwrap();
             assert_eq!(read(&text), (kept(&digitized), design.settings), "{id}");

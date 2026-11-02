@@ -63,6 +63,40 @@ fn area(element: &Element) -> f64 {
 }
 
 #[test]
+fn req_auto_016_a_round_dot_stays_in_the_fill_wherever_it_lies() {
+    // A dot drawn as a circle of 32 corners, 3.4 mm and 2.7 mm across, at each place a button's dots lie
+    // (`testsheets::pictures::button`). Its triangles leave its middle as lines that depend on where it lies,
+    // through ties between corners on one circle, but never longer than the dot is wide: it is a dot, filled,
+    // wherever it lies.
+    for (radius, (x, y)) in [(1.7, (15.0, 15.0)), (1.36, (103.0, 38.4))] {
+        for k in 0..7_u32 {
+            let (sin, cos) = stitchcraft_core::math::sin_cos(-std::f64::consts::FRAC_PI_2 + std::f64::consts::TAU * f64::from(k) / 7.0);
+            let (cx, cy) = (x + 5.6 / 1.7 * radius * cos, y + 5.6 / 1.7 * radius * sin);
+            let ring: Vec<(f64, f64)> = (0..32_u32)
+                .map(|j| {
+                    let (s, c) = stitchcraft_core::math::sin_cos(std::f64::consts::TAU * f64::from(j) / 32.0);
+                    (cx + radius * c, cy + radius * s)
+                })
+                .collect();
+            let out = made(&shape("dot", &ring));
+            assert_eq!(out.stitches, Some(Stitches::Fill), "a dot {radius} mm round ({cx}, {cy}): {:?}", out.elements);
+        }
+    }
+}
+
+#[test]
+fn req_auto_016_a_square_is_a_dot_and_a_rectangle_a_little_longer_a_column() {
+    // A square 3 mm wide: its lines are 0.4 times as long as it is wide, and it is a dot, filled. A rectangle
+    // as wide and 3.5 mm long: its line is more than half as long as it is wide, and it is a satin column.
+    for (x, y) in [(0.0, 0.0), (10.3, 7.1), (-4.6, 21.9)] {
+        let square = made(&shape("square", &rectangle((x, y), (x + 3.0, y + 3.0))));
+        assert_eq!(square.stitches, Some(Stitches::Fill), "a square at ({x}, {y}): {:?}", square.elements);
+        let longer = made(&shape("rectangle", &rectangle((x, y), (x + 3.5, y + 3.0))));
+        assert_eq!(longer.stitches, Some(Stitches::Satin), "a rectangle at ({x}, {y}): {:?}", longer.elements);
+    }
+}
+
+#[test]
 fn req_auto_016_a_band_sews_as_one_satin_column_between_its_sides() {
     // A band 3 mm wide and 20 mm long: one satin column, which keeps the band's name, read back with the
     // band's long sides as its rails and rungs straight across it, and settings that say so.
