@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-95dbadc4.js";
+            window.path_to_searchindex_js = "../searchindex-b0b29ef2.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-ee9d300a.js"></script>
+        <script src="../toc-0c202e0a.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -435,15 +435,16 @@ the difference as excused. An excuse for a measure that agrees fails the case, s
 the ledger is still true. Where the differential can undo a deviation in Ink/Stitch’s file, it measures
 the file again without it. The excuse then counts only if the measure agrees. Ink/Stitch’s jumps that go
 nowhere (<code>DEV-FMT-001</code>) excuse as many trims and jumps as there are of them, and no more.</p>
-<p><code>REQ-SVG-008</code>, <code>REQ-AUTO-021</code> and <code>REQ-AUTO-022</code> are the requirements of level L3. The other runs of
-the suite leave them and their cases to this one. Until M8 reads every <code>inkstitch:</code> attribute, the corpus is the designs
-the SVG reader sews in full, at Ink/Stitch’s defaults, with trim and stop commands and the file version.
-A case may name a test sheet drawn as a design instead (<code>sheet</code>). StitchCraft sews the sheet, and
-Ink/Stitch an SVG file of the elements StitchCraft sews it with, written with their parameters
-(<code>stitchcraft_testkit::inkstitch</code>). Automatic digitizing chooses ordinary elements with Ink/Stitch’s
-parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check StitchCraft’s
-stitches of those choices against Ink/Stitch’s (<code>REQ-AUTO-021</code>). <code>conformance/inkstitch/README.md</code> says
-how to run it by hand and how to add a case.</p>
+<p><code>REQ-SVG-008</code>, <code>REQ-AUTO-021</code>, <code>REQ-AUTO-022</code> and <code>REQ-FILL-CON-008</code> are the requirements of level L3.
+The other runs of the suite leave them and their cases to this one. Until M8 reads every <code>inkstitch:</code>
+attribute, the corpus is the designs the SVG reader sews in full, at Ink/Stitch’s defaults, with trim and
+stop commands and the file version. A case may name a test sheet drawn as a design instead (<code>sheet</code>).
+StitchCraft sews the sheet, and Ink/Stitch an SVG file of the elements StitchCraft sews it with, written
+with their parameters (<code>stitchcraft_testkit::inkstitch</code>). Automatic digitizing chooses ordinary elements
+with Ink/Stitch’s parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check
+StitchCraft’s stitches of those choices against Ink/Stitch’s (<code>REQ-AUTO-021</code>). TS-11B checks the contour
+fills so, each strategy and join style among them (<code>REQ-FILL-CON-008</code>). <code>conformance/inkstitch/README.md</code>
+says how to run it by hand and how to add a case.</p>
 <p><strong>Centre lines.</strong> Sewing what StitchCraft chose can’t find a choice that is wrong: TS-13B’s small T sewed
 a Γ, the left arm of its bar left out of its centre line, and the differential agreed by every measure.
 The <code>centre-lines</code> cases compare a step before the stitches (<code>REQ-AUTO-022</code>,

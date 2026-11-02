@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-95dbadc4.js";
+            window.path_to_searchindex_js = "../searchindex-b0b29ef2.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-ee9d300a.js"></script>
+        <script src="../toc-0c202e0a.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -576,22 +576,22 @@ PES exporter writes each column’s file as it wrote the line’s (2026-10-29):<
 <p>That is at most 360 instructions for each unit of the engine’s work, which the plug-in prices at 450, and
 the filter stops with <code>SC-E0004</code> before VectorCraft would. A VectorCraft before 0.17 runs it as a light
 filter, which almost every curved line outruns, and stops it with its own error.</p>
-<p><strong>Test Sheet</strong> (<code>REQ-VC-015</code>, <code>apps/stitchcraft-vc-plugin/src/testsheet.rs</code>) draws one of the sheets drawn
-as designs, TS-02B to TS-09 and the TS-13 sheets, into the document: the sheet’s design moved by whole millimetres so that its
-middle is nearest the middle of the artboard <code>_context</code> names (<code>Design::moved</code>). Each element is an object
-named by its id, with its path and its thread as the paint its family sews with. Its settings are its
-family’s effect record, each the value its dialog row takes, which reads back as the setting it was. The
-objects selected are given back as they are, and the sheet goes above them. The document sews as the
-sheet’s design moved. A fill’s rows lie where the design’s origin puts them, so moved they may fall
-elsewhere across a shape, and the sheet looks the same. The threads lose their names in the Brother
-palette, since VectorCraft unlinks the swatch of a paint a filter gives, and the PES file is the same.
-VectorCraft 0.15 keeps the records, but with an empty selection it looks to a filter as 0.14 does, which
-would drop them. Only the <code>documentData</code> every filter gets from 0.16 tells them apart, so before 0.16 the
-filter declines with <code>SC-E0813</code>. It declines with <code>SC-E0817</code> where parts of the sheet would lie more than
-10 m from the document’s origin, farther than StitchCraft stitches (<code>Design::new</code>). The sheets
-drawn stitch by stitch are plans, which no object holds. The
-TS-13 sheets are designs whose shapes StitchCraft digitizes automatically (<code>TestSheet::digitized</code>): each
-such shape has the Auto effect’s record (M13.7, <code>REQ-VC-016</code>), and StitchCraft Auto must be installed for
+<p><strong>Test Sheet</strong> (<code>REQ-VC-015</code>, <code>apps/stitchcraft-vc-plugin/src/testsheet.rs</code>) draws one of the sheets
+drawn as designs, TS-02B to TS-09, TS-11B and the TS-13 sheets, into the document: the sheet’s design
+moved by whole millimetres so that its middle is nearest the middle of the artboard <code>_context</code> names
+(<code>Design::moved</code>). Each element is an object named by its id, with its path and its thread as the paint
+its family sews with. Its settings are its family’s effect record, each the value its dialog row takes,
+which reads back as the setting it was. The objects selected are given back as they are, and the sheet
+goes above them. The document sews as the sheet’s design moved. A fill’s rows lie where the design’s
+origin puts them, so moved they may fall elsewhere across a shape, and the sheet looks the same. The
+threads lose their names in the Brother palette, since VectorCraft unlinks the swatch of a paint a filter
+gives, and the PES file is the same. VectorCraft 0.15 keeps the records, but with an empty selection it
+looks to a filter as 0.14 does, which would drop them. Only the <code>documentData</code> every filter gets from
+0.16 tells them apart, so before 0.16 the filter declines with <code>SC-E0813</code>. It declines with <code>SC-E0817</code>
+where parts of the sheet would lie more than 10 m from the document’s origin, farther than StitchCraft
+stitches (<code>Design::new</code>). The sheets drawn stitch by stitch are plans, which no object holds. The TS-13
+sheets are designs whose shapes StitchCraft digitizes automatically (<code>TestSheet::digitized</code>): each such
+shape has the Auto effect’s record (M13.7, <code>REQ-VC-016</code>), and StitchCraft Auto must be installed for
 VectorCraft to keep it.</p>
 <p>The contract test <code>req_vc_015_each_test_sheet_draws_into_a_document_that_exports_within_vectorcraft_s_limits</code>
 draws each sheet into a new document in VectorCraft 0.17.0’s and 0.18.0’s hosts alike, and exports it with
@@ -649,7 +649,7 @@ share, instead of being stopped (<code>apps/stitchcraft-vc-plugin/src/preview.rs
 </thead>
 <tbody>
 <tr><td>Exact</td><td>The stitch polyline (strokes, satins) or one thin closed ribbon per stitch (fills)</td><td>For a stroke or a satin column, within nine tenths of the budget</td></tr>
-<tr><td>Rows</td><td>One ribbon per row segment of a fill’s top rows: where its stitches lie and which way they run</td><td>For a fill, within eight tenths</td></tr>
+<tr><td>Rows</td><td>One ribbon per row segment of a fill’s top rows, or per side of a contour fill’s path round its rings (from M7.7): where its stitches lie and which way they run</td><td>For a fill, within eight tenths</td></tr>
 <tr><td>Outline</td><td>The object’s path as lines for a stroke or a satin column, and as ribbons for a fill, which are hatched every 3 mm in its direction</td><td>When the others cost too much</td></tr>
 </tbody>
 </table>

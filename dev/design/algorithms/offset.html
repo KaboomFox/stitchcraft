@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-95dbadc4.js";
+            window.path_to_searchindex_js = "../../searchindex-b0b29ef2.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-ee9d300a.js"></script>
+        <script src="../../toc-0c202e0a.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -243,13 +243,19 @@ so does the offset. Where the line comes back near itself, the stroke covers par
 which splits the offset there.</p>
 <h2 id="buffers-a-fills-part-grown-or-shrunk"><a class="header" href="#buffers-a-fills-part-grown-or-shrunk">Buffers: a fill’s part grown or shrunk</a></h2>
 <p>The same module grows or shrinks a fill’s part, as shapely’s <code>buffer</code> does for Ink/Stitch’s inset
-underlay and <code>expand_mm</code> (<a href="fills.html#6-underlay">fills</a>, <code>REQ-FILL-TAT-012</code>). Each ring’s raw curve is
-built as in step 1, closed, with round corners of 16 segments to a quarter circle. It runs to the ring’s
-left, outside an outline and inside a hole: a positive distance grows the part. In place of steps 2
-and 3, the area the curves wind round clockwise at least once comes from the fill’s own region code, and
-the loops where the curves fold over drop out of it. GEOS’s rules for a ring the buffer wears away, and
-for a small ring whose curve turns inside out, are followed as the <code>buffer</code> module’s docs say, and
-<code>conformance/oracle/buffer.py</code> checks the polygons against shapely’s.</p>
+underlay and <code>expand_mm</code> (<a href="fills.html#6-underlay">fills</a>, <code>REQ-FILL-TAT-012</code>), and for a contour fill’s
+rings (<a href="fills.html#rings">fills</a>, <code>REQ-FILL-CON-001</code>). Each ring’s raw curve is built as in step 1, closed,
+with the corners the caller asks for: round with 16 segments to a quarter circle, shapely’s default, for
+a tatami fill, and for a contour fill the corners its <code>join_style</code> gives, round with 8 segments, mitred
+with a limit of 10 or bevelled. The join applies at each corner that points the way its ring moves, such
+as an outline’s inward corners as it shrinks or a hole’s outward ones as it grows. At the other corners the
+curve’s sides cross, and meet there, whatever the join. It runs to the ring’s left, outside an outline
+and inside a hole: a positive distance grows the part. In place of steps 2 and 3, the area the curves
+wind round clockwise at least once comes from the fill’s own region code, and the loops where the curves
+fold over drop out of it. GEOS’s rules for a ring the buffer wears away, and for a small ring whose curve
+turns inside out, are followed as the <code>buffer</code> module’s docs say, and <code>conformance/oracle/buffer.py</code>
+checks the polygons against shapely’s: 538 of them, 330 with a tatami fill’s corners and 208 with a
+contour fill’s.</p>
 <h2 id="speed"><a class="header" href="#speed">Speed</a></h2>
 <p>Contour fill shrinks a part again and again, each inset from the last, so the offsetter has a budget of
 its own, NFR-PERF-3. A region 150 mm across, of 1,000 points, is shrunk 300 times in under 200 ms natively

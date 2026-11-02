@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-95dbadc4.js";
+            window.path_to_searchindex_js = "../searchindex-b0b29ef2.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-ee9d300a.js"></script>
+        <script src="../toc-0c202e0a.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -377,7 +377,11 @@ changing a default.</p>
 defaults: <code>max_stitch_length_mm</code> is empty on manual stitch and satin columns and 4 mm on fills. The
 contract is per key and stitch type, so the contract page matches a declaration with the rows for the
 stitch types it applies to, and a declaration for a stitch type Ink/Stitch does not give the key is
-reported. A key is declared once for a family (rule 7), and a family whose default differs gets its own
+reported. A stitch type that reads a key as it sews, though Ink/Stitch’s settings window doesn’t show
+the key for it, is given the key all the same, and the contract lists it under the row’s <code>read_by</code>.
+Every fill method with an underlay reads the tatami fill’s <code>angle</code>, <code>staggers</code> and
+<code>running_stitch_length_mm</code> for it, and <code>check_params.py</code> finds those methods in Ink/Stitch’s code. Each
+family declares a key once (rule 7), and a family whose default differs gets its own
 with <code>defaults</code>, as fills do for <code>max_stitch_length_mm</code>. A family with a
 default of its own needs a value (<code>ParamSpec::in_family</code>). There an empty value means its default. A
 length of 0 or less is raised to the least the key accepts instead of counting as empty, as Ink/Stitch

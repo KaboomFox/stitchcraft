@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-95dbadc4.js";
+            window.path_to_searchindex_js = "../../searchindex-b0b29ef2.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-ee9d300a.js"></script>
+        <script src="../../toc-0c202e0a.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -235,7 +235,9 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/satin.html">Satin parameters</a></td><td>34</td><td>Satin column, E-stitch, S-stitch, Zigzag satin</td></tr>
 <tr><td><a href="params/pull.html">Pull parameters</a></td><td>2</td><td>Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill</td></tr>
 <tr><td><a href="params/fill.html">Fill parameters</a></td><td>2</td><td>Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill</td></tr>
-<tr><td><a href="params/tatami.html">Tatami parameters</a></td><td>15</td><td>Tatami fill</td></tr>
+<tr><td><a href="params/tatami.html">Tatami parameters</a></td><td>15</td><td>Tatami fill, Contour fill</td></tr>
+<tr><td><a href="params/contour.html">Contour parameters</a></td><td>5</td><td>Contour fill</td></tr>
+<tr><td><a href="params/fill-repeat.html">Fill repeat parameters</a></td><td>2</td><td>Contour fill</td></tr>
 <tr><td><a href="params/auto.html">Auto parameters</a></td><td>5</td><td>automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type</td></tr>
 </tbody>
 </table>
@@ -253,12 +255,16 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/auto.html#auto_min_area_mm2"><code>auto_min_area_mm2</code></a></td><td>Smallest area</td><td>Auto parameters</td></tr>
 <tr><td><a href="params/auto.html#auto_min_triple_run_width_mm"><code>auto_min_triple_run_width_mm</code></a></td><td>Narrowest triple run</td><td>Auto parameters</td></tr>
 <tr><td><a href="params/auto.html#auto_overlap_mm"><code>auto_overlap_mm</code></a></td><td>Overlap</td><td>Auto parameters</td></tr>
+<tr><td><a href="params/contour.html#avoid_self_crossing"><code>avoid_self_crossing</code></a></td><td>Avoid self-crossing</td><td>Contour parameters</td></tr>
 <tr><td><a href="params/repeat.html#bean_stitch_repeats"><code>bean_stitch_repeats</code></a></td><td>Bean stitch</td><td>Repeat parameters</td></tr>
+<tr><td><a href="params/fill-repeat.html#bean_stitch_repeats"><code>bean_stitch_repeats</code></a></td><td>Bean stitch</td><td>Fill repeat parameters</td></tr>
 <tr><td><a href="params/satin.html#center_walk_underlay"><code>center_walk_underlay</code></a></td><td>Centre walk underlay</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#center_walk_underlay_position"><code>center_walk_underlay_position</code></a></td><td>Centre walk position</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#center_walk_underlay_repeats"><code>center_walk_underlay_repeats</code></a></td><td>Centre walk repeats</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#center_walk_underlay_stitch_length_mm"><code>center_walk_underlay_stitch_length_mm</code></a></td><td>Centre walk stitch length</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#center_walk_underlay_stitch_tolerance_mm"><code>center_walk_underlay_stitch_tolerance_mm</code></a></td><td>Centre walk tolerance</td><td>Satin parameters</td></tr>
+<tr><td><a href="params/contour.html#clockwise"><code>clockwise</code></a></td><td>Clockwise</td><td>Contour parameters</td></tr>
+<tr><td><a href="params/contour.html#contour_strategy"><code>contour_strategy</code></a></td><td>Strategy</td><td>Contour parameters</td></tr>
 <tr><td><a href="params/satin.html#contour_underlay"><code>contour_underlay</code></a></td><td>Contour underlay</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#contour_underlay_inset_mm"><code>contour_underlay_inset_mm</code></a></td><td>Contour inset</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#contour_underlay_inset_percent"><code>contour_underlay_inset_percent</code></a></td><td>Contour inset (% of width)</td><td>Satin parameters</td></tr>
@@ -278,6 +284,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/tatami.html#fill_underlay_skip_last"><code>fill_underlay_skip_last</code></a></td><td>Skip last underlay stitch</td><td>Tatami parameters</td></tr>
 <tr><td><a href="params/common.html#force_lock_stitches"><code>force_lock_stitches</code></a></td><td>Always lock</td><td>Common parameters</td></tr>
 <tr><td><a href="params/tatami.html#gap_fill_rows"><code>gap_fill_rows</code></a></td><td>Gap-filling rows</td><td>Tatami parameters</td></tr>
+<tr><td><a href="params/contour.html#join_style"><code>join_style</code></a></td><td>Join style</td><td>Contour parameters</td></tr>
 <tr><td><a href="params/common.html#lock_custom_end"><code>lock_custom_end</code></a></td><td>Custom end lock</td><td>Common parameters</td></tr>
 <tr><td><a href="params/common.html#lock_custom_start"><code>lock_custom_start</code></a></td><td>Custom start lock</td><td>Common parameters</td></tr>
 <tr><td><a href="params/common.html#lock_end"><code>lock_end</code></a></td><td>End lock</td><td>Common parameters</td></tr>
@@ -301,6 +308,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/satin.html#random_width_increase_percent"><code>random_width_increase_percent</code></a></td><td>Random width increase</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#random_zigzag_spacing_percent"><code>random_zigzag_spacing_percent</code></a></td><td>Random zigzag spacing</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/repeat.html#repeats"><code>repeats</code></a></td><td>Repeats</td><td>Repeat parameters</td></tr>
+<tr><td><a href="params/fill-repeat.html#repeats"><code>repeats</code></a></td><td>Repeats</td><td>Fill repeat parameters</td></tr>
 <tr><td><a href="params/satin.html#reverse_rails"><code>reverse_rails</code></a></td><td>Reverse rails</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/tatami.html#row_spacing_mm"><code>row_spacing_mm</code></a></td><td>Row spacing</td><td>Tatami parameters</td></tr>
 <tr><td><a href="params/running.html#running_stitch_length_mm"><code>running_stitch_length_mm</code></a></td><td>Stitch length</td><td>Running parameters</td></tr>
@@ -311,6 +319,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/satin.html#short_stitch_distance_mm"><code>short_stitch_distance_mm</code></a></td><td>Short stitch distance</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#short_stitch_inset"><code>short_stitch_inset</code></a></td><td>Short stitch inset</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/tatami.html#skip_last"><code>skip_last</code></a></td><td>Skip last stitch</td><td>Tatami parameters</td></tr>
+<tr><td><a href="params/contour.html#smoothness_mm"><code>smoothness_mm</code></a></td><td>Smoothness</td><td>Contour parameters</td></tr>
 <tr><td><a href="params/satin.html#split_method"><code>split_method</code></a></td><td>Split method</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#split_staggers"><code>split_staggers</code></a></td><td>Staggers</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/tatami.html#staggers"><code>staggers</code></a></td><td>Staggers</td><td>Tatami parameters</td></tr>

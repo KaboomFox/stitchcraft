@@ -35,10 +35,10 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-95dbadc4.js";
+            window.path_to_searchindex_js = "../../../searchindex-b0b29ef2.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../toc-ee9d300a.js"></script>
+        <script src="../../../toc-0c202e0a.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -341,11 +341,11 @@ jump. Empty: the document’s setting.</p>
 <h3 id="max_stitch_length_mm"><a class="header" href="#max_stitch_length_mm"><code>max_stitch_length_mm</code></a></h3>
 <p><strong>Longest stitch.</strong> Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as
 its split method says. Empty, a stitch is split only where it is longer than the machine sews. A
-tatami fill sews its rows in stitches this long.</p>
+tatami fill sews its rows in stitches this long, and a contour fill its rings.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from 0.1 to 25 mm, or empty (0 or less counts as empty); for fills, a length from 0.1 to 25 mm, empty being the default</li>
 <li><strong>Default:</strong> empty, and <code>4</code> for fills</li>
-<li><strong>Applies to:</strong> Manual stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill</li>
+<li><strong>Applies to:</strong> Manual stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
 <li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column’s deviates so. Ink/Stitch reads a manual stitch’s as not set at 0 or below too, and doesn’t warn.</li>
@@ -356,13 +356,13 @@ tatami fill sews its rows in stitches this long.</p>
 <h2 id="random-variation"><a class="header" href="#random-variation">Random variation</a></h2>
 <h3 id="random_seed"><a class="header" href="#random_seed"><code>random_seed</code></a></h3>
 <p><strong>Random seed.</strong> Where random variation starts: a running stitch’s random lengths, a satin column’s random
-widths and spacing, and a tatami fill’s random lengths. The same seed gives the same stitches,
-another seed others, and elements alike given one seed vary alike. Empty, each element gets its
-own.</p>
+widths and spacing, and a tatami or contour fill’s random lengths. The same seed gives the same
+stitches, another seed others, and elements alike given one seed vary alike. Empty, each element
+gets its own.</p>
 <ul>
 <li><strong>Accepts:</strong> a number or any text, or empty to derive it from the element</li>
 <li><strong>Default:</strong> empty</li>
-<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill</li>
+<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
 <li><strong>DEV-RUN-005.</strong> A running stitch’s random lengths are drawn from StitchCraft’s generator (SplitMix64, seeded from random_seed, or from the element’s id when it has none), so the values differ from Ink/Stitch’s for the same seed. They are placed otherwise too. StitchCraft draws a stitch’s length and its span’s phase from 2 numbers, starts a phase only where a span starts, and scales each span’s stitches to end on its corner. Ink/Stitch draws one number for both a stitch’s length and its phase, starts a new phase after each stitch the tolerance shortened as well, and leaves what is left before a corner as the last stitch. Both key each span’s draws by its place in its subpath; StitchCraft’s keys hold the subpath’s place in the path too, where Ink/Stitch’s start again in each subpath, so subpaths drawn alike sew alike there.</li>

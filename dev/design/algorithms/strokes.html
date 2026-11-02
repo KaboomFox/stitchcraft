@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-95dbadc4.js";
+            window.path_to_searchindex_js = "../../searchindex-b0b29ef2.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-ee9d300a.js"></script>
+        <script src="../../toc-0c202e0a.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -277,6 +277,9 @@ treatment on every pass.</li>
 <li>A zigzag’s turnaround takes no step of the list, as in Ink/Stitch (<a href="#zigzag-stroke-p2-m7">zigzag stroke</a>).</li>
 <li>Repeats apply to running, ripple and zigzag strokes; bean stitch to those and to manual stitch (the
 <a href="../inkstitch-compat-contract.html">compatibility contract</a> lists each parameter’s stitch types).</li>
+<li>A contour fill has repeats and bean stitch of its own, which Ink/Stitch declares for its fills apart
+from a stroke’s. Bean stitch comes first, and each repeat then sews everything sewn so far again, the
+other way round, so <code>k</code> repeats sew 2^(k−1) passes (<a href="fills.html#stitches">fills</a>).</li>
 </ul>
 <h3 id="random-length"><a class="header" href="#random-length">Random length</a></h3>
 <p>Ink/Stitch draws each stitch from <code>s × (1 ± jitter)</code> and starts each stretch between corners at a random
@@ -290,6 +293,8 @@ subpath, so subpaths drawn alike sew alike.</p>
 starts, and each span is rescaled to end on its corner (placement, step 6: no short leftover). Its streams
 are keyed by the subpath’s place as well, so subpaths drawn alike, such as lines side by side, start at
 different phases, which is what the random phase is for (<code>DEV-RUN-005</code>).</p>
+<p>A contour fill sews its path stretch by stretch, a ring or a turn of a spiral at a time, each a span of
+its own, and keys each span’s streams by its number in the fill (<a href="fills.html#stitches">fills</a>).</p>
 <h3 id="properties-conformance"><a class="header" href="#properties-conformance">Properties (conformance)</a></h3>
 <ul>
 <li>Stitches are spread evenly between corners, in more of them where they stray from the points of the
