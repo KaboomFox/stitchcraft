@@ -249,8 +249,11 @@ them. What is left to fit comes from joining groups and from settings the machin
    It is then left out itself, the points before it stay, and a trim or stop after it happens where the
    needle now is. So is a point where the needle already is, which would sew in place. Only the run's
    first point always stays. A stitch into or out of a lock point is a lock stitch, whose shortest is 0.2 mm
-   (`REQ-PLAN-002`). `SC-I0504` says how many points were left out (`REQ-FIN-001`). The rule is one
-   function, which a generator that joins pieces of its own also applies, as a tatami fill does to its
+   (`REQ-PLAN-002`). A stitch is left out unless it is still long enough once the plan is moved to the
+   hoop's centre (step 3): the move rounds each point to the nearest double, which may shorten a stitch by
+   a few billionths of a millimetre. A stitch at the very edge of what counts as long enough would
+   otherwise fail the check after the move. `SC-I0504` says how many points were left out (`REQ-FIN-001`).
+   The rule is one function, which a generator that joins pieces of its own also applies, as a tatami fill does to its
    rows and the travel between them, so that finalize finds nothing of its stitches to thin. A satin
    column joins its parts by rules of its own instead, since the end of a top stitch must not move
    ([satin](algorithms/satin.md#underlays)).
