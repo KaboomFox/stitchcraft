@@ -221,7 +221,7 @@ beyond that length can cause.
 - [Lock stitches](algorithms/locks.md) specifies the lock itself: its shape (`lock_start`, `lock_end`),
   its size and its shortest stitch (0.2 mm).
 
-### Origin and stop position
+### Origin, stop position and turn on export
 
 The finished plan is in hoop coordinates: the design's origin goes to the hoop's centre, (0, 0), where the
 needle starts. The origin is the design's own or else the centre of the box around every point where the
@@ -236,6 +236,13 @@ objects named `stitch:origin` and `stitch:stop-position` (M8.8). Each is a point
 Ink/Stitch's command is where its symbol is placed, and a marker is at the middle of the box round its
 anchors. A file with 2 origins, or 2 stop positions and a stop, is an error (`SC-E0819`), since which one
 counts isn't known. Ink/Stitch doesn't write a machine file of it either.
+
+Once the origin is at the hoop's centre, the design's turn on export turns the plan about it, by its
+degrees, right for a positive number (M8.9). It is Ink/Stitch's design setting `rotate_on_export`, for a
+machine that doesn't turn a design to fit its hoop, which the Design Settings filter keeps with a VectorCraft
+document. Ink/Stitch's writer turns the machine file the same way, stop position jumps included. The hoop
+check measures the turned plan, as the machine gets it. A whole number of quarter turns moves each coordinate
+to the other axis and rounds nothing (`stitchcraft_engine::design::Turn`).
 
 ### Commands
 
@@ -279,8 +286,9 @@ them. What is left to fit comes from joining groups and from settings the machin
    custom lock's long step, a satin column wider than the machine's longest stitch, a tatami fill whose
    `max_stitch_length_mm` is longer than it, or a move sewn on under a `min_jump_stitch_length_mm` that
    long. Each part counts against the design's stitch budget.
-3. **The hoop's centre.** The fitted plan is moved so the design's origin is at the hoop's centre
-   ([origin](#origin-and-stop-position), `REQ-ASM-005`).
+3. **The hoop's centre.** The fitted plan is moved so the design's origin is at the hoop's centre, and
+   turned about it by the design's turn on export ([origin](#origin-stop-position-and-turn-on-export),
+   `REQ-ASM-005`).
 4. **Colour limits:** colour changes and stops above what the format the plan is written in records →
    `SC-E0601`. That is the profile's own, or the one `--format` or an exporter writes, planned for with
    `MachineProfile::writing`: a DST file records 999 colour changes, where the PE800's own PES records 255.

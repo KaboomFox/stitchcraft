@@ -99,12 +99,15 @@ choose **Object › Plug-ins › StitchCraft Design Settings**, set them, and pr
 - **Machine**, the machine and hoop the design is planned for, `brother-pe800-5x7` by default.
 - **Shortest jump**, **Shortest stitch** and **Narrowest satin stroke**, in millimetres. Rest the pointer
   on a label for what each does.
+- **Turn on export**, for a machine that doesn't turn a design to fit its hoop. In the machine file, 90
+  turns the design right about the hoop's centre and -90 turns it left, as Ink/Stitch's rotate on export
+  does.
 
 The document saves them. The exporters and `stitch export` plan the design for the machine it keeps,
 unless the export's **Machine** option or `--profile` names another. They use its settings as they use
 an SVG file's design settings. Whatever is selected, the filter leaves every object as it is.
 
-VectorCraft opens the dialog at the defaults each time, not at what the document keeps, so set all 4 when
+VectorCraft opens the dialog at the defaults each time, not at what the document keeps, so set all 5 when
 you run it again. A live effect isn't given what the document keeps. The stitches shown as you work are
 planned for `brother-pe800-5x7` with the default settings, and a longer shortest stitch shows only in the
 machine file and in `stitch export --preview`. A setting that StitchCraft can't read keeps its default,

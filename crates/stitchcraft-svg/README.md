@@ -1,15 +1,15 @@
 # stitchcraft-svg
 
 Layer **L3**. Reads SVG documents into the engine's `Design`: `stitchcraft_svg::read(bytes, budget)`
-returns the design and warnings about what was left out or simplified. Ink/Stitch's rotation on export
-and clones follow in M8 (M8.9 and M8.10).
+returns the design and warnings about what was left out or simplified. Ink/Stitch's clones follow in M8
+(M8.10).
 
 **Status:** v1 (M3.3) reads paths and the basic shapes, groups and `<switch>`, transforms, the root's
 size and viewBox (so positions come out in millimetres), fill and stroke colours with `currentColor`, and
 everything that hides an element. A shape's fill is sewn before its stroke, as Ink/Stitch sews them.
 Since M4.8 it reads each stroke's width and join (`REQ-SVG-004`), which give a satin column drawn as one
 path its width and corners, and Ink/Stitch's design settings in the file's metadata (`src/settings.rs`,
-`REQ-SVG-005`). Since M13.1 it reads each stroke's cap. With `--auto`, `read_with` marks a shape without
+`REQ-SVG-005`), from M8.9 the turn on export among them. Since M13.1 it reads each stroke's cap. With `--auto`, `read_with` marks a shape without
 `inkstitch:` attributes as an automatic element (`REQ-AUTO-001`). Its corners are joined as SVG draws
 them, and a transform that stretches such a line more one way than the other is named (`REQ-AUTO-005`).
 Ink/Stitch's own objects are not stitched (`src/inkstitch.rs`, `REQ-SVG-003`):

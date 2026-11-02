@@ -13,9 +13,11 @@
 //!   Ink/Stitch takes text that is not JSON as unset, and so uses its default too, but it sews a negative
 //!   number as it is. A file without a setting has StitchCraft's default, which is Ink/Stitch's own unless
 //!   the person sewing it has changed theirs in Ink/Stitch's preferences.
-//! - **`rotate_on_export`** turns the design as Ink/Stitch writes it into a machine file, by 90° either
-//!   way, for machines that don't turn a design to fit their hoop. StitchCraft does not apply it yet: a
-//!   value other than 0 is named (`SC-W0802`), and the design is written as drawn.
+//! - **`rotate_on_export`** turns the design about the hoop's centre as Ink/Stitch writes it into a machine
+//!   file, for machines that don't turn a design to fit their hoop: the design's [`Turn`], a number of
+//!   degrees, right for a positive one. Ink/Stitch's preferences offer 90° either way, and its writer turns
+//!   by any number. Text that is not a number turns nothing and is named (`SC-W0802`): Ink/Stitch takes text
+//!   that isn't JSON as no turn, and fails to write a file for JSON that isn't a number.
 //! - **`thread-palette`** names the threads in Ink/Stitch's own thread lists and print-outs, which
 //!   StitchCraft does not write; it changes nothing StitchCraft sews or writes, and is passed over.
 //! - **`inkstitch_svg_version`** is the file's version, which [`crate::version`] reads with the file.
@@ -26,13 +28,10 @@ use std::collections::BTreeSet;
 
 use roxmltree::{Node, NodeId};
 use stitchcraft_core::Mm;
-use stitchcraft_engine::design::{DesignSettings, Setting};
+use stitchcraft_engine::design::{DesignSettings, Setting, Turn};
 
 use crate::inkstitch::INKSTITCH_NS;
 use crate::version;
-
-/// The design setting that turns the design as it is written.
-const ROTATE_ON_EXPORT: &str = "rotate_on_export";
 
 /// The design setting that names the threads in Ink/Stitch's own lists.
 const THREAD_PALETTE: &str = "thread-palette";
@@ -73,13 +72,18 @@ impl Found {
             return (!apply(setting, &mut self.settings, text)).then_some((message, None));
         }
         match name {
-            ROTATE_ON_EXPORT => turns(text).then(|| {
-                let message = format!(
-                    "Ink/Stitch's design setting `{name}`, \"{text}\", turns the design as it is written into a machine file; StitchCraft does \
-                     not apply it yet, and writes the design as drawn."
-                );
-                (message, Some("Rotate the drawing itself instead."))
-            }),
+            Turn::NAME => match text.parse::<f64>().ok().and_then(Turn::new) {
+                Some(turn) => {
+                    self.settings.rotate_on_export = turn;
+                    None
+                }
+                None => Some((
+                    format!(
+                        "Ink/Stitch's design setting `{name}`, \"{text}\", is not a number of degrees; it is ignored, and the design isn't turned."
+                    ),
+                    None,
+                )),
+            },
             THREAD_PALETTE | version::ELEMENT => None,
             _ => Some((
                 format!("The file's metadata has Ink/Stitch's `{name}`, which is not a design setting StitchCraft knows; it is ignored."),
@@ -97,12 +101,6 @@ fn apply(setting: &Setting, settings: &mut DesignSettings, text: &str) -> bool {
         setting.set(settings, value);
     }
     value.is_some()
-}
-
-/// Whether `rotate_on_export`'s text `text` turns the design: a number other than 0. Ink/Stitch turns
-/// nothing for one that is not JSON, which it reads as none.
-fn turns(text: &str) -> bool {
-    text.parse::<f64>().is_ok_and(|degrees| degrees.is_finite() && degrees != 0.0)
 }
 
 #[cfg(test)]

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- An L-shaped red fill, stopped after by Ink/Stitch's stop command tied to it by a connector, and a blue
+     line, in a file whose design setting rotate_on_export turns the design by 45 degrees as it is written. Its
+     origin command lies off the design's middle, and its stop_position command right of it. The symbols'
+     drawings are placeholders. Written for StitchCraft's Ink/Stitch differential cases (conformance L3). -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+     xmlns:inkstitch="http://inkstitch.org/namespace"
+     width="100mm" height="100mm" viewBox="0 0 100 100">
+  <metadata>
+    <inkstitch:inkstitch_svg_version>4</inkstitch:inkstitch_svg_version>
+    <inkstitch:rotate_on_export>45</inkstitch:rotate_on_export>
+  </metadata>
+  <defs>
+    <symbol id="inkstitch_stop"><circle r="2" fill="#808080"/></symbol>
+    <symbol id="inkstitch_origin"><circle r="2" fill="#808080"/></symbol>
+    <symbol id="inkstitch_stop_position"><circle r="2" fill="#808080"/></symbol>
+  </defs>
+  <path id="ell" d="M 10,10 H 50 V 20 H 20 V 40 H 10 Z" fill="#ed171f"/>
+  <g id="command_group1">
+    <path id="command_connector1" d="M 55,30 45,20" style="fill:none;stroke:#000000;stroke-opacity:0.5"
+          inkscape:connection-start="#use1" inkscape:connection-end="#ell" inkscape:connector-type="polyline"/>
+    <use id="use1" xlink:href="#inkstitch_stop" x="55" y="30"/>
+  </g>
+  <path id="line" d="M 30,35 H 60" fill="none" stroke="#0a55a3"/>
+  <use id="origin" xlink:href="#inkstitch_origin" x="20" y="30"/>
+  <use id="stop_position" xlink:href="#inkstitch_stop_position" x="70" y="10"/>
+</svg>

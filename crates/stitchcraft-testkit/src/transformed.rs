@@ -18,12 +18,13 @@
 //! no change here. A setting that is a direction turns the other way when the design is mirrored, as
 //! Ink/Stitch turns a mirrored clone's fill angle: the rows of a tatami fill at 30° run at −30° in its
 //! mirror image. Plans are measured from the design's origin, which the change takes with the design, so
-//! a plan's points change as the design's do.
+//! a plan's points change as the design's do. The design's turn on export turns the other way in a mirror
+//! image too: the mirror image of a plan turned right is the mirror image's plan turned left.
 
 use std::collections::BTreeMap;
 
 use stitchcraft_core::{Budget, Point};
-use stitchcraft_engine::design::{Clip, ClipShape, Design, Element, Path, Segment, Shape, Subpath};
+use stitchcraft_engine::design::{Clip, ClipShape, Design, Element, Path, Segment, Shape, Subpath, Turn};
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::normalize::region::{self, Region};
 use stitchcraft_engine::normalize::stroke::distance_to_segment;
@@ -92,6 +93,9 @@ impl Change {
         let mut settings = design.settings;
         settings.origin = settings.origin.map(|q| self.point(q));
         settings.stop_position = settings.stop_position.map(|q| self.point(q));
+        if self.mirrors() {
+            settings.rotate_on_export = Turn::new(-settings.rotate_on_export.degrees()).unwrap();
+        }
         let mut changed = Design::new(elements, settings).unwrap();
         changed.sort_colours = design.sort_colours;
         changed
@@ -362,6 +366,21 @@ mod tests {
     #[test]
     fn an_l_sews_the_same_however_it_is_changed() {
         for (change, compared) in compare(&l_shape(), &Change::ALL) {
+            for element in compared {
+                assert!(element.shared > 0.99, "{change:?}: {element:?}");
+            }
+        }
+    }
+
+    #[test]
+    fn an_l_turned_on_export_sews_the_same_however_it_is_changed() {
+        // Mirrored with the L but turned the same way, its plan would not be the mirror image of the L's.
+        let l = l_shape();
+        let settings = stitchcraft_engine::design::DesignSettings { rotate_on_export: Turn::RIGHT, ..l.settings };
+        let turned = Design::new(l.elements().to_vec(), settings).unwrap();
+        assert_eq!(Change::MirrorY.design(&turned).settings.rotate_on_export, Turn::LEFT);
+        assert_eq!(Change::HalfTurn.design(&turned).settings.rotate_on_export, Turn::RIGHT);
+        for (change, compared) in compare(&turned, &Change::ALL) {
             for element in compared {
                 assert!(element.shared > 0.99, "{change:?}: {element:?}");
             }

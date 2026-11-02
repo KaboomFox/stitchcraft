@@ -8,21 +8,22 @@
 //! reference machine.
 //!
 //! **What they are.** The filter's data is an object: Ink/Stitch's design settings by their names, each a
-//! length in millimetres ([`SETTINGS`]), and `profile`, the machine's id ([`kept_data`]):
+//! length in millimetres ([`SETTINGS`]) but `rotate_on_export`, the turn on export in degrees ([`Turn`]),
+//! and `profile`, the machine's id ([`kept_data`]):
 //!
 //! ```json
-//! {"profile": "brother-pe800-5x7", "collapse_len_mm": 3, "min_stitch_len_mm": 0, "min_satin_stroke_width_mm": 1}
+//! {"profile": "brother-pe800-5x7", "collapse_len_mm": 3, "min_stitch_len_mm": 0, "min_satin_stroke_width_mm": 1, "rotate_on_export": 90}
 //! ```
 //!
-//! **How they read.** A length is a number of 0 or more, as the SVG adapter reads Ink/Stitch's, and a
-//! machine is one of the built-in profiles. What doesn't read keeps its default, and so does a setting
+//! **How they read.** A length is a number of 0 or more, and a turn any number, as the SVG adapter reads
+//! Ink/Stitch's, and a machine is one of the built-in profiles. What doesn't read keeps its default, and so does a setting
 //! named that this StitchCraft doesn't read, as a newer one may write, each with `SC-W0812`. Data that is
 //! not an object keeps every default, with `SC-W0812` too. A document the filter never ran on has the
 //! defaults and no machine of its own.
 
 use serde_json::{Map, Value, json};
 use stitchcraft_core::{Code, Diagnostic, Fix, Mm};
-use stitchcraft_engine::design::{DesignSettings, SETTINGS, Setting};
+use stitchcraft_engine::design::{DesignSettings, SETTINGS, Setting, Turn};
 use stitchcraft_plan::MachineProfile;
 use stitchcraft_plan::profiles::{self, REFERENCE};
 
@@ -48,6 +49,7 @@ pub fn kept_data(settings: &DesignSettings, machine: &MachineProfile) -> Value {
     for setting in &SETTINGS {
         data.insert(setting.name.to_string(), json!(setting.get(settings).get()));
     }
+    data.insert(Turn::NAME.to_string(), json!(settings.rotate_on_export.degrees()));
     Value::Object(data)
 }
 
@@ -77,6 +79,14 @@ pub(crate) fn kept(plugin_data: Option<&Value>, warnings: &mut Vec<Diagnostic>) 
                 Some(length) => setting.set(&mut kept.settings, length),
                 None => warnings.push(ignored(&format!(
                     "The design setting `{name}` kept with the document, {}, is not a length of 0 or more, so it keeps its default",
+                    quoted(value)
+                ))),
+            }
+        } else if name == Turn::NAME {
+            match value.as_f64().and_then(Turn::new) {
+                Some(turn) => kept.settings.rotate_on_export = turn,
+                None => warnings.push(ignored(&format!(
+                    "The design setting `{name}` kept with the document, {}, is not a number of degrees, so the design isn't turned",
                     quoted(value)
                 ))),
             }
@@ -130,10 +140,14 @@ mod tests {
         for (setting, value) in SETTINGS.iter().zip([5.0, 0.3, 2.0]) {
             setting.set(&mut settings, Mm::new(value).unwrap());
         }
+        settings.rotate_on_export = Turn::LEFT;
         let data = kept_data(&settings, &BROTHER_PE800_SMALL);
         assert_eq!(
             data,
-            json!({"profile": BROTHER_PE800_SMALL.id, "collapse_len_mm": 5.0, "min_stitch_len_mm": 0.3, "min_satin_stroke_width_mm": 2.0})
+            json!({
+                "profile": BROTHER_PE800_SMALL.id, "collapse_len_mm": 5.0, "min_stitch_len_mm": 0.3, "min_satin_stroke_width_mm": 2.0,
+                "rotate_on_export": -90.0
+            })
         );
         assert_eq!(read(&data), (Kept { settings, machine: Some(&BROTHER_PE800_SMALL) }, Vec::new()));
         // A document the filter never ran on has the defaults and no machine of its own.
@@ -143,9 +157,11 @@ mod tests {
 
     #[test]
     fn diag_sc_w0812_a_setting_that_does_not_read_keeps_its_default() {
-        let (kept, said) = read(&json!({"profile": "singer", "collapse_len_mm": -1, "min_stitch_len_mm": 0.5, "origin": [0, 0]}));
+        let (kept, said) =
+            read(&json!({"profile": "singer", "collapse_len_mm": -1, "min_stitch_len_mm": 0.5, "origin": [0, 0], "rotate_on_export": "90"}));
         assert_eq!(kept.machine, None);
         assert_eq!((kept.settings.collapse_len, kept.settings.min_stitch_len.map(Mm::get)), (DesignSettings::COLLAPSE_LEN, Some(0.5)));
+        assert_eq!(kept.settings.rotate_on_export, Turn::NONE);
         let hint = "Keep the settings anew with Object › Plug-ins › StitchCraft Design Settings.";
         assert_eq!(
             said,
@@ -156,6 +172,9 @@ mod tests {
                 format!("warning SC-W0812: The document keeps a design setting this StitchCraft doesn't read, `origin`. {hint}"),
                 format!(
                     "warning SC-W0812: The machine kept with the document, \"singer\", is not one this StitchCraft has, so the design is planned for the machine `--profile` or the export names, or else for brother-pe800-5x7. {hint}"
+                ),
+                format!(
+                    "warning SC-W0812: The design setting `rotate_on_export` kept with the document, \"90\", is not a number of degrees, so the design isn't turned. {hint}"
                 ),
             ]
         );
