@@ -187,41 +187,147 @@ fn diag_sc_i0818_a_file_an_older_ink_stitch_saved_is_read_as_ink_stitch_updates_
 }
 
 #[test]
-fn req_svg_009_the_updates_of_an_older_file_s_settings_that_are_not_applied_yet_are_named() {
-    // Ink/Stitch's update of a file of version 1 or 2 halves a zigzag stroke's pull compensation, unless 0,
-    // into `stroke_pull_compensation_mm`, and makes a satin column start and end where it is drawn. Its
-    // update of a file of version 1 to 3 makes a fill with `auto_fill` off a legacy fill; a blank setting is
-    // none. StitchCraft reads these shapes' settings as the file has them until it applies those updates, and
-    // says so, counting the shapes.
+fn req_svg_007_a_zigzag_stroke_of_a_file_before_version_3_halves_its_pull_compensation_for_each_side() {
+    // From version 3 a zigzag stroke's pull compensation is its own setting, `stroke_pull_compensation_mm`,
+    // which applies to each side. Ink/Stitch's update of a file of version 1 or 2 halves the old one into it,
+    // over any the stroke has, unless it is 0 or doesn't read as a number. Other strokes keep theirs.
     let body = r#"<path id="zigzag" d="M 10 50 L 60 50" fill="none" stroke="blue" inkstitch:stroke_method="zigzag_stitch"
               inkstitch:pull_compensation_mm="1"/>
-        <path id="pulled" d="M 10 55 L 60 55" fill="none" stroke="blue" inkstitch:stroke_method=" zigzag_stitch "
-              inkstitch:pull_compensation_mm="-0.5"/>
-        <path id="unpulled" d="M 10 60 L 60 60" fill="none" stroke="blue" inkstitch:stroke_method="zigzag_stitch"
+        <path id="spaced" d="M 10 55 L 60 55" fill="none" stroke="blue" inkstitch:stroke_method=" zigzag_stitch "
+              inkstitch:pull_compensation_mm=" -0.5 " inkstitch:stroke_pull_compensation_mm="2"/>
+        <path id="nought" d="M 10 60 L 60 60" fill="none" stroke="blue" inkstitch:stroke_method="zigzag_stitch"
+              inkstitch:pull_compensation_mm="0.0"/>
+        <path id="zero" d="M 10 65 L 60 65" fill="none" stroke="blue" inkstitch:stroke_method="zigzag_stitch"
               inkstitch:pull_compensation_mm="0"/>
+        <path id="word" d="M 10 70 L 60 70" fill="none" stroke="blue" inkstitch:stroke_method="zigzag_stitch"
+              inkstitch:pull_compensation_mm="wide"/>
+        <path id="running" d="M 10 75 L 60 75" fill="none" stroke="blue" inkstitch:pull_compensation_mm="1"/>"#;
+    for v in ["1", "2"] {
+        let old = svg(drawing(&version(v), body));
+        assert_eq!(
+            set(&old, "stroke_pull_compensation_mm"),
+            [
+                ("svg:zigzag:stroke", Some("0.5")),
+                ("svg:spaced:stroke", Some("-0.25")),
+                ("svg:nought:stroke", Some("0")),
+                ("svg:zero:stroke", None),
+                ("svg:word:stroke", None),
+                ("svg:running:stroke", None)
+            ],
+            "version {v}"
+        );
+        assert_eq!(set(&old, "pull_compensation_mm")[0], ("svg:zigzag:stroke", Some("1")));
+        assert_eq!(
+            warnings(&old),
+            [format!(
+                "info SC-I0818: The file was saved by an older Ink/Stitch (file version {v}), and is read as Ink/Stitch updates it: 3 \
+                 zigzag strokes' pull compensations are halved for each side (`stroke_pull_compensation_mm`), as they apply to both \
+                 sides from version 3."
+            )]
+        );
+    }
+    let newer = svg(drawing(&version("3"), body));
+    assert_eq!(set(&newer, "stroke_pull_compensation_mm")[..2], [("svg:zigzag:stroke", None), ("svg:spaced:stroke", Some("2"))]);
+    assert!(newer.warnings.is_empty(), "{:?}", warnings(&newer));
+}
+
+#[test]
+fn req_svg_007_a_satin_column_of_a_file_before_version_3_starts_and_ends_where_it_is_drawn() {
+    // Ink/Stitch's update of a file of version 1 or 2 turns a satin column's nearest points off, over its own
+    // settings: it starts and ends where it is drawn, as before. A stroke that is no satin column keeps them.
+    let body = r#"<path id="satin" d="M 10 70 L 60 70 M 10 74 L 60 74" fill="none" stroke="blue" inkstitch:satin_column="yes"/>
+        <path id="own" d="M 10 80 L 60 80 M 10 84 L 60 84" fill="none" stroke="blue" inkstitch:satin_column=" True "
+              inkstitch:start_at_nearest_point="true"/>
+        <path id="line" d="M 10 90 L 60 90" fill="none" stroke="blue" inkstitch:satin_column="no" inkstitch:end_at_nearest_point="yes"/>"#;
+    let old = svg(drawing(&version("2"), body));
+    let off = Some("false");
+    assert_eq!(set(&old, "start_at_nearest_point"), [("svg:satin:stroke", off), ("svg:own:stroke", off), ("svg:line:stroke", None)]);
+    assert_eq!(set(&old, "end_at_nearest_point"), [("svg:satin:stroke", off), ("svg:own:stroke", off), ("svg:line:stroke", Some("yes"))]);
+    assert_eq!(
+        warnings(&old),
+        ["info SC-I0818: The file was saved by an older Ink/Stitch (file version 2), and is read as Ink/Stitch updates it: 2 satin \
+          columns start and end where they are drawn (`start_at_nearest_point` and `end_at_nearest_point` off), as before version 3."]
+    );
+    let newer = svg(drawing(&version("3"), body));
+    assert_eq!(set(&newer, "start_at_nearest_point"), [("svg:satin:stroke", None), ("svg:own:stroke", Some("true")), ("svg:line:stroke", None)]);
+}
+
+#[test]
+fn req_svg_007_a_fill_of_a_file_before_version_4_with_auto_fill_off_is_a_legacy_fill() {
+    // Before version 4 a fill with `auto_fill` off was a legacy fill. Ink/Stitch's update of a file of version
+    // 1 to 3 gives it that method, over its own, and removes `auto_fill`. A blank setting is none, which
+    // leaves `auto_fill` on, its default, and any text but one of Ink/Stitch's words for yes is off. A shape
+    // that sews no fill keeps its setting.
+    let body = r#"<rect id="off" x="10" y="10" width="20" height="10" fill="red" inkstitch:auto_fill="false"/>
+        <rect id="no" x="10" y="25" width="20" height="10" fill="red" inkstitch:auto_fill=" No " inkstitch:fill_method="contour_fill"/>
+        <rect id="blank" x="10" y="40" width="20" height="10" fill="red" inkstitch:auto_fill=" "/>
+        <rect id="on" x="10" y="55" width="20" height="10" fill="red" inkstitch:auto_fill="Yes"/>
+        <path id="line" d="M 40 10 L 90 10" fill="none" stroke="blue" inkstitch:auto_fill="false"/>"#;
+    let old = svg(drawing(&version("3"), body));
+    let legacy = Some("legacy_fill");
+    assert_eq!(
+        set(&old, "fill_method"),
+        [("svg:off:fill", legacy), ("svg:no:fill", legacy), ("svg:blank:fill", None), ("svg:on:fill", None), ("svg:line:stroke", None)]
+    );
+    assert_eq!(
+        set(&old, "auto_fill"),
+        [
+            ("svg:off:fill", None),
+            ("svg:no:fill", None),
+            ("svg:blank:fill", Some(" ")),
+            ("svg:on:fill", Some("Yes")),
+            ("svg:line:stroke", Some("false"))
+        ]
+    );
+    let updated = warnings(&old);
+    assert!(updated[0].ends_with(", and 2 fills with `auto_fill` off are legacy fills (`fill_method`), as before version 4."), "{updated:?}");
+    let newer = svg(drawing(&version("4"), body));
+    assert_eq!(set(&newer, "fill_method")[..2], [("svg:off:fill", None), ("svg:no:fill", Some("contour_fill"))]);
+    assert_eq!(set(&newer, "auto_fill")[0], ("svg:off:fill", Some("false")));
+}
+
+#[test]
+fn req_svg_007_the_fill_method_auto_fill_of_a_file_before_version_4_is_a_tatami_fill() {
+    // Ink/Stitch named the tatami fill `auto_fill` before version 4, and its update renames it in a file of
+    // version 1 to 3. A fill whose `auto_fill` is off is a legacy fill instead.
+    let body = r#"<rect id="auto" x="10" y="10" width="20" height="10" fill="red" inkstitch:fill_method=" auto_fill "
+              inkstitch:max_stitch_length_mm="4"/>
+        <rect id="off" x="10" y="25" width="20" height="10" fill="red" inkstitch:fill_method="auto_fill" inkstitch:auto_fill="0"
+              inkstitch:max_stitch_length_mm="4"/>"#;
+    let old = svg(drawing(&version("1"), body));
+    assert_eq!(set(&old, "fill_method"), [("svg:auto:fill", Some("tatami_fill")), ("svg:off:fill", Some("legacy_fill"))]);
+    assert_eq!(
+        warnings(&old),
+        ["info SC-I0818: The file was saved by an older Ink/Stitch (file version 1), and is read as Ink/Stitch updates it: 1 fill with \
+          `auto_fill` off is a legacy fill (`fill_method`), as before version 4, and 1 fill set to `auto_fill`, the tatami fill's name \
+          before version 4, is a tatami fill (`fill_method`)."]
+    );
+    let newer = svg(drawing(&version("4"), body));
+    assert_eq!(set(&newer, "fill_method"), [("svg:auto:fill", Some(" auto_fill ")), ("svg:off:fill", Some("auto_fill"))]);
+}
+
+#[test]
+fn req_svg_007_every_update_of_a_file_of_version_1_at_once() {
+    // A shape gets each update of each version after its file's, in the order of the versions: a polyline
+    // that is a zigzag stroke is a manual stitch before its pull compensation would be halved.
+    let body = r#"<polyline id="poly" points="0,0 20,5 40,0" style="fill:none;stroke:red" inkstitch:stroke_method="zigzag_stitch"
+              inkstitch:pull_compensation_mm="1"/>
+        <path id="zigzag" d="M 10 50 L 60 50" fill="none" stroke="blue" inkstitch:stroke_method="zigzag_stitch"
+              inkstitch:pull_compensation_mm="1"/>
         <path id="satin" d="M 10 70 L 60 70 M 10 74 L 60 74" fill="none" stroke="blue" inkstitch:satin_column="yes"/>
-        <path id="twice" d="M 10 80 L 60 80 M 10 84 L 60 84" fill="none" stroke="blue" inkstitch:satin_column="True"/>
-        <rect id="legacy" x="70" y="10" width="20" height="20" fill="red" inkstitch:auto_fill="false" inkstitch:max_stitch_length_mm="3"/>
-        <rect id="blank" x="70" y="40" width="20" height="20" fill="red" inkstitch:auto_fill=" " inkstitch:max_stitch_length_mm="3"/>"#;
-    let unapplied = |v: &str| {
-        let read = svg(drawing(&version(v), body));
-        let notes: Vec<_> = read.warnings.iter().filter(|w| w.message.contains("doesn't apply")).cloned().collect();
-        assert!(notes.iter().all(|w| w.code == Code::SvgFeatureIgnored && w.element.is_none()), "{notes:?}");
-        notes
-    };
-    let [two] = &unapplied("2")[..] else { panic!() };
+        <rect id="legacy" x="70" y="10" width="20" height="20" fill="red" inkstitch:auto_fill="false"/>
+        <rect id="renamed" x="70" y="40" width="20" height="20" fill="red" inkstitch:fill_method="auto_fill"/>"#;
+    let old = svg(drawing(&version("1"), body));
+    assert_eq!(set(&old, "stroke_method")[0], ("svg:poly:stroke", Some("manual_stitch")));
+    assert_eq!(set(&old, "stroke_pull_compensation_mm")[..2], [("svg:poly:stroke", None), ("svg:zigzag:stroke", Some("0.5"))]);
     assert_eq!(
-        two.message,
-        "The file was saved by an older Ink/Stitch (file version 2). Ink/Stitch's update also changes the pull compensation of 2 zigzag \
-         strokes, which it halves into `stroke_pull_compensation_mm`, and 2 satin columns, which it makes start and end where they are \
-         drawn, and 1 fill with `auto_fill` off, which it makes a legacy fill, sewn without underlay. StitchCraft doesn't apply these \
-         changes yet, so those shapes sew as the file sets them."
+        warnings(&old),
+        ["info SC-I0818: The file was saved by an older Ink/Stitch (file version 1), and is read as Ink/Stitch updates it: 2 shapes with a \
+          fill and no longest stitch of their own sew 3 mm stitches (`max_stitch_length_mm`), the default before version 4, and 1 \
+          polyline whose `style` sets a stroke sews as a manual stitch (`stroke_method`), as before version 2, and 1 zigzag stroke's \
+          pull compensation is halved for each side (`stroke_pull_compensation_mm`), as it applies to both sides from version 3, and 1 \
+          satin column starts and ends where it is drawn (`start_at_nearest_point` and `end_at_nearest_point` off), as before version 3, \
+          and 1 fill with `auto_fill` off is a legacy fill (`fill_method`), as before version 4, and 1 fill set to `auto_fill`, the \
+          tatami fill's name before version 4, is a tatami fill (`fill_method`)."]
     );
-    assert_eq!(
-        two.fix.as_ref().unwrap().describe(),
-        "To sew them as Ink/Stitch does, run any Ink/Stitch extension on the file and save it: that updates it."
-    );
-    let [three] = &unapplied("3")[..] else { panic!() };
-    assert!(three.message.contains("(file version 3). Ink/Stitch's update also changes 1 fill with `auto_fill` off, which it makes a legacy"));
-    assert!(unapplied("4").is_empty());
 }

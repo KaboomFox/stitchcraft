@@ -759,10 +759,11 @@ as a colour. Values that do not read are named too. A colour that does not read 
 viewer ignores it, and one of Ink/Stitch's design settings keeps its default. A line that `--auto`
 sews across its width, as a satin column or a fill, is as wide as its transforms stretch it on
 average, so a transform that stretches it more one way than the other, and draws it wider one way,
-is named too. So is what StitchCraft does not apply of an Ink/Stitch file: the settings of its
-elements, its design setting `rotate_on_export`, which turns the design as it is written, and the
-updates Ink/Stitch would make to a file with its settings and no file version, or from a newer
-Ink/Stitch, which is read as it is.
+is named too. So is what StitchCraft does not apply of an Ink/Stitch file: the settings of a group,
+which Ink/Stitch doesn't read either, those of its early versions (`embroider_` attributes), its
+design setting `rotate_on_export`, which turns the design as it is written, and the updates
+Ink/Stitch would make to a file with its settings and no file version, or from a newer Ink/Stitch,
+which is read as it is.
 
 The message names the element and what was done. Convert text and clones to paths in the editor
 (in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.
@@ -784,15 +785,18 @@ setting off in Ink/Stitch's parameters.
 **Info** — Ink/Stitch file from an older version, read as Ink/Stitch updates it
 
 The SVG file was saved by an older Ink/Stitch, and is read as Ink/Stitch updates such a file when it
-opens it, so that it sews as it did: a default that has changed since is written into the shapes
-that relied on it. Ink/Stitch numbers the files it saves. Before its file version 4, a fill's
-stitches were 3 mm long unless it set another length, where they are 4 mm now; before version 2, a
-polyline whose style set a stroke was sewn as a manual stitch, with a needle point at each of its
-points. A shape digitized automatically (`--auto`) sews by StitchCraft's rules instead.
+opens it, so that it sews as it did: a default or a setting whose meaning has changed since is
+written into the shapes that relied on it. Ink/Stitch numbers the files it saves. Before its file
+version 4, a fill's stitches were 3 mm long unless it set another length, where they are 4 mm now,
+and a fill with `auto_fill` off was a legacy fill; before version 3, a zigzag stroke's pull
+compensation was shared by its 2 sides, and a satin column started and ended where it was drawn;
+before version 2, a polyline whose style set a stroke was sewn as a manual stitch, with a needle
+point at each of its points. A shape digitized automatically (`--auto`) sews by StitchCraft's rules
+instead.
 
 The message gives the file's version, and how many shapes were updated and how. Nothing needs doing:
-the design sews as Ink/Stitch sews it. To sew a shape otherwise, set its longest stitch
-(`max_stitch_length_mm`) or its stitch type in Ink/Stitch.
+the design sews as Ink/Stitch sews it. To sew a shape otherwise, change the setting the message
+names in Ink/Stitch.
 
 ## SC-W0804
 

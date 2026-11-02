@@ -317,12 +317,12 @@ change Ink/Stitch's updater makes (`lib/update.py`), in StitchCraft's words.
 | 1 | a stroke with neither a method nor `satin_column`, whose `style` doesn't set `stroke-dasharray`, gets `zigzag_stitch`, unless it has `inkscape:connection-start` | not planned |
 | 1 | a stroke's `grid_size`, in pixels, becomes `grid_size_mm`, unless it has `inkscape:connection-start` | not planned |
 | 2 | a `<polyline>` whose `style` attribute sets a stroke other than `none` gets `stroke_method` `manual_stitch` | applied, unless digitized automatically |
-| 3 | a zigzag stroke's `pull_compensation_mm`, unless 0, is halved into `stroke_pull_compensation_mm`, which applies to each side | planned (M8) |
-| 3 | a satin column gets `start_at_nearest_point` and `end_at_nearest_point` off | planned (M8) |
+| 3 | a zigzag stroke's `pull_compensation_mm`, unless 0, is halved into `stroke_pull_compensation_mm`, which applies to each side | applied, unless digitized automatically |
+| 3 | a satin column gets `start_at_nearest_point` and `end_at_nearest_point` off | applied, unless digitized automatically |
 | 3 | the commands' old names become today's (the table under Commands) | applied, in any file (`DEV-SVG-014`) |
 | 3 | a `starting_point` or `ending_point` command is placed anew at its connector's end on its object | planned (M8) |
 | 4 | an element whose fill is not `none` (a fill not set is black), and whose `max_stitch_length_mm` is missing, empty, not a number or 0, gets 3 | applied to the shapes whose fill is sewn, unless digitized automatically |
-| 4 | a fill with `auto_fill` off gets `fill_method` `legacy_fill`, and `auto_fill` is removed | planned (M8) |
-| 4 | `fill_method` `auto_fill` becomes `tatami_fill` | planned (M8) |
+| 4 | a fill with `auto_fill` off gets `fill_method` `legacy_fill`, and `auto_fill` is removed | applied to the shapes whose fill is sewn, unless digitized automatically (`DEV-FILL-014` says how a legacy fill sews) |
+| 4 | `fill_method` `auto_fill` becomes `tatami_fill` | applied to the shapes whose fill is sewn, unless digitized automatically |
 
 _145 parameter declarations, 99 registered in StitchCraft._
