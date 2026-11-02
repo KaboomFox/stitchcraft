@@ -94,7 +94,7 @@ pub enum Turn {
 /// stitch, a stitch: those of the run were spent as it was made.
 pub fn sew(run: &[Point], repeats: u32, beans: &[u32], turn: Turn, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
     let Some((&start, rest)) = run.split_first() else { return Ok(Vec::new()) };
-    let mut out = vec![start];
+    let mut out = Needle::at(start);
     let mut step = 0_usize;
     for pass in 0..repeats.max(1) {
         // A pass after the first starts with the point the last ended at, or the one after it; the way back
@@ -110,11 +110,11 @@ pub fn sew(run: &[Point], repeats: u32, beans: &[u32], turn: Turn, meter: &mut M
             made(meter, rest.len())?;
         }
         for to in points {
-            stitch(&mut out, to, nth(beans, step), meter)?;
+            out.stitch(to, nth(beans, step), meter)?;
             step += 1;
         }
     }
-    Ok(out)
+    Ok(out.sewn)
 }
 
 /// `run` with each stitch sewn 2b + 1 times, b taken in turn from `beans` as [`sew`] takes it for one pass,
@@ -123,12 +123,12 @@ pub fn sew(run: &[Point], repeats: u32, beans: &[u32], turn: Turn, meter: &mut M
 /// counts it. Costs as [`sew`] does.
 pub fn beaned(run: &[Point], beans: &[u32], travel: &[bool], meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
     let Some((&start, rest)) = run.split_first() else { return Ok(Vec::new()) };
-    let mut out = vec![start];
+    let mut out = Needle::at(start);
     for (step, &to) in rest.iter().enumerate() {
         let travels = travel.get(step + 1).copied().unwrap_or(false);
-        stitch(&mut out, to, if travels { 0 } else { nth(beans, step) }, meter)?;
+        out.stitch(to, if travels { 0 } else { nth(beans, step) }, meter)?;
     }
-    Ok(out)
+    Ok(out.sewn)
 }
 
 /// The `step`-th value of `beans`, taken in turn; 0 when there is none.
@@ -136,26 +136,36 @@ fn nth(beans: &[u32], step: usize) -> u32 {
     step.checked_rem(beans.len()).and_then(|i| beans.get(i)).copied().unwrap_or(0)
 }
 
-/// Sews the stitch from where `out` ends to `to`, then `bean` times back and on to `to` again; nothing
-/// where the needle already is. A unit of `meter`'s work for the point, and 2 and 2 stitches for each
-/// time back and on.
-fn stitch(out: &mut Vec<Point>, to: Point, bean: u32, meter: &mut Meter) -> Result<(), Exhausted> {
-    meter.charge(1)?;
-    let Some(&from) = out.last() else {
-        out.push(to);
-        return Ok(());
-    };
-    if to == from {
-        return Ok(());
+/// The needle points sewn so far, from the first, and where the needle is: the last of them.
+struct Needle {
+    sewn: Vec<Point>,
+    at: Point,
+}
+
+impl Needle {
+    /// The needle at `start`, which it has sewn.
+    fn at(start: Point) -> Self {
+        Needle { sewn: vec![start], at: start }
     }
-    out.push(to);
-    for _ in 0..bean {
-        meter.charge(2)?;
-        meter.charge_stitches(2)?;
-        out.push(from);
-        out.push(to);
+
+    /// Sews the stitch from where the needle is to `to`, then `bean` times back and on to `to` again; nothing
+    /// where the needle already is. A unit of `meter`'s work for the point, and 2 and 2 stitches for each
+    /// time back and on.
+    fn stitch(&mut self, to: Point, bean: u32, meter: &mut Meter) -> Result<(), Exhausted> {
+        meter.charge(1)?;
+        if to == self.at {
+            return Ok(());
+        }
+        self.sewn.push(to);
+        for _ in 0..bean {
+            meter.charge(2)?;
+            meter.charge_stitches(2)?;
+            self.sewn.push(self.at);
+            self.sewn.push(to);
+        }
+        self.at = to;
+        Ok(())
     }
-    Ok(())
 }
 
 /// `run` sewn over as `repeats` doubles it, as Ink/Stitch repeats a fill sewn as one path: each repeat

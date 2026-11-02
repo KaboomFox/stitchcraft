@@ -143,7 +143,7 @@ mod tests {
     use stitchcraft_core::Budget;
 
     use super::*;
-    use crate::generators::tatami::fixture::{p, rectangle};
+    use crate::generators::tatami::fixture::{self, p, rectangle};
 
     const TRAVEL: Travel = Travel { length: 2.0, tolerance: 0.2, min_stitch: 1e-6, underpath: false, jump: 3.0 };
 
@@ -215,6 +215,38 @@ mod tests {
         assert!(travel[at] && points[at - 1] == lines[1][1], "{points:?}");
         assert_eq!(points.last(), Some(&lines[0][1]), "{points:?}");
         assert!(points.iter().rposition(|&q| q == lines[0][0]) < Some(2), "{points:?}");
+    }
+
+    #[test]
+    fn from_a_needle_inside_the_part_the_needle_comes_in_along_the_lines_under_them() {
+        // The 2 arcs across the 10 × 4 rectangle, the lines under them on, and the needle inside the part
+        // left of both: it starts at the node of the lines nearest it, travelling from there to the route's
+        // start, and every point it travels to before the first line is marked.
+        let part = rectangle(4.0);
+        let lines = [arc(5.0, 2.0), arc(2.0, 2.0)];
+        let given = Given { travel: Travel { underpath: true, ..TRAVEL }, angle: 0.0, skip_last: false };
+        let meter = &mut Budget::DEFAULT.meter();
+        let rings = Rings::new(&part, meter).unwrap();
+        let needle = p(0.8, 2.0);
+        let runs = lines_sewn(&part, &rings, &lines, &given, Some(needle), None, meter, &mut Vec::new()).unwrap().unwrap();
+        let Marked { points, travel } = &runs[0];
+        // That node lies inside the part, off its outline, where the route's first node lies.
+        let off_the_outline = |q: Point| q.x() > 0.1 && q.x() < 9.9 && q.y() > 0.1 && q.y() < 3.9;
+        assert!(points[0].distance(needle) < 1.0 && off_the_outline(points[0]) && travel[0], "{points:?}");
+        let first_line = points.iter().position(|q| lines.iter().any(|line| line.contains(q))).unwrap();
+        assert!(first_line > 0 && travel[..first_line].iter().all(|&t| t), "{points:?}");
+    }
+
+    #[test]
+    fn a_needle_that_finds_no_way_between_2_lines_jumps_and_says_so_as_a_bug() {
+        // A line between 2 points of the frame's outline and one between 2 points of its hole, which nothing
+        // joins: the travel from the first to the second finds no way, and the needle jumps to the second.
+        let part = fixture::frame();
+        let lines = [vec![p(0.0, 0.5), p(10.0, 0.5)], vec![p(4.0, 2.0), p(6.0, 2.0)]];
+        let (runs, warnings) = sewn(&part, &lines, &Given { travel: TRAVEL, angle: 0.0, skip_last: false });
+        assert_eq!(runs.len(), 2, "the needle jumps once");
+        assert!(lines[1].contains(&runs[1].points[0]), "{:?}", runs[1].points);
+        assert_eq!(warnings.iter().map(|d| d.code).collect::<Vec<_>>(), [Code::InternalCheckFailed]);
     }
 
     #[test]

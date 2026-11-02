@@ -155,10 +155,7 @@ pub fn top_path(region: &Region, circular: &Circular, meter: &mut Meter) -> Resu
                 Spiral::Pieces(pieces) => pieces.into_iter().map(|piece| piece.points).collect(),
             };
             for line in &lines {
-                segments.extend(line.windows(2).filter_map(|side| match *side {
-                    [start, end] => Some(Segment { start, end }),
-                    _ => None,
-                }));
+                segments.extend(line.iter().zip(line.iter().skip(1)).map(|(&start, &end)| Segment { start, end }));
             }
         }
     }
