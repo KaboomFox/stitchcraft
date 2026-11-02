@@ -112,10 +112,10 @@ identical to Ink/Stitch's SVG attributes because that is the interoperability co
 | Tatami fill (underlay, pull compensation, staggers, gap fill, underpath travel) | P1 | M5 |
 | VectorCraft plug-in (ABI v1), export from `.vectorcraft`, compatibility gate, and the plug-in features VectorCraft added from 0.14 (exports from File › Export, labelled dialogs, design settings and a machine for each document, and the tools filter) | P1 | M6 |
 | Zigzag/E/S stitches, contour, meander, circular fill | P2 | M7 |
-| Image to embroidery: stitch types chosen by width, overlaps, sewing order, VectorCraft's Auto effect | P2 | M13, between M7.5 and M7.6 |
+| Image to embroidery: stitch types chosen by width, overlaps, sewing order, VectorCraft's Auto effect | P2 | M13, after M7.5 |
 | Ink/Stitch SVG import (attributes, commands, clones) and differential testing | P2 | M8 |
-| Lettering in embroidery fonts, and text in pictures set again as lettering | P3 | M14 |
 | Guided, gradient, ripple, tartan, cross stitch; auto-run/auto-satin | P3 | M10 |
+| Lettering in embroidery fonts, and text in pictures set again as lettering | P3 | M14 |
 | EXP, JEF, VP3, XXX, U01 formats; thread catalogues | P3 | M11 |
 | 1.0 hardening, translations, release automation | — | M12 |
 | VectorCraft plug-in features still proposed upstream (RFC), for previews drawn as overlays, heavy live effects and the objects beside a live effect | after 1.0 | M9, last |

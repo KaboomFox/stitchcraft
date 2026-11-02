@@ -50,6 +50,8 @@ about, which can differ from what they do most.
 ## Changes to the roadmap
 
 - **M13, image to embroidery.** It is new, and comes after M7.5 and before M7.6.
+- **M10, more stitch types II.** It moves before M14 (2026-11-01): 35 of the 142 fonts in Ink/Stitch's
+  library use its stitch types, cross stitch in 25 of them.
 - **M14, lettering.** It moves from after 1.0 to after M8, whose SVG adapter reads the files of
   Ink/Stitch's fonts. Its last steps set the text in a picture again as lettering.
 - **Colour sorting for any design.** `--sort-colours` gives a design with settings the order of M13.3. It
