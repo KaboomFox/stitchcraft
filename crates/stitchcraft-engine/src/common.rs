@@ -19,18 +19,25 @@ pub const TRIM_AFTER: &str = "trim_after";
 /// several elements keeps it for the last.
 pub const STOP_AFTER: &str = "stop_after";
 
-/// The key of the longest stitch: a tatami fill sews its rows in stitches that long, and the stitch types
-/// that split stitches split longer ones.
+/// The key of the longest stitch: a tatami fill sews its rows in stitches that long, a contour fill its
+/// rings, and the stitch types that split stitches split longer ones.
 pub const MAX_STITCH_LENGTH: &str = "max_stitch_length_mm";
 
 /// The stitch types with a longest stitch: manual stitch and satin columns, whatever their method, split
-/// longer stitches, and a tatami fill sews its rows in stitches that long.
-const LONGEST: &[StitchType] =
-    &[StitchType::ManualStitch, StitchType::SatinColumn, StitchType::EStitch, StitchType::SStitch, StitchType::SatinZigzag, StitchType::TatamiFill];
+/// longer stitches, a tatami fill sews its rows in stitches that long, and a contour fill its rings.
+const LONGEST: &[StitchType] = &[
+    StitchType::ManualStitch,
+    StitchType::SatinColumn,
+    StitchType::EStitch,
+    StitchType::SStitch,
+    StitchType::SatinZigzag,
+    StitchType::TatamiFill,
+    StitchType::ContourFill,
+];
 
 /// The stitch types that vary at random, and so take a seed: running stitch's random lengths (ripple
 /// stitch sews its lines with them), a satin column's random widths and spacing, whatever its method, and
-/// a tatami fill's random stitch lengths.
+/// a tatami or contour fill's random stitch lengths.
 const RANDOMIZED: &[StitchType] = &[
     StitchType::RunningStitch,
     StitchType::RippleStitch,
@@ -39,6 +46,7 @@ const RANDOMIZED: &[StitchType] = &[
     StitchType::SStitch,
     StitchType::SatinZigzag,
     StitchType::TatamiFill,
+    StitchType::ContourFill,
 ];
 
 params! {
@@ -118,16 +126,16 @@ params! {
     "Longest stitch" {
         /// Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as
         /// its split method says. Empty, a stitch is split only where it is longer than the machine sews. A
-        /// tatami fill sews its rows in stitches this long.
+        /// tatami fill sews its rows in stitches this long, and a contour fill its rings.
         max_stitch_length_mm: OptionalLength = "", label "Longest stitch", range (0.1, 25.0), applies LONGEST,
             defaults [Family::Fill => "4"];
     }
 
     "Random variation" {
         /// Where random variation starts: a running stitch's random lengths, a satin column's random
-        /// widths and spacing, and a tatami fill's random lengths. The same seed gives the same stitches,
-        /// another seed others, and elements alike given one seed vary alike. Empty, each element gets its
-        /// own.
+        /// widths and spacing, and a tatami or contour fill's random lengths. The same seed gives the same
+        /// stitches, another seed others, and elements alike given one seed vary alike. Empty, each element
+        /// gets its own.
         random_seed: Seed = "", label "Random seed", applies RANDOMIZED;
     }
 }
