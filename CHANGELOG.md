@@ -9,7 +9,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   flattened before anything is digitized (`REQ-AUTO-023`), so that a picture traced with its colours
   stacked sews as one traced with its colours abutting.
   - Each automatic area sews what shows of it. The automatic areas drawn after it are taken from it where
-    they overlap it, a hairline that rounding leaves along their edges shows nothing, and one they cover
+    they overlap it. A hairline that rounding leaves along their edges is dropped, and an area they cover
     whole sews nothing (`SC-I0904`). A stacked colour's stitches were
     chosen for its whole shape, most of it hidden. The stacked emblem's gold is a square under the navy, and
     it sewed as a large fill cut down to its 3 bars. It sews them as satin columns 3 mm wide now, as the
@@ -17,8 +17,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - An automatic area wider than its widest satin column somewhere is digitized whole under its details,
     the automatic areas that fill its holes. Its stitches are chosen with those holes closed. It moves back
     in paint order before its details, never across a stop, and is then cut away under them, 0.4 mm inside
-    their edges. A hole whose details don't all sew after it, once every area has moved, stays open. A broad area with details on it split into narrow columns between them, traced either way,
-    as a flower's middle did round its dots, and it is one fill now. An area no wider than a satin column
+    their edges. Once every area has moved, a hole is opened again unless all its details sew after the
+    area. Before, a broad area with details on it split into narrow columns between them, traced either
+    way, as a flower's middle did round its dots, and it is one fill now. An area no wider than a satin column
     everywhere, such as a letter or an outline, keeps its holes.
   - What shows of the picture's background inside the picture is sewn (`REQ-AUTO-009`): its parts that come
     no nearer than 0.5 mm to the sides of the box round the design. A trace that stacks its colours draws a
@@ -28,9 +29,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     area (`REQ-AUTO-007`). A satin column or a line digitized from a stroke still goes over an area, which is
     sewn whole under it.
   - `SC-I0908`, *Layers flattened*, counts the areas that sew only what shows of them and those digitized
-    whole under their details. It names an area whose layers need more work to find than the budget
-    allows, which does without that step: sewn as it is drawn, in its place, when what shows of it can't be
-    found, with its holes open when they can't be found, and in its place when it can't be moved.
+    whole under their details. It also names an area whose layers need more work to find than the budget
+    allows, which then does without that step. Without what shows of it, the area is sewn as it is drawn,
+    in its place. Without its holes, it keeps them open, and without its move, its place.
   - The test pictures `emblem` and `button` (`stitchcraft_engine::testsheets::pictures`) are traced each
     way, as VectorCraft 0.19.0's Image Trace traces such pictures. The emblem, 60 mm wide, sews the same
     shapes with each thread either way: its navy square one tatami fill of 1,848.5 mm², sewn first, its white

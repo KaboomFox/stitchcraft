@@ -113,3 +113,47 @@ fn moving_an_area_back_costs_2_units_for_each_element_to_find_where_it_and_its_d
     };
     assert_eq!(cost(10), cost(0) + 2 * 10);
 }
+
+/// `design` flattened with `budget`, each automatic area with the default settings of the rules.
+fn flattened_with<'d>(design: &'d Design, budget: &Budget) -> Flattened<'d> {
+    let rules: Vec<Option<AutoParams>> = design.elements().iter().map(|_| Some(AutoParams::defaults())).collect();
+    flattened(design, &rules, false, budget)
+}
+
+#[test]
+fn an_area_whose_holes_need_more_work_than_its_budget_allows_keeps_them() {
+    // A square with a round hole of many points, and the disc that fills it drawn after it. Finding that the
+    // disc fills the hole shrinks the disc, the most work of any step: with a unit less, the square keeps its
+    // hole, which is said, and sews as it is drawn.
+    let disc = circle((20.0, 20.0), 10.0, 2_000);
+    let hole: Vec<(f64, f64)> = disc.outline.iter().map(|point| (point.x(), point.y())).collect();
+    let square = part(&[(0.0, 0.0), (40.0, 0.0), (40.0, 40.0), (0.0, 40.0)], &[&hole]);
+    let design = Design::new(vec![automatic("square", &[square]), automatic("disc", &[disc])], DesignSettings::default()).unwrap();
+    let least = least_work(|budget| flattened_with(&design, budget).said);
+    let flat = flattened_with(&design, &Budget { max_work: least - 1, ..Budget::DEFAULT });
+    let [said] = flat.said.as_slice() else { panic!("{:?}", flat.said) };
+    assert_eq!((said.code, said.element.as_ref().map(ElementId::as_str)), (Code::AutoLayers, Some("square")));
+    assert_eq!(said.message, format!("Finding the holes of this area needed more than the work budget of {} units, so it keeps them.", least - 1));
+    assert!(matches!(flat.elements.first(), Some((0, Cow::Borrowed(_)))));
+}
+
+#[test]
+fn an_area_whose_move_needs_more_work_than_its_budget_allows_keeps_its_place_and_its_holes() {
+    // A square drawn after the square that fills its hole, with discs of many points far from both drawn
+    // between them: moving back, it looks at each disc, the most work of any step. With a unit less, it keeps
+    // its place, which is said, and its hole, whose detail sews before it.
+    let mut elements = vec![automatic("detail", &[small()])];
+    elements.extend((0..12_u32).map(|k| automatic(&format!("disc-{k}"), &[circle((100.0 + 10.0 * f64::from(k), 100.0), 3.0, 400)])));
+    elements.push(automatic(
+        "square",
+        &[part(&[(0.0, 0.0), (40.0, 0.0), (40.0, 40.0), (0.0, 40.0)], &[&[(18.0, 18.0), (22.0, 18.0), (22.0, 22.0), (18.0, 22.0)]])],
+    ));
+    let design = Design::new(elements, DesignSettings::default()).unwrap();
+    assert_eq!(flattened_with(&design, &Budget::DEFAULT).elements.first().map(|(index, _)| *index), Some(13), "moved first");
+    let least = least_work(|budget| flattened_with(&design, budget).said);
+    let flat = flattened_with(&design, &Budget { max_work: least - 1, ..Budget::DEFAULT });
+    let [said] = flat.said.as_slice() else { panic!("{:?}", flat.said) };
+    assert_eq!((said.code, said.element.as_ref().map(ElementId::as_str)), (Code::AutoLayers, Some("square")));
+    assert_eq!(said.message, format!("Finding where this area sews needed more than the work budget of {} units, so it keeps its place.", least - 1));
+    assert!(matches!(flat.elements.last(), Some((13, Cow::Borrowed(_)))));
+}

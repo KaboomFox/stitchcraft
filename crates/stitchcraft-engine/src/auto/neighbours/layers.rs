@@ -374,10 +374,11 @@ fn move_back(elements: &[Element], layers: &[Option<Layer>], order: &mut Vec<usi
     let Some(Some(layer)) = layers.get(index) else { return Ok(()) };
     let details: BTreeSet<usize> = layer.closed.iter().flat_map(|hole| hole.details.iter().copied()).collect();
     meter.charge(2 * order.len() as u64)?;
-    let (Some(from), Some(earliest)) = (order.iter().position(|&at| at == index), order.iter().position(|at| details.contains(at))) else {
-        return Ok(());
-    };
-    // Nothing moves across a stop, and an element with a stop after it keeps its place.
+    // An area that sews before its details keeps its place, and so does one that sews nothing, or whose
+    // details sew nothing, as none does. Nothing moves across a stop, and an element with a stop after it
+    // keeps its place.
+    let from = order.iter().position(|&at| at == index).unwrap_or(0);
+    let earliest = order.iter().position(|at| details.contains(at)).unwrap_or(usize::MAX);
     if earliest >= from || elements.get(index).is_none_or(stops_after) {
         return Ok(());
     }

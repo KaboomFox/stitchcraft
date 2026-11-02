@@ -317,40 +317,40 @@ mends it in 4 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.
 
    - **What shows.** The automatic areas drawn after an area are taken from it where they overlap it by
      more than twice the shapes' tolerance, as the order measures an overlap ([Sewing
-     order](#sewing-order)). A part of what is left no wider than that anywhere, measured as a narrow
-     part is, is a hairline that rounding leaves where edges drawn as one meet, as round a disc drawn a
-     hair larger than the disc on it, and shows nothing. An area that they cover whole, or of which only
-     hairlines are left, sews nothing (`SC-I0904`).
+     order](#sewing-order)). Rounding leaves hairlines where edges drawn as one meet, as round a disc drawn
+     a hair larger than the disc on it. A part of what is left that is narrower than twice the shapes'
+     tolerance everywhere, measured as a narrow part is, is such a hairline and is dropped. An area that
+     they cover whole sews nothing (`SC-I0904`), and so does one of which only hairlines are left.
    - **Details.** Where what shows of an area is wider than its widest satin column somewhere
      (`auto_max_satin_width_mm`), the area is digitized whole under its details, the automatic areas that
      fill one of its holes. They fill the hole when what they leave of it is no wider than twice the shapes'
      tolerance, or smaller than the area's smallest area. The hole is closed, and the area's stitches are
      chosen by its width with the hole closed ([Stitch types by width](#stitch-types-by-width)). An area,
      or a part of one, no wider than a satin column everywhere, such as a letter or an outline, keeps its
-     holes, and the shapes in them sew beside it. Closed, it would be a broad fill under them. A speck in a
-     hole is no detail. A hole that only specks fill is left open, and the specks merge into the area round
-     them (step 3), which closes it. Only the parts whose boxes meet the hole's are looked at, so a hole
-     costs the work of the parts near it, not of the whole picture.
+     holes, and the shapes in them sew beside it. Closed, it would be a broad fill under them. Specks in a
+     hole aren't details. When only specks fill a hole, the hole is left open, and the specks merge into the
+     area round them (step 3), which closes it. A hole is filled from the parts whose boxes meet its own, and costs
+     the work of those parts alone.
    - **Moved back.** The area sews before its details, so that they lie on it. It moves back in paint
      order past them, past the automatic areas whose part that shows doesn't overlap it, and past the
      other shapes whose boxes don't come within twice the shapes' tolerance of its box. It never moves
      across a stop, nor when it has a stop after it. The areas move the largest first, so that an area
      moves before the areas inside it. Once all have moved, a hole whose details don't all sew after its
      area is left open: sewn after them, the area would cover them. The area couldn't move back past them,
-     or another area that holds one of them moved back past it. On a red square with a white ring on it
-     and the red showing again as a bullseye in the ring's hole, the ring moves back before the red, the
-     bullseye being its detail, and the red's hole stays open round the ring.
+     or another area that has one of them for a detail moved back past it. On a red square with a white
+     ring on it and the red showing again as a bullseye in the ring's hole, the ring moves back before the
+     red, the bullseye being its detail, and the red's hole is opened again round the ring.
 
    The overlaps (step 4) then cut the area away under its details, 0.4 mm inside their edges. So a trace
    that stacks its colours sews as one whose colours abut. An area whose region changed is given its new
    outline, and one whose region is what it was keeps its path as drawn. `SC-I0908` counts the areas that
    sew only what shows of them and those digitized whole under their details.
 
-   Each area has the work budget to itself for what shows of it, for its holes, for its move and for what
-   it is given to sew. It costs a unit for each shape and each part it looks past, and the work of those
-   near it. An area that needs more work for a step does without it. One that needs more to find what
-   shows of it is sewn as it is drawn, in its place, but for the background, which is left out whole; it
-   fills no hole and is no detail. When finding an area's details needs more work, its holes are kept
+   Each area has the work budget to itself at each step of the flattening, and again when it is given
+   what it sews. It costs a unit for each shape and each part it looks past, and the work of those near
+   it. An area that needs more work for a step does without it. One that needs more to find what shows of
+   it is sewn as it is drawn, in its place, but for the background, which is left out whole. The other
+   areas' holes are found without it. When finding an area's details needs more work, its holes are kept
    open. When its move does, it keeps its place, and the holes whose details then sew before it are opened
    again. When giving it its region does, it is sewn as it is drawn, and isn't counted as digitized whole.
    `SC-I0908` names each. `SC-E0009` names an area whose region the region code fails to join, a bug,
