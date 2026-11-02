@@ -140,6 +140,16 @@ registry! {
     /// later one; a bundle changed by hand, or by an email program, needs the original file.
     BundleUnreadable = "SC-E0012", Error, "Bug-report bundle could not be replayed";
 
+    /// The element is cut to clip paths, its own or those of the groups round it, and they leave nothing of
+    /// it: it lies wholly outside them, they don't overlap one another, or one of them has no area, such as
+    /// an empty clip path or one of text alone. A viewer shows nothing of it, so it sews nothing
+    /// (`REQ-GEN-005`), and a trim or stop after it is left out (`SC-W0505`). Ink/Stitch sews nothing of an
+    /// element outside its clip path too, but sews an element whose clip path has no area whole
+    /// (`DEV-SVG-019`).
+    ///
+    /// Move the element or its clip paths, or delete the element if it is hidden on purpose.
+    ClippedAway = "SC-W0013", Warning, "Clip paths leave nothing of this element; it sews nothing";
+
     /// A parameter's value could not be understood: a number where a word was expected, a choice that
     /// is not one of the parameter's options, or a list with the wrong number of values. The element was
     /// not stitched: guessing could sew something you did not ask for.
@@ -296,6 +306,13 @@ registry! {
     ///
     /// Move the rungs so that each meets both rails away from their ends, or lower `push_compensation_mm`.
     SatinNoSection = "SC-E0216", Error, "Satin column has no section to sew";
+
+    /// A satin column is cut to clip paths, its own or those of the groups round it, which StitchCraft
+    /// doesn't apply to a satin column: it is sewn whole, as Ink/Stitch sews it, where a viewer shows only
+    /// what lies inside them (`REQ-GEN-005`).
+    ///
+    /// Draw the column as far as it should sew, or make it a fill if it should take the clip's shape.
+    SatinClipNotApplied = "SC-W0217", Warning, "Satin column is clipped; sewn whole";
 
     /// A fill is sewn in rows of stitches across each part of its area. A part of 0.21 mm² or less (3
     /// square CSS pixels), a speck about half a millimetre across, is too small for a row, so it is left

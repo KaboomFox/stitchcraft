@@ -71,8 +71,9 @@ fn sewn(path: &Path, max_stitch: Option<Mm>, passes: &RepeatParams, min_stitch: 
 }
 
 /// The subpath's nodes in order, as Ink/Stitch lists them: its start and every segment's end, a node drawn
-/// twice listed twice, and the start again at the end of a closed subpath.
-fn nodes(subpath: &Subpath, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+/// twice listed twice, and the start again at the end of a closed subpath. A manual stitch cut to its clips is
+/// cut along them (`crate::normalize::region::cut`).
+pub(crate) fn nodes(subpath: &Subpath, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
     let mut nodes = vec![subpath.start];
     let closing = subpath.closed.then_some(subpath.start);
     for end in subpath.segments.iter().map(|s| s.end()).chain(closing) {

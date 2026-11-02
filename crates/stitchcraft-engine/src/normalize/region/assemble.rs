@@ -52,6 +52,14 @@ impl Unjoined {
                        size. This is a bug in StitchCraft.";
         Diagnostic::new(Code::InternalCheckFailed, message)
     }
+
+    /// What to say when it happens to the area of an element's clips, or to what they leave of a fill
+    /// (`SC-E0009`): the element is not sewn.
+    pub(crate) fn clip(self) -> Diagnostic {
+        let message = "The edges of this element's clip paths, or of what they leave of it, could not be joined into rings, so it is not \
+                       sewn. This is a bug in StitchCraft.";
+        Diagnostic::new(Code::InternalCheckFailed, message)
+    }
 }
 
 /// The parts whose rings run along the half edges marked in `kept` (indexed as [`Arrangement::ends`]),

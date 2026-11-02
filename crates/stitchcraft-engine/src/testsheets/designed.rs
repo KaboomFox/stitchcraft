@@ -111,6 +111,7 @@ impl Drawing {
             params: params.iter().copied().collect::<ParamSet>(),
             automatic: false,
             hints: Hints::default(),
+            clips: Vec::new(),
         });
         Ok(())
     }
