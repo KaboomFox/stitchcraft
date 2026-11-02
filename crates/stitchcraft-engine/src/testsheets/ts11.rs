@@ -1,11 +1,13 @@
-//! TS-11 — new stitch types (M7), for MC-6. TS-11B sews the new fills: contour fills (M7.7) so far, and
-//! meander and circular fills as M7.8 and M7.9 sew them. TS-11A, the new strokes and satins of M7.2 to
-//! M7.5, is drawn before MC-6.
+//! TS-11 — new stitch types (M7), for MC-6. TS-11B sews the contour fills (M7.7), and circular fills join
+//! it as M7.9 sews them; TS-11C sews the meander fills (M7.8). TS-11A, the new strokes and satins of M7.2
+//! to M7.5, is drawn before MC-6.
 //!
-//! Drawn as a design (`designed`), so the engine sews each sample as a design's element, with Ink/Stitch's
-//! defaults but for what the sample sets: rings the default 0.25 mm apart, over the default underlay. Each
-//! sample is trimmed after, and each row is a thread of its own: the reference machine cuts the thread at a
-//! colour change, and leaves a jump's thread on the fabric (MC-1), which the next row would sew over.
+//! Drawn as designs (`designed`), so the engine sews each sample as a design's element, with Ink/Stitch's
+//! defaults but for what the sample sets, over the default underlay. Each sample is trimmed after, and each
+//! row is a thread of its own: the reference machine cuts the thread at a colour change, and leaves a
+//! jump's thread on the fabric (MC-1), which the next row would sew over.
+//!
+//! TS-11B, contour fills, their rings the default 0.25 mm apart:
 //!
 //! - **Top row**, the 3 strategies on a disc 36 mm across: inner to outer, round a hole 12 mm across set off
 //!   its middle, then a single spiral and a double one.
@@ -16,6 +18,15 @@
 //!
 //! No sample's hole grows to meet its outline at the same ring all round: there the rings that are left
 //! turn on the last bits of the arithmetic, in Ink/Stitch's as in StitchCraft's.
+//!
+//! TS-11C, meander fills:
+//!
+//! - **Top and middle rows**, 6 of the 7 tiles on a disc 36 mm across, each side 2 mm long: the honeycomb,
+//!   squares and triangles, then octagons and squares, hexagons and triangles, and hexagons, squares and
+//!   triangles.
+//! - **Bottom row**: the seventh tile, squares and triangles, on the star; a rectangle of hexagons twice as
+//!   large, sewn as a zigzag kept inside it; and the leaf in hexagons half as large, turned by 30° and
+//!   smoothed by 0.5 mm.
 
 use stitchcraft_core::math::sin_cos;
 
@@ -35,7 +46,7 @@ const HOLE: (f64, (f64, f64)) = (6.0, (4.0, -3.0));
 const STAR: (f64, f64) = (20.0, 8.0);
 
 /// Draws TS-11B.
-pub(super) fn fills() -> Result<Drawing, SheetError> {
+pub(super) fn contours() -> Result<Drawing, SheetError> {
     let (green, blue, red) = (thread(EMERALD_GREEN)?, thread(BLUE)?, thread(RED)?);
     let mut d = Drawing::new("ts11b");
     let [left, middle, right] = ACROSS;
@@ -72,6 +83,38 @@ pub(super) fn fills() -> Result<Drawing, SheetError> {
     let rectangle = polygon(&[(x, y), (x + 36.0, y), (x + 36.0, y + 24.0), (x, y + 24.0)])?;
     d.fill("alternating", vec![rectangle], &red, &with(&[("avoid_self_crossing", "true")]))?;
     d.fill("smoothed", vec![polygon(&leaf((right, bottom), 19.0, 10.0))?], &red, &with(&[("smoothness_mm", "0.5")]))?;
+    Ok(d)
+}
+
+/// The settings every meander sample shares: a meander fill, trimmed after.
+const MEANDER: [(&str, &str); 2] = [("fill_method", "meander_fill"), ("trim_after", "true")];
+
+/// Draws TS-11C.
+pub(super) fn meanders() -> Result<Drawing, SheetError> {
+    let (green, blue, red) = (thread(EMERALD_GREEN)?, thread(BLUE)?, thread(RED)?);
+    let mut d = Drawing::new("ts11c");
+    let [left, middle, right] = ACROSS;
+    let [top, centre, bottom] = DOWN;
+    let with = |own: &[(&'static str, &'static str)]| [&MEANDER[..], own].concat();
+    // Top and middle rows: 6 tiles, a disc each.
+    let rows = [
+        (top, &green, ["honeycomb", "squares", "triangles"]),
+        (centre, &blue, ["octagons-squares", "hexagons-triangles", "hexagons-squares-triangles"]),
+    ];
+    for (y, thread, tiles) in rows {
+        for (x, tile) in ACROSS.into_iter().zip(tiles) {
+            d.fill(tile, vec![round((x, y), DISC)?], thread, &with(&[("meander_pattern", tile)]))?;
+        }
+    }
+    // Bottom row: the seventh tile on the star, a zigzag kept inside a rectangle, and a turned and smoothed
+    // leaf.
+    d.fill("squares-triangles", vec![polygon(&star((left, bottom)))?], &red, &with(&[("meander_pattern", "squares-triangles")]))?;
+    let (x, y) = (middle - 18.0, bottom - 12.0);
+    let rectangle = polygon(&[(x, y), (x + 36.0, y), (x + 36.0, y + 24.0), (x, y + 24.0)])?;
+    let zigzag = with(&[("meander_scale_percent", "200"), ("zigzag_spacing_mm", "0.6"), ("zigzag_width_mm", "2.5"), ("clip", "true")]);
+    d.fill("zigzag", vec![rectangle], &red, &zigzag)?;
+    let turned = with(&[("meander_scale_percent", "50"), ("meander_angle", "30"), ("smoothness_mm", "0.5")]);
+    d.fill("turned", vec![polygon(&leaf((right, bottom), 19.0, 10.0))?], &red, &turned)?;
     Ok(d)
 }
 
@@ -168,5 +211,43 @@ mod tests {
         let (hx, hy) = (left + 4.0, top - 3.0);
         let nearest = sewn("inner-to-outer").iter().map(|&(x, y)| ((x - hx) * (x - hx) + (y - hy) * (y - hy)).sqrt()).fold(f64::INFINITY, f64::min);
         assert!((nearest - 6.0).abs() < 0.1, "{nearest}");
+    }
+
+    #[test]
+    fn ts11c_sews_each_sample_where_its_drawing_puts_it() {
+        // The sheet is planned with its middle on the hoop's: its drawing spans x from the star's left point to the
+        // leaf's tip, and y from the top discs to the star's lower points. Each sample's needle points lie in its
+        // shape's bounds, its underlay reaching to within a millimetre of each side of them.
+        let plan = crate::testsheets::find("TS-11C").unwrap().plan().unwrap();
+        let [left, middle, right] = ACROSS;
+        let [top, centre, bottom] = DOWN;
+        let (star, leaf) = (bounds(star((left, bottom))), bounds(leaf((right, bottom), 19.0, 10.0)));
+        let mid = plan.bounds().unwrap().center();
+        let (dx, dy) = (mid.x() - (star[0] + leaf[2]) / 2.0, mid.y() - (top - DISC + star[3]) / 2.0);
+        let sewn = |name: &str| -> Vec<(f64, f64)> {
+            let element = plan.elements.iter().position(|e| e.as_str() == format!("ts11c:{name}")).unwrap();
+            let mine = |s: &&stitchcraft_plan::Stitch| {
+                s.kind == StitchKind::Normal && s.origin.role != Role::Lock && s.origin.element.map(|e| e.index()) == Some(element)
+            };
+            plan.stitches().filter(mine).map(|s| (s.at.x() - dx, s.at.y() - dy)).collect()
+        };
+        let disc = |x: f64, y: f64| [x - DISC, y - DISC, x + DISC, y + DISC];
+        let expected = [
+            ("honeycomb", disc(left, top)),
+            ("squares", disc(middle, top)),
+            ("triangles", disc(right, top)),
+            ("octagons-squares", disc(left, centre)),
+            ("hexagons-triangles", disc(middle, centre)),
+            ("hexagons-squares-triangles", disc(right, centre)),
+            ("squares-triangles", star),
+            ("zigzag", [middle - 18.0, bottom - 12.0, middle + 18.0, bottom + 12.0]),
+            ("turned", leaf),
+        ];
+        for (name, drawn) in expected {
+            let [x0, y0, x1, y1] = bounds(sewn(name));
+            let inside = x0 > drawn[0] - 0.1 && y0 > drawn[1] - 0.1 && x1 < drawn[2] + 0.1 && y1 < drawn[3] + 0.1;
+            let reaching = x0 < drawn[0] + 1.0 && y0 < drawn[1] + 1.0 && x1 > drawn[2] - 1.0 && y1 > drawn[3] - 1.0;
+            assert!(inside && reaching, "{name}: sewn {:?}, drawn {drawn:?}", [x0, y0, x1, y1]);
+        }
     }
 }

@@ -4,17 +4,17 @@
 
 Tatami fill: rows of running stitches across the fill's area, the needle points of neighbouring rows
 offset so that they never line up. Ink/Stitch's default fill. A contour fill takes its row spacing,
-its expand and its underlay from these settings too.
+its expand and its underlay from these settings too, and a meander fill its expand and its underlay.
 
-Applies to Tatami fill, Contour fill.
+Applies to Tatami fill, Contour fill, Meander fill.
 
 ## Rows
 
 ### `angle`
 
 **Angle.** The direction of the rows, in degrees counter-clockwise from horizontal: 0 sews horizontal rows
-and 90 upright ones. A contour fill's rings follow its outline, and its angle turns only its
-underlay.
+and 90 upright ones. A contour fill's rings follow its outline, and a meander fill's path its tile,
+and their angle turns only their underlay.
 
 - **Accepts:** an angle in degrees
 - **Default:** `0`
@@ -23,7 +23,8 @@ underlay.
 ### `row_spacing_mm`
 
 **Row spacing.** How far apart the rows are, measured square to them, or a contour fill's rings. Rows closer
-together cover the fabric more fully, and pull it in more.
+together cover the fabric more fully, and pull it in more. A meander fill's underlay rows lie 3
+of them apart.
 
 - **Accepts:** a length from 0.1 to 100 mm
 - **Default:** `0.25`
@@ -47,7 +48,7 @@ row is the row spacing from the next.
 ### `expand_mm`
 
 **Expand.** How far past the drawn edge the top rows reach: each part is grown by this much, with round
-corners, before its rows or rings are laid. The thread's pull opens gaps between fills sewn side
+corners, before its rows, rings or path are laid. The thread's pull opens gaps between fills sewn side
 by side, and this closes them. Negative values pull the rows in from the edge.
 
 - **Accepts:** a length from -10 to 10 mm
@@ -76,7 +77,8 @@ Rounded up to an even number, so the needle comes back to where the stretch ende
 the longest stitch (`max_stitch_length_mm`) apart, a `staggers`-th of a stitch along from the
 row before's, so that neighbouring rows never line them up. A fraction draws diagonals that show
 less than whole numbers do. A negative number staggers the rows the other way, and 0 counts as 1,
-which lines every row's points up, as in Ink/Stitch. A contour fill staggers its underlay's rows so.
+which lines every row's points up, as in Ink/Stitch. A contour or meander fill staggers its
+underlay's rows so.
 
 - **Accepts:** a number from -100 to 100
 - **Default:** `4`
@@ -110,9 +112,9 @@ needle travels along the fill's outline, where the travel can show along the edg
 
 ### `fill_underlay`
 
-**Underlay.** Sew underlay before the top rows, or a contour fill's rings: rows of stitches farther apart than
-the top rows, square to them unless set otherwise. It holds the fabric still while the fill is
-sewn and lifts the top rows, so less fabric shows between them.
+**Underlay.** Sew underlay before the top rows, a contour fill's rings or a meander fill's path: rows of stitches
+farther apart than the top rows, square to them unless set otherwise. It holds the fabric still
+while the fill is sewn and lifts the top rows, so less fabric shows between them.
 
 - **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `true`

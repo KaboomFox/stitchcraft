@@ -20,6 +20,7 @@
 
 pub mod contour;
 pub mod manual;
+pub mod meander;
 mod next;
 pub mod passes;
 pub mod pull;
@@ -113,7 +114,7 @@ pub(crate) fn too_small(why: TooSmall, min: f64) -> Diagnostic {
 
 /// A stitch type as a method a settings window offers: its id and its name.
 pub(crate) const fn method(stitch_type: StitchType) -> ChoiceOption {
-    ChoiceOption { id: stitch_type.id(), label: stitch_type.name() }
+    ChoiceOption::new(stitch_type.id(), stitch_type.name())
 }
 
 /// `value` millimetres for a message: at most two decimals, without trailing zeros.

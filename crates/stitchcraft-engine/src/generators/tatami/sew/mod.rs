@@ -184,13 +184,18 @@ fn sewn(
     meter: &mut Meter,
 ) -> Result<Stitched, Exhausted> {
     let (mut tops, mut outlined) = (0, 0);
-    let mut top =
-        |piece: &Polygon, needle: Option<Point>, here: Option<Point>, rng: &mut SplitMix64, meter: &mut Meter, warnings: &mut Vec<Diagnostic>| {
-            let part = Part { polygon: piece, rings: Rings::new(piece, meter)? };
-            let (runs, rowless) = part.sew(&fill.top, needle, here, rng, meter, warnings)?;
-            (tops, outlined) = (tops + 1, outlined + usize::from(rowless));
-            Ok(runs)
-        };
+    let mut top = |piece: &Polygon,
+                   _: &Polygon,
+                   needle: Option<Point>,
+                   here: Option<Point>,
+                   rng: &mut SplitMix64,
+                   meter: &mut Meter,
+                   warnings: &mut Vec<Diagnostic>| {
+        let part = Part { polygon: piece, rings: Rings::new(piece, meter)? };
+        let (runs, rowless) = part.sew(&fill.top, needle, here, rng, meter, warnings)?;
+        (tops, outlined) = (tops + 1, outlined + usize::from(rowless));
+        Ok(runs)
+    };
     let parts = Parts {
         underlay: &fill.underlay,
         inset: fill.inset,
@@ -226,10 +231,11 @@ pub(crate) struct Parts<'f> {
     pub(crate) ends_near: bool,
 }
 
-/// A fill's top over one piece of a part: the runs it sews from the needle (the first point), to end near the
-/// second where it has one, drawing from the generator and charging the meter, and what it says.
-pub(crate) type Top<'t> =
-    dyn FnMut(&Polygon, Option<Point>, Option<Point>, &mut SplitMix64, &mut Meter, &mut Vec<Diagnostic>) -> Result<Vec<Vec<Point>>, Exhausted> + 't;
+/// A fill's top over one piece of a part (the first polygon), the part as drawn being the second: the runs
+/// it sews from the needle (the first point), to end near the second where it has one, drawing from the
+/// generator and charging the meter, and what it says.
+pub(crate) type Top<'t> = dyn FnMut(&Polygon, &Polygon, Option<Point>, Option<Point>, &mut SplitMix64, &mut Meter, &mut Vec<Diagnostic>) -> Result<Vec<Vec<Point>>, Exhausted>
+    + 't;
 
 /// What [`parts_sewn`] sewed: the runs, what was said, and what was counted for the diagnostics that close a
 /// fill's.
@@ -280,7 +286,7 @@ pub(crate) fn parts_sewn(
         let (pieces, gone) = pieces(polygon, parts.expand, &mut warnings, meter)?;
         tally.expand_gone += usize::from(gone);
         for (k, piece) in pieces.iter().enumerate() {
-            let top_runs = top(piece, needle, here, rng, meter, &mut warnings)?;
+            let top_runs = top(piece, polygon, needle, here, rng, meter, &mut warnings)?;
             needle = top_runs.iter().rev().find_map(|run| run.last().copied()).or(needle);
             if k > 0 && parts.force_locks {
                 sewn.extend(top_runs);

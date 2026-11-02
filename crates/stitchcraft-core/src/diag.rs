@@ -163,6 +163,15 @@ registry! {
     /// The Ink/Stitch compatibility page says when each Ink/Stitch parameter is supported.
     ParamUnknown = "SC-W0105", Warning, "Unknown parameter preserved but ignored";
 
+    /// An SVG node's fill and its stroke read the same settings, and some keys mean different things to
+    /// each: a zigzag stroke keeps 2 spacings in `zigzag_spacing_mm`, where a meander fill reads one. A
+    /// value this element can't read but the node's other stitch type can is that one's, so this element
+    /// sews with its own default, as Ink/Stitch does.
+    ///
+    /// The message names the key and the value. To give this element a value of its own, set it on a
+    /// node of its own.
+    ParamForOtherFamily = "SC-I0106", Info, "Value only the node's other stitch type reads; default used here";
+
     /// A satin column's path has no subpath longer than a point, so it has no rails to sew between. The
     /// element was not stitched.
     ///
@@ -402,6 +411,20 @@ registry! {
     /// The message counts the parts. To sew them in a spiral, widen them to more than 2 row spacings for the
     /// single spiral, or 4 for the double, or make `row_spacing_mm` smaller.
     FillContourSpiralTooShort = "SC-I0315", Info, "Contour fill's part too narrow for its spiral; sewn inner to outer";
+
+    /// The meander fill's pattern names one of Ink/Stitch's tiles. Those are drawings that ship with
+    /// Ink/Stitch, which StitchCraft doesn't copy, so the fill wanders through StitchCraft's default tile,
+    /// the honeycomb, instead.
+    ///
+    /// Choose one of StitchCraft's tiles for `meander_pattern` to remove the warning.
+    FillMeanderTileNotOurs = "SC-W0316", Warning, "Meander pattern is one of Ink/Stitch's tiles; sewn with StitchCraft's default tile";
+
+    /// A part of a meander fill is too small for any line of its tile, or none of its lines join up, so it
+    /// has nothing to wander through. It is sewn as a running stitch round its outline. Ink/Stitch stops
+    /// the whole fill with an error there.
+    ///
+    /// The message counts the parts. Make `meander_scale_percent` smaller to fit the tile into them.
+    FillMeanderTooSmall = "SC-W0317", Warning, "Meander fill part too small for its tile; sewn round its outline";
 
     /// A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
     /// one stitch that short would hammer one spot of the fabric and could break the thread. The part is

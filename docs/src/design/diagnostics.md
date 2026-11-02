@@ -97,6 +97,7 @@ another.
 | `SC-E0101` | Error | Parameter has the wrong type or an unknown choice | M3 |
 | `SC-W0102` | Warning | Parameter clamped to its allowed range | M3 |
 | `SC-W0105` | Warning | Unknown parameter preserved but ignored | M3 |
+| `SC-I0106` | Info | Value only the node's other stitch type reads; default used here (as in Ink/Stitch) | M7 |
 | `SC-E0201` | Error | Satin column has no rails (no subpath longer than a point) | M4 |
 | `SC-W0202` | Warning | Satin rails taken as the two longest subpaths (where the subpaths meet does not say) | M4 |
 | `SC-W0203` | Warning | Satin rung does not cross both rails (dangling rung); the rail's nearest point is used | M4 |
@@ -125,6 +126,8 @@ another.
 | `SC-I0313` | Info | Fill drawn twice along its edge; Ink/Stitch fills the part left empty (its repair merges the stretch) | M5 |
 | `SC-W0314` | Warning | Legacy fill sewn as a tatami fill without underlay (Ink/Stitch's legacy fill is not built) | M7 |
 | `SC-I0315` | Info | Contour fill's part too narrow for its spiral; sewn inner to outer (Ink/Stitch fails or sews nothing) | M7 |
+| `SC-W0316` | Warning | Meander pattern is one of Ink/Stitch's tiles; sewn with StitchCraft's default tile | M7 |
+| `SC-W0317` | Warning | Meander fill part too small for its tile; sewn round its outline (Ink/Stitch stops with an error) | M7 |
 | `SC-W0401` | Warning | Path too small for the shortest stitch; skipped | M3 |
 | `SC-W0402` | Warning | Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest | M3 |
 | `SC-W0403` | Warning | Hand-placed stitch shorter than the shortest stitch; point left out | M3 |
