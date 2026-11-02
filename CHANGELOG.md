@@ -7,9 +7,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ### Added
 - M7.7: contour fill, sewn as Ink/Stitch sews it (`REQ-FILL-CON-001` to `REQ-FILL-CON-008`). Rings follow
   each part's outline inward, a row spacing apart, with round, mitred or bevelled corners (`join_style`),
-  and round its holes. They are sewn as one line of running stitches after the tatami fill's underlay:
-  inner to outer, stepping in to the middle and sewing each ring on the way out, or as a single or a
-  double spiral (`contour_strategy`). `avoid_self_crossing` alternates the rings' direction, `clockwise`
+  and round its holes. One line of running stitches sews them after the tatami fill's underlay, in the
+  order `contour_strategy` chooses. Inner to outer steps in to the middle and sews each ring on the way
+  out. Single spiral turns in to the middle, and double spiral turns in on every other ring and back out
+  between them. `avoid_self_crossing` alternates the rings' direction, `clockwise`
   turns them, and `smoothness_mm` rounds inner to outer's path off inside the shape. Bean stitch and
   random lengths work as on a stroke, and the fill's own `repeats` double the path.
   - A part too narrow for its spiral is sewn inner to outer (`SC-I0315`, `DEV-FILL-016`), rings the path

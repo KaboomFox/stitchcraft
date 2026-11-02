@@ -32,9 +32,9 @@ rail. Every satin method then names stitches that lean far along the column, and
 12 mm (`generators::satin`). Since M7.4 an S-stitch sews each pair once across, every other one back the
 other way, and since M7.5 a zigzag satin sews a zigzag between the rails, its pairs at half the spacing.
 Since M7.7 a contour fill sews rings that follow each part's outline inward, offset with the corners its
-`join_style` gives, as one line of running stitches after the tatami fill's underlay, inner to outer or as
-a single or double spiral (`generators::contour`); a tatami fill's travel and its smoothed path share
-`generators::smoothing`.
+`join_style` gives, as one line of running stitches after the tatami fill's underlay, inner to outer or in
+a spiral or double spiral (`generators::contour`). Its smoothed path shares `generators::smoothing` with a
+tatami fill's travel.
 Since M13.1 a shape without settings, read with `--auto`, is digitized automatically before anything else
 (`auto`). A line no wider than the design's narrowest satin stroke runs, a line up to 7 mm wide becomes
 satin columns along its centre line, and a wider line becomes the tatami fill of the area it paints

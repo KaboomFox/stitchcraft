@@ -533,9 +533,9 @@ fill ends where its strategy ends.
 | Requirement | Property |
 |---|---|
 | `REQ-FILL-CON-001` | A disc's rings lie a row spacing apart (± 5 %) down to its middle, every one sewn, clockwise as drawn or the other way with `clockwise` off; the outlines shrunk and the holes grown agree with shapely's buffer within a nanometre, for each join style, on 538 polygons |
-| `REQ-FILL-CON-002` | Inner to outer starts at the outline's point nearest the needle, steps in to the middle first, and ends on the outline a row spacing short of where it began |
+| `REQ-FILL-CON-002` | Inner to outer starts at the outline's point nearest the needle and steps in to the middle first. It ends on the outline a row spacing short of where it began |
 | `REQ-FILL-CON-003` | A smoothed path stays inside the part, out of its holes |
-| `REQ-FILL-CON-004` | A single spiral starts at the outline's point nearest the needle and ends in the middle; a double one ends on the ring inside the outline, near where it began |
+| `REQ-FILL-CON-004` | Single spiral starts at the outline's point nearest the needle and ends in the middle. Double spiral ends on the ring inside the outline, near where it began |
 | `REQ-FILL-CON-005` | A part too narrow for its spiral is sewn inner to outer, with `SC-I0315` |
 | `REQ-FILL-CON-006` | `k` repeats sew 2^(k−1) passes, bean stitch sews each stitch 3 times, and random lengths follow the seed |
 | `REQ-FILL-CON-007` | The underlay's rows come first and the rings go on from them, with no jump |
