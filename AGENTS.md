@@ -17,7 +17,8 @@ changes the code — people and AI agents alike. `CLAUDE.md` points here; there 
 4. Before you push, run the quick checks: `cargo fmt`, `cargo clippy --all-targets -- -D warnings` and the
    tests of the code you changed, and regenerate what the change touches (`cargo xtask docs`, `shots`,
    `api`). CI runs every gate (`cargo xtask ci`) on the pull request, side by side on machines of its own,
-   and its checks decide the merge. Watch them, and run a gate locally only to reproduce a failure.
+   and a pull request merges only once every check passes. Watch the checks, and run a gate locally only
+   to reproduce a failure.
 
 ## Non-negotiables
 
