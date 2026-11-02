@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Ink/Stitch's start and end commands, each a symbol tied to its shape by a connector. 3 red squares 2 mm apart: the first ends at its end command, left of it, and the third starts at its start command, right of it, so the needle jumps to the second and to the third where it would sew straight on. A blue satin column below them starts and ends at its commands, 5 mm below it, where both programs put a needle point. Written for StitchCraft's Ink/Stitch differential cases (conformance L3). -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:inkstitch="http://inkstitch.org/namespace"
+     width="100mm" height="100mm" viewBox="0 0 100 100">
+  <metadata><inkstitch:inkstitch_svg_version>4</inkstitch:inkstitch_svg_version></metadata>
+  <defs>
+    <symbol id="inkstitch_starting_point"><circle r="1"/></symbol>
+    <symbol id="inkstitch_ending_point"><circle r="1"/></symbol>
+  </defs>
+  <rect id="a" x="10" y="10" width="20" height="20" fill="#ed171f"/>
+  <rect id="b" x="32" y="10" width="20" height="20" fill="#ed171f"/>
+  <rect id="c" x="54" y="10" width="20" height="20" fill="#ed171f"/>
+  <path id="column" fill="none" stroke="#0b3d91" stroke-width="0.2" d="M 10,40 L 74,40 M 10,45 L 74,45"
+        inkstitch:satin_column="true"/>
+  <path d="M 5,20 L 10,20" fill="none" stroke="#000" stroke-width="0.1" inkscape:connector-type="polyline"
+        inkscape:connection-start="#a-end" inkscape:connection-end="#a"/>
+  <use id="a-end" xlink:href="#inkstitch_ending_point" x="5" y="20"/>
+  <path d="M 79,20 L 74,20" fill="none" stroke="#000" stroke-width="0.1" inkscape:connector-type="polyline"
+        inkscape:connection-start="#c-start" inkscape:connection-end="#c"/>
+  <use id="c-start" xlink:href="#inkstitch_starting_point" x="79" y="20"/>
+  <path d="M 20,50 L 20,45" fill="none" stroke="#000" stroke-width="0.1" inkscape:connector-type="polyline"
+        inkscape:connection-start="#column-start" inkscape:connection-end="#column"/>
+  <use id="column-start" xlink:href="#inkstitch_starting_point" x="20" y="50"/>
+  <path d="M 60,50 L 60,45" fill="none" stroke="#000" stroke-width="0.1" inkscape:connector-type="polyline"
+        inkscape:connection-start="#column-end" inkscape:connection-end="#column"/>
+  <use id="column-end" xlink:href="#inkstitch_ending_point" x="60" y="50"/>
+</svg>

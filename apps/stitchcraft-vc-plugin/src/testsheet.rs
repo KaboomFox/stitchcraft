@@ -6,7 +6,8 @@
 //! are shapes ([`TestSheet::design`]). The others are drawn stitch by stitch, as plans, which no object
 //! holds, and only `stitch testsheet` writes them. So does TS-11C, a design whose meander fills wander as
 //! their elements' ids draw: the objects drawn have ids of their own, and would wander other ways
-//! ([`TestSheet::drawable`]).
+//! ([`TestSheet::drawable`]). So does TS-16, whose elements start and end at positions, which the filter
+//! would draw as `stitch:start` and `stitch:end` markers grouped with them ([`TestSheet::positioned`]).
 //!
 //! **What it draws.** The sheet's design moved by whole millimetres, so that the middle of its bounds is as
 //! near the middle of the artboard VectorCraft names as that allows: the artboard under the selection, or

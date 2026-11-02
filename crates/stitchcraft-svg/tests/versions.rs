@@ -12,8 +12,8 @@
 mod common;
 
 use common::{svg, usual_stitch, warnings};
-use stitchcraft_core::{Budget, Code};
-use stitchcraft_engine::design::Reading;
+use stitchcraft_core::{Budget, Code, Point};
+use stitchcraft_engine::design::{Hints, Reading};
 use stitchcraft_svg::{Svg, read_with};
 
 /// A drawing in millimetres with the namespaces Ink/Stitch's files declare, `metadata` and then `body`.
@@ -330,4 +330,44 @@ fn req_svg_007_every_update_of_a_file_of_version_1_at_once() {
           and 1 fill with `auto_fill` off is a legacy fill (`fill_method`), as before version 4, and 1 fill set to `auto_fill`, the \
           tatami fill's name before version 4, is a tatami fill (`fill_method`)."]
     );
+}
+
+#[test]
+fn req_svg_007_a_start_or_end_command_of_a_file_before_version_3_works_at_its_connector_s_end() {
+    // Before version 3, a start or end command worked where its connector met the object; Ink/Stitch's update
+    // of a file of version 1 or 2 places it anew there, where it then works. A target command stays at its
+    // symbol, and from version 3 every command does.
+    let body = r##"<defs><symbol id="inkstitch_fill_start"><circle r="1"/></symbol><symbol id="inkstitch_ending_point"><circle r="1"/></symbol>
+          <symbol id="inkstitch_target_point"><circle r="1"/></symbol></defs>
+        <rect id="patch" x="10" y="10" width="40" height="30" fill="red" inkstitch:max_stitch_length_mm="4"/>
+        <path d="M 70,60 L 45,35" inkscape:connection-start="#u1" inkscape:connection-end="#patch"/>
+        <use id="u1" xlink:href="#inkstitch_fill_start" x="70" y="60"/>
+        <path d="M 12,12 C 20,20 50,60 80,80" inkscape:connection-start="#patch" inkscape:connection-end="#u2"/>
+        <use id="u2" xlink:href="#inkstitch_ending_point" x="80" y="80"/>
+        <path d="M 90,5 L 30,25" inkscape:connection-start="#u3" inkscape:connection-end="#patch"/>
+        <use id="u3" xlink:href="#inkstitch_target_point" x="90" y="5"/>"##;
+    let read = |v: &str| {
+        svg(format!(
+            r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                 xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:inkstitch="http://inkstitch.org/namespace"
+                 width="100mm" height="100mm" viewBox="0 0 100 100">{}{body}</svg>"#,
+            version(v)
+        ))
+    };
+    let p = |x: f64, y: f64| Some(Point::new(x, y).unwrap());
+    for v in ["1", "2"] {
+        let old = read(v);
+        let hints = old.design.elements()[0].hints;
+        assert_eq!(hints, Hints { start: p(45.0, 35.0), end: p(12.0, 12.0), target: p(90.0, 5.0) }, "version {v}");
+        assert_eq!(
+            warnings(&old),
+            [format!(
+                "info SC-I0818: The file was saved by an older Ink/Stitch (file version {v}), and is read as Ink/Stitch updates it: 2 start \
+                 and end commands work at their connectors' ends on their objects, as before version 3."
+            )]
+        );
+    }
+    let current = read("3");
+    assert_eq!(current.design.elements()[0].hints, Hints { start: p(70.0, 60.0), end: p(80.0, 80.0), target: p(90.0, 5.0) });
+    assert!(current.warnings.is_empty(), "{:?}", warnings(&current));
 }

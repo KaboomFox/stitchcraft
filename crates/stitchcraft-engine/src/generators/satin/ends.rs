@@ -186,13 +186,19 @@ impl Guides {
 
     /// Where a column whose rails, swapped and turned as they are sewn, are `rails` ends before what `next`
     /// offers: the point of the compensated `outline` nearest the next stitch, found on the rails as
-    /// Ink/Stitch finds it ([`Approach::next_stitch`]). `None` when that is within 5 CSS pixels of the
-    /// line's end.
+    /// Ink/Stitch finds it ([`Approach::next_stitch`]), as [`Guides::end_at`] takes it.
     pub(crate) fn end(&self, next: &Approach, rails: [&[Point]; 2], outline: [&[Point]; 2], meter: &mut Meter) -> Result<Option<Point>, Exhausted> {
         let Some(next_stitch) = next.next_stitch(Own::Lines(&rails), meter)? else { return Ok(None) };
         let Some((end, _)) = nearest_to_point(&outline, next_stitch, meter)? else { return Ok(None) };
+        Ok(self.end_at(end))
+    }
+
+    /// The column's end at `end`, or `None` when that is within 5 CSS pixels of the line's end, where the
+    /// column ends anyway: an end position as the design gives it (`REQ-GEN-001`), or where
+    /// [`Guides::end`] finds it.
+    pub(crate) fn end_at(&self, end: Point) -> Option<Point> {
         let usual = self.line.last().is_some_and(|&last| length(last, end) < END_NEAR);
-        Ok((!usual).then_some(end))
+        (!usual).then_some(end)
     }
 
     /// The pieces of a column with the underlays `layers` and the `top` stitches, started from `start` and

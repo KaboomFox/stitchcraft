@@ -18,7 +18,7 @@ use stitchcraft_plan::{StitchPlan, Thread};
 use super::pictures::Picture;
 use super::sketch::SheetError;
 use crate::common::{STOP_AFTER, TRIM_AFTER};
-use crate::design::{Design, DesignSettings, Element, FillRule, Path, Segment, Shape, Subpath};
+use crate::design::{Design, DesignSettings, Element, FillRule, Hints, Path, Segment, Shape, Subpath};
 use crate::generators::satin::{END_AT_NEAREST_POINT, START_AT_NEAREST_POINT};
 
 /// The settings that sew a sheet's satin column as drawn, from its start to its end whatever is around it,
@@ -89,6 +89,15 @@ impl Drawing {
         }
     }
 
+    /// Start and end positions for the last element drawn so far, as Ink/Stitch's start and end commands
+    /// give them (`REQ-GEN-001`).
+    pub fn positions(&mut self, start: (f64, f64), end: (f64, f64)) -> Result<(), SheetError> {
+        if let Some(last) = self.elements.last_mut() {
+            last.hints = Hints { start: Some(point(start)?), end: Some(point(end)?), target: None };
+        }
+        Ok(())
+    }
+
     fn stroke(&mut self, name: &str, subpaths: Vec<Subpath>, thread: &Thread, params: &[(&str, &str)]) -> Result<(), SheetError> {
         self.add(name, Shape::stroke(Path { subpaths }), thread, params)
     }
@@ -101,6 +110,7 @@ impl Drawing {
             thread: thread.clone(),
             params: params.iter().copied().collect::<ParamSet>(),
             automatic: false,
+            hints: Hints::default(),
         });
         Ok(())
     }

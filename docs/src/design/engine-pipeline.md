@@ -132,8 +132,9 @@ Rules every generator follows:
   That is its first point, or, when it starts at its own nearest point, its shape: a satin column's rails
   or a tatami fill's area. The offer comes from the next element's shape and settings and the design's,
   never its stitches, so nothing waits for a later element. A satin column and a tatami fill start and
-  end by them ([satin](algorithms/satin.md#start-and-end), [fills](algorithms/fills.md#5-parts)), and
-  explicit start and end commands will override them (`REQ-GEN-001`). Each ends near its next stitch, its
+  end by them ([satin](algorithms/satin.md#start-and-end), [fills](algorithms/fills.md#5-parts)). An
+  element's start and end positions, which its design places, take their place for the stitch types that
+  use them, and a fill or a satin column with a start position offers it (`REQ-GEN-001`). Each ends near its next stitch, its
   point nearest the offer as Ink/Stitch's geometry library finds it, a point of one shape inside the
   other's area first (`generators::next`).
 - **Seeded randomness:** each element's generator is seeded from its `random_seed`, one of the settings
@@ -226,8 +227,8 @@ is clear of the needle for an appliqué or a check, and sewing resumes with a ju
 
 | Command | Effect | From |
 |---|---|---|
-| Start / end point | Entry/exit hints for the generator (`REQ-GEN-001`). The VectorCraft adapter reads them from markers named `stitch:start` and `stitch:end`, which it names until then | M8 |
-| Target point | Centre for circular fills and ripple targets. A circular fill turns round its part's centroid until the adapter reads the command | M8, M10 |
+| Start / end point | The element's start and end positions, which take the place of the needle before it and of the next element's offer for fills and satin columns (`REQ-GEN-001`). The SVG adapter reads Ink/Stitch's commands, and the VectorCraft adapter its markers named `stitch:start` and `stitch:end` | M8.4 |
+| Target point | The point a circular fill turns round, in place of its parts' centroids (`REQ-FILL-CIR-008`), and from M10 the ripple stitch's target | M8.4, M10 |
 | Trim after, stop after | `trim_after` and `stop_after` on the element's last group (see the connection table). The SVG adapter reads Ink/Stitch's trim and stop commands as these settings. | M3.8 (engine), M3 (adapter) |
 | Ignore object / ignore layer | The adapter drops the element and says so in the report (`REQ-ASM-004`). The VectorCraft adapter reads them from the name `stitch:ignore` | M3 (SVG), M6 (VectorCraft) |
 | Origin | The design setting `origin` | M3.8 (engine), M8 (adapter) |
