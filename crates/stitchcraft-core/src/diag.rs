@@ -354,6 +354,17 @@ registry! {
     /// The message counts the parts. Set a smaller `fill_underlay_inset_mm`, or turn `fill_underlay` off.
     FillUnderlayInsetShrinksAway = "SC-W0310", Warning, "Fill's underlay inset shrinks a part away; underlay over all of it";
 
+    /// A contour fill sews rings that follow the shape's outline inward, a row spacing apart. Some of its
+    /// rings are not sewn, and fabric shows where they lie. Inner to outer, the default strategy, leaves out
+    /// a ring that no point of the ring round it comes within 2.05 row spacings of, where the shape narrows
+    /// or rings lie far apart at a mitred corner. A spiral follows one chain of rings inward, and leaves out
+    /// the rings off it: the other side where the shape parts, and usually the rings round a hole. Ink/Stitch
+    /// leaves out the same rings without a word.
+    ///
+    /// The message counts the rings left out. Sew the shape with inner to outer, or draw its parts as
+    /// shapes of their own; a round `join_style` keeps the rings a row spacing apart at corners.
+    FillContourRingsLeftOut = "SC-W0311", Warning, "Contour fill leaves out rings it does not reach";
+
     /// A fill's rows reach past its edge by its pull compensation, which makes up for the thread pulling
     /// the fabric in. Ink/Stitch reads a fill's `pull_compensation_mm` or `pull_compensation_percent` below
     /// 0 as 0, so that the rows reach the edge and no less, and so does StitchCraft. A satin column reads
@@ -383,6 +394,14 @@ registry! {
     ///
     /// To sew the fill alike in both, set its fill method to tatami fill and turn `fill_underlay` off.
     FillLegacyAsTatami = "SC-W0314", Warning, "Legacy fill sewn as a tatami fill without underlay";
+
+    /// A contour fill's spiral turns from each ring to the next inside it. A part too narrow for a turn,
+    /// with one ring for the single spiral or 2 or fewer for the double, is sewn inner to outer instead,
+    /// round its rings. Ink/Stitch fails on such a part or sews nothing of it, as its version decides.
+    ///
+    /// The message counts the parts. To sew them in a spiral, widen them to more than 2 row spacings for the
+    /// single spiral, or 4 for the double, or make `row_spacing_mm` smaller.
+    FillContourSpiralTooShort = "SC-I0315", Info, "Contour fill's part too narrow for its spiral; sewn inner to outer";
 
     /// A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
     /// one stitch that short would hammer one spot of the fabric and could break the thread. The part is

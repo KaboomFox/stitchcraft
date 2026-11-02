@@ -22,7 +22,7 @@
 use stitchcraft_core::{Exhausted, Meter, Point};
 
 use super::{Polygon, Unjoined, area};
-use crate::normalize::offset::buffer;
+use crate::normalize::offset::{Corners, buffer_with};
 
 /// The parts of a region, or [`Unjoined`] should the edges of its area not join into rings (a bug).
 pub(crate) type Parts = Result<Vec<Polygon>, Unjoined>;
@@ -61,9 +61,14 @@ pub(crate) fn difference(a: &[Polygon], b: &[Polygon], meter: &mut Meter) -> Res
 /// `parts`, a region, grown by `distance`, or shrunk by a negative distance, with round corners: each part
 /// buffered, and the parts grown joined.
 pub(crate) fn buffered(parts: &[Polygon], distance: f64, meter: &mut Meter) -> Result<Parts, Exhausted> {
+    buffered_with(parts, distance, Corners::ROUND, meter)
+}
+
+/// [`buffered`] with `corners`.
+pub(crate) fn buffered_with(parts: &[Polygon], distance: f64, corners: Corners, meter: &mut Meter) -> Result<Parts, Exhausted> {
     let mut moved = Vec::new();
     for part in parts {
-        let Ok(polygons) = buffer(part, distance, meter)? else { return Ok(Err(Unjoined)) };
+        let Ok(polygons) = buffer_with(part, distance, corners, meter)? else { return Ok(Err(Unjoined)) };
         moved.extend(polygons);
     }
     // Parts shrunk stay apart, as the parts did; parts grown may now overlap.
@@ -88,6 +93,7 @@ mod tests {
     use stitchcraft_core::Budget;
 
     use super::*;
+    use crate::normalize::offset::buffer;
 
     /// The square from `(x0, y0)` to `(x1, y1)` as a part, wound as a part is: clockwise in y-up axes.
     fn square((x0, y0): (f64, f64), (x1, y1): (f64, f64)) -> Polygon {

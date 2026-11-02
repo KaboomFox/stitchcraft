@@ -120,10 +120,11 @@ another.
 | `SC-I0308` | Info | Fill underlay too thin for rows; sewn round the outline (as in Ink/Stitch) | M5 |
 | `SC-W0309` | Warning | Fill's expand shrinks a part away; sewn at its own size (as in Ink/Stitch) | M5 |
 | `SC-W0310` | Warning | Fill's underlay inset shrinks a part away; underlay over all of it (as in Ink/Stitch) | M5 |
-| `SC-W0311` | Warning | Contour fill leaves out rings it does not reach, where its rings part or lie too far apart | M7 |
+| `SC-W0311` | Warning | Contour fill leaves out rings it does not reach, where its rings part or lie too far apart (as in Ink/Stitch, which says nothing) | M7 |
 | `SC-W0312` | Warning | Fill's pull compensation below 0; read as 0 (as in Ink/Stitch) | M5 |
 | `SC-I0313` | Info | Fill drawn twice along its edge; Ink/Stitch fills the part left empty (its repair merges the stretch) | M5 |
 | `SC-W0314` | Warning | Legacy fill sewn as a tatami fill without underlay (Ink/Stitch's legacy fill is not built) | M7 |
+| `SC-I0315` | Info | Contour fill's part too narrow for its spiral; sewn inner to outer (Ink/Stitch fails or sews nothing) | M7 |
 | `SC-W0401` | Warning | Path too small for the shortest stitch; skipped | M3 |
 | `SC-W0402` | Warning | Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest | M3 |
 | `SC-W0403` | Warning | Hand-placed stitch shorter than the shortest stitch; point left out | M3 |

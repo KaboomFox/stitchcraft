@@ -7,6 +7,7 @@
 
 use stitchcraft_core::Point;
 
+use crate::design::Join;
 use crate::normalize::region::{Polygon, geom};
 
 /// A part with the outline `outline` and the holes `holes`, each a ring of corners, wound as a region winds
@@ -26,8 +27,8 @@ pub(crate) fn part(outline: &[(f64, f64)], holes: &[&[(f64, f64)]]) -> Polygon {
 /// their coordinates).
 pub(crate) struct Words<'a>(pub(crate) std::str::SplitWhitespace<'a>);
 
-impl Words<'_> {
-    pub(crate) fn word(&mut self) -> &str {
+impl<'a> Words<'a> {
+    pub(crate) fn word(&mut self) -> &'a str {
         self.0.next().unwrap()
     }
     pub(crate) fn number(&mut self) -> f64 {
@@ -45,6 +46,17 @@ impl Words<'_> {
     }
     pub(crate) fn polylines(&mut self) -> Vec<Vec<Point>> {
         (0..self.count()).map(|_| self.polyline()).collect()
+    }
+    /// A join as the oracles write it: `mitre`, `round` or `bevel`, then shapely's mitre limit, which only
+    /// a mitre keeps.
+    pub(crate) fn join(&mut self) -> Join {
+        let name = self.word();
+        let limit = self.number();
+        match name {
+            "mitre" => Join::Miter { limit },
+            "round" => Join::Round,
+            _ => Join::Bevel,
+        }
     }
 }
 
