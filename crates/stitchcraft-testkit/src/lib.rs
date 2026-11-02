@@ -1,6 +1,9 @@
 //! Test support for StitchCraft: fixtures, property-test strategies, conformance metrics and invariant
 //! assertions. A dev-dependency only (`cargo xtask layers` enforces it).
 //!
+//! - [`degenerate`]: the degenerate corpus, the paths that every stitch type must survive: points, lines of
+//!   no length, rings of no area, hair-thin and self-touching shapes, rings twice over, and a path of 10⁶
+//!   points.
 //! - [`designs`]: small designs for the engine's cases, and a plan's shape at a glance.
 //! - [`satins`]: satin columns sewn as an element is, and their needle points read back in pairs.
 //! - [`plans`]: canonical stitch plans behind the format golden files.
@@ -26,6 +29,7 @@
 // Test support may unwrap and panic: a failing assertion is the point of a test.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+pub mod degenerate;
 pub mod designs;
 pub mod equivalence;
 pub mod fuzz;

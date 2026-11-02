@@ -28,6 +28,11 @@ reads back each element's needle points, a satin column's rungs and the jump thr
 Ink/Stitch differential can sew a test sheet in both programs. Its tests read the file as XML, the one use of
 the dev-dependency `roxmltree`.
 
-**Status:** grows with the milestones M1 to M5 and M13. Design: `docs/src/design/conformance.md`.
+**Since M7:** `degenerate` holds the degenerate corpus, which the engine's `tests/degenerate.rs` runs
+through every stitch type. Among its shapes are points and lines of no length, rings of no area, hair-thin
+and self-touching shapes, rings twice over, rails that cross, a square near the edge of where a design may
+lie, and a path of 10⁶ points. Its `random` strategy draws paths on a coarse grid, where points coincide and lie in line often.
+
+**Status:** grows with the milestones M1 to M5, M7 and M13. Design: `docs/src/design/conformance.md`.
 
 Tests may unwrap and panic; this crate opts out of the no-panic lints at its root.
