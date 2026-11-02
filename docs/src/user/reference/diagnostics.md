@@ -784,9 +784,11 @@ hooping (most machines refuse the file). A design that fits the hoop can still r
 where it is placed: its origin, which goes to the hoop's centre, can lie far from its middle, and
 its stop position, where the frame goes before each stop, can lie outside the hoop.
 
-If the message says the design fits when turned 90 degrees, rotate it. Otherwise scale it down,
-or split it into parts that are sewn in separate hoopings. Where it reaches past the edge from
-where it is placed, move its origin nearer its middle, or its stop position nearer the design.
+If the message says the design fits when turned 90 degrees, rotate it, or have the machine file
+turn it: Ink/Stitch's rotate on export, or Turn on export in StitchCraft's Design Settings filter.
+Otherwise scale it down, or split it into parts that are sewn in separate hoopings. Where it reaches
+past the edge from where it is placed, move its origin nearer its middle, or its stop position nearer
+the design.
 
 ## SC-W0702
 
