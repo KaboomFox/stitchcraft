@@ -34,7 +34,20 @@ params! {
         /// How many times to go back and forth over each stitch: 1 sews every stitch three times (there,
         /// back and there again), 2 five times. Several numbers separated by spaces are taken in turn along
         /// the stitches: "1 0" makes every other stitch bold.
-        bean_stitch_repeats: CountList = "0", label "Bean stitch", range (0, 10);
+        bean_stitch_repeats: CountList = "0", label "Bean stitch", range (0, 10),
+            applies &[StitchType::RunningStitch, StitchType::RippleStitch, StitchType::ZigzagStitch, StitchType::ManualStitch, StitchType::ContourFill];
+    }
+}
+
+params! {
+    /// Repeats of a fill sewn as one path: each repeat sews everything sewn so far again, the other way
+    /// round, as Ink/Stitch repeats a contour fill.
+    pub struct FillRepeatParams for &[StitchType::ContourFill];
+
+    "Repeats" {
+        /// How many times to sew the fill's path, doubling each time: 2 sews it there and back, 3 there and
+        /// back twice, 4 four times. Each repeat sews everything sewn so far again, the other way round.
+        repeats: Count = "1", label "Repeats", range (1, 8);
     }
 }
 
@@ -93,6 +106,20 @@ pub fn sew(run: &[Point], repeats: u32, beans: &[u32], turn: Turn, meter: &mut M
         }
     }
     Ok(out)
+}
+
+/// `run` sewn over as `repeats` doubles it, as Ink/Stitch repeats a fill sewn as one path: each repeat
+/// after the first adds everything sewn so far again, reversed for the second, fourth and every other
+/// repeat, so that `repeats` sews `2^(repeats − 1)` passes, each the other way from the one before. A stitch
+/// for each point added.
+pub fn doubled(run: Vec<Point>, repeats: u32, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+    let mut sewn = run;
+    for repeat in 1..repeats.max(1) {
+        made(meter, sewn.len())?;
+        let again: Vec<Point> = if repeat % 2 == 1 { sewn.iter().rev().copied().collect() } else { sewn.clone() };
+        sewn.extend(again);
+    }
+    Ok(sewn)
 }
 
 #[cfg(test)]

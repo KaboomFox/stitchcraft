@@ -15,16 +15,16 @@
 //! a satin's stitches share (`generators::pull`), and where the route leaves a stretch of rows, rows past its
 //! last fill the gap the fabric can open there (`gaps`).
 
-mod clamp;
+pub(crate) mod clamp;
 #[cfg(test)]
 mod fixture;
 mod gaps;
 mod graph;
-mod rings;
+pub(crate) mod rings;
 mod route;
 pub mod rows;
 pub mod sew;
-mod sides;
+pub(crate) mod sides;
 pub mod stitches;
 mod travel;
 mod underpath;
@@ -37,39 +37,45 @@ use crate::generators::tatami::rows::Grid;
 use crate::generators::tatami::sew::{Fill, Layer, Pull, Travel};
 use crate::generators::tatami::stitches::Stitching;
 
-/// The stitch types a tatami fill's settings apply to.
+/// The stitch types a tatami fill's own settings apply to.
 const TATAMI: &[StitchType] = &[StitchType::TatamiFill];
+
+/// The stitch types its rows, its expand and its underlay apply to: a contour fill takes them as Ink/Stitch's
+/// does, sewing its rings the row spacing apart over the part expanded, after the same underlay.
+const TATAMI_AND_CONTOUR: &[StitchType] = &[StitchType::TatamiFill, StitchType::ContourFill];
 
 params! {
     /// Tatami fill: rows of running stitches across the fill's area, the needle points of neighbouring rows
-    /// offset so that they never line up. Ink/Stitch's default fill.
-    pub struct TatamiParams for TATAMI;
+    /// offset so that they never line up. Ink/Stitch's default fill. A contour fill takes its row spacing,
+    /// its expand and its underlay from these settings too.
+    pub struct TatamiParams for TATAMI_AND_CONTOUR;
 
     "Rows" {
         /// The direction of the rows, in degrees counter-clockwise from horizontal: 0 sews horizontal rows
-        /// and 90 upright ones.
+        /// and 90 upright ones. A contour fill's rings follow its outline, and its angle turns only its
+        /// underlay.
         angle: Angle = "0", label "Angle";
 
-        /// How far apart the rows are, measured square to them. Rows closer together cover the fabric more
-        /// fully, and pull it in more.
+        /// How far apart the rows are, measured square to them, or a contour fill's rings. Rows closer
+        /// together cover the fabric more fully, and pull it in more.
         row_spacing_mm: Length = "0.25", label "Row spacing", range (0.1, 100.0);
 
         /// The spacing of the last rows, for a fill that fades: from the first row the spacing changes
         /// steadily towards it, reaching it the part's height away, in each part of the fill. Empty, every
         /// row is the row spacing from the next.
-        end_row_spacing_mm: OptionalLength = "", label "End row spacing", range (0.1, 100.0),
+        end_row_spacing_mm: OptionalLength = "", label "End row spacing", range (0.1, 100.0), applies TATAMI,
             origin Origin::InkStitchDeviates { deviation: "DEV-FILL-003" };
 
         /// How far past the drawn edge the top rows reach: each part is grown by this much, with round
-        /// corners, before its rows are laid. The thread's pull opens gaps between fills sewn side by side,
-        /// and this closes them. Negative values pull the rows in from the edge.
+        /// corners, before its rows or rings are laid. The thread's pull opens gaps between fills sewn side
+        /// by side, and this closes them. Negative values pull the rows in from the edge.
         expand_mm: Length = "0", label "Expand", range (-10.0, 10.0);
 
         /// Rows sewn again where the fill leaves a stretch of more than 3 rows for another: that many rows
         /// past the stretch's last row, back and forth, before the needle travels on. The rows on the far
         /// side are sewn later, and the fabric between can be pulled apart by then; these close the gap.
         /// Rounded up to an even number, so the needle comes back to where the stretch ended.
-        gap_fill_rows: Count = "0", label "Gap-filling rows", range (0, 100);
+        gap_fill_rows: Count = "0", label "Gap-filling rows", range (0, 100), applies TATAMI;
     }
 
     "Stitches" {
@@ -77,24 +83,24 @@ params! {
         /// the longest stitch (`max_stitch_length_mm`) apart, a `staggers`-th of a stitch along from the
         /// row before's, so that neighbouring rows never line them up. A fraction draws diagonals that show
         /// less than whole numbers do. A negative number staggers the rows the other way, and 0 counts as 1,
-        /// which lines every row's points up, as in Ink/Stitch.
+        /// which lines every row's points up, as in Ink/Stitch. A contour fill staggers its underlay's rows so.
         staggers: Number = "4", label "Staggers", range (-100.0, 100.0);
 
         /// Leave out the needle point at the end of each row. It lies close to the start of the next row,
         /// and leaving it out lowers the stitch count and the density along the fill's edge.
-        skip_last: Toggle = "false", label "Skip last stitch";
+        skip_last: Toggle = "false", label "Skip last stitch", applies TATAMI;
     }
 
     "Travel" {
         /// Travel between rows runs inside the fill, under rows sewn after it, which hide it. Off, the
         /// needle travels along the fill's outline, where the travel can show along the edge.
-        underpath: Toggle = "true", label "Underpath";
+        underpath: Toggle = "true", label "Underpath", applies TATAMI;
     }
 
     "Underlay" {
-        /// Sew underlay before the top rows: rows of stitches farther apart than the top rows, square to
-        /// them unless set otherwise. It holds the fabric still while the fill is sewn and lifts the top
-        /// rows, so less fabric shows between them.
+        /// Sew underlay before the top rows, or a contour fill's rings: rows of stitches farther apart than
+        /// the top rows, square to them unless set otherwise. It holds the fabric still while the fill is
+        /// sewn and lifts the top rows, so less fabric shows between them.
         fill_underlay: Toggle = "true", label "Underlay";
 
         /// The direction of the underlay's rows, in degrees counter-clockwise from horizontal. Several

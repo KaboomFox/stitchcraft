@@ -39,11 +39,10 @@ use super::route::Node;
 use super::rows::{Grid, axes, rows};
 use super::sides::Sides;
 use super::travel::{search, way_to};
-use crate::generators::running::along_line;
 use crate::normalize::near::{Snap, apart, key};
 use crate::normalize::region::Polygon;
 use crate::normalize::region::geom::{Hit, hit};
-use crate::normalize::stroke::distance_to_segment;
+use crate::normalize::simplify::simplify;
 
 /// CSS pixels to a millimetre: Ink/Stitch weighs travel in pixels.
 const PX_PER_MM: f64 = 1.0 / MM_PER_SVG_PX;
@@ -63,12 +62,6 @@ const OFF_RING: f64 = 0.1;
 /// Crossings nearer each other than this, in millimetres, are one: 0.005 px, within which Ink/Stitch snaps
 /// the square lines to the diagonal ones.
 const SNAP: f64 = 0.005 * MM_PER_SVG_PX;
-/// How long, in millimetres, the stitches are that a way is cut into before it is smoothed (10 px), and how
-/// far they may stray from it (4 px): Ink/Stitch's, for a smoothness of 2.
-const SMOOTH_LENGTH: f64 = 10.0 * MM_PER_SVG_PX;
-const SMOOTH_TOLERANCE: f64 = 4.0 * MM_PER_SVG_PX;
-/// How many times a way's corners are cut.
-const SMOOTHING_ROUNDS: usize = 5;
 
 /// An edge travel may follow: its ends, what it costs, and whether a sewn row has closed it.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -364,65 +357,9 @@ fn closing(
     Ok(closes)
 }
 
-/// `ring` simplified by Douglas and Peucker's rule within `tolerance`: its first and last points stay, and
-/// between 2 that stay, the point farthest from the line between them, the first of equally far ones, stays
-/// if it lies farther than `tolerance` from it, and so on. One unit of `meter` for each point looked at.
-fn simplify(ring: &[Point], tolerance: f64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
-    let last = ring.len().saturating_sub(1);
-    let mut keep = vec![false; ring.len()];
-    for end in [0, last] {
-        if let Some(slot) = keep.get_mut(end) {
-            *slot = true;
-        }
-    }
-    let mut spans = vec![(0, last)];
-    while let Some((i, j)) = spans.pop() {
-        let (Some(&a), Some(&b)) = (ring.get(i), ring.get(j)) else { continue };
-        let mut farthest: Option<(usize, f64)> = None;
-        for (k, &p) in ring.iter().enumerate().take(j).skip(i + 1) {
-            meter.charge(1)?;
-            let d = distance_to_segment(p, a, b);
-            if farthest.is_none_or(|(_, far)| d > far) {
-                farthest = Some((k, d));
-            }
-        }
-        if let Some((k, _)) = farthest.filter(|&(_, d)| d > tolerance) {
-            if let Some(slot) = keep.get_mut(k) {
-                *slot = true;
-            }
-            spans.push((i, k));
-            spans.push((k, j));
-        }
-    }
-    Ok(ring.iter().zip(&keep).filter(|(_, kept)| **kept).map(|(p, _)| *p).collect())
-}
-
-/// `way` smoothed as Ink/Stitch smooths travel: cut into stitches of 10 pixels within 4 of it, whose
-/// needle points after the first have their corners cut 5 times (a quarter of the way along each side from
-/// each end, Chaikin's rule), and its own ends added back at either end. So the way leaves its start
-/// straight, to the first point after it, and curves from there. One unit of `meter` for each point made.
-pub(crate) fn smooth(way: &[Point], min_stitch: f64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
-    let (Some(&first), Some(&last)) = (way.first(), way.last()) else { return Ok(Vec::new()) };
-    let mut points: Vec<Point> = along_line(way, SMOOTH_LENGTH, SMOOTH_TOLERANCE, min_stitch, meter)?.into_iter().skip(1).collect();
-    for _ in 0..SMOOTHING_ROUNDS {
-        let mut cut = Vec::with_capacity(2 * points.len());
-        cut.extend(points.first().copied());
-        for pair in points.windows(2) {
-            let &[p, q] = pair else { continue };
-            meter.charge(2)?;
-            cut.push(p.lerp(q, 0.25));
-            cut.push(p.lerp(q, 0.75));
-        }
-        cut.extend(points.last().copied());
-        points = cut;
-    }
-    Ok(std::iter::once(first).chain(points).chain(std::iter::once(last)).collect())
-}
-
 #[cfg(test)]
 mod tests {
     use stitchcraft_core::Budget;
-    use stitchcraft_core::math::sin_cos;
 
     use super::*;
     use crate::generators::tatami::fixture::{frame, p, rectangle};
@@ -551,59 +488,6 @@ mod tests {
         let sliver = Polygon { outline: vec![p(0.3, 0.3), p(0.3, 0.5), p(0.6, 0.5), p(0.6, 0.3), p(0.3, 0.3)], holes: Vec::new() };
         assert!(underpath(&sliver, &[], 0.0).is_none());
         assert!(underpath(&frame(), &[], 0.0).is_some());
-    }
-
-    #[test]
-    fn a_ring_is_simplified_by_douglas_and_peucker_s_rule() {
-        let meter = &mut Budget::DEFAULT.meter();
-        // A bump of 0.4 on a 10 long side stays out of a simplification within 0.5, as does one of exactly 0.5,
-        // and one of 0.6 stays in.
-        let ring = |bump: f64| vec![p(0.0, 0.0), p(5.0, -bump), p(10.0, 0.0), p(10.0, 4.0), p(0.0, 4.0), p(0.0, 0.0)];
-        for bump in [0.4, 0.5] {
-            assert_eq!(simplify(&ring(bump), 0.5, meter).unwrap(), [p(0.0, 0.0), p(10.0, 0.0), p(10.0, 4.0), p(0.0, 4.0), p(0.0, 0.0)]);
-        }
-        assert_eq!(simplify(&ring(0.6), 0.5, meter).unwrap(), ring(0.6));
-        assert_eq!(simplify(&[p(1.0, 1.0)], 0.5, meter).unwrap(), [p(1.0, 1.0)]);
-        // Of 2 points as far from the line, 1 from the side from (0, 0) to (10, 0), the first stays, and the
-        // second then lies 0.28 from the line through it.
-        let tie = [p(0.0, 0.0), p(3.0, 1.0), p(5.0, 1.0), p(10.0, 0.0), p(10.0, -5.0), p(0.0, 0.0)];
-        assert_eq!(simplify(&tie, 0.5, meter).unwrap(), [p(0.0, 0.0), p(3.0, 1.0), p(10.0, 0.0), p(10.0, -5.0), p(0.0, 0.0)]);
-        // Each point between 2 that stay is looked at once for each span it lies in: 4, then 1, 2 and 1.
-        let mut counted = Budget::DEFAULT.meter();
-        simplify(&ring(0.6), 0.5, &mut counted).unwrap();
-        assert_eq!(Budget::DEFAULT.max_work - counted.work_left(), 8);
-    }
-
-    #[test]
-    fn a_way_is_smoothed_by_cutting_its_corners_keeping_its_ends() {
-        let meter = &mut Budget::DEFAULT.meter();
-        let way = [p(0.0, 0.0), p(4.0, 0.0), p(4.0, 4.0)];
-        let smoothed = smooth(&way, 0.1, meter).unwrap();
-        assert_eq!((smoothed.first(), smoothed.last()), (Some(&p(0.0, 0.0)), Some(&p(4.0, 4.0))));
-        // Cut into stitches of 10 px (2.6 mm), the first side takes 2 of 2 mm: the way leaves its start
-        // straight to the first needle point after it, and curves from there.
-        assert_eq!(smoothed.get(1), Some(&p(2.0, 0.0)));
-        // The corner is cut: no point comes within 0.2 mm of it, and the points stay within the way's box.
-        assert!(smoothed.iter().all(|q| q.distance(p(4.0, 0.0)) > 0.2), "{smoothed:?}");
-        assert!(smoothed.iter().all(|q| q.x() >= -1e-9 && q.x() <= 4.0 + 1e-9 && q.y() >= -1e-9 && q.y() <= 4.0 + 1e-9));
-        assert!(smooth(&[], 0.1, meter).unwrap().is_empty());
-    }
-
-    #[test]
-    fn a_way_is_cut_within_4_px_of_it_before_it_is_smoothed() {
-        // A hairpin 0.34 mm wide. Stitches of 10 px across its turn would stray 1.15 mm from it, more than
-        // 4 px (1.06 mm), so a point goes on the turn, and the smoothed way passes within 0.3 mm of it.
-        let meter = &mut Budget::DEFAULT.meter();
-        let r = 0.169;
-        let mut way = vec![p(0.0, 3.4845)];
-        for i in 0..=12 {
-            let (sin, cos) = sin_cos(std::f64::consts::PI * f64::from(i) / 12.0);
-            way.push(p(r - r * cos, -r * sin));
-        }
-        way.push(p(2.0 * r, 3.4845));
-        let turn = p(r, -r);
-        let nearest = smooth(&way, 0.3, meter).unwrap().iter().map(|q| q.distance(turn)).fold(f64::INFINITY, f64::min);
-        assert!(nearest < 0.5, "{nearest}");
     }
 
     #[test]

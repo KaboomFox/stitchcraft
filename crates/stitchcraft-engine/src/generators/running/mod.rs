@@ -151,11 +151,36 @@ pub(crate) fn raised(key: &str, length: Mm, min: f64, warnings: &mut Vec<Diagnos
 /// Ink/Stitch sews it, and finalizing merges what is too short (`SC-I0504`). Every point costs work from
 /// `meter`.
 pub(crate) fn along_line(points: &[Point], length: f64, tolerance: f64, min_stitch: f64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
-    let piece = stroke::polyline(points);
-    let (Some(&first), Some(&last)) = (piece.points.first(), piece.points.last()) else { return Ok(Vec::new()) };
-    let mut lengths = Lengths { pattern: vec![length], next: 0, random: None };
-    let along = Along::new(&piece.points, meter)?;
-    Ok(stitch_piece(&along, (&piece.corners, 0), &mut lengths, min_stitch, tolerance, meter)?.unwrap_or_else(|| vec![first, last]))
+    sewn_along(points, Lengths { pattern: vec![length], next: 0, random: None }, 0, tolerance, min_stitch, meter)
+}
+
+/// [`along_line`] at random lengths when `jitter` is set: each stitch drawn from `length` ± `jitter` times
+/// it, and each span started at a random phase, from streams of `rng` that `piece` and the span's place
+/// key, as a stroke's pieces draw theirs. A contour fill sews its path so.
+pub(crate) fn along_line_varied(
+    points: &[Point],
+    (length, tolerance, min_stitch): (f64, f64, f64),
+    jitter: Option<f64>,
+    (rng, piece): (&SplitMix64, usize),
+    meter: &mut Meter,
+) -> Result<Vec<Point>, Exhausted> {
+    let random = jitter.map(|jitter| Random::new(jitter, rng));
+    sewn_along(points, Lengths { pattern: vec![length], next: 0, random }, piece, tolerance, min_stitch, meter)
+}
+
+/// The running stitch along the polyline `points` with `lengths`, its random draws keyed by `piece`.
+fn sewn_along(
+    points: &[Point],
+    mut lengths: Lengths,
+    piece: usize,
+    tolerance: f64,
+    min_stitch: f64,
+    meter: &mut Meter,
+) -> Result<Vec<Point>, Exhausted> {
+    let line = stroke::polyline(points);
+    let (Some(&first), Some(&last)) = (line.points.first(), line.points.last()) else { return Ok(Vec::new()) };
+    let along = Along::new(&line.points, meter)?;
+    Ok(stitch_piece(&along, (&line.corners, piece), &mut lengths, min_stitch, tolerance, meter)?.unwrap_or_else(|| vec![first, last]))
 }
 
 /// A needle penetration: how far along the piece it is, where it is, and whether it is on a corner.

@@ -3,13 +3,15 @@
 //! two). Ripple stitch (M10) sews each of its lines with the same settings. The stitches that join a satin
 //! column's underlays are no longer than the running stitch's length, and its way to its start and from
 //! its end keeps to the running stitch's length and tolerance, which Ink/Stitch stores under the same keys.
-//! A tatami fill's needle travels between its rows in running stitches of the same length and tolerance.
+//! A tatami fill's needle travels between its rows in running stitches of the same length and tolerance,
+//! and a contour fill's between the rows of its underlay; a contour fill's rings keep to the tolerance.
 
 use stitchcraft_params::{Origin, StitchType, params};
 
 /// The stitch types that sew stitches of the running stitch's length and tolerance: running and ripple
 /// stitch along their lines, satin columns, whatever their method, between their underlays and on their
-/// way to their start and from their end, and tatami fills between their rows.
+/// way to their start and from their end, tatami fills between their rows, and contour fills between the
+/// rows of their underlay and, keeping to the tolerance, along their rings.
 const RUNS: &[StitchType] = &[
     StitchType::RunningStitch,
     StitchType::RippleStitch,
@@ -18,11 +20,12 @@ const RUNS: &[StitchType] = &[
     StitchType::SStitch,
     StitchType::SatinZigzag,
     StitchType::TatamiFill,
+    StitchType::ContourFill,
 ];
 
 /// The stitch types whose stitches may vary in length at random: running and ripple stitch along their
-/// lines, and a tatami fill along its rows.
-const RANDOM_LENGTHS: &[StitchType] = &[StitchType::RunningStitch, StitchType::RippleStitch, StitchType::TatamiFill];
+/// lines, a tatami fill along its rows and a contour fill along its rings.
+const RANDOM_LENGTHS: &[StitchType] = &[StitchType::RunningStitch, StitchType::RippleStitch, StitchType::TatamiFill, StitchType::ContourFill];
 
 params! {
     /// Running stitch: single stitches along the path, for outlines, details and travel.
@@ -36,7 +39,8 @@ params! {
         running_stitch_length_mm: LengthList = "2.5", label "Stitch length", range (0.1, 25.0), applies RUNS;
 
         /// How far a stitch may stray from a curve. A smaller tolerance follows curves more closely, with
-        /// more and shorter stitches. A satin column's way to its start and from its end keeps to it too.
+        /// more and shorter stitches. A satin column's way to its start and from its end keeps to it too, as
+        /// do a contour fill's rings.
         running_stitch_tolerance_mm: Length = "0.2", label "Curve tolerance", range (0.01, 5.0), applies RUNS,
             origin Origin::InkStitchDeviates { deviation: "DEV-SAT-006" };
 
@@ -46,8 +50,8 @@ params! {
         enable_random_stitch_length: Toggle = "false", label "Random stitch length", applies RANDOM_LENGTHS;
 
         /// How much each stitch may be longer or shorter than the stitch length, in percent of it. A tatami
-        /// fill's stitch length is its longest stitch. Where the random lengths start is the element's
-        /// `random_seed`.
+        /// or contour fill's stitch length is its longest stitch. Where the random lengths start is the
+        /// element's `random_seed`.
         random_stitch_length_jitter_percent: Percent = "10", label "Length variation", range (0.0, 100.0), applies RANDOM_LENGTHS,
             when enable_random_stitch_length == "true";
     }

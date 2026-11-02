@@ -75,7 +75,7 @@
 use std::collections::BTreeSet;
 
 use stitchcraft_core::rng::SplitMix64;
-use stitchcraft_core::units::at_least;
+use stitchcraft_core::units::{MM_PER_SVG_PX, at_least};
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Meter, Point};
 
 use super::clamp::clamp;
@@ -86,14 +86,18 @@ use super::route::{Route, Step, route};
 use super::rows::{Segment, rows};
 use super::stitches::{Stitching, row_points};
 use super::travel::{Network, between};
-use super::underpath::{Underpath, smooth};
+use super::underpath::Underpath;
 use crate::generators::pull::offset;
 use crate::generators::running::along_line;
+use crate::generators::smoothing::smooth;
 use crate::generators::{Approach, Own, Stitched, covers, settled};
 use crate::normalize::near::{key, nearest_pair, nearest_to_point};
 use crate::normalize::offset::buffer;
 use crate::normalize::region::{Polygon, Region, Unjoined};
 use crate::thin::thin;
+
+/// How much the needle's way under the rows is smoothed, in millimetres: Ink/Stitch smooths travel by 2 pixels.
+const TRAVEL_SMOOTHNESS: f64 = 2.0 * MM_PER_SVG_PX;
 
 /// How the needle travels between rows: in stitches this long, within this tolerance of the way, none
 /// shorter than the shortest stitch, in millimetres, and under the rows or along the rings. And how far it
@@ -179,23 +183,93 @@ fn sewn(
     rng: &mut SplitMix64,
     meter: &mut Meter,
 ) -> Result<Stitched, Exhausted> {
-    let parts = in_order(region, needle, meter)?;
-    let end = next.map(|next| next.next_stitch(Own::Area(&region.parts), meter)).transpose()?.flatten();
+    let (mut tops, mut outlined) = (0, 0);
+    let mut top =
+        |piece: &Polygon, needle: Option<Point>, here: Option<Point>, rng: &mut SplitMix64, meter: &mut Meter, warnings: &mut Vec<Diagnostic>| {
+            let part = Part { polygon: piece, rings: Rings::new(piece, meter)? };
+            let (runs, rowless) = part.sew(&fill.top, needle, here, rng, meter, warnings)?;
+            (tops, outlined) = (tops + 1, outlined + usize::from(rowless));
+            Ok(runs)
+        };
+    let parts = Parts {
+        underlay: &fill.underlay,
+        inset: fill.inset,
+        expand: fill.expand,
+        force_locks: fill.force_locks,
+        top: fill.top.travel,
+        ends_near: true,
+    };
+    let sewn = parts_sewn(region, &parts, needle, next, rng, meter, &mut top)?;
+    let mut warnings = sewn.warnings;
+    warnings.extend(too_thin(outlined, tops));
+    warnings.extend(sewn.tally.said());
+    Ok(Stitched { runs: sewn.runs, warnings })
+}
+
+/// What a fill sews over each part of its region but its own top: its underlay's layers over the part shrunk
+/// by `inset`, then its top over the part grown by `expand`, for a tatami fill and a contour fill alike.
+pub(crate) struct Parts<'f> {
+    /// The underlay's layers, in the order they are sewn.
+    pub(crate) underlay: &'f [Layer],
+    /// How far each part is shrunk for its underlay, in millimetres; grown where it is negative.
+    pub(crate) inset: f64,
+    /// How far each part is grown for its top, in millimetres; shrunk where it is negative.
+    pub(crate) expand: f64,
+    /// Whether locks part the element's groups: then each piece of a part's top after its first is a run of
+    /// its own.
+    pub(crate) force_locks: bool,
+    /// The top's travel: the jump length past which a piece starting away from the needle is a run of its
+    /// own, and the shortest stitch the runs are thinned to.
+    pub(crate) top: Travel,
+    /// Whether the top of each part ends near the next part, and the last near the next element: a tatami
+    /// fill's does, a contour fill's ends where its rings end.
+    pub(crate) ends_near: bool,
+}
+
+/// A fill's top over one piece of a part: the runs it sews from the needle (the first point), to end near the
+/// second where it has one, drawing from the generator and charging the meter, and what it says.
+pub(crate) type Top<'t> =
+    dyn FnMut(&Polygon, Option<Point>, Option<Point>, &mut SplitMix64, &mut Meter, &mut Vec<Diagnostic>) -> Result<Vec<Vec<Point>>, Exhausted> + 't;
+
+/// What [`parts_sewn`] sewed: the runs, what was said, and what was counted for the diagnostics that close a
+/// fill's.
+pub(crate) struct PartsSewn {
+    pub(crate) runs: Vec<Vec<Point>>,
+    pub(crate) warnings: Vec<Diagnostic>,
+    pub(crate) tally: Tally,
+}
+
+/// The runs of a fill over `region` as `parts` says, each piece's top sewn by `top`: the parts nearest the
+/// needle first, in each the layers of its underlay in order, each back to where it started, then its top
+/// over each piece of the part grown, from where the last ended. Runs nearer each other than the jump length
+/// go on as one, and each part's runs are thinned to the shortest stitch.
+pub(crate) fn parts_sewn(
+    region: &Region,
+    parts: &Parts,
+    needle: Option<Point>,
+    next: Option<&Approach>,
+    rng: &mut SplitMix64,
+    meter: &mut Meter,
+    top: &mut Top,
+) -> Result<PartsSewn, Exhausted> {
+    let ordered = in_order(region, needle, meter)?;
+    let end = if parts.ends_near { next.map(|next| next.next_stitch(Own::Area(&region.parts), meter)).transpose()?.flatten() } else { None };
     let mut needle = needle;
     let (mut runs, mut warnings) = (Vec::new(), Vec::new());
-    let mut tally = Tally::default();
-    for (i, polygon) in parts.iter().enumerate() {
-        let here = match parts.get(i + 1) {
-            Some(after) => nearest_pair(&rings_of(polygon), &rings_of(after), meter)?.map(|(on, _)| on),
-            None => end,
+    let mut tally = Tally { parts: ordered.len(), ..Tally::default() };
+    for (i, polygon) in ordered.iter().enumerate() {
+        let here = match (parts.ends_near, ordered.get(i + 1)) {
+            (false, _) => None,
+            (true, Some(after)) => nearest_pair(&rings_of(polygon), &rings_of(after), meter)?.map(|(on, _)| on),
+            (true, None) => end,
         };
         let mut sewn = Vec::new();
-        if !fill.underlay.is_empty() {
-            let (pieces, gone) = pieces(polygon, -fill.inset, &mut warnings, meter)?;
+        if !parts.underlay.is_empty() {
+            let (pieces, gone) = pieces(polygon, -parts.inset, &mut warnings, meter)?;
             tally.inset_gone += usize::from(gone);
             for piece in &pieces {
                 let part = Part { polygon: piece, rings: Rings::new(piece, meter)? };
-                for layer in &fill.underlay {
+                for layer in parts.underlay {
                     let (layer_runs, rowless) = part.sew(layer, needle, None, rng, meter, &mut warnings)?;
                     tally.bare += usize::from(rowless);
                     needle = layer_runs.iter().rev().find_map(|run| run.last().copied()).or(needle);
@@ -203,33 +277,26 @@ fn sewn(
                 }
             }
         }
-        let (pieces, gone) = pieces(polygon, fill.expand, &mut warnings, meter)?;
+        let (pieces, gone) = pieces(polygon, parts.expand, &mut warnings, meter)?;
         tally.expand_gone += usize::from(gone);
         for (k, piece) in pieces.iter().enumerate() {
-            let part = Part { polygon: piece, rings: Rings::new(piece, meter)? };
-            let (top_runs, rowless) = part.sew(&fill.top, needle, here, rng, meter, &mut warnings)?;
-            (tally.tops, tally.outlined) = (tally.tops + 1, tally.outlined + usize::from(rowless));
+            let top_runs = top(piece, needle, here, rng, meter, &mut warnings)?;
             needle = top_runs.iter().rev().find_map(|run| run.last().copied()).or(needle);
-            if k > 0 && fill.force_locks {
+            if k > 0 && parts.force_locks {
                 sewn.extend(top_runs);
             } else {
-                append(&mut sewn, top_runs, fill.top.travel.jump);
+                append(&mut sewn, top_runs, parts.top.jump);
             }
         }
         let sewn: Vec<Vec<Point>> = sewn
             .into_iter()
-            .map(|run| thin(run, |a, b| !at_least(a.distance(*b), fill.top.travel.min_stitch), |_| false, |_, _| ()))
+            .map(|run| thin(run, |a, b| !at_least(a.distance(*b), parts.top.min_stitch), |_| false, |_, _| ()))
             .filter(|run| !run.is_empty())
             .collect();
         needle = sewn.iter().rev().find_map(|run| run.last().copied()).or(needle);
         runs.extend(sewn);
     }
-    warnings.extend(too_thin(tally.outlined, tally.tops));
-    warnings.extend(underlay_too_thin(tally.bare));
-    let parts = parts.len();
-    warnings.extend(shrunk_away(Code::FillExpandShrinksAway, "expand_mm", "its top rows are", tally.expand_gone, parts));
-    warnings.extend(shrunk_away(Code::FillUnderlayInsetShrinksAway, "fill_underlay_inset_mm", "its underlay is", tally.inset_gone, parts));
-    Ok(Stitched { runs, warnings })
+    Ok(PartsSewn { runs, warnings, tally })
 }
 
 /// The segments of the top rows of the tatami `fill` over `region`, each part grown by its `expand` as
@@ -246,17 +313,28 @@ pub fn top_rows(region: &Region, fill: &Fill, meter: &mut Meter) -> Result<Vec<S
     Ok(segments)
 }
 
-/// What sewing a fill counted, for its diagnostics.
+/// What sewing a fill's parts counted, for the diagnostics that close its own.
 #[derive(Default)]
-struct Tally {
-    /// The pieces sewn with top rows, and those of them that found no row and went round the outline.
-    tops: usize,
-    outlined: usize,
+pub(crate) struct Tally {
+    /// The parts sewn.
+    parts: usize,
     /// The layers of underlay that found no row.
     bare: usize,
     /// The parts that `expand` and that `inset` left nothing of.
     expand_gone: usize,
     inset_gone: usize,
+}
+
+impl Tally {
+    /// What the counts say: `SC-I0308` for the layers of underlay with no row, then `SC-W0309` and `SC-W0310`
+    /// for the parts `expand_mm` and `fill_underlay_inset_mm` shrank away.
+    pub(crate) fn said(&self) -> impl Iterator<Item = Diagnostic> {
+        let parts = self.parts;
+        underlay_too_thin(self.bare)
+            .into_iter()
+            .chain(shrunk_away(Code::FillExpandShrinksAway, "expand_mm", "its top rows are", self.expand_gone, parts))
+            .chain(shrunk_away(Code::FillUnderlayInsetShrinksAway, "fill_underlay_inset_mm", "its underlay is", self.inset_gone, parts))
+    }
 }
 
 /// The pieces `polygon` grown by `distance` falls into, or `polygon` itself where that leaves nothing, as
@@ -590,7 +668,7 @@ impl Sewing<'_> {
 
     /// A way along the lines, smoothed and kept inside the part.
     fn smoothed(&self, way: &[Point], meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
-        clamp(&smooth(way, self.travel.min_stitch, meter)?, self.rings, meter)
+        clamp(&smooth(way, TRAVEL_SMOOTHNESS, self.travel.min_stitch, meter)?, self.rings, meter)
     }
 
     /// The row `step` sews, between its segment's ends lengthened by the pull compensation, from the end the
