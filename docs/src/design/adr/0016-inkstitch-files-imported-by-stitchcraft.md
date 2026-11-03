@@ -82,7 +82,9 @@ What was checked, on 2026-11-02, in VectorCraft's source at `v0.17.0`, `v0.18.0`
   P7 intends. `stitch export` names those objects instead of sewing them by settings it could read
   only in part.
 - M8.12 comes after M8.7 and M8.10, so that the clip groups it writes sew cut and its clones are what
-  the SVG adapter reads of them. It gives Ink/Stitch's target point a name in VectorCraft documents,
+  the SVG adapter reads of them. On 2026-11-02 it moved after 1.0, as a nice to have: `stitch plan`
+  already sews an Ink/Stitch file, and the document matters only for a design edited further in
+  VectorCraft. It gives Ink/Stitch's target point a name in VectorCraft documents,
   which have none for it yet, or names the command it leaves out. The writer serves
   `stitch import design.pes` after 1.0 too.
 - Revisit this if VectorCraft gives plug-ins the foreign attributes and its SVG import keeps the
