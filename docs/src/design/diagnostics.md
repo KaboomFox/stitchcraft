@@ -35,6 +35,7 @@ probably not what you want) or `I` (info) + four digits grouped by area:
 | 0700–0799 | Machine profile (hoop, limits) |
 | 0800–0899 | Hosts (SVG, VectorCraft) |
 | 0900 to 0999 | Automatic digitizing ([image to embroidery](image-to-embroidery.md)) |
+| 1000 to 1099 | Routing ([routing tools](routing.md)) |
 
 Codes are never reused. A retired code keeps its page with "retired in vX".
 
@@ -168,6 +169,7 @@ another.
 | `SC-E0817` | Error | VectorCraft test sheet not drawn (in the middle of the artboard, parts of the sheet would lie more than 10 m from the document's origin) | M6 |
 | `SC-I0818` | Info | Ink/Stitch file from an older version, read as Ink/Stitch updates it (the shapes given a default or a setting whose meaning has changed since, such as a fill's 3 mm stitches before its file version 4, counted for each change) | M3 |
 | `SC-E0819` | Error | More than one origin or stop position (Ink/Stitch's `origin` command, or more than one object named `stitch:origin`, 2 or more times, or its `stop_position` command or `stitch:stop-position` in a design that stops: no machine file is written, as Ink/Stitch writes none) | M8 |
+| `SC-E0820` | Error | VectorCraft selection not routed (no selected path has a satin effect of its own, or 2 objects selected mark the route's start, or 2 its end: nothing changes) | M10 |
 | `SC-I0901` | Info | Shapes digitized automatically (`--auto`, or VectorCraft's Auto effect), counted by their stitches (running stitches, satin columns or tatami fills) | M13 |
 | `SC-I0902` | Info | Satin column can't be made; filled (a part of an automatic line that turns more tightly than it is wide, is shorter than a CSS pixel or is a dot its cap draws, or a part of an automatic area whose triangles don't make a column round one of its lines or whose column would be read back otherwise) | M13 |
 | `SC-W0903` | Warning | Line too wide to fill; left out (an automatic line whose filled area would reach more than 10 m from the origin) | M13 |
@@ -176,3 +178,6 @@ another.
 | `SC-W0906` | Warning | Background left out (the lowest shape, an automatic area that covers the whole design under the other shapes, unless it switches `auto_ignore_background` off; what shows of it inside the picture is sewn) | M13 |
 | `SC-I0907` | Info | Elements sewn in an order of their own (automatic elements, and with `--sort-colours` every element, sewn in the order StitchCraft chooses, with the thread changes of each order; an element or an order that needs more work than the budget allows keeps paint order) | M13 |
 | `SC-I0908` | Info | Layers flattened (each automatic area sews what shows of it under the automatic areas drawn over it, and an area wider than a satin column somewhere is digitized whole under the areas that fill its holes, which sew after it) | M13 |
+| `SC-E1001` | Error | Nothing to route (none of the elements given is a satin column the route can take: nothing changes) | M10 |
+| `SC-I1002` | Info | Element left out of the route (a fill, a shape digitized automatically, settings that don't read, rails that can't be made, no length, or a stroke whose first subpath ends where it starts: kept as it is) | M10 |
+| `SC-W1003` | Warning | Piece of a routed satin column may sew otherwise (read back, it has other rails or pairs other points: it is kept) | M10 |

@@ -662,8 +662,9 @@ fn too_far(element: &Element, width: Mm) -> Diagnostic {
         .with_fix(Fix::Hint("Check the line's stroke width.".to_string()))
 }
 
-/// `id` with `#n` after it, shortened as needed to leave room for the `~2` a clash adds.
-fn numbered(id: &ElementId, n: usize) -> Option<ElementId> {
+/// `id` with `#n` after it, shortened as needed to leave room for the `~2` a clash adds: the id of an
+/// element made from the one with `id`, as a route's pieces are too (`crate::route`).
+pub(crate) fn numbered(id: &ElementId, n: usize) -> Option<ElementId> {
     let suffix = format!("#{n}");
     let room = ElementId::MAX_LEN.saturating_sub(suffix.len() + CLAIM_ROOM);
     let mut base = String::new();
