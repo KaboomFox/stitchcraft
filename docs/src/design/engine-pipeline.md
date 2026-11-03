@@ -146,7 +146,9 @@ Rules every generator follows:
   element's start and end positions, which its design places, take their place for the stitch types that
   use them, and a fill or a satin column with a start position offers it (`REQ-GEN-001`). Each ends near its next stitch, its
   point nearest the offer as Ink/Stitch's geometry library finds it, a point of one shape inside the
-  other's area first (`generators::next`).
+  other's area first (`generators::next`). From M10.15 an element in a run of underlays first is
+  generated as 2 layers, and each layer gets its neighbours as an element does
+  ([underlays first](#underlays-first)).
 - **Seeded randomness:** each element's generator is seeded from its `random_seed`, one of the settings
   every stitch type shares. When that is empty, a hash of its id seeds it. A seed replaces the id, as in
   Ink/Stitch. The PRNG is SplitMix64 from `stitchcraft-core` ([determinism](determinism.md)).
@@ -159,7 +161,8 @@ Rules every generator follows:
 - **Roles:** every stitch is tagged by its role. Assembly tags the stitches of groups as top and the lock
   stitches as lock. The jumps between groups are travel. Previews draw the lock stitches apart. A
   generator hands assembly its needle points without roles, so an element's underlay, and the running
-  stitches between its rows, are tagged top as well, until generators tag their own.
+  stitches between its rows, are tagged top as well, until generators tag their own. From M10.15 the
+  stitches of a run's underlays are tagged underlay ([underlays first](#underlays-first)).
 
 Generators are listed in [algorithms](algorithms/).
 
@@ -175,9 +178,39 @@ order stage 0 chose), by `stitchcraft_engine::assemble`.
   in an order chosen for few thread changes, in which a shape still sews after every shape it is drawn
   over, where they overlap by more than rounding leaves. No stage routes elements a host read. M10's
   routing tools write their route into the document, whose paint order is then the route's
-  ([routing tools](routing.md)).
+  ([routing tools](routing.md)). The elements of a run of underlays first keep this order too, with their
+  underlays moved ahead of their top stitches ([below](#underlays-first)).
 - A thread change starts a new colour block (`REQ-ASM-001`). Threads are compared by colour, as
   Ink/Stitch compares them: two names for one colour are one thread, and the block keeps the first.
+
+### Underlays first
+
+From M10.15, consecutive elements that set `underlays_first` sew all their underlays before any of their
+top stitches ([ADR-0018](adr/0018-underlays-first-is-a-setting-of-each-element.md)). The setting is a
+toggle that every stitch type shares, off by default, and StitchCraft's own. Ink/Stitch has no such order.
+
+- **Runs.** The engine finds the runs before stage 3, in the order stage 0 gives. A run is a stretch of
+  consecutive elements that set the toggle and have one thread, compared by colour as above. It ends after
+  an element with `trim_after` or `stop_after`. An element sewn in several threads (M10.5), or skipped
+  for settings that don't read, is in no run. An element that would make a run of one sews as it does
+  without the setting, and a note says why its setting joins nothing.
+- **2 passes.** A run sews its elements' underlays in their order, then their top stitches in the same
+  order. An element without underlay, such as a running stitch or a fill with `fill_underlay` off, sews in
+  the second pass alone. The run's last element keeps its trim or stop after its top stitches.
+- **Layers.** Each element of a run is generated as 2 layers, its underlay and its top, each in its place
+  in the passes. A layer starts near the last needle point sewn before it and ends near what the next
+  layer offers, which is what that layer's element offers ([stage 3](#3-generate)). The element's start
+  position places the start of its first layer, and its end position the end of its top. Its settings are
+  read and its shape built once, and the 2 layers share its work budget. Each layer spends the design's
+  stitches on the needle points it makes. The top stitches take the same random numbers as without the
+  setting, since an underlay draws none.
+- **Joins and roles.** Assembly joins the layers as it joins any 2 groups
+  ([below](#connecting-consecutive-groups)), and tags the needle points of each underlay layer underlay.
+
+The needle goes back from a run's last underlay to its first top stitch, with a jump and its locks where
+that is farther than the jump length. Each run has one thread, so the design's colour changes are those
+it has without the setting. `--sort-colours` moves the elements that set the toggle as it moves any
+element with settings, and the runs are made of the elements its order puts side by side.
 
 ### Connecting consecutive groups
 
