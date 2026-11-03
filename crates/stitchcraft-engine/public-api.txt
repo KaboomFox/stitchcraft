@@ -70,6 +70,8 @@ pub fn stitchcraft_engine::common::CommonParams::from_set_as(&stitchcraft_params
 impl stitchcraft_engine::common::CommonParams
 pub fn stitchcraft_engine::common::CommonParams::jump_length(&self, stitchcraft_core::units::Mm) -> stitchcraft_core::units::Mm
 pub const stitchcraft_engine::common::MAX_STITCH_LENGTH: &str
+pub const stitchcraft_engine::common::MIN_JUMP_STITCH_LENGTH: &str
+pub const stitchcraft_engine::common::MIN_STITCH_LENGTH: &str
 pub const stitchcraft_engine::common::STOP_AFTER: &str
 pub const stitchcraft_engine::common::TRIM_AFTER: &str
 pub mod stitchcraft_engine::design
@@ -512,6 +514,7 @@ pub fn stitchcraft_engine::generators::tatami::TatamiParams::fill(&self, stitchc
 pub fn stitchcraft_engine::generators::tatami::TatamiParams::grid(&self) -> stitchcraft_engine::generators::tatami::rows::Grid
 pub fn stitchcraft_engine::generators::tatami::TatamiParams::stitching(&self, stitchcraft_core::units::Mm, &stitchcraft_engine::generators::running::RunningParams) -> stitchcraft_engine::generators::tatami::stitches::Stitching
 pub fn stitchcraft_engine::generators::tatami::TatamiParams::underlay(&self, stitchcraft_core::units::Mm, stitchcraft_engine::generators::tatami::sew::Travel) -> alloc::vec::Vec<stitchcraft_engine::generators::tatami::sew::Layer>
+pub const stitchcraft_engine::generators::tatami::ANGLE: &str
 pub mod stitchcraft_engine::generators::zigzag
 pub struct stitchcraft_engine::generators::zigzag::ZigzagStrokeParams
 pub stitchcraft_engine::generators::zigzag::ZigzagStrokeParams::stroke_pull_compensation_mm: <stitchcraft_params::kinds::LengthPair as stitchcraft_params::kinds::ParamKind>::Value
@@ -636,12 +639,17 @@ pub stitchcraft_engine::testsheets::SheetError::Plan(stitchcraft_plan::builder::
 pub stitchcraft_engine::testsheets::SheetError::Said(alloc::string::String)
 pub stitchcraft_engine::testsheets::SheetError::Unit(stitchcraft_core::units::UnitError)
 pub stitchcraft_engine::testsheets::SheetError::UnknownThread(u8)
+pub struct stitchcraft_engine::testsheets::Cloned
+pub stitchcraft_engine::testsheets::Cloned::element: stitchcraft_core::element::ElementId
+pub stitchcraft_engine::testsheets::Cloned::map: [f64; 6]
+pub stitchcraft_engine::testsheets::Cloned::of: stitchcraft_core::element::ElementId
 pub struct stitchcraft_engine::testsheets::TestSheet
 pub stitchcraft_engine::testsheets::TestSheet::checks: &'static [&'static str]
 pub stitchcraft_engine::testsheets::TestSheet::id: &'static str
 pub stitchcraft_engine::testsheets::TestSheet::profile: &'static stitchcraft_plan::profile::MachineProfile
 pub stitchcraft_engine::testsheets::TestSheet::title: &'static str
 impl stitchcraft_engine::testsheets::TestSheet
+pub fn stitchcraft_engine::testsheets::TestSheet::clones(&self) -> core::option::Option<core::result::Result<alloc::vec::Vec<stitchcraft_engine::testsheets::Cloned>, stitchcraft_engine::testsheets::SheetError>>
 pub fn stitchcraft_engine::testsheets::TestSheet::design(&self) -> core::option::Option<core::result::Result<stitchcraft_engine::design::Design, stitchcraft_engine::testsheets::SheetError>>
 pub const fn stitchcraft_engine::testsheets::TestSheet::designed(&self) -> bool
 pub fn stitchcraft_engine::testsheets::TestSheet::digitized(&self) -> bool

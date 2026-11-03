@@ -66,6 +66,31 @@ pub(crate) const STROKE_FIRST: &str = "stroke_first";
 /// of the elements the shape makes. The compatibility contract lists them all.
 pub const READ_ATTRIBUTES: &[&str] = &[IGNORE_OBJECT, STROKE_FIRST];
 
+/// A clone's own setting, an attribute of its `<use>` in Ink/Stitch's namespace, which the reader applies to
+/// what the clone shows (`REQ-SVG-013`, `lib/elements/clone.py` at `d59c9ab`). The compatibility contract
+/// lists the same names.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct CloneSetting {
+    /// Its name, Ink/Stitch's.
+    pub name: &'static str,
+    /// What StitchCraft does with it, for the compatibility contract.
+    pub does: &'static str,
+}
+
+/// The clone setting that, off, makes a clone sew nothing.
+pub(crate) const CLONE: &str = "clone";
+/// The clone setting that reverses the angle of the clone's fills.
+pub(crate) const FLIP_ANGLE: &str = "flip_angle";
+/// The clone setting that gives the clone's fills an angle: a fill's own setting of that name.
+pub(crate) use stitchcraft_engine::generators::tatami::ANGLE;
+
+/// A clone's settings, in Ink/Stitch's order.
+pub const CLONE_SETTINGS: [CloneSetting; 3] = [
+    CloneSetting { name: CLONE, does: "applied: off, the clone sews nothing, and is listed (`SC-I0805`)" },
+    CloneSetting { name: ANGLE, does: "applied: the angle of every fill the clone shows, in place of the one the clone turns it to" },
+    CloneSetting { name: FLIP_ANGLE, does: "applied: reverses the angle of every fill the clone shows" },
+];
+
 /// What StitchCraft does with an Ink/Stitch command.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Does {
@@ -258,6 +283,10 @@ pub(crate) struct Found<'a, 'input> {
 pub(crate) struct Tied {
     /// The command.
     pub command: Command,
+    /// The places of its connector and of its symbol's `<use>`, which say whether a clone of a group copies
+    /// the command with what it shows (`crate::document`).
+    pub connector: Place,
+    pub symbol_use: Place,
     /// Its symbol's place: its `<use>` element's `x` and `y`, under the transforms of the use and of the
     /// elements above it but the root, which the reader leaves out.
     pub symbol: Option<V>,
@@ -299,11 +328,6 @@ impl Objects {
     /// The commands tied to `node`, in the order of their connectors in the file.
     pub(crate) fn on(&self, node: Node<'_, '_>) -> &[Tied] {
         self.commands.get(&place(node)).map_or(&[], Vec::as_slice)
-    }
-
-    /// The first command named `name` tied to `node`, as Ink/Stitch takes it.
-    pub(crate) fn first(&self, node: Node<'_, '_>, name: &str) -> Option<Tied> {
-        self.on(node).iter().find(|tied| tied.command.name == name).copied()
     }
 
     /// Whether `node` is the connector of a command, which the command speaks for.
@@ -397,8 +421,8 @@ pub(crate) fn find<'a, 'input>(root: Node<'a, 'input>, ns: Option<&str>, meter: 
     }
     for (connector, start, end) in connectors {
         let (Some(start), Some(end)) = (by_url(Some(start)), by_url(Some(end))) else { continue };
-        let tied = [(start, end), (end, start)].into_iter().find_map(|(symbol, target)| Some((objects.shown_by(symbol)?, target)));
-        if let Some((command, target)) = tied {
+        let tied = [(start, end), (end, start)].into_iter().find_map(|(symbol, target)| Some((objects.shown_by(symbol)?, symbol, target)));
+        if let Some((command, symbol_use, target)) = tied {
             objects.command_connectors.insert(place(connector));
             // The commands that place something are placed; the symbol is at one end of the connector, and
             // the object at the other.
@@ -408,7 +432,8 @@ pub(crate) fn find<'a, 'input>(root: Node<'a, 'input>, ns: Option<&str>, meter: 
             } else {
                 (None, None)
             };
-            objects.commands.entry(place(target)).or_default().push(Tied { command, symbol, on_object });
+            let (connector, symbol_use) = (place(connector), place(symbol_use));
+            objects.commands.entry(place(target)).or_default().push(Tied { command, connector, symbol_use, symbol, on_object });
         }
     }
     Ok(Found { ids, sheets, objects, content, version })
@@ -440,7 +465,7 @@ fn connector_end(connector: Node<'_, '_>, symbol_first: bool, meter: &mut Meter)
 /// The map from `node`'s user units to the root's: the transforms of `node` and of the elements above it,
 /// composed, the root's left out as the reader leaves it out; `None` when one of them doesn't read. A unit of
 /// work per element.
-fn placed(node: Node<'_, '_>, meter: &mut Meter) -> Result<Option<Affine>, Exhausted> {
+pub(crate) fn placed(node: Node<'_, '_>, meter: &mut Meter) -> Result<Option<Affine>, Exhausted> {
     let mut map = Affine::IDENTITY;
     for element in node.ancestors().filter(|n| n.is_element() && n.parent_element().is_some()) {
         meter.charge(1)?;

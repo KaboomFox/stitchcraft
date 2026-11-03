@@ -829,35 +829,39 @@ save it again as plain SVG.
 **Warning** — SVG feature ignored
 
 Part of the SVG uses a feature that StitchCraft does not stitch, so that part is left out or
-simplified: text that is not converted to paths, raster images, clones (`<use>`), nested `<svg>`
-elements, style sheet rules with selectors StitchCraft does not read, or a gradient or pattern used
-as a colour. Values that do not read are named too. A colour that does not read is ignored, as a
-viewer ignores it, and one of Ink/Stitch's design settings keeps its default. A line that `--auto`
-sews across its width, as a satin column or a fill, is as wide as its transforms stretch it on
-average, so a transform that stretches it more one way than the other, and draws it wider one way,
-is named too. So is what StitchCraft does not apply of an Ink/Stitch file: the settings of a group,
-which Ink/Stitch doesn't read either, those of its early versions (`embroider_` attributes), a turn
-on export (`rotate_on_export`) that is not a number, and the updates
-Ink/Stitch would make to a file with its settings and no file version, or from a newer Ink/Stitch,
-which is read as it is. Of its commands, one on an object that is not stitched is named, and so is a
-start, end, target, origin or stop position command whose place doesn't read, an `ignore_layer`
-command in no layer, and a command on a shape digitized automatically (`--auto`), which places where
-its parts start and end. Of clip paths, which cut the shapes they clip,
-what isn't applied is named: text in one, which adds nothing to it, a clip path on a clip path's
-shape, one that isn't a reference, such as a CSS shape, clip paths that name each other in a loop,
-`objectBoundingBox` units on a group, groups in a clip path more than 16 deep, and the root's.
+simplified: text that is not converted to paths, raster images, nested `<svg>` elements, style sheet
+rules with selectors StitchCraft does not read, or a gradient or pattern used as a colour. Values that
+do not read are named too. A colour that does not read is ignored, as a viewer ignores it, and one of
+Ink/Stitch's design settings keeps its default. A line that `--auto` sews across its width, as a satin
+column or a fill, is as wide as its transforms stretch it on average, so a transform that stretches it
+more one way than the other, and draws it wider one way, is named too.
 
-The message names the element and what was done. Convert text and clones to paths in the editor
-(in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.
+So is what StitchCraft does not apply of an Ink/Stitch file: the settings of a group, which Ink/Stitch
+doesn't read either, those of its early versions (`embroider_` attributes), a turn on export
+(`rotate_on_export`) that is not a number, and the updates Ink/Stitch would make to a file with its
+settings and no file version, or from a newer Ink/Stitch, which is read as it is. Of its commands, one
+on an object that is not stitched is named, and so is a start, end, target, origin or stop position
+command whose place doesn't read, an `ignore_layer` command in no layer, a command on a shape digitized
+automatically (`--auto`), which places where its parts start and end, and a start, end or target
+command on a clone (`<use>`), which Ink/Stitch applies to shapes alone. Of a clone, its Ink/Stitch
+settings that change nothing are named, an `angle` that is not an angle, and its angle settings on a
+shape digitized automatically; a clone inside more than 16 others is left out. Of clip paths, which cut
+the shapes they clip, what isn't applied is named: text in one, which adds nothing to it, a clip path
+on a clip path's shape, one that isn't a reference, such as a CSS shape, clip paths that name each
+other in a loop, `objectBoundingBox` units on a group, groups in a clip path more than 16 deep, and the
+root's.
+
+The message names the element and what was done. Convert text to paths in the editor (in Inkscape:
+Path › Object to Path), and give shapes plain colours.
 
 ## SC-I0805
 
 **Info** — Object left out, as the file asks
 
 An object or a layer is left out because the file asks for it: an Ink/Stitch "ignore object" or
-"ignore layer" command, or the object's Ink/Stitch setting `ignore_object`. Designs keep
-templates, placement lines and notes this way, in the drawing but out of the sew-out, and
-Ink/Stitch leaves them out too.
+"ignore layer" command, the object's Ink/Stitch setting `ignore_object`, or a clone's setting `clone`
+turned off. Designs keep templates, placement lines and notes this way, in the drawing but out of the
+sew-out, and Ink/Stitch leaves them out too.
 
 The message names what was left out and why. To stitch it, delete the command's symbol, or turn the
 setting off in Ink/Stitch's parameters.
@@ -901,8 +905,11 @@ stitched up to the error, as SVG viewers draw it), its transform is not valid (i
 everything inside it), it draws nothing, or it lies more than 10 metres from the document's origin,
 beyond what machine files can record (it is skipped). A stroke width, join or miter limit that does
 not read is named as well, and ignored as a viewer ignores it, and so is an empty width, height or
-viewBox of the drawing, or an aspect ratio that does not read. A stroke too wide to measure is
-skipped.
+viewBox of the drawing, or an aspect ratio that does not read, and a symbol's viewBox, aspect ratio
+or size that a clone gives it. A stroke too wide to measure is skipped, and so is a clone that shows
+itself, directly or through other clones, as viewers skip it, and a symbol shown in a viewport of no
+area. A clone whose source's place doesn't read is drawn, but the angles of its fills don't turn with
+it.
 
 The message names the element. Check its path data, points and transform, or remove stray objects
 far from the design.

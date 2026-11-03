@@ -1,0 +1,5 @@
+id = "inkstitch-clone-of-clone"
+requirements = ["REQ-SVG-008", "REQ-SVG-012", "REQ-SVG-013"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/clone-of-clone.svg"
+# A clone of a clone: both maps move the bar, and each clone turns its rows, 60 degrees in all.
