@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-456b16a9.js";
+            window.path_to_searchindex_js = "../searchindex-40a25f38.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-0e01f503.js"></script>
@@ -874,7 +874,8 @@ tests write files for the adapter to read back (Level B, M6.6).</p>
 <h3 id="importing-inkstitch-svgs-into-vectorcraft"><a class="header" href="#importing-inkstitch-svgs-into-vectorcraft">Importing Ink/Stitch SVGs into VectorCraft</a></h3>
 <p>Because VectorCraft up to 0.16 drops <code>inkstitch:*</code> attributes on SVG import, phase 1 offers
 <code>stitch import-inkstitch design.svg -o design.vectorcraft</code>: our SVG adapter reads the Ink/Stitch file
-and writes a VectorCraft document with the same art and the parameters as live-effect records (M8).
+and writes a VectorCraft document with the same art and the parameters as live-effect records (M8.12,
+after 1.0).
 From 0.17 VectorCraft keeps the attributes from SVG import to SVG export, but its live effects read none
 of them. <a href="adr/0016-inkstitch-files-imported-by-stitchcraft.html">ADR-0016</a> keeps <code>stitch import-inkstitch</code>
 as the way in, after spike M8.11: VectorCraft gives a plug-in no attribute of another application, and
