@@ -214,7 +214,7 @@ mod tests {
         let sewn = [
             glyph("a", 0, Verdict::Agrees, &[]),
             glyph("a", 1, Verdict::Excused(vec!["threads differ".into()]), &[0]),
-            glyph("a", 2, Verdict::Listed(vec!["cross_stitch".into()]), &[]),
+            glyph("a", 2, Verdict::Listed(vec!["tartan_fill".into()]), &[]),
             glyph("b", 0, Verdict::Differs(vec!["stitches differ: StitchCraft 10, Ink/Stitch 20".into()]), &[]),
             glyph("b", 1, Verdict::Failed("Ink/Stitch: it failed".into()), &[]),
             glyph("b", 2, Verdict::Known(vec!["size differ (known: the sizes of b)".into()]), &[2]),
@@ -226,7 +226,7 @@ mod tests {
         assert!(md.contains("| DEV-THREAD-001 | threads | every glyph | 1 |\n| DEV-X-001 | size | an element is a `meander_fill` | 0 |"), "{md}");
         assert!(md.contains("## Known differences: follow-up work\n\n| Follow-up | Measures | For glyphs where | Glyphs |\n|---|---|---|---|\n| the sizes of b | size | the font is `b` | 1 |"), "{md}");
         assert!(md.contains("- b/ltr.svg glyph 2 `g2` (satin_column): known: size differ (known: the sizes of b)\n"), "{md}");
-        assert!(md.contains("| cross_stitch | 1 | a |"), "{md}");
+        assert!(md.contains("| tartan_fill | 1 | a |"), "{md}");
         assert!(md.contains("## Left out by their licences\n\nc (GPL)\n"), "{md}");
         assert!(md.contains("- b/ltr.svg glyph 0 `g0` (satin_column): stitches differ: StitchCraft 10, Ink/Stitch 20\n- b/ltr.svg glyph 1 `g1` (satin_column): Ink/Stitch: it failed\n"), "{md}");
         assert_eq!(failures, ["b: 1 of 3 glyphs differ and 1 didn't sew (target/conformance/fonts.md)"]);

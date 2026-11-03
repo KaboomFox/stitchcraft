@@ -101,14 +101,15 @@ each font, from its first glyph, and moves only when the pin does. Run from its 
 its debug level, and a glyph took it 10 seconds, against 1.6 with the log turned off. On 2 cores the sample
 then takes 12 minutes, and a twentieth of every glyph 22.
 
-**What differs.** Of the sample's 524 glyphs, 357 agree by every measure. 98 are of stitch types StitchCraft
-doesn't sew yet, which the report lists, 66 of them in cross stitch and the rest in tartan fills, ripples and
-guided fills. They join the comparison with M10's steps. The other 69 differ as the ledger explains,
-`conformance/inkstitch/glyphs.toml` naming the glyphs each excuse is for. A glyph may differ in more than
-one way. A twentieth of every glyph, the seventh of 20 parts, holds 1,059 glyphs. Of them 699 agree, 238
-are listed and 122 differ as the ledger explains. It found the last 3 rows of the table, which the sample
-has none of, and a glyph neither program writes a file of, which agrees: the U of Apex simple small, whose
-satin column neither can sew.
+**What differs.** These counts are from runs on 3 November 2026, before M10.1 brought simple crosses. Of
+the sample's 524 glyphs, 357 agree by every measure. 98 are of stitch types StitchCraft doesn't sew yet,
+which the report lists, 66 of them in cross stitch and the rest in tartan fills, ripples and guided
+fills. They join the comparison with M10's steps, the simple crosses with M10.1. The other 69 differ as
+the ledger explains, `conformance/inkstitch/glyphs.toml` naming the glyphs each excuse is for. A glyph
+may differ in more than one way. A twentieth of every glyph, the seventh of 20 parts, holds 1,059 glyphs.
+Of them 699 agree, 238 are listed and 122 differ as the ledger explains. It found the last 3 rows of the
+table, which the sample has none of, and a glyph neither program writes a file of, which agrees: the U of
+Apex simple small, whose satin column neither can sew.
 
 | Difference | Sample | Twentieth | Explained by |
 |---|---|---|---|
