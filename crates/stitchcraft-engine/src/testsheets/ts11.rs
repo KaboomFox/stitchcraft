@@ -381,6 +381,7 @@ mod tests {
     use stitchcraft_plan::{Role, StitchKind};
 
     use super::*;
+    use crate::design::{Element, Shape};
 
     #[test]
     fn the_star_s_points_and_the_leaf_s_tips_lie_where_they_are_drawn() {
@@ -397,6 +398,125 @@ mod tests {
         assert_eq!(leaf[0], (-19.0, 0.0));
         assert!((leaf[24].0 - 19.0).abs() < 1e-9 && leaf[24].1.abs() < 1e-9, "{:?}", leaf[24]);
         assert!(leaf.iter().all(|&(_, y)| y.abs() <= 10.0 + 1e-9));
+    }
+
+    /// Where each subpath of `element` starts, then where each of its segments ends.
+    fn nodes(element: &Element) -> Vec<Vec<(f64, f64)>> {
+        let ends = |s: &Subpath| std::iter::once(s.start).chain(s.segments.iter().map(|g| g.end())).map(|p| (p.x(), p.y())).collect();
+        element.shape.path().subpaths.iter().map(ends).collect()
+    }
+
+    /// The points a hook of TS-11A runs through, as the sheet describes one: from `aside` mm below `(x, y)`,
+    /// straight on `straight` mm east (`way` 1) or west (-1), then round a quarter circle to the south, `aside`
+    /// inside the turn, to `radius` mm below `(x, y)`.
+    fn hooked((x, y): (f64, f64), way: f64, (straight, radius): (f64, f64), aside: f64) -> Vec<(f64, f64)> {
+        vec![(x, y + aside), (x + way * straight, y + aside), (x + way * (straight + radius - aside), y + radius)]
+    }
+
+    /// The points a circle of `radius` round `(x, y)` runs through from its left, clockwise: its left, top,
+    /// right, bottom and left again.
+    fn circled((x, y): (f64, f64), radius: f64) -> Vec<(f64, f64)> {
+        vec![(x - radius, y), (x, y - radius), (x + radius, y), (x, y + radius), (x - radius, y)]
+    }
+
+    #[test]
+    fn ts11a_draws_each_sample_where_its_layout_puts_it() {
+        let (east, west) = (1.0, -1.0);
+        // Zigzag strokes: hooks 18 mm long round 6, in rows at y = 4, 16 and 28. The first row runs east from
+        // x = 6, a hook every 32 mm, and its last hook ends 24 mm east of its start and 6 mm below it, at (94, 10).
+        // The second starts as far on from there as it lies below, 6 mm, at x = 88, and runs west to (0, 22); the
+        // third starts at x = 6 again and ends at (94, 34). The line at 45° lies on the third row's height, 6 mm on
+        // from where that row ends, and is 24 mm long.
+        let zigzag = |name: &str, x: f64, y: f64, way: f64| (format!("zigzag-stroke-{name}"), vec![hooked((x, y), way, (18.0, 6.0), 0.0)]);
+        let mut laid = vec![
+            zigzag("1-0.4", 6.0, 4.0, east),
+            zigzag("1-1", 38.0, 4.0, east),
+            zigzag("1-2", 70.0, 4.0, east),
+            zigzag("2-2", 88.0, 16.0, west),
+            zigzag("2-1", 56.0, 16.0, west),
+            zigzag("2-0.4", 24.0, 16.0, west),
+            zigzag("4-0.4", 6.0, 28.0, east),
+            zigzag("4-1", 38.0, 28.0, east),
+            zigzag("4-2", 70.0, 28.0, east),
+            ("zigzag-stroke-45".to_string(), vec![vec![(100.0, 28.0), (124.0, 28.0)]]),
+        ];
+        // E-stitches: twice, to place the fabric and to tack it down, a line 1 mm inside the edge of the square 26 mm
+        // a side from (0, 42), then 1 mm inside each circle of radius 9 round (40, 55), (63, 55), (86, 55) and
+        // (109, 55), from its left.
+        let middles = [40.0, 63.0, 86.0, 109.0];
+        for step in ["placement", "tack-down"] {
+            laid.push((format!("{step}-square"), vec![vec![(1.0, 43.0), (25.0, 43.0), (25.0, 67.0), (1.0, 67.0), (1.0, 43.0)]]));
+            laid.extend(middles.map(|x| (format!("{step}-circle-{x}"), vec![circled((x, 55.0), 8.0)])));
+        }
+        // Then the square's sides clockwise from the top, 3, 3, 5 and 5 mm wide, each its spine on the edge and its
+        // other rail inside it. The top runs along the whole edge, and each side after it from where the one before
+        // stops covering its edge.
+        let sides = [
+            ("top", [[(0.0, 42.0), (26.0, 42.0)], [(0.0, 45.0), (26.0, 45.0)]]),
+            ("right", [[(26.0, 45.0), (26.0, 68.0)], [(23.0, 45.0), (23.0, 68.0)]]),
+            ("bottom", [[(23.0, 68.0), (0.0, 68.0)], [(23.0, 63.0), (0.0, 63.0)]]),
+            ("left", [[(0.0, 63.0), (0.0, 45.0)], [(5.0, 63.0), (5.0, 45.0)]]),
+        ];
+        laid.extend(sides.map(|(name, rails)| (format!("e-stitch-{name}"), rails.map(Vec::from).to_vec())));
+        // And the rings, left to right, 3, 3, 5 and 5 mm wide at spacings of 2, 3, 2 and 3 mm, each its spine on its
+        // circle and its other rail inside it, from their left.
+        let rings = ["3-2", "3-3", "5-2", "5-3"].into_iter().zip(middles).zip([6.0, 6.0, 4.0, 4.0]);
+        laid.extend(rings.map(|((name, x), inner)| (format!("e-stitch-{name}"), vec![circled((x, 55.0), 9.0), circled((x, 55.0), inner)])));
+        // S-stitches: columns along hooks 20 mm long round 8, in rows at y = 80 and 96. The first row runs east from
+        // x = 13, a hook every 40 mm, and its last hook ends 28 mm east of its start and 8 mm below it, at (121, 88);
+        // the second starts 8 mm on from there, at x = 113, and runs west. An S-stitch starts on its second rail:
+        // each column's rail outside its turn comes first, so that it starts inside, next to where the hook before it
+        // ended, but for the second row's first, which starts outside, nearest the row above, where the needle comes
+        // from.
+        let s_stitch = |name: &str, x: f64, y: f64, way: f64, width: f64, outside_first: bool| {
+            let [outside, inside] = [-width / 2.0, width / 2.0].map(|aside| hooked((x, y), way, (20.0, 8.0), aside));
+            (format!("s-stitch-{name}"), if outside_first { vec![outside, inside] } else { vec![inside, outside] })
+        };
+        laid.extend([
+            s_stitch("6-0.4", 13.0, 80.0, east, 6.0, true),
+            s_stitch("10-default-0.4", 53.0, 80.0, east, 10.0, true),
+            s_stitch("10-staggered-0.4", 93.0, 80.0, east, 10.0, true),
+            s_stitch("10-staggered-0.6", 113.0, 96.0, west, 10.0, false),
+            s_stitch("10-default-0.6", 73.0, 96.0, west, 10.0, true),
+            s_stitch("6-0.6", 33.0, 96.0, west, 6.0, true),
+        ]);
+        // Zigzag satins and satin columns along hooks 14 mm long, in rows at y = 114, 4 mm wide round 6, and at
+        // y = 127, 8 mm wide round 7. The first row runs east from x = 12, a hook every 30 mm, and its last hook ends
+        // 20 mm east of its start and 6 mm below it, at (122, 120); the second starts 7 mm on from there, at x = 115,
+        // and runs west to (4, 134). The zigzag satin over a contour underlay, 8 mm wide round 7, starts at y = 141,
+        // 7 mm on from there. Each column's rail outside its turn comes first.
+        let satin = |name: &str, x: f64, y: f64, way: f64, (radius, width): (f64, f64)| {
+            (name.to_string(), [-width / 2.0, width / 2.0].map(|aside| hooked((x, y), way, (14.0, radius), aside)).to_vec())
+        };
+        let (narrow, wide) = ((6.0, 4.0), (7.0, 8.0));
+        laid.extend([
+            satin("zigzag-satin-4-0.4", 12.0, 114.0, east, narrow),
+            satin("satin-column-4-0.4", 42.0, 114.0, east, narrow),
+            satin("zigzag-satin-4-1", 72.0, 114.0, east, narrow),
+            satin("satin-column-4-1", 102.0, 114.0, east, narrow),
+            satin("satin-column-8-1", 115.0, 127.0, west, wide),
+            satin("zigzag-satin-8-1", 85.0, 127.0, west, wide),
+            satin("satin-column-8-0.4", 55.0, 127.0, west, wide),
+            satin("zigzag-satin-8-0.4", 25.0, 127.0, west, wide),
+            satin("zigzag-satin-underlay", 11.0, 141.0, east, wide),
+        ]);
+        // The sheet draws those samples, in that order, each through those points.
+        let design = crate::testsheets::find("TS-11A").unwrap().design().unwrap().unwrap();
+        let named = |e: &Element| e.id.as_str().trim_start_matches("ts11a:").to_string();
+        let drawn = design.elements().iter().map(|e| (named(e), nodes(e))).collect::<Vec<_>>();
+        assert_eq!(drawn.iter().map(|(name, _)| name).collect::<Vec<_>>(), laid.iter().map(|(name, _)| name).collect::<Vec<_>>());
+        let near = |(a, b): (&(f64, f64), &(f64, f64))| (a.0 - b.0).abs() < 1e-9 && (a.1 - b.1).abs() < 1e-9;
+        for ((name, found), (_, wanted)) in drawn.iter().zip(&laid) {
+            let same = found.len() == wanted.len() && found.iter().zip(wanted).all(|(f, w)| f.len() == w.len() && f.iter().zip(w).all(near));
+            assert!(same, "{name}: drawn through {found:?}, laid out through {wanted:?}");
+        }
+        // The zigzag strokes are as wide as their rows, the line at 45° as the last row.
+        let width = |e: &Element| if let Shape::Stroke { width, .. } = e.shape { width.get() } else { f64::NAN };
+        assert_eq!(design.elements().iter().take(10).map(width).collect::<Vec<_>>(), [1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 4.0, 4.0, 4.0, 4.0]);
+        // The machine stops after the lines that place the fabric, after those that tack it down, and before the
+        // zigzag satin over a contour underlay.
+        let stops: Vec<String> = design.elements().iter().filter(|e| e.params.get(crate::common::STOP_AFTER) == Some("true")).map(named).collect();
+        assert_eq!(stops, ["placement-circle-109", "tack-down-circle-109", "zigzag-satin-8-0.4"]);
     }
 
     /// The least x and y of `points`, then the greatest.
