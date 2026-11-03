@@ -55,10 +55,10 @@ pub struct Piece {
 }
 ```
 
-It reads each element with the design's settings as the generators read it: each satin column's rails and
-rungs as the satin generators read them, made first for a column drawn as one path, and each stroke by its
-first subpath. The elements it doesn't take stay as they are, `SC-I1002` says why, and `replaced` leaves
-them out. It writes ordinary elements, which every
+It reads each element with the design's settings, as the generators read it. A satin column's rails and
+rungs are read as the satin generators read them, made first for a column drawn as one path, and a stroke
+is read by its first subpath. An element it doesn't take stays as it is, out of `replaced`, and `SC-I1002`
+says why. It writes ordinary elements, which every
 host sews as it sews any. Each piece says which element it comes from, so that a host can place and name
 it. The function charges its budget for every loop over pieces, and keeps them in ordered collections.
 Ties go to the earlier element and to the earlier piece along it, so a route is the same on every platform

@@ -44,8 +44,9 @@ cargo build -p stitchcraft-vc-plugin --release --target wasm32-unknown-unknown -
 
 The feature is the family, `stroke`, `satin` or `fill`, `auto` for the Auto effect, the machine format, `pes`
 or `dst`, or the filter, `settings`, `stroke-to-satin`, `testsheet` or `route-satins`. Without one, the build is
-*hello*. Each build writes the same file, so copy it before building the next. `cargo xtask compat contract
---ref <tag>` builds all eleven into `target/compat/plugins/` and loads them into VectorCraft's host.
+*hello*. Each build writes the same file, so copy it before building the next.
+`cargo xtask compat contract --ref <tag>` builds all eleven into `target/compat/plugins/` and loads them into
+VectorCraft's host.
 
 In VectorCraft: **Object › Plug-ins › Install Plug-in…** (or `File › Open` the `.wasm`), then
 **Effect › Plug-ins › StitchCraft Fill**, **File › Export › Export As** with an exporter, or a filter under

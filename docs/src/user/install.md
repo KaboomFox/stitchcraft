@@ -53,9 +53,9 @@ In VectorCraft's desktop app, choose that folder in **Edit › Preferences › P
 Additional Plug-ins Folder**, which is under **Performance & Storage** up to VectorCraft 0.14. VectorCraft
 installs the plug-ins in it whenever it starts, all but Stroke to Satin and Auto-Route Satin Columns. They
 ask for more work than a filter usually may do, which VectorCraft lets you allow when you install each on
-its own: choose **Object › Plug-ins › Install Plug-in…** and pick `stitchcraft-stroke-to-satin.wasm`, then
-`stitchcraft-route-satins.wasm`. VectorCraft asks you first, and once you allow one, keeps it and installs
-it again when it starts. The effects are under **Effect › Plug-ins**, the formats in **File ›
+its own. Choose **Object › Plug-ins › Install Plug-in…** and pick `stitchcraft-stroke-to-satin.wasm`, and
+install `stitchcraft-route-satins.wasm` the same way. VectorCraft asks you first, and once you allow one,
+keeps it and installs it again when it starts. The effects are under **Effect › Plug-ins**, the formats in **File ›
 Export › Export As**, and the filters under **Object › Plug-ins**. In VectorCraft on the web, open each
 file with **File › Open** instead, once each time VectorCraft is opened. [Embroider a VectorCraft
 design](how-to/embroider-a-vectorcraft-design.md) shows how to use them.

@@ -6,9 +6,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 
 ### Added
 - M10.4: auto-satin routing. `stitchcraft_engine::route` routes satin columns, and the strokes among them,
-  as Ink/Stitch's Auto-Route Satin Columns does: each column cut into pieces at most 1 mm long along its
-  centre line, the groups joined by the shortest jumps in all, a stretch passed twice run under the satin
-  that covers it, and long jumps trimmed. Its options are Ink/Stitch's, declared once. In VectorCraft, the
+  as Ink/Stitch's Auto-Route Satin Columns does. Each column is cut into pieces at most 1 mm long along its
+  centre line, and the groups of pieces are joined by the shortest jumps in all. A stretch passed twice is
+  run under the satin that covers it, and long jumps are trimmed. Its options are Ink/Stitch's, declared once. In VectorCraft, the
   heavy filter StitchCraft Auto-Route Satin Columns (`--features route-satins`) replaces the selection
   with the route in one undo step, from the paths named `stitch:route-start` and `stitch:route-end` when
   they are selected, which `stitch export` leaves out. New codes: `SC-E1001`, `SC-I1002`, `SC-W1003` and

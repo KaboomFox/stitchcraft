@@ -457,19 +457,19 @@ where the topmost path routed was, in its group or layer. With Preserve order, I
 to the end of its element's group, and the filter puts the pieces of each path, the runs along it among
 them, where the path was, in sewing order. With Keep original paths, the paths and markers stay as they
 are, and the route goes above the topmost path. A group the run leaves empty stays in the document. Each
-piece keeps the other effects of the path it comes from, as Stroke to Satin keeps a line's, and is painted
-with its stroke 1 CSS pixel wide, or black when it has none.
+piece keeps the other effects of the path it comes from, as Stroke to Satin keeps a line's. Its paint is
+that path's stroke 1 CSS pixel wide, or black for a path without a stroke.
 
 **Budget.** Both are heavy filters (VectorCraft 0.17), as Stroke to Satin is. Each run gets 1 G
 instructions and 300 s, once the user allows the filter at install, and runs in the background, with no
 preview in its dialog. Stroke to Satin's run, which makes a column's rails from its centre line, took up to
 233 million instructions for one line ([above](#tools-stroke-to-satin-and-test-sheet)). A route makes the
 rails of every column drawn as one path that it routes. The engine's work is priced in instructions, as Stroke to Satin
-prices it: 450 a unit, a tenth of the run's spend for reading the paths and 8 tenths for routing them. A
-filter stops with `SC-E0004` before VectorCraft would stop it. A contract test routes TS-17C's letters,
-drawn as lines with the satin effect, in VectorCraft's host and prints what the route takes, and a Level B
-case routes 2 lines with VectorCraft's command line and checks the route exports as `stitch export` sews
-it.
+prices it: 450 a unit, a tenth of the run's spend for reading the paths and 8 tenths for routing them.
+The filter stops with `SC-E0004` before VectorCraft would stop it. In VectorCraft's host, a contract test
+routes TS-17C's letters, drawn as lines with the satin effect, and prints what the route takes. With
+VectorCraft's command line, a Level B case routes 2 lines and checks that the route exports as `stitch
+export` sews it.
 
 ### Live-effect previews within v1 budgets
 
