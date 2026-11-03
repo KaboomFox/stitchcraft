@@ -77,7 +77,8 @@ pub enum Kind {
         max: f64,
     },
     /// A length in millimetres within `min..=max`, or 2 separated by a space: Ink/Stitch's values "for each
-    /// side", one for both or the first's then the second's (a satin's rails, or its start and end). An
+    /// side", one for both or the first's then the second's (a satin's rails, or its start and end, or a cross
+    /// stitch grid's width and height, and its offset left and down). An
     /// `optional` pair may be left empty, and then comes from another parameter. Unlike an optional
     /// length, 0 is a value, as in Ink/Stitch.
     LengthPair {

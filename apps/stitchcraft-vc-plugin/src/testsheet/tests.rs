@@ -44,12 +44,17 @@ fn req_vc_015_each_sheet_drawn_sews_as_its_design_moved_to_the_artboard() {
         }
         let document = drawn(&out);
         // As `stitch export` sews the document, and as the engine sews the sheet's design, moved by whole
-        // millimetres to the middle of the Letter page: 107.95 mm across and 139.7 mm down.
+        // millimetres to the middle of the Letter page, 107.95 mm across and 139.7 mm down, or TS-17A by whole
+        // multiples of 6 mm, which keep its crosses' cells.
         let moved = placed(sheet, Point::new(107.95, 139.7).ok()).unwrap();
         assert_eq!(sewn(&document), planned(&moved), "{}", sheet.id);
         let read = stitchcraft_vectorcraft::read(&document, &Budget::DEFAULT).unwrap().design;
         let middle = read.bounds().unwrap().center();
-        assert!((middle.x() - 107.95).abs() <= 0.5 && (middle.y() - 139.7).abs() <= 0.5, "{}: {middle:?}", sheet.id);
+        let near = sheet.step() / 2.0;
+        assert!((middle.x() - 107.95).abs() <= near && (middle.y() - 139.7).abs() <= near, "{}: {middle:?}", sheet.id);
+        let start = sheet.design().unwrap().unwrap().bounds().unwrap().center();
+        let moved_by = [middle.x() - start.x(), middle.y() - start.y()].map(|d| d / sheet.step());
+        assert!(moved_by.iter().all(|d| (d - d.round()).abs() < 1e-6), "{}: {moved_by:?}", sheet.id);
         // Each element an object of its family, named by its id.
         let ids: Vec<&str> = read.elements().iter().map(|e| e.id.as_str().rsplit(':').next().unwrap_or_default()).collect();
         let families: Vec<&str> = moved.elements().iter().map(|e| stitch_type_of(e, &moved.settings).unwrap().family().id()).collect();
@@ -58,7 +63,10 @@ fn req_vc_015_each_sheet_drawn_sews_as_its_design_moved_to_the_artboard() {
     }
     assert_eq!(
         drawn_sheets,
-        ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D"]
+        [
+            "TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D",
+            "TS-17A"
+        ]
     );
     // The sheets draw both.
     assert!(kinds.iter().all(|(several, kind)| kind == if *several { "compound" } else { "path" }), "{kinds:?}");
@@ -177,8 +185,9 @@ fn req_vc_015_the_filter_s_manifest_offers_the_sheets_drawn_as_designs() {
     assert_eq!(validate(&serde_json::to_vec(&manifest).unwrap()), Ok(()));
     assert_eq!((manifest.id.as_str(), manifest.kind, manifest.budget), ("dev.stitchcraft.testsheet", "filter", BudgetClass::Light));
     let [(SHEET, sheet)] = manifest.params.as_slice() else { panic!("{:?}", manifest.params) };
-    let ids =
-        vec!["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D"];
+    let ids = vec![
+        "TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D", "TS-17A",
+    ];
     assert_eq!(sheet.schema, Schema::Choice { options: ids, default: "TS-02B" });
     // Its help names what each sheet tests, from the sheets themselves.
     let help = sheet.ui.help.as_deref().unwrap();

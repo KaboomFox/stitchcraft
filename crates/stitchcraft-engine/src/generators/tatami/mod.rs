@@ -53,6 +53,11 @@ const ROUTED: &[StitchType] = &[StitchType::TatamiFill, StitchType::CircularFill
 /// circles the row spacing apart.
 const UNDERLAID: &[StitchType] = &[StitchType::TatamiFill, StitchType::ContourFill, StitchType::MeanderFill, StitchType::CircularFill];
 
+/// The stitch types each part of whose area grows by `expand_mm`: those [`UNDERLAID`], and a cross stitch
+/// fill, whose cells the grown part covers, as in Ink/Stitch.
+const EXPANDED: &[StitchType] =
+    &[StitchType::TatamiFill, StitchType::ContourFill, StitchType::MeanderFill, StitchType::CircularFill, StitchType::CrossStitch];
+
 params! {
     /// Tatami fill: rows of running stitches across the fill's area, the needle points of neighbouring rows
     /// offset so that they never line up. Ink/Stitch's default fill. A contour fill takes its row spacing,
@@ -80,9 +85,10 @@ params! {
             origin Origin::InkStitchDeviates { deviation: "DEV-FILL-003" };
 
         /// How far past the drawn edge the top rows reach: each part is grown by this much, with round
-        /// corners, before its rows, rings or path are laid. The thread's pull opens gaps between fills sewn side
-        /// by side, and this closes them. Negative values pull the rows in from the edge.
-        expand_mm: Length = "0", label "Expand", range (-10.0, 10.0);
+        /// corners, before its rows, rings or path are laid, or its cross stitch's cells are chosen. The
+        /// thread's pull opens gaps between fills sewn side by side, and this closes them. Negative values pull
+        /// the rows in from the edge.
+        expand_mm: Length = "0", label "Expand", range (-10.0, 10.0), applies EXPANDED;
 
         /// Rows sewn again where the fill leaves a stretch of more than 3 rows for another: that many rows
         /// past the stretch's last row, back and forth, before the needle travels on. The rows on the far

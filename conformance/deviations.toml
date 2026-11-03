@@ -12,7 +12,7 @@
 [[deviation]]
 id = "DEV-PRM-001"
 area = "params"
-summary = "A value StitchCraft cannot read refuses its element (SC-E0101), and the rest of the design is sewn. Ink/Stitch sews such a value as the parameter's default, or a toggle as off, without a word: it sews 3,5 for running_stitch_length_mm as 2.5 mm stitches, and a toggle of on as off. A toggle reads yes, y, true, t and 1 as on here, as Ink/Stitch does, and only their opposites and off as off. StitchCraft reads a tab, or several spaces, between a list's values as one space, where Ink/Stitch sews a list with a tab between values as its default, and a fill's underlay angles with 2 spaces between them too. It also reads a unit right after a number, mm, in or pt after a length, a degree sign or deg after an angle and a percent sign after a percentage, where Ink/Stitch sews the default."
+summary = "A value StitchCraft cannot read refuses its element (SC-E0101), and the rest of the design is sewn. Ink/Stitch sews such a value as the parameter's default, or a toggle as off, without a word: it sews 3,5 for running_stitch_length_mm as 2.5 mm stitches, and a toggle of on as off. A toggle reads yes, y, true, t and 1 as on here, as Ink/Stitch does, and only their opposites and off as off. StitchCraft reads a tab, or several spaces, between a list's values as one space, where Ink/Stitch sews a list with a tab between values as its default, and a fill's underlay angles with 2 spaces between them too. It also reads a unit right after a number, mm, in or pt after a length, a degree sign or deg after an angle and a percent sign after a percentage, where Ink/Stitch sews the default. And it reads a fraction in fill_coverage, which Ink/Stitch reads as a whole number and so sews 75.5 at its default, 50."
 reason = "Guessing could sew what the designer did not ask for, and a value that changes nothing in silence is lost work (REQ-PRM-002). On means on wherever else it is written. A tab or a second space separates values as plainly as one space does, and a unit says plainly what a number is. Ink/Stitch's readers were read at d59c9ab (lib/elements/element.py, lib/elements/fill_stitch.py)."
 requirements = ["REQ-PRM-002"]
 
@@ -395,6 +395,45 @@ area = "fill"
 summary = "A fill in parts with a start position starts its first part nearest it, and each part after nearest where the part before ended, as without a start position (REQ-GEN-001). Ink/Stitch starts each of its parts nearest its start command."
 reason = "The start position says where the fill begins. After the first part the needle is where that part ended, near the next, so starting the next part nearest it keeps the needle's way between parts short. Ink/Stitch takes the start command's point as each part's start (lib/elements/fill_stitch.py: to_stitch_groups, get_starting_point, read at d59c9ab), and a part after the first starts at its point nearest the command however far that lies from where the part before ended. The parts go in the same order in both, by their distance from the start position, and the last ends nearest the end position in both."
 requirements = ["REQ-GEN-001", "REQ-FILL-TAT-008"]
+
+[[deviation]]
+id = "DEV-FILL-024"
+area = "fill/cross"
+summary = "A cross stitch fill's part that a negative expand_mm shrinks away entirely is sewn at its own size, with SC-W0309, as every fill's part is. Ink/Stitch shrinks a cross stitch fill's shape as a whole, and keeps it as drawn only when nothing at all is left, so where other parts are left, a part shrunk away sews no cross."
+reason = "A part of the drawing is still part of the design, and StitchCraft's fills all keep a part that their expand_mm wears away (REQ-FILL-TAT-012). Ink/Stitch's tatami fill shrinks each part alone. Its cross stitch was read at d59c9ab (lib/elements/fill_stitch.py: do_cross_stitch, _prepare_cross_stitch_shape, fill_shape, shrink_or_grow_shape, which buffers the whole shape)."
+requirements = ["REQ-FILL-CRS-006"]
+params = ["expand_mm"]
+
+[[deviation]]
+id = "DEV-FILL-025"
+area = "fill/cross"
+summary = "A cross stitch fill looks at every cell of its grid within the part's bounds. Ink/Stitch starts at the grid's first line at or above the part's top, moved down by the offset's second length, or with canvas_grid_origin off at the part's top moved down so, and never looks at the row above it. So a part whose top lies less far below a line of the grid than that length loses the row of crosses it covers there: a 3 mm grid moved 2 mm down over a rectangle whose top lies 0.2 mm below a line leaves out a row the rectangle covers 60 % of."
+reason = "cross_offset_mm moves the grid, and a cell the part covers enough of sews a cross wherever the grid's lines lie (REQ-FILL-CRS-001). Ink/Stitch's loop over the rows was read at d59c9ab (lib/stitches/utils/cross_stitch.py: CrossGeometries, _setup_geometry, _setup_crosses), and Ink/Stitch run as a black box (ADR-0001, decision 6) on a rectangle from (10, 9.2) to (22, 19) mm with an offset of 0 2 sewed 11 crosses from y = 11 to 20, where it sews 12 from y = 9 to 18 without the offset, and 14 cells reach 50 % of the moved grid."
+requirements = ["REQ-FILL-CRS-001"]
+params = ["cross_offset_mm"]
+
+[[deviation]]
+id = "DEV-FILL-026"
+area = "fill/cross"
+summary = "Flipped crosses lie on the grid plain crosses lie on, with their / diagonal under their \\ one. Ink/Stitch turns the part a quarter turn, lays its grid over the turned part and turns the crosses back. Its flipped cells are then pattern_size_mm's second length wide and its first tall, the offset's second length moves them right and its first down, and with canvas_grid_origin off its grid starts at the part's bottom left corner. With square cells, no offset and the canvas's grid, both lay the same crosses."
+reason = "Flipping a cross changes which diagonal lies on top, and nothing else, so that plain and flipped crosses side by side share one grid (REQ-FILL-CRS-003). Ink/Stitch's flip was read at d59c9ab (lib/stitches/cross_stitch.py: even_cross_stitch, which turns the shape before laying the grid), and Ink/Stitch run as a black box (ADR-0001, decision 6) sewed flipped crosses on a pattern size of 2 3 mm 3 mm wide and 2 mm tall, and with canvas_grid_origin off from the part's bottom edge."
+requirements = ["REQ-FILL-CRS-003"]
+params = ["cross_stitch_method", "pattern_size_mm", "cross_offset_mm", "canvas_grid_origin"]
+
+[[deviation]]
+id = "DEV-FILL-027"
+area = "fill/cross"
+summary = "A cross_thread_count of 1 sews 2 threads on each diagonal, with SC-W0320, and so does 0 and less, which the range raises to 1. Ink/Stitch takes the even count below 1, 0, and sews a stitch from a corner of each cell to its middle and back, and no cross. It takes the size of a count below 0."
+reason = "A full cross takes an even number of passes on each half of a diagonal, and 2 is the fewest that sews a cross (REQ-FILL-CRS-003). Ink/Stitch's own description of the count says that 1 sews as 2. Its thread count was read at d59c9ab (lib/stitches/cross_stitch.py: cross_stitch, even_cross_stitch; lib/stitches/utils/cross_stitch.py: Cross), and Ink/Stitch run as a black box (ADR-0001, decision 6) sewed a stitch from a cell's top right corner to its middle for a count of 1 and of 0."
+requirements = ["REQ-FILL-CRS-003"]
+params = ["cross_thread_count"]
+
+[[deviation]]
+id = "DEV-FILL-028"
+area = "fill/cross"
+summary = "A cross stitch fill takes its groups of crosses, and the crosses that meet at a corner, in a fixed order: the group nearest the needle first, the group nearest the end last, the cross below and to the left of a corner before the one above and to the right. Ink/Stitch takes them in the order of a Python set of its objects, which follows where they lie in memory. Where the needle and the end lie nearest one group of several, Ink/Stitch sews another group first, from its corner nearest the end, where StitchCraft starts it nearest the needle. And with neither, it starts each group at the first corner it finds that is a corner of one cross alone, where StitchCraft starts at its first cross's top right corner."
+reason = "The same design sews the same stitches every time and everywhere (docs/src/design/determinism.md), and starting nearest the needle keeps the way to the first group short. Every cross is sewn the same way in both, so only the order of the crosses and the travel between groups differ. Ink/Stitch's routing was read at d59c9ab (lib/stitches/cross_stitch.py: _build_eulerian_cycles, _build_simple_cycles, organize; lib/stitches/utils/cross_stitch.py: CrossGeometries keeps its crosses in a set)."
+requirements = ["REQ-FILL-CRS-004"]
 
 [[deviation]]
 id = "DEV-SVG-001"
