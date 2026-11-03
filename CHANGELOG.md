@@ -5,6 +5,42 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M10.1: cross stitch with simple crosses (`REQ-FILL-CRS-001` to `REQ-FILL-CRS-007`). A fill whose
+  `fill_method` is `cross_stitch` sews a cross in each cell of a grid laid over it that it covers
+  `fill_coverage` percent of, as Ink/Stitch sews its simple crosses.
+  - The grid's cells are `pattern_size_mm` wide and tall. It and `cross_offset_mm` take 1 length or 2,
+    which the registry's `LengthPair` kind reads, as it reads a satin's pull compensation for each side.
+    The grid's lines pass through the canvas's origin, or with `canvas_grid_origin` off through each
+    part's top left corner, and `cross_offset_mm` moves them left and down. A VectorCraft document's
+    canvas origin is the origin of its coordinates, where a new document's first artboard has its top
+    left corner.
+  - Each part is grown by `expand_mm` first. The share of each cell it covers is worked out exactly, row
+    by row, and a cell covered `fill_coverage` percent, less a ten-thousandth of a percent, sews a cross.
+    A part that covers no cell so much sews nothing (`SC-W0319`).
+  - Each cross is a loop from a corner back to it, its `\` diagonal under its `/` one, through its middle
+    between them. `simple_cross_flipped` lays the `/` diagonal under, on the same grid.
+    `cross_thread_count` passes lie on each half of each diagonal, an even count of 2 or more
+    (`SC-W0320`). A stitch longer than `max_cross_stitch_length_mm` is split into equal stitches, and a
+    grid too fine for the machine's shortest stitch is named (`SC-W0321`).
+  - Crosses that share a corner sew in one run, each joining it at a corner of its top diagonal where it
+    can. The group nearest the end sews last, and the others nearest the needle first. A part of one
+    group first travels from the needle to its end through the middles of its crosses.
+  - The 10 other methods, half, upright, dense upright, double and Smyrna crosses and their flipped
+    variants, come with M10.2, and an element set to one is skipped (`SC-W0011`). `cross_rotation` stays
+    planned.
+  - Every cell the part's bounds reach costs a unit of work before any is looked at, and each cross must
+    fit in the stitches left, so a fine grid over a large part ends with `SC-E0004` before it takes memory
+    (`REQ-GEN-004`).
+  - The ledger says where StitchCraft differs on purpose: a part that a negative `expand_mm` shrinks away
+    (`DEV-FILL-024`), the row above the first line that Ink/Stitch's offset leaves out (`DEV-FILL-025`),
+    Ink/Stitch's flipped crosses on a turned grid (`DEV-FILL-026`), a thread count of 1 (`DEV-FILL-027`)
+    and the order of the groups and crosses (`DEV-FILL-028`). `DEV-PRM-001` adds a fraction in
+    `fill_coverage`, which Ink/Stitch sews at its default.
+  - TS-17A's M10.1 part is drawn for MC-12: squares of simple crosses on grids of 2 and 3 mm with 2 and 4
+    threads, plain and flipped, and a K whose slanted edges cut their cells in half. Its samples lie on
+    the canvas's grid, and VectorCraft's Test Sheet filter moves the sheet by multiples of 6 mm, so they
+    stay there.
+  - The user's guide shows cross stitch in pictures, and its design page says how it is sewn.
 - M8.7: clipping in VectorCraft documents (`REQ-VC-017`, `REQ-GEN-005`). What a clip group or a clipping
   layer holds sews only what shows inside its clipping object, as an SVG file's shapes sew inside their
   clip paths from M8.5. The VectorCraft reader makes the clipping object's area a clip of each element
@@ -2309,6 +2345,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Added `conformance/golden/testsheets/TS-17A.pes` (M10.1), the simple crosses of the cross stitch sheet
+  that MC-12 sews: 5,299 stitches.
 - Changed `conformance/golden/testsheets/TS-16.pes` (M8.10). The sheet gains a clone of its red fill, turned
   45° right, which sews last, in red after a fourth colour change, below the fill once the sheet is turned.
   It starts and ends at the corners turned from the fill's. The plan spans 110 × 97.2 mm, and sews 4,931

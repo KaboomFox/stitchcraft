@@ -41,6 +41,8 @@ mod route;
 mod tests;
 
 pub use params::CrossParams;
+use std::cmp::Ordering;
+
 use stitchcraft_core::units::at_least;
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Meter, Point};
 
@@ -185,21 +187,23 @@ fn sewn(region: &Region, cross: &Cross, needle: Option<Point>, next: Option<&App
 /// meet are joined. Shrunk, each part is shrunk alone, and one shrunk away is kept as it is drawn. Should the
 /// grown area's edges not join into rings, a bug that `warnings` gets, nothing.
 fn grown(region: &Region, expand: f64, warnings: &mut Vec<Diagnostic>, meter: &mut Meter) -> Result<(Vec<Polygon>, usize), Exhausted> {
-    if expand > 0.0 {
-        let grown = buffered(&region.parts, expand, meter)?;
-        warnings.extend(grown.as_ref().err().copied().map(Unjoined::grown));
-        return Ok((grown.unwrap_or_default(), 0));
+    match expand.partial_cmp(&0.0) {
+        Some(Ordering::Greater) => {
+            let grown = buffered(&region.parts, expand, meter)?;
+            warnings.extend(grown.as_ref().err().copied().map(Unjoined::grown));
+            Ok((grown.unwrap_or_default(), 0))
+        }
+        Some(Ordering::Less) => {
+            let (mut parts, mut gone) = (Vec::new(), 0);
+            for part in &region.parts {
+                let (pieces, shrunk_away) = pieces(part, expand, warnings, meter)?;
+                parts.extend(pieces);
+                gone += usize::from(shrunk_away);
+            }
+            Ok((parts, gone))
+        }
+        Some(Ordering::Equal) | None => Ok((region.parts.clone(), 0)),
     }
-    if expand == 0.0 {
-        return Ok((region.parts.clone(), 0));
-    }
-    let (mut parts, mut gone) = (Vec::new(), 0);
-    for part in &region.parts {
-        let (pieces, shrunk_away) = pieces(part, expand, warnings, meter)?;
-        parts.extend(pieces);
-        gone += usize::from(shrunk_away);
-    }
-    Ok((parts, gone))
 }
 
 /// `part`'s rings as lines: its outline, then its holes.

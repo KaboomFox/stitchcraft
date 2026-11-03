@@ -18,8 +18,11 @@
 //!
 //! **Cost.** Every cell of the grid that the part's bounds reach is looked at once, and they are charged
 //! to the meter before any is held: a fine grid over a large part runs out of work (`SC-E0004`) before it
-//! takes memory. Each row then charges a unit for each ring, for each point of a ring that reaches it, and
-//! for each share it splits off.
+//! takes memory. A row's cells are held while they are looked at, so a row must fit in the stitches left, as
+//! each cell that sews a cross must. Each row then charges 2 units for each point of each ring, one for each
+//! edge of the strip it is clipped by, and a unit for each share it splits off.
+
+use std::cmp::Ordering;
 
 use stitchcraft_core::{Exhausted, Meter, Point};
 
@@ -104,8 +107,8 @@ impl Cells {
 
 /// The cells of `grid` that `part` covers `coverage` percent of or more, less [`SLACK`]: each cell the
 /// part's bounds reach is looked at once. All of them are charged to `meter` before any is looked at, and
-/// then each row as the module's docs say. Each cell that sews a cross must fit in the stitches left, so
-/// that no more are held than could be sewn.
+/// then each row as the module's docs say. A row of them, and each cell that sews a cross, must fit in the
+/// stitches left, so that no more are held than could be sewn.
 pub(crate) fn crossed(part: &Polygon, grid: &Grid, coverage: f64, meter: &mut Meter) -> Result<Cells, Exhausted> {
     let ([ox, oy], [w, h]) = (grid.origin, grid.size);
     let ([x0, y0], [x1, y1]) = bounds(&part.outline);
@@ -113,7 +116,7 @@ pub(crate) fn crossed(part: &Polygon, grid: &Grid, coverage: f64, meter: &mut Me
     let (j0, rows) = reach(y0, y1, oy, h);
     meter.charge(columns.checked_mul(rows).unwrap_or(u64::MAX))?;
     let columns = usize::try_from(columns).unwrap_or(usize::MAX);
-    let spans: Vec<(&[Point], [f64; 2])> = part.rings().map(|ring| (ring, heights(ring))).collect();
+    meter.room(columns)?;
     let mut sums = vec![0.0; columns];
     let (full, left) = (w * h, ox + i0 as f64 * w);
     let mut crossed = Vec::new();
@@ -121,11 +124,7 @@ pub(crate) fn crossed(part: &Polygon, grid: &Grid, coverage: f64, meter: &mut Me
         let j = j0.saturating_add_unsigned(row);
         let (top, bottom) = (oy + j as f64 * h, oy + j.saturating_add(1) as f64 * h);
         sums.iter_mut().for_each(|sum| *sum = 0.0);
-        for (ring, [low, high]) in &spans {
-            meter.charge(1)?;
-            if *high < top || *low > bottom {
-                continue;
-            }
+        for ring in part.rings() {
             let strip = strip(ring, top, bottom, meter)?;
             share(&strip, top, (left, w), &mut sums, meter)?;
         }
@@ -140,11 +139,11 @@ pub(crate) fn crossed(part: &Polygon, grid: &Grid, coverage: f64, meter: &mut Me
 }
 
 /// The first of the grid's lines at or before `low`, counted from `origin` in steps of `size`, and how many
-/// cells from it reach past `high`: 1 at least.
+/// cells from it reach `high`.
 #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
 fn reach(low: f64, high: f64, origin: f64, size: f64) -> (i64, u64) {
     let first = ((low - origin) / size).floor();
-    let past = ((high - origin) / size).ceil().max(first + 1.0);
+    let past = ((high - origin) / size).ceil();
     (first as i64, (past - first) as u64)
 }
 
@@ -152,12 +151,6 @@ fn reach(low: f64, high: f64, origin: f64, size: f64) -> (i64, u64) {
 fn bounds(ring: &[Point]) -> ([f64; 2], [f64; 2]) {
     let start = ([f64::INFINITY; 2], [f64::NEG_INFINITY; 2]);
     ring.iter().fold(start, |([x0, y0], [x1, y1]), p| ([x0.min(p.x()), y0.min(p.y())], [x1.max(p.x()), y1.max(p.y())]))
-}
-
-/// The least and the greatest y of `ring`'s points.
-fn heights(ring: &[Point]) -> [f64; 2] {
-    let ([_, low], [_, high]) = bounds(ring);
-    [low, high]
 }
 
 /// `ring` cut to the strip from `top` to `bottom` down the page: clipped by its top edge and then by its
@@ -194,25 +187,26 @@ fn crossing([ax, ay]: [f64; 2], [bx, by]: [f64; 2], y: f64) -> [f64; 2] {
 
 /// Adds to `sums` each column's share of the closed polygon `points`, which lies in a strip whose top edge is
 /// at `top`: for each side, the area between it and the top edge, signed by the way it runs across, split
-/// where it crosses the columns' lines, the first at `left` and each `width` past the last. A side past the
-/// first or last column falls to it. One unit of `meter` for each share.
+/// where it crosses the columns' lines, the first at `left` and each `width` past the last. One unit of
+/// `meter` for each share. The columns span the part's points: a point that rounding puts a hair past the
+/// first or the last line adds nothing past it.
 fn share(points: &[[f64; 2]], top: f64, (left, width): (f64, f64), sums: &mut [f64], meter: &mut Meter) -> Result<(), Exhausted> {
     let Some(&last) = points.last() else { return Ok(()) };
-    let columns = sums.len();
-    let column = |x: f64| column_of(x, left, width, columns);
+    let last_column = sums.len().saturating_sub(1);
+    let line = |k: usize| left + k as f64 * width;
     let mut from = last;
     for &to in points {
         let ([ax, ay], [bx, by]) = (from, to);
         from = to;
-        if ax == bx {
-            continue;
-        }
-        let ((u, v), sign) = if ax < bx { ((ax, bx), 1.0) } else { ((bx, ax), -1.0) };
+        let ((u, v), sign) = match ax.partial_cmp(&bx) {
+            Some(Ordering::Less) => ((ax, bx), 1.0),
+            Some(Ordering::Greater) => ((bx, ax), -1.0),
+            Some(Ordering::Equal) | None => continue,
+        };
         let height = |x: f64| ay + (x - ax) * (by - ay) / (bx - ax);
-        for k in column(u)..=column(v) {
+        for k in column_of(u, left, width, last_column)..=column_of(v, left, width, last_column) {
             meter.charge(1)?;
-            let start = if k == 0 { u } else { u.max(left + k as f64 * width) };
-            let end = if k + 1 == columns { v } else { v.min(left + (k + 1) as f64 * width) };
+            let (start, end) = (u.max(line(k)), v.min(line(k + 1)));
             if let Some(sum) = sums.get_mut(k) {
                 *sum += sign * (end - start) * ((height(start) + height(end)) / 2.0 - top);
             }
@@ -221,12 +215,11 @@ fn share(points: &[[f64; 2]], top: f64, (left, width): (f64, f64), sums: &mut [f
     Ok(())
 }
 
-/// The column of `columns` that `x` lies in, the first at `left` and each `width` wide: the first or the last
-/// for a point past them.
+/// The column that `x` lies in, of columns from 0 to `last`, the first at `left` and each `width` wide: the
+/// first or the last for a point past them.
 #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
-fn column_of(x: f64, left: f64, width: f64, columns: usize) -> usize {
-    let k = ((x - left) / width).floor().max(0.0) as usize;
-    k.min(columns.saturating_sub(1))
+fn column_of(x: f64, left: f64, width: f64, last: usize) -> usize {
+    (((x - left) / width).floor().max(0.0) as usize).min(last)
 }
 
 #[cfg(test)]
@@ -263,6 +256,10 @@ mod tests {
         // for the corners, covered less: 5 columns of 4 rows less 3.
         assert_eq!(crossed_cells(&part, &THREE, 33.0).len(), 4 * 5 - 3);
         assert_eq!(crossed_cells(&part, &THREE, 34.0).len(), 12);
+        // Left of and above the origin, the same: the rectangle moved 30 mm left and up, 10 cells each way.
+        let moved = rect((-20.0, -20.8), (-8.0, -11.0));
+        let wanted_moved: Vec<[i64; 2]> = wanted.iter().map(|&[i, j]| [i - 10, j - 10]).collect();
+        assert_eq!(crossed_cells(&moved, &THREE, 50.0), wanted_moved);
     }
 
     #[test]
@@ -325,5 +322,11 @@ mod tests {
         let mut few = Budget { max_stitches: 119, ..Budget::DEFAULT }.meter();
         assert_eq!(crossed(&part, &THREE, 50.0, &mut few), Err(Exhausted::Stitches));
         assert!(crossed(&part, &THREE, 50.0, &mut Budget { max_stitches: 120, ..Budget::DEFAULT }.meter()).is_ok());
+        // A row of cells is held while they are looked at, so it must fit in the stitches left too: a bar 300 mm
+        // long and 0.5 mm tall reaches 100 cells in a row, and covers none of them enough to sew.
+        let bar = rect((0.0, 1.0), (300.0, 1.5));
+        let mut narrow = Budget { max_stitches: 99, ..Budget::DEFAULT }.meter();
+        assert_eq!(crossed(&bar, &THREE, 50.0, &mut narrow), Err(Exhausted::Stitches));
+        assert!(crossed(&bar, &THREE, 50.0, &mut Budget { max_stitches: 100, ..Budget::DEFAULT }.meter()).unwrap().is_empty());
     }
 }

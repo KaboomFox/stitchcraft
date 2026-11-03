@@ -73,9 +73,9 @@ side and the strip's top edge, so each side's share falls to the columns it cros
 other way round, and take their area away. A part that covers no cell so much sews nothing, and
 `SC-W0319` says so, as Ink/Stitch warns of it.
 
-Every cell the bounds reach costs a unit of work before any is looked at, and each cell that sews a cross
-must fit in the stitches left (`REQ-GEN-004`). A grid of 0.1 mm over a part 1 m wide reaches 10⁸ cells, and
-ends with `SC-E0004` before it takes memory.
+Every cell the bounds reach costs a unit of work before any is looked at. A row of cells, held while they are
+looked at, and each cell that sews a cross must fit in the stitches left (`REQ-GEN-004`). A grid of 0.1 mm
+over a part 1 m wide reaches 10⁸ cells, and ends with `SC-E0004` before it takes memory.
 
 ## A cross
 

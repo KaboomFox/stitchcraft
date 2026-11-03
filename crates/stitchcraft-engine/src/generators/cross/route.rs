@@ -91,6 +91,10 @@ pub(crate) fn runs(
     Ok(runs)
 }
 
+/// The 8 cells round a cell, by how far they lie across and down from it: the row above, the 2 beside it and
+/// the row below, each from the left.
+const AROUND: [[i64; 2]; 8] = [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]];
+
 /// The groups of crosses of `cells` that share corners, each its crosses in the order they were reached
 /// from its first, the groups in the order of their first crosses, row by row from the top. One unit of
 /// `meter` for each cross, and one for each of its neighbours looked for.
@@ -110,8 +114,9 @@ fn groups(cells: &Cells, meter: &mut Meter) -> Result<Vec<Vec<[i64; 2]>>, Exhaus
         let mut next = 0;
         while let Some(&[i, j]) = group.get(next) {
             next += 1;
-            for neighbour in [-1, 0, 1].into_iter().flat_map(|dj| [-1, 0, 1].map(|di| [i + di, j + dj])) {
+            for [di, dj] in AROUND {
                 meter.charge(1)?;
+                let neighbour = [i.saturating_add(di), j.saturating_add(dj)];
                 if let Some(mark) = cells.find(neighbour).and_then(|n| seen.get_mut(n))
                     && !*mark
                 {
@@ -479,6 +484,8 @@ mod tests {
         assert_eq!(starts(Some(p(-1.0, 0.0)), Some(p(9.0, 1.0))), [Spot::Corner([0, 0]), Spot::Corner([3, 0]), Spot::Corner([7, 1])]);
         // With no needle, the first cross from its top right corner, and on from there.
         assert_eq!(starts(None, None), [Spot::Corner([1, 0]), Spot::Corner([3, 0]), Spot::Corner([6, 0])]);
+        // A needle as near 2 corners starts at the first of them, clockwise from the top left: (0, 0), not (1, 0).
+        assert_eq!(starts(Some(p(0.5, -1.0)), None)[0], Spot::Corner([0, 0]));
         // With no needle and the end at the left, the left cross last.
         assert_eq!(starts(None, Some(p(0.0, 0.0))), [Spot::Corner([4, 0]), Spot::Corner([6, 0]), Spot::Corner([0, 0])]);
         // The group of the needle and the end both, with others, goes last, from the end.

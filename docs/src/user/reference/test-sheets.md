@@ -427,3 +427,22 @@ After sewing, check:
 - The file turns the sheet right about its origin, as Ink/Stitch's rotate on export does: its first 4 shapes sew 100 mm wide and 40 mm tall, the red fill at the right and the zigzag at the left. Does the machine sew it so, or turn it back?
 - Last, in red again, the red fill's clone sews below the fill, turned 45° right. Do its rows run along its long sides, as the fill's run along its own? It starts at its corner turned from the fill's top-right one and ends at the one turned from the fill's bottom-left.
 - Any difference between the 2 sew-outs, and where.
+
+## TS-17A — New stitch types: cross stitch
+
+114.0 × 54.0 mm · 5299 stitches, 7 jumps, 6 trims, 1 colour change, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
+
+Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
+
+Drawn as a design, which VectorCraft's Test Sheet filter draws too.
+
+Threads: Red, Blue.
+
+After sewing, check:
+
+- Each sample is a cross stitch fill, trimmed after. Top row, in red, left to right: squares 24 mm wide on grids of 2 mm with 2 and 4 threads, then of 3 mm with 2 and 4 threads. Bottom row, in blue: the 2 mm square with 2 threads and the 3 mm one with 4, flipped, then a K 24 mm tall on a 2 mm grid with 2 threads, grown by 0.1 mm as Ink/Stitch's cross-stitch fonts grow their letters.
+- Does every cross of the top row lie with its / diagonal on top, and every cross of the flipped squares with its \ diagonal on top?
+- Between its 2 diagonals the needle passes through each cross's middle, under the diagonal sewn last. Do those stitches show? The squares and the K first travel from where the needle comes in to where they end, through the middles of their crosses: does that travel show?
+- Does fabric show between the crosses at 2 threads? At 4, do the holes at the cells' corners stay clean, or do they pack and tear? Which grid and thread count look best?
+- The K's arms slant across the grid, and each cell their edges cut in half sews a cross, so the arms step along the grid. Does the K read at 24 mm on a 2 mm grid? A few of its crosses are reached by a corner of their bottom diagonal, and end with a stitch from their middle to it on top: do those show?
+- How long does the sheet take?
