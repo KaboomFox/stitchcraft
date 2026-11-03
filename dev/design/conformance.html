@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d85a2d21.js";
+            window.path_to_searchindex_js = "../searchindex-6f4fd14f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b002ec72.js"></script>
@@ -465,8 +465,9 @@ stitches of those choices against Ink/Stitch’s (<code>REQ-AUTO-021</code>). TS
 strategy and join style among them (<code>REQ-FILL-CON-008</code>), and its circular fills (<code>REQ-FILL-CIR-007</code>).
 TS-11A checks the zigzag strokes (<code>REQ-RUN-013</code>), and the E-stitches, S-stitches and zigzag satins
 (<code>REQ-SAT-029</code>), along straights and round curves. TS-02B to TS-09, the sheets of MC-2 to MC-4, and
-TS-11C, the meander fills’ sheet, are cases of <code>REQ-SVG-008</code> (M8.2). <code>conformance/inkstitch/README.md</code>
-says how to run it by hand and how to add a case.</p>
+TS-11C, the meander fills’ sheet, are cases of <code>REQ-SVG-008</code> (M8.2). The <code>drawn-locks</code> case and TS-16
+check custom locks drawn as paths, of each kind of command, which both programs sew at the same nodes
+(<code>REQ-LCK-005</code>). <code>conformance/inkstitch/README.md</code> says how to run it by hand and how to add a case.</p>
 <p><strong>Centre lines.</strong> Sewing what StitchCraft chose can’t find a choice that is wrong: TS-13B’s small T sewed
 a Γ, the left arm of its bar left out of its centre line, and the differential agreed by every measure.
 The <code>centre-lines</code> cases compare a step before the stitches (<code>REQ-AUTO-022</code>,

@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-d85a2d21.js";
+            window.path_to_searchindex_js = "../../searchindex-6f4fd14f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-b002ec72.js"></script>
@@ -205,7 +205,8 @@ next needle point at another place, pointing into the stitching. Its y axis is a
 When following the stitching would sew a stitch shorter than 0.2 mm, the lock is sewn straight along the
 first stitch, in the frame, and <code>SC-W0502</code> says so.</p>
 <h2 id="tie-in-and-tie-off"><a class="header" href="#tie-in-and-tie-off">Tie-in and tie-off</a></h2>
-<p>A lock is sewn in the same order at both ends. At a tie-off, into the stitching is back along it.</p>
+<p>A lock is sewn in the same order at both ends, but a custom lock drawn as a path, which a tie-off sews
+backwards (<a href="#drawn-as-a-path">drawn as a path</a>). At a tie-off, into the stitching is back along it.</p>
 <ul>
 <li>A <strong>tie-in</strong> leads into the anchor. The needle sews the lock from its first point, and the group’s first
 needle point follows.</li>
@@ -226,7 +227,7 @@ applies to come from that table.</p>
 <tbody>
 <tr><td><code>half_stitch</code> (default)</td><td>steps</td><td>the first stitch</td><td>forth and back over half the first (or last) stitch, twice: steps half as long as that stitch, from 0.2 mm to 1 mm</td></tr>
 <tr><td><code>back_forth</code></td><td>steps</td><td><code>lock_*_scale_mm</code></td><td>forth and back over one step, twice: the half stitch’s rhythm, at a size the user sets</td></tr>
-<tr><td><code>custom</code></td><td>steps</td><td><code>lock_*_scale_mm</code></td><td>the element’s own steps (<a href="#custom-locks">custom locks</a>)</td></tr>
+<tr><td><code>custom</code></td><td>steps, or drawn</td><td><code>lock_*_scale_mm</code> for steps, <code>lock_*_scale_percent</code> for a path</td><td>the element’s own steps, or its own path (<a href="#custom-locks">custom locks</a>)</td></tr>
 <tr><td><code>arrow</code></td><td>drawn</td><td><code>lock_*_scale_percent</code></td><td>a shaft along the stitching to the tip of an arrowhead 1.4 mm ahead, round the head and back down the shaft</td></tr>
 <tr><td><code>bowtie</code></td><td>drawn</td><td><code>lock_*_scale_percent</code></td><td>two triangles tip to tip across the stitching, 1.2 mm long, their long stitches crossing in the middle</td></tr>
 <tr><td><code>cross</code></td><td>drawn</td><td><code>lock_*_scale_percent</code></td><td>an X 0.8 mm across, 0.3 to 1.1 mm ahead</td></tr>
@@ -257,21 +258,64 @@ over the last stitches and 0.5 mm forth again. Steps that add up to 0, as the bu
 start a tie-in and end a tie-off at the anchor.</p>
 <h2 id="custom-locks"><a class="header" href="#custom-locks">Custom locks</a></h2>
 <p><code>lock_custom_start</code> and <code>lock_custom_end</code> hold numbers separated by spaces, or an SVG path that draws the
-lock. The numbers are steps, in sizes of <code>lock_*_scale_mm</code>. The kind of text sets how a file sews, and
-StitchCraft reads it as Ink/Stitch does (<code>REQ-LCK-004</code>). Stripped of the white space round it, as Ink/Stitch
-strips every value, a text made only of digits, spaces, dots, commas and minus signs is numbers. Any other
-text is a path. The steps are the pieces between spaces that read as numbers, and <code>1,5</code> is not one of them.</p>
-<p>StitchCraft reports what it cannot sew (<code>SC-W0503</code>), where Ink/Stitch passes over it in silence:</p>
+lock. The numbers are steps, in sizes of <code>lock_*_scale_mm</code>, and a path is a drawn lock, sized by
+<code>lock_*_scale_percent</code>. The kind of text sets how a file sews, and StitchCraft reads it as Ink/Stitch does
+(<code>REQ-LCK-004</code>). Stripped of the white space round it, as Ink/Stitch strips every value, a text made only of
+digits, spaces, dots, commas and minus signs is numbers. Any other text is a path. The steps are the pieces
+between spaces that read as numbers, and <code>1,5</code> is not one of them.</p>
+<p>StitchCraft reports what it cannot sew of the numbers (<code>SC-W0503</code>), where Ink/Stitch passes over it in
+silence:</p>
 <ul>
 <li>Pieces that are not numbers are left out, with steps longer than 10 m (the data model’s reach) and steps
 of 0, which move nowhere and would sew in place.</li>
 <li>With no step left, as in an empty text, the half stitch is sewn instead.</li>
-<li>A lock drawn as an SVG path is not sewn yet, and the half stitch is sewn instead. The engine never reads
-SVG, and the SVG adapter will hand it the path (roadmap M8).</li>
 </ul>
 <p>What comes of a lock’s settings alone, these and the enlargements below, is the same at every end the lock
 is sewn at, so it is said once for the element, with no place. A lock sewn straight where the stitching
 turns is said where it is sewn.</p>
+<h3 id="drawn-as-a-path"><a class="header" href="#drawn-as-a-path">Drawn as a path</a></h3>
+<p>A path draws the lock in millimetres, at 100 % of <code>lock_*_scale_percent</code>, and StitchCraft sews it as
+Ink/Stitch sews it (<code>REQ-LCK-005</code>). Each command of the path ends at a node, and the needle sews straight
+from node to node:</p>
+<ul>
+<li>A curve or an arc ends at a node. Its control points and its bend are not sewn.</li>
+<li>A closepath’s node is where its subpath started, and the next command starts from there.</li>
+<li>A move to a new subpath ends at a node like the others, and the needle sews to it.</li>
+</ul>
+<p>The last segment gives the lock its direction and is not sewn. It starts at the last node but one, the
+lock’s anchor, which goes where the stitching starts or ends. The path is turned about the anchor until its
+last segment runs along the first stitch into the stitching, and scaled about it. A tie-in sews the nodes
+before the anchor in the order they are drawn, and the stitching starts at the anchor. A tie-off is the
+same lock, turned along the last stitch back into the stitching, and sewn backwards. It leaves the anchor
+for the node before it and ends at the path’s first node, where the thread is trimmed.</p>
+<p>Take <code>M 0,0 L 0,1 L 1,1 L 1,0 L 2,0</code>, whose anchor is (1, 0) and whose last segment runs along x. The
+tie-in sews 3 sides of a square 1 mm across behind the start of the stitching, from 1 mm behind the start
+round to it. The tie-off sews the same 3 sides past the end of the stitching, from the end round to 1 mm
+past it.</p>
+<p>The text is untrusted, and StitchCraft reports what it cannot sew of it (<code>SC-W0503</code>, <code>REQ-LCK-006</code>):</p>
+<ul>
+<li>Path data with an error is read up to the error, as an SVG viewer reads it. The rest is left out.</li>
+<li>A node where the node sewn before it is would sew in place, and is left out.</li>
+<li>The half stitch is sewn instead of a path:
+<ul>
+<li>of fewer than 3 nodes, or more than 100</li>
+<li>whose last segment, which would give the direction, is 0 mm long</li>
+<li>that reaches farther than 10 m from its anchor, the data model’s reach</li>
+<li>left with no stitch to sew</li>
+<li>whose shortest stitch would be shorter than 0.2 mm even at 500 %, the largest scale
+(<a href="#the-shortest-lock-stitch">the shortest lock stitch</a>)</li>
+</ul>
+</li>
+</ul>
+<h3 id="reading-a-path"><a class="header" href="#reading-a-path">Reading a path</a></h3>
+<p>The engine reads the path from the setting’s text, as it reads numbers. A VectorCraft document’s effect
+keeps the same text as an SVG file. A drawn lock then sews alike from every host. The engine is at layer 2
+and cannot use the SVG adapter. It reads the path with <code>svgtypes</code>’ path-data parser, which the SVG adapter
+reads a path’s <code>d</code> with, and one parser reads SVG’s path syntax for both. <code>svgtypes</code> is pure Rust and builds
+for WebAssembly. Its parser reads each number with Rust’s own reading of decimals, the same on every
+platform. The engine calls nothing else of it, and nothing of <code>kurbo</code>, which <code>svgtypes</code> depends on. Its
+geometry is its own (<a href="../adr/0005-geometry-stack.html">ADR-0005</a>). <code>xtask/src/layers.rs</code> allows <code>svgtypes</code>
+in the engine and the SVG adapter alone.</p>
 <h2 id="the-shortest-lock-stitch"><a class="header" href="#the-shortest-lock-stitch">The shortest lock stitch</a></h2>
 <p>A lock stitch is at least 0.2 mm long (<code>LOCK_MIN_STITCH</code>), and the plan checker holds lock stitches to
 that length (<code>REQ-PLAN-002</code>). The needle never goes back into the hole it just left. Joins count: a
@@ -279,7 +323,8 @@ tie-in’s last stitch into the anchor and a tie-off’s first stitch out of it.
 <ul>
 <li>A step shorter than 0.2 mm is lengthened to it, keeping its direction.</li>
 <li>A drawn lock whose shortest stitch would be shorter is enlarged as a whole until that stitch is 0.2 mm
-long, keeping its shape.</li>
+long, keeping its shape. A custom lock’s path is enlarged to 500 % at most, the largest scale
+<code>lock_*_scale_percent</code> takes. A path that would need more is not sewn.</li>
 <li>A lock of steps that a sharp turn would fold onto itself is sewn straight (<a href="#placement">placement</a>).</li>
 </ul>
 <p><code>SC-W0502</code> reports each of these, with the size. The half stitch never needs them.</p>
@@ -297,7 +342,20 @@ one step, twice, like its half stitch.</li>
 cross and star are centred on the anchor, and reach 1.1 mm past the end of the stitching at 150 %.
 TS-04, whose lines end at the sheet’s edges, is 1.6 mm wider in Ink/Stitch, and its differential case
 excuses the size and the overlap.</li>
-<li>Ink/Stitch draws custom SVG paths. StitchCraft sews the half stitch with <code>SC-W0503</code> until M8.13.</li>
+<li>A custom lock drawn as a path sews the same nodes in both, in the same places and order, as differential
+cases and TS-16 check. Ink/Stitch was run on paths of each kind of command, and where the 2
+differ, StitchCraft follows the rules above:
+<ul>
+<li>Ink/Stitch reads the path with inkex, which passes over a letter that is no command, with the numbers
+after it. Its reader stops at arc flags written together (<code>A 1 1 0 01 2,0</code>). With fewer than 3 nodes
+read, Ink/Stitch sews its half stitch. StitchCraft reads SVG’s grammar up to the first error.</li>
+<li>Ink/Stitch sews a stitch in place where 2 nodes are one, and stitches shorter than 0.2 mm as they are.
+It sews a path of any number of nodes, at any distance.</li>
+<li>Ink/Stitch lays a path whose last segment has no length along the path’s own x axis.</li>
+<li>Ink/Stitch turns the lock towards the group’s second needle point, wherever it is. StitchCraft turns it
+towards the first needle point at another place than the anchor, as it turns its own drawn locks.</li>
+</ul>
+</li>
 </ul>
 <p>Both follow the stitching with custom steps. They differ in 5 places (<code>DEV-LCK-002</code>):</p>
 <ul>
@@ -318,6 +376,9 @@ sews the same lock (<code>REQ-LCK-002</code>, property test).</li>
 <li><strong>Sizes:</strong> the drawn locks scale with <code>lock_*_scale_percent</code> alone, and the locks made of steps with
 <code>lock_*_scale_mm</code> alone. The half stitch scales with neither (<code>REQ-LCK-002</code>).</li>
 <li><strong>Custom steps</strong> sew as Ink/Stitch reads them, round the stitching’s corners (<code>REQ-LCK-004</code>).</li>
+<li><strong>Custom paths</strong> sew the nodes Ink/Stitch sews, in the same places and order, at both ends
+(<code>REQ-LCK-005</code>). A path that cannot be sewn as written says why, and any path sews no lock stitch shorter
+than 0.2 mm (<code>REQ-LCK-006</code>, property test).</li>
 </ol>
 <p>Plan assembly (M3.8) checks where locks go (<code>ties</code>, <code>REQ-LCK-001</code>). Machine checkpoint MC-2 checks with test
 sheet TS-04 whether the default locks hold when the tail is pulled (<code>REQ-LCK-003</code>).</p>

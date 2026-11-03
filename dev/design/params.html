@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d85a2d21.js";
+            window.path_to_searchindex_js = "../searchindex-6f4fd14f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b002ec72.js"></script>
@@ -217,7 +217,7 @@ embroiderer. The real declaration of the settings every stitch type shares, in
         /// The shape of a custom start lock: …
         lock_custom_start: Text = "", label "Custom start lock", when lock_start == "custom";
 
-        /// How long each step of a start lock made of steps (back and forth, or custom) is.
+        /// How long each step of a start lock made of steps (back and forth, or custom numbers) is.
         lock_start_scale_mm: Length = "0.7", label "Start lock size", range (0.1, 10.0),
             when lock_start in SIZED_IN_MM;
         …

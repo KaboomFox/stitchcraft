@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-d85a2d21.js";
+            window.path_to_searchindex_js = "../searchindex-6f4fd14f.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-b002ec72.js"></script>
@@ -187,8 +187,10 @@ new piece of code belongs. If you are about to add a file and are not sure where
 <a href="#where-does-my-code-go">decision table</a> at the end answers it.</p>
 <h2 id="principles"><a class="header" href="#principles">Principles</a></h2>
 <ol>
-<li><strong>The engine knows nothing about hosts.</strong> It never sees SVG, VectorCraft, files or the network.
-Hosts adapt <em>their</em> documents into a <code>Design</code> and consume a <code>StitchPlan</code>.</li>
+<li><strong>The engine doesn’t read a host’s documents.</strong> It never sees an SVG document, VectorCraft, files or
+the network. Hosts adapt <em>their</em> documents into a <code>Design</code> and consume a <code>StitchPlan</code>. A custom lock drawn
+as a path is a setting’s text in SVG’s path syntax, which the engine reads as it reads any setting
+(<a href="algorithms/locks.html#reading-a-path">locks</a>).</li>
 <li><strong>Pure core, effects at the edges.</strong> Generators are deterministic functions of their inputs.
 File I/O, clocks, environment variables and terminals live only in apps and <code>xtask</code>.</li>
 <li><strong>One source of truth per concept.</strong> Parameters live in the registry, diagnostics in the
@@ -259,7 +261,7 @@ GPL/AGPL/LGPL.</p>
 <tbody>
 <tr><td>Deterministic transcendental math</td><td><code>libm</code> 0.2</td><td>MIT</td><td>core</td></tr>
 <tr><td>Errors</td><td><code>thiserror</code> 2</td><td>MIT/Apache</td><td>all libraries</td></tr>
-<tr><td>XML / SVG syntax</td><td><code>roxmltree</code>, <code>svgtypes</code></td><td>MIT/Apache</td><td>svg</td></tr>
+<tr><td>XML / SVG syntax</td><td><code>roxmltree</code>, <code>svgtypes</code></td><td>MIT/Apache</td><td>svg, and engine for <code>svgtypes</code>’ path-data parser alone, which reads a custom lock drawn as a path</td></tr>
 <tr><td><code>.vectorcraft</code> documents: JSON, its coordinates read exactly, unpacked from gzip by a Rust backend</td><td><code>serde</code>, <code>serde_json</code>, <code>flate2</code> 1</td><td>MIT/Apache</td><td>vectorcraft</td></tr>
 <tr><td>Rasterizing previews, and reading VectorCraft’s pictures to compare them</td><td><code>tiny-skia</code> 0.11</td><td>BSD-3-Clause</td><td>render, xtask</td></tr>
 <tr><td>JSON reports, and the plug-in’s JSON</td><td><code>serde_json</code></td><td>MIT/Apache</td><td>cli, vc-plugin</td></tr>
