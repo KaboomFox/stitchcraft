@@ -115,6 +115,8 @@ underlay, reading the running stitch's tolerance and random lengths for its path
 and sews one path through it after the same underlay ([fills](algorithms/fills.md#meander-fill)). A
 circular fill, sewn from M7.9, sews a spiral round the middle of each part after that underlay too, and
 routes the spiral's pieces as a tatami fill routes its rows ([fills](algorithms/fills.md#circular-fill)).
+A cross stitch fill, sewn from M10.1, sews a cross in each cell of a grid that each part covers enough of,
+with no underlay, the crosses that meet at a corner in one run ([cross stitch](algorithms/cross-stitch.md)).
 The other stroke, satin and fill methods are skipped with `SC-W0011` until their milestones. An element whose parameters are wrong (`SC-E0101`) is skipped too, and
 the rest of the design still plans.
 
@@ -128,8 +130,8 @@ A preview that cannot afford a fill's stitches shows its top rows (`stitchcraft_
 from M6.3). The fill's settings are read as for sewing it, and what they say is said the same, but only
 the region is built and the rows laid over it: no needle point is placed and no route is searched. A
 contour fill has no rows, and shows its path round its rings, from M7.7. A meander fill shows its path
-through its tile as the element's seed lays it, from M7.8, and a circular fill the pieces of its spiral,
-from M7.9.
+through its tile as the element's seed lays it, from M7.8, a circular fill the pieces of its spiral,
+from M7.9, and a cross stitch fill the 2 diagonals of each of its crosses, from M10.1.
 
 Rules every generator follows:
 
