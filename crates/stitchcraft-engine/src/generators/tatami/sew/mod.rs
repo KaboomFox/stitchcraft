@@ -358,7 +358,7 @@ pub(crate) fn pieces(polygon: &Polygon, distance: f64, warnings: &mut Vec<Diagno
 
 /// `code` for the `gone` parts of `parts` that `key` shrank away entirely, whose `what` sewn over all of
 /// the part.
-fn shrunk_away(code: Code, key: &str, what: &str, gone: usize, parts: usize) -> Option<Diagnostic> {
+pub(crate) fn shrunk_away(code: Code, key: &str, what: &str, gone: usize, parts: usize) -> Option<Diagnostic> {
     let message = match (gone, parts) {
         (0, _) => return None,
         (1, 1) => format!("`{key}` shrinks this fill away entirely, so {what} sewn over all of it."),
@@ -454,8 +454,9 @@ fn rings_of(part: &Polygon) -> Vec<&[Point]> {
 /// `region`'s parts in the order they are sewn: nearest `needle` first, or with no needle, by how far left
 /// they reach. Ink/Stitch sorts them so with a stable sort, over the order its geometry library gives
 /// them in, which in every case tried was by their point of least x, and of least y among the points level
-/// with it. Parts that tie go in that order here too (`REQ-FILL-TAT-008`).
-fn in_order<'a>(region: &'a Region, needle: Option<Point>, meter: &mut Meter) -> Result<Vec<&'a Polygon>, Exhausted> {
+/// with it. Parts that tie go in that order here too (`REQ-FILL-TAT-008`). A cross stitch fill takes its
+/// parts in this order too (`generators::cross`).
+pub(crate) fn in_order<'a>(region: &'a Region, needle: Option<Point>, meter: &mut Meter) -> Result<Vec<&'a Polygon>, Exhausted> {
     let mut keyed = Vec::with_capacity(region.parts.len());
     for part in &region.parts {
         let (x, y) = leftmost(part);

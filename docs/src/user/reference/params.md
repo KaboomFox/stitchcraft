@@ -40,7 +40,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 
 ## Where reading differs from Ink/Stitch
 
-- **DEV-PRM-001.** A value StitchCraft cannot read refuses its element (SC-E0101), and the rest of the design is sewn. Ink/Stitch sews such a value as the parameter's default, or a toggle as off, without a word: it sews 3,5 for running_stitch_length_mm as 2.5 mm stitches, and a toggle of on as off. A toggle reads yes, y, true, t and 1 as on here, as Ink/Stitch does, and only their opposites and off as off. StitchCraft reads a tab, or several spaces, between a list's values as one space, where Ink/Stitch sews a list with a tab between values as its default, and a fill's underlay angles with 2 spaces between them too. It also reads a unit right after a number, mm, in or pt after a length, a degree sign or deg after an angle and a percent sign after a percentage, where Ink/Stitch sews the default.
+- **DEV-PRM-001.** A value StitchCraft cannot read refuses its element (SC-E0101), and the rest of the design is sewn. Ink/Stitch sews such a value as the parameter's default, or a toggle as off, without a word: it sews 3,5 for running_stitch_length_mm as 2.5 mm stitches, and a toggle of on as off. A toggle reads yes, y, true, t and 1 as on here, as Ink/Stitch does, and only their opposites and off as off. StitchCraft reads a tab, or several spaces, between a list's values as one space, where Ink/Stitch sews a list with a tab between values as its default, and a fill's underlay angles with 2 spaces between them too. It also reads a unit right after a number, mm, in or pt after a length, a degree sign or deg after an angle and a percent sign after a percentage, where Ink/Stitch sews the default. And it reads a fraction in fill_coverage, which Ink/Stitch reads as a whole number and so sews 75.5 at its default, 50.
 - **DEV-PRM-002.** Every number a parameter takes keeps to a range of StitchCraft's, given in the parameter's reference entry. A value outside it is clamped into it, with SC-W0102. Ink/Stitch sets a floor for most of its numbers and few ceilings, so many of these ranges are narrower than its own: repeats has no ceiling there and stops at 100 here.
 - **DEV-PRM-003.** An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column's deviates so. Ink/Stitch reads a manual stitch's as not set at 0 or below too, and doesn't warn.
 - **DEV-PRM-004.** A list takes at most 16 values and a pair 2, and no value may be longer than 4,096 bytes: more refuses the element (SC-E0101), whose message quotes the start of a long value. Ink/Stitch reads a list of any length, takes the first 2 values of a longer pair, and reads text of any length.
@@ -60,6 +60,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Tatami parameters](params/tatami.md) | 15 | Tatami fill, Contour fill, Meander fill, Circular fill |
 | [Contour parameters](params/contour.md) | 4 | Contour fill |
 | [Meander parameters](params/meander.md) | 6 | Meander fill |
+| [Cross parameters](params/cross.md) | 7 | Cross stitch |
 | [Path fill parameters](params/path-fill.md) | 3 | Contour fill, Meander fill, Circular fill |
 | [Auto parameters](params/auto.md) | 5 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
 
@@ -76,6 +77,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`avoid_self_crossing`](params/contour.md#avoid_self_crossing) | Avoid self-crossing | Contour parameters |
 | [`bean_stitch_repeats`](params/repeat.md#bean_stitch_repeats) | Bean stitch | Repeat parameters |
 | [`bean_stitch_repeats`](params/path-fill.md#bean_stitch_repeats) | Bean stitch | Path fill parameters |
+| [`canvas_grid_origin`](params/cross.md#canvas_grid_origin) | Grid on the canvas | Cross parameters |
 | [`center_walk_underlay`](params/satin.md#center_walk_underlay) | Centre walk underlay | Satin parameters |
 | [`center_walk_underlay_position`](params/satin.md#center_walk_underlay_position) | Centre walk position | Satin parameters |
 | [`center_walk_underlay_repeats`](params/satin.md#center_walk_underlay_repeats) | Centre walk repeats | Satin parameters |
@@ -89,11 +91,15 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`contour_underlay_inset_percent`](params/satin.md#contour_underlay_inset_percent) | Contour inset (% of width) | Satin parameters |
 | [`contour_underlay_stitch_length_mm`](params/satin.md#contour_underlay_stitch_length_mm) | Contour stitch length | Satin parameters |
 | [`contour_underlay_stitch_tolerance_mm`](params/satin.md#contour_underlay_stitch_tolerance_mm) | Contour tolerance | Satin parameters |
+| [`cross_offset_mm`](params/cross.md#cross_offset_mm) | Grid offset | Cross parameters |
+| [`cross_stitch_method`](params/cross.md#cross_stitch_method) | Cross | Cross parameters |
+| [`cross_thread_count`](params/cross.md#cross_thread_count) | Threads | Cross parameters |
 | [`enable_random_stitch_length`](params/running.md#enable_random_stitch_length) | Random stitch length | Running parameters |
 | [`end_at_nearest_point`](params/satin.md#end_at_nearest_point) | End at nearest point | Satin parameters |
 | [`end_row_spacing_mm`](params/tatami.md#end_row_spacing_mm) | End row spacing | Tatami parameters |
 | [`expand_mm`](params/tatami.md#expand_mm) | Expand | Tatami parameters |
 | [`fill`](params/fill.md#fill) | Sew the fill | Fill parameters |
+| [`fill_coverage`](params/cross.md#fill_coverage) | Coverage | Cross parameters |
 | [`fill_method`](params/fill.md#fill_method) | Fill method | Fill parameters |
 | [`fill_underlay`](params/tatami.md#fill_underlay) | Underlay | Tatami parameters |
 | [`fill_underlay_angle`](params/tatami.md#fill_underlay_angle) | Underlay angle | Tatami parameters |
@@ -112,6 +118,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`lock_start`](params/common.md#lock_start) | Start lock | Common parameters |
 | [`lock_start_scale_mm`](params/common.md#lock_start_scale_mm) | Start lock size | Common parameters |
 | [`lock_start_scale_percent`](params/common.md#lock_start_scale_percent) | Start lock scale | Common parameters |
+| [`max_cross_stitch_length_mm`](params/cross.md#max_cross_stitch_length_mm) | Longest cross stitch | Cross parameters |
 | [`max_stitch_length_mm`](params/common.md#max_stitch_length_mm) | Longest stitch | Common parameters |
 | [`meander_angle`](params/meander.md#meander_angle) | Pattern angle | Meander parameters |
 | [`meander_pattern`](params/meander.md#meander_pattern) | Pattern | Meander parameters |
@@ -119,6 +126,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`min_jump_stitch_length_mm`](params/common.md#min_jump_stitch_length_mm) | Shortest jump | Common parameters |
 | [`min_random_split_length_mm`](params/satin.md#min_random_split_length_mm) | Shortest split stitch | Satin parameters |
 | [`min_stitch_length_mm`](params/common.md#min_stitch_length_mm) | Shortest stitch | Common parameters |
+| [`pattern_size_mm`](params/cross.md#pattern_size_mm) | Cell size | Cross parameters |
 | [`pull_compensation_mm`](params/pull.md#pull_compensation_mm) | Pull compensation | Pull parameters |
 | [`pull_compensation_percent`](params/pull.md#pull_compensation_percent) | Pull compensation (%) | Pull parameters |
 | [`push_compensation_mm`](params/satin.md#push_compensation_mm) | Push compensation | Satin parameters |
