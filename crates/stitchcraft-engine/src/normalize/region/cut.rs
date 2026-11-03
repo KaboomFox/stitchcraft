@@ -167,6 +167,15 @@ mod tests {
     }
 
     #[test]
+    fn a_line_across_a_ring_upright_or_aslant_is_cut_where_it_crosses_it() {
+        // How far along the line each crossing lies, along x and y both, orders the cuts and finds the middle
+        // of each stretch between them.
+        let parts = [square(0.0, 0.0, 10.0)];
+        assert_eq!(cut(&[p(5.0, -5.0), p(5.0, 15.0)], &parts), [vec![p(5.0, 0.0), p(5.0, 10.0)]]);
+        assert_eq!(cut(&[p(-5.0, 0.0), p(15.0, 10.0)], &parts), [vec![p(0.0, 2.5), p(10.0, 7.5)]]);
+    }
+
+    #[test]
     fn a_point_repeated_along_a_line_adds_nothing_to_its_pieces() {
         // A manual stitch's nodes may repeat a point: the step between them goes nowhere and is passed over.
         let parts = [square(0.0, 0.0, 10.0)];

@@ -401,7 +401,7 @@ the filter stops with `SC-E0004` before VectorCraft would. A VectorCraft before 
 filter, which almost every curved line outruns, and stops it with its own error.
 
 **Test Sheet** (`REQ-VC-015`, `apps/stitchcraft-vc-plugin/src/testsheet.rs`) draws one of the sheets
-drawn as designs, TS-02B to TS-09, TS-11B and the TS-13 sheets, into the document: the sheet's design
+drawn as designs, TS-02B to TS-09, TS-11A, TS-11B and the TS-13 sheets, into the document: the sheet's design
 moved by whole millimetres so that its middle is nearest the middle of the artboard `_context` names
 (`Design::moved`). Each element is an object named by its id, with its path and its thread as the paint
 its family sews with. Its settings are its family's effect record, each the value its dialog row takes,
@@ -694,9 +694,12 @@ tests write files for the adapter to read back (Level B, M6.6).
 
 Because VectorCraft up to 0.16 drops `inkstitch:*` attributes on SVG import, phase 1 offers
 `stitch import-inkstitch design.svg -o design.vectorcraft`: our SVG adapter reads the Ink/Stitch file
-and writes a VectorCraft document with the same art and the parameters as live-effect records (M8).
+and writes a VectorCraft document with the same art and the parameters as live-effect records (M8.12,
+after 1.0).
 From 0.17 VectorCraft keeps the attributes from SVG import to SVG export, but its live effects read none
-of them.
+of them. [ADR-0016](adr/0016-inkstitch-files-imported-by-stitchcraft.md) keeps `stitch import-inkstitch`
+as the way in, after spike M8.11: VectorCraft gives a plug-in no attribute of another application, and
+its import loses what Ink/Stitch's settings depend on.
 
 ## 5. Phase 2: plug-in features proposed upstream (summary)
 

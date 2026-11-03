@@ -10,7 +10,7 @@
 
 use std::f64::consts::SQRT_2;
 
-use stitchcraft_core::{Budget, Code, ElementId, Point, UnitError};
+use stitchcraft_core::{Budget, Code, ElementId, Mm, Point, UnitError};
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::{StitchPlan, Thread};
@@ -19,7 +19,7 @@ use super::Cloned;
 use super::pictures::Picture;
 use super::sketch::SheetError;
 use crate::common::{STOP_AFTER, TRIM_AFTER};
-use crate::design::{Clip, Design, DesignSettings, Element, FillRule, Hints, Path, Segment, Shape, Subpath, Turn};
+use crate::design::{Cap, Clip, Design, DesignSettings, Element, FillRule, Hints, Join, Path, Segment, Shape, Subpath, Turn};
 use crate::generators::satin::{END_AT_NEAREST_POINT, START_AT_NEAREST_POINT};
 use crate::generators::tatami::ANGLE;
 
@@ -100,12 +100,38 @@ impl Drawing {
         self.stroke(name, vec![line(first, rest)?], thread, params)
     }
 
+    /// A stroke along `path`, `width` mm wide, named `name`, sewn with `thread` and the Ink/Stitch `params`:
+    /// a zigzag stroke sews across its path as wide as it is drawn.
+    pub fn wide(&mut self, name: &str, path: Subpath, width: f64, thread: &Thread, params: &[(&str, &str)]) -> Result<(), SheetError> {
+        let shape = Shape::Stroke { path: Path { subpaths: vec![path] }, width: Mm::new(width)?, join: Join::UNSET, cap: Cap::Butt };
+        self.add(name, shape, thread, params)
+    }
+
+    /// A satin column named `name` between 2 rails, each from its start to its end, sewn with `thread` and
+    /// the Ink/Stitch `params`. The first rail is the one a satin column starts on, and an E-stitch's spine.
+    pub fn satin_between(&mut self, name: &str, rails: [Subpath; 2], thread: &Thread, params: &[(&str, &str)]) -> Result<(), SheetError> {
+        let params = [params, &[("satin_column", "true")]].concat();
+        self.stroke(name, rails.into(), thread, &params)
+    }
+
     /// A satin column named `name` between 2 straight rails, each from its first point to its second, sewn
     /// with `thread` and the Ink/Stitch `params`.
     pub fn satin(&mut self, name: &str, rails: [[(f64, f64); 2]; 2], thread: &Thread, params: &[(&str, &str)]) -> Result<(), SheetError> {
         let [[a, b], [c, d]] = rails;
-        let params = [params, &[("satin_column", "true")]].concat();
-        self.stroke(name, vec![line(a, &[b])?, line(c, &[d])?], thread, &params)
+        self.satin_between(name, [line(a, &[b])?, line(c, &[d])?], thread, params)
+    }
+
+    /// A satin column named `name` round `centre`, between a circle of radius `outer`, its first rail, and one
+    /// of radius `inner`, each round from `start`, sewn with `thread` and the Ink/Stitch `params`.
+    pub fn ring(
+        &mut self,
+        name: &str,
+        (centre, start): ((f64, f64), Start),
+        (outer, inner): (f64, f64),
+        thread: &Thread,
+        params: &[(&str, &str)],
+    ) -> Result<(), SheetError> {
+        self.satin_between(name, [round_from(centre, outer, start)?, round_from(centre, inner, start)?], thread, params)
     }
 
     /// A circle of `radius` round `centre`, sewn along from `start` with `thread` and the Ink/Stitch `params`.
@@ -222,6 +248,10 @@ pub(super) fn open(points: &[(f64, f64)]) -> Result<Subpath, UnitError> {
     line(first, rest)
 }
 
+/// The control points of a quarter circle drawn as a cubic curve lie this share of its radius from its ends,
+/// 4/3 (√2 − 1).
+const KAPPA: f64 = 4.0 / 3.0 * (SQRT_2 - 1.0);
+
 /// Where a circle starts and ends: a point where one of its axes crosses it. A circle runs clockwise as seen
 /// from the front, the drawing's y axis pointing down: from its right-hand point down to its bottom.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -243,8 +273,7 @@ pub(super) fn round(centre: (f64, f64), radius: f64) -> Result<Subpath, UnitErro
 /// a circle where the jump to it arrives, since the reference machine does not cut the jump's thread, and a
 /// circle that crossed it would sew it down.
 pub(super) fn round_from(centre: (f64, f64), radius: f64, start: Start) -> Result<Subpath, UnitError> {
-    // The control points of a quarter circle: 4/3 (√2 − 1) of the radius from its ends.
-    let (x, y, r, k) = (centre.0, centre.1, radius, 4.0 / 3.0 * (SQRT_2 - 1.0) * radius);
+    let (x, y, r, k) = (centre.0, centre.1, radius, KAPPA * radius);
     // The quarters clockwise, each to the next point from the one before: to the bottom, the left, the top and
     // the right.
     let quarters = [
@@ -266,6 +295,45 @@ pub(super) fn round_from(centre: (f64, f64), radius: f64, start: Start) -> Resul
         end = to;
     }
     Ok(Subpath { start: point(end)?, segments, closed: true })
+}
+
+/// Which way a hook runs from its start.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) enum Way {
+    /// East, then round to the south the way a clock's hands turn.
+    East,
+    /// West, then round to the south the other way: a hook running east, mirrored.
+    West,
+}
+
+impl Way {
+    /// The sign of the way along x: 1 east and -1 west.
+    pub(super) const fn sign(self) -> f64 {
+        match self {
+            Way::East => 1.0,
+            Way::West => -1.0,
+        }
+    }
+
+    /// The other way.
+    pub(super) const fn back(self) -> Way {
+        match self {
+            Way::East => Way::West,
+            Way::West => Way::East,
+        }
+    }
+}
+
+/// A hook: `straight` mm from `start` the `way` it runs, then a quarter circle of `radius` round to the south,
+/// so a sample sews straight and then curved. With `aside`, the hook lies that far towards the middle of its
+/// turn, as a satin column's rail lies beside its middle: south of the straight, and inside the curve.
+pub(super) fn hook((x, y): (f64, f64), way: Way, (straight, radius): (f64, f64), aside: f64) -> Result<Subpath, UnitError> {
+    // The quarter circle round (x ± straight, y + radius), from its top to its side, as `round_from` draws a
+    // quarter, mirrored for a hook running west.
+    let (s, r) = (way.sign(), radius - aside);
+    let (cx, cy, k) = (x + s * straight, y + radius, KAPPA * r);
+    let turn = Segment::Cubic(point((cx + s * k, cy - r))?, point((cx + s * r, cy - k))?, point((cx + s * r, cy))?);
+    Ok(Subpath { start: point((x, y + aside))?, segments: vec![Segment::Line(point((cx, cy - r))?), turn], closed: false })
 }
 
 /// A point from literal coordinates.

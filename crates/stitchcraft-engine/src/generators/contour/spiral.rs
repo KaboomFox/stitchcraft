@@ -209,8 +209,8 @@ mod tests {
 
     #[test]
     fn a_ring_walked_once_is_resampled_at_the_very_points_point_at_finds() {
-        // A circle of 64 sides, a ring with a side of no length, a line and a point, each into 1 to 200
-        // points: the points of looking for each from the ring's start, to the last bit.
+        // A circle of 64 sides, a ring with a side of no length, a line, a point and a line bent once, each into
+        // 1 to 200 points: the points of looking for each from the ring's start, to the last bit.
         use super::super::line::point_at;
         let circle: Vec<Point> = (0..=64)
             .map(|k| {
@@ -219,7 +219,12 @@ mod tests {
             })
             .collect();
         let doubled = [p(0.0, 0.0), p(1.0, 0.0), p(1.0, 0.0), p(1.0, 2.5), p(0.0, 0.0)];
-        for ring in [&circle[..], &doubled[..], &[p(0.0, 0.0), p(0.3, 0.7)][..], &[p(2.0, 2.0)][..]] {
+        // The bent line's sides, 0.3 and 0.4 long, add up to 0.7 rounded down, and 0.7 less 0.3 is a hair short
+        // of 0.4, so a point found on the last side at the line's whole length would fall a hair short of its
+        // end: the walk goes on past that side, as point_at's does, to the end itself.
+        let bent = [p(0.0, 0.0), p(0.3, 0.0), p(0.3, 0.4)];
+        assert_eq!(resampled(&bent, 2), [p(0.0, 0.0), p(0.3, 0.4)]);
+        for ring in [&circle[..], &doubled[..], &[p(0.0, 0.0), p(0.3, 0.7)][..], &[p(2.0, 2.0)][..], &bent[..]] {
             let long = length(ring);
             for n in [1, 2, 3, 7, 64, 65, 200] {
                 let step = if n > 1 { long / (n - 1) as f64 } else { 0.0 };

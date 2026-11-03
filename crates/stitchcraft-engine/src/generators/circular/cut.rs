@@ -91,7 +91,7 @@ impl Spanned {
 }
 
 /// The pieces of `line` inside the part whose rings are `rings`, in order along it, each running its way
-/// with its spans. A piece shorter than [`SAME`] is left out. Costs as [`Rings::meeting`] and
+/// with its spans. A piece no longer than [`SAME`] is left out. Costs as [`Rings::meeting`] and
 /// [`Rings::covers`] do, and one unit of `meter` for each side of the line and each point where it meets
 /// a ring.
 pub(super) fn cut(line: &Spanned, rings: &Rings<'_>, meter: &mut Meter) -> Result<Vec<Spanned>, Exhausted> {
@@ -162,7 +162,8 @@ impl Cutting {
         piece.points.push(to);
     }
 
-    /// The piece the line is in ends, and is kept if it has any length.
+    /// The piece the line is in ends, and is kept if it is longer than [`SAME`], the length below which
+    /// points are one.
     fn end(&mut self) {
         let Some(mut piece) = self.piece.take() else { return };
         piece.starts.retain(|&start| start + 1 < piece.points.len());
@@ -222,6 +223,16 @@ mod tests {
     }
 
     #[test]
+    fn a_piece_no_longer_than_same_is_left_out() {
+        // Points SAME apart are one point: inside a square round the origin, a line half of SAME long or SAME
+        // long is no piece, and one twice SAME long is one.
+        let square = Polygon { outline: vec![p(-1.0, -1.0), p(-1.0, 1.0), p(1.0, 1.0), p(1.0, -1.0), p(-1.0, -1.0)], holes: Vec::new() };
+        for (long, pieces) in [(0.5 * SAME, 0), (SAME, 0), (2.0 * SAME, 1)] {
+            assert_eq!(cut_by(&square, &line(&[(0.0, 0.0), (long, 0.0)])).len(), pieces, "{long}");
+        }
+    }
+
+    #[test]
     fn a_piece_keeps_the_spans_of_its_stretch_of_line() {
         // 3 stretches across the rectangle, the second starting where the first ends and the third apart:
         // spans start at (5, 1), at (6, 1) for the step, and at (7, 1).
@@ -256,6 +267,19 @@ mod tests {
         assert_eq!(a, before);
         a.extend(&line(&[(3.0, 1.0)]));
         assert_eq!((a.points.len(), a.starts), (4, vec![2]));
+    }
+
+    #[test]
+    fn a_line_of_one_point_extended_starts_no_span_at_its_first_point() {
+        // No span starts at a line's first point. A point extended by a line that starts elsewhere: the step
+        // from the point to the line is the first span, and the line's own starts after it. A point extended by
+        // a line that starts there: the line alone, with its own spans.
+        let mut a = line(&[(0.0, 0.0)]);
+        a.extend(&line(&[(1.0, 0.0), (2.0, 0.0)]));
+        assert_eq!((a.points.len(), a.starts), (3, vec![1]));
+        let mut b = line(&[(1.0, 0.0)]);
+        b.extend(&line(&[(1.0, 0.0), (2.0, 0.0)]));
+        assert_eq!(b, line(&[(1.0, 0.0), (2.0, 0.0)]));
     }
 
     #[test]

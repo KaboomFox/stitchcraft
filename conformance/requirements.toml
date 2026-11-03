@@ -551,6 +551,15 @@ rationale = "Ink/Stitch's zig-zag stitch, read at d59c9ab: a file sews the same 
 milestone = "M7"
 status = "active"
 
+[[req]]
+id = "REQ-RUN-013"
+area = "strokes/zigzag"
+level = "L3"
+statement = "The zigzag strokes StitchCraft sews TS-11A with, 1, 2 and 4 mm wide at spacings of 0.4, 1 and 2 mm, along a straight and round a curve, and one whose stitches turn 45°, written as an SVG file with their Ink/Stitch parameters, sew in the Ink/Stitch that conformance/inkstitch/pin.toml names, run as a black box, as StitchCraft sews the sheet, by the measures of REQ-SVG-008 and within their tolerances. A measure that a case excuses with an entry of the deviations ledger may differ."
+rationale = "The zigzag stroke is built from Ink/Stitch's behaviour, and the differential is how a file is shown to sew the same in both."
+milestone = "M7"
+status = "active"
+
 # ── Lock stitches and assembly ─────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -903,6 +912,15 @@ area = "satin/zigzag"
 level = "L2"
 statement = "Under a zigzag satin, each side of the contour underlay stops where the zigzag stops on its rail, before it stops short of the column's ends by the insets: the first rail's side where the zigzag's last point on the first rail meets it, and the second rail's where its first and last points on the second rail meet it, each point as inset. A cut that would leave less than half a CSS pixel of a side is not made. An odd centre walk moves none of these places (DEV-SAT-011)."
 rationale = "Ink/Stitch's zigzag satin, read at 6555892, stops its contour underlay at the zigzag's peaks (lib/elements/satin_column/underlay.py, _do_contour_underlay): an underlay past the last top stitch on a rail would show, and a file sews alike in both."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-SAT-029"
+area = "satin"
+level = "L3"
+statement = "The E-stitches, S-stitches and zigzag satins StitchCraft sews TS-11A with, written as an SVG file with their Ink/Stitch parameters, sew in the Ink/Stitch that conformance/inkstitch/pin.toml names, run as a black box, as StitchCraft sews the sheet, by the measures of REQ-SVG-008 and within their tolerances: E-stitches along straight sides and round circles, S-stitches along a straight and round a curve, split by the default and the staggered methods, and zigzag satins beside satin columns and over a contour underlay. A measure that a case excuses with an entry of the deviations ledger may differ."
+rationale = "The E-stitch, the S-stitch and the zigzag satin are built from Ink/Stitch's behaviour, and the differential is how a file is shown to sew the same in both."
 milestone = "M7"
 status = "active"
 
@@ -1390,7 +1408,7 @@ status = "active"
 id = "REQ-VC-015"
 area = "vectorcraft"
 level = "L2"
-statement = "From VectorCraft 0.16, StitchCraft's Test Sheet filter draws one of `stitch testsheet`'s sheets drawn as designs, TS-02B to TS-09, TS-11B and the TS-13 sheets, into the document, moved by whole millimetres so that its middle is nearest the middle of the artboard. Each element is an object with its path, its thread as the paint its family sews with, and its settings as the record of its family's StitchCraft effect, each the value its dialog row takes. The document sews as the sheet's design sews, moved as the filter moved it, and exports within an export's budget. The objects selected stay as they are. A VectorCraft before 0.16 doesn't tell the filter that it keeps the effect records a filter gives, and there the filter declines with SC-E0813. Where parts of the sheet would lie more than 10 m from the document's origin, farther than StitchCraft stitches, it declines with SC-E0817. The sheets drawn stitch by stitch, TS-01, TS-02 and TS-10A to TS-10C, are not designs, and only `stitch testsheet` writes them. Nor does it draw TS-11C, whose meander fills wander as their elements' ids draw: a document's objects have ids of their own, and would wander other ways. The TS-13 sheets' shapes digitized automatically have the Auto effect's record (REQ-VC-016)."
+statement = "From VectorCraft 0.16, StitchCraft's Test Sheet filter draws one of `stitch testsheet`'s sheets drawn as designs, TS-02B to TS-09, TS-11A, TS-11B and the TS-13 sheets, into the document, moved by whole millimetres so that its middle is nearest the middle of the artboard. Each element is an object with its path, its thread as the paint its family sews with, and its settings as the record of its family's StitchCraft effect, each the value its dialog row takes. The document sews as the sheet's design sews, moved as the filter moved it, and exports within an export's budget. The objects selected stay as they are. A VectorCraft before 0.16 doesn't tell the filter that it keeps the effect records a filter gives, and there the filter declines with SC-E0813. Where parts of the sheet would lie more than 10 m from the document's origin, farther than StitchCraft stitches, it declines with SC-E0817. The sheets drawn stitch by stitch, TS-01, TS-02 and TS-10A to TS-10C, are not designs, and only `stitch testsheet` writes them. Nor does it draw TS-11C, whose meander fills wander as their elements' ids draw: a document's objects have ids of their own, and would wander other ways. The TS-13 sheets' shapes digitized automatically have the Auto effect's record (REQ-VC-016)."
 rationale = "A machine checkpoint can then start from VectorCraft: the sheet's objects show their stitches, the exporters write it, and the dialogs show its settings. The sheets are the same designs the command line plans, so a sew-out from either answers the same questions."
 milestone = "M6"
 status = "active"

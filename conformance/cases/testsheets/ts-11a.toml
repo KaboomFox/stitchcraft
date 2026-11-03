@@ -1,0 +1,16 @@
+# The new strokes and satins of M7.2 to M7.5: zigzag strokes at 3 widths and 3 spacings and one whose
+# stitches turn 45°, E-stitches round an appliqué square and 4 circles after the stops that lay and trim the
+# fabric, S-stitches split by the default and the staggered methods, and zigzag satins beside satin columns
+# and over a contour underlay. The sheet draws only as the engine sews it, saying that the S-stitches' needle
+# points too near each other inside their turns are left out; the diagnostics here are the hoop's, of which
+# there are none. The invariants (REQ-PLAN-…) run on the sheet's plan; the golden file is the bytes MC-6 sews.
+id = "ts-11a"
+requirements = ["REQ-PLAN-001", "REQ-PLAN-002", "REQ-PLAN-003", "REQ-PLAN-005", "REQ-PLAN-006", "REQ-PLAN-007", "REQ-PRF-002", "REQ-FMT-001"]
+kind = "testsheet"
+sheet = "TS-11A"
+profile = "brother-pe800-5x7"
+
+[expect]
+size_mm = [126.997970829, 144.458917156]
+diagnostics = []
+golden = ["golden/testsheets/TS-11A.pes"]
