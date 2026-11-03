@@ -1,0 +1,39 @@
+# Level B: VectorCraft's Make Clipping Mask clips a fill and a stroke, and `stitch export` and StitchCraft's
+# exporters sew them cut to the clipping object (docs/src/design/compatibility-gate.md, M8.7). A red square
+# 1 in a side has the fill effect, and a blue line across it, 2 in long, the stroke effect. A square half the
+# size, drawn last in the middle, becomes the clipping object: VectorCraft takes its paint away and puts it
+# first in a clip group. The square's rows and the line's piece inside the clipping object sew, and nothing
+# outside it, so the PES file differs from the one the art wrote before it was clipped. Coordinates are points.
+description = "A fill and a stroke clipped by VectorCraft's Make Clipping Mask sew only what shows, as `stitch export` and the exporters write them."
+requirements = ["REQ-VC-017", "REQ-GEN-005", "REQ-VC-011"]
+
+[[run]]
+plugins = ["stroke", "fill", "pes", "dst"]
+steps = [
+  { cmd = "shape.rectangle", params = { x = 0, y = 0, width = 72, height = 72 } },
+  { cmd = "paint.setFill", params = { color = "#c00000" } },
+  { apply = "fill", params = { angle = 45 } },
+  { cmd = "shape.line", params = { x1 = -36, y1 = 36, x2 = 108, y2 = 36 } },
+  { cmd = "paint.setStroke", params = { color = "#1a4e9c" } },
+  { apply = "stroke", params = { running_stitch_length_mm = 2.5 } },
+  { export = "whole.png" },
+  { export = "whole.pes" },
+  { cmd = "shape.rectangle", params = { x = 18, y = 18, width = 36, height = 36 } },
+  { cmd = "select.all" },
+  { cmd = "object.clippingMask.make" },
+  { export = "clipped.vectorcraft" },
+  # Drawing it runs the live effects inside the clip group, which must leave no last error.
+  { export = "clipped.png" },
+  { export = "clipped.pes" },
+  { export = "clipped.dst" },
+]
+
+[expect]
+applied = ["clipped.vectorcraft"]
+elements = [
+  { file = "clipped.vectorcraft", element = "fill", count = 1, thread = "#c00000", params = { angle = 45 } },
+  { file = "clipped.vectorcraft", element = "stroke", count = 1, thread = "#1a4e9c" },
+]
+within = [{ file = "clipped.vectorcraft", box = [18, 18, 54, 54] }]
+exported = [["clipped.vectorcraft", "clipped.pes"], ["clipped.vectorcraft", "clipped.dst"]]
+differ = [["whole.pes", "clipped.pes"]]

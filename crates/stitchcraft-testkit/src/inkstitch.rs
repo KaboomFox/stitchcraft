@@ -147,7 +147,7 @@ fn clip_paths(index: usize, element: &Element) -> String {
     let mut out = String::new();
     for (k, clip) in element.clips.iter().enumerate() {
         out.push_str(&format!("    <clipPath id=\"e{index}-clip{k}\" clipPathUnits=\"userSpaceOnUse\">\n"));
-        for shape in &clip.shapes {
+        for shape in clip.shapes.iter() {
             out.push_str(&format!("      <path clip-rule=\"{}\" d=\"{}\"/>\n", rule(shape.rule), data(&shape.path)));
         }
         out.push_str("    </clipPath>\n");
@@ -323,7 +323,8 @@ mod tests {
             shapes: vec![
                 stitchcraft_engine::design::ClipShape { path: ring(0.0), rule: FillRule::NonZero },
                 stitchcraft_engine::design::ClipShape { path: ring(15.0), rule: FillRule::EvenOdd },
-            ],
+            ]
+            .into(),
         });
         let text = svg(std::slice::from_ref(&square), &DesignSettings::default()).unwrap();
         assert!(text.contains("<g clip-path=\"url(#e0-clip1)\">\n  <path id=\"e0\" "), "{text}");

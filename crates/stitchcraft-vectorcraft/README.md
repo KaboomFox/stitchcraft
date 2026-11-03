@@ -23,7 +23,12 @@ of the paint it draws over the others, which is how a graphic style applied to a
 From M6.5 Ink/Stitch's commands can be written in an object's or a layer's name. `stitch:ignore` leaves
 it out, and `stitch:start` and `stitch:end` mark where the shape grouped with them starts or ends
 (`REQ-VC-009`), which its fills and satin columns do from M8.4 (`REQ-GEN-001`). From M8.8 `stitch:origin`
-and `stitch:stop-position`, anywhere, give the design its origin and stop position (`REQ-ASM-005`). From M13.1 strokes keep their cap too. With `--auto`, `read_with` marks an object as an
+and `stitch:stop-position`, anywhere, give the design its origin and stop position (`REQ-ASM-005`). From M8.7
+a clip group's or a clipping layer's first object, its clipping object, cuts what it holds, as VectorCraft
+clips it (`REQ-VC-017`, `src/document/clip.rs`). Each element holds a clip of the area of each clipping object
+around it, shared with the others it cuts, and the engine cuts it to them as it cuts an SVG file's shapes to
+their clip paths (`REQ-GEN-005`). What a clipping object holds that the reader doesn't read, such as text,
+adds nothing to the clip, and is named. From M13.1 strokes keep their cap too. With `--auto`, `read_with` marks an object as an
 automatic element when neither it nor a group or layer around it has a StitchCraft effect
 (`REQ-AUTO-001`). Of such a line sewn across its width, the reader names the alignment and the width
 profile VectorCraft draws, which its stitches don't follow (`REQ-AUTO-005`). From M13.7 StitchCraft's Auto
@@ -65,7 +70,8 @@ The VectorCraft versions it reads are proven by `docs/src/design/compatibility-g
 - Positions are points times 25.4/72, and the same on every platform. So are colours, whose Lab
   conversion uses `stitchcraft_core::math`, never the platform's maths.
 - Work is bounded: at most 64 MiB of JSON, unpacked, nesting as deep as the JSON reader allows, and the
-  budget charged for every object, appearance item, effect, anchor and element.
+  budget charged for every object, appearance item, effect, anchor and element, and for each segment of the
+  clips each element holds.
 
 ## Dependencies
 

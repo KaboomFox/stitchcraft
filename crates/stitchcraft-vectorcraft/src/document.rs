@@ -25,6 +25,11 @@
 //! a group's, or 2 groups', is drawn in VectorCraft as one effect run on the stitches of another, which a
 //! machine cannot sew. It sews by the nearest, and `SC-W0807` says so.
 //!
+//! **Clip groups** (`REQ-VC-017`). What a clip group or a clipping layer holds is cut to its clipping object,
+//! and to those of the clip groups around it, as VectorCraft clips it: each element made of it holds those
+//! clips ([`Clips`]), and the engine cuts it to them (`REQ-GEN-005`). [`clip`] reads a clipping object's
+//! area, and names what it can't read of it.
+//!
 //! **The Auto effect** (`REQ-VC-016`). StitchCraft's Auto effect asks StitchCraft to choose the stitches:
 //! an object it reaches sews by its paints, as an object without effects does, and each of its fills and
 //! strokes is an automatic element (`REQ-AUTO-001`), with or without `--auto`, the effect's parameters its
@@ -38,8 +43,9 @@
 //! ([`Labels`]). `<what>` is `fill` or `stroke` for a paint, `fill.2` and so on from an object's second,
 //! and the family for an effect. The reader's own diagnostics name the object: `vc:<label>`.
 //!
-//! **Nothing is dropped silently** (`REQ-VC-005`). `SC-W0807` names what is not stitched, `SC-W0808`
-//! geometry that cannot be used and `SC-I0809` the layers and guides VectorCraft does not print. What
+//! **Nothing is dropped silently** (`REQ-VC-005`). `SC-W0807` names what is not stitched, and what adds
+//! nothing to a clip, `SC-W0808` geometry that cannot be used and `SC-I0809` the layers and guides
+//! VectorCraft does not print. What
 //! VectorCraft does not draw is left out without a word: a hidden object, an object or a paint of opacity
 //! 0, a paint turned off, and a stroke of width 0. What it draws of a stroke and the stitches don't
 //! follow is named as well. A stroke's arrowheads are not stitched, a dashed stroke is stitched along all
@@ -63,8 +69,9 @@
 //! effect and effect parameter costs one unit, and each subpath one unit and one more for each anchor. An
 //! element costs one unit and one more for each segment of its path, which it holds a copy of, so that
 //! many paints or effects on one long path cost what they make, and one more for every 64 bytes of the
-//! name and settings it holds a copy of. An object with StitchCraft effects costs one more for each group
-//! or layer around it that paints.
+//! name and settings it holds a copy of, and one more for each clip that cuts it and for each segment of
+//! those clips ([`clip`]). An object with StitchCraft effects costs one more for each group or layer around
+//! it that paints.
 //!
 //! **Copies are bounded.** An object's name goes into each element made of it, and a group's or a
 //! layer's StitchCraft settings into each element of the paths in it. Those copies may come to as many
@@ -85,7 +92,7 @@ use serde_json::Value;
 use stitchcraft_core::Point;
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, Mm};
 use stitchcraft_engine::auto::{self, Stitches};
-use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule, Hints, Join, Path, Reading, Segment, Shape};
+use stitchcraft_engine::design::{Cap, Clip, Design, DesignSettings, Element, FillRule, Hints, Join, Path, Reading, Segment, Shape};
 use stitchcraft_engine::generate::stops_after;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_params::stitch_type::Family;
@@ -93,6 +100,8 @@ use stitchcraft_params::{ParamSet, StitchType};
 use stitchcraft_plan::{MachineProfile, Rgb, Thread};
 
 use crate::container::{self, BYTES_PER_UNIT, MAX_BYTES, unreadable};
+
+mod clip;
 
 /// The bytes the elements' copies of their objects' paths may take, in all, for each byte of JSON read
 /// ([the module](self)).
@@ -250,6 +259,27 @@ struct Around<'a> {
     hints: Hints,
     /// The markers that give those places, which are said nothing of.
     markers: Rc<[&'a Node]>,
+    /// The clips of the clip groups and clipping layers around it, which cut its elements.
+    clips: Clips,
+}
+
+/// The clips of the clip groups and the clipping layers around an object, the nearest first, each its
+/// clipping object's area ([`clip`]), and what each element they cut is charged for holding them: a unit for
+/// each clip, and one for each segment of the clips, which the engine cuts the element by.
+#[derive(Clone, Default)]
+struct Clips {
+    /// The clips.
+    list: Rc<[Clip]>,
+    /// The units each element they cut is charged.
+    cost: u64,
+}
+
+impl Clips {
+    /// These clips with `clip`, of `segments` segments, the nearest.
+    fn with(&self, clip: &Clip, segments: u64) -> Clips {
+        let list = std::iter::once(clip).chain(self.list.iter()).cloned().collect();
+        Clips { list, cost: self.cost.saturating_add(segments).saturating_add(1) }
+    }
 }
 
 /// A group's or a layer's own paints, which VectorCraft paints its contents with: the items before the
@@ -562,10 +592,8 @@ impl Reader {
     /// shapes of. Its StitchCraft effects reach the paths inside it, which `around` adds to.
     fn container<'a>(&mut self, node: &'a Node, kind: &'a Kind, label: &str, around: &Around<'a>) -> Result<(), Diagnostic> {
         let who = called(node, if kind.name == "layer" { "A layer" } else { "A group" });
-        if kind.clip {
-            let message = format!("{who} clips what it holds, and the clipping is not applied: what it holds is stitched whole.");
-            self.feature(label, message, Some("Cut the art to shape with Pathfinder, then release the clipping mask."));
-        }
+        // A clip group's or a clipping layer's first object clips the others.
+        let clipped = self.clip(kind, label, &who)?;
         let appearance = &node.appearance;
         let paints = appearance.items.iter().any(drawn).then(|| {
             let message = format!(
@@ -590,7 +618,7 @@ impl Reader {
         let hints = Hints { start: hints.start.or(around.hints.start), end: hints.end.or(around.hints.end), target: None };
         let placed = !markers.is_empty();
         let markers: Rc<[&'a Node]> = if markers.is_empty() { Rc::clone(&around.markers) } else { markers.into() };
-        let inside = (gives || paints.is_some() || placed).then(|| Around {
+        let inside = (gives || paints.is_some() || placed || clipped.is_some()).then(|| Around {
             auto: if gives { auto } else { around.auto },
             effects: if gives { effects.into() } else { Rc::clone(&around.effects) },
             levels: around.levels.saturating_add(u32::from(gives)),
@@ -601,12 +629,26 @@ impl Reader {
             clipping: false,
             hints,
             markers: Rc::clone(&markers),
+            clips: match &clipped {
+                Some((clip, segments)) => around.clips.with(clip, *segments),
+                None => around.clips.clone(),
+            },
         });
         let inside = inside.as_ref().unwrap_or(around);
+        // VectorCraft runs the StitchCraft effects that reach the clipping object on it, and clips to the
+        // stitches they draw ([`clip`]).
+        if clipped.as_ref().is_some_and(|(clip, _)| !clip.shapes.is_empty()) && (!inside.effects.is_empty() || inside.auto.is_some()) {
+            let message = format!(
+                "{who} clips what it holds to an object that StitchCraft's effects reach too. VectorCraft clips to the stitches they \
+                 draw of it, and what sews is cut to the object as it is drawn, which the preview doesn't show."
+            );
+            self.feature(label, message, Some("Apply StitchCraft's effects to the objects it clips, not to it or to a group around it."));
+        }
         for (k, child) in kind.children.iter().enumerate() {
             match (k, kind.clip, node.shaper.is_some()) {
                 // A clip group's first object is its clipping object. VectorCraft runs the effects of the
-                // groups around it on it too, and paints it with its own paints alone.
+                // groups around it on it too, and paints it with its own paints alone. Its own clip doesn't
+                // cut it, and the clips around the group do.
                 (0, true, _) => {
                     let clipping = Around {
                         effects: Rc::clone(&inside.effects),
@@ -616,6 +658,7 @@ impl Reader {
                         clipping: true,
                         hints: inside.hints,
                         markers: Rc::clone(&inside.markers),
+                        clips: around.clips.clone(),
                     };
                     self.node(child, &clipping)?;
                 }
@@ -690,14 +733,7 @@ impl Reader {
     /// or else those `around` it, and by its paints if not.
     fn shape<'a>(&mut self, node: &'a Node, label: &str, data: &[&PathData], rule: Option<&str>, around: &Around<'a>) -> Result<(), Diagnostic> {
         let Some(path) = self.path(node, label, data)? else { return Ok(()) };
-        let rule = match rule {
-            None | Some("NonZero") => FillRule::NonZero,
-            Some("EvenOdd") => FillRule::EvenOdd,
-            Some(other) => {
-                self.feature(label, format!("The fill rule {} is not one StitchCraft reads, and nonzero is used.", quoted(other)), None);
-                FillRule::NonZero
-            }
-        };
+        let rule = self.rule(label, rule);
         let unused = |id: &str| format!("The effect {id} is not applied: the object is stitched as it is drawn without it.");
         let (own, own_auto) = self.effects(node, label, unused, EXPAND_EFFECT);
         let who = called(node, "The object");
@@ -724,13 +760,40 @@ impl Reader {
         }
         // The nearest StitchCraft effects say how it sews: its own, or else those of the groups around it.
         let (effects, auto) = if gives { (own.as_slice(), own_auto) } else { (&around.effects[..], around.auto) };
+        let made = self.elements.len();
         if effects.is_empty() {
-            return self.by_paints(node, label, &path, rule, auto, around.hints);
+            self.by_paints(node, label, &path, rule, auto, around.hints)?;
+        } else {
+            // Each group around that paints is a step more in finding the thread and the stroke.
+            self.charge(around.painters.len() as u64)?;
+            let paints = Part::new(&node.appearance.items);
+            self.by_effects(node, label, &path, rule, effects, &painting(label, &paints, around), around.hints)?;
         }
-        // Each group around that paints is a step more in finding the thread and the stroke.
-        self.charge(around.painters.len() as u64)?;
-        let paints = Part::new(&node.appearance.items);
-        self.by_effects(node, label, &path, rule, effects, &painting(label, &paints, around), around.hints)
+        self.cut(made, &around.clips)
+    }
+
+    /// The fill rule VectorCraft names `rule`, which `None` leaves at its default, nonzero. One StitchCraft
+    /// doesn't read is said, and nonzero is used.
+    fn rule(&mut self, label: &str, rule: Option<&str>) -> FillRule {
+        match rule {
+            None | Some("NonZero") => FillRule::NonZero,
+            Some("EvenOdd") => FillRule::EvenOdd,
+            Some(other) => {
+                self.feature(label, format!("The fill rule {} is not one StitchCraft reads, and nonzero is used.", quoted(other)), None);
+                FillRule::NonZero
+            }
+        }
+    }
+
+    /// Gives the elements made from the `made`-th on the `clips` around their object, which cut them, each
+    /// charged what holding them costs.
+    fn cut(&mut self, made: usize, clips: &Clips) -> Result<(), Diagnostic> {
+        let count = self.elements.len().saturating_sub(made) as u64;
+        self.charge(count.saturating_mul(clips.cost))?;
+        for element in self.elements.iter_mut().skip(made) {
+            element.clips = clips.list.to_vec();
+        }
+        Ok(())
     }
 
     /// The elements of an object without StitchCraft stitch effects: the fills VectorCraft draws, then its
