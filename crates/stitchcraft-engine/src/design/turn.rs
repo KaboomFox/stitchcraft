@@ -120,6 +120,15 @@ mod tests {
     }
 
     #[test]
+    fn a_turned_point_has_no_minus_0() {
+        // A quarter turn right takes (3, 0) to (-0, 3), and a quarter turn left (0, 3) to (3, -0), the
+        // sign of the 0 turned with it. Each comes out a plain 0, which prints as 0, not -0.
+        let (right, left) = (Turn::RIGHT.apply(p(3.0, 0.0)).unwrap(), Turn::LEFT.apply(p(0.0, 3.0)).unwrap());
+        assert!(right.x().is_sign_positive() && left.y().is_sign_positive(), "{right:?} {left:?}");
+        assert_eq!((right.x().to_string(), left.y().to_string()), ("0".to_string(), "0".to_string()));
+    }
+
+    #[test]
     fn a_turn_is_a_finite_number_of_degrees_and_minus_0_is_0() {
         assert_eq!(Turn::new(f64::NAN), None);
         assert_eq!(Turn::new(f64::INFINITY), None);

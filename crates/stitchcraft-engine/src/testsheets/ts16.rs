@@ -110,3 +110,26 @@ pub(super) fn drawing() -> Result<Drawing, SheetError> {
     d.clone_of("clone", "fill", [cos, sin, -sin, cos, mx - cos * cx + sin * cy, my - sin * cx - cos * cy], CLONE_ANGLE)?;
     Ok(d)
 }
+
+#[cfg(test)]
+mod tests {
+    use stitchcraft_core::{Budget, Point};
+
+    use super::super::find;
+    use crate::normalize::region::{clipped, cut};
+
+    #[test]
+    fn ts16_s_gap_leaves_the_band_the_zigzag_runs_in_from_x_0_to_15_and_from_25_to_40() {
+        // The U's legs reach past both ends of the zigzag and as far up and down as it goes, so they leave
+        // each edge of its band, y = 95 and y = 100, from x = 0 to 15 and from 25 to 40.
+        let design = find("TS-16").unwrap().design().unwrap().unwrap();
+        let zigzag = design.elements().iter().find(|element| element.id.as_str() == "ts16:zigzag").unwrap();
+        let meter = &mut Budget::DEFAULT.meter();
+        let parts = clipped(&zigzag.clips, meter).unwrap().unwrap();
+        let p = |x: f64, y: f64| Point::new(x, y).unwrap();
+        for y in [95.0, 100.0] {
+            let left = cut::inside(&[p(0.0, y), p(40.0, y)], &parts, meter).unwrap();
+            assert_eq!(left, [vec![p(0.0, y), p(15.0, y)], vec![p(25.0, y), p(40.0, y)]], "y = {y}");
+        }
+    }
+}
