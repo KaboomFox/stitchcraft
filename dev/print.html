@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-78270ae2.js";
+            window.path_to_searchindex_js = "searchindex-7fc64a95.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-0e01f503.js"></script>
@@ -1335,7 +1335,7 @@ StitchCraft reads them from an SVG file’s Ink/Stitch attributes (<a href="user
 half the stroke’s width to each side of the path, and rungs cross it at the path’s nodes and on either
 side of each sharp corner, where the stitches fan round it. Automatic digitizing sews a stroke this way
 when it is wider than the design’s narrowest satin stroke and no wider than the widest satin column
-(<a href="#automatic-digitizing">automatic digitizing</a>).</p>
+(<a href="#stitches-by-width">automatic digitizing</a>).</p>
 <!-- shot: satin-column-one-path -->
 <p><strong>Running stitch, as a stroke sews by default</strong></p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/satin-column-one-path-1.png" alt="A wave 36 mm long drawn 3 mm wide as one path, Running stitch, as a stroke sews by default"><span class="img-wrapper"><img src="images/generated/satin-column-one-path-1.png" alt="A wave 36 mm long drawn 3 mm wide as one path, Running stitch, as a stroke sews by default"></span></label></p>
@@ -1946,21 +1946,76 @@ pieces, and its underlay and expanding</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="automatic-digitizing"><a class="header" href="#automatic-digitizing">Automatic digitizing</a></h1>
-<p>StitchCraft can choose a shape’s stitches itself. A shape without settings sews by its width, at the size
-it sews (<a href="#stitches-by-width">stitches by width</a>). Digitizing also mends where shapes meet, and chooses an
-order with few thread changes. A picture traced in VectorCraft then becomes a machine file without a
-setting on any shape.</p>
-<p>To digitize the shapes without settings:</p>
+<p>Automatic digitizing makes a machine file from a picture without a setting on any of its shapes. StitchCraft
+chooses the stitches of each shape by its width and mends the places where shapes meet. It also orders the
+sewing for few colour changes. It is made for 2 kinds of picture:</p>
 <ul>
-<li>on the command line, add <code>--auto</code> to <a href="#command-line"><code>stitch plan</code></a> or <code>stitch export</code>, or give
-<code>stitch plan</code> a picture, which it traces first
-(<a href="#from-a-picture-to-a-machine-file">from a picture to a machine file</a>);</li>
-<li>in VectorCraft, give the shapes StitchCraft’s Auto effect, whose dialog sets the rules’ settings.</li>
+<li><a href="#flat-colour-art">Flat-colour art</a>, such as logos, badges, clip art and drawings. Its colours are solid
+shapes, stacked in layers or abutting.</li>
+<li><a href="#a-photo-in-a-few-colours">A photo reduced to a few flat colours</a>, such as 4. It sews in those flat
+colours, as flat-colour art does.</li>
 </ul>
-<p>A shape with settings sews as they say. Each picture below shows shapes sewn as drawn, as a design sews
-without <code>--auto</code>, and then digitized automatically.
-<a href="#image-to-embroidery">Image to embroidery</a> gives every rule in full.</p>
-<h2 id="stitches-by-width"><a class="header" href="#stitches-by-width">Stitches by width</a></h2>
+<h2 id="flat-colour-art"><a class="header" href="#flat-colour-art">Flat-colour art</a></h2>
+<p>Logos, badges, clip art and drawings have a few flat colours, each of them one solid shape or more. The
+emblem below, <code>docs/fixtures/emblem.svg</code>, is drawn in layers in 4 of the machine’s threads, each layer whole
+under the layers drawn over it.</p>
+<p><strong>The picture</strong></p>
+<!-- shot: auto-emblem-picture -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/auto-emblem-picture.png" alt="An emblem in 4 solid colours, drawn in layers. A navy square on white holds a white disc with a red star on it, and 3 gold bars below the disc, each shorter than the one above it."><span class="img-wrapper"><img src="images/generated/auto-emblem-picture.png" alt="An emblem in 4 solid colours, drawn in layers. A navy square on white holds a white disc with a red star on it, and 3 gold bars below the disc, each shorter than the one above it."></span></label></p>
+<!-- /shot -->
+<p><strong>Digitized</strong></p>
+<!-- shot: auto-emblem -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/auto-emblem.png" alt="The emblem digitized automatically. The navy square, the white disc and the red star sew as tatami fills, and the gold bars as satin columns. The white round the square is left out."><span class="img-wrapper"><img src="images/generated/auto-emblem.png" alt="The emblem digitized automatically. The navy square, the white disc and the red star sew as tatami fills, and the gold bars as satin columns. The white round the square is left out."></span></label></p>
+<!-- /shot -->
+<p>The navy square and the white disc are broader than a satin column, and each is filled whole under the
+shapes on it. The bars are 3 mm tall and sew as satin columns. The white round the square is the picture’s
+background, the fabric’s own colour, and is left out.</p>
+<p>To digitize such art:</p>
+<ul>
+<li>Art drawn in VectorCraft, or opened there from an SVG file, is made of shapes already. Select them,
+choose <strong>Effect › Plug-ins › StitchCraft Auto</strong>, and write the machine file
+(<a href="#write-the-machine-file">how</a>). On the command line, add
+<code>--auto</code> to <a href="#stitch-plan"><code>stitch plan</code></a> or <code>stitch export</code>, as in
+<code>stitch plan emblem.svg --auto -o emblem.pes</code>.</li>
+<li>A picture of the art, a PNG or JPEG file, is traced into shapes first, in the machine’s threads.
+<code>stitch plan emblem.png -o emblem.pes</code> traces it with VectorCraft’s command line, then digitizes the shapes.
+In VectorCraft, Image Trace traces it
+(<a href="#from-a-picture-to-a-machine-file">from a picture to a machine file</a>).</li>
+</ul>
+<h2 id="a-photo-in-a-few-colours"><a class="header" href="#a-photo-in-a-few-colours">A photo in a few colours</a></h2>
+<p>A photo’s colours blend into each other. VectorCraft’s Image Trace reduces them to a few flat colours first,
+such as 4 of the machine’s threads, the backdrop’s colour among them. The traced shapes are then digitized as
+flat-colour art is. The photo sews in those few flat colours, and its blended shading isn’t reproduced.
+<a href="#image-to-embroidery">Image to embroidery</a> leaves photos sewn in blended colours outside the
+roadmap.</p>
+<p><strong>The photo</strong></p>
+<!-- shot: auto-pear-photo -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/auto-pear-photo.png" alt="A photo of a yellow-green pear with a brown stem on a light grey backdrop, lit from the top left. Its skin shades smoothly from a pale highlight to a dark olive side, with a little grain."><span class="img-wrapper"><img src="images/generated/auto-pear-photo.png" alt="A photo of a yellow-green pear with a brown stem on a light grey backdrop, lit from the top left. Its skin shades smoothly from a pale highlight to a dark olive side, with a little grain."></span></label></p>
+<!-- /shot -->
+<p><strong>Traced in 4 threads</strong></p>
+<!-- shot: auto-pear-traced -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/auto-pear-traced.png" alt="The pear photo traced in 4 of the machine’s threads: a light grey square, and on it the pear in 3 flat greens. It is pale green where the light falls, olive in a band across its middle and dark olive on its shaded side, and its stem is olive and dark olive. The bands’ edges are ragged where the shading crossed from one thread to the next."><span class="img-wrapper"><img src="images/generated/auto-pear-traced.png" alt="The pear photo traced in 4 of the machine’s threads: a light grey square, and on it the pear in 3 flat greens. It is pale green where the light falls, olive in a band across its middle and dark olive on its shaded side, and its stem is olive and dark olive. The bands’ edges are ragged where the shading crossed from one thread to the next."></span></label></p>
+<!-- /shot -->
+<p><strong>Digitized</strong></p>
+<!-- shot: auto-pear -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/auto-pear.png" alt="The traced pear digitized automatically. Its 3 greens sew as tatami fills, and its stem as a satin column and a running stitch. The light grey square is left out."><span class="img-wrapper"><img src="images/generated/auto-pear.png" alt="The traced pear digitized automatically. Its 3 greens sew as tatami fills, and its stem as a satin column and a running stitch. The light grey square is left out."></span></label></p>
+<!-- /shot -->
+<p>The photo is drawn in code for these pages. <code>stitch plan</code> traced it 90 mm across with VectorCraft 0.19.0, into
+<code>docs/fixtures/traced-pear.vectorcraft</code>. The pear’s shading became 3 bands of green, and the backdrop the
+4th colour, which is left out as the picture’s background.</p>
+<p>To digitize a photo:</p>
+<ul>
+<li><code>stitch plan pear.png --colours 4 --size 90 -o pear.pes</code> traces the photo in 4 threads, 90 mm across, and
+digitizes the shapes. <code>--colours</code> counts the backdrop’s colour too.</li>
+<li>In VectorCraft, trace it with Image Trace’s <strong>Colors</strong> set to 4, then give the traced shapes StitchCraft’s
+Auto effect
+(<a href="#2-trace-the-picture-in-those-threads">from a picture to a machine file</a>).</li>
+</ul>
+<h2 id="how-it-chooses-the-stitches"><a class="header" href="#how-it-chooses-the-stitches">How it chooses the stitches</a></h2>
+<p>Automatic digitizing chooses the stitches of each shape without settings. A shape with settings sews as they
+say. Each picture below shows shapes sewn as drawn, as a design sews without <code>--auto</code>, and then digitized
+automatically. <a href="#image-to-embroidery">Image to embroidery</a> gives every rule in full.</p>
+<h3 id="stitches-by-width"><a class="header" href="#stitches-by-width">Stitches by width</a></h3>
 <p>A shape’s width at a place is the diameter of the largest circle that fits inside it there:</p>
 <div class="table-wrapper">
 <table>
@@ -1988,7 +2043,7 @@ pictures are drawn from <code>docs/fixtures/widths.svg</code>, a line 0.6 mm wid
 <!-- shot: auto-widths -->
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/auto-widths.png" alt="The same shapes digitized automatically. The line runs along its middle, tripled, and the C sews as a satin column between its edges. The disc is still a tatami fill."><span class="img-wrapper"><img src="images/generated/auto-widths.png" alt="The same shapes digitized automatically. The line runs along its middle, tripled, and the C sews as a satin column between its edges. The disc is still a tatami fill."></span></label></p>
 <!-- /shot -->
-<h2 id="shapes-in-parts"><a class="header" href="#shapes-in-parts">Shapes in parts</a></h2>
+<h3 id="shapes-in-parts"><a class="header" href="#shapes-in-parts">Shapes in parts</a></h3>
 <p>A shape can be broad in one place and narrow in another, such as a letter with thin serifs or a balloon
 on a string. Its broad parts are filled, and its narrow parts sew as columns and lines that reach into
 the fill. The pictures are drawn from <code>docs/fixtures/parts.svg</code>, a lollipop on a stick 2.4 mm wide and a
@@ -2001,7 +2056,7 @@ balloon on a string 0.8 mm wide, each one area.</p>
 <!-- shot: auto-parts -->
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/auto-parts.png" alt="The same shapes digitized automatically. The discs are tatami fills as before, and the stick sews as a satin column and the string as a triple run, each into its fill."><span class="img-wrapper"><img src="images/generated/auto-parts.png" alt="The same shapes digitized automatically. The discs are tatami fills as before, and the stick sews as a satin column and the string as a triple run, each into its fill."></span></label></p>
 <!-- /shot -->
-<h2 id="neighbours"><a class="header" href="#neighbours">Neighbours</a></h2>
+<h3 id="neighbours"><a class="header" href="#neighbours">Neighbours</a></h3>
 <p>The shapes of a traced picture meet, and sewn as drawn they sew badly there. Digitizing mends that in 4
 steps:</p>
 <ol>
@@ -2032,7 +2087,7 @@ is sewn too.</p>
 <!-- shot: auto-badge -->
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/auto-badge.png" alt="The same badge digitized automatically. Its white background is left out, and each colour sews under the edges of the colours sewn on it."><span class="img-wrapper"><img src="images/generated/auto-badge.png" alt="The same badge digitized automatically. Its white background is left out, and each colour sews under the edges of the colours sewn on it."></span></label></p>
 <!-- /shot -->
-<h2 id="sewing-order"><a class="header" href="#sewing-order">Sewing order</a></h2>
+<h3 id="sewing-order"><a class="header" href="#sewing-order">Sewing order</a></h3>
 <p>The shapes sew in an order StitchCraft chooses. 4 rules decide it, each where the rules before it leave a
 choice:</p>
 <ol>
@@ -2042,7 +2097,7 @@ choice:</p>
 thread as seldom as it can.</li>
 <li>Of those shapes, the nearest sews next.</li>
 </ol>
-<h2 id="settings-by-width"><a class="header" href="#settings-by-width">Settings by width</a></h2>
+<h3 id="settings-by-width"><a class="header" href="#settings-by-width">Settings by width</a></h3>
 <p>Each satin column digitizing makes has the underlay of its width, and 0.4 mm of pull compensation:</p>
 <div class="table-wrapper">
 <table>
@@ -2058,7 +2113,7 @@ thread as seldom as it can.</li>
 </div>
 <p>Fills keep a tatami fill’s defaults, their underlay included. These are starting values, which the next
 sew-out at the machine checkpoint confirms or changes.</p>
-<h2 id="settings"><a class="header" href="#settings">Settings</a></h2>
+<h3 id="settings"><a class="header" href="#settings">Settings</a></h3>
 <p>Each rule goes by the settings of the shape it digitizes, and a shape that sets none takes the defaults,
 as every shape does with <code>--auto</code>. VectorCraft’s Auto effect sets them, and the
 <a href="#auto-parameters">reference</a> gives each one’s range and default. The narrowest satin column
@@ -12293,7 +12348,7 @@ file in a generated directory has lost its generator. The header is for people. 
 a generated page by the generator that writes it, so a page that only says it is generated is checked as
 one written by hand. The conformance report is not a page of the book: <code>cargo xtask conformance</code> writes it
 to <code>target/conformance/</code>, and CI shows it in the job summary.</p>
-<h2 id="images-four-kinds-each-reproducible"><a class="header" href="#images-four-kinds-each-reproducible">Images: four kinds, each reproducible</a></h2>
+<h2 id="images-five-kinds-each-reproducible"><a class="header" href="#images-five-kinds-each-reproducible">Images: five kinds, each reproducible</a></h2>
 <p>Every image in the docs is declared in <code>docs/shots.toml</code> with an id, a kind and how to make it. Pages
 reference <code>images/generated/&lt;id&gt;.png</code>, or a photo in <code>images/photos/</code>. An image at any other path fails the
 docs check, whatever its file name.</p>
@@ -12304,6 +12359,7 @@ docs check, whatever its file name.</p>
 </thead>
 <tbody>
 <tr><td><code>stitch</code></td><td><code>stitchcraft-render</code> (<a href="#rendering-previews">rendering</a>) from a test sheet, or from a design the engine plans, an SVG file or a VectorCraft document</td><td><strong>exact bytes</strong> (rendering is deterministic)</td><td>Stitch-type illustrations, parameter comparisons, diagnostics examples</td></tr>
+<tr><td><code>picture</code></td><td>xtask (<code>xtask/src/shots/picture.rs</code>): a design’s areas filled flat in their colours, or a photo drawn in code</td><td><strong>exact bytes</strong></td><td>The pictures <a href="#automatic-digitizing">automatic digitizing</a> starts from</td></tr>
 <tr><td><code>vectorcraft-render</code></td><td><code>vectorcraft-cli</code> of the pinned stable release, with the plug-in’s modules installed: the canvas after the shot’s <code>steps</code>, exported as PNG at <code>scale</code> pixels per point</td><td>perceptual tolerance (≤ 0.2 % of pixels differing by more than 8/255 in a channel, and ≤ 8 of them in any square of 16 pixels a side)</td><td>How the previews look in VectorCraft’s canvas, without its window</td></tr>
 <tr><td><code>vectorcraft-ui</code></td><td>VectorCraft’s window, of the same release, with the document <code>vectorcraft-cli</code> drew. The shot’s menu path and the family’s row are pressed through the accessibility tree, and the screenshot is cropped to the menus or the dialog</td><td>the same tolerance</td><td>Menus and dialogs, in a desktop without a screen (<a href="#vectorcrafts-window-in-ci">VectorCraft’s window in CI</a>)</td></tr>
 <tr><td><code>photo</code></td><td>a person, of a real sew-out</td><td>presence + metadata record (machine, fabric, commit, checkpoint)</td><td>Never regenerated; listed with their sew-out report</td></tr>
@@ -12327,6 +12383,21 @@ panels = [
 and so on. A test sheet is drawn as it is, so a shot of one has no panels. The plan may report only the codes the shot lists in <code>allow</code>, and a shot fails on any other:
 a picture never shows a design that the engine changed without the page saying so. The <code>alt</code> text is
 mandatory (accessibility), and the docs check fails on images without it.</p>
+<p>A picture shot shows a picture before it is digitized:</p>
+<pre><code class="language-toml">[[shot]]
+id = "auto-pear-traced"
+kind = "picture"
+fixture = "docs/fixtures/traced-pear.vectorcraft"   # its areas, filled flat in their threads' colours
+scale = 3.5                                          # pixels per millimetre
+alt = "The pear photo traced in 4 of the machine's threads…"
+</code></pre>
+<p>With a <code>fixture</code>, each area of the design is filled in its thread’s colour, the lowest first, as a drawing
+program shows it. The areas are filled 4 times larger without anti-aliasing, and each block of 4 × 4 pixels
+is then averaged into one, so that the white under 2 areas doesn’t show along the edge they share. With
+<code>picture = "pear"</code> in place of a <code>fixture</code>, the picture is a photo xtask draws in code, with soft shading and
+a little grain, so that the docs show a photo with no licence to keep. VectorCraft traced that photo once
+into <code>docs/fixtures/traced-pear.vectorcraft</code>, which the shots plan without VectorCraft. A test keeps the hash
+of the photo it traced, and fails once the photo changes, until it is traced again.</p>
 <p>A VectorCraft shot draws its document with VectorCraft’s own commands, as a Level B scenario does
 (<a href="#vectorcraft-compatibility-gate">compatibility gate</a>), in points:</p>
 <pre><code class="language-toml">[[shot]]
@@ -12445,8 +12516,8 @@ writes. Each is a warning until then, and an error once its page exists.</li>
 <li><code>cargo xtask conformance --check</code> fails when requirements and cases disagree, or a fixture has no row
 in the fixtures index.</li>
 <li><code>cargo xtask shots --check</code> fails for a declared image that is missing or has no alt text. It also
-regenerates each <code>stitch</code> image and compares it with the committed file, which must come out byte for
-byte the same. It checks VectorCraft’s shots’ declarations without running VectorCraft.</li>
+regenerates each <code>stitch</code> and <code>picture</code> image and compares it with the committed file, which must come out
+byte for byte the same. It checks VectorCraft’s shots’ declarations without running VectorCraft.</li>
 <li><code>cargo xtask book</code> builds the book with mdBook and reads every page it made, <code>print.html</code> included.
 It fails when a link or an image leads to no file of the book, or an <code>#anchor</code> to no id of its page.
 A link to the repository’s files on GitHub, on <code>main</code>, must name a file or folder of the checkout. The
