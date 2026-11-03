@@ -4,6 +4,7 @@
 
 A fill covers the area its path bounds, its [region](#region), with rows of stitches. Tatami is P1 (M5);
 contour, meander and circular are P2 (M7); guided, linear gradient, tartan and cross stitch are P3 (M10).
+Cross stitch, sewn from M10.1, is described on a page of its own ([cross stitch](cross-stitch.md)).
 Ink/Stitch's legacy fill is not planned, and is sewn as a tatami fill ([below](#legacy-fill-not-planned)).
 
 A fill sews the drawing's shape with Ink/Stitch's stitches. Ink/Stitch's rows, their spacing and stagger,
@@ -778,10 +779,9 @@ with `rows_per_thread` and optional herringbone. Specified at M10.
 
 ## Cross stitch (P3)
 
-The region is covered by grid cells (`pattern_size_mm`, `cross_offset_mm`, `cross_rotation`,
-`canvas_grid_origin`); a cell becomes a cross when the region covers at least `fill_coverage` percent of
-it; crosses use `cross_stitch_method` (simple, half, upright, double, Smyrna, flipped variants) and are
-routed row by row. Specified at M10.
+A cross in each cell of a grid that the region covers enough of, simple and flipped from M10.1
+([cross stitch](cross-stitch.md)). It takes its parts in a tatami fill's order ([section 5](#5-parts)), and
+its `expand_mm` from the tatami fill's settings, which grows the region before its cells are chosen.
 
 ## Legacy fill (not planned)
 

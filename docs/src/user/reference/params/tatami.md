@@ -52,13 +52,16 @@ every row is the row spacing from the next.
 ### `expand_mm`
 
 **Expand.** How far past the drawn edge the top rows reach: each part is grown by this much, with round
-corners, before its rows, rings or path are laid. The thread's pull opens gaps between fills sewn side
-by side, and this closes them. Negative values pull the rows in from the edge.
+corners, before its rows, rings or path are laid, or its cross stitch's cells are chosen. The
+thread's pull opens gaps between fills sewn side by side, and this closes them. Negative values pull
+the rows in from the edge.
 
 - **Accepts:** a length from -10 to 10 mm
 - **Default:** `0`
+- **Applies to:** Tatami fill, Contour fill, Meander fill, Circular fill, Cross stitch
 - **Ink/Stitch:** same key and default; StitchCraft differs:
   - **DEV-FILL-008.** Where fill_underlay_inset_mm, or a negative expand_mm, cuts a part into pieces, the pieces are sewn in order of their point of least x, and of least y among pieces level with each other, each with its least x within a nanometre of the one before. GEOS gives them in the order it walks its graph, which Ink/Stitch sews them in. Of 2,000 random polygons grown or shrunk, 85 gave 2 or more pieces, and 81 of those came in the same order; the 4 others had a sliver among their pieces. For pieces level at their least x, GEOS's order turns on where the ring's points start: 2 squares one above the other, shrunk apart, give the lower first when the ring is listed from the bottom and the upper first when it is listed from the top, and 310 of 400 random such shapes, listed from random points, gave the lower first. Each piece's top rows start at the point nearest the needle after the piece before, where Ink/Stitch starts every piece's top rows nearest the needle as it was before the first.
+  - **DEV-FILL-024.** A cross stitch fill's part that a negative expand_mm shrinks away entirely is sewn at its own size, with SC-W0309, as every fill's part is. Ink/Stitch shrinks a cross stitch fill's shape as a whole, and keeps it as drawn only when nothing at all is left, so where other parts are left, a part shrunk away sews no cross.
 
 ### `gap_fill_rows`
 

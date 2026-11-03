@@ -283,12 +283,12 @@ the file again without it. The excuse then counts only if the measure agrees. In
 nowhere (`DEV-FMT-001`) excuse as many trims and jumps as there are of them, and no more.
 
 `REQ-SVG-008`, `REQ-AUTO-021`, `REQ-AUTO-022`, `REQ-RUN-013`, `REQ-SAT-029`, `REQ-FILL-CON-008`,
-`REQ-FILL-CIR-007` and `REQ-ROUTE-008` are the requirements of level L3. The other runs of the suite leave them and their
-cases to this one. The corpus is designs the SVG reader sews in full, with their settings
-(`REQ-SVG-009`), trim and stop commands and the file version. A case may name a test sheet drawn as a
-design instead (`sheet`). Both programs sew an SVG file of the elements StitchCraft sews the sheet with,
-written with their parameters, their start, end and target positions as Ink/Stitch's commands and their
-clips as clip paths, the design's origin and stop position as commands too, and its turn on export
+`REQ-FILL-CIR-007`, `REQ-FILL-CRS-007` and `REQ-ROUTE-008` are the requirements of level L3. The other runs of the suite
+leave them and their cases to this one. The corpus is designs the SVG reader sews in full, with their
+settings (`REQ-SVG-009`), trim and stop commands and the file version. A case may name a test sheet drawn
+as a design instead (`sheet`). Both programs sew an SVG file of the elements StitchCraft sews the sheet
+with, written with their parameters, their start, end and target positions as Ink/Stitch's commands and
+their clips as clip paths, the design's origin and stop position as commands too, and its turn on export
 (`stitchcraft_testkit::inkstitch`), which StitchCraft's reader reads back unchanged (`REQ-PRM-003`). An
 element a sheet draws as a clone of another is written as a `<use>` of it, and each command in a group
 with its connector, as Ink/Stitch's Attach Commands writes them, since Ink/Stitch moves a command its
@@ -297,9 +297,12 @@ parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets c
 stitches of those choices against Ink/Stitch's (`REQ-AUTO-021`). TS-11B checks the contour fills so, each
 strategy and join style among them (`REQ-FILL-CON-008`), and its circular fills (`REQ-FILL-CIR-007`).
 TS-11A checks the zigzag strokes (`REQ-RUN-013`), and the E-stitches, S-stitches and zigzag satins
-(`REQ-SAT-029`), along straights and round curves. TS-02B to TS-09, the sheets of MC-2 to MC-4, and
-TS-11C, the meander fills' sheet, are cases of `REQ-SVG-008` (M8.2). `conformance/inkstitch/README.md`
-says how to run it by hand and how to add a case.
+(`REQ-SAT-029`), along straights and round curves. TS-17A checks the simple crosses of cross stitch, on
+grids of 2 and 3 mm with 2 and 4 threads, flipped, and over a letter whose slanted edges cut their cells
+in half (`REQ-FILL-CRS-007`). TS-02B to TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills'
+sheet, are cases of `REQ-SVG-008` (M8.2). The `drawn-locks` case and TS-16 check custom locks drawn as
+paths, of each kind of command, which both programs sew at the same nodes (`REQ-LCK-005`).
+`conformance/inkstitch/README.md` says how to run it by hand and how to add a case.
 
 **Routes.** A route is a design of its own, so sewing StitchCraft's route in both programs would compare 2
 sewings of one route. A case with a `[route]` table instead routes elements of a sheet in each program

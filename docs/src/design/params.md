@@ -44,7 +44,7 @@ params! {
         /// The shape of a custom start lock: …
         lock_custom_start: Text = "", label "Custom start lock", when lock_start == "custom";
 
-        /// How long each step of a start lock made of steps (back and forth, or custom) is.
+        /// How long each step of a start lock made of steps (back and forth, or custom numbers) is.
         lock_start_scale_mm: Length = "0.7", label "Start lock size", range (0.1, 10.0),
             when lock_start in SIZED_IN_MM;
         …
@@ -110,7 +110,7 @@ version and a registry schema version arrive with the first release, together wi
 | `OptionalLengthWithZero` | `Option<Mm>` | as `OptionalLength`, but only empty text is empty, and 0 is a length, as Ink/Stitch reads a satin's shortest stitch to split | `float`, unit `mm`, no default |
 | `Angle` | degrees, `f64` | finite; normalized to (−180, 180] | `float`, unit `deg` |
 | `BoundedAngle` | degrees, `f64` | finite, within range, never turned by whole turns. 270 is above a range that ends at 89, and reads as 89, as Ink/Stitch reads a zigzag stroke's angle | `float`, unit `deg` |
-| `Percent` | `f64` | finite, within range | `float`, unit `%` |
+| `Percent` | `f64` | finite, within range | `float`, unit `%`, or `int` for a cross stitch's coverage, which Ink/Stitch's fonts write as `50.0` too |
 | `Number` | `f64` | finite, within range, without a unit | `float`, no unit |
 | `Area` | square millimetres, `f64` | finite, within range, written as a number | none (Ink/Stitch has no area setting) |
 | `Count` | `u32` | whole, within range | `int` |
@@ -118,7 +118,7 @@ version and a registry schema version arrive with the first release, together wi
 | `Choice` | `&'static str` (the id) | one of the declared ids; unknown ids are a diagnostic, not a default | `combo`, `dropdown` |
 | `Seed` | `Option<u64>` | any; empty means "derive from the element"; text that is not a number is hashed (FNV-1a) | `random_seed` |
 | `LengthList` | `Vec<Mm>` | 1 to 16 values, each in range (patterns like `"2.5 1.0"`) | `string`/`float` lists |
-| `LengthPair` | `[Mm; 2]` | 1 value for both sides, or 2 for the first side and the second (a satin's rails, or its start and end). Each is in range, with units as for `Length` | `float`, unit `mm (each side)` |
+| `LengthPair` | `[Mm; 2]` | 1 value for both sides, or 2 for the first side and the second (a satin's rails, or its start and end, or a cross stitch grid's width and height). Each is in range, with units as for `Length` | `float`, unit `mm (each side)` or `mm (x y)` |
 | `PercentPair` | `[f64; 2]` | as `LengthPair`, in percent | `float`, unit `% (each side)` |
 | `OptionalLengthPair`, `OptionalPercentPair` | `Option<[Mm; 2]>`, `Option<[f64; 2]>` | as `LengthPair` and `PercentPair`, or empty: the setting then comes from another one, as a zigzag underlay's inset comes from the contour's. 0 is a value, as Ink/Stitch reads it | `float`, unit `mm (each side)` or `% (each side)`, no default |
 | `PercentList` | `Vec<f64>` | 1 to 16 percentages, each in range (levels like `"15 30"`) | `float`, unit `%`, read as a list |
