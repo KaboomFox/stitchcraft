@@ -562,8 +562,7 @@ further than the limit. Nesting deeper than the JSON reader allows (128 levels, 
 groups) refuses the file. VectorCraft itself keeps 32. The JSON is read into the few things the adapter
 uses, and the rest is skipped as it is read: images, previews and text runs are never kept. Every object,
 appearance item, effect and anchor charges the budget, and so does each element for its copies of the
-object's path, name and settings, and for the clips that cut it. An object's name goes into each element
-made of it, and a group's
+object's path, name and settings. An object's name goes into each element made of it, and a group's
 StitchCraft settings into each element of the paths in it. Those copies come to at most 64 MiB, as much
 as the JSON read. Each element's copy of its object's path takes 56 bytes a segment, and a long path under
 many paints would hold far more than the file: 4 MB drawing 2,500 fills on a path of 200,000 anchors would
