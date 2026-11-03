@@ -356,8 +356,11 @@ fn turns(ps: &[V]) -> impl Iterator<Item = f64> {
         if disc < 0.0 {
             return Vec::new();
         }
-        let root = disc.sqrt();
-        vec![(-b + root) / (2.0 * a), (-b - root) / (2.0 * a)]
+        // The roots are q / a and k / q, where q = -(b ± √disc) / 2 takes the sign that adds the root's size to
+        // b's. The textbook formula (-b ± √disc) / 2a also takes one from the other. When a is far smaller than
+        // b, as for a quadratic curve drawn as a cubic one, that difference is only rounding, and its root is lost.
+        let q = -0.5 * (b + disc.sqrt().copysign(b));
+        vec![q / a, k / q]
     };
     let mut all = roots(|v| v.0);
     all.extend(roots(|v| v.1));
@@ -432,6 +435,21 @@ mod tests {
         // A cubic curve from (1, 2) to (11, 2) through (1, 12) and (11, 12) reaches y 9.5, halfway along.
         let cubic = Sub { start: (1.0, 2.0), segs: vec![Seg::Cubic((1.0, 12.0), (11.0, 12.0), (11.0, 2.0))], closed: false };
         assert_eq!(bounds(&[cubic]), Some((1.0, 2.0, 10.0, 7.5)));
+    }
+
+    #[test]
+    fn a_box_bounds_a_quadratic_curve_drawn_as_a_cubic_one_where_it_turns() {
+        // This cubic curve is the quadratic one from (0, 0) to (3, -0.3) through (1.5, 1.5), whose y turns at
+        // 15/22, 5/11 of the way along. The t² term of its derivative is 0, and rounding leaves about 1e-16 of
+        // it. The textbook formula divides by that and finds no turn, which leaves a box 0.3 high.
+        let (x, y, w, h) = bounds(&outline("M 0 0 C 1 1 2 0.9 3 -0.3").subs).unwrap();
+        assert_eq!((x, y, w), (0.0, -0.3, 3.0));
+        assert!((h - (0.3 + 15.0 / 22.0)).abs() < 1e-12, "{h}");
+        // A curve that turns twice along x, at (3 ± √3) / 6 of the way along, reaches x = ±5/√3 either side of
+        // its ends, which lie at x = 0.
+        let (x, _, w, _) = bounds(&outline("M 0 0 C 10 1 -10 2 0 3").subs).unwrap();
+        let reach = 5.0 / 3f64.sqrt();
+        assert!((x + reach).abs() < 1e-12 && (w - 2.0 * reach).abs() < 1e-12, "{x}, {w}");
     }
 
     fn outline(data: &str) -> Outline {
