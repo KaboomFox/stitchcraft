@@ -62,6 +62,11 @@ letters, of words and of lines by a number of millimetres. Lines align left, cen
 justified as a block. A trim
 can follow each letter, word or line. Lines sew back and forth in a font with a variant for the other
 direction, and a sortable font's colours sew in order. Batch lettering clamps the scale to the font's range.
+In a font whose `auto_satin` is on, Auto-Route Satin Columns routes the satin columns and strokes of the
+whole text, their order kept and without trims, before the trims are added and the colours sorted. Each
+piece goes to the end of the group its element was in. The key is on when `font.json` leaves it out, and
+at `c7e3a05` every font sets it, Ink/Stitch Small Font and Medium Font on and the other 140 off.
+StitchCraft's lettering routes such a font's text with M10.4's function ([routing tools](routing.md)).
 
 ## The corpus
 

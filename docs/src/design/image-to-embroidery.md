@@ -483,7 +483,8 @@ as drawn.
 An element with a stop after it keeps its place: the elements drawn before it sew before it, and those
 drawn after it after it. A user sets a stop for a reason, such as placing appliqué fabric, and it comes
 where it was drawn. `SC-I0907` says when the order isn't paint order, with the thread changes of each.
-M10's routing tools, which order satin columns and running stitches drawn by hand, start from this order.
+M10's routing tools don't start from this order. They route satin columns and running stitches drawn by
+hand as Ink/Stitch's tools route them, and write the route into the document ([routing tools](routing.md#order)).
 
 Shapes are near when their boxes come within twice the shapes' tolerance of each other. An automatic area's
 box is round its region, and a narrow part's line's round the part. Any other shape's box is round its
