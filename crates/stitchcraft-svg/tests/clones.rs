@@ -121,6 +121,38 @@ fn req_svg_012_a_clone_s_content_inherits_from_it_as_in_a_viewer() {
 }
 
 #[test]
+fn req_svg_012_context_fill_and_context_stroke_paint_with_the_clone_s_fill_and_stroke() {
+    let file = svg(drawing(
+        r##"<defs><g id="motif" color="#ffff00"><rect id="r" width="10" height="10" fill="context-stroke" stroke="context-fill"/>
+              <circle id="c" cx="20" cy="5" r="5" style="fill:context-fill"/></g></defs>
+            <rect id="alone" y="60" width="10" height="10" fill="context-fill" stroke="context-stroke"/>
+            <use id="u1" xlink:href="#motif" fill="currentColor" color="#00ff00" stroke="#0000ff"/>
+            <use id="u2" xlink:href="#motif" y="20"/>
+            <use id="u3" xlink:href="#u2" y="40" fill="#ff0000"/>
+            <use id="u4" xlink:href="#u1" y="60" fill="#ff0000"/>"##,
+    ));
+    // Outside a clone they paint nothing; a clone's currentColor is the clone's colour, and a clone in a
+    // clone gives the paints it has, its own or those it inherits.
+    let colours: Vec<(&str, String)> = file.design.elements().iter().map(|e| (e.id.as_str(), e.thread.color.to_string())).collect();
+    let expected = [
+        ("svg:u1/r:fill", "#0000ff"),
+        ("svg:u1/r:stroke", "#00ff00"),
+        ("svg:u1/c:fill", "#00ff00"),
+        ("svg:u1/c:stroke", "#0000ff"),
+        ("svg:u2/r:stroke", "#000000"),
+        ("svg:u2/c:fill", "#000000"),
+        ("svg:u3/u2/r:stroke", "#ff0000"),
+        ("svg:u3/u2/c:fill", "#ff0000"),
+        ("svg:u4/u1/r:fill", "#0000ff"),
+        ("svg:u4/u1/r:stroke", "#00ff00"),
+        ("svg:u4/u1/c:fill", "#00ff00"),
+        ("svg:u4/u1/c:stroke", "#0000ff"),
+    ];
+    assert_eq!(colours, expected.map(|(id, colour)| (id, colour.to_string())));
+    assert!(warnings(&file).is_empty(), "{:?}", warnings(&file));
+}
+
+#[test]
 fn req_svg_012_a_clone_of_a_clone_draws_both_maps() {
     let file = svg(drawing(
         r##"<rect id="square" width="10" height="10" fill="red"/>
@@ -161,12 +193,14 @@ fn diag_sc_w0804_a_symbol_s_viewport_that_doesnt_read_is_named() {
     let file = svg(drawing(
         r##"<defs><symbol id="bad" viewBox="0 0 ten 10"><rect width="10" height="10"/></symbol>
               <symbol id="flat" viewBox="0 0 0 10"><rect width="10" height="10"/></symbol>
-              <symbol id="odd" viewBox="0 0 10 10" preserveAspectRatio="sideways"><rect width="10" height="10"/></symbol></defs>
+              <symbol id="odd" viewBox="0 0 10 10" preserveAspectRatio="sideways"><rect width="10" height="10"/></symbol>
+              <symbol id="sized" viewBox="0 0 10 10" width="big"><rect width="10" height="10"/></symbol></defs>
             <use id="u1" xlink:href="#bad" x="10"/>
             <use id="u2" xlink:href="#flat"/>
             <use id="u3" xlink:href="#odd" width="20" height="20"/>
             <use id="u4" xlink:href="#odd" width="20" height="0"/>
-            <use id="u5" xlink:href="#odd" width="wide" height="20"/>"##,
+            <use id="u5" xlink:href="#odd" width="wide" height="20"/>
+            <use id="u6" xlink:href="#sized" height="20"/>"##,
     ));
     assert_eq!(
         warnings(&file),
@@ -181,13 +215,16 @@ fn diag_sc_w0804_a_symbol_s_viewport_that_doesnt_read_is_named() {
             "warning SC-W0804: The preserveAspectRatio of `odd`, which `u5` shows, \"sideways\", is not an aspect ratio SVG names; it is \
              ignored, as a viewer ignores it.",
             "warning SC-W0804: The width of `u5`, \"wide\", is not a length; it is ignored, as a viewer ignores it.",
+            "warning SC-W0804: The width of `sized`, which `u6` shows, \"big\", is not a length; it is ignored, as a viewer ignores it.",
         ]
     );
     // What doesn't read is ignored: unscaled, scaled to fit, and fitted to the page across.
-    assert_eq!(ids(&file), ["svg:u1/rect@1:fill", "svg:u2/rect@1:fill", "svg:u3/rect@1:fill", "svg:u5/rect@1:fill"]);
+    assert_eq!(ids(&file), ["svg:u1/rect@1:fill", "svg:u2/rect@1:fill", "svg:u3/rect@1:fill", "svg:u5/rect@1:fill", "svg:u6/rect@1:fill"]);
     all_at(&ends(element(&file, "svg:u1/rect@1:fill"))[0], &[(10.0, 0.0), (20.0, 0.0), (20.0, 10.0), (10.0, 10.0)]);
     all_at(&ends(element(&file, "svg:u3/rect@1:fill"))[0], &[(0.0, 0.0), (20.0, 0.0), (20.0, 20.0), (0.0, 20.0)]);
-    all_at(&ends(element(&file, "svg:u5/rect@1:fill"))[0], &[(40.0, 0.0), (60.0, 0.0), (60.0, 20.0), (40.0, 20.0)]);
+    for clone in ["u5", "u6"] {
+        all_at(&ends(element(&file, &format!("svg:{clone}/rect@1:fill")))[0], &[(40.0, 0.0), (60.0, 0.0), (60.0, 20.0), (40.0, 20.0)]);
+    }
 }
 
 #[test]
