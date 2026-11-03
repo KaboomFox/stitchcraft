@@ -1,0 +1,8 @@
+# Custom locks drawn as SVG paths at both ends of 4 lines, of straight lines, curves and an arc, relative
+# commands, 2 subpaths with closepaths, at 150 % and 70 %, and last segments that run across and slanted
+# (REQ-LCK-005). Both programs sew the same nodes at each end, the end locks backwards, so the locks that
+# reach past the lines' ends give both files the same size.
+id = "inkstitch-drawn-locks"
+requirements = ["REQ-SVG-008", "REQ-LCK-005"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/drawn-locks.svg"

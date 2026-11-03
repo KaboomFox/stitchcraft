@@ -298,8 +298,9 @@ stitches of those choices against Ink/Stitch's (`REQ-AUTO-021`). TS-11B checks t
 strategy and join style among them (`REQ-FILL-CON-008`), and its circular fills (`REQ-FILL-CIR-007`).
 TS-11A checks the zigzag strokes (`REQ-RUN-013`), and the E-stitches, S-stitches and zigzag satins
 (`REQ-SAT-029`), along straights and round curves. TS-02B to TS-09, the sheets of MC-2 to MC-4, and
-TS-11C, the meander fills' sheet, are cases of `REQ-SVG-008` (M8.2). `conformance/inkstitch/README.md`
-says how to run it by hand and how to add a case.
+TS-11C, the meander fills' sheet, are cases of `REQ-SVG-008` (M8.2). The `drawn-locks` case and TS-16
+check custom locks drawn as paths, of each kind of command, which both programs sew at the same nodes
+(`REQ-LCK-005`). `conformance/inkstitch/README.md` says how to run it by hand and how to add a case.
 
 **Centre lines.** Sewing what StitchCraft chose can't find a choice that is wrong: TS-13B's small T sewed
 a Γ, the left arm of its bar left out of its centre line, and the differential agreed by every measure.

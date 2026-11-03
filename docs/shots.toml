@@ -207,7 +207,7 @@ kind = "stitch"
 sheet = "TS-16"
 style = "realistic"
 scale = 6.0
-alt = "TS-16 as it will sew, turned right: from the left, a black zigzag in 2 pieces, a green quarter of a disc, a blue satin column 40 mm long and a red tatami rectangle 30 mm wide and 40 mm tall, its rows running down. Below the red rectangle, its red clone, turned 45° from it, its rows along its long sides."
+alt = "TS-16 as it will sew, turned right: from the left, a black zigzag in 2 pieces, a green quarter of a disc, a blue satin column 40 mm long and a red tatami rectangle 30 mm wide and 40 mm tall, its rows running down. Below the red rectangle, its red clone, turned 45° from it, its rows along its long sides. Above them, 2 black lines 40 mm long with small locks drawn as paths at their ends."
 
 # ── Stitch types (designs from docs/fixtures/, planned by the engine; one image per panel) ──────────
 
