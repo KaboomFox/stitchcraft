@@ -659,6 +659,41 @@ pub fn stitchcraft_engine::normalize::stroke::flatten(&stitchcraft_engine::desig
 pub fn stitchcraft_engine::normalize::stroke::nearest_on_segment(stitchcraft_core::units::Point, stitchcraft_core::units::Point, stitchcraft_core::units::Point) -> stitchcraft_core::units::Point
 pub mod stitchcraft_engine::registry
 pub const stitchcraft_engine::registry::PARAMETERS: &[&stitchcraft_params::spec::ParamGroup]
+pub mod stitchcraft_engine::route
+#[non_exhaustive] pub enum stitchcraft_engine::route::Tool
+pub stitchcraft_engine::route::Tool::Satins
+pub struct stitchcraft_engine::route::Options
+pub stitchcraft_engine::route::Options::keep_originals: bool
+pub stitchcraft_engine::route::Options::preserve_order: bool
+pub stitchcraft_engine::route::Options::trim: bool
+impl core::default::Default for stitchcraft_engine::route::Options
+pub fn stitchcraft_engine::route::Options::default() -> stitchcraft_engine::route::Options
+pub struct stitchcraft_engine::route::Piece
+pub stitchcraft_engine::route::Piece::element: stitchcraft_engine::design::Element
+pub stitchcraft_engine::route::Piece::from: usize
+pub stitchcraft_engine::route::Piece::under: bool
+pub struct stitchcraft_engine::route::Route
+pub stitchcraft_engine::route::Route::end: core::option::Option<stitchcraft_core::units::Point>
+pub stitchcraft_engine::route::Route::options: stitchcraft_engine::route::Options
+pub stitchcraft_engine::route::Route::start: core::option::Option<stitchcraft_core::units::Point>
+pub stitchcraft_engine::route::Route::tool: stitchcraft_engine::route::Tool
+pub struct stitchcraft_engine::route::RouteOption
+pub stitchcraft_engine::route::RouteOption::default: bool
+pub stitchcraft_engine::route::RouteOption::help: &'static str
+pub stitchcraft_engine::route::RouteOption::label: &'static str
+pub stitchcraft_engine::route::RouteOption::name: &'static str
+impl stitchcraft_engine::route::RouteOption
+pub fn stitchcraft_engine::route::RouteOption::get(&self, &stitchcraft_engine::route::Options) -> bool
+pub fn stitchcraft_engine::route::RouteOption::named(&str) -> core::option::Option<&'static stitchcraft_engine::route::RouteOption>
+pub fn stitchcraft_engine::route::RouteOption::set(&self, &mut stitchcraft_engine::route::Options, bool)
+pub struct stitchcraft_engine::route::Routed
+pub stitchcraft_engine::route::Routed::diagnostics: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
+pub stitchcraft_engine::route::Routed::pieces: alloc::vec::Vec<stitchcraft_engine::route::Piece>
+pub stitchcraft_engine::route::Routed::replaced: alloc::vec::Vec<usize>
+pub const stitchcraft_engine::route::OPTIONS: [stitchcraft_engine::route::RouteOption; 3]
+pub const stitchcraft_engine::route::PIECE: f64
+pub const stitchcraft_engine::route::TRIMMED: f64
+pub fn stitchcraft_engine::route::route(&[stitchcraft_engine::design::Element], &stitchcraft_engine::route::Route, &stitchcraft_engine::design::DesignSettings, &stitchcraft_core::budget::Budget) -> stitchcraft_engine::route::Routed
 pub mod stitchcraft_engine::testsheets
 pub mod stitchcraft_engine::testsheets::pictures
 pub enum stitchcraft_engine::testsheets::pictures::Trace
@@ -679,6 +714,9 @@ pub fn stitchcraft_engine::testsheets::pictures::specks((f64, f64)) -> core::res
 pub fn stitchcraft_engine::testsheets::pictures::star((f64, f64), f64) -> core::result::Result<stitchcraft_engine::testsheets::pictures::Picture, stitchcraft_engine::testsheets::SheetError>
 pub fn stitchcraft_engine::testsheets::pictures::window((f64, f64), f64) -> core::result::Result<stitchcraft_engine::testsheets::pictures::Picture, stitchcraft_engine::testsheets::SheetError>
 pub fn stitchcraft_engine::testsheets::pictures::word((f64, f64), f64) -> core::result::Result<stitchcraft_engine::testsheets::pictures::Picture, stitchcraft_engine::testsheets::SheetError>
+pub mod stitchcraft_engine::testsheets::ts17c
+pub const stitchcraft_engine::testsheets::ts17c::BELOW: f64
+pub const stitchcraft_engine::testsheets::ts17c::LETTERS: [&str; 11]
 pub enum stitchcraft_engine::testsheets::SheetError
 pub stitchcraft_engine::testsheets::SheetError::Budget(stitchcraft_core::budget::Exhausted)
 pub stitchcraft_engine::testsheets::SheetError::ElementId(stitchcraft_core::element::ElementIdError)
@@ -702,6 +740,7 @@ pub const fn stitchcraft_engine::testsheets::TestSheet::designed(&self) -> bool
 pub fn stitchcraft_engine::testsheets::TestSheet::digitized(&self) -> bool
 pub const fn stitchcraft_engine::testsheets::TestSheet::drawable(&self) -> bool
 pub fn stitchcraft_engine::testsheets::TestSheet::plan(&self) -> core::result::Result<stitchcraft_plan::plan::StitchPlan, stitchcraft_engine::testsheets::SheetError>
+pub const fn stitchcraft_engine::testsheets::TestSheet::routed(&self) -> bool
 pub fn stitchcraft_engine::testsheets::TestSheet::step(&self) -> f64
 pub fn stitchcraft_engine::testsheets::TestSheet::uses_file_features(&self) -> bool
 pub const stitchcraft_engine::testsheets::STITCH_LEN: f64

@@ -80,7 +80,10 @@ satin column whose centre lines are each shorter than half its width, a disc or 
 stays in the fill (`auto::columns::DOT`).
 Since M6.12 a column drawn as one path can be drawn with its rails and rungs instead, for a host's Stroke
 to Satin tool (`generators::satin::drawn`). They sew as the column does. A design can be moved
-(`Design::moved`), as a host draws a test sheet (`testsheets`, `TestSheet::design`).
+(`Design::moved`), as a host draws a test sheet (`testsheets`, `TestSheet::design`). Since M10.4 satin
+columns, and the strokes among them, are routed as Ink/Stitch's Auto-Route Satin Columns routes them
+(`route`, `docs/src/design/routing.md`), each column cut into pieces that sew its pairs
+(`generators::satin::cut`).
 Design:
 `docs/src/design/engine-pipeline.md` and `docs/src/design/algorithms/`.
 

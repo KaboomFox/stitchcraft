@@ -9,6 +9,8 @@ Each guide solves one problem:
   `stitch export`
 - [Make satin columns and keep presets in VectorCraft](vectorcraft-columns-and-presets.md) with
   VectorCraft's own commands and Graphic Styles
+- [Route satin columns](route-satin-columns.md) in VectorCraft, as Ink/Stitch's Auto-Route Satin Columns
+  routes them
 - [Report a bug](report-a-bug.md) with a bundle that reproduces it (`stitch bug-report`)
 
 Planned, each with the milestone that brings its feature:

@@ -8,7 +8,8 @@
 //! [`generate`], which sends each element to its generator in
 //! [`generators`], [`assemble`], with the [`locks`] it sews, and [`finalize`], which fits the plan to the
 //! machine and checks it; the machine-checkpoint [`testsheets`], drawn in code; and the parameter
-//! [`registry`] with the settings every stitch type shares ([`common`]). Finalize and the generators that
+//! [`registry`] with the settings every stitch type shares ([`common`]). [`route`] joins satin columns into one
+//! route, as a host's routing tools and lettering ask. Finalize and the generators that
 //! join pieces of their own leave out stitches shorter than the shortest by one rule, `thin`. Design:
 //! `docs/src/design/engine-pipeline.md`.
 #![forbid(unsafe_code)]
@@ -24,6 +25,7 @@ pub mod locks;
 pub mod normalize;
 mod pipeline;
 pub mod registry;
+pub mod route;
 pub mod testsheets;
 mod thin;
 

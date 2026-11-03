@@ -61,7 +61,9 @@
 //! until the generators start and end at such hints (M8). `stitch:origin` and `stitch:stop-position`, anywhere
 //! in the document, give the design its origin and its stop position (`REQ-ASM-005`), as Ink/Stitch's commands
 //! do in an SVG file, and 2 origins, or 2 stop positions in a design that stops, are an error (`SC-E0819`).
-//! A group or a layer is never a marker, and a word
+//! `stitch:route-start` and `stitch:route-end` mark where the routing filters start and end a route
+//! ([`route_marker`], `REQ-VC-019`), and are left out without a word. A group or a layer is never a marker,
+//! and a word
 //! after `stitch:` that names none is ignored: `SC-W0807` names both, in case of a slip. A live effect
 //! is never given a name, so its preview shows what a name leaves out.
 //!
@@ -372,13 +374,43 @@ enum Marker {
     Origin,
     /// The design's stop position, where the frame moves before each stop.
     StopPosition,
+    /// Where the routing filters start a route (`REQ-VC-019`), which `stitch export` leaves out.
+    RouteStart,
+    /// Where they end it.
+    RouteEnd,
     /// No marker StitchCraft reads.
     Unknown,
 }
 
 /// The word after `stitch:` of each marker StitchCraft reads.
-const MARKERS: [(&str, Marker); 5] =
-    [("ignore", Marker::Ignore), ("start", Marker::Start), ("end", Marker::End), ("origin", Marker::Origin), ("stop-position", Marker::StopPosition)];
+const MARKERS: [(&str, Marker); 7] = [
+    ("ignore", Marker::Ignore),
+    ("start", Marker::Start),
+    ("end", Marker::End),
+    ("origin", Marker::Origin),
+    ("stop-position", Marker::StopPosition),
+    ("route-start", Marker::RouteStart),
+    ("route-end", Marker::RouteEnd),
+];
+
+/// Which end of a route an object marks, as the routing filters read its name (`REQ-VC-019`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RouteMarker {
+    /// `stitch:route-start`: where a route starts.
+    Start,
+    /// `stitch:route-end`: where it ends.
+    End,
+}
+
+/// The end of a route an object named `name` marks, read as every marker's name is read;
+/// `None` for any other name.
+pub fn route_marker(name: &str) -> Option<RouteMarker> {
+    match marker(name)? {
+        Marker::RouteStart => Some(RouteMarker::Start),
+        Marker::RouteEnd => Some(RouteMarker::End),
+        _ => None,
+    }
+}
 
 /// The marker `name` is: `stitch:` and a word, after any white space, alone or followed by white space and a
 /// note, in any mix of upper and lower case. `None` for a name that doesn't begin with `stitch:`.
@@ -491,9 +523,13 @@ impl Reader {
                 Marker::Start => ("starts", "start"),
                 Marker::Origin => ("", "origin"),
                 Marker::StopPosition => ("", "stop-position"),
+                Marker::RouteStart => ("", "route-start"),
+                Marker::RouteEnd => ("", "route-end"),
                 _ => ("ends", "end"),
             };
             match (marked, container) {
+                // The routing filters read it, and it is never stitched.
+                (Marker::RouteStart | Marker::RouteEnd, None) => return Ok(()),
                 (Marker::Origin | Marker::StopPosition, None) => {
                     // It places the design's origin or stop position, wherever it is, and is not stitched.
                     let data: Vec<&PathData> = node.kind.iter().flat_map(|kind| &kind.path).collect();
@@ -521,7 +557,7 @@ impl Reader {
                     let message = format!("{shown} is named as a {noun} marker, which a {kind} can't be, and the name is ignored.");
                     self.feature(&label, message, Some(&format!("Name a small path grouped with the shape stitch:{noun}.")));
                 }
-                (Marker::Origin | Marker::StopPosition, Some(kind)) => {
+                (Marker::Origin | Marker::StopPosition | Marker::RouteStart | Marker::RouteEnd, Some(kind)) => {
                     let message = format!("{shown} is named stitch:{noun}, which a {kind} can't be, and the name is ignored.");
                     self.feature(&label, message, Some(&format!("Name a small path stitch:{noun}.")));
                 }

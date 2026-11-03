@@ -134,6 +134,15 @@ pub fn from_line(line: &Subpath, width: Mm, join: Join, push: [f64; 2], meter: &
 /// lengthen take one first, the start before the end, and then ends it lengthens
 /// ([`Column::cuts_lengthened_end`]).
 pub fn from_rails(rails: [Vec<Point>; 2], rungs: Vec<[Point; 2]>, push: [f64; 2], meter: &mut Meter) -> Result<Result<Column, Unmade>, Exhausted> {
+    let Some((column, pairs)) = drawing(rails, rungs, push) else { return Ok(Err(Unmade::ReadOtherwise)) };
+    Ok(if reads_back(&column, &pairs, meter)? { Ok(column) } else { Err(Unmade::ReadOtherwise) })
+}
+
+/// The column [`from_rails`] draws, before it is read back: `rails` and a rung across each of `rungs` and
+/// the rungs added at an end, with the points every rung pairs, in order. `None` when a rung drawn past its
+/// points would reach a point that is no number. A route's piece of a column is drawn so too, and kept when
+/// it would be read back otherwise (`crate::route`).
+pub(crate) fn drawing(rails: [Vec<Point>; 2], rungs: Vec<[Point; 2]>, push: [f64; 2]) -> Option<(Column, Vec<[Point; 2]>)> {
     let reaching = |[a, b]: [Point; 2]| {
         let past = |from: Point, to: Point| Point::new(to.x() + REACH * (to.x() - from.x()), to.y() + REACH * (to.y() - from.y())).ok();
         Some([past(b, a)?, past(a, b)?])
@@ -157,19 +166,22 @@ pub fn from_rails(rails: [Vec<Point>; 2], rungs: Vec<[Point; 2]>, push: [f64; 2]
             cuts_lengthened_end = lengthening;
         }
     }
-    let Some(drawn) = pairs.iter().copied().map(reaching).collect::<Option<Vec<_>>>() else { return Ok(Err(Unmade::ReadOtherwise)) };
-    let column = Column { rails, rungs: drawn, cuts_lengthened_end };
-    // Read back, the column must give its rails and pair the points the line's rungs pair.
+    let drawn = pairs.iter().copied().map(reaching).collect::<Option<Vec<_>>>()?;
+    Some((Column { rails, rungs: drawn, cuts_lengthened_end }, pairs))
+}
+
+/// Whether `column`, read back as any satin column is drawn, gives the rails it was drawn with and pairs
+/// `pairs`, in order: the points its rungs were drawn across. Reading it charges `meter`.
+pub(crate) fn reads_back(column: &Column, pairs: &[[Point; 2]], meter: &mut Meter) -> Result<bool, Exhausted> {
     let found = recognize(&column.path(), meter)?;
-    let same = match found.shape {
+    Ok(match found.shape {
         Ok(Shape::Rails(Satin { rails: found_rails, pairing: Pairing::Rungs(found_pairs), .. })) => {
             found.warnings.is_empty()
                 && found_rails.iter().zip(&column.rails).all(|(found, made)| alike(found, made))
                 && alike(&found_pairs.iter().flat_map(|rung| rung.points).collect::<Vec<_>>(), &pairs.concat())
         }
         _ => false,
-    };
-    Ok(if same { Ok(column) } else { Err(Unmade::ReadOtherwise) })
+    })
 }
 
 /// Whether `a` and `b` are as many points, each within a millionth of a millimetre of the other's.

@@ -610,26 +610,31 @@ its own, which its stitch plan drops when it is no longer than its shortest stit
 ## Cut in 2
 
 From M10.4 the [routing tools](../routing.md) cut satin columns into pieces, each of which sews the pairs
-the column sewed along it ([ADR-0017](../adr/0017-routing-is-one-engine-function.md)). The cut is one of
-the column's cuts (*Cuts* in [Start and end](#start-and-end)). Given as a point, a place takes the pair
-with the point nearest it. Given as a fraction of the column, it takes the pair at that fraction of the
-pairs' count, as Ink/Stitch's tools take them (read at `d59c9ab`).
+the column sewed along it ([ADR-0017](../adr/0017-routing-is-one-engine-function.md)), in the engine's
+`generators::satin::cut`. The cut is one of the column's cuts (*Cuts* in [Start and end](#start-and-end)),
+taken with no compensation and nothing random. Given as a fraction of the column's centre line, the line
+through the middles of the cuts, a place takes the cut of the point at that fraction of the cuts' points,
+2 to a cut, rounded to the nearest, as Ink/Stitch's tools take it (read at `d59c9ab`).
 
-- **Rails.** Each rail is cut at its point of the pair. Where `reverse_rails` turns a rail round, its
-  parts go to the pieces by the way the column runs, so each piece has both rails' parts from its side of
-  the cut.
-- **Rungs.** Each piece keeps the column's rungs that cross both its rails. A column of 2 subpaths keeps
-  the rungs across its nodes ([Correspondence](#correspondence)) as rungs it draws. A piece left with no
-  rung, or with 2, would be read back with other rails. It gets a rung more, as a column [drawn with its
-  rails and rungs](#drawn-with-its-rails-and-rungs) does. Ink/Stitch adds its rung 0.3 CSS pixels from
-  the piece's start. A piece with none gets 2 more from Ink/Stitch, at the middle of its rails and 0.3
-  CSS pixels from its end.
+- **Rails.** Each rail is cut where it comes nearest its point of the cut. A piece is drawn as the column
+  is drawn. Its rails keep the column's order, and a rail that `reverse_rails` names is turned back, so
+  that the piece's own settings turn it again as they turn the column's rail. With `automatic`, the rails
+  are drawn running the same way, which the setting leaves as they are (`DEV-ROUTE-002`).
+- **Rungs.** Each piece keeps the column's rungs whose points both lie on its parts of the rails, and a
+  column of 2 subpaths keeps the rungs across its nodes ([Correspondence](#correspondence)) as rungs it
+  draws. A rung across the piece's start or its end, on both rails, is that end's, and is left out. When
+  its rungs alone wouldn't tell its rails from them, the piece gets a rung more across an end, like a
+  column [drawn with its rails and rungs](#drawn-with-its-rails-and-rungs). Ink/Stitch adds its rung 0.3 CSS
+  pixels from the piece's start, and a piece with none gets 2 more, at the middle of its rails and 0.3 CSS
+  pixels from its end (`DEV-ROUTE-001`). A piece read back otherwise all the same is kept, with
+  `SC-W1003`.
 - **Settings.** Each piece keeps every setting of the column, and so sews the column's pairs along it.
 - **A column drawn as one path** is cut as the rails and rungs the engine makes of it (`REQ-SAT-016`,
   `REQ-SAT-017`), and each piece is drawn with its share of them. Its stroke's width no longer makes the
   piece.
-- **Short pieces.** Ink/Stitch doesn't make a piece on a side of the cut where a rail would be shorter than
-  the zigzag spacing. M10.4 writes what StitchCraft sews there, with a case that shows it.
+- **Short pieces.** A piece whose rails both have no length sews nothing and is none, while one whose rail
+  is shorter than the zigzag spacing still sews the column's pairs there, as the cut's tests show.
+  Ink/Stitch doesn't make that piece, and leaves the stretch unsewn (`DEV-ROUTE-004`).
 
 Ink/Stitch's Cut Satin Column cuts a column this way at each of its `satin_cut_point` commands, or where
 a stroke selected with it crosses its rails. No step plans such a tool in StitchCraft.

@@ -1,0 +1,10 @@
+# TS-17C's satin letters as drawn, ROUTE, routed by Ink/Stitch's Auto-Route Satin Columns and by StitchCraft's
+# routing with the tool's options at their defaults: trims on, order not kept (REQ-ROUTE-008). Each program
+# sews its own route.
+id = "inkstitch-route-ts17c"
+requirements = ["REQ-ROUTE-008"]
+kind = "inkstitch"
+sheet = "TS-17C"
+
+[route]
+elements = "ts17c:drawn:"

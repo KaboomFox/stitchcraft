@@ -202,6 +202,25 @@ scale = 3.0
 alt = "TS-13D as it will sew: 2 emblems, a navy square in a white frame with a red star on a white disc and 3 gold bars, traced abutting and stacked, and 2 buttons, a yellow disc with 7 orange dots in a black rim, twice. At the top, digitized, both emblems sew alike: one navy fill under the disc and the bars, the bars satin columns, and the white round each star a satin column. Each button's rim is a satin column round one yellow fill under its dots. At the bottom, in paint order, every shape is a fill."
 
 [[shot]]
+id = "testsheet-ts-17c"
+kind = "stitch"
+sheet = "TS-17C"
+style = "realistic"
+scale = 4.0
+alt = "TS-17C as it will sew, in blue: the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E's arms. At the bottom the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next."
+
+# ── How-to pages ────────────────────────────────────────────────────────────────────────────────────
+
+[[shot]]
+id = "routing-letters"
+kind = "stitch"
+sheet = "TS-17C"
+style = "simple"
+scale = 4.0
+alt = "TS-17C's letters ROUTE drawn as thin lines, twice: at the top as drawn, and at the bottom as Auto-Route Satin Columns routes them. Dashed lines are jumps, which the reference machine leaves as threads to cut by hand, and orange rings mark lock stitches. The routed letters jump only from one letter to the next."
+
+
+[[shot]]
 id = "testsheet-ts-16"
 kind = "stitch"
 sheet = "TS-16"

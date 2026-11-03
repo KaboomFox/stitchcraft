@@ -289,7 +289,8 @@ where a path's move-to draws nothing after it, is left out with the jumps and th
 (`DEV-SVG-011`).
 
 `REQ-SVG-008`, `REQ-AUTO-021`, `REQ-AUTO-022`, `REQ-RUN-013`, `REQ-SAT-029`, `REQ-FILL-CON-008`,
-`REQ-FILL-CIR-007`, `REQ-FILL-CRS-007` and `REQ-FONT-001` are the requirements of level L3. The other
+`REQ-FILL-CIR-007`, `REQ-FILL-CRS-007`, `REQ-FONT-001` and `REQ-ROUTE-008` are the requirements of level
+L3. The other
 runs of the suite leave them and their cases to this one. The corpus is designs the SVG reader sews in
 full, with their settings (`REQ-SVG-009`), trim and stop commands and the file version. A case may name a
 test sheet drawn as a design instead (`sheet`). Both programs sew an SVG file of the elements StitchCraft
@@ -309,6 +310,15 @@ cut their cells in half (`REQ-FILL-CRS-007`). TS-02B to TS-09, the sheets of MC-
 the meander fills' sheet, are cases of `REQ-SVG-008` (M8.2). The `drawn-locks` case and TS-16 check
 custom locks drawn as paths, of each kind of command, which both programs sew at the same nodes
 (`REQ-LCK-005`). `conformance/inkstitch/README.md` says how to run it by hand and how to add a case.
+
+**Routes.** A route is a design of its own, so sewing StitchCraft's route in both programs would compare 2
+sewings of one route. A case with a `[route]` table instead routes elements of a sheet in each program
+(`REQ-ROUTE-008`, `xtask/src/conformance/routing.rs`). Ink/Stitch's Auto-Route Satin Columns routes the
+SVG file of the elements, with the table's options, and writes its route, which Ink/Stitch sews.
+`stitchcraft_engine::route` routes the same elements with the same options, and StitchCraft sews its route.
+The 2 PES files are measured as any case's. The `route-ts17c` cases route TS-17C's letters as drawn, with
+the options at their defaults and with Preserve order on and trims off, and `ts17c` sews the whole sheet,
+whose lower letters StitchCraft routed, in both programs.
 
 **Centre lines.** Sewing what StitchCraft chose can't find a choice that is wrong: TS-13B's small T sewed
 a Γ, the left arm of its bar left out of its centre line, and the differential agreed by every measure.

@@ -449,3 +449,23 @@ After sewing, check:
 - Does fabric show between the crosses at 2 threads? At 4, do the holes at the cells' corners stay clean, or do they pack and tear? Which grid and thread count look best?
 - The K's arms slant across the grid, and each cell their edges cut in half sews a cross, so the arms step along the grid. Does the K read at 24 mm on a 2 mm grid? A few of its crosses are reached by a corner of their bottom diagonal, and end with a stitch from their middle to it on top: do those show?
 - How long does the sheet take?
+
+## TS-17C — Ripples and routing: satin letters as drawn and routed
+
+82.0 × 50.6 mm · 3271 stitches, 12 jumps, 11 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
+
+Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
+
+![TS-17C as it will sew, in blue: the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E's arms. At the bottom the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next.](../../images/generated/testsheet-ts-17c.png)
+
+![TS-17C's letters ROUTE drawn as thin lines, twice: at the top as drawn, and at the bottom as Auto-Route Satin Columns routes them. Dashed lines are jumps, which the reference machine leaves as threads to cut by hand, and orange rings mark lock stitches. The routed letters jump only from one letter to the next.](../../images/generated/routing-letters.png)
+
+Threads: Blue.
+
+After sewing, check:
+
+- Top: the word ROUTE in satin columns 3 mm wide, sewn as drawn, column by column. Bottom: the same letters as auto-satin routing joins them, cut into pieces, with running stitches under the satins and a trim between letters.
+- Count the jump threads of each half, within each letter and between the letters. The routed half should have none within a letter. Its file asks for a trim between letters, which a machine that obeys trims cuts.
+- On the routed half, do the running stitches under the satins show anywhere, at a column's edge, at its ends or where 2 columns meet?
+- Where a routed column is cut into pieces, is the satin even across the cut, or does a gap, a ridge or a stitch out of line show?
+- The time each half takes, from its first stitch to its last.

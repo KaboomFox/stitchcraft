@@ -695,6 +695,77 @@ fn req_vc_014_stroke_to_satin_makes_columns_that_export_as_the_lines_did() {
     println!("::notice title=stroke to satin::{}", costs.join("; "));
 }
 
+/// TS-17C's letters, the word ROUTE, drawn as lines with the satin effect 3 mm wide, in millimetres: the
+/// columns the engine makes rails for before it routes them, the most work a route of the letters takes.
+fn letters() -> Vec<PathData> {
+    let at = |x: f64, y: f64| Point::new(pt(x), pt(y));
+    let line = |from: (f64, f64), to: (f64, f64)| {
+        let mut line = BezPath::new();
+        line.move_to(at(from.0, from.1));
+        line.line_to(at(to.0, to.1));
+        PathData::from_bezpath(&line)
+    };
+    // The R's bowl and the U: straight stretches joined by half circles, each quarter a cubic curve.
+    let k = 4.0 / 3.0 * (std::f64::consts::SQRT_2 - 1.0);
+    let mut bowl = BezPath::new();
+    bowl.move_to(at(1.5, 1.5));
+    bowl.line_to(at(7.0, 1.5));
+    bowl.curve_to(at(7.0 + 4.25 * k, 1.5), at(11.25, 5.75 - 4.25 * k), at(11.25, 5.75));
+    bowl.curve_to(at(11.25, 5.75 + 4.25 * k), at(7.0 + 4.25 * k, 10.0), at(7.0, 10.0));
+    bowl.line_to(at(1.5, 10.0));
+    let mut u = BezPath::new();
+    u.move_to(at(40.5, 0.0));
+    u.line_to(at(40.5, 14.0));
+    u.curve_to(at(40.5, 14.0 + 4.5 * k), at(45.0 - 4.5 * k, 18.5), at(45.0, 18.5));
+    u.curve_to(at(45.0 + 4.5 * k, 18.5), at(49.5, 14.0 + 4.5 * k), at(49.5, 14.0));
+    u.line_to(at(49.5, 0.0));
+    vec![
+        line((1.5, 0.0), (1.5, 20.0)),
+        PathData::from_bezpath(&bowl),
+        line((6.5, 10.5), (11.5, 20.0)),
+        shapes::ellipse(Rect::new(pt(17.5), pt(1.5), pt(34.5), pt(18.5))),
+        PathData::from_bezpath(&u),
+        line((54.0, 1.5), (68.0, 1.5)),
+        line((61.0, 1.5), (61.0, 20.0)),
+        line((72.5, 0.0), (72.5, 20.0)),
+        line((72.5, 1.5), (82.0, 1.5)),
+        line((72.5, 10.0), (80.0, 10.0)),
+        line((72.5, 18.5), (82.0, 18.5)),
+    ]
+}
+
+/// StitchCraft Auto-Route Satin Columns, from VectorCraft 0.17, is a heavy filter, which VectorCraft's host
+/// gives 1 G instructions, run as `plugin.run` runs it. It replaces TS-17C's letters, drawn as lines with the
+/// satin effect, with one route: the topmost line's place holds the first piece, the other lines are gone,
+/// and StitchCraft's PES exporter writes the route (`REQ-VC-018`). It prints what the route takes of what
+/// VectorCraft allows, from which the plug-in prices its work (`apps/stitchcraft-vc-plugin/src/route_satins.rs`).
+#[test]
+fn req_vc_018_auto_route_satin_columns_routes_ts_17c_s_letters_within_a_heavy_filter_s_budget() {
+    let plugin = registry::install_bytes(&module("route-satins")).unwrap_or_else(|e| panic!("VectorCraft refuses route-satins: {e}"));
+    assert_eq!(plugin.id(), "dev.stitchcraft.route-satins");
+    assert!(plugin.manifest().kind == Kind::Filter && plugin.manifest().budget == Budget::Heavy, "a heavy filter");
+    // VectorCraft admits the pieces' records only while StitchCraft Satin and Stroke are installed.
+    for family in ["satin", "stroke"] {
+        registry::install_bytes(&module(family)).unwrap();
+    }
+    let pes = registry::install_bytes(&module("pes")).unwrap();
+    let letters = letters();
+    let ids: Vec<u32> = (0..letters.len()).map(|k| 2 + k as u32).collect();
+    let lines: Vec<Value> = letters.iter().zip(&ids).map(|(path, id)| satin_line(*id, path)).collect();
+    let mut doc = read_document(&lines);
+    let nodes: Vec<NodeId> = ids.iter().map(|id| NodeId(u64::from(*id))).collect();
+    let (used, allowed) = filtered(&plugin, &mut doc, &nodes, &json!({}), NodeId(1)).unwrap_or_else(|e| panic!("TS-17C's letters: {e}"));
+    // The route's first piece, a column's piece or a run under one, takes the topmost line's place.
+    let (topmost, others) = nodes.split_last().unwrap();
+    let first = doc.node(*topmost).and_then(|node| node.name.clone()).unwrap_or_default();
+    assert!(["AutoSatin 1", "AutoSatin Running Stitch 1"].contains(&first.as_str()), "{first}");
+    assert!(others.iter().all(|id| doc.node(*id).is_none()), "the lines routed are gone");
+    let target = export::Target { extension: "pes", name: "Route" };
+    let routed = export::run(&pes, &saved(&doc), &json!({}), target).unwrap_or_else(|e| panic!("the route doesn't export: {e}"));
+    assert!(base64_decoded(&routed.data_base64).starts_with(b"#PES0001"));
+    println!("::notice title=auto-route satin columns::TS-17C's letters: {used} of {allowed}");
+}
+
 /// StitchCraft Test Sheet draws each sheet its dialog offers into a new document as `plugin.run` runs it,
 /// within a light filter's budget, each object with its StitchCraft effect, and StitchCraft's PES exporter
 /// writes the document within an export's budget (`REQ-VC-015`). It prints what each takes of what
