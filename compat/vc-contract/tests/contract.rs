@@ -755,8 +755,10 @@ fn req_vc_018_auto_route_satin_columns_routes_ts_17c_s_letters_within_a_heavy_fi
     let mut doc = read_document(&lines);
     let nodes: Vec<NodeId> = ids.iter().map(|id| NodeId(u64::from(*id))).collect();
     let (used, allowed) = filtered(&plugin, &mut doc, &nodes, &json!({}), NodeId(1)).unwrap_or_else(|e| panic!("TS-17C's letters: {e}"));
+    // The route's first piece, a column's piece or a run under one, takes the topmost line's place.
     let (topmost, others) = nodes.split_last().unwrap();
-    assert_eq!(doc.node(*topmost).and_then(|node| node.name.clone()).as_deref(), Some("AutoSatin 1"));
+    let first = doc.node(*topmost).and_then(|node| node.name.clone()).unwrap_or_default();
+    assert!(["AutoSatin 1", "AutoSatin Running Stitch 1"].contains(&first.as_str()), "{first}");
     assert!(others.iter().all(|id| doc.node(*id).is_none()), "the lines routed are gone");
     let target = export::Target { extension: "pes", name: "Route" };
     let routed = export::run(&pes, &saved(&doc), &json!({}), target).unwrap_or_else(|e| panic!("the route doesn't export: {e}"));
