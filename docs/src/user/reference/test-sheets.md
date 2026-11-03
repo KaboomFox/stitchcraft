@@ -405,15 +405,15 @@ After sewing, check:
 - On the top half, each button's yellow is one fill under the dots, which sew after it, and its black rim a satin column round it. On the bottom half, the abutting button's yellow sews round the dots as drawn. Which sews better between the dots? Does the rim cover the yellow's edge?
 - The machine cuts the thread at thread changes and at the stop, but at no jump, and the pictures sew as any design does: a shape sewn after a jump may sew its thread down. Snip the jump threads at each stop and after sewing. Where is one sewn down, and does it show?
 
-## TS-16 — An Ink/Stitch file: start and end commands, clip paths, origin, stop position, turn and a clone
+## TS-16 — An Ink/Stitch file: start and end commands, clip paths, origin, stop position, turn, a clone and drawn locks
 
-110.0 × 97.2 mm · 4931 stitches, 7 jumps, 6 trims, 4 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+110.0 × 117.2 mm · 4979 stitches, 9 jumps, 8 trims, 5 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
-![TS-16 as it will sew, turned right: from the left, a black zigzag in 2 pieces, a green quarter of a disc, a blue satin column 40 mm long and a red tatami rectangle 30 mm wide and 40 mm tall, its rows running down. Below the red rectangle, its red clone, turned 45° from it, its rows along its long sides.](../../images/generated/testsheet-ts-16.png)
+![TS-16 as it will sew, turned right: from the left, a black zigzag in 2 pieces, a green quarter of a disc, a blue satin column 40 mm long and a red tatami rectangle 30 mm wide and 40 mm tall, its rows running down. Below the red rectangle, its red clone, turned 45° from it, its rows along its long sides. Above them, 2 black lines 40 mm long with small locks drawn as paths at their ends.](../../images/generated/testsheet-ts-16.png)
 
-Threads: Red, Blue, Blue (stop), Emerald Green, Black, Red.
+Threads: Red, Blue, Blue (stop), Emerald Green, Black, Red, Black.
 
 After sewing, check:
 
@@ -425,7 +425,8 @@ After sewing, check:
 - The design's origin, on the blue column's top edge 10 mm in from its left end, goes to the hoop's centre, where the needle waits before it sews. Does the machine put the design there, or its middle?
 - The machine stops after the blue column. Before it stops, the frame moves to the stop position, 20 mm right of the red fill's top-right corner and 10 mm above it. Does the frame wait there, and does the needle come back for the green fill?
 - The file turns the sheet right about its origin, as Ink/Stitch's rotate on export does: its first 4 shapes sew 100 mm wide and 40 mm tall, the red fill at the right and the zigzag at the left. Does the machine sew it so, or turn it back?
-- Last, in red again, the red fill's clone sews below the fill, turned 45° right. Do its rows run along its long sides, as the fill's run along its own? It starts at its corner turned from the fill's top-right one and ends at the one turned from the fill's bottom-left.
+- In red again, the red fill's clone sews below the fill, turned 45° right. Do its rows run along its long sides, as the fill's run along its own? It starts at its corner turned from the fill's top-right one and ends at the one turned from the fill's bottom-left.
+- Last, in black after a colour change, 2 lines 40 mm long sew above the rest, each locked at both ends with a lock drawn as a path and trimmed after. The lower one, sewn from the right, starts with a zigzag across its first 1.6 mm and ends with a triangle over its last 1.4 mm, sewn backwards. The upper one, sewn from the left at 150 %, starts with a triangle along its first 1.8 mm and ends with one over its last 1.8 mm. Snip the thread between them, then pull each tail gently: does each lock hold? Does each look as it does in Ink/Stitch's sew-out?
 - Any difference between the 2 sew-outs, and where.
 
 ## TS-17A — New stitch types: cross stitch

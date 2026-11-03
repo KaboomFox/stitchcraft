@@ -9,11 +9,12 @@
 //!
 //! StitchCraft adds two rules of its own, and names the pieces they leave out (`SC-W0503`): a step longer
 //! than 10 m (the data model's reach) is not sewn, and a step of 0 is no step, because it would sew in
-//! place, where Ink/Stitch sews a stitch in place for it (`DEV-LCK-002`). It does not sew drawn custom
-//! locks yet: the engine never reads SVG, so the adapter will hand it the path (roadmap M8).
+//! place, where Ink/Stitch sews a stitch in place for it (`DEV-LCK-002`). A path's nodes are read by
+//! `path`, from the same text (`REQ-LCK-005`).
 
 use stitchcraft_core::{Exhausted, Meter};
 
+use super::path::{self, Nodes};
 use crate::design::WORKING_LIMIT_MM;
 
 /// A custom lock's text, read.
@@ -26,15 +27,15 @@ pub(crate) enum Read {
         /// The pieces left out, as written.
         skipped: Vec<String>,
     },
-    /// Not numbers: a lock drawn as an SVG path.
-    Drawn,
+    /// Not numbers: a lock drawn as an SVG path, and its nodes.
+    Drawn(Nodes),
 }
 
 /// `text`, stripped as a parameter's text is, read as a custom lock, its steps `scale_mm` long per unit.
-/// Every piece costs a unit of `meter`.
+/// Every piece, or every command of a path, costs a unit of `meter`.
 pub(crate) fn read(text: &str, scale_mm: f64, meter: &mut Meter) -> Result<Read, Exhausted> {
     if !text.chars().all(|c| c.is_ascii_digit() || matches!(c, ' ' | '.' | ',' | '-')) {
-        return Ok(Read::Drawn);
+        return Ok(Read::Drawn(path::read(text, meter)?));
     }
     let (mut steps, mut skipped) = (Vec::new(), Vec::new());
     for piece in text.split(' ').filter(|piece| !piece.is_empty()) {
@@ -79,9 +80,13 @@ mod tests {
 
     #[test]
     fn anything_else_is_a_drawn_lock() {
-        assert_eq!(steps("M 0,0 L 1,1", 1.0), Read::Drawn);
-        assert_eq!(steps("1\t-1", 1.0), Read::Drawn, "only spaces separate numbers");
-        assert_eq!(steps("1 -1\n", 1.0), Read::Drawn, "white space round the numbers is stripped before, by the parameter reader");
+        let drawn = |text: &str| matches!(steps(text, 1.0), Read::Drawn(_));
+        assert_eq!(steps("M 0,0 L 1,1", 1.0), Read::Drawn(Nodes { nodes: vec![(0.0, 0.0), (1.0, 1.0)], error: None }));
+        assert!(drawn("1\t-1"), "only spaces separate numbers");
+        assert!(drawn("1 -1\n"), "white space round the numbers is stripped before, by the parameter reader");
+        // A path costs a unit for each command.
+        let mut meter = Budget { max_stitches: 1, max_work: 1 }.meter();
+        assert_eq!(read("M 0,0 L 1,1", 1.0, &mut meter), Err(Exhausted::Work));
     }
 
     #[test]
