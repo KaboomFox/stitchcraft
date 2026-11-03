@@ -285,3 +285,8 @@ fn req_vc_018_lines_with_the_satin_effect_route_as_the_columns_the_engine_makes_
     let (a, b) = (stitches(&read.design), stitches(&engine));
     assert!(a.len() == b.len() && a.iter().zip(&b).all(|((k, p), (l, q))| k == l && p.distance(*q) < 1e-6), "{} and {} stitches", a.len(), b.len());
 }
+
+#[test]
+fn a_piece_the_filter_can_t_write_is_a_bug_it_names() {
+    assert_eq!(bug("a reason").to_string(), "error SC-E0009: The route could not be written: a reason.");
+}
