@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-8d72ca23.js";
+            window.path_to_searchindex_js = "../searchindex-78270ae2.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-0e01f503.js"></script>
@@ -759,7 +759,8 @@ as the JSON read. Each element’s copy of its object’s path takes 56 bytes a 
 many paints would hold far more than the file: 4 MB drawing 2,500 fills on a path of 200,000 anchors would
 hold 28 GB before the budget ran out. So the copies of paths come to at most 32 bytes for each byte of
 JSON read, which an object’s fill and stroke on its most compact path keep well within. A file whose
-copies come to more is refused with <code>SC-E0806</code>.</p>
+copies come to more is refused with <code>SC-E0806</code>. A clip group’s clip is held once, shared by the elements it
+cuts, and costs each of them a unit for each of its segments.</p>
 <p><strong>Coordinates.</strong> VectorCraft keeps every path in document coordinates. Moving or scaling a group moves
 its paths’ anchors, so layers, groups and compound paths have no transform. Coordinates are points, 1/72
 inch, with y down, and the adapter multiplies them by 25.4/72 into millimetres. The document’s origin
@@ -770,10 +771,8 @@ anchor, leaves that end of the segment straight, and a segment without handles i
 <ul>
 <li><strong>Paths and compound paths</strong> are the art. A compound path’s children are one shape, with the compound’s
 appearance and fill rule.</li>
-<li><strong>Groups and layers</strong> pass their children on, and their StitchCraft effects with them (below). Clipping
-is left for M8.7: a clipping group’s or layer’s art is stitched whole, with <code>SC-W0807</code>. The SVG adapter
-cuts a shape to its clip paths from M8.5, and M8.7 gives a clip group’s art its clipping object as a
-clip of its elements the same way (<code>REQ-GEN-005</code>).</li>
+<li><strong>Groups and layers</strong> pass their children on, and their StitchCraft effects with them (below). A clip
+group’s or a clipping layer’s art is cut to its clipping object, as VectorCraft clips it (below).</li>
 <li><strong>Hidden objects</strong>, and everything in them, are left out without a word, as VectorCraft draws nothing
 for them. So are objects and paints of opacity 0, paints turned off and strokes of width 0.</li>
 <li><strong>Objects and layers named <code>stitch:ignore</code></strong>, and everything in them, are left out with <code>SC-I0811</code>.
@@ -861,6 +860,39 @@ sews nothing. VectorCraft draws nothing of a group or an image there, which an i
 and neither is sewn. Where StitchCraft effects meet from more than one level, a path’s own and a group’s,
 or 2 groups’, VectorCraft draws one effect run on the stitches another drew, which a machine cannot sew.
 The path sews as the nearest effects say, and <code>SC-W0807</code> names it.</p>
+<p><strong>Clip groups</strong> (<code>REQ-VC-017</code>, M8.7). A group or a layer whose kind has <code>"clip": true</code> clips what it holds
+to its first object, the clipping object. Object › Clipping Mask › Make wraps the objects selected in such a
+group, the topmost first, which must be a path, a compound path or text. It takes that object’s paints and
+effects away, and marks a path <code>"clipping": true</code> (<code>clip_make</code> in <code>crates/engine</code>). The Layers panel’s
+Make Clipping Mask clips a layer or a group the same way. VectorCraft clips to the clipping object’s area
+whatever its paints, hidden or not (<code>Node::clip_shapes</code> in <code>crates/doc</code>, read at 0.19.0, and alike from
+0.13):</p>
+<ul>
+<li>A path’s area is the one its fill rule fills, and a compound path’s is its paths’ together, by its own
+rule, holes and all.</li>
+<li>A nested clip group’s is its own clipping object’s.</li>
+<li>Another group’s or a layer’s is that of its members that show, together, but a Shaper group’s sources.</li>
+<li>Text’s is its glyphs’ outlines, an image’s or a placed document’s its frame, and a live object’s what it
+draws. A guide or a symbol doesn’t add to it.</li>
+</ul>
+<p>One shape keeps its rule, several are united, and a clipping object of none hides the group’s contents.
+The adapter makes the clipping object’s area into a clip of each element made inside the group, however
+deep, as the SVG adapter does with a clip path (<code>Element::clips</code>). Clip groups inside one another give one
+clip each, and the engine cuts an element to all of them (<code>REQ-GEN-005</code>). It cuts a fill’s area and a
+stroke’s lines, each piece sewn on its own. Satin columns are sewn whole, as in Ink/Stitch (<code>SC-W0217</code>),
+and an element wholly outside its clips isn’t sewn (<code>SC-W0013</code>). An automatic shape is cut before it is
+digitized. The clipping object isn’t cut to its own clip, as VectorCraft paints its fills inside its own
+area and its strokes over the clip’s edge. The clips round its group do cut it.</p>
+<p>The adapter doesn’t read glyphs, frames or what a live object draws. Text, an image, a placed document, a
+live object or a kind it doesn’t know adds nothing to the clip, and <code>SC-W0807</code> names it, with the
+VectorCraft command that makes paths of it, such as Type › Create Outlines. A path in the clipping object
+whose geometry can’t be used doesn’t add to the clip either, and <code>SC-W0808</code> names it. A clip left with no
+shape cuts away all of what it clips, where VectorCraft shows what lies in the glyphs or the frame.</p>
+<p>VectorCraft runs a group’s geometry effects on every path inside it, the clipping objects of the clip groups
+it holds among them (<code>for_each_leaf</code> in <code>crates/effects</code>), and clips to what they return. Where StitchCraft’s
+effects apply to a clipping object, the preview is cut to the stitches they draw of it, a fill’s rows or a
+stroke’s line. What sews is cut to the clipping object as it is drawn, and <code>SC-W0807</code> says so. Its hint is
+to apply the effects to the objects the group clips.</p>
 <p><strong>Ids.</strong> An element is <code>vc:&lt;object id&gt;:&lt;what&gt;</code>: <code>fill</code> or <code>stroke</code> for a paint, with its rank among the
 object’s fills or strokes from the second on (<code>fill.2</code>), and the family for an effect. VectorCraft keeps
 an object’s id when it saves, so a report and a preview name the same object. A repeated id gets <code>~2</code>,

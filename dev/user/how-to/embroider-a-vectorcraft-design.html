@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-8d72ca23.js";
+            window.path_to_searchindex_js = "../../searchindex-78270ae2.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-0e01f503.js"></script>
@@ -224,6 +224,17 @@ note can follow the name after a space, as in <code>stitch:ignore placement line
 read alike. A hidden object is left out too.</p>
 <p>VectorCraft’s preview can’t see names. An object named <code>stitch:ignore</code> that a StitchCraft effect sews, its
 own or its group’s, still shows its stitches there, and <code>stitch export</code> leaves it out.</p>
+<h2 id="clip-art-to-a-shape"><a class="header" href="#clip-art-to-a-shape">Clip art to a shape</a></h2>
+<p>Draw the shape over the art, select both, and choose <strong>Object › Clipping Mask › Make</strong>. The art sews only
+where it shows inside the shape, in the machine file and in <code>stitch export</code> alike. A fill sews the part of
+its area inside, and a stroke the pieces of its line inside, each on its own. Satin columns are sewn
+whole, as Ink/Stitch sews them, and StitchCraft says so (<code>SC-W0217</code>). Art wholly outside the shape isn’t
+sewn (<code>SC-W0013</code>). A clipping mask inside another cuts its art to both shapes.</p>
+<p>Clip with a path or a compound path. StitchCraft doesn’t read the outlines of text, so make paths of text
+with <strong>Type › Create Outlines</strong> before you clip with it: until then it clips all the art away, and
+StitchCraft says why. Give StitchCraft’s effects to the objects in the clipping mask rather than to the
+mask itself. VectorCraft runs a group’s effects on the clipping shape too, and then shows the art cut to
+the stitches they draw there, where the machine file cuts it to the shape (<code>SC-W0807</code>).</p>
 <h2 id="write-the-machine-file"><a class="header" href="#write-the-machine-file">Write the machine file</a></h2>
 <p>With the <a href="../install.html#the-vectorcraft-plug-ins">exporters installed</a>, choose <strong>File › Export › Export
 As</strong>, and <strong>PES embroidery (StitchCraft)</strong> or <strong>DST embroidery (StitchCraft)</strong> as the format. Once the file

@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-8d72ca23.js";
+            window.path_to_searchindex_js = "../searchindex-78270ae2.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-0e01f503.js"></script>
@@ -221,8 +221,8 @@ pub struct Element {
     pub clips: Vec&lt;Clip&gt;,            // since M8.5: it sews only what lies inside every one (REQ-GEN-005)
 }
 
-pub struct Clip {                    // since M8.5: an SVG clip path, VectorCraft's clipping object from M8.7
-    pub shapes: Vec&lt;ClipShape&gt;,      // their areas together; none leaves nothing of what it cuts
+pub struct Clip {                    // since M8.5: an SVG clip path, and from M8.7 a VectorCraft clipping object
+    pub shapes: Arc&lt;[ClipShape]&gt;,    // their areas together, shared by the elements it cuts; none leaves nothing
 }
 
 pub struct ClipShape {
@@ -292,7 +292,9 @@ position, checked the same way. VectorCraft’s Test Sheet filter draws a test s
 artboard with it (<code>REQ-VC-015</code>).</p>
 <p><strong>Commands.</strong> Ink/Stitch’s start, end and target commands, and VectorCraft’s start and end markers, are
 an element’s hints (M8.4), its points checked and moved with the rest. Clip paths are an element’s clips
-(M8.5), checked and moved with it too, which the engine cuts it to (<a href="engine-pipeline.html">engine pipeline</a>). Trims and stops are the element
+(M8.5), and so are VectorCraft’s clipping objects (M8.7), checked and moved with it too, which the engine
+cuts it to (<a href="engine-pipeline.html">engine pipeline</a>). A clip’s shapes are shared by the elements it cuts, so
+that a clip group of many objects holds its clipping object once. Trims and stops are the element
 parameters <code>trim_after</code> and <code>stop_after</code>, and the origin and stop position are design settings (M3.8), which
 Ink/Stitch’s <code>origin</code> and <code>stop_position</code> commands and VectorCraft’s <code>stitch:origin</code> and <code>stitch:stop-position</code>
 markers give (M8.8).</p>

@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-8d72ca23.js";
+            window.path_to_searchindex_js = "../../searchindex-78270ae2.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-0e01f503.js"></script>
@@ -329,13 +329,14 @@ format this StitchCraft does not have. Nothing was replayed.</p>
 later one; a bundle changed by hand, or by an email program, needs the original file.</p>
 <h2 id="sc-w0013"><a class="header" href="#sc-w0013">SC-W0013</a></h2>
 <p><strong>Warning</strong> — Element outside its clip paths; left out</p>
-<p>The element is cut to clip paths, its own or those of the groups round it, and they leave nothing of
-it: it lies wholly outside them, they don’t overlap one another, or one of them has no area, such as
-an empty clip path or one of text alone. A viewer shows nothing of it, so it sews nothing
-(<code>REQ-GEN-005</code>), and a trim or stop after it is left out (<code>SC-W0505</code>). Ink/Stitch sews nothing of an
-element outside its clip path too, but sews an element whose clip path has no area whole
+<p>The element is cut to clip paths, its own or those of the groups round it, or to the clipping objects
+of the VectorCraft clip groups round it, and they leave nothing of it: it lies wholly outside them,
+they don’t overlap one another, or one of them has no area, such as an empty clip path, one of text
+alone, or a clipping object StitchCraft doesn’t read (<code>SC-W0807</code>). A viewer shows nothing of it, so it
+sews nothing (<code>REQ-GEN-005</code>), and a trim or stop after it is left out (<code>SC-W0505</code>). Ink/Stitch sews
+nothing of an element outside its clip path too, but sews an element whose clip path has no area whole
 (<code>DEV-SVG-019</code>).</p>
-<p>Move the element or its clip paths, or delete the element if it is hidden on purpose.</p>
+<p>Move the element or what clips it, or delete the element if it is hidden on purpose.</p>
 <h2 id="sc-e0101"><a class="header" href="#sc-e0101">SC-E0101</a></h2>
 <p><strong>Error</strong> — Parameter has the wrong type or an unknown choice</p>
 <p>A parameter’s value could not be understood: a number where a word was expected, a choice that
@@ -477,9 +478,9 @@ a short column’s rails where its rungs meet them. Ink/Stitch says such a colum
 <p>Move the rungs so that each meets both rails away from their ends, or lower <code>push_compensation_mm</code>.</p>
 <h2 id="sc-w0217"><a class="header" href="#sc-w0217">SC-W0217</a></h2>
 <p><strong>Warning</strong> — Satin column is clipped; sewn whole</p>
-<p>A satin column is cut to clip paths, its own or those of the groups round it, which StitchCraft
-doesn’t apply to a satin column: it is sewn whole, as Ink/Stitch sews it, where a viewer shows only
-what lies inside them (<code>REQ-GEN-005</code>).</p>
+<p>A satin column is cut to clip paths, its own or those of the groups round it, or to the clipping
+objects of the VectorCraft clip groups round it, which StitchCraft doesn’t apply to a satin column: it
+is sewn whole, as Ink/Stitch sews it, where a viewer shows only what lies inside them (<code>REQ-GEN-005</code>).</p>
 <p>Draw the column as far as it should sew, or make it a fill if it should take the clip’s shape.</p>
 <h2 id="sc-w0303"><a class="header" href="#sc-w0303">SC-W0303</a></h2>
 <p><strong>Warning</strong> — Parts of a fill too small to sew left out</p>
@@ -852,23 +853,26 @@ effect leaves the object as it is, and the filter changes nothing.</p>
 again. For a plug-in, install the StitchCraft plug-ins made for that version of VectorCraft.</p>
 <h2 id="sc-w0807"><a class="header" href="#sc-w0807">SC-W0807</a></h2>
 <p><strong>Warning</strong> — VectorCraft object or feature not stitched</p>
-<p>Part of the VectorCraft document is not stitched: text, images, symbols, objects VectorCraft computes
-as it draws them (blends, envelopes, meshes, repeats, placed documents and Intertwine objects), a kind
-of object StitchCraft does not read, clipping and opacity masks, VectorCraft’s own effects, a brush’s
-art, a StitchCraft effect it cannot use, such as an Auto effect beside a stitch effect, which says how
-the object sews, or a group’s or a layer’s own fills and strokes. A gradient is sewn in its first
-colour, and a pattern, or a colour that does not read, in black. An object that StitchCraft effects
-reach from more than one level, its own and a group’s around it, or 2 groups’, sews as the nearest say:
-VectorCraft runs each on the stitches the one before drew, which no machine sews. A start or end
-marker, an object named <code>stitch:start</code> or <code>stitch:end</code>, is never stitched: the shapes grouped with it
-start or end there, and a marker they don’t use is said, a second one of its kind in a group or one
-with no point that reads, as are those beside a shape digitized automatically, which places where its
-parts start and end. So is an origin or stop position marker, <code>stitch:origin</code> or
-<code>stitch:stop-position</code>, with no point that reads. A name that begins with <code>stitch:</code> and names no marker StitchCraft
-reads is said too, as is a group or a layer named as a marker, which only a shape can be: the name is
-ignored. A satin column, a zigzag or a fill made of a stroke is as wide as the stroke all along and
-centred on its path, so a stroke aligned inside or outside a closed path is said, as is a width
-profile, and round or square caps where the stitches end at the path’s end.</p>
+<p>Part of the VectorCraft document is not stitched: text, images, symbols, objects VectorCraft computes as
+it draws them (blends, envelopes, meshes, repeats, placed documents and Intertwine objects), a kind of
+object StitchCraft does not read, opacity masks, VectorCraft’s own effects, a brush’s art, a StitchCraft
+effect it cannot use, such as an Auto effect beside a stitch effect, which says how the object sews, or
+a group’s or a layer’s own fills and strokes. A clip group cuts what it holds to its clipping object:
+text, an image, a placed document, a live object or a kind StitchCraft does not read there adds nothing
+to the clip, which is said too. So is a clipping object that StitchCraft effects reach: VectorCraft
+clips the preview to the stitches they draw of it, and what sews is cut to it as it is drawn. A gradient
+is sewn in its first colour, and a pattern, or a colour that does not read, in black. An object that
+StitchCraft effects reach from more than one level, its own and a group’s around it, or 2 groups’, sews
+as the nearest say: VectorCraft runs each on the stitches the one before drew, which no machine sews. A
+start or end marker, an object named <code>stitch:start</code> or <code>stitch:end</code>, is never stitched: the shapes
+grouped with it start or end there, and a marker they don’t use is said, a second one of its kind in a
+group or one with no point that reads, as are those beside a shape digitized automatically, which places
+where its parts start and end. So is an origin or stop position marker, <code>stitch:origin</code> or
+<code>stitch:stop-position</code>, with no point that reads. A name that begins with <code>stitch:</code> and names no marker
+StitchCraft reads is said too, as is a group or a layer named as a marker, which only a shape can be:
+the name is ignored. A satin column, a zigzag or a fill made of a stroke is as wide as the stroke all
+along and centred on its path, so a stroke aligned inside or outside a closed path is said, as is a
+width profile, and round or square caps where the stitches end at the path’s end.</p>
 <p>The message names the object and what was done. In VectorCraft, Type › Create Outlines makes paths
 of text, and Object › Expand of blends, envelopes, repeats and placed documents. Break Link to Symbol
 makes paths of a symbol, and Object › Expand Appearance of what effects and brushes draw.</p>
@@ -877,8 +881,9 @@ makes paths of a symbol, and Object › Expand Appearance of what effects and br
 <p>An object’s geometry cannot be used, and the object, or the stroke, is left out: a coordinate or a
 stroke’s width is not a number, the object draws nothing, or it lies more than 10 metres from the
 document’s origin, beyond what machine files can record. A StitchCraft stroke or satin effect takes
-a width that is not a number as 0. A StitchCraft live effect leaves such an object as it is, with
-this message as the plug-in’s last error.</p>
+a width that is not a number as 0. Such a path in a clip group’s clipping object adds nothing to the
+clip. A StitchCraft live effect leaves such an object as it is, with this message as the plug-in’s
+last error.</p>
 <p>The message names the object. Check its anchors, or remove stray objects far from the design.</p>
 <h2 id="sc-i0809"><a class="header" href="#sc-i0809">SC-I0809</a></h2>
 <p><strong>Info</strong> — VectorCraft layer or guide left out, as it does not print</p>

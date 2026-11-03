@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-8d72ca23.js";
+            window.path_to_searchindex_js = "../../searchindex-78270ae2.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-0e01f503.js"></script>
@@ -189,8 +189,9 @@ neighbours, as every generator is (<a href="../adr/0014-generators-see-their-nei
 stroke sews the same whatever they are, and whatever start and end positions its design gives it
 (<code>REQ-GEN-001</code>). A satin column or a tatami fill before a stroke ends near the
 stroke’s first point.</p>
-<p>A stroke cut to clips, its clip paths, sews the pieces of its lines inside every one (<code>REQ-GEN-005</code>). Its
-subpaths are cut where they cross a clip’s outline, as Ink/Stitch cuts them. A running stitch’s or a zigzag
+<p>A stroke cut to clips, its SVG clip paths or VectorCraft clipping objects, sews the pieces of its lines
+inside every one (<code>REQ-GEN-005</code>). Its subpaths are cut where they cross a clip’s outline, as Ink/Stitch
+cuts them. A running stitch’s or a zigzag
 stroke’s is flattened first as a shape’s outline is, and a manual stitch’s runs from node to node, with a
 needle point at each cut. Each piece sews on its own, in order along its subpath, and a closed subpath that is cut
 is cut where it starts too. Left whole, a subpath keeps its curves and sews as drawn. The clips leave the

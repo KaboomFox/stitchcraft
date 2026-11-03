@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-8d72ca23.js";
+            window.path_to_searchindex_js = "../searchindex-78270ae2.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-0e01f503.js"></script>
@@ -269,7 +269,7 @@ another.</p>
 <tr><td><code>SC-E0010</code></td><td>Error</td><td>Nothing to stitch (no embroiderable elements)</td><td>M1</td></tr>
 <tr><td><code>SC-W0011</code></td><td>Warning</td><td>Stitch type not sewn yet; element skipped</td><td>M3</td></tr>
 <tr><td><code>SC-E0012</code></td><td>Error</td><td>Bug-report bundle could not be replayed</td><td>M3</td></tr>
-<tr><td><code>SC-W0013</code></td><td>Warning</td><td>Element outside its clip paths; left out (wholly outside them, or under clip paths that don’t meet or have no area; Ink/Stitch sews one whose clip path is empty whole)</td><td>M8</td></tr>
+<tr><td><code>SC-W0013</code></td><td>Warning</td><td>Element outside its clip paths; left out (wholly outside them or a VectorCraft clipping object, or under clips that don’t meet or have no area; Ink/Stitch sews one whose clip path is empty whole)</td><td>M8</td></tr>
 <tr><td><code>SC-E0101</code></td><td>Error</td><td>Parameter has the wrong type or an unknown choice</td><td>M3</td></tr>
 <tr><td><code>SC-W0102</code></td><td>Warning</td><td>Parameter clamped to its allowed range</td><td>M3</td></tr>
 <tr><td><code>SC-W0105</code></td><td>Warning</td><td>Unknown parameter preserved but ignored</td><td>M3</td></tr>
@@ -330,8 +330,8 @@ another.</p>
 <tr><td><code>SC-W0804</code></td><td>Warning</td><td>Element geometry invalid or out of range (path data error, invalid transform, draws nothing, beyond 10 m, a stroke’s width, join or miter limit that does not read, a clone that shows itself); the usable part is stitched</td><td>M3</td></tr>
 <tr><td><code>SC-I0805</code></td><td>Info</td><td>Object left out, as the file asks (Ink/Stitch’s ignore commands and <code>ignore_object</code> setting, or a clone whose <code>clone</code> setting is off)</td><td>M3</td></tr>
 <tr><td><code>SC-E0806</code></td><td>Error</td><td>VectorCraft file could not be read (not a VectorCraft document, or larger than the adapter reads). Its JSON counts, and so do the copies of names, settings and paths its elements would hold</td><td>M6</td></tr>
-<tr><td><code>SC-W0807</code></td><td>Warning</td><td>VectorCraft object or feature not stitched (text, images, symbols, live objects, clipping, VectorCraft’s own effects, brushes, gradients, patterns, a group’s own paints), StitchCraft effects from more than one level, a start or end marker, or a <code>stitch:</code> name StitchCraft doesn’t read</td><td>M6</td></tr>
-<tr><td><code>SC-W0808</code></td><td>Warning</td><td>VectorCraft geometry unusable (a number that does not read or a point beyond 10 m; a shape that draws nothing)</td><td>M6</td></tr>
+<tr><td><code>SC-W0807</code></td><td>Warning</td><td>VectorCraft object or feature not stitched (text, images, symbols, live objects, opacity masks, VectorCraft’s own effects, brushes, gradients, patterns, a group’s own paints), what adds nothing to a clip, StitchCraft effects from more than one level or on a clipping object, a start or end marker, or a <code>stitch:</code> name StitchCraft doesn’t read</td><td>M6</td></tr>
+<tr><td><code>SC-W0808</code></td><td>Warning</td><td>VectorCraft geometry unusable (a number that does not read or a point beyond 10 m; a shape that draws nothing; a clipping path, which adds nothing to its clip)</td><td>M6</td></tr>
 <tr><td><code>SC-I0809</code></td><td>Info</td><td>VectorCraft layer or guide left out, as it does not print (template layers, layers whose printing is off, guides)</td><td>M6</td></tr>
 <tr><td><code>SC-I0810</code></td><td>Info</td><td>VectorCraft live effect leaves the object as it is (it sews no stitch, its preview level needs more work than VectorCraft lets a live effect do, it is a satin column drawn as one path or a zigzag stroke and VectorCraft gives the effect no stroke, or the effect is on one of the object’s fills or strokes)</td><td>M6</td></tr>
 <tr><td><code>SC-I0811</code></td><td>Info</td><td>VectorCraft object left out, as its name asks (an object or a layer named <code>stitch:ignore</code>)</td><td>M6</td></tr>

@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-8d72ca23.js";
+            window.path_to_searchindex_js = "../searchindex-78270ae2.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-0e01f503.js"></script>
@@ -272,6 +272,7 @@ version and what sews must not:</p>
 <tbody>
 <tr><td><code>install-and-list</code></td><td>install the 9 modules, then <code>plugin.list</code></td><td>each family’s live effect, the Auto effect, each format’s exporter and each filter is listed (<code>REQ-VC-002</code>, <code>REQ-VC-011</code>, <code>REQ-VC-013</code>, <code>REQ-VC-014</code>, <code>REQ-VC-015</code>, <code>REQ-VC-016</code>)</td></tr>
 <tr><td><code>apply</code></td><td>a square filled red and a line, given the fill and stroke effects with parameters, then saved</td><td>as sent, with a fill in red and a stroke (<code>REQ-VC-004</code>, <code>REQ-PRM-003</code>)</td></tr>
+<tr><td><code>clipping-mask</code></td><td>a red square 1 in a side with the fill effect and a blue line across it with the stroke effect, drawn and exported to PES, then a square half the size drawn in their middle and Make Clipping Mask made of all 3, saved, drawn and exported to PES and DST</td><td>as sent, with a fill in red and a stroke in blue, each sewing, and every needle point within the clipping object. Each file is the one <code>stitch export</code> writes, and the PES file differs from the one before the mask (<code>REQ-VC-017</code>, <code>REQ-GEN-005</code>, <code>REQ-VC-011</code>)</td></tr>
 <tr><td><code>compound-satin</code></td><td>2 rails and a rung, Make Compound Path, then the satin effect</td><td>as sent, and one satin column (<code>REQ-VC-007</code>)</td></tr>
 <tr><td><code>graphic-style</code></td><td>a group of 2 squares, and a gold square with a fill effect, drawn, whose new graphic style is then applied to the group</td><td>as sent, and 3 fills in gold at the effect’s 90° (<code>REQ-VC-006</code>)</td></tr>
 <tr><td><code>missing-plugin</code></td><td>a fill saved and drawn, then opened and saved again without the plug-ins</td><td>both sew alike, as sent: the records are kept (<code>REQ-PRM-003</code>)</td></tr>
@@ -291,7 +292,8 @@ fails the check. A file is sewn as <code>stitch plan</code> sews it, for the mac
 machine, and 2 are compared
 byte for byte, as is a machine file exported with the one <code>stitch export</code> writes of its document, by the
 format and the name of the file. Elements are counted by kind, thread and settings. A paint’s fill is a fill too, and has no
-settings. The live-effect budget of each preview level is Level A’s (<code>REQ-VC-003</code>).</p>
+settings. A box a document sews within is in its points, the design planned with its origin at the
+document’s and no turn on export, so that each needle point lies where the document draws it. The live-effect budget of each preview level is Level A’s (<code>REQ-VC-003</code>).</p>
 <h2 id="automation"><a class="header" href="#automation">Automation</a></h2>
 <pre><code class="language-text">schedule (daily) ──▶ discover tracks ──▶ for each track: build plug-ins ─▶ Level A ─▶ Level B ─▶ its result
                                                                                                   │

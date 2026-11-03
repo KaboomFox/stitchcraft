@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-8d72ca23.js";
+            window.path_to_searchindex_js = "searchindex-78270ae2.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-0e01f503.js"></script>
@@ -849,6 +849,17 @@ note can follow the name after a space, as in <code>stitch:ignore placement line
 read alike. A hidden object is left out too.</p>
 <p>VectorCraft’s preview can’t see names. An object named <code>stitch:ignore</code> that a StitchCraft effect sews, its
 own or its group’s, still shows its stitches there, and <code>stitch export</code> leaves it out.</p>
+<h2 id="clip-art-to-a-shape"><a class="header" href="#clip-art-to-a-shape">Clip art to a shape</a></h2>
+<p>Draw the shape over the art, select both, and choose <strong>Object › Clipping Mask › Make</strong>. The art sews only
+where it shows inside the shape, in the machine file and in <code>stitch export</code> alike. A fill sews the part of
+its area inside, and a stroke the pieces of its line inside, each on its own. Satin columns are sewn
+whole, as Ink/Stitch sews them, and StitchCraft says so (<code>SC-W0217</code>). Art wholly outside the shape isn’t
+sewn (<code>SC-W0013</code>). A clipping mask inside another cuts its art to both shapes.</p>
+<p>Clip with a path or a compound path. StitchCraft doesn’t read the outlines of text, so make paths of text
+with <strong>Type › Create Outlines</strong> before you clip with it: until then it clips all the art away, and
+StitchCraft says why. Give StitchCraft’s effects to the objects in the clipping mask rather than to the
+mask itself. VectorCraft runs a group’s effects on the clipping shape too, and then shows the art cut to
+the stitches they draw there, where the machine file cuts it to the shape (<code>SC-W0807</code>).</p>
 <h2 id="write-the-machine-file"><a class="header" href="#write-the-machine-file">Write the machine file</a></h2>
 <p>With the <a href="#the-vectorcraft-plug-ins">exporters installed</a>, choose <strong>File › Export › Export
 As</strong>, and <strong>PES embroidery (StitchCraft)</strong> or <strong>DST embroidery (StitchCraft)</strong> as the format. Once the file
@@ -2982,13 +2993,14 @@ format this StitchCraft does not have. Nothing was replayed.</p>
 later one; a bundle changed by hand, or by an email program, needs the original file.</p>
 <h2 id="sc-w0013"><a class="header" href="#sc-w0013">SC-W0013</a></h2>
 <p><strong>Warning</strong> — Element outside its clip paths; left out</p>
-<p>The element is cut to clip paths, its own or those of the groups round it, and they leave nothing of
-it: it lies wholly outside them, they don’t overlap one another, or one of them has no area, such as
-an empty clip path or one of text alone. A viewer shows nothing of it, so it sews nothing
-(<code>REQ-GEN-005</code>), and a trim or stop after it is left out (<code>SC-W0505</code>). Ink/Stitch sews nothing of an
-element outside its clip path too, but sews an element whose clip path has no area whole
+<p>The element is cut to clip paths, its own or those of the groups round it, or to the clipping objects
+of the VectorCraft clip groups round it, and they leave nothing of it: it lies wholly outside them,
+they don’t overlap one another, or one of them has no area, such as an empty clip path, one of text
+alone, or a clipping object StitchCraft doesn’t read (<code>SC-W0807</code>). A viewer shows nothing of it, so it
+sews nothing (<code>REQ-GEN-005</code>), and a trim or stop after it is left out (<code>SC-W0505</code>). Ink/Stitch sews
+nothing of an element outside its clip path too, but sews an element whose clip path has no area whole
 (<code>DEV-SVG-019</code>).</p>
-<p>Move the element or its clip paths, or delete the element if it is hidden on purpose.</p>
+<p>Move the element or what clips it, or delete the element if it is hidden on purpose.</p>
 <h2 id="sc-e0101"><a class="header" href="#sc-e0101">SC-E0101</a></h2>
 <p><strong>Error</strong> — Parameter has the wrong type or an unknown choice</p>
 <p>A parameter’s value could not be understood: a number where a word was expected, a choice that
@@ -3130,9 +3142,9 @@ a short column’s rails where its rungs meet them. Ink/Stitch says such a colum
 <p>Move the rungs so that each meets both rails away from their ends, or lower <code>push_compensation_mm</code>.</p>
 <h2 id="sc-w0217"><a class="header" href="#sc-w0217">SC-W0217</a></h2>
 <p><strong>Warning</strong> — Satin column is clipped; sewn whole</p>
-<p>A satin column is cut to clip paths, its own or those of the groups round it, which StitchCraft
-doesn’t apply to a satin column: it is sewn whole, as Ink/Stitch sews it, where a viewer shows only
-what lies inside them (<code>REQ-GEN-005</code>).</p>
+<p>A satin column is cut to clip paths, its own or those of the groups round it, or to the clipping
+objects of the VectorCraft clip groups round it, which StitchCraft doesn’t apply to a satin column: it
+is sewn whole, as Ink/Stitch sews it, where a viewer shows only what lies inside them (<code>REQ-GEN-005</code>).</p>
 <p>Draw the column as far as it should sew, or make it a fill if it should take the clip’s shape.</p>
 <h2 id="sc-w0303"><a class="header" href="#sc-w0303">SC-W0303</a></h2>
 <p><strong>Warning</strong> — Parts of a fill too small to sew left out</p>
@@ -3505,23 +3517,26 @@ effect leaves the object as it is, and the filter changes nothing.</p>
 again. For a plug-in, install the StitchCraft plug-ins made for that version of VectorCraft.</p>
 <h2 id="sc-w0807"><a class="header" href="#sc-w0807">SC-W0807</a></h2>
 <p><strong>Warning</strong> — VectorCraft object or feature not stitched</p>
-<p>Part of the VectorCraft document is not stitched: text, images, symbols, objects VectorCraft computes
-as it draws them (blends, envelopes, meshes, repeats, placed documents and Intertwine objects), a kind
-of object StitchCraft does not read, clipping and opacity masks, VectorCraft’s own effects, a brush’s
-art, a StitchCraft effect it cannot use, such as an Auto effect beside a stitch effect, which says how
-the object sews, or a group’s or a layer’s own fills and strokes. A gradient is sewn in its first
-colour, and a pattern, or a colour that does not read, in black. An object that StitchCraft effects
-reach from more than one level, its own and a group’s around it, or 2 groups’, sews as the nearest say:
-VectorCraft runs each on the stitches the one before drew, which no machine sews. A start or end
-marker, an object named <code>stitch:start</code> or <code>stitch:end</code>, is never stitched: the shapes grouped with it
-start or end there, and a marker they don’t use is said, a second one of its kind in a group or one
-with no point that reads, as are those beside a shape digitized automatically, which places where its
-parts start and end. So is an origin or stop position marker, <code>stitch:origin</code> or
-<code>stitch:stop-position</code>, with no point that reads. A name that begins with <code>stitch:</code> and names no marker StitchCraft
-reads is said too, as is a group or a layer named as a marker, which only a shape can be: the name is
-ignored. A satin column, a zigzag or a fill made of a stroke is as wide as the stroke all along and
-centred on its path, so a stroke aligned inside or outside a closed path is said, as is a width
-profile, and round or square caps where the stitches end at the path’s end.</p>
+<p>Part of the VectorCraft document is not stitched: text, images, symbols, objects VectorCraft computes as
+it draws them (blends, envelopes, meshes, repeats, placed documents and Intertwine objects), a kind of
+object StitchCraft does not read, opacity masks, VectorCraft’s own effects, a brush’s art, a StitchCraft
+effect it cannot use, such as an Auto effect beside a stitch effect, which says how the object sews, or
+a group’s or a layer’s own fills and strokes. A clip group cuts what it holds to its clipping object:
+text, an image, a placed document, a live object or a kind StitchCraft does not read there adds nothing
+to the clip, which is said too. So is a clipping object that StitchCraft effects reach: VectorCraft
+clips the preview to the stitches they draw of it, and what sews is cut to it as it is drawn. A gradient
+is sewn in its first colour, and a pattern, or a colour that does not read, in black. An object that
+StitchCraft effects reach from more than one level, its own and a group’s around it, or 2 groups’, sews
+as the nearest say: VectorCraft runs each on the stitches the one before drew, which no machine sews. A
+start or end marker, an object named <code>stitch:start</code> or <code>stitch:end</code>, is never stitched: the shapes
+grouped with it start or end there, and a marker they don’t use is said, a second one of its kind in a
+group or one with no point that reads, as are those beside a shape digitized automatically, which places
+where its parts start and end. So is an origin or stop position marker, <code>stitch:origin</code> or
+<code>stitch:stop-position</code>, with no point that reads. A name that begins with <code>stitch:</code> and names no marker
+StitchCraft reads is said too, as is a group or a layer named as a marker, which only a shape can be:
+the name is ignored. A satin column, a zigzag or a fill made of a stroke is as wide as the stroke all
+along and centred on its path, so a stroke aligned inside or outside a closed path is said, as is a
+width profile, and round or square caps where the stitches end at the path’s end.</p>
 <p>The message names the object and what was done. In VectorCraft, Type › Create Outlines makes paths
 of text, and Object › Expand of blends, envelopes, repeats and placed documents. Break Link to Symbol
 makes paths of a symbol, and Object › Expand Appearance of what effects and brushes draw.</p>
@@ -3530,8 +3545,9 @@ makes paths of a symbol, and Object › Expand Appearance of what effects and br
 <p>An object’s geometry cannot be used, and the object, or the stroke, is left out: a coordinate or a
 stroke’s width is not a number, the object draws nothing, or it lies more than 10 metres from the
 document’s origin, beyond what machine files can record. A StitchCraft stroke or satin effect takes
-a width that is not a number as 0. A StitchCraft live effect leaves such an object as it is, with
-this message as the plug-in’s last error.</p>
+a width that is not a number as 0. Such a path in a clip group’s clipping object adds nothing to the
+clip. A StitchCraft live effect leaves such an object as it is, with this message as the plug-in’s
+last error.</p>
 <p>The message names the object. Check its anchors, or remove stray objects far from the design.</p>
 <h2 id="sc-i0809"><a class="header" href="#sc-i0809">SC-I0809</a></h2>
 <p><strong>Info</strong> — VectorCraft layer or guide left out, as it does not print</p>
@@ -5697,8 +5713,8 @@ pub struct Element {
     pub clips: Vec&lt;Clip&gt;,            // since M8.5: it sews only what lies inside every one (REQ-GEN-005)
 }
 
-pub struct Clip {                    // since M8.5: an SVG clip path, VectorCraft's clipping object from M8.7
-    pub shapes: Vec&lt;ClipShape&gt;,      // their areas together; none leaves nothing of what it cuts
+pub struct Clip {                    // since M8.5: an SVG clip path, and from M8.7 a VectorCraft clipping object
+    pub shapes: Arc&lt;[ClipShape]&gt;,    // their areas together, shared by the elements it cuts; none leaves nothing
 }
 
 pub struct ClipShape {
@@ -5768,7 +5784,9 @@ position, checked the same way. VectorCraft’s Test Sheet filter draws a test s
 artboard with it (<code>REQ-VC-015</code>).</p>
 <p><strong>Commands.</strong> Ink/Stitch’s start, end and target commands, and VectorCraft’s start and end markers, are
 an element’s hints (M8.4), its points checked and moved with the rest. Clip paths are an element’s clips
-(M8.5), checked and moved with it too, which the engine cuts it to (<a href="#engine-pipeline">engine pipeline</a>). Trims and stops are the element
+(M8.5), and so are VectorCraft’s clipping objects (M8.7), checked and moved with it too, which the engine
+cuts it to (<a href="#engine-pipeline">engine pipeline</a>). A clip’s shapes are shared by the elements it cuts, so
+that a clip group of many objects holds its clipping object once. Trims and stops are the element
 parameters <code>trim_after</code> and <code>stop_after</code>, and the origin and stop position are design settings (M3.8), which
 Ink/Stitch’s <code>origin</code> and <code>stop_position</code> commands and VectorCraft’s <code>stitch:origin</code> and <code>stitch:stop-position</code>
 markers give (M8.8).</p>
@@ -6300,7 +6318,7 @@ another.</p>
 <tr><td><code>SC-E0010</code></td><td>Error</td><td>Nothing to stitch (no embroiderable elements)</td><td>M1</td></tr>
 <tr><td><code>SC-W0011</code></td><td>Warning</td><td>Stitch type not sewn yet; element skipped</td><td>M3</td></tr>
 <tr><td><code>SC-E0012</code></td><td>Error</td><td>Bug-report bundle could not be replayed</td><td>M3</td></tr>
-<tr><td><code>SC-W0013</code></td><td>Warning</td><td>Element outside its clip paths; left out (wholly outside them, or under clip paths that don’t meet or have no area; Ink/Stitch sews one whose clip path is empty whole)</td><td>M8</td></tr>
+<tr><td><code>SC-W0013</code></td><td>Warning</td><td>Element outside its clip paths; left out (wholly outside them or a VectorCraft clipping object, or under clips that don’t meet or have no area; Ink/Stitch sews one whose clip path is empty whole)</td><td>M8</td></tr>
 <tr><td><code>SC-E0101</code></td><td>Error</td><td>Parameter has the wrong type or an unknown choice</td><td>M3</td></tr>
 <tr><td><code>SC-W0102</code></td><td>Warning</td><td>Parameter clamped to its allowed range</td><td>M3</td></tr>
 <tr><td><code>SC-W0105</code></td><td>Warning</td><td>Unknown parameter preserved but ignored</td><td>M3</td></tr>
@@ -6361,8 +6379,8 @@ another.</p>
 <tr><td><code>SC-W0804</code></td><td>Warning</td><td>Element geometry invalid or out of range (path data error, invalid transform, draws nothing, beyond 10 m, a stroke’s width, join or miter limit that does not read, a clone that shows itself); the usable part is stitched</td><td>M3</td></tr>
 <tr><td><code>SC-I0805</code></td><td>Info</td><td>Object left out, as the file asks (Ink/Stitch’s ignore commands and <code>ignore_object</code> setting, or a clone whose <code>clone</code> setting is off)</td><td>M3</td></tr>
 <tr><td><code>SC-E0806</code></td><td>Error</td><td>VectorCraft file could not be read (not a VectorCraft document, or larger than the adapter reads). Its JSON counts, and so do the copies of names, settings and paths its elements would hold</td><td>M6</td></tr>
-<tr><td><code>SC-W0807</code></td><td>Warning</td><td>VectorCraft object or feature not stitched (text, images, symbols, live objects, clipping, VectorCraft’s own effects, brushes, gradients, patterns, a group’s own paints), StitchCraft effects from more than one level, a start or end marker, or a <code>stitch:</code> name StitchCraft doesn’t read</td><td>M6</td></tr>
-<tr><td><code>SC-W0808</code></td><td>Warning</td><td>VectorCraft geometry unusable (a number that does not read or a point beyond 10 m; a shape that draws nothing)</td><td>M6</td></tr>
+<tr><td><code>SC-W0807</code></td><td>Warning</td><td>VectorCraft object or feature not stitched (text, images, symbols, live objects, opacity masks, VectorCraft’s own effects, brushes, gradients, patterns, a group’s own paints), what adds nothing to a clip, StitchCraft effects from more than one level or on a clipping object, a start or end marker, or a <code>stitch:</code> name StitchCraft doesn’t read</td><td>M6</td></tr>
+<tr><td><code>SC-W0808</code></td><td>Warning</td><td>VectorCraft geometry unusable (a number that does not read or a point beyond 10 m; a shape that draws nothing; a clipping path, which adds nothing to its clip)</td><td>M6</td></tr>
 <tr><td><code>SC-I0809</code></td><td>Info</td><td>VectorCraft layer or guide left out, as it does not print (template layers, layers whose printing is off, guides)</td><td>M6</td></tr>
 <tr><td><code>SC-I0810</code></td><td>Info</td><td>VectorCraft live effect leaves the object as it is (it sews no stitch, its preview level needs more work than VectorCraft lets a live effect do, it is a satin column drawn as one path or a zigzag stroke and VectorCraft gives the effect no stroke, or the effect is on one of the object’s fills or strokes)</td><td>M6</td></tr>
 <tr><td><code>SC-I0811</code></td><td>Info</td><td>VectorCraft object left out, as its name asks (an object or a layer named <code>stitch:ignore</code>)</td><td>M6</td></tr>
@@ -7174,8 +7192,9 @@ neighbours, as every generator is (<a href="#adr-0014-generators-see-their-neigh
 stroke sews the same whatever they are, and whatever start and end positions its design gives it
 (<code>REQ-GEN-001</code>). A satin column or a tatami fill before a stroke ends near the
 stroke’s first point.</p>
-<p>A stroke cut to clips, its clip paths, sews the pieces of its lines inside every one (<code>REQ-GEN-005</code>). Its
-subpaths are cut where they cross a clip’s outline, as Ink/Stitch cuts them. A running stitch’s or a zigzag
+<p>A stroke cut to clips, its SVG clip paths or VectorCraft clipping objects, sews the pieces of its lines
+inside every one (<code>REQ-GEN-005</code>). Its subpaths are cut where they cross a clip’s outline, as Ink/Stitch
+cuts them. A running stitch’s or a zigzag
 stroke’s is flattened first as a shape’s outline is, and a manual stitch’s runs from node to node, with a
 needle point at each cut. Each piece sews on its own, in order along its subpath, and a closed subpath that is cut
 is cut where it starts too. Left whole, a subpath keeps its curves and sews as drawn. The clips leave the
@@ -8175,10 +8194,11 @@ element offers (<a href="#5-parts">section 5</a>). Its start and end positions t
 places with Ink/Stitch’s start and end commands or VectorCraft’s start and end markers, and the element
 before a fill with a start position ends nearest that (<code>REQ-GEN-001</code>). Every method uses them but the
 contour fill’s end, which lies where its rings end.</p>
-<p>A fill cut to clips, its clip paths, fills the part of its region inside every one (<code>REQ-GEN-005</code>). The
-region is cut when it is built, before the underlay, <code>expand_mm</code> and the method see it, as Ink/Stitch cuts
-its shape, so <code>expand_mm</code> grows the cut area past the clip’s edge. Parts the cut leaves too small to sew are
-left out as any are (<code>SC-W0303</code>), and a fill wholly outside its clips isn’t sewn (<code>SC-W0013</code>).</p>
+<p>A fill cut to clips, its SVG clip paths or VectorCraft clipping objects, fills the part of its region inside
+every one (<code>REQ-GEN-005</code>). The region is cut when it is built, before the underlay, <code>expand_mm</code> and the
+method see it, as Ink/Stitch cuts its shape, so <code>expand_mm</code> grows the cut area past the clip’s edge. Parts
+the cut leaves too small to sew are left out as any are (<code>SC-W0303</code>), and a fill wholly outside its clips
+isn’t sewn (<code>SC-W0013</code>).</p>
 <h2 id="region-1"><a class="header" href="#region-1">Region</a></h2>
 <p>A fill’s region is the area an SVG renderer paints for its path, in parts with holes
 (<code>stitchcraft_engine::normalize::region</code>, <code>REQ-FILL-001</code>):</p>
@@ -11098,7 +11118,8 @@ as the JSON read. Each element’s copy of its object’s path takes 56 bytes a 
 many paints would hold far more than the file: 4 MB drawing 2,500 fills on a path of 200,000 anchors would
 hold 28 GB before the budget ran out. So the copies of paths come to at most 32 bytes for each byte of
 JSON read, which an object’s fill and stroke on its most compact path keep well within. A file whose
-copies come to more is refused with <code>SC-E0806</code>.</p>
+copies come to more is refused with <code>SC-E0806</code>. A clip group’s clip is held once, shared by the elements it
+cuts, and costs each of them a unit for each of its segments.</p>
 <p><strong>Coordinates.</strong> VectorCraft keeps every path in document coordinates. Moving or scaling a group moves
 its paths’ anchors, so layers, groups and compound paths have no transform. Coordinates are points, 1/72
 inch, with y down, and the adapter multiplies them by 25.4/72 into millimetres. The document’s origin
@@ -11109,10 +11130,8 @@ anchor, leaves that end of the segment straight, and a segment without handles i
 <ul>
 <li><strong>Paths and compound paths</strong> are the art. A compound path’s children are one shape, with the compound’s
 appearance and fill rule.</li>
-<li><strong>Groups and layers</strong> pass their children on, and their StitchCraft effects with them (below). Clipping
-is left for M8.7: a clipping group’s or layer’s art is stitched whole, with <code>SC-W0807</code>. The SVG adapter
-cuts a shape to its clip paths from M8.5, and M8.7 gives a clip group’s art its clipping object as a
-clip of its elements the same way (<code>REQ-GEN-005</code>).</li>
+<li><strong>Groups and layers</strong> pass their children on, and their StitchCraft effects with them (below). A clip
+group’s or a clipping layer’s art is cut to its clipping object, as VectorCraft clips it (below).</li>
 <li><strong>Hidden objects</strong>, and everything in them, are left out without a word, as VectorCraft draws nothing
 for them. So are objects and paints of opacity 0, paints turned off and strokes of width 0.</li>
 <li><strong>Objects and layers named <code>stitch:ignore</code></strong>, and everything in them, are left out with <code>SC-I0811</code>.
@@ -11200,6 +11219,39 @@ sews nothing. VectorCraft draws nothing of a group or an image there, which an i
 and neither is sewn. Where StitchCraft effects meet from more than one level, a path’s own and a group’s,
 or 2 groups’, VectorCraft draws one effect run on the stitches another drew, which a machine cannot sew.
 The path sews as the nearest effects say, and <code>SC-W0807</code> names it.</p>
+<p><strong>Clip groups</strong> (<code>REQ-VC-017</code>, M8.7). A group or a layer whose kind has <code>"clip": true</code> clips what it holds
+to its first object, the clipping object. Object › Clipping Mask › Make wraps the objects selected in such a
+group, the topmost first, which must be a path, a compound path or text. It takes that object’s paints and
+effects away, and marks a path <code>"clipping": true</code> (<code>clip_make</code> in <code>crates/engine</code>). The Layers panel’s
+Make Clipping Mask clips a layer or a group the same way. VectorCraft clips to the clipping object’s area
+whatever its paints, hidden or not (<code>Node::clip_shapes</code> in <code>crates/doc</code>, read at 0.19.0, and alike from
+0.13):</p>
+<ul>
+<li>A path’s area is the one its fill rule fills, and a compound path’s is its paths’ together, by its own
+rule, holes and all.</li>
+<li>A nested clip group’s is its own clipping object’s.</li>
+<li>Another group’s or a layer’s is that of its members that show, together, but a Shaper group’s sources.</li>
+<li>Text’s is its glyphs’ outlines, an image’s or a placed document’s its frame, and a live object’s what it
+draws. A guide or a symbol doesn’t add to it.</li>
+</ul>
+<p>One shape keeps its rule, several are united, and a clipping object of none hides the group’s contents.
+The adapter makes the clipping object’s area into a clip of each element made inside the group, however
+deep, as the SVG adapter does with a clip path (<code>Element::clips</code>). Clip groups inside one another give one
+clip each, and the engine cuts an element to all of them (<code>REQ-GEN-005</code>). It cuts a fill’s area and a
+stroke’s lines, each piece sewn on its own. Satin columns are sewn whole, as in Ink/Stitch (<code>SC-W0217</code>),
+and an element wholly outside its clips isn’t sewn (<code>SC-W0013</code>). An automatic shape is cut before it is
+digitized. The clipping object isn’t cut to its own clip, as VectorCraft paints its fills inside its own
+area and its strokes over the clip’s edge. The clips round its group do cut it.</p>
+<p>The adapter doesn’t read glyphs, frames or what a live object draws. Text, an image, a placed document, a
+live object or a kind it doesn’t know adds nothing to the clip, and <code>SC-W0807</code> names it, with the
+VectorCraft command that makes paths of it, such as Type › Create Outlines. A path in the clipping object
+whose geometry can’t be used doesn’t add to the clip either, and <code>SC-W0808</code> names it. A clip left with no
+shape cuts away all of what it clips, where VectorCraft shows what lies in the glyphs or the frame.</p>
+<p>VectorCraft runs a group’s geometry effects on every path inside it, the clipping objects of the clip groups
+it holds among them (<code>for_each_leaf</code> in <code>crates/effects</code>), and clips to what they return. Where StitchCraft’s
+effects apply to a clipping object, the preview is cut to the stitches they draw of it, a fill’s rows or a
+stroke’s line. What sews is cut to the clipping object as it is drawn, and <code>SC-W0807</code> says so. Its hint is
+to apply the effects to the objects the group clips.</p>
 <p><strong>Ids.</strong> An element is <code>vc:&lt;object id&gt;:&lt;what&gt;</code>: <code>fill</code> or <code>stroke</code> for a paint, with its rank among the
 object’s fills or strokes from the second on (<code>fill.2</code>), and the family for an effect. VectorCraft keeps
 an object’s id when it saves, so a report and a preview name the same object. A repeated id gets <code>~2</code>,
@@ -11503,6 +11555,7 @@ version and what sews must not:</p>
 <tbody>
 <tr><td><code>install-and-list</code></td><td>install the 9 modules, then <code>plugin.list</code></td><td>each family’s live effect, the Auto effect, each format’s exporter and each filter is listed (<code>REQ-VC-002</code>, <code>REQ-VC-011</code>, <code>REQ-VC-013</code>, <code>REQ-VC-014</code>, <code>REQ-VC-015</code>, <code>REQ-VC-016</code>)</td></tr>
 <tr><td><code>apply</code></td><td>a square filled red and a line, given the fill and stroke effects with parameters, then saved</td><td>as sent, with a fill in red and a stroke (<code>REQ-VC-004</code>, <code>REQ-PRM-003</code>)</td></tr>
+<tr><td><code>clipping-mask</code></td><td>a red square 1 in a side with the fill effect and a blue line across it with the stroke effect, drawn and exported to PES, then a square half the size drawn in their middle and Make Clipping Mask made of all 3, saved, drawn and exported to PES and DST</td><td>as sent, with a fill in red and a stroke in blue, each sewing, and every needle point within the clipping object. Each file is the one <code>stitch export</code> writes, and the PES file differs from the one before the mask (<code>REQ-VC-017</code>, <code>REQ-GEN-005</code>, <code>REQ-VC-011</code>)</td></tr>
 <tr><td><code>compound-satin</code></td><td>2 rails and a rung, Make Compound Path, then the satin effect</td><td>as sent, and one satin column (<code>REQ-VC-007</code>)</td></tr>
 <tr><td><code>graphic-style</code></td><td>a group of 2 squares, and a gold square with a fill effect, drawn, whose new graphic style is then applied to the group</td><td>as sent, and 3 fills in gold at the effect’s 90° (<code>REQ-VC-006</code>)</td></tr>
 <tr><td><code>missing-plugin</code></td><td>a fill saved and drawn, then opened and saved again without the plug-ins</td><td>both sew alike, as sent: the records are kept (<code>REQ-PRM-003</code>)</td></tr>
@@ -11522,7 +11575,8 @@ fails the check. A file is sewn as <code>stitch plan</code> sews it, for the mac
 machine, and 2 are compared
 byte for byte, as is a machine file exported with the one <code>stitch export</code> writes of its document, by the
 format and the name of the file. Elements are counted by kind, thread and settings. A paint’s fill is a fill too, and has no
-settings. The live-effect budget of each preview level is Level A’s (<code>REQ-VC-003</code>).</p>
+settings. A box a document sews within is in its points, the design planned with its origin at the
+document’s and no turn on export, so that each needle point lies where the document draws it. The live-effect budget of each preview level is Level A’s (<code>REQ-VC-003</code>).</p>
 <h2 id="automation"><a class="header" href="#automation">Automation</a></h2>
 <pre><code class="language-text">schedule (daily) ──▶ discover tracks ──▶ for each track: build plug-ins ─▶ Level A ─▶ Level B ─▶ its result
                                                                                                   │
@@ -13874,7 +13928,7 @@ needle points to the other shapes in their group or take some out, are not plann
 <tr><td>M8.4 ✅</td><td>Start and end positions. Ink/Stitch’s <code>starting_point</code> and <code>ending_point</code> commands place where the element tied to them starts and ends, at their symbols. The markers <code>stitch:start</code> and <code>stitch:end</code> do the same in a VectorCraft document, each at its middle. A fill starts nearest its start position and its last part ends nearest the end position, with every fill method, the legacy fill sewn as a tatami fill among them, but the contour fill, which uses the start alone. Its first part starts nearest the start position, and each part after where the one before ended, where Ink/Stitch starts each nearest the command (<code>DEV-FILL-023</code>). A satin column starts at its start position and runs along its centre line to its first stitch. It ends at its end position, unless that lies within 5 px (1.32 mm) of the column’s end. Strokes don’t use them, as in Ink/Stitch. The element before a fill or a satin column with a start position ends nearest it. In a file of version 1 or 2, each of these commands is first moved to its connector’s end on the object, as the update moves it. 2,548 such commands start or end the elements of glyphs in 14 of Ink/Stitch’s fonts. From this step the <code>target_point</code> command centres a circular fill (M7.9), and from M10.8 it aims a ripple stitch</td><td><code>REQ-GEN-001</code> rewritten for these stitch types and active, <code>REQ-FILL-CIR-008</code>, <code>REQ-VC-009</code> updated, differential cases for the commands, the update’s move and the target point, and TS-16’s first part drawn for MC-11, which the differential sews in both programs</td></tr>
 <tr><td>M8.5 ✅</td><td>Clip paths. Fills and strokes are cut to the clip paths of the shape and of the groups around it, links and switches among them, with the region code of M5.1. A fill’s area is cut before its underlay and <code>expand_mm</code>, and a stroke’s line where it crosses a clip, each piece sewn on its own, as Ink/Stitch cuts them. Clips belong to the design’s elements (<code>Element::clips</code>). The engine cuts them for every reader, and automatic digitizing cuts its shapes first. A clip path’s area is the one a viewer clips to, its children’s together by their <code>clip-rule</code>, with a group’s children as Inkscape draws them. It lies in the user space of what it clips, or of a shape’s box. Where Ink/Stitch’s area differs, as when it takes the largest subpath for the outline and every other subpath for a hole, the ledger says how (<code>DEV-SVG-016</code> to <code>DEV-SVG-020</code>). Satin columns are sewn whole, as in Ink/Stitch, with <code>SC-W0217</code>. A shape wholly outside its clips isn’t sewn (<code>SC-W0013</code>). Inkscape’s power clips are read from their clip paths, as a viewer draws them. Masks stay unapplied, as in Ink/Stitch. The glyphs of 5 of Ink/Stitch’s fonts are clipped 187 times, mostly running stitches and guided fills</td><td><code>REQ-SVG-011</code> and <code>REQ-GEN-005</code> active, and <code>SC-W0802</code> no longer naming the clip paths applied. 7 differential cases, 2 that agree and 5 that differ as the ledger says, and TS-16’s part drawn for MC-11, which Ink/Stitch sews as StitchCraft does</td></tr>
 <tr><td>M8.6</td><td>Ink/Stitch’s fonts as a corpus. <code>cargo xtask corpus</code> downloads inkstitch/embroidery-fonts at a commit this repository pins, and checks its SHA-256. The files are never committed. The corpus takes the fonts whose licence file is the OFL, CC0, CC BY or CC BY-SA, 131 of the 142 fonts at <code>c7e3a05</code> (<a href="#inkstitchs-fonts">fonts</a>). The differential sews each glyph as a design of its own, its layer shown and the others left out, in both programs. The glyphs of stitch types StitchCraft doesn’t sew yet are listed, and join the corpus with M10’s steps</td><td>A pinned sample of each font’s glyphs runs every night, and every glyph every week. Each glyph sews as in Ink/Stitch, or its difference is excused by the ledger or reproduced as a bug by a case of its own</td></tr>
-<tr><td>M8.7</td><td>Clipping in VectorCraft documents. A clip group’s art is cut to its clipping object as M8.5 cuts an SVG file’s shapes, in place of <code>SC-W0807</code>’s note that the clipping isn’t applied. A satin column is sewn whole there too</td><td><code>REQ-VC-005</code> updated, and a Level B case in which VectorCraft’s Make Clipping Mask clips a fill and a stroke, which <code>stitch export</code> and the exporters sew cut</td></tr>
+<tr><td>M8.7 ✅</td><td>Clipping in VectorCraft documents. A clip group’s art is cut to its clipping object as M8.5 cuts an SVG file’s shapes, in place of <code>SC-W0807</code>’s note that the clipping isn’t applied. The clipping object’s area is the one VectorCraft clips to, whatever its paints, and hidden or not. A path clips by its fill rule and a compound path by its own, a nested clip group by its clipping object, and another group or a layer by its members that show. Clip groups inside one another give one clip each, shared by the elements they cut. A satin column is sewn whole there too. Text, images and live objects in a clipping object are named, and left out of the clip. A clipping object under StitchCraft’s effects is named too, as VectorCraft clips the preview to the stitches they draw of it</td><td><code>REQ-VC-005</code> updated and <code>REQ-VC-017</code> active, and a Level B case in which VectorCraft’s Make Clipping Mask clips a fill and a stroke, which <code>stitch export</code> and the exporters sew cut</td></tr>
 <tr><td>M8.8 ✅</td><td>Origin and stop position. Ink/Stitch’s <code>origin</code> command gives the design’s origin, which goes to the hoop’s centre, and its <code>stop_position</code> command the stop position, which the frame moves to before each stop (<code>REQ-ASM-005</code>). Each is the point where its symbol is placed, wherever it is, in <code>&lt;defs&gt;</code> and hidden layers too, as Ink/Stitch finds them. Planning a design with 2 origins, or with 2 stop positions and a stop, ends with an error (<code>SC-E0819</code>). Ink/Stitch doesn’t write a machine file of it either. In a VectorCraft document, objects named <code>stitch:origin</code> and <code>stitch:stop-position</code> mark them, each at its middle. The differential measures the design’s place too, the middle of its box from where the machine starts, which the origin moves</td><td><code>REQ-SVG-003</code>, <code>REQ-ASM-005</code> and <code>REQ-VC-009</code> updated, 2 differential cases that agree by every measure, the place among them, and TS-16’s part drawn for MC-11</td></tr>
 <tr><td>M8.9 ✅</td><td>Rotation on export. The design setting <code>rotate_on_export</code> turns the plan about the hoop’s centre once the origin is there, before the hoop is checked, as Ink/Stitch turns the machine file it writes, the stop position’s jumps with it. <code>90</code> turns it right, and <code>-90</code> left. Any other number of degrees turns it that much, as Ink/Stitch’s writer does, and a whole number of quarter turns rounds nothing. The SVG adapter reads it from the file’s metadata, and VectorCraft’s Design Settings filter keeps it with a document, offering none, left and right</td><td><code>REQ-SVG-005</code>, <code>REQ-VC-013</code> and <code>REQ-ASM-005</code> updated, 2 differential cases, a quarter turn and 45°, that agree by every measure, and TS-16 turned for MC-11</td></tr>
 <tr><td>M8.10 ✅</td><td>Clones (<code>&lt;use&gt;</code>). A clone sews what it shows, in its place in the document’s order, as Ink/Stitch sews a clone, each element named after it. What it shows is drawn as a viewer draws it, under the use’s transform and position and with the style it inherits, a symbol in the viewport the use gives it. The commands tied to the source go with the clone, and the clone’s own trim, stop and shortest lengths apply. Clones inside it are sewn the same way. A fill’s angle turns with the clone, unless the clone’s <code>angle</code> gives one, and <code>flip_angle</code> reverses it. A clone whose <code>clone</code> setting is off sews nothing. A clone that shows itself, directly or through other clones, is left out as a viewer leaves it out, and the rest is sewn, where Ink/Stitch doesn’t write a file at all. Where Ink/Stitch draws a clone otherwise, as for a symbol’s viewBox, the ledger says how (<code>DEV-SVG-021</code> to <code>DEV-SVG-024</code>)</td><td><code>REQ-SVG-012</code> and <code>REQ-SVG-013</code>, the contract’s clone settings applied, 6 differential cases that agree by every measure but a symbol’s size, which <code>DEV-SVG-022</code> excuses, and TS-16’s clone of its red fill for MC-11</td></tr>
@@ -14082,7 +14136,7 @@ middle of the artboard (<code>REQ-VC-015</code>). A checkpoint can so sew a shee
 <tr><td><strong>TS-11A</strong> New strokes and satins</td><td>M7’s new strokes and satins, a band to a thread, each sample trimmed after (127 × 144 mm). Most are hooks, straight and then turning a quarter circle, in rows that turn back on each other. Zigzag strokes (M7.2) at spacings of 0.4, 1 and 2 mm and widths of 1, 2 and 4 mm, and a line 4 mm wide whose stitches turn 45°. E-stitches (M7.3) 3 and 5 mm wide at spacings of 2 and 3 mm, along the sides of a square and round 4 circles, on appliqué fabric laid at one stop and trimmed at the next. S-stitches (M7.4) 6 and 10 mm wide at spacings of 0.4 and 0.6 mm, the 10 mm ones split at 3 mm by the default and the staggered methods. Zigzag satins (M7.5) 4 and 8 mm wide at spacings of 0.4 and 1 mm, each beside a satin column of the same width and spacing, and one 8 mm wide at 1 mm over a contour underlay</td><td>Per type, as listed on its expected-result sheet. A zigzag sews narrower than drawn, and the report says by how much, whether its sides are even round curves and which is the narrowest width that sews cleanly. The E-stitch’s spine should cover the appliqué’s raw edge, and its spikes hold it without puckering. The S-stitch should cover its band at 0.4 mm with its steps along the edges even, and the report says whether the default method’s splits leave a furrow along the band that the staggered ones do not. The zigzag satin should cover its band at 0.4 mm as its satin column does, and the report says whether it sews narrower than the satin column beside it. Its contour underlay should not show past the zigzag at either end</td><td>MC-6</td></tr>
 <tr><td><strong>TS-11B</strong> New fills</td><td>Contour fills (M7.7) and circular fills (M7.9), each over the default underlay and trimmed after, a row to a thread (125 × 166 mm). Top row: discs 36 mm across with rings 0.25 mm apart, sewn inner to outer round a hole 12 mm across set off its middle, as a spiral and as a double spiral. Middle row: stars 40 mm across with rings 0.4 mm apart and round, mitred and bevelled corners. Third row: 2 squares joined by a neck 3 mm wide, where the rings part. Beside them, a rectangle whose rings alternate their direction and a leaf smoothed by 0.5 mm. Bottom row, circular fills: the disc round its hole and the star again, and a rectangle whose circles fade from 0.25 mm apart at its middle to 1 mm at its corners</td><td>Fabric showing between the rings, puckering, and whether the discs sew 36 mm across. Whether inner to outer’s steps show as a line across the rings, and whether the alternating rectangle looks calmer. A knot or a bump where the spirals end. Whether the mitred star’s rings reach into its points where the round and bevelled ones leave a gap at each tip, and which looks best. The neck should fill, and the smoothed leaf’s line should run without kinks. Whether the circular fills’ rings look round and even, whether the travel between pieces of a spiral shows on the star’s points or round the hole, and whether the fading rectangle is denser at its middle. The time the sheet takes</td><td>MC-6</td></tr>
 <tr><td><strong>TS-11C</strong> Meander fills</td><td>Meander fills (M7.8), each over the default underlay and trimmed after, a row to a thread (123 × 120 mm). The top row’s discs, 36 mm across, are in hexagons, squares and triangles 2 mm a side. The middle row’s discs are in octagons and squares, in hexagons and triangles, and in hexagons with squares and triangles. In the bottom row a star 40 mm across is in squares and triangles. Beside it a rectangle in hexagons twice as large sews as a zigzag 2.5 mm wide kept inside it, and a leaf in hexagons half as large is turned by 30° and smoothed by 0.5 mm</td><td>Whether each tiling shows in the stitches and the line looks even, or bare patches show where it didn’t reach, and which tile looks best at which size. Does the underlay show between the line’s turns, or is the fill too light to hide the fabric? The zigzag should stay inside the rectangle and lie flat. On the smoothed leaf, a line without kinks and 1 mm sides sewn cleanly. Puckering where the line turns</td><td>MC-6</td></tr>
-<tr><td><strong>TS-12</strong> Real design</td><td>A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours, its PES file written by VectorCraft’s File › Export › Export As (M6.9)</td><td>Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden? Satin columns drawn as one path: are they as wide as their strokes, and do their corners sew clean? A graphic style applied to a group: do the paths inside sew as VectorCraft shows them, with the style’s settings and colour? A satin border of 2 circles joined by Make Compound Path: do its stitches go straight across all the way round? A satin column that Stroke to Satin made of a line (M6.12): does it sew as the line did with the satin effect?</td><td>MC-5, MC-7</td></tr>
+<tr><td><strong>TS-12</strong> Real design</td><td>A design up to 130 × 180 mm authored in VectorCraft with fill, satin, running stitch and 3 colours, its PES file written by VectorCraft’s File › Export › Export As (M6.9)</td><td>Overall quality, registration between colours, and time against the estimate. Satin columns start and end at their nearest points: is the way the needle takes under them hidden? Satin columns drawn as one path: are they as wide as their strokes, and do their corners sew clean? A graphic style applied to a group: do the paths inside sew as VectorCraft shows them, with the style’s settings and colour? A satin border of 2 circles joined by Make Compound Path: do its stitches go straight across all the way round? A satin column that Stroke to Satin made of a line (M6.12): does it sew as the line did with the satin effect? A fill and a line cut by Make Clipping Mask (M8.7): do they sew only inside the clipping shape, cut where VectorCraft shows them cut?</td><td>MC-5, MC-7</td></tr>
 <tr><td><strong>TS-13</strong> Pictures digitized automatically (M13)</td><td>Test pictures drawn in code (<code>stitchcraft_engine::testsheets::pictures</code>), digitized automatically in the top half of each sheet and sewn as drawn, in paint order, in the bottom half, which sews first and stops. TS-13A has a badge traced abutting and one traced stacked, specks round a disc, a row of badges drawn badge by badge, and a bar that runs on beside a square without touching it (126 × 168 mm). TS-13B has the word MATCH in block letters 15, 10, 6 and 4 mm tall, and windows whose lines, traced as areas, are 0.3, 0.6 and 0.9 mm wide (110 × 148 mm). TS-13C has a cartoon face drawn with black lines 1, 2 and 4 mm wide, a star, and a balloon on its string (111 × 108 mm). TS-13D has an emblem 42 mm wide, a navy square with a white disc, a red star on the disc and 3 gold bars, and a button 23 mm across, a yellow disc with 7 orange dots in a black rim, each traced abutting and traced stacked (115 × 108 mm)</td><td>Fabric showing between colours, on both halves, and on the digitized half whether each area’s 0.4 mm overlap under the next covers the gap or shows as a ridge (M13.2). Whether a stacked trace’s digitized half, its covered parts cut away, sews as flat as the abutting one, and what became of the specks round the disc (M13.2). Where a shape runs on beside an area without touching it, whether the fabric that shows there as drawn reads as a gap (M13.2). The smallest letters that read. Whether each outline’s columns cover the edges of the fills beside them, and whether the triple runs show as wide as their lines. A column’s square end past the end of a line with round caps (M13.1), and how far it shows past the round end. Small traced rings and hairpins, filled because no satin column can follow them (M13.1), and how solid they sew beside their columns’ neighbours. Colour changes, jumps, trims and time against the half in paint order, on a row of badges drawn badge by badge too, as Auto Grouping draws them (M13.3). Whether any shape covers one drawn over it, which the order must never let happen, and whether each line sewn after the fill it borders covers the fill’s edge (M13.3). Lines traced as areas, 0.3, 0.6 and 0.9 mm wide, sewn along their middles (M13.4): whether each reaches as far as the line drawn, whether the 0.6 and 0.9 mm lines’ triple runs show as wide as they are drawn and the 0.3 mm line’s single run doesn’t look thin, and whether the fills beside a line, reaching under it, leave fabric showing along it. Whether a junction’s third branch, which ends at the line it meets, leaves a gap or a knot there (M13.4). Letters and outlines as wide as a satin column, sewn as satin columns between their own edges (M13.5): whether each column’s stitches lie square to its stroke, round a ring and through a bend. Where a column ends under another, 0.4 mm longer, does fabric show, or a ridge? A slanted terminal should end flat along its edge as drawn, and a round one at its farthest point. Whether a crossbar sewn as a column of its own across a stem reads as one stroke. The underlays by width should hold the columns up, and 0.4 mm of pull compensation keep them as wide as drawn. The stitches that lean where strokes meet at sharp angles, as in an M or a W (<code>SC-W0208</code>), and the jumps between a letter’s columns. Shapes broad in places and narrow in others (M13.6). The star’s points and the balloon’s string sew as columns over the fill of the star’s middle and of the balloon. Do their flat ends cover the fill’s edge, or leave fabric or a ridge there? Do each point’s stitches lie square to it from its tip to its cut? Pictures traced in layers (M13.12). Whether the stacked emblem, its layers flattened, sews as the abutting one beside it, and how stiff it sews as drawn on the bottom half, each colour whole under the colours over it. Which sews better between the bars, the navy filled whole under the white disc and the bars or the navy sewn round them as drawn? Whether the gold bars keep their height, 2.1 mm as drawn, and their square ends. Which sews better between the dots, the button’s yellow filled whole under them or sewn round them as drawn, and does the rim’s column cover the yellow’s edge? Whether fabric or a ridge shows round the bars, the disc, the star and the dots. Small discs no wider than a satin column are dots, filled (M13.12), as the gold discs of the row of badges and the button’s dots are. Do they sew round, and does fabric show at their edges? Which jump threads a shape sews down, since the PE800 cuts none</td><td>MC-8</td></tr>
 <tr><td><strong>TS-14</strong> Lettering (M14)</td><td>3 embroidery fonts, a block, a script and a small one, each at the least and the greatest heights it sews at, and a name along an arc</td><td>Whether every glyph reads at its least height, satin coverage at its greatest, and whether the locks of small glyphs hold after the trims</td><td>MC-9</td></tr>
 <tr><td><strong>TS-15</strong> Fonts ported automatically (M15)</td><td>3 fonts from Google Fonts, a sans, a serif and a script, each ported at 3 heights beside the font Ink/Stitch digitized by hand from it, at the same heights. A word in satin columns 0.4, 0.6, 0.8 and 1 mm wide beside the same word in triple runs. <code>stitch testsheet</code> draws it with the fonts of the corpus</td><td>Whether every ported glyph reads at the least height, with its dots, serifs and counters. The jump threads inside letters and between them. Whether the ported letters read as well as the letters digitized by hand beside them, and the narrowest satin column that sews a letter cleanly</td><td>MC-10</td></tr>
