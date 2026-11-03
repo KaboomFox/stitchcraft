@@ -8,8 +8,10 @@ new piece of code belongs. If you are about to add a file and are not sure where
 
 ## Principles
 
-1. **The engine knows nothing about hosts.** It never sees SVG, VectorCraft, files or the network.
-   Hosts adapt *their* documents into a `Design` and consume a `StitchPlan`.
+1. **The engine knows nothing about hosts.** It never sees an SVG document, VectorCraft, files or the
+   network. Hosts adapt *their* documents into a `Design` and consume a `StitchPlan`. A custom lock drawn
+   as a path is a setting's text in SVG's path syntax, which the engine reads as it reads any setting
+   ([locks](algorithms/locks.md#reading-a-path)).
 2. **Pure core, effects at the edges.** Generators are deterministic functions of their inputs.
    File I/O, clocks, environment variables and terminals live only in apps and `xtask`.
 3. **One source of truth per concept.** Parameters live in the registry, diagnostics in the
@@ -76,7 +78,7 @@ GPL/AGPL/LGPL.
 |---|---|---|---|
 | Deterministic transcendental math | `libm` 0.2 | MIT | core |
 | Errors | `thiserror` 2 | MIT/Apache | all libraries |
-| XML / SVG syntax | `roxmltree`, `svgtypes` | MIT/Apache | svg |
+| XML / SVG syntax | `roxmltree`, `svgtypes` | MIT/Apache | svg, and engine for `svgtypes`' path-data parser alone, which reads a custom lock drawn as a path |
 | `.vectorcraft` documents: JSON, its coordinates read exactly, unpacked from gzip by a Rust backend | `serde`, `serde_json`, `flate2` 1 | MIT/Apache | vectorcraft |
 | Rasterizing previews, and reading VectorCraft's pictures to compare them | `tiny-skia` 0.11 | BSD-3-Clause | render, xtask |
 | JSON reports, and the plug-in's JSON | `serde_json` | MIT/Apache | cli, vc-plugin |
