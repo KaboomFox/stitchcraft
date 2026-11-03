@@ -7,7 +7,7 @@
 # Run from a checkout, Ink/Stitch logs everything at its debug level into inkstitch.log there: a run on a
 # glyph of its fonts took 10 seconds so, and 1.6 without. A DEBUG.toml beside inkstitch.py, which Ink/Stitch's
 # .gitignore leaves out for such settings, turns its logging off, and the PES files it writes stay the same
-# byte for byte. Its settings file turns its stitch-plan cache off, so that each run sews its file afresh.
+# byte for byte.
 name: Ink/Stitch oracle
 description: Fetch the pinned Ink/Stitch and point the differential at it.
 runs:
@@ -22,9 +22,6 @@ runs:
         git -C "$checkout" fetch -q --depth 1 "$repository" "$commit"
         git -C "$checkout" checkout -q FETCH_HEAD
         printf '[LOGGING]\ndisable_logging = true\n' > "$checkout/DEBUG.toml"
-        settings="${XDG_CONFIG_HOME:-$HOME/.config}/inkstitch"
-        mkdir -p "$settings"
-        echo '{"cache_size": 0}' > "$settings/settings.json"
         python3 -m venv "$RUNNER_TEMP/inkstitch-venv"
         "$RUNNER_TEMP/inkstitch-venv/bin/pip" install -q --no-deps --require-hashes -r conformance/inkstitch/requirements.txt
         echo "STITCHCRAFT_INKSTITCH=$checkout" >> "$GITHUB_ENV"

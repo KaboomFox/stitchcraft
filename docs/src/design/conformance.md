@@ -282,8 +282,11 @@ the ledger is still true. Where the differential can undo a deviation in Ink/Sti
 the file again without it. The excuse then counts only if the measure agrees. Ink/Stitch's jumps that go
 nowhere (`DEV-FMT-001`) excuse as many trims and jumps as there are of them, and no more. Where both files
 change thread at the same colour blocks, Ink/Stitch's threads, named by other entries of Brother's palette
-(`DEV-THREAD-001`), take StitchCraft's names, and its stitches longer than the machine's longest are split
-as StitchCraft splits them (`DEV-FIN-001`).
+(`DEV-THREAD-001`), take StitchCraft's names. StitchCraft fits each stitch to the machine (`DEV-FIN-001`),
+so to undo that, Ink/Stitch's stitches longer than the machine's longest are split and its needle points
+nearer the one before than the machine's shortest stitch left out. A needle point Ink/Stitch sews alone,
+where a path's move-to draws nothing after it, is left out with the jumps and the trim that lead to it
+(`DEV-SVG-011`).
 
 `REQ-SVG-008`, `REQ-AUTO-021`, `REQ-AUTO-022`, `REQ-RUN-013`, `REQ-SAT-029`, `REQ-FILL-CON-008`,
 `REQ-FILL-CIR-007` and `REQ-FONT-001` are the requirements of level L3. The other runs of the suite leave them and their
@@ -336,7 +339,9 @@ the reference machine with a hoop 400 mm a side, as a glyph file is drawn at its
 may be wider than the reference hoop. Every night the case sews 4 glyphs of each font, and every Sunday all
 21,179, in 6 parts. A glyph whose stitch types StitchCraft doesn't sew yet is listed, and joins the
 comparison with M10's steps. An element whose setting StitchCraft can't read is left out with `SC-E0101`,
-where Ink/Stitch sews the setting's default: its glyph is excused by `DEV-PRM-001` and not compared.
+where Ink/Stitch sews the setting's default: its glyph is excused by `DEV-PRM-001` and not compared. A glyph
+neither program writes a file of agrees. Ink/Stitch writes none when it finds nothing to sew or an element
+it can't sew, and StitchCraft none when an element is left out with an error, as `stitch plan` does.
 
 The corpus can't have an excuse for each of its glyphs. `conformance/inkstitch/glyphs.toml` excuses a
 measure by an entry of the ledger for the glyphs where its cause is. A diagnostic picks them, such as

@@ -483,7 +483,7 @@ requirements = ["REQ-SVG-001"]
 id = "DEV-SVG-011"
 area = "svg"
 summary = "A path has the subpaths SVG draws. A move-to with nothing drawn after it is no subpath, and a command that draws after a closepath starts a new subpath where the closed one started. inkex, which Ink/Stitch reads paths with, keeps such a move-to as a subpath of 1 point. It also runs the commands after a closepath on in the closed subpath. Ink/Stitch then counts other subpaths than StitchCraft, and they decide how it sews the path. It tells a satin column's rails from its rungs by them and sews a stroke one subpath at a time. A path of more than 1 is a satin column there however narrow its stroke."
-reason = "The drawing is read as a viewer draws it (REQ-SVG-001), and a point that nothing draws is no part of it. inkex was read in inkex 1.4.1 (inkex/paths/path.py: CubicSuperPath.append_path_command), and Ink/Stitch at d59c9ab (lib/elements/element.py: path; lib/elements/utils/nodes.py; lib/elements/stroke.py: to_stitch_groups)."
+reason = "The drawing is read as a viewer draws it (REQ-SVG-001), and a point that nothing draws is no part of it. inkex was read in inkex 1.4.1 (inkex/paths/path.py: CubicSuperPath.append_path_command), and Ink/Stitch at d59c9ab (lib/elements/element.py: path; lib/elements/utils/nodes.py; lib/elements/stroke.py: to_stitch_groups). Ink/Stitch at d59c9ab, run as a black box (ADR-0001, decision 6), sews a needle point at the move-to that ends a path of Kum Tsoan relief's V, 24 mm above the glyph, which is then 91.4 mm tall, where StitchCraft's is 67.6 mm. Without the move-to it sews the V 67.6 mm tall, and the two programs' threads overlap by 0.984."
 requirements = ["REQ-SVG-001", "REQ-SAT-005", "REQ-SAT-015"]
 
 [[deviation]]

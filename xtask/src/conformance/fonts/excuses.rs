@@ -227,10 +227,14 @@ impl Excuses {
                     .map(|undone| Measured::of(&undone).map(|undone| differential::compare(ours, &undone)));
                 match undone.map(|rows| rows.and_then(|rows| rows.into_iter().find(|row| row.0 == *measure))) {
                     None => Some((place, format!("{said}, as {deviation} says"))),
-                    Some(Some((_, _, undone, true))) => Some((place, format!("{said}, as {deviation} says, and agree without it ({undone})"))),
+                    Some(Some((_, mine, undone, true))) => {
+                        // The overlap is one number of both files, which the row gives as StitchCraft's.
+                        let value = if *measure == Measure::Overlap { mine } else { undone };
+                        Some((place, format!("{said}, as {deviation} says, and agree without it ({value})")))
+                    }
                     Some(again) => {
                         let without =
-                            again.map_or("no needle point".to_string(), |(_, mine, undone, _)| format!("StitchCraft {mine}, Ink/Stitch {undone}"));
+                            again.map_or("no needle point".to_string(), |(_, mine, undone, _)| differential::said_undone(*measure, &mine, &undone));
                         failed.get_or_insert(format!("{} differ by more than {deviation} explains: without it, {without}", measure.name()));
                         None
                     }
@@ -456,6 +460,53 @@ saying = "stitch pattern"
         let (verdict, used) = judged("f", &plan_of(&[red, blue], 5.0), &plan_of(&[blue, red], 5.0));
         assert_eq!(verdict, Verdict::Excused(vec!["threads differ: StitchCraft #ed171f #0b3d91, Ink/Stitch #0b3d91 #ed171f, as DEV-THREAD-001 says, and agree without it (#ed171f #0b3d91)".to_string()]));
         assert_eq!(used, BTreeSet::from([0]));
+    }
+
+    #[test]
+    fn a_needle_point_ink_stitch_sews_alone_is_explained_where_the_glyph_agrees_without_it() {
+        let file = "[[excuse]]\nmeasures = [\"size\", \"place\", \"trims\", \"jumps\", \"overlap\"]\ndeviation = \"DEV-SVG-011\"\n";
+        let excuses = Excuses::parse(file).unwrap();
+        let point = |x: f64, y: f64| stitchcraft_core::Point::new(x, y).unwrap();
+        // Needle points, and one sewn alone after a trim, where a move-to draws nothing.
+        let plan = |points: &[(f64, f64)], lone: Option<(f64, f64)>| {
+            let mut builder = PlanBuilder::new(Thread::new(Rgb::new(11, 61, 145)));
+            for &(x, y) in points {
+                builder.stitch(point(x, y), Provenance::plan(Role::Top));
+            }
+            if let Some((x, y)) = lone {
+                builder.trim(None);
+                builder.jump(point(x, y), Provenance::plan(Role::Travel));
+                builder.stitch(point(x, y), Provenance::plan(Role::Top));
+            }
+            builder.finish()
+        };
+        let judged = |ours: &StitchPlan, theirs: &StitchPlan| {
+            let (measured, their_measures) = (Measured::of(ours).unwrap(), Measured::of(theirs).unwrap());
+            let rows = differential::compare(&measured, &their_measures);
+            excuses.judge("f", &Traits::default(), &rows, (ours, &measured), (theirs, &their_measures))
+        };
+        // A line 10 mm long, centred as a PES file is. Ink/Stitch's has a needle point 20 mm off, and the
+        // design is centred with it.
+        let along = |y: f64| (0..=10).map(|i| (f64::from(i) - 5.0, y)).collect::<Vec<_>>();
+        let ours = plan(&along(0.0), None);
+        let (verdict, used) = judged(&ours, &plan(&along(-10.0), Some((-5.0, 10.0))));
+        let size = "size differ: StitchCraft 10.0 × 0.0 mm, Ink/Stitch 10.0 × 20.0 mm, as DEV-SVG-011 says, and agree without it (10.0 × 0.0 mm)";
+        // The overlap, one number of both files, is said as it is without the needle point.
+        let overlap = "overlap 0.000, below 0.9, as DEV-SVG-011 says, and agree without it (1.000)";
+        assert_eq!(verdict, Verdict::Excused(vec![size.to_string(), overlap.to_string()]));
+        assert_eq!(used, BTreeSet::from([0]));
+        // Where the glyph still differs without the needle point, the deviation doesn't explain it: Ink/Stitch's
+        // line runs across StitchCraft's.
+        let across: Vec<(f64, f64)> = (0..=10).map(|i| (-10.0, f64::from(i) - 5.0)).collect();
+        let (verdict, used) = judged(&ours, &plan(&across, Some((10.0, 0.0))));
+        let how = match verdict {
+            Verdict::Differs(how) => how,
+            other => vec![format!("{other:?}")],
+        };
+        let without = "size differ by more than DEV-SVG-011 explains: without it, StitchCraft 10.0 × 0.0 mm, Ink/Stitch 0.0 × 10.0 mm";
+        assert_eq!(how.first().unwrap(), without);
+        assert!(how.last().unwrap().starts_with("overlap differ by more than DEV-SVG-011 explains: without it, overlap 0."), "{how:?}");
+        assert!(used.is_empty());
     }
 
     #[test]
