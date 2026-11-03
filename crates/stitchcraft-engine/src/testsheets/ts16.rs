@@ -33,7 +33,7 @@
 //! left. Turned, it reaches 60 mm left of the hoop's centre and 50 mm right, 10 mm above and 50 mm below.
 //!
 //! M8.10's part: a clone of the red fill (`REQ-SVG-012`), turned right by 45° about the fill's middle and
-//! moved right of it, its middle at [`CLONE_MIDDLE`]. It sews last, after the zigzag, in red again: a jump
+//! moved right of it, its middle at [`CLONE_MIDDLE`]. It sews after the zigzag, in red again: a jump
 //! from the red fill to it would leave its thread across it, which the reference machine doesn't cut (MC-1).
 //! Its rows turn with it (`REQ-SVG-013`): the fill's horizontal rows lie at -45° in the clone, as a fill's
 //! angle counts them, 45° right, along its long sides as the fill's lie along its own. The commands tied to
