@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9632f69b.js";
+            window.path_to_searchindex_js = "../searchindex-7c6304c1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-0e01f503.js"></script>
@@ -404,7 +404,7 @@ tied to nothing, and count wherever they are, in <code>&lt;defs&gt;</code> and h
 them. Each gives the design a setting at its symbol’s place (<code>REQ-ASM-005</code>). The origin goes to the
 hoop’s centre, and the frame moves to the stop position before each stop. Ink/Stitch refuses a file with
 2 origins, or 2 stop positions and a stop, and StitchCraft does too (<code>SC-E0819</code>,
-<a href="engine-pipeline.html#origin-and-stop-position">why</a>). The
+<a href="engine-pipeline.html#origin-stop-position-and-turn-on-export">why</a>). The
 <a href="inkstitch-compat-contract.html#commands">command table</a> gives what the adapter does with each of the 12
 commands. Before its file version 3, Ink/Stitch named 7 of them otherwise, such as
 <code>fill_start</code> for <code>starting_point</code>: the adapter reads those as the commands they became in any file,
@@ -430,9 +430,12 @@ which a VectorCraft document’s settings are read with too
 design’s elements with their parameters, and the settings that aren’t StitchCraft’s defaults
 (<code>stitchcraft_testkit::inkstitch</code>). It names Ink/Stitch’s namespace by the reader’s own constant,
 <code>stitchcraft_svg::inkstitch::INKSTITCH_NS</code>.</p>
-<p>The fourth, <code>rotate_on_export</code>, turns the design by 90° either way as Ink/Stitch writes it into a machine
-file, for machines that don’t turn a design to fit their hoop. It is not applied yet (M8): <code>SC-W0802</code>
-names a value other than 0, and the design is written as drawn. Ink/Stitch also keeps <code>thread-palette</code>
+<p>The fourth, <code>rotate_on_export</code>, turns the design about the hoop’s centre as it is written into a machine
+file, for machines that don’t turn a design to fit their hoop (M8.9). It is the design’s turn on export,
+a number of degrees, right for a positive one (<a href="engine-pipeline.html#origin-stop-position-and-turn-on-export">engine pipeline</a>).
+Ink/Stitch’s preferences offer 90 either way, and its writer turns by any number, as does StitchCraft.
+<code>SC-W0802</code> names text that is not a number, which turns nothing. Ink/Stitch takes text that isn’t JSON as
+no turn, and doesn’t write a file for JSON that isn’t a number. Ink/Stitch also keeps <code>thread-palette</code>
 there, which names the threads in its own lists and print-outs and doesn’t change what the adapter sews,
 and the file’s version (below). <code>SC-W0802</code> names any other element of Ink/Stitch’s there.</p>
 <h2 id="files-of-older-inkstitch-versions"><a class="header" href="#files-of-older-inkstitch-versions">Files of older Ink/Stitch versions</a></h2>

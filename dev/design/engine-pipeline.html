@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9632f69b.js";
+            window.path_to_searchindex_js = "../searchindex-7c6304c1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-0e01f503.js"></script>
@@ -386,7 +386,7 @@ by hand.</li>
 <li><a href="algorithms/locks.html">Lock stitches</a> specifies the lock itself: its shape (<code>lock_start</code>, <code>lock_end</code>),
 its size and its shortest stitch (0.2 mm).</li>
 </ul>
-<h3 id="origin-and-stop-position"><a class="header" href="#origin-and-stop-position">Origin and stop position</a></h3>
+<h3 id="origin-stop-position-and-turn-on-export"><a class="header" href="#origin-stop-position-and-turn-on-export">Origin, stop position and turn on export</a></h3>
 <p>The finished plan is in hoop coordinates: the design’s origin goes to the hoop’s centre, (0, 0), where the
 needle starts. The origin is the design’s own or else the centre of the box around every point where the
 needle goes down (<code>REQ-ASM-005</code>). Assembly builds the plan in the
@@ -399,6 +399,12 @@ objects named <code>stitch:origin</code> and <code>stitch:stop-position</code> (
 Ink/Stitch’s command is where its symbol is placed, and a marker is at the middle of the box round its
 anchors. A file with 2 origins, or 2 stop positions and a stop, is an error (<code>SC-E0819</code>), since which one
 counts isn’t known. Ink/Stitch doesn’t write a machine file of it either.</p>
+<p>Once the origin is at the hoop’s centre, the design’s turn on export turns the plan about it, by its
+degrees, right for a positive number (M8.9). It is Ink/Stitch’s design setting <code>rotate_on_export</code>, for a
+machine that doesn’t turn a design to fit its hoop, which the Design Settings filter keeps with a VectorCraft
+document. Ink/Stitch’s writer turns the machine file the same way, stop position jumps included. The hoop
+check measures the turned plan, as the machine gets it. A whole number of quarter turns moves each coordinate
+to the other axis and rounds nothing (<code>stitchcraft_engine::design::Turn</code>).</p>
 <h3 id="commands"><a class="header" href="#commands">Commands</a></h3>
 <div class="table-wrapper">
 <table>
@@ -445,8 +451,9 @@ no longer than it (<code>SC-I0703</code>, <code>REQ-FIN-001</code>). Such a stit
 custom lock’s long step, a satin column wider than the machine’s longest stitch, a tatami fill whose
 <code>max_stitch_length_mm</code> is longer than it, or a move sewn on under a <code>min_jump_stitch_length_mm</code> that
 long. Each part counts against the design’s stitch budget.</li>
-<li><strong>The hoop’s centre.</strong> The fitted plan is moved so the design’s origin is at the hoop’s centre
-(<a href="#origin-and-stop-position">origin</a>, <code>REQ-ASM-005</code>).</li>
+<li><strong>The hoop’s centre.</strong> The fitted plan is moved so the design’s origin is at the hoop’s centre, and
+turned about it by the design’s turn on export (<a href="#origin-stop-position-and-turn-on-export">origin</a>,
+<code>REQ-ASM-005</code>).</li>
 <li><strong>Colour limits:</strong> colour changes and stops above what the format the plan is written in records →
 <code>SC-E0601</code>. That is the profile’s own, or the one <code>--format</code> or an exporter writes, planned for with
 <code>MachineProfile::writing</code>: a DST file records 999 colour changes, where the PE800’s own PES records 255.</li>

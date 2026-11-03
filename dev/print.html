@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-9632f69b.js";
+            window.path_to_searchindex_js = "searchindex-7c6304c1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-0e01f503.js"></script>
@@ -903,11 +903,14 @@ choose <strong>Object › Plug-ins › StitchCraft Design Settings</strong>, set
 <li><strong>Machine</strong>, the machine and hoop the design is planned for, <code>brother-pe800-5x7</code> by default.</li>
 <li><strong>Shortest jump</strong>, <strong>Shortest stitch</strong> and <strong>Narrowest satin stroke</strong>, in millimetres. Rest the pointer
 on a label for what each does.</li>
+<li><strong>Turn on export</strong>, for a machine that doesn’t turn a design to fit its hoop. In the machine file, 90
+turns the design right about the hoop’s centre and -90 turns it left, as Ink/Stitch’s rotate on export
+does.</li>
 </ul>
 <p>The document saves them. The exporters and <code>stitch export</code> plan the design for the machine it keeps,
 unless the export’s <strong>Machine</strong> option or <code>--profile</code> names another. They use its settings as they use
 an SVG file’s design settings. Whatever is selected, the filter leaves every object as it is.</p>
-<p>VectorCraft opens the dialog at the defaults each time, not at what the document keeps, so set all 4 when
+<p>VectorCraft opens the dialog at the defaults each time, not at what the document keeps, so set all 5 when
 you run it again. A live effect isn’t given what the document keeps. The stitches shown as you work are
 planned for <code>brother-pe800-5x7</code> with the default settings, and a longer shortest stitch shows only in the
 machine file and in <code>stitch export --preview</code>. A setting that StitchCraft can’t read keeps its default,
@@ -2795,8 +2798,8 @@ Arguments:
 <li>On the top half, each button’s yellow is one fill under the dots, which sew after it, and its black rim a satin column round it. On the bottom half, the abutting button’s yellow sews round the dots as drawn. Which sews better between the dots? Does the rim cover the yellow’s edge?</li>
 <li>The machine cuts the thread at thread changes and at the stop, but at no jump, and the pictures sew as any design does: a shape sewn after a jump may sew its thread down. Snip the jump threads at each stop and after sewing. Where is one sewn down, and does it show?</li>
 </ul>
-<h2 id="ts-16--an-inkstitch-file-start-and-end-commands-clip-paths-origin-and-stop-position"><a class="header" href="#ts-16--an-inkstitch-file-start-and-end-commands-clip-paths-origin-and-stop-position">TS-16 — An Ink/Stitch file: start and end commands, clip paths, origin and stop position</a></h2>
-<p>60.0 × 110.0 mm · 3026 stitches, 6 jumps, 5 trims, 3 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand</p>
+<h2 id="ts-16--an-inkstitch-file-start-and-end-commands-clip-paths-origin-stop-position-and-turn"><a class="header" href="#ts-16--an-inkstitch-file-start-and-end-commands-clip-paths-origin-stop-position-and-turn">TS-16 — An Ink/Stitch file: start and end commands, clip paths, origin, stop position and turn</a></h2>
+<p>110.0 × 60.0 mm · 3026 stitches, 6 jumps, 5 trims, 3 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-16.png" alt="TS-16 as it will sew: a red tatami rectangle 40 by 30 mm, its rows across, and below it a blue satin column 40 mm long and 5 mm wide. The machine cuts the thread between them, at the thread change."><span class="img-wrapper"><img src="images/generated/testsheet-ts-16.png" alt="TS-16 as it will sew: a red tatami rectangle 40 by 30 mm, its rows across, and below it a blue satin column 40 mm long and 5 mm wide. The machine cuts the thread between them, at the thread change."></span></label></p>
 <p>Threads: Red, Blue, Blue (stop), Emerald Green, Black.</p>
@@ -2809,6 +2812,7 @@ Arguments:
 <li>The black zigzag at the bottom sews its first 15 mm and its last 15 mm, and nothing between, where its clip path leaves a gap: the needle jumps it. Does each piece end where the gap begins?</li>
 <li>The design’s origin, on the blue column’s top edge 10 mm in from its left end, goes to the hoop’s centre, where the needle waits before it sews. Does the machine put the design there, or its middle?</li>
 <li>The machine stops after the blue column. Before it stops, the frame moves to the stop position, 20 mm right of the red fill’s top-right corner and 10 mm above it. Does the frame wait there, and does the needle come back for the green fill?</li>
+<li>The file turns the sheet right about its origin, as Ink/Stitch’s rotate on export does: it sews 100 mm wide and 40 mm tall, the red fill at the right and the zigzag at the left. Does the machine sew it so, or turn it back?</li>
 <li>Any difference between the 2 sew-outs, and where.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from the registry in `stitchcraft-core/src/diag.rs`. Edit the source, not this page. -->
@@ -3366,9 +3370,11 @@ Or use fewer different threads: merge those of nearly the same colour.</p>
 hooping (most machines refuse the file). A design that fits the hoop can still reach past its edge
 where it is placed: its origin, which goes to the hoop’s centre, can lie far from its middle, and
 its stop position, where the frame goes before each stop, can lie outside the hoop.</p>
-<p>If the message says the design fits when turned 90 degrees, rotate it. Otherwise scale it down,
-or split it into parts that are sewn in separate hoopings. Where it reaches past the edge from
-where it is placed, move its origin nearer its middle, or its stop position nearer the design.</p>
+<p>If the message says the design fits when turned 90 degrees, rotate it, or have the machine file
+turn it: Ink/Stitch’s rotate on export, or Turn on export in StitchCraft’s Design Settings filter.
+Otherwise scale it down, or split it into parts that are sewn in separate hoopings. Where it reaches
+past the edge from where it is placed, move its origin nearer its middle, or its stop position nearer
+the design.</p>
 <h2 id="sc-w0702"><a class="header" href="#sc-w0702">SC-W0702</a></h2>
 <p><strong>Warning</strong> — Design is larger than the comfort zone</p>
 <p>The design fits the hoop but is larger than the profile’s comfort zone: the area where this
@@ -3400,8 +3406,8 @@ viewer ignores it, and one of Ink/Stitch’s design settings keeps its default. 
 sews across its width, as a satin column or a fill, is as wide as its transforms stretch it on
 average, so a transform that stretches it more one way than the other, and draws it wider one way,
 is named too. So is what StitchCraft does not apply of an Ink/Stitch file: the settings of a group,
-which Ink/Stitch doesn’t read either, those of its early versions (<code>embroider_</code> attributes), its
-design setting <code>rotate_on_export</code>, which turns the design as it is written, and the updates
+which Ink/Stitch doesn’t read either, those of its early versions (<code>embroider_</code> attributes), a turn
+on export (<code>rotate_on_export</code>) that is not a number, and the updates
 Ink/Stitch would make to a file with its settings and no file version, or from a newer Ink/Stitch,
 which is read as it is. Of its commands, one on an object that is not stitched is named, and so is a
 start, end, target, origin or stop position command whose place doesn’t read, an <code>ignore_layer</code>
@@ -5626,7 +5632,7 @@ VectorCraft reports the plug-in as failed.</p>
 </div>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="data-model"><a class="header" href="#data-model">Data model</a></h1>
-<!-- implements: crates/stitchcraft-core/src/lib.rs, crates/stitchcraft-core/src/units.rs, crates/stitchcraft-core/src/element.rs, crates/stitchcraft-core/src/rect.rs, crates/stitchcraft-core/src/budget.rs, crates/stitchcraft-plan/src/*.rs, crates/stitchcraft-plan/src/palette/**, crates/stitchcraft-plan/src/profiles/**, crates/stitchcraft-engine/src/design.rs -->
+<!-- implements: crates/stitchcraft-core/src/lib.rs, crates/stitchcraft-core/src/units.rs, crates/stitchcraft-core/src/element.rs, crates/stitchcraft-core/src/rect.rs, crates/stitchcraft-core/src/budget.rs, crates/stitchcraft-plan/src/*.rs, crates/stitchcraft-plan/src/palette/**, crates/stitchcraft-plan/src/profiles/**, crates/stitchcraft-engine/src/design.rs, crates/stitchcraft-engine/src/design/turn.rs -->
 <p>The types every crate shares. Code sketches are illustrative (<code>ignore</code>); the crates’ rustdoc is the
 API reference once the types exist. Invariants listed here are checked in code (constructors return
 <code>Result</code>) and by conformance level L0.</p>
@@ -5693,6 +5699,7 @@ pub struct DesignSettings {          // since M3.8; read from an Ink/Stitch file
     pub origin: Option&lt;Point&gt;,       // where the hoop's centre goes; None: the centre of the stitches
     pub stop_position: Option&lt;Point&gt;,// where the frame moves before each stop; None: it stays
     pub min_satin_stroke_width: Mm,  // 1 mm: a satin column drawn as one path no wider is sewn as a stroke (M4.8)
+    pub rotate_on_export: Turn,      // the plan turned about the hoop's centre as it is written (M8.9); none by default
 }
 
 pub enum Shape {
@@ -6578,7 +6585,7 @@ tied to nothing, and count wherever they are, in <code>&lt;defs&gt;</code> and h
 them. Each gives the design a setting at its symbol’s place (<code>REQ-ASM-005</code>). The origin goes to the
 hoop’s centre, and the frame moves to the stop position before each stop. Ink/Stitch refuses a file with
 2 origins, or 2 stop positions and a stop, and StitchCraft does too (<code>SC-E0819</code>,
-<a href="#origin-and-stop-position">why</a>). The
+<a href="#origin-stop-position-and-turn-on-export">why</a>). The
 <a href="#commands-1">command table</a> gives what the adapter does with each of the 12
 commands. Before its file version 3, Ink/Stitch named 7 of them otherwise, such as
 <code>fill_start</code> for <code>starting_point</code>: the adapter reads those as the commands they became in any file,
@@ -6604,9 +6611,12 @@ which a VectorCraft document’s settings are read with too
 design’s elements with their parameters, and the settings that aren’t StitchCraft’s defaults
 (<code>stitchcraft_testkit::inkstitch</code>). It names Ink/Stitch’s namespace by the reader’s own constant,
 <code>stitchcraft_svg::inkstitch::INKSTITCH_NS</code>.</p>
-<p>The fourth, <code>rotate_on_export</code>, turns the design by 90° either way as Ink/Stitch writes it into a machine
-file, for machines that don’t turn a design to fit their hoop. It is not applied yet (M8): <code>SC-W0802</code>
-names a value other than 0, and the design is written as drawn. Ink/Stitch also keeps <code>thread-palette</code>
+<p>The fourth, <code>rotate_on_export</code>, turns the design about the hoop’s centre as it is written into a machine
+file, for machines that don’t turn a design to fit their hoop (M8.9). It is the design’s turn on export,
+a number of degrees, right for a positive one (<a href="#origin-stop-position-and-turn-on-export">engine pipeline</a>).
+Ink/Stitch’s preferences offer 90 either way, and its writer turns by any number, as does StitchCraft.
+<code>SC-W0802</code> names text that is not a number, which turns nothing. Ink/Stitch takes text that isn’t JSON as
+no turn, and doesn’t write a file for JSON that isn’t a number. Ink/Stitch also keeps <code>thread-palette</code>
 there, which names the threads in its own lists and print-outs and doesn’t change what the adapter sews,
 and the file’s version (below). <code>SC-W0802</code> names any other element of Ink/Stitch’s there.</p>
 <h2 id="files-of-older-inkstitch-versions"><a class="header" href="#files-of-older-inkstitch-versions">Files of older Ink/Stitch versions</a></h2>
@@ -6885,7 +6895,7 @@ by hand.</li>
 <li><a href="#lock-stitches-1">Lock stitches</a> specifies the lock itself: its shape (<code>lock_start</code>, <code>lock_end</code>),
 its size and its shortest stitch (0.2 mm).</li>
 </ul>
-<h3 id="origin-and-stop-position"><a class="header" href="#origin-and-stop-position">Origin and stop position</a></h3>
+<h3 id="origin-stop-position-and-turn-on-export"><a class="header" href="#origin-stop-position-and-turn-on-export">Origin, stop position and turn on export</a></h3>
 <p>The finished plan is in hoop coordinates: the design’s origin goes to the hoop’s centre, (0, 0), where the
 needle starts. The origin is the design’s own or else the centre of the box around every point where the
 needle goes down (<code>REQ-ASM-005</code>). Assembly builds the plan in the
@@ -6898,6 +6908,12 @@ objects named <code>stitch:origin</code> and <code>stitch:stop-position</code> (
 Ink/Stitch’s command is where its symbol is placed, and a marker is at the middle of the box round its
 anchors. A file with 2 origins, or 2 stop positions and a stop, is an error (<code>SC-E0819</code>), since which one
 counts isn’t known. Ink/Stitch doesn’t write a machine file of it either.</p>
+<p>Once the origin is at the hoop’s centre, the design’s turn on export turns the plan about it, by its
+degrees, right for a positive number (M8.9). It is Ink/Stitch’s design setting <code>rotate_on_export</code>, for a
+machine that doesn’t turn a design to fit its hoop, which the Design Settings filter keeps with a VectorCraft
+document. Ink/Stitch’s writer turns the machine file the same way, stop position jumps included. The hoop
+check measures the turned plan, as the machine gets it. A whole number of quarter turns moves each coordinate
+to the other axis and rounds nothing (<code>stitchcraft_engine::design::Turn</code>).</p>
 <h3 id="commands"><a class="header" href="#commands">Commands</a></h3>
 <div class="table-wrapper">
 <table>
@@ -6944,8 +6960,9 @@ no longer than it (<code>SC-I0703</code>, <code>REQ-FIN-001</code>). Such a stit
 custom lock’s long step, a satin column wider than the machine’s longest stitch, a tatami fill whose
 <code>max_stitch_length_mm</code> is longer than it, or a move sewn on under a <code>min_jump_stitch_length_mm</code> that
 long. Each part counts against the design’s stitch budget.</li>
-<li><strong>The hoop’s centre.</strong> The fitted plan is moved so the design’s origin is at the hoop’s centre
-(<a href="#origin-and-stop-position">origin</a>, <code>REQ-ASM-005</code>).</li>
+<li><strong>The hoop’s centre.</strong> The fitted plan is moved so the design’s origin is at the hoop’s centre, and
+turned about it by the design’s turn on export (<a href="#origin-stop-position-and-turn-on-export">origin</a>,
+<code>REQ-ASM-005</code>).</li>
 <li><strong>Colour limits:</strong> colour changes and stops above what the format the plan is written in records →
 <code>SC-E0601</code>. That is the profile’s own, or the one <code>--format</code> or an exporter writes, planned for with
 <code>MachineProfile::writing</code>: a DST file records 999 colour changes, where the PE800’s own PES records 255.</li>
@@ -10694,18 +10711,19 @@ channel, and an exporter no picture: <code>stitch export --preview</code> still 
 <h3 id="design-settings-and-machine-kept-with-the-document"><a class="header" href="#design-settings-and-machine-kept-with-the-document">Design settings and machine kept with the document</a></h3>
 <p>Ink/Stitch keeps 3 lengths for the whole design with an SVG file, <code>collapse_len_mm</code>, <code>min_stitch_len_mm</code>
 and <code>min_satin_stroke_width_mm</code> (<a href="#design-settings">SVG input</a>), and a VectorCraft document has
-no place of its own for them. Its fourth such setting, <code>rotate_on_export</code>, which turns the design as it is
-written, is not kept yet (M8). VectorCraft 0.16 keeps up to 1 MiB of JSON with a document for each filter,
+no place of its own for them. From M8.9 the filter keeps its fourth such setting too, <code>rotate_on_export</code>,
+which turns the design as it is written. VectorCraft 0.16 keeps up to 1 MiB of JSON with a document for each filter,
 the RFC’s <a href="#p5-document-level-plug-in-data">P5</a>. The filter returns it as
 <code>documentData</code>, and the native file saves it in <code>document.unknown.pluginData</code> under the plug-in’s id. An
 exporter reads every plug-in’s in the document it is given, and a live effect isn’t given it.</p>
 <p>M6.11 makes a filter keep them (<code>REQ-VC-013</code>): <em>StitchCraft Design Settings</em>, in Object › Plug-ins
 (<code>&lt;ns&gt;.settings</code>, <code>apps/stitchcraft-vc-plugin/src/settings.rs</code>). Its dialog has the machine, a choice of
-the built-in profiles, then each design setting as a length. The settings’ names, labels and help come
-from <code>stitchcraft_engine::design::SETTINGS</code>, the table the SVG adapter reads Ink/Stitch’s settings with.
-The machine is StitchCraft’s own, as Ink/Stitch’s hoop is the page. On OK the filter keeps all 4, the
-settings under Ink/Stitch’s names and the machine’s id as <code>profile</code>:</p>
-<pre><code class="language-json">{"profile": "brother-pe800-5x7", "collapse_len_mm": 3, "min_stitch_len_mm": 0, "min_satin_stroke_width_mm": 1}
+the built-in profiles, then each design setting as a length, and the turn on export, a choice of none,
+left and right, as Ink/Stitch’s preferences offer it. The settings’ names, labels and help come from
+<code>stitchcraft_engine::design::SETTINGS</code> and <code>Turn</code>, which the SVG adapter reads Ink/Stitch’s settings with.
+The machine is StitchCraft’s own, as Ink/Stitch’s hoop is the page. On OK the filter keeps all 5, the
+settings under Ink/Stitch’s names, the turn in degrees, and the machine’s id as <code>profile</code>:</p>
+<pre><code class="language-json">{"profile": "brother-pe800-5x7", "collapse_len_mm": 3, "min_stitch_len_mm": 0, "min_satin_stroke_width_mm": 1, "rotate_on_export": 90}
 </code></pre>
 <p>The filter returns each object it is given by its id alone, as VectorCraft deletes an input object that a
 filter leaves out, and so its run leaves every object as it was.</p>
@@ -10730,9 +10748,10 @@ longer shortest stitch kept with the document shows in the machine file and in <
 and not in the preview.</p>
 <p>The contract test <code>req_vc_013_the_settings_filter_keeps_the_machine_each_exporter_plans_for</code> has
 VectorCraft’s host run the filter as <code>plugin.run</code> runs it, then exports the document with what it kept. Level B’s <code>settings</code>
-scenario does the same with VectorCraft’s command line: a shortest stitch of 1.5 mm changes the PES file,
-the exports are <code>stitch export</code>’s, and with the small hoop kept the export of a 1 in square fails with
-<code>SC-E0701</code>.</p>
+scenario does the same with VectorCraft’s command line: a shortest stitch of 1.5 mm and a quarter turn
+right change the PES file, the exports are <code>stitch export</code>’s, and with the small hoop kept the export of a
+1 in square fails with <code>SC-E0701</code>. The filter keeps the turn as its number of degrees, where its dialog
+offers it as a choice.</p>
 <h3 id="tools-vectorcrafts-own-commands"><a class="header" href="#tools-vectorcrafts-own-commands">Tools: VectorCraft’s own commands</a></h3>
 <p>The plan had one object filter, <code>&lt;ns&gt;.tools</code>, to make a satin column from 2 paths, add a rung, bake a
 preview to paths, make a line into a satin column and draw a test sheet. VectorCraft’s own commands do the
@@ -11402,7 +11421,7 @@ version and what sews must not:</p>
 <tr><td><code>graphic-style</code></td><td>a group of 2 squares, and a gold square with a fill effect, drawn, whose new graphic style is then applied to the group</td><td>as sent, and 3 fills in gold at the effect’s 90° (<code>REQ-VC-006</code>)</td></tr>
 <tr><td><code>missing-plugin</code></td><td>a fill saved and drawn, then opened and saved again without the plug-ins</td><td>both sew alike, as sent: the records are kept (<code>REQ-PRM-003</code>)</td></tr>
 <tr><td><code>export</code></td><td>a square filled red and a line far below it, given the fill and stroke effects, saved, then exported to PES and DST by StitchCraft’s exporters</td><td>each file is the one <code>stitch export</code> writes of the saved document, and the export’s warnings are what it says, the DST’s cut on the long jump among them (<code>REQ-VC-011</code>)</td></tr>
-<tr><td><code>settings</code></td><td>a 1 in square given the fill effect and exported to PES, then the Design Settings filter run with the 4 × 4 in hoop and a shortest stitch of 1.5 mm, and the square saved and exported to PES and DST; then the filter run with the small hoop, and the square saved and exported to PES</td><td>each document keeps what the filter was run with, each file is the one <code>stitch export</code> writes, the PES file differs from the one before the filter, and the small hoop’s export fails with <code>SC-E0701</code> (<code>REQ-VC-013</code>)</td></tr>
+<tr><td><code>settings</code></td><td>a 1 in square given the fill effect and exported to PES, then the Design Settings filter run with the 4 × 4 in hoop, a shortest stitch of 1.5 mm and a quarter turn right on export, and the square saved and exported to PES and DST; then the filter run with the small hoop, and the square saved and exported to PES</td><td>each document keeps what the filter was run with, each file is the one <code>stitch export</code> writes, the PES file differs from the one before the filter, and the small hoop’s export fails with <code>SC-E0701</code> (<code>REQ-VC-013</code>)</td></tr>
 <tr><td><code>stroke-to-satin</code></td><td>an S curve, a V and a circle with strokes 3 mm wide and the satin effect, saved and drawn, then made into columns by Stroke to Satin, saved, drawn and exported to PES</td><td>the columns sew as the lines did, 3 satin columns in the strokes’ colour, and the file is the one <code>stitch export</code> writes (<code>REQ-VC-014</code>)</td></tr>
 <tr><td><code>testsheets</code></td><td>each sheet drawn as a design, drawn by Test Sheet into a new document, then saved and exported to PES; the TS-13 sheets with StitchCraft Auto installed</td><td>each document sews as the sheet’s design moved by whole millimetres to the middle of its artboard, and each file is the one <code>stitch export</code> writes. The Auto effect digitizes the TS-13 sheets’ shapes automatically (<code>REQ-VC-015</code>, <code>REQ-VC-016</code>)</td></tr>
 <tr><td><code>picture</code></td><td>the badge drawn flat as a PNG, which <code>stitch plan badge.png --traced traced.vectorcraft</code> traces with VectorCraft’s command line, its steps on standard input. With the reference machine’s threads loaded as a swatch library, the picture is fitted into the hoop and traced in colour with the library’s colours by the Abutting method, and its paths are kept and saved</td><td><code>stitch</code> ends well, and the document it traced, read with <code>--auto</code>, sews the badge’s 3 threads, each a thread of the palette, the white round the badge left out as the background (<code>REQ-CLI-012</code>, <code>REQ-AUTO-001</code>, <code>REQ-AUTO-009</code>)</td></tr>
@@ -11725,14 +11744,15 @@ meant to be covered (<code>stitchcraft_testkit::metrics</code>).</p>
 it (<code>stitchcraft-testkit::transformed</code>, <code>tests/transformed.rs</code>), and a shape drawn again the other way
 round, from another point or with points added along its edges must sew the same thread. Since the checks
 don’t need an expected answer, they run on every element of every test sheet drawn as a design, and on
-random letters digitized automatically. They compare the share of each element’s top stitches and underlay
-that lies within 0.3 mm of the other plan’s, which overlooks needle points placed a little apart but still
-tells a column from a line sewn along its middle. A fill lays out its rows from the point (0, 0). So a
-design is mirrored and turned about that point, its fill angles and its elements’ start, end and target
-positions and clips with it, and a move is left out of the changes. A rule that depends on a tie broken by
-coordinates fails the checks: TS-13B’s letter A 6 mm tall sewed one leg as a satin column and the other as
-a line, and its mirror image the other way round. Each element of the sheets keeps 0.993 or more of its
-thread where the change takes it, against a bound of 0.98.</p>
+random letters digitized automatically. They compare the share of each element’s top stitches and
+underlay that lies within 0.3 mm of the other plan’s, which overlooks needle points placed a little apart
+but still tells a column from a line sewn along its middle. A fill lays out its rows from the point (0,
+0). So a design is mirrored and turned about that point, its fill angles and its elements’ start, end and
+target positions and clips with it, and a move is left out of the changes. The design’s turn on export
+turns the other way in a mirror image, whose plan is then the mirror image of the design’s. A rule that
+depends on a tie broken by coordinates fails the checks: TS-13B’s letter A 6 mm tall sewed one leg as a
+satin column and the other as a line, and its mirror image the other way round. Each element of the
+sheets keeps 0.993 or more of its thread where the change takes it, against a bound of 0.98.</p>
 <h3 id="l3--inkstitch-differential-nightly"><a class="header" href="#l3--inkstitch-differential-nightly">L3 — Ink/Stitch differential (nightly)</a></h3>
 <p>A pinned Ink/Stitch runs as a black box on a corpus of SVG files written for StitchCraft, and writes
 machine files. Running Ink/Stitch as an oracle uses it and doesn’t copy it
@@ -11768,14 +11788,15 @@ requirements of level L3. The other runs of the suite leave them and their cases
 is designs the SVG reader sews in full, with their settings (<code>REQ-SVG-009</code>), trim and stop commands and
 the file version. A case may name a test sheet drawn as a design instead (<code>sheet</code>). Both programs sew an
 SVG file of the elements StitchCraft sews the sheet with, written with their parameters, their start, end
-and target positions as Ink/Stitch’s commands and their clips as clip paths, and the design’s origin and
-stop position as commands too (<code>stitchcraft_testkit::inkstitch</code>), which StitchCraft’s reader reads back
-unchanged (<code>REQ-PRM-003</code>). Automatic digitizing chooses ordinary elements with Ink/Stitch’s parameters,
-so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check StitchCraft’s stitches of those
-choices against Ink/Stitch’s (<code>REQ-AUTO-021</code>). TS-11B checks the contour fills so, each strategy and join
-style among them (<code>REQ-FILL-CON-008</code>), and its circular fills (<code>REQ-FILL-CIR-007</code>). TS-02B to TS-09, the
-sheets of MC-2 to MC-4, and TS-11C, the meander fills’ sheet, are cases of <code>REQ-SVG-008</code> (M8.2).
-<code>conformance/inkstitch/README.md</code> says how to run it by hand and how to add a case.</p>
+and target positions as Ink/Stitch’s commands and their clips as clip paths, the design’s origin and stop
+position as commands too, and its turn on export (<code>stitchcraft_testkit::inkstitch</code>), which StitchCraft’s
+reader reads back unchanged (<code>REQ-PRM-003</code>). Automatic digitizing chooses ordinary elements with
+Ink/Stitch’s parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check
+StitchCraft’s stitches of those choices against Ink/Stitch’s (<code>REQ-AUTO-021</code>). TS-11B checks the contour
+fills so, each strategy and join style among them (<code>REQ-FILL-CON-008</code>), and its circular fills
+(<code>REQ-FILL-CIR-007</code>). TS-02B to TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills’ sheet,
+are cases of <code>REQ-SVG-008</code> (M8.2). <code>conformance/inkstitch/README.md</code> says how to run it by hand and how
+to add a case.</p>
 <p><strong>Centre lines.</strong> Sewing what StitchCraft chose can’t find a choice that is wrong: TS-13B’s small T sewed
 a Γ, the left arm of its bar left out of its centre line, and the differential agreed by every measure.
 The <code>centre-lines</code> cases compare a step before the stitches (<code>REQ-AUTO-022</code>,
@@ -13756,7 +13777,7 @@ needle points to the other shapes in their group or take some out, are not plann
 <tr><td>M8.6</td><td>Ink/Stitch’s fonts as a corpus. <code>cargo xtask corpus</code> downloads inkstitch/embroidery-fonts at a commit this repository pins, and checks its SHA-256. The files are never committed. The corpus takes the fonts whose licence file is the OFL, CC0, CC BY or CC BY-SA, 131 of the 142 fonts at <code>c7e3a05</code> (<a href="#inkstitchs-fonts">fonts</a>). The differential sews each glyph as a design of its own, its layer shown and the others left out, in both programs. The glyphs of stitch types StitchCraft doesn’t sew yet are listed, and join the corpus with M10’s steps</td><td>A pinned sample of each font’s glyphs runs every night, and every glyph every week. Each glyph sews as in Ink/Stitch, or its difference is excused by the ledger or reproduced as a bug by a case of its own</td></tr>
 <tr><td>M8.7</td><td>Clipping in VectorCraft documents. A clip group’s art is cut to its clipping object as M8.5 cuts an SVG file’s shapes, in place of <code>SC-W0807</code>’s note that the clipping isn’t applied. A satin column is sewn whole there too</td><td><code>REQ-VC-005</code> updated, and a Level B case in which VectorCraft’s Make Clipping Mask clips a fill and a stroke, which <code>stitch export</code> and the exporters sew cut</td></tr>
 <tr><td>M8.8 ✅</td><td>Origin and stop position. Ink/Stitch’s <code>origin</code> command gives the design’s origin, which goes to the hoop’s centre, and its <code>stop_position</code> command the stop position, which the frame moves to before each stop (<code>REQ-ASM-005</code>). Each is the point where its symbol is placed, wherever it is, in <code>&lt;defs&gt;</code> and hidden layers too, as Ink/Stitch finds them. Planning a design with 2 origins, or with 2 stop positions and a stop, ends with an error (<code>SC-E0819</code>). Ink/Stitch doesn’t write a machine file of it either. In a VectorCraft document, objects named <code>stitch:origin</code> and <code>stitch:stop-position</code> mark them, each at its middle. The differential measures the design’s place too, the middle of its box from where the machine starts, which the origin moves</td><td><code>REQ-SVG-003</code>, <code>REQ-ASM-005</code> and <code>REQ-VC-009</code> updated, 2 differential cases that agree by every measure, the place among them, and TS-16’s part drawn for MC-11</td></tr>
-<tr><td>M8.9</td><td>Rotation on export. The design setting <code>rotate_on_export</code> turns the plan about the hoop’s centre once the origin is there, before the hoop is checked, as Ink/Stitch turns the machine file it writes. <code>90</code> turns it right, and <code>-90</code> left. The SVG adapter reads it from the file’s metadata, and VectorCraft’s Design Settings filter keeps it with a document</td><td><code>REQ-SVG-005</code> and <code>REQ-VC-013</code> updated, a differential case, and TS-16 turned for MC-11</td></tr>
+<tr><td>M8.9 ✅</td><td>Rotation on export. The design setting <code>rotate_on_export</code> turns the plan about the hoop’s centre once the origin is there, before the hoop is checked, as Ink/Stitch turns the machine file it writes, the stop position’s jumps with it. <code>90</code> turns it right, and <code>-90</code> left. Any other number of degrees turns it that much, as Ink/Stitch’s writer does, and a whole number of quarter turns rounds nothing. The SVG adapter reads it from the file’s metadata, and VectorCraft’s Design Settings filter keeps it with a document, offering none, left and right</td><td><code>REQ-SVG-005</code>, <code>REQ-VC-013</code> and <code>REQ-ASM-005</code> updated, 2 differential cases, a quarter turn and 45°, that agree by every measure, and TS-16 turned for MC-11</td></tr>
 <tr><td>M8.10</td><td>Clones (<code>&lt;use&gt;</code>). A clone sews the elements of what it shows, in its place in the document’s order, as Ink/Stitch sews a clone. They keep the source’s settings and the commands tied to it, under the clone’s transform and position. Clones inside it are sewn the same way. A fill’s angle turns with the clone, unless the clone’s <code>angle</code> gives one, and <code>flip_angle</code> reverses it. A clone whose <code>clone</code> setting is off sews nothing. A clone that shows itself, directly or through other clones, is left out, as a viewer leaves it out. Where a viewer draws a clone otherwise, as for a symbol’s viewBox, the ledger says how</td><td>Requirements written, the contract’s clone settings supported, differential cases, and TS-16’s part drawn for MC-11</td></tr>
 <tr><td>M8.11 ✅ 🧪</td><td>Ink/Stitch files in VectorCraft. <code>stitch import-inkstitch</code> was planned while VectorCraft dropped <code>inkstitch:*</code> attributes on SVG import. Since 0.17 it keeps them to SVG export (<a href="#p7-preserve-foreign-svg-attributes">P7</a>). The step finds where a <code>.vectorcraft</code> document saves them, and whether a filter is given them. It then compares 2 ways for an Ink/Stitch file to preview and sew in VectorCraft. <code>stitch import-inkstitch</code> writes a document with StitchCraft’s effects. VectorCraft’s own SVG import keeps the attributes, which the VectorCraft adapter would read and a filter would make into effects</td><td>Decision recorded in the design, <a href="#adr-0016-inkstitch-files-come-into-vectorcraft-through-stitch-import-inkstitch">ADR-0016</a>: <code>stitch import-inkstitch</code> writes the document, its effects the only settings it keeps, and the VectorCraft adapter names an object that keeps Ink/Stitch’s attributes. VectorCraft gives a filter none of them, and its import drops the commands’ ties, the design settings and the clones’ settings (2026-11-02)</td></tr>
 <tr><td>M8.12</td><td>Ink/Stitch files made into VectorCraft documents whose objects preview and sew as the file’s settings say, as <a href="#adr-0016-inkstitch-files-come-into-vectorcraft-through-stitch-import-inkstitch">ADR-0016</a> decided. <code>stitch import-inkstitch file.svg -o file.vectorcraft</code> reads the file with the SVG adapter and writes the same art with a document writer. Each element’s settings become a StitchCraft effect of its family, and Ink/Stitch’s commands the names a VectorCraft document uses. The writer makes clip paths into clip groups and clones into copies. It keeps the design settings as the Design Settings filter keeps them, and no <code>inkstitch:*</code> attribute. The VectorCraft adapter names an object that keeps one, as VectorCraft’s own SVG import keeps them. <code>stitch import design.pes</code> reuses the writer after 1.0</td><td><code>REQ-PRM-003</code> active, a file’s settings read back unchanged from the document. A Level B case in which VectorCraft opens the document, and <code>stitch export</code> and the exporters write what <code>stitch plan</code> writes of the SVG file</td></tr>
@@ -13965,7 +13986,7 @@ middle of the artboard (<code>REQ-VC-015</code>). A checkpoint can so sew a shee
 <tr><td><strong>TS-13</strong> Pictures digitized automatically (M13)</td><td>Test pictures drawn in code (<code>stitchcraft_engine::testsheets::pictures</code>), digitized automatically in the top half of each sheet and sewn as drawn, in paint order, in the bottom half, which sews first and stops. TS-13A has a badge traced abutting and one traced stacked, specks round a disc, a row of badges drawn badge by badge, and a bar that runs on beside a square without touching it (126 × 168 mm). TS-13B has the word MATCH in block letters 15, 10, 6 and 4 mm tall, and windows whose lines, traced as areas, are 0.3, 0.6 and 0.9 mm wide (110 × 148 mm). TS-13C has a cartoon face drawn with black lines 1, 2 and 4 mm wide, a star, and a balloon on its string (111 × 108 mm). TS-13D has an emblem 42 mm wide, a navy square with a white disc, a red star on the disc and 3 gold bars, and a button 23 mm across, a yellow disc with 7 orange dots in a black rim, each traced abutting and traced stacked (115 × 108 mm)</td><td>Fabric showing between colours, on both halves, and on the digitized half whether each area’s 0.4 mm overlap under the next covers the gap or shows as a ridge (M13.2). Whether a stacked trace’s digitized half, its covered parts cut away, sews as flat as the abutting one, and what became of the specks round the disc (M13.2). Where a shape runs on beside an area without touching it, whether the fabric that shows there as drawn reads as a gap (M13.2). The smallest letters that read. Whether each outline’s columns cover the edges of the fills beside them, and whether the triple runs show as wide as their lines. A column’s square end past the end of a line with round caps (M13.1), and how far it shows past the round end. Small traced rings and hairpins, filled because no satin column can follow them (M13.1), and how solid they sew beside their columns’ neighbours. Colour changes, jumps, trims and time against the half in paint order, on a row of badges drawn badge by badge too, as Auto Grouping draws them (M13.3). Whether any shape covers one drawn over it, which the order must never let happen, and whether each line sewn after the fill it borders covers the fill’s edge (M13.3). Lines traced as areas, 0.3, 0.6 and 0.9 mm wide, sewn along their middles (M13.4): whether each reaches as far as the line drawn, whether the 0.6 and 0.9 mm lines’ triple runs show as wide as they are drawn and the 0.3 mm line’s single run doesn’t look thin, and whether the fills beside a line, reaching under it, leave fabric showing along it. Whether a junction’s third branch, which ends at the line it meets, leaves a gap or a knot there (M13.4). Letters and outlines as wide as a satin column, sewn as satin columns between their own edges (M13.5): whether each column’s stitches lie square to its stroke, round a ring and through a bend. Where a column ends under another, 0.4 mm longer, does fabric show, or a ridge? A slanted terminal should end flat along its edge as drawn, and a round one at its farthest point. Whether a crossbar sewn as a column of its own across a stem reads as one stroke. The underlays by width should hold the columns up, and 0.4 mm of pull compensation keep them as wide as drawn. The stitches that lean where strokes meet at sharp angles, as in an M or a W (<code>SC-W0208</code>), and the jumps between a letter’s columns. Shapes broad in places and narrow in others (M13.6). The star’s points and the balloon’s string sew as columns over the fill of the star’s middle and of the balloon. Do their flat ends cover the fill’s edge, or leave fabric or a ridge there? Do each point’s stitches lie square to it from its tip to its cut? Pictures traced in layers (M13.12). Whether the stacked emblem, its layers flattened, sews as the abutting one beside it, and how stiff it sews as drawn on the bottom half, each colour whole under the colours over it. Which sews better between the bars, the navy filled whole under the white disc and the bars or the navy sewn round them as drawn? Whether the gold bars keep their height, 2.1 mm as drawn, and their square ends. Which sews better between the dots, the button’s yellow filled whole under them or sewn round them as drawn, and does the rim’s column cover the yellow’s edge? Whether fabric or a ridge shows round the bars, the disc, the star and the dots. Small discs no wider than a satin column are dots, filled (M13.12), as the gold discs of the row of badges and the button’s dots are. Do they sew round, and does fabric show at their edges? Which jump threads a shape sews down, since the PE800 cuts none</td><td>MC-8</td></tr>
 <tr><td><strong>TS-14</strong> Lettering (M14)</td><td>3 embroidery fonts, a block, a script and a small one, each at the least and the greatest heights it sews at, and a name along an arc</td><td>Whether every glyph reads at its least height, satin coverage at its greatest, and whether the locks of small glyphs hold after the trims</td><td>MC-9</td></tr>
 <tr><td><strong>TS-15</strong> Fonts ported automatically (M15)</td><td>3 fonts from Google Fonts, a sans, a serif and a script, each ported at 3 heights beside the font Ink/Stitch digitized by hand from it, at the same heights. A word in satin columns 0.4, 0.6, 0.8 and 1 mm wide beside the same word in triple runs. <code>stitch testsheet</code> draws it with the fonts of the corpus</td><td>Whether every ported glyph reads at the least height, with its dots, serifs and counters. The jump threads inside letters and between them. Whether the ported letters read as well as the letters digitized by hand beside them, and the narrowest satin column that sews a letter cleanly</td><td>MC-10</td></tr>
-<tr><td><strong>TS-16</strong> An Ink/Stitch file (M8)</td><td>A design written as Ink/Stitch writes a file, which <code>stitch plan</code> reads, each step of M8 drawing its part. Its fill and its satin column start and end at Ink/Stitch’s commands. From M8.4 a red fill 40 × 30 mm sews from its top-right corner to its bottom-left one, and a blue satin column 40 mm long starts in its middle and ends three quarters along. From M8.5 a green fill is cut by its clip path, a circle, to a quarter of a disc, and a black zigzag running stitch by a U-shaped one into 2 pieces. From M8.8 the origin lies off the design’s middle, on the blue column’s top edge 10 mm in from its left end, and a stop after the blue column sends the frame to a stop position 20 mm right of the fill and 10 mm above it. A clone of a fill is turned by 45°, and lines are locked with locks drawn as paths. The file turns the design right on export. It is sewn beside the PES file the differential’s Ink/Stitch writes of it</td><td>Where each element starts and ends, against its commands. Whether the clipped edges sew where the clip path cuts them, and the clone’s rows lie at its turned angle. Do the drawn locks hold when the tail is pulled? Whether the machine puts the origin or the design’s middle at the hoop’s centre, where the frame waits at the stop, and whether the design sews turned right about its origin. Every difference between the 2 sew-outs</td><td>MC-11</td></tr>
+<tr><td><strong>TS-16</strong> An Ink/Stitch file (M8)</td><td>A design written as Ink/Stitch writes a file, which <code>stitch plan</code> reads, each step of M8 drawing its part. Its fill and its satin column start and end at Ink/Stitch’s commands. From M8.4 a red fill 40 × 30 mm sews from its top-right corner to its bottom-left one, and a blue satin column 40 mm long starts in its middle and ends three quarters along. From M8.5 a green fill is cut by its clip path, a circle, to a quarter of a disc, and a black zigzag running stitch by a U-shaped one into 2 pieces. From M8.8 the origin lies off the design’s middle, on the blue column’s top edge 10 mm in from its left end, and a stop after the blue column sends the frame to a stop position 20 mm right of the fill and 10 mm above it. From M8.9 the file turns the design right on export, about its origin, so it sews 100 mm wide and 40 mm tall. A clone of a fill is turned by 45°, and lines are locked with locks drawn as paths. It is sewn beside the PES file the differential’s Ink/Stitch writes of it</td><td>Where each element starts and ends, against its commands. Whether the clipped edges sew where the clip path cuts them, and the clone’s rows lie at its turned angle. Do the drawn locks hold when the tail is pulled? Whether the machine puts the origin or the design’s middle at the hoop’s centre, where the frame waits at the stop, and whether the design sews turned right about its origin. Every difference between the 2 sew-outs</td><td>MC-11</td></tr>
 <tr><td><strong>TS-17A</strong> Cross stitch (M10)</td><td>Cross stitch fills (M10.1, M10.2), drawn before MC-12, each trimmed after, a row to a thread. Squares 24 mm wide of simple crosses on grids of 2 and 3 mm, with 2 and 4 threads, and flipped. A letter drawn as Ink/Stitch’s cross-stitch fonts draw theirs, on a 2 mm grid with 2 threads and its edge cells half covered. Squares of half, upright, dense upright, double and Smyrna crosses, and simple crosses on a grid turned 30°</td><td>Whether every cross’s top diagonal lies the same way, and whether the stitches through the cells’ middles show. Fabric between the crosses at 2 and 4 threads, and the grid that reads best at the letter’s size. Whether the half crosses’ travel stitches show on their edges, and how the layers of the double and Smyrna crosses look. The time the sheet takes</td><td>MC-12</td></tr>
 <tr><td><strong>TS-17B</strong> New fills (M10)</td><td>Tartan, guided and linear gradient fills (M10.6, M10.7, M10.9, M10.10, M10.12), drawn before MC-12, each trimmed after. Tartans 40 mm square, their setts mirrored at the ends or repeated, one with a weft that differs from its warp and one with stripes narrow enough to sew as runs, beside herringbones 3 mm wide. Leaves filled along an S-shaped guide, copied, offset and buffered. Rectangles in gradients of 2 and 3 stops, one of them transparent</td><td>Whether a tartan’s warp and weft read as a weave and its runs lie flat on its fills, and how its herringbone turns. The spacing of the guided rows round the guide’s bends, and where the copied rows crowd. Whether a gradient’s colours blend with no step between its sections, and whether the transparent stop leaves a clean gap. Colour changes, jumps and time</td><td>MC-12</td></tr>
 <tr><td><strong>TS-17C</strong> Ripples and routing (M10)</td><td>Ripple stitches (M10.8, M10.11), drawn before MC-12, along a column of rails and rungs, from an open line towards a target point and from a closed line spiralling in. Ripples along a guide line and closed lines on a satin guide, beside a ripple with a grid. The routing tools (M10.4, M10.13): satin letters as drawn beside the same letters after auto-satin routing, and a network of running stitches as drawn beside it after auto-run routing. 2 satin columns that cross, their underlays first (M10.15)</td><td>Whether the ripples’ lines keep their spacing, and how their joins look. Jumps, trims and time on the routed halves against the halves as drawn, and whether the runs under the satins show. Whether the crossing columns, their underlays sewn first, lie flatter than as drawn</td><td>MC-12</td></tr>

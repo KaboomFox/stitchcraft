@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-9632f69b.js";
+            window.path_to_searchindex_js = "../searchindex-7c6304c1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-0e01f503.js"></script>
@@ -181,7 +181,7 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="data-model"><a class="header" href="#data-model">Data model</a></h1>
-<!-- implements: crates/stitchcraft-core/src/lib.rs, crates/stitchcraft-core/src/units.rs, crates/stitchcraft-core/src/element.rs, crates/stitchcraft-core/src/rect.rs, crates/stitchcraft-core/src/budget.rs, crates/stitchcraft-plan/src/*.rs, crates/stitchcraft-plan/src/palette/**, crates/stitchcraft-plan/src/profiles/**, crates/stitchcraft-engine/src/design.rs -->
+<!-- implements: crates/stitchcraft-core/src/lib.rs, crates/stitchcraft-core/src/units.rs, crates/stitchcraft-core/src/element.rs, crates/stitchcraft-core/src/rect.rs, crates/stitchcraft-core/src/budget.rs, crates/stitchcraft-plan/src/*.rs, crates/stitchcraft-plan/src/palette/**, crates/stitchcraft-plan/src/profiles/**, crates/stitchcraft-engine/src/design.rs, crates/stitchcraft-engine/src/design/turn.rs -->
 <p>The types every crate shares. Code sketches are illustrative (<code>ignore</code>); the crates’ rustdoc is the
 API reference once the types exist. Invariants listed here are checked in code (constructors return
 <code>Result</code>) and by conformance level L0.</p>
@@ -248,6 +248,7 @@ pub struct DesignSettings {          // since M3.8; read from an Ink/Stitch file
     pub origin: Option&lt;Point&gt;,       // where the hoop's centre goes; None: the centre of the stitches
     pub stop_position: Option&lt;Point&gt;,// where the frame moves before each stop; None: it stays
     pub min_satin_stroke_width: Mm,  // 1 mm: a satin column drawn as one path no wider is sewn as a stroke (M4.8)
+    pub rotate_on_export: Turn,      // the plan turned about the hoop's centre as it is written (M8.9); none by default
 }
 
 pub enum Shape {

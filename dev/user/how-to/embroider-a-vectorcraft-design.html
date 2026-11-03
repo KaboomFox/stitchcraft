@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-9632f69b.js";
+            window.path_to_searchindex_js = "../../searchindex-7c6304c1.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-0e01f503.js"></script>
@@ -278,11 +278,14 @@ choose <strong>Object › Plug-ins › StitchCraft Design Settings</strong>, set
 <li><strong>Machine</strong>, the machine and hoop the design is planned for, <code>brother-pe800-5x7</code> by default.</li>
 <li><strong>Shortest jump</strong>, <strong>Shortest stitch</strong> and <strong>Narrowest satin stroke</strong>, in millimetres. Rest the pointer
 on a label for what each does.</li>
+<li><strong>Turn on export</strong>, for a machine that doesn’t turn a design to fit its hoop. In the machine file, 90
+turns the design right about the hoop’s centre and -90 turns it left, as Ink/Stitch’s rotate on export
+does.</li>
 </ul>
 <p>The document saves them. The exporters and <code>stitch export</code> plan the design for the machine it keeps,
 unless the export’s <strong>Machine</strong> option or <code>--profile</code> names another. They use its settings as they use
 an SVG file’s design settings. Whatever is selected, the filter leaves every object as it is.</p>
-<p>VectorCraft opens the dialog at the defaults each time, not at what the document keeps, so set all 4 when
+<p>VectorCraft opens the dialog at the defaults each time, not at what the document keeps, so set all 5 when
 you run it again. A live effect isn’t given what the document keeps. The stitches shown as you work are
 planned for <code>brother-pe800-5x7</code> with the default settings, and a longer shortest stitch shows only in the
 machine file and in <code>stitch export --preview</code>. A setting that StitchCraft can’t read keeps its default,
