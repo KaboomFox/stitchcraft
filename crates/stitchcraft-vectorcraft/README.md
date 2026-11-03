@@ -24,11 +24,11 @@ From M6.5 Ink/Stitch's commands can be written in an object's or a layer's name.
 it out, and `stitch:start` and `stitch:end` mark where the shape grouped with them starts or ends
 (`REQ-VC-009`), which its fills and satin columns do from M8.4 (`REQ-GEN-001`). From M8.8 `stitch:origin`
 and `stitch:stop-position`, anywhere, give the design its origin and stop position (`REQ-ASM-005`). From M8.7
-a clip group's or a clipping layer's first object, its clipping object, cuts what it holds, as VectorCraft
-clips it (`REQ-VC-017`, `src/document/clip.rs`). Each element holds a clip of the area of each clipping object
-around it, shared with the others it cuts, and the engine cuts it to them as it cuts an SVG file's shapes to
-their clip paths (`REQ-GEN-005`). What a clipping object holds that the reader doesn't read, such as text,
-adds nothing to the clip, and is named. From M13.1 strokes keep their cap too. With `--auto`, `read_with` marks an object as an
+the first object of a clip group or a clipping layer, its clipping object, cuts what it holds as VectorCraft
+clips it (`REQ-VC-017`, `src/document/clip.rs`). Each element made inside keeps a clip of the area of each
+clipping object round it, shared with the other elements it cuts. The engine cuts the element to them as it
+cuts an SVG file's shapes to their clip paths (`REQ-GEN-005`). Text in a clipping object, or anything else
+there the reader can't read, is named and left out of the clip. From M13.1 strokes keep their cap too. With `--auto`, `read_with` marks an object as an
 automatic element when neither it nor a group or layer around it has a StitchCraft effect
 (`REQ-AUTO-001`). Of such a line sewn across its width, the reader names the alignment and the width
 profile VectorCraft draws, which its stitches don't follow (`REQ-AUTO-005`). From M13.7 StitchCraft's Auto

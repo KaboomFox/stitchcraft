@@ -107,7 +107,7 @@ impl stitchcraft_engine::design::Shape
 pub fn stitchcraft_engine::design::Shape::path(&self) -> &stitchcraft_engine::design::Path
 pub fn stitchcraft_engine::design::Shape::stroke(stitchcraft_engine::design::Path) -> stitchcraft_engine::design::Shape
 pub struct stitchcraft_engine::design::Clip
-pub stitchcraft_engine::design::Clip::shapes: alloc::vec::Vec<stitchcraft_engine::design::ClipShape>
+pub stitchcraft_engine::design::Clip::shapes: alloc::sync::Arc<[stitchcraft_engine::design::ClipShape]>
 impl stitchcraft_engine::design::Clip
 pub fn stitchcraft_engine::design::Clip::of(stitchcraft_engine::design::Path, stitchcraft_engine::design::FillRule) -> stitchcraft_engine::design::Clip
 pub fn stitchcraft_engine::design::Clip::points(&self) -> impl core::iter::traits::iterator::Iterator<Item = stitchcraft_core::units::Point> + '_

@@ -682,33 +682,35 @@ The path sews as the nearest effects say, and `SC-W0807` names it.
 to its first object, the clipping object. Object › Clipping Mask › Make wraps the objects selected in such a
 group, the topmost first, which must be a path, a compound path or text. It takes that object's paints and
 effects away, and marks a path `"clipping": true` (`clip_make` in `crates/engine`). The Layers panel's
-Make Clipping Mask clips a layer or a group the same way. VectorCraft clips to the clipping object's area,
-whatever its paints, and hidden or not (`Node::clip_shapes` in `crates/doc`, read at 0.18.0):
+Make Clipping Mask clips a layer or a group the same way. VectorCraft clips to the clipping object's area
+whatever its paints, hidden or not (`Node::clip_shapes` in `crates/doc`, read at 0.19.0, and alike from
+0.13):
 
-- a path's by its fill rule, and a compound path's paths together by its own rule, holes and all;
-- a nested clip group's, its own clipping object's;
-- the members that show of another group or of a layer together, but a Shaper group's sources;
-- text's by its glyphs' outlines, an image's or a placed document's by its frame, and a live object's by
-  what it draws. A guide and a symbol add nothing.
+- A path's area is the one its fill rule fills, and a compound path's is its paths' together, by its own
+  rule, holes and all.
+- A nested clip group's is its own clipping object's.
+- Another group's or a layer's is that of its members that show, together, but a Shaper group's sources.
+- Text's is its glyphs' outlines, an image's or a placed document's its frame, and a live object's what it
+  draws. A guide or a symbol doesn't add to it.
 
-One shape keeps its rule, several are united, and none hides what the group holds. The adapter makes the
-clipping object's area into a clip of each element of what the group holds, however deep, as the SVG
-adapter does with a clip path (`Element::clips`). Clip groups inside one another give one clip each, and
-the engine cuts an element to all of them (`REQ-GEN-005`): a fill's area and a stroke's lines, each piece
-sewn on its own. A satin column is sewn whole, as in Ink/Stitch (`SC-W0217`), and an element its clips
-leave nothing of isn't sewn (`SC-W0013`). An automatic shape is cut before it is digitized. The clipping
-object isn't cut to its own clip, as VectorCraft paints its fills inside its own area and its strokes over
-the clip's edge, and the clips round its group cut it.
+One shape keeps its rule, several are united, and a clipping object of none hides the group's contents.
+The adapter makes the clipping object's area into a clip of each element made inside the group, however
+deep, as the SVG adapter does with a clip path (`Element::clips`). Clip groups inside one another give one
+clip each, and the engine cuts an element to all of them (`REQ-GEN-005`). It cuts a fill's area and a
+stroke's lines, each piece sewn on its own. Satin columns are sewn whole, as in Ink/Stitch (`SC-W0217`),
+and an element wholly outside its clips isn't sewn (`SC-W0013`). An automatic shape is cut before it is
+digitized. The clipping object isn't cut to its own clip, as VectorCraft paints its fills inside its own
+area and its strokes over the clip's edge. The clips round its group do cut it.
 
 The adapter doesn't read glyphs, frames or what a live object draws. Text, an image, a placed document, a
 live object or a kind it doesn't know adds nothing to the clip, and `SC-W0807` names it, with the
 VectorCraft command that makes paths of it, such as Type › Create Outlines. A path in the clipping object
-whose geometry can't be used adds nothing either, with `SC-W0808`. A clip left with no shape leaves nothing
-of what it cuts, where VectorCraft shows what lies in the glyphs or the frame.
+whose geometry can't be used doesn't add to the clip either, and `SC-W0808` names it. A clip left with no
+shape cuts away all of what it clips, where VectorCraft shows what lies in the glyphs or the frame.
 
 VectorCraft runs a group's geometry effects on every path inside it, the clipping objects of the clip groups
 it holds among them (`for_each_leaf` in `crates/effects`), and clips to what they return. Where StitchCraft's
-effects reach a clipping object, the preview is cut to the stitches they draw of it, a fill's rows or a
+effects apply to a clipping object, the preview is cut to the stitches they draw of it, a fill's rows or a
 stroke's line. What sews is cut to the clipping object as it is drawn, and `SC-W0807` says so. Its hint is
 to apply the effects to the objects the group clips.
 

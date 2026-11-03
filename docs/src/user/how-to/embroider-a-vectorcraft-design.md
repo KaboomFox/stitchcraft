@@ -56,8 +56,8 @@ own or its group's, still shows its stitches there, and `stitch export` leaves i
 
 Draw the shape over the art, select both, and choose **Object › Clipping Mask › Make**. The art sews only
 where it shows inside the shape, in the machine file and in `stitch export` alike. A fill sews the part of
-its area inside, and a stroke the pieces of its line inside, each on its own. A satin column is sewn
-whole, as Ink/Stitch sews one, and StitchCraft says so (`SC-W0217`). Art wholly outside the shape isn't
+its area inside, and a stroke the pieces of its line inside, each on its own. Satin columns are sewn
+whole, as Ink/Stitch sews them, and StitchCraft says so (`SC-W0217`). Art wholly outside the shape isn't
 sewn (`SC-W0013`). A clipping mask inside another cuts its art to both shapes.
 
 Clip with a path or a compound path. StitchCraft doesn't read the outlines of text, so make paths of text
