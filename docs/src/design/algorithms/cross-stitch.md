@@ -15,7 +15,7 @@ loops. Half crosses sew one diagonal in each cell, in rows.
 24 of the 25 cross-stitch fonts in Ink/Stitch's font library sew simple crosses only, on grids of 1.5 to 3
 mm with 2 or 4 threads. They draw each letter as rectangles of whole cells, grown by 0.1 mm, on a grid
 that starts at each rectangle's corner (`canvas_grid_origin` off). Jersey 15, the 25th, sews its 238
-elements as double crosses of 2 threads, grown so, on the default grid of 3 mm.
+elements as double crosses of 2 threads, grown so and on such a grid, of the default 3 mm cells.
 
 ## Parameters
 
@@ -117,9 +117,9 @@ from the middle of its top side to the middle of its bottom side. A dense uprigh
 on the second grid. Each has its middle on a corner of the first grid, and its arms end at the middles of
 the sides of the first grid's cells, where the first grid's arms end too.
 
-A cross joins the run that sews it at its joins. The good ones are the ends of its top bar: a loop from one
-goes in to the middle along the top bar, which covers that stitch later, so nothing of the loop lies on top.
-From a bad one, the loop ends with a stitch from the middle back to it, on top of the bars.
+A cross joins the run that sews it at its joins. Its good joins are the ends of its top bar. A loop from one
+of them goes in to the middle along the top bar, which covers that stitch later. The loop then leaves
+nothing on top. From a bad one, the loop ends with a stitch from the middle back to it, on top of the bars.
 
 ### A loop
 
@@ -129,15 +129,15 @@ even. An odd count sews the even count below it, as in Ink/Stitch, and 1 sews 2,
 sews a stitch from a corner of each cell to its middle for 1, and no cross (`DEV-FILL-027`). With n the count's
 half:
 
-- From an end of the top bar, the loop goes in to the middle along the top bar. It then sews each bar below
-  the top one in turn, n times back and forth from its first end and back to the middle, and ends with the top
-  bar n times back and forth from its far end to the start.
+- From an end of the top bar, the loop goes in to the middle along the top bar. It then sews the bars below
+  the top one from the bottom up, each n times back and forth from its first end and back to the middle, and
+  ends with the top bar n times back and forth from its far end to the start.
 - From an end of the bottom bar, the loop sews that bar back and forth from the start, ending at its far end,
-  and goes to the middle. It sews each bar above in turn as above, and ends with the stitch from the middle to
-  the start.
+  and goes to the middle. It sews the bars above it from the bottom up as above, and ends with the stitch from
+  the middle to the start.
 - From an end of a bar between, a Smyrna cross's `/` diagonal, the loop goes in to the middle along that bar
-  and sews each bar in turn. That bar goes from the middle to its far end and back and forth 1 time fewer,
-  ending there. The loop ends with the stitch from the middle to the start.
+  and sews the bars from the bottom up. That bar goes from the middle to its far end and back and forth 1 time
+  fewer, ending there. The loop ends with the stitch from the middle to the start.
 
 A bar's first end is the one the needle goes to first from the middle. For the `\` diagonal it is the top
 end, or the bottom end in a loop from the bottom left corner. For the `/` diagonal it is the top end, but a
@@ -186,9 +186,9 @@ first part nearest it and each part after nearest where the part before ended (`
 
 ## Half crosses
 
-A half cross sews one diagonal in each cell, `\`, or `/` for `half_cross_flipped`, on the same grid. With
-nothing to hide the needle's way under, its diagonals that run on from cell to cell are one row, and the rows
-are routed as a tatami fill's rows, as Ink/Stitch's half crosses are (read at `d59c9ab`,
+A half cross sews one diagonal in each cell, `\`, or `/` for `half_cross_flipped`, on the same grid. The
+needle's way from cell to cell lies bare. So the diagonals that run on from cell to cell are joined into
+rows, which are routed as a tatami fill's rows, as Ink/Stitch routes its half crosses (read at `d59c9ab`,
 `lib/stitches/cross_stitch_half.py`):
 
 1. **Pieces.** Cells that share a side or a corner are one piece, and each piece is sewn on its own. The
@@ -202,9 +202,9 @@ are routed as a tatami fill's rows, as Ink/Stitch's half crosses are (read at `d
    its top end and a `/` row from its bottom end, the rows in the order of their first cells, row by row
    from the top.
 4. **Route.** The rows are routed as a tatami fill's rows with `underpath` off (`REQ-FILL-TAT-001`), each sewn
-   once. Between them the needle travels along the rings in running stitches of `max_cross_stitch_length_mm`,
-   within 0.2 CSS pixels of the way, as Ink/Stitch's half crosses travel. Those travel stitches lie on the
-   outline of the cells, where nothing covers them.
+   once. Between them the needle is sent along the rings in running stitches of `max_cross_stitch_length_mm`,
+   within 0.2 CSS pixels of the way, as in Ink/Stitch's half crosses. Those stitches lie on the outline of the
+   cells, where nothing covers them.
 5. **Passes.** Each stitch of a row is sewn there and back again until it lies an odd number of times, as
    bean stitch sews it, and the travel lies once. Ink/Stitch takes half of `cross_thread_count` as the bean
    stitch's repeats. So an odd count is the number of times, and an even count sews the odd count above it,
@@ -212,9 +212,9 @@ are routed as a tatami fill's rows, as Ink/Stitch's half crosses are (read at `d
 
 The tatami fill's route differs from Ink/Stitch's where its own ledger entries say (`DEV-FILL-005`,
 `DEV-FILL-006`, `DEV-FILL-011`). Ink/Stitch's grown union rounds each outer corner of the outline by its
-hundred-thousandth of a pixel, so its travel cuts such a corner by up to its tolerance, 0.05 mm. Were a hole's
-rows to reach no other ring, Ink/Stitch would leave out the rows the walk can't reach, where StitchCraft's
-travel reaches them along the rows.
+hundred-thousandth of a pixel. Its way between rows then cuts such a corner by up to its tolerance, 0.05 mm.
+Where no row joins a hole's ring to another ring, Ink/Stitch would leave out the rows its walk finds no way
+to, where StitchCraft's needle goes to them along the rows.
 
 ## Stitches
 
@@ -228,7 +228,7 @@ shortest stitches are shorter than the shortest stitch, `SC-W0321` says so:
 - a simple cross's run from a corner to its middle, half its diagonal,
 - an upright, dense upright, double or Smyrna cross's run from the middle of a side to its middle, half
   the cell's shorter side,
-- a half cross's travel along a side of a cell.
+- a half cross's stitches between rows, each a side of a cell.
 
 A cross stitch fill sews its crosses alone, without the underlay, pull compensation or random stitch lengths
 of a tatami fill, as in Ink/Stitch. A preview too costly to sew shows each cross's bars, or each half cross's
@@ -247,8 +247,8 @@ agree. These differ:
 - **Cells covered exactly half.** On a file whose `viewBox` is in millimetres, Ink/Stitch writes the drawing's
   scale with 6 decimals, 3.779528 pixels to the millimetre, against 3.7795275… for its grid. Its drawing is
   then a ten-millionth larger than its grid, about the page's origin. A cell that a part covers exactly half
-  then falls short of the slack on the part's left and top sides some 13 mm or more from the origin, and is
-  over it on the right and bottom sides. So a dense upright square drawn on the grid loses the second grid's
+  is then covered less than the slack allows on the part's left and top sides, some 13 mm or more from the
+  origin, and more on the right and bottom sides. So a dense upright square drawn on the grid loses the second grid's
   crosses along its left and top sides in Ink/Stitch, and keeps those along its right and bottom sides.
   StitchCraft reads the drawing exactly, and sews all 4 sides. Grown by 0.1 mm, as Ink/Stitch's fonts grow
   their letters, the cells along every side are covered more than half, and both sew them.

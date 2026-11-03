@@ -632,7 +632,7 @@ kind = "stitch"
 fixture = "docs/fixtures/heart.svg"
 style = "realistic"
 scale = 10.0
-alt = "A red heart 32 mm wide in half crosses on a 3 mm grid, one diagonal in each cell sewn 3 times, and the needle's travel along the stepped outline between the rows"
+alt = "A red heart 32 mm wide in half crosses on a 3 mm grid, one diagonal in each cell sewn 3 times, and the needle's way between the rows on the stepped outline"
 panels = [
   { caption = "Half cross", params = { fill_method = "cross_stitch", cross_stitch_method = "half_cross", cross_thread_count = "3" } },
   { caption = "Flipped", params = { fill_method = "cross_stitch", cross_stitch_method = "half_cross_flipped", cross_thread_count = "3" } },
@@ -644,7 +644,7 @@ kind = "stitch"
 fixture = "docs/fixtures/heart.svg"
 style = "realistic"
 scale = 10.0
-alt = "A red heart 32 mm wide in cross stitch on a 3 mm grid with 4 threads, its grid turned, and its crosses and stepped edges turned with it"
+alt = "A red heart 32 mm wide in cross stitch on a 3 mm grid with 4 threads, its crosses and stepped edges turned with the grid"
 panels = [
   { caption = "0°", params = { fill_method = "cross_stitch" } },
   { caption = "30°", params = { fill_method = "cross_stitch", cross_rotation = "30" } },
