@@ -251,15 +251,19 @@ fn sew_all(root: &Path, inkstitch: &Inkstitch, fonts: &[Font], jobs: &[Job], exc
             at += of_file.len();
             let font = fonts.iter().find(|font| font.name == first.font);
             let text = font.map_or(Err(format!("no font {}", first.font)), |font| util::read(&font.dir.join(&first.file)));
-            let designs = text.and_then(|text| glyphs::designs(&text, &|index| of_file.iter().any(|job| job.index == index)));
-            for job in of_file {
-                let design = match &designs {
-                    Ok(designs) => designs.get(job.index).and_then(|glyph| glyph.design.clone()).ok_or(format!("no glyph {} in the file", job.index)),
-                    Err(e) => Err(e.clone()),
-                };
-                if send.send((job.clone(), design)).is_err() {
-                    break;
-                }
+            // Each design goes to a worker as soon as it is made, and waits while every worker is busy.
+            let mut sent = BTreeSet::new();
+            let made = text.and_then(|text| {
+                glyphs::each_design(&text, &|index| of_file.iter().any(|job| job.index == index), &mut |index, glyph| {
+                    if let (Some(job), Some(design)) = (of_file.iter().find(|job| job.index == index), glyph.design) {
+                        sent.insert(index);
+                        let _ = send.send(((*job).clone(), Ok(design)));
+                    }
+                })
+            });
+            for job in of_file.into_iter().filter(|job| !sent.contains(&job.index)) {
+                let why = made.clone().err().unwrap_or(format!("no glyph {} in the file", job.index));
+                let _ = send.send((job.clone(), Err(why)));
             }
         }
         drop(send);

@@ -47,16 +47,23 @@ pub struct Glyph {
 /// The glyphs of the glyph file `text`, in the order of the file, each with its design when `wanted` says so
 /// of its place in that order.
 pub fn designs(text: &str, wanted: &dyn Fn(usize) -> bool) -> Result<Vec<Glyph>, String> {
+    let mut glyphs = Vec::new();
+    each_design(text, wanted, &mut |_, glyph| glyphs.push(glyph))?;
+    Ok(glyphs)
+}
+
+/// Gives `each` the glyphs of the glyph file `text`, with their places in the order of the file, each with its
+/// design when `wanted` says so of its place, one after another, so that a large file's designs are made as
+/// they are taken and never held all at once.
+pub fn each_design(text: &str, wanted: &dyn Fn(usize) -> bool, each: &mut dyn FnMut(usize, Glyph)) -> Result<(), String> {
     let options = roxmltree::ParsingOptions { allow_dtd: true, nodes_limit: NODES, ..roxmltree::ParsingOptions::default() };
     let document = roxmltree::Document::parse_with_options(text, options).map_err(|e| format!("the glyph file doesn't read: {e}"))?;
     let groups = document.descendants().filter(|node| node.has_tag_name((SVG, "g")) && name(node).is_some());
-    groups
-        .enumerate()
-        .map(|(index, group)| {
-            let design = wanted(index).then(|| design(text, group));
-            Ok(Glyph { name: name(&group).unwrap_or_default().to_string(), design })
-        })
-        .collect()
+    for (index, group) in groups.enumerate() {
+        let design = wanted(index).then(|| design(text, group));
+        each(index, Glyph { name: name(&group).unwrap_or_default().to_string(), design });
+    }
+    Ok(())
 }
 
 /// The glyphs of the glyph file `text`, by name, in the order of the file.
