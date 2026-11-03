@@ -5,6 +5,22 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M10.14, a spike: per-layer ordering will be a setting of each element, and ADR-0018 records why.
+  Consecutive elements that set `underlays_first` and sew in one thread will form a run, which sews all
+  its underlays before its top stitches. Where 2 satin columns cross, both underlays then lie under both
+  tops, and MC-12 will sew TS-17C's pair both ways to compare them.
+  - The setting is a toggle among the settings every stitch type shares, StitchCraft's own and off by
+    default. Its reference entry and its row in each stitch family's dialog in VectorCraft come from the
+    registry, and a group's effect gives it to every path in the group.
+  - SVG files keep it as `inkstitch:underlays_first` on each shape. Ink/Stitch, read at `d59c9ab`, doesn't
+    read the attribute and sews such a file element by element, as StitchCraft sews it with the setting
+    off. Its sew stack orders the layers of one element, and isn't planned.
+  - A trim, a stop or another thread ends a run, and a run has one thread. The design's colour changes stay
+    as they were, each a stop to rethread on a home machine. An element's underlay and top are generated
+    apart, with neighbours of their own. The needle goes back from a run's last underlay to its first top
+    stitch.
+  - Automatic digitizing and lettering don't set it. The engine pipeline's design describes runs, and
+    M10.15 builds them.
 - M8.13: custom locks drawn as paths (`REQ-LCK-005`, `REQ-LCK-006`). A `lock_custom_start` or
   `lock_custom_end` written as SVG path data sews as Ink/Stitch sews it, where the half stitch was sewn with
   `SC-W0503`. The path is drawn in millimetres and scaled by `lock_*_scale_percent` about its last node but

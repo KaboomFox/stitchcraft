@@ -485,6 +485,8 @@ drawn after it after it. A user sets a stop for a reason, such as placing appliq
 where it was drawn. `SC-I0907` says when the order isn't paint order, with the thread changes of each.
 M10's routing tools don't start from this order. They route satin columns and running stitches drawn by
 hand as Ink/Stitch's tools route them, and write the route into the document ([routing tools](routing.md#order)).
+Each element that automatic digitizing makes sews its underlay just before its own top stitches. The
+rules leave `underlays_first` off ([ADR-0018](adr/0018-underlays-first-is-a-setting-of-each-element.md)).
 
 Shapes are near when their boxes come within twice the shapes' tolerance of each other. An automatic area's
 box is round its region, and a narrow part's line's round the part. Any other shape's box is round its
