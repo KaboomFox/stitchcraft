@@ -22,6 +22,7 @@
 mod cases;
 mod centre_lines;
 mod differential;
+pub mod fonts;
 mod oracle;
 mod report;
 mod routing;
@@ -42,14 +43,31 @@ const INKSTITCH: &str = "conformance/inkstitch-params.toml";
 /// The fixtures, and their index, `README.md`.
 const FIXTURES: &str = "conformance/fixtures";
 
-/// `cargo xtask conformance …`, the Ink/Stitch differential with `differential`.
-pub fn run(check_only: bool, filter: Option<&str>, bless: Option<&str>, differential: bool) -> Result<(), String> {
+/// What a run of the glyph differential sews, from the command line: every glyph, not the sample, and only a
+/// part of them.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Glyphs {
+    /// Every glyph (`--every-glyph`).
+    pub every: bool,
+    /// Only this part (`--shard`).
+    pub shard: Option<fonts::Shard>,
+}
+
+/// `cargo xtask conformance …`, the Ink/Stitch differential with `differential`, which sews the fonts'
+/// glyphs as `glyphs` says.
+pub fn run(check_only: bool, filter: Option<&str>, bless: Option<&str>, differential: bool, glyphs: Glyphs) -> Result<(), String> {
     let filter = filter.map(str::to_ascii_lowercase);
     let root = util::root();
     let mut findings = Findings::default();
     let requirements = cases::load_requirements(&root)?;
     let known = check_requirements(&requirements, &mut findings);
-    let data = cases::load_cases(&root, &mut findings);
+    let mut data = cases::load_cases(&root, &mut findings);
+    for case in &mut data {
+        if let cases::Spec::Fonts { options } = &mut case.spec {
+            options.every = glyphs.every;
+            options.shard = glyphs.shard;
+        }
+    }
     let rust = cases::discover_rust_cases(&root, &mut findings);
 
     let mut case_ids = BTreeSet::new();
@@ -216,7 +234,7 @@ fn unindexed(root: &Path) -> Result<Vec<String>, String> {
 
 /// Whether `case` is one of the Ink/Stitch differential's.
 fn is_differential(case: &cases::DataCase) -> bool {
-    matches!(case.spec, cases::Spec::Inkstitch { .. } | cases::Spec::CentreLines { .. })
+    matches!(case.spec, cases::Spec::Inkstitch { .. } | cases::Spec::CentreLines { .. } | cases::Spec::Fonts { .. })
 }
 
 /// What is wrong with the Ink/Stitch differential's cases: a design that isn't there, a sheet that isn't

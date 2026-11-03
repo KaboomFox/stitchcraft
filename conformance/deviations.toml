@@ -63,8 +63,8 @@ requirements = ["REQ-RUN-003", "REQ-SAT-010", "REQ-SAT-011"]
 [[deviation]]
 id = "DEV-RUN-002"
 area = "strokes/running"
-summary = "Stitches are spread evenly along the path between corners. The path is flattened within a tenth of the tolerance, and where the stitches stray from its points by more than the other nine tenths, the span is spread evenly in more of them when that takes no more stitches than splitting the stray ones, and otherwise the stray ones are split. Ink/Stitch makes each stitch as long as the whole tolerance allows at the points of its path, measured straight, and divides what is left evenly again after each one. A small circle can take one stitch more than Ink/Stitch's: TS-03's circles 6 mm across take 14 and 10 at 0.1 and 0.2 mm."
-reason = "Equal stitches between corners with no short leftover, and the tolerance met where the path needs it. The stitches keep within the tolerance of the drawn path between the flattened points too, where Ink/Stitch's keep within it at its points. A small circle is sewn in even stitches as long as that allows."
+summary = "Stitches are spread evenly along the path between corners. The path is flattened within a tenth of the tolerance, and where the stitches stray from its points by more than the other nine tenths, the span is spread evenly in more of them when that takes no more stitches than splitting the stray ones, and otherwise the stray ones are split. Ink/Stitch makes each stitch as long as the whole tolerance allows at the points of its path, measured straight, and divides what is left evenly again after each one. A small circle can take one stitch more than Ink/Stitch's: TS-03's circles 6 mm across take 14 and 10 at 0.1 and 0.2 mm. A path of many tight curves, as the redwork of some of Ink/Stitch's fonts is, can take a quarter more."
+reason = "Equal stitches between corners with no short leftover, and the tolerance met where the path needs it. The stitches keep within the tolerance of the drawn path between the flattened points too, where Ink/Stitch's keep within it at its points. A small circle is sewn in even stitches as long as that allows. Ink/Stitch at d59c9ab, run as a black box (ADR-0001, decision 6), sews the redwork of Decadent Flowers Monogram's N in 4,705 stitches and StitchCraft in 5,876, most of the extra needle points where the path turns by less than 30°, each program's thread within 0.3 mm of the other's."
 requirements = ["REQ-RUN-001", "REQ-RUN-002", "REQ-SAT-010", "REQ-SAT-011"]
 
 [[deviation]]
@@ -109,7 +109,7 @@ requirements = ["REQ-RUN-009"]
 id = "DEV-FIN-001"
 area = "plan/finalize"
 summary = "StitchCraft fits every stitch to the machine. It leaves out a needle point nearer the one before than its element's shortest stitch, and never nearer than the machine's (0.3 mm on the Brother). It keeps the ends of each run of stitches and its lock points, unless a stitch to one would be too short, and it splits stitches longer than the machine's longest. Ink/Stitch drops stitches no longer than the element's own shortest stitch, else the document's min_stitch_len_mm, 0.1 mm unless the file sets it, and splits nothing. Along an edge square to them, a tatami fill's rows nearer each other than the shortest stitch hand over in a stitch too short. The next row's first needle point is then left out, and a sliver at its start is bare. A bar 5 mm wide at 0.25 mm on the Brother is 97 % covered. Along an edge at 45°, their ends lie 0.35 mm apart, and the handovers stay."
-reason = "The machine profile says what the machine sews well; a stitch outside it hammers one hole, snags, or is refused (docs/src/design/engine-pipeline.md › Finalize)."
+reason = "The machine profile says what the machine sews well; a stitch outside it hammers one hole, snags, or is refused (docs/src/design/engine-pipeline.md › Finalize). Honoka's satin columns split their zigzag underlay into stitches of 0.2 mm (zigzag_underlay_max_stitch_length_mm). Ink/Stitch at d59c9ab, run as a black box (ADR-0001, decision 6), sews its 服 in 3,101 stitches, and StitchCraft in 1,935, leaving out 1,169 needle points (SC-I0504). Without its needle points nearer the one before than 0.3 mm, Ink/Stitch's takes 1,889."
 requirements = ["REQ-FIN-001", "REQ-FILL-TAT-004"]
 params = ["min_stitch_length_mm"]
 
@@ -523,7 +523,7 @@ requirements = ["REQ-SVG-001"]
 id = "DEV-SVG-011"
 area = "svg"
 summary = "A path has the subpaths SVG draws. A move-to with nothing drawn after it is no subpath, and a command that draws after a closepath starts a new subpath where the closed one started. inkex, which Ink/Stitch reads paths with, keeps such a move-to as a subpath of 1 point. It also runs the commands after a closepath on in the closed subpath. Ink/Stitch then counts other subpaths than StitchCraft, and they decide how it sews the path. It tells a satin column's rails from its rungs by them and sews a stroke one subpath at a time. A path of more than 1 is a satin column there however narrow its stroke."
-reason = "The drawing is read as a viewer draws it (REQ-SVG-001), and a point that nothing draws is no part of it. inkex was read in inkex 1.4.1 (inkex/paths/path.py: CubicSuperPath.append_path_command), and Ink/Stitch at d59c9ab (lib/elements/element.py: path; lib/elements/utils/nodes.py; lib/elements/stroke.py: to_stitch_groups)."
+reason = "The drawing is read as a viewer draws it (REQ-SVG-001), and a point that nothing draws is no part of it. inkex was read in inkex 1.4.1 (inkex/paths/path.py: CubicSuperPath.append_path_command), and Ink/Stitch at d59c9ab (lib/elements/element.py: path; lib/elements/utils/nodes.py; lib/elements/stroke.py: to_stitch_groups). Ink/Stitch at d59c9ab, run as a black box (ADR-0001, decision 6), sews a needle point at the move-to that ends a path of Kum Tsoan relief's V, 24 mm above the glyph, which is then 91.4 mm tall, where StitchCraft's is 67.6 mm. Without the move-to it sews the V 67.6 mm tall, and the two programs' threads overlap by 0.984."
 requirements = ["REQ-SVG-001", "REQ-SAT-005", "REQ-SAT-015"]
 
 [[deviation]]
@@ -616,6 +616,20 @@ area = "svg"
 summary = "Each clone applies its own settings and copies its source's commands wherever it is drawn. Ink/Stitch resolves the clones in a clone's source first, each in its own place, and then applies only their angle settings: there a clone sews though its clone setting is off, its trim, stop and shortest stitch and jump don't apply, and the commands it copies stay where it moves them, not where the clone round it moves their shapes. It also copies a command whose connector is a child of the root, not in a group, to its old place. And it gives everything a clone sews the clone's shortest stitch and jump, the design's when the clone sets none, where StitchCraft keeps the source's."
 reason = "A clone sews as its source sews, with the settings it sets itself, and a clone of a clone as a clone of that, moved again (REQ-SVG-012). Ink/Stitch at d59c9ab, run as a black box (ADR-0001, decision 6), sewed an inner clone whose clone setting is off inside another, started a clone of a clone at the start command its inner clone moved, left a command written at the root where its source is, and jumped after a clone of a line whose shortest jump of 20 mm sews the same move on. It resolves clones in lib/elements/clone.py and sets every stitch group of a clone to the clone's shortest stitch and jump in lib/elements/element.py (embroider), where it keeps their trims and stops."
 requirements = ["REQ-SVG-012"]
+
+[[deviation]]
+id = "DEV-SVG-025"
+area = "svg"
+summary = "A root whose viewBox has another shape than its width and height is fitted as its preserveAspectRatio says: by default it is scaled to fit and centred in the page. Ink/Stitch scales it to fit and leaves it at the page's top left corner, whatever the alignment. The drawing then lies elsewhere on the page, and a tatami fill's rows and needle points, laid from the page's corner, lie elsewhere on its shapes."
+reason = "The page is mapped as SVG maps it (REQ-SVG-001), where a viewer shows it, and rows laid from its corner line up across fills side by side (REQ-FILL-TAT-002). Ink/Stitch's mapping was read at d59c9ab (lib/svg/units.py: get_viewbox_transform, a scale without the alignment). Cooper Marif's glyph files fit a viewBox of 300 × 423.3 into a page 112.4 × 112 mm, and its drawing lies 16.5 mm further right in StitchCraft. Ink/Stitch at d59c9ab, run as a black box (ADR-0001, decision 6), sews its 7 alike in that page and in a page of the viewBox's shape, 79.4 × 112 mm. StitchCraft's fill and Ink/Stitch's overlap by 0.573 in the first page, and by 0.999 in the second."
+requirements = ["REQ-SVG-001", "REQ-FILL-TAT-002"]
+
+[[deviation]]
+id = "DEV-SVG-026"
+area = "svg"
+summary = "Ink/Stitch's stitch patterns are not applied. A path whose style starts it with Ink/Stitch's pattern marker is a helper, which SC-W0802 names, and the other shapes in its group sew without it. Ink/Stitch adds a needle point wherever their stitches cross a pattern's stroke, and leaves out their needle points inside a pattern's fill."
+reason = "Stitch patterns are not planned (docs/src/plan/roadmap.md, M8), and the warning names each one, so a design that relies on one is seen to sew otherwise. Ink/Stitch's patterns were read at d59c9ab (lib/patterns.py). 6 of Ink/Stitch's fonts use them. Ink/Stitch at d59c9ab, run as a black box (ADR-0001, decision 6), sews Initials XL's B in 12,158 stitches, and in 9,804 without its 6 patterns. StitchCraft sews it in 9,805."
+requirements = ["REQ-SVG-003"]
 
 [[deviation]]
 id = "DEV-ROUTE-001"
