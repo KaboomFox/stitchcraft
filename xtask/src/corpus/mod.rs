@@ -325,7 +325,11 @@ mod tests {
                 ("c_font".to_string(), Licence::Other, strings(&["ltr.svg"])),
             ]
         );
-        assert!(fonts(&cache).unwrap_err().ends_with("src: No such file or directory (os error 2)"));
+        // A folder without the corpus says so with what the system says of the missing folder, in its own
+        // words on each system.
+        let missing = cache.join("src");
+        let said = std::fs::read_dir(&missing).unwrap_err();
+        assert_eq!(fonts(&cache).unwrap_err(), format!("{}: {said}", missing.display()));
     }
 
     #[test]
