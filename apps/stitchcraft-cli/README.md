@@ -15,7 +15,7 @@ traces a picture (ADR-0015).
 | `stitch explain SC-W0702` | M1.8 | A diagnostic's explanation, from the registry |
 | `stitch bug-report design.svg --says "…"` | M3.10 | Writes a bug-report bundle, which keeps the design, an SVG file or the part of a VectorCraft document its reader reads, with the profile, format and version it was planned with, whether it was digitized automatically (`--auto`), and digests of what came of them (`--replay BUNDLE` plans it again and compares) |
 
-Coming with their milestones: `import-inkstitch` (M8), `conformance run`.
+Coming with their milestones: `conformance run`, and after 1.0 `import-inkstitch` (M8.12).
 
 | Exit status | Meaning |
 |---|---|
