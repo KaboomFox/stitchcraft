@@ -25,7 +25,7 @@ pub trait Generator {
         &self,
         shape: &Self::Shape,
         params: &Self::Params,
-        hints: &Hints,           // entry/exit/target points
+        hints: &Hints,           // start, end and target positions
         rng: &mut SplitMix64,
         budget: &mut Budget,
     ) -> Result<GroupStitches, GenerateError>;   // GenerateError -> coded diagnostic
@@ -47,8 +47,9 @@ automatically by `stitchcraft-testkit` for every generator registered:
 2. **Finite and bounded:** all coordinates finite and within the shape's bounds expanded by the
    compensation parameters plus 0.05 mm.
 3. **Length limits:** top stitches within the generator's maximum length; no zero-length stitches.
-4. **Hints honoured:** with start/end hints the first/last stitch lies within 0.1 mm of the nearest
-   point of the shape to the hint (`REQ-GEN-001`).
+4. **Positions honoured:** a fill starts and ends nearest its start and end positions whatever its
+   neighbours, and a satin column at them. A contour fill uses its start position alone, and a stroke
+   sews as drawn (`REQ-GEN-001`, `crates/stitchcraft-engine/tests/positions.rs`).
 5. **Degenerate inputs:** the shared degenerate corpus (zero-area, hair-thin, self-touching, collinear,
    duplicate points, 1-point paths, huge coordinates, 10⁶-vertex paths) never fails and never exceeds the
    budget without `SC-E0004`. `tests/degenerate.rs` sews it, and random paths that tend to degenerate, by

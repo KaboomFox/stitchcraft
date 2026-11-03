@@ -290,7 +290,8 @@ fn req_vc_011_a_machine_file_exported_is_checked_against_what_stitch_export_writ
     let patch = patch();
     let (file, said) = stitch_export(&patch, FormatId::Dst, "patch").unwrap();
     let warnings = stitchcraft_vc_plugin::export::warnings(&said);
-    assert_eq!(warnings.len(), 3, "{warnings:?}");
+    // The placement line left out by its name, and the paint of the group of dots: the start marker is used.
+    assert_eq!(warnings.len(), 2, "{warnings:?}");
     assert_eq!(written_as_exported(&patch, "patch.dst", &file, &warnings), Ok(()));
     // Another name, another file: the design name is the file's.
     let renamed = written_as_exported(&patch, "poster.dst", &file, &warnings).unwrap_err();

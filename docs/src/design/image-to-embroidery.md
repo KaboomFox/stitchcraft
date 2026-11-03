@@ -76,7 +76,10 @@ its settings say, as far as its reader reads them. So a picture can be digitized
 its shapes then set by hand. A shape's fill gives its
 area and its stroke gives its line, each with its thread, width, join and cap, as for any element. A trim
 or a stop that an Ink/Stitch command asks for is not a setting of the stitches, and an automatic element
-keeps it. An element sewn as several elements keeps it for the last of them.
+keeps it. An element sewn as several elements keeps it for the last of them. Start and end positions,
+from Ink/Stitch's commands or VectorCraft's markers, and a target point, are not kept: automatic digitizing
+places where its parts start and end, and the readers say the commands and markers aren't used
+(`REQ-GEN-001`). The elements it makes have none.
 
 The readers mark the element (`Element::automatic`), and they read the switch from `Reading`, which every
 host takes. Before anything is generated, the engine turns each automatic element into ordinary elements

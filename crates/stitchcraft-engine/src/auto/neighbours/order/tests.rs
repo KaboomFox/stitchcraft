@@ -29,7 +29,15 @@ fn through(points: &[(f64, f64)], closed: bool) -> Path {
 
 /// An element `id` of `shape`, sewn with `thread`, without settings.
 fn element(id: &str, shape: Shape, thread: &Thread) -> Element {
-    Element { id: ElementId::new(id).unwrap(), name: None, shape, thread: thread.clone(), params: ParamSet::default(), automatic: false }
+    Element {
+        id: ElementId::new(id).unwrap(),
+        name: None,
+        shape,
+        thread: thread.clone(),
+        params: ParamSet::default(),
+        automatic: false,
+        hints: Default::default(),
+    }
 }
 
 /// An automatic area `id`, the square `size` wide from `(x, y)`, sewn with `thread`, a shape of its own.

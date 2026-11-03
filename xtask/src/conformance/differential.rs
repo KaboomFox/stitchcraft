@@ -20,6 +20,8 @@
 //! **A test sheet** drawn as a design is a case's subject too (`sheet`). Both programs sew the SVG file of
 //! the elements StitchCraft sews the sheet with, automatic digitizing's for its automatic shapes, written
 //! with their parameters (`stitchcraft_testkit::inkstitch`) to [`WRITTEN`], where a reviewer can open it.
+//! Ink/Stitch's PES file of it is kept beside it ([`kept`]), which a machine checkpoint sews beside
+//! StitchCraft's: MC-11 sews TS-16 so.
 //! Ink/Stitch then sews the stitch types StitchCraft chose, with StitchCraft's settings, so the stitches
 //! StitchCraft makes of its own choices are checked against Ink/Stitch's (`REQ-AUTO-021`), and StitchCraft
 //! reads the same file as Ink/Stitch does (`REQ-SVG-009`): what its SVG reader keeps of a sheet is what
@@ -236,7 +238,7 @@ pub fn run(root: &Path, subject: &Subject, excused: &BTreeMap<String, String>, o
             (inkstitch.pes(root, &path), sewn(&path, design))
         }
         Subject::Sheet(id) => match sheet(root, id) {
-            Ok(path) => (inkstitch.pes(root, &path), sewn(&path, id)),
+            Ok(path) => (inkstitch.pes(root, &path).and_then(|bytes| kept(&path, bytes)), sewn(&path, id)),
             Err(e) => return outcome.failures.push(e),
         },
         // `load_cases` draws letters for centre-lines cases alone.
@@ -372,6 +374,14 @@ fn encoded(plan: &StitchPlan, name: &str) -> Result<Vec<u8>, String> {
     stitchcraft_formats::encode(plan, FormatId::PesV1, name).map(|encoded| encoded.bytes).map_err(|e| format!("{name}: {e}"))
 }
 
+/// Ink/Stitch's PES file `bytes` of the sheet's SVG file at `svg`, kept beside it with the extension
+/// `inkstitch.pes` (`ts-16.inkstitch.pes`), and given back.
+fn kept(svg: &Path, bytes: Vec<u8>) -> Result<Vec<u8>, String> {
+    let path = svg.with_extension("inkstitch.pes");
+    std::fs::write(&path, &bytes).map_err(|e| format!("{}: {e}", util::rel(&path)))?;
+    Ok(bytes)
+}
+
 /// The test sheet `id` as both programs are given it: the SVG file, written to [`WRITTEN`], of the elements
 /// StitchCraft sews the sheet with, automatic digitizing's for its automatic shapes, with their parameters,
 /// which StitchCraft's SVG reader reads as they were written (`REQ-SVG-009`).
@@ -435,6 +445,18 @@ mod tests {
 
     fn p(x: f64, y: f64) -> Point {
         Point::new(x, y).unwrap()
+    }
+
+    #[test]
+    fn ink_stitch_s_machine_file_of_a_sheet_is_kept_beside_its_svg_file() {
+        let dir = util::root().join("target/xtask-tests/differential");
+        std::fs::create_dir_all(&dir).unwrap();
+        let svg = dir.join("ts-16.svg");
+        assert_eq!(kept(&svg, b"#PES0001".to_vec()).unwrap(), b"#PES0001");
+        assert_eq!(std::fs::read(dir.join("ts-16.inkstitch.pes")).unwrap(), b"#PES0001");
+        // A folder that isn't there is said.
+        let nowhere = dir.join("missing/ts-16.svg");
+        assert!(kept(&nowhere, Vec::new()).unwrap_err().contains("ts-16.inkstitch.pes"));
     }
 
     #[test]

@@ -2,7 +2,7 @@
 
 Layer **L3**. Reads SVG documents into the engine's `Design`: `stitchcraft_svg::read(bytes, budget)`
 returns the design and warnings about what was left out or simplified. Ink/Stitch's remaining commands,
-clip paths and clones follow in M8 (M8.4 to M8.10).
+clip paths and clones follow in M8 (M8.5 to M8.10).
 
 **Status:** v1 (M3.3) reads paths and the basic shapes, groups and `<switch>`, transforms, the root's
 size and viewBox (so positions come out in millimetres), fill and stroke colours with `currentColor`, and
@@ -19,7 +19,10 @@ Ink/Stitch's own objects are not stitched (`src/inkstitch.rs`, `REQ-SVG-003`):
 
 Its trim and stop commands set `trim_after` and `stop_after`, under today's names or those from before
 its file version 3. Its ignore commands and `ignore_object` setting leave objects and layers out and list
-them (`SC-I0805`, `REQ-ASM-004`).
+them (`SC-I0805`, `REQ-ASM-004`). Since M8.4 its start, end and target commands give the elements of the
+shape they are tied to their hints, at the symbol's place (`REQ-GEN-001`, `REQ-FILL-CIR-008`); the first
+connector in the file counts, and a command whose place doesn't read is named and left out
+(`SC-W0802`).
 
 Since M8.1 each `inkstitch:*` setting of a shape is a parameter of the elements it makes, by its own name
 (`REQ-SVG-009`): an Ink/Stitch file sews with its stitch types, spacings, underlays and locks. The
@@ -29,9 +32,10 @@ change nothing in Ink/Stitch either. `stroke_first` sews a shape's stroke before
 A file an older Ink/Stitch saved is read as Ink/Stitch updates it (`src/version.rs`, `REQ-SVG-007`).
 Before file version 4, for one, a fill's stitches were 3 mm long, and a shape of such a file gets that
 length as a parameter. Since M8.3 the reader makes the updates of the shapes' settings too. In a file
-before version 3, a zigzag stroke's pull compensation is halved for each side and a satin column starts
-and ends where it is drawn. In a file before version 4, a fill with `auto_fill` off is a legacy fill. `SC-I0818` counts the shapes each
-update changed. A file with Ink/Stitch's content and no version, which Ink/Stitch asks its user about,
+before version 3, a zigzag stroke's pull compensation is halved for each side, a satin column starts
+and ends where it is drawn, and a start or end command works at its connector's end on its object
+(M8.4). In a file before version 4, a fill with `auto_fill` off is a legacy fill. `SC-I0818` counts the shapes
+and commands each update changed. A file with Ink/Stitch's content and no version, which Ink/Stitch asks its user about,
 and one from a newer Ink/Stitch are read as they are, with `SC-W0802`.
 
 Style sheets set properties as in a viewer (`src/sheet.rs`, `REQ-SVG-006`). Their rules with element,

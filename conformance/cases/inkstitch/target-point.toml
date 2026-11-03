@@ -1,0 +1,9 @@
+# A circular fill round a target point off its middle sews alike in both programs. The measures can't tell
+# the target from the square's centroid: at the default spacing both cover the square, and at a sparse
+# one the overlap of thin rings falls with offsets under PES's 0.1 mm grid, the 2 sew-outs alike to the
+# eye. The engine's own tests check that the spiral turns round the target (REQ-FILL-CIR-008,
+# crates/stitchcraft-engine/tests/positions.rs).
+id = "inkstitch-target-point"
+requirements = ["REQ-SVG-003", "REQ-SVG-008", "REQ-FILL-CIR-008"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/target-point.svg"
