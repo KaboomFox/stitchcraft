@@ -256,8 +256,8 @@ symbols is a command instead ([above](#inkstitch-objects)). The code is in
 `crates/stitchcraft-svg/src/document/clone.rs`, whose module docs say what was read of Ink/Stitch and what
 was run.
 
-- **What it shows.** The source and everything in it, drawn as a viewer draws it: under the use's
-  transform, then its `x` and `y`, then the source's own transform. It inherits the use's style, and the
+- **What it shows.** The source and everything in it, drawn as a viewer draws it. The source is drawn under
+  its own transform, which the use's `x` and `y` move and the use's transform places. It inherits the use's style, and the
   source's own declarations win over it, the rules of a style sheet that select the source among them.
   There `context-fill` and `context-stroke` paint with the use's fill and stroke, as Chrome and Firefox draw
   them. A clip path on the use cuts what it shows. A clone in the source is drawn the same way, inside the
@@ -267,8 +267,8 @@ was run.
   `clone1` shows is `svg:clone1/square:fill`. So 2 clones of one shape sew elements with ids of their own.
 - **Symbols.** A `<symbol>` is drawn in the viewport the clone gives it. Its `viewBox` fits the use's
   `width` and `height`, as its `preserveAspectRatio` says, or the symbol's own size when the use sets none,
-  as SVG 2 has it, or else the page. What lies outside that viewport is sewn too: Inkscape draws it, though
-  a browser cuts it off. Ink/Stitch sews a symbol's content in its own units at the use's place, whatever
+  as SVG 2 has it, or else the page. What lies outside that viewport is sewn too, as Inkscape draws it,
+  though a browser cuts it off. Ink/Stitch sews a symbol's content in its own units at the use's place, whatever
   its size (`DEV-SVG-022`).
 - **Settings.** A clone has 3 settings of its own, which the
   [compatibility contract](inkstitch-compat-contract.md#clones-use) lists. When `clone` is off, the clone
@@ -284,16 +284,17 @@ was run.
   fill turns its angle with it (`REQ-SVG-013`). The direction of the fill's rows is taken through the map
   from where the source is drawn to where the clone draws it, and the angle is rounded to 6 decimal places,
   as Ink/Stitch writes it. A fill at 30° sews at -15° in a clone turned 45° right, and at 150° in one
-  mirrored left to right. A symbol has no place of its own, so its fills turn with the clone's transform
+  mirrored left to right. A symbol has no place of its own. Its fills turn with the clone's transform
   alone, as Ink/Stitch turns them. A clone's own `angle` gives all its fills that angle instead, and
   `flip_angle` reverses the angle they sew at. Clones inside clones turn it each in its own place, the
   innermost first. A shape digitized automatically keeps the angle digitizing chooses, and `SC-W0802` names
   a clone's `angle` or `flip_angle` there.
-- **What is left out.** A use that names nothing, or an element that isn't SVG's, shows nothing, as in a
-  viewer. A clone that shows itself, directly or through other clones, is left out with `SC-W0804`, as a
-  viewer leaves it out, and the rest of the file is sewn. So is a clone inside more than 16 others, with
-  `SC-W0802`, which bounds how deep the reader goes. What a clone shows is charged to the budget each time
-  it is shown, so a small file of clones of clones that would draw a billion shapes is refused.
+- **What is left out.** A use doesn't draw anything when its link leads to no element, or to one that
+  isn't SVG's, as in a viewer. When a clone shows itself, directly or through other clones, it is left out
+  with `SC-W0804`, as a viewer leaves it out, and the rest of the file is sewn. So is a clone inside more
+  than 16 others, with `SC-W0802`, which bounds how deep the reader goes. The reader charges the budget for
+  what a clone shows each time it shows it. A small file of clones of clones that would draw a billion
+  shapes runs out of it and is refused.
 
 Ink/Stitch fails on a clone that shows itself, and on a use whose `x` or `y` has a unit, such as `10mm`.
 It sews the drawing of a command's symbol whose id ends in a copy's `-2` as a clone, besides applying the
