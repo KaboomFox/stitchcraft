@@ -171,7 +171,9 @@ order stage 0 chose), by `stitchcraft_engine::assemble`.
 - Assembly keeps the order the elements come in, so that embroidery stacking follows the art's stacking.
   That is paint order, unless stage 0 put the automatic elements, or with `--sort-colours` every element,
   in an order chosen for few thread changes, in which a shape still sews after every shape it is drawn
-  over, where they overlap by more than rounding leaves.
+  over, where they overlap by more than rounding leaves. No stage routes elements a host read. M10's
+  routing tools write their route into the document, whose paint order is then the route's
+  ([routing tools](routing.md)).
 - A thread change starts a new colour block (`REQ-ASM-001`). Threads are compared by colour, as
   Ink/Stitch compares them: two names for one colour are one thread, and the block keeps the first.
 
