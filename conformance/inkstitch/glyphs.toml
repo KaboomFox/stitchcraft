@@ -24,6 +24,13 @@ measures = ["stitches"]
 deviation = "DEV-FIN-001"
 codes = ["SC-I0703"]
 
+# Random satin widths and spacing, drawn from StitchCraft's own generator. Magnolia bicolor's !, its random
+# widths set to 0 in both programs, overlaps by 0.991.
+[[excuse]]
+measures = ["overlap"]
+deviation = "DEV-SAT-002"
+settings = ["random_width_increase_percent", "random_width_decrease_percent", "random_zigzag_spacing_percent", "random_split_jitter_percent"]
+
 # A setting StitchCraft clamps into its range (SC-W0102) where Ink/Stitch sews it as it is: a satin
 # column's random width decrease below 0, which widens it there, in Magnolia bicolor.
 [[excuse]]
@@ -31,12 +38,6 @@ measures = ["size", "overlap"]
 deviation = "DEV-PRM-002"
 codes = ["SC-W0102"]
 saying = "random_width_decrease_percent"
-
-# Random satin widths and spacing, drawn from StitchCraft's own generator.
-[[excuse]]
-measures = ["overlap"]
-deviation = "DEV-SAT-002"
-settings = ["random_width_increase_percent", "random_width_decrease_percent", "random_zigzag_spacing_percent", "random_split_jitter_percent"]
 
 # StitchCraft's meander tiles are its own.
 [[excuse]]
@@ -58,10 +59,19 @@ deviation = "DEV-SVG-026"
 codes = ["SC-W0802"]
 saying = "stitch pattern"
 
-# Running stitches place their needle points otherwise along the same lines (and corners, DEV-RUN-001):
-# checked by each program's thread lying within 0.3 mm of the other's.
+# Running stitches place their needle points otherwise along the same lines, more of them on tight curves
+# (and corners, DEV-RUN-001): checked by each program's thread lying within 0.3 mm of the other's.
 [[excuse]]
 measures = ["stitches", "overlap"]
 deviation = "DEV-RUN-002"
 only_types = ["running_stitch"]
+within_mm = 0.3
+
+# Decadent Flowers Monogram's glyphs are a fill under a redwork running stitch. Sewn apart, the fill of its N
+# agrees by every measure, and its redwork takes 5,876 stitches against 4,705, within 0.3 mm of each other.
+[[excuse]]
+measures = ["stitches"]
+deviation = "DEV-RUN-002"
+types = ["running_stitch"]
+fonts = ["decadent_flowers_monogram"]
 within_mm = 0.3
