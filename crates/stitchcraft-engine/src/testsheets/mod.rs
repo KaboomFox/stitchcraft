@@ -455,7 +455,7 @@ pub static SHEETS: &[TestSheet] = &[
     },
     TestSheet {
         id: "TS-16",
-        title: "An Ink/Stitch file: start and end commands, clip paths, origin, stop position, turn and a clone",
+        title: "An Ink/Stitch file: start and end commands, clip paths, origin, stop position, turn, a clone and drawn locks",
         checks: &[
             "Sew it beside Ink/Stitch's machine file of the same sheet, which the differential keeps (`target/conformance/differential/ts-16.inkstitch.pes`). Each element should start and end in the same place in both.",
             "The red fill, 40 by 30 mm, starts at its top-right corner, where its start command is, and ends at its bottom-left corner, at its end command.",
@@ -465,7 +465,8 @@ pub static SHEETS: &[TestSheet] = &[
             "The design's origin, on the blue column's top edge 10 mm in from its left end, goes to the hoop's centre, where the needle waits before it sews. Does the machine put the design there, or its middle?",
             "The machine stops after the blue column. Before it stops, the frame moves to the stop position, 20 mm right of the red fill's top-right corner and 10 mm above it. Does the frame wait there, and does the needle come back for the green fill?",
             "The file turns the sheet right about its origin, as Ink/Stitch's rotate on export does: its first 4 shapes sew 100 mm wide and 40 mm tall, the red fill at the right and the zigzag at the left. Does the machine sew it so, or turn it back?",
-            "Last, in red again, the red fill's clone sews below the fill, turned 45° right. Do its rows run along its long sides, as the fill's run along its own? It starts at its corner turned from the fill's top-right one and ends at the one turned from the fill's bottom-left.",
+            "In red again, the red fill's clone sews below the fill, turned 45° right. Do its rows run along its long sides, as the fill's run along its own? It starts at its corner turned from the fill's top-right one and ends at the one turned from the fill's bottom-left.",
+            "Last, in black after a colour change, 2 lines 40 mm long sew above the rest, each locked at both ends with a lock drawn as a path and trimmed after. The lower one, sewn from the right, starts with a zigzag across its first 1.6 mm and ends with a triangle over its last 1.4 mm, sewn backwards. The upper one, sewn from the left at 150 %, starts with a triangle along its first 1.8 mm and ends with one over its last 1.8 mm. Snip the thread between them, then pull each tail gently: does each lock hold? Does each look as it does in Ink/Stitch's sew-out?",
             "Any difference between the 2 sew-outs, and where.",
         ],
         profile: REFERENCE,
@@ -591,8 +592,9 @@ mod tests {
         // TS-16's shapes, 40 × 100 mm as drawn, and the frame's move to its stop position, 20 mm right of them and
         // 10 mm above, round its origin, which lies 10 mm from their left side and 40 mm from their top, all
         // turned right. Its clone of the red fill reaches 35 / √2 mm from its middle, 62.5 mm right of the
-        // origin, so 87.25 mm below it once turned.
-        assert_eq!(about("TS-16"), [110.0, 97.248737342, -5.0, 38.624368671]);
+        // origin, so 87.25 mm below it once turned. Its lines with drawn locks lie 20 and 30 mm left of the
+        // origin, so above it once turned, their locks inside the 30 mm.
+        assert_eq!(about("TS-16"), [110.0, 117.248737342, -5.0, 28.624368671]);
         // Each TS-10 frame is its hoop's whole field, as its title and checks say, and fits no smaller hoop.
         let hoops = [("ts-10a", "4 × 4 in", &BROTHER_PE800_4X4), ("TS-10B", "5 × 7 in", REFERENCE), ("TS-10C", "small", &BROTHER_PE800_SMALL)];
         for (id, hoop, profile) in hoops {
@@ -688,6 +690,42 @@ mod tests {
         // No other sheet's file draws a clone, and a sheet drawn stitch by stitch has no file.
         assert!(SHEETS.iter().filter(|sheet| sheet.id != "TS-16").all(|sheet| sheet.clones().is_none_or(|clones| clones.unwrap().is_empty())));
         assert!(find("TS-01").unwrap().clones().is_none());
+    }
+
+    #[test]
+    fn ts16_s_lines_are_locked_with_locks_drawn_as_paths() {
+        // The lock stitches each line sews, in order: its start lock's and its end lock's.
+        let locked = |name: &str| {
+            let plan = find("TS-16").unwrap().plan().unwrap();
+            let element = plan.elements.iter().position(|e| e.as_str() == format!("ts16:{name}")).unwrap();
+            let lock = |s: &&stitchcraft_plan::Stitch| {
+                s.kind == StitchKind::Normal && s.origin.role == Role::Lock && s.origin.element.map(|e| e.index()) == Some(element)
+            };
+            plan.stitches().filter(lock).map(|s| s.at).collect::<Vec<_>>()
+        };
+        let [[(ax, ay), (bx, by)], [(cx, cy), (dx, dy)]] = ts16::LOCKED_LINES;
+        // The first runs down as drawn: its start lock lies along it, a quarter turn on to the left, and its
+        // end lock back up it, sewn backwards from its last point.
+        let (start, end) = (|x: f64, y: f64| ts16_planned(ax - y, ay + x), |x: f64, y: f64| ts16_planned(bx + y, by - x));
+        let zigzag = [start(0.0, 0.0), start(0.4, 0.4), start(0.8, -0.4), start(1.2, 0.4), start(1.6, -0.4)];
+        let triangle = [end(0.7, 0.5), end(1.4, 0.0), end(0.0, 0.0)];
+        let first = locked("locked-1");
+        assert_eq!(first.len(), 8, "{first:?}");
+        assert!(first.iter().zip(zigzag.iter().chain(&triangle)).all(|(a, b)| a.distance(*b) < 1e-9), "{first:?}");
+        // The second runs up, at 150 %.
+        let (start, end) = (|x: f64, y: f64| ts16_planned(cx + 1.5 * y, cy - 1.5 * x), |x: f64, y: f64| ts16_planned(dx - 1.5 * y, dy + 1.5 * x));
+        let want = [start(0.0, 0.0), start(1.2, 0.0), start(1.2, 0.4), end(0.6, -0.4), end(1.2, 0.0), end(0.0, 0.0)];
+        let second = locked("locked-2");
+        assert_eq!(second.len(), 6, "{second:?}");
+        assert!(second.iter().zip(&want).all(|(a, b)| a.distance(*b) < 1e-9), "{second:?}");
+        // In black, after the clone, each trimmed after.
+        assert_eq!(shape("TS-16").len(), 6);
+        let params =
+            |name: &str| find("TS-16").unwrap().design().unwrap().unwrap().elements().iter().find(|e| e.id.as_str() == name).unwrap().params.clone();
+        assert_eq!(
+            (params("ts16:locked-2").get("lock_custom_end"), params("ts16:locked-1").get("trim_after")),
+            (Some(ts16::DRAWN_LOCKS[1].1), Some("true"))
+        );
     }
 
     #[test]
