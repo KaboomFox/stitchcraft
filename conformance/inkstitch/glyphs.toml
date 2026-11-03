@@ -27,6 +27,15 @@ measures = ["stitches"]
 deviation = "DEV-FIN-001"
 codes = ["SC-I0703", "SC-I0504"]
 
+# A setting StitchCraft clamps into its range (SC-W0102) where Ink/Stitch sews it as it is: a satin
+# column's random width decrease below 0, which widens it there, in Magnolia bicolor. It comes before the
+# random widths, which Magnolia bicolor's satin columns have too, as the closer cause.
+[[excuse]]
+measures = ["size", "overlap"]
+deviation = "DEV-PRM-002"
+codes = ["SC-W0102"]
+saying = "random_width_decrease_percent"
+
 # Random satin widths and spacing, drawn from StitchCraft's own generator. Magnolia bicolor's !, its random
 # widths set to 0 in both programs, overlaps by 0.991. Cats' b widens one rail by up to 100 %, and the widest
 # point drawn differs: 25.8 mm wide here, 26.8 mm in Ink/Stitch.
@@ -34,14 +43,6 @@ codes = ["SC-I0703", "SC-I0504"]
 measures = ["size", "overlap"]
 deviation = "DEV-SAT-002"
 settings = ["random_width_increase_percent", "random_width_decrease_percent", "random_zigzag_spacing_percent", "random_split_jitter_percent"]
-
-# A setting StitchCraft clamps into its range (SC-W0102) where Ink/Stitch sews it as it is: a satin
-# column's random width decrease below 0, which widens it there, in Magnolia bicolor.
-[[excuse]]
-measures = ["size", "overlap"]
-deviation = "DEV-PRM-002"
-codes = ["SC-W0102"]
-saying = "random_width_decrease_percent"
 
 # StitchCraft's meander tiles are its own.
 [[excuse]]

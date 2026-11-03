@@ -84,8 +84,12 @@ excuse is for the glyphs where its cause is, picked by the diagnostics StitchCra
 [[excuse]]
 measures = ["stitches"]
 deviation = "DEV-FIN-001"
-codes = ["SC-I0703"]
+codes = ["SC-I0703", "SC-I0504"]
 ```
+
+A difference the weekly run finds that no one has explained yet goes in as `[[known]]`, with a `follow_up`
+saying what is known of it in place of the deviation. The case then passes, and the report shows the glyph
+apart, until the difference is explained or reproduced as a bug by a case of its own.
 
 ## Adding a case
 
