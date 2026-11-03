@@ -9,29 +9,37 @@ which copies Ink/Stitch's code ([ADR-0001](../../docs/src/design/adr/0001-licens
   runs Ink/Stitch as a black box on the designs of the `inkstitch` cases (`conformance/cases/inkstitch/`)
   and compares its machine files with StitchCraft's by measures. Its `centre-lines` cases compare the
   lines Ink/Stitch's Fill to Stroke draws for narrow shapes with the lines automatic digitizing sews them
-  along. CI runs it every night, and on a pull request that changes it or automatic digitizing
-  (`.github/workflows/differential.yml`).
+  along. Its `fonts` case sews the glyphs of Ink/Stitch's fonts, each as a design of its own
+  ([below](#inkstitchs-fonts)). CI runs it every night, and on a pull request that changes it or automatic
+  digitizing (`.github/workflows/differential.yml`). Every Sunday it sews every glyph.
 
 ## What is here
 
 | File | What it is |
 |---|---|
 | `pin.toml` | The Ink/Stitch the differential is measured against: its repository and commit, the one the compatibility contract was read at |
+| `fonts.toml` | Ink/Stitch's fonts, the corpus of the glyph differential: their repository, a commit, and the SHA-256 of the archive GitHub makes of it |
+| `glyphs.toml` | The glyph differential's excuses: the measures the deviations ledger explains, and for which glyphs |
 | `requirements.txt` | The Python packages that Ink/Stitch runs with, pinned by version and hash |
 | `stubs/wx/` | A stand-in for wxPython, which Ink/Stitch's extensions import as they load and writing a file never uses |
 
 ## Running the differential by hand
 
 Fetch Ink/Stitch at the pinned commit outside the repository, give it a Python of its own, and point the
-suite at both, as the `inkstitch` action does in CI:
+suite at both, as the `inkstitch` action does in CI. Its `DEBUG.toml` turns off the log Ink/Stitch writes at
+its debug level when it runs from a checkout, which takes 8 of the 10 seconds of each run. Its settings turn
+its stitch-plan cache off. `cargo xtask corpus` fetches the fonts:
 
 ```sh
 commit=$(sed -n 's/^commit = "\(.*\)"$/\1/p' conformance/inkstitch/pin.toml)
 git init -q ../inkstitch-pinned
 git -C ../inkstitch-pinned fetch -q --depth 1 https://github.com/inkstitch/inkstitch "$commit"
 git -C ../inkstitch-pinned checkout -q FETCH_HEAD
+printf '[LOGGING]\ndisable_logging = true\n' > ../inkstitch-pinned/DEBUG.toml
+mkdir -p ~/.config/inkstitch && echo '{"cache_size": 0}' > ~/.config/inkstitch/settings.json
 python3 -m venv target/inkstitch-venv
 target/inkstitch-venv/bin/pip install --no-deps --require-hashes -r conformance/inkstitch/requirements.txt
+cargo xtask corpus
 STITCHCRAFT_INKSTITCH="$PWD/../inkstitch-pinned" STITCHCRAFT_INKSTITCH_PYTHON=target/inkstitch-venv/bin/python \
   cargo xtask conformance --differential
 ```
@@ -43,6 +51,41 @@ machine checkpoint sews beside `stitch testsheet`'s, and each `centre-lines` cas
 of both programs' lines over them, Ink/Stitch's red and StitchCraft's blue. `--filter centre-lines` runs those
 cases alone. The suite refuses a checkout at another commit, since the cases' excuses were written against
 this one.
+
+## Ink/Stitch's fonts
+
+`cargo xtask corpus` fetches the archive of inkstitch/embroidery-fonts at the commit `fonts.toml` pins, checks
+its SHA-256 and unpacks it in a cache outside the repository: the folder `STITCHCRAFT_CORPUS` names, or
+`stitchcraft/corpus` in the user's cache folder. It lists the fonts it takes, those whose licence file is the
+OFL, CC0, CC BY or CC BY-SA, and the others. No font file is ever committed.
+
+The `inkstitch-fonts` case (`conformance/cases/inkstitch/fonts.toml`) cuts each glyph out of its glyph file
+as a design of its own, its group shown and the other glyphs left out, which both programs sew. A run sews
+the case's `sample` of glyphs of each font, or every glyph with `--every-glyph`, and `--shard 2/6` sews the
+second of 6 parts of them:
+
+```sh
+cargo xtask conformance --differential --filter inkstitch-fonts                  # the nightly sample
+cargo xtask conformance --differential --filter inkstitch-fonts --every-glyph    # every glyph, for hours
+```
+
+The report is `target/conformance/fonts.md`, with a row for each font, the excuses with the glyphs each
+excused, the stitch types StitchCraft doesn't sew yet with their glyphs, and each glyph that differs with its
+measures. `target/conformance/fonts.json` has every glyph's verdict. The design of each glyph that doesn't
+agree stays in `target/conformance/fonts/`, by font and file, with Ink/Stitch's PES file of it.
+
+A difference StitchCraft makes on purpose is excused in `glyphs.toml`, by the ledger's entry that explains it,
+for the glyphs where its cause is. An excuse says which glyphs: those StitchCraft says a diagnostic of
+(`codes`, and `saying`, words of the message), whose elements are of a stitch type (`types`) or all of some
+(`only_types`), that set an Ink/Stitch setting (`settings`), or of a font (`fonts`). An excuse whose stitches
+are placed otherwise along the same lines asks that the threads lie that near (`within_mm`):
+
+```toml
+[[excuse]]
+measures = ["stitches"]
+deviation = "DEV-FIN-001"
+codes = ["SC-I0703"]
+```
 
 ## Adding a case
 

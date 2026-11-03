@@ -3,6 +3,11 @@
 # by hash, and named by STITCHCRAFT_INKSTITCH and STITCHCRAFT_INKSTITCH_PYTHON for `cargo xtask conformance
 # --differential`. Ink/Stitch is GPL-3.0 and runs only as a black box (ADR-0001, decision 6), outside the
 # checkout: nothing of it is kept in the repository.
+#
+# Run from a checkout, Ink/Stitch logs everything at its debug level into inkstitch.log there: a run on a
+# glyph of its fonts took 10 seconds so, and 1.6 without. A DEBUG.toml beside inkstitch.py, which Ink/Stitch's
+# .gitignore leaves out for such settings, turns its logging off, and the PES files it writes stay the same
+# byte for byte. Its settings file turns its stitch-plan cache off, so that each run sews its file afresh.
 name: Ink/Stitch oracle
 description: Fetch the pinned Ink/Stitch and point the differential at it.
 runs:
@@ -16,6 +21,10 @@ runs:
         git init -q "$checkout"
         git -C "$checkout" fetch -q --depth 1 "$repository" "$commit"
         git -C "$checkout" checkout -q FETCH_HEAD
+        printf '[LOGGING]\ndisable_logging = true\n' > "$checkout/DEBUG.toml"
+        settings="${XDG_CONFIG_HOME:-$HOME/.config}/inkstitch"
+        mkdir -p "$settings"
+        echo '{"cache_size": 0}' > "$settings/settings.json"
         python3 -m venv "$RUNNER_TEMP/inkstitch-venv"
         "$RUNNER_TEMP/inkstitch-venv/bin/pip" install -q --no-deps --require-hashes -r conformance/inkstitch/requirements.txt
         echo "STITCHCRAFT_INKSTITCH=$checkout" >> "$GITHUB_ENV"
