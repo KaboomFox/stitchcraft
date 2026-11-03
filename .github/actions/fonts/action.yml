@@ -1,0 +1,15 @@
+# Ink/Stitch's fonts, the corpus of the glyph differential (M8.6, conformance/inkstitch/README.md): `cargo
+# xtask corpus` fetches the archive of the commit conformance/inkstitch/fonts.toml pins into the corpus cache,
+# checks its SHA-256 and unpacks it there. The Actions cache keeps the archive from run to run, under the
+# pin's hash, so a run fetches it only when the pin moves, and checks its sum every time.
+name: Ink/Stitch's fonts
+description: Fetch the pinned fonts into the corpus cache and check them.
+runs:
+  using: composite
+  steps:
+    - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ~/.cache/stitchcraft/corpus/*.tar.gz
+        key: inkstitch-fonts-${{ hashFiles('conformance/inkstitch/fonts.toml') }}
+    - shell: bash
+      run: cargo xtask corpus

@@ -4,7 +4,8 @@ Lettering sews text in a font. M14 sets text in embroidery fonts, digitized glyp
 font format. M15 ports an ordinary TrueType or OpenType font automatically. It reads each glyph's outline at
 the height the text is set and works out how the glyph sews ([roadmap](../plan/roadmap.md)). This page
 records the research both milestones rest on, counted and read on 2026-11-02. The sources are listed at the
-end.
+end. Since M8.6, Ink/Stitch's fonts are a corpus of the differential, each glyph sewn in both programs
+([the corpus](#the-corpus)).
 
 ## Ink/Stitch's fonts
 
@@ -66,6 +67,70 @@ whole text, their order kept and without trims, before the trims are added and t
 piece goes to the end of the group its element was in. The key is on when `font.json` leaves it out, and
 at `c7e3a05` every font sets it, Ink/Stitch Small Font and Medium Font on and the other 140 off.
 StitchCraft's lettering routes such a font's text with M10.4's function ([routing tools](routing.md)).
+
+## The corpus
+
+M8.6 makes Ink/Stitch's fonts a corpus of the [differential](conformance.md#l3--inkstitch-differential-nightly).
+`cargo xtask corpus` fetches the archive GitHub makes of `c7e3a05`, the commit
+`conformance/inkstitch/fonts.toml` pins, and checks its SHA-256 before it unpacks it. The fonts stay in a
+cache outside the repository: the folder `STITCHCRAFT_CORPUS` names, or `stitchcraft/corpus` in the user's
+cache folder. No font file is committed. Outside the repository the gates leave them alone, where the
+clean-room check would find the GPL in one font's licence. `cargo clean` keeps them, and every worktree
+shares them.
+
+**The fonts it takes.** A licence file names the font's own licence first, in a sentence such as "This font
+has been adapted for Ink/Stitch and is licensed under the SIL Open Font License". It often names the licence
+of the font it was made from after it, or quotes it. So of the licences a file names, the first is the
+font's. The corpus takes the fonts under the OFL, CC0 or the public domain, CC BY and CC BY-SA, whose
+adaptations may be shared for any use: 131 fonts, with 167 glyph files and 21,179 glyphs. The report names the
+other 11, which are never sewn.
+
+**A glyph as a design.** Ink/Stitch's lettering takes every group labelled `GlyphLayer-`, wherever it lies in
+the file, and so does the differential: of the 21,616 glyphs of the 142 fonts, 3,030 lie inside other groups.
+Each glyph is cut out of its glyph file as a design of its own. Its group is shown, as lettering shows it, and
+every other drawn element is left out, in the groups round it too. The rest of the file stays as it was
+written, its version and definitions with the symbols of Ink/Stitch's commands among them, and so do the
+transforms and styles of the groups round the glyph. Both programs sew that file. StitchCraft plans it for the reference machine with a
+hoop 400 mm a side, since a glyph file is drawn at its font's height and a glyph can be wider than the
+reference hoop.
+
+**The sample.** Every night the differential sews 4 glyphs of each font, 524 in all, and every Sunday all
+21,179, in 6 parts. A font's glyphs are taken in the order of its files, sorted by path, and in each file in
+its order. The sample takes the glyphs at the places 0, n/4, n/2 and 3n/4 of n, rounded down. It spreads over
+each font, from its first glyph, and moves only when the pin does. Run from its checkout, Ink/Stitch logs at
+its debug level, and a glyph took it 10 seconds, against 1.6 with the log turned off. On 2 cores the sample
+then takes 12 minutes, and a twentieth of every glyph 22.
+
+**What differs.** These counts are from runs on 3 November 2026, before M10.1 brought simple crosses. Of
+the sample's 524 glyphs, 357 agree by every measure. 98 are of stitch types StitchCraft doesn't sew yet,
+which the report lists, 66 of them in cross stitch and the rest in tartan fills, ripples and guided
+fills. They join the comparison with M10's steps, the simple crosses with M10.1. The other 69 differ as
+the ledger explains, `conformance/inkstitch/glyphs.toml` naming the glyphs each excuse is for. A glyph
+may differ in more than one way. A twentieth of every glyph, the seventh of 20 parts, holds 1,059 glyphs.
+Of them 699 agree, 238 are listed and 122 differ as the ledger explains. It found the last 3 rows of the
+table, which the sample has none of, and a glyph neither program writes a file of, which agrees: the U of
+Apex simple small, whose satin column neither can sew.
+
+| Difference | Sample | Twentieth | Explained by |
+|---|---|---|---|
+| The threads named by other entries of Brother's palette, both files changing thread at the same blocks | 34 | 29 | `DEV-THREAD-001`, checked |
+| Running stitches placed otherwise, more of them on tight curves, within 0.3 mm of each other | 14 | 28 | `DEV-RUN-002`, checked |
+| Elements whose settings StitchCraft can't read, left out, such as a `repeats` of `0 2` in Neon blinking | 6 | 38 | `DEV-PRM-001` |
+| Stitch patterns, which StitchCraft doesn't apply, in Initials XL and Mai en fleur | 5 | 6 | `DEV-SVG-026` |
+| Random satin widths, and a negative width decrease raised to 0, in Magnolia bicolor and Cats | 4 | 7 | `DEV-SAT-002`, `DEV-PRM-002` |
+| Meander tiles of StitchCraft's own, in Barstitch textured | 4 | 8 | `DEV-FILL-018` |
+| Cooper Marif's fills in a viewBox of another shape than its page, which StitchCraft centres and Ink/Stitch doesn't | 4 | 6 | `DEV-SVG-025` |
+| Satin stitches longer than the machine's 12 mm, split, in Hebrew simple rounded small, whose pull compensation is 10 mm | 2 | 1 | `DEV-FIN-001`, checked |
+| Needle points nearer the one before than the machine's shortest stitch, 0.3 mm, left out, in Honoka's underlays of 0.2 mm stitches and DejaVu's full stop | 0 | 3 | `DEV-FIN-001`, checked |
+| A needle point Ink/Stitch sews where a path ends with a move-to that draws nothing, 24 mm above Kum Tsoan relief's V | 0 | 1 | `DEV-SVG-011`, checked |
+| A jump that goes nowhere in Ink/Stitch's file, which pystitch writes | 0 | 1 | `DEV-FMT-001`, checked |
+
+A checked excuse counts only where the differential undoes the deviation in Ink/Stitch's file and the measure
+then agrees, or where each program's thread lies within 0.3 mm of the other's. Without its 6 stitch patterns,
+Ink/Stitch sews Initials XL's B in 9,804 stitches, against StitchCraft's 9,805 and its own 12,158. In a page
+of its viewBox's shape, Cooper Marif's 7 overlaps by 0.999, against 0.573. Without its needle points nearer
+the one before than 0.3 mm, Ink/Stitch sews Honoka's 服 in 1,889 stitches, against StitchCraft's 1,935 and its
+own 3,101.
 
 ## Fonts ported by other programs
 
