@@ -41,7 +41,10 @@ routed as a tatami fill's rows after the same underlay (`generators::circular`).
 them as it runs between rows (`generators::tatami::sew::lines`). Since M8.4 an element's start and end
 positions and its target point (`design::Hints`), which Ink/Stitch's commands and VectorCraft's markers
 give, take the place of the needle before it, of the next element's offer and of a circular fill's
-centroid, for the stitch types that use them (`generate`).
+centroid, for the stitch types that use them (`generate`). Since M8.5 an element's clips (`design::Clip`),
+which SVG clip paths give, cut a fill's region when it is built and a stroke's lines where they cross a
+clip's outline (`normalize::region::cut`). Automatic digitizing cuts its shapes first (`auto::clips`), and a
+satin column is sewn whole.
 Since M13.1 a shape without settings, read with `--auto`, is digitized automatically before anything else
 (`auto`). A line no wider than the design's narrowest satin stroke runs, a line up to 7 mm wide becomes
 satin columns along its centre line, and a wider line becomes the tatami fill of the area it paints

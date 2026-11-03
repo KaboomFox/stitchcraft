@@ -579,8 +579,9 @@ anchor, leaves that end of the segment straight, and a segment without handles i
 - **Paths and compound paths** are the art. A compound path's children are one shape, with the compound's
   appearance and fill rule.
 - **Groups and layers** pass their children on, and their StitchCraft effects with them (below). Clipping
-  is left for M8, as in the SVG adapter: a clipping group's or layer's art is stitched whole, with
-  `SC-W0807`.
+  is left for M8.7: a clipping group's or layer's art is stitched whole, with `SC-W0807`. The SVG adapter
+  cuts a shape to its clip paths from M8.5, and M8.7 gives a clip group's art its clipping object as a
+  clip of its elements the same way (`REQ-GEN-005`).
 - **Hidden objects**, and everything in them, are left out without a word, as VectorCraft draws nothing
   for them. So are objects and paints of opacity 0, paints turned off and strokes of width 0.
 - **Objects and layers named `stitch:ignore`**, and everything in them, are left out with `SC-I0811`.

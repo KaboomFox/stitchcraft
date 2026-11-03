@@ -23,7 +23,7 @@
 use std::collections::BTreeMap;
 
 use stitchcraft_core::{Budget, Point};
-use stitchcraft_engine::design::{Design, Element, Path, Segment, Shape, Subpath};
+use stitchcraft_engine::design::{Clip, ClipShape, Design, Element, Path, Segment, Shape, Subpath};
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::normalize::region::{self, Region};
 use stitchcraft_engine::normalize::stroke::distance_to_segment;
@@ -97,10 +97,13 @@ impl Change {
         changed
     }
 
-    /// `element`, changed: its shape, and its start, end and target positions (`REQ-GEN-001`) with it.
+    /// `element`, changed: its shape, and its start, end and target positions (`REQ-GEN-001`) and its clips
+    /// (`REQ-GEN-005`), each an area as a fill's is, with it.
     fn element(self, element: &Element) -> Element {
         let mut changed = element.clone();
         changed.hints = element.hints.map(|q| Ok::<Point, ()>(self.point(q))).unwrap();
+        let shapes = |clip: &Clip| clip.shapes.iter().map(|shape| ClipShape { path: self.path(&shape.path, true), rule: shape.rule }).collect();
+        changed.clips = element.clips.iter().map(|clip| Clip { shapes: shapes(clip) }).collect();
         let fill = matches!(element.shape, Shape::Fill { .. });
         let satin = element.params.iter().any(|(key, value)| key == SATIN_COLUMN && value == "true");
         let mut path = self.path(element.shape.path(), fill);
@@ -359,6 +362,20 @@ mod tests {
     #[test]
     fn an_l_sews_the_same_however_it_is_changed() {
         for (change, compared) in compare(&l_shape(), &Change::ALL) {
+            for element in compared {
+                assert!(element.shared > 0.99, "{change:?}: {element:?}");
+            }
+        }
+    }
+
+    #[test]
+    fn an_l_cut_to_a_clip_sews_the_same_however_it_is_changed() {
+        // Mirrored with the L but not with it, the clip would leave nothing of it.
+        let l = l_shape();
+        let clip = Clip::of(rings(&[&[(1.0, 1.0), (9.0, 1.0), (9.0, 7.0), (1.0, 7.0)]]), stitchcraft_engine::design::FillRule::NonZero);
+        let design = Design::new(vec![Element { clips: vec![clip], ..l.elements()[0].clone() }], l.settings).unwrap();
+        for (change, compared) in compare(&design, &Change::ALL) {
+            assert_eq!(compared.len(), 1, "{change:?}");
             for element in compared {
                 assert!(element.shared > 0.99, "{change:?}: {element:?}");
             }

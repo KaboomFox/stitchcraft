@@ -25,6 +25,11 @@
 //! Another fill's area is built first ([`crate::normalize::region`]), so what is left out of it is said
 //! even when its settings cannot be used, and its `fill_method` then picks the generator: a tatami fill
 //! ([`crate::generators::tatami`]), the only one sewn so far.
+//!
+//! An element is cut to its clips, the clip paths round it, before its generator sees it (`REQ-GEN-005`): a
+//! fill's area when it is built ([`region::build_clipped`]), and a stroke's subpaths where they cross a
+//! clip's outline (`region::cut`). A satin column is sewn whole, as in Ink/Stitch (`SC-W0217`), and an
+//! element its clips leave nothing of sews nothing (`SC-W0013`).
 
 use std::borrow::Cow;
 
@@ -39,7 +44,7 @@ use crate::common::{CommonParams, STOP_AFTER, TRIM_AFTER};
 use crate::design::{DesignSettings, Element, Hints, Join, Path, Shape};
 use crate::generators::circular::{self, Circular, circular_fill};
 use crate::generators::contour::{self, Contour, ContourParams, Stitching, contour_fill};
-use crate::generators::manual::manual_stitch;
+use crate::generators::manual::{self, manual_stitch};
 use crate::generators::meander::{self, Meander, MeanderParams, meander_fill};
 use crate::generators::passes::{PathFillParams, RepeatParams};
 use crate::generators::pull::PullParams;
@@ -51,7 +56,8 @@ use crate::generators::tatami::rows::Segment;
 use crate::generators::tatami::sew::{Fill, Pull, Travel, tatami_fill, top_rows};
 use crate::generators::zigzag::{ZigzagStrokeParams, zigzag_stroke};
 use crate::generators::{Approach, Neighbours, Stitched, method, mm};
-use crate::normalize::region::{self, Region};
+use crate::normalize::region::{self, Region, cut};
+use crate::normalize::stroke;
 use crate::registry::PARAMETERS;
 
 /// The stroke methods `stroke_method` offers, in Ink/Stitch's order, which its files count on: Ink/Stitch
@@ -307,9 +313,17 @@ fn sew(
     let stitched = match &element.shape {
         Shape::Fill { .. } => fill(&sewing, &region, &mut rng, diagnostics, meter)?,
         Shape::Stroke { path, width, join, .. } if sewing.stitch_type.family() == Family::Satin => {
+            if !element.clips.is_empty() {
+                let message = "This satin column is cut to clip paths, which StitchCraft doesn't apply to a satin column, so it is sewn whole, \
+                               as Ink/Stitch sews it.";
+                diagnostics.push(Diagnostic::new(Code::SatinClipNotApplied, message));
+            }
             satin_column(&sewing, (path, *width, *join), &mut rng, diagnostics, meter)?
         }
-        Shape::Stroke { path, width, .. } => stroke(&sewing, path, *width, &rng, diagnostics, meter)?,
+        Shape::Stroke { path, width, .. } => {
+            let Some(path) = cut::stroke(path, &element.clips, cut_line(sewing.stitch_type), diagnostics, meter)? else { return Ok(None) };
+            stroke(&sewing, &path, *width, &rng, diagnostics, meter)?
+        }
     };
     let (Some(common), Some(Shared { min_stitch, .. }), Some(stitched)) = (common, sewing.shared, stitched) else { return Ok(None) };
     diagnostics.extend(stitched.warnings);
@@ -376,7 +390,7 @@ fn prepare<'a>(
     let region = match &element.shape {
         Shape::Fill { path, rule } => {
             let Some(true) = setting::<Toggle>(set, FillParams::SPECS, "fill", diagnostics) else { return Ok(None) };
-            let built = region::build(path, *rule, meter)?;
+            let built = region::build_clipped(path, *rule, &element.clips, meter)?;
             diagnostics.extend(built.diagnostics);
             built.region
         }
@@ -679,6 +693,13 @@ fn satin_column(
     Ok(Some(satin_stitch(&rails, &params, &pull, lengths, sewing.neighbours, &sewing.hints, rng, meter)?))
 }
 
+/// The line a stroke sewn as `stitch_type` is cut to its clips along (`REQ-GEN-005`): a manual stitch's
+/// nodes, as it sews them, and another stroke's path flattened as a shape's outline is, as Ink/Stitch cuts
+/// them.
+fn cut_line(stitch_type: StitchType) -> cut::Line {
+    if stitch_type == StitchType::ManualStitch { manual::nodes } else { stroke::flattened }
+}
+
 /// A stroke's stitches as `sewing` says, varied at random by streams of its `rng`, or `None` when it is
 /// skipped: its `path` is `width` wide, which a zigzag stroke is. Its `stroke_method` picks the generator.
 fn stroke(
@@ -724,7 +745,10 @@ fn stroke(
 /// its rails. A fill of a method StitchCraft does not sew offers nothing, since what it would offer is not
 /// known. Neither does an element whose shape cannot be read, or the settings its offer depends on: those
 /// that choose its stitch type, and a satin column's. They are read as its stitch type reads them. A fill
-/// of any method, or a satin column, with a start position offers that, where it starts (`REQ-GEN-001`).
+/// of any method, or a satin column, with a start position offers that, where it starts (`REQ-GEN-001`). A
+/// fill cut to its clips offers what they leave of its area, a stroke the first point of the first piece
+/// they leave, and either offers nothing when they leave nothing; a satin column is sewn whole
+/// (`REQ-GEN-005`).
 pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -> Option<Approach> {
     let stitch_type = stitch_type_of(element, settings)?;
     if let Some(start) = element.hints.start
@@ -739,10 +763,11 @@ pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -
             return None;
         }
         Shape::Fill { path, rule } => {
-            let parts = region::build(path, *rule, &mut budget.meter()).ok()?.region.parts;
+            let parts = region::build_clipped(path, *rule, &element.clips, &mut budget.meter()).ok()?.region.parts;
             return (!parts.is_empty()).then_some(Approach::Area(parts));
         }
         Shape::Stroke { path, .. } if stitch_type.family() != Family::Satin => {
+            let path = cut::stroke(path, &element.clips, cut_line(stitch_type), &mut Vec::new(), &mut budget.meter()).ok()??;
             return path.subpaths.first().map(|subpath| Approach::Point(subpath.start));
         }
         Shape::Stroke { path, width, join, .. } => (path, width, join),
@@ -807,6 +832,7 @@ mod tests {
             params: params.iter().copied().collect(),
             automatic: false,
             hints: Default::default(),
+            clips: Vec::new(),
         }
     }
 

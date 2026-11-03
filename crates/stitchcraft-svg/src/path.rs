@@ -309,6 +309,77 @@ pub fn polyline(points: &str, closed: bool) -> Outline {
     Outline { subs, error }
 }
 
+/// The box round what `subs` draw, in their user units, as SVG's `getBBox` gives it: the least x and y, and
+/// the width and height. Curves are bounded where they turn, not by their control points, so the box is
+/// what a clip path's `objectBoundingBox` units are of (`crate::document`). `None` when they draw nothing.
+pub fn bounds(subs: &[Sub]) -> Option<(f64, f64, f64, f64)> {
+    let mut points: Vec<V> = Vec::new();
+    for sub in subs {
+        let mut from = sub.start;
+        points.push(from);
+        for seg in &sub.segs {
+            let to = match *seg {
+                Seg::Line(to) => to,
+                Seg::Quad(c, to) => {
+                    points.extend(turns(&[from, c, to]).map(|t| quad_at(from, c, to, t)));
+                    to
+                }
+                Seg::Cubic(c1, c2, to) => {
+                    points.extend(turns(&[from, c1, c2, to]).map(|t| cubic_at(from, c1, c2, to, t)));
+                    to
+                }
+            };
+            points.push(to);
+            from = to;
+        }
+    }
+    let (x0, y0) = points.iter().fold((f64::INFINITY, f64::INFINITY), |(x, y), p| (x.min(p.0), y.min(p.1)));
+    let (x1, y1) = points.iter().fold((f64::NEG_INFINITY, f64::NEG_INFINITY), |(x, y), p| (x.max(p.0), y.max(p.1)));
+    (!points.is_empty()).then_some((x0, y0, x1 - x0, y1 - y0))
+}
+
+/// Where between 0 and 1 the Bézier curve of the control points `ps` (3 or 4) turns along x or y: where the
+/// derivative of a coordinate is 0.
+fn turns(ps: &[V]) -> impl Iterator<Item = f64> {
+    let roots = |coordinate: fn(&V) -> f64| -> Vec<f64> {
+        let c: Vec<f64> = ps.iter().map(coordinate).collect();
+        // The derivative, up to a positive factor: a·t² + b·t + k.
+        let (a, b, k) = match *c.as_slice() {
+            [p0, p1, p2] => (0.0, p0 - 2.0 * p1 + p2, p1 - p0),
+            [p0, p1, p2, p3] => (-p0 + 3.0 * p1 - 3.0 * p2 + p3, 2.0 * (p0 - 2.0 * p1 + p2), p1 - p0),
+            _ => return Vec::new(),
+        };
+        if a == 0.0 {
+            return if b == 0.0 { Vec::new() } else { vec![-k / b] };
+        }
+        let disc = b * b - 4.0 * a * k;
+        if disc < 0.0 {
+            return Vec::new();
+        }
+        // The roots are q / a and k / q, where q = -(b ± √disc) / 2 takes the sign that adds the root's size to
+        // b's. The textbook formula (-b ± √disc) / 2a also takes one from the other. When a is far smaller than
+        // b, as for a quadratic curve drawn as a cubic one, that difference is only rounding, and its root is lost.
+        let q = -0.5 * (b + disc.sqrt().copysign(b));
+        vec![q / a, k / q]
+    };
+    let mut all = roots(|v| v.0);
+    all.extend(roots(|v| v.1));
+    all.into_iter().filter(|t| *t > 0.0 && *t < 1.0)
+}
+
+/// The point of the quadratic Bézier curve `p0`, `c`, `p1` at `t`.
+fn quad_at(p0: V, c: V, p1: V, t: f64) -> V {
+    let u = 1.0 - t;
+    (u * u * p0.0 + 2.0 * u * t * c.0 + t * t * p1.0, u * u * p0.1 + 2.0 * u * t * c.1 + t * t * p1.1)
+}
+
+/// The point of the cubic Bézier curve `p0`, `c1`, `c2`, `p1` at `t`.
+fn cubic_at(p0: V, c1: V, c2: V, p1: V, t: f64) -> V {
+    let u = 1.0 - t;
+    let (w0, w1, w2, w3) = (u * u * u, 3.0 * u * u * t, 3.0 * u * t * t, t * t * t);
+    (w0 * p0.0 + w1 * c1.0 + w2 * c2.0 + w3 * p1.0, w0 * p0.1 + w1 * c1.1 + w2 * c2.1 + w3 * p1.1)
+}
+
 /// `subs` mapped through `map` into millimetres, or why they cannot be: a number too large to compute
 /// with, or a point more than 10 m from the origin.
 pub fn to_mm(subs: &[Sub], map: Affine) -> Result<Path, String> {
@@ -343,6 +414,43 @@ mod tests {
     use stitchcraft_core::units::MM_PER_SVG_PX;
 
     use super::*;
+
+    #[test]
+    fn a_box_bounds_curves_where_they_turn() {
+        // A circle of radius 5 round (10, 20), drawn in cubic curves whose control points reach past it: the box
+        // is the circle's, as near as the curves are to it.
+        let (x, y, w, h) = bounds(&ellipse(10.0, 20.0, 5.0, 5.0)).unwrap();
+        assert!([x - 5.0, y - 15.0, w - 10.0, h - 10.0].iter().all(|d| d.abs() < 1e-3), "{:?}", (x, y, w, h));
+        assert!(w < 10.1, "not the box of the control points");
+        // A quadratic curve from (0, 0) to (10, 0) through (5, 10) reaches y 5; lines and points as they are.
+        let quad = Sub { start: (0.0, 0.0), segs: vec![Seg::Quad((5.0, 10.0), (10.0, 0.0))], closed: false };
+        assert_eq!(bounds(&[quad]), Some((0.0, 0.0, 10.0, 5.0)));
+        let line = Sub { start: (3.0, 4.0), segs: vec![Seg::Line((1.0, 9.0))], closed: false };
+        assert_eq!(bounds(&[line]), Some((1.0, 4.0, 2.0, 5.0)));
+        assert_eq!(bounds(&[]), None);
+        // Off the axes, each coordinate of each point counts: a curve from (2, 1) to (2, 9) through (12, 5)
+        // reaches x 7, and one on from there to (4, 9) through (5, 19) reaches y 14.
+        let quads = Sub { start: (2.0, 1.0), segs: vec![Seg::Quad((12.0, 5.0), (2.0, 9.0)), Seg::Quad((5.0, 19.0), (4.0, 9.0))], closed: false };
+        assert_eq!(bounds(&[quads]), Some((2.0, 1.0, 5.0, 13.0)));
+        // A cubic curve from (1, 2) to (11, 2) through (1, 12) and (11, 12) reaches y 9.5, halfway along.
+        let cubic = Sub { start: (1.0, 2.0), segs: vec![Seg::Cubic((1.0, 12.0), (11.0, 12.0), (11.0, 2.0))], closed: false };
+        assert_eq!(bounds(&[cubic]), Some((1.0, 2.0, 10.0, 7.5)));
+    }
+
+    #[test]
+    fn a_box_bounds_a_quadratic_curve_drawn_as_a_cubic_one_where_it_turns() {
+        // This cubic curve is the quadratic one from (0, 0) to (3, -0.3) through (1.5, 1.5), whose y turns at
+        // 15/22, 5/11 of the way along. The t² term of its derivative is 0, and rounding leaves about 1e-16 of
+        // it. The textbook formula divides by that and finds no turn, which leaves a box 0.3 high.
+        let (x, y, w, h) = bounds(&outline("M 0 0 C 1 1 2 0.9 3 -0.3").subs).unwrap();
+        assert_eq!((x, y, w), (0.0, -0.3, 3.0));
+        assert!((h - (0.3 + 15.0 / 22.0)).abs() < 1e-12, "{h}");
+        // A curve that turns twice along x, at (3 ± √3) / 6 of the way along, reaches x = ±5/√3 either side of
+        // its ends, which lie at x = 0.
+        let (x, _, w, _) = bounds(&outline("M 0 0 C 10 1 -10 2 0 3").subs).unwrap();
+        let reach = 5.0 / 3f64.sqrt();
+        assert!((x + reach).abs() < 1e-12 && (w - 2.0 * reach).abs() < 1e-12, "{x}, {w}");
+    }
 
     fn outline(data: &str) -> Outline {
         path_data(data, &mut Budget::DEFAULT.meter()).unwrap()

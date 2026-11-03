@@ -18,7 +18,7 @@ use stitchcraft_plan::{StitchPlan, Thread};
 use super::pictures::Picture;
 use super::sketch::SheetError;
 use crate::common::{STOP_AFTER, TRIM_AFTER};
-use crate::design::{Design, DesignSettings, Element, FillRule, Hints, Path, Segment, Shape, Subpath};
+use crate::design::{Clip, Design, DesignSettings, Element, FillRule, Hints, Path, Segment, Shape, Subpath};
 use crate::generators::satin::{END_AT_NEAREST_POINT, START_AT_NEAREST_POINT};
 
 /// The settings that sew a sheet's satin column as drawn, from its start to its end whatever is around it,
@@ -98,6 +98,14 @@ impl Drawing {
         Ok(())
     }
 
+    /// A clip for the last element drawn so far, as a clip path round it cuts it (`REQ-GEN-005`): the area its
+    /// closed `rings` bound by the nonzero rule.
+    pub fn clip(&mut self, rings: Vec<Subpath>) {
+        if let Some(last) = self.elements.last_mut() {
+            last.clips.push(Clip::of(Path { subpaths: rings }, FillRule::NonZero));
+        }
+    }
+
     fn stroke(&mut self, name: &str, subpaths: Vec<Subpath>, thread: &Thread, params: &[(&str, &str)]) -> Result<(), SheetError> {
         self.add(name, Shape::stroke(Path { subpaths }), thread, params)
     }
@@ -111,6 +119,7 @@ impl Drawing {
             params: params.iter().copied().collect::<ParamSet>(),
             automatic: false,
             hints: Hints::default(),
+            clips: Vec::new(),
         });
         Ok(())
     }
@@ -237,11 +246,12 @@ mod tests {
     }
 
     #[test]
-    fn a_stop_or_positions_before_any_element_change_nothing() {
+    fn a_stop_or_positions_or_a_clip_before_any_element_change_nothing() {
         // Each is for the last element drawn so far, and there is none yet.
         let mut d = Drawing::new("none");
         d.stop();
         assert!(d.positions((0.0, 0.0), (1.0, 1.0)).is_ok());
+        d.clip(vec![polygon(&[(0.0, 0.0), (1.0, 0.0), (1.0, 1.0)]).unwrap()]);
         assert!(d.elements.is_empty());
     }
 
