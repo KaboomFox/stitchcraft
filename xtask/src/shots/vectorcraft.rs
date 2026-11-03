@@ -128,6 +128,9 @@ fn problems(shot: &Shot) -> Vec<String> {
     if stitch_fields {
         found.push("`sheet`, `fixture`, `panels`, `allow` and `style` are a stitch shot's".to_string());
     }
+    if shot.picture.is_some() {
+        found.push("`picture` is a picture shot's".to_string());
+    }
     if shot.kind == RENDER && (!shot.menu.is_empty() || shot.dialog.is_some()) {
         found.push("`menu` and `dialog` are a vectorcraft-ui shot's".to_string());
     }

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="60mm" height="60mm" viewBox="0 0 60 60">
+  <!-- An emblem in solid colours, drawn in layers on white in the Brother threads that `stitch palette`
+       writes, lowest first: the white under it all; a navy square 50 mm wide; a white disc 26 mm across in
+       its upper part; a red star on the disc, its points 11 mm from its middle; and 3 gold bars 3 mm tall
+       below the disc, 2 mm apart. Each layer is whole, under the layers drawn over it. No shape has
+       StitchCraft's settings. -->
+  <rect id="white" fill="#f0f0f0" width="60" height="60"/>
+  <rect id="navy" fill="#0e1f7c" x="5" y="5" width="50" height="50"/>
+  <circle id="disc" fill="#f0f0f0" cx="30" cy="24" r="13"/>
+  <path id="star" fill="#ed171f" d="M30 13 L33.233 19.550 L40.462 20.601 L35.231 25.700 L36.466 32.899 L30 29.500 L23.534 32.899 L24.769 25.700 L19.538 20.601 L26.767 19.550 Z"/>
+  <rect id="bar-1" fill="#e8a900" x="14" y="41" width="32" height="3"/>
+  <rect id="bar-2" fill="#e8a900" x="18" y="46" width="24" height="3"/>
+  <rect id="bar-3" fill="#e8a900" x="22" y="51" width="16" height="3"/>
+</svg>

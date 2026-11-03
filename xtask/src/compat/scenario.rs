@@ -45,6 +45,8 @@
 //! - `sheets`: a document sews as the test sheet the Test Sheet filter drew into it: the sheet's design,
 //!   moved by the whole millimetres that bring it nearest to where the document has it, as the filter
 //!   moves it to its artboard (`REQ-VC-015`).
+//! - `within`: every element of a document sews, and every needle point lies within a box, in the document's
+//!   points, such as a clipping object's, which a clip group's art is cut to (`REQ-VC-017`).
 //!
 //! **Why a heavy module is allowed.** VectorCraft 0.17 installs a filter that asks for a heavy budget only
 //! once the user allows it, with `allowHeavy: true`, which a run passes for each heavy module it installs
@@ -73,11 +75,12 @@ use serde_json::{Value, json};
 use stitchcraft_cli::cli::{Cli, Command as Stitch, PlanArgs};
 use stitchcraft_cli::commands::Status;
 use stitchcraft_cli::commands::plan::{self, Source, machine_for, sew};
-use stitchcraft_core::{Budget, Code, Diagnostic, Rect, Severity};
+use stitchcraft_core::units::MM_PER_POINT;
+use stitchcraft_core::{Budget, Code, Diagnostic, Point, Rect, Severity};
 use stitchcraft_engine::design::{Reading, Setting, Turn};
 use stitchcraft_params::Family;
-use stitchcraft_plan::FormatId;
 use stitchcraft_plan::profiles::REFERENCE;
+use stitchcraft_plan::{FormatId, StitchKind};
 use stitchcraft_vc_plugin::testsheet;
 use stitchcraft_vectorcraft::{EXTENSIONS, effect_id, effect_name, param_text, plugin_id};
 
@@ -86,6 +89,9 @@ use crate::util;
 
 /// Where the scenarios are.
 pub const SCENARIOS: &str = "compat/scenarios";
+/// How far past a box a needle point may lie, in millimetres: a cut is exact, and a needle point on its edge
+/// is placed to the machine's tenth of a millimetre.
+const EDGE: f64 = 0.1;
 /// How often a run of `vectorcraft-cli` is looked at, and how many looks it gets before it counts as hung:
 /// 10 minutes. Counted in looks, as budgets are counted in work, not read from a clock.
 const LOOK: Duration = Duration::from_millis(50);
@@ -186,6 +192,20 @@ pub struct Expect {
     /// Documents of traced pictures, each with the threads it sews digitized automatically.
     #[serde(default)]
     pub traced: Vec<Traced>,
+    /// Documents, each with the box it sews within.
+    #[serde(default)]
+    pub within: Vec<Within>,
+}
+
+/// A document and the box every needle point it sews lies within ([`sews_within`]).
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Within {
+    /// The document.
+    pub file: String,
+    /// The box, `[x0, y0, x1, y1]` in points, as the document's coordinates are.
+    #[serde(rename = "box")]
+    pub area: [f64; 4],
 }
 
 /// A document of a traced picture and the threads it sews digitized automatically ([`trace::traced`]).
@@ -361,6 +381,7 @@ pub fn problems(scenario: &Scenario, modules: &[&str], requirements: &std::colle
     let checked = expect.applied.iter().chain(expect.same.iter().flatten()).chain(expect.elements.iter().map(|e| &e.file));
     let checked = checked.chain(expect.kept.iter().map(|kept| &kept.file)).chain(expect.differ.iter().flatten());
     let checked = checked.chain(expect.sheets.iter().map(|sheet| &sheet.file)).chain(expect.traced.iter().map(|traced| &traced.file));
+    let checked = checked.chain(expect.within.iter().map(|within| &within.file));
     for file in checked.chain(expect.exported.iter().flatten()) {
         if !exported.contains(&file.as_str()) {
             found.push(format!("it checks `{file}`, which no run exports"));
@@ -769,7 +790,39 @@ fn check(expect: &Expect, out: &Path, ran: &Ran) -> Vec<String> {
             failures.push(format!("{}: {e}", expected.file));
         }
     }
+    for expected in &expect.within {
+        if let Err(e) = read(&expected.file).and_then(|bytes| sews_within(&bytes, expected.area)) {
+            failures.push(format!("{}: {e}", expected.file));
+        }
+    }
     failures
+}
+
+/// Whether every element of the document `bytes` sews, and every needle point it sews lies within `area`,
+/// `[x0, y0, x1, y1]` in points, or how it doesn't. It is planned as `stitch plan` plans it, for the machine
+/// it keeps or else the reference machine, but with its origin where the document's is and without a turn on
+/// export, so that each needle point is where the document draws it.
+fn sews_within(bytes: &[u8], area: [f64; 4]) -> Result<(), String> {
+    let read = stitchcraft_vectorcraft::read(bytes, &Budget::DEFAULT).map_err(|unread| unread.to_string())?;
+    let mut design = read.design;
+    design.settings.origin = Some(Point::ORIGIN);
+    design.settings.rotate_on_export = Turn::NONE;
+    let outcome = stitchcraft_engine::plan(&design, machine_for(None, Source::VectorCraft, bytes), &Budget::DEFAULT);
+    let said: Vec<String> = outcome.diagnostics.iter().map(ToString::to_string).collect();
+    let plan = outcome.plan.ok_or_else(|| format!("StitchCraft doesn't sew it: {}", said.join("; ")))?;
+    let sewn: Vec<_> = plan.stitches().filter(|stitch| stitch.kind == StitchKind::Normal).collect();
+    // The plan holds the elements that sew.
+    let sewing: Vec<&str> = sewn.iter().filter_map(|stitch| plan.elements.get(stitch.origin.element?.index())).map(|id| id.as_str()).collect();
+    let silent: Vec<&str> = design.elements().iter().map(|element| element.id.as_str()).filter(|id| !sewing.contains(id)).collect();
+    if !silent.is_empty() {
+        return Err(format!("{} sews nothing: {}", silent.join(", "), said.join("; ")));
+    }
+    let [x0, y0, x1, y1] = area.map(|v| v * MM_PER_POINT);
+    let inside = |p: Point| (x0 - EDGE..=x1 + EDGE).contains(&p.x()) && (y0 - EDGE..=y1 + EDGE).contains(&p.y());
+    match sewn.iter().find(|stitch| !inside(stitch.at)) {
+        None => Ok(()),
+        Some(out) => Err(format!("it sews at ({:.2}, {:.2}) pt, outside the box {area:?}", out.at.x() / MM_PER_POINT, out.at.y() / MM_PER_POINT)),
+    }
 }
 
 /// Whether the document `bytes` sews as the test sheet `id` the Test Sheet filter drew into it, or how it

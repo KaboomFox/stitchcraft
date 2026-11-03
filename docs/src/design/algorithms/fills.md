@@ -23,10 +23,11 @@ places with Ink/Stitch's start and end commands or VectorCraft's start and end m
 before a fill with a start position ends nearest that (`REQ-GEN-001`). Every method uses them but the
 contour fill's end, which lies where its rings end.
 
-A fill cut to clips, its clip paths, fills the part of its region inside every one (`REQ-GEN-005`). The
-region is cut when it is built, before the underlay, `expand_mm` and the method see it, as Ink/Stitch cuts
-its shape, so `expand_mm` grows the cut area past the clip's edge. Parts the cut leaves too small to sew are
-left out as any are (`SC-W0303`), and a fill wholly outside its clips isn't sewn (`SC-W0013`).
+A fill cut to clips, its SVG clip paths or VectorCraft clipping objects, fills the part of its region inside
+every one (`REQ-GEN-005`). The region is cut when it is built, before the underlay, `expand_mm` and the
+method see it, as Ink/Stitch cuts its shape, so `expand_mm` grows the cut area past the clip's edge. Parts
+the cut leaves too small to sew are left out as any are (`SC-W0303`), and a fill wholly outside its clips
+isn't sewn (`SC-W0013`).
 
 ## Region
 
