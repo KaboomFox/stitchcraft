@@ -393,6 +393,24 @@ rationale = "A design clipped in Inkscape, and the glyphs of 5 of Ink/Stitch's f
 milestone = "M8"
 status = "active"
 
+[[req]]
+id = "REQ-SVG-012"
+area = "svg"
+level = "L2"
+statement = "A clone, a use element that names an element other than a command's symbol, sews what it shows in its place in the document's order, as Ink/Stitch sews a clone. What it shows is drawn as a viewer draws it: under the use's transform, then its x and y, then the source's own transform, with the style it inherits from the use, which the source's own declarations override, and cut to the use's clip path. In it, context-fill and context-stroke paint with the use's fill and stroke. A symbol's viewBox is fitted by its preserveAspectRatio to the use's width and height, the symbol's own, or else the page's, and nothing is cut to that viewport, as Inkscape draws it. Clones in what it shows are drawn the same way. The commands tied to its source, and those in its source whose connector is in it too, apply to what it sews, at their places moved with it. The clone's own trim_after and stop_after, and the trim and stop commands tied to it, trim or stop after the last of what it sews, and its min_stitch_length_mm and min_jump_stitch_length_mm apply to all of it. Its other Ink/Stitch settings change nothing, which SC-W0802 says. A clone that shows itself, directly or through other clones, is left out, with SC-W0804, and so is one inside more than 16 others, with SC-W0802. A link to nothing shows nothing."
+rationale = "Inkscape repeats a motif as clones and symbols, and Ink/Stitch sews them where they are, so a design made of them sews only when they are read. A viewer and Ink/Stitch draw a clone otherwise in places, which the ledger lists (DEV-SVG-021 to DEV-SVG-024). Ink/Stitch's clones were read in lib/elements/clone.py at d59c9ab and sewn as a black box."
+milestone = "M8"
+status = "active"
+
+[[req]]
+id = "REQ-SVG-013"
+area = "svg"
+level = "L2"
+statement = "A clone turns the angle of each fill it shows with it, as Ink/Stitch turns it: the direction of the fill's rows at its angle, 0 when it sets none, is taken through the map from where its source is drawn to where the clone draws it, and from where the clone's parent is for a symbol's content, and the angle is rounded to 6 decimal places. Clones inside clones turn it each in its own place, the innermost first. A clone's own angle gives every fill it shows that angle instead, and flip_angle reverses it. A clone whose clone setting is any text but blank or one of Ink/Stitch's words for yes sews nothing, which SC-I0805 lists. An angle of a clone that doesn't read is named with SC-W0802, and the fills' angles are turned. A shape digitized automatically keeps the angle digitizing chooses, and SC-W0802 names a clone's angle or flip_angle there."
+rationale = "A fill's angle is fixed to the page in Ink/Stitch, not to its shape, so a clone that turns a fill without its angle would sew its rows at another angle to the shape. Ink/Stitch's clone settings, clone, angle and flip_angle, are the interoperability contract (conformance/inkstitch-params.toml)."
+milestone = "M8"
+status = "active"
+
 # ── Generators: shared ─────────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -436,7 +454,7 @@ id = "REQ-GEN-005"
 area = "generators"
 level = "L2"
 statement = "An element's clips cut what it sews. A fill's area is the part of its region inside every clip, before its underlay, expand_mm and its method see it, and what it offers the element before it is that area. A stroke's lines are cut where they cross a clip's outline, and each piece inside is sewn as a line of its own, in order along the line, as Ink/Stitch sews them; its width is not cut. A satin column is sewn whole, as in Ink/Stitch, and SC-W0217 names it. An element its clips leave nothing of sews nothing, and SC-W0013 names it. A clip is the areas of its shapes together, each by its rule, and an automatic shape is cut before it is digitized."
-rationale = "Ink/Stitch cuts a fill's shape and a stroke's centre line to the clip before sewing them, and sews a satin column whole (lib/elements/fill_stitch.py: shape, lib/elements/stroke.py: _get_clipped_path, read at d59c9ab). The engine cuts them for every reader, the SVG file's clip paths now and VectorCraft's clip groups from M8.7."
+rationale = "Ink/Stitch cuts a fill's shape and a stroke's centre line to the clip before sewing them, and sews a satin column whole (lib/elements/fill_stitch.py: shape, lib/elements/stroke.py: _get_clipped_path, read at d59c9ab). The engine cuts them for every reader: an SVG file's clip paths (REQ-SVG-011) and a VectorCraft document's clip groups (REQ-VC-017)."
 milestone = "M8"
 status = "active"
 
@@ -1310,7 +1328,7 @@ status = "active"
 id = "REQ-VC-005"
 area = "vectorcraft"
 level = "L2"
-statement = "Nothing a VectorCraft document draws is left out silently: text, images, symbols, live objects, clipping, VectorCraft's own effects, brushes, the paints of groups and layers, gradients and patterns are named (SC-W0807), and so are template layers, layers that don't print and guides (SC-I0809). So is what VectorCraft draws of a stroke and its stitches don't follow: arrowheads, dashes, a stroke painted below a fill, and the alignment, width profile and caps of a stroke a satin column or a zigzag is made of. So are 2 or more StitchCraft effects on one object or group, each sewn on the shape as drawn where VectorCraft draws each on what the one before drew. Only what VectorCraft does not draw, such as a hidden object, is left out without a word."
+statement = "Nothing a VectorCraft document draws is left out silently: text, images, symbols, live objects, opacity masks, VectorCraft's own effects, brushes, the paints of groups and layers, gradients and patterns are named (SC-W0807), and so are template layers, layers that don't print and guides (SC-I0809). So is what VectorCraft draws of a stroke and its stitches don't follow: arrowheads, dashes, a stroke painted below a fill, and the alignment, width profile and caps of a stroke a satin column or a zigzag is made of. So are 2 or more StitchCraft effects on one object or group, each sewn on the shape as drawn where VectorCraft draws each on what the one before drew. What a clipping object holds that StitchCraft doesn't read adds nothing to its clip, and is named too (REQ-VC-017). Only what VectorCraft does not draw, such as a hidden object, is left out without a word."
 milestone = "M6"
 status = "active"
 
@@ -1411,6 +1429,15 @@ level = "L2"
 statement = "StitchCraft's Auto effect (`plugin.dev.stitchcraft.auto`) makes an object, and each path inside a group or a layer it is applied to, an automatic element, whether or not `--auto` is given, with the effect's parameters as its settings of the rules (REQ-AUTO-020). A path with a StitchCraft stitch effect of its own sews as that effect says, and an Auto effect beside one on the same object is not used, which SC-W0807 says. The nearest group's or layer's Auto effect reaches a path, as a stitch effect does. Its dialog shows the rules' settings, each with the registry's label, unit, help and help page, and `preview_level`. Its live effect previews the object's stitches as automatic digitizing chooses them, its fill as an area and its topmost stroke as a line, without what neighbours change (REQ-AUTO-007 to REQ-AUTO-010). Auto shows them as far as ABI v1's budget allows, and the outline when they cost more, and a level that costs more than the budget leaves the object as it is, with SC-I0810. The Test Sheet filter draws the TS-13 sheets too, each shape with the Auto effect."
 rationale = "A picture traced in VectorCraft is a group of paths without settings. With the effect on the group, the user sees each path's stitches and sets the rules' values in a dialog, and the document then sews digitized automatically from VectorCraft's own export, without the command line's switch."
 milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-VC-017"
+area = "vectorcraft"
+level = "L2"
+statement = "What a clip group, or a layer with a clipping mask, holds is cut to its first object, the clipping object, as VectorCraft clips it, and to the clipping objects of the clip groups around it (REQ-GEN-005): a fill's area and a stroke's lines, and a satin column is sewn whole (SC-W0217). A clipping object's area, whatever its paints and whether it shows, is a path's by its fill rule, a compound path's paths together by its rule, a clip group's clipping object's, or the members that show of another group or of a layer together, but a Shaper group's sources. A guide and a symbol add nothing to it, as in VectorCraft. Text, an image, a placed document, a live object and a kind StitchCraft doesn't read add nothing, and SC-W0807 names them, as SC-W0808 names a path whose geometry can't be used. A clip left with no shape leaves nothing of what it cuts (SC-W0013). A clipping object is not cut to its own clip. One that StitchCraft's effects reach, whose stitches VectorCraft clips the preview to, is named (SC-W0807)."
+rationale = "Object › Clipping Mask › Make shows art only inside the clipping object, and StitchCraft sews what shows, as it sews an SVG file's clip paths (REQ-SVG-011). The area and the drawing are VectorCraft's Node::clip_shapes and Node::clip_outline (crates/doc/src/node/clip.rs) and its renderer's clip groups (crates/render/src/renderer/nodes.rs), read at v0.19.0 and alike from 0.13, and a group's effects reshape the clipping paths it holds too (for_each_leaf, crates/effects/src/reshape.rs)."
+milestone = "M8"
 status = "active"
 
 # ── Command line ───────────────────────────────────────────────────────────────────────────────────

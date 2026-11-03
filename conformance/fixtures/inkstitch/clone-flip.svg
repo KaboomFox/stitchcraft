@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A red bar 60 x 10 mm filled at 20 degrees, and a clone of it turned 30 degrees right and moved below it,
+     whose flip_angle reverses the angle the clone turns it to: -10 degrees reversed, 10. Written for
+     StitchCraft's Ink/Stitch differential cases (conformance L3). -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+     xmlns:inkstitch="http://inkstitch.org/namespace"
+     width="100mm" height="100mm" viewBox="0 0 100 100">
+  <metadata>
+    <inkstitch:inkstitch_svg_version>4</inkstitch:inkstitch_svg_version>
+  </metadata>
+  <rect id="bar" x="20" y="10" width="60" height="10" fill="#ed171f" inkstitch:angle="20"/>
+  <use id="flipped" xlink:href="#bar" transform="translate(0 50) rotate(30 50 15)" inkstitch:flip_angle="true"/>
+</svg>

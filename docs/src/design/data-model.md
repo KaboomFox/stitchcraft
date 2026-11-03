@@ -48,8 +48,8 @@ pub struct Element {
     pub clips: Vec<Clip>,            // since M8.5: it sews only what lies inside every one (REQ-GEN-005)
 }
 
-pub struct Clip {                    // since M8.5: an SVG clip path, VectorCraft's clipping object from M8.7
-    pub shapes: Vec<ClipShape>,      // their areas together; none leaves nothing of what it cuts
+pub struct Clip {                    // since M8.5: an SVG clip path, and from M8.7 a VectorCraft clipping object
+    pub shapes: Arc<[ClipShape]>,    // their areas together, shared by the elements it cuts; none leaves nothing
 }
 
 pub struct ClipShape {
@@ -127,7 +127,9 @@ artboard with it (`REQ-VC-015`).
 
 **Commands.** Ink/Stitch's start, end and target commands, and VectorCraft's start and end markers, are
 an element's hints (M8.4), its points checked and moved with the rest. Clip paths are an element's clips
-(M8.5), checked and moved with it too, which the engine cuts it to ([engine pipeline](engine-pipeline.md)). Trims and stops are the element
+(M8.5), and so are VectorCraft's clipping objects (M8.7), checked and moved with it too, which the engine
+cuts it to ([engine pipeline](engine-pipeline.md)). A clip's shapes are shared by the elements it cuts, so
+that a clip group of many objects holds its clipping object once. Trims and stops are the element
 parameters `trim_after` and `stop_after`, and the origin and stop position are design settings (M3.8), which
 Ink/Stitch's `origin` and `stop_position` commands and VectorCraft's `stitch:origin` and `stitch:stop-position`
 markers give (M8.8).

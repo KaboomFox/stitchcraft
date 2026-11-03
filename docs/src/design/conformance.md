@@ -292,15 +292,17 @@ cases to this one. The corpus is designs the SVG reader sews in full, with their
 design instead (`sheet`). Both programs sew an SVG file of the elements StitchCraft sews the sheet with,
 written with their parameters, their start, end and target positions as Ink/Stitch's commands and their
 clips as clip paths, the design's origin and stop position as commands too, and its turn on export
-(`stitchcraft_testkit::inkstitch`), which StitchCraft's reader reads back unchanged (`REQ-PRM-003`).
-Automatic digitizing chooses ordinary elements with Ink/Stitch's parameters, so Ink/Stitch can sew what
-StitchCraft chose, and the TS-13 sheets check StitchCraft's stitches of those choices against
-Ink/Stitch's (`REQ-AUTO-021`). TS-11B checks the contour fills so, each strategy and join style among
-them (`REQ-FILL-CON-008`), and its circular fills (`REQ-FILL-CIR-007`). TS-11A checks the zigzag strokes
-(`REQ-RUN-013`), and the E-stitches, S-stitches and zigzag satins (`REQ-SAT-029`), along straights and
-round curves. TS-02B to TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills' sheet, are
-cases of `REQ-SVG-008` (M8.2). `conformance/inkstitch/README.md` says how to run it by hand and how to
-add a case.
+(`stitchcraft_testkit::inkstitch`), which StitchCraft's reader reads back unchanged (`REQ-PRM-003`). An
+element a sheet draws as a clone of another is written as a `<use>` of it, and each command in a group
+with its connector, as Ink/Stitch's Attach Commands writes them, since Ink/Stitch moves a command its
+clone copies only from a group. Automatic digitizing chooses ordinary elements with Ink/Stitch's
+parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check StitchCraft's
+stitches of those choices against Ink/Stitch's (`REQ-AUTO-021`). TS-11B checks the contour fills so, each
+strategy and join style among them (`REQ-FILL-CON-008`), and its circular fills (`REQ-FILL-CIR-007`).
+TS-11A checks the zigzag strokes (`REQ-RUN-013`), and the E-stitches, S-stitches and zigzag satins
+(`REQ-SAT-029`), along straights and round curves. TS-02B to TS-09, the sheets of MC-2 to MC-4, and
+TS-11C, the meander fills' sheet, are cases of `REQ-SVG-008` (M8.2). `conformance/inkstitch/README.md`
+says how to run it by hand and how to add a case.
 
 **Centre lines.** Sewing what StitchCraft chose can't find a choice that is wrong: TS-13B's small T sewed
 a Γ, the left arm of its bar left out of its centre line, and the differential agreed by every measure.

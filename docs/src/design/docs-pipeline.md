@@ -39,7 +39,7 @@ a generated page by the generator that writes it, so a page that only says it is
 one written by hand. The conformance report is not a page of the book: `cargo xtask conformance` writes it
 to `target/conformance/`, and CI shows it in the job summary.
 
-## Images: four kinds, each reproducible
+## Images: five kinds, each reproducible
 
 Every image in the docs is declared in `docs/shots.toml` with an id, a kind and how to make it. Pages
 reference `images/generated/<id>.png`, or a photo in `images/photos/`. An image at any other path fails the
@@ -48,6 +48,7 @@ docs check, whatever its file name.
 | Kind | Made by | Compared by | Notes |
 |---|---|---|---|
 | `stitch` | `stitchcraft-render` ([rendering](rendering.md)) from a test sheet, or from a design the engine plans, an SVG file or a VectorCraft document | **exact bytes** (rendering is deterministic) | Stitch-type illustrations, parameter comparisons, diagnostics examples |
+| `picture` | xtask (`xtask/src/shots/picture.rs`): a design's areas filled flat in their colours, or a photo drawn in code | **exact bytes** | The pictures [automatic digitizing](../user/stitches/automatic.md) starts from |
 | `vectorcraft-render` | `vectorcraft-cli` of the pinned stable release, with the plug-in's modules installed: the canvas after the shot's `steps`, exported as PNG at `scale` pixels per point | perceptual tolerance (≤ 0.2 % of pixels differing by more than 8/255 in a channel, and ≤ 8 of them in any square of 16 pixels a side) | How the previews look in VectorCraft's canvas, without its window |
 | `vectorcraft-ui` | VectorCraft's window, of the same release, with the document `vectorcraft-cli` drew. The shot's menu path and the family's row are pressed through the accessibility tree, and the screenshot is cropped to the menus or the dialog | the same tolerance | Menus and dialogs, in a desktop without a screen ([VectorCraft's window in CI](#vectorcrafts-window-in-ci)) |
 | `photo` | a person, of a real sew-out | presence + metadata record (machine, fabric, commit, checkpoint) | Never regenerated; listed with their sew-out report |
@@ -72,6 +73,25 @@ Each panel sets its parameters on every element of the design and becomes one im
 and so on. A test sheet is drawn as it is, so a shot of one has no panels. The plan may report only the codes the shot lists in `allow`, and a shot fails on any other:
 a picture never shows a design that the engine changed without the page saying so. The `alt` text is
 mandatory (accessibility), and the docs check fails on images without it.
+
+A picture shot shows a picture before it is digitized:
+
+```toml
+[[shot]]
+id = "auto-pear-traced"
+kind = "picture"
+fixture = "docs/fixtures/traced-pear.vectorcraft"   # its areas, filled flat in their threads' colours
+scale = 3.5                                          # pixels per millimetre
+alt = "The pear photo traced in 4 of the machine's threads…"
+```
+
+With a `fixture`, each area of the design is filled in its thread's colour, the lowest first, as a drawing
+program shows it. The areas are filled 4 times larger without anti-aliasing, and each block of 4 × 4 pixels
+is then averaged into one, so that the white under 2 areas doesn't show along the edge they share. With
+`picture = "pear"` in place of a `fixture`, the picture is a photo xtask draws in code, with soft shading and
+a little grain, so that the docs show a photo with no licence to keep. VectorCraft traced that photo once
+into `docs/fixtures/traced-pear.vectorcraft`, which the shots plan without VectorCraft. A test keeps the hash
+of the photo it traced, and fails once the photo changes, until it is traced again.
 
 A VectorCraft shot draws its document with VectorCraft's own commands, as a Level B scenario does
 ([compatibility gate](compatibility-gate.md)), in points:
@@ -145,14 +165,18 @@ install, and an install that stalls or fails is tried again, 3 times in all. A d
 installed fails its job with an error that says so. The jobs that use the action stop after 30 minutes,
 or 45 for the refresh, where GitHub's limit is 6 hours.
 
-**Screenshots: the same pixels, but for the frame timings.** The window opens at 1440 × 900 pixels,
-drawn by llvmpipe, and a screenshot takes about 0.65 s. Above the status bar, screenshots of one window
-match to the pixel. The screenshots of two starts of the app match there too, and so did two runs on
-GitHub's runners. The status bar differs, since it shows the frame timings ("render 4.4 ms · ui 1.4 ms ·
-24 fps"), which change with every frame. VectorCraft's own visual fixtures record where that text is, as
-text that changes. So the generator crops each picture to the menu or dialog it shows. A picture of the
-whole window leaves the status bar out. The tolerance in the table stays: the runner's Mesa comes with
-Ubuntu's updates, and a new one may move an anti-aliased edge.
+**Screenshots: the same pixels, but for the frame timings.** The window opens at 1440 × 900 pixels, drawn
+by llvmpipe, and a screenshot takes about 0.65 s. Above the status bar, screenshots of one window match
+to the pixel. The screenshots of two starts of the app match there too, and so did two runs on GitHub's
+runners, in all but a few runs. In 3 of the 97 runs from 1 to 3 November 2026, the second start differed
+from the first in 19,159 pixels above the status bar, the same number each time, for a reason not yet
+known. The probe's notice gives each start's time to its screenshot and the fingerprint of its pixels
+there, and a failure says where they differ and what `ui.inspect` shows differently. The status bar
+differs, since it shows the frame timings ("render 4.4 ms · ui 1.4 ms · 24 fps"), which change with every
+frame. VectorCraft's own visual fixtures record where that text is, as text that changes. So the
+generator crops each picture to the menu or dialog it shows. A picture of the whole window leaves the
+status bar out. The tolerance in the table stays: the runner's Mesa comes with Ubuntu's updates, and a
+new one may move an anti-aliased edge.
 
 **xa11y: AT-SPI's press and clicks both work.** xa11y finds the app by its process. AT-SPI's press, as a
 screen reader uses it, opens View and chooses its row Outline. Clicks at the middle of the bounds the tree
@@ -209,8 +233,8 @@ written again. Pages show what the command prints today.
 - `cargo xtask conformance --check` fails when requirements and cases disagree, or a fixture has no row
   in the fixtures index.
 - `cargo xtask shots --check` fails for a declared image that is missing or has no alt text. It also
-  regenerates each `stitch` image and compares it with the committed file, which must come out byte for
-  byte the same. It checks VectorCraft's shots' declarations without running VectorCraft.
+  regenerates each `stitch` and `picture` image and compares it with the committed file, which must come out
+  byte for byte the same. It checks VectorCraft's shots' declarations without running VectorCraft.
 - `cargo xtask book` builds the book with mdBook and reads every page it made, `print.html` included.
   It fails when a link or an image leads to no file of the book, or an `#anchor` to no id of its page.
   A link to the repository's files on GitHub, on `main`, must name a file or folder of the checkout. The

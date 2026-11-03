@@ -286,9 +286,12 @@ fn req_vc_006_a_clipping_object_takes_the_group_s_effects_and_only_its_own_paint
     assert!(read.design.elements().iter().all(|e| params(e) == [("angle", "30")]), "{:?}", read.design.elements());
     let colours: Vec<Rgb> = read.design.elements().iter().map(|e| e.thread.color).collect();
     assert_eq!(colours, [rgb(B), rgb(G), rgb(G), rgb(G)]);
-    // What is said is said of the groups: their clipping, and their paints.
+    // What is said is said of the groups: their paints, and that their effects reach their clipping objects.
     let groups = ["vc:2", "vc:5", "vc:8"];
     assert!(read.warnings.iter().all(|w| w.element.as_ref().is_some_and(|e| groups.contains(&e.as_str()))), "{:?}", read.warnings);
+    // What each holds is cut to its clipping object, the clipping object not (REQ-VC-017).
+    let clipped: Vec<usize> = read.design.elements().iter().map(|e| e.clips.len()).collect();
+    assert_eq!(clipped, [0, 1, 1, 1]);
 }
 
 #[test]
@@ -316,7 +319,9 @@ fn req_vc_006_a_shaper_group_that_clips_sews_its_clipping_object() {
     );
     let read = read_ok(&document(4, &shaper));
     assert_eq!(ids(&read), ["vc:3:fill", "vc:6:fill"]);
-    assert_eq!(said(&read), [(Code::VcFeatureIgnored, "vc:2".to_string())]);
+    assert_eq!(said(&read), []);
+    // The shape it shows is cut to the clipping object, which sews whole (REQ-VC-017).
+    assert_eq!((element(&read, "vc:3:fill").clips.len(), element(&read, "vc:6:fill").clips.len()), (0, 1));
 }
 
 #[test]

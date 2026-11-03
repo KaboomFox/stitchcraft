@@ -270,9 +270,28 @@ impl Pixels {
     /// How many pixels differ from `other`'s by more than `tolerance` in a channel; `None` when the two
     /// differ in size.
     pub fn differing(&self, other: &Pixels, tolerance: u8) -> Option<usize> {
+        self.difference(other, tolerance).map(|d| d.pixels)
+    }
+
+    /// Which pixels differ from `other`'s by more than `tolerance` in a channel: how many, and the box
+    /// round them, which says what changed when a check fails. `None` when the two differ in size.
+    pub fn difference(&self, other: &Pixels, tolerance: u8) -> Option<Difference> {
         let same_size = (self.width, self.height) == (other.width, other.height) && self.rgba.len() == other.rgba.len();
+        if !same_size {
+            return None;
+        }
         let differs = |(a, b): &(&[u8; 4], &[u8; 4])| a.iter().zip(b.iter()).any(|(x, y)| x.abs_diff(*y) > tolerance);
-        same_size.then(|| self.rgba.as_chunks::<4>().0.iter().zip(other.rgba.as_chunks::<4>().0.iter()).filter(differs).count())
+        let width = self.width.max(1) as usize;
+        let mut found = Difference::default();
+        let pairs = self.rgba.as_chunks::<4>().0.iter().zip(other.rgba.as_chunks::<4>().0.iter());
+        for (at, _) in pairs.enumerate().filter(|(_, pair)| differs(pair)) {
+            let place = |n: usize| u32::try_from(n).unwrap_or(u32::MAX);
+            let (x, y) = (place(at % width), place(at / width));
+            found.pixels += 1;
+            found.bounds =
+                Some(found.bounds.map_or([x, y, x, y], |[left, top, right, bottom]| [left.min(x), top.min(y), right.max(x), bottom.max(y)]));
+        }
+        Some(found)
     }
 
     /// Rows `from` to `to`, the last excluded, cut to the picture.
@@ -319,6 +338,55 @@ impl Pixels {
     pub fn fingerprint(&self) -> u64 {
         let size = [self.width.to_le_bytes(), self.height.to_le_bytes()].concat();
         size.iter().chain(&self.rgba).fold(0xcbf2_9ce4_8422_2325, |hash, byte| (hash ^ u64::from(*byte)).wrapping_mul(0x0100_0000_01b3))
+    }
+}
+
+/// Where 2 pictures of one size differ ([`Pixels::difference`]).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Difference {
+    /// How many pixels differ.
+    pub pixels: usize,
+    /// The smallest box that holds them: its left column, top row, right column and bottom row, each
+    /// one of the box's own. `None` when no pixel differs.
+    pub bounds: Option<[u32; 4]>,
+}
+
+/// Where `a` and `b`, two answers of `ui.inspect`, differ: a JSON pointer to each value that differs, with
+/// its value in `a` and in `b`, cut to 80 characters. Objects are compared key by key and arrays of one
+/// length item by item. The places under a pointer in `skip` are left out, such as the frame timings,
+/// which change with every frame.
+pub fn changes(a: &Value, b: &Value, skip: &[&str]) -> Vec<String> {
+    let mut found = Vec::new();
+    changes_at(a, b, String::new(), skip, &mut found);
+    found
+}
+
+fn changes_at(a: &Value, b: &Value, at: String, skip: &[&str], found: &mut Vec<String>) {
+    if skip.contains(&at.as_str()) || a == b {
+        return;
+    }
+    let key = |k: &str| format!("{at}/{}", k.replace('~', "~0").replace('/', "~1"));
+    match (a, b) {
+        (Value::Object(a), Value::Object(b)) => {
+            let keys: std::collections::BTreeSet<&String> = a.keys().chain(b.keys()).collect();
+            for k in keys {
+                let missing = Value::Null;
+                changes_at(a.get(k).unwrap_or(&missing), b.get(k).unwrap_or(&missing), key(k), skip, found);
+            }
+        }
+        (Value::Array(a), Value::Array(b)) if a.len() == b.len() => {
+            for (i, (a, b)) in a.iter().zip(b).enumerate() {
+                changes_at(a, b, key(&i.to_string()), skip, found);
+            }
+        }
+        _ => {
+            let short = |v: &Value| {
+                let text = v.to_string();
+                if text.chars().count() > 80 { format!("{}…", text.chars().take(79).collect::<String>()) } else { text }
+            };
+            let place = if at.is_empty() { "the whole answer" } else { &at };
+            found.push(format!("{place}: {}, then {}", short(a), short(b)));
+        }
     }
 }
 
@@ -382,6 +450,37 @@ mod tests {
         assert_eq!(a.differing(&b, 8), Some(1));
         assert_eq!(a.differing(&b, 9), Some(0));
         assert_eq!(a.differing(&Pixels { width: 1, height: 2, rgba: a.rgba.clone() }, 0), None);
+    }
+
+    #[test]
+    fn a_difference_is_boxed_by_the_pixels_that_differ() {
+        // 3 × 2 pixels, each byte its own number; 2 of them changed: (2, 0) and (1, 1).
+        let a = Pixels { width: 3, height: 2, rgba: (0..24).collect() };
+        let mut b = Pixels { width: 3, height: 2, rgba: a.rgba.clone() };
+        b.rgba[8] += 5;
+        b.rgba[18] += 1;
+        assert_eq!(a.difference(&b, 0), Some(Difference { pixels: 2, bounds: Some([1, 0, 2, 1]) }));
+        assert_eq!(a.difference(&b, 1), Some(Difference { pixels: 1, bounds: Some([2, 0, 2, 0]) }));
+        assert_eq!(a.difference(&b, 5), Some(Difference { pixels: 0, bounds: None }));
+        assert_eq!(a.difference(&a.rows(0, 1), 0), None);
+    }
+
+    #[test]
+    fn changes_name_each_value_that_differs_by_its_json_pointer() {
+        let a = json!({"ui": {"view": {"outline": false}, "panels": [1, 2]}, "perf": {"fps": 24}, "a/b": 1, "list": [1]});
+        let b = json!({"ui": {"view": {"outline": true}, "panels": [1, 3], "dialog": "update"}, "perf": {"fps": 30}, "a/b": 2, "list": [1, 2]});
+        assert_eq!(
+            changes(&a, &b, &["/perf"]),
+            [
+                "/a~1b: 1, then 2",
+                "/list: [1], then [1,2]",
+                "/ui/dialog: null, then \"update\"",
+                "/ui/panels/1: 2, then 3",
+                "/ui/view/outline: false, then true",
+            ]
+        );
+        assert_eq!(changes(&a, &b, &["/perf", "/ui", "/a~1b", "/list"]), Vec::<String>::new());
+        assert_eq!(changes(&json!(1), &json!("x".repeat(100)), &[]), [format!("the whole answer: 1, then \"{}…", "x".repeat(78))]);
     }
 
     #[test]

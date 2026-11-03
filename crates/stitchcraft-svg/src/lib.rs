@@ -13,8 +13,8 @@
 //! connector-tool lines and helper paths are left out; trim and stop commands, and the ignore commands and
 //! setting, are applied. It reads style sheets as editors write them, with element, class and id
 //! selectors (`REQ-SVG-006`), and a file an older Ink/Stitch saved as Ink/Stitch updates it ([`version`],
-//! `REQ-SVG-007`). The other `inkstitch:*` settings, commands, clones and clip paths follow in milestone
-//! M8.
+//! `REQ-SVG-007`). Since M8 it reads every `inkstitch:*` setting of a shape, Ink/Stitch's commands, clip
+//! paths, and clones (`<use>`), which sew what they show where they show it.
 //!
 //! Its invariants:
 //!
