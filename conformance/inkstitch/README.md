@@ -72,7 +72,7 @@ cargo xtask conformance --differential --filter inkstitch-fonts --every-glyph   
 The report is `target/conformance/fonts.md`, with a row for each font, the excuses with the glyphs each
 excused, the stitch types StitchCraft doesn't sew yet with their glyphs, and each glyph that differs with its
 measures. Beside it, `fonts.json` gives every glyph's verdict for tools, and `fonts/` keeps the design of
-each glyph that doesn't agree, by font and file, with Ink/Stitch's PES file of it.
+each glyph that differs or didn't sew, by font and file, with Ink/Stitch's PES file of it.
 
 `glyphs.toml` excuses a difference StitchCraft makes on purpose by the ledger's entry that explains it. Each
 excuse is for the glyphs where its cause is, picked by the diagnostics StitchCraft gives them (`codes` and

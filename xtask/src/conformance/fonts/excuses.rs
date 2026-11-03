@@ -52,7 +52,7 @@ pub struct Traits {
 impl Traits {
     /// Whether a setting's text `value` sets something: neither nothing nor only zeros.
     pub fn sets(value: &str) -> bool {
-        value.split_whitespace().any(|word| word.parse::<f64>().map_or(true, |n| n != 0.0))
+        value.split_whitespace().any(|word| word.parse::<f64>() != Ok(0.0))
     }
 }
 

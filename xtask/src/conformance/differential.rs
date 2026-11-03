@@ -728,10 +728,7 @@ mod tests {
         let theirs = blocks(&[red, ultramarine, red], 5.0);
         let named = undone(PALETTE, &theirs, &ours).unwrap();
         assert_eq!(named.blocks.iter().map(|b| b.thread.color).collect::<Vec<_>>(), [vermilion, blue, vermilion]);
-        assert_eq!(
-            compare(&Measured::of(&ours).unwrap(), &Measured::of(&named).unwrap()).iter().find(|row| row.0 == Measure::Threads).unwrap().3,
-            true
-        );
+        assert!(compare(&Measured::of(&ours).unwrap(), &Measured::of(&named).unwrap()).iter().find(|row| row.0 == Measure::Threads).unwrap().3);
         // Where they change thread at other blocks, or have more of them, the threads stay theirs.
         for other in [blocks(&[red, ultramarine, ultramarine], 5.0), blocks(&[red, ultramarine], 5.0), blocks(&[red, red, red], 5.0)] {
             assert_eq!(undone(PALETTE, &other, &ours).unwrap(), other);
