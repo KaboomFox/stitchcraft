@@ -124,13 +124,13 @@ them, so they may fall a little elsewhere across a shape, and look the same. The
 colours but not their names in the Brother palette, and the machine file is the same. StitchCraft Stroke,
 Satin and Fill must be installed: VectorCraft gives a new object only the effects of installed plug-ins.
 The TS-13 sheets need StitchCraft Auto too, which their top halves' shapes have. TS-01, TS-02 and TS-10A to
-TS-10C are drawn stitch by stitch, and come from `stitch testsheet` alone.
+TS-10C are drawn stitch by stitch, and come from `stitch testsheet` alone. So does TS-16, whose fill and
+satin column start and end at positions that the filter would have to draw as markers.
 
 ## Read what it says
 
 Each line under the summary names an object by its id in the document, such as `vc:10`, and says what
-was done with it. In the patch, the placement line is left out, as its name asks (`SC-I0811`). The start
-marker isn't applied yet (below). The group's own gold fill, which the graphic style put on it, isn't
+was done with it. In the patch, the placement line is left out, as its name asks (`SC-I0811`). The group's own gold fill, which the graphic style put on it, isn't
 sewn as a shape of its own, and gives the squares their thread. Other messages name what isn't sewn as it
 is drawn, with the VectorCraft command that makes it sewable, such as **Type › Create Outlines** for text
 (`SC-W0807`). The [diagnostic codes](../reference/diagnostics.md) page explains each code, as
@@ -139,9 +139,10 @@ is drawn, with the VectorCraft command that makes it sewable, such as **Type ›
 ## Start and end markers
 
 A small path named `stitch:start` or `stitch:end`, grouped with a fill or a satin column, marks where the
-fill or the column is to start or end, as Ink/Stitch's starting and ending positions do. A marker is
-never sewn, and a group or a layer is never a marker. StitchCraft doesn't start or end a shape at one
-yet, and chooses where, as the patch's start marker shows.
+fill or the column starts or ends, as Ink/Stitch's start and end commands do. The patch's red fill starts
+at its start marker. A marker is never sewn, and a group or a layer is never a marker. Put one of each in
+a group: StitchCraft names a second one, and uses the first. The middle of the marker counts, so draw it
+small, such as a dot or a short line, where the needle is to go in or come out.
 
 ## When it sews wrong
 

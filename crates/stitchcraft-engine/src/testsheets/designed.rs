@@ -18,7 +18,7 @@ use stitchcraft_plan::{StitchPlan, Thread};
 use super::pictures::Picture;
 use super::sketch::SheetError;
 use crate::common::{STOP_AFTER, TRIM_AFTER};
-use crate::design::{Cap, Design, DesignSettings, Element, FillRule, Join, Path, Segment, Shape, Subpath};
+use crate::design::{Cap, Design, DesignSettings, Element, FillRule, Hints, Join, Path, Segment, Shape, Subpath};
 use crate::generators::satin::{END_AT_NEAREST_POINT, START_AT_NEAREST_POINT};
 
 /// The settings that sew a sheet's satin column as drawn, from its start to its end whatever is around it,
@@ -115,6 +115,15 @@ impl Drawing {
         }
     }
 
+    /// Start and end positions for the last element drawn so far, as Ink/Stitch's start and end commands
+    /// give them (`REQ-GEN-001`); none before the first.
+    pub fn positions(&mut self, start: (f64, f64), end: (f64, f64)) -> Result<(), SheetError> {
+        if let Some(last) = self.elements.last_mut() {
+            last.hints = Hints { start: Some(point(start)?), end: Some(point(end)?), target: None };
+        }
+        Ok(())
+    }
+
     fn stroke(&mut self, name: &str, subpaths: Vec<Subpath>, thread: &Thread, params: &[(&str, &str)]) -> Result<(), SheetError> {
         self.add(name, Shape::stroke(Path { subpaths }), thread, params)
     }
@@ -127,6 +136,7 @@ impl Drawing {
             thread: thread.clone(),
             params: params.iter().copied().collect::<ParamSet>(),
             automatic: false,
+            hints: Hints::default(),
         });
         Ok(())
     }
@@ -292,6 +302,15 @@ mod tests {
         twice.polyline("a", &[(0.0, 5.0), (10.0, 5.0)], &thread, &[]).unwrap();
         let Err(SheetError::Said(said)) = twice.plan_saying(&[]) else { panic!("drawn with one id twice") };
         assert!(said.contains("Two elements of the design have the id `twice:a`."), "{said}");
+    }
+
+    #[test]
+    fn a_stop_or_positions_before_any_element_change_nothing() {
+        // Each is for the last element drawn so far, and there is none yet.
+        let mut d = Drawing::new("none");
+        d.stop();
+        assert!(d.positions((0.0, 0.0), (1.0, 1.0)).is_ok());
+        assert!(d.elements.is_empty());
     }
 
     #[test]

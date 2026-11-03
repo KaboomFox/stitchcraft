@@ -619,7 +619,9 @@ registry! {
     /// which Ink/Stitch doesn't read either, those of its early versions (`embroider_` attributes), its
     /// design setting `rotate_on_export`, which turns the design as it is written, and the updates
     /// Ink/Stitch would make to a file with its settings and no file version, or from a newer Ink/Stitch,
-    /// which is read as it is.
+    /// which is read as it is. Of its commands, one on an object that is not stitched is named, and so is a
+    /// start, end or target command whose place doesn't read, and one on a shape digitized automatically
+    /// (`--auto`), which places where its parts start and end.
     ///
     /// The message names the element and what was done. Convert text and clones to paths in the editor
     /// (in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.
@@ -692,8 +694,10 @@ registry! {
     /// colour, and a pattern, or a colour that does not read, in black. An object that StitchCraft effects
     /// reach from more than one level, its own and a group's around it, or 2 groups', sews as the nearest say:
     /// VectorCraft runs each on the stitches the one before drew, which no machine sews. A start or end
-    /// marker, an object named `stitch:start` or `stitch:end`, is never stitched, and StitchCraft does not yet
-    /// start or end a shape where one says. A name that begins with `stitch:` and names no marker StitchCraft
+    /// marker, an object named `stitch:start` or `stitch:end`, is never stitched: the shapes grouped with it
+    /// start or end there, and a marker they don't use is said, a second one of its kind in a group or one
+    /// with no point that reads, as are those beside a shape digitized automatically, which places where its
+    /// parts start and end. A name that begins with `stitch:` and names no marker StitchCraft
     /// reads is said too, as is a group or a layer named as a marker, which only a shape can be: the name is
     /// ignored. A satin column, a zigzag or a fill made of a stroke is as wide as the stroke all along and
     /// centred on its path, so a stroke aligned inside or outside a closed path is said, as is a width

@@ -19,7 +19,10 @@ stroke or the fill of a shape, and each sews in its own thread colour.
 | [Circular fill](circular-fill.md) | areas, in a spiral round their middle | now |
 
 Every element also gets [lock stitches](locks.md) where its stitching starts and ends, and a trim or a
-stop after it when it asks for one. A shape without settings can have its stitch type chosen by its width
+stop after it when it asks for one. A fill or a satin column starts near where the element before it left
+the needle, and ends near where the next one starts. A design can say where instead, with Ink/Stitch's
+start and end commands in an SVG file or objects named `stitch:start` and `stitch:end` in a VectorCraft
+document ([how](../how-to/embroider-a-vectorcraft-design.md#start-and-end-markers)). A shape without settings can have its stitch type chosen by its width
 instead ([automatic digitizing](automatic.md)). An element of a type that is not sewn yet is left out, and
 `SC-W0011` names it. The [roadmap](../../plan/roadmap.md) says what each milestone adds.
 

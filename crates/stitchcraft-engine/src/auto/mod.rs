@@ -87,7 +87,7 @@ use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Fix, Labe
 use stitchcraft_params::{ParamSet, Validated};
 
 use crate::common::{STOP_AFTER, TRIM_AFTER};
-use crate::design::{Cap, Design, DesignSettings, Element, FillRule, Join, Path, Segment, Shape, Subpath, within_working_limit};
+use crate::design::{Cap, Design, DesignSettings, Element, FillRule, Hints, Join, Path, Segment, Shape, Subpath, within_working_limit};
 use crate::generators::passes::BEAN_STITCH_REPEATS;
 use crate::generators::pull::PULL_COMPENSATION;
 use crate::generators::satin::{
@@ -604,9 +604,10 @@ fn ring_subpath(ring: &[Point]) -> Option<Subpath> {
     Some(Subpath { start, segments: rest.iter().map(|&q| Segment::Line(q)).collect(), closed: true })
 }
 
-/// An ordinary element that sews `shape` as a part of `element`, named `id`, with `params`.
+/// An ordinary element that sews `shape` as a part of `element`, named `id`, with `params`. It starts and
+/// ends where automatic digitizing's order puts it: an automatic element's hints are the reader's to name.
 fn part(element: &Element, id: ElementId, shape: Shape, params: ParamSet) -> Element {
-    Element { id, name: element.name.clone(), shape, thread: element.thread.clone(), params, automatic: false }
+    Element { id, name: element.name.clone(), shape, thread: element.thread.clone(), params, automatic: false, hints: Hints::default() }
 }
 
 /// `params` without the settings that act after an element, and those settings.
@@ -760,7 +761,15 @@ mod tests {
         let (square, strip) = (rect((0.0, 0.0), (10.0, 10.0)), rect((20.0, 0.0), (30.0, 0.6)));
         let shape = Shape::Fill { path: outline(&[square.clone(), strip.clone()]), rule: FillRule::NonZero };
         let thread = stitchcraft_plan::Thread::new(stitchcraft_plan::Rgb::new(0, 0, 0));
-        let area = Element { id: ElementId::new("area").unwrap(), name: None, shape, thread, params: ParamSet::default(), automatic: true };
+        let area = Element {
+            id: ElementId::new("area").unwrap(),
+            name: None,
+            shape,
+            thread,
+            params: ParamSet::default(),
+            automatic: true,
+            hints: Default::default(),
+        };
         let said = vec![Diagnostic::new(Code::InternalCheckFailed, "A part could not be measured.").with_element(area.id.clone())];
         let filled = narrow::Parts { filled: vec![square.clone()], along: Vec::new(), said: said.clone() };
         assert_eq!(sewn(&area, filled, &AutoParams::defaults()).diagnostics, said);

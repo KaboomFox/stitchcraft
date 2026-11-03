@@ -22,12 +22,15 @@
 //!   listed (`SC-I0805`).
 //!
 //! The other commands: `trim` and `stop` turn on the object's `trim_after` and `stop_after`, exactly as
-//! the settings would. `starting_point` and `ending_point` place where Ink/Stitch starts and ends a fill
-//! or a satin column; they, `origin` and `stop_position` are not applied yet (`SC-W0802`). `target_point`
-//! centres a circular fill and aims a ripple, and this reader reads none of the settings that make a shape
-//! one until M8, so it changes nothing StitchCraft sews from a file yet. The rest feed Ink/Stitch's own
-//! tools, so they change nothing StitchCraft sews. Before its file version 3, Ink/Stitch named 7 commands
-//! otherwise ([`RENAMED`]); they are read as the commands they became.
+//! the settings would. `starting_point` and `ending_point` give the start and end positions of the object's
+//! fills and satin columns, and `target_point` the point a circular fill turns round (`REQ-GEN-001`,
+//! `REQ-FILL-CIR-008`): each at its symbol's place, the `<use>` element's `x` and `y` under its transform
+//! and those of the elements above it, as Ink/Stitch places it (`lib/commands.py`). With 2 of one kind on an
+//! object, the first connector in the file counts, as in Ink/Stitch. Each connector's end on its object is
+//! kept too: Ink/Stitch's update of a file of version 1 or 2 moves start and end commands there
+//! ([`crate::version`]). `origin` and `stop_position` are not applied yet (`SC-W0802`). The rest feed
+//! Ink/Stitch's own tools, so they change nothing StitchCraft sews. Before its file version 3, Ink/Stitch
+//! named 7 commands otherwise ([`RENAMED`]); they are read as the commands they became.
 //!
 //! **Ink/Stitch's own content** is what tells its updater that a file is one of its own
 //! ([`crate::version`]): an element or an attribute in its namespace, or an `embroider_` attribute, the
@@ -39,7 +42,9 @@ use std::collections::{BTreeMap, BTreeSet};
 use roxmltree::{Attribute, ExpandedName, Node};
 use stitchcraft_core::{Exhausted, Meter};
 
+use crate::path::{Seg, V, path_data};
 use crate::style::Declared;
+use crate::transform::{self, Affine};
 use crate::version;
 
 pub(crate) const INKSCAPE_NS: &str = "http://www.inkscape.org/namespaces/inkscape";
@@ -71,11 +76,10 @@ pub enum Does {
     IgnoreLayer,
     /// Nothing yet, and says so: it changes where the design sews.
     NotYet,
-    /// Nothing yet, and says so on the object it is tied to: it places where Ink/Stitch starts or ends a
-    /// fill or a satin column.
+    /// Places where the object's fills and satin columns start or end (`REQ-GEN-001`).
     StartOrEnd,
-    /// Nothing yet: it centres a circular fill and aims a ripple, and this reader reads none of the settings
-    /// that make a shape one until M8 reads Ink/Stitch's attributes.
+    /// Places the point the object's circular fill turns round (`REQ-FILL-CIR-008`), and its ripple stitch
+    /// aims at from M10.
     Positions,
     /// Nothing: it is input to Ink/Stitch's own tools, not to sewing.
     ToolInput,
@@ -90,8 +94,10 @@ impl Does {
             Does::IgnoreObject => "applied: the object is left out and listed (`SC-I0805`)",
             Does::IgnoreLayer => "applied: every layer it is in is left out and listed (`SC-I0805`)",
             Does::NotYet => "planned: noted as not applied (`SC-W0802`)",
-            Does::StartOrEnd => "planned: noted on the object as not applied (`SC-W0802`)",
-            Does::Positions => "read with the stitch types it positions",
+            Does::StartOrEnd => "applied to the object's fills and satin columns (`REQ-GEN-001`), unless it is digitized automatically",
+            Does::Positions => {
+                "applied to the object's circular fill (`REQ-FILL-CIR-008`), and from M10 to its ripple stitch, unless it is digitized automatically"
+            }
             Does::ToolInput => "nothing to sew: input to Ink/Stitch's tools",
         }
     }
@@ -241,11 +247,24 @@ pub(crate) struct Found<'a, 'input> {
     pub version: Option<&'a str>,
 }
 
+/// A command tied to an object, and where it is, in the root's user units: `None` where that doesn't read.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) struct Tied {
+    /// The command.
+    pub command: Command,
+    /// Its symbol's place: its `<use>` element's `x` and `y`, under the transforms of the use and of the
+    /// elements above it but the root, which the reader leaves out.
+    pub symbol: Option<V>,
+    /// Where its connector ends on the object: the first subpath's end at the object's side, under the
+    /// connector's transforms.
+    pub on_object: Option<V>,
+}
+
 /// Every Ink/Stitch command in a document, by where it applies.
 #[derive(Default)]
 pub(crate) struct Objects {
-    /// The commands tied to each object.
-    commands: BTreeMap<Place, Vec<Command>>,
+    /// The commands tied to each object, in the order of their connectors in the file.
+    commands: BTreeMap<Place, Vec<Tied>>,
     /// The connectors that tie a command to its object.
     command_connectors: BTreeSet<Place>,
     /// Every `<use>` of a command's symbol, and its command.
@@ -267,9 +286,14 @@ pub(crate) enum Unapplied {
 }
 
 impl Objects {
-    /// The commands tied to `node`.
-    pub(crate) fn on(&self, node: Node<'_, '_>) -> &[Command] {
+    /// The commands tied to `node`, in the order of their connectors in the file.
+    pub(crate) fn on(&self, node: Node<'_, '_>) -> &[Tied] {
         self.commands.get(&place(node)).map_or(&[], Vec::as_slice)
+    }
+
+    /// The first command named `name` tied to `node`, as Ink/Stitch takes it.
+    pub(crate) fn first(&self, node: Node<'_, '_>, name: &str) -> Option<Tied> {
+        self.on(node).iter().find(|tied| tied.command.name == name).copied()
     }
 
     /// Whether `node` is the connector of a command, which the command speaks for.
@@ -289,7 +313,7 @@ impl Objects {
 
     /// The commands tied to objects, with the places of the objects, in document order.
     pub(crate) fn tied(&self) -> impl Iterator<Item = (Place, Command)> + '_ {
-        self.commands.iter().flat_map(|(node, commands)| commands.iter().map(|c| (*node, *c)))
+        self.commands.iter().flat_map(|(node, commands)| commands.iter().map(|tied| (*node, tied.command)))
     }
 
     /// The commands that are not applied, by their `<use>` elements' places, in document order.
@@ -300,8 +324,8 @@ impl Objects {
 
 /// The ids, style sheets, Ink/Stitch commands and Ink/Stitch content and version of the document under
 /// `root`, whose SVG elements are in namespace `ns`. One unit of work per node, one per step from a layer
-/// command up to its layers, and one per node searched for the version's text or per step up from an
-/// element of the version's name.
+/// command or a tied command's symbol or connector up to the root, one per segment of a connector, and one
+/// per node searched for the version's text or per step up from an element of the version's name.
 pub(crate) fn find<'a, 'input>(root: Node<'a, 'input>, ns: Option<&str>, meter: &mut Meter) -> Result<Found<'a, 'input>, Exhausted> {
     let mut ids = BTreeMap::new();
     let (mut connectors, mut uses, mut sheets) = (Vec::new(), Vec::new(), Vec::new());
@@ -359,10 +383,56 @@ pub(crate) fn find<'a, 'input>(root: Node<'a, 'input>, ns: Option<&str>, meter: 
         let tied = [(start, end), (end, start)].into_iter().find_map(|(symbol, target)| Some((objects.shown_by(symbol)?, target)));
         if let Some((command, target)) = tied {
             objects.command_connectors.insert(place(connector));
-            objects.commands.entry(place(target)).or_default().push(command);
+            // The commands that place something are placed; the symbol is at one end of the connector, and
+            // the object at the other.
+            let (symbol, on_object) = if matches!(command.does, Does::StartOrEnd | Does::Positions) {
+                let symbol_first = objects.shown_by(start).is_some();
+                (symbol_place(if symbol_first { start } else { end }, meter)?, connector_end(connector, symbol_first, meter)?)
+            } else {
+                (None, None)
+            };
+            objects.commands.entry(place(target)).or_default().push(Tied { command, symbol, on_object });
         }
     }
     Ok(Found { ids, sheets, objects, content, version })
+}
+
+/// The place of a command's symbol: its `<use>` element's `x` and `y`, 0 where unset, under the transforms of
+/// the use and of the elements above it ([`placed`]); `None` when one of them doesn't read as a number.
+fn symbol_place(use_node: Node<'_, '_>, meter: &mut Meter) -> Result<Option<V>, Exhausted> {
+    let coordinate = |name: &str| use_node.attribute(name).map_or(Some(0.0), |text| text.trim().parse::<f64>().ok().filter(|v| v.is_finite()));
+    let (Some(x), Some(y)) = (coordinate("x"), coordinate("y")) else { return Ok(None) };
+    Ok(placed(use_node, meter)?.map(|map| map.apply(x, y)))
+}
+
+/// Where a command's `connector` ends on its object, as Ink/Stitch's update finds it: its first subpath's
+/// last point when the symbol is at the connector's start (`symbol_first`), and its first point otherwise,
+/// under the transforms of the connector and of the elements above it ([`placed`]). `None` when its path data
+/// draws nothing or a transform doesn't read. A unit of work per segment.
+fn connector_end(connector: Node<'_, '_>, symbol_first: bool, meter: &mut Meter) -> Result<Option<V>, Exhausted> {
+    let Some(data) = connector.attribute("d") else { return Ok(None) };
+    let outline = path_data(data, meter)?;
+    let Some(first) = outline.subs.first() else { return Ok(None) };
+    let last = first.segs.last().map_or(first.start, |seg| match *seg {
+        Seg::Line(end) | Seg::Quad(_, end) | Seg::Cubic(_, _, end) => end,
+    });
+    let (x, y) = if symbol_first { last } else { first.start };
+    Ok(placed(connector, meter)?.map(|map| map.apply(x, y)))
+}
+
+/// The map from `node`'s user units to the root's: the transforms of `node` and of the elements above it,
+/// composed, the root's left out as the reader leaves it out; `None` when one of them doesn't read. A unit of
+/// work per element.
+fn placed(node: Node<'_, '_>, meter: &mut Meter) -> Result<Option<Affine>, Exhausted> {
+    let mut map = Affine::IDENTITY;
+    for element in node.ancestors().filter(|n| n.is_element() && n.parent_element().is_some()) {
+        meter.charge(1)?;
+        if let Some(text) = element.attribute("transform") {
+            let Ok(own) = transform::parse(text) else { return Ok(None) };
+            map = own.after(map);
+        }
+    }
+    Ok(Some(map).filter(|map| map.is_finite()))
 }
 
 /// The first text inside `element`, an element of the version's name, unless it is inside one of those

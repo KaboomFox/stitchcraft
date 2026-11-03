@@ -36,8 +36,9 @@
 //! a running stitch of even lengths from the circle's right-hand point, as Ink/Stitch sews it, and
 //! `SC-W0318` says so.
 //!
-//! **The middle** is each piece's centroid. Ink/Stitch's `target_point` command moves it, which StitchCraft
-//! reads with the rest of Ink/Stitch's commands and settings in M8.
+//! **The middle** is each piece's centroid, or the element's target point when its design gives one
+//! (Ink/Stitch's `target_point` command, `REQ-FILL-CIR-008`), the same for every piece, which need not lie
+//! inside it.
 
 mod cut;
 
@@ -88,6 +89,9 @@ pub struct Circular {
     /// The needle's travel between the pieces of the spiral: its running stitch, whether it runs under them,
     /// the shortest stitch, and the jump length, past which a piece is a run of its own.
     pub travel: Travel,
+    /// The point every piece's spiral turns round, the element's target point (`REQ-FILL-CIR-008`); without
+    /// one, each piece's centroid.
+    pub target: Option<Point>,
 }
 
 /// The stitches of the circular fill `circular` over `region`: in each part the tatami fill's underlay, then
@@ -183,7 +187,10 @@ impl Tally {
     /// The spiral of `circular` over `piece`, whose rings are `rings`.
     fn spiral(&mut self, piece: &Polygon, rings: &Rings<'_>, circular: &Circular, meter: &mut Meter) -> Result<Spiral, Exhausted> {
         self.pieces += 1;
-        let middle = piece.centroid(meter)?;
+        let middle = match circular.target {
+            Some(target) => target,
+            None => piece.centroid(meter)?,
+        };
         let farthest = farthest(piece, middle, meter)?;
         if circular.spacing > farthest {
             self.small += 1;

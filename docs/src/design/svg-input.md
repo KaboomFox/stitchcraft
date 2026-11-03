@@ -182,19 +182,24 @@ them (`REQ-SVG-003`).
   `ignore_object` and `ignore_layer` commands leave out an object or a layer, as the
   `inkstitch:ignore_object` setting does when it says yes in one of Ink/Stitch's words, which a toggle
   reads too, and `SC-I0805` lists each object left out. The
-  `starting_point` and `ending_point` commands, which place where Ink/Stitch starts and ends a fill or a
-  satin column, are not applied yet (`REQ-GEN-001`), and `SC-W0802` names each one on an object a viewer
-  shows. The `target_point` command centres a circular fill and aims a ripple. The adapter doesn't apply
-  it until M8, which reads the settings that make a shape one. The [command table](inkstitch-compat-contract.md#commands) gives what the adapter does with
-  each of the 12 commands. Before its file version 3, Ink/Stitch named 7 of them otherwise, such as
+  `starting_point` and `ending_point` commands give the start and end positions of every element of the
+  shape they are tied to, which its fills and satin columns start and end at (`REQ-GEN-001`). The
+  `target_point` command gives the point its circular fill turns round (`REQ-FILL-CIR-008`), and from
+  M10 the point its ripple stitch aims at. Each is at its symbol's place: the `<use>` element's `x` and
+  `y` under the transforms of the use and of the groups above it, as Ink/Stitch places it. Of 2 commands
+  of a kind on a shape, the first connector in the file counts. A command whose place doesn't read is
+  named with `SC-W0802` and left out, and so are those of a shape digitized automatically, whose parts
+  start and end where automatic digitizing places them. The
+  [command table](inkstitch-compat-contract.md#commands) gives what the adapter does with each of the 12
+  commands. Before its file version 3, Ink/Stitch named 7 of them otherwise, such as
   `fill_start` for `starting_point`: the adapter reads those as the commands they became in any file,
   where Ink/Stitch renames them only in the files it updates and sews the old symbol elsewhere
   (`DEV-SVG-014`).
 - **Connectors** tie a command to its object.
 - **Helper paths** have one of Ink/Stitch's start markers. They steer the stitches of other objects.
 
-`SC-W0802` reports a connector that ties no command, a helper path, and a command that the adapter does
-not apply yet. The module docs of `crates/stitchcraft-svg/src/inkstitch.rs` describe how the adapter
+`SC-W0802` reports a connector that ties no command, a helper path, a command that the adapter does
+not apply yet, and one on an object that is not stitched. The module docs of `crates/stitchcraft-svg/src/inkstitch.rs` describe how the adapter
 finds these objects, with the Ink/Stitch files they were read from.
 
 ## Design settings
@@ -235,6 +240,8 @@ Ink/Stitch updates it (`REQ-SVG-007`), with the changed defaults as parameters o
   `stroke_pull_compensation_mm`, which applies to each side from version 3 (M8.3);
 - in a file of version 1 or 2, a satin column starts and ends where it is drawn, with
   `start_at_nearest_point` and `end_at_nearest_point` off (M8.3);
+- in a file of version 1 or 2, a `starting_point` or `ending_point` command works at its connector's end
+  on its object, where it worked then, rather than at its symbol (M8.4);
 - in a file of version 1 to 3, a shape whose fill is sewn, without a longest stitch of its own, sews
   3 mm stitches, the default before version 4, where today's default is 4 mm;
 - in a file of version 1 to 3, a fill with `auto_fill` off is a legacy fill, sewn as a tatami fill without
@@ -247,8 +254,7 @@ Ink/Stitch asks its user whether a file with its content and no version is an ol
 updates, or objects pasted into a new file. The adapter can't ask. It reads such a file as it is and says
 so with `SC-W0802`, as it says that a file of a version above 4 is read as version 4.
 
-Of the update's other changes, the start and end commands it moves onto their objects wait for M8.4, and
-the rest alter nothing the adapter sews. The
+The update's other changes alter nothing the adapter sews. The
 [compatibility contract](inkstitch-compat-contract.md#file-versions) lists them all, with the milestone
 that applies them.
 

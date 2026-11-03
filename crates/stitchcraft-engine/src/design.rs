@@ -185,6 +185,36 @@ pub struct Element {
     /// read with `--auto`. Its `params` then choose no stitch type; those that every stitch type shares, such
     /// as the trim after it that an Ink/Stitch command asks for, still apply.
     pub automatic: bool,
+    /// Where it starts and ends, and the point it aims at, when the design gives them (`REQ-GEN-001`).
+    pub hints: Hints,
+}
+
+/// Where an element starts and ends, and the point it aims at, as a design gives them: Ink/Stitch's
+/// `starting_point`, `ending_point` and `target_point` commands, or a VectorCraft document's `stitch:start`
+/// and `stitch:end` markers. Each is a place in the design, in millimetres, which need not lie on the
+/// element. A start or end position takes the place of the needle before the element, or of what the element
+/// after it offers, for the stitch types that use them (`REQ-GEN-001`, [`crate::generate`]). A circular
+/// fill's spirals turn round its target point (`REQ-FILL-CIR-008`).
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct Hints {
+    /// Where it starts.
+    pub start: Option<Point>,
+    /// Where it ends.
+    pub end: Option<Point>,
+    /// The point it aims at.
+    pub target: Option<Point>,
+}
+
+impl Hints {
+    /// Each position it has.
+    pub fn points(&self) -> impl Iterator<Item = Point> {
+        [self.start, self.end, self.target].into_iter().flatten()
+    }
+
+    /// The same positions, each moved by `f`, or `f`'s error.
+    pub fn map<E>(&self, f: impl Fn(Point) -> Result<Point, E>) -> Result<Hints, E> {
+        Ok(Hints { start: self.start.map(&f).transpose()?, end: self.end.map(&f).transpose()?, target: self.target.map(&f).transpose()? })
+    }
 }
 
 /// What a host is asked when it reads a document into a design, the same for every host.
@@ -332,7 +362,7 @@ impl Design {
             if !ids.insert(&element.id) {
                 return Err(Diagnostic::new(Code::InternalCheckFailed, format!("Two elements of the design have the id `{}`.", element.id)));
             }
-            if element.shape.path().points().any(far) {
+            if element.shape.path().points().chain(element.hints.points()).any(far) {
                 return Err(Diagnostic::new(Code::InternalCheckFailed, format!("Element `{}` lies more than 10 m from the origin.", element.id))
                     .with_element(element.id.clone()));
             }
@@ -370,8 +400,8 @@ impl Design {
         Rect::around(self.elements.iter().flat_map(|e| e.shape.path().points()))
     }
 
-    /// The design moved by `by`, `[dx, dy]` in millimetres: every point of its elements, and its origin and
-    /// stop position, as a host draws a design somewhere else (`REQ-VC-015`). `SC-E0009`, as from
+    /// The design moved by `by`, `[dx, dy]` in millimetres: every point of its elements, their hints, and its
+    /// origin and stop position, as a host draws a design somewhere else (`REQ-VC-015`). `SC-E0009`, as from
     /// [`Design::new`], when a point would lie more than 10 m from the origin.
     pub fn moved(&self, [dx, dy]: [f64; 2]) -> Result<Design, Diagnostic> {
         let point = |p: Point| {
@@ -397,7 +427,7 @@ impl Design {
                 Shape::Stroke { path: outline, width, join, cap } => Shape::Stroke { path: path(outline)?, width: *width, join: *join, cap: *cap },
                 Shape::Fill { path: boundary, rule } => Shape::Fill { path: path(boundary)?, rule: *rule },
             };
-            Ok(Element { shape, ..element.clone() })
+            Ok(Element { shape, hints: element.hints.map(point)?, ..element.clone() })
         });
         let settings = DesignSettings {
             origin: self.settings.origin.map(point).transpose()?,
@@ -427,6 +457,7 @@ mod tests {
             thread: Thread::new(Rgb::new(0, 0, 0)),
             params: ParamSet::new(),
             automatic: false,
+            hints: Default::default(),
         }
     }
 
@@ -463,12 +494,16 @@ mod tests {
             subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Cubic(p(0.0, -5.0), p(10.0, 5.0), p(10.0, 0.0))], closed: true }],
         };
         let quad = Path { subpaths: vec![Subpath { start: p(1.0, 1.0), segments: vec![Segment::Quad(p(2.0, 3.0), p(4.0, 1.0))], closed: false }] };
-        let fill = Element { shape: Shape::Fill { path: quad, rule: FillRule::EvenOdd }, ..element("q", Path::default()) };
+        let hints = Hints { start: Some(p(1.0, 1.0)), end: Some(p(4.0, 1.0)), target: Some(p(2.0, 2.0)) };
+        let fill = Element { shape: Shape::Fill { path: quad, rule: FillRule::EvenOdd }, hints, ..element("q", Path::default()) };
         let settings = DesignSettings { origin: Some(p(5.0, 5.0)), stop_position: Some(p(-1.0, 0.0)), ..DesignSettings::default() };
         let design = Design::new(vec![element("c", curve), fill, element("l", line(p(-2.0, 1.0), p(3.0, 1.0)))], settings).unwrap();
         let moved = design.moved([3.0, -2.0]).unwrap();
-        let points = |design: &Design| design.elements().iter().flat_map(|e| e.shape.path().points()).collect::<Vec<_>>();
+        // Every point, the hints' among them.
+        let points = |design: &Design| design.elements().iter().flat_map(|e| e.shape.path().points().chain(e.hints.points())).collect::<Vec<_>>();
+        assert_eq!(points(&moved).len(), points(&design).len());
         assert!(points(&moved).iter().zip(points(&design)).all(|(a, b)| (a.x(), a.y()) == (b.x() + 3.0, b.y() - 2.0)));
+        assert_eq!(moved.elements()[1].hints, Hints { start: Some(p(4.0, -1.0)), end: Some(p(7.0, -1.0)), target: Some(p(5.0, 0.0)) });
         assert_eq!((moved.settings.origin, moved.settings.stop_position), (Some(p(8.0, 3.0)), Some(p(2.0, -2.0))));
         // Each element as it was but for its points: its id, kind of shape, thread and settings.
         assert_eq!(moved.moved([-3.0, 2.0]).unwrap(), design);
@@ -487,6 +522,17 @@ mod tests {
         assert_eq!((problem.code, problem.element.map(|e| e.to_string())), (Code::InternalCheckFailed, Some("far".to_string())));
         let edge = vec![element("edge", line(p(-WORKING_LIMIT_MM, 0.0), p(WORKING_LIMIT_MM, 0.0)))];
         assert!(Design::new(edge, DesignSettings::default()).is_ok());
+        // A hint is a point of the design too, though it need not lie on its element.
+        for hints in [
+            Hints { start: Some(p(0.0, WORKING_LIMIT_MM + 1.0)), ..Hints::default() },
+            Hints { end: Some(p(0.0, WORKING_LIMIT_MM + 1.0)), ..Hints::default() },
+            Hints { target: Some(p(0.0, WORKING_LIMIT_MM + 1.0)), ..Hints::default() },
+        ] {
+            let far = vec![Element { hints, ..element("hinted", line(p(0.0, 0.0), p(1.0, 0.0))) }];
+            assert_eq!(Design::new(far, DesignSettings::default()).unwrap_err().code, Code::InternalCheckFailed, "{hints:?}");
+        }
+        let near = Hints { start: Some(p(0.0, WORKING_LIMIT_MM)), end: Some(p(5.0, 5.0)), target: Some(p(-5.0, 5.0)) };
+        assert!(Design::new(vec![Element { hints: near, ..element("near", line(p(0.0, 0.0), p(1.0, 0.0))) }], DesignSettings::default()).is_ok());
         // The limit is the reach of machine files: 10 m either way.
         assert_eq!(WORKING_LIMIT_MM, 10_000.0);
     }
