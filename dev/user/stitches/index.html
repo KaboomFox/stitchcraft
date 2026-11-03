@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-0e4f6aea.js";
+            window.path_to_searchindex_js = "../../searchindex-1df020c6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-0e01f503.js"></script>
@@ -205,7 +205,10 @@ stroke or the fill of a shape, and each sews in its own thread colour.</p>
 </table>
 </div>
 <p>Every element also gets <a href="locks.html">lock stitches</a> where its stitching starts and ends, and a trim or a
-stop after it when it asks for one. A shape without settings can have its stitch type chosen by its width
+stop after it when it asks for one. A fill or a satin column starts near where the element before it left
+the needle, and ends near where the next one starts. A design can say where instead, with Ink/Stitch’s
+start and end commands in an SVG file or objects named <code>stitch:start</code> and <code>stitch:end</code> in a VectorCraft
+document (<a href="../how-to/embroider-a-vectorcraft-design.html#start-and-end-markers">how</a>). A shape without settings can have its stitch type chosen by its width
 instead (<a href="automatic.html">automatic digitizing</a>). An element of a type that is not sewn yet is left out, and
 <code>SC-W0011</code> names it. The <a href="../../plan/roadmap.html">roadmap</a> says what each milestone adds.</p>
 <h2 id="setting-parameters"><a class="header" href="#setting-parameters">Setting parameters</a></h2>

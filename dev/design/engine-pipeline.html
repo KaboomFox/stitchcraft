@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0e4f6aea.js";
+            window.path_to_searchindex_js = "../searchindex-1df020c6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-0e01f503.js"></script>
@@ -299,8 +299,9 @@ point of the elements before it, whatever their thread, and what the next elemen
 That is its first point, or, when it starts at its own nearest point, its shape: a satin column’s rails
 or a tatami fill’s area. The offer comes from the next element’s shape and settings and the design’s,
 never its stitches, so nothing waits for a later element. A satin column and a tatami fill start and
-end by them (<a href="algorithms/satin.html#start-and-end">satin</a>, <a href="algorithms/fills.html#5-parts">fills</a>), and
-explicit start and end commands will override them (<code>REQ-GEN-001</code>). Each ends near its next stitch, its
+end by them (<a href="algorithms/satin.html#start-and-end">satin</a>, <a href="algorithms/fills.html#5-parts">fills</a>). An
+element’s start and end positions, which its design places, take their place for the stitch types that
+use them, and a fill or a satin column with a start position offers it (<code>REQ-GEN-001</code>). Each ends near its next stitch, its
 point nearest the offer as Ink/Stitch’s geometry library finds it, a point of one shape inside the
 other’s area first (<code>generators::next</code>).</li>
 <li><strong>Seeded randomness:</strong> each element’s generator is seeded from its <code>random_seed</code>, one of the settings
@@ -392,8 +393,8 @@ is clear of the needle for an appliqué or a check, and sewing resumes with a ju
 <tr><th>Command</th><th>Effect</th><th>From</th></tr>
 </thead>
 <tbody>
-<tr><td>Start / end point</td><td>Entry/exit hints for the generator (<code>REQ-GEN-001</code>). The VectorCraft adapter reads them from markers named <code>stitch:start</code> and <code>stitch:end</code>, which it names until then</td><td>M8</td></tr>
-<tr><td>Target point</td><td>Centre for circular fills and ripple targets. A circular fill turns round its part’s centroid until the adapter reads the command</td><td>M8, M10</td></tr>
+<tr><td>Start / end point</td><td>The element’s start and end positions, which take the place of the needle before it and of the next element’s offer for fills and satin columns (<code>REQ-GEN-001</code>). The SVG adapter reads Ink/Stitch’s commands, and the VectorCraft adapter its markers named <code>stitch:start</code> and <code>stitch:end</code></td><td>M8.4</td></tr>
+<tr><td>Target point</td><td>The point a circular fill turns round, in place of its parts’ centroids (<code>REQ-FILL-CIR-008</code>), and from M10 the ripple stitch’s target</td><td>M8.4, M10</td></tr>
 <tr><td>Trim after, stop after</td><td><code>trim_after</code> and <code>stop_after</code> on the element’s last group (see the connection table). The SVG adapter reads Ink/Stitch’s trim and stop commands as these settings.</td><td>M3.8 (engine), M3 (adapter)</td></tr>
 <tr><td>Ignore object / ignore layer</td><td>The adapter drops the element and says so in the report (<code>REQ-ASM-004</code>). The VectorCraft adapter reads them from the name <code>stitch:ignore</code></td><td>M3 (SVG), M6 (VectorCraft)</td></tr>
 <tr><td>Origin</td><td>The design setting <code>origin</code></td><td>M3.8 (engine), M8 (adapter)</td></tr>

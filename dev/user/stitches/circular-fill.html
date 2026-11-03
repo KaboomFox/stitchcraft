@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-0e4f6aea.js";
+            window.path_to_searchindex_js = "../../searchindex-1df020c6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-0e01f503.js"></script>
@@ -220,8 +220,8 @@ pictures leave the underlay out.</p>
 </table>
 </div>
 <!-- /shot -->
-<p>Ink/Stitch’s <code>target_point</code> command moves the middle. StitchCraft reads it with Ink/Stitch’s other
-commands in a later version, and until then the spiral turns round the centroid.</p>
+<p>In an Ink/Stitch file, a <code>target_point</code> command tied to the fill moves the middle to where its symbol
+is. Every part of the fill then turns round that point, which may lie outside a part.</p>
 <h2 id="pieces-and-travel"><a class="header" href="#pieces-and-travel">Pieces and travel</a></h2>
 <p>Where the part isn’t round, the spiral leaves it and comes back at every turn past the largest circle
 inside the outline, and the part cuts it into pieces. Each is sewn once, in the order a

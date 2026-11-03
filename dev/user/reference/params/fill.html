@@ -35,7 +35,7 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-0e4f6aea.js";
+            window.path_to_searchindex_js = "../../../searchindex-1df020c6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../../toc-0e01f503.js"></script>
@@ -204,7 +204,7 @@ until then an element set to one is skipped (<code>SC-W0011</code>).</p>
 <li><strong>Default:</strong> <code>tatami_fill</code></li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
-<li><strong>DEV-FILL-014.</strong> A fill whose fill_method is legacy_fill is sewn as a tatami fill without underlay (SC-W0314), and without the pull compensation, random stitch lengths and gap-filling rows legacy fill takes none of, its rows routed and joined by travel stitches as a tatami fill’s are, from near the needle to near the next element. Ink/Stitch’s legacy fill sews each stretch of rows that join on its own, back and forth, with no travel stitches between stretches; its flip starts the rows from the other side, and its reverse sews the whole fill backwards. StitchCraft keeps both settings without reading them (SC-W0105).</li>
+<li><strong>DEV-FILL-014.</strong> A fill whose fill_method is legacy_fill is sewn as a tatami fill without underlay (SC-W0314), and without the pull compensation, random stitch lengths and gap-filling rows legacy fill takes none of, its rows routed and joined by travel stitches as a tatami fill’s are, from near the needle to near the next element. Ink/Stitch’s legacy fill sews each stretch of rows that join on its own, back and forth, with no travel stitches between stretches; its flip starts the rows from the other side, and its reverse sews the whole fill backwards. StitchCraft keeps both settings without reading them (SC-W0105). Its start and end positions are used as a tatami fill’s are (REQ-GEN-001), where Ink/Stitch’s legacy fill sews its parts in order of their distance from its start command and uses it no further.</li>
 </ul>
 </li>
 </ul>

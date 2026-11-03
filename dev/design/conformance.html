@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-0e4f6aea.js";
+            window.path_to_searchindex_js = "../searchindex-1df020c6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-0e01f503.js"></script>
@@ -405,14 +405,14 @@ meant to be covered (<code>stitchcraft_testkit::metrics</code>).</p>
 it (<code>stitchcraft-testkit::transformed</code>, <code>tests/transformed.rs</code>), and a shape drawn again the other way
 round, from another point or with points added along its edges must sew the same thread. Since the checks
 don’t need an expected answer, they run on every element of every test sheet drawn as a design, and on
-random letters digitized automatically. They compare the share of each element’s top stitches and
-underlay that lies within 0.3 mm of the other plan’s, which overlooks needle points placed a little apart
-but still tells a column from a line sewn along its middle. A fill lays out its rows from the point (0, 0).
-So a design is mirrored and turned about that point, its fill angles with it, and a move is left out of
-the changes. A rule that depends on a tie broken by coordinates fails the checks: TS-13B’s letter A 6 mm
-tall sewed one leg as a satin column and the other as a line, and its mirror image the other way round.
-Each element of the sheets keeps 0.993 or more of its thread where the change takes it, against a bound
-of 0.98.</p>
+random letters digitized automatically. They compare the share of each element’s top stitches and underlay
+that lies within 0.3 mm of the other plan’s, which overlooks needle points placed a little apart but still
+tells a column from a line sewn along its middle. A fill lays out its rows from the point (0, 0). So a
+design is mirrored and turned about that point, its fill angles and its elements’ start, end and target
+positions with it, and a move is left out of the changes. A rule that depends on a tie broken by
+coordinates fails the checks: TS-13B’s letter A 6 mm tall sewed one leg as a satin column and the other as
+a line, and its mirror image the other way round. Each element of the sheets keeps 0.993 or more of its
+thread where the change takes it, against a bound of 0.98.</p>
 <h3 id="l3--inkstitch-differential-nightly"><a class="header" href="#l3--inkstitch-differential-nightly">L3 — Ink/Stitch differential (nightly)</a></h3>
 <p>A pinned Ink/Stitch runs as a black box on a corpus of SVG files written for StitchCraft, and writes
 machine files. Running Ink/Stitch as an oracle uses it and doesn’t copy it
@@ -444,13 +444,13 @@ the ledger is still true. Where the differential can undo a deviation in Ink/Sti
 the file again without it. The excuse then counts only if the measure agrees. Ink/Stitch’s jumps that go
 nowhere (<code>DEV-FMT-001</code>) excuse as many trims and jumps as there are of them, and no more.</p>
 <p><code>REQ-SVG-008</code>, <code>REQ-AUTO-021</code>, <code>REQ-AUTO-022</code>, <code>REQ-FILL-CON-008</code> and <code>REQ-FILL-CIR-007</code> are the
-requirements of level L3.
-The other runs of the suite leave them and their cases to this one. The corpus is designs the SVG reader
-sews in full, with their settings (<code>REQ-SVG-009</code>), trim and stop commands and the file version. A case may
-name a test sheet drawn as a design instead (<code>sheet</code>). Both programs sew an SVG file of the elements
-StitchCraft sews the sheet with, written with their parameters (<code>stitchcraft_testkit::inkstitch</code>), which
-StitchCraft’s reader reads back unchanged (<code>REQ-PRM-003</code>). Automatic digitizing chooses ordinary elements
-with Ink/Stitch’s parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check
+requirements of level L3. The other runs of the suite leave them and their cases to this one. The corpus
+is designs the SVG reader sews in full, with their settings (<code>REQ-SVG-009</code>), trim and stop commands and
+the file version. A case may name a test sheet drawn as a design instead (<code>sheet</code>). Both programs sew an
+SVG file of the elements StitchCraft sews the sheet with, written with their parameters, and their start,
+end and target positions as Ink/Stitch’s commands (<code>stitchcraft_testkit::inkstitch</code>), which StitchCraft’s
+reader reads back unchanged (<code>REQ-PRM-003</code>). Automatic digitizing chooses ordinary elements with
+Ink/Stitch’s parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check
 StitchCraft’s stitches of those choices against Ink/Stitch’s (<code>REQ-AUTO-021</code>). TS-11B checks the contour
 fills so, each strategy and join style among them (<code>REQ-FILL-CON-008</code>), and its circular fills
 (<code>REQ-FILL-CIR-007</code>). TS-02B to TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills’ sheet,

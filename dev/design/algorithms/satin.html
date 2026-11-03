@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-0e4f6aea.js";
+            window.path_to_searchindex_js = "../../searchindex-1df020c6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-0e01f503.js"></script>
@@ -704,6 +704,14 @@ trade places in the halves above. The first pass works from the column’s end t
 second from its start. The centre walk’s halves are its part from the cut to the end and its part from
 the cut to the start, each sewn its repeats. The first pass begins at the cut. Between the passes the
 needle goes to the line at the cut, where the second pass begins.</p>
+<p><strong>Start and end positions</strong> (<code>REQ-GEN-001</code>). A design places them with Ink/Stitch’s start and end
+commands or VectorCraft’s markers, and they apply whatever <code>start_at_nearest_point</code> and
+<code>end_at_nearest_point</code> say. The start position takes the needle’s place: it is the column’s first needle
+point, from which the needle enters the line where the position’s cut says and follows it to where the
+first stitch’s cut says. The end position takes the place of the end above and is the column’s last
+needle point, unless it lies less than 5 CSS pixels from the line’s end, where the column ends as if it
+were the last element. Ink/Stitch does the same. The element before a column with a start position ends
+nearest it (<code>DEV-SAT-012</code>).</p>
 <p><strong>A point inside an area.</strong> An area is 0 away from every point in it or on its rings, so before it
 measures between lines, Ink/Stitch’s geometry library looks for such a point. It tests the next
 element’s points first, then the element’s own, each against every part of the other’s area before the
@@ -726,8 +734,7 @@ point of the line within the shortest stitch of the needle, or of the next piece
 routes it, and is left out. An end within
 the shortest stitch of the column’s last needle point moves that point to the end. The column’s last
 stitch, often a top stitch, then goes to the end in one stitch. Ink/Stitch sews the end as a stitch of
-its own, which its stitch plan drops when it is no longer than its shortest stitch. An explicit start or
-end command, read from M8, would replace the needle point or the next stitch.</p>
+its own, which its stitch plan drops when it is no longer than its shortest stitch.</p>
 <h2 id="variants-p2-m7"><a class="header" href="#variants-p2-m7">Variants (P2, M7)</a></h2>
 <div class="table-wrapper">
 <table>

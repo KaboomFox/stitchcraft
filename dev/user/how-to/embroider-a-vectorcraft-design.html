@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-0e4f6aea.js";
+            window.path_to_searchindex_js = "../../searchindex-1df020c6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-0e01f503.js"></script>
@@ -245,11 +245,11 @@ running stitch and 2 squares in a group that a graphic style’s fill effect sew
 named <code>stitch:ignore placement line</code>:</p>
 <pre><code class="language-console">$ stitch export patch.vectorcraft -o patch.pes --preview patch.png
 patch.vectorcraft
-  file      patch.pes (PES v1, 6656 bytes)
-  sha256    6236ce2cb1bc9db739830a38a457cff67689195f86e1200e79b846240d943457
+  file      patch.pes (PES v1, 6690 bytes)
+  sha256    487060b5551385490b19acd3bb16f91db165cffcf0b1055b1aaad1f9361668d6
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
   size      50.0 × 54.0 mm
-  stitches  2466 stitches, 5 jumps, 4 trims, 3 colour changes, 0 stops
+  stitches  2483 stitches, 5 jumps, 4 trims, 3 colour changes, 0 stops
   trims     the machine makes none of them: cut the jump threads by hand
   threads   1. unnamed (#bf0000), shown as Brother PEC 5 "Red"
             2. unnamed (#0033b3), shown as Brother PEC 21 "Ultramarine"
@@ -258,7 +258,6 @@ patch.vectorcraft
   preview   patch.png (432 × 464 pixels)
 info SC-I0811 (vc:10): The object "stitch:ignore placement line" is named stitch:ignore, and is left out with everything in it.
   hint: Rename it to stitch it.
-warning SC-W0807 (vc:4): The object "stitch:start" marks where the shape grouped with it starts, and is not stitched. StitchCraft doesn't yet start a shape at a marker: it chooses where.
 warning SC-W0807 (vc:7): A group "Dots" has fills or strokes of its own, which VectorCraft paints what it holds with. They are not stitched as shapes of their own, and give their thread and stroke to the StitchCraft effects they paint.
   hint: Make objects of them with Object › Expand Appearance.
 </code></pre>
@@ -300,20 +299,21 @@ them, so they may fall a little elsewhere across a shape, and look the same. The
 colours but not their names in the Brother palette, and the machine file is the same. StitchCraft Stroke,
 Satin and Fill must be installed: VectorCraft gives a new object only the effects of installed plug-ins.
 The TS-13 sheets need StitchCraft Auto too, which their top halves’ shapes have. TS-01, TS-02 and TS-10A to
-TS-10C are drawn stitch by stitch, and come from <code>stitch testsheet</code> alone.</p>
+TS-10C are drawn stitch by stitch, and come from <code>stitch testsheet</code> alone. So does TS-16, whose fill and
+satin column start and end at positions that the filter would have to draw as markers.</p>
 <h2 id="read-what-it-says"><a class="header" href="#read-what-it-says">Read what it says</a></h2>
 <p>Each line under the summary names an object by its id in the document, such as <code>vc:10</code>, and says what
-was done with it. In the patch, the placement line is left out, as its name asks (<code>SC-I0811</code>). The start
-marker isn’t applied yet (below). The group’s own gold fill, which the graphic style put on it, isn’t
+was done with it. In the patch, the placement line is left out, as its name asks (<code>SC-I0811</code>). The group’s own gold fill, which the graphic style put on it, isn’t
 sewn as a shape of its own, and gives the squares their thread. Other messages name what isn’t sewn as it
 is drawn, with the VectorCraft command that makes it sewable, such as <strong>Type › Create Outlines</strong> for text
 (<code>SC-W0807</code>). The <a href="../reference/diagnostics.html">diagnostic codes</a> page explains each code, as
 <code>stitch explain SC-W0807</code> does.</p>
 <h2 id="start-and-end-markers"><a class="header" href="#start-and-end-markers">Start and end markers</a></h2>
 <p>A small path named <code>stitch:start</code> or <code>stitch:end</code>, grouped with a fill or a satin column, marks where the
-fill or the column is to start or end, as Ink/Stitch’s starting and ending positions do. A marker is
-never sewn, and a group or a layer is never a marker. StitchCraft doesn’t start or end a shape at one
-yet, and chooses where, as the patch’s start marker shows.</p>
+fill or the column starts or ends, as Ink/Stitch’s start and end commands do. The patch’s red fill starts
+at its start marker. A marker is never sewn, and a group or a layer is never a marker. Put one of each in
+a group: StitchCraft names a second one, and uses the first. The middle of the marker counts, so draw it
+small, such as a dot or a short line, where the needle is to go in or come out.</p>
 <h2 id="when-it-sews-wrong"><a class="header" href="#when-it-sews-wrong">When it sews wrong</a></h2>
 <p><code>stitch bug-report design.vectorcraft --says "what is wrong"</code> writes a bundle that includes the document.
 <a href="report-a-bug.html">Report a bug</a> says what to do with it.</p>

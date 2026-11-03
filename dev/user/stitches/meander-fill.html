@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-0e4f6aea.js";
+            window.path_to_searchindex_js = "../../searchindex-1df020c6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-0e01f503.js"></script>
@@ -252,8 +252,9 @@ clockwise as the drawing shows it.</p>
 <p>A part too small for the tiling, with no ring of its sides inside it, is sewn as a running stitch round
 its outline, and <code>SC-W0317</code> says so. A smaller scale lets the line in.</p>
 <h2 id="the-line"><a class="header" href="#the-line">The line</a></h2>
-<p>The line starts at the point of the tiling nearest the needle. It ends nearest where the next part, or
-the next element, starts, or else half way round the outline from where it began. It first takes the
+<p>The line starts at the point of the tiling nearest the needle, or the fill’s start position. It ends
+nearest where the next part, or the next element, starts, or the fill’s end position, or else half way
+round the outline from where it began. It first takes the
 way of fewest sides between the two, then swaps sides, and pairs of sides, picked at random, for longer
 ways round through points it hasn’t passed, until it can swap none. <code>random_seed</code> picks them: another
 seed wanders another way.</p>

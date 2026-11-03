@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-0e4f6aea.js";
+            window.path_to_searchindex_js = "../../searchindex-1df020c6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-0e01f503.js"></script>
@@ -208,7 +208,7 @@ a narrow part of a shape, which automatic digitizing sews along.</p>
         &amp;self,
         shape: &amp;Self::Shape,
         params: &amp;Self::Params,
-        hints: &amp;Hints,           // entry/exit/target points
+        hints: &amp;Hints,           // start, end and target positions
         rng: &amp;mut SplitMix64,
         budget: &amp;mut Budget,
     ) -&gt; Result&lt;GroupStitches, GenerateError&gt;;   // GenerateError -&gt; coded diagnostic
@@ -228,8 +228,9 @@ this element’s stitches.</li>
 <li><strong>Finite and bounded:</strong> all coordinates finite and within the shape’s bounds expanded by the
 compensation parameters plus 0.05 mm.</li>
 <li><strong>Length limits:</strong> top stitches within the generator’s maximum length; no zero-length stitches.</li>
-<li><strong>Hints honoured:</strong> with start/end hints the first/last stitch lies within 0.1 mm of the nearest
-point of the shape to the hint (<code>REQ-GEN-001</code>).</li>
+<li><strong>Positions honoured:</strong> a fill starts and ends nearest its start and end positions whatever its
+neighbours, and a satin column at them. A contour fill uses its start position alone, and a stroke
+sews as drawn (<code>REQ-GEN-001</code>, <code>crates/stitchcraft-engine/tests/positions.rs</code>).</li>
 <li><strong>Degenerate inputs:</strong> the shared degenerate corpus (zero-area, hair-thin, self-touching, collinear,
 duplicate points, 1-point paths, huge coordinates, 10⁶-vertex paths) never fails and never exceeds the
 budget without <code>SC-E0004</code>. <code>tests/degenerate.rs</code> sews it, and random paths that tend to degenerate, by

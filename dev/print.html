@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-0e4f6aea.js";
+            window.path_to_searchindex_js = "searchindex-1df020c6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-0e01f503.js"></script>
@@ -870,11 +870,11 @@ running stitch and 2 squares in a group that a graphic style’s fill effect sew
 named <code>stitch:ignore placement line</code>:</p>
 <pre><code class="language-console">$ stitch export patch.vectorcraft -o patch.pes --preview patch.png
 patch.vectorcraft
-  file      patch.pes (PES v1, 6656 bytes)
-  sha256    6236ce2cb1bc9db739830a38a457cff67689195f86e1200e79b846240d943457
+  file      patch.pes (PES v1, 6690 bytes)
+  sha256    487060b5551385490b19acd3bb16f91db165cffcf0b1055b1aaad1f9361668d6
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
   size      50.0 × 54.0 mm
-  stitches  2466 stitches, 5 jumps, 4 trims, 3 colour changes, 0 stops
+  stitches  2483 stitches, 5 jumps, 4 trims, 3 colour changes, 0 stops
   trims     the machine makes none of them: cut the jump threads by hand
   threads   1. unnamed (#bf0000), shown as Brother PEC 5 "Red"
             2. unnamed (#0033b3), shown as Brother PEC 21 "Ultramarine"
@@ -883,7 +883,6 @@ patch.vectorcraft
   preview   patch.png (432 × 464 pixels)
 info SC-I0811 (vc:10): The object "stitch:ignore placement line" is named stitch:ignore, and is left out with everything in it.
   hint: Rename it to stitch it.
-warning SC-W0807 (vc:4): The object "stitch:start" marks where the shape grouped with it starts, and is not stitched. StitchCraft doesn't yet start a shape at a marker: it chooses where.
 warning SC-W0807 (vc:7): A group "Dots" has fills or strokes of its own, which VectorCraft paints what it holds with. They are not stitched as shapes of their own, and give their thread and stroke to the StitchCraft effects they paint.
   hint: Make objects of them with Object › Expand Appearance.
 </code></pre>
@@ -925,20 +924,21 @@ them, so they may fall a little elsewhere across a shape, and look the same. The
 colours but not their names in the Brother palette, and the machine file is the same. StitchCraft Stroke,
 Satin and Fill must be installed: VectorCraft gives a new object only the effects of installed plug-ins.
 The TS-13 sheets need StitchCraft Auto too, which their top halves’ shapes have. TS-01, TS-02 and TS-10A to
-TS-10C are drawn stitch by stitch, and come from <code>stitch testsheet</code> alone.</p>
+TS-10C are drawn stitch by stitch, and come from <code>stitch testsheet</code> alone. So does TS-16, whose fill and
+satin column start and end at positions that the filter would have to draw as markers.</p>
 <h2 id="read-what-it-says"><a class="header" href="#read-what-it-says">Read what it says</a></h2>
 <p>Each line under the summary names an object by its id in the document, such as <code>vc:10</code>, and says what
-was done with it. In the patch, the placement line is left out, as its name asks (<code>SC-I0811</code>). The start
-marker isn’t applied yet (below). The group’s own gold fill, which the graphic style put on it, isn’t
+was done with it. In the patch, the placement line is left out, as its name asks (<code>SC-I0811</code>). The group’s own gold fill, which the graphic style put on it, isn’t
 sewn as a shape of its own, and gives the squares their thread. Other messages name what isn’t sewn as it
 is drawn, with the VectorCraft command that makes it sewable, such as <strong>Type › Create Outlines</strong> for text
 (<code>SC-W0807</code>). The <a href="#diagnostic-codes">diagnostic codes</a> page explains each code, as
 <code>stitch explain SC-W0807</code> does.</p>
 <h2 id="start-and-end-markers"><a class="header" href="#start-and-end-markers">Start and end markers</a></h2>
 <p>A small path named <code>stitch:start</code> or <code>stitch:end</code>, grouped with a fill or a satin column, marks where the
-fill or the column is to start or end, as Ink/Stitch’s starting and ending positions do. A marker is
-never sewn, and a group or a layer is never a marker. StitchCraft doesn’t start or end a shape at one
-yet, and chooses where, as the patch’s start marker shows.</p>
+fill or the column starts or ends, as Ink/Stitch’s start and end commands do. The patch’s red fill starts
+at its start marker. A marker is never sewn, and a group or a layer is never a marker. Put one of each in
+a group: StitchCraft names a second one, and uses the first. The middle of the marker counts, so draw it
+small, such as a dot or a short line, where the needle is to go in or come out.</p>
 <h2 id="when-it-sews-wrong"><a class="header" href="#when-it-sews-wrong">When it sews wrong</a></h2>
 <p><code>stitch bug-report design.vectorcraft --says "what is wrong"</code> writes a bundle that includes the document.
 <a href="#report-a-bug">Report a bug</a> says what to do with it.</p>
@@ -1116,7 +1116,10 @@ stroke or the fill of a shape, and each sews in its own thread colour.</p>
 </table>
 </div>
 <p>Every element also gets <a href="#lock-stitches-trims-and-stops">lock stitches</a> where its stitching starts and ends, and a trim or a
-stop after it when it asks for one. A shape without settings can have its stitch type chosen by its width
+stop after it when it asks for one. A fill or a satin column starts near where the element before it left
+the needle, and ends near where the next one starts. A design can say where instead, with Ink/Stitch’s
+start and end commands in an SVG file or objects named <code>stitch:start</code> and <code>stitch:end</code> in a VectorCraft
+document (<a href="#start-and-end-markers">how</a>). A shape without settings can have its stitch type chosen by its width
 instead (<a href="#automatic-digitizing">automatic digitizing</a>). An element of a type that is not sewn yet is left out, and
 <code>SC-W0011</code> names it. The <a href="#roadmap-small-steps-to-the-final-project">roadmap</a> says what each milestone adds.</p>
 <h2 id="setting-parameters"><a class="header" href="#setting-parameters">Setting parameters</a></h2>
@@ -1795,8 +1798,9 @@ clockwise as the drawing shows it.</p>
 <p>A part too small for the tiling, with no ring of its sides inside it, is sewn as a running stitch round
 its outline, and <code>SC-W0317</code> says so. A smaller scale lets the line in.</p>
 <h2 id="the-line-1"><a class="header" href="#the-line-1">The line</a></h2>
-<p>The line starts at the point of the tiling nearest the needle. It ends nearest where the next part, or
-the next element, starts, or else half way round the outline from where it began. It first takes the
+<p>The line starts at the point of the tiling nearest the needle, or the fill’s start position. It ends
+nearest where the next part, or the next element, starts, or the fill’s end position, or else half way
+round the outline from where it began. It first takes the
 way of fewest sides between the two, then swaps sides, and pairs of sides, picked at random, for longer
 ways round through points it hasn’t passed, until it can swap none. <code>random_seed</code> picks them: another
 seed wanders another way.</p>
@@ -1875,8 +1879,8 @@ pictures leave the underlay out.</p>
 </table>
 </div>
 <!-- /shot -->
-<p>Ink/Stitch’s <code>target_point</code> command moves the middle. StitchCraft reads it with Ink/Stitch’s other
-commands in a later version, and until then the spiral turns round the centroid.</p>
+<p>In an Ink/Stitch file, a <code>target_point</code> command tied to the fill moves the middle to where its symbol
+is. Every part of the fill then turns round that point, which may lie outside a part.</p>
 <h2 id="pieces-and-travel"><a class="header" href="#pieces-and-travel">Pieces and travel</a></h2>
 <p>Where the part isn’t round, the spiral leaves it and comes back at every turn past the largest circle
 inside the outline, and the part cuts it into pieces. Each is sewn once, in the order a
@@ -2786,6 +2790,18 @@ Arguments:
 <li>On the top half, each button’s yellow is one fill under the dots, which sew after it, and its black rim a satin column round it. On the bottom half, the abutting button’s yellow sews round the dots as drawn. Which sews better between the dots? Does the rim cover the yellow’s edge?</li>
 <li>The machine cuts the thread at thread changes and at the stop, but at no jump, and the pictures sew as any design does: a shape sewn after a jump may sew its thread down. Snip the jump threads at each stop and after sewing. Where is one sewn down, and does it show?</li>
 </ul>
+<h2 id="ts-16--an-inkstitch-file-start-and-end-commands"><a class="header" href="#ts-16--an-inkstitch-file-start-and-end-commands">TS-16 — An Ink/Stitch file: start and end commands</a></h2>
+<p>40.0 × 45.0 mm · 2096 stitches, 2 jumps, 1 trim, 1 colour change, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-16.png" alt="TS-16 as it will sew: a red tatami rectangle 40 by 30 mm, its rows across, and below it a blue satin column 40 mm long and 5 mm wide. The machine cuts the thread between them, at the thread change."><span class="img-wrapper"><img src="images/generated/testsheet-ts-16.png" alt="TS-16 as it will sew: a red tatami rectangle 40 by 30 mm, its rows across, and below it a blue satin column 40 mm long and 5 mm wide. The machine cuts the thread between them, at the thread change."></span></label></p>
+<p>Threads: Red, Blue.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>Sew it beside Ink/Stitch’s machine file of the same sheet, which the differential keeps (<code>target/conformance/differential/ts-16.inkstitch.pes</code>). Each element should start and end in the same place in both.</li>
+<li>The red fill, 40 by 30 mm, starts at its top-right corner, where its start command is, and ends at its bottom-left corner, at its end command.</li>
+<li>The blue satin column below it, 40 mm long and 5 mm wide, starts in its middle, where its start command is: the needle runs under the column to its left end, sews it to three quarters along, runs on under it to its right end and sews back. It ends three quarters along, at its end command. Is the needle’s way under the column hidden?</li>
+<li>Any difference between the 2 sew-outs, and where.</li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from the registry in `stitchcraft-core/src/diag.rs`. Edit the source, not this page. -->
 <h1 id="diagnostic-codes"><a class="header" href="#diagnostic-codes">Diagnostic codes</a></h1>
 <p>Every problem StitchCraft reports has a code. <code>E</code> codes are errors (nothing is written), <code>W</code> codes are warnings (the file is written), <code>I</code> codes are information. <code>stitch explain &lt;code&gt;</code> prints the same explanation in the terminal. Codes are never reused.</p>
@@ -3360,7 +3376,9 @@ is named too. So is what StitchCraft does not apply of an Ink/Stitch file: the s
 which Ink/Stitch doesn’t read either, those of its early versions (<code>embroider_</code> attributes), its
 design setting <code>rotate_on_export</code>, which turns the design as it is written, and the updates
 Ink/Stitch would make to a file with its settings and no file version, or from a newer Ink/Stitch,
-which is read as it is.</p>
+which is read as it is. Of its commands, one on an object that is not stitched is named, and so is a
+start, end or target command whose place doesn’t read, and one on a shape digitized automatically
+(<code>--auto</code>), which places where its parts start and end.</p>
 <p>The message names the element and what was done. Convert text and clones to paths in the editor
 (in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.</p>
 <h2 id="sc-i0805"><a class="header" href="#sc-i0805">SC-I0805</a></h2>
@@ -3426,8 +3444,10 @@ the object sews, or a group’s or a layer’s own fills and strokes. A gradient
 colour, and a pattern, or a colour that does not read, in black. An object that StitchCraft effects
 reach from more than one level, its own and a group’s around it, or 2 groups’, sews as the nearest say:
 VectorCraft runs each on the stitches the one before drew, which no machine sews. A start or end
-marker, an object named <code>stitch:start</code> or <code>stitch:end</code>, is never stitched, and StitchCraft does not yet
-start or end a shape where one says. A name that begins with <code>stitch:</code> and names no marker StitchCraft
+marker, an object named <code>stitch:start</code> or <code>stitch:end</code>, is never stitched: the shapes grouped with it
+start or end there, and a marker they don’t use is said, a second one of its kind in a group or one
+with no point that reads, as are those beside a shape digitized automatically, which places where its
+parts start and end. A name that begins with <code>stitch:</code> and names no marker StitchCraft
 reads is said too, as is a group or a layer named as a marker, which only a shape can be: the name is
 ignored. A satin column, a zigzag or a fill made of a stroke is as wide as the stroke all along and
 centred on its path, so a stroke aligned inside or outside a closed path is said, as is a width
@@ -4525,7 +4545,7 @@ until then an element set to one is skipped (<code>SC-W0011</code>).</p>
 <li><strong>Default:</strong> <code>tatami_fill</code></li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
-<li><strong>DEV-FILL-014.</strong> A fill whose fill_method is legacy_fill is sewn as a tatami fill without underlay (SC-W0314), and without the pull compensation, random stitch lengths and gap-filling rows legacy fill takes none of, its rows routed and joined by travel stitches as a tatami fill’s are, from near the needle to near the next element. Ink/Stitch’s legacy fill sews each stretch of rows that join on its own, back and forth, with no travel stitches between stretches; its flip starts the rows from the other side, and its reverse sews the whole fill backwards. StitchCraft keeps both settings without reading them (SC-W0105).</li>
+<li><strong>DEV-FILL-014.</strong> A fill whose fill_method is legacy_fill is sewn as a tatami fill without underlay (SC-W0314), and without the pull compensation, random stitch lengths and gap-filling rows legacy fill takes none of, its rows routed and joined by travel stitches as a tatami fill’s are, from near the needle to near the next element. Ink/Stitch’s legacy fill sews each stretch of rows that join on its own, back and forth, with no travel stitches between stretches; its flip starts the rows from the other side, and its reverse sews the whole fill backwards. StitchCraft keeps both settings without reading them (SC-W0105). Its start and end positions are used as a tatami fill’s are (REQ-GEN-001), where Ink/Stitch’s legacy fill sews its parts in order of their distance from its start command and uses it no further.</li>
 </ul>
 </li>
 </ul>
@@ -5602,6 +5622,13 @@ pub struct Element {
     pub thread: Thread,
     pub params: ParamSet,            // as the host stores them; validated against the registry when planned
     pub automatic: bool,             // since M13.1: a shape without settings, read with --auto, whose stitches StitchCraft chooses
+    pub hints: Hints,                // since M8.4: where its design says it starts and ends, and the point it aims at
+}
+
+pub struct Hints {                   // since M8.4: Ink/Stitch's start, end and target commands, VectorCraft's markers
+    pub start: Option&lt;Point&gt;,        // its start position, in place of the needle before it (REQ-GEN-001)
+    pub end: Option&lt;Point&gt;,          // its end position, in place of the next element's offer
+    pub target: Option&lt;Point&gt;,       // the point a circular fill turns round (REQ-FILL-CIR-008)
 }
 
 pub struct Reading {                 // since M13.1: what every host's reader is asked
@@ -5657,9 +5684,9 @@ represent with a diagnostic of their own, so a failed check is a bug in the adap
 <code>Design::moved</code> gives the design moved by an offset, every point of its elements and its origin and stop
 position, checked the same way. VectorCraft’s Test Sheet filter draws a test sheet in the middle of the
 artboard with it (<code>REQ-VC-015</code>).</p>
-<p><strong>Commands</strong> attached to elements come with M8, for Ink/Stitch’s command symbols such as start and end
-points. Trims and stops are the element parameters <code>trim_after</code> and <code>stop_after</code>, and the origin and
-stop position are design settings (M3.8).</p>
+<p><strong>Commands.</strong> Ink/Stitch’s start, end and target commands, and VectorCraft’s start and end markers, are
+an element’s hints (M8.4), its points checked and moved with the rest. Trims and stops are the element
+parameters <code>trim_after</code> and <code>stop_after</code>, and the origin and stop position are design settings (M3.8).</p>
 <h3 id="region"><a class="header" href="#region">Region</a></h3>
 <p>A fill’s region is not part of the design: the normalizer builds it from the fill’s path and fill rule,
 since M5.1 (<code>stitchcraft_engine::normalize::region</code>):</p>
@@ -6445,19 +6472,24 @@ them (<code>REQ-SVG-003</code>).</p>
 <code>ignore_object</code> and <code>ignore_layer</code> commands leave out an object or a layer, as the
 <code>inkstitch:ignore_object</code> setting does when it says yes in one of Ink/Stitch’s words, which a toggle
 reads too, and <code>SC-I0805</code> lists each object left out. The
-<code>starting_point</code> and <code>ending_point</code> commands, which place where Ink/Stitch starts and ends a fill or a
-satin column, are not applied yet (<code>REQ-GEN-001</code>), and <code>SC-W0802</code> names each one on an object a viewer
-shows. The <code>target_point</code> command centres a circular fill and aims a ripple. The adapter doesn’t apply
-it until M8, which reads the settings that make a shape one. The <a href="#commands-1">command table</a> gives what the adapter does with
-each of the 12 commands. Before its file version 3, Ink/Stitch named 7 of them otherwise, such as
+<code>starting_point</code> and <code>ending_point</code> commands give the start and end positions of every element of the
+shape they are tied to, which its fills and satin columns start and end at (<code>REQ-GEN-001</code>). The
+<code>target_point</code> command gives the point its circular fill turns round (<code>REQ-FILL-CIR-008</code>), and from
+M10 the point its ripple stitch aims at. Each is at its symbol’s place: the <code>&lt;use&gt;</code> element’s <code>x</code> and
+<code>y</code> under the transforms of the use and of the groups above it, as Ink/Stitch places it. Of 2 commands
+of a kind on a shape, the first connector in the file counts. A command whose place doesn’t read is
+named with <code>SC-W0802</code> and left out, and so are those of a shape digitized automatically, whose parts
+start and end where automatic digitizing places them. The
+<a href="#commands-1">command table</a> gives what the adapter does with each of the 12
+commands. Before its file version 3, Ink/Stitch named 7 of them otherwise, such as
 <code>fill_start</code> for <code>starting_point</code>: the adapter reads those as the commands they became in any file,
 where Ink/Stitch renames them only in the files it updates and sews the old symbol elsewhere
 (<code>DEV-SVG-014</code>).</li>
 <li><strong>Connectors</strong> tie a command to its object.</li>
 <li><strong>Helper paths</strong> have one of Ink/Stitch’s start markers. They steer the stitches of other objects.</li>
 </ul>
-<p><code>SC-W0802</code> reports a connector that ties no command, a helper path, and a command that the adapter does
-not apply yet. The module docs of <code>crates/stitchcraft-svg/src/inkstitch.rs</code> describe how the adapter
+<p><code>SC-W0802</code> reports a connector that ties no command, a helper path, a command that the adapter does
+not apply yet, and one on an object that is not stitched. The module docs of <code>crates/stitchcraft-svg/src/inkstitch.rs</code> describe how the adapter
 finds these objects, with the Ink/Stitch files they were read from.</p>
 <h2 id="design-settings"><a class="header" href="#design-settings">Design settings</a></h2>
 <p>Ink/Stitch keeps 4 settings for the whole design in the file’s first <code>&lt;metadata&gt;</code> element. Each is an
@@ -6492,6 +6524,8 @@ Ink/Stitch updates it (<code>REQ-SVG-007</code>), with the changed defaults as p
 <code>stroke_pull_compensation_mm</code>, which applies to each side from version 3 (M8.3);</li>
 <li>in a file of version 1 or 2, a satin column starts and ends where it is drawn, with
 <code>start_at_nearest_point</code> and <code>end_at_nearest_point</code> off (M8.3);</li>
+<li>in a file of version 1 or 2, a <code>starting_point</code> or <code>ending_point</code> command works at its connector’s end
+on its object, where it worked then, rather than at its symbol (M8.4);</li>
 <li>in a file of version 1 to 3, a shape whose fill is sewn, without a longest stitch of its own, sews
 3 mm stitches, the default before version 4, where today’s default is 4 mm;</li>
 <li>in a file of version 1 to 3, a fill with <code>auto_fill</code> off is a legacy fill, sewn as a tatami fill without
@@ -6503,8 +6537,7 @@ settings it has, as Ink/Stitch updates it. One digitized automatically sews by t
 Ink/Stitch asks its user whether a file with its content and no version is an old design, which it then
 updates, or objects pasted into a new file. The adapter can’t ask. It reads such a file as it is and says
 so with <code>SC-W0802</code>, as it says that a file of a version above 4 is read as version 4.</p>
-<p>Of the update’s other changes, the start and end commands it moves onto their objects wait for M8.4, and
-the rest alter nothing the adapter sews. The
+<p>The update’s other changes alter nothing the adapter sews. The
 <a href="#file-versions">compatibility contract</a> lists them all, with the milestone
 that applies them.</p>
 <h2 id="reports"><a class="header" href="#reports">Reports</a></h2>
@@ -6665,8 +6698,9 @@ point of the elements before it, whatever their thread, and what the next elemen
 That is its first point, or, when it starts at its own nearest point, its shape: a satin column’s rails
 or a tatami fill’s area. The offer comes from the next element’s shape and settings and the design’s,
 never its stitches, so nothing waits for a later element. A satin column and a tatami fill start and
-end by them (<a href="#start-and-end-1">satin</a>, <a href="#5-parts">fills</a>), and
-explicit start and end commands will override them (<code>REQ-GEN-001</code>). Each ends near its next stitch, its
+end by them (<a href="#start-and-end-1">satin</a>, <a href="#5-parts">fills</a>). An
+element’s start and end positions, which its design places, take their place for the stitch types that
+use them, and a fill or a satin column with a start position offers it (<code>REQ-GEN-001</code>). Each ends near its next stitch, its
 point nearest the offer as Ink/Stitch’s geometry library finds it, a point of one shape inside the
 other’s area first (<code>generators::next</code>).</li>
 <li><strong>Seeded randomness:</strong> each element’s generator is seeded from its <code>random_seed</code>, one of the settings
@@ -6758,8 +6792,8 @@ is clear of the needle for an appliqué or a check, and sewing resumes with a ju
 <tr><th>Command</th><th>Effect</th><th>From</th></tr>
 </thead>
 <tbody>
-<tr><td>Start / end point</td><td>Entry/exit hints for the generator (<code>REQ-GEN-001</code>). The VectorCraft adapter reads them from markers named <code>stitch:start</code> and <code>stitch:end</code>, which it names until then</td><td>M8</td></tr>
-<tr><td>Target point</td><td>Centre for circular fills and ripple targets. A circular fill turns round its part’s centroid until the adapter reads the command</td><td>M8, M10</td></tr>
+<tr><td>Start / end point</td><td>The element’s start and end positions, which take the place of the needle before it and of the next element’s offer for fills and satin columns (<code>REQ-GEN-001</code>). The SVG adapter reads Ink/Stitch’s commands, and the VectorCraft adapter its markers named <code>stitch:start</code> and <code>stitch:end</code></td><td>M8.4</td></tr>
+<tr><td>Target point</td><td>The point a circular fill turns round, in place of its parts’ centroids (<code>REQ-FILL-CIR-008</code>), and from M10 the ripple stitch’s target</td><td>M8.4, M10</td></tr>
 <tr><td>Trim after, stop after</td><td><code>trim_after</code> and <code>stop_after</code> on the element’s last group (see the connection table). The SVG adapter reads Ink/Stitch’s trim and stop commands as these settings.</td><td>M3.8 (engine), M3 (adapter)</td></tr>
 <tr><td>Ignore object / ignore layer</td><td>The adapter drops the element and says so in the report (<code>REQ-ASM-004</code>). The VectorCraft adapter reads them from the name <code>stitch:ignore</code></td><td>M3 (SVG), M6 (VectorCraft)</td></tr>
 <tr><td>Origin</td><td>The design setting <code>origin</code></td><td>M3.8 (engine), M8 (adapter)</td></tr>
@@ -6879,7 +6913,7 @@ a narrow part of a shape, which automatic digitizing sews along.</p>
         &amp;self,
         shape: &amp;Self::Shape,
         params: &amp;Self::Params,
-        hints: &amp;Hints,           // entry/exit/target points
+        hints: &amp;Hints,           // start, end and target positions
         rng: &amp;mut SplitMix64,
         budget: &amp;mut Budget,
     ) -&gt; Result&lt;GroupStitches, GenerateError&gt;;   // GenerateError -&gt; coded diagnostic
@@ -6899,8 +6933,9 @@ this element’s stitches.</li>
 <li><strong>Finite and bounded:</strong> all coordinates finite and within the shape’s bounds expanded by the
 compensation parameters plus 0.05 mm.</li>
 <li><strong>Length limits:</strong> top stitches within the generator’s maximum length; no zero-length stitches.</li>
-<li><strong>Hints honoured:</strong> with start/end hints the first/last stitch lies within 0.1 mm of the nearest
-point of the shape to the hint (<code>REQ-GEN-001</code>).</li>
+<li><strong>Positions honoured:</strong> a fill starts and ends nearest its start and end positions whatever its
+neighbours, and a satin column at them. A contour fill uses its start position alone, and a stroke
+sews as drawn (<code>REQ-GEN-001</code>, <code>crates/stitchcraft-engine/tests/positions.rs</code>).</li>
 <li><strong>Degenerate inputs:</strong> the shared degenerate corpus (zero-area, hair-thin, self-touching, collinear,
 duplicate points, 1-point paths, huge coordinates, 10⁶-vertex paths) never fails and never exceeds the
 budget without <code>SC-E0004</code>. <code>tests/degenerate.rs</code> sews it, and random paths that tend to degenerate, by
@@ -6921,7 +6956,8 @@ rests on is welcome when it helps the next reader check it again
 normalizer). Phase P1 (M3) unless noted.</p>
 <p>A stroke starts where it is drawn and ends where it is drawn, as in Ink/Stitch. Its generator is given its
 neighbours, as every generator is (<a href="#adr-0014-generators-see-their-neighbours-the-needle-before-the-next-element-after">ADR 0014</a>), and a
-stroke sews the same whatever they are. A satin column or a tatami fill before a stroke ends near the
+stroke sews the same whatever they are, and whatever start and end positions its design gives it
+(<code>REQ-GEN-001</code>). A satin column or a tatami fill before a stroke ends near the
 stroke’s first point.</p>
 <h2 id="running-stitch-2"><a class="header" href="#running-stitch-2">Running stitch</a></h2>
 <p>The workhorse: outlines, details, travel, underlay.</p>
@@ -7688,6 +7724,14 @@ trade places in the halves above. The first pass works from the column’s end t
 second from its start. The centre walk’s halves are its part from the cut to the end and its part from
 the cut to the start, each sewn its repeats. The first pass begins at the cut. Between the passes the
 needle goes to the line at the cut, where the second pass begins.</p>
+<p><strong>Start and end positions</strong> (<code>REQ-GEN-001</code>). A design places them with Ink/Stitch’s start and end
+commands or VectorCraft’s markers, and they apply whatever <code>start_at_nearest_point</code> and
+<code>end_at_nearest_point</code> say. The start position takes the needle’s place: it is the column’s first needle
+point, from which the needle enters the line where the position’s cut says and follows it to where the
+first stitch’s cut says. The end position takes the place of the end above and is the column’s last
+needle point, unless it lies less than 5 CSS pixels from the line’s end, where the column ends as if it
+were the last element. Ink/Stitch does the same. The element before a column with a start position ends
+nearest it (<code>DEV-SAT-012</code>).</p>
 <p><strong>A point inside an area.</strong> An area is 0 away from every point in it or on its rings, so before it
 measures between lines, Ink/Stitch’s geometry library looks for such a point. It tests the next
 element’s points first, then the element’s own, each against every part of the other’s area before the
@@ -7710,8 +7754,7 @@ point of the line within the shortest stitch of the needle, or of the next piece
 routes it, and is left out. An end within
 the shortest stitch of the column’s last needle point moves that point to the end. The column’s last
 stitch, often a top stitch, then goes to the end in one stitch. Ink/Stitch sews the end as a stitch of
-its own, which its stitch plan drops when it is no longer than its shortest stitch. An explicit start or
-end command, read from M8, would replace the needle point or the next stitch.</p>
+its own, which its stitch plan drops when it is no longer than its shortest stitch.</p>
 <h2 id="variants-p2-m7"><a class="header" href="#variants-p2-m7">Variants (P2, M7)</a></h2>
 <div class="table-wrapper">
 <table>
@@ -7900,6 +7943,11 @@ warning.</p>
 <p>A fill whose <code>fill</code> setting is off sews nothing, and nothing is said of it, as in Ink/Stitch
 (<code>REQ-FILL-003</code>). The path’s outline, if it has one, is sewn as its stroke settings say, and the element
 before it still ends near its area, as Ink/Stitch’s does.</p>
+<p>A fill starts nearest the needle, where the elements before it left it, and ends nearest what the next
+element offers (<a href="#5-parts">section 5</a>). Its start and end positions take their place, which a design
+places with Ink/Stitch’s start and end commands or VectorCraft’s start and end markers, and the element
+before a fill with a start position ends nearest that (<code>REQ-GEN-001</code>). Every method uses them but the
+contour fill’s end, which lies where its rings end.</p>
 <h2 id="region-1"><a class="header" href="#region-1">Region</a></h2>
 <p>A fill’s region is the area an SVG renderer paints for its path, in parts with holes
 (<code>stitchcraft_engine::normalize::region</code>, <code>REQ-FILL-001</code>):</p>
@@ -8047,7 +8095,7 @@ stretches, from the first, gets a second edge. A node then meets its row and 3 s
 even number of edges. Ink/Stitch’s graph knows an edge between 2 nodes by its kind, so a ring of 2
 nodes doubles only one of its 2 stretches. This graph does the same.</li>
 <li><strong>Start and end.</strong> The fill starts at the point of its rings nearest the needle and ends at the point
-nearest its next stitch, which the next element’s shape gives (section 5). Each of the 2 points gets a
+nearest its next stitch, which its end position or else the next element’s shape gives (section 5). Each of the 2 points gets a
 node, which splits the stretch of that ring whose chord passes nearest it. Then the node nearest the
 needle is where the fill starts, and the one nearest the next stitch where it ends. Without a needle
 the fill starts at its first segment’s start, and without a next element it ends where it starts. Only
@@ -8154,6 +8202,10 @@ rails, the start of the first that lies in the fill is the next stitch, and of a
 outline’s start that does. Failing those, for a fill after a fill, it is the first start of this fill’s
 outlines that lies in the next, and otherwise the fill’s point nearest the next element. Ink/Stitch’s
 geometry library finds it so (<a href="#start-and-end-1">satin</a>).
+A start position is the needle the parts are ordered by, and the first part starts nearest it. Each part
+after starts nearest where the part before ended, as without one, where Ink/Stitch starts each part
+nearest its start command (<code>DEV-FILL-023</code>). An end position is the last part’s next stitch
+(<code>REQ-GEN-001</code>).
 Each part is a group of its own, which assembly joins to the next as it joins any 2 groups:
 straight on within the collapse length, and otherwise with a jump and the ties and trims the element’s
 settings give. <code>SC-W0307</code> says the fill is in parts.</p>
@@ -8361,10 +8413,11 @@ stitches along one curve, placed differently, lie farthest apart. The smoothed l
 (<code>DEV-FILL-017</code>).</p>
 <h3 id="start-end-and-underlay"><a class="header" href="#start-end-and-underlay">Start, end and underlay</a></h3>
 <p>Each part sews the tatami fill’s underlay first (<a href="#6-underlay">section 6</a>), on by default, at <code>angle</code> +
-90° with 3 row spacings between its rows. Each part starts nearest the needle, at the start command’s
-point or else at the last stitch before, the underlay’s, or at the origin without either. The parts go
-in order of their distance from the first part’s start. The end command is read but not used, and the
-fill ends where its strategy ends.</p>
+90° with 3 row spacings between its rows. Each part’s underlay starts nearest the stitch before it, and
+its rings nearest the underlay’s last stitch. Before the first part, that stitch is the fill’s start
+position where it has one (<code>REQ-GEN-001</code>), and otherwise the last stitch of the elements before, or the
+origin. The parts go in order of their distance from the first part’s start. An end
+position has nothing to replace, as in Ink/Stitch: the fill ends where its strategy ends.</p>
 <h3 id="properties-conformance-1-1"><a class="header" href="#properties-conformance-1-1">Properties (conformance)</a></h3>
 <div class="table-wrapper">
 <table>
@@ -8431,7 +8484,8 @@ stitch round its outline, as a tatami fill’s part too thin for rows is, and <c
 <h3 id="the-path"><a class="header" href="#the-path">The path</a></h3>
 <p>The path runs from the point of the network nearest the needle, or else the outline’s first point, to
 the point nearest where it is to end. That is the point of the part nearest the next part, or for the
-last part the next element’s offer, or else the point of the outline half way round it from the start.
+last part its end position or else the next element’s offer, or else the point of the outline half way
+round it from the start.
 Where the 2 are one point, it ends at the point next nearest.</p>
 <ol>
 <li>It begins as the path of fewest lines between them.</li>
@@ -8491,8 +8545,9 @@ circular fill (read at <code>d59c9ab</code>). Each part of the region is sewn on
 underlay (<a href="#6-underlay">section 6</a>), grown by <code>expand_mm</code>, nearest the needle first, each ending near the
 next part and the last near the next element, as a meander fill’s are.</p>
 <h3 id="circles"><a class="header" href="#circles">Circles</a></h3>
-<p>The circles lie round the middle of the part, its centroid. Ink/Stitch’s <code>target_point</code> command moves
-the middle, and StitchCraft reads it with Ink/Stitch’s other commands in M8. The first circle has a radius
+<p>The circles lie round the middle of the part. That is the fill’s target point where its design places one
+with Ink/Stitch’s <code>target_point</code> command (<code>REQ-FILL-CIR-008</code>), and otherwise the part’s centroid. Every
+part turns round the same target point, as in Ink/Stitch, and it may lie outside the part. The first circle has a radius
 of 0.1 CSS pixel, so that the spiral ends at the middle. From <code>row_spacing_mm</code> out, each circle lies a row
 spacing past the last, until one lies 2 spacings past the part’s farthest point. That point is the one
 farthest from the middle, as the discrete Hausdorff distance Ink/Stitch takes finds it.</p>
@@ -8591,8 +8646,10 @@ the other side, and <code>reverse</code> sews the whole fill backwards.</p>
 <p>StitchCraft does not build it, since the method exists for Ink/Stitch’s older files. A fill set to it is
 sewn as a tatami fill with its settings and no underlay, and <code>SC-W0314</code> says so (<code>REQ-FILL-005</code>). Nor does
 it take pull compensation, random stitch lengths or gap-filling rows, which Ink/Stitch’s legacy fill has no
-use for, but its area grows by <code>expand_mm</code> as in Ink/Stitch. It is a tatami fill in every other way too. The element before it ends near its area, and its rows are routed and
-joined by travel stitches as a tatami fill’s are (<code>DEV-FILL-014</code>). <code>flip</code> and <code>reverse</code> are not planned,
+use for, but its area grows by <code>expand_mm</code> as in Ink/Stitch. It is a tatami fill in every other way too.
+The element before it ends near its area, and its rows are routed and joined by travel stitches as a
+tatami fill’s are, between its start and end positions where it has them. Ink/Stitch’s legacy fill takes
+its parts in order of their distance from its start command and uses it no further (<code>DEV-FILL-014</code>). <code>flip</code> and <code>reverse</code> are not planned,
 and a design that sets them gets <code>SC-W0105</code>. The VectorCraft plug-in’s fill dialog does not offer the
 method.</p>
 <h2 id="references"><a class="header" href="#references">References</a></h2>
@@ -8986,7 +9043,10 @@ its settings say, as far as its reader reads them. So a picture can be digitized
 its shapes then set by hand. A shape’s fill gives its
 area and its stroke gives its line, each with its thread, width, join and cap, as for any element. A trim
 or a stop that an Ink/Stitch command asks for is not a setting of the stitches, and an automatic element
-keeps it. An element sewn as several elements keeps it for the last of them.</p>
+keeps it. An element sewn as several elements keeps it for the last of them. Start and end positions,
+from Ink/Stitch’s commands or VectorCraft’s markers, and a target point, are not kept: automatic digitizing
+places where its parts start and end, and the readers say the commands and markers aren’t used
+(<code>REQ-GEN-001</code>). The elements it makes have none.</p>
 <p>The readers mark the element (<code>Element::automatic</code>), and they read the switch from <code>Reading</code>, which every
 host takes. Before anything is generated, the engine turns each automatic element into ordinary elements
 whose settings say what to sew (<code>stitchcraft_engine::auto</code>). The generators, the assembly and every host
@@ -10766,7 +10826,7 @@ note can follow it:</p>
 </thead>
 <tbody>
 <tr><td><code>stitch:ignore</code></td><td><code>ignore_object</code>, <code>ignore_layer</code></td><td>Leaves the object or the layer out with everything in it, and lists it with <code>SC-I0811</code></td></tr>
-<tr><td><code>stitch:start</code>, <code>stitch:end</code></td><td><code>starting_point</code>, <code>ending_point</code></td><td>Marks where the fill or the satin column grouped with it starts or ends, and never stitches the marker. Until the generators start and end at hints (<code>REQ-GEN-001</code>, M8), they choose where, and <code>SC-W0807</code> names the marker. A group or a layer is never a marker: <code>SC-W0807</code> names it, and what it holds is read as under any other name</td></tr>
+<tr><td><code>stitch:start</code>, <code>stitch:end</code></td><td><code>starting_point</code>, <code>ending_point</code></td><td>Gives the shapes of the group or layer it is in, and of the groups inside it, their start or end position: the centre of the box round its anchors. Their fills and satin columns start or end there (<code>REQ-GEN-001</code>). The marker is left out of the stitches. The first marker of each kind that shows counts, a group’s own before those of the groups round it. <code>SC-W0807</code> names another, one with no anchor that reads, and the markers of a shape digitized automatically, which places its own. A group or a layer is never a marker: <code>SC-W0807</code> names it, and what it holds is read as under any other name</td></tr>
 <tr><td>Any other word after <code>stitch:</code></td><td></td><td>Ignores the name, and <code>SC-W0807</code> names the object, in case the word is a misspelt marker</td></tr>
 </tbody>
 </table>
@@ -11531,14 +11591,14 @@ meant to be covered (<code>stitchcraft_testkit::metrics</code>).</p>
 it (<code>stitchcraft-testkit::transformed</code>, <code>tests/transformed.rs</code>), and a shape drawn again the other way
 round, from another point or with points added along its edges must sew the same thread. Since the checks
 don’t need an expected answer, they run on every element of every test sheet drawn as a design, and on
-random letters digitized automatically. They compare the share of each element’s top stitches and
-underlay that lies within 0.3 mm of the other plan’s, which overlooks needle points placed a little apart
-but still tells a column from a line sewn along its middle. A fill lays out its rows from the point (0, 0).
-So a design is mirrored and turned about that point, its fill angles with it, and a move is left out of
-the changes. A rule that depends on a tie broken by coordinates fails the checks: TS-13B’s letter A 6 mm
-tall sewed one leg as a satin column and the other as a line, and its mirror image the other way round.
-Each element of the sheets keeps 0.993 or more of its thread where the change takes it, against a bound
-of 0.98.</p>
+random letters digitized automatically. They compare the share of each element’s top stitches and underlay
+that lies within 0.3 mm of the other plan’s, which overlooks needle points placed a little apart but still
+tells a column from a line sewn along its middle. A fill lays out its rows from the point (0, 0). So a
+design is mirrored and turned about that point, its fill angles and its elements’ start, end and target
+positions with it, and a move is left out of the changes. A rule that depends on a tie broken by
+coordinates fails the checks: TS-13B’s letter A 6 mm tall sewed one leg as a satin column and the other as
+a line, and its mirror image the other way round. Each element of the sheets keeps 0.993 or more of its
+thread where the change takes it, against a bound of 0.98.</p>
 <h3 id="l3--inkstitch-differential-nightly"><a class="header" href="#l3--inkstitch-differential-nightly">L3 — Ink/Stitch differential (nightly)</a></h3>
 <p>A pinned Ink/Stitch runs as a black box on a corpus of SVG files written for StitchCraft, and writes
 machine files. Running Ink/Stitch as an oracle uses it and doesn’t copy it
@@ -11570,13 +11630,13 @@ the ledger is still true. Where the differential can undo a deviation in Ink/Sti
 the file again without it. The excuse then counts only if the measure agrees. Ink/Stitch’s jumps that go
 nowhere (<code>DEV-FMT-001</code>) excuse as many trims and jumps as there are of them, and no more.</p>
 <p><code>REQ-SVG-008</code>, <code>REQ-AUTO-021</code>, <code>REQ-AUTO-022</code>, <code>REQ-FILL-CON-008</code> and <code>REQ-FILL-CIR-007</code> are the
-requirements of level L3.
-The other runs of the suite leave them and their cases to this one. The corpus is designs the SVG reader
-sews in full, with their settings (<code>REQ-SVG-009</code>), trim and stop commands and the file version. A case may
-name a test sheet drawn as a design instead (<code>sheet</code>). Both programs sew an SVG file of the elements
-StitchCraft sews the sheet with, written with their parameters (<code>stitchcraft_testkit::inkstitch</code>), which
-StitchCraft’s reader reads back unchanged (<code>REQ-PRM-003</code>). Automatic digitizing chooses ordinary elements
-with Ink/Stitch’s parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check
+requirements of level L3. The other runs of the suite leave them and their cases to this one. The corpus
+is designs the SVG reader sews in full, with their settings (<code>REQ-SVG-009</code>), trim and stop commands and
+the file version. A case may name a test sheet drawn as a design instead (<code>sheet</code>). Both programs sew an
+SVG file of the elements StitchCraft sews the sheet with, written with their parameters, and their start,
+end and target positions as Ink/Stitch’s commands (<code>stitchcraft_testkit::inkstitch</code>), which StitchCraft’s
+reader reads back unchanged (<code>REQ-PRM-003</code>). Automatic digitizing chooses ordinary elements with
+Ink/Stitch’s parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check
 StitchCraft’s stitches of those choices against Ink/Stitch’s (<code>REQ-AUTO-021</code>). TS-11B checks the contour
 fills so, each strategy and join style among them (<code>REQ-FILL-CON-008</code>), and its circular fills
 (<code>REQ-FILL-CIR-007</code>). TS-02B to TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills’ sheet,
@@ -12399,9 +12459,9 @@ StitchCraft’s SVG adapter does with it (<code>stitchcraft_svg::inkstitch</code
 <tr><th>Command</th><th>Applies to</th><th>StitchCraft</th></tr>
 </thead>
 <tbody>
-<tr><td><code>starting_point</code></td><td>the object a connector ties it to</td><td>planned: noted on the object as not applied (<code>SC-W0802</code>)</td></tr>
-<tr><td><code>ending_point</code></td><td>the object a connector ties it to</td><td>planned: noted on the object as not applied (<code>SC-W0802</code>)</td></tr>
-<tr><td><code>target_point</code></td><td>the object a connector ties it to</td><td>read with the stitch types it positions</td></tr>
+<tr><td><code>starting_point</code></td><td>the object a connector ties it to</td><td>applied to the object’s fills and satin columns (<code>REQ-GEN-001</code>), unless it is digitized automatically</td></tr>
+<tr><td><code>ending_point</code></td><td>the object a connector ties it to</td><td>applied to the object’s fills and satin columns (<code>REQ-GEN-001</code>), unless it is digitized automatically</td></tr>
+<tr><td><code>target_point</code></td><td>the object a connector ties it to</td><td>applied to the object’s circular fill (<code>REQ-FILL-CIR-008</code>), and from M10 to its ripple stitch, unless it is digitized automatically</td></tr>
 <tr><td><code>autoroute_start</code></td><td>the object a connector ties it to</td><td>nothing to sew: input to Ink/Stitch’s tools</td></tr>
 <tr><td><code>autoroute_end</code></td><td>the object a connector ties it to</td><td>nothing to sew: input to Ink/Stitch’s tools</td></tr>
 <tr><td><code>stop</code></td><td>the object a connector ties it to</td><td>applied: turns on <code>stop_after</code></td></tr>
@@ -12497,7 +12557,7 @@ change Ink/Stitch’s updater makes (<code>lib/update.py</code>), in StitchCraft
 <tr><td>3</td><td>a zigzag stroke’s <code>pull_compensation_mm</code>, unless 0, is halved into <code>stroke_pull_compensation_mm</code>, which applies to each side</td><td>applied, unless digitized automatically</td></tr>
 <tr><td>3</td><td>a satin column gets <code>start_at_nearest_point</code> and <code>end_at_nearest_point</code> off</td><td>applied, unless digitized automatically</td></tr>
 <tr><td>3</td><td>the commands’ old names become today’s (the table under Commands)</td><td>applied, in any file (<code>DEV-SVG-014</code>)</td></tr>
-<tr><td>3</td><td>a <code>starting_point</code> or <code>ending_point</code> command is placed anew at its connector’s end on its object</td><td>planned (M8)</td></tr>
+<tr><td>3</td><td>a <code>starting_point</code> or <code>ending_point</code> command is placed anew at its connector’s end on its object</td><td>applied, unless digitized automatically</td></tr>
 <tr><td>4</td><td>an element whose fill is not <code>none</code> (a fill not set is black), and whose <code>max_stitch_length_mm</code> is missing, empty, not a number or 0, gets 3</td><td>applied to the shapes whose fill is sewn, unless digitized automatically</td></tr>
 <tr><td>4</td><td>a fill with <code>auto_fill</code> off gets <code>fill_method</code> <code>legacy_fill</code>, and <code>auto_fill</code> is removed</td><td>applied to the shapes whose fill is sewn, unless digitized automatically (<code>DEV-FILL-014</code> says how a legacy fill sews)</td></tr>
 <tr><td>4</td><td><code>fill_method</code> <code>auto_fill</code> becomes <code>tatami_fill</code></td><td>applied to the shapes whose fill is sewn, unless digitized automatically</td></tr>
@@ -13554,7 +13614,7 @@ needle points to the other shapes in their group or take some out, are not plann
 <tr><td>M8.1 ✅</td><td>Ink/Stitch’s settings. Each <code>inkstitch:*</code> attribute of a shape is a parameter of every element the shape makes, under its own name, and the registry reads it as it reads a VectorCraft effect’s parameters (<code>REQ-PRM-002</code>). An Ink/Stitch file then sews with its satin columns, fill methods, underlays, locks and the rest of its settings, and <code>SC-W0802</code> no longer says that every element sews at the defaults. A setting the registry doesn’t declare yet, such as a setting of a stitch type of M10, is kept and named (<code>SC-W0105</code>). A setting on a group, where Ink/Stitch reads only <code>ignore_object</code>, is named too. <code>stroke_first</code> sews a shape’s stroke before its fill. Of the legacy attributes, <code>auto_fill</code> changes a fill through the update (M8.3). <code>e_stitch</code>, <code>manual_stitch</code>, <code>grid_size</code> and <code>polyline</code> don’t change what sews, as in Ink/Stitch, which reads the first 3 only to update a file without a version. The contract adds the attributes Ink/Stitch reads outside its list of them, which <code>conformance/inkstitch/check_params.py</code> finds in its code, each with its milestone: the tartan fill’s settings, <code>tartan</code> (M10), lettering’s <code>color_sort_index</code> and <code>letter-group</code> (M14), and <code>path_type</code>, which its tools write and nothing sews</td><td>Requirements written. A case of <code>REQ-PRM-003</code> for SVG: a file the test kit writes for Ink/Stitch reads back with the same parameters. The differential’s sheet cases sew the file Ink/Stitch sews, in both programs, and a fixture of each family’s settings joins them</td></tr>
 <tr><td>M8.2 ✅</td><td>Every test sheet drawn as a design in the differential. TS-02B to TS-09 and TS-11C join TS-11B and the TS-13 sheets, each written as an Ink/Stitch file of its elements and their settings, which both programs sew. TS-04’s drawn locks are StitchCraft’s own shapes, and its case excuses the size and the overlap (<code>DEV-LCK-001</code>). TS-11C’s tiles are StitchCraft’s own, and its case excuses the stitches and the overlap (<code>DEV-FILL-018</code>). An overlap below 0.9 is reported as <code>overlap 0.564, below 0.9</code>. TS-11A’s case comes with TS-11A, drawn for MC-6 in a pull request of its own</td><td>Each sheet’s case passes, or excuses a measure with the ledger entry that says why (<code>REQ-SVG-008</code>)</td></tr>
 <tr><td>M8.3 ✅</td><td>Older files updated. The changes Ink/Stitch’s update makes to the settings of a file of an older version apply, now that those settings are read (<a href="#file-versions">file versions</a>). In a file of version 1 or 2, a zigzag stroke’s <code>pull_compensation_mm</code> is halved into <code>stroke_pull_compensation_mm</code>. A satin column there starts and ends where it is drawn, with <code>start_at_nearest_point</code> and <code>end_at_nearest_point</code> off. In a file of version 1 to 3, a fill with <code>auto_fill</code> off is a legacy fill, and the method <code>auto_fill</code> is a tatami fill. 167 of the 178 glyph files of Ink/Stitch’s fonts are of versions 1 to 3</td><td><code>REQ-SVG-007</code> extended, <code>SC-I0818</code> counting the shapes changed, and a differential case for each change</td></tr>
-<tr><td>M8.4</td><td>Start and end positions. Ink/Stitch’s <code>starting_point</code> and <code>ending_point</code> commands place where the element tied to them starts and ends. The markers <code>stitch:start</code> and <code>stitch:end</code> do the same in a VectorCraft document. A fill’s parts start nearest the start position, and its last part ends nearest the end position, with every fill method but 2. The legacy fill doesn’t use them, and the contour fill uses the start alone. A satin column starts at its start position and runs along its centre line to its first stitch. It ends at its end position, unless that lies within 5 px (1.32 mm) of the column’s end. Strokes don’t use them, as in Ink/Stitch. In a file of version 1 or 2, each of these commands is first moved to its connector’s end on the object, as the update moves it. 2,548 such commands start or end the elements of glyphs in 14 of Ink/Stitch’s fonts. From this step the <code>target_point</code> command centres a circular fill (M7.9), and from M10.8 it aims a ripple stitch</td><td><code>REQ-GEN-001</code> rewritten for these stitch types and active, <code>REQ-VC-009</code> updated, differential cases, and TS-16’s part drawn for MC-11</td></tr>
+<tr><td>M8.4 ✅</td><td>Start and end positions. Ink/Stitch’s <code>starting_point</code> and <code>ending_point</code> commands place where the element tied to them starts and ends, at their symbols. The markers <code>stitch:start</code> and <code>stitch:end</code> do the same in a VectorCraft document, each at its middle. A fill starts nearest its start position and its last part ends nearest the end position, with every fill method, the legacy fill sewn as a tatami fill among them, but the contour fill, which uses the start alone. Its first part starts nearest the start position, and each part after where the one before ended, where Ink/Stitch starts each nearest the command (<code>DEV-FILL-023</code>). A satin column starts at its start position and runs along its centre line to its first stitch. It ends at its end position, unless that lies within 5 px (1.32 mm) of the column’s end. Strokes don’t use them, as in Ink/Stitch. The element before a fill or a satin column with a start position ends nearest it. In a file of version 1 or 2, each of these commands is first moved to its connector’s end on the object, as the update moves it. 2,548 such commands start or end the elements of glyphs in 14 of Ink/Stitch’s fonts. From this step the <code>target_point</code> command centres a circular fill (M7.9), and from M10.8 it aims a ripple stitch</td><td><code>REQ-GEN-001</code> rewritten for these stitch types and active, <code>REQ-FILL-CIR-008</code>, <code>REQ-VC-009</code> updated, differential cases for the commands, the update’s move and the target point, and TS-16’s first part drawn for MC-11, which the differential sews in both programs</td></tr>
 <tr><td>M8.5</td><td>Clip paths. Fills and strokes are cut to the clip paths of the shape and of the groups around it, as Ink/Stitch cuts them, with the region code of M5.1. A clip path’s area is the one a viewer clips to, by its <code>clip-rule</code>. Where Ink/Stitch’s area differs, as when it takes the largest subpath for the outline and every other subpath for a hole, the ledger says how. A satin column is sewn whole, as in Ink/Stitch, and a warning names it. An Inkscape power clip that is hidden or flattened clips nothing, and an inverse one keeps what lies outside its shape, as Ink/Stitch reads them. Masks stay unapplied, as in Ink/Stitch. The glyphs of 5 of Ink/Stitch’s fonts are clipped 187 times, mostly running stitches and guided fills</td><td>Requirements written, and <code>SC-W0802</code> no longer naming the clip paths applied. Differential cases, and TS-16’s part drawn for MC-11</td></tr>
 <tr><td>M8.6</td><td>Ink/Stitch’s fonts as a corpus. <code>cargo xtask corpus</code> downloads inkstitch/embroidery-fonts at a commit this repository pins, and checks its SHA-256. The files are never committed. The corpus takes the fonts whose licence file is the OFL, CC0, CC BY or CC BY-SA, 131 of the 142 fonts at <code>c7e3a05</code> (<a href="#inkstitchs-fonts">fonts</a>). The differential sews each glyph as a design of its own, its layer shown and the others left out, in both programs. The glyphs of stitch types StitchCraft doesn’t sew yet are listed, and join the corpus with M10’s steps</td><td>A pinned sample of each font’s glyphs runs every night, and every glyph every week. Each glyph sews as in Ink/Stitch, or its difference is excused by the ledger or reproduced as a bug by a case of its own</td></tr>
 <tr><td>M8.7</td><td>Clipping in VectorCraft documents. A clip group’s art is cut to its clipping object as M8.5 cuts an SVG file’s shapes, in place of <code>SC-W0807</code>’s note that the clipping isn’t applied. A satin column is sewn whole there too</td><td><code>REQ-VC-005</code> updated, and a Level B case in which VectorCraft’s Make Clipping Mask clips a fill and a stroke, which <code>stitch export</code> and the exporters sew cut</td></tr>
@@ -13768,7 +13828,7 @@ middle of the artboard (<code>REQ-VC-015</code>). A checkpoint can so sew a shee
 <tr><td><strong>TS-13</strong> Pictures digitized automatically (M13)</td><td>Test pictures drawn in code (<code>stitchcraft_engine::testsheets::pictures</code>), digitized automatically in the top half of each sheet and sewn as drawn, in paint order, in the bottom half, which sews first and stops. TS-13A has a badge traced abutting and one traced stacked, specks round a disc, a row of badges drawn badge by badge, and a bar that runs on beside a square without touching it (126 × 168 mm). TS-13B has the word MATCH in block letters 15, 10, 6 and 4 mm tall, and windows whose lines, traced as areas, are 0.3, 0.6 and 0.9 mm wide (110 × 148 mm). TS-13C has a cartoon face drawn with black lines 1, 2 and 4 mm wide, a star, and a balloon on its string (111 × 108 mm). TS-13D has an emblem 42 mm wide, a navy square with a white disc, a red star on the disc and 3 gold bars, and a button 23 mm across, a yellow disc with 7 orange dots in a black rim, each traced abutting and traced stacked (115 × 108 mm)</td><td>Fabric showing between colours, on both halves, and on the digitized half whether each area’s 0.4 mm overlap under the next covers the gap or shows as a ridge (M13.2). Whether a stacked trace’s digitized half, its covered parts cut away, sews as flat as the abutting one, and what became of the specks round the disc (M13.2). Where a shape runs on beside an area without touching it, whether the fabric that shows there as drawn reads as a gap (M13.2). The smallest letters that read. Whether each outline’s columns cover the edges of the fills beside them, and whether the triple runs show as wide as their lines. A column’s square end past the end of a line with round caps (M13.1), and how far it shows past the round end. Small traced rings and hairpins, filled because no satin column can follow them (M13.1), and how solid they sew beside their columns’ neighbours. Colour changes, jumps, trims and time against the half in paint order, on a row of badges drawn badge by badge too, as Auto Grouping draws them (M13.3). Whether any shape covers one drawn over it, which the order must never let happen, and whether each line sewn after the fill it borders covers the fill’s edge (M13.3). Lines traced as areas, 0.3, 0.6 and 0.9 mm wide, sewn along their middles (M13.4): whether each reaches as far as the line drawn, whether the 0.6 and 0.9 mm lines’ triple runs show as wide as they are drawn and the 0.3 mm line’s single run doesn’t look thin, and whether the fills beside a line, reaching under it, leave fabric showing along it. Whether a junction’s third branch, which ends at the line it meets, leaves a gap or a knot there (M13.4). Letters and outlines as wide as a satin column, sewn as satin columns between their own edges (M13.5): whether each column’s stitches lie square to its stroke, round a ring and through a bend. Where a column ends under another, 0.4 mm longer, does fabric show, or a ridge? A slanted terminal should end flat along its edge as drawn, and a round one at its farthest point. Whether a crossbar sewn as a column of its own across a stem reads as one stroke. The underlays by width should hold the columns up, and 0.4 mm of pull compensation keep them as wide as drawn. The stitches that lean where strokes meet at sharp angles, as in an M or a W (<code>SC-W0208</code>), and the jumps between a letter’s columns. Shapes broad in places and narrow in others (M13.6). The star’s points and the balloon’s string sew as columns over the fill of the star’s middle and of the balloon. Do their flat ends cover the fill’s edge, or leave fabric or a ridge there? Do each point’s stitches lie square to it from its tip to its cut? Pictures traced in layers (M13.12). Whether the stacked emblem, its layers flattened, sews as the abutting one beside it, and how stiff it sews as drawn on the bottom half, each colour whole under the colours over it. Which sews better between the bars, the navy filled whole under the white disc and the bars or the navy sewn round them as drawn? Whether the gold bars keep their height, 2.1 mm as drawn, and their square ends. Which sews better between the dots, the button’s yellow filled whole under them or sewn round them as drawn, and does the rim’s column cover the yellow’s edge? Whether fabric or a ridge shows round the bars, the disc, the star and the dots. Small discs no wider than a satin column are dots, filled (M13.12), as the gold discs of the row of badges and the button’s dots are. Do they sew round, and does fabric show at their edges? Which jump threads a shape sews down, since the PE800 cuts none</td><td>MC-8</td></tr>
 <tr><td><strong>TS-14</strong> Lettering (M14)</td><td>3 embroidery fonts, a block, a script and a small one, each at the least and the greatest heights it sews at, and a name along an arc</td><td>Whether every glyph reads at its least height, satin coverage at its greatest, and whether the locks of small glyphs hold after the trims</td><td>MC-9</td></tr>
 <tr><td><strong>TS-15</strong> Fonts ported automatically (M15)</td><td>3 fonts from Google Fonts, a sans, a serif and a script, each ported at 3 heights beside the font Ink/Stitch digitized by hand from it, at the same heights. A word in satin columns 0.4, 0.6, 0.8 and 1 mm wide beside the same word in triple runs. <code>stitch testsheet</code> draws it with the fonts of the corpus</td><td>Whether every ported glyph reads at the least height, with its dots, serifs and counters. The jump threads inside letters and between them. Whether the ported letters read as well as the letters digitized by hand beside them, and the narrowest satin column that sews a letter cleanly</td><td>MC-10</td></tr>
-<tr><td><strong>TS-16</strong> An Ink/Stitch file (M8)</td><td>A design written as Ink/Stitch writes a file, which <code>stitch plan</code> reads. Its fill and its satin column start and end at Ink/Stitch’s commands, and a fill and a running stitch are cut by their group’s clip path. A clone of a fill is turned by 45°, and lines are locked with locks drawn as paths. A stop sends the frame to a stop position, and the origin lies off the design’s middle. The file turns the design right on export. It is sewn beside the PES file the differential’s Ink/Stitch writes of it</td><td>Where each element starts and ends, against its commands. Whether the clipped edges sew where the clip path cuts them, and the clone’s rows lie at its turned angle. Do the drawn locks hold when the tail is pulled? Where the frame waits at the stop, and whether the design sews turned right about its origin. Every difference between the 2 sew-outs</td><td>MC-11</td></tr>
+<tr><td><strong>TS-16</strong> An Ink/Stitch file (M8)</td><td>A design written as Ink/Stitch writes a file, which <code>stitch plan</code> reads, each step of M8 drawing its part. Its fill and its satin column start and end at Ink/Stitch’s commands. From M8.4 a red fill 40 × 30 mm sews from its top-right corner to its bottom-left one, and a blue satin column 40 mm long starts in its middle and ends three quarters along. A fill and a running stitch are cut by their group’s clip path. A clone of a fill is turned by 45°, and lines are locked with locks drawn as paths. A stop sends the frame to a stop position, and the origin lies off the design’s middle. The file turns the design right on export. It is sewn beside the PES file the differential’s Ink/Stitch writes of it</td><td>Where each element starts and ends, against its commands. Whether the clipped edges sew where the clip path cuts them, and the clone’s rows lie at its turned angle. Do the drawn locks hold when the tail is pulled? Where the frame waits at the stop, and whether the design sews turned right about its origin. Every difference between the 2 sew-outs</td><td>MC-11</td></tr>
 <tr><td><strong>TS-17A</strong> Cross stitch (M10)</td><td>Cross stitch fills (M10.1, M10.2), drawn before MC-12, each trimmed after, a row to a thread. Squares 24 mm wide of simple crosses on grids of 2 and 3 mm, with 2 and 4 threads, and flipped. A letter drawn as Ink/Stitch’s cross-stitch fonts draw theirs, on a 2 mm grid with 2 threads and its edge cells half covered. Squares of half, upright, dense upright, double and Smyrna crosses, and simple crosses on a grid turned 30°</td><td>Whether every cross’s top diagonal lies the same way, and whether the stitches through the cells’ middles show. Fabric between the crosses at 2 and 4 threads, and the grid that reads best at the letter’s size. Whether the half crosses’ travel stitches show on their edges, and how the layers of the double and Smyrna crosses look. The time the sheet takes</td><td>MC-12</td></tr>
 <tr><td><strong>TS-17B</strong> New fills (M10)</td><td>Tartan, guided and linear gradient fills (M10.6, M10.7, M10.9, M10.10, M10.12), drawn before MC-12, each trimmed after. Tartans 40 mm square, their setts mirrored at the ends or repeated, one with a weft that differs from its warp and one with stripes narrow enough to sew as runs, beside herringbones 3 mm wide. Leaves filled along an S-shaped guide, copied, offset and buffered. Rectangles in gradients of 2 and 3 stops, one of them transparent</td><td>Whether a tartan’s warp and weft read as a weave and its runs lie flat on its fills, and how its herringbone turns. The spacing of the guided rows round the guide’s bends, and where the copied rows crowd. Whether a gradient’s colours blend with no step between its sections, and whether the transparent stop leaves a clean gap. Colour changes, jumps and time</td><td>MC-12</td></tr>
 <tr><td><strong>TS-17C</strong> Ripples and routing (M10)</td><td>Ripple stitches (M10.8, M10.11), drawn before MC-12, along a column of rails and rungs, from an open line towards a target point and from a closed line spiralling in. Ripples along a guide line and closed lines on a satin guide, beside a ripple with a grid. The routing tools (M10.4, M10.13): satin letters as drawn beside the same letters after auto-satin routing, and a network of running stitches as drawn beside it after auto-run routing. 2 satin columns that cross, their underlays first (M10.15)</td><td>Whether the ripples’ lines keep their spacing, and how their joins look. Jumps, trims and time on the routed halves against the halves as drawn, and whether the runs under the satins show. Whether the crossing columns, their underlays sewn first, lie flatter than as drawn</td><td>MC-12</td></tr>
@@ -13789,7 +13849,7 @@ middle of the artboard (<code>REQ-VC-015</code>). A checkpoint can so sew a shee
 <tr><td>MC-5</td><td>M6</td><td>TS-12, TS-10</td><td>Is the VectorCraft workflow complete and correct? Does a test sheet drawn by the Test Sheet filter sew as <code>stitch testsheet</code> writes it?</td></tr>
 <tr><td>MC-8</td><td>M13.12</td><td>TS-13, from <code>stitch testsheet</code> or drawn in VectorCraft by the Test Sheet filter with the Auto effect</td><td>Do pictures digitized automatically sew better than the same shapes in paint order? Are the widest satin column, the narrowest triple run, the overlap, the underlays by width and the columns’ pull compensation right?</td></tr>
 <tr><td>MC-6</td><td>M7</td><td>TS-11A and TS-11B, from <code>stitch testsheet</code> or drawn in VectorCraft by the Test Sheet filter, and TS-11C from <code>stitch testsheet</code></td><td>New stitch types acceptable? Are their defaults right?</td></tr>
-<tr><td>MC-11</td><td>M8</td><td>TS-16, from <code>stitch testsheet</code>, beside Ink/Stitch’s machine file of it from the differential</td><td>Does an Ink/Stitch file sew from StitchCraft’s machine file as it does from Ink/Stitch’s?</td></tr>
+<tr><td>MC-11</td><td>M8</td><td>TS-16, from <code>stitch testsheet</code>, beside Ink/Stitch’s machine file of it, which the differential keeps (<code>target/conformance/differential/ts-16.inkstitch.pes</code>)</td><td>Does an Ink/Stitch file sew from StitchCraft’s machine file as it does from Ink/Stitch’s?</td></tr>
 <tr><td>MC-12</td><td>M10</td><td>TS-17A, TS-17B, TS-17C, from <code>stitch testsheet</code> or drawn in VectorCraft by the Test Sheet filter</td><td>New stitch types acceptable, and their defaults right? Do the routed designs leave fewer jump threads than the same elements as drawn?</td></tr>
 <tr><td>MC-9</td><td>M14</td><td>TS-14</td><td>Do the fonts sew legibly across the heights they claim?</td></tr>
 <tr><td>MC-10</td><td>M15</td><td>TS-15</td><td>Do fonts ported automatically sew as legibly as fonts digitized by hand, from the least height of their range?</td></tr>

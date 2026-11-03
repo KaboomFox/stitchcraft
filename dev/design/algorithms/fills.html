@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-0e4f6aea.js";
+            window.path_to_searchindex_js = "../../searchindex-1df020c6.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-0e01f503.js"></script>
@@ -194,6 +194,11 @@ warning.</p>
 <p>A fill whose <code>fill</code> setting is off sews nothing, and nothing is said of it, as in Ink/Stitch
 (<code>REQ-FILL-003</code>). The path’s outline, if it has one, is sewn as its stroke settings say, and the element
 before it still ends near its area, as Ink/Stitch’s does.</p>
+<p>A fill starts nearest the needle, where the elements before it left it, and ends nearest what the next
+element offers (<a href="#5-parts">section 5</a>). Its start and end positions take their place, which a design
+places with Ink/Stitch’s start and end commands or VectorCraft’s start and end markers, and the element
+before a fill with a start position ends nearest that (<code>REQ-GEN-001</code>). Every method uses them but the
+contour fill’s end, which lies where its rings end.</p>
 <h2 id="region"><a class="header" href="#region">Region</a></h2>
 <p>A fill’s region is the area an SVG renderer paints for its path, in parts with holes
 (<code>stitchcraft_engine::normalize::region</code>, <code>REQ-FILL-001</code>):</p>
@@ -341,7 +346,7 @@ stretches, from the first, gets a second edge. A node then meets its row and 3 s
 even number of edges. Ink/Stitch’s graph knows an edge between 2 nodes by its kind, so a ring of 2
 nodes doubles only one of its 2 stretches. This graph does the same.</li>
 <li><strong>Start and end.</strong> The fill starts at the point of its rings nearest the needle and ends at the point
-nearest its next stitch, which the next element’s shape gives (section 5). Each of the 2 points gets a
+nearest its next stitch, which its end position or else the next element’s shape gives (section 5). Each of the 2 points gets a
 node, which splits the stretch of that ring whose chord passes nearest it. Then the node nearest the
 needle is where the fill starts, and the one nearest the next stitch where it ends. Without a needle
 the fill starts at its first segment’s start, and without a next element it ends where it starts. Only
@@ -448,6 +453,10 @@ rails, the start of the first that lies in the fill is the next stitch, and of a
 outline’s start that does. Failing those, for a fill after a fill, it is the first start of this fill’s
 outlines that lies in the next, and otherwise the fill’s point nearest the next element. Ink/Stitch’s
 geometry library finds it so (<a href="satin.html#start-and-end">satin</a>).
+A start position is the needle the parts are ordered by, and the first part starts nearest it. Each part
+after starts nearest where the part before ended, as without one, where Ink/Stitch starts each part
+nearest its start command (<code>DEV-FILL-023</code>). An end position is the last part’s next stitch
+(<code>REQ-GEN-001</code>).
 Each part is a group of its own, which assembly joins to the next as it joins any 2 groups:
 straight on within the collapse length, and otherwise with a jump and the ties and trims the element’s
 settings give. <code>SC-W0307</code> says the fill is in parts.</p>
@@ -655,10 +664,11 @@ stitches along one curve, placed differently, lie farthest apart. The smoothed l
 (<code>DEV-FILL-017</code>).</p>
 <h3 id="start-end-and-underlay"><a class="header" href="#start-end-and-underlay">Start, end and underlay</a></h3>
 <p>Each part sews the tatami fill’s underlay first (<a href="#6-underlay">section 6</a>), on by default, at <code>angle</code> +
-90° with 3 row spacings between its rows. Each part starts nearest the needle, at the start command’s
-point or else at the last stitch before, the underlay’s, or at the origin without either. The parts go
-in order of their distance from the first part’s start. The end command is read but not used, and the
-fill ends where its strategy ends.</p>
+90° with 3 row spacings between its rows. Each part’s underlay starts nearest the stitch before it, and
+its rings nearest the underlay’s last stitch. Before the first part, that stitch is the fill’s start
+position where it has one (<code>REQ-GEN-001</code>), and otherwise the last stitch of the elements before, or the
+origin. The parts go in order of their distance from the first part’s start. An end
+position has nothing to replace, as in Ink/Stitch: the fill ends where its strategy ends.</p>
 <h3 id="properties-conformance-1"><a class="header" href="#properties-conformance-1">Properties (conformance)</a></h3>
 <div class="table-wrapper">
 <table>
@@ -725,7 +735,8 @@ stitch round its outline, as a tatami fill’s part too thin for rows is, and <c
 <h3 id="the-path"><a class="header" href="#the-path">The path</a></h3>
 <p>The path runs from the point of the network nearest the needle, or else the outline’s first point, to
 the point nearest where it is to end. That is the point of the part nearest the next part, or for the
-last part the next element’s offer, or else the point of the outline half way round it from the start.
+last part its end position or else the next element’s offer, or else the point of the outline half way
+round it from the start.
 Where the 2 are one point, it ends at the point next nearest.</p>
 <ol>
 <li>It begins as the path of fewest lines between them.</li>
@@ -785,8 +796,9 @@ circular fill (read at <code>d59c9ab</code>). Each part of the region is sewn on
 underlay (<a href="#6-underlay">section 6</a>), grown by <code>expand_mm</code>, nearest the needle first, each ending near the
 next part and the last near the next element, as a meander fill’s are.</p>
 <h3 id="circles"><a class="header" href="#circles">Circles</a></h3>
-<p>The circles lie round the middle of the part, its centroid. Ink/Stitch’s <code>target_point</code> command moves
-the middle, and StitchCraft reads it with Ink/Stitch’s other commands in M8. The first circle has a radius
+<p>The circles lie round the middle of the part. That is the fill’s target point where its design places one
+with Ink/Stitch’s <code>target_point</code> command (<code>REQ-FILL-CIR-008</code>), and otherwise the part’s centroid. Every
+part turns round the same target point, as in Ink/Stitch, and it may lie outside the part. The first circle has a radius
 of 0.1 CSS pixel, so that the spiral ends at the middle. From <code>row_spacing_mm</code> out, each circle lies a row
 spacing past the last, until one lies 2 spacings past the part’s farthest point. That point is the one
 farthest from the middle, as the discrete Hausdorff distance Ink/Stitch takes finds it.</p>
@@ -885,8 +897,10 @@ the other side, and <code>reverse</code> sews the whole fill backwards.</p>
 <p>StitchCraft does not build it, since the method exists for Ink/Stitch’s older files. A fill set to it is
 sewn as a tatami fill with its settings and no underlay, and <code>SC-W0314</code> says so (<code>REQ-FILL-005</code>). Nor does
 it take pull compensation, random stitch lengths or gap-filling rows, which Ink/Stitch’s legacy fill has no
-use for, but its area grows by <code>expand_mm</code> as in Ink/Stitch. It is a tatami fill in every other way too. The element before it ends near its area, and its rows are routed and
-joined by travel stitches as a tatami fill’s are (<code>DEV-FILL-014</code>). <code>flip</code> and <code>reverse</code> are not planned,
+use for, but its area grows by <code>expand_mm</code> as in Ink/Stitch. It is a tatami fill in every other way too.
+The element before it ends near its area, and its rows are routed and joined by travel stitches as a
+tatami fill’s are, between its start and end positions where it has them. Ink/Stitch’s legacy fill takes
+its parts in order of their distance from its start command and uses it no further (<code>DEV-FILL-014</code>). <code>flip</code> and <code>reverse</code> are not planned,
 and a design that sets them gets <code>SC-W0105</code>. The VectorCraft plug-in’s fill dialog does not offer the
 method.</p>
 <h2 id="references"><a class="header" href="#references">References</a></h2>
