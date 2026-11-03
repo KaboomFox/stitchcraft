@@ -18,7 +18,7 @@ use stitchcraft_plan::{StitchPlan, Thread};
 use super::pictures::Picture;
 use super::sketch::SheetError;
 use crate::common::{STOP_AFTER, TRIM_AFTER};
-use crate::design::{Clip, Design, DesignSettings, Element, FillRule, Hints, Path, Segment, Shape, Subpath};
+use crate::design::{Clip, Design, DesignSettings, Element, FillRule, Hints, Path, Segment, Shape, Subpath, Turn};
 use crate::generators::satin::{END_AT_NEAREST_POINT, START_AT_NEAREST_POINT};
 
 /// The settings that sew a sheet's satin column as drawn, from its start to its end whatever is around it,
@@ -44,6 +44,12 @@ impl Drawing {
         self.settings.origin = Some(point(origin)?);
         self.settings.stop_position = Some(point(stop_position)?);
         Ok(())
+    }
+
+    /// The turn the design is written at, about its origin (`REQ-ASM-005`), as Ink/Stitch's
+    /// `rotate_on_export` gives it.
+    pub fn turned(&mut self, turn: Turn) {
+        self.settings.rotate_on_export = turn;
     }
 
     /// A stroke through `points`, named `name`, sewn with `thread` and the Ink/Stitch `params`.

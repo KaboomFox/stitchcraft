@@ -1,6 +1,6 @@
 # Data model
 
-<!-- implements: crates/stitchcraft-core/src/lib.rs, crates/stitchcraft-core/src/units.rs, crates/stitchcraft-core/src/element.rs, crates/stitchcraft-core/src/rect.rs, crates/stitchcraft-core/src/budget.rs, crates/stitchcraft-plan/src/*.rs, crates/stitchcraft-plan/src/palette/**, crates/stitchcraft-plan/src/profiles/**, crates/stitchcraft-engine/src/design.rs -->
+<!-- implements: crates/stitchcraft-core/src/lib.rs, crates/stitchcraft-core/src/units.rs, crates/stitchcraft-core/src/element.rs, crates/stitchcraft-core/src/rect.rs, crates/stitchcraft-core/src/budget.rs, crates/stitchcraft-plan/src/*.rs, crates/stitchcraft-plan/src/palette/**, crates/stitchcraft-plan/src/profiles/**, crates/stitchcraft-engine/src/design.rs, crates/stitchcraft-engine/src/design/turn.rs -->
 
 The types every crate shares. Code sketches are illustrative (`ignore`); the crates' rustdoc is the
 API reference once the types exist. Invariants listed here are checked in code (constructors return
@@ -75,6 +75,7 @@ pub struct DesignSettings {          // since M3.8; read from an Ink/Stitch file
     pub origin: Option<Point>,       // where the hoop's centre goes; None: the centre of the stitches
     pub stop_position: Option<Point>,// where the frame moves before each stop; None: it stays
     pub min_satin_stroke_width: Mm,  // 1 mm: a satin column drawn as one path no wider is sewn as a stroke (M4.8)
+    pub rotate_on_export: Turn,      // the plan turned about the hoop's centre as it is written (M8.9); none by default
 }
 
 pub enum Shape {

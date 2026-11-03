@@ -1,7 +1,7 @@
 //! `REQ-SVG-005`: Ink/Stitch's design settings. Ink/Stitch keeps settings for the whole design in the
 //! file's first `<metadata>`, each an element of its namespace named after the setting, its text the
 //! value. 3 of them, `collapse_len_mm`, `min_stitch_len_mm` and `min_satin_stroke_width_mm`, become the
-//! design's settings; the fourth, `rotate_on_export`, is named until StitchCraft applies it.
+//! design's settings, and the fourth, `rotate_on_export`, is the design's turn on export.
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic)]
@@ -10,7 +10,7 @@ mod common;
 
 use common::{svg, warnings};
 use stitchcraft_core::Mm;
-use stitchcraft_engine::design::DesignSettings;
+use stitchcraft_engine::design::{DesignSettings, Turn};
 
 /// A document with `metadata` before a line to sew, of Ink/Stitch's current file version, which a second
 /// `<metadata>` holds (`REQ-SVG-007`).
@@ -85,25 +85,23 @@ fn req_svg_005_a_value_that_does_not_read_keeps_the_default() {
 }
 
 #[test]
-fn req_svg_005_rotate_on_export_is_named_until_it_is_applied() {
-    // Ink/Stitch's fourth design setting turns the design as it writes it into a machine file, by 90°
-    // either way (`lib/gui/preferences.py`, `lib/extensions/output.py` at d59c9ab). StitchCraft writes the
-    // design as drawn, and says so.
-    for (value, said) in [("90", "90"), ("-90", "-90"), (" 90.0 ", "90.0"), ("45", "45")] {
+fn req_svg_005_rotate_on_export_turns_the_design() {
+    // Ink/Stitch's fourth design setting turns the design about the hoop's centre as it writes it into a
+    // machine file, by any number of degrees, right for a positive one (`lib/extensions/output.py` at
+    // d59c9ab, and its writer's matrix); its preferences offer 90 either way.
+    for (value, degrees) in [("90", 90.0), ("-90", -90.0), (" 90.0 ", 90.0), ("45", 45.0), ("180", 180.0), ("0", 0.0), ("-0", 0.0)] {
         let (settings, warned) = read(&format!("<metadata>{}</metadata>", setting("rotate_on_export", value)));
-        assert_eq!(settings, DesignSettings::default());
-        let message = format!(
-            "warning SC-W0802: Ink/Stitch's design setting `rotate_on_export`, \"{said}\", turns the design as it is written into a machine \
-             file; StitchCraft does not apply it yet, and writes the design as drawn."
-        );
-        assert_eq!(warned, [message], "{value}");
-        let svg = svg(document(&format!("<metadata>{}</metadata>", setting("rotate_on_export", value))));
-        assert_eq!(svg.warnings[0].fix.as_ref().unwrap().describe(), "Rotate the drawing itself instead.");
+        let expected = DesignSettings { rotate_on_export: Turn::new(degrees).unwrap(), ..DesignSettings::default() };
+        assert_eq!((settings, warned), (expected, vec![]), "{value}");
     }
-    // 0, Ink/Stitch's default, turns nothing, and nor does a value that is not JSON, which Ink/Stitch reads
-    // as none.
-    for value in ["0", "-0", "", "right"] {
-        assert_eq!(read(&format!("<metadata>{}</metadata>", setting("rotate_on_export", value))), (DesignSettings::default(), vec![]), "{value}");
+    // Text that isn't a number turns nothing, as in Ink/Stitch, which reads text that isn't JSON as no turn.
+    for value in ["", "right", "inf"] {
+        let (settings, warned) = read(&format!("<metadata>{}</metadata>", setting("rotate_on_export", value)));
+        let message = format!(
+            "warning SC-W0802: Ink/Stitch's design setting `rotate_on_export`, \"{value}\", is not a number of degrees; it is ignored, and the \
+             design isn't turned."
+        );
+        assert_eq!((settings, warned), (DesignSettings::default(), vec![message]), "{value}");
     }
 }
 

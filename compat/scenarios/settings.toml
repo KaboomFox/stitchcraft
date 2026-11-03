@@ -1,7 +1,8 @@
 # Level B: a document's design settings and machine, kept with it by StitchCraft's Design Settings filter
 # (VectorCraft 0.16), plan the files VectorCraft's exporters and `stitch export` write of it
 # (docs/src/design/compatibility-gate.md). The square's rows end in stitches shorter than 1.5 mm, which the
-# shortest stitch kept leaves out, so the PES file exported after the filter ran differs from the one before.
+# shortest stitch kept leaves out, so the PES file exported after the filter ran differs from the one before;
+# the filter also keeps a turn on export, a quarter turn right (M8.9), which the exports turn the design by.
 # The 4 × 4 in hoop holds the 1 in square, and the small hoop, 20 mm wide, doesn't. The filter's dialog opens
 # at its defaults, so the second time it runs, the shortest stitch it keeps is the default again.
 # Coordinates are points.
@@ -15,7 +16,7 @@ steps = [
   { cmd = "paint.setFill", params = { color = "#c00000" } },
   { apply = "fill", params = { angle = 30 } },
   { export = "before.pes" },
-  { cmd = "plugin.run", params = { id = "dev.stitchcraft.settings", params = { profile = "brother-pe800-4x4", min_stitch_len_mm = 1.5 } } },
+  { cmd = "plugin.run", params = { id = "dev.stitchcraft.settings", params = { profile = "brother-pe800-4x4", min_stitch_len_mm = 1.5, rotate_on_export = "90" } } },
   { export = "design.vectorcraft" },
   { export = "design.png" },
   { export = "design.pes" },
@@ -27,8 +28,8 @@ steps = [
 
 [expect]
 kept = [
-  { file = "design.vectorcraft", settings = { profile = "brother-pe800-4x4", min_stitch_len_mm = 1.5, collapse_len_mm = 3, min_satin_stroke_width_mm = 1 } },
-  { file = "small.vectorcraft", settings = { profile = "brother-pe800-small", min_stitch_len_mm = 0 } },
+  { file = "design.vectorcraft", settings = { profile = "brother-pe800-4x4", min_stitch_len_mm = 1.5, collapse_len_mm = 3, min_satin_stroke_width_mm = 1, rotate_on_export = 90 } },
+  { file = "small.vectorcraft", settings = { profile = "brother-pe800-small", min_stitch_len_mm = 0, rotate_on_export = 0 } },
 ]
 exported = [["design.vectorcraft", "design.pes"], ["design.vectorcraft", "design.dst"]]
 differ = [["before.pes", "design.pes"]]

@@ -233,7 +233,7 @@ them (`REQ-SVG-003`).
   them. Each gives the design a setting at its symbol's place (`REQ-ASM-005`). The origin goes to the
   hoop's centre, and the frame moves to the stop position before each stop. Ink/Stitch refuses a file with
   2 origins, or 2 stop positions and a stop, and StitchCraft does too (`SC-E0819`,
-  [why](engine-pipeline.md#origin-and-stop-position)). The
+  [why](engine-pipeline.md#origin-stop-position-and-turn-on-export)). The
   [command table](inkstitch-compat-contract.md#commands) gives what the adapter does with each of the 12
   commands. Before its file version 3, Ink/Stitch named 7 of them otherwise, such as
   `fill_start` for `starting_point`: the adapter reads those as the commands they became in any file,
@@ -263,9 +263,12 @@ design's elements with their parameters, and the settings that aren't StitchCraf
 (`stitchcraft_testkit::inkstitch`). It names Ink/Stitch's namespace by the reader's own constant,
 `stitchcraft_svg::inkstitch::INKSTITCH_NS`.
 
-The fourth, `rotate_on_export`, turns the design by 90° either way as Ink/Stitch writes it into a machine
-file, for machines that don't turn a design to fit their hoop. It is not applied yet (M8): `SC-W0802`
-names a value other than 0, and the design is written as drawn. Ink/Stitch also keeps `thread-palette`
+The fourth, `rotate_on_export`, turns the design about the hoop's centre as it is written into a machine
+file, for machines that don't turn a design to fit their hoop (M8.9). It is the design's turn on export,
+a number of degrees, right for a positive one ([engine pipeline](engine-pipeline.md#origin-stop-position-and-turn-on-export)).
+Ink/Stitch's preferences offer 90 either way, and its writer turns by any number, as does StitchCraft.
+`SC-W0802` names text that is not a number, which turns nothing. Ink/Stitch takes text that isn't JSON as
+no turn, and doesn't write a file for JSON that isn't a number. Ink/Stitch also keeps `thread-palette`
 there, which names the threads in its own lists and print-outs and doesn't change what the adapter sews,
 and the file's version (below). `SC-W0802` names any other element of Ink/Stitch's there.
 

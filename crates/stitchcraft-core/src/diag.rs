@@ -596,9 +596,11 @@ registry! {
     /// where it is placed: its origin, which goes to the hoop's centre, can lie far from its middle, and
     /// its stop position, where the frame goes before each stop, can lie outside the hoop.
     ///
-    /// If the message says the design fits when turned 90 degrees, rotate it. Otherwise scale it down,
-    /// or split it into parts that are sewn in separate hoopings. Where it reaches past the edge from
-    /// where it is placed, move its origin nearer its middle, or its stop position nearer the design.
+    /// If the message says the design fits when turned 90 degrees, rotate it, or have the machine file
+    /// turn it: Ink/Stitch's rotate on export, or Turn on export in StitchCraft's Design Settings filter.
+    /// Otherwise scale it down, or split it into parts that are sewn in separate hoopings. Where it reaches
+    /// past the edge from where it is placed, move its origin nearer its middle, or its stop position nearer
+    /// the design.
     OutsideHoop = "SC-E0701", Error, "Design does not fit the hoop";
 
     /// The design fits the hoop but is larger than the profile's comfort zone: the area where this
@@ -633,8 +635,8 @@ registry! {
     /// sews across its width, as a satin column or a fill, is as wide as its transforms stretch it on
     /// average, so a transform that stretches it more one way than the other, and draws it wider one way,
     /// is named too. So is what StitchCraft does not apply of an Ink/Stitch file: the settings of a group,
-    /// which Ink/Stitch doesn't read either, those of its early versions (`embroider_` attributes), its
-    /// design setting `rotate_on_export`, which turns the design as it is written, and the updates
+    /// which Ink/Stitch doesn't read either, those of its early versions (`embroider_` attributes), a turn
+    /// on export (`rotate_on_export`) that is not a number, and the updates
     /// Ink/Stitch would make to a file with its settings and no file version, or from a newer Ink/Stitch,
     /// which is read as it is. Of its commands, one on an object that is not stitched is named, and so is a
     /// start, end, target, origin or stop position command whose place doesn't read, an `ignore_layer`

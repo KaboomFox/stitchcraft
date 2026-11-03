@@ -16,6 +16,10 @@ use stitchcraft_core::{Code, Diagnostic, ElementId, Mm, Point, Rect};
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::Thread;
 
+mod turn;
+
+pub use turn::Turn;
+
 /// How far from the design's origin geometry may lie, in millimetres: the reach of machine-file
 /// coordinates (10 m), beyond which no position can be written.
 pub const WORKING_LIMIT_MM: f64 = MACHINE_LIMIT as f64 / 10.0;
@@ -261,9 +265,10 @@ pub struct Reading {
 }
 
 /// Settings for the whole design. Ink/Stitch keeps them in the document. The SVG adapter reads the
-/// collapse length, the shortest stitch and the narrowest satin stroke from the file's metadata, and the
-/// origin and stop position from Ink/Stitch's `origin` and `stop_position` commands; the VectorCraft adapter
-/// reads those from objects named `stitch:origin` and `stitch:stop-position`.
+/// collapse length, the shortest stitch, the narrowest satin stroke and the turn on export from the file's
+/// metadata, and the origin and stop position from Ink/Stitch's `origin` and `stop_position` commands; the
+/// VectorCraft adapter reads those from objects named `stitch:origin` and `stitch:stop-position`, and the
+/// rest from what the Design Settings filter keeps with the document.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct DesignSettings {
     /// Moves between groups of the same thread no longer than this are sewn on rather than jumped, for
@@ -280,6 +285,9 @@ pub struct DesignSettings {
     /// A satin column drawn as one path whose stroke is no wider than this is sewn as a stroke (Ink/Stitch's
     /// `min_satin_stroke_width_mm`).
     pub min_satin_stroke_width: Mm,
+    /// How far the plan turns about the hoop's centre as it is written, once its origin is there
+    /// (Ink/Stitch's `rotate_on_export`); none unless the design says.
+    pub rotate_on_export: Turn,
 }
 
 impl DesignSettings {
@@ -298,6 +306,7 @@ impl Default for DesignSettings {
             origin: None,
             stop_position: None,
             min_satin_stroke_width: DesignSettings::MIN_SATIN_STROKE_WIDTH,
+            rotate_on_export: Turn::NONE,
         }
     }
 }
@@ -620,7 +629,7 @@ mod tests {
     fn settings_default_to_ink_stitch_s_and_are_checked_too() {
         let settings = DesignSettings::default();
         assert_eq!((settings.collapse_len.get(), settings.min_stitch_len, settings.origin, settings.stop_position), (3.0, None, None, None));
-        assert_eq!(settings.min_satin_stroke_width.get(), 1.0);
+        assert_eq!((settings.min_satin_stroke_width.get(), settings.rotate_on_export), (1.0, Turn::NONE));
         let one = || vec![element("a", line(p(0.0, 0.0), p(1.0, 0.0)))];
         let at = |x: f64| Some(p(x, 0.0));
         let bad = [
@@ -639,6 +648,7 @@ mod tests {
             collapse_len: Mm::ZERO,
             min_stitch_len: Some(Mm::ZERO),
             min_satin_stroke_width: Mm::ZERO,
+            rotate_on_export: Turn::LEFT,
         };
         assert!(Design::new(one(), edge).is_ok());
     }

@@ -128,6 +128,7 @@ pub stitchcraft_engine::design::DesignSettings::collapse_len: stitchcraft_core::
 pub stitchcraft_engine::design::DesignSettings::min_satin_stroke_width: stitchcraft_core::units::Mm
 pub stitchcraft_engine::design::DesignSettings::min_stitch_len: core::option::Option<stitchcraft_core::units::Mm>
 pub stitchcraft_engine::design::DesignSettings::origin: core::option::Option<stitchcraft_core::units::Point>
+pub stitchcraft_engine::design::DesignSettings::rotate_on_export: stitchcraft_engine::design::Turn
 pub stitchcraft_engine::design::DesignSettings::stop_position: core::option::Option<stitchcraft_core::units::Point>
 impl stitchcraft_engine::design::DesignSettings
 pub const stitchcraft_engine::design::DesignSettings::COLLAPSE_LEN: stitchcraft_core::units::Mm
@@ -170,6 +171,19 @@ pub struct stitchcraft_engine::design::Subpath
 pub stitchcraft_engine::design::Subpath::closed: bool
 pub stitchcraft_engine::design::Subpath::segments: alloc::vec::Vec<stitchcraft_engine::design::Segment>
 pub stitchcraft_engine::design::Subpath::start: stitchcraft_core::units::Point
+pub struct stitchcraft_engine::design::Turn(_)
+impl stitchcraft_engine::design::Turn
+pub const stitchcraft_engine::design::Turn::CHOICES: [(&'static str, stitchcraft_engine::design::Turn); 3]
+pub const stitchcraft_engine::design::Turn::HELP: &'static str
+pub const stitchcraft_engine::design::Turn::LABEL: &'static str
+pub const stitchcraft_engine::design::Turn::LEFT: stitchcraft_engine::design::Turn
+pub const stitchcraft_engine::design::Turn::NAME: &'static str
+pub const stitchcraft_engine::design::Turn::NONE: stitchcraft_engine::design::Turn
+pub const stitchcraft_engine::design::Turn::RIGHT: stitchcraft_engine::design::Turn
+pub fn stitchcraft_engine::design::Turn::apply(self, stitchcraft_core::units::Point) -> core::option::Option<stitchcraft_core::units::Point>
+pub const fn stitchcraft_engine::design::Turn::degrees(self) -> f64
+pub fn stitchcraft_engine::design::Turn::new(f64) -> core::option::Option<stitchcraft_engine::design::Turn>
+pub fn stitchcraft_engine::design::Turn::turns(self) -> bool
 pub const stitchcraft_engine::design::SETTINGS: [stitchcraft_engine::design::Setting; 3]
 pub const stitchcraft_engine::design::WORKING_LIMIT_MM: f64
 pub fn stitchcraft_engine::design::within_working_limit(stitchcraft_core::units::Point) -> bool
