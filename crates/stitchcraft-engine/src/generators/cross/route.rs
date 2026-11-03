@@ -69,7 +69,8 @@ pub(crate) fn runs(
     let mut left: Vec<usize> = all.into_iter().filter(|&group| last.is_none_or(|(sewn_last, _)| sewn_last != group)).collect();
     let mut runs = Vec::with_capacity(groups.len());
     let mut at = needle;
-    while !left.is_empty() {
+    // Each group is sewn once: a group a turn, until none is left.
+    for _ in 0..groups.len() {
         let next = match at {
             Some(p) => nearest(&groups, &left, grid, p, meter)?,
             None => left.first().and_then(|&group| Some((group, top_right(*groups.get(group)?.first()?)))),
@@ -111,9 +112,9 @@ fn groups(cells: &Cells, meter: &mut Meter) -> Result<Vec<Vec<[i64; 2]>>, Exhaus
             *mark = true;
         }
         let mut group = vec![cell];
-        let mut next = 0;
-        while let Some(&[i, j]) = group.get(next) {
-            next += 1;
+        // Each cross of the group is looked round once, and the group holds no more crosses than there are.
+        for next in 0..crossed.len() {
+            let Some(&[i, j]) = group.get(next) else { break };
             for [di, dj] in AROUND {
                 meter.charge(1)?;
                 let neighbour = [i.saturating_add(di), j.saturating_add(dj)];
@@ -371,6 +372,12 @@ mod tests {
     }
 
     #[test]
+    fn a_place_lies_on_a_corner_or_a_middle_of_the_grid() {
+        let grid = Grid { origin: [0.5, 1.0], size: [2.0, 3.0] };
+        assert_eq!((Spot::Corner([1, 1]).on(&grid), Spot::Middle([1, 1]).on(&grid)), (p(2.5, 4.0), p(3.5, 5.5)));
+    }
+
+    #[test]
     fn req_fill_crs_003_a_cross_from_a_corner_of_its_slash_sews_its_backslash_then_its_slash_and_shows_no_travel() {
         let tr = Spot::Corner([1, 0]);
         let (tl, br, bl, m) = (Spot::Corner([0, 0]), Spot::Corner([1, 1]), Spot::Corner([0, 1]), Spot::Middle([0, 0]));
@@ -428,6 +435,9 @@ mod tests {
         assert_eq!(groups(&["x.", ".x"]), [vec![[0, 0], [1, 1]]]);
         assert_eq!(groups(&[".x", "x."]), [vec![[1, 0], [0, 1]]]);
         assert_eq!(groups(&["xx.x"]), [vec![[0, 0], [1, 0]], vec![[3, 0]]]);
+        // Crosses found from a cross after them in the group, above, to the left, and above and to the left.
+        assert_eq!(groups(&["x..x", ".x.x", "..x."]), [vec![[0, 0], [1, 1], [2, 2], [3, 1], [3, 0]]]);
+        assert_eq!(groups(&["...x", "x..x", ".xx."]), [vec![[3, 0], [3, 1], [2, 2], [1, 2], [0, 1]]]);
         let mut few = Budget { max_work: 5, ..Budget::DEFAULT }.meter();
         assert_eq!(super::groups(&cells(&["xx"]), &mut few), Err(Exhausted::Work));
     }

@@ -19,8 +19,8 @@
 //!    Every cell the part reaches is looked at, where Ink/Stitch looks from the first line at or above the
 //!    part's top, moved down by the offset, and misses a row there (`DEV-FILL-025`).
 //! 3. **Coverage.** A cell sews a cross when the part covers `fill_coverage` percent of it, with Ink/Stitch's
-//!    slack of a ten-thousandth of a percent ([`grid`]).
-//! 4. **Runs.** Crosses that share a corner are sewn in one run, the runs in the order [`route`] gives,
+//!    slack of a ten-thousandth of a percent (`grid`).
+//! 4. **Runs.** Crosses that share a corner are sewn in one run, the runs in the order `route` gives,
 //!    from the needle and ending nearest the next part, or for the last part nearest the next element.
 //! 5. **Stitches.** Each run's places are its needle points, and a stitch longer than
 //!    `max_cross_stitch_length_mm` is split into the fewest equal stitches no longer, as Ink/Stitch's geometry
@@ -29,7 +29,7 @@
 //!
 //! **Flipped crosses** lie on the same grid, with their `/` diagonal under their `\` one. A flipped cross
 //! is a plain cross turned a quarter turn, so each part, its grid, the needle and the end are turned a
-//! quarter turn ([`Frame`]), sewn as plain crosses, and turned back. Ink/Stitch turns the part alone and
+//! quarter turn (`Frame`), sewn as plain crosses, and turned back. Ink/Stitch turns the part alone and
 //! lays its grid afresh, which takes the pattern size's 2 values the other way round and anchors a grid at
 //! the part's bottom edge (`DEV-FILL-026`).
 
@@ -41,6 +41,7 @@ mod route;
 mod tests;
 
 pub use params::CrossParams;
+
 use std::cmp::Ordering;
 
 use stitchcraft_core::units::at_least;

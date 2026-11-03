@@ -55,7 +55,7 @@ params! {
 
     "Crosses" {
         /// The kind of cross. A simple cross sews its `\` diagonal and then its `/` diagonal over it, as the
-        /// drawing shows it; flipped, the `/` diagonal goes under. The other kinds arrive in a later version,
+        /// drawing shows it. Flipped, the `/` diagonal goes under. The other kinds arrive in a later version,
         /// and until then an element set to one is skipped (`SC-W0011`).
         cross_stitch_method: Choice = "simple_cross", label "Cross", choices METHODS;
 
@@ -71,7 +71,7 @@ params! {
 
     "Grid" {
         /// How wide and how tall the grid's cells are, each the size of a cross. One length gives square
-        /// cells; 2 separated by a space give the width, then the height.
+        /// cells, and 2 separated by a space give the width, then the height.
         pattern_size_mm: LengthPair = "3", label "Cell size", range (0.1, 100.0);
 
         /// Lay the grid from the canvas's origin, so that cross stitch fills side by side share one grid and
@@ -83,8 +83,8 @@ params! {
         /// as far each way. Moved by a whole cell, the grid lies where it was.
         cross_offset_mm: LengthPair = "0", label "Grid offset", range (0.0, 100.0);
 
-        /// How much of a cell, in percent, the fill must cover for the cell to sew a cross. Lower, the
-        /// crosses reach further past the fill's edges; at 100, only cells wholly inside it sew.
+        /// How much of a cell, in percent, the fill must cover for the cell to sew a cross. Lower, crosses
+        /// are sewn further past the fill's edges. At 100, only cells wholly inside it sew.
         fill_coverage: Percent = "50", label "Coverage", range (1.0, 100.0);
     }
 }
