@@ -1055,4 +1055,21 @@ mod tests {
         let long: f64 = path.iter().map(|s| s.start.distance(s.end)).sum();
         assert!((95.0..110.0).contains(&long), "{long} mm");
     }
+
+    #[test]
+    fn a_cross_stitch_fill_s_preview_is_its_crosses_diagonals() {
+        // A cross stitch fill has no rows: its preview shows the 2 diagonals of each cross. A 4 mm square on
+        // the canvas's 2 mm grid covers 4 cells whole, and each sews a cross.
+        let segments = [p(4.0, 0.0), p(4.0, 4.0), p(0.0, 4.0)].map(Segment::Line).to_vec();
+        let square = Shape::Fill { path: Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments, closed: true }] }, rule: FillRule::NonZero };
+        let params = [("fill_method", "cross_stitch"), ("pattern_size_mm", "2")];
+        let laid = rows(&element(square, &params), &DesignSettings::default(), stitchcraft_plan::profiles::REFERENCE, &Budget::DEFAULT);
+        assert_eq!(laid.diagnostics, Vec::new());
+        let mut diagonals: Vec<[f64; 4]> = laid.segments.unwrap().iter().map(|s| [s.start.x(), s.start.y(), s.end.x(), s.end.y()]).collect();
+        diagonals.sort_by(|a, b| a.iter().zip(b).map(|(x, y)| x.total_cmp(y)).find(|o| o.is_ne()).unwrap_or(std::cmp::Ordering::Equal));
+        let cell = |x: f64, y: f64| [[x, y, x + 2.0, y + 2.0], [x, y + 2.0, x + 2.0, y]];
+        let mut expected: Vec<[f64; 4]> = [cell(0.0, 0.0), cell(2.0, 0.0), cell(0.0, 2.0), cell(2.0, 2.0)].concat();
+        expected.sort_by(|a, b| a.iter().zip(b).map(|(x, y)| x.total_cmp(y)).find(|o| o.is_ne()).unwrap_or(std::cmp::Ordering::Equal));
+        assert_eq!(diagonals, expected);
+    }
 }
