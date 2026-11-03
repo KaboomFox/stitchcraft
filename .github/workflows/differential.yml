@@ -2,14 +2,23 @@
 # request that changes the differential itself or automatic digitizing, a pinned Ink/Stitch and StitchCraft
 # sew the design of each `inkstitch` case, and their machine files are compared by measures. The
 # `centre-lines` cases compare the lines Ink/Stitch's Fill to Stroke draws for narrow shapes with the lines
-# automatic digitizing sews them along. The report is the job's summary, and an artifact with the SVG files
-# written for test sheets and the pictures of both programs' lines.
+# automatic digitizing sews them along. The `fonts` case sews a sample of the glyphs of Ink/Stitch's fonts
+# (M8.6), which `cargo xtask corpus` fetches at a pinned commit. Every Sunday every glyph is sewn, in 6 parts
+# dealt out in turn. The report is the job's summary, and an artifact with the SVG files written for test
+# sheets, the pictures of both programs' lines, and the fonts' report with the glyphs that differ.
 name: differential
 
 on:
   schedule:
     - cron: "17 4 * * *"
+    # Every glyph of Ink/Stitch's fonts.
+    - cron: "37 5 * * 0"
   workflow_dispatch:
+    inputs:
+      every_glyph:
+        description: Sew every glyph of Ink/Stitch's fonts, in parts, in place of the cases and the sample
+        type: boolean
+        default: false
   pull_request:
     paths:
       - conformance/inkstitch/**
@@ -17,12 +26,14 @@ on:
       - conformance/fixtures/inkstitch/**
       - conformance/deviations.toml
       - xtask/src/conformance/**
+      - xtask/src/corpus/**
       - crates/stitchcraft-testkit/src/metrics.rs
       - crates/stitchcraft-testkit/src/inkstitch.rs
       - crates/stitchcraft-testkit/src/designs.rs
       - crates/stitchcraft-engine/src/auto/**
       - crates/stitchcraft-engine/src/normalize/strips/**
       - .github/actions/inkstitch/**
+      - .github/actions/fonts/**
       - .github/workflows/differential.yml
 
 permissions:
@@ -35,12 +46,14 @@ env:
 jobs:
   inkstitch:
     name: Ink/Stitch differential (L3)
+    if: github.event.schedule != '37 5 * * 0' && !inputs.every_glyph
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: rustup toolchain install --profile minimal
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - uses: ./.github/actions/inkstitch
+      - uses: ./.github/actions/fonts
       - run: cargo xtask conformance --differential
       - name: Keep the report
         if: always()
@@ -50,4 +63,36 @@ jobs:
           path: |
             target/conformance/differential.md
             target/conformance/differential/
+            target/conformance/fonts.md
+            target/conformance/fonts.json
+            target/conformance/fonts/
+          if-no-files-found: ignore
+
+  every-glyph:
+    # Each part sews a sixth of the glyphs, dealt out in turn, as many at a time as the runner has cores.
+    name: every glyph of Ink/Stitch's fonts, part ${{ matrix.part }} of 6
+    if: github.event.schedule == '37 5 * * 0' || inputs.every_glyph
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [1, 2, 3, 4, 5, 6]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install --profile minimal
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - uses: ./.github/actions/inkstitch
+      - uses: ./.github/actions/fonts
+      - run: cargo xtask conformance --differential --filter inkstitch-fonts --every-glyph --shard ${{ matrix.part }}/6
+      - name: Keep the report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: inkstitch-fonts-part-${{ matrix.part }}
+          path: |
+            target/conformance/differential.md
+            target/conformance/fonts.md
+            target/conformance/fonts.json
+            target/conformance/fonts/
           if-no-files-found: ignore

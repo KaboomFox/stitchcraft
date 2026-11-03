@@ -1,0 +1,90 @@
+# The differences of the glyph differential (M8.6, xtask/src/conformance/fonts/excuses.rs) that the
+# deviations ledger explains: each glyph of Ink/Stitch's fonts, sewn alone in Ink/Stitch and in StitchCraft.
+# An excuse names the measures it excuses, the ledger's entry that explains them (conformance/deviations.toml),
+# and the glyphs it holds for: those StitchCraft says a diagnostic of (`codes`, and `saying`, words of its
+# message), whose elements are of a stitch type (`types`), all of these types (`only_types`), or set an
+# Ink/Stitch setting to something other than nothing or 0 (`settings`), or of a font (`fonts`). An excuse
+# without them holds for every glyph. Where the differential can undo the deviation in Ink/Stitch's file, the
+# excuse holds only when the measure then agrees, and with `within_mm` only where each program's thread lies
+# that near the other's. Otherwise the next one that holds is tried.
+
+# Each program names a thread by its own entry of Brother's palette: checked by naming Ink/Stitch's threads
+# as StitchCraft names them, where both change thread at the same colour blocks.
+[[excuse]]
+measures = ["threads"]
+deviation = "DEV-THREAD-001"
+
+# pystitch's jumps that go nowhere, checked by leaving them out of Ink/Stitch's file.
+[[excuse]]
+measures = ["trims", "jumps"]
+deviation = "DEV-FMT-001"
+
+# Stitches longer than the machine's longest, which StitchCraft splits, and needle points nearer each other
+# than its shortest, which it leaves out: checked by fitting Ink/Stitch's so. Honoka's satin columns set an
+# underlay of stitches 0.2 mm long, and its 服 takes 3,101 stitches in Ink/Stitch and 1,935 in StitchCraft.
+[[excuse]]
+measures = ["stitches"]
+deviation = "DEV-FIN-001"
+codes = ["SC-I0703", "SC-I0504"]
+
+# A setting StitchCraft clamps into its range (SC-W0102) where Ink/Stitch sews it as it is: a satin
+# column's random width decrease below 0, which widens it there, in Magnolia bicolor. It comes before the
+# random widths, which Magnolia bicolor's satin columns have too, as the closer cause.
+[[excuse]]
+measures = ["size", "overlap"]
+deviation = "DEV-PRM-002"
+codes = ["SC-W0102"]
+saying = "random_width_decrease_percent"
+
+# Random satin widths and spacing, drawn from StitchCraft's own generator. Magnolia bicolor's !, its random
+# widths set to 0 in both programs, overlaps by 0.991. Cats' b widens one rail by up to 100 %, and the widest
+# point drawn differs: 25.8 mm wide here, 26.8 mm in Ink/Stitch.
+[[excuse]]
+measures = ["size", "overlap"]
+deviation = "DEV-SAT-002"
+settings = ["random_width_increase_percent", "random_width_decrease_percent", "random_zigzag_spacing_percent", "random_split_jitter_percent"]
+
+# StitchCraft's meander tiles are its own.
+[[excuse]]
+measures = ["stitches", "overlap"]
+deviation = "DEV-FILL-018"
+types = ["meander_fill"]
+
+# A viewBox of another shape than its page, centred by StitchCraft and not by Ink/Stitch: the fills' rows
+# are laid from another point. Cooper Marif's are the only glyph files of the corpus that sew fills so.
+[[excuse]]
+measures = ["overlap"]
+deviation = "DEV-SVG-025"
+fonts = ["cooper_marif"]
+
+# Ink/Stitch's stitch patterns, which StitchCraft doesn't apply.
+[[excuse]]
+measures = ["stitches", "size", "overlap"]
+deviation = "DEV-SVG-026"
+codes = ["SC-W0802"]
+saying = "stitch pattern"
+
+# Running stitches place their needle points otherwise along the same lines, more of them on tight curves
+# (and corners, DEV-RUN-001): checked by each program's thread lying within 0.3 mm of the other's. Learning
+# curve's ë and Ë sew their dots in manual stitches, whose needle points are the path's in both programs.
+[[excuse]]
+measures = ["stitches", "overlap"]
+deviation = "DEV-RUN-002"
+only_types = ["running_stitch", "manual_stitch"]
+within_mm = 0.3
+
+# Decadent Flowers Monogram's glyphs are a fill under a redwork running stitch. Sewn apart, the fill of its N
+# agrees by every measure, and its redwork takes 5,876 stitches against 4,705, within 0.3 mm of each other.
+[[excuse]]
+measures = ["stitches"]
+deviation = "DEV-RUN-002"
+types = ["running_stitch"]
+fonts = ["decadent_flowers_monogram"]
+within_mm = 0.3
+
+# A move-to with nothing drawn after it, where Ink/Stitch sews a needle point and StitchCraft nothing: checked
+# by leaving such needle points out of Ink/Stitch's file, with the jumps and the trim that lead to them. Kum
+# Tsoan relief's V ends a path with one, 24 mm above the glyph, and its size is 64.4 × 91.4 mm in Ink/Stitch.
+[[excuse]]
+measures = ["size", "place", "trims", "jumps", "overlap"]
+deviation = "DEV-SVG-011"
