@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Cross stitch fills on the grids Ink/Stitch lays, each trimmed after: a rectangle on the canvas's grid moved 1 mm left and 0.5 mm down, a rectangle on a grid from its own top left corner moved 0.5 mm left, a square on cells 2 mm wide and 3 tall with 2 threads at 30 % coverage, a square whose diagonals are split into stitches of 2 mm at most, and a disc on a 2 mm grid. Written for StitchCraft's Ink/Stitch differential cases (conformance L3). -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkstitch="http://inkstitch.org/namespace"
+     width="110mm" height="40mm" viewBox="0 0 110 40">
+  <metadata><inkstitch:inkstitch_svg_version>4</inkstitch:inkstitch_svg_version></metadata>
+  <path id="offset" d="M 10,9.6 H 22 V 19 H 10 Z" fill="#ed171f"
+        inkstitch:fill_method="cross_stitch" inkstitch:cross_offset_mm="1 0.5" inkstitch:trim_after="true"/>
+  <path id="bounds" d="M 30.3,9.2 H 42 V 19 H 30.3 Z" fill="#ed171f"
+        inkstitch:fill_method="cross_stitch" inkstitch:canvas_grid_origin="false" inkstitch:cross_offset_mm="0.5 0"
+        inkstitch:trim_after="true"/>
+  <path id="cells" d="M 50,10 H 62 V 22 H 50 Z" fill="#ed171f"
+        inkstitch:fill_method="cross_stitch" inkstitch:pattern_size_mm="2 3" inkstitch:cross_thread_count="2"
+        inkstitch:fill_coverage="30" inkstitch:trim_after="true"/>
+  <path id="split" d="M 69,9 H 78 V 18 H 69 Z" fill="#ed171f"
+        inkstitch:fill_method="cross_stitch" inkstitch:max_cross_stitch_length_mm="2" inkstitch:trim_after="true"/>
+  <circle id="disc" cx="95" cy="15" r="8" fill="#ed171f"
+          inkstitch:fill_method="cross_stitch" inkstitch:pattern_size_mm="2" inkstitch:cross_thread_count="2"/>
+</svg>

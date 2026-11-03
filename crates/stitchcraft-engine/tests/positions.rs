@@ -58,9 +58,10 @@ fn req_gen_001_a_fill_starts_and_ends_nearest_its_positions() {
     // next element, at its corner (10, 20). With them, it starts nearest the start position, here its
     // corner (10, 0), and ends nearest the end position, its corner (-10, 20), whatever its neighbours. A
     // legacy fill is sewn as a tatami fill (DEV-FILL-014), positions and all. A meander fill's line starts
-    // and ends on the tiling, its points a tile or so apart.
+    // and ends on the tiling, its points a tile or so apart, and a cross stitch fill at the corners of its
+    // crosses on the 3 mm grid, x = ±9 and y = 0 or 21, the cells beyond them covered too little.
     let (start, end) = (p(15.0, -5.0), p(-15.0, 25.0));
-    for method in ["tatami_fill", "legacy_fill", "meander_fill", "circular_fill"] {
+    for method in ["tatami_fill", "legacy_fill", "meander_fill", "circular_fill", "cross_stitch"] {
         let plain = sewn_by(&planned(around(square(method))), 1);
         assert!(plain[0].distance(p(-10.0, 0.0)) < NEAR, "{method}: {:?}", plain[0]);
         assert!(plain.last().unwrap().distance(p(10.0, 20.0)) < NEAR, "{method}: {:?}", plain.last());

@@ -162,6 +162,20 @@
         }
       ]
     },
+    "canvas_grid_origin": {
+      "default": true,
+      "description": "Lay the grid from the canvas's origin, so that cross stitch fills side by side share one grid and their crosses line up. Moved, the fill may then sew other crosses. Off, the grid starts at the top left corner of each part of the fill, which then sews the same wherever it lies.",
+      "title": "Grid on the canvas",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "applies_to": [
+          "cross_stitch"
+        ],
+        "group": "Grid",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
     "center_walk_underlay": {
       "default": false,
       "description": "Sew a running stitch along the middle of the column first, there and back. It holds the fabric still along the column, and suits narrow columns. The other underlays and the top stitches follow it.",
@@ -417,6 +431,74 @@
         "unit": "mm"
       }
     },
+    "cross_offset_mm": {
+      "default": [
+        0.0
+      ],
+      "description": "How far the grid is moved: left by the first length, and down by the second. One length moves it as far each way. Moved by a whole cell, the grid lies where it was.",
+      "items": {
+        "maximum": 100.0,
+        "minimum": 0.0,
+        "type": "number"
+      },
+      "maxItems": 2,
+      "minItems": 1,
+      "title": "Grid offset",
+      "type": "array",
+      "x-stitchcraft": {
+        "applies_to": [
+          "cross_stitch"
+        ],
+        "group": "Grid",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "mm"
+      }
+    },
+    "cross_stitch_method": {
+      "default": "simple_cross",
+      "description": "The kind of cross. A simple cross sews its `\\` diagonal and then its `/` diagonal over it, as the drawing shows it. Flipped, the `/` diagonal goes under. The other kinds arrive in a later version, and until then an element set to one is skipped (`SC-W0011`).",
+      "enum": [
+        "simple_cross",
+        "simple_cross_flipped",
+        "half_cross",
+        "half_cross_flipped",
+        "upright_cross",
+        "upright_cross_flipped",
+        "dense_upright_cross",
+        "dense_upright_cross_flipped",
+        "double_cross",
+        "double_cross_flipped",
+        "smyrna_cross",
+        "smyrna_cross_flipped"
+      ],
+      "title": "Cross",
+      "type": "string",
+      "x-stitchcraft": {
+        "applies_to": [
+          "cross_stitch"
+        ],
+        "group": "Crosses",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
+    "cross_thread_count": {
+      "default": 4,
+      "description": "How many times the thread passes along each diagonal of a cross. A full cross takes an even number, since the needle comes back to where it started: an odd number sews the even number below it, and 1 sews 2. More threads make bolder crosses, and pack the holes at the cells' corners.",
+      "maximum": 20,
+      "minimum": 1,
+      "title": "Threads",
+      "type": "integer",
+      "x-stitchcraft": {
+        "applies_to": [
+          "cross_stitch"
+        ],
+        "group": "Crosses",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
     "enable_random_stitch_length": {
       "default": false,
       "description": "Vary the stitch lengths at random instead of spreading them evenly, or in a tatami fill, instead of placing the needle points on the stagger grid. Lines and rows sewn close together then do not line their needle holes up, which avoids moiré patterns.",
@@ -476,7 +558,7 @@
     },
     "expand_mm": {
       "default": 0.0,
-      "description": "How far past the drawn edge the top rows reach: each part is grown by this much, with round corners, before its rows, rings or path are laid. The thread's pull opens gaps between fills sewn side by side, and this closes them. Negative values pull the rows in from the edge.",
+      "description": "How far past the drawn edge the top rows reach: each part is grown by this much, with round corners, before its rows, rings or path are laid, or its cross stitch's cells are chosen. The thread's pull opens gaps between fills sewn side by side, and this closes them. Negative values pull the rows in from the edge.",
       "maximum": 10.0,
       "minimum": -10.0,
       "title": "Expand",
@@ -486,7 +568,8 @@
           "tatami_fill",
           "contour_fill",
           "meander_fill",
-          "circular_fill"
+          "circular_fill",
+          "cross_stitch"
         ],
         "group": "Rows",
         "origin": "inkstitch",
@@ -514,6 +597,23 @@
         "group": "Fill",
         "origin": "inkstitch",
         "stability": "stable"
+      }
+    },
+    "fill_coverage": {
+      "default": 50.0,
+      "description": "How much of a cell, in percent, the fill must cover for the cell to sew a cross. Lower, crosses are sewn further past the fill's edges. At 100, only cells wholly inside it sew.",
+      "maximum": 100.0,
+      "minimum": 1.0,
+      "title": "Coverage",
+      "type": "number",
+      "x-stitchcraft": {
+        "applies_to": [
+          "cross_stitch"
+        ],
+        "group": "Grid",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "%"
       }
     },
     "fill_method": {
@@ -903,6 +1003,23 @@
         }
       }
     },
+    "max_cross_stitch_length_mm": {
+      "default": 11.0,
+      "description": "The longest stitch a cross sews. A diagonal longer than this, on a large grid, is sewn in equal stitches, each no longer.",
+      "maximum": 100.0,
+      "minimum": 0.1,
+      "title": "Longest cross stitch",
+      "type": "number",
+      "x-stitchcraft": {
+        "applies_to": [
+          "cross_stitch"
+        ],
+        "group": "Crosses",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "mm"
+      }
+    },
     "max_stitch_length_mm": {
       "default": null,
       "description": "Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as its split method says. Empty, a stitch is split only where it is longer than the machine sews. A tatami fill sews its rows in stitches this long, and a contour fill its rings. A meander or circular fill's underlay sews its rows so.",
@@ -1130,6 +1247,30 @@
       ],
       "x-stitchcraft": {
         "group": "Shortest stitch and jump",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "mm"
+      }
+    },
+    "pattern_size_mm": {
+      "default": [
+        3.0
+      ],
+      "description": "How wide and how tall the grid's cells are, each the size of a cross. One length gives square cells, and 2 separated by a space give the width, then the height.",
+      "items": {
+        "maximum": 100.0,
+        "minimum": 0.1,
+        "type": "number"
+      },
+      "maxItems": 2,
+      "minItems": 1,
+      "title": "Cell size",
+      "type": "array",
+      "x-stitchcraft": {
+        "applies_to": [
+          "cross_stitch"
+        ],
+        "group": "Grid",
         "origin": "inkstitch",
         "stability": "stable",
         "unit": "mm"
@@ -2276,6 +2417,19 @@
         ],
         "name": "MeanderParams",
         "title": "Meander parameters"
+      },
+      {
+        "keys": [
+          "cross_stitch_method",
+          "cross_thread_count",
+          "max_cross_stitch_length_mm",
+          "pattern_size_mm",
+          "canvas_grid_origin",
+          "cross_offset_mm",
+          "fill_coverage"
+        ],
+        "name": "CrossParams",
+        "title": "Cross parameters"
       },
       {
         "keys": [
