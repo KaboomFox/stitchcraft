@@ -26,9 +26,9 @@ which copies Ink/Stitch's code ([ADR-0001](../../docs/src/design/adr/0001-licens
 ## Running the differential by hand
 
 Fetch Ink/Stitch at the pinned commit outside the repository, give it a Python of its own, and point the
-suite at both, as the `inkstitch` action does in CI. Its `DEBUG.toml` turns off the log Ink/Stitch writes at
-its debug level when it runs from a checkout: a glyph took 10 seconds with it, and 1.6 without. Its settings
-turn its stitch-plan cache off. `cargo xtask corpus` fetches the fonts:
+suite at both, as the `inkstitch` action does in CI. Run from a checkout, Ink/Stitch logs at its debug level,
+and a glyph took it 10 seconds, against 1.6 with its `DEBUG.toml` turning the log off. Its settings turn its
+stitch-plan cache off. `cargo xtask corpus` fetches the fonts:
 
 ```sh
 commit=$(sed -n 's/^commit = "\(.*\)"$/\1/p' conformance/inkstitch/pin.toml)
