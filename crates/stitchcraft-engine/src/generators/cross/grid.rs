@@ -251,7 +251,7 @@ mod tests {
     const THREE: Grid = Grid { origin: [0.0, 0.0], size: [3.0, 3.0] };
 
     #[test]
-    fn a_cell_sews_a_cross_when_the_part_covers_enough_of_it() {
+    fn req_fill_crs_002_a_cell_sews_a_cross_when_the_part_covers_enough_of_it() {
         // A rectangle from (10, 9.2) to (22, 19) on a 3 mm grid: the cells from x = 9 to 21 and y = 9 to 18,
         // but the top left one, which it covers 2/3 × 2.8/3, 62 %, in full: 12 cells. At 63 %, that one goes too.
         let part = rect((10.0, 9.2), (22.0, 19.0));
@@ -266,7 +266,7 @@ mod tests {
     }
 
     #[test]
-    fn a_cell_covered_exactly_as_asked_sews_and_a_hole_takes_its_area_away() {
+    fn req_fill_crs_002_a_cell_covered_exactly_as_asked_sews_and_a_hole_takes_its_area_away() {
         // Half of each cell of the column x 0 to 3: exactly 50 %, which sews at 50, with the slack, and not at
         // 50.001.
         let half = rect((1.5, 0.0), (6.0, 3.0));
@@ -279,7 +279,7 @@ mod tests {
     }
 
     #[test]
-    fn a_slanted_side_shares_its_area_among_the_columns_it_crosses() {
+    fn req_fill_crs_002_a_slanted_side_shares_its_area_among_the_columns_it_crosses() {
         // A triangle under the diagonal of a 6 mm square: each of the 2 cells the diagonal cuts is half covered,
         // the one below it whole, and the one above it not at all.
         let triangle = Polygon { outline: vec![p(0.0, 0.0), p(0.0, 6.0), p(6.0, 6.0), p(0.0, 0.0)], holes: Vec::new() };
@@ -304,7 +304,7 @@ mod tests {
     }
 
     #[test]
-    fn every_cell_the_bounds_reach_is_charged_before_any_is_looked_at() {
+    fn req_fill_crs_006_every_cell_the_bounds_reach_is_charged_before_any_is_looked_at() {
         // 12 by 10 cells: 120 units at once, and a budget of 119 runs out before a row is looked at.
         let part = rect((0.0, 0.0), (36.0, 30.0));
         let mut short = Budget { max_work: 119, ..Budget::DEFAULT }.meter();
