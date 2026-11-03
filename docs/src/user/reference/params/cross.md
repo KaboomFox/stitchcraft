@@ -16,7 +16,7 @@ Applies to Cross stitch.
 drawing shows it. Flipped, the `/` diagonal goes under. The other kinds arrive in a later version,
 and until then an element set to one is skipped (`SC-W0011`).
 
-- **Accepts:** one of `simple_cross` (Simple cross), `simple_cross_flipped` (Simple cross, flipped), or one of the 10 other values kept for designs that name them, each sewn as another: `half_cross`, `half_cross_flipped`, `upright_cross`, `upright_cross_flipped`, `dense_upright_cross`, `dense_upright_cross_flipped`, `double_cross`, `double_cross_flipped`, `smyrna_cross`, `smyrna_cross_flipped`
+- **Accepts:** one of `simple_cross` (Simple cross), `simple_cross_flipped` (Simple cross, flipped), or one of the 10 other values kept for designs that name them, read as the help above says: `half_cross`, `half_cross_flipped`, `upright_cross`, `upright_cross_flipped`, `dense_upright_cross`, `dense_upright_cross_flipped`, `double_cross`, `double_cross_flipped`, `smyrna_cross`, `smyrna_cross_flipped`
 - **Default:** `simple_cross`
 - **Ink/Stitch:** same key and default; StitchCraft differs:
   - **DEV-FILL-026.** Flipped crosses lie on the grid plain crosses lie on, with their / diagonal under their \ one. Ink/Stitch turns the part a quarter turn, lays its grid over the turned part and turns the crosses back. Its flipped cells are then pattern_size_mm's second length wide and its first tall, the offset's second length moves them right and its first down, and with canvas_grid_origin off its grid starts at the part's bottom left corner. With square cells, no offset and the canvas's grid, both lay the same crosses.

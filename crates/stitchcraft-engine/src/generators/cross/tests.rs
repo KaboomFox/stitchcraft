@@ -37,6 +37,7 @@ fn sewn(region: &Region, cross: &Cross, needle: Option<Point>, next: Option<&App
 
 /// The cells, by their top left corners, whose 2 diagonals `stitched` passes along, on square cells of
 /// `size` from the origin: each needle point lies on a corner or a middle of one.
+#[allow(clippy::cast_possible_truncation)]
 fn crosses(runs: &[Vec<Point>], size: f64) -> Vec<(i64, i64)> {
     let mut cells: Vec<(i64, i64)> = runs
         .iter()
@@ -93,6 +94,7 @@ fn req_fill_crs_001_the_grid_lies_on_the_canvas_or_on_the_part_moved_by_the_offs
 }
 
 #[test]
+#[allow(clippy::cast_possible_truncation)]
 fn req_fill_crs_003_flipped_crosses_lie_on_the_same_grid_with_their_slash_under_their_backslash() {
     // The same cells as plain crosses, on cells 2 mm wide and 3 tall moved off the origin, where Ink/Stitch's
     // would be 3 wide and 2 tall (DEV-FILL-026); each cross's last pass lies along its `\` diagonal, where a
@@ -111,7 +113,7 @@ fn req_fill_crs_003_flipped_crosses_lie_on_the_same_grid_with_their_slash_under_
         found.dedup();
         found
     };
-    let flipped = Cross { flipped: true, ..cross.clone() };
+    let flipped = Cross { flipped: true, ..cross };
     assert_eq!(cells(&flipped), cells(&cross));
     assert_eq!(cells(&cross).len(), 18);
     // A square frame 12 mm wide round a hole 6 mm wide, on the default grid: its hole is turned with it, and

@@ -27,6 +27,7 @@
 //! **Cost.** Every step charges `meter`: each place the run passes, each cross looked for at a corner, and
 //! each corner the travel reaches.
 
+use std::collections::btree_map::Entry;
 use std::collections::{BTreeMap, VecDeque};
 
 use stitchcraft_core::{Exhausted, Meter, Point};
@@ -262,6 +263,9 @@ fn run(start: [i64; 2], cells: &Cells, pending: &mut [bool], repeats: u32, meter
     Ok(linked.in_order())
 }
 
+/// A cross found along a run: the place it joins the run at, the corner there and the cross's cell.
+type Found = (usize, [i64; 2], [i64; 2]);
+
 /// The first corner along `linked` from the place `from` where `take` gives a cross whose `\` diagonal ends
 /// there, the place, the corner and the cross's cell. One unit of `meter` for each place passed.
 fn first_backslashed(
@@ -269,7 +273,7 @@ fn first_backslashed(
     from: Option<usize>,
     take: &mut impl FnMut([i64; 2]) -> bool,
     meter: &mut Meter,
-) -> Result<Option<(usize, [i64; 2], [i64; 2])>, Exhausted> {
+) -> Result<Option<Found>, Exhausted> {
     let mut at = from;
     while let Some(k) = at {
         meter.charge(1)?;
@@ -308,12 +312,16 @@ fn walk(
     Ok(())
 }
 
+/// A step of a travel: the corner it starts from and the cross it passes through.
+type Step = ([i64; 2], [i64; 2]);
+
 /// The way from the corner `from` to the corner `to` through the crosses of `cells`, its places from `from`:
 /// from corner to corner of a cross through its middle, through the fewest crosses, each corner reached
 /// first from the corner before it in the order the way is searched. One unit of `meter` for each corner
 /// reached and each cross looked at.
 fn travel(from: [i64; 2], to: [i64; 2], cells: &Cells, meter: &mut Meter) -> Result<Vec<Spot>, Exhausted> {
-    let mut came: BTreeMap<[i64; 2], Option<([i64; 2], [i64; 2])>> = BTreeMap::from([(from, None)]);
+    // Each corner reached, by the corner and the cross it was reached from: none for `from`.
+    let mut came: BTreeMap<[i64; 2], Option<Step>> = BTreeMap::from([(from, None)]);
     let mut queue = VecDeque::from([from]);
     while let Some(corner) = queue.pop_front().filter(|_| !came.contains_key(&to)) {
         let [i, j] = corner;
@@ -323,8 +331,8 @@ fn travel(from: [i64; 2], to: [i64; 2], cells: &Cells, meter: &mut Meter) -> Res
                 continue;
             }
             for next in corners(cell) {
-                if !came.contains_key(&next) {
-                    came.insert(next, Some((corner, cell)));
+                if let Entry::Vacant(unreached) = came.entry(next) {
+                    unreached.insert(Some((corner, cell)));
                     queue.push_back(next);
                 }
             }
