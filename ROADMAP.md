@@ -62,7 +62,8 @@ and TS-11B samples it too (M7.9). An Ink/Stitch file sews with its settings, eac
 of a shape a parameter of its elements (M8.1), and an older file's settings as Ink/Stitch updates them
 (M8.3). Its fills and satin columns start and end at its start and end commands, a VectorCraft document's
 at its `stitch:start` and `stitch:end` markers, and its circular fills turn round its target point
-(M8.4). Next is MC-8's sew-out, then M13.8, and MC-6, and M8 goes ahead meanwhile. M10 comes before
+(M8.4). TS-11A samples the new strokes and satins, so MC-6's sheets are all drawn. Next is MC-8's sew-out,
+then M13.8, and MC-6, and M8 goes ahead meanwhile. M10 comes before
 M14, since lettering's fonts use its stitch types. M15, planned after M14, ports TrueType and
 OpenType fonts for lettering automatically.
 The repository is

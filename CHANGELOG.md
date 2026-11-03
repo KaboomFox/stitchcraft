@@ -5,6 +5,21 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- MC-6: TS-11A, the sampler of M7's new strokes and satins, so every sheet MC-6 sews is drawn. A band to a
+  thread, most samples hooks, straight and then turning a quarter circle, in rows that turn back on each
+  other so the needle never comes to a sample where it would sew a jump's thread down. Zigzag strokes 1, 2
+  and 4 mm wide at spacings of 0.4, 1 and 2 mm, and a line whose stitches turn 45°. E-stitches 3 and 5 mm
+  wide at spacings of 2 and 3 mm round an appliqué square and 4 circles, the fabric laid at one stop and
+  trimmed at the next. S-stitches 6 and 10 mm wide at spacings of 0.4 and 0.6 mm, the 10 mm ones split at
+  3 mm by the default and the staggered methods. Zigzag satins 4 and 8 mm wide at spacings of 0.4 and 1 mm,
+  each beside a satin column of the same width and spacing, and one over a contour underlay. The Test
+  Sheet filter draws it in VectorCraft.
+  - Sewn by Ink/Stitch at `d59c9ab` as a black box, the sheet agrees with StitchCraft by every measure of
+    the differential (`REQ-RUN-013`, `REQ-SAT-029`): 4,632 stitches against 4,709, the same size, threads,
+    trims and jumps, and footprints that overlap by 0.993.
+  - The checks that sew every sheet mirrored, turned and drawn again leave out what a zigzag stroke and an
+    E-stitch don't keep by design, as Ink/Stitch sews them: a zigzag mirrored or drawn from its end
+    zigzags from the other side, and an E-stitch drawn from its end spikes elsewhere along it.
 - M8.9: the turn on export (`REQ-ASM-005`). Ink/Stitch's design setting `rotate_on_export` turns the plan
   about the hoop's centre once the origin is there, before the hoop is checked, as Ink/Stitch turns the
   machine file it writes. 90 turns the design right and -90 left, and any other number of degrees that
@@ -2251,6 +2266,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Added `conformance/golden/testsheets/TS-11A.pes` (MC-6), the new strokes and satins' test sheet that MC-6
+  sews: 4,632 stitches.
 - Changed `conformance/golden/plans/patch.pes` and `patch.dst` (M8.4, `REQ-GEN-001`): the patch's red fill
   starts nearest its start marker, in its top-left corner. `SC-W0807` no longer names the marker. The
   patch sews 2,483 stitches, 17 more.
