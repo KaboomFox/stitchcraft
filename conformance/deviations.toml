@@ -108,7 +108,7 @@ requirements = ["REQ-RUN-009"]
 id = "DEV-FIN-001"
 area = "plan/finalize"
 summary = "StitchCraft fits every stitch to the machine. It leaves out a needle point nearer the one before than its element's shortest stitch, and never nearer than the machine's (0.3 mm on the Brother). It keeps the ends of each run of stitches and its lock points, unless a stitch to one would be too short, and it splits stitches longer than the machine's longest. Ink/Stitch drops stitches no longer than the element's own shortest stitch, else the document's min_stitch_len_mm, 0.1 mm unless the file sets it, and splits nothing. Along an edge square to them, a tatami fill's rows nearer each other than the shortest stitch hand over in a stitch too short. The next row's first needle point is then left out, and a sliver at its start is bare. A bar 5 mm wide at 0.25 mm on the Brother is 97 % covered. Along an edge at 45°, their ends lie 0.35 mm apart, and the handovers stay."
-reason = "The machine profile says what the machine sews well; a stitch outside it hammers one hole, snags, or is refused (docs/src/design/engine-pipeline.md › Finalize)."
+reason = "The machine profile says what the machine sews well; a stitch outside it hammers one hole, snags, or is refused (docs/src/design/engine-pipeline.md › Finalize). Honoka's satin columns split their zigzag underlay into stitches of 0.2 mm (zigzag_underlay_max_stitch_length_mm). Ink/Stitch at d59c9ab, run as a black box (ADR-0001, decision 6), sews its 服 in 3,101 stitches, and StitchCraft in 1,935, leaving out 1,169 needle points (SC-I0504). Without its needle points nearer the one before than 0.3 mm, Ink/Stitch's takes 1,889."
 requirements = ["REQ-FIN-001", "REQ-FILL-TAT-004"]
 params = ["min_stitch_length_mm"]
 
