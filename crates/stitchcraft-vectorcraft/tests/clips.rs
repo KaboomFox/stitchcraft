@@ -101,14 +101,17 @@ fn of<'r>(read: &'r VectorCraft, label: &str) -> Vec<(Code, &'r str)> {
     read.warnings.iter().filter(about).map(|w| (w.code, w.message.as_str())).collect()
 }
 
+/// The needle points of each element, by its id, in points.
+type Points = BTreeMap<String, Vec<(f64, f64)>>;
+
 /// The needle points that each element of `read` sews, locks left out, by its id, in points, planned for the
 /// reference machine with the design's origin at the document's, and what planning says.
-fn sewn(read: &VectorCraft) -> (BTreeMap<String, Vec<(f64, f64)>>, Vec<String>) {
+fn sewn(read: &VectorCraft) -> (Points, Vec<String>) {
     let mut design = read.design.clone();
     design.settings.origin = Some(Point::new(0.0, 0.0).unwrap());
     let outcome = stitchcraft_engine::plan(&design, REFERENCE, &Budget::DEFAULT);
     let plan = outcome.plan.unwrap();
-    let mut points: BTreeMap<String, Vec<(f64, f64)>> = BTreeMap::new();
+    let mut points = Points::new();
     for stitch in plan.stitches().filter(|s| s.kind == StitchKind::Normal && s.origin.role != Role::Lock) {
         let id = stitch.origin.element.and_then(|e| plan.elements.get(e.index())).unwrap();
         points.entry(id.to_string()).or_default().push((stitch.at.x() / MM_PER_POINT, stitch.at.y() / MM_PER_POINT));
@@ -321,7 +324,7 @@ fn diag_sc_w0807_what_a_clip_can_t_read_adds_nothing_to_it_and_is_named() {
         ("intertwine", "an Intertwine object", Some("Object › Intertwine › Release")),
         ("hologram", "an object of the kind \"hologram\"", None),
     ];
-    let groups: Vec<u32> = (0..kinds.len()).map(|k| 2 + 3 * k as u32).collect();
+    let groups: Vec<u32> = (0..).map(|k: u32| 2 + 3 * k).take(kinds.len()).collect();
     let objects: Vec<String> =
         kinds.iter().zip(&groups).map(|((kind, ..), &id)| clip_group(id, "{}", &[bare(id + 1, kind), square(id + 2, 0.0, 0.0, RED)])).collect();
     let read = read_ok(&document(4, &objects.join(",")));

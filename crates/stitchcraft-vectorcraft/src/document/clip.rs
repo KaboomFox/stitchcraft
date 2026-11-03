@@ -1,15 +1,16 @@
 //! Clip groups (`REQ-VC-017`): what a clip group holds shows only inside its clipping object, and sews only
 //! what shows.
 //!
-//! VectorCraft's source is cited as its tag `v0.18.0` (`68b68a3`) has it, and 0.13 to 0.17 do the same.
+//! VectorCraft's source is cited as its tag `v0.19.0` (`bcebabe`), the compatibility gate's stable release,
+//! has it. Releases from 0.13 clip alike, the area's code in `crates/doc/src/node.rs` before 0.18.
 //!
 //! **What VectorCraft saves.** A group or a layer whose kind has `"clip": true` clips the objects it holds
 //! to its first, the clipping object (`crates/doc/src/node/kind.rs`, lines 41 to 68). Object › Clipping Mask
 //! › Make wraps the objects selected in such a group, the topmost first, and that one must be a path, a
 //! compound path or text. It loses its paints and effects, and a path is marked `"clipping": true`
-//! (`make_clipping_path` to `clip_make`, `crates/engine/src/cmd/object/compound.rs`, lines 127 to 178). The
+//! (`make_clipping_path` to `clip_make`, `crates/engine/src/cmd/object/compound.rs`, lines 129 to 180). The
 //! Layers panel's Make Clipping Mask clips a layer or a group the same way (`clip_toggle`,
-//! `crates/engine/src/cmd/layer.rs`, line 445). A file VectorCraft imports can clip to a group or a clip
+//! `crates/engine/src/cmd/layer.rs`, line 448). A file VectorCraft imports can clip to a group or a clip
 //! group too (`crates/doc/src/clipnest.rs`).
 //!
 //! **What it clips to.** The area of the clipping object, whatever its paints, and hidden or not
@@ -24,7 +25,7 @@
 //!
 //! One shape keeps its rule, and several are united. A clipping object of no shape hides what the group
 //! holds. The group's other objects are drawn inside the area, the clipping object's fills behind them and
-//! its strokes over them, unclipped (`crates/render/src/renderer/nodes.rs`, lines 357 to 388).
+//! its strokes over them, unclipped (`crates/render/src/renderer/nodes.rs`, lines 389 to 420).
 //!
 //! **What the reader makes of it.** A [`Clip`] for each clip group, of the clipping object's shapes in
 //! millimetres, each with its rule. Every element of what the group holds, however deep, is cut to it and
@@ -40,8 +41,8 @@
 //!
 //! **StitchCraft's effects on a clipping object.** VectorCraft runs a group's geometry effects on every path
 //! inside it, the clipping objects of the clip groups it holds among them (`for_each_leaf`,
-//! `crates/effects/src/reshape.rs`, line 715, from `evaluate_container`, `crates/effects/src/group.rs`,
-//! line 440), and clips to what they return. So where StitchCraft's effects reach a clipping object, the
+//! `crates/effects/src/reshape.rs`, line 731, from `evaluate_container`, `crates/effects/src/group.rs`,
+//! line 522), and clips to what they return. So where StitchCraft's effects reach a clipping object, the
 //! preview is cut to the stitches they draw of it, a fill's rows or a stroke's line, and what sews is cut
 //! to the clipping object as it is drawn. `SC-W0807` says so.
 //!
@@ -83,8 +84,13 @@ impl Reader {
             ("symbolinstance", _) => return Ok(()),
             ("path", Some(kind)) => return self.clip_path(&kind.path.iter().collect::<Vec<_>>(), kind.rule.as_deref(), label, who, shapes),
             ("compound", Some(kind)) => {
-                let paths = kind.children.iter().filter_map(|child| child.kind.as_ref().filter(|k| k.name == "path"));
-                return self.clip_path(&paths.flat_map(|k| &k.path).collect::<Vec<_>>(), kind.rule.as_deref(), label, who, shapes);
+                // Its paths' subpaths together, each child a unit, as a compound path's are when it sews.
+                let mut paths = Vec::new();
+                for child in &kind.children {
+                    self.charge(1)?;
+                    paths.extend(child.kind.iter().filter(|k| k.name == "path").flat_map(|k| &k.path));
+                }
+                return self.clip_path(&paths, kind.rule.as_deref(), label, who, shapes);
             }
             ("group" | "layer", Some(kind)) => {
                 // A clip group clips to its own clipping object, and a layer or another group to its members
