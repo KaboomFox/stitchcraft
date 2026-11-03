@@ -6,7 +6,8 @@
 //! ([`Reader::walk`]), under the map of the use: its transform, then its `x` and `y`, then the source's own
 //! transform, as a viewer draws it. Style comes as a viewer gives it: the source inherits from the use, and
 //! the source's own declarations, its presentation attributes and the style sheets' rules that select it,
-//! win. A clip path on the use cuts what it shows. The elements a clone sews are named after it:
+//! win. In what the use shows, `context-fill` and `context-stroke` paint with the use's fill and stroke
+//! ([`Style::context`]). A clip path on the use cuts what it shows. The elements a clone sews are named after it:
 //! `clone1/square` for the shape `square` it shows, so each has an id of its own. A clone inside the source
 //! is drawn the same way, inside the one that shows it.
 //!
@@ -149,7 +150,7 @@ impl<'a, 'input> Reader<'_, 'a, 'input> {
         let Some(parent) = source.parent() else { return Ok(()) };
         let start = self.elements.len();
         self.frames.push(frame);
-        let walked = self.walk(source.descendants(), parent.id(), Context::Shown { map: content, style: *style, clipped });
+        let walked = self.walk(source.descendants(), parent.id(), Context::Shown { map: content, style: style.context(), clipped });
         self.frames.pop();
         walked?;
         self.sews(node, start, commands)
@@ -370,14 +371,16 @@ impl<'a, 'input> Reader<'_, 'a, 'input> {
     }
 
     /// The side `name` of a symbol's viewport, in user units: the clone `node`'s, `label`, or the `symbol`'s
-    /// own, or else 100 % of the page's. One that doesn't read is ignored, as a viewer ignores it, and named.
+    /// own, or else 100 % of the page's. One that doesn't read is ignored, as a viewer ignores it, and named
+    /// with the element whose it is.
     fn size(&mut self, node: Node<'a, 'input>, symbol: Node<'a, 'input>, name: &str, axis: Axis, label: &str) -> f64 {
-        for element in [node, symbol] {
+        let whose = [format!("`{label}`,"), format!("`{}`, which `{label}` shows,", symbol.attribute("id").unwrap_or_default())];
+        for (element, whose) in [node, symbol].into_iter().zip(whose) {
             match self.length(element, name, axis) {
                 Ok(Some(value)) => return value,
                 Ok(None) => {}
                 Err(text) => {
-                    let message = format!("The {name} of `{label}`, \"{text}\", is not a length; it is ignored, as a viewer ignores it.");
+                    let message = format!("The {name} of {whose} \"{text}\", is not a length; it is ignored, as a viewer ignores it.");
                     self.unusable(label, message);
                 }
             }
