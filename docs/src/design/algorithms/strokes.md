@@ -11,8 +11,9 @@ stroke sews the same whatever they are, and whatever start and end positions its
 (`REQ-GEN-001`). A satin column or a tatami fill before a stroke ends near the
 stroke's first point.
 
-A stroke cut to clips, its clip paths, sews the pieces of its lines inside every one (`REQ-GEN-005`). Its
-subpaths are cut where they cross a clip's outline, as Ink/Stitch cuts them. A running stitch's or a zigzag
+A stroke cut to clips, its SVG clip paths or VectorCraft clipping objects, sews the pieces of its lines
+inside every one (`REQ-GEN-005`). Its subpaths are cut where they cross a clip's outline, as Ink/Stitch
+cuts them. A running stitch's or a zigzag
 stroke's is flattened first as a shape's outline is, and a manual stitch's runs from node to node, with a
 needle point at each cut. Each piece sews on its own, in order along its subpath, and a closed subpath that is cut
 is cut where it starts too. Left whole, a subpath keeps its curves and sews as drawn. The clips leave the
