@@ -73,13 +73,16 @@ An automatic element is a shape whose stitches StitchCraft chooses. The readers 
 
 An element with settings is not digitized automatically, whether or not the switch is given: it sews as
 its settings say, as far as its reader reads them. So a picture can be digitized automatically and one of
-its shapes then set by hand. A shape's fill gives its
-area and its stroke gives its line, each with its thread, width, join and cap, as for any element. A trim
-or a stop that an Ink/Stitch command asks for is not a setting of the stitches, and an automatic element
-keeps it. An element sewn as several elements keeps it for the last of them. Start and end positions,
-from Ink/Stitch's commands or VectorCraft's markers, and a target point, are not kept: automatic digitizing
-places where its parts start and end, and the readers say the commands and markers aren't used
-(`REQ-GEN-001`). The elements it makes have none.
+its shapes then set by hand. A shape's fill gives its area and its stroke gives its line, each with its
+thread, width, join and cap, as for any element. A trim or a stop that an Ink/Stitch command asks for is
+not a setting of the stitches, and an automatic element keeps it. An element sewn as several elements
+keeps it for the last of them. Start and end positions, from Ink/Stitch's commands or VectorCraft's
+markers, and a target point, are not kept: automatic digitizing places where its parts start and end, and
+the readers say the commands and markers aren't used (`REQ-GEN-001`). The elements it makes have none. An
+automatic element's clip paths are applied before it is digitized, where an ordinary element's are
+applied as it is generated: the shape digitized is what its clips leave of it, and its columns follow
+what shows (`REQ-GEN-005`, `auto/clips.rs`). A line's cut end takes the line's cap. A shape wholly
+outside its clips is left out (`SC-W0013`).
 
 The readers mark the element (`Element::automatic`), and they read the switch from `Reading`, which every
 host takes. Before anything is generated, the engine turns each automatic element into ordinary elements
