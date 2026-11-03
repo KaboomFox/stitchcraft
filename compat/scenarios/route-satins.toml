@@ -1,0 +1,34 @@
+# Level B: 2 lines with the satin effect, an upright and a bar to its right, each 3 mm wide, routed by
+# StitchCraft's Auto-Route Satin Columns, a heavy filter VectorCraft 0.17 installs once the user allows it
+# (docs/src/design/vectorcraft-integration.md). The route replaces them: the upright's top, a run down its
+# centre line, the upright back up over the run, and the bar, as the engine's tests route them
+# (`req_vc_018_lines_with_the_satin_effect_route_*`). Coordinates are points: the upright runs from 5 to
+# 25 mm down at 6.5 mm across, and the bar from 15 to 25 mm across at 6.5 mm down.
+description = "2 lines with the satin effect, routed by the Auto-Route Satin Columns filter, become satin pieces and a run under them, which export as `stitch export` sews them."
+requirements = ["REQ-VC-018"]
+
+[[run]]
+plugins = ["satin", "stroke", "route-satins", "pes"]
+steps = [
+  { cmd = "path.create", params = { d = "M 18.425 14.173 L 18.425 70.866" } },
+  { cmd = "path.create", params = { d = "M 42.52 18.425 L 70.866 18.425" } },
+  { cmd = "select.all" },
+  { cmd = "paint.setFill", params = { none = true } },
+  { cmd = "paint.setStroke", params = { color = "#1a4e9c" } },
+  { cmd = "stroke.set", params = { weight = 8.504 } },
+  { apply = "satin" },
+  { export = "lines.vectorcraft" },
+  { export = "lines.pes" },
+  { cmd = "plugin.run", params = { id = "dev.stitchcraft.route-satins" } },
+  { export = "routed.vectorcraft" },
+  { export = "routed.png" },
+  { export = "routed.pes" },
+]
+
+[expect]
+elements = [
+  { file = "routed.vectorcraft", element = "satin", count = 3, thread = "#1a4e9c" },
+  { file = "routed.vectorcraft", element = "stroke", count = 1, thread = "#1a4e9c" },
+]
+exported = [["routed.vectorcraft", "routed.pes"]]
+differ = [["lines.pes", "routed.pes"]]
