@@ -44,7 +44,7 @@ params! {
         /// The shape of a custom start lock: …
         lock_custom_start: Text = "", label "Custom start lock", when lock_start == "custom";
 
-        /// How long each step of a start lock made of steps (back and forth, or custom) is.
+        /// How long each step of a start lock made of steps (back and forth, or custom numbers) is.
         lock_start_scale_mm: Length = "0.7", label "Start lock size", range (0.1, 10.0),
             when lock_start in SIZED_IN_MM;
         …

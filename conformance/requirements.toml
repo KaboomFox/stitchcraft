@@ -587,6 +587,22 @@ milestone = "M3"
 status = "active"
 
 [[req]]
+id = "REQ-LCK-005"
+area = "plan/locks"
+level = "L2"
+statement = "A custom lock written as an SVG path sews its nodes as Ink/Stitch sews them, the engine reading them from the setting's text: one node where each command ends, a closepath's where its subpath started. The path is drawn in millimetres and scaled by `lock_*_scale_percent` about its last node but one, which goes where the stitching starts or ends. Its last segment is turned along the first stitch from there, into the stitching, and is not sewn. A tie-in sews the nodes before it in order, and a tie-off the same lock backwards, ending at the path's first node."
+milestone = "M8"
+status = "active"
+
+[[req]]
+id = "REQ-LCK-006"
+area = "plan/locks"
+level = "L2"
+statement = "A custom lock's path is untrusted text. It is read up to its first error, and a node where the node sewn before it is is left out, each with SC-W0503. A path of fewer than 3 nodes or more than 100, whose last segment has no length, that reaches farther than 10 m from its last node but one, left with no stitch, or with a stitch shorter than 0.2 mm even at 500 %, sews the half stitch, and SC-W0503 says why. Every command costs a unit of work, and no path sews a lock stitch shorter than 0.2 mm."
+milestone = "M8"
+status = "active"
+
+[[req]]
 id = "REQ-LCK-003"
 area = "plan/locks"
 level = "L4"

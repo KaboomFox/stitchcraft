@@ -39,25 +39,29 @@ half of the first stitch, which hides it. The other shapes are larger and grip m
 - **Accepts:** one of `half_stitch` (Half stitch), `arrow` (Arrow), `back_forth` (Back and forth), `bowtie` (Bowtie), `cross` (Cross), `star` (Star), `simple` (Simple), `triangle` (Triangle), `zigzag` (Zigzag), `custom` (Custom)
 - **Default:** `half_stitch`
 - **Ink/Stitch:** same key; StitchCraft differs:
-  - **DEV-LCK-001.** Each Ink/Stitch lock id is accepted, with StitchCraft's own shapes behind the ids and the same intent. The half stitch goes forth and back twice over half the first stitch, and back_forth twice over one step, where Ink/Stitch's go out two steps and back. The drawn shapes are new. A custom lock drawn as an SVG path sews the half stitch, with SC-W0503, until M8.
+  - **DEV-LCK-001.** Each Ink/Stitch lock id is accepted, with StitchCraft's own shapes behind the ids and the same intent. The half stitch goes forth and back twice over half the first stitch, and back_forth twice over one step, where Ink/Stitch's go out two steps and back. The drawn shapes are new. A custom lock drawn as an SVG path sews the nodes Ink/Stitch sews, in the same places and order, and differs in 5 places. StitchCraft reads SVG's grammar up to the first error, where Ink/Stitch's reader passes over a letter that is no command and refuses arc flags written together, sewing its half stitch. A node where the node before it is is left out, with SC-W0503, where Ink/Stitch sews a stitch in place. A lock whose stitches would be shorter than 0.2 mm is enlarged, with SC-W0502, where Ink/Stitch sews them as they are. The half stitch is sewn, with SC-W0503, for a path of more than 100 nodes, reaching farther than 10 m, or with a stitch shorter than 0.2 mm even at 500 %, which Ink/Stitch sews, and for one whose last segment has no length, which Ink/Stitch lays along its own x axis. And the lock turns towards the first needle point away from where the stitching starts or ends, where Ink/Stitch's turns towards the next needle point wherever it is.
 
 ### `lock_custom_start`
 
 **Custom start lock.** The steps a custom start lock takes along the stitching before it starts, as numbers separated
 by spaces, each a number of `lock_start_scale_mm`. Positive steps go into the stitching. The
-last step ends where the stitching starts, and `1 -1 1 -1` goes forth and back twice. Ink/Stitch
-also takes an SVG path that draws the lock. StitchCraft does not sew those yet, and sews the
-half stitch in its place (`SC-W0503`).
+last step ends where the stitching starts, and `1 -1 1 -1` goes forth and back twice. Or an SVG
+path that draws the lock in millimetres, at `lock_start_scale_percent`. Its last segment points
+along the first stitch, into the stitching, and is not sewn. It starts where the stitching
+starts, and the nodes before it are sewn first, in order. `M 0,0 L 0,1 L 1,1 L 1,0 L 2,0` sews
+3 sides of a square 1 mm across behind the start. A path that cannot be sewn as written is
+named (`SC-W0503`).
 
 - **Accepts:** text of at most 4096 bytes
 - **Default:** empty
 - **Shown when** [`lock_start`](#lock_start) is `custom`
 - **Ink/Stitch:** same key; StitchCraft differs:
   - **DEV-LCK-002.** Locks of steps follow the stitching round its corners, as Ink/Stitch's custom steps do. They differ in 5 places. Past the end of stitching shorter than the lock, they go straight on from the last stitch, where Ink/Stitch puts the rest of the lock on the last needle point. Where following a sharp turn would sew a stitch shorter than 0.2 mm, the lock is sewn straight along the first (or last) stitch, with SC-W0502, where Ink/Stitch follows the turn. A step shorter than 0.2 mm is lengthened to 0.2 mm, with SC-W0502, where Ink/Stitch sews it as it is. A custom step of 0 is left out, with SC-W0503, where Ink/Stitch sews a stitch in place for it. And a custom step longer than 10 m, the data model's reach, is left out with SC-W0503.
+  - **DEV-LCK-001.** Each Ink/Stitch lock id is accepted, with StitchCraft's own shapes behind the ids and the same intent. The half stitch goes forth and back twice over half the first stitch, and back_forth twice over one step, where Ink/Stitch's go out two steps and back. The drawn shapes are new. A custom lock drawn as an SVG path sews the nodes Ink/Stitch sews, in the same places and order, and differs in 5 places. StitchCraft reads SVG's grammar up to the first error, where Ink/Stitch's reader passes over a letter that is no command and refuses arc flags written together, sewing its half stitch. A node where the node before it is is left out, with SC-W0503, where Ink/Stitch sews a stitch in place. A lock whose stitches would be shorter than 0.2 mm is enlarged, with SC-W0502, where Ink/Stitch sews them as they are. The half stitch is sewn, with SC-W0503, for a path of more than 100 nodes, reaching farther than 10 m, or with a stitch shorter than 0.2 mm even at 500 %, which Ink/Stitch sews, and for one whose last segment has no length, which Ink/Stitch lays along its own x axis. And the lock turns towards the first needle point away from where the stitching starts or ends, where Ink/Stitch's turns towards the next needle point wherever it is.
 
 ### `lock_start_scale_mm`
 
-**Start lock size.** How long each step of a start lock made of steps (back and forth, or custom) is.
+**Start lock size.** How long each step of a start lock made of steps (back and forth, or custom numbers) is.
 
 - **Accepts:** a length from 0.1 to 10 mm
 - **Default:** `0.7`
@@ -67,7 +71,7 @@ half stitch in its place (`SC-W0503`).
 ### `lock_start_scale_percent`
 
 **Start lock scale.** How large a drawn start lock is, in percent of its own size: at 100 % it reaches about
-1.4 mm along the stitching.
+1.4 mm along the stitching. A custom path is drawn in millimetres at 100 %.
 
 - **Accepts:** a percentage from 10 to 500
 - **Default:** `100`
@@ -82,25 +86,29 @@ half of the last stitch, which hides it. The other shapes are larger and grip mo
 - **Accepts:** one of `half_stitch` (Half stitch), `arrow` (Arrow), `back_forth` (Back and forth), `bowtie` (Bowtie), `cross` (Cross), `star` (Star), `simple` (Simple), `triangle` (Triangle), `zigzag` (Zigzag), `custom` (Custom)
 - **Default:** `half_stitch`
 - **Ink/Stitch:** same key; StitchCraft differs:
-  - **DEV-LCK-001.** Each Ink/Stitch lock id is accepted, with StitchCraft's own shapes behind the ids and the same intent. The half stitch goes forth and back twice over half the first stitch, and back_forth twice over one step, where Ink/Stitch's go out two steps and back. The drawn shapes are new. A custom lock drawn as an SVG path sews the half stitch, with SC-W0503, until M8.
+  - **DEV-LCK-001.** Each Ink/Stitch lock id is accepted, with StitchCraft's own shapes behind the ids and the same intent. The half stitch goes forth and back twice over half the first stitch, and back_forth twice over one step, where Ink/Stitch's go out two steps and back. The drawn shapes are new. A custom lock drawn as an SVG path sews the nodes Ink/Stitch sews, in the same places and order, and differs in 5 places. StitchCraft reads SVG's grammar up to the first error, where Ink/Stitch's reader passes over a letter that is no command and refuses arc flags written together, sewing its half stitch. A node where the node before it is is left out, with SC-W0503, where Ink/Stitch sews a stitch in place. A lock whose stitches would be shorter than 0.2 mm is enlarged, with SC-W0502, where Ink/Stitch sews them as they are. The half stitch is sewn, with SC-W0503, for a path of more than 100 nodes, reaching farther than 10 m, or with a stitch shorter than 0.2 mm even at 500 %, which Ink/Stitch sews, and for one whose last segment has no length, which Ink/Stitch lays along its own x axis. And the lock turns towards the first needle point away from where the stitching starts or ends, where Ink/Stitch's turns towards the next needle point wherever it is.
 
 ### `lock_custom_end`
 
 **Custom end lock.** The steps a custom end lock takes along the stitching after it ends, as numbers separated by
 spaces, each a number of `lock_end_scale_mm`. Positive steps go back into the stitching. The
-first step starts where the stitching ends, and `1 -1 1 -1` goes back and forth twice.
-Ink/Stitch also takes an SVG path that draws the lock. StitchCraft does not sew those yet, and
-sews the half stitch in its place (`SC-W0503`).
+first step starts where the stitching ends, and `1 -1 1 -1` goes back and forth twice. Or an
+SVG path that draws the lock in millimetres, at `lock_end_scale_percent`, as a start lock's path
+draws it. Its last segment points along the last stitch, back into the stitching, and is not
+sewn. The lock is sewn backwards, from where the stitching ends, which is where that segment
+starts, through the nodes before it to the path's first node. A path that cannot be sewn as
+written is named (`SC-W0503`).
 
 - **Accepts:** text of at most 4096 bytes
 - **Default:** empty
 - **Shown when** [`lock_end`](#lock_end) is `custom`
 - **Ink/Stitch:** same key; StitchCraft differs:
   - **DEV-LCK-002.** Locks of steps follow the stitching round its corners, as Ink/Stitch's custom steps do. They differ in 5 places. Past the end of stitching shorter than the lock, they go straight on from the last stitch, where Ink/Stitch puts the rest of the lock on the last needle point. Where following a sharp turn would sew a stitch shorter than 0.2 mm, the lock is sewn straight along the first (or last) stitch, with SC-W0502, where Ink/Stitch follows the turn. A step shorter than 0.2 mm is lengthened to 0.2 mm, with SC-W0502, where Ink/Stitch sews it as it is. A custom step of 0 is left out, with SC-W0503, where Ink/Stitch sews a stitch in place for it. And a custom step longer than 10 m, the data model's reach, is left out with SC-W0503.
+  - **DEV-LCK-001.** Each Ink/Stitch lock id is accepted, with StitchCraft's own shapes behind the ids and the same intent. The half stitch goes forth and back twice over half the first stitch, and back_forth twice over one step, where Ink/Stitch's go out two steps and back. The drawn shapes are new. A custom lock drawn as an SVG path sews the nodes Ink/Stitch sews, in the same places and order, and differs in 5 places. StitchCraft reads SVG's grammar up to the first error, where Ink/Stitch's reader passes over a letter that is no command and refuses arc flags written together, sewing its half stitch. A node where the node before it is is left out, with SC-W0503, where Ink/Stitch sews a stitch in place. A lock whose stitches would be shorter than 0.2 mm is enlarged, with SC-W0502, where Ink/Stitch sews them as they are. The half stitch is sewn, with SC-W0503, for a path of more than 100 nodes, reaching farther than 10 m, or with a stitch shorter than 0.2 mm even at 500 %, which Ink/Stitch sews, and for one whose last segment has no length, which Ink/Stitch lays along its own x axis. And the lock turns towards the first needle point away from where the stitching starts or ends, where Ink/Stitch's turns towards the next needle point wherever it is.
 
 ### `lock_end_scale_mm`
 
-**End lock size.** How long each step of an end lock made of steps (back and forth, or custom) is.
+**End lock size.** How long each step of an end lock made of steps (back and forth, or custom numbers) is.
 
 - **Accepts:** a length from 0.1 to 10 mm
 - **Default:** `0.7`
@@ -110,7 +118,7 @@ sews the half stitch in its place (`SC-W0503`).
 ### `lock_end_scale_percent`
 
 **End lock scale.** How large a drawn end lock is, in percent of its own size: at 100 % it reaches about 1.4 mm
-along the stitching.
+along the stitching. A custom path is drawn in millimetres at 100 %.
 
 - **Accepts:** a percentage from 10 to 500
 - **Default:** `100`
