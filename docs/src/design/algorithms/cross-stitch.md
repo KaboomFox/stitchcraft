@@ -44,10 +44,10 @@ size, with `SC-W0309`, as every fill's part is. Ink/Stitch keeps the shape as dr
 is left of it, and otherwise sews no cross in such a part (`DEV-FILL-024`).
 
 The grid's cells are `pattern_size_mm` wide and tall. Its lines pass through the canvas's origin, so that
-cross stitch fills side by side share one grid and their crosses line up. With `canvas_grid_origin` off,
-they pass through the top left corner of the part's bounds instead, and the part sews the same wherever it
-lies. `cross_offset_mm` moves the lines left by its first length and down by its second, as Ink/Stitch moves
-them. A move by a whole cell leaves the grid where it was.
+2 fills of cross stitch that lie side by side share one grid and their crosses line up. With
+`canvas_grid_origin` off, they pass through the top left corner of the part's bounds instead, and the
+part sews the same wherever it lies. `cross_offset_mm` moves the lines left by its first length and down
+by its second, as Ink/Stitch moves them. A move by a whole cell leaves the grid where it was.
 
 **The canvas's origin.** In an SVG file it is the origin of the page, where Ink/Stitch puts it, and the SVG
 reader puts the page's top left corner at the design's origin. In a VectorCraft document it is the origin of

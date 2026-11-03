@@ -22,13 +22,14 @@ Ink/Stitch's cross-stitch fonts sew.
 
 ## The grid
 
-`pattern_size_mm` sets the cells' size. One length gives square cells, and 2 separated by a space give the
-width and then the height. Smaller cells follow the shape more closely and take more stitches. The grid's
-lines pass through the canvas's origin, `canvas_grid_origin` on, so that cross stitch fills side by side
-share one grid and their crosses line up. Move such a fill by part of a cell, though, and it may sew other
-crosses. Off, the grid starts at the top left corner of each part of the fill, and the fill sews the same
-wherever it lies. In an SVG file the canvas's origin is the page's top left corner, and in a VectorCraft
-document the origin of the document, where a new document's first artboard has its top left corner.
+`pattern_size_mm` sets the cells' size. One length gives square cells, and 2 separated by a space give
+the width and then the height. Smaller cells follow the shape more closely and take more stitches. The
+grid's lines pass through the canvas's origin, `canvas_grid_origin` on, so that 2 fills of cross stitch
+that lie side by side share one grid and their crosses line up. Move such a fill by part of a cell,
+though, and it may sew other crosses. Off, the grid starts at the top left corner of each part of the
+fill, and the fill sews the same wherever it lies. In an SVG file the canvas's origin is the page's top
+left corner, and in a VectorCraft document the origin of the document, where a new document's first
+artboard has its top left corner.
 
 `cross_offset_mm` moves the grid: left by its first length and down by its second, or as far each way by
 one length. A move by a whole cell leaves it where it was.
