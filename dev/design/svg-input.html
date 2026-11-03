@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a04b6d5d.js";
+            window.path_to_searchindex_js = "../searchindex-9632f69b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-0e01f503.js"></script>
@@ -399,7 +399,12 @@ M10 the point its ripple stitch aims at. Each is at its symbol’s place: the <c
 <code>y</code> under the transforms of the use and of the groups above it, as Ink/Stitch places it. Of 2 commands
 of a kind on a shape, the first connector in the file counts. A command whose place doesn’t read is
 named with <code>SC-W0802</code> and left out, and so are those of a shape digitized automatically, whose parts
-start and end where automatic digitizing places them. The
+start and end where automatic digitizing places them. The <code>origin</code> and <code>stop_position</code> commands are
+tied to nothing, and count wherever they are, in <code>&lt;defs&gt;</code> and hidden layers too, as Ink/Stitch finds
+them. Each gives the design a setting at its symbol’s place (<code>REQ-ASM-005</code>). The origin goes to the
+hoop’s centre, and the frame moves to the stop position before each stop. Ink/Stitch refuses a file with
+2 origins, or 2 stop positions and a stop, and StitchCraft does too (<code>SC-E0819</code>,
+<a href="engine-pipeline.html#origin-and-stop-position">why</a>). The
 <a href="inkstitch-compat-contract.html#commands">command table</a> gives what the adapter does with each of the 12
 commands. Before its file version 3, Ink/Stitch named 7 of them otherwise, such as
 <code>fill_start</code> for <code>starting_point</code>: the adapter reads those as the commands they became in any file,
@@ -408,8 +413,8 @@ where Ink/Stitch renames them only in the files it updates and sews the old symb
 <li><strong>Connectors</strong> tie a command to its object.</li>
 <li><strong>Helper paths</strong> have one of Ink/Stitch’s start markers. They steer the stitches of other objects.</li>
 </ul>
-<p><code>SC-W0802</code> reports a connector that ties no command, a helper path, a command that the adapter does
-not apply yet, and one on an object that is not stitched. The module docs of <code>crates/stitchcraft-svg/src/inkstitch.rs</code> describe how the adapter
+<p><code>SC-W0802</code> reports a connector that ties no command, a helper path, an <code>ignore_layer</code> command in no layer,
+and a command on an object that is not stitched. The module docs of <code>crates/stitchcraft-svg/src/inkstitch.rs</code> describe how the adapter
 finds these objects, with the Ink/Stitch files they were read from.</p>
 <h2 id="design-settings"><a class="header" href="#design-settings">Design settings</a></h2>
 <p>Ink/Stitch keeps 4 settings for the whole design in the file’s first <code>&lt;metadata&gt;</code> element. Each is an

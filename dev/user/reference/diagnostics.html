@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-a04b6d5d.js";
+            window.path_to_searchindex_js = "../../searchindex-9632f69b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-0e01f503.js"></script>
@@ -254,6 +254,7 @@
 <tr><td><a href="#sc-w0802"><code>SC-W0802</code></a></td><td>Warning</td><td>SVG feature ignored</td></tr>
 <tr><td><a href="#sc-i0805"><code>SC-I0805</code></a></td><td>Info</td><td>Object left out, as the file asks</td></tr>
 <tr><td><a href="#sc-i0818"><code>SC-I0818</code></a></td><td>Info</td><td>Ink/Stitch file from an older version, read as Ink/Stitch updates it</td></tr>
+<tr><td><a href="#sc-e0819"><code>SC-E0819</code></a></td><td>Error</td><td>More than one origin or stop position</td></tr>
 <tr><td><a href="#sc-w0804"><code>SC-W0804</code></a></td><td>Warning</td><td>Element geometry invalid or out of range</td></tr>
 <tr><td><a href="#sc-w0803"><code>SC-W0803</code></a></td><td>Warning</td><td>VectorCraft file from a newer format version; read best-effort</td></tr>
 <tr><td><a href="#sc-e0806"><code>SC-E0806</code></a></td><td>Error</td><td>VectorCraft file could not be read</td></tr>
@@ -772,8 +773,9 @@ which Ink/Stitch doesn’t read either, those of its early versions (<code>embro
 design setting <code>rotate_on_export</code>, which turns the design as it is written, and the updates
 Ink/Stitch would make to a file with its settings and no file version, or from a newer Ink/Stitch,
 which is read as it is. Of its commands, one on an object that is not stitched is named, and so is a
-start, end or target command whose place doesn’t read, and one on a shape digitized automatically
-(<code>--auto</code>), which places where its parts start and end. Of clip paths, which cut the shapes they clip,
+start, end, target, origin or stop position command whose place doesn’t read, an <code>ignore_layer</code>
+command in no layer, and a command on a shape digitized automatically (<code>--auto</code>), which places where
+its parts start and end. Of clip paths, which cut the shapes they clip,
 what isn’t applied is named: text in one, which adds nothing to it, a clip path on a clip path’s
 shape, one that isn’t a reference, such as a CSS shape, clip paths that name each other in a loop,
 <code>objectBoundingBox</code> units on a group, groups in a clip path more than 16 deep, and the root’s.</p>
@@ -801,6 +803,14 @@ instead.</p>
 <p>The message gives the file’s version, and how many shapes were updated and how. Nothing needs doing:
 the design sews as Ink/Stitch sews it. To sew a shape otherwise, change the setting the message
 names in Ink/Stitch.</p>
+<h2 id="sc-e0819"><a class="header" href="#sc-e0819">SC-E0819</a></h2>
+<p><strong>Error</strong> — More than one origin or stop position</p>
+<p>The file gives the design 2 origins, or 2 stop positions where the design has a stop: Ink/Stitch’s
+<code>origin</code> or <code>stop_position</code> command more than once, or more than one object named <code>stitch:origin</code> or
+<code>stitch:stop-position</code> in a VectorCraft document. Which one counts isn’t known, so no machine file is
+written, as Ink/Stitch writes none (<code>REQ-ASM-005</code>). 2 stop positions in a design without a stop
+change nothing.</p>
+<p>The message names the command or marker and counts them. Delete or rename all but one.</p>
 <h2 id="sc-w0804"><a class="header" href="#sc-w0804">SC-W0804</a></h2>
 <p><strong>Warning</strong> — Element geometry invalid or out of range</p>
 <p>An element’s geometry cannot be used: its path data or its list of points has an error (the path is
@@ -845,7 +855,8 @@ VectorCraft runs each on the stitches the one before drew, which no machine sews
 marker, an object named <code>stitch:start</code> or <code>stitch:end</code>, is never stitched: the shapes grouped with it
 start or end there, and a marker they don’t use is said, a second one of its kind in a group or one
 with no point that reads, as are those beside a shape digitized automatically, which places where its
-parts start and end. A name that begins with <code>stitch:</code> and names no marker StitchCraft
+parts start and end. So is an origin or stop position marker, <code>stitch:origin</code> or
+<code>stitch:stop-position</code>, with no point that reads. A name that begins with <code>stitch:</code> and names no marker StitchCraft
 reads is said too, as is a group or a layer named as a marker, which only a shape can be: the name is
 ignored. A satin column, a zigzag or a fill made of a stroke is as wide as the stroke all along and
 centred on its path, so a stroke aligned inside or outside a closed path is said, as is a width

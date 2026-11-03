@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a04b6d5d.js";
+            window.path_to_searchindex_js = "../searchindex-9632f69b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-0e01f503.js"></script>
@@ -342,6 +342,7 @@ another.</p>
 <tr><td><code>SC-E0816</code></td><td>Error</td><td>VectorCraft could not trace the picture (its command line failed or didn’t save the document)</td><td>M13</td></tr>
 <tr><td><code>SC-E0817</code></td><td>Error</td><td>VectorCraft test sheet not drawn (in the middle of the artboard, parts of the sheet would lie more than 10 m from the document’s origin)</td><td>M6</td></tr>
 <tr><td><code>SC-I0818</code></td><td>Info</td><td>Ink/Stitch file from an older version, read as Ink/Stitch updates it (the shapes given a default or a setting whose meaning has changed since, such as a fill’s 3 mm stitches before its file version 4, counted for each change)</td><td>M3</td></tr>
+<tr><td><code>SC-E0819</code></td><td>Error</td><td>More than one origin or stop position (Ink/Stitch’s <code>origin</code> command, or more than one object named <code>stitch:origin</code>, 2 or more times, or its <code>stop_position</code> command or <code>stitch:stop-position</code> in a design that stops: no machine file is written, as Ink/Stitch writes none)</td><td>M8</td></tr>
 <tr><td><code>SC-I0901</code></td><td>Info</td><td>Shapes digitized automatically (<code>--auto</code>, or VectorCraft’s Auto effect), counted by their stitches (running stitches, satin columns or tatami fills)</td><td>M13</td></tr>
 <tr><td><code>SC-I0902</code></td><td>Info</td><td>Satin column can’t be made; filled (a part of an automatic line that turns more tightly than it is wide, is shorter than a CSS pixel or is a dot its cap draws, or a part of an automatic area whose triangles don’t make a column round one of its lines or whose column would be read back otherwise)</td><td>M13</td></tr>
 <tr><td><code>SC-W0903</code></td><td>Warning</td><td>Line too wide to fill; left out (an automatic line whose filled area would reach more than 10 m from the origin)</td><td>M13</td></tr>

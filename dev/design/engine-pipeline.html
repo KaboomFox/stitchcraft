@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-a04b6d5d.js";
+            window.path_to_searchindex_js = "../searchindex-9632f69b.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-0e01f503.js"></script>
@@ -388,12 +388,17 @@ its size and its shortest stitch (0.2 mm).</li>
 </ul>
 <h3 id="origin-and-stop-position"><a class="header" href="#origin-and-stop-position">Origin and stop position</a></h3>
 <p>The finished plan is in hoop coordinates: the design’s origin goes to the hoop’s centre, (0, 0), where the
-needle starts. The origin is the design’s own (Ink/Stitch’s origin command, read from M8) or else the centre
-of the box around every point where the needle goes down (<code>REQ-ASM-005</code>). Assembly builds the plan in the
+needle starts. The origin is the design’s own or else the centre of the box around every point where the
+needle goes down (<code>REQ-ASM-005</code>). Assembly builds the plan in the
 design’s coordinates, and finalize moves it once it has left out the points the machine cannot sew, so the
-box is the finished plan’s, as in Ink/Stitch. A design’s stop position
-(Ink/Stitch’s stop position command) adds a jump to it before each <code>Stop</code>. At the stop position the frame
-is clear of the needle for an appliqué or a check, and sewing resumes with a jump back.</p>
+box is the finished plan’s, as in Ink/Stitch. A design’s stop position adds a jump to it before each <code>Stop</code>.
+At the stop position the frame is clear of the needle for an appliqué or a check, and sewing resumes with a
+jump back. The plan’s bounds take in that jump, and the hoop check measures them (<code>SC-E0701</code>).</p>
+<p>An SVG file gives both with Ink/Stitch’s <code>origin</code> and <code>stop_position</code> commands, a VectorCraft document with
+objects named <code>stitch:origin</code> and <code>stitch:stop-position</code> (M8.8). Each is a point anywhere in the document.
+Ink/Stitch’s command is where its symbol is placed, and a marker is at the middle of the box round its
+anchors. A file with 2 origins, or 2 stop positions and a stop, is an error (<code>SC-E0819</code>), since which one
+counts isn’t known. Ink/Stitch doesn’t write a machine file of it either.</p>
 <h3 id="commands"><a class="header" href="#commands">Commands</a></h3>
 <div class="table-wrapper">
 <table>
@@ -405,8 +410,8 @@ is clear of the needle for an appliqué or a check, and sewing resumes with a ju
 <tr><td>Target point</td><td>The point a circular fill turns round, in place of its parts’ centroids (<code>REQ-FILL-CIR-008</code>), and from M10 the ripple stitch’s target</td><td>M8.4, M10</td></tr>
 <tr><td>Trim after, stop after</td><td><code>trim_after</code> and <code>stop_after</code> on the element’s last group (see the connection table). The SVG adapter reads Ink/Stitch’s trim and stop commands as these settings.</td><td>M3.8 (engine), M3 (adapter)</td></tr>
 <tr><td>Ignore object / ignore layer</td><td>The adapter drops the element and says so in the report (<code>REQ-ASM-004</code>). The VectorCraft adapter reads them from the name <code>stitch:ignore</code></td><td>M3 (SVG), M6 (VectorCraft)</td></tr>
-<tr><td>Origin</td><td>The design setting <code>origin</code></td><td>M3.8 (engine), M8 (adapter)</td></tr>
-<tr><td>Stop position</td><td>The design setting <code>stop_position</code></td><td>M3.8 (engine), M8 (adapter)</td></tr>
+<tr><td>Origin</td><td>The design setting <code>origin</code>. The SVG adapter reads Ink/Stitch’s <code>origin</code> command, and the VectorCraft adapter its marker named <code>stitch:origin</code></td><td>M3.8 (engine), M8.8 (adapters)</td></tr>
+<tr><td>Stop position</td><td>The design setting <code>stop_position</code>. The SVG adapter reads Ink/Stitch’s <code>stop_position</code> command, and the VectorCraft adapter its marker named <code>stitch:stop-position</code></td><td>M3.8 (engine), M8.8 (adapters)</td></tr>
 </tbody>
 </table>
 </div>
