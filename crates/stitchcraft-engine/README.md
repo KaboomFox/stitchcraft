@@ -97,7 +97,8 @@ Design:
 
 ## Dependencies
 
-`stitchcraft-core`, `stitchcraft-params`, `stitchcraft-plan`; `thiserror`. Tests also use `proptest` and
+`stitchcraft-core`, `stitchcraft-params`, `stitchcraft-plan`; `thiserror`; `svgtypes`, whose path-data
+parser alone reads a custom lock's path, from the setting's text (`locks::path`). Tests also use `proptest` and
 `stitchcraft-testkit`. Curves are flattened here, not with `kurbo`, so every platform gets the same
 points (`docs/src/design/engine-pipeline.md` › Normalize), and a fill's region is built here, not with
 `i_overlay`, so it keeps the drawing's points and charges the budget (ADR 0005).

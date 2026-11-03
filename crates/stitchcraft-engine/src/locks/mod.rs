@@ -10,7 +10,8 @@
 //!    its corners and the stitching covers it. A drawn lock lies in a frame at the anchor: x along the
 //!    stitch there, pointing into the stitching, and y across it.
 //! 2. **The shape** ([`LOCKS`]): the half stitch, sized from that stitch; steps, sized by
-//!    `lock_*_scale_mm`; a drawn loop, sized by `lock_*_scale_percent`; or the element's custom steps.
+//!    `lock_*_scale_mm`; a drawn loop, sized by `lock_*_scale_percent`; or the element's custom steps, or
+//!    its custom path, drawn in the frame as Ink/Stitch draws it and sized as a drawn loop is (`path`).
 //! 3. **No lock stitch shorter than 0.2 mm** ([`LOCK_MIN_STITCH`]), so the needle never goes back into the
 //!    hole it just left: a shorter step is lengthened to it, a drawn lock enlarged until its shortest
 //!    stitch is that long, and a lock of steps that a sharp turn would fold onto itself sewn straight
@@ -18,9 +19,11 @@
 //! 4. **The ends.** A lock is sewn in the same order at both ends. A tie-in leads into the anchor: its
 //!    steps end there, its loop starts there. A tie-off leaves from it: its steps start there, its loop
 //!    comes back to it, where the thread is trimmed. That is how Ink/Stitch reads custom steps, so a file
-//!    sews the same in both.
+//!    sews the same in both. A custom path is the exception: a tie-off sews it backwards, as Ink/Stitch
+//!    sews it, and ends at the path's first node.
 
 mod custom;
+mod path;
 mod shapes;
 
 pub use shapes::{LOCKS, SIZED_IN_MM, SIZED_IN_PERCENT};
@@ -37,6 +40,10 @@ use shapes::Shape;
 /// first stitch covers them, but no longer than this, so they grip like the other locks' stitches, and
 /// no shorter than [`LOCK_MIN_STITCH`].
 pub const HALF_STITCH_LONGEST: f64 = 1.0;
+
+/// The largest scale of a drawn lock, `lock_*_scale_percent`'s highest value. A custom lock's path is
+/// enlarged no further to make its shortest stitch 0.2 mm long.
+pub(crate) const LARGEST_SCALE_PERCENT: f64 = 500.0;
 
 /// The lock stitches at one end of a group.
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -145,10 +152,10 @@ fn sew(mut track: impl Iterator<Item = Point>, end: End, params: &CommonParams, 
                     Planned::Along(along(&lengthened(steps, end, &mut warnings), end))
                 }
             }
-            custom::Read::Drawn => {
-                warnings.push(unusable(end, "is not written as numbers, and StitchCraft cannot sew a lock drawn as an SVG path yet"));
-                fallback()
-            }
+            custom::Read::Drawn(nodes) => match path::placed(&nodes, end, &mut warnings) {
+                Some(points) => Planned::Drawn(drawn(&points, settings.scale_percent, end, &mut warnings)),
+                None => fallback(),
+            },
         },
     };
     let frame = Frame::new(anchor, toward);
@@ -315,11 +322,12 @@ fn lengthened(mut steps: Vec<f64>, end: End, warnings: &mut Vec<Diagnostic>) -> 
 /// The needle positions in the frame of the drawn loop `points` at `percent`: for a tie-in, all but the
 /// loop's last point (the anchor, where the stitching starts); for a tie-off, all but its first. A loop
 /// whose shortest stitch would be shorter than [`LOCK_MIN_STITCH`] is enlarged until it is that long,
-/// which `SC-W0502` reports.
+/// which `SC-W0502` reports. A custom path is a loop too, in the order `path::placed` gives it for `end`.
 fn drawn(points: &[(f64, f64)], percent: f64, end: End, warnings: &mut Vec<Diagnostic>) -> Vec<(f64, f64)> {
     let min = LOCK_MIN_STITCH.get();
     let mut scale = percent / 100.0;
-    // The shapes are tested to have no stitch shorter than 0.46 mm, so the shortest is never 0.
+    // The shapes are tested to have no stitch shorter than 0.46 mm, and a custom path none shorter than
+    // 0.2 mm at the largest scale, so the shortest is never 0 and the lock is never enlarged past that.
     let shortest =
         points.windows(2).map(|pair| if let [a, b] = pair { hypot(b.0 - a.0, b.1 - a.1) } else { 0.0 }).fold(f64::INFINITY, f64::min) * scale;
     if !at_least(shortest, min) {

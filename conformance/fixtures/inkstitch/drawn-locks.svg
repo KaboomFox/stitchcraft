@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Red lines, each trimmed after, locked at both ends with custom locks drawn as SVG paths in millimetres.
+     The first's are straight lines: a zigzag across the line before its start, and a triangle ahead of its
+     end. The second, at 30°, has curves and an arc, whose ends are their nodes. The third, downwards, has
+     relative paths of 2 subpaths with closepaths, across and down, its start lock at 150 % and its end lock
+     at 70 %. The fourth, right to left, has a last segment that runs down and one at 53°. Written for
+     StitchCraft's Ink/Stitch differential cases (conformance L3). -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkstitch="http://inkstitch.org/namespace"
+     width="100mm" height="100mm" viewBox="0 0 100 100">
+  <metadata><inkstitch:inkstitch_svg_version>4</inkstitch:inkstitch_svg_version></metadata>
+  <path id="lines" fill="none" stroke="#ed171f" stroke-width="0.2" d="M 15,15 L 45,15"
+        inkstitch:lock_start="custom" inkstitch:lock_custom_start="M 0,0 L 0.4,0.4 L 0.8,-0.4 L 1.2,0.4 L 0.6,0 L 1.6,0"
+        inkstitch:lock_end="custom" inkstitch:lock_custom_end="M 0,0 L 1,0.5 L 1,-0.5 L 0,0 L 1,0"
+        inkstitch:trim_after="true"/>
+  <path id="curves" fill="none" stroke="#ed171f" stroke-width="0.2" d="M 15,35 L 40.98,50"
+        inkstitch:lock_start="custom" inkstitch:lock_custom_start="M 0,0 C 0.5,1 1,1 1.2,0.6 S 1.5,-0.5 0.8,-0.6 Q 0.2,-0.6 0.3,0 L 1.3,0"
+        inkstitch:lock_end="custom" inkstitch:lock_custom_end="M 0,0 A 0.6,0.6 0 0 1 1.2,0 T 0.6,0.6 L 0,0 L 1,0"
+        inkstitch:trim_after="true"/>
+  <path id="relative" fill="none" stroke="#ed171f" stroke-width="0.2" d="M 70,15 L 70,45"
+        inkstitch:lock_start="custom" inkstitch:lock_custom_start="m 0,0 l 0.5,0.5 h 0.5 v -1 h -0.5 z m 0.5,0 l 1,0"
+        inkstitch:lock_start_scale_percent="150"
+        inkstitch:lock_end="custom" inkstitch:lock_custom_end="M 0,0 V 1 H 1 Z M 1,0 L 2,0"
+        inkstitch:lock_end_scale_percent="70"
+        inkstitch:trim_after="true"/>
+  <path id="turned" fill="none" stroke="#ed171f" stroke-width="0.2" d="M 85,70 L 55,70"
+        inkstitch:lock_start="custom" inkstitch:lock_custom_start="M 0,0 L 1,0 L 1,1 L 0,1 L 0,2"
+        inkstitch:lock_end="custom" inkstitch:lock_custom_end="M 0.5,0.8 L 0,0 L 0.6,0.8"
+        inkstitch:trim_after="true"/>
+</svg>

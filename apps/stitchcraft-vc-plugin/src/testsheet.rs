@@ -2,8 +2,8 @@
 //! into the document (`REQ-VC-015`). A machine checkpoint can then start from VectorCraft: the sheet's
 //! objects show their stitches, the exporters write it, and the dialogs show its settings.
 //!
-//! **Which sheets.** Those drawn as designs, TS-02B to TS-09, TS-11A, TS-11B and the TS-13 sheets, whose elements
-//! are shapes ([`TestSheet::design`]). The others are drawn stitch by stitch, as plans, which no object
+//! **Which sheets.** Those drawn as designs, TS-02B to TS-09, TS-11A, TS-11B, the TS-13 sheets and TS-17A,
+//! whose elements are shapes ([`TestSheet::design`]). The others are drawn stitch by stitch, as plans, which no object
 //! holds, and only `stitch testsheet` writes them. So does TS-11C, a design whose meander fills wander as
 //! their elements' ids draw: the objects drawn have ids of their own, and would wander other ways
 //! ([`TestSheet::drawable`]). So does TS-16, whose elements start and end at positions and are cut by clips,
@@ -17,7 +17,8 @@
 //!
 //! **What it draws.** The sheet's design moved by whole millimetres, so that the middle of its bounds is as
 //! near the middle of the artboard VectorCraft names as that allows: the artboard under the selection, or
-//! else the first ([`placed`]). Each element is an object, named by its id, in sewing order, bottom first.
+//! else the first ([`placed`]). TS-17A moves by whole multiples of 6 mm, so that its crosses keep their cells
+//! on the canvas's grids of 2 and 3 mm, which lie on the document's origin ([`TestSheet::step`]). Each element is an object, named by its id, in sewing order, bottom first.
 //! It has the element's path, a compound path for more than one subpath, its thread as the paint its family
 //! sews with, a fill's fill or a stroke's and a satin column's stroke, and its settings as the record of
 //! its family's StitchCraft effect. A shape the sheet digitizes automatically, as the TS-13 sheets' top
@@ -108,8 +109,8 @@ fn objects(sheet: &TestSheet, given: &Given) -> Result<Vec<Out>, Diagnostic> {
     Ok(out)
 }
 
-/// `sheet`'s design moved by whole millimetres, so that the middle of its bounds is as near to `centre` as
-/// that allows; where `stitch testsheet` draws it without a centre. `SC-E0817` when parts of it would lie
+/// `sheet`'s design moved by whole millimetres, or whole multiples of its step ([`TestSheet::step`]), so that
+/// the middle of its bounds is as near to `centre` as that allows; where `stitch testsheet` draws it without a centre. `SC-E0817` when parts of it would lie
 /// more than 10 m from the origin there, farther than a design's points lie ([`within_working_limit`]), and
 /// `SC-E0009` for a sheet the filter doesn't draw, or that can't be drawn, which is a bug.
 pub fn placed(sheet: &TestSheet, centre: Option<Point>) -> Result<Design, Diagnostic> {
@@ -117,7 +118,8 @@ pub fn placed(sheet: &TestSheet, centre: Option<Point>) -> Result<Design, Diagno
     let design = sheet.design().ok_or_else(|| bug("it is drawn stitch by stitch".into()))?.map_err(|e| bug(e.to_string()))?;
     let (Some(centre), Some(bounds)) = (centre, design.bounds()) else { return Ok(design) };
     let middle = bounds.center();
-    let [dx, dy] = [(centre.x() - middle.x()).round(), (centre.y() - middle.y()).round()];
+    let step = sheet.step();
+    let [dx, dy] = [((centre.x() - middle.x()) / step).round() * step, ((centre.y() - middle.y()) / step).round() * step];
     let reached = [bounds.min(), bounds.max()].into_iter().all(|corner| Point::new(corner.x() + dx, corner.y() + dy).is_ok_and(within_working_limit));
     if !reached {
         let message = format!(

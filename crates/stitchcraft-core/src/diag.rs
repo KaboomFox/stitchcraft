@@ -452,6 +452,31 @@ registry! {
     /// running stitch or a satin column.
     FillCircularTooSmall = "SC-W0318", Warning, "Circular fill part within its row spacing of its middle; sewn as one circle";
 
+    /// A cross stitch fill sews a cross in each cell of its grid that it covers enough of: `fill_coverage`
+    /// percent of the cell or more, once the fill is grown by `expand_mm`. A part that covers no cell so
+    /// much sews nothing, as in Ink/Stitch, which warns of it too. Such a part is smaller or narrower than a
+    /// cell, or lies across the grid's lines so that no cell holds enough of it.
+    ///
+    /// The message counts the parts. Make `pattern_size_mm` smaller, lower `fill_coverage`, raise
+    /// `expand_mm`, or move the grid with `cross_offset_mm`.
+    FillCrossNoCell = "SC-W0319", Warning, "Cross stitch part covers no cell of its grid enough; sews nothing";
+
+    /// Each half of a cross's 2 diagonals takes `cross_thread_count` passes of the thread. The needle goes
+    /// out from the cross's middle and back again, so the passes come in pairs, and the count is an even
+    /// number. An odd count sews the even count below it, as in Ink/Stitch, and 1 sews 2. Ink/Stitch sews
+    /// a stitch from a corner of each cell to its middle for 1, and no cross.
+    ///
+    /// The message gives the count set and the count sewn. Set an even number.
+    FillCrossThreadsOdd = "SC-W0320", Warning, "Cross stitch with an odd thread count; an even count sewn";
+
+    /// A cross's shortest stitches run from its corners to its middle, half its diagonal long. On a grid
+    /// this fine they are shorter than the shortest stitch the machine sews well, so needle points of the
+    /// crosses are left out where they lie too near the one before, and the crosses lose their shape.
+    ///
+    /// The message gives the cells' size, the stitch's length and the shortest stitch. Make
+    /// `pattern_size_mm` larger.
+    FillCrossTooFine = "SC-W0321", Warning, "Cross stitch grid too fine for the shortest stitch; needle points left out";
+
     /// A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
     /// one stitch that short would hammer one spot of the fabric and could break the thread. The part is
     /// a single point (a stray node), shorter than the shortest stitch, or longer but curled up so that
@@ -513,12 +538,16 @@ registry! {
 
     /// The lock is set to custom, but its shape cannot be sewn as written. A custom lock is numbers
     /// separated by spaces, the steps the needle takes along the stitching in sizes of
-    /// `lock_*_scale_mm`, or an SVG path that draws it. StitchCraft sews the numbers. It does not sew a
-    /// drawn custom lock yet, and sews the half stitch in its place. Parts that are not numbers, and steps
-    /// longer than 10 m, are left out. If no step is left, the half stitch is sewn instead.
+    /// `lock_*_scale_mm`, or an SVG path that draws it in millimetres, at `lock_*_scale_percent`. Parts
+    /// that are not numbers, steps of 0 and steps longer than 10 m are left out, and if no step is left,
+    /// the half stitch is sewn instead. A path is read up to an error in it, and a node where the node
+    /// before it is is left out. The half stitch is sewn instead of a path of fewer than 3 nodes or more
+    /// than 100, one whose last segment, which gives its direction, has no length, one that reaches
+    /// farther than 10 m, one with no stitch to sew, and one with a stitch shorter than 0.2 mm even at
+    /// 500 %.
     ///
-    /// The message says what was wrong. Write the lock as numbers, such as `1 -1 1 -1`, or choose
-    /// another lock shape.
+    /// The message says what was wrong. Write the lock as numbers, such as `1 -1 1 -1`, or as a path of
+    /// at least 3 nodes, such as `M 0,0 L 0,1 L 1,1 L 1,0 L 2,0`, or choose another lock shape.
     CustomLockUnusable = "SC-W0503", Warning, "Custom lock cannot be sewn as written";
 
     /// Needle points less than the shortest stitch from a needle point next to them were left out, so the

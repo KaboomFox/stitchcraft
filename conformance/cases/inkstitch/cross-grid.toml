@@ -1,0 +1,8 @@
+# Cross stitch fills on the grids both programs lay: on the canvas's grid moved left and down, on a grid from
+# the part's own top left corner, on cells of 2 lengths at a coverage of 30 %, with diagonals split at
+# max_cross_stitch_length_mm, and over a disc, whose round edge each program covers cell by cell
+# (REQ-FILL-CRS-001, REQ-FILL-CRS-002, REQ-FILL-CRS-005).
+id = "inkstitch-cross-grid"
+requirements = ["REQ-SVG-008", "REQ-FILL-CRS-001", "REQ-FILL-CRS-002", "REQ-FILL-CRS-005"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/cross-grid.svg"

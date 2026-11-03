@@ -14,6 +14,64 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   they are selected, which `stitch export` leaves out. New codes: `SC-E1001`, `SC-I1002`, `SC-W1003` and
   `SC-E0820`. TS-17C is drawn with its letters as drawn and routed, and the differential routes them with
   Ink/Stitch's tool too. A how-to page shows the route. Golden added: `TS-17C.pes`.
+- M10.1: cross stitch with simple crosses (`REQ-FILL-CRS-001` to `REQ-FILL-CRS-007`). A fill whose
+  `fill_method` is `cross_stitch` sews a cross in each cell of a grid laid over it that it covers
+  `fill_coverage` percent of, as Ink/Stitch sews its simple crosses.
+  - The grid's cells are `pattern_size_mm` wide and tall. It and `cross_offset_mm` take 1 length or 2,
+    which the registry's `LengthPair` kind reads, as it reads a satin's pull compensation for each side.
+    The grid's lines pass through the canvas's origin, or with `canvas_grid_origin` off through each
+    part's top left corner, and `cross_offset_mm` moves them left and down. A VectorCraft document's
+    canvas origin is the origin of its coordinates, where a new document's first artboard has its top
+    left corner.
+  - Each part is grown by `expand_mm` first. The share of each cell it covers is worked out exactly, row
+    by row, and a cell covered `fill_coverage` percent, less a ten-thousandth of a percent, sews a cross.
+    A part that covers no cell so much sews nothing (`SC-W0319`).
+  - Each cross is a loop from a corner back to it, its `\` diagonal under its `/` one, through its middle
+    between them. `simple_cross_flipped` lays the `/` diagonal under, on the same grid.
+    `cross_thread_count` passes lie on each half of each diagonal, an even count of 2 or more
+    (`SC-W0320`). A stitch longer than `max_cross_stitch_length_mm` is split into equal stitches, and a
+    grid too fine for the machine's shortest stitch is named (`SC-W0321`).
+  - Crosses that share a corner sew in one run, each joining it at a corner of its top diagonal where it
+    can. The group nearest the end sews last, and the others nearest the needle first. A part of one
+    group first runs from the needle to its end through the middles of its crosses.
+  - The 10 other methods, half, upright, dense upright, double and Smyrna crosses and their flipped
+    variants, come with M10.2, and an element set to one is skipped (`SC-W0011`). `cross_rotation` stays
+    planned.
+  - Every cell within the part's bounds costs a unit of work before any is looked at. A row of cells, and
+    each cross, must fit in the stitches left. A fine grid over a large part then ends with `SC-E0004`
+    before it takes memory (`REQ-GEN-004`).
+  - Where StitchCraft differs on purpose, the ledger says how, for a part that a negative `expand_mm`
+    shrinks away (`DEV-FILL-024`), the row above the first line that Ink/Stitch's offset leaves out
+    (`DEV-FILL-025`), Ink/Stitch's flipped crosses on a turned grid (`DEV-FILL-026`), a thread count of 1
+    (`DEV-FILL-027`) and the order of the groups and crosses (`DEV-FILL-028`). `DEV-PRM-001` adds a
+    fraction in `fill_coverage`, which Ink/Stitch sews at its default.
+  - TS-17A's M10.1 part is drawn for MC-12. Squares of simple crosses on grids of 2 and 3 mm with 2 and 4
+    threads sew plain and flipped, beside a K whose slanted edges cut their cells in half. Its samples lie
+    on the canvas's grid, and VectorCraft's Test Sheet filter moves the sheet by multiples of 6 mm, which
+    keep them there. It sews in Ink/Stitch as in StitchCraft by every measure of the differential, 5,299
+    stitches in both, and so does a case of offset grids, cells of 2 lengths, split stitches and a disc.
+  - The user's guide shows cross stitch in pictures, and its design page says how it is sewn. The
+    parameter reference reads a choice's kept values as its help says, where it said that each sews as
+    another, which a cross stitch method of M10.2 doesn't.
+- M8.13: custom locks drawn as paths (`REQ-LCK-005`, `REQ-LCK-006`). A `lock_custom_start` or
+  `lock_custom_end` written as SVG path data sews as Ink/Stitch sews it, where the half stitch was sewn with
+  `SC-W0503`. The path is drawn in millimetres and scaled by `lock_*_scale_percent` about its last node but
+  one, which goes where the stitching starts or ends. Its last segment is turned along the first stitch into
+  the stitching and left out. A tie-in sews the nodes before it in order, and a tie-off the same lock
+  backwards. Each command ends at a node. The needle sews straight to a curve's or an arc's end, and a
+  closepath's node is where its subpath started.
+  - The engine reads the path from the setting's text with `svgtypes`' path-data parser, which the SVG
+    adapter reads a path's `d` with. A drawn lock then sews alike from an SVG file and from a VectorCraft
+    document's effect. `cargo xtask layers` allows `svgtypes` in the engine.
+  - The text is untrusted. It is read up to its first error, and to 100 nodes at most. Each command costs a
+    unit of work. A node where the node before it is is left out. A path of fewer than 3 nodes or more than
+    100, whose last segment has no length, that reaches farther than 10 m, left with no stitch, or with a
+    stitch shorter than 0.2 mm even at 500 %, sews the half stitch, and `SC-W0503` says why. A lock whose
+    stitches would be shorter than 0.2 mm is enlarged as a whole, as the other drawn locks are
+    (`SC-W0502`). `DEV-LCK-001` says where Ink/Stitch sews a path otherwise.
+  - A differential case sews 8 drawn locks of each kind of command at both ends of 4 lines, and both
+    programs sew it alike by every measure.
+  - TS-16 gains 2 black lines locked with drawn locks for MC-11, so it has all its parts.
 - M10.3, a spike: the routing tools will come to StitchCraft as one function of the engine, and ADR-0017
   records why. The function routes as Ink/Stitch's Auto-Route Satin Columns and Auto-Route Running Stitch
   route. In VectorCraft, 2 heavy filters will call it. A filter will replace the selected paths with the
@@ -2336,6 +2394,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Added `conformance/golden/testsheets/TS-17A.pes` (M10.1), the simple crosses of the cross stitch sheet
+  that MC-12 sews: 5,299 stitches.
+- Changed `conformance/golden/testsheets/TS-16.pes` (M8.13). The sheet gains 2 black lines locked at both ends
+  with custom locks drawn as paths, which sew last, after a fifth colour change, above the rest once the sheet
+  is turned. The plan spans 110 × 117.2 mm, and sews 4,979 stitches, 48 more. The first 5 parts sew as before.
 - Changed `conformance/golden/testsheets/TS-16.pes` (M8.10). The sheet gains a clone of its red fill, turned
   45° right, which sews last, in red after a fourth colour change, below the fill once the sheet is turned.
   It starts and ends at the corners turned from the fill's. The plan spans 110 × 97.2 mm, and sews 4,931
