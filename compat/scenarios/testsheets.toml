@@ -1,8 +1,9 @@
 # Level B: each test sheet drawn as a design, drawn into a new document of its own by StitchCraft's Test
 # Sheet filter, each object with its StitchCraft effect, the Auto effect for the TS-13 sheets' shapes
 # digitized automatically (docs/src/design/compatibility-gate.md). The document sews as the sheet's design
-# moved by whole millimetres to the middle of the artboard, and StitchCraft's PES exporter writes it within
-# an export's budget, as `stitch export` writes it.
+# moved by whole millimetres to the middle of the artboard, TS-17A by whole multiples of 6 mm to keep its
+# crosses on their grids, and StitchCraft's PES exporter writes it within an export's budget, as
+# `stitch export` writes it.
 description = "Each test sheet drawn as a design, drawn into a document by the Test Sheet filter, sews as its design moved, and exports as `stitch export` writes it."
 requirements = ["REQ-VC-015", "REQ-VC-016"]
 
@@ -118,6 +119,14 @@ steps = [
   { export = "ts-13d.pes" },
 ]
 
+[[run]]
+plugins = ["stroke", "satin", "fill", "testsheet", "pes"]
+steps = [
+  { cmd = "plugin.run", params = { id = "dev.stitchcraft.testsheet", params = { sheet = "TS-17A" } } },
+  { export = "ts-17a.vectorcraft" },
+  { export = "ts-17a.pes" },
+]
+
 [expect]
 exported = [
   ["ts-02b.vectorcraft", "ts-02b.pes"],
@@ -134,6 +143,7 @@ exported = [
   ["ts-13b.vectorcraft", "ts-13b.pes"],
   ["ts-13c.vectorcraft", "ts-13c.pes"],
   ["ts-13d.vectorcraft", "ts-13d.pes"],
+  ["ts-17a.vectorcraft", "ts-17a.pes"],
 ]
 sheets = [
   { file = "ts-02b.vectorcraft", sheet = "TS-02B" },
@@ -150,4 +160,5 @@ sheets = [
   { file = "ts-13b.vectorcraft", sheet = "TS-13B" },
   { file = "ts-13c.vectorcraft", sheet = "TS-13C" },
   { file = "ts-13d.vectorcraft", sheet = "TS-13D" },
+  { file = "ts-17a.vectorcraft", sheet = "TS-17A" },
 ]
