@@ -55,17 +55,7 @@ impl Drawing {
         let Shape::Fill { path, rule } = &source.shape else { return Err(SheetError::Said(format!("{of} is not a fill"))) };
         let [a, b, c, d, e, f] = map;
         let moved = |p: Point| Point::new(a * p.x() + c * p.y() + e, b * p.x() + d * p.y() + f);
-        let subpaths = path.subpaths.iter().map(|subpath| {
-            let segments = subpath.segments.iter().map(|segment| {
-                Ok(match *segment {
-                    Segment::Line(end) => Segment::Line(moved(end)?),
-                    Segment::Quad(control, end) => Segment::Quad(moved(control)?, moved(end)?),
-                    Segment::Cubic(first, second, end) => Segment::Cubic(moved(first)?, moved(second)?, moved(end)?),
-                })
-            });
-            Ok(Subpath { start: moved(subpath.start)?, segments: segments.collect::<Result<_, UnitError>>()?, closed: subpath.closed })
-        });
-        let shape = Shape::Fill { path: Path { subpaths: subpaths.collect::<Result<_, UnitError>>()? }, rule: *rule };
+        let shape = Shape::Fill { path: path.map(moved)?, rule: *rule };
         let mut params = source.params.clone();
         params.set(ANGLE, angle);
         let id = ElementId::new(format!("{}:{name}", self.sheet))?;
