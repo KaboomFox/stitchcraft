@@ -22,6 +22,7 @@ supersedes the old one.
 | [0014](0014-generators-see-their-neighbours.md) | Generators see their neighbours: the needle before, the next element after | Accepted |
 | [0015](0015-pictures-traced-by-vectorcraft.md) | Pictures are traced by VectorCraft's command line | Accepted (spike M13.9) |
 | [0016](0016-inkstitch-files-imported-by-stitchcraft.md) | Ink/Stitch files come into VectorCraft through `stitch import-inkstitch` | Accepted (spike M8.11) |
+| [0017](0017-routing-is-one-engine-function.md) | Routing is one engine function, which VectorCraft's filters and lettering call | Accepted (spike M10.3) |
 
 `cargo xtask docs --check` fails if an ADR file is missing from this table or its status here differs
 from the file's status line.
