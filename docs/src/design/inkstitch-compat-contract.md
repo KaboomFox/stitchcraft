@@ -22,7 +22,8 @@ registry uses these names as its keys so files move between the tools unchanged
   planned*: never, and a design that sets it gets the same.
   *registered*: StitchCraft reads and checks it under the same key, meaning and default; it changes the
   stitches once its stitch type or feature lands (see *Phase* and the parameter's reference entry).
-  *deviates*: registered, with a meaning that differs as its reference entry describes.
+  *deviates*: registered, with a meaning that differs as its reference entry describes. A clone's settings
+  say what the SVG adapter does with them.
 - **Applies to** lists the stitch types Ink/Stitch's settings window shows the parameter for. *Read by*
   adds those whose sewing reads it without showing it, as a contour fill's underlay reads the tatami
   fill's `angle`, and StitchCraft's registry gives it those too.
@@ -195,9 +196,9 @@ registry uses these names as its keys so files move between the tools unchanged
 
 | Attribute | Type | Unit | Default | Applies to | Phase | StitchCraft |
 |---|---|---|---|---|---|---|
-| `clone` | toggle | — | true | all | P2 (M8) | planned |
-| `angle` | float | deg | — | all | P2 (M8) | planned |
-| `flip_angle` | boolean | — | false | all | P2 (M8) | planned |
+| `clone` | toggle | — | true | clones | P2 (M8) | applied: off, the clone sews nothing, and is listed (`SC-I0805`) |
+| `angle` | float | deg | — | clones | P2 (M8) | applied: the angle of every fill the clone shows, in place of the one the clone turns it to |
+| `flip_angle` | boolean | — | false | clones | P2 (M8) | applied: reverses the angle of every fill the clone shows |
 
 ## Method identifiers
 

@@ -1,0 +1,6 @@
+id = "inkstitch-clone-flip"
+requirements = ["REQ-SVG-008", "REQ-SVG-012", "REQ-SVG-013"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/clone-flip.svg"
+# A clone turned 30 degrees whose flip_angle reverses the angle it turns the bar's 20 degrees to: 10 degrees,
+# where the turned angle alone, -10, lies along the bar.

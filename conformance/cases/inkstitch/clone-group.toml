@@ -1,0 +1,6 @@
+id = "inkstitch-clone-group"
+requirements = ["REQ-SVG-008", "REQ-SVG-012", "REQ-SVG-013", "REQ-GEN-001"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/clone-group.svg"
+# A clone of a group turned a quarter right: both programs sew its bar and its disc in turn, in the group's
+# threads, the bar from its start command, which lies in the group and turns with the clone, its rows upright.

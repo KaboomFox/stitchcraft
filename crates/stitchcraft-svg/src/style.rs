@@ -355,14 +355,18 @@ pub enum Plain {
     Color(Rgb),
     /// The element's `color` property.
     CurrentColor,
+    /// `context-fill`, or `context-stroke` when `true`: the fill or the stroke of the clone that shows the
+    /// element, which [`Style::child`] puts in its place.
+    Context(bool),
 }
 
 impl Plain {
     /// The colour it paints with on an element whose `color` is `current`, if it paints: `currentColor`
-    /// paints nothing where `color` is fully transparent.
+    /// paints nothing where `color` is fully transparent, and `context-fill` or `context-stroke`, which
+    /// [`Style::child`] replaces with the paint it names, nothing.
     pub const fn colour(self, current: Option<Rgb>) -> Option<Rgb> {
         match self {
-            Plain::None => None,
+            Plain::None | Plain::Context(_) => None,
             Plain::Color(color) => Some(color),
             Plain::CurrentColor => current,
         }
@@ -371,11 +375,11 @@ impl Plain {
 
 impl<'a> Paint<'a> {
     /// The paint `value` declares (not `inherit`, which the caller handles), or `None` when it does not
-    /// parse: a paint server reference with the plain paint after it, or a plain paint.
+    /// parse: a paint server reference with the plain paint after it, `none` or a colour, or a plain paint.
     fn parse(value: &'a str) -> Option<Paint<'a>> {
         let value = value.trim();
         let Some((id, rest)) = reference(value) else { return plain(value).map(Paint::Plain) };
-        let fallback = if rest.is_empty() { None } else { Some(plain(rest)?) };
+        let fallback = if rest.is_empty() { None } else { Some(plain(rest).filter(|after| !matches!(after, Plain::Context(_)))?) };
         Some(Paint::Server { id, fallback })
     }
 }
@@ -395,13 +399,15 @@ pub fn reference(value: &str) -> Option<(&str, &str)> {
     Some((id, value.get(end + 1..)?.trim()))
 }
 
-/// A paint that is not a server, in any case: `none` (or `context-fill` and `context-stroke`, which
-/// nothing here provides), `currentColor` or a colour.
+/// A paint that is not a server, in any case: `none`, `context-fill`, `context-stroke`, `currentColor` or
+/// a colour.
 fn plain(value: &str) -> Option<Plain> {
     let value = without_icc(value);
     let is = |keyword: &str| value.eq_ignore_ascii_case(keyword);
-    if is("none") || is("context-fill") || is("context-stroke") {
+    if is("none") {
         Some(Plain::None)
+    } else if is("context-fill") || is("context-stroke") {
+        Some(Plain::Context(is("context-stroke")))
     } else if is("currentcolor") {
         Some(Plain::CurrentColor)
     } else {
@@ -471,6 +477,9 @@ pub struct Style<'a> {
     pub miter_limit: f64,
     /// The `stroke-linecap` property.
     pub line_cap: Cap,
+    /// What `context-fill` and `context-stroke` paint with: the fill and the stroke of the clone that shows
+    /// the element ([`Style::context`]), and nothing outside one, as SVG 2 has them paint.
+    pub context: [Paint<'a>; 2],
 }
 
 impl Default for Style<'_> {
@@ -492,11 +501,23 @@ impl Default for Style<'_> {
             line_join: None,
             miter_limit: 4.0,
             line_cap: Cap::Butt,
+            context: [Paint::Plain(Plain::None); 2],
         }
     }
 }
 
 impl<'a> Style<'a> {
+    /// This style, that of a clone, as what the clone shows inherits it: there `context-fill` and
+    /// `context-stroke` paint with the clone's fill and stroke, `currentColor` in the clone's `color`, as
+    /// SVG 2 has a `<use>` element give them, and Chrome and Firefox draw them.
+    pub fn context(&self) -> Style<'a> {
+        let own = |paint: Paint<'a>| match paint {
+            Paint::Plain(Plain::CurrentColor) => Paint::Plain(self.color.map_or(Plain::None, Plain::Color)),
+            _ => paint,
+        };
+        Style { context: [own(self.fill), own(self.stroke)], ..*self }
+    }
+
     /// The style of an element that inherits this one and declares `declared`; `None` when the element
     /// has `display: none`, which hides it and everything inside it.
     pub fn child(&self, declared: &Declared<'a, '_>) -> Option<Style<'a>> {
@@ -505,11 +526,22 @@ impl<'a> Style<'a> {
             return None;
         }
         let mut style = *self;
+        let [context_fill, context_stroke] = self.context;
+        let in_context = |paint| match paint {
+            Paint::Plain(Plain::Context(stroke)) => {
+                if stroke {
+                    context_stroke
+                } else {
+                    context_fill
+                }
+            }
+            _ => paint,
+        };
         if let Declaration::Set(paint) = declared.paint("fill") {
-            style.fill = paint;
+            style.fill = in_context(paint);
         }
         if let Declaration::Set(paint) = declared.paint("stroke") {
-            style.stroke = paint;
+            style.stroke = in_context(paint);
         }
         if let Declaration::Set(color) = declared.value("color", |v| Color::from_str(without_icc(v)).ok()) {
             style.color = painted(color);
@@ -627,13 +659,15 @@ mod tests {
         assert_eq!(without_icc("#cd853f icc-color(sRGB-IEC61966-2.1, 0.8, 0.52, 0.25)"), "#cd853f");
         assert_eq!(without_icc("#cd853f ICC-COLOR(x, 1)"), "#cd853f");
         assert_eq!(without_icc("icc-color(x, 1)"), "icc-color(x, 1)", "an ICC colour alone stays, and does not parse");
-        assert_eq!((plain("CurrentColor"), plain("NONE"), plain("Context-Fill")), (Some(Plain::CurrentColor), Some(Plain::None), Some(Plain::None)));
+        assert_eq!((plain("CurrentColor"), plain("NONE")), (Some(Plain::CurrentColor), Some(Plain::None)));
+        assert_eq!((plain("Context-Fill"), plain("CONTEXT-stroke")), (Some(Plain::Context(false)), Some(Plain::Context(true))));
         assert_eq!(plain("#00000000"), Some(Plain::None), "a fully transparent colour paints nothing");
         let server = |id, fallback| Some(Paint::Server { id, fallback });
         assert_eq!(Paint::parse("url(#g) CURRENTCOLOR"), server("g", Some(Plain::CurrentColor)));
         assert_eq!(Paint::parse("URL( '#g' )"), server("g", None));
         assert_eq!(Paint::parse(r##"url("#g") none"##), server("g", Some(Plain::None)));
-        for unreadable in ["url(#g) bogus", "url(#g", "url(g)", "url(#)", "url(\"#g')", "bogus"] {
+        // After a reference comes `none` or a colour, as SVG 2 writes a paint, and no context's paint.
+        for unreadable in ["url(#g) bogus", "url(#g", "url(g)", "url(#)", "url(\"#g')", "bogus", "url(#g) context-fill", "url(#g) context-stroke"] {
             assert_eq!(Paint::parse(unreadable), None, "{unreadable}");
         }
     }
@@ -649,6 +683,29 @@ mod tests {
         assert_eq!(paint("a"), Declaration::Set(BLUE));
         assert_eq!(paint("b"), Declaration::Unreadable("bogus"), "the value that would win is named");
         assert_eq!((paint("c"), paint("d"), paint("e")), (Declaration::Inherited, Declaration::Inherited, Declaration::Inherited));
+    }
+
+    #[test]
+    fn context_paints_are_those_of_the_clone_that_shows_the_element() {
+        let doc = Document::parse(
+            r##"<svg><use id="u" fill="currentColor" stroke="#00f" color="#0f0"/><use id="clear" fill="currentColor" color="transparent"/>
+               <path id="p" fill="context-stroke" stroke="context-fill" color="red"/><path id="q"/></svg>"##,
+        )
+        .unwrap();
+        let node = |id: &str| doc.descendants().find(|n| n.attribute("id") == Some(id)).unwrap();
+        // Outside a clone, nothing.
+        let alone = Style::default().child(&declared(node("p"), &[])).unwrap();
+        assert_eq!((alone.fill, alone.stroke), (NONE, NONE));
+        // In one, its stroke and its fill, its currentColor in its own colour, which the element inherits.
+        let clone = Style::default().child(&declared(node("u"), &[])).unwrap().context();
+        let green = Paint::Plain(Plain::Color(Rgb::new(0, 255, 0)));
+        assert_eq!(clone.context, [green, BLUE]);
+        let p = clone.child(&declared(node("p"), &[])).unwrap();
+        assert_eq!((p.fill, p.stroke, p.context), (BLUE, green, [green, BLUE]));
+        let q = clone.child(&declared(node("q"), &[])).unwrap();
+        assert_eq!((q.fill, q.stroke), (Paint::Plain(Plain::CurrentColor), BLUE));
+        let clear = Style::default().child(&declared(node("clear"), &[])).unwrap().context();
+        assert_eq!(clear.context, [NONE, NONE], "a clear colour paints nothing");
     }
 
     #[test]

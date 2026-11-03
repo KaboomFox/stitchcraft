@@ -37,11 +37,15 @@
 //! ([`crate::version`], `SC-I0818`): the defaults that have changed since are given to the shapes that
 //! relied on them, as parameters, as the trim and stop commands are.
 //!
+//! **Clones** (`<use>`) sew what they show where they show it ([`clone`]), in their place in the document's
+//! order: the reader walks what a clone shows as it walks the document, under the clone's transform and with
+//! its style, and turns the angles of its fills with it, as Ink/Stitch does.
+//!
 //! **Nothing is dropped silently.** `SC-W0802` reports SVG features that StitchCraft does not stitch:
-//! text, images, clones, nested `<svg>`, style sheet rules it does not read, clipping, masks, filters,
-//! markers, gradients, patterns, a group's Ink/Stitch settings, the settings of Ink/Stitch's early versions
-//! (`embroider_` attributes), and a file Ink/Stitch would update or warn about that is read as it is (one
-//! with its settings and no file version, or from a newer Ink/Stitch).
+//! text, images, nested `<svg>`, style sheet rules it does not read, clipping, masks, filters, markers,
+//! gradients, patterns, a group's or a clone's Ink/Stitch settings that change nothing, the settings of
+//! Ink/Stitch's early versions (`embroider_` attributes), and a file Ink/Stitch would update or warn about
+//! that is read as it is (one with its settings and no file version, or from a newer Ink/Stitch).
 //! `SC-W0804` reports geometry that cannot be used,
 //! and `SC-E0801` a file that cannot be read at all, or whose size cannot be read. What a viewer would not
 //! show either is left out without a word: `display: none`, hidden or fully transparent elements, and the
@@ -84,9 +88,11 @@ use crate::transform::{self, Affine, user_units};
 use crate::version::{self, Updated, Version};
 
 mod clip;
+mod clone;
 mod root;
 
 use clip::Link;
+use clone::{Applied, Frame};
 
 /// The most XML nodes a file may have.
 const MAX_NODES: u32 = 1_000_000;
@@ -145,6 +151,8 @@ enum Context<'a> {
 enum Kind {
     Group,
     Switch,
+    /// A `<use>`: a command's symbol, or a clone of what it names.
+    Use,
     Shape(Geometry),
     /// Drawn by a viewer but not stitched: what it is, and how to make it stitchable.
     Unsupported(&'static str, Option<&'static str>),
@@ -180,10 +188,7 @@ impl Kind {
             "image" => {
                 Kind::Unsupported("is a raster image, which is not stitched", Some("Trace it into paths first (in Inkscape: Path › Trace Bitmap)."))
             }
-            "use" => Kind::Unsupported(
-                "is a clone (`<use>`), which is not stitched yet",
-                Some("Unlink the clone first (in Inkscape: Edit › Clone › Unlink Clone)."),
-            ),
+            "use" => Kind::Use,
             "svg" => Kind::Unsupported("is a nested `<svg>` element, which is not read yet", None),
             "foreignObject" => Kind::Unsupported("holds content that is not SVG (`<foreignObject>`), which is not stitched", None),
             _ => return None,
@@ -236,6 +241,10 @@ struct Reader<'b, 'a, 'input> {
     auto: bool,
     /// The clips round the elements drawn, each a link of a chain (`clip`).
     links: Vec<Link>,
+    /// The clones whose content is being drawn, the innermost last (`clone`).
+    frames: Vec<Frame<'a, 'input>>,
+    /// The clones in the document that sew something: a trim or a stop command on one is applied.
+    sewn_clones: BTreeSet<Place>,
 }
 
 impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
@@ -262,6 +271,8 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             updated: Updated::default(),
             auto: reading.auto,
             links: Vec::new(),
+            frames: Vec::new(),
+            sewn_clones: BTreeSet::new(),
         }
     }
 
@@ -302,11 +313,26 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             Some(style) => Context::Shown { map, style, clipped: None },
             None => Context::Hidden,
         };
-        // Document order, with the ancestors' contexts on a stack: a node's parent is the nearest entry
-        // still on it once the finished subtrees above it are popped.
-        let mut stack = vec![(root.id(), root_context)];
-        let mut counts: BTreeMap<&str, u32> = BTreeMap::from([("svg", 1)]);
-        for node in root.descendants().skip(1) {
+        self.walk(root.descendants().skip(1), root.id(), root_context)?;
+        self.command_notes();
+        self.global_settings();
+        if let Some(message) = self.version.note(self.updated) {
+            self.warnings.insert(0, self.diagnostic(Code::SvgInkStitchUpdated, None, message, None));
+        }
+        let design = Design::new(self.elements, self.settings.settings)?;
+        Ok(Svg { design, warnings: self.warnings })
+    }
+
+    /// Draws `nodes` in document order, the elements under the one `top` names, which are drawn in `context`:
+    /// the document's, or what a clone shows ([`clone`]). The ancestors' contexts are kept on a stack: a
+    /// node's parent is the nearest entry still on it once the finished subtrees above it are popped. The
+    /// document's own walk also gives the file-wide notes and numbers each kind of element for the labels
+    /// ([`label`]); what a clone shows is numbered on its own.
+    fn walk(&mut self, nodes: impl Iterator<Item = Node<'a, 'input>>, top: NodeId, context: Context<'a>) -> Result<(), Diagnostic> {
+        let document = self.frames.is_empty();
+        let mut stack = vec![(top, context)];
+        let mut counts: BTreeMap<&str, u32> = if document { BTreeMap::from([("svg", 1)]) } else { BTreeMap::new() };
+        for node in nodes {
             self.charge(1)?;
             if !node.is_element() {
                 continue;
@@ -316,7 +342,9 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 stack.pop();
             }
             let Some(&(_, context)) = stack.last() else { continue };
-            self.notice(node);
+            if document {
+                self.notice(node);
+            }
             let tag = node.tag_name().name();
             let n = if self.is_svg(node) {
                 let count = counts.entry(tag).or_insert(0);
@@ -325,7 +353,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             } else {
                 0
             };
-            if self.objects.shown_by(node).is_some() {
+            if document && self.objects.shown_by(node).is_some() {
                 self.labels.insert(place(node), label(node, tag, n));
             }
             let own = match context {
@@ -337,20 +365,14 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 stack.push((node.id(), own));
             }
         }
-        self.command_notes();
-        self.global_settings();
-        if let Some(message) = self.version.note(self.updated) {
-            self.warnings.insert(0, self.diagnostic(Code::SvgInkStitchUpdated, None, message, None));
-        }
-        let design = Design::new(self.elements, self.settings.settings)?;
-        Ok(Svg { design, warnings: self.warnings })
+        Ok(())
     }
 
     /// Notes on the commands that are not applied, in document order: commands that StitchCraft does
     /// not apply yet or that are not where they apply, on the objects a viewer shows. A trim, a stop, a
     /// start or an end on an object that is not a stitched shape is noted as such: Ink/Stitch applies them
-    /// only to those. A start or an end on a stitched shape is noted too, until StitchCraft applies them
-    /// (`REQ-GEN-001`).
+    /// only to those, and the trim and the stop to a clone that sews something too, after the last of what
+    /// it sews (`clone`).
     fn command_notes(&mut self) {
         let mut notes = Vec::new();
         for (target, command) in self.objects.tied() {
@@ -359,7 +381,13 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             }
             let label = self.labels.get(&target).cloned().unwrap_or_default();
             let name = command.name;
+            let clone = self.sewn_clones.contains(&target);
             let message = match command.does {
+                Does::Trim | Does::Stop if clone => continue,
+                Does::StartOrEnd | Does::Positions if clone => format!(
+                    "`{label}` has an Ink/Stitch `{name}` command, which is not applied: `{label}` is a clone, and of the commands tied to a \
+                     clone Ink/Stitch applies only a trim and a stop."
+                ),
                 Does::Trim | Does::Stop | Does::StartOrEnd | Does::Positions if !self.stitched_targets.contains(&target) => {
                     format!("`{label}` has an Ink/Stitch `{name}` command, which is not applied: `{label}` is not a shape that is stitched.")
                 }
@@ -449,17 +477,22 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         clipped: Option<usize>,
     ) -> Result<Context<'a>, Diagnostic> {
         let tag = node.tag_name().name();
-        let Some(kind) = Kind::of(tag).filter(|_| self.is_svg(node)) else { return Ok(Context::Hidden) };
+        // A clone draws the symbol it shows as a group, in the viewport it gives it.
+        let symbol = tag == "symbol" && self.frames.last().is_some_and(|frame| frame.source == node);
+        let kind = if symbol { Some(Kind::Group) } else { Kind::of(tag) };
+        let Some(kind) = kind.filter(|_| self.is_svg(node)) else { return Ok(Context::Hidden) };
         let declared = self.declared(node)?;
         let Some(style) = inherited.child(&declared) else { return Ok(Context::Hidden) };
-        let label = label(node, tag, n);
-        if self.own_object(node, kind, &label, &declared, &style) {
+        let label = self.cloned_label(label(node, tag, n));
+        let commands = self.commands(node)?;
+        if self.own_object(node, kind, &label, (&declared, &style), &commands) {
             return Ok(Context::Hidden);
         }
         if style.shown() {
             self.unreadable(&label, &declared);
         }
-        if style.shown() && !self.objects.on(node).is_empty() {
+        // The objects with commands that a viewer shows in the document, for the notes on them.
+        if style.shown() && self.frames.is_empty() && !commands.is_empty() {
             self.shown_targets.insert(place(node));
             self.labels.insert(place(node), label.clone());
         }
@@ -467,7 +500,11 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             None => map,
             Some(text) => {
                 self.charge_text(text)?;
-                let inside = if matches!(kind, Kind::Group | Kind::Switch) { " with everything inside it" } else { "" };
+                let inside = match kind {
+                    Kind::Group | Kind::Switch => " with everything inside it",
+                    Kind::Use => " with all it shows",
+                    _ => "",
+                };
                 match transform::parse(text).map(|own| map.after(own)) {
                     // The map around it has an inverse, or it would not be drawn: its own flattened it.
                     Ok(map) if map.flattens() => {
@@ -508,11 +545,17 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 let clipped = self.clipped(&label, &declared, map, clipped)?;
                 Ok(Context::Switch { chosen: self.chosen(node).map(|c| c.id()), map, style, clipped })
             }
+            Kind::Use => {
+                effects(self, &label);
+                let clipped = self.clipped(&label, &declared, map, clipped)?;
+                self.cloned(node, &label, map, (&style, clipped), &commands)?;
+                Ok(Context::Hidden)
+            }
             Kind::Shape(geometry) => {
                 if style.shown() {
                     effects(self, &label);
                     let label = self.claim(label, tag, n)?;
-                    self.shape(node, geometry, &label, (map, clipped), &style, &declared)?;
+                    self.shape(node, geometry, &label, (map, clipped), (&style, &declared), &commands)?;
                 }
                 Ok(Context::Hidden)
             }
@@ -560,9 +603,17 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
     }
 
     /// Whether `node` is one of Ink/Stitch's own objects, or is left out as the file asks
-    /// ([`crate::inkstitch`]); it is then not drawn, nor is anything inside it. Says so where that is not
-    /// obvious: a connector that ties no command, an ignored object or layer, a helper path.
-    fn own_object(&mut self, node: Node<'a, 'input>, kind: Kind, label: &str, declared: &Declared<'a, 'input>, style: &Style<'a>) -> bool {
+    /// ([`crate::inkstitch`]), by the `commands` that apply to it; it is then not drawn, nor is anything inside
+    /// it. Says so where that is not obvious: a connector that ties no command, an ignored object or layer, a
+    /// helper path.
+    fn own_object(
+        &mut self,
+        node: Node<'a, 'input>,
+        kind: Kind,
+        label: &str,
+        (declared, style): (&Declared<'a, 'input>, &Style<'a>),
+        commands: &[Applied],
+    ) -> bool {
         if inkstitch::is_connector(node) {
             if !self.objects.ties_a_command(node) && style.shown() {
                 let message =
@@ -571,7 +622,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             }
             return true;
         }
-        let why = if self.objects.on(node).iter().any(|tied| tied.command.does == Does::IgnoreObject) {
+        let why = if commands.iter().any(|applied| applied.tied.command.does == Does::IgnoreObject) {
             Some(format!("an Ink/Stitch `{IGNORE_OBJECT}` command is attached to it"))
         } else if node.attribute((INKSTITCH_NS, IGNORE_OBJECT)).is_some_and(inkstitch::yes) {
             Some(format!("its Ink/Stitch setting `{IGNORE_OBJECT}` is on"))
@@ -581,7 +632,11 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             None
         };
         if let Some(why) = why {
-            let inside = if matches!(kind, Kind::Group | Kind::Switch) { ", with everything in it" } else { "" };
+            let inside = match kind {
+                Kind::Group | Kind::Switch => ", with everything in it",
+                Kind::Use => ", with all it shows",
+                _ => "",
+            };
             let message = format!("`{label}` is left out{inside}: {why}.");
             let note = self.diagnostic(Code::SvgObjectIgnored, Some(label), message, None);
             self.warnings.push(note);
@@ -607,15 +662,16 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
     }
 
     /// The design elements of a shape that is shown, `label` its own: one per paint it paints with, each in
-    /// millimetres by `map` and cut to its own clips and those of the chain from `clipped` (`clip`).
+    /// millimetres by `map` and cut to its own clips and those of the chain from `clipped` (`clip`), with the
+    /// `commands` that apply to it.
     fn shape(
         &mut self,
         node: Node<'a, 'input>,
         geometry: Geometry,
         label: &str,
         (map, clipped): (Affine, Option<usize>),
-        style: &Style<'a>,
-        declared: &Declared<'a, 'input>,
+        (style, declared): (&Style<'a>, &Declared<'a, 'input>),
+        commands: &[Applied],
     ) -> Result<(), Diagnostic> {
         // A line has no inside to fill.
         let fill = if geometry == Geometry::Line || style.fill_clear { None } else { self.colour(label, "fill", style.fill, style.color)? };
@@ -650,8 +706,8 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         let settings: Vec<_> = node.attributes().filter(|a| a.namespace() == Some(INKSTITCH_NS) && !READ_ATTRIBUTES.contains(&a.name())).collect();
         self.charge(settings.len() as u64)?;
         let mut params: ParamSet = settings.iter().map(|a| (a.name(), a.value())).collect();
-        for tied in self.objects.on(node) {
-            match tied.command.does {
+        for applied in commands {
+            match applied.tied.command.does {
                 Does::Trim => params.set(TRIM_AFTER, "true"),
                 Does::Stop => params.set(STOP_AFTER, "true"),
                 _ => None,
@@ -660,7 +716,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         // A shape without Ink/Stitch's settings is digitized automatically when the user asks for it, and
         // sews by the rules; any other is updated as Ink/Stitch updates a file of its version.
         let automatic = self.auto && !node.attributes().any(|a| inkstitch::is_setting(&a));
-        let hints = self.hints(node, label, automatic);
+        let hints = self.hints(label, automatic, commands);
         if !automatic {
             let styled_stroke = declared.in_style("stroke").last().is_some_and(|stroke| !stroke.trim().eq_ignore_ascii_case("none"));
             let shape = version::Shape {
@@ -668,7 +724,14 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 longest: node.attribute((INKSTITCH_NS, MAX_STITCH_LENGTH)),
                 styled_polyline: geometry == Geometry::Polyline && styled_stroke,
             };
-            self.version.update(&shape, &mut params, &mut self.updated);
+            // Ink/Stitch updates each shape of the file once, which is counted where the document draws it.
+            let mut uncounted = Updated::default();
+            let updated = if self.frames.is_empty() { &mut self.updated } else { &mut uncounted };
+            self.version.update(&shape, &mut params, updated);
+        }
+        // A clone turns the angle of each fill it shows with it (`clone`).
+        if fill.is_some() {
+            self.turned(label, &mut params, automatic);
         }
         // Ink/Stitch's own setting sews the stroke first (`REQ-SVG-010`), and SVG's `paint-order` doesn't.
         let stroke_first = node.attribute((INKSTITCH_NS, STROKE_FIRST)).is_some_and(inkstitch::yes);
@@ -707,7 +770,9 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 hints,
                 clips: clips.clone(),
             });
-            self.stitched_targets.insert(place(node));
+            if self.frames.is_empty() {
+                self.stitched_targets.insert(place(node));
+            }
         }
         Ok(())
     }
@@ -938,16 +1003,18 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         self.warn(Code::SvgFeatureIgnored, label, message, hint);
     }
 
-    /// Where Ink/Stitch's commands tied to `node`, labelled `label`, place its elements, in millimetres
-    /// (`REQ-GEN-001`): each command at its symbol's place, or a start or end command in a file Ink/Stitch's
-    /// update moves them in at its connector's end on the shape, as the update moves it, which `SC-I0818`
-    /// counts. With 2 commands of a kind, the first counts. One whose place doesn't read, or lies beyond the
-    /// design's reach, is named and left out. An `automatic` shape's parts start and end where automatic
-    /// digitizing places them, and its commands are named as not applied.
-    fn hints(&mut self, node: Node<'a, 'input>, label: &str, automatic: bool) -> Hints {
+    /// Where the Ink/Stitch `commands` that apply to a shape, labelled `label`, place its elements, in
+    /// millimetres (`REQ-GEN-001`): each command at its symbol's place, or a start or end command in a file
+    /// Ink/Stitch's update moves them in at its connector's end on the shape, as the update moves it, which
+    /// `SC-I0818` counts. A command a clone copies with what it shows is moved with the clone (`clone`). With 2
+    /// commands of a kind, the first counts. One whose place doesn't read, or lies beyond the design's reach, is
+    /// named and left out. An `automatic` shape's parts start and end where automatic digitizing places them,
+    /// and its commands are named as not applied.
+    fn hints(&mut self, label: &str, automatic: bool, commands: &[Applied]) -> Hints {
         const PLACING: [&str; 3] = ["starting_point", "ending_point", "target_point"];
+        let first = |name: &str| commands.iter().find(|applied| applied.tied.command.name == name).copied();
         if automatic {
-            if PLACING.iter().any(|name| self.objects.first(node, name).is_some()) {
+            if PLACING.iter().any(|name| first(name).is_some()) {
                 let message = format!(
                     "`{label}` is digitized automatically, which places where its parts start and end: its Ink/Stitch start, end and \
                      target commands are not applied."
@@ -957,13 +1024,21 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             return Hints::default();
         }
         let moved = self.version.moves_start_and_end();
+        // The update moves each command once, which is counted where the document draws its shape.
+        let counted = self.frames.is_empty();
+        let clone = self.frames.last().and_then(|frame| frame.moved);
         let mut at = |name: &str, movable: bool| {
-            let tied = self.objects.first(node, name)?;
-            if movable && moved {
+            let Applied { tied, moves } = first(name)?;
+            if movable && moved && counted {
                 self.updated.commands += 1;
             }
             let user = if movable && moved { tied.on_object } else { tied.symbol };
-            let placed = user.map(|(x, y)| self.root.apply(x, y)).and_then(|(x, y)| Point::new(x, y).ok()).filter(|p| within_working_limit(*p));
+            let shift = clone.filter(|_| moves);
+            let placed = user
+                .map(|(x, y)| self.root.apply(x, y))
+                .map(|(x, y)| shift.map_or((x, y), |map| map.apply(x, y)))
+                .and_then(|(x, y)| Point::new(x, y).ok())
+                .filter(|p| within_working_limit(*p));
             if placed.is_none() {
                 let message = format!(
                     "`{label}` has an Ink/Stitch `{name}` command whose place doesn't read: a coordinate, a transform or its connector's path \

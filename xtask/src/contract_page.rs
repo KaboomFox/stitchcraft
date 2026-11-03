@@ -6,8 +6,10 @@
 //! the registry declares with an Ink/Stitch origin must exist in the data file with a compatible kind and
 //! the default Ink/Stitch sews, because defaults are part of the contract (`docs/src/design/params.md` ›
 //! Naming rules); one with StitchCraft's own origin must not; the lock and method identifiers must match.
-//! The SVG adapter's commands must be Ink/Stitch's, and the attributes it reads must be listed; the file
-//! versions' changes and renamed commands are checked by [`crate::contract_versions`].
+//! The SVG adapter's commands and clone settings must be Ink/Stitch's, and the attributes it reads must be
+//! listed; the file versions' changes and renamed commands are checked by [`crate::contract_versions`]. A
+//! clone's settings belong to no stitch type, so their StitchCraft column says what the adapter does with
+//! each (`stitchcraft_svg::inkstitch::CLONE_SETTINGS`), as the commands' does.
 //!
 //! The default Ink/Stitch sews for a file that sets none is a row's `fallback` where it has one, and its
 //! `default` otherwise. The default is what Ink/Stitch's settings window shows, and its code reads a few
@@ -21,7 +23,7 @@ use std::collections::BTreeSet;
 
 use serde::Deserialize;
 use stitchcraft_params::{Family, Kind, Origin, ParamGroup, ParamSpec, StitchType, declarations, find_for};
-use stitchcraft_svg::inkstitch::{COMMANDS, READ_ATTRIBUTES};
+use stitchcraft_svg::inkstitch::{CLONE_SETTINGS, COMMANDS, READ_ATTRIBUTES};
 
 use crate::contract_versions::{self, Renamed, Update};
 use crate::param_pages;
@@ -171,7 +173,8 @@ registry uses these names as its keys so files move between the tools unchanged
   planned*: never, and a design that sets it gets the same.
   *registered*: StitchCraft reads and checks it under the same key, meaning and default; it changes the
   stitches once its stitch type or feature lands (see *Phase* and the parameter's reference entry).
-  *deviates*: registered, with a meaning that differs as its reference entry describes.
+  *deviates*: registered, with a meaning that differs as its reference entry describes. A clone's settings
+  say what the SVG adapter does with them.
 - **Applies to** lists the stitch types Ink/Stitch's settings window shows the parameter for. *Read by*
   adds those whose sewing reads it without showing it, as a contour fill's underlay reads the tatami
   fill's `angle`, and StitchCraft's registry gives it those too.
@@ -194,10 +197,17 @@ impl Contract {
             ));
             for p in self.param.iter().filter(|p| p.element == *key) {
                 let listed = |values: &[String]| values.iter().map(|a| format!("`{a}`")).collect::<Vec<_>>().join(", ");
-                let applies = match (p.applies_to.is_empty(), p.read_by.is_empty()) {
-                    (true, _) => "all".to_string(),
-                    (false, true) => listed(&p.applies_to),
-                    (false, false) => format!("{}; read by {}", listed(&p.applies_to), listed(&p.read_by)),
+                let clone = p.element == "clone";
+                let applies = match (clone, p.applies_to.is_empty(), p.read_by.is_empty()) {
+                    (true, _, _) => "clones".to_string(),
+                    (false, true, _) => "all".to_string(),
+                    (false, false, true) => listed(&p.applies_to),
+                    (false, false, false) => format!("{}; read by {}", listed(&p.applies_to), listed(&p.read_by)),
+                };
+                let ours = if clone {
+                    CLONE_SETTINGS.iter().find(|ours| ours.name == p.name).map_or("planned", |ours| ours.does).to_string()
+                } else {
+                    status(registry, p)
                 };
                 let default = match &p.fallback {
                     Some(fallback) => format!("{} ({fallback} when unset)", p.default),
@@ -209,7 +219,7 @@ impl Contract {
                     p.kind,
                     p.unit.replace('|', "\\|"),
                     phase(&p.phase, &p.milestone),
-                    status(registry, p)
+                    ours
                 ));
             }
         }
@@ -338,6 +348,11 @@ impl Contract {
         if ours != theirs {
             problems.push(format!("the SVG adapter knows the commands {ours:?}, but {DATA} lists {theirs:?}"));
         }
+        let ours: BTreeSet<&str> = CLONE_SETTINGS.iter().map(|setting| setting.name).collect();
+        let theirs: BTreeSet<&str> = self.param.iter().filter(|p| p.element == "clone").map(|p| p.name.as_str()).collect();
+        if ours != theirs {
+            problems.push(format!("the SVG adapter applies the clone settings {ours:?}, but {DATA} lists {theirs:?}"));
+        }
         for name in READ_ATTRIBUTES {
             if !self.attribute.iter().any(|a| a.name == *name) {
                 problems.push(format!("the SVG adapter reads `{name}`, which {DATA} does not list as an attribute"));
@@ -458,6 +473,13 @@ mod tests {
         for c in COMMANDS {
             data.push_str(&format!("[[command]]\nname = \"{}\"\ntied_to = \"object\"\n", c.name));
         }
+        for c in CLONE_SETTINGS {
+            data.push_str(&format!(
+                "[[param]]\nelement = \"clone\"\nname = \"{}\"\ntype = \"toggle\"\nunit = \"—\"\ndefault = \"true\"\napplies_to = []\n\
+                 phase = \"P2\"\nmilestone = \"M8\"\n",
+                c.name
+            ));
+        }
         for a in READ_ATTRIBUTES {
             data.push_str(&format!("[[attribute]]\nname = \"{a}\"\nkind = \"element\"\nphase = \"P1\"\nmilestone = \"M3\"\n"));
         }
@@ -501,7 +523,10 @@ mod tests {
         let planned = contract.render(&[]);
         assert!(planned.contains("| `row_spacing_mm` | float | mm | 0.25 | `tatami_fill` | P1 (M5) | planned |"));
         assert!(planned.contains("| `fill_method` | `tatami_fill` | P1 (M5) |"));
-        assert!(planned.contains("_1 parameter declarations, 0 registered in StitchCraft._"));
+        assert!(planned.contains("_4 parameter declarations, 0 registered in StitchCraft._"));
+        // A clone's settings say what the SVG adapter does with them.
+        let off = "| `clone` | toggle | — | true | clones | P2 (M8) | applied: off, the clone sews nothing, and is listed (`SC-I0805`) |";
+        assert!(planned.contains(off), "{planned}");
         assert!(planned.contains("| `trim` | the object a connector ties it to | applied: turns on `trim_after` |"));
         assert!(planned.contains("| `ignore_object` | element | P1 (M3) | read |"));
         let group = registry(&[ROW_SPACING]);
@@ -540,7 +565,7 @@ mod tests {
         let page = contract.render(&[&group]);
         assert!(page.contains("| `running_stitch_tolerance_mm` | float | mm | 0.1 | all | P1 (M4) | planned |"), "satin's is not ours");
         assert!(page.contains("| P1 (M3) | [registered](../user/reference/params/running.md#running_stitch_tolerance_mm) |"));
-        assert!(page.contains("_3 parameter declarations, 1 registered in StitchCraft._"));
+        assert!(page.contains("_6 parameter declarations, 1 registered in StitchCraft._"));
         assert_eq!(contract.check(&[&group]), Vec::<String>::new(), "compared with the stroke's default, not the satin's");
         let (data, group) = shared("0.1");
         assert_eq!(Contract::parse(&data).unwrap().check(&[&group]), [unlike("running_stitch_tolerance_mm", "0.1", "0.2")]);
@@ -815,12 +840,22 @@ mod tests {
     #[test]
     fn the_svg_adapter_s_commands_and_attributes_must_be_listed() {
         let data = data("0.25");
-        let missing =
-            data.replace("name = \"trim\"\ntied_to", "name = \"cut\"\ntied_to").replace("name = \"ignore_object\"\nkind", "name = \"x\"\nkind");
+        let missing = data
+            .replace("name = \"trim\"\ntied_to", "name = \"cut\"\ntied_to")
+            .replace("name = \"ignore_object\"\nkind", "name = \"x\"\nkind")
+            .replace("element = \"clone\"\nname = \"flip_angle\"", "element = \"clone\"\nname = \"flip\"");
         let problems = Contract::parse(&missing).unwrap().check(&[]);
-        assert_eq!(problems.len(), 2, "{problems:?}");
+        assert_eq!(problems.len(), 3, "{problems:?}");
         assert!(problems[0].starts_with("the SVG adapter knows the commands {"), "{problems:?}");
-        assert_eq!(problems[1], "the SVG adapter reads `ignore_object`, which conformance/inkstitch-params.toml does not list as an attribute");
+        assert_eq!(
+            problems[1],
+            "the SVG adapter applies the clone settings {\"angle\", \"clone\", \"flip_angle\"}, but conformance/inkstitch-params.toml lists \
+             {\"angle\", \"clone\", \"flip\"}"
+        );
+        assert_eq!(problems[2], "the SVG adapter reads `ignore_object`, which conformance/inkstitch-params.toml does not list as an attribute");
+        // A clone setting the adapter doesn't know is planned.
+        let page = Contract::parse(&missing).unwrap().render(&[]);
+        assert!(page.contains("| `flip` | toggle | — | true | clones | P2 (M8) | planned |"), "{page}");
         // Attributes the adapter reads, and those it doesn't: planned, or not planned at all.
         let more = format!(
             "{data}[[attribute]]\nname = \"stroke_first\"\nkind = \"element\"\nphase = \"P1\"\nmilestone = \"M8\"\n\
