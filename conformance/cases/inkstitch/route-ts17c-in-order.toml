@@ -1,0 +1,11 @@
+# TS-17C's satin letters as drawn, routed as lettering routes a font whose auto_satin is on: their order kept,
+# without trims (REQ-ROUTE-008). Each program sews its own route.
+id = "inkstitch-route-ts17c-in-order"
+requirements = ["REQ-ROUTE-008"]
+kind = "inkstitch"
+sheet = "TS-17C"
+
+[route]
+elements = "ts17c:drawn:"
+preserve_order = true
+trim = false

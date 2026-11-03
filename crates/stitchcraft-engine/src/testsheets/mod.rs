@@ -34,6 +34,7 @@ mod ts10;
 mod ts11;
 mod ts13;
 mod ts16;
+pub mod ts17c;
 
 use designed::Drawing;
 pub use sketch::{STITCH_LEN, SheetError};
@@ -92,6 +93,11 @@ enum Drawn {
     /// position, or keep with the document: its turn on export ([`TestSheet::uses_file_features`]), as TS-16's.
     /// Only `stitch testsheet` and the differential's SVG file draw it.
     FromFile(fn() -> Result<Drawing, SheetError>, &'static [Code]),
+    /// As [`Drawn::Designed`], but part of it is routed (`crate::route`), into pieces cut at points along its
+    /// columns that a document's points hold only to within a unit in their last place. Drawn into a
+    /// document, TS-17C's T sews its first stitch 0.05 mm elsewhere, so only `stitch testsheet` and the
+    /// differential's SVG file draw it.
+    Routed(fn() -> Result<Drawing, SheetError>, &'static [Code]),
 }
 
 impl TestSheet {
@@ -99,13 +105,15 @@ impl TestSheet {
     pub fn plan(&self) -> Result<StitchPlan, SheetError> {
         match self.drawn {
             Drawn::Sketched(build) => build(),
-            Drawn::Designed(drawing, said) | Drawn::DesignedById(drawing, said) | Drawn::FromFile(drawing, said) => drawing()?.plan_saying(said),
+            Drawn::Designed(drawing, said) | Drawn::DesignedById(drawing, said) | Drawn::FromFile(drawing, said) | Drawn::Routed(drawing, said) => {
+                drawing()?.plan_saying(said)
+            }
         }
     }
 
     /// Whether the sheet is drawn as a design, which [`TestSheet::design`] gives, rather than stitch by stitch.
     pub const fn designed(&self) -> bool {
-        matches!(self.drawn, Drawn::Designed(..) | Drawn::DesignedById(..) | Drawn::FromFile(..))
+        matches!(self.drawn, Drawn::Designed(..) | Drawn::DesignedById(..) | Drawn::FromFile(..) | Drawn::Routed(..))
     }
 
     /// Whether a host can draw the sheet into a document that sews as the sheet does: a design whose
@@ -114,6 +122,12 @@ impl TestSheet {
     /// it, so a host can list the sheets it draws within the little work a plug-in may do.
     pub const fn drawable(&self) -> bool {
         matches!(self.drawn, Drawn::Designed(..))
+    }
+
+    /// Whether part of the sheet is routed, as TS-17C's lower letters are, which [`TestSheet::drawable`] leaves
+    /// out: their pieces are cut at points a document holds only to within a unit in their last place.
+    pub const fn routed(&self) -> bool {
+        matches!(self.drawn, Drawn::Routed(..))
     }
 
     /// Whether the sheet's design holds what an Ink/Stitch file gives it, as TS-16's does: elements' start or
@@ -146,7 +160,9 @@ impl TestSheet {
     pub fn design(&self) -> Option<Result<Design, SheetError>> {
         match self.drawn {
             Drawn::Sketched(_) => None,
-            Drawn::Designed(drawing, _) | Drawn::DesignedById(drawing, _) | Drawn::FromFile(drawing, _) => Some(drawing().and_then(Drawing::design)),
+            Drawn::Designed(drawing, _) | Drawn::DesignedById(drawing, _) | Drawn::FromFile(drawing, _) | Drawn::Routed(drawing, _) => {
+                Some(drawing().and_then(Drawing::design))
+            }
         }
     }
 
@@ -155,7 +171,9 @@ impl TestSheet {
     pub fn clones(&self) -> Option<Result<Vec<Cloned>, SheetError>> {
         match self.drawn {
             Drawn::Sketched(_) => None,
-            Drawn::Designed(drawing, _) | Drawn::DesignedById(drawing, _) | Drawn::FromFile(drawing, _) => Some(drawing().map(Drawing::clones)),
+            Drawn::Designed(drawing, _) | Drawn::DesignedById(drawing, _) | Drawn::FromFile(drawing, _) | Drawn::Routed(drawing, _) => {
+                Some(drawing().map(Drawing::clones))
+            }
         }
     }
 }
@@ -471,6 +489,19 @@ pub static SHEETS: &[TestSheet] = &[
         profile: REFERENCE,
         drawn: Drawn::FromFile(ts16::drawing, &[]),
     },
+    TestSheet {
+        id: "TS-17C",
+        title: "Ripples and routing: satin letters as drawn and routed",
+        checks: &[
+            "Top: the word ROUTE in satin columns 3 mm wide, sewn as drawn, column by column. Bottom: the same letters as auto-satin routing joins them, cut into pieces, with running stitches under the satins and a trim between letters.",
+            "Count the jump threads of each half, within each letter and between the letters. The routed half should have none within a letter. Its file asks for a trim between letters, which a machine that obeys trims cuts.",
+            "On the routed half, do the running stitches under the satins show anywhere, at a column's edge, at its ends or where 2 columns meet?",
+            "Where a routed column is cut into pieces, is the satin even across the cut, or does a gap, a ridge or a stitch out of line show?",
+            "The time each half takes, from its first stitch to its last.",
+        ],
+        profile: REFERENCE,
+        drawn: Drawn::Routed(ts17c::drawing, &[Code::StitchesMerged]),
+    },
 ];
 
 /// The sheet with id `id` (any case).
@@ -504,7 +535,7 @@ mod tests {
             designed,
             [
                 "TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-11C", "TS-13A", "TS-13B", "TS-13C",
-                "TS-13D", "TS-16"
+                "TS-13D", "TS-16", "TS-17C"
             ]
         );
         // The TS-13 sheets' shapes are digitized automatically, and no other sheet's are.
@@ -536,7 +567,7 @@ mod tests {
                 .map(|e| crate::design::Element { id: stitchcraft_core::ElementId::new(format!("host:{}", e.id.as_str())).unwrap(), ..e.clone() })
                 .collect();
             let renamed = crate::design::Design::new(renamed, design.settings).unwrap();
-            assert_eq!(stitches(&renamed) == stitches(&design), sheet.drawable() || sheet.uses_file_features(), "{}", sheet.id);
+            assert_eq!(stitches(&renamed) == stitches(&design), sheet.drawable() || sheet.uses_file_features() || sheet.routed(), "{}", sheet.id);
             if sheet.drawable() {
                 drawable.push(sheet.id);
             }
@@ -1056,9 +1087,10 @@ mod tests {
 
     /// The sheets sewn at MC-1 as they are: drawn stitch by stitch, to test the machine and the file format.
     const SEWN_AT_MC1: [&str; 5] = ["TS-01", "TS-02", "TS-10A", "TS-10B", "TS-10C"];
-    /// The sheets that sew pictures as the engine plans any design, jump threads and all: which jump threads
-    /// their shapes sew down is one of their checks.
-    const SEWN_AS_PLANNED: [&str; 4] = ["TS-13A", "TS-13B", "TS-13C", "TS-13D"];
+    /// The sheets that sew pictures or letters as the engine plans any design, jump threads and all: which jump
+    /// threads their shapes sew down is one of their checks, and TS-17C counts them on its letters as drawn
+    /// and routed.
+    const SEWN_AS_PLANNED: [&str; 5] = ["TS-13A", "TS-13B", "TS-13C", "TS-13D", "TS-17C"];
 
     /// How near a needle may come down to a thread on the fabric without catching it (mm): about half a 75/11
     /// needle, 0.75 mm across, and half a 40 wt thread.

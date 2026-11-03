@@ -69,6 +69,23 @@ sew an SVG file of the elements StitchCraft sews the sheet with, automatic digit
 shapes, each with its parameters (`stitchcraft_testkit::inkstitch`), which StitchCraft's SVG reader reads
 as they were written (`REQ-SVG-009`).
 
+A sheet's case with a `[route]` table routes the sheet's elements whose ids start with `elements` in each
+program, with the options it sets by Ink/Stitch's names, and compares the 2 routes, each sewn by its own
+program (`REQ-ROUTE-008`). Ink/Stitch's tool runs as `--extension=auto_satin`, and writes the SVG file it
+routed, `route-<case>.routed.svg`, beside StitchCraft's route as an SVG file, `route-<case>.stitchcraft.svg`:
+
+```toml
+id = "inkstitch-route-ts17c-in-order"
+requirements = ["REQ-ROUTE-008"]
+kind = "inkstitch"
+sheet = "TS-17C"
+
+[route]
+elements = "ts17c:drawn:"
+preserve_order = true
+trim = false
+```
+
 A `centre-lines` case names its shapes with `sheet`, `design` or a `[letters]` table, and has no
 excuses:
 

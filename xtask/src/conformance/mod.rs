@@ -24,6 +24,7 @@ mod centre_lines;
 mod differential;
 mod oracle;
 mod report;
+mod routing;
 mod runner;
 mod wasm;
 
@@ -225,7 +226,7 @@ fn check_differential(root: &Path, data: &[cases::DataCase], findings: &mut Find
     let empty = BTreeMap::new();
     for case in data {
         let (subject, excused) = match &case.spec {
-            cases::Spec::Inkstitch { subject, excused } => (subject, excused),
+            cases::Spec::Inkstitch { subject, excused, .. } => (subject, excused),
             cases::Spec::CentreLines { subject } => (subject, &empty),
             _ => continue,
         };

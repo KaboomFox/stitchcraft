@@ -282,8 +282,8 @@ the ledger is still true. Where the differential can undo a deviation in Ink/Sti
 the file again without it. The excuse then counts only if the measure agrees. Ink/Stitch's jumps that go
 nowhere (`DEV-FMT-001`) excuse as many trims and jumps as there are of them, and no more.
 
-`REQ-SVG-008`, `REQ-AUTO-021`, `REQ-AUTO-022`, `REQ-RUN-013`, `REQ-SAT-029`, `REQ-FILL-CON-008` and
-`REQ-FILL-CIR-007` are the requirements of level L3. The other runs of the suite leave them and their
+`REQ-SVG-008`, `REQ-AUTO-021`, `REQ-AUTO-022`, `REQ-RUN-013`, `REQ-SAT-029`, `REQ-FILL-CON-008`,
+`REQ-FILL-CIR-007` and `REQ-ROUTE-008` are the requirements of level L3. The other runs of the suite leave them and their
 cases to this one. The corpus is designs the SVG reader sews in full, with their settings
 (`REQ-SVG-009`), trim and stop commands and the file version. A case may name a test sheet drawn as a
 design instead (`sheet`). Both programs sew an SVG file of the elements StitchCraft sews the sheet with,
@@ -300,6 +300,15 @@ TS-11A checks the zigzag strokes (`REQ-RUN-013`), and the E-stitches, S-stitches
 (`REQ-SAT-029`), along straights and round curves. TS-02B to TS-09, the sheets of MC-2 to MC-4, and
 TS-11C, the meander fills' sheet, are cases of `REQ-SVG-008` (M8.2). `conformance/inkstitch/README.md`
 says how to run it by hand and how to add a case.
+
+**Routes.** A route is a design of its own, so sewing StitchCraft's route in both programs would compare 2
+sewings of one route. A case with a `[route]` table instead routes elements of a sheet in each program
+(`REQ-ROUTE-008`, `xtask/src/conformance/routing.rs`). Ink/Stitch's Auto-Route Satin Columns routes the
+SVG file of the elements, with the table's options, and writes its route, which Ink/Stitch sews.
+`stitchcraft_engine::route` routes the same elements with the same options, and StitchCraft sews its route.
+The 2 PES files are measured as any case's. The `route-ts17c` cases route TS-17C's letters as drawn, with
+the options at their defaults and with Preserve order on and trims off, and `ts17c` sews the whole sheet,
+whose lower letters StitchCraft routed, in both programs.
 
 **Centre lines.** Sewing what StitchCraft chose can't find a choice that is wrong: TS-13B's small T sewed
 a Γ, the left arm of its bar left out of its centre line, and the differential agreed by every measure.
