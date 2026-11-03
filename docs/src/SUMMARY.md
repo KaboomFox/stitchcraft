@@ -74,6 +74,7 @@
       - [Cross stitch](design/algorithms/cross-stitch.md)
     - [Lock stitches](design/algorithms/locks.md)
     - [Centre lines](design/algorithms/centre-lines.md)
+  - [Routing tools](design/routing.md)
   - [Image to embroidery](design/image-to-embroidery.md)
   - [Fonts](design/fonts.md)
   - [Machine formats](design/formats.md)
@@ -103,6 +104,7 @@
     - [0014 Generators see their neighbours](design/adr/0014-generators-see-their-neighbours.md)
     - [0015 Pictures traced by VectorCraft](design/adr/0015-pictures-traced-by-vectorcraft.md)
     - [0016 Ink/Stitch files imported into VectorCraft](design/adr/0016-inkstitch-files-imported-by-stitchcraft.md)
+    - [0017 Routing in one engine function](design/adr/0017-routing-is-one-engine-function.md)
 
 # Plan
 

@@ -104,9 +104,12 @@ release takes:
 | `<ns>.settings` | filter (VectorCraft 0.16) | none | keeps the design settings and the machine with the document (M6.11, [below](#design-settings-and-machine-kept-with-the-document)) |
 | `<ns>.stroke-to-satin` | heavy filter (VectorCraft 0.17) | satin | makes each selected line into a satin column drawn with its rails and rungs (M6.12, [below](#tools-stroke-to-satin-and-test-sheet)) |
 | `<ns>.testsheet` | filter (VectorCraft 0.16) | every family | draws a test sheet into the document, each object with its effect (M6.12, [below](#tools-stroke-to-satin-and-test-sheet)) |
+| `<ns>.route-satins` | heavy filter (VectorCraft 0.17) | satin, stroke | routes the selected satin columns, as Ink/Stitch's Auto-Route Satin Columns does (M10.4, [below](#tools-the-routing-filters)) |
+| `<ns>.route-runs` | heavy filter (VectorCraft 0.17) | stroke | routes the selected strokes, as Ink/Stitch's Auto-Route Running Stitch does (M10.13, [below](#tools-the-routing-filters)) |
 
 The tools an object filter was to give are VectorCraft's own commands ([tools](#tools-vectorcrafts-own-commands))
-and M6.12's 2 filters ([Stroke to Satin and Test Sheet](#tools-stroke-to-satin-and-test-sheet)).
+and M6.12's 2 filters ([Stroke to Satin and Test Sheet](#tools-stroke-to-satin-and-test-sheet)). M10.4
+and M10.13 add 2 routing filters ([routing filters](#tools-the-routing-filters)).
 
 `<ns>` is a reverse-DNS namespace defined in one constant (`PLUGIN_NAMESPACE`) in the VectorCraft adapter,
 which reads the effect records too. The adapter makes the ids from it, a plug-in's with `plugin_id` and its
@@ -426,6 +429,43 @@ the PES exporter (2026-10-29). Drawing takes 14 to 25 million instructions, at m
 Exporting takes 23 million to 1.6 billion, at most 17 % of an export's, the most for the fills of TS-07,
 TS-08 and TS-09.
 
+### Tools: the routing filters
+
+From M10.4 and M10.13, 2 filters in Object › Plug-ins route the selection with the engine's routing
+function, as Ink/Stitch's tools route theirs ([routing tools](routing.md),
+[ADR-0017](adr/0017-routing-is-one-engine-function.md)). StitchCraft Auto-Route Satin Columns
+(`<ns>.route-satins`) routes satin columns and the strokes among them, and StitchCraft Auto-Route Running
+Stitch (`<ns>.route-runs`) routes strokes.
+
+**What they read.** VectorCraft gives a filter the selected paths in paint order, with the paths in the
+selected groups and layers, and Preserve order keeps that order. Each path routes as a satin column when
+its own StitchCraft effects make it one, and as a stroke when they make it a stroke. VectorCraft gives a
+filter each path's own effect records, and none of its groups'. So a path that sews by a group's effect
+(`REQ-VC-006`) stays as it is, as Ink/Stitch's tool leaves a fill. So does a path without a StitchCraft
+effect of its own. A selection with nothing to route is refused with a coded error, whose hint says to
+put the effect on the paths themselves. Objects named `stitch:route-start` and `stitch:route-end` among
+the paths give the route's ends ([start and end](routing.md#start-and-end)).
+
+**What they write.** A column's piece is a compound path of its rails and rungs with the column's satin
+effect, drawn as Stroke to Satin draws a column. A stroke's stretch, and a run under the others, is a path
+with the stroke effect. Each is painted with its element's stroke and named as Ink/Stitch names it, and
+Trim jump stitches turns on `trim_after` in the effect of the piece before a long jump. In one undo step,
+the pieces replace the paths they come from and the markers used. A filter can't make a group, where
+Ink/Stitch puts its route in a new group after the last element. So the pieces go in their sewing order
+where the topmost path routed was, in its group or layer. With Preserve order, Ink/Stitch moves each piece
+to the end of its element's group, and the filter puts it where the path it comes from was. A run then
+goes after the piece before it. With Keep original paths, the paths and markers stay as they are, and the
+route goes above the topmost path. A group the run leaves empty stays in the document.
+
+**Budget.** Both are heavy filters (VectorCraft 0.17), as Stroke to Satin is. Each run gets 1 G
+instructions and 300 s, once the user allows the filter at install, and runs in the background, with no
+preview in its dialog. Stroke to Satin's run, which makes a column's rails from its centre line, took up to
+233 million instructions for one line ([above](#tools-stroke-to-satin-and-test-sheet)). A route makes the
+rails of every column drawn as one path that it routes. The engine's work is priced in instructions, as Stroke to Satin
+prices it, and a filter stops with `SC-E0004` before VectorCraft would stop it. A contract test measures
+the routes of TS-17C's letters and lines in VectorCraft's host, and a Level B case routes them with
+VectorCraft's command line and sews them with `stitch export`.
+
 ### Live-effect previews within v1 budgets
 
 A live effect gets 50 million instructions, plus 4,000 for each byte of its input, and 5 seconds. Spike
@@ -532,6 +572,7 @@ note can follow it:
 | `stitch:ignore` | `ignore_object`, `ignore_layer` | Leaves the object or the layer out with everything in it, and lists it with `SC-I0811` |
 | `stitch:start`, `stitch:end` | `starting_point`, `ending_point` | Gives the shapes of the group or layer it is in, and of the groups inside it, their start or end position: the centre of the box round its anchors. Their fills and satin columns start or end there (`REQ-GEN-001`). The marker is left out of the stitches. The first marker of each kind that shows counts, a group's own before those of the groups round it. `SC-W0807` names another, one with no anchor that reads, and the markers of a shape digitized automatically, which places its own. A group or a layer is never a marker: `SC-W0807` names it, and what it holds is read as under any other name |
 | `stitch:origin`, `stitch:stop-position` | `origin`, `stop_position` | Gives the design its origin, which goes to the hoop's centre, or the stop position the frame moves to before each stop (`REQ-ASM-005`): the centre of the box round its anchors, wherever the marker is (M8.8). The marker is left out of the stitches. 2 origins, or 2 stop positions in a design with a stop, are an error (`SC-E0819`), as Ink/Stitch doesn't write a file with 2 such commands. `SC-W0807` names a marker with no anchor that reads, which places nothing, and a group or a layer of either name, which is never a marker |
+| `stitch:route-start`, `stitch:route-end` | `autoroute_start`, `autoroute_end` | From M10.4, marks where the routing filters start and end a route, at the centre of the box round its anchors, when it is selected with the paths they route. The filters delete it with the paths ([routing filters](#tools-the-routing-filters)). `stitch export` leaves it out of the stitches. Before M10.4 the reader reads the name as the row below says |
 | Any other word after `stitch:` | | Ignores the name, and `SC-W0807` names the object, in case the word is a misspelt marker |
 
 Hiding an object leaves it out too, without a word, and a name on a hidden object says nothing. A live
@@ -751,7 +792,7 @@ item is generic, useful to any plug-in and not only embroidery:
 | 1. Exporter plug-ins, for File › Export › PES | 0.14.0 | M6.9 |
 | 2. Rich parameter schemas: labels, units, groups, help, conditions, texts and lists, 256 parameters | 0.14.0 | M6.10 |
 | 3. Display-only overlays from live effects, real stitch previews at low cost | in review | M9 |
-| 4. Budget classes, with the user's consent | heavy filters in 0.17.0, heavy live effects proposed | M6.12 (Stroke to Satin), M9 |
+| 4. Budget classes, with the user's consent | heavy filters in 0.17.0, heavy live effects proposed | M6.12 (Stroke to Satin), M10.4 and M10.13 (the routing filters), M9 |
 | 5. Document-level plug-in data, for the machine profile and palettes | 0.16.0, for filters and exporters | M6.11 |
 | 6. Read-only context for live effects | the object's paints in 0.14.0, the markers beside it proposed | M6.8, M9 |
 | 7. SVG foreign-attribute preservation | 0.17.0 | Ink/Stitch files keep their settings through VectorCraft |

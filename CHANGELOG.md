@@ -44,6 +44,24 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - The user's guide shows cross stitch in pictures, and its design page says how it is sewn. The
     parameter reference reads a choice's kept values as its help says, where it said that each sews as
     another, which a cross stitch method of M10.2 doesn't.
+- M10.3, a spike: the routing tools will come to StitchCraft as one function of the engine, and ADR-0017
+  records why. The function routes as Ink/Stitch's Auto-Route Satin Columns and Auto-Route Running Stitch
+  route. In VectorCraft, 2 heavy filters will call it. A filter will replace the selected paths with the
+  routed objects in one undo step, as Stroke to Satin replaces a line. Each piece then previews with its
+  effect and can be edited. Lettering will call the function for a font whose `auto_satin` is on, as
+  Ink/Stitch's lettering routes Ink/Stitch Small Font and Medium Font. M15.8 will call it inside a ported
+  glyph.
+  - `stitch plan` routes no element the user drew, and a design sews in the order it is drawn. A pass of
+    `stitch plan` would sew a route that VectorCraft can't show and nobody can correct.
+  - Routing doesn't start from M13.3's order. It takes the order Ink/Stitch's tools take, which the
+    differential checks it against.
+  - Objects named `stitch:route-start` and `stitch:route-end`, selected with the paths, mark where a route
+    starts and ends, as Ink/Stitch's `autoroute_start` and `autoroute_end` commands mark it.
+  - A satin column is cut in 2 at one of its pairs, the kind of cut it ends at. Each piece keeps the
+    column's settings and the rungs that cross both its rails, with a rung more where it would be read
+    back with other rails.
+  - `stitch route` waits for M8.12's document writer, after 1.0. The design pages gain a page on the
+    routing tools, which M10.4 and M10.13 fill in.
 - M8.7: clipping in VectorCraft documents (`REQ-VC-017`, `REQ-GEN-005`). What a clip group or a clipping
   layer holds sews only what shows inside its clipping object, as an SVG file's shapes sew inside their
   clip paths from M8.5. The VectorCraft reader makes the clipping object's area a clip of each element

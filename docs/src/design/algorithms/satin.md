@@ -607,6 +607,33 @@ the shortest stitch of the column's last needle point moves that point to the en
 stitch, often a top stitch, then goes to the end in one stitch. Ink/Stitch sews the end as a stitch of
 its own, which its stitch plan drops when it is no longer than its shortest stitch.
 
+## Cut in 2
+
+From M10.4 the [routing tools](../routing.md) cut satin columns into pieces, each of which sews the pairs
+the column sewed along it ([ADR-0017](../adr/0017-routing-is-one-engine-function.md)). The cut is one of
+the column's cuts (*Cuts* in [Start and end](#start-and-end)). Given as a point, a place takes the pair
+with the point nearest it. Given as a fraction of the column, it takes the pair at that fraction of the
+pairs' count, as Ink/Stitch's tools take them (read at `d59c9ab`).
+
+- **Rails.** Each rail is cut at its point of the pair. Where `reverse_rails` turns a rail round, its
+  parts go to the pieces by the way the column runs, so each piece has both rails' parts from its side of
+  the cut.
+- **Rungs.** Each piece keeps the column's rungs that cross both its rails. A column of 2 subpaths keeps
+  the rungs across its nodes ([Correspondence](#correspondence)) as rungs it draws. A piece left with no
+  rung, or with 2, would be read back with other rails. It gets a rung more, as a column [drawn with its
+  rails and rungs](#drawn-with-its-rails-and-rungs) does. Ink/Stitch adds its rung 0.3 CSS pixels from
+  the piece's start. A piece with none gets 2 more from Ink/Stitch, at the middle of its rails and 0.3
+  CSS pixels from its end.
+- **Settings.** Each piece keeps every setting of the column, and so sews the column's pairs along it.
+- **A column drawn as one path** is cut as the rails and rungs the engine makes of it (`REQ-SAT-016`,
+  `REQ-SAT-017`), and each piece is drawn with its share of them. Its stroke's width no longer makes the
+  piece.
+- **Short pieces.** Ink/Stitch doesn't make a piece on a side of the cut where a rail would be shorter than
+  the zigzag spacing. M10.4 writes what StitchCraft sews there, with a case that shows it.
+
+Ink/Stitch's Cut Satin Column cuts a column this way at each of its `satin_cut_point` commands, or where
+a stroke selected with it crosses its rails. No step plans such a tool in StitchCraft.
+
 ## Variants (P2, M7)
 
 | `satin_method` | Look | Design notes |
