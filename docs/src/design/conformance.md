@@ -284,8 +284,9 @@ name a test sheet drawn as a design instead (`sheet`). Both programs sew an SVG 
 StitchCraft sews the sheet with, written with their parameters (`stitchcraft_testkit::inkstitch`), which
 StitchCraft's reader reads back unchanged (`REQ-PRM-003`). An element a sheet draws as a clone of another
 is written as a `<use>` of it, and each command in a group with its connector, as Ink/Stitch's Attach
-Commands writes them, since Ink/Stitch moves a command its clone copies only from a group. Automatic digitizing chooses ordinary elements
-with Ink/Stitch's parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check
+Commands writes them, since Ink/Stitch moves a command its clone copies only from a group. Automatic
+digitizing chooses ordinary elements with Ink/Stitch's parameters, so Ink/Stitch can sew what StitchCraft
+chose, and the TS-13 sheets check
 StitchCraft's stitches of those choices against Ink/Stitch's (`REQ-AUTO-021`). TS-11B checks the contour
 fills so, each strategy and join style among them (`REQ-FILL-CON-008`), and its circular fills
 (`REQ-FILL-CIR-007`). TS-02B to TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills' sheet,
