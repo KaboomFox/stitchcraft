@@ -1,4 +1,4 @@
-# TS-16's first 2 parts. M8.4's: a tatami fill and a satin column with start and end positions, written as
+# TS-16's parts. M8.4's: a tatami fill and a satin column with start and end positions, written as
 # Ink/Stitch's starting_point and ending_point commands, each a symbol where its position is, tied to its
 # shape by a connector. Both programs start and end them there (REQ-GEN-001). M8.5's: a fill cut by a circle
 # and a zigzag running stitch cut into 2 pieces, written as clip paths, which both programs cut them to
@@ -11,8 +11,10 @@
 # clone of the red fill, written as a use of it turned 45 degrees right, which both programs sew last, its
 # rows turned with it, from the corner the clone turns the fill's start command to (REQ-SVG-012,
 # REQ-SVG-013). It lies below the fill once the sheet is turned, as the size and the place show, and the
-# overlap of the footprints its rows' angle.
+# overlap of the footprints its rows' angle. M8.13's: 2 black lines locked at both ends with custom locks drawn
+# as SVG paths, written as the elements' lock_custom_start and lock_custom_end, which both programs sew at the
+# same nodes (REQ-LCK-005). They lie above the rest once the sheet is turned, which the size shows.
 id = "inkstitch-ts16"
-requirements = ["REQ-SVG-008", "REQ-GEN-001", "REQ-SVG-011", "REQ-GEN-005", "REQ-SVG-003", "REQ-ASM-005", "REQ-SVG-005", "REQ-SVG-012", "REQ-SVG-013"]
+requirements = ["REQ-SVG-008", "REQ-GEN-001", "REQ-SVG-011", "REQ-GEN-005", "REQ-SVG-003", "REQ-ASM-005", "REQ-SVG-005", "REQ-SVG-012", "REQ-SVG-013", "REQ-LCK-005"]
 kind = "inkstitch"
 sheet = "TS-16"

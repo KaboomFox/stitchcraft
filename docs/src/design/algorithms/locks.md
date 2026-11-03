@@ -125,11 +125,11 @@ past it.
 
 The text is untrusted, and StitchCraft reports what it cannot sew of it (`SC-W0503`, `REQ-LCK-006`):
 
-- Path data with an error is read up to the error, as an SVG viewer reads it, and the rest is left out.
+- Path data with an error is read up to the error, as an SVG viewer reads it. The rest is left out.
 - A node where the node sewn before it is would sew in place, and is left out.
 - The half stitch is sewn instead of a path:
   - of fewer than 3 nodes, or more than 100
-  - whose last segment has no length, and gives no direction
+  - whose last segment, which would give the direction, is 0 mm long
   - that reaches farther than 10 m from its anchor, the data model's reach
   - left with no stitch to sew
   - whose shortest stitch would be shorter than 0.2 mm even at 500 %, the largest scale
@@ -138,13 +138,13 @@ The text is untrusted, and StitchCraft reports what it cannot sew of it (`SC-W05
 ### Reading a path
 
 The engine reads the path from the setting's text, as it reads numbers. A VectorCraft document's effect
-keeps the same text as an SVG file, so a drawn lock sews alike from every host. The engine is at layer 2
+keeps the same text as an SVG file. A drawn lock then sews alike from every host. The engine is at layer 2
 and cannot use the SVG adapter. It reads the path with `svgtypes`' path-data parser, which the SVG adapter
-reads a path's `d` with, so one parser reads SVG's path syntax for both. `svgtypes` is pure Rust and builds
-for WebAssembly. Its parser reads each number with Rust's own reading of decimals, so every platform reads
-the same nodes. The engine calls nothing else of it, and so nothing of `kurbo`, which `svgtypes` depends on:
-its geometry stays its own ([ADR-0005](../adr/0005-geometry-stack.md)). `xtask/src/layers.rs` allows
-`svgtypes` in the engine and the SVG adapter alone.
+reads a path's `d` with, and one parser reads SVG's path syntax for both. `svgtypes` is pure Rust and builds
+for WebAssembly. Its parser reads each number with Rust's own reading of decimals, the same on every
+platform. The engine calls nothing else of it, and nothing of `kurbo`, which `svgtypes` depends on. Its
+geometry is its own ([ADR-0005](../adr/0005-geometry-stack.md)). `xtask/src/layers.rs` allows `svgtypes`
+in the engine and the SVG adapter alone.
 
 ## The shortest lock stitch
 
@@ -155,7 +155,7 @@ tie-in's last stitch into the anchor and a tie-off's first stitch out of it.
 - A step shorter than 0.2 mm is lengthened to it, keeping its direction.
 - A drawn lock whose shortest stitch would be shorter is enlarged as a whole until that stitch is 0.2 mm
   long, keeping its shape. A custom lock's path is enlarged to 500 % at most, the largest scale
-  `lock_*_scale_percent` takes, and one that would need more is not sewn.
+  `lock_*_scale_percent` takes. A path that would need more is not sewn.
 - A lock of steps that a sharp turn would fold onto itself is sewn straight ([placement](#placement)).
 
 `SC-W0502` reports each of these, with the size. The half stitch never needs them.
@@ -175,12 +175,12 @@ and which size parameter applies to which lock are the same. The shapes differ (
   cross and star are centred on the anchor, and reach 1.1 mm past the end of the stitching at 150 %.
   TS-04, whose lines end at the sheet's edges, is 1.6 mm wider in Ink/Stitch, and its differential case
   excuses the size and the overlap.
-- A custom lock drawn as a path sews the same nodes in both, turned, scaled and sewn in the same order, as
-  differential cases and TS-16 check. Ink/Stitch was run on paths of each kind of command, and where the 2
+- A custom lock drawn as a path sews the same nodes in both, in the same places and order, as differential
+  cases and TS-16 check. Ink/Stitch was run on paths of each kind of command, and where the 2
   differ, StitchCraft follows the rules above:
   - Ink/Stitch reads the path with inkex, which passes over a letter that is no command, with the numbers
-    after it. It reads arc flags written together, as in `A 1 1 0 01 2,0`, as an error, and sews its half
-    stitch. StitchCraft reads SVG's grammar up to the first error.
+    after it. Its reader stops at arc flags written together (`A 1 1 0 01 2,0`). With fewer than 3 nodes
+    read, Ink/Stitch sews its half stitch. StitchCraft reads SVG's grammar up to the first error.
   - Ink/Stitch sews a stitch in place where 2 nodes are one, and stitches shorter than 0.2 mm as they are.
     It sews a path of any number of nodes, at any distance.
   - Ink/Stitch lays a path whose last segment has no length along the path's own x axis.

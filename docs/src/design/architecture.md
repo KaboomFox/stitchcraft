@@ -8,8 +8,8 @@ new piece of code belongs. If you are about to add a file and are not sure where
 
 ## Principles
 
-1. **The engine knows nothing about hosts.** It never sees an SVG document, VectorCraft, files or the
-   network. Hosts adapt *their* documents into a `Design` and consume a `StitchPlan`. A custom lock drawn
+1. **The engine doesn't read a host's documents.** It never sees an SVG document, VectorCraft, files or
+   the network. Hosts adapt *their* documents into a `Design` and consume a `StitchPlan`. A custom lock drawn
    as a path is a setting's text in SVG's path syntax, which the engine reads as it reads any setting
    ([locks](algorithms/locks.md#reading-a-path)).
 2. **Pure core, effects at the edges.** Generators are deterministic functions of their inputs.

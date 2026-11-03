@@ -83,6 +83,6 @@ Design: `docs/src/design/data-model.md` (the `Design`), `docs/src/design/archite
 ## Dependencies
 
 `stitchcraft-core`, `stitchcraft-params`, `stitchcraft-plan`, `stitchcraft-engine`; `roxmltree` (the XML
-tree) and `svgtypes` (SVG's micro-syntaxes), the versions VectorCraft's lockfile carries. Only this crate
+tree) and `svgtypes` (SVG's micro-syntaxes), the versions in VectorCraft's lockfile. Only this crate
 reads them, but for the engine, which reads a custom lock's path with `svgtypes`' path-data parser
 (`cargo xtask layers`).
