@@ -41,7 +41,7 @@ tools: stitchcraft-xtask (`xtask/`, run as `cargo xtask`)
 | `stitchcraft-core` | L0 | `Mm`, `Point`, `Vec2`, tolerances, deterministic math (`libm` wrappers), `SplitMix64` RNG, `Budget`, `Diagnostic`/`Code`/`Severity` | depend on any workspace crate |
 | `stitchcraft-params` | L0 | `params!`, `ParamSpec`, `ParamSet`, value parsing and validation, the registry audit (the list of declarations is `stitchcraft_engine::registry`) | know any stitch algorithm |
 | `stitchcraft-plan` | L1 | `Stitch`, `StitchKind`, `ColorBlock`, `StitchPlan`, `Thread`, palettes, `MachineProfile`, plan invariants | generate stitches; read/write files |
-| `stitchcraft-engine` | L2 | `Design`/`Element`/`Shape`, automatic digitizing, normalization, generators, plan assembly, finalizing for the machine | depend on formats, render or any adapter |
+| `stitchcraft-engine` | L2 | `Design`/`Element`/`Shape`, automatic digitizing, normalization, generators, plan assembly, finalizing for the machine, and from M10.4 routing | depend on formats, render or any adapter |
 | `stitchcraft-formats` | L2 | readers/writers (PES/PEC, DST, …), quantization, format limits | depend on engine (it encodes *plans*) |
 | `stitchcraft-render` | L2 | CPU preview images of plans (thread look, simple look, overlays) | depend on engine |
 | `stitchcraft-svg` | L3 | SVG → `Design` (geometry, styles, `inkstitch:*` attributes, commands), plan → SVG | contain stitch logic |
@@ -120,6 +120,10 @@ pub struct Generation {
 
 A live preview sees one object, so it has no neighbours, and it sews on the reference machine.
 
+From M10.4 a third entry point, `route`, gives elements back in a sewing order, with the satin columns cut
+and runs added under them, as Ink/Stitch's routing tools do. VectorCraft's routing filters and lettering
+call it ([routing tools](routing.md#the-function), [ADR-0017](adr/0017-routing-is-one-engine-function.md)).
+
 Adapters only translate:
 
 | Adapter | From | To |
@@ -129,7 +133,7 @@ Adapters only translate:
 | `stitchcraft-vc-plugin` | ABI v1 call (JSON in linear memory) | `generate` → preview geometry JSON |
 | `stitchcraft-cli` | files and flags, a picture traced by VectorCraft's command line | `plan` → formats/render/report |
 
-A future in-tree VectorCraft crate would be a fifth adapter calling the same two functions.
+A future in-tree VectorCraft crate would be a fifth adapter calling the same functions.
 
 ## Errors and diagnostics
 
@@ -176,6 +180,7 @@ VectorCraft reports the plug-in as failed.
 | A new stitch type | `crates/stitchcraft-engine/src/generators/<name>/` | registry params, diagnostics, conformance cases, docs page — see the [playbook](../contributing/playbook-new-stitch-type.md) |
 | A parameter | the generator's `params!` block | nothing else by hand: docs and schemas regenerate; a new `…Params` declaration also gets a line in `stitchcraft_engine::registry::PARAMETERS` — see the [playbook](../contributing/playbook-new-param.md) |
 | A machine format | `crates/stitchcraft-formats/src/<format>/` | [format playbook](../contributing/playbook-new-format.md) |
+| Routing, as Ink/Stitch's Auto-Route tools route | `stitchcraft_engine::route`, from M10.4 | the routing filters in `stitchcraft-vc-plugin`, and the [routing tools](routing.md) page |
 | A machine profile | `crates/stitchcraft-plan/src/profiles/` (data) | machine-testing record |
 | A diagnostic | the diagnostics registry in `stitchcraft-core` | explanation text + a case that triggers it |
 | SVG/Ink/Stitch parsing | `stitchcraft-svg` | compatibility contract row |
