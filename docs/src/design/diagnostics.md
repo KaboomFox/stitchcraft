@@ -94,7 +94,7 @@ another.
 | `SC-E0010` | Error | Nothing to stitch (no embroiderable elements) | M1 |
 | `SC-W0011` | Warning | Stitch type not sewn yet; element skipped | M3 |
 | `SC-E0012` | Error | Bug-report bundle could not be replayed | M3 |
-| `SC-W0013` | Warning | Element outside its clip paths; left out (wholly outside them, or under clip paths that don't meet or have no area; Ink/Stitch sews one whose clip path is empty whole) | M8 |
+| `SC-W0013` | Warning | Element outside its clip paths; left out (wholly outside them or a VectorCraft clipping object, or under clips that don't meet or have no area; Ink/Stitch sews one whose clip path is empty whole) | M8 |
 | `SC-E0101` | Error | Parameter has the wrong type or an unknown choice | M3 |
 | `SC-W0102` | Warning | Parameter clamped to its allowed range | M3 |
 | `SC-W0105` | Warning | Unknown parameter preserved but ignored | M3 |
@@ -152,11 +152,11 @@ another.
 | `SC-E0801` | Error | SVG could not be read (with the parser's position) | M3 |
 | `SC-W0802` | Warning | SVG feature ignored (e.g. raster image, text not converted to paths, an Ink/Stitch file Ink/Stitch would update or warn about, read as it is) | M3 |
 | `SC-W0803` | Warning | VectorCraft file from a newer format version; read best-effort (a version newer than the newest the adapter reads) | M6 |
-| `SC-W0804` | Warning | Element geometry invalid or out of range (path data error, invalid transform, draws nothing, beyond 10 m, a stroke's width, join or miter limit that does not read); the usable part is stitched | M3 |
-| `SC-I0805` | Info | Object left out, as the file asks (Ink/Stitch's ignore commands and `ignore_object` setting) | M3 |
+| `SC-W0804` | Warning | Element geometry invalid or out of range (path data error, invalid transform, draws nothing, beyond 10 m, a stroke's width, join or miter limit that does not read, a clone that shows itself); the usable part is stitched | M3 |
+| `SC-I0805` | Info | Object left out, as the file asks (Ink/Stitch's ignore commands and `ignore_object` setting, or a clone whose `clone` setting is off) | M3 |
 | `SC-E0806` | Error | VectorCraft file could not be read (not a VectorCraft document, or larger than the adapter reads). Its JSON counts, and so do the copies of names, settings and paths its elements would hold | M6 |
-| `SC-W0807` | Warning | VectorCraft object or feature not stitched (text, images, symbols, live objects, clipping, VectorCraft's own effects, brushes, gradients, patterns, a group's own paints), StitchCraft effects from more than one level, a start or end marker, or a `stitch:` name StitchCraft doesn't read | M6 |
-| `SC-W0808` | Warning | VectorCraft geometry unusable (a number that does not read or a point beyond 10 m; a shape that draws nothing) | M6 |
+| `SC-W0807` | Warning | VectorCraft object or feature not stitched (text, images, symbols, live objects, opacity masks, VectorCraft's own effects, brushes, gradients, patterns, a group's own paints), what adds nothing to a clip, StitchCraft effects from more than one level or on a clipping object, a start or end marker, or a `stitch:` name StitchCraft doesn't read | M6 |
+| `SC-W0808` | Warning | VectorCraft geometry unusable (a number that does not read or a point beyond 10 m; a shape that draws nothing; a clipping path, which adds nothing to its clip) | M6 |
 | `SC-I0809` | Info | VectorCraft layer or guide left out, as it does not print (template layers, layers whose printing is off, guides) | M6 |
 | `SC-I0810` | Info | VectorCraft live effect leaves the object as it is (it sews no stitch, its preview level needs more work than VectorCraft lets a live effect do, it is a satin column drawn as one path or a zigzag stroke and VectorCraft gives the effect no stroke, or the effect is on one of the object's fills or strokes) | M6 |
 | `SC-I0811` | Info | VectorCraft object left out, as its name asks (an object or a layer named `stitch:ignore`) | M6 |

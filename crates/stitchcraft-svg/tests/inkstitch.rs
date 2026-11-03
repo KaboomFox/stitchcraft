@@ -238,19 +238,12 @@ fn req_svg_003_only_ink_stitch_symbols_are_commands() {
             <use id="cut" xlink:href="#inkstitch_satin_cut_point"/>"##,
     ));
     // A command is a `<use>` of a `<symbol>` named for one of Ink/Stitch's commands, linked exactly as
-    // `#` and its id; anything else is what it would be without Ink/Stitch. A command that only
-    // Ink/Stitch's tools use (cutting a satin, routing) changes nothing that is sewn.
-    assert_eq!(ids(&svg), ["svg:circle@5:fill", "svg:p:stroke"], "the group named like a command's symbol is drawn");
-    assert_eq!(
-        warnings(&svg),
-        [
-            "warning SC-W0802: `unknown` is a clone (`<use>`), which is not stitched yet; it is left out.",
-            "warning SC-W0802: `clone` is a clone (`<use>`), which is not stitched yet; it is left out.",
-            "warning SC-W0802: `not-a-symbol` is a clone (`<use>`), which is not stitched yet; it is left out.",
-            "warning SC-W0802: `spaced` is a clone (`<use>`), which is not stitched yet; it is left out.",
-            "warning SC-W0802: `picture` is a raster image, which is not stitched; it is left out.",
-        ]
-    );
+    // `#` and its id; anything else is what it would be without Ink/Stitch, a clone that sews what it shows
+    // (`REQ-SVG-012`), as Ink/Stitch sews it. A command that only Ink/Stitch's tools use (cutting a satin,
+    // routing) changes nothing that is sewn.
+    let clones = ["unknown", "clone", "not-a-symbol", "spaced"].map(|clone| format!("svg:{clone}/circle@1:fill"));
+    assert_eq!(ids(&svg), [&["svg:circle@5:fill", "svg:p:stroke"][..], &clones.each_ref().map(String::as_str)].concat());
+    assert_eq!(warnings(&svg), ["warning SC-W0802: `picture` is a raster image, which is not stitched; it is left out."]);
 }
 
 #[test]

@@ -10,6 +10,10 @@
 //! panel with the panel's parameters set on every element, and must come out byte for byte the same.
 //! `photo` shots are never regenerated; they must exist and link their sew-out report.
 //!
+//! `picture` shots are the pictures automatic digitizing starts from, which xtask draws itself
+//! (`picture.rs`): a design's areas filled flat in their colours, or a photo drawn in code. They are
+//! compared byte for byte too.
+//!
 //! `vectorcraft-render` and `vectorcraft-ui` shots are VectorCraft's own pictures, which only
 //! `--vectorcraft` makes, on Linux with the pinned release (`vectorcraft.rs`): the `shots-ui` job's work.
 //! Without it they must only be declared well and committed.
@@ -33,6 +37,7 @@ use stitchcraft_render::{Settings, Style};
 use crate::compat::scenario::Step;
 use crate::util::{self, Findings};
 
+mod picture;
 mod vectorcraft;
 
 const SHOTS: &str = "docs/shots.toml";
@@ -56,7 +61,7 @@ struct ShotsFile {
 pub struct Shot {
     /// The image's name: `images/generated/<id>.png`, or `images/photos/<id>.<ext>`.
     pub id: String,
-    /// How it is made: `stitch`, `vectorcraft-render`, `vectorcraft-ui` or `photo`.
+    /// How it is made: `stitch`, `picture`, `vectorcraft-render`, `vectorcraft-ui` or `photo`.
     pub kind: String,
     /// The alternative text; pages that show the image use it.
     #[serde(default)]
@@ -65,9 +70,12 @@ pub struct Shot {
     #[serde(default)]
     pub sheet: Option<String>,
     /// `stitch` shots: or else a design of the repository, an SVG file or a VectorCraft document, planned
-    /// by the engine for the reference machine.
+    /// by the engine for the reference machine. `picture` shots: a design whose areas are drawn flat.
     #[serde(default)]
     pub fixture: Option<String>,
+    /// `picture` shots: or else a picture drawn in code, by its name, such as `pear`.
+    #[serde(default)]
+    pub picture: Option<String>,
     /// `stitch` shots of a design: one image per panel. Without panels, the design is drawn once, as it is.
     #[serde(default)]
     pub panels: Vec<Panel>,
@@ -76,14 +84,15 @@ pub struct Shot {
     #[serde(default)]
     pub auto: bool,
     /// `stitch` shots of a design: the diagnostic codes the plan may report. Any other is an error, so a
-    /// picture never shows a design the engine changed without saying so on the page.
+    /// picture never shows a design the engine changed without saying so on the page. `picture` shots of a
+    /// design: the codes its reader may report.
     #[serde(default)]
     pub allow: Vec<String>,
     /// `stitch` shots: `realistic` (the default) or `simple`.
     #[serde(default)]
     pub style: Option<String>,
-    /// `stitch` shots: pixels per millimetre (the renderer's default when absent). `vectorcraft-render`
-    /// shots: pixels per point, VectorCraft's `--scale` (1 when absent).
+    /// `stitch` shots, and `picture` shots of a design: pixels per millimetre (the renderer's default when
+    /// absent). `vectorcraft-render` shots: pixels per point, VectorCraft's `--scale` (1 when absent).
     #[serde(default)]
     pub scale: Option<f32>,
     /// `photo` shots: the sew-out report.
@@ -173,7 +182,7 @@ pub fn run(check_only: bool, vectorcraft: bool) -> Result<(), String> {
         if vectorcraft {
             continue;
         }
-        if matches!(shot.kind.as_str(), "photo" | "stitch") {
+        if matches!(shot.kind.as_str(), "photo" | "stitch" | picture::KIND) {
             for problem in foreign(shot) {
                 findings.error(format!("shot `{}`: {problem}", shot.id));
             }
@@ -194,6 +203,10 @@ pub fn run(check_only: bool, vectorcraft: bool) -> Result<(), String> {
                         keep(&root, name, png, check_only, &mut findings, Same::Bytes);
                     }
                 }
+                Err(e) => findings.error(format!("shot `{}`: {e}", shot.id)),
+            },
+            picture::KIND => match picture::make(&root, shot) {
+                Ok(png) => keep(&root, &shot.id, &png, check_only, &mut findings, Same::Bytes),
                 Err(e) => findings.error(format!("shot `{}`: {e}", shot.id)),
             },
             vectorcraft::RENDER | vectorcraft::UI => vectorcraft::committed(&root, shot, &mut findings),
@@ -219,10 +232,18 @@ pub fn run(check_only: bool, vectorcraft: bool) -> Result<(), String> {
     findings.finish("shots", &format!("{} shots declared, all {verb}", shots.len()))
 }
 
-/// What `shot`, a `stitch` or `photo` shot, sets that only a VectorCraft shot reads.
+/// What `shot`, a `stitch`, `picture` or `photo` shot, sets that only a VectorCraft shot reads, or only a
+/// picture shot.
 fn foreign(shot: &Shot) -> Vec<String> {
+    let mut found = Vec::new();
     let vectorcraft = !shot.plugins.is_empty() || !shot.steps.is_empty() || !shot.menu.is_empty() || shot.dialog.is_some() || shot.document.is_some();
-    if vectorcraft { vec!["`plugins`, `steps`, `menu`, `dialog` and `document` are a VectorCraft shot's".to_string()] } else { Vec::new() }
+    if vectorcraft {
+        found.push("`plugins`, `steps`, `menu`, `dialog` and `document` are a VectorCraft shot's".to_string());
+    }
+    if shot.picture.is_some() && shot.kind != picture::KIND {
+        found.push("`picture` is a picture shot's".to_string());
+    }
+    found
 }
 
 /// The PNG files of a `stitch` shot, one per image it makes ([`Shot::images`]).
@@ -346,6 +367,7 @@ mod tests {
             alt: "A probe".to_string(),
             sheet: sheet.map(str::to_string),
             fixture: fixture.map(str::to_string),
+            picture: None,
             panels,
             auto: false,
             allow: Vec::new(),
@@ -367,7 +389,10 @@ mod tests {
         let refused = "`plugins`, `steps`, `menu`, `dialog` and `document` are a VectorCraft shot's";
         assert_eq!(foreign(&shot("kind = \"stitch\"\nmenu = [\"Effect\"]")), [refused]);
         assert_eq!(foreign(&shot("kind = \"photo\"\nsteps = [{ cmd = \"select.all\" }]")), [refused]);
+        assert_eq!(foreign(&shot("kind = \"picture\"\nplugins = [\"fill\"]")), [refused]);
         assert!(foreign(&shot("kind = \"stitch\"\nfixture = \"docs/fixtures/wave.svg\"")).is_empty());
+        assert_eq!(foreign(&shot("kind = \"stitch\"\npicture = \"pear\"")), ["`picture` is a picture shot's"]);
+        assert!(foreign(&shot("kind = \"picture\"\npicture = \"pear\"")).is_empty());
     }
 
     #[test]

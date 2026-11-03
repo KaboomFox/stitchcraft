@@ -30,7 +30,7 @@ A path with a stroke sews as a column as wide as the stroke, its middle along th
 half the stroke's width to each side of the path, and rungs cross it at the path's nodes and on either
 side of each sharp corner, where the stitches fan round it. Automatic digitizing sews a stroke this way
 when it is wider than the design's narrowest satin stroke and no wider than the widest satin column
-([automatic digitizing](automatic.md)).
+([automatic digitizing](automatic.md#stitches-by-width)).
 
 <!-- shot: satin-column-one-path -->
 **Running stitch, as a stroke sews by default**

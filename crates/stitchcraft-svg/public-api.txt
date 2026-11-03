@@ -14,9 +14,13 @@ pub stitchcraft_svg::inkstitch::Does::ToolInput
 pub stitchcraft_svg::inkstitch::Does::Trim
 impl stitchcraft_svg::inkstitch::Does
 pub const fn stitchcraft_svg::inkstitch::Does::describe(self) -> &'static str
+pub struct stitchcraft_svg::inkstitch::CloneSetting
+pub stitchcraft_svg::inkstitch::CloneSetting::does: &'static str
+pub stitchcraft_svg::inkstitch::CloneSetting::name: &'static str
 pub struct stitchcraft_svg::inkstitch::Command
 pub stitchcraft_svg::inkstitch::Command::does: stitchcraft_svg::inkstitch::Does
 pub stitchcraft_svg::inkstitch::Command::name: &'static str
+pub const stitchcraft_svg::inkstitch::CLONE_SETTINGS: [stitchcraft_svg::inkstitch::CloneSetting; 3]
 pub const stitchcraft_svg::inkstitch::COMMANDS: [stitchcraft_svg::inkstitch::Command; 12]
 pub const stitchcraft_svg::inkstitch::INKSTITCH_NS: &str
 pub const stitchcraft_svg::inkstitch::READ_ATTRIBUTES: &[&str]

@@ -99,6 +99,31 @@ impl Affine {
     pub fn is_finite(self) -> bool {
         [self.a, self.b, self.c, self.d, self.e, self.f].iter().all(|v| v.is_finite())
     }
+
+    /// The map that undoes this one; `None` when it flattens the plane, or its inverse is no number.
+    pub fn inverse(self) -> Option<Affine> {
+        let det = self.a * self.d - self.b * self.c;
+        let inverse = Affine {
+            a: self.d / det,
+            b: -self.b / det,
+            c: -self.c / det,
+            d: self.a / det,
+            e: (self.c * self.f - self.d * self.e) / det,
+            f: (self.b * self.e - self.a * self.f) / det,
+        };
+        (det != 0.0 && inverse.is_finite()).then_some(inverse)
+    }
+
+    /// The angle a fill's rows at `degrees` lie at once the map has drawn them, in degrees counter-clockwise
+    /// on screen, as a fill's `angle` counts them: the rows' direction taken through the map, as Ink/Stitch
+    /// turns a clone's fills (`lib/elements/clone.py` at `d59c9ab`). The move doesn't count, and a map that
+    /// takes the direction to nothing gives 0, as Ink/Stitch gives it.
+    pub fn turn(self, degrees: f64) -> f64 {
+        // Counter-clockwise on screen is up from the x axis, and y points down.
+        let (sin, cos) = math::sin_cos(math::to_radians(degrees));
+        let (x, y) = (self.a * cos - self.c * sin, self.b * cos - self.d * sin);
+        if x == 0.0 && y == 0.0 { 0.0 } else { -math::to_degrees(math::atan2(y, x)) }
+    }
 }
 
 /// The transform list in `text`, as one map; the reason when `text` is not a transform list.
@@ -167,9 +192,15 @@ pub fn root_to_mm(width: Option<Length>, height: Option<Length>, view_box: Optio
         (None, Some(height)) => (height * vb.w / vb.h, height),
         (None, None) => (vb.w * MM_PER_SVG_PX, vb.h * MM_PER_SVG_PX),
     };
+    usable(fit(width, height, vb, aspect))
+}
+
+/// The map that fits the viewBox `vb` into a viewport `width` by `height` from (0, 0), as `aspect` aligns
+/// and scales it (SVG 1.1 § 7.8): the root's into the page, and a symbol's into the clone that shows it.
+pub fn fit(width: f64, height: f64, vb: ViewBox, aspect: AspectRatio) -> Affine {
     let (sx, sy) = (width / vb.w, height / vb.h);
     let (fx, fy) = match aspect.align {
-        Align::None => return usable(Affine::translate(-vb.x * sx, -vb.y * sy).after(Affine::scale(sx, sy))),
+        Align::None => return Affine::translate(-vb.x * sx, -vb.y * sy).after(Affine::scale(sx, sy)),
         Align::XMinYMin => (0.0, 0.0),
         Align::XMidYMin => (0.5, 0.0),
         Align::XMaxYMin => (1.0, 0.0),
@@ -182,7 +213,7 @@ pub fn root_to_mm(width: Option<Length>, height: Option<Length>, view_box: Optio
     };
     let s = if aspect.slice { sx.max(sy) } else { sx.min(sy) };
     let (tx, ty) = ((width - vb.w * s) * fx - vb.x * s, (height - vb.h * s) * fy - vb.y * s);
-    usable(Affine::translate(tx, ty).after(Affine::scale(s, s)))
+    Affine::translate(tx, ty).after(Affine::scale(s, s))
 }
 
 /// `map`, when its numbers are finite: a size so large that the viewBox scales to no number gives none,
@@ -260,6 +291,39 @@ mod tests {
         }
         // Rounding, not a skew: axes 1000 long that lean toward each other by half a billionth of a radian.
         assert!(even("matrix(1000 0 0.0000005 1000 0 0)"));
+    }
+
+    #[test]
+    fn a_map_s_inverse_undoes_it() {
+        for text in ["translate(7 9)", "rotate(30 4 5) scale(2 3)", "matrix(1 2 3 4 5 6)", "skewX(20) translate(-3 1)"] {
+            let map = parse(text).unwrap();
+            let (back, (x, y)) = (map.inverse().unwrap(), map.apply(3.0, -2.0));
+            assert!(close(back.apply(x, y), (3.0, -2.0)), "{text}");
+            assert!(close(map.after(back).apply(1.5, 2.5), (1.5, 2.5)), "{text}");
+        }
+        // A map that flattens the plane has none, and nor does one whose inverse is too large to be a number.
+        assert_eq!(parse("scale(0 1)").unwrap().inverse(), None);
+        assert_eq!(parse("matrix(1e-309 0 0 1 0 0)").unwrap().inverse(), None);
+        assert!(parse("matrix(1e-300 0 0 1 0 0)").unwrap().inverse().is_some());
+    }
+
+    #[test]
+    fn a_map_turns_a_fill_s_rows_with_it_as_ink_stitch_turns_a_clone_s() {
+        let turn = |text: &str, degrees: f64| parse(text).unwrap().turn(degrees);
+        let about = |turned: f64, expected: f64| (turned - expected).abs() < 1e-9;
+        // A quarter turn clockwise on screen takes rows at 0° to -90°, and rows at 30° to -60°; a move turns
+        // nothing.
+        assert!(about(turn("rotate(90)", 0.0), -90.0));
+        assert!(about(turn("rotate(90) translate(50 7)", 30.0), -60.0));
+        assert!(about(turn("translate(5 5)", 30.0), 30.0));
+        // A mirror turns 30° to 150°, the same rows, and a scale along one axis tilts them.
+        assert!(about(turn("scale(-1 1)", 30.0), 150.0));
+        assert!(about(turn("scale(1 2)", 45.0), 63.43494882292201));
+        // Exact quarter and half turns, whose rows lie along an axis.
+        assert_eq!(turn("matrix(0 1 -1 0 0 0)", 0.0), -90.0);
+        assert_eq!(turn("scale(-1)", 0.0), -180.0);
+        // A map that takes the rows' direction to nothing gives 0.
+        assert_eq!(turn("scale(0)", 30.0), 0.0);
     }
 
     #[test]

@@ -22,6 +22,49 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     leaves it at the top left corner. `DEV-SVG-026` says Ink/Stitch's stitch patterns aren't applied.
   - The `inkstitch` action turns Ink/Stitch's debug log off, with which a glyph took 10 seconds against 1.6,
     and its stitch-plan cache.
+- M8.7: clipping in VectorCraft documents (`REQ-VC-017`, `REQ-GEN-005`). What a clip group or a clipping
+  layer holds sews only what shows inside its clipping object, as an SVG file's shapes sew inside their
+  clip paths from M8.5. The VectorCraft reader makes the clipping object's area a clip of each element
+  inside, however deep, and the engine cuts them.
+  - VectorCraft clips to the clipping object's area whatever its paints, hidden or not. A path's area is
+    the one its fill rule fills, and a compound path's is its paths' together by its own rule. A nested
+    clip group's is its clipping object's, and another group's or a layer's that of its members that show,
+    a Shaper group's sources left out. A guide or a symbol doesn't add to it, as in VectorCraft. Clip
+    groups inside one another give one clip each.
+  - A fill's area and a stroke's lines are cut, and a satin column sews whole (`SC-W0217`). Art wholly
+    outside its clipping object isn't sewn (`SC-W0013`). The clipping object's own paints aren't cut to its
+    clip, as VectorCraft paints its fill inside it and its stroke over its edge.
+  - `SC-W0807`'s note that the clipping isn't applied is gone. It names what the reader can't read in a
+    clipping object, which stays out of the clip: text, whose glyphs need VectorCraft's fonts, an image, a
+    placed document and a live object. `SC-W0808` names a clipping path whose geometry can't be used.
+    `SC-W0807` names a clipping object under StitchCraft's effects too, as VectorCraft clips the preview to
+    the stitches they draw of it.
+  - A clip's shapes are shared by the elements it cuts (`Clip::shapes`), so that a clip group of many
+    objects, or an SVG group's clip path, holds them once.
+  - The Level B case `clipping-mask` makes a clipping mask of a fill, a stroke and a square in their middle
+    with Make Clipping Mask. Every needle point sews inside the square, and the PES and DST exporters write
+    what `stitch export` writes. TS-12 asks MC-5 whether clipped art sews as VectorCraft shows it.
+- M8.10: clones (`REQ-SVG-012`, `REQ-SVG-013`). The SVG adapter sews a clone, a `<use>` of an element other
+  than a command's symbol, as Ink/Stitch sews it. The elements of what it shows sew in the clone's place in
+  the document's order, each named after the clone (`svg:clone1/square:fill`). What it shows is drawn as a viewer
+  draws it, under the use's transform, `x` and `y`, with the style it inherits from the use, and a symbol is
+  fitted to the viewport the use gives it. There `context-fill` and `context-stroke` paint with the use's fill
+  and stroke.
+  - The commands tied to the source move with the clone. So do those in the source whose connectors are in
+    it too. The clone's own `trim_after` and `stop_after`, and its trim and stop commands, trim
+    or stop after the last of what it sews, and its shortest stitch and jump apply to all of it.
+  - A fill's angle turns with the clone as Ink/Stitch turns it. The clone's own `angle` replaces it, and
+    `flip_angle` reverses it. The compatibility contract shows these 3 clone settings as applied.
+  - A clone whose `clone` setting is off sews nothing (`SC-I0805`). A clone that shows itself, directly or
+    through other clones, is left out (`SC-W0804`), where Ink/Stitch fails, and so is one inside more than 16
+    others (`SC-W0802`). The ledger says where Ink/Stitch sews a clone otherwise (`DEV-SVG-021` to
+    `DEV-SVG-024`).
+  - 6 differential cases sew clones turned, with an angle and a flip of their own, of a group, of a clone and
+    of a symbol. Both programs sew each alike by every measure but a symbol's size, which Ink/Stitch doesn't
+    fit to its viewport (`DEV-SVG-022`). The differential runs Ink/Stitch with its stitch-plan cache off, which
+    gave a clone the stitches of an earlier file. The test kit writes a clone as a `<use>`, and each command in
+    a group with its connector.
+  - TS-16 gains a clone of its red fill, turned 45° right, for MC-11.
 - MC-6: TS-11A, the sampler of M7's new strokes and satins, so every sheet MC-6 sews is drawn. A band to a
   thread, most samples hooks, straight and then turning a quarter circle, in rows that turn back on each
   other so the needle never comes to a sample where it would sew a jump's thread down. Zigzag strokes 1, 2
@@ -2283,6 +2326,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-16.pes` (M8.10). The sheet gains a clone of its red fill, turned
+  45° right, which sews last, in red after a fourth colour change, below the fill once the sheet is turned.
+  It starts and ends at the corners turned from the fill's. The plan spans 110 × 97.2 mm, and sews 4,931
+  stitches, 1,905 more. The first 4 parts sew as before.
 - Added `conformance/golden/testsheets/TS-11A.pes` (MC-6), the new strokes and satins' test sheet that MC-6
   sews: 4,632 stitches.
 - Changed `conformance/golden/plans/patch.pes` and `patch.dst` (M8.4, `REQ-GEN-001`): the patch's red fill

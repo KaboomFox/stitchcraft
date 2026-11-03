@@ -15,27 +15,59 @@ use stitchcraft_params::ParamSet;
 use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::{StitchPlan, Thread};
 
+use super::Cloned;
 use super::pictures::Picture;
 use super::sketch::SheetError;
 use crate::common::{STOP_AFTER, TRIM_AFTER};
 use crate::design::{Cap, Clip, Design, DesignSettings, Element, FillRule, Hints, Join, Path, Segment, Shape, Subpath, Turn};
 use crate::generators::satin::{END_AT_NEAREST_POINT, START_AT_NEAREST_POINT};
+use crate::generators::tatami::ANGLE;
 
 /// The settings that sew a sheet's satin column as drawn, from its start to its end whatever is around it,
 /// and trim after it, so the columns stand apart.
 pub(super) const AS_DRAWN: [(&str, &str); 3] = [(START_AT_NEAREST_POINT, "false"), (END_AT_NEAREST_POINT, "false"), (TRIM_AFTER, "true")];
 
-/// A test sheet as a design: its elements, in sewing order, and the design's settings.
+/// A test sheet as a design: its elements, in sewing order, and the design's settings, and the elements its
+/// file draws as clones of others.
 pub(super) struct Drawing {
     sheet: &'static str,
     elements: Vec<Element>,
     settings: DesignSettings,
+    clones: Vec<Cloned>,
 }
 
 impl Drawing {
     /// A sheet whose element ids start with `sheet` (`ts03:circle-0.1`), with the design settings' defaults.
     pub fn new(sheet: &'static str) -> Self {
-        Drawing { sheet, elements: Vec::new(), settings: DesignSettings::default() }
+        Drawing { sheet, elements: Vec::new(), settings: DesignSettings::default(), clones: Vec::new() }
+    }
+
+    /// A clone named `name` of the fill drawn as `of`, which the sheet's file draws as a `<use>` of it under
+    /// `map` (`REQ-SVG-012`), SVG's `matrix(a b c d e f)` in millimetres: the fill's shape and start and end
+    /// positions moved by the map, and its parameters, but its `angle`, which the clone turns to `angle`
+    /// (`REQ-SVG-013`). The design holds it as an element of its own, which `stitch testsheet` sews, and the
+    /// SVG reader reads the clone back as that element. `SheetError::Said` when there is no fill `of`.
+    pub fn clone_of(&mut self, name: &str, of: &str, map: [f64; 6], angle: &str) -> Result<(), SheetError> {
+        let of = ElementId::new(format!("{}:{of}", self.sheet))?;
+        let Some(source) = self.elements.iter().find(|e| e.id == of) else {
+            return Err(SheetError::Said(format!("{of} is not drawn before its clone")));
+        };
+        let Shape::Fill { path, rule } = &source.shape else { return Err(SheetError::Said(format!("{of} is not a fill"))) };
+        let [a, b, c, d, e, f] = map;
+        let moved = |p: Point| Point::new(a * p.x() + c * p.y() + e, b * p.x() + d * p.y() + f);
+        let shape = Shape::Fill { path: path.map(moved)?, rule: *rule };
+        let mut params = source.params.clone();
+        params.set(ANGLE, angle);
+        let id = ElementId::new(format!("{}:{name}", self.sheet))?;
+        let element = Element { id: id.clone(), shape, params, hints: source.hints.map(moved)?, ..source.clone() };
+        self.elements.push(element);
+        self.clones.push(Cloned { element: id, of, map });
+        Ok(())
+    }
+
+    /// The elements the sheet's file draws as clones.
+    pub fn clones(self) -> Vec<Cloned> {
+        self.clones
     }
 
     /// The design's origin, which goes to the hoop's centre, and the stop position the frame moves to before
@@ -336,6 +368,27 @@ mod tests {
         assert!(d.positions((0.0, 0.0), (1.0, 1.0)).is_ok());
         d.clip(vec![polygon(&[(0.0, 0.0), (1.0, 0.0), (1.0, 1.0)]).unwrap()]);
         assert!(d.elements.is_empty());
+    }
+
+    #[test]
+    fn a_clone_is_of_a_fill_drawn_before_it() {
+        let thread = Thread::new(Rgb::new(0, 0, 0));
+        let mut d = Drawing::new("test");
+        d.polyline("line", &[(0.0, 0.0), (10.0, 0.0)], &thread, &[]).unwrap();
+        let identity = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
+        let said = |result: Result<(), SheetError>| result.unwrap_err().to_string();
+        assert_eq!(said(d.clone_of("copy", "fill", identity, "0")), "the engine says: test:fill is not drawn before its clone");
+        assert_eq!(said(d.clone_of("copy", "line", identity, "0")), "the engine says: test:line is not a fill");
+        // A fill moved by the map, its hints with it, its angle given.
+        d.fill("fill", vec![polygon(&[(0.0, 0.0), (4.0, 0.0), (4.0, 2.0)]).unwrap()], &thread, &[("row_spacing_mm", "0.3")]).unwrap();
+        d.positions((4.0, 0.0), (0.0, 0.0)).unwrap();
+        d.clone_of("copy", "fill", [0.0, 1.0, -1.0, 0.0, 10.0, 0.0], "-90").unwrap();
+        let clone = d.elements.last().unwrap();
+        let ring = &clone.shape.path().subpaths[0];
+        assert_eq!((ring.start, ring.segments[1].end()), (point((10.0, 0.0)).unwrap(), point((8.0, 4.0)).unwrap()));
+        assert_eq!((clone.hints.start, clone.hints.end), (Some(point((10.0, 4.0)).unwrap()), Some(point((10.0, 0.0)).unwrap())));
+        assert_eq!(clone.params.iter().collect::<Vec<_>>(), [("angle", "-90"), ("row_spacing_mm", "0.3")]);
+        assert_eq!(d.clones().iter().map(|c| (c.element.as_str(), c.of.as_str(), c.map[4])).collect::<Vec<_>>(), [("test:copy", "test:fill", 10.0)]);
     }
 
     #[test]

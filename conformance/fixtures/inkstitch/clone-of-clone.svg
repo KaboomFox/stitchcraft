@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A red bar 60 x 10 mm filled at its default angle; a clone of it turned 30 degrees right and moved below
+     it; and a clone of that clone, turned 30 degrees more and moved below both, 60 degrees in all. Each turns the
+     bar's rows with it. Written for StitchCraft's Ink/Stitch differential cases (conformance L3). -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+     xmlns:inkstitch="http://inkstitch.org/namespace"
+     width="100mm" height="100mm" viewBox="0 0 100 100">
+  <metadata>
+    <inkstitch:inkstitch_svg_version>4</inkstitch:inkstitch_svg_version>
+  </metadata>
+  <rect id="bar" x="20" y="5" width="60" height="10" fill="#ed171f"/>
+  <use id="inner" xlink:href="#bar" transform="translate(0 30) rotate(30 50 10)"/>
+  <use id="outer" xlink:href="#inner" transform="translate(0 40) rotate(30 50 40)"/>
+</svg>

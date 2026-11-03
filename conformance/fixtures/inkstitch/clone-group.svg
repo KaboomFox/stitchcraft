@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A group of a red bar 50 x 10 mm, moved by the group, whose start command lies in the group beside it as
+     Ink/Stitch's Attach Commands puts it, and a blue disc; and a clone of the group turned a quarter right and
+     moved right of it. The clone sews the bar and the disc in turn, the bar from its start command turned with
+     it, its rows upright. The symbol's drawing is a placeholder. Written for StitchCraft's Ink/Stitch
+     differential cases (conformance L3). -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+     xmlns:inkstitch="http://inkstitch.org/namespace"
+     width="100mm" height="100mm" viewBox="0 0 100 100">
+  <metadata>
+    <inkstitch:inkstitch_svg_version>4</inkstitch:inkstitch_svg_version>
+  </metadata>
+  <defs>
+    <symbol id="inkstitch_starting_point"><circle r="1" fill="#808080"/></symbol>
+  </defs>
+  <g id="pair" transform="translate(0 5)">
+    <rect id="bar" x="5" y="10" width="50" height="10" fill="#ed171f"/>
+    <g id="command_group1">
+      <path id="command_connector1" d="M 56,21 55,20" style="fill:none;stroke:#000000;stroke-opacity:0.5"
+            inkscape:connection-start="#use1" inkscape:connection-end="#bar" inkscape:connector-type="polyline"/>
+      <use id="use1" xlink:href="#inkstitch_starting_point" x="56" y="21"/>
+    </g>
+    <circle id="disc" cx="30" cy="45" r="10" fill="#0a55a3"/>
+  </g>
+  <use id="turned" xlink:href="#pair" transform="translate(95 0) rotate(90)"/>
+</svg>

@@ -50,7 +50,9 @@ rows are the measures of both machine files, and a `centre-lines` case's are its
 machine checkpoint sews beside `stitch testsheet`'s, and each `centre-lines` case's shapes with a picture
 of both programs' lines over them, Ink/Stitch's red and StitchCraft's blue. `--filter centre-lines` runs those
 cases alone. The suite refuses a checkout at another commit, since the cases' excuses were written against
-this one.
+this one. It runs Ink/Stitch with its stitch-plan cache off, from a settings file of its own in
+`target/conformance/inkstitch-config/`: the cache keeps a clone's stitches across files whose commands
+differ, and gave the stitches of an earlier run.
 
 ## Ink/Stitch's fonts
 
@@ -90,8 +92,8 @@ codes = ["SC-I0703"]
 
 Each case is a design in `conformance/fixtures/inkstitch/`, with its row in the fixtures index, and a file
 in `conformance/cases/inkstitch/` naming the design and the requirements it covers. The SVG reader reads
-each shape's `inkstitch:` settings (`REQ-SVG-009`), so a design may set them. Until M8's later steps apply
-them, a design leaves out what the reader names as not applied (`SC-W0802`), such as clip paths and clones.
+each shape's `inkstitch:` settings (`REQ-SVG-009`), so a design may set them. A design leaves out what the
+reader names as not applied (`SC-W0802`), such as text, masks and markers.
 Where StitchCraft sews otherwise on purpose, the case excuses the measure with the deviation that says why:
 
 ```toml
