@@ -1,0 +1,6 @@
+id = "inkstitch-clip-satin"
+requirements = ["REQ-SVG-008", "REQ-SVG-011", "REQ-GEN-005"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/clip-satin.svg"
+# Both programs sew a clipped satin column whole; StitchCraft says so (SC-W0217). Cut to its clip path, the
+# design would be 20 mm wide.

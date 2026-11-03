@@ -45,6 +45,16 @@ pub struct Element {
     pub params: ParamSet,            // as the host stores them; validated against the registry when planned
     pub automatic: bool,             // since M13.1: a shape without settings, read with --auto, whose stitches StitchCraft chooses
     pub hints: Hints,                // since M8.4: where its design says it starts and ends, and the point it aims at
+    pub clips: Vec<Clip>,            // since M8.5: it sews only what lies inside every one (REQ-GEN-005)
+}
+
+pub struct Clip {                    // since M8.5: an SVG clip path, VectorCraft's clipping object from M8.7
+    pub shapes: Vec<ClipShape>,      // their areas together; none leaves nothing of what it cuts
+}
+
+pub struct ClipShape {
+    pub path: Path,                  // in the design's millimetres
+    pub rule: FillRule,              // which parts of it are inside, as a fill's
 }
 
 pub struct Hints {                   // since M8.4: Ink/Stitch's start, end and target commands, VectorCraft's markers
@@ -115,7 +125,8 @@ position, checked the same way. VectorCraft's Test Sheet filter draws a test she
 artboard with it (`REQ-VC-015`).
 
 **Commands.** Ink/Stitch's start, end and target commands, and VectorCraft's start and end markers, are
-an element's hints (M8.4), its points checked and moved with the rest. Trims and stops are the element
+an element's hints (M8.4), its points checked and moved with the rest. Clip paths are an element's clips
+(M8.5), checked and moved with it too, which the engine cuts it to ([engine pipeline](engine-pipeline.md)). Trims and stops are the element
 parameters `trim_after` and `stop_after`, and the origin and stop position are design settings (M3.8).
 
 ### Region

@@ -5,6 +5,33 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M8.5: clip paths (`REQ-SVG-011`, `REQ-GEN-005`). A shape that a `clip-path` cuts sews only what shows of
+  it. The SVG reader reads the clip paths of a shape and of the groups, links and switches round it, each
+  a clip of its elements (`Element::clips`), and the engine cuts them for every reader.
+  - A clip path is its children's areas together, each by its `clip-rule`, in the user space of what it
+    clips, or in shares of a shape's box with `objectBoundingBox`. A group in one counts, as Inkscape draws
+    it, and a clip path's own `clip-path` cuts it too. Children that aren't displayed are left out, as are
+    lines and text, and text is named.
+  - A fill's area is cut before its underlay, `expand_mm` and its method see it, as Ink/Stitch cuts it. A
+    stroke's line is cut where it crosses the clip, and each piece sews on its own. Left whole, a subpath
+    sews as drawn. Satin columns are sewn whole, as in Ink/Stitch, and `SC-W0217` names each. A shape
+    wholly outside its clips, or under an empty clip path, isn't sewn, with `SC-W0013`. Automatic
+    digitizing cuts its shapes first, so that what shows of them is digitized.
+  - What isn't applied of a clip path is named (`SC-W0802`), and the note that clipping isn't applied is
+    gone. An Inkscape power clip is read from its clip path, as a viewer draws it.
+  - The ledger says where Ink/Stitch builds a clip otherwise. Ink/Stitch pools the children's subpaths, and
+    leaves out where 2 children overlap (`DEV-SVG-016`). It drops a clip path's transform (`DEV-SVG-017`)
+    and ignores a link's or a switch's clip path (`DEV-SVG-018`). A shape whose clip path is empty sews
+    whole there (`DEV-SVG-019`), and a power clip goes by its settings (`DEV-SVG-020`). Each piece of a cut
+    closed zigzag is closed (`DEV-RUN-009`), and a line that touches its clip at a point sews whole
+    (`DEV-RUN-010`). 7 differential cases sew clip paths in both programs, 2 that agree and 5 that differ
+    as the ledger says.
+  - TS-16 gains its clip part for MC-11, a square cut by a circle to a green quarter disc and a black
+    zigzag cut into 2 pieces. Ink/Stitch sews the sheet as StitchCraft does by every measure of the
+    differential: 3,026 stitches against 3,212, the same size, threads, trims and jumps, and footprints
+    that overlap by 0.99.
+  - The transform harness of the sheets moves an element's positions and clips with its shape, which it
+    left where they were.
 - M8.4: start and end positions (`REQ-GEN-001`) and the target point (`REQ-FILL-CIR-008`). Ink/Stitch's
   `starting_point` and `ending_point` commands, and objects named `stitch:start` and `stitch:end` in a
   VectorCraft document, say where the elements of their shape start and end, in place of the needle before
@@ -2199,6 +2226,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - Changed `conformance/golden/plans/patch.pes` and `patch.dst` (M8.4, `REQ-GEN-001`): the patch's red fill
   starts nearest its start marker, in its top-left corner. `SC-W0807` no longer names the marker. The
   patch sews 2,483 stitches, 17 more.
+- Changed `conformance/golden/testsheets/TS-16.pes` (M8.5). The sheet gains its clip part, which makes it
+  40 × 100 mm, and sews 3,026 stitches, 930 more.
 - Added `conformance/golden/testsheets/TS-16.pes` (M8.4), the first part of the Ink/Stitch file MC-11
   sews: 2,096 stitches.
 - Changed `conformance/golden/testsheets/TS-11B.pes` (M7.9): the sheet gains a row of 3 circular fills

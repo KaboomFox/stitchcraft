@@ -94,6 +94,7 @@ another.
 | `SC-E0010` | Error | Nothing to stitch (no embroiderable elements) | M1 |
 | `SC-W0011` | Warning | Stitch type not sewn yet; element skipped | M3 |
 | `SC-E0012` | Error | Bug-report bundle could not be replayed | M3 |
+| `SC-W0013` | Warning | Element outside its clip paths; left out (wholly outside them, or under clip paths that don't meet or have no area; Ink/Stitch sews one whose clip path is empty whole) | M8 |
 | `SC-E0101` | Error | Parameter has the wrong type or an unknown choice | M3 |
 | `SC-W0102` | Warning | Parameter clamped to its allowed range | M3 |
 | `SC-W0105` | Warning | Unknown parameter preserved but ignored | M3 |
@@ -113,6 +114,7 @@ another.
 | `SC-E0214` | Error | Satin column drawn as one path could not be made into rails (too short, or too tight for its width) | M4 |
 | `SC-W0215` | Warning | Satin column too small for the shortest stitch; left out (all within it of its first needle point, or a zigzag satin with no stitch across, underlays and all; Ink/Stitch sews a speck) | M4 |
 | `SC-E0216` | Error | Satin column has no section to sew (its rungs or push compensation take each section's length off a rail) | M4 |
+| `SC-W0217` | Warning | Satin column is clipped; sewn whole (as in Ink/Stitch) | M8 |
 | `SC-W0303` | Warning | Parts of a fill too small to sew left out (3 square CSS pixels or less, as in Ink/Stitch); a fill of no area sews nothing | M5 |
 | `SC-W0304` | Warning | Fill smaller than 1.4 mm² (20 square CSS pixels); a running stitch or a satin column may sew it better | M5 |
 | `SC-W0305` | Warning | Fill part too thin for rows; sewn round its outline (as in Ink/Stitch) | M5 |

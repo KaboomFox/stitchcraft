@@ -35,6 +35,7 @@ pub stitchcraft_core::diag::Code::AutoSpeck
 pub stitchcraft_core::diag::Code::AutoUnder
 pub stitchcraft_core::diag::Code::BudgetExhausted
 pub stitchcraft_core::diag::Code::BundleUnreadable
+pub stitchcraft_core::diag::Code::ClippedAway
 pub stitchcraft_core::diag::Code::CustomLockUnusable
 pub stitchcraft_core::diag::Code::FillCircularTooSmall
 pub stitchcraft_core::diag::Code::FillContourRingsLeftOut
@@ -67,6 +68,7 @@ pub stitchcraft_core::diag::Code::ParamUnknown
 pub stitchcraft_core::diag::Code::PreviewTooLarge
 pub stitchcraft_core::diag::Code::SatinCentreLineFailed
 pub stitchcraft_core::diag::Code::SatinCentreLinePartsLeftOut
+pub stitchcraft_core::diag::Code::SatinClipNotApplied
 pub stitchcraft_core::diag::Code::SatinContourTooShort
 pub stitchcraft_core::diag::Code::SatinNoSection
 pub stitchcraft_core::diag::Code::SatinNodesUnequal
@@ -261,6 +263,7 @@ pub stitchcraft_core::Code::AutoSpeck
 pub stitchcraft_core::Code::AutoUnder
 pub stitchcraft_core::Code::BudgetExhausted
 pub stitchcraft_core::Code::BundleUnreadable
+pub stitchcraft_core::Code::ClippedAway
 pub stitchcraft_core::Code::CustomLockUnusable
 pub stitchcraft_core::Code::FillCircularTooSmall
 pub stitchcraft_core::Code::FillContourRingsLeftOut
@@ -293,6 +296,7 @@ pub stitchcraft_core::Code::ParamUnknown
 pub stitchcraft_core::Code::PreviewTooLarge
 pub stitchcraft_core::Code::SatinCentreLineFailed
 pub stitchcraft_core::Code::SatinCentreLinePartsLeftOut
+pub stitchcraft_core::Code::SatinClipNotApplied
 pub stitchcraft_core::Code::SatinContourTooShort
 pub stitchcraft_core::Code::SatinNoSection
 pub stitchcraft_core::Code::SatinNodesUnequal

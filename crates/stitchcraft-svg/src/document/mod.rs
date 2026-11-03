@@ -82,7 +82,10 @@ use crate::text::{self, unreadable};
 use crate::transform::{self, Affine, user_units};
 use crate::version::{self, Updated, Version};
 
+mod clip;
 mod root;
+
+use clip::Link;
 
 /// The most XML nodes a file may have.
 const MAX_NODES: u32 = 1_000_000;
@@ -129,10 +132,11 @@ pub fn read_with(bytes: &[u8], budget: &Budget, reading: Reading) -> Result<Svg,
 enum Context<'a> {
     /// Nothing inside is drawn: a leaf, `<defs>`, `display: none`, a branch a `<switch>` did not choose.
     Hidden,
-    /// Every child is drawn with this transform (user units to millimetres) and style.
-    Shown { map: Affine, style: Style<'a> },
+    /// Every child is drawn with this transform (user units to millimetres) and style, cut to the clips of
+    /// the chain from `clipped` (`clip`).
+    Shown { map: Affine, style: Style<'a>, clipped: Option<usize> },
     /// Only the child a `<switch>` chose is drawn.
-    Switch { chosen: Option<NodeId>, map: Affine, style: Style<'a> },
+    Switch { chosen: Option<NodeId>, map: Affine, style: Style<'a>, clipped: Option<usize> },
 }
 
 /// The elements the reader draws, or reports; any other element draws nothing, in a viewer too.
@@ -229,6 +233,8 @@ struct Reader<'b, 'a, 'input> {
     updated: Updated,
     /// Whether a shape with no `inkstitch:` attribute is an automatic element (`--auto`).
     auto: bool,
+    /// The clips round the elements drawn, each a link of a chain (`clip`).
+    links: Vec<Link>,
 }
 
 impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
@@ -254,6 +260,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             version: Version::Current,
             updated: Updated::default(),
             auto: reading.auto,
+            links: Vec::new(),
         }
     }
 
@@ -286,8 +293,12 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             self.note(None, "The root `<svg>` element's transform is not applied.".to_string(), None);
         }
         self.notice(root);
-        let root_context = match Style::default().child(&self.declared(root)?) {
-            Some(style) => Context::Shown { map, style },
+        let declared = self.declared(root)?;
+        if declared.uses("clip-path") {
+            self.note(None, "The root `<svg>` element's clip path is not applied.".to_string(), None);
+        }
+        let root_context = match Style::default().child(&declared) {
+            Some(style) => Context::Shown { map, style, clipped: None },
             None => Context::Hidden,
         };
         // Document order, with the ancestors' contexts on a stack: a node's parent is the nearest entry
@@ -319,7 +330,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             let own = match context {
                 Context::Hidden => Context::Hidden,
                 Context::Switch { chosen, .. } if chosen != Some(node.id()) => Context::Hidden,
-                Context::Shown { map, style } | Context::Switch { map, style, .. } => self.visit(node, n, map, &style)?,
+                Context::Shown { map, style, clipped } | Context::Switch { map, style, clipped, .. } => self.visit(node, n, map, &style, clipped)?,
             };
             if node.has_children() {
                 stack.push((node.id(), own));
@@ -391,8 +402,16 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         }
     }
 
-    /// Draws or reports one element whose parent is drawn; returns what its children are drawn with.
-    fn visit(&mut self, node: Node<'a, 'input>, n: u32, map: Affine, inherited: &Style<'a>) -> Result<Context<'a>, Diagnostic> {
+    /// Draws or reports one element whose parent is drawn, cut to the clips of the chain from `clipped`; returns
+    /// what its children are drawn with.
+    fn visit(
+        &mut self,
+        node: Node<'a, 'input>,
+        n: u32,
+        map: Affine,
+        inherited: &Style<'a>,
+        clipped: Option<usize>,
+    ) -> Result<Context<'a>, Diagnostic> {
         let tag = node.tag_name().name();
         let Some(kind) = Kind::of(tag).filter(|_| self.is_svg(node)) else { return Ok(Context::Hidden) };
         let declared = self.declared(node)?;
@@ -432,7 +451,6 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         };
         let effects = |reader: &mut Self, label: &str| {
             for (property, what) in [
-                ("clip-path", "is clipped (`clip-path`); clipping is not applied, so all of it is stitched"),
                 ("mask", "has a mask; masks are not applied, so all of it is stitched"),
                 ("filter", "has filter effects (blurs, shadows and the like), which are not stitched"),
             ] {
@@ -445,18 +463,20 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             Kind::Group => {
                 effects(self, &label);
                 self.group_settings(node, &label)?;
-                Ok(Context::Shown { map, style })
+                let clipped = self.clipped(&label, &declared, map, clipped)?;
+                Ok(Context::Shown { map, style, clipped })
             }
             Kind::Switch => {
                 effects(self, &label);
                 self.group_settings(node, &label)?;
-                Ok(Context::Switch { chosen: self.chosen(node).map(|c| c.id()), map, style })
+                let clipped = self.clipped(&label, &declared, map, clipped)?;
+                Ok(Context::Switch { chosen: self.chosen(node).map(|c| c.id()), map, style, clipped })
             }
             Kind::Shape(geometry) => {
                 if style.shown() {
                     effects(self, &label);
                     let label = self.claim(label, tag, n)?;
-                    self.shape(node, geometry, &label, map, &style, &declared)?;
+                    self.shape(node, geometry, &label, (map, clipped), &style, &declared)?;
                 }
                 Ok(Context::Hidden)
             }
@@ -550,13 +570,14 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         node.children().find(|c| self.is_svg(*c) && !c.has_attribute("requiredExtensions"))
     }
 
-    /// The design elements of a shape that is shown, `label` its own: one per paint it paints with.
+    /// The design elements of a shape that is shown, `label` its own: one per paint it paints with, each in
+    /// millimetres by `map` and cut to its own clips and those of the chain from `clipped` (`clip`).
     fn shape(
         &mut self,
         node: Node<'a, 'input>,
         geometry: Geometry,
         label: &str,
-        map: Affine,
+        (map, clipped): (Affine, Option<usize>),
         style: &Style<'a>,
         declared: &Declared<'a, 'input>,
     ) -> Result<(), Diagnostic> {
@@ -583,6 +604,9 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             self.unusable(label, format!("`{label}` draws nothing: all of its points are in the same place. It is left out."));
             return Ok(());
         }
+        // Its own clips, then those round it, nearest first.
+        let mut clips = self.clips(label, declared, map, path::bounds(&subs))?;
+        clips.extend(self.chain(clipped)?);
         let name = node.attribute((INKSCAPE_NS, "label")).map(str::trim).filter(|s| !s.is_empty()).map(str::to_string);
         // Each of Ink/Stitch's settings of the shape is a parameter of every element it makes, by its own name,
         // but those the reader applies itself (`REQ-SVG-009`). Its trim and stop commands then turn on the same
@@ -637,7 +661,16 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             };
             let id = ElementId::new(format!("svg:{label}:{part}"))
                 .map_err(|e| Diagnostic::new(Code::InternalCheckFailed, format!("The SVG reader made an element id that cannot be used: {e}.")))?;
-            self.elements.push(Element { id, name: name.clone(), shape, thread: Thread::new(colour), params: params.clone(), automatic, hints });
+            self.elements.push(Element {
+                id,
+                name: name.clone(),
+                shape,
+                thread: Thread::new(colour),
+                params: params.clone(),
+                automatic,
+                hints,
+                clips: clips.clone(),
+            });
             self.stitched_targets.insert(place(node));
         }
         Ok(())

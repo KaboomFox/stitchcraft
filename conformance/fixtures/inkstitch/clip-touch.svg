@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A blue running stitch 60 mm long cut by a clip path of a square, which it crosses, and a triangle, whose tip it touches: a viewer shows the 20 mm in the square. Written for StitchCraft's Ink/Stitch differential cases (conformance L3). -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:inkstitch="http://inkstitch.org/namespace"
+     width="100mm" height="100mm" viewBox="0 0 100 100">
+  <metadata><inkstitch:inkstitch_svg_version>4</inkstitch:inkstitch_svg_version></metadata>
+  <defs><clipPath id="c"><path d="M 10,0 L 30,0 L 30,20 L 10,20 Z M 45,20 L 55,20 L 50,10 Z"/></clipPath></defs>
+  <path id="line" d="M 0,10 L 60,10" fill="none" stroke="#0a55a3" stroke-width="0.3" clip-path="url(#c)"/>
+</svg>
