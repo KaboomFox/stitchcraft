@@ -1,19 +1,20 @@
-# TS-16's 5 parts. M8.4's: a tatami fill and a satin column that start and end at the positions Ink/Stitch's
+# TS-16's 6 parts. M8.4's: a tatami fill and a satin column that start and end at the positions Ink/Stitch's
 # start and end commands give them. M8.5's: a fill and a running stitch cut by clip paths, to a quarter of a
 # disc and to 2 pieces. M8.8's: an origin off the design's middle, and a stop after the column, before which
 # the frame moves to a stop position outside the shapes, so the plan's bounds take in that move
 # (REQ-ASM-005). M8.9's: the sheet written turned right about its origin. M8.10's: a clone of the red fill,
-# turned 45 degrees right, which sews last and reaches 87.25 mm below the origin, so the sheet spans 110 x
-# 97.25 mm. The sheet draws only as the engine sews it without a word;
+# turned 45 degrees right, which reaches 87.25 mm below the origin. M8.13's: 2 black lines locked with custom
+# locks drawn as paths (REQ-LCK-005), which sew last, up to 30 mm above the origin, so the sheet spans 110 x
+# 117.25 mm. The sheet draws only as the engine sews it without a word;
 # the diagnostics here are the hoop's, of which there are none. The invariants (REQ-PLAN-…) run on the
 # sheet's plan; the golden file is the bytes MC-11 sews.
 id = "ts-16"
-requirements = ["REQ-PLAN-001", "REQ-PLAN-002", "REQ-PLAN-003", "REQ-PLAN-005", "REQ-PLAN-006", "REQ-PLAN-007", "REQ-PRF-002", "REQ-FMT-001", "REQ-GEN-001", "REQ-GEN-005", "REQ-ASM-005"]
+requirements = ["REQ-PLAN-001", "REQ-PLAN-002", "REQ-PLAN-003", "REQ-PLAN-005", "REQ-PLAN-006", "REQ-PLAN-007", "REQ-PRF-002", "REQ-FMT-001", "REQ-GEN-001", "REQ-GEN-005", "REQ-ASM-005", "REQ-LCK-005"]
 kind = "testsheet"
 sheet = "TS-16"
 profile = "brother-pe800-5x7"
 
 [expect]
-size_mm = [110.0, 97.2487373]
+size_mm = [110.0, 117.2487373]
 diagnostics = []
 golden = ["golden/testsheets/TS-16.pes"]

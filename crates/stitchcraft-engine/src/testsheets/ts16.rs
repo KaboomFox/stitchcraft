@@ -49,6 +49,16 @@
 //! the clone back as the element the design holds (`REQ-PRM-003`), which the test kit's tests check. Kept in
 //! the design, as M8.4's positions and M8.5's clips are, a clone would be a fact about a file that no host
 //! but an SVG file could hold, which every host and the engine would carry without using it.
+//!
+//! M8.13's part: 2 black lines 40 mm long, locked at both ends with custom locks drawn as SVG paths
+//! (`REQ-LCK-005`), [`LOCKED_LINES`] with [`DRAWN_LOCKS`], each trimmed after, so a lock is all that holds
+//! each end once the thread between the lines is snipped. They sew last, after a colour change from the
+//! clone. Drawn left of the shapes, they lie above them once the sheet is turned. The first is sewn down as
+//! drawn, from the right once turned, and the second back up, so neither starts along the thread left from
+//! the other. The first starts with a zigzag across its first 1.6 mm, of straight lines, and ends with a
+//! triangle over its last 1.4 mm, of relative commands and a curve, sewn backwards. The second, at 150 %,
+//! starts with a triangle along its first 1.8 mm, of across and down commands, and ends with one over its
+//! last 1.8 mm, drawn with an arc. Locks are settings, so the design holds them as it holds any setting.
 
 use stitchcraft_core::math;
 
@@ -82,6 +92,14 @@ pub const CLONE_ANGLE: &str = "-45";
 /// The clip path that cuts it, a U upside down whose legs reach x = 15 and x = 25 from the outside: it leaves
 /// the zigzag from x = 0 to 15 and from 25 to 40 (mm).
 pub const GAP: [(f64, f64); 8] = [(-2.0, 90.0), (42.0, 90.0), (42.0, 105.0), (25.0, 105.0), (25.0, 92.0), (15.0, 92.0), (15.0, 105.0), (-2.0, 105.0)];
+/// The lines locked with locks drawn as paths, each from its start to its end (mm).
+pub const LOCKED_LINES: [[(f64, f64); 2]; 2] = [[(-10.0, 0.0), (-10.0, 40.0)], [(-20.0, 40.0), (-20.0, 0.0)]];
+/// Each line's start and end locks, drawn as SVG paths in millimetres, and the scale both are sewn at
+/// (`lock_*_scale_percent`).
+pub const DRAWN_LOCKS: [(&str, &str, &str); 2] = [
+    ("M 0,0 L 0.4,0.4 L 0.8,-0.4 L 1.2,0.4 L 1.6,-0.4 L 0,0 L 1,0", "m 0,0 c 0.4,-0.6 1,-0.6 1.4,0 l -0.7,0.5 z l 1,0", "100"),
+    ("M 0,0 H 1.2 V 0.4 L 0,0 L 1,0", "M 0,0 A 0.6,0.6 0 0 0 1.2,0 L 0.6,-0.4 L 0,0 L 1,0", "150"),
+];
 
 /// Draws TS-16.
 pub(super) fn drawing() -> Result<Drawing, SheetError> {
@@ -108,6 +126,19 @@ pub(super) fn drawing() -> Result<Drawing, SheetError> {
     let [left, top, right, bottom] = FILL;
     let ((cx, cy), (mx, my)) = (((left + right) / 2.0, (top + bottom) / 2.0), CLONE_MIDDLE);
     d.clone_of("clone", "fill", [cos, sin, -sin, cos, mx - cos * cx + sin * cy, my - sin * cx - cos * cy], CLONE_ANGLE)?;
+    let black = thread(BLACK)?;
+    for (n, (ends, (start, end, percent))) in LOCKED_LINES.iter().zip(DRAWN_LOCKS).enumerate() {
+        let locks = [
+            ("lock_start", "custom"),
+            ("lock_custom_start", start),
+            ("lock_start_scale_percent", percent),
+            ("lock_end", "custom"),
+            ("lock_custom_end", end),
+            ("lock_end_scale_percent", percent),
+            ("trim_after", "true"),
+        ];
+        d.polyline(&format!("locked-{}", n + 1), ends, &black, &locks)?;
+    }
     Ok(d)
 }
 

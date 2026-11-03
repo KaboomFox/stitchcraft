@@ -5,6 +5,25 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M8.13: custom locks drawn as paths (`REQ-LCK-005`, `REQ-LCK-006`). A `lock_custom_start` or
+  `lock_custom_end` written as SVG path data sews as Ink/Stitch sews it, where the half stitch was sewn with
+  `SC-W0503`. The path is drawn in millimetres and scaled by `lock_*_scale_percent` about its last node but
+  one, which goes where the stitching starts or ends. Its last segment is turned along the first stitch into
+  the stitching and left out. A tie-in sews the nodes before it in order, and a tie-off the same lock
+  backwards. Each command ends at a node. The needle sews straight to a curve's or an arc's end, and a
+  closepath's node is where its subpath started.
+  - The engine reads the path from the setting's text with `svgtypes`' path-data parser, which the SVG
+    adapter reads a path's `d` with. A drawn lock then sews alike from an SVG file and from a VectorCraft
+    document's effect. `cargo xtask layers` allows `svgtypes` in the engine.
+  - The text is untrusted. It is read up to its first error, and to 100 nodes at most. Each command costs a
+    unit of work. A node where the node before it is is left out. A path of fewer than 3 nodes or more than 100, whose
+    last segment has no length, that reaches farther than 10 m, left with no stitch, or with a stitch shorter
+    than 0.2 mm even at 500 %, sews the half stitch, and `SC-W0503` says why. A lock whose stitches would be
+    shorter than 0.2 mm is enlarged as a whole, as the other drawn locks are (`SC-W0502`). `DEV-LCK-001`
+    says where Ink/Stitch sews a path otherwise.
+  - A differential case sews 8 drawn locks of each kind of command at both ends of 4 lines, and both
+    programs sew it alike by every measure.
+  - TS-16 gains 2 black lines locked with drawn locks for MC-11, so it has all its parts.
 - M8.10: clones (`REQ-SVG-012`, `REQ-SVG-013`). The SVG adapter sews a clone, a `<use>` of an element other
   than a command's symbol, as Ink/Stitch sews it. The elements of what it shows sew in the clone's place in
   the document's order, each named after the clone (`svg:clone1/square:fill`). What it shows is drawn as a viewer
@@ -2287,6 +2306,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-16.pes` (M8.13). The sheet gains 2 black lines locked at both ends
+  with custom locks drawn as paths, which sew last, after a fifth colour change, above the rest once the sheet
+  is turned. The plan spans 110 × 117.2 mm, and sews 4,979 stitches, 48 more. The first 5 parts sew as before.
 - Changed `conformance/golden/testsheets/TS-16.pes` (M8.10). The sheet gains a clone of its red fill, turned
   45° right, which sews last, in red after a fourth colour change, below the fill once the sheet is turned.
   It starts and ends at the corners turned from the fill's. The plan spans 110 × 97.2 mm, and sews 4,931

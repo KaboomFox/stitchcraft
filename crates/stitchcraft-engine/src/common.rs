@@ -89,9 +89,9 @@ params! {
         /// last step ends where the stitching starts, and `1 -1 1 -1` goes forth and back twice. Or an SVG
         /// path that draws the lock in millimetres, at `lock_start_scale_percent`. Its last segment points
         /// along the first stitch, into the stitching, and is not sewn. It starts where the stitching
-        /// starts, and the nodes before it are sewn first, in order: `M 0,0 L 0,1 L 1,1 L 1,0 L 2,0`
-        /// sews 3 sides of a square 1 mm across behind the start. A path that cannot be sewn as written
-        /// is named (`SC-W0503`).
+        /// starts, and the nodes before it are sewn first, in order. `M 0,0 L 0,1 L 1,1 L 1,0 L 2,0` sews
+        /// 3 sides of a square 1 mm across behind the start. A path that cannot be sewn as written is
+        /// named (`SC-W0503`).
         lock_custom_start: Text = "", label "Custom start lock", when lock_start == "custom", origin Origin::InkStitchDeviates { deviation: "DEV-LCK-002" };
 
         /// How long each step of a start lock made of steps (back and forth, or custom numbers) is.
@@ -110,8 +110,8 @@ params! {
         /// first step starts where the stitching ends, and `1 -1 1 -1` goes back and forth twice. Or an
         /// SVG path that draws the lock in millimetres, at `lock_end_scale_percent`, as a start lock's path
         /// draws it. Its last segment points along the last stitch, back into the stitching, and is not
-        /// sewn. The lock is sewn backwards: from where the stitching ends, which is where that segment
-        /// starts, through the nodes before it, to the path's first node. A path that cannot be sewn as
+        /// sewn. The lock is sewn backwards, from where the stitching ends, which is where that segment
+        /// starts, through the nodes before it to the path's first node. A path that cannot be sewn as
         /// written is named (`SC-W0503`).
         lock_custom_end: Text = "", label "Custom end lock", when lock_end == "custom", origin Origin::InkStitchDeviates { deviation: "DEV-LCK-002" };
 
