@@ -24,22 +24,23 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     grid too fine for the machine's shortest stitch is named (`SC-W0321`).
   - Crosses that share a corner sew in one run, each joining it at a corner of its top diagonal where it
     can. The group nearest the end sews last, and the others nearest the needle first. A part of one
-    group first travels from the needle to its end through the middles of its crosses.
+    group first runs from the needle to its end through the middles of its crosses.
   - The 10 other methods, half, upright, dense upright, double and Smyrna crosses and their flipped
     variants, come with M10.2, and an element set to one is skipped (`SC-W0011`). `cross_rotation` stays
     planned.
-  - Every cell the part's bounds reach costs a unit of work before any is looked at, and each cross must
-    fit in the stitches left, so a fine grid over a large part ends with `SC-E0004` before it takes memory
-    (`REQ-GEN-004`).
-  - The ledger says where StitchCraft differs on purpose: a part that a negative `expand_mm` shrinks away
-    (`DEV-FILL-024`), the row above the first line that Ink/Stitch's offset leaves out (`DEV-FILL-025`),
-    Ink/Stitch's flipped crosses on a turned grid (`DEV-FILL-026`), a thread count of 1 (`DEV-FILL-027`)
-    and the order of the groups and crosses (`DEV-FILL-028`). `DEV-PRM-001` adds a fraction in
-    `fill_coverage`, which Ink/Stitch sews at its default.
-  - TS-17A's M10.1 part is drawn for MC-12: squares of simple crosses on grids of 2 and 3 mm with 2 and 4
-    threads, plain and flipped, and a K whose slanted edges cut their cells in half. Its samples lie on
-    the canvas's grid, and VectorCraft's Test Sheet filter moves the sheet by multiples of 6 mm, so they
-    stay there.
+  - Every cell within the part's bounds costs a unit of work before any is looked at. A row of cells, and
+    each cross, must fit in the stitches left. A fine grid over a large part then ends with `SC-E0004`
+    before it takes memory (`REQ-GEN-004`).
+  - Where StitchCraft differs on purpose, the ledger says how, for a part that a negative `expand_mm`
+    shrinks away (`DEV-FILL-024`), the row above the first line that Ink/Stitch's offset leaves out
+    (`DEV-FILL-025`), Ink/Stitch's flipped crosses on a turned grid (`DEV-FILL-026`), a thread count of 1
+    (`DEV-FILL-027`) and the order of the groups and crosses (`DEV-FILL-028`). `DEV-PRM-001` adds a
+    fraction in `fill_coverage`, which Ink/Stitch sews at its default.
+  - TS-17A's M10.1 part is drawn for MC-12. Squares of simple crosses on grids of 2 and 3 mm with 2 and 4
+    threads sew plain and flipped, beside a K whose slanted edges cut their cells in half. Its samples lie
+    on the canvas's grid, and VectorCraft's Test Sheet filter moves the sheet by multiples of 6 mm, which
+    keep them there. It sews in Ink/Stitch as in StitchCraft by every measure of the differential, 5,299
+    stitches in both, and so does a case of offset grids, cells of 2 lengths, split stitches and a disc.
   - The user's guide shows cross stitch in pictures, and its design page says how it is sewn.
 - M8.7: clipping in VectorCraft documents (`REQ-VC-017`, `REQ-GEN-005`). What a clip group or a clipping
   layer holds sews only what shows inside its clipping object, as an SVG file's shapes sew inside their

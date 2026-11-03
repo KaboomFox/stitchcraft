@@ -457,7 +457,7 @@
     },
     "cross_stitch_method": {
       "default": "simple_cross",
-      "description": "The kind of cross. A simple cross sews its `\\` diagonal and then its `/` diagonal over it, as the drawing shows it; flipped, the `/` diagonal goes under. The other kinds arrive in a later version, and until then an element set to one is skipped (`SC-W0011`).",
+      "description": "The kind of cross. A simple cross sews its `\\` diagonal and then its `/` diagonal over it, as the drawing shows it. Flipped, the `/` diagonal goes under. The other kinds arrive in a later version, and until then an element set to one is skipped (`SC-W0011`).",
       "enum": [
         "simple_cross",
         "simple_cross_flipped",
@@ -601,7 +601,7 @@
     },
     "fill_coverage": {
       "default": 50.0,
-      "description": "How much of a cell, in percent, the fill must cover for the cell to sew a cross. Lower, the crosses reach further past the fill's edges; at 100, only cells wholly inside it sew.",
+      "description": "How much of a cell, in percent, the fill must cover for the cell to sew a cross. Lower, crosses are sewn further past the fill's edges. At 100, only cells wholly inside it sew.",
       "maximum": 100.0,
       "minimum": 1.0,
       "title": "Coverage",
@@ -1256,7 +1256,7 @@
       "default": [
         3.0
       ],
-      "description": "How wide and how tall the grid's cells are, each the size of a cross. One length gives square cells; 2 separated by a space give the width, then the height.",
+      "description": "How wide and how tall the grid's cells are, each the size of a cross. One length gives square cells, and 2 separated by a space give the width, then the height.",
       "items": {
         "maximum": 100.0,
         "minimum": 0.1,

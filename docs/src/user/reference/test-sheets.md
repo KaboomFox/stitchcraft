@@ -436,6 +436,8 @@ Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](p
 
 Drawn as a design, which VectorCraft's Test Sheet filter draws too.
 
+![TS-17A as it will sew: a row of 4 red squares of crosses 24 mm wide, on grids of 2 and 3 mm with 2 and 4 threads. Below them in blue, the 2 mm and 3 mm squares again with their crosses flipped, and a K 24 mm tall in crosses on a 2 mm grid, its slanted arms stepping along the grid.](../../images/generated/testsheet-ts-17a.png)
+
 Threads: Red, Blue.
 
 After sewing, check:

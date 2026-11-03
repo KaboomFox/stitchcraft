@@ -13,7 +13,7 @@ Applies to Cross stitch.
 ### `cross_stitch_method`
 
 **Cross.** The kind of cross. A simple cross sews its `\` diagonal and then its `/` diagonal over it, as the
-drawing shows it; flipped, the `/` diagonal goes under. The other kinds arrive in a later version,
+drawing shows it. Flipped, the `/` diagonal goes under. The other kinds arrive in a later version,
 and until then an element set to one is skipped (`SC-W0011`).
 
 - **Accepts:** one of `simple_cross` (Simple cross), `simple_cross_flipped` (Simple cross, flipped), or one of the 10 other values kept for designs that name them, each sewn as another: `half_cross`, `half_cross_flipped`, `upright_cross`, `upright_cross_flipped`, `dense_upright_cross`, `dense_upright_cross_flipped`, `double_cross`, `double_cross_flipped`, `smyrna_cross`, `smyrna_cross_flipped`
@@ -46,7 +46,7 @@ stitches, each no longer.
 ### `pattern_size_mm`
 
 **Cell size.** How wide and how tall the grid's cells are, each the size of a cross. One length gives square
-cells; 2 separated by a space give the width, then the height.
+cells, and 2 separated by a space give the width, then the height.
 
 - **Accepts:** a length from 0.1 to 100 mm, or 2 separated by a space
 - **Default:** `3`
@@ -72,13 +72,13 @@ as far each way. Moved by a whole cell, the grid lies where it was.
 - **Accepts:** a length from 0 to 100 mm, or 2 separated by a space
 - **Default:** `0`
 - **Ink/Stitch:** same key and default; StitchCraft differs:
-  - **DEV-FILL-025.** A cross stitch fill looks at every cell of its grid that the part reaches. Ink/Stitch starts at the grid's first line at or above the part's top, moved down by the offset's second length, or with canvas_grid_origin off at the part's top moved down so, and never looks at the row above it. So a part whose top lies less far below a line of the grid than that length loses the row of crosses it covers there: a 3 mm grid moved 2 mm down over a rectangle whose top lies 0.2 mm below a line leaves out a row the rectangle covers 60 % of.
+  - **DEV-FILL-025.** A cross stitch fill looks at every cell of its grid within the part's bounds. Ink/Stitch starts at the grid's first line at or above the part's top, moved down by the offset's second length, or with canvas_grid_origin off at the part's top moved down so, and never looks at the row above it. So a part whose top lies less far below a line of the grid than that length loses the row of crosses it covers there: a 3 mm grid moved 2 mm down over a rectangle whose top lies 0.2 mm below a line leaves out a row the rectangle covers 60 % of.
   - **DEV-FILL-026.** Flipped crosses lie on the grid plain crosses lie on, with their / diagonal under their \ one. Ink/Stitch turns the part a quarter turn, lays its grid over the turned part and turns the crosses back. Its flipped cells are then pattern_size_mm's second length wide and its first tall, the offset's second length moves them right and its first down, and with canvas_grid_origin off its grid starts at the part's bottom left corner. With square cells, no offset and the canvas's grid, both lay the same crosses.
 
 ### `fill_coverage`
 
-**Coverage.** How much of a cell, in percent, the fill must cover for the cell to sew a cross. Lower, the
-crosses reach further past the fill's edges; at 100, only cells wholly inside it sew.
+**Coverage.** How much of a cell, in percent, the fill must cover for the cell to sew a cross. Lower, crosses
+are sewn further past the fill's edges. At 100, only cells wholly inside it sew.
 
 - **Accepts:** a percentage from 1 to 100
 - **Default:** `50`

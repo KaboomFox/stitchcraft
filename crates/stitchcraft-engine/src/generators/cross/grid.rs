@@ -260,6 +260,12 @@ mod tests {
         let moved = rect((-20.0, -20.8), (-8.0, -11.0));
         let wanted_moved: Vec<[i64; 2]> = wanted.iter().map(|&[i, j]| [i - 10, j - 10]).collect();
         assert_eq!(crossed_cells(&moved, &THREE, 50.0), wanted_moved);
+        // On a grid whose lines pass through (-1, 2): the columns from x = 11 to 23, the last covered two thirds,
+        // and the rows from y = 8 to 20, the first covered 60 % and the last two thirds. The last column's top
+        // and bottom cells are covered less than half.
+        let off = Grid { origin: [-1.0, 2.0], size: [3.0, 3.0] };
+        let wanted_off: Vec<[i64; 2]> = (2..6).flat_map(|j| (4..8).map(move |i| [i, j])).filter(|&[i, j]| i < 7 || (3..5).contains(&j)).collect();
+        assert_eq!(crossed_cells(&part, &off, 50.0), wanted_off);
     }
 
     #[test]
@@ -287,6 +293,13 @@ mod tests {
         // Drawn the other way round, the same.
         let reversed = Polygon { outline: triangle.outline.iter().rev().copied().collect(), holes: Vec::new() };
         assert_eq!(crossed_cells(&reversed, &THREE, 50.0), [[0, 0], [0, 1], [1, 1]]);
+        // A side that slants from (0.5, 0.2) to (5.5, 2.8), off the grid's lines, over a side along y = 2.8:
+        // the first cell covered 4.875 mm², 54.2 %, and the second 1.625 mm², 18.1 %.
+        let slanted = Polygon { outline: vec![p(0.5, 0.2), p(5.5, 2.8), p(0.5, 2.8), p(0.5, 0.2)], holes: Vec::new() };
+        assert_eq!(crossed_cells(&slanted, &THREE, 18.0), [[0, 0], [1, 0]]);
+        assert_eq!(crossed_cells(&slanted, &THREE, 19.0), [[0, 0]]);
+        assert_eq!(crossed_cells(&slanted, &THREE, 54.0), [[0, 0]]);
+        assert!(crossed(&slanted, &THREE, 55.0, &mut Budget::DEFAULT.meter()).unwrap().is_empty());
     }
 
     #[test]
@@ -309,6 +322,7 @@ mod tests {
         assert_eq!(short.work_left(), 0);
         let cells = crossed(&part, &THREE, 50.0, &mut Budget::DEFAULT.meter()).unwrap();
         assert_eq!((cells.crossed().first(), cells.crossed().last(), cells.crossed().len()), (Some(&[0, 0]), Some(&[11, 9]), 120));
+        assert!(!cells.is_empty());
         // A part far finer than its grid's cells reaches one cell, and covers too little of it.
         let speck = rect((1.0, 1.0), (1.1, 1.1));
         assert!(crossed(&speck, &THREE, 1.0, &mut Budget::DEFAULT.meter()).unwrap().is_empty());
