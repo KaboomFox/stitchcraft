@@ -16,6 +16,10 @@ use stitchcraft_core::{Code, Diagnostic, ElementId, Mm, Point, Rect};
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::Thread;
 
+mod turn;
+
+pub use turn::Turn;
+
 /// How far from the design's origin geometry may lie, in millimetres: the reach of machine-file
 /// coordinates (10 m), beyond which no position can be written.
 pub const WORKING_LIMIT_MM: f64 = MACHINE_LIMIT as f64 / 10.0;
@@ -185,6 +189,69 @@ pub struct Element {
     /// read with `--auto`. Its `params` then choose no stitch type; those that every stitch type shares, such
     /// as the trim after it that an Ink/Stitch command asks for, still apply.
     pub automatic: bool,
+    /// Where it starts and ends, and the point it aims at, when the design gives them (`REQ-GEN-001`).
+    pub hints: Hints,
+    /// The areas it is cut to: it sews only what lies inside every one (`REQ-GEN-005`). None cuts nothing.
+    pub clips: Vec<Clip>,
+}
+
+/// An area an element is cut to, as an SVG file's clip path or a VectorCraft document's clipping object cuts
+/// what it holds: the areas of its shapes together, in the design's millimetres. A fill sews the part of its
+/// area inside it, a stroke the pieces of its lines inside it, and a satin column is sewn whole
+/// (`REQ-GEN-005`). With no shapes, it has no area, and leaves nothing of what it cuts.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Clip {
+    /// The shapes whose areas, together, it is: a clip path's children.
+    pub shapes: Vec<ClipShape>,
+}
+
+/// One shape of a [`Clip`]: the region `path` bounds by `rule`, as a fill's ([`crate::normalize::region`]).
+#[derive(Clone, Debug, PartialEq)]
+pub struct ClipShape {
+    /// Its outline.
+    pub path: Path,
+    /// Which parts of its outline are inside it.
+    pub rule: FillRule,
+}
+
+impl Clip {
+    /// The clip of one shape: the region `path` bounds by `rule`.
+    pub fn of(path: Path, rule: FillRule) -> Clip {
+        Clip { shapes: vec![ClipShape { path, rule }] }
+    }
+
+    /// The points of its shapes' outlines.
+    pub fn points(&self) -> impl Iterator<Item = Point> + '_ {
+        self.shapes.iter().flat_map(|shape| shape.path.points())
+    }
+}
+
+/// Where an element starts and ends, and the point it aims at, as a design gives them: Ink/Stitch's
+/// `starting_point`, `ending_point` and `target_point` commands, or a VectorCraft document's `stitch:start`
+/// and `stitch:end` markers. Each is a place in the design, in millimetres, which need not lie on the
+/// element. A start or end position takes the place of the needle before the element, or of what the element
+/// after it offers, for the stitch types that use them (`REQ-GEN-001`, [`crate::generate`]). A circular
+/// fill's spirals turn round its target point (`REQ-FILL-CIR-008`).
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub struct Hints {
+    /// Where it starts.
+    pub start: Option<Point>,
+    /// Where it ends.
+    pub end: Option<Point>,
+    /// The point it aims at.
+    pub target: Option<Point>,
+}
+
+impl Hints {
+    /// Each position it has.
+    pub fn points(&self) -> impl Iterator<Item = Point> {
+        [self.start, self.end, self.target].into_iter().flatten()
+    }
+
+    /// The same positions, each moved by `f`, or `f`'s error.
+    pub fn map<E>(&self, f: impl Fn(Point) -> Result<Point, E>) -> Result<Hints, E> {
+        Ok(Hints { start: self.start.map(&f).transpose()?, end: self.end.map(&f).transpose()?, target: self.target.map(&f).transpose()? })
+    }
 }
 
 /// What a host is asked when it reads a document into a design, the same for every host.
@@ -198,8 +265,10 @@ pub struct Reading {
 }
 
 /// Settings for the whole design. Ink/Stitch keeps them in the document. The SVG adapter reads the
-/// collapse length, the shortest stitch and the narrowest satin stroke from the file's metadata, and the
-/// origin and stop position from Ink/Stitch's commands from roadmap M8. Until then those are unset.
+/// collapse length, the shortest stitch, the narrowest satin stroke and the turn on export from the file's
+/// metadata, and the origin and stop position from Ink/Stitch's `origin` and `stop_position` commands; the
+/// VectorCraft adapter reads those from objects named `stitch:origin` and `stitch:stop-position`, and the
+/// rest from what the Design Settings filter keeps with the document.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct DesignSettings {
     /// Moves between groups of the same thread no longer than this are sewn on rather than jumped, for
@@ -216,6 +285,9 @@ pub struct DesignSettings {
     /// A satin column drawn as one path whose stroke is no wider than this is sewn as a stroke (Ink/Stitch's
     /// `min_satin_stroke_width_mm`).
     pub min_satin_stroke_width: Mm,
+    /// How far the plan turns about the hoop's centre as it is written, once its origin is there
+    /// (Ink/Stitch's `rotate_on_export`); none unless the design says.
+    pub rotate_on_export: Turn,
 }
 
 impl DesignSettings {
@@ -234,6 +306,7 @@ impl Default for DesignSettings {
             origin: None,
             stop_position: None,
             min_satin_stroke_width: DesignSettings::MIN_SATIN_STROKE_WIDTH,
+            rotate_on_export: Turn::NONE,
         }
     }
 }
@@ -332,7 +405,8 @@ impl Design {
             if !ids.insert(&element.id) {
                 return Err(Diagnostic::new(Code::InternalCheckFailed, format!("Two elements of the design have the id `{}`.", element.id)));
             }
-            if element.shape.path().points().any(far) {
+            let clips = element.clips.iter().flat_map(Clip::points);
+            if element.shape.path().points().chain(element.hints.points()).chain(clips).any(far) {
                 return Err(Diagnostic::new(Code::InternalCheckFailed, format!("Element `{}` lies more than 10 m from the origin.", element.id))
                     .with_element(element.id.clone()));
             }
@@ -370,8 +444,8 @@ impl Design {
         Rect::around(self.elements.iter().flat_map(|e| e.shape.path().points()))
     }
 
-    /// The design moved by `by`, `[dx, dy]` in millimetres: every point of its elements, and its origin and
-    /// stop position, as a host draws a design somewhere else (`REQ-VC-015`). `SC-E0009`, as from
+    /// The design moved by `by`, `[dx, dy]` in millimetres: every point of its elements, their hints, and its
+    /// origin and stop position, as a host draws a design somewhere else (`REQ-VC-015`). `SC-E0009`, as from
     /// [`Design::new`], when a point would lie more than 10 m from the origin.
     pub fn moved(&self, [dx, dy]: [f64; 2]) -> Result<Design, Diagnostic> {
         let point = |p: Point| {
@@ -397,7 +471,11 @@ impl Design {
                 Shape::Stroke { path: outline, width, join, cap } => Shape::Stroke { path: path(outline)?, width: *width, join: *join, cap: *cap },
                 Shape::Fill { path: boundary, rule } => Shape::Fill { path: path(boundary)?, rule: *rule },
             };
-            Ok(Element { shape, ..element.clone() })
+            let shapes = |clip: &Clip| {
+                clip.shapes.iter().map(|shape| Ok(ClipShape { path: path(&shape.path)?, rule: shape.rule })).collect::<Result<_, Diagnostic>>()
+            };
+            let clips = element.clips.iter().map(|clip| Ok(Clip { shapes: shapes(clip)? })).collect::<Result<_, Diagnostic>>()?;
+            Ok(Element { shape, hints: element.hints.map(point)?, clips, ..element.clone() })
         });
         let settings = DesignSettings {
             origin: self.settings.origin.map(point).transpose()?,
@@ -427,6 +505,8 @@ mod tests {
             thread: Thread::new(Rgb::new(0, 0, 0)),
             params: ParamSet::new(),
             automatic: false,
+            hints: Default::default(),
+            clips: Vec::new(),
         }
     }
 
@@ -463,12 +543,21 @@ mod tests {
             subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Cubic(p(0.0, -5.0), p(10.0, 5.0), p(10.0, 0.0))], closed: true }],
         };
         let quad = Path { subpaths: vec![Subpath { start: p(1.0, 1.0), segments: vec![Segment::Quad(p(2.0, 3.0), p(4.0, 1.0))], closed: false }] };
-        let fill = Element { shape: Shape::Fill { path: quad, rule: FillRule::EvenOdd }, ..element("q", Path::default()) };
+        let hints = Hints { start: Some(p(1.0, 1.0)), end: Some(p(4.0, 1.0)), target: Some(p(2.0, 2.0)) };
+        let clips = vec![Clip::of(line(p(0.0, 0.0), p(1.0, 2.0)), FillRule::EvenOdd)];
+        let fill = Element { shape: Shape::Fill { path: quad, rule: FillRule::EvenOdd }, hints, clips, ..element("q", Path::default()) };
         let settings = DesignSettings { origin: Some(p(5.0, 5.0)), stop_position: Some(p(-1.0, 0.0)), ..DesignSettings::default() };
         let design = Design::new(vec![element("c", curve), fill, element("l", line(p(-2.0, 1.0), p(3.0, 1.0)))], settings).unwrap();
         let moved = design.moved([3.0, -2.0]).unwrap();
-        let points = |design: &Design| design.elements().iter().flat_map(|e| e.shape.path().points()).collect::<Vec<_>>();
+        // Every point, the hints' and the clips' among them.
+        let points = |design: &Design| {
+            let clips = |e: &Element| e.clips.iter().flat_map(Clip::points).collect::<Vec<_>>();
+            design.elements().iter().flat_map(|e| e.shape.path().points().chain(e.hints.points()).chain(clips(e))).collect::<Vec<_>>()
+        };
+        assert_eq!(points(&moved).len(), points(&design).len());
         assert!(points(&moved).iter().zip(points(&design)).all(|(a, b)| (a.x(), a.y()) == (b.x() + 3.0, b.y() - 2.0)));
+        assert_eq!(moved.elements()[1].hints, Hints { start: Some(p(4.0, -1.0)), end: Some(p(7.0, -1.0)), target: Some(p(5.0, 0.0)) });
+        assert_eq!(moved.elements()[1].clips, [Clip::of(line(p(3.0, -2.0), p(4.0, 0.0)), FillRule::EvenOdd)]);
         assert_eq!((moved.settings.origin, moved.settings.stop_position), (Some(p(8.0, 3.0)), Some(p(2.0, -2.0))));
         // Each element as it was but for its points: its id, kind of shape, thread and settings.
         assert_eq!(moved.moved([-3.0, 2.0]).unwrap(), design);
@@ -487,6 +576,21 @@ mod tests {
         assert_eq!((problem.code, problem.element.map(|e| e.to_string())), (Code::InternalCheckFailed, Some("far".to_string())));
         let edge = vec![element("edge", line(p(-WORKING_LIMIT_MM, 0.0), p(WORKING_LIMIT_MM, 0.0)))];
         assert!(Design::new(edge, DesignSettings::default()).is_ok());
+        // A hint is a point of the design too, though it need not lie on its element.
+        for hints in [
+            Hints { start: Some(p(0.0, WORKING_LIMIT_MM + 1.0)), ..Hints::default() },
+            Hints { end: Some(p(0.0, WORKING_LIMIT_MM + 1.0)), ..Hints::default() },
+            Hints { target: Some(p(0.0, WORKING_LIMIT_MM + 1.0)), ..Hints::default() },
+        ] {
+            let far = vec![Element { hints, ..element("hinted", line(p(0.0, 0.0), p(1.0, 0.0))) }];
+            assert_eq!(Design::new(far, DesignSettings::default()).unwrap_err().code, Code::InternalCheckFailed, "{hints:?}");
+        }
+        let near = Hints { start: Some(p(0.0, WORKING_LIMIT_MM)), end: Some(p(5.0, 5.0)), target: Some(p(-5.0, 5.0)) };
+        assert!(Design::new(vec![Element { hints: near, ..element("near", line(p(0.0, 0.0), p(1.0, 0.0))) }], DesignSettings::default()).is_ok());
+        // So is a clip's.
+        let clips = vec![Clip::of(line(p(0.0, 0.0), p(WORKING_LIMIT_MM + 1.0, 0.0)), FillRule::NonZero)];
+        let far = vec![Element { clips, ..element("clipped", line(p(0.0, 0.0), p(1.0, 0.0))) }];
+        assert_eq!(Design::new(far, DesignSettings::default()).unwrap_err().code, Code::InternalCheckFailed);
         // The limit is the reach of machine files: 10 m either way.
         assert_eq!(WORKING_LIMIT_MM, 10_000.0);
     }
@@ -525,7 +629,7 @@ mod tests {
     fn settings_default_to_ink_stitch_s_and_are_checked_too() {
         let settings = DesignSettings::default();
         assert_eq!((settings.collapse_len.get(), settings.min_stitch_len, settings.origin, settings.stop_position), (3.0, None, None, None));
-        assert_eq!(settings.min_satin_stroke_width.get(), 1.0);
+        assert_eq!((settings.min_satin_stroke_width.get(), settings.rotate_on_export), (1.0, Turn::NONE));
         let one = || vec![element("a", line(p(0.0, 0.0), p(1.0, 0.0)))];
         let at = |x: f64| Some(p(x, 0.0));
         let bad = [
@@ -544,6 +648,7 @@ mod tests {
             collapse_len: Mm::ZERO,
             min_stitch_len: Some(Mm::ZERO),
             min_satin_stroke_width: Mm::ZERO,
+            rotate_on_export: Turn::LEFT,
         };
         assert!(Design::new(one(), edge).is_ok());
     }

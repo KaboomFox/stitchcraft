@@ -6,14 +6,29 @@
 # Ink/Stitch's code sews another value for a file that sets none, and the registry's default is compared
 # with that. A row has `read_by` where stitch types the window does not show it for read it as they sew:
 # every fill method but legacy fill and cross stitch sews the tatami fill's underlay, which reads `angle`
-# (its default angle is 90° from it), `running_stitch_length_mm` and `staggers` (lib/elements/
-# fill_stitch.py at d59c9ab: fill_underlay_angle, do_underlay, to_stitch_groups). `phase` and `milestone`
+# (its default angle is 90° from it), `running_stitch_length_mm`, `running_stitch_tolerance_mm` and
+# `staggers`, and `row_spacing_mm` and `max_stitch_length_mm` where its own are not set (lib/elements/
+# fill_stitch.py at d59c9ab: to_stitch_groups, do_underlay, fill_underlay_angle,
+# fill_underlay_row_spacing, fill_underlay_max_stitch_length), and a method's own sewing reads what its
+# `do_<method>` function takes from the element, as the circular fill reads `skip_last`. `phase` and `milestone`
 # are StitchCraft's plan for it, both `—` when it has none. Checked
 # field by field against that commit's declarations and getters with
 # `python3 -I conformance/inkstitch/check_params.py PATH/TO/INKSTITCH`; run it again when moving to a
 # newer commit.
 
 lock_ids = ["half_stitch", "arrow", "back_forth", "bowtie", "cross", "star", "simple", "triangle", "zigzag", "custom"]
+# The meander tiles' ids (`meander_pattern`), in the order Ink/Stitch's settings window lists them: by
+# their names (tiles/*/tile.json).
+meander_tiles = [
+    "N3-11a", "N3-12", "N3-16a", "N3-17", "N3-18", "N3-18-modified", "N3-20", "N3-23b", "N3-25c",
+    "N3-26b", "N3-27", "N3-30a", "N3-51b", "N3-57f-modified", "N3-58b", "N3-6", "N3-7", "N3-8a",
+    "N3-8a-modified", "N3-8b", "N4-13b", "N4-13c", "N4-13d", "N4-13e", "N4-13f", "N4-16a", "N4-19",
+    "N4-20", "N4-21c", "N4-22", "N4-23a", "N4-23c", "N4-27", "N4-29e", "N4-29f", "N4-31", "N4-38",
+    "N4-42e", "N4-44", "N4-52", "N4-54d", "N4-5a", "N4-5a-2", "N4-82", "N4-85d", "N5-1e1", "N5-1q2",
+    "N5-1t", "N6-1", "N6-2", "N6-5b", "N6-6a", "N6-6c", "NC5-11a", "NC5-20a", "P3-1", "P3-12", "P4-1",
+    "P4-10", "P4-15", "P4-19", "P4-23", "P4-24", "P4-25", "P4-43", "P4-43-modified", "P4-47",
+    "P5-10_11", "P5-19", "P5-23_24", "P5-4", "P6-6_11", "diamond-square", "hexagon", "weird-one",
+]
 
 [[param]]
 element = "common"
@@ -1065,6 +1080,7 @@ type = "float"
 unit = "mm"
 default = "4.0"
 applies_to = ["tatami_fill", "contour_fill", "guided_fill", "linear_gradient_fill", "tartan_fill", "legacy_fill"]
+read_by = ["circular_fill", "meander_fill"]
 phase = "P1"
 milestone = "M5"
 
@@ -1075,6 +1091,7 @@ type = "float"
 unit = "mm"
 default = "0.25"
 applies_to = ["tatami_fill", "contour_fill", "guided_fill", "circular_fill", "linear_gradient_fill", "tartan_fill", "legacy_fill"]
+read_by = ["meander_fill"]
 phase = "P1"
 milestone = "M5"
 
@@ -1116,6 +1133,7 @@ type = "boolean"
 unit = "—"
 default = "false"
 applies_to = ["tatami_fill", "guided_fill", "linear_gradient_fill", "legacy_fill"]
+read_by = ["circular_fill"]
 phase = "P1"
 milestone = "M5"
 
@@ -1762,7 +1780,7 @@ milestone = "—"
 
 # Ink/Stitch reads `polyline`, `e_stitch`, `manual_stitch` and `grid_size` only to update a file without a
 # version, which StitchCraft reads as it is (`REQ-SVG-007`): in a file with one they change nothing in either
-# program. `auto_fill` changes a fill of a file of version 1 to 3 (M8.3).
+# program. `auto_fill` changes a fill of a file of version 1 to 3, through the update (`REQ-SVG-007`).
 [[attribute]]
 name = "polyline"
 kind = "legacy"

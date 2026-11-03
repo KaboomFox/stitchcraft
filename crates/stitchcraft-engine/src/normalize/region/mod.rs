@@ -32,6 +32,7 @@
 
 mod arrange;
 mod assemble;
+pub(crate) mod cut;
 pub(crate) mod geom;
 pub(crate) mod ops;
 mod snap;
@@ -41,7 +42,7 @@ pub use assemble::Unjoined;
 use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Point};
 
-use crate::design::{FillRule, Path};
+use crate::design::{Clip, FillRule, Path};
 use crate::normalize::stroke;
 
 /// Points this near each other, in millimetres, are one point to the code that sews a region: a row's
@@ -86,6 +87,31 @@ impl Polygon {
     pub fn area(&self) -> f64 {
         geom::signed_area(&self.outline).abs() - self.holes.iter().map(|hole| geom::signed_area(hole).abs()).sum::<f64>()
     }
+
+    /// The middle of its area, its centroid: the outline's area and its first moments less its holes', each
+    /// ring's taken from triangles of its sides and the outline's first point, as GEOS finds a polygon's
+    /// centroid, which Ink/Stitch centres a circular fill on. A part of no area has its outline's first
+    /// point. One unit of `meter` for each point of its rings.
+    pub(crate) fn centroid(&self, meter: &mut Meter) -> Result<Point, Exhausted> {
+        let Some(&base) = self.outline.first() else { return Ok(Point::ORIGIN) };
+        let (mut area, mut x, mut y) = (0.0, 0.0, 0.0);
+        for (k, ring) in self.rings().enumerate() {
+            meter.charge(u64::try_from(ring.len()).unwrap_or(u64::MAX))?;
+            let (mut a, mut mx, mut my) = (0.0, 0.0, 0.0);
+            for side in ring.windows(2) {
+                let (px, py, qx, qy) = (side[0].x() - base.x(), side[0].y() - base.y(), side[1].x() - base.x(), side[1].y() - base.y());
+                let cross = px * qy - qx * py;
+                (a, mx, my) = (a + cross, mx + cross * (px + qx), my + cross * (py + qy));
+            }
+            // The outline counts its area whichever way it runs, and a hole takes its own away.
+            let sign = if (a < 0.0) == (k == 0) { -1.0 } else { 1.0 };
+            (area, x, y) = (area + sign * a, x + sign * mx, y + sign * my);
+        }
+        if area == 0.0 || !area.is_finite() {
+            return Ok(base);
+        }
+        Ok(Point::new(base.x() + x / (3.0 * area), base.y() + y / (3.0 * area)).unwrap_or(base))
+    }
 }
 
 /// A fill's area, as parts.
@@ -118,10 +144,57 @@ pub struct Built {
 /// each ring compared with a face or an outline, and each point walked to find a ring's bounds or its place
 /// among the faces and outlines (`REQ-FILL-004`).
 pub fn build(path: &Path, rule: FillRule, meter: &mut Meter) -> Result<Built, Exhausted> {
+    build_clipped(path, rule, &[], meter)
+}
+
+/// The region [`build`] builds of `path` under `rule`, cut to `clips`: the part of it inside every one
+/// (`REQ-GEN-005`). What is said of it is said of the region once cut, its parts, size and pieces, and a
+/// fill its clips leave nothing of says so (`SC-W0013`) and sews nothing. The same work as [`build`], and the
+/// work of building each clip and of each cut (`ops::intersection`).
+pub fn build_clipped(path: &Path, rule: FillRule, clips: &[Clip], meter: &mut Meter) -> Result<Built, Exhausted> {
+    let mut area = area(&rings(path, meter)?, |w| fills(rule, w), meter)?;
+    let Ok(parts) = &area.parts else { return Ok(built(area, rule)) };
+    if clips.is_empty() || parts.is_empty() {
+        return Ok(built(area, rule));
+    }
+    let not_sewn = |diagnostic| Built { region: Region::default(), diagnostics: vec![diagnostic] };
+    // An area that doesn't join into rings is a bug ([`Unjoined`]), which no drawing tried makes.
+    let Ok(clip) = clipped(clips, meter)? else { return Ok(not_sewn(Unjoined.clip())) };
+    let Ok(cut) = ops::intersection(parts, &clip, meter)? else { return Ok(not_sewn(Unjoined.clip())) };
+    if cut.is_empty() {
+        return Ok(not_sewn(Diagnostic::new(Code::ClippedAway, "Its clip paths leave nothing of this fill, so it sews nothing.")));
+    }
+    area.parts = Ok(cut);
+    Ok(built(area, rule))
+}
+
+/// The area every one of `clips` covers, each the union of its shapes' regions, each shape's the region its
+/// path bounds under its rule: their parts' common part, or [`Unjoined`] (a bug). None leaves nothing: a
+/// caller with no clips cuts nothing.
+pub(crate) fn clipped(clips: &[Clip], meter: &mut Meter) -> Result<Result<Vec<Polygon>, Unjoined>, Exhausted> {
+    let mut common: Option<Vec<Polygon>> = None;
+    for clip in clips {
+        let mut shapes = Vec::with_capacity(clip.shapes.len());
+        for shape in &clip.shapes {
+            let Ok(parts) = area(&rings(&shape.path, meter)?, |w| fills(shape.rule, w), meter)?.parts else { return Ok(Err(Unjoined)) };
+            shapes.push(parts);
+        }
+        let Ok(parts) = ops::union(shapes.iter().map(Vec::as_slice), meter)? else { return Ok(Err(Unjoined)) };
+        common = Some(match common {
+            None => parts,
+            Some(before) => {
+                let Ok(both) = ops::intersection(&before, &parts, meter)? else { return Ok(Err(Unjoined)) };
+                both
+            }
+        });
+    }
+    Ok(Ok(common.unwrap_or_default()))
+}
+
+/// The closed rings of `path`'s subpaths, flattened as a fill's outline is, those that bound nothing left out.
+fn rings(path: &Path, meter: &mut Meter) -> Result<Vec<Vec<Point>>, Exhausted> {
     let flat = stroke::flatten(path, stroke::SHAPE_TOLERANCE, meter)?;
-    let rings: Vec<Vec<Point>> =
-        flat.pieces.into_iter().map(|piece| geom::closed(&piece.points)).filter(|ring| geom::without_repeats(ring).len() >= 4).collect();
-    Ok(built(area(&rings, |w| fills(rule, w), meter)?, rule))
+    Ok(flat.pieces.into_iter().map(|piece| geom::closed(&piece.points)).filter(|ring| geom::without_repeats(ring).len() >= 4).collect())
 }
 
 /// `p` on the grid a region's points lie on ([`snap::GRID`]), where coordinates' differences are exact

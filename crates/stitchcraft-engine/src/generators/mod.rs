@@ -14,12 +14,16 @@
 //!
 //! Elements are generated in sewing order, and each sees its [`Neighbours`]: where the elements before it
 //! left the needle, and what the next element offers to end near, its [`Approach`]
-//! (`docs/src/design/adr/0014-generators-see-their-neighbours.md`). A satin column and a tatami fill
-//! start and end by them; the other stitch types do not yet. Both end near the next stitch, found as
-//! Ink/Stitch's geometry library finds it, by the rules of the `next` module.
+//! (`docs/src/design/adr/0014-generators-see-their-neighbours.md`). A satin column and the fills start
+//! and end by them, but for a contour fill's end, which lies where its rings end; a stroke starts and ends
+//! where it is drawn. An element's start and end positions take their place for those that use them, as
+//! the generate step passes them on (`REQ-GEN-001`). The fills and the satin column end near the next
+//! stitch, found as Ink/Stitch's geometry library finds it, by the rules of the `next` module.
 
+pub mod circular;
 pub mod contour;
 pub mod manual;
+pub mod meander;
 mod next;
 pub mod passes;
 pub mod pull;
@@ -113,7 +117,7 @@ pub(crate) fn too_small(why: TooSmall, min: f64) -> Diagnostic {
 
 /// A stitch type as a method a settings window offers: its id and its name.
 pub(crate) const fn method(stitch_type: StitchType) -> ChoiceOption {
-    ChoiceOption { id: stitch_type.id(), label: stitch_type.name() }
+    ChoiceOption::new(stitch_type.id(), stitch_type.name())
 }
 
 /// `value` millimetres for a message: at most two decimals, without trailing zeros.

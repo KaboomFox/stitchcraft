@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A red square 40 mm a side filled by the circular fill, with Ink/Stitch's target point command 10 mm in from its top-left corner, tied to it by a connector: the spiral turns round that point, not round the square's middle. Written for StitchCraft's Ink/Stitch differential cases (conformance L3). -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:inkstitch="http://inkstitch.org/namespace"
+     width="100mm" height="100mm" viewBox="0 0 100 100">
+  <metadata><inkstitch:inkstitch_svg_version>4</inkstitch:inkstitch_svg_version></metadata>
+  <defs>
+    <symbol id="inkstitch_target_point"><circle r="1"/></symbol>
+  </defs>
+  <rect id="square" x="10" y="10" width="40" height="40" fill="#ed171f"
+        inkstitch:fill_method="circular_fill"/>
+  <path d="M 20,20 L 10,10" fill="none" stroke="#000" stroke-width="0.1" inkscape:connector-type="polyline"
+        inkscape:connection-start="#target" inkscape:connection-end="#square"/>
+  <use id="target" xlink:href="#inkstitch_target_point" x="20" y="20"/>
+</svg>

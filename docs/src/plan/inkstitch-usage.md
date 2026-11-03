@@ -57,5 +57,5 @@ about, which can differ from what they do most.
 - **Colour sorting for any design.** `--sort-colours` gives a design with settings the order of M13.3. It
   was after 1.0.
 - **Machine files opened in VectorCraft.** This is planned after 1.0. `stitch import design.pes -o
-  design.vectorcraft` writes their stitches as manual stitches, with the same document writer as M8's
-  `stitch import-inkstitch`.
+  design.vectorcraft` writes their stitches as manual stitches, with the same document writer as
+  `stitch import-inkstitch` (M8.12).

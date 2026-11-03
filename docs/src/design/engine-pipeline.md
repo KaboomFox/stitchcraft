@@ -59,6 +59,14 @@ Per element, independent of the others:
   them from a column's centre line ([single-path satin](algorithms/satin.md#single-path-satin)).
 - **Strokes:** each subpath becomes its own path piece, in document order.
 - **Commands** become hints (start/end/target points) on the element.
+- **Clips:** an element's clips cut it, each the areas of its shapes together by their rules
+  (`REQ-GEN-005`). A fill's region is cut when it is built (`region::build_clipped`), before its underlay,
+  `expand_mm` and its method see it. For a stroke, the subpaths are cut at their crossings with a clip's
+  outline (`region::cut`), as in Ink/Stitch. A manual stitch's run from node to node, and other strokes'
+  are flattened as a shape's outline is. Left whole, a subpath keeps its curves and sews as drawn, and each piece of a cut one sews
+  on its own. Satin columns are sewn whole (`SC-W0217`), and an element wholly outside its clips isn't
+  sewn (`SC-W0013`). Automatic digitizing cuts its shapes first, so that what shows of them is digitized
+  (`auto::clips`).
 
 Adapters have already applied transforms and converted units, so normalization never sees host types.
 
@@ -66,8 +74,10 @@ Adapters have already applied transforms and converted units, so normalization n
 
 - Parameters are read by the registry as the element's stitch type reads them. Blank text takes the
   default, and a setting the stitch type does not use, or that its other settings hide, is kept unread
-  ([parameters](params.md#the-parameters-an-element-reads-req-prm-004)). The rest are checked for type and range,
-  and the generator receives a typed struct or nothing.
+  ([parameters](params.md#the-parameters-an-element-reads-req-prm-004)). A value that only the node's
+  other stitch type can read, such as a zigzag stroke's 2 spacings under a meander fill, is left to it:
+  the element takes the default, and `SC-I0106` says so (`REQ-PRM-006`). The rest are checked for type
+  and range, and the generator receives a typed struct or nothing.
 - Shapes are checked against the stitch type. A satin needs a subpath longer than a point (`SC-E0201`),
   a fill needs a non-empty region, and a running stitch needs a path longer than the minimum stitch
   length.
@@ -101,8 +111,11 @@ not build that method (`REQ-FILL-005`). Nor does it take pull compensation, rand
 gap-filling rows, which Ink/Stitch's legacy fill has no use for. A contour fill, sewn from M7.7, lays its
 rings with the tatami fill's row spacing and sews them as one running stitch after the tatami fill's
 underlay, reading the running stitch's tolerance and random lengths for its path
-([fills](algorithms/fills.md#contour-fill)). The other stroke, satin and fill methods are skipped with
-`SC-W0011` until their milestones. An element whose parameters are wrong (`SC-E0101`) is skipped too, and
+([fills](algorithms/fills.md#contour-fill)). A meander fill, sewn from M7.8, lays a tile over each part
+and sews one path through it after the same underlay ([fills](algorithms/fills.md#meander-fill)). A
+circular fill, sewn from M7.9, sews a spiral round the middle of each part after that underlay too, and
+routes the spiral's pieces as a tatami fill routes its rows ([fills](algorithms/fills.md#circular-fill)).
+The other stroke, satin and fill methods are skipped with `SC-W0011` until their milestones. An element whose parameters are wrong (`SC-E0101`) is skipped too, and
 the rest of the design still plans.
 
 Each element is generated with the shortest stitch for it: the larger of the machine's (the profile's
@@ -114,7 +127,9 @@ or a fill's longest, is raised to it with `SC-W0402`: shorter, the plan would me
 A preview that cannot afford a fill's stitches shows its top rows (`stitchcraft_engine::generate::rows`,
 from M6.3). The fill's settings are read as for sewing it, and what they say is said the same, but only
 the region is built and the rows laid over it: no needle point is placed and no route is searched. A
-contour fill has no rows, and shows its path round its rings, from M7.7.
+contour fill has no rows, and shows its path round its rings, from M7.7. A meander fill shows its path
+through its tile as the element's seed lays it, from M7.8, and a circular fill the pieces of its spiral,
+from M7.9.
 
 Rules every generator follows:
 
@@ -125,8 +140,9 @@ Rules every generator follows:
   That is its first point, or, when it starts at its own nearest point, its shape: a satin column's rails
   or a tatami fill's area. The offer comes from the next element's shape and settings and the design's,
   never its stitches, so nothing waits for a later element. A satin column and a tatami fill start and
-  end by them ([satin](algorithms/satin.md#start-and-end), [fills](algorithms/fills.md#5-parts)), and
-  explicit start and end commands will override them (`REQ-GEN-001`). Each ends near its next stitch, its
+  end by them ([satin](algorithms/satin.md#start-and-end), [fills](algorithms/fills.md#5-parts)). An
+  element's start and end positions, which its design places, take their place for the stitch types that
+  use them, and a fill or a satin column with a start position offers it (`REQ-GEN-001`). Each ends near its next stitch, its
   point nearest the offer as Ink/Stitch's geometry library finds it, a point of one shape inside the
   other's area first (`generators::next`).
 - **Seeded randomness:** each element's generator is seeded from its `random_seed`, one of the settings
@@ -205,26 +221,39 @@ beyond that length can cause.
 - [Lock stitches](algorithms/locks.md) specifies the lock itself: its shape (`lock_start`, `lock_end`),
   its size and its shortest stitch (0.2 mm).
 
-### Origin and stop position
+### Origin, stop position and turn on export
 
 The finished plan is in hoop coordinates: the design's origin goes to the hoop's centre, (0, 0), where the
-needle starts. The origin is the design's own (Ink/Stitch's origin command, read from M8) or else the centre
-of the box around every point where the needle goes down (`REQ-ASM-005`). Assembly builds the plan in the
+needle starts. The origin is the design's own or else the centre of the box around every point where the
+needle goes down (`REQ-ASM-005`). Assembly builds the plan in the
 design's coordinates, and finalize moves it once it has left out the points the machine cannot sew, so the
-box is the finished plan's, as in Ink/Stitch. A design's stop position
-(Ink/Stitch's stop position command) adds a jump to it before each `Stop`. At the stop position the frame
-is clear of the needle for an appliqué or a check, and sewing resumes with a jump back.
+box is the finished plan's, as in Ink/Stitch. A design's stop position adds a jump to it before each `Stop`.
+At the stop position the frame is clear of the needle for an appliqué or a check, and sewing resumes with a
+jump back. The plan's bounds take in that jump, and the hoop check measures them (`SC-E0701`).
+
+An SVG file gives both with Ink/Stitch's `origin` and `stop_position` commands, a VectorCraft document with
+objects named `stitch:origin` and `stitch:stop-position` (M8.8). Each is a point anywhere in the document.
+Ink/Stitch's command is where its symbol is placed, and a marker is at the middle of the box round its
+anchors. A file with 2 origins, or 2 stop positions and a stop, is an error (`SC-E0819`), since which one
+counts isn't known. Ink/Stitch doesn't write a machine file of it either.
+
+Once the origin is at the hoop's centre, the design's turn on export turns the plan about it, by its
+degrees, right for a positive number (M8.9). It is Ink/Stitch's design setting `rotate_on_export`, for a
+machine that doesn't turn a design to fit its hoop, which the Design Settings filter keeps with a VectorCraft
+document. Ink/Stitch's writer turns the machine file the same way, stop position jumps included. The hoop
+check measures the turned plan, as the machine gets it. A whole number of quarter turns moves each coordinate
+to the other axis and rounds nothing (`stitchcraft_engine::design::Turn`).
 
 ### Commands
 
 | Command | Effect | From |
 |---|---|---|
-| Start / end point | Entry/exit hints for the generator (`REQ-GEN-001`). The VectorCraft adapter reads them from markers named `stitch:start` and `stitch:end`, which it names until then | M8 |
-| Target point | Centre for circular fills and ripple targets | M7, M10 |
+| Start / end point | The element's start and end positions, which take the place of the needle before it and of the next element's offer for fills and satin columns (`REQ-GEN-001`). The SVG adapter reads Ink/Stitch's commands, and the VectorCraft adapter its markers named `stitch:start` and `stitch:end` | M8.4 |
+| Target point | The point a circular fill turns round, in place of its parts' centroids (`REQ-FILL-CIR-008`), and from M10 the ripple stitch's target | M8.4, M10 |
 | Trim after, stop after | `trim_after` and `stop_after` on the element's last group (see the connection table). The SVG adapter reads Ink/Stitch's trim and stop commands as these settings. | M3.8 (engine), M3 (adapter) |
 | Ignore object / ignore layer | The adapter drops the element and says so in the report (`REQ-ASM-004`). The VectorCraft adapter reads them from the name `stitch:ignore` | M3 (SVG), M6 (VectorCraft) |
-| Origin | The design setting `origin` | M3.8 (engine), M8 (adapter) |
-| Stop position | The design setting `stop_position` | M3.8 (engine), M8 (adapter) |
+| Origin | The design setting `origin`. The SVG adapter reads Ink/Stitch's `origin` command, and the VectorCraft adapter its marker named `stitch:origin` | M3.8 (engine), M8.8 (adapters) |
+| Stop position | The design setting `stop_position`. The SVG adapter reads Ink/Stitch's `stop_position` command, and the VectorCraft adapter its marker named `stitch:stop-position` | M3.8 (engine), M8.8 (adapters) |
 
 ## 5. Finalize
 
@@ -257,8 +286,9 @@ them. What is left to fit comes from joining groups and from settings the machin
    custom lock's long step, a satin column wider than the machine's longest stitch, a tatami fill whose
    `max_stitch_length_mm` is longer than it, or a move sewn on under a `min_jump_stitch_length_mm` that
    long. Each part counts against the design's stitch budget.
-3. **The hoop's centre.** The fitted plan is moved so the design's origin is at the hoop's centre
-   ([origin](#origin-and-stop-position), `REQ-ASM-005`).
+3. **The hoop's centre.** The fitted plan is moved so the design's origin is at the hoop's centre, and
+   turned about it by the design's turn on export ([origin](#origin-stop-position-and-turn-on-export),
+   `REQ-ASM-005`).
 4. **Colour limits:** colour changes and stops above what the format the plan is written in records →
    `SC-E0601`. That is the profile's own, or the one `--format` or an exporter writes, planned for with
    `MachineProfile::writing`: a DST file records 999 colour changes, where the PE800's own PES records 255.

@@ -52,7 +52,10 @@
 //! once the objects VectorCraft draws nothing of are left out ([`marker`]). `stitch:ignore` leaves an object
 //! or a layer out with everything in it, and `SC-I0811` lists it. `stitch:start` and `stitch:end` mark
 //! where the shape grouped with them starts or ends: the marker is never stitched, and `SC-W0807` names it
-//! until the generators start and end at such hints (M8). A group or a layer is never a marker, and a word
+//! until the generators start and end at such hints (M8). `stitch:origin` and `stitch:stop-position`, anywhere
+//! in the document, give the design its origin and its stop position (`REQ-ASM-005`), as Ink/Stitch's commands
+//! do in an SVG file, and 2 origins, or 2 stop positions in a design that stops, are an error (`SC-E0819`).
+//! A group or a layer is never a marker, and a word
 //! after `stitch:` that names none is ignored: `SC-W0807` names both, in case of a slip. A live effect
 //! is never given a name, so its preview shows what a name leaves out.
 //!
@@ -79,9 +82,11 @@ use std::collections::BTreeMap;
 use std::rc::Rc;
 
 use serde_json::Value;
+use stitchcraft_core::Point;
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, Mm};
 use stitchcraft_engine::auto::{self, Stitches};
-use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule, Join, Path, Reading, Segment, Shape};
+use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule, Hints, Join, Path, Reading, Segment, Shape};
+use stitchcraft_engine::generate::stops_after;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_params::stitch_type::Family;
 use stitchcraft_params::{ParamSet, StitchType};
@@ -146,8 +151,19 @@ pub fn read_with(bytes: &[u8], budget: &Budget, reading: Reading) -> Result<Vect
     let file: wire::File = serde_json::from_slice(&json).map_err(|e| unreadable(&format!("Its JSON does not read: {e}.")))?;
     let settings = DesignSettings::default();
     let (labels, read) = (Labels::default(), json.len());
-    let mut reader =
-        Reader { meter, labels, objects: 0, elements: Vec::new(), warnings: Vec::new(), auto: reading.auto, settings, copied: 0, read, held: 0 };
+    let mut reader = Reader {
+        meter,
+        labels,
+        objects: 0,
+        elements: Vec::new(),
+        warnings: Vec::new(),
+        auto: reading.auto,
+        settings,
+        copied: 0,
+        read,
+        held: 0,
+        places: Vec::new(),
+    };
     reader.header(file.format.as_deref(), file.version.as_ref())?;
     let document = file.document.ok_or_else(|| unreadable("It holds no document."))?;
     let mut unread = Vec::new();
@@ -156,9 +172,10 @@ pub fn read_with(bytes: &[u8], budget: &Budget, reading: Reading) -> Result<Vect
     for layer in &document.layers {
         reader.node(layer, &Around::default())?;
     }
+    reader.placed();
     let mut warnings = reader.warnings;
     warnings.extend(unread);
-    let design = Design::new(reader.elements, kept.settings)?.read_as(reading);
+    let design = Design::new(reader.elements, reader.settings)?.read_as(reading);
     Ok(VectorCraft { design, machine: kept.machine, warnings })
 }
 
@@ -228,6 +245,11 @@ struct Around<'a> {
     /// Whether the object is a clip group's clipping object, which VectorCraft paints only when it is a
     /// path, a compound path or text.
     clipping: bool,
+    /// Where the nearest start and end markers grouped with it place its fills and satin columns
+    /// (`REQ-VC-009`).
+    hints: Hints,
+    /// The markers that give those places, which are said nothing of.
+    markers: Rc<[&'a Node]>,
 }
 
 /// A group's or a layer's own paints, which VectorCraft paints its contents with: the items before the
@@ -316,12 +338,17 @@ enum Marker {
     Start,
     /// Where it ends.
     End,
+    /// The design's origin, which goes to the hoop's centre.
+    Origin,
+    /// The design's stop position, where the frame moves before each stop.
+    StopPosition,
     /// No marker StitchCraft reads.
     Unknown,
 }
 
 /// The word after `stitch:` of each marker StitchCraft reads.
-const MARKERS: [(&str, Marker); 3] = [("ignore", Marker::Ignore), ("start", Marker::Start), ("end", Marker::End)];
+const MARKERS: [(&str, Marker); 5] =
+    [("ignore", Marker::Ignore), ("start", Marker::Start), ("end", Marker::End), ("origin", Marker::Origin), ("stop-position", Marker::StopPosition)];
 
 /// The marker `name` is: `stitch:` and a word, after any white space, alone or followed by white space and a
 /// note, in any mix of upper and lower case. `None` for a name that doesn't begin with `stitch:`.
@@ -359,6 +386,8 @@ struct Reader {
     read: usize,
     /// The bytes of the paths copied into the elements so far, at most [`HELD_PER_BYTE`] for each byte read.
     held: usize,
+    /// The origin and stop position markers met, in order, each with its label and its place, if it reads.
+    places: Vec<(Marker, String, Option<Point>)>,
 }
 
 impl Reader {
@@ -384,6 +413,32 @@ impl Reader {
         self.meter.charge(units).map_err(|_| exhausted())
     }
 
+    /// The design's origin and stop position from the markers met (`REQ-ASM-005`): the one of each kind, at
+    /// the middle of its anchors, where one with no point that reads is named and places nothing. 2 origins,
+    /// or 2 stop positions in a design that stops, are an error (`SC-E0819`), as Ink/Stitch's commands are.
+    fn placed(&mut self) {
+        let stops = self.elements.iter().any(stops_after);
+        for (marked, noun) in [(Marker::Origin, "origin"), (Marker::StopPosition, "stop-position")] {
+            let found: Vec<(String, Option<Point>)> =
+                self.places.iter().filter(|(kind, _, _)| *kind == marked).map(|(_, label, at)| (label.clone(), *at)).collect();
+            match found.as_slice() {
+                [] => {}
+                [(_, Some(at))] if marked == Marker::Origin => self.settings.origin = Some(*at),
+                [(_, Some(at))] => self.settings.stop_position = Some(*at),
+                [(label, None)] => {
+                    let message = format!("The object named stitch:{noun} has no point that reads, so it places nothing.");
+                    self.feature(label, message, Some(UNUSABLE_HINT));
+                }
+                several if marked == Marker::Origin || stops => {
+                    let has = if marked == Marker::Origin { "" } else { ", and the design stops" };
+                    let message = format!("The document has {} objects named stitch:{noun}{has}: which one counts isn't known.", several.len());
+                    self.warn(Code::OriginOrStopPositionTwice, None, message, Some("Rename all but one."));
+                }
+                _ => {}
+            }
+        }
+    }
+
     /// One object and what is inside it, inside groups and layers whose StitchCraft effects are `around`.
     fn node<'a>(&mut self, node: &'a Node, around: &Around<'a>) -> Result<(), Diagnostic> {
         let appearance = &node.appearance;
@@ -402,24 +457,43 @@ impl Reader {
         if let Some(marked) = node.name.as_deref().and_then(marker) {
             let container = node.kind.as_ref().map(|kind| kind.name.as_str()).filter(|kind| matches!(*kind, "layer" | "group"));
             let shown = called(node, &container.map_or_else(|| "The object".to_string(), |kind| format!("The {kind}")));
-            let (verb, noun) = if marked == Marker::Start { ("starts", "start") } else { ("ends", "end") };
+            let (verb, noun) = match marked {
+                Marker::Start => ("starts", "start"),
+                Marker::Origin => ("", "origin"),
+                Marker::StopPosition => ("", "stop-position"),
+                _ => ("ends", "end"),
+            };
             match (marked, container) {
+                (Marker::Origin | Marker::StopPosition, None) => {
+                    // It places the design's origin or stop position, wherever it is, and is not stitched.
+                    let data: Vec<&PathData> = node.kind.iter().flat_map(|kind| &kind.path).collect();
+                    let at = geometry::middle(&data, &mut self.meter).map_err(|_| exhausted())?;
+                    self.places.push((marked, label, at));
+                    return Ok(());
+                }
                 (Marker::Ignore, _) => {
                     let message = format!("{shown} is named stitch:ignore, and is left out with everything in it.");
                     self.warn(Code::VcObjectIgnored, Some(&label), message, Some("Rename it to stitch it."));
                     return Ok(());
                 }
                 (Marker::Start | Marker::End, None) => {
-                    let message = format!(
-                        "{shown} marks where the shape grouped with it {verb}, and is not stitched. StitchCraft doesn't yet {noun} a shape \
-                         at a marker: it chooses where."
-                    );
-                    self.feature(&label, message, None);
+                    // The group it is in places its shapes there, and it is not stitched.
+                    if !around.markers.iter().any(|used| std::ptr::eq(*used, node)) {
+                        let message = format!(
+                            "{shown} would mark where the shapes grouped with it {verb}, and is not stitched. It is not used: it has no \
+                             point that reads, or another {noun} marker in its group comes first."
+                        );
+                        self.feature(&label, message, Some(&format!("Keep one {noun} marker in a group, drawn as a small path.")));
+                    }
                     return Ok(());
                 }
                 (Marker::Start | Marker::End, Some(kind)) => {
                     let message = format!("{shown} is named as a {noun} marker, which a {kind} can't be, and the name is ignored.");
                     self.feature(&label, message, Some(&format!("Name a small path grouped with the shape stitch:{noun}.")));
+                }
+                (Marker::Origin | Marker::StopPosition, Some(kind)) => {
+                    let message = format!("{shown} is named stitch:{noun}, which a {kind} can't be, and the name is ignored.");
+                    self.feature(&label, message, Some(&format!("Name a small path stitch:{noun}.")));
                 }
                 (Marker::Unknown, _) => {
                     let message = format!("{shown} begins with stitch:, which names no marker StitchCraft reads, and the name is ignored.");
@@ -510,7 +584,13 @@ impl Reader {
             self.feature(label, beside_auto(&who), Some(BESIDE_AUTO));
         }
         let gives = !effects.is_empty() || auto.is_some();
-        let inside = (gives || paints.is_some()).then(|| Around {
+        // Its own markers place what it holds, before those of the groups around it. Its hints differ from
+        // theirs only where it has markers of its own.
+        let (hints, markers) = self.markers(kind)?;
+        let hints = Hints { start: hints.start.or(around.hints.start), end: hints.end.or(around.hints.end), target: None };
+        let placed = !markers.is_empty();
+        let markers: Rc<[&'a Node]> = if markers.is_empty() { Rc::clone(&around.markers) } else { markers.into() };
+        let inside = (gives || paints.is_some() || placed).then(|| Around {
             auto: if gives { auto } else { around.auto },
             effects: if gives { effects.into() } else { Rc::clone(&around.effects) },
             levels: around.levels.saturating_add(u32::from(gives)),
@@ -519,6 +599,8 @@ impl Reader {
                 None => Rc::clone(&around.painters),
             },
             clipping: false,
+            hints,
+            markers: Rc::clone(&markers),
         });
         let inside = inside.as_ref().unwrap_or(around);
         for (k, child) in kind.children.iter().enumerate() {
@@ -532,6 +614,8 @@ impl Reader {
                         levels: inside.levels,
                         painters: Rc::default(),
                         clipping: true,
+                        hints: inside.hints,
+                        markers: Rc::clone(&inside.markers),
                     };
                     self.node(child, &clipping)?;
                 }
@@ -541,6 +625,28 @@ impl Reader {
             }
         }
         Ok(())
+    }
+
+    /// The start and end markers among `kind`'s children, a group's or a layer's (`REQ-VC-009`): the first of
+    /// each kind that shows and has a point that reads gives where the fills and satin columns it holds
+    /// start or end, the middle of its anchors ([`geometry::middle`]). Each such marker is used.
+    fn markers<'a>(&mut self, kind: &'a Kind) -> Result<(Hints, Vec<&'a Node>), Diagnostic> {
+        let (mut hints, mut used) = (Hints::default(), Vec::new());
+        for child in &kind.children {
+            let Some(marked @ (Marker::Start | Marker::End)) = child.name.as_deref().and_then(marker) else { continue };
+            // A group or a layer is never a marker, and one that doesn't show places nothing.
+            let Some(own) = child.kind.as_ref().filter(|k| !matches!(k.name.as_str(), "layer" | "group")) else { continue };
+            let place = if marked == Marker::Start { &mut hints.start } else { &mut hints.end };
+            if place.is_some() || !child.visible || !shows(child.opacity) {
+                continue;
+            }
+            let data: Vec<&PathData> = own.path.iter().collect();
+            if let Some(at) = geometry::middle(&data, &mut self.meter).map_err(|_| exhausted())? {
+                *place = Some(at);
+                used.push(child);
+            }
+        }
+        Ok((hints, used))
     }
 
     /// The visible StitchCraft stitch effects of `node`, in their order, and the parameters of its first
@@ -619,19 +725,27 @@ impl Reader {
         // The nearest StitchCraft effects say how it sews: its own, or else those of the groups around it.
         let (effects, auto) = if gives { (own.as_slice(), own_auto) } else { (&around.effects[..], around.auto) };
         if effects.is_empty() {
-            return self.by_paints(node, label, &path, rule, auto);
+            return self.by_paints(node, label, &path, rule, auto, around.hints);
         }
         // Each group around that paints is a step more in finding the thread and the stroke.
         self.charge(around.painters.len() as u64)?;
         let paints = Part::new(&node.appearance.items);
-        self.by_effects(node, label, &path, rule, effects, &painting(label, &paints, around))
+        self.by_effects(node, label, &path, rule, effects, &painting(label, &paints, around), around.hints)
     }
 
     /// The elements of an object without StitchCraft stitch effects: the fills VectorCraft draws, then its
     /// strokes. Each is automatic with `--auto`, and when an Auto effect reaches the object, its own or a
     /// group's, whose parameters `auto` are then its settings of the rules (`REQ-VC-016`).
-    fn by_paints(&mut self, node: &Node, label: &str, path: &Path, rule: FillRule, auto: Option<&Value>) -> Result<(), Diagnostic> {
+    fn by_paints(&mut self, node: &Node, label: &str, path: &Path, rule: FillRule, auto: Option<&Value>, hints: Hints) -> Result<(), Diagnostic> {
         let automatic = self.auto || auto.is_some();
+        // Automatic digitizing places where an automatic shape's parts start and end.
+        let hints = if automatic && hints != Hints::default() {
+            let message = "It is digitized automatically, which places where its parts start and end: the markers grouped with it are not used.";
+            self.feature(label, message.to_string(), None);
+            Hints::default()
+        } else {
+            hints
+        };
         let params = match auto {
             Some(params) => self.params(label, AUTO, params)?,
             None => ParamSet::new(),
@@ -644,7 +758,7 @@ impl Reader {
             let Some(thread) = self.thread(label, item.paint.as_ref()) else { continue };
             fills += 1;
             let shape = Shape::Fill { path: self.copy(path)?, rule };
-            self.element(node, label, &rank("fill", fills), shape, thread, params.clone(), automatic)?;
+            self.element(node, label, &rank("fill", fills), shape, thread, params.clone(), automatic, hints)?;
         }
         // VectorCraft paints the items in order, the first lowest, and the fills are sewn first.
         let items = &node.appearance.items;
@@ -675,14 +789,15 @@ impl Reader {
             }
             strokes += 1;
             let shape = Shape::Stroke { path: self.copy(path)?, width, join, cap };
-            self.element(node, label, &rank("stroke", strokes), shape, thread, params.clone(), automatic)?;
+            self.element(node, label, &rank("stroke", strokes), shape, thread, params.clone(), automatic, hints)?;
         }
         Ok(())
     }
 
     /// The elements of an object with StitchCraft effects: one for each, in their order, in the thread and
     /// with the stroke they take from `painting`. A fill takes its thread from the fills first, the others
-    /// from the strokes, the stroke a stroke or a satin column follows.
+    /// from the strokes, the stroke a stroke or a satin column follows. Each takes the shape's `hints`.
+    #[allow(clippy::too_many_arguments)]
     fn by_effects(
         &mut self,
         node: &Node,
@@ -691,6 +806,7 @@ impl Reader {
         rule: FillRule,
         effects: &[(Family, &Value)],
         painting: &Painting,
+        hints: Hints,
     ) -> Result<(), Diagnostic> {
         let (mut counts, mut black): (BTreeMap<Family, u32>, _) = (BTreeMap::new(), None);
         // Found when the first effect that needs it comes, each once.
@@ -723,7 +839,7 @@ impl Reader {
             let count = counts.entry(*family).or_default();
             *count = count.saturating_add(1);
             let what = rank(family.id(), *count);
-            self.element(node, label, &what, shape, thread, set, false)?;
+            self.element(node, label, &what, shape, thread, set, false, hints)?;
         }
         Ok(())
     }
@@ -757,6 +873,7 @@ impl Reader {
         thread: Thread,
         params: ParamSet,
         automatic: bool,
+        hints: Hints,
     ) -> Result<(), Diagnostic> {
         let copied = node.name.as_ref().map_or(0, String::len) + params.iter().map(|(key, value)| key.len() + value.len()).sum::<usize>();
         self.charge(1 + (copied / BYTES_PER_UNIT) as u64)?;
@@ -771,7 +888,7 @@ impl Reader {
         }
         let id = ElementId::new(format!("vc:{label}:{what}"))
             .map_err(|e| Diagnostic::new(Code::InternalCheckFailed, format!("The VectorCraft object `vc:{label}` makes no element id: {e}.")))?;
-        self.elements.push(Element { id, name: node.name.clone(), shape, thread, params, automatic });
+        self.elements.push(Element { id, name: node.name.clone(), shape, thread, params, automatic, hints, clips: Vec::new() });
         Ok(())
     }
 

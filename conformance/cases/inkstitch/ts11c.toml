@@ -1,0 +1,11 @@
+id = "inkstitch-ts11c"
+requirements = ["REQ-SVG-008"]
+kind = "inkstitch"
+sheet = "TS-11C"
+# StitchCraft's meander tiles are its own, made in code. Ink/Stitch has none of their names, and sews each
+# sample with one of its own tiles, so the lines and the stitches they take differ. Size, threads, trims and
+# jumps agree.
+
+[excused]
+stitches = "DEV-FILL-018"
+overlap = "DEV-FILL-018"

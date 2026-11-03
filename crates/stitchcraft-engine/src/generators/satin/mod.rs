@@ -38,7 +38,7 @@ use stitchcraft_core::units::at_least;
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Mm, Point};
 use stitchcraft_params::{ChoiceOption, Origin, StitchType, params};
 
-use crate::design::{Join, Path};
+use crate::design::{Hints, Join, Path};
 use crate::generators::pull::PullParams;
 use crate::generators::running::raised;
 use crate::generators::satin::column::Section;
@@ -74,6 +74,10 @@ pub const ZIGZAG_UNDERLAY: &str = "zigzag_underlay";
 /// The key of the setting that shortens or lengthens a satin column at its start and its end, with which
 /// automatic digitizing makes a column that ends under another reach under it.
 pub const PUSH_COMPENSATION: &str = "push_compensation_mm";
+
+/// The key of the setting that starts a satin column near where the needle is, which Ink/Stitch's update of
+/// a file older than its version 3 turns off, as it does [`END_AT_NEAREST_POINT`].
+pub const START_AT_NEAREST_POINT: &str = "start_at_nearest_point";
 
 /// The key of the setting that ends a satin column near where the next element starts, which automatic
 /// digitizing turns off: its order starts the next element near the column's end already.
@@ -361,27 +365,32 @@ pub struct SatinLengths {
 /// variation drawn from the element's `rng`: one run of needle points, its underlays first, then its top
 /// stitches a pair across the column at a time, from the rails' starts to their ends, or from their ends
 /// after an odd centre walk. With its `neighbours`, it starts near where the needle was left and ends near
-/// the next element, as its settings say (the `ends` module). Every needle point costs a stitch from
+/// the next element, as its settings say (the `ends` module). The start and end positions of its `hints`
+/// take their place, whatever its settings say (`REQ-GEN-001`). Every needle point costs a stitch from
 /// `meter`.
+#[allow(clippy::too_many_arguments)] // The column, how it is sewn, and where: each its own input.
 pub fn satin_stitch(
     satin: &Satin,
     params: &SatinParams,
     pull: &PullParams,
     lengths: SatinLengths,
     neighbours: &Neighbours,
+    hints: &Hints,
     rng: &mut SplitMix64,
     meter: &mut Meter,
 ) -> Result<Stitched, Exhausted> {
-    settled(meter, |meter| sewn(satin, params, pull, lengths, neighbours, rng, meter))
+    settled(meter, |meter| sewn(satin, params, pull, lengths, neighbours, hints, rng, meter))
 }
 
 /// [`satin_stitch`], before its stitches are settled.
+#[allow(clippy::too_many_arguments)] // As `satin_stitch`.
 fn sewn(
     satin: &Satin,
     params: &SatinParams,
     pull: &PullParams,
     lengths: SatinLengths,
     neighbours: &Neighbours,
+    hints: &Hints,
     rng: &mut SplitMix64,
     meter: &mut Meter,
 ) -> Result<Stitched, Exhausted> {
@@ -410,25 +419,28 @@ fn sewn(
     // The needle's travel between the pieces and the line it follows to the start and the end keep to the
     // shortest stitch alike: the length is raised once, with one warning.
     let travel = raised("running_stitch_length_mm", lengths.travel, lengths.min_stitch.get(), &mut warnings);
-    let needle = neighbours.needle.filter(|_| params.start_at_nearest_point);
-    let next = neighbours.next.as_ref().filter(|_| params.end_at_nearest_point);
-    let pieces = if needle.is_none() && next.is_none() {
+    // A start or end position takes the place of the needle or the next element, whatever the settings say.
+    let needle = neighbours.needle.filter(|_| params.start_at_nearest_point && hints.start.is_none());
+    let next = neighbours.next.as_ref().filter(|_| params.end_at_nearest_point && hints.end.is_none());
+    let pieces = if needle.is_none() && next.is_none() && hints.start.is_none() && hints.end.is_none() {
         ends::sewn(layers, top, meter)?
     } else {
         let guides = Guides::new(&sections, params, lengths, travel, cuts, meter)?;
         let outline = outline(&sections, params, pull, placed, drawn, meter)?;
         let edges: [Vec<Point>; 2] = [outline.iter().map(|[a, _]| *a).collect(), outline.iter().map(|[_, b]| *b).collect()];
         let outline = [edges[0].as_slice(), edges[1].as_slice()];
-        let start = match needle {
-            Some(needle) => guides.start(needle, outline, lengths.jump.get(), meter)?,
-            None => None,
+        let start = match (hints.start, needle) {
+            (Some(start), _) => Some(start),
+            (None, Some(needle)) => guides.start(needle, outline, lengths.jump.get(), meter)?,
+            (None, None) => None,
         };
-        let end = match next {
-            Some(next) => {
+        let end = match (hints.end, next) {
+            (Some(end), _) => guides.end_at(end),
+            (None, Some(next)) => {
                 let [first, second] = column::sewn_rails(satin, params, meter)?;
                 guides.end(next, [&first, &second], outline, meter)?
             }
-            None => None,
+            (None, None) => None,
         };
         guides.pieces(layers, top, start, end, odd, meter)?
     };
@@ -550,7 +562,9 @@ mod tests {
         }
         let push = SatinParams::SPECS.iter().find(|spec| spec.key == PUSH_COMPENSATION);
         assert!(push.is_some_and(|spec| matches!(spec.kind, stitchcraft_params::Kind::LengthPair { .. })));
-        let end = SatinParams::SPECS.iter().find(|spec| spec.key == END_AT_NEAREST_POINT);
-        assert!(end.is_some_and(|spec| spec.kind == stitchcraft_params::Kind::Toggle));
+        for key in [START_AT_NEAREST_POINT, END_AT_NEAREST_POINT] {
+            let spec = SatinParams::SPECS.iter().find(|spec| spec.key == key);
+            assert!(spec.is_some_and(|spec| spec.kind == stitchcraft_params::Kind::Toggle), "{key}");
+        }
     }
 }

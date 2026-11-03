@@ -58,6 +58,9 @@
 //! element has the budget's work to itself, as each element has for its generator; one that needs more
 //! is left out with `SC-E0004`, and the rest of the design still plans (`REQ-GEN-002`).
 //!
+//! An automatic shape is cut to its clips before anything else (`clips`, `REQ-GEN-005`), so that what shows
+//! of it is what is digitized.
+//!
 //! The shapes of a traced picture meet, and [`digitized`] then sews them as neighbours (`auto::neighbours`):
 //! the lowest shape is left out when it is the picture's background (`REQ-AUTO-009`), but for what shows of
 //! it inside the picture, and before anything is digitized the layers are flattened (`REQ-AUTO-023`): each
@@ -71,6 +74,7 @@
 //! neighbours, and the areas sewn before it reach under it.
 
 mod area;
+mod clips;
 mod columns;
 mod narrow;
 mod neighbours;
@@ -87,7 +91,7 @@ use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Fix, Labe
 use stitchcraft_params::{ParamSet, Validated};
 
 use crate::common::{STOP_AFTER, TRIM_AFTER};
-use crate::design::{Cap, Design, DesignSettings, Element, FillRule, Join, Path, Segment, Shape, Subpath, within_working_limit};
+use crate::design::{Cap, Design, DesignSettings, Element, FillRule, Hints, Join, Path, Segment, Shape, Subpath, within_working_limit};
 use crate::generators::passes::BEAN_STITCH_REPEATS;
 use crate::generators::pull::PULL_COMPENSATION;
 use crate::generators::satin::{
@@ -243,20 +247,24 @@ impl Digitized {
     }
 }
 
-/// The elements of `design` as they are generated, in the order they sew: each automatic element turned
-/// into the elements its stitches need ([`digitize`]) and named, the others as they are, and the elements
-/// then sewn as neighbours (`auto::neighbours`); and what was said of them: `SC-I0901` for the shapes
+/// The elements of `design` as they are generated, in the order they sew: each automatic element cut to its
+/// clips (`auto::clips`), turned into the elements its stitches need ([`digitize`]) and named, the others as
+/// they are, and the elements then sewn as neighbours (`auto::neighbours`); and what was said of them:
+/// `SC-W0013` for a shape its clips leave nothing of, `SC-I0901` for the shapes
 /// digitized, what [`digitize`] says of each, its settings of the rules first, `SC-E0004` for each one left
 /// out because digitizing and naming it needs more work than `budget` allows an element, and what is said of
 /// the background, the layers, the specks, the order and the overlaps (`SC-W0906`, `SC-I0908`, `SC-I0905`,
 /// `SC-I0907`, `SC-I0904`). A design without automatic elements that doesn't ask for its threads sorted
 /// comes back as it is.
 pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>, Vec<Diagnostic>) {
-    let elements = design.elements();
-    if !design.sort_colours && !elements.iter().any(|element| element.automatic) {
-        return (Cow::Borrowed(elements), Vec::new());
+    if !design.sort_colours && !design.elements().iter().any(|element| element.automatic) {
+        return (Cow::Borrowed(design.elements()), Vec::new());
     }
     let mut diagnostics = Vec::new();
+    // Each automatic shape is cut to its clips first, so that what shows of it is digitized and hides others.
+    let cut = clips::cut(design, budget, &mut diagnostics);
+    let design = cut.as_ref().unwrap_or(design);
+    let elements = design.elements();
     // Each automatic element's settings of the rules, read once: none for an element with settings, or with a
     // setting that doesn't read, which sews nothing.
     let rules: Vec<Option<AutoParams>> =
@@ -604,9 +612,12 @@ fn ring_subpath(ring: &[Point]) -> Option<Subpath> {
     Some(Subpath { start, segments: rest.iter().map(|&q| Segment::Line(q)).collect(), closed: true })
 }
 
-/// An ordinary element that sews `shape` as a part of `element`, named `id`, with `params`.
+/// An ordinary element that sews `shape` as a part of `element`, named `id`, with `params`. It starts and
+/// ends where automatic digitizing's order puts it: an automatic element's hints are the reader's to name.
+/// It is cut to the element's clips, as the element would be (`REQ-GEN-005`).
 fn part(element: &Element, id: ElementId, shape: Shape, params: ParamSet) -> Element {
-    Element { id, name: element.name.clone(), shape, thread: element.thread.clone(), params, automatic: false }
+    let clips = element.clips.clone();
+    Element { id, name: element.name.clone(), shape, thread: element.thread.clone(), params, automatic: false, hints: Hints::default(), clips }
 }
 
 /// `params` without the settings that act after an element, and those settings.
@@ -760,7 +771,16 @@ mod tests {
         let (square, strip) = (rect((0.0, 0.0), (10.0, 10.0)), rect((20.0, 0.0), (30.0, 0.6)));
         let shape = Shape::Fill { path: outline(&[square.clone(), strip.clone()]), rule: FillRule::NonZero };
         let thread = stitchcraft_plan::Thread::new(stitchcraft_plan::Rgb::new(0, 0, 0));
-        let area = Element { id: ElementId::new("area").unwrap(), name: None, shape, thread, params: ParamSet::default(), automatic: true };
+        let area = Element {
+            id: ElementId::new("area").unwrap(),
+            name: None,
+            shape,
+            thread,
+            params: ParamSet::default(),
+            automatic: true,
+            hints: Default::default(),
+            clips: Vec::new(),
+        };
         let said = vec![Diagnostic::new(Code::InternalCheckFailed, "A part could not be measured.").with_element(area.id.clone())];
         let filled = narrow::Parts { filled: vec![square.clone()], along: Vec::new(), said: said.clone() };
         assert_eq!(sewn(&area, filled, &AutoParams::defaults()).diagnostics, said);

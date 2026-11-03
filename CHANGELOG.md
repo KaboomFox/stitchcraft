@@ -5,6 +5,176 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- MC-6: TS-11A, the sampler of M7's new strokes and satins, so every sheet MC-6 sews is drawn. A band to a
+  thread, most samples hooks, straight and then turning a quarter circle, in rows that turn back on each
+  other so the needle never comes to a sample where it would sew a jump's thread down. Zigzag strokes 1, 2
+  and 4 mm wide at spacings of 0.4, 1 and 2 mm, and a line whose stitches turn 45°. E-stitches 3 and 5 mm
+  wide at spacings of 2 and 3 mm round an appliqué square and 4 circles, the fabric laid at one stop and
+  trimmed at the next. S-stitches 6 and 10 mm wide at spacings of 0.4 and 0.6 mm, the 10 mm ones split at
+  3 mm by the default and the staggered methods. Zigzag satins 4 and 8 mm wide at spacings of 0.4 and 1 mm,
+  each beside a satin column of the same width and spacing, and one over a contour underlay. The Test
+  Sheet filter draws it in VectorCraft.
+  - Sewn by Ink/Stitch at `d59c9ab` as a black box, the sheet agrees with StitchCraft by every measure of
+    the differential (`REQ-RUN-013`, `REQ-SAT-029`): 4,632 stitches against 4,709, the same size, threads,
+    trims and jumps, and footprints that overlap by 0.993.
+  - The checks that sew every sheet mirrored, turned and drawn again leave out what a zigzag stroke and an
+    E-stitch don't keep by design, as Ink/Stitch sews them: a zigzag mirrored or drawn from its end
+    zigzags from the other side, and an E-stitch drawn from its end spikes elsewhere along it.
+- M8.9: the turn on export (`REQ-ASM-005`). Ink/Stitch's design setting `rotate_on_export` turns the plan
+  about the hoop's centre once the origin is there, before the hoop is checked, as Ink/Stitch turns the
+  machine file it writes. 90 turns the design right and -90 left, and any other number of degrees that
+  much, as Ink/Stitch's writer does. A whole number of quarter turns rounds nothing.
+  - The SVG adapter reads it from the file's metadata (`REQ-SVG-005`), where `SC-W0802` named it as not
+    applied, and names text that isn't a number. VectorCraft's Design Settings filter keeps it with a
+    document, a choice of none, left and right (`REQ-VC-013`). The test kit writes it.
+  - 2 differential cases turn a design 90 and 45 degrees about an origin off its middle, with a stop
+    position. Both programs sew each alike by every measure.
+  - TS-16 is written turned right for MC-11: its shapes sew 100 mm wide and 40 mm tall, the red fill at the
+    right.
+- M8.8: the design's origin and stop position (`REQ-ASM-005`). Ink/Stitch's `origin` command gives the
+  design its origin, which goes to the hoop's centre, and its `stop_position` command the stop position,
+  which the frame moves to before each stop. Each is the point where its symbol is placed, wherever it is,
+  in `<defs>` and hidden layers too, as Ink/Stitch finds them (`REQ-SVG-003`). In a VectorCraft document,
+  objects named `stitch:origin` and `stitch:stop-position` mark them, each at the middle of its anchors
+  (`REQ-VC-009`).
+  - 2 origins, or 2 stop positions in a design with a stop, end planning with `SC-E0819` (new). Ink/Stitch
+    doesn't write a machine file of them either. A command or a marker whose place doesn't read is named and
+    left out (`SC-W0802`, `SC-W0807`).
+  - The differential measures each file's place too, within 0.5 mm each way. The place is the middle of
+    the file's box, from where the machine starts. Its new case sews an origin in a moved and scaled group
+    and a stop position in a hidden layer, which both programs sew alike by every measure.
+  - The test kit writes a design's origin and stop position as Ink/Stitch's commands (`REQ-PRM-003`).
+  - TS-16 gains its M8.8 part for MC-11. Its origin lies on the blue column's top edge, 10 mm in from its
+    left end. A stop after the blue column sends the frame to a stop position 20 mm right of the fill and
+    10 mm above it. Ink/Stitch sews the sheet as StitchCraft does by every measure of the differential,
+    the place among them.
+- M8.5: clip paths (`REQ-SVG-011`, `REQ-GEN-005`). A shape that a `clip-path` cuts sews only what shows of
+  it. The SVG reader reads the clip paths of a shape and of the groups, links and switches round it, each
+  a clip of its elements (`Element::clips`), and the engine cuts them for every reader.
+  - A clip path is its children's areas together, each by its `clip-rule`, in the user space of what it
+    clips, or in shares of a shape's box with `objectBoundingBox`. A group in one counts, as Inkscape draws
+    it, and a clip path's own `clip-path` cuts it too. Children that aren't displayed are left out, as are
+    lines and text, and text is named.
+  - A fill's area is cut before its underlay, `expand_mm` and its method see it, as Ink/Stitch cuts it. A
+    stroke's line is cut where it crosses the clip, and each piece sews on its own. Left whole, a subpath
+    sews as drawn. Satin columns are sewn whole, as in Ink/Stitch, and `SC-W0217` names each. A shape
+    wholly outside its clips, or under an empty clip path, isn't sewn, with `SC-W0013`. Automatic
+    digitizing cuts its shapes first, so that what shows of them is digitized.
+  - What isn't applied of a clip path is named (`SC-W0802`), and the note that clipping isn't applied is
+    gone. An Inkscape power clip is read from its clip path, as a viewer draws it.
+  - The ledger says where Ink/Stitch builds a clip otherwise. Ink/Stitch pools the children's subpaths, and
+    leaves out where 2 children overlap (`DEV-SVG-016`). It drops a clip path's transform (`DEV-SVG-017`)
+    and ignores a link's or a switch's clip path (`DEV-SVG-018`). A shape whose clip path is empty sews
+    whole there (`DEV-SVG-019`), and a power clip goes by its settings (`DEV-SVG-020`). Each piece of a cut
+    closed zigzag is closed (`DEV-RUN-009`), and a line that touches its clip at a point sews whole
+    (`DEV-RUN-010`). 7 differential cases sew clip paths in both programs, 2 that agree and 5 that differ
+    as the ledger says.
+  - TS-16 gains its clip part for MC-11, a square cut by a circle to a green quarter disc and a black
+    zigzag cut into 2 pieces. Ink/Stitch sews the sheet as StitchCraft does by every measure of the
+    differential: 3,026 stitches against 3,212, the same size, threads, trims and jumps, and footprints
+    that overlap by 0.99.
+  - The transform harness of the sheets moves an element's positions and clips with its shape, which it
+    left where they were.
+- M8.4: start and end positions (`REQ-GEN-001`) and the target point (`REQ-FILL-CIR-008`). Ink/Stitch's
+  `starting_point` and `ending_point` commands, and objects named `stitch:start` and `stitch:end` in a
+  VectorCraft document, say where the elements of their shape start and end, in place of the needle before
+  them and of what the next element offers. A fill starts nearest its start position and ends nearest its
+  end position by every method, the legacy fill sewn as a tatami fill among them, but for the contour fill's
+  end, which lies where its rings end. In parts, its first part starts nearest the start position, and each
+  part after where the part before ended (`DEV-FILL-023`). A satin column sews a stitch at its start
+  position and follows its line to its first stitch, and ends at its end position unless that lies within
+  5 CSS pixels of the line's end, whatever its nearest-point settings say. Strokes start and end where they
+  are drawn, as in Ink/Stitch. The element before a fill or a satin column with a start position ends nearest it
+  (`DEV-SAT-012`). A circular fill turns round Ink/Stitch's `target_point` command. In a file of version 1
+  or 2, a start or end command works at its connector's end on its object, as Ink/Stitch's update moves
+  it, and `SC-I0818` counts the commands moved. A shape digitized automatically places its own, and the
+  readers say its commands and markers aren't used.
+  - The SVG reader places a command where its symbol's `<use>` is, under the transforms above it, as
+    Ink/Stitch does, and the VectorCraft reader a marker at the middle of the box round its anchors. Of 2
+    commands or markers of a kind, the first counts, and `SC-W0807` names a marker that isn't used.
+  - TS-16, the sheet MC-11 sews beside Ink/Stitch's machine file of it, starts with M8.4's part: a fill and
+    a satin column that start and end at their positions. The differential keeps Ink/Stitch's PES file of
+    each sheet beside the SVG file it sewed, for a checkpoint to sew.
+  - Differential cases: TS-16, and 3 squares whose start and end commands make the needle jump between
+    them, with a satin column that starts and ends at commands below it. The same squares in a file of
+    version 2 check the update's move, and a circular fill turns round its target point.
+- M8.11, a spike: `stitch import-inkstitch` will bring Ink/Stitch files into VectorCraft as documents
+  whose objects have StitchCraft's effects. ADR-0016 records why. VectorCraft keeps an SVG file's
+  `inkstitch:*` attributes from import to export since 0.17, but doesn't give a filter or a live effect
+  any of them. Its import drops the connectors that tie commands to objects, the design settings, the
+  file's version and the settings of a clone's source, so a document opened that way would sew otherwise
+  than `stitch plan` sews the file. From M8.12 the VectorCraft adapter names an object that keeps
+  Ink/Stitch's attributes, with `stitch import-inkstitch` as the hint.
+- M7.9: circular fill, sewn as Ink/Stitch sews it (`REQ-FILL-CIR-001` to `REQ-FILL-CIR-007`). A double
+  spiral turns round each part's centroid. Its rings lie `row_spacing_mm` apart out to 2 spacings past the
+  part's farthest point, or fade towards `end_row_spacing_mm` there. It turns in on every other ring and
+  back out between them, and the part's outline and holes cut it into pieces, sewn after the tatami fill's
+  underlay.
+  - The pieces are routed as a tatami fill's rows are, each sewn once. The needle runs between them under
+    the pieces sewn later, at the fill's `angle`, or along the outline with `underpath` off.
+    `skip_last` leaves out each piece's last needle point, as Ink/Stitch's circular fill does though its
+    settings window doesn't show it. A round part's spiral, cut once, is joined to the needle and to the
+    end along the outline, the shorter way round (`DEV-FILL-022`).
+  - Bean stitch leaves the travel between pieces out, and `repeats` double the stitching, as for a contour
+    fill. A part within its row spacing of its middle is sewn as one circle that size (`SC-W0318`), and one
+    the spiral misses round its outline (`SC-W0305`), as Ink/Stitch sews them. Past the farthest point
+    fading circles stay the end spacing apart, where Ink/Stitch's can crowd without end (`DEV-FILL-021`).
+  - Tatami's routing takes rows that run along lines of any shape: the route, the travel under the rows
+    and the ways along the rings and rows follow a piece of spiral as they follow a straight row.
+  - TS-11B gains a row of circular fills for MC-6: round a hole, on a star and fading. Sewn by Ink/Stitch
+    at `d59c9ab` as a black box, the sheet agrees with StitchCraft by every measure of the differential:
+    15,314 stitches against 14,535, the same size, threads, trims and jumps, and footprints that overlap by
+    0.99. Its 3 circular fills take 2,132, 1,409 and 1,162 stitches against Ink/Stitch's 2,063, 1,494 and
+    1,093, and the same thread within 2 %.
+  - `check_params.py` finds what each fill method's own sewing reads, as well as its underlay, and the
+    contract lists `skip_last` as read by the circular fill (`read_by`).
+  - A circular fill's preview shows its pieces of spiral, and the user's guide has a page for it.
+- M8.2: every test sheet drawn as a design in the Ink/Stitch differential (`REQ-SVG-008`). TS-02B to
+  TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills' sheet, are cases, as TS-11B and the
+  TS-13 sheets are. Sewn by Ink/Stitch at `d59c9ab`, each agrees by every measure or excuses a measure
+  with the ledger entry that says why.
+  - TS-04 excuses the size and the overlap with `DEV-LCK-001`. Its drawn locks are StitchCraft's own
+    shapes, which lie on the line they secure. Ink/Stitch's cross and star reach past the line's end, and
+    the sheet is 1.6 mm wider in Ink/Stitch.
+  - TS-11C excuses the stitches and the overlap with `DEV-FILL-018`. Its tiles are StitchCraft's own, and
+    Ink/Stitch sews each sample with one of its own tiles. Ink/Stitch sews 7,340 stitches to
+    StitchCraft's 5,883, and the footprints overlap by 0.743. The size and threads are the same, and the
+    trims and jumps within 1.
+  - An overlap below the least is reported as `overlap 0.564, below 0.9`. The report gave it as a
+    difference, with a blank for Ink/Stitch. The least is a constant the comparison shares
+    (`LEAST_OVERLAP`).
+- M8.3: the settings of older Ink/Stitch files updated as Ink/Stitch updates them (`REQ-SVG-007`). Now that
+  the SVG reader reads the shapes' settings, the updates that change what they sew apply too. In a file of
+  version 1 or 2, a zigzag stroke's pull compensation is halved for each side into
+  `stroke_pull_compensation_mm`, and a satin column starts and ends where it is drawn. In a file of version
+  1 to 3, a fill with `auto_fill` off is a legacy fill, and `fill_method` `auto_fill` is a tatami fill. A
+  shape gets them over its own settings, version by version, and `SC-I0818` counts the shapes each changed.
+  A differential case for each change sews a file of the older version in both programs.
+- M7.8: meander fill with generated tiles (`REQ-FILL-MEA-001` to `REQ-FILL-MEA-005`). One line wanders
+  through the sides of a tiling inside each part, after the tatami fill's underlay, and never passes a
+  point twice, as Ink/Stitch's meander fill wanders through its tiles. It starts nearest the needle and ends
+  nearest the next part or element. Between them, the way of fewest sides grows by detours drawn at random
+  through points it hasn't passed. `random_seed` chooses them.
+  - The tiles are StitchCraft's own, made in code: 7 of the regular and semiregular tilings, with the
+    honeycomb by default. `meander_scale_percent` scales them and `meander_angle` turns them. Ink/Stitch's
+    tiles are drawings StitchCraft doesn't copy. Their 75 ids are kept, and a fill set to one sews the
+    honeycomb with `SC-W0316` (`DEV-FILL-018`). Dialogs and the reference offer only the 7 tiles.
+  - A part too small for its tile is sewn round its outline with `SC-W0317`, where Ink/Stitch stops the
+    whole fill (`DEV-FILL-019`). The path differs from Ink/Stitch's for one seed (`DEV-FILL-020`). Its
+    search takes each detour the long way round, which covers more of the network than the short way.
+  - `smoothness_mm` rounds the line off, `zigzag_spacing_mm` and `zigzag_width_mm` sew it as a zigzag, and
+    `clip` keeps it inside the shape as drawn. Bean stitch and `repeats` work as for a contour fill, whose
+    smoothing and repeats the 2 fills share (`PathFillParams`).
+  - A value only a node's other stitch type reads is left to it (`REQ-PRM-006`). A meander fill on a node
+    whose zigzag stroke keeps 2 spacings sews without a zigzag, and a satin column given them sews at its
+    own 0.4 mm, as Ink/Stitch's do, with `SC-I0106`.
+  - TS-11C, the meander fills' test sheet for MC-6, sews 6 tiles on discs and the seventh on a star, with
+    a zigzag kept inside a rectangle and a leaf turned and smoothed. Its meanders wander as their
+    elements' ids draw, so VectorCraft's Test Sheet filter, whose objects have ids of their own, doesn't
+    draw it. A meander fill's preview shows its path, and the user's guide has a page for it.
+  - Ink/Stitch's compatibility contract lists its meander tiles in the order its settings window does, and
+    `check_params.py` compares them with Ink/Stitch's tiles. It finds that the underlay reads
+    `row_spacing_mm` and `max_stitch_length_mm` too, where its own are not set (`read_by`).
 - M8.1: the settings of Ink/Stitch files (`REQ-SVG-009`, `REQ-SVG-010`). Each `inkstitch:*` attribute of a shape in an
   SVG file is a parameter of every element the shape makes, under its own name, so an Ink/Stitch file sews
   with its stitch types, spacings, underlays, locks and the rest of its settings, where every element
@@ -14,9 +184,6 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     names it when the design is planned. A group's settings don't change what sews, as in Ink/Stitch, and
     `SC-W0802` names them. A file's `embroider_` attributes, as early versions of Ink/Stitch wrote their
     settings, are named as unread.
-  - In a file of an older version, `SC-W0802` counts the shapes whose settings Ink/Stitch's update changes
-    and StitchCraft doesn't update yet (M8.3): zigzag strokes' pull compensation and satin columns'
-    nearest points before version 3, and fills with `auto_fill` off before version 4.
   - The Ink/Stitch differential sews each test sheet from the SVG file it writes, in both programs, and
     the file reads back with every element's parameters (`REQ-PRM-003`). A new case,
     `inkstitch-settings`, sews shapes of each family with settings other than the defaults: 3,558
@@ -2099,6 +2266,25 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Added `conformance/golden/testsheets/TS-11A.pes` (MC-6), the new strokes and satins' test sheet that MC-6
+  sews: 4,632 stitches.
+- Changed `conformance/golden/plans/patch.pes` and `patch.dst` (M8.4, `REQ-GEN-001`): the patch's red fill
+  starts nearest its start marker, in its top-left corner. `SC-W0807` no longer names the marker. The
+  patch sews 2,483 stitches, 17 more.
+- Changed `conformance/golden/testsheets/TS-16.pes` (M8.9). The sheet is turned right about its origin. The
+  plan spans 110 × 60 mm, and sews the same 3,026 stitches.
+- Changed `conformance/golden/testsheets/TS-16.pes` (M8.8). The sheet's origin, on the blue column's top
+  edge 10 mm in from its left end, goes to the hoop's centre, and a stop after the blue column moves the
+  frame to the stop position first. The plan spans 60 × 110 mm, and sews the same 3,026 stitches.
+- Changed `conformance/golden/testsheets/TS-16.pes` (M8.5). The sheet gains its clip part, which makes it
+  40 × 100 mm, and sews 3,026 stitches, 930 more.
+- Added `conformance/golden/testsheets/TS-16.pes` (M8.4), the first part of the Ink/Stitch file MC-11
+  sews: 2,096 stitches.
+- Changed `conformance/golden/testsheets/TS-11B.pes` (M7.9): the sheet gains a row of 3 circular fills
+  under its contour fills, and grows to 125 × 166 mm. It sews 15,314 stitches, 4,703 more, and its contour
+  fills sew as before.
+- Added `conformance/golden/testsheets/TS-11C.pes` (M7.8), the meander fills' test sheet that MC-6 sews:
+  5,880 stitches.
 - Added `conformance/golden/testsheets/TS-11B.pes` (M7.7), the contour fills' test sheet that MC-6 sews:
   10,611 stitches.
 - Changed `conformance/golden/testsheets/TS-13A.pes` and `TS-13B.pes` (`REQ-AUTO-023`, `REQ-AUTO-007`,

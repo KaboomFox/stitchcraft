@@ -5,10 +5,11 @@ pub mod stitchcraft_svg::inkstitch
 pub enum stitchcraft_svg::inkstitch::Does
 pub stitchcraft_svg::inkstitch::Does::IgnoreLayer
 pub stitchcraft_svg::inkstitch::Does::IgnoreObject
-pub stitchcraft_svg::inkstitch::Does::NotYet
+pub stitchcraft_svg::inkstitch::Does::Origin
 pub stitchcraft_svg::inkstitch::Does::Positions
 pub stitchcraft_svg::inkstitch::Does::StartOrEnd
 pub stitchcraft_svg::inkstitch::Does::Stop
+pub stitchcraft_svg::inkstitch::Does::StopPosition
 pub stitchcraft_svg::inkstitch::Does::ToolInput
 pub stitchcraft_svg::inkstitch::Does::Trim
 impl stitchcraft_svg::inkstitch::Does
@@ -21,7 +22,7 @@ pub const stitchcraft_svg::inkstitch::INKSTITCH_NS: &str
 pub const stitchcraft_svg::inkstitch::READ_ATTRIBUTES: &[&str]
 pub const stitchcraft_svg::inkstitch::RENAMED: [(&str, &str); 7]
 pub mod stitchcraft_svg::version
-pub const stitchcraft_svg::version::APPLIED: [(&str, &str); 3]
+pub const stitchcraft_svg::version::APPLIED: [(&str, &str); 8]
 pub const stitchcraft_svg::version::CURRENT: i64
 pub struct stitchcraft_svg::Svg
 pub stitchcraft_svg::Svg::design: stitchcraft_engine::design::Design

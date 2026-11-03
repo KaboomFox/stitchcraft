@@ -274,21 +274,22 @@ channel, and an exporter no picture: `stitch export --preview` still draws what 
 
 Ink/Stitch keeps 3 lengths for the whole design with an SVG file, `collapse_len_mm`, `min_stitch_len_mm`
 and `min_satin_stroke_width_mm` ([SVG input](svg-input.md#design-settings)), and a VectorCraft document has
-no place of its own for them. Its fourth such setting, `rotate_on_export`, which turns the design as it is
-written, is not kept yet (M8). VectorCraft 0.16 keeps up to 1 MiB of JSON with a document for each filter,
+no place of its own for them. From M8.9 the filter keeps its fourth such setting too, `rotate_on_export`,
+which turns the design as it is written. VectorCraft 0.16 keeps up to 1 MiB of JSON with a document for each filter,
 the RFC's [P5](rfc-vectorcraft-abi-v2.md#p5-document-level-plug-in-data). The filter returns it as
 `documentData`, and the native file saves it in `document.unknown.pluginData` under the plug-in's id. An
 exporter reads every plug-in's in the document it is given, and a live effect isn't given it.
 
 M6.11 makes a filter keep them (`REQ-VC-013`): *StitchCraft Design Settings*, in Object › Plug-ins
 (`<ns>.settings`, `apps/stitchcraft-vc-plugin/src/settings.rs`). Its dialog has the machine, a choice of
-the built-in profiles, then each design setting as a length. The settings' names, labels and help come
-from `stitchcraft_engine::design::SETTINGS`, the table the SVG adapter reads Ink/Stitch's settings with.
-The machine is StitchCraft's own, as Ink/Stitch's hoop is the page. On OK the filter keeps all 4, the
-settings under Ink/Stitch's names and the machine's id as `profile`:
+the built-in profiles, then each design setting as a length, and the turn on export, a choice of none,
+left and right, as Ink/Stitch's preferences offer it. The settings' names, labels and help come from
+`stitchcraft_engine::design::SETTINGS` and `Turn`, which the SVG adapter reads Ink/Stitch's settings with.
+The machine is StitchCraft's own, as Ink/Stitch's hoop is the page. On OK the filter keeps all 5, the
+settings under Ink/Stitch's names, the turn in degrees, and the machine's id as `profile`:
 
 ```json
-{"profile": "brother-pe800-5x7", "collapse_len_mm": 3, "min_stitch_len_mm": 0, "min_satin_stroke_width_mm": 1}
+{"profile": "brother-pe800-5x7", "collapse_len_mm": 3, "min_stitch_len_mm": 0, "min_satin_stroke_width_mm": 1, "rotate_on_export": 90}
 ```
 
 The filter returns each object it is given by its id alone, as VectorCraft deletes an input object that a
@@ -317,9 +318,10 @@ and not in the preview.
 
 The contract test `req_vc_013_the_settings_filter_keeps_the_machine_each_exporter_plans_for` has
 VectorCraft's host run the filter as `plugin.run` runs it, then exports the document with what it kept. Level B's `settings`
-scenario does the same with VectorCraft's command line: a shortest stitch of 1.5 mm changes the PES file,
-the exports are `stitch export`'s, and with the small hoop kept the export of a 1 in square fails with
-`SC-E0701`.
+scenario does the same with VectorCraft's command line: a shortest stitch of 1.5 mm and a quarter turn
+right change the PES file, the exports are `stitch export`'s, and with the small hoop kept the export of a
+1 in square fails with `SC-E0701`. The filter keeps the turn as its number of degrees, where its dialog
+offers it as a choice.
 
 ### Tools: VectorCraft's own commands
 
@@ -399,7 +401,7 @@ the filter stops with `SC-E0004` before VectorCraft would. A VectorCraft before 
 filter, which almost every curved line outruns, and stops it with its own error.
 
 **Test Sheet** (`REQ-VC-015`, `apps/stitchcraft-vc-plugin/src/testsheet.rs`) draws one of the sheets
-drawn as designs, TS-02B to TS-09, TS-11B and the TS-13 sheets, into the document: the sheet's design
+drawn as designs, TS-02B to TS-09, TS-11A, TS-11B and the TS-13 sheets, into the document: the sheet's design
 moved by whole millimetres so that its middle is nearest the middle of the artboard `_context` names
 (`Design::moved`). Each element is an object named by its id, with its path and its thread as the paint
 its family sews with. Its settings are its family's effect record, each the value its dialog row takes,
@@ -411,10 +413,11 @@ gives, and the PES file is the same. VectorCraft 0.15 keeps the records, but wit
 looks to a filter as 0.14 does, which would drop them. Only the `documentData` every filter gets from
 0.16 tells them apart, so before 0.16 the filter declines with `SC-E0813`. It declines with `SC-E0817`
 where parts of the sheet would lie more than 10 m from the document's origin, farther than StitchCraft
-stitches (`Design::new`). The sheets drawn stitch by stitch are plans, which no object holds. The TS-13
-sheets are designs whose shapes StitchCraft digitizes automatically (`TestSheet::digitized`): each such
-shape has the Auto effect's record (M13.7, `REQ-VC-016`), and StitchCraft Auto must be installed for
-VectorCraft to keep it.
+stitches (`Design::new`). The sheets drawn stitch by stitch are plans, which no object holds. TS-11C's
+meander fills wander as their elements' ids draw, and the objects drawn would have ids of their own, so
+the filter doesn't draw it either (`TestSheet::drawable`). The TS-13 sheets are designs whose shapes
+StitchCraft digitizes automatically (`TestSheet::digitized`): each such shape has the Auto effect's
+record (M13.7, `REQ-VC-016`), and StitchCraft Auto must be installed for VectorCraft to keep it.
 
 The contract test `req_vc_015_each_test_sheet_draws_into_a_document_that_exports_within_vectorcraft_s_limits`
 draws each sheet into a new document in VectorCraft 0.17.0's and 0.18.0's hosts alike, and exports it with
@@ -461,7 +464,7 @@ share, instead of being stopped (`apps/stitchcraft-vc-plugin/src/preview.rs`):
 | Level | Geometry returned | Auto shows it |
 |---|---|---|
 | Exact | The stitch polyline (strokes, satins) or one thin closed ribbon per stitch (fills) | For a stroke or a satin column, within nine tenths of the budget |
-| Rows | One ribbon per row segment of a fill's top rows, or per side of a contour fill's path round its rings (from M7.7): where its stitches lie and which way they run | For a fill, within eight tenths |
+| Rows | One ribbon per row segment of a fill's top rows, or per side of a contour fill's path round its rings (from M7.7), a meander fill's path (from M7.8) or a circular fill's pieces of spiral (from M7.9): where its stitches lie and which way they run | For a fill, within eight tenths |
 | Outline | The object's path as lines for a stroke or a satin column, and as ribbons for a fill, which are hatched every 3 mm in its direction | When the others cost too much |
 
 The `preview_level` parameter, `auto` by default, lets the user pick a level (VectorCraft reserves the
@@ -526,7 +529,8 @@ note can follow it:
 | Name | Ink/Stitch's command | What StitchCraft does |
 |---|---|---|
 | `stitch:ignore` | `ignore_object`, `ignore_layer` | Leaves the object or the layer out with everything in it, and lists it with `SC-I0811` |
-| `stitch:start`, `stitch:end` | `starting_point`, `ending_point` | Marks where the fill or the satin column grouped with it starts or ends, and never stitches the marker. Until the generators start and end at hints (`REQ-GEN-001`, M8), they choose where, and `SC-W0807` names the marker. A group or a layer is never a marker: `SC-W0807` names it, and what it holds is read as under any other name |
+| `stitch:start`, `stitch:end` | `starting_point`, `ending_point` | Gives the shapes of the group or layer it is in, and of the groups inside it, their start or end position: the centre of the box round its anchors. Their fills and satin columns start or end there (`REQ-GEN-001`). The marker is left out of the stitches. The first marker of each kind that shows counts, a group's own before those of the groups round it. `SC-W0807` names another, one with no anchor that reads, and the markers of a shape digitized automatically, which places its own. A group or a layer is never a marker: `SC-W0807` names it, and what it holds is read as under any other name |
+| `stitch:origin`, `stitch:stop-position` | `origin`, `stop_position` | Gives the design its origin, which goes to the hoop's centre, or the stop position the frame moves to before each stop (`REQ-ASM-005`): the centre of the box round its anchors, wherever the marker is (M8.8). The marker is left out of the stitches. 2 origins, or 2 stop positions in a design with a stop, are an error (`SC-E0819`), as Ink/Stitch doesn't write a file with 2 such commands. `SC-W0807` names a marker with no anchor that reads, which places nothing, and a group or a layer of either name, which is never a marker |
 | Any other word after `stitch:` | | Ignores the name, and `SC-W0807` names the object, in case the word is a misspelt marker |
 
 Hiding an object leaves it out too, without a word, and a name on a hidden object says nothing. A live
@@ -578,8 +582,9 @@ anchor, leaves that end of the segment straight, and a segment without handles i
 - **Paths and compound paths** are the art. A compound path's children are one shape, with the compound's
   appearance and fill rule.
 - **Groups and layers** pass their children on, and their StitchCraft effects with them (below). Clipping
-  is left for M8, as in the SVG adapter: a clipping group's or layer's art is stitched whole, with
-  `SC-W0807`.
+  is left for M8.7: a clipping group's or layer's art is stitched whole, with `SC-W0807`. The SVG adapter
+  cuts a shape to its clip paths from M8.5, and M8.7 gives a clip group's art its clipping object as a
+  clip of its elements the same way (`REQ-GEN-005`).
 - **Hidden objects**, and everything in them, are left out without a word, as VectorCraft draws nothing
   for them. So are objects and paints of opacity 0, paints turned off and strokes of width 0.
 - **Objects and layers named `stitch:ignore`**, and everything in them, are left out with `SC-I0811`.
@@ -689,9 +694,12 @@ tests write files for the adapter to read back (Level B, M6.6).
 
 Because VectorCraft up to 0.16 drops `inkstitch:*` attributes on SVG import, phase 1 offers
 `stitch import-inkstitch design.svg -o design.vectorcraft`: our SVG adapter reads the Ink/Stitch file
-and writes a VectorCraft document with the same art and the parameters as live-effect records (M8).
+and writes a VectorCraft document with the same art and the parameters as live-effect records (M8.12,
+after 1.0).
 From 0.17 VectorCraft keeps the attributes from SVG import to SVG export, but its live effects read none
-of them.
+of them. [ADR-0016](adr/0016-inkstitch-files-imported-by-stitchcraft.md) keeps `stitch import-inkstitch`
+as the way in, after spike M8.11: VectorCraft gives a plug-in no attribute of another application, and
+its import loses what Ink/Stitch's settings depend on.
 
 ## 5. Phase 2: plug-in features proposed upstream (summary)
 

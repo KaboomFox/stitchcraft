@@ -140,6 +140,16 @@ registry! {
     /// later one; a bundle changed by hand, or by an email program, needs the original file.
     BundleUnreadable = "SC-E0012", Error, "Bug-report bundle could not be replayed";
 
+    /// The element is cut to clip paths, its own or those of the groups round it, and they leave nothing of
+    /// it: it lies wholly outside them, they don't overlap one another, or one of them has no area, such as
+    /// an empty clip path or one of text alone. A viewer shows nothing of it, so it sews nothing
+    /// (`REQ-GEN-005`), and a trim or stop after it is left out (`SC-W0505`). Ink/Stitch sews nothing of an
+    /// element outside its clip path too, but sews an element whose clip path has no area whole
+    /// (`DEV-SVG-019`).
+    ///
+    /// Move the element or its clip paths, or delete the element if it is hidden on purpose.
+    ClippedAway = "SC-W0013", Warning, "Element outside its clip paths; left out";
+
     /// A parameter's value could not be understood: a number where a word was expected, a choice that
     /// is not one of the parameter's options, or a list with the wrong number of values. The element was
     /// not stitched: guessing could sew something you did not ask for.
@@ -162,6 +172,15 @@ registry! {
     ///
     /// The Ink/Stitch compatibility page says when each Ink/Stitch parameter is supported.
     ParamUnknown = "SC-W0105", Warning, "Unknown parameter preserved but ignored";
+
+    /// An SVG node's fill and its stroke read the same settings, and some keys mean different things to
+    /// each: a zigzag stroke keeps 2 spacings in `zigzag_spacing_mm`, where a meander fill reads one. A
+    /// value this element can't read but the node's other stitch type can is that one's, so this element
+    /// sews with its own default, as Ink/Stitch does.
+    ///
+    /// The message names the key and the value. To give this element a value of its own, set it on a
+    /// node of its own.
+    ParamForOtherFamily = "SC-I0106", Info, "Value only the node's other stitch type reads; default used here";
 
     /// A satin column's path has no subpath longer than a point, so it has no rails to sew between. The
     /// element was not stitched.
@@ -288,6 +307,13 @@ registry! {
     /// Move the rungs so that each meets both rails away from their ends, or lower `push_compensation_mm`.
     SatinNoSection = "SC-E0216", Error, "Satin column has no section to sew";
 
+    /// A satin column is cut to clip paths, its own or those of the groups round it, which StitchCraft
+    /// doesn't apply to a satin column: it is sewn whole, as Ink/Stitch sews it, where a viewer shows only
+    /// what lies inside them (`REQ-GEN-005`).
+    ///
+    /// Draw the column as far as it should sew, or make it a fill if it should take the clip's shape.
+    SatinClipNotApplied = "SC-W0217", Warning, "Satin column is clipped; sewn whole";
+
     /// A fill is sewn in rows of stitches across each part of its area. A part of 0.21 mm² or less (3
     /// square CSS pixels), a speck about half a millimetre across, is too small for a row, so it is left
     /// out, as Ink/Stitch leaves it out. Where every part is that small, the fill sews nothing. So does a
@@ -402,6 +428,28 @@ registry! {
     /// The message counts the parts. To sew them in a spiral, widen them to more than 2 row spacings for the
     /// single spiral, or 4 for the double, or make `row_spacing_mm` smaller.
     FillContourSpiralTooShort = "SC-I0315", Info, "Contour fill's part too narrow for its spiral; sewn inner to outer";
+
+    /// The meander fill's pattern names one of Ink/Stitch's tiles. Those are drawings that ship with
+    /// Ink/Stitch, which StitchCraft doesn't copy, so the fill wanders through StitchCraft's default tile,
+    /// the honeycomb, instead.
+    ///
+    /// Choose one of StitchCraft's tiles for `meander_pattern` to remove the warning.
+    FillMeanderTileNotOurs = "SC-W0316", Warning, "Meander pattern is one of Ink/Stitch's tiles; sewn with StitchCraft's default tile";
+
+    /// A part of a meander fill is too small for any line of its tile, or none of its lines join up, so it
+    /// has nothing to wander through. It is sewn as a running stitch round its outline. Ink/Stitch stops
+    /// the whole fill with an error there.
+    ///
+    /// The message counts the parts. Make `meander_scale_percent` smaller to fit the tile into them.
+    FillMeanderTooSmall = "SC-W0317", Warning, "Meander fill part too small for its tile; sewn round its outline";
+
+    /// A part of a circular fill lies within its row spacing of its middle, too small for a spiral, so it is
+    /// sewn as one circle with a radius of the row spacing round its middle, as Ink/Stitch sews it. The
+    /// circle may reach past the part.
+    ///
+    /// The message counts the parts. Make `row_spacing_mm` smaller for a spiral, or sew so small a part as a
+    /// running stitch or a satin column.
+    FillCircularTooSmall = "SC-W0318", Warning, "Circular fill part within its row spacing of its middle; sewn as one circle";
 
     /// A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
     /// one stitch that short would hammer one spot of the fabric and could break the thread. The part is
@@ -548,9 +596,11 @@ registry! {
     /// where it is placed: its origin, which goes to the hoop's centre, can lie far from its middle, and
     /// its stop position, where the frame goes before each stop, can lie outside the hoop.
     ///
-    /// If the message says the design fits when turned 90 degrees, rotate it. Otherwise scale it down,
-    /// or split it into parts that are sewn in separate hoopings. Where it reaches past the edge from
-    /// where it is placed, move its origin nearer its middle, or its stop position nearer the design.
+    /// If the message says the design fits when turned 90 degrees, rotate it, or have the machine file
+    /// turn it: Ink/Stitch's rotate on export, or Turn on export in StitchCraft's Design Settings filter.
+    /// Otherwise scale it down, or split it into parts that are sewn in separate hoopings. Where it reaches
+    /// past the edge from where it is placed, move its origin nearer its middle, or its stop position nearer
+    /// the design.
     OutsideHoop = "SC-E0701", Error, "Design does not fit the hoop";
 
     /// The design fits the hoop but is larger than the profile's comfort zone: the area where this
@@ -584,10 +634,17 @@ registry! {
     /// viewer ignores it, and one of Ink/Stitch's design settings keeps its default. A line that `--auto`
     /// sews across its width, as a satin column or a fill, is as wide as its transforms stretch it on
     /// average, so a transform that stretches it more one way than the other, and draws it wider one way,
-    /// is named too. So is what StitchCraft does not apply of an Ink/Stitch file: the settings of its
-    /// elements, its design setting `rotate_on_export`, which turns the design as it is written, and the
-    /// updates Ink/Stitch would make to a file with its settings and no file version, or from a newer
-    /// Ink/Stitch, which is read as it is.
+    /// is named too. So is what StitchCraft does not apply of an Ink/Stitch file: the settings of a group,
+    /// which Ink/Stitch doesn't read either, those of its early versions (`embroider_` attributes), a turn
+    /// on export (`rotate_on_export`) that is not a number, and the updates
+    /// Ink/Stitch would make to a file with its settings and no file version, or from a newer Ink/Stitch,
+    /// which is read as it is. Of its commands, one on an object that is not stitched is named, and so is a
+    /// start, end, target, origin or stop position command whose place doesn't read, an `ignore_layer`
+    /// command in no layer, and a command on a shape digitized automatically (`--auto`), which places where
+    /// its parts start and end. Of clip paths, which cut the shapes they clip,
+    /// what isn't applied is named: text in one, which adds nothing to it, a clip path on a clip path's
+    /// shape, one that isn't a reference, such as a CSS shape, clip paths that name each other in a loop,
+    /// `objectBoundingBox` units on a group, groups in a clip path more than 16 deep, and the root's.
     ///
     /// The message names the element and what was done. Convert text and clones to paths in the editor
     /// (in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.
@@ -603,16 +660,28 @@ registry! {
     SvgObjectIgnored = "SC-I0805", Info, "Object left out, as the file asks";
 
     /// The SVG file was saved by an older Ink/Stitch, and is read as Ink/Stitch updates such a file when it
-    /// opens it, so that it sews as it did: a default that has changed since is written into the shapes
-    /// that relied on it. Ink/Stitch numbers the files it saves. Before its file version 4, a fill's
-    /// stitches were 3 mm long unless it set another length, where they are 4 mm now; before version 2, a
-    /// polyline whose style set a stroke was sewn as a manual stitch, with a needle point at each of its
-    /// points. A shape digitized automatically (`--auto`) sews by StitchCraft's rules instead.
+    /// opens it, so that it sews as it did: a default or a setting whose meaning has changed since is
+    /// written into the shapes that relied on it. Ink/Stitch numbers the files it saves. Before its file
+    /// version 4, a fill's stitches were 3 mm long unless it set another length, where they are 4 mm now,
+    /// and a fill with `auto_fill` off was a legacy fill; before version 3, a zigzag stroke's pull
+    /// compensation was shared by its 2 sides, and a satin column started and ended where it was drawn;
+    /// before version 2, a polyline whose style set a stroke was sewn as a manual stitch, with a needle
+    /// point at each of its points. A shape digitized automatically (`--auto`) sews by StitchCraft's rules
+    /// instead.
     ///
     /// The message gives the file's version, and how many shapes were updated and how. Nothing needs doing:
-    /// the design sews as Ink/Stitch sews it. To sew a shape otherwise, set its longest stitch
-    /// (`max_stitch_length_mm`) or its stitch type in Ink/Stitch.
+    /// the design sews as Ink/Stitch sews it. To sew a shape otherwise, change the setting the message
+    /// names in Ink/Stitch.
     SvgInkStitchUpdated = "SC-I0818", Info, "Ink/Stitch file from an older version, read as Ink/Stitch updates it";
+
+    /// The file gives the design 2 origins, or 2 stop positions where the design has a stop: Ink/Stitch's
+    /// `origin` or `stop_position` command more than once, or more than one object named `stitch:origin` or
+    /// `stitch:stop-position` in a VectorCraft document. Which one counts isn't known, so no machine file is
+    /// written, as Ink/Stitch writes none (`REQ-ASM-005`). 2 stop positions in a design without a stop
+    /// change nothing.
+    ///
+    /// The message names the command or marker and counts them. Delete or rename all but one.
+    OriginOrStopPositionTwice = "SC-E0819", Error, "More than one origin or stop position";
 
     /// An element's geometry cannot be used: its path data or its list of points has an error (the path is
     /// stitched up to the error, as SVG viewers draw it), its transform is not valid (it is skipped with
@@ -657,8 +726,11 @@ registry! {
     /// colour, and a pattern, or a colour that does not read, in black. An object that StitchCraft effects
     /// reach from more than one level, its own and a group's around it, or 2 groups', sews as the nearest say:
     /// VectorCraft runs each on the stitches the one before drew, which no machine sews. A start or end
-    /// marker, an object named `stitch:start` or `stitch:end`, is never stitched, and StitchCraft does not yet
-    /// start or end a shape where one says. A name that begins with `stitch:` and names no marker StitchCraft
+    /// marker, an object named `stitch:start` or `stitch:end`, is never stitched: the shapes grouped with it
+    /// start or end there, and a marker they don't use is said, a second one of its kind in a group or one
+    /// with no point that reads, as are those beside a shape digitized automatically, which places where its
+    /// parts start and end. So is an origin or stop position marker, `stitch:origin` or
+    /// `stitch:stop-position`, with no point that reads. A name that begins with `stitch:` and names no marker StitchCraft
     /// reads is said too, as is a group or a layer named as a marker, which only a shape can be: the name is
     /// ignored. A satin column, a zigzag or a fill made of a stroke is as wide as the stroke all along and
     /// centred on its path, so a stroke aligned inside or outside a closed path is said, as is a width

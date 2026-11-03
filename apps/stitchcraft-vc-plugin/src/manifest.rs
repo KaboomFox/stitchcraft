@@ -426,7 +426,9 @@ pub fn schema(spec: &ParamSpec, siblings: &[ParamSpec]) -> Option<Schema> {
             };
             let family = Family::ALL.iter().copied().find(|family| family.method_param() == spec.key);
             let other = |option: &str| family.and_then(|family| StitchType::from_id(family, option)).is_some_and(|t| sewn_as(t) != t);
-            let options: Vec<&'static str> = options.iter().map(|o| o.id).filter(|o| !spelled(o) && !other(o)).collect();
+            // Only the options offered: a design that names one kept for it still reads, but a dialog
+            // doesn't offer it.
+            let options: Vec<&'static str> = options.iter().filter(|o| o.offered).map(|o| o.id).filter(|o| !spelled(o) && !other(o)).collect();
             options.contains(&id).then_some(Schema::Choice { options, default: id })
         }
         (Kind::LengthList { min, max }, Parsed::Lengths(lengths)) => match lengths.as_slice() {

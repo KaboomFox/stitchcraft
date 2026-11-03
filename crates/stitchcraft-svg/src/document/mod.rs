@@ -40,9 +40,8 @@
 //! **Nothing is dropped silently.** `SC-W0802` reports SVG features that StitchCraft does not stitch:
 //! text, images, clones, nested `<svg>`, style sheet rules it does not read, clipping, masks, filters,
 //! markers, gradients, patterns, a group's Ink/Stitch settings, the settings of Ink/Stitch's early versions
-//! (`embroider_` attributes), a file Ink/Stitch would update or warn about that is read as it is (one with
-//! its settings and no file version, or from a newer Ink/Stitch), and the updates of an older file's
-//! settings that are not applied yet.
+//! (`embroider_` attributes), and a file Ink/Stitch would update or warn about that is read as it is (one
+//! with its settings and no file version, or from a newer Ink/Stitch).
 //! `SC-W0804` reports geometry that cannot be used,
 //! and `SC-E0801` a file that cannot be read at all, or whose size cannot be read. What a viewer would not
 //! show either is left out without a word: `display: none`, hidden or fully transparent elements, and the
@@ -62,17 +61,18 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::str::FromStr;
 
 use roxmltree::{Document, Node, NodeId, ParsingOptions};
-use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, Mm};
+use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, Mm, Point};
 use stitchcraft_engine::auto::{self, Stitches};
 use stitchcraft_engine::common::MAX_STITCH_LENGTH;
-use stitchcraft_engine::design::{Design, Element, Reading, Shape};
+use stitchcraft_engine::design::{Design, Element, Hints, Reading, Shape, within_working_limit};
+use stitchcraft_engine::generate::stops_after;
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::{Rgb, Thread};
 use svgtypes::{Color, Length};
 
 use crate::BYTES_PER_UNIT;
 use crate::inkstitch::{
-    self, Does, Helper, IGNORE_OBJECT, INKSCAPE_NS, INKSTITCH_NS, Objects, Place, READ_ATTRIBUTES, STOP_AFTER, STROKE_FIRST, TRIM_AFTER, Unapplied,
+    self, Does, Global, Helper, IGNORE_OBJECT, INKSCAPE_NS, INKSTITCH_NS, Objects, Place, READ_ATTRIBUTES, STOP_AFTER, STROKE_FIRST, TRIM_AFTER,
     place,
 };
 use crate::path::{self, Seg, Sub};
@@ -81,9 +81,12 @@ use crate::sheet::{self, Sheet};
 use crate::style::{self, Declared, Paint, Style, painted, without_icc};
 use crate::text::{self, unreadable};
 use crate::transform::{self, Affine, user_units};
-use crate::version::{self, Pending, Updated, Version};
+use crate::version::{self, Updated, Version};
 
+mod clip;
 mod root;
+
+use clip::Link;
 
 /// The most XML nodes a file may have.
 const MAX_NODES: u32 = 1_000_000;
@@ -130,10 +133,11 @@ pub fn read_with(bytes: &[u8], budget: &Budget, reading: Reading) -> Result<Svg,
 enum Context<'a> {
     /// Nothing inside is drawn: a leaf, `<defs>`, `display: none`, a branch a `<switch>` did not choose.
     Hidden,
-    /// Every child is drawn with this transform (user units to millimetres) and style.
-    Shown { map: Affine, style: Style<'a> },
+    /// Every child is drawn with this transform (user units to millimetres) and style, cut to the clips of
+    /// the chain from `clipped` (`clip`).
+    Shown { map: Affine, style: Style<'a>, clipped: Option<usize> },
     /// Only the child a `<switch>` chose is drawn.
-    Switch { chosen: Option<NodeId>, map: Affine, style: Style<'a> },
+    Switch { chosen: Option<NodeId>, map: Affine, style: Style<'a>, clipped: Option<usize> },
 }
 
 /// The elements the reader draws, or reports; any other element draws nothing, in a viewer too.
@@ -203,6 +207,8 @@ struct Reader<'b, 'a, 'input> {
     ns: Option<&'a str>,
     /// The root viewport in user units: what percentages are of.
     viewport: (f64, f64),
+    /// The map from the root's user units to millimetres, which places Ink/Stitch's commands.
+    root: Affine,
     elements: Vec<Element>,
     warnings: Vec<Diagnostic>,
     /// The labels given out.
@@ -223,13 +229,13 @@ struct Reader<'b, 'a, 'input> {
     noted_inkstitch: bool,
     /// Ink/Stitch's design settings.
     settings: settings::Found,
-    /// The Ink/Stitch file version the file is read as, what its update changed, and what it would change
-    /// that is not applied yet.
+    /// The Ink/Stitch file version the file is read as, and what its update changed.
     version: Version,
     updated: Updated,
-    pending: Pending,
     /// Whether a shape with no `inkstitch:` attribute is an automatic element (`--auto`).
     auto: bool,
+    /// The clips round the elements drawn, each a link of a chain (`clip`).
+    links: Vec<Link>,
 }
 
 impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
@@ -239,6 +245,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             meter: budget.meter(),
             ns: None,
             viewport: (0.0, 0.0),
+            root: Affine::IDENTITY,
             elements: Vec::new(),
             warnings: Vec::new(),
             claimed: Labels::default(),
@@ -253,8 +260,8 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             settings: settings::Found::default(),
             version: Version::Current,
             updated: Updated::default(),
-            pending: Pending::default(),
             auto: reading.auto,
+            links: Vec::new(),
         }
     }
 
@@ -282,12 +289,17 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             }
         }
         let map = self.root_map(root)?;
+        self.root = map;
         if root.has_attribute("transform") {
             self.note(None, "The root `<svg>` element's transform is not applied.".to_string(), None);
         }
         self.notice(root);
-        let root_context = match Style::default().child(&self.declared(root)?) {
-            Some(style) => Context::Shown { map, style },
+        let declared = self.declared(root)?;
+        if declared.uses("clip-path") {
+            self.note(None, "The root `<svg>` element's clip path is not applied.".to_string(), None);
+        }
+        let root_context = match Style::default().child(&declared) {
+            Some(style) => Context::Shown { map, style, clipped: None },
             None => Context::Hidden,
         };
         // Document order, with the ancestors' contexts on a stack: a node's parent is the nearest entry
@@ -319,18 +331,16 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             let own = match context {
                 Context::Hidden => Context::Hidden,
                 Context::Switch { chosen, .. } if chosen != Some(node.id()) => Context::Hidden,
-                Context::Shown { map, style } | Context::Switch { map, style, .. } => self.visit(node, n, map, &style)?,
+                Context::Shown { map, style, clipped } | Context::Switch { map, style, clipped, .. } => self.visit(node, n, map, &style, clipped)?,
             };
             if node.has_children() {
                 stack.push((node.id(), own));
             }
         }
         self.command_notes();
+        self.global_settings();
         if let Some(message) = self.version.note(self.updated) {
             self.warnings.insert(0, self.diagnostic(Code::SvgInkStitchUpdated, None, message, None));
-        }
-        if let Some((message, hint)) = self.version.unapplied(self.pending) {
-            self.note(None, message, Some(hint));
         }
         let design = Design::new(self.elements, self.settings.settings)?;
         Ok(Svg { design, warnings: self.warnings })
@@ -350,28 +360,58 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             let label = self.labels.get(&target).cloned().unwrap_or_default();
             let name = command.name;
             let message = match command.does {
-                Does::Trim | Does::Stop | Does::StartOrEnd if !self.stitched_targets.contains(&target) => {
+                Does::Trim | Does::Stop | Does::StartOrEnd | Does::Positions if !self.stitched_targets.contains(&target) => {
                     format!("`{label}` has an Ink/Stitch `{name}` command, which is not applied: `{label}` is not a shape that is stitched.")
                 }
-                Does::StartOrEnd => format!(
-                    "`{label}` has an Ink/Stitch `{name}` command, which StitchCraft does not apply yet. Ink/Stitch applies it to fills and satin \
-                     columns."
-                ),
                 _ => continue,
             };
             notes.push((target, self.diagnostic(Code::SvgFeatureIgnored, Some(&label), message, None)));
         }
-        for &(symbol, command, why) in self.objects.unapplied() {
+        for &(symbol, command) in self.objects.unapplied() {
             let label = self.labels.get(&symbol).cloned().unwrap_or_default();
-            let message = match why {
-                Unapplied::NotYet => format!("`{label}` is Ink/Stitch's `{}` command, which StitchCraft does not apply yet.", command.name),
-                Unapplied::NoLayer => format!("`{label}` is Ink/Stitch's `{}` command, which is not applied: it is not in a layer.", command.name),
-            };
+            let message = format!("`{label}` is Ink/Stitch's `{}` command, which is not applied: it is not in a layer.", command.name);
             notes.push((symbol, self.diagnostic(Code::SvgFeatureIgnored, Some(&label), message, None)));
         }
         // Stable: two notes on one object keep the order above.
         notes.sort_by_key(|(node, _)| *node);
         self.warnings.extend(notes.into_iter().map(|(_, note)| note));
+    }
+
+    /// The design's origin and stop position, from Ink/Stitch's `origin` and `stop_position` commands, each at
+    /// its symbol's place, wherever it is, as Ink/Stitch's `global_command` finds it (`REQ-ASM-005`). One whose
+    /// place doesn't read, or lies beyond the design's reach, is named and left out. 2 origins, or 2 stop
+    /// positions in a design with a stop, are an error (`SC-E0819`): Ink/Stitch writes no file of them either.
+    fn global_settings(&mut self) {
+        let stops = self.elements.iter().any(stops_after);
+        for does in [Does::Origin, Does::StopPosition] {
+            let found: Vec<Global> = self.objects.globals().iter().filter(|global| global.command.does == does).copied().collect();
+            let Some((first, rest)) = found.split_first() else { continue };
+            let name = first.command.name;
+            if !rest.is_empty() {
+                if does == Does::Origin || stops {
+                    let has = if does == Does::Origin { String::new() } else { ", and the design stops".to_string() };
+                    let message = format!(
+                        "The file has {} Ink/Stitch `{name}` commands{has}, and Ink/Stitch writes no file of it: which one counts isn't known.",
+                        found.len()
+                    );
+                    self.warn(Code::OriginOrStopPositionTwice, None, message, Some("Delete all but one."));
+                }
+                continue;
+            }
+            let label = self.labels.get(&first.place).cloned().unwrap_or_default();
+            let at = first.symbol.map(|(x, y)| self.root.apply(x, y)).and_then(|(x, y)| Point::new(x, y).ok()).filter(|p| within_working_limit(*p));
+            match (does, at) {
+                (Does::Origin, Some(at)) => self.settings.settings.origin = Some(at),
+                (_, Some(at)) => self.settings.settings.stop_position = Some(at),
+                (_, None) => {
+                    let message = format!(
+                        "`{label}` is Ink/Stitch's `{name}` command, whose place doesn't read: a coordinate or a transform is not a number, or \
+                         it lies more than 10 m from the origin. It is left out."
+                    );
+                    self.note(Some(&label), message, None);
+                }
+            }
+        }
     }
 
     /// File-wide notes, where the reader meets their subject: the style sheet rules not read, at the first
@@ -398,8 +438,16 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         }
     }
 
-    /// Draws or reports one element whose parent is drawn; returns what its children are drawn with.
-    fn visit(&mut self, node: Node<'a, 'input>, n: u32, map: Affine, inherited: &Style<'a>) -> Result<Context<'a>, Diagnostic> {
+    /// Draws or reports one element whose parent is drawn, cut to the clips of the chain from `clipped`; returns
+    /// what its children are drawn with.
+    fn visit(
+        &mut self,
+        node: Node<'a, 'input>,
+        n: u32,
+        map: Affine,
+        inherited: &Style<'a>,
+        clipped: Option<usize>,
+    ) -> Result<Context<'a>, Diagnostic> {
         let tag = node.tag_name().name();
         let Some(kind) = Kind::of(tag).filter(|_| self.is_svg(node)) else { return Ok(Context::Hidden) };
         let declared = self.declared(node)?;
@@ -439,7 +487,6 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         };
         let effects = |reader: &mut Self, label: &str| {
             for (property, what) in [
-                ("clip-path", "is clipped (`clip-path`); clipping is not applied, so all of it is stitched"),
                 ("mask", "has a mask; masks are not applied, so all of it is stitched"),
                 ("filter", "has filter effects (blurs, shadows and the like), which are not stitched"),
             ] {
@@ -452,18 +499,20 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             Kind::Group => {
                 effects(self, &label);
                 self.group_settings(node, &label)?;
-                Ok(Context::Shown { map, style })
+                let clipped = self.clipped(&label, &declared, map, clipped)?;
+                Ok(Context::Shown { map, style, clipped })
             }
             Kind::Switch => {
                 effects(self, &label);
                 self.group_settings(node, &label)?;
-                Ok(Context::Switch { chosen: self.chosen(node).map(|c| c.id()), map, style })
+                let clipped = self.clipped(&label, &declared, map, clipped)?;
+                Ok(Context::Switch { chosen: self.chosen(node).map(|c| c.id()), map, style, clipped })
             }
             Kind::Shape(geometry) => {
                 if style.shown() {
                     effects(self, &label);
                     let label = self.claim(label, tag, n)?;
-                    self.shape(node, geometry, &label, map, &style, &declared)?;
+                    self.shape(node, geometry, &label, (map, clipped), &style, &declared)?;
                 }
                 Ok(Context::Hidden)
             }
@@ -522,7 +571,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             }
             return true;
         }
-        let why = if self.objects.on(node).iter().any(|c| c.does == Does::IgnoreObject) {
+        let why = if self.objects.on(node).iter().any(|tied| tied.command.does == Does::IgnoreObject) {
             Some(format!("an Ink/Stitch `{IGNORE_OBJECT}` command is attached to it"))
         } else if node.attribute((INKSTITCH_NS, IGNORE_OBJECT)).is_some_and(inkstitch::yes) {
             Some(format!("its Ink/Stitch setting `{IGNORE_OBJECT}` is on"))
@@ -557,13 +606,14 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         node.children().find(|c| self.is_svg(*c) && !c.has_attribute("requiredExtensions"))
     }
 
-    /// The design elements of a shape that is shown, `label` its own: one per paint it paints with.
+    /// The design elements of a shape that is shown, `label` its own: one per paint it paints with, each in
+    /// millimetres by `map` and cut to its own clips and those of the chain from `clipped` (`clip`).
     fn shape(
         &mut self,
         node: Node<'a, 'input>,
         geometry: Geometry,
         label: &str,
-        map: Affine,
+        (map, clipped): (Affine, Option<usize>),
         style: &Style<'a>,
         declared: &Declared<'a, 'input>,
     ) -> Result<(), Diagnostic> {
@@ -590,6 +640,9 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             self.unusable(label, format!("`{label}` draws nothing: all of its points are in the same place. It is left out."));
             return Ok(());
         }
+        // Its own clips, then those round it, nearest first.
+        let mut clips = self.clips(label, declared, map, path::bounds(&subs))?;
+        clips.extend(self.chain(clipped)?);
         let name = node.attribute((INKSCAPE_NS, "label")).map(str::trim).filter(|s| !s.is_empty()).map(str::to_string);
         // Each of Ink/Stitch's settings of the shape is a parameter of every element it makes, by its own name,
         // but those the reader applies itself (`REQ-SVG-009`). Its trim and stop commands then turn on the same
@@ -597,8 +650,8 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         let settings: Vec<_> = node.attributes().filter(|a| a.namespace() == Some(INKSTITCH_NS) && !READ_ATTRIBUTES.contains(&a.name())).collect();
         self.charge(settings.len() as u64)?;
         let mut params: ParamSet = settings.iter().map(|a| (a.name(), a.value())).collect();
-        for command in self.objects.on(node) {
-            match command.does {
+        for tied in self.objects.on(node) {
+            match tied.command.does {
                 Does::Trim => params.set(TRIM_AFTER, "true"),
                 Does::Stop => params.set(STOP_AFTER, "true"),
                 _ => None,
@@ -607,6 +660,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         // A shape without Ink/Stitch's settings is digitized automatically when the user asks for it, and
         // sews by the rules; any other is updated as Ink/Stitch updates a file of its version.
         let automatic = self.auto && !node.attributes().any(|a| inkstitch::is_setting(&a));
+        let hints = self.hints(node, label, automatic);
         if !automatic {
             let styled_stroke = declared.in_style("stroke").last().is_some_and(|stroke| !stroke.trim().eq_ignore_ascii_case("none"));
             let shape = version::Shape {
@@ -615,7 +669,6 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 styled_polyline: geometry == Geometry::Polyline && styled_stroke,
             };
             self.version.update(&shape, &mut params, &mut self.updated);
-            self.version.pending(fill.is_some(), &params, &mut self.pending);
         }
         // Ink/Stitch's own setting sews the stroke first (`REQ-SVG-010`), and SVG's `paint-order` doesn't.
         let stroke_first = node.attribute((INKSTITCH_NS, STROKE_FIRST)).is_some_and(inkstitch::yes);
@@ -644,7 +697,16 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             };
             let id = ElementId::new(format!("svg:{label}:{part}"))
                 .map_err(|e| Diagnostic::new(Code::InternalCheckFailed, format!("The SVG reader made an element id that cannot be used: {e}.")))?;
-            self.elements.push(Element { id, name: name.clone(), shape, thread: Thread::new(colour), params: params.clone(), automatic });
+            self.elements.push(Element {
+                id,
+                name: name.clone(),
+                shape,
+                thread: Thread::new(colour),
+                params: params.clone(),
+                automatic,
+                hints,
+                clips: clips.clone(),
+            });
             self.stitched_targets.insert(place(node));
         }
         Ok(())
@@ -874,6 +936,45 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
     /// `SC-W0802` (a feature that is not stitched), about `label` when it concerns one element.
     fn note(&mut self, label: Option<&str>, message: String, hint: Option<&str>) {
         self.warn(Code::SvgFeatureIgnored, label, message, hint);
+    }
+
+    /// Where Ink/Stitch's commands tied to `node`, labelled `label`, place its elements, in millimetres
+    /// (`REQ-GEN-001`): each command at its symbol's place, or a start or end command in a file Ink/Stitch's
+    /// update moves them in at its connector's end on the shape, as the update moves it, which `SC-I0818`
+    /// counts. With 2 commands of a kind, the first counts. One whose place doesn't read, or lies beyond the
+    /// design's reach, is named and left out. An `automatic` shape's parts start and end where automatic
+    /// digitizing places them, and its commands are named as not applied.
+    fn hints(&mut self, node: Node<'a, 'input>, label: &str, automatic: bool) -> Hints {
+        const PLACING: [&str; 3] = ["starting_point", "ending_point", "target_point"];
+        if automatic {
+            if PLACING.iter().any(|name| self.objects.first(node, name).is_some()) {
+                let message = format!(
+                    "`{label}` is digitized automatically, which places where its parts start and end: its Ink/Stitch start, end and \
+                     target commands are not applied."
+                );
+                self.note(Some(label), message, None);
+            }
+            return Hints::default();
+        }
+        let moved = self.version.moves_start_and_end();
+        let mut at = |name: &str, movable: bool| {
+            let tied = self.objects.first(node, name)?;
+            if movable && moved {
+                self.updated.commands += 1;
+            }
+            let user = if movable && moved { tied.on_object } else { tied.symbol };
+            let placed = user.map(|(x, y)| self.root.apply(x, y)).and_then(|(x, y)| Point::new(x, y).ok()).filter(|p| within_working_limit(*p));
+            if placed.is_none() {
+                let message = format!(
+                    "`{label}` has an Ink/Stitch `{name}` command whose place doesn't read: a coordinate, a transform or its connector's path \
+                     data is not a number, or it lies more than 10 m from the origin. It is left out."
+                );
+                self.note(Some(label), message, None);
+            }
+            placed
+        };
+        let [start, end, target] = PLACING;
+        Hints { start: at(start, true), end: at(end, true), target: at(target, false) }
     }
 
     /// `SC-W0804` (geometry that cannot be used) about `label`.

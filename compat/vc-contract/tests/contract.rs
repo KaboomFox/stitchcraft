@@ -553,14 +553,17 @@ fn req_vc_013_the_settings_filter_keeps_the_machine_each_exporter_plans_for() {
     let mut doc: Document = serde_json::from_value(file["document"].clone()).unwrap();
     let before = serde_json::to_value(&doc).unwrap();
     let inputs = objects::filter_targets(&doc, &[NodeId(2)]);
-    let dialog = manifest.resolve_params(&json!({"profile": "brother-pe800-small", "min_stitch_len_mm": 1.5})).unwrap();
+    let dialog = manifest.resolve_params(&json!({"profile": "brother-pe800-small", "min_stitch_len_mm": 1.5, "rotate_on_export": "90"})).unwrap();
     let mut params = dialog.clone();
     params.insert("_context".into(), json!({"mode": "filter", "bounds": null, "artboard": null, "documentData": null}));
     let out = plugin.run(&objects::encode_input(&doc, &inputs), &serde_json::to_vec(&params).unwrap()).unwrap();
     let Output { objects: changed, document_data } = objects::decode_output(&out).unwrap();
-    // What it keeps is its dialog's values, and the document is as it was: the host refuses any effect
-    // records the filter would give its objects.
-    assert_eq!(document_data, Some(Some(Value::Object(dialog))));
+    // What it keeps is its dialog's values, the turn on export as its number of degrees rather than the id of
+    // its choice, and the document is as it was: the host refuses any effect records the filter would give
+    // its objects.
+    let mut kept = dialog.clone();
+    kept.insert("rotate_on_export".into(), json!(90.0));
+    assert_eq!(document_data, Some(Some(Value::Object(kept))));
     let refuse: &dyn Fn(&[Effect], &Node) -> Result<Vec<Effect>, String> = &|_, _| Err("the filter changes no effect".to_string());
     assert_eq!(objects::apply_output(&mut doc, &inputs, changed, None, refuse).unwrap(), inputs);
     assert_eq!(serde_json::to_value(&doc).unwrap(), before);
@@ -705,7 +708,7 @@ fn req_vc_015_each_test_sheet_draws_into_a_document_that_exports_within_vectorcr
         Some(ParamSpec::Choice { options, .. }) => options.clone(),
         other => panic!("no choice of sheets: {other:?}"),
     };
-    assert_eq!(sheets, ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D"]);
+    assert_eq!(sheets, ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D"]);
     // VectorCraft admits StitchCraft's effect records only while their plug-ins are installed: the families',
     // and the Auto effect's, which the TS-13 sheets' shapes digitized automatically have.
     for family in FAMILIES.into_iter().chain([AUTO]) {

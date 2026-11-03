@@ -277,6 +277,15 @@ status = "active"
 
 # ── SVG adapter ────────────────────────────────────────────────────────────────────────────────────
 
+
+[[req]]
+id = "REQ-PRM-006"
+area = "params"
+level = "L2"
+statement = "A value that an element's own declaration of a key cannot read, but another family's declaration of the key can, is that family's: an SVG node's fill and its stroke read the same settings. The element sews with its own default, and SC-I0106 says which value it left to the other declaration. A meander fill on a node whose zigzag stroke has 2 spacings sews without a zigzag."
+rationale = "Ink/Stitch sews such a fill with its default (DEV-PRM-001's rule refuses a value nothing can read). A value written for the node's stroke is the stroke's, and refusing the fill for it would leave out a part of the design that has nothing wrong."
+milestone = "M7"
+status = "active"
 [[req]]
 id = "REQ-SVG-001"
 area = "svg"
@@ -298,7 +307,7 @@ status = "active"
 id = "REQ-SVG-003"
 area = "svg"
 level = "L2"
-statement = "Ink/Stitch's own objects are not stitched: command symbols and the connectors that tie them to objects, lines drawn with Inkscape's connector tool, and paths that Ink/Stitch's guide-line, anchor-line or pattern start marker makes helpers. Its trim and stop commands set the shape's trim_after and stop_after, and a command that is not applied is noted. The 7 names its commands had before its file version 3 are read as the commands they became (DEV-SVG-014)."
+statement = "Ink/Stitch's own objects are not stitched: command symbols and the connectors that tie them to objects, lines drawn with Inkscape's connector tool, and paths that Ink/Stitch's guide-line, anchor-line or pattern start marker makes helpers. Its trim and stop commands set the shape's trim_after and stop_after. Its starting_point, ending_point and target_point commands give every element of the shape they are tied to its start position, end position and target point (REQ-GEN-001, REQ-FILL-CIR-008): the symbol's place, its use element's x and y under the transforms of the use and of the elements above it but the root, in millimetres. Of 2 commands of a kind on a shape, the first connector in the file counts. Its origin and stop_position commands, wherever they are, give the design its origin and its stop position (REQ-ASM-005), each its symbol's place; 2 origins, or 2 stop positions in a design with a stop, end planning (SC-E0819), as Ink/Stitch writes no file of them. A command whose place doesn't read is noted and left out, and so is one a shape digitized automatically has, and one that is not applied. The 7 names its commands had before its file version 3 are read as the commands they became (DEV-SVG-014)."
 rationale = "Read as plain SVG, every command would add a stray line and a colour change to the sew-out, and every guide line would be stitched."
 milestone = "M3"
 status = "active"
@@ -316,7 +325,7 @@ status = "active"
 id = "REQ-SVG-005"
 area = "svg"
 level = "L2"
-statement = "Ink/Stitch's design settings collapse_len_mm, min_stitch_len_mm and min_satin_stroke_width_mm, kept in the first metadata element of the file, are the design's settings. The first element of each name counts. SC-W0802 names a value that is not a number of 0 or more, and the design keeps its default. It names rotate_on_export too when it turns the design, a number other than 0, which StitchCraft does not apply yet, and any other element of Ink/Stitch's namespace there, but the thread palette and the file version."
+statement = "Ink/Stitch's design settings collapse_len_mm, min_stitch_len_mm and min_satin_stroke_width_mm, kept in the first metadata element of the file, are the design's settings, and so is rotate_on_export, the turn on export in degrees (REQ-ASM-005). The first element of each name counts. SC-W0802 names a length that is not a number of 0 or more, and the design keeps its default, and a turn that is not a number, and the design isn't turned. It names any other element of Ink/Stitch's namespace there too, but the thread palette and the file version."
 rationale = "A file that changes them sews as Ink/Stitch sews it, and a setting that is not applied is never silent."
 milestone = "M4"
 status = "active"
@@ -334,8 +343,8 @@ status = "active"
 id = "REQ-SVG-007"
 area = "svg"
 level = "L2"
-statement = "A file an older Ink/Stitch saved is read as Ink/Stitch's updater updates it. Its version is the text of the first element named inkstitch_svg_version, read as a whole number, and it counts when the file has Ink/Stitch's content: an element or an attribute in its namespace, or an embroider_ attribute. In a file of version 1 to 3, each shape with a fill that is sewn and whose own max_stitch_length_mm is missing, empty, not a number or 0 gets max_stitch_length_mm 3, and in a file of version 1 a polyline whose style attribute sets a stroke other than none gets stroke_method manual_stitch, unless the shape is digitized automatically; SC-I0818 counts them. A file with Ink/Stitch's content and no version, or one below 1, and a file of a version above 4 are read as they are, and SC-W0802 says so."
-rationale = "Ink/Stitch's defaults change: a fill's stitches were 3 mm long before its file version 4, and Ink/Stitch writes the old default into an older file's shapes when it opens it. Read as today's files, every file saved before then would sew longer stitches than in Ink/Stitch. Ink/Stitch asks its user whether a file without a version is an old design to update; StitchCraft can't ask, and says what it did."
+statement = "A file an older Ink/Stitch saved is read as Ink/Stitch's updater updates it. Its version is the text of the first element named inkstitch_svg_version, read as a whole number, and it counts when the file has Ink/Stitch's content: an element or an attribute in its namespace, or an embroider_ attribute. Each shape that is not digitized automatically gets the updates of each version after its file's, in the order of the versions, over its own settings, each read with the white space round it stripped and a blank one as none. To version 2, a polyline whose style attribute sets a stroke other than none gets stroke_method manual_stitch. To version 3, a zigzag stroke's pull_compensation_mm, unless it is 0 or not a number, is halved into stroke_pull_compensation_mm, a satin column gets start_at_nearest_point and end_at_nearest_point off, and a starting_point or ending_point command is placed at its connector's end on its object: the connector's first subpath's last point when the symbol is at its start, and its first point otherwise. To version 4, in a shape with a fill that is sewn, a max_stitch_length_mm of its own that is missing, empty, not a number or 0 becomes 3, a fill with auto_fill off, which is not one of Ink/Stitch's words for yes, gets fill_method legacy_fill and loses auto_fill, and then fill_method auto_fill becomes tatami_fill. SC-I0818 counts the shapes and commands each update changed. A file with Ink/Stitch's content and no version, or one below 1, and a file of a version above 4 are read as they are, and SC-W0802 says so."
+rationale = "Ink/Stitch's defaults and settings change: a fill's stitches were 3 mm long before its file version 4, a zigzag stroke's pull compensation applies to each side from version 3, and a fill with auto_fill off was a legacy fill before version 4. Ink/Stitch writes the old meaning into an older file's shapes when it opens it. Read as today's files, every file saved before then would sew otherwise than in Ink/Stitch. Ink/Stitch asks its user whether a file without a version is an old design to update; StitchCraft can't ask, and says what it did."
 milestone = "M3"
 status = "active"
 
@@ -352,7 +361,7 @@ status = "active"
 id = "REQ-SVG-009"
 area = "svg"
 level = "L2"
-statement = "Each attribute in Ink/Stitch's namespace on a shape is a parameter of each element the shape makes, named as the attribute is and with its text, but ignore_object and stroke_first, which the reader applies itself. The registry reads the parameters as it reads a VectorCraft effect's (REQ-PRM-002), and SC-W0105 names one it doesn't declare, which is kept. Ink/Stitch's trim and stop commands turn on trim_after and stop_after over the shape's own settings, and the updates StitchCraft applies to a file of an older version are made over them (REQ-SVG-007). SC-W0802 counts the shapes of such a file whose settings Ink/Stitch's update changes and StitchCraft doesn't update yet: a zigzag stroke's pull compensation other than 0 and a satin column's nearest points before version 3, and a fill with auto_fill off before version 4. Ink/Stitch reads no setting from a group but ignore_object, and SC-W0802 names the other settings of a group, which change nothing. Reading costs a unit of work for each setting of a shape or a group."
+statement = "Each attribute in Ink/Stitch's namespace on a shape is a parameter of each element the shape makes, named as the attribute is and with its text, but ignore_object and stroke_first, which the reader applies itself. The registry reads the parameters as it reads a VectorCraft effect's (REQ-PRM-002), and SC-W0105 names one it doesn't declare, which is kept. Ink/Stitch's trim and stop commands turn on trim_after and stop_after over the shape's own settings, and the updates StitchCraft applies to a file of an older version are made over them (REQ-SVG-007). Ink/Stitch reads no setting from a group but ignore_object, and SC-W0802 names the other settings of a group, which change nothing. Reading costs a unit of work for each setting of a shape or a group."
 rationale = "A file made with Ink/Stitch keeps how each shape sews in these attributes: its stitch type, spacing, underlay, locks and the rest. Read without them, every element would sew at the defaults, and a file would sew otherwise in each program."
 milestone = "M8"
 status = "active"
@@ -366,16 +375,25 @@ rationale = "Ink/Stitch's stroke_first lets a design sew a shape's outline under
 milestone = "M8"
 status = "active"
 
+[[req]]
+id = "REQ-SVG-011"
+area = "svg"
+level = "L2"
+statement = "A shape is cut to its clip paths as a viewer clips it: the clipPath its clip-path property names, as an attribute, in its style or by a style sheet, and those named on the groups, links and switches round it, each of which it must lie inside. A clip path's area is its children's together: each path, basic shape, or use of one at its x and y, filled by its clip-rule, under its own transform and the clip path's, in the user space of the element it clips, or of that shape's box with clipPathUnits objectBoundingBox; and a group's children, as Inkscape draws them. A child not displayed, a line and text add nothing, and SC-W0802 names text. A clip-path on the clip path cuts it in turn. A clip path with no area leaves nothing of the shape. A clip-path naming no clip path clips nothing, and one in a loop, one on a clip path's child, one on the root and objectBoundingBox on a group are not applied, which SC-W0802 names. Masks are not applied, as in Ink/Stitch, and SC-W0802 names them."
+rationale = "A design clipped in Inkscape, and the glyphs of 5 of Ink/Stitch's fonts, sew only what shows. Ink/Stitch builds a clip's area otherwise in places, which the ledger lists (DEV-SVG-016 to DEV-SVG-020); behaviour checked against Chromium's drawing of each case and Ink/Stitch's lib/svg/clip.py read at d59c9ab, and sewn in both programs (inkstitch-clip-*)."
+milestone = "M8"
+status = "active"
+
 # ── Generators: shared ─────────────────────────────────────────────────────────────────────────────
 
 [[req]]
 id = "REQ-GEN-001"
 area = "generators"
 level = "L2"
-statement = "Every generator honours start and end hints: the first and last stitch lie within 0.1 mm of the shape point nearest each hint."
-rationale = "Where stitching starts and ends decides the jumps and trims between elements."
+statement = "An element's start and end positions, which its design gives it as Ink/Stitch's starting_point and ending_point commands (REQ-SVG-003) or VectorCraft's stitch:start and stitch:end markers (REQ-VC-009), take the place of the needle before it and of what the element after it offers (REQ-GEN-003), for the stitch types that use them. A fill's start position is its needle as its first part begins (DEV-FILL-023), and its end position the next element's offer, with each fill method but the contour fill, which ends where its rings end and uses the start position alone. A satin column sews a stitch at its start position and follows its line from there to its first stitch (REQ-SAT-013), whatever start_at_nearest_point says, and ends at its end position (REQ-SAT-014) unless that lies within 5 CSS pixels of the line's end, whatever end_at_nearest_point says. Strokes use neither. A fill of any method, or a satin column, with a start position offers it to the element before it."
+rationale = "Where stitching starts and ends decides the jumps and trims between elements, and a design's author places them where a jump hides or a part should begin. Ink/Stitch applies its commands to fills and satin columns so (lib/elements/fill_stitch.py, lib/elements/satin_column/satin_column.py, read at d59c9ab); its satin column with a start command offers nothing to the element before it, or its rails' start, where StitchCraft's offers the start position (DEV-SAT-012)."
 milestone = "M8"
-status = "planned"
+status = "active"
 
 [[req]]
 id = "REQ-GEN-002"
@@ -402,6 +420,15 @@ level = "L2"
 statement = "A generator spends a stitch of the design's limit for each needle point as it makes it, and for each one a later pass or bean stitch sews again. What it lays out before sewing it, such as a satin column's pairs or a fill's row segments, must fit in the stitches left. Once done, it has spent exactly a stitch for each needle point it gives. Each element is given the stitches the elements before it left, and the first that needs more ends planning there, with SC-E0004 naming it, before more is made."
 rationale = "Work bounds time, not memory, and a few settings multiply needle points: 10 mm of zigzag at the smallest spacing with 100 repeats and bean stitch 10 is 4.2 million, and a metre of it 420 million, gigabytes. The stitch limit must stop them before they are made, not refuse them after."
 milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-GEN-005"
+area = "generators"
+level = "L2"
+statement = "An element's clips cut what it sews. A fill's area is the part of its region inside every clip, before its underlay, expand_mm and its method see it, and what it offers the element before it is that area. A stroke's lines are cut where they cross a clip's outline, and each piece inside is sewn as a line of its own, in order along the line, as Ink/Stitch sews them; its width is not cut. A satin column is sewn whole, as in Ink/Stitch, and SC-W0217 names it. An element its clips leave nothing of sews nothing, and SC-W0013 names it. A clip is the areas of its shapes together, each by its rule, and an automatic shape is cut before it is digitized."
+rationale = "Ink/Stitch cuts a fill's shape and a stroke's centre line to the clip before sewing them, and sews a satin column whole (lib/elements/fill_stitch.py: shape, lib/elements/stroke.py: _get_clipped_path, read at d59c9ab). The engine cuts them for every reader, the SVG file's clip paths now and VectorCraft's clip groups from M8.7."
+milestone = "M8"
 status = "active"
 
 # ── Running stitch family ──────────────────────────────────────────────────────────────────────────
@@ -506,6 +533,15 @@ rationale = "Ink/Stitch's zig-zag stitch, read at d59c9ab: a file sews the same 
 milestone = "M7"
 status = "active"
 
+[[req]]
+id = "REQ-RUN-013"
+area = "strokes/zigzag"
+level = "L3"
+statement = "The zigzag strokes StitchCraft sews TS-11A with, 1, 2 and 4 mm wide at spacings of 0.4, 1 and 2 mm, along a straight and round a curve, and one whose stitches turn 45°, written as an SVG file with their Ink/Stitch parameters, sew in the Ink/Stitch that conformance/inkstitch/pin.toml names, run as a black box, as StitchCraft sews the sheet, by the measures of REQ-SVG-008 and within their tolerances. A measure that a case excuses with an entry of the deviations ledger may differ."
+rationale = "The zigzag stroke is built from Ink/Stitch's behaviour, and the differential is how a file is shown to sew the same in both."
+milestone = "M7"
+status = "active"
+
 # ── Lock stitches and assembly ─────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -577,7 +613,7 @@ status = "active"
 id = "REQ-ASM-005"
 area = "plan/assembly"
 level = "L2"
-statement = "The design's origin, or without one the centre of the box around the finished plan's stitches, as Ink/Stitch centres them, becomes the hoop's centre; a stop position adds a jump to it before each stop."
+statement = "The design's origin, or without one the centre of the box around the finished plan's stitches, as Ink/Stitch centres them, becomes the hoop's centre; a stop position adds a jump to it before each stop. Ink/Stitch's origin and stop_position commands give them in an SVG file (REQ-SVG-003), and objects named `stitch:origin` and `stitch:stop-position` in a VectorCraft document (REQ-VC-009). The design's turn on export, Ink/Stitch's rotate_on_export (REQ-SVG-005, REQ-VC-013), then turns the plan about the hoop's centre by its degrees, right for a positive number, exactly for whole quarter turns, before the hoop is checked."
 milestone = "M3"
 status = "active"
 
@@ -861,6 +897,15 @@ rationale = "Ink/Stitch's zigzag satin, read at 6555892, stops its contour under
 milestone = "M7"
 status = "active"
 
+[[req]]
+id = "REQ-SAT-029"
+area = "satin"
+level = "L3"
+statement = "The E-stitches, S-stitches and zigzag satins StitchCraft sews TS-11A with, written as an SVG file with their Ink/Stitch parameters, sew in the Ink/Stitch that conformance/inkstitch/pin.toml names, run as a black box, as StitchCraft sews the sheet, by the measures of REQ-SVG-008 and within their tolerances: E-stitches along straight sides and round circles, S-stitches along a straight and round a curve, split by the default and the staggered methods, and zigzag satins beside satin columns and over a contour underlay. A measure that a case excuses with an entry of the deviations ledger may differ."
+rationale = "The E-stitch, the S-stitch and the zigzag satin are built from Ink/Stitch's behaviour, and the differential is how a file is shown to sew the same in both."
+milestone = "M7"
+status = "active"
+
 # ── Fill region ────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -1097,6 +1142,123 @@ rationale = "The contour fill is built from Ink/Stitch's behaviour, and the diff
 milestone = "M7"
 status = "active"
 
+[[req]]
+id = "REQ-FILL-MEA-001"
+area = "fill/meander"
+level = "L2"
+statement = "Each of StitchCraft's 7 meander tiles is a network that repeats: the sides of a regular or semiregular tiling of the plane, none with dodecagons, 2 mm long at meander_scale_percent 100, each point meeting as many lines as the tiling has polygons round it. The tile is scaled by meander_scale_percent, one percentage or 2 for across and down, each at least 1, turned by meander_angle clockwise as drawn, and repeated so that a point of it lies at the middle of the part's bounds."
+rationale = "StitchCraft's tiles are its own, made in code, where Ink/Stitch's are pictures it ships (DEV-FILL-018): a tiling's sides make a network with no free end, which a meander can wander through."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-MEA-002"
+area = "fill/meander"
+level = "L2"
+statement = "A part's network keeps each line of the tile that lies wholly inside the part, touching its outline at most, and then takes away a line with a free end until none is left. Pieces of what is left are joined by the shortest straight lines between their points that join them all, as few as join them. A part with no network is sewn as a running stitch round its outline, and SC-W0317 says so (DEV-FILL-019)."
+rationale = "Ink/Stitch's meander fill, read at d59c9ab (lib/tiles.py: to_graph, _remove_dead_ends; lib/stitches/meander_fill.py: ensure_connected), but where it stops with an error on a part too small for its tile."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-MEA-003"
+area = "fill/meander"
+level = "L2"
+statement = "The path runs through the network from its point nearest the needle, or else the outline's first point, to its point nearest the end: the part's point nearest the next part, the next element's offer for the last part, or else the outline's point half way round from the start, the next nearest where that is the start. It begins as a path of fewest lines and is lengthened by detours through points it has not passed, a line at a time (2 to 7 lines) and then 2 lines at a time (3 to 10 lines), the lines and pairs drawn at random, each detour the first a depth-first search finds trying the points farthest from its end first, until no line or pair can be replaced. It passes no point twice. The same element and seed give the same path on every platform, and another seed another path."
+rationale = "Ink/Stitch's meander path, read at d59c9ab (lib/stitches/meander_fill.py: find_starting_and_ending_nodes, generate_meander_path, replace_edge, replace_edge_pair). Its random numbers and its search's order are its own, so its path differs for one seed (DEV-FILL-020)."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-MEA-004"
+area = "fill/meander"
+level = "L2"
+statement = "The path is smoothed by smoothness_mm as a contour fill's is (REQ-FILL-CON-003). With zigzag_spacing_mm above 0, it is cut into points half the spacing apart, and each but the last is moved half zigzag_width_mm to the right of the way to the next point as drawn, and the next to the left, in turn. With clip on, it is kept inside the part as drawn, before expand_mm. Unless it zigzags without clip, it is sewn as a running stitch of running_stitch_length_mm within running_stitch_tolerance_mm. Bean stitch comes next, then repeats, each of which sews everything so far again the other way round (REQ-FILL-CON-006)."
+rationale = "Ink/Stitch sews a meander path so, read at d59c9ab (lib/stitches/meander_fill.py: post_process, zigzag_stitch)."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-MEA-005"
+area = "fill/meander"
+level = "L2"
+statement = "Each part of a meander fill sews the tatami fill's underlay first (REQ-FILL-TAT-011), and then its path over the part grown by expand_mm, nearest the needle first, each part ending nearest the next and the last nearest the next element. A meander_pattern that names one of Ink/Stitch's tiles sews StitchCraft's default tile, and SC-W0316 names it (DEV-FILL-018)."
+rationale = "Ink/Stitch's meander fill takes the tatami fill's underlay, start and end, read at d59c9ab (lib/elements/fill_stitch.py: to_stitch_groups, do_meander_fill)."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CIR-001"
+area = "fill/circular"
+level = "L2"
+statement = "A circular fill lays circles round the middle of each part grown by expand_mm, its centroid: one of 0.1 CSS pixel radius, then from row_spacing_mm out, each a row spacing past the last, until one lies 2 spacings past the part's farthest point, end_row_spacing_mm's where it is set. With end_row_spacing_mm, the step from a circle to the next is the row spacing plus the share of the way to the end spacing that the circle's radius is of the farthest point's distance, and the end spacing past the farthest point (DEV-FILL-021). Each circle has 64 sides, from its right-hand point, turning up as drawn first."
+rationale = "Ink/Stitch's circular fill, read at d59c9ab (lib/stitches/circular_fill.py: circular_fill; lib/elements/fill_stitch.py: do_circular_fill), and GEOS's buffer of a point, which it draws its circles with: checked with shapely 2.2 on GEOS 3.14."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CIR-002"
+area = "fill/circular"
+level = "L2"
+statement = "The spiral is the contour fill's double spiral through the circles (REQ-FILL-CON-004), from the outermost circle's first point, its turns cut into points by the running stitch's first length. The part cuts it where it meets the part's rings, and its pieces are the stretches inside the part, a stretch along a ring among them, in order along the spiral and running its way. 2 stretches that meet where the spiral touches a ring from inside are 2 pieces, and a point where it touches the part from outside is none."
+rationale = "Ink/Stitch's circular fill joins its circles with its contour fill's double spiral and cuts it with the shape, which GEOS does so, read at d59c9ab (lib/stitches/circular_fill.py: circular_fill; lib/stitches/contour_fill.py: _make_fermat_spiral) and checked with shapely 2.2 on GEOS 3.14."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CIR-003"
+area = "fill/circular"
+level = "L2"
+statement = "A spiral of one piece is sewn as a running stitch of running_stitch_length_mm, within running_stitch_tolerance_mm and at random lengths when they are on: from the needle along the outline to where the piece starts, along the piece, and from where it ends along the outline to the end, the next part's nearest point or the next element's offer, each way along the outline the shorter way round (DEV-FILL-022). Without a needle or an end, that way is left out. Each turn of the spiral, and each step between turns, is a span of the running stitch."
+rationale = "Ink/Stitch sews a circular fill whose spiral the shape cuts once so, read at d59c9ab (lib/stitches/circular_fill.py: circular_fill, _apply_start_end_commands)."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CIR-004"
+area = "fill/circular"
+level = "L2"
+statement = "A spiral of several pieces is sewn as a tatami fill routes its rows (REQ-FILL-TAT-001), each piece a row between its ends: each sewn once, every needle point a running stitch along it puts, from the end the route enters it by, and without its last needle point with skip_last. Between pieces the needle travels as a tatami fill's does (REQ-FILL-TAT-005): under the pieces not sewn yet, along lines at 45° and square to the fill's angle, or with underpath off along the rings and along the pieces themselves."
+rationale = "Ink/Stitch routes and sews a circular fill's pieces with its tatami fill's graph and travel, read at d59c9ab (lib/stitches/circular_fill.py: circular_fill, path_to_stitches; lib/stitches/tatami_fill.py)."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CIR-005"
+area = "fill/circular"
+level = "L2"
+statement = "A part that lies within its row spacing of its middle is sewn as one circle with a radius of the row spacing round its middle, a running stitch of even lengths from its right-hand point, and SC-W0318 says so. A part the spiral misses, which lies between 2 of its turns, is sewn as a running stitch round its outline from the outline's start, with no bean stitch or repeats, and SC-W0305 says so."
+rationale = "Ink/Stitch sews such parts so, read at d59c9ab (lib/stitches/circular_fill.py: circular_fill; lib/stitches/tatami_fill.py: fallback). The circle can reach past a part so small, and is worth a warning."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CIR-006"
+area = "fill/circular"
+level = "L2"
+statement = "Each part of a circular fill sews the tatami fill's underlay first (REQ-FILL-TAT-011), then its spiral over the part grown by expand_mm, nearest the needle first, each part ending nearest the next and the last nearest the next element. Bean stitch sews each stitch 2b + 1 times, b taken in turn from bean_stitch_repeats, but each stitch the needle travels between pieces once, which still takes its turn in the list. k repeats then sew 2^(k − 1) passes, each the other way from the one before (REQ-FILL-CON-006)."
+rationale = "Ink/Stitch's circular fill takes the tatami fill's underlay, start and end, and leaves its travel out of bean stitch, read at d59c9ab (lib/elements/fill_stitch.py: to_stitch_groups; lib/stitches/circular_fill.py: _apply_bean_stitch_and_repeats; lib/stitches/running_stitch.py: bean_stitch)."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CIR-007"
+area = "fill/circular"
+level = "L3"
+statement = "The circular fills StitchCraft sews TS-11B with, round a hole, on a star and fading, written as an SVG file with their Ink/Stitch parameters, sew in the Ink/Stitch that conformance/inkstitch/pin.toml names, run as a black box, as StitchCraft sews the sheet, by the measures of REQ-SVG-008 and within their tolerances. A measure that a case excuses with an entry of the deviations ledger may differ."
+rationale = "The circular fill is built from Ink/Stitch's behaviour, and the differential is how a file is shown to sew the same in both."
+milestone = "M7"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CIR-008"
+area = "fill/circular"
+level = "L2"
+statement = "A circular fill with a target point, Ink/Stitch's target_point command (REQ-SVG-003), lays its circles round it in place of each part's centroid (REQ-FILL-CIR-001): the same point for every part, inside it or not."
+rationale = "Ink/Stitch centres a circular fill on its target command (lib/elements/fill_stitch.py, do_circular_fill, read at d59c9ab), so that its rings radiate from a point the design chooses."
+milestone = "M8"
+status = "active"
+
 # ── VectorCraft ────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -1174,7 +1336,7 @@ status = "active"
 id = "REQ-VC-009"
 area = "vectorcraft"
 level = "L2"
-statement = "An object or a layer named `stitch:ignore`, alone or followed by white space and a note, is left out with everything in it, and listed (SC-I0811). An object named `stitch:start` or `stitch:end` that is neither a group nor a layer marks where the fill or the satin column grouped with it starts or ends, and is never stitched. Until StitchCraft starts and ends shapes at such hints (REQ-GEN-001), each marker is named (SC-W0807). A group or a layer so named, and any other name that begins with `stitch:`, is named as well, and the name is otherwise ignored. The names are read after any white space, in any mix of upper and lower case."
+statement = "An object or a layer named `stitch:ignore`, alone or followed by white space and a note, is left out with everything in it, and listed (SC-I0811). An object named `stitch:start` or `stitch:end` that is neither a group nor a layer is never stitched, and gives the shapes of the group or layer it is in, and of the groups inside it, their start or end position: the centre of the box round its anchors (REQ-GEN-001). The first such marker of each kind that shows counts, a group's before those of the groups around it; another, or one with no anchor that reads, is named (SC-W0807), and so are the markers of a shape digitized automatically, which uses none. An object named `stitch:origin` or `stitch:stop-position` that is neither a group nor a layer is never stitched either, and gives the design its origin or its stop position (REQ-ASM-005), the centre of the box round its anchors, wherever it is; 2 origins, or 2 stop positions in a design with a stop, end planning (SC-E0819), and one with no anchor that reads is named (SC-W0807). A group or a layer so named, and any other name that begins with `stitch:`, is named as well, and the name is otherwise ignored. The names are read after any white space, in any mix of upper and lower case."
 rationale = "ABI v1 gives a plug-in no command objects of its own. The names VectorCraft's Layers panel edits can carry them, as Ink/Stitch's ignore commands and its start and end positions do."
 milestone = "M6"
 status = "active"
@@ -1210,7 +1372,7 @@ status = "active"
 id = "REQ-VC-013"
 area = "vectorcraft"
 level = "L2"
-statement = "From VectorCraft 0.16, StitchCraft's Design Settings filter keeps a document's design settings and machine with it, as data VectorCraft keeps with a document for a filter: Ink/Stitch's 3 design settings, `collapse_len_mm`, `min_stitch_len_mm` and `min_satin_stroke_width_mm`, and the machine profile. It changes no object. `stitch export` and the exporters plan the document with its settings, and for its machine unless `--profile` or the export's dialog names another. A setting that does not read keeps its default, and a machine StitchCraft doesn't have leaves the reference machine, each with `SC-W0812`. A VectorCraft before 0.16 doesn't keep a filter's data, and there the filter declines with `SC-E0813`. A live effect is not given them, and its preview keeps the defaults and the reference machine."
+statement = "From VectorCraft 0.16, StitchCraft's Design Settings filter keeps a document's design settings and machine with it, as data VectorCraft keeps with a document for a filter: Ink/Stitch's 3 design settings, `collapse_len_mm`, `min_stitch_len_mm` and `min_satin_stroke_width_mm`, and the machine profile. It changes no object. `stitch export` and the exporters plan the document with its settings, and for its machine unless `--profile` or the export's dialog names another. From M8.9 it keeps the turn on export too, Ink/Stitch's `rotate_on_export` (REQ-ASM-005), which its dialog offers as none, left or right. A setting that does not read keeps its default, and a machine StitchCraft doesn't have leaves the reference machine, each with `SC-W0812`. A VectorCraft before 0.16 doesn't keep a filter's data, and there the filter declines with `SC-E0813`. A live effect is not given them, and its preview keeps the defaults and the reference machine."
 rationale = "Ink/Stitch keeps its design settings in the SVG file, and a VectorCraft document had nowhere to keep them until 0.16 gave each filter data of its own in the document. A design is planned for one machine and hoop, which belongs with it as much as its settings do. So the file VectorCraft exports and the one `stitch export` writes of the saved document are the same, whoever exports it."
 milestone = "M6"
 status = "active"
@@ -1228,7 +1390,7 @@ status = "active"
 id = "REQ-VC-015"
 area = "vectorcraft"
 level = "L2"
-statement = "From VectorCraft 0.16, StitchCraft's Test Sheet filter draws one of `stitch testsheet`'s sheets drawn as designs, TS-02B to TS-09, TS-11B and the TS-13 sheets, into the document, moved by whole millimetres so that its middle is nearest the middle of the artboard. Each element is an object with its path, its thread as the paint its family sews with, and its settings as the record of its family's StitchCraft effect, each the value its dialog row takes. The document sews as the sheet's design sews, moved as the filter moved it, and exports within an export's budget. The objects selected stay as they are. A VectorCraft before 0.16 doesn't tell the filter that it keeps the effect records a filter gives, and there the filter declines with SC-E0813. Where parts of the sheet would lie more than 10 m from the document's origin, farther than StitchCraft stitches, it declines with SC-E0817. The sheets drawn stitch by stitch, TS-01, TS-02 and TS-10A to TS-10C, are not designs, and only `stitch testsheet` writes them. The TS-13 sheets' shapes digitized automatically have the Auto effect's record (REQ-VC-016)."
+statement = "From VectorCraft 0.16, StitchCraft's Test Sheet filter draws one of `stitch testsheet`'s sheets drawn as designs, TS-02B to TS-09, TS-11A, TS-11B and the TS-13 sheets, into the document, moved by whole millimetres so that its middle is nearest the middle of the artboard. Each element is an object with its path, its thread as the paint its family sews with, and its settings as the record of its family's StitchCraft effect, each the value its dialog row takes. The document sews as the sheet's design sews, moved as the filter moved it, and exports within an export's budget. The objects selected stay as they are. A VectorCraft before 0.16 doesn't tell the filter that it keeps the effect records a filter gives, and there the filter declines with SC-E0813. Where parts of the sheet would lie more than 10 m from the document's origin, farther than StitchCraft stitches, it declines with SC-E0817. The sheets drawn stitch by stitch, TS-01, TS-02 and TS-10A to TS-10C, are not designs, and only `stitch testsheet` writes them. Nor does it draw TS-11C, whose meander fills wander as their elements' ids draw: a document's objects have ids of their own, and would wander other ways. The TS-13 sheets' shapes digitized automatically have the Auto effect's record (REQ-VC-016)."
 rationale = "A machine checkpoint can then start from VectorCraft: the sheet's objects show their stitches, the exporters write it, and the dialogs show its settings. The sheets are the same designs the command line plans, so a sew-out from either answers the same questions."
 milestone = "M6"
 status = "active"

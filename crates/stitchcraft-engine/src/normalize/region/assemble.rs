@@ -52,6 +52,14 @@ impl Unjoined {
                        size. This is a bug in StitchCraft.";
         Diagnostic::new(Code::InternalCheckFailed, message)
     }
+
+    /// What to say when it happens to the area of an element's clips, or to what they leave of a fill
+    /// (`SC-E0009`): the element is not sewn.
+    pub(crate) fn clip(self) -> Diagnostic {
+        let message = "The edges of this element's clip paths, or of what they leave of it, could not be joined into rings, so it is not \
+                       sewn. This is a bug in StitchCraft.";
+        Diagnostic::new(Code::InternalCheckFailed, message)
+    }
 }
 
 /// The parts whose rings run along the half edges marked in `kept` (indexed as [`Arrangement::ends`]),
@@ -405,6 +413,10 @@ mod tests {
         let grown = unjoined.grown();
         assert_eq!(grown.code, Code::InternalCheckFailed);
         assert!(grown.message.contains("sewn at its own size"), "{}", grown.message);
+        // Of a clip's area, or of what it leaves of a fill: the element isn't sewn.
+        let clipped = unjoined.clip();
+        assert_eq!(clipped.code, Code::InternalCheckFailed);
+        assert!(clipped.message.contains("clip paths") && clipped.message.contains("it is not sewn"), "{}", clipped.message);
     }
 
     /// A square `side` wide from (`x`, `y`), each side cut into `cuts` segments: counter-clockwise in y-up

@@ -20,11 +20,12 @@ its stroke settings say. The element before it still ends near it, as Ink/Stitch
 ### `fill_method`
 
 **Fill method.** The stitch the area is filled with. A tatami fill sews rows of running stitches across it, a
-contour fill rings that follow its outline inward, and a fill set to Ink/Stitch's legacy fill is
+contour fill rings that follow its outline inward, a meander fill one line that wanders through a
+tiling, and a circular fill a spiral round its middle. A fill set to Ink/Stitch's legacy fill is
 sewn as a tatami fill without underlay (`SC-W0314`). The other methods arrive in later versions;
 until then an element set to one is skipped (`SC-W0011`).
 
 - **Accepts:** one of `tatami_fill` (Tatami fill), `circular_fill` (Circular fill), `contour_fill` (Contour fill), `cross_stitch` (Cross stitch), `guided_fill` (Guided fill), `linear_gradient_fill` (Linear gradient fill), `meander_fill` (Meander fill), `tartan_fill` (Tartan fill), `legacy_fill` (Legacy fill)
 - **Default:** `tatami_fill`
 - **Ink/Stitch:** same key and default; StitchCraft differs:
-  - **DEV-FILL-014.** A fill whose fill_method is legacy_fill is sewn as a tatami fill without underlay (SC-W0314), and without the pull compensation, random stitch lengths and gap-filling rows legacy fill takes none of, its rows routed and joined by travel stitches as a tatami fill's are, from near the needle to near the next element. Ink/Stitch's legacy fill sews each stretch of rows that join on its own, back and forth, with no travel stitches between stretches; its flip starts the rows from the other side, and its reverse sews the whole fill backwards. StitchCraft keeps both settings without reading them (SC-W0105).
+  - **DEV-FILL-014.** A fill whose fill_method is legacy_fill is sewn as a tatami fill without underlay (SC-W0314), and without the pull compensation, random stitch lengths and gap-filling rows legacy fill takes none of, its rows routed and joined by travel stitches as a tatami fill's are, from near the needle to near the next element. Ink/Stitch's legacy fill sews each stretch of rows that join on its own, back and forth, with no travel stitches between stretches; its flip starts the rows from the other side, and its reverse sews the whole fill backwards. StitchCraft keeps both settings without reading them (SC-W0105). Its start and end positions are used as a tatami fill's are (REQ-GEN-001), where Ink/Stitch's legacy fill sews its parts in order of their distance from its start command and uses it no further.

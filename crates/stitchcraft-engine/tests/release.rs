@@ -46,6 +46,8 @@ fn req_auto_003_a_closed_line_wider_than_the_circle_it_follows_is_filled_in_a_re
         thread: RED,
         params: ParamSet::new(),
         automatic: false,
+        hints: Default::default(),
+        clips: Vec::new(),
     };
     let outcome = planned(vec![automatic(pupils)]);
     let codes: Vec<Code> = outcome.diagnostics.iter().map(|d| d.code).collect();

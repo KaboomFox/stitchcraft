@@ -2,9 +2,16 @@
 //! into the document (`REQ-VC-015`). A machine checkpoint can then start from VectorCraft: the sheet's
 //! objects show their stitches, the exporters write it, and the dialogs show its settings.
 //!
-//! **Which sheets.** Those drawn as designs, TS-02B to TS-09, TS-11B and the TS-13 sheets, whose elements
+//! **Which sheets.** Those drawn as designs, TS-02B to TS-09, TS-11A, TS-11B and the TS-13 sheets, whose elements
 //! are shapes ([`TestSheet::design`]). The others are drawn stitch by stitch, as plans, which no object
-//! holds, and only `stitch testsheet` writes them.
+//! holds, and only `stitch testsheet` writes them. So does TS-11C, a design whose meander fills wander as
+//! their elements' ids draw: the objects drawn have ids of their own, and would wander other ways
+//! ([`TestSheet::drawable`]). So does TS-16, whose elements start and end at positions and are cut by clips,
+//! which the filter would draw as `stitch:start` and `stitch:end` markers grouped with them and as clip groups,
+//! and whose origin and stop position it would draw as `stitch:origin` and `stitch:stop-position` markers
+//! ([`TestSheet::uses_file_features`]). Which sheets it draws is known without drawing them
+//! ([`TestSheet::drawable`]): a run that drew every sheet's design to find its own went past the work
+//! VectorCraft allows a filter.
 //!
 //! **What it draws.** The sheet's design moved by whole millimetres, so that the middle of its bounds is as
 //! near the middle of the artboard VectorCraft names as that allows: the artboard under the selection, or
@@ -54,7 +61,7 @@ const PAGE: &str = "user/how-to/embroider-a-vectorcraft-design.html#draw-a-test-
 
 /// The sheets drawn as designs, which the filter draws, in protocol order.
 pub fn sheets() -> impl Iterator<Item = &'static TestSheet> {
-    SHEETS.iter().filter(|sheet| sheet.designed())
+    SHEETS.iter().filter(|sheet| sheet.drawable())
 }
 
 /// The filter's dialog: a choice of the sheets, by their ids, the first by default, with what each tests.

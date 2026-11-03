@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A clip path scaled by half: a viewer shows the red square from 10 to 40 mm, where the clip path's rectangle from 20 to 80 lies once scaled. Written for StitchCraft's Ink/Stitch differential cases (conformance L3). -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:inkstitch="http://inkstitch.org/namespace"
+     width="100mm" height="100mm" viewBox="0 0 100 100">
+  <metadata><inkstitch:inkstitch_svg_version>4</inkstitch:inkstitch_svg_version></metadata>
+  <defs><clipPath id="small" transform="scale(0.5)"><rect x="20" y="20" width="60" height="60"/></clipPath></defs>
+  <rect id="square" x="0" y="0" width="80" height="80" fill="#ed171f" clip-path="url(#small)"/>
+</svg>

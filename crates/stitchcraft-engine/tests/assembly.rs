@@ -6,7 +6,7 @@
 
 use proptest::prelude::*;
 use stitchcraft_core::{Budget, Code, ElementId, Mm, Rect};
-use stitchcraft_engine::design::{Design, DesignSettings, Element, FillRule, Path, Segment, Shape, Subpath};
+use stitchcraft_engine::design::{Design, DesignSettings, Element, FillRule, Path, Segment, Shape, Subpath, Turn};
 use stitchcraft_engine::plan;
 use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::{Rgb, Role, StitchKind, Thread};
@@ -103,6 +103,31 @@ fn req_asm_005_the_origin_goes_to_the_hoop_centre() {
 }
 
 #[test]
+fn req_asm_005_the_turn_on_export_turns_the_plan_about_its_origin_before_the_hoop_is_checked() {
+    // A line 150 mm long from its origin, sideways: past the 5 × 7 in hoop's 65 mm either side of its centre.
+    // Turned right, it runs 150 mm down from the centre and fits the hoop's 90; turned left, up. The stop
+    // position, 10 mm above the line's start, turns with it.
+    let elements = || vec![line("a", (-75.0, 0.0), 150.0, &RED, &[("stop_after", "true")]), line("b", (-75.0, 5.0), 10.0, &RED, &[])];
+    let settings = |turn: Turn| DesignSettings {
+        origin: Some(p(0.0, 0.0)),
+        stop_position: Some(p(-75.0, -10.0)),
+        rotate_on_export: turn,
+        ..DesignSettings::default()
+    };
+    let unturned = sewn_with(elements(), settings(Turn::NONE));
+    assert_eq!((unturned.plan, unturned.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>()), (None, vec![Code::OutsideHoop]));
+    for (turn, start, stop_position) in [(Turn::RIGHT, p(0.0, -75.0), p(10.0, -75.0)), (Turn::LEFT, p(0.0, 75.0), p(-10.0, 75.0))] {
+        let plan = sewn_with(elements(), settings(turn)).plan.unwrap();
+        let first = plan.stitches().find(|s| s.origin.role == Role::Top).unwrap();
+        assert_eq!(first.at, start, "{turn:?}");
+        let stop = plan.stitches().position(|s| s.kind == StitchKind::Stop).unwrap();
+        assert_eq!(plan.stitches().nth(stop - 1).map(|s| (s.kind, s.at)), Some((StitchKind::Jump, stop_position)), "{turn:?}");
+        let sewn_box = Rect::around(plan.stitches().filter(|s| s.kind == StitchKind::Normal).map(|s| s.at)).unwrap();
+        assert_eq!((sewn_box.width(), sewn_box.height()), (5.0, 150.0), "{turn:?}");
+    }
+}
+
+#[test]
 fn diag_sc_w0503_a_lock_setting_that_cannot_be_sewn_is_named_once_for_its_element() {
     // 5 parts of one element, each tied in and off: what comes of its lock settings alone is the same at
     // every part, and is said once, with no place.
@@ -147,7 +172,7 @@ fn req_gen_002_an_element_that_cannot_be_sewn_is_skipped_and_the_rest_still_plan
         Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0)), Segment::Line(p(5.0, 5.0))], closed: true }] };
     let fill = Element {
         shape: Shape::Fill { path: square, rule: FillRule::NonZero },
-        ..line("fill", (0.0, 0.0), 1.0, &RED, &[("fill_method", "meander_fill")])
+        ..line("fill", (0.0, 0.0), 1.0, &RED, &[("fill_method", "tartan_fill")])
     };
     let ripple = line("ripple", (0.0, 5.0), 10.0, &RED, &[("stroke_method", "ripple_stitch")]);
     let wrong = line("wrong", (0.0, 10.0), 10.0, &RED, &[("running_stitch_length_mm", "long")]);
@@ -236,12 +261,12 @@ fn diag_sc_w0011_a_stitch_type_not_sewn_yet_is_named() {
         Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0)), Segment::Line(p(5.0, 5.0))], closed: true }] };
     let fill = Element {
         shape: Shape::Fill { path: square, rule: FillRule::EvenOdd },
-        ..line("f", (0.0, 0.0), 1.0, &RED, &[("fill_method", "meander_fill")])
+        ..line("f", (0.0, 0.0), 1.0, &RED, &[("fill_method", "tartan_fill")])
     };
     let outcome = sewn(vec![fill, line("ok", (0.0, 5.0), 10.0, &RED, &[])]);
     assert_eq!(
         messages(&outcome),
-        ["warning SC-W0011: This element's fill method, `meander_fill`, is not sewn by this version of StitchCraft yet, so it is skipped."]
+        ["warning SC-W0011: This element's fill method, `tartan_fill`, is not sewn by this version of StitchCraft yet, so it is skipped."]
     );
     assert_eq!(outcome.diagnostics[0].element.as_ref().map(ElementId::as_str), Some("f"));
 }

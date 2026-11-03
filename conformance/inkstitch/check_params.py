@@ -4,14 +4,17 @@ The data file is the interoperability contract: every parameter an Ink/Stitch SV
 type, unit, default and the stitch types (or conditions) it applies to. Defaults are part of the contract,
 so a stale row would make a file sew differently in the two tools. This script compares every row with
 Ink/Stitch's own `@param` declarations, the method identifiers with its option lists, the lock
-identifiers with its lock definitions, the commands with its command lists, the other attributes with
-its attribute list and those its code reads or writes by name outside it, and the file version and
-renamed commands with its updater, and prints each difference.
+identifiers with its lock definitions, the meander tiles with its tiles' folders, the commands with its
+command lists, the other attributes with its attribute list and those its code reads or writes by name
+outside it, and the file version and renamed commands with its updater, and prints each difference.
 
 A row's `read_by` lists the fill methods that read it as they sew, though the window doesn't show it for
 them: the tatami fill's underlay, which every fill method but those `to_stitch_groups` leaves out sews,
-reads `angle`, `running_stitch_length_mm` and `staggers` (`UNDERLAY_READS`). The script finds those
-methods and what the underlay reads in Ink/Stitch's code, and compares each row with them.
+reads `angle`, `running_stitch_length_mm`, `running_stitch_tolerance_mm` and `staggers`, and
+`row_spacing_mm` and `max_stitch_length_mm` where its own are not set (`UNDERLAY_READS`). A method's own
+sewing, its `do_<method>` function, reads the properties it takes from the element, as the circular fill
+reads `skip_last` (`method_reads`). The script finds those methods and what each reads in Ink/Stitch's
+code, and compares each row with them.
 
 A declared default is what Ink/Stitch's settings window shows. What it sews for a file that sets no value
 is the fallback its code reads the attribute with, `self.get_..._param("name", fallback)`, and the two
@@ -29,6 +32,7 @@ Exit status 0 when everything agrees, 1 when anything differs or cannot be compa
 """
 
 import ast
+import json
 import re
 import sys
 import tomllib
@@ -48,6 +52,8 @@ LOCKS = "lib/stitch_plan/lock_stitch.py"
 COMMANDS = "lib/commands.py"
 ATTRIBUTES = "lib/svg/tags.py"
 UPDATE = "lib/update.py"
+# Where the meander fill's tiles are, a folder each, its `tile.json` giving the id and the name.
+TILES = "tiles"
 # Ink/Stitch's extensions: tools that read elements' settings to compare them, not to sew them.
 TOOLS = "lib/extensions/"
 
@@ -57,9 +63,17 @@ METHODS = {"stroke": "stroke_method", "satin": "satin_method", "fill": "fill_met
 # The fill parameters the tatami fill's underlay reads, by the property it reads each through: every fill
 # method that sews the underlay reads them, whether or not the settings window shows them for it, and the
 # row lists those methods as `read_by`. The underlay's angle is 90° from `angle` unless set.
-UNDERLAY_READS = {"angle": "angle", "running_stitch_length_mm": "running_stitch_length", "staggers": "staggers"}
-# Where the fill element sews its underlay and what it reads there.
-UNDERLAY_FUNCTIONS = ("to_stitch_groups", "do_underlay", "fill_underlay_angle")
+UNDERLAY_READS = {
+    "angle": "angle",
+    "max_stitch_length_mm": "max_stitch_length",
+    "row_spacing_mm": "row_spacing",
+    "running_stitch_length_mm": "running_stitch_length",
+    "running_stitch_tolerance_mm": "running_stitch_tolerance",
+    "staggers": "staggers",
+}
+# Where the fill element sews its underlay, and the functions whose reads are the underlay's: its own, and
+# the properties that give its angle, row spacing and longest stitch, which fall back on the fill's.
+UNDERLAY_FUNCTIONS = ("to_stitch_groups", "do_underlay", "fill_underlay_angle", "fill_underlay_row_spacing", "fill_underlay_max_stitch_length")
 
 # The methods Ink/Stitch reads a parameter with (`get_param`, `get_float_param`, `get_split_mm_param_as_px`
 # and the like), defined in the common section's file.
@@ -147,6 +161,7 @@ def declarations(root, locks):
                             problems.append(f"{section} {name}: cannot compare the computed condition `{source}`")
                             conditions = []
                 found[(section, name)] = {
+                    "property": getattr(node, "name", None),
                     "type": literal(kw["type"])[0] if "type" in kw else None,
                     "unit": gettext(kw["unit"]) if "unit" in kw else None,
                     "default": default,
@@ -310,9 +325,33 @@ def underlay(root):
     if left_out is None:
         return None, set()
     sewn = [m for m in methods_of(root, "fill") if m not in left_out]
-    read = {n.attr for name in ("do_underlay", "fill_underlay_angle") for n in ast.walk(functions[name])
+    read = {n.attr for name in UNDERLAY_FUNCTIONS[1:] for n in ast.walk(functions[name])
             if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name) and n.value.id == "self"}
     return sewn, read
+
+
+def method_reads(root, theirs):
+    """{fill method: the parameters it reads as it sews}: the element's properties that its `do_<method>`
+    function reads as `self.<property>`, each the parameter whose `@param` declares it. A method that hands
+    the element to a function of its own reads there too, which this doesn't follow."""
+    properties = {fact["property"]: name for (section, name), fact in theirs.items() if section == "fill" and fact["property"]}
+    methods = methods_of(root, "fill")
+    tree = ast.parse((root / ELEMENTS["fill"]).read_text(encoding="utf-8"))
+    reads = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name.removeprefix("do_") in methods and node.name.startswith("do_"):
+            used = {n.attr for n in ast.walk(node) if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name) and n.value.id == "self"}
+            reads[node.name.removeprefix("do_")] = {properties[attr] for attr in used if attr in properties}
+    return reads
+
+
+def meander_tiles(root):
+    """The meander tiles' ids, in the order the settings window lists them: sorted by name."""
+    tiles = []
+    for folder in sorted((root / TILES).iterdir()):
+        meta = json.loads((folder / "tile.json").read_text(encoding="utf-8"))
+        tiles.append((meta["name"], meta["id"]))
+    return [tile_id for _, tile_id in sorted(tiles)]
 
 
 def main(checkout):
@@ -323,6 +362,7 @@ def main(checkout):
     reads = getters(root, theirs)
     ours = {(p["element"], p["name"]): p for p in data["param"]}
     with_underlay, underlay_reads = underlay(root)
+    sewn_reads = method_reads(root, theirs)
     if with_underlay is None:
         problems.append(f"fill: {', '.join(UNDERLAY_FUNCTIONS)} no longer show which methods sew the underlay")
     for key in sorted(set(ours) | set(theirs)):
@@ -356,16 +396,21 @@ def main(checkout):
         declared = sorted(c for c in fact["applies_to"] if (key[0], key[1], c) not in OMITTED)
         if sorted(row["applies_to"]) != declared:
             problems.append(f"{key[0]} {key[1]}: applies to {sorted(row['applies_to'])} here, {declared} in Ink/Stitch")
-        unshown = []
+        unshown = set()
         if key[0] == "fill" and key[1] in UNDERLAY_READS and with_underlay is not None:
             if UNDERLAY_READS[key[1]] not in underlay_reads:
                 problems.append(f"{key[0]} {key[1]}: the underlay no longer reads self.{UNDERLAY_READS[key[1]]}")
-            unshown = sorted(m for m in with_underlay if m not in declared)
+            unshown |= {m for m in with_underlay if m not in declared}
+        if key[0] == "fill":
+            unshown |= {m for m, read in sewn_reads.items() if key[1] in read and m not in declared}
+        unshown = sorted(unshown)
         if sorted(row.get("read_by", [])) != unshown:
             problems.append(f"{key[0]} {key[1]}: read by {sorted(row.get('read_by', []))} here, {unshown} in Ink/Stitch")
     start, end, _ = locks
     if data["lock_ids"] != start or sorted(start) != sorted(end):
         problems.append(f"lock ids: {data['lock_ids']} here, start {start} and end {end} in Ink/Stitch")
+    if data.get("meander_tiles", []) != meander_tiles(root):
+        problems.append(f"meander tiles: {data.get('meander_tiles', [])} here, {meander_tiles(root)} in Ink/Stitch")
     for section, param in METHODS.items():
         here = [m["value"] for m in data["method"] if m["param"] == param]
         if here != methods_of(root, section):

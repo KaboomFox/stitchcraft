@@ -18,34 +18,38 @@
 //! the second, and says so (`SC-W0802`), as it says that a file from a newer Ink/Stitch is read as the
 //! current version.
 //!
-//! **What is applied.** The updates that change what StitchCraft sews today, as parameters of the shapes,
-//! as the reader applies Ink/Stitch's trim and stop commands:
+//! **What is applied.** The updates that change what StitchCraft sews, as parameters of the shapes, over
+//! the shape's own settings (M8.1) and as the reader applies Ink/Stitch's trim and stop commands. A shape
+//! gets each update of each version after its file's, in the order of the versions, as Ink/Stitch updates it:
 //!
-//! - files of version 1 to 3: a shape with a fill that sets no longest stitch of its own, its
-//!   `inkstitch:max_stitch_length_mm` missing, empty, not a number or 0, gets `max_stitch_length_mm` 3, on
-//!   the whole shape, as Ink/Stitch sets it: a manual stitch or a satin column of its stroke reads it too;
-//! - files of version 1: a `<polyline>` whose `style` attribute sets a stroke other than `none` gets
-//!   `stroke_method` `manual_stitch`;
+//! - to version 2, in a file of version 1: a `<polyline>` whose `style` attribute sets a stroke other than
+//!   `none` gets `stroke_method` `manual_stitch`;
+//! - to version 3, in a file of version 1 or 2: a zigzag stroke's `pull_compensation_mm`, unless it is 0 or
+//!   not a number, is halved into `stroke_pull_compensation_mm`, which applies to each side from then on, and
+//!   a satin column gets `start_at_nearest_point` and `end_at_nearest_point` off, to start and end where it
+//!   is drawn, as it did. A start or end command is placed at its connector's end on its object, where it
+//!   worked before, and the reader takes it from there ([`crate::inkstitch`]);
+//! - to version 4, in a file of version 1 to 3: a shape with a fill that sets no longest stitch of its own,
+//!   its `inkstitch:max_stitch_length_mm` missing, empty, not a number or 0, gets `max_stitch_length_mm` 3,
+//!   on the whole shape, as Ink/Stitch sets it: a manual stitch or a satin column of its stroke reads it too.
+//!   A fill with `auto_fill` off, which was Ink/Stitch's legacy fill, gets `fill_method` `legacy_fill`
+//!   (sewn as `DEV-FILL-014` says), and `auto_fill` goes; then `fill_method` `auto_fill`, the tatami fill's
+//!   old name, becomes `tatami_fill`;
 //! - the commands' names from before version 3, read as the commands they became in any file
 //!   ([`crate::inkstitch::RENAMED`]).
 //!
 //! A shape digitized automatically (`--auto`) sews by StitchCraft's rules instead, and is left as it is.
-//! `SC-I0818` says how many shapes were updated, and how.
-//!
-//! **What is not applied yet.** Of the other updates, three change what StitchCraft sews now that it reads
-//! the shapes' settings (M8.1): in a file of version 1 or 2, a zigzag stroke's pull compensation is halved
-//! into `stroke_pull_compensation_mm`, and a satin column starts and ends where it is drawn; in a file of
-//! version 1 to 3, a fill with `auto_fill` off is Ink/Stitch's legacy fill, which StitchCraft sews without
-//! underlay. M8.3 applies them; until then `SC-W0802` counts the shapes they would change (`Pending`),
-//! which sew as the file sets them. The others change nothing StitchCraft sews: `fill_method` `auto_fill`,
-//! which the update renames `tatami_fill`, is not a fill method StitchCraft knows, and a fill set to it sews
-//! the default, a tatami fill, and says so (`SC-W0102`). The compatibility contract lists every update, with
-//! the milestone that applies it.
+//! `SC-I0818` says how many shapes and commands were updated, and how. The others of Ink/Stitch's updates
+//! change nothing StitchCraft sews. The compatibility contract lists every update, with the milestone that
+//! applies it.
 
 use stitchcraft_engine::common::MAX_STITCH_LENGTH;
 use stitchcraft_engine::generators::pull::PULL_COMPENSATION;
-use stitchcraft_engine::generators::satin::SATIN_COLUMN;
+use stitchcraft_engine::generators::satin::{END_AT_NEAREST_POINT, SATIN_COLUMN, START_AT_NEAREST_POINT};
+use stitchcraft_engine::generators::zigzag::STROKE_PULL_COMPENSATION;
 use stitchcraft_params::{Family, ParamSet, StitchType};
+
+use crate::inkstitch::yes;
 
 /// Ink/Stitch's current file version: the one it gives the files it works on, at `d59c9ab`.
 pub const CURRENT: i64 = 4;
@@ -54,15 +58,21 @@ pub const CURRENT: i64 = 4;
 pub(crate) const ELEMENT: &str = "inkstitch_svg_version";
 
 /// The updates StitchCraft applies, by their ids in the compatibility contract, each with how.
-pub const APPLIED: [(&str, &str); 3] = [
+pub const APPLIED: [(&str, &str); 8] = [
     ("longest-fill-stitch", "applied to the shapes whose fill is sewn, unless digitized automatically"),
     ("polyline-manual-stitch", "applied, unless digitized automatically"),
+    ("zigzag-pull-compensation", "applied, unless digitized automatically"),
+    ("satin-nearest-points", "applied, unless digitized automatically"),
     ("command-names", "applied, in any file (`DEV-SVG-014`)"),
+    ("start-end-positions", "applied, unless digitized automatically"),
+    ("auto-fill-off", "applied to the shapes whose fill is sewn, unless digitized automatically (`DEV-FILL-014` says how a legacy fill sews)"),
+    ("auto-fill-renamed", "applied to the shapes whose fill is sewn, unless digitized automatically"),
 ];
 
 /// A fill's longest stitch before version 4, which the update gives the shapes that set none.
 const OLD_LONGEST: &str = "3";
-/// Ink/Stitch's setting, before version 4, that made a fill off a legacy fill.
+/// Ink/Stitch's setting, before version 4, that made a fill off a legacy fill, and the tatami fill's name
+/// before then.
 const AUTO_FILL: &str = "auto_fill";
 
 /// The version a file is read as.
@@ -95,18 +105,16 @@ pub(crate) struct Updated {
     pub fills: u32,
     /// Polylines made manual stitches.
     pub polylines: u32,
-}
-
-/// How many shapes the updates StitchCraft doesn't apply yet would change, of those that change what it sews
-/// now that it reads the shapes' settings (M8.3 applies them).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub(crate) struct Pending {
-    /// Zigzag strokes whose `pull_compensation_mm` the update halves into `stroke_pull_compensation_mm`.
+    /// Zigzag strokes whose pull compensation was halved into `stroke_pull_compensation_mm`.
     pub zigzag_pulls: u32,
-    /// Satin columns the update makes start and end where they are drawn.
+    /// Satin columns made to start and end where they are drawn.
     pub satins: u32,
-    /// Fills with `auto_fill` off, which the update makes legacy fills.
+    /// Fills with `auto_fill` off, made legacy fills.
     pub legacy_fills: u32,
+    /// Fills set to `auto_fill`, made tatami fills.
+    pub tatami_fills: u32,
+    /// Start and end commands placed at their connectors' ends on their objects.
+    pub commands: u32,
 }
 
 impl Version {
@@ -123,69 +131,53 @@ impl Version {
     }
 
     /// Updates the parameters `params` of a shape that is not digitized automatically, as Ink/Stitch
-    /// updates a file of this version; what it changed is added to `updated`.
+    /// updates a file of this version, version by version (`lib/update.py`); what it changed is added to
+    /// `updated`. Ink/Stitch reads a setting as its text with the white space round it stripped, a blank one as
+    /// none, and a toggle as on for one of its words for yes ([`yes`]).
     pub(crate) fn update(self, shape: &Shape<'_>, params: &mut ParamSet, updated: &mut Updated) {
         let Version::Older(version) = self else { return };
-        let own = shape.longest.and_then(|text| text.trim().parse::<f64>().ok()).is_some_and(|length| length != 0.0);
-        if shape.fill && !own {
-            params.set(MAX_STITCH_LENGTH, OLD_LONGEST);
-            updated.fills += 1;
-        }
+        let trimmed = |params: &ParamSet, key: &str| params.get(key).map(str::trim).filter(|text| !text.is_empty()).map(str::to_string);
         if version < 2 && shape.styled_polyline {
             params.set(Family::Stroke.method_param(), StitchType::ManualStitch.id());
             updated.polylines += 1;
         }
-    }
-
-    /// Adds to `pending` what Ink/Stitch's updates change in a shape with the parameters `params`, once updated
-    /// as [`Version::update`] updates them, `fill` when it sews a fill, and StitchCraft doesn't apply yet
-    /// (`lib/update.py`): before version 3, a zigzag stroke's pull compensation, a number other than 0, and a
-    /// satin column's nearest points; before version 4, a fill with `auto_fill` set to anything but one of
-    /// Ink/Stitch's words for yes, or blank.
-    pub(crate) fn pending(self, fill: bool, params: &ParamSet, pending: &mut Pending) {
-        let Version::Older(version) = self else { return };
         if version < 3 {
-            let zigzag = params.get(Family::Stroke.method_param()).map(str::trim) == Some(StitchType::ZigzagStitch.id());
-            let pulled = params.get(PULL_COMPENSATION).and_then(|text| text.trim().parse::<f64>().ok()).is_some_and(|pull| pull != 0.0);
-            pending.zigzag_pulls += u32::from(zigzag && pulled);
-            pending.satins += u32::from(params.get(SATIN_COLUMN).is_some_and(crate::inkstitch::yes));
+            let zigzag = trimmed(params, Family::Stroke.method_param()).as_deref() == Some(StitchType::ZigzagStitch.id());
+            let pull = trimmed(params, PULL_COMPENSATION).filter(|text| text.as_str() != "0").and_then(|text| text.parse::<f64>().ok());
+            if let Some(pull) = pull.filter(|_| zigzag) {
+                params.set(STROKE_PULL_COMPENSATION, (pull / 2.0).to_string());
+                updated.zigzag_pulls += 1;
+            }
+            if params.get(SATIN_COLUMN).is_some_and(yes) {
+                params.set(START_AT_NEAREST_POINT, "false");
+                params.set(END_AT_NEAREST_POINT, "false");
+                updated.satins += 1;
+            }
         }
-        // Ink/Stitch reads a blank setting as none, and `auto_fill`'s default is on.
-        let off = params.get(AUTO_FILL).is_some_and(|text| !text.trim().is_empty() && !crate::inkstitch::yes(text));
-        pending.legacy_fills += u32::from(fill && off);
+        if !shape.fill {
+            return;
+        }
+        let own = shape.longest.and_then(|text| text.trim().parse::<f64>().ok()).is_some_and(|length| length != 0.0);
+        if !own {
+            params.set(MAX_STITCH_LENGTH, OLD_LONGEST);
+            updated.fills += 1;
+        }
+        // `auto_fill` is on by default, and a blank setting is none.
+        if trimmed(params, AUTO_FILL).is_some_and(|text| !yes(&text)) {
+            params.set(Family::Fill.method_param(), StitchType::LegacyFill.id());
+            params.remove(AUTO_FILL);
+            updated.legacy_fills += 1;
+        }
+        if trimmed(params, Family::Fill.method_param()).as_deref() == Some(AUTO_FILL) {
+            params.set(Family::Fill.method_param(), StitchType::TatamiFill.id());
+            updated.tatami_fills += 1;
+        }
     }
 
-    /// The note on a file whose shapes Ink/Stitch's update changes in ways StitchCraft doesn't apply yet, with
-    /// its hint (`SC-W0802`).
-    pub(crate) fn unapplied(self, pending: Pending) -> Option<(String, &'static str)> {
-        let Version::Older(version) = self else { return None };
-        let mut changes = Vec::new();
-        match pending.zigzag_pulls {
-            0 => {}
-            1 => changes.push("the pull compensation of 1 zigzag stroke".to_string()),
-            n => changes.push(format!("the pull compensation of {n} zigzag strokes")),
-        }
-        if let Some(pulls) = changes.first_mut() {
-            pulls.push_str(", which it halves into `stroke_pull_compensation_mm`");
-        }
-        match pending.satins {
-            0 => {}
-            1 => changes.push("1 satin column, which it makes start and end where it is drawn".to_string()),
-            n => changes.push(format!("{n} satin columns, which it makes start and end where they are drawn")),
-        }
-        match pending.legacy_fills {
-            0 => {}
-            1 => changes.push("1 fill with `auto_fill` off, which it makes a legacy fill, sewn without underlay".to_string()),
-            n => changes.push(format!("{n} fills with `auto_fill` off, which it makes legacy fills, sewn without underlay")),
-        }
-        (!changes.is_empty()).then(|| {
-            let message = format!(
-                "The file was saved by an older Ink/Stitch (file version {version}). Ink/Stitch's update also changes {}. StitchCraft \
-                 doesn't apply these changes yet, so those shapes sew as the file sets them.",
-                changes.join(", and ")
-            );
-            (message, "To sew them as Ink/Stitch does, run any Ink/Stitch extension on the file and save it: that updates it.")
-        })
+    /// Whether Ink/Stitch's update moves the file's start and end commands to their connectors' ends on their
+    /// objects: in a file of version 1 or 2.
+    pub(crate) fn moves_start_and_end(self) -> bool {
+        matches!(self, Version::Older(version) if version < 3)
     }
 
     /// The note on a file read as it is although Ink/Stitch would update it or warn about it, with its
@@ -227,6 +219,39 @@ impl Version {
             1 => changes.push("1 polyline whose `style` sets a stroke sews as a manual stitch (`stroke_method`), as before version 2".to_string()),
             n => changes.push(format!("{n} polylines whose `style` sets a stroke sew as manual stitches (`stroke_method`), as before version 2")),
         }
+        match updated.zigzag_pulls {
+            0 => {}
+            1 => changes.push(
+                "1 zigzag stroke's pull compensation is halved for each side (`stroke_pull_compensation_mm`), as it applies to both sides \
+                 from version 3"
+                    .to_string(),
+            ),
+            n => changes.push(format!(
+                "{n} zigzag strokes' pull compensations are halved for each side (`stroke_pull_compensation_mm`), as they apply to both \
+                 sides from version 3"
+            )),
+        }
+        let nearest = "(`start_at_nearest_point` and `end_at_nearest_point` off), as before version 3";
+        match updated.satins {
+            0 => {}
+            1 => changes.push(format!("1 satin column starts and ends where it is drawn {nearest}")),
+            n => changes.push(format!("{n} satin columns start and end where they are drawn {nearest}")),
+        }
+        match updated.commands {
+            0 => {}
+            1 => changes.push("1 start or end command works at its connector's end on its object, as before version 3".to_string()),
+            n => changes.push(format!("{n} start and end commands work at their connectors' ends on their objects, as before version 3")),
+        }
+        match updated.legacy_fills {
+            0 => {}
+            1 => changes.push("1 fill with `auto_fill` off is a legacy fill (`fill_method`), as before version 4".to_string()),
+            n => changes.push(format!("{n} fills with `auto_fill` off are legacy fills (`fill_method`), as before version 4")),
+        }
+        match updated.tatami_fills {
+            0 => {}
+            1 => changes.push("1 fill set to `auto_fill`, the tatami fill's name before version 4, is a tatami fill (`fill_method`)".to_string()),
+            n => changes.push(format!("{n} fills set to `auto_fill`, the tatami fill's name before version 4, are tatami fills (`fill_method`)")),
+        }
         (!changes.is_empty()).then(|| {
             format!(
                 "The file was saved by an older Ink/Stitch (file version {version}), and is read as Ink/Stitch updates it: {}.",
@@ -241,40 +266,6 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_updates_not_applied_yet_are_counted_one_shape_or_several() {
-        let one = Pending { zigzag_pulls: 1, satins: 1, legacy_fills: 1 };
-        let (message, _) = Version::Older(1).unapplied(one).unwrap();
-        assert!(message.contains("the pull compensation of 1 zigzag stroke, which it halves"), "{message}");
-        assert!(message.contains("1 satin column, which it makes start and end where it is drawn"), "{message}");
-        assert!(message.contains("1 fill with `auto_fill` off, which it makes a legacy fill,"), "{message}");
-        let several = Pending { zigzag_pulls: 3, satins: 0, legacy_fills: 2 };
-        let (message, _) = Version::Older(1).unapplied(several).unwrap();
-        assert!(message.contains("changes the pull compensation of 3 zigzag strokes, which it halves into"), "{message}");
-        assert!(message.contains("and 2 fills with `auto_fill` off, which it makes legacy fills,") && !message.contains("satin"), "{message}");
-        assert_eq!(Version::Older(1).unapplied(Pending::default()), None);
-        assert_eq!(Version::Current.unapplied(one), None);
-        // A file read as it is is not updated, so nothing is pending in it.
-        let (mut pending, params) = (Pending::default(), [("satin_column", "yes"), ("auto_fill", "no")].into_iter().collect::<ParamSet>());
-        for version in [Version::Current, Version::Unversioned, Version::Newer(5)] {
-            version.pending(true, &params, &mut pending);
-        }
-        assert_eq!(pending, Pending::default());
-    }
-
-    #[test]
-    fn a_fill_with_auto_fill_off_is_counted_and_a_blank_one_is_not() {
-        // Ink/Stitch reads a blank setting as none, which leaves `auto_fill` on, its default, and any text but
-        // one of its words for yes as off. Only a shape that sews a fill counts.
-        for (text, fill, counted) in
-            [("false", true, 1), (" no ", true, 1), ("0", true, 1), ("", true, 0), ("  ", true, 0), ("Yes", true, 0), ("false", false, 0)]
-        {
-            let (mut pending, params) = (Pending::default(), [("auto_fill", text)].into_iter().collect::<ParamSet>());
-            Version::Older(3).pending(fill, &params, &mut pending);
-            assert_eq!(pending, Pending { legacy_fills: counted, ..Pending::default() }, "{text:?} {fill}");
-        }
-    }
-
-    #[test]
     fn a_version_is_a_whole_number_and_counts_only_in_a_file_of_ink_stitch_s() {
         let of = Version::of;
         assert_eq!([of(Some("4"), true), of(Some(" 4 "), false), of(None, false), of(Some("3"), false)], [Version::Current; 4]);
@@ -287,9 +278,9 @@ mod tests {
     fn only_an_older_version_updates_and_only_what_it_changed() {
         let shape = Shape { fill: true, longest: None, styled_polyline: true };
         for (version, expected) in [
-            (Version::Older(1), Updated { fills: 1, polylines: 1 }),
-            (Version::Older(2), Updated { fills: 1, polylines: 0 }),
-            (Version::Older(3), Updated { fills: 1, polylines: 0 }),
+            (Version::Older(1), Updated { fills: 1, polylines: 1, ..Updated::default() }),
+            (Version::Older(2), Updated { fills: 1, ..Updated::default() }),
+            (Version::Older(3), Updated { fills: 1, ..Updated::default() }),
             (Version::Current, Updated::default()),
             (Version::Unversioned, Updated::default()),
             (Version::Newer(5), Updated::default()),

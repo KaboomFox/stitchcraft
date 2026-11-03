@@ -5,7 +5,7 @@
 use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::{Budget, Diagnostic, Point};
 use stitchcraft_engine::common::CommonParams;
-use stitchcraft_engine::design::{DesignSettings, Path, Segment, Subpath};
+use stitchcraft_engine::design::{DesignSettings, Hints, Path, Segment, Subpath};
 use stitchcraft_engine::generate::shortest_stitch;
 use stitchcraft_engine::generators::Neighbours;
 use stitchcraft_engine::generators::pull::PullParams;
@@ -42,6 +42,11 @@ pub fn sewn_between(path: &Path, params: &[(&str, &str)], neighbours: &Neighbour
 /// its warnings as diagnostics, with their places. A column is sewn in one run, or none when it is left
 /// out.
 pub fn satin_diagnostics(path: &Path, params: &[(&str, &str)], neighbours: &Neighbours) -> (Vec<Point>, Vec<Diagnostic>) {
+    placed_satin(path, params, neighbours, &Hints::default())
+}
+
+/// [`satin_diagnostics`], with the start and end positions of `hints` (`REQ-GEN-001`).
+pub fn placed_satin(path: &Path, params: &[(&str, &str)], neighbours: &Neighbours, hints: &Hints) -> (Vec<Point>, Vec<Diagnostic>) {
     let mut meter = Budget::DEFAULT.meter();
     let Ok(Shape::Rails(satin)) = recognize(path, &mut meter).unwrap().shape else { panic!("not rails: {path:?}") };
     let set: ParamSet = params.iter().copied().collect();
@@ -49,7 +54,7 @@ pub fn satin_diagnostics(path: &Path, params: &[(&str, &str)], neighbours: &Neig
     let mut rng = SplitMix64::for_element(SATIN_ID, seed);
     let params = SatinParams::from_set_as(&set, SATIN).unwrap().params;
     let pull = PullParams::from_set_as(&set, SATIN).unwrap().params;
-    let stitched = satin_stitch(&satin, &params, &pull, satin_lengths(&set), neighbours, &mut rng, &mut meter).unwrap();
+    let stitched = satin_stitch(&satin, &params, &pull, satin_lengths(&set), neighbours, hints, &mut rng, &mut meter).unwrap();
     assert!(stitched.runs.len() <= 1, "{} runs", stitched.runs.len());
     (stitched.runs.into_iter().flatten().collect(), stitched.warnings)
 }
