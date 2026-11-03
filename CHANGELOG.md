@@ -5,6 +5,28 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M8.7: clipping in VectorCraft documents (`REQ-VC-017`, `REQ-GEN-005`). What a clip group or a clipping
+  layer holds sews only what shows inside its clipping object, as an SVG file's shapes sew inside their
+  clip paths from M8.5. The VectorCraft reader makes the clipping object's area a clip of each element
+  inside, however deep, and the engine cuts them.
+  - VectorCraft clips to the clipping object's area whatever its paints, hidden or not. A path's area is
+    the one its fill rule fills, and a compound path's is its paths' together by its own rule. A nested
+    clip group's is its clipping object's, and another group's or a layer's that of its members that show,
+    a Shaper group's sources left out. A guide or a symbol doesn't add to it, as in VectorCraft. Clip
+    groups inside one another give one clip each.
+  - A fill's area and a stroke's lines are cut, and a satin column sews whole (`SC-W0217`). Art wholly
+    outside its clipping object isn't sewn (`SC-W0013`). The clipping object's own paints aren't cut to its
+    clip, as VectorCraft paints its fill inside it and its stroke over its edge.
+  - `SC-W0807`'s note that the clipping isn't applied is gone. It names what the reader can't read in a
+    clipping object, which stays out of the clip: text, whose glyphs need VectorCraft's fonts, an image, a
+    placed document and a live object. `SC-W0808` names a clipping path whose geometry can't be used.
+    `SC-W0807` names a clipping object under StitchCraft's effects too, as VectorCraft clips the preview to
+    the stitches they draw of it.
+  - A clip's shapes are shared by the elements it cuts (`Clip::shapes`), so that a clip group of many
+    objects, or an SVG group's clip path, holds them once.
+  - The Level B case `clipping-mask` makes a clipping mask of a fill, a stroke and a square in their middle
+    with Make Clipping Mask. Every needle point sews inside the square, and the PES and DST exporters write
+    what `stitch export` writes. TS-12 asks MC-5 whether clipped art sews as VectorCraft shows it.
 - M8.10: clones (`REQ-SVG-012`, `REQ-SVG-013`). The SVG adapter sews a clone, a `<use>` of an element other
   than a command's symbol, as Ink/Stitch sews it. The elements of what it shows sew in the clone's place in
   the document's order, each named after the clone (`svg:clone1/square:fill`). What it shows is drawn as a viewer

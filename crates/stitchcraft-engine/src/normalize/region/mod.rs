@@ -175,7 +175,7 @@ pub(crate) fn clipped(clips: &[Clip], meter: &mut Meter) -> Result<Result<Vec<Po
     let mut common: Option<Vec<Polygon>> = None;
     for clip in clips {
         let mut shapes = Vec::with_capacity(clip.shapes.len());
-        for shape in &clip.shapes {
+        for shape in clip.shapes.iter() {
             let Ok(parts) = area(&rings(&shape.path, meter)?, |w| fills(shape.rule, w), meter)?.parts else { return Ok(Err(Unjoined)) };
             shapes.push(parts);
         }
