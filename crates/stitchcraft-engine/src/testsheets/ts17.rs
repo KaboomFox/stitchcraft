@@ -79,20 +79,25 @@ fn square(x: f64, y: f64) -> Result<crate::design::Subpath, SheetError> {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeSet;
+    use std::collections::{BTreeMap, BTreeSet};
 
     use stitchcraft_plan::{Role, StitchKind};
 
-    /// The cells, by their top left corners in cells from the origin, of each cross the sample `name` of
-    /// TS-17A sews on a grid of `size` mm: the cells both of whose diagonals it sews whole.
-    fn crossed(name: &str, size: f64) -> BTreeSet<(i64, i64)> {
+    /// The top stitches' needle points of each sample of TS-17A, by its name, as the sheet's plan sews them.
+    fn samples() -> BTreeMap<String, Vec<(f64, f64)>> {
         let plan = crate::testsheets::find("TS-17A").unwrap().plan().unwrap();
-        let element = plan.elements.iter().position(|e| e.as_str() == format!("ts17a:{name}")).unwrap();
-        let mine = |s: &&stitchcraft_plan::Stitch| {
-            s.kind == StitchKind::Normal && s.origin.role == Role::Top && s.origin.element.map(|e| e.index()) == Some(element)
-        };
-        let points: Vec<(f64, f64)> = plan.stitches().filter(mine).map(|s| (s.at.x(), s.at.y())).collect();
-        // The plan is centred on the hoop: the cells are counted from the sample's first needle point's cell.
+        let mut samples: BTreeMap<String, Vec<(f64, f64)>> = BTreeMap::new();
+        for s in plan.stitches().filter(|s| s.kind == StitchKind::Normal && s.origin.role == Role::Top) {
+            let element = &plan.elements[s.origin.element.unwrap().index()];
+            let name = element.as_str().strip_prefix("ts17a:").unwrap().to_string();
+            samples.entry(name).or_default().push((s.at.x(), s.at.y()));
+        }
+        samples
+    }
+
+    /// The cells, by their top left corners in cells, of each cross that `points` sews on a grid of `size`
+    /// mm: the cells both of whose diagonals it sews whole.
+    fn crossed(points: &[(f64, f64)], size: f64) -> BTreeSet<(i64, i64)> {
         let mut falling = BTreeSet::new();
         let mut rising = BTreeSet::new();
         for w in points.windows(2) {
@@ -109,24 +114,47 @@ mod tests {
         falling.intersection(&rising).copied().collect()
     }
 
+    /// The least x and y of `points`, and how wide and tall they reach.
+    fn bounds(points: &[(f64, f64)]) -> [f64; 4] {
+        let (xs, ys) = (points.iter().map(|p| p.0), points.iter().map(|p| p.1));
+        let ([x0, y0], [x1, y1]) = (
+            [xs.clone().fold(f64::INFINITY, f64::min), ys.clone().fold(f64::INFINITY, f64::min)],
+            [xs.fold(f64::NEG_INFINITY, f64::max), ys.fold(f64::NEG_INFINITY, f64::max)],
+        );
+        [x0, y0, x1 - x0, y1 - y0]
+    }
+
     #[test]
     fn ts17a_sews_a_cross_in_each_cell_of_its_squares_and_of_the_letter_s_arms() {
+        let samples = samples();
         // Each square sews a cross in each of its cells, and no other: 144 on the 2 mm grid and 64 on the 3 mm
-        // one, in rows and columns of 12 and 8.
-        for (name, size, side) in [
-            ("simple-2-2", 2.0, 12),
-            ("simple-2-4", 2.0, 12),
-            ("simple-3-2", 3.0, 8),
-            ("simple-3-4", 3.0, 8),
-            ("flipped-2-2", 2.0, 12),
-            ("flipped-3-4", 3.0, 8),
+        // one, in rows and columns of 12 and 8. Its needle points span it, 24 mm a side, where the sheet puts
+        // it: the plan is centred on the hoop, so each is placed from the first square's corner.
+        let [x0, y0, ..] = bounds(&samples["simple-2-2"]);
+        for (name, size, side, [x, y]) in [
+            ("simple-2-2", 2.0, 12, [0.0, 0.0]),
+            ("simple-2-4", 2.0, 12, [30.0, 0.0]),
+            ("simple-3-2", 3.0, 8, [60.0, 0.0]),
+            ("simple-3-4", 3.0, 8, [90.0, 0.0]),
+            ("flipped-2-2", 2.0, 12, [0.0, 30.0]),
+            ("flipped-3-4", 3.0, 8, [30.0, 30.0]),
         ] {
-            let cells = crossed(name, size);
+            let cells = crossed(&samples[name], size);
             let (columns, rows): (BTreeSet<i64>, BTreeSet<i64>) = (cells.iter().map(|c| c.0).collect(), cells.iter().map(|c| c.1).collect());
             assert_eq!((cells.len(), columns.len(), rows.len()), (side * side, side as usize, side as usize), "{name}");
+            let [left, top, width, height] = bounds(&samples[name]);
+            assert!(near([left - x0, top - y0, width, height], [x, y, 24.0, 24.0]), "{name}: {:?}", [left - x0, top - y0, width, height]);
         }
         // The K: its stem's 2 columns of 12 cells, and along each arm 15: the 5 it covers whole, and the 10 its
-        // slanted edges cut in half, which its 0.1 mm of growth covers by 57 %.
-        assert_eq!(crossed("letter", 2.0).len(), 24 + 2 * 15);
+        // slanted edges cut in half, which its 0.1 mm of growth covers by 57 %. It spans 16 by 24 mm, right of
+        // the flipped squares.
+        assert_eq!(crossed(&samples["letter"], 2.0).len(), 24 + 2 * 15);
+        let [left, top, width, height] = bounds(&samples["letter"]);
+        assert!(near([left - x0, top - y0, width, height], [60.0, 30.0, 16.0, 24.0]), "{:?}", [left - x0, top - y0, width, height]);
+    }
+
+    /// Whether `a` and `b` agree within a thousandth of a millimetre.
+    fn near(a: [f64; 4], b: [f64; 4]) -> bool {
+        a.iter().zip(b).all(|(a, b)| (a - b).abs() < 0.001)
     }
 }

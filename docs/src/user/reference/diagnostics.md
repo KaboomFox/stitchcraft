@@ -49,6 +49,9 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0316`](#sc-w0316) | Warning | Meander pattern is one of Ink/Stitch's tiles; sewn with StitchCraft's default tile |
 | [`SC-W0317`](#sc-w0317) | Warning | Meander fill part too small for its tile; sewn round its outline |
 | [`SC-W0318`](#sc-w0318) | Warning | Circular fill part within its row spacing of its middle; sewn as one circle |
+| [`SC-W0319`](#sc-w0319) | Warning | Cross stitch part covers no cell of its grid enough; sews nothing |
+| [`SC-W0320`](#sc-w0320) | Warning | Cross stitch thread count odd; an even count sewn |
+| [`SC-W0321`](#sc-w0321) | Warning | Cross stitch grid too fine for the shortest stitch; needle points left out |
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
 | [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
@@ -589,6 +592,40 @@ circle may reach past the part.
 
 The message counts the parts. Make `row_spacing_mm` smaller for a spiral, or sew so small a part as a
 running stitch or a satin column.
+
+## SC-W0319
+
+**Warning** — Cross stitch part covers no cell of its grid enough; sews nothing
+
+A cross stitch fill sews a cross in each cell of its grid that it covers enough of: `fill_coverage`
+percent of the cell or more, once the fill is grown by `expand_mm`. A part that covers no cell so
+much sews nothing, as in Ink/Stitch, which warns of it too. Such a part is smaller or narrower than a
+cell, or lies across the grid's lines so that no cell holds enough of it.
+
+The message counts the parts. Make `pattern_size_mm` smaller, lower `fill_coverage`, raise
+`expand_mm`, or move the grid with `cross_offset_mm`.
+
+## SC-W0320
+
+**Warning** — Cross stitch thread count odd; an even count sewn
+
+Each half of a cross's 2 diagonals takes `cross_thread_count` passes of the thread. The needle goes
+out from the cross's middle and back again, so the passes come in pairs, and the count is an even
+number. An odd count sews the even count below it, as in Ink/Stitch, and 1 sews 2. Ink/Stitch sews
+a stitch from a corner of each cell to its middle for 1, and no cross.
+
+The message gives the count set and the count sewn. Set an even number.
+
+## SC-W0321
+
+**Warning** — Cross stitch grid too fine for the shortest stitch; needle points left out
+
+A cross's shortest stitches run from its corners to its middle, half its diagonal long. On a grid
+this fine they are shorter than the shortest stitch the machine sews well, so needle points of the
+crosses are left out where they lie too near the one before, and the crosses lose their shape.
+
+The message gives the cells' size, the stitch's length and the shortest stitch. Make
+`pattern_size_mm` larger.
 
 ## SC-W0401
 

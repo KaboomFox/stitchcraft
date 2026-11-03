@@ -183,14 +183,14 @@ registry uses these names as its keys so files move between the tools unchanged
 | `fill_underlay_skip_last` | boolean | — | false | all | P1 (M5) | [registered](../user/reference/params/tatami.md#fill_underlay_skip_last) |
 | `underlay_underpath` | boolean | — | true | all | P1 (M5) | [registered](../user/reference/params/tatami.md#underlay_underpath) |
 | `random_seed` | random_seed | — | — | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `meander_fill`, `linear_gradient_fill` | P1 (M5) | [registered](../user/reference/params/common.md#random_seed) |
-| `cross_stitch_method` | combo | — | 0 | `cross_stitch` | P3 (M10) | planned |
-| `cross_thread_count` | int | — | 4 | `cross_stitch` | P3 (M10) | planned |
-| `pattern_size_mm` | float | mm (x y) | 3 | `cross_stitch` | P3 (M10) | planned |
-| `canvas_grid_origin` | boolean | — | true | `cross_stitch` | P3 (M10) | planned |
-| `cross_offset_mm` | float | mm (x y) | 0 | `cross_stitch` | P3 (M10) | planned |
+| `cross_stitch_method` | combo | — | 0 | `cross_stitch` | P3 (M10) | [registered](../user/reference/params/cross.md#cross_stitch_method) |
+| `cross_thread_count` | int | — | 4 | `cross_stitch` | P3 (M10) | [registered](../user/reference/params/cross.md#cross_thread_count) |
+| `pattern_size_mm` | float | mm (x y) | 3 | `cross_stitch` | P3 (M10) | [registered](../user/reference/params/cross.md#pattern_size_mm) |
+| `canvas_grid_origin` | boolean | — | true | `cross_stitch` | P3 (M10) | [registered](../user/reference/params/cross.md#canvas_grid_origin) |
+| `cross_offset_mm` | float | mm (x y) | 0 | `cross_stitch` | P3 (M10) | [registered](../user/reference/params/cross.md#cross_offset_mm) |
 | `cross_rotation` | float | deg | 0 | `cross_stitch` | P3 (M10) | planned |
-| `fill_coverage` | int | % | 50 | `cross_stitch` | P3 (M10) | planned |
-| `max_cross_stitch_length_mm` | float | mm | 11.0 | `cross_stitch` | P3 (M10) | planned |
+| `fill_coverage` | int | % | 50 | `cross_stitch` | P3 (M10) | [registered](../user/reference/params/cross.md#fill_coverage) |
+| `max_cross_stitch_length_mm` | float | mm | 11.0 | `cross_stitch` | P3 (M10) | [registered](../user/reference/params/cross.md#max_cross_stitch_length_mm) |
 
 ## Clones (`<use>`)
 
@@ -329,4 +329,4 @@ change Ink/Stitch's updater makes (`lib/update.py`), in StitchCraft's words.
 | 4 | a fill with `auto_fill` off gets `fill_method` `legacy_fill`, and `auto_fill` is removed | applied to the shapes whose fill is sewn, unless digitized automatically (`DEV-FILL-014` says how a legacy fill sews) |
 | 4 | `fill_method` `auto_fill` becomes `tatami_fill` | applied to the shapes whose fill is sewn, unless digitized automatically |
 
-_145 parameter declarations, 105 registered in StitchCraft._
+_145 parameter declarations, 112 registered in StitchCraft._

@@ -114,6 +114,15 @@ fn req_fill_crs_003_flipped_crosses_lie_on_the_same_grid_with_their_slash_under_
     let flipped = Cross { flipped: true, ..cross.clone() };
     assert_eq!(cells(&flipped), cells(&cross));
     assert_eq!(cells(&cross).len(), 18);
+    // A square frame 12 mm wide round a hole 6 mm wide, on the default grid: its hole is turned with it, and
+    // its 12 crosses lie round the hole, flipped or not.
+    let hole = vec![p(3.0, 3.0), p(9.0, 3.0), p(9.0, 9.0), p(3.0, 9.0), p(3.0, 3.0)];
+    let frame = region(vec![Polygon { holes: vec![hole], ..rect((0.0, 0.0), (12.0, 12.0)) }]);
+    let framed = |cross: &Cross| crosses(&sewn(&frame, cross, None, None).runs, 3.0);
+    let ring: Vec<(i64, i64)> =
+        (0..4).flat_map(|i| (0..4).map(move |j| (i, j))).filter(|&(i, j)| !(1..3).contains(&i) || !(1..3).contains(&j)).collect();
+    assert_eq!(framed(&plain()), ring);
+    assert_eq!(framed(&Cross { flipped: true, ..plain() }), ring);
     // A single cross from the origin, 2 mm wide and 3 tall: plain, its last diagonal rises to the right (`/`);
     // flipped, it falls to the right (`\`).
     let one = region(vec![rect((0.0, 0.0), (2.0, 3.0))]);

@@ -208,9 +208,10 @@ fn a_cross_stitch_fill_offers_its_area_and_its_preview_shows_its_crosses_diagona
     let one = cross(&[&square((0.0, 0.0), 6.0)], &[]);
     assert!(matches!(approach(&one, &DesignSettings::default(), &Budget::DEFAULT), Some(Approach::Area(parts)) if parts.len() == 1));
     let preview = rows(&one, &DesignSettings::default(), REFERENCE, &Budget::DEFAULT);
-    let segments = preview.segments.unwrap();
-    assert_eq!(segments.len(), 2 * 4);
-    assert!(segments.iter().all(|s| (s.start.distance(s.end) - 3.0 * 2f64.sqrt()).abs() < 1e-9));
+    // The 4 cells row by row, each its `\` diagonal from its top left corner and its `/` from its bottom left.
+    let segments: Vec<(Point, Point)> = preview.segments.unwrap().iter().map(|s| (s.start, s.end)).collect();
+    let diagonals = |x: f64, y: f64| [(p(x, y), p(x + 3.0, y + 3.0)), (p(x, y + 3.0), p(x + 3.0, y))];
+    assert_eq!(segments, [diagonals(0.0, 0.0), diagonals(3.0, 0.0), diagonals(0.0, 3.0), diagonals(3.0, 3.0)].concat());
     // A method of a later version shows nothing, and says why, as sewing it does.
     let later = cross(&[&square((0.0, 0.0), 6.0)], &[("cross_stitch_method", "smyrna_cross")]);
     let preview = rows(&later, &DesignSettings::default(), REFERENCE, &Budget::DEFAULT);
