@@ -292,7 +292,8 @@ pub fn run(root: &Path, subject: &Subject, excused: &BTreeMap<String, String>, o
 pub const NOWHERE: &str = "DEV-FMT-001";
 /// The deviation by which the 2 programs name a thread by other entries of Brother's palette.
 pub const PALETTE: &str = "DEV-THREAD-001";
-/// The deviation by which StitchCraft fits stitches to the machine, splitting those longer than its longest.
+/// The deviation by which StitchCraft fits stitches to the machine: it leaves out those shorter than its
+/// shortest and splits those longer than its longest.
 pub const FITTED: &str = "DEV-FIN-001";
 
 /// Ink/Stitch's file `theirs` with the deviation `deviation` undone, as the file would read had Ink/Stitch
@@ -305,15 +306,42 @@ pub const FITTED: &str = "DEV-FIN-001";
 /// - [`PALETTE`]: each thread named by StitchCraft's entry, when both files change thread at the same
 ///   colour blocks: as many blocks, and 2 of them of one thread in one file just when they are in the other.
 ///   Then only the entries chosen differ. Otherwise the file stays as it is, and the threads still differ.
-/// - [`FITTED`]: each stitch longer than the reference machine's longest, 12 mm, split into as few equal
-///   parts as are no longer, as StitchCraft splits it (`REQ-FIN-001`).
+/// - [`FITTED`]: each needle point nearer the one before than the reference machine's shortest stitch,
+///   0.3 mm, left out, but the last of a run of stitches, and each stitch longer than its longest, 12 mm,
+///   split into as few equal parts as are no longer, as StitchCraft fits them (`REQ-FIN-001`). StitchCraft
+///   keeps some needle points this leaves out, such as a lock's, so the stitches agree within their
+///   tolerance and not exactly.
 pub fn undone(deviation: &str, theirs: &StitchPlan, ours: &StitchPlan) -> Option<StitchPlan> {
     match deviation {
         NOWHERE => Some(without_jumps_nowhere(theirs)),
         PALETTE => Some(named_as(theirs, ours)),
-        FITTED => Some(split(theirs, profiles::REFERENCE.max_stitch.get())),
+        FITTED => Some(split(&without_short(theirs, profiles::REFERENCE.min_stitch.get()), profiles::REFERENCE.max_stitch.get())),
         _ => None,
     }
+}
+
+/// `plan` without each needle point nearer the one before than `shortest` millimetres, but the first and the
+/// last of a run of stitches ([`undone`]).
+fn without_short(plan: &StitchPlan, shortest: f64) -> StitchPlan {
+    let mut plan = plan.clone();
+    for block in &mut plan.blocks {
+        let mut kept: Vec<Stitch> = Vec::with_capacity(block.stitches.len());
+        let mut needle: Option<Point> = None;
+        let stitch_at = |i: Option<usize>| i.and_then(|i| block.stitches.get(i)).is_some_and(|s| s.kind == StitchKind::Normal);
+        for (i, &stitch) in block.stitches.iter().enumerate() {
+            let inside = stitch.kind == StitchKind::Normal && stitch_at(i.checked_sub(1)) && stitch_at(i.checked_add(1));
+            let near = needle.is_some_and(|from| (stitch.at.x() - from.x()).hypot(stitch.at.y() - from.y()) < shortest);
+            if inside && near {
+                continue;
+            }
+            if !stitch.kind.is_command() {
+                needle = Some(stitch.at);
+            }
+            kept.push(stitch);
+        }
+        block.stitches = kept;
+    }
+    plan
 }
 
 /// `theirs` with each block's thread `ours`' block's, when both change thread at the same blocks ([`undone`]).
@@ -775,6 +803,26 @@ mod tests {
         );
         assert!(report.contains("## ✅ `passed` (conformance/cases/inkstitch/passed.toml)\n\n| Measure"), "{report}");
         assert!(report.contains("- skipped: no Ink/Stitch\n"), "{report}");
+    }
+
+    #[test]
+    fn needle_points_nearer_than_the_machine_s_shortest_stitch_are_left_out_but_a_run_s_last() {
+        use stitchcraft_plan::{PlanBuilder, Provenance, Role, Thread};
+        let top = Provenance::plan(Role::Top);
+        let mut builder = PlanBuilder::new(Thread::new(Rgb::new(237, 23, 31)));
+        for x in [0.0, 0.2, 0.25, 1.0, 1.2, 2.0, 2.1] {
+            builder.stitch(p(x, 0.0), top);
+        }
+        builder.jump(p(9.0, 0.0), Provenance::plan(Role::Travel));
+        builder.stitch(p(9.1, 0.0), top);
+        builder.stitch(p(10.0, 0.0), top);
+        let plan = builder.finish();
+        let fitted = undone(FITTED, &plan, &plan).unwrap();
+        let kept: Vec<(StitchKind, f64)> = fitted.blocks[0].stitches.iter().map(|s| (s.kind, s.at.x())).collect();
+        let (n, j) = (StitchKind::Normal, StitchKind::Jump);
+        // 0.2 and 0.25 lie within 0.3 mm of 0, and 1.2 of 1.0; 2.1 ends its run, and 9.1, 0.1 mm from where the
+        // jump went, starts one.
+        assert_eq!(kept, [(n, 0.0), (n, 1.0), (n, 2.0), (n, 2.1), (j, 9.0), (n, 9.1), (n, 10.0)]);
     }
 
     #[test]
