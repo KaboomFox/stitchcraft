@@ -1,0 +1,11 @@
+id = "inkstitch-clone-symbol"
+requirements = ["REQ-SVG-008", "REQ-SVG-012"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/clone-symbol.svg"
+# A symbol fitted to the clone's viewport, 4 times its viewBox, as a viewer draws it: StitchCraft sews the bar
+# 80 x 40 mm, and Ink/Stitch 20 x 10 mm, in its own units.
+
+[excused]
+stitches = "DEV-SVG-022"
+size = "DEV-SVG-022"
+overlap = "DEV-SVG-022"
