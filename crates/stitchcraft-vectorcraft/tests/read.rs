@@ -16,8 +16,8 @@ use stitchcraft_core::{Budget, Code, Diagnostic, Fix, Mm, Point};
 use stitchcraft_engine::design::{DesignSettings, FillRule, Join, Segment, Shape};
 use stitchcraft_engine::generate::generate;
 use stitchcraft_engine::generators::Neighbours;
-use stitchcraft_plan::Rgb;
 use stitchcraft_plan::profiles::REFERENCE;
+use stitchcraft_plan::{Rgb, Role, StitchKind};
 use stitchcraft_vectorcraft::{VectorCraft, read};
 
 const FORMAT_1: &[u8] = include_bytes!("../../../conformance/fixtures/vectorcraft/drawing-format1.vectorcraft");
@@ -467,6 +467,35 @@ fn req_vc_005_a_stroke_of_width_0_is_left_out_and_a_brush_is_named() {
     assert_eq!(ids(&read), ["vc:3:stroke"]);
     assert_eq!(said(&read), [(Code::VcFeatureIgnored, "vc:3".to_string())]);
     assert!(read.warnings[0].message.contains("brush \"Charcoal\""), "{}", read.warnings[0]);
+}
+
+#[test]
+fn req_lck_005_a_lock_drawn_as_a_path_in_a_document_s_effect_sews_as_in_an_svg_file() {
+    // A stroke effect whose start and end locks are custom paths. The document keeps their text, and the
+    // engine reads the path from it, as it reads an SVG file's attribute.
+    let square = "M 0,0 L 0,1 L 1,1 L 1,0 L 2,0";
+    let effect = format!(
+        r#"{{"id": "plugin.dev.stitchcraft.stroke", "params": {{"lock_start": "custom", "lock_custom_start": "{square}", "lock_end": "custom", "lock_custom_end": "{square}"}}}}"#
+    );
+    let read = read_ok(&document(4, &line(2, "", &format!(r#"{{"items": [{}], "effects": [{effect}]}}"#, stroke("")))));
+    assert_eq!(element(&read, "vc:2:stroke").params.get("lock_custom_start"), Some(square));
+    let outcome = stitchcraft_engine::plan(&read.design, REFERENCE, &Budget::DEFAULT);
+    assert!(outcome.diagnostics.is_empty(), "{:?}", outcome.diagnostics);
+    let plan = outcome.plan.unwrap();
+    // The needle points in order, each with whether it is a lock's: the start lock's, the line's, the end lock's.
+    let sewn: Vec<(bool, Point)> = plan.stitches().filter(|s| s.kind == StitchKind::Normal).map(|s| (s.origin.role == Role::Lock, s.at)).collect();
+    let stitching: Vec<Point> = sewn.iter().filter(|(lock, _)| !lock).map(|&(_, at)| at).collect();
+    let start: Vec<Point> = sewn.iter().take_while(|(lock, _)| *lock).map(|&(_, at)| at).collect();
+    let mut end: Vec<Point> = sewn.iter().rev().take_while(|(lock, _)| *lock).map(|&(_, at)| at).collect();
+    end.reverse();
+    let from = |points: &[Point], anchor: Point| -> Vec<(f64, f64)> {
+        let round = |v: f64| (v * 1e6).round() / 1e6 + 0.0;
+        points.iter().map(|q| (round(q.x() - anchor.x()), round(q.y() - anchor.y()))).collect()
+    };
+    // 1 mm behind where the line starts, 1 mm to its side and back beside it, and from where it ends the same
+    // turned back along it, sewn backwards, as Ink/Stitch sews the path.
+    assert_eq!(from(&start, stitching[0]), [(-1.0, 0.0), (-1.0, 1.0), (0.0, 1.0)]);
+    assert_eq!(from(&end, stitching[stitching.len() - 1]), [(0.0, -1.0), (1.0, -1.0), (1.0, 0.0)]);
 }
 
 /// A gray stroke 2 pt wide with the `extra` fields given, as an appearance item.
