@@ -435,7 +435,7 @@ mod tests {
     /// A glyph file of 2 glyphs: a running stitch and a cross-stitch fill.
     pub(super) const GLYPHS: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:inkstitch="http://inkstitch.org/namespace" width="20mm" height="20mm" viewBox="0 0 20 20">
   <g inkscape:groupmode="layer" inkscape:label="GlyphLayer-l" style="display:none"><path d="M2 2 L18 2" style="fill:none;stroke:#000000;stroke-width:0.26" inkstitch:running_stitch_length_mm="2" inkstitch:bean_stitch_repeats="0"/></g>
-  <g inkscape:groupmode="layer" inkscape:label="GlyphLayer-x" style="display:none"><path d="M2 2 H18 V18 H2 Z" style="fill:#ed171f" inkstitch:fill_method="cross_stitch"/></g>
+  <g inkscape:groupmode="layer" inkscape:label="GlyphLayer-x" style="display:none"><path d="M2 2 H18 V18 H2 Z" style="fill:#ed171f" inkstitch:fill_method="linear_gradient_fill"/></g>
 </svg>"#;
 
     /// The design of the `index`-th glyph of the glyph file `text`.
@@ -464,7 +464,7 @@ mod tests {
     fn stitchcraft_lists_the_stitch_types_it_doesn_t_sew_yet() {
         let mut traits = Traits::default();
         let made = ours(design(GLYPHS, 1).as_bytes(), "x", &mut traits).unwrap();
-        assert_eq!((made.plan.is_none(), traits.types, made.listed), (true, vec!["cross_stitch"], vec!["cross_stitch".to_string()]));
+        assert_eq!((made.plan.is_none(), traits.types, made.listed), (true, vec!["linear_gradient_fill"], vec!["linear_gradient_fill".to_string()]));
         // A design StitchCraft can't read is said.
         assert!(ours(b"<svg", "y", &mut Traits::default()).is_err());
     }
