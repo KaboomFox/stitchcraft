@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-1df020c6.js";
+            window.path_to_searchindex_js = "../../searchindex-a04b6d5d.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-0e01f503.js"></script>
@@ -189,6 +189,16 @@ neighbours, as every generator is (<a href="../adr/0014-generators-see-their-nei
 stroke sews the same whatever they are, and whatever start and end positions its design gives it
 (<code>REQ-GEN-001</code>). A satin column or a tatami fill before a stroke ends near the
 stroke’s first point.</p>
+<p>A stroke cut to clips, its clip paths, sews the pieces of its lines inside every one (<code>REQ-GEN-005</code>). Its
+subpaths are cut where they cross a clip’s outline, as Ink/Stitch cuts them. A running stitch’s or a zigzag
+stroke’s is flattened first as a shape’s outline is, and a manual stitch’s runs from node to node, with a
+needle point at each cut. Each piece sews on its own, in order along its subpath, and a closed subpath that is cut
+is cut where it starts too. Left whole, a subpath keeps its curves and sews as drawn. The clips leave the
+width alone, so a zigzag stroke’s zigzag ends square at a cut, half its width either side of the line.
+Ink/Stitch closes each piece of a cut closed zigzag stroke, which StitchCraft sews open (<code>DEV-RUN-009</code>), and
+sews a line that also touches its clip at a point whole, which StitchCraft cuts as any other
+(<code>DEV-RUN-010</code>). Wholly outside its clips, a stroke isn’t sewn (<code>SC-W0013</code>), and the element before it ends
+nearest the first piece they leave.</p>
 <h2 id="running-stitch"><a class="header" href="#running-stitch">Running stitch</a></h2>
 <p>The workhorse: outlines, details, travel, underlay.</p>
 <p><strong>Parameters:</strong> <code>running_stitch_length_mm</code> (one length or a repeating pattern of lengths, <code>LengthList</code>),

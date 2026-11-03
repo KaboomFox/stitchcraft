@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-1df020c6.js";
+            window.path_to_searchindex_js = "../searchindex-a04b6d5d.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-0e01f503.js"></script>
@@ -768,8 +768,9 @@ anchor, leaves that end of the segment straight, and a segment without handles i
 <li><strong>Paths and compound paths</strong> are the art. A compound path’s children are one shape, with the compound’s
 appearance and fill rule.</li>
 <li><strong>Groups and layers</strong> pass their children on, and their StitchCraft effects with them (below). Clipping
-is left for M8, as in the SVG adapter: a clipping group’s or layer’s art is stitched whole, with
-<code>SC-W0807</code>.</li>
+is left for M8.7: a clipping group’s or layer’s art is stitched whole, with <code>SC-W0807</code>. The SVG adapter
+cuts a shape to its clip paths from M8.5, and M8.7 gives a clip group’s art its clipping object as a
+clip of its elements the same way (<code>REQ-GEN-005</code>).</li>
 <li><strong>Hidden objects</strong>, and everything in them, are left out without a word, as VectorCraft draws nothing
 for them. So are objects and paints of opacity 0, paints turned off and strokes of width 0.</li>
 <li><strong>Objects and layers named <code>stitch:ignore</code></strong>, and everything in them, are left out with <code>SC-I0811</code>.

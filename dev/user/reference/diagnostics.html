@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-1df020c6.js";
+            window.path_to_searchindex_js = "../../searchindex-a04b6d5d.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-0e01f503.js"></script>
@@ -195,6 +195,7 @@
 <tr><td><a href="#sc-e0010"><code>SC-E0010</code></a></td><td>Error</td><td>Nothing to stitch</td></tr>
 <tr><td><a href="#sc-w0011"><code>SC-W0011</code></a></td><td>Warning</td><td>Stitch type not sewn yet; element skipped</td></tr>
 <tr><td><a href="#sc-e0012"><code>SC-E0012</code></a></td><td>Error</td><td>Bug-report bundle could not be replayed</td></tr>
+<tr><td><a href="#sc-w0013"><code>SC-W0013</code></a></td><td>Warning</td><td>Element outside its clip paths; left out</td></tr>
 <tr><td><a href="#sc-e0101"><code>SC-E0101</code></a></td><td>Error</td><td>Parameter has the wrong type or an unknown choice</td></tr>
 <tr><td><a href="#sc-w0102"><code>SC-W0102</code></a></td><td>Warning</td><td>Parameter clamped to its allowed range</td></tr>
 <tr><td><a href="#sc-w0105"><code>SC-W0105</code></a></td><td>Warning</td><td>Unknown parameter preserved but ignored</td></tr>
@@ -214,6 +215,7 @@
 <tr><td><a href="#sc-e0214"><code>SC-E0214</code></a></td><td>Error</td><td>Satin column drawn as one path could not be made into rails</td></tr>
 <tr><td><a href="#sc-w0215"><code>SC-W0215</code></a></td><td>Warning</td><td>Satin column too small for the shortest stitch; left out</td></tr>
 <tr><td><a href="#sc-e0216"><code>SC-E0216</code></a></td><td>Error</td><td>Satin column has no section to sew</td></tr>
+<tr><td><a href="#sc-w0217"><code>SC-W0217</code></a></td><td>Warning</td><td>Satin column is clipped; sewn whole</td></tr>
 <tr><td><a href="#sc-w0303"><code>SC-W0303</code></a></td><td>Warning</td><td>Parts of a fill too small to sew left out</td></tr>
 <tr><td><a href="#sc-w0304"><code>SC-W0304</code></a></td><td>Warning</td><td>Fill smaller than 1.4 mm²</td></tr>
 <tr><td><a href="#sc-w0305"><code>SC-W0305</code></a></td><td>Warning</td><td>Fill part too thin for rows; sewn round its outline</td></tr>
@@ -324,6 +326,15 @@ JSON, not a bundle, a bundle format newer than this StitchCraft, or one that nam
 format this StitchCraft does not have. Nothing was replayed.</p>
 <p>The message says what is wrong. A bundle written by a newer StitchCraft needs that version or a
 later one; a bundle changed by hand, or by an email program, needs the original file.</p>
+<h2 id="sc-w0013"><a class="header" href="#sc-w0013">SC-W0013</a></h2>
+<p><strong>Warning</strong> — Element outside its clip paths; left out</p>
+<p>The element is cut to clip paths, its own or those of the groups round it, and they leave nothing of
+it: it lies wholly outside them, they don’t overlap one another, or one of them has no area, such as
+an empty clip path or one of text alone. A viewer shows nothing of it, so it sews nothing
+(<code>REQ-GEN-005</code>), and a trim or stop after it is left out (<code>SC-W0505</code>). Ink/Stitch sews nothing of an
+element outside its clip path too, but sews an element whose clip path has no area whole
+(<code>DEV-SVG-019</code>).</p>
+<p>Move the element or its clip paths, or delete the element if it is hidden on purpose.</p>
 <h2 id="sc-e0101"><a class="header" href="#sc-e0101">SC-E0101</a></h2>
 <p><strong>Error</strong> — Parameter has the wrong type or an unknown choice</p>
 <p>A parameter’s value could not be understood: a number where a word was expected, a choice that
@@ -463,6 +474,12 @@ its rails, so no stitch goes across it and the column is not sewn. A rung from t
 start to the second rail’s end does this, and so does push compensation that takes off the parts of
 a short column’s rails where its rungs meet them. Ink/Stitch says such a column cannot be stitched.</p>
 <p>Move the rungs so that each meets both rails away from their ends, or lower <code>push_compensation_mm</code>.</p>
+<h2 id="sc-w0217"><a class="header" href="#sc-w0217">SC-W0217</a></h2>
+<p><strong>Warning</strong> — Satin column is clipped; sewn whole</p>
+<p>A satin column is cut to clip paths, its own or those of the groups round it, which StitchCraft
+doesn’t apply to a satin column: it is sewn whole, as Ink/Stitch sews it, where a viewer shows only
+what lies inside them (<code>REQ-GEN-005</code>).</p>
+<p>Draw the column as far as it should sew, or make it a fill if it should take the clip’s shape.</p>
 <h2 id="sc-w0303"><a class="header" href="#sc-w0303">SC-W0303</a></h2>
 <p><strong>Warning</strong> — Parts of a fill too small to sew left out</p>
 <p>A fill is sewn in rows of stitches across each part of its area. A part of 0.21 mm² or less (3
@@ -756,7 +773,10 @@ design setting <code>rotate_on_export</code>, which turns the design as it is wr
 Ink/Stitch would make to a file with its settings and no file version, or from a newer Ink/Stitch,
 which is read as it is. Of its commands, one on an object that is not stitched is named, and so is a
 start, end or target command whose place doesn’t read, and one on a shape digitized automatically
-(<code>--auto</code>), which places where its parts start and end.</p>
+(<code>--auto</code>), which places where its parts start and end. Of clip paths, which cut the shapes they clip,
+what isn’t applied is named: text in one, which adds nothing to it, a clip path on a clip path’s
+shape, one that isn’t a reference, such as a CSS shape, clip paths that name each other in a loop,
+<code>objectBoundingBox</code> units on a group, groups in a clip path more than 16 deep, and the root’s.</p>
 <p>The message names the element and what was done. Convert text and clones to paths in the editor
 (in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.</p>
 <h2 id="sc-i0805"><a class="header" href="#sc-i0805">SC-I0805</a></h2>

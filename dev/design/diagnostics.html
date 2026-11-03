@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-1df020c6.js";
+            window.path_to_searchindex_js = "../searchindex-a04b6d5d.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-0e01f503.js"></script>
@@ -269,6 +269,7 @@ another.</p>
 <tr><td><code>SC-E0010</code></td><td>Error</td><td>Nothing to stitch (no embroiderable elements)</td><td>M1</td></tr>
 <tr><td><code>SC-W0011</code></td><td>Warning</td><td>Stitch type not sewn yet; element skipped</td><td>M3</td></tr>
 <tr><td><code>SC-E0012</code></td><td>Error</td><td>Bug-report bundle could not be replayed</td><td>M3</td></tr>
+<tr><td><code>SC-W0013</code></td><td>Warning</td><td>Element outside its clip paths; left out (wholly outside them, or under clip paths that don’t meet or have no area; Ink/Stitch sews one whose clip path is empty whole)</td><td>M8</td></tr>
 <tr><td><code>SC-E0101</code></td><td>Error</td><td>Parameter has the wrong type or an unknown choice</td><td>M3</td></tr>
 <tr><td><code>SC-W0102</code></td><td>Warning</td><td>Parameter clamped to its allowed range</td><td>M3</td></tr>
 <tr><td><code>SC-W0105</code></td><td>Warning</td><td>Unknown parameter preserved but ignored</td><td>M3</td></tr>
@@ -288,6 +289,7 @@ another.</p>
 <tr><td><code>SC-E0214</code></td><td>Error</td><td>Satin column drawn as one path could not be made into rails (too short, or too tight for its width)</td><td>M4</td></tr>
 <tr><td><code>SC-W0215</code></td><td>Warning</td><td>Satin column too small for the shortest stitch; left out (all within it of its first needle point, or a zigzag satin with no stitch across, underlays and all; Ink/Stitch sews a speck)</td><td>M4</td></tr>
 <tr><td><code>SC-E0216</code></td><td>Error</td><td>Satin column has no section to sew (its rungs or push compensation take each section’s length off a rail)</td><td>M4</td></tr>
+<tr><td><code>SC-W0217</code></td><td>Warning</td><td>Satin column is clipped; sewn whole (as in Ink/Stitch)</td><td>M8</td></tr>
 <tr><td><code>SC-W0303</code></td><td>Warning</td><td>Parts of a fill too small to sew left out (3 square CSS pixels or less, as in Ink/Stitch); a fill of no area sews nothing</td><td>M5</td></tr>
 <tr><td><code>SC-W0304</code></td><td>Warning</td><td>Fill smaller than 1.4 mm² (20 square CSS pixels); a running stitch or a satin column may sew it better</td><td>M5</td></tr>
 <tr><td><code>SC-W0305</code></td><td>Warning</td><td>Fill part too thin for rows; sewn round its outline (as in Ink/Stitch)</td><td>M5</td></tr>

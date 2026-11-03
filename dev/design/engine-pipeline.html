@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-1df020c6.js";
+            window.path_to_searchindex_js = "../searchindex-a04b6d5d.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-0e01f503.js"></script>
@@ -232,6 +232,14 @@ way, and parts too small to sew are left out with <code>SC-W0303</code>
 them from a column’s centre line (<a href="algorithms/satin.html#single-path-satin">single-path satin</a>).</li>
 <li><strong>Strokes:</strong> each subpath becomes its own path piece, in document order.</li>
 <li><strong>Commands</strong> become hints (start/end/target points) on the element.</li>
+<li><strong>Clips:</strong> an element’s clips cut it, each the areas of its shapes together by their rules
+(<code>REQ-GEN-005</code>). A fill’s region is cut when it is built (<code>region::build_clipped</code>), before its underlay,
+<code>expand_mm</code> and its method see it. For a stroke, the subpaths are cut at their crossings with a clip’s
+outline (<code>region::cut</code>), as in Ink/Stitch. A manual stitch’s run from node to node, and other strokes’
+are flattened as a shape’s outline is. Left whole, a subpath keeps its curves and sews as drawn, and each piece of a cut one sews
+on its own. Satin columns are sewn whole (<code>SC-W0217</code>), and an element wholly outside its clips isn’t
+sewn (<code>SC-W0013</code>). Automatic digitizing cuts its shapes first, so that what shows of them is digitized
+(<code>auto::clips</code>).</li>
 </ul>
 <p>Adapters have already applied transforms and converted units, so normalization never sees host types.</p>
 <h2 id="2-validate"><a class="header" href="#2-validate">2. Validate</a></h2>

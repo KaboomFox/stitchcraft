@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-1df020c6.js";
+            window.path_to_searchindex_js = "../searchindex-a04b6d5d.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-0e01f503.js"></script>
@@ -237,7 +237,10 @@ tests and the integration tests use separate builds, a generic function has one 
 and a closure is a function of its own. So a line can count as untested though the lcov report counts it
 run. Only the other kind of test runs it, or only a closure on the line runs, as with a <code>?</code> after a
 closure argument whose error the tests never bring. The coverage job names these lines and the function
-they count against. Run them from the kind of test that runs most of the function.</p>
+they count against. Run them from the kind of test that runs most of the function. A closure is an
+untested line of its own until a test calls it, even where the code around it runs. So a path that only
+a bug takes passes its error on without one: <code>said.extend(result.as_ref().err().cloned())</code>, then
+<code>result.ok()?</code>.</p>
 <p><code>cargo xtask coverage</code> runs the job locally. It needs cargo-llvm-cov and rustup’s <code>llvm-tools</code>. Without
 the latter, <code>LLVM_COV</code> and <code>LLVM_PROFDATA</code> can name another LLVM’s llvm-cov and llvm-profdata that read
 the toolchain’s profiles. Rust 1.99 writes raw profile format 11, which its own LLVM 23 reads and LLVM
