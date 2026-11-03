@@ -404,12 +404,13 @@ the filter stops with `SC-E0004` before VectorCraft would. A VectorCraft before 
 filter, which almost every curved line outruns, and stops it with its own error.
 
 **Test Sheet** (`REQ-VC-015`, `apps/stitchcraft-vc-plugin/src/testsheet.rs`) draws one of the sheets
-drawn as designs, TS-02B to TS-09, TS-11A, TS-11B and the TS-13 sheets, into the document: the sheet's design
-moved by whole millimetres so that its middle is nearest the middle of the artboard `_context` names
-(`Design::moved`). Each element is an object named by its id, with its path and its thread as the paint
-its family sews with. Its settings are its family's effect record, each the value its dialog row takes,
-which reads back as the setting it was. The objects selected are given back as they are, and the sheet
-goes above them. The document sews as the sheet's design moved. A fill's rows lie where the design's
+drawn as designs, TS-02B to TS-09, TS-11A, TS-11B, the TS-13 sheets and TS-17A, into the document: the
+sheet's design moved by whole millimetres so that its middle is nearest the middle of the artboard
+`_context` names (`Design::moved`). TS-17A moves by whole multiples of 6 mm, which keep its crosses' cells on
+the canvas's grids of 2 and 3 mm (`TestSheet::step`). Each element is an object named by its id, with its
+path and its thread as the paint its family sews with. Its settings are its family's effect record, each the
+value its dialog row takes, which reads back as the setting it was. The objects selected are given back as
+they are, and the sheet goes above them. The document sews as the sheet's design moved. A fill's rows lie where the design's
 origin puts them, so moved they may fall elsewhere across a shape, and the sheet looks the same. The
 threads lose their names in the Brother palette, since VectorCraft unlinks the swatch of a paint a filter
 gives, and the PES file is the same. VectorCraft 0.15 keeps the records, but with an empty selection it
@@ -615,7 +616,10 @@ cuts, and costs each of them a unit for each of its segments.
 **Coordinates.** VectorCraft keeps every path in document coordinates. Moving or scaling a group moves
 its paths' anchors, so layers, groups and compound paths have no transform. Coordinates are points, 1/72
 inch, with y down, and the adapter multiplies them by 25.4/72 into millimetres. The document's origin
-stays the origin. Coordinates are read exactly, as VectorCraft reads them, from their text in the JSON.
+stays the origin. It is the canvas's origin, through which a cross stitch fill's grid passes
+(`canvas_grid_origin`, [cross stitch](algorithms/cross-stitch.md#the-grid)), decided in M10.1. A new
+document's first artboard has its top left corner there, and moving an artboard leaves the grid where it is.
+Coordinates are read exactly, as VectorCraft reads them, from their text in the JSON.
 An anchor's handles are absolute positions. A missing handle, or one within a billionth of a point of its
 anchor, leaves that end of the segment straight, and a segment without handles is a line.
 

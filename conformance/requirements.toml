@@ -1302,6 +1302,69 @@ rationale = "Ink/Stitch centres a circular fill on its target command (lib/eleme
 milestone = "M8"
 status = "active"
 
+[[req]]
+id = "REQ-FILL-CRS-001"
+area = "fill/cross"
+level = "L2"
+statement = "A cross stitch fill lays over each part of its area, grown by expand_mm, a grid of cells pattern_size_mm wide and tall: 1 length gives square cells, and 2 the width and then the height. The grid's lines pass through the design's origin, the canvas's, or with canvas_grid_origin off through the top left corner of the part's bounds, and cross_offset_mm moves them left by its first length and down by its second, 1 length moving them as far each way. Every cell the part's bounds reach is looked at (DEV-FILL-025). A VectorCraft document's canvas origin is the origin of its coordinates, where a new document's first artboard has its top left corner."
+rationale = "Ink/Stitch's cross stitch grid, read at d59c9ab (lib/elements/fill_stitch.py: pattern_size, canvas_grid_origin, cross_offset; lib/stitches/utils/cross_stitch.py: CrossGeometries), and run as a black box on rectangles on the canvas's grid and off it, with and without offsets. An SVG file's page has its top left corner at the origin of Ink/Stitch's coordinates, as of the SVG reader's; a VectorCraft document's grid at its own origin stays put wherever its artboards lie, so that fills side by side share it."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CRS-002"
+area = "fill/cross"
+level = "L2"
+statement = "A cell sews a cross when the part covers fill_coverage percent of it or more, less a ten-thousandth of a percent, as Ink/Stitch decides it: a cell covered exactly half sews at 50. What the part covers is its area cut to the cell, its holes taken away, worked out exactly. A part that covers no cell so much sews nothing, and SC-W0319 says so, counting such parts."
+rationale = "Ink/Stitch's coverage rule, read at d59c9ab (lib/stitches/utils/cross_stitch.py: CrossGeometries._setup_crosses; lib/elements/fill_stitch.py: fill_coverage, CrossPatternCoverageWarning). Its fonts' letters cover the cells along their edges about half, where an area sampled at points would decide otherwise."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CRS-003"
+area = "fill/cross"
+level = "L2"
+statement = "Each cross is sewn as a loop from one of its corners back to it: its backslash diagonal, then its slash diagonal over it, the needle passing through the cell's middle between them. simple_cross_flipped sews the slash diagonal first, on the same grid (DEV-FILL-026). Each half of each diagonal takes cross_thread_count passes: an odd count sews the even count below it, and 1 sews 2, with SC-W0320 (DEV-FILL-027). From a corner of the diagonal sewn last, the loop goes in to the middle along that diagonal and leaves nothing over it; from a corner of the other, its last stitch, from the middle back to the start, lies over it."
+rationale = "Ink/Stitch's simple and flipped crosses, read at d59c9ab (lib/stitches/utils/cross_stitch.py: Cross; lib/stitches/cross_stitch.py: cross_stitch, even_cross_stitch), and run as a black box with 1, 2, 3 and 4 threads. Every cross's top diagonal lies the same way, as in hand cross stitch."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CRS-004"
+area = "fill/cross"
+level = "L2"
+statement = "Crosses that share a corner, side by side or corner to corner, are one group, sewn in one run from a corner back to it. The run starts with a cross at its corner, and at each corner it reaches it sews the loop of each cross not sewn yet whose top diagonal ends there, the one below and to the left first; where crosses are left, it sews from the first corner along it where the bottom diagonal of one ends, the one below and to the right first, and goes on so. The group nearest the end is sewn last, from its corner nearest the end; the others first, each the group nearest the needle, from its corner nearest it, or with no needle the group of the first cross row by row from the top, from its top right corner (DEV-FILL-028). A part of one group with both a needle and an end first travels from the corner nearest the needle to the corner nearest the end, corner to corner through the middles of the fewest crosses. Each run is a group of stitches of its own."
+rationale = "Ink/Stitch joins its crosses into runs so, read at d59c9ab (lib/stitches/cross_stitch.py: _build_connect_subgraphs, _build_eulerian_cycles, _build_simple_cycles, organize), each run a stitch group that its stitch plan joins to the next with a jump or a stitch. Its order among groups and among the crosses at a corner follows a Python set's, which StitchCraft fixes."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CRS-005"
+area = "fill/cross"
+level = "L2"
+statement = "A stitch longer than max_cross_stitch_length_mm is split into the fewest equal stitches no longer, and one exactly as long is not. A longest stitch below twice the shortest stitch is raised to it (SC-W0402). A grid whose cells' half diagonal is shorter than the shortest stitch says so (SC-W0321), and a needle point nearer the one before than the shortest stitch is left out."
+rationale = "Ink/Stitch splits a cross's stitches with its geometry library's segmentize, read at d59c9ab (lib/stitches/cross_stitch.py: _cycles_to_stitches) and checked with shapely 2.2 on GEOS 3.14: a line of n times the length is n stitches, a hair longer n + 1. The machine sews no stitch shorter than its shortest (DEV-FIN-001)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CRS-006"
+area = "fill/cross"
+level = "L2"
+statement = "A cross stitch fill's parts are grown by expand_mm, parts grown into each other one part, nearest the needle first, each ending nearest the next part and the last nearest the next element or the end position (REQ-GEN-001). A negative expand_mm shrinks each part, and a part it shrinks away entirely is sewn at its own size, with SC-W0309 (DEV-FILL-024). Every cell a part's bounds reach costs a unit of work before any is looked at, and a row of cells, held while they are looked at, and each cell that sews a cross must fit in the stitches left (REQ-GEN-004), so a fine grid over a large part ends with SC-E0004 before it takes memory. A cross stitch method that this version doesn't sew, one of M10.2's, skips the element with SC-W0011."
+rationale = "Ink/Stitch grows a cross stitch fill's whole shape and sews its parts so, read at d59c9ab (lib/elements/fill_stitch.py: to_stitch_groups, do_cross_stitch, _prepare_cross_stitch_shape). A 1 m part on a grid of 0.1 mm reaches 10^8 cells."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CRS-007"
+area = "fill/cross"
+level = "L3"
+statement = "The cross stitch fills StitchCraft sews TS-17A's simple crosses with, on grids of 2 and 3 mm with 2 and 4 threads, flipped, and a letter whose edge cells are half covered, written as an SVG file with their Ink/Stitch parameters, sew in the Ink/Stitch that conformance/inkstitch/pin.toml names, run as a black box, as StitchCraft sews the sheet, by the measures of REQ-SVG-008 and within their tolerances. A measure that a case excuses with an entry of the deviations ledger may differ."
+rationale = "Cross stitch is built from Ink/Stitch's behaviour, and the differential is how a file is shown to sew the same in both."
+milestone = "M10"
+status = "active"
+
 # ── VectorCraft ────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -1433,7 +1496,7 @@ status = "active"
 id = "REQ-VC-015"
 area = "vectorcraft"
 level = "L2"
-statement = "From VectorCraft 0.16, StitchCraft's Test Sheet filter draws one of `stitch testsheet`'s sheets drawn as designs, TS-02B to TS-09, TS-11A, TS-11B and the TS-13 sheets, into the document, moved by whole millimetres so that its middle is nearest the middle of the artboard. Each element is an object with its path, its thread as the paint its family sews with, and its settings as the record of its family's StitchCraft effect, each the value its dialog row takes. The document sews as the sheet's design sews, moved as the filter moved it, and exports within an export's budget. The objects selected stay as they are. A VectorCraft before 0.16 doesn't tell the filter that it keeps the effect records a filter gives, and there the filter declines with SC-E0813. Where parts of the sheet would lie more than 10 m from the document's origin, farther than StitchCraft stitches, it declines with SC-E0817. The sheets drawn stitch by stitch, TS-01, TS-02 and TS-10A to TS-10C, are not designs, and only `stitch testsheet` writes them. Nor does it draw TS-11C, whose meander fills wander as their elements' ids draw: a document's objects have ids of their own, and would wander other ways. The TS-13 sheets' shapes digitized automatically have the Auto effect's record (REQ-VC-016)."
+statement = "From VectorCraft 0.16, StitchCraft's Test Sheet filter draws one of `stitch testsheet`'s sheets drawn as designs, TS-02B to TS-09, TS-11A, TS-11B, the TS-13 sheets and TS-17A, into the document, moved by whole millimetres so that its middle is nearest the middle of the artboard, and TS-17A by whole multiples of 6 mm, which keep its crosses' cells on the canvas's grid. Each element is an object with its path, its thread as the paint its family sews with, and its settings as the record of its family's StitchCraft effect, each the value its dialog row takes. The document sews as the sheet's design sews, moved as the filter moved it, and exports within an export's budget. The objects selected stay as they are. A VectorCraft before 0.16 doesn't tell the filter that it keeps the effect records a filter gives, and there the filter declines with SC-E0813. Where parts of the sheet would lie more than 10 m from the document's origin, farther than StitchCraft stitches, it declines with SC-E0817. The sheets drawn stitch by stitch, TS-01, TS-02 and TS-10A to TS-10C, are not designs, and only `stitch testsheet` writes them. Nor does it draw TS-11C, whose meander fills wander as their elements' ids draw: a document's objects have ids of their own, and would wander other ways. The TS-13 sheets' shapes digitized automatically have the Auto effect's record (REQ-VC-016)."
 rationale = "A machine checkpoint can then start from VectorCraft: the sheet's objects show their stitches, the exporters write it, and the dialogs show its settings. The sheets are the same designs the command line plans, so a sew-out from either answers the same questions."
 milestone = "M6"
 status = "active"
