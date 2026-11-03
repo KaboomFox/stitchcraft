@@ -365,18 +365,29 @@ mod tests {
         Cells::of(crossed)
     }
 
+    /// The corners of the places `pair`, in order, and its middle, if it has one: a stitch from a corner to a
+    /// middle or back, or from a corner to a corner.
+    fn ends(pair: &[Spot]) -> (Vec<[i64; 2]>, Option<[i64; 2]>) {
+        let mut corners = Vec::new();
+        let mut middle = None;
+        for &spot in pair {
+            match spot {
+                Spot::Corner(c) => corners.push(c),
+                Spot::Middle(m) => middle = Some(m),
+            }
+        }
+        (corners, middle)
+    }
+
     /// How many times each half of each diagonal of each cross of `run` is passed, by its corner and cell.
     fn passes(run: &[Spot]) -> BTreeMap<([i64; 2], [i64; 2]), usize> {
         let mut passes = BTreeMap::new();
         for pair in run.windows(2) {
-            match (pair[0], pair[1]) {
-                (Spot::Corner(c), Spot::Middle(m)) | (Spot::Middle(m), Spot::Corner(c)) => *passes.entry((c, m)).or_insert(0) += 1,
-                (Spot::Corner(a), Spot::Corner(b)) => {
-                    let cell = [a[0].min(b[0]), a[1].min(b[1])];
-                    *passes.entry((a, cell)).or_insert(0) += 1;
-                    *passes.entry((b, cell)).or_insert(0) += 1;
-                }
-                other => panic!("{other:?}"),
+            let (corners, middle) = ends(pair);
+            let (a, b) = (corners[0], corners[corners.len() - 1]);
+            let cell = middle.unwrap_or([a[0].min(b[0]), a[1].min(b[1])]);
+            for corner in corners {
+                *passes.entry((corner, cell)).or_insert(0) += 1;
             }
         }
         passes
@@ -428,10 +439,11 @@ mod tests {
         // For each cell, where along the run each of its diagonals was last passed: `\` first, then `/`.
         let mut last: BTreeMap<[i64; 2], [usize; 2]> = BTreeMap::new();
         for (k, pair) in run.windows(2).enumerate() {
-            let (cell, falling) = match (pair[0], pair[1]) {
-                (Spot::Corner(c), Spot::Middle(m)) | (Spot::Middle(m), Spot::Corner(c)) => (m, c == m || c == [m[0] + 1, m[1] + 1]),
-                (Spot::Corner(a), Spot::Corner(b)) => ([a[0].min(b[0]), a[1].min(b[1])], (b[0] - a[0]) * (b[1] - a[1]) > 0),
-                other => panic!("{other:?}"),
+            let (corners, middle) = ends(pair);
+            let (a, b) = (corners[0], corners[corners.len() - 1]);
+            let (cell, falling) = match middle {
+                Some(m) => (m, a == m || a == [m[0] + 1, m[1] + 1]),
+                None => ([a[0].min(b[0]), a[1].min(b[1])], (b[0] - a[0]) * (b[1] - a[1]) > 0),
             };
             last.entry(cell).or_insert([0, 0])[usize::from(!falling)] = k;
         }
