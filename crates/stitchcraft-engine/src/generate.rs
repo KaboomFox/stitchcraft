@@ -44,6 +44,7 @@ use crate::common::{CommonParams, STOP_AFTER, TRIM_AFTER};
 use crate::design::{DesignSettings, Element, Hints, Join, Path, Shape};
 use crate::generators::circular::{self, Circular, circular_fill};
 use crate::generators::contour::{self, Contour, ContourParams, Stitching, contour_fill};
+use crate::generators::cross::{self, Cross, CrossParams, cross_stitch};
 use crate::generators::manual::{self, manual_stitch};
 use crate::generators::meander::{self, Meander, MeanderParams, meander_fill};
 use crate::generators::passes::{PathFillParams, RepeatParams};
@@ -345,7 +346,8 @@ fn top_rows_of(
     let neighbours = Neighbours::default();
     let Some(Prepared { region, common, sewing }) = prepare(element, settings, profile, &neighbours, diagnostics, meter)? else { return Ok(None) };
     // A contour, meander or circular fill has no rows: the preview shows its path, round the rings, through
-    // the tile as the element's seed lays it, or along the spiral's pieces.
+    // the tile as the element's seed lays it, or along the spiral's pieces. A cross stitch fill shows its
+    // crosses' diagonals.
     match sewing.stitch_type {
         StitchType::ContourFill => {
             let Some(contour) = contour_settings(&sewing, diagnostics) else { return Ok(None) };
@@ -359,6 +361,10 @@ fn top_rows_of(
             let Some(meander) = meander_settings(&sewing, diagnostics) else { return Ok(None) };
             let rng = SplitMix64::for_element(element.id.as_str(), common.as_ref().and_then(|common| common.random_seed));
             return meander::top_path(&region, &meander, &rng, meter).map(Some);
+        }
+        StitchType::CrossStitch => {
+            let Some(cross) = cross_settings(&sewing, diagnostics) else { return Ok(None) };
+            return cross::top_path(&region, &cross, meter).map(Some);
         }
         _ => {}
     }
@@ -493,6 +499,10 @@ fn fill(
         let Some(circular) = circular_settings(sewing, diagnostics) else { return Ok(None) };
         return Ok(Some(circular_fill(region, &circular, needle, next, rng, meter)?));
     }
+    if sewing.stitch_type == StitchType::CrossStitch {
+        let Some(cross) = cross_settings(sewing, diagnostics) else { return Ok(None) };
+        return Ok(Some(cross_stitch(region, &cross, needle, next, meter)?));
+    }
     let Some(fill) = fill_settings(sewing, diagnostics) else { return Ok(None) };
     Ok(Some(tatami_fill(region, &fill, needle, next, rng, meter)?))
 }
@@ -596,6 +606,16 @@ fn circular_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Opti
         travel,
         target: sewing.hints.target,
     })
+}
+
+/// The cross stitch `sewing` describes, its settings read as a cross stitch reads them: its own, and the
+/// `expand_mm` it shares with the tatami fill, with the element's shortest stitch. `None` when they cannot be
+/// read, or its method is not sewn yet, which `diagnostics` says.
+fn cross_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Option<Cross> {
+    let tatami = sewing.read(TatamiParams::from_set_as, diagnostics);
+    let cross = sewing.read(CrossParams::from_set_as, diagnostics);
+    let (Some(tatami), Some(cross), Some(shared)) = (tatami, cross, sewing.shared) else { return None };
+    cross.cross(tatami.expand_mm.get(), shared.min_stitch, diagnostics)
 }
 
 /// The tatami fill `sewing` describes, its settings read as its stitch type reads them; `None` when they
@@ -737,9 +757,10 @@ fn stroke(
 /// design's `settings` alone, with the budget's work to itself (`REQ-GEN-003`): a stroke its first point,
 /// a satin column its rails as they are sewn when it starts at its nearest point and otherwise its first
 /// rail's start. A satin column too narrow to stitch across is a stroke (`REQ-SAT-015`). A tatami fill, a
-/// fill set to Ink/Stitch's legacy fill, which is sewn as one (`REQ-FILL-005`), and a contour, meander or
-/// circular fill start at their point nearest the needle and offer their area, their parts, even when set not to be sewn, as
-/// Ink/Stitch's next element is the next in the drawing. Where its stitch type is known, an
+/// fill set to Ink/Stitch's legacy fill, which is sewn as one (`REQ-FILL-005`), and a contour, meander,
+/// circular or cross stitch fill start at their point nearest the needle and offer their area, their parts,
+/// even when set not to be sewn, as Ink/Stitch's next element is the next in the drawing. Where its stitch
+/// type is known, an
 /// element offers what Ink/Stitch's would, even of a method StitchCraft does not sew yet (ADR 0014): a
 /// stroke of any method its first point, as Ink/Stitch's strokes all do, and a satin column of any method
 /// its rails. A fill of a method StitchCraft does not sew offers nothing, since what it would offer is not
@@ -758,7 +779,10 @@ pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -
     }
     let (path, width, join) = match &element.shape {
         Shape::Fill { .. }
-            if !matches!(stitch_type, StitchType::TatamiFill | StitchType::ContourFill | StitchType::MeanderFill | StitchType::CircularFill) =>
+            if !matches!(
+                stitch_type,
+                StitchType::TatamiFill | StitchType::ContourFill | StitchType::MeanderFill | StitchType::CircularFill | StitchType::CrossStitch
+            ) =>
         {
             return None;
         }
