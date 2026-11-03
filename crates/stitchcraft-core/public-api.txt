@@ -67,6 +67,9 @@ pub stitchcraft_core::diag::Code::ParamForOtherFamily
 pub stitchcraft_core::diag::Code::ParamInvalid
 pub stitchcraft_core::diag::Code::ParamUnknown
 pub stitchcraft_core::diag::Code::PreviewTooLarge
+pub stitchcraft_core::diag::Code::RouteLeftOut
+pub stitchcraft_core::diag::Code::RouteNothing
+pub stitchcraft_core::diag::Code::RoutePieceReadOtherwise
 pub stitchcraft_core::diag::Code::SatinCentreLineFailed
 pub stitchcraft_core::diag::Code::SatinCentreLinePartsLeftOut
 pub stitchcraft_core::diag::Code::SatinClipNotApplied
@@ -106,6 +109,7 @@ pub stitchcraft_core::diag::Code::VcGeometryUnusable
 pub stitchcraft_core::diag::Code::VcNewerFormat
 pub stitchcraft_core::diag::Code::VcNotConverted
 pub stitchcraft_core::diag::Code::VcNotPrinted
+pub stitchcraft_core::diag::Code::VcNotRouted
 pub stitchcraft_core::diag::Code::VcObjectIgnored
 pub stitchcraft_core::diag::Code::VcSettingIgnored
 pub stitchcraft_core::diag::Code::VcSheetNotDrawn
@@ -296,6 +300,9 @@ pub stitchcraft_core::Code::ParamForOtherFamily
 pub stitchcraft_core::Code::ParamInvalid
 pub stitchcraft_core::Code::ParamUnknown
 pub stitchcraft_core::Code::PreviewTooLarge
+pub stitchcraft_core::Code::RouteLeftOut
+pub stitchcraft_core::Code::RouteNothing
+pub stitchcraft_core::Code::RoutePieceReadOtherwise
 pub stitchcraft_core::Code::SatinCentreLineFailed
 pub stitchcraft_core::Code::SatinCentreLinePartsLeftOut
 pub stitchcraft_core::Code::SatinClipNotApplied
@@ -335,6 +342,7 @@ pub stitchcraft_core::Code::VcGeometryUnusable
 pub stitchcraft_core::Code::VcNewerFormat
 pub stitchcraft_core::Code::VcNotConverted
 pub stitchcraft_core::Code::VcNotPrinted
+pub stitchcraft_core::Code::VcNotRouted
 pub stitchcraft_core::Code::VcObjectIgnored
 pub stitchcraft_core::Code::VcSettingIgnored
 pub stitchcraft_core::Code::VcSheetNotDrawn

@@ -688,6 +688,19 @@ registry! {
     /// The message names the command or marker and counts them. Delete or rename all but one.
     OriginOrStopPositionTwice = "SC-E0819", Error, "More than one origin or stop position";
 
+    /// StitchCraft's Auto-Route Satin Columns, a filter in VectorCraft, routes the selected paths whose own
+    /// StitchCraft effects make them satin columns, with the paths among them whose own effects make them
+    /// strokes, which show where the needle may travel. A path sewn by a group's effect, or by none, is left
+    /// as it is. The route runs between the objects named `stitch:route-start` and `stitch:route-end`
+    /// selected with the paths. It changed nothing, because nothing was selected, because no selected path has
+    /// a satin effect of its own, or because 2 markers of a kind were selected, and which one counts isn't
+    /// known, as Ink/Stitch's tool stops at 2 `autoroute_start` or `autoroute_end` commands.
+    ///
+    /// The message says which. Select the satin columns to route, and put StitchCraft's Satin effect on the
+    /// paths themselves rather than on their group. Keep one start marker and one end marker in the
+    /// selection.
+    VcNotRouted = "SC-E0820", Error, "VectorCraft selection not routed";
+
     /// An element's geometry cannot be used: its path data or its list of points has an error (the path is
     /// stitched up to the error, as SVG viewers draw it), its transform is not valid (it is skipped with
     /// everything inside it), it draws nothing, or it lies more than 10 metres from the document's origin,
@@ -982,6 +995,36 @@ registry! {
     /// and one whose region can't be given is sewn as it is drawn. To sew a shape as it is drawn, give it
     /// settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it.
     AutoLayers = "SC-I0908", Info, "Layers flattened";
+
+    /// Routing joins satin columns, and the running stitches among them, into one route, as Ink/Stitch's
+    /// Auto-Route Satin Columns does: StitchCraft Auto-Route Satin Columns in VectorCraft, and lettering in a
+    /// font whose `auto_satin` is on. It routed nothing, because none of the elements it was given is a
+    /// satin column it can route: they are fills, strokes alone, or columns left out of the route
+    /// (`SC-I1002`). Nothing changed.
+    ///
+    /// The message counts the elements given. Give the satin columns to route, with the running stitches among
+    /// them that show where the needle may travel.
+    RouteNothing = "SC-E1001", Error, "Nothing to route";
+
+    /// Routing takes satin columns, and the strokes among them, which show where the needle may travel. This
+    /// element is kept as it is, in its place: it is a fill, a shape digitized automatically, an element whose
+    /// settings don't read, a satin column whose rails can't be made, a column or a stroke of no length, or a
+    /// stroke whose first subpath ends where it starts, which shows no way between 2 places. Ink/Stitch's
+    /// tool leaves a fill and an element of no length as they are too.
+    ///
+    /// The message says why. Nothing needs doing unless the element was meant to be routed: then give it
+    /// settings that read, draw it as a satin column, or open the stroke's first subpath.
+    RouteLeftOut = "SC-I1002", Info, "Element left out of the route";
+
+    /// Routing cuts each satin column into pieces along its centre line, each drawn with its share of the
+    /// column's rails and rungs and a rung more at an end where it needs one, so that it sews the pairs the
+    /// column sews along it. This piece, read back as any satin column is, has other rails or pairs other
+    /// points: the column's rails cross each other there, or a rung crosses a rail twice. It is kept in the
+    /// route, and may sew otherwise than the column did there.
+    ///
+    /// The message names the column. Draw the column with rails that don't cross and rungs that cross each
+    /// rail once, with more rungs where it turns sharply.
+    RoutePieceReadOtherwise = "SC-W1003", Warning, "Piece of a routed satin column may sew otherwise";
 }
 
 impl Code {

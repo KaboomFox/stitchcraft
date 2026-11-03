@@ -652,3 +652,9 @@ file = "crates/stitchcraft-engine/src/generators/tatami/route.rs"
 mutant = "replace < with <= in Rows<'_>::network"
 line = "if from.point.distance(last) < from.point.distance(first) {"
 why = "the nodes a row joins are its line's ends, at their very coordinates, so the first lies 0 from one end, and the 2 tests differ only when it lies 0 from both: a closed line, which <= turns round. No way runs along a closed line, which leaves its node and comes back to it: a step from a node to itself never makes the node nearer, so the search never takes one, and the network's distances and ways are the same whichever way round the line runs"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/route/trim.rs"
+mutant = "replace <= with < in outside"
+line = "if length <= 0.0 {"
+why = "a jump of no length is 0 mm outside whatever hides it: past the test, its length times what it doesn't hide is 0 too"

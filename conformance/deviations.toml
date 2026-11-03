@@ -576,3 +576,39 @@ area = "svg"
 summary = "Each clone applies its own settings and copies its source's commands wherever it is drawn. Ink/Stitch resolves the clones in a clone's source first, each in its own place, and then applies only their angle settings: there a clone sews though its clone setting is off, its trim, stop and shortest stitch and jump don't apply, and the commands it copies stay where it moves them, not where the clone round it moves their shapes. It also copies a command whose connector is a child of the root, not in a group, to its old place. And it gives everything a clone sews the clone's shortest stitch and jump, the design's when the clone sets none, where StitchCraft keeps the source's."
 reason = "A clone sews as its source sews, with the settings it sets itself, and a clone of a clone as a clone of that, moved again (REQ-SVG-012). Ink/Stitch at d59c9ab, run as a black box (ADR-0001, decision 6), sewed an inner clone whose clone setting is off inside another, started a clone of a clone at the start command its inner clone moved, left a command written at the root where its source is, and jumped after a clone of a line whose shortest jump of 20 mm sews the same move on. It resolves clones in lib/elements/clone.py and sets every stitch group of a clone to the clone's shortest stitch and jump in lib/elements/element.py (embroider), where it keeps their trims and stops."
 requirements = ["REQ-SVG-012"]
+
+[[deviation]]
+id = "DEV-ROUTE-001"
+area = "routing"
+summary = "A piece of a satin column cut for a route gets a rung only where its rungs alone would not tell its rails from them, across its start or its end, as a column drawn with its rails and rungs does. Ink/Stitch gives every piece a rung 0.3 CSS pixels from its start, and a piece without rungs 2 more, at the middle of its rails and 0.3 CSS pixels from its end."
+reason = "A rung across an end pairs the points that end pairs anyway, so the piece sews the pairs the column sews along it (REQ-ROUTE-001). A rung 0.3 pixels in pairs other points. Ink/Stitch's cut was read at d59c9ab (lib/elements/satin_column/satin_column.py, lib/stitches/auto_satin.py)."
+requirements = ["REQ-ROUTE-001"]
+
+[[deviation]]
+id = "DEV-ROUTE-002"
+area = "routing"
+summary = "A piece of a satin column is drawn with the column's rails in the column's order, a rail that reverse_rails names turned back, so that the piece's settings, the column's, swap and turn its rails as they swap and turn the column's. With swap_satin_rails, Ink/Stitch draws a piece with its rails as the column sews them, already swapped, and the piece's own setting swaps them again: the piece sews its satin the other way round from the column."
+reason = "A piece sews the stretch of the column it is cut from as the column sews it (REQ-ROUTE-001). Ink/Stitch's cut was read at d59c9ab (lib/elements/satin_column/satin_column.py)."
+requirements = ["REQ-ROUTE-001"]
+params = ["swap_satin_rails", "reverse_rails"]
+
+[[deviation]]
+id = "DEV-ROUTE-003"
+area = "routing"
+summary = "A stroke whose first subpath ends where it starts is left out of a route and kept as it is, with SC-I1002. Ink/Stitch takes its one point into the route's graph, never sews it, and deletes the stroke with the elements it routes."
+reason = "Deleting a stroke the route doesn't sew would lose what it sews (REQ-ROUTE-007). Ink/Stitch's tool was read at d59c9ab (lib/stitches/auto_satin.py)."
+requirements = ["REQ-ROUTE-007"]
+
+[[deviation]]
+id = "DEV-ROUTE-004"
+area = "routing"
+summary = "A piece of a satin column whose rail is shorter than the zigzag spacing is kept, and sews the column's pairs there. Ink/Stitch makes no part on a side of a cut where a rail would be shorter than the zigzag spacing, and its route leaves the stretch unsewn."
+reason = "The pieces of a column together sew every pair the column sews (REQ-ROUTE-001). Ink/Stitch's cut was read at d59c9ab (lib/elements/satin_column/satin_column.py)."
+requirements = ["REQ-ROUTE-001"]
+
+[[deviation]]
+id = "DEV-ROUTE-005"
+area = "routing"
+summary = "2 pieces that join the same 2 places, such as a stroke from one end of a column's piece to its other, are both routed and sewn. Ink/Stitch's graph holds one link between 2 places, and the piece added later replaces the one before, which its route then doesn't sew."
+reason = "Every piece of the elements a route takes is sewn (REQ-ROUTE-002). Ink/Stitch's graph was read at d59c9ab (lib/stitches/auto_satin.py), and networkx's Graph keeps one edge between 2 nodes."
+requirements = ["REQ-ROUTE-002"]

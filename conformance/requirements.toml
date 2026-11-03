@@ -924,6 +924,78 @@ rationale = "The E-stitch, the S-stitch and the zigzag satin are built from Ink/
 milestone = "M7"
 status = "active"
 
+# ── Routing ────────────────────────────────────────────────────────────────────────────────────────
+
+[[req]]
+id = "REQ-ROUTE-001"
+area = "route"
+level = "L2"
+statement = "Auto-satin routing cuts each satin column into equal pieces along its centre line, the line through the middles of its pairs at the zigzag spacing with no compensation and nothing random, as few as keep each at most 1 mm long. A stretch of the column is cut from it at 2 of those pairs: the place at a fraction of the line takes, of the pairs' points listed 2 to a pair, the one at that fraction of their count, rounded to the nearest and halves to the even, and its pair, and each rail is cut where it comes nearest the pair's point on it. The stretch keeps the column's rungs whose points lie on its parts of both rails, gets a rung more at an end where Ink/Stitch's rule would not tell its rails from its rungs, and is drawn so that the column's settings swap and turn its rails as they swap and turn the column's. Pieces sewn in a row along a column the same way are one stretch, and the stretches together sew the column's every stretch once as satin."
+rationale = "Ink/Stitch's Auto-Route Satin Columns cuts columns so (lib/stitches/auto_satin.py and lib/elements/satin_column/satin_column.py, read at d59c9ab), and a route that cuts them alike sews alike. ADR-0017 chose to draw each stretch as Stroke to Satin draws a column (DEV-ROUTE-001)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-ROUTE-002"
+area = "route"
+level = "L2"
+statement = "A stretch of a satin column that the route passes twice is sewn the first time as a running stitch along its centre line, under the satin that the last time sews over it. Such a run takes the column's running stitch length, or else its centre walk's or its contour's stitch length, and its shortest jump and bean stitch, where the column sets them. A stroke among the columns is sewn as such a running stitch along its first subpath each time the route passes it, with its own lengths. Runs in a row along one element are one run, unless the second goes back the way the first came. A column's stretch keeps every setting of the column, but an odd number of centre walk repeats is lowered by 1, to no fewer than 2."
+rationale = "A run that the satin covers moves the needle without a jump or a trim. Ink/Stitch's tool sews a stretch passed twice so, and lowers the repeats so that each stretch sews from its start (lib/stitches/auto_satin.py, read at d59c9ab)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-ROUTE-003"
+area = "route"
+level = "L2"
+statement = "Without Preserve order, the groups of pieces that lie apart are joined by jumps between their nearest ends, and of all the sets of such jumps that join every group, the one whose lengths add up to the least, a minimum spanning tree of the groups. With Preserve order, each element is joined to the next by the shortest jump between their pieces' ends, which the route takes only forwards, so that the elements keep their order and gain only cuts and runs."
+rationale = "Ink/Stitch joins the groups with networkx's k_edge_augmentation, a minimum spanning tree of them, or with Preserve order each element to the next (lib/stitches/utils/autoroute.py, read at d59c9ab)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-ROUTE-004"
+area = "route"
+level = "L2"
+statement = "A route starts at the end of a piece nearest its start, or else at the leftmost, and stops at the end nearest its end, or else at the rightmost, of the first and of the last element with Preserve order, the first added of ends as near. It sews the way with the fewest pieces and jumps from its start to its end, and at each place along that way every piece still to sew that can be reached from there, depth first, out along each link and back. A single satin column with a start and no end is kept as it is, after a running stitch along its centre line from the point nearest the start back to the column's start."
+rationale = "Ink/Stitch's tool finds its way with networkx's bidirectional_shortest_path and dfs_labeled_edges, in the order its graph was built, which StitchCraft keeps so that both take the same way where 2 are as short (lib/stitches/utils/autoroute.py, read at d59c9ab)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-ROUTE-005"
+area = "route"
+level = "L2"
+statement = "With Trim jump stitches, a jump that runs more than 1 mm outside the elements it joins trims the thread after the piece before it, a satin column counting as its rails, which hide only what runs along them, and a stroke as the convex hull of its subpaths. The running stitches right after a trim are left out, and the last piece trims after it too. Without it, the route trims nothing."
+rationale = "Ink/Stitch trims so (JumpStitch.should_trim and add_trims in lib/stitches/auto_satin.py, read at d59c9ab). A satin column's shape there is its rails, lines with no area."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-ROUTE-006"
+area = "route"
+level = "L2"
+statement = "A route depends on its elements, options, start and end alone, and is the same on every platform and in every host: ties go to the place added first, element by element and along each. A route that needs more work than its budget allows gives back no piece, with SC-E0004, and the elements stay as they were."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-ROUTE-007"
+area = "route"
+level = "L2"
+statement = "Routing takes the satin columns, whatever their method, and the strokes among them, by their first subpaths. A fill, a shape digitized automatically, an element whose settings don't read or whose rails can't be made, an element of no length and a stroke whose first subpath ends where it starts stay as they are, each named by SC-I1002, and given no satin column the route takes, routing is refused with SC-E1001. The route's pieces replace the elements it takes, in its sewing order. They are named AutoSatin and a number, or AutoSatin Running Stitch and a number for a run, counting every piece but those left out after a trim; with Preserve order, a column's piece keeps its column's name. A piece whose rails and rungs would be read back otherwise is kept, with SC-W1003."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-ROUTE-008"
+area = "route"
+level = "L3"
+statement = "TS-17C's satin letters as drawn, routed by the Auto-Route Satin Columns of the Ink/Stitch that conformance/inkstitch/pin.toml names, run as a black box, and by StitchCraft's routing with the same options, each route sewn by its own program, sew alike by the measures of REQ-SVG-008 and within their tolerances: with the tool's options at their defaults, and with Preserve order on and Trim jump stitches off, as lettering routes. The sheet's routed letters, sewn by both programs, sew alike too. A measure that a case excuses with an entry of the deviations ledger may differ."
+rationale = "A route is a design of its own, so each program routes the letters itself, and the differential compares what each route sews."
+milestone = "M10"
+status = "active"
+
 # ── Fill region ────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -1429,6 +1501,24 @@ level = "L2"
 statement = "What a clip group, or a layer with a clipping mask, holds is cut to its first object, the clipping object, as VectorCraft clips it, and to the clipping objects of the clip groups around it (REQ-GEN-005): a fill's area and a stroke's lines, and a satin column is sewn whole (SC-W0217). A clipping object's area, whatever its paints and whether it shows, is a path's by its fill rule, a compound path's paths together by its rule, a clip group's clipping object's, or the members that show of another group or of a layer together, but a Shaper group's sources. A guide and a symbol add nothing to it, as in VectorCraft. Text, an image, a placed document, a live object and a kind StitchCraft doesn't read add nothing, and SC-W0807 names them, as SC-W0808 names a path whose geometry can't be used. A clip left with no shape leaves nothing of what it cuts (SC-W0013). A clipping object is not cut to its own clip. One that StitchCraft's effects reach, whose stitches VectorCraft clips the preview to, is named (SC-W0807)."
 rationale = "Object › Clipping Mask › Make shows art only inside the clipping object, and StitchCraft sews what shows, as it sews an SVG file's clip paths (REQ-SVG-011). The area and the drawing are VectorCraft's Node::clip_shapes and Node::clip_outline (crates/doc/src/node/clip.rs) and its renderer's clip groups (crates/render/src/renderer/nodes.rs), read at v0.19.0 and alike from 0.13, and a group's effects reshape the clipping paths it holds too (for_each_leaf, crates/effects/src/reshape.rs)."
 milestone = "M8"
+status = "active"
+
+[[req]]
+id = "REQ-VC-018"
+area = "vectorcraft"
+level = "L2"
+statement = "From VectorCraft 0.17, StitchCraft's Auto-Route Satin Columns, a heavy filter, routes the selected paths whose own StitchCraft effects make them satin columns, with the selected paths among them whose own effects make them strokes, as routing routes elements (REQ-ROUTE-001 to REQ-ROUTE-007), and replaces them with the route in one undo step, within a heavy filter's budget. A column's piece is a compound path of its rails and rungs with the column's satin effect, a run a path with the stroke effect, each with its element's stroke and named as the route names it, and a trim turns on the effect's trim_after. The pieces go in their sewing order where the topmost path routed was, or with Preserve order each where the path it comes from was. The paths the route doesn't take stay as they are. With Keep original paths the paths routed and the markers stay too, and the route goes above the topmost path. Its dialog offers the tool's options, made from their declarations."
+rationale = "Ink/Stitch's tool replaces the selection with its route, which the user then edits as any objects (ADR-0017). A filter can't make a group, so the route goes where the topmost path was, where Ink/Stitch puts its new group after the last element."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-VC-019"
+area = "vectorcraft"
+level = "L2"
+statement = "Auto-Route Satin Columns routes from the selected object named `stitch:route-start` and to the one named `stitch:route-end`, each at the centre of the box round its anchors, and deletes them with the paths. It refuses with SC-E0820, and nothing changes, a selection with nothing selected, with no path whose own effects make it a satin column, or with 2 markers of a kind. A VectorCraft before 0.15, which keeps no effect record a filter gives, makes it decline with SC-E0813. `stitch export` leaves both markers out of the stitches without a word, as it leaves out the other markers."
+rationale = "Ink/Stitch marks a route's ends with its autoroute_start and autoroute_end commands, and stops at 2 of a kind (lib/extensions/auto_satin.py, read at d59c9ab). ABI v1 gives a filter no command objects, and names mark them, as stitch:start marks a shape's start (REQ-VC-009)."
+milestone = "M10"
 status = "active"
 
 # ── Command line ───────────────────────────────────────────────────────────────────────────────────

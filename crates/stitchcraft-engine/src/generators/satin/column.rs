@@ -156,7 +156,7 @@ pub(crate) fn sewn_rails(satin: &Satin, params: &SatinParams, meter: &mut Meter)
 }
 
 /// `satin`'s rails swapped and turned as `params` say, and which places, first and second, were turned.
-fn oriented(satin: &Satin, params: &SatinParams, meter: &mut Meter) -> Result<([Vec<Point>; 2], [bool; 2]), Exhausted> {
+pub(super) fn oriented(satin: &Satin, params: &SatinParams, meter: &mut Meter) -> Result<([Vec<Point>; 2], [bool; 2]), Exhausted> {
     let mut rails = satin.rails.clone();
     if params.swap_satin_rails {
         rails.swap(0, 1);
@@ -210,7 +210,7 @@ fn backwards(rails: &[Vec<Point>; 2], meter: &mut Meter) -> Result<bool, Exhaust
 /// `SC-W0210` when there are more on one rail than on the other, or for rails of 2 nodes each, between the
 /// points [`NEAR_START`] along their chords. Each is [`ADDED_REACH`] times as long as the line between its
 /// points, about its middle.
-fn added_rungs(nodes: &[Vec<Point>; 2], turned: [bool; 2], warnings: &mut Vec<Diagnostic>) -> Vec<(Point, Point)> {
+pub(super) fn added_rungs(nodes: &[Vec<Point>; 2], turned: [bool; 2], warnings: &mut Vec<Diagnostic>) -> Vec<(Point, Point)> {
     let mut lists = nodes.clone();
     for (list, turn) in lists.iter_mut().zip(turned) {
         if turn {
@@ -266,7 +266,7 @@ fn started_at(ring: &[Point], at: Point, meter: &mut Meter) -> Result<Vec<Point>
 /// The rails' nodes in their drawn order. When both rails are rings, each ring's nodes have its start once
 /// at each end ([`ring_nodes`]), and those of the rail sewn second start where its line does
 /// ([`together`]). `swap` is `swap_satin_rails`; looking costs `meter` a unit per node.
-fn nodes_started_together(satin: &Satin, swap: bool, meter: &mut Meter) -> Result<[Vec<Point>; 2], Exhausted> {
+pub(super) fn nodes_started_together(satin: &Satin, swap: bool, meter: &mut Meter) -> Result<[Vec<Point>; 2], Exhausted> {
     let Some(at) = together(satin, swap) else { return Ok(satin.nodes.clone()) };
     let [first, second] = satin.nodes.each_ref().map(|nodes| ring_nodes(nodes));
     Ok(if swap { [started_at(&first, at, meter)?, second] } else { [first, started_at(&second, at, meter)?] })
