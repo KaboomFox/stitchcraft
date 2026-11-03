@@ -6,7 +6,7 @@
 use std::time::{Duration, Instant};
 
 use serde_json::Value;
-use stitchcraft_vc_window::{Pixels, Window, fixture, out, record};
+use stitchcraft_vc_window::{Difference, Pixels, Window, changes, fixture, out, record};
 use xa11y::{App, AppExt, Element};
 
 /// The drawing the window opens: the SVG tutorial's badge, a red star inside a blue ring.
@@ -25,17 +25,31 @@ fn checked(test: &str, check: impl FnOnce() -> Result<(), String>) {
 }
 
 /// How `a` and `b` compare above `bar`, the status bar's first row, and below it: the pixels that differ
-/// above (an error unless there are none) and below.
-fn compare(what: &str, a: &Pixels, b: &Pixels, bar: u32) -> Result<(usize, usize), String> {
+/// above (an error unless there are none) and how many differ below.
+fn compare(what: &str, a: &Pixels, b: &Pixels, bar: u32) -> Result<(Difference, usize), String> {
     let size = || format!("{what}: {}×{} pixels, then {}×{}", a.width, a.height, b.width, b.height);
-    let above = a.rows(0, bar).differing(&b.rows(0, bar), 0).ok_or_else(size)?;
+    let above = a.rows(0, bar).difference(&b.rows(0, bar), 0).ok_or_else(size)?;
     let below = a.rows(bar, a.height).differing(&b.rows(bar, b.height), 0).ok_or_else(size)?;
     Ok((above, below))
 }
 
-/// What `compare` found, as a sentence.
-fn described(above: usize, below: usize, bar: u32) -> String {
-    format!("{above} pixels differ above the status bar (rows 0 to {bar}), and {below} in it")
+/// What `compare` found, as a sentence: above the status bar, the box round the pixels that differ, as
+/// the column and row of its top left and bottom right pixels, says what changed.
+fn described(above: Difference, below: usize, bar: u32) -> String {
+    let place = above.bounds.map_or_else(String::new, |[left, top, right, bottom]| format!(", from ({left}, {top}) to ({right}, {bottom})"));
+    format!("{} pixels differ above the status bar (rows 0 to {bar}){place}, and {below} in it", above.pixels)
+}
+
+/// A start of the app with the badge open, recorded as `name`: its screenshot, what `ui.inspect` shows
+/// then, the status bar's first row, and how long the start took until the screenshot. The app quits on
+/// the way out.
+fn start(name: &str) -> Result<(Pixels, Value, u32, Duration), String> {
+    let started = Instant::now();
+    let mut window = Window::open(&fixture(BADGE)?, name)?;
+    let shot = window.screenshot(name)?;
+    let took = started.elapsed();
+    let bar = window.below_canvas(&shot)?;
+    Ok((shot, window.inspect()?, bar, took))
 }
 
 #[test]
@@ -58,25 +72,37 @@ fn the_window_screenshots_the_same_pixels_twice() {
             first.rows(0, bar).fingerprint()
         );
         record(test, "notice", "window", &measured)?;
-        if above == 0 { Ok(()) } else { Err(format!("two screenshots of one window: {}", described(above, below, bar))) }
+        if above.pixels == 0 { Ok(()) } else { Err(format!("two screenshots of one window: {}", described(above, below, bar))) }
     });
 }
 
+/// In 3 of the 97 runs from 1 to 3 November 2026, the screenshots of the two starts differed in 19,159
+/// pixels above the status bar, the same number each time, for a reason not yet known. So the notice gives
+/// each start's time to its screenshot and the fingerprint of its pixels above the status bar, which `the
+/// same pixels twice` gives for a window of its own, and a failure names what `ui.inspect` shows
+/// differently, the frame timings left out.
 #[test]
 fn a_new_start_screenshots_the_same_pixels() {
     let test = "the same pixels after a new start";
     checked(test, || {
-        let (first, bar) = {
-            // The window quits at the end of this block.
-            let mut window = Window::open(&fixture(BADGE)?, "start-1")?;
-            let shot = window.screenshot("start-1")?;
-            let bar = window.below_canvas(&shot)?;
-            (shot, bar)
-        };
-        let second = Window::open(&fixture(BADGE)?, "start-2")?.screenshot("start-2")?;
+        let (first, seen, bar, took) = start("start-1")?;
+        let (second, then, _, took_again) = start("start-2")?;
         let (above, below) = compare("screenshots of two starts", &first, &second, bar)?;
-        record(test, "notice", "a new start", &described(above, below, bar))?;
-        if above == 0 { Ok(()) } else { Err(format!("screenshots of two starts: {}", described(above, below, bar))) }
+        let fingerprint = |shot: &Pixels| format!("{:016x}", shot.rows(0, bar).fingerprint());
+        let measured = format!(
+            "{}. The first start took {took:.1?} to its screenshot, which has the fingerprint {} above the status bar, and the second took {took_again:.1?}, with {}",
+            described(above, below, bar),
+            fingerprint(&first),
+            fingerprint(&second)
+        );
+        record(test, "notice", "a new start", &measured)?;
+        if above.pixels == 0 {
+            return Ok(());
+        }
+        let changed = changes(&seen, &then, &["/perf"]);
+        let inspect =
+            if changed.is_empty() { "ui.inspect shows the same".to_string() } else { format!("ui.inspect differs at {}", changed.join("; ")) };
+        Err(format!("screenshots of two starts: {}. {inspect}", described(above, below, bar)))
     });
 }
 

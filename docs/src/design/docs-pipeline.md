@@ -145,14 +145,18 @@ install, and an install that stalls or fails is tried again, 3 times in all. A d
 installed fails its job with an error that says so. The jobs that use the action stop after 30 minutes,
 or 45 for the refresh, where GitHub's limit is 6 hours.
 
-**Screenshots: the same pixels, but for the frame timings.** The window opens at 1440 × 900 pixels,
-drawn by llvmpipe, and a screenshot takes about 0.65 s. Above the status bar, screenshots of one window
-match to the pixel. The screenshots of two starts of the app match there too, and so did two runs on
-GitHub's runners. The status bar differs, since it shows the frame timings ("render 4.4 ms · ui 1.4 ms ·
-24 fps"), which change with every frame. VectorCraft's own visual fixtures record where that text is, as
-text that changes. So the generator crops each picture to the menu or dialog it shows. A picture of the
-whole window leaves the status bar out. The tolerance in the table stays: the runner's Mesa comes with
-Ubuntu's updates, and a new one may move an anti-aliased edge.
+**Screenshots: the same pixels, but for the frame timings.** The window opens at 1440 × 900 pixels, drawn
+by llvmpipe, and a screenshot takes about 0.65 s. Above the status bar, screenshots of one window match
+to the pixel. The screenshots of two starts of the app match there too, and so did two runs on GitHub's
+runners, in all but a few runs. In 3 of the 97 runs from 1 to 3 November 2026, the second start differed
+from the first in 19,159 pixels above the status bar, the same number each time, for a reason not yet
+known. The probe's notice gives each start's time to its screenshot and the fingerprint of its pixels
+there, and a failure says where they differ and what `ui.inspect` shows differently. The status bar
+differs, since it shows the frame timings ("render 4.4 ms · ui 1.4 ms · 24 fps"), which change with every
+frame. VectorCraft's own visual fixtures record where that text is, as text that changes. So the
+generator crops each picture to the menu or dialog it shows. A picture of the whole window leaves the
+status bar out. The tolerance in the table stays: the runner's Mesa comes with Ubuntu's updates, and a
+new one may move an anti-aliased edge.
 
 **xa11y: AT-SPI's press and clicks both work.** xa11y finds the app by its process. AT-SPI's press, as a
 screen reader uses it, opens View and chooses its row Outline. Clicks at the middle of the bounds the tree
