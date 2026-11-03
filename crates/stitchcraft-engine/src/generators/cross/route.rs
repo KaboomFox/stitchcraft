@@ -527,6 +527,24 @@ mod tests {
         assert_eq!(run[..travel.len()], travel);
         assert_eq!(run.len(), travel.len() + 6 * 4);
         assert_eq!(run.last(), Some(&Spot::Corner([4, 1])));
+        // From the needle at its right to the end at its left, back along the top from (4, 1).
+        let back = sewn(&cells, Some(p(5.0, 1.0)), Some(p(-1.0, 0.0)));
+        let way = [
+            Spot::Corner([4, 1]),
+            Spot::Middle([3, 0]),
+            Spot::Corner([3, 0]),
+            Spot::Middle([2, 0]),
+            Spot::Corner([2, 0]),
+            Spot::Middle([1, 0]),
+            Spot::Corner([1, 0]),
+            Spot::Middle([0, 0]),
+            Spot::Corner([0, 0]),
+        ];
+        assert_eq!(back[0][..way.len()], way);
+        // Up through the cross above and to the right of the needle's corner, to the end's corner.
+        let rising = sewn(&self::cells(&[".x", "x."]), Some(p(-0.5, 2.5)), Some(p(2.5, -0.5)));
+        let up = [Spot::Corner([0, 2]), Spot::Middle([0, 1]), Spot::Corner([1, 1]), Spot::Middle([1, 0]), Spot::Corner([2, 0])];
+        assert_eq!(rising[0][..up.len()], up);
         // The same corner for both: no travel.
         let runs = sewn(&cells, Some(p(5.0, 1.0)), Some(p(5.0, 1.0)));
         assert_eq!(runs[0].len(), 1 + 6 * 4);
