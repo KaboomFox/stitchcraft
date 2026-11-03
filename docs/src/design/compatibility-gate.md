@@ -92,6 +92,7 @@ version and what sews must not:
 |---|---|---|
 | `install-and-list` | install the 9 modules, then `plugin.list` | each family's live effect, the Auto effect, each format's exporter and each filter is listed (`REQ-VC-002`, `REQ-VC-011`, `REQ-VC-013`, `REQ-VC-014`, `REQ-VC-015`, `REQ-VC-016`) |
 | `apply` | a square filled red and a line, given the fill and stroke effects with parameters, then saved | as sent, with a fill in red and a stroke (`REQ-VC-004`, `REQ-PRM-003`) |
+| `clipping-mask` | a red square 1 in a side with the fill effect and a blue line across it with the stroke effect, drawn and exported to PES, then a square half the size drawn in their middle and Make Clipping Mask made of all 3, saved, drawn and exported to PES and DST | as sent, with a fill in red and a stroke in blue, each sewing, and every needle point within the clipping object. Each file is the one `stitch export` writes, and the PES file differs from the one before the mask (`REQ-VC-017`, `REQ-GEN-005`, `REQ-VC-011`) |
 | `compound-satin` | 2 rails and a rung, Make Compound Path, then the satin effect | as sent, and one satin column (`REQ-VC-007`) |
 | `graphic-style` | a group of 2 squares, and a gold square with a fill effect, drawn, whose new graphic style is then applied to the group | as sent, and 3 fills in gold at the effect's 90° (`REQ-VC-006`) |
 | `missing-plugin` | a fill saved and drawn, then opened and saved again without the plug-ins | both sew alike, as sent: the records are kept (`REQ-PRM-003`) |
@@ -109,7 +110,8 @@ fails the check. A file is sewn as `stitch plan` sews it, for the machine it kee
 machine, and 2 are compared
 byte for byte, as is a machine file exported with the one `stitch export` writes of its document, by the
 format and the name of the file. Elements are counted by kind, thread and settings. A paint's fill is a fill too, and has no
-settings. The live-effect budget of each preview level is Level A's (`REQ-VC-003`).
+settings. A box a document sews within is in its points, the design planned with its origin at the
+document's and no turn on export, so that each needle point lies where the document draws it. The live-effect budget of each preview level is Level A's (`REQ-VC-003`).
 
 ## Automation
 

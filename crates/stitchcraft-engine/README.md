@@ -44,7 +44,8 @@ give, take the place of the needle before it, of the next element's offer and of
 centroid, for the stitch types that use them (`generate`). Since M8.5 an element's clips (`design::Clip`),
 which SVG clip paths give, cut a fill's region when it is built and a stroke's lines where they cross a
 clip's outline (`normalize::region::cut`). Automatic digitizing cuts its shapes first (`auto::clips`), and a
-satin column is sewn whole.
+satin column is sewn whole. From M8.7 VectorCraft's clipping objects give clips too, and a clip's shapes
+are shared by the elements it cuts.
 Since M13.1 a shape without settings, read with `--auto`, is digitized automatically before anything else
 (`auto`). A line no wider than the design's narrowest satin stroke runs, a line up to 7 mm wide becomes
 satin columns along its centre line, and a wider line becomes the tatami fill of the area it paints

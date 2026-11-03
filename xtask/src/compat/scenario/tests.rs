@@ -28,6 +28,7 @@ fn every_scenario_checks_only_what_its_runs_export() {
         names,
         [
             "apply",
+            "clipping-mask",
             "compound-satin",
             "export",
             "graphic-style",
@@ -70,6 +71,7 @@ fn a_scenario_that_doesn_t_hold_together_is_refused() {
         elements = [{ file = "d.vectorcraft", element = "fill", count = 1 }]
         exported = [["a.vectorcraft", "e.pes"], ["a.png", "a.vectorcraft"]]
         sheets = [{ file = "f.vectorcraft", sheet = "TS-03" }, { file = "a.vectorcraft", sheet = "TS-01" }]
+        within = [{ file = "g.vectorcraft", box = [0, 0, 1, 1] }]
         "#,
     );
     let found = problems(&bad, &modules(), &requirement_ids().unwrap());
@@ -89,6 +91,7 @@ fn a_scenario_that_doesn_t_hold_together_is_refused() {
             "it checks `c.vectorcraft`, which no run exports".to_string(),
             "it checks `d.vectorcraft`, which no run exports".to_string(),
             "it checks `f.vectorcraft`, which no run exports".to_string(),
+            "it checks `g.vectorcraft`, which no run exports".to_string(),
             "it checks `e.pes`, which no run exports".to_string(),
             // The step that would export it is refused, for its `params`.
             "it checks `a.png`, which no run exports".to_string(),
@@ -441,6 +444,38 @@ fn elements_are_counted_by_kind_thread_and_settings() {
 }
 
 #[test]
+fn req_vc_017_a_document_is_checked_for_each_element_sewing_within_a_box() {
+    // A clip group's 2 red squares, at `first` and `second` along x, cut to the square from 18 to 54 points.
+    let document = |first: f64, second: f64| {
+        let square = |id: u32, x: f64| {
+            let r = x + 36.0;
+            format!(
+                r#"{{"id": {id}, "appearance": {{"items": [{{"kind": "fill", "paint": {{"type": "solid", "color": {{"model": "rgb", "r": 1, "g": 0, "b": 0}}}}}}]}},
+                    "kind": {{"type": "path", "path": {{"subpaths": [{{"closed": true, "anchors": [{{"p": [{x}, 0]}}, {{"p": [{r}, 0]}}, {{"p": [{r}, 36]}}, {{"p": [{x}, 36]}}]}}]}}}}}}"#
+            )
+        };
+        let clip = r#"{"id": 3, "kind": {"type": "path", "path": {"subpaths": [{"closed": true, "anchors": [{"p": [18, 18]}, {"p": [54, 18]}, {"p": [54, 54]}, {"p": [18, 54]}]}]}}}"#;
+        format!(
+            r#"{{"format": "vectorcraft", "version": 4, "document": {{"layers": [{{"id": 1, "kind": {{"type": "layer", "children": [
+                {{"id": 2, "kind": {{"type": "group", "clip": true, "children": [{clip}, {}, {}]}}}}]}}}}]}}}}"#,
+            square(4, first),
+            square(5, second)
+        )
+        .into_bytes()
+    };
+    let clip = [18.0, 18.0, 54.0, 54.0];
+    assert_eq!(sews_within(&document(0.0, 20.0), clip), Ok(()));
+    let outside = sews_within(&document(0.0, 20.0), [18.0, 18.0, 40.0, 54.0]).unwrap_err();
+    assert!(outside.starts_with("it sews at (") && outside.ends_with("pt, outside the box [18.0, 18.0, 40.0, 54.0]"), "{outside}");
+    // A square beside the clip sews nothing, and with both there, nothing is left to sew.
+    let silent = sews_within(&document(0.0, 100.0), clip).unwrap_err();
+    assert!(silent.starts_with("vc:5:fill sews nothing: warning SC-W0013: "), "{silent}");
+    let nothing = sews_within(&document(100.0, 200.0), clip).unwrap_err();
+    assert!(nothing.starts_with("StitchCraft doesn't sew it: warning SC-W0013: "), "{nothing}");
+    assert!(sews_within(b"{}", clip).unwrap_err().starts_with("error SC-E0806"));
+}
+
+#[test]
 fn toml_parameters_become_json() {
     let table: toml::Table = toml::from_str("a = 1\nb = 0.5\nc = \"x\"\nd = [true, { e = 2 }]\nf = 1979-05-27").unwrap();
     assert_eq!(toml_to_json(toml::Value::Table(table)), json!({ "a": 1, "b": 0.5, "c": "x", "d": [true, { "e": 2 }], "f": "1979-05-27" }));
@@ -573,6 +608,15 @@ fn a_scenario_runs_and_its_checks_say_what_fails() {
     assert_eq!(failures.len(), 1, "{failures:?}");
     assert!(failures[0].starts_with("a.vectorcraft: it sews otherwise than TS-03's design moved: "), "{failures:?}");
     assert_eq!(holds_sheet(&patch(), "TS-01"), Err("the Test Sheet filter doesn't draw TS-01".to_string()));
+    // The patch sews beyond a box an inch square at the origin.
+    let boxed =
+        sheet.replace(r#"sheets = [{ file = "a.vectorcraft", sheet = "TS-03" }]"#, r#"within = [{ file = "a.vectorcraft", box = [0, 0, 72, 72] }]"#);
+    let failures = run_with(&boxed, "null", "boxed");
+    assert_eq!(failures.len(), 1, "{failures:?}");
+    assert!(
+        failures[0].starts_with("a.vectorcraft: it sews at (") && failures[0].ends_with("pt, outside the box [0.0, 0.0, 72.0, 72.0]"),
+        "{failures:?}"
+    );
     // A run of `stitch` traces the picture made for it with the stand-in, which saves the patch: the run ends
     // well, and the document it traced, whose shapes have settings, is no traced picture.
     let picture = r##"description = "d"
