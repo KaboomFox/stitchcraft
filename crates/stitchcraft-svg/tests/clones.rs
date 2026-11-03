@@ -430,10 +430,8 @@ fn diag_sc_w0802_a_command_s_symbol_that_a_clone_shows_is_named_as_the_document_
     assert_eq!(ids(&file), ["svg:first/square:fill", "svg:square:fill", "svg:clone1/square:fill"]);
     assert_eq!(
         warnings(&file),
-        [
-            "warning SC-W0802: `use@2` is Ink/Stitch's `origin` command, whose place doesn't read: a coordinate or a transform is not a \
-             number, or it lies more than 10 m from the origin. It is left out."
-        ]
+        ["warning SC-W0802: `use@2` is Ink/Stitch's `origin` command, whose place doesn't read: a coordinate or a transform is not a \
+             number, or it lies more than 10 m from the origin. It is left out."]
     );
 }
 
