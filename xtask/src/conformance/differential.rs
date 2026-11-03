@@ -215,7 +215,7 @@ impl Inkstitch {
     }
 
     /// The PES file Ink/Stitch writes for the SVG file `design`.
-    fn pes(&self, root: &Path, design: &Path) -> Result<Vec<u8>, String> {
+    pub(super) fn pes(&self, root: &Path, design: &Path) -> Result<Vec<u8>, String> {
         self.output(root, &["--extension=output", "--format=pes"], design, "PES file")
     }
 
@@ -277,6 +277,12 @@ pub fn run(root: &Path, subject: &Subject, excused: &BTreeMap<String, String>, o
         // `load_cases` draws letters for centre-lines cases alone.
         Subject::Letters(_) => return outcome.failures.push("an inkstitch case sews a design or a test sheet, not letters".to_string()),
     };
+    judged(theirs, ours, excused, outcome);
+}
+
+/// Measures and judges Ink/Stitch's machine file `theirs` against StitchCraft's `ours`, either of which may
+/// be why there is none, with the measures `excused` excuses by a deviation's id, as [`run`] judges them.
+pub(super) fn judged(theirs: Result<Vec<u8>, String>, ours: Result<Vec<u8>, String>, excused: &BTreeMap<String, String>, outcome: &mut Outcome) {
     let measured = |bytes: &[u8], who: &str| -> Result<(StitchPlan, Measured), String> {
         let plan = stitchcraft_formats::decode(bytes).map_err(|e| format!("{who}'s PES file doesn't read: {e}"))?.plan;
         let measured = Measured::of(&plan).ok_or_else(|| format!("{who}'s PES file has no needle point"))?;
@@ -403,13 +409,13 @@ fn sewn(path: &Path, file: &str) -> Result<Vec<u8>, String> {
 }
 
 /// `plan` as a PES file, labelled `name`.
-fn encoded(plan: &StitchPlan, name: &str) -> Result<Vec<u8>, String> {
+pub(super) fn encoded(plan: &StitchPlan, name: &str) -> Result<Vec<u8>, String> {
     stitchcraft_formats::encode(plan, FormatId::PesV1, name).map(|encoded| encoded.bytes).map_err(|e| format!("{name}: {e}"))
 }
 
 /// Ink/Stitch's PES file `bytes` of the sheet's SVG file at `svg`, kept beside it with the extension
 /// `inkstitch.pes` (`ts-16.inkstitch.pes`), and given back.
-fn kept(svg: &Path, bytes: Vec<u8>) -> Result<Vec<u8>, String> {
+pub(super) fn kept(svg: &Path, bytes: Vec<u8>) -> Result<Vec<u8>, String> {
     let path = svg.with_extension("inkstitch.pes");
     std::fs::write(&path, &bytes).map_err(|e| format!("{}: {e}", util::rel(&path)))?;
     Ok(bytes)

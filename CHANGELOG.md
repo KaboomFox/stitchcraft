@@ -5,6 +5,15 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M10.4: auto-satin routing. `stitchcraft_engine::route` routes satin columns, and the strokes among them,
+  as Ink/Stitch's Auto-Route Satin Columns does: each column cut into pieces at most 1 mm long along its
+  centre line, the groups joined by the shortest jumps in all, a stretch passed twice run under the satin
+  that covers it, and long jumps trimmed. Its options are Ink/Stitch's, declared once. In VectorCraft, the
+  heavy filter StitchCraft Auto-Route Satin Columns (`--features route-satins`) replaces the selection
+  with the route in one undo step, from the paths named `stitch:route-start` and `stitch:route-end` when
+  they are selected, which `stitch export` leaves out. New codes: `SC-E1001`, `SC-I1002`, `SC-W1003` and
+  `SC-E0820`. TS-17C is drawn with its letters as drawn and routed, and the differential routes them with
+  Ink/Stitch's tool too. A how-to page shows the route. Golden added: `TS-17C.pes`.
 - M10.3, a spike: the routing tools will come to StitchCraft as one function of the engine, and ADR-0017
   records why. The function routes as Ink/Stitch's Auto-Route Satin Columns and Auto-Route Running Stitch
   route. In VectorCraft, 2 heavy filters will call it. A filter will replace the selected paths with the

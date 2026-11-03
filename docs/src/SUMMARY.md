@@ -16,6 +16,7 @@
     - [Fit a design to the hoop](user/how-to/fit-the-hoop.md)
     - [Embroider a VectorCraft design](user/how-to/embroider-a-vectorcraft-design.md)
     - [Satin columns and presets in VectorCraft](user/how-to/vectorcraft-columns-and-presets.md)
+    - [Route satin columns](user/how-to/route-satin-columns.md)
     - [Report a bug](user/how-to/report-a-bug.md)
   - [Stitch types](user/stitches/README.md)
     - [Running stitch](user/stitches/running.md)
