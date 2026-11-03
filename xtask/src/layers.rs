@@ -45,13 +45,15 @@ pub const TABLE: &[(&str, Class)] = &[
 pub const SAME_LAYER: &[(&str, &str)] = &[("stitchcraft-params", "stitchcraft-core")];
 
 /// External crates allowed only in the listed packages (normal dependencies). Only the renderer draws with
-/// tiny-skia; xtask reads VectorCraft's pictures with it, to compare them within a tolerance.
+/// tiny-skia; xtask reads VectorCraft's pictures with it, to compare them within a tolerance. The engine
+/// reads a custom lock drawn as a path with svgtypes' path-data parser, the one the SVG adapter reads a
+/// path's `d` with, since the setting's text is the lock in every host (`docs/src/design/algorithms/locks.md`).
 pub const RESTRICTED: &[(&str, &[&str])] = &[
     ("clap", &["stitchcraft-cli", "stitchcraft-xtask"]),
     ("rayon", &["stitchcraft-cli"]),
     ("tiny-skia", &["stitchcraft-render", "stitchcraft-xtask"]),
     ("roxmltree", &["stitchcraft-svg"]),
-    ("svgtypes", &["stitchcraft-svg"]),
+    ("svgtypes", &["stitchcraft-svg", "stitchcraft-engine"]),
     ("flate2", &["stitchcraft-vectorcraft", "stitchcraft-testkit"]),
 ];
 
