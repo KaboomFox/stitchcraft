@@ -50,7 +50,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0317`](#sc-w0317) | Warning | Meander fill part too small for its tile; sewn round its outline |
 | [`SC-W0318`](#sc-w0318) | Warning | Circular fill part within its row spacing of its middle; sewn as one circle |
 | [`SC-W0319`](#sc-w0319) | Warning | Cross stitch part covers no cell of its grid enough; sews nothing |
-| [`SC-W0320`](#sc-w0320) | Warning | Cross stitch thread count odd; an even count sewn |
+| [`SC-W0320`](#sc-w0320) | Warning | Cross stitch with an odd thread count; an even count sewn |
 | [`SC-W0321`](#sc-w0321) | Warning | Cross stitch grid too fine for the shortest stitch; needle points left out |
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
 | [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
@@ -607,7 +607,7 @@ The message counts the parts. Make `pattern_size_mm` smaller, lower `fill_covera
 
 ## SC-W0320
 
-**Warning** — Cross stitch thread count odd; an even count sewn
+**Warning** — Cross stitch with an odd thread count; an even count sewn
 
 Each half of a cross's 2 diagonals takes `cross_thread_count` passes of the thread. The needle goes
 out from the cross's middle and back again, so the passes come in pairs, and the count is an even

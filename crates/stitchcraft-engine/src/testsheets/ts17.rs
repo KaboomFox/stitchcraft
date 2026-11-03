@@ -97,6 +97,7 @@ mod tests {
 
     /// The cells, by their top left corners in cells, of each cross that `points` sews on a grid of `size`
     /// mm: the cells both of whose diagonals it sews whole.
+    #[allow(clippy::cast_possible_truncation)]
     fn crossed(points: &[(f64, f64)], size: f64) -> BTreeSet<(i64, i64)> {
         let mut falling = BTreeSet::new();
         let mut rising = BTreeSet::new();
@@ -141,7 +142,7 @@ mod tests {
         ] {
             let cells = crossed(&samples[name], size);
             let (columns, rows): (BTreeSet<i64>, BTreeSet<i64>) = (cells.iter().map(|c| c.0).collect(), cells.iter().map(|c| c.1).collect());
-            assert_eq!((cells.len(), columns.len(), rows.len()), (side * side, side as usize, side as usize), "{name}");
+            assert_eq!((cells.len(), columns.len(), rows.len()), (side * side, side, side), "{name}");
             let [left, top, width, height] = bounds(&samples[name]);
             assert!(near([left - x0, top - y0, width, height], [x, y, 24.0, 24.0]), "{name}: {:?}", [left - x0, top - y0, width, height]);
         }

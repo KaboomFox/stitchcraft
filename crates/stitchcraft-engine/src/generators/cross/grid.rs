@@ -114,7 +114,7 @@ pub(crate) fn crossed(part: &Polygon, grid: &Grid, coverage: f64, meter: &mut Me
     let ([x0, y0], [x1, y1]) = bounds(&part.outline);
     let (i0, columns) = reach(x0, x1, ox, w);
     let (j0, rows) = reach(y0, y1, oy, h);
-    meter.charge(columns.checked_mul(rows).unwrap_or(u64::MAX))?;
+    meter.charge(columns.saturating_mul(rows))?;
     let columns = usize::try_from(columns).unwrap_or(usize::MAX);
     meter.room(columns)?;
     let mut sums = vec![0.0; columns];
