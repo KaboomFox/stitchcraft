@@ -200,7 +200,8 @@ fn diag_sc_w0804_a_symbol_s_viewport_that_doesnt_read_is_named() {
             <use id="u3" xlink:href="#odd" width="20" height="20"/>
             <use id="u4" xlink:href="#odd" width="20" height="0"/>
             <use id="u5" xlink:href="#odd" width="wide" height="20"/>
-            <use id="u6" xlink:href="#sized" height="20"/>"##,
+            <use id="u6" xlink:href="#sized" height="20"/>
+            <use id="u7" xlink:href="#sized" width="0" height="20"/>"##,
     ));
     assert_eq!(
         warnings(&file),
@@ -216,6 +217,7 @@ fn diag_sc_w0804_a_symbol_s_viewport_that_doesnt_read_is_named() {
              ignored, as a viewer ignores it.",
             "warning SC-W0804: The width of `u5`, \"wide\", is not a length; it is ignored, as a viewer ignores it.",
             "warning SC-W0804: The width of `sized`, which `u6` shows, \"big\", is not a length; it is ignored, as a viewer ignores it.",
+            "warning SC-W0804: `u7` gives the symbol `sized` a viewport 0 by 20, which a viewer draws nothing in; it is left out.",
         ]
     );
     // What doesn't read is ignored: unscaled, scaled to fit, and fitted to the page across.
@@ -389,16 +391,19 @@ fn req_svg_012_a_clone_s_own_trim_stop_and_shortest_lengths_apply_to_what_it_sew
             <use id="c1" xlink:href="#pair" inkstitch:trim_after="yes" inkstitch:min_jump_stitch_length_mm="2" inkstitch:min_stitch_length_mm="0.5"/>
             <use id="c2" xlink:href="#pair" y="20" inkstitch:stop_after="true" inkstitch:trim_after="no"/>
             <use id="c3" xlink:href="#pair" y="40"/>{}{}{}
+            <use id="c4" xlink:href="#pair" y="80"/>{}
             <use id="none" xlink:href="#pair" y="60" inkstitch:clone="no"/>{}"##,
         command("t3", "trim", (20.0, 40.0), "c3"),
         command("p3", "stop", (20.0, 45.0), "c3"),
         command("s3", "starting_point", (20.0, 50.0), "c3"),
+        command("t5", "trim", (20.0, 80.0), "c4"),
         command("t4", "trim", (20.0, 60.0), "none"),
     )));
     let has = |key: &str| setting(&file, key).into_iter().filter_map(|(id, value)| Some(format!("{id}={}", value?))).collect::<Vec<_>>();
-    assert_eq!(has("min_jump_stitch_length_mm"), ["svg:c1/a:fill=2", "svg:c1/b:fill=2", "svg:c2/a:fill=5", "svg:c3/a:fill=5"]);
+    assert_eq!(has("min_jump_stitch_length_mm"), ["svg:c1/a:fill=2", "svg:c1/b:fill=2", "svg:c2/a:fill=5", "svg:c3/a:fill=5", "svg:c4/a:fill=5"]);
     assert_eq!(has("min_stitch_length_mm"), ["svg:c1/a:fill=0.5", "svg:c1/b:fill=0.5"]);
-    assert_eq!(has("trim_after"), ["svg:c1/b:fill=true", "svg:c3/b:fill=true"]);
+    // A command applies as what it is: a trim alone trims, and stops nothing.
+    assert_eq!(has("trim_after"), ["svg:c1/b:fill=true", "svg:c3/b:fill=true", "svg:c4/b:fill=true"]);
     assert_eq!(has("stop_after"), ["svg:c2/b:fill=true", "svg:c3/b:fill=true"]);
     // Of the commands tied to a clone Ink/Stitch applies a trim and a stop, and to one that sews nothing none.
     assert_eq!(
@@ -408,6 +413,26 @@ fn req_svg_012_a_clone_s_own_trim_stop_and_shortest_lengths_apply_to_what_it_sew
             "warning SC-W0802: `c3` has an Ink/Stitch `starting_point` command, which is not applied: `c3` is a clone, and of the commands \
              tied to a clone Ink/Stitch applies only a trim and a stop.",
             "warning SC-W0802: `none` has an Ink/Stitch `trim` command, which is not applied: `none` is not a shape that is stitched.",
+        ]
+    );
+}
+
+#[test]
+fn diag_sc_w0802_a_command_s_symbol_that_a_clone_shows_is_named_as_the_document_names_it() {
+    // The origin's symbol is the document's second `<use>`, and the first in the group the clone shows: the
+    // note names it as the document numbers it, though the clone walks the group after it.
+    let file = svg(drawing(
+        r##"<defs><symbol id="inkstitch_origin"><circle r="1"/></symbol></defs>
+            <use id="first" xlink:href="#square" y="20"/>
+            <g id="motif"><rect id="square" width="10" height="10" fill="red"/><use xlink:href="#inkstitch_origin" x="far"/></g>
+            <use id="clone1" xlink:href="#motif" x="20"/>"##,
+    ));
+    assert_eq!(ids(&file), ["svg:first/square:fill", "svg:square:fill", "svg:clone1/square:fill"]);
+    assert_eq!(
+        warnings(&file),
+        [
+            "warning SC-W0802: `use@2` is Ink/Stitch's `origin` command, whose place doesn't read: a coordinate or a transform is not a \
+             number, or it lies more than 10 m from the origin. It is left out."
         ]
     );
 }
