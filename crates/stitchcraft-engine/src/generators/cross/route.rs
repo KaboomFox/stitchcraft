@@ -228,11 +228,12 @@ impl Linked {
         }
     }
 
-    /// The places from the first, in sewing order.
+    /// The places from the first, in sewing order: each once.
     fn in_order(&self) -> Vec<Spot> {
         let mut spots = Vec::with_capacity(self.spots.len());
         let mut at = Some(0);
-        while let Some(k) = at {
+        for _ in 0..self.spots.len() {
+            let Some(k) = at else { break };
             spots.extend(self.spots.get(k).copied());
             at = self.after(k);
         }
@@ -250,7 +251,9 @@ fn run(start: [i64; 2], cells: &Cells, pending: &mut [bool], repeats: u32, meter
     }
     walk(&mut linked, (0, None), &mut take, repeats, meter)?;
     let mut from = linked.after(0);
-    while let Some((k, corner, cell)) = first_backslashed(&linked, from, &mut take, meter)? {
+    // Each turn sews a cross not sewn yet.
+    for _ in 0..cells.crossed().len() {
+        let Some((k, corner, cell)) = first_backslashed(&linked, from, &mut take, meter)? else { break };
         let after = linked.after(k);
         linked.insert(k, cross_loop(cell, corner, repeats));
         walk(&mut linked, (k, after), &mut take, repeats, meter)?;
