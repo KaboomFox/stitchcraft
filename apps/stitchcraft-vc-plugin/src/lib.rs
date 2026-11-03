@@ -4,9 +4,10 @@
 //! stays within VectorCraft's 64 (`docs/src/design/vectorcraft-integration.md`), one for the Auto effect,
 //! which chooses the stitches by width (M13.7), one for each machine format, an exporter (VectorCraft
 //! 0.14), and one for each filter: Design Settings (VectorCraft 0.16), Stroke to Satin, a heavy filter
-//! (VectorCraft 0.17), and Test Sheet. Which plug-in a module is is chosen when it is built, by a feature:
-//! `stroke`, `satin`, `fill` or `auto` for a live effect, `pes` or `dst` for an exporter, and `settings`,
-//! `stroke-to-satin` or `testsheet` for a filter ([`MODULE`]). Without one it is the M0.6 *hello* effect,
+//! (VectorCraft 0.17), Test Sheet, and Auto-Route Satin Columns, a heavy filter. Which plug-in a module is
+//! is chosen when it is built, by a feature: `stroke`, `satin`, `fill` or `auto` for a live effect, `pes`
+//! or `dst` for an exporter, and `settings`, `stroke-to-satin`, `testsheet` or `route-satins` for a filter
+//! ([`MODULE`]). Without one it is the M0.6 *hello* effect,
 //! which the contract tests measure the host's costs with. Everything a module does is ordinary code,
 //! built into every module and tested natively, whichever it is.
 //!
@@ -21,6 +22,8 @@
 //! - [`stroke_to_satin`]: what the Stroke to Satin filter does: each selected line made into a satin column
 //!   drawn with its rails and rungs;
 //! - [`testsheet`]: what the Test Sheet filter does: a test sheet drawn into the document;
+//! - [`route_satins`]: what the Auto-Route Satin Columns filter does: the selected columns, and the strokes
+//!   among them, replaced with one route;
 //! - `abi`: the exported functions VectorCraft calls. It is the single place in StitchCraft allowed to use
 //!   `unsafe`, because the ABI passes raw pointers into linear memory. This crate therefore does not carry
 //!   `#![forbid(unsafe_code)]`; the workspace denies `unsafe` and only `abi.rs` opts out, which
@@ -32,6 +35,7 @@ pub mod effect;
 pub mod export;
 pub mod manifest;
 pub mod preview;
+pub mod route_satins;
 pub mod settings;
 pub mod stroke_to_satin;
 pub mod testsheet;
@@ -65,10 +69,13 @@ pub enum Module {
     StrokeToSatin,
     /// The Test Sheet filter, which draws a test sheet into the document.
     TestSheet,
+    /// The Auto-Route Satin Columns filter, a heavy one, which replaces the selected satin columns, and the
+    /// strokes among them, with one route.
+    RouteSatins,
 }
 
 /// What this build of the module is, by its features: the first of `fill`, `satin`, `stroke`, `auto`, `pes`,
-/// `dst`, `settings`, `stroke-to-satin` and `testsheet`, or *hello* without any.
+/// `dst`, `settings`, `stroke-to-satin`, `testsheet` and `route-satins`, or *hello* without any.
 pub const MODULE: Module = if cfg!(feature = "fill") {
     Module::Family(Family::Fill)
 } else if cfg!(feature = "satin") {
@@ -87,6 +94,8 @@ pub const MODULE: Module = if cfg!(feature = "fill") {
     Module::StrokeToSatin
 } else if cfg!(feature = "testsheet") {
     Module::TestSheet
+} else if cfg!(feature = "route-satins") {
+    Module::RouteSatins
 } else {
     Module::Hello
 };
@@ -97,7 +106,7 @@ impl Module {
     pub fn all() -> Vec<Module> {
         let families = Family::ALL.iter().map(|family| Module::Family(*family));
         let exporters = FormatId::ALL.iter().map(|format| Module::Exporter(*format));
-        let filters = [Module::Settings, Module::StrokeToSatin, Module::TestSheet];
+        let filters = [Module::Settings, Module::StrokeToSatin, Module::TestSheet, Module::RouteSatins];
         std::iter::once(Module::Hello).chain(families).chain([Module::Auto]).chain(exporters).chain(filters).collect()
     }
 
@@ -112,6 +121,7 @@ impl Module {
             Module::Settings => SETTINGS_FILTER,
             Module::StrokeToSatin => stroke_to_satin::STROKE_TO_SATIN,
             Module::TestSheet => testsheet::TESTSHEET,
+            Module::RouteSatins => route_satins::ROUTE_SATINS,
         }
     }
 
@@ -125,6 +135,7 @@ impl Module {
             Module::Settings => manifest::settings(),
             Module::StrokeToSatin => manifest::stroke_to_satin(),
             Module::TestSheet => manifest::testsheet(),
+            Module::RouteSatins => manifest::route_satins(),
         }
     }
 
@@ -140,6 +151,7 @@ impl Module {
             Module::Settings => settings::run(input, params),
             Module::StrokeToSatin => stroke_to_satin::run(input, params),
             Module::TestSheet => testsheet::run(input, params),
+            Module::RouteSatins => route_satins::run(input, params),
         }
     }
 }
@@ -160,7 +172,8 @@ mod tests {
         feature = "dst",
         feature = "settings",
         feature = "stroke-to-satin",
-        feature = "testsheet"
+        feature = "testsheet",
+        feature = "route-satins"
     )))]
     fn without_a_feature_the_module_is_hello() {
         assert_eq!(MODULE, Module::Hello);
@@ -183,8 +196,12 @@ mod tests {
         assert!(rows["objects"][0]["path"]["subpaths"].as_array().is_some_and(|ribbons| ribbons.len() > 4), "{rows}");
         assert_eq!(
             Module::all().into_iter().map(Module::name).collect::<Vec<_>>(),
-            ["hello", "stroke", "satin", "fill", "auto", "pes", "dst", "settings", "stroke-to-satin", "testsheet"]
+            ["hello", "stroke", "satin", "fill", "auto", "pes", "dst", "settings", "stroke-to-satin", "testsheet", "route-satins"]
         );
+        // A filter is given the selection: Auto-Route Satin Columns refuses an empty one.
+        assert_eq!(Module::RouteSatins.manifest(), manifest::route_satins());
+        let refused = read(Module::RouteSatins.run(br#"{"objects": []}"#, br#"{"_context": {}}"#));
+        assert!(refused["error"].as_str().is_some_and(|error| error.starts_with("error SC-E0820")), "{refused}");
         // An exporter is given a whole document, and returns a machine file.
         for format in FormatId::ALL {
             assert_eq!(Module::Exporter(*format).manifest(), manifest::exporter(*format));

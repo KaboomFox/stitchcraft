@@ -66,6 +66,7 @@ use stitchcraft_vectorcraft::settings::SETTINGS_FILTER;
 pub use stitchcraft_vectorcraft::{PREVIEW_LEVEL, plugin_id};
 
 use crate::dialog::{self, Ui, registry_ui};
+use crate::route_satins::ROUTE_SATINS;
 use crate::stroke_to_satin::STROKE_TO_SATIN;
 use crate::testsheet::TESTSHEET;
 use crate::{export, preview};
@@ -305,6 +306,25 @@ pub fn stroke_to_satin() -> Manifest {
         description: "Makes each selected line into a satin column drawn with its 2 rails and rungs, with the satin effect, which sews as the \
                       line does with the satin effect: as wide as its stroke. Each line needs a stroke, and StitchCraft Satin must be installed.",
         params: Vec::new(),
+        extensions: Vec::new(),
+        budget: BudgetClass::Heavy,
+    }
+}
+
+/// The manifest of the Auto-Route Satin Columns filter, which replaces the selected satin columns, and the
+/// strokes among them, with one route ([`crate::route_satins`]): a heavy filter, from VectorCraft 0.17, whose
+/// dialog offers Ink/Stitch's options.
+pub fn route_satins() -> Manifest {
+    Manifest {
+        id: plugin_id(ROUTE_SATINS),
+        name: "StitchCraft Auto-Route Satin Columns",
+        version: env!("CARGO_PKG_VERSION"),
+        kind: "filter",
+        author: AUTHOR,
+        description: "Replaces the selected satin columns, and the strokes among them, with one route through them, as Ink/Stitch's \
+                      Auto-Route Satin Columns does: each column cut where the route needs, runs under the satin and long jumps trimmed. \
+                      StitchCraft Satin and Stroke must be installed.",
+        params: crate::route_satins::options(),
         extensions: Vec::new(),
         budget: BudgetClass::Heavy,
     }

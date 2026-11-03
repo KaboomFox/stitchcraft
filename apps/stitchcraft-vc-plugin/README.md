@@ -26,7 +26,11 @@ sheet into the document from 0.16, each object with its effect (`src/testsheet.r
 M13.7 a fourth live effect, *StitchCraft Auto*, makes the object, or each path inside the group, a shape
 whose stitches StitchCraft chooses by its width, with the settings of automatic digitizing's rules in its
 dialog, and previews the stitches it chooses for each path on its own (`REQ-VC-016`). The Test Sheet
-filter draws the TS-13 sheets with it.
+filter draws the TS-13 sheets with it. From M10.4 a heavy filter, *StitchCraft Auto-Route Satin Columns*,
+replaces the selected satin columns, and the strokes among them, with one route through them, as
+Ink/Stitch's tool of that name does, its dialog Ink/Stitch's options (`src/route_satins.rs`, `REQ-VC-018`).
+Paths named `stitch:route-start` and `stitch:route-end` selected with them mark the route's ends
+(`REQ-VC-019`).
 Without a feature the module is M0.6's *hello* effect, which returns the object's geometry unchanged. The
 contract tests measure the host's costs with it (`docs/src/design/vectorcraft-integration.md`).
 
@@ -39,9 +43,9 @@ cargo build -p stitchcraft-vc-plugin --release --target wasm32-unknown-unknown -
 ```
 
 The feature is the family, `stroke`, `satin` or `fill`, `auto` for the Auto effect, the machine format, `pes`
-or `dst`, or the filter, `settings`, `stroke-to-satin` or `testsheet`. Without one, the build is *hello*. Each
-build writes the same file, so copy it before building the next. `cargo xtask compat contract --ref <tag>`
-builds all ten into `target/compat/plugins/` and loads them into VectorCraft's host.
+or `dst`, or the filter, `settings`, `stroke-to-satin`, `testsheet` or `route-satins`. Without one, the build is
+*hello*. Each build writes the same file, so copy it before building the next. `cargo xtask compat contract
+--ref <tag>` builds all eleven into `target/compat/plugins/` and loads them into VectorCraft's host.
 
 In VectorCraft: **Object › Plug-ins › Install Plug-in…** (or `File › Open` the `.wasm`), then
 **Effect › Plug-ins › StitchCraft Fill**, **File › Export › Export As** with an exporter, or a filter under

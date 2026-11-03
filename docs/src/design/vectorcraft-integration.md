@@ -123,10 +123,10 @@ the tests before a release.
 
 **Modules.** The plug-in crate builds one module for each family, chosen by a Cargo feature named after
 the family: `stroke`, `satin` or `fill`, one for each machine format, by its extension: `pes` or `dst`, and
-one for each filter: `settings`, `stroke-to-satin` and `testsheet`. Without one it builds M0.6's *hello*
+one for each filter: `settings`, `stroke-to-satin`, `testsheet` and `route-satins`. Without one it builds M0.6's *hello*
 effect. The modules contain the same code, which the native tests run whichever it is, and the feature only
 picks the manifest and the run that `vc_manifest` and `vc_run` serve. `cargo xtask compat contract` builds
-the nine modules, notes their sizes and loads them into VectorCraft's host.
+every module, notes their sizes and loads them into VectorCraft's host.
 
 **Manifests.** A family's manifest is made from the registry when VectorCraft asks for it, so a parameter
 added to the registry shows in the dialog without another change. A key that several families declare,
@@ -438,7 +438,8 @@ Stitch (`<ns>.route-runs`) routes strokes.
 
 **What they read.** VectorCraft gives a filter the selected paths in paint order, with the paths in the
 selected groups and layers, and Preserve order keeps that order. Each path routes as a satin column when
-its own StitchCraft effects make it one, and as a stroke when they make it a stroke. VectorCraft gives a
+the first of its own StitchCraft effects that is on is the satin effect, and as a stroke when it is the
+stroke effect. VectorCraft gives a
 filter each path's own effect records, and none of its groups'. So a path that sews by a group's effect
 (`REQ-VC-006`) stays as it is, as Ink/Stitch's tool leaves a fill. So does a path without a StitchCraft
 effect of its own. A selection with nothing to route is refused with a coded error, whose hint says to
@@ -452,18 +453,22 @@ Trim jump stitches turns on `trim_after` in the effect of the piece before a lon
 the pieces replace the paths they come from and the markers used. A filter can't make a group, where
 Ink/Stitch puts its route in a new group after the last element. So the pieces go in their sewing order
 where the topmost path routed was, in its group or layer. With Preserve order, Ink/Stitch moves each piece
-to the end of its element's group, and the filter puts it where the path it comes from was. A run then
-goes after the piece before it. With Keep original paths, the paths and markers stay as they are, and the
-route goes above the topmost path. A group the run leaves empty stays in the document.
+to the end of its element's group, and the filter puts the pieces of each path, the runs along it among
+them, where the path was, in sewing order. With Keep original paths, the paths and markers stay as they
+are, and the route goes above the topmost path. A group the run leaves empty stays in the document. Each
+piece keeps the other effects of the path it comes from, as Stroke to Satin keeps a line's, and is painted
+with its stroke 1 CSS pixel wide, or black when it has none.
 
 **Budget.** Both are heavy filters (VectorCraft 0.17), as Stroke to Satin is. Each run gets 1 G
 instructions and 300 s, once the user allows the filter at install, and runs in the background, with no
 preview in its dialog. Stroke to Satin's run, which makes a column's rails from its centre line, took up to
 233 million instructions for one line ([above](#tools-stroke-to-satin-and-test-sheet)). A route makes the
 rails of every column drawn as one path that it routes. The engine's work is priced in instructions, as Stroke to Satin
-prices it, and a filter stops with `SC-E0004` before VectorCraft would stop it. A contract test measures
-the routes of TS-17C's letters and lines in VectorCraft's host, and a Level B case routes them with
-VectorCraft's command line and sews them with `stitch export`.
+prices it: 450 a unit, a tenth of the run's spend for reading the paths and 8 tenths for routing them. A
+filter stops with `SC-E0004` before VectorCraft would stop it. A contract test routes TS-17C's letters,
+drawn as lines with the satin effect, in VectorCraft's host and prints what the route takes, and a Level B
+case routes 2 lines with VectorCraft's command line and checks the route exports as `stitch export` sews
+it.
 
 ### Live-effect previews within v1 budgets
 

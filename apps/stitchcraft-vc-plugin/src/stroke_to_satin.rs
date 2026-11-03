@@ -116,22 +116,30 @@ fn push(satin: Option<&Record>) -> [f64; 2] {
 }
 
 /// `effects` with `satin`, or a new satin effect at the defaults, in the place of the first StitchCraft
-/// effect among them, or after them, and without their other StitchCraft effects.
+/// effect among them ([`in_place_of_ours`]).
 fn with_satin(effects: Vec<Record>, satin: Option<Record>) -> Result<Vec<Record>, Diagnostic> {
-    let mut satin = Some(match satin {
+    let satin = match satin {
         Some(satin) => satin,
         None => Record::ours(Family::Satin.id(), &Map::new()).map_err(|e| unwritten(&e))?,
-    });
+    };
+    Ok(in_place_of_ours(effects, satin))
+}
+
+/// `effects` with `ours`, a StitchCraft effect's record, in the place of the first StitchCraft effect among
+/// them, or after them, and without their other StitchCraft effects. The Auto-Route Satin Columns filter
+/// gives its pieces their effects so too.
+pub(crate) fn in_place_of_ours(effects: Vec<Record>, ours: Record) -> Vec<Record> {
+    let mut ours = Some(ours);
     let mut records = Vec::with_capacity(effects.len() + 1);
     for record in effects {
         if record.is_stitchcraft() {
-            records.extend(satin.take());
+            records.extend(ours.take());
         } else {
             records.push(record);
         }
     }
-    records.extend(satin);
-    Ok(records)
+    records.extend(ours);
+    records
 }
 
 /// How a message names `object`, the `n`th of `count` selected, as a `what`: by its name, or else by where
