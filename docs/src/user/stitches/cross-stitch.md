@@ -43,7 +43,7 @@ fills side by side with the same turn still share one grid.
 <!-- shot: cross-rotation -->
 | 0° | 30° |
 |:-:|:-:|
-| ![A red heart 32 mm wide in cross stitch on a 3 mm grid with 4 threads, its grid turned, and its crosses and stepped edges turned with it, 0°](../../images/generated/cross-rotation-1.png) | ![A red heart 32 mm wide in cross stitch on a 3 mm grid with 4 threads, its grid turned, and its crosses and stepped edges turned with it, 30°](../../images/generated/cross-rotation-2.png) |
+| ![A red heart 32 mm wide in cross stitch on a 3 mm grid with 4 threads, its crosses and stepped edges turned with the grid, 0°](../../images/generated/cross-rotation-1.png) | ![A red heart 32 mm wide in cross stitch on a 3 mm grid with 4 threads, its crosses and stepped edges turned with the grid, 30°](../../images/generated/cross-rotation-2.png) |
 <!-- /shot -->
 
 ## Which cells sew a cross
@@ -84,8 +84,8 @@ stitches no longer.
 `cross_stitch_method` chooses the kind of cross, each with a flipped variant, `_flipped` after its name,
 that turns each cross a quarter turn on its cell:
 
-- `upright_cross` sews a `+` in each cell: a bar across, from the middle of one side to the middle of the
-  other, and a bar down over it. Flipped, the bar across lies on top.
+- `upright_cross` sews a `+` in each cell, a bar across from the middle of one side to the middle of the
+  other with a bar down over it. Flipped, the bar across lies on top.
 - `dense_upright_cross` adds a second grid of upright crosses half a cell over, each on a corner of the
   first grid's cells, so that the crosses close the gaps between each other. Along the shape's edges they
   reach half a cell past the first grid's crosses where the shape covers enough of their cells.
@@ -93,8 +93,8 @@ that turns each cross a quarter turn on its cell:
   top. Ink/Stitch's font Jersey 15 sews it, with 2 threads.
 - `smyrna_cross` sews a simple cross and an upright cross over it, its bar down on top.
 
-Each of them is sewn in runs as a simple cross is, each cross a loop from one of its ends back to it, and
-takes the same even thread count on each half of each bar. With 4 bars through each cell's middle, a double
+They are sewn in runs as simple crosses are, every cross a loop from one of its ends back to it. Each half
+of every bar takes the same even thread count. With 4 bars through each cell's middle, a double
 or a Smyrna cross packs much thread there: 2 threads suit them on small grids.
 
 <!-- shot: cross-methods -->
@@ -114,7 +114,7 @@ Set 3 for a stitch that lies 3 times, or 1 for a light one.
 <!-- shot: cross-half -->
 | Half cross | Flipped |
 |:-:|:-:|
-| ![A red heart 32 mm wide in half crosses on a 3 mm grid, one diagonal in each cell sewn 3 times, and the needle's travel along the stepped outline between the rows, Half cross](../../images/generated/cross-half-1.png) | ![A red heart 32 mm wide in half crosses on a 3 mm grid, one diagonal in each cell sewn 3 times, and the needle's travel along the stepped outline between the rows, Flipped](../../images/generated/cross-half-2.png) |
+| ![A red heart 32 mm wide in half crosses on a 3 mm grid, one diagonal in each cell sewn 3 times, and the needle's way between the rows on the stepped outline, Half cross](../../images/generated/cross-half-1.png) | ![A red heart 32 mm wide in half crosses on a 3 mm grid, one diagonal in each cell sewn 3 times, and the needle's way between the rows on the stepped outline, Flipped](../../images/generated/cross-half-2.png) |
 <!-- /shot -->
 
 ## The order of the crosses

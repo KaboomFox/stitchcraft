@@ -17,7 +17,7 @@
 //!    or through the top left corner of the part's bounds with `canvas_grid_origin` off, and
 //!    `cross_offset_mm` moves them left by its first length and down by its second, as Ink/Stitch moves them.
 //!    `cross_rotation` turns the part the other way first, about the point the offset names on the canvas's
-//!    grid, and the grid is laid over the part so turned ([`Frame`]). Every cell the part reaches is looked
+//!    grid, and the grid is laid over the part so turned (`Frame`). Every cell the part reaches is looked
 //!    at, where Ink/Stitch looks from the first line at or above the part's top, moved down by the offset,
 //!    and misses a row there (`DEV-FILL-025`).
 //! 3. **Coverage.** A cell sews when the part covers `fill_coverage` percent of it, with Ink/Stitch's slack
@@ -33,7 +33,7 @@
 //!
 //! **Flipped full crosses** lie on the same grid, each bar in the place of the bar a quarter turn from it,
 //! so that the `/` diagonal goes under the `\` one. A flipped cross is a plain cross turned a quarter turn,
-//! so each part, its grid, the needle and the end are turned a quarter turn more ([`Frame`]), sewn as plain
+//! so each part, its grid, the needle and the end are turned a quarter turn more (`Frame`), sewn as plain
 //! crosses, and turned back. Ink/Stitch turns the part alone and lays its grid afresh, which takes the
 //! pattern size's 2 values the other way round and anchors a grid at the part's bottom edge
 //! (`DEV-FILL-026`). Flipped half crosses sew each cell's `/` diagonal, on the same grid, as in Ink/Stitch.

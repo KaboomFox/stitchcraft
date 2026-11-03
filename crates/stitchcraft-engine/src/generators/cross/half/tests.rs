@@ -37,6 +37,12 @@ fn req_fill_crs_010_cells_that_share_a_side_or_a_corner_are_one_piece() {
     assert_eq!(found(&[".x", "x."]), [vec![[1, 0], [0, 1]]]);
     // A piece's cells go row by row from the top, whichever way they were reached.
     assert_eq!(found(&["..x", "x.x", "xx."]), [vec![[2, 0], [0, 1], [2, 1], [0, 2], [1, 2]]]);
+    // Each way round a cell is looked along: each of these pieces has a cell that only a step up and to the
+    // left, up, up and to the right, or to the left reaches from the cells found before it.
+    assert_eq!(found(&["...x", "x.x.", ".x.."]), [vec![[3, 0], [0, 1], [2, 1], [1, 2]]]);
+    assert_eq!(found(&["x.x", "x.x", "xxx"]), [vec![[0, 0], [2, 0], [0, 1], [2, 1], [0, 2], [1, 2], [2, 2]]]);
+    assert_eq!(found(&["x.x", "xx."]), [vec![[0, 0], [2, 0], [0, 1], [1, 1]]]);
+    assert_eq!(found(&["..x", "xxx"]), [vec![[2, 0], [0, 1], [1, 1], [2, 1]]]);
     let mut few = Budget { max_work: 5, ..Budget::DEFAULT }.meter();
     assert_eq!(pieces(&cells(&["xx"]), &mut few), Err(Exhausted::Work));
 }
@@ -136,6 +142,10 @@ fn req_fill_crs_010_pieces_apart_are_sewn_nearest_the_needle_first_each_ending_n
     // Without a needle, the piece farthest left first.
     let first = runs_of(&apart, (None, None));
     assert!(first[0].iter().all(|q| q.x() <= 1.0), "{first:?}");
+    // The cell at the right, a row above the one at the left, ends at its bottom left corner, the point of it
+    // nearest the other cell, not where its outline starts.
+    let stepped = runs_of(&cells(&["...x", "x..."]), (Some(p(5.0, 0.5)), Some(p(-1.0, 2.0))));
+    assert_eq!((stepped.len(), stepped[0].last()), (2, Some(&p(3.0, 1.0))), "{stepped:?}");
 }
 
 fn runs_of(cells: &Cells, ends: (Option<Point>, Option<Point>)) -> Vec<Vec<Point>> {

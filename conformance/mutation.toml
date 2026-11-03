@@ -664,3 +664,15 @@ file = "crates/stitchcraft-engine/src/generators/cross/grid.rs"
 mutant = "replace - with + in share"
 line = "*sum += sign * (end - start) * ((height(start) + height(end)) / 2.0 - top);"
 why = "a closed ring's sides cross each column as far right as left, so the strip's top edge, taken away from each side's height or added to it, adds nothing to a column's sum: it is there to keep the heights small, which keeps their rounding small"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/cross/half.rs"
+mutant = "replace * with +"
+line = "const TOLERANCE: f64 = 0.2 * MM_PER_SVG_PX;"
+why = "a half cross's travel runs along the outline of its cells, whose every bend is a right angle, and a running stitch puts a needle point at each bend of more than 30°: between bends the way is straight, and no stitch along it strays from it, so no tolerance changes a stitch"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/cross/half.rs"
+mutant = "replace * with /"
+line = "const TOLERANCE: f64 = 0.2 * MM_PER_SVG_PX;"
+why = "a half cross's travel runs along the outline of its cells, whose every bend is a right angle, and a running stitch puts a needle point at each bend of more than 30°: between bends the way is straight, and no stitch along it strays from it, so no tolerance changes a stitch"

@@ -26,7 +26,7 @@ const CROSS: &[StitchType] = &[StitchType::CrossStitch];
 
 /// The cross stitch methods `cross_stitch_method` reads, in Ink/Stitch's order, which its files count on:
 /// Ink/Stitch gives the parameter's default as the first one's place in this list. Each method comes with
-/// its flipped variant after it, the methods in the order of [`ORDER`].
+/// its flipped variant after it.
 pub const METHODS: &[ChoiceOption] = &[
     ChoiceOption::new("simple_cross", "Simple cross"),
     ChoiceOption::new("simple_cross_flipped", "Simple cross, flipped"),
