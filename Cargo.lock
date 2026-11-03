@@ -827,6 +827,7 @@ name = "stitchcraft-xtask"
 version = "0.0.1"
 dependencies = [
  "clap",
+ "roxmltree",
  "serde",
  "serde_json",
  "stitchcraft-cli",

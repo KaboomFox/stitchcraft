@@ -548,3 +548,17 @@ area = "svg"
 summary = "An Inkscape power clip is read from the clip path the file holds, as a viewer draws it. Ink/Stitch reads the path effect's settings instead: hidden or flattened, it applies no clip, and inverse, it takes the first path of class powerclip in the clip path, by the even-odd rule."
 reason = "The file holds what Inkscape draws of the effect, which a viewer shows, and StitchCraft reads no path effects. Ink/Stitch's reading of the effect was read in lib/svg/clip.py (_get_path_effects) at d59c9ab."
 requirements = ["REQ-SVG-011"]
+
+[[deviation]]
+id = "DEV-SVG-025"
+area = "svg"
+summary = "A root whose viewBox has another shape than its width and height is fitted as its preserveAspectRatio says: by default it is scaled to fit and centred in the page. Ink/Stitch scales it to fit and leaves it at the page's top left corner, whatever the alignment. The drawing then lies elsewhere on the page, and a tatami fill's rows and needle points, laid from the page's corner, lie elsewhere on its shapes."
+reason = "The page is mapped as SVG maps it (REQ-SVG-001), where a viewer shows it, and rows laid from its corner line up across fills side by side (REQ-FILL-TAT-002). Ink/Stitch's mapping was read at d59c9ab (lib/svg/units.py: get_viewbox_transform, a scale without the alignment). Cooper Marif's glyph files fit a viewBox of 300 × 423.3 into a page 112.4 × 112 mm, and its drawing lies 16.5 mm further right in StitchCraft. Ink/Stitch at d59c9ab, run as a black box (ADR-0001, decision 6), sews its 7 alike in that page and in a page of the viewBox's shape, 79.4 × 112 mm. StitchCraft's fill and Ink/Stitch's overlap by 0.573 in the first page, and by 0.999 in the second."
+requirements = ["REQ-SVG-001", "REQ-FILL-TAT-002"]
+
+[[deviation]]
+id = "DEV-SVG-026"
+area = "svg"
+summary = "Ink/Stitch's stitch patterns are not applied. A path whose style starts it with Ink/Stitch's pattern marker is a helper, which SC-W0802 names, and the other shapes in its group sew without it. Ink/Stitch adds a needle point wherever their stitches cross a pattern's stroke, and leaves out their needle points inside a pattern's fill."
+reason = "Stitch patterns are not planned (docs/src/plan/roadmap.md, M8), and the warning names each one, so a design that relies on one is seen to sew otherwise. Ink/Stitch's patterns were read at d59c9ab (lib/patterns.py). 6 of Ink/Stitch's fonts use them. Ink/Stitch at d59c9ab, run as a black box (ADR-0001, decision 6), sews Initials XL's B in 12,158 stitches, and in 9,804 without its 6 patterns. StitchCraft sews it in 9,805."
+requirements = ["REQ-SVG-003"]

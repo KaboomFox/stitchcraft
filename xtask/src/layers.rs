@@ -45,12 +45,13 @@ pub const TABLE: &[(&str, Class)] = &[
 pub const SAME_LAYER: &[(&str, &str)] = &[("stitchcraft-params", "stitchcraft-core")];
 
 /// External crates allowed only in the listed packages (normal dependencies). Only the renderer draws with
-/// tiny-skia; xtask reads VectorCraft's pictures with it, to compare them within a tolerance.
+/// tiny-skia; xtask reads VectorCraft's pictures with it, to compare them within a tolerance. Only the SVG
+/// reader reads XML with roxmltree; xtask cuts the glyph files of Ink/Stitch's fonts with it.
 pub const RESTRICTED: &[(&str, &[&str])] = &[
     ("clap", &["stitchcraft-cli", "stitchcraft-xtask"]),
     ("rayon", &["stitchcraft-cli"]),
     ("tiny-skia", &["stitchcraft-render", "stitchcraft-xtask"]),
-    ("roxmltree", &["stitchcraft-svg"]),
+    ("roxmltree", &["stitchcraft-svg", "stitchcraft-xtask"]),
     ("svgtypes", &["stitchcraft-svg"]),
     ("flate2", &["stitchcraft-vectorcraft", "stitchcraft-testkit"]),
 ];

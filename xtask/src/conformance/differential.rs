@@ -49,7 +49,7 @@ use stitchcraft_cli::commands::plan::Source;
 use stitchcraft_core::{Budget, Point};
 use stitchcraft_engine::testsheets;
 use stitchcraft_plan::{FormatId, Rgb, Stitch, StitchKind, StitchPlan, profiles};
-use stitchcraft_testkit::metrics::footprint_overlap;
+use stitchcraft_testkit::metrics::{footprint_overlap, footprint_within};
 
 use super::cases::Subject;
 use super::runner::Outcome;
@@ -124,7 +124,7 @@ pub struct Measured {
 
 impl Measured {
     /// `plan`, measured: `None` when it has no needle point.
-    fn of(plan: &StitchPlan) -> Option<Measured> {
+    pub(super) fn of(plan: &StitchPlan) -> Option<Measured> {
         let bounds = plan.bounds()?;
         let centre = bounds.center();
         let moved = |q: Point| Point::new(q.x() - centre.x(), q.y() - centre.y()).unwrap_or(q);
@@ -138,6 +138,13 @@ impl Measured {
             jumps: stats.jumps,
             sewn: plan.sewn_stitches().iter().map(|stitch| [moved(stitch.from), moved(stitch.to)]).collect(),
         })
+    }
+
+    /// How nearly each file's thread lies where the other's does, `tolerance` millimetres apart: the lesser
+    /// share of either's footprint that the other's covers once grown by the tolerance, their centres made
+    /// one (`stitchcraft_testkit::metrics::footprint_within`).
+    pub(super) fn within(&self, other: &Measured, tolerance: f64) -> f64 {
+        footprint_within(&self.sewn, &other.sewn, tolerance).min(footprint_within(&other.sewn, &self.sewn, tolerance))
     }
 }
 
@@ -206,7 +213,7 @@ impl Inkstitch {
     }
 
     /// The PES file Ink/Stitch writes for the SVG file `design`.
-    fn pes(&self, root: &Path, design: &Path) -> Result<Vec<u8>, String> {
+    pub(super) fn pes(&self, root: &Path, design: &Path) -> Result<Vec<u8>, String> {
         self.output(root, &["--extension=output", "--format=pes"], design, "PES file")
     }
 
@@ -263,7 +270,7 @@ pub fn run(root: &Path, subject: &Subject, excused: &BTreeMap<String, String>, o
     };
     let theirs = theirs.and_then(|bytes| measured(&bytes, "Ink/Stitch"));
     let ours = ours.and_then(|bytes| measured(&bytes, "StitchCraft"));
-    let ((_, ours), (their_plan, theirs)) = match (ours, theirs) {
+    let ((our_plan, ours), (their_plan, theirs)) = match (ours, theirs) {
         (Ok(ours), Ok(theirs)) => (ours, theirs),
         (ours, theirs) => {
             outcome.failures.extend(ours.err().into_iter().chain(theirs.err()));
@@ -276,23 +283,84 @@ pub fn run(root: &Path, subject: &Subject, excused: &BTreeMap<String, String>, o
         .values()
         .collect::<BTreeSet<_>>()
         .into_iter()
-        .filter_map(|deviation| Some((deviation.clone(), compare(&ours, &Measured::of(&undone(deviation, &their_plan)?)?))))
+        .filter_map(|deviation| Some((deviation.clone(), compare(&ours, &Measured::of(&undone(deviation, &their_plan, &our_plan)?)?))))
         .collect();
     judge(compare(&ours, &theirs), excused, &again, outcome);
 }
 
 /// The deviation by which pystitch, writing Ink/Stitch's PES files, writes jumps that go nowhere.
 pub const NOWHERE: &str = "DEV-FMT-001";
+/// The deviation by which the 2 programs name a thread by other entries of Brother's palette.
+pub const PALETTE: &str = "DEV-THREAD-001";
+/// The deviation by which StitchCraft fits stitches to the machine, splitting those longer than its longest.
+pub const FITTED: &str = "DEV-FIN-001";
 
-/// Ink/Stitch's file `plan` with the deviation `deviation` undone, as the file would read had Ink/Stitch
-/// done as StitchCraft does; `None` for a deviation the differential can't undo, which excuses its
-/// measures as they are.
+/// Ink/Stitch's file `theirs` with the deviation `deviation` undone, as the file would read had Ink/Stitch
+/// done as StitchCraft does, whose file is `ours`; `None` for a deviation the differential can't undo,
+/// which excuses its measures as they are.
 ///
 /// - [`NOWHERE`]: each jump that goes nowhere at the start of a colour block or right after a stop, where
 ///   Ink/Stitch's plan has no trim, and the trim it carries, as every jump of a PES file does. StitchCraft
 ///   writes no such record (`REQ-FMT-010`).
-pub fn undone(deviation: &str, plan: &StitchPlan) -> Option<StitchPlan> {
-    (deviation == NOWHERE).then(|| without_jumps_nowhere(plan))
+/// - [`PALETTE`]: each thread named by StitchCraft's entry, when both files change thread at the same
+///   colour blocks: as many blocks, and 2 of them of one thread in one file just when they are in the other.
+///   Then only the entries chosen differ. Otherwise the file stays as it is, and the threads still differ.
+/// - [`FITTED`]: each stitch longer than the reference machine's longest, 12 mm, split into as few equal
+///   parts as are no longer, as StitchCraft splits it (`REQ-FIN-001`).
+pub fn undone(deviation: &str, theirs: &StitchPlan, ours: &StitchPlan) -> Option<StitchPlan> {
+    match deviation {
+        NOWHERE => Some(without_jumps_nowhere(theirs)),
+        PALETTE => Some(named_as(theirs, ours)),
+        FITTED => Some(split(theirs, profiles::REFERENCE.max_stitch.get())),
+        _ => None,
+    }
+}
+
+/// `theirs` with each block's thread `ours`' block's, when both change thread at the same blocks ([`undone`]).
+fn named_as(theirs: &StitchPlan, ours: &StitchPlan) -> StitchPlan {
+    let pattern = |plan: &StitchPlan| -> Vec<usize> {
+        let colours: Vec<Rgb> = plan.blocks.iter().map(|block| block.thread.color).collect();
+        colours.iter().map(|c| colours.iter().position(|first| first == c).unwrap_or_default()).collect()
+    };
+    let mut named = theirs.clone();
+    if pattern(theirs) == pattern(ours) {
+        for (block, our) in named.blocks.iter_mut().zip(&ours.blocks) {
+            block.thread = our.thread.clone();
+        }
+    }
+    named
+}
+
+/// `plan` with each stitch longer than `longest` millimetres split into as few equal parts as are no longer
+/// ([`undone`]).
+fn split(plan: &StitchPlan, longest: f64) -> StitchPlan {
+    let mut plan = plan.clone();
+    let mut needle: Option<Point> = None;
+    for block in &mut plan.blocks {
+        let mut kept: Vec<Stitch> = Vec::with_capacity(block.stitches.len());
+        for &stitch in &block.stitches {
+            if let (StitchKind::Normal, Some(from)) = (stitch.kind, needle) {
+                let (dx, dy) = (stitch.at.x() - from.x(), stitch.at.y() - from.y());
+                let parts = (dx.hypot(dy) / longest).ceil();
+                // A count of parts, at most the stitch's length over the longest: well within usize.
+                #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
+                let parts = if parts.is_finite() && parts > 1.0 { parts as usize } else { 1 };
+                for part in 1..parts {
+                    #[allow(clippy::cast_precision_loss)] // A count of parts, far below 2^52.
+                    let t = part as f64 / parts as f64;
+                    if let Ok(at) = Point::new(from.x() + dx * t, from.y() + dy * t) {
+                        kept.push(Stitch { at, ..stitch });
+                    }
+                }
+            }
+            if !stitch.kind.is_command() {
+                needle = Some(stitch.at);
+            }
+            kept.push(stitch);
+        }
+        block.stitches = kept;
+    }
+    plan
 }
 
 /// `plan` without the jumps that go nowhere at the start of a colour block or right after a stop, nor the
@@ -363,7 +431,7 @@ fn judge(compared: Vec<Compared>, excused: &BTreeMap<String, String>, again: &BT
 
 /// How `measure` differs, StitchCraft's `mine` against Ink/Stitch's `other`, for a failure or an excuse's
 /// note. The overlap is a measure of the pair, with one value, given with the least it may be.
-fn differs(measure: Measure, mine: &str, other: &str) -> String {
+pub(super) fn differs(measure: Measure, mine: &str, other: &str) -> String {
     let name = measure.name();
     match measure {
         Measure::Overlap => format!("{name} {mine}, below {LEAST_OVERLAP}"),
@@ -436,7 +504,10 @@ pub fn report(outcomes: &[Outcome], commit: &str, pin: &str) -> String {
             if !(o.failures.is_empty() && o.notes.is_empty() && o.skipped.is_none()) {
                 out.push('\n');
             }
-            out.push_str("| Measure | StitchCraft | Ink/Stitch | |\n|---|---|---|---|\n");
+            // A case whose rows aren't measures gives its table's head as its first 2 rows (the fonts').
+            if !o.details.get(1).is_some_and(|row| row.starts_with("|---")) {
+                out.push_str("| Measure | StitchCraft | Ink/Stitch | |\n|---|---|---|---|\n");
+            }
             for detail in &o.details {
                 out.push_str(detail);
                 out.push('\n');
@@ -617,20 +688,76 @@ mod tests {
         builder.stitch(p(20.0, 12.0), top);
         let plan = builder.finish();
         assert_eq!((plan.stats().trims, plan.stats().jumps), (4, 5));
-        let without = undone(NOWHERE, &plan).unwrap();
+        let without = undone(NOWHERE, &plan, &plan).unwrap();
         assert_eq!((without.stats().trims, without.stats().jumps), (2, 3));
         let kinds = |block: &stitchcraft_plan::ColorBlock| block.stitches.iter().map(|s| s.kind).collect::<Vec<_>>();
         let (n, j, t, s) = (StitchKind::Normal, StitchKind::Jump, StitchKind::Trim, StitchKind::Stop);
         assert_eq!(without.blocks.iter().map(kinds).collect::<Vec<_>>(), [vec![j, n, n], vec![n, s, n, t, j, n], vec![t, j, n]]);
         assert_eq!(without.stats().stitches, plan.stats().stitches);
         // A deviation the differential can't undo excuses as it is.
-        assert_eq!(undone("DEV-THREAD-001", &plan), None);
+        assert_eq!(undone("DEV-LCK-001", &plan, &plan), None);
     }
 
     #[test]
     fn every_deviation_the_differential_undoes_is_in_the_ledger() {
         let ledger = crate::deviations::parse(&util::read(&util::root().join(crate::deviations::LEDGER)).unwrap()).unwrap();
         assert!(ledger.iter().any(|d| d.id == NOWHERE && d.requirements.iter().any(|r| r == "REQ-FMT-010")));
+        assert!(ledger.iter().any(|d| d.id == PALETTE && d.requirements.iter().any(|r| r == "REQ-THREAD-001")));
+        assert!(ledger.iter().any(|d| d.id == FITTED && d.requirements.iter().any(|r| r == "REQ-FIN-001")));
+    }
+
+    /// A plan of a block for each of `threads`, each block a stitch at the origin and one `long` mm right.
+    fn blocks(threads: &[Rgb], long: f64) -> StitchPlan {
+        use stitchcraft_plan::{PlanBuilder, Provenance, Role, Thread};
+        let top = Provenance::plan(Role::Top);
+        let mut builder = PlanBuilder::new(Thread::new(threads[0]));
+        for (i, &thread) in threads.iter().enumerate() {
+            if i > 0 {
+                builder.change_thread(Thread::new(thread));
+            }
+            builder.stitch(p(0.0, 0.0), top);
+            builder.stitch(p(long, 0.0), top);
+        }
+        builder.finish()
+    }
+
+    #[test]
+    fn threads_named_by_other_entries_are_named_as_ours_when_they_change_at_the_same_blocks() {
+        let (red, vermilion, blue, ultramarine) = (Rgb::new(237, 23, 31), Rgb::new(254, 55, 15), Rgb::new(11, 61, 145), Rgb::new(38, 38, 200));
+        let ours = blocks(&[vermilion, blue, vermilion], 5.0);
+        let theirs = blocks(&[red, ultramarine, red], 5.0);
+        let named = undone(PALETTE, &theirs, &ours).unwrap();
+        assert_eq!(named.blocks.iter().map(|b| b.thread.color).collect::<Vec<_>>(), [vermilion, blue, vermilion]);
+        assert_eq!(
+            compare(&Measured::of(&ours).unwrap(), &Measured::of(&named).unwrap()).iter().find(|row| row.0 == Measure::Threads).unwrap().3,
+            true
+        );
+        // Where they change thread at other blocks, or have more of them, the threads stay theirs.
+        for other in [blocks(&[red, ultramarine, ultramarine], 5.0), blocks(&[red, ultramarine], 5.0), blocks(&[red, red, red], 5.0)] {
+            assert_eq!(undone(PALETTE, &other, &ours).unwrap(), other);
+        }
+    }
+
+    #[test]
+    fn stitches_longer_than_the_machine_s_longest_are_split_into_equal_parts() {
+        let red = Rgb::new(237, 23, 31);
+        // 30 mm: 3 parts of 10 mm. 12 mm, the longest, stays whole.
+        let split = undone(FITTED, &blocks(&[red], 30.0), &blocks(&[red], 30.0)).unwrap();
+        let xs: Vec<f64> = split.blocks[0].stitches.iter().filter(|s| s.kind == StitchKind::Normal).map(|s| s.at.x()).collect();
+        assert_eq!(xs, [0.0, 10.0, 20.0, 30.0]);
+        let whole = blocks(&[red], 12.0);
+        assert_eq!(undone(FITTED, &whole, &whole).unwrap(), whole);
+        // A jump is never split, and the stitch after it is measured from where it went.
+        use stitchcraft_plan::{PlanBuilder, Provenance, Role, Thread};
+        let mut builder = PlanBuilder::new(Thread::new(red));
+        builder.stitch(p(0.0, 0.0), Provenance::plan(Role::Top));
+        builder.jump(p(50.0, 0.0), Provenance::plan(Role::Travel));
+        builder.stitch(p(50.0, 0.0), Provenance::plan(Role::Top));
+        builder.stitch(p(63.0, 0.0), Provenance::plan(Role::Top));
+        let jumped = undone(FITTED, &builder.finish(), &whole).unwrap();
+        let kinds: Vec<(StitchKind, f64)> = jumped.blocks[0].stitches.iter().map(|s| (s.kind, s.at.x())).collect();
+        let (n, j) = (StitchKind::Normal, StitchKind::Jump);
+        assert_eq!(kinds, [(n, 0.0), (j, 50.0), (n, 50.0), (n, 56.5), (n, 63.0)]);
     }
 
     #[test]
@@ -651,6 +778,18 @@ mod tests {
         );
         assert!(report.contains("## ✅ `passed` (conformance/cases/inkstitch/passed.toml)\n\n| Measure"), "{report}");
         assert!(report.contains("- skipped: no Ink/Stitch\n"), "{report}");
+    }
+
+    #[test]
+    fn threads_that_run_a_little_apart_lie_within_a_tolerance_of_each_other() {
+        let line = |y: f64| measured(2, [10.0, 0.0], &[], 0, 0, &[[p(0.0, y), p(10.0, y)]]);
+        // 0.2 mm apart: within 0.3 mm of each other, and not within 0.05.
+        assert_eq!(line(0.0).within(&line(0.2), 0.3), 1.0);
+        assert!(line(0.0).within(&line(0.2), 0.05) < 0.9);
+        // A thread the other lacks: the lesser share counts, both ways.
+        let more = measured(4, [10.0, 0.0], &[], 0, 0, &[[p(0.0, 0.0), p(10.0, 0.0)], [p(0.0, 5.0), p(10.0, 5.0)]]);
+        let (one, other) = (more.within(&line(0.0), 0.3), line(0.0).within(&more, 0.3));
+        assert!(one < 0.6 && one == other, "{one} {other}");
     }
 
     #[test]

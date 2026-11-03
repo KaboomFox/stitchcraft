@@ -1,0 +1,67 @@
+# The differences of the glyph differential (M8.6, xtask/src/conformance/fonts/excuses.rs) that the
+# deviations ledger explains: each glyph of Ink/Stitch's fonts, sewn alone in Ink/Stitch and in StitchCraft.
+# An excuse names the measures it excuses, the ledger's entry that explains them (conformance/deviations.toml),
+# and the glyphs it holds for: those StitchCraft says a diagnostic of (`codes`, and `saying`, words of its
+# message), whose elements are of a stitch type (`types`) or set an Ink/Stitch setting to something other
+# than nothing or 0 (`settings`), or of a font (`fonts`). An excuse without them holds for every glyph. Where
+# the differential can undo the deviation in Ink/Stitch's file, the excuse holds only when the measure then
+# agrees, and the next one that holds is tried.
+
+# Each program names a thread by its own entry of Brother's palette: checked by naming Ink/Stitch's threads
+# as StitchCraft names them, where both change thread at the same colour blocks.
+[[excuse]]
+measures = ["threads"]
+deviation = "DEV-THREAD-001"
+
+# pystitch's jumps that go nowhere, checked by leaving them out of Ink/Stitch's file.
+[[excuse]]
+measures = ["trims", "jumps"]
+deviation = "DEV-FMT-001"
+
+# Stitches longer than the machine's longest, which StitchCraft splits: checked by splitting Ink/Stitch's.
+[[excuse]]
+measures = ["stitches"]
+deviation = "DEV-FIN-001"
+codes = ["SC-I0703"]
+
+# A setting StitchCraft clamps into its range (SC-W0102) where Ink/Stitch sews it as it is: a satin
+# column's random width decrease below 0, which widens it there, in Magnolia bicolor.
+[[excuse]]
+measures = ["size", "overlap"]
+deviation = "DEV-PRM-002"
+codes = ["SC-W0102"]
+saying = "random_width_decrease_percent"
+
+# Random satin widths and spacing, drawn from StitchCraft's own generator.
+[[excuse]]
+measures = ["overlap"]
+deviation = "DEV-SAT-002"
+settings = ["random_width_increase_percent", "random_width_decrease_percent", "random_zigzag_spacing_percent", "random_split_jitter_percent"]
+
+# StitchCraft's meander tiles are its own.
+[[excuse]]
+measures = ["stitches", "overlap"]
+deviation = "DEV-FILL-018"
+types = ["meander_fill"]
+
+# A viewBox of another shape than its page, centred by StitchCraft and not by Ink/Stitch: the fills' rows
+# are laid from another point. Cooper Marif's are the only glyph files of the corpus that sew fills so.
+[[excuse]]
+measures = ["overlap"]
+deviation = "DEV-SVG-025"
+fonts = ["cooper_marif"]
+
+# Ink/Stitch's stitch patterns, which StitchCraft doesn't apply.
+[[excuse]]
+measures = ["stitches", "size", "overlap"]
+deviation = "DEV-SVG-026"
+codes = ["SC-W0802"]
+saying = "stitch pattern"
+
+# Running stitches place their needle points otherwise along the same lines (and corners, DEV-RUN-001):
+# checked by each program's thread lying within 0.3 mm of the other's.
+[[excuse]]
+measures = ["stitches", "overlap"]
+deviation = "DEV-RUN-002"
+only_types = ["running_stitch"]
+within_mm = 0.3

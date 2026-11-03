@@ -1,0 +1,8 @@
+# Ink/Stitch's fonts, the corpus of the glyph differential (M8.6, docs/src/design/fonts.md): the repository,
+# the commit, and the SHA-256 of the archive GitHub makes of it. `cargo xtask corpus` fetches the archive into
+# a cache outside the repository, checks the sum and unpacks it there. No font file is ever committed. Move it
+# on with the date of the commit, and record what then sews otherwise in conformance/inkstitch/glyphs.toml.
+repository = "https://github.com/inkstitch/embroidery-fonts"
+commit = "c7e3a05c3d6f5c77b881c50f257851af9a8e9cb8"
+date = "2026-08-28"
+sha256 = "9e8442555664d7e638de9587d1475f1983d87bc856adf28bad273adcf2eb1db0"
