@@ -86,6 +86,26 @@ impl Path {
     pub fn points(&self) -> impl Iterator<Item = Point> + '_ {
         self.subpaths.iter().flat_map(|s| std::iter::once(s.start).chain(s.segments.iter().flat_map(|seg| seg.points())))
     }
+
+    /// The same path, each of its points moved by `f`, or `f`'s error, as [`Hints::map`] moves positions: a
+    /// design moved ([`Design::moved`]), or a test sheet's clone of a fill.
+    pub(crate) fn map<E>(&self, f: impl Fn(Point) -> Result<Point, E>) -> Result<Path, E> {
+        let segment = |segment: &Segment| -> Result<Segment, E> {
+            Ok(match *segment {
+                Segment::Line(end) => Segment::Line(f(end)?),
+                Segment::Quad(control, end) => Segment::Quad(f(control)?, f(end)?),
+                Segment::Cubic(first, second, end) => Segment::Cubic(f(first)?, f(second)?, f(end)?),
+            })
+        };
+        let subpaths = self.subpaths.iter().map(|subpath| {
+            Ok(Subpath {
+                start: f(subpath.start)?,
+                segments: subpath.segments.iter().map(segment).collect::<Result<_, E>>()?,
+                closed: subpath.closed,
+            })
+        });
+        Ok(Path { subpaths: subpaths.collect::<Result<_, E>>()? })
+    }
 }
 
 /// Which parts of a self-overlapping outline are inside an area.
@@ -456,26 +476,13 @@ impl Design {
                 Diagnostic::new(Code::InternalCheckFailed, format!("The design moved by ({dx}, {dy}) mm has a point that is no number: {e}."))
             })
         };
-        let path = |path: &Path| -> Result<Path, Diagnostic> {
-            let subpaths = path.subpaths.iter().map(|subpath| {
-                let segments = subpath.segments.iter().map(|segment| {
-                    Ok(match *segment {
-                        Segment::Line(end) => Segment::Line(point(end)?),
-                        Segment::Quad(control, end) => Segment::Quad(point(control)?, point(end)?),
-                        Segment::Cubic(first, second, end) => Segment::Cubic(point(first)?, point(second)?, point(end)?),
-                    })
-                });
-                Ok(Subpath { start: point(subpath.start)?, segments: segments.collect::<Result<_, Diagnostic>>()?, closed: subpath.closed })
-            });
-            Ok(Path { subpaths: subpaths.collect::<Result<_, Diagnostic>>()? })
-        };
         let elements = self.elements.iter().map(|element| {
             let shape = match &element.shape {
-                Shape::Stroke { path: outline, width, join, cap } => Shape::Stroke { path: path(outline)?, width: *width, join: *join, cap: *cap },
-                Shape::Fill { path: boundary, rule } => Shape::Fill { path: path(boundary)?, rule: *rule },
+                Shape::Stroke { path, width, join, cap } => Shape::Stroke { path: path.map(point)?, width: *width, join: *join, cap: *cap },
+                Shape::Fill { path, rule } => Shape::Fill { path: path.map(point)?, rule: *rule },
             };
             let shapes = |clip: &Clip| {
-                clip.shapes.iter().map(|shape| Ok(ClipShape { path: path(&shape.path)?, rule: shape.rule })).collect::<Result<_, Diagnostic>>()
+                clip.shapes.iter().map(|shape| Ok(ClipShape { path: shape.path.map(point)?, rule: shape.rule })).collect::<Result<_, Diagnostic>>()
             };
             let clips = element.clips.iter().map(|clip| Ok(Clip { shapes: shapes(clip)? })).collect::<Result<_, Diagnostic>>()?;
             Ok(Element { shape, hints: element.hints.map(point)?, clips, ..element.clone() })

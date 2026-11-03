@@ -79,7 +79,7 @@ fn diag_sc_w0802_what_is_not_stitched_is_named() {
             "warning SC-W0802: StitchCraft does not read `g > rect` in the file's style sheet; what it sets is not used.",
             "warning SC-W0802: `title` is text, which is not stitched; it is left out.",
             "warning SC-W0802: `photo` is a raster image, which is not stitched; it is left out.",
-            "warning SC-W0802: `clone` is a clone (`<use>`), which is not stitched yet; it is left out.",
+            "warning SC-W0802: `clone/inner` is a nested `<svg>` element, which is not read yet; it is left out.",
             "warning SC-W0802: The fill of `patterned` is a `<pattern>`, which is not stitched; it is stitched in the fallback colour, #000080.",
             "warning SC-W0802: `inner` is a nested `<svg>` element, which is not read yet; it is left out.",
         ]

@@ -12,6 +12,10 @@
 //! dialogs, which its extensions import as they load and writing a file never uses. Nothing of Ink/Stitch's
 //! is kept in this repository: the `inkstitch` action fetches it where the job runs, as
 //! `conformance/inkstitch/README.md` does by hand. Without `STITCHCRAFT_INKSTITCH`, a case is skipped.
+//! Ink/Stitch runs with a configuration folder of its own, [`CONFIG`], whose settings turn its stitch-plan
+//! cache off: kept between runs, the cache gave a clone the stitches it had kept for a clone in another
+//! file, whose source's commands were drawn otherwise (found in M8.10). Ink/Stitch finds the folder by
+//! `XDG_CONFIG_HOME`, as it does on Linux, where CI runs it.
 //!
 //! **StitchCraft** reads the design and plans it on the reference machine, as `stitch plan` does, and
 //! writes PES. Both files are then read by StitchCraft's reader, so that both are measured on the 0.1 mm
@@ -20,6 +24,7 @@
 //! **A test sheet** drawn as a design is a case's subject too (`sheet`). Both programs sew the SVG file of
 //! the elements StitchCraft sews the sheet with, automatic digitizing's for its automatic shapes, written
 //! with their parameters (`stitchcraft_testkit::inkstitch`) to [`WRITTEN`], where a reviewer can open it.
+//! An element the sheet's file draws as a clone of another is written as one (`TestSheet::clones`).
 //! Ink/Stitch's PES file of it is kept beside it ([`kept`]), which a machine checkpoint sews beside
 //! StitchCraft's: MC-11 sews TS-16 so.
 //! Ink/Stitch then sews the stitch types StitchCraft chose, with StitchCraft's settings, so the stitches
@@ -61,6 +66,10 @@ pub const PIN: &str = "conformance/inkstitch/pin.toml";
 pub const STUBS: &str = "conformance/inkstitch/stubs";
 /// Where the SVG files written for test sheets go, relative to the repository root.
 pub const WRITTEN: &str = "target/conformance/differential";
+/// Ink/Stitch's configuration folder, relative to the repository root, and the settings it holds: the
+/// stitch-plan cache off.
+pub const CONFIG: &str = "target/conformance/inkstitch-config";
+const SETTINGS: &str = r#"{"cache_size": 0}"#;
 /// The least overlap of the two programs' thread footprints.
 pub const LEAST_OVERLAP: f64 = 0.9;
 
@@ -213,12 +222,14 @@ impl Inkstitch {
     /// What Ink/Stitch's command line writes to its standard output, `what`, run with `arguments` on the SVG
     /// file `design`: an extension's result.
     pub(super) fn output(&self, root: &Path, arguments: &[&str], design: &Path, what: &str) -> Result<Vec<u8>, String> {
+        let config = configured(root)?;
         let output = Command::new(&self.python)
             .arg("inkstitch.py")
             .args(arguments)
             .arg(design)
             .current_dir(&self.checkout)
             .env("PYTHONPATH", root.join(STUBS))
+            .env("XDG_CONFIG_HOME", config)
             // Nothing written into the repository's stand-ins.
             .env("PYTHONDONTWRITEBYTECODE", "1")
             .output()
@@ -230,6 +241,16 @@ impl Inkstitch {
         }
         Ok(output.stdout)
     }
+}
+
+/// Ink/Stitch's configuration folder under `root`, [`CONFIG`], with its settings written: the stitch-plan
+/// cache off.
+fn configured(root: &Path) -> Result<PathBuf, String> {
+    let config = root.join(CONFIG);
+    let settings = config.join("inkstitch").join("settings.json");
+    let written = settings.parent().map_or(Ok(()), std::fs::create_dir_all).and_then(|()| std::fs::write(&settings, SETTINGS));
+    written.map_err(|e| format!("{}: {e}", util::rel(&settings)))?;
+    Ok(config)
 }
 
 /// The commit [`PIN`] gives.
@@ -401,8 +422,9 @@ fn sheet(root: &Path, id: &str) -> Result<PathBuf, String> {
     let sheet = testsheets::find(id).ok_or_else(|| format!("there is no test sheet `{id}`"))?;
     let design =
         sheet.design().ok_or_else(|| format!("{id} is drawn stitch by stitch, and is no design to write"))?.map_err(|e| format!("{id}: {e}"))?;
+    let clones = sheet.clones().unwrap_or(Ok(Vec::new())).map_err(|e| format!("{id}: {e}"))?;
     let (elements, _) = stitchcraft_engine::auto::digitized(&design, &Budget::DEFAULT);
-    let svg = stitchcraft_testkit::inkstitch::svg(&elements, &design.settings).map_err(|e| format!("{id}: {e}"))?;
+    let svg = stitchcraft_testkit::inkstitch::svg_with(&elements, &design.settings, &clones).map_err(|e| format!("{id}: {e}"))?;
     let path = root.join(WRITTEN).join(format!("{}.svg", id.to_ascii_lowercase()));
     let written = path.parent().map_or(Ok(()), std::fs::create_dir_all).and_then(|()| std::fs::write(&path, svg));
     written.map_err(|e| format!("{}: {e}", util::rel(&path)))?;
@@ -475,6 +497,17 @@ mod tests {
         // A folder that isn't there is said.
         let nowhere = dir.join("missing/ts-16.svg");
         assert!(kept(&nowhere, Vec::new()).unwrap_err().contains("ts-16.inkstitch.pes"));
+    }
+
+    #[test]
+    fn ink_stitch_runs_with_its_stitch_cache_off() {
+        let root = util::root().join("target/xtask-tests/differential-config");
+        let config = configured(&root).unwrap();
+        assert_eq!(config, root.join(CONFIG));
+        assert_eq!(std::fs::read_to_string(config.join("inkstitch/settings.json")).unwrap(), r#"{"cache_size": 0}"#);
+        // A root it can't write in is said.
+        std::fs::write(root.join("file"), "").unwrap();
+        assert!(configured(&root.join("file")).unwrap_err().contains("settings.json"));
     }
 
     #[test]

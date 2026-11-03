@@ -115,9 +115,10 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
   element or above it. A `fill-opacity` or `stroke-opacity` of 0 makes its paint clear, as does a colour
   that is `transparent` or has an alpha of 0, `currentColor` where `color` is such a colour, and a
   gradient whose stops a viewer doesn't show. Ink/Stitch leaves out only what `display` hides and a fill
-  whose `fill-opacity` is written `0` (`DEV-SVG-003`). The insides of `<defs>`, `<symbol>`, `<marker>`,
-  `<pattern>`, `<clipPath>` and `<mask>` are never drawn, and `context-fill` and `context-stroke` paint
-  nothing, as they paint only a marker's or a clone's content. Ink/Stitch sews them black.
+  whose `fill-opacity` is written `0` (`DEV-SVG-003`). The insides of `<defs>` and `<symbol>` are drawn
+  only where a clone shows them ([below](#clones)), and those of `<marker>`, `<pattern>`, `<clipPath>` and
+  `<mask>` never. `context-fill` and `context-stroke` paint only a marker's or a clone's content, and
+  outside a clone they paint nothing. Ink/Stitch sews them black.
 - Ink/Stitch sews a fill's linear gradient in its first stop, and a swatch in its colour, like the
   adapter, but every other gradient and every pattern in black, whatever colour is written after it
   (`DEV-SVG-013`).
@@ -246,6 +247,65 @@ them (`REQ-SVG-003`).
 and a command on an object that is not stitched. The module docs of `crates/stitchcraft-svg/src/inkstitch.rs` describe how the adapter
 finds these objects, with the Ink/Stitch files they were read from.
 
+## Clones
+
+A clone is a `<use>` element that names another element, its source. Inkscape makes one with Edit › Clone ›
+Create Clone, and places each symbol with one. A clone sews what it shows, in its own place in the
+document's order, as Ink/Stitch sews a clone (`REQ-SVG-012`). A `<use>` of one of Ink/Stitch's command
+symbols is a command instead ([above](#inkstitch-objects)). The code is in
+`crates/stitchcraft-svg/src/document/clone.rs`, whose module docs say what was read of Ink/Stitch and what
+was run.
+
+- **What it shows.** The source and everything in it, drawn as a viewer draws it. The source is drawn under
+  its own transform, which the use's `x` and `y` move and the use's transform places. It inherits the use's style, and the
+  source's own declarations win over it, the rules of a style sheet that select the source among them.
+  There `context-fill` and `context-stroke` paint with the use's fill and stroke, as Chrome and Firefox draw
+  them. A clip path on the use cuts what it shows. A clone in the source is drawn the same way, inside the
+  one that shows it. Ink/Stitch drops the use's presentation attributes and the rules that select the
+  source by its id, and sews context paints black (`DEV-SVG-021`).
+- **Ids.** The elements a clone sews are named after it: the fill of the shape `square` that the clone
+  `clone1` shows is `svg:clone1/square:fill`. So 2 clones of one shape sew elements with ids of their own.
+- **Symbols.** A `<symbol>` is drawn in the viewport the clone gives it. Its `viewBox` fits the use's
+  `width` and `height`, as its `preserveAspectRatio` says, or the symbol's own size when the use sets none,
+  as SVG 2 has it, or else the page. What lies outside that viewport is sewn too, as Inkscape draws it,
+  though a browser cuts it off. Ink/Stitch sews a symbol's content in its own units at the use's place, whatever
+  its size (`DEV-SVG-022`).
+- **Settings.** A clone has 3 settings of its own, which the
+  [compatibility contract](inkstitch-compat-contract.md#clones-use) lists. When `clone` is off, the clone
+  sews nothing, and `SC-I0805` lists it. `angle` and `flip_angle` set the angles of its fills (below). The
+  clone's `trim_after` and `stop_after`, and a trim or a stop command tied to it, trim or stop after the last
+  element it sews. Its `min_stitch_length_mm` and `min_jump_stitch_length_mm` apply to every element it
+  sews. Ink/Stitch reads none of a clone's other settings, and `SC-W0802` names them.
+- **Commands.** The commands tied to the source apply to what the clone sews, at places that move with
+  it, as Ink/Stitch copies them. So do the commands in the source whose connectors are in it too. A command
+  tied to a shape in the source from outside it applies only where the source itself is drawn. Of the
+  other commands tied to the clone, Ink/Stitch applies none, and `SC-W0802` names them.
+- **Angles.** A fill's angle is fixed to the page in Ink/Stitch, not to the shape, so a clone that turns a
+  fill turns its angle with it (`REQ-SVG-013`). The direction of the fill's rows is taken through the map
+  from where the source is drawn to where the clone draws it, and the angle is rounded to 6 decimal places,
+  as Ink/Stitch writes it. A fill at 30° sews at -15° in a clone turned 45° right, and at 150° in one
+  mirrored left to right. A symbol has no place of its own. Its fills turn with the clone's transform
+  alone, as Ink/Stitch turns them. A clone's own `angle` gives all its fills that angle instead, and
+  `flip_angle` reverses the angle they sew at. Clones inside clones turn it each in its own place, the
+  innermost first. A shape digitized automatically keeps the angle digitizing chooses, and `SC-W0802` names
+  a clone's `angle` or `flip_angle` there.
+- **What is left out.** A use doesn't draw anything when its link leads to no element, or to one that
+  isn't SVG's, as in a viewer. When a clone shows itself, directly or through other clones, it is left out
+  with `SC-W0804`, as a viewer leaves it out, and the rest of the file is sewn. So is a clone inside more
+  than 16 others, with `SC-W0802`, which bounds how deep the reader goes. The reader charges the budget for
+  what a clone shows each time it shows it. A small file of clones of clones that would draw a billion
+  shapes runs out of it and is refused.
+
+Ink/Stitch fails on a clone that shows itself, and on a use whose `x` or `y` has a unit, such as `10mm`.
+It sews the drawing of a command's symbol whose id ends in a copy's `-2` as a clone, besides applying the
+command (`DEV-SVG-023`). It resolves the clones in a clone's source first and applies only their angles
+there, so such a clone sews though its `clone` setting is off, without its trim, stop and shortest stitch
+and jump, and a command it copies stays where it moves it, wherever the clone round it draws the shape. It
+moves a command it copies only when the command's connector is in a group, where Ink/Stitch's Attach
+Commands puts it, and leaves one at the root where it was. And it gives everything a clone sews the clone's
+shortest stitch and jump, the design's when the clone sets none, where the adapter keeps the source's
+(`DEV-SVG-024`).
+
 ## Design settings
 
 Ink/Stitch keeps 4 settings for the whole design in the file's first `<metadata>` element. Each is an
@@ -307,12 +367,12 @@ that applies them.
 
 ## Reports
 
-- `SC-W0802` reports a feature that is not stitched. Text, images, clones, nested `<svg>` elements and
-  the style sheet rules that are not read are such features. So are masks, filters and markers, a
-  group's Ink/Stitch settings, the settings of Ink/Stitch's early versions (`embroider_` attributes),
-  and what is not applied of a clip path ([Clip paths](#clip-paths)). It reports a file Ink/Stitch would
-  update, or warn about, that is read as it is: one with Ink/Stitch's content and no file version, or of
-  a newer version.
+- `SC-W0802` reports a feature that is not stitched. Text, images, nested `<svg>` elements and the style
+  sheet rules that are not read are such features. So are masks, filters and markers, a group's
+  Ink/Stitch settings, the settings of Ink/Stitch's early versions (`embroider_` attributes), what is not
+  applied of a clip path ([Clip paths](#clip-paths)) and what is not applied of a clone
+  ([Clones](#clones)). It reports a file Ink/Stitch would update, or warn about, that is read as it is: one
+  with Ink/Stitch's content and no file version, or of a newer version.
 - `SC-I0818` says how many shapes of a file an older Ink/Stitch saved are read as its update changes
   them, for each change.
 - `SC-W0804` reports geometry that cannot be used:
@@ -322,6 +382,8 @@ that applies them.
   - a point more than 10 m from the origin
   - a stroke width, join or miter limit that does not read, and a stroke too wide to measure
   - an empty root `width`, `height` or `viewBox`, and a root `preserveAspectRatio` that does not read
+  - a clone that shows itself, a symbol's `viewBox`, `preserveAspectRatio` or size that does not read, a
+    symbol's viewport of no area, and a clone whose source's place does not read
 - `SC-E0801` refuses a file that is not SVG, or that is larger than the adapter reads. It refuses a file
   whose size cannot be used too: a root `width`, `height` or `viewBox` that does not read, a size of 0
   or less, a viewBox with no area, or a size so large that the viewBox scales to no number, however
