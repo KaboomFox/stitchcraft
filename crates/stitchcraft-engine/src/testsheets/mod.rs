@@ -37,7 +37,7 @@ mod ts16;
 
 use designed::Drawing;
 pub use sketch::{STITCH_LEN, SheetError};
-use stitchcraft_core::Code;
+use stitchcraft_core::{Code, ElementId};
 use stitchcraft_plan::palette::BROTHER_PEC;
 use stitchcraft_plan::profiles::{BROTHER_PE800_4X4, BROTHER_PE800_SMALL, REFERENCE};
 use stitchcraft_plan::{MachineProfile, StitchPlan, Thread};
@@ -149,6 +149,30 @@ impl TestSheet {
             Drawn::Designed(drawing, _) | Drawn::DesignedById(drawing, _) | Drawn::FromFile(drawing, _) => Some(drawing().and_then(Drawing::design)),
         }
     }
+
+    /// The elements of the sheet's design that its Ink/Stitch file draws as clones of others, as TS-16's file
+    /// draws one (`REQ-SVG-012`); `None` for a sheet drawn stitch by stitch, which has no file.
+    pub fn clones(&self) -> Option<Result<Vec<Cloned>, SheetError>> {
+        match self.drawn {
+            Drawn::Sketched(_) => None,
+            Drawn::Designed(drawing, _) | Drawn::DesignedById(drawing, _) | Drawn::FromFile(drawing, _) => Some(drawing().map(Drawing::clones)),
+        }
+    }
+}
+
+/// An element of a sheet's design that the sheet's Ink/Stitch file draws as a clone (`<use>`) of another,
+/// which Ink/Stitch and the SVG reader both resolve into the element (`REQ-SVG-012`). The design holds the
+/// element itself, as it holds any other, so `stitch testsheet` sews it: a clone is how a file draws an
+/// element, not something the engine sews otherwise, and the element remembers nothing of it.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Cloned {
+    /// The element the file draws as a clone.
+    pub element: ElementId,
+    /// The element it is a clone of.
+    pub of: ElementId,
+    /// The clone's transform, SVG's `matrix(a b c d e f)`: the map from the source's millimetres to the
+    /// element's.
+    pub map: [f64; 6],
 }
 
 /// Whether `design` holds any of what an Ink/Stitch file gives it ([`TestSheet::uses_file_features`]).
@@ -431,7 +455,7 @@ pub static SHEETS: &[TestSheet] = &[
     },
     TestSheet {
         id: "TS-16",
-        title: "An Ink/Stitch file: start and end commands, clip paths, origin, stop position and turn",
+        title: "An Ink/Stitch file: start and end commands, clip paths, origin, stop position, turn and a clone",
         checks: &[
             "Sew it beside Ink/Stitch's machine file of the same sheet, which the differential keeps (`target/conformance/differential/ts-16.inkstitch.pes`). Each element should start and end in the same place in both.",
             "The red fill, 40 by 30 mm, starts at its top-right corner, where its start command is, and ends at its bottom-left corner, at its end command.",
@@ -440,7 +464,8 @@ pub static SHEETS: &[TestSheet] = &[
             "The black zigzag at the bottom sews its first 15 mm and its last 15 mm, and nothing between, where its clip path leaves a gap: the needle jumps it. Does each piece end where the gap begins?",
             "The design's origin, on the blue column's top edge 10 mm in from its left end, goes to the hoop's centre, where the needle waits before it sews. Does the machine put the design there, or its middle?",
             "The machine stops after the blue column. Before it stops, the frame moves to the stop position, 20 mm right of the red fill's top-right corner and 10 mm above it. Does the frame wait there, and does the needle come back for the green fill?",
-            "The file turns the sheet right about its origin, as Ink/Stitch's rotate on export does: it sews 100 mm wide and 40 mm tall, the red fill at the right and the zigzag at the left. Does the machine sew it so, or turn it back?",
+            "The file turns the sheet right about its origin, as Ink/Stitch's rotate on export does: its first 4 shapes sew 100 mm wide and 40 mm tall, the red fill at the right and the zigzag at the left. Does the machine sew it so, or turn it back?",
+            "Last, in red again, the red fill's clone sews below the fill, turned 45° right. Do its rows run along its long sides, as the fill's run along its own? It starts at its corner turned from the fill's top-right one and ends at the one turned from the fill's bottom-left.",
             "Any difference between the 2 sew-outs, and where.",
         ],
         profile: REFERENCE,
@@ -565,8 +590,9 @@ mod tests {
         assert_eq!(about("TS-11C"), [123.0, 120.176369967, 0.0, 0.0]);
         // TS-16's shapes, 40 × 100 mm as drawn, and the frame's move to its stop position, 20 mm right of them and
         // 10 mm above, round its origin, which lies 10 mm from their left side and 40 mm from their top, all
-        // turned right.
-        assert_eq!(about("TS-16"), [110.0, 60.0, -5.0, 20.0]);
+        // turned right. Its clone of the red fill reaches 35 / √2 mm from its middle, 62.5 mm right of the
+        // origin, so 87.25 mm below it once turned.
+        assert_eq!(about("TS-16"), [110.0, 97.248737342, -5.0, 38.624368671]);
         // Each TS-10 frame is its hoop's whole field, as its title and checks say, and fits no smaller hoop.
         let hoops = [("ts-10a", "4 × 4 in", &BROTHER_PE800_4X4), ("TS-10B", "5 × 7 in", REFERENCE), ("TS-10C", "small", &BROTHER_PE800_SMALL)];
         for (id, hoop, profile) in hoops {
@@ -628,6 +654,40 @@ mod tests {
         assert!(fill.last().unwrap().distance(at(0.0, 30.0)) < 1.5, "{:?}", fill.last());
         let column = sewn("TS-16", "column");
         assert!(column[0].distance(at(20.0, 42.5)) < 1e-9 && column.last().unwrap().distance(at(30.0, 42.5)) < 1e-9, "{column:?}");
+    }
+
+    #[test]
+    fn ts16_s_clone_of_the_red_fill_turns_its_rows_and_its_positions_with_it() {
+        // The clone's map, from the fill's millimetres to its own, as the sheet draws it, and back.
+        let (sin, cos) = stitchcraft_core::math::sin_cos(stitchcraft_core::math::to_radians(ts16::CLONE_TURN));
+        let [left, top, right, bottom] = ts16::FILL;
+        let ((cx, cy), (mx, my)) = (((left + right) / 2.0, (top + bottom) / 2.0), ts16::CLONE_MIDDLE);
+        let turned =
+            |(x, y): (f64, f64)| stitchcraft_core::Point::new(cos * (x - cx) - sin * (y - cy) + mx, sin * (x - cx) + cos * (y - cy) + my).unwrap();
+        let back = |q: &stitchcraft_core::Point| {
+            let (dx, dy) = (q.x() - mx, q.y() - my);
+            (cos * dx + sin * dy + cx, -sin * dx + cos * dy + cy)
+        };
+        let clone: Vec<_> = sewn("TS-16", "clone").iter().map(ts16_drawn).collect();
+        // It sews inside the fill turned, from the corner turned from the fill's start to the one turned from its end.
+        assert!(clone.iter().map(back).all(|(x, y)| (left - 0.1..=right + 0.1).contains(&x) && (top - 0.1..=bottom + 0.1).contains(&y)), "{clone:?}");
+        assert!(clone[0].distance(turned((right, top))) < 1.5, "{:?}", clone[0]);
+        assert!(clone.last().unwrap().distance(turned((left, bottom))) < 1.5, "{:?}", clone.last());
+        // Most of its stitches run along its rows, at -45° as the sheet is drawn: down to the right, or back.
+        let long: Vec<(f64, f64)> =
+            clone.windows(2).map(|w| (w[1].x() - w[0].x(), w[1].y() - w[0].y())).filter(|(dx, dy)| (dx * dx + dy * dy).sqrt() > 1.5).collect();
+        let along = long.iter().filter(|(dx, dy)| dx * dy > 0.0 && (dx.abs() - dy.abs()).abs() < 0.05 * (dx * dx + dy * dy).sqrt()).count();
+        assert!(2 * along > long.len(), "{along} of {}", long.len());
+        let design = find("TS-16").unwrap().design().unwrap().unwrap();
+        let element = design.elements().iter().find(|e| e.id.as_str() == "ts16:clone").unwrap();
+        assert_eq!(element.params.get(crate::generators::tatami::ANGLE), Some(ts16::CLONE_ANGLE));
+        // And the file draws it as a clone of the fill.
+        let clones = find("TS-16").unwrap().clones().unwrap().unwrap();
+        assert_eq!(clones.iter().map(|c| (c.element.as_str(), c.of.as_str())).collect::<Vec<_>>(), [("ts16:clone", "ts16:fill")]);
+        assert_eq!(clones[0].map, [cos, sin, -sin, cos, mx - cos * cx + sin * cy, my - sin * cx - cos * cy]);
+        // No other sheet's file draws a clone, and a sheet drawn stitch by stitch has no file.
+        assert!(SHEETS.iter().filter(|sheet| sheet.id != "TS-16").all(|sheet| sheet.clones().is_none_or(|clones| clones.unwrap().is_empty())));
+        assert!(find("TS-01").unwrap().clones().is_none());
     }
 
     #[test]

@@ -1,0 +1,6 @@
+id = "inkstitch-clone-angle"
+requirements = ["REQ-SVG-008", "REQ-SVG-012", "REQ-SVG-013"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/clone-angle.svg"
+# A clone turned 30 degrees whose own angle, 90 degrees, its fill takes instead of the turned one: upright rows
+# across the turned bar, about a third more stitches than rows along it.

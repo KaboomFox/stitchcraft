@@ -1,0 +1,7 @@
+id = "inkstitch-clone-turn-45"
+requirements = ["REQ-SVG-008", "REQ-SVG-012", "REQ-SVG-013"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/clone-turn-45.svg"
+# A bar and its clone turned 45 degrees right: both programs sew the clone where the bar is shown, its rows
+# turned with it, along its long sides. Rows left horizontal across the turned bar would sew other stitches,
+# which the count shows.
