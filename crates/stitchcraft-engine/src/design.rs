@@ -10,6 +10,7 @@
 //! give, and a fill's region is normalized into polygons with holes ([`crate::normalize::region`]).
 
 use std::collections::BTreeSet;
+use std::sync::Arc;
 
 use stitchcraft_core::units::MACHINE_LIMIT;
 use stitchcraft_core::{Code, Diagnostic, ElementId, Mm, Point, Rect};
@@ -221,8 +222,10 @@ pub struct Element {
 /// (`REQ-GEN-005`). With no shapes, it has no area, and leaves nothing of what it cuts.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Clip {
-    /// The shapes whose areas, together, it is: a clip path's children.
-    pub shapes: Vec<ClipShape>,
+    /// The shapes whose areas, together, it is: a clip path's children. They are shared, so that every
+    /// element a clip cuts holds the clip without a copy of its shapes: a clip group of many objects holds
+    /// its clipping object's paths once.
+    pub shapes: Arc<[ClipShape]>,
 }
 
 /// One shape of a [`Clip`]: the region `path` bounds by `rule`, as a fill's ([`crate::normalize::region`]).
@@ -237,7 +240,7 @@ pub struct ClipShape {
 impl Clip {
     /// The clip of one shape: the region `path` bounds by `rule`.
     pub fn of(path: Path, rule: FillRule) -> Clip {
-        Clip { shapes: vec![ClipShape { path, rule }] }
+        Clip { shapes: Arc::new([ClipShape { path, rule }]) }
     }
 
     /// The points of its shapes' outlines.

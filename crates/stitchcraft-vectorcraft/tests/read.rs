@@ -142,12 +142,12 @@ fn req_vc_001_vectorcraft_s_own_example_reads_alike_in_formats_1_and_4() {
     // VectorCraft's `examples/ribbons.vectorcraft`, as 0.1.0 saved it (format 1) and as 0.11.0 did (format 4).
     let (old, new) = (read_ok(RIBBONS_1), read_ok(RIBBONS_4));
     assert_eq!(old, new);
-    // Its background is a gradient, sewn in its first colour; the ribbons are blends in a clipping group,
+    // Its background is a gradient, sewn in its first colour; the ribbons are blends in a clip group,
     // computed as VectorCraft draws them, and the titles are text.
     assert_eq!(ids(&new), ["vc:2:fill"]);
     assert_eq!(element(&new, "vc:2:fill").thread.color, Rgb::new(27, 27, 47));
     let named: Vec<&str> = new.warnings.iter().map(|w| w.element.as_ref().map_or("", |e| e.as_str())).collect();
-    assert_eq!(named, ["vc:2", "vc:15", "vc:5", "vc:8", "vc:11", "vc:12", "vc:13"]);
+    assert_eq!(named, ["vc:2", "vc:5", "vc:8", "vc:11", "vc:12", "vc:13"]);
     assert!(new.warnings.iter().all(|w| w.code == Code::VcFeatureIgnored), "{:?}", new.warnings);
 }
 
@@ -436,7 +436,6 @@ fn req_vc_005_what_is_not_stitched_is_named() {
         (w, "vc:14"),
         (w, "vc:15"),
         (w, "vc:16"),
-        (w, "vc:17"),
         (w, "vc:20"),
         (w, "vc:28"),
         (w, "vc:30"),
@@ -455,6 +454,10 @@ fn req_vc_005_what_is_not_stitched_is_named() {
     assert_eq!(element(&read, "vc:29:fill").thread.color, Rgb::new(0, 128, 0));
     assert_eq!(element(&read, "vc:28:fill").thread.color, Rgb::new(255, 0, 0));
     assert_eq!(element(&read, "vc:30:fill").thread.color, Rgb::new(0, 0, 0));
+    // The square in a clip group is cut to its clipping object, which the square lies in (REQ-VC-017).
+    let clipped = element(&read, "vc:19:fill");
+    assert_eq!(clipped.clips.len(), 1);
+    assert!(read.design.elements().iter().all(|e| e.clips.is_empty() || e.id == clipped.id));
 }
 
 #[test]
@@ -716,12 +719,13 @@ fn diag_sc_w0807_text_images_and_live_objects_are_named_with_how_to_stitch_them(
         assert!(warning.message.starts_with(what), "{warning}");
         assert!(matches!(&warning.fix, Some(Fix::Hint(h)) if h.contains(hint)), "{warning}");
     }
-    // What is said of a layer's clipping, paints and effects is said of a layer.
+    // What is said of a layer's paints and effects is said of a layer. Its clipping mask, of nothing, says
+    // nothing.
     let layer = br#"{"format": "vectorcraft", "version": 4, "document": {"layers": [{"id": 1, "name": "Cut",
         "appearance": {"items": [{"kind": "fill", "paint": {"type": "solid", "color": {"model": "gray", "k": 1}}}],
         "effects": [{"id": "stylize.dropShadow", "params": {}}]}, "kind": {"type": "layer", "clip": true, "children": []}}]}}"#;
     let read = read_ok(layer);
-    assert_eq!(read.warnings.len(), 3);
+    assert_eq!(read.warnings.len(), 2);
     assert!(read.warnings.iter().all(|w| w.message.starts_with("A layer \"Cut\"")), "{:?}", read.warnings);
 }
 
