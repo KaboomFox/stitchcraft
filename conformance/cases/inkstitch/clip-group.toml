@@ -1,0 +1,6 @@
+id = "inkstitch-clip-group"
+requirements = ["REQ-SVG-008", "REQ-SVG-011", "REQ-GEN-005"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/clip-group.svg"
+# A group's clip path and the square's own cut it to the 30 mm square where both overlap, and the group's cuts
+# the running stitch into its 2 pieces left of x 40. Unclipped, the design would be 40 mm wide.

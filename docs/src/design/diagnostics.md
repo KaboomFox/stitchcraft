@@ -94,6 +94,7 @@ another.
 | `SC-E0010` | Error | Nothing to stitch (no embroiderable elements) | M1 |
 | `SC-W0011` | Warning | Stitch type not sewn yet; element skipped | M3 |
 | `SC-E0012` | Error | Bug-report bundle could not be replayed | M3 |
+| `SC-W0013` | Warning | Element outside its clip paths; left out (wholly outside them, or under clip paths that don't meet or have no area; Ink/Stitch sews one whose clip path is empty whole) | M8 |
 | `SC-E0101` | Error | Parameter has the wrong type or an unknown choice | M3 |
 | `SC-W0102` | Warning | Parameter clamped to its allowed range | M3 |
 | `SC-W0105` | Warning | Unknown parameter preserved but ignored | M3 |
@@ -113,6 +114,7 @@ another.
 | `SC-E0214` | Error | Satin column drawn as one path could not be made into rails (too short, or too tight for its width) | M4 |
 | `SC-W0215` | Warning | Satin column too small for the shortest stitch; left out (all within it of its first needle point, or a zigzag satin with no stitch across, underlays and all; Ink/Stitch sews a speck) | M4 |
 | `SC-E0216` | Error | Satin column has no section to sew (its rungs or push compensation take each section's length off a rail) | M4 |
+| `SC-W0217` | Warning | Satin column is clipped; sewn whole (as in Ink/Stitch) | M8 |
 | `SC-W0303` | Warning | Parts of a fill too small to sew left out (3 square CSS pixels or less, as in Ink/Stitch); a fill of no area sews nothing | M5 |
 | `SC-W0304` | Warning | Fill smaller than 1.4 mm² (20 square CSS pixels); a running stitch or a satin column may sew it better | M5 |
 | `SC-W0305` | Warning | Fill part too thin for rows; sewn round its outline (as in Ink/Stitch) | M5 |
@@ -165,6 +167,7 @@ another.
 | `SC-E0816` | Error | VectorCraft could not trace the picture (its command line failed or didn't save the document) | M13 |
 | `SC-E0817` | Error | VectorCraft test sheet not drawn (in the middle of the artboard, parts of the sheet would lie more than 10 m from the document's origin) | M6 |
 | `SC-I0818` | Info | Ink/Stitch file from an older version, read as Ink/Stitch updates it (the shapes given a default or a setting whose meaning has changed since, such as a fill's 3 mm stitches before its file version 4, counted for each change) | M3 |
+| `SC-E0819` | Error | More than one origin or stop position (Ink/Stitch's `origin` command, or more than one object named `stitch:origin`, 2 or more times, or its `stop_position` command or `stitch:stop-position` in a design that stops: no machine file is written, as Ink/Stitch writes none) | M8 |
 | `SC-I0901` | Info | Shapes digitized automatically (`--auto`, or VectorCraft's Auto effect), counted by their stitches (running stitches, satin columns or tatami fills) | M13 |
 | `SC-I0902` | Info | Satin column can't be made; filled (a part of an automatic line that turns more tightly than it is wide, is shorter than a CSS pixel or is a dot its cap draws, or a part of an automatic area whose triangles don't make a column round one of its lines or whose column would be read back otherwise) | M13 |
 | `SC-W0903` | Warning | Line too wide to fill; left out (an automatic line whose filled area would reach more than 10 m from the origin) | M13 |

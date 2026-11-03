@@ -99,12 +99,15 @@ choose **Object › Plug-ins › StitchCraft Design Settings**, set them, and pr
 - **Machine**, the machine and hoop the design is planned for, `brother-pe800-5x7` by default.
 - **Shortest jump**, **Shortest stitch** and **Narrowest satin stroke**, in millimetres. Rest the pointer
   on a label for what each does.
+- **Turn on export**, for a machine that doesn't turn a design to fit its hoop. In the machine file, 90
+  turns the design right about the hoop's centre and -90 turns it left, as Ink/Stitch's rotate on export
+  does.
 
 The document saves them. The exporters and `stitch export` plan the design for the machine it keeps,
 unless the export's **Machine** option or `--profile` names another. They use its settings as they use
 an SVG file's design settings. Whatever is selected, the filter leaves every object as it is.
 
-VectorCraft opens the dialog at the defaults each time, not at what the document keeps, so set all 4 when
+VectorCraft opens the dialog at the defaults each time, not at what the document keeps, so set all 5 when
 you run it again. A live effect isn't given what the document keeps. The stitches shown as you work are
 planned for `brother-pe800-5x7` with the default settings, and a longer shortest stitch shows only in the
 machine file and in `stitch export --preview`. A setting that StitchCraft can't read keeps its default,
@@ -136,13 +139,19 @@ is drawn, with the VectorCraft command that makes it sewable, such as **Type ›
 (`SC-W0807`). The [diagnostic codes](../reference/diagnostics.md) page explains each code, as
 `stitch explain SC-W0807` does.
 
-## Start and end markers
+## Start, end, origin and stop position markers
 
 A small path named `stitch:start` or `stitch:end`, grouped with a fill or a satin column, marks where the
 fill or the column starts or ends, as Ink/Stitch's start and end commands do. The patch's red fill starts
 at its start marker. A marker is never sewn, and a group or a layer is never a marker. Put one of each in
 a group: StitchCraft names a second one, and uses the first. The middle of the marker counts, so draw it
 small, such as a dot or a short line, where the needle is to go in or come out.
+
+A small path named `stitch:origin`, anywhere in the document, is the design's origin, which goes to the
+hoop's centre, as Ink/Stitch's origin command is. Without one, the middle of the design goes there. One named
+`stitch:stop-position` is where the frame moves before each stop, clear of the needle, so you can place an
+appliqué or check the work. Draw at most one of each. StitchCraft doesn't write a file of a design with 2
+origins, or with 2 stop positions and a stop (`SC-E0819`), and neither does Ink/Stitch.
 
 ## When it sews wrong
 

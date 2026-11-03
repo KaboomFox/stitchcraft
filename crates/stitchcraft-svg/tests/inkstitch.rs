@@ -3,7 +3,7 @@
 //! helper paths are never stitched.
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
-#![allow(clippy::unwrap_used)]
+#![allow(clippy::unwrap_used, clippy::panic)]
 
 mod common;
 
@@ -53,9 +53,10 @@ fn req_svg_003_commands_connectors_and_helper_paths_are_not_stitched() {
             "warning SC-W0802: `sample` is an Ink/Stitch stitch pattern, a helper for the other shapes in its group, so it is not stitched; StitchCraft does not apply patterns yet.",
             "warning SC-W0802: `flow` is a connector (drawn with Inkscape's connector tool), which Ink/Stitch does not stitch; it is left out.",
             "info SC-I0805: `layer2` is left out, with everything in it: an Ink/Stitch `ignore_layer` command is in it.",
-            "warning SC-W0802: `use5` is Ink/Stitch's `origin` command, which StitchCraft does not apply yet.",
         ]
     );
+    // The origin command gives the design its origin, at its symbol (`REQ-ASM-005`).
+    assert_eq!(svg.design.settings.origin, Some(p(50.0, 50.0)));
 }
 
 #[test]
@@ -361,4 +362,66 @@ fn req_svg_001_any_marker_property_that_names_a_marker_is_noted() {
             "warning SC-W0802: `b` has markers (arrowheads and the like), which are not stitched.",
         ]
     );
+}
+
+/// The symbols of Ink/Stitch's `origin` and `stop_position` commands, as its Commands extension adds them.
+const GLOBAL_SYMBOLS: &str = r#"<defs><symbol id="inkstitch_origin"><circle r="1"/></symbol>
+    <symbol id="inkstitch_stop_position"><circle r="1"/></symbol></defs>"#;
+
+#[test]
+fn req_asm_005_origin_and_stop_position_commands_give_the_design_its_origin_and_stop_position() {
+    // Each at its symbol's place, under the transforms above it, wherever it is.
+    let read = svg(drawing(&format!(
+        r##"{GLOBAL_SYMBOLS}
+        <rect id="square" x="20" y="20" width="10" height="10" fill="red" inkstitch:stop_after="true"/>
+        <g transform="translate(5 0)"><use id="o" xlink:href="#inkstitch_origin" x="15" y="20"/></g>
+        <use id="s" xlink:href="#inkstitch_stop_position" x="80" y="10"/>"##
+    )));
+    assert!(warnings(&read).is_empty(), "{:?}", warnings(&read));
+    assert_eq!((read.design.settings.origin, read.design.settings.stop_position), (Some(p(20.0, 20.0)), Some(p(80.0, 10.0))));
+    // Planned, the origin is where the machine starts, so the square sews from (0, 0) to (10, 10), and the
+    // frame moves to the stop position, 60 mm right and 10 mm up, before the stop after it.
+    let outcome = stitchcraft_engine::plan(&read.design, stitchcraft_plan::profiles::REFERENCE, &Budget::DEFAULT);
+    let plan = outcome.plan.unwrap_or_else(|| panic!("{:?}", outcome.diagnostics));
+    let sewn: Vec<Point> = plan.stitches().filter(|s| s.kind == stitchcraft_plan::StitchKind::Normal).map(|s| s.at).collect();
+    let (xs, ys) = (sewn.iter().map(|q| q.x()), sewn.iter().map(|q| q.y()));
+    let bounds = [xs.clone().fold(f64::MAX, f64::min), ys.clone().fold(f64::MAX, f64::min), xs.fold(f64::MIN, f64::max), ys.fold(f64::MIN, f64::max)];
+    assert!(bounds.iter().zip([0.0, 0.0, 10.0, 10.0]).all(|(got, want)| (got - want).abs() < 0.1), "{bounds:?}");
+    assert!(plan.stitches().any(|s| s.kind == stitchcraft_plan::StitchKind::Jump && s.at == p(60.0, -10.0)));
+}
+
+#[test]
+fn req_asm_005_a_global_command_whose_place_doesn_t_read_is_left_out() {
+    let read = svg(drawing(&format!(r##"{GLOBAL_SYMBOLS}<rect width="10" height="10"/><use id="o" xlink:href="#inkstitch_origin" x="far"/>"##)));
+    assert_eq!(read.design.settings.origin, None);
+    assert_eq!(
+        warnings(&read),
+        [
+            "warning SC-W0802: `o` is Ink/Stitch's `origin` command, whose place doesn't read: a coordinate or a transform is not a number, or it lies more than 10 m from the origin. It is left out."
+        ]
+    );
+}
+
+#[test]
+fn diag_sc_e0819_two_origins_or_two_stop_positions_and_a_stop_end_planning() {
+    // 2 origins whatever the design; 2 stop positions where it stops, and nothing where it doesn't, as
+    // Ink/Stitch looks for a stop position only at a stop.
+    let twice = |command: &str, stops: bool| {
+        let stop = if stops { r#" inkstitch:stop_after="true""# } else { "" };
+        svg(drawing(&format!(
+            r##"{GLOBAL_SYMBOLS}<rect width="10" height="10"{stop}/>
+            <use xlink:href="#inkstitch_{command}" x="1"/><use xlink:href="#inkstitch_{command}" x="2"/>"##
+        )))
+    };
+    for (command, stops) in [("origin", false), ("origin", true), ("stop_position", true)] {
+        let read = twice(command, stops);
+        let error = read.warnings.iter().find(|d| d.code == Code::OriginOrStopPositionTwice).unwrap();
+        assert_eq!(error.severity(), Severity::Error);
+        let has = if command == "origin" { "" } else { ", and the design stops" };
+        let message =
+            format!("The file has 2 Ink/Stitch `{command}` commands{has}, and Ink/Stitch writes no file of it: which one counts isn't known.");
+        assert_eq!(error.message, message);
+        assert_eq!(read.design.settings.origin.or(read.design.settings.stop_position), None, "neither counts");
+    }
+    assert!(twice("stop_position", false).warnings.is_empty());
 }

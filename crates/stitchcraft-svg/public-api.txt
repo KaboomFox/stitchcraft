@@ -5,10 +5,11 @@ pub mod stitchcraft_svg::inkstitch
 pub enum stitchcraft_svg::inkstitch::Does
 pub stitchcraft_svg::inkstitch::Does::IgnoreLayer
 pub stitchcraft_svg::inkstitch::Does::IgnoreObject
-pub stitchcraft_svg::inkstitch::Does::NotYet
+pub stitchcraft_svg::inkstitch::Does::Origin
 pub stitchcraft_svg::inkstitch::Does::Positions
 pub stitchcraft_svg::inkstitch::Does::StartOrEnd
 pub stitchcraft_svg::inkstitch::Does::Stop
+pub stitchcraft_svg::inkstitch::Does::StopPosition
 pub stitchcraft_svg::inkstitch::Does::ToolInput
 pub stitchcraft_svg::inkstitch::Does::Trim
 impl stitchcraft_svg::inkstitch::Does

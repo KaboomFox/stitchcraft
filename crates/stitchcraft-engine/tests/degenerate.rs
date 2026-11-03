@@ -31,6 +31,7 @@ fn elements(path: &Path) -> Vec<(String, Element)> {
         params: params.iter().copied().collect::<ParamSet>(),
         automatic: false,
         hints: Default::default(),
+        clips: Vec::new(),
     };
     let stroke = |width: f64| Shape::Stroke { path: path.clone(), width: Mm::new(width).unwrap(), join: Join::UNSET, cap: Cap::Butt };
     let mut all = Vec::new();

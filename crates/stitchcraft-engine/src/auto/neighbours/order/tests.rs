@@ -37,6 +37,7 @@ fn element(id: &str, shape: Shape, thread: &Thread) -> Element {
         params: ParamSet::default(),
         automatic: false,
         hints: Default::default(),
+        clips: Vec::new(),
     }
 }
 
