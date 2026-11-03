@@ -12,6 +12,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0010`](#sc-e0010) | Error | Nothing to stitch |
 | [`SC-W0011`](#sc-w0011) | Warning | Stitch type not sewn yet; element skipped |
 | [`SC-E0012`](#sc-e0012) | Error | Bug-report bundle could not be replayed |
+| [`SC-W0013`](#sc-w0013) | Warning | Element outside its clip paths; left out |
 | [`SC-E0101`](#sc-e0101) | Error | Parameter has the wrong type or an unknown choice |
 | [`SC-W0102`](#sc-w0102) | Warning | Parameter clamped to its allowed range |
 | [`SC-W0105`](#sc-w0105) | Warning | Unknown parameter preserved but ignored |
@@ -31,6 +32,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0214`](#sc-e0214) | Error | Satin column drawn as one path could not be made into rails |
 | [`SC-W0215`](#sc-w0215) | Warning | Satin column too small for the shortest stitch; left out |
 | [`SC-E0216`](#sc-e0216) | Error | Satin column has no section to sew |
+| [`SC-W0217`](#sc-w0217) | Warning | Satin column is clipped; sewn whole |
 | [`SC-W0303`](#sc-w0303) | Warning | Parts of a fill too small to sew left out |
 | [`SC-W0304`](#sc-w0304) | Warning | Fill smaller than 1.4 mm² |
 | [`SC-W0305`](#sc-w0305) | Warning | Fill part too thin for rows; sewn round its outline |
@@ -69,6 +71,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0802`](#sc-w0802) | Warning | SVG feature ignored |
 | [`SC-I0805`](#sc-i0805) | Info | Object left out, as the file asks |
 | [`SC-I0818`](#sc-i0818) | Info | Ink/Stitch file from an older version, read as Ink/Stitch updates it |
+| [`SC-E0819`](#sc-e0819) | Error | More than one origin or stop position |
 | [`SC-W0804`](#sc-w0804) | Warning | Element geometry invalid or out of range |
 | [`SC-W0803`](#sc-w0803) | Warning | VectorCraft file from a newer format version; read best-effort |
 | [`SC-E0806`](#sc-e0806) | Error | VectorCraft file could not be read |
@@ -162,6 +165,19 @@ format this StitchCraft does not have. Nothing was replayed.
 
 The message says what is wrong. A bundle written by a newer StitchCraft needs that version or a
 later one; a bundle changed by hand, or by an email program, needs the original file.
+
+## SC-W0013
+
+**Warning** — Element outside its clip paths; left out
+
+The element is cut to clip paths, its own or those of the groups round it, and they leave nothing of
+it: it lies wholly outside them, they don't overlap one another, or one of them has no area, such as
+an empty clip path or one of text alone. A viewer shows nothing of it, so it sews nothing
+(`REQ-GEN-005`), and a trim or stop after it is left out (`SC-W0505`). Ink/Stitch sews nothing of an
+element outside its clip path too, but sews an element whose clip path has no area whole
+(`DEV-SVG-019`).
+
+Move the element or its clip paths, or delete the element if it is hidden on purpose.
 
 ## SC-E0101
 
@@ -377,6 +393,16 @@ start to the second rail's end does this, and so does push compensation that tak
 a short column's rails where its rungs meet them. Ink/Stitch says such a column cannot be stitched.
 
 Move the rungs so that each meets both rails away from their ends, or lower `push_compensation_mm`.
+
+## SC-W0217
+
+**Warning** — Satin column is clipped; sewn whole
+
+A satin column is cut to clip paths, its own or those of the groups round it, which StitchCraft
+doesn't apply to a satin column: it is sewn whole, as Ink/Stitch sews it, where a viewer shows only
+what lies inside them (`REQ-GEN-005`).
+
+Draw the column as far as it should sew, or make it a fill if it should take the clip's shape.
 
 ## SC-W0303
 
@@ -758,9 +784,11 @@ hooping (most machines refuse the file). A design that fits the hoop can still r
 where it is placed: its origin, which goes to the hoop's centre, can lie far from its middle, and
 its stop position, where the frame goes before each stop, can lie outside the hoop.
 
-If the message says the design fits when turned 90 degrees, rotate it. Otherwise scale it down,
-or split it into parts that are sewn in separate hoopings. Where it reaches past the edge from
-where it is placed, move its origin nearer its middle, or its stop position nearer the design.
+If the message says the design fits when turned 90 degrees, rotate it, or have the machine file
+turn it: Ink/Stitch's rotate on export, or Turn on export in StitchCraft's Design Settings filter.
+Otherwise scale it down, or split it into parts that are sewn in separate hoopings. Where it reaches
+past the edge from where it is placed, move its origin nearer its middle, or its stop position nearer
+the design.
 
 ## SC-W0702
 
@@ -807,12 +835,16 @@ viewer ignores it, and one of Ink/Stitch's design settings keeps its default. A 
 sews across its width, as a satin column or a fill, is as wide as its transforms stretch it on
 average, so a transform that stretches it more one way than the other, and draws it wider one way,
 is named too. So is what StitchCraft does not apply of an Ink/Stitch file: the settings of a group,
-which Ink/Stitch doesn't read either, those of its early versions (`embroider_` attributes), its
-design setting `rotate_on_export`, which turns the design as it is written, and the updates
+which Ink/Stitch doesn't read either, those of its early versions (`embroider_` attributes), a turn
+on export (`rotate_on_export`) that is not a number, and the updates
 Ink/Stitch would make to a file with its settings and no file version, or from a newer Ink/Stitch,
 which is read as it is. Of its commands, one on an object that is not stitched is named, and so is a
-start, end or target command whose place doesn't read, and one on a shape digitized automatically
-(`--auto`), which places where its parts start and end.
+start, end, target, origin or stop position command whose place doesn't read, an `ignore_layer`
+command in no layer, and a command on a shape digitized automatically (`--auto`), which places where
+its parts start and end. Of clip paths, which cut the shapes they clip,
+what isn't applied is named: text in one, which adds nothing to it, a clip path on a clip path's
+shape, one that isn't a reference, such as a CSS shape, clip paths that name each other in a loop,
+`objectBoundingBox` units on a group, groups in a clip path more than 16 deep, and the root's.
 
 The message names the element and what was done. Convert text and clones to paths in the editor
 (in Inkscape: Path › Object to Path, Edit › Clone › Unlink Clone), and give shapes plain colours.
@@ -846,6 +878,18 @@ instead.
 The message gives the file's version, and how many shapes were updated and how. Nothing needs doing:
 the design sews as Ink/Stitch sews it. To sew a shape otherwise, change the setting the message
 names in Ink/Stitch.
+
+## SC-E0819
+
+**Error** — More than one origin or stop position
+
+The file gives the design 2 origins, or 2 stop positions where the design has a stop: Ink/Stitch's
+`origin` or `stop_position` command more than once, or more than one object named `stitch:origin` or
+`stitch:stop-position` in a VectorCraft document. Which one counts isn't known, so no machine file is
+written, as Ink/Stitch writes none (`REQ-ASM-005`). 2 stop positions in a design without a stop
+change nothing.
+
+The message names the command or marker and counts them. Delete or rename all but one.
 
 ## SC-W0804
 
@@ -906,7 +950,8 @@ VectorCraft runs each on the stitches the one before drew, which no machine sews
 marker, an object named `stitch:start` or `stitch:end`, is never stitched: the shapes grouped with it
 start or end there, and a marker they don't use is said, a second one of its kind in a group or one
 with no point that reads, as are those beside a shape digitized automatically, which places where its
-parts start and end. A name that begins with `stitch:` and names no marker StitchCraft
+parts start and end. So is an origin or stop position marker, `stitch:origin` or
+`stitch:stop-position`, with no point that reads. A name that begins with `stitch:` and names no marker StitchCraft
 reads is said too, as is a group or a layer named as a marker, which only a shape can be: the name is
 ignored. A satin column, a zigzag or a fill made of a stroke is as wide as the stroke all along and
 centred on its path, so a stroke aligned inside or outside a closed path is said, as is a width

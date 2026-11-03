@@ -16,7 +16,7 @@
 use serde::Deserialize;
 use serde_json::{Value, json};
 use stitchcraft_core::{Diagnostic, Mm};
-use stitchcraft_engine::design::{DesignSettings, SETTINGS};
+use stitchcraft_engine::design::{DesignSettings, SETTINGS, Turn};
 use stitchcraft_params::{Empty, Kind};
 use stitchcraft_plan::profiles::{self, BUILTIN, REFERENCE};
 use stitchcraft_vectorcraft::effect_error;
@@ -32,7 +32,8 @@ use crate::manifest::{Param, Schema};
 const PAGE: &str = "user/how-to/embroider-a-vectorcraft-design.html#keep-the-designs-settings-and-machine-with-it";
 
 /// The filter's dialog: the machine, a choice of the built-in profiles, the reference machine by default,
-/// then each design setting ([`SETTINGS`]), a length from 0, at its default.
+/// then each design setting ([`SETTINGS`]), a length from 0, at its default, and the turn on export, a
+/// choice of the turns Ink/Stitch's preferences offer ([`Turn::CHOICES`]), none by default.
 pub(crate) fn options() -> Vec<(&'static str, Param)> {
     let machines = BUILTIN.iter().map(|profile| profile.id).collect();
     let help = format!("{MACHINE_HELP} `stitch export` and File › Export plan the document for it unless they are told another.");
@@ -44,7 +45,10 @@ pub(crate) fn options() -> Vec<(&'static str, Param)> {
         param.ui.unit = dialog::unit(Kind::Length { min: 0.0, max: setting.max, empty: Empty::Never });
         (setting.name, param)
     });
-    std::iter::once((PROFILE, machine)).chain(lengths).collect()
+    let [(none, _), ..] = Turn::CHOICES;
+    let mut turn = own(Schema::Choice { options: Turn::CHOICES.iter().map(|(id, _)| *id).collect(), default: none }, Turn::LABEL, Turn::HELP, PAGE);
+    turn.ui.unit = dialog::unit(Kind::Angle);
+    std::iter::once((PROFILE, machine)).chain(lengths).chain(std::iter::once((Turn::NAME, turn))).collect()
 }
 
 /// What VectorCraft gives a filter: the selected paths and compound paths, each with its id.
@@ -61,8 +65,8 @@ struct Object {
 }
 
 /// The filter's run on `input`, with its dialog's `params`: each object as it is, and the settings to keep
-/// with the document. Parameters that aren't what VectorCraft passes, every setting a number of 0 or more
-/// and a machine its manifest offers, are [`RunError::BadInput`]. A VectorCraft before 0.16 gives the
+/// with the document. Parameters that aren't what VectorCraft passes, every length a number of 0 or more, a
+/// turn and a machine its manifest offers, are [`RunError::BadInput`]. A VectorCraft before 0.16 gives the
 /// filter no `documentData` in its `_context` and would drop what it returned, so there the filter
 /// declines with `SC-E0813`.
 pub fn run(input: &[u8], params: &[u8]) -> Result<Vec<u8>, RunError> {
@@ -73,6 +77,8 @@ pub fn run(input: &[u8], params: &[u8]) -> Result<Vec<u8>, RunError> {
         let value = params.get(setting.name).and_then(Value::as_f64).filter(|v| *v >= 0.0).ok_or(RunError::BadInput)?;
         setting.set(&mut settings, Mm::new(value).map_err(|_| RunError::BadInput)?);
     }
+    let turn = params.get(Turn::NAME).and_then(Value::as_str).and_then(|id| Turn::CHOICES.iter().find(|(choice, _)| *choice == id));
+    settings.rotate_on_export = turn.map(|(_, turn)| *turn).ok_or(RunError::BadInput)?;
     let machine = params.get(PROFILE).and_then(Value::as_str).and_then(profiles::find).ok_or(RunError::BadInput)?;
     if params.pointer("/_context/documentData").is_none() {
         return Ok(effect_error(&cannot_keep()));
@@ -111,8 +117,8 @@ mod tests {
     #[test]
     fn req_vc_013_the_filter_keeps_its_dialog_s_settings_and_changes_no_object() {
         let input = json!({"objects": [{"id": 12, "type": "path", "path": {"subpaths": []}}, {"id": 14, "type": "compound"}]});
-        let out = ran(&input, &json!({"profile": BROTHER_PE800_SMALL.id, "collapse_len_mm": 10.0}));
-        let settings = DesignSettings { collapse_len: Mm::new(10.0).unwrap(), ..DesignSettings::default() };
+        let out = ran(&input, &json!({"profile": BROTHER_PE800_SMALL.id, "collapse_len_mm": 10.0, "rotate_on_export": "90"}));
+        let settings = DesignSettings { collapse_len: Mm::new(10.0).unwrap(), rotate_on_export: Turn::RIGHT, ..DesignSettings::default() };
         assert_eq!(out, json!({"objects": [{"id": 12}, {"id": 14}], "documentData": kept_data(&settings, &BROTHER_PE800_SMALL)}));
         // At the defaults, with nothing selected: the defaults, for the reference machine.
         assert_eq!(
@@ -126,19 +132,22 @@ mod tests {
         let manifest = settings();
         assert_eq!(validate(&serde_json::to_vec(&manifest).unwrap()), Ok(()));
         assert_eq!((manifest.id.as_str(), manifest.kind), ("dev.stitchcraft.settings", "filter"));
-        // The machine, the reference machine by default, then each design setting, a length at its default.
+        // The machine, the reference machine by default, then each design setting, a length at its default,
+        // and the turn on export, none, left or right, none by default.
         let defaults = DesignSettings::default();
         let machines = BUILTIN.iter().map(|profile| profile.id).collect();
         let mut expected = vec![(PROFILE, Schema::Choice { options: machines, default: REFERENCE.id })];
         expected.extend(
             SETTINGS.iter().map(|setting| (setting.name, Schema::Number { min: 0.0, max: setting.max, default: setting.get(&defaults).get() })),
         );
+        expected.push((Turn::NAME, Schema::Choice { options: vec!["0", "-90", "90"], default: "0" }));
         let schemas: Vec<(&str, Schema)> = manifest.params.iter().map(|(key, param)| (*key, param.schema.clone())).collect();
         assert_eq!(schemas, expected);
         for (key, param) in &manifest.params {
             assert!(param.ui.label.is_some() && param.ui.help.is_some() && param.ui.help_url.is_some(), "{key}");
         }
-        assert!(manifest.params.iter().skip(1).all(|(_, param)| param.ui.unit == Some("mm")));
+        let units: Vec<Option<&str>> = manifest.params.iter().map(|(_, param)| param.ui.unit).collect();
+        assert_eq!(units, [None, Some("mm"), Some("mm"), Some("mm"), Some("°")]);
     }
 
     #[test]
@@ -157,7 +166,14 @@ mod tests {
     #[test]
     fn parameters_that_are_not_what_vectorcraft_passes_are_bad_input() {
         let input = serde_json::to_vec(&json!({"objects": []})).unwrap();
-        for bad in [json!({"profile": "singer"}), json!({"collapse_len_mm": -1.0}), json!({"min_stitch_len_mm": "short"})] {
+        let bad = [
+            json!({"profile": "singer"}),
+            json!({"collapse_len_mm": -1.0}),
+            json!({"min_stitch_len_mm": "short"}),
+            json!({"rotate_on_export": "45"}),
+            json!({"rotate_on_export": 90}),
+        ];
+        for bad in bad {
             assert_eq!(run(&input, &params(&bad)), Err(RunError::BadInput), "{bad}");
         }
         assert_eq!(run(b"{", &params(&json!({}))), Err(RunError::BadInput));

@@ -6,7 +6,7 @@
 
 use proptest::prelude::*;
 use stitchcraft_core::{Budget, Code, ElementId, Mm, Rect};
-use stitchcraft_engine::design::{Design, DesignSettings, Element, FillRule, Path, Segment, Shape, Subpath};
+use stitchcraft_engine::design::{Design, DesignSettings, Element, FillRule, Path, Segment, Shape, Subpath, Turn};
 use stitchcraft_engine::plan;
 use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::{Rgb, Role, StitchKind, Thread};
@@ -100,6 +100,31 @@ fn req_asm_005_the_origin_goes_to_the_hoop_centre() {
     let finished = sewn_with(vec![a, b], DesignSettings::default()).plan.unwrap();
     let finished_box = Rect::around(finished.stitches().filter(|s| s.kind == StitchKind::Normal).map(|s| s.at)).unwrap();
     assert!(finished_box.center().distance(p(0.0, 0.0)) < 1e-9, "{finished_box:?}");
+}
+
+#[test]
+fn req_asm_005_the_turn_on_export_turns_the_plan_about_its_origin_before_the_hoop_is_checked() {
+    // A line 150 mm long from its origin, sideways: past the 5 × 7 in hoop's 65 mm either side of its centre.
+    // Turned right, it runs 150 mm down from the centre and fits the hoop's 90; turned left, up. The stop
+    // position, 10 mm above the line's start, turns with it.
+    let elements = || vec![line("a", (-75.0, 0.0), 150.0, &RED, &[("stop_after", "true")]), line("b", (-75.0, 5.0), 10.0, &RED, &[])];
+    let settings = |turn: Turn| DesignSettings {
+        origin: Some(p(0.0, 0.0)),
+        stop_position: Some(p(-75.0, -10.0)),
+        rotate_on_export: turn,
+        ..DesignSettings::default()
+    };
+    let unturned = sewn_with(elements(), settings(Turn::NONE));
+    assert_eq!((unturned.plan, unturned.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>()), (None, vec![Code::OutsideHoop]));
+    for (turn, start, stop_position) in [(Turn::RIGHT, p(0.0, -75.0), p(10.0, -75.0)), (Turn::LEFT, p(0.0, 75.0), p(-10.0, 75.0))] {
+        let plan = sewn_with(elements(), settings(turn)).plan.unwrap();
+        let first = plan.stitches().find(|s| s.origin.role == Role::Top).unwrap();
+        assert_eq!(first.at, start, "{turn:?}");
+        let stop = plan.stitches().position(|s| s.kind == StitchKind::Stop).unwrap();
+        assert_eq!(plan.stitches().nth(stop - 1).map(|s| (s.kind, s.at)), Some((StitchKind::Jump, stop_position)), "{turn:?}");
+        let sewn_box = Rect::around(plan.stitches().filter(|s| s.kind == StitchKind::Normal).map(|s| s.at)).unwrap();
+        assert_eq!((sewn_box.width(), sewn_box.height()), (5.0, 150.0), "{turn:?}");
+    }
 }
 
 #[test]

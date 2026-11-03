@@ -1,0 +1,11 @@
+id = "inkstitch-clip-touch"
+requirements = ["REQ-SVG-008", "REQ-SVG-011", "REQ-GEN-005"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/clip-touch.svg"
+# The line crosses the clip path's square and touches its triangle's tip. StitchCraft sews the 20 mm in the
+# square. Ink/Stitch's cut gives a point as well as the line, which it doesn't take, and sews all 60 mm.
+
+[excused]
+stitches = "DEV-RUN-010"
+size = "DEV-RUN-010"
+overlap = "DEV-RUN-010"

@@ -1,0 +1,7 @@
+id = "inkstitch-turn-right"
+requirements = ["REQ-SVG-005", "REQ-ASM-005"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/turn-right.svg"
+# rotate_on_export 90 turns the design right about its origin, (20, 30), as it is written: 60 mm wide and
+# 30 mm tall as drawn, with the frame's move to its stop position, it sews 30 mm wide and 60 mm tall. Both
+# programs turn it so, which the size and the place show; unturned, the size would be the other way round.

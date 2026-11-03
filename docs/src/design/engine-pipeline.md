@@ -59,6 +59,14 @@ Per element, independent of the others:
   them from a column's centre line ([single-path satin](algorithms/satin.md#single-path-satin)).
 - **Strokes:** each subpath becomes its own path piece, in document order.
 - **Commands** become hints (start/end/target points) on the element.
+- **Clips:** an element's clips cut it, each the areas of its shapes together by their rules
+  (`REQ-GEN-005`). A fill's region is cut when it is built (`region::build_clipped`), before its underlay,
+  `expand_mm` and its method see it. For a stroke, the subpaths are cut at their crossings with a clip's
+  outline (`region::cut`), as in Ink/Stitch. A manual stitch's run from node to node, and other strokes'
+  are flattened as a shape's outline is. Left whole, a subpath keeps its curves and sews as drawn, and each piece of a cut one sews
+  on its own. Satin columns are sewn whole (`SC-W0217`), and an element wholly outside its clips isn't
+  sewn (`SC-W0013`). Automatic digitizing cuts its shapes first, so that what shows of them is digitized
+  (`auto::clips`).
 
 Adapters have already applied transforms and converted units, so normalization never sees host types.
 
@@ -213,15 +221,28 @@ beyond that length can cause.
 - [Lock stitches](algorithms/locks.md) specifies the lock itself: its shape (`lock_start`, `lock_end`),
   its size and its shortest stitch (0.2 mm).
 
-### Origin and stop position
+### Origin, stop position and turn on export
 
 The finished plan is in hoop coordinates: the design's origin goes to the hoop's centre, (0, 0), where the
-needle starts. The origin is the design's own (Ink/Stitch's origin command, read from M8) or else the centre
-of the box around every point where the needle goes down (`REQ-ASM-005`). Assembly builds the plan in the
+needle starts. The origin is the design's own or else the centre of the box around every point where the
+needle goes down (`REQ-ASM-005`). Assembly builds the plan in the
 design's coordinates, and finalize moves it once it has left out the points the machine cannot sew, so the
-box is the finished plan's, as in Ink/Stitch. A design's stop position
-(Ink/Stitch's stop position command) adds a jump to it before each `Stop`. At the stop position the frame
-is clear of the needle for an appliqué or a check, and sewing resumes with a jump back.
+box is the finished plan's, as in Ink/Stitch. A design's stop position adds a jump to it before each `Stop`.
+At the stop position the frame is clear of the needle for an appliqué or a check, and sewing resumes with a
+jump back. The plan's bounds take in that jump, and the hoop check measures them (`SC-E0701`).
+
+An SVG file gives both with Ink/Stitch's `origin` and `stop_position` commands, a VectorCraft document with
+objects named `stitch:origin` and `stitch:stop-position` (M8.8). Each is a point anywhere in the document.
+Ink/Stitch's command is where its symbol is placed, and a marker is at the middle of the box round its
+anchors. A file with 2 origins, or 2 stop positions and a stop, is an error (`SC-E0819`), since which one
+counts isn't known. Ink/Stitch doesn't write a machine file of it either.
+
+Once the origin is at the hoop's centre, the design's turn on export turns the plan about it, by its
+degrees, right for a positive number (M8.9). It is Ink/Stitch's design setting `rotate_on_export`, for a
+machine that doesn't turn a design to fit its hoop, which the Design Settings filter keeps with a VectorCraft
+document. Ink/Stitch's writer turns the machine file the same way, stop position jumps included. The hoop
+check measures the turned plan, as the machine gets it. A whole number of quarter turns moves each coordinate
+to the other axis and rounds nothing (`stitchcraft_engine::design::Turn`).
 
 ### Commands
 
@@ -231,8 +252,8 @@ is clear of the needle for an appliqué or a check, and sewing resumes with a ju
 | Target point | The point a circular fill turns round, in place of its parts' centroids (`REQ-FILL-CIR-008`), and from M10 the ripple stitch's target | M8.4, M10 |
 | Trim after, stop after | `trim_after` and `stop_after` on the element's last group (see the connection table). The SVG adapter reads Ink/Stitch's trim and stop commands as these settings. | M3.8 (engine), M3 (adapter) |
 | Ignore object / ignore layer | The adapter drops the element and says so in the report (`REQ-ASM-004`). The VectorCraft adapter reads them from the name `stitch:ignore` | M3 (SVG), M6 (VectorCraft) |
-| Origin | The design setting `origin` | M3.8 (engine), M8 (adapter) |
-| Stop position | The design setting `stop_position` | M3.8 (engine), M8 (adapter) |
+| Origin | The design setting `origin`. The SVG adapter reads Ink/Stitch's `origin` command, and the VectorCraft adapter its marker named `stitch:origin` | M3.8 (engine), M8.8 (adapters) |
+| Stop position | The design setting `stop_position`. The SVG adapter reads Ink/Stitch's `stop_position` command, and the VectorCraft adapter its marker named `stitch:stop-position` | M3.8 (engine), M8.8 (adapters) |
 
 ## 5. Finalize
 
@@ -265,8 +286,9 @@ them. What is left to fit comes from joining groups and from settings the machin
    custom lock's long step, a satin column wider than the machine's longest stitch, a tatami fill whose
    `max_stitch_length_mm` is longer than it, or a move sewn on under a `min_jump_stitch_length_mm` that
    long. Each part counts against the design's stitch budget.
-3. **The hoop's centre.** The fitted plan is moved so the design's origin is at the hoop's centre
-   ([origin](#origin-and-stop-position), `REQ-ASM-005`).
+3. **The hoop's centre.** The fitted plan is moved so the design's origin is at the hoop's centre, and
+   turned about it by the design's turn on export ([origin](#origin-stop-position-and-turn-on-export),
+   `REQ-ASM-005`).
 4. **Colour limits:** colour changes and stops above what the format the plan is written in records →
    `SC-E0601`. That is the profile's own, or the one `--format` or an exporter writes, planned for with
    `MachineProfile::writing`: a DST file records 999 colour changes, where the PE800's own PES records 255.

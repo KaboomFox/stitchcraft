@@ -28,8 +28,11 @@
 //! and those of the elements above it, as Ink/Stitch places it (`lib/commands.py`). With 2 of one kind on an
 //! object, the first connector in the file counts, as in Ink/Stitch. Each connector's end on its object is
 //! kept too: Ink/Stitch's update of a file of version 1 or 2 moves start and end commands there
-//! ([`crate::version`]). `origin` and `stop_position` are not applied yet (`SC-W0802`). The rest feed
-//! Ink/Stitch's own tools, so they change nothing StitchCraft sews. Before its file version 3, Ink/Stitch
+//! ([`crate::version`]). `origin` and `stop_position` stand alone, wherever they are: each gives the design
+//! its origin, which goes to the hoop's centre, or the stop position the frame moves to before each stop
+//! (`REQ-ASM-005`), at its symbol's place, as Ink/Stitch's `global_command` finds them. Ink/Stitch refuses to
+//! write a file with 2 origins, or 2 stop positions and a stop, and so does StitchCraft (`SC-E0819`). The
+//! rest feed Ink/Stitch's own tools, so they change nothing StitchCraft sews. Before its file version 3, Ink/Stitch
 //! named 7 commands otherwise ([`RENAMED`]); they are read as the commands they became.
 //!
 //! **Ink/Stitch's own content** is what tells its updater that a file is one of its own
@@ -74,8 +77,10 @@ pub enum Does {
     IgnoreObject,
     /// Leaves out every layer the symbol is in, and lists each.
     IgnoreLayer,
-    /// Nothing yet, and says so: it changes where the design sews.
-    NotYet,
+    /// Gives the design its origin, which goes to the hoop's centre (`REQ-ASM-005`).
+    Origin,
+    /// Gives the design the stop position the frame moves to before each stop (`REQ-ASM-005`).
+    StopPosition,
     /// Places where the object's fills and satin columns start or end (`REQ-GEN-001`).
     StartOrEnd,
     /// Places the point the object's circular fill turns round (`REQ-FILL-CIR-008`), and its ripple stitch
@@ -93,7 +98,8 @@ impl Does {
             Does::Stop => "applied: turns on `stop_after`",
             Does::IgnoreObject => "applied: the object is left out and listed (`SC-I0805`)",
             Does::IgnoreLayer => "applied: every layer it is in is left out and listed (`SC-I0805`)",
-            Does::NotYet => "planned: noted as not applied (`SC-W0802`)",
+            Does::Origin => "applied: the design's origin, which goes to the hoop's centre; 2 end planning (`SC-E0819`)",
+            Does::StopPosition => "applied: where the frame moves before each stop; 2 in a design with a stop end planning (`SC-E0819`)",
             Does::StartOrEnd => "applied to the object's fills and satin columns (`REQ-GEN-001`), unless it is digitized automatically",
             Does::Positions => {
                 "applied to the object's circular fill (`REQ-FILL-CIR-008`), and from M10 to its ripple stitch, unless it is digitized automatically"
@@ -125,8 +131,8 @@ pub const COMMANDS: [Command; 12] = [
     Command { name: "ignore_object", does: Does::IgnoreObject },
     Command { name: "satin_cut_point", does: Does::ToolInput },
     Command { name: "ignore_layer", does: Does::IgnoreLayer },
-    Command { name: "origin", does: Does::NotYet },
-    Command { name: "stop_position", does: Does::NotYet },
+    Command { name: "origin", does: Does::Origin },
+    Command { name: "stop_position", does: Does::StopPosition },
 ];
 
 /// Ink/Stitch's command names from before its file version 3, each with the command it became. Its
@@ -260,6 +266,17 @@ pub(crate) struct Tied {
     pub on_object: Option<V>,
 }
 
+/// A command that stands alone and gives the design a setting: `origin` or `stop_position`.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) struct Global {
+    /// Its `<use>` element's place in the document.
+    pub place: Place,
+    /// The command.
+    pub command: Command,
+    /// Its symbol's place, in the root's user units, as a tied command's ([`Tied::symbol`]).
+    pub symbol: Option<V>,
+}
+
 /// Every Ink/Stitch command in a document, by where it applies.
 #[derive(Default)]
 pub(crate) struct Objects {
@@ -271,18 +288,11 @@ pub(crate) struct Objects {
     uses: BTreeMap<Place, Command>,
     /// The layers an `ignore_layer` command is in.
     ignored_layers: BTreeSet<Place>,
-    /// The `<use>` elements of commands that change where the design sews but are not applied, or that
-    /// are not where they apply (an `ignore_layer` outside every layer), with why.
-    unapplied: Vec<(Place, Command, Unapplied)>,
-}
-
-/// Why a command a file has is not applied.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum Unapplied {
-    /// StitchCraft does not apply it yet.
-    NotYet,
-    /// An `ignore_layer` command that is in no layer.
-    NoLayer,
+    /// The `<use>` elements of commands that are not where they apply: an `ignore_layer` outside every
+    /// layer.
+    unapplied: Vec<(Place, Command)>,
+    /// The commands that give the design a setting, in document order.
+    globals: Vec<Global>,
 }
 
 impl Objects {
@@ -316,16 +326,23 @@ impl Objects {
         self.commands.iter().flat_map(|(node, commands)| commands.iter().map(|tied| (*node, tied.command)))
     }
 
-    /// The commands that are not applied, by their `<use>` elements' places, in document order.
-    pub(crate) fn unapplied(&self) -> &[(Place, Command, Unapplied)] {
+    /// The commands that are not applied, an `ignore_layer` outside every layer, by their `<use>` elements'
+    /// places, in document order.
+    pub(crate) fn unapplied(&self) -> &[(Place, Command)] {
         &self.unapplied
+    }
+
+    /// The commands that give the design a setting, `origin` and `stop_position`, in document order.
+    pub(crate) fn globals(&self) -> &[Global] {
+        &self.globals
     }
 }
 
 /// The ids, style sheets, Ink/Stitch commands and Ink/Stitch content and version of the document under
 /// `root`, whose SVG elements are in namespace `ns`. One unit of work per node, one per step from a layer
-/// command or a tied command's symbol or connector up to the root, one per segment of a connector, and one
-/// per node searched for the version's text or per step up from an element of the version's name.
+/// command, a tied command's symbol or connector or a global command's symbol up to the root, one per
+/// segment of a connector, and one per node searched for the version's text or per step up from an element
+/// of the version's name.
 pub(crate) fn find<'a, 'input>(root: Node<'a, 'input>, ns: Option<&str>, meter: &mut Meter) -> Result<Found<'a, 'input>, Exhausted> {
     let mut ids = BTreeMap::new();
     let (mut connectors, mut uses, mut sheets) = (Vec::new(), Vec::new(), Vec::new());
@@ -371,10 +388,10 @@ pub(crate) fn find<'a, 'input>(root: Node<'a, 'input>, ns: Option<&str>, meter: 
                     }
                 }
                 if !in_a_layer {
-                    objects.unapplied.push((place(node), command, Unapplied::NoLayer));
+                    objects.unapplied.push((place(node), command));
                 }
             }
-            Does::NotYet => objects.unapplied.push((place(node), command, Unapplied::NotYet)),
+            Does::Origin | Does::StopPosition => objects.globals.push(Global { place: place(node), command, symbol: symbol_place(node, meter)? }),
             _ => {}
         }
     }
@@ -480,7 +497,17 @@ mod tests {
     #[test]
     fn what_each_command_does_is_described_once() {
         assert_eq!(Does::Trim.describe(), "applied: turns on `trim_after`");
-        let all = [Does::Trim, Does::Stop, Does::IgnoreObject, Does::IgnoreLayer, Does::NotYet, Does::StartOrEnd, Does::Positions, Does::ToolInput];
+        let all = [
+            Does::Trim,
+            Does::Stop,
+            Does::IgnoreObject,
+            Does::IgnoreLayer,
+            Does::Origin,
+            Does::StopPosition,
+            Does::StartOrEnd,
+            Does::Positions,
+            Does::ToolInput,
+        ];
         let texts: BTreeSet<&str> = all.iter().map(|d| d.describe()).collect();
         assert_eq!(texts.len(), all.len(), "{texts:?}");
         // Every command is described, and every description is used.
@@ -491,7 +518,7 @@ mod tests {
     #[test]
     fn symbols_name_their_commands() {
         assert_eq!(command("inkstitch_trim"), Some(Command { name: "trim", does: Does::Trim }));
-        assert_eq!(command("inkstitch_stop_position-12").map(|c| c.does), Some(Does::NotYet));
+        assert_eq!(command("inkstitch_stop_position-12").map(|c| c.does), Some(Does::StopPosition));
         assert_eq!(command("inkstitch_stop-3").map(|c| c.does), Some(Does::Stop));
         for other in ["inkstitch_", "inkstitch_sparkle", "trim", "Inkstitch_trim", "inkstitch_TRIM", "fill_start", "inkstitch_FILL_START"] {
             assert_eq!(command(other), None, "{other}");

@@ -20,6 +20,61 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - The checks that sew every sheet mirrored, turned and drawn again leave out what a zigzag stroke and an
     E-stitch don't keep by design, as Ink/Stitch sews them: a zigzag mirrored or drawn from its end
     zigzags from the other side, and an E-stitch drawn from its end spikes elsewhere along it.
+- M8.9: the turn on export (`REQ-ASM-005`). Ink/Stitch's design setting `rotate_on_export` turns the plan
+  about the hoop's centre once the origin is there, before the hoop is checked, as Ink/Stitch turns the
+  machine file it writes. 90 turns the design right and -90 left, and any other number of degrees that
+  much, as Ink/Stitch's writer does. A whole number of quarter turns rounds nothing.
+  - The SVG adapter reads it from the file's metadata (`REQ-SVG-005`), where `SC-W0802` named it as not
+    applied, and names text that isn't a number. VectorCraft's Design Settings filter keeps it with a
+    document, a choice of none, left and right (`REQ-VC-013`). The test kit writes it.
+  - 2 differential cases turn a design 90 and 45 degrees about an origin off its middle, with a stop
+    position. Both programs sew each alike by every measure.
+  - TS-16 is written turned right for MC-11: its shapes sew 100 mm wide and 40 mm tall, the red fill at the
+    right.
+- M8.8: the design's origin and stop position (`REQ-ASM-005`). Ink/Stitch's `origin` command gives the
+  design its origin, which goes to the hoop's centre, and its `stop_position` command the stop position,
+  which the frame moves to before each stop. Each is the point where its symbol is placed, wherever it is,
+  in `<defs>` and hidden layers too, as Ink/Stitch finds them (`REQ-SVG-003`). In a VectorCraft document,
+  objects named `stitch:origin` and `stitch:stop-position` mark them, each at the middle of its anchors
+  (`REQ-VC-009`).
+  - 2 origins, or 2 stop positions in a design with a stop, end planning with `SC-E0819` (new). Ink/Stitch
+    doesn't write a machine file of them either. A command or a marker whose place doesn't read is named and
+    left out (`SC-W0802`, `SC-W0807`).
+  - The differential measures each file's place too, within 0.5 mm each way. The place is the middle of
+    the file's box, from where the machine starts. Its new case sews an origin in a moved and scaled group
+    and a stop position in a hidden layer, which both programs sew alike by every measure.
+  - The test kit writes a design's origin and stop position as Ink/Stitch's commands (`REQ-PRM-003`).
+  - TS-16 gains its M8.8 part for MC-11. Its origin lies on the blue column's top edge, 10 mm in from its
+    left end. A stop after the blue column sends the frame to a stop position 20 mm right of the fill and
+    10 mm above it. Ink/Stitch sews the sheet as StitchCraft does by every measure of the differential,
+    the place among them.
+- M8.5: clip paths (`REQ-SVG-011`, `REQ-GEN-005`). A shape that a `clip-path` cuts sews only what shows of
+  it. The SVG reader reads the clip paths of a shape and of the groups, links and switches round it, each
+  a clip of its elements (`Element::clips`), and the engine cuts them for every reader.
+  - A clip path is its children's areas together, each by its `clip-rule`, in the user space of what it
+    clips, or in shares of a shape's box with `objectBoundingBox`. A group in one counts, as Inkscape draws
+    it, and a clip path's own `clip-path` cuts it too. Children that aren't displayed are left out, as are
+    lines and text, and text is named.
+  - A fill's area is cut before its underlay, `expand_mm` and its method see it, as Ink/Stitch cuts it. A
+    stroke's line is cut where it crosses the clip, and each piece sews on its own. Left whole, a subpath
+    sews as drawn. Satin columns are sewn whole, as in Ink/Stitch, and `SC-W0217` names each. A shape
+    wholly outside its clips, or under an empty clip path, isn't sewn, with `SC-W0013`. Automatic
+    digitizing cuts its shapes first, so that what shows of them is digitized.
+  - What isn't applied of a clip path is named (`SC-W0802`), and the note that clipping isn't applied is
+    gone. An Inkscape power clip is read from its clip path, as a viewer draws it.
+  - The ledger says where Ink/Stitch builds a clip otherwise. Ink/Stitch pools the children's subpaths, and
+    leaves out where 2 children overlap (`DEV-SVG-016`). It drops a clip path's transform (`DEV-SVG-017`)
+    and ignores a link's or a switch's clip path (`DEV-SVG-018`). A shape whose clip path is empty sews
+    whole there (`DEV-SVG-019`), and a power clip goes by its settings (`DEV-SVG-020`). Each piece of a cut
+    closed zigzag is closed (`DEV-RUN-009`), and a line that touches its clip at a point sews whole
+    (`DEV-RUN-010`). 7 differential cases sew clip paths in both programs, 2 that agree and 5 that differ
+    as the ledger says.
+  - TS-16 gains its clip part for MC-11, a square cut by a circle to a green quarter disc and a black
+    zigzag cut into 2 pieces. Ink/Stitch sews the sheet as StitchCraft does by every measure of the
+    differential: 3,026 stitches against 3,212, the same size, threads, trims and jumps, and footprints
+    that overlap by 0.99.
+  - The transform harness of the sheets moves an element's positions and clips with its shape, which it
+    left where they were.
 - M8.4: start and end positions (`REQ-GEN-001`) and the target point (`REQ-FILL-CIR-008`). Ink/Stitch's
   `starting_point` and `ending_point` commands, and objects named `stitch:start` and `stitch:end` in a
   VectorCraft document, say where the elements of their shape start and end, in place of the needle before
@@ -2216,6 +2271,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - Changed `conformance/golden/plans/patch.pes` and `patch.dst` (M8.4, `REQ-GEN-001`): the patch's red fill
   starts nearest its start marker, in its top-left corner. `SC-W0807` no longer names the marker. The
   patch sews 2,483 stitches, 17 more.
+- Changed `conformance/golden/testsheets/TS-16.pes` (M8.9). The sheet is turned right about its origin. The
+  plan spans 110 × 60 mm, and sews the same 3,026 stitches.
+- Changed `conformance/golden/testsheets/TS-16.pes` (M8.8). The sheet's origin, on the blue column's top
+  edge 10 mm in from its left end, goes to the hoop's centre, and a stop after the blue column moves the
+  frame to the stop position first. The plan spans 60 × 110 mm, and sews the same 3,026 stitches.
+- Changed `conformance/golden/testsheets/TS-16.pes` (M8.5). The sheet gains its clip part, which makes it
+  40 × 100 mm, and sews 3,026 stitches, 930 more.
 - Added `conformance/golden/testsheets/TS-16.pes` (M8.4), the first part of the Ink/Stitch file MC-11
   sews: 2,096 stitches.
 - Changed `conformance/golden/testsheets/TS-11B.pes` (M7.9): the sheet gains a row of 3 circular fills

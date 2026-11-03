@@ -1,0 +1,9 @@
+id = "inkstitch-clip-zigzag"
+requirements = ["REQ-SVG-008", "REQ-SVG-011", "REQ-GEN-005"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/clip-zigzag.svg"
+# The clip path cuts the closed zigzag into 2 pieces, which StitchCraft sews open. Ink/Stitch closes each as it
+# closes the circle, its last needle point moved onto its first: a stitch 24.5 mm long across each piece.
+
+[excused]
+overlap = "DEV-RUN-009"

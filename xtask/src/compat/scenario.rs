@@ -74,7 +74,7 @@ use stitchcraft_cli::cli::{Cli, Command as Stitch, PlanArgs};
 use stitchcraft_cli::commands::Status;
 use stitchcraft_cli::commands::plan::{self, Source, machine_for, sew};
 use stitchcraft_core::{Budget, Code, Diagnostic, Rect, Severity};
-use stitchcraft_engine::design::{Reading, Setting};
+use stitchcraft_engine::design::{Reading, Setting, Turn};
 use stitchcraft_params::Family;
 use stitchcraft_plan::FormatId;
 use stitchcraft_plan::profiles::REFERENCE;
@@ -792,13 +792,15 @@ fn holds_sheet(bytes: &[u8], id: &str) -> Result<(), String> {
 }
 
 /// Whether the document `bytes` keeps `settings`, the machine as `profile` and the design settings by their
-/// names, as the VectorCraft adapter reads them, or how it doesn't.
+/// names, the turn on export in degrees, as the VectorCraft adapter reads them, or how it doesn't.
 fn keeps(bytes: &[u8], settings: &toml::Table) -> Result<(), String> {
     let read = stitchcraft_vectorcraft::read(bytes, &Budget::DEFAULT).map_err(|unread| unread.to_string())?;
     let mut wrong = Vec::new();
     for (name, value) in settings {
         let (kept, wanted) = if name == stitchcraft_vectorcraft::settings::PROFILE {
             (read.machine.map(|machine| json!(machine.id)), toml_to_json(value.clone()))
+        } else if name == Turn::NAME {
+            (Some(json!(read.design.settings.rotate_on_export.degrees())), toml_to_json(value.clone()))
         } else {
             let setting = Setting::named(name).ok_or(format!("there is no design setting `{name}`"))?;
             (Some(json!(setting.get(&read.design.settings).get())), toml_to_json(value.clone()))

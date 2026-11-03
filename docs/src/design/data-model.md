@@ -1,6 +1,6 @@
 # Data model
 
-<!-- implements: crates/stitchcraft-core/src/lib.rs, crates/stitchcraft-core/src/units.rs, crates/stitchcraft-core/src/element.rs, crates/stitchcraft-core/src/rect.rs, crates/stitchcraft-core/src/budget.rs, crates/stitchcraft-plan/src/*.rs, crates/stitchcraft-plan/src/palette/**, crates/stitchcraft-plan/src/profiles/**, crates/stitchcraft-engine/src/design.rs -->
+<!-- implements: crates/stitchcraft-core/src/lib.rs, crates/stitchcraft-core/src/units.rs, crates/stitchcraft-core/src/element.rs, crates/stitchcraft-core/src/rect.rs, crates/stitchcraft-core/src/budget.rs, crates/stitchcraft-plan/src/*.rs, crates/stitchcraft-plan/src/palette/**, crates/stitchcraft-plan/src/profiles/**, crates/stitchcraft-engine/src/design.rs, crates/stitchcraft-engine/src/design/turn.rs -->
 
 The types every crate shares. Code sketches are illustrative (`ignore`); the crates' rustdoc is the
 API reference once the types exist. Invariants listed here are checked in code (constructors return
@@ -45,6 +45,16 @@ pub struct Element {
     pub params: ParamSet,            // as the host stores them; validated against the registry when planned
     pub automatic: bool,             // since M13.1: a shape without settings, read with --auto, whose stitches StitchCraft chooses
     pub hints: Hints,                // since M8.4: where its design says it starts and ends, and the point it aims at
+    pub clips: Vec<Clip>,            // since M8.5: it sews only what lies inside every one (REQ-GEN-005)
+}
+
+pub struct Clip {                    // since M8.5: an SVG clip path, VectorCraft's clipping object from M8.7
+    pub shapes: Vec<ClipShape>,      // their areas together; none leaves nothing of what it cuts
+}
+
+pub struct ClipShape {
+    pub path: Path,                  // in the design's millimetres
+    pub rule: FillRule,              // which parts of it are inside, as a fill's
 }
 
 pub struct Hints {                   // since M8.4: Ink/Stitch's start, end and target commands, VectorCraft's markers
@@ -65,6 +75,7 @@ pub struct DesignSettings {          // since M3.8; read from an Ink/Stitch file
     pub origin: Option<Point>,       // where the hoop's centre goes; None: the centre of the stitches
     pub stop_position: Option<Point>,// where the frame moves before each stop; None: it stays
     pub min_satin_stroke_width: Mm,  // 1 mm: a satin column drawn as one path no wider is sewn as a stroke (M4.8)
+    pub rotate_on_export: Turn,      // the plan turned about the hoop's centre as it is written (M8.9); none by default
 }
 
 pub enum Shape {
@@ -115,8 +126,11 @@ position, checked the same way. VectorCraft's Test Sheet filter draws a test she
 artboard with it (`REQ-VC-015`).
 
 **Commands.** Ink/Stitch's start, end and target commands, and VectorCraft's start and end markers, are
-an element's hints (M8.4), its points checked and moved with the rest. Trims and stops are the element
-parameters `trim_after` and `stop_after`, and the origin and stop position are design settings (M3.8).
+an element's hints (M8.4), its points checked and moved with the rest. Clip paths are an element's clips
+(M8.5), checked and moved with it too, which the engine cuts it to ([engine pipeline](engine-pipeline.md)). Trims and stops are the element
+parameters `trim_after` and `stop_after`, and the origin and stop position are design settings (M3.8), which
+Ink/Stitch's `origin` and `stop_position` commands and VectorCraft's `stitch:origin` and `stitch:stop-position`
+markers give (M8.8).
 
 ### Region
 

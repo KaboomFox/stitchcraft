@@ -106,6 +106,14 @@ pub stitchcraft_engine::design::Shape::Stroke::width: stitchcraft_core::units::M
 impl stitchcraft_engine::design::Shape
 pub fn stitchcraft_engine::design::Shape::path(&self) -> &stitchcraft_engine::design::Path
 pub fn stitchcraft_engine::design::Shape::stroke(stitchcraft_engine::design::Path) -> stitchcraft_engine::design::Shape
+pub struct stitchcraft_engine::design::Clip
+pub stitchcraft_engine::design::Clip::shapes: alloc::vec::Vec<stitchcraft_engine::design::ClipShape>
+impl stitchcraft_engine::design::Clip
+pub fn stitchcraft_engine::design::Clip::of(stitchcraft_engine::design::Path, stitchcraft_engine::design::FillRule) -> stitchcraft_engine::design::Clip
+pub fn stitchcraft_engine::design::Clip::points(&self) -> impl core::iter::traits::iterator::Iterator<Item = stitchcraft_core::units::Point> + '_
+pub struct stitchcraft_engine::design::ClipShape
+pub stitchcraft_engine::design::ClipShape::path: stitchcraft_engine::design::Path
+pub stitchcraft_engine::design::ClipShape::rule: stitchcraft_engine::design::FillRule
 pub struct stitchcraft_engine::design::Design
 pub stitchcraft_engine::design::Design::settings: stitchcraft_engine::design::DesignSettings
 pub stitchcraft_engine::design::Design::sort_colours: bool
@@ -120,6 +128,7 @@ pub stitchcraft_engine::design::DesignSettings::collapse_len: stitchcraft_core::
 pub stitchcraft_engine::design::DesignSettings::min_satin_stroke_width: stitchcraft_core::units::Mm
 pub stitchcraft_engine::design::DesignSettings::min_stitch_len: core::option::Option<stitchcraft_core::units::Mm>
 pub stitchcraft_engine::design::DesignSettings::origin: core::option::Option<stitchcraft_core::units::Point>
+pub stitchcraft_engine::design::DesignSettings::rotate_on_export: stitchcraft_engine::design::Turn
 pub stitchcraft_engine::design::DesignSettings::stop_position: core::option::Option<stitchcraft_core::units::Point>
 impl stitchcraft_engine::design::DesignSettings
 pub const stitchcraft_engine::design::DesignSettings::COLLAPSE_LEN: stitchcraft_core::units::Mm
@@ -128,6 +137,7 @@ impl core::default::Default for stitchcraft_engine::design::DesignSettings
 pub fn stitchcraft_engine::design::DesignSettings::default() -> Self
 pub struct stitchcraft_engine::design::Element
 pub stitchcraft_engine::design::Element::automatic: bool
+pub stitchcraft_engine::design::Element::clips: alloc::vec::Vec<stitchcraft_engine::design::Clip>
 pub stitchcraft_engine::design::Element::hints: stitchcraft_engine::design::Hints
 pub stitchcraft_engine::design::Element::id: stitchcraft_core::element::ElementId
 pub stitchcraft_engine::design::Element::name: core::option::Option<alloc::string::String>
@@ -161,6 +171,19 @@ pub struct stitchcraft_engine::design::Subpath
 pub stitchcraft_engine::design::Subpath::closed: bool
 pub stitchcraft_engine::design::Subpath::segments: alloc::vec::Vec<stitchcraft_engine::design::Segment>
 pub stitchcraft_engine::design::Subpath::start: stitchcraft_core::units::Point
+pub struct stitchcraft_engine::design::Turn(_)
+impl stitchcraft_engine::design::Turn
+pub const stitchcraft_engine::design::Turn::CHOICES: [(&'static str, stitchcraft_engine::design::Turn); 3]
+pub const stitchcraft_engine::design::Turn::HELP: &'static str
+pub const stitchcraft_engine::design::Turn::LABEL: &'static str
+pub const stitchcraft_engine::design::Turn::LEFT: stitchcraft_engine::design::Turn
+pub const stitchcraft_engine::design::Turn::NAME: &'static str
+pub const stitchcraft_engine::design::Turn::NONE: stitchcraft_engine::design::Turn
+pub const stitchcraft_engine::design::Turn::RIGHT: stitchcraft_engine::design::Turn
+pub fn stitchcraft_engine::design::Turn::apply(self, stitchcraft_core::units::Point) -> core::option::Option<stitchcraft_core::units::Point>
+pub const fn stitchcraft_engine::design::Turn::degrees(self) -> f64
+pub fn stitchcraft_engine::design::Turn::new(f64) -> core::option::Option<stitchcraft_engine::design::Turn>
+pub fn stitchcraft_engine::design::Turn::turns(self) -> bool
 pub const stitchcraft_engine::design::SETTINGS: [stitchcraft_engine::design::Setting; 3]
 pub const stitchcraft_engine::design::WORKING_LIMIT_MM: f64
 pub fn stitchcraft_engine::design::within_working_limit(stitchcraft_core::units::Point) -> bool
@@ -204,6 +227,7 @@ pub fn stitchcraft_engine::generate::rows(&stitchcraft_engine::design::Element, 
 pub const fn stitchcraft_engine::generate::sewn_as(stitchcraft_params::stitch_type::StitchType) -> stitchcraft_params::stitch_type::StitchType
 pub fn stitchcraft_engine::generate::shortest_stitch(core::option::Option<stitchcraft_core::units::Mm>, &stitchcraft_engine::design::DesignSettings, &stitchcraft_plan::profile::MachineProfile) -> stitchcraft_core::units::Mm
 pub fn stitchcraft_engine::generate::stitch_type_of(&stitchcraft_engine::design::Element, &stitchcraft_engine::design::DesignSettings) -> core::option::Option<stitchcraft_params::stitch_type::StitchType>
+pub fn stitchcraft_engine::generate::stops_after(&stitchcraft_engine::design::Element) -> bool
 pub mod stitchcraft_engine::generators
 pub mod stitchcraft_engine::generators::circular
 pub struct stitchcraft_engine::generators::circular::Circular
@@ -546,6 +570,7 @@ pub struct stitchcraft_engine::normalize::region::Unjoined
 pub const stitchcraft_engine::normalize::region::SMALL_FILL: f64
 pub const stitchcraft_engine::normalize::region::TINY_PART: f64
 pub fn stitchcraft_engine::normalize::region::build(&stitchcraft_engine::design::Path, stitchcraft_engine::design::FillRule, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::normalize::region::Built, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_engine::normalize::region::build_clipped(&stitchcraft_engine::design::Path, stitchcraft_engine::design::FillRule, &[stitchcraft_engine::design::Clip], &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::normalize::region::Built, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::normalize::satin
 pub enum stitchcraft_engine::normalize::satin::Pairing
 pub stitchcraft_engine::normalize::satin::Pairing::Nodes
@@ -622,7 +647,7 @@ pub const fn stitchcraft_engine::testsheets::TestSheet::designed(&self) -> bool
 pub fn stitchcraft_engine::testsheets::TestSheet::digitized(&self) -> bool
 pub const fn stitchcraft_engine::testsheets::TestSheet::drawable(&self) -> bool
 pub fn stitchcraft_engine::testsheets::TestSheet::plan(&self) -> core::result::Result<stitchcraft_plan::plan::StitchPlan, stitchcraft_engine::testsheets::SheetError>
-pub fn stitchcraft_engine::testsheets::TestSheet::positioned(&self) -> bool
+pub fn stitchcraft_engine::testsheets::TestSheet::uses_file_features(&self) -> bool
 pub const stitchcraft_engine::testsheets::STITCH_LEN: f64
 pub static stitchcraft_engine::testsheets::SHEETS: &[stitchcraft_engine::testsheets::TestSheet]
 pub fn stitchcraft_engine::testsheets::find(&str) -> core::option::Option<&'static stitchcraft_engine::testsheets::TestSheet>
