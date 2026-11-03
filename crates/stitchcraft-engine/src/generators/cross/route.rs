@@ -366,7 +366,7 @@ mod tests {
     }
 
     #[test]
-    fn a_cross_from_a_corner_of_its_slash_sews_its_backslash_then_its_slash_and_shows_no_travel() {
+    fn req_fill_crs_003_a_cross_from_a_corner_of_its_slash_sews_its_backslash_then_its_slash_and_shows_no_travel() {
         let tr = Spot::Corner([1, 0]);
         let (tl, br, bl, m) = (Spot::Corner([0, 0]), Spot::Corner([1, 1]), Spot::Corner([0, 1]), Spot::Middle([0, 0]));
         assert_eq!(cross_loop([0, 0], [1, 0], 1), [m, tl, br, m, bl, tr]);
@@ -416,7 +416,7 @@ mod tests {
     }
 
     #[test]
-    fn crosses_that_share_a_corner_are_one_group_and_the_rest_apart() {
+    fn req_fill_crs_004_crosses_that_share_a_corner_are_one_group_and_the_rest_apart() {
         let groups = |rows: &[&str]| groups(&cells(rows), &mut Budget::DEFAULT.meter()).unwrap();
         assert_eq!(groups(&["x.x", "...", ".x."]), [vec![[0, 0]], vec![[2, 0]], vec![[1, 2]]]);
         // Corner to corner, either way, and side by side.
@@ -428,7 +428,7 @@ mod tests {
     }
 
     #[test]
-    fn a_run_sews_every_cross_of_its_group_once_and_ends_where_it_started() {
+    fn req_fill_crs_004_a_run_sews_every_cross_of_its_group_once_and_ends_where_it_started() {
         for rows in [&["xxx", "xxx", "xxx"][..], &["x..", ".x.", "..x"], &["..x", ".x.", "x.."], &["x.x", ".x.", "x.x"], &["xx", "x.", "xx"]] {
             let cells = cells(rows);
             let runs = sewn(&cells, None, None);
@@ -443,7 +443,7 @@ mod tests {
     }
 
     #[test]
-    fn a_cross_reached_only_by_its_backslash_is_sewn_last_with_a_stitch_on_top() {
+    fn req_fill_crs_004_a_cross_reached_only_by_its_backslash_is_sewn_last_with_a_stitch_on_top() {
         // A row of crosses, and a falling diagonal, which meet only at the corners of their `\` diagonals.
         // The row's crosses join at the corners of their `/` diagonals, and none ends on top; each cross down the
         // falling diagonal but the first is reached at its top left corner, and ends on top.
@@ -457,7 +457,7 @@ mod tests {
     }
 
     #[test]
-    fn at_a_corner_the_cross_below_and_left_is_sewn_before_the_one_above_and_right() {
+    fn req_fill_crs_004_at_a_corner_the_cross_below_and_left_is_sewn_before_the_one_above_and_right() {
         // 2 crosses whose `/` diagonals meet at (1, 1), from the needle there: the lower left one first.
         let run = &sewn(&cells(&[".x", "x."]), Some(p(1.0, 1.0)), None)[0];
         assert_eq!(run[..2], [Spot::Corner([1, 1]), Spot::Middle([0, 1])]);
@@ -469,7 +469,7 @@ mod tests {
     }
 
     #[test]
-    fn groups_go_nearest_the_needle_first_and_nearest_the_end_last() {
+    fn req_fill_crs_004_groups_go_nearest_the_needle_first_and_nearest_the_end_last() {
         // 3 crosses apart in a row, at x = 0, 3 and 6.
         let cells = cells(&["x..x..x"]);
         let starts = |needle: Option<Point>, end: Option<Point>| sewn(&cells, needle, end).iter().map(|run| run[0]).collect::<Vec<Spot>>();
@@ -486,7 +486,7 @@ mod tests {
     }
 
     #[test]
-    fn one_group_with_a_needle_and_an_end_travels_through_the_crosses_first() {
+    fn req_fill_crs_004_one_group_with_a_needle_and_an_end_travels_through_the_crosses_first() {
         // A row of 4 crosses, from the needle at its left to the end at its right: from (0, 0) through the
         // middles of the fewest crosses to (4, 1), from corner to corner of each, then the loops from there.
         let cells = cells(&["xxxx"]);
