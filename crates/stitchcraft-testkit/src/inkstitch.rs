@@ -25,6 +25,10 @@
 //! takes a clip's shapes as one outline and its holes, whatever their rules (`DEV-SVG-016`), so a case that
 //! both sew gives each clip shapes that don't overlap.
 //!
+//! The design's origin and stop position are Ink/Stitch's `origin` and `stop_position` commands
+//! (`REQ-ASM-005`): a `<use>` of the command's symbol at the point, standing alone, as Ink/Stitch's Add
+//! Commands draws them.
+//!
 //! The metadata gives Ink/Stitch's current file version ([`stitchcraft_svg::version::CURRENT`]), so its
 //! updater changes nothing, and each design setting that isn't StitchCraft's default. One that is stays
 //! unset, and Ink/Stitch takes its own default, StitchCraft's too but for the shortest stitch, which
@@ -67,8 +71,16 @@ pub fn svg(elements: &[Element], settings: &DesignSettings) -> Result<String, St
         out.push_str(&format!("    <inkstitch:{0}>{1}</inkstitch:{0}>\n", setting.name, setting.get(settings).get()));
     }
     out.push_str("  </metadata>\n");
-    // A symbol for each command the elements' hints are written as, and the elements' clip paths.
-    let used: Vec<&str> = COMMANDS.iter().filter(|(_, at)| elements.iter().any(|e| at(&e.hints).is_some())).map(|(name, _)| *name).collect();
+    // A symbol for each command the elements' hints and the design's origin and stop position are written as,
+    // and the elements' clip paths.
+    let globals: Vec<(&str, Point)> =
+        [("origin", settings.origin), ("stop_position", settings.stop_position)].into_iter().filter_map(|(name, at)| Some((name, at?))).collect();
+    let used: Vec<&str> = COMMANDS
+        .iter()
+        .filter(|(_, at)| elements.iter().any(|e| at(&e.hints).is_some()))
+        .map(|(name, _)| *name)
+        .chain(globals.iter().map(|(name, _)| *name))
+        .collect();
     let clip_paths: String = elements.iter().enumerate().map(|(index, element)| clip_paths(index, element)).collect();
     if !used.is_empty() || !clip_paths.is_empty() {
         out.push_str("  <defs>\n");
@@ -90,6 +102,9 @@ pub fn svg(elements: &[Element], settings: &DesignSettings) -> Result<String, St
         out.push_str(&format!("  <path id=\"e{index}\" {}{own}{parameters} d=\"{}\"/>\n", paint(element), data(element.shape.path())));
         out.push_str(&"  </g>\n".repeat(groups));
         out.push_str(&commands(index, element));
+    }
+    for (name, at) in globals {
+        out.push_str(&format!("  <use id=\"{name}\" xlink:href=\"#inkstitch_{name}\" x=\"{}\" y=\"{}\"/>\n", at.x(), at.y()));
     }
     out.push_str("</svg>\n");
     Ok(out)
@@ -339,6 +354,16 @@ mod tests {
         // The narrowest satin stroke is StitchCraft's default, which Ink/Stitch's is too.
         assert!(!text.contains("min_satin_stroke_width_mm"), "{text}");
         assert!(text.contains("stroke-linejoin=\"miter\" stroke-miterlimit=\"5\" stroke-linecap=\"butt\""), "{text}");
+        assert_eq!(read(&text), (kept(&[line]), settings));
+    }
+
+    #[test]
+    fn req_prm_003_the_design_s_origin_and_stop_position_are_written_as_ink_stitch_s_commands() {
+        let line = along("ring", rings(&[&[(0.0, 0.0), (4.0, 0.0), (4.0, 4.0)]]), &RED, &[("stop_after", "true")]);
+        let settings = DesignSettings { origin: Some(p(1.0, 2.0)), stop_position: Some(p(30.5, -4.0)), ..DesignSettings::default() };
+        let text = svg(std::slice::from_ref(&line), &settings).unwrap();
+        assert!(text.contains(r##"<use id="origin" xlink:href="#inkstitch_origin" x="1" y="2"/>"##), "{text}");
+        assert!(text.contains(r##"<symbol id="inkstitch_stop_position">"##), "{text}");
         assert_eq!(read(&text), (kept(&[line]), settings));
     }
 

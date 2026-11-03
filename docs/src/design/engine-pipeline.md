@@ -224,12 +224,18 @@ beyond that length can cause.
 ### Origin and stop position
 
 The finished plan is in hoop coordinates: the design's origin goes to the hoop's centre, (0, 0), where the
-needle starts. The origin is the design's own (Ink/Stitch's origin command, read from M8) or else the centre
-of the box around every point where the needle goes down (`REQ-ASM-005`). Assembly builds the plan in the
+needle starts. The origin is the design's own or else the centre of the box around every point where the
+needle goes down (`REQ-ASM-005`). Assembly builds the plan in the
 design's coordinates, and finalize moves it once it has left out the points the machine cannot sew, so the
-box is the finished plan's, as in Ink/Stitch. A design's stop position
-(Ink/Stitch's stop position command) adds a jump to it before each `Stop`. At the stop position the frame
-is clear of the needle for an appliqué or a check, and sewing resumes with a jump back.
+box is the finished plan's, as in Ink/Stitch. A design's stop position adds a jump to it before each `Stop`.
+At the stop position the frame is clear of the needle for an appliqué or a check, and sewing resumes with a
+jump back. The plan's bounds take in that jump, and the hoop check measures them (`SC-E0701`).
+
+An SVG file gives both with Ink/Stitch's `origin` and `stop_position` commands, a VectorCraft document with
+objects named `stitch:origin` and `stitch:stop-position` (M8.8). Each is a point anywhere in the document.
+Ink/Stitch's command is where its symbol is placed, and a marker is at the middle of the box round its
+anchors. A file with 2 origins, or 2 stop positions and a stop, is an error (`SC-E0819`), since which one
+counts isn't known. Ink/Stitch doesn't write a machine file of it either.
 
 ### Commands
 
@@ -239,8 +245,8 @@ is clear of the needle for an appliqué or a check, and sewing resumes with a ju
 | Target point | The point a circular fill turns round, in place of its parts' centroids (`REQ-FILL-CIR-008`), and from M10 the ripple stitch's target | M8.4, M10 |
 | Trim after, stop after | `trim_after` and `stop_after` on the element's last group (see the connection table). The SVG adapter reads Ink/Stitch's trim and stop commands as these settings. | M3.8 (engine), M3 (adapter) |
 | Ignore object / ignore layer | The adapter drops the element and says so in the report (`REQ-ASM-004`). The VectorCraft adapter reads them from the name `stitch:ignore` | M3 (SVG), M6 (VectorCraft) |
-| Origin | The design setting `origin` | M3.8 (engine), M8 (adapter) |
-| Stop position | The design setting `stop_position` | M3.8 (engine), M8 (adapter) |
+| Origin | The design setting `origin`. The SVG adapter reads Ink/Stitch's `origin` command, and the VectorCraft adapter its marker named `stitch:origin` | M3.8 (engine), M8.8 (adapters) |
+| Stop position | The design setting `stop_position`. The SVG adapter reads Ink/Stitch's `stop_position` command, and the VectorCraft adapter its marker named `stitch:stop-position` | M3.8 (engine), M8.8 (adapters) |
 
 ## 5. Finalize
 

@@ -382,15 +382,15 @@ After sewing, check:
 - On the top half, each button's yellow is one fill under the dots, which sew after it, and its black rim a satin column round it. On the bottom half, the abutting button's yellow sews round the dots as drawn. Which sews better between the dots? Does the rim cover the yellow's edge?
 - The machine cuts the thread at thread changes and at the stop, but at no jump, and the pictures sew as any design does: a shape sewn after a jump may sew its thread down. Snip the jump threads at each stop and after sewing. Where is one sewn down, and does it show?
 
-## TS-16 — An Ink/Stitch file: start and end commands, clip paths
+## TS-16 — An Ink/Stitch file: start and end commands, clip paths, origin and stop position
 
-40.0 × 100.0 mm · 3026 stitches, 5 jumps, 4 trims, 3 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
+60.0 × 110.0 mm · 3026 stitches, 6 jumps, 5 trims, 3 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
 ![TS-16 as it will sew: a red tatami rectangle 40 by 30 mm, its rows across, and below it a blue satin column 40 mm long and 5 mm wide. The machine cuts the thread between them, at the thread change.](../../images/generated/testsheet-ts-16.png)
 
-Threads: Red, Blue, Emerald Green, Black.
+Threads: Red, Blue, Blue (stop), Emerald Green, Black.
 
 After sewing, check:
 
@@ -399,4 +399,6 @@ After sewing, check:
 - The blue satin column below it, 40 mm long and 5 mm wide, starts in its middle, where its start command is: the needle runs under the column to its left end, sews it to three quarters along, runs on under it to its right end and sews back. It ends three quarters along, at its end command. Is the needle's way under the column hidden?
 - The green fill is a quarter of a disc, 25 mm round its bottom-right corner: what its clip path, a circle, leaves of a 30 mm square. Is its round edge smooth, with no row past it?
 - The black zigzag at the bottom sews its first 15 mm and its last 15 mm, and nothing between, where its clip path leaves a gap: the needle jumps it. Does each piece end where the gap begins?
+- The design's origin, on the blue column's top edge 10 mm in from its left end, goes to the hoop's centre, where the needle waits before it sews. Does the machine put the design there, or its middle?
+- The machine stops after the blue column. Before it stops, the frame moves to the stop position, 20 mm right of the red fill's top-right corner and 10 mm above it. Does the frame wait there, and does the needle come back for the green fill?
 - Any difference between the 2 sew-outs, and where.

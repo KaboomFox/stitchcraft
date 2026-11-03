@@ -25,16 +25,25 @@ use crate::generators::satin::{END_AT_NEAREST_POINT, START_AT_NEAREST_POINT};
 /// and trim after it, so the columns stand apart.
 pub(super) const AS_DRAWN: [(&str, &str); 3] = [(START_AT_NEAREST_POINT, "false"), (END_AT_NEAREST_POINT, "false"), (TRIM_AFTER, "true")];
 
-/// A test sheet as a design: its elements, in sewing order.
+/// A test sheet as a design: its elements, in sewing order, and the design's settings.
 pub(super) struct Drawing {
     sheet: &'static str,
     elements: Vec<Element>,
+    settings: DesignSettings,
 }
 
 impl Drawing {
-    /// A sheet whose element ids start with `sheet` (`ts03:circle-0.1`).
+    /// A sheet whose element ids start with `sheet` (`ts03:circle-0.1`), with the design settings' defaults.
     pub fn new(sheet: &'static str) -> Self {
-        Drawing { sheet, elements: Vec::new() }
+        Drawing { sheet, elements: Vec::new(), settings: DesignSettings::default() }
+    }
+
+    /// The design's origin, which goes to the hoop's centre, and the stop position the frame moves to before
+    /// each stop (`REQ-ASM-005`), as Ink/Stitch's commands give them.
+    pub fn origin_and_stop_position(&mut self, origin: (f64, f64), stop_position: (f64, f64)) -> Result<(), SheetError> {
+        self.settings.origin = Some(point(origin)?);
+        self.settings.stop_position = Some(point(stop_position)?);
+        Ok(())
     }
 
     /// A stroke through `points`, named `name`, sewn with `thread` and the Ink/Stitch `params`.
@@ -124,9 +133,9 @@ impl Drawing {
         Ok(())
     }
 
-    /// The sheet as a design with the design settings' defaults, as it is planned; or why it is none.
+    /// The sheet as a design with its settings, as it is planned; or why it is none.
     pub fn design(self) -> Result<Design, SheetError> {
-        Design::new(self.elements, DesignSettings::default()).map_err(|d| SheetError::Said(d.to_string()))
+        Design::new(self.elements, self.settings).map_err(|d| SheetError::Said(d.to_string()))
     }
 
     /// The sheet planned for the reference machine, which says exactly the diagnostics of `codes`, in their

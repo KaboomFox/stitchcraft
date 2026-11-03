@@ -637,8 +637,9 @@ registry! {
     /// design setting `rotate_on_export`, which turns the design as it is written, and the updates
     /// Ink/Stitch would make to a file with its settings and no file version, or from a newer Ink/Stitch,
     /// which is read as it is. Of its commands, one on an object that is not stitched is named, and so is a
-    /// start, end or target command whose place doesn't read, and one on a shape digitized automatically
-    /// (`--auto`), which places where its parts start and end. Of clip paths, which cut the shapes they clip,
+    /// start, end, target, origin or stop position command whose place doesn't read, an `ignore_layer`
+    /// command in no layer, and a command on a shape digitized automatically (`--auto`), which places where
+    /// its parts start and end. Of clip paths, which cut the shapes they clip,
     /// what isn't applied is named: text in one, which adds nothing to it, a clip path on a clip path's
     /// shape, one that isn't a reference, such as a CSS shape, clip paths that name each other in a loop,
     /// `objectBoundingBox` units on a group, groups in a clip path more than 16 deep, and the root's.
@@ -670,6 +671,15 @@ registry! {
     /// the design sews as Ink/Stitch sews it. To sew a shape otherwise, change the setting the message
     /// names in Ink/Stitch.
     SvgInkStitchUpdated = "SC-I0818", Info, "Ink/Stitch file from an older version, read as Ink/Stitch updates it";
+
+    /// The file gives the design 2 origins, or 2 stop positions where the design has a stop: Ink/Stitch's
+    /// `origin` or `stop_position` command more than once, or more than one object named `stitch:origin` or
+    /// `stitch:stop-position` in a VectorCraft document. Which one counts isn't known, so no machine file is
+    /// written, as Ink/Stitch writes none (`REQ-ASM-005`). 2 stop positions in a design without a stop
+    /// change nothing.
+    ///
+    /// The message names the command or marker and counts them. Delete or rename all but one.
+    OriginOrStopPositionTwice = "SC-E0819", Error, "More than one origin or stop position";
 
     /// An element's geometry cannot be used: its path data or its list of points has an error (the path is
     /// stitched up to the error, as SVG viewers draw it), its transform is not valid (it is skipped with
@@ -717,7 +727,8 @@ registry! {
     /// marker, an object named `stitch:start` or `stitch:end`, is never stitched: the shapes grouped with it
     /// start or end there, and a marker they don't use is said, a second one of its kind in a group or one
     /// with no point that reads, as are those beside a shape digitized automatically, which places where its
-    /// parts start and end. A name that begins with `stitch:` and names no marker StitchCraft
+    /// parts start and end. So is an origin or stop position marker, `stitch:origin` or
+    /// `stitch:stop-position`, with no point that reads. A name that begins with `stitch:` and names no marker StitchCraft
     /// reads is said too, as is a group or a layer named as a marker, which only a shape can be: the name is
     /// ignored. A satin column, a zigzag or a fill made of a stroke is as wide as the stroke all along and
     /// centred on its path, so a stroke aligned inside or outside a closed path is said, as is a width

@@ -22,7 +22,8 @@ group's or a layer's StitchCraft effects sew each path inside it, as VectorCraft
 of the paint it draws over the others, which is how a graphic style applied to a group sews (`REQ-VC-006`).
 From M6.5 Ink/Stitch's commands can be written in an object's or a layer's name. `stitch:ignore` leaves
 it out, and `stitch:start` and `stitch:end` mark where the shape grouped with them starts or ends
-(`REQ-VC-009`), which its fills and satin columns do from M8.4 (`REQ-GEN-001`). From M13.1 strokes keep their cap too. With `--auto`, `read_with` marks an object as an
+(`REQ-VC-009`), which its fills and satin columns do from M8.4 (`REQ-GEN-001`). From M8.8 `stitch:origin`
+and `stitch:stop-position`, anywhere, give the design its origin and stop position (`REQ-ASM-005`). From M13.1 strokes keep their cap too. With `--auto`, `read_with` marks an object as an
 automatic element when neither it nor a group or layer around it has a StitchCraft effect
 (`REQ-AUTO-001`). Of such a line sewn across its width, the reader names the alignment and the width
 profile VectorCraft draws, which its stitches don't follow (`REQ-AUTO-005`). From M13.7 StitchCraft's Auto
