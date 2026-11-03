@@ -347,7 +347,7 @@ fn top_rows_of(
     let Some(Prepared { region, common, sewing }) = prepare(element, settings, profile, &neighbours, diagnostics, meter)? else { return Ok(None) };
     // A contour, meander or circular fill has no rows: the preview shows its path, round the rings, through
     // the tile as the element's seed lays it, or along the spiral's pieces. A cross stitch fill shows its
-    // crosses' diagonals.
+    // crosses' bars, or its half crosses' diagonals.
     match sewing.stitch_type {
         StitchType::ContourFill => {
             let Some(contour) = contour_settings(&sewing, diagnostics) else { return Ok(None) };
@@ -610,12 +610,12 @@ fn circular_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Opti
 
 /// The cross stitch `sewing` describes, its settings read as a cross stitch reads them: its own, and the
 /// `expand_mm` it shares with the tatami fill, with the element's shortest stitch. `None` when they cannot be
-/// read, or its method is not sewn yet, which `diagnostics` says.
+/// read, which `diagnostics` says.
 fn cross_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Option<Cross> {
     let tatami = sewing.read(TatamiParams::from_set_as, diagnostics);
     let cross = sewing.read(CrossParams::from_set_as, diagnostics);
     let (Some(tatami), Some(cross), Some(shared)) = (tatami, cross, sewing.shared) else { return None };
-    cross.cross(tatami.expand_mm.get(), shared.min_stitch, diagnostics)
+    Some(cross.cross(tatami.expand_mm.get(), shared.min_stitch, diagnostics))
 }
 
 /// The tatami fill `sewing` describes, its settings read as its stitch type reads them; `None` when they

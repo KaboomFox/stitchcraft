@@ -1,8 +1,10 @@
-# TS-17A's simple crosses, M10.1's: squares on grids of 2 and 3 mm with 2 and 4 threads, the 2 mm square with
-# 2 threads and the 3 mm one with 4 flipped, and a K on a 2 mm grid grown by 0.1 mm, whose slanted edges cut
-# their cells in half, as Ink/Stitch's cross-stitch fonts sew their letters. Both programs sew the same
-# crosses, each a run from a corner back to it, the squares on the canvas's grid (REQ-FILL-CRS-007).
+# TS-17A's crosses. M10.1's simple crosses: squares on grids of 2 and 3 mm with 2 and 4 threads, the 2 mm square
+# with 2 threads and the 3 mm one with 4 flipped, and a K on a 2 mm grid grown by 0.1 mm, whose slanted edges cut
+# their cells in half, as Ink/Stitch's cross-stitch fonts sew their letters (REQ-FILL-CRS-007). M10.2's other
+# crosses: squares of upright, dense upright, double and Smyrna crosses, of half crosses plain and flipped, and
+# a square turned 30° with its grid (REQ-FILL-CRS-012). Both programs sew the same crosses, the squares on the
+# canvas's grid.
 id = "inkstitch-ts17a"
-requirements = ["REQ-SVG-008", "REQ-FILL-CRS-007"]
+requirements = ["REQ-SVG-008", "REQ-FILL-CRS-007", "REQ-FILL-CRS-012"]
 kind = "inkstitch"
 sheet = "TS-17A"
