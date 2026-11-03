@@ -110,5 +110,8 @@ mod tests {
         let Shape::Fill { path, .. } = &cut.elements()[2].shape else { panic!("{:?}", cut.elements()[2]) };
         assert!(path.subpaths.iter().flat_map(|s| &s.segments).all(|s| matches!(s, Segment::Line(_))), "{path:?}");
         assert!(cut.elements()[2].clips.is_empty());
+        // Without the automatic clipped square, nothing is cut first, and the design is digitized as it is.
+        let uncut = Design::new(elements[..2].to_vec(), crate::design::DesignSettings::default()).unwrap();
+        assert_eq!(super::cut(&uncut, &Budget::DEFAULT, &mut Vec::new()), None);
     }
 }
