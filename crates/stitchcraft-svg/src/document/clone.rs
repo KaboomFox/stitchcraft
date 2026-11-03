@@ -33,6 +33,11 @@
 //!   everything it sews. Its other Ink/Stitch settings change nothing, and `SC-W0802` names them.
 //!
 //! Where Ink/Stitch sews a clone otherwise than this, the ledger says how (`DEV-SVG-021` to `DEV-SVG-024`).
+//! Ink/Stitch was run on files written for this, with its stitch-plan cache off, which otherwise gave a clone
+//! the stitches of an earlier file: clones turned, mirrored and scaled, in turned groups, with their own
+//! `angle`, `flip_angle` and `clone`, of groups, of clones and of symbols; commands tied to a source, inside
+//! it, at the root and on the clone; the use's style, presentation attributes, clip path and `context-fill`;
+//! and the loops and units it fails on. Each ledger entry says what it did.
 //!
 //! **What is left out.** A use that names nothing, or an element that isn't SVG, shows nothing, as in a
 //! viewer. A clone that shows itself, directly or through the clones in its source, is left out, as a viewer
