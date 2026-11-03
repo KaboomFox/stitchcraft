@@ -238,9 +238,9 @@ StitchCraft's SVG adapter does with it (`stitchcraft_svg::inkstitch`). Their con
 
 | Command | Applies to | StitchCraft |
 |---|---|---|
-| `starting_point` | the object a connector ties it to | planned: noted on the object as not applied (`SC-W0802`) |
-| `ending_point` | the object a connector ties it to | planned: noted on the object as not applied (`SC-W0802`) |
-| `target_point` | the object a connector ties it to | read with the stitch types it positions |
+| `starting_point` | the object a connector ties it to | applied to the object's fills and satin columns (`REQ-GEN-001`), unless it is digitized automatically |
+| `ending_point` | the object a connector ties it to | applied to the object's fills and satin columns (`REQ-GEN-001`), unless it is digitized automatically |
+| `target_point` | the object a connector ties it to | applied to the object's circular fill (`REQ-FILL-CIR-008`), and from M10 to its ripple stitch, unless it is digitized automatically |
 | `autoroute_start` | the object a connector ties it to | nothing to sew: input to Ink/Stitch's tools |
 | `autoroute_end` | the object a connector ties it to | nothing to sew: input to Ink/Stitch's tools |
 | `stop` | the object a connector ties it to | applied: turns on `stop_after` |
@@ -323,7 +323,7 @@ change Ink/Stitch's updater makes (`lib/update.py`), in StitchCraft's words.
 | 3 | a zigzag stroke's `pull_compensation_mm`, unless 0, is halved into `stroke_pull_compensation_mm`, which applies to each side | applied, unless digitized automatically |
 | 3 | a satin column gets `start_at_nearest_point` and `end_at_nearest_point` off | applied, unless digitized automatically |
 | 3 | the commands' old names become today's (the table under Commands) | applied, in any file (`DEV-SVG-014`) |
-| 3 | a `starting_point` or `ending_point` command is placed anew at its connector's end on its object | planned (M8) |
+| 3 | a `starting_point` or `ending_point` command is placed anew at its connector's end on its object | applied, unless digitized automatically |
 | 4 | an element whose fill is not `none` (a fill not set is black), and whose `max_stitch_length_mm` is missing, empty, not a number or 0, gets 3 | applied to the shapes whose fill is sewn, unless digitized automatically |
 | 4 | a fill with `auto_fill` off gets `fill_method` `legacy_fill`, and `auto_fill` is removed | applied to the shapes whose fill is sewn, unless digitized automatically (`DEV-FILL-014` says how a legacy fill sews) |
 | 4 | `fill_method` `auto_fill` becomes `tatami_fill` | applied to the shapes whose fill is sewn, unless digitized automatically |

@@ -1,0 +1,7 @@
+# The same squares in a file of version 2, with that version's fill_start and fill_end commands. Ink/Stitch's
+# update moves each to its connector's end on its square, facing the middle one, so the needle sews straight
+# on from square to square; at their symbols, as in a file of today's version, it would jump twice more.
+id = "inkstitch-version-2-start-end"
+requirements = ["REQ-SVG-007", "REQ-SVG-008", "REQ-GEN-001"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/version-2-start-end.svg"

@@ -11,6 +11,7 @@ const TRAVEL: Travel = Travel { length: 2.5, tolerance: 0.2, min_stitch: 0.3, un
 /// A circular fill of circles `spacing` apart, in running stitches of 2.5 mm, with no underlay.
 fn circular(spacing: f64) -> Circular {
     Circular {
+        target: None,
         spacing,
         end_spacing: None,
         stitching: Stitching { length: 2.5, tolerance: 0.2, jitter: None, beans: vec![0], repeats: 1 },

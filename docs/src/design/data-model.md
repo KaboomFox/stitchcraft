@@ -44,6 +44,13 @@ pub struct Element {
     pub thread: Thread,
     pub params: ParamSet,            // as the host stores them; validated against the registry when planned
     pub automatic: bool,             // since M13.1: a shape without settings, read with --auto, whose stitches StitchCraft chooses
+    pub hints: Hints,                // since M8.4: where its design says it starts and ends, and the point it aims at
+}
+
+pub struct Hints {                   // since M8.4: Ink/Stitch's start, end and target commands, VectorCraft's markers
+    pub start: Option<Point>,        // its start position, in place of the needle before it (REQ-GEN-001)
+    pub end: Option<Point>,          // its end position, in place of the next element's offer
+    pub target: Option<Point>,       // the point a circular fill turns round (REQ-FILL-CIR-008)
 }
 
 pub struct Reading {                 // since M13.1: what every host's reader is asked
@@ -107,9 +114,9 @@ represent with a diagnostic of their own, so a failed check is a bug in the adap
 position, checked the same way. VectorCraft's Test Sheet filter draws a test sheet in the middle of the
 artboard with it (`REQ-VC-015`).
 
-**Commands** attached to elements come with M8, for Ink/Stitch's command symbols such as start and end
-points. Trims and stops are the element parameters `trim_after` and `stop_after`, and the origin and
-stop position are design settings (M3.8).
+**Commands.** Ink/Stitch's start, end and target commands, and VectorCraft's start and end markers, are
+an element's hints (M8.4), its points checked and moved with the rest. Trims and stops are the element
+parameters `trim_after` and `stop_after`, and the origin and stop position are design settings (M3.8).
 
 ### Region
 

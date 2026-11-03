@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 3 red squares 2 mm apart in a file of version 2, with the start and end commands of that version, fill_start and fill_end. The first's end command lies left of it and the third's start command right of it, but their connectors end on the sides that face the middle square. Ink/Stitch's update moves each command to its connector's end on its shape, as it worked then, so the needle sews straight on from square to square; at their symbols it would jump twice. Written for StitchCraft's Ink/Stitch differential cases (conformance L3). -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:inkstitch="http://inkstitch.org/namespace"
+     width="100mm" height="100mm" viewBox="0 0 100 100">
+  <metadata><inkstitch:inkstitch_svg_version>2</inkstitch:inkstitch_svg_version></metadata>
+  <defs>
+    <symbol id="inkstitch_fill_start"><circle r="1"/></symbol>
+    <symbol id="inkstitch_fill_end"><circle r="1"/></symbol>
+  </defs>
+  <rect id="a" x="10" y="10" width="20" height="20" fill="#ed171f"/>
+  <rect id="b" x="32" y="10" width="20" height="20" fill="#ed171f"/>
+  <rect id="c" x="54" y="10" width="20" height="20" fill="#ed171f"/>
+  <path d="M 5,20 L 30,20" fill="none" stroke="#000" stroke-width="0.1" inkscape:connector-type="polyline"
+        inkscape:connection-start="#a-end" inkscape:connection-end="#a"/>
+  <use id="a-end" xlink:href="#inkstitch_fill_end" x="5" y="20"/>
+  <path d="M 79,20 L 54,20" fill="none" stroke="#000" stroke-width="0.1" inkscape:connector-type="polyline"
+        inkscape:connection-start="#c-start" inkscape:connection-end="#c"/>
+  <use id="c-start" xlink:href="#inkstitch_fill_start" x="79" y="20"/>
+</svg>

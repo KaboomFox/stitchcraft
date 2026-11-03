@@ -58,8 +58,9 @@ its outline, and `SC-W0317` says so. A smaller scale lets the line in.
 
 ## The line
 
-The line starts at the point of the tiling nearest the needle. It ends nearest where the next part, or
-the next element, starts, or else half way round the outline from where it began. It first takes the
+The line starts at the point of the tiling nearest the needle, or the fill's start position. It ends
+nearest where the next part, or the next element, starts, or the fill's end position, or else half way
+round the outline from where it began. It first takes the
 way of fewest sides between the two, then swaps sides, and pairs of sides, picked at random, for longer
 ways round through points it hasn't passed, until it can swap none. `random_seed` picks them: another
 seed wanders another way.

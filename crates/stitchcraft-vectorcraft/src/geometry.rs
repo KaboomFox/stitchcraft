@@ -11,7 +11,7 @@
 //! anchor draws nothing.
 
 use stitchcraft_core::units::MM_PER_POINT;
-use stitchcraft_core::{Exhausted, Meter, Point};
+use stitchcraft_core::{Exhausted, Meter, Point, Rect};
 use stitchcraft_engine::design::{Path, Segment, Subpath, WORKING_LIMIT_MM};
 
 use crate::wire::{Anchor, PathData, WirePoint};
@@ -71,6 +71,20 @@ pub(crate) fn path(data: &[&PathData], meter: &mut Meter) -> Result<Result<Path,
 /// A point in millimetres as VectorCraft's coordinates, in points.
 pub(crate) fn in_points(p: Point) -> [f64; 2] {
     [p.x() / MM_PER_POINT, p.y() / MM_PER_POINT]
+}
+
+/// Where a marker drawn as `data` is (`REQ-VC-009`): the middle of the box round its anchors, in
+/// millimetres, its handles left out, so that a dot of one anchor or a small circle marks its centre. `None`
+/// when it has no anchor, or one that is not a number or lies past the working limit. Each anchor charges
+/// `meter` a unit.
+pub(crate) fn middle(data: &[&PathData], meter: &mut Meter) -> Result<Option<Point>, Exhausted> {
+    let mut anchors = Vec::new();
+    for anchor in data.iter().flat_map(|d| &d.subpaths).flat_map(|sub| &sub.anchors) {
+        meter.charge(1)?;
+        let Some(p) = anchor.p.0.and_then(mm) else { return Ok(None) };
+        anchors.push(p);
+    }
+    Ok(Rect::around(anchors).map(Rect::center))
 }
 
 /// An anchor's three points, in points: `None` when a coordinate is not a number.

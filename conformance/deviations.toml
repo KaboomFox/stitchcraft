@@ -200,6 +200,13 @@ requirements = ["REQ-SAT-028"]
 params = ["contour_underlay"]
 
 [[deviation]]
+id = "DEV-SAT-012"
+area = "satin"
+summary = "A satin column with a start position offers it to the element before it, which ends nearest it (REQ-GEN-001). Ink/Stitch's satin column offers nothing then, or its rails' start when start_at_nearest_point is off, and the element before it ends as it would before an element that starts elsewhere."
+reason = "The element before ends near where the column starts, so the needle's way between them is the shortest, as before a fill with a start position, which Ink/Stitch's fills offer. Ink/Stitch's satin column offers a first stitch only when it doesn't start at its nearest point, and then its rails' start, whatever its start command says (lib/elements/satin_column/satin_column.py: first_stitch, read at d59c9ab)."
+requirements = ["REQ-GEN-001", "REQ-GEN-003"]
+
+[[deviation]]
 id = "DEV-FILL-001"
 area = "fill"
 summary = "A fill's region follows its fill rule. Ink/Stitch takes the subpath of the largest area as the outline and every other subpath as a hole, whatever the fill rule, and repairs a shape that is not valid. The repair merges the subpaths' lines, a stretch drawn twice into one, and fills the faces they bound by how deeply they nest, which fills every face beside the outside. Where the nonzero rule fills a part inside that the subpaths wind round twice the same way, such as a ring drawn inside another the same way round, or the overlap of 2 shapes drawn the same way round, StitchCraft fills it (SC-I0306) and Ink/Stitch leaves it empty. Where the fill rule leaves a part beside the outside empty, which subpaths running along each other bound, such as a notch drawn as a hole along the outline or a subpath drawn twice, StitchCraft leaves it empty (SC-I0313) and Ink/Stitch fills it."
@@ -300,9 +307,9 @@ params = ["underpath"]
 [[deviation]]
 id = "DEV-FILL-014"
 area = "fill"
-summary = "A fill whose fill_method is legacy_fill is sewn as a tatami fill without underlay (SC-W0314), and without the pull compensation, random stitch lengths and gap-filling rows legacy fill takes none of, its rows routed and joined by travel stitches as a tatami fill's are, from near the needle to near the next element. Ink/Stitch's legacy fill sews each stretch of rows that join on its own, back and forth, with no travel stitches between stretches; its flip starts the rows from the other side, and its reverse sews the whole fill backwards. StitchCraft keeps both settings without reading them (SC-W0105)."
+summary = "A fill whose fill_method is legacy_fill is sewn as a tatami fill without underlay (SC-W0314), and without the pull compensation, random stitch lengths and gap-filling rows legacy fill takes none of, its rows routed and joined by travel stitches as a tatami fill's are, from near the needle to near the next element. Ink/Stitch's legacy fill sews each stretch of rows that join on its own, back and forth, with no travel stitches between stretches; its flip starts the rows from the other side, and its reverse sews the whole fill backwards. StitchCraft keeps both settings without reading them (SC-W0105). Its start and end positions are used as a tatami fill's are (REQ-GEN-001), where Ink/Stitch's legacy fill sews its parts in order of their distance from its start command and uses it no further."
 reason = "StitchCraft does not build legacy fill, since the method exists for Ink/Stitch's older files: Ink/Stitch gives it to a fill whose auto_fill is off (lib/update.py: update_legacy_params, read at 6555892). Its rows and their needle points come from the functions a tatami fill's come from, and it sews no underlay (lib/stitches/fill.py: legacy_fill, intersect_region_with_grating, stitch_row; lib/stitches/tatami_fill.py imports both; lib/elements/fill_stitch.py: to_stitch_groups), so a tatami fill without underlay lays the same rows."
-requirements = ["REQ-FILL-005"]
+requirements = ["REQ-FILL-005", "REQ-GEN-001"]
 params = ["fill_method"]
 
 [[deviation]]
@@ -366,6 +373,13 @@ area = "fill/circular"
 summary = "A circular fill whose spiral the part cuts into one piece joins it to the needle, and to the end, along the outline the shorter way round. Ink/Stitch's way runs along the outline from where it starts, without passing its start, which is the longer way round when the outline's start lies between."
 reason = "Where an outline starts depends on how it was drawn, and the shorter way puts less of a line on the fill's edge. Travel along a ring takes the shorter way too (DEV-FILL-011). Ink/Stitch's join was read at d59c9ab (lib/stitches/circular_fill.py: _apply_start_end_commands, _get_start_end_sequence, which takes shapely's substring of the outline)."
 requirements = ["REQ-FILL-CIR-003"]
+
+[[deviation]]
+id = "DEV-FILL-023"
+area = "fill"
+summary = "A fill in parts with a start position starts its first part nearest it, and each part after nearest where the part before ended, as without a start position (REQ-GEN-001). Ink/Stitch starts each of its parts nearest its start command."
+reason = "The start position says where the fill begins. After the first part the needle is where that part ended, near the next, so starting the next part nearest it keeps the needle's way between parts short. Ink/Stitch takes the start command's point as each part's start (lib/elements/fill_stitch.py: to_stitch_groups, get_starting_point, read at d59c9ab), and a part after the first starts at its point nearest the command however far that lies from where the part before ended. The parts go in the same order in both, by their distance from the start position, and the last ends nearest the end position in both."
+requirements = ["REQ-GEN-001", "REQ-FILL-TAT-008"]
 
 [[deviation]]
 id = "DEV-SVG-001"
