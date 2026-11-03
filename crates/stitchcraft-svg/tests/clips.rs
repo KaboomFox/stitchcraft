@@ -130,7 +130,8 @@ fn req_svg_011_object_bounding_box_units_are_shares_of_the_shape_s_box() {
 fn req_svg_011_a_clip_path_is_the_area_of_its_children_as_a_viewer_takes_them_in() {
     // A path, a circle, a use of a rectangle at its x and y, and a group's polygon, as Inkscape draws it, each
     // by its clip-rule, which inherits from the clip path. Not a child that isn't displayed or visible, nor a
-    // line, nor text, which is named; nor what a shape in a clip path is clipped to, which is named too.
+    // line, nor text, which is named when it is visible; nor what a shape in a clip path is clipped to, which is
+    // named too. Hidden text adds nothing in a viewer either, so it is left out without a note.
     let read = svg(file(
         r##"<defs><rect id="used" width="5" height="5"/>
         <clipPath id="c" clip-rule="evenodd">
@@ -142,6 +143,7 @@ fn req_svg_011_a_clip_path_is_the_area_of_its_children_as_a_viewer_takes_them_in
           <rect visibility="hidden" width="99" height="99"/>
           <line x1="0" y1="0" x2="99" y2="99"/>
           <text>A</text>
+          <text visibility="hidden">B</text>
         </clipPath></defs>
         <rect id="r" width="100" height="100" clip-path="url(#c)"/>"##,
     ));
