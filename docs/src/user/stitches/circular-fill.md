@@ -33,8 +33,8 @@ pictures leave the underlay out.
 | ![A rounded square 30 mm a side sewn without underlay as a circular fill, a spiral round its middle whose rings the corners cut, 1 mm apart](../../images/generated/circular-spacing-1.png) | ![A rounded square 30 mm a side sewn without underlay as a circular fill, a spiral round its middle whose rings the corners cut, 2 mm apart](../../images/generated/circular-spacing-2.png) | ![A rounded square 30 mm a side sewn without underlay as a circular fill, a spiral round its middle whose rings the corners cut, 1 mm, fading to 3 mm](../../images/generated/circular-spacing-3.png) |
 <!-- /shot -->
 
-Ink/Stitch's `target_point` command moves the middle. StitchCraft reads it with Ink/Stitch's other
-commands in a later version, and until then the spiral turns round the centroid.
+In an Ink/Stitch file, a `target_point` command tied to the fill moves the middle to where its symbol
+is. Every part of the fill then turns round that point, which may lie outside a part.
 
 ## Pieces and travel
 

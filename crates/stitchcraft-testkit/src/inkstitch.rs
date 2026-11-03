@@ -15,6 +15,10 @@
 //! own that a stitch type reads is refused, as Ink/Stitch would pass it over and sew otherwise. Automatic
 //! digitizing's own are left out, as no stitch type reads them in either program (`REQ-AUTO-020`).
 //!
+//! An element's start and end positions and its target point are Ink/Stitch's `starting_point`,
+//! `ending_point` and `target_point` commands (`REQ-GEN-001`): a `<use>` of the command's symbol at the
+//! position, and a connector from it to the element's path, as Ink/Stitch's Attach Commands draws them.
+//!
 //! The metadata gives Ink/Stitch's current file version ([`stitchcraft_svg::version::CURRENT`]), so its
 //! updater changes nothing, and each design setting that isn't StitchCraft's default. One that is stays
 //! unset, and Ink/Stitch takes its own default, StitchCraft's too but for the shortest stitch, which
@@ -24,8 +28,8 @@
 //! the design's coordinates. The page reaches [`MARGIN`] past the design's right and bottom. What lies left
 //! of the origin or above it is off the page, which a viewer leaves out, but both programs sew it.
 
-use stitchcraft_core::Rect;
-use stitchcraft_engine::design::{Cap, DesignSettings, Element, FillRule, Join, Path, SETTINGS, Segment, Shape};
+use stitchcraft_core::{Point, Rect};
+use stitchcraft_engine::design::{Cap, DesignSettings, Element, FillRule, Hints, Join, Path, SETTINGS, Segment, Shape};
 use stitchcraft_engine::registry::PARAMETERS;
 use stitchcraft_params::{Origin, ParamGroup};
 use stitchcraft_svg::inkstitch::INKSTITCH_NS;
@@ -44,7 +48,9 @@ pub fn svg(elements: &[Element], settings: &DesignSettings) -> Result<String, St
     };
     let (width, height) = ((bounds.max().x() + MARGIN).max(MARGIN), (bounds.max().y() + MARGIN).max(MARGIN));
     let mut out = String::from("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-    out.push_str(&format!("<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:inkstitch=\"{INKSTITCH_NS}\" "));
+    out.push_str("<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" ");
+    out.push_str("xmlns:inkscape=\"http://www.inkscape.org/namespaces/inkscape\" ");
+    out.push_str(&format!("xmlns:inkstitch=\"{INKSTITCH_NS}\" "));
     out.push_str(&format!("width=\"{width}mm\" height=\"{height}mm\" viewBox=\"0 0 {width} {height}\">\n"));
     out.push_str("  <metadata>\n");
     out.push_str(&format!("    <inkstitch:inkstitch_svg_version>{CURRENT}</inkstitch:inkstitch_svg_version>\n"));
@@ -53,12 +59,49 @@ pub fn svg(elements: &[Element], settings: &DesignSettings) -> Result<String, St
         out.push_str(&format!("    <inkstitch:{0}>{1}</inkstitch:{0}>\n", setting.name, setting.get(settings).get()));
     }
     out.push_str("  </metadata>\n");
+    // A symbol for each command the elements' hints are written as.
+    let used: Vec<&str> = COMMANDS.iter().filter(|(_, at)| elements.iter().any(|e| at(&e.hints).is_some())).map(|(name, _)| *name).collect();
+    if !used.is_empty() {
+        out.push_str("  <defs>\n");
+        for name in &used {
+            out.push_str(&format!("    <symbol id=\"inkstitch_{name}\"><circle r=\"1\"/></symbol>\n"));
+        }
+        out.push_str("  </defs>\n");
+    }
     for (index, element) in elements.iter().enumerate() {
         let parameters = parameters(element, PARAMETERS)?;
         out.push_str(&format!("  <path id=\"e{index}\" {}{parameters} d=\"{}\"/>\n", paint(element), data(element.shape.path())));
+        out.push_str(&commands(index, element));
     }
     out.push_str("</svg>\n");
     Ok(out)
+}
+
+/// Which of an element's hints a command is written for.
+type Hint = fn(&Hints) -> Option<Point>;
+
+/// The commands `hints` are written as, each with the hint it is written for.
+const COMMANDS: [(&str, Hint); 3] = [("starting_point", |h| h.start), ("ending_point", |h| h.end), ("target_point", |h| h.target)];
+
+/// The commands of the element `index`, `element`: for each of its hints, a `<use>` of the command's symbol
+/// there, and a connector from it to the element's first point, which ties it to the element.
+fn commands(index: usize, element: &Element) -> String {
+    let Some(first) = element.shape.path().points().next() else { return String::new() };
+    let mut out = String::new();
+    for (name, at) in COMMANDS {
+        let Some(at) = at(&element.hints) else { continue };
+        let id = format!("e{index}-{name}");
+        out.push_str(&format!(
+            "  <path d=\"M {},{} L {},{}\" style=\"fill:none;stroke:#000;stroke-width:0.1\" inkscape:connector-type=\"polyline\" \
+             inkscape:connection-start=\"#{id}\" inkscape:connection-end=\"#e{index}\"/>\n",
+            at.x(),
+            at.y(),
+            first.x(),
+            first.y()
+        ));
+        out.push_str(&format!("  <use id=\"{id}\" xlink:href=\"#inkstitch_{name}\" x=\"{}\" y=\"{}\"/>\n", at.x(), at.y()));
+    }
+    out
 }
 
 /// How `element` is painted, as attributes: its fill, or its stroke.
@@ -146,24 +189,24 @@ mod tests {
     use super::*;
     use crate::designs::{BLUE, RED, along, capped, fill, p, polylines, rings, widened};
 
-    /// What a file keeps of an element: its shape, its thread's colour and its parameters.
-    type Kept = (Shape, Rgb, Vec<(String, String)>);
+    /// What a file keeps of an element: its shape, its thread's colour, its parameters and its hints.
+    type Kept = (Shape, Rgb, Vec<(String, String)>, Hints);
 
     /// What the file `text` keeps of each element, and the design settings StitchCraft reads from it, as
     /// StitchCraft's SVG reader reads them, which says nothing of a file the test kit writes: the shapes,
-    /// colours and parameters (`REQ-PRM-003`).
+    /// colours, parameters and hints (`REQ-PRM-003`).
     fn read(text: &str) -> (Vec<Kept>, DesignSettings) {
         let read = stitchcraft_svg::read(text.as_bytes(), &Budget::DEFAULT).unwrap();
         assert!(read.warnings.is_empty(), "{:?}", read.warnings);
         let elements = read.design.elements();
-        assert_eq!(elements.len(), text.matches("<path ").count(), "an element for each path");
+        assert_eq!(elements.len(), text.matches("<path ").count() - text.matches("inkscape:connection-start").count(), "an element for each path");
         (kept(elements), read.design.settings)
     }
 
     /// What a file should keep of `elements`.
     fn kept(elements: &[Element]) -> Vec<Kept> {
         let parameters = |element: &Element| element.params.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect();
-        elements.iter().map(|element| (element.shape.clone(), element.thread.color, parameters(element))).collect()
+        elements.iter().map(|element| (element.shape.clone(), element.thread.color, parameters(element), element.hints)).collect()
     }
 
     #[test]
@@ -192,6 +235,21 @@ mod tests {
         assert!(text.contains(&format!("<inkstitch:inkstitch_svg_version>{CURRENT}</inkstitch:inkstitch_svg_version>")), "{text}");
         assert!(text.contains("viewBox=\"0 0 56 30\""), "the design's own coordinates: {text}");
         assert_eq!(read(&text), (kept(&written), DesignSettings::default()));
+    }
+
+    #[test]
+    fn req_prm_003_an_element_s_hints_are_written_as_ink_stitch_s_commands() {
+        // A fill that starts and ends at its corners and turns round a point off its middle, and a line with
+        // a start alone: each hint a command tied to its element, which the reader places where it was.
+        let square = fill("square", &[&[(10.0, 10.0), (20.0, 10.0), (20.0, 20.0), (10.0, 20.0)]], &RED, &[("fill_method", "circular_fill")]);
+        let square = Element { hints: Hints { start: Some(p(10.0, 10.0)), end: Some(p(20.5, 20.25)), target: Some(p(12.0, 18.0)) }, ..square };
+        let line = along("line", polylines(&[&[(30.0, 5.0), (40.0, 5.0)]]), &BLUE, &[]);
+        let line = Element { hints: Hints { start: Some(p(31.0, 5.0)), ..Hints::default() }, ..line };
+        let written = [square, line];
+        let text = svg(&written, &DesignSettings::default()).unwrap();
+        assert_eq!(text.matches("<symbol ").count(), 3, "a symbol for each command used: {text}");
+        assert!(text.contains(r##"<use id="e0-ending_point" xlink:href="#inkstitch_ending_point" x="20.5" y="20.25"/>"##), "{text}");
+        assert_eq!(read(&text).0, kept(&written));
     }
 
     #[test]

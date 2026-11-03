@@ -12,7 +12,8 @@
 //! MC-2 they are drawn as designs and planned by the engine (`designed`), to test its stitches too. The MC-3
 //! sheets sew satin columns: a ladder of widths and spacings, and the underlays side by side. The MC-4 sheets
 //! sew tatami fills: inside outlines at 3 pull compensations, at 5 spacings and 3 angles, and round holes
-//! and a part apart, with and without underlay and gap-filling rows.
+//! and a part apart, with and without underlay and gap-filling rows. TS-16, for MC-11, gathers what
+//! StitchCraft applies of an Ink/Stitch file; the differential writes it as Ink/Stitch writes a file.
 //! Sheets use exact Brother PEC thread colours, so a Brother machine shows the thread names the
 //! expected-result sheet lists.
 
@@ -32,6 +33,7 @@ mod ts09;
 mod ts10;
 mod ts11;
 mod ts13;
+mod ts16;
 
 use designed::Drawing;
 pub use sketch::{STITCH_LEN, SheetError};
@@ -40,7 +42,7 @@ use stitchcraft_plan::palette::BROTHER_PEC;
 use stitchcraft_plan::profiles::{BROTHER_PE800_4X4, BROTHER_PE800_SMALL, REFERENCE};
 use stitchcraft_plan::{MachineProfile, StitchPlan, Thread};
 
-use crate::design::Design;
+use crate::design::{Design, Hints};
 
 /// Brother PEC indices of the threads the sheets use.
 const PRUSSIAN_BLUE: u8 = 1;
@@ -85,6 +87,10 @@ enum Drawn {
     /// `random_seed` wanders as its id draws. A host's objects have ids of their own, so the sheet drawn into
     /// a document would sew otherwise, and only `stitch testsheet` writes it.
     DesignedById(fn() -> Result<Drawing, SheetError>, &'static [Code]),
+    /// As [`Drawn::Designed`], but the design holds what an Ink/Stitch file gives its elements, which a host
+    /// would draw as objects of their own: start and end positions ([`TestSheet::positioned`]), as TS-16's.
+    /// Only `stitch testsheet` and the differential's SVG file draw it.
+    FromFile(fn() -> Result<Drawing, SheetError>, &'static [Code]),
 }
 
 impl TestSheet {
@@ -92,19 +98,31 @@ impl TestSheet {
     pub fn plan(&self) -> Result<StitchPlan, SheetError> {
         match self.drawn {
             Drawn::Sketched(build) => build(),
-            Drawn::Designed(drawing, said) | Drawn::DesignedById(drawing, said) => drawing()?.plan_saying(said),
+            Drawn::Designed(drawing, said) | Drawn::DesignedById(drawing, said) | Drawn::FromFile(drawing, said) => drawing()?.plan_saying(said),
         }
     }
 
     /// Whether the sheet is drawn as a design, which [`TestSheet::design`] gives, rather than stitch by stitch.
     pub const fn designed(&self) -> bool {
-        matches!(self.drawn, Drawn::Designed(..) | Drawn::DesignedById(..))
+        matches!(self.drawn, Drawn::Designed(..) | Drawn::DesignedById(..) | Drawn::FromFile(..))
     }
 
     /// Whether a host can draw the sheet into a document that sews as the sheet does: a design whose
-    /// elements' ids choose none of its stitches (`REQ-VC-015`).
+    /// elements' ids choose none of its stitches (`REQ-VC-015`), and which holds nothing only an Ink/Stitch
+    /// file gives, as a sheet drawn from a file does. It is known from how the sheet is drawn, without drawing
+    /// it, so a host can list the sheets it draws within the little work a plug-in may do.
     pub const fn drawable(&self) -> bool {
         matches!(self.drawn, Drawn::Designed(..))
+    }
+
+    /// Whether the sheet's design gives elements start or end positions or target points
+    /// ([`Element::hints`]), as TS-16's does. A host would draw them as markers grouped with their shapes,
+    /// which VectorCraft's Test Sheet filter doesn't draw. The sheets that do are those drawn from a file,
+    /// which [`TestSheet::drawable`] leaves out, as the tests check.
+    ///
+    /// [`Element::hints`]: crate::design::Element::hints
+    pub fn positioned(&self) -> bool {
+        self.design().and_then(Result::ok).is_some_and(|design| design.elements().iter().any(|element| element.hints != Hints::default()))
     }
 
     /// Whether the sheet's design has shapes that StitchCraft digitizes automatically ([`Element::automatic`]),
@@ -120,7 +138,7 @@ impl TestSheet {
     pub fn design(&self) -> Option<Result<Design, SheetError>> {
         match self.drawn {
             Drawn::Sketched(_) => None,
-            Drawn::Designed(drawing, _) | Drawn::DesignedById(drawing, _) => Some(drawing().and_then(Drawing::design)),
+            Drawn::Designed(drawing, _) | Drawn::DesignedById(drawing, _) | Drawn::FromFile(drawing, _) => Some(drawing().and_then(Drawing::design)),
         }
     }
 }
@@ -380,6 +398,18 @@ pub static SHEETS: &[TestSheet] = &[
         profile: REFERENCE,
         drawn: Drawn::Designed(ts13::layers, &ts13::LAYERS_SAY),
     },
+    TestSheet {
+        id: "TS-16",
+        title: "An Ink/Stitch file: start and end commands",
+        checks: &[
+            "Sew it beside Ink/Stitch's machine file of the same sheet, which the differential keeps (`target/conformance/differential/ts-16.inkstitch.pes`). Each element should start and end in the same place in both.",
+            "The red fill, 40 by 30 mm, starts at its top-right corner, where its start command is, and ends at its bottom-left corner, at its end command.",
+            "The blue satin column below it, 40 mm long and 5 mm wide, starts in its middle, where its start command is: the needle runs under the column to its left end, sews it to three quarters along, runs on under it to its right end and sews back. It ends three quarters along, at its end command. Is the needle's way under the column hidden?",
+            "Any difference between the 2 sew-outs, and where.",
+        ],
+        profile: REFERENCE,
+        drawn: Drawn::FromFile(ts16::drawing, &[]),
+    },
 ];
 
 /// The sheet with id `id` (any case).
@@ -410,17 +440,26 @@ mod tests {
         // The sheets drawn stitch by stitch have no design.
         assert_eq!(
             designed,
-            ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11B", "TS-11C", "TS-13A", "TS-13B", "TS-13C", "TS-13D"]
+            [
+                "TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11B", "TS-11C", "TS-13A", "TS-13B", "TS-13C", "TS-13D",
+                "TS-16"
+            ]
         );
         // The TS-13 sheets' shapes are digitized automatically, and no other sheet's are.
         let digitized: Vec<&str> = SHEETS.iter().filter(|sheet| sheet.digitized()).map(|sheet| sheet.id).collect();
         assert_eq!(digitized, ["TS-13A", "TS-13B", "TS-13C", "TS-13D"]);
+        // TS-16 alone places its elements, and it alone is drawn from a file.
+        let positioned: Vec<&str> = SHEETS.iter().filter(|sheet| sheet.positioned()).map(|sheet| sheet.id).collect();
+        assert_eq!(positioned, ["TS-16"]);
+        let from_file: Vec<&str> = SHEETS.iter().filter(|sheet| matches!(sheet.drawn, Drawn::FromFile(..))).map(|sheet| sheet.id).collect();
+        assert_eq!(from_file, positioned);
     }
 
     #[test]
     fn req_vc_015_a_host_draws_the_sheets_whose_stitches_their_elements_ids_dont_choose() {
         // Each element renamed, as a host's objects are: the same stitches, but for TS-11C's meander fills,
-        // which wander as their ids draw.
+        // which wander as their ids draw. TS-16's start and end positions would be markers, which the filter
+        // doesn't draw.
         let stitches = |design: &crate::design::Design| {
             let plan = crate::plan(design, REFERENCE, &stitchcraft_core::Budget::DEFAULT).plan.unwrap();
             plan.stitches().map(|s| (s.at, s.kind)).collect::<Vec<_>>()
@@ -434,7 +473,7 @@ mod tests {
                 .map(|e| crate::design::Element { id: stitchcraft_core::ElementId::new(format!("host:{}", e.id.as_str())).unwrap(), ..e.clone() })
                 .collect();
             let renamed = crate::design::Design::new(renamed, design.settings).unwrap();
-            assert_eq!(stitches(&renamed) == stitches(&design), sheet.drawable(), "{}", sheet.id);
+            assert_eq!(stitches(&renamed) == stitches(&design), sheet.drawable() || sheet.positioned(), "{}", sheet.id);
             if sheet.drawable() {
                 drawable.push(sheet.id);
             }
@@ -482,6 +521,8 @@ mod tests {
         // TS-11C's star, in its bottom row, reaches 20 sin 54° mm below its middle, and the discs of its top row
         // 18 mm above theirs.
         assert_eq!(about("TS-11C"), [123.0, 120.176369967, 0.0, 0.0]);
+        // TS-16's fill and its satin column below it, as drawn.
+        assert_eq!(about("TS-16"), [40.0, 45.0, 0.0, 0.0]);
         // Each TS-10 frame is its hoop's whole field, as its title and checks say, and fits no smaller hoop.
         let hoops = [("ts-10a", "4 × 4 in", &BROTHER_PE800_4X4), ("TS-10B", "5 × 7 in", REFERENCE), ("TS-10C", "small", &BROTHER_PE800_SMALL)];
         for (id, hoop, profile) in hoops {
@@ -519,6 +560,18 @@ mod tests {
             s.kind == StitchKind::Normal && s.origin.role != Role::Lock && s.origin.element.map(|e| e.index()) == Some(element)
         };
         plan.stitches().filter(mine).map(|s| s.at).collect()
+    }
+
+    #[test]
+    fn ts16_s_fill_and_satin_column_start_and_end_at_their_positions() {
+        // As drawn, the sheet's stitches start at (0, 0), which the plan moves to its bounds' least corner.
+        let least = find("TS-16").unwrap().plan().unwrap().bounds().unwrap().min();
+        let at = |x: f64, y: f64| stitchcraft_core::Point::new(least.x() + x, least.y() + y).unwrap();
+        let fill = sewn("TS-16", "fill");
+        assert!(fill[0].distance(at(40.0, 0.0)) < 1.5, "{:?}", fill[0]);
+        assert!(fill.last().unwrap().distance(at(0.0, 30.0)) < 1.5, "{:?}", fill.last());
+        let column = sewn("TS-16", "column");
+        assert!(column[0].distance(at(20.0, 42.5)) < 1e-9 && column.last().unwrap().distance(at(30.0, 42.5)) < 1e-9, "{column:?}");
     }
 
     #[test]

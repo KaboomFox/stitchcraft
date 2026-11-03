@@ -283,9 +283,9 @@ mod tests {
         for format in FormatId::ALL {
             let (bytes, said) = stitch_export(PATCH, Reading::default(), REFERENCE, *format, "patch");
             assert_eq!(file(&exported(*format, PATCH, &params("patch", &json!({})))), (base64(&bytes), said.clone()), "{format:?}");
-            // The patch's placement line, its start marker and its group's paint, each naming its object, and
-            // the hint after it.
-            assert_eq!(said.len(), 3, "{format:?}: {said:?}");
+            // The patch's placement line and its group's paint, each naming its object, and the hint after it.
+            // Its start marker is used, and says nothing.
+            assert_eq!(said.len(), 2, "{format:?}: {said:?}");
             let line = "info SC-I0811 (vc:10): The object \"stitch:ignore placement line\" is named stitch:ignore, and is left out with \
                         everything in it. Rename it to stitch it.";
             assert_eq!(said.first().map(String::as_str), Some(line));

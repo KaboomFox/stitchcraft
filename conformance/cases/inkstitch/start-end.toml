@@ -1,0 +1,8 @@
+# Ink/Stitch's start and end commands, each tied to its shape by a connector: the first square ends at a
+# command left of it and the third starts at one right of it, so the needle jumps to the second square and
+# to the third, where it would sew straight on (2 jumps more than without them, past the tolerance of 1).
+# The satin column's first and last needle points are its commands, 5 mm below it, which the size shows.
+id = "inkstitch-start-end"
+requirements = ["REQ-SVG-003", "REQ-SVG-008", "REQ-GEN-001"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/start-end.svg"

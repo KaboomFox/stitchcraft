@@ -189,6 +189,14 @@ style = "realistic"
 scale = 3.0
 alt = "TS-13D as it will sew: 2 emblems, a navy square in a white frame with a red star on a white disc and 3 gold bars, traced abutting and stacked, and 2 buttons, a yellow disc with 7 orange dots in a black rim, twice. At the top, digitized, both emblems sew alike: one navy fill under the disc and the bars, the bars satin columns, and the white round each star a satin column. Each button's rim is a satin column round one yellow fill under its dots. At the bottom, in paint order, every shape is a fill."
 
+[[shot]]
+id = "testsheet-ts-16"
+kind = "stitch"
+sheet = "TS-16"
+style = "realistic"
+scale = 6.0
+alt = "TS-16 as it will sew: a red tatami rectangle 40 by 30 mm, its rows across, and below it a blue satin column 40 mm long and 5 mm wide. The machine cuts the thread between them, at the thread change."
+
 # ── Stitch types (designs from docs/fixtures/, planned by the engine; one image per panel) ──────────
 
 [[shot]]

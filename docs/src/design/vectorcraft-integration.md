@@ -527,7 +527,7 @@ note can follow it:
 | Name | Ink/Stitch's command | What StitchCraft does |
 |---|---|---|
 | `stitch:ignore` | `ignore_object`, `ignore_layer` | Leaves the object or the layer out with everything in it, and lists it with `SC-I0811` |
-| `stitch:start`, `stitch:end` | `starting_point`, `ending_point` | Marks where the fill or the satin column grouped with it starts or ends, and never stitches the marker. Until the generators start and end at hints (`REQ-GEN-001`, M8), they choose where, and `SC-W0807` names the marker. A group or a layer is never a marker: `SC-W0807` names it, and what it holds is read as under any other name |
+| `stitch:start`, `stitch:end` | `starting_point`, `ending_point` | Gives the shapes of the group or layer it is in, and of the groups inside it, their start or end position: the centre of the box round its anchors. Their fills and satin columns start or end there (`REQ-GEN-001`). The marker is left out of the stitches. The first marker of each kind that shows counts, a group's own before those of the groups round it. `SC-W0807` names another, one with no anchor that reads, and the markers of a shape digitized automatically, which places its own. A group or a layer is never a marker: `SC-W0807` names it, and what it holds is read as under any other name |
 | Any other word after `stitch:` | | Ignores the name, and `SC-W0807` names the object, in case the word is a misspelt marker |
 
 Hiding an object leaves it out too, without a word, and a name on a hidden object says nothing. A live

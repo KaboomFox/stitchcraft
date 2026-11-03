@@ -27,7 +27,8 @@
 //! - to version 3, in a file of version 1 or 2: a zigzag stroke's `pull_compensation_mm`, unless it is 0 or
 //!   not a number, is halved into `stroke_pull_compensation_mm`, which applies to each side from then on, and
 //!   a satin column gets `start_at_nearest_point` and `end_at_nearest_point` off, to start and end where it
-//!   is drawn, as it did;
+//!   is drawn, as it did. A start or end command is placed at its connector's end on its object, where it
+//!   worked before, and the reader takes it from there ([`crate::inkstitch`]);
 //! - to version 4, in a file of version 1 to 3: a shape with a fill that sets no longest stitch of its own,
 //!   its `inkstitch:max_stitch_length_mm` missing, empty, not a number or 0, gets `max_stitch_length_mm` 3,
 //!   on the whole shape, as Ink/Stitch sets it: a manual stitch or a satin column of its stroke reads it too.
@@ -38,9 +39,9 @@
 //!   ([`crate::inkstitch::RENAMED`]).
 //!
 //! A shape digitized automatically (`--auto`) sews by StitchCraft's rules instead, and is left as it is.
-//! `SC-I0818` says how many shapes were updated, and how. The others of Ink/Stitch's updates change nothing
-//! StitchCraft sews, or wait for what they change: the start and end commands it moves to their objects
-//! (M8.4). The compatibility contract lists every update, with the milestone that applies it.
+//! `SC-I0818` says how many shapes and commands were updated, and how. The others of Ink/Stitch's updates
+//! change nothing StitchCraft sews. The compatibility contract lists every update, with the milestone that
+//! applies it.
 
 use stitchcraft_engine::common::MAX_STITCH_LENGTH;
 use stitchcraft_engine::generators::pull::PULL_COMPENSATION;
@@ -57,12 +58,13 @@ pub const CURRENT: i64 = 4;
 pub(crate) const ELEMENT: &str = "inkstitch_svg_version";
 
 /// The updates StitchCraft applies, by their ids in the compatibility contract, each with how.
-pub const APPLIED: [(&str, &str); 7] = [
+pub const APPLIED: [(&str, &str); 8] = [
     ("longest-fill-stitch", "applied to the shapes whose fill is sewn, unless digitized automatically"),
     ("polyline-manual-stitch", "applied, unless digitized automatically"),
     ("zigzag-pull-compensation", "applied, unless digitized automatically"),
     ("satin-nearest-points", "applied, unless digitized automatically"),
     ("command-names", "applied, in any file (`DEV-SVG-014`)"),
+    ("start-end-positions", "applied, unless digitized automatically"),
     ("auto-fill-off", "applied to the shapes whose fill is sewn, unless digitized automatically (`DEV-FILL-014` says how a legacy fill sews)"),
     ("auto-fill-renamed", "applied to the shapes whose fill is sewn, unless digitized automatically"),
 ];
@@ -111,6 +113,8 @@ pub(crate) struct Updated {
     pub legacy_fills: u32,
     /// Fills set to `auto_fill`, made tatami fills.
     pub tatami_fills: u32,
+    /// Start and end commands placed at their connectors' ends on their objects.
+    pub commands: u32,
 }
 
 impl Version {
@@ -170,6 +174,12 @@ impl Version {
         }
     }
 
+    /// Whether Ink/Stitch's update moves the file's start and end commands to their connectors' ends on their
+    /// objects: in a file of version 1 or 2.
+    pub(crate) fn moves_start_and_end(self) -> bool {
+        matches!(self, Version::Older(version) if version < 3)
+    }
+
     /// The note on a file read as it is although Ink/Stitch would update it or warn about it, with its
     /// hint (`SC-W0802`).
     pub(crate) fn warning(self) -> Option<(String, &'static str)> {
@@ -226,6 +236,11 @@ impl Version {
             0 => {}
             1 => changes.push(format!("1 satin column starts and ends where it is drawn {nearest}")),
             n => changes.push(format!("{n} satin columns start and end where they are drawn {nearest}")),
+        }
+        match updated.commands {
+            0 => {}
+            1 => changes.push("1 start or end command works at its connector's end on its object, as before version 3".to_string()),
+            n => changes.push(format!("{n} start and end commands work at their connectors' ends on their objects, as before version 3")),
         }
         match updated.legacy_fills {
             0 => {}

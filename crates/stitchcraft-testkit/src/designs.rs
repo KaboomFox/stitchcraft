@@ -5,7 +5,7 @@
 
 use stitchcraft_core::{Budget, ElementId, Mm, Point};
 use stitchcraft_engine::auto::{self, AutoParams};
-use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule, Path, Segment, Shape, Subpath};
+use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule, Hints, Path, Segment, Shape, Subpath};
 use stitchcraft_engine::{PlanOutcome, plan};
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::profiles::REFERENCE;
@@ -43,6 +43,7 @@ pub fn along(id: &str, path: Path, thread: &Thread, params: &[(&str, &str)]) -> 
         thread: thread.clone(),
         params: params.iter().copied().collect::<ParamSet>(),
         automatic: false,
+        hints: Hints::default(),
     }
 }
 
@@ -151,6 +152,7 @@ pub fn fill(id: &str, parts: &[&[(f64, f64)]], thread: &Thread, params: &[(&str,
         thread: thread.clone(),
         params: params.iter().copied().collect::<ParamSet>(),
         automatic: false,
+        hints: Hints::default(),
     }
 }
 

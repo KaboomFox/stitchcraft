@@ -5,6 +5,29 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M8.4: start and end positions (`REQ-GEN-001`) and the target point (`REQ-FILL-CIR-008`). Ink/Stitch's
+  `starting_point` and `ending_point` commands, and objects named `stitch:start` and `stitch:end` in a
+  VectorCraft document, say where the elements of their shape start and end, in place of the needle before
+  them and of what the next element offers. A fill starts nearest its start position and ends nearest its
+  end position by every method, the legacy fill sewn as a tatami fill among them, but for the contour fill's
+  end, which lies where its rings end. In parts, its first part starts nearest the start position, and each
+  part after where the part before ended (`DEV-FILL-023`). A satin column sews a stitch at its start
+  position and follows its line to its first stitch, and ends at its end position unless that lies within
+  5 CSS pixels of the line's end, whatever its nearest-point settings say. Strokes start and end where they
+  are drawn, as in Ink/Stitch. The element before a fill or a satin column with a start position ends nearest it
+  (`DEV-SAT-012`). A circular fill turns round Ink/Stitch's `target_point` command. In a file of version 1
+  or 2, a start or end command works at its connector's end on its object, as Ink/Stitch's update moves
+  it, and `SC-I0818` counts the commands moved. A shape digitized automatically places its own, and the
+  readers say its commands and markers aren't used.
+  - The SVG reader places a command where its symbol's `<use>` is, under the transforms above it, as
+    Ink/Stitch does, and the VectorCraft reader a marker at the middle of the box round its anchors. Of 2
+    commands or markers of a kind, the first counts, and `SC-W0807` names a marker that isn't used.
+  - TS-16, the sheet MC-11 sews beside Ink/Stitch's machine file of it, starts with M8.4's part: a fill and
+    a satin column that start and end at their positions. The differential keeps Ink/Stitch's PES file of
+    each sheet beside the SVG file it sewed, for a checkpoint to sew.
+  - Differential cases: TS-16, and 3 squares whose start and end commands make the needle jump between
+    them, with a satin column that starts and ends at commands below it. The same squares in a file of
+    version 2 check the update's move, and a circular fill turns round its target point.
 - M8.11, a spike: `stitch import-inkstitch` will bring Ink/Stitch files into VectorCraft as documents
   whose objects have StitchCraft's effects. ADR-0016 records why. VectorCraft keeps an SVG file's
   `inkstitch:*` attributes from import to export since 0.17, but doesn't give a filter or a live effect
@@ -2173,6 +2196,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/plans/patch.pes` and `patch.dst` (M8.4, `REQ-GEN-001`): the patch's red fill
+  starts nearest its start marker, in its top-left corner. `SC-W0807` no longer names the marker. The
+  patch sews 2,483 stitches, 17 more.
+- Added `conformance/golden/testsheets/TS-16.pes` (M8.4), the first part of the Ink/Stitch file MC-11
+  sews: 2,096 stitches.
 - Changed `conformance/golden/testsheets/TS-11B.pes` (M7.9): the sheet gains a row of 3 circular fills
   under its contour fills, and grows to 125 × 166 mm. It sews 15,314 stitches, 4,703 more, and its contour
   fills sew as before.
