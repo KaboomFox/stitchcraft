@@ -17,13 +17,20 @@
 //!
 //! An element's start and end positions and its target point are Ink/Stitch's `starting_point`,
 //! `ending_point` and `target_point` commands (`REQ-GEN-001`): a `<use>` of the command's symbol at the
-//! position, and a connector from it to the element's path, as Ink/Stitch's Attach Commands draws them.
+//! position, and a connector from it to the element's path, in a group, as Ink/Stitch's Attach Commands draws
+//! them. Ink/Stitch moves the commands of a clone's source with the clone only when they are in a group.
 //!
 //! An element's clips are clip paths (`REQ-GEN-005`), each a `<clipPath>` of a `<path>` for each of its
 //! shapes, by its `clip-rule`, in user space. The first clips the element's path, and each one after it a
 //! group round the path, as Inkscape clips a group, which both programs read (`REQ-SVG-011`). Ink/Stitch
 //! takes a clip's shapes as one outline and its holes, whatever their rules (`DEV-SVG-016`), so a case that
 //! both sew gives each clip shapes that don't overlap.
+//!
+//! An element the design's file draws as a clone of another ([`Cloned`], as TS-16's does) is a `<use>` of
+//! that element's path under the clone's transform (`REQ-SVG-012`), in its place. Both programs read it as
+//! what the clone shows: the source's shape and positions moved, and its settings, the fill's angle turned
+//! (`REQ-SVG-013`). The tests read it back as the element the design holds, so the clone's element is what
+//! the file's clone is.
 //!
 //! The design's origin and stop position are Ink/Stitch's `origin` and `stop_position` commands
 //! (`REQ-ASM-005`): a `<use>` of the command's symbol at the point, standing alone, as Ink/Stitch's Add
@@ -44,6 +51,7 @@ use stitchcraft_core::{Point, Rect};
 use stitchcraft_engine::design::Clip;
 use stitchcraft_engine::design::{Cap, DesignSettings, Element, FillRule, Hints, Join, Path, SETTINGS, Segment, Shape, Turn};
 use stitchcraft_engine::registry::PARAMETERS;
+use stitchcraft_engine::testsheets::Cloned;
 use stitchcraft_params::{Origin, ParamGroup};
 use stitchcraft_svg::inkstitch::INKSTITCH_NS;
 use stitchcraft_svg::version::CURRENT;
@@ -56,6 +64,12 @@ pub const MARGIN: f64 = 10.0;
 /// module's docs); or why they can't be: no element has a point, or an element has a parameter of
 /// StitchCraft's own that a stitch type reads.
 pub fn svg(elements: &[Element], settings: &DesignSettings) -> Result<String, String> {
+    svg_with(elements, settings, &[])
+}
+
+/// [`svg`], with the elements `clones` names drawn as clones of others; or why they can't be, as for `svg`,
+/// or a clone of an element that isn't there.
+pub fn svg_with(elements: &[Element], settings: &DesignSettings, clones: &[Cloned]) -> Result<String, String> {
     let Some(bounds) = Rect::around(elements.iter().flat_map(|element| element.shape.path().points())) else {
         return Err("no element has a point".to_string());
     };
@@ -85,7 +99,9 @@ pub fn svg(elements: &[Element], settings: &DesignSettings) -> Result<String, St
         .map(|(name, _)| *name)
         .chain(globals.iter().map(|(name, _)| *name))
         .collect();
-    let clip_paths: String = elements.iter().enumerate().map(|(index, element)| clip_paths(index, element)).collect();
+    let cloned = |element: &Element| clones.iter().find(|clone| clone.element == element.id);
+    let clip_paths: String =
+        elements.iter().enumerate().filter(|(_, element)| cloned(element).is_none()).map(|(index, element)| clip_paths(index, element)).collect();
     if !used.is_empty() || !clip_paths.is_empty() {
         out.push_str("  <defs>\n");
         for name in &used {
@@ -95,6 +111,14 @@ pub fn svg(elements: &[Element], settings: &DesignSettings) -> Result<String, St
         out.push_str("  </defs>\n");
     }
     for (index, element) in elements.iter().enumerate() {
+        if let Some(clone) = cloned(element) {
+            let Some(of) = elements.iter().position(|source| source.id == clone.of) else {
+                return Err(format!("{}: a clone of {}, which the design doesn't have", element.id, clone.of));
+            };
+            let [a, b, c, d, e, f] = clone.map;
+            out.push_str(&format!("  <use id=\"e{index}\" xlink:href=\"#e{of}\" transform=\"matrix({a} {b} {c} {d} {e} {f})\"/>\n"));
+            continue;
+        }
         let parameters = parameters(element, PARAMETERS)?;
         // The first clip on the path, each one after it on a group round it.
         let clip = |k: usize| format!(" clip-path=\"url(#e{index}-clip{k})\"");
@@ -120,8 +144,9 @@ type Hint = fn(&Hints) -> Option<Point>;
 /// The commands `hints` are written as, each with the hint it is written for.
 const COMMANDS: [(&str, Hint); 3] = [("starting_point", |h| h.start), ("ending_point", |h| h.end), ("target_point", |h| h.target)];
 
-/// The commands of the element `index`, `element`: for each of its hints, a `<use>` of the command's symbol
-/// there, and a connector from it to the element's first point, which ties it to the element.
+/// The commands of the element `index`, `element`: for each of its hints, a group of a connector from the
+/// command's place to the element's first point, which ties it to the element, and a `<use>` of the command's
+/// symbol there.
 fn commands(index: usize, element: &Element) -> String {
     let Some(first) = element.shape.path().points().next() else { return String::new() };
     let mut out = String::new();
@@ -129,14 +154,14 @@ fn commands(index: usize, element: &Element) -> String {
         let Some(at) = at(&element.hints) else { continue };
         let id = format!("e{index}-{name}");
         out.push_str(&format!(
-            "  <path d=\"M {},{} L {},{}\" style=\"fill:none;stroke:#000;stroke-width:0.1\" inkscape:connector-type=\"polyline\" \
+            "  <g>\n    <path d=\"M {},{} L {},{}\" style=\"fill:none;stroke:#000;stroke-width:0.1\" inkscape:connector-type=\"polyline\" \
              inkscape:connection-start=\"#{id}\" inkscape:connection-end=\"#e{index}\"/>\n",
             at.x(),
             at.y(),
             first.x(),
             first.y()
         ));
-        out.push_str(&format!("  <use id=\"{id}\" xlink:href=\"#inkstitch_{name}\" x=\"{}\" y=\"{}\"/>\n", at.x(), at.y()));
+        out.push_str(&format!("    <use id=\"{id}\" xlink:href=\"#inkstitch_{name}\" x=\"{}\" y=\"{}\"/>\n  </g>\n", at.x(), at.y()));
     }
     out
 }
@@ -253,7 +278,8 @@ mod tests {
         assert!(read.warnings.is_empty(), "{:?}", read.warnings);
         let elements = read.design.elements();
         let others = text.matches("inkscape:connection-start").count() + text.matches("<path clip-rule").count();
-        assert_eq!(elements.len(), text.matches("<path ").count() - others, "an element for each path");
+        let clones = text.matches(" xlink:href=\"#e").count();
+        assert_eq!(elements.len(), text.matches("<path ").count() - others + clones, "an element for each path and each clone");
         (kept(elements), read.design.settings)
     }
 
@@ -398,15 +424,39 @@ mod tests {
 
     #[test]
     fn req_prm_003_the_file_of_each_sheet_drawn_as_a_design_keeps_the_elements_it_sews() {
-        // The TS-13 sheets' shapes as automatic digitizing makes them, each sheet's other elements as they are.
+        // The TS-13 sheets' shapes as automatic digitizing makes them, each sheet's other elements as they are,
+        // and TS-16's clone a clone in the file.
         let mut checked = 0;
         for sheet in testsheets::SHEETS.iter().filter(|sheet| sheet.designed()) {
-            let (id, design) = (sheet.id, sheet.design().unwrap().unwrap());
+            let (id, design, clones) = (sheet.id, sheet.design().unwrap().unwrap(), sheet.clones().unwrap().unwrap());
             let (digitized, _) = stitchcraft_engine::auto::digitized(&design, &Budget::DEFAULT);
-            let text = svg(&digitized, &design.settings).unwrap();
+            let text = svg_with(&digitized, &design.settings, &clones).unwrap();
+            assert_eq!(text.matches("transform=\"matrix(").count(), clones.len(), "{id}");
             assert_eq!(read(&text), (kept(&digitized), design.settings), "{id}");
             checked += usize::from(sheet.digitized());
         }
         assert!(checked >= 4, "the TS-13 sheets are drawn as designs");
+    }
+
+    #[test]
+    fn req_prm_003_an_element_drawn_as_a_clone_is_a_use_of_its_source() {
+        // A square that starts and ends at its corners, and its clone turned a quarter right about (20, 0): its
+        // corners and positions turned, and its rows, at 0°, turned to -90°, as the reader turns them.
+        let square = fill("square", &[&[(0.0, 0.0), (10.0, 0.0), (10.0, 5.0), (0.0, 5.0)]], &RED, &[("row_spacing_mm", "0.4")]);
+        let square = Element { hints: Hints { start: Some(p(10.0, 0.0)), end: Some(p(0.0, 5.0)), target: None }, ..square };
+        let map = [0.0, 1.0, -1.0, 0.0, 20.0, -20.0];
+        let turned = |x: f64, y: f64| p(-y + 20.0, x - 20.0);
+        let ring = vec![&[(20.0, -20.0), (20.0, -10.0), (15.0, -10.0), (15.0, -20.0)][..]];
+        let clone = fill("clone", &ring, &RED, &[("angle", "-90"), ("row_spacing_mm", "0.4")]);
+        let clone = Element { hints: Hints { start: Some(turned(10.0, 0.0)), end: Some(turned(0.0, 5.0)), target: None }, ..clone };
+        let cloned = Cloned { element: clone.id.clone(), of: square.id.clone(), map };
+        let written = [square, clone];
+        let text = svg_with(&written, &DesignSettings::default(), std::slice::from_ref(&cloned)).unwrap();
+        assert!(text.contains("  <use id=\"e1\" xlink:href=\"#e0\" transform=\"matrix(0 1 -1 0 20 -20)\"/>\n"), "{text}");
+        assert_eq!(text.matches("<g>").count(), 2, "the square's commands, each in a group: {text}");
+        assert_eq!(read(&text).0, kept(&written));
+        // A clone of an element the design doesn't have can't be written.
+        let alone = Cloned { of: stitchcraft_core::ElementId::new("gone").unwrap(), ..cloned };
+        assert_eq!(svg_with(&written, &DesignSettings::default(), &[alone]).unwrap_err(), "clone: a clone of gone, which the design doesn't have");
     }
 }
