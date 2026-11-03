@@ -34,7 +34,7 @@ use stitchcraft_plan::Thread;
 use super::designed::{open, polygon, round};
 use super::sketch::SheetError;
 use super::{BLACK, BLUE, DEEP_GOLD, FLESH_PINK, PRUSSIAN_BLUE, RED, TANGERINE, WHITE, YELLOW, thread};
-use crate::design::{Cap, Element, FillRule, Join, Path, Segment, Shape, Subpath};
+use crate::design::{Cap, Element, FillRule, Hints, Join, Path, Segment, Shape, Subpath};
 
 /// A ring of a shape: its corners, in order.
 type Ring = Vec<(f64, f64)>;
@@ -444,7 +444,17 @@ fn line(id: &str, subpaths: Vec<Subpath>, width: f64, cap: Cap, thread: &Thread)
 
 /// An automatic element named `id`, of `shape`, sewn with `thread`.
 fn automatic(id: &str, shape: Shape, thread: &Thread) -> Result<Element, SheetError> {
-    Ok(Element { id: ElementId::new(id)?, name: None, shape, thread: thread.clone(), params: ParamSet::default(), automatic: true })
+    let id = ElementId::new(id)?;
+    Ok(Element {
+        id,
+        name: None,
+        shape,
+        thread: thread.clone(),
+        params: ParamSet::default(),
+        automatic: true,
+        hints: Hints::default(),
+        clips: Vec::new(),
+    })
 }
 
 /// The rectangle from `(x0, y0)` to `(x1, y1)`, its corners in order.

@@ -142,22 +142,22 @@ registry uses these names as its keys so files move between the tools unchanged
 | `join_style` | dropdown | — | 0 | `contour_fill` | P2 (M7) | [registered](../user/reference/params/contour.md#join_style) |
 | `avoid_self_crossing` | boolean | — | false | `contour_fill` | P2 (M7) | [registered](../user/reference/params/contour.md#avoid_self_crossing) |
 | `clockwise` | boolean | — | true | `contour_fill` | P2 (M7) | [registered](../user/reference/params/contour.md#clockwise) |
-| `meander_pattern` | combo | — | 0 | `meander_fill` | P2 (M7) | planned |
-| `meander_angle` | float | degrees | 0 | `meander_fill` | P2 (M7) | planned |
-| `meander_scale_percent` | float | % | 100 | `meander_fill` | P2 (M7) | planned |
-| `clip` | boolean | — | false | `meander_fill` | P2 (M7) | planned |
-| `smoothness_mm` | float | mm | 0 | `contour_fill`, `guided_fill`, `meander_fill` | P2 (M7) | [registered](../user/reference/params/contour.md#smoothness_mm) |
+| `meander_pattern` | combo | — | 0 | `meander_fill` | P2 (M7) | [deviates](../user/reference/params/meander.md#meander_pattern) |
+| `meander_angle` | float | degrees | 0 | `meander_fill` | P2 (M7) | [registered](../user/reference/params/meander.md#meander_angle) |
+| `meander_scale_percent` | float | % | 100 | `meander_fill` | P2 (M7) | [registered](../user/reference/params/meander.md#meander_scale_percent) |
+| `clip` | boolean | — | false | `meander_fill` | P2 (M7) | [registered](../user/reference/params/meander.md#clip) |
+| `smoothness_mm` | float | mm | 0 | `contour_fill`, `guided_fill`, `meander_fill` | P2 (M7) | [registered](../user/reference/params/path-fill.md#smoothness_mm) |
 | `expand_mm` | float | mm | 0 | all | P1 (M5) | [registered](../user/reference/params/tatami.md#expand_mm) |
 | `gap_fill_rows` | int | rows | 0 | `tatami_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#gap_fill_rows) |
 | `angle` | float | deg | 0 | `tatami_fill`, `legacy_fill`; read by `circular_fill`, `contour_fill`, `guided_fill`, `linear_gradient_fill`, `meander_fill`, `tartan_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#angle) |
 | `guided_fill_angle` | float | deg | — | `guided_fill` | P3 (M10) | planned |
 | `tartan_angle` | float | deg | -45 | `tartan_fill` | P3 (M10) | planned |
-| `max_stitch_length_mm` | float | mm | 4.0 | `tatami_fill`, `contour_fill`, `guided_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill` | P1 (M5) | [registered](../user/reference/params/common.md#max_stitch_length_mm) |
-| `row_spacing_mm` | float | mm | 0.25 | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#row_spacing_mm) |
+| `max_stitch_length_mm` | float | mm | 4.0 | `tatami_fill`, `contour_fill`, `guided_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill`; read by `circular_fill`, `meander_fill` | P1 (M5) | [registered](../user/reference/params/common.md#max_stitch_length_mm) |
+| `row_spacing_mm` | float | mm | 0.25 | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill`; read by `meander_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#row_spacing_mm) |
 | `end_row_spacing_mm` | float | mm | — | `tatami_fill`, `circular_fill`, `legacy_fill` | P1 (M5) | [deviates](../user/reference/params/tatami.md#end_row_spacing_mm) |
 | `stitch_position_method` | combo | — | 0 | `guided_fill` | P3 (M10) | planned |
 | `staggers` | int | — | 4 | `tatami_fill`, `guided_fill`, `linear_gradient_fill`, `tartan_fill`, `legacy_fill`; read by `circular_fill`, `contour_fill`, `meander_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#staggers) |
-| `skip_last` | boolean | — | false | `tatami_fill`, `guided_fill`, `linear_gradient_fill`, `legacy_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#skip_last) |
+| `skip_last` | boolean | — | false | `tatami_fill`, `guided_fill`, `linear_gradient_fill`, `legacy_fill`; read by `circular_fill` | P1 (M5) | [registered](../user/reference/params/tatami.md#skip_last) |
 | `flip` | boolean | — | false | `legacy_fill` | — | not planned |
 | `reverse` | boolean | — | false | `legacy_fill` | — | not planned |
 | `stop_at_ending_point` | boolean | — | false | `linear_gradient_fill`, `tartan_fill` | P3 (M10) | planned |
@@ -166,10 +166,10 @@ registry uses these names as its keys so files move between the tools unchanged
 | `running_stitch_tolerance_mm` | float | mm | 0.1 (0.2 when unset) | `tatami_fill`, `contour_fill`, `guided_fill`, `meander_fill`, `circular_fill`, `linear_gradient_fill`, `tartan_fill` | P1 (M5) | [deviates](../user/reference/params/running.md#running_stitch_tolerance_mm) |
 | `enable_random_stitch_length` | boolean | — | false | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill` | P1 (M5) | [registered](../user/reference/params/running.md#enable_random_stitch_length) |
 | `random_stitch_length_jitter_percent` | float | ± % | 10 | `tatami_fill`, `contour_fill`, `guided_fill`, `circular_fill`, `linear_gradient_fill` | P1 (M5) | [registered](../user/reference/params/running.md#random_stitch_length_jitter_percent) |
-| `repeats` | int | — | 1 | `meander_fill`, `contour_fill`, `circular_fill` | P2 (M7) | [registered](../user/reference/params/fill-repeat.md#repeats) |
-| `bean_stitch_repeats` | str | — | 0 | `meander_fill`, `circular_fill`, `contour_fill`, `guided_fill`, `tartan_fill` | P2 (M7) | [registered](../user/reference/params/fill-repeat.md#bean_stitch_repeats) |
-| `zigzag_spacing_mm` | float | mm | 0 | `meander_fill` | P2 (M7) | planned |
-| `zigzag_width_mm` | float | mm | 3 | `meander_fill` | P2 (M7) | planned |
+| `repeats` | int | — | 1 | `meander_fill`, `contour_fill`, `circular_fill` | P2 (M7) | [registered](../user/reference/params/path-fill.md#repeats) |
+| `bean_stitch_repeats` | str | — | 0 | `meander_fill`, `circular_fill`, `contour_fill`, `guided_fill`, `tartan_fill` | P2 (M7) | [registered](../user/reference/params/path-fill.md#bean_stitch_repeats) |
+| `zigzag_spacing_mm` | float | mm | 0 | `meander_fill` | P2 (M7) | [registered](../user/reference/params/meander.md#zigzag_spacing_mm) |
+| `zigzag_width_mm` | float | mm | 3 | `meander_fill` | P2 (M7) | [registered](../user/reference/params/meander.md#zigzag_width_mm) |
 | `rows_per_thread` | int | — | 2 | `tartan_fill` | P3 (M10) | planned |
 | `herringbone_width_mm` | int | mm | 0 | `tartan_fill` | P3 (M10) | planned |
 | `pull_compensation_mm` | float | mm (each side) | 0 | `tatami_fill` | P1 (M5) | [registered](../user/reference/params/pull.md#pull_compensation_mm) |
@@ -228,6 +228,9 @@ value of phase `—` is not planned as a method of its own, and the deviations l
 Lock stitch identifiers (`lock_start`, `lock_end`): `half_stitch`, `arrow`, `back_forth`, `bowtie`, `cross`, `star`, `simple`, `triangle`, `zigzag`, `custom`. StitchCraft accepts every identifier; the shapes are its own
 designs with the same intent, a deviation recorded in the deviations ledger (`conformance/deviations.toml`).
 
+Meander tiles (`meander_pattern`), in the order Ink/Stitch's settings window lists them: `N3-11a`, `N3-12`, `N3-16a`, `N3-17`, `N3-18`, `N3-18-modified`, `N3-20`, `N3-23b`, `N3-25c`, `N3-26b`, `N3-27`, `N3-30a`, `N3-51b`, `N3-57f-modified`, `N3-58b`, `N3-6`, `N3-7`, `N3-8a`, `N3-8a-modified`, `N3-8b`, `N4-13b`, `N4-13c`, `N4-13d`, `N4-13e`, `N4-13f`, `N4-16a`, `N4-19`, `N4-20`, `N4-21c`, `N4-22`, `N4-23a`, `N4-23c`, `N4-27`, `N4-29e`, `N4-29f`, `N4-31`, `N4-38`, `N4-42e`, `N4-44`, `N4-52`, `N4-54d`, `N4-5a`, `N4-5a-2`, `N4-82`, `N4-85d`, `N5-1e1`, `N5-1q2`, `N5-1t`, `N6-1`, `N6-2`, `N6-5b`, `N6-6a`, `N6-6c`, `NC5-11a`, `NC5-20a`, `P3-1`, `P3-12`, `P4-1`, `P4-10`, `P4-15`, `P4-19`, `P4-23`, `P4-24`, `P4-25`, `P4-43`, `P4-43-modified`, `P4-47`, `P5-10_11`, `P5-19`, `P5-23_24`, `P5-4`, `P6-6_11`, `diamond-square`, `hexagon`, `weird-one`. StitchCraft accepts
+every one and sews its own default tile for it, with a warning (`DEV-FILL-018`).
+
 ## Commands
 
 Ink/Stitch's command symbols (a `<use>` of the symbol `inkstitch_<name>`), where each applies, and what
@@ -235,9 +238,9 @@ StitchCraft's SVG adapter does with it (`stitchcraft_svg::inkstitch`). Their con
 
 | Command | Applies to | StitchCraft |
 |---|---|---|
-| `starting_point` | the object a connector ties it to | planned: noted on the object as not applied (`SC-W0802`) |
-| `ending_point` | the object a connector ties it to | planned: noted on the object as not applied (`SC-W0802`) |
-| `target_point` | the object a connector ties it to | read with the stitch types it positions |
+| `starting_point` | the object a connector ties it to | applied to the object's fills and satin columns (`REQ-GEN-001`), unless it is digitized automatically |
+| `ending_point` | the object a connector ties it to | applied to the object's fills and satin columns (`REQ-GEN-001`), unless it is digitized automatically |
+| `target_point` | the object a connector ties it to | applied to the object's circular fill (`REQ-FILL-CIR-008`), and from M10 to its ripple stitch, unless it is digitized automatically |
 | `autoroute_start` | the object a connector ties it to | nothing to sew: input to Ink/Stitch's tools |
 | `autoroute_end` | the object a connector ties it to | nothing to sew: input to Ink/Stitch's tools |
 | `stop` | the object a connector ties it to | applied: turns on `stop_after` |
@@ -245,8 +248,8 @@ StitchCraft's SVG adapter does with it (`stitchcraft_svg::inkstitch`). Their con
 | `ignore_object` | the object a connector ties it to | applied: the object is left out and listed (`SC-I0805`) |
 | `satin_cut_point` | the object a connector ties it to | nothing to sew: input to Ink/Stitch's tools |
 | `ignore_layer` | every layer it is in | applied: every layer it is in is left out and listed (`SC-I0805`) |
-| `origin` | the document | planned: noted as not applied (`SC-W0802`) |
-| `stop_position` | the document | planned: noted as not applied (`SC-W0802`) |
+| `origin` | the document | applied: the design's origin, which goes to the hoop's centre; 2 end planning (`SC-E0819`) |
+| `stop_position` | the document | applied: where the frame moves before each stop; 2 in a design with a stop end planning (`SC-E0819`) |
 
 Before its file version 3, Ink/Stitch named 7 commands otherwise. Its updater renames them in the files it updates, and
 StitchCraft reads them as the commands they became in any file (`DEV-SVG-014`).
@@ -317,12 +320,12 @@ change Ink/Stitch's updater makes (`lib/update.py`), in StitchCraft's words.
 | 1 | a stroke with neither a method nor `satin_column`, whose `style` doesn't set `stroke-dasharray`, gets `zigzag_stitch`, unless it has `inkscape:connection-start` | not planned |
 | 1 | a stroke's `grid_size`, in pixels, becomes `grid_size_mm`, unless it has `inkscape:connection-start` | not planned |
 | 2 | a `<polyline>` whose `style` attribute sets a stroke other than `none` gets `stroke_method` `manual_stitch` | applied, unless digitized automatically |
-| 3 | a zigzag stroke's `pull_compensation_mm`, unless 0, is halved into `stroke_pull_compensation_mm`, which applies to each side | planned (M8) |
-| 3 | a satin column gets `start_at_nearest_point` and `end_at_nearest_point` off | planned (M8) |
+| 3 | a zigzag stroke's `pull_compensation_mm`, unless 0, is halved into `stroke_pull_compensation_mm`, which applies to each side | applied, unless digitized automatically |
+| 3 | a satin column gets `start_at_nearest_point` and `end_at_nearest_point` off | applied, unless digitized automatically |
 | 3 | the commands' old names become today's (the table under Commands) | applied, in any file (`DEV-SVG-014`) |
-| 3 | a `starting_point` or `ending_point` command is placed anew at its connector's end on its object | planned (M8) |
+| 3 | a `starting_point` or `ending_point` command is placed anew at its connector's end on its object | applied, unless digitized automatically |
 | 4 | an element whose fill is not `none` (a fill not set is black), and whose `max_stitch_length_mm` is missing, empty, not a number or 0, gets 3 | applied to the shapes whose fill is sewn, unless digitized automatically |
-| 4 | a fill with `auto_fill` off gets `fill_method` `legacy_fill`, and `auto_fill` is removed | planned (M8) |
-| 4 | `fill_method` `auto_fill` becomes `tatami_fill` | planned (M8) |
+| 4 | a fill with `auto_fill` off gets `fill_method` `legacy_fill`, and `auto_fill` is removed | applied to the shapes whose fill is sewn, unless digitized automatically (`DEV-FILL-014` says how a legacy fill sews) |
+| 4 | `fill_method` `auto_fill` becomes `tatami_fill` | applied to the shapes whose fill is sewn, unless digitized automatically |
 
-_145 parameter declarations, 99 registered in StitchCraft._
+_145 parameter declarations, 105 registered in StitchCraft._

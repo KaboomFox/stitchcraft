@@ -128,20 +128,20 @@ commit and with a SHA-256 this repository pins.
 The engine's cases build their small designs with `stitchcraft_testkit::designs`. It also reads a plan's
 shape at a glance: `J L4 S5 L4` is a jump, 4 lock stitches, 5 needle points of stitching and 4 more lock
 stitches. Its strokes are as wide as an SVG stroke whose style says nothing, and `widened` gives one a
-width, `capped` a cap, and `automatic` makes any element one whose stitches StitchCraft chooses, by the
-settings of the rules that `rules` gives at their defaults. Its fills are closed rings filled by the nonzero
-rule (`fill`, through `rings`), so a hole is drawn
-the other way round from its outline. The satin cases sew their columns with `stitchcraft_testkit::satins`, as an element is sewn on the
-reference machine, with the stitch lengths the engine gives it there (`satin_lengths`), and read the needle
-points back in pairs across the column. A column is sewn alone (`sewn_satin`) or between the neighbours a
-case gives it (`sewn_between`), and `satin_diagnostics` keeps its warnings' places for the cases that
-check where a warning points. The cases of a satin method sew a straight column by that method
-(`sewn_ladder`) and compare its needle points with the ones they expect, but for rounding (`near`).
-The cases of automatic digitizing sew the test pictures, which `stitchcraft_engine::testsheets::pictures`
-draws in code and the TS-13 sheets sew too, each with the edges where its shapes meet.
-`stitchcraft_testkit::pictures` places them where the cases measure them. There are 3 stripes side by side,
-and a badge, a row of badges, an emblem and a button, each traced abutting or stacked
-([image to embroidery](image-to-embroidery.md#testing)).
+width, `capped` a cap, `clipped` one clip path more, and `automatic` makes any element one whose stitches
+StitchCraft chooses, by the settings of the rules that `rules` gives at their defaults. Its fills are
+closed rings filled by the nonzero rule (`fill`, through `rings`), so a hole is drawn the other way round
+from its outline. The satin cases sew their columns with `stitchcraft_testkit::satins`, as an element is
+sewn on the reference machine, with the stitch lengths the engine gives it there (`satin_lengths`), and
+read the needle points back in pairs across the column. A column is sewn alone (`sewn_satin`) or between
+the neighbours a case gives it (`sewn_between`), and `satin_diagnostics` keeps its warnings' places for
+the cases that check where a warning points. The cases of a satin method sew a straight column by that
+method (`sewn_ladder`) and compare its needle points with the ones they expect, but for rounding
+(`near`). The cases of automatic digitizing sew the test pictures, which
+`stitchcraft_engine::testsheets::pictures` draws in code and the TS-13 sheets sew too, each with the
+edges where its shapes meet. `stitchcraft_testkit::pictures` places them where the cases measure them.
+There are 3 stripes side by side, and a badge, a row of badges, an emblem and a button, each traced
+abutting or stacked ([image to embroidery](image-to-embroidery.md#testing)).
 
 ## Levels
 
@@ -242,12 +242,18 @@ round, from another point or with points added along its edges must sew the same
 don't need an expected answer, they run on every element of every test sheet drawn as a design, and on
 random letters digitized automatically. They compare the share of each element's top stitches and
 underlay that lies within 0.3 mm of the other plan's, which overlooks needle points placed a little apart
-but still tells a column from a line sewn along its middle. A fill lays out its rows from the point (0, 0).
-So a design is mirrored and turned about that point, its fill angles with it, and a move is left out of
-the changes. A rule that depends on a tie broken by coordinates fails the checks: TS-13B's letter A 6 mm
-tall sewed one leg as a satin column and the other as a line, and its mirror image the other way round.
-Each element of the sheets keeps 0.993 or more of its thread where the change takes it, against a bound
-of 0.98.
+but still tells a column from a line sewn along its middle. A fill lays out its rows from the point (0,
+0). So a design is mirrored and turned about that point, its fill angles and its elements' start, end and
+target positions and clips with it, and a move is left out of the changes. The design's turn on export
+turns the other way in a mirror image, whose plan is then the mirror image of the design's. A rule that
+depends on a tie broken by coordinates fails the checks: TS-13B's letter A 6 mm tall sewed one leg as a
+satin column and the other as a line, and its mirror image the other way round. Each element of the
+sheets keeps 0.993 or more of its thread where the change takes it, against a bound of 0.98. A zigzag
+stroke and an E-stitch are laid by design from where their shape is drawn, as Ink/Stitch lays them, and
+are not measured where that changes. A zigzag stroke moves its first needle point to the right of its
+way, so mirrored or drawn from its end it zigzags from the other side. An E-stitch's spikes lie a spacing
+apart from its start, so drawn from its end they lie elsewhere along it. TS-11A's sparse zigzags and
+E-stitches keep as little as 0.42 of their thread so.
 
 ### L3 — Ink/Stitch differential (nightly)
 
@@ -276,16 +282,22 @@ the ledger is still true. Where the differential can undo a deviation in Ink/Sti
 the file again without it. The excuse then counts only if the measure agrees. Ink/Stitch's jumps that go
 nowhere (`DEV-FMT-001`) excuse as many trims and jumps as there are of them, and no more.
 
-`REQ-SVG-008`, `REQ-AUTO-021`, `REQ-AUTO-022` and `REQ-FILL-CON-008` are the requirements of level L3.
-The other runs of the suite leave them and their cases to this one. The corpus is designs the SVG reader
-sews in full, with their settings (`REQ-SVG-009`), trim and stop commands and the file version. A case may
-name a test sheet drawn as a design instead (`sheet`). Both programs sew an SVG file of the elements
-StitchCraft sews the sheet with, written with their parameters (`stitchcraft_testkit::inkstitch`), which
-StitchCraft's reader reads back unchanged (`REQ-PRM-003`). Automatic digitizing chooses ordinary elements
-with Ink/Stitch's parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check
-StitchCraft's stitches of those choices against Ink/Stitch's (`REQ-AUTO-021`). TS-11B checks the contour
-fills so, each strategy and join style among them (`REQ-FILL-CON-008`). `conformance/inkstitch/README.md`
-says how to run it by hand and how to add a case.
+`REQ-SVG-008`, `REQ-AUTO-021`, `REQ-AUTO-022`, `REQ-RUN-013`, `REQ-SAT-029`, `REQ-FILL-CON-008` and
+`REQ-FILL-CIR-007` are the requirements of level L3. The other runs of the suite leave them and their
+cases to this one. The corpus is designs the SVG reader sews in full, with their settings
+(`REQ-SVG-009`), trim and stop commands and the file version. A case may name a test sheet drawn as a
+design instead (`sheet`). Both programs sew an SVG file of the elements StitchCraft sews the sheet with,
+written with their parameters, their start, end and target positions as Ink/Stitch's commands and their
+clips as clip paths, the design's origin and stop position as commands too, and its turn on export
+(`stitchcraft_testkit::inkstitch`), which StitchCraft's reader reads back unchanged (`REQ-PRM-003`).
+Automatic digitizing chooses ordinary elements with Ink/Stitch's parameters, so Ink/Stitch can sew what
+StitchCraft chose, and the TS-13 sheets check StitchCraft's stitches of those choices against
+Ink/Stitch's (`REQ-AUTO-021`). TS-11B checks the contour fills so, each strategy and join style among
+them (`REQ-FILL-CON-008`), and its circular fills (`REQ-FILL-CIR-007`). TS-11A checks the zigzag strokes
+(`REQ-RUN-013`), and the E-stitches, S-stitches and zigzag satins (`REQ-SAT-029`), along straights and
+round curves. TS-02B to TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills' sheet, are
+cases of `REQ-SVG-008` (M8.2). `conformance/inkstitch/README.md` says how to run it by hand and how to
+add a case.
 
 **Centre lines.** Sewing what StitchCraft chose can't find a choice that is wrong: TS-13B's small T sewed
 a Γ, the left arm of its bar left out of its centre line, and the differential agreed by every measure.
@@ -378,6 +390,13 @@ which counts apart. A loop that keeps 40 bytes for each unit of work wants 20 GB
 default budget, more than a CI runner has, and the job ends without a result when the runner runs out of
 memory. So in the mutants jobs each test binary runs with at most 4 GiB of address space, through
 `prlimit` as Cargo's runner: such a mutant aborts at the cap, which counts as noticed.
+
+Each mutant builds its crate again and runs the crate's tests, and the tests take most of the time. So
+the mutants jobs build without debug information, and with the workspace's own code optimized a little
+(`opt-level` 1, where its dependencies are at 2 in every build). On 2 cores an engine mutant then takes
+157 s against 267 s: its build 114 s against 47 s, and its tests 43 s against 220 s. The results stay the
+same. Rust keeps floating-point arithmetic as written at every level, and debug assertions and overflow
+checks stay on.
 
 Mutation testing runs the tests hundreds of times for one pull request. A test that writes files puts
 them in a folder of its own (`stitchcraft_testkit::temp::TempDir`), which goes with everything in it

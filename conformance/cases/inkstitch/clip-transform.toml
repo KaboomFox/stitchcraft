@@ -1,0 +1,11 @@
+id = "inkstitch-clip-transform"
+requirements = ["REQ-SVG-008", "REQ-SVG-011", "REQ-GEN-005"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/clip-transform.svg"
+# The clip path's transform halves it, as a viewer draws it: StitchCraft sews the square from 10 to 40 mm.
+# Ink/Stitch puts the square's own transform in its place, none here, and sews from 20 to 80.
+
+[excused]
+stitches = "DEV-SVG-017"
+size = "DEV-SVG-017"
+overlap = "DEV-SVG-017"

@@ -14,7 +14,8 @@
 //! and compound paths in paint order; visibility; fills and strokes with their colours, and a stroke's
 //! width and join; and StitchCraft's live effects, whose records say how an object sews, or, the Auto
 //! effect's (M13.7), that StitchCraft chooses its stitches. From M6.5 it reads Ink/Stitch's commands in
-//! names: `stitch:ignore`, `stitch:start` and `stitch:end` (`REQ-VC-009`).
+//! names: `stitch:ignore`, and `stitch:start` and `stitch:end`, which from M8.4 give the shapes grouped
+//! with them their start and end positions (`REQ-VC-009`).
 //! [`read_part`] is the part of a file it reads, which a bug-report bundle keeps.
 //!
 //! Its invariants:

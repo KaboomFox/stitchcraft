@@ -12,7 +12,7 @@
 
 use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::{Budget, Code, ElementId, Exhausted, Meter, Mm};
-use stitchcraft_engine::design::{Design, DesignSettings, FillRule, Path};
+use stitchcraft_engine::design::{Design, DesignSettings, FillRule, Hints, Path};
 use stitchcraft_engine::generate::generate;
 use stitchcraft_engine::generators::manual::manual_stitch;
 use stitchcraft_engine::generators::passes::RepeatParams;
@@ -89,7 +89,7 @@ fn satin(path: &Path, params: &ParamSet, meter: &mut Meter) -> Result<Stitched, 
     let Ok(Shape::Rails(satin)) = recognize(path, &mut Budget::DEFAULT.meter()).unwrap().shape else { panic!("not rails") };
     let column = SatinParams::from_set_as(params, StitchType::SatinColumn).unwrap().params;
     let pull = PullParams::from_set_as(params, StitchType::SatinColumn).unwrap().params;
-    satin_stitch(&satin, &column, &pull, satin_lengths(params), &Neighbours::default(), &mut SplitMix64::new(1), meter)
+    satin_stitch(&satin, &column, &pull, satin_lengths(params), &Neighbours::default(), &Hints::default(), &mut SplitMix64::new(1), meter)
 }
 
 /// Rows at 0°, `spacing` apart, in stitches of `length`.

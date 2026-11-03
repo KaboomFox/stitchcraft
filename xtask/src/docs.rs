@@ -537,11 +537,8 @@ mod tests {
     #[test]
     fn the_milestones_done_are_the_roadmap_s() {
         let done = done_milestones(&util::read(&util::root().join(ROADMAP)).unwrap());
-        // M6's steps are done, its machine checkpoint to sew, and M0 and M7 have steps open.
-        assert!(
-            ["M1", "M2", "M3", "M4", "M5", "M6"].iter().all(|m| done.contains(*m)) && !["M0", "M7"].iter().any(|m| done.contains(*m)),
-            "{done:?}"
-        );
+        // M6's and M7's steps are done, their machine checkpoints to sew, and M0 has steps open.
+        assert!(["M1", "M2", "M3", "M4", "M5", "M6", "M7"].iter().all(|m| done.contains(*m)) && !done.contains("M0"), "{done:?}");
     }
 
     #[test]

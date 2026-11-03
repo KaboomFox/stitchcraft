@@ -290,7 +290,8 @@ fn req_vc_011_a_machine_file_exported_is_checked_against_what_stitch_export_writ
     let patch = patch();
     let (file, said) = stitch_export(&patch, FormatId::Dst, "patch").unwrap();
     let warnings = stitchcraft_vc_plugin::export::warnings(&said);
-    assert_eq!(warnings.len(), 3, "{warnings:?}");
+    // The placement line left out by its name, and the paint of the group of dots: the start marker is used.
+    assert_eq!(warnings.len(), 2, "{warnings:?}");
     assert_eq!(written_as_exported(&patch, "patch.dst", &file, &warnings), Ok(()));
     // Another name, another file: the design name is the file's.
     let renamed = written_as_exported(&patch, "poster.dst", &file, &warnings).unwrap_err();
@@ -304,7 +305,11 @@ fn req_vc_011_a_machine_file_exported_is_checked_against_what_stitch_export_writ
 fn req_vc_013_a_document_is_checked_for_the_settings_it_keeps_and_two_files_for_differing() {
     // The patch, kept with the small hoop and a shortest stitch of 1.5 mm.
     let mut file: Value = serde_json::from_slice(&patch()).unwrap();
-    let settings = stitchcraft_engine::design::DesignSettings { min_stitch_len: Some(stitchcraft_core::Mm::new(1.5).unwrap()), ..Default::default() };
+    let settings = stitchcraft_engine::design::DesignSettings {
+        min_stitch_len: Some(stitchcraft_core::Mm::new(1.5).unwrap()),
+        rotate_on_export: stitchcraft_engine::design::Turn::RIGHT,
+        ..Default::default()
+    };
     let small = stitchcraft_plan::profiles::find("brother-pe800-small").unwrap();
     file["document"]["unknown"] = json!({"pluginData": {"dev.stitchcraft.settings": stitchcraft_vectorcraft::settings::kept_data(&settings, small)}});
     let kept = serde_json::to_vec(&file).unwrap();
@@ -315,7 +320,8 @@ fn req_vc_013_a_document_is_checked_for_the_settings_it_keeps_and_two_files_for_
             &table(
                 r#"profile = "brother-pe800-small"
         min_stitch_len_mm = 1.5
-        collapse_len_mm = 3"#
+        collapse_len_mm = 3
+        rotate_on_export = 90"#
             )
         ),
         Ok(())
@@ -330,6 +336,7 @@ fn req_vc_013_a_document_is_checked_for_the_settings_it_keeps_and_two_files_for_
         ),
         Err("it keeps min_stitch_len_mm 0.0, not 1.5, profile none, not \"brother-pe800-small\"".to_string())
     );
+    assert_eq!(keeps(&patch(), &table("rotate_on_export = -90")), Err("it keeps rotate_on_export 0.0, not -90".to_string()));
     assert!(keeps(&kept, &table("shortest = 1")).unwrap_err().contains("no design setting `shortest`"));
     // `stitch export`, which the gate checks the exporters against, plans the document for its machine,
     // which the patch doesn't fit.

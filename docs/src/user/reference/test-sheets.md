@@ -247,27 +247,71 @@ After sewing, check:
 - If it asks for a larger hoop, turn the design a quarter turn on the machine's screen. Does it take it then?
 - The frame measures 20.0 × 60.0 mm (± 0.5 mm), tall side top to bottom, the F at the top left.
 
-## TS-11B — New fills: contour fills
+## TS-11A — New strokes and satins: zigzag strokes, E-stitches, S-stitches and zigzag satins
 
-125.0 × 116.0 mm · 10611 stitches, 9 jumps, 8 trims, 2 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
+127.0 × 144.4 mm · 4632 stitches, 43 jumps, 42 trims, 3 colour changes, 3 stops · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
 Drawn as a design, which VectorCraft's Test Sheet filter draws too.
 
-![TS-11B as it will sew: 9 contour fills in 3 rows. At the top, in green, 3 discs: one round a hole set off its middle, a single spiral and a double spiral. In the middle, in blue, 3 five-pointed stars whose rings have round, mitred and bevelled corners. At the bottom, in red, 2 squares joined by a narrow neck, a rectangle, and a leaf. Jump threads join the samples in each row.](../../images/generated/testsheet-ts-11b.png)
+![TS-11A as it will sew: 4 bands of the new strokes and satins, most of them hooks that run straight and then turn down, in rows that turn back on each other. At the top, in green, 9 zigzag strokes in 3 rows, narrow to wide, and a straight one whose stitches slant. Under them, in red, E-stitches along the sides of a square and round 4 circles, over the lines that place and tack down the appliqué fabric. Then, in blue, 6 S-stitches in 2 rows, 6 and 10 mm wide. At the bottom, in gold, zigzag satins beside satin columns in 2 rows, 4 and 8 mm wide, and one more under them. Jump threads join the samples in each band.](../../images/generated/testsheet-ts-11a.png)
 
-Threads: Emerald Green, Blue, Red.
+Threads: Emerald Green, Red, Red (stop), Red (stop), Blue, Deep Gold, Deep Gold (stop).
 
 After sewing, check:
 
-- Each sample is a contour fill: rings that follow its outline inward, a row spacing apart, sewn as one line over the default underlay. Top row, in green, left to right: a disc 36 mm across sewn inner to outer round a hole, then a single spiral and a double spiral, the rings 0.25 mm apart. Middle row, in blue: stars 40 mm across with round, mitred and bevelled corners, the rings 0.4 mm apart. Bottom row, in red: 2 squares joined by a neck 3 mm wide, a rectangle whose rings alternate direction, and a leaf smoothed by 0.5 mm.
+- 4 bands, a thread to each, every sample trimmed after. Most samples are hooks, straight and then turning a quarter circle. Top band, in green: zigzag strokes 1, 2 and 4 mm wide down the rows, at spacings of 0.4, 1 and 2 mm across them, and beside the last row a straight line 4 mm wide at 1 mm whose stitches turn 45°.
+- Second band, in red: E-stitches for appliqué, round a square 26 mm a side and 4 circles 18 mm across. The machine sews a line 1 mm inside each edge and stops: lay the appliqué fabric over the lines. It sews them again to tack the fabric down and stops: trim the fabric 1 mm outside the lines. Clockwise from the top, the square's sides are 3 mm wide at spacings of 2 and 3 mm, then 5 mm wide at 2 and 3 mm. The rings, left to right, are the same 4.
+- Third band, in blue: S-stitches 6 mm wide, then 10 mm wide split at 3 mm by the default method and by the staggered one. The first row is at a spacing of 0.4 mm and the second at 0.6 mm.
+- Bottom band, in gold: zigzag satins, each followed by a satin column of the same width and spacing, 4 mm wide in the first row and 8 mm in the second, at spacings of 0.4 and 1 mm. Under them, after a stop, a zigzag satin 8 mm wide at 1 mm over a contour underlay: go on with the same thread.
+- Measure the zigzag strokes: how much narrower than drawn does each sew? Are their sides even round the curves? Note the narrowest width that sews cleanly, and the spacing that looks best. The line at 45° should sew as wide as the hooks beside it, its stitches slanting.
+- Does each E-stitch's spine cover the fabric's cut edge, and do its spikes hold the fabric flat, without puckering? Compare the widths of 3 and 5 mm, and the spacings of 2 and 3 mm, on the straight sides and round the circles.
+- Do the S-stitches cover their bands at 0.4 mm, with even steps along their edges? On the 10 mm bands, do the default method's splits leave a furrow along the band that the staggered ones don't? Round the curves, the inside of each S-stitch packs its steps closer than the machine's shortest stitch, and StitchCraft leaves those needle points out (SC-I0504): does the inner edge still look even?
+- Does each zigzag satin cover its band at 0.4 mm as the satin column beside it does? Measure both: does the zigzag satin sew narrower? On the last one, does the contour underlay show past the zigzag at either end?
+
+## TS-11B — New fills: contour and circular fills
+
+125.0 × 166.0 mm · 15314 stitches, 12 jumps, 11 trims, 3 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
+
+Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
+
+Drawn as a design, which VectorCraft's Test Sheet filter draws too.
+
+![TS-11B as it will sew: 9 contour fills in 3 rows and 3 circular fills under them. At the top, in green, 3 discs: one round a hole set off its middle, a single spiral and a double spiral. In the second row, in blue, 3 five-pointed stars whose rings have round, mitred and bevelled corners. In the third, in red, 2 squares joined by a narrow neck, a rectangle, and a leaf. At the bottom, in gold, a spiral round the middle of a disc with a hole, of a star and of a rectangle whose rings fade. Jump threads join the samples in each row.](../../images/generated/testsheet-ts-11b.png)
+
+Threads: Emerald Green, Blue, Red, Deep Gold.
+
+After sewing, check:
+
+- The top 3 rows are contour fills: rings that follow the outline inward, a row spacing apart, sewn as one line over the default underlay. Top row, in green, left to right: a disc 36 mm across sewn inner to outer round a hole, then a single spiral and a double spiral, the rings 0.25 mm apart. Second row, in blue: stars 40 mm across with round, mitred and bevelled corners, the rings 0.4 mm apart. Third row, in red: 2 squares joined by a neck 3 mm wide, a rectangle whose rings alternate direction, and a leaf smoothed by 0.5 mm.
+- The bottom row, in gold, is circular fills: a spiral round the middle of each shape, cut by its outline, over the default underlay. Left to right: the disc round its hole, the star, and a rectangle whose circles fade from 0.25 mm apart at its middle to 1 mm at its corners. Where the spiral leaves the shape and comes back, the needle travels inside it under the spiral sewn later.
 - Does fabric show between the rings, or does a fill pucker? Measure the discs: do they sew 36 mm across?
 - Inner to outer steps in from ring to ring and sews each on its way out. Do the steps show as a line across the rings? On the rectangle, whose rings alternate, the steps don't cross: does it look calmer than the disc?
 - Where do the spirals end in the middle, and the double spiral on its outline? Is there a knot or a bump there?
 - On the stars, do the mitred rings reach into the points, and the round and bevelled ones leave a gap at each tip? Which star looks best?
 - Does the neck between the 2 squares fill, where the rings part to each side? Does the smoothed leaf's line run evenly, without kinks?
+- Do the circular fills' circles look round and even, and does fabric show between them? Does the travel between the pieces of a spiral show anywhere, on the star's points or round the disc's hole? Does the fading rectangle look denser at its middle and lighter at its corners, as it should?
 - How long does the sheet take? A contour fill sews as one line, with no travel between rows.
+
+## TS-11C — New fills: meander fills
+
+123.0 × 120.2 mm · 5880 stitches, 11 jumps, 10 trims, 2 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
+
+Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
+
+![TS-11C as it will sew: 9 meander fills in 3 rows, each a line that wanders along the sides of a tiling over the underlay's rows. At the top, in green, 3 discs in hexagons, squares and triangles. In the middle, in blue, 3 discs in octagons and squares, hexagons and triangles, and hexagons, squares and triangles. At the bottom, in red, a five-pointed star in squares and triangles, a rectangle in large hexagons sewn as a zigzag, and a leaf in small hexagons, turned. Jump threads join the samples in each row.](../../images/generated/testsheet-ts-11c.png)
+
+Threads: Emerald Green, Blue, Red.
+
+After sewing, check:
+
+- Each sample is a meander fill: one line that wanders along the sides of a tiling without crossing itself, over the default underlay. Top row, in green, left to right: discs 36 mm across in hexagons, squares and triangles, each side 2 mm long. Middle row, in blue: discs in octagons and squares, hexagons and triangles, and hexagons, squares and triangles. Bottom row, in red: a star 40 mm across in squares and triangles, a rectangle in hexagons twice as large sewn as a zigzag 2.5 mm wide, and a leaf in hexagons half as large, turned by 30° and smoothed by 0.5 mm.
+- Does each tiling show in the stitches? Does the line look even, or do bare patches show where it didn't reach? Which tile looks best, and at which size?
+- Does the underlay show between the line's turns? A meander covers the area lightly: is it too light to hide the fabric, or the underlay?
+- On the rectangle, does the zigzag stay inside its outline, and lie flat? Is 2.5 mm too wide?
+- On the leaf, does the smoothed line run evenly round its turns, without kinks? Do the 1 mm sides sew cleanly, or do the stitches bunch?
+- Does any sample pucker, or the line pull the fabric where it turns?
 
 ## TS-13A — Pictures digitized automatically: neighbours and sewing order
 
@@ -360,3 +404,25 @@ After sewing, check:
 - On the top half, the gold bars sew as satin columns, 2.1 mm tall as drawn. Do they keep their height, and do their ends stay square?
 - On the top half, each button's yellow is one fill under the dots, which sew after it, and its black rim a satin column round it. On the bottom half, the abutting button's yellow sews round the dots as drawn. Which sews better between the dots? Does the rim cover the yellow's edge?
 - The machine cuts the thread at thread changes and at the stop, but at no jump, and the pictures sew as any design does: a shape sewn after a jump may sew its thread down. Snip the jump threads at each stop and after sewing. Where is one sewn down, and does it show?
+
+## TS-16 — An Ink/Stitch file: start and end commands, clip paths, origin, stop position and turn
+
+110.0 × 60.0 mm · 3026 stitches, 6 jumps, 5 trims, 3 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+
+Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
+
+![TS-16 as it will sew: a red tatami rectangle 40 by 30 mm, its rows across, and below it a blue satin column 40 mm long and 5 mm wide. The machine cuts the thread between them, at the thread change.](../../images/generated/testsheet-ts-16.png)
+
+Threads: Red, Blue, Blue (stop), Emerald Green, Black.
+
+After sewing, check:
+
+- Sew it beside Ink/Stitch's machine file of the same sheet, which the differential keeps (`target/conformance/differential/ts-16.inkstitch.pes`). Each element should start and end in the same place in both.
+- The red fill, 40 by 30 mm, starts at its top-right corner, where its start command is, and ends at its bottom-left corner, at its end command.
+- The blue satin column below it, 40 mm long and 5 mm wide, starts in its middle, where its start command is: the needle runs under the column to its left end, sews it to three quarters along, runs on under it to its right end and sews back. It ends three quarters along, at its end command. Is the needle's way under the column hidden?
+- The green fill is a quarter of a disc, 25 mm round its bottom-right corner: what its clip path, a circle, leaves of a 30 mm square. Is its round edge smooth, with no row past it?
+- The black zigzag at the bottom sews its first 15 mm and its last 15 mm, and nothing between, where its clip path leaves a gap: the needle jumps it. Does each piece end where the gap begins?
+- The design's origin, on the blue column's top edge 10 mm in from its left end, goes to the hoop's centre, where the needle waits before it sews. Does the machine put the design there, or its middle?
+- The machine stops after the blue column. Before it stops, the frame moves to the stop position, 20 mm right of the red fill's top-right corner and 10 mm above it. Does the frame wait there, and does the needle come back for the green fill?
+- The file turns the sheet right about its origin, as Ink/Stitch's rotate on export does: it sews 100 mm wide and 40 mm tall, the red fill at the right and the zigzag at the left. Does the machine sew it so, or turn it back?
+- Any difference between the 2 sew-outs, and where.

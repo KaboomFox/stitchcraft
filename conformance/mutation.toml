@@ -451,12 +451,6 @@ why = "when the area moves back no place, taking it out of the order and putting
 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/generators/contour/line.rs"
-mutant = "replace > with >= in point_at"
-line = "if start + length > at {"
-why = "a distance that falls exactly at the end of a side is the end of that side, at a fraction of 1, or the start of the next, at a fraction of 0, and `lerp` gives each end exactly: the same point. A side of no length there gives its one point, as the next side's start"
-
-[[equivalent]]
-file = "crates/stitchcraft-engine/src/generators/contour/line.rs"
 mutant = "replace > with >= in cut"
 line = "if traveled > at {"
 why = "a distance equal to how far the sides reach has returned on the line before, which cuts the line at that point, so this test never meets one"
@@ -520,3 +514,141 @@ file = "crates/stitchcraft-engine/src/generators/contour/spiral.rs"
 mutant = "replace > with >= in resampled"
 line = "let step = if n > 1 { long / (n - 1) as f64 } else { 0.0 };"
 why = "with 1 point, the only point is the last, which lies at the ring's whole length, so the step is never used"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/network.rs"
+mutant = "replace + with - in Laid<'t>::cells"
+line = "let reach = 1 + self.tile.lines.iter().map(|l| l.cell.0.abs().max(l.cell.1.abs())).max().unwrap_or(0);"
+why = "no tile's line reaches past the next cell, so the reach is then 0 instead of 2: a line is kept only where its first corner lies in the part, and a corner lies within its own cell, which the part's bounds rounded out to whole cells take in already. The cells left out hold the first corner of no line kept, so only the work charged shrinks"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/network.rs"
+mutant = "replace + with * in Laid<'t>::cells"
+line = "let reach = 1 + self.tile.lines.iter().map(|l| l.cell.0.abs().max(l.cell.1.abs())).max().unwrap_or(0);"
+why = "no tile's line reaches past the next cell, so the reach is then 1 instead of 2: a line is kept only where its first corner lies in the part, and a corner lies within its own cell, which the part's bounds rounded out to whole cells take in already. The cells left out hold the first corner of no line kept, so only the work charged shrinks"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/network.rs"
+mutant = "replace + with * in Laid<'t>::cells"
+line = "((cell(low.0, false) - reach, cell(low.1, false) - reach), (cell(high.0, true) + reach, cell(high.1, true) + reach))"
+why = "the last cell along a step is then twice the bounds' last instead of 2 past it: the middle of the bounds, where both steps count 0, lies in the hull of the outline, so the bounds' last cell is 0 or more and twice it is no less. The cells still take in the part's bounds, where every line kept starts, so only the work charged changes"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/network.rs"
+mutant = "replace || with && in contains"
+line = "if p == q || !rings.covers(p, meter)? || !rings.covers(q, meter)? {"
+why = "the early answer for a line with an end outside the part only saves work: the line leaves the part through a side, which the crossing test finds, or through a corner, a cut beyond which the piece to that end lies outside, so its middle is found outside, and the answer is no either way"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/network.rs"
+mutant = "replace && with || in contains"
+line = "if on == Side::On && t > 0.0 && t < 1.0 {"
+why = "a cut at a corner off the line only splits a piece lying wholly inside, outside or along a ring into pieces of the same kind, and a cut before the start or past the end adds a piece whose middle Point::lerp holds at that end, which is covered, and inside only where the piece next to it is already: the answer is the same"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/network.rs"
+mutant = "replace > with >= in contains"
+line = "if on == Side::On && t > 0.0 && t < 1.0 {"
+why = "a corner on the line where it starts adds a cut at 0, where the cuts have one already, and the copy goes with the duplicates: the pieces are the same"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/network.rs"
+mutant = "replace < with <= in contains"
+line = "if on == Side::On && t > 0.0 && t < 1.0 {"
+why = "a corner on the line where it ends adds a cut at 1, where the cuts have one already, and the copy goes with the duplicates: the pieces are the same"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/network.rs"
+mutant = "replace + with * in joined"
+line = "for (b, second) in pieces.iter().enumerate().skip(a + 1) {"
+why = "each piece is then also weighed against itself, whose nearest points are a point and itself, 0 apart: that join is sorted first and passed over, the piece being joined to itself already, so the same joins are made and only the work charged grows"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/tiles.rs"
+mutant = "replace < with > in lines"
+line = "let once = from < to || (from == to && (i, j) > (0, 0));"
+why = "a line between 2 corners is then kept from the higher corner, in the cell at its other end: the same line found from its other end, so every corner meets the same lines and the network joins the same points"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/tiles.rs"
+mutant = "replace > with < in lines"
+line = "let once = from < to || (from == to && (i, j) > (0, 0));"
+why = "a corner joined to itself is then kept from the cell before it instead of the cell after: the same line found from its other end, so every corner meets the same lines and the network joins the same points"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/tiles.rs"
+mutant = "replace > with >= in lines"
+line = "let once = from < to || (from == to && (i, j) > (0, 0));"
+why = "it also weighs a corner against itself in its own cell, 0 apart, which is no side: no line is added"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/tiles.rs"
+mutant = "replace < with <= in lines"
+line = "if once && (a.distance(there) - 1.0).abs() < SIDE {"
+why = "only 2 corners exactly 1e-9 sides nearer or farther than a side apart tell the 2 apart, and a tile's corners lie a side apart to within rounding, or much farther from it than that"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/meander/tiles.rs"
+mutant = "replace < with <= in same"
+line = "(-1..=1).any(|i| (-1..=1).any(|j| a.distance(plus(b, offset(steps, i, j))) < SIDE))"
+why = "only 2 corners exactly 1e-9 sides apart tell the 2 apart, and a tile's corners are one corner to within rounding, or a good part of a side apart"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/contour/spiral.rs"
+mutant = "replace <= with < in resampled"
+line = "if at <= 0.0 {"
+why = "no distance along the ring is below 0, and at 0 the walk stops at the start of the first side that has a length, which is the ring's first point, or at the ring's last point when no side has one, which is then its first"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/region/mod.rs"
+mutant = "replace || with && in Polygon::centroid"
+line = "if area == 0.0 || !area.is_finite() {"
+why = "the early return only spares a division whose answer is the outline's first point all the same: dividing the moments by an area of 0 makes a coordinate infinite or not a number, which Point::new refuses, so the first point is taken; and dividing them by an area that is not finite makes one not a number too, or adds 0 to each of the first point's"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/region/mod.rs"
+mutant = "replace < with > in Polygon::centroid"
+line = "let sign = if (a < 0.0) == (k == 0) { -1.0 } else { 1.0 };"
+why = "it turns the sign of every ring whose area does not add up to 0, so the area and both moments all change sign, exactly, and the centroid, their quotient, is the same to the last bit. A ring whose area adds up to 0 keeps its sign, but the rings of a part, grown or not, each wind round some area, the others being left out when they are joined, so only a coincidence of rounding could make one, and no case can aim at that"
+
+[[equivalent]]
+file = "crates/stitchcraft-svg/src/path.rs"
+mutant = "replace < with == in turns"
+line = "if disc < 0.0 {"
+why = "for a negative discriminant the square root is not a number, and so are both roots, which the filter that keeps roots between 0 and 1 drops, as the early return does; for a discriminant of 0, which the mutant passes over, the derivative is a square that touches 0 without changing sign, so the curve doesn't turn there, and its point lies between the curve's ends along that axis, inside the box"
+
+[[equivalent]]
+file = "crates/stitchcraft-svg/src/path.rs"
+mutant = "replace < with <= in turns"
+line = "all.into_iter().filter(|t| *t > 0.0 && *t < 1.0)"
+why = "a root at 1 is the curve's end, which the box takes in as the segment's end in any case, exactly: at 1 the curve's point is its end point to the last bit"
+
+[[equivalent]]
+file = "crates/stitchcraft-svg/src/path.rs"
+mutant = "replace < with <= in turns"
+line = "if disc < 0.0 {"
+why = "the 2 tests differ only at a discriminant of exactly 0, where the derivative along that axis is a square that touches 0 without changing sign: the curve doesn't turn there, and its point lies between the curve's ends along that axis and on the curve along the other, inside the box. Leaving that point out changes the box at most by the rounding in its coordinates"
+
+[[equivalent]]
+file = "crates/stitchcraft-svg/src/path.rs"
+mutant = "replace > with >= in turns"
+line = "all.into_iter().filter(|t| *t > 0.0 && *t < 1.0)"
+why = "a root at 0 is the curve's start, which the box takes in as the segment's start in any case: at 0 the weights of the control points and the end are 0, so the curve's point there equals its start point exactly"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/region/mod.rs"
+mutant = "replace == with != in Polygon::centroid"
+line = "let sign = if (a < 0.0) == (k == 0) { -1.0 } else { 1.0 };"
+why = "either == turned to != turns the test's answer for every ring, whatever its area, so every ring's sign turns: the area and both moments all change sign exactly, as rounding to nearest is the same either side of 0, and the centroid, their quotient, is the same point"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/region/mod.rs"
+mutant = "replace < with <= in Polygon::centroid"
+line = "let sign = if (a < 0.0) == (k == 0) { -1.0 } else { 1.0 };"
+why = "the 2 tests differ only for a ring whose doubled area adds up to exactly 0, which then takes the other sign, and no part has one: rings join a part, grown or not, only as an outline whose exact area on the grid winds clockwise or a hole whose area winds counter-clockwise, and pass no point twice, so each winds round some area and only a coincidence of rounding could make its sum 0. A ring drawn by hand whose area adds up to 0 bounds nothing, or crosses itself as a figure 8 does and runs neither way: it has no way round for the sign to set right"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/tatami/route.rs"
+mutant = "replace < with <= in Rows<'_>::network"
+line = "if from.point.distance(last) < from.point.distance(first) {"
+why = "the nodes a row joins are its line's ends, at their very coordinates, so the first lies 0 from one end, and the 2 tests differ only when it lies 0 from both: a closed line, which <= turns round. No way runs along a closed line, which leaves its node and comes back to it: a step from a node to itself never makes the node nearer, so the search never takes one, and the network's distances and ways are the same whichever way round the line runs"

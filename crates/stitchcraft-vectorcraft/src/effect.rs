@@ -36,7 +36,7 @@
 use serde::Serialize;
 use serde_json::{Map, Value};
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Mm, Point};
-use stitchcraft_engine::design::{Cap, Element, FillRule, Join, Path, Shape};
+use stitchcraft_engine::design::{Cap, Element, FillRule, Hints, Join, Path, Shape};
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_params::ParamSet;
 use stitchcraft_params::stitch_type::Family;
@@ -162,7 +162,7 @@ fn given(input: &[u8], params: &[u8], budget: &Budget) -> Result<Given, Diagnost
 fn element(what: &str, shape: Shape, params: ParamSet, automatic: bool) -> Result<Element, Diagnostic> {
     let id = ElementId::new(format!("vc:effect:{what}"))
         .map_err(|e| Diagnostic::new(Code::InternalCheckFailed, format!("A live effect's element has no id: {e}.")))?;
-    Ok(Element { id, name: None, shape, thread: Thread::new(Rgb::new(0, 0, 0)), params, automatic })
+    Ok(Element { id, name: None, shape, thread: Thread::new(Rgb::new(0, 0, 0)), params, automatic, hints: Hints::default(), clips: Vec::new() })
 }
 
 /// Whether `_context.item` among `params` says the effect is on one of its object's fills or strokes

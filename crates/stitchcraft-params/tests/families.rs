@@ -1,12 +1,13 @@
 //! A key declared once for each family of stitch types (REQ-PRM-005). Ink/Stitch's `zigzag_spacing_mm` is
 //! a list of lengths for a zigzag stroke and one length for a satin column, and a meander fill reads it as
-//! a length that is 0 by default. Each element reads the key as its family's declaration says.
+//! a length that is 0 by default. Each element reads the key as its family's declaration says, and leaves a
+//! value only another family's declaration reads to that family (REQ-PRM-006).
 
 // Test code may unwrap (clippy.toml allows it inside #[test] functions; these helpers are test code too).
 #![allow(clippy::unwrap_used)]
 
 use stitchcraft_core::Code;
-use stitchcraft_params::{Family, Kind, ParamGroup, ParamSet, StitchType, audit, find_for, params};
+use stitchcraft_params::{Family, Kind, ParamGroup, ParamSet, StitchType, audit, find_for, left_to_others, params};
 
 params! {
     /// A spacing, as a satin column reads it.
@@ -84,4 +85,27 @@ fn req_prm_005_an_element_reads_the_key_as_its_family_declares_it() {
     set.set("a_spacing_mm", "0.5");
     assert_eq!(SatinSpacingParams::from_set_as(&set, StitchType::SatinColumn).unwrap().params.a_spacing_mm.get(), 0.5);
     assert_eq!(StrokeSpacingParams::from_set_as(&set, StitchType::ZigzagStitch).unwrap().params.a_spacing_mm.len(), 1);
+}
+
+#[test]
+fn req_prm_006_a_value_only_another_family_reads_is_left_to_it() {
+    let set: ParamSet = [("a_spacing_mm", "0.5 0.6")].into_iter().collect();
+    // A meander fill cannot read 2 lengths, and a zigzag stroke can: the value is the stroke's.
+    let left = left_to_others(&set, StitchType::MeanderFill, FAMILIES);
+    let said: Vec<(&str, Code, &str)> = left.iter().map(|(key, d)| (key.as_str(), d.code, d.message.as_str())).collect();
+    assert_eq!(
+        said,
+        [(
+            "a_spacing_mm",
+            Code::ParamForOtherFamily,
+            "`a_spacing_mm` is \"0.5 0.6\", which only a zigzag stitch reads, so this meander fill takes its default, 0, as Ink/Stitch's does."
+        )]
+    );
+    // The stroke reads it, and keeps it.
+    assert_eq!(left_to_others(&set, StitchType::ZigzagStitch, FAMILIES), Vec::new());
+    // A value no family reads stays the element's, to be refused; and a stitch type that doesn't read the
+    // key leaves nothing.
+    let wide: ParamSet = [("a_spacing_mm", "wide")].into_iter().collect();
+    assert_eq!(left_to_others(&wide, StitchType::MeanderFill, FAMILIES), Vec::new());
+    assert_eq!(left_to_others(&set, StitchType::TatamiFill, FAMILIES), Vec::new());
 }

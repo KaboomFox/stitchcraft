@@ -37,6 +37,8 @@ fn fill(id: &str, path: Path, rule: FillRule) -> Element {
         thread: RED,
         params: ParamSet::default(),
         automatic: false,
+        hints: Default::default(),
+        clips: Vec::new(),
     }
 }
 

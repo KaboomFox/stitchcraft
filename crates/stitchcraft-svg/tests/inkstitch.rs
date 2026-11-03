@@ -3,16 +3,28 @@
 //! helper paths are never stitched.
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
-#![allow(clippy::unwrap_used)]
+#![allow(clippy::unwrap_used, clippy::panic)]
 
 mod common;
 
 use common::{fixture, ids, svg, warnings};
-use stitchcraft_core::{Code, Severity};
+use stitchcraft_core::{Budget, Code, Point, Severity};
+use stitchcraft_engine::design::{Hints, Reading};
+use stitchcraft_svg::read_with;
 
 /// The design's elements with the value each gives `key`, or `None`.
 fn setting<'s>(svg: &'s stitchcraft_svg::Svg, key: &str) -> Vec<(&'s str, Option<&'s str>)> {
     svg.design.elements().iter().map(|e| (e.id.as_str(), e.params.get(key))).collect()
+}
+
+/// Each element's id and its hints, as the commands tied to its shape place it (`REQ-GEN-001`).
+fn hints(svg: &stitchcraft_svg::Svg) -> Vec<(&str, Hints)> {
+    svg.design.elements().iter().map(|e| (e.id.as_str(), e.hints)).collect()
+}
+
+/// A point in millimetres.
+fn p(x: f64, y: f64) -> Point {
+    Point::new(x, y).unwrap()
 }
 
 /// A drawing in millimetres with the namespaces Ink/Stitch's files declare and its current file version,
@@ -41,9 +53,10 @@ fn req_svg_003_commands_connectors_and_helper_paths_are_not_stitched() {
             "warning SC-W0802: `sample` is an Ink/Stitch stitch pattern, a helper for the other shapes in its group, so it is not stitched; StitchCraft does not apply patterns yet.",
             "warning SC-W0802: `flow` is a connector (drawn with Inkscape's connector tool), which Ink/Stitch does not stitch; it is left out.",
             "info SC-I0805: `layer2` is left out, with everything in it: an Ink/Stitch `ignore_layer` command is in it.",
-            "warning SC-W0802: `use5` is Ink/Stitch's `origin` command, which StitchCraft does not apply yet.",
         ]
     );
+    // The origin command gives the design its origin, at its symbol (`REQ-ASM-005`).
+    assert_eq!(svg.design.settings.origin, Some(p(50.0, 50.0)));
 }
 
 #[test]
@@ -86,11 +99,12 @@ fn req_svg_003_a_command_on_something_not_stitched_says_so() {
 }
 
 #[test]
-fn req_svg_003_start_and_end_commands_are_noted() {
-    // Ink/Stitch starts a fill or a satin column at its `starting_point` command and ends it at its
-    // `ending_point`. StitchCraft does not apply them yet, and says so for each object a viewer shows: on a
-    // shape it sews, and, as for a trim, on anything else. A `target_point` aims stitch types StitchCraft
-    // does not sew, so it changes nothing sewn here, and a command on a hidden object is quiet.
+fn req_svg_003_start_end_and_target_commands_place_the_shapes_they_are_tied_to() {
+    // Ink/Stitch starts a fill or a satin column at its `starting_point` command, ends it at its
+    // `ending_point`, and turns a circular fill round its `target_point`: each at its symbol's place, the
+    // `<use>` element's `x` and `y`. Every element the shape makes gets them, and its stitch type uses those
+    // it reads (`REQ-GEN-001`). A command on an object that is not stitched is named, as for a trim, and one on
+    // a hidden object is quiet.
     let svg = svg(drawing(
         r##"<defs><symbol id="inkstitch_starting_point"><circle r="1"/></symbol><symbol id="inkstitch_ending_point-2"><circle r="1"/></symbol>
               <symbol id="inkstitch_target_point"><circle r="1"/></symbol></defs>
@@ -113,16 +127,99 @@ fn req_svg_003_start_and_end_commands_are_noted() {
     ));
     assert_eq!(ids(&svg), ["svg:patch:fill", "svg:line:stroke", "svg:path@2:stroke"]);
     assert_eq!(
-        warnings(&svg),
+        hints(&svg),
         [
-            "warning SC-W0802: `patch` has an Ink/Stitch `starting_point` command, which StitchCraft does not apply yet. Ink/Stitch applies it to fills and satin columns.",
-            "warning SC-W0802: `patch` has an Ink/Stitch `ending_point` command, which StitchCraft does not apply yet. Ink/Stitch applies it to fills and satin columns.",
-            "warning SC-W0802: `line` has an Ink/Stitch `ending_point` command, which StitchCraft does not apply yet. Ink/Stitch applies it to fills and satin columns.",
-            "warning SC-W0802: `group` has an Ink/Stitch `starting_point` command, which is not applied: `group` is not a shape that is stitched.",
+            ("svg:patch:fill", Hints { start: Some(p(50.0, 40.0)), end: Some(p(10.0, 10.0)), target: Some(p(30.0, 25.0)) }),
+            ("svg:line:stroke", Hints { end: Some(p(90.0, 60.0)), ..Hints::default() }),
+            ("svg:path@2:stroke", Hints::default()),
         ]
     );
-    let named: Vec<_> = svg.warnings.iter().map(|w| w.element.as_ref().unwrap().to_string()).collect();
-    assert_eq!(named, ["svg:patch", "svg:patch", "svg:line", "svg:group"]);
+    assert_eq!(
+        warnings(&svg),
+        ["warning SC-W0802: `group` has an Ink/Stitch `starting_point` command, which is not applied: `group` is not a shape that is stitched."]
+    );
+    assert_eq!(svg.warnings[0].element.as_ref().unwrap().to_string(), "svg:group");
+}
+
+#[test]
+fn req_svg_003_a_command_is_placed_under_the_transforms_above_it_and_the_first_of_a_kind_counts() {
+    // The symbol's place is its `x` and `y` under the transforms of the `<use>` and of the groups above it,
+    // in the root's user units, which the viewBox makes millimetres; the root's own transform is not
+    // applied. Of 2 commands of a kind on an object, the first connector in the file counts, as in
+    // Ink/Stitch; a place that doesn't read leaves the command out, and says so.
+    let read = |uses: &str| {
+        svg(format!(
+            r##"<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                 xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:inkstitch="http://inkstitch.org/namespace"
+                 width="200mm" height="200mm" viewBox="0 0 100 100">
+                 <metadata><inkstitch:inkstitch_svg_version>4</inkstitch:inkstitch_svg_version></metadata>
+                 <defs><symbol id="inkstitch_starting_point"><circle r="1"/></symbol></defs>
+                 <rect id="patch" x="10" y="10" width="40" height="30" fill="#0000ff"/>{uses}</svg>"##
+        ))
+    };
+    let placed = read(
+        r##"<g transform="translate(10 5)"><g id="commands" transform="scale(2)">
+              <path d="M 0,0 1,1" inkscape:connection-start="#u1" inkscape:connection-end="#patch"/>
+              <use id="u1" xlink:href="#inkstitch_starting_point" x="3" y="4" transform="translate(1 1)"/>
+              <path d="M 0,0 1,1" inkscape:connection-start="#u2" inkscape:connection-end="#patch"/>
+              <use id="u2" xlink:href="#inkstitch_starting_point" x="30" y="30"/></g></g>"##,
+    );
+    // (3, 4) + (1, 1), scaled by 2, moved by (10, 5): (18, 15) in user units, 2 mm each.
+    assert_eq!(hints(&placed), [("svg:patch:fill", Hints { start: Some(p(36.0, 30.0)), ..Hints::default() })]);
+    assert!(placed.warnings.is_empty(), "{:?}", warnings(&placed));
+    // A `<use>` without `x` or `y` is at 0 in each, as in SVG and Ink/Stitch.
+    let bare = read(
+        r##"<path d="M 0,0 1,1" inkscape:connection-start="#u1" inkscape:connection-end="#patch"/>
+            <use id="u1" xlink:href="#inkstitch_starting_point" transform="translate(3 4)"/>"##,
+    );
+    assert_eq!(hints(&bare), [("svg:patch:fill", Hints { start: Some(p(6.0, 8.0)), ..Hints::default() })]);
+    // 6,000 user units are 12 m.
+    for broken in [r#"x="5mm""#, r#"y="x""#, r#"transform="spin(1)""#, r#"x="6000""#] {
+        let unread = read(&format!(
+            r##"<path d="M 0,0 1,1" inkscape:connection-start="#u1" inkscape:connection-end="#patch"/>
+                <use id="u1" xlink:href="#inkstitch_starting_point" {broken}/>"##
+        ));
+        assert_eq!(hints(&unread), [("svg:patch:fill", Hints::default())], "{broken}");
+        assert_eq!(
+            warnings(&unread),
+            ["warning SC-W0802: `patch` has an Ink/Stitch `starting_point` command whose place doesn't read: a coordinate, a transform or \
+              its connector's path data is not a number, or it lies more than 10 m from the origin. It is left out."],
+            "{broken}"
+        );
+    }
+}
+
+#[test]
+fn req_svg_003_a_command_is_placed_without_the_root_s_transform_which_is_not_applied() {
+    // The reader leaves the root's own transform out of every place, the shapes' and the commands' alike, and
+    // says so once.
+    let svg = svg(r##"<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+             xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:inkstitch="http://inkstitch.org/namespace"
+             width="100mm" height="100mm" viewBox="0 0 100 100" transform="translate(5 5)">
+             <metadata><inkstitch:inkstitch_svg_version>4</inkstitch:inkstitch_svg_version></metadata>
+             <defs><symbol id="inkstitch_starting_point"><circle r="1"/></symbol></defs>
+             <rect id="patch" x="10" y="10" width="40" height="30" fill="#0000ff"/>
+             <path d="M 0,0 1,1" inkscape:connection-start="#u1" inkscape:connection-end="#patch"/>
+             <use id="u1" xlink:href="#inkstitch_starting_point" x="50" y="40"/></svg>"##);
+    assert_eq!(hints(&svg), [("svg:patch:fill", Hints { start: Some(p(50.0, 40.0)), ..Hints::default() })]);
+    assert_eq!(warnings(&svg), ["warning SC-W0802: The root `<svg>` element's transform is not applied."]);
+}
+
+#[test]
+fn req_svg_003_a_shape_digitized_automatically_starts_and_ends_where_its_parts_do() {
+    // With `--auto`, a shape without Ink/Stitch's settings is digitized by StitchCraft's rules, which place
+    // its parts; its start, end and target commands are not applied, and that is said.
+    let body = r##"<defs><symbol id="inkstitch_starting_point"><circle r="1"/></symbol></defs>
+        <rect id="patch" x="10" y="10" width="40" height="30" fill="#0000ff"/>
+        <path d="M 0,0 1,1" inkscape:connection-start="#u1" inkscape:connection-end="#patch"/>
+        <use id="u1" xlink:href="#inkstitch_starting_point" x="50" y="40"/>"##;
+    let auto = read_with(drawing(body).as_bytes(), &Budget::DEFAULT, Reading { auto: true, ..Reading::default() }).unwrap();
+    assert_eq!(hints(&auto), [("svg:patch:fill", Hints::default())]);
+    assert_eq!(
+        warnings(&auto),
+        ["warning SC-W0802: `patch` is digitized automatically, which places where its parts start and end: its Ink/Stitch start, end and \
+          target commands are not applied."]
+    );
 }
 
 #[test]
@@ -162,17 +259,15 @@ fn req_svg_003_ink_stitch_2_command_symbols_are_commands() {
     // files it updates, and they work as the commands they became. Read as clones, they would be named as
     // such, with a hint that gets the symbol's drawing sewn; Ink/Stitch at d59c9ab, run as a black box,
     // sewed the symbol where it did not update the file (`DEV-SVG-014`).
-    let starting = "warning SC-W0802: `patch` has an Ink/Stitch `starting_point` command, which StitchCraft does not apply yet. Ink/Stitch \
-                    applies it to fills and satin columns.";
-    let ending = starting.replace("starting_point", "ending_point");
-    for (old, said) in [
-        ("fill_start", Some(starting)),
-        ("fill_end-2", Some(ending.as_str())),
-        ("satin_start", None),
-        ("satin_end", None),
-        ("run_start", None),
-        ("run_end", None),
-        ("ripple_target", None),
+    let at = Some(p(70.0, 60.0));
+    for (old, placed) in [
+        ("fill_start", Hints { start: at, ..Hints::default() }),
+        ("fill_end-2", Hints { end: at, ..Hints::default() }),
+        ("satin_start", Hints::default()),
+        ("satin_end", Hints::default()),
+        ("run_start", Hints::default()),
+        ("run_end", Hints::default()),
+        ("ripple_target", Hints { target: at, ..Hints::default() }),
     ] {
         let file = svg(drawing(&format!(
             r##"<defs><symbol id="inkstitch_{old}"><path d="M0,0 L2,0 L1,2 Z" fill="#000"/></symbol></defs>
@@ -181,8 +276,8 @@ fn req_svg_003_ink_stitch_2_command_symbols_are_commands() {
                       inkscape:connection-start="#cmd" inkscape:connection-end="#patch"/>
                 <use id="cmd" xlink:href="#inkstitch_{old}" x="70" y="60"/>"##
         )));
-        assert_eq!(ids(&file), ["svg:patch:fill"], "{old}");
-        assert_eq!(warnings(&file), said.into_iter().collect::<Vec<_>>(), "{old}");
+        assert_eq!(hints(&file), [("svg:patch:fill", placed)], "{old}");
+        assert!(file.warnings.is_empty(), "{old}: {:?}", warnings(&file));
     }
 }
 
@@ -267,4 +362,66 @@ fn req_svg_001_any_marker_property_that_names_a_marker_is_noted() {
             "warning SC-W0802: `b` has markers (arrowheads and the like), which are not stitched.",
         ]
     );
+}
+
+/// The symbols of Ink/Stitch's `origin` and `stop_position` commands, as its Commands extension adds them.
+const GLOBAL_SYMBOLS: &str = r#"<defs><symbol id="inkstitch_origin"><circle r="1"/></symbol>
+    <symbol id="inkstitch_stop_position"><circle r="1"/></symbol></defs>"#;
+
+#[test]
+fn req_asm_005_origin_and_stop_position_commands_give_the_design_its_origin_and_stop_position() {
+    // Each at its symbol's place, under the transforms above it, wherever it is.
+    let read = svg(drawing(&format!(
+        r##"{GLOBAL_SYMBOLS}
+        <rect id="square" x="20" y="20" width="10" height="10" fill="red" inkstitch:stop_after="true"/>
+        <g transform="translate(5 0)"><use id="o" xlink:href="#inkstitch_origin" x="15" y="20"/></g>
+        <use id="s" xlink:href="#inkstitch_stop_position" x="80" y="10"/>"##
+    )));
+    assert!(warnings(&read).is_empty(), "{:?}", warnings(&read));
+    assert_eq!((read.design.settings.origin, read.design.settings.stop_position), (Some(p(20.0, 20.0)), Some(p(80.0, 10.0))));
+    // Planned, the origin is where the machine starts, so the square sews from (0, 0) to (10, 10), and the
+    // frame moves to the stop position, 60 mm right and 10 mm up, before the stop after it.
+    let outcome = stitchcraft_engine::plan(&read.design, stitchcraft_plan::profiles::REFERENCE, &Budget::DEFAULT);
+    let plan = outcome.plan.unwrap_or_else(|| panic!("{:?}", outcome.diagnostics));
+    let sewn: Vec<Point> = plan.stitches().filter(|s| s.kind == stitchcraft_plan::StitchKind::Normal).map(|s| s.at).collect();
+    let (xs, ys) = (sewn.iter().map(|q| q.x()), sewn.iter().map(|q| q.y()));
+    let bounds = [xs.clone().fold(f64::MAX, f64::min), ys.clone().fold(f64::MAX, f64::min), xs.fold(f64::MIN, f64::max), ys.fold(f64::MIN, f64::max)];
+    assert!(bounds.iter().zip([0.0, 0.0, 10.0, 10.0]).all(|(got, want)| (got - want).abs() < 0.1), "{bounds:?}");
+    assert!(plan.stitches().any(|s| s.kind == stitchcraft_plan::StitchKind::Jump && s.at == p(60.0, -10.0)));
+}
+
+#[test]
+fn req_asm_005_a_global_command_whose_place_doesn_t_read_is_left_out() {
+    let read = svg(drawing(&format!(r##"{GLOBAL_SYMBOLS}<rect width="10" height="10"/><use id="o" xlink:href="#inkstitch_origin" x="far"/>"##)));
+    assert_eq!(read.design.settings.origin, None);
+    assert_eq!(
+        warnings(&read),
+        [
+            "warning SC-W0802: `o` is Ink/Stitch's `origin` command, whose place doesn't read: a coordinate or a transform is not a number, or it lies more than 10 m from the origin. It is left out."
+        ]
+    );
+}
+
+#[test]
+fn diag_sc_e0819_two_origins_or_two_stop_positions_and_a_stop_end_planning() {
+    // 2 origins whatever the design; 2 stop positions where it stops, and nothing where it doesn't, as
+    // Ink/Stitch looks for a stop position only at a stop.
+    let twice = |command: &str, stops: bool| {
+        let stop = if stops { r#" inkstitch:stop_after="true""# } else { "" };
+        svg(drawing(&format!(
+            r##"{GLOBAL_SYMBOLS}<rect width="10" height="10"{stop}/>
+            <use xlink:href="#inkstitch_{command}" x="1"/><use xlink:href="#inkstitch_{command}" x="2"/>"##
+        )))
+    };
+    for (command, stops) in [("origin", false), ("origin", true), ("stop_position", true)] {
+        let read = twice(command, stops);
+        let error = read.warnings.iter().find(|d| d.code == Code::OriginOrStopPositionTwice).unwrap();
+        assert_eq!(error.severity(), Severity::Error);
+        let has = if command == "origin" { "" } else { ", and the design stops" };
+        let message =
+            format!("The file has 2 Ink/Stitch `{command}` commands{has}, and Ink/Stitch writes no file of it: which one counts isn't known.");
+        assert_eq!(error.message, message);
+        assert_eq!(read.design.settings.origin.or(read.design.settings.stop_position), None, "neither counts");
+    }
+    assert!(twice("stop_position", false).warnings.is_empty());
 }

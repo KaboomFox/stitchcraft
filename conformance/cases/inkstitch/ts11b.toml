@@ -1,4 +1,4 @@
 id = "inkstitch-ts11b"
-requirements = ["REQ-FILL-CON-008"]
+requirements = ["REQ-FILL-CON-008", "REQ-FILL-CIR-007"]
 kind = "inkstitch"
 sheet = "TS-11B"

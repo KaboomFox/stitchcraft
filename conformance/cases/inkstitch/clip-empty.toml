@@ -1,0 +1,12 @@
+id = "inkstitch-clip-empty"
+requirements = ["REQ-SVG-008", "REQ-SVG-011", "REQ-GEN-005"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/clip-empty.svg"
+# A viewer hides a shape whose clip path has no shapes, and StitchCraft sews nothing of it (SC-W0013).
+# Ink/Stitch takes such a clip path for none and sews the red square whole, above the blue one.
+
+[excused]
+stitches = "DEV-SVG-019"
+size = "DEV-SVG-019"
+threads = "DEV-SVG-019"
+overlap = "DEV-SVG-019"

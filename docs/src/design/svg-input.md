@@ -122,6 +122,45 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
   adapter, but every other gradient and every pattern in black, whatever colour is written after it
   (`DEV-SVG-013`).
 
+## Clip paths
+
+A shape that a `clip-path` cuts shows only inside it, and sews only what shows (`REQ-SVG-011`). The
+adapter reads each clip path into a clip of the shape's elements, and the engine cuts them to it
+(`REQ-GEN-005`, [engine pipeline](engine-pipeline.md)). The code is in `crates/stitchcraft-svg/src/document/clip.rs`.
+
+- **Which clip paths.** The `clip-path` property of the shape, and of each group, link (`<a>`) and
+  `<switch>` round it, as an attribute, in a `style` or by a style sheet's rule, names a `<clipPath>` by
+  `url(#id)`. The shape must lie inside every one. A clip path's own `clip-path` cuts it too, as
+  another clip. Ink/Stitch reads only the shape's and its groups' (`DEV-SVG-018`), and no clip path's own
+  (`DEV-SVG-017`).
+- **Its area.** A clip path is its children's areas together, each filled by its `clip-rule`, which they
+  inherit from the clip path: a path or basic shape, or a `<use>` of one at the use's `x` and `y`. A
+  group's children count, as Inkscape draws them, because Inkscape puts the group it clips with in the
+  clip path as it is. SVG doesn't allow a group there, and a browser leaves one out. Children that aren't
+  displayed (`display: none`, `visibility: hidden`) are left out, as are lines, which have no inside, and
+  text, which the adapter doesn't read. A child's paint doesn't matter. Ink/Stitch pools every
+  child's subpaths and takes the largest for the outline and the rest for holes, whatever their rules,
+  so where 2 children overlap it leaves the overlap out (`DEV-SVG-016`).
+- **Where it lies.** In the user space of the element it clips, that element's own transform included,
+  after the clip path's transform and each child's. With `clipPathUnits="objectBoundingBox"`, its
+  coordinates are shares of the box round the shape, curves bounded where they turn. The transforms of
+  the elements the clip path itself lies in don't move it. Ink/Stitch puts the clipped element's
+  transform in place of the clip path's, reads `objectBoundingBox` as user space and applies the
+  transforms round the clip path (`DEV-SVG-017`).
+- **What it leaves.** A fill's area is cut before its underlay, `expand_mm` and its method see it, so
+  `expand_mm` grows the cut area past the clip's edge, as in Ink/Stitch. A stroke's line is cut where it
+  crosses the clip's outline, and each piece sews on its own, in order along it. A satin column is sewn
+  whole, as Ink/Stitch sews it (`SC-W0217`). A clip path with no area, empty or of lines or text alone,
+  hides the whole shape in a viewer. The shape isn't sewn then (`SC-W0013`). Ink/Stitch takes such
+  a clip path for none and sews the shape whole (`DEV-SVG-019`).
+- **Exceptions.** A `clip-path` that names nothing, or an element that isn't a clip path, clips nothing,
+  as in a viewer. `SC-W0802` names the rest: a CSS shape such as `circle(50%)`, clip paths that name each
+  other in a loop, `objectBoundingBox` on a group, whose box the adapter doesn't measure, a `clip-path` on
+  a clip path's child, which neither program applies, what lies in more than 16 groups in a clip path,
+  and the root's. An Inkscape power clip is read from
+  the clip path the file holds, as a viewer draws it, where Ink/Stitch reads the path effect's settings
+  (`DEV-SVG-020`). Masks are not applied, as in Ink/Stitch.
+
 ## Stroke width and join
 
 A stroke's width and join give a satin column drawn as one path its width and its corners
@@ -182,18 +221,29 @@ them (`REQ-SVG-003`).
   `ignore_object` and `ignore_layer` commands leave out an object or a layer, as the
   `inkstitch:ignore_object` setting does when it says yes in one of Ink/Stitch's words, which a toggle
   reads too, and `SC-I0805` lists each object left out. The
-  `starting_point` and `ending_point` commands, which place where Ink/Stitch starts and ends a fill or a
-  satin column, are not applied yet (`REQ-GEN-001`), and `SC-W0802` names each one on an object a viewer
-  shows. The [command table](inkstitch-compat-contract.md#commands) gives what the adapter does with
-  each of the 12 commands. Before its file version 3, Ink/Stitch named 7 of them otherwise, such as
+  `starting_point` and `ending_point` commands give the start and end positions of every element of the
+  shape they are tied to, which its fills and satin columns start and end at (`REQ-GEN-001`). The
+  `target_point` command gives the point its circular fill turns round (`REQ-FILL-CIR-008`), and from
+  M10 the point its ripple stitch aims at. Each is at its symbol's place: the `<use>` element's `x` and
+  `y` under the transforms of the use and of the groups above it, as Ink/Stitch places it. Of 2 commands
+  of a kind on a shape, the first connector in the file counts. A command whose place doesn't read is
+  named with `SC-W0802` and left out, and so are those of a shape digitized automatically, whose parts
+  start and end where automatic digitizing places them. The `origin` and `stop_position` commands are
+  tied to nothing, and count wherever they are, in `<defs>` and hidden layers too, as Ink/Stitch finds
+  them. Each gives the design a setting at its symbol's place (`REQ-ASM-005`). The origin goes to the
+  hoop's centre, and the frame moves to the stop position before each stop. Ink/Stitch refuses a file with
+  2 origins, or 2 stop positions and a stop, and StitchCraft does too (`SC-E0819`,
+  [why](engine-pipeline.md#origin-stop-position-and-turn-on-export)). The
+  [command table](inkstitch-compat-contract.md#commands) gives what the adapter does with each of the 12
+  commands. Before its file version 3, Ink/Stitch named 7 of them otherwise, such as
   `fill_start` for `starting_point`: the adapter reads those as the commands they became in any file,
   where Ink/Stitch renames them only in the files it updates and sews the old symbol elsewhere
   (`DEV-SVG-014`).
 - **Connectors** tie a command to its object.
 - **Helper paths** have one of Ink/Stitch's start markers. They steer the stitches of other objects.
 
-`SC-W0802` reports a connector that ties no command, a helper path, and a command that the adapter does
-not apply yet. The module docs of `crates/stitchcraft-svg/src/inkstitch.rs` describe how the adapter
+`SC-W0802` reports a connector that ties no command, a helper path, an `ignore_layer` command in no layer,
+and a command on an object that is not stitched. The module docs of `crates/stitchcraft-svg/src/inkstitch.rs` describe how the adapter
 finds these objects, with the Ink/Stitch files they were read from.
 
 ## Design settings
@@ -213,9 +263,12 @@ design's elements with their parameters, and the settings that aren't StitchCraf
 (`stitchcraft_testkit::inkstitch`). It names Ink/Stitch's namespace by the reader's own constant,
 `stitchcraft_svg::inkstitch::INKSTITCH_NS`.
 
-The fourth, `rotate_on_export`, turns the design by 90° either way as Ink/Stitch writes it into a machine
-file, for machines that don't turn a design to fit their hoop. It is not applied yet (M8): `SC-W0802`
-names a value other than 0, and the design is written as drawn. Ink/Stitch also keeps `thread-palette`
+The fourth, `rotate_on_export`, turns the design about the hoop's centre as it is written into a machine
+file, for machines that don't turn a design to fit their hoop (M8.9). It is the design's turn on export,
+a number of degrees, right for a positive one ([engine pipeline](engine-pipeline.md#origin-stop-position-and-turn-on-export)).
+Ink/Stitch's preferences offer 90 either way, and its writer turns by any number, as does StitchCraft.
+`SC-W0802` names text that is not a number, which turns nothing. Ink/Stitch takes text that isn't JSON as
+no turn, and doesn't write a file for JSON that isn't a number. Ink/Stitch also keeps `thread-palette`
 there, which names the threads in its own lists and print-outs and doesn't change what the adapter sews,
 and the file's version (below). `SC-W0802` names any other element of Ink/Stitch's there.
 
@@ -229,37 +282,39 @@ the defaults that have changed since are written into the shapes that relied on 
 Ink/Stitch updates it (`REQ-SVG-007`), with the changed defaults as parameters of the shapes, and
 `SC-I0818` says how many shapes changed:
 
+- in a file of version 1, a polyline whose `style` attribute sets a stroke is a manual stitch;
+- in a file of version 1 or 2, a zigzag stroke's `pull_compensation_mm`, unless 0, is halved into
+  `stroke_pull_compensation_mm`, which applies to each side from version 3 (M8.3);
+- in a file of version 1 or 2, a satin column starts and ends where it is drawn, with
+  `start_at_nearest_point` and `end_at_nearest_point` off (M8.3);
+- in a file of version 1 or 2, a `starting_point` or `ending_point` command works at its connector's end
+  on its object, where it worked then, rather than at its symbol (M8.4);
 - in a file of version 1 to 3, a shape whose fill is sewn, without a longest stitch of its own, sews
   3 mm stitches, the default before version 4, where today's default is 4 mm;
-- in a file of version 1, a polyline whose `style` attribute sets a stroke is a manual stitch.
+- in a file of version 1 to 3, a fill with `auto_fill` off is a legacy fill, sewn as a tatami fill without
+  underlay (`DEV-FILL-014`), and `fill_method` `auto_fill`, the tatami fill's name before version 4, is a
+  tatami fill (M8.3).
 
-A shape digitized automatically sews by the rules instead. Ink/Stitch asks its user whether a file with
-its content and no version is an old design, which it then updates, or objects pasted into a new file.
-The adapter can't ask. It reads such a file as it is and says so with `SC-W0802`, as it says that a file
-of a version above 4 is read as version 4.
+Each shape gets the updates of each version after its file's, in the order of the versions, over the
+settings it has, as Ink/Stitch updates it. One digitized automatically sews by the rules instead.
+Ink/Stitch asks its user whether a file with its content and no version is an old design, which it then
+updates, or objects pasted into a new file. The adapter can't ask. It reads such a file as it is and says
+so with `SC-W0802`, as it says that a file of a version above 4 is read as version 4.
 
-The adapter doesn't make 3 of the update's other changes yet (M8.3), and each changes what a shape sews:
-
-- in a file of version 1 or 2, a zigzag stroke's `pull_compensation_mm` other than 0 is halved into
-  `stroke_pull_compensation_mm`;
-- in a file of version 1 or 2, a satin column starts and ends where it is drawn, with
-  `start_at_nearest_point` and `end_at_nearest_point` off;
-- in a file of version 1 to 3, a fill with `auto_fill` off is a legacy fill, sewn without underlay.
-
-`SC-W0802` counts the shapes each would change, and those shapes sew as the file sets them. The other
-changes alter nothing the adapter sews. The [compatibility contract](inkstitch-compat-contract.md#file-versions)
-lists them all, with the milestone that applies them.
+The update's other changes alter nothing the adapter sews. The
+[compatibility contract](inkstitch-compat-contract.md#file-versions) lists them all, with the milestone
+that applies them.
 
 ## Reports
 
 - `SC-W0802` reports a feature that is not stitched. Text, images, clones, nested `<svg>` elements and
-  the style sheet rules that are not read are such features. So are clipping, masks, filters and
-  markers, a group's Ink/Stitch settings, and the settings of Ink/Stitch's early versions (`embroider_`
-  attributes). Clipping is planned for M8.5. It reports a file Ink/Stitch would update, or warn about,
-  that is read as it is: one with Ink/Stitch's content and no file version, or of a newer version. It
-  counts the shapes of an older file that the update would change in ways the adapter doesn't make yet.
+  the style sheet rules that are not read are such features. So are masks, filters and markers, a
+  group's Ink/Stitch settings, the settings of Ink/Stitch's early versions (`embroider_` attributes),
+  and what is not applied of a clip path ([Clip paths](#clip-paths)). It reports a file Ink/Stitch would
+  update, or warn about, that is read as it is: one with Ink/Stitch's content and no file version, or of
+  a newer version.
 - `SC-I0818` says how many shapes of a file an older Ink/Stitch saved are read as its update changes
-  them.
+  them, for each change.
 - `SC-W0804` reports geometry that cannot be used:
   - path data or a list of points with an error, stitched up to the error
   - a transform that does not parse, or that flattens what it draws, left out with its contents

@@ -36,6 +36,8 @@ pub const DATA: &str = "conformance/inkstitch-params.toml";
 pub struct Contract {
     #[serde(default)]
     lock_ids: Vec<String>,
+    #[serde(default)]
+    meander_tiles: Vec<String>,
     param: Vec<Param>,
     #[serde(default)]
     method: Vec<Method>,
@@ -225,6 +227,11 @@ impl Contract {
             "\nLock stitch identifiers (`lock_start`, `lock_end`): {locks}. StitchCraft accepts every identifier; the shapes are its own\n\
              designs with the same intent, a deviation recorded in the deviations ledger (`conformance/deviations.toml`).\n"
         ));
+        let tiles = self.meander_tiles.iter().map(|t| format!("`{t}`")).collect::<Vec<_>>().join(", ");
+        md.push_str(&format!(
+            "\nMeander tiles (`meander_pattern`), in the order Ink/Stitch's settings window lists them: {tiles}. StitchCraft accepts\n\
+             every one and sews its own default tile for it, with a warning (`DEV-FILL-018`).\n"
+        ));
         md.push_str(
             "\n## Commands\n\nInk/Stitch's command symbols (a `<use>` of the symbol `inkstitch_<name>`), where each applies, and what\n\
              StitchCraft's SVG adapter does with it (`stitchcraft_svg::inkstitch`). Their connectors are never stitched.\n\n\
@@ -290,6 +297,15 @@ impl Contract {
                             }
                         }
                     }
+                }
+            }
+        }
+        // The meander tiles are kept as options, so that a design naming one still reads.
+        for spec in declarations(registry, "meander_pattern") {
+            if let Kind::Choice { options } = spec.kind {
+                let kept: Vec<&str> = options.iter().filter(|o| !o.offered).map(|o| o.id).collect();
+                if kept != self.meander_tiles {
+                    problems.push(format!("`meander_pattern` keeps {kept:?}, but the meander tiles in {DATA} are {:?}", self.meander_tiles));
                 }
             }
         }
@@ -403,7 +419,8 @@ fn compatible(kind: Kind, their_type: &str, unit: &str) -> bool {
         Kind::Length { .. } => their_type == "float" && matches!(unit, "mm" | "mm/cycle"),
         Kind::LengthList { .. } => matches!(their_type, "float" | "string" | "str") && unit.starts_with("mm"),
         Kind::LengthPair { .. } => their_type == "float" && unit == "mm (each side)",
-        Kind::PercentPair { .. } => their_type == "float" && unit == "% (each side)",
+        // A meander's scale is 1 percentage or 2, across and down, which Ink/Stitch's window shows as 1.
+        Kind::PercentPair { .. } => their_type == "float" && matches!(unit, "% (each side)" | "%"),
         Kind::PercentList { .. } => their_type == "float" && unit == "%",
         Kind::Angle | Kind::BoundedAngle { .. } | Kind::AngleList { .. } => their_type == "float" && matches!(unit, "deg" | "degrees" | "°"),
         Kind::Percent { .. } => their_type == "float" && matches!(unit, "%" | "± %"),
@@ -663,7 +680,7 @@ mod tests {
             ParamSpec { key: "sparkle_mm", ..ROW_SPACING },
             ParamSpec {
                 key: "lock_start",
-                kind: Kind::Choice { options: &[ChoiceOption { id: "bowtie", label: "Bowtie" }] },
+                kind: Kind::Choice { options: &[ChoiceOption::new("bowtie", "Bowtie")] },
                 default: "bowtie",
                 origin: Origin::StitchCraft,
                 ..ROW_SPACING
@@ -755,7 +772,7 @@ mod tests {
         );
         let contract = Contract::parse(&data).unwrap();
         let fills = |order: &[StitchType], default: &'static str| -> ParamGroup {
-            let options: Vec<ChoiceOption> = order.iter().map(|t| ChoiceOption { id: t.id(), label: t.name() }).collect();
+            let options: Vec<ChoiceOption> = order.iter().map(|t| ChoiceOption::new(t.id(), t.name())).collect();
             let fills: Vec<StitchType> = StitchType::ALL.iter().copied().filter(|t| t.family() == Family::Fill).collect();
             let spec = ParamSpec {
                 key: "fill_method",

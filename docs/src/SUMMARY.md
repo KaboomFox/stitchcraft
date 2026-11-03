@@ -26,6 +26,8 @@
     - [Zigzag satin](user/stitches/zigzag-satin.md)
     - [Tatami fill](user/stitches/tatami-fill.md)
     - [Contour fill](user/stitches/contour-fill.md)
+    - [Meander fill](user/stitches/meander-fill.md)
+    - [Circular fill](user/stitches/circular-fill.md)
     - [Automatic digitizing](user/stitches/automatic.md)
     - [Lock stitches, trims and stops](user/stitches/locks.md)
   - [Embroidery basics](user/explanation/embroidery-basics.md)
@@ -46,7 +48,8 @@
       - [Fill](user/reference/params/fill.md)
       - [Tatami fill](user/reference/params/tatami.md)
       - [Contour fill](user/reference/params/contour.md)
-      - [Fill repeats](user/reference/params/fill-repeat.md)
+      - [Meander fill](user/reference/params/meander.md)
+      - [Path fills](user/reference/params/path-fill.md)
       - [Automatic digitizing](user/reference/params/auto.md)
     - [Glossary](user/reference/glossary.md)
     - [VectorCraft compatibility](user/reference/compatibility.md)
@@ -96,6 +99,7 @@
     - [0013 Brother PE800](design/adr/0013-brother-pe800-reference-machine.md)
     - [0014 Generators see their neighbours](design/adr/0014-generators-see-their-neighbours.md)
     - [0015 Pictures traced by VectorCraft](design/adr/0015-pictures-traced-by-vectorcraft.md)
+    - [0016 Ink/Stitch files imported into VectorCraft](design/adr/0016-inkstitch-files-imported-by-stitchcraft.md)
 
 # Plan
 

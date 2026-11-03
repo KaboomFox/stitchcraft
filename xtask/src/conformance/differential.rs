@@ -20,16 +20,19 @@
 //! **A test sheet** drawn as a design is a case's subject too (`sheet`). Both programs sew the SVG file of
 //! the elements StitchCraft sews the sheet with, automatic digitizing's for its automatic shapes, written
 //! with their parameters (`stitchcraft_testkit::inkstitch`) to [`WRITTEN`], where a reviewer can open it.
+//! Ink/Stitch's PES file of it is kept beside it ([`kept`]), which a machine checkpoint sews beside
+//! StitchCraft's: MC-11 sews TS-16 so.
 //! Ink/Stitch then sews the stitch types StitchCraft chose, with StitchCraft's settings, so the stitches
 //! StitchCraft makes of its own choices are checked against Ink/Stitch's (`REQ-AUTO-021`), and StitchCraft
 //! reads the same file as Ink/Stitch does (`REQ-SVG-009`): what its SVG reader keeps of a sheet is what
 //! `stitch testsheet` sews (`REQ-PRM-003`).
 //!
 //! **The measures** ([`Measure`]): each file's stitches, the needle-downs; its size, the bounds of its needle
-//! points; its threads, in order; its trims; its jumps; and how nearly their thread's footprints overlap
+//! points; its place, the middle of those bounds from where the machine starts, which the design's origin
+//! moves; its threads, in order; its trims; its jumps; and how nearly their thread's footprints overlap
 //! once their bounds' centres are made one (`stitchcraft_testkit::metrics::footprint_overlap`). Each has the
-//! tolerance the design gives: stitches within 10 %, each side within 0.5 mm, the same threads in the same
-//! order, trims and jumps within 1, footprints overlapping by 0.9 at least. A case may excuse a measure
+//! tolerance the design gives: stitches within 10 %, each side and the place each way within 0.5 mm, the
+//! same threads in the same order, trims and jumps within 1, footprints overlapping by 0.9 at least. A case may excuse a measure
 //! with an entry of the deviations ledger that explains the difference: it is reported as excused, not
 //! failed.
 //!
@@ -58,6 +61,8 @@ pub const PIN: &str = "conformance/inkstitch/pin.toml";
 pub const STUBS: &str = "conformance/inkstitch/stubs";
 /// Where the SVG files written for test sheets go, relative to the repository root.
 pub const WRITTEN: &str = "target/conformance/differential";
+/// The least overlap of the two programs' thread footprints.
+pub const LEAST_OVERLAP: f64 = 0.9;
 
 /// What is measured, by the name a case's `excused` table gives it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -66,25 +71,30 @@ pub enum Measure {
     Stitches,
     /// The bounds of the needle points, each side: within 0.5 mm.
     Size,
+    /// The middle of those bounds, from where the machine starts, which the design's origin sets: within
+    /// 0.5 mm each way (`REQ-ASM-005`).
+    Place,
     /// The threads, in order: the same.
     Threads,
     /// The trims: within 1.
     Trims,
     /// The jumps: within 1.
     Jumps,
-    /// The overlap of the thread's footprints: 0.9 at least.
+    /// The overlap of the thread's footprints: [`LEAST_OVERLAP`] at least.
     Overlap,
 }
 
 impl Measure {
     /// Every measure, in the order the report gives them.
-    pub const ALL: [Measure; 6] = [Measure::Stitches, Measure::Size, Measure::Threads, Measure::Trims, Measure::Jumps, Measure::Overlap];
+    pub const ALL: [Measure; 7] =
+        [Measure::Stitches, Measure::Size, Measure::Place, Measure::Threads, Measure::Trims, Measure::Jumps, Measure::Overlap];
 
     /// Its name in a case file and the report.
     pub fn name(self) -> &'static str {
         match self {
             Measure::Stitches => "stitches",
             Measure::Size => "size",
+            Measure::Place => "place",
             Measure::Threads => "threads",
             Measure::Trims => "trims",
             Measure::Jumps => "jumps",
@@ -103,6 +113,8 @@ impl Measure {
 pub struct Measured {
     stitches: usize,
     size: [f64; 2],
+    /// The middle of the needle points' bounds, from where the machine starts.
+    place: [f64; 2],
     threads: Vec<Rgb>,
     trims: usize,
     jumps: usize,
@@ -120,6 +132,7 @@ impl Measured {
         Some(Measured {
             stitches: stats.stitches,
             size: [bounds.width(), bounds.height()],
+            place: [centre.x(), centre.y()],
             threads: plan.blocks.iter().map(|block| block.thread.color).collect(),
             trims: stats.trims,
             jumps: stats.jumps,
@@ -136,16 +149,19 @@ pub type Compared = (Measure, String, String, bool);
 pub fn compare(ours: &Measured, theirs: &Measured) -> Vec<Compared> {
     let count = |n: usize| n.to_string();
     let size = |s: [f64; 2]| format!("{:.1} × {:.1} mm", s[0], s[1]);
+    let place = |p: [f64; 2]| format!("{:.1}, {:.1} mm", p[0] + 0.0, p[1] + 0.0);
+    let near = |a: [f64; 2], b: [f64; 2]| a.iter().zip(b).all(|(a, b)| (a - b).abs() <= 0.5);
     let threads = |t: &[Rgb]| t.iter().map(|c| format!("#{:02x}{:02x}{:02x}", c.r, c.g, c.b)).collect::<Vec<_>>().join(" ");
     let within = |a: usize, b: usize, by: usize| a.abs_diff(b) <= by;
     let overlap = footprint_overlap(&ours.sewn, &theirs.sewn);
     vec![
         (Measure::Stitches, count(ours.stitches), count(theirs.stitches), ours.stitches.abs_diff(theirs.stitches) * 10 <= theirs.stitches),
-        (Measure::Size, size(ours.size), size(theirs.size), ours.size.iter().zip(theirs.size).all(|(a, b)| (a - b).abs() <= 0.5)),
+        (Measure::Size, size(ours.size), size(theirs.size), near(ours.size, theirs.size)),
+        (Measure::Place, place(ours.place), place(theirs.place), near(ours.place, theirs.place)),
         (Measure::Threads, threads(&ours.threads), threads(&theirs.threads), ours.threads == theirs.threads),
         (Measure::Trims, count(ours.trims), count(theirs.trims), within(ours.trims, theirs.trims, 1)),
         (Measure::Jumps, count(ours.jumps), count(theirs.jumps), within(ours.jumps, theirs.jumps, 1)),
-        (Measure::Overlap, format!("{overlap:.3}"), String::new(), overlap >= 0.9),
+        (Measure::Overlap, format!("{overlap:.3}"), String::new(), overlap >= LEAST_OVERLAP),
     ]
 }
 
@@ -234,7 +250,7 @@ pub fn run(root: &Path, subject: &Subject, excused: &BTreeMap<String, String>, o
             (inkstitch.pes(root, &path), sewn(&path, design))
         }
         Subject::Sheet(id) => match sheet(root, id) {
-            Ok(path) => (inkstitch.pes(root, &path), sewn(&path, id)),
+            Ok(path) => (inkstitch.pes(root, &path).and_then(|bytes| kept(&path, bytes)), sewn(&path, id)),
             Err(e) => return outcome.failures.push(e),
         },
         // `load_cases` draws letters for centre-lines cases alone.
@@ -318,7 +334,7 @@ fn judge(compared: Vec<Compared>, excused: &BTreeMap<String, String>, again: &BT
             (true, None) => "✅".to_string(),
             (false, Some(deviation)) => match again.get(deviation).and_then(|rows| rows.iter().find(|row| row.0 == measure)) {
                 None => {
-                    outcome.notes.push(format!("{name} differ, as {deviation} says"));
+                    outcome.notes.push(format!("{}, as {deviation} says", differs(measure, &mine, &other)));
                     format!("excused by `{deviation}`")
                 }
                 Some((_, mine, undone, true)) => {
@@ -333,7 +349,7 @@ fn judge(compared: Vec<Compared>, excused: &BTreeMap<String, String>, again: &BT
                 }
             },
             (false, None) => {
-                outcome.failures.push(format!("{name} differ: StitchCraft {mine}, Ink/Stitch {other}"));
+                outcome.failures.push(differs(measure, &mine, &other));
                 "❌".to_string()
             }
             (true, Some(deviation)) => {
@@ -342,6 +358,16 @@ fn judge(compared: Vec<Compared>, excused: &BTreeMap<String, String>, again: &BT
             }
         };
         outcome.details.push(format!("| {name} | {mine} | {other} | {mark} |"));
+    }
+}
+
+/// How `measure` differs, StitchCraft's `mine` against Ink/Stitch's `other`, for a failure or an excuse's
+/// note. The overlap is a measure of the pair, with one value, given with the least it may be.
+fn differs(measure: Measure, mine: &str, other: &str) -> String {
+    let name = measure.name();
+    match measure {
+        Measure::Overlap => format!("{name} {mine}, below {LEAST_OVERLAP}"),
+        _ => format!("{name} differ: StitchCraft {mine}, Ink/Stitch {other}"),
     }
 }
 
@@ -358,6 +384,14 @@ fn sewn(path: &Path, file: &str) -> Result<Vec<u8>, String> {
 /// `plan` as a PES file, labelled `name`.
 fn encoded(plan: &StitchPlan, name: &str) -> Result<Vec<u8>, String> {
     stitchcraft_formats::encode(plan, FormatId::PesV1, name).map(|encoded| encoded.bytes).map_err(|e| format!("{name}: {e}"))
+}
+
+/// Ink/Stitch's PES file `bytes` of the sheet's SVG file at `svg`, kept beside it with the extension
+/// `inkstitch.pes` (`ts-16.inkstitch.pes`), and given back.
+fn kept(svg: &Path, bytes: Vec<u8>) -> Result<Vec<u8>, String> {
+    let path = svg.with_extension("inkstitch.pes");
+    std::fs::write(&path, &bytes).map_err(|e| format!("{}: {e}", util::rel(&path)))?;
+    Ok(bytes)
 }
 
 /// The test sheet `id` as both programs are given it: the SVG file, written to [`WRITTEN`], of the elements
@@ -417,12 +451,30 @@ pub fn report(outcomes: &[Outcome], commit: &str, pin: &str) -> String {
 mod tests {
     use super::*;
 
+    /// A file measured so, centred where the machine starts.
     fn measured(stitches: usize, size: [f64; 2], threads: &[Rgb], trims: usize, jumps: usize, sewn: &[[Point; 2]]) -> Measured {
-        Measured { stitches, size, threads: threads.to_vec(), trims, jumps, sewn: sewn.to_vec() }
+        Measured { stitches, size, place: [0.0, 0.0], threads: threads.to_vec(), trims, jumps, sewn: sewn.to_vec() }
+    }
+
+    /// `measured` placed with its middle at `place`.
+    fn placed(measured: Measured, place: [f64; 2]) -> Measured {
+        Measured { place, ..measured }
     }
 
     fn p(x: f64, y: f64) -> Point {
         Point::new(x, y).unwrap()
+    }
+
+    #[test]
+    fn ink_stitch_s_machine_file_of_a_sheet_is_kept_beside_its_svg_file() {
+        let dir = util::root().join("target/xtask-tests/differential");
+        std::fs::create_dir_all(&dir).unwrap();
+        let svg = dir.join("ts-16.svg");
+        assert_eq!(kept(&svg, b"#PES0001".to_vec()).unwrap(), b"#PES0001");
+        assert_eq!(std::fs::read(dir.join("ts-16.inkstitch.pes")).unwrap(), b"#PES0001");
+        // A folder that isn't there is said.
+        let nowhere = dir.join("missing/ts-16.svg");
+        assert!(kept(&nowhere, Vec::new()).unwrap_err().contains("ts-16.inkstitch.pes"));
     }
 
     #[test]
@@ -431,18 +483,19 @@ mod tests {
         let row = [[p(0.0, 0.0), p(10.0, 0.0)]];
         let theirs = measured(100, [50.0, 30.0], &[red, blue], 2, 3, &row);
         let within = |ours: &Measured| compare(ours, &theirs).into_iter().map(|(m, .., ok)| (m, ok)).collect::<Vec<_>>();
-        let all = |ok: [bool; 6]| Measure::ALL.into_iter().zip(ok).collect::<Vec<_>>();
+        let all = |ok: [bool; 7]| Measure::ALL.into_iter().zip(ok).collect::<Vec<_>>();
         // At the edge of each tolerance: 10 stitches of 100, 0.5 mm, a trim and a jump.
-        assert_eq!(within(&measured(110, [50.5, 29.5], &[red, blue], 3, 2, &row)), all([true; 6]));
-        assert_eq!(within(&measured(90, [49.5, 30.5], &[red, blue], 1, 4, &row)), all([true; 6]));
+        assert_eq!(within(&placed(measured(110, [50.5, 29.5], &[red, blue], 3, 2, &row), [0.5, -0.5])), all([true; 7]));
+        assert_eq!(within(&placed(measured(90, [49.5, 30.5], &[red, blue], 1, 4, &row), [-0.5, 0.5])), all([true; 7]));
         // Just past each.
-        let past = measured(111, [50.0, 30.6], &[blue, red], 4, 1, &[[p(0.0, 5.0), p(10.0, 5.0)]]);
-        assert_eq!(within(&past), all([false; 6]));
-        assert_eq!(within(&measured(89, [50.6, 30.0], &[red], 2, 5, &row)), all([false, false, false, true, false, true]));
+        let past = placed(measured(111, [50.0, 30.6], &[blue, red], 4, 1, &[[p(0.0, 5.0), p(10.0, 5.0)]]), [0.0, 0.6]);
+        assert_eq!(within(&past), all([false; 7]));
+        let others = placed(measured(89, [50.6, 30.0], &[red], 2, 5, &row), [-0.6, 0.0]);
+        assert_eq!(within(&others), all([false, false, false, false, true, false, true]));
     }
 
     #[test]
-    fn a_plan_is_measured_by_its_needle_downs_bounds_threads_trims_and_jumps() {
+    fn a_plan_is_measured_by_its_needle_downs_bounds_place_threads_trims_and_jumps() {
         use stitchcraft_plan::{PlanBuilder, Provenance, Role, Thread};
         let (red, blue) = (Rgb::new(237, 23, 31), Rgb::new(11, 61, 145));
         let mut builder = PlanBuilder::new(Thread::new(red));
@@ -457,8 +510,8 @@ mod tests {
         builder.stitch(p(20.0, 8.0), top);
         let measured = Measured::of(&builder.finish()).unwrap();
         assert_eq!(
-            (measured.stitches, measured.size, measured.threads.clone(), measured.trims, measured.jumps),
-            (5, [20.0, 8.0], vec![red, blue], 1, 1)
+            (measured.stitches, measured.size, measured.place, measured.threads.clone(), measured.trims, measured.jumps),
+            (5, [20.0, 8.0], [10.0, 4.0], vec![red, blue], 1, 1)
         );
         // The thread runs from each needle point to the next, its bounds' centre, (10, 4), at the origin.
         assert_eq!(measured.sewn.first(), Some(&[p(-10.0, -4.0), p(0.0, -4.0)]));
@@ -489,7 +542,7 @@ mod tests {
             judged.failures,
             ["size differ: StitchCraft 1, Ink/Stitch 2", "trims agree, and DEV-X-001 excuses a difference no longer there: drop it from the case"]
         );
-        assert_eq!(judged.notes, ["threads differ, as DEV-THREAD-001 says"]);
+        assert_eq!(judged.notes, ["threads differ: StitchCraft 1, Ink/Stitch 2, as DEV-THREAD-001 says"]);
         assert_eq!(
             judged.details,
             [
@@ -499,6 +552,20 @@ mod tests {
                 "| trims | 1 | 2 | ❌ agree |"
             ]
         );
+    }
+
+    #[test]
+    fn an_overlap_too_small_is_given_with_the_least_it_may_be() {
+        // The overlap is a measure of the pair: one value, which a failure gives with its tolerance.
+        let mut judged = outcome("case");
+        judge(vec![(Measure::Overlap, "0.564".to_string(), String::new(), false)], &BTreeMap::new(), &BTreeMap::new(), &mut judged);
+        assert_eq!(judged.failures, ["overlap 0.564, below 0.9"]);
+        assert_eq!(judged.details, ["| overlap | 0.564 |  | ❌ |"]);
+        // And so does an excuse for it.
+        let mut excused = outcome("case");
+        let by = BTreeMap::from([("overlap".to_string(), "DEV-FILL-018".to_string())]);
+        judge(vec![(Measure::Overlap, "0.743".to_string(), String::new(), false)], &by, &BTreeMap::new(), &mut excused);
+        assert_eq!((excused.failures.len(), excused.notes), (0, vec!["overlap 0.743, below 0.9, as DEV-FILL-018 says".to_string()]));
     }
 
     #[test]

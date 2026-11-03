@@ -8,7 +8,9 @@
 mod common;
 
 use common::{RED, document, ids, read_ok, said, square};
-use stitchcraft_core::Code;
+use stitchcraft_core::{Budget, Code, Point};
+use stitchcraft_engine::design::{Hints, Reading};
+use stitchcraft_vectorcraft::read_with;
 
 const IGNORED: Code = Code::VcObjectIgnored;
 const NAMED: Code = Code::VcFeatureIgnored;
@@ -55,23 +57,44 @@ fn diag_sc_i0811_what_is_left_out_by_its_name_is_listed() {
 }
 
 #[test]
-fn req_vc_009_start_and_end_markers_are_never_stitched_and_are_named() {
-    // A small path grouped with the shape whose start or end it marks.
-    let shape = square(2, 0.0, 0.0, RED);
-    let objects = [
-        format!(
-            r#"{{"id": 3, "kind": {{"type": "group", "children": [{shape}, {}, {}]}}}}"#,
-            named(&square(4, 2.0, 2.0, RED), "stitch:start"),
-            named(&square(5, 30.0, 30.0, RED), "Stitch:End 2")
-        ),
-        // Hidden, it is left out without a word, as everything hidden is.
-        named(&square(6, 50.0, 0.0, RED), "stitch:start").replacen("{\"name\"", "{\"visible\": false, \"name\"", 1),
-    ];
-    let read = read_ok(&document(4, &objects.join(",")));
-    assert_eq!(ids(&read), ["vc:2:fill"]);
-    assert_eq!(said(&read), [about(NAMED, 4), about(NAMED, 5)]);
-    assert!(read.warnings[0].message.contains("start"), "{}", read.warnings[0]);
-    assert!(read.warnings[1].message.contains("end"), "{}", read.warnings[1]);
+fn req_vc_009_start_and_end_markers_place_the_shapes_grouped_with_them() {
+    // A small path grouped with the shapes whose start or end it marks, at the middle of its anchors. It is
+    // never stitched. The shapes of its group start and end there, those of groups inside it too, and the
+    // first marker of each kind counts: another is named, unused. A hidden one is left out without a word,
+    // as everything hidden is.
+    let inner = format!(r#"{{"id": 7, "kind": {{"type": "group", "children": [{}]}}}}"#, square(8, 100.0, 0.0, RED));
+    let group = format!(
+        r#"{{"id": 3, "kind": {{"type": "group", "children": [{}, {}, {}, {inner}, {}]}}}}"#,
+        square(2, 0.0, 0.0, RED),
+        named(&square(4, 2.0, 2.0, RED), "stitch:start"),
+        named(&square(5, 30.0, 30.0, RED), "Stitch:End 2"),
+        named(&square(9, 60.0, 60.0, RED), "stitch:start")
+    );
+    let hidden = named(&square(6, 50.0, 0.0, RED), "stitch:start").replacen("{\"name\"", "{\"visible\": false, \"name\"", 1);
+    let read = read_ok(&document(4, &[group, hidden, square(10, 200.0, 0.0, RED)].join(",")));
+    assert_eq!(ids(&read), ["vc:2:fill", "vc:8:fill", "vc:10:fill"]);
+    // The middle of a 36 pt square, in millimetres.
+    let at = |x: f64, y: f64| Some(Point::new((x + 18.0) * 25.4 / 72.0, (y + 18.0) * 25.4 / 72.0).unwrap());
+    let placed = Hints { start: at(2.0, 2.0), end: at(30.0, 30.0), target: None };
+    let hints: Vec<Hints> = read.design.elements().iter().map(|e| e.hints).collect();
+    assert_eq!(hints, [placed, placed, Hints::default()]);
+    assert_eq!(said(&read), [about(NAMED, 9)]);
+    assert!(read.warnings[0].message.contains("another start marker in its group comes first"), "{}", read.warnings[0]);
+}
+
+#[test]
+fn req_vc_009_a_shape_digitized_automatically_starts_and_ends_where_its_parts_do() {
+    // Automatic digitizing places where an automatic shape's parts start and end, so a marker grouped with it
+    // is not used, which is said.
+    let group = format!(
+        r#"{{"id": 3, "kind": {{"type": "group", "children": [{}, {}]}}}}"#,
+        square(2, 0.0, 0.0, RED),
+        named(&square(4, 2.0, 2.0, RED), "stitch:start")
+    );
+    let read = read_with(&document(4, &group), &Budget::DEFAULT, Reading { auto: true, ..Reading::default() }).unwrap();
+    assert_eq!(read.design.elements()[0].hints, Hints::default());
+    assert_eq!(said(&read), [about(NAMED, 2)]);
+    assert!(read.warnings[0].message.starts_with("It is digitized automatically"), "{}", read.warnings[0]);
 }
 
 #[test]
@@ -81,7 +104,7 @@ fn req_vc_009_a_stitch_name_stitchcraft_does_not_read_is_named_and_stitched() {
     assert_eq!(ids(&read), ["vc:2:fill", "vc:3:fill"]);
     assert_eq!(said(&read), [about(NAMED, 2), about(NAMED, 3)]);
     let hint = read.warnings[0].fix.as_ref().map(stitchcraft_core::Fix::describe);
-    assert_eq!(hint.as_deref(), Some("StitchCraft reads stitch:ignore, stitch:start and stitch:end."));
+    assert_eq!(hint.as_deref(), Some("StitchCraft reads stitch:ignore, stitch:start, stitch:end, stitch:origin and stitch:stop-position."));
 }
 
 #[test]
@@ -124,4 +147,77 @@ fn req_vc_009_a_group_or_a_layer_is_never_a_marker() {
     assert_eq!(ids(&read), ["vc:2:fill", "vc:3:fill", "vc:5:fill"]);
     assert_eq!(said(&read), [about(NAMED, 1), about(NAMED, 4)]);
     assert!(read.warnings.iter().all(|w| w.message.contains("can't be, and the name is ignored")), "{:?}", read.warnings);
+}
+
+#[test]
+fn req_vc_009_a_marker_is_at_the_middle_of_the_box_round_its_anchors() {
+    // A triangle's box, not its centroid, and its anchors alone, not the handles of its curves. A marker with
+    // no anchor marks nothing, and is named.
+    let triangle = r#"{"id": 4, "name": "stitch:end", "appearance": {"items": []}, "kind": {"type": "path", "path": {"subpaths": [{"closed": true,
+        "anchors": [{"p": [0, 0], "out": [90, -90]}, {"p": [36, 0]}, {"p": [0, 72]}]}]}}}"#;
+    let empty = r#"{"id": 5, "name": "stitch:start", "appearance": {"items": []}, "kind": {"type": "path", "path": {"subpaths": []}}}"#;
+    let group = format!(r#"{{"id": 3, "kind": {{"type": "group", "children": [{}, {triangle}, {empty}]}}}}"#, square(2, 100.0, 0.0, RED));
+    let read = read_ok(&document(4, &group));
+    let mm = |pt: f64| pt * 25.4 / 72.0;
+    let end = Some(Point::new(mm(18.0), mm(36.0)).unwrap());
+    assert_eq!(read.design.elements()[0].hints, Hints { end, ..Hints::default() });
+    assert_eq!(said(&read), [about(NAMED, 5)]);
+    assert!(read.warnings[0].message.contains("it has no point that reads"), "{}", read.warnings[0]);
+}
+
+#[test]
+fn req_asm_005_origin_and_stop_position_markers_place_the_design_s_origin_and_stop_position() {
+    // Anywhere in the document, at the middle of its anchors, and never stitched, as Ink/Stitch's commands
+    // place them in an SVG file.
+    let group = format!(r#"{{"id": 3, "kind": {{"type": "group", "children": [{}]}}}}"#, named(&square(4, 100.0, 0.0, RED), "stitch:origin"));
+    let objects = [square(2, 0.0, 0.0, RED), group, named(&square(5, 200.0, 0.0, RED), "stitch:stop-position")];
+    let read = read_ok(&document(4, &objects.join(",")));
+    assert_eq!(ids(&read), ["vc:2:fill"]);
+    assert!(said(&read).is_empty(), "{:?}", said(&read));
+    let at = |x: f64, y: f64| Some(Point::new((x + 18.0) * 25.4 / 72.0, (y + 18.0) * 25.4 / 72.0).unwrap());
+    let near = |got: Option<Point>, want: Option<Point>| got.zip(want).is_some_and(|(got, want)| got.distance(want) < 1e-9);
+    assert!(near(read.design.settings.origin, at(100.0, 0.0)) && near(read.design.settings.stop_position, at(200.0, 0.0)));
+    // A group so named is no marker, and the name is ignored.
+    for name in ["stitch:origin", "stitch:stop-position"] {
+        let group = format!(r#"{{"id": 3, "name": "{name}", "kind": {{"type": "group", "children": [{}]}}}}"#, square(4, 0.0, 0.0, RED));
+        let read = read_ok(&document(4, &group));
+        let settings = read.design.settings;
+        assert_eq!((ids(&read), settings.origin, settings.stop_position), (vec!["vc:4:fill"], None, None));
+        assert_eq!(said(&read), [about(NAMED, 3)]);
+        let message = &read.warnings[0].message;
+        assert!(message.ends_with(&format!(" is named {name}, which a group can't be, and the name is ignored.")), "{message}");
+        let hint = read.warnings[0].fix.as_ref().map(stitchcraft_core::Fix::describe);
+        assert_eq!(hint, Some(format!("Name a small path {name}.")));
+    }
+}
+
+#[test]
+fn req_asm_005_an_origin_or_stop_position_marker_with_no_point_that_reads_places_nothing_and_is_named() {
+    for name in ["stitch:origin", "stitch:stop-position"] {
+        let empty =
+            format!(r#"{{"id": 5, "name": "{name}", "appearance": {{"items": []}}, "kind": {{"type": "path", "path": {{"subpaths": []}}}}}}"#);
+        let read = read_ok(&document(4, &[square(2, 0.0, 0.0, RED), empty].join(",")));
+        assert_eq!((read.design.settings.origin, read.design.settings.stop_position), (None, None));
+        assert_eq!(said(&read), [about(NAMED, 5)]);
+        assert_eq!(read.warnings[0].message, format!("The object named {name} has no point that reads, so it places nothing."));
+    }
+}
+
+#[test]
+fn diag_sc_e0819_two_origin_markers_or_two_stop_position_markers_and_a_stop_end_planning() {
+    // 2 origins whatever the design; 2 stop positions where it stops, and nothing where it doesn't.
+    let twice = |name: &str, stop: bool| {
+        // A red square, whose fill effect stops after it.
+        let stops = r#"{"items": [{"kind": "fill", "paint": {"type": "solid", "color": {"model": "rgb", "r": 1, "g": 0, "b": 0}}}],
+            "effects": [{"id": "plugin.dev.stitchcraft.fill", "params": {"stop_after": true}}]}"#;
+        let shape = square(2, 0.0, 0.0, if stop { stops } else { RED });
+        read_ok(&document(4, &[shape, named(&square(4, 50.0, 0.0, RED), name), named(&square(5, 60.0, 0.0, RED), name)].join(",")))
+    };
+    for (name, stop, has) in [("stitch:origin", false, ""), ("stitch:stop-position", true, ", and the design stops")] {
+        let read = twice(name, stop);
+        let error = read.warnings.iter().find(|d| d.code == Code::OriginOrStopPositionTwice).unwrap_or_else(|| panic!("{name}: {:?}", read.warnings));
+        assert_eq!(error.message, format!("The document has 2 objects named {name}{has}: which one counts isn't known."));
+        assert_eq!(read.design.settings.origin.or(read.design.settings.stop_position), None);
+    }
+    assert!(twice("stitch:stop-position", false).warnings.is_empty());
 }

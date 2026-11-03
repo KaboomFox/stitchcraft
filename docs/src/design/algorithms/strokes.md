@@ -7,8 +7,20 @@ normalizer). Phase P1 (M3) unless noted.
 
 A stroke starts where it is drawn and ends where it is drawn, as in Ink/Stitch. Its generator is given its
 neighbours, as every generator is ([ADR 0014](../adr/0014-generators-see-their-neighbours.md)), and a
-stroke sews the same whatever they are. A satin column or a tatami fill before a stroke ends near the
+stroke sews the same whatever they are, and whatever start and end positions its design gives it
+(`REQ-GEN-001`). A satin column or a tatami fill before a stroke ends near the
 stroke's first point.
+
+A stroke cut to clips, its clip paths, sews the pieces of its lines inside every one (`REQ-GEN-005`). Its
+subpaths are cut where they cross a clip's outline, as Ink/Stitch cuts them. A running stitch's or a zigzag
+stroke's is flattened first as a shape's outline is, and a manual stitch's runs from node to node, with a
+needle point at each cut. Each piece sews on its own, in order along its subpath, and a closed subpath that is cut
+is cut where it starts too. Left whole, a subpath keeps its curves and sews as drawn. The clips leave the
+width alone, so a zigzag stroke's zigzag ends square at a cut, half its width either side of the line.
+Ink/Stitch closes each piece of a cut closed zigzag stroke, which StitchCraft sews open (`DEV-RUN-009`), and
+sews a line that also touches its clip at a point whole, which StitchCraft cuts as any other
+(`DEV-RUN-010`). Wholly outside its clips, a stroke isn't sewn (`SC-W0013`), and the element before it ends
+nearest the first piece they leave.
 
 ## Running stitch
 
@@ -107,9 +119,12 @@ Where 2 segments meet smoothly nothing more is needed.
 - A zigzag's turnaround takes no step of the list, as in Ink/Stitch ([zigzag stroke](#zigzag-stroke-p2-m7)).
 - Repeats apply to running, ripple and zigzag strokes; bean stitch to those and to manual stitch (the
   [compatibility contract](../inkstitch-compat-contract.md) lists each parameter's stitch types).
-- A contour fill has repeats and bean stitch of its own, which Ink/Stitch declares for its fills apart
-  from a stroke's. Bean stitch comes first, and each repeat then sews everything sewn so far again, the
-  other way round, so `k` repeats sew 2^(k−1) passes ([fills](fills.md#stitches)).
+- The fills sewn as one path have repeats and bean stitch of their own, which Ink/Stitch declares for
+  its fills apart from a stroke's. Bean stitch comes first, and each repeat then sews everything sewn so
+  far again, the other way round, so `k` repeats sew 2^(k−1) passes ([fills](fills.md#stitches)).
+- A circular fill's bean stitch leaves out the stitches that run between the pieces of its spiral, but
+  each of those stitches takes a step of the list, as in Ink/Stitch
+  ([circular fill](fills.md#circular-fill)).
 
 ### Random length
 
@@ -193,6 +208,9 @@ the same way, a zig and a zag together, 0.4 mm by default; `stroke_pull_compensa
 out than half the stroke's width each side's needle points go, one value for both sides or 2; and
 `zigzag_angle`, which turns every stitch away from square to the path, from −89° to 89°. `repeats` and
 `bean_stitch_repeats` apply. The width is the stroke's, read as a satin column drawn as one path reads it.
+Before Ink/Stitch's file version 3 a zigzag stroke read `pull_compensation_mm`, shared by its 2 sides, and
+in a file of version 1 or 2 the SVG reader halves it into `stroke_pull_compensation_mm`, as Ink/Stitch's
+update does (`REQ-SVG-007`).
 
 Strokes, satin columns and fills each read `zigzag_spacing_mm` their own way
 ([parameter registry](../params.md#naming-rules), rule 7). A stroke reads a list, as Ink/Stitch does.

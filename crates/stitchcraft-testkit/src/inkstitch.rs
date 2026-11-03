@@ -15,8 +15,23 @@
 //! own that a stitch type reads is refused, as Ink/Stitch would pass it over and sew otherwise. Automatic
 //! digitizing's own are left out, as no stitch type reads them in either program (`REQ-AUTO-020`).
 //!
+//! An element's start and end positions and its target point are Ink/Stitch's `starting_point`,
+//! `ending_point` and `target_point` commands (`REQ-GEN-001`): a `<use>` of the command's symbol at the
+//! position, and a connector from it to the element's path, as Ink/Stitch's Attach Commands draws them.
+//!
+//! An element's clips are clip paths (`REQ-GEN-005`), each a `<clipPath>` of a `<path>` for each of its
+//! shapes, by its `clip-rule`, in user space. The first clips the element's path, and each one after it a
+//! group round the path, as Inkscape clips a group, which both programs read (`REQ-SVG-011`). Ink/Stitch
+//! takes a clip's shapes as one outline and its holes, whatever their rules (`DEV-SVG-016`), so a case that
+//! both sew gives each clip shapes that don't overlap.
+//!
+//! The design's origin and stop position are Ink/Stitch's `origin` and `stop_position` commands
+//! (`REQ-ASM-005`): a `<use>` of the command's symbol at the point, standing alone, as Ink/Stitch's Add
+//! Commands draws them.
+//!
 //! The metadata gives Ink/Stitch's current file version ([`stitchcraft_svg::version::CURRENT`]), so its
-//! updater changes nothing, and each design setting that isn't StitchCraft's default. One that is stays
+//! updater changes nothing, and each design setting that isn't StitchCraft's default, the turn on export
+//! (`rotate_on_export`) among them, in degrees. One that is stays
 //! unset, and Ink/Stitch takes its own default, StitchCraft's too but for the shortest stitch, which
 //! StitchCraft leaves to the machine and Ink/Stitch takes as 0.1 mm (`DEV-FIN-001`).
 //!
@@ -24,8 +39,10 @@
 //! the design's coordinates. The page reaches [`MARGIN`] past the design's right and bottom. What lies left
 //! of the origin or above it is off the page, which a viewer leaves out, but both programs sew it.
 
-use stitchcraft_core::Rect;
-use stitchcraft_engine::design::{Cap, DesignSettings, Element, FillRule, Join, Path, SETTINGS, Segment, Shape};
+use stitchcraft_core::{Point, Rect};
+#[cfg(test)]
+use stitchcraft_engine::design::Clip;
+use stitchcraft_engine::design::{Cap, DesignSettings, Element, FillRule, Hints, Join, Path, SETTINGS, Segment, Shape, Turn};
 use stitchcraft_engine::registry::PARAMETERS;
 use stitchcraft_params::{Origin, ParamGroup};
 use stitchcraft_svg::inkstitch::INKSTITCH_NS;
@@ -44,7 +61,9 @@ pub fn svg(elements: &[Element], settings: &DesignSettings) -> Result<String, St
     };
     let (width, height) = ((bounds.max().x() + MARGIN).max(MARGIN), (bounds.max().y() + MARGIN).max(MARGIN));
     let mut out = String::from("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
-    out.push_str(&format!("<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:inkstitch=\"{INKSTITCH_NS}\" "));
+    out.push_str("<svg xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" ");
+    out.push_str("xmlns:inkscape=\"http://www.inkscape.org/namespaces/inkscape\" ");
+    out.push_str(&format!("xmlns:inkstitch=\"{INKSTITCH_NS}\" "));
     out.push_str(&format!("width=\"{width}mm\" height=\"{height}mm\" viewBox=\"0 0 {width} {height}\">\n"));
     out.push_str("  <metadata>\n");
     out.push_str(&format!("    <inkstitch:inkstitch_svg_version>{CURRENT}</inkstitch:inkstitch_svg_version>\n"));
@@ -52,13 +71,96 @@ pub fn svg(elements: &[Element], settings: &DesignSettings) -> Result<String, St
     for setting in SETTINGS.iter().filter(|setting| setting.get(settings) != setting.get(&defaults)) {
         out.push_str(&format!("    <inkstitch:{0}>{1}</inkstitch:{0}>\n", setting.name, setting.get(settings).get()));
     }
+    if settings.rotate_on_export != Turn::NONE {
+        out.push_str(&format!("    <inkstitch:{0}>{1}</inkstitch:{0}>\n", Turn::NAME, settings.rotate_on_export.degrees()));
+    }
     out.push_str("  </metadata>\n");
+    // A symbol for each command the elements' hints and the design's origin and stop position are written as,
+    // and the elements' clip paths.
+    let globals: Vec<(&str, Point)> =
+        [("origin", settings.origin), ("stop_position", settings.stop_position)].into_iter().filter_map(|(name, at)| Some((name, at?))).collect();
+    let used: Vec<&str> = COMMANDS
+        .iter()
+        .filter(|(_, at)| elements.iter().any(|e| at(&e.hints).is_some()))
+        .map(|(name, _)| *name)
+        .chain(globals.iter().map(|(name, _)| *name))
+        .collect();
+    let clip_paths: String = elements.iter().enumerate().map(|(index, element)| clip_paths(index, element)).collect();
+    if !used.is_empty() || !clip_paths.is_empty() {
+        out.push_str("  <defs>\n");
+        for name in &used {
+            out.push_str(&format!("    <symbol id=\"inkstitch_{name}\"><circle r=\"1\"/></symbol>\n"));
+        }
+        out.push_str(&clip_paths);
+        out.push_str("  </defs>\n");
+    }
     for (index, element) in elements.iter().enumerate() {
         let parameters = parameters(element, PARAMETERS)?;
-        out.push_str(&format!("  <path id=\"e{index}\" {}{parameters} d=\"{}\"/>\n", paint(element), data(element.shape.path())));
+        // The first clip on the path, each one after it on a group round it.
+        let clip = |k: usize| format!(" clip-path=\"url(#e{index}-clip{k})\"");
+        let groups = element.clips.len().saturating_sub(1);
+        for k in (1..=groups).rev() {
+            out.push_str(&format!("  <g{}>\n", clip(k)));
+        }
+        let own = if element.clips.is_empty() { String::new() } else { clip(0) };
+        out.push_str(&format!("  <path id=\"e{index}\" {}{own}{parameters} d=\"{}\"/>\n", paint(element), data(element.shape.path())));
+        out.push_str(&"  </g>\n".repeat(groups));
+        out.push_str(&commands(index, element));
+    }
+    for (name, at) in globals {
+        out.push_str(&format!("  <use id=\"{name}\" xlink:href=\"#inkstitch_{name}\" x=\"{}\" y=\"{}\"/>\n", at.x(), at.y()));
     }
     out.push_str("</svg>\n");
     Ok(out)
+}
+
+/// Which of an element's hints a command is written for.
+type Hint = fn(&Hints) -> Option<Point>;
+
+/// The commands `hints` are written as, each with the hint it is written for.
+const COMMANDS: [(&str, Hint); 3] = [("starting_point", |h| h.start), ("ending_point", |h| h.end), ("target_point", |h| h.target)];
+
+/// The commands of the element `index`, `element`: for each of its hints, a `<use>` of the command's symbol
+/// there, and a connector from it to the element's first point, which ties it to the element.
+fn commands(index: usize, element: &Element) -> String {
+    let Some(first) = element.shape.path().points().next() else { return String::new() };
+    let mut out = String::new();
+    for (name, at) in COMMANDS {
+        let Some(at) = at(&element.hints) else { continue };
+        let id = format!("e{index}-{name}");
+        out.push_str(&format!(
+            "  <path d=\"M {},{} L {},{}\" style=\"fill:none;stroke:#000;stroke-width:0.1\" inkscape:connector-type=\"polyline\" \
+             inkscape:connection-start=\"#{id}\" inkscape:connection-end=\"#e{index}\"/>\n",
+            at.x(),
+            at.y(),
+            first.x(),
+            first.y()
+        ));
+        out.push_str(&format!("  <use id=\"{id}\" xlink:href=\"#inkstitch_{name}\" x=\"{}\" y=\"{}\"/>\n", at.x(), at.y()));
+    }
+    out
+}
+
+/// The clip paths of the element `index`, `element`: a `<clipPath>` for each of its clips, with a `<path>` for
+/// each of the clip's shapes, filled by its rule.
+fn clip_paths(index: usize, element: &Element) -> String {
+    let mut out = String::new();
+    for (k, clip) in element.clips.iter().enumerate() {
+        out.push_str(&format!("    <clipPath id=\"e{index}-clip{k}\" clipPathUnits=\"userSpaceOnUse\">\n"));
+        for shape in &clip.shapes {
+            out.push_str(&format!("      <path clip-rule=\"{}\" d=\"{}\"/>\n", rule(shape.rule), data(&shape.path)));
+        }
+        out.push_str("    </clipPath>\n");
+    }
+    out
+}
+
+/// `rule` as SVG writes it.
+const fn rule(rule: FillRule) -> &'static str {
+    match rule {
+        FillRule::NonZero => "nonzero",
+        FillRule::EvenOdd => "evenodd",
+    }
 }
 
 /// How `element` is painted, as attributes: its fill, or its stroke.
@@ -66,13 +168,7 @@ fn paint(element: &Element) -> String {
     let colour = element.thread.color;
     let colour = format!("#{:02x}{:02x}{:02x}", colour.r, colour.g, colour.b);
     match &element.shape {
-        Shape::Fill { rule, .. } => {
-            let rule = match rule {
-                FillRule::NonZero => "nonzero",
-                FillRule::EvenOdd => "evenodd",
-            };
-            format!("fill=\"{colour}\" fill-rule=\"{rule}\" stroke=\"none\"")
-        }
+        Shape::Fill { rule: fill_rule, .. } => format!("fill=\"{colour}\" fill-rule=\"{}\" stroke=\"none\"", rule(*fill_rule)),
         Shape::Stroke { width, join, cap, .. } => {
             let join = match join {
                 Join::Miter { limit } => format!("stroke-linejoin=\"miter\" stroke-miterlimit=\"{limit}\""),
@@ -146,24 +242,28 @@ mod tests {
     use super::*;
     use crate::designs::{BLUE, RED, along, capped, fill, p, polylines, rings, widened};
 
-    /// What a file keeps of an element: its shape, its thread's colour and its parameters.
-    type Kept = (Shape, Rgb, Vec<(String, String)>);
+    /// What a file keeps of an element: its shape, its thread's colour, its parameters, its hints and its clips.
+    type Kept = (Shape, Rgb, Vec<(String, String)>, Hints, Vec<Clip>);
 
     /// What the file `text` keeps of each element, and the design settings StitchCraft reads from it, as
     /// StitchCraft's SVG reader reads them, which says nothing of a file the test kit writes: the shapes,
-    /// colours and parameters (`REQ-PRM-003`).
+    /// colours, parameters, hints and clips (`REQ-PRM-003`).
     fn read(text: &str) -> (Vec<Kept>, DesignSettings) {
         let read = stitchcraft_svg::read(text.as_bytes(), &Budget::DEFAULT).unwrap();
         assert!(read.warnings.is_empty(), "{:?}", read.warnings);
         let elements = read.design.elements();
-        assert_eq!(elements.len(), text.matches("<path ").count(), "an element for each path");
+        let others = text.matches("inkscape:connection-start").count() + text.matches("<path clip-rule").count();
+        assert_eq!(elements.len(), text.matches("<path ").count() - others, "an element for each path");
         (kept(elements), read.design.settings)
     }
 
     /// What a file should keep of `elements`.
     fn kept(elements: &[Element]) -> Vec<Kept> {
         let parameters = |element: &Element| element.params.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect();
-        elements.iter().map(|element| (element.shape.clone(), element.thread.color, parameters(element))).collect()
+        elements
+            .iter()
+            .map(|element| (element.shape.clone(), element.thread.color, parameters(element), element.hints, element.clips.clone()))
+            .collect()
     }
 
     #[test]
@@ -195,6 +295,44 @@ mod tests {
     }
 
     #[test]
+    fn req_prm_003_an_element_s_hints_are_written_as_ink_stitch_s_commands() {
+        // A fill that starts and ends at its corners and turns round a point off its middle, and a line with
+        // a start alone: each hint a command tied to its element, which the reader places where it was.
+        let square = fill("square", &[&[(10.0, 10.0), (20.0, 10.0), (20.0, 20.0), (10.0, 20.0)]], &RED, &[("fill_method", "circular_fill")]);
+        let square = Element { hints: Hints { start: Some(p(10.0, 10.0)), end: Some(p(20.5, 20.25)), target: Some(p(12.0, 18.0)) }, ..square };
+        let line = along("line", polylines(&[&[(30.0, 5.0), (40.0, 5.0)]]), &BLUE, &[]);
+        let line = Element { hints: Hints { start: Some(p(31.0, 5.0)), ..Hints::default() }, ..line };
+        let written = [square, line];
+        let text = svg(&written, &DesignSettings::default()).unwrap();
+        assert_eq!(text.matches("<symbol ").count(), 3, "a symbol for each command used: {text}");
+        assert!(text.contains(r##"<use id="e0-ending_point" xlink:href="#inkstitch_ending_point" x="20.5" y="20.25"/>"##), "{text}");
+        assert_eq!(read(&text).0, kept(&written));
+    }
+
+    #[test]
+    fn req_prm_003_an_element_s_clips_are_written_as_clip_paths() {
+        // A fill cut to 2 clips, the second of 2 shapes, one of them by the even-odd rule: the first clip path
+        // on its path, the second on a group round it, which the reader reads back as they were.
+        let ring = |x: f64| rings(&[&[(x, 0.0), (x + 10.0, 0.0), (x + 10.0, 10.0), (x, 10.0)]]);
+        let square = crate::designs::clipped(
+            fill("square", &[&[(0.0, 0.0), (30.0, 0.0), (30.0, 30.0)]], &RED, &[]),
+            &[&[(0.0, 0.0), (20.0, 0.0), (20.0, 20.0)]],
+        );
+        let mut square = square;
+        square.clips.push(Clip {
+            shapes: vec![
+                stitchcraft_engine::design::ClipShape { path: ring(0.0), rule: FillRule::NonZero },
+                stitchcraft_engine::design::ClipShape { path: ring(15.0), rule: FillRule::EvenOdd },
+            ],
+        });
+        let text = svg(std::slice::from_ref(&square), &DesignSettings::default()).unwrap();
+        assert!(text.contains("<g clip-path=\"url(#e0-clip1)\">\n  <path id=\"e0\" "), "{text}");
+        assert!(text.contains(" clip-path=\"url(#e0-clip0)\""), "{text}");
+        assert_eq!(text.matches("<path clip-rule=\"evenodd\"").count(), 1, "{text}");
+        assert_eq!(read(&text).0, kept(&[square]));
+    }
+
+    #[test]
     fn what_lies_left_of_the_origin_or_above_it_keeps_its_coordinates() {
         let line = along("line", polylines(&[&[(-5.0, 2.0), (5.0, -3.0)]]), &RED, &[]);
         let text = svg(std::slice::from_ref(&line), &DesignSettings::default()).unwrap();
@@ -221,6 +359,26 @@ mod tests {
         assert!(!text.contains("min_satin_stroke_width_mm"), "{text}");
         assert!(text.contains("stroke-linejoin=\"miter\" stroke-miterlimit=\"5\" stroke-linecap=\"butt\""), "{text}");
         assert_eq!(read(&text), (kept(&[line]), settings));
+    }
+
+    #[test]
+    fn req_prm_003_the_design_s_origin_stop_position_and_turn_are_written_as_ink_stitch_keeps_them() {
+        let line = along("ring", rings(&[&[(0.0, 0.0), (4.0, 0.0), (4.0, 4.0)]]), &RED, &[("stop_after", "true")]);
+        let settings = DesignSettings { origin: Some(p(1.0, 2.0)), stop_position: Some(p(30.5, -4.0)), ..DesignSettings::default() };
+        let text = svg(std::slice::from_ref(&line), &settings).unwrap();
+        assert!(text.contains(r##"<use id="origin" xlink:href="#inkstitch_origin" x="1" y="2"/>"##), "{text}");
+        assert!(text.contains(r##"<symbol id="inkstitch_stop_position">"##), "{text}");
+        assert_eq!(read(&text), (kept(std::slice::from_ref(&line)), settings));
+        // The turn on export is a design setting in the metadata, in degrees.
+        for (turn, written) in [(Turn::LEFT, Some("-90")), (Turn::new(45.5).unwrap(), Some("45.5")), (Turn::NONE, None)] {
+            let settings = DesignSettings { rotate_on_export: turn, ..DesignSettings::default() };
+            let text = svg(std::slice::from_ref(&line), &settings).unwrap();
+            match written {
+                Some(degrees) => assert!(text.contains(&format!("<inkstitch:rotate_on_export>{degrees}</inkstitch:rotate_on_export>")), "{text}"),
+                None => assert!(!text.contains("rotate_on_export"), "{text}"),
+            }
+            assert_eq!(read(&text).1, settings);
+        }
     }
 
     #[test]

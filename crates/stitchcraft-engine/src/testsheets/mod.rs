@@ -12,7 +12,8 @@
 //! MC-2 they are drawn as designs and planned by the engine (`designed`), to test its stitches too. The MC-3
 //! sheets sew satin columns: a ladder of widths and spacings, and the underlays side by side. The MC-4 sheets
 //! sew tatami fills: inside outlines at 3 pull compensations, at 5 spacings and 3 angles, and round holes
-//! and a part apart, with and without underlay and gap-filling rows.
+//! and a part apart, with and without underlay and gap-filling rows. TS-16, for MC-11, gathers what
+//! StitchCraft applies of an Ink/Stitch file; the differential writes it as Ink/Stitch writes a file.
 //! Sheets use exact Brother PEC thread colours, so a Brother machine shows the thread names the
 //! expected-result sheet lists.
 
@@ -32,6 +33,7 @@ mod ts09;
 mod ts10;
 mod ts11;
 mod ts13;
+mod ts16;
 
 use designed::Drawing;
 pub use sketch::{STITCH_LEN, SheetError};
@@ -40,7 +42,7 @@ use stitchcraft_plan::palette::BROTHER_PEC;
 use stitchcraft_plan::profiles::{BROTHER_PE800_4X4, BROTHER_PE800_SMALL, REFERENCE};
 use stitchcraft_plan::{MachineProfile, StitchPlan, Thread};
 
-use crate::design::Design;
+use crate::design::{Design, Hints};
 
 /// Brother PEC indices of the threads the sheets use.
 const PRUSSIAN_BLUE: u8 = 1;
@@ -81,6 +83,15 @@ enum Drawn {
     Sketched(fn() -> Result<StitchPlan, SheetError>),
     /// As a design the engine plans (`designed`), which says exactly the diagnostics of these codes.
     Designed(fn() -> Result<Drawing, SheetError>, &'static [Code]),
+    /// As [`Drawn::Designed`], but the elements' ids choose some of its stitches: a meander fill without a
+    /// `random_seed` wanders as its id draws. A host's objects have ids of their own, so the sheet drawn into
+    /// a document would sew otherwise, and only `stitch testsheet` writes it.
+    DesignedById(fn() -> Result<Drawing, SheetError>, &'static [Code]),
+    /// As [`Drawn::Designed`], but the design holds what an Ink/Stitch file gives its elements, which a host
+    /// would draw as objects of their own: start and end positions, clips, and the design's origin and stop
+    /// position, or keep with the document: its turn on export ([`TestSheet::uses_file_features`]), as TS-16's.
+    /// Only `stitch testsheet` and the differential's SVG file draw it.
+    FromFile(fn() -> Result<Drawing, SheetError>, &'static [Code]),
 }
 
 impl TestSheet {
@@ -88,13 +99,38 @@ impl TestSheet {
     pub fn plan(&self) -> Result<StitchPlan, SheetError> {
         match self.drawn {
             Drawn::Sketched(build) => build(),
-            Drawn::Designed(drawing, said) => drawing()?.plan_saying(said),
+            Drawn::Designed(drawing, said) | Drawn::DesignedById(drawing, said) | Drawn::FromFile(drawing, said) => drawing()?.plan_saying(said),
         }
     }
 
     /// Whether the sheet is drawn as a design, which [`TestSheet::design`] gives, rather than stitch by stitch.
     pub const fn designed(&self) -> bool {
+        matches!(self.drawn, Drawn::Designed(..) | Drawn::DesignedById(..) | Drawn::FromFile(..))
+    }
+
+    /// Whether a host can draw the sheet into a document that sews as the sheet does: a design whose
+    /// elements' ids choose none of its stitches (`REQ-VC-015`), and which holds nothing only an Ink/Stitch
+    /// file gives, as a sheet drawn from a file does. It is known from how the sheet is drawn, without drawing
+    /// it, so a host can list the sheets it draws within the little work a plug-in may do.
+    pub const fn drawable(&self) -> bool {
         matches!(self.drawn, Drawn::Designed(..))
+    }
+
+    /// Whether the sheet's design holds what an Ink/Stitch file gives it, as TS-16's does: elements' start or
+    /// end positions or target points ([`Element::hints`]), which a host would draw as markers grouped with
+    /// their shapes; clips ([`Element::clips`]), which it would draw as clip groups; the design's origin or
+    /// stop position ([`DesignSettings::origin`], [`DesignSettings::stop_position`]), which it would draw as
+    /// markers; or its turn on export ([`DesignSettings::rotate_on_export`]), which the Design Settings filter
+    /// would keep. VectorCraft's Test Sheet filter draws and keeps none of them. The sheets that do are those
+    /// drawn from a file, which [`TestSheet::drawable`] leaves out, as the tests check.
+    ///
+    /// [`Element::hints`]: crate::design::Element::hints
+    /// [`Element::clips`]: crate::design::Element::clips
+    /// [`DesignSettings::origin`]: crate::design::DesignSettings::origin
+    /// [`DesignSettings::stop_position`]: crate::design::DesignSettings::stop_position
+    /// [`DesignSettings::rotate_on_export`]: crate::design::DesignSettings::rotate_on_export
+    pub fn uses_file_features(&self) -> bool {
+        self.design().and_then(Result::ok).is_some_and(|design| filed(&design))
     }
 
     /// Whether the sheet's design has shapes that StitchCraft digitizes automatically ([`Element::automatic`]),
@@ -105,14 +141,21 @@ impl TestSheet {
         self.design().and_then(Result::ok).is_some_and(|design| design.elements().iter().any(|element| element.automatic))
     }
 
-    /// The sheet as the design the engine plans, with the design settings' defaults, as a host draws it into
-    /// a document (`REQ-VC-015`); `None` for a sheet drawn stitch by stitch, which is no design.
+    /// The sheet as the design the engine plans, with its settings, as a host draws it into a document
+    /// (`REQ-VC-015`); `None` for a sheet drawn stitch by stitch, which is no design.
     pub fn design(&self) -> Option<Result<Design, SheetError>> {
         match self.drawn {
             Drawn::Sketched(_) => None,
-            Drawn::Designed(drawing, _) => Some(drawing().and_then(Drawing::design)),
+            Drawn::Designed(drawing, _) | Drawn::DesignedById(drawing, _) | Drawn::FromFile(drawing, _) => Some(drawing().and_then(Drawing::design)),
         }
     }
+}
+
+/// Whether `design` holds any of what an Ink/Stitch file gives it ([`TestSheet::uses_file_features`]).
+fn filed(design: &Design) -> bool {
+    let marked = |element: &crate::design::Element| element.hints != Hints::default() || !element.clips.is_empty();
+    let settings = &design.settings;
+    settings.origin.is_some() || settings.stop_position.is_some() || settings.rotate_on_export.turns() || design.elements().iter().any(marked)
 }
 
 /// Every test sheet, in protocol order.
@@ -276,19 +319,51 @@ pub static SHEETS: &[TestSheet] = &[
         drawn: Drawn::Sketched(|| ts10::build("ts10c", &BROTHER_PE800_SMALL)),
     },
     TestSheet {
-        id: "TS-11B",
-        title: "New fills: contour fills",
+        id: "TS-11A",
+        title: "New strokes and satins: zigzag strokes, E-stitches, S-stitches and zigzag satins",
         checks: &[
-            "Each sample is a contour fill: rings that follow its outline inward, a row spacing apart, sewn as one line over the default underlay. Top row, in green, left to right: a disc 36 mm across sewn inner to outer round a hole, then a single spiral and a double spiral, the rings 0.25 mm apart. Middle row, in blue: stars 40 mm across with round, mitred and bevelled corners, the rings 0.4 mm apart. Bottom row, in red: 2 squares joined by a neck 3 mm wide, a rectangle whose rings alternate direction, and a leaf smoothed by 0.5 mm.",
+            "4 bands, a thread to each, every sample trimmed after. Most samples are hooks, straight and then turning a quarter circle. Top band, in green: zigzag strokes 1, 2 and 4 mm wide down the rows, at spacings of 0.4, 1 and 2 mm across them, and beside the last row a straight line 4 mm wide at 1 mm whose stitches turn 45°.",
+            "Second band, in red: E-stitches for appliqué, round a square 26 mm a side and 4 circles 18 mm across. The machine sews a line 1 mm inside each edge and stops: lay the appliqué fabric over the lines. It sews them again to tack the fabric down and stops: trim the fabric 1 mm outside the lines. Clockwise from the top, the square's sides are 3 mm wide at spacings of 2 and 3 mm, then 5 mm wide at 2 and 3 mm. The rings, left to right, are the same 4.",
+            "Third band, in blue: S-stitches 6 mm wide, then 10 mm wide split at 3 mm by the default method and by the staggered one. The first row is at a spacing of 0.4 mm and the second at 0.6 mm.",
+            "Bottom band, in gold: zigzag satins, each followed by a satin column of the same width and spacing, 4 mm wide in the first row and 8 mm in the second, at spacings of 0.4 and 1 mm. Under them, after a stop, a zigzag satin 8 mm wide at 1 mm over a contour underlay: go on with the same thread.",
+            "Measure the zigzag strokes: how much narrower than drawn does each sew? Are their sides even round the curves? Note the narrowest width that sews cleanly, and the spacing that looks best. The line at 45° should sew as wide as the hooks beside it, its stitches slanting.",
+            "Does each E-stitch's spine cover the fabric's cut edge, and do its spikes hold the fabric flat, without puckering? Compare the widths of 3 and 5 mm, and the spacings of 2 and 3 mm, on the straight sides and round the circles.",
+            "Do the S-stitches cover their bands at 0.4 mm, with even steps along their edges? On the 10 mm bands, do the default method's splits leave a furrow along the band that the staggered ones don't? Round the curves, the inside of each S-stitch packs its steps closer than the machine's shortest stitch, and StitchCraft leaves those needle points out (SC-I0504): does the inner edge still look even?",
+            "Does each zigzag satin cover its band at 0.4 mm as the satin column beside it does? Measure both: does the zigzag satin sew narrower? On the last one, does the contour underlay show past the zigzag at either end?",
+        ],
+        profile: REFERENCE,
+        drawn: Drawn::Designed(ts11::strokes, &[Code::StitchesMerged]),
+    },
+    TestSheet {
+        id: "TS-11B",
+        title: "New fills: contour and circular fills",
+        checks: &[
+            "The top 3 rows are contour fills: rings that follow the outline inward, a row spacing apart, sewn as one line over the default underlay. Top row, in green, left to right: a disc 36 mm across sewn inner to outer round a hole, then a single spiral and a double spiral, the rings 0.25 mm apart. Second row, in blue: stars 40 mm across with round, mitred and bevelled corners, the rings 0.4 mm apart. Third row, in red: 2 squares joined by a neck 3 mm wide, a rectangle whose rings alternate direction, and a leaf smoothed by 0.5 mm.",
+            "The bottom row, in gold, is circular fills: a spiral round the middle of each shape, cut by its outline, over the default underlay. Left to right: the disc round its hole, the star, and a rectangle whose circles fade from 0.25 mm apart at its middle to 1 mm at its corners. Where the spiral leaves the shape and comes back, the needle travels inside it under the spiral sewn later.",
             "Does fabric show between the rings, or does a fill pucker? Measure the discs: do they sew 36 mm across?",
             "Inner to outer steps in from ring to ring and sews each on its way out. Do the steps show as a line across the rings? On the rectangle, whose rings alternate, the steps don't cross: does it look calmer than the disc?",
             "Where do the spirals end in the middle, and the double spiral on its outline? Is there a knot or a bump there?",
             "On the stars, do the mitred rings reach into the points, and the round and bevelled ones leave a gap at each tip? Which star looks best?",
             "Does the neck between the 2 squares fill, where the rings part to each side? Does the smoothed leaf's line run evenly, without kinks?",
+            "Do the circular fills' circles look round and even, and does fabric show between them? Does the travel between the pieces of a spiral show anywhere, on the star's points or round the disc's hole? Does the fading rectangle look denser at its middle and lighter at its corners, as it should?",
             "How long does the sheet take? A contour fill sews as one line, with no travel between rows.",
         ],
         profile: REFERENCE,
-        drawn: Drawn::Designed(ts11::fills, &[]),
+        drawn: Drawn::Designed(ts11::contours, &[]),
+    },
+    TestSheet {
+        id: "TS-11C",
+        title: "New fills: meander fills",
+        checks: &[
+            "Each sample is a meander fill: one line that wanders along the sides of a tiling without crossing itself, over the default underlay. Top row, in green, left to right: discs 36 mm across in hexagons, squares and triangles, each side 2 mm long. Middle row, in blue: discs in octagons and squares, hexagons and triangles, and hexagons, squares and triangles. Bottom row, in red: a star 40 mm across in squares and triangles, a rectangle in hexagons twice as large sewn as a zigzag 2.5 mm wide, and a leaf in hexagons half as large, turned by 30° and smoothed by 0.5 mm.",
+            "Does each tiling show in the stitches? Does the line look even, or do bare patches show where it didn't reach? Which tile looks best, and at which size?",
+            "Does the underlay show between the line's turns? A meander covers the area lightly: is it too light to hide the fabric, or the underlay?",
+            "On the rectangle, does the zigzag stay inside its outline, and lie flat? Is 2.5 mm too wide?",
+            "On the leaf, does the smoothed line run evenly round its turns, without kinks? Do the 1 mm sides sew cleanly, or do the stitches bunch?",
+            "Does any sample pucker, or the line pull the fabric where it turns?",
+        ],
+        profile: REFERENCE,
+        drawn: Drawn::DesignedById(ts11::meanders, &[]),
     },
     TestSheet {
         id: "TS-13A",
@@ -354,6 +429,23 @@ pub static SHEETS: &[TestSheet] = &[
         profile: REFERENCE,
         drawn: Drawn::Designed(ts13::layers, &ts13::LAYERS_SAY),
     },
+    TestSheet {
+        id: "TS-16",
+        title: "An Ink/Stitch file: start and end commands, clip paths, origin, stop position and turn",
+        checks: &[
+            "Sew it beside Ink/Stitch's machine file of the same sheet, which the differential keeps (`target/conformance/differential/ts-16.inkstitch.pes`). Each element should start and end in the same place in both.",
+            "The red fill, 40 by 30 mm, starts at its top-right corner, where its start command is, and ends at its bottom-left corner, at its end command.",
+            "The blue satin column below it, 40 mm long and 5 mm wide, starts in its middle, where its start command is: the needle runs under the column to its left end, sews it to three quarters along, runs on under it to its right end and sews back. It ends three quarters along, at its end command. Is the needle's way under the column hidden?",
+            "The green fill is a quarter of a disc, 25 mm round its bottom-right corner: what its clip path, a circle, leaves of a 30 mm square. Is its round edge smooth, with no row past it?",
+            "The black zigzag at the bottom sews its first 15 mm and its last 15 mm, and nothing between, where its clip path leaves a gap: the needle jumps it. Does each piece end where the gap begins?",
+            "The design's origin, on the blue column's top edge 10 mm in from its left end, goes to the hoop's centre, where the needle waits before it sews. Does the machine put the design there, or its middle?",
+            "The machine stops after the blue column. Before it stops, the frame moves to the stop position, 20 mm right of the red fill's top-right corner and 10 mm above it. Does the frame wait there, and does the needle come back for the green fill?",
+            "The file turns the sheet right about its origin, as Ink/Stitch's rotate on export does: it sews 100 mm wide and 40 mm tall, the red fill at the right and the zigzag at the left. Does the machine sew it so, or turn it back?",
+            "Any difference between the 2 sew-outs, and where.",
+        ],
+        profile: REFERENCE,
+        drawn: Drawn::FromFile(ts16::drawing, &[]),
+    },
 ];
 
 /// The sheet with id `id` (any case).
@@ -364,9 +456,10 @@ pub fn find(id: &str) -> Option<&'static TestSheet> {
 #[cfg(test)]
 mod tests {
     use stitchcraft_plan::invariants::check;
-    use stitchcraft_plan::{Role, StitchKind};
+    use stitchcraft_plan::{Rgb, Role, StitchKind};
 
     use super::*;
+    use crate::design::Turn;
 
     #[test]
     fn req_vc_015_a_sheet_drawn_as_a_design_has_the_design_it_plans() {
@@ -384,11 +477,49 @@ mod tests {
         // The sheets drawn stitch by stitch have no design.
         assert_eq!(
             designed,
-            ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D"]
+            [
+                "TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-11C", "TS-13A", "TS-13B", "TS-13C",
+                "TS-13D", "TS-16"
+            ]
         );
         // The TS-13 sheets' shapes are digitized automatically, and no other sheet's are.
         let digitized: Vec<&str> = SHEETS.iter().filter(|sheet| sheet.digitized()).map(|sheet| sheet.id).collect();
         assert_eq!(digitized, ["TS-13A", "TS-13B", "TS-13C", "TS-13D"]);
+        // TS-16 alone places and clips its elements, as an Ink/Stitch file does, and it alone is drawn from a
+        // file.
+        let filed: Vec<&str> = SHEETS.iter().filter(|sheet| sheet.uses_file_features()).map(|sheet| sheet.id).collect();
+        assert_eq!(filed, ["TS-16"]);
+        let from_file: Vec<&str> = SHEETS.iter().filter(|sheet| matches!(sheet.drawn, Drawn::FromFile(..))).map(|sheet| sheet.id).collect();
+        assert_eq!(from_file, filed);
+    }
+
+    #[test]
+    fn req_vc_015_a_host_draws_the_sheets_whose_stitches_their_elements_ids_dont_choose() {
+        // Each element renamed, as a host's objects are: the same stitches, but for TS-11C's meander fills,
+        // which wander as their ids draw. TS-16's start and end positions would be markers, and its clips clip
+        // groups, which the filter doesn't draw.
+        let stitches = |design: &crate::design::Design| {
+            let plan = crate::plan(design, REFERENCE, &stitchcraft_core::Budget::DEFAULT).plan.unwrap();
+            plan.stitches().map(|s| (s.at, s.kind)).collect::<Vec<_>>()
+        };
+        let mut drawable = Vec::new();
+        for sheet in SHEETS.iter().filter(|sheet| sheet.designed()) {
+            let design = sheet.design().unwrap().unwrap();
+            let renamed: Vec<crate::design::Element> = design
+                .elements()
+                .iter()
+                .map(|e| crate::design::Element { id: stitchcraft_core::ElementId::new(format!("host:{}", e.id.as_str())).unwrap(), ..e.clone() })
+                .collect();
+            let renamed = crate::design::Design::new(renamed, design.settings).unwrap();
+            assert_eq!(stitches(&renamed) == stitches(&design), sheet.drawable() || sheet.uses_file_features(), "{}", sheet.id);
+            if sheet.drawable() {
+                drawable.push(sheet.id);
+            }
+        }
+        assert_eq!(
+            drawable,
+            ["TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D"]
+        );
     }
 
     #[test]
@@ -423,8 +554,19 @@ mod tests {
         assert_eq!(about("TS-07"), [126.2, 126.0, 0.0, 0.0]);
         assert_eq!(about("TS-08"), [100.0, 170.0, 0.0, 0.0]);
         assert_eq!(about("TS-09"), [66.0, 114.0, 0.0, 0.0]);
+        // TS-11A runs from x = -1, where the last hook of its 2 mm zigzags ends 1 mm either side of x = 0, to 126,
+        // where its first S-stitches end, and from just below y = 3.5, the top of its 1 mm zigzags, which sew a
+        // little narrower than drawn, to 148, where its last hook ends.
+        assert_eq!(about("TS-11A"), [126.997970829, 144.458917156, 0.0, 0.0]);
         // The right-hand star's upper point on its right lies 20 mm from its middle, 18° above the level.
-        assert_eq!(about("TS-11B"), [125.021130326, 116.0, 0.0, 0.0]);
+        assert_eq!(about("TS-11B"), [125.021130326, 165.993678599, 0.0, 0.0]);
+        // TS-11C's star, in its bottom row, reaches 20 sin 54° mm below its middle, and the discs of its top row
+        // 18 mm above theirs.
+        assert_eq!(about("TS-11C"), [123.0, 120.176369967, 0.0, 0.0]);
+        // TS-16's shapes, 40 × 100 mm as drawn, and the frame's move to its stop position, 20 mm right of them and
+        // 10 mm above, round its origin, which lies 10 mm from their left side and 40 mm from their top, all
+        // turned right.
+        assert_eq!(about("TS-16"), [110.0, 60.0, -5.0, 20.0]);
         // Each TS-10 frame is its hoop's whole field, as its title and checks say, and fits no smaller hoop.
         let hoops = [("ts-10a", "4 × 4 in", &BROTHER_PE800_4X4), ("TS-10B", "5 × 7 in", REFERENCE), ("TS-10C", "small", &BROTHER_PE800_SMALL)];
         for (id, hoop, profile) in hoops {
@@ -462,6 +604,79 @@ mod tests {
             s.kind == StitchKind::Normal && s.origin.role != Role::Lock && s.origin.element.map(|e| e.index()) == Some(element)
         };
         plan.stitches().filter(mine).map(|s| s.at).collect()
+    }
+
+    /// Where TS-16's plan puts the point (x, y) of the sheet as drawn: moved so that its origin is at (0, 0),
+    /// then turned as the sheet is written.
+    fn ts16_planned(x: f64, y: f64) -> stitchcraft_core::Point {
+        let [(ox, oy), _] = ts16::ORIGIN_AND_STOP_POSITION;
+        ts16::TURN.apply(stitchcraft_core::Point::new(x - ox, y - oy).unwrap()).unwrap()
+    }
+
+    /// Where TS-16 draws its plan's point `q`: turned back, and moved from its origin.
+    fn ts16_drawn(q: &stitchcraft_core::Point) -> stitchcraft_core::Point {
+        let [(ox, oy), _] = ts16::ORIGIN_AND_STOP_POSITION;
+        let back = Turn::new(-ts16::TURN.degrees()).and_then(|turn| turn.apply(*q)).unwrap();
+        stitchcraft_core::Point::new(back.x() + ox, back.y() + oy).unwrap()
+    }
+
+    #[test]
+    fn ts16_s_fill_and_satin_column_start_and_end_at_their_positions() {
+        let at = ts16_planned;
+        let fill = sewn("TS-16", "fill");
+        assert!(fill[0].distance(at(40.0, 0.0)) < 1.5, "{:?}", fill[0]);
+        assert!(fill.last().unwrap().distance(at(0.0, 30.0)) < 1.5, "{:?}", fill.last());
+        let column = sewn("TS-16", "column");
+        assert!(column[0].distance(at(20.0, 42.5)) < 1e-9 && column.last().unwrap().distance(at(30.0, 42.5)) < 1e-9, "{column:?}");
+    }
+
+    #[test]
+    fn ts16_s_frame_moves_to_its_stop_position_before_its_stop() {
+        let plan = find("TS-16").unwrap().plan().unwrap();
+        let [_, (sx, sy)] = ts16::ORIGIN_AND_STOP_POSITION;
+        let stitches: Vec<_> = plan.stitches().collect();
+        let stops: Vec<_> = stitches.windows(2).filter(|w| w[1].kind == StitchKind::Stop).map(|w| (w[0].kind, w[0].at)).collect();
+        assert_eq!(stops, [(StitchKind::Jump, ts16_planned(sx, sy))]);
+        // It stops at the end of the blue column, the second element, whose thread's block it ends.
+        assert!(shape("TS-16")[1].ends_with("llllJP"), "{:?}", shape("TS-16"));
+    }
+
+    #[test]
+    fn a_design_holds_what_a_file_gives_it_with_any_one_of_the_file_s_features() {
+        // Each alone, as a host would draw or keep it: start and end positions, a clip, an origin, a stop
+        // position, a turn on export.
+        let line = || {
+            let mut d = Drawing::new("test");
+            d.polyline("line", &[(0.0, 0.0), (10.0, 0.0)], &Thread::new(Rgb::new(0, 0, 0)), &[]).unwrap();
+            d
+        };
+        assert!(!filed(&line().design().unwrap()));
+        let mut positioned = line();
+        positioned.positions((0.0, 0.0), (10.0, 0.0)).unwrap();
+        let mut clipped = line();
+        clipped.clip(vec![designed::polygon(&[(0.0, -1.0), (5.0, -1.0), (5.0, 1.0)]).unwrap()]);
+        assert!(filed(&positioned.design().unwrap()) && filed(&clipped.design().unwrap()));
+        let at = Some(stitchcraft_core::Point::new(5.0, 0.0).unwrap());
+        let (mut placed, mut stopped, mut turned) = (line().design().unwrap(), line().design().unwrap(), line().design().unwrap());
+        (placed.settings.origin, stopped.settings.stop_position, turned.settings.rotate_on_export) = (at, at, crate::design::Turn::RIGHT);
+        assert!(filed(&placed) && filed(&stopped) && filed(&turned));
+    }
+
+    #[test]
+    fn ts16_s_quarter_disc_and_zigzag_sew_what_their_clip_paths_leave() {
+        let drawn = ts16_drawn;
+        let ((cx, cy), radius) = ts16::CIRCLE;
+        let corner = stitchcraft_core::Point::new(cx, cy).unwrap();
+        let quarter: Vec<_> = sewn("TS-16", "quarter").iter().map(drawn).collect();
+        assert!(quarter.iter().all(|q| q.distance(corner) <= radius + 0.1 && q.x() <= cx + 0.1 && q.y() <= cy + 0.1), "{quarter:?}");
+        assert!(quarter.iter().any(|q| q.distance(corner) > radius - 1.0), "it reaches its round edge");
+        let zigzag: Vec<_> = sewn("TS-16", "zigzag").iter().map(drawn).collect();
+        assert!(zigzag.iter().all(|q| q.x() <= 15.05 || q.x() >= 24.95), "{zigzag:?}");
+        // It starts and ends where it is drawn to, which the clip path's outer edges leave inside it.
+        let at = |(x, y): (f64, f64)| stitchcraft_core::Point::new(x, y).unwrap();
+        let (first, last) = (zigzag.first().unwrap(), zigzag.last().unwrap());
+        let (start, end) = (at(*ts16::ZIGZAG.first().unwrap()), at(*ts16::ZIGZAG.last().unwrap()));
+        assert!(first.distance(start) < 0.06 && last.distance(end) < 0.06, "{zigzag:?}");
     }
 
     #[test]

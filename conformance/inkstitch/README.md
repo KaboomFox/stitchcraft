@@ -38,8 +38,9 @@ STITCHCRAFT_INKSTITCH="$PWD/../inkstitch-pinned" STITCHCRAFT_INKSTITCH_PYTHON=ta
 
 The report is `target/conformance/differential.md`, with a table for each case. An `inkstitch` case's
 rows are the measures of both machine files, and a `centre-lines` case's are its shapes. The SVG files written for test sheets are in
-`target/conformance/differential/`, with each `centre-lines` case's shapes and a picture of both
-programs' lines over them, Ink/Stitch's red and StitchCraft's blue. `--filter centre-lines` runs those
+`target/conformance/differential/`, each with Ink/Stitch's PES file of it (`ts-16.inkstitch.pes`), which a
+machine checkpoint sews beside `stitch testsheet`'s, and each `centre-lines` case's shapes with a picture
+of both programs' lines over them, Ink/Stitch's red and StitchCraft's blue. `--filter centre-lines` runs those
 cases alone. The suite refuses a checkout at another commit, since the cases' excuses were written against
 this one.
 
