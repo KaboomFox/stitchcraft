@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-6f4fd14f.js";
+            window.path_to_searchindex_js = "searchindex-8e41d00c.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-b002ec72.js"></script>
+        <script src="toc-3b2820bf.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -816,7 +816,7 @@ holds Ink/Stitch’s settings for that kind of stitch, and the object shows its 
 art. The thread is the colour of the object’s fill for a fill, and of its stroke for a stroke or a satin
 column.</p>
 <p>From VectorCraft 0.14 each setting has a label and its unit, in the sections of the
-<a href="#parameters-11">parameter reference</a>. Rest the pointer on a label for its help, or press the
+<a href="#parameters-12">parameter reference</a>. Rest the pointer on a label for its help, or press the
 button after the field for its page in the reference. A setting shows only when it applies: a satin’s
 staggers show for staggered splits. VectorCraft before 0.14 lists every setting, each under its Ink/Stitch
 name.</p>
@@ -934,12 +934,13 @@ can start from VectorCraft 0.16 and later. With the <a href="#the-vectorcraft-pl
 StitchCraft effect and settings, and shows its stitches. Write it as any design, with <strong>File › Export ›
 Export As</strong>. Selected objects stay as they are, and the sheet goes above them, in their group or layer.</p>
 <p>The sheet sews as <code>stitch testsheet</code> writes it, moved. A fill’s rows lie where the document’s origin puts
-them, so they may fall a little elsewhere across a shape, and look the same. The threads keep their
-colours but not their names in the Brother palette, and the machine file is the same. StitchCraft Stroke,
-Satin and Fill must be installed: VectorCraft gives a new object only the effects of installed plug-ins.
-The TS-13 sheets need StitchCraft Auto too, which their top halves’ shapes have. TS-01, TS-02 and TS-10A to
-TS-10C are drawn stitch by stitch, and come from <code>stitch testsheet</code> alone. So does TS-16, whose fill and
-satin column start and end at positions that the filter would have to draw as markers.</p>
+them, so they may fall a little elsewhere across a shape, and look the same. TS-17A’s crosses lie on a grid
+from the document’s origin too, and the sheet moves by whole multiples of 6 mm so that each keeps its cell.
+The threads keep their colours but not their names in the Brother palette, and the machine file is the same.
+StitchCraft Stroke, Satin and Fill must be installed: VectorCraft gives a new object only the effects of
+installed plug-ins. The TS-13 sheets need StitchCraft Auto too, which their top halves’ shapes have. TS-01,
+TS-02 and TS-10A to TS-10C are drawn stitch by stitch, and come from <code>stitch testsheet</code> alone. So does TS-16,
+whose fill and satin column start and end at positions that the filter would have to draw as markers.</p>
 <h2 id="read-what-it-says"><a class="header" href="#read-what-it-says">Read what it says</a></h2>
 <p>Each line under the summary names an object by its id in the document, such as <code>vc:10</code>, and says what
 was done with it. In the patch, the placement line is left out, as its name asks (<code>SC-I0811</code>). The group’s own gold fill, which the graphic style put on it, isn’t
@@ -1131,6 +1132,7 @@ stroke or the fill of a shape, and each sews in its own thread colour.</p>
 <tr><td><a href="#contour-fill">Contour fill</a></td><td>areas, in rings that follow the outline inward, sewn as one line</td><td>now</td></tr>
 <tr><td><a href="#meander-fill">Meander fill</a></td><td>areas, in one line that wanders along the sides of a tiling</td><td>now</td></tr>
 <tr><td><a href="#circular-fill">Circular fill</a></td><td>areas, in a spiral round their middle</td><td>now</td></tr>
+<tr><td><a href="#cross-stitch">Cross stitch</a></td><td>areas, in crosses on a grid, as counted cross stitch and Ink/Stitch’s cross-stitch fonts</td><td>now</td></tr>
 </tbody>
 </table>
 </div>
@@ -1945,6 +1947,99 @@ pieces, and its underlay and expanding</li>
 <li><a href="#common-parameters">the settings every element shares</a>, the random seed among them</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="cross-stitch"><a class="header" href="#cross-stitch">Cross stitch</a></h1>
+<!-- stitch-types: cross_stitch -->
+<p>Cross stitch fills an area with crosses, as hand embroiderers count them on even-weave fabric: a grid of
+equal cells lies over the area, and each cell the area covers enough of sews a cross. Every cross is the
+same size, in rows and columns, and a curved edge steps along the grid’s lines. It suits letters and motifs
+drawn as pixels, and Ink/Stitch’s cross-stitch fonts are sewn this way. Set a fill’s <code>fill_method</code> to
+<code>cross_stitch</code> for it.</p>
+<p>Its settings are set as every stitch type’s are (<a href="user/stitches#setting-parameters">setting parameters</a>).</p>
+<p>Here is the heart of <code>docs/fixtures/heart.svg</code>, 32 mm wide, sewn as a cross stitch fill. On the left it has
+Ink/Stitch’s defaults, cells of 3 mm and 4 threads, and on the right a 2 mm grid with 2 threads, as most of
+Ink/Stitch’s cross-stitch fonts sew.</p>
+<!-- shot: cross-stitch -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: center">3 mm grid, 4 threads</th><th style="text-align: center">2 mm grid, 2 threads</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/cross-stitch-1.png" alt="A red heart 32 mm wide sewn in cross stitch. Each cell of the grid that the heart covers by half or more holds a cross, and its edge steps along the grid, 3 mm grid, 4 threads"><span class="img-wrapper"><img src="images/generated/cross-stitch-1.png" alt="A red heart 32 mm wide sewn in cross stitch. Each cell of the grid that the heart covers by half or more holds a cross, and its edge steps along the grid, 3 mm grid, 4 threads"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/cross-stitch-2.png" alt="A red heart 32 mm wide sewn in cross stitch. Each cell of the grid that the heart covers by half or more holds a cross, and its edge steps along the grid, 2 mm grid, 2 threads"><span class="img-wrapper"><img src="images/generated/cross-stitch-2.png" alt="A red heart 32 mm wide sewn in cross stitch. Each cell of the grid that the heart covers by half or more holds a cross, and its edge steps along the grid, 2 mm grid, 2 threads"></span></label></td></tr>
+</tbody>
+</table>
+</div>
+<!-- /shot -->
+<h2 id="the-grid"><a class="header" href="#the-grid">The grid</a></h2>
+<p><code>pattern_size_mm</code> sets the cells’ size. One length gives square cells, and 2 separated by a space give
+the width and then the height. Smaller cells follow the shape more closely and take more stitches. The
+grid’s lines pass through the canvas’s origin, <code>canvas_grid_origin</code> on, so that 2 fills of cross stitch
+that lie side by side share one grid and their crosses line up. Move such a fill by part of a cell,
+though, and it may sew other crosses. Off, the grid starts at the top left corner of each part of the
+fill, and the fill sews the same wherever it lies. In an SVG file the canvas’s origin is the page’s top
+left corner, and in a VectorCraft document the origin of the document, where a new document’s first
+artboard has its top left corner.</p>
+<p><code>cross_offset_mm</code> moves the grid: left by its first length and down by its second, or as far each way by
+one length. A move by a whole cell leaves it where it was.</p>
+<h2 id="which-cells-sew-a-cross"><a class="header" href="#which-cells-sew-a-cross">Which cells sew a cross</a></h2>
+<p>A cell sews a cross when the fill covers <code>fill_coverage</code> percent of it, 50 by default. Lower, crosses are
+sewn further past the shape’s edges. Higher, they keep further inside them, and at 100 only cells wholly
+inside the shape sew. <code>expand_mm</code> grows the shape first, by 0.1 mm in Ink/Stitch’s fonts, so that a cell
+drawn exactly is covered. A part that covers no cell enough sews nothing, and <code>SC-W0319</code> says so: make the
+cells smaller, or lower <code>fill_coverage</code>.</p>
+<!-- shot: cross-coverage -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: center">25 % covered</th><th style="text-align: center">50 % covered</th><th style="text-align: center">90 % covered</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/cross-coverage-1.png" alt="A heart 32 mm wide in cross stitch on a 2 mm grid with 2 threads, each cell sewn where the heart covers enough of it, 25 % covered"><span class="img-wrapper"><img src="images/generated/cross-coverage-1.png" alt="A heart 32 mm wide in cross stitch on a 2 mm grid with 2 threads, each cell sewn where the heart covers enough of it, 25 % covered"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/cross-coverage-2.png" alt="A heart 32 mm wide in cross stitch on a 2 mm grid with 2 threads, each cell sewn where the heart covers enough of it, 50 % covered"><span class="img-wrapper"><img src="images/generated/cross-coverage-2.png" alt="A heart 32 mm wide in cross stitch on a 2 mm grid with 2 threads, each cell sewn where the heart covers enough of it, 50 % covered"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/cross-coverage-3.png" alt="A heart 32 mm wide in cross stitch on a 2 mm grid with 2 threads, each cell sewn where the heart covers enough of it, 90 % covered"><span class="img-wrapper"><img src="images/generated/cross-coverage-3.png" alt="A heart 32 mm wide in cross stitch on a 2 mm grid with 2 threads, each cell sewn where the heart covers enough of it, 90 % covered"></span></label></td></tr>
+</tbody>
+</table>
+</div>
+<!-- /shot -->
+<h2 id="each-cross"><a class="header" href="#each-cross">Each cross</a></h2>
+<p>A cross sews its <code>\</code> diagonal first and then its <code>/</code> diagonal over it, so every cross’s top diagonal lies the
+same way, as in hand cross stitch. Between the 2 the needle passes through the cell’s middle, where the top
+diagonal covers it. <code>cross_stitch_method</code> set to <code>simple_cross_flipped</code> lays the <code>/</code> diagonal under the <code>\</code>
+one instead, on the same grid. The other kinds of cross, half, upright, double and Smyrna, arrive in a later
+version, and a fill set to one is skipped for now (<code>SC-W0011</code>).</p>
+<!-- shot: cross-flipped -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: center">Simple cross</th><th style="text-align: center">Flipped</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/cross-flipped-1.png" alt="A red heart 32 mm wide in cross stitch on a 3 mm grid with 4 threads, each cross’s top diagonal lying one way, Simple cross"><span class="img-wrapper"><img src="images/generated/cross-flipped-1.png" alt="A red heart 32 mm wide in cross stitch on a 3 mm grid with 4 threads, each cross’s top diagonal lying one way, Simple cross"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/cross-flipped-2.png" alt="A red heart 32 mm wide in cross stitch on a 3 mm grid with 4 threads, each cross’s top diagonal lying one way, Flipped"><span class="img-wrapper"><img src="images/generated/cross-flipped-2.png" alt="A red heart 32 mm wide in cross stitch on a 3 mm grid with 4 threads, each cross’s top diagonal lying one way, Flipped"></span></label></td></tr>
+</tbody>
+</table>
+</div>
+<!-- /shot -->
+<p><code>cross_thread_count</code> sets how many times the thread passes along each diagonal, 4 by default. The needle
+comes back to where it started, and the count is even. An odd count sews the even count below it, and 1
+sews 2, with <code>SC-W0320</code>. 2 threads give a lighter cross, which suits small grids, and 4 a bolder one. A
+diagonal longer than <code>max_cross_stitch_length_mm</code>, 11 mm by default, is sewn in equal stitches no longer.</p>
+<h2 id="the-order-of-the-crosses"><a class="header" href="#the-order-of-the-crosses">The order of the crosses</a></h2>
+<p>Crosses that meet, side by side or corner to corner, are sewn in one run, and the needle jumps only between
+groups that don’t. Each cross joins the run at one of its corners, its top diagonal’s where it can, so that
+the stitches through its middle lie under that diagonal. A cross that the run comes to only at a corner of
+its bottom diagonal ends with a stitch from its middle back to that corner, on top. A fill of one group first
+runs from where the needle comes in to where it ends, near the next element, from corner to corner through
+the middles of the crosses on the way. The crosses sewn after hide those stitches.</p>
+<p>A grid so fine that a cross’s stitches from its corners to its middle are shorter than the machine’s
+shortest stitch loses some of its needle points, and its crosses their shape: <code>SC-W0321</code> says so. A cross
+stitch fill has no underlay.</p>
+<h2 id="parameters-10"><a class="header" href="#parameters-10">Parameters</a></h2>
+<p>The reference gives each setting’s range and default:</p>
+<ul>
+<li><a href="#cross-parameters">cross stitch</a>, the grid, the coverage and the crosses</li>
+<li><a href="#fill-parameters">fill</a>, which chooses the fill method</li>
+<li><a href="#tatami-parameters">tatami fill</a>, its <code>expand_mm</code></li>
+<li><a href="#common-parameters">the settings every element shares</a>, such as its locks and trims</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="automatic-digitizing"><a class="header" href="#automatic-digitizing">Automatic digitizing</a></h1>
 <p>Automatic digitizing makes a machine file from a picture without a setting on any of its shapes. StitchCraft
 chooses the stitches of each shape by its width and mends the places where shapes meet. It also orders the
@@ -2184,7 +2279,7 @@ work. When the design has a stop position, the frame moves there before each sto
 test sheet TS-02 checks what the reference machine does. DST has no trim command. StitchCraft writes a trim
 there as 3 short jumps that end where they started, and a DST machine set to cut at 3 jumps in a row
 cuts there. The <a href="#machine-formats">machine formats</a> design says how each format records a trim.</p>
-<h2 id="parameters-10"><a class="header" href="#parameters-10">Parameters</a></h2>
+<h2 id="parameters-11"><a class="header" href="#parameters-11">Parameters</a></h2>
 <p><a href="#common-parameters">Common parameters</a> lists each of these settings with its range and
 default.</p>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -2252,7 +2347,7 @@ it plans for, and warns beyond a profile’s comfort zone where the profile has 
 <tr><td><a href="#diagnostic-codes">Diagnostic codes</a></td><td>generated from the diagnostics registry</td><td>available</td></tr>
 <tr><td><a href="#glossary">Glossary</a></td><td>hand-written</td><td>available</td></tr>
 <tr><td><a href="#vectorcraft-compatibility">VectorCraft compatibility</a></td><td>generated from the compatibility gate’s record, <code>compat/supported.toml</code></td><td>available</td></tr>
-<tr><td><a href="#parameters-11">Parameters</a> (one page per stitch type)</td><td>generated from the parameter registry</td><td>available</td></tr>
+<tr><td><a href="#parameters-12">Parameters</a> (one page per stitch type)</td><td>generated from the parameter registry</td><td>available</td></tr>
 <tr><td><a href="#inkstitch-compatibility-contract">Ink/Stitch compatibility contract</a></td><td>generated from <code>conformance/inkstitch-params.toml</code> and the parameter registry</td><td>available</td></tr>
 </tbody>
 </table>
@@ -2900,6 +2995,21 @@ Arguments:
 <li>Last, in black after a colour change, 2 lines 40 mm long sew above the rest, each locked at both ends with a lock drawn as a path and trimmed after. The lower one, sewn from the right, starts with a zigzag across its first 1.6 mm and ends with a triangle over its last 1.4 mm, sewn backwards. The upper one, sewn from the left at 150 %, starts with a triangle along its first 1.8 mm and ends with one over its last 1.8 mm. Snip the thread between them, then pull each tail gently: does each lock hold? Does each look as it does in Ink/Stitch’s sew-out?</li>
 <li>Any difference between the 2 sew-outs, and where.</li>
 </ul>
+<h2 id="ts-17a--new-stitch-types-cross-stitch"><a class="header" href="#ts-17a--new-stitch-types-cross-stitch">TS-17A — New stitch types: cross stitch</a></h2>
+<p>114.0 × 54.0 mm · 5299 stitches, 7 jumps, 6 trims, 1 colour change, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
+<p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-17a.png" alt="TS-17A as it will sew: a row of 4 red squares of crosses 24 mm wide, on grids of 2 and 3 mm with 2 and 4 threads. Below them in blue, the 2 mm and 3 mm squares again with their crosses flipped, and a K 24 mm tall in crosses on a 2 mm grid, its slanted arms stepping along the grid."><span class="img-wrapper"><img src="images/generated/testsheet-ts-17a.png" alt="TS-17A as it will sew: a row of 4 red squares of crosses 24 mm wide, on grids of 2 and 3 mm with 2 and 4 threads. Below them in blue, the 2 mm and 3 mm squares again with their crosses flipped, and a K 24 mm tall in crosses on a 2 mm grid, its slanted arms stepping along the grid."></span></label></p>
+<p>Threads: Red, Blue.</p>
+<p>After sewing, check:</p>
+<ul>
+<li>Each sample is a cross stitch fill, trimmed after. Top row, in red, left to right: squares 24 mm wide on grids of 2 mm with 2 and 4 threads, then of 3 mm with 2 and 4 threads. Bottom row, in blue: the 2 mm square with 2 threads and the 3 mm one with 4, flipped, then a K 24 mm tall on a 2 mm grid with 2 threads, grown by 0.1 mm as Ink/Stitch’s cross-stitch fonts grow their letters.</li>
+<li>Does every cross of the top row lie with its / diagonal on top, and every cross of the flipped squares with its \ diagonal on top?</li>
+<li>Between its 2 diagonals the needle passes through each cross’s middle, under the diagonal sewn last. Do those stitches show? The squares and the K first travel from where the needle comes in to where they end, through the middles of their crosses: does that travel show?</li>
+<li>Does fabric show between the crosses at 2 threads? At 4, do the holes at the cells’ corners stay clean, or do they pack and tear? Which grid and thread count look best?</li>
+<li>The K’s arms slant across the grid, and each cell their edges cut in half sews a cross, so the arms step along the grid. Does the K read at 24 mm on a 2 mm grid? A few of its crosses are reached by a corner of their bottom diagonal, and end with a stitch from their middle to it on top: do those show?</li>
+<li>How long does the sheet take?</li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from the registry in `stitchcraft-core/src/diag.rs`. Edit the source, not this page. -->
 <h1 id="diagnostic-codes"><a class="header" href="#diagnostic-codes">Diagnostic codes</a></h1>
 <p>Every problem StitchCraft reports has a code. <code>E</code> codes are errors (nothing is written), <code>W</code> codes are warnings (the file is written), <code>I</code> codes are information. <code>stitch explain &lt;code&gt;</code> prints the same explanation in the terminal. Codes are never reused.</p>
@@ -2952,6 +3062,9 @@ Arguments:
 <tr><td><a href="#sc-w0316"><code>SC-W0316</code></a></td><td>Warning</td><td>Meander pattern is one of Ink/Stitch’s tiles; sewn with StitchCraft’s default tile</td></tr>
 <tr><td><a href="#sc-w0317"><code>SC-W0317</code></a></td><td>Warning</td><td>Meander fill part too small for its tile; sewn round its outline</td></tr>
 <tr><td><a href="#sc-w0318"><code>SC-W0318</code></a></td><td>Warning</td><td>Circular fill part within its row spacing of its middle; sewn as one circle</td></tr>
+<tr><td><a href="#sc-w0319"><code>SC-W0319</code></a></td><td>Warning</td><td>Cross stitch part covers no cell of its grid enough; sews nothing</td></tr>
+<tr><td><a href="#sc-w0320"><code>SC-W0320</code></a></td><td>Warning</td><td>Cross stitch with an odd thread count; an even count sewn</td></tr>
+<tr><td><a href="#sc-w0321"><code>SC-W0321</code></a></td><td>Warning</td><td>Cross stitch grid too fine for the shortest stitch; needle points left out</td></tr>
 <tr><td><a href="#sc-w0401"><code>SC-W0401</code></a></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td></tr>
 <tr><td><a href="#sc-w0402"><code>SC-W0402</code></a></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised</td></tr>
 <tr><td><a href="#sc-w0403"><code>SC-W0403</code></a></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td></tr>
@@ -3324,6 +3437,28 @@ sewn as one circle with a radius of the row spacing round its middle, as Ink/Sti
 circle may reach past the part.</p>
 <p>The message counts the parts. Make <code>row_spacing_mm</code> smaller for a spiral, or sew so small a part as a
 running stitch or a satin column.</p>
+<h2 id="sc-w0319"><a class="header" href="#sc-w0319">SC-W0319</a></h2>
+<p><strong>Warning</strong> — Cross stitch part covers no cell of its grid enough; sews nothing</p>
+<p>A cross stitch fill sews a cross in each cell of its grid that it covers enough of: <code>fill_coverage</code>
+percent of the cell or more, once the fill is grown by <code>expand_mm</code>. A part that covers no cell so
+much sews nothing, as in Ink/Stitch, which warns of it too. Such a part is smaller or narrower than a
+cell, or lies across the grid’s lines so that no cell holds enough of it.</p>
+<p>The message counts the parts. Make <code>pattern_size_mm</code> smaller, lower <code>fill_coverage</code>, raise
+<code>expand_mm</code>, or move the grid with <code>cross_offset_mm</code>.</p>
+<h2 id="sc-w0320"><a class="header" href="#sc-w0320">SC-W0320</a></h2>
+<p><strong>Warning</strong> — Cross stitch with an odd thread count; an even count sewn</p>
+<p>Each half of a cross’s 2 diagonals takes <code>cross_thread_count</code> passes of the thread. The needle goes
+out from the cross’s middle and back again, so the passes come in pairs, and the count is an even
+number. An odd count sews the even count below it, as in Ink/Stitch, and 1 sews 2. Ink/Stitch sews
+a stitch from a corner of each cell to its middle for 1, and no cross.</p>
+<p>The message gives the count set and the count sewn. Set an even number.</p>
+<h2 id="sc-w0321"><a class="header" href="#sc-w0321">SC-W0321</a></h2>
+<p><strong>Warning</strong> — Cross stitch grid too fine for the shortest stitch; needle points left out</p>
+<p>A cross’s shortest stitches run from its corners to its middle, half its diagonal long. On a grid
+this fine they are shorter than the shortest stitch the machine sews well, so needle points of the
+crosses are left out where they lie too near the one before, and the crosses lose their shape.</p>
+<p>The message gives the cells’ size, the stitch’s length and the shortest stitch. Make
+<code>pattern_size_mm</code> larger.</p>
 <h2 id="sc-w0401"><a class="header" href="#sc-w0401">SC-W0401</a></h2>
 <p><strong>Warning</strong> — Path too small for the shortest stitch; skipped</p>
 <p>A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
@@ -3814,7 +3949,7 @@ background; one whose holes can’t be found keeps them open; one that can’t b
 and one whose region can’t be given is sewn as it is drawn. To sew a shape as it is drawn, give it
 settings: in VectorCraft, apply StitchCraft’s Fill, Stroke or Satin effect to it.</p>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from the parameter registry (`stitchcraft-engine/src/registry.rs`) and the deviations ledger. Edit the declaration, not this page. -->
-<h1 id="parameters-11"><a class="header" href="#parameters-11">Parameters</a></h1>
+<h1 id="parameters-12"><a class="header" href="#parameters-12">Parameters</a></h1>
 <p>Every setting a design element can carry, by the key a design stores it under. A parameter that Ink/Stitch
 also has keeps Ink/Stitch’s key, meaning and default, so files move between the two tools unchanged
 (<a href="#inkstitch-compatibility-contract">compatibility contract</a>). Where StitchCraft reads or sews one
@@ -3848,7 +3983,7 @@ setting it does not read is kept with the element, unchecked, and changes nothin
 numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <code>null</code> for an empty value.</p>
 <h2 id="where-reading-differs-from-inkstitch"><a class="header" href="#where-reading-differs-from-inkstitch">Where reading differs from Ink/Stitch</a></h2>
 <ul>
-<li><strong>DEV-PRM-001.</strong> A value StitchCraft cannot read refuses its element (SC-E0101), and the rest of the design is sewn. Ink/Stitch sews such a value as the parameter’s default, or a toggle as off, without a word: it sews 3,5 for running_stitch_length_mm as 2.5 mm stitches, and a toggle of on as off. A toggle reads yes, y, true, t and 1 as on here, as Ink/Stitch does, and only their opposites and off as off. StitchCraft reads a tab, or several spaces, between a list’s values as one space, where Ink/Stitch sews a list with a tab between values as its default, and a fill’s underlay angles with 2 spaces between them too. It also reads a unit right after a number, mm, in or pt after a length, a degree sign or deg after an angle and a percent sign after a percentage, where Ink/Stitch sews the default.</li>
+<li><strong>DEV-PRM-001.</strong> A value StitchCraft cannot read refuses its element (SC-E0101), and the rest of the design is sewn. Ink/Stitch sews such a value as the parameter’s default, or a toggle as off, without a word: it sews 3,5 for running_stitch_length_mm as 2.5 mm stitches, and a toggle of on as off. A toggle reads yes, y, true, t and 1 as on here, as Ink/Stitch does, and only their opposites and off as off. StitchCraft reads a tab, or several spaces, between a list’s values as one space, where Ink/Stitch sews a list with a tab between values as its default, and a fill’s underlay angles with 2 spaces between them too. It also reads a unit right after a number, mm, in or pt after a length, a degree sign or deg after an angle and a percent sign after a percentage, where Ink/Stitch sews the default. And it reads a fraction in fill_coverage, which Ink/Stitch reads as a whole number and so sews 75.5 at its default, 50.</li>
 <li><strong>DEV-PRM-002.</strong> Every number a parameter takes keeps to a range of StitchCraft’s, given in the parameter’s reference entry. A value outside it is clamped into it, with SC-W0102. Ink/Stitch sets a floor for most of its numbers and few ceilings, so many of these ranges are narrower than its own: repeats has no ceiling there and stops at 100 here.</li>
 <li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column’s deviates so. Ink/Stitch reads a manual stitch’s as not set at 0 or below too, and doesn’t warn.</li>
 <li><strong>DEV-PRM-004.</strong> A list takes at most 16 values and a pair 2, and no value may be longer than 4,096 bytes: more refuses the element (SC-E0101), whose message quotes the start of a long value. Ink/Stitch reads a list of any length, takes the first 2 values of a longer pair, and reads text of any length.</li>
@@ -3871,6 +4006,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#tatami-parameters">Tatami parameters</a></td><td>15</td><td>Tatami fill, Contour fill, Meander fill, Circular fill</td></tr>
 <tr><td><a href="#contour-parameters">Contour parameters</a></td><td>4</td><td>Contour fill</td></tr>
 <tr><td><a href="#meander-parameters">Meander parameters</a></td><td>6</td><td>Meander fill</td></tr>
+<tr><td><a href="#cross-parameters">Cross parameters</a></td><td>7</td><td>Cross stitch</td></tr>
 <tr><td><a href="#path-fill-parameters">Path fill parameters</a></td><td>3</td><td>Contour fill, Meander fill, Circular fill</td></tr>
 <tr><td><a href="#auto-parameters">Auto parameters</a></td><td>5</td><td>automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type</td></tr>
 </tbody>
@@ -3892,6 +4028,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#avoid_self_crossing"><code>avoid_self_crossing</code></a></td><td>Avoid self-crossing</td><td>Contour parameters</td></tr>
 <tr><td><a href="#bean_stitch_repeats"><code>bean_stitch_repeats</code></a></td><td>Bean stitch</td><td>Repeat parameters</td></tr>
 <tr><td><a href="#bean_stitch_repeats-1"><code>bean_stitch_repeats</code></a></td><td>Bean stitch</td><td>Path fill parameters</td></tr>
+<tr><td><a href="#canvas_grid_origin"><code>canvas_grid_origin</code></a></td><td>Grid on the canvas</td><td>Cross parameters</td></tr>
 <tr><td><a href="#center_walk_underlay"><code>center_walk_underlay</code></a></td><td>Centre walk underlay</td><td>Satin parameters</td></tr>
 <tr><td><a href="#center_walk_underlay_position"><code>center_walk_underlay_position</code></a></td><td>Centre walk position</td><td>Satin parameters</td></tr>
 <tr><td><a href="#center_walk_underlay_repeats"><code>center_walk_underlay_repeats</code></a></td><td>Centre walk repeats</td><td>Satin parameters</td></tr>
@@ -3905,11 +4042,15 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#contour_underlay_inset_percent"><code>contour_underlay_inset_percent</code></a></td><td>Contour inset (% of width)</td><td>Satin parameters</td></tr>
 <tr><td><a href="#contour_underlay_stitch_length_mm"><code>contour_underlay_stitch_length_mm</code></a></td><td>Contour stitch length</td><td>Satin parameters</td></tr>
 <tr><td><a href="#contour_underlay_stitch_tolerance_mm"><code>contour_underlay_stitch_tolerance_mm</code></a></td><td>Contour tolerance</td><td>Satin parameters</td></tr>
+<tr><td><a href="#cross_offset_mm"><code>cross_offset_mm</code></a></td><td>Grid offset</td><td>Cross parameters</td></tr>
+<tr><td><a href="#cross_stitch_method"><code>cross_stitch_method</code></a></td><td>Cross</td><td>Cross parameters</td></tr>
+<tr><td><a href="#cross_thread_count"><code>cross_thread_count</code></a></td><td>Threads</td><td>Cross parameters</td></tr>
 <tr><td><a href="#enable_random_stitch_length"><code>enable_random_stitch_length</code></a></td><td>Random stitch length</td><td>Running parameters</td></tr>
 <tr><td><a href="#end_at_nearest_point"><code>end_at_nearest_point</code></a></td><td>End at nearest point</td><td>Satin parameters</td></tr>
 <tr><td><a href="#end_row_spacing_mm"><code>end_row_spacing_mm</code></a></td><td>End row spacing</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#expand_mm"><code>expand_mm</code></a></td><td>Expand</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#fill"><code>fill</code></a></td><td>Sew the fill</td><td>Fill parameters</td></tr>
+<tr><td><a href="#fill_coverage"><code>fill_coverage</code></a></td><td>Coverage</td><td>Cross parameters</td></tr>
 <tr><td><a href="#fill_method"><code>fill_method</code></a></td><td>Fill method</td><td>Fill parameters</td></tr>
 <tr><td><a href="#fill_underlay"><code>fill_underlay</code></a></td><td>Underlay</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#fill_underlay_angle"><code>fill_underlay_angle</code></a></td><td>Underlay angle</td><td>Tatami parameters</td></tr>
@@ -3928,6 +4069,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#lock_start"><code>lock_start</code></a></td><td>Start lock</td><td>Common parameters</td></tr>
 <tr><td><a href="#lock_start_scale_mm"><code>lock_start_scale_mm</code></a></td><td>Start lock size</td><td>Common parameters</td></tr>
 <tr><td><a href="#lock_start_scale_percent"><code>lock_start_scale_percent</code></a></td><td>Start lock scale</td><td>Common parameters</td></tr>
+<tr><td><a href="#max_cross_stitch_length_mm"><code>max_cross_stitch_length_mm</code></a></td><td>Longest cross stitch</td><td>Cross parameters</td></tr>
 <tr><td><a href="#max_stitch_length_mm"><code>max_stitch_length_mm</code></a></td><td>Longest stitch</td><td>Common parameters</td></tr>
 <tr><td><a href="#meander_angle"><code>meander_angle</code></a></td><td>Pattern angle</td><td>Meander parameters</td></tr>
 <tr><td><a href="#meander_pattern"><code>meander_pattern</code></a></td><td>Pattern</td><td>Meander parameters</td></tr>
@@ -3935,6 +4077,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#min_jump_stitch_length_mm"><code>min_jump_stitch_length_mm</code></a></td><td>Shortest jump</td><td>Common parameters</td></tr>
 <tr><td><a href="#min_random_split_length_mm"><code>min_random_split_length_mm</code></a></td><td>Shortest split stitch</td><td>Satin parameters</td></tr>
 <tr><td><a href="#min_stitch_length_mm"><code>min_stitch_length_mm</code></a></td><td>Shortest stitch</td><td>Common parameters</td></tr>
+<tr><td><a href="#pattern_size_mm"><code>pattern_size_mm</code></a></td><td>Cell size</td><td>Cross parameters</td></tr>
 <tr><td><a href="#pull_compensation_mm"><code>pull_compensation_mm</code></a></td><td>Pull compensation</td><td>Pull parameters</td></tr>
 <tr><td><a href="#pull_compensation_percent"><code>pull_compensation_percent</code></a></td><td>Pull compensation (%)</td><td>Pull parameters</td></tr>
 <tr><td><a href="#push_compensation_mm"><code>push_compensation_mm</code></a></td><td>Push compensation</td><td>Satin parameters</td></tr>
@@ -4754,14 +4897,17 @@ every row is the row spacing from the next.</p>
 </ul>
 <h3 id="expand_mm"><a class="header" href="#expand_mm"><code>expand_mm</code></a></h3>
 <p><strong>Expand.</strong> How far past the drawn edge the top rows reach: each part is grown by this much, with round
-corners, before its rows, rings or path are laid. The thread’s pull opens gaps between fills sewn side
-by side, and this closes them. Negative values pull the rows in from the edge.</p>
+corners, before its rows, rings or path are laid, or its cross stitch’s cells are chosen. The
+thread’s pull opens gaps between fills sewn side by side, and this closes them. Negative values pull
+the rows in from the edge.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from -10 to 10 mm</li>
 <li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Applies to:</strong> Tatami fill, Contour fill, Meander fill, Circular fill, Cross stitch</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
 <li><strong>DEV-FILL-008.</strong> Where fill_underlay_inset_mm, or a negative expand_mm, cuts a part into pieces, the pieces are sewn in order of their point of least x, and of least y among pieces level with each other, each with its least x within a nanometre of the one before. GEOS gives them in the order it walks its graph, which Ink/Stitch sews them in. Of 2,000 random polygons grown or shrunk, 85 gave 2 or more pieces, and 81 of those came in the same order; the 4 others had a sliver among their pieces. For pieces level at their least x, GEOS’s order turns on where the ring’s points start: 2 squares one above the other, shrunk apart, give the lower first when the ring is listed from the bottom and the upper first when it is listed from the top, and 310 of 400 random such shapes, listed from random points, gave the lower first. Each piece’s top rows start at the point nearest the needle after the piece before, where Ink/Stitch starts every piece’s top rows nearest the needle as it was before the first.</li>
+<li><strong>DEV-FILL-024.</strong> A cross stitch fill’s part that a negative expand_mm shrinks away entirely is sewn at its own size, with SC-W0309, as every fill’s part is. Ink/Stitch shrinks a cross stitch fill’s shape as a whole, and keeps it as drawn only when nothing at all is left, so where other parts are left, a part shrunk away sews no cross.</li>
 </ul>
 </li>
 </ul>
@@ -4944,7 +5090,7 @@ never crosses itself.</p>
 polygon. Its sides are 2 mm long at a scale of 100 %. A fill set to one of Ink/Stitch’s tiles,
 which StitchCraft doesn’t have, wanders through the honeycomb (<code>SC-W0316</code>).</p>
 <ul>
-<li><strong>Accepts:</strong> one of <code>honeycomb</code> (Honeycomb), <code>squares</code> (Squares), <code>triangles</code> (Triangles), <code>octagons-squares</code> (Octagons and squares), <code>hexagons-triangles</code> (Hexagons and triangles), <code>hexagons-squares-triangles</code> (Hexagons, squares and triangles), <code>squares-triangles</code> (Squares and triangles), or one of the 75 other values kept for designs that name them, each sewn as another: <code>N3-11a</code>, <code>N3-12</code>, <code>N3-16a</code>, <code>N3-17</code>, <code>N3-18</code>, <code>N3-18-modified</code>, <code>N3-20</code>, <code>N3-23b</code>, <code>N3-25c</code>, <code>N3-26b</code>, <code>N3-27</code>, <code>N3-30a</code>, <code>N3-51b</code>, <code>N3-57f-modified</code>, <code>N3-58b</code>, <code>N3-6</code>, <code>N3-7</code>, <code>N3-8a</code>, <code>N3-8a-modified</code>, <code>N3-8b</code>, <code>N4-13b</code>, <code>N4-13c</code>, <code>N4-13d</code>, <code>N4-13e</code>, <code>N4-13f</code>, <code>N4-16a</code>, <code>N4-19</code>, <code>N4-20</code>, <code>N4-21c</code>, <code>N4-22</code>, <code>N4-23a</code>, <code>N4-23c</code>, <code>N4-27</code>, <code>N4-29e</code>, <code>N4-29f</code>, <code>N4-31</code>, <code>N4-38</code>, <code>N4-42e</code>, <code>N4-44</code>, <code>N4-52</code>, <code>N4-54d</code>, <code>N4-5a</code>, <code>N4-5a-2</code>, <code>N4-82</code>, <code>N4-85d</code>, <code>N5-1e1</code>, <code>N5-1q2</code>, <code>N5-1t</code>, <code>N6-1</code>, <code>N6-2</code>, <code>N6-5b</code>, <code>N6-6a</code>, <code>N6-6c</code>, <code>NC5-11a</code>, <code>NC5-20a</code>, <code>P3-1</code>, <code>P3-12</code>, <code>P4-1</code>, <code>P4-10</code>, <code>P4-15</code>, <code>P4-19</code>, <code>P4-23</code>, <code>P4-24</code>, <code>P4-25</code>, <code>P4-43</code>, <code>P4-43-modified</code>, <code>P4-47</code>, <code>P5-10_11</code>, <code>P5-19</code>, <code>P5-23_24</code>, <code>P5-4</code>, <code>P6-6_11</code>, <code>diamond-square</code>, <code>hexagon</code>, <code>weird-one</code></li>
+<li><strong>Accepts:</strong> one of <code>honeycomb</code> (Honeycomb), <code>squares</code> (Squares), <code>triangles</code> (Triangles), <code>octagons-squares</code> (Octagons and squares), <code>hexagons-triangles</code> (Hexagons and triangles), <code>hexagons-squares-triangles</code> (Hexagons, squares and triangles), <code>squares-triangles</code> (Squares and triangles), or one of the 75 other values kept for designs that name them, read as the help above says: <code>N3-11a</code>, <code>N3-12</code>, <code>N3-16a</code>, <code>N3-17</code>, <code>N3-18</code>, <code>N3-18-modified</code>, <code>N3-20</code>, <code>N3-23b</code>, <code>N3-25c</code>, <code>N3-26b</code>, <code>N3-27</code>, <code>N3-30a</code>, <code>N3-51b</code>, <code>N3-57f-modified</code>, <code>N3-58b</code>, <code>N3-6</code>, <code>N3-7</code>, <code>N3-8a</code>, <code>N3-8a-modified</code>, <code>N3-8b</code>, <code>N4-13b</code>, <code>N4-13c</code>, <code>N4-13d</code>, <code>N4-13e</code>, <code>N4-13f</code>, <code>N4-16a</code>, <code>N4-19</code>, <code>N4-20</code>, <code>N4-21c</code>, <code>N4-22</code>, <code>N4-23a</code>, <code>N4-23c</code>, <code>N4-27</code>, <code>N4-29e</code>, <code>N4-29f</code>, <code>N4-31</code>, <code>N4-38</code>, <code>N4-42e</code>, <code>N4-44</code>, <code>N4-52</code>, <code>N4-54d</code>, <code>N4-5a</code>, <code>N4-5a-2</code>, <code>N4-82</code>, <code>N4-85d</code>, <code>N5-1e1</code>, <code>N5-1q2</code>, <code>N5-1t</code>, <code>N6-1</code>, <code>N6-2</code>, <code>N6-5b</code>, <code>N6-6a</code>, <code>N6-6c</code>, <code>NC5-11a</code>, <code>NC5-20a</code>, <code>P3-1</code>, <code>P3-12</code>, <code>P4-1</code>, <code>P4-10</code>, <code>P4-15</code>, <code>P4-19</code>, <code>P4-23</code>, <code>P4-24</code>, <code>P4-25</code>, <code>P4-43</code>, <code>P4-43-modified</code>, <code>P4-47</code>, <code>P5-10_11</code>, <code>P5-19</code>, <code>P5-23_24</code>, <code>P5-4</code>, <code>P6-6_11</code>, <code>diamond-square</code>, <code>hexagon</code>, <code>weird-one</code></li>
 <li><strong>Default:</strong> <code>honeycomb</code></li>
 <li><strong>Ink/Stitch:</strong> same key; StitchCraft differs:
 <ul>
@@ -4992,6 +5138,94 @@ other and back. 0 sews it as a running stitch.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from 0 to 100 mm</li>
 <li><strong>Default:</strong> <code>3</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from `CrossParams` in the parameter registry. Edit the declaration, not this page. -->
+<h1 id="cross-parameters"><a class="header" href="#cross-parameters">Cross parameters</a></h1>
+<p>Cross stitch: a cross in each cell of a grid laid over the fill, where the fill covers enough of the
+cell, as a hand embroiderer counts crosses on even-weave fabric. Each cross sews one diagonal, then
+the other over it, and the crosses that meet at a corner sew in one run.</p>
+<p>Applies to Cross stitch.</p>
+<h2 id="crosses"><a class="header" href="#crosses">Crosses</a></h2>
+<h3 id="cross_stitch_method"><a class="header" href="#cross_stitch_method"><code>cross_stitch_method</code></a></h3>
+<p><strong>Cross.</strong> The kind of cross. A simple cross sews its <code>\</code> diagonal and then its <code>/</code> diagonal over it, as the
+drawing shows it. Flipped, the <code>/</code> diagonal goes under. The other kinds arrive in a later version,
+and until then an element set to one is skipped (<code>SC-W0011</code>).</p>
+<ul>
+<li><strong>Accepts:</strong> one of <code>simple_cross</code> (Simple cross), <code>simple_cross_flipped</code> (Simple cross, flipped), or one of the 10 other values kept for designs that name them, read as the help above says: <code>half_cross</code>, <code>half_cross_flipped</code>, <code>upright_cross</code>, <code>upright_cross_flipped</code>, <code>dense_upright_cross</code>, <code>dense_upright_cross_flipped</code>, <code>double_cross</code>, <code>double_cross_flipped</code>, <code>smyrna_cross</code>, <code>smyrna_cross_flipped</code></li>
+<li><strong>Default:</strong> <code>simple_cross</code></li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-FILL-026.</strong> Flipped crosses lie on the grid plain crosses lie on, with their / diagonal under their \ one. Ink/Stitch turns the part a quarter turn, lays its grid over the turned part and turns the crosses back. Its flipped cells are then pattern_size_mm’s second length wide and its first tall, the offset’s second length moves them right and its first down, and with canvas_grid_origin off its grid starts at the part’s bottom left corner. With square cells, no offset and the canvas’s grid, both lay the same crosses.</li>
+</ul>
+</li>
+</ul>
+<h3 id="cross_thread_count"><a class="header" href="#cross_thread_count"><code>cross_thread_count</code></a></h3>
+<p><strong>Threads.</strong> How many times the thread passes along each diagonal of a cross. A full cross takes an even
+number, since the needle comes back to where it started: an odd number sews the even number below
+it, and 1 sews 2. More threads make bolder crosses, and pack the holes at the cells’ corners.</p>
+<ul>
+<li><strong>Accepts:</strong> a whole number from 1 to 20</li>
+<li><strong>Default:</strong> <code>4</code></li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-FILL-027.</strong> A cross_thread_count of 1 sews 2 threads on each diagonal, with SC-W0320, and so does 0 and less, which the range raises to 1. Ink/Stitch takes the even count below 1, 0, and sews a stitch from a corner of each cell to its middle and back, and no cross. It takes the size of a count below 0.</li>
+</ul>
+</li>
+</ul>
+<h3 id="max_cross_stitch_length_mm"><a class="header" href="#max_cross_stitch_length_mm"><code>max_cross_stitch_length_mm</code></a></h3>
+<p><strong>Longest cross stitch.</strong> The longest stitch a cross sews. A diagonal longer than this, on a large grid, is sewn in equal
+stitches, each no longer.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0.1 to 100 mm</li>
+<li><strong>Default:</strong> <code>11</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h2 id="grid"><a class="header" href="#grid">Grid</a></h2>
+<h3 id="pattern_size_mm"><a class="header" href="#pattern_size_mm"><code>pattern_size_mm</code></a></h3>
+<p><strong>Cell size.</strong> How wide and how tall the grid’s cells are, each the size of a cross. One length gives square
+cells, and 2 separated by a space give the width, then the height.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0.1 to 100 mm, or 2 separated by a space</li>
+<li><strong>Default:</strong> <code>3</code></li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-FILL-026.</strong> Flipped crosses lie on the grid plain crosses lie on, with their / diagonal under their \ one. Ink/Stitch turns the part a quarter turn, lays its grid over the turned part and turns the crosses back. Its flipped cells are then pattern_size_mm’s second length wide and its first tall, the offset’s second length moves them right and its first down, and with canvas_grid_origin off its grid starts at the part’s bottom left corner. With square cells, no offset and the canvas’s grid, both lay the same crosses.</li>
+</ul>
+</li>
+</ul>
+<h3 id="canvas_grid_origin"><a class="header" href="#canvas_grid_origin"><code>canvas_grid_origin</code></a></h3>
+<p><strong>Grid on the canvas.</strong> Lay the grid from the canvas’s origin, so that cross stitch fills side by side share one grid and
+their crosses line up. Moved, the fill may then sew other crosses. Off, the grid starts at the top
+left corner of each part of the fill, which then sews the same wherever it lies.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
+<li><strong>Default:</strong> <code>true</code></li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-FILL-026.</strong> Flipped crosses lie on the grid plain crosses lie on, with their / diagonal under their \ one. Ink/Stitch turns the part a quarter turn, lays its grid over the turned part and turns the crosses back. Its flipped cells are then pattern_size_mm’s second length wide and its first tall, the offset’s second length moves them right and its first down, and with canvas_grid_origin off its grid starts at the part’s bottom left corner. With square cells, no offset and the canvas’s grid, both lay the same crosses.</li>
+</ul>
+</li>
+</ul>
+<h3 id="cross_offset_mm"><a class="header" href="#cross_offset_mm"><code>cross_offset_mm</code></a></h3>
+<p><strong>Grid offset.</strong> How far the grid is moved: left by the first length, and down by the second. One length moves it
+as far each way. Moved by a whole cell, the grid lies where it was.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0 to 100 mm, or 2 separated by a space</li>
+<li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-FILL-025.</strong> A cross stitch fill looks at every cell of its grid within the part’s bounds. Ink/Stitch starts at the grid’s first line at or above the part’s top, moved down by the offset’s second length, or with canvas_grid_origin off at the part’s top moved down so, and never looks at the row above it. So a part whose top lies less far below a line of the grid than that length loses the row of crosses it covers there: a 3 mm grid moved 2 mm down over a rectangle whose top lies 0.2 mm below a line leaves out a row the rectangle covers 60 % of.</li>
+<li><strong>DEV-FILL-026.</strong> Flipped crosses lie on the grid plain crosses lie on, with their / diagonal under their \ one. Ink/Stitch turns the part a quarter turn, lays its grid over the turned part and turns the crosses back. Its flipped cells are then pattern_size_mm’s second length wide and its first tall, the offset’s second length moves them right and its first down, and with canvas_grid_origin off its grid starts at the part’s bottom left corner. With square cells, no offset and the canvas’s grid, both lay the same crosses.</li>
+</ul>
+</li>
+</ul>
+<h3 id="fill_coverage"><a class="header" href="#fill_coverage"><code>fill_coverage</code></a></h3>
+<p><strong>Coverage.</strong> How much of a cell, in percent, the fill must cover for the cell to sew a cross. Lower, crosses
+are sewn further past the fill’s edges. At 100, only cells wholly inside it sew.</p>
+<ul>
+<li><strong>Accepts:</strong> a percentage from 1 to 100</li>
+<li><strong>Default:</strong> <code>50</code></li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from `PathFillParams` in the parameter registry. Edit the declaration, not this page. -->
@@ -5882,7 +6116,7 @@ every ring. Parts of 3 square CSS pixels (0.21 mm²) or less are left out, with 
 <p>A centre line is made into a <code>Satin</code> of its own, its rails offset from the line by the stroke’s width and
 join (<code>stitchcraft_engine::normalize::centre_line</code>, since M4.9). How rails and rungs are recognised from
 a host path, and made from a centre line, is part of the <a href="#satin-generators">satin design</a>.</p>
-<h2 id="parameters-12"><a class="header" href="#parameters-12">Parameters</a></h2>
+<h2 id="parameters-13"><a class="header" href="#parameters-13">Parameters</a></h2>
 <p><code>ParamSet</code> maps registry keys to typed values; generators receive <em>typed views</em>
 (<code>TatamiParams { row_spacing: Mm, angle: Deg, … }</code>) produced by the registry. See
 <a href="#parameter-registry">parameter registry</a>.</p>
@@ -6124,7 +6358,7 @@ version and a registry schema version arrive with the first release, together wi
 <tr><td><code>OptionalLengthWithZero</code></td><td><code>Option&lt;Mm&gt;</code></td><td>as <code>OptionalLength</code>, but only empty text is empty, and 0 is a length, as Ink/Stitch reads a satin’s shortest stitch to split</td><td><code>float</code>, unit <code>mm</code>, no default</td></tr>
 <tr><td><code>Angle</code></td><td>degrees, <code>f64</code></td><td>finite; normalized to (−180, 180]</td><td><code>float</code>, unit <code>deg</code></td></tr>
 <tr><td><code>BoundedAngle</code></td><td>degrees, <code>f64</code></td><td>finite, within range, never turned by whole turns. 270 is above a range that ends at 89, and reads as 89, as Ink/Stitch reads a zigzag stroke’s angle</td><td><code>float</code>, unit <code>deg</code></td></tr>
-<tr><td><code>Percent</code></td><td><code>f64</code></td><td>finite, within range</td><td><code>float</code>, unit <code>%</code></td></tr>
+<tr><td><code>Percent</code></td><td><code>f64</code></td><td>finite, within range</td><td><code>float</code>, unit <code>%</code>, or <code>int</code> for a cross stitch’s coverage, which Ink/Stitch’s fonts write as <code>50.0</code> too</td></tr>
 <tr><td><code>Number</code></td><td><code>f64</code></td><td>finite, within range, without a unit</td><td><code>float</code>, no unit</td></tr>
 <tr><td><code>Area</code></td><td>square millimetres, <code>f64</code></td><td>finite, within range, written as a number</td><td>none (Ink/Stitch has no area setting)</td></tr>
 <tr><td><code>Count</code></td><td><code>u32</code></td><td>whole, within range</td><td><code>int</code></td></tr>
@@ -6132,7 +6366,7 @@ version and a registry schema version arrive with the first release, together wi
 <tr><td><code>Choice</code></td><td><code>&amp;'static str</code> (the id)</td><td>one of the declared ids; unknown ids are a diagnostic, not a default</td><td><code>combo</code>, <code>dropdown</code></td></tr>
 <tr><td><code>Seed</code></td><td><code>Option&lt;u64&gt;</code></td><td>any; empty means “derive from the element”; text that is not a number is hashed (FNV-1a)</td><td><code>random_seed</code></td></tr>
 <tr><td><code>LengthList</code></td><td><code>Vec&lt;Mm&gt;</code></td><td>1 to 16 values, each in range (patterns like <code>"2.5 1.0"</code>)</td><td><code>string</code>/<code>float</code> lists</td></tr>
-<tr><td><code>LengthPair</code></td><td><code>[Mm; 2]</code></td><td>1 value for both sides, or 2 for the first side and the second (a satin’s rails, or its start and end). Each is in range, with units as for <code>Length</code></td><td><code>float</code>, unit <code>mm (each side)</code></td></tr>
+<tr><td><code>LengthPair</code></td><td><code>[Mm; 2]</code></td><td>1 value for both sides, or 2 for the first side and the second (a satin’s rails, or its start and end, or a cross stitch grid’s width and height). Each is in range, with units as for <code>Length</code></td><td><code>float</code>, unit <code>mm (each side)</code> or <code>mm (x y)</code></td></tr>
 <tr><td><code>PercentPair</code></td><td><code>[f64; 2]</code></td><td>as <code>LengthPair</code>, in percent</td><td><code>float</code>, unit <code>% (each side)</code></td></tr>
 <tr><td><code>OptionalLengthPair</code>, <code>OptionalPercentPair</code></td><td><code>Option&lt;[Mm; 2]&gt;</code>, <code>Option&lt;[f64; 2]&gt;</code></td><td>as <code>LengthPair</code> and <code>PercentPair</code>, or empty: the setting then comes from another one, as a zigzag underlay’s inset comes from the contour’s. 0 is a value, as Ink/Stitch reads it</td><td><code>float</code>, unit <code>mm (each side)</code> or <code>% (each side)</code>, no default</td></tr>
 <tr><td><code>PercentList</code></td><td><code>Vec&lt;f64&gt;</code></td><td>1 to 16 percentages, each in range (levels like <code>"15 30"</code>)</td><td><code>float</code>, unit <code>%</code>, read as a list</td></tr>
@@ -6266,7 +6500,7 @@ refused (<code>DEV-PRM-001</code>).</p>
 <tr><th style="text-align: left">Output</th><th style="text-align: left">Generated by</th><th style="text-align: left">Checked by</th><th style="text-align: left">Since</th></tr>
 </thead>
 <tbody>
-<tr><td style="text-align: left">The reference pages, the <a href="#parameters-11">index</a> and one page per declaration (<code>docs/src/user/reference/params/*.md</code>), with the deviations ledger’s entries</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left"><code>cargo xtask docs --check</code>, which fails on a stale page and on a page left from a declaration since removed (<code>cargo xtask docs</code> deletes those)</td><td style="text-align: left">M3.1</td></tr>
+<tr><td style="text-align: left">The reference pages, the <a href="#parameters-12">index</a> and one page per declaration (<code>docs/src/user/reference/params/*.md</code>), with the deviations ledger’s entries</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left"><code>cargo xtask docs --check</code>, which fails on a stale page and on a page left from a declaration since removed (<code>cargo xtask docs</code> deletes those)</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left"><code>docs/src/user/reference/params.schema.json</code>: the parameters as JSON values (numbers, booleans, strings, arrays, <code>null</code> for empty), for editors, presets and JSON hosts</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left">same</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left">The <em>StitchCraft</em> column of the <a href="#inkstitch-compatibility-contract">Ink/Stitch compatibility contract</a></td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left">same, plus the cross-checks above</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left">VectorCraft manifests, one for each stitch family’s module, with each parameter’s label, unit, section, help, help page and the values that show it</td><td style="text-align: left">at runtime from the registry, when VectorCraft asks a module for its manifest (<code>stitchcraft-vc-plugin</code>’s <code>manifest</code> and <code>dialog</code>)</td><td style="text-align: left">plug-in tests validate them against VectorCraft’s manifest rules, <code>cargo xtask docs --check</code> finds each help page, the contract tests install them in VectorCraft’s host, and the window probe checks the dialogs’ rows</td><td style="text-align: left">M6.2, and the dialogs M6.10</td></tr>
@@ -6429,6 +6663,9 @@ another.</p>
 <tr><td><code>SC-W0316</code></td><td>Warning</td><td>Meander pattern is one of Ink/Stitch’s tiles; sewn with StitchCraft’s default tile</td><td>M7</td></tr>
 <tr><td><code>SC-W0317</code></td><td>Warning</td><td>Meander fill part too small for its tile; sewn round its outline (Ink/Stitch stops with an error)</td><td>M7</td></tr>
 <tr><td><code>SC-W0318</code></td><td>Warning</td><td>Circular fill part within its row spacing of its middle; sewn as one circle (as Ink/Stitch sews it)</td><td>M7</td></tr>
+<tr><td><code>SC-W0319</code></td><td>Warning</td><td>Cross stitch part covers no cell of its grid enough; sews nothing (Ink/Stitch warns too)</td><td>M10</td></tr>
+<tr><td><code>SC-W0320</code></td><td>Warning</td><td>Cross stitch with an odd thread count; an even count sewn (1 sews 2, where Ink/Stitch sews no cross)</td><td>M10</td></tr>
+<tr><td><code>SC-W0321</code></td><td>Warning</td><td>Cross stitch grid too fine for the shortest stitch; needle points left out</td><td>M10</td></tr>
 <tr><td><code>SC-W0401</code></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td><td>M3</td></tr>
 <tr><td><code>SC-W0402</code></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest</td><td>M3</td></tr>
 <tr><td><code>SC-W0403</code></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td><td>M3</td></tr>
@@ -6971,6 +7208,8 @@ underlay, reading the running stitch’s tolerance and random lengths for its pa
 and sews one path through it after the same underlay (<a href="#meander-fill-1">fills</a>). A
 circular fill, sewn from M7.9, sews a spiral round the middle of each part after that underlay too, and
 routes the spiral’s pieces as a tatami fill routes its rows (<a href="#circular-fill-1">fills</a>).
+A cross stitch fill, sewn from M10.1, sews a cross in each cell of a grid that each part covers enough of,
+with no underlay, the crosses that meet at a corner in one run (<a href="#cross-stitch-1">cross stitch</a>).
 The other stroke, satin and fill methods are skipped with <code>SC-W0011</code> until their milestones. An element whose parameters are wrong (<code>SC-E0101</code>) is skipped too, and
 the rest of the design still plans.</p>
 <p>Each element is generated with the shortest stitch for it: the larger of the machine’s (the profile’s
@@ -6982,8 +7221,8 @@ or a fill’s longest, is raised to it with <code>SC-W0402</code>: shorter, the 
 from M6.3). The fill’s settings are read as for sewing it, and what they say is said the same, but only
 the region is built and the rows laid over it: no needle point is placed and no route is searched. A
 contour fill has no rows, and shows its path round its rings, from M7.7. A meander fill shows its path
-through its tile as the element’s seed lays it, from M7.8, and a circular fill the pieces of its spiral,
-from M7.9.</p>
+through its tile as the element’s seed lays it, from M7.8, a circular fill the pieces of its spiral,
+from M7.9, and a cross stitch fill the 2 diagonals of each of its crosses, from M10.1.</p>
 <p>Rules every generator follows:</p>
 <ul>
 <li><strong>Pure:</strong> output depends only on (normalized shape, typed params, neighbours, seed, budget).</li>
@@ -7206,7 +7445,8 @@ conformance suite checks.</p>
 <tbody>
 <tr><td><a href="#stroke-generators">Strokes</a></td><td>running, bean, manual, random-length, zigzag stroke, ripple</td></tr>
 <tr><td><a href="#satin-generators">Satin</a></td><td>satin column, E-stitch, S-stitch, zigzag satin, underlays</td></tr>
-<tr><td><a href="#fill-generators">Fills</a></td><td>tatami, contour, meander, circular, guided, linear gradient, tartan, cross stitch</td></tr>
+<tr><td><a href="#fill-generators">Fills</a></td><td>tatami, contour, meander, circular, guided, linear gradient, tartan</td></tr>
+<tr><td><a href="#cross-stitch-1">Cross stitch</a></td><td>simple and flipped crosses on a grid, from M10.2 the other crosses</td></tr>
 <tr><td><a href="#lock-stitches-1">Lock stitches</a></td><td>the tie-in and tie-off at the ends of an element’s stitching</td></tr>
 </tbody>
 </table>
@@ -8280,6 +8520,7 @@ to about 17 million units of work for each offset.</p>
 <!-- implements: crates/stitchcraft-engine/src/normalize/region/**, crates/stitchcraft-engine/src/normalize/simplify.rs, crates/stitchcraft-engine/src/generators/tatami/**, crates/stitchcraft-engine/src/generators/contour/**, crates/stitchcraft-engine/src/generators/meander/**, crates/stitchcraft-engine/src/generators/circular/**, crates/stitchcraft-engine/src/generators/smoothing.rs, crates/stitchcraft-engine/src/generators/pull.rs -->
 <p>A fill covers the area its path bounds, its <a href="#region-1">region</a>, with rows of stitches. Tatami is P1 (M5);
 contour, meander and circular are P2 (M7); guided, linear gradient, tartan and cross stitch are P3 (M10).
+Cross stitch, sewn from M10.1, is described on a page of its own (<a href="#cross-stitch-1">cross stitch</a>).
 Ink/Stitch’s legacy fill is not planned, and is sewn as a tatami fill (<a href="#legacy-fill-not-planned">below</a>).</p>
 <p>A fill sews the drawing’s shape with Ink/Stitch’s stitches. Ink/Stitch’s rows, their spacing and stagger,
 the order it sews them in, its travel, underlay and compensation are what make its fills look good
@@ -8985,10 +9226,9 @@ Specified at M10.</p>
 <p>A woven plaid from a stripe specification (sett): warp and weft stripes become fills at <code>tartan_angle</code>
 with <code>rows_per_thread</code> and optional herringbone. Specified at M10.</p>
 <h2 id="cross-stitch-p3"><a class="header" href="#cross-stitch-p3">Cross stitch (P3)</a></h2>
-<p>The region is covered by grid cells (<code>pattern_size_mm</code>, <code>cross_offset_mm</code>, <code>cross_rotation</code>,
-<code>canvas_grid_origin</code>); a cell becomes a cross when the region covers at least <code>fill_coverage</code> percent of
-it; crosses use <code>cross_stitch_method</code> (simple, half, upright, double, Smyrna, flipped variants) and are
-routed row by row. Specified at M10.</p>
+<p>A cross in each cell of a grid that the region covers enough of, simple and flipped from M10.1
+(<a href="#cross-stitch-1">cross stitch</a>). It takes its parts in a tatami fill’s order (<a href="#5-parts">section 5</a>), and
+its <code>expand_mm</code> from the tatami fill’s settings, which grows the region before its cells are chosen.</p>
 <h2 id="legacy-fill-not-planned"><a class="header" href="#legacy-fill-not-planned">Legacy fill (not planned)</a></h2>
 <p>Ink/Stitch’s first fill method, which it keeps for its older files: it gives <code>legacy_fill</code> to a fill whose
 <code>auto_fill</code> is off when it opens one. Its rows lie on a tatami fill’s grating, with a tatami fill’s needle
@@ -9008,6 +9248,165 @@ method.</p>
 <ul>
 <li>D. Hilbert, “Über die stetige Abbildung einer Linie auf ein Flächenstück,” <em>Mathematische Annalen</em> 38, 1891.</li>
 </ul>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="cross-stitch-1"><a class="header" href="#cross-stitch-1">Cross stitch</a></h1>
+<!-- implements: crates/stitchcraft-engine/src/generators/cross/** -->
+<p>A cross in each cell of a grid laid over the fill, where the fill covers enough of the cell (P3, M10.1).
+Cross stitch is counted work. Hand embroiderers sew it on even-weave fabric, every cross the same size and
+in rows and columns. A shape is filled by choosing cells of the grid, and its edges step along the grid’s
+lines. StitchCraft sews Ink/Stitch’s simple crosses, plain and flipped, as Ink/Stitch sews them (read at
+<code>d59c9ab</code>, <code>lib/stitches/cross_stitch.py</code>, <code>lib/stitches/utils/cross_stitch.py</code> and the fill element’s
+cross stitch settings in <code>lib/elements/fill_stitch.py</code>, described here in our own words, ADR-0012). The
+other crosses, half, upright, double and Smyrna, arrive with M10.2, and the turned grid
+(<code>cross_rotation</code>) with it.</p>
+<p>24 of the 25 cross-stitch fonts in Ink/Stitch’s font library sew simple crosses only, on grids of 1.5 to 3
+mm with 2 or 4 threads. They draw each letter as rectangles of whole cells, grown by 0.1 mm, on a grid
+that starts at each rectangle’s corner (<code>canvas_grid_origin</code> off).</p>
+<h2 id="parameters-14"><a class="header" href="#parameters-14">Parameters</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Key</th><th>Meaning</th><th>Default</th></tr>
+</thead>
+<tbody>
+<tr><td><code>cross_stitch_method</code></td><td><code>simple_cross</code>, or <code>simple_cross_flipped</code> with the <code>/</code> diagonal under. The 10 other methods, M10.2’s, skip the element (<code>SC-W0011</code>)</td><td><code>simple_cross</code></td></tr>
+<tr><td><code>cross_thread_count</code></td><td>passes on each half of each diagonal, 1 to 20. An odd count sews the even count below it, 2 at least</td><td>4</td></tr>
+<tr><td><code>pattern_size_mm</code></td><td>the cells’ width and height, 1 length or 2</td><td>3</td></tr>
+<tr><td><code>canvas_grid_origin</code></td><td>the grid’s lines through the canvas’s origin, or through each part’s top left corner</td><td>on</td></tr>
+<tr><td><code>cross_offset_mm</code></td><td>the grid moved left by the first length and down by the second, 1 length or 2</td><td>0</td></tr>
+<tr><td><code>fill_coverage</code></td><td>how much of a cell, in percent, the fill must cover for a cross</td><td>50</td></tr>
+<tr><td><code>max_cross_stitch_length_mm</code></td><td>the longest stitch, past which a stitch is split</td><td>11</td></tr>
+<tr><td><code>expand_mm</code></td><td>each part grown, or shrunk where negative, before its cells are chosen</td><td>0</td></tr>
+</tbody>
+</table>
+</div>
+<p>The pattern size and the offset are 1 length, for both ways, or 2 separated by a space. The registry’s
+<code>LengthPair</code> kind reads exactly that, as it reads a satin’s pull compensation for each of its sides, and they
+are of that kind. Ink/Stitch takes the first 2 of more values, where StitchCraft leaves the element out with
+<code>SC-E0101</code> (<code>DEV-PRM-004</code>). Ink/Stitch reads a pattern size below 0.1 mm as 0.1, an offset below 0 as 0 and a
+coverage below 1 % as 1 %, and StitchCraft clamps them so too, with <code>SC-W0102</code>. Its coverage is a whole
+number, and its fonts write it as <code>50.0</code> too, which it sews at its default of 50. StitchCraft reads it as a
+percentage, and <code>50.0</code> is 50 here too (<code>DEV-PRM-001</code>).</p>
+<h2 id="the-grid-1"><a class="header" href="#the-grid-1">The grid</a></h2>
+<p>Each part of the fill’s area is grown by <code>expand_mm</code> first. Grown parts that meet are one part, as Ink/Stitch
+grows the whole shape at once. Shrunk, each part is shrunk alone, and a part shrunk away is sewn at its own
+size, with <code>SC-W0309</code>, as every fill’s part is. Ink/Stitch keeps the shape as drawn only when nothing at all
+is left of it, and otherwise sews no cross in such a part (<code>DEV-FILL-024</code>).</p>
+<p>The grid’s cells are <code>pattern_size_mm</code> wide and tall. Its lines pass through the canvas’s origin, so that
+2 fills of cross stitch that lie side by side share one grid and their crosses line up. With
+<code>canvas_grid_origin</code> off, they pass through the top left corner of the part’s bounds instead, and the
+part sews the same wherever it lies. <code>cross_offset_mm</code> moves the lines left by its first length and down
+by its second, as Ink/Stitch moves them. A move by a whole cell leaves the grid where it was.</p>
+<p><strong>The canvas’s origin.</strong> In an SVG file it is the origin of the page, where Ink/Stitch puts it, and the SVG
+reader puts the page’s top left corner at the design’s origin. In a VectorCraft document it is the origin of
+the document’s coordinates, which the VectorCraft adapter keeps as the design’s origin
+(<a href="#reading-vectorcraft-files-stitchcraft-vectorcraft">coordinates</a>). A new document’s first
+artboard has its top left corner there. Moving an artboard then leaves the grid where it is, a fill and its
+neighbours on other artboards share it, and a document exported to SVG keeps it where its page puts the
+origin.</p>
+<p>Every cell within the part’s bounds is looked at. Ink/Stitch starts at the grid’s first line at or above the
+part’s top, moved down by the offset’s second length, and never looks at the row above it. Where the part’s
+top lies less far below a line than that length, Ink/Stitch loses the row of crosses the part covers there. A
+3 mm grid moved 2 mm down over a rectangle whose top lies 0.2 mm below a line leaves out a row the rectangle
+covers 60 % of (<code>DEV-FILL-025</code>).</p>
+<h2 id="coverage"><a class="header" href="#coverage">Coverage</a></h2>
+<p>A cell sews a cross when the part covers <code>fill_coverage</code> percent of it or more. Ink/Stitch allows a
+ten-thousandth of a percent of slack, and StitchCraft allows the same. A cell covered exactly half sews at 50,
+however the arithmetic rounds. The covered area is worked out exactly, row by row. Each of the part’s rings is clipped to the row’s
+strip, as Sutherland and Hodgman clip a polygon by each of the strip’s edges. By Green’s theorem, the area of
+the clipped rings left of a line down the strip is a sum over their sides, of the area between each side and
+the strip’s top edge. Each side’s share then falls to the columns it crosses. The holes run the other way
+round, and take their area away. A part that covers no cell so much sews nothing, and <code>SC-W0319</code> says so, as
+Ink/Stitch warns of it.</p>
+<p>Every cell within the bounds costs a unit of work before any is looked at. A row of cells, held while they are
+looked at, and each cell that sews a cross must fit in the stitches left (<code>REQ-GEN-004</code>). A grid of 0.1 mm
+over a part 1 m wide holds 10⁸ cells, and ends with <code>SC-E0004</code> before it takes memory.</p>
+<h2 id="a-cross"><a class="header" href="#a-cross">A cross</a></h2>
+<p>Each cross is sewn as a loop from one of its corners back to it. Its <code>\</code> diagonal goes under and its <code>/</code>
+diagonal over, as the drawing shows them, and between the 2 the needle passes through the cell’s middle,
+where the second diagonal covers it. Each half of each diagonal takes <code>cross_thread_count</code> passes of the
+thread, the needle going back and forth along it, and the count is even. An odd count sews the even count
+below it, as in Ink/Stitch, and 1 sews 2, with <code>SC-W0320</code>. Ink/Stitch sews a stitch from a corner of each
+cell to its middle for 1, and no cross (<code>DEV-FILL-027</code>).</p>
+<p>From a corner of its <code>/</code> diagonal, the loop runs in to the middle along that diagonal, which it sews last.
+It then sews the <code>\</code> diagonal back and forth from the corner on the start’s side, the top or the bottom,
+returns to the middle, and sews the <code>/</code> diagonal from its far end back to the start. Nothing of the loop
+lies over the <code>/</code> diagonal. From a corner of its <code>\</code> diagonal, the loop first sews that diagonal back and
+forth, ending at its far end. It goes in to the middle and sews the <code>/</code> diagonal from its top, then returns
+through the middle to where it started. That last stitch lies over the <code>/</code> diagonal.</p>
+<p><code>simple_cross_flipped</code> sews the <code>/</code> diagonal first and the <code>\</code> diagonal over it, on the same grid. A flipped
+cross is a plain cross turned a quarter turn. The part, its grid, the needle and the end are turned, sewn
+as plain crosses, and turned back, exactly. Ink/Stitch turns the part alone and lays its grid afresh over
+it. Its flipped cells are then the pattern size’s second length wide and its first tall, the offset’s
+second length moves them right and its first down, and with <code>canvas_grid_origin</code> off its grid starts at the
+part’s bottom left corner (<code>DEV-FILL-026</code>). On square cells, without an offset and on the canvas’s grid,
+both lay the same crosses.</p>
+<h2 id="sewing-the-crosses"><a class="header" href="#sewing-the-crosses">Sewing the crosses</a></h2>
+<p>Crosses that share a corner, side by side or corner to corner, form a group, and each group is one run, from
+a corner back to it. The run starts with a cross at its corner, one whose <code>/</code> diagonal ends there if it has
+one, and goes round its loop. At each corner along the run, before going on, it sews the loop of each cross
+not sewn yet whose <code>/</code> diagonal ends there. The cross below and to the left of the corner goes first and the
+one above and to the right second, each loop sewn the same way as the run goes along it. Such a loop starts
+along its own <code>/</code> diagonal, and nothing of it lies on top. Where the run has been round and crosses are left,
+which only their <code>\</code> diagonals’ ends join to it, it takes the first corner along it where such a cross has
+one, the cross below and to the right first. It sews that loop there, ending on top, and goes on as before.
+Every corner of a cross sewn lies on the run, and every cross of the group is sewn.</p>
+<p>The groups go in this order:</p>
+<ul>
+<li>The group with the corner nearest the end is sewn last, from that corner, and the part ends there. The end
+is the next part’s point nearest this one, or for the last part the next element’s offer, or the end
+position.</li>
+<li>The others go first, each the group with the corner nearest the needle, from that corner, the needle being
+where the run before it ended. With no needle, the first is the group of the first cross, row by row from
+the top, from that cross’s top right corner.</li>
+<li>A part of one group with both a needle and an end first runs from its corner nearest the needle to its
+corner nearest the end through the middles of the fewest crosses. Its loops start from there, and the
+crosses sewn later cover these stitches.</li>
+</ul>
+<p>Each run is a group of stitches of its own, which assembly joins to the next with a stitch when it starts
+within the element’s jump length, and with a jump otherwise, as Ink/Stitch’s stitch plan joins its runs. The
+parts are sewn nearest the needle first, as a tatami fill’s are, and a fill with a start position starts its
+first part nearest it and each part after nearest where the part before ended (<code>DEV-FILL-023</code>).</p>
+<p><strong>How it compares with Ink/Stitch.</strong> Ink/Stitch builds the same runs, of the same loops. It takes its
+groups, and the crosses that meet at a corner, in the order of a Python set of its objects, which follows
+where they lie in memory, where StitchCraft’s order is fixed. Where the needle and the end lie nearest one
+group of several, it sews another group first, from that group’s corner nearest the end. And with neither, it
+starts each group at the first corner it finds of one cross alone (<code>DEV-FILL-028</code>). The crosses and their
+stitches are the same in both, and the measures of the differential agree.</p>
+<h2 id="stitches-2"><a class="header" href="#stitches-2">Stitches</a></h2>
+<p>Each place of a run is a needle point. A stitch longer than <code>max_cross_stitch_length_mm</code> is split into the
+fewest equal stitches no longer, as Ink/Stitch’s geometry library splits it, and a stitch exactly as long is
+not split. A longest stitch below twice the shortest stitch is raised to it, with <code>SC-W0402</code>, as a fill’s
+is, and every piece of a split stitch is at least the shortest stitch. A cross’s shortest stitches run from
+its corners to its middle, half its diagonal. On a grid so fine that they are shorter than the shortest
+stitch, <code>SC-W0321</code> says so, and a needle point nearer the one before than the shortest stitch is left out,
+as finalize would leave it out.</p>
+<p>A cross stitch fill sews its crosses alone, without the underlay, pull compensation or random stitch lengths
+of a tatami fill, as in Ink/Stitch. A preview too costly to sew shows each cross’s 2 diagonals.</p>
+<h2 id="test-sheet-2"><a class="header" href="#test-sheet-2">Test sheet</a></h2>
+<p>TS-17A sews squares 24 mm wide on grids of 2 and 3 mm, with 2 and 4 threads, plain and flipped, and a K
+whose slanted edges cut their cells in half, with the fonts’ 2 threads and 0.1 mm of growth
+(<a href="#machine-testing-protocol">machine testing</a>). Every sample lies on the canvas’s grid, its corner a
+multiple of 6 mm from the origin, so that the squares sew whole cells. VectorCraft’s Test Sheet filter moves
+the sheet by whole multiples of 6 mm, which keep them. The differential compares the sheet with Ink/Stitch’s
+sewing of it (<code>REQ-FILL-CRS-007</code>).</p>
+<h2 id="properties-conformance-4"><a class="header" href="#properties-conformance-4">Properties (conformance)</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Requirement</th><th>Property</th></tr>
+</thead>
+<tbody>
+<tr><td><code>REQ-FILL-CRS-001</code></td><td>The grid’s cells are the pattern size, 1 length or 2. Its lines pass through the canvas’s origin, or each part’s top left corner, moved left and down by the offset. Every cell within the part’s bounds is looked at</td></tr>
+<tr><td><code>REQ-FILL-CRS-002</code></td><td>A cell sews a cross at <code>fill_coverage</code> percent covered, less a ten-thousandth of a percent, and a part that covers none so much sews nothing, with <code>SC-W0319</code></td></tr>
+<tr><td><code>REQ-FILL-CRS-003</code></td><td>Each cross is a loop from a corner back to it, <code>\</code> under <code>/</code>, or <code>/</code> under <code>\</code> flipped on the same grid. Each half diagonal takes the even thread count, 2 at least, with <code>SC-W0320</code> for an odd one</td></tr>
+<tr><td><code>REQ-FILL-CRS-004</code></td><td>Crosses that share a corner sew in one run, and loops join at the corners of their top diagonals first. The group nearest the end goes last and the others nearest the needle first. One group runs from the needle to the end first</td></tr>
+<tr><td><code>REQ-FILL-CRS-005</code></td><td>A stitch longer than the longest is split into equal stitches, and one as long is not. A grid too fine for the shortest stitch says so, with <code>SC-W0321</code></td></tr>
+<tr><td><code>REQ-FILL-CRS-006</code></td><td>Parts grown into each other are one, and a part shrunk away is sewn at its size, with <code>SC-W0309</code>. A fine grid over a large part runs out of the budget before it takes memory. M10.2’s methods skip the element, with <code>SC-W0011</code></td></tr>
+<tr><td><code>REQ-FILL-CRS-007</code></td><td>TS-17A’s simple crosses sew in Ink/Stitch as in StitchCraft by the differential’s measures</td></tr>
+</tbody>
+</table>
+</div>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="lock-stitches-1"><a class="header" href="#lock-stitches-1">Lock stitches</a></h1>
 <!-- implements: crates/stitchcraft-engine/src/locks/** -->
@@ -11292,12 +11691,13 @@ PES exporter writes each column’s file as it wrote the line’s (2026-10-29):<
 the filter stops with <code>SC-E0004</code> before VectorCraft would. A VectorCraft before 0.17 runs it as a light
 filter, which almost every curved line outruns, and stops it with its own error.</p>
 <p><strong>Test Sheet</strong> (<code>REQ-VC-015</code>, <code>apps/stitchcraft-vc-plugin/src/testsheet.rs</code>) draws one of the sheets
-drawn as designs, TS-02B to TS-09, TS-11A, TS-11B and the TS-13 sheets, into the document: the sheet’s design
-moved by whole millimetres so that its middle is nearest the middle of the artboard <code>_context</code> names
-(<code>Design::moved</code>). Each element is an object named by its id, with its path and its thread as the paint
-its family sews with. Its settings are its family’s effect record, each the value its dialog row takes,
-which reads back as the setting it was. The objects selected are given back as they are, and the sheet
-goes above them. The document sews as the sheet’s design moved. A fill’s rows lie where the design’s
+drawn as designs, TS-02B to TS-09, TS-11A, TS-11B, the TS-13 sheets and TS-17A, into the document: the
+sheet’s design moved by whole millimetres so that its middle is nearest the middle of the artboard
+<code>_context</code> names (<code>Design::moved</code>). TS-17A moves by whole multiples of 6 mm, which keep its crosses’ cells on
+the canvas’s grids of 2 and 3 mm (<code>TestSheet::step</code>). Each element is an object named by its id, with its
+path and its thread as the paint its family sews with. Its settings are its family’s effect record, each the
+value its dialog row takes, which reads back as the setting it was. The objects selected are given back as
+they are, and the sheet goes above them. The document sews as the sheet’s design moved. A fill’s rows lie where the design’s
 origin puts them, so moved they may fall elsewhere across a shape, and the sheet looks the same. The
 threads lose their names in the Brother palette, since VectorCraft unlinks the swatch of a paint a filter
 gives, and the PES file is the same. VectorCraft 0.15 keeps the records, but with an empty selection it
@@ -11510,7 +11910,10 @@ cuts, and costs each of them a unit for each of its segments.</p>
 <p><strong>Coordinates.</strong> VectorCraft keeps every path in document coordinates. Moving or scaling a group moves
 its paths’ anchors, so layers, groups and compound paths have no transform. Coordinates are points, 1/72
 inch, with y down, and the adapter multiplies them by 25.4/72 into millimetres. The document’s origin
-stays the origin. Coordinates are read exactly, as VectorCraft reads them, from their text in the JSON.
+stays the origin. It is the canvas’s origin, through which a cross stitch fill’s grid passes
+(<code>canvas_grid_origin</code>, <a href="#the-grid-1">cross stitch</a>), decided in M10.1. A new
+document’s first artboard has its top left corner there, and moving an artboard leaves the grid where it is.
+Coordinates are read exactly, as VectorCraft reads them, from their text in the JSON.
 An anchor’s handles are absolute positions. A missing handle, or one within a billionth of a point of its
 anchor, leaves that end of the segment straight, and a segment without handles is a line.</p>
 <p><strong>What is stitched.</strong> The layers in order, bottom first, and in each its children in paint order:</p>
@@ -12315,13 +12718,13 @@ the difference as excused. An excuse for a measure that agrees fails the case, s
 the ledger is still true. Where the differential can undo a deviation in Ink/Stitch’s file, it measures
 the file again without it. The excuse then counts only if the measure agrees. Ink/Stitch’s jumps that go
 nowhere (<code>DEV-FMT-001</code>) excuse as many trims and jumps as there are of them, and no more.</p>
-<p><code>REQ-SVG-008</code>, <code>REQ-AUTO-021</code>, <code>REQ-AUTO-022</code>, <code>REQ-RUN-013</code>, <code>REQ-SAT-029</code>, <code>REQ-FILL-CON-008</code> and
-<code>REQ-FILL-CIR-007</code> are the requirements of level L3. The other runs of the suite leave them and their
-cases to this one. The corpus is designs the SVG reader sews in full, with their settings
-(<code>REQ-SVG-009</code>), trim and stop commands and the file version. A case may name a test sheet drawn as a
-design instead (<code>sheet</code>). Both programs sew an SVG file of the elements StitchCraft sews the sheet with,
-written with their parameters, their start, end and target positions as Ink/Stitch’s commands and their
-clips as clip paths, the design’s origin and stop position as commands too, and its turn on export
+<p><code>REQ-SVG-008</code>, <code>REQ-AUTO-021</code>, <code>REQ-AUTO-022</code>, <code>REQ-RUN-013</code>, <code>REQ-SAT-029</code>, <code>REQ-FILL-CON-008</code>,
+<code>REQ-FILL-CIR-007</code> and <code>REQ-FILL-CRS-007</code> are the requirements of level L3. The other runs of the suite
+leave them and their cases to this one. The corpus is designs the SVG reader sews in full, with their
+settings (<code>REQ-SVG-009</code>), trim and stop commands and the file version. A case may name a test sheet drawn
+as a design instead (<code>sheet</code>). Both programs sew an SVG file of the elements StitchCraft sews the sheet
+with, written with their parameters, their start, end and target positions as Ink/Stitch’s commands and
+their clips as clip paths, the design’s origin and stop position as commands too, and its turn on export
 (<code>stitchcraft_testkit::inkstitch</code>), which StitchCraft’s reader reads back unchanged (<code>REQ-PRM-003</code>). An
 element a sheet draws as a clone of another is written as a <code>&lt;use&gt;</code> of it, and each command in a group
 with its connector, as Ink/Stitch’s Attach Commands writes them, since Ink/Stitch moves a command its
@@ -12330,10 +12733,12 @@ parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets c
 stitches of those choices against Ink/Stitch’s (<code>REQ-AUTO-021</code>). TS-11B checks the contour fills so, each
 strategy and join style among them (<code>REQ-FILL-CON-008</code>), and its circular fills (<code>REQ-FILL-CIR-007</code>).
 TS-11A checks the zigzag strokes (<code>REQ-RUN-013</code>), and the E-stitches, S-stitches and zigzag satins
-(<code>REQ-SAT-029</code>), along straights and round curves. TS-02B to TS-09, the sheets of MC-2 to MC-4, and
-TS-11C, the meander fills’ sheet, are cases of <code>REQ-SVG-008</code> (M8.2). The <code>drawn-locks</code> case and TS-16
-check custom locks drawn as paths, of each kind of command, which both programs sew at the same nodes
-(<code>REQ-LCK-005</code>). <code>conformance/inkstitch/README.md</code> says how to run it by hand and how to add a case.</p>
+(<code>REQ-SAT-029</code>), along straights and round curves. TS-17A checks the simple crosses of cross stitch, on
+grids of 2 and 3 mm with 2 and 4 threads, flipped, and over a letter whose slanted edges cut their cells
+in half (<code>REQ-FILL-CRS-007</code>). TS-02B to TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills’
+sheet, are cases of <code>REQ-SVG-008</code> (M8.2). The <code>drawn-locks</code> case and TS-16 check custom locks drawn as
+paths, of each kind of command, which both programs sew at the same nodes (<code>REQ-LCK-005</code>).
+<code>conformance/inkstitch/README.md</code> says how to run it by hand and how to add a case.</p>
 <p><strong>Centre lines.</strong> Sewing what StitchCraft chose can’t find a choice that is wrong: TS-13B’s small T sewed
 a Γ, the left arm of its bar left out of its centre line, and the differential agreed by every measure.
 The <code>centre-lines</code> cases compare a step before the stitches (<code>REQ-AUTO-022</code>,
@@ -12924,7 +13329,7 @@ a parameter declared with an Ink/Stitch origin must be listed here with a compat
 default must be the value Ink/Stitch sews.</li>
 <li><strong>Default</strong> is the value Ink/Stitch’s settings window shows. For a few parameters its code sews another
 value when a file sets none, and the cell gives that value after the default, as in <code>0.1 (0.2 when unset)</code>. <code>—</code> means no default: the value is derived from another parameter or the shape.</li>
-<li><strong>StitchCraft</strong> says whether the <a href="#parameters-11">parameter registry</a> declares the
+<li><strong>StitchCraft</strong> says whether the <a href="#parameters-12">parameter registry</a> declares the
 parameter. <em>planned</em>: not yet; a design that sets it keeps it unchanged and gets <code>SC-W0105</code>. <em>not
 planned</em>: never, and a design that sets it gets the same.
 <em>registered</em>: StitchCraft reads and checks it under the same key, meaning and default; it changes the
@@ -13108,14 +13513,14 @@ planned.</li>
 <tr><td><code>fill_underlay_skip_last</code></td><td>boolean</td><td>—</td><td>false</td><td>all</td><td>P1 (M5)</td><td><a href="#fill_underlay_skip_last">registered</a></td></tr>
 <tr><td><code>underlay_underpath</code></td><td>boolean</td><td>—</td><td>true</td><td>all</td><td>P1 (M5)</td><td><a href="#underlay_underpath">registered</a></td></tr>
 <tr><td><code>random_seed</code></td><td>random_seed</td><td>—</td><td>—</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>circular_fill</code>, <code>meander_fill</code>, <code>linear_gradient_fill</code></td><td>P1 (M5)</td><td><a href="#random_seed">registered</a></td></tr>
-<tr><td><code>cross_stitch_method</code></td><td>combo</td><td>—</td><td>0</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>cross_thread_count</code></td><td>int</td><td>—</td><td>4</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>pattern_size_mm</code></td><td>float</td><td>mm (x y)</td><td>3</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>canvas_grid_origin</code></td><td>boolean</td><td>—</td><td>true</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>cross_offset_mm</code></td><td>float</td><td>mm (x y)</td><td>0</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
+<tr><td><code>cross_stitch_method</code></td><td>combo</td><td>—</td><td>0</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td><a href="#cross_stitch_method">registered</a></td></tr>
+<tr><td><code>cross_thread_count</code></td><td>int</td><td>—</td><td>4</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td><a href="#cross_thread_count">registered</a></td></tr>
+<tr><td><code>pattern_size_mm</code></td><td>float</td><td>mm (x y)</td><td>3</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td><a href="#pattern_size_mm">registered</a></td></tr>
+<tr><td><code>canvas_grid_origin</code></td><td>boolean</td><td>—</td><td>true</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td><a href="#canvas_grid_origin">registered</a></td></tr>
+<tr><td><code>cross_offset_mm</code></td><td>float</td><td>mm (x y)</td><td>0</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td><a href="#cross_offset_mm">registered</a></td></tr>
 <tr><td><code>cross_rotation</code></td><td>float</td><td>deg</td><td>0</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>fill_coverage</code></td><td>int</td><td>%</td><td>50</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>max_cross_stitch_length_mm</code></td><td>float</td><td>mm</td><td>11.0</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
+<tr><td><code>fill_coverage</code></td><td>int</td><td>%</td><td>50</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td><a href="#fill_coverage">registered</a></td></tr>
+<tr><td><code>max_cross_stitch_length_mm</code></td><td>float</td><td>mm</td><td>11.0</td><td><code>cross_stitch</code></td><td>P3 (M10)</td><td><a href="#max_cross_stitch_length_mm">registered</a></td></tr>
 </tbody>
 </table>
 </div>
@@ -13280,7 +13685,7 @@ change Ink/Stitch’s updater makes (<code>lib/update.py</code>), in StitchCraft
 </tbody>
 </table>
 </div>
-<p><em>145 parameter declarations, 105 registered in StitchCraft.</em></p>
+<p><em>145 parameter declarations, 112 registered in StitchCraft.</em></p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="architecture-decision-records"><a class="header" href="#architecture-decision-records">Architecture decision records</a></h1>
 <p>Short records of decisions that shape the code, with their context and the alternatives we rejected.
@@ -14520,7 +14925,7 @@ routes its pieces.</p>
 <tr><th>Step</th><th>Deliverable</th><th>Done when</th></tr>
 </thead>
 <tbody>
-<tr><td>M10.1</td><td>Cross stitch with simple crosses, as Ink/Stitch sews it. Its grid of cells <code>pattern_size_mm</code> across, one length or 2, starts at the canvas’s origin, or at the corner of the element’s bounds with <code>canvas_grid_origin</code> off, and <code>cross_offset_mm</code> moves it. A cell sews a cross when the region, grown by <code>expand_mm</code>, covers <code>fill_coverage</code> percent of it. Crosses that share a corner sew in one run. Each sews its <code>\</code> diagonal and then its <code>/</code> diagonal over it, passing through the cell’s middle in between, and <code>simple_cross_flipped</code> sews the <code>/</code> diagonal first. <code>cross_thread_count</code> threads lie on each diagonal, and stitches longer than <code>max_cross_stitch_length_mm</code> are split. The pattern size and the offset are a new kind of setting, of 1 length or 2. The step chooses where a VectorCraft document’s canvas origin lies. 24 of Ink/Stitch’s 25 cross-stitch fonts sew simple crosses only, on grids of 1.5 to 3 mm with 2 or 4 threads</td><td>requirements written. TS-17A’s simple crosses sew in Ink/Stitch as in StitchCraft by every measure of the differential, a user page shows cross stitch in pictures, and TS-17A is drawn for MC-12</td></tr>
+<tr><td>M10.1 ✅</td><td>Cross stitch with simple crosses, as Ink/Stitch sews it. Its grid of cells <code>pattern_size_mm</code> across, one length or 2, starts at the canvas’s origin, or at the corner of the element’s bounds with <code>canvas_grid_origin</code> off, and <code>cross_offset_mm</code> moves it. A cell sews a cross when the region, grown by <code>expand_mm</code>, covers <code>fill_coverage</code> percent of it. Crosses that share a corner sew in one run. Each sews its <code>\</code> diagonal and then its <code>/</code> diagonal over it, passing through the cell’s middle in between, and <code>simple_cross_flipped</code> sews the <code>/</code> diagonal first. <code>cross_thread_count</code> threads lie on each diagonal, and stitches longer than <code>max_cross_stitch_length_mm</code> are split. The pattern size and the offset are 1 length or 2, which the registry’s kind for a satin’s paired pull compensation already reads. A VectorCraft document’s canvas origin is the origin of its coordinates, where a new document’s first artboard has its top left corner (<a href="#the-grid-1">cross stitch</a>). 24 of Ink/Stitch’s 25 cross-stitch fonts sew simple crosses only, on grids of 1.5 to 3 mm with 2 or 4 threads</td><td><code>REQ-FILL-CRS-001</code> to <code>REQ-FILL-CRS-007</code> and <code>SC-W0319</code> to <code>SC-W0321</code>, <code>DEV-FILL-024</code> to <code>DEV-FILL-028</code>, TS-17A’s simple crosses and a case of grids, offsets and split stitches that agree with Ink/Stitch by every measure of the differential, a user page with pictures, and TS-17A’s M10.1 part drawn for MC-12</td></tr>
 <tr><td>M10.2</td><td>The other cross stitch methods, as Ink/Stitch sews them, each with its flipped variant. Upright crosses sew a <code>+</code> in each cell, and dense upright crosses add a second grid of them half a cell over. A double cross sews an upright cross between its 2 diagonals, and a Smyrna cross sews one over them. Half crosses sew one diagonal in each cell, joined into rows that are routed as a tatami fill’s rows, with the travel stitches on the outline of the cells, and each stitch sewn an odd number of times. <code>cross_rotation</code> turns the grid, as lettering along a path turns each glyph’s (M14.3). Jersey 15, the 25th cross-stitch font, sews double crosses</td><td>requirements written. TS-17A’s other samples sew in Ink/Stitch as in StitchCraft by every measure of the differential, the user page shows each method, and the methods are listed for MC-12</td></tr>
 <tr><td>M10.3 ✅ 🧪</td><td>The routing tools. Ink/Stitch’s Auto-Route Satin Columns and Auto-Route Running Stitch replace the selected elements with new ones in a sewing order, joined by runs that later stitches cover and by as few jumps as they can. VectorCraft’s tools filter came with M6.12’s Stroke to Satin, once named Convert Line to Satin. The step chooses whether StitchCraft’s routing tools are filters of that kind, a function that lettering calls (M14, M15.8), a pass of <code>stitch plan</code>, or all of these. It also chooses whether the tools start from the order M13.3 gives a design, how a satin column is cut in 2, its rails and rungs with it, and how a document marks a route’s start and end, as Ink/Stitch’s <code>autoroute_start</code> and <code>autoroute_end</code> commands mark them</td><td>Decision recorded in the design, <a href="#adr-0017-routing-is-one-engine-function-which-vectorcrafts-filters-and-lettering-call">ADR-0017</a>: one function of the engine routes, which 2 heavy filters call in VectorCraft and lettering calls for its fonts and glyphs. The filters write the route into the document, and <code>stitch plan</code> routes no element the user drew. Routing doesn’t start from M13.3’s order. Objects named <code>stitch:route-start</code> and <code>stitch:route-end</code> mark a route’s ends, and a column is cut at one of its pairs, each piece keeping the rungs that cross both its rails. <code>stitch route</code> comes after 1.0, with M8.12’s writer (2026-11-03)</td></tr>
 <tr><td>M10.4</td><td>Auto-satin routing, as Ink/Stitch’s Auto-Route Satin Columns routes, in the form <a href="#adr-0017-routing-is-one-engine-function-which-vectorcrafts-filters-and-lettering-call">ADR-0017</a> chose (<a href="#routing-tools">routing tools</a>). <code>stitchcraft_engine::route</code> routes the columns, and StitchCraft Auto-Route Satin Columns, a heavy filter, calls it in VectorCraft to replace the selected paths with the routed objects in one undo step. Satin columns are cut into pieces 1 mm long along their centre lines, and the running stitches among them show where the needle may travel. Jumps join the parts that lie apart, as short in all as they can be. The route runs from the leftmost point to the rightmost, or from the marker named <code>stitch:route-start</code> to the one named <code>stitch:route-end</code>, selected with the paths. It sews each piece once, and a piece it passes twice is sewn first as a running stitch along its centre line, under the satin that covers it later. A column is cut at one of its pairs, each piece keeping its settings and the rungs that cross both its rails (<a href="#cut-in-2">satin</a>). With their order kept, as lettering routes them, the satins gain only the cuts and runs between them. A jump longer than 1 mm outside the shapes is trimmed when the user asks. Ink/Stitch Small Font and Medium Font are routed this way</td><td>requirements written. TS-17C’s satin letters, routed by Ink/Stitch’s tool and by StitchCraft’s function, sew alike by every measure of the differential. A contract test routes them with the filter within a heavy filter’s budget in VectorCraft’s host, and a Level B case routes them with VectorCraft’s command line and sews them with <code>stitch export</code>. A how-to page shows letters before and after in pictures, and TS-17C is drawn for MC-12</td></tr>
@@ -14704,7 +15109,7 @@ middle of the artboard (<code>REQ-VC-015</code>). A checkpoint can so sew a shee
 <tr><td><strong>TS-14</strong> Lettering (M14)</td><td>3 embroidery fonts, a block, a script and a small one, each at the least and the greatest heights it sews at, and a name along an arc</td><td>Whether every glyph reads at its least height, satin coverage at its greatest, and whether the locks of small glyphs hold after the trims</td><td>MC-9</td></tr>
 <tr><td><strong>TS-15</strong> Fonts ported automatically (M15)</td><td>3 fonts from Google Fonts, a sans, a serif and a script, each ported at 3 heights beside the font Ink/Stitch digitized by hand from it, at the same heights. A word in satin columns 0.4, 0.6, 0.8 and 1 mm wide beside the same word in triple runs. <code>stitch testsheet</code> draws it with the fonts of the corpus</td><td>Whether every ported glyph reads at the least height, with its dots, serifs and counters. The jump threads inside letters and between them. Whether the ported letters read as well as the letters digitized by hand beside them, and the narrowest satin column that sews a letter cleanly</td><td>MC-10</td></tr>
 <tr><td><strong>TS-16</strong> An Ink/Stitch file (M8)</td><td>A design written as Ink/Stitch writes a file, which <code>stitch plan</code> reads, each step of M8 drawing its part. Its fill and its satin column start and end at Ink/Stitch’s commands. From M8.4 a red fill 40 × 30 mm sews from its top-right corner to its bottom-left one, and a blue satin column 40 mm long starts in its middle and ends three quarters along. From M8.5 a green fill is cut by its clip path, a circle, to a quarter of a disc, and a black zigzag running stitch by a U-shaped one into 2 pieces. From M8.8 the origin lies off the design’s middle, on the blue column’s top edge 10 mm in from its left end, and a stop after the blue column sends the frame to a stop position 20 mm right of the fill and 10 mm above it. From M8.9 the file turns the design right on export, about its origin, so its first 4 parts sew 100 mm wide and 40 mm tall. From M8.10 a clone of the red fill, turned 45° right, sews after them, in red, below the fill once the design is turned: its rows turn with it, and it starts and ends at the corners turned from the fill’s. From M8.13 2 black lines 40 mm long sew last, above the rest once the design is turned, each locked at both ends with a custom lock drawn as a path and trimmed after: straight lines and a curve at 100 %, and lines and an arc at 150 %. It is sewn beside the PES file the differential’s Ink/Stitch writes of it</td><td>Where each element starts and ends, against its commands. Whether the clipped edges sew where the clip path cuts them, and the clone’s rows lie at its turned angle. Do the drawn locks hold when the tail is pulled? Whether the machine puts the origin or the design’s middle at the hoop’s centre, where the frame waits at the stop, and whether the design sews turned right about its origin. Every difference between the 2 sew-outs</td><td>MC-11</td></tr>
-<tr><td><strong>TS-17A</strong> Cross stitch (M10)</td><td>Cross stitch fills (M10.1, M10.2), drawn before MC-12, each trimmed after, a row to a thread. Squares 24 mm wide of simple crosses on grids of 2 and 3 mm, with 2 and 4 threads, and flipped. A letter drawn as Ink/Stitch’s cross-stitch fonts draw theirs, on a 2 mm grid with 2 threads and its edge cells half covered. Squares of half, upright, dense upright, double and Smyrna crosses, and simple crosses on a grid turned 30°</td><td>Whether every cross’s top diagonal lies the same way, and whether the stitches through the cells’ middles show. Fabric between the crosses at 2 and 4 threads, and the grid that reads best at the letter’s size. Whether the half crosses’ travel stitches show on their edges, and how the layers of the double and Smyrna crosses look. The time the sheet takes</td><td>MC-12</td></tr>
+<tr><td><strong>TS-17A</strong> Cross stitch (M10)</td><td>Cross stitch fills (M10.1, M10.2), drawn before MC-12, each trimmed after, a row to a thread, every sample on the canvas’s grid. From M10.1, in red, squares 24 mm wide of simple crosses on grids of 2 and 3 mm, with 2 and 4 threads. Below them in blue, the 2 mm square with 2 threads and the 3 mm one with 4, flipped, and a K 24 mm tall drawn as Ink/Stitch’s cross-stitch fonts draw their letters, on a 2 mm grid with 2 threads, grown by 0.1 mm, its slanted edges cutting their cells in half (114 × 54 mm). M10.2 adds squares of half, upright, dense upright, double and Smyrna crosses, and simple crosses on a grid turned 30°</td><td>Whether every cross’s top diagonal lies the same way, and whether the stitches through the cells’ middles show. Fabric between the crosses at 2 and 4 threads, and the grid that reads best at the letter’s size. Whether the half crosses’ travel stitches show on their edges, and how the layers of the double and Smyrna crosses look. The time the sheet takes</td><td>MC-12</td></tr>
 <tr><td><strong>TS-17B</strong> New fills (M10)</td><td>Tartan, guided and linear gradient fills (M10.6, M10.7, M10.9, M10.10, M10.12), drawn before MC-12, each trimmed after. Tartans 40 mm square, their setts mirrored at the ends or repeated, one with a weft that differs from its warp and one with stripes narrow enough to sew as runs, beside herringbones 3 mm wide. Leaves filled along an S-shaped guide, copied, offset and buffered. Rectangles in gradients of 2 and 3 stops, one of them transparent</td><td>Whether a tartan’s warp and weft read as a weave and its runs lie flat on its fills, and how its herringbone turns. The spacing of the guided rows round the guide’s bends, and where the copied rows crowd. Whether a gradient’s colours blend with no step between its sections, and whether the transparent stop leaves a clean gap. Colour changes, jumps and time</td><td>MC-12</td></tr>
 <tr><td><strong>TS-17C</strong> Ripples and routing (M10)</td><td>Ripple stitches (M10.8, M10.11), drawn before MC-12, along a column of rails and rungs, from an open line towards a target point and from a closed line spiralling in. Ripples along a guide line and closed lines on a satin guide, beside a ripple with a grid. The routing tools (M10.4, M10.13): satin letters as drawn beside the same letters after auto-satin routing, and a network of running stitches as drawn beside it after auto-run routing. 2 satin columns that cross, their underlays first (M10.15)</td><td>Whether the ripples’ lines keep their spacing, and how their joins look. Jumps, trims and time on the routed halves against the halves as drawn, and whether the runs under the satins show. Whether the crossing columns, their underlays sewn first, lie flatter than as drawn</td><td>MC-12</td></tr>
 </tbody>

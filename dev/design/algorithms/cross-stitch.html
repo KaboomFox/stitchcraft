@@ -1,0 +1,398 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Cross stitch - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../searchindex-8e41d00c.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../toc-3b2820bf.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/design/algorithms/cross-stitch.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="cross-stitch"><a class="header" href="#cross-stitch">Cross stitch</a></h1>
+<!-- implements: crates/stitchcraft-engine/src/generators/cross/** -->
+<p>A cross in each cell of a grid laid over the fill, where the fill covers enough of the cell (P3, M10.1).
+Cross stitch is counted work. Hand embroiderers sew it on even-weave fabric, every cross the same size and
+in rows and columns. A shape is filled by choosing cells of the grid, and its edges step along the grid’s
+lines. StitchCraft sews Ink/Stitch’s simple crosses, plain and flipped, as Ink/Stitch sews them (read at
+<code>d59c9ab</code>, <code>lib/stitches/cross_stitch.py</code>, <code>lib/stitches/utils/cross_stitch.py</code> and the fill element’s
+cross stitch settings in <code>lib/elements/fill_stitch.py</code>, described here in our own words, ADR-0012). The
+other crosses, half, upright, double and Smyrna, arrive with M10.2, and the turned grid
+(<code>cross_rotation</code>) with it.</p>
+<p>24 of the 25 cross-stitch fonts in Ink/Stitch’s font library sew simple crosses only, on grids of 1.5 to 3
+mm with 2 or 4 threads. They draw each letter as rectangles of whole cells, grown by 0.1 mm, on a grid
+that starts at each rectangle’s corner (<code>canvas_grid_origin</code> off).</p>
+<h2 id="parameters"><a class="header" href="#parameters">Parameters</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Key</th><th>Meaning</th><th>Default</th></tr>
+</thead>
+<tbody>
+<tr><td><code>cross_stitch_method</code></td><td><code>simple_cross</code>, or <code>simple_cross_flipped</code> with the <code>/</code> diagonal under. The 10 other methods, M10.2’s, skip the element (<code>SC-W0011</code>)</td><td><code>simple_cross</code></td></tr>
+<tr><td><code>cross_thread_count</code></td><td>passes on each half of each diagonal, 1 to 20. An odd count sews the even count below it, 2 at least</td><td>4</td></tr>
+<tr><td><code>pattern_size_mm</code></td><td>the cells’ width and height, 1 length or 2</td><td>3</td></tr>
+<tr><td><code>canvas_grid_origin</code></td><td>the grid’s lines through the canvas’s origin, or through each part’s top left corner</td><td>on</td></tr>
+<tr><td><code>cross_offset_mm</code></td><td>the grid moved left by the first length and down by the second, 1 length or 2</td><td>0</td></tr>
+<tr><td><code>fill_coverage</code></td><td>how much of a cell, in percent, the fill must cover for a cross</td><td>50</td></tr>
+<tr><td><code>max_cross_stitch_length_mm</code></td><td>the longest stitch, past which a stitch is split</td><td>11</td></tr>
+<tr><td><code>expand_mm</code></td><td>each part grown, or shrunk where negative, before its cells are chosen</td><td>0</td></tr>
+</tbody>
+</table>
+</div>
+<p>The pattern size and the offset are 1 length, for both ways, or 2 separated by a space. The registry’s
+<code>LengthPair</code> kind reads exactly that, as it reads a satin’s pull compensation for each of its sides, and they
+are of that kind. Ink/Stitch takes the first 2 of more values, where StitchCraft leaves the element out with
+<code>SC-E0101</code> (<code>DEV-PRM-004</code>). Ink/Stitch reads a pattern size below 0.1 mm as 0.1, an offset below 0 as 0 and a
+coverage below 1 % as 1 %, and StitchCraft clamps them so too, with <code>SC-W0102</code>. Its coverage is a whole
+number, and its fonts write it as <code>50.0</code> too, which it sews at its default of 50. StitchCraft reads it as a
+percentage, and <code>50.0</code> is 50 here too (<code>DEV-PRM-001</code>).</p>
+<h2 id="the-grid"><a class="header" href="#the-grid">The grid</a></h2>
+<p>Each part of the fill’s area is grown by <code>expand_mm</code> first. Grown parts that meet are one part, as Ink/Stitch
+grows the whole shape at once. Shrunk, each part is shrunk alone, and a part shrunk away is sewn at its own
+size, with <code>SC-W0309</code>, as every fill’s part is. Ink/Stitch keeps the shape as drawn only when nothing at all
+is left of it, and otherwise sews no cross in such a part (<code>DEV-FILL-024</code>).</p>
+<p>The grid’s cells are <code>pattern_size_mm</code> wide and tall. Its lines pass through the canvas’s origin, so that
+2 fills of cross stitch that lie side by side share one grid and their crosses line up. With
+<code>canvas_grid_origin</code> off, they pass through the top left corner of the part’s bounds instead, and the
+part sews the same wherever it lies. <code>cross_offset_mm</code> moves the lines left by its first length and down
+by its second, as Ink/Stitch moves them. A move by a whole cell leaves the grid where it was.</p>
+<p><strong>The canvas’s origin.</strong> In an SVG file it is the origin of the page, where Ink/Stitch puts it, and the SVG
+reader puts the page’s top left corner at the design’s origin. In a VectorCraft document it is the origin of
+the document’s coordinates, which the VectorCraft adapter keeps as the design’s origin
+(<a href="../vectorcraft-integration.html#reading-vectorcraft-files-stitchcraft-vectorcraft">coordinates</a>). A new document’s first
+artboard has its top left corner there. Moving an artboard then leaves the grid where it is, a fill and its
+neighbours on other artboards share it, and a document exported to SVG keeps it where its page puts the
+origin.</p>
+<p>Every cell within the part’s bounds is looked at. Ink/Stitch starts at the grid’s first line at or above the
+part’s top, moved down by the offset’s second length, and never looks at the row above it. Where the part’s
+top lies less far below a line than that length, Ink/Stitch loses the row of crosses the part covers there. A
+3 mm grid moved 2 mm down over a rectangle whose top lies 0.2 mm below a line leaves out a row the rectangle
+covers 60 % of (<code>DEV-FILL-025</code>).</p>
+<h2 id="coverage"><a class="header" href="#coverage">Coverage</a></h2>
+<p>A cell sews a cross when the part covers <code>fill_coverage</code> percent of it or more. Ink/Stitch allows a
+ten-thousandth of a percent of slack, and StitchCraft allows the same. A cell covered exactly half sews at 50,
+however the arithmetic rounds. The covered area is worked out exactly, row by row. Each of the part’s rings is clipped to the row’s
+strip, as Sutherland and Hodgman clip a polygon by each of the strip’s edges. By Green’s theorem, the area of
+the clipped rings left of a line down the strip is a sum over their sides, of the area between each side and
+the strip’s top edge. Each side’s share then falls to the columns it crosses. The holes run the other way
+round, and take their area away. A part that covers no cell so much sews nothing, and <code>SC-W0319</code> says so, as
+Ink/Stitch warns of it.</p>
+<p>Every cell within the bounds costs a unit of work before any is looked at. A row of cells, held while they are
+looked at, and each cell that sews a cross must fit in the stitches left (<code>REQ-GEN-004</code>). A grid of 0.1 mm
+over a part 1 m wide holds 10⁸ cells, and ends with <code>SC-E0004</code> before it takes memory.</p>
+<h2 id="a-cross"><a class="header" href="#a-cross">A cross</a></h2>
+<p>Each cross is sewn as a loop from one of its corners back to it. Its <code>\</code> diagonal goes under and its <code>/</code>
+diagonal over, as the drawing shows them, and between the 2 the needle passes through the cell’s middle,
+where the second diagonal covers it. Each half of each diagonal takes <code>cross_thread_count</code> passes of the
+thread, the needle going back and forth along it, and the count is even. An odd count sews the even count
+below it, as in Ink/Stitch, and 1 sews 2, with <code>SC-W0320</code>. Ink/Stitch sews a stitch from a corner of each
+cell to its middle for 1, and no cross (<code>DEV-FILL-027</code>).</p>
+<p>From a corner of its <code>/</code> diagonal, the loop runs in to the middle along that diagonal, which it sews last.
+It then sews the <code>\</code> diagonal back and forth from the corner on the start’s side, the top or the bottom,
+returns to the middle, and sews the <code>/</code> diagonal from its far end back to the start. Nothing of the loop
+lies over the <code>/</code> diagonal. From a corner of its <code>\</code> diagonal, the loop first sews that diagonal back and
+forth, ending at its far end. It goes in to the middle and sews the <code>/</code> diagonal from its top, then returns
+through the middle to where it started. That last stitch lies over the <code>/</code> diagonal.</p>
+<p><code>simple_cross_flipped</code> sews the <code>/</code> diagonal first and the <code>\</code> diagonal over it, on the same grid. A flipped
+cross is a plain cross turned a quarter turn. The part, its grid, the needle and the end are turned, sewn
+as plain crosses, and turned back, exactly. Ink/Stitch turns the part alone and lays its grid afresh over
+it. Its flipped cells are then the pattern size’s second length wide and its first tall, the offset’s
+second length moves them right and its first down, and with <code>canvas_grid_origin</code> off its grid starts at the
+part’s bottom left corner (<code>DEV-FILL-026</code>). On square cells, without an offset and on the canvas’s grid,
+both lay the same crosses.</p>
+<h2 id="sewing-the-crosses"><a class="header" href="#sewing-the-crosses">Sewing the crosses</a></h2>
+<p>Crosses that share a corner, side by side or corner to corner, form a group, and each group is one run, from
+a corner back to it. The run starts with a cross at its corner, one whose <code>/</code> diagonal ends there if it has
+one, and goes round its loop. At each corner along the run, before going on, it sews the loop of each cross
+not sewn yet whose <code>/</code> diagonal ends there. The cross below and to the left of the corner goes first and the
+one above and to the right second, each loop sewn the same way as the run goes along it. Such a loop starts
+along its own <code>/</code> diagonal, and nothing of it lies on top. Where the run has been round and crosses are left,
+which only their <code>\</code> diagonals’ ends join to it, it takes the first corner along it where such a cross has
+one, the cross below and to the right first. It sews that loop there, ending on top, and goes on as before.
+Every corner of a cross sewn lies on the run, and every cross of the group is sewn.</p>
+<p>The groups go in this order:</p>
+<ul>
+<li>The group with the corner nearest the end is sewn last, from that corner, and the part ends there. The end
+is the next part’s point nearest this one, or for the last part the next element’s offer, or the end
+position.</li>
+<li>The others go first, each the group with the corner nearest the needle, from that corner, the needle being
+where the run before it ended. With no needle, the first is the group of the first cross, row by row from
+the top, from that cross’s top right corner.</li>
+<li>A part of one group with both a needle and an end first runs from its corner nearest the needle to its
+corner nearest the end through the middles of the fewest crosses. Its loops start from there, and the
+crosses sewn later cover these stitches.</li>
+</ul>
+<p>Each run is a group of stitches of its own, which assembly joins to the next with a stitch when it starts
+within the element’s jump length, and with a jump otherwise, as Ink/Stitch’s stitch plan joins its runs. The
+parts are sewn nearest the needle first, as a tatami fill’s are, and a fill with a start position starts its
+first part nearest it and each part after nearest where the part before ended (<code>DEV-FILL-023</code>).</p>
+<p><strong>How it compares with Ink/Stitch.</strong> Ink/Stitch builds the same runs, of the same loops. It takes its
+groups, and the crosses that meet at a corner, in the order of a Python set of its objects, which follows
+where they lie in memory, where StitchCraft’s order is fixed. Where the needle and the end lie nearest one
+group of several, it sews another group first, from that group’s corner nearest the end. And with neither, it
+starts each group at the first corner it finds of one cross alone (<code>DEV-FILL-028</code>). The crosses and their
+stitches are the same in both, and the measures of the differential agree.</p>
+<h2 id="stitches"><a class="header" href="#stitches">Stitches</a></h2>
+<p>Each place of a run is a needle point. A stitch longer than <code>max_cross_stitch_length_mm</code> is split into the
+fewest equal stitches no longer, as Ink/Stitch’s geometry library splits it, and a stitch exactly as long is
+not split. A longest stitch below twice the shortest stitch is raised to it, with <code>SC-W0402</code>, as a fill’s
+is, and every piece of a split stitch is at least the shortest stitch. A cross’s shortest stitches run from
+its corners to its middle, half its diagonal. On a grid so fine that they are shorter than the shortest
+stitch, <code>SC-W0321</code> says so, and a needle point nearer the one before than the shortest stitch is left out,
+as finalize would leave it out.</p>
+<p>A cross stitch fill sews its crosses alone, without the underlay, pull compensation or random stitch lengths
+of a tatami fill, as in Ink/Stitch. A preview too costly to sew shows each cross’s 2 diagonals.</p>
+<h2 id="test-sheet"><a class="header" href="#test-sheet">Test sheet</a></h2>
+<p>TS-17A sews squares 24 mm wide on grids of 2 and 3 mm, with 2 and 4 threads, plain and flipped, and a K
+whose slanted edges cut their cells in half, with the fonts’ 2 threads and 0.1 mm of growth
+(<a href="../../plan/machine-testing.html">machine testing</a>). Every sample lies on the canvas’s grid, its corner a
+multiple of 6 mm from the origin, so that the squares sew whole cells. VectorCraft’s Test Sheet filter moves
+the sheet by whole multiples of 6 mm, which keep them. The differential compares the sheet with Ink/Stitch’s
+sewing of it (<code>REQ-FILL-CRS-007</code>).</p>
+<h2 id="properties-conformance"><a class="header" href="#properties-conformance">Properties (conformance)</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Requirement</th><th>Property</th></tr>
+</thead>
+<tbody>
+<tr><td><code>REQ-FILL-CRS-001</code></td><td>The grid’s cells are the pattern size, 1 length or 2. Its lines pass through the canvas’s origin, or each part’s top left corner, moved left and down by the offset. Every cell within the part’s bounds is looked at</td></tr>
+<tr><td><code>REQ-FILL-CRS-002</code></td><td>A cell sews a cross at <code>fill_coverage</code> percent covered, less a ten-thousandth of a percent, and a part that covers none so much sews nothing, with <code>SC-W0319</code></td></tr>
+<tr><td><code>REQ-FILL-CRS-003</code></td><td>Each cross is a loop from a corner back to it, <code>\</code> under <code>/</code>, or <code>/</code> under <code>\</code> flipped on the same grid. Each half diagonal takes the even thread count, 2 at least, with <code>SC-W0320</code> for an odd one</td></tr>
+<tr><td><code>REQ-FILL-CRS-004</code></td><td>Crosses that share a corner sew in one run, and loops join at the corners of their top diagonals first. The group nearest the end goes last and the others nearest the needle first. One group runs from the needle to the end first</td></tr>
+<tr><td><code>REQ-FILL-CRS-005</code></td><td>A stitch longer than the longest is split into equal stitches, and one as long is not. A grid too fine for the shortest stitch says so, with <code>SC-W0321</code></td></tr>
+<tr><td><code>REQ-FILL-CRS-006</code></td><td>Parts grown into each other are one, and a part shrunk away is sewn at its size, with <code>SC-W0309</code>. A fine grid over a large part runs out of the budget before it takes memory. M10.2’s methods skip the element, with <code>SC-W0011</code></td></tr>
+<tr><td><code>REQ-FILL-CRS-007</code></td><td>TS-17A’s simple crosses sew in Ink/Stitch as in StitchCraft by the differential’s measures</td></tr>
+</tbody>
+</table>
+</div>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../design/algorithms/fills.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../design/algorithms/locks.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../design/algorithms/fills.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../design/algorithms/locks.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../mark-09e88c2c.min.js"></script>
+        <script src="../../searcher-09f2665d.js"></script>
+
+        <script src="../../clipboard-1626706a.min.js"></script>
+        <script src="../../highlight-abc7f01d.js"></script>
+        <script src="../../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

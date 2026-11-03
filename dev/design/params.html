@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-6f4fd14f.js";
+            window.path_to_searchindex_js = "../searchindex-8e41d00c.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-b002ec72.js"></script>
+        <script src="../toc-3b2820bf.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -277,7 +277,7 @@ version and a registry schema version arrive with the first release, together wi
 <tr><td><code>OptionalLengthWithZero</code></td><td><code>Option&lt;Mm&gt;</code></td><td>as <code>OptionalLength</code>, but only empty text is empty, and 0 is a length, as Ink/Stitch reads a satin’s shortest stitch to split</td><td><code>float</code>, unit <code>mm</code>, no default</td></tr>
 <tr><td><code>Angle</code></td><td>degrees, <code>f64</code></td><td>finite; normalized to (−180, 180]</td><td><code>float</code>, unit <code>deg</code></td></tr>
 <tr><td><code>BoundedAngle</code></td><td>degrees, <code>f64</code></td><td>finite, within range, never turned by whole turns. 270 is above a range that ends at 89, and reads as 89, as Ink/Stitch reads a zigzag stroke’s angle</td><td><code>float</code>, unit <code>deg</code></td></tr>
-<tr><td><code>Percent</code></td><td><code>f64</code></td><td>finite, within range</td><td><code>float</code>, unit <code>%</code></td></tr>
+<tr><td><code>Percent</code></td><td><code>f64</code></td><td>finite, within range</td><td><code>float</code>, unit <code>%</code>, or <code>int</code> for a cross stitch’s coverage, which Ink/Stitch’s fonts write as <code>50.0</code> too</td></tr>
 <tr><td><code>Number</code></td><td><code>f64</code></td><td>finite, within range, without a unit</td><td><code>float</code>, no unit</td></tr>
 <tr><td><code>Area</code></td><td>square millimetres, <code>f64</code></td><td>finite, within range, written as a number</td><td>none (Ink/Stitch has no area setting)</td></tr>
 <tr><td><code>Count</code></td><td><code>u32</code></td><td>whole, within range</td><td><code>int</code></td></tr>
@@ -285,7 +285,7 @@ version and a registry schema version arrive with the first release, together wi
 <tr><td><code>Choice</code></td><td><code>&amp;'static str</code> (the id)</td><td>one of the declared ids; unknown ids are a diagnostic, not a default</td><td><code>combo</code>, <code>dropdown</code></td></tr>
 <tr><td><code>Seed</code></td><td><code>Option&lt;u64&gt;</code></td><td>any; empty means “derive from the element”; text that is not a number is hashed (FNV-1a)</td><td><code>random_seed</code></td></tr>
 <tr><td><code>LengthList</code></td><td><code>Vec&lt;Mm&gt;</code></td><td>1 to 16 values, each in range (patterns like <code>"2.5 1.0"</code>)</td><td><code>string</code>/<code>float</code> lists</td></tr>
-<tr><td><code>LengthPair</code></td><td><code>[Mm; 2]</code></td><td>1 value for both sides, or 2 for the first side and the second (a satin’s rails, or its start and end). Each is in range, with units as for <code>Length</code></td><td><code>float</code>, unit <code>mm (each side)</code></td></tr>
+<tr><td><code>LengthPair</code></td><td><code>[Mm; 2]</code></td><td>1 value for both sides, or 2 for the first side and the second (a satin’s rails, or its start and end, or a cross stitch grid’s width and height). Each is in range, with units as for <code>Length</code></td><td><code>float</code>, unit <code>mm (each side)</code> or <code>mm (x y)</code></td></tr>
 <tr><td><code>PercentPair</code></td><td><code>[f64; 2]</code></td><td>as <code>LengthPair</code>, in percent</td><td><code>float</code>, unit <code>% (each side)</code></td></tr>
 <tr><td><code>OptionalLengthPair</code>, <code>OptionalPercentPair</code></td><td><code>Option&lt;[Mm; 2]&gt;</code>, <code>Option&lt;[f64; 2]&gt;</code></td><td>as <code>LengthPair</code> and <code>PercentPair</code>, or empty: the setting then comes from another one, as a zigzag underlay’s inset comes from the contour’s. 0 is a value, as Ink/Stitch reads it</td><td><code>float</code>, unit <code>mm (each side)</code> or <code>% (each side)</code>, no default</td></tr>
 <tr><td><code>PercentList</code></td><td><code>Vec&lt;f64&gt;</code></td><td>1 to 16 percentages, each in range (levels like <code>"15 30"</code>)</td><td><code>float</code>, unit <code>%</code>, read as a list</td></tr>

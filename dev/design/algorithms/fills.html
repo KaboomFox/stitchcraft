@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-6f4fd14f.js";
+            window.path_to_searchindex_js = "../../searchindex-8e41d00c.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-b002ec72.js"></script>
+        <script src="../../toc-3b2820bf.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -184,6 +184,7 @@
 <!-- implements: crates/stitchcraft-engine/src/normalize/region/**, crates/stitchcraft-engine/src/normalize/simplify.rs, crates/stitchcraft-engine/src/generators/tatami/**, crates/stitchcraft-engine/src/generators/contour/**, crates/stitchcraft-engine/src/generators/meander/**, crates/stitchcraft-engine/src/generators/circular/**, crates/stitchcraft-engine/src/generators/smoothing.rs, crates/stitchcraft-engine/src/generators/pull.rs -->
 <p>A fill covers the area its path bounds, its <a href="#region">region</a>, with rows of stitches. Tatami is P1 (M5);
 contour, meander and circular are P2 (M7); guided, linear gradient, tartan and cross stitch are P3 (M10).
+Cross stitch, sewn from M10.1, is described on a page of its own (<a href="cross-stitch.html">cross stitch</a>).
 Ink/Stitch’s legacy fill is not planned, and is sewn as a tatami fill (<a href="#legacy-fill-not-planned">below</a>).</p>
 <p>A fill sews the drawing’s shape with Ink/Stitch’s stitches. Ink/Stitch’s rows, their spacing and stagger,
 the order it sews them in, its travel, underlay and compensation are what make its fills look good
@@ -889,10 +890,9 @@ Specified at M10.</p>
 <p>A woven plaid from a stripe specification (sett): warp and weft stripes become fills at <code>tartan_angle</code>
 with <code>rows_per_thread</code> and optional herringbone. Specified at M10.</p>
 <h2 id="cross-stitch-p3"><a class="header" href="#cross-stitch-p3">Cross stitch (P3)</a></h2>
-<p>The region is covered by grid cells (<code>pattern_size_mm</code>, <code>cross_offset_mm</code>, <code>cross_rotation</code>,
-<code>canvas_grid_origin</code>); a cell becomes a cross when the region covers at least <code>fill_coverage</code> percent of
-it; crosses use <code>cross_stitch_method</code> (simple, half, upright, double, Smyrna, flipped variants) and are
-routed row by row. Specified at M10.</p>
+<p>A cross in each cell of a grid that the region covers enough of, simple and flipped from M10.1
+(<a href="cross-stitch.html">cross stitch</a>). It takes its parts in a tatami fill’s order (<a href="#5-parts">section 5</a>), and
+its <code>expand_mm</code> from the tatami fill’s settings, which grows the region before its cells are chosen.</p>
 <h2 id="legacy-fill-not-planned"><a class="header" href="#legacy-fill-not-planned">Legacy fill (not planned)</a></h2>
 <p>Ink/Stitch’s first fill method, which it keeps for its older files: it gives <code>legacy_fill</code> to a fill whose
 <code>auto_fill</code> is off when it opens one. Its rows lie on a tatami fill’s grating, with a tatami fill’s needle
@@ -921,7 +921,7 @@ method.</p>
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../../design/algorithms/locks.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../../design/algorithms/cross-stitch.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -935,7 +935,7 @@ method.</p>
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../../design/algorithms/locks.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../../design/algorithms/cross-stitch.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>
