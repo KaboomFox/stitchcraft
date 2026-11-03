@@ -3,9 +3,10 @@
 # or a declaration without alt text, fails `cargo xtask docs --check`; pages that show a shot use
 # its alt text.
 #
-# Kinds: "stitch" (our renderer, exact bytes), "vectorcraft-render" (vectorcraft-cli export) and
-# "vectorcraft-ui" (VectorCraft's window, driven through its accessibility tree), both compared within a
-# tolerance, and "photo" (a real sew-out; never regenerated, needs a sew-out report link).
+# Kinds: "stitch" (our renderer, exact bytes), "picture" (drawn by xtask, exact bytes), "vectorcraft-render"
+# (vectorcraft-cli export) and "vectorcraft-ui" (VectorCraft's window, driven through its accessibility
+# tree), both compared within a tolerance, and "photo" (a real sew-out; never regenerated, needs a sew-out
+# report link).
 #
 # A "stitch" shot names a style ("realistic" or "simple"), a scale in pixels per millimetre, and what to
 # draw: a test sheet (`sheet = "TS-01"`), or a design that the engine plans for the reference machine as
@@ -18,6 +19,9 @@
 # them one under another instead, each as wide as the page, for pictures too wide to share it. The plan of
 # a design may report only the diagnostic codes its shot lists in `allow = ["SC-W0402"]`. `auto = true` reads
 # the design as `--auto` does, its shapes without settings digitized automatically.
+#
+# A "picture" shot shows a picture before it is digitized: a design's areas filled flat in their threads'
+# colours (`fixture`, at `scale` pixels per millimetre), or a photo drawn in code (`picture = "pear"`).
 
 # ── Test sheets (shown on the test-sheets reference page, in this order) ────────────────────────────
 
@@ -667,6 +671,50 @@ fixture = "docs/fixtures/traced-badge.svg"
 style = "realistic"
 scale = 6.0
 alt = "The traced badge sewn as drawn. Its white background sews too, and each colour is a tatami fill over the colours under it."
+
+# ── Automatic digitizing's 2 kinds of picture (docs/src/user/stitches/automatic.md) ─────────────────
+# The pear's photo was traced into docs/fixtures/traced-pear.vectorcraft with VectorCraft 0.19.0, as
+# docs/fixtures/README.md says.
+
+[[shot]]
+id = "auto-emblem-picture"
+kind = "picture"
+fixture = "docs/fixtures/emblem.svg"
+scale = 6.0
+alt = "An emblem in 4 solid colours, drawn in layers. A navy square on white holds a white disc with a red star on it, and 3 gold bars below the disc, each shorter than the one above it."
+
+[[shot]]
+id = "auto-emblem"
+kind = "stitch"
+fixture = "docs/fixtures/emblem.svg"
+auto = true
+style = "realistic"
+scale = 6.0
+allow = ["SC-I0901", "SC-W0906", "SC-I0908", "SC-I0904"]
+alt = "The emblem digitized automatically. The navy square, the white disc and the red star sew as tatami fills, and the gold bars as satin columns. The white round the square is left out."
+
+[[shot]]
+id = "auto-pear-photo"
+kind = "picture"
+picture = "pear"
+alt = "A photo of a yellow-green pear with a brown stem on a light grey backdrop, lit from the top left. Its skin shades smoothly from a pale highlight to a dark olive side, with a little grain."
+
+[[shot]]
+id = "auto-pear-traced"
+kind = "picture"
+fixture = "docs/fixtures/traced-pear.vectorcraft"
+scale = 3.5
+alt = "The pear photo traced in 4 of the machine's threads: a light grey square, and on it the pear in 3 flat greens. It is pale green where the light falls, olive in a band across its middle and dark olive on its shaded side, and its stem is olive and dark olive. The bands' edges are ragged where the shading crossed from one thread to the next."
+
+[[shot]]
+id = "auto-pear"
+kind = "stitch"
+fixture = "docs/fixtures/traced-pear.vectorcraft"
+auto = true
+style = "realistic"
+scale = 5.0
+allow = ["SC-I0901", "SC-I0902", "SC-W0906", "SC-I0907", "SC-I0904", "SC-I0504"]
+alt = "The traced pear digitized automatically. Its 3 greens sew as tatami fills, and its stem as a satin column and a running stitch. The light grey square is left out."
 
 [[shot]]
 id = "auto-widths-drawn"
