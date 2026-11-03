@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-87f17b8d.js";
+            window.path_to_searchindex_js = "../../searchindex-d85a2d21.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-0e01f503.js"></script>
+        <script src="../../toc-b002ec72.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -737,6 +737,31 @@ routes it, and is left out. An end within
 the shortest stitch of the column’s last needle point moves that point to the end. The column’s last
 stitch, often a top stitch, then goes to the end in one stitch. Ink/Stitch sews the end as a stitch of
 its own, which its stitch plan drops when it is no longer than its shortest stitch.</p>
+<h2 id="cut-in-2"><a class="header" href="#cut-in-2">Cut in 2</a></h2>
+<p>From M10.4 the <a href="../routing.html">routing tools</a> cut satin columns into pieces, each of which sews the pairs
+the column sewed along it (<a href="../adr/0017-routing-is-one-engine-function.html">ADR-0017</a>). The cut is one of
+the column’s cuts (<em>Cuts</em> in <a href="#start-and-end">Start and end</a>). Given as a point, a place takes the pair
+with the point nearest it. Given as a fraction of the column, it takes the pair at that fraction of the
+pairs’ count, as Ink/Stitch’s tools take them (read at <code>d59c9ab</code>).</p>
+<ul>
+<li><strong>Rails.</strong> Each rail is cut at its point of the pair. Where <code>reverse_rails</code> turns a rail round, its
+parts go to the pieces by the way the column runs, so each piece has both rails’ parts from its side of
+the cut.</li>
+<li><strong>Rungs.</strong> Each piece keeps the column’s rungs that cross both its rails. A column of 2 subpaths keeps
+the rungs across its nodes (<a href="#correspondence">Correspondence</a>) as rungs it draws. A piece left with no
+rung, or with 2, would be read back with other rails. It gets a rung more, as a column <a href="#drawn-with-its-rails-and-rungs">drawn with its
+rails and rungs</a> does. Ink/Stitch adds its rung 0.3 CSS pixels from
+the piece’s start. A piece with none gets 2 more from Ink/Stitch, at the middle of its rails and 0.3
+CSS pixels from its end.</li>
+<li><strong>Settings.</strong> Each piece keeps every setting of the column, and so sews the column’s pairs along it.</li>
+<li><strong>A column drawn as one path</strong> is cut as the rails and rungs the engine makes of it (<code>REQ-SAT-016</code>,
+<code>REQ-SAT-017</code>), and each piece is drawn with its share of them. Its stroke’s width no longer makes the
+piece.</li>
+<li><strong>Short pieces.</strong> Ink/Stitch doesn’t make a piece on a side of the cut where a rail would be shorter than
+the zigzag spacing. M10.4 writes what StitchCraft sews there, with a case that shows it.</li>
+</ul>
+<p>Ink/Stitch’s Cut Satin Column cuts a column this way at each of its <code>satin_cut_point</code> commands, or where
+a stroke selected with it crosses its rails. No step plans such a tool in StitchCraft.</p>
 <h2 id="variants-p2-m7"><a class="header" href="#variants-p2-m7">Variants (P2, M7)</a></h2>
 <div class="table-wrapper">
 <table>

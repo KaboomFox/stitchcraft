@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-87f17b8d.js";
+            window.path_to_searchindex_js = "../searchindex-d85a2d21.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-0e01f503.js"></script>
+        <script src="../toc-b002ec72.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -236,7 +236,12 @@ less the kerning of its pair, and each word by the space’s advance. The user c
 letters, of words and of lines by a number of millimetres. Lines align left, centre or right, or are
 justified as a block. A trim
 can follow each letter, word or line. Lines sew back and forth in a font with a variant for the other
-direction, and a sortable font’s colours sew in order. Batch lettering clamps the scale to the font’s range.</p>
+direction, and a sortable font’s colours sew in order. Batch lettering clamps the scale to the font’s range.
+In a font whose <code>auto_satin</code> is on, Auto-Route Satin Columns routes the satin columns and strokes of the
+whole text, their order kept and without trims, before the trims are added and the colours sorted. Each
+piece goes to the end of the group its element was in. The key is on when <code>font.json</code> leaves it out, and
+at <code>c7e3a05</code> every font sets it, Ink/Stitch Small Font and Medium Font on and the other 140 off.
+StitchCraft’s lettering routes such a font’s text with M10.4’s function (<a href="routing.html">routing tools</a>).</p>
 <h2 id="fonts-ported-by-other-programs"><a class="header" href="#fonts-ported-by-other-programs">Fonts ported by other programs</a></h2>
 <div class="table-wrapper">
 <table>

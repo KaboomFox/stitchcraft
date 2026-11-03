@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-87f17b8d.js";
+            window.path_to_searchindex_js = "../searchindex-d85a2d21.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-0e01f503.js"></script>
+        <script src="../toc-b002ec72.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -221,7 +221,7 @@ tools: stitchcraft-xtask (`xtask/`, run as `cargo xtask`)
 <tr><td><code>stitchcraft-core</code></td><td>L0</td><td><code>Mm</code>, <code>Point</code>, <code>Vec2</code>, tolerances, deterministic math (<code>libm</code> wrappers), <code>SplitMix64</code> RNG, <code>Budget</code>, <code>Diagnostic</code>/<code>Code</code>/<code>Severity</code></td><td>depend on any workspace crate</td></tr>
 <tr><td><code>stitchcraft-params</code></td><td>L0</td><td><code>params!</code>, <code>ParamSpec</code>, <code>ParamSet</code>, value parsing and validation, the registry audit (the list of declarations is <code>stitchcraft_engine::registry</code>)</td><td>know any stitch algorithm</td></tr>
 <tr><td><code>stitchcraft-plan</code></td><td>L1</td><td><code>Stitch</code>, <code>StitchKind</code>, <code>ColorBlock</code>, <code>StitchPlan</code>, <code>Thread</code>, palettes, <code>MachineProfile</code>, plan invariants</td><td>generate stitches; read/write files</td></tr>
-<tr><td><code>stitchcraft-engine</code></td><td>L2</td><td><code>Design</code>/<code>Element</code>/<code>Shape</code>, automatic digitizing, normalization, generators, plan assembly, finalizing for the machine</td><td>depend on formats, render or any adapter</td></tr>
+<tr><td><code>stitchcraft-engine</code></td><td>L2</td><td><code>Design</code>/<code>Element</code>/<code>Shape</code>, automatic digitizing, normalization, generators, plan assembly, finalizing for the machine, and from M10.4 routing</td><td>depend on formats, render or any adapter</td></tr>
 <tr><td><code>stitchcraft-formats</code></td><td>L2</td><td>readers/writers (PES/PEC, DST, …), quantization, format limits</td><td>depend on engine (it encodes <em>plans</em>)</td></tr>
 <tr><td><code>stitchcraft-render</code></td><td>L2</td><td>CPU preview images of plans (thread look, simple look, overlays)</td><td>depend on engine</td></tr>
 <tr><td><code>stitchcraft-svg</code></td><td>L3</td><td>SVG → <code>Design</code> (geometry, styles, <code>inkstitch:*</code> attributes, commands), plan → SVG</td><td>contain stitch logic</td></tr>
@@ -293,6 +293,9 @@ pub struct Generation {
     pub diagnostics: Vec&lt;Diagnostic&gt;,
 }</code></pre>
 <p>A live preview sees one object, so it has no neighbours, and it sews on the reference machine.</p>
+<p>From M10.4 a third entry point, <code>route</code>, gives elements back in a sewing order, with the satin columns cut
+and runs added under them, as Ink/Stitch’s routing tools do. VectorCraft’s routing filters and lettering
+call it (<a href="routing.html#the-function">routing tools</a>, <a href="adr/0017-routing-is-one-engine-function.html">ADR-0017</a>).</p>
 <p>Adapters only translate:</p>
 <div class="table-wrapper">
 <table>
@@ -307,7 +310,7 @@ pub struct Generation {
 </tbody>
 </table>
 </div>
-<p>A future in-tree VectorCraft crate would be a fifth adapter calling the same two functions.</p>
+<p>A future in-tree VectorCraft crate would be a fifth adapter calling the same functions.</p>
 <h2 id="errors-and-diagnostics"><a class="header" href="#errors-and-diagnostics">Errors and diagnostics</a></h2>
 <ul>
 <li><strong>Diagnostics</strong> describe problems with the user’s design (a satin with three rails, a fill smaller
@@ -352,6 +355,7 @@ VectorCraft reports the plug-in as failed.</p>
 <tr><td>A new stitch type</td><td><code>crates/stitchcraft-engine/src/generators/&lt;name&gt;/</code></td><td>registry params, diagnostics, conformance cases, docs page — see the <a href="../contributing/playbook-new-stitch-type.html">playbook</a></td></tr>
 <tr><td>A parameter</td><td>the generator’s <code>params!</code> block</td><td>nothing else by hand: docs and schemas regenerate; a new <code>…Params</code> declaration also gets a line in <code>stitchcraft_engine::registry::PARAMETERS</code> — see the <a href="../contributing/playbook-new-param.html">playbook</a></td></tr>
 <tr><td>A machine format</td><td><code>crates/stitchcraft-formats/src/&lt;format&gt;/</code></td><td><a href="../contributing/playbook-new-format.html">format playbook</a></td></tr>
+<tr><td>Routing, as Ink/Stitch’s Auto-Route tools route</td><td><code>stitchcraft_engine::route</code>, from M10.4</td><td>the routing filters in <code>stitchcraft-vc-plugin</code>, and the <a href="routing.html">routing tools</a> page</td></tr>
 <tr><td>A machine profile</td><td><code>crates/stitchcraft-plan/src/profiles/</code> (data)</td><td>machine-testing record</td></tr>
 <tr><td>A diagnostic</td><td>the diagnostics registry in <code>stitchcraft-core</code></td><td>explanation text + a case that triggers it</td></tr>
 <tr><td>SVG/Ink/Stitch parsing</td><td><code>stitchcraft-svg</code></td><td>compatibility contract row</td></tr>

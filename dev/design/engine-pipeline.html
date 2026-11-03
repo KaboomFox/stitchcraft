@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-87f17b8d.js";
+            window.path_to_searchindex_js = "../searchindex-d85a2d21.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-0e01f503.js"></script>
+        <script src="../toc-b002ec72.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -335,7 +335,9 @@ order stage 0 chose), by <code>stitchcraft_engine::assemble</code>.</p>
 <li>Assembly keeps the order the elements come in, so that embroidery stacking follows the art’s stacking.
 That is paint order, unless stage 0 put the automatic elements, or with <code>--sort-colours</code> every element,
 in an order chosen for few thread changes, in which a shape still sews after every shape it is drawn
-over, where they overlap by more than rounding leaves.</li>
+over, where they overlap by more than rounding leaves. No stage routes elements a host read. M10’s
+routing tools write their route into the document, whose paint order is then the route’s
+(<a href="routing.html">routing tools</a>).</li>
 <li>A thread change starts a new colour block (<code>REQ-ASM-001</code>). Threads are compared by colour, as
 Ink/Stitch compares them: two names for one colour are one thread, and the block keeps the first.</li>
 </ul>
