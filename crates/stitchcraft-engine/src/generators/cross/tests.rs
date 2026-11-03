@@ -22,7 +22,9 @@ fn plain() -> Cross {
         size: [3.0, 3.0],
         on_canvas: true,
         offset: [0.0, 0.0],
+        rotation: 0.0,
         coverage: 50.0,
+        method: Method::Simple,
         flipped: false,
         threads: 4,
         longest: 11.0,
@@ -158,4 +160,184 @@ fn req_fill_crs_005_a_stitch_longer_than_the_longest_is_split_and_one_as_long_is
     assert_eq!(pieces_of(half, half), 1);
     assert_eq!(pieces_of(half * 1.000_001, half), 2);
     assert_eq!(pieces_of(0.0, half), 1);
+}
+
+/// Whether `x` lies on the segment from `p` to `q`.
+fn on_segment(x: Point, p: Point, q: Point) -> bool {
+    let cross = (q.x() - p.x()) * (x.y() - p.y()) - (q.y() - p.y()) * (x.x() - p.x());
+    cross.abs() < 1e-9 && x.distance(p) + x.distance(q) < p.distance(q) + 1e-9
+}
+
+/// How many stitches of `runs` pass over the half bar from `middle` to `end`: those whose line holds both.
+fn sewn_over(runs: &[Vec<Point>], middle: Point, end: Point) -> usize {
+    runs.iter().flat_map(|run| run.windows(2)).filter(|w| on_segment(middle, w[0], w[1]) && on_segment(end, w[0], w[1])).count()
+}
+
+/// Whether the last stitch of `runs` through `middle` along a diagonal falls to the right as drawn, `\\`;
+/// `None` when none passes it.
+fn on_top(runs: &[Vec<Point>], middle: Point) -> Option<bool> {
+    let mut through =
+        runs.iter().flat_map(|run| run.windows(2)).filter(|w| on_segment(middle, w[0], w[1]) && w[0].x() != w[1].x() && w[0].y() != w[1].y());
+    through.next_back().map(|w| (w[1].x() - w[0].x()) * (w[1].y() - w[0].y()) > 0.0)
+}
+
+/// The ends of the bars `bars` names in the cell `size` mm wide from (`x`, `y`): `\` and `/` its diagonals,
+/// `-` its bar across and `|` its bar down.
+fn bar_ends((x, y): (f64, f64), size: f64, bars: &[&str]) -> Vec<Point> {
+    let at = |u: f64, v: f64| p(x + u * size, y + v * size);
+    bars.iter()
+        .flat_map(|bar| match *bar {
+            "\\" => [at(0.0, 0.0), at(1.0, 1.0)],
+            "/" => [at(0.0, 1.0), at(1.0, 0.0)],
+            "-" => [at(0.0, 0.5), at(1.0, 0.5)],
+            _ => [at(0.5, 0.0), at(0.5, 1.0)],
+        })
+        .collect()
+}
+
+#[test]
+fn req_fill_crs_008_each_method_sews_each_half_of_each_of_its_bars_its_thread_count_times() {
+    // A 6 mm square on the 3 mm grid, 2 threads: each half of each bar of each cross twice, whichever
+    // method, and no other stitch through a cross's middle.
+    let square = region(vec![rect((0.0, 0.0), (6.0, 6.0))]);
+    for (method, bars) in [
+        (Method::Simple, &["\\", "/"][..]),
+        (Method::Upright, &["-", "|"]),
+        (Method::Double, &["\\", "-", "|", "/"]),
+        (Method::Smyrna, &["\\", "/", "-", "|"]),
+    ] {
+        for flipped in [false, true] {
+            let stitched = sewn(&square, &Cross { method, flipped, threads: 2, ..plain() }, None, None);
+            assert_eq!(stitched.warnings, Vec::new(), "{method:?}");
+            for cell in [(0.0, 0.0), (3.0, 0.0), (0.0, 3.0), (3.0, 3.0)] {
+                let middle = p(cell.0 + 1.5, cell.1 + 1.5);
+                for end in bar_ends(cell, 3.0, bars) {
+                    assert_eq!(sewn_over(&stitched.runs, middle, end), 2, "{method:?} {flipped} {cell:?} {end:?}");
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn req_fill_crs_008_dense_upright_crosses_add_a_grid_of_them_on_the_corners_half_covered_ones_too() {
+    // A 6 mm square: its 4 cells' upright crosses, and those of the second grid on the corners it covers by
+    // half or more: the one in its middle, wholly, and the 4 on the middles of its sides, by half.
+    let square = region(vec![rect((0.0, 0.0), (6.0, 6.0))]);
+    let stitched = sewn(&square, &Cross { method: Method::DenseUpright, threads: 2, ..plain() }, None, None);
+    for corner in [(3.0, 3.0), (3.0, 0.0), (0.0, 3.0), (6.0, 3.0), (3.0, 6.0)] {
+        let middle = p(corner.0, corner.1);
+        for end in bar_ends((corner.0 - 1.5, corner.1 - 1.5), 3.0, &["-", "|"]) {
+            assert_eq!(sewn_over(&stitched.runs, middle, end), 2, "{corner:?} {end:?}");
+        }
+    }
+    // The corners of the square are covered a quarter, and sew none.
+    let reach = |runs: &[Vec<Point>]| runs.concat().iter().fold([f64::INFINITY, f64::NEG_INFINITY], |[lo, hi], q| [lo.min(q.x()), hi.max(q.x())]);
+    assert_eq!(reach(&stitched.runs), [-1.5, 7.5]);
+    assert_eq!(sewn_over(&stitched.runs, p(0.0, 0.0), p(-1.5, 0.0)), 0);
+    // All of them in one run: they share the ends of their arms.
+    assert_eq!(stitched.runs.len(), 1);
+}
+
+#[test]
+fn req_fill_crs_010_half_crosses_sew_one_diagonal_in_each_cell_an_odd_number_of_times() {
+    // A 6 mm square, 3 threads: each cell's `\` diagonal 3 times, or flipped its `/`, and neither the other.
+    let square = region(vec![rect((0.0, 0.0), (6.0, 6.0))]);
+    for (flipped, sewn_bar, other) in [(false, "\\", "/"), (true, "/", "\\")] {
+        let stitched = sewn(&square, &Cross { method: Method::Half, flipped, threads: 3, ..plain() }, None, None);
+        assert_eq!((stitched.warnings.len(), stitched.runs.len()), (0, 1), "{flipped}");
+        for cell in [(0.0, 0.0), (3.0, 0.0), (0.0, 3.0), (3.0, 3.0)] {
+            let middle = p(cell.0 + 1.5, cell.1 + 1.5);
+            for end in bar_ends(cell, 3.0, &[sewn_bar]) {
+                assert_eq!(sewn_over(&stitched.runs, middle, end), 3, "{flipped} {cell:?}");
+            }
+            for end in bar_ends(cell, 3.0, &[other]) {
+                assert_eq!(sewn_over(&stitched.runs, middle, end), 0, "{flipped} {cell:?}");
+            }
+        }
+    }
+    // A part too small for a cell sews nothing, and says so, as a full cross's does.
+    let speck = sewn(&region(vec![rect((0.0, 0.0), (1.0, 1.0))]), &Cross { method: Method::Half, ..plain() }, None, None);
+    assert_eq!((speck.runs.len(), speck.warnings.iter().map(|d| d.code).collect::<Vec<_>>()), (0, vec![Code::FillCrossNoCell]));
+}
+
+#[test]
+fn req_fill_crs_011_a_grid_turned_with_its_part_sews_the_part_s_crosses_turned() {
+    // A 6 mm square turned 30° about the origin, its grid turned with it from its own corner: the plain
+    // square's crosses, turned 30°, whichever method.
+    let (sin, cos) = stitchcraft_core::math::sin_cos(30f64.to_radians());
+    let turn = |q: Point| p(q.x() * cos - q.y() * sin, q.x() * sin + q.y() * cos);
+    let square = rect((0.0, 0.0), (6.0, 6.0));
+    let turned = Polygon { outline: square.outline.iter().map(|&q| turn(q)).collect(), holes: Vec::new() };
+    for method in [Method::Simple, Method::Upright, Method::Half] {
+        let own = Cross { method, on_canvas: false, threads: 3, ..plain() };
+        let plain_runs = sewn(&region(vec![square.clone()]), &own, None, None).runs;
+        let turned_runs = sewn(&region(vec![turned.clone()]), &Cross { rotation: 30.0, ..own.clone() }, None, None).runs;
+        let expected: Vec<Point> = plain_runs.concat().into_iter().map(turn).collect();
+        let found = turned_runs.concat();
+        assert_eq!(found.len(), expected.len(), "{method:?}");
+        assert!(found.iter().zip(&expected).all(|(a, b)| a.distance(*b) < 1e-9), "{method:?}: {found:?}");
+    }
+}
+
+#[test]
+fn req_fill_crs_011_on_the_canvas_s_grid_the_grid_turns_about_the_point_the_offset_names() {
+    // A quarter turn of the canvas's square grid lays its lines where they were, and sews each simple cross
+    // with its `/` diagonal under, as flipped crosses are: exactly, each needle point on the grid to the last
+    // bit, and no minus zero.
+    let square = region(vec![rect((0.0, 0.0), (6.0, 6.0))]);
+    let turned = sewn(&square, &Cross { rotation: 90.0, ..plain() }, None, None).runs;
+    let flipped = sewn(&square, &Cross { flipped: true, ..plain() }, None, None).runs;
+    for runs in [&turned, &flipped] {
+        let exact = |v: f64| (v / 1.5).fract() == 0.0 && v.to_bits() != (-0.0f64).to_bits();
+        assert!(runs.concat().iter().all(|q| exact(q.x()) && exact(q.y())), "{runs:?}");
+    }
+    for cell in [(0.0, 0.0), (3.0, 0.0), (0.0, 3.0), (3.0, 3.0)] {
+        let middle = p(cell.0 + 1.5, cell.1 + 1.5);
+        for end in bar_ends(cell, 3.0, &["\\", "/"]) {
+            assert_eq!((sewn_over(&turned, middle, end), sewn_over(&flipped, middle, end)), (4, 4), "{cell:?} {end:?}");
+        }
+        assert_eq!((on_top(&turned, middle), on_top(&flipped, middle)), (Some(true), Some(true)), "{cell:?}");
+    }
+    // Turned 30° about the point (1, 0.5), the offset's, where the grid's lines pass through (-1, 0.5): the
+    // square's crosses lie on that grid turned about that point.
+    let off = Cross { rotation: 30.0, offset: [1.0, 0.5], ..plain() };
+    let (sin, cos) = stitchcraft_core::math::sin_cos(30f64.to_radians());
+    let back = |q: Point| {
+        let (x, y) = (q.x() - 1.0, q.y() - 0.5);
+        p(1.0 + x * cos + y * sin, 0.5 - x * sin + y * cos)
+    };
+    for q in sewn(&square, &off, None, None).runs.concat() {
+        // Turned back by 30° about (1, 0.5), each needle point lies on a corner or a middle of the grid
+        // through (-1, 0.5).
+        let r = back(q);
+        let on = |v: f64| ((v / 1.5).round() * 1.5 - v).abs() < 1e-9;
+        assert!(on(r.x() + 1.0) && on(r.y() - 0.5), "{q:?} back to {r:?}");
+    }
+    // No turn, or a whole turn either way, turns nothing.
+    for rotation in [0.0, -0.0, 360.0, -360.0] {
+        assert_eq!(Cross { rotation, ..plain() }.frame().turn, None, "{rotation}");
+    }
+    assert_eq!(Cross { rotation: 90.0, ..plain() }.frame().turn.map(|t| t.about), Some([0.0, 0.0]));
+    assert_eq!(Cross { rotation: 90.0, on_canvas: false, offset: [1.0, 0.5], ..plain() }.frame().turn.map(|t| t.about), Some([0.0, 0.0]));
+    assert_eq!(off.frame().turn.map(|t| t.about), Some([1.0, 0.5]));
+}
+
+#[test]
+fn the_preview_shows_each_method_s_bars_and_half_crosses_diagonals() {
+    let square = region(vec![rect((0.0, 0.0), (3.0, 3.0))]);
+    let preview =
+        |cross: &Cross| top_path(&square, cross, &mut Budget::DEFAULT.meter()).unwrap().iter().map(|s| (s.start, s.end)).collect::<Vec<_>>();
+    let (falling, rising) = ((p(0.0, 0.0), p(3.0, 3.0)), (p(0.0, 3.0), p(3.0, 0.0)));
+    let (across, down) = ((p(0.0, 1.5), p(3.0, 1.5)), (p(1.5, 0.0), p(1.5, 3.0)));
+    assert_eq!(preview(&plain()), [falling, rising]);
+    assert_eq!(preview(&Cross { method: Method::Upright, ..plain() }), [across, down]);
+    assert_eq!(preview(&Cross { method: Method::Double, flipped: true, ..plain() }), [falling, across, down, rising]);
+    assert_eq!(preview(&Cross { method: Method::Smyrna, ..plain() }), [falling, rising, across, down]);
+    assert_eq!(preview(&Cross { method: Method::Half, ..plain() }), [falling]);
+    assert_eq!(preview(&Cross { method: Method::Half, flipped: true, ..plain() }), [rising]);
+    // Dense: the cell's cross, and none of the second grid, whose cells it covers a quarter.
+    assert_eq!(preview(&Cross { method: Method::DenseUpright, ..plain() }), [across, down]);
+    // A turned grid's bars, turned back: a quarter turn lays the plain cross's diagonals the other way.
+    assert_eq!(preview(&Cross { rotation: 90.0, ..plain() }), [(p(3.0, 0.0), p(0.0, 3.0)), (p(0.0, 0.0), p(3.0, 3.0))]);
 }

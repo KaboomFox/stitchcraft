@@ -1,15 +1,16 @@
-# TS-17A's M10.1 parts: squares of simple crosses on grids of 2 and 3 mm, with 2 and 4 threads, plain and
-# flipped, and a K whose slanted edges cut their cells in half, each a cross stitch fill on the canvas's grid
-# (REQ-FILL-CRS-001 to REQ-FILL-CRS-005). The sheet draws only as the engine sews it without a word; the
+# TS-17A: squares of simple crosses on grids of 2 and 3 mm, with 2 and 4 threads, plain and flipped, and a K whose
+# slanted edges cut their cells in half (REQ-FILL-CRS-001 to REQ-FILL-CRS-005); then squares of upright, dense
+# upright, double, Smyrna and half crosses, and a square turned with its grid (REQ-FILL-CRS-008 to
+# REQ-FILL-CRS-011), each a cross stitch fill. The sheet draws only as the engine sews it without a word; the
 # diagnostics here are the hoop's, of which there are none. The invariants (REQ-PLAN-…) run on the sheet's
 # plan; the golden file is the bytes MC-12 sews.
 id = "ts-17a"
-requirements = ["REQ-PLAN-001", "REQ-PLAN-002", "REQ-PLAN-003", "REQ-PLAN-005", "REQ-PLAN-006", "REQ-PLAN-007", "REQ-PRF-002", "REQ-FMT-001", "REQ-FILL-CRS-001", "REQ-FILL-CRS-003"]
+requirements = ["REQ-PLAN-001", "REQ-PLAN-002", "REQ-PLAN-003", "REQ-PLAN-005", "REQ-PLAN-006", "REQ-PLAN-007", "REQ-PRF-002", "REQ-FMT-001", "REQ-FILL-CRS-001", "REQ-FILL-CRS-003", "REQ-FILL-CRS-008", "REQ-FILL-CRS-009", "REQ-FILL-CRS-010", "REQ-FILL-CRS-011"]
 kind = "testsheet"
 sheet = "TS-17A"
 profile = "brother-pe800-5x7"
 
 [expect]
-size_mm = [114.0, 54.0]
+size_mm = [114.0, 114.0]
 diagnostics = []
 golden = ["golden/testsheets/TS-17A.pes"]

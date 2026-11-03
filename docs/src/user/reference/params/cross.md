@@ -3,8 +3,8 @@
 # Cross parameters
 
 Cross stitch: a cross in each cell of a grid laid over the fill, where the fill covers enough of the
-cell, as a hand embroiderer counts crosses on even-weave fabric. Each cross sews one diagonal, then
-the other over it, and the crosses that meet at a corner sew in one run.
+cell, as a hand embroiderer counts crosses on even-weave fabric. Each cross sews its bars one over
+another, and the crosses that meet sew in one run. Half crosses sew one diagonal in each cell, in rows.
 
 Applies to Cross stitch.
 
@@ -13,29 +13,34 @@ Applies to Cross stitch.
 ### `cross_stitch_method`
 
 **Cross.** The kind of cross. A simple cross sews its `\` diagonal and then its `/` diagonal over it, as the
-drawing shows it. Flipped, the `/` diagonal goes under. The other kinds arrive in a later version,
-and until then an element set to one is skipped (`SC-W0011`).
+drawing shows it. An upright cross sews a `+`, its bar across and then its bar down, and a dense
+upright cross adds a second grid of them half a cell over. A double cross sews an upright cross
+between its 2 diagonals, and a Smyrna cross one over them. A half cross sews the `\` diagonal
+alone, joined into rows from cell to cell. Flipped, each cross is turned a quarter turn on its
+cell, so that a simple cross's `/` diagonal goes under, and a half cross sews the `/` diagonal.
 
-- **Accepts:** one of `simple_cross` (Simple cross), `simple_cross_flipped` (Simple cross, flipped), or one of the 10 other values kept for designs that name them, read as the help above says: `half_cross`, `half_cross_flipped`, `upright_cross`, `upright_cross_flipped`, `dense_upright_cross`, `dense_upright_cross_flipped`, `double_cross`, `double_cross_flipped`, `smyrna_cross`, `smyrna_cross_flipped`
+- **Accepts:** one of `simple_cross` (Simple cross), `simple_cross_flipped` (Simple cross, flipped), `half_cross` (Half cross), `half_cross_flipped` (Half cross, flipped), `upright_cross` (Upright cross), `upright_cross_flipped` (Upright cross, flipped), `dense_upright_cross` (Dense upright cross), `dense_upright_cross_flipped` (Dense upright cross, flipped), `double_cross` (Double cross), `double_cross_flipped` (Double cross, flipped), `smyrna_cross` (Smyrna cross), `smyrna_cross_flipped` (Smyrna cross, flipped)
 - **Default:** `simple_cross`
 - **Ink/Stitch:** same key and default; StitchCraft differs:
-  - **DEV-FILL-026.** Flipped crosses lie on the grid plain crosses lie on, with their / diagonal under their \ one. Ink/Stitch turns the part a quarter turn, lays its grid over the turned part and turns the crosses back. Its flipped cells are then pattern_size_mm's second length wide and its first tall, the offset's second length moves them right and its first down, and with canvas_grid_origin off its grid starts at the part's bottom left corner. With square cells, no offset and the canvas's grid, both lay the same crosses.
+  - **DEV-FILL-026.** Flipped full crosses lie on the grid plain crosses lie on, each bar in the place of the bar a quarter turn from it, a simple cross's / diagonal under its \ one. Ink/Stitch turns the part a quarter turn, lays its grid over the turned part and turns the crosses back. Its flipped cells are then pattern_size_mm's second length wide and its first tall, the offset's second length moves them right and its first down, and with canvas_grid_origin off its grid starts at the part's bottom left corner. With square cells, no offset and the canvas's grid, both lay the same crosses.
 
 ### `cross_thread_count`
 
-**Threads.** How many times the thread passes along each diagonal of a cross. A full cross takes an even
-number, since the needle comes back to where it started: an odd number sews the even number below
-it, and 1 sews 2. More threads make bolder crosses, and pack the holes at the cells' corners.
+**Threads.** How many times the thread passes along each half of each bar of a cross. A full cross takes an
+even number, since the needle comes back to where it started: an odd number sews the even number
+below it, and 1 sews 2. A half cross sews each stitch an odd number of times: an even number sews
+the odd number above it, 4 sewing 5. More threads make bolder crosses, and pack the holes at the
+cells' corners.
 
 - **Accepts:** a whole number from 1 to 20
 - **Default:** `4`
 - **Ink/Stitch:** same key and default; StitchCraft differs:
-  - **DEV-FILL-027.** A cross_thread_count of 1 sews 2 threads on each diagonal, with SC-W0320, and so does 0 and less, which the range raises to 1. Ink/Stitch takes the even count below 1, 0, and sews a stitch from a corner of each cell to its middle and back, and no cross. It takes the size of a count below 0.
+  - **DEV-FILL-027.** A cross_thread_count of 1 sews 2 threads on each half of each bar of a full cross, with SC-W0320, and so does 0 and less, which the range raises to 1. Ink/Stitch takes the even count below 1, 0, and sews no cross: of a simple cross, a stitch from a corner of each cell to its middle and back. It takes the size of a count below 0. Half crosses sew each stitch once at a count of 1, as in Ink/Stitch.
 
 ### `max_cross_stitch_length_mm`
 
 **Longest cross stitch.** The longest stitch a cross sews. A diagonal longer than this, on a large grid, is sewn in equal
-stitches, each no longer.
+stitches, each no longer. Half crosses travel between their rows in stitches this long.
 
 - **Accepts:** a length from 0.1 to 100 mm
 - **Default:** `11`
@@ -51,7 +56,7 @@ cells, and 2 separated by a space give the width, then the height.
 - **Accepts:** a length from 0.1 to 100 mm, or 2 separated by a space
 - **Default:** `3`
 - **Ink/Stitch:** same key and default; StitchCraft differs:
-  - **DEV-FILL-026.** Flipped crosses lie on the grid plain crosses lie on, with their / diagonal under their \ one. Ink/Stitch turns the part a quarter turn, lays its grid over the turned part and turns the crosses back. Its flipped cells are then pattern_size_mm's second length wide and its first tall, the offset's second length moves them right and its first down, and with canvas_grid_origin off its grid starts at the part's bottom left corner. With square cells, no offset and the canvas's grid, both lay the same crosses.
+  - **DEV-FILL-026.** Flipped full crosses lie on the grid plain crosses lie on, each bar in the place of the bar a quarter turn from it, a simple cross's / diagonal under its \ one. Ink/Stitch turns the part a quarter turn, lays its grid over the turned part and turns the crosses back. Its flipped cells are then pattern_size_mm's second length wide and its first tall, the offset's second length moves them right and its first down, and with canvas_grid_origin off its grid starts at the part's bottom left corner. With square cells, no offset and the canvas's grid, both lay the same crosses.
 
 ### `canvas_grid_origin`
 
@@ -62,7 +67,7 @@ left corner of each part of the fill, which then sews the same wherever it lies.
 - **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `true`
 - **Ink/Stitch:** same key and default; StitchCraft differs:
-  - **DEV-FILL-026.** Flipped crosses lie on the grid plain crosses lie on, with their / diagonal under their \ one. Ink/Stitch turns the part a quarter turn, lays its grid over the turned part and turns the crosses back. Its flipped cells are then pattern_size_mm's second length wide and its first tall, the offset's second length moves them right and its first down, and with canvas_grid_origin off its grid starts at the part's bottom left corner. With square cells, no offset and the canvas's grid, both lay the same crosses.
+  - **DEV-FILL-026.** Flipped full crosses lie on the grid plain crosses lie on, each bar in the place of the bar a quarter turn from it, a simple cross's / diagonal under its \ one. Ink/Stitch turns the part a quarter turn, lays its grid over the turned part and turns the crosses back. Its flipped cells are then pattern_size_mm's second length wide and its first tall, the offset's second length moves them right and its first down, and with canvas_grid_origin off its grid starts at the part's bottom left corner. With square cells, no offset and the canvas's grid, both lay the same crosses.
 
 ### `cross_offset_mm`
 
@@ -72,8 +77,18 @@ as far each way. Moved by a whole cell, the grid lies where it was.
 - **Accepts:** a length from 0 to 100 mm, or 2 separated by a space
 - **Default:** `0`
 - **Ink/Stitch:** same key and default; StitchCraft differs:
-  - **DEV-FILL-025.** A cross stitch fill looks at every cell of its grid within the part's bounds. Ink/Stitch starts at the grid's first line at or above the part's top, moved down by the offset's second length, or with canvas_grid_origin off at the part's top moved down so, and never looks at the row above it. So a part whose top lies less far below a line of the grid than that length loses the row of crosses it covers there: a 3 mm grid moved 2 mm down over a rectangle whose top lies 0.2 mm below a line leaves out a row the rectangle covers 60 % of.
-  - **DEV-FILL-026.** Flipped crosses lie on the grid plain crosses lie on, with their / diagonal under their \ one. Ink/Stitch turns the part a quarter turn, lays its grid over the turned part and turns the crosses back. Its flipped cells are then pattern_size_mm's second length wide and its first tall, the offset's second length moves them right and its first down, and with canvas_grid_origin off its grid starts at the part's bottom left corner. With square cells, no offset and the canvas's grid, both lay the same crosses.
+  - **DEV-FILL-025.** A cross stitch fill looks at every cell of its grid within the part's bounds, and of a dense upright cross's second grid. Ink/Stitch starts at the grid's first line at or above the part's top, moved down by the offset's second length, or with canvas_grid_origin off at the part's top moved down so, and never looks at the row above it. So a part whose top lies less far below a line of the grid than that length loses the row of crosses it covers there: a 3 mm grid moved 2 mm down over a rectangle whose top lies 0.2 mm below a line leaves out a row the rectangle covers 60 % of.
+  - **DEV-FILL-026.** Flipped full crosses lie on the grid plain crosses lie on, each bar in the place of the bar a quarter turn from it, a simple cross's / diagonal under its \ one. Ink/Stitch turns the part a quarter turn, lays its grid over the turned part and turns the crosses back. Its flipped cells are then pattern_size_mm's second length wide and its first tall, the offset's second length moves them right and its first down, and with canvas_grid_origin off its grid starts at the part's bottom left corner. With square cells, no offset and the canvas's grid, both lay the same crosses.
+
+### `cross_rotation`
+
+**Grid rotation.** How far the grid is turned, clockwise for a positive angle. A letter turned along a path keeps its
+crosses square to it when its grid turns with it, from the letter's own corner
+(`canvas_grid_origin` off). On the canvas's grid, the grid turns about the point the offset names.
+
+- **Accepts:** an angle in degrees
+- **Default:** `0`
+- **Ink/Stitch:** same key, meaning and default
 
 ### `fill_coverage`
 
