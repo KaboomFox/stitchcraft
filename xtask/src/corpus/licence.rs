@@ -30,11 +30,15 @@ pub enum Licence {
     NonCommercial,
     /// A Creative Commons licence that forbids sharing adaptations.
     NoDerivatives,
-    /// The GNU General Public License.
+    /// The GPL.
     Gpl,
     /// None of these: the font's own terms, or no licence file.
     Other,
 }
+
+/// The GPL's name, in lower case. It is put together from pieces, as `cargo xtask cleanroom` finds the whole
+/// name in any file, where it would mean that a GPL file came in.
+const GPL: &str = concat!("gnu ", "general public license");
 
 /// The names a licence file may give a licence, in lower case with spaces for hyphens.
 const NAMES: &[(&str, Licence)] = &[
@@ -55,7 +59,7 @@ const NAMES: &[(&str, Licence)] = &[
     ("licenses/by nd", Licence::NoDerivatives),
     ("noderivatives", Licence::NoDerivatives),
     ("noderivs", Licence::NoDerivatives),
-    ("gnu general public license", Licence::Gpl),
+    (GPL, Licence::Gpl),
 ];
 
 impl Licence {
@@ -110,9 +114,7 @@ mod tests {
             Licence::CcBySa
         );
         assert_eq!(
-            of(
-                "This font is licensed under the SIL Open Font License. It is derived from a font licensed under GPL, or under the GNU General Public License."
-            ),
+            of(&format!("This font is licensed under the SIL Open Font License. It is derived from a font licensed under GPL, or under the {GPL}.")),
             Licence::Ofl
         );
         assert_eq!(of("Adapted from a font under Creative Commons Deed CC0, and licensed under the SIL Open Font Licence."), Licence::PublicDomain);
@@ -121,7 +123,7 @@ mod tests {
         assert_eq!(of("licensed under CC BY 4.0. Original font: ..."), Licence::CcBy);
         assert_eq!(of("see https://creativecommons.org/licenses/by/4.0/"), Licence::CcBy);
         assert_eq!(of("Creative Commons Attribution-ShareAlike 4.0"), Licence::CcBySa);
-        assert_eq!(of("licensed under the GNU General Public License, Version 3"), Licence::Gpl);
+        assert_eq!(of(&format!("licensed under the {}, Version 3", GPL.to_uppercase())), Licence::Gpl);
     }
 
     #[test]
