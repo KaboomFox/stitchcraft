@@ -121,9 +121,9 @@ files. The `strokes` case:
 
 What a generator keeps of a shape, such as the holes of a fill, is checked by Rust tests named after their
 requirement. Fixtures are small files under `conformance/fixtures/`, hand-written or generated, each with
-a row in the fixtures index stating its origin and licence (`--check`). Large real-world corpora will
-live in a repository of their own, as VectorCraft's do. `cargo xtask corpus` (M8) will download them at a
-commit and with a SHA-256 this repository pins.
+a row in the fixtures index stating its origin and licence (`--check`). Large real-world corpora live in
+repositories of their own, as VectorCraft's do, and are never committed. `cargo xtask corpus` fetches
+Ink/Stitch's fonts at a commit and with a SHA-256 this repository pins ([fonts](fonts.md#the-corpus)).
 
 The engine's cases build their small designs with `stitchcraft_testkit::designs`. It also reads a plan's
 shape at a glance: `J L4 S5 L4` is a jump, 4 lock stitches, 5 needle points of stitching and 4 more lock
@@ -280,29 +280,35 @@ are StitchCraft's own). A case excuses a measure with the entry that explains it
 the difference as excused. An excuse for a measure that agrees fails the case, so that every reason in
 the ledger is still true. Where the differential can undo a deviation in Ink/Stitch's file, it measures
 the file again without it. The excuse then counts only if the measure agrees. Ink/Stitch's jumps that go
-nowhere (`DEV-FMT-001`) excuse as many trims and jumps as there are of them, and no more.
+nowhere (`DEV-FMT-001`) excuse as many trims and jumps as there are of them, and no more. Where both files
+change thread at the same colour blocks, Ink/Stitch's threads, named by other entries of Brother's palette
+(`DEV-THREAD-001`), take StitchCraft's names. StitchCraft fits each stitch to the machine (`DEV-FIN-001`),
+so to undo that, Ink/Stitch's stitches longer than the machine's longest are split and its needle points
+nearer the one before than the machine's shortest stitch left out. A needle point Ink/Stitch sews alone,
+where a path's move-to draws nothing after it, is left out with the jumps and the trim that lead to it
+(`DEV-SVG-011`).
 
 `REQ-SVG-008`, `REQ-AUTO-021`, `REQ-AUTO-022`, `REQ-RUN-013`, `REQ-SAT-029`, `REQ-FILL-CON-008`,
-`REQ-FILL-CIR-007` and `REQ-FILL-CRS-007` are the requirements of level L3. The other runs of the suite
-leave them and their cases to this one. The corpus is designs the SVG reader sews in full, with their
-settings (`REQ-SVG-009`), trim and stop commands and the file version. A case may name a test sheet drawn
-as a design instead (`sheet`). Both programs sew an SVG file of the elements StitchCraft sews the sheet
-with, written with their parameters, their start, end and target positions as Ink/Stitch's commands and
-their clips as clip paths, the design's origin and stop position as commands too, and its turn on export
-(`stitchcraft_testkit::inkstitch`), which StitchCraft's reader reads back unchanged (`REQ-PRM-003`). An
-element a sheet draws as a clone of another is written as a `<use>` of it, and each command in a group
-with its connector, as Ink/Stitch's Attach Commands writes them, since Ink/Stitch moves a command its
-clone copies only from a group. Automatic digitizing chooses ordinary elements with Ink/Stitch's
-parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check StitchCraft's
-stitches of those choices against Ink/Stitch's (`REQ-AUTO-021`). TS-11B checks the contour fills so, each
-strategy and join style among them (`REQ-FILL-CON-008`), and its circular fills (`REQ-FILL-CIR-007`).
-TS-11A checks the zigzag strokes (`REQ-RUN-013`), and the E-stitches, S-stitches and zigzag satins
-(`REQ-SAT-029`), along straights and round curves. TS-17A checks the simple crosses of cross stitch, on
-grids of 2 and 3 mm with 2 and 4 threads, flipped, and over a letter whose slanted edges cut their cells
-in half (`REQ-FILL-CRS-007`). TS-02B to TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills'
-sheet, are cases of `REQ-SVG-008` (M8.2). The `drawn-locks` case and TS-16 check custom locks drawn as
-paths, of each kind of command, which both programs sew at the same nodes (`REQ-LCK-005`).
-`conformance/inkstitch/README.md` says how to run it by hand and how to add a case.
+`REQ-FILL-CIR-007`, `REQ-FILL-CRS-007` and `REQ-FONT-001` are the requirements of level L3. The other
+runs of the suite leave them and their cases to this one. The corpus is designs the SVG reader sews in
+full, with their settings (`REQ-SVG-009`), trim and stop commands and the file version. A case may name a
+test sheet drawn as a design instead (`sheet`). Both programs sew an SVG file of the elements StitchCraft
+sews the sheet with, written with their parameters, their start, end and target positions as Ink/Stitch's
+commands and their clips as clip paths, the design's origin and stop position as commands too, and its
+turn on export (`stitchcraft_testkit::inkstitch`), which StitchCraft's reader reads back unchanged
+(`REQ-PRM-003`). An element a sheet draws as a clone of another is written as a `<use>` of it, and each
+command in a group with its connector, as Ink/Stitch's Attach Commands writes them, since Ink/Stitch
+moves a command its clone copies only from a group. Automatic digitizing chooses ordinary elements with
+Ink/Stitch's parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check
+StitchCraft's stitches of those choices against Ink/Stitch's (`REQ-AUTO-021`). TS-11B checks the contour
+fills so, each strategy and join style among them (`REQ-FILL-CON-008`), and its circular fills
+(`REQ-FILL-CIR-007`). TS-11A checks the zigzag strokes (`REQ-RUN-013`), and the E-stitches, S-stitches
+and zigzag satins (`REQ-SAT-029`), along straights and round curves. TS-17A checks the simple crosses of
+cross stitch, on grids of 2 and 3 mm with 2 and 4 threads, flipped, and over a letter whose slanted edges
+cut their cells in half (`REQ-FILL-CRS-007`). TS-02B to TS-09, the sheets of MC-2 to MC-4, and TS-11C,
+the meander fills' sheet, are cases of `REQ-SVG-008` (M8.2). The `drawn-locks` case and TS-16 check
+custom locks drawn as paths, of each kind of command, which both programs sew at the same nodes
+(`REQ-LCK-005`). `conformance/inkstitch/README.md` says how to run it by hand and how to add a case.
 
 **Centre lines.** Sewing what StitchCraft chose can't find a choice that is wrong: TS-13B's small T sewed
 a Γ, the left arm of its bar left out of its centre line, and the differential agreed by every measure.
@@ -327,6 +333,26 @@ The report has a row for each shape, and `target/conformance/differential/` the 
 Ink/Stitch and a picture of both programs' lines over them. Run on the code from before the T was fixed
 (`03f0ab69`), the letters case finds a branch missing in 3 letters 3 mm tall: the Ts in 0.5 and 0.7 mm
 lines, and the E in 0.7 mm lines.
+
+**Ink/Stitch's fonts.** The `fonts` case sews each glyph of Ink/Stitch's fonts as a design of its own
+(`REQ-FONT-001`, `xtask/src/conformance/fonts/`), from the 131 fonts whose licence file allows it
+([fonts](fonts.md#the-corpus)). Each glyph is cut out of its glyph file, its group shown and the other
+glyphs left out, and both programs sew that file, compared by the measures above. StitchCraft plans it for
+the reference machine with a hoop 400 mm a side, as a glyph file is drawn at its font's height and a glyph
+may be wider than the reference hoop. Every night the case sews 4 glyphs of each font, and every Sunday all
+21,179, in 6 parts. A glyph whose stitch types StitchCraft doesn't sew yet is listed, and joins the
+comparison with M10's steps. An element whose setting StitchCraft can't read is left out with `SC-E0101`,
+where Ink/Stitch sews the setting's default: its glyph is excused by `DEV-PRM-001` and not compared. A glyph
+neither program writes a file of agrees. Ink/Stitch writes none when it finds nothing to sew or an element
+it can't sew, and StitchCraft none when an element is left out with an error, as `stitch plan` does.
+
+The corpus can't have an excuse for each of its glyphs. `conformance/inkstitch/glyphs.toml` excuses a
+measure by an entry of the ledger for the glyphs where its cause is. A diagnostic picks them, such as
+`SC-I0703` where StitchCraft splits stitches longer than the machine's longest, and so do a stitch type, a
+setting and a font. The excuses the differential can check are checked as a case's are. StitchCraft's
+running stitches place their needle points otherwise (`DEV-RUN-002`), and that excuse counts only where each
+program's thread lies within 0.3 mm of the other's, for 0.9 of it. The report, `target/conformance/fonts.md`,
+has a row for each font, the glyphs each excuse excused, and each glyph that differs with its measures.
 
 ### L4 — Physical (milestone gates)
 
@@ -365,6 +391,7 @@ will let users validate a machine profile with the same cases.
 | Every PR | L0, L1 (no fuzzing), L2 with fixed seeds, `--check` rules, the data cases' golden files on Linux, macOS and Windows ([cross-platform check](determinism.md#cross-platform-check)), coverage floors, mutants in the changed lines |
 | Nightly | L1 fuzzing, L2 fresh seeds, L3 differential (also on a pull request that changes it) |
 | Weekly | Mutation testing of every shipped crate, against the recorded counts |
+| Weekly | Every glyph of Ink/Stitch's fonts in the L3 differential |
 | Milestone close | All requirements of the milestone `active` and green; its machine checkpoint signed off |
 | Release | Everything above, plus the compatibility gate green on VectorCraft `stable` |
 
