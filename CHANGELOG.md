@@ -6,15 +6,15 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 
 ### Added
 - M8.10: clones (`REQ-SVG-012`, `REQ-SVG-013`). The SVG adapter sews a clone, a `<use>` of an element other
-  than a command's symbol, as Ink/Stitch sews it: the elements of what it shows, in the clone's place in the
-  document's order, each named after the clone (`svg:clone1/square:fill`). What it shows is drawn as a viewer
+  than a command's symbol, as Ink/Stitch sews it. The elements of what it shows sew in the clone's place in
+  the document's order, each named after the clone (`svg:clone1/square:fill`). What it shows is drawn as a viewer
   draws it, under the use's transform, `x` and `y`, with the style it inherits from the use, and a symbol is
   fitted to the viewport the use gives it. There `context-fill` and `context-stroke` paint with the use's fill
   and stroke.
-  - The commands tied to the source go with the clone, moved with it, and so do those in the source whose
-    connectors are in it. The clone's own `trim_after` and `stop_after`, and its trim and stop commands, trim
+  - The commands tied to the source move with the clone. So do those in the source whose connectors are in
+    it too. The clone's own `trim_after` and `stop_after`, and its trim and stop commands, trim
     or stop after the last of what it sews, and its shortest stitch and jump apply to all of it.
-  - A fill's angle turns with the clone, as Ink/Stitch turns it, unless the clone's `angle` gives one, and
+  - A fill's angle turns with the clone as Ink/Stitch turns it. The clone's own `angle` replaces it, and
     `flip_angle` reverses it. The compatibility contract shows these 3 clone settings as applied.
   - A clone whose `clone` setting is off sews nothing (`SC-I0805`). A clone that shows itself, directly or
     through other clones, is left out (`SC-W0804`), where Ink/Stitch fails, and so is one inside more than 16
