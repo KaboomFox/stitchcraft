@@ -452,6 +452,31 @@ registry! {
     /// running stitch or a satin column.
     FillCircularTooSmall = "SC-W0318", Warning, "Circular fill part within its row spacing of its middle; sewn as one circle";
 
+    /// A cross stitch fill sews a cross in each cell of its grid that it covers enough of: `fill_coverage`
+    /// percent of the cell or more, once the fill is grown by `expand_mm`. A part that covers no cell so
+    /// much sews nothing, as in Ink/Stitch, which warns of it too. Such a part is smaller or narrower than a
+    /// cell, or lies across the grid's lines so that no cell holds enough of it.
+    ///
+    /// The message counts the parts. Make `pattern_size_mm` smaller, lower `fill_coverage`, raise
+    /// `expand_mm`, or move the grid with `cross_offset_mm`.
+    FillCrossNoCell = "SC-W0319", Warning, "Cross stitch part covers no cell of its grid enough; sews nothing";
+
+    /// Each half of a cross's 2 diagonals takes `cross_thread_count` passes of the thread. The needle goes
+    /// out from the cross's middle and back again, so the passes come in pairs, and the count is an even
+    /// number. An odd count sews the even count below it, as in Ink/Stitch, and 1 sews 2. Ink/Stitch sews
+    /// a stitch from a corner of each cell to its middle for 1, and no cross.
+    ///
+    /// The message gives the count set and the count sewn. Set an even number.
+    FillCrossThreadsOdd = "SC-W0320", Warning, "Cross stitch thread count odd; an even count sewn";
+
+    /// A cross's shortest stitches run from its corners to its middle, half its diagonal long. On a grid
+    /// this fine they are shorter than the shortest stitch the machine sews well, so needle points of the
+    /// crosses are left out where they lie too near the one before, and the crosses lose their shape.
+    ///
+    /// The message gives the cells' size, the stitch's length and the shortest stitch. Make
+    /// `pattern_size_mm` larger.
+    FillCrossTooFine = "SC-W0321", Warning, "Cross stitch grid too fine for the shortest stitch; needle points left out";
+
     /// A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
     /// one stitch that short would hammer one spot of the fabric and could break the thread. The part is
     /// a single point (a stray node), shorter than the shortest stitch, or longer but curled up so that

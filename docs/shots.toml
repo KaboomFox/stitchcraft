@@ -564,6 +564,43 @@ panels = [
 ]
 
 [[shot]]
+id = "cross-stitch"
+kind = "stitch"
+fixture = "docs/fixtures/heart.svg"
+style = "realistic"
+scale = 10.0
+alt = "A red heart 32 mm wide sewn in cross stitch: a cross in each cell of a grid that the heart covers half of or more, so its edge steps along the grid"
+panels = [
+  { caption = "3 mm grid, 4 threads", params = { fill_method = "cross_stitch" } },
+  { caption = "2 mm grid, 2 threads", params = { fill_method = "cross_stitch", pattern_size_mm = "2", cross_thread_count = "2" } },
+]
+
+[[shot]]
+id = "cross-coverage"
+kind = "stitch"
+fixture = "docs/fixtures/heart.svg"
+style = "simple"
+scale = 8.0
+alt = "A heart 32 mm wide in cross stitch on a 2 mm grid with 2 threads, each cell sewn where the heart covers enough of it"
+panels = [
+  { caption = "25 % covered", params = { fill_method = "cross_stitch", pattern_size_mm = "2", cross_thread_count = "2", fill_coverage = "25" } },
+  { caption = "50 % covered", params = { fill_method = "cross_stitch", pattern_size_mm = "2", cross_thread_count = "2" } },
+  { caption = "90 % covered", params = { fill_method = "cross_stitch", pattern_size_mm = "2", cross_thread_count = "2", fill_coverage = "90" } },
+]
+
+[[shot]]
+id = "cross-flipped"
+kind = "stitch"
+fixture = "docs/fixtures/heart.svg"
+style = "realistic"
+scale = 10.0
+alt = "A red heart 32 mm wide in cross stitch on a 3 mm grid with 4 threads, each cross's top diagonal lying one way"
+panels = [
+  { caption = "Simple cross", params = { fill_method = "cross_stitch" } },
+  { caption = "Flipped", params = { fill_method = "cross_stitch", cross_stitch_method = "simple_cross_flipped" } },
+]
+
+[[shot]]
 id = "running-tolerance"
 kind = "stitch"
 fixture = "docs/fixtures/half-disc.svg"

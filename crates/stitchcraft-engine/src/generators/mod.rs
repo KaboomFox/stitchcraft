@@ -22,6 +22,7 @@
 
 pub mod circular;
 pub mod contour;
+pub mod cross;
 pub mod manual;
 pub mod meander;
 mod next;

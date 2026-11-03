@@ -34,6 +34,7 @@ mod ts10;
 mod ts11;
 mod ts13;
 mod ts16;
+mod ts17;
 
 use designed::Drawing;
 pub use sketch::{STITCH_LEN, SheetError};
@@ -139,6 +140,13 @@ impl TestSheet {
     /// [`Element::automatic`]: crate::design::Element::automatic
     pub fn digitized(&self) -> bool {
         self.design().and_then(Result::ok).is_some_and(|design| design.elements().iter().any(|element| element.automatic))
+    }
+
+    /// How far apart, in millimetres, the places lie that a host may move the sheet to and have it sew as it
+    /// does where it is drawn: whole millimetres, or for TS-17A whole multiples of 6 mm, so that its crosses
+    /// keep their cells on the canvas's grids of 2 and 3 mm.
+    pub fn step(&self) -> f64 {
+        if self.id == "TS-17A" { 6.0 } else { 1.0 }
     }
 
     /// The sheet as the design the engine plans, with its settings, as a host draws it into a document
@@ -471,6 +479,20 @@ pub static SHEETS: &[TestSheet] = &[
         profile: REFERENCE,
         drawn: Drawn::FromFile(ts16::drawing, &[]),
     },
+    TestSheet {
+        id: "TS-17A",
+        title: "New stitch types: cross stitch",
+        checks: &[
+            "Each sample is a cross stitch fill, trimmed after. Top row, in red, left to right: squares 24 mm wide on grids of 2 mm with 2 and 4 threads, then of 3 mm with 2 and 4 threads. Bottom row, in blue: the 2 mm square with 2 threads and the 3 mm one with 4, flipped, then a K 24 mm tall on a 2 mm grid with 2 threads, grown by 0.1 mm as Ink/Stitch's cross-stitch fonts grow their letters.",
+            "Does every cross of the top row lie with its / diagonal on top, and every cross of the flipped squares with its \\ diagonal on top?",
+            "Between its 2 diagonals the needle passes through each cross's middle, under the diagonal sewn last. Do those stitches show? The squares and the K first travel from where the needle comes in to where they end, through the middles of their crosses: does that travel show?",
+            "Does fabric show between the crosses at 2 threads? At 4, do the holes at the cells' corners stay clean, or do they pack and tear? Which grid and thread count look best?",
+            "The K's arms slant across the grid, and each cell their edges cut in half sews a cross, so the arms step along the grid. Does the K read at 24 mm on a 2 mm grid? A few of its crosses are reached by a corner of their bottom diagonal, and end with a stitch from their middle to it on top: do those show?",
+            "How long does the sheet take?",
+        ],
+        profile: REFERENCE,
+        drawn: Drawn::Designed(ts17::crosses, &[]),
+    },
 ];
 
 /// The sheet with id `id` (any case).
@@ -504,9 +526,11 @@ mod tests {
             designed,
             [
                 "TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-11C", "TS-13A", "TS-13B", "TS-13C",
-                "TS-13D", "TS-16"
+                "TS-13D", "TS-16", "TS-17A"
             ]
         );
+        // A host moves each by whole millimetres, but TS-17A by multiples of 6 mm, which keep its crosses' cells.
+        assert_eq!(SHEETS.iter().filter(|sheet| sheet.step() != 1.0).map(|sheet| (sheet.id, sheet.step())).collect::<Vec<_>>(), [("TS-17A", 6.0)]);
         // The TS-13 sheets' shapes are digitized automatically, and no other sheet's are.
         let digitized: Vec<&str> = SHEETS.iter().filter(|sheet| sheet.digitized()).map(|sheet| sheet.id).collect();
         assert_eq!(digitized, ["TS-13A", "TS-13B", "TS-13C", "TS-13D"]);
