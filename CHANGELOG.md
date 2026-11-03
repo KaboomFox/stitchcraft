@@ -5,23 +5,28 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
-- M8.6: Ink/Stitch's fonts as a corpus of the differential (`REQ-FONT-001`). `cargo xtask corpus` fetches the
-  archive of inkstitch/embroidery-fonts at `c7e3a05`, the commit `conformance/inkstitch/fonts.toml` pins,
-  checks its SHA-256 and unpacks it in a cache outside the repository. It takes the 131 fonts whose licence
-  file names the OFL, CC0, CC BY or CC BY-SA first, and no font file is committed.
-  - The differential's `fonts` case cuts each glyph out of its glyph file, its group shown and the other
-    glyphs left out, and sews it in both programs. Every night it sews 4 glyphs of each font, and every
-    Sunday all 21,179 in 6 parts (`--every-glyph`, `--shard`). The glyphs of stitch types StitchCraft
-    doesn't sew yet are listed.
+- M8.6: the fonts of Ink/Stitch as a corpus of the differential (`REQ-FONT-001`). `cargo xtask corpus`
+  fetches the archive of inkstitch/embroidery-fonts at `c7e3a05`, the commit
+  `conformance/inkstitch/fonts.toml` pins, checks its SHA-256 and unpacks it in a cache outside the
+  repository. It takes the 131 fonts whose licence file names the OFL, CC0, CC BY or CC BY-SA first, and no
+  font file is committed.
+  - The differential's `fonts` case sews each glyph in both programs as a design of its own, cut out of its
+    glyph file with the other glyphs left out. Every night it sews 4 glyphs of each font, and every Sunday
+    all 21,179 in 6 parts (`--every-glyph`, `--shard`). The glyphs of stitch types StitchCraft doesn't sew
+    yet are listed.
   - Of the sample's 524 glyphs, 357 agree by every measure, 98 are listed and 69 differ as the ledger
-    explains, for the glyphs `conformance/inkstitch/glyphs.toml` names. The differential undoes 2 more
-    deviations in Ink/Stitch's file to check their excuses, the threads named by other entries of Brother's
-    palette (`DEV-THREAD-001`) and the stitches split at the machine's longest (`DEV-FIN-001`). An excuse
-    for running stitches counts only where the threads lie within 0.3 mm of each other (`DEV-RUN-002`).
-  - The ledger gains `DEV-SVG-025`: a viewBox of another shape than its page is centred, where Ink/Stitch
-    leaves it at the top left corner. `DEV-SVG-026` says Ink/Stitch's stitch patterns aren't applied.
-  - The `inkstitch` action turns Ink/Stitch's debug log off, with which a glyph took 10 seconds against 1.6,
-    and its stitch-plan cache.
+    explains, for the glyphs `conformance/inkstitch/glyphs.toml` names. Of a twentieth of every glyph, 1,059
+    glyphs, 699 agree, 238 are listed and 122 differ as the ledger explains. A glyph neither program writes
+    a file of agrees, as Apex simple small's U, whose satin column neither can sew.
+  - The differential undoes 3 more deviations in Ink/Stitch's file to check their excuses: the threads named
+    by other entries of Brother's palette (`DEV-THREAD-001`), the stitches fitted to the machine's longest and
+    shortest (`DEV-FIN-001`) and the needle point sewn at a move-to that draws nothing (`DEV-SVG-011`). An
+    excuse for running stitches counts only where the threads lie within 0.3 mm of each other (`DEV-RUN-002`).
+  - `DEV-SVG-025` says that a viewBox of another shape than its page is centred, where Ink/Stitch leaves it at
+    the top left corner, and `DEV-SVG-026` that Ink/Stitch's stitch patterns aren't applied.
+  - The `inkstitch` action turns Ink/Stitch's debug log off, with which a glyph took 10 seconds against 1.6.
+    Ink/Stitch's settings file is written only when it holds something else, and whole, so that glyphs sewn
+    side by side never read it half written, which would turn the cache on.
 - M10.3, a spike: the routing tools will come to StitchCraft as one function of the engine, and ADR-0017
   records why. The function routes as Ink/Stitch's Auto-Route Satin Columns and Auto-Route Running Stitch
   route. In VectorCraft, 2 heavy filters will call it. A filter will replace the selected paths with the

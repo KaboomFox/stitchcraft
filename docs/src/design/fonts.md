@@ -99,29 +99,37 @@ reference hoop.
 its order. The sample takes the glyphs at the places 0, n/4, n/2 and 3n/4 of n, rounded down. It spreads over
 each font, from its first glyph, and moves only when the pin does. Run from its checkout, Ink/Stitch logs at
 its debug level, and a glyph took it 10 seconds, against 1.6 with the log turned off. On 2 cores the sample
-then takes 12 minutes.
+then takes 12 minutes, and a twentieth of every glyph 22.
 
 **What differs.** Of the sample's 524 glyphs, 357 agree by every measure. 98 are of stitch types StitchCraft
 doesn't sew yet, which the report lists, 66 of them in cross stitch and the rest in tartan fills, ripples and
 guided fills. They join the comparison with M10's steps. The other 69 differ as the ledger explains,
 `conformance/inkstitch/glyphs.toml` naming the glyphs each excuse is for. A glyph may differ in more than
-one way.
+one way. A twentieth of every glyph, the seventh of 20 parts, holds 1,059 glyphs. Of them 699 agree, 238
+are listed and 122 differ as the ledger explains. It found the last 3 rows of the table, which the sample
+has none of, and a glyph neither program writes a file of, which agrees: the U of Apex simple small, whose
+satin column neither can sew.
 
-| Difference | Glyphs of the sample | Explained by |
-|---|---|---|
-| The threads named by other entries of Brother's palette, both files changing thread at the same blocks | 34 | `DEV-THREAD-001`, checked |
-| Running stitches placed otherwise, more of them on tight curves, within 0.3 mm of each other | 14 | `DEV-RUN-002`, checked |
-| Elements whose settings StitchCraft can't read, left out, such as a `repeats` of `0 2` in Neon blinking | 6 | `DEV-PRM-001` |
-| Stitch patterns, which StitchCraft doesn't apply, in Initials XL and Mai en fleur | 5 | `DEV-SVG-026` |
-| Random satin widths, and a negative width decrease raised to 0, in Magnolia bicolor | 4 | `DEV-SAT-002`, `DEV-PRM-002` |
-| Meander tiles of StitchCraft's own, in Barstitch textured | 4 | `DEV-FILL-018` |
-| Cooper Marif's fills in a viewBox of another shape than its page, which StitchCraft centres and Ink/Stitch doesn't | 4 | `DEV-SVG-025` |
-| Satin stitches longer than the machine's 12 mm, split, in Hebrew simple rounded small, whose pull compensation is 10 mm | 2 | `DEV-FIN-001`, checked |
+| Difference | Sample | Twentieth | Explained by |
+|---|---|---|---|
+| The threads named by other entries of Brother's palette, both files changing thread at the same blocks | 34 | 29 | `DEV-THREAD-001`, checked |
+| Running stitches placed otherwise, more of them on tight curves, within 0.3 mm of each other | 14 | 28 | `DEV-RUN-002`, checked |
+| Elements whose settings StitchCraft can't read, left out, such as a `repeats` of `0 2` in Neon blinking | 6 | 38 | `DEV-PRM-001` |
+| Stitch patterns, which StitchCraft doesn't apply, in Initials XL and Mai en fleur | 5 | 6 | `DEV-SVG-026` |
+| Random satin widths, and a negative width decrease raised to 0, in Magnolia bicolor and Cats | 4 | 7 | `DEV-SAT-002`, `DEV-PRM-002` |
+| Meander tiles of StitchCraft's own, in Barstitch textured | 4 | 8 | `DEV-FILL-018` |
+| Cooper Marif's fills in a viewBox of another shape than its page, which StitchCraft centres and Ink/Stitch doesn't | 4 | 6 | `DEV-SVG-025` |
+| Satin stitches longer than the machine's 12 mm, split, in Hebrew simple rounded small, whose pull compensation is 10 mm | 2 | 1 | `DEV-FIN-001`, checked |
+| Needle points nearer the one before than the machine's shortest stitch, 0.3 mm, left out, in Honoka's underlays of 0.2 mm stitches and DejaVu's full stop | 0 | 3 | `DEV-FIN-001`, checked |
+| A needle point Ink/Stitch sews where a path ends with a move-to that draws nothing, 24 mm above Kum Tsoan relief's V | 0 | 1 | `DEV-SVG-011`, checked |
+| A jump that goes nowhere in Ink/Stitch's file, which pystitch writes | 0 | 1 | `DEV-FMT-001`, checked |
 
 A checked excuse counts only where the differential undoes the deviation in Ink/Stitch's file and the measure
 then agrees, or where each program's thread lies within 0.3 mm of the other's. Without its 6 stitch patterns,
 Ink/Stitch sews Initials XL's B in 9,804 stitches, against StitchCraft's 9,805 and its own 12,158. In a page
-of its viewBox's shape, Cooper Marif's 7 overlaps by 0.999, against 0.573.
+of its viewBox's shape, Cooper Marif's 7 overlaps by 0.999, against 0.573. Without its needle points nearer
+the one before than 0.3 mm, Ink/Stitch sews Honoka's 服 in 1,889 stitches, against StitchCraft's 1,935 and its
+own 3,101.
 
 ## Fonts ported by other programs
 
