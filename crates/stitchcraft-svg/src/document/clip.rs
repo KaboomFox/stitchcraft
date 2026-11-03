@@ -134,7 +134,7 @@ impl<'a, 'input> Reader<'_, 'a, 'input> {
         let style = Style::default().child(&declared).unwrap_or_default();
         let mut shapes = Vec::new();
         self.shapes_in(clip_path, (id, label), base, &style, &mut shapes, 0)?;
-        Ok(Some(Clip { shapes }))
+        Ok(Some(Clip { shapes: shapes.into() }))
     }
 
     /// `map` after the transform of `node`, a clip path or one of its children, `id` in clip path, cutting

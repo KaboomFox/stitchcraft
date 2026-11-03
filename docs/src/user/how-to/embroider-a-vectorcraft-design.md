@@ -52,6 +52,20 @@ read alike. A hidden object is left out too.
 VectorCraft's preview can't see names. An object named `stitch:ignore` that a StitchCraft effect sews, its
 own or its group's, still shows its stitches there, and `stitch export` leaves it out.
 
+## Clip art to a shape
+
+Draw the shape over the art, select both, and choose **Object › Clipping Mask › Make**. The art sews only
+where it shows inside the shape, in the machine file and in `stitch export` alike. A fill sews the part of
+its area inside, and a stroke the pieces of its line inside, each on its own. A satin column is sewn
+whole, as Ink/Stitch sews one, and StitchCraft says so (`SC-W0217`). Art wholly outside the shape isn't
+sewn (`SC-W0013`). A clipping mask inside another cuts its art to both shapes.
+
+Clip with a path or a compound path. StitchCraft doesn't read the outlines of text, so make paths of text
+with **Type › Create Outlines** before you clip with it: until then it clips all the art away, and
+StitchCraft says why. Give StitchCraft's effects to the objects in the clipping mask rather than to the
+mask itself. VectorCraft runs a group's effects on the clipping shape too, and then shows the art cut to
+the stitches they draw there, where the machine file cuts it to the shape (`SC-W0807`).
+
 ## Write the machine file
 
 With the [exporters installed](../install.md#the-vectorcraft-plug-ins), choose **File › Export › Export

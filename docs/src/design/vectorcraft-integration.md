@@ -562,13 +562,15 @@ further than the limit. Nesting deeper than the JSON reader allows (128 levels, 
 groups) refuses the file. VectorCraft itself keeps 32. The JSON is read into the few things the adapter
 uses, and the rest is skipped as it is read: images, previews and text runs are never kept. Every object,
 appearance item, effect and anchor charges the budget, and so does each element for its copies of the
-object's path, name and settings. An object's name goes into each element made of it, and a group's
+object's path, name and settings, and for the clips that cut it. An object's name goes into each element
+made of it, and a group's
 StitchCraft settings into each element of the paths in it. Those copies come to at most 64 MiB, as much
 as the JSON read. Each element's copy of its object's path takes 56 bytes a segment, and a long path under
 many paints would hold far more than the file: 4 MB drawing 2,500 fills on a path of 200,000 anchors would
 hold 28 GB before the budget ran out. So the copies of paths come to at most 32 bytes for each byte of
 JSON read, which an object's fill and stroke on its most compact path keep well within. A file whose
-copies come to more is refused with `SC-E0806`.
+copies come to more is refused with `SC-E0806`. A clip group's clip is held once, shared by the elements it
+cuts, and costs each of them a unit for each of its segments.
 
 **Coordinates.** VectorCraft keeps every path in document coordinates. Moving or scaling a group moves
 its paths' anchors, so layers, groups and compound paths have no transform. Coordinates are points, 1/72
@@ -581,10 +583,8 @@ anchor, leaves that end of the segment straight, and a segment without handles i
 
 - **Paths and compound paths** are the art. A compound path's children are one shape, with the compound's
   appearance and fill rule.
-- **Groups and layers** pass their children on, and their StitchCraft effects with them (below). Clipping
-  is left for M8.7: a clipping group's or layer's art is stitched whole, with `SC-W0807`. The SVG adapter
-  cuts a shape to its clip paths from M8.5, and M8.7 gives a clip group's art its clipping object as a
-  clip of its elements the same way (`REQ-GEN-005`).
+- **Groups and layers** pass their children on, and their StitchCraft effects with them (below). A clip
+  group's or a clipping layer's art is cut to its clipping object, as VectorCraft clips it (below).
 - **Hidden objects**, and everything in them, are left out without a word, as VectorCraft draws nothing
   for them. So are objects and paints of opacity 0, paints turned off and strokes of width 0.
 - **Objects and layers named `stitch:ignore`**, and everything in them, are left out with `SC-I0811`.
@@ -677,6 +677,40 @@ sews nothing. VectorCraft draws nothing of a group or an image there, which an i
 and neither is sewn. Where StitchCraft effects meet from more than one level, a path's own and a group's,
 or 2 groups', VectorCraft draws one effect run on the stitches another drew, which a machine cannot sew.
 The path sews as the nearest effects say, and `SC-W0807` names it.
+
+**Clip groups** (`REQ-VC-017`, M8.7). A group or a layer whose kind has `"clip": true` clips what it holds
+to its first object, the clipping object. Object › Clipping Mask › Make wraps the objects selected in such a
+group, the topmost first, which must be a path, a compound path or text. It takes that object's paints and
+effects away, and marks a path `"clipping": true` (`clip_make` in `crates/engine`). The Layers panel's
+Make Clipping Mask clips a layer or a group the same way. VectorCraft clips to the clipping object's area,
+whatever its paints, and hidden or not (`Node::clip_shapes` in `crates/doc`, read at 0.18.0):
+
+- a path's by its fill rule, and a compound path's paths together by its own rule, holes and all;
+- a nested clip group's, its own clipping object's;
+- the members that show of another group or of a layer together, but a Shaper group's sources;
+- text's by its glyphs' outlines, an image's or a placed document's by its frame, and a live object's by
+  what it draws. A guide and a symbol add nothing.
+
+One shape keeps its rule, several are united, and none hides what the group holds. The adapter makes the
+clipping object's area into a clip of each element of what the group holds, however deep, as the SVG
+adapter does with a clip path (`Element::clips`). Clip groups inside one another give one clip each, and
+the engine cuts an element to all of them (`REQ-GEN-005`): a fill's area and a stroke's lines, each piece
+sewn on its own. A satin column is sewn whole, as in Ink/Stitch (`SC-W0217`), and an element its clips
+leave nothing of isn't sewn (`SC-W0013`). An automatic shape is cut before it is digitized. The clipping
+object isn't cut to its own clip, as VectorCraft paints its fills inside its own area and its strokes over
+the clip's edge, and the clips round its group cut it.
+
+The adapter doesn't read glyphs, frames or what a live object draws. Text, an image, a placed document, a
+live object or a kind it doesn't know adds nothing to the clip, and `SC-W0807` names it, with the
+VectorCraft command that makes paths of it, such as Type › Create Outlines. A path in the clipping object
+whose geometry can't be used adds nothing either, with `SC-W0808`. A clip left with no shape leaves nothing
+of what it cuts, where VectorCraft shows what lies in the glyphs or the frame.
+
+VectorCraft runs a group's geometry effects on every path inside it, the clipping objects of the clip groups
+it holds among them (`for_each_leaf` in `crates/effects`), and clips to what they return. Where StitchCraft's
+effects reach a clipping object, the preview is cut to the stitches they draw of it, a fill's rows or a
+stroke's line. What sews is cut to the clipping object as it is drawn, and `SC-W0807` says so. Its hint is
+to apply the effects to the objects the group clips.
 
 **Ids.** An element is `vc:<object id>:<what>`: `fill` or `stroke` for a paint, with its rank among the
 object's fills or strokes from the second on (`fill.2`), and the family for an effect. VectorCraft keeps

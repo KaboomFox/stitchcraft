@@ -70,7 +70,7 @@ fn req_gen_005_a_fill_sews_what_its_clips_leave_of_its_area() {
 fn req_gen_005_a_clip_is_the_area_of_its_shapes_together() {
     // 2 shapes that overlap: the fill sews what lies in either, the overlap among it (DEV-SVG-016).
     let shape = |x0, x1| ClipShape { path: rings(&[&rect(x0, 0.0, x1, 20.0)]), rule: FillRule::NonZero };
-    let both = Clip { shapes: vec![shape(-10.0, 0.0), shape(-5.0, 5.0)] };
+    let both = Clip { shapes: vec![shape(-10.0, 0.0), shape(-5.0, 5.0)].into() };
     let sewn = sewn_by(&planned(vec![Element { clips: vec![both], ..square(&[]) }]), "square");
     assert!(about(bounds(&sewn), [-10.0, 0.0, 5.0, 20.0], EDGE), "{:?}", bounds(&sewn));
     assert!(sewn.iter().any(|q| (-4.0..-1.0).contains(&q.x())), "the overlap is sewn");
