@@ -513,12 +513,16 @@ registry! {
 
     /// The lock is set to custom, but its shape cannot be sewn as written. A custom lock is numbers
     /// separated by spaces, the steps the needle takes along the stitching in sizes of
-    /// `lock_*_scale_mm`, or an SVG path that draws it. StitchCraft sews the numbers. It does not sew a
-    /// drawn custom lock yet, and sews the half stitch in its place. Parts that are not numbers, and steps
-    /// longer than 10 m, are left out. If no step is left, the half stitch is sewn instead.
+    /// `lock_*_scale_mm`, or an SVG path that draws it in millimetres, at `lock_*_scale_percent`. Parts
+    /// that are not numbers, steps of 0 and steps longer than 10 m are left out, and if no step is left,
+    /// the half stitch is sewn instead. A path is read up to an error in it, and a node where the node
+    /// before it is is left out. The half stitch is sewn instead of a path of fewer than 3 nodes or more
+    /// than 100, one whose last segment, which gives its direction, has no length, one that reaches
+    /// farther than 10 m, one with no stitch to sew, and one with a stitch shorter than 0.2 mm even at
+    /// 500 %.
     ///
-    /// The message says what was wrong. Write the lock as numbers, such as `1 -1 1 -1`, or choose
-    /// another lock shape.
+    /// The message says what was wrong. Write the lock as numbers, such as `1 -1 1 -1`, or as a path of
+    /// at least 3 nodes, such as `M 0,0 L 0,1 L 1,1 L 1,0 L 2,0`, or choose another lock shape.
     CustomLockUnusable = "SC-W0503", Warning, "Custom lock cannot be sewn as written";
 
     /// Needle points less than the shortest stitch from a needle point next to them were left out, so the

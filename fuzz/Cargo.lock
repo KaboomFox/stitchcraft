@@ -521,6 +521,7 @@ dependencies = [
  "stitchcraft-core",
  "stitchcraft-params",
  "stitchcraft-plan",
+ "svgtypes",
  "thiserror",
 ]
 

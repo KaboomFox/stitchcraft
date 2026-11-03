@@ -1,5 +1,5 @@
-//! Lock stitches' conformance cases (`REQ-LCK-002`, `REQ-LCK-004`) and `SC-W0502`, `SC-W0503`, through the
-//! engine's public API.
+//! Lock stitches' conformance cases (`REQ-LCK-002`, `REQ-LCK-004` to `REQ-LCK-006`) and `SC-W0502`,
+//! `SC-W0503`, through the engine's public API.
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used)]
@@ -155,9 +155,123 @@ fn req_lck_004_a_custom_lock_s_text_is_stripped_first_as_in_ink_stitch() {
         let (start, end) = locks(&group, "custom", &[("lock_custom_start", text)]);
         assert_eq!((&start.points, messages(&start), messages(&end)), (&plain.points, vec![], vec![]), "{text:?}");
     }
-    // A tab among the numbers is no space between them: the text is a drawn lock, as in Ink/Stitch.
+    // A tab among the numbers is no space between them: the text is a drawn lock, as in Ink/Stitch, and as a
+    // path it does not read.
     let (tabbed, _) = locks(&group, "custom", &[("lock_custom_start", "1\t-1")]);
-    assert_eq!(tabbed.warnings.iter().map(|w| w.code).collect::<Vec<_>>(), [Code::CustomLockUnusable]);
+    assert_eq!(tabbed.warnings.iter().map(|w| w.code).collect::<Vec<_>>(), [Code::CustomLockUnusable; 2]);
+}
+
+/// Where a lock's points lie from `anchor`.
+fn from(lock: &Lock, anchor: Point) -> Vec<Point> {
+    lock.points.iter().map(|q| p(q.x() - anchor.x(), q.y() - anchor.y())).collect()
+}
+
+#[test]
+fn req_lck_005_a_custom_path_sews_where_ink_stitch_sews_it() {
+    // Each path at both ends of a straight line, and where Ink/Stitch at d59c9ab, run as a black box on the
+    // same path at both ends of a line along x, put the lock's needle points, from where the line starts and
+    // ends: the start lock's before the line's first point, the end lock's after its last.
+    let square = [p(-1.0, 0.0), p(-1.0, 1.0), p(0.0, 1.0)];
+    let square_end = [p(0.0, -1.0), p(1.0, -1.0), p(1.0, 0.0)];
+    let cases: [(&str, &str, &[Point], &[Point]); 9] = [
+        ("lines", "M 0,0 L 0,1 L 1,1 L 1,0 L 2,0", &square, &square_end),
+        // Relative, across and down, and 2 subpaths: the same nodes.
+        ("relative", "m 0,0 l 0,1 1,0 0,-1 1,0", &square, &square_end),
+        ("across and down", "M 0,0 V 1 H 1 V 0 h 1", &square, &square_end),
+        ("subpaths", "M 0,0 L 0,1 M 1,1 L 1,0 L 2,0", &square, &square_end),
+        // A curve and an arc sew straight to their ends.
+        ("curve", "M 0,0 C 0,1 1,1 1,0.5 L 1,0 L 2,0", &[p(-1.0, 0.0), p(0.0, 0.5)], &[p(0.0, -0.5), p(1.0, 0.0)]),
+        ("arc", "M 0,0 A 0.5,0.5 0 0 1 1,0 L 1,1 L 2,1", &[p(-1.0, -1.0), p(0.0, -1.0)], &[p(0.0, 1.0), p(1.0, 1.0)]),
+        // A closepath goes back to where its subpath started, and the next command starts there.
+        (
+            "closepath",
+            "M 0,1 L 1,1 L 1,0 Z L 0.5,0.5 L 1.5,0.5",
+            &[p(-0.5, 0.5), p(0.5, 0.5), p(0.5, -0.5), p(-0.5, 0.5)],
+            &[p(0.5, -0.5), p(-0.5, 0.5), p(-0.5, -0.5), p(0.5, -0.5)],
+        ),
+        // A last segment that runs down is turned along the line.
+        ("turned", "M 0,0 L 1,0 L 1,1 L 0,1 L 0,2", &[p(-1.0, 0.0), p(-1.0, -1.0), p(0.0, -1.0)], &[p(0.0, 1.0), p(1.0, 1.0), p(1.0, 0.0)]),
+        // 3 nodes: 1 stitch into the line, and 1 out of it.
+        ("3 nodes", "M 0,1 L 1,0 L 2,0", &[p(-1.0, 1.0)], &[p(1.0, -1.0)]),
+    ];
+    let group = straight();
+    let (first, last) = (group[0], group[4]);
+    for (name, path, start_wants, end_wants) in cases {
+        let (start, end) = locks(&group, "custom", &[("lock_custom_start", path)]);
+        assert!(start.warnings.is_empty() && end.warnings.is_empty(), "{name}: {:?} {:?}", start.warnings, end.warnings);
+        near(&from(&start, first), start_wants);
+        near(&from(&end, last), end_wants);
+    }
+    // Twice as large at 200 %, about where the line starts or ends, as Ink/Stitch scales it.
+    let (start, end) = locks(&group, "custom", &[("lock_custom_start", "M 0,0 L 0,1 L 1,1 L 1,0 L 2,0"), ("lock_start_scale_percent", "200")]);
+    near(&from(&start, first), &[p(-2.0, 0.0), p(-2.0, 2.0), p(0.0, 2.0)]);
+    near(&from(&end, last), &[p(0.0, -2.0), p(2.0, -2.0), p(2.0, 0.0)]);
+}
+
+#[test]
+fn req_lck_005_a_custom_path_turns_with_the_stitching_and_scales_with_the_percent_alone() {
+    // Stitching along (3, 4) / 5 from (1, 1): the path's x axis turns onto it, and its y axis a quarter turn on.
+    let group = [p(1.0, 1.0), p(4.0, 5.0), p(7.0, 9.0)];
+    let along = |x: f64, y: f64, from: Point| p(from.x() + 0.6 * x - 0.8 * y, from.y() + 0.8 * x + 0.6 * y);
+    let square = [("lock_custom_start", "M 0,0 L 0,1 L 1,1 L 1,0 L 2,0")];
+    let (start, end) = locks(&group, "custom", &square);
+    near(&start.points, &[along(-1.0, 0.0, group[0]), along(-1.0, 1.0, group[0]), along(0.0, 1.0, group[0])]);
+    // At the end, the frame turns back into the stitching.
+    near(&end.points, &[along(0.0, -1.0, group[2]), along(1.0, -1.0, group[2]), along(1.0, 0.0, group[2])]);
+    // The scale in millimetres sizes the custom numbers, and leaves a path as it is.
+    let (sized, _) = locks(&group, "custom", &[square[0], ("lock_start_scale_mm", "3")]);
+    assert_eq!(sized.points, start.points);
+}
+
+#[test]
+fn req_lck_005_a_custom_path_too_small_to_sew_is_enlarged_as_a_drawn_lock_is() {
+    // At 10 %, the square's stitches would be 0.1 mm: it is sewn at 20 %, as Ink/Stitch would sew it at 20 %.
+    let group = straight();
+    let (start, end) = locks(&group, "custom", &[("lock_custom_start", "M 0,0 L 0,1 L 1,1 L 1,0 L 2,0"), ("lock_start_scale_percent", "10")]);
+    near(&start.points, &[p(-0.2, 0.0), p(-0.2, 0.2), p(0.0, 0.2)]);
+    near(&from(&end, group[4]), &[p(0.0, -0.2), p(0.2, -0.2), p(0.2, 0.0)]);
+    let enlarged = "warning SC-W0502: The start lock's shortest stitch would be 0.1 mm, shorter than 0.2 mm, so the lock is sewn 2 times as large.";
+    assert_eq!(messages(&start), [enlarged]);
+    assert_eq!(messages(&end), [enlarged.replace("start", "end")]);
+}
+
+#[test]
+fn req_lck_006_a_custom_path_that_cannot_be_sewn_says_why_and_sews_the_half_stitch() {
+    let group = straight();
+    let (half_in, half_off) = locks(&group, "half_stitch", &[]);
+    let cases = [
+        ("M 0,0 L 1,1", "is a path of fewer than 3 nodes"),
+        ("M 0,1 L 1,0 L 1,0", "is a path whose last segment, which would give its direction, has no length"),
+        ("M 0,0 L 0.01,0 L 1,0 L 2,0", "is a path with a stitch of 0.05 mm even at 500 %, the largest scale, shorter than 0.2 mm"),
+        ("M 20000,0 L 0,0 L 1,0", "is a path that reaches farther than 10 m from its last node but one"),
+    ];
+    for (path, why) in cases {
+        let (start, end) = locks(&group, "custom", &[("lock_custom_start", path)]);
+        assert_eq!((&start.points, &end.points), (&half_in.points, &half_off.points), "{path}");
+        assert_eq!(messages(&start), [format!("warning SC-W0503: The custom start lock {why}, so the half stitch is sewn instead.")]);
+        assert_eq!(messages(&end), [format!("warning SC-W0503: The custom end lock {why}, so the half stitch is sewn instead.")]);
+    }
+    // More than 100 nodes, with Ink/Stitch's own most at 9.
+    let long = format!("M 0,0{}", " h 1".repeat(100));
+    let (start, _) = locks(&group, "custom", &[("lock_custom_start", long.as_str())]);
+    assert_eq!(messages(&start), ["warning SC-W0503: The custom start lock is a path of more than 100 nodes, so the half stitch is sewn instead."]);
+}
+
+#[test]
+fn req_lck_006_a_custom_path_s_error_and_repeated_nodes_are_left_out() {
+    let group = straight();
+    // Read up to the error, which is named: the 5 nodes before it sew.
+    let (start, end) = locks(&group, "custom", &[("lock_custom_start", "M 0,0 L 0,1 L 1,1 L 1,0 L 2,0 K 3,3")]);
+    near(&start.points, &[p(-1.0, 0.0), p(-1.0, 1.0), p(0.0, 1.0)]);
+    assert_eq!(
+        messages(&start),
+        ["warning SC-W0503: The custom start lock's path has an error (unexpected data at position 31), so the rest of it is left out."]
+    );
+    assert_eq!(end.points.len(), 3);
+    // A node where the node before it is would sew in place.
+    let (start, _) = locks(&group, "custom", &[("lock_custom_start", "M 0,0 L 0,1 L 0,1 L 1,1 L 1,0 L 2,0")]);
+    near(&start.points, &[p(-1.0, 0.0), p(-1.0, 1.0), p(0.0, 1.0)]);
+    assert_eq!(messages(&start), ["warning SC-W0503: A node of the custom start lock's path is where the node before it is, so it is left out."]);
 }
 
 /// `got` is `want`, point by point, to within a nanometre.
@@ -274,13 +388,8 @@ fn diag_sc_w0502_lock_stitches_shorter_than_0_2_mm_are_lengthened() {
 fn diag_sc_w0503_custom_locks_that_cannot_be_sewn_as_written_are_named() {
     let group = straight();
     let half_stitch = locks(&group, "half_stitch", &[]).0.points;
-    let (drawn, _) = locks(&group, "custom", &[("lock_custom_start", "M 0,0 L 1,1 2,0")]);
-    assert_eq!(
-        messages(&drawn),
-        [
-            "warning SC-W0503: The custom start lock is not written as numbers, and StitchCraft cannot sew a lock drawn as an SVG path yet, so the half stitch is sewn instead."
-        ]
-    );
+    let (drawn, _) = locks(&group, "custom", &[("lock_custom_start", "M 0,0 L 1,1")]);
+    assert_eq!(messages(&drawn), ["warning SC-W0503: The custom start lock is a path of fewer than 3 nodes, so the half stitch is sewn instead."]);
     assert_eq!((drawn.points, drawn.warnings[0].code), (half_stitch, Code::CustomLockUnusable));
     let (_, empty) = locks(&group, "custom", &[]);
     assert_eq!(messages(&empty), ["warning SC-W0503: The custom end lock has no steps to sew, so the half stitch is sewn instead."]);
@@ -330,5 +439,35 @@ proptest! {
         prop_assert!(shortest(&into) >= LOCK_MIN_STITCH.get() - 1e-9, "{id}: {into:?}");
         prop_assert!(shortest(&from) >= LOCK_MIN_STITCH.get() - 1e-9, "{id}: {from:?}");
         prop_assert_eq!(locks(&group, id, &pairs), (start, end));
+    }
+
+    /// Any path, any group and any scale: a custom path sews no lock stitch shorter than 0.2 mm, joins
+    /// included, whether it is sewn, enlarged or replaced by the half stitch, and the same input sews the same
+    /// lock.
+    #[test]
+    fn req_lck_006_no_custom_path_sews_a_lock_stitch_shorter_than_0_2_mm(
+        steps in prop::collection::vec((0.3..5.0_f64, 0.0..6.3_f64), 1..5),
+        nodes in prop::collection::vec((-2.0..2.0_f64, -2.0..2.0_f64), 0..8),
+        twice in 0..8_usize,
+        percent in 10.0..500.0_f64,
+    ) {
+        let mut group = vec![p(0.0, 0.0)];
+        for (length, angle) in &steps {
+            let (sin, cos) = sin_cos(*angle);
+            let last = *group.last().unwrap();
+            group.push(p(last.x() + length * cos, last.y() + length * sin));
+        }
+        // Some nodes twice, where the node before them is.
+        let mut text: Vec<String> = nodes.iter().map(|(x, y)| format!("{x:.3},{y:.3}")).collect();
+        if let Some(node) = text.get(twice).cloned() {
+            text.insert(twice, node);
+        }
+        let (path, percent) = (format!("M {}", text.join(" ")), percent.to_string());
+        let pairs = [("lock_custom_start", path.as_str()), ("lock_start_scale_percent", percent.as_str())];
+        let (start, end) = locks(&group, "custom", &pairs);
+        let (into, from) = sewn(&group, &start, &end);
+        prop_assert!(shortest(&into) >= LOCK_MIN_STITCH.get() - 1e-9, "{path}: {into:?}");
+        prop_assert!(shortest(&from) >= LOCK_MIN_STITCH.get() - 1e-9, "{path}: {from:?}");
+        prop_assert_eq!(locks(&group, "custom", &pairs), (start, end));
     }
 }
