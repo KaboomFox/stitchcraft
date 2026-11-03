@@ -52,7 +52,10 @@
 //! once the objects VectorCraft draws nothing of are left out ([`marker`]). `stitch:ignore` leaves an object
 //! or a layer out with everything in it, and `SC-I0811` lists it. `stitch:start` and `stitch:end` mark
 //! where the shape grouped with them starts or ends: the marker is never stitched, and `SC-W0807` names it
-//! until the generators start and end at such hints (M8). A group or a layer is never a marker, and a word
+//! until the generators start and end at such hints (M8). `stitch:origin` and `stitch:stop-position`, anywhere
+//! in the document, give the design its origin and its stop position (`REQ-ASM-005`), as Ink/Stitch's commands
+//! do in an SVG file, and 2 origins, or 2 stop positions in a design that stops, are an error (`SC-E0819`).
+//! A group or a layer is never a marker, and a word
 //! after `stitch:` that names none is ignored: `SC-W0807` names both, in case of a slip. A live effect
 //! is never given a name, so its preview shows what a name leaves out.
 //!
@@ -79,9 +82,11 @@ use std::collections::BTreeMap;
 use std::rc::Rc;
 
 use serde_json::Value;
+use stitchcraft_core::Point;
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, Mm};
 use stitchcraft_engine::auto::{self, Stitches};
 use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule, Hints, Join, Path, Reading, Segment, Shape};
+use stitchcraft_engine::generate::stops_after;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_params::stitch_type::Family;
 use stitchcraft_params::{ParamSet, StitchType};
@@ -146,8 +151,19 @@ pub fn read_with(bytes: &[u8], budget: &Budget, reading: Reading) -> Result<Vect
     let file: wire::File = serde_json::from_slice(&json).map_err(|e| unreadable(&format!("Its JSON does not read: {e}.")))?;
     let settings = DesignSettings::default();
     let (labels, read) = (Labels::default(), json.len());
-    let mut reader =
-        Reader { meter, labels, objects: 0, elements: Vec::new(), warnings: Vec::new(), auto: reading.auto, settings, copied: 0, read, held: 0 };
+    let mut reader = Reader {
+        meter,
+        labels,
+        objects: 0,
+        elements: Vec::new(),
+        warnings: Vec::new(),
+        auto: reading.auto,
+        settings,
+        copied: 0,
+        read,
+        held: 0,
+        places: Vec::new(),
+    };
     reader.header(file.format.as_deref(), file.version.as_ref())?;
     let document = file.document.ok_or_else(|| unreadable("It holds no document."))?;
     let mut unread = Vec::new();
@@ -156,9 +172,10 @@ pub fn read_with(bytes: &[u8], budget: &Budget, reading: Reading) -> Result<Vect
     for layer in &document.layers {
         reader.node(layer, &Around::default())?;
     }
+    reader.placed();
     let mut warnings = reader.warnings;
     warnings.extend(unread);
-    let design = Design::new(reader.elements, kept.settings)?.read_as(reading);
+    let design = Design::new(reader.elements, reader.settings)?.read_as(reading);
     Ok(VectorCraft { design, machine: kept.machine, warnings })
 }
 
@@ -321,12 +338,17 @@ enum Marker {
     Start,
     /// Where it ends.
     End,
+    /// The design's origin, which goes to the hoop's centre.
+    Origin,
+    /// The design's stop position, where the frame moves before each stop.
+    StopPosition,
     /// No marker StitchCraft reads.
     Unknown,
 }
 
 /// The word after `stitch:` of each marker StitchCraft reads.
-const MARKERS: [(&str, Marker); 3] = [("ignore", Marker::Ignore), ("start", Marker::Start), ("end", Marker::End)];
+const MARKERS: [(&str, Marker); 5] =
+    [("ignore", Marker::Ignore), ("start", Marker::Start), ("end", Marker::End), ("origin", Marker::Origin), ("stop-position", Marker::StopPosition)];
 
 /// The marker `name` is: `stitch:` and a word, after any white space, alone or followed by white space and a
 /// note, in any mix of upper and lower case. `None` for a name that doesn't begin with `stitch:`.
@@ -364,6 +386,8 @@ struct Reader {
     read: usize,
     /// The bytes of the paths copied into the elements so far, at most [`HELD_PER_BYTE`] for each byte read.
     held: usize,
+    /// The origin and stop position markers met, in order, each with its label and its place, if it reads.
+    places: Vec<(Marker, String, Option<Point>)>,
 }
 
 impl Reader {
@@ -389,6 +413,32 @@ impl Reader {
         self.meter.charge(units).map_err(|_| exhausted())
     }
 
+    /// The design's origin and stop position from the markers met (`REQ-ASM-005`): the one of each kind, at
+    /// the middle of its anchors, where one with no point that reads is named and places nothing. 2 origins,
+    /// or 2 stop positions in a design that stops, are an error (`SC-E0819`), as Ink/Stitch's commands are.
+    fn placed(&mut self) {
+        let stops = self.elements.iter().any(stops_after);
+        for (marked, noun) in [(Marker::Origin, "origin"), (Marker::StopPosition, "stop-position")] {
+            let found: Vec<(String, Option<Point>)> =
+                self.places.iter().filter(|(kind, _, _)| *kind == marked).map(|(_, label, at)| (label.clone(), *at)).collect();
+            match found.as_slice() {
+                [] => {}
+                [(_, Some(at))] if marked == Marker::Origin => self.settings.origin = Some(*at),
+                [(_, Some(at))] => self.settings.stop_position = Some(*at),
+                [(label, None)] => {
+                    let message = format!("The object named stitch:{noun} has no point that reads, so it places nothing.");
+                    self.feature(label, message, Some(UNUSABLE_HINT));
+                }
+                several if marked == Marker::Origin || stops => {
+                    let has = if marked == Marker::Origin { "" } else { ", and the design stops" };
+                    let message = format!("The document has {} objects named stitch:{noun}{has}: which one counts isn't known.", several.len());
+                    self.warn(Code::OriginOrStopPositionTwice, None, message, Some("Rename all but one."));
+                }
+                _ => {}
+            }
+        }
+    }
+
     /// One object and what is inside it, inside groups and layers whose StitchCraft effects are `around`.
     fn node<'a>(&mut self, node: &'a Node, around: &Around<'a>) -> Result<(), Diagnostic> {
         let appearance = &node.appearance;
@@ -407,8 +457,20 @@ impl Reader {
         if let Some(marked) = node.name.as_deref().and_then(marker) {
             let container = node.kind.as_ref().map(|kind| kind.name.as_str()).filter(|kind| matches!(*kind, "layer" | "group"));
             let shown = called(node, &container.map_or_else(|| "The object".to_string(), |kind| format!("The {kind}")));
-            let (verb, noun) = if marked == Marker::Start { ("starts", "start") } else { ("ends", "end") };
+            let (verb, noun) = match marked {
+                Marker::Start => ("starts", "start"),
+                Marker::Origin => ("", "origin"),
+                Marker::StopPosition => ("", "stop-position"),
+                _ => ("ends", "end"),
+            };
             match (marked, container) {
+                (Marker::Origin | Marker::StopPosition, None) => {
+                    // It places the design's origin or stop position, wherever it is, and is not stitched.
+                    let data: Vec<&PathData> = node.kind.iter().flat_map(|kind| &kind.path).collect();
+                    let at = geometry::middle(&data, &mut self.meter).map_err(|_| exhausted())?;
+                    self.places.push((marked, label, at));
+                    return Ok(());
+                }
                 (Marker::Ignore, _) => {
                     let message = format!("{shown} is named stitch:ignore, and is left out with everything in it.");
                     self.warn(Code::VcObjectIgnored, Some(&label), message, Some("Rename it to stitch it."));
@@ -428,6 +490,10 @@ impl Reader {
                 (Marker::Start | Marker::End, Some(kind)) => {
                     let message = format!("{shown} is named as a {noun} marker, which a {kind} can't be, and the name is ignored.");
                     self.feature(&label, message, Some(&format!("Name a small path grouped with the shape stitch:{noun}.")));
+                }
+                (Marker::Origin | Marker::StopPosition, Some(kind)) => {
+                    let message = format!("{shown} is named stitch:{noun}, which a {kind} can't be, and the name is ignored.");
+                    self.feature(&label, message, Some(&format!("Name a small path stitch:{noun}.")));
                 }
                 (Marker::Unknown, _) => {
                     let message = format!("{shown} begins with stitch:, which names no marker StitchCraft reads, and the name is ignored.");

@@ -1,8 +1,8 @@
 # stitchcraft-svg
 
 Layer **L3**. Reads SVG documents into the engine's `Design`: `stitchcraft_svg::read(bytes, budget)`
-returns the design and warnings about what was left out or simplified. Ink/Stitch's remaining commands
-and clones follow in M8 (M8.8 to M8.10).
+returns the design and warnings about what was left out or simplified. Ink/Stitch's rotation on export
+and clones follow in M8 (M8.9 and M8.10).
 
 **Status:** v1 (M3.3) reads paths and the basic shapes, groups and `<switch>`, transforms, the root's
 size and viewBox (so positions come out in millimetres), fill and stroke colours with `currentColor`, and
@@ -22,7 +22,9 @@ its file version 3. Its ignore commands and `ignore_object` setting leave object
 them (`SC-I0805`, `REQ-ASM-004`). Since M8.4 its start, end and target commands give the elements of the
 shape they are tied to their hints, at the symbol's place (`REQ-GEN-001`, `REQ-FILL-CIR-008`); the first
 connector in the file counts, and a command whose place doesn't read is named and left out
-(`SC-W0802`).
+(`SC-W0802`). Since M8.8 its `origin` and `stop_position` commands, wherever they are, give the design its
+origin and stop position (`REQ-ASM-005`), at the symbol's place; 2 origins, or 2 stop positions in a design
+with a stop, are an error (`SC-E0819`). Ink/Stitch doesn't write a file of them either.
 
 Since M8.5 clip paths cut the shapes they clip (`REQ-SVG-011`, `src/document/clip.rs`). The clip path of a
 shape, and that of each group round it, is a clip of the shape's elements, which the engine cuts them to

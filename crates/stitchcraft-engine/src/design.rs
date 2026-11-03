@@ -262,7 +262,8 @@ pub struct Reading {
 
 /// Settings for the whole design. Ink/Stitch keeps them in the document. The SVG adapter reads the
 /// collapse length, the shortest stitch and the narrowest satin stroke from the file's metadata, and the
-/// origin and stop position from Ink/Stitch's commands from roadmap M8. Until then those are unset.
+/// origin and stop position from Ink/Stitch's `origin` and `stop_position` commands; the VectorCraft adapter
+/// reads those from objects named `stitch:origin` and `stitch:stop-position`.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct DesignSettings {
     /// Moves between groups of the same thread no longer than this are sewn on rather than jumped, for

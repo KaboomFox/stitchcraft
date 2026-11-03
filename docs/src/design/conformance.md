@@ -281,13 +281,13 @@ requirements of level L3. The other runs of the suite leave them and their cases
 is designs the SVG reader sews in full, with their settings (`REQ-SVG-009`), trim and stop commands and
 the file version. A case may name a test sheet drawn as a design instead (`sheet`). Both programs sew an
 SVG file of the elements StitchCraft sews the sheet with, written with their parameters, their start, end
-and target positions as Ink/Stitch's commands and their clips as clip paths
-(`stitchcraft_testkit::inkstitch`), which StitchCraft's reader reads back unchanged (`REQ-PRM-003`).
-Automatic digitizing chooses ordinary elements with Ink/Stitch's parameters, so Ink/Stitch can sew what
-StitchCraft chose, and the TS-13 sheets check StitchCraft's stitches of those choices against Ink/Stitch's
-(`REQ-AUTO-021`). TS-11B checks the contour fills so, each strategy and join style among them
-(`REQ-FILL-CON-008`), and its circular fills (`REQ-FILL-CIR-007`). TS-02B to TS-09, the sheets of MC-2 to
-MC-4, and TS-11C, the meander fills' sheet, are cases of `REQ-SVG-008` (M8.2).
+and target positions as Ink/Stitch's commands and their clips as clip paths, and the design's origin and
+stop position as commands too (`stitchcraft_testkit::inkstitch`), which StitchCraft's reader reads back
+unchanged (`REQ-PRM-003`). Automatic digitizing chooses ordinary elements with Ink/Stitch's parameters,
+so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check StitchCraft's stitches of those
+choices against Ink/Stitch's (`REQ-AUTO-021`). TS-11B checks the contour fills so, each strategy and join
+style among them (`REQ-FILL-CON-008`), and its circular fills (`REQ-FILL-CIR-007`). TS-02B to TS-09, the
+sheets of MC-2 to MC-4, and TS-11C, the meander fills' sheet, are cases of `REQ-SVG-008` (M8.2).
 `conformance/inkstitch/README.md` says how to run it by hand and how to add a case.
 
 **Centre lines.** Sewing what StitchCraft chose can't find a choice that is wrong: TS-13B's small T sewed

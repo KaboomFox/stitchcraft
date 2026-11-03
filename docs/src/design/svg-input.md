@@ -228,7 +228,12 @@ them (`REQ-SVG-003`).
   `y` under the transforms of the use and of the groups above it, as Ink/Stitch places it. Of 2 commands
   of a kind on a shape, the first connector in the file counts. A command whose place doesn't read is
   named with `SC-W0802` and left out, and so are those of a shape digitized automatically, whose parts
-  start and end where automatic digitizing places them. The
+  start and end where automatic digitizing places them. The `origin` and `stop_position` commands are
+  tied to nothing, and count wherever they are, in `<defs>` and hidden layers too, as Ink/Stitch finds
+  them. Each gives the design a setting at its symbol's place (`REQ-ASM-005`). The origin goes to the
+  hoop's centre, and the frame moves to the stop position before each stop. Ink/Stitch refuses a file with
+  2 origins, or 2 stop positions and a stop, and StitchCraft does too (`SC-E0819`,
+  [why](engine-pipeline.md#origin-and-stop-position)). The
   [command table](inkstitch-compat-contract.md#commands) gives what the adapter does with each of the 12
   commands. Before its file version 3, Ink/Stitch named 7 of them otherwise, such as
   `fill_start` for `starting_point`: the adapter reads those as the commands they became in any file,
@@ -237,8 +242,8 @@ them (`REQ-SVG-003`).
 - **Connectors** tie a command to its object.
 - **Helper paths** have one of Ink/Stitch's start markers. They steer the stitches of other objects.
 
-`SC-W0802` reports a connector that ties no command, a helper path, a command that the adapter does
-not apply yet, and one on an object that is not stitched. The module docs of `crates/stitchcraft-svg/src/inkstitch.rs` describe how the adapter
+`SC-W0802` reports a connector that ties no command, a helper path, an `ignore_layer` command in no layer,
+and a command on an object that is not stitched. The module docs of `crates/stitchcraft-svg/src/inkstitch.rs` describe how the adapter
 finds these objects, with the Ink/Stitch files they were read from.
 
 ## Design settings
