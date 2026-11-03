@@ -181,6 +181,6 @@ another.
 | `SC-W0906` | Warning | Background left out (the lowest shape, an automatic area that covers the whole design under the other shapes, unless it switches `auto_ignore_background` off; what shows of it inside the picture is sewn) | M13 |
 | `SC-I0907` | Info | Elements sewn in an order of their own (automatic elements, and with `--sort-colours` every element, sewn in the order StitchCraft chooses, with the thread changes of each order; an element or an order that needs more work than the budget allows keeps paint order) | M13 |
 | `SC-I0908` | Info | Layers flattened (each automatic area sews what shows of it under the automatic areas drawn over it, and an area wider than a satin column somewhere is digitized whole under the areas that fill its holes, which sew after it) | M13 |
-| `SC-E1001` | Error | Nothing to route (none of the elements given is a satin column the route can take: nothing changes) | M10 |
+| `SC-E1001` | Error | Nothing to route (no satin column the route can take among its elements: they stay as they were) | M10 |
 | `SC-I1002` | Info | Element left out of the route (a fill, a shape digitized automatically, settings that don't read, rails that can't be made, no length, or a stroke whose first subpath ends where it starts: kept as it is) | M10 |
 | `SC-W1003` | Warning | Piece of a routed satin column may sew otherwise (read back, it has other rails or pairs other points: it is kept) | M10 |

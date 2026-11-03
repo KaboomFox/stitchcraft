@@ -617,14 +617,14 @@ through the middles of the cuts, a place takes the cut of the point at that frac
 2 to a cut, rounded to the nearest, as Ink/Stitch's tools take it (read at `d59c9ab`).
 
 - **Rails.** Each rail is cut where it comes nearest its point of the cut. A piece is drawn as the column
-  is drawn: its rails in the column's order, and a rail that `reverse_rails` names turned back, so that
-  the piece's settings swap and turn its rails as they swap and turn the column's. With `automatic`, the
-  rails are drawn running the same way, which the setting leaves as they are (`DEV-ROUTE-002`).
+  is drawn. Its rails keep the column's order, and a rail that `reverse_rails` names is turned back, so
+  that the piece's own settings turn it again as they turn the column's rail. With `automatic`, the rails
+  are drawn running the same way, which the setting leaves as they are (`DEV-ROUTE-002`).
 - **Rungs.** Each piece keeps the column's rungs whose points both lie on its parts of the rails, and a
   column of 2 subpaths keeps the rungs across its nodes ([Correspondence](#correspondence)) as rungs it
-  draws. A rung across the piece's start or its end, on both rails, is that end's, and is left out. A
-  piece whose rungs alone would be read back with other rails gets a rung more across an end, as a column
-  [drawn with its rails and rungs](#drawn-with-its-rails-and-rungs) does. Ink/Stitch adds its rung 0.3 CSS
+  draws. A rung across the piece's start or its end, on both rails, is that end's, and is left out. When
+  its rungs alone wouldn't tell its rails from them, the piece gets a rung more across an end, like a
+  column [drawn with its rails and rungs](#drawn-with-its-rails-and-rungs). Ink/Stitch adds its rung 0.3 CSS
   pixels from the piece's start, and a piece with none gets 2 more, at the middle of its rails and 0.3 CSS
   pixels from its end (`DEV-ROUTE-001`). A piece read back otherwise all the same is kept, with
   `SC-W1003`.
@@ -632,9 +632,9 @@ through the middles of the cuts, a place takes the cut of the point at that frac
 - **A column drawn as one path** is cut as the rails and rungs the engine makes of it (`REQ-SAT-016`,
   `REQ-SAT-017`), and each piece is drawn with its share of them. Its stroke's width no longer makes the
   piece.
-- **Short pieces.** A piece whose rails both have no length sews nothing, and is none. One whose rail is
-  shorter than the zigzag spacing is kept and sews the column's pairs there, where Ink/Stitch makes no
-  piece and leaves the stretch unsewn (`DEV-ROUTE-004`). The cut's tests show both.
+- **Short pieces.** A piece whose rails both have no length sews nothing and is none, while one whose rail
+  is shorter than the zigzag spacing still sews the column's pairs there, as the cut's tests show.
+  Ink/Stitch doesn't make that piece, and leaves the stretch unsewn (`DEV-ROUTE-004`).
 
 Ink/Stitch's Cut Satin Column cuts a column this way at each of its `satin_cut_point` commands, or where
 a stroke selected with it crosses its rails. No step plans such a tool in StitchCraft.
