@@ -719,26 +719,26 @@ registry! {
     /// again. For a plug-in, install the StitchCraft plug-ins made for that version of VectorCraft.
     VcUnreadable = "SC-E0806", Error, "VectorCraft file could not be read";
 
-    /// Part of the VectorCraft document is not stitched: text, images, symbols, objects VectorCraft computes
-    /// as it draws them (blends, envelopes, meshes, repeats, placed documents and Intertwine objects), a kind
-    /// of object StitchCraft does not read, opacity masks, VectorCraft's own effects, a brush's art, a
-    /// StitchCraft effect it cannot use, such as an Auto effect beside a stitch effect, which says how the
-    /// object sews, or a group's or a layer's own fills and strokes. A clip group cuts what it holds to its
-    /// clipping object, and what that holds of these adds nothing to the clip, which is said too. So is a
-    /// clipping object that StitchCraft effects reach: VectorCraft clips the preview to the stitches they draw
-    /// of it, and what sews is cut to it as it is drawn. A gradient is sewn in its first
-    /// colour, and a pattern, or a colour that does not read, in black. An object that StitchCraft effects
-    /// reach from more than one level, its own and a group's around it, or 2 groups', sews as the nearest say:
-    /// VectorCraft runs each on the stitches the one before drew, which no machine sews. A start or end
-    /// marker, an object named `stitch:start` or `stitch:end`, is never stitched: the shapes grouped with it
-    /// start or end there, and a marker they don't use is said, a second one of its kind in a group or one
-    /// with no point that reads, as are those beside a shape digitized automatically, which places where its
-    /// parts start and end. So is an origin or stop position marker, `stitch:origin` or
-    /// `stitch:stop-position`, with no point that reads. A name that begins with `stitch:` and names no marker StitchCraft
-    /// reads is said too, as is a group or a layer named as a marker, which only a shape can be: the name is
-    /// ignored. A satin column, a zigzag or a fill made of a stroke is as wide as the stroke all along and
-    /// centred on its path, so a stroke aligned inside or outside a closed path is said, as is a width
-    /// profile, and round or square caps where the stitches end at the path's end.
+    /// Part of the VectorCraft document is not stitched: text, images, symbols, objects VectorCraft computes as
+    /// it draws them (blends, envelopes, meshes, repeats, placed documents and Intertwine objects), a kind of
+    /// object StitchCraft does not read, opacity masks, VectorCraft's own effects, a brush's art, a StitchCraft
+    /// effect it cannot use, such as an Auto effect beside a stitch effect, which says how the object sews, or
+    /// a group's or a layer's own fills and strokes. A clip group cuts what it holds to its clipping object:
+    /// text, an image, a placed document, a live object or a kind StitchCraft does not read there adds nothing
+    /// to the clip, which is said too. So is a clipping object that StitchCraft effects reach: VectorCraft
+    /// clips the preview to the stitches they draw of it, and what sews is cut to it as it is drawn. A gradient
+    /// is sewn in its first colour, and a pattern, or a colour that does not read, in black. An object that
+    /// StitchCraft effects reach from more than one level, its own and a group's around it, or 2 groups', sews
+    /// as the nearest say: VectorCraft runs each on the stitches the one before drew, which no machine sews. A
+    /// start or end marker, an object named `stitch:start` or `stitch:end`, is never stitched: the shapes
+    /// grouped with it start or end there, and a marker they don't use is said, a second one of its kind in a
+    /// group or one with no point that reads, as are those beside a shape digitized automatically, which places
+    /// where its parts start and end. So is an origin or stop position marker, `stitch:origin` or
+    /// `stitch:stop-position`, with no point that reads. A name that begins with `stitch:` and names no marker
+    /// StitchCraft reads is said too, as is a group or a layer named as a marker, which only a shape can be:
+    /// the name is ignored. A satin column, a zigzag or a fill made of a stroke is as wide as the stroke all
+    /// along and centred on its path, so a stroke aligned inside or outside a closed path is said, as is a
+    /// width profile, and round or square caps where the stitches end at the path's end.
     ///
     /// The message names the object and what was done. In VectorCraft, Type › Create Outlines makes paths
     /// of text, and Object › Expand of blends, envelopes, repeats and placed documents. Break Link to Symbol
