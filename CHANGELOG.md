@@ -5,6 +5,17 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M8.9: the turn on export (`REQ-ASM-005`). Ink/Stitch's design setting `rotate_on_export` turns the plan
+  about the hoop's centre once the origin is there, before the hoop is checked, as Ink/Stitch turns the
+  machine file it writes. 90 turns the design right and -90 left, and any other number of degrees that
+  much, as Ink/Stitch's writer does. A whole number of quarter turns rounds nothing.
+  - The SVG adapter reads it from the file's metadata (`REQ-SVG-005`), where `SC-W0802` named it as not
+    applied, and names text that isn't a number. VectorCraft's Design Settings filter keeps it with a
+    document, a choice of none, left and right (`REQ-VC-013`). The test kit writes it.
+  - 2 differential cases turn a design 90 and 45 degrees about an origin off its middle, with a stop
+    position. Both programs sew each alike by every measure.
+  - TS-16 is written turned right for MC-11: its shapes sew 100 mm wide and 40 mm tall, the red fill at the
+    right.
 - M8.8: the design's origin and stop position (`REQ-ASM-005`). Ink/Stitch's `origin` command gives the
   design its origin, which goes to the hoop's centre, and its `stop_position` command the stop position,
   which the frame moves to before each stop. Each is the point where its symbol is placed, wherever it is,
@@ -2243,6 +2254,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 - Changed `conformance/golden/plans/patch.pes` and `patch.dst` (M8.4, `REQ-GEN-001`): the patch's red fill
   starts nearest its start marker, in its top-left corner. `SC-W0807` no longer names the marker. The
   patch sews 2,483 stitches, 17 more.
+- Changed `conformance/golden/testsheets/TS-16.pes` (M8.9). The sheet is turned right about its origin. The
+  plan spans 110 × 60 mm, and sews the same 3,026 stitches.
 - Changed `conformance/golden/testsheets/TS-16.pes` (M8.8). The sheet's origin, on the blue column's top
   edge 10 mm in from its left end, goes to the hoop's centre, and a stop after the blue column moves the
   frame to the stop position first. The plan spans 60 × 110 mm, and sews the same 3,026 stitches.

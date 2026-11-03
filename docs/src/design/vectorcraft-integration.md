@@ -274,21 +274,22 @@ channel, and an exporter no picture: `stitch export --preview` still draws what 
 
 Ink/Stitch keeps 3 lengths for the whole design with an SVG file, `collapse_len_mm`, `min_stitch_len_mm`
 and `min_satin_stroke_width_mm` ([SVG input](svg-input.md#design-settings)), and a VectorCraft document has
-no place of its own for them. Its fourth such setting, `rotate_on_export`, which turns the design as it is
-written, is not kept yet (M8). VectorCraft 0.16 keeps up to 1 MiB of JSON with a document for each filter,
+no place of its own for them. From M8.9 the filter keeps its fourth such setting too, `rotate_on_export`,
+which turns the design as it is written. VectorCraft 0.16 keeps up to 1 MiB of JSON with a document for each filter,
 the RFC's [P5](rfc-vectorcraft-abi-v2.md#p5-document-level-plug-in-data). The filter returns it as
 `documentData`, and the native file saves it in `document.unknown.pluginData` under the plug-in's id. An
 exporter reads every plug-in's in the document it is given, and a live effect isn't given it.
 
 M6.11 makes a filter keep them (`REQ-VC-013`): *StitchCraft Design Settings*, in Object › Plug-ins
 (`<ns>.settings`, `apps/stitchcraft-vc-plugin/src/settings.rs`). Its dialog has the machine, a choice of
-the built-in profiles, then each design setting as a length. The settings' names, labels and help come
-from `stitchcraft_engine::design::SETTINGS`, the table the SVG adapter reads Ink/Stitch's settings with.
-The machine is StitchCraft's own, as Ink/Stitch's hoop is the page. On OK the filter keeps all 4, the
-settings under Ink/Stitch's names and the machine's id as `profile`:
+the built-in profiles, then each design setting as a length, and the turn on export, a choice of none,
+left and right, as Ink/Stitch's preferences offer it. The settings' names, labels and help come from
+`stitchcraft_engine::design::SETTINGS` and `Turn`, which the SVG adapter reads Ink/Stitch's settings with.
+The machine is StitchCraft's own, as Ink/Stitch's hoop is the page. On OK the filter keeps all 5, the
+settings under Ink/Stitch's names, the turn in degrees, and the machine's id as `profile`:
 
 ```json
-{"profile": "brother-pe800-5x7", "collapse_len_mm": 3, "min_stitch_len_mm": 0, "min_satin_stroke_width_mm": 1}
+{"profile": "brother-pe800-5x7", "collapse_len_mm": 3, "min_stitch_len_mm": 0, "min_satin_stroke_width_mm": 1, "rotate_on_export": 90}
 ```
 
 The filter returns each object it is given by its id alone, as VectorCraft deletes an input object that a
@@ -317,9 +318,10 @@ and not in the preview.
 
 The contract test `req_vc_013_the_settings_filter_keeps_the_machine_each_exporter_plans_for` has
 VectorCraft's host run the filter as `plugin.run` runs it, then exports the document with what it kept. Level B's `settings`
-scenario does the same with VectorCraft's command line: a shortest stitch of 1.5 mm changes the PES file,
-the exports are `stitch export`'s, and with the small hoop kept the export of a 1 in square fails with
-`SC-E0701`.
+scenario does the same with VectorCraft's command line: a shortest stitch of 1.5 mm and a quarter turn
+right change the PES file, the exports are `stitch export`'s, and with the small hoop kept the export of a
+1 in square fails with `SC-E0701`. The filter keeps the turn as its number of degrees, where its dialog
+offers it as a choice.
 
 ### Tools: VectorCraft's own commands
 

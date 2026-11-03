@@ -89,8 +89,8 @@ enum Drawn {
     DesignedById(fn() -> Result<Drawing, SheetError>, &'static [Code]),
     /// As [`Drawn::Designed`], but the design holds what an Ink/Stitch file gives its elements, which a host
     /// would draw as objects of their own: start and end positions, clips, and the design's origin and stop
-    /// position ([`TestSheet::uses_file_features`]), as TS-16's. Only `stitch testsheet` and the differential's
-    /// SVG file draw it.
+    /// position, or keep with the document: its turn on export ([`TestSheet::uses_file_features`]), as TS-16's.
+    /// Only `stitch testsheet` and the differential's SVG file draw it.
     FromFile(fn() -> Result<Drawing, SheetError>, &'static [Code]),
 }
 
@@ -118,15 +118,17 @@ impl TestSheet {
 
     /// Whether the sheet's design holds what an Ink/Stitch file gives it, as TS-16's does: elements' start or
     /// end positions or target points ([`Element::hints`]), which a host would draw as markers grouped with
-    /// their shapes; clips ([`Element::clips`]), which it would draw as clip groups; or the design's origin or
+    /// their shapes; clips ([`Element::clips`]), which it would draw as clip groups; the design's origin or
     /// stop position ([`DesignSettings::origin`], [`DesignSettings::stop_position`]), which it would draw as
-    /// markers. VectorCraft's Test Sheet filter draws none of them. The sheets that do are those drawn from a
-    /// file, which [`TestSheet::drawable`] leaves out, as the tests check.
+    /// markers; or its turn on export ([`DesignSettings::rotate_on_export`]), which the Design Settings filter
+    /// would keep. VectorCraft's Test Sheet filter draws and keeps none of them. The sheets that do are those
+    /// drawn from a file, which [`TestSheet::drawable`] leaves out, as the tests check.
     ///
     /// [`Element::hints`]: crate::design::Element::hints
     /// [`Element::clips`]: crate::design::Element::clips
     /// [`DesignSettings::origin`]: crate::design::DesignSettings::origin
     /// [`DesignSettings::stop_position`]: crate::design::DesignSettings::stop_position
+    /// [`DesignSettings::rotate_on_export`]: crate::design::DesignSettings::rotate_on_export
     pub fn uses_file_features(&self) -> bool {
         self.design().and_then(Result::ok).is_some_and(|design| filed(&design))
     }
@@ -152,7 +154,8 @@ impl TestSheet {
 /// Whether `design` holds any of what an Ink/Stitch file gives it ([`TestSheet::uses_file_features`]).
 fn filed(design: &Design) -> bool {
     let marked = |element: &crate::design::Element| element.hints != Hints::default() || !element.clips.is_empty();
-    design.settings.origin.is_some() || design.settings.stop_position.is_some() || design.elements().iter().any(marked)
+    let settings = &design.settings;
+    settings.origin.is_some() || settings.stop_position.is_some() || settings.rotate_on_export.turns() || design.elements().iter().any(marked)
 }
 
 /// Every test sheet, in protocol order.
@@ -412,7 +415,7 @@ pub static SHEETS: &[TestSheet] = &[
     },
     TestSheet {
         id: "TS-16",
-        title: "An Ink/Stitch file: start and end commands, clip paths, origin and stop position",
+        title: "An Ink/Stitch file: start and end commands, clip paths, origin, stop position and turn",
         checks: &[
             "Sew it beside Ink/Stitch's machine file of the same sheet, which the differential keeps (`target/conformance/differential/ts-16.inkstitch.pes`). Each element should start and end in the same place in both.",
             "The red fill, 40 by 30 mm, starts at its top-right corner, where its start command is, and ends at its bottom-left corner, at its end command.",
@@ -421,6 +424,7 @@ pub static SHEETS: &[TestSheet] = &[
             "The black zigzag at the bottom sews its first 15 mm and its last 15 mm, and nothing between, where its clip path leaves a gap: the needle jumps it. Does each piece end where the gap begins?",
             "The design's origin, on the blue column's top edge 10 mm in from its left end, goes to the hoop's centre, where the needle waits before it sews. Does the machine put the design there, or its middle?",
             "The machine stops after the blue column. Before it stops, the frame moves to the stop position, 20 mm right of the red fill's top-right corner and 10 mm above it. Does the frame wait there, and does the needle come back for the green fill?",
+            "The file turns the sheet right about its origin, as Ink/Stitch's rotate on export does: it sews 100 mm wide and 40 mm tall, the red fill at the right and the zigzag at the left. Does the machine sew it so, or turn it back?",
             "Any difference between the 2 sew-outs, and where.",
         ],
         profile: REFERENCE,
@@ -439,6 +443,7 @@ mod tests {
     use stitchcraft_plan::{Rgb, Role, StitchKind};
 
     use super::*;
+    use crate::design::Turn;
 
     #[test]
     fn req_vc_015_a_sheet_drawn_as_a_design_has_the_design_it_plans() {
@@ -539,8 +544,9 @@ mod tests {
         // 18 mm above theirs.
         assert_eq!(about("TS-11C"), [123.0, 120.176369967, 0.0, 0.0]);
         // TS-16's shapes, 40 × 100 mm as drawn, and the frame's move to its stop position, 20 mm right of them and
-        // 10 mm above, round its origin, which lies 10 mm from their left side and 40 mm from their top.
-        assert_eq!(about("TS-16"), [60.0, 110.0, 20.0, 5.0]);
+        // 10 mm above, round its origin, which lies 10 mm from their left side and 40 mm from their top, all
+        // turned right.
+        assert_eq!(about("TS-16"), [110.0, 60.0, -5.0, 20.0]);
         // Each TS-10 frame is its hoop's whole field, as its title and checks say, and fits no smaller hoop.
         let hoops = [("ts-10a", "4 × 4 in", &BROTHER_PE800_4X4), ("TS-10B", "5 × 7 in", REFERENCE), ("TS-10C", "small", &BROTHER_PE800_SMALL)];
         for (id, hoop, profile) in hoops {
@@ -580,11 +586,23 @@ mod tests {
         plan.stitches().filter(mine).map(|s| s.at).collect()
     }
 
+    /// Where TS-16's plan puts the point (x, y) of the sheet as drawn: moved so that its origin is at (0, 0),
+    /// then turned as the sheet is written.
+    fn ts16_planned(x: f64, y: f64) -> stitchcraft_core::Point {
+        let [(ox, oy), _] = ts16::ORIGIN_AND_STOP_POSITION;
+        ts16::TURN.apply(stitchcraft_core::Point::new(x - ox, y - oy).unwrap()).unwrap()
+    }
+
+    /// Where TS-16 draws its plan's point `q`: turned back, and moved from its origin.
+    fn ts16_drawn(q: &stitchcraft_core::Point) -> stitchcraft_core::Point {
+        let [(ox, oy), _] = ts16::ORIGIN_AND_STOP_POSITION;
+        let back = Turn::new(-ts16::TURN.degrees()).and_then(|turn| turn.apply(*q)).unwrap();
+        stitchcraft_core::Point::new(back.x() + ox, back.y() + oy).unwrap()
+    }
+
     #[test]
     fn ts16_s_fill_and_satin_column_start_and_end_at_their_positions() {
-        // The plan puts the sheet's origin, as drawn, at (0, 0).
-        let [(ox, oy), _] = ts16::ORIGIN_AND_STOP_POSITION;
-        let at = |x: f64, y: f64| stitchcraft_core::Point::new(x - ox, y - oy).unwrap();
+        let at = ts16_planned;
         let fill = sewn("TS-16", "fill");
         assert!(fill[0].distance(at(40.0, 0.0)) < 1.5, "{:?}", fill[0]);
         assert!(fill.last().unwrap().distance(at(0.0, 30.0)) < 1.5, "{:?}", fill.last());
@@ -595,17 +613,18 @@ mod tests {
     #[test]
     fn ts16_s_frame_moves_to_its_stop_position_before_its_stop() {
         let plan = find("TS-16").unwrap().plan().unwrap();
-        let [(ox, oy), (sx, sy)] = ts16::ORIGIN_AND_STOP_POSITION;
+        let [_, (sx, sy)] = ts16::ORIGIN_AND_STOP_POSITION;
         let stitches: Vec<_> = plan.stitches().collect();
         let stops: Vec<_> = stitches.windows(2).filter(|w| w[1].kind == StitchKind::Stop).map(|w| (w[0].kind, w[0].at)).collect();
-        assert_eq!(stops, [(StitchKind::Jump, stitchcraft_core::Point::new(sx - ox, sy - oy).unwrap())]);
+        assert_eq!(stops, [(StitchKind::Jump, ts16_planned(sx, sy))]);
         // It stops at the end of the blue column, the second element, whose thread's block it ends.
         assert!(shape("TS-16")[1].ends_with("llllJP"), "{:?}", shape("TS-16"));
     }
 
     #[test]
     fn a_design_holds_what_a_file_gives_it_with_any_one_of_the_file_s_features() {
-        // Each alone, as a host would draw it: start and end positions, a clip, an origin, a stop position.
+        // Each alone, as a host would draw or keep it: start and end positions, a clip, an origin, a stop
+        // position, a turn on export.
         let line = || {
             let mut d = Drawing::new("test");
             d.polyline("line", &[(0.0, 0.0), (10.0, 0.0)], &Thread::new(Rgb::new(0, 0, 0)), &[]).unwrap();
@@ -618,16 +637,14 @@ mod tests {
         clipped.clip(vec![designed::polygon(&[(0.0, -1.0), (5.0, -1.0), (5.0, 1.0)]).unwrap()]);
         assert!(filed(&positioned.design().unwrap()) && filed(&clipped.design().unwrap()));
         let at = Some(stitchcraft_core::Point::new(5.0, 0.0).unwrap());
-        let (mut placed, mut stopped) = (line().design().unwrap(), line().design().unwrap());
-        (placed.settings.origin, stopped.settings.stop_position) = (at, at);
-        assert!(filed(&placed) && filed(&stopped));
+        let (mut placed, mut stopped, mut turned) = (line().design().unwrap(), line().design().unwrap(), line().design().unwrap());
+        (placed.settings.origin, stopped.settings.stop_position, turned.settings.rotate_on_export) = (at, at, crate::design::Turn::RIGHT);
+        assert!(filed(&placed) && filed(&stopped) && filed(&turned));
     }
 
     #[test]
     fn ts16_s_quarter_disc_and_zigzag_sew_what_their_clip_paths_leave() {
-        // The plan puts the sheet's origin, as drawn, at (0, 0).
-        let [(ox, oy), _] = ts16::ORIGIN_AND_STOP_POSITION;
-        let drawn = |q: &stitchcraft_core::Point| stitchcraft_core::Point::new(q.x() + ox, q.y() + oy).unwrap();
+        let drawn = ts16_drawn;
         let ((cx, cy), radius) = ts16::CIRCLE;
         let corner = stitchcraft_core::Point::new(cx, cy).unwrap();
         let quarter: Vec<_> = sewn("TS-16", "quarter").iter().map(drawn).collect();
