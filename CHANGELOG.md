@@ -5,6 +5,23 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M8.6: Ink/Stitch's fonts as a corpus of the differential (`REQ-FONT-001`). `cargo xtask corpus` fetches the
+  archive of inkstitch/embroidery-fonts at `c7e3a05`, the commit `conformance/inkstitch/fonts.toml` pins,
+  checks its SHA-256 and unpacks it in a cache outside the repository. It takes the 131 fonts whose licence
+  file names the OFL, CC0, CC BY or CC BY-SA first, and no font file is committed.
+  - The differential's `fonts` case cuts each glyph out of its glyph file, its group shown and the other
+    glyphs left out, and sews it in both programs. Every night it sews 4 glyphs of each font, and every
+    Sunday all 21,179 in 6 parts (`--every-glyph`, `--shard`). The glyphs of stitch types StitchCraft
+    doesn't sew yet are listed.
+  - Of the sample's 524 glyphs, 357 agree by every measure, 98 are listed and 69 differ as the ledger
+    explains, for the glyphs `conformance/inkstitch/glyphs.toml` names. The differential undoes 2 more
+    deviations in Ink/Stitch's file to check their excuses, the threads named by other entries of Brother's
+    palette (`DEV-THREAD-001`) and the stitches split at the machine's longest (`DEV-FIN-001`). An excuse
+    for running stitches counts only where the threads lie within 0.3 mm of each other (`DEV-RUN-002`).
+  - The ledger gains `DEV-SVG-025`: a viewBox of another shape than its page is centred, where Ink/Stitch
+    leaves it at the top left corner. `DEV-SVG-026` says Ink/Stitch's stitch patterns aren't applied.
+  - The `inkstitch` action turns Ink/Stitch's debug log off, with which a glyph took 10 seconds against 1.6,
+    and its stitch-plan cache.
 - MC-6: TS-11A, the sampler of M7's new strokes and satins, so every sheet MC-6 sews is drawn. A band to a
   thread, most samples hooks, straight and then turning a quarter circle, in rows that turn back on each
   other so the needle never comes to a sample where it would sew a jump's thread down. Zigzag strokes 1, 2

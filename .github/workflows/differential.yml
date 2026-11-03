@@ -5,7 +5,7 @@
 # automatic digitizing sews them along. The `fonts` case sews a sample of the glyphs of Ink/Stitch's fonts
 # (M8.6), which `cargo xtask corpus` fetches at a pinned commit. Every Sunday every glyph is sewn, in 6 parts
 # dealt out in turn. The report is the job's summary, and an artifact with the SVG files written for test
-# sheets, the pictures of both programs' lines, and the fonts' report with the glyphs that don't agree.
+# sheets, the pictures of both programs' lines, and the fonts' report with the glyphs that differ.
 name: differential
 
 on:

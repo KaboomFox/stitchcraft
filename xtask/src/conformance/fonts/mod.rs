@@ -26,8 +26,8 @@
 //! measure no excuse explains, or a program can't sew it, as a case of the differential does.
 //!
 //! **The report** ([`report`]): `target/conformance/fonts.md` and `target/conformance/fonts.json`. The design
-//! of each glyph that doesn't agree stays in [`WRITTEN`] with Ink/Stitch's PES file of it, where a reviewer
-//! can open them.
+//! of each glyph that differs, or didn't sew, stays in [`WRITTEN`] with Ink/Stitch's PES file of it, where a
+//! reviewer can open them.
 
 pub mod excuses;
 mod report;
@@ -314,8 +314,8 @@ fn sew(root: &Path, inkstitch: &Inkstitch, job: Job, design: &str, excuses: &Exc
             }
         }
     };
-    if sewn.verdict == Verdict::Agrees {
-        // Only what doesn't agree is kept for a reviewer.
+    if !matches!(sewn.verdict, Verdict::Differs(_) | Verdict::Known(_) | Verdict::Failed(_)) {
+        // Only what differs, or didn't sew, is kept for a reviewer.
         let _ = std::fs::remove_file(path.with_extension("inkstitch.pes"));
         let _ = std::fs::remove_file(&path);
     }
