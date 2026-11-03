@@ -280,10 +280,10 @@ are StitchCraft's own). A case excuses a measure with the entry that explains it
 the difference as excused. An excuse for a measure that agrees fails the case, so that every reason in
 the ledger is still true. Where the differential can undo a deviation in Ink/Stitch's file, it measures
 the file again without it. The excuse then counts only if the measure agrees. Ink/Stitch's jumps that go
-nowhere (`DEV-FMT-001`) excuse as many trims and jumps as there are of them, and no more. Its threads, named
-by other entries of Brother's palette (`DEV-THREAD-001`), are named as StitchCraft names them where both
-files change thread at the same colour blocks. Its stitches longer than the machine's longest are split as
-StitchCraft splits them (`DEV-FIN-001`).
+nowhere (`DEV-FMT-001`) excuse as many trims and jumps as there are of them, and no more. Where both files
+change thread at the same colour blocks, Ink/Stitch's threads, named by other entries of Brother's palette
+(`DEV-THREAD-001`), take StitchCraft's names, and its stitches longer than the machine's longest are split
+as StitchCraft splits them (`DEV-FIN-001`).
 
 `REQ-SVG-008`, `REQ-AUTO-021`, `REQ-AUTO-022`, `REQ-RUN-013`, `REQ-SAT-029`, `REQ-FILL-CON-008`,
 `REQ-FILL-CIR-007` and `REQ-FONT-001` are the requirements of level L3. The other runs of the suite leave them and their
@@ -333,17 +333,16 @@ glyphs left out, and both programs sew that file, compared by the measures above
 the reference machine with a hoop 400 mm a side, as a glyph file is drawn at its font's height and a glyph
 may be wider than the reference hoop. Every night the case sews 4 glyphs of each font, and every Sunday all
 21,179, in 6 parts. A glyph whose stitch types StitchCraft doesn't sew yet is listed, and joins the
-comparison with M10's steps. A glyph with an element StitchCraft refuses, whose setting it can't read
-(`SC-E0101`), is excused by `DEV-PRM-001` and not compared, as Ink/Stitch sews the setting's default.
+comparison with M10's steps. An element whose setting StitchCraft can't read is left out with `SC-E0101`,
+where Ink/Stitch sews the setting's default: its glyph is excused by `DEV-PRM-001` and not compared.
 
 The corpus can't have an excuse for each of its glyphs. `conformance/inkstitch/glyphs.toml` excuses a
-measure by an entry of the ledger for the glyphs where its cause is: those StitchCraft says a diagnostic
-of, such as `SC-I0703` where it splits stitches longer than the machine's longest, or of a stitch type,
-setting or font. The excuses the differential can check are checked as a case's are. An excuse for stitches
-placed otherwise along the same lines, as StitchCraft's running stitches are (`DEV-RUN-002`), holds only
-where each program's thread lies within 0.3 mm of the other's, for 0.9 of it. The report,
-`target/conformance/fonts.md`, has a row for each font, the glyphs each excuse excused, and each glyph
-that differs with its measures.
+measure by an entry of the ledger for the glyphs where its cause is. A diagnostic picks them, such as
+`SC-I0703` where StitchCraft splits stitches longer than the machine's longest, and so do a stitch type, a
+setting and a font. The excuses the differential can check are checked as a case's are. StitchCraft's
+running stitches place their needle points otherwise (`DEV-RUN-002`), and that excuse counts only where each
+program's thread lies within 0.3 mm of the other's, for 0.9 of it. The report, `target/conformance/fonts.md`,
+has a row for each font, the glyphs each excuse excused, and each glyph that differs with its measures.
 
 ### L4 — Physical (milestone gates)
 
@@ -381,7 +380,8 @@ will let users validate a machine profile with the same cases.
 |---|---|
 | Every PR | L0, L1 (no fuzzing), L2 with fixed seeds, `--check` rules, the data cases' golden files on Linux, macOS and Windows ([cross-platform check](determinism.md#cross-platform-check)), coverage floors, mutants in the changed lines |
 | Nightly | L1 fuzzing, L2 fresh seeds, L3 differential (also on a pull request that changes it) |
-| Weekly | Mutation testing of every shipped crate, against the recorded counts, and every glyph of Ink/Stitch's fonts in the L3 differential |
+| Weekly | Mutation testing of every shipped crate, against the recorded counts |
+| Weekly | Every glyph of Ink/Stitch's fonts in the L3 differential |
 | Milestone close | All requirements of the milestone `active` and green; its machine checkpoint signed off |
 | Release | Everything above, plus the compatibility gate green on VectorCraft `stable` |
 

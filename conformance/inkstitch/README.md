@@ -18,7 +18,7 @@ which copies Ink/Stitch's code ([ADR-0001](../../docs/src/design/adr/0001-licens
 | File | What it is |
 |---|---|
 | `pin.toml` | The Ink/Stitch the differential is measured against: its repository and commit, the one the compatibility contract was read at |
-| `fonts.toml` | Ink/Stitch's fonts, the corpus of the glyph differential: their repository, a commit, and the SHA-256 of the archive GitHub makes of it |
+| `fonts.toml` | Ink/Stitch's fonts, the corpus of the glyph differential: their repository and commit, with the SHA-256 of the archive GitHub makes of it |
 | `glyphs.toml` | The glyph differential's excuses: the measures the deviations ledger explains, and for which glyphs |
 | `requirements.txt` | The Python packages that Ink/Stitch runs with, pinned by version and hash |
 | `stubs/wx/` | A stand-in for wxPython, which Ink/Stitch's extensions import as they load and writing a file never uses |
@@ -27,8 +27,8 @@ which copies Ink/Stitch's code ([ADR-0001](../../docs/src/design/adr/0001-licens
 
 Fetch Ink/Stitch at the pinned commit outside the repository, give it a Python of its own, and point the
 suite at both, as the `inkstitch` action does in CI. Its `DEBUG.toml` turns off the log Ink/Stitch writes at
-its debug level when it runs from a checkout, which takes 8 of the 10 seconds of each run. Its settings turn
-its stitch-plan cache off. `cargo xtask corpus` fetches the fonts:
+its debug level when it runs from a checkout: a glyph took 10 seconds with it, and 1.6 without. Its settings
+turn its stitch-plan cache off. `cargo xtask corpus` fetches the fonts:
 
 ```sh
 commit=$(sed -n 's/^commit = "\(.*\)"$/\1/p' conformance/inkstitch/pin.toml)
@@ -71,14 +71,13 @@ cargo xtask conformance --differential --filter inkstitch-fonts --every-glyph   
 
 The report is `target/conformance/fonts.md`, with a row for each font, the excuses with the glyphs each
 excused, the stitch types StitchCraft doesn't sew yet with their glyphs, and each glyph that differs with its
-measures. `target/conformance/fonts.json` has every glyph's verdict. The design of each glyph that doesn't
-agree stays in `target/conformance/fonts/`, by font and file, with Ink/Stitch's PES file of it.
+measures. Beside it, `fonts.json` gives every glyph's verdict for tools, and `fonts/` keeps the design of
+each glyph that doesn't agree, by font and file, with Ink/Stitch's PES file of it.
 
-A difference StitchCraft makes on purpose is excused in `glyphs.toml`, by the ledger's entry that explains it,
-for the glyphs where its cause is. An excuse says which glyphs: those StitchCraft says a diagnostic of
-(`codes`, and `saying`, words of the message), whose elements are of a stitch type (`types`) or all of some
-(`only_types`), that set an Ink/Stitch setting (`settings`), or of a font (`fonts`). An excuse whose stitches
-are placed otherwise along the same lines asks that the threads lie that near (`within_mm`):
+`glyphs.toml` excuses a difference StitchCraft makes on purpose by the ledger's entry that explains it. Each
+excuse is for the glyphs where its cause is, picked by the diagnostics StitchCraft gives them (`codes` and
+`saying`), by their stitch types (`types` and `only_types`), or by their settings and fonts (`settings` and
+`fonts`). With `within_mm`, an excuse counts only where each program's thread lies that near the other's:
 
 ```toml
 [[excuse]]
