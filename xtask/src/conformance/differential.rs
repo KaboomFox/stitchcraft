@@ -49,6 +49,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use stitchcraft_cli::commands::plan::Source;
 use stitchcraft_core::{Budget, Point};
@@ -226,9 +227,23 @@ impl Inkstitch {
         self.output(root, &["--extension=output", "--format=pes"], design, "PES file")
     }
 
+    /// The PES file Ink/Stitch writes for the SVG file `design`, or [`Ran::Nothing`] when it writes none.
+    pub(super) fn pes_or_nothing(&self, root: &Path, design: &Path) -> Result<Ran, String> {
+        self.ran(root, &["--extension=output", "--format=pes"], design, "PES file")
+    }
+
     /// What Ink/Stitch's command line writes to its standard output, `what`, run with `arguments` on the SVG
     /// file `design`: an extension's result.
     pub(super) fn output(&self, root: &Path, arguments: &[&str], design: &Path, what: &str) -> Result<Vec<u8>, String> {
+        match self.ran(root, arguments, design, what)? {
+            Ran::Wrote(bytes) => Ok(bytes),
+            Ran::Nothing(said) => Err(said),
+        }
+    }
+
+    /// What Ink/Stitch's command line wrote, `what`, run with `arguments` on the SVG file `design`. It
+    /// fails when Ink/Stitch does: it ends with a status other than 0, as on an error it didn't expect.
+    fn ran(&self, root: &Path, arguments: &[&str], design: &Path, what: &str) -> Result<Ran, String> {
         let config = configured(root)?;
         let output = Command::new(&self.python)
             .arg("inkstitch.py")
@@ -241,21 +256,42 @@ impl Inkstitch {
             .env("PYTHONDONTWRITEBYTECODE", "1")
             .output()
             .map_err(|e| format!("{}: {e}", self.python))?;
-        if !output.status.success() || output.stdout.is_empty() {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            let tail: Vec<&str> = stderr.lines().rev().take(8).collect();
-            return Err(format!("Ink/Stitch wrote no {what} ({}): {}", output.status, tail.into_iter().rev().collect::<Vec<_>>().join(" / ")));
+        if output.status.success() && !output.stdout.is_empty() {
+            return Ok(Ran::Wrote(output.stdout));
         }
-        Ok(output.stdout)
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let tail: Vec<&str> = stderr.lines().rev().take(8).collect();
+        let said = format!("Ink/Stitch wrote no {what} ({}): {}", output.status, tail.into_iter().rev().collect::<Vec<_>>().join(" / "));
+        if output.status.success() { Ok(Ran::Nothing(said)) } else { Err(said) }
     }
 }
 
+/// What Ink/Stitch's command line gave, when it ran to its end.
+#[derive(Debug, PartialEq)]
+pub(super) enum Ran {
+    /// What it wrote to its standard output.
+    Wrote(Vec<u8>),
+    /// It wrote nothing, as it does when it finds nothing to sew, or an element it can't sew: what it said.
+    Nothing(String),
+}
+
 /// Ink/Stitch's configuration folder under `root`, [`CONFIG`], with its settings written: the stitch-plan
-/// cache off.
+/// cache off. The settings file is written only when it holds something else, and whole, by renaming a file
+/// of its own: the fonts case runs Ink/Stitch on several glyphs side by side, and an Ink/Stitch that read
+/// the file half written would take its default settings, the cache on.
 fn configured(root: &Path) -> Result<PathBuf, String> {
+    static WRITES: AtomicUsize = AtomicUsize::new(0);
     let config = root.join(CONFIG);
     let settings = config.join("inkstitch").join("settings.json");
-    let written = settings.parent().map_or(Ok(()), std::fs::create_dir_all).and_then(|()| std::fs::write(&settings, SETTINGS));
+    if std::fs::read_to_string(&settings).is_ok_and(|held| held == SETTINGS) {
+        return Ok(config);
+    }
+    let whole = settings.with_extension(format!("json.{}-{}", std::process::id(), WRITES.fetch_add(1, Ordering::Relaxed)));
+    let written = settings
+        .parent()
+        .map_or(Ok(()), std::fs::create_dir_all)
+        .and_then(|()| std::fs::write(&whole, SETTINGS))
+        .and_then(|()| std::fs::rename(&whole, &settings));
     written.map_err(|e| format!("{}: {e}", util::rel(&settings)))?;
     Ok(config)
 }
@@ -316,6 +352,9 @@ pub const PALETTE: &str = "DEV-THREAD-001";
 /// The deviation by which StitchCraft fits stitches to the machine: it leaves out those shorter than its
 /// shortest and splits those longer than its longest.
 pub const FITTED: &str = "DEV-FIN-001";
+/// The deviation by which a move-to with nothing drawn after it is no subpath, where Ink/Stitch sews a
+/// needle point there.
+pub const LONE: &str = "DEV-SVG-011";
 
 /// Ink/Stitch's file `theirs` with the deviation `deviation` undone, as the file would read had Ink/Stitch
 /// done as StitchCraft does, whose file is `ours`; `None` for a deviation the differential can't undo,
@@ -332,13 +371,97 @@ pub const FITTED: &str = "DEV-FIN-001";
 ///   split into as few equal parts as are no longer, as StitchCraft fits them (`REQ-FIN-001`). StitchCraft
 ///   keeps some needle points this leaves out, such as a lock's, so the stitches agree within their
 ///   tolerance and not exactly.
+/// - [`LONE`]: each run of stitches that sews at one point, every needle point of it nearer its first than
+///   the reference machine's shortest stitch, with the jumps that lead to it and the trim before them. A trim
+///   or a stop where it was moves to the needle point before it. The jumps that go nowhere this leaves, as
+///   after a thread change, are left out as for [`NOWHERE`], and the file is moved so the middle of its
+///   bounds stays where it was, as Ink/Stitch centres a design.
 pub fn undone(deviation: &str, theirs: &StitchPlan, ours: &StitchPlan) -> Option<StitchPlan> {
+    let shortest = profiles::REFERENCE.min_stitch.get();
     match deviation {
         NOWHERE => Some(without_jumps_nowhere(theirs)),
         PALETTE => Some(named_as(theirs, ours)),
-        FITTED => Some(split(&without_short(theirs, profiles::REFERENCE.min_stitch.get()), profiles::REFERENCE.max_stitch.get())),
+        FITTED => Some(split(&without_short(theirs, shortest), profiles::REFERENCE.max_stitch.get())),
+        LONE => Some(in_middle_of(without_jumps_nowhere(&without_lone_points(theirs, shortest)), theirs)),
         _ => None,
     }
+}
+
+/// `plan` without each run of stitches whose needle points all lie nearer its first than `shortest`
+/// millimetres, nor the jumps that lead to it and the trim before them. A trim or a stop where such a run
+/// was is moved to the needle point before it, or left out when there is none ([`undone`]).
+fn without_lone_points(plan: &StitchPlan, shortest: f64) -> StitchPlan {
+    let mut plan = plan.clone();
+    let mut at = Lone { needle: None, left: None, shortest };
+    for block in &mut plan.blocks {
+        let mut kept: Vec<Stitch> = Vec::with_capacity(block.stitches.len());
+        let mut run: Vec<Stitch> = Vec::new();
+        for &stitch in &block.stitches {
+            if stitch.kind == StitchKind::Normal {
+                run.push(stitch);
+                continue;
+            }
+            at.end(&mut kept, &mut run);
+            match (at.left.filter(|&left| at.near(stitch.at, left)), at.needle) {
+                (None, _) => kept.push(stitch),
+                (Some(_), Some(needle)) => kept.push(Stitch { at: needle, ..stitch }),
+                (Some(_), None) => {}
+            }
+        }
+        at.end(&mut kept, &mut run);
+        block.stitches = kept;
+    }
+    plan
+}
+
+/// Where [`without_lone_points`] is: the last needle point it kept, and the point of a run it just left out.
+struct Lone {
+    needle: Option<Point>,
+    left: Option<Point>,
+    shortest: f64,
+}
+
+impl Lone {
+    /// Whether `a` lies nearer `b` than the shortest stitch.
+    fn near(&self, a: Point, b: Point) -> bool {
+        (a.x() - b.x()).hypot(a.y() - b.y()) < self.shortest
+    }
+
+    /// Ends the run of stitches `run`: added to `kept`, unless it sews at one point. Then it is left out, and
+    /// so are the jumps at the end of `kept` that lead to it and the trim before them.
+    fn end(&mut self, kept: &mut Vec<Stitch>, run: &mut Vec<Stitch>) {
+        let Some(first) = run.first().map(|s| s.at) else {
+            return;
+        };
+        if !run.iter().all(|s| self.near(s.at, first)) {
+            self.needle = run.last().map(|s| s.at);
+            self.left = None;
+            kept.append(run);
+            return;
+        }
+        run.clear();
+        while kept.last().is_some_and(|s| s.kind == StitchKind::Jump) {
+            kept.pop();
+        }
+        if kept.last().is_some_and(|s| s.kind == StitchKind::Trim) {
+            kept.pop();
+        }
+        self.left = Some(first);
+    }
+}
+
+/// `plan` moved so the middle of its bounds is where `was`'s is ([`undone`]).
+fn in_middle_of(mut plan: StitchPlan, was: &StitchPlan) -> StitchPlan {
+    let (Some(was), Some(is)) = (was.bounds(), plan.bounds()) else {
+        return plan;
+    };
+    let (dx, dy) = (was.center().x() - is.center().x(), was.center().y() - is.center().y());
+    for stitch in plan.blocks.iter_mut().flat_map(|block| block.stitches.iter_mut()) {
+        if let Ok(at) = Point::new(stitch.at.x() + dx, stitch.at.y() + dy) {
+            stitch.at = at;
+        }
+    }
+    plan
 }
 
 /// `plan` without each needle point nearer the one before than `shortest` millimetres, but the first and the
@@ -455,14 +578,13 @@ fn judge(compared: Vec<Compared>, excused: &BTreeMap<String, String>, again: &BT
                     format!("excused by `{deviation}`")
                 }
                 Some((_, mine, undone, true)) => {
-                    outcome.notes.push(format!("{name} differ, as {deviation} says, and agree without it: StitchCraft {mine}, Ink/Stitch {undone}"));
-                    format!("explained by `{deviation}`: Ink/Stitch {undone} without it")
+                    outcome.notes.push(format!("{name} differ, as {deviation} says, and agree without it: {}", said_undone(measure, mine, undone)));
+                    format!("explained by `{deviation}`: {} without it", theirs_undone(measure, mine, undone))
                 }
                 Some((_, mine, undone, false)) => {
-                    outcome
-                        .failures
-                        .push(format!("{name} differ by more than {deviation} explains: without it, StitchCraft {mine}, Ink/Stitch {undone}"));
-                    format!("❌ Ink/Stitch {undone} without `{deviation}`")
+                    let without = said_undone(measure, mine, undone);
+                    outcome.failures.push(format!("{name} differ by more than {deviation} explains: without it, {without}"));
+                    format!("❌ {} without `{deviation}`", theirs_undone(measure, mine, undone))
                 }
             },
             (false, None) => {
@@ -480,6 +602,23 @@ fn judge(compared: Vec<Compared>, excused: &BTreeMap<String, String>, again: &BT
 
 /// How `measure` differs, StitchCraft's `mine` against Ink/Stitch's `other`, for a failure or an excuse's
 /// note. The overlap is a measure of the pair, with one value, given with the least it may be.
+/// A measure compared again, with a deviation undone in Ink/Stitch's file: StitchCraft's `mine` and Ink/Stitch's
+/// `undone`, or the overlap, one number of both files.
+pub(super) fn said_undone(measure: Measure, mine: &str, undone: &str) -> String {
+    match measure {
+        Measure::Overlap => format!("overlap {mine}"),
+        _ => format!("StitchCraft {mine}, Ink/Stitch {undone}"),
+    }
+}
+
+/// Ink/Stitch's side of [`said_undone`]: its `undone`, or the overlap, `mine`.
+pub(super) fn theirs_undone(measure: Measure, mine: &str, undone: &str) -> String {
+    match measure {
+        Measure::Overlap => format!("overlap {mine}"),
+        _ => format!("Ink/Stitch {undone}"),
+    }
+}
+
 pub(super) fn differs(measure: Measure, mine: &str, other: &str) -> String {
     let name = measure.name();
     match measure {
@@ -603,7 +742,13 @@ mod tests {
         let root = util::root().join("target/xtask-tests/differential-config");
         let config = configured(&root).unwrap();
         assert_eq!(config, root.join(CONFIG));
-        assert_eq!(std::fs::read_to_string(config.join("inkstitch/settings.json")).unwrap(), r#"{"cache_size": 0}"#);
+        let settings = config.join("inkstitch/settings.json");
+        assert_eq!(std::fs::read_to_string(&settings).unwrap(), r#"{"cache_size": 0}"#);
+        // Settings of another cache are replaced, and nothing else is left in the folder.
+        std::fs::write(&settings, r#"{"cache_size": 100}"#).unwrap();
+        configured(&root).unwrap();
+        assert_eq!(std::fs::read_to_string(&settings).unwrap(), r#"{"cache_size": 0}"#);
+        assert_eq!(std::fs::read_dir(config.join("inkstitch")).unwrap().count(), 1);
         // A root it can't write in is said.
         std::fs::write(root.join("file"), "").unwrap();
         assert!(configured(&root.join("file")).unwrap_err().contains("settings.json"));
@@ -836,6 +981,59 @@ mod tests {
         );
         assert!(report.contains("## ✅ `passed` (conformance/cases/inkstitch/passed.toml)\n\n| Measure"), "{report}");
         assert!(report.contains("- skipped: no Ink/Stitch\n"), "{report}");
+    }
+
+    #[test]
+    fn a_run_that_sews_at_one_point_is_undone_with_the_jumps_and_trim_that_lead_to_it() {
+        use stitchcraft_plan::{PlanBuilder, Provenance, Role, Thread};
+        let (red, blue) = (Thread::new(Rgb::new(237, 23, 31)), Thread::new(Rgb::new(11, 61, 145)));
+        let (top, travel) = (Provenance::plan(Role::Top), Provenance::plan(Role::Travel));
+        // As Kum Tsoan relief's V: a line, then a needle point 20 mm off where a lone move-to is, and the next
+        // thread where the line ended.
+        let mut builder = PlanBuilder::new(red);
+        builder.jump(p(0.0, 0.0), travel);
+        builder.stitch(p(0.0, 0.0), top);
+        builder.stitch(p(10.0, 0.0), top);
+        builder.trim(None);
+        builder.jump(p(0.0, -20.0), travel);
+        builder.stitch(p(0.0, -20.0), top);
+        builder.stitch(p(0.1, -20.0), top);
+        builder.change_thread(blue);
+        builder.trim(None);
+        builder.jump(p(10.0, 0.0), travel);
+        builder.stitch(p(10.0, 0.0), top);
+        builder.stitch(p(10.0, 10.0), top);
+        let plan = builder.finish();
+        let measured = Measured::of(&plan).unwrap();
+        assert_eq!((measured.stitches, measured.size, measured.trims, measured.jumps), (6, [10.0, 30.0], 2, 3));
+        let without = undone(LONE, &plan, &plan).unwrap();
+        let kinds = |block: &stitchcraft_plan::ColorBlock| block.stitches.iter().map(|s| s.kind).collect::<Vec<_>>();
+        let (n, j) = (StitchKind::Normal, StitchKind::Jump);
+        assert_eq!(without.blocks.iter().map(kinds).collect::<Vec<_>>(), [vec![j, n, n], vec![n, n]]);
+        // The middle of the bounds stays where it was: the line and the next thread move up by 10 mm.
+        let measured = Measured::of(&without).unwrap();
+        assert_eq!((measured.stitches, measured.size, measured.place, measured.trims, measured.jumps), (4, [10.0, 10.0], [5.0, -5.0], 0, 1));
+        // Inside a block, the trim after the lone point cuts where the needle was before it.
+        let mut builder = PlanBuilder::new(Thread::new(Rgb::new(237, 23, 31)));
+        builder.stitch(p(0.0, 0.0), top);
+        builder.stitch(p(10.0, 0.0), top);
+        builder.trim(None);
+        builder.jump(p(0.0, -20.0), travel);
+        builder.stitch(p(0.0, -20.0), top);
+        builder.trim(None);
+        builder.jump(p(0.0, 10.0), travel);
+        builder.stitch(p(0.0, 10.0), top);
+        builder.stitch(p(10.0, 10.0), top);
+        let without = undone(LONE, &builder.finish(), &plan).unwrap();
+        let records: Vec<(StitchKind, f64, f64)> = without.blocks[0].stitches.iter().map(|s| (s.kind, s.at.x(), s.at.y() + 0.0)).collect();
+        let t = StitchKind::Trim;
+        // The middle of the bounds stays at y = -5 mm, so the lines at 0 and 10 mm move up to -10 and 0.
+        assert_eq!(records, [(n, 0.0, -10.0), (n, 10.0, -10.0), (t, 10.0, -10.0), (j, 0.0, 0.0), (n, 0.0, 0.0), (n, 10.0, 0.0)]);
+        // A run of more than one place stays.
+        let mut builder = PlanBuilder::new(Thread::new(Rgb::new(237, 23, 31)));
+        builder.stitch(p(0.0, 0.0), top);
+        builder.stitch(p(0.3, 0.0), top);
+        assert_eq!(undone(LONE, &builder.finish(), &plan).unwrap().stats().stitches, 2);
     }
 
     #[test]

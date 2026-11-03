@@ -27,8 +27,8 @@ which copies Ink/Stitch's code ([ADR-0001](../../docs/src/design/adr/0001-licens
 
 Fetch Ink/Stitch at the pinned commit outside the repository, give it a Python of its own, and point the
 suite at both, as the `inkstitch` action does in CI. Run from a checkout, Ink/Stitch logs at its debug level,
-and a glyph took it 10 seconds, against 1.6 with its `DEBUG.toml` turning the log off. Its settings turn its
-stitch-plan cache off. `cargo xtask corpus` fetches the fonts:
+and a glyph took it 10 seconds, against 1.6 with its `DEBUG.toml` turning the log off. `cargo xtask corpus`
+fetches the fonts:
 
 ```sh
 commit=$(sed -n 's/^commit = "\(.*\)"$/\1/p' conformance/inkstitch/pin.toml)
@@ -36,7 +36,6 @@ git init -q ../inkstitch-pinned
 git -C ../inkstitch-pinned fetch -q --depth 1 https://github.com/inkstitch/inkstitch "$commit"
 git -C ../inkstitch-pinned checkout -q FETCH_HEAD
 printf '[LOGGING]\ndisable_logging = true\n' > ../inkstitch-pinned/DEBUG.toml
-mkdir -p ~/.config/inkstitch && echo '{"cache_size": 0}' > ~/.config/inkstitch/settings.json
 python3 -m venv target/inkstitch-venv
 target/inkstitch-venv/bin/pip install --no-deps --require-hashes -r conformance/inkstitch/requirements.txt
 cargo xtask corpus

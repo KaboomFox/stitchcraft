@@ -22,8 +22,10 @@
 //! StitchCraft doesn't sew yet (`SC-W0011`) is listed with them and not sewn in Ink/Stitch: it joins the
 //! comparison with M10's steps. A glyph with an element whose setting StitchCraft can't read, which it
 //! refuses (`SC-E0101`) and Ink/Stitch sews at the setting's default, is excused by [`REFUSED`] and not
-//! compared. A glyph that a program can't sew is said, with why. The case fails when a glyph differs by a
-//! measure no excuse explains, or a program can't sew it, as a case of the differential does.
+//! compared. A glyph neither program writes a file of agrees: Ink/Stitch writes none when it finds nothing
+//! to sew or an element it can't sew, and StitchCraft none when an element is left out with an error, as
+//! `stitch plan` does. A glyph that a program fails on is said, with why. The case fails when a glyph
+//! differs by a measure no excuse explains, or a program fails on it, as a case of the differential does.
 //!
 //! **The report** ([`report`]): `target/conformance/fonts.md` and `target/conformance/fonts.json`. The design
 //! of each glyph that differs, or didn't sew, stays in [`WRITTEN`] with Ink/Stitch's PES file of it, where a
@@ -42,7 +44,7 @@ use stitchcraft_engine::generate::stitch_type_of;
 use stitchcraft_params::StitchType;
 use stitchcraft_plan::{MachineProfile, StitchPlan, profiles};
 
-use super::differential::{self, Compared, Inkstitch, Measured};
+use super::differential::{self, Compared, Inkstitch, Measured, Ran};
 use super::runner::Outcome;
 use crate::corpus::{self, Font, glyphs};
 use crate::util;
@@ -55,8 +57,6 @@ pub const WRITTEN: &str = "target/conformance/fonts";
 pub const REFUSED: &str = "DEV-PRM-001";
 /// The side of the hoop the glyphs are planned in, in millimetres ([`machine`]).
 pub const HOOP: f64 = 400.0;
-/// What Ink/Stitch says when it finds nothing in a design that it sews, and writes no file.
-const NOTHING: &str = "no objects in the entire document that Ink/Stitch knows how to work with";
 
 /// The machine each glyph is planned for: the reference machine, with a hoop [`HOOP`] mm a side. A glyph
 /// file is drawn at its font's height, up to 144 mm, and a glyph may be wider than the reference hoop,
@@ -289,32 +289,37 @@ fn sew(root: &Path, inkstitch: &Inkstitch, job: Job, design: &str, excuses: &Exc
             Verdict::Excused(refused.into_iter().map(|why| format!("StitchCraft refuses an element: {why}, as {REFUSED} says")).collect())
         }
         Ok(Ours { plan, nothing, .. }) => {
-            let theirs = inkstitch.pes(root, &path).and_then(|bytes| {
-                let kept = path.with_extension("inkstitch.pes");
-                std::fs::write(&kept, &bytes).map_err(|e| format!("{}: {e}", util::rel(&kept)))?;
-                Ok(stitchcraft_formats::decode(&bytes).map_err(|e| format!("Ink/Stitch's PES file doesn't read: {e}"))?.plan)
+            let theirs = inkstitch.pes_or_nothing(root, &path).and_then(|ran| match ran {
+                Ran::Nothing(said) => Ok(Err(said)),
+                Ran::Wrote(bytes) => {
+                    let kept = path.with_extension("inkstitch.pes");
+                    std::fs::write(&kept, &bytes).map_err(|e| format!("{}: {e}", util::rel(&kept)))?;
+                    Ok(Ok(stitchcraft_formats::decode(&bytes).map_err(|e| format!("Ink/Stitch's PES file doesn't read: {e}"))?.plan))
+                }
             });
-            let ours = plan.as_ref().and_then(|plan| Some((plan, Measured::of(plan)?)));
             match theirs {
-                // Ink/Stitch finds nothing to sew in the glyph, and writes no file.
-                Err(e) if e.contains(NOTHING) => match ours {
-                    None => Verdict::Agrees,
-                    Some(_) => Verdict::Differs(vec!["Ink/Stitch sews nothing, and StitchCraft sews the glyph".to_string()]),
-                },
                 Err(e) => Verdict::Failed(format!("Ink/Stitch: {e}")),
-                Ok(their_plan) => match (ours, Measured::of(&their_plan)) {
-                    (Some((our_plan, ours)), Some(theirs)) => {
-                        sewn.rows = differential::compare(&ours, &theirs);
-                        let (verdict, used) = excuses.judge(&sewn.job.font, &sewn.traits, &sewn.rows, (our_plan, &ours), (&their_plan, &theirs));
-                        sewn.used = used;
-                        verdict
+                Ok(written) => {
+                    let ours = plan.as_ref().and_then(|plan| Some((plan, Measured::of(plan)?)));
+                    let theirs = written.as_ref().ok().and_then(|plan| Some((plan, Measured::of(plan)?)));
+                    match (ours, theirs) {
+                        (Some((our_plan, ours)), Some((their_plan, theirs))) => {
+                            sewn.rows = differential::compare(&ours, &theirs);
+                            let (verdict, used) = excuses.judge(&sewn.job.font, &sewn.traits, &sewn.rows, (our_plan, &ours), (their_plan, &theirs));
+                            sewn.used = used;
+                            verdict
+                        }
+                        // Neither program writes a file of the glyph, or a file that sews.
+                        (None, None) => Verdict::Agrees,
+                        (None, Some(_)) => {
+                            Verdict::Differs(vec![format!("StitchCraft sews nothing ({}), and Ink/Stitch sews the glyph", nothing.join("; "))])
+                        }
+                        (Some(_), None) => {
+                            let said = written.err().unwrap_or_else(|| "its file sews nothing".to_string());
+                            Verdict::Differs(vec![format!("Ink/Stitch sews nothing ({said}), and StitchCraft sews the glyph")])
+                        }
                     }
-                    (None, None) => Verdict::Agrees,
-                    (None, Some(_)) => {
-                        Verdict::Differs(vec![format!("StitchCraft sews nothing ({}), and Ink/Stitch sews the glyph", nothing.join("; "))])
-                    }
-                    (Some(_), None) => Verdict::Differs(vec!["Ink/Stitch sews nothing, and StitchCraft sews the glyph".to_string()]),
-                },
+                }
             }
         }
     };
@@ -329,13 +334,13 @@ fn sew(root: &Path, inkstitch: &Inkstitch, job: Job, design: &str, excuses: &Exc
 /// What StitchCraft makes of a glyph.
 #[derive(Debug, Default)]
 struct Ours {
-    /// Its plan, read back from its PES file, or `None` when it sews nothing.
+    /// Its plan, read back from its PES file, or `None` when it writes no file.
     plan: Option<StitchPlan>,
     /// The stitch types of its elements it doesn't sew yet, named by `SC-W0011`.
     listed: Vec<String>,
     /// Why it refuses elements whose settings it can't read, by `SC-E0101`.
     refused: Vec<String>,
-    /// Why it sews nothing, when it sews nothing: its errors.
+    /// Why it writes no file, when it writes none: its errors.
     nothing: Vec<String>,
 }
 
@@ -365,9 +370,16 @@ fn ours(bytes: &[u8], name: &str, traits: &mut Traits) -> Result<Ours, String> {
         return Ok(Ours { listed: if named.is_empty() { listed } else { named }, ..Ours::default() });
     }
     let refused = said(Code::ParamInvalid);
-    let Some(plan) = planned.plan else {
-        let errors = warnings.iter().chain(&planned.diagnostics).filter(|d| d.severity() == Severity::Error);
-        return Ok(Ours { refused, nothing: errors.map(|d| format!("{}: {}", d.code.id(), d.message)).collect(), ..Ours::default() });
+    let errors: Vec<String> = warnings
+        .iter()
+        .chain(&planned.diagnostics)
+        .filter(|d| d.severity() == Severity::Error)
+        .map(|d| format!("{}: {}", d.code.id(), d.message))
+        .collect();
+    // An element left out with an error leaves the rest of the design planned, but `stitch plan` writes no
+    // file then, as Ink/Stitch writes none when an element fails.
+    let (Some(plan), true) = (planned.plan, errors.is_empty()) else {
+        return Ok(Ours { refused, nothing: errors, ..Ours::default() });
     };
     let pes = stitchcraft_formats::encode(&plan, stitchcraft_plan::FormatId::PesV1, "glyph").map_err(|e| format!("{name}: {e}"))?;
     let read = stitchcraft_formats::decode(&pes.bytes).map_err(|e| format!("its PES file doesn't read: {e}"))?.plan;
@@ -465,6 +477,21 @@ mod tests {
         assert!(made.refused.first().unwrap().contains("`repeats` is \"0 2\""), "{:?}", made.refused);
         // It sews nothing else, and its error is said.
         assert!(made.plan.is_none() && made.nothing.iter().any(|e| e.starts_with("SC-E0101: ")), "{:?}", made.nothing);
+    }
+
+    #[test]
+    fn stitchcraft_writes_no_file_of_a_glyph_with_an_element_left_out_with_an_error() {
+        // A satin column whose rung joins its first rail's start to its second's end has no section to sew
+        // (SC-E0216). The line beside it is planned, but `stitch plan` writes no file, as Ink/Stitch writes none.
+        let satin =
+            r#"<path d="M 0,0 H 10 M 0,4 H 10 M -5,-2 L 15,6" style="fill:none;stroke:#000000;stroke-width:0.26" inkstitch:satin_column="true"/>"#;
+        let text = GLYPHS.replace(r#"<path d="M2 2 L18 2""#, &format!(r#"{satin}<path d="M2 2 L18 2""#));
+        let mut traits = Traits::default();
+        let made = ours(design(&text, 0).as_bytes(), "l", &mut traits).unwrap();
+        assert!(made.plan.is_none() && made.refused.is_empty(), "{made:?}");
+        assert_eq!(made.nothing.len(), 1, "{:?}", made.nothing);
+        assert!(made.nothing.first().unwrap().starts_with("SC-E0216: "), "{:?}", made.nothing);
+        assert_eq!(traits.types, ["running_stitch", "satin_column"]);
     }
 
     #[test]
