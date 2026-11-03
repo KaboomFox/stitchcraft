@@ -76,6 +76,8 @@ struct CaseFile {
     letters: Option<Letters>,
     #[serde(default)]
     route: Option<toml::Table>,
+    #[serde(default)]
+    sample: Option<usize>,
 }
 
 /// What a test-sheet or plan case expects.
@@ -121,6 +123,10 @@ pub enum Spec {
     /// stitches with the lines a pinned Ink/Stitch's Fill to Stroke draws (L3, the Ink/Stitch differential,
     /// `centre_lines`).
     CentreLines { subject: Subject },
+    /// Sew each glyph of Ink/Stitch's fonts in both programs (L3, the glyph differential, `fonts`): the
+    /// sample of the case's `sample` glyphs of each font, or every glyph and a part of them, as the run's
+    /// options say.
+    Fonts { options: super::fonts::Options },
 }
 
 /// What an Ink/Stitch differential case gives both programs.
@@ -192,6 +198,20 @@ pub fn load_cases(root: &Path, findings: &mut Findings) -> Vec<DataCase> {
             findings.error(format!("{file}: only a centre-lines case draws `[letters]`"));
             continue;
         }
+        if case.kind == "fonts" {
+            match (case.sample, case.sheet, case.design, case.profile, case.expect, case.files, excused) {
+                (Some(sample), None, None, None, None, None, None) if sample > 0 => {
+                    let options = super::fonts::Options { sample, every: false, shard: None };
+                    cases.push(DataCase { id: case.id, requirements: case.requirements, file, spec: Spec::Fonts { options } });
+                }
+                _ => findings.error(format!("{file}: a fonts case needs a `sample` of 1 glyph or more, and nothing else")),
+            }
+            continue;
+        }
+        if case.sample.is_some() {
+            findings.error(format!("{file}: only a fonts case takes a `sample`"));
+            continue;
+        }
         let spec = match (case.kind.as_str(), case.sheet, case.design, case.profile, case.expect, case.files) {
             ("testsheet", Some(sheet), None, Some(profile), Some(expect), None) if excused.is_none() => Spec::Testsheet { sheet, profile, expect },
             ("plan", None, Some(design), Some(profile), Some(expect), None) if excused.is_none() => Spec::Plan { design, profile, expect },
@@ -220,7 +240,7 @@ pub fn load_cases(root: &Path, findings: &mut Findings) -> Vec<DataCase> {
                 continue;
             }
             (other, ..) => {
-                findings.error(format!("{file}: unknown case kind `{other}` (known: testsheet, plan, oracle, inkstitch, centre-lines)"));
+                findings.error(format!("{file}: unknown case kind `{other}` (known: testsheet, plan, oracle, inkstitch, centre-lines, fonts)"));
                 continue;
             }
         };

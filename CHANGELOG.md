@@ -14,6 +14,28 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   they are selected, which `stitch export` leaves out. New codes: `SC-E1001`, `SC-I1002`, `SC-W1003` and
   `SC-E0820`. TS-17C is drawn with its letters as drawn and routed, and the differential routes them with
   Ink/Stitch's tool too. A how-to page shows the route. Golden added: `TS-17C.pes`.
+- M8.6: the fonts of Ink/Stitch as a corpus of the differential (`REQ-FONT-001`). `cargo xtask corpus`
+  fetches the archive of inkstitch/embroidery-fonts at `c7e3a05`, the commit
+  `conformance/inkstitch/fonts.toml` pins, checks its SHA-256 and unpacks it in a cache outside the
+  repository. It takes the 131 fonts whose licence file names the OFL, CC0, CC BY or CC BY-SA first, and no
+  font file is committed.
+  - The differential's `fonts` case sews each glyph in both programs as a design of its own, cut out of its
+    glyph file with the other glyphs left out. Every night it sews 4 glyphs of each font, and every Sunday
+    all 21,179 in 6 parts (`--every-glyph`, `--shard`). The glyphs of stitch types StitchCraft doesn't sew
+    yet are listed.
+  - Of the sample's 524 glyphs, 357 agree by every measure, 98 are listed and 69 differ as the ledger
+    explains, for the glyphs `conformance/inkstitch/glyphs.toml` names. Of a twentieth of every glyph, 1,059
+    glyphs, 699 agree, 238 are listed and 122 differ as the ledger explains. A glyph neither program writes
+    a file of agrees, as Apex simple small's U, whose satin column neither can sew.
+  - The differential undoes 3 more deviations in Ink/Stitch's file to check their excuses: the threads named
+    by other entries of Brother's palette (`DEV-THREAD-001`), the stitches fitted to the machine's longest and
+    shortest (`DEV-FIN-001`) and the needle point sewn at a move-to that draws nothing (`DEV-SVG-011`). An
+    excuse for running stitches counts only where the threads lie within 0.3 mm of each other (`DEV-RUN-002`).
+  - `DEV-SVG-025` says that a viewBox of another shape than its page is centred, where Ink/Stitch leaves it at
+    the top left corner, and `DEV-SVG-026` that Ink/Stitch's stitch patterns aren't applied.
+  - The `inkstitch` action turns Ink/Stitch's debug log off, with which a glyph took 10 seconds against 1.6.
+    Ink/Stitch's settings file is written only when it holds something else, and whole, so that glyphs sewn
+    side by side never read it half written, which would turn the cache on.
 - M10.1: cross stitch with simple crosses (`REQ-FILL-CRS-001` to `REQ-FILL-CRS-007`). A fill whose
   `fill_method` is `cross_stitch` sews a cross in each cell of a grid laid over it that it covers
   `fill_coverage` percent of, as Ink/Stitch sews its simple crosses.
