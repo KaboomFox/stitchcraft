@@ -1,8 +1,7 @@
 # stitchcraft-svg
 
 Layer **L3**. Reads SVG documents into the engine's `Design`: `stitchcraft_svg::read(bytes, budget)`
-returns the design and warnings about what was left out or simplified. Ink/Stitch's clones follow in M8
-(M8.10).
+returns the design and warnings about what was left out or simplified.
 
 **Status:** v1 (M3.3) reads paths and the basic shapes, groups and `<switch>`, transforms, the root's
 size and viewBox (so positions come out in millimetres), fill and stroke colours with `currentColor`, and
@@ -31,6 +30,14 @@ shape, and that of each group round it, is a clip of the shape's elements, which
 (`REQ-GEN-005`). A clip path is its children's areas together, each by its `clip-rule`, in the user space
 of what it clips or in shares of a shape's box. A group's children count, as Inkscape draws them, and a
 clip path's own `clip-path` cuts it too. `SC-W0802` names what isn't applied.
+
+Since M8.10 a clone, a `<use>` of an element other than a command's symbol, sews what it shows in its
+own place in the document's order (`REQ-SVG-012`, `src/document/clone.rs`). The reader draws its source
+again under the use's map and style, symbols in the viewport the use gives them, and names each element
+after the clone (`svg:clone1/square:fill`). The commands tied to the source go with it, and its own trim,
+stop and shortest lengths apply. A fill's angle turns with the clone, unless the clone's `angle` sets it,
+and `flip_angle` reverses it (`REQ-SVG-013`). A clone whose `clone` setting is off sews nothing
+(`SC-I0805`), and one that shows itself is left out (`SC-W0804`).
 
 Since M8.1 each `inkstitch:*` setting of a shape is a parameter of the elements it makes, by its own name
 (`REQ-SVG-009`): an Ink/Stitch file sews with its stitch types, spacings, underlays and locks. The
@@ -69,7 +76,8 @@ Design: `docs/src/design/data-model.md` (the `Design`), `docs/src/design/archite
   charges the budget two units per XML node, one in the pass that indexes the file and one in the pass
   that reads it, and the search for Ink/Stitch's file version a unit per node it looks at and per step up
   from an element of its name. Style sheets cost a unit per 8 bytes, and each element a unit per class,
-  per rule tested against it and per declaration it takes.
+  per rule tested against it and per declaration it takes. A clone costs what it shows each time it shows
+  it, and a unit per node it looks at to find out whether it shows itself; it is at most 16 clones deep.
 - Parameters will round-trip unchanged (`REQ-PRM-003`, M8).
 
 ## Dependencies

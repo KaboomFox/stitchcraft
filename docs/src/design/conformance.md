@@ -282,7 +282,9 @@ The other runs of the suite leave them and their cases to this one. The corpus i
 sews in full, with their settings (`REQ-SVG-009`), trim and stop commands and the file version. A case may
 name a test sheet drawn as a design instead (`sheet`). Both programs sew an SVG file of the elements
 StitchCraft sews the sheet with, written with their parameters (`stitchcraft_testkit::inkstitch`), which
-StitchCraft's reader reads back unchanged (`REQ-PRM-003`). Automatic digitizing chooses ordinary elements
+StitchCraft's reader reads back unchanged (`REQ-PRM-003`). An element a sheet draws as a clone of another
+is written as a `<use>` of it, and each command in a group with its connector, as Ink/Stitch's Attach
+Commands writes them, since Ink/Stitch moves a command its clone copies only from a group. Automatic digitizing chooses ordinary elements
 with Ink/Stitch's parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check
 StitchCraft's stitches of those choices against Ink/Stitch's (`REQ-AUTO-021`). TS-11B checks the contour
 fills so, each strategy and join style among them (`REQ-FILL-CON-008`), and its circular fills

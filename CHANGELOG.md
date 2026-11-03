@@ -5,6 +5,27 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M8.10: clones (`REQ-SVG-012`, `REQ-SVG-013`). The SVG adapter sews a clone, a `<use>` of an element other
+  than a command's symbol, as Ink/Stitch sews it: the elements of what it shows, in the clone's place in the
+  document's order, each named after the clone (`svg:clone1/square:fill`). What it shows is drawn as a viewer
+  draws it, under the use's transform, `x` and `y`, with the style it inherits from the use, and a symbol is
+  fitted to the viewport the use gives it. There `context-fill` and `context-stroke` paint with the use's fill
+  and stroke.
+  - The commands tied to the source go with the clone, moved with it, and so do those in the source whose
+    connectors are in it. The clone's own `trim_after` and `stop_after`, and its trim and stop commands, trim
+    or stop after the last of what it sews, and its shortest stitch and jump apply to all of it.
+  - A fill's angle turns with the clone, as Ink/Stitch turns it, unless the clone's `angle` gives one, and
+    `flip_angle` reverses it. The compatibility contract shows these 3 clone settings as applied.
+  - A clone whose `clone` setting is off sews nothing (`SC-I0805`). A clone that shows itself, directly or
+    through other clones, is left out (`SC-W0804`), where Ink/Stitch fails, and so is one inside more than 16
+    others (`SC-W0802`). The ledger says where Ink/Stitch sews a clone otherwise (`DEV-SVG-021` to
+    `DEV-SVG-024`).
+  - 6 differential cases sew clones turned, with an angle and a flip of their own, of a group, of a clone and
+    of a symbol. Both programs sew each alike by every measure but a symbol's size, which Ink/Stitch doesn't
+    fit to its viewport (`DEV-SVG-022`). The differential runs Ink/Stitch with its stitch-plan cache off, which
+    gave a clone the stitches of an earlier file. The test kit writes a clone as a `<use>`, and each command in
+    a group with its connector.
+  - TS-16 gains a clone of its red fill, turned 45° right, for MC-11.
 - M8.9: the turn on export (`REQ-ASM-005`). Ink/Stitch's design setting `rotate_on_export` turns the plan
   about the hoop's centre once the origin is there, before the hoop is checked, as Ink/Stitch turns the
   machine file it writes. 90 turns the design right and -90 left, and any other number of degrees that
@@ -2244,6 +2265,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-16.pes` (M8.10). The sheet gains a clone of its red fill, turned
+  45° right, which sews last, in red after a fourth colour change, below the fill once the sheet is turned.
+  It starts and ends at the corners turned from the fill's. The plan spans 110 × 97.2 mm, and sews 4,931
+  stitches, 1,905 more. The first 4 parts sew as before.
 - Changed `conformance/golden/plans/patch.pes` and `patch.dst` (M8.4, `REQ-GEN-001`): the patch's red fill
   starts nearest its start marker, in its top-left corner. `SC-W0807` no longer names the marker. The
   patch sews 2,483 stitches, 17 more.
