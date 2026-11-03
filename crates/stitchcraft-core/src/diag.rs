@@ -467,7 +467,7 @@ registry! {
     /// a stitch from a corner of each cell to its middle for 1, and no cross.
     ///
     /// The message gives the count set and the count sewn. Set an even number.
-    FillCrossThreadsOdd = "SC-W0320", Warning, "Cross stitch thread count odd; an even count sewn";
+    FillCrossThreadsOdd = "SC-W0320", Warning, "Cross stitch with an odd thread count; an even count sewn";
 
     /// A cross's shortest stitches run from its corners to its middle, half its diagonal long. On a grid
     /// this fine they are shorter than the shortest stitch the machine sews well, so needle points of the

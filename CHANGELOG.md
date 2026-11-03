@@ -41,7 +41,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     on the canvas's grid, and VectorCraft's Test Sheet filter moves the sheet by multiples of 6 mm, which
     keep them there. It sews in Ink/Stitch as in StitchCraft by every measure of the differential, 5,299
     stitches in both, and so does a case of offset grids, cells of 2 lengths, split stitches and a disc.
-  - The user's guide shows cross stitch in pictures, and its design page says how it is sewn.
+  - The user's guide shows cross stitch in pictures, and its design page says how it is sewn. The
+    parameter reference reads a choice's kept values as its help says, where it said that each sews as
+    another, which a cross stitch method of M10.2 doesn't.
 - M8.7: clipping in VectorCraft documents (`REQ-VC-017`, `REQ-GEN-005`). What a clip group or a clipping
   layer holds sews only what shows inside its clipping object, as an SVG file's shapes sew inside their
   clip paths from M8.5. The VectorCraft reader makes the clipping object's area a clip of each element

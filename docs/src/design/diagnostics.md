@@ -132,7 +132,7 @@ another.
 | `SC-W0317` | Warning | Meander fill part too small for its tile; sewn round its outline (Ink/Stitch stops with an error) | M7 |
 | `SC-W0318` | Warning | Circular fill part within its row spacing of its middle; sewn as one circle (as Ink/Stitch sews it) | M7 |
 | `SC-W0319` | Warning | Cross stitch part covers no cell of its grid enough; sews nothing (Ink/Stitch warns too) | M10 |
-| `SC-W0320` | Warning | Cross stitch thread count odd; an even count sewn (1 sews 2, where Ink/Stitch sews no cross) | M10 |
+| `SC-W0320` | Warning | Cross stitch with an odd thread count; an even count sewn (1 sews 2, where Ink/Stitch sews no cross) | M10 |
 | `SC-W0321` | Warning | Cross stitch grid too fine for the shortest stitch; needle points left out | M10 |
 | `SC-W0401` | Warning | Path too small for the shortest stitch; skipped | M3 |
 | `SC-W0402` | Warning | Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest | M3 |

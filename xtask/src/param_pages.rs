@@ -179,7 +179,7 @@ fn accepts(spec: &ParamSpec) -> String {
             match kept.len() {
                 0 => format!("one of {offered}"),
                 n => format!(
-                    "one of {offered}, or one of the {n} other values kept for designs that name them, each sewn as another: {}",
+                    "one of {offered}, or one of the {n} other values kept for designs that name them, read as the help above says: {}",
                     kept.join(", ")
                 ),
             }
