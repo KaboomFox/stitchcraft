@@ -460,7 +460,10 @@ Every satin method gives 2 warnings about how its stitches lie. Ink/Stitch gives
 
 Underlays are sewn before the top stitches, as Ink/Stitch sews them. The centre walk comes first, then the
 contour and the zigzag, each one the element turns on, and all of them go into one run with the top
-stitches.
+stitches. From M10.15 a column in a run of `underlays_first` sews its underlays apart from its top
+stitches, each layer started and ended by its own neighbours
+([engine pipeline](../engine-pipeline.md#underlays-first)). Each layer then follows
+[Start and end](#start-and-end) with the parts it sews.
 
 Each underlay places pairs of points across the column as the top stitches are placed (step 1 of *Top
 stitches*), along the same sections, after any swap, reversal and push compensation. A pair moves in by
