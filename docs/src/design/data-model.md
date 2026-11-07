@@ -93,7 +93,9 @@ pub enum Segment { Line(Point), Quad(Point, Point), Cubic(Point, Point, Point) }
 
 Elements are in the host's paint order, bottom first. They sew in that order unless the design has
 automatic elements or `sort_colours` is set: since M13.3 automatic digitizing then chooses the order
-([image to embroidery](image-to-embroidery.md#sewing-order)). Curves keep their control points, and the
+([image to embroidery](image-to-embroidery.md#sewing-order)). From M10.15 a run of elements that set
+`underlays_first` sews in that order twice, its underlays first and its top stitches after
+([engine pipeline](engine-pipeline.md#underlays-first)). Curves keep their control points, and the
 generators flatten them with the tolerance their parameters give.
 
 A host reads 3 of the settings by Ink/Stitch's names, `collapse_len_mm`, `min_stitch_len_mm` and
