@@ -406,7 +406,7 @@ fn sewn(
                     "Move the rungs so that each meets both rails away from their ends, or lower `push_compensation_mm`.".to_string(),
                 )),
         );
-        return Ok(Stitched { runs: Vec::new(), warnings });
+        return Ok(Stitched { runs: Vec::new(), colours: Vec::new(), warnings });
     }
     // The generator as the top stitches find it: a zigzag satin's outline draws from a copy (`outline`).
     let drawn = rng.clone();
@@ -451,9 +451,9 @@ fn sewn(
     let run = ends::join(pieces, travel, lengths.min_stitch.get(), meter)?;
     if let Some(left_out) = too_small(across, &run, lengths.min_stitch.get()) {
         warnings.push(left_out);
-        return Ok(Stitched { runs: Vec::new(), warnings });
+        return Ok(Stitched { runs: Vec::new(), colours: Vec::new(), warnings });
     }
-    Ok(Stitched { runs: vec![run], warnings })
+    Ok(Stitched { runs: vec![run], colours: Vec::new(), warnings })
 }
 
 /// `SC-W0215` for a column left out: one with no stitch `across`, which only a zigzag satin of a single

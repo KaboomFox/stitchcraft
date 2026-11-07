@@ -52,6 +52,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0319`](#sc-w0319) | Warning | Cross stitch part covers no cell of its grid enough; sews nothing |
 | [`SC-W0320`](#sc-w0320) | Warning | Cross stitch with an odd thread count; an even count sewn |
 | [`SC-W0321`](#sc-w0321) | Warning | Cross stitch grid too fine for the shortest stitch; needle points left out |
+| [`SC-W0322`](#sc-w0322) | Warning | Half cross with an even thread count; the odd count above sewn |
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
 | [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
@@ -630,6 +631,16 @@ crosses are left out where they lie too near the one before, and the crosses los
 
 The message gives the cells' size, the stitch's length and the shortest stitch. Make
 `pattern_size_mm` larger.
+
+## SC-W0322
+
+**Warning** — Half cross with an even thread count; the odd count above sewn
+
+A half cross sews each stitch of its rows an odd number of times: along the stitch, and then back
+and forth over it, as bean stitch does. An even `cross_thread_count` sews the odd count above it, as
+in Ink/Stitch, whose own help for the count says that half crosses take an odd one.
+
+The message gives the count set and the count sewn. Set an odd number.
 
 ## SC-W0401
 

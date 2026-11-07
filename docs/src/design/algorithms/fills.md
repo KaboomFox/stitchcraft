@@ -334,6 +334,10 @@ element's jump length, and farther with a jump. The generator makes that join it
 never forces locks after a layer of underlay, where assembly would after any group of an element with
 `force_lock_stitches`.
 
+From M10.15 a fill in a run of `underlays_first` sews the underlay of every part before any top rows. Its
+underlay and its top rows each start and end by their own neighbours
+([engine pipeline](../engine-pipeline.md#underlays-first)).
+
 The underlay is sewn on the part shrunk by `fill_underlay_inset_mm`, and the top rows on the part grown by
 `expand_mm`, or shrunk where it is negative (`REQ-FILL-TAT-012`, since M5.7). A part is grown or shrunk
 as GEOS buffers a polygon, which Ink/Stitch calls, with round corners of 16 segments to a quarter circle
@@ -770,17 +774,21 @@ sewn with the tatami needle grid (`staggers`, `stitch_position_method`). Specifi
 
 A tatami variant whose rows alternate between the colours of a linear gradient with a probability that
 follows the gradient position, producing a blend from interleaved threads; one colour block per stop.
-Specified at M10.
+Specified at M10. The rows of each stop will be a colour block in a thread of their own
+([several threads in one element](../engine-pipeline.md#several-threads-in-one-element)).
 
 ## Tartan fill (P3)
 
 A woven plaid from a stripe specification (sett): warp and weft stripes become fills at `tartan_angle`
-with `rows_per_thread` and optional herringbone. Specified at M10.
+with `rows_per_thread` and optional herringbone. Specified at M10. The underlay sews in the fill's own
+thread and ends no colour block, and each colour's rows, then its runs, sew in that colour's thread, each
+a colour block (M10.5).
 
 ## Cross stitch (P3)
 
-A cross in each cell of a grid that the region covers enough of, simple and flipped from M10.1
-([cross stitch](cross-stitch.md)). It takes its parts in a tatami fill's order ([section 5](#5-parts)), and
+A cross in each cell of a grid that the region covers enough of, simple and flipped from M10.1, and every
+other method of Ink/Stitch's from M10.2 ([cross stitch](cross-stitch.md)). Half crosses route their rows
+as this page's tatami fill routes its rows, with `underpath` off ([section 3](#3-routing-every-segment-once)). It takes its parts in a tatami fill's order ([section 5](#5-parts)), and
 its `expand_mm` from the tatami fill's settings, which grows the region before its cells are chosen.
 
 ## Legacy fill (not planned)

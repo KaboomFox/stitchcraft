@@ -14,6 +14,76 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   they are selected, which `stitch export` leaves out. New codes: `SC-E1001`, `SC-I1002`, `SC-W1003` and
   `SC-E0820`. TS-17C is drawn with its letters as drawn and routed, and the differential routes them with
   Ink/Stitch's tool too. A how-to page shows the route. Golden added: `TS-17C.pes`.
+- M10.2: the other cross stitch methods and the turned grid (`REQ-FILL-CRS-008` to `REQ-FILL-CRS-012`).
+  `cross_stitch_method` sews each of Ink/Stitch's 12 methods, of which 10 were skipped with `SC-W0011`,
+  and `cross_rotation` turns the grid.
+  - An upright cross sews a `+` in each cell, its bar across and then its bar down. Dense upright crosses
+    add a second grid of them half a cell left and up, whose middles are the first grid's corners. Between
+    a double cross's 2 diagonals lies an upright cross, and a Smyrna cross sews one over them. Flipped,
+    each bar lies where the bar a quarter turn from it lies, on the same grid.
+  - Every full cross is a stack of bars, sewn as a loop from one of its ends back to it by M10.1's
+    generator. The crosses that share an end sew in one run, each joining it at an end of its top bar
+    where it can. A cross the run reaches only at an end of a lower bar ends with a stitch back from its
+    middle, which then lies on top. `SC-W0321` names the shortest stitch of each kind of cross.
+  - A half cross sews one diagonal in each cell, `\`, or `/` flipped. The diagonals that run on from cell
+    to cell are rows, routed as a tatami fill's rows with underpath off. Between rows the needle is sent
+    along the outline and holes of each piece of cells, and 2 cells that meet at a corner join through
+    it. Each stitch of a row lies an odd number of times, and an even `cross_thread_count` sews the odd
+    count above it (`SC-W0322`).
+  - `cross_rotation` turns the grid clockwise for a positive angle. On the canvas's grid it turns about
+    the point the offset names, as Ink/Stitch turns it. With `canvas_grid_origin` off the grid starts at
+    the turned part's corner, so that a part turned with its grid sews its crosses turned with it, as
+    lettering along a path will turn a glyph's (M14.3). A whole number of quarter turns is exact.
+  - The ledger's entries for the row Ink/Stitch's offset leaves out (`DEV-FILL-025`), the flipped
+    crosses' grid (`DEV-FILL-026`), a thread count of 1 (`DEV-FILL-027`) and the order of the crosses
+    (`DEV-FILL-028`) now cover the new methods.
+  - TS-17A's M10.2 part is drawn for MC-12. Squares of upright, dense upright, double and Smyrna crosses
+    sew in green, and squares of half crosses, plain and flipped, and a square turned 30° with its grid in
+    black. It sews in Ink/Stitch as in StitchCraft by every measure of the differential, 10,305 stitches
+    against 10,303. So does a case of each full cross's flipped variant, turned grids, and half crosses
+    round a hole, through cells that meet at a corner and in 2 pieces of one part, 1,077 stitches in both.
+    And so does each of the 162 glyphs of Jersey 15, the font of double crosses, in the glyph differential,
+    170,892 stitches in both.
+  - The test harness mirrors a half cross's method with its design and turns `cross_rotation` the other
+    way, so that a mirrored or turned design sews the same crosses mirrored or turned.
+  - The user's guide shows each method, the half crosses and the turned grid in pictures, and the design
+    page says how each is sewn.
+- M10.5: several threads in one element (`REQ-ASM-006`, `REQ-ASM-007`, `REQ-AUTO-024`, `REQ-THREAD-003`),
+  as the tartan fill (M10.6) and the linear gradient fill (M10.12) will need them. A generator gives each
+  run of needle points a thread of its own, or leaves it in its element's, and says which runs end a
+  colour block (`generators::Colour`, `Stitched::colours`, `Generated::colours`).
+  - Assembly changes thread inside an element as it changes it between 2 elements, with its locks as
+    `ties` allows and a jump to the new colour block. The plan's first colour block takes the thread of the
+    first group sewn.
+  - With `trim_after` on, each colour block is trimmed after, and the stop comes only after the element's
+    last group. A tartan's underlay ends no colour block, and no trim follows it. That is Ink/Stitch's
+    plan, read at `d59c9ab` and run as a black box on a gradient of 3 stops, in one part and in 2, and on a
+    tartan of 3 colours.
+  - The sewing order of automatic digitizing and `--sort-colours` moves such an element as one, its
+    colours together and in their order. It reads the thread an element starts in and the one it ends in,
+    and `SC-I0907` counts the thread changes inside it.
+  - The machine files, the previews, the report and VectorCraft's exporters show each thread. A live
+    effect still draws every group with its object's own paints, so a tartan's preview will show one
+    colour.
+  - Until a stitch type gives its groups threads of their own, the cases give assembly the groups such a
+    generator will give (`stitchcraft_testkit::designs::threaded`). The golden files of
+    `cargo xtask conformance` stay as they were.
+- M10.14, a spike: per-layer ordering will be a setting of each element, and ADR-0018 records why.
+  Consecutive elements that set `underlays_first` and sew in one thread will form a run, which sews all
+  its underlays before its top stitches. Where 2 satin columns cross, both underlays then lie under both
+  tops, and MC-12 will sew TS-17C's pair both ways to compare them.
+  - The setting is a toggle among the settings every stitch type shares, StitchCraft's own and off by
+    default. Its reference entry and its row in each stitch family's dialog in VectorCraft come from the
+    registry, and a group's effect gives it to every path in the group.
+  - SVG files keep it as `inkstitch:underlays_first` on each shape. Ink/Stitch, read at `d59c9ab`, doesn't
+    read the attribute and sews such a file element by element, as StitchCraft sews it with the setting
+    off. Its sew stack orders the layers of one element, and isn't planned.
+  - A trim, a stop or another thread ends a run, and a run has one thread. The design's colour changes stay
+    as they were, each a stop to rethread on a home machine. An element's underlay and top are generated
+    apart, with neighbours of their own. The needle goes back from a run's last underlay to its first top
+    stitch.
+  - Automatic digitizing and lettering don't set it. The engine pipeline's design describes runs, and
+    M10.15 builds them.
 - M8.6: the fonts of Ink/Stitch as a corpus of the differential (`REQ-FONT-001`). `cargo xtask corpus`
   fetches the archive of inkstitch/embroidery-fonts at `c7e3a05`, the commit
   `conformance/inkstitch/fonts.toml` pins, checks its SHA-256 and unpacks it in a cache outside the
@@ -2416,6 +2486,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-17A.pes` (M10.2). The sheet gains 2 rows after 2 more colour
+  changes. Its green row sews squares of upright and dense upright crosses, then of double and Smyrna
+  crosses, and its black row squares of half crosses and a square turned 30° with its grid. The plan spans
+  114 × 114 mm, and sews 10,305 stitches, 5,006 more. The first 2 rows sew as before.
 - Added `conformance/golden/testsheets/TS-17A.pes` (M10.1), the simple crosses of the cross stitch sheet
   that MC-12 sews: 5,299 stitches.
 - Changed `conformance/golden/testsheets/TS-16.pes` (M8.13). The sheet gains 2 black lines locked at both ends

@@ -93,7 +93,9 @@ pub enum Segment { Line(Point), Quad(Point, Point), Cubic(Point, Point, Point) }
 
 Elements are in the host's paint order, bottom first. They sew in that order unless the design has
 automatic elements or `sort_colours` is set: since M13.3 automatic digitizing then chooses the order
-([image to embroidery](image-to-embroidery.md#sewing-order)). Curves keep their control points, and the
+([image to embroidery](image-to-embroidery.md#sewing-order)). From M10.15 a run of elements that set
+`underlays_first` sews in that order twice, its underlays first and its top stitches after
+([engine pipeline](engine-pipeline.md#underlays-first)). Curves keep their control points, and the
 generators flatten them with the tolerance their parameters give.
 
 A host reads 3 of the settings by Ink/Stitch's names, `collapse_len_mm`, `min_stitch_len_mm` and
@@ -246,6 +248,11 @@ pub struct Thread {
     pub name: Option<String>,        // shown to the operator
 }
 ```
+
+An element has one thread of its own, `Element::thread`, which its host reads from its paint. From M10.5 its
+generator may sew some of its groups in threads of their own, as a tartan or a gradient fill will. The
+element's stitches then lie in several colour blocks of the plan, each block in one thread, and each stitch
+still names its element ([engine pipeline](engine-pipeline.md#several-threads-in-one-element)).
 
 Palettes are static tables (the Brother PEC palette first) of `PaletteEntry { index, name, color,
 matchable }`. Nearest-colour matching uses CIEDE2000 in CIELAB (D65), through `stitchcraft_core::math`

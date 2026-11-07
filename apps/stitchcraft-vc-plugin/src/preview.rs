@@ -50,7 +50,7 @@
 use stitchcraft_core::{Budget, Code, Diagnostic, Fix, Point};
 use stitchcraft_engine::auto::digitize;
 use stitchcraft_engine::design::{DesignSettings, Element, Shape};
-use stitchcraft_engine::generate::{generate, rows, stitch_type_of};
+use stitchcraft_engine::generate::{Generated, generate, rows, stitch_type_of};
 use stitchcraft_engine::generators::Neighbours;
 use stitchcraft_engine::normalize::satin::{Shape as Column, recognize};
 use stitchcraft_engine::normalize::stroke::{SHAPE_TOLERANCE, flatten};
@@ -287,7 +287,15 @@ fn stitched(element: &Element, budget: &Budget) -> Worked<Vec<Vec<Point>>> {
     if spent(&generation.diagnostics) {
         return Err(Shown::TooCostly);
     }
-    Ok((generation.generated.map(|generated| generated.groups).unwrap_or_default(), generation.diagnostics))
+    Ok((drawn(generation.generated), generation.diagnostics))
+}
+
+/// The runs of needle points a preview draws of `generated`: every group, whatever thread it is sewn in.
+/// VectorCraft paints a live effect's geometry with its object's own paints, and ABI v1 gives a path no
+/// paint of its own, so an element sewn in several threads, such as a tartan, shows in one colour. The
+/// exporters write every thread (`REQ-THREAD-003`).
+fn drawn(generated: Option<Generated>) -> Vec<Vec<Point>> {
+    generated.map(|generated| generated.groups).unwrap_or_default()
 }
 
 /// The top rows of `element`, a fill, within `spend`, a ribbon for each segment: nine tenths for laying
@@ -715,6 +723,21 @@ mod tests {
         for key in [ROW_SPACING, END_ROW_SPACING] {
             assert!(matches!(kind(key), Some(Kind::Length { .. })), "{key}");
         }
+    }
+
+    #[test]
+    fn req_thread_003_a_live_effect_shows_every_thread_of_an_element_in_its_object_s_paint() {
+        // A stroke of 3 lines in red, green and blue, and the same lines in the element's one thread.
+        let (_, three) = crate::testing::three_threads();
+        let one = Generated { colours: Vec::new(), ..three.clone() };
+        // Every group is drawn, all 3 colours' stitches, and the geometry says no paint: VectorCraft paints it
+        // with the object's, as it paints the same element in one thread.
+        let drawn_in_three = effect_output(Family::Stroke, &drawn(Some(three))).unwrap();
+        assert_eq!(drawn_in_three, effect_output(Family::Stroke, &drawn(Some(one))).unwrap());
+        let geometry: Value = serde_json::from_slice(&drawn_in_three).unwrap();
+        assert_eq!(geometry["objects"][0]["path"]["subpaths"].as_array().map(Vec::len), Some(3));
+        assert!(!String::from_utf8(drawn_in_three).unwrap().contains("paint"));
+        assert_eq!(drawn(None), Vec::<Vec<Point>>::new());
     }
 
     #[test]

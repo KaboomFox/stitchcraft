@@ -210,6 +210,15 @@ rationale = "A machine knows threads only by their entries. 2 threads written as
 milestone = "M3"
 status = "active"
 
+[[req]]
+id = "REQ-THREAD-003"
+area = "threads"
+level = "L1"
+statement = "Each thread of an element sewn in several (REQ-ASM-006) is shown as the threads of different elements are: PES and DST files, and so VectorCraft's PES and DST exporters, write a colour change between each 2 of its colour blocks, and a PES file names each block's thread by an entry of its own (REQ-THREAD-002). The previews draw each block's holes in its thread, and `stitch plan`'s report and what it prints list each. A live effect in VectorCraft draws every group of the element, in the object's own paints, as it draws any element, since ABI v1 gives the geometry a live effect returns no paint of its own: a tartan's live preview shows one colour."
+rationale = "The writers, the previews and the report read the plan's colour blocks, which REQ-ASM-006 gives an element sewn in several threads, so a tartan or a gradient (M10.6, M10.12) sews and shows in its threads. The live preview's one colour is ABI v1's limit, which the RFC's overlay channel would lift."
+milestone = "M10"
+status = "active"
+
 # ── Rendering ──────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -658,6 +667,24 @@ area = "plan/assembly"
 level = "L2"
 statement = "The design's origin, or without one the centre of the box around the finished plan's stitches, as Ink/Stitch centres them, becomes the hoop's centre; a stop position adds a jump to it before each stop. Ink/Stitch's origin and stop_position commands give them in an SVG file (REQ-SVG-003), and objects named `stitch:origin` and `stitch:stop-position` in a VectorCraft document (REQ-VC-009). The design's turn on export, Ink/Stitch's rotate_on_export (REQ-SVG-005, REQ-VC-013), then turns the plan about the hoop's centre by its degrees, right for a positive number, exactly for whole quarter turns, before the hoop is checked."
 milestone = "M3"
+status = "active"
+
+[[req]]
+id = "REQ-ASM-006"
+area = "plan/assembly"
+level = "L2"
+statement = "An element's generator may give each of its groups a thread of its own, as a tartan or a gradient fill gives each colour. Each group is sewn in its own thread, or else in its element's, in the order the generator gives them. Where the colour changes, inside an element as between 2 elements, the group before ties off, a new colour block starts, the needle jumps and the next group ties in, as the element's `ties` allows. Groups of one colour join as REQ-ASM-002 says, whatever their names. A group with no needle point is left out, its thread with it. The plan's first colour block has the thread of the first group sewn. An element of 3 threads sews 3 colour blocks and 2 colour changes, each block starting with a jump, as Ink/Stitch's plan of a linear gradient fill of 3 stops does."
+rationale = "Ink/Stitch's tartan and linear gradient fills give a stitch group for each colour, and its plan compares each group's colour with the thread sewing, as it compares elements' (lib/stitch_plan/stitch_plan.py: stitch_groups_to_stitch_plan, read at d59c9ab, and run as a black box). The tartan fill (M10.6) and the linear gradient fill (M10.12) give their groups threads this way."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-ASM-007"
+area = "plan/assembly"
+level = "L2"
+statement = "With an element's `trim_after` on, a trim follows each of its colour blocks, the groups its generator sews in one thread before it moves on to another colour or part, after the block's tie-off, as Ink/Stitch's plan trims after each colour of a tartan or a gradient. A group that ends no colour block, such as a tartan's underlay, has no trim after it. Blocks of one thread one after the other are each trimmed after, with no colour change between them. The element's last group always has its trim, and its stop when `stop_after` is on, which comes after it alone. With `trim_after` off, no trim comes inside the element. An element whose groups are all in its own thread is one colour block, as REQ-ASM-003 says."
+rationale = "Ink/Stitch gives the stitch group of each colour of a tartan or a linear gradient fill the element's trim_after, and none to the underlay's (lib/stitches/tartan_fill.py, lib/stitches/linear_gradient_fill.py, lib/elements/fill_stitch.py: do_underlay, read at d59c9ab). Run as a black box, its plan of a gradient in 2 parts trims after each part's colour, twice in each thread, and its tartan sews its underlay in its own fill without a trim after it."
+milestone = "M10"
 status = "active"
 
 # ── Finalize and check ─────────────────────────────────────────────────────────────────────────────
@@ -1423,7 +1450,7 @@ status = "active"
 id = "REQ-FILL-CRS-006"
 area = "fill/cross"
 level = "L2"
-statement = "A cross stitch fill's parts are grown by expand_mm, parts grown into each other one part, nearest the needle first, each ending nearest the next part and the last nearest the next element or the end position (REQ-GEN-001). A negative expand_mm shrinks each part, and a part it shrinks away entirely is sewn at its own size, with SC-W0309 (DEV-FILL-024). Every cell a part's bounds reach costs a unit of work before any is looked at, and a row of cells, held while they are looked at, and each cell that sews a cross must fit in the stitches left (REQ-GEN-004), so a fine grid over a large part ends with SC-E0004 before it takes memory. A cross stitch method that this version doesn't sew, one of M10.2's, skips the element with SC-W0011."
+statement = "A cross stitch fill's parts are grown by expand_mm, parts grown into each other one part, nearest the needle first, each ending nearest the next part and the last nearest the next element or the end position (REQ-GEN-001). A negative expand_mm shrinks each part, and a part it shrinks away entirely is sewn at its own size, with SC-W0309 (DEV-FILL-024). Every cell a part's bounds reach costs a unit of work before any is looked at, and a row of cells, held while they are looked at, and each cell that sews a cross must fit in the stitches left (REQ-GEN-004), so a fine grid over a large part ends with SC-E0004 before it takes memory."
 rationale = "Ink/Stitch grows a cross stitch fill's whole shape and sews its parts so, read at d59c9ab (lib/elements/fill_stitch.py: to_stitch_groups, do_cross_stitch, _prepare_cross_stitch_shape). A 1 m part on a grid of 0.1 mm reaches 10^8 cells."
 milestone = "M10"
 status = "active"
@@ -1434,6 +1461,51 @@ area = "fill/cross"
 level = "L3"
 statement = "The cross stitch fills StitchCraft sews TS-17A's simple crosses with, on grids of 2 and 3 mm with 2 and 4 threads, flipped, and a letter whose edge cells are half covered, written as an SVG file with their Ink/Stitch parameters, sew in the Ink/Stitch that conformance/inkstitch/pin.toml names, run as a black box, as StitchCraft sews the sheet, by the measures of REQ-SVG-008 and within their tolerances. A measure that a case excuses with an entry of the deviations ledger may differ."
 rationale = "Cross stitch is built from Ink/Stitch's behaviour, and the differential is how a file is shown to sew the same in both."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CRS-008"
+area = "fill/cross"
+level = "L2"
+statement = "An upright cross sews its bar across, from the middle of the cell's left side to the middle of its right side, and then its bar down over it. A dense upright cross adds upright crosses on a second grid of cells half a cell left and up, each a cell that the part covers fill_coverage percent of, whose middles are the first grid's corners and whose arms end at the middles of its cells' sides. Upright crosses join at the middles of their sides: those that share a side, and the 2 grids' crosses that share an arm's end, sew in one run, by the rules of REQ-FILL-CRS-004 with the ends of the bar down as the good joins. Of the crosses at a place, the one lower down is sewn first, and of 2 level with each other the one further right. Flipped, the bar down goes under the bar across, on the same grid. Each half of each bar takes the even thread count, as a simple cross's (SC-W0320)."
+rationale = "Ink/Stitch's upright and dense upright crosses, read at d59c9ab (lib/stitches/utils/cross_stitch.py: UprightCross, CrossGeometries._setup_crosses with its offset grid and _snapped_box; lib/stitches/cross_stitch.py: _build_simple_cycles), and run as a black box on squares, plain and flipped. Its order among crosses at a place follows a Python set's, which StitchCraft fixes (DEV-FILL-028)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CRS-009"
+area = "fill/cross"
+level = "L2"
+statement = "A double cross sews its backslash diagonal, an upright cross over it, its bar across and then its bar down, and its slash diagonal over that. A Smyrna cross sews a simple cross, both diagonals, and an upright cross over it. A double cross joins at its corners, as a simple cross does, its slash diagonal's ends good. A Smyrna cross joins at its corners and at the middles of its top and bottom sides, the latter good. A loop from a good join goes in to the middle along the top bar and ends along it; from an end of the bottom bar it sews that bar first and ends with a stitch from the middle back to the start; from an end of a Smyrna cross's slash diagonal it sews that bar 1 time back and forth fewer and ends so too. Flipped, each bar lies in the place of the bar a quarter turn from it, on the same grid."
+rationale = "Ink/Stitch's double and Smyrna crosses, read at d59c9ab (lib/stitches/utils/cross_stitch.py: DoubleCross, SmyrnaCross), and run as a black box on squares. Jersey 15, one of Ink/Stitch's cross-stitch fonts at c7e3a05, sews its 238 elements as double crosses of 2 threads, grown by 0.1 mm, on a grid from each part's corner."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CRS-010"
+area = "fill/cross"
+level = "L2"
+statement = "A half cross sews one diagonal in each cell that the part covers fill_coverage percent of: its backslash diagonal, or its slash diagonal flipped, on the same grid. Cells that share a side or a corner are one piece, sewn on its own, nearest the needle first, each ending nearest the next. A piece's outline and holes are the sides of its cells that no other cell of it shares, joined with the piece on their left, and 2 cells that meet only at a corner are joined through it. Diagonals that run on from cell to cell are one row, each split into the fewest equal stitches no longer than max_cross_stitch_length_mm. The rows are routed as a tatami fill's with underpath off (REQ-FILL-TAT-001), the needle travelling between them along the rings in running stitches of max_cross_stitch_length_mm. Each stitch of a row lies an odd number of times: cross_thread_count when it is odd, and the odd count above it when it is even, with SC-W0322. The travel between rows takes none of the extra passes."
+rationale = "Ink/Stitch's half crosses, read at d59c9ab (lib/stitches/cross_stitch_half.py: half_cross_stitch, cross_stitch_multiple, _lines_to_stitches, path_to_stitches; lib/stitches/cross_stitch.py: cross_stitch, which halves the thread count into bean stitch repeats), and run as a black box on rectangles, plain and flipped. Its own help for the thread count says that half crosses take an odd one."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CRS-011"
+area = "fill/cross"
+level = "L2"
+statement = "cross_rotation turns the grid by its angle, clockwise as drawn for a positive one: the part is turned the other way, its grid laid over it as REQ-FILL-CRS-001 lays it, its crosses sewn there, and the stitches turned back. On the canvas's grid the turn is about the point cross_offset_mm names, as Ink/Stitch turns it, and with canvas_grid_origin off the grid starts at the turned part's top left corner, so that a part turned with its grid sews its crosses turned with it. A whole number of quarter turns is exact, and a whole turn turns nothing."
+rationale = "Ink/Stitch's grid rotation, read at d59c9ab (lib/stitches/cross_stitch.py: _grid_rotate, _grid_unrotate; lib/extensions/lettering_along_path.py, which turns each glyph of a cross-stitch font and sets its cross_rotation to the glyph's angle). With the grid on the part's corner, the point Ink/Stitch turns about, the transform centre lettering writes or the part's bottom left corner, changes nothing but rounding."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-CRS-012"
+area = "fill/cross"
+level = "L3"
+statement = "The cross stitch fills StitchCraft sews TS-17A's M10.2 samples with, upright, dense upright, double, Smyrna and half crosses and simple crosses on a turned grid, and the cases of each method's flipped variant, of turned grids and of half crosses' pieces, holes and corners, written as SVG files with their Ink/Stitch parameters, sew in the Ink/Stitch that conformance/inkstitch/pin.toml names, run as a black box, as StitchCraft sews them, by the measures of REQ-SVG-008 and within their tolerances. A measure that a case excuses with an entry of the deviations ledger may differ."
+rationale = "The other cross stitch methods are built from Ink/Stitch's behaviour, and the differential is how a file is shown to sew the same in both."
 milestone = "M10"
 status = "active"
 
@@ -1933,4 +2005,13 @@ level = "L2"
 statement = "Before automatic areas are digitized, the layers of a traced picture are flattened. Each automatic area is what shows of it: the automatic areas drawn after it are taken from it where they overlap it by more than twice the shapes' tolerance, and a part of what is left no wider than that anywhere, measured as a narrow part is (REQ-AUTO-013), is a hairline that rounding leaves where edges drawn as one meet, and shows nothing. One they cover whole, or of which only hairlines are left, sews nothing, which SC-I0904 says. An automatic area wider than its widest satin column somewhere, as it shows (REQ-AUTO-016), is digitized whole under its details, the automatic areas that fill a hole of it: they fill the hole when what they leave of it is no wider than twice the shapes' tolerance, or smaller than the area's smallest area. The hole is closed, the area's stitches are chosen with it closed (REQ-AUTO-002, REQ-AUTO-013, REQ-AUTO-016, REQ-AUTO-019), and the area sews before its details: it moves back in paint order past them, past the automatic areas whose part that shows doesn't overlap it, and past the other shapes whose boxes don't come within twice the shapes' tolerance of its box, but never past a stop, nor when it has a stop after it. Areas are moved back the largest first, so that an area moves before the areas inside it. Once all have moved, a hole whose details don't all sew after its area stays open, as when the area can't move back past them or another area that holds one of them moved back past it, and so do the holes of an area no wider than its widest satin column everywhere, such as a letter or an outline. The area is then cut away under its details, its overlap inside their edges (REQ-AUTO-007). So a trace that stacks its colours sews as one whose colours abut. SC-I0908 counts the areas that sew only what shows of them and those digitized whole under their details. Each area has the budget's work to itself for what shows of it, for its holes, for its move and for what it sews, and costs a unit for each shape and each part it looks past: a hole looks only at the parts whose boxes meet its own. An area that needs more for a step does without it, which SC-I0908 says: one whose part that shows can't be found is sewn as it is drawn, in its place, or left out whole when it is the picture's background (REQ-AUTO-009); one whose holes can't be found keeps them open; one that can't be moved keeps its place; and one whose region can't be given is sewn as it is drawn."
 rationale = "VectorCraft's Image Trace stacks each colour whole under the colours drawn over it by its Overlapping method, and cuts a hole in each area for each shape on it by its Abutting method. Digitized as drawn, a stacked colour's stitches are chosen for its whole shape, most of it hidden, and a broad area with details on it splits into narrow columns between them. A digitizer fills the area under the details whole and sews the details on top. An outline or a letter is narrow everywhere, and closed it would be a broad fill under the shape inside it."
 milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-024"
+area = "auto"
+level = "L2"
+statement = "An element sewn in several threads (REQ-ASM-006) moves in the order of REQ-AUTO-010 as one, with automatic digitizing and with `--sort-colours` alike: its colours stay together, in the order its generator sews them. It has the thread that is sewing when the thread it starts in is, and the thread it ends in is sewing once it is sewn. SC-I0907 counts the thread changes inside it too, in the order chosen and in paint order. The order reads each element's threads before it is generated, from its shape and settings: its own thread, for each stitch type sewn so far."
+rationale = "The order is chosen before the elements are generated, since each is generated between its neighbours (ADR-0014). A tartan's or a gradient's colours are known from its settings and its paint (M10.6, M10.12), and the plan sews them one after another, so the order counts the thread it starts in and the one it ends in."
+milestone = "M10"
 status = "active"

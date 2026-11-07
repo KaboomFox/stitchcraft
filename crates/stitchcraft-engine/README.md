@@ -45,7 +45,10 @@ centroid, for the stitch types that use them (`generate`). Since M8.5 an element
 which SVG clip paths give, cut a fill's region when it is built and a stroke's lines where they cross a
 clip's outline (`normalize::region::cut`). Automatic digitizing cuts its shapes first (`auto::clips`), and a
 satin column is sewn whole. From M8.7 VectorCraft's clipping objects give clips too, and a clip's shapes
-are shared by the elements it cuts.
+are shared by the elements it cuts. Since M10.1 a cross stitch fill sews a cross in each cell of its grid
+that it covers enough of, the crosses that share a join in one run (`generators::cross`). Since M10.2 it
+sews each of Ink/Stitch's 12 methods, the half crosses in rows routed as a tatami fill's, on a grid that
+may turn.
 Since M13.1 a shape without settings, read with `--auto`, is digitized automatically before anything else
 (`auto`). A line no wider than the design's narrowest satin stroke runs, a line up to 7 mm wide becomes
 satin columns along its centre line, and a wider line becomes the tatami fill of the area it paints
@@ -84,6 +87,10 @@ to Satin tool (`generators::satin::drawn`). They sew as the column does. A desig
 columns, and the strokes among them, are routed as Ink/Stitch's Auto-Route Satin Columns routes them
 (`route`, `docs/src/design/routing.md`), each column cut into pieces that sew its pairs
 (`generators::satin::cut`).
+Since M10.5 a generator may sew groups of an element in threads of their own (`generators::Colour`), as
+the tartan and gradient fills will. Assembly then changes thread inside the element and trims after each
+of its colour blocks when it trims, and the sewing order moves the element as one, by the thread it starts
+in and the one it ends in (`generate::colours`).
 Design:
 `docs/src/design/engine-pipeline.md` and `docs/src/design/algorithms/`.
 

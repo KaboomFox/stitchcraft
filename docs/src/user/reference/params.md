@@ -60,7 +60,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Tatami parameters](params/tatami.md) | 15 | Tatami fill, Contour fill, Meander fill, Circular fill |
 | [Contour parameters](params/contour.md) | 4 | Contour fill |
 | [Meander parameters](params/meander.md) | 6 | Meander fill |
-| [Cross parameters](params/cross.md) | 7 | Cross stitch |
+| [Cross parameters](params/cross.md) | 8 | Cross stitch |
 | [Path fill parameters](params/path-fill.md) | 3 | Contour fill, Meander fill, Circular fill |
 | [Auto parameters](params/auto.md) | 5 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
 
@@ -92,6 +92,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`contour_underlay_stitch_length_mm`](params/satin.md#contour_underlay_stitch_length_mm) | Contour stitch length | Satin parameters |
 | [`contour_underlay_stitch_tolerance_mm`](params/satin.md#contour_underlay_stitch_tolerance_mm) | Contour tolerance | Satin parameters |
 | [`cross_offset_mm`](params/cross.md#cross_offset_mm) | Grid offset | Cross parameters |
+| [`cross_rotation`](params/cross.md#cross_rotation) | Grid rotation | Cross parameters |
 | [`cross_stitch_method`](params/cross.md#cross_stitch_method) | Cross | Cross parameters |
 | [`cross_thread_count`](params/cross.md#cross_thread_count) | Threads | Cross parameters |
 | [`enable_random_stitch_length`](params/running.md#enable_random_stitch_length) | Random stitch length | Running parameters |

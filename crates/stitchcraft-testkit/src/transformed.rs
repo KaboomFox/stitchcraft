@@ -23,7 +23,8 @@
 //! Ink/Stitch turns a mirrored clone's fill angle: the rows of a tatami fill at 30° run at −30° in its
 //! mirror image. Plans are measured from the design's origin, which the change takes with the design, so
 //! a plan's points change as the design's do. The design's turn on export turns the other way in a mirror
-//! image too: the mirror image of a plan turned right is the mirror image's plan turned left.
+//! image too: the mirror image of a plan turned right is the mirror image's plan turned left. So does a
+//! cross stitch fill's turned grid, and a half cross's diagonal, whose mirror image is the flipped method's.
 
 use std::collections::BTreeMap;
 
@@ -68,8 +69,12 @@ pub enum Change {
 }
 
 /// The settings that are directions, in degrees, which turn the other way in a mirror image: a fill's
-/// rows and its underlay's.
-pub const DIRECTIONS: &[&str] = &["angle", "fill_underlay_angle"];
+/// rows and its underlay's, and a cross stitch fill's grid.
+pub const DIRECTIONS: &[&str] = &["angle", "fill_underlay_angle", "cross_rotation"];
+
+/// The cross stitch methods that lie one way, each with the method a mirror image of it sews: a half cross
+/// sews one diagonal, which lies the other way in its mirror image. A full cross's bars lie both ways.
+pub const MIRRORED_METHODS: [(&str, &str); 2] = [("half_cross", "half_cross_flipped"), ("half_cross_flipped", "half_cross")];
 
 impl Change {
     /// Every change.
@@ -142,6 +147,10 @@ impl Change {
                 let turned: Vec<String> =
                     value.split_whitespace().map(|angle| angle.parse::<f64>().map_or(angle.to_string(), |a| (-a).to_string())).collect();
                 changed.params.set(*key, turned.join(" ").as_str());
+            }
+            let method = param(element, "cross_stitch_method");
+            if let Some(&(_, mirrored)) = MIRRORED_METHODS.iter().find(|(method_of, _)| method == Some(*method_of)) {
+                changed.params.set("cross_stitch_method", mirrored);
             }
         }
         changed
@@ -295,10 +304,22 @@ fn planned(design: &Design) -> StitchPlan {
 /// drawn the other way round it may lock at its other end, or be reached by a stitch from the element before
 /// instead of a jump. So is a stitch of an automatic area whose middle lies outside the area, by more than
 /// [`TOLERANCE`]: automatic digitizing chooses the order its lines and columns sew in, and in a shape drawn
-/// symmetric 2 of them tie, so the stitch that joins them crosses the fabric wherever the tie puts it.
+/// symmetric 2 of them tie, so the stitch that joins them crosses the fabric wherever the tie puts it. And so
+/// is a half cross's stitch along a line of its grid: its rows run along the cells' diagonals, and the needle
+/// travels between them along the cells' outline, from where the needle comes in, wherever the route takes it.
 fn stitches(design: &Design, plan: &StitchPlan) -> BTreeMap<String, Vec<[Point; 2]>> {
     let shows = |role: Role| matches!(role, Role::Top | Role::Underlay);
     let origin = design.settings.origin.unwrap_or(Point::ORIGIN);
+    // The way each half cross element's grid lines run, its sine and cosine, by its id.
+    let half_crosses: BTreeMap<&str, (f64, f64)> = design
+        .elements()
+        .iter()
+        .filter(|element| param(element, "cross_stitch_method").is_some_and(|method| method.starts_with("half_cross")))
+        .map(|element| {
+            let turn = param(element, "cross_rotation").and_then(|degrees| degrees.parse::<f64>().ok()).unwrap_or(0.0);
+            (element.id.as_str(), stitchcraft_core::math::sin_cos(stitchcraft_core::math::to_radians(turn)))
+        })
+        .collect();
     // The area of each automatic area, by its id.
     let areas: BTreeMap<&str, Region> = design
         .elements()
@@ -324,7 +345,8 @@ fn stitches(design: &Design, plan: &StitchPlan) -> BTreeMap<String, Vec<[Point; 
                     let id = element.and_then(|element| plan.element(element)).map_or("", |id| id.as_str());
                     let drawn = id.split_once('#').map_or(id, |(drawn, _)| drawn);
                     let middle = p(origin.x() + (from.x() + stitch.at.x()) / 2.0, origin.y() + (from.y() + stitch.at.y()) / 2.0);
-                    if areas.get(drawn).is_none_or(|area| near(area, middle, TOLERANCE)) {
+                    let travel = half_crosses.get(drawn).is_some_and(|&turn| along_grid(from, stitch.at, turn));
+                    if !travel && areas.get(drawn).is_none_or(|area| near(area, middle, TOLERANCE)) {
                         by_element.entry(drawn.to_string()).or_default().push([from, stitch.at]);
                     }
                 }
@@ -335,6 +357,20 @@ fn stitches(design: &Design, plan: &StitchPlan) -> BTreeMap<String, Vec<[Point; 
         }
     }
     by_element
+}
+
+/// The value of `element`'s setting `key`, if it sets one.
+fn param<'e>(element: &'e Element, key: &str) -> Option<&'e str> {
+    element.params.iter().find(|(k, _)| *k == key).map(|(_, value)| value)
+}
+
+/// Whether the stitch from `a` to `b` runs along a line of a grid turned by the angle whose sine and cosine are
+/// `(sin, cos)`: across it or down it, to a millionth of its length.
+fn along_grid(a: Point, b: Point, (sin, cos): (f64, f64)) -> bool {
+    let (dx, dy) = (b.x() - a.x(), b.y() - a.y());
+    let (across, down) = (dx * cos + dy * sin, dy * cos - dx * sin);
+    let length = a.distance(b);
+    across.abs() <= 1e-6 * length || down.abs() <= 1e-6 * length
 }
 
 /// Whether `q` lies inside `area`, or no farther than `reach` from its outlines and holes.
@@ -372,6 +408,48 @@ mod tests {
         let hinted = Element { hints, ..l_shape().elements()[0].clone() };
         let mirrored = stitchcraft_engine::design::Hints { start: Some(p(-1.0, 2.0)), end: None, target: Some(p(-3.0, 4.0)) };
         assert_eq!(Change::MirrorX.element(&hinted).hints, mirrored);
+    }
+
+    #[test]
+    fn a_mirror_image_of_a_half_cross_fill_sews_the_flipped_method_on_its_grid_turned_the_other_way() {
+        let square = [(0.0, 0.0), (9.0, 0.0), (9.0, 6.0), (0.0, 6.0)];
+        let half =
+            fill("half", &[&square], &RED, &[("fill_method", "cross_stitch"), ("cross_stitch_method", "half_cross"), ("cross_rotation", "30")]);
+        let param = |element: &Element, key: &str| element.params.iter().find(|(k, _)| *k == key).map(|(_, v)| v.to_string());
+        let mirrored = Change::MirrorY.element(&half);
+        assert_eq!(
+            (param(&mirrored, "cross_stitch_method"), param(&mirrored, "cross_rotation")),
+            (Some("half_cross_flipped".into()), Some("-30".into()))
+        );
+        assert_eq!(param(&Change::MirrorX.element(&mirrored), "cross_stitch_method"), Some("half_cross".into()));
+        // Turned half round, it keeps its method and its turn, and a full cross's method stays mirrored.
+        assert_eq!(param(&Change::HalfTurn.element(&half), "cross_stitch_method"), Some("half_cross".into()));
+        let simple = fill("simple", &[&square], &RED, &[("fill_method", "cross_stitch")]);
+        assert_eq!(param(&Change::MirrorX.element(&simple), "cross_stitch_method"), None);
+        // So a square of half crosses on the canvas's grid sews the same however it is changed.
+        let whole = [(0.0, 0.0), (12.0, 0.0), (12.0, 12.0), (0.0, 12.0)];
+        let plain =
+            fill("half", &[&whole], &RED, &[("fill_method", "cross_stitch"), ("cross_stitch_method", "half_cross"), ("cross_thread_count", "3")]);
+        let squares =
+            Design::new(vec![plain], stitchcraft_engine::design::DesignSettings { origin: Some(p(0.0, 0.0)), ..Default::default() }).unwrap();
+        for (change, compared) in compare(&squares, &Change::ALL) {
+            for element in compared {
+                assert!(element.shared > 0.98, "{change:?}: {element:?}");
+            }
+        }
+        // Its rows are measured, and its travel along the grid's lines, which the route lays where the needle
+        // comes in, is not: across or down the grid, turned or not.
+        let quarter = (1.0, 0.0);
+        assert!(along_grid(p(0.0, 0.0), p(3.0, 0.0), (0.0, 1.0)) && along_grid(p(0.0, 0.0), p(0.0, -3.0), quarter));
+        assert!(!along_grid(p(0.0, 0.0), p(3.0, 3.0), (0.0, 1.0)) && !along_grid(p(0.0, 0.0), p(3.0, 3.0), quarter));
+        let half = 0.5f64.sqrt();
+        assert!(along_grid(p(1.0, 1.0), p(4.0, 4.0), (half, half)) && !along_grid(p(1.0, 1.0), p(4.0, 1.0), (half, half)));
+        let turned =
+            fill("turned", &[&whole], &RED, &[("fill_method", "cross_stitch"), ("cross_stitch_method", "half_cross"), ("cross_rotation", "90")]);
+        let turned =
+            Design::new(vec![turned], stitchcraft_engine::design::DesignSettings { origin: Some(p(0.0, 0.0)), ..Default::default() }).unwrap();
+        let measured = stitches(&turned, &planned(&turned));
+        assert!(measured["turned"].iter().all(|&[a, b]| !along_grid(a, b, (0.0, 1.0))), "{measured:?}");
     }
 
     #[test]

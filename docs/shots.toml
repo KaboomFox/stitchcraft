@@ -234,7 +234,7 @@ kind = "stitch"
 sheet = "TS-17A"
 style = "realistic"
 scale = 6.0
-alt = "TS-17A as it will sew: a row of 4 red squares of crosses 24 mm wide, on grids of 2 and 3 mm with 2 and 4 threads. Below them in blue, the 2 mm and 3 mm squares again with their crosses flipped, and a K 24 mm tall in crosses on a 2 mm grid, its slanted arms stepping along the grid."
+alt = "TS-17A as it will sew: a row of 4 red squares of crosses 24 mm wide, on grids of 2 and 3 mm with 2 and 4 threads. Below them in blue, the 2 mm and 3 mm squares again with their crosses flipped, and a K 24 mm tall in crosses on a 2 mm grid, its slanted arms stepping along the grid. Below them in green, squares of upright, dense upright, double and Smyrna crosses, and at the bottom in black, squares of half crosses plain and flipped, and a square turned 30° with its crosses square to its sides."
 
 # ── Stitch types (designs from docs/fixtures/, planned by the engine; one image per panel) ──────────
 
@@ -629,6 +629,44 @@ alt = "A red heart 32 mm wide in cross stitch on a 3 mm grid with 4 threads, eac
 panels = [
   { caption = "Simple cross", params = { fill_method = "cross_stitch" } },
   { caption = "Flipped", params = { fill_method = "cross_stitch", cross_stitch_method = "simple_cross_flipped" } },
+]
+
+[[shot]]
+id = "cross-methods"
+kind = "stitch"
+fixture = "docs/fixtures/heart.svg"
+style = "realistic"
+scale = 8.0
+alt = "A red heart 32 mm wide in cross stitch on a 3 mm grid with 4 threads, sewn with another kind of cross in each cell"
+panels = [
+  { caption = "Upright", params = { fill_method = "cross_stitch", cross_stitch_method = "upright_cross" } },
+  { caption = "Dense upright", params = { fill_method = "cross_stitch", cross_stitch_method = "dense_upright_cross" } },
+  { caption = "Double", params = { fill_method = "cross_stitch", cross_stitch_method = "double_cross" } },
+  { caption = "Smyrna", params = { fill_method = "cross_stitch", cross_stitch_method = "smyrna_cross" } },
+]
+
+[[shot]]
+id = "cross-half"
+kind = "stitch"
+fixture = "docs/fixtures/heart.svg"
+style = "realistic"
+scale = 10.0
+alt = "A red heart 32 mm wide in half crosses on a 3 mm grid, one diagonal in each cell sewn 3 times, and the needle's way between the rows on the stepped outline"
+panels = [
+  { caption = "Half cross", params = { fill_method = "cross_stitch", cross_stitch_method = "half_cross", cross_thread_count = "3" } },
+  { caption = "Flipped", params = { fill_method = "cross_stitch", cross_stitch_method = "half_cross_flipped", cross_thread_count = "3" } },
+]
+
+[[shot]]
+id = "cross-rotation"
+kind = "stitch"
+fixture = "docs/fixtures/heart.svg"
+style = "realistic"
+scale = 10.0
+alt = "A red heart 32 mm wide in cross stitch on a 3 mm grid with 4 threads, its crosses and stepped edges turned with the grid"
+panels = [
+  { caption = "0°", params = { fill_method = "cross_stitch" } },
+  { caption = "30°", params = { fill_method = "cross_stitch", cross_rotation = "30" } },
 ]
 
 [[shot]]

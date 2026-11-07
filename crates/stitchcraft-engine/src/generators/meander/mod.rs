@@ -177,7 +177,7 @@ fn sewn(
     let mut warnings = sewn.warnings;
     warnings.extend(tally.said());
     warnings.extend(sewn.tally.said());
-    Ok(Stitched { runs: sewn.runs, warnings })
+    Ok(Stitched { runs: sewn.runs, colours: Vec::new(), warnings })
 }
 
 /// The path of the `meander` fill over `region`, each part grown by its `expand` as [`meander_fill`] grows

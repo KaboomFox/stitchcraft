@@ -139,6 +139,7 @@ Export As**. Selected objects stay as they are, and the sheet goes above them, i
 The sheet sews as `stitch testsheet` writes it, moved. A fill's rows lie where the document's origin puts
 them, so they may fall a little elsewhere across a shape, and look the same. TS-17A's crosses lie on a grid
 from the document's origin too, and the sheet moves by whole multiples of 6 mm so that each keeps its cell.
+Its turned square lays its grid from its own corner, which moves with it.
 The threads keep their colours but not their names in the Brother palette, and the machine file is the same.
 StitchCraft Stroke, Satin and Fill must be installed: VectorCraft gives a new object only the effects of
 installed plug-ins. The TS-13 sheets need StitchCraft Auto too, which their top halves' shapes have. TS-01,
