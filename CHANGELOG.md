@@ -33,6 +33,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     black. It sews in Ink/Stitch as in StitchCraft by every measure of the differential, 10,305 stitches
     against 10,303. So does a case of each full cross's flipped variant, turned grids, and half crosses
     round a hole, through cells that meet at a corner and in 2 pieces of one part, 1,077 stitches in both.
+    And so does each of the 162 glyphs of Jersey 15, the font of double crosses, in the glyph differential,
+    170,892 stitches in both.
   - The test harness mirrors a half cross's method with its design and turns `cross_rotation` the other
     way, so that a mirrored or turned design sews the same crosses mirrored or turned.
   - The user's guide shows each method, the half crosses and the turned grid in pictures, and the design
