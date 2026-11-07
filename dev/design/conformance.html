@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-20f46e19.js";
+            window.path_to_searchindex_js = "../searchindex-1975b613.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-8178bdeb.js"></script>
@@ -460,26 +460,30 @@ nearer the one before than the machine’s shortest stitch left out. A needle po
 where a path’s move-to draws nothing after it, is left out with the jumps and the trim that lead to it
 (<code>DEV-SVG-011</code>).</p>
 <p><code>REQ-SVG-008</code>, <code>REQ-AUTO-021</code>, <code>REQ-AUTO-022</code>, <code>REQ-RUN-013</code>, <code>REQ-SAT-029</code>, <code>REQ-FILL-CON-008</code>,
-<code>REQ-FILL-CIR-007</code>, <code>REQ-FILL-CRS-007</code> and <code>REQ-FONT-001</code> are the requirements of level L3. The other
-runs of the suite leave them and their cases to this one. The corpus is designs the SVG reader sews in
-full, with their settings (<code>REQ-SVG-009</code>), trim and stop commands and the file version. A case may name a
-test sheet drawn as a design instead (<code>sheet</code>). Both programs sew an SVG file of the elements StitchCraft
-sews the sheet with, written with their parameters, their start, end and target positions as Ink/Stitch’s
-commands and their clips as clip paths, the design’s origin and stop position as commands too, and its
-turn on export (<code>stitchcraft_testkit::inkstitch</code>), which StitchCraft’s reader reads back unchanged
-(<code>REQ-PRM-003</code>). An element a sheet draws as a clone of another is written as a <code>&lt;use&gt;</code> of it, and each
-command in a group with its connector, as Ink/Stitch’s Attach Commands writes them, since Ink/Stitch
-moves a command its clone copies only from a group. Automatic digitizing chooses ordinary elements with
-Ink/Stitch’s parameters, so Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check
-StitchCraft’s stitches of those choices against Ink/Stitch’s (<code>REQ-AUTO-021</code>). TS-11B checks the contour
-fills so, each strategy and join style among them (<code>REQ-FILL-CON-008</code>), and its circular fills
-(<code>REQ-FILL-CIR-007</code>). TS-11A checks the zigzag strokes (<code>REQ-RUN-013</code>), and the E-stitches, S-stitches
-and zigzag satins (<code>REQ-SAT-029</code>), along straights and round curves. TS-17A checks the simple crosses of
-cross stitch, on grids of 2 and 3 mm with 2 and 4 threads, flipped, and over a letter whose slanted edges
-cut their cells in half (<code>REQ-FILL-CRS-007</code>). TS-02B to TS-09, the sheets of MC-2 to MC-4, and TS-11C,
-the meander fills’ sheet, are cases of <code>REQ-SVG-008</code> (M8.2). The <code>drawn-locks</code> case and TS-16 check
-custom locks drawn as paths, of each kind of command, which both programs sew at the same nodes
-(<code>REQ-LCK-005</code>). <code>conformance/inkstitch/README.md</code> says how to run it by hand and how to add a case.</p>
+<code>REQ-FILL-CIR-007</code>, <code>REQ-FILL-CRS-007</code>, <code>REQ-FILL-CRS-012</code> and <code>REQ-FONT-001</code> are the requirements of
+level L3. The other runs of the suite leave them and their cases to this one. The corpus is designs the
+SVG reader sews in full, with their settings (<code>REQ-SVG-009</code>), trim and stop commands and the file
+version. A case may name a test sheet drawn as a design instead (<code>sheet</code>). Both programs sew an SVG file
+of the elements StitchCraft sews the sheet with, written with their parameters, their start, end and
+target positions as Ink/Stitch’s commands and their clips as clip paths, the design’s origin and stop
+position as commands too, and its turn on export (<code>stitchcraft_testkit::inkstitch</code>), which StitchCraft’s
+reader reads back unchanged (<code>REQ-PRM-003</code>). An element a sheet draws as a clone of another is written as
+a <code>&lt;use&gt;</code> of it, and each command in a group with its connector, as Ink/Stitch’s Attach Commands writes
+them, since Ink/Stitch moves a command its clone copies only from a group. Automatic digitizing chooses
+ordinary elements with Ink/Stitch’s parameters, so Ink/Stitch can sew what StitchCraft chose, and the
+TS-13 sheets check StitchCraft’s stitches of those choices against Ink/Stitch’s (<code>REQ-AUTO-021</code>). TS-11B
+checks the contour fills so, each strategy and join style among them (<code>REQ-FILL-CON-008</code>), and its
+circular fills (<code>REQ-FILL-CIR-007</code>). TS-11A checks the zigzag strokes (<code>REQ-RUN-013</code>), and the
+E-stitches, S-stitches and zigzag satins (<code>REQ-SAT-029</code>), along straights and round curves. TS-17A checks
+the simple crosses of cross stitch, on grids of 2 and 3 mm with 2 and 4 threads, flipped, and over a
+letter whose slanted edges cut their cells in half (<code>REQ-FILL-CRS-007</code>). It checks the other methods too,
+upright, dense upright, double, Smyrna and half crosses, and simple crosses on a grid turned 30°. The
+<code>cross-methods</code> case adds each full cross’s flipped variant, grids turned on the canvas and from a part’s
+own corner, and half crosses round a hole, through cells that meet at a corner and in 2 pieces of one
+part (<code>REQ-FILL-CRS-012</code>). TS-02B to TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills’
+sheet, are cases of <code>REQ-SVG-008</code> (M8.2). The <code>drawn-locks</code> case and TS-16 check custom locks drawn as
+paths, of each kind of command, which both programs sew at the same nodes (<code>REQ-LCK-005</code>).
+<code>conformance/inkstitch/README.md</code> says how to run it by hand and how to add a case.</p>
 <p><strong>Centre lines.</strong> Sewing what StitchCraft chose can’t find a choice that is wrong: TS-13B’s small T sewed
 a Γ, the left arm of its bar left out of its centre line, and the differential agreed by every measure.
 The <code>centre-lines</code> cases compare a step before the stitches (<code>REQ-AUTO-022</code>,

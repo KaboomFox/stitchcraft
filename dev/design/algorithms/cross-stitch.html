@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-20f46e19.js";
+            window.path_to_searchindex_js = "../../searchindex-1975b613.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-8178bdeb.js"></script>
@@ -182,17 +182,19 @@
                     <main>
                         <h1 id="cross-stitch"><a class="header" href="#cross-stitch">Cross stitch</a></h1>
 <!-- implements: crates/stitchcraft-engine/src/generators/cross/** -->
-<p>A cross in each cell of a grid laid over the fill, where the fill covers enough of the cell (P3, M10.1).
-Cross stitch is counted work. Hand embroiderers sew it on even-weave fabric, every cross the same size and
-in rows and columns. A shape is filled by choosing cells of the grid, and its edges step along the grid’s
-lines. StitchCraft sews Ink/Stitch’s simple crosses, plain and flipped, as Ink/Stitch sews them (read at
-<code>d59c9ab</code>, <code>lib/stitches/cross_stitch.py</code>, <code>lib/stitches/utils/cross_stitch.py</code> and the fill element’s
-cross stitch settings in <code>lib/elements/fill_stitch.py</code>, described here in our own words, ADR-0012). The
-other crosses, half, upright, double and Smyrna, arrive with M10.2, and the turned grid
-(<code>cross_rotation</code>) with it.</p>
+<p>A cross in each cell of a grid laid over the fill, where the fill covers enough of the cell (P3, M10.1 and
+M10.2). Cross stitch is counted work. Hand embroiderers sew it on even-weave fabric, every cross the same
+size and in rows and columns. A shape is filled by choosing cells of the grid, and its edges step along the
+grid’s lines. StitchCraft sews Ink/Stitch’s 12 cross stitch methods as Ink/Stitch sews them (read at
+<code>d59c9ab</code>, <code>lib/stitches/cross_stitch.py</code>, <code>lib/stitches/cross_stitch_half.py</code>,
+<code>lib/stitches/utils/cross_stitch.py</code> and the fill element’s cross stitch settings in
+<code>lib/elements/fill_stitch.py</code>, described here in our own words, ADR-0012). Simple, upright, dense upright,
+double and Smyrna crosses are full crosses, a stack of bars through each cell’s middle, sewn in runs of
+loops. Half crosses sew one diagonal in each cell, in rows.</p>
 <p>24 of the 25 cross-stitch fonts in Ink/Stitch’s font library sew simple crosses only, on grids of 1.5 to 3
 mm with 2 or 4 threads. They draw each letter as rectangles of whole cells, grown by 0.1 mm, on a grid
-that starts at each rectangle’s corner (<code>canvas_grid_origin</code> off).</p>
+that starts at each rectangle’s corner (<code>canvas_grid_origin</code> off). Jersey 15, the 25th, sews its 238
+elements as double crosses of 2 threads, grown so and on such a grid, of the default 3 mm cells.</p>
 <h2 id="parameters"><a class="header" href="#parameters">Parameters</a></h2>
 <div class="table-wrapper">
 <table>
@@ -200,13 +202,14 @@ that starts at each rectangle’s corner (<code>canvas_grid_origin</code> off).<
 <tr><th>Key</th><th>Meaning</th><th>Default</th></tr>
 </thead>
 <tbody>
-<tr><td><code>cross_stitch_method</code></td><td><code>simple_cross</code>, or <code>simple_cross_flipped</code> with the <code>/</code> diagonal under. The 10 other methods, M10.2’s, skip the element (<code>SC-W0011</code>)</td><td><code>simple_cross</code></td></tr>
-<tr><td><code>cross_thread_count</code></td><td>passes on each half of each diagonal, 1 to 20. An odd count sews the even count below it, 2 at least</td><td>4</td></tr>
+<tr><td><code>cross_stitch_method</code></td><td><code>simple_cross</code>, <code>upright_cross</code>, <code>dense_upright_cross</code>, <code>double_cross</code>, <code>smyrna_cross</code> or <code>half_cross</code>, each also as its flipped variant, <code>_flipped</code> after its name</td><td><code>simple_cross</code></td></tr>
+<tr><td><code>cross_thread_count</code></td><td>passes on each half of each bar of a full cross, 1 to 20, or along each stitch of a half cross’s rows. A full cross sews an odd count as the even count below it, 2 at least, and a half cross an even count as the odd count above it</td><td>4</td></tr>
 <tr><td><code>pattern_size_mm</code></td><td>the cells’ width and height, 1 length or 2</td><td>3</td></tr>
 <tr><td><code>canvas_grid_origin</code></td><td>the grid’s lines through the canvas’s origin, or through each part’s top left corner</td><td>on</td></tr>
 <tr><td><code>cross_offset_mm</code></td><td>the grid moved left by the first length and down by the second, 1 length or 2</td><td>0</td></tr>
+<tr><td><code>cross_rotation</code></td><td>the grid turned by this angle, clockwise as drawn for a positive one</td><td>0</td></tr>
 <tr><td><code>fill_coverage</code></td><td>how much of a cell, in percent, the fill must cover for a cross</td><td>50</td></tr>
-<tr><td><code>max_cross_stitch_length_mm</code></td><td>the longest stitch, past which a stitch is split</td><td>11</td></tr>
+<tr><td><code>max_cross_stitch_length_mm</code></td><td>the longest stitch, past which a stitch is split, and the length of a half cross’s travel stitches</td><td>11</td></tr>
 <tr><td><code>expand_mm</code></td><td>each part grown, or shrunk where negative, before its cells are chosen</td><td>0</td></tr>
 </tbody>
 </table>
@@ -217,7 +220,8 @@ are of that kind. Ink/Stitch takes the first 2 of more values, where StitchCraft
 <code>SC-E0101</code> (<code>DEV-PRM-004</code>). Ink/Stitch reads a pattern size below 0.1 mm as 0.1, an offset below 0 as 0 and a
 coverage below 1 % as 1 %, and StitchCraft clamps them so too, with <code>SC-W0102</code>. Its coverage is a whole
 number, and its fonts write it as <code>50.0</code> too, which it sews at its default of 50. StitchCraft reads it as a
-percentage, and <code>50.0</code> is 50 here too (<code>DEV-PRM-001</code>).</p>
+percentage, and <code>50.0</code> is 50 here too (<code>DEV-PRM-001</code>). The rotation is an angle of the registry’s <code>Angle</code>
+kind, read in (−180°, 180°], so a whole turn is no turn.</p>
 <h2 id="the-grid"><a class="header" href="#the-grid">The grid</a></h2>
 <p>Each part of the fill’s area is grown by <code>expand_mm</code> first. Grown parts that meet are one part, as Ink/Stitch
 grows the whole shape at once. Shrunk, each part is shrunk alone, and a part shrunk away is sewn at its own
@@ -240,6 +244,19 @@ part’s top, moved down by the offset’s second length, and never looks at the
 top lies less far below a line than that length, Ink/Stitch loses the row of crosses the part covers there. A
 3 mm grid moved 2 mm down over a rectangle whose top lies 0.2 mm below a line leaves out a row the rectangle
 covers 60 % of (<code>DEV-FILL-025</code>).</p>
+<h3 id="the-turned-grid"><a class="header" href="#the-turned-grid">The turned grid</a></h3>
+<p><code>cross_rotation</code> turns the grid. The part is turned the other way, the grid is laid over the part so turned
+as above, the crosses are sewn there, and their stitches are turned back. On the canvas’s grid the turn is
+about the point (x, y) that the offset’s lengths name, as Ink/Stitch turns it, where the grid’s own lines
+pass through (−x, y). Fills side by side with the same turn and offset then share one turned grid. With
+<code>canvas_grid_origin</code> off the grid starts at the turned part’s top left corner, so the point the grid turns
+about changes nothing but rounding. StitchCraft turns such a grid about the canvas’s origin. Ink/Stitch turns
+it about the part’s bottom left corner, or about the point that a file’s <code>inkscape:transform-center-x</code> and
+<code>-y</code> name.</p>
+<p>That is how lettering along a path turns a glyph of a cross-stitch font (M14.3). Ink/Stitch’s lettering
+turns each glyph to follow the path and sets its elements’ <code>cross_rotation</code> to the same angle, so a letter
+drawn as whole cells keeps its crosses square to its sides. A whole number of quarter turns turns each
+point exactly, and a whole turn turns nothing.</p>
 <h2 id="coverage"><a class="header" href="#coverage">Coverage</a></h2>
 <p>A cell sews a cross when the part covers <code>fill_coverage</code> percent of it or more. Ink/Stitch allows a
 ten-thousandth of a percent of slack, and StitchCraft allows the same. A cell covered exactly half sews at 50,
@@ -249,78 +266,165 @@ the clipped rings left of a line down the strip is a sum over their sides, of th
 the strip’s top edge. Each side’s share then falls to the columns it crosses. The holes run the other way
 round, and take their area away. A part that covers no cell so much sews nothing, and <code>SC-W0319</code> says so, as
 Ink/Stitch warns of it.</p>
+<p>Dense upright crosses look at a second grid too, its lines half a cell left of and above the first grid’s,
+and a cell of it sews a cross by the same rule.</p>
 <p>Every cell within the bounds costs a unit of work before any is looked at. A row of cells, held while they are
 looked at, and each cell that sews a cross must fit in the stitches left (<code>REQ-GEN-004</code>). A grid of 0.1 mm
 over a part 1 m wide holds 10⁸ cells, and ends with <code>SC-E0004</code> before it takes memory.</p>
-<h2 id="a-cross"><a class="header" href="#a-cross">A cross</a></h2>
-<p>Each cross is sewn as a loop from one of its corners back to it. Its <code>\</code> diagonal goes under and its <code>/</code>
-diagonal over, as the drawing shows them, and between the 2 the needle passes through the cell’s middle,
-where the second diagonal covers it. Each half of each diagonal takes <code>cross_thread_count</code> passes of the
-thread, the needle going back and forth along it, and the count is even. An odd count sews the even count
-below it, as in Ink/Stitch, and 1 sews 2, with <code>SC-W0320</code>. Ink/Stitch sews a stitch from a corner of each
-cell to its middle for 1, and no cross (<code>DEV-FILL-027</code>).</p>
-<p>From a corner of its <code>/</code> diagonal, the loop runs in to the middle along that diagonal, which it sews last.
-It then sews the <code>\</code> diagonal back and forth from the corner on the start’s side, the top or the bottom,
-returns to the middle, and sews the <code>/</code> diagonal from its far end back to the start. Nothing of the loop
-lies over the <code>/</code> diagonal. From a corner of its <code>\</code> diagonal, the loop first sews that diagonal back and
-forth, ending at its far end. It goes in to the middle and sews the <code>/</code> diagonal from its top, then returns
-through the middle to where it started. That last stitch lies over the <code>/</code> diagonal.</p>
-<p><code>simple_cross_flipped</code> sews the <code>/</code> diagonal first and the <code>\</code> diagonal over it, on the same grid. A flipped
-cross is a plain cross turned a quarter turn. The part, its grid, the needle and the end are turned, sewn
-as plain crosses, and turned back, exactly. Ink/Stitch turns the part alone and lays its grid afresh over
-it. Its flipped cells are then the pattern size’s second length wide and its first tall, the offset’s
-second length moves them right and its first down, and with <code>canvas_grid_origin</code> off its grid starts at the
-part’s bottom left corner (<code>DEV-FILL-026</code>). On square cells, without an offset and on the canvas’s grid,
-both lay the same crosses.</p>
-<h2 id="sewing-the-crosses"><a class="header" href="#sewing-the-crosses">Sewing the crosses</a></h2>
-<p>Crosses that share a corner, side by side or corner to corner, form a group, and each group is one run, from
-a corner back to it. The run starts with a cross at its corner, one whose <code>/</code> diagonal ends there if it has
-one, and goes round its loop. At each corner along the run, before going on, it sews the loop of each cross
-not sewn yet whose <code>/</code> diagonal ends there. The cross below and to the left of the corner goes first and the
-one above and to the right second, each loop sewn the same way as the run goes along it. Such a loop starts
-along its own <code>/</code> diagonal, and nothing of it lies on top. Where the run has been round and crosses are left,
-which only their <code>\</code> diagonals’ ends join to it, it takes the first corner along it where such a cross has
-one, the cross below and to the right first. It sews that loop there, ending on top, and goes on as before.
-Every corner of a cross sewn lies on the run, and every cross of the group is sewn.</p>
+<h2 id="full-crosses"><a class="header" href="#full-crosses">Full crosses</a></h2>
+<p>A full cross is a stack of bars through its cell’s middle, sewn from the bottom up:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Method</th><th>Bars, from the bottom up</th><th>Good joins</th><th>Bad joins</th></tr>
+</thead>
+<tbody>
+<tr><td>simple</td><td><code>\</code>, <code>/</code></td><td>the corners of <code>/</code></td><td>the corners of <code>\</code></td></tr>
+<tr><td>upright</td><td>the bar across, the bar down</td><td>the middles of the top and bottom sides</td><td>the middles of the left and right sides</td></tr>
+<tr><td>double</td><td><code>\</code>, the bar across, the bar down, <code>/</code></td><td>the corners of <code>/</code></td><td>the corners of <code>\</code></td></tr>
+<tr><td>Smyrna</td><td><code>\</code>, <code>/</code>, the bar across, the bar down</td><td>the middles of the top and bottom sides</td><td>the 4 corners</td></tr>
+</tbody>
+</table>
+</div>
+<p>The bar across runs from the middle of the cell’s left side to the middle of its right side, and the bar down
+from the middle of its top side to the middle of its bottom side. A dense upright cross adds upright crosses
+on the second grid. Each has its middle on a corner of the first grid, and its arms end at the middles of
+the sides of the first grid’s cells, where the first grid’s arms end too.</p>
+<p>A cross joins the run that sews it at its joins. Its good joins are the ends of its top bar. A loop from one
+of them goes in to the middle along the top bar, which covers that stitch later. The loop then leaves
+nothing on top. From a bad one, the loop ends with a stitch from the middle back to it, on top of the bars.</p>
+<h3 id="a-loop"><a class="header" href="#a-loop">A loop</a></h3>
+<p>Each cross is sewn as a loop from one of its joins back to it. Each half of each bar takes
+<code>cross_thread_count</code> passes of the thread, the needle going back and forth along the bar, and the count is
+even. An odd count sews the even count below it, as in Ink/Stitch, and 1 sews 2, with <code>SC-W0320</code>. Ink/Stitch
+sews a stitch from a corner of each cell to its middle for 1, and no cross (<code>DEV-FILL-027</code>). With n the count’s
+half:</p>
+<ul>
+<li>From an end of the top bar, the loop goes in to the middle along the top bar. It then sews the bars below
+the top one from the bottom up, each n times back and forth from its first end and back to the middle, and
+ends with the top bar n times back and forth from its far end to the start.</li>
+<li>From an end of the bottom bar, the loop sews that bar back and forth from the start, ending at its far end,
+and goes to the middle. It sews the bars above it from the bottom up as above, and ends with the stitch from
+the middle to the start.</li>
+<li>From an end of a bar between, a Smyrna cross’s <code>/</code> diagonal, the loop goes in to the middle along that bar
+and sews the bars from the bottom up. That bar goes from the middle to its far end and back and forth 1 time
+fewer, ending there. The loop ends with the stitch from the middle to the start.</li>
+</ul>
+<p>A bar’s first end is the one the needle goes to first from the middle. For the <code>\</code> diagonal it is the top
+end, or the bottom end in a loop from the bottom left corner. For the <code>/</code> diagonal it is the top end, but a
+Smyrna cross’s bottom end, unless its loop starts at the bottom right corner. The bar across starts from its
+left end. The bar down starts from its top end, but a Smyrna cross’s from its bottom end in a loop from the
+top left corner. So each loop is the one Ink/Stitch sews from that join, needle point for needle point.</p>
+<p><strong>Flipped crosses</strong> lie on the same grid. A flipped cross is a plain cross turned a quarter turn, each bar in
+the place of the bar a quarter turn from it, so that a simple cross’s <code>/</code> diagonal goes under its <code>\</code> one and
+an upright cross’s bar down under its bar across. The part, its grid, the needle and the end are turned a
+quarter turn, sewn as plain crosses, and turned back, exactly. Ink/Stitch turns the part alone and lays its
+grid afresh over it. Its flipped cells are then the pattern size’s second length wide and its first tall, the
+offset’s second length moves them right and its first down, and with <code>canvas_grid_origin</code> off its grid starts
+at the part’s bottom left corner (<code>DEV-FILL-026</code>). On square cells, without an offset and on the canvas’s
+grid, both lay the same crosses.</p>
+<h3 id="sewing-the-crosses"><a class="header" href="#sewing-the-crosses">Sewing the crosses</a></h3>
+<p>Crosses that share a join form a group: simple, double and Smyrna crosses side by side or corner to corner,
+upright crosses side by side, and the 2 grids’ dense upright crosses through the ends of the arms they share.
+Each group is one run, from a join back to it. The run starts with a cross at its join, one whose good join it
+is if it has one, and goes round its loop. At each place along the run, before going on, it sews the loop of
+each cross not sewn yet whose good join lies there. Of several, the cross lower down goes first, and of 2
+level with each other the one further right, each loop sewn the same way as the run goes along it. Such a loop
+leaves nothing on top. Where the run has been round and crosses are left, which only their bad joins join to
+it, it takes the first place along it where such a cross has one, in the same order. It sews that loop there,
+ending on top, and goes on as before. Every join of a cross sewn lies on the run, and every cross of the group
+is sewn.</p>
 <p>The groups go in this order:</p>
 <ul>
-<li>The group with the corner nearest the end is sewn last, from that corner, and the part ends there. The end
-is the next part’s point nearest this one, or for the last part the next element’s offer, or the end
-position.</li>
-<li>The others go first, each the group with the corner nearest the needle, from that corner, the needle being
+<li>The group with the join nearest the end is sewn last, from that join, and the part ends there. The end is
+the next part’s point nearest this one, or for the last part the next element’s offer, or the end position.</li>
+<li>The others go first, each the group with the join nearest the needle, from that join, the needle being
 where the run before it ended. With no needle, the first is the group of the first cross, row by row from
-the top, from that cross’s top right corner.</li>
-<li>A part of one group with both a needle and an end first runs from its corner nearest the needle to its
-corner nearest the end through the middles of the fewest crosses. Its loops start from there, and the
-crosses sewn later cover these stitches.</li>
+the top, from that cross’s first good join clockwise from its top left: a simple or double cross’s top right
+corner, an upright or Smyrna cross’s top middle.</li>
+<li>A part of one group with both a needle and an end first runs from its join nearest the needle to its join
+nearest the end through the middles of the fewest crosses. Its loops start from there, and the crosses sewn
+later cover these stitches.</li>
 </ul>
 <p>Each run is a group of stitches of its own, which assembly joins to the next with a stitch when it starts
 within the element’s jump length, and with a jump otherwise, as Ink/Stitch’s stitch plan joins its runs. The
 parts are sewn nearest the needle first, as a tatami fill’s are, and a fill with a start position starts its
 first part nearest it and each part after nearest where the part before ended (<code>DEV-FILL-023</code>).</p>
-<p><strong>How it compares with Ink/Stitch.</strong> Ink/Stitch builds the same runs, of the same loops. It takes its
-groups, and the crosses that meet at a corner, in the order of a Python set of its objects, which follows
-where they lie in memory, where StitchCraft’s order is fixed. Where the needle and the end lie nearest one
-group of several, it sews another group first, from that group’s corner nearest the end. And with neither, it
-starts each group at the first corner it finds of one cross alone (<code>DEV-FILL-028</code>). The crosses and their
-stitches are the same in both, and the measures of the differential agree.</p>
+<h2 id="half-crosses"><a class="header" href="#half-crosses">Half crosses</a></h2>
+<p>A half cross sews one diagonal in each cell, <code>\</code>, or <code>/</code> for <code>half_cross_flipped</code>, on the same grid. The
+needle’s way from cell to cell lies bare. So the diagonals that run on from cell to cell are joined into
+rows, which are routed as a tatami fill’s rows, as Ink/Stitch routes its half crosses (read at <code>d59c9ab</code>,
+<code>lib/stitches/cross_stitch_half.py</code>):</p>
+<ol>
+<li><strong>Pieces.</strong> Cells that share a side or a corner are one piece, and each piece is sewn on its own. The
+pieces nearest the needle go first, as a fill’s parts do, each ending at its point nearest the next.</li>
+<li><strong>Outline.</strong> A piece’s rings are the sides of its cells that no other cell of it shares, joined end to
+end, the piece on their left as a fill’s rings have it. Where 2 cells of the piece meet only at a corner,
+the ring runs through the corner from the one to the other, as Ink/Stitch’s union of the cells, grown by a
+hundred-thousandth of a CSS pixel, joins them. Each ring starts at its top left corner.</li>
+<li><strong>Rows.</strong> Each cell’s diagonal is split into the fewest equal stitches no longer than
+<code>max_cross_stitch_length_mm</code>, and diagonals that run on from cell to cell are one row. A <code>\</code> row runs from
+its top end and a <code>/</code> row from its bottom end, the rows in the order of their first cells, row by row
+from the top.</li>
+<li><strong>Route.</strong> The rows are routed as a tatami fill’s rows with <code>underpath</code> off (<code>REQ-FILL-TAT-001</code>), each sewn
+once. Between them the needle is sent along the rings in running stitches of <code>max_cross_stitch_length_mm</code>,
+within 0.2 CSS pixels of the way, as in Ink/Stitch’s half crosses. Those stitches lie on the outline of the
+cells, where nothing covers them.</li>
+<li><strong>Passes.</strong> Each stitch of a row is sewn there and back again until it lies an odd number of times, as
+bean stitch sews it, and the travel lies once. Ink/Stitch takes half of <code>cross_thread_count</code> as the bean
+stitch’s repeats. So an odd count is the number of times, and an even count sews the odd count above it,
+4 sewing 5, with <code>SC-W0322</code>.</li>
+</ol>
+<p>The tatami fill’s route differs from Ink/Stitch’s where its own ledger entries say (<code>DEV-FILL-005</code>,
+<code>DEV-FILL-006</code>, <code>DEV-FILL-011</code>). Ink/Stitch’s grown union rounds each outer corner of the outline by its
+hundred-thousandth of a pixel. Its way between rows then cuts such a corner by up to its tolerance, 0.05 mm.
+Where no row joins a hole’s ring to another ring, Ink/Stitch would leave out the rows its walk finds no way
+to, where StitchCraft’s needle goes to them along the rows.</p>
 <h2 id="stitches"><a class="header" href="#stitches">Stitches</a></h2>
 <p>Each place of a run is a needle point. A stitch longer than <code>max_cross_stitch_length_mm</code> is split into the
 fewest equal stitches no longer, as Ink/Stitch’s geometry library splits it, and a stitch exactly as long is
 not split. A longest stitch below twice the shortest stitch is raised to it, with <code>SC-W0402</code>, as a fill’s
-is, and every piece of a split stitch is at least the shortest stitch. A cross’s shortest stitches run from
-its corners to its middle, half its diagonal. On a grid so fine that they are shorter than the shortest
-stitch, <code>SC-W0321</code> says so, and a needle point nearer the one before than the shortest stitch is left out,
-as finalize would leave it out.</p>
+is, and every piece of a split stitch is at least the shortest stitch. A needle point nearer the one before
+than the shortest stitch is left out, as finalize would leave it out. On a grid so fine that the method’s
+shortest stitches are shorter than the shortest stitch, <code>SC-W0321</code> says so:</p>
+<ul>
+<li>a simple cross’s run from a corner to its middle, half its diagonal,</li>
+<li>an upright, dense upright, double or Smyrna cross’s run from the middle of a side to its middle, half
+the cell’s shorter side,</li>
+<li>a half cross’s stitches between rows, each a side of a cell.</li>
+</ul>
 <p>A cross stitch fill sews its crosses alone, without the underlay, pull compensation or random stitch lengths
-of a tatami fill, as in Ink/Stitch. A preview too costly to sew shows each cross’s 2 diagonals.</p>
+of a tatami fill, as in Ink/Stitch. A preview too costly to sew shows each cross’s bars, or each half cross’s
+diagonal.</p>
+<h2 id="how-it-compares-with-inkstitch"><a class="header" href="#how-it-compares-with-inkstitch">How it compares with Ink/Stitch</a></h2>
+<p>The crosses, their loops and the stitches of each are the same in both, and the measures of the differential
+agree. These differ:</p>
+<ul>
+<li><strong>Orders.</strong> Ink/Stitch takes its groups, and the crosses that meet at a place, in the order of a Python set
+of its objects, which follows where they lie in memory, where StitchCraft’s order is fixed. Where the needle
+and the end lie nearest one group of several, it sews another group first, from that group’s join nearest
+the end. And with neither, it starts each group at the first good join it finds of one cross alone
+(<code>DEV-FILL-028</code>).</li>
+<li><strong>Cells covered exactly half.</strong> On a file whose <code>viewBox</code> is in millimetres, Ink/Stitch writes the drawing’s
+scale with 6 decimals, 3.779528 pixels to the millimetre, against 3.7795275… for its grid. Its drawing is
+then a ten-millionth larger than its grid, about the page’s origin. A cell that a part covers exactly half
+is then covered less than the slack allows on the part’s left and top sides, some 13 mm or more from the
+origin, and more on the right and bottom sides. So a dense upright square drawn on the grid loses the second grid’s
+crosses along its left and top sides in Ink/Stitch, and keeps those along its right and bottom sides.
+StitchCraft reads the drawing exactly, and sews all 4 sides. Grown by 0.1 mm, as Ink/Stitch’s fonts grow
+their letters, the cells along every side are covered more than half, and both sew them.</li>
+</ul>
 <h2 id="test-sheet"><a class="header" href="#test-sheet">Test sheet</a></h2>
 <p>TS-17A sews squares 24 mm wide on grids of 2 and 3 mm, with 2 and 4 threads, plain and flipped, and a K
-whose slanted edges cut their cells in half, with the fonts’ 2 threads and 0.1 mm of growth
-(<a href="../../plan/machine-testing.html">machine testing</a>). Every sample lies on the canvas’s grid, its corner a
-multiple of 6 mm from the origin, so that the squares sew whole cells. VectorCraft’s Test Sheet filter moves
-the sheet by whole multiples of 6 mm, which keep them. The differential compares the sheet with Ink/Stitch’s
-sewing of it (<code>REQ-FILL-CRS-007</code>).</p>
+whose slanted edges cut their cells in half, with the fonts’ 2 threads and 0.1 mm of growth. A third row sews
+upright, dense upright, double and Smyrna crosses on the 3 mm grid, and a fourth half crosses, plain and
+flipped, and a square turned 30° with its grid (<a href="../../plan/machine-testing.html">machine testing</a>). Every sample
+but the turned one lies on the canvas’s grid, its corner a multiple of 6 mm from the origin, so that the
+squares sew whole cells. VectorCraft’s Test Sheet filter moves the sheet by whole multiples of 6 mm, which
+keep them, and the turned square’s grid starts at its own corner. The differential compares the sheet with
+Ink/Stitch’s sewing of it (<code>REQ-FILL-CRS-007</code>, <code>REQ-FILL-CRS-012</code>), and the case <code>inkstitch-cross-methods</code>
+adds each method’s flipped variant, turned grids, and half crosses in pieces, round a hole and through a
+corner.</p>
 <h2 id="properties-conformance"><a class="header" href="#properties-conformance">Properties (conformance)</a></h2>
 <div class="table-wrapper">
 <table>
@@ -330,11 +434,16 @@ sewing of it (<code>REQ-FILL-CRS-007</code>).</p>
 <tbody>
 <tr><td><code>REQ-FILL-CRS-001</code></td><td>The grid’s cells are the pattern size, 1 length or 2. Its lines pass through the canvas’s origin, or each part’s top left corner, moved left and down by the offset. Every cell within the part’s bounds is looked at</td></tr>
 <tr><td><code>REQ-FILL-CRS-002</code></td><td>A cell sews a cross at <code>fill_coverage</code> percent covered, less a ten-thousandth of a percent, and a part that covers none so much sews nothing, with <code>SC-W0319</code></td></tr>
-<tr><td><code>REQ-FILL-CRS-003</code></td><td>Each cross is a loop from a corner back to it, <code>\</code> under <code>/</code>, or <code>/</code> under <code>\</code> flipped on the same grid. Each half diagonal takes the even thread count, 2 at least, with <code>SC-W0320</code> for an odd one</td></tr>
+<tr><td><code>REQ-FILL-CRS-003</code></td><td>Each simple cross is a loop from a corner back to it, <code>\</code> under <code>/</code>, or <code>/</code> under <code>\</code> flipped on the same grid. Each half diagonal takes the even thread count, 2 at least, with <code>SC-W0320</code> for an odd one</td></tr>
 <tr><td><code>REQ-FILL-CRS-004</code></td><td>Crosses that share a corner sew in one run, and loops join at the corners of their top diagonals first. The group nearest the end goes last and the others nearest the needle first. One group runs from the needle to the end first</td></tr>
 <tr><td><code>REQ-FILL-CRS-005</code></td><td>A stitch longer than the longest is split into equal stitches, and one as long is not. A grid too fine for the shortest stitch says so, with <code>SC-W0321</code></td></tr>
-<tr><td><code>REQ-FILL-CRS-006</code></td><td>Parts grown into each other are one, and a part shrunk away is sewn at its size, with <code>SC-W0309</code>. A fine grid over a large part runs out of the budget before it takes memory. M10.2’s methods skip the element, with <code>SC-W0011</code></td></tr>
+<tr><td><code>REQ-FILL-CRS-006</code></td><td>Parts grown into each other are one, and a part shrunk away is sewn at its size, with <code>SC-W0309</code>. A fine grid over a large part runs out of the budget before it takes memory</td></tr>
 <tr><td><code>REQ-FILL-CRS-007</code></td><td>TS-17A’s simple crosses sew in Ink/Stitch as in StitchCraft by the differential’s measures</td></tr>
+<tr><td><code>REQ-FILL-CRS-008</code></td><td>Upright crosses sew the bar across under the bar down, and dense ones add the second grid’s. They join at the middles of their sides, the 2 grids through their arms’ ends</td></tr>
+<tr><td><code>REQ-FILL-CRS-009</code></td><td>Double crosses sew an upright cross between their diagonals, and Smyrna crosses one over them, each loop as the table of joins gives it</td></tr>
+<tr><td><code>REQ-FILL-CRS-010</code></td><td>Half crosses sew one diagonal in each cell, in rows routed as a tatami fill’s, each stitch an odd number of times, with <code>SC-W0322</code> for an even count</td></tr>
+<tr><td><code>REQ-FILL-CRS-011</code></td><td><code>cross_rotation</code> turns the grid, about the offset’s point on the canvas’s grid, and a part turned with its grid sews its crosses turned</td></tr>
+<tr><td><code>REQ-FILL-CRS-012</code></td><td>TS-17A’s other samples and the methods’ case sew in Ink/Stitch as in StitchCraft by the differential’s measures</td></tr>
 </tbody>
 </table>
 </div>

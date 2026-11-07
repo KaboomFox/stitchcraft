@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-20f46e19.js";
+            window.path_to_searchindex_js = "../searchindex-1975b613.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-8178bdeb.js"></script>
@@ -288,7 +288,8 @@ and sews one path through it after the same underlay (<a href="algorithms/fills.
 circular fill, sewn from M7.9, sews a spiral round the middle of each part after that underlay too, and
 routes the spiral’s pieces as a tatami fill routes its rows (<a href="algorithms/fills.html#circular-fill">fills</a>).
 A cross stitch fill, sewn from M10.1, sews a cross in each cell of a grid that each part covers enough of,
-with no underlay, the crosses that meet at a corner in one run (<a href="algorithms/cross-stitch.html">cross stitch</a>).
+with no underlay, the crosses that meet in one run. From M10.2 it sews each of Ink/Stitch’s 12 methods, its
+half crosses in rows routed as a tatami fill’s (<a href="algorithms/cross-stitch.html">cross stitch</a>).
 The other stroke, satin and fill methods are skipped with <code>SC-W0011</code> until their milestones. An element whose parameters are wrong (<code>SC-E0101</code>) is skipped too, and
 the rest of the design still plans.</p>
 <p>Each element is generated with the shortest stitch for it: the larger of the machine’s (the profile’s
@@ -301,7 +302,8 @@ from M6.3). The fill’s settings are read as for sewing it, and what they say i
 the region is built and the rows laid over it: no needle point is placed and no route is searched. A
 contour fill has no rows, and shows its path round its rings, from M7.7. A meander fill shows its path
 through its tile as the element’s seed lays it, from M7.8, a circular fill the pieces of its spiral,
-from M7.9, and a cross stitch fill the 2 diagonals of each of its crosses, from M10.1.</p>
+from M7.9, and a cross stitch fill the bars of each of its crosses, from M10.1, or each half cross’s
+diagonal, from M10.2.</p>
 <p>Rules every generator follows:</p>
 <ul>
 <li><strong>Pure:</strong> output depends only on (normalized shape, typed params, neighbours, seed, budget).</li>
