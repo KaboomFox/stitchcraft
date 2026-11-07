@@ -310,12 +310,12 @@ fn walk(
     let mut at = linked.after(from);
     while let Some(k) = at.filter(|&k| Some(k) != until) {
         meter.charge(1)?;
-        if let Some(place) = linked.spots.get(k).copied() {
-            for &join in kind.good().iter().rev() {
-                let middle = sub(place, join);
-                if take(middle) {
-                    linked.insert(k, loop_from(kind, middle, join, repeats));
-                }
+        // `after` only gives places that `linked` holds, so the walk never stops here.
+        let Some(place) = linked.spots.get(k).copied() else { break };
+        for &join in kind.good().iter().rev() {
+            let middle = sub(place, join);
+            if take(middle) {
+                linked.insert(k, loop_from(kind, middle, join, repeats));
             }
         }
         at = linked.after(k);
