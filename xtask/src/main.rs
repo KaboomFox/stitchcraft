@@ -21,6 +21,7 @@ mod compat;
 mod conformance;
 mod contract_page;
 mod contract_versions;
+mod corpus;
 mod coverage;
 mod design_map;
 mod deviations;
@@ -103,6 +104,12 @@ enum Command {
         /// StitchCraft, and compare the machine files by measures (conformance/inkstitch/README.md)
         #[arg(long)]
         differential: bool,
+        /// Sew every glyph of Ink/Stitch's fonts in the differential, not the nightly sample
+        #[arg(long, requires = "differential")]
+        every_glyph: bool,
+        /// Sew only the I-th of N parts of the fonts' glyphs (`--shard 2/6`)
+        #[arg(long, value_name = "I/N", requires = "differential", value_parser = conformance::fonts::Shard::parse)]
+        shard: Option<conformance::fonts::Shard>,
     },
     /// No GPL licence text or pasted Python source anywhere in the repository
     Cleanroom,
@@ -161,7 +168,7 @@ enum Command {
         #[arg(long)]
         record: bool,
     },
-    /// Download the pinned real-world corpora for Ink/Stitch differential testing (planned: M8)
+    /// Fetch Ink/Stitch's fonts at the pinned commit into the cache, check them, and list the fonts taken
     Corpus,
 }
 
@@ -268,7 +275,9 @@ fn run(command: Command) -> Result<(), String> {
         Command::Docs { check, pages: None } => docs::run(check),
         Command::Book { no_build } => book::run(no_build),
         Command::Prose { base } => prose::run(&base),
-        Command::Conformance { check, filter, bless, differential } => conformance::run(check, filter.as_deref(), bless.as_deref(), differential),
+        Command::Conformance { check, filter, bless, differential, every_glyph, shard } => {
+            conformance::run(check, filter.as_deref(), bless.as_deref(), differential, conformance::Glyphs { every: every_glyph, shard })
+        }
         Command::Cleanroom => cleanroom::run(),
         Command::UnsafeAudit => unsafe_audit::run(),
         Command::Filesize => filesize::run(),
@@ -289,7 +298,7 @@ fn run(command: Command) -> Result<(), String> {
         Command::Coverage { record } => coverage::run(record),
         Command::Mutants { record, changed, dirs } => mutants::run(record, changed, &dirs),
         Command::Perf { record } => perf::run(record),
-        Command::Corpus => Err("`corpus` arrives with roadmap step M8.6".to_string()),
+        Command::Corpus => corpus::run(),
     }
 }
 
@@ -336,6 +345,8 @@ mod tests {
             &["docs", "for", "crates/stitchcraft-core/src/lib.rs"],
             &["conformance", "--check"],
             &["conformance", "--filter", "ts-01", "--bless", "ts-01"],
+            &["conformance", "--differential", "--filter", "inkstitch-fonts", "--every-glyph", "--shard", "2/6"],
+            &["corpus"],
             &["compat", "discover", "--json"],
             &["compat", "contract", "--ref", "v0.7.0"],
             &["compat", "e2e", "--ref", "v0.12.0"],
@@ -374,6 +385,9 @@ mod tests {
             &["docs", "for"],
             &["mutants"],
             &["mutants", "--record", "--changed", "a"],
+            &["conformance", "--every-glyph"],
+            &["conformance", "--differential", "--shard", "0/6"],
+            &["conformance", "--differential", "--shard", "7/6"],
             &["compat", "e2e"],
             &["compat", "report", "--results", "r", "--discovered", "{}", "--move", "timed-out", "--date", "d", "--run-url", "u"],
         ] {

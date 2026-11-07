@@ -46,15 +46,20 @@
 //! only when the measure then agrees. So an excuse can't hide a difference of another kind: Ink/Stitch's
 //! jumps that go nowhere (`DEV-FMT-001`) excuse as many trims and jumps as there are of them, and no more.
 
+mod undo;
+
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use stitchcraft_cli::commands::plan::Source;
 use stitchcraft_core::{Budget, Point};
 use stitchcraft_engine::testsheets;
-use stitchcraft_plan::{FormatId, Rgb, Stitch, StitchKind, StitchPlan, profiles};
-use stitchcraft_testkit::metrics::footprint_overlap;
+use stitchcraft_plan::{FormatId, Rgb, StitchPlan, profiles};
+use stitchcraft_testkit::metrics::{footprint_overlap, footprint_within};
+
+pub use undo::undone;
 
 use super::cases::Subject;
 use super::runner::Outcome;
@@ -133,7 +138,7 @@ pub struct Measured {
 
 impl Measured {
     /// `plan`, measured: `None` when it has no needle point.
-    fn of(plan: &StitchPlan) -> Option<Measured> {
+    pub(super) fn of(plan: &StitchPlan) -> Option<Measured> {
         let bounds = plan.bounds()?;
         let centre = bounds.center();
         let moved = |q: Point| Point::new(q.x() - centre.x(), q.y() - centre.y()).unwrap_or(q);
@@ -147,6 +152,13 @@ impl Measured {
             jumps: stats.jumps,
             sewn: plan.sewn_stitches().iter().map(|stitch| [moved(stitch.from), moved(stitch.to)]).collect(),
         })
+    }
+
+    /// How nearly each file's thread lies where the other's does, `tolerance` millimetres apart: the lesser
+    /// share of either's footprint that the other's covers once grown by the tolerance, their centres made
+    /// one (`stitchcraft_testkit::metrics::footprint_within`).
+    pub(super) fn within(&self, other: &Measured, tolerance: f64) -> f64 {
+        footprint_within(&self.sewn, &other.sewn, tolerance).min(footprint_within(&other.sewn, &self.sewn, tolerance))
     }
 }
 
@@ -215,13 +227,27 @@ impl Inkstitch {
     }
 
     /// The PES file Ink/Stitch writes for the SVG file `design`.
-    fn pes(&self, root: &Path, design: &Path) -> Result<Vec<u8>, String> {
+    pub(super) fn pes(&self, root: &Path, design: &Path) -> Result<Vec<u8>, String> {
         self.output(root, &["--extension=output", "--format=pes"], design, "PES file")
+    }
+
+    /// The PES file Ink/Stitch writes for the SVG file `design`, or [`Ran::Nothing`] when it writes none.
+    pub(super) fn pes_or_nothing(&self, root: &Path, design: &Path) -> Result<Ran, String> {
+        self.ran(root, &["--extension=output", "--format=pes"], design, "PES file")
     }
 
     /// What Ink/Stitch's command line writes to its standard output, `what`, run with `arguments` on the SVG
     /// file `design`: an extension's result.
     pub(super) fn output(&self, root: &Path, arguments: &[&str], design: &Path, what: &str) -> Result<Vec<u8>, String> {
+        match self.ran(root, arguments, design, what)? {
+            Ran::Wrote(bytes) => Ok(bytes),
+            Ran::Nothing(said) => Err(said),
+        }
+    }
+
+    /// What Ink/Stitch's command line wrote, `what`, run with `arguments` on the SVG file `design`. It
+    /// fails when Ink/Stitch does: it ends with a status other than 0, as on an error it didn't expect.
+    fn ran(&self, root: &Path, arguments: &[&str], design: &Path, what: &str) -> Result<Ran, String> {
         let config = configured(root)?;
         let output = Command::new(&self.python)
             .arg("inkstitch.py")
@@ -234,21 +260,42 @@ impl Inkstitch {
             .env("PYTHONDONTWRITEBYTECODE", "1")
             .output()
             .map_err(|e| format!("{}: {e}", self.python))?;
-        if !output.status.success() || output.stdout.is_empty() {
-            let stderr = String::from_utf8_lossy(&output.stderr);
-            let tail: Vec<&str> = stderr.lines().rev().take(8).collect();
-            return Err(format!("Ink/Stitch wrote no {what} ({}): {}", output.status, tail.into_iter().rev().collect::<Vec<_>>().join(" / ")));
+        if output.status.success() && !output.stdout.is_empty() {
+            return Ok(Ran::Wrote(output.stdout));
         }
-        Ok(output.stdout)
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let tail: Vec<&str> = stderr.lines().rev().take(8).collect();
+        let said = format!("Ink/Stitch wrote no {what} ({}): {}", output.status, tail.into_iter().rev().collect::<Vec<_>>().join(" / "));
+        if output.status.success() { Ok(Ran::Nothing(said)) } else { Err(said) }
     }
 }
 
+/// What Ink/Stitch's command line gave, when it ran to its end.
+#[derive(Debug, PartialEq)]
+pub(super) enum Ran {
+    /// What it wrote to its standard output.
+    Wrote(Vec<u8>),
+    /// It wrote nothing, as it does when it finds nothing to sew, or an element it can't sew: what it said.
+    Nothing(String),
+}
+
 /// Ink/Stitch's configuration folder under `root`, [`CONFIG`], with its settings written: the stitch-plan
-/// cache off.
+/// cache off. The settings file is written only when it holds something else, and whole, by renaming a file
+/// of its own: the fonts case runs Ink/Stitch on several glyphs side by side, and an Ink/Stitch that read
+/// the file half written would take its default settings, the cache on.
 fn configured(root: &Path) -> Result<PathBuf, String> {
+    static WRITES: AtomicUsize = AtomicUsize::new(0);
     let config = root.join(CONFIG);
     let settings = config.join("inkstitch").join("settings.json");
-    let written = settings.parent().map_or(Ok(()), std::fs::create_dir_all).and_then(|()| std::fs::write(&settings, SETTINGS));
+    if std::fs::read_to_string(&settings).is_ok_and(|held| held == SETTINGS) {
+        return Ok(config);
+    }
+    let whole = settings.with_extension(format!("json.{}-{}", std::process::id(), WRITES.fetch_add(1, Ordering::Relaxed)));
+    let written = settings
+        .parent()
+        .map_or(Ok(()), std::fs::create_dir_all)
+        .and_then(|()| std::fs::write(&whole, SETTINGS))
+        .and_then(|()| std::fs::rename(&whole, &settings));
     written.map_err(|e| format!("{}: {e}", util::rel(&settings)))?;
     Ok(config)
 }
@@ -284,7 +331,7 @@ pub fn run(root: &Path, subject: &Subject, excused: &BTreeMap<String, String>, o
     };
     let theirs = theirs.and_then(|bytes| measured(&bytes, "Ink/Stitch"));
     let ours = ours.and_then(|bytes| measured(&bytes, "StitchCraft"));
-    let ((_, ours), (their_plan, theirs)) = match (ours, theirs) {
+    let ((our_plan, ours), (their_plan, theirs)) = match (ours, theirs) {
         (Ok(ours), Ok(theirs)) => (ours, theirs),
         (ours, theirs) => {
             outcome.failures.extend(ours.err().into_iter().chain(theirs.err()));
@@ -297,50 +344,9 @@ pub fn run(root: &Path, subject: &Subject, excused: &BTreeMap<String, String>, o
         .values()
         .collect::<BTreeSet<_>>()
         .into_iter()
-        .filter_map(|deviation| Some((deviation.clone(), compare(&ours, &Measured::of(&undone(deviation, &their_plan)?)?))))
+        .filter_map(|deviation| Some((deviation.clone(), compare(&ours, &Measured::of(&undone(deviation, &their_plan, &our_plan)?)?))))
         .collect();
     judge(compare(&ours, &theirs), excused, &again, outcome);
-}
-
-/// The deviation by which pystitch, writing Ink/Stitch's PES files, writes jumps that go nowhere.
-pub const NOWHERE: &str = "DEV-FMT-001";
-
-/// Ink/Stitch's file `plan` with the deviation `deviation` undone, as the file would read had Ink/Stitch
-/// done as StitchCraft does; `None` for a deviation the differential can't undo, which excuses its
-/// measures as they are.
-///
-/// - [`NOWHERE`]: each jump that goes nowhere at the start of a colour block or right after a stop, where
-///   Ink/Stitch's plan has no trim, and the trim it carries, as every jump of a PES file does. StitchCraft
-///   writes no such record (`REQ-FMT-010`).
-pub fn undone(deviation: &str, plan: &StitchPlan) -> Option<StitchPlan> {
-    (deviation == NOWHERE).then(|| without_jumps_nowhere(plan))
-}
-
-/// `plan` without the jumps that go nowhere at the start of a colour block or right after a stop, nor the
-/// trims they carry ([`undone`]).
-fn without_jumps_nowhere(plan: &StitchPlan) -> StitchPlan {
-    let mut plan = plan.clone();
-    let mut needle = None;
-    for block in &mut plan.blocks {
-        let mut kept: Vec<Stitch> = Vec::with_capacity(block.stitches.len());
-        for &stitch in &block.stitches {
-            if stitch.kind == StitchKind::Jump && needle == Some(stitch.at) {
-                // The trim a PES file's jump carries, and what comes before it.
-                let carried = kept.last().is_some_and(|before| before.kind == StitchKind::Trim);
-                let before = kept.len().saturating_sub(usize::from(carried));
-                if kept.get(..before).and_then(<[_]>::last).is_none_or(|before| before.kind == StitchKind::Stop) {
-                    kept.truncate(before);
-                    continue;
-                }
-            }
-            if !stitch.kind.is_command() {
-                needle = Some(stitch.at);
-            }
-            kept.push(stitch);
-        }
-        block.stitches = kept;
-    }
-    plan
 }
 
 /// Judges the `compared` measures, with those `excused` excuses, and the measures compared `again` with
@@ -359,14 +365,13 @@ fn judge(compared: Vec<Compared>, excused: &BTreeMap<String, String>, again: &BT
                     format!("excused by `{deviation}`")
                 }
                 Some((_, mine, undone, true)) => {
-                    outcome.notes.push(format!("{name} differ, as {deviation} says, and agree without it: StitchCraft {mine}, Ink/Stitch {undone}"));
-                    format!("explained by `{deviation}`: Ink/Stitch {undone} without it")
+                    outcome.notes.push(format!("{name} differ, as {deviation} says, and agree without it: {}", said_undone(measure, mine, undone)));
+                    format!("explained by `{deviation}`: {} without it", theirs_undone(measure, mine, undone))
                 }
                 Some((_, mine, undone, false)) => {
-                    outcome
-                        .failures
-                        .push(format!("{name} differ by more than {deviation} explains: without it, StitchCraft {mine}, Ink/Stitch {undone}"));
-                    format!("❌ Ink/Stitch {undone} without `{deviation}`")
+                    let without = said_undone(measure, mine, undone);
+                    outcome.failures.push(format!("{name} differ by more than {deviation} explains: without it, {without}"));
+                    format!("❌ {} without `{deviation}`", theirs_undone(measure, mine, undone))
                 }
             },
             (false, None) => {
@@ -384,7 +389,24 @@ fn judge(compared: Vec<Compared>, excused: &BTreeMap<String, String>, again: &BT
 
 /// How `measure` differs, StitchCraft's `mine` against Ink/Stitch's `other`, for a failure or an excuse's
 /// note. The overlap is a measure of the pair, with one value, given with the least it may be.
-fn differs(measure: Measure, mine: &str, other: &str) -> String {
+/// A measure compared again, with a deviation undone in Ink/Stitch's file: StitchCraft's `mine` and Ink/Stitch's
+/// `undone`, or the overlap, one number of both files.
+pub(super) fn said_undone(measure: Measure, mine: &str, undone: &str) -> String {
+    match measure {
+        Measure::Overlap => format!("overlap {mine}"),
+        _ => format!("StitchCraft {mine}, Ink/Stitch {undone}"),
+    }
+}
+
+/// Ink/Stitch's side of [`said_undone`]: its `undone`, or the overlap, `mine`.
+pub(super) fn theirs_undone(measure: Measure, mine: &str, undone: &str) -> String {
+    match measure {
+        Measure::Overlap => format!("overlap {mine}"),
+        _ => format!("Ink/Stitch {undone}"),
+    }
+}
+
+pub(super) fn differs(measure: Measure, mine: &str, other: &str) -> String {
     let name = measure.name();
     match measure {
         Measure::Overlap => format!("{name} {mine}, below {LEAST_OVERLAP}"),
@@ -458,7 +480,10 @@ pub fn report(outcomes: &[Outcome], commit: &str, pin: &str) -> String {
             if !(o.failures.is_empty() && o.notes.is_empty() && o.skipped.is_none()) {
                 out.push('\n');
             }
-            out.push_str("| Measure | StitchCraft | Ink/Stitch | |\n|---|---|---|---|\n");
+            // A case whose rows aren't measures gives its table's head as its first 2 rows (the fonts').
+            if !o.details.get(1).is_some_and(|row| row.starts_with("|---")) {
+                out.push_str("| Measure | StitchCraft | Ink/Stitch | |\n|---|---|---|---|\n");
+            }
             for detail in &o.details {
                 out.push_str(detail);
                 out.push('\n');
@@ -504,7 +529,13 @@ mod tests {
         let root = util::root().join("target/xtask-tests/differential-config");
         let config = configured(&root).unwrap();
         assert_eq!(config, root.join(CONFIG));
-        assert_eq!(std::fs::read_to_string(config.join("inkstitch/settings.json")).unwrap(), r#"{"cache_size": 0}"#);
+        let settings = config.join("inkstitch/settings.json");
+        assert_eq!(std::fs::read_to_string(&settings).unwrap(), r#"{"cache_size": 0}"#);
+        // Settings of another cache are replaced, and nothing else is left in the folder.
+        std::fs::write(&settings, r#"{"cache_size": 100}"#).unwrap();
+        configured(&root).unwrap();
+        assert_eq!(std::fs::read_to_string(&settings).unwrap(), r#"{"cache_size": 0}"#);
+        assert_eq!(std::fs::read_dir(config.join("inkstitch")).unwrap().count(), 1);
         // A root it can't write in is said.
         std::fs::write(root.join("file"), "").unwrap();
         assert!(configured(&root.join("file")).unwrap_err().contains("settings.json"));
@@ -603,6 +634,7 @@ mod tests {
 
     #[test]
     fn an_excuse_whose_deviation_can_be_undone_holds_only_when_the_measure_then_agrees() {
+        use undo::NOWHERE;
         let row = |measure: Measure, mine: &str, other: &str, within: bool| (measure, mine.to_string(), other.to_string(), within);
         let excused = BTreeMap::from([("trims".to_string(), NOWHERE.to_string()), ("jumps".to_string(), NOWHERE.to_string())]);
         let again = BTreeMap::from([(NOWHERE.to_string(), vec![row(Measure::Trims, "30", "30", true), row(Measure::Jumps, "31", "35", false)])]);
@@ -617,53 +649,6 @@ mod tests {
                 format!("| jumps | 31 | 41 | ❌ Ink/Stitch 35 without `{NOWHERE}` |")
             ]
         );
-    }
-
-    #[test]
-    fn jumps_that_go_nowhere_where_the_plan_has_no_trim_are_undone_with_the_trims_they_carry() {
-        use stitchcraft_plan::{PlanBuilder, Provenance, Role, Thread};
-        let (red, blue) = (Thread::new(Rgb::new(237, 23, 31)), Thread::new(Rgb::new(11, 61, 145)));
-        let (top, travel) = (Provenance::plan(Role::Top), Provenance::plan(Role::Travel));
-        // As StitchCraft reads Ink/Stitch's PES files back: every jump but the first carries a trim.
-        let mut builder = PlanBuilder::new(red.clone());
-        builder.jump(p(0.0, 0.0), travel);
-        builder.stitch(p(0.0, 0.0), top);
-        builder.stitch(p(10.0, 0.0), top);
-        // A thread change where the needle is: undone.
-        builder.change_thread(blue);
-        builder.trim(None);
-        builder.jump(p(10.0, 0.0), travel);
-        builder.stitch(p(10.0, 5.0), top);
-        // A stop where the needle is: undone.
-        builder.stop(None);
-        builder.trim(None);
-        builder.jump(p(10.0, 5.0), travel);
-        builder.stitch(p(10.0, 9.0), top);
-        // A trim the plan asked for, and a jump that goes nowhere after it: StitchCraft writes it too.
-        builder.trim(None);
-        builder.jump(p(10.0, 9.0), travel);
-        builder.stitch(p(14.0, 9.0), top);
-        // A thread change that moves: kept.
-        builder.change_thread(red);
-        builder.trim(None);
-        builder.jump(p(20.0, 9.0), travel);
-        builder.stitch(p(20.0, 12.0), top);
-        let plan = builder.finish();
-        assert_eq!((plan.stats().trims, plan.stats().jumps), (4, 5));
-        let without = undone(NOWHERE, &plan).unwrap();
-        assert_eq!((without.stats().trims, without.stats().jumps), (2, 3));
-        let kinds = |block: &stitchcraft_plan::ColorBlock| block.stitches.iter().map(|s| s.kind).collect::<Vec<_>>();
-        let (n, j, t, s) = (StitchKind::Normal, StitchKind::Jump, StitchKind::Trim, StitchKind::Stop);
-        assert_eq!(without.blocks.iter().map(kinds).collect::<Vec<_>>(), [vec![j, n, n], vec![n, s, n, t, j, n], vec![t, j, n]]);
-        assert_eq!(without.stats().stitches, plan.stats().stitches);
-        // A deviation the differential can't undo excuses as it is.
-        assert_eq!(undone("DEV-THREAD-001", &plan), None);
-    }
-
-    #[test]
-    fn every_deviation_the_differential_undoes_is_in_the_ledger() {
-        let ledger = crate::deviations::parse(&util::read(&util::root().join(crate::deviations::LEDGER)).unwrap()).unwrap();
-        assert!(ledger.iter().any(|d| d.id == NOWHERE && d.requirements.iter().any(|r| r == "REQ-FMT-010")));
     }
 
     #[test]
@@ -684,6 +669,18 @@ mod tests {
         );
         assert!(report.contains("## ✅ `passed` (conformance/cases/inkstitch/passed.toml)\n\n| Measure"), "{report}");
         assert!(report.contains("- skipped: no Ink/Stitch\n"), "{report}");
+    }
+
+    #[test]
+    fn threads_that_run_a_little_apart_lie_within_a_tolerance_of_each_other() {
+        let line = |y: f64| measured(2, [10.0, 0.0], &[], 0, 0, &[[p(0.0, y), p(10.0, y)]]);
+        // 0.2 mm apart: within 0.3 mm of each other, and not within 0.05.
+        assert_eq!(line(0.0).within(&line(0.2), 0.3), 1.0);
+        assert!(line(0.0).within(&line(0.2), 0.05) < 0.9);
+        // A thread the other lacks: the lesser share counts, both ways.
+        let more = measured(4, [10.0, 0.0], &[], 0, 0, &[[p(0.0, 0.0), p(10.0, 0.0)], [p(0.0, 5.0), p(10.0, 5.0)]]);
+        let (one, other) = (more.within(&line(0.0), 0.3), line(0.0).within(&more, 0.3));
+        assert!(one < 0.6 && one == other, "{one} {other}");
     }
 
     #[test]

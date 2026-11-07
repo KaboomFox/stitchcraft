@@ -25,4 +25,7 @@ gates catch anything you miss.
 8. **Gate.** `cargo xtask ci`, then open the PR with the roadmap step id. A test sheet drawn as a design is
    checked mirrored, turned and drawn again too (`tests/transformed.rs`). The type's sheet must sew the same
    whichever way it is drawn.
-9. **Sew-out.** If the type is new to the machine, list it for the next machine checkpoint (TS-11).
+9. **Ink/Stitch's fonts.** The glyph differential lists the glyphs of a type StitchCraft doesn't sew yet. Once
+   it sews the type, they are compared, and the nightly sample and the weekly run of every glyph sew them
+   in both programs (`conformance/inkstitch/README.md`).
+10. **Sew-out.** If the type is new to the machine, list it for the next machine checkpoint (TS-11).
