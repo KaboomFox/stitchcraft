@@ -220,6 +220,12 @@ Stitching order is paint order (bottom first). Hidden objects are skipped, as Ve
 for them, and locked objects are stitched. Thread colours come from the object's fill for a fill, and
 from its stroke for a stroke or a satin column, as in Ink/Stitch, mapped to the profile's palette.
 
+From M10.15, objects next to each other in paint order and in one thread, whose StitchCraft effects set
+`underlays_first`, sew their underlays before their top stitches
+([underlays first](engine-pipeline.md#underlays-first)). The toggle is a row of every stitch family's
+dialog. Set on a group's effect, it applies to every path in the group (`REQ-VC-006`). A live effect sews
+its object alone, so a preview doesn't show the order, and `stitch export --preview` draws what sews.
+
 ### Exporters: File › Export writes PES and DST
 
 VectorCraft 0.14 added exporter plug-ins (the RFC's [P1](rfc-vectorcraft-abi-v2.md#p1-exporter-plug-ins)).

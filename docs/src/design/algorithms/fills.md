@@ -334,6 +334,10 @@ element's jump length, and farther with a jump. The generator makes that join it
 never forces locks after a layer of underlay, where assembly would after any group of an element with
 `force_lock_stitches`.
 
+From M10.15 a fill in a run of `underlays_first` sews the underlay of every part before any top rows. Its
+underlay and its top rows each start and end by their own neighbours
+([engine pipeline](../engine-pipeline.md#underlays-first)).
+
 The underlay is sewn on the part shrunk by `fill_underlay_inset_mm`, and the top rows on the part grown by
 `expand_mm`, or shrunk where it is negative (`REQ-FILL-TAT-012`, since M5.7). A part is grown or shrunk
 as GEOS buffers a polygon, which Ink/Stitch calls, with round corners of 16 segments to a quarter circle

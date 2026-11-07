@@ -213,6 +213,15 @@ Ink/Stitch doesn't read a group's settings, but for `ignore_object`. `SC-W0802` 
 has, which don't change what sews. The [compatibility contract](inkstitch-compat-contract.md) lists every setting, with
 the milestone in which StitchCraft reads it.
 
+A setting of StitchCraft's own that a stitch type reads is an attribute of Ink/Stitch's namespace as well,
+read as every other. From M10.15, `inkstitch:underlays_first` on a shape sews its elements' underlays
+with those of the elements beside them that set it, before their top stitches
+([underlays first](engine-pipeline.md#underlays-first),
+[ADR-0018](adr/0018-underlays-first-is-a-setting-of-each-element.md)). Ink/Stitch (read at `d59c9ab`)
+reads only the settings on its own list of attributes, so it sews such a shape as one without the
+attribute. Its Params dialog leaves the attribute in place, Duplicate Params copies it to other shapes
+with the rest of the shape's settings, and Remove Embroidery Settings deletes it with them.
+
 ## Ink/Stitch objects
 
 An Ink/Stitch SVG has 3 kinds of object that Ink/Stitch reads and does not sew. The adapter sews none of
