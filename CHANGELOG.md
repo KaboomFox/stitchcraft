@@ -18,9 +18,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     middle, which then lies on top. `SC-W0321` names the shortest stitch of each kind of cross.
   - A half cross sews one diagonal in each cell, `\`, or `/` flipped. The diagonals that run on from cell
     to cell are rows, routed as a tatami fill's rows with underpath off. Between rows the needle is sent
-    along the outline and holes of each piece of cells, and 2 cells that meet at a corner join through it. Each
-    stitch of a row lies an odd number of times, and an even `cross_thread_count` sews the odd count above
-    it (`SC-W0322`).
+    along the outline and holes of each piece of cells, and 2 cells that meet at a corner join through
+    it. Each stitch of a row lies an odd number of times, and an even `cross_thread_count` sews the odd
+    count above it (`SC-W0322`).
   - `cross_rotation` turns the grid clockwise for a positive angle. On the canvas's grid it turns about
     the point the offset names, as Ink/Stitch turns it. With `canvas_grid_origin` off the grid starts at
     the turned part's corner, so that a part turned with its grid sews its crosses turned with it, as
