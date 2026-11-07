@@ -115,7 +115,7 @@ pub fn generate(element: &Element, settings: &DesignSettings, profile: &MachineP
                 neighbours: &Neighbours, budget: &Budget) -> Generation;   // since M3.8
 
 pub struct Generation {
-    pub generated: Option<Generated>,   // the element's stitch groups; None when it is skipped
+    pub generated: Option<Generated>,   // the element's stitch groups and their threads (M10.5); None when it is skipped
     pub diagnostics: Vec<Diagnostic>,
 }
 ```

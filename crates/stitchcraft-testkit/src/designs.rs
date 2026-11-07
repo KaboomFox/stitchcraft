@@ -2,10 +2,19 @@
 //!
 //! Plan assembly and finalizing are tested through the engine's entry point, `stitchcraft_engine::plan`,
 //! on designs of a few straight strokes. The helpers are shared so every case builds them the same way.
+//!
+//! No stitch type gives its groups threads of their own yet (M10.5): tartan fills will from M10.6 and
+//! gradient fills from M10.12. Until then [`threaded`] gives assembly what such a generator would, real
+//! groups of needle points each given a thread, and assembles and finalizes them as `plan` does. Every
+//! case of an element sewn in several threads starts from it, [`three_threads`] among them.
 
 use stitchcraft_core::{Budget, ElementId, Mm, Point};
+use stitchcraft_engine::assemble::{Assembled, assemble};
 use stitchcraft_engine::auto::{self, AutoParams};
 use stitchcraft_engine::design::{Cap, Clip, Design, DesignSettings, Element, FillRule, Hints, Path, Segment, Shape, Subpath};
+use stitchcraft_engine::finalize::{Finalized, finalize};
+use stitchcraft_engine::generate::{approach, generate};
+use stitchcraft_engine::generators::{Colour, Neighbours};
 use stitchcraft_engine::{PlanOutcome, plan};
 use stitchcraft_params::ParamSet;
 use stitchcraft_plan::profiles::REFERENCE;
@@ -15,6 +24,8 @@ use stitchcraft_plan::{Rgb, Role, StitchKind, StitchPlan, Thread};
 pub const RED: Thread = Thread::new(Rgb::new(200, 0, 0));
 /// A blue thread.
 pub const BLUE: Thread = Thread::new(Rgb::new(0, 0, 200));
+/// A green thread.
+pub const GREEN: Thread = Thread::new(Rgb::new(0, 160, 0));
 
 /// The point (`x`, `y`).
 pub fn p(x: f64, y: f64) -> Point {
@@ -175,6 +186,54 @@ pub fn planned(elements: Vec<Element>) -> PlanOutcome {
 /// `elements` planned for the reference machine with `settings`.
 pub fn planned_with(elements: Vec<Element>, settings: DesignSettings) -> PlanOutcome {
     plan(&Design::new(elements, settings).unwrap(), REFERENCE, &Budget::DEFAULT)
+}
+
+/// The colour of a group sewn in `thread` that ends a colour block, which a trim follows when its
+/// element's `trim_after` is on (`REQ-ASM-007`).
+pub fn block(thread: &Thread) -> Colour {
+    Colour { thread: Some(thread.clone()), ends_block: true }
+}
+
+/// The colour of a group sewn in `thread`, or in its element's for `None`, that ends no colour block, as a
+/// tartan's underlay ends none.
+pub fn within(thread: Option<&Thread>) -> Colour {
+    Colour { thread: thread.cloned(), ends_block: false }
+}
+
+/// What a design of `elements`, in the order they sew, plans to for the reference machine with `settings`
+/// when each element's groups have the colours given with it, by their place, as a generator of several
+/// threads gives them (`REQ-ASM-006`): each element generated as `plan` generates it, between its
+/// neighbours, then assembled and finalized. No order is chosen, and the plan's origin is where the
+/// coordinates are unless `settings` gives one.
+pub fn threaded(elements: &[(Element, Vec<Colour>)], settings: DesignSettings) -> PlanOutcome {
+    let settings = DesignSettings { origin: settings.origin.or(Some(p(0.0, 0.0))), ..settings };
+    let budget = Budget::DEFAULT;
+    let (mut generated, mut diagnostics, mut needle) = (Vec::new(), Vec::new(), None);
+    for (i, (element, colours)) in elements.iter().enumerate() {
+        let next = elements.get(i + 1).and_then(|(next, _)| approach(next, &settings, &budget));
+        let generation = generate(element, &settings, REFERENCE, &Neighbours { needle, next }, &budget);
+        diagnostics.extend(generation.diagnostics);
+        let Some(mut sewn) = generation.generated else { continue };
+        sewn.colours = colours.clone();
+        needle = sewn.groups.iter().rev().find_map(|group| group.last().copied()).or(needle);
+        generated.push((element, sewn));
+    }
+    let mut meter = budget.meter();
+    let Some(Assembled { plan, warnings, shortest }) = assemble(&generated, &settings, &mut meter).unwrap() else {
+        return PlanOutcome { plan: None, diagnostics };
+    };
+    diagnostics.extend(warnings);
+    let Finalized { plan, diagnostics: finalized } = finalize(plan, REFERENCE, &settings, &shortest, &mut meter).unwrap();
+    diagnostics.extend(finalized);
+    PlanOutcome { plan, diagnostics }
+}
+
+/// The plan of one element sewn in 3 threads, red, green and blue, as a linear gradient fill of 3 stops is
+/// sewn: a stroke of 3 lines 10 mm long, 5 mm apart, one in each thread, trimmed after each colour block
+/// (`REQ-ASM-006`, `REQ-ASM-007`). Its shape is `J L4 S5 L4 T | J L4 S5 L4 T | J L4 S5 L4 T`.
+pub fn three_threads() -> StitchPlan {
+    let lines = stroke("gradient", &[((0.0, 0.0), 10.0), ((0.0, 5.0), 10.0), ((0.0, 10.0), 10.0)], &RED, &[("trim_after", "true")]);
+    threaded(&[(lines, vec![block(&RED), block(&GREEN), block(&BLUE)])], DesignSettings::default()).plan.unwrap()
 }
 
 /// The plan in words: `J` a jump, `S` a stitch, `L` a lock stitch, `T` a trim, `P` a stop and `|` a thread

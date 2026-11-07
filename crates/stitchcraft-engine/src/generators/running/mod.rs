@@ -108,7 +108,7 @@ fn sewn(
         };
         warnings.push(too_small(skipped, min));
     }
-    Ok(Stitched { runs, warnings })
+    Ok(Stitched { runs, colours: Vec::new(), warnings })
 }
 
 /// The pattern of stitch lengths the parameter `key` gives, each raised to at least twice the shortest

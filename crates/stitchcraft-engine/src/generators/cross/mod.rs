@@ -181,7 +181,7 @@ fn sewn(region: &Region, cross: &Cross, needle: Option<Point>, next: Option<&App
     }
     warnings.extend(no_cell(bare, ordered.len(), cross.coverage));
     warnings.extend(shrunk_away(Code::FillExpandShrinksAway, "expand_mm", "its crosses are", gone, region.parts.len()));
-    Ok(Stitched { runs, warnings })
+    Ok(Stitched { runs, colours: Vec::new(), warnings })
 }
 
 /// The parts `region`'s parts grow into by `expand`, and how many of them it shrank away. Grown, parts that
