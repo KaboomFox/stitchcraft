@@ -204,6 +204,7 @@ pub const stitchcraft_engine::generate::FillParams::SPECS: &'static [stitchcraft
 pub fn stitchcraft_engine::generate::FillParams::from_set(&stitchcraft_params::set::ParamSet) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
 pub fn stitchcraft_engine::generate::FillParams::from_set_as(&stitchcraft_params::set::ParamSet, stitchcraft_params::stitch_type::StitchType) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
 pub struct stitchcraft_engine::generate::Generated
+pub stitchcraft_engine::generate::Generated::colours: alloc::vec::Vec<stitchcraft_engine::generators::Colour>
 pub stitchcraft_engine::generate::Generated::common: stitchcraft_engine::common::CommonParams
 pub stitchcraft_engine::generate::Generated::groups: alloc::vec::Vec<alloc::vec::Vec<stitchcraft_core::units::Point>>
 pub stitchcraft_engine::generate::Generated::min_stitch: stitchcraft_core::units::Mm
@@ -587,10 +588,14 @@ pub enum stitchcraft_engine::generators::Approach
 pub stitchcraft_engine::generators::Approach::Area(alloc::vec::Vec<stitchcraft_engine::normalize::region::Polygon>)
 pub stitchcraft_engine::generators::Approach::Point(stitchcraft_core::units::Point)
 pub stitchcraft_engine::generators::Approach::Shape(alloc::vec::Vec<alloc::vec::Vec<stitchcraft_core::units::Point>>)
+pub struct stitchcraft_engine::generators::Colour
+pub stitchcraft_engine::generators::Colour::ends_block: bool
+pub stitchcraft_engine::generators::Colour::thread: core::option::Option<stitchcraft_plan::thread::Thread>
 pub struct stitchcraft_engine::generators::Neighbours
 pub stitchcraft_engine::generators::Neighbours::needle: core::option::Option<stitchcraft_core::units::Point>
 pub stitchcraft_engine::generators::Neighbours::next: core::option::Option<stitchcraft_engine::generators::Approach>
 pub struct stitchcraft_engine::generators::Stitched
+pub stitchcraft_engine::generators::Stitched::colours: alloc::vec::Vec<stitchcraft_engine::generators::Colour>
 pub stitchcraft_engine::generators::Stitched::runs: alloc::vec::Vec<alloc::vec::Vec<stitchcraft_core::units::Point>>
 pub stitchcraft_engine::generators::Stitched::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
 pub mod stitchcraft_engine::locks

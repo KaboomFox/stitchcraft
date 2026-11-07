@@ -16,7 +16,9 @@
 //! 3. **Few thread changes.** The next element has the thread that is sewing, as long as an element of that
 //!    thread is free to sew, every element that must sew before it sewn. Otherwise the thread changes to
 //!    that of the first free element in paint order. Threads are the same when their colours are, as plan
-//!    assembly counts thread changes.
+//!    assembly counts thread changes. An element sewn in several threads moves as one, its colours
+//!    together and in their order: it has the thread it starts in, and leaves the one it ends in sewing
+//!    (`REQ-AUTO-024`).
 //! 4. **The nearest next.** Of the free elements of that thread, the next is the one whose box lies nearest
 //!    the box of the one sewn last, then the one whose box's centre does, then the one drawn first. Each
 //!    element then starts and ends at its points nearest its neighbours (`REQ-GEN-003`).
@@ -46,7 +48,7 @@ use stitchcraft_plan::Rgb;
 
 use super::{Failed, Kind, Shapes, TOUCHING, envelope, joined, near, no_area};
 use crate::design::{Element, Join, Shape};
-use crate::generate::stops_after;
+use crate::generate::{colours, stops_after};
 use crate::normalize::region::Polygon;
 use crate::normalize::region::geom::Envelope;
 use crate::normalize::region::ops::{area_of, buffered, intersection};
@@ -103,8 +105,8 @@ pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget) -
 
 /// What the order needs to know of an element.
 struct Facts {
-    /// Its thread's colour.
-    colour: Rgb,
+    /// The colours of its threads, in the order it sews them ([`colours`]).
+    colours: Vec<Rgb>,
     /// Whether it has a stop after it, which nothing moves across.
     stop: bool,
     /// The box round it ([`reach`]); `None` for a path of no points.
@@ -114,7 +116,22 @@ struct Facts {
 impl Facts {
     /// What the order needs to know of `element`, whose box is `reach`.
     fn of(element: &Element, reach: Option<Envelope>) -> Facts {
-        Facts { colour: element.thread.color, stop: stops_after(element), reach }
+        Facts { colours: colours(element), stop: stops_after(element), reach }
+    }
+
+    /// The colour of the thread it starts in, which must be sewing for it to sew next without a change.
+    fn first(&self) -> Option<Rgb> {
+        self.colours.first().copied()
+    }
+
+    /// The colour of the thread it ends in, which is sewing once it is sewn.
+    fn last(&self) -> Option<Rgb> {
+        self.colours.last().copied()
+    }
+
+    /// How many times its thread changes as it is sewn, between colours one after the other that differ.
+    fn changes(&self) -> usize {
+        self.colours.windows(2).filter(|pair| matches!(pair, [a, b] if a != b)).count()
     }
 }
 
@@ -262,33 +279,34 @@ impl Order<'_> {
     }
 
     /// Puts the elements of `run` after those `sewing` holds, with `meter`'s work: of the elements free to
-    /// sew, those of the thread sewing, or else those of the first one's thread, and of those the one
-    /// nearest the last sewn. An element of a later run that one placed here frees waits for its own run, so
-    /// that none moves across what ends this one, a stop or an element kept in its place, and none is
-    /// placed twice.
+    /// sew, those that start in the thread sewing, or else those that start in the first one's thread, and
+    /// of those the one nearest the last sewn, whose last thread is then sewing. An element of a later run
+    /// that one placed here frees waits for its own run, so that none moves across what ends this one, a
+    /// stop or an element kept in its place, and none is placed twice.
     fn run(&mut self, run: &[usize], sewing: &mut Sewing, meter: &mut Meter) -> Result<(), Exhausted> {
         let members: BTreeSet<usize> = run.iter().copied().collect();
         let mut free: BTreeSet<usize> = run.iter().copied().filter(|&index| self.graph.waiting(index) == 0).collect();
         while let Some(&first) = free.first() {
-            let colour = |index: usize| self.facts.get(index).map(|facts| facts.colour);
+            let starts = |index: usize| self.facts.get(index).and_then(Facts::first);
             let (mut same, mut changed) = (Vec::new(), Vec::new());
             for &index in &free {
                 meter.charge(1)?;
-                if colour(index) == sewing.thread {
+                if starts(index) == sewing.thread {
                     same.push(index);
                 }
-                if colour(index) == colour(first) {
+                if starts(index) == starts(first) {
                     changed.push(index);
                 }
             }
             if same.is_empty() {
-                (same, sewing.thread) = (changed, colour(first));
+                same = changed;
             }
             let Some(next) = self.nearest(&same, sewing.last) else { break };
             free.remove(&next);
             free.extend(self.graph.release(next).into_iter().filter(|index| members.contains(index)));
             sewing.order.push(next);
             sewing.last = Some(next);
+            sewing.thread = self.facts.get(next).and_then(Facts::last);
         }
         Ok(())
     }
@@ -365,7 +383,7 @@ fn apart(a: &Envelope, b: &Envelope) -> f64 {
 struct Sewing {
     /// The elements placed, in the order they sew.
     order: Vec<usize>,
-    /// The thread sewing: the last placed element's; `None` before the first.
+    /// The thread sewing: the one the last placed element ends in; `None` before the first.
     thread: Option<Rgb>,
     /// The last placed.
     last: Option<usize>,
@@ -432,10 +450,12 @@ impl Graph {
     }
 }
 
-/// How many times the thread changes from one element of `order` to the next.
+/// How many times the thread changes as the elements of `order` are sewn: from one element to the next, and
+/// inside the elements sewn in several threads, as the plan changes it.
 fn changes(order: &[usize], facts: &[Facts]) -> usize {
-    let colour = |index: usize| facts.get(index).map(|facts| facts.colour);
-    order.windows(2).filter(|pair| matches!(pair, [a, b] if colour(*a) != colour(*b))).count()
+    let of = |index: usize| facts.get(index);
+    let between = order.windows(2).filter(|pair| matches!(pair, [a, b] if of(*a).and_then(Facts::last) != of(*b).and_then(Facts::first)));
+    between.count() + order.iter().filter_map(|&index| of(index)).map(Facts::changes).sum::<usize>()
 }
 
 /// `SC-I0907` saying the elements sew in an order of their own, with `after` thread changes where paint

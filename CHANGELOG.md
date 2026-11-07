@@ -39,6 +39,26 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     way, so that a mirrored or turned design sews the same crosses mirrored or turned.
   - The user's guide shows each method, the half crosses and the turned grid in pictures, and the design
     page says how each is sewn.
+- M10.5: several threads in one element (`REQ-ASM-006`, `REQ-ASM-007`, `REQ-AUTO-024`, `REQ-THREAD-003`),
+  as the tartan fill (M10.6) and the linear gradient fill (M10.12) will need them. A generator gives each
+  run of needle points a thread of its own, or leaves it in its element's, and says which runs end a
+  colour block (`generators::Colour`, `Stitched::colours`, `Generated::colours`).
+  - Assembly changes thread inside an element as it changes it between 2 elements, with its locks as
+    `ties` allows and a jump to the new colour block. The plan's first colour block takes the thread of the
+    first group sewn.
+  - With `trim_after` on, each colour block is trimmed after, and the stop comes only after the element's
+    last group. A tartan's underlay ends no colour block, and no trim follows it. That is Ink/Stitch's
+    plan, read at `d59c9ab` and run as a black box on a gradient of 3 stops, in one part and in 2, and on a
+    tartan of 3 colours.
+  - The sewing order of automatic digitizing and `--sort-colours` moves such an element as one, its
+    colours together and in their order. It reads the thread an element starts in and the one it ends in,
+    and `SC-I0907` counts the thread changes inside it.
+  - The machine files, the previews, the report and VectorCraft's exporters show each thread. A live
+    effect still draws every group with its object's own paints, so a tartan's preview will show one
+    colour.
+  - Until a stitch type gives its groups threads of their own, the cases give assembly the groups such a
+    generator will give (`stitchcraft_testkit::designs::threaded`). The golden files of
+    `cargo xtask conformance` stay as they were.
 - M10.14, a spike: per-layer ordering will be a setting of each element, and ADR-0018 records why.
   Consecutive elements that set `underlays_first` and sew in one thread will form a run, which sews all
   its underlays before its top stitches. Where 2 satin columns cross, both underlays then lie under both

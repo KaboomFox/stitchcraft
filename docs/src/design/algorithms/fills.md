@@ -774,12 +774,15 @@ sewn with the tatami needle grid (`staggers`, `stitch_position_method`). Specifi
 
 A tatami variant whose rows alternate between the colours of a linear gradient with a probability that
 follows the gradient position, producing a blend from interleaved threads; one colour block per stop.
-Specified at M10.
+Specified at M10. The rows of each stop will be a colour block in a thread of their own
+([several threads in one element](../engine-pipeline.md#several-threads-in-one-element)).
 
 ## Tartan fill (P3)
 
 A woven plaid from a stripe specification (sett): warp and weft stripes become fills at `tartan_angle`
-with `rows_per_thread` and optional herringbone. Specified at M10.
+with `rows_per_thread` and optional herringbone. Specified at M10. The underlay sews in the fill's own
+thread and ends no colour block, and each colour's rows, then its runs, sew in that colour's thread, each
+a colour block (M10.5).
 
 ## Cross stitch (P3)
 
