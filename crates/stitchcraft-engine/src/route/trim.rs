@@ -167,4 +167,32 @@ mod tests {
         assert_eq!(outside(p(3.0, 0.0), p(7.0, 0.0), [&rail, &rail], meter).unwrap(), 2.0);
         assert_eq!(outside(p(3.0, 0.0), p(3.0, 0.0), [&rail, &square], meter).unwrap(), 0.0);
     }
+
+    #[test]
+    fn a_rail_hides_what_runs_along_it_at_a_slant_and_nothing_of_a_jump_it_only_meets() {
+        let meter = &mut Budget::DEFAULT.meter();
+        let none = Outline::Lines(Vec::new());
+        // A jump 5 mm long, 3 mm across and 4 mm down from (1, 2), and a rail on its line from 5 mm before its
+        // start to half way along it: half of it is hidden.
+        let (from, to) = (p(1.0, 2.0), p(4.0, 6.0));
+        let along = Outline::Lines(vec![[p(-2.0, -2.0), p(2.5, 4.0)]]);
+        assert_eq!(outside(from, to, [&along, &none], meter).unwrap(), 2.5);
+        // A rail that meets the jump half way along and leaves its line hides none of it, whichever of its ends
+        // meets it.
+        for rail in [[p(2.5, 4.0), p(2.5, 0.0)], [p(2.5, 0.0), p(2.5, 4.0)]] {
+            assert_eq!(outside(from, to, [&Outline::Lines(vec![rail]), &none], meter).unwrap(), 5.0, "{rail:?}");
+        }
+    }
+
+    #[test]
+    fn a_hull_hides_what_lies_inside_it_whichever_side_the_jump_crosses() {
+        let meter = &mut Budget::DEFAULT.meter();
+        let square = Outline::Area(vec![p(0.0, 0.0), p(4.0, 0.0), p(4.0, 4.0), p(0.0, 4.0)]);
+        let none = Outline::Lines(Vec::new());
+        // From inside the square to 3 mm past its side along y = 4, and to 1 mm past the one along y = 0.
+        assert!((outside(p(2.0, 2.0), p(2.0, 7.0), [&square, &none], meter).unwrap() - 3.0).abs() < 1e-12);
+        assert!((outside(p(1.0, 2.0), p(1.0, -1.0), [&none, &square], meter).unwrap() - 1.0).abs() < 1e-12);
+        // A jump that meets it at a corner only lies wholly outside it.
+        assert!((outside(p(3.0, 5.0), p(5.0, 3.0), [&square, &none], meter).unwrap() - 8.0_f64.sqrt()).abs() < 1e-12);
+    }
 }

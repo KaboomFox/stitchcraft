@@ -131,3 +131,119 @@ fn across(from: (f64, f64), to: (f64, f64)) -> [[(f64, f64); 2]; 3] {
     let middle = ((from.0 + to.0) / 2.0, (from.1 + to.1) / 2.0);
     [side(1.5), side(-1.5), [(middle.0 + nx * 1.9, middle.1 + ny * 1.9), (middle.0 - nx * 1.9, middle.1 - ny * 1.9)]]
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::design::Element;
+
+    /// The columns of the letters `letters` draws `down` mm below the top, named after `half`.
+    fn columns(half: &str, down: f64) -> Vec<Element> {
+        let mut d = Drawing::new("ts17c");
+        letters(&mut d, half, down, &thread(BLUE).unwrap()).unwrap();
+        d.design().unwrap().elements().to_vec()
+    }
+
+    /// The subpaths of `element` as an SVG path draws them, each number to a thousandth of a millimetre: `M`
+    /// and its start, `L` and a line's end, `C` and a curve's 2 control points and its end, and `Z` when it
+    /// closes.
+    fn svg(element: &Element) -> Vec<String> {
+        let at = |p: Point| format!("{},{}", (p.x() * 1000.0).round() / 1000.0 + 0.0, (p.y() * 1000.0).round() / 1000.0 + 0.0);
+        let segment = |piece: &Segment| match piece {
+            Segment::Cubic(a, b, end) => format!(" C{} {} {}", at(*a), at(*b), at(*end)),
+            _ => format!(" L{}", at(piece.end())),
+        };
+        let subpath =
+            |s: &Subpath| format!("M{}{}{}", at(s.start), s.segments.iter().map(segment).collect::<String>(), if s.closed { " Z" } else { "" });
+        element.shape.path().subpaths.iter().map(subpath).collect()
+    }
+
+    #[test]
+    fn ts17c_draws_the_word_route_in_satin_columns_3_mm_wide_with_rails_and_rungs() {
+        // Each column, in the order it is drawn: its 2 rails, then its rungs.
+        let drawn: [(&str, &[&str]); 11] = [
+            ("r-stem", &["M0,0 L0,20", "M3,0 L3,20", "M-0.4,15 L3.4,15"]),
+            // From the stem's middle along to x = 7, round half circles of 5.75 and 2.75 mm about (7, 5.75), each
+            // quarter a curve whose control points lie 0.552 of the radius from its ends, and back.
+            (
+                "r-bowl",
+                &[
+                    "M1.5,0 L7,0 C10.176,0 12.75,2.574 12.75,5.75 C12.75,8.926 10.176,11.5 7,11.5 L1.5,11.5",
+                    "M1.5,3 L7,3 C8.519,3 9.75,4.231 9.75,5.75 C9.75,7.269 8.519,8.5 7,8.5 L1.5,8.5",
+                    "M4.25,-0.4 L4.25,3.4",
+                    "M9.35,5.75 L13.15,5.75",
+                    "M4.25,8.1 L4.25,11.9",
+                ],
+            ),
+            // 1.5 mm either side of the line from (6.5, 10.5) to (11.5, 20), and a rung across its middle reaching
+            // 0.4 mm past them, all square to the line.
+            ("r-leg", &["M5.173,11.199 L10.173,20.699", "M7.827,9.801 L12.827,19.301", "M7.319,16.135 L10.681,14.365"]),
+            (
+                "o",
+                &[
+                    "M26,0 C31.523,0 36,4.477 36,10 C36,15.523 31.523,20 26,20 C20.477,20 16,15.523 16,10 C16,4.477 20.477,0 26,0 Z",
+                    "M26,3 C29.866,3 33,6.134 33,10 C33,13.866 29.866,17 26,17 C22.134,17 19,13.866 19,10 C19,6.134 22.134,3 26,3 Z",
+                ],
+            ),
+            // Down from the top at x = 39 and 42, round half circles of 6 and 3 mm about (45, 14), and up again at
+            // x = 51 and 48, the mirror image.
+            (
+                "u",
+                &[
+                    "M39,0 L39,14 C39,17.314 41.686,20 45,20 C48.314,20 51,17.314 51,14 L51,0",
+                    "M42,0 L42,14 C42,15.657 43.343,17 45,17 C46.657,17 48,15.657 48,14 L48,0",
+                    "M38.6,7 L42.4,7",
+                    "M45,16.6 L45,20.4",
+                    "M47.6,7 L51.4,7",
+                ],
+            ),
+            ("t-bar", &["M54,0 L68,0", "M54,3 L68,3", "M61,-0.4 L61,3.4"]),
+            ("t-stem", &["M59.5,1.5 L59.5,20", "M62.5,1.5 L62.5,20", "M59.1,11.15 L62.9,11.15"]),
+            ("e-stem", &["M71,0 L71,20", "M74,0 L74,20", "M70.6,10 L74.4,10"]),
+            ("e-top", &["M72.5,0 L82,0", "M72.5,3 L82,3", "M77.5,-0.4 L77.5,3.4"]),
+            ("e-middle", &["M72.5,8.5 L80,8.5", "M72.5,11.5 L80,11.5", "M77.5,8.1 L77.5,11.9"]),
+            ("e-bottom", &["M72.5,17 L82,17", "M72.5,20 L82,20", "M77.5,16.6 L77.5,20.4"]),
+        ];
+        assert_eq!(drawn.map(|(name, _)| name), LETTERS);
+        let columns = columns("drawn", 0.0);
+        let found: Vec<(String, Vec<String>)> = columns.iter().map(|column| (column.id.to_string(), svg(column))).collect();
+        let want: Vec<(String, Vec<String>)> =
+            drawn.iter().map(|(name, subpaths)| (format!("ts17c:drawn:{name}"), subpaths.iter().map(ToString::to_string).collect())).collect();
+        assert_eq!(found, want);
+        // Each a satin column with a centre walk underlay, in blue.
+        let blue = thread(BLUE).unwrap();
+        let settings = [("center_walk_underlay", "true"), ("satin_column", "true")];
+        assert!(columns.iter().all(|c| c.params.iter().eq(settings) && c.thread == blue && c.name.is_none()), "{columns:?}");
+    }
+
+    #[test]
+    fn ts17c_s_routed_letters_are_the_drawn_ones_30_mm_lower() {
+        let (drawn, routed) = (columns("drawn", 0.0), columns("routed", BELOW));
+        assert_eq!(routed.iter().map(|column| column.id.to_string()).collect::<Vec<_>>(), LETTERS.map(|name| format!("ts17c:routed:{name}")));
+        for (above, below) in drawn.iter().zip(&routed) {
+            let points = |column: &Element| column.shape.path().points().collect::<Vec<_>>();
+            let (above_points, below_points) = (points(above), points(below));
+            assert_eq!(above_points.len(), below_points.len(), "{}", below.id);
+            let lower = |(p, q): (&Point, &Point)| (q.x() - p.x()).abs() < 1e-9 && (q.y() - p.y() - BELOW).abs() < 1e-9;
+            assert!(above_points.iter().zip(&below_points).all(lower), "{}: {below_points:?}", below.id);
+            assert_eq!((above.params.clone(), &above.thread), (below.params.clone(), &below.thread));
+        }
+    }
+
+    #[test]
+    fn ts17c_s_routed_half_trims_after_each_letter_and_nowhere_else() {
+        // The letters as drawn, then the pieces of the route of those below, each named after its column. The
+        // route sews each letter in one go, and the jump to the next letter, more than 1 mm long, trims.
+        let design = super::super::find("TS-17C").unwrap().design().unwrap().unwrap();
+        let (drawn, pieces) = design.elements().split_at(LETTERS.len());
+        assert_eq!(drawn, columns("drawn", 0.0).as_slice());
+        let letter = |piece: &Element| piece.id.as_str().strip_prefix("ts17c:routed:").and_then(|name| name.chars().next());
+        let sewn: Vec<(Option<char>, bool)> = pieces.iter().map(|piece| (letter(piece), piece.params.get("trim_after") == Some("true"))).collect();
+        for (k, &(of, trims)) in sewn.iter().enumerate() {
+            assert_eq!(trims, sewn.get(k + 1).is_none_or(|next| next.0 != of), "piece {k} of {sewn:?}");
+        }
+        let mut order: Vec<Option<char>> = sewn.iter().map(|piece| piece.0).collect();
+        order.dedup();
+        assert_eq!(order, ['r', 'o', 'u', 't', 'e'].map(Some));
+    }
+}

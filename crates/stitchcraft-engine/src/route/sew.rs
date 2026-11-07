@@ -10,7 +10,9 @@
 //!    settings, but an odd number of centre walk repeats is lowered by 1, to no fewer than 2, so that it
 //!    sews from its start. A run under a column takes the column's running stitch length, or else its centre
 //!    walk's or its contour's, its shortest jump and its bean stitch, where it sets them, and a run along a
-//!    stroke the stroke's. Each is the element's thread and stroke.
+//!    stroke the stroke's. Each is the element's thread and stroke. A column's piece keeps the column's clips
+//!    too, which leave a satin column whole, and a run, a path of its own, keeps none. Neither keeps the
+//!    element's start and end positions or its target point: the route places its ends.
 //! 5. **Trims.** A jump longer than [`TRIMMED`] outside the elements it joins ([`trim::outside`]) trims after
 //!    the element before it, when the route trims. The runs right after a trim are left out, and the last
 //!    element trims after it too.

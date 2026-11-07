@@ -94,6 +94,23 @@ fn the_way_with_fewest_links_is_found_from_both_ends_at_once() {
 }
 
 #[test]
+fn the_side_with_fewer_places_to_look_from_looks_next_and_the_start_s_side_when_they_are_as_many() {
+    // 2 ways of 3 pieces from the start, (0, 0), to the end, (3, 0): up through (1, 1) and (2, 1), or down
+    // through (1, -1) and (2, -1). The start lists the way up first, and the end the way down. The start's side
+    // looks first, from 1 place as the end's side does, and reaches 2. The end's side, with 1, looks next and
+    // reaches 2 too. Then the start's side looks again and meets the end's on the way up. Had the end's side
+    // looked first, the ways would have met at the start, on the way down.
+    let [start, up, down, end, up_end, down_end] = [p(0.0, 0.0), p(1.0, 1.0), p(1.0, -1.0), p(3.0, 0.0), p(2.0, 1.0), p(2.0, -1.0)];
+    let mut diamond = Graph::new(false);
+    for (element, ends) in [[start, up], [start, down], [end, down_end], [end, up_end], [up, up_end], [down, down_end]].into_iter().enumerate() {
+        diamond.piece(element, 0, ends);
+    }
+    let places: Vec<Point> = diamond.places().iter().map(|place| place.at).collect();
+    assert_eq!(places, [start, up, down, end, down_end, up_end]);
+    assert_eq!(diamond.shortest(0, 3, &mut Budget::DEFAULT.meter()).unwrap(), Some((vec![0, 1, 5, 3], vec![0, 4, 3])));
+}
+
+#[test]
 fn the_rest_is_walked_depth_first_from_each_place_of_the_way_out_and_back() {
     // A triangle at the start, and the way from it: out round the triangle, there and back along the link
     // that closes it, back, then along the way.

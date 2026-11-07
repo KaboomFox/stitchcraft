@@ -3,7 +3,7 @@ use stitchcraft_params::ParamSet;
 use stitchcraft_plan::{Rgb, Thread};
 
 use super::*;
-use crate::design::{Cap, FillRule, Hints, Join, Path, Segment, Shape, Subpath};
+use crate::design::{Cap, Clip, FillRule, Hints, Join, Path, Segment, Shape, Subpath};
 
 pub(super) fn p(x: f64, y: f64) -> Point {
     Point::new(x, y).unwrap()
@@ -104,6 +104,8 @@ fn req_route_002_a_stretch_passed_twice_runs_under_the_satin_that_covers_it_as_i
     let run = &pieces[1][0];
     assert!(near(run[0], (6.5, 6.0)) && near(*run.last().unwrap(), (6.5, 25.0)), "{run:?}");
     assert!(run.windows(2).all(|pair| pair[0].distance(pair[1]) >= 1e-6), "no point repeats");
+    // It runs along each piece's stretch of the centre line once, from the piece's start to its end: straight down.
+    assert!(run.windows(2).all(|pair| pair[1].x() == 6.5 && pair[1].y() > pair[0].y()), "{run:?}");
     // The satin back up runs from the foot to the cut, its own rung kept.
     assert!(near(pieces[2][0][0], (5.0, 25.0)) && near(pieces[2][0][1], (5.0, 5.8)) && near(pieces[2][2][0], (4.97, 15.0)), "{:?}", pieces[2]);
     // The bar is whole, as it was drawn but for its rung, drawn reaching a hundredth past each rail.
@@ -146,6 +148,42 @@ fn req_route_001_a_column_routed_whole_from_end_to_end_is_one_piece_with_its_own
     assert_eq!(lines.len(), 3, "its 2 rails and its rung: {lines:?}");
     assert!(near(lines[0][0], (0.0, 0.0)) && near(lines[0][1], (10.0, 0.0)) && near(lines[1][1], (10.0, 3.0)), "{lines:?}");
     assert!(near(lines[2][0], (5.0, -0.03)) && near(lines[2][1], (5.0, 3.03)), "{lines:?}");
+}
+
+#[test]
+fn req_route_001_a_piece_at_an_end_of_its_column_reaches_the_end_of_its_rails_whatever_its_push_compensation() {
+    // Push compensation shortens or lengthens a column at its ends, and its cuts with it: shortened by 1 mm,
+    // the bar's first and last cuts lie 1 mm inside its rails' ends. Routed whole, its piece still runs from
+    // end to end of the rails, and keeps the setting, which shortens it when it sews as it shortens the column.
+    for push in ["1", "0.5 0", "0 0.5", "-1"] {
+        let pushed = bar("b", (0.0, 10.0), 0.0).with(&[("push_compensation_mm", push)]);
+        let routed = routed(&[pushed], Options::default(), [None, None]);
+        assert_eq!(summary(&routed), [("AutoSatin 1".to_string(), 0, false, true)], "{push}");
+        let lines = lines_of(&routed.pieces[0].element);
+        let ends = [lines[0][0], lines[0][1], lines[1][0], lines[1][1]];
+        assert!(ends.iter().zip([(0.0, 0.0), (10.0, 0.0), (0.0, 3.0), (10.0, 3.0)]).all(|(at, want)| near(*at, want)), "{push}: {lines:?}");
+        assert_eq!(routed.pieces[0].element.params.get("push_compensation_mm"), Some(push));
+    }
+}
+
+#[test]
+fn a_route_s_pieces_keep_their_element_s_thread_and_a_column_s_its_clips_but_none_keeps_its_positions() {
+    // The upright of `two` placed and clipped, as an Ink/Stitch file's commands and clip path place and clip
+    // it. Its pieces start and end where the route cuts it. A column's piece is a copy of the column, its clip
+    // with it, which leaves a satin column whole, and the run is a path of its own, which nothing clips.
+    let mut elements = two();
+    elements[0].hints = Hints { start: Some(p(6.5, 5.0)), end: Some(p(6.5, 25.0)), target: Some(p(6.5, 15.0)) };
+    let square = Path { subpaths: vec![Subpath { closed: true, ..line(&[(0.0, 0.0), (30.0, 0.0), (30.0, 30.0), (0.0, 30.0)]) }] };
+    elements[0].clips = vec![Clip::of(square, FillRule::NonZero)];
+    let routed = routed(&elements, Options::default(), [None, None]);
+    // Routed as `two` is: the upright's first piece, the run under it, the satin back up and the bar.
+    assert_eq!(routed.pieces.iter().map(|piece| (piece.from, piece.under)).collect::<Vec<_>>(), [(0, false), (0, true), (0, false), (1, false)]);
+    for piece in &routed.pieces {
+        assert_eq!((&piece.element.thread, piece.element.hints), (&elements[piece.from].thread, Hints::default()), "{}", piece.element.id);
+    }
+    let clipped: Vec<usize> = routed.pieces.iter().map(|piece| piece.element.clips.len()).collect();
+    assert_eq!(clipped, [1, 0, 1, 0]);
+    assert_eq!(routed.pieces[0].element.clips, elements[0].clips);
 }
 
 #[test]
@@ -269,9 +307,10 @@ fn req_route_004_with_preserve_order_a_route_starts_on_the_first_element_and_end
 
 #[test]
 fn req_route_004_a_single_column_with_a_start_and_no_end_runs_from_the_start_back_to_its_own_start() {
-    let elements = [bar("a", (0.0, 10.0), 0.0)];
+    let elements = [Element { name: Some("Bar".to_string()), ..bar("a", (0.0, 10.0), 0.0) }];
     let single = routed(&elements, Options::default(), [Some(p(6.0, 5.0)), None]);
     assert_eq!(single.pieces.len(), 2);
+    // The run is a path of its own, which takes no name, though the column has one.
     let run = &single.pieces[0];
     assert!(run.under && run.element.name.is_none(), "{run:?}");
     let way = &lines_of(&run.element)[0];
