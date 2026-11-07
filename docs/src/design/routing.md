@@ -119,8 +119,9 @@ Ink/Stitch's Auto-Route Satin Columns routes a selection in these steps:
    ends with a trim too.
 8. **One column with a start and no end.** A run along its centre line from the start back to the
    column's start goes before it, and the column stays as it is.
-9. **Names.** AutoSatin 1, AutoSatin Running Stitch 2, and on, counting every piece. With Preserve order,
-   a piece keeps its element's name when the element has one.
+9. **Names.** AutoSatin 1, AutoSatin Running Stitch 2, and on, counting every piece. A run that a trim
+   leaves out is counted too, and no piece takes its number. Ink/Stitch names the pieces before it trims.
+   With Preserve order, a piece keeps its element's name when the element has one.
 
 StitchCraft's route is Ink/Stitch's in each of these steps, and draws the pieces otherwise in a few
 places, each in the ledger:
