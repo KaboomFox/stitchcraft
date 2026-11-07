@@ -25,6 +25,22 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - Until a stitch type gives its groups threads of their own, the cases give assembly the groups such a
     generator will give (`stitchcraft_testkit::designs::threaded`). The golden files of
     `cargo xtask conformance` stay as they were.
+- M10.14, a spike: per-layer ordering will be a setting of each element, and ADR-0018 records why.
+  Consecutive elements that set `underlays_first` and sew in one thread will form a run, which sews all
+  its underlays before its top stitches. Where 2 satin columns cross, both underlays then lie under both
+  tops, and MC-12 will sew TS-17C's pair both ways to compare them.
+  - The setting is a toggle among the settings every stitch type shares, StitchCraft's own and off by
+    default. Its reference entry and its row in each stitch family's dialog in VectorCraft come from the
+    registry, and a group's effect gives it to every path in the group.
+  - SVG files keep it as `inkstitch:underlays_first` on each shape. Ink/Stitch, read at `d59c9ab`, doesn't
+    read the attribute and sews such a file element by element, as StitchCraft sews it with the setting
+    off. Its sew stack orders the layers of one element, and isn't planned.
+  - A trim, a stop or another thread ends a run, and a run has one thread. The design's colour changes stay
+    as they were, each a stop to rethread on a home machine. An element's underlay and top are generated
+    apart, with neighbours of their own. The needle goes back from a run's last underlay to its first top
+    stitch.
+  - Automatic digitizing and lettering don't set it. The engine pipeline's design describes runs, and
+    M10.15 builds them.
 - M8.6: the fonts of Ink/Stitch as a corpus of the differential (`REQ-FONT-001`). `cargo xtask corpus`
   fetches the archive of inkstitch/embroidery-fonts at `c7e3a05`, the commit
   `conformance/inkstitch/fonts.toml` pins, checks its SHA-256 and unpacks it in a cache outside the

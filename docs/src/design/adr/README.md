@@ -23,6 +23,7 @@ supersedes the old one.
 | [0015](0015-pictures-traced-by-vectorcraft.md) | Pictures are traced by VectorCraft's command line | Accepted (spike M13.9) |
 | [0016](0016-inkstitch-files-imported-by-stitchcraft.md) | Ink/Stitch files come into VectorCraft through `stitch import-inkstitch` | Accepted (spike M8.11) |
 | [0017](0017-routing-is-one-engine-function.md) | Routing is one engine function, which VectorCraft's filters and lettering call | Accepted (spike M10.3) |
+| [0018](0018-underlays-first-is-a-setting-of-each-element.md) | Underlays first is a setting of each element, shared by runs of elements in one thread | Accepted (spike M10.14) |
 
 `cargo xtask docs --check` fails if an ADR file is missing from this table or its status here differs
 from the file's status line.
