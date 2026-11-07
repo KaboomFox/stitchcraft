@@ -125,6 +125,15 @@ fn req_vc_019_route_markers_are_left_out_of_the_stitches_without_a_word() {
         read.warnings[0].message,
         "The group \"stitch:route-end\" is named stitch:route-end, which a group can't be, and the name is ignored."
     );
+    // What is said of a group named as either marker names that marker.
+    for name in ["stitch:route-start", "stitch:route-end"] {
+        let group = named(&format!(r#"{{"id": 3, "kind": {{"type": "group", "children": [{}]}}}}"#, square(4, 0.0, 0.0, RED)), name);
+        let read = read_ok(&document(4, &group));
+        assert_eq!((ids(&read), said(&read)), (vec!["vc:4:fill"], vec![about(NAMED, 3)]), "{name}");
+        assert_eq!(read.warnings[0].message, format!("The group \"{name}\" is named {name}, which a group can't be, and the name is ignored."));
+        let hint = read.warnings[0].fix.as_ref().map(stitchcraft_core::Fix::describe);
+        assert_eq!(hint, Some(format!("Name a small path {name}.")));
+    }
     use stitchcraft_vectorcraft::{RouteMarker, route_marker};
     assert_eq!(route_marker(" stitch:ROUTE-start note"), Some(RouteMarker::Start));
     assert_eq!(route_marker("stitch:route-end"), Some(RouteMarker::End));
