@@ -16,6 +16,7 @@ use crate::design::{Cap, DesignSettings, FillRule, Path, Segment, Subpath};
 
 const RED: Thread = Thread::new(Rgb::new(200, 0, 0));
 const BLUE: Thread = Thread::new(Rgb::new(0, 0, 200));
+const GREEN: Thread = Thread::new(Rgb::new(0, 160, 0));
 
 fn p(x: f64, y: f64) -> Point {
     Point::new(x, y).unwrap()
@@ -208,7 +209,7 @@ fn runs_end_at_each_element_nothing_moves_across() {
 fn a_line_waits_for_no_fill_it_borders_beyond_an_element_kept_in_its_place() {
     // A line, an element kept in its place, and a fill the line borders, each a run of its own: the line
     // sews first, as it is drawn, and doesn't wait for the fill.
-    let facts: Vec<Facts> = (0..3).map(|_| Facts { colour: RED.color, stop: false, reach: None }).collect();
+    let facts: Vec<Facts> = (0..3).map(|_| Facts { colours: vec![RED.color], stop: false, reach: None }).collect();
     let moving: Vec<Moving> = (0..3).map(|shape| Moving { free: true, shape }).collect();
     let mut order = Order { facts: &facts, moving: &moving, graph: Graph::new(3), borders: vec![(2, 0)], kept: BTreeSet::from([1]) };
     let mut sewing = Sewing::default();
@@ -220,7 +221,7 @@ fn a_line_waits_for_no_fill_it_borders_beyond_an_element_kept_in_its_place() {
 fn req_auto_012_nothing_moves_across_an_element_kept_in_its_place_and_each_sews_once() {
     // 0 overlaps 2 across 1, which keeps its place, and 2 and 3 both overlap 4, drawn after them: placing 0
     // frees 2, which waits for its run all the same, after 1; and 4 waits for 3.
-    let facts: Vec<Facts> = [RED, RED, RED, BLUE, RED].iter().map(|thread| Facts { colour: thread.color, stop: false, reach: None }).collect();
+    let facts: Vec<Facts> = [RED, RED, RED, BLUE, RED].iter().map(|thread| Facts { colours: vec![thread.color], stop: false, reach: None }).collect();
     let moving: Vec<Moving> = (0..5).map(|shape| Moving { free: true, shape }).collect();
     let mut graph = Graph::new(5);
     for (from, to) in [(0, 2), (2, 4), (3, 4)] {
@@ -230,6 +231,48 @@ fn req_auto_012_nothing_moves_across_an_element_kept_in_its_place_and_each_sews_
     let mut sewing = Sewing::default();
     order.sew(&[vec![0], vec![1], vec![2, 3, 4]], &mut sewing, &mut Budget::DEFAULT.meter()).unwrap();
     assert_eq!(sewing.order, [0, 1, 2, 3, 4]);
+}
+
+/// The order of elements, each sewn in the threads of its colours in turn, all free to move and with no box,
+/// which the order places as drawn when no thread tells them apart; and its thread changes, then paint
+/// order's.
+fn threaded(colours: &[&[Rgb]]) -> (Vec<usize>, usize, usize) {
+    let facts: Vec<Facts> = colours.iter().map(|colours| Facts { colours: colours.to_vec(), stop: false, reach: None }).collect();
+    let moving: Vec<Moving> = (0..facts.len()).map(|shape| Moving { free: true, shape }).collect();
+    let mut order = Order { facts: &facts, moving: &moving, graph: Graph::new(facts.len()), borders: Vec::new(), kept: BTreeSet::new() };
+    let mut sewing = Sewing::default();
+    let painted: Vec<usize> = (0..facts.len()).collect();
+    order.sew(&[painted.clone()], &mut sewing, &mut Budget::DEFAULT.meter()).unwrap();
+    let (sewn, before) = (changes(&sewing.order, &facts), changes(&painted, &facts));
+    (sewing.order, sewn, before)
+}
+
+#[test]
+fn req_auto_024_an_element_in_several_threads_starts_in_its_first_and_leaves_its_last_sewing() {
+    let (red, blue, green) = (RED.color, BLUE.color, GREEN.color);
+    // Green then red, a blue, a red: once the first is sewn, red sews on, and the blue last. In paint order
+    // the thread changes inside the first and twice after it.
+    assert_eq!(threaded(&[&[green, red], &[blue], &[red]]), (vec![0, 2, 1], 2, 3));
+    // A red, a blue, red then blue: the third starts in red, which is sewing, and leaves blue sewing.
+    assert_eq!(threaded(&[&[red], &[blue], &[red, blue]]), (vec![0, 2, 1], 1, 3));
+    // Its colours stay together and in their order: one that starts in blue and ends in red waits for no
+    // thread of its own, and a red sews after it.
+    assert_eq!(threaded(&[&[blue], &[blue, red], &[green], &[red]]), (vec![0, 1, 3, 2], 2, 3));
+    // Of one thread, nothing moves, as before.
+    assert_eq!(threaded(&[&[red], &[red, red], &[red]]), (vec![0, 1, 2], 0, 0));
+}
+
+#[test]
+fn req_auto_024_the_thread_changes_inside_an_element_are_between_colours_that_differ() {
+    let (red, blue) = (RED.color, BLUE.color);
+    let changes = |colours: &[Rgb]| Facts { colours: colours.to_vec(), stop: false, reach: None }.changes();
+    assert_eq!([changes(&[]), changes(&[red]), changes(&[red, red]), changes(&[red, blue]), changes(&[red, blue, red])], [0, 0, 0, 1, 2]);
+    let ends = |colours: &[Rgb]| {
+        let facts = Facts { colours: colours.to_vec(), stop: false, reach: None };
+        (facts.first(), facts.last())
+    };
+    assert_eq!(ends(&[red, blue]), (Some(red), Some(blue)));
+    assert_eq!(ends(&[]), (None, None));
 }
 
 #[test]

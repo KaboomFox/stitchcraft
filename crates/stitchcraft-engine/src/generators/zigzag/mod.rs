@@ -70,7 +70,7 @@ fn sewn(
     // The registry reads 1 spacing or more; the first is the zigzag's.
     let Some(spacing) = params.zigzag_spacing_mm.first() else {
         let missing = Diagnostic::new(Code::InternalCheckFailed, "A zigzag stroke's spacing is missing.");
-        return Ok(Stitched { runs: Vec::new(), warnings: vec![missing] });
+        return Ok(Stitched { runs: Vec::new(), colours: Vec::new(), warnings: vec![missing] });
     };
     let stroke = stroke::flatten(path, SHAPE_TOLERANCE, meter)?;
     let closed = is_closed(stroke.pieces.iter().map(|piece| piece.points.as_slice()));
@@ -96,7 +96,7 @@ fn sewn(
         runs.push(passes::sew(&points, passes.repeats, &passes.bean_stitch_repeats, Turn::Joined, meter)?);
     }
     warnings.extend(short.diagnostic(spacing.get(), min_stitch.get()));
-    Ok(Stitched { runs, warnings })
+    Ok(Stitched { runs, colours: Vec::new(), warnings })
 }
 
 /// A zigzag's stitches before repeats, and those shorter than the shortest stitch, which finishing leaves

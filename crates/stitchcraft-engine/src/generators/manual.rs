@@ -67,7 +67,7 @@ fn sewn(path: &Path, max_stitch: Option<Mm>, passes: &RepeatParams, min_stitch: 
         runs.push(passes::sew(&run, 1, &passes.bean_stitch_repeats, Turn::Listed, meter)?);
     }
     warnings.extend(longest.and_then(|longest| kept_long(&long, longest, min)));
-    Ok(Stitched { runs, warnings })
+    Ok(Stitched { runs, colours: Vec::new(), warnings })
 }
 
 /// The subpath's nodes in order, as Ink/Stitch lists them: its start and every segment's end, a node drawn

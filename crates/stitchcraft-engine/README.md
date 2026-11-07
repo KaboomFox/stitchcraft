@@ -81,6 +81,10 @@ stays in the fill (`auto::columns::DOT`).
 Since M6.12 a column drawn as one path can be drawn with its rails and rungs instead, for a host's Stroke
 to Satin tool (`generators::satin::drawn`). They sew as the column does. A design can be moved
 (`Design::moved`), as a host draws a test sheet (`testsheets`, `TestSheet::design`).
+Since M10.5 a generator may sew groups of an element in threads of their own (`generators::Colour`), as
+the tartan and gradient fills will. Assembly then changes thread inside the element and trims after each
+of its colour blocks when it trims, and the sewing order moves the element as one, by the thread it starts
+in and the one it ends in (`generate::colours`).
 Design:
 `docs/src/design/engine-pipeline.md` and `docs/src/design/algorithms/`.
 
