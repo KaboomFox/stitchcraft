@@ -92,7 +92,9 @@ says how many. `stitch plan`, `convert` and `inspect` name each thread by the en
 file's index that is none of Brother's entries is read as a grey thread named after it, with a warning, and
 `inspect` says it is not one of the palette's colours rather than naming the entry nearest that grey.
 Catalogue numbers from other brands cannot survive PES v1. A PES v6 writer (below) could store a thread
-list with RGB and codes.
+list with RGB and codes. The writers know colour blocks, not elements: an element sewn in several threads
+(M10.5) is written in each of its blocks' threads, as the blocks of different elements are
+(`REQ-THREAD-003`).
 
 ### Risks found in the field, and how we test them
 
