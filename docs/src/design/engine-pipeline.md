@@ -36,7 +36,8 @@ The digitized elements are then sewn as neighbours, in an order of their own. Wh
 paint order, and a line sews after the fill it borders. Then each thread sews as long as it can, the
 nearest element next ([image to embroidery](image-to-embroidery.md#sewing-order), `SC-I0907`). Elements
 with settings keep their order among themselves, unless `--sort-colours` is given. The switch brings a
-design without automatic elements through this stage too.
+design without automatic elements through this stage too. An element sewn in several threads moves as one,
+its colours together and in their order (`REQ-AUTO-024`).
 
 ## 1. Normalize
 
@@ -90,7 +91,8 @@ Adapters have already applied transforms and converted units, so normalization n
 Each element becomes stitch groups (`stitchcraft_engine::generate`): the needle points of each part of it
 that a jump may separate from the next, in sewing order. A stroke gives one group per subpath, and a part
 too small for a stitch gives none (`SC-W0401`). The element's own settings stay with the element, and
-assembly reads them there: its thread, locks, trim and stop.
+assembly reads them there: its thread, locks, trim and stop. A generator may give each group a thread of
+its own as well, which a tartan or a gradient fill needs ([below](#several-threads-in-one-element)).
 
 The stitch type picks the generator. A stroke whose `satin_column` setting is on is a satin column,
 whatever its `stroke_method` says, as in Ink/Stitch. Its rails and rungs are recognized, what
@@ -181,7 +183,8 @@ order stage 0 chose), by `stitchcraft_engine::assemble`.
   ([routing tools](routing.md)). The elements of a run of underlays first keep this order too, with their
   underlays moved ahead of their top stitches ([below](#underlays-first)).
 - A thread change starts a new colour block (`REQ-ASM-001`). Threads are compared by colour, as
-  Ink/Stitch compares them: two names for one colour are one thread, and the block keeps the first.
+  Ink/Stitch compares them: two names for one colour are one thread, and the block keeps the first. The
+  thread changes inside an element too, where its groups' threads change (`REQ-ASM-006`).
 
 ### Underlays first
 
@@ -222,8 +225,9 @@ distance from where the needle is to the next group's first needle point:
 | Same thread, `d` no more than the earlier element's `min_jump_stitch_length_mm` if it sets one, else the design's collapse length (3 mm), and the earlier element does not force locks | **Sewn on:** the next group's first stitch starts where the needle is; finalize splits it if it is longer than the machine's longest stitch |
 | Same thread, otherwise | Tie-off → `Jump` → tie-in (`REQ-ASM-002`) |
 | After an element's last group, when it says `trim_after` | Tie-off → `Trim` → `Jump` → tie-in (`REQ-ASM-003`) |
+| After one of the colour blocks of an element sewn in several threads, when it says `trim_after` | Tie-off → `Trim` → `Jump` → tie-in (`REQ-ASM-007`) |
 | After an element's last group, when it says `stop_after` | Tie-off → `Jump` to the stop position, if the design has one → `Stop` → `Jump` → tie-in (`REQ-ASM-003`, `REQ-ASM-005`) |
-| Thread change | Tie-off → a new colour block → `Jump` → tie-in |
+| Thread change, between elements or inside one | Tie-off → a new colour block → `Jump` → tie-in (`REQ-ASM-006`) |
 | Before the design's first group | `Jump` → tie-in |
 | After the design's last group | Tie-off |
 
@@ -257,6 +261,51 @@ beyond that length can cause.
 - A group with fewer than two needle points is sewn without locks: it has no stitch to lock.
 - [Lock stitches](algorithms/locks.md) specifies the lock itself: its shape (`lock_start`, `lock_end`),
   its size and its shortest stitch (0.2 mm).
+
+### Several threads in one element
+
+From M10.5 a generator may give each group of needle points a thread of its own, and say whether the group
+ends one of the element's colour blocks (`stitchcraft_engine::generators::Colour`). A colour block is what
+the generator sews in one thread before it moves on to another colour or another part. A tartan fill will
+give its colours so from M10.6, and a linear gradient fill from M10.12. A group without a thread of its
+own is sewn in its element's, as every group of the other stitch types is.
+
+- **Thread changes.** Assembly sews the groups in their order and compares each group's thread with the
+  one sewing, as it compares 2 elements' threads. At a change the group before ties off and a colour block
+  starts. The needle then jumps to the next group, which ties in, as the element's `ties` allows
+  (`REQ-ASM-006`). Groups of one colour join as any 2 groups do. The plan's first colour block has the
+  thread of the first group sewn, which may be a thread of the group's own. A group without needle points
+  is left out with its thread.
+- **Trims.** With `trim_after` on, a trim follows each colour block, after its tie-off, and the element's
+  last group has its trim and its stop as before (`REQ-ASM-007`). A group that ends no colour block, such
+  as a tartan's underlay, has no trim after it. 2 colour blocks of one thread in a row are each trimmed
+  after, with no colour change between them.
+- **Order.** Stage 0 moves an element of several threads as one, its colours together and in their order.
+  The element has the thread sewing when the thread it starts in is, and leaves the thread it ends in
+  sewing (`REQ-AUTO-024`, [image to embroidery](image-to-embroidery.md#sewing-order)). The order reads each
+  element's threads before it is generated, from its shape and settings
+  (`stitchcraft_engine::generate::colours`): its own thread, for each stitch type sewn so far. A stitch
+  type that gives its groups threads of their own will give them there too. The runs of
+  [underlays first](#underlays-first) can ask it which elements are sewn in several threads, which they
+  leave out.
+- **What shows them.** The machine files, the previews and the report read the plan's colour blocks, so
+  they show each thread, and VectorCraft's exporters write them with the same writers (`REQ-THREAD-003`).
+  A live effect draws every group with its object's own paints, as VectorCraft paints the geometry a live
+  effect returns ([integration](vectorcraft-integration.md#live-effect-previews-within-v1-budgets)).
+
+Ink/Stitch (read at `d59c9ab`) gives its tartan and linear gradient fills a stitch group for each colour
+of each part, each with its colour and the element's trim. It sews their underlay first, in the tartan's
+own fill or in the gradient's first colour, with no trim after it. Its plan compares each group's colour
+with the thread sewing, as it compares elements'. Run as a black box with its stitch-plan cache off, its
+plan of a linear gradient fill of 3 stops has 3 colour blocks, each started by a jump, with a trim after
+each when `trim_after` is on and none when it is off. In 2 parts, the colours are sorted so that each sews
+once, and each part's colour is trimmed after: 2 trims in each thread. Its tartan sews its underlay in its
+own fill's thread without a trim after it, then a trim after each colour.
+
+No stitch type gives its groups threads of their own yet. The engine has no hook for tests, since assembly
+takes generated elements as its input. A case generates an element as `plan` does and puts its groups in
+threads of their own. It then assembles and finalizes the element as `plan` does
+(`stitchcraft_testkit::designs::threaded`). The order's cases give it each element's threads directly.
 
 ### Origin, stop position and turn on export
 
@@ -375,4 +424,4 @@ It writes a bug-report bundle that reproduces the failure (`REQ-CLI-002`). The c
 | Preview PNG | `stitchcraft-render`, from the *quantized* plan (`REQ-RND-001`), cut where the profile's machine cuts the thread ([rendering](rendering.md)) |
 | Report JSON | The CLI's, with the counts and size of the machine file read back as a machine reads it, its SHA-256, the threads and the diagnostics |
 | Traced document | Of a picture, the document VectorCraft's command line traced it into, which `stitch plan --traced` writes ([image to embroidery](image-to-embroidery.md#pictures-from-the-command-line)) |
-| Plug-in preview geometry | `stitchcraft-vc-plugin`, from one element's groups, its top rows or its path, by the preview's level ([integration](vectorcraft-integration.md#live-effect-previews-within-v1-budgets)) |
+| Plug-in preview geometry | `stitchcraft-vc-plugin`, from one element's groups whatever their threads, its top rows or its path, by the preview's level ([integration](vectorcraft-integration.md#live-effect-previews-within-v1-budgets)) |

@@ -19,6 +19,11 @@
 //! where it is drawn. An element's start and end positions take their place for those that use them, as
 //! the generate step passes them on (`REQ-GEN-001`). The fills and the satin column end near the next
 //! stitch, found as Ink/Stitch's geometry library finds it, by the rules of the `next` module.
+//!
+//! A generator sews its runs in its element's thread, unless it gives them threads of their own
+//! ([`Stitched::colours`], `REQ-ASM-006`), as Ink/Stitch's tartan and gradient fills sew each colour.
+//! Plan assembly changes thread inside the element where they change, and trims after each colour block
+//! when the element's `trim_after` is on (`REQ-ASM-007`).
 
 pub mod circular;
 pub mod contour;
@@ -37,6 +42,7 @@ pub mod zigzag;
 pub(crate) use next::{Own, covers};
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Meter, Point};
 use stitchcraft_params::{ChoiceOption, StitchType};
+use stitchcraft_plan::Thread;
 
 use crate::normalize::region::Polygon;
 
@@ -63,14 +69,34 @@ pub struct Neighbours {
     pub next: Option<Approach>,
 }
 
-/// The stitches of one stroke.
+/// The stitches of one element, as its generator sews them.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Stitched {
-    /// The needle points of each piece of the stroke that is stitched, in drawing order, its repeats and
-    /// bean stitch included. Each run starts where its piece starts, and ends where its last pass does.
+    /// The needle points of each piece of the element that is stitched, in sewing order, a stroke's
+    /// repeats and bean stitch included. Each run starts where its piece starts, and ends where its last
+    /// pass does.
     pub runs: Vec<Vec<Point>>,
+    /// The colour of each run, by its place: empty when every run is sewn in the element's thread, as every
+    /// stitch type sewn so far sews them (`REQ-ASM-006`). A run without a colour is sewn in the element's
+    /// thread and ends no colour block.
+    pub colours: Vec<Colour>,
     /// What was changed or left out. They name no element: the caller adds it.
     pub warnings: Vec<Diagnostic>,
+}
+
+/// The thread a run of an element sewn in several threads is sewn in, and whether it ends one of the
+/// element's colour blocks (`REQ-ASM-006`, `REQ-ASM-007`).
+///
+/// A colour block is what the generator sews in one thread before it moves on, as Ink/Stitch's tartan and
+/// gradient fills sew each colour of each part as one group (read at `d59c9ab`). Assembly trims after each
+/// one when the element's `trim_after` is on, as Ink/Stitch's plan trims after each, and not after the
+/// runs that end none, such as a tartan's underlay.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Colour {
+    /// The run's thread; `None` for its element's.
+    pub thread: Option<Thread>,
+    /// Whether the run ends a colour block.
+    pub ends_block: bool,
 }
 
 /// Spends a stitch of `meter` for each of `count` needle points a generator makes. A count past `u32` is

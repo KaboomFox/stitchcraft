@@ -14,7 +14,11 @@ gates catch anything you miss.
    `Generator` impl), `params.rs` (the `params!` block, doc comments as help text) and `tests.rs`.
    Keep files under 800 lines; split by concern (sampling, routing, compensation).
 5. **Register** the generator in the generator table and its params in the registry list (one line
-   each).
+   each). A tartan or a gradient fill sews in more threads than its element's own. Its generator puts each
+   run's thread in `Stitched::colours`, with whether the run ends a colour block, which a trim follows when
+   `trim_after` is on. The sewing order reads its threads from the element's shape and settings, in
+   `generate::colours`
+   ([several threads in one element](../design/engine-pipeline.md#several-threads-in-one-element)).
 6. **Make the cases pass.** Run `cargo xtask conformance --filter <area>`; switch the requirements to
    `active`.
 7. **Docs.** `cargo xtask docs` regenerates the parameter pages. Write the user-facing page in

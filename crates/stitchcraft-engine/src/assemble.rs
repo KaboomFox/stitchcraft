@@ -7,6 +7,14 @@
 //! stop. Anything else ends the group with its tie-off and starts the next with a jump and its tie-in, as
 //! `ties` allows ([`crate::locks`] sews them). That is where locks go, and the only place (`REQ-LCK-001`).
 //!
+//! **Several threads in one element** (M10.5). Each group is sewn in its own thread, which its generator
+//! gives it ([`crate::generators::Colour`]), or else in its element's. The thread changes inside an element
+//! as it changes between 2 elements, by colour, with the tie-off, the new colour block, the jump and the
+//! tie-in (`REQ-ASM-006`). With the element's `trim_after` on, each colour block the generator ends is
+//! trimmed after, as Ink/Stitch's plan trims after each colour of a tartan or a gradient, and the stop
+//! comes only after the element's last group (`REQ-ASM-007`). The plan's first colour block takes the
+//! thread of the first group sewn.
+//!
 //! The plan is built in the design's coordinates. Finalize moves it so the design's origin, or the centre
 //! of its stitches, is at the hoop's centre (`REQ-ASM-005`), once it has left out the points the machine
 //! cannot sew. What the machine cannot sew — a stitch too long or too short for it, a design too large for
@@ -38,8 +46,12 @@ pub struct Assembled {
 /// The plan for the generated `elements`, in the order they sew, in a design with `settings`; `None` when no
 /// element has a stitch. Every needle point costs a unit of work and a stitch from `meter`.
 pub fn assemble(elements: &[(&Element, Generated)], settings: &DesignSettings, meter: &mut Meter) -> Result<Option<Assembled>, Exhausted> {
-    let parts: Vec<&(&Element, Generated)> = elements.iter().filter(|(_, generated)| generated.groups.iter().any(|g| !g.is_empty())).collect();
-    let Some((first, _)) = parts.first() else { return Ok(None) };
+    let parts: Vec<(&Element, &Generated, Vec<Threaded>)> = elements
+        .iter()
+        .map(|(element, generated)| (*element, generated, threaded(element, generated)))
+        .filter(|(_, _, groups)| !groups.is_empty())
+        .collect();
+    let Some(first) = parts.first().and_then(|(_, _, groups)| groups.first()) else { return Ok(None) };
     let mut assembly = Assembly {
         builder: PlanBuilder::new(first.thread.clone()),
         thread: first.thread.clone(),
@@ -49,15 +61,18 @@ pub fn assemble(elements: &[(&Element, Generated)], settings: &DesignSettings, m
         settings_said: BTreeSet::new(),
     };
     let mut shortest = Vec::with_capacity(parts.len());
-    for (element, generated) in parts {
+    for (element, generated, groups) in &parts {
         // Each element registered has a stitch, so the stitch budget runs out long before element
         // references do. `ok_or` takes a value: a closure here would never run, and coverage counts a
         // closure that never runs as an untested line.
         let reference = assembly.builder.element(element.id.clone()).ok().ok_or(Exhausted::Stitches)?;
         shortest.push(generated.min_stitch);
-        let groups: Vec<&[Point]> = generated.groups.iter().filter(|g| !g.is_empty()).map(Vec::as_slice).collect();
-        for stitches in &groups {
-            assembly.join(Group { element, generated, stitches, reference }, meter)?;
+        for (index, group) in groups.iter().enumerate() {
+            assembly.join(Group { element, generated, stitches: group.stitches, thread: group.thread, reference }, meter)?;
+            // The trim after the element's last group is `after`'s, with its stop.
+            if group.ends_block && generated.common.trim_after && index + 1 < groups.len() {
+                assembly.trim(reference, meter)?;
+            }
         }
         assembly.after(generated, reference, meter)?;
     }
@@ -66,12 +81,36 @@ pub fn assemble(elements: &[(&Element, Generated)], settings: &DesignSettings, m
     Ok(Some(Assembled { plan: builder.finish(), warnings, shortest }))
 }
 
-/// One group, with its element.
+/// One of an element's groups that sews a stitch, with the thread it is sewn in and whether it ends a
+/// colour block.
+struct Threaded<'a> {
+    stitches: &'a [Point],
+    thread: &'a Thread,
+    ends_block: bool,
+}
+
+/// The groups of `generated`, `element`'s, that sew a stitch, in their order: each in the thread its
+/// generator gives it, or else in the element's, and ending a colour block when its generator says so
+/// (`REQ-ASM-006`).
+fn threaded<'a>(element: &'a Element, generated: &'a Generated) -> Vec<Threaded<'a>> {
+    let colour = |index: usize| generated.colours.get(index);
+    let groups = generated.groups.iter().enumerate().filter(|(_, stitches)| !stitches.is_empty());
+    groups
+        .map(|(index, stitches)| Threaded {
+            stitches,
+            thread: colour(index).and_then(|colour| colour.thread.as_ref()).unwrap_or(&element.thread),
+            ends_block: colour(index).is_some_and(|colour| colour.ends_block),
+        })
+        .collect()
+}
+
+/// One group, with its element and the thread it is sewn in.
 #[derive(Clone, Copy)]
 struct Group<'a> {
     element: &'a Element,
     generated: &'a Generated,
     stitches: &'a [Point],
+    thread: &'a Thread,
     reference: ElementRef,
 }
 
@@ -112,9 +151,9 @@ impl<'a> Assembly<'a> {
     /// Sews `group`: straight on from the open group if nothing separates them, else after a jump.
     fn join(&mut self, group: Group<'a>, meter: &mut Meter) -> Result<(), Exhausted> {
         // Threads are compared by colour, as Ink/Stitch compares them: a name alone changes nothing.
-        if group.element.thread.color != self.thread.color {
+        if group.thread.color != self.thread.color {
             self.tie_off(meter)?;
-            self.thread = group.element.thread.clone();
+            self.thread = group.thread.clone();
             self.builder.change_thread(self.thread.clone());
         } else if let (Some(open), Some(&next)) = (self.open, group.stitches.first())
             && !open.sews_on(self.builder.needle().distance(next), self.settings)
@@ -134,6 +173,14 @@ impl<'a> Assembly<'a> {
         self.stitch(&tie_in, Provenance::new(group.reference, Role::Lock), meter)?;
         self.stitch(group.stitches, Provenance::new(group.reference, Role::Top), meter)?;
         self.open = Some(group);
+        Ok(())
+    }
+
+    /// The trim after a colour block of an element sewn in several threads, but its last: the open group's
+    /// tie-off, then the trim (`REQ-ASM-007`).
+    fn trim(&mut self, reference: ElementRef, meter: &mut Meter) -> Result<(), Exhausted> {
+        self.tie_off(meter)?;
+        self.builder.trim(Some(reference));
         Ok(())
     }
 

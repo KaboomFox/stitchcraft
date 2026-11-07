@@ -1,6 +1,9 @@
 //! REQ-RND-001: a preview shows what sews — the holes a machine file makes, not the positions the plan
 //! meant — checked on off-grid plans and by reading designs back from the PES files they become.
 //!
+//! REQ-THREAD-003: a preview draws each thread of an element sewn in several, as its plan's blocks give
+//! them.
+//!
 //! REQ-RND-002: previews are byte-identical on every platform, checked against committed golden PNG
 //! files on Linux, macOS and Windows. A changed golden file is a changed picture: re-bless it on purpose,
 //! with `STITCHCRAFT_BLESS=1 cargo test -p stitchcraft-render --test preview`, in a PR that explains why
@@ -21,7 +24,7 @@ use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::{FormatId, PlanBuilder, Provenance, Rgb, Role, StitchPlan, Thread, TrimSupport};
 use stitchcraft_render::{Scene, Settings, Style, preview};
 use stitchcraft_testkit::equivalence::as_pes;
-use stitchcraft_testkit::strategies;
+use stitchcraft_testkit::{designs, strategies};
 
 fn p(x: f64, y: f64) -> Point {
     Point::new(x, y).unwrap()
@@ -137,6 +140,23 @@ fn req_rnd_001_on_the_reference_machine_a_sheet_s_file_shows_the_jump_threads_it
     // TS-13A's jump threads, which its checks ask about, are there.
     let ts13a = testsheets::find("TS-13A").unwrap().plan().unwrap();
     assert!(holes(&through_pes(&ts13a)).iter().filter(|(_, arrival)| *arrival == stitchcraft_render::Arrival::Loose).count() > 10);
+}
+
+#[test]
+fn req_thread_003_the_preview_draws_each_thread_of_an_element_sewn_in_3() {
+    // One element in red, green and blue, as a gradient fill of 3 stops sews: each block's holes in its
+    // thread, the thread cut where it changes.
+    let plan = designs::three_threads();
+    let shown = Scene::of(&plan, REFERENCE.trims, &mut Budget::DEFAULT.meter()).unwrap();
+    let mut colours: Vec<Rgb> = shown.holes.iter().map(|hole| hole.color).collect();
+    colours.dedup();
+    assert_eq!(colours, [designs::RED.color, designs::GREEN.color, designs::BLUE.color]);
+    let cut = shown.holes.windows(2).filter(|pair| pair[0].color != pair[1].color).all(|pair| pair[1].arrival == stitchcraft_render::Arrival::Cut);
+    assert!(cut, "{:?}", shown.holes);
+    // And the picture of it is drawn, in both styles.
+    for style in Style::ALL {
+        assert!(preview(&plan, REFERENCE.trims, Settings::new(*style, 8.0).unwrap(), &mut Budget::DEFAULT.meter()).is_ok(), "{}", style.name());
+    }
 }
 
 proptest! {
