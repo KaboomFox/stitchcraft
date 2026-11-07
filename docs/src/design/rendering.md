@@ -13,7 +13,8 @@ docs, and for conformance diffs. Two promises shape it:
   settings, so documentation images can be compared byte for byte on every pull request.
 
 `stitch plan --preview` draws the machine file it wrote, read back as `stitch preview` reads it, in the
-design's colours (`REQ-CLI-008`).
+design's colours (`REQ-CLI-008`). Each colour block is drawn in its own thread, those of an element sewn in
+several threads among them (`REQ-THREAD-003`).
 
 **What cuts the thread is the machine's.** A preview is drawn for a machine, whose profile says how it
 trims (`TrimSupport`): `stitch plan --preview` for the profile it planned for, `stitch preview` for
