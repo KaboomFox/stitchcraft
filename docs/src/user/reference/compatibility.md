@@ -6,6 +6,7 @@ The VectorCraft releases the StitchCraft plug-ins work with. Each passed both le
 
 | VectorCraft | Track | Passed the gate |
 |---|---|---|
+| 0.21.0 | stable | 2026-11-04 |
 | 0.20.0 | stable | 2026-11-02 |
 | 0.19.0 | stable | 2026-10-31 |
 | 0.18.0 | stable | 2026-10-29 |
@@ -14,4 +15,4 @@ The VectorCraft releases the StitchCraft plug-ins work with. Each passed both le
 | 0.13.1 | stable | 2026-10-18 |
 | 0.12.0 | stable | 2026-10-18 |
 
-The plug-ins speak VectorCraft's plug-in ABI v1. Pull requests are checked against VectorCraft 0.20.0, the release the gate pins in `compat/vectorcraft.toml`.
+The plug-ins speak VectorCraft's plug-in ABI v1. Pull requests are checked against VectorCraft 0.21.0, the release the gate pins in `compat/vectorcraft.toml`.
