@@ -38,7 +38,7 @@ use stitchcraft_params::kinds::{Choice, Toggle};
 use stitchcraft_params::{
     ChoiceOption, Family, ParamKind, ParamSet, ParamSpec, StitchType, Validated, left_to_others, params, read_param, unknown_keys,
 };
-use stitchcraft_plan::MachineProfile;
+use stitchcraft_plan::{MachineProfile, Rgb};
 
 use crate::common::{CommonParams, STOP_AFTER, TRIM_AFTER};
 use crate::design::{DesignSettings, Element, Hints, Join, Path, Shape};
@@ -56,7 +56,7 @@ use crate::generators::tatami::TatamiParams;
 use crate::generators::tatami::rows::Segment;
 use crate::generators::tatami::sew::{Fill, Pull, Travel, tatami_fill, top_rows};
 use crate::generators::zigzag::{ZigzagStrokeParams, zigzag_stroke};
-use crate::generators::{Approach, Neighbours, Stitched, method, mm};
+use crate::generators::{Approach, Colour, Neighbours, Stitched, method, mm};
 use crate::normalize::region::{self, Region, cut};
 use crate::normalize::stroke;
 use crate::registry::PARAMETERS;
@@ -132,6 +132,9 @@ pub struct Generated {
     pub stitch_type: StitchType,
     /// Its groups: the needle points of each part a jump may separate from the next, in sewing order.
     pub groups: Vec<Vec<Point>>,
+    /// The colour of each group, by its place, as its generator gives them ([`Stitched::colours`]): empty when
+    /// every group is sewn in the element's thread (`REQ-ASM-006`).
+    pub colours: Vec<Colour>,
     /// The shortest stitch it was sewn with, which finalize holds its stitches to as well.
     pub min_stitch: Mm,
 }
@@ -232,6 +235,14 @@ pub fn stops_after(element: &Element) -> bool {
     setting::<Toggle>(&element.params, CommonParams::SPECS, STOP_AFTER, &mut Vec::new()).unwrap_or(false)
 }
 
+/// The colours of the threads `element` sews in, in their order, read before it is generated, as the
+/// sewing order needs them (`crate::auto`, `REQ-AUTO-024`): its own thread's, for every stitch type sewn so
+/// far. A stitch type whose generator gives its runs threads of their own ([`Stitched::colours`]), as
+/// M10.6's tartan and M10.12's gradient fills will, gives them here from the element's shape and settings.
+pub(crate) fn colours(element: &Element) -> Vec<Rgb> {
+    vec![element.thread.color]
+}
+
 /// The value of the parameter `key` of the declaration whose parameters are `specs`, read alone from `set`,
 /// whatever stitch type uses it; what is wrong with it goes to `diagnostics`.
 fn setting<K: ParamKind>(set: &ParamSet, specs: &[ParamSpec], key: &str, diagnostics: &mut Vec<Diagnostic>) -> Option<K::Value> {
@@ -328,7 +339,7 @@ fn sew(
     };
     let (Some(common), Some(Shared { min_stitch, .. }), Some(stitched)) = (common, sewing.shared, stitched) else { return Ok(None) };
     diagnostics.extend(stitched.warnings);
-    Ok(Some(Generated { common, stitch_type: sewing.stitch_type, groups: stitched.runs, min_stitch }))
+    Ok(Some(Generated { common, stitch_type: sewing.stitch_type, groups: stitched.runs, colours: stitched.colours, min_stitch }))
 }
 
 /// The segments of a fill's top rows, or `None` when it is skipped or is not a fill; what it says about it

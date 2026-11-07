@@ -132,3 +132,48 @@ pub(crate) fn planned(design: &stitchcraft_engine::design::Design) -> (Vec<u8>, 
     let plan = outcome.plan.unwrap_or_else(|| panic!("no plan: {:?}", outcome.diagnostics));
     (stitchcraft_formats::encode(&plan, stitchcraft_plan::FormatId::PesV1, "test").unwrap().bytes, said)
 }
+
+/// An element sewn in red, green and blue, as a linear gradient fill of 3 stops will be (`REQ-ASM-006`): a red
+/// stroke of 3 lines 10 mm long and 5 mm apart, trimmed after, generated as `stitch export` generates it,
+/// and its 3 groups given those threads, each ending a colour block. No stitch type gives its groups threads
+/// of their own yet. The other crates' cases take the same element from `stitchcraft_testkit::designs`,
+/// which this crate doesn't depend on.
+pub(crate) fn three_threads() -> (stitchcraft_engine::design::Element, stitchcraft_engine::generate::Generated) {
+    use stitchcraft_core::{Budget, ElementId, Point};
+    use stitchcraft_engine::design::{DesignSettings, Element, Path, Segment, Shape, Subpath};
+    use stitchcraft_engine::generators::{Colour, Neighbours};
+    use stitchcraft_plan::{Rgb, Thread};
+
+    let p = |x: f64, y: f64| Point::new(x, y).unwrap();
+    let lines =
+        (0..3).map(|i| Subpath { start: p(0.0, f64::from(i) * 5.0), segments: vec![Segment::Line(p(10.0, f64::from(i) * 5.0))], closed: false });
+    let [red, green, blue] = [Rgb::new(200, 0, 0), Rgb::new(0, 160, 0), Rgb::new(0, 0, 200)].map(Thread::new);
+    let element = Element {
+        id: ElementId::new("gradient").unwrap(),
+        name: None,
+        shape: Shape::stroke(Path { subpaths: lines.collect() }),
+        thread: red.clone(),
+        params: [("trim_after", "true")].into_iter().collect(),
+        automatic: false,
+        hints: Default::default(),
+        clips: Vec::new(),
+    };
+    let settings = DesignSettings::default();
+    let mut generated =
+        stitchcraft_engine::generate::generate(&element, &settings, stitchcraft_plan::profiles::REFERENCE, &Neighbours::default(), &Budget::DEFAULT)
+            .generated
+            .unwrap();
+    generated.colours = [red, green, blue].map(|thread| Colour { thread: Some(thread), ends_block: true }).to_vec();
+    (element, generated)
+}
+
+/// The plan of [`three_threads`]'s element, assembled and finalized for the reference machine as
+/// `stitch export` plans a design: 3 colour blocks, each trimmed after.
+pub(crate) fn three_threads_plan() -> stitchcraft_plan::StitchPlan {
+    let (element, generated) = three_threads();
+    let (settings, mut meter) = (stitchcraft_engine::design::DesignSettings::default(), stitchcraft_core::Budget::DEFAULT.meter());
+    let assembled = stitchcraft_engine::assemble::assemble(&[(&element, generated)], &settings, &mut meter).unwrap().unwrap();
+    let finalized =
+        stitchcraft_engine::finalize::finalize(assembled.plan, stitchcraft_plan::profiles::REFERENCE, &settings, &assembled.shortest, &mut meter);
+    finalized.unwrap().plan.unwrap()
+}

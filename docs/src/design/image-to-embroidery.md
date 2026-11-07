@@ -464,7 +464,11 @@ rules.
    thread is free to sew: every element that must sew before it has. Otherwise the thread changes to that
    of the first free element in paint order. Threads are the same when their colours are, as plan assembly
    counts thread changes. A PES file gives different colours different palette entries while they last
-   (`REQ-THREAD-002`), so 2 colours are one thread to the machine only past the palette's 64 entries.
+   (`REQ-THREAD-002`), so 2 colours are one thread to the machine only past the palette's 64 entries. An
+   element sewn in several threads, as a tartan or a gradient fill will be (M10.5), moves as one, its
+   colours together and in the order its generator sews them. It has the thread sewing when the thread it
+   starts in is, and leaves the thread it ends in sewing (`REQ-AUTO-024`). Its threads are read before it is
+   generated, from its shape and settings.
 4. **The nearest next.** Of the free elements of that thread, the next is the one whose box lies nearest
    the box of the element sewn last. On a tie it is the one whose box's centre lies nearest, and then the
    one drawn first. Each element then starts and ends at its points nearest its neighbours
@@ -482,7 +486,8 @@ exporters order the automatic elements when their `auto` option is on, and sew t
 as drawn.
 An element with a stop after it keeps its place: the elements drawn before it sew before it, and those
 drawn after it after it. A user sets a stop for a reason, such as placing appliqué fabric, and it comes
-where it was drawn. `SC-I0907` says when the order isn't paint order, with the thread changes of each.
+where it was drawn. `SC-I0907` says when the order isn't paint order, with the thread changes of each, those
+inside the elements sewn in several threads among them.
 M10's routing tools don't start from this order. They route satin columns and running stitches drawn by
 hand as Ink/Stitch's tools route them, and write the route into the document ([routing tools](routing.md#order)).
 Each element that automatic digitizing makes sews its underlay just before its own top stitches. The

@@ -272,7 +272,7 @@ fn sewn(region: &Region, cross: &Cross, needle: Option<Point>, next: Option<&App
     }
     warnings.extend(no_cell(bare, ordered.len(), cross.coverage));
     warnings.extend(shrunk_away(Code::FillExpandShrinksAway, "expand_mm", "its crosses are", gone, region.parts.len()));
-    Ok(Stitched { runs, warnings })
+    Ok(Stitched { runs, colours: Vec::new(), warnings })
 }
 
 /// The full crosses of `kind` that `part`, as it lies in the frame, covers `coverage` percent of on `grid`,

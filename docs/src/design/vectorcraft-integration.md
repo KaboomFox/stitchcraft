@@ -248,7 +248,8 @@ writes of the document:
   design takes the file's name. The option's default, `document`,
   is the machine the document keeps, or `brother-pe800-5x7` when it keeps none, as `stitch export` plans
   it without `--profile` ([below](#design-settings-and-machine-kept-with-the-document)).
-  Reading the file back, as `stitch export` does, stops it at a writer's bug (`SC-E0009`). The budget is
+  Reading the file back, as `stitch export` does, stops it at a writer's bug (`SC-E0009`). The file has
+  every thread of the plan, those of an element sewn in several among them (`REQ-THREAD-003`). The budget is
   `stitch export`'s own too. Its `auto` option digitizes the objects without StitchCraft effects, as
   `--auto` does, and sews them in the order StitchCraft chooses. The exporters have no switch like
   `--sort-colours`, and the objects with effects keep their order among themselves
@@ -564,7 +565,10 @@ finish.
 Paint caveat: a live effect changes only geometry. A fill preview's ribbons are painted with the object's
 own fill, and a stroke preview with its stroke. From 0.14 a stroke or a satin effect reads its stroke's
 style, and still cannot change the paints. Users set the fill/stroke to the thread colour, which they want
-anyway for export.
+anyway for export. An element sewn in several threads (M10.5), as a tartan or a gradient fill will be,
+previews every group of its stitches with the object's own paints too. A tartan's preview shows one
+colour. ABI v1 gives the geometry a live effect returns no paint of its own. The exporters and
+`stitch export` write each thread, and the command line's preview draws each (`REQ-THREAD-003`).
 
 ### Commands in v1
 

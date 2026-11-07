@@ -3,7 +3,7 @@
 //! places — for every writer/reader pair, on random plans and on a plan with every command.
 //! "The same thing" is `stitchcraft_testkit::equivalence::events`, with the cuts each format adds:
 //! `format_events` — before three or more jumps in a row for DST (REQ-FMT-008), before every jump for
-//! PES (REQ-FMT-010).
+//! PES (REQ-FMT-010). An element sewn in several threads is written with each of them (REQ-THREAD-003).
 
 // Test code may unwrap (clippy.toml allows it inside #[test] functions; these helpers are test code too).
 #![allow(clippy::unwrap_used)]
@@ -14,7 +14,7 @@ use stitchcraft_formats::{decode, encode};
 use stitchcraft_plan::palette::BROTHER_PEC;
 use stitchcraft_plan::{FormatId, PlanBuilder, Provenance, Rgb, Role, StitchPlan, Thread};
 use stitchcraft_testkit::equivalence::{Event, events, format_events};
-use stitchcraft_testkit::{plans, strategies};
+use stitchcraft_testkit::{designs, plans, strategies};
 
 fn round_trip(plan: &StitchPlan, format: FormatId) -> StitchPlan {
     let encoded = encode(plan, format, "round trip").unwrap();
@@ -62,6 +62,24 @@ fn req_fmt_002_a_stitch_in_the_file_is_the_plans_to_within_the_rounding_of_its_e
             assert!((w - p).abs() <= 0.1 * std::f64::consts::SQRT_2, "{}: {w} for {p}", format.name());
         }
     }
+}
+
+#[test]
+fn req_thread_003_pes_and_dst_files_write_each_thread_of_an_element_sewn_in_3() {
+    // One element in red, green and blue, as a gradient fill of 3 stops sews: 3 colour blocks, 2 changes.
+    let plan = designs::three_threads();
+    assert_eq!(plan.elements.len(), 1);
+    for format in FormatId::ALL {
+        let back = round_trip(&plan, *format);
+        assert_eq!(events(&back), format_events(&plan, *format), "{}", format.name());
+        let stats = back.stats();
+        assert_eq!((back.blocks.len(), stats.color_changes, stats.stops), (3, 2, 0), "{}", format.name());
+    }
+    // A PES file names each by its own Brother colour: Red, then a green and a blue, none of them a stop.
+    let threads = pec_threads(&round_trip(&plan, FormatId::PesV1));
+    assert_eq!(threads, pec_threads(&plan));
+    assert_eq!(threads.len(), 3);
+    assert!(threads[0] != threads[1] && threads[1] != threads[2] && threads[0] != threads[2], "{threads:?}");
 }
 
 proptest! {
