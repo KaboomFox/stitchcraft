@@ -786,8 +786,9 @@ a colour block (M10.5).
 
 ## Cross stitch (P3)
 
-A cross in each cell of a grid that the region covers enough of, simple and flipped from M10.1
-([cross stitch](cross-stitch.md)). It takes its parts in a tatami fill's order ([section 5](#5-parts)), and
+A cross in each cell of a grid that the region covers enough of, simple and flipped from M10.1, and every
+other method of Ink/Stitch's from M10.2 ([cross stitch](cross-stitch.md)). Half crosses route their rows
+as this page's tatami fill routes its rows, with `underpath` off ([section 3](#3-routing-every-segment-once)). It takes its parts in a tatami fill's order ([section 5](#5-parts)), and
 its `expand_mm` from the tatami fill's settings, which grows the region before its cells are chosen.
 
 ## Legacy fill (not planned)

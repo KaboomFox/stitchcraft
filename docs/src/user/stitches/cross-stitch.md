@@ -34,6 +34,18 @@ artboard has its top left corner.
 `cross_offset_mm` moves the grid: left by its first length and down by its second, or as far each way by
 one length. A move by a whole cell leaves it where it was.
 
+`cross_rotation` turns the grid, clockwise for a positive angle, and the crosses and the stepped edge
+turn with it. A shape turned with its grid, with `canvas_grid_origin` off, sews the same crosses as the
+shape unturned, turned with it: a letter of a cross-stitch font turned along a path keeps its crosses
+square to its sides this way. On the canvas's grid the grid turns about the point the offset names, so
+fills side by side with the same turn still share one grid.
+
+<!-- shot: cross-rotation -->
+| 0° | 30° |
+|:-:|:-:|
+| ![A red heart 32 mm wide in cross stitch on a 3 mm grid with 4 threads, its crosses and stepped edges turned with the grid, 0°](../../images/generated/cross-rotation-1.png) | ![A red heart 32 mm wide in cross stitch on a 3 mm grid with 4 threads, its crosses and stepped edges turned with the grid, 30°](../../images/generated/cross-rotation-2.png) |
+<!-- /shot -->
+
 ## Which cells sew a cross
 
 A cell sews a cross when the fill covers `fill_coverage` percent of it, 50 by default. Lower, crosses are
@@ -53,8 +65,7 @@ cells smaller, or lower `fill_coverage`.
 A cross sews its `\` diagonal first and then its `/` diagonal over it, so every cross's top diagonal lies the
 same way, as in hand cross stitch. Between the 2 the needle passes through the cell's middle, where the top
 diagonal covers it. `cross_stitch_method` set to `simple_cross_flipped` lays the `/` diagonal under the `\`
-one instead, on the same grid. The other kinds of cross, half, upright, double and Smyrna, arrive in a later
-version, and a fill set to one is skipped for now (`SC-W0011`).
+one instead, on the same grid.
 
 <!-- shot: cross-flipped -->
 | Simple cross | Flipped |
@@ -62,23 +73,62 @@ version, and a fill set to one is skipped for now (`SC-W0011`).
 | ![A red heart 32 mm wide in cross stitch on a 3 mm grid with 4 threads, each cross's top diagonal lying one way, Simple cross](../../images/generated/cross-flipped-1.png) | ![A red heart 32 mm wide in cross stitch on a 3 mm grid with 4 threads, each cross's top diagonal lying one way, Flipped](../../images/generated/cross-flipped-2.png) |
 <!-- /shot -->
 
-`cross_thread_count` sets how many times the thread passes along each diagonal, 4 by default. The needle
-comes back to where it started, and the count is even. An odd count sews the even count below it, and 1
-sews 2, with `SC-W0320`. 2 threads give a lighter cross, which suits small grids, and 4 a bolder one. A
-diagonal longer than `max_cross_stitch_length_mm`, 11 mm by default, is sewn in equal stitches no longer.
+`cross_thread_count` sets how many times the thread passes along each half of each bar of a cross, 4 by
+default. The needle comes back to where it started, and the count is even. An odd count sews the even count
+below it, and 1 sews 2, with `SC-W0320`. 2 threads give a lighter cross, which suits small grids, and 4 a
+bolder one. A diagonal longer than `max_cross_stitch_length_mm`, 11 mm by default, is sewn in equal
+stitches no longer.
+
+## Other kinds of cross
+
+`cross_stitch_method` chooses the kind of cross, each with a flipped variant, `_flipped` after its name,
+that turns each cross a quarter turn on its cell:
+
+- `upright_cross` sews a `+` in each cell, a bar across from the middle of one side to the middle of the
+  other with a bar down over it. Flipped, the bar across lies on top.
+- `dense_upright_cross` adds a second grid of upright crosses half a cell over, each on a corner of the
+  first grid's cells, so that the crosses close the gaps between each other. Along the shape's edges they
+  reach half a cell past the first grid's crosses where the shape covers enough of their cells.
+- `double_cross` sews a simple cross with an upright cross between its 2 diagonals, its `/` diagonal on
+  top. Ink/Stitch's font Jersey 15 sews it, with 2 threads.
+- `smyrna_cross` sews a simple cross and an upright cross over it, its bar down on top.
+
+They are sewn in runs as simple crosses are, every cross a loop from one of its ends back to it. Each half
+of every bar takes the same even thread count. With 4 bars through each cell's middle, a double
+or a Smyrna cross packs much thread there: 2 threads suit them on small grids.
+
+<!-- shot: cross-methods -->
+| Upright | Dense upright | Double | Smyrna |
+|:-:|:-:|:-:|:-:|
+| ![A red heart 32 mm wide in cross stitch on a 3 mm grid with 4 threads, sewn with another kind of cross in each cell, Upright](../../images/generated/cross-methods-1.png) | ![A red heart 32 mm wide in cross stitch on a 3 mm grid with 4 threads, sewn with another kind of cross in each cell, Dense upright](../../images/generated/cross-methods-2.png) | ![A red heart 32 mm wide in cross stitch on a 3 mm grid with 4 threads, sewn with another kind of cross in each cell, Double](../../images/generated/cross-methods-3.png) | ![A red heart 32 mm wide in cross stitch on a 3 mm grid with 4 threads, sewn with another kind of cross in each cell, Smyrna](../../images/generated/cross-methods-4.png) |
+<!-- /shot -->
+
+## Half crosses
+
+`half_cross` sews only the `\` diagonal of each cell, and `half_cross_flipped` only the `/` one. The
+diagonals that meet end to end are sewn as one row, and the needle goes from row to row along the stepped
+outline of the cells, where the travel shows. Each stitch of a row is sewn there and back until it lies an
+odd number of times: `cross_thread_count` when it is odd, and one more when it is even, with `SC-W0322`.
+Set 3 for a stitch that lies 3 times, or 1 for a light one.
+
+<!-- shot: cross-half -->
+| Half cross | Flipped |
+|:-:|:-:|
+| ![A red heart 32 mm wide in half crosses on a 3 mm grid, one diagonal in each cell sewn 3 times, and the needle's way between the rows on the stepped outline, Half cross](../../images/generated/cross-half-1.png) | ![A red heart 32 mm wide in half crosses on a 3 mm grid, one diagonal in each cell sewn 3 times, and the needle's way between the rows on the stepped outline, Flipped](../../images/generated/cross-half-2.png) |
+<!-- /shot -->
 
 ## The order of the crosses
 
-Crosses that meet, side by side or corner to corner, are sewn in one run, and the needle jumps only between
-groups that don't. Each cross joins the run at one of its corners, its top diagonal's where it can, so that
-the stitches through its middle lie under that diagonal. A cross that the run comes to only at a corner of
-its bottom diagonal ends with a stitch from its middle back to that corner, on top. A fill of one group first
-runs from where the needle comes in to where it ends, near the next element, from corner to corner through
-the middles of the crosses on the way. The crosses sewn after hide those stitches.
+Crosses that meet are sewn in one run, and the needle jumps only between groups that don't. Simple, double
+and Smyrna crosses meet side by side or corner to corner, and upright crosses side by side. Each cross joins
+the run at one of its ends, its top bar's where it can, so that the stitches through its middle lie under
+that bar. A cross that the run comes to only at an end of a lower bar ends with a stitch from its middle back
+to it, on top. A fill of one group first runs from where the needle comes in to where it ends, near the next
+element, from end to end through the middles of the crosses on the way. The crosses sewn after hide those
+stitches.
 
-A grid so fine that a cross's stitches from its corners to its middle are shorter than the machine's
-shortest stitch loses some of its needle points, and its crosses their shape: `SC-W0321` says so. A cross
-stitch fill has no underlay.
+A grid so fine that a cross's shortest stitches are shorter than the machine's shortest stitch loses some of
+its needle points, and its crosses their shape: `SC-W0321` says so. A cross stitch fill has no underlay.
 
 ## Parameters
 

@@ -45,7 +45,10 @@ centroid, for the stitch types that use them (`generate`). Since M8.5 an element
 which SVG clip paths give, cut a fill's region when it is built and a stroke's lines where they cross a
 clip's outline (`normalize::region::cut`). Automatic digitizing cuts its shapes first (`auto::clips`), and a
 satin column is sewn whole. From M8.7 VectorCraft's clipping objects give clips too, and a clip's shapes
-are shared by the elements it cuts.
+are shared by the elements it cuts. Since M10.1 a cross stitch fill sews a cross in each cell of its grid
+that it covers enough of, the crosses that share a join in one run (`generators::cross`). Since M10.2 it
+sews each of Ink/Stitch's 12 methods, the half crosses in rows routed as a tatami fill's, on a grid that
+may turn.
 Since M13.1 a shape without settings, read with `--auto`, is digitized automatically before anything else
 (`auto`). A line no wider than the design's narrowest satin stroke runs, a line up to 7 mm wide becomes
 satin columns along its centre line, and a wider line becomes the tatami fill of the area it paints

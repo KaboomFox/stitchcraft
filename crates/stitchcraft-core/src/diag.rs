@@ -477,6 +477,13 @@ registry! {
     /// `pattern_size_mm` larger.
     FillCrossTooFine = "SC-W0321", Warning, "Cross stitch grid too fine for the shortest stitch; needle points left out";
 
+    /// A half cross sews each stitch of its rows an odd number of times: along the stitch, and then back
+    /// and forth over it, as bean stitch does. An even `cross_thread_count` sews the odd count above it, as
+    /// in Ink/Stitch, whose own help for the count says that half crosses take an odd one.
+    ///
+    /// The message gives the count set and the count sewn. Set an odd number.
+    FillCrossThreadsEven = "SC-W0322", Warning, "Half cross with an even thread count; the odd count above sewn";
+
     /// A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
     /// one stitch that short would hammer one spot of the fabric and could break the thread. The part is
     /// a single point (a stray node), shorter than the shortest stitch, or longer but curled up so that

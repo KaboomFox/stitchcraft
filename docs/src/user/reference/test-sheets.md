@@ -431,21 +431,25 @@ After sewing, check:
 
 ## TS-17A — New stitch types: cross stitch
 
-114.0 × 54.0 mm · 5299 stitches, 7 jumps, 6 trims, 1 colour change, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
+114.0 × 114.0 mm · 10305 stitches, 14 jumps, 13 trims, 3 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
 Drawn as a design, which VectorCraft's Test Sheet filter draws too.
 
-![TS-17A as it will sew: a row of 4 red squares of crosses 24 mm wide, on grids of 2 and 3 mm with 2 and 4 threads. Below them in blue, the 2 mm and 3 mm squares again with their crosses flipped, and a K 24 mm tall in crosses on a 2 mm grid, its slanted arms stepping along the grid.](../../images/generated/testsheet-ts-17a.png)
+![TS-17A as it will sew: a row of 4 red squares of crosses 24 mm wide, on grids of 2 and 3 mm with 2 and 4 threads. Below them in blue, the 2 mm and 3 mm squares again with their crosses flipped, and a K 24 mm tall in crosses on a 2 mm grid, its slanted arms stepping along the grid. Below them in green, squares of upright, dense upright, double and Smyrna crosses, and at the bottom in black, squares of half crosses plain and flipped, and a square turned 30° with its crosses square to its sides.](../../images/generated/testsheet-ts-17a.png)
 
-Threads: Red, Blue.
+Threads: Red, Blue, Emerald Green, Black.
 
 After sewing, check:
 
-- Each sample is a cross stitch fill, trimmed after. Top row, in red, left to right: squares 24 mm wide on grids of 2 mm with 2 and 4 threads, then of 3 mm with 2 and 4 threads. Bottom row, in blue: the 2 mm square with 2 threads and the 3 mm one with 4, flipped, then a K 24 mm tall on a 2 mm grid with 2 threads, grown by 0.1 mm as Ink/Stitch's cross-stitch fonts grow their letters.
+- Each sample is a cross stitch fill, trimmed after. First row, in red, left to right: squares 24 mm wide on grids of 2 mm with 2 and 4 threads, then of 3 mm with 2 and 4 threads. Second row, in blue: the 2 mm square with 2 threads and the 3 mm one with 4, flipped, then a K 24 mm tall on a 2 mm grid with 2 threads, grown by 0.1 mm as Ink/Stitch's cross-stitch fonts grow their letters. Third row, in green, on the 3 mm grid: squares of upright, dense upright, double and Smyrna crosses, the double ones with 2 threads. Fourth row, in black: squares of half crosses with 3 threads, plain and flipped, and a square 18 mm wide turned 30°, its grid turned with it.
 - Does every cross of the top row lie with its / diagonal on top, and every cross of the flipped squares with its \ diagonal on top?
 - Between its 2 diagonals the needle passes through each cross's middle, under the diagonal sewn last. Do those stitches show? The squares and the K first travel from where the needle comes in to where they end, through the middles of their crosses: does that travel show?
 - Does fabric show between the crosses at 2 threads? At 4, do the holes at the cells' corners stay clean, or do they pack and tear? Which grid and thread count look best?
 - The K's arms slant across the grid, and each cell their edges cut in half sews a cross, so the arms step along the grid. Does the K read at 24 mm on a 2 mm grid? A few of its crosses are reached by a corner of their bottom diagonal, and end with a stitch from their middle to it on top: do those show?
+- Each upright cross sews its bar across and then its bar down over it, a + in each cell. The dense square adds a second grid of them half a cell over, on the corners of the first, and those along its sides reach half a cell past them. Does the dense square close the gaps of the plain one, or pack too much thread?
+- Each double cross sews its \ diagonal, an upright cross over it and its / diagonal over that, and each Smyrna cross both diagonals and an upright cross over them, its bar down on top. How do the layers look at 2 and 4 threads? Do the many stitches through each cell's middle pack or tear it?
+- The half crosses sew one diagonal in each cell, \ on the left square and / on the flipped one, 3 times, joined into rows along the square's diagonals. Between the rows the needle travels along the square's sides, sewn once. Do those travel stitches show on its edges?
+- The square turned 30° sews its crosses square to its own sides, as a letter turned along a path sews its own. Do its rows of crosses run along its edges, with no part cell along them?
 - How long does the sheet take?

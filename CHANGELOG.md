@@ -5,6 +5,40 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M10.2: the other cross stitch methods and the turned grid (`REQ-FILL-CRS-008` to `REQ-FILL-CRS-012`).
+  `cross_stitch_method` sews each of Ink/Stitch's 12 methods, of which 10 were skipped with `SC-W0011`,
+  and `cross_rotation` turns the grid.
+  - An upright cross sews a `+` in each cell, its bar across and then its bar down. Dense upright crosses
+    add a second grid of them half a cell left and up, whose middles are the first grid's corners. Between
+    a double cross's 2 diagonals lies an upright cross, and a Smyrna cross sews one over them. Flipped,
+    each bar lies where the bar a quarter turn from it lies, on the same grid.
+  - Every full cross is a stack of bars, sewn as a loop from one of its ends back to it by M10.1's
+    generator. The crosses that share an end sew in one run, each joining it at an end of its top bar
+    where it can. A cross the run reaches only at an end of a lower bar ends with a stitch back from its
+    middle, which then lies on top. `SC-W0321` names the shortest stitch of each kind of cross.
+  - A half cross sews one diagonal in each cell, `\`, or `/` flipped. The diagonals that run on from cell
+    to cell are rows, routed as a tatami fill's rows with underpath off. Between rows the needle is sent
+    along the outline and holes of each piece of cells, and 2 cells that meet at a corner join through
+    it. Each stitch of a row lies an odd number of times, and an even `cross_thread_count` sews the odd
+    count above it (`SC-W0322`).
+  - `cross_rotation` turns the grid clockwise for a positive angle. On the canvas's grid it turns about
+    the point the offset names, as Ink/Stitch turns it. With `canvas_grid_origin` off the grid starts at
+    the turned part's corner, so that a part turned with its grid sews its crosses turned with it, as
+    lettering along a path will turn a glyph's (M14.3). A whole number of quarter turns is exact.
+  - The ledger's entries for the row Ink/Stitch's offset leaves out (`DEV-FILL-025`), the flipped
+    crosses' grid (`DEV-FILL-026`), a thread count of 1 (`DEV-FILL-027`) and the order of the crosses
+    (`DEV-FILL-028`) now cover the new methods.
+  - TS-17A's M10.2 part is drawn for MC-12. Squares of upright, dense upright, double and Smyrna crosses
+    sew in green, and squares of half crosses, plain and flipped, and a square turned 30° with its grid in
+    black. It sews in Ink/Stitch as in StitchCraft by every measure of the differential, 10,305 stitches
+    against 10,303. So does a case of each full cross's flipped variant, turned grids, and half crosses
+    round a hole, through cells that meet at a corner and in 2 pieces of one part, 1,077 stitches in both.
+    And so does each of the 162 glyphs of Jersey 15, the font of double crosses, in the glyph differential,
+    170,892 stitches in both.
+  - The test harness mirrors a half cross's method with its design and turns `cross_rotation` the other
+    way, so that a mirrored or turned design sews the same crosses mirrored or turned.
+  - The user's guide shows each method, the half crosses and the turned grid in pictures, and the design
+    page says how each is sewn.
 - M10.5: several threads in one element (`REQ-ASM-006`, `REQ-ASM-007`, `REQ-AUTO-024`, `REQ-THREAD-003`),
   as the tartan fill (M10.6) and the linear gradient fill (M10.12) will need them. A generator gives each
   run of needle points a thread of its own, or leaves it in its element's, and says which runs end a
@@ -2443,6 +2477,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-17A.pes` (M10.2). The sheet gains 2 rows after 2 more colour
+  changes. Its green row sews squares of upright and dense upright crosses, then of double and Smyrna
+  crosses, and its black row squares of half crosses and a square turned 30° with its grid. The plan spans
+  114 × 114 mm, and sews 10,305 stitches, 5,006 more. The first 2 rows sew as before.
 - Added `conformance/golden/testsheets/TS-17A.pes` (M10.1), the simple crosses of the cross stitch sheet
   that MC-12 sews: 5,299 stitches.
 - Changed `conformance/golden/testsheets/TS-16.pes` (M8.13). The sheet gains 2 black lines locked at both ends

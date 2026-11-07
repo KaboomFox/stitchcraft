@@ -103,13 +103,15 @@ then takes 12 minutes, and a twentieth of every glyph 22.
 
 **What differs.** These counts are from runs on 3 November 2026, before M10.1 brought simple crosses. Of
 the sample's 524 glyphs, 357 agree by every measure. 98 are of stitch types StitchCraft doesn't sew yet,
-which the report lists, 66 of them in cross stitch and the rest in tartan fills, ripples and guided
-fills. They join the comparison with M10's steps, the simple crosses with M10.1. The other 69 differ as
-the ledger explains, `conformance/inkstitch/glyphs.toml` naming the glyphs each excuse is for. A glyph
-may differ in more than one way. A twentieth of every glyph, the seventh of 20 parts, holds 1,059 glyphs.
-Of them 699 agree, 238 are listed and 122 differ as the ledger explains. It found the last 3 rows of the
-table, which the sample has none of, and a glyph neither program writes a file of, which agrees: the U of
-Apex simple small, whose satin column neither can sew.
+which the report lists, 66 of them in cross stitch and the rest in tartan fills, ripples and guided fills.
+They join the comparison with M10's steps, the simple crosses with M10.1 and Jersey 15's double crosses
+with M10.2. Sewn alone with M10.2, every one of Jersey 15's 162 glyphs agrees, the 2 programs' threads
+overlapping by 1.000 in each. The other 69 differ as the ledger explains,
+`conformance/inkstitch/glyphs.toml` naming the glyphs each excuse is for. A glyph may differ in more than
+one way. A twentieth of every glyph, the seventh of 20 parts, holds 1,059 glyphs. Of them 699 agree, 238
+are listed and 122 differ as the ledger explains. It found the last 3 rows of the table, which the sample
+has none of, and a glyph neither program writes a file of, which agrees: the U of Apex simple small, whose
+satin column neither can sew.
 
 | Difference | Sample | Twentieth | Explained by |
 |---|---|---|---|
