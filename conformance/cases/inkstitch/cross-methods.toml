@@ -1,0 +1,7 @@
+# The other cross stitch methods on the grids both programs lay: each full cross's flipped variant, grids
+# turned on the canvas and from a part's own corner, and half crosses round a hole, through cells that meet
+# at their corners, in 2 pieces of one part and on a turned grid (REQ-FILL-CRS-008 to REQ-FILL-CRS-011).
+id = "inkstitch-cross-methods"
+requirements = ["REQ-SVG-008", "REQ-FILL-CRS-012"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/cross-methods.svg"

@@ -188,7 +188,7 @@ registry uses these names as its keys so files move between the tools unchanged
 | `pattern_size_mm` | float | mm (x y) | 3 | `cross_stitch` | P3 (M10) | [registered](../user/reference/params/cross.md#pattern_size_mm) |
 | `canvas_grid_origin` | boolean | — | true | `cross_stitch` | P3 (M10) | [registered](../user/reference/params/cross.md#canvas_grid_origin) |
 | `cross_offset_mm` | float | mm (x y) | 0 | `cross_stitch` | P3 (M10) | [registered](../user/reference/params/cross.md#cross_offset_mm) |
-| `cross_rotation` | float | deg | 0 | `cross_stitch` | P3 (M10) | planned |
+| `cross_rotation` | float | deg | 0 | `cross_stitch` | P3 (M10) | [registered](../user/reference/params/cross.md#cross_rotation) |
 | `fill_coverage` | int | % | 50 | `cross_stitch` | P3 (M10) | [registered](../user/reference/params/cross.md#fill_coverage) |
 | `max_cross_stitch_length_mm` | float | mm | 11.0 | `cross_stitch` | P3 (M10) | [registered](../user/reference/params/cross.md#max_cross_stitch_length_mm) |
 
@@ -329,4 +329,4 @@ change Ink/Stitch's updater makes (`lib/update.py`), in StitchCraft's words.
 | 4 | a fill with `auto_fill` off gets `fill_method` `legacy_fill`, and `auto_fill` is removed | applied to the shapes whose fill is sewn, unless digitized automatically (`DEV-FILL-014` says how a legacy fill sews) |
 | 4 | `fill_method` `auto_fill` becomes `tatami_fill` | applied to the shapes whose fill is sewn, unless digitized automatically |
 
-_145 parameter declarations, 112 registered in StitchCraft._
+_145 parameter declarations, 113 registered in StitchCraft._

@@ -407,7 +407,7 @@ params = ["expand_mm"]
 [[deviation]]
 id = "DEV-FILL-025"
 area = "fill/cross"
-summary = "A cross stitch fill looks at every cell of its grid within the part's bounds. Ink/Stitch starts at the grid's first line at or above the part's top, moved down by the offset's second length, or with canvas_grid_origin off at the part's top moved down so, and never looks at the row above it. So a part whose top lies less far below a line of the grid than that length loses the row of crosses it covers there: a 3 mm grid moved 2 mm down over a rectangle whose top lies 0.2 mm below a line leaves out a row the rectangle covers 60 % of."
+summary = "A cross stitch fill looks at every cell of its grid within the part's bounds, and of a dense upright cross's second grid. Ink/Stitch starts at the grid's first line at or above the part's top, moved down by the offset's second length, or with canvas_grid_origin off at the part's top moved down so, and never looks at the row above it. So a part whose top lies less far below a line of the grid than that length loses the row of crosses it covers there: a 3 mm grid moved 2 mm down over a rectangle whose top lies 0.2 mm below a line leaves out a row the rectangle covers 60 % of."
 reason = "cross_offset_mm moves the grid, and a cell the part covers enough of sews a cross wherever the grid's lines lie (REQ-FILL-CRS-001). Ink/Stitch's loop over the rows was read at d59c9ab (lib/stitches/utils/cross_stitch.py: CrossGeometries, _setup_geometry, _setup_crosses), and Ink/Stitch run as a black box (ADR-0001, decision 6) on a rectangle from (10, 9.2) to (22, 19) mm with an offset of 0 2 sewed 11 crosses from y = 11 to 20, where it sews 12 from y = 9 to 18 without the offset, and 14 cells reach 50 % of the moved grid."
 requirements = ["REQ-FILL-CRS-001"]
 params = ["cross_offset_mm"]
@@ -415,25 +415,25 @@ params = ["cross_offset_mm"]
 [[deviation]]
 id = "DEV-FILL-026"
 area = "fill/cross"
-summary = "Flipped crosses lie on the grid plain crosses lie on, with their / diagonal under their \\ one. Ink/Stitch turns the part a quarter turn, lays its grid over the turned part and turns the crosses back. Its flipped cells are then pattern_size_mm's second length wide and its first tall, the offset's second length moves them right and its first down, and with canvas_grid_origin off its grid starts at the part's bottom left corner. With square cells, no offset and the canvas's grid, both lay the same crosses."
-reason = "Flipping a cross changes which diagonal lies on top, and nothing else, so that plain and flipped crosses side by side share one grid (REQ-FILL-CRS-003). Ink/Stitch's flip was read at d59c9ab (lib/stitches/cross_stitch.py: even_cross_stitch, which turns the shape before laying the grid), and Ink/Stitch run as a black box (ADR-0001, decision 6) sewed flipped crosses on a pattern size of 2 3 mm 3 mm wide and 2 mm tall, and with canvas_grid_origin off from the part's bottom edge."
-requirements = ["REQ-FILL-CRS-003"]
+summary = "Flipped full crosses lie on the grid plain crosses lie on, each bar in the place of the bar a quarter turn from it, a simple cross's / diagonal under its \\ one. Ink/Stitch turns the part a quarter turn, lays its grid over the turned part and turns the crosses back. Its flipped cells are then pattern_size_mm's second length wide and its first tall, the offset's second length moves them right and its first down, and with canvas_grid_origin off its grid starts at the part's bottom left corner. With square cells, no offset and the canvas's grid, both lay the same crosses."
+reason = "Flipping a cross changes which bar lies on top, and nothing else, so that plain and flipped crosses side by side share one grid (REQ-FILL-CRS-003, REQ-FILL-CRS-008, REQ-FILL-CRS-009). Ink/Stitch's flip was read at d59c9ab (lib/stitches/cross_stitch.py: even_cross_stitch, which turns the shape before laying the grid), and Ink/Stitch run as a black box (ADR-0001, decision 6) sewed flipped crosses on a pattern size of 2 3 mm 3 mm wide and 2 mm tall, and with canvas_grid_origin off from the part's bottom edge."
+requirements = ["REQ-FILL-CRS-003", "REQ-FILL-CRS-008", "REQ-FILL-CRS-009"]
 params = ["cross_stitch_method", "pattern_size_mm", "cross_offset_mm", "canvas_grid_origin"]
 
 [[deviation]]
 id = "DEV-FILL-027"
 area = "fill/cross"
-summary = "A cross_thread_count of 1 sews 2 threads on each diagonal, with SC-W0320, and so does 0 and less, which the range raises to 1. Ink/Stitch takes the even count below 1, 0, and sews a stitch from a corner of each cell to its middle and back, and no cross. It takes the size of a count below 0."
-reason = "A full cross takes an even number of passes on each half of a diagonal, and 2 is the fewest that sews a cross (REQ-FILL-CRS-003). Ink/Stitch's own description of the count says that 1 sews as 2. Its thread count was read at d59c9ab (lib/stitches/cross_stitch.py: cross_stitch, even_cross_stitch; lib/stitches/utils/cross_stitch.py: Cross), and Ink/Stitch run as a black box (ADR-0001, decision 6) sewed a stitch from a cell's top right corner to its middle for a count of 1 and of 0."
+summary = "A cross_thread_count of 1 sews 2 threads on each half of each bar of a full cross, with SC-W0320, and so does 0 and less, which the range raises to 1. Ink/Stitch takes the even count below 1, 0, and sews no cross: of a simple cross, a stitch from a corner of each cell to its middle and back. It takes the size of a count below 0. Half crosses sew each stitch once at a count of 1, as in Ink/Stitch."
+reason = "A full cross takes an even number of passes on each half of a bar, and 2 is the fewest that sews a cross (REQ-FILL-CRS-003). Ink/Stitch's own description of the count says that 1 sews as 2. Its thread count was read at d59c9ab (lib/stitches/cross_stitch.py: cross_stitch, even_cross_stitch; lib/stitches/utils/cross_stitch.py: Cross), and Ink/Stitch run as a black box (ADR-0001, decision 6) sewed a stitch from a cell's top right corner to its middle for a count of 1 and of 0."
 requirements = ["REQ-FILL-CRS-003"]
 params = ["cross_thread_count"]
 
 [[deviation]]
 id = "DEV-FILL-028"
 area = "fill/cross"
-summary = "A cross stitch fill takes its groups of crosses, and the crosses that meet at a corner, in a fixed order: the group nearest the needle first, the group nearest the end last, the cross below and to the left of a corner before the one above and to the right. Ink/Stitch takes them in the order of a Python set of its objects, which follows where they lie in memory. Where the needle and the end lie nearest one group of several, Ink/Stitch sews another group first, from its corner nearest the end, where StitchCraft starts it nearest the needle. And with neither, it starts each group at the first corner it finds that is a corner of one cross alone, where StitchCraft starts at its first cross's top right corner."
+summary = "A cross stitch fill takes its groups of crosses, and the crosses that meet at a place, in a fixed order: the group nearest the needle first, the group nearest the end last, and of the crosses at a place the one lower down first, and of 2 level with each other the one further right. Ink/Stitch takes them in the order of a Python set of its objects, which follows where they lie in memory. Where the needle and the end lie nearest one group of several, Ink/Stitch sews another group first, from its join nearest the end, where StitchCraft starts it nearest the needle. And with neither, it starts each group at the first good join it finds that is a join of one cross alone, where StitchCraft starts at its first cross's first good join clockwise from its top left."
 reason = "The same design sews the same stitches every time and everywhere (docs/src/design/determinism.md), and starting nearest the needle keeps the way to the first group short. Every cross is sewn the same way in both, so only the order of the crosses and the travel between groups differ. Ink/Stitch's routing was read at d59c9ab (lib/stitches/cross_stitch.py: _build_eulerian_cycles, _build_simple_cycles, organize; lib/stitches/utils/cross_stitch.py: CrossGeometries keeps its crosses in a set)."
-requirements = ["REQ-FILL-CRS-004"]
+requirements = ["REQ-FILL-CRS-004", "REQ-FILL-CRS-008", "REQ-FILL-CRS-009"]
 
 [[deviation]]
 id = "DEV-SVG-001"

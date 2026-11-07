@@ -414,8 +414,9 @@ filter, which almost every curved line outruns, and stops it with its own error.
 drawn as designs, TS-02B to TS-09, TS-11A, TS-11B, the TS-13 sheets and TS-17A, into the document: the
 sheet's design moved by whole millimetres so that its middle is nearest the middle of the artboard
 `_context` names (`Design::moved`). TS-17A moves by whole multiples of 6 mm, which keep its crosses' cells on
-the canvas's grids of 2 and 3 mm (`TestSheet::step`). Each element is an object named by its id, with its
-path and its thread as the paint its family sews with. Its settings are its family's effect record, each the
+the canvas's grids of 2 and 3 mm (`TestSheet::step`). The turned square's grid starts at the square's
+corner, and moves with it. Each element is an object named by its id, with its path and its thread as
+the paint its family sews with. Its settings are its family's effect record, each the
 value its dialog row takes, which reads back as the setting it was. The objects selected are given back as
 they are, and the sheet goes above them. The document sews as the sheet's design moved. A fill's rows lie where the design's
 origin puts them, so moved they may fall elsewhere across a shape, and the sheet looks the same. The

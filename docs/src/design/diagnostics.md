@@ -134,6 +134,7 @@ another.
 | `SC-W0319` | Warning | Cross stitch part covers no cell of its grid enough; sews nothing (Ink/Stitch warns too) | M10 |
 | `SC-W0320` | Warning | Cross stitch with an odd thread count; an even count sewn (1 sews 2, where Ink/Stitch sews no cross) | M10 |
 | `SC-W0321` | Warning | Cross stitch grid too fine for the shortest stitch; needle points left out | M10 |
+| `SC-W0322` | Warning | Half cross with an even thread count; the odd count above sewn (as Ink/Stitch sews it) | M10 |
 | `SC-W0401` | Warning | Path too small for the shortest stitch; skipped | M3 |
 | `SC-W0402` | Warning | Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest | M3 |
 | `SC-W0403` | Warning | Hand-placed stitch shorter than the shortest stitch; point left out | M3 |

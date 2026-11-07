@@ -43,24 +43,12 @@ pub(crate) struct Grid {
 }
 
 impl Grid {
-    /// The point where the grid's line `i` cells right of its origin meets its line `j` cells down. A
-    /// cell is named by its top left corner.
-    pub(crate) fn corner(&self, [i, j]: [i64; 2]) -> Point {
-        let [x, y] = self.line([i, j]);
-        Point::new(x, y).unwrap_or(Point::ORIGIN)
-    }
-
-    /// The middle of the cell whose top left corner is `[i, j]`.
-    pub(crate) fn middle(&self, [i, j]: [i64; 2]) -> Point {
-        let ([x0, y0], [x1, y1]) = (self.line([i, j]), self.line([i.saturating_add(1), j.saturating_add(1)]));
-        Point::new((x0 + x1) / 2.0, (y0 + y1) / 2.0).unwrap_or(Point::ORIGIN)
-    }
-
-    /// Where the grid's lines `[i, j]` lie: across, and down.
-    fn line(&self, [i, j]: [i64; 2]) -> [f64; 2] {
-        let [ox, oy] = self.origin;
-        let [w, h] = self.size;
-        [ox + i as f64 * w, oy + j as f64 * h]
+    /// The point of the grid `[u, v]` half cells right of its origin and down: a corner where both are even,
+    /// the middle of a cell where both are odd, and the middle of a side where one is. A middle lies halfway
+    /// between the lines on either side of it.
+    pub(crate) fn place(&self, [u, v]: [i64; 2]) -> Point {
+        let ([ox, oy], [w, h]) = (self.origin, self.size);
+        Point::new(half(u, ox, w), half(v, oy, h)).unwrap_or(Point::ORIGIN)
     }
 
     /// The grid turned a quarter turn, as a drawing is turned to lay flipped crosses ([`super::Frame`]): a
@@ -70,6 +58,14 @@ impl Grid {
         let ([x, y], [w, h]) = (self.origin, self.size);
         Grid { origin: [-y, x], size: [h, w] }
     }
+}
+
+/// Where half line `k` of lines `size` apart from `origin` lies: line `k / 2` for an even `k`, and halfway
+/// between the lines on either side for an odd one.
+fn half(k: i64, origin: f64, size: f64) -> f64 {
+    let line = |n: i64| origin + n as f64 * size;
+    let n = k.div_euclid(2);
+    if k.rem_euclid(2) == 0 { line(n) } else { (line(n) + line(n.saturating_add(1))) / 2.0 }
 }
 
 /// The cells of a grid that sew a cross for one part, by their top left corners, row after row from the top,
@@ -305,12 +301,14 @@ mod tests {
     #[test]
     fn the_grid_lies_where_its_origin_puts_it_and_turns_with_a_quarter_turn() {
         let grid = Grid { origin: [-1.0, 0.5], size: [2.0, 3.0] };
-        assert_eq!(grid.corner([1, 1]), p(1.0, 3.5));
-        assert_eq!(grid.middle([1, 1]), p(2.0, 5.0));
+        assert_eq!(grid.place([2, 2]), p(1.0, 3.5));
+        assert_eq!(grid.place([3, 3]), p(2.0, 5.0));
+        // The middles of sides, and places left of and above the origin.
+        assert_eq!([grid.place([3, 2]), grid.place([-1, -3]), grid.place([-2, 0])], [p(2.0, 3.5), p(-2.0, -4.0), p(-3.0, 0.5)]);
         let turned = grid.turned();
         assert_eq!(turned, Grid { origin: [-0.5, -1.0], size: [3.0, 2.0] });
         // Turned, each corner is a corner of the turned grid: (1, 3.5) goes to (-3.5, 1).
-        assert_eq!(turned.corner([-1, 1]), p(-3.5, 1.0));
+        assert_eq!(turned.place([-2, 2]), p(-3.5, 1.0));
     }
 
     #[test]

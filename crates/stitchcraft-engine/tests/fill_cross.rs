@@ -1,6 +1,6 @@
-//! A cross stitch fill (`REQ-FILL-CRS-001` to `REQ-FILL-CRS-006`), sewn as whole designs: the grid, the
-//! coverage, the crosses and their runs are tested in the generator's modules (`generators::cross`); these
-//! cases sew designs through every stage, with what is said of them.
+//! A cross stitch fill (`REQ-FILL-CRS-001` to `REQ-FILL-CRS-006`, `REQ-FILL-CRS-008` to `REQ-FILL-CRS-011`),
+//! sewn as whole designs: the grid, the coverage, the crosses and their runs are tested in the generator's
+//! modules (`generators::cross`); these cases sew designs through every stage, with what is said of them.
 
 // Test code may unwrap, index and panic (clippy.toml allows the first 2 in tests).
 #![allow(clippy::unwrap_used, clippy::indexing_slicing, clippy::panic)]
@@ -155,14 +155,99 @@ fn diag_sc_w0402_a_longest_cross_stitch_below_twice_the_shortest_is_raised_to_it
 }
 
 #[test]
-fn diag_sc_w0011_a_cross_stitch_method_of_a_later_version_is_skipped() {
+fn req_fill_crs_008_every_method_and_its_flipped_variant_sews_a_design_without_a_word() {
+    // A 6 mm square in each of the 12 methods, 2 threads for the full crosses and 3 for the half ones: each
+    // sews, nothing is said, and each sews a number of needle points of its own.
+    let one = square((0.0, 0.0), 6.0);
+    let mut counts = Vec::new();
+    for method in [
+        "simple_cross",
+        "simple_cross_flipped",
+        "half_cross",
+        "half_cross_flipped",
+        "upright_cross",
+        "upright_cross_flipped",
+        "dense_upright_cross",
+        "dense_upright_cross_flipped",
+        "double_cross",
+        "double_cross_flipped",
+        "smyrna_cross",
+        "smyrna_cross_flipped",
+    ] {
+        let threads = if method.starts_with("half") { "3" } else { "2" };
+        let sewn = planned(vec![cross(&[&one], &[("cross_stitch_method", method), ("cross_thread_count", threads)])]);
+        assert_eq!(messages(&sewn), Vec::<String>::new(), "{method}");
+        counts.push((method, needles(&sewn).len()));
+    }
+    // 4 crosses of 6 needle points, the run's start, and the dense crosses' 5 more on the second grid; the
+    // double and Smyrna crosses 12 a cross, and a Smyrna cross from a corner of its `/` diagonal 13.
+    let of = |method: &str| counts.iter().find(|(m, _)| *m == method).unwrap().1;
+    assert_eq!([of("simple_cross"), of("upright_cross"), of("dense_upright_cross"), of("double_cross")], [25, 25, 55, 49]);
+    assert!((49..=53).contains(&of("smyrna_cross")), "{counts:?}");
+    for (method, count) in &counts {
+        if let Some(plain) = method.strip_suffix("_flipped") {
+            assert_eq!(*count, of(plain), "{method}");
+        }
+    }
+}
+
+#[test]
+fn diag_sc_w0322_an_even_thread_count_on_half_crosses_sews_the_odd_count_above_it() {
+    // A 3 mm cell: its diagonal 4.24 mm long, sewn 1, 3 or 5 times, and the travel to the end.
     let one = square((0.0, 0.0), 3.0);
-    let sewn = planned(vec![cross(&[&one], &[("cross_stitch_method", "half_cross")]), line("line", (0.0, 10.0), 10.0, &RED, &[])]);
+    let sewn = |count: &str| planned(vec![cross(&[&one], &[("cross_stitch_method", "half_cross"), ("cross_thread_count", count)])]);
+    for (count, passes) in [("2", 3), ("4", 5)] {
+        let even = sewn(count);
+        assert_eq!(
+            messages(&even),
+            [format!(
+                "warning SC-W0322: `cross_thread_count` is {count}, and a half cross sews each stitch an odd number of times, so it sews \
+                 {passes}."
+            )]
+        );
+        let diagonal = needles(&even).windows(2).filter(|w| (w[0].distance(w[1]) - 18f64.sqrt()).abs() < 1e-9).count();
+        assert_eq!(diagonal, passes, "{count}");
+    }
+    // An odd count says nothing, and 1 sews each stitch once.
+    for (count, passes) in [("1", 1), ("3", 3)] {
+        let odd = sewn(count);
+        let diagonal = needles(&odd).windows(2).filter(|w| (w[0].distance(w[1]) - 18f64.sqrt()).abs() < 1e-9).count();
+        assert_eq!((messages(&odd), diagonal), (Vec::<String>::new(), passes), "{count}");
+    }
+}
+
+#[test]
+fn diag_sc_w0321_the_shortest_stitch_of_each_method_on_a_fine_grid_is_named() {
+    // Cells of 0.5 mm: an upright cross's half bar is 0.25 mm long, and a half cross's travel along a side of
+    // a cell 0.5 mm, longer than the shortest stitch of 0.3 mm.
+    let small = square((0.0, 0.0), 1.5);
+    let fine = |method: &str, size: &str| {
+        messages(&planned(vec![cross(&[&small], &[("cross_stitch_method", method), ("pattern_size_mm", size), ("cross_thread_count", "3")])]))
+    };
+    let upright = fine("upright_cross", "0.5");
     assert_eq!(
-        messages(&sewn),
-        ["warning SC-W0011: This element's cross stitch method, `half_cross`, is not sewn by this version of StitchCraft yet, so it \
-          is skipped."]
+        upright.last().unwrap(),
+        "warning SC-W0321: This cross stitch fill's cells are 0.5 by 0.5 mm, so the stitch from the middle of a side of a cross to its \
+         middle is 0.25 mm long, shorter than the shortest stitch (0.3 mm), and needle points of the crosses are left out."
     );
+    assert!(fine("half_cross", "0.5").is_empty());
+    assert_eq!(
+        fine("half_cross", "0.25"),
+        ["warning SC-W0321: This cross stitch fill's cells are 0.25 by 0.25 mm, so a stitch along a side of a cell is 0.25 mm long, \
+          shorter than the shortest stitch (0.3 mm), and needle points of the crosses are left out."]
+    );
+}
+
+#[test]
+fn req_fill_crs_011_cross_rotation_turns_the_grid_of_a_design_s_fill() {
+    // A square 12 mm wide turned 45° about the origin, its grid turned with it from its own corner: 16 crosses,
+    // as the square sews unturned; on the canvas's grid unturned, its stepped edge sews others.
+    let (half, side) = (std::f64::consts::FRAC_1_SQRT_2, 12.0);
+    let diamond = [(0.0, 0.0), (side * half, side * half), (0.0, 2.0 * side * half), (-side * half, side * half)];
+    let turned = planned(vec![cross(&[&diamond], &[("cross_rotation", "45"), ("canvas_grid_origin", "false")])]);
+    assert_eq!((messages(&turned), needles(&turned).len()), (Vec::<String>::new(), 16 * 10 + 1));
+    let unturned = planned(vec![cross(&[&diamond], &[("canvas_grid_origin", "false")])]);
+    assert_ne!(needles(&unturned).len(), 16 * 10 + 1);
 }
 
 #[test]
@@ -204,7 +289,7 @@ fn req_gen_004_a_fine_grid_over_a_large_part_runs_out_of_its_budget_before_it_ta
 }
 
 #[test]
-fn a_cross_stitch_fill_offers_its_area_and_its_preview_shows_its_crosses_diagonals() {
+fn a_cross_stitch_fill_offers_its_area_and_its_preview_shows_its_crosses_bars() {
     let one = cross(&[&square((0.0, 0.0), 6.0)], &[]);
     assert!(matches!(approach(&one, &DesignSettings::default(), &Budget::DEFAULT), Some(Approach::Area(parts)) if parts.len() == 1));
     let preview = rows(&one, &DesignSettings::default(), REFERENCE, &Budget::DEFAULT);
@@ -212,10 +297,10 @@ fn a_cross_stitch_fill_offers_its_area_and_its_preview_shows_its_crosses_diagona
     let segments: Vec<(Point, Point)> = preview.segments.unwrap().iter().map(|s| (s.start, s.end)).collect();
     let diagonals = |x: f64, y: f64| [(p(x, y), p(x + 3.0, y + 3.0)), (p(x, y + 3.0), p(x + 3.0, y))];
     assert_eq!(segments, [diagonals(0.0, 0.0), diagonals(3.0, 0.0), diagonals(0.0, 3.0), diagonals(3.0, 3.0)].concat());
-    // A method of a later version shows nothing, and says why, as sewing it does.
-    let later = cross(&[&square((0.0, 0.0), 6.0)], &[("cross_stitch_method", "smyrna_cross")]);
-    let preview = rows(&later, &DesignSettings::default(), REFERENCE, &Budget::DEFAULT);
-    assert_eq!((preview.segments, preview.diagnostics.len()), (None, 1));
+    // A Smyrna cross shows its 4 bars in each cell, and says nothing.
+    let smyrna = cross(&[&square((0.0, 0.0), 6.0)], &[("cross_stitch_method", "smyrna_cross")]);
+    let preview = rows(&smyrna, &DesignSettings::default(), REFERENCE, &Budget::DEFAULT);
+    assert_eq!((preview.segments.map(|s| s.len()), preview.diagnostics.len()), (Some(16), 0));
     // Generated after a line, the fill starts at its corner nearest where the line ended.
     let generated = stitchcraft_engine::generate::generate(
         &Element { hints: Hints::default(), ..one },
