@@ -38,7 +38,7 @@ use stitchcraft_engine::design::{DesignSettings, Reading};
 use stitchcraft_formats::{Encoded, read_back};
 use stitchcraft_params::find;
 use stitchcraft_plan::profiles::{self, BUILTIN, REFERENCE};
-use stitchcraft_plan::{FormatId, MachineProfile};
+use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan};
 use stitchcraft_vectorcraft::base64;
 
 use crate::dialog::own;
@@ -167,7 +167,14 @@ fn sewn(
     let mut said = read.warnings;
     said.extend(outcome.diagnostics);
     let Some(plan) = outcome.plan else { return Err(with_an_error(said)) };
-    let file = match stitchcraft_formats::encode(&plan, format, name) {
+    written(&plan, format, name, said)
+}
+
+/// The file of `format`, named `name`, that `plan` is written as, every thread of it, those of an element
+/// sewn in several among them (`REQ-THREAD-003`), and read back, with `said` and what writing it says; or
+/// everything said, which then holds an error and leaves the file unwritten.
+fn written(plan: &StitchPlan, format: FormatId, name: &str, mut said: Vec<Diagnostic>) -> Result<(Vec<u8>, Vec<Diagnostic>), Vec<Diagnostic>> {
+    let file = match stitchcraft_formats::encode(plan, format, name) {
         Ok(Encoded { bytes, notes }) => {
             said.extend(notes);
             bytes
@@ -177,7 +184,7 @@ fn sewn(
             return Err(said);
         }
     };
-    if let Err(bug) = read_back(&file, &plan) {
+    if let Err(bug) = read_back(&file, plan) {
         said.push(bug);
     }
     if said.iter().any(is_error) { Err(said) } else { Ok((file, said)) }
@@ -384,6 +391,28 @@ mod tests {
         // Each on one line, its hint after it.
         let hinted = Diagnostic::new(Code::FillPartsApart, "In parts.").with_fix(Fix::Hint("Break it apart.".into()));
         assert_eq!(warnings(&[hinted]), ["warning SC-W0307: In parts. Break it apart."]);
+    }
+
+    #[test]
+    fn req_thread_003_an_exporter_writes_each_thread_of_an_element_sewn_in_3() {
+        // One element in red, green and blue, as a gradient fill of 3 stops sews: no document makes one yet,
+        // so the exporter writes the plan its document would give.
+        let plan = stitchcraft_testkit::designs::three_threads();
+        for format in FormatId::ALL {
+            let (bytes, said) = written(&plan, *format, "gradient", Vec::new()).unwrap();
+            assert_eq!(said, Vec::new(), "{format:?}");
+            let back = stitchcraft_formats::decode(&bytes).unwrap().plan;
+            assert_eq!((back.blocks.len(), back.stats().color_changes, back.stats().stops), (3, 2, 0), "{format:?}");
+        }
+        // A PES file names each thread by a Brother colour of its own.
+        let (pes, _) = written(&plan, FormatId::PesV1, "gradient", Vec::new()).unwrap();
+        let threads: Vec<_> = stitchcraft_formats::decode(&pes).unwrap().plan.blocks.iter().map(|block| block.thread.color).collect();
+        assert!(threads[0] != threads[1] && threads[1] != threads[2] && threads[0] != threads[2], "{threads:?}");
+        // What was said before goes on, and an error leaves the file unwritten.
+        let said = vec![Diagnostic::new(Code::FillPartsApart, "In parts.")];
+        assert_eq!(written(&plan, FormatId::Dst, "gradient", said.clone()).map(|(_, said)| said), Ok(said));
+        let error = vec![Diagnostic::new(Code::NothingToStitch, "Nothing.")];
+        assert_eq!(written(&plan, FormatId::Dst, "gradient", error.clone()), Err(error));
     }
 
     #[test]

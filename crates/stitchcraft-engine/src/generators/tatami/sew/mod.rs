@@ -210,7 +210,7 @@ fn sewn(
     let mut warnings = sewn.warnings;
     warnings.extend(too_thin(outlined, tops));
     warnings.extend(sewn.tally.said());
-    Ok(Stitched { runs: sewn.runs, warnings })
+    Ok(Stitched { runs: sewn.runs, colours: Vec::new(), warnings })
 }
 
 /// What a fill sews over each part of its region but its own top: its underlay's layers over the part shrunk
