@@ -166,6 +166,10 @@ by the shapes each overlaps in the whole design ([sewing order](image-to-embroid
 routed design is drawn in its sewing order, which `stitch plan` keeps. `--sort-colours` moves routed
 pieces as it moves the other elements with settings, and isn't meant for a routed design.
 
+Each piece keeps `underlays_first` with the rest of its element's settings. Pieces in one thread that set
+it sew their underlays along the route, and the needle then goes back to the first of them for the top
+stitches ([underlays first](engine-pipeline.md#underlays-first)).
+
 ## Requirements to write
 
 M10.4 and M10.13 write the routing's requirements in an area of their own, `REQ-ROUTE-…`, and the
