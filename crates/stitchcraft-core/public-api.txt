@@ -41,6 +41,7 @@ pub stitchcraft_core::diag::Code::FillCircularTooSmall
 pub stitchcraft_core::diag::Code::FillContourRingsLeftOut
 pub stitchcraft_core::diag::Code::FillContourSpiralTooShort
 pub stitchcraft_core::diag::Code::FillCrossNoCell
+pub stitchcraft_core::diag::Code::FillCrossThreadsEven
 pub stitchcraft_core::diag::Code::FillCrossThreadsOdd
 pub stitchcraft_core::diag::Code::FillCrossTooFine
 pub stitchcraft_core::diag::Code::FillExpandShrinksAway
@@ -277,6 +278,7 @@ pub stitchcraft_core::Code::FillCircularTooSmall
 pub stitchcraft_core::Code::FillContourRingsLeftOut
 pub stitchcraft_core::Code::FillContourSpiralTooShort
 pub stitchcraft_core::Code::FillCrossNoCell
+pub stitchcraft_core::Code::FillCrossThreadsEven
 pub stitchcraft_core::Code::FillCrossThreadsOdd
 pub stitchcraft_core::Code::FillCrossTooFine
 pub stitchcraft_core::Code::FillExpandShrinksAway

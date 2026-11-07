@@ -398,6 +398,27 @@ mod tests {
     }
 
     #[test]
+    fn req_thread_003_the_report_lists_each_thread_of_an_element_sewn_in_3() {
+        // One element in red, green and blue, as a gradient fill of 3 stops sews: no design file makes one
+        // yet, so the report is made of the plan its file would give.
+        let plan = stitchcraft_testkit::designs::three_threads();
+        let file = stitchcraft_formats::encode(&plan, FormatId::PesV1, "gradient").unwrap().bytes;
+        let back = read_back(&file, &plan).unwrap();
+        let args = args(PathBuf::from("gradient.svg"), PathBuf::from("gradient.pes"));
+        let report: Value = serde_json::from_str(&report(&args, REFERENCE, Some((FormatId::PesV1, &file)), Some((&plan, &back)), &[])).unwrap();
+        let colours: Vec<&str> = report["threads"].as_array().unwrap().iter().map(|thread| thread["color"].as_str().unwrap()).collect();
+        assert_eq!(colours, ["#c80000", "#00a000", "#0000c8"]);
+        assert_eq!((report["color_changes"].as_u64(), report["stops"].as_u64()), (Some(2), Some(0)));
+        // What `stitch plan` prints lists them too, each with the Brother colour it is written as.
+        let printed = summary(&args, REFERENCE, FormatId::PesV1, (&plan, &back), &file);
+        let listed: Vec<&str> = printed.lines().filter(|line| line.contains(", shown as Brother PEC ")).collect();
+        assert_eq!(listed.len(), 3, "{printed}");
+        for (line, colour) in listed.iter().zip(["1. unnamed (#c80000)", "2. unnamed (#00a000)", "3. unnamed (#0000c8)"]) {
+            assert!(line.contains(colour), "{printed}");
+        }
+    }
+
+    #[test]
     fn writes_the_machine_file_a_picture_and_a_report() {
         let dir = TempDir::new("plan");
         let (output, preview, report) = (dir.join("strokes.pes"), dir.join("strokes.png"), dir.join("strokes.json"));

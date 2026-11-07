@@ -142,7 +142,7 @@ fn sewn(
     let mut warnings = sewn.warnings;
     warnings.extend(tally.said());
     warnings.extend(sewn.tally.said());
-    Ok(Stitched { runs: sewn.runs, warnings })
+    Ok(Stitched { runs: sewn.runs, colours: Vec::new(), warnings })
 }
 
 /// The pieces of the spiral of the `circular` fill over `region`, each part grown by its `expand` as

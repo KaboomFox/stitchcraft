@@ -220,6 +220,12 @@ Stitching order is paint order (bottom first). Hidden objects are skipped, as Ve
 for them, and locked objects are stitched. Thread colours come from the object's fill for a fill, and
 from its stroke for a stroke or a satin column, as in Ink/Stitch, mapped to the profile's palette.
 
+From M10.15, objects next to each other in paint order and in one thread, whose StitchCraft effects set
+`underlays_first`, sew their underlays before their top stitches
+([underlays first](engine-pipeline.md#underlays-first)). The toggle is a row of every stitch family's
+dialog. Set on a group's effect, it applies to every path in the group (`REQ-VC-006`). A live effect sews
+its object alone, so a preview doesn't show the order, and `stitch export --preview` draws what sews.
+
 ### Exporters: File › Export writes PES and DST
 
 VectorCraft 0.14 added exporter plug-ins (the RFC's [P1](rfc-vectorcraft-abi-v2.md#p1-exporter-plug-ins)).
@@ -242,7 +248,8 @@ writes of the document:
   design takes the file's name. The option's default, `document`,
   is the machine the document keeps, or `brother-pe800-5x7` when it keeps none, as `stitch export` plans
   it without `--profile` ([below](#design-settings-and-machine-kept-with-the-document)).
-  Reading the file back, as `stitch export` does, stops it at a writer's bug (`SC-E0009`). The budget is
+  Reading the file back, as `stitch export` does, stops it at a writer's bug (`SC-E0009`). The file has
+  every thread of the plan, those of an element sewn in several among them (`REQ-THREAD-003`). The budget is
   `stitch export`'s own too. Its `auto` option digitizes the objects without StitchCraft effects, as
   `--auto` does, and sews them in the order StitchCraft chooses. The exporters have no switch like
   `--sort-colours`, and the objects with effects keep their order among themselves
@@ -407,8 +414,9 @@ filter, which almost every curved line outruns, and stops it with its own error.
 drawn as designs, TS-02B to TS-09, TS-11A, TS-11B, the TS-13 sheets and TS-17A, into the document: the
 sheet's design moved by whole millimetres so that its middle is nearest the middle of the artboard
 `_context` names (`Design::moved`). TS-17A moves by whole multiples of 6 mm, which keep its crosses' cells on
-the canvas's grids of 2 and 3 mm (`TestSheet::step`). Each element is an object named by its id, with its
-path and its thread as the paint its family sews with. Its settings are its family's effect record, each the
+the canvas's grids of 2 and 3 mm (`TestSheet::step`). The turned square's grid starts at the square's
+corner, and moves with it. Each element is an object named by its id, with its path and its thread as
+the paint its family sews with. Its settings are its family's effect record, each the
 value its dialog row takes, which reads back as the setting it was. The objects selected are given back as
 they are, and the sheet goes above them. The document sews as the sheet's design moved. A fill's rows lie where the design's
 origin puts them, so moved they may fall elsewhere across a shape, and the sheet looks the same. The
@@ -562,7 +570,10 @@ finish.
 Paint caveat: a live effect changes only geometry. A fill preview's ribbons are painted with the object's
 own fill, and a stroke preview with its stroke. From 0.14 a stroke or a satin effect reads its stroke's
 style, and still cannot change the paints. Users set the fill/stroke to the thread colour, which they want
-anyway for export.
+anyway for export. An element sewn in several threads (M10.5), as a tartan or a gradient fill will be,
+previews every group of its stitches with the object's own paints too. A tartan's preview shows one
+colour. ABI v1 gives the geometry a live effect returns no paint of its own. The exporters and
+`stitch export` write each thread, and the command line's preview draws each (`REQ-THREAD-003`).
 
 ### Commands in v1
 

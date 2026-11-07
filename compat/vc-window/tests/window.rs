@@ -15,6 +15,9 @@ const BADGE: &str = "badge.svg";
 /// How long xa11y waits for the app to appear in the accessibility tree, and for a control to show.
 const FIND: Duration = Duration::from_secs(30);
 
+/// Where `ui.inspect` says whether the view shows outlines, the newest VectorCraft's place first.
+const OUTLINE: [&str; 2] = ["/view/outline", "/ui/view/outline"];
+
 /// Runs `check` as `test`, and records why it failed before failing.
 fn checked(test: &str, check: impl FnOnce() -> Result<(), String>) {
     if let Err(why) = check() {
@@ -111,9 +114,11 @@ fn xa11y_chooses_a_menu_item_in_the_window() {
     let test = "xa11y drives the window";
     checked(test, || {
         let mut window = Window::open(&fixture(BADGE)?, "xa11y")?;
-        let outline = |inspect: &Value| inspect.pointer("/ui/view/outline").and_then(Value::as_bool);
+        // VectorCraft 0.21 keeps whether the view shows outlines with the document's view, at `/view/outline`,
+        // where 0.20 kept it with the window's settings, at `/ui/view/outline`.
+        let outline = |inspect: &Value| OUTLINE.iter().find_map(|at| inspect.pointer(at).and_then(Value::as_bool));
         let before = window.inspect()?;
-        let was = outline(&before).ok_or(format!("ui.inspect shows no /ui/view/outline: {before}"))?;
+        let was = outline(&before).ok_or(format!("ui.inspect shows neither {}: {before}", OUTLINE.join(" nor ")))?;
         let app = App::by_pid(window.pid(), FIND).map_err(|e| format!("xa11y did not find the app's process in the accessibility tree: {e}"))?;
         // A screen reader's way: AT-SPI's action on View, then on its row Outline.
         let view = title(&app, "View")?;

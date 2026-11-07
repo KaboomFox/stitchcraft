@@ -9,7 +9,7 @@ conformance suite checks.
 | [Strokes](strokes.md) | running, bean, manual, random-length, zigzag stroke, ripple |
 | [Satin](satin.md) | satin column, E-stitch, S-stitch, zigzag satin, underlays |
 | [Fills](fills.md) | tatami, contour, meander, circular, guided, linear gradient, tartan |
-| [Cross stitch](cross-stitch.md) | simple and flipped crosses on a grid, from M10.2 the other crosses |
+| [Cross stitch](cross-stitch.md) | simple, upright, dense upright, double, Smyrna and half crosses on a grid, each plain or flipped, and the turned grid |
 | [Lock stitches](locks.md) | the tie-in and tie-off at the ends of an element's stitching |
 
 Travel and the joining of elements, and which ends get a lock, are part of

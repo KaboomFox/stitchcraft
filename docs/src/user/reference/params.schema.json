@@ -455,9 +455,24 @@
         "unit": "mm"
       }
     },
+    "cross_rotation": {
+      "default": 0.0,
+      "description": "How far the grid is turned, clockwise for a positive angle. A letter turned along a path keeps its crosses square to it when its grid turns with it, from the letter's own corner (`canvas_grid_origin` off). On the canvas's grid, the grid turns about the point the offset names.",
+      "title": "Grid rotation",
+      "type": "number",
+      "x-stitchcraft": {
+        "applies_to": [
+          "cross_stitch"
+        ],
+        "group": "Grid",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "°"
+      }
+    },
     "cross_stitch_method": {
       "default": "simple_cross",
-      "description": "The kind of cross. A simple cross sews its `\\` diagonal and then its `/` diagonal over it, as the drawing shows it. Flipped, the `/` diagonal goes under. The other kinds arrive in a later version, and until then an element set to one is skipped (`SC-W0011`).",
+      "description": "The kind of cross. A simple cross sews its `\\` diagonal and then its `/` diagonal over it, as the drawing shows it. An upright cross sews a `+`, its bar across and then its bar down, and a dense upright cross adds a second grid of them half a cell over. A double cross sews an upright cross between its 2 diagonals, and a Smyrna cross one over them. A half cross sews the `\\` diagonal alone, joined into rows from cell to cell. Flipped, each cross is turned a quarter turn on its cell, so that a simple cross's `/` diagonal goes under, and a half cross sews the `/` diagonal.",
       "enum": [
         "simple_cross",
         "simple_cross_flipped",
@@ -485,7 +500,7 @@
     },
     "cross_thread_count": {
       "default": 4,
-      "description": "How many times the thread passes along each diagonal of a cross. A full cross takes an even number, since the needle comes back to where it started: an odd number sews the even number below it, and 1 sews 2. More threads make bolder crosses, and pack the holes at the cells' corners.",
+      "description": "How many times the thread passes along each half of each bar of a cross. A full cross takes an even number, since the needle comes back to where it started: an odd number sews the even number below it, and 1 sews 2. A half cross sews each stitch an odd number of times: an even number sews the odd number above it, 4 sewing 5. More threads make bolder crosses, and pack the holes at the cells' corners.",
       "maximum": 20,
       "minimum": 1,
       "title": "Threads",
@@ -1005,7 +1020,7 @@
     },
     "max_cross_stitch_length_mm": {
       "default": 11.0,
-      "description": "The longest stitch a cross sews. A diagonal longer than this, on a large grid, is sewn in equal stitches, each no longer.",
+      "description": "The longest stitch a cross sews. A diagonal longer than this, on a large grid, is sewn in equal stitches, each no longer. Half crosses travel between their rows in stitches this long.",
       "maximum": 100.0,
       "minimum": 0.1,
       "title": "Longest cross stitch",
@@ -2426,6 +2441,7 @@
           "pattern_size_mm",
           "canvas_grid_origin",
           "cross_offset_mm",
+          "cross_rotation",
           "fill_coverage"
         ],
         "name": "CrossParams",
