@@ -1035,7 +1035,7 @@ status = "active"
 id = "REQ-ROUTE-007"
 area = "route"
 level = "L2"
-statement = "Routing takes the satin columns, whatever their method, and the strokes among them, by their first subpaths. A fill, a shape digitized automatically, an element whose settings don't read or whose rails can't be made, an element of no length and a stroke whose first subpath ends where it starts stay as they are, each named by SC-I1002, and given no satin column the route takes, routing is refused with SC-E1001. The route's pieces replace the elements it takes, in its sewing order. They are named AutoSatin and a number, or AutoSatin Running Stitch and a number for a run, counting every piece but those left out after a trim; with Preserve order, a column's piece keeps its column's name. A piece whose rails and rungs would be read back otherwise is kept, with SC-W1003."
+statement = "Routing takes the satin columns, whatever their method, and the strokes among them, by their first subpaths. A fill, a shape digitized automatically, an element whose settings don't read or whose rails can't be made, an element of no length and a stroke whose first subpath ends where it starts stay as they are, each named by SC-I1002, and given no satin column the route takes, routing is refused with SC-E1001. The route's pieces replace the elements it takes, in its sewing order. They are named AutoSatin and a number, or AutoSatin Running Stitch and a number for a run, counting every piece, a run that a trim leaves out included. With Preserve order, a column's piece keeps its column's name. A piece whose rails and rungs would be read back otherwise is kept, with SC-W1003."
 milestone = "M10"
 status = "active"
 
