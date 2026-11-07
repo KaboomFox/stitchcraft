@@ -242,7 +242,7 @@ fn threaded(colours: &[&[Rgb]]) -> (Vec<usize>, usize, usize) {
     let mut order = Order { facts: &facts, moving: &moving, graph: Graph::new(facts.len()), borders: Vec::new(), kept: BTreeSet::new() };
     let mut sewing = Sewing::default();
     let painted: Vec<usize> = (0..facts.len()).collect();
-    order.sew(&[painted.clone()], &mut sewing, &mut Budget::DEFAULT.meter()).unwrap();
+    order.sew(std::slice::from_ref(&painted), &mut sewing, &mut Budget::DEFAULT.meter()).unwrap();
     let (sewn, before) = (changes(&sewing.order, &facts), changes(&painted, &facts));
     (sewing.order, sewn, before)
 }
