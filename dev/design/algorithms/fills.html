@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-8210994d.js";
+            window.path_to_searchindex_js = "../../searchindex-20f46e19.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-8178bdeb.js"></script>
@@ -888,10 +888,13 @@ sewn with the tatami needle grid (<code>staggers</code>, <code>stitch_position_m
 <h2 id="linear-gradient-fill-p3"><a class="header" href="#linear-gradient-fill-p3">Linear gradient fill (P3)</a></h2>
 <p>A tatami variant whose rows alternate between the colours of a linear gradient with a probability that
 follows the gradient position, producing a blend from interleaved threads; one colour block per stop.
-Specified at M10.</p>
+Specified at M10. The rows of each stop will be a colour block in a thread of their own
+(<a href="../engine-pipeline.html#several-threads-in-one-element">several threads in one element</a>).</p>
 <h2 id="tartan-fill-p3"><a class="header" href="#tartan-fill-p3">Tartan fill (P3)</a></h2>
 <p>A woven plaid from a stripe specification (sett): warp and weft stripes become fills at <code>tartan_angle</code>
-with <code>rows_per_thread</code> and optional herringbone. Specified at M10.</p>
+with <code>rows_per_thread</code> and optional herringbone. Specified at M10. The underlay sews in the fill’s own
+thread and ends no colour block, and each colour’s rows, then its runs, sew in that colour’s thread, each
+a colour block (M10.5).</p>
 <h2 id="cross-stitch-p3"><a class="header" href="#cross-stitch-p3">Cross stitch (P3)</a></h2>
 <p>A cross in each cell of a grid that the region covers enough of, simple and flipped from M10.1
 (<a href="cross-stitch.html">cross stitch</a>). It takes its parts in a tatami fill’s order (<a href="#5-parts">section 5</a>), and

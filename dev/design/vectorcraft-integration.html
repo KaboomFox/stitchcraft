@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-8210994d.js";
+            window.path_to_searchindex_js = "../searchindex-20f46e19.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-8178bdeb.js"></script>
@@ -427,7 +427,8 @@ option names, written in its own format, whose colour changes the plan keeps to 
 design takes the file’s name. The option’s default, <code>document</code>,
 is the machine the document keeps, or <code>brother-pe800-5x7</code> when it keeps none, as <code>stitch export</code> plans
 it without <code>--profile</code> (<a href="#design-settings-and-machine-kept-with-the-document">below</a>).
-Reading the file back, as <code>stitch export</code> does, stops it at a writer’s bug (<code>SC-E0009</code>). The budget is
+Reading the file back, as <code>stitch export</code> does, stops it at a writer’s bug (<code>SC-E0009</code>). The file has
+every thread of the plan, those of an element sewn in several among them (<code>REQ-THREAD-003</code>). The budget is
 <code>stitch export</code>’s own too. Its <code>auto</code> option digitizes the objects without StitchCraft effects, as
 <code>--auto</code> does, and sews them in the order StitchCraft chooses. The exporters have no switch like
 <code>--sort-colours</code>, and the objects with effects keep their order among themselves
@@ -750,7 +751,10 @@ finish.</p>
 <p>Paint caveat: a live effect changes only geometry. A fill preview’s ribbons are painted with the object’s
 own fill, and a stroke preview with its stroke. From 0.14 a stroke or a satin effect reads its stroke’s
 style, and still cannot change the paints. Users set the fill/stroke to the thread colour, which they want
-anyway for export.</p>
+anyway for export. An element sewn in several threads (M10.5), as a tartan or a gradient fill will be,
+previews every group of its stitches with the object’s own paints too. A tartan’s preview shows one
+colour. ABI v1 gives the geometry a live effect returns no paint of its own. The exporters and
+<code>stitch export</code> write each thread, and the command line’s preview draws each (<code>REQ-THREAD-003</code>).</p>
 <h3 id="commands-in-v1"><a class="header" href="#commands-in-v1">Commands in v1</a></h3>
 <p>Ink/Stitch’s commands are symbols linked to an object, and ABI v1 has nothing to link. <code>trim_after</code> and
 <code>stop_after</code> are ordinary parameters. StitchCraft reads the others from names, an object’s or a layer’s,

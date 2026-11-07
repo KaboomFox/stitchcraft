@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-8210994d.js";
+            window.path_to_searchindex_js = "../searchindex-20f46e19.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-8178bdeb.js"></script>
@@ -395,6 +395,10 @@ settings (<code>REQ-ASM-003</code>, <code>REQ-LCK-001</code>).</p>
     pub color: Rgb,                  // what the user chose
     pub name: Option&lt;String&gt;,        // shown to the operator
 }</code></pre>
+<p>An element has one thread of its own, <code>Element::thread</code>, which its host reads from its paint. From M10.5 its
+generator may sew some of its groups in threads of their own, as a tartan or a gradient fill will. The
+element’s stitches then lie in several colour blocks of the plan, each block in one thread, and each stitch
+still names its element (<a href="engine-pipeline.html#several-threads-in-one-element">engine pipeline</a>).</p>
 <p>Palettes are static tables (the Brother PEC palette first) of <code>PaletteEntry { index, name, color, matchable }</code>. Nearest-colour matching uses CIEDE2000 in CIELAB (D65), through <code>stitchcraft_core::math</code>
 so it is deterministic, with ties going to the lower index; it is tested against the 34 reference pairs
 of Sharma, Wu &amp; Dalal (2005). Entries that are not threads — Brother’s applique steps 62–64 — are never

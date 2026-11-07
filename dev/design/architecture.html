@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-8210994d.js";
+            window.path_to_searchindex_js = "../searchindex-20f46e19.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-8178bdeb.js"></script>
@@ -291,7 +291,7 @@ finalizing (M3.9) fits the plan to the machine’s longest stitch and hoop.</p>
                 neighbours: &amp;Neighbours, budget: &amp;Budget) -&gt; Generation;   // since M3.8
 
 pub struct Generation {
-    pub generated: Option&lt;Generated&gt;,   // the element's stitch groups; None when it is skipped
+    pub generated: Option&lt;Generated&gt;,   // the element's stitch groups and their threads (M10.5); None when it is skipped
     pub diagnostics: Vec&lt;Diagnostic&gt;,
 }</code></pre>
 <p>A live preview sees one object, so it has no neighbours, and it sews on the reference machine.</p>

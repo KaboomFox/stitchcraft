@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-8210994d.js";
+            window.path_to_searchindex_js = "../searchindex-20f46e19.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-8178bdeb.js"></script>
@@ -195,7 +195,11 @@ that matter, and one case per diagnostic. They fail for now — that is the poin
 <code>Generator</code> impl), <code>params.rs</code> (the <code>params!</code> block, doc comments as help text) and <code>tests.rs</code>.
 Keep files under 800 lines; split by concern (sampling, routing, compensation).</li>
 <li><strong>Register</strong> the generator in the generator table and its params in the registry list (one line
-each).</li>
+each). A tartan or a gradient fill sews in more threads than its element’s own. Its generator puts each
+run’s thread in <code>Stitched::colours</code>, with whether the run ends a colour block, which a trim follows when
+<code>trim_after</code> is on. The sewing order reads its threads from the element’s shape and settings, in
+<code>generate::colours</code>
+(<a href="../design/engine-pipeline.html#several-threads-in-one-element">several threads in one element</a>).</li>
 <li><strong>Make the cases pass.</strong> Run <code>cargo xtask conformance --filter &lt;area&gt;</code>; switch the requirements to
 <code>active</code>.</li>
 <li><strong>Docs.</strong> <code>cargo xtask docs</code> regenerates the parameter pages. Write the user-facing page in

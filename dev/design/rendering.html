@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-8210994d.js";
+            window.path_to_searchindex_js = "../searchindex-20f46e19.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-8178bdeb.js"></script>
@@ -193,7 +193,8 @@ anything.</li>
 settings, so documentation images can be compared byte for byte on every pull request.</li>
 </ul>
 <p><code>stitch plan --preview</code> draws the machine file it wrote, read back as <code>stitch preview</code> reads it, in the
-design’s colours (<code>REQ-CLI-008</code>).</p>
+design’s colours (<code>REQ-CLI-008</code>). Each colour block is drawn in its own thread, those of an element sewn in
+several threads among them (<code>REQ-THREAD-003</code>).</p>
 <p><strong>What cuts the thread is the machine’s.</strong> A preview is drawn for a machine, whose profile says how it
 trims (<code>TrimSupport</code>): <code>stitch plan --preview</code> for the profile it planned for, <code>stitch preview</code> for
 <code>--profile</code> or the reference machine, a test sheet’s picture for its hoop. A thread change cuts, and so

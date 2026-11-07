@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-8210994d.js";
+            window.path_to_searchindex_js = "../searchindex-20f46e19.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-8178bdeb.js"></script>
@@ -306,7 +306,11 @@ stitches. Its strokes are as wide as an SVG stroke whose style says nothing, and
 width, <code>capped</code> a cap, <code>clipped</code> one clip path more, and <code>automatic</code> makes any element one whose stitches
 StitchCraft chooses, by the settings of the rules that <code>rules</code> gives at their defaults. Its fills are
 closed rings filled by the nonzero rule (<code>fill</code>, through <code>rings</code>), so a hole is drawn the other way round
-from its outline. The satin cases sew their columns with <code>stitchcraft_testkit::satins</code>, as an element is
+from its outline. No stitch type gives its groups threads of their own before M10.6. Until then <code>threaded</code>
+puts the groups of each element in the threads a case gives them, <code>block</code> and <code>within</code>, and assembles and
+finalizes the elements as <code>plan</code> does. <code>three_threads</code> is one element sewn in red, green and blue, which the
+cases of the writers, the previews and the report sew (<code>REQ-THREAD-003</code>). The plug-in has no dev-dependencies,
+and its own <code>testing</code> module makes the same element for the cases of its exporters and live effects. The satin cases sew their columns with <code>stitchcraft_testkit::satins</code>, as an element is
 sewn on the reference machine, with the stitch lengths the engine gives it there (<code>satin_lengths</code>), and
 read the needle points back in pairs across the column. A column is sewn alone (<code>sewn_satin</code>) or between
 the neighbours a case gives it (<code>sewn_between</code>), and <code>satin_diagnostics</code> keeps its warnings’ places for

@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-8210994d.js";
+            window.path_to_searchindex_js = "../searchindex-20f46e19.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-8178bdeb.js"></script>
@@ -269,7 +269,9 @@ says how many. <code>stitch plan</code>, <code>convert</code> and <code>inspect<
 file’s index that is none of Brother’s entries is read as a grey thread named after it, with a warning, and
 <code>inspect</code> says it is not one of the palette’s colours rather than naming the entry nearest that grey.
 Catalogue numbers from other brands cannot survive PES v1. A PES v6 writer (below) could store a thread
-list with RGB and codes.</p>
+list with RGB and codes. The writers know colour blocks, not elements: an element sewn in several threads
+(M10.5) is written in each of its blocks’ threads, as the blocks of different elements are
+(<code>REQ-THREAD-003</code>).</p>
 <h3 id="risks-found-in-the-field-and-how-we-test-them"><a class="header" href="#risks-found-in-the-field-and-how-we-test-them">Risks found in the field, and how we test them</a></h3>
 <p>Embroiderers report these with files from other software:</p>
 <ol>
