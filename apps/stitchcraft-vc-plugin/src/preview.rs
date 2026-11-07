@@ -727,13 +727,9 @@ mod tests {
 
     #[test]
     fn req_thread_003_a_live_effect_shows_every_thread_of_an_element_in_its_object_s_paint() {
-        use stitchcraft_testkit::designs::{BLUE, GREEN, RED, block, stroke};
-
-        // A stroke of 3 lines, as an element sewn in red, green and blue would give them: no stitch type gives
-        // its groups threads of their own yet, so the colours are given here.
-        let element = stroke("e", &[((0.0, 0.0), 10.0), ((0.0, 5.0), 10.0), ((0.0, 10.0), 10.0)], &RED, &[]);
-        let one = generate(&element, &DesignSettings::default(), REFERENCE, &Neighbours::default(), &Budget::DEFAULT).generated.unwrap();
-        let three = Generated { colours: vec![block(&RED), block(&GREEN), block(&BLUE)], ..one.clone() };
+        // A stroke of 3 lines in red, green and blue, and the same lines in the element's one thread.
+        let (_, three) = crate::testing::three_threads();
+        let one = Generated { colours: Vec::new(), ..three.clone() };
         // Every group is drawn, all 3 colours' stitches, and the geometry says no paint: VectorCraft paints it
         // with the object's, as it paints the same element in one thread.
         let drawn_in_three = effect_output(Family::Stroke, &drawn(Some(three))).unwrap();

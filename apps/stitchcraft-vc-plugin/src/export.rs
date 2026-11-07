@@ -395,9 +395,9 @@ mod tests {
 
     #[test]
     fn req_thread_003_an_exporter_writes_each_thread_of_an_element_sewn_in_3() {
-        // One element in red, green and blue, as a gradient fill of 3 stops sews: no document makes one yet,
-        // so the exporter writes the plan its document would give.
-        let plan = stitchcraft_testkit::designs::three_threads();
+        // One element in red, green and blue, as a gradient fill of 3 stops sews. No document makes one yet,
+        // and the exporter writes the plan its document would give.
+        let plan = crate::testing::three_threads_plan();
         for format in FormatId::ALL {
             let (bytes, said) = written(&plan, *format, "gradient", Vec::new()).unwrap();
             assert_eq!(said, Vec::new(), "{format:?}");

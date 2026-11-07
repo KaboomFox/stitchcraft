@@ -134,7 +134,8 @@ closed rings filled by the nonzero rule (`fill`, through `rings`), so a hole is 
 from its outline. No stitch type gives its groups threads of their own before M10.6. Until then `threaded`
 puts the groups of each element in the threads a case gives them, `block` and `within`, and assembles and
 finalizes the elements as `plan` does. `three_threads` is one element sewn in red, green and blue, which the
-cases of the writers, the previews, the report and the exporters sew (`REQ-THREAD-003`). The satin cases sew their columns with `stitchcraft_testkit::satins`, as an element is
+cases of the writers, the previews and the report sew (`REQ-THREAD-003`). The plug-in has no dev-dependencies,
+and its own `testing` module makes the same element for the cases of its exporters and live effects. The satin cases sew their columns with `stitchcraft_testkit::satins`, as an element is
 sewn on the reference machine, with the stitch lengths the engine gives it there (`satin_lengths`), and
 read the needle points back in pairs across the column. A column is sewn alone (`sewn_satin`) or between
 the neighbours a case gives it (`sewn_between`), and `satin_diagnostics` keeps its warnings' places for

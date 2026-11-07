@@ -148,10 +148,9 @@ fn req_thread_003_the_preview_draws_each_thread_of_an_element_sewn_in_3() {
     // thread, the thread cut where it changes.
     let plan = designs::three_threads();
     let shown = Scene::of(&plan, REFERENCE.trims, &mut Budget::DEFAULT.meter()).unwrap();
-    let colours: Vec<Rgb> = shown.holes.iter().map(|hole| hole.color).collect();
-    let mut changes = colours.clone();
-    changes.dedup();
-    assert_eq!(changes, [designs::RED.color, designs::GREEN.color, designs::BLUE.color]);
+    let mut colours: Vec<Rgb> = shown.holes.iter().map(|hole| hole.color).collect();
+    colours.dedup();
+    assert_eq!(colours, [designs::RED.color, designs::GREEN.color, designs::BLUE.color]);
     let cut = shown.holes.windows(2).filter(|pair| pair[0].color != pair[1].color).all(|pair| pair[1].arrival == stitchcraft_render::Arrival::Cut);
     assert!(cut, "{:?}", shown.holes);
     // And the picture of it is drawn, in both styles.
