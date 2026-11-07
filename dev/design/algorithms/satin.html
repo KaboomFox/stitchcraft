@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-cb8298cb.js";
+            window.path_to_searchindex_js = "../../searchindex-2dd38593.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-3b2820bf.js"></script>
+        <script src="../../toc-8178bdeb.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -603,7 +603,10 @@ machine’s longest stitch anyway (<code>SC-I0703</code>).</li>
 <h2 id="underlays"><a class="header" href="#underlays">Underlays</a></h2>
 <p>Underlays are sewn before the top stitches, as Ink/Stitch sews them. The centre walk comes first, then the
 contour and the zigzag, each one the element turns on, and all of them go into one run with the top
-stitches.</p>
+stitches. From M10.15 a column in a run of <code>underlays_first</code> sews its underlays apart from its top
+stitches, each layer started and ended by its own neighbours
+(<a href="../engine-pipeline.html#underlays-first">engine pipeline</a>). Each layer then follows
+<a href="#start-and-end">Start and end</a> with the parts it sews.</p>
 <p>Each underlay places pairs of points across the column as the top stitches are placed (step 1 of <em>Top
 stitches</em>), along the same sections, after any swap, reversal and push compensation. A pair moves in by
 its underlay’s insets as negative pull compensation moves it, and nothing varies at random, so turning an

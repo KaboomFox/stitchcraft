@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-cb8298cb.js";
+            window.path_to_searchindex_js = "../searchindex-2dd38593.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-3b2820bf.js"></script>
+        <script src="../toc-8178bdeb.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -264,7 +264,9 @@ pub struct Subpath { pub start: Point, pub segments: Vec&lt;Segment&gt;, pub clo
 pub enum Segment { Line(Point), Quad(Point, Point), Cubic(Point, Point, Point) }</code></pre>
 <p>Elements are in the host’s paint order, bottom first. They sew in that order unless the design has
 automatic elements or <code>sort_colours</code> is set: since M13.3 automatic digitizing then chooses the order
-(<a href="image-to-embroidery.html#sewing-order">image to embroidery</a>). Curves keep their control points, and the
+(<a href="image-to-embroidery.html#sewing-order">image to embroidery</a>). From M10.15 a run of elements that set
+<code>underlays_first</code> sews in that order twice, its underlays first and its top stitches after
+(<a href="engine-pipeline.html#underlays-first">engine pipeline</a>). Curves keep their control points, and the
 generators flatten them with the tolerance their parameters give.</p>
 <p>A host reads 3 of the settings by Ink/Stitch’s names, <code>collapse_len_mm</code>, <code>min_stitch_len_mm</code> and
 <code>min_satin_stroke_width_mm</code>: an SVG file’s metadata, and since M6.11 the data a VectorCraft document keeps

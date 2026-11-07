@@ -1,0 +1,416 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>0018 Underlays first, a setting of each element - StitchCraft</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../favicon-de23e50b.svg">
+        <link rel="shortcut icon" href="../../favicon-8114d1fc.png">
+        <link rel="stylesheet" href="../../css/variables-8adf115d.css">
+        <link rel="stylesheet" href="../../css/general-e96d0476.css">
+        <link rel="stylesheet" href="../../css/chrome-d279d366.css">
+        <link rel="stylesheet" href="../../css/print-9e4910d8.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../fonts/fonts-9644e21d.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="mdbook-highlight-css" href="../../highlight-493f70e1.css">
+        <link rel="stylesheet" id="mdbook-tomorrow-night-css" href="../../tomorrow-night-4c0ae647.css">
+        <link rel="stylesheet" id="mdbook-ayu-highlight-css" href="../../ayu-highlight-3fdfc3ac.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../../searchindex-2dd38593.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../toc-8178bdeb.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="mdbook-body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="mdbook-sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("mdbook-sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="mdbook-sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../toc.html"></iframe>
+            </noscript>
+            <div id="mdbook-sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="mdbook-page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="mdbook-menu-bar-hover-placeholder"></div>
+                <div id="mdbook-menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="mdbook-sidebar-toggle" class="icon-button" for="mdbook-sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="mdbook-sidebar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"/></svg></span>
+                        </label>
+                        <button id="mdbook-theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="mdbook-theme-list">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M371.3 367.1c27.3-3.9 51.9-19.4 67.2-42.9L600.2 74.1c12.6-19.5 9.4-45.3-7.6-61.2S549.7-4.4 531.1 9.6L294.4 187.2c-24 18-38.2 46.1-38.4 76.1L371.3 367.1zm-19.6 25.4l-116-104.4C175.9 290.3 128 339.6 128 400c0 3.9 .2 7.8 .6 11.6c1.8 17.5-10.2 36.4-27.8 36.4H96c-17.7 0-32 14.3-32 32s14.3 32 32 32H240c61.9 0 112-50.1 112-112c0-2.5-.1-5-.2-7.5z"/></svg></span>
+                        </button>
+                        <ul id="mdbook-theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="mdbook-theme-ayu">Ayu</button></li>
+                        </ul>
+                        <button id="mdbook-search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="mdbook-searchbar">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352c79.5 0 144-64.5 144-144s-64.5-144-144-144S64 128.5 64 208s64.5 144 144 144z"/></svg></span>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">StitchCraft</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                            <span class=fa-svg id="print-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M128 0C92.7 0 64 28.7 64 64v96h64V64H354.7L384 93.3V160h64V93.3c0-17-6.7-33.3-18.7-45.3L400 18.7C388 6.7 371.7 0 354.7 0H128zM384 352v32 64H128V384 368 352H384zm64 32h32c17.7 0 32-14.3 32-32V256c0-35.3-28.7-64-64-64H64c-35.3 0-64 28.7-64 64v96c0 17.7 14.3 32 32 32H64v64c0 35.3 28.7 64 64 64H384c35.3 0 64-28.7 64-64V384zm-16-88c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft" title="Git repository" aria-label="Git repository">
+                            <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg></span>
+                        </a>
+                        <a href="https://github.com/KaboomFox/stitchcraft/edit/main/docs/src/design/adr/0018-underlays-first-is-a-setting-of-each-element.md" title="Suggest an edit" aria-label="Suggest an edit" rel="edit">
+                            <span class=fa-svg id="git-edit-button"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M421.7 220.3l-11.3 11.3-22.6 22.6-205 205c-6.6 6.6-14.8 11.5-23.8 14.1L30.8 511c-8.4 2.5-17.5 .2-23.7-6.1S-1.5 489.7 1 481.2L38.7 353.1c2.6-9 7.5-17.2 14.1-23.8l205-205 22.6-22.6 11.3-11.3 33.9 33.9 62.1 62.1 33.9 33.9zM96 353.9l-9.3 9.3c-.9 .9-1.6 2.1-2 3.4l-25.3 86 86-25.3c1.3-.4 2.5-1.1 3.4-2l9.3-9.3H112c-8.8 0-16-7.2-16-16V353.9zM453.3 19.3l39.4 39.4c25 25 25 65.5 0 90.5l-14.5 14.5-22.6 22.6-11.3 11.3-33.9-33.9-62.1-62.1L314.3 67.7l11.3-11.3 22.6-22.6 14.5-14.5c25-25 65.5-25 90.5 0z"/></svg></span>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="mdbook-search-wrapper" class="hidden">
+                    <form id="mdbook-searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="mdbook-searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="mdbook-searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <span class=fa-svg id="fa-spin"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M304 48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zm0 416c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM48 304c26.5 0 48-21.5 48-48s-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48zm464-48c0-26.5-21.5-48-48-48s-48 21.5-48 48s21.5 48 48 48s48-21.5 48-48zM142.9 437c18.7-18.7 18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zm0-294.2c18.7-18.7 18.7-49.1 0-67.9S93.7 56.2 75 75s-18.7 49.1 0 67.9s49.1 18.7 67.9 0zM369.1 437c18.7 18.7 49.1 18.7 67.9 0s18.7-49.1 0-67.9s-49.1-18.7-67.9 0s-18.7 49.1 0 67.9z"/></svg></span>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="mdbook-searchresults-outer" class="searchresults-outer hidden">
+                        <div id="mdbook-searchresults-header" class="searchresults-header"></div>
+                        <ul id="mdbook-searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('mdbook-sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('mdbook-sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#mdbook-sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="mdbook-content" class="content">
+                    <main>
+                        <h1 id="adr-0018-underlays-first-is-a-setting-of-each-element-shared-by-runs-of-elements-in-one-thread"><a class="header" href="#adr-0018-underlays-first-is-a-setting-of-each-element-shared-by-runs-of-elements-in-one-thread">ADR-0018: Underlays first is a setting of each element, shared by runs of elements in one thread</a></h1>
+<!-- The status line, a label and its value, which the ADR index is checked against. -->
+<!-- vale ai-tells.ColonUsage = NO -->
+<p><strong>Status:</strong> Accepted · 2026-11-03, after spike M10.14</p>
+<!-- vale ai-tells.ColonUsage = YES -->
+<h2 id="context"><a class="header" href="#context">Context</a></h2>
+<p>Each element sews its underlay and its top stitches before the next element starts. Where 2 satin columns
+cross, the second column’s underlay is sewn over the first column’s top stitches, and the crossing stacks
+top stitches, underlay and top stitches again. A satin border over a fill’s edge stacks the same way.
+Sewing the underlays of such elements first and their top stitches after lays every underlay on the fabric
+under every top stitch. The aim is a flatter crossing, which MC-12 is to check on the reference machine.
+The needle then goes back from the last underlay to the first top stitch, and elements of other threads
+would need more colour changes. Spike M10.14 chooses how a design sets this order, as a setting of a group
+of elements or of each element. It also chooses how VectorCraft documents and SVG files keep the setting,
+whether automatic digitizing uses it, and what Ink/Stitch sews from a file that has it. M10.15 builds
+what it chooses.</p>
+<p>What was checked, on 2026-11-03:</p>
+<ul>
+<li><strong>Ink/Stitch’s order,</strong> read at <code>d59c9ab</code> (<a href="0012-read-dont-copy.html">ADR-0012</a>). Ink/Stitch embroiders
+the elements in document order, each given the stitches before it and the next element. A satin column
+makes its underlays and its top stitches as separate groups and joins them into one. The underlays come
+first, or, when the column ends at its point nearest the next element, each half’s underlays come before
+that half’s top stitches. A fill sews its shapes one at a time, each shape’s underlay before its top
+stitches. Each element’s underlay sews just before that element’s top stitches.</li>
+<li><strong>Ink/Stitch’s sew stack.</strong> It is an element made from the JSON of a shape’s <code>sew_stack</code> attribute,
+which lists stitch layers. The layers sew one after another. Each starts where the layer before it
+ended, and the last ends near the next element. Only a running stitch layer exists. Ink/Stitch adds the
+stack to a shape’s elements only when its debug settings turn it on, and <code>sew_stack_only</code> then leaves
+the shape’s other elements out. The <a href="../inkstitch-compat-contract.html">compatibility contract</a> lists both
+attributes as not planned.</li>
+<li><strong>Ink/Stitch and an attribute it doesn’t list.</strong> Ink/Stitch reads each setting by its name, from its own
+list of attributes. Its Params dialog writes the values of the settings it shows, and its updater
+removes legacy names alone. So an attribute of its namespace that isn’t on the list doesn’t change what
+Ink/Stitch sews, and stays in the file through both. Duplicate Params copies every attribute of the
+namespace from the first selected shape to the others, and Remove Embroidery Settings deletes them all.</li>
+<li><strong>Wilcom EmbroideryStudio,</strong> in its documentation. Branching joins objects into one branched object,
+which takes the colour of the first object in its sequence. Where the objects touch or overlap, the
+underlay of the whole branched object is sewn first, followed by the cover stitches.</li>
+<li><strong>What StitchCraft has.</strong> Generators give assembly each element’s needle points without roles. A satin
+column’s underlays and top stitches are one run of needle points
+(<a href="../algorithms/satin.html#underlays">satin</a>), and so are a fill part’s underlay and top rows
+(<a href="../algorithms/fills.html#6-underlay">fills</a>). Both underlays are placed without random variation.
+Assembly tags every stitch of a group top, keeps the elements in their order and starts a colour block
+at each thread change. Elements are generated in sewing order,
+each given the needle before it and what the next element offers
+(<a href="0014-generators-see-their-neighbours.html">ADR-0014</a>). The settings every stitch type shares are one
+declaration of the registry. The registry’s only settings of StitchCraft’s own so far are automatic
+digitizing’s, which no stitch type reads. In an SVG file each <code>inkstitch:*</code> attribute of a shape is a
+parameter of its elements (<code>REQ-SVG-009</code>), and a group’s settings are named and not applied. In a
+VectorCraft document each parameter is a row of each stitch family’s dialog, made from the registry, and
+a group’s effects apply alike to every path in the group (<code>REQ-VC-006</code>). A live effect sews its object
+alone. M13.3 orders the automatic elements, and with <code>--sort-colours</code> every element, so that each thread
+sews as long as it can. The routing tools write a route in its sewing order, and each piece keeps the
+settings of the element it comes from (<a href="0017-routing-is-one-engine-function.html">ADR-0017</a>). On a home
+machine such as the reference machine, each colour change is a stop to rethread
+(<a href="../image-to-embroidery.html#sewing-order">image to embroidery</a>). TS-17C is to sew 2 satin columns that
+cross, their underlays first, and MC-12’s report is to say whether they lie flatter than as drawn
+(<a href="../../plan/machine-testing.html">machine testing</a>).</li>
+</ul>
+<h2 id="decision"><a class="header" href="#decision">Decision</a></h2>
+<ol>
+<li><strong>A setting of each element.</strong> <code>underlays_first</code> is a toggle among the settings every stitch type
+shares, off by default and StitchCraft’s own. The registry declares it once, and its reference entry,
+its JSON Schema and its row in each stitch family’s dialog in VectorCraft come from that declaration.</li>
+<li><strong>Runs.</strong> Consecutive elements that set it and sew in one thread form a run, in the sewing order stage
+0 gives. An element’s trim or stop ends its run after it. An element in several threads (M10.5) is in
+no run. A run of one element sews as it would without the setting, and a note names an element whose
+setting joins no run.</li>
+<li><strong>The underlays, then the top stitches.</strong> A run sews its elements’ underlays in their order, then their
+top stitches in the same order. Each element of a run is generated as 2 layers, its underlay and its
+top, in the order the run sews them. Each layer gets the needle before it and what the next layer
+offers, which ADR-0014 gives an element. Assembly joins the layers like any other groups. It tags the
+needle points of the underlay layers underlay.</li>
+<li><strong>Files.</strong> In a VectorCraft document the setting is a parameter of an object’s StitchCraft effect, and
+a group’s effect gives it to every path in the group. SVG files keep it as the attribute
+<code>inkstitch:underlays_first</code> of each shape, which the SVG adapter reads as every setting of a shape. A
+group’s attribute is named and not applied, as every setting of a group is.</li>
+<li><strong>Ink/Stitch sews such a file element by element.</strong> It doesn’t read the attribute, and sews each
+element’s underlay and top stitches before the next element’s, as StitchCraft sews them with the
+setting off. The differential has no case for the setting.</li>
+<li><strong>Automatic digitizing and lettering don’t set it.</strong> The elements they make take their settings from
+the rules and from the fonts.</li>
+<li>StitchCraft proposes no VectorCraft change for this.</li>
+</ol>
+<h2 id="consequences"><a class="header" href="#consequences">Consequences</a></h2>
+<ul>
+<li>A design that doesn’t set it plans as before, and every golden file stays as it was.</li>
+<li>In VectorCraft the user turns it on in the dialog of each object’s effect, or once in a group’s effect
+where every path of the group sews alike. In an SVG file it is added with Inkscape’s XML editor, and
+Ink/Stitch’s tools treat it as <a href="../svg-input.html#settings-of-a-shape">SVG input</a> says.</li>
+<li>Since a run’s elements share a thread, the design’s colour changes stay as they were. A fill and a
+border in other threads sew one after the other, each with its underlay, whatever they set.</li>
+<li>Each run adds the needle’s way back from its last underlay to its first top stitch, a jump with its
+locks where it is longer than the jump length. Elements that lie apart add jumps between their underlays
+too. The setting is for elements that cross or overlap.</li>
+<li>2 sets of elements next to each other in one thread form one run. A trim after the first set keeps them
+apart.</li>
+<li>An element’s start position places the start of its first layer, and its end position the end of its
+top. The 2 layers share the element’s work budget, as its underlay and top share it outside a run.
+Random variation gives the top stitches what it gives them without the setting.</li>
+<li><code>--sort-colours</code> moves the elements that set it as it moves any element with settings, and the runs form
+in the order it chooses. A run of routed pieces sews its underlays along the route, and the needle then
+goes back to the route’s first piece for the top stitches.</li>
+<li>A live effect sews its object alone, so VectorCraft’s previews can’t show the order. <code>stitch export</code> and
+the exporters sew it.</li>
+<li>M10.15’s cases check that a run’s underlays all come before its top stitches, that the top stitches
+keep the elements’ order, and that a design without the setting plans as before. TS-17C sews 2 satin
+columns of one thread that cross, as drawn beside the same 2 with their underlays first, for MC-12 to
+compare. The test kit stops at a setting of StitchCraft’s own when it writes a file for Ink/Stitch. The
+differential’s file of TS-17C leaves that pair out.</li>
+<li>The attribute is in Ink/Stitch’s namespace. Should a later Ink/Stitch name a setting <code>underlays_first</code>,
+the contract updated to it fails <code>cargo xtask docs --check</code>, as a setting of StitchCraft’s own may not
+take an Ink/Stitch key. A migration then renames StitchCraft’s
+(<a href="../params.html#versioning-and-migration">parameter registry</a>).</li>
+<li>Revisit runs of one thread if a sew-out shows that a border lies flatter with its underlay sewn before a
+fill of another thread, which costs 2 colour changes more. Revisit automatic digitizing if MC-12 shows
+that crossing columns lie flatter with their underlays first: a step of M13 could then set it on the
+columns of one shape that cross, measured on the test pictures. Revisit the namespace when the project
+has a domain of its own, or if Ink/Stitch asks other programs to keep out of its namespace. Revisit a
+group’s own setting in VectorCraft if VectorCraft gives a plug-in data of its own on a group, or shows a
+filter the groups round a path.</li>
+</ul>
+<h2 id="alternatives-considered"><a class="header" href="#alternatives-considered">Alternatives considered</a></h2>
+<ul>
+<li><strong>A setting of the group.</strong> The engine has no groups. Adapters give it the elements in sewing order, and
+stage 0 can move a group’s elements apart. Of a group’s settings, Ink/Stitch reads <code>ignore_object</code>
+alone, and StitchCraft names the others. In VectorCraft every path of a group sews as the group’s
+effects say. One group’s effect can’t serve a fill and its satin border. A live effect that only marks
+the group could store a setting of the group itself, and VectorCraft would run it on each path inside
+at every redraw. A name like the markers’ could store one too, though no dialog shows it and SVG files
+have no such names. Rejected. A group’s effect already gives the setting to every path of a group that
+sews alike.</li>
+<li><strong>A design setting.</strong> Every element would join a run with its neighbours of the same thread, though the
+order serves only elements that cross or overlap. Ink/Stitch’s metadata holds its 4 settings for the
+whole design, and StitchCraft names any other element there. Rejected.</li>
+<li><strong>Runs across threads,</strong> each underlay in its element’s thread. Sewn this way, a run of 2 threads at
+least doubles its colour changes, each a stop on a home machine. Sewing the underlays in one thread
+would change what the user drew where an underlay shows. Rejected. Wilcom’s branched objects take one
+colour too.</li>
+<li><strong>Reordering the groups as generated.</strong> Each element would still start and end near its neighbours in
+element order, so the needle would jump between every 2 layers. The generators join underlay and top
+into one run of needle points, and would have to give them apart anyway. Rejected.</li>
+<li><strong>The top stitches in reverse order,</strong> to start them where the underlays end. An element drawn over
+another must sew its top stitches after the other’s, as M13.3’s first rule says. Rejected.</li>
+<li><strong>Numbered or named runs,</strong> so that 2 runs next to each other stay apart. The plug-in’s dialogs leave
+texts out, and a name would keep its default in VectorCraft. A number would have to be set alike on
+every element of a run. A trim keeps 2 runs apart already, and runs that join only lengthen the
+needle’s way between the 2 passes. Rejected.</li>
+<li><strong>A namespace of StitchCraft’s own,</strong> such as a <code>stitchcraft:</code> attribute. The SVG adapter reads settings
+from Ink/Stitch’s namespace, and Ink/Stitch ignores the attribute in either. A namespace of StitchCraft’s
+own needs a URI, which waits on the project’s name and domain (<a href="../tdd.html#19-open-questions">TDD</a>,
+question 2). Rejected for now.</li>
+<li><strong>Automatic digitizing sets it</strong> on the columns of a shape that cross or meet. No sew-out has shown the
+gain yet, MC-8 is to confirm the rules as they are, and the way back from each run’s last underlay would
+add jumps that M13.3’s order saves. Rejected for now.</li>
+<li><strong>Ink/Stitch’s sew stack.</strong> It orders the stitch layers of one element, and Ink/Stitch builds it only
+with its debug settings on. Not planned, as the contract says.</li>
+<li><strong>A filter that sets it on the selected objects.</strong> VectorCraft gives a filter each selected path’s own
+effects, which it can change in one undo step. The dialogs and a group’s effect cover the designs that
+need the setting now. Not planned until designs need it on many objects of several families.</li>
+</ul>
+<h2 id="references"><a class="header" href="#references">References</a></h2>
+<ul>
+<li>Ink/Stitch at <code>d59c9ab</code>: <code>lib/extensions/base.py</code> (<code>elements_to_stitch_groups</code>),
+<code>lib/elements/satin_column/satin_column.py</code> (<code>to_stitch_groups</code>, <code>_sort_stitch_groups</code>),
+<code>lib/elements/fill_stitch.py</code> (<code>to_stitch_groups</code>), <code>lib/sew_stack/__init__.py</code> and
+<code>lib/sew_stack/stitch_layers/</code>, <code>lib/elements/utils/nodes.py</code>, <code>lib/debug/debug.py</code>,
+<code>lib/elements/element.py</code> (<code>get_param</code>), <code>lib/svg/tags.py</code>, <code>lib/extensions/params.py</code>,
+<code>duplicate_params.py</code> and <code>remove_embroidery_settings.py</code>, and <code>lib/update.py</code>.</li>
+<li><a href="https://docs.wilcom.com/embroiderystudio/28/en/OnlineHelp/Quality/connectors/connectors-20.htm">Automatic branching</a>
+and <a href="https://docs.wilcom.com/embroiderystudio/28/en/OnlineHelp/Quality/connectors/connectors-23.htm">Apply automatic underlay to branched objects</a>,
+in Wilcom EmbroideryStudio’s documentation, version 28.</li>
+<li><a href="../engine-pipeline.html#underlays-first">Underlays first</a>,
+<a href="../svg-input.html#settings-of-a-shape">settings of a shape</a> and
+<a href="../vectorcraft-integration.html#the-workflow">the workflow in VectorCraft</a>.</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../design/adr/0017-routing-is-one-engine-function.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                            </a>
+
+                            <a rel="next prefetch" href="../../plan/roadmap.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../design/adr/0017-routing-is-one-engine-function.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
+                    </a>
+
+                    <a rel="next prefetch" href="../../plan/roadmap.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
+                    </a>
+            </nav>
+
+        </div>
+
+        <template id=fa-eye><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM432 256c0 79.5-64.5 144-144 144s-144-64.5-144-144s64.5-144 144-144s144 64.5 144 144zM288 192c0 35.3-28.7 64-64 64c-11.5 0-22.3-3-31.6-8.4c-.2 2.8-.4 5.5-.4 8.4c0 53 43 96 96 96s96-43 96-96s-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6z"/></svg></span></template>
+        <template id=fa-eye-slash><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c5.2-11.8 8-24.8 8-38.5c0-53-43-96-96-96c-2.8 0-5.6 .1-8.4 .4c5.3 9.3 8.4 20.1 8.4 31.6c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zm223.1 298L373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5z"/></svg></span></template>
+        <template id=fa-copy><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M502.6 70.63l-61.25-61.25C435.4 3.371 427.2 0 418.7 0H255.1c-35.35 0-64 28.66-64 64l.0195 256C192 355.4 220.7 384 256 384h192c35.2 0 64-28.8 64-64V93.25C512 84.77 508.6 76.63 502.6 70.63zM464 320c0 8.836-7.164 16-16 16H255.1c-8.838 0-16-7.164-16-16L239.1 64.13c0-8.836 7.164-16 16-16h128L384 96c0 17.67 14.33 32 32 32h47.1V320zM272 448c0 8.836-7.164 16-16 16H63.1c-8.838 0-16-7.164-16-16L47.98 192.1c0-8.836 7.164-16 16-16H160V128H63.99c-35.35 0-64 28.65-64 64l.0098 256C.002 483.3 28.66 512 64 512h192c35.2 0 64-28.8 64-64v-32h-47.1L272 448z"/></svg></span></template>
+        <template id=fa-play><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/></svg></span></template>
+        <template id=fa-clock-rotate-left><span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M75 75L41 41C25.9 25.9 0 36.6 0 57.9V168c0 13.3 10.7 24 24 24H134.1c21.4 0 32.1-25.9 17-41l-30.8-30.8C155 85.5 203 64 256 64c106 0 192 86 192 192s-86 192-192 192c-40.8 0-78.6-12.7-109.7-34.4c-14.5-10.1-34.4-6.6-44.6 7.9s-6.6 34.4 7.9 44.6C151.2 495 201.7 512 256 512c141.4 0 256-114.6 256-256S397.4 0 256 0C185.3 0 121.3 28.7 75 75zm181 53c-13.3 0-24 10.7-24 24V256c0 6.4 2.5 12.5 7 17l72 72c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-65-65V152c0-13.3-10.7-24-24-24z"/></svg></span></template>
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../elasticlunr-ef4e11c1.min.js"></script>
+        <script src="../../mark-09e88c2c.min.js"></script>
+        <script src="../../searcher-09f2665d.js"></script>
+
+        <script src="../../clipboard-1626706a.min.js"></script>
+        <script src="../../highlight-abc7f01d.js"></script>
+        <script src="../../book-609e4cb8.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

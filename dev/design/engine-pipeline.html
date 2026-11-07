@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-cb8298cb.js";
+            window.path_to_searchindex_js = "../searchindex-2dd38593.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-3b2820bf.js"></script>
+        <script src="../toc-8178bdeb.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -313,7 +313,9 @@ end by them (<a href="algorithms/satin.html#start-and-end">satin</a>, <a href="a
 element’s start and end positions, which its design places, take their place for the stitch types that
 use them, and a fill or a satin column with a start position offers it (<code>REQ-GEN-001</code>). Each ends near its next stitch, its
 point nearest the offer as Ink/Stitch’s geometry library finds it, a point of one shape inside the
-other’s area first (<code>generators::next</code>).</li>
+other’s area first (<code>generators::next</code>). From M10.15 an element in a run of underlays first is
+generated as 2 layers, and each layer gets its neighbours as an element does
+(<a href="#underlays-first">underlays first</a>).</li>
 <li><strong>Seeded randomness:</strong> each element’s generator is seeded from its <code>random_seed</code>, one of the settings
 every stitch type shares. When that is empty, a hash of its id seeds it. A seed replaces the id, as in
 Ink/Stitch. The PRNG is SplitMix64 from <code>stitchcraft-core</code> (<a href="determinism.html">determinism</a>).</li>
@@ -326,7 +328,8 @@ elements before it left, and the first that needs more ends planning, with <code
 <li><strong>Roles:</strong> every stitch is tagged by its role. Assembly tags the stitches of groups as top and the lock
 stitches as lock. The jumps between groups are travel. Previews draw the lock stitches apart. A
 generator hands assembly its needle points without roles, so an element’s underlay, and the running
-stitches between its rows, are tagged top as well, until generators tag their own.</li>
+stitches between its rows, are tagged top as well, until generators tag their own. From M10.15 the
+stitches of a run’s underlays are tagged underlay (<a href="#underlays-first">underlays first</a>).</li>
 </ul>
 <p>Generators are listed in <a href="algorithms/">algorithms</a>.</p>
 <h2 id="4-plan-assembly"><a class="header" href="#4-plan-assembly">4. Plan assembly</a></h2>
@@ -339,10 +342,38 @@ That is paint order, unless stage 0 put the automatic elements, or with <code>--
 in an order chosen for few thread changes, in which a shape still sews after every shape it is drawn
 over, where they overlap by more than rounding leaves. No stage routes elements a host read. M10’s
 routing tools write their route into the document, whose paint order is then the route’s
-(<a href="routing.html">routing tools</a>).</li>
+(<a href="routing.html">routing tools</a>). The elements of a run of underlays first keep this order too, with their
+underlays moved ahead of their top stitches (<a href="#underlays-first">below</a>).</li>
 <li>A thread change starts a new colour block (<code>REQ-ASM-001</code>). Threads are compared by colour, as
 Ink/Stitch compares them: two names for one colour are one thread, and the block keeps the first.</li>
 </ul>
+<h3 id="underlays-first"><a class="header" href="#underlays-first">Underlays first</a></h3>
+<p>From M10.15, consecutive elements that set <code>underlays_first</code> sew all their underlays before any of their
+top stitches (<a href="adr/0018-underlays-first-is-a-setting-of-each-element.html">ADR-0018</a>). The setting is a
+toggle that every stitch type shares, off by default, and StitchCraft’s own. Ink/Stitch has no such order.</p>
+<ul>
+<li><strong>Runs.</strong> The engine finds the runs before stage 3, in the order stage 0 gives. A run is a stretch of
+consecutive elements that set the toggle and have one thread, compared by colour as above. It ends after
+an element with <code>trim_after</code> or <code>stop_after</code>. An element sewn in several threads (M10.5), or skipped
+for settings that don’t read, is in no run. An element that would make a run of one sews as it does
+without the setting, and a note says why its setting joins nothing.</li>
+<li><strong>2 passes.</strong> A run sews its elements’ underlays in their order, then their top stitches in the same
+order. An element without underlay, such as a running stitch or a fill with <code>fill_underlay</code> off, sews in
+the second pass alone. The run’s last element keeps its trim or stop after its top stitches.</li>
+<li><strong>Layers.</strong> Each element of a run is generated as 2 layers, its underlay and its top, each in its place
+in the passes. A layer starts near the last needle point sewn before it and ends near what the next
+layer offers, which is what that layer’s element offers (<a href="#3-generate">stage 3</a>). The element’s start
+position places the start of its first layer, and its end position the end of its top. Its settings are
+read and its shape built once, and the 2 layers share its work budget. Each layer spends the design’s
+stitches on the needle points it makes. The top stitches take the same random numbers as without the
+setting, since an underlay draws none.</li>
+<li><strong>Joins and roles.</strong> Assembly joins the layers as it joins any 2 groups
+(<a href="#connecting-consecutive-groups">below</a>), and tags the needle points of each underlay layer underlay.</li>
+</ul>
+<p>The needle goes back from a run’s last underlay to its first top stitch, with a jump and its locks where
+that is farther than the jump length. Each run has one thread, so the design’s colour changes are those
+it has without the setting. <code>--sort-colours</code> moves the elements that set the toggle as it moves any
+element with settings, and the runs are made of the elements its order puts side by side.</p>
 <h3 id="connecting-consecutive-groups"><a class="header" href="#connecting-consecutive-groups">Connecting consecutive groups</a></h3>
 <p>The needle sews straight on from one group to the next only when nothing separates them. With <code>d</code> the
 distance from where the needle is to the next group’s first needle point:</p>

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-cb8298cb.js";
+            window.path_to_searchindex_js = "../searchindex-2dd38593.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-3b2820bf.js"></script>
+        <script src="../toc-8178bdeb.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -339,6 +339,9 @@ text’s order in lettering. M13.3 orders the automatic elements, and with <code
 by the shapes each overlaps in the whole design (<a href="image-to-embroidery.html#sewing-order">sewing order</a>). A
 routed design is drawn in its sewing order, which <code>stitch plan</code> keeps. <code>--sort-colours</code> moves routed
 pieces as it moves the other elements with settings, and isn’t meant for a routed design.</p>
+<p>Each piece keeps <code>underlays_first</code> with the rest of its element’s settings. Pieces in one thread that set
+it sew their underlays along the route, and the needle then goes back to the first of them for the top
+stitches (<a href="engine-pipeline.html#underlays-first">underlays first</a>).</p>
 <h2 id="requirements-to-write"><a class="header" href="#requirements-to-write">Requirements to write</a></h2>
 <p>M10.4 and M10.13 write the routing’s requirements in an area of their own, <code>REQ-ROUTE-…</code>, and the
 filters’ among <code>REQ-VC-…</code>. They cover at least these properties:</p>

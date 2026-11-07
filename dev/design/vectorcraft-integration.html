@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-cb8298cb.js";
+            window.path_to_searchindex_js = "../searchindex-2dd38593.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-3b2820bf.js"></script>
+        <script src="../toc-8178bdeb.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -402,6 +402,11 @@ the same file with StitchCraft’s exporters, without saving first (<a href="#ex
 <p>Stitching order is paint order (bottom first). Hidden objects are skipped, as VectorCraft draws nothing
 for them, and locked objects are stitched. Thread colours come from the object’s fill for a fill, and
 from its stroke for a stroke or a satin column, as in Ink/Stitch, mapped to the profile’s palette.</p>
+<p>From M10.15, objects next to each other in paint order and in one thread, whose StitchCraft effects set
+<code>underlays_first</code>, sew their underlays before their top stitches
+(<a href="engine-pipeline.html#underlays-first">underlays first</a>). The toggle is a row of every stitch family’s
+dialog. Set on a group’s effect, it applies to every path in the group (<code>REQ-VC-006</code>). A live effect sews
+its object alone, so a preview doesn’t show the order, and <code>stitch export --preview</code> draws what sews.</p>
 <h3 id="exporters-file--export-writes-pes-and-dst"><a class="header" href="#exporters-file--export-writes-pes-and-dst">Exporters: File › Export writes PES and DST</a></h3>
 <p>VectorCraft 0.14 added exporter plug-ins (the RFC’s <a href="rfc-vectorcraft-abi-v2.html#p1-exporter-plug-ins">P1</a>).
 File › Export › Export As lists each after the built-in formats by its name, and <code>document.export</code> writes

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-cb8298cb.js";
+            window.path_to_searchindex_js = "../searchindex-2dd38593.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-3b2820bf.js"></script>
+        <script src="../toc-8178bdeb.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -665,7 +665,9 @@ An element with a stop after it keeps its place: the elements drawn before it se
 drawn after it after it. A user sets a stop for a reason, such as placing appliqué fabric, and it comes
 where it was drawn. <code>SC-I0907</code> says when the order isn’t paint order, with the thread changes of each.
 M10’s routing tools don’t start from this order. They route satin columns and running stitches drawn by
-hand as Ink/Stitch’s tools route them, and write the route into the document (<a href="routing.html#order">routing tools</a>).</p>
+hand as Ink/Stitch’s tools route them, and write the route into the document (<a href="routing.html#order">routing tools</a>).
+Each element that automatic digitizing makes sews its underlay just before its own top stitches. The
+rules leave <code>underlays_first</code> off (<a href="adr/0018-underlays-first-is-a-setting-of-each-element.html">ADR-0018</a>).</p>
 <p>Shapes are near when their boxes come within twice the shapes’ tolerance of each other. An automatic area’s
 box is round its region, and a narrow part’s line’s round the part. Any other shape’s box is round its
 path’s points, grown for a stroke by half its width times √(L² + 1) for a miter limit L. That holds the

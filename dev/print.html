@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-cb8298cb.js";
+            window.path_to_searchindex_js = "searchindex-2dd38593.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-3b2820bf.js"></script>
+        <script src="toc-8178bdeb.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -6064,7 +6064,9 @@ pub struct Subpath { pub start: Point, pub segments: Vec&lt;Segment&gt;, pub clo
 pub enum Segment { Line(Point), Quad(Point, Point), Cubic(Point, Point, Point) }</code></pre>
 <p>Elements are in the host’s paint order, bottom first. They sew in that order unless the design has
 automatic elements or <code>sort_colours</code> is set: since M13.3 automatic digitizing then chooses the order
-(<a href="#sewing-order-1">image to embroidery</a>). Curves keep their control points, and the
+(<a href="#sewing-order-1">image to embroidery</a>). From M10.15 a run of elements that set
+<code>underlays_first</code> sews in that order twice, its underlays first and its top stitches after
+(<a href="#underlays-first">engine pipeline</a>). Curves keep their control points, and the
 generators flatten them with the tolerance their parameters give.</p>
 <p>A host reads 3 of the settings by Ink/Stitch’s names, <code>collapse_len_mm</code>, <code>min_stitch_len_mm</code> and
 <code>min_satin_stroke_width_mm</code>: an SVG file’s metadata, and since M6.11 the data a VectorCraft document keeps
@@ -6920,6 +6922,14 @@ shape’s own settings, as Ink/Stitch adds them.</p>
 <p>Ink/Stitch doesn’t read a group’s settings, but for <code>ignore_object</code>. <code>SC-W0802</code> names the others a group
 has, which don’t change what sews. The <a href="#inkstitch-compatibility-contract">compatibility contract</a> lists every setting, with
 the milestone in which StitchCraft reads it.</p>
+<p>A setting of StitchCraft’s own that a stitch type reads is an attribute of Ink/Stitch’s namespace as well,
+read as every other. From M10.15, <code>inkstitch:underlays_first</code> on a shape sews its elements’ underlays
+with those of the elements beside them that set it, before their top stitches
+(<a href="#underlays-first">underlays first</a>,
+<a href="#adr-0018-underlays-first-is-a-setting-of-each-element-shared-by-runs-of-elements-in-one-thread">ADR-0018</a>). Ink/Stitch (read at <code>d59c9ab</code>)
+reads only the settings on its own list of attributes, so it sews such a shape as one without the
+attribute. Its Params dialog leaves the attribute in place, Duplicate Params copies it to other shapes
+with the rest of the shape’s settings, and Remove Embroidery Settings deletes it with them.</p>
 <h2 id="inkstitch-objects"><a class="header" href="#inkstitch-objects">Ink/Stitch objects</a></h2>
 <p>An Ink/Stitch SVG has 3 kinds of object that Ink/Stitch reads and does not sew. The adapter sews none of
 them (<code>REQ-SVG-003</code>).</p>
@@ -7236,7 +7246,9 @@ end by them (<a href="#start-and-end-1">satin</a>, <a href="#5-parts">fills</a>)
 element’s start and end positions, which its design places, take their place for the stitch types that
 use them, and a fill or a satin column with a start position offers it (<code>REQ-GEN-001</code>). Each ends near its next stitch, its
 point nearest the offer as Ink/Stitch’s geometry library finds it, a point of one shape inside the
-other’s area first (<code>generators::next</code>).</li>
+other’s area first (<code>generators::next</code>). From M10.15 an element in a run of underlays first is
+generated as 2 layers, and each layer gets its neighbours as an element does
+(<a href="#underlays-first">underlays first</a>).</li>
 <li><strong>Seeded randomness:</strong> each element’s generator is seeded from its <code>random_seed</code>, one of the settings
 every stitch type shares. When that is empty, a hash of its id seeds it. A seed replaces the id, as in
 Ink/Stitch. The PRNG is SplitMix64 from <code>stitchcraft-core</code> (<a href="#determinism-1">determinism</a>).</li>
@@ -7249,7 +7261,8 @@ elements before it left, and the first that needs more ends planning, with <code
 <li><strong>Roles:</strong> every stitch is tagged by its role. Assembly tags the stitches of groups as top and the lock
 stitches as lock. The jumps between groups are travel. Previews draw the lock stitches apart. A
 generator hands assembly its needle points without roles, so an element’s underlay, and the running
-stitches between its rows, are tagged top as well, until generators tag their own.</li>
+stitches between its rows, are tagged top as well, until generators tag their own. From M10.15 the
+stitches of a run’s underlays are tagged underlay (<a href="#underlays-first">underlays first</a>).</li>
 </ul>
 <p>Generators are listed in <a href="design/algorithms">algorithms</a>.</p>
 <h2 id="4-plan-assembly"><a class="header" href="#4-plan-assembly">4. Plan assembly</a></h2>
@@ -7262,10 +7275,38 @@ That is paint order, unless stage 0 put the automatic elements, or with <code>--
 in an order chosen for few thread changes, in which a shape still sews after every shape it is drawn
 over, where they overlap by more than rounding leaves. No stage routes elements a host read. M10’s
 routing tools write their route into the document, whose paint order is then the route’s
-(<a href="#routing-tools">routing tools</a>).</li>
+(<a href="#routing-tools">routing tools</a>). The elements of a run of underlays first keep this order too, with their
+underlays moved ahead of their top stitches (<a href="#underlays-first">below</a>).</li>
 <li>A thread change starts a new colour block (<code>REQ-ASM-001</code>). Threads are compared by colour, as
 Ink/Stitch compares them: two names for one colour are one thread, and the block keeps the first.</li>
 </ul>
+<h3 id="underlays-first"><a class="header" href="#underlays-first">Underlays first</a></h3>
+<p>From M10.15, consecutive elements that set <code>underlays_first</code> sew all their underlays before any of their
+top stitches (<a href="#adr-0018-underlays-first-is-a-setting-of-each-element-shared-by-runs-of-elements-in-one-thread">ADR-0018</a>). The setting is a
+toggle that every stitch type shares, off by default, and StitchCraft’s own. Ink/Stitch has no such order.</p>
+<ul>
+<li><strong>Runs.</strong> The engine finds the runs before stage 3, in the order stage 0 gives. A run is a stretch of
+consecutive elements that set the toggle and have one thread, compared by colour as above. It ends after
+an element with <code>trim_after</code> or <code>stop_after</code>. An element sewn in several threads (M10.5), or skipped
+for settings that don’t read, is in no run. An element that would make a run of one sews as it does
+without the setting, and a note says why its setting joins nothing.</li>
+<li><strong>2 passes.</strong> A run sews its elements’ underlays in their order, then their top stitches in the same
+order. An element without underlay, such as a running stitch or a fill with <code>fill_underlay</code> off, sews in
+the second pass alone. The run’s last element keeps its trim or stop after its top stitches.</li>
+<li><strong>Layers.</strong> Each element of a run is generated as 2 layers, its underlay and its top, each in its place
+in the passes. A layer starts near the last needle point sewn before it and ends near what the next
+layer offers, which is what that layer’s element offers (<a href="#3-generate">stage 3</a>). The element’s start
+position places the start of its first layer, and its end position the end of its top. Its settings are
+read and its shape built once, and the 2 layers share its work budget. Each layer spends the design’s
+stitches on the needle points it makes. The top stitches take the same random numbers as without the
+setting, since an underlay draws none.</li>
+<li><strong>Joins and roles.</strong> Assembly joins the layers as it joins any 2 groups
+(<a href="#connecting-consecutive-groups">below</a>), and tags the needle points of each underlay layer underlay.</li>
+</ul>
+<p>The needle goes back from a run’s last underlay to its first top stitch, with a jump and its locks where
+that is farther than the jump length. Each run has one thread, so the design’s colour changes are those
+it has without the setting. <code>--sort-colours</code> moves the elements that set the toggle as it moves any
+element with settings, and the runs are made of the elements its order puts side by side.</p>
 <h3 id="connecting-consecutive-groups"><a class="header" href="#connecting-consecutive-groups">Connecting consecutive groups</a></h3>
 <p>The needle sews straight on from one group to the next only when nothing separates them. With <code>d</code> the
 distance from where the needle is to the next group’s first needle point:</p>
@@ -8183,7 +8224,10 @@ machine’s longest stitch anyway (<code>SC-I0703</code>).</li>
 <h2 id="underlays-2"><a class="header" href="#underlays-2">Underlays</a></h2>
 <p>Underlays are sewn before the top stitches, as Ink/Stitch sews them. The centre walk comes first, then the
 contour and the zigzag, each one the element turns on, and all of them go into one run with the top
-stitches.</p>
+stitches. From M10.15 a column in a run of <code>underlays_first</code> sews its underlays apart from its top
+stitches, each layer started and ended by its own neighbours
+(<a href="#underlays-first">engine pipeline</a>). Each layer then follows
+<a href="#start-and-end-1">Start and end</a> with the parts it sews.</p>
 <p>Each underlay places pairs of points across the column as the top stitches are placed (step 1 of <em>Top
 stitches</em>), along the same sections, after any swap, reversal and push compensation. A pair moves in by
 its underlay’s insets as negative pull compensation moves it, and nothing varies at random, so turning an
@@ -8818,6 +8862,9 @@ goes on to that start as Ink/Stitch’s stitch plan joins a layer to the next on
 element’s jump length, and farther with a jump. The generator makes that join itself, because Ink/Stitch
 never forces locks after a layer of underlay, where assembly would after any group of an element with
 <code>force_lock_stitches</code>.</p>
+<p>From M10.15 a fill in a run of <code>underlays_first</code> sews the underlay of every part before any top rows. Its
+underlay and its top rows each start and end by their own neighbours
+(<a href="#underlays-first">engine pipeline</a>).</p>
 <p>The underlay is sewn on the part shrunk by <code>fill_underlay_inset_mm</code>, and the top rows on the part grown by
 <code>expand_mm</code>, or shrunk where it is negative (<code>REQ-FILL-TAT-012</code>, since M5.7). A part is grown or shrunk
 as GEOS buffers a polygon, which Ink/Stitch calls, with round corners of 16 segments to a quarter circle
@@ -9948,6 +9995,9 @@ text’s order in lettering. M13.3 orders the automatic elements, and with <code
 by the shapes each overlaps in the whole design (<a href="#sewing-order-1">sewing order</a>). A
 routed design is drawn in its sewing order, which <code>stitch plan</code> keeps. <code>--sort-colours</code> moves routed
 pieces as it moves the other elements with settings, and isn’t meant for a routed design.</p>
+<p>Each piece keeps <code>underlays_first</code> with the rest of its element’s settings. Pieces in one thread that set
+it sew their underlays along the route, and the needle then goes back to the first of them for the top
+stitches (<a href="#underlays-first">underlays first</a>).</p>
 <h2 id="requirements-to-write"><a class="header" href="#requirements-to-write">Requirements to write</a></h2>
 <p>M10.4 and M10.13 write the routing’s requirements in an area of their own, <code>REQ-ROUTE-…</code>, and the
 filters’ among <code>REQ-VC-…</code>. They cover at least these properties:</p>
@@ -10457,7 +10507,9 @@ An element with a stop after it keeps its place: the elements drawn before it se
 drawn after it after it. A user sets a stop for a reason, such as placing appliqué fabric, and it comes
 where it was drawn. <code>SC-I0907</code> says when the order isn’t paint order, with the thread changes of each.
 M10’s routing tools don’t start from this order. They route satin columns and running stitches drawn by
-hand as Ink/Stitch’s tools route them, and write the route into the document (<a href="#order">routing tools</a>).</p>
+hand as Ink/Stitch’s tools route them, and write the route into the document (<a href="#order">routing tools</a>).
+Each element that automatic digitizing makes sews its underlay just before its own top stitches. The
+rules leave <code>underlays_first</code> off (<a href="#adr-0018-underlays-first-is-a-setting-of-each-element-shared-by-runs-of-elements-in-one-thread">ADR-0018</a>).</p>
 <p>Shapes are near when their boxes come within twice the shapes’ tolerance of each other. An automatic area’s
 box is round its region, and a narrow part’s line’s round the part. Any other shape’s box is round its
 path’s points, grown for a stroke by half its width times √(L² + 1) for a miter limit L. That holds the
@@ -11575,6 +11627,11 @@ the same file with StitchCraft’s exporters, without saving first (<a href="#ex
 <p>Stitching order is paint order (bottom first). Hidden objects are skipped, as VectorCraft draws nothing
 for them, and locked objects are stitched. Thread colours come from the object’s fill for a fill, and
 from its stroke for a stroke or a satin column, as in Ink/Stitch, mapped to the profile’s palette.</p>
+<p>From M10.15, objects next to each other in paint order and in one thread, whose StitchCraft effects set
+<code>underlays_first</code>, sew their underlays before their top stitches
+(<a href="#underlays-first">underlays first</a>). The toggle is a row of every stitch family’s
+dialog. Set on a group’s effect, it applies to every path in the group (<code>REQ-VC-006</code>). A live effect sews
+its object alone, so a preview doesn’t show the order, and <code>stitch export --preview</code> draws what sews.</p>
 <h3 id="exporters-file--export-writes-pes-and-dst"><a class="header" href="#exporters-file--export-writes-pes-and-dst">Exporters: File › Export writes PES and DST</a></h3>
 <p>VectorCraft 0.14 added exporter plug-ins (the RFC’s <a href="#p1-exporter-plug-ins">P1</a>).
 File › Export › Export As lists each after the built-in formats by its name, and <code>document.export</code> writes
@@ -13803,6 +13860,7 @@ supersedes the old one.</p>
 <tr><td><a href="#adr-0015-pictures-are-traced-by-vectorcrafts-command-line">0015</a></td><td>Pictures are traced by VectorCraft’s command line</td><td>Accepted (spike M13.9)</td></tr>
 <tr><td><a href="#adr-0016-inkstitch-files-come-into-vectorcraft-through-stitch-import-inkstitch">0016</a></td><td>Ink/Stitch files come into VectorCraft through <code>stitch import-inkstitch</code></td><td>Accepted (spike M8.11)</td></tr>
 <tr><td><a href="#adr-0017-routing-is-one-engine-function-which-vectorcrafts-filters-and-lettering-call">0017</a></td><td>Routing is one engine function, which VectorCraft’s filters and lettering call</td><td>Accepted (spike M10.3)</td></tr>
+<tr><td><a href="#adr-0018-underlays-first-is-a-setting-of-each-element-shared-by-runs-of-elements-in-one-thread">0018</a></td><td>Underlays first is a setting of each element, shared by runs of elements in one thread</td><td>Accepted (spike M10.14)</td></tr>
 </tbody>
 </table>
 </div>
@@ -14744,6 +14802,183 @@ command line is meant to do without. Rejected.</li>
 <a href="#tools-the-routing-filters">the routing filters</a>.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="adr-0018-underlays-first-is-a-setting-of-each-element-shared-by-runs-of-elements-in-one-thread"><a class="header" href="#adr-0018-underlays-first-is-a-setting-of-each-element-shared-by-runs-of-elements-in-one-thread">ADR-0018: Underlays first is a setting of each element, shared by runs of elements in one thread</a></h1>
+<!-- The status line, a label and its value, which the ADR index is checked against. -->
+<!-- vale ai-tells.ColonUsage = NO -->
+<p><strong>Status:</strong> Accepted · 2026-11-03, after spike M10.14</p>
+<!-- vale ai-tells.ColonUsage = YES -->
+<h2 id="context-17"><a class="header" href="#context-17">Context</a></h2>
+<p>Each element sews its underlay and its top stitches before the next element starts. Where 2 satin columns
+cross, the second column’s underlay is sewn over the first column’s top stitches, and the crossing stacks
+top stitches, underlay and top stitches again. A satin border over a fill’s edge stacks the same way.
+Sewing the underlays of such elements first and their top stitches after lays every underlay on the fabric
+under every top stitch. The aim is a flatter crossing, which MC-12 is to check on the reference machine.
+The needle then goes back from the last underlay to the first top stitch, and elements of other threads
+would need more colour changes. Spike M10.14 chooses how a design sets this order, as a setting of a group
+of elements or of each element. It also chooses how VectorCraft documents and SVG files keep the setting,
+whether automatic digitizing uses it, and what Ink/Stitch sews from a file that has it. M10.15 builds
+what it chooses.</p>
+<p>What was checked, on 2026-11-03:</p>
+<ul>
+<li><strong>Ink/Stitch’s order,</strong> read at <code>d59c9ab</code> (<a href="#adr-0012-read-inkstitchs-source-never-copy-it">ADR-0012</a>). Ink/Stitch embroiders
+the elements in document order, each given the stitches before it and the next element. A satin column
+makes its underlays and its top stitches as separate groups and joins them into one. The underlays come
+first, or, when the column ends at its point nearest the next element, each half’s underlays come before
+that half’s top stitches. A fill sews its shapes one at a time, each shape’s underlay before its top
+stitches. Each element’s underlay sews just before that element’s top stitches.</li>
+<li><strong>Ink/Stitch’s sew stack.</strong> It is an element made from the JSON of a shape’s <code>sew_stack</code> attribute,
+which lists stitch layers. The layers sew one after another. Each starts where the layer before it
+ended, and the last ends near the next element. Only a running stitch layer exists. Ink/Stitch adds the
+stack to a shape’s elements only when its debug settings turn it on, and <code>sew_stack_only</code> then leaves
+the shape’s other elements out. The <a href="#inkstitch-compatibility-contract">compatibility contract</a> lists both
+attributes as not planned.</li>
+<li><strong>Ink/Stitch and an attribute it doesn’t list.</strong> Ink/Stitch reads each setting by its name, from its own
+list of attributes. Its Params dialog writes the values of the settings it shows, and its updater
+removes legacy names alone. So an attribute of its namespace that isn’t on the list doesn’t change what
+Ink/Stitch sews, and stays in the file through both. Duplicate Params copies every attribute of the
+namespace from the first selected shape to the others, and Remove Embroidery Settings deletes them all.</li>
+<li><strong>Wilcom EmbroideryStudio,</strong> in its documentation. Branching joins objects into one branched object,
+which takes the colour of the first object in its sequence. Where the objects touch or overlap, the
+underlay of the whole branched object is sewn first, followed by the cover stitches.</li>
+<li><strong>What StitchCraft has.</strong> Generators give assembly each element’s needle points without roles. A satin
+column’s underlays and top stitches are one run of needle points
+(<a href="#underlays-2">satin</a>), and so are a fill part’s underlay and top rows
+(<a href="#6-underlay">fills</a>). Both underlays are placed without random variation.
+Assembly tags every stitch of a group top, keeps the elements in their order and starts a colour block
+at each thread change. Elements are generated in sewing order,
+each given the needle before it and what the next element offers
+(<a href="#adr-0014-generators-see-their-neighbours-the-needle-before-the-next-element-after">ADR-0014</a>). The settings every stitch type shares are one
+declaration of the registry. The registry’s only settings of StitchCraft’s own so far are automatic
+digitizing’s, which no stitch type reads. In an SVG file each <code>inkstitch:*</code> attribute of a shape is a
+parameter of its elements (<code>REQ-SVG-009</code>), and a group’s settings are named and not applied. In a
+VectorCraft document each parameter is a row of each stitch family’s dialog, made from the registry, and
+a group’s effects apply alike to every path in the group (<code>REQ-VC-006</code>). A live effect sews its object
+alone. M13.3 orders the automatic elements, and with <code>--sort-colours</code> every element, so that each thread
+sews as long as it can. The routing tools write a route in its sewing order, and each piece keeps the
+settings of the element it comes from (<a href="#adr-0017-routing-is-one-engine-function-which-vectorcrafts-filters-and-lettering-call">ADR-0017</a>). On a home
+machine such as the reference machine, each colour change is a stop to rethread
+(<a href="#sewing-order-1">image to embroidery</a>). TS-17C is to sew 2 satin columns that
+cross, their underlays first, and MC-12’s report is to say whether they lie flatter than as drawn
+(<a href="#machine-testing-protocol">machine testing</a>).</li>
+</ul>
+<h2 id="decision-17"><a class="header" href="#decision-17">Decision</a></h2>
+<ol>
+<li><strong>A setting of each element.</strong> <code>underlays_first</code> is a toggle among the settings every stitch type
+shares, off by default and StitchCraft’s own. The registry declares it once, and its reference entry,
+its JSON Schema and its row in each stitch family’s dialog in VectorCraft come from that declaration.</li>
+<li><strong>Runs.</strong> Consecutive elements that set it and sew in one thread form a run, in the sewing order stage
+0 gives. An element’s trim or stop ends its run after it. An element in several threads (M10.5) is in
+no run. A run of one element sews as it would without the setting, and a note names an element whose
+setting joins no run.</li>
+<li><strong>The underlays, then the top stitches.</strong> A run sews its elements’ underlays in their order, then their
+top stitches in the same order. Each element of a run is generated as 2 layers, its underlay and its
+top, in the order the run sews them. Each layer gets the needle before it and what the next layer
+offers, which ADR-0014 gives an element. Assembly joins the layers like any other groups. It tags the
+needle points of the underlay layers underlay.</li>
+<li><strong>Files.</strong> In a VectorCraft document the setting is a parameter of an object’s StitchCraft effect, and
+a group’s effect gives it to every path in the group. SVG files keep it as the attribute
+<code>inkstitch:underlays_first</code> of each shape, which the SVG adapter reads as every setting of a shape. A
+group’s attribute is named and not applied, as every setting of a group is.</li>
+<li><strong>Ink/Stitch sews such a file element by element.</strong> It doesn’t read the attribute, and sews each
+element’s underlay and top stitches before the next element’s, as StitchCraft sews them with the
+setting off. The differential has no case for the setting.</li>
+<li><strong>Automatic digitizing and lettering don’t set it.</strong> The elements they make take their settings from
+the rules and from the fonts.</li>
+<li>StitchCraft proposes no VectorCraft change for this.</li>
+</ol>
+<h2 id="consequences-17"><a class="header" href="#consequences-17">Consequences</a></h2>
+<ul>
+<li>A design that doesn’t set it plans as before, and every golden file stays as it was.</li>
+<li>In VectorCraft the user turns it on in the dialog of each object’s effect, or once in a group’s effect
+where every path of the group sews alike. In an SVG file it is added with Inkscape’s XML editor, and
+Ink/Stitch’s tools treat it as <a href="#settings-of-a-shape">SVG input</a> says.</li>
+<li>Since a run’s elements share a thread, the design’s colour changes stay as they were. A fill and a
+border in other threads sew one after the other, each with its underlay, whatever they set.</li>
+<li>Each run adds the needle’s way back from its last underlay to its first top stitch, a jump with its
+locks where it is longer than the jump length. Elements that lie apart add jumps between their underlays
+too. The setting is for elements that cross or overlap.</li>
+<li>2 sets of elements next to each other in one thread form one run. A trim after the first set keeps them
+apart.</li>
+<li>An element’s start position places the start of its first layer, and its end position the end of its
+top. The 2 layers share the element’s work budget, as its underlay and top share it outside a run.
+Random variation gives the top stitches what it gives them without the setting.</li>
+<li><code>--sort-colours</code> moves the elements that set it as it moves any element with settings, and the runs form
+in the order it chooses. A run of routed pieces sews its underlays along the route, and the needle then
+goes back to the route’s first piece for the top stitches.</li>
+<li>A live effect sews its object alone, so VectorCraft’s previews can’t show the order. <code>stitch export</code> and
+the exporters sew it.</li>
+<li>M10.15’s cases check that a run’s underlays all come before its top stitches, that the top stitches
+keep the elements’ order, and that a design without the setting plans as before. TS-17C sews 2 satin
+columns of one thread that cross, as drawn beside the same 2 with their underlays first, for MC-12 to
+compare. The test kit stops at a setting of StitchCraft’s own when it writes a file for Ink/Stitch. The
+differential’s file of TS-17C leaves that pair out.</li>
+<li>The attribute is in Ink/Stitch’s namespace. Should a later Ink/Stitch name a setting <code>underlays_first</code>,
+the contract updated to it fails <code>cargo xtask docs --check</code>, as a setting of StitchCraft’s own may not
+take an Ink/Stitch key. A migration then renames StitchCraft’s
+(<a href="#versioning-and-migration">parameter registry</a>).</li>
+<li>Revisit runs of one thread if a sew-out shows that a border lies flatter with its underlay sewn before a
+fill of another thread, which costs 2 colour changes more. Revisit automatic digitizing if MC-12 shows
+that crossing columns lie flatter with their underlays first: a step of M13 could then set it on the
+columns of one shape that cross, measured on the test pictures. Revisit the namespace when the project
+has a domain of its own, or if Ink/Stitch asks other programs to keep out of its namespace. Revisit a
+group’s own setting in VectorCraft if VectorCraft gives a plug-in data of its own on a group, or shows a
+filter the groups round a path.</li>
+</ul>
+<h2 id="alternatives-considered-11"><a class="header" href="#alternatives-considered-11">Alternatives considered</a></h2>
+<ul>
+<li><strong>A setting of the group.</strong> The engine has no groups. Adapters give it the elements in sewing order, and
+stage 0 can move a group’s elements apart. Of a group’s settings, Ink/Stitch reads <code>ignore_object</code>
+alone, and StitchCraft names the others. In VectorCraft every path of a group sews as the group’s
+effects say. One group’s effect can’t serve a fill and its satin border. A live effect that only marks
+the group could store a setting of the group itself, and VectorCraft would run it on each path inside
+at every redraw. A name like the markers’ could store one too, though no dialog shows it and SVG files
+have no such names. Rejected. A group’s effect already gives the setting to every path of a group that
+sews alike.</li>
+<li><strong>A design setting.</strong> Every element would join a run with its neighbours of the same thread, though the
+order serves only elements that cross or overlap. Ink/Stitch’s metadata holds its 4 settings for the
+whole design, and StitchCraft names any other element there. Rejected.</li>
+<li><strong>Runs across threads,</strong> each underlay in its element’s thread. Sewn this way, a run of 2 threads at
+least doubles its colour changes, each a stop on a home machine. Sewing the underlays in one thread
+would change what the user drew where an underlay shows. Rejected. Wilcom’s branched objects take one
+colour too.</li>
+<li><strong>Reordering the groups as generated.</strong> Each element would still start and end near its neighbours in
+element order, so the needle would jump between every 2 layers. The generators join underlay and top
+into one run of needle points, and would have to give them apart anyway. Rejected.</li>
+<li><strong>The top stitches in reverse order,</strong> to start them where the underlays end. An element drawn over
+another must sew its top stitches after the other’s, as M13.3’s first rule says. Rejected.</li>
+<li><strong>Numbered or named runs,</strong> so that 2 runs next to each other stay apart. The plug-in’s dialogs leave
+texts out, and a name would keep its default in VectorCraft. A number would have to be set alike on
+every element of a run. A trim keeps 2 runs apart already, and runs that join only lengthen the
+needle’s way between the 2 passes. Rejected.</li>
+<li><strong>A namespace of StitchCraft’s own,</strong> such as a <code>stitchcraft:</code> attribute. The SVG adapter reads settings
+from Ink/Stitch’s namespace, and Ink/Stitch ignores the attribute in either. A namespace of StitchCraft’s
+own needs a URI, which waits on the project’s name and domain (<a href="#19-open-questions">TDD</a>,
+question 2). Rejected for now.</li>
+<li><strong>Automatic digitizing sets it</strong> on the columns of a shape that cross or meet. No sew-out has shown the
+gain yet, MC-8 is to confirm the rules as they are, and the way back from each run’s last underlay would
+add jumps that M13.3’s order saves. Rejected for now.</li>
+<li><strong>Ink/Stitch’s sew stack.</strong> It orders the stitch layers of one element, and Ink/Stitch builds it only
+with its debug settings on. Not planned, as the contract says.</li>
+<li><strong>A filter that sets it on the selected objects.</strong> VectorCraft gives a filter each selected path’s own
+effects, which it can change in one undo step. The dialogs and a group’s effect cover the designs that
+need the setting now. Not planned until designs need it on many objects of several families.</li>
+</ul>
+<h2 id="references-3"><a class="header" href="#references-3">References</a></h2>
+<ul>
+<li>Ink/Stitch at <code>d59c9ab</code>: <code>lib/extensions/base.py</code> (<code>elements_to_stitch_groups</code>),
+<code>lib/elements/satin_column/satin_column.py</code> (<code>to_stitch_groups</code>, <code>_sort_stitch_groups</code>),
+<code>lib/elements/fill_stitch.py</code> (<code>to_stitch_groups</code>), <code>lib/sew_stack/__init__.py</code> and
+<code>lib/sew_stack/stitch_layers/</code>, <code>lib/elements/utils/nodes.py</code>, <code>lib/debug/debug.py</code>,
+<code>lib/elements/element.py</code> (<code>get_param</code>), <code>lib/svg/tags.py</code>, <code>lib/extensions/params.py</code>,
+<code>duplicate_params.py</code> and <code>remove_embroidery_settings.py</code>, and <code>lib/update.py</code>.</li>
+<li><a href="https://docs.wilcom.com/embroiderystudio/28/en/OnlineHelp/Quality/connectors/connectors-20.htm">Automatic branching</a>
+and <a href="https://docs.wilcom.com/embroiderystudio/28/en/OnlineHelp/Quality/connectors/connectors-23.htm">Apply automatic underlay to branched objects</a>,
+in Wilcom EmbroideryStudio’s documentation, version 28.</li>
+<li><a href="#underlays-first">Underlays first</a>,
+<a href="#settings-of-a-shape">settings of a shape</a> and
+<a href="#the-workflow">the workflow in VectorCraft</a>.</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="roadmap-small-steps-to-the-final-project"><a class="header" href="#roadmap-small-steps-to-the-final-project">Roadmap: small steps to the final project</a></h1>
 <p>Each <strong>step</strong> is one pull request: small, reviewable, with its tests, conformance cases and docs. Each
 <strong>milestone</strong> ends with green gates and, where it produces something sewable, a <strong>machine checkpoint</strong>
@@ -15007,7 +15242,8 @@ follows, since lettering routes Ink/Stitch Small Font and Medium Font with it, f
 glyph. Like M7’s, each stitch type comes with requirements, cases and docs
 (<a href="#playbook-add-a-stitch-type">playbook</a>). Its samples go on TS-17A, TS-17B or TS-17C for
 MC-12 (<a href="#machine-testing-protocol">machine testing</a>). The new fills route their rows as M7.9’s circular fill
-routes its pieces.</p>
+routes its pieces. Per-layer ordering (M10.14 and M10.15) is StitchCraft’s own, since Ink/Stitch sews each
+element’s underlay just before that element’s top stitches.</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -15027,8 +15263,8 @@ routes its pieces.</p>
 <tr><td>M10.11</td><td>Guided ripples, as Ink/Stitch sews them. With a guide line, copies of the stroke move along it, scaled from <code>scale_start</code> to <code>scale_end</code> on <code>scale_axis</code>, and turned with the guide while <code>rotate_ripples</code> is on. A satin column as the guide, or a guide of several subpaths, sets the copies between its rails, as <code>satin_guide_pattern_position</code> places them, with <code>reverse_rails</code> and <code>swap_satin_rails</code>. The anchor line across the stroke sets the copies’ direction. <code>grid_size_mm</code> adds lines across the ripples, sewn first with <code>grid_first</code>, and <code>manual_pattern_placement</code> keeps the stroke’s own nodes as needle points. A clip path cuts the ripples as M8.5 cuts a stroke, and the pieces are routed as a tatami fill’s rows. Ondulamarif XL sews 48 closed lines on satin guides</td><td>requirements written. TS-17C’s guided ripples sew in Ink/Stitch as in StitchCraft by every measure of the differential, and the user page shows them</td></tr>
 <tr><td>M10.12</td><td>Linear gradient fill, as Ink/Stitch sews it. The fill’s linear gradient is read with its stops, their colours and the transforms of its vector, from SVG and from VectorCraft’s paints. Rows square to the gradient’s vector, a row spacing apart and staggered, cover the region. Between 2 stops the rows go to the 2 colours in a fixed pattern that gives the second colour more of them towards its stop, and a transparent stop leaves its rows out. Each colour’s rows are routed as one fill, with the travel stitches on the outline, in the order of the stops. The underlay sews in the first stop’s colour. Without a gradient, the fill’s colour fades out along <code>angle</code>, with a warning</td><td>requirements written. TS-17B’s gradients sew in Ink/Stitch as in StitchCraft by every measure of the differential, a user page shows gradient fills in pictures, and the type is listed for MC-12</td></tr>
 <tr><td>M10.13</td><td>Auto-run routing, as Ink/Stitch’s Auto-Route Running Stitch routes, with M10.4’s function, which StitchCraft Auto-Route Running Stitch, a heavy filter of its own, calls in VectorCraft (<a href="#adr-0017-routing-is-one-engine-function-which-vectorcrafts-filters-and-lettering-call">ADR-0017</a>). Running stitches are split where they cross, and at their nearest points where 2 pass within 50 CSS pixels (13.2 mm) of each other, unless the user turns that off. The pieces are routed as M10.4 routes a satin’s pieces, between the same markers. A piece the route passes twice is sewn first as a plain running stitch underneath, without repeats or bean stitch. The pieces on top keep their settings, an even number of repeats lowered by 1. A jump longer than 0.75 mm is trimmed when the user asks</td><td>requirements written. TS-17C’s network of lines, routed by Ink/Stitch’s tool and by StitchCraft’s function, sews alike by every measure of the differential. The filter routes it within a heavy filter’s budget in VectorCraft’s host, and a how-to page shows lines before and after in pictures</td></tr>
-<tr><td>M10.14 🧪</td><td>Per-layer ordering. Today an element’s top stitches follow its underlay at once. The step chooses how a design sets the underlays of a group of elements to sew before their top stitches, as a setting of the group or of each element. It also chooses how VectorCraft documents and SVG files keep the setting, whether automatic digitizing uses it, and what Ink/Stitch sews from such a file. Ink/Stitch has no such order at <code>d59c9ab</code>, and its experimental sew stack, not planned here, sews each element’s layers one after another</td><td>Decision recorded in the design</td></tr>
-<tr><td>M10.15</td><td>Per-layer ordering, as M10.14 decides. Assembly sews the underlays of the elements set for it first, in their order, and then their top stitches, joined by its travel, jumps and locks. Each stitch already has its role, underlay or top</td><td>requirements written. TS-17C sews 2 satin columns that cross, their underlays first, and the user page shows it. Ink/Stitch has no such order, and no differential case applies</td></tr>
+<tr><td>M10.14 ✅ 🧪</td><td>Per-layer ordering. Today an element’s top stitches follow its underlay at once. The step chooses how a design sets the underlays of a group of elements to sew before their top stitches, as a setting of the group or of each element. It also chooses how VectorCraft documents and SVG files keep the setting, whether automatic digitizing uses it, and what Ink/Stitch sews from such a file. Ink/Stitch has no such order at <code>d59c9ab</code>, and its experimental sew stack, not planned here, sews each element’s layers one after another</td><td>Decision recorded in the design, <a href="#adr-0018-underlays-first-is-a-setting-of-each-element-shared-by-runs-of-elements-in-one-thread">ADR-0018</a>: <code>underlays_first</code>, a toggle every stitch type shares, StitchCraft’s own and off by default. Consecutive elements that set it and sew in one thread form a run, which a trim or a stop ends, and a run sews all its underlays before its top stitches, each layer with its own neighbours. VectorCraft documents keep it in the objects’ effects, a group’s effect giving it to every path in the group, and SVG files as <code>inkstitch:underlays_first</code> on each shape, which Ink/Stitch doesn’t read. Automatic digitizing and lettering don’t set it (2026-11-03)</td></tr>
+<tr><td>M10.15</td><td>Per-layer ordering, as <a href="#adr-0018-underlays-first-is-a-setting-of-each-element-shared-by-runs-of-elements-in-one-thread">ADR-0018</a> decided (<a href="#underlays-first">underlays first</a>). The registry declares <code>underlays_first</code> among the settings every stitch type shares, off by default and StitchCraft’s own, so each stitch family’s dialog in VectorCraft shows it, and an SVG shape keeps it as an <code>inkstitch:</code> attribute. Consecutive elements that set it and sew in one thread form a run, which ends after a trim or a stop. A run of 2 or more sews its elements’ underlays in their order, then their top stitches in the same order. The generators sew an element’s underlay and its top apart, each from the needle before it to what the next layer offers, from one reading of the element and within its budget. Assembly tags the underlays’ stitches underlay, and puts the last element’s trim or stop after its top stitches. A note names an element whose setting joins no run</td><td>requirements written, and a design without the setting plans as before, every golden file unchanged. TS-17C sews 2 satin columns of one thread that cross, as drawn beside the same 2 with their underlays first, and the user page shows them. Ink/Stitch has no such order, and no differential case applies. The differential’s file of TS-17C leaves that pair out</td></tr>
 <tr><td>MC-12 🧵</td><td><strong>TS-17A</strong>, <strong>TS-17B</strong> and <strong>TS-17C</strong> (samplers of cross stitch, of the new fills, and of the ripples and routing tools); kit: <code>stitch testsheet</code></td><td>report filed; the new types’ defaults confirmed</td></tr>
 </tbody>
 </table>
@@ -15200,7 +15436,7 @@ middle of the artboard (<code>REQ-VC-015</code>). A checkpoint can so sew a shee
 <tr><td><strong>TS-16</strong> An Ink/Stitch file (M8)</td><td>A design written as Ink/Stitch writes a file, which <code>stitch plan</code> reads, each step of M8 drawing its part. Its fill and its satin column start and end at Ink/Stitch’s commands. From M8.4 a red fill 40 × 30 mm sews from its top-right corner to its bottom-left one, and a blue satin column 40 mm long starts in its middle and ends three quarters along. From M8.5 a green fill is cut by its clip path, a circle, to a quarter of a disc, and a black zigzag running stitch by a U-shaped one into 2 pieces. From M8.8 the origin lies off the design’s middle, on the blue column’s top edge 10 mm in from its left end, and a stop after the blue column sends the frame to a stop position 20 mm right of the fill and 10 mm above it. From M8.9 the file turns the design right on export, about its origin, so its first 4 parts sew 100 mm wide and 40 mm tall. From M8.10 a clone of the red fill, turned 45° right, sews after them, in red, below the fill once the design is turned: its rows turn with it, and it starts and ends at the corners turned from the fill’s. From M8.13 2 black lines 40 mm long sew last, above the rest once the design is turned, each locked at both ends with a custom lock drawn as a path and trimmed after: straight lines and a curve at 100 %, and lines and an arc at 150 %. It is sewn beside the PES file the differential’s Ink/Stitch writes of it</td><td>Where each element starts and ends, against its commands. Whether the clipped edges sew where the clip path cuts them, and the clone’s rows lie at its turned angle. Do the drawn locks hold when the tail is pulled? Whether the machine puts the origin or the design’s middle at the hoop’s centre, where the frame waits at the stop, and whether the design sews turned right about its origin. Every difference between the 2 sew-outs</td><td>MC-11</td></tr>
 <tr><td><strong>TS-17A</strong> Cross stitch (M10)</td><td>Cross stitch fills (M10.1, M10.2), drawn before MC-12, each trimmed after, a row to a thread, every sample on the canvas’s grid. From M10.1, in red, squares 24 mm wide of simple crosses on grids of 2 and 3 mm, with 2 and 4 threads. Below them in blue, the 2 mm square with 2 threads and the 3 mm one with 4, flipped, and a K 24 mm tall drawn as Ink/Stitch’s cross-stitch fonts draw their letters, on a 2 mm grid with 2 threads, grown by 0.1 mm, its slanted edges cutting their cells in half (114 × 54 mm). M10.2 adds squares of half, upright, dense upright, double and Smyrna crosses, and simple crosses on a grid turned 30°</td><td>Whether every cross’s top diagonal lies the same way, and whether the stitches through the cells’ middles show. Fabric between the crosses at 2 and 4 threads, and the grid that reads best at the letter’s size. Whether the half crosses’ travel stitches show on their edges, and how the layers of the double and Smyrna crosses look. The time the sheet takes</td><td>MC-12</td></tr>
 <tr><td><strong>TS-17B</strong> New fills (M10)</td><td>Tartan, guided and linear gradient fills (M10.6, M10.7, M10.9, M10.10, M10.12), drawn before MC-12, each trimmed after. Tartans 40 mm square, their setts mirrored at the ends or repeated, one with a weft that differs from its warp and one with stripes narrow enough to sew as runs, beside herringbones 3 mm wide. Leaves filled along an S-shaped guide, copied, offset and buffered. Rectangles in gradients of 2 and 3 stops, one of them transparent</td><td>Whether a tartan’s warp and weft read as a weave and its runs lie flat on its fills, and how its herringbone turns. The spacing of the guided rows round the guide’s bends, and where the copied rows crowd. Whether a gradient’s colours blend with no step between its sections, and whether the transparent stop leaves a clean gap. Colour changes, jumps and time</td><td>MC-12</td></tr>
-<tr><td><strong>TS-17C</strong> Ripples and routing (M10)</td><td>Ripple stitches (M10.8, M10.11), drawn before MC-12, along a column of rails and rungs, from an open line towards a target point and from a closed line spiralling in. Ripples along a guide line and closed lines on a satin guide, beside a ripple with a grid. The routing tools (M10.4, M10.13): satin letters as drawn beside the same letters after auto-satin routing, and a network of running stitches as drawn beside it after auto-run routing. 2 satin columns that cross, their underlays first (M10.15)</td><td>Whether the ripples’ lines keep their spacing, and how their joins look. Jumps, trims and time on the routed halves against the halves as drawn, and whether the runs under the satins show. Whether the crossing columns, their underlays sewn first, lie flatter than as drawn</td><td>MC-12</td></tr>
+<tr><td><strong>TS-17C</strong> Ripples and routing (M10)</td><td>Ripple stitches (M10.8, M10.11), drawn before MC-12, along a column of rails and rungs, from an open line towards a target point and from a closed line spiralling in. Ripples along a guide line and closed lines on a satin guide, beside a ripple with a grid. The routing tools (M10.4, M10.13): satin letters as drawn beside the same letters after auto-satin routing, and a network of running stitches as drawn beside it after auto-run routing. 2 satin columns of one thread that cross, as drawn beside the same 2 with their underlays first (M10.15)</td><td>Whether the ripples’ lines keep their spacing, and how their joins look. Jumps, trims and time on the routed halves against the halves as drawn, and whether the runs under the satins show. Whether the crossing columns, their underlays sewn first, lie flatter than as drawn</td><td>MC-12</td></tr>
 </tbody>
 </table>
 </div>
