@@ -251,9 +251,11 @@ Where the pairing leaves stitches leaning far along the column, `SC-W0208` names
 ([Leaning and long stitches](#leaning-and-long-stitches)).
 
 A ripple stitch along a column reads its rails and rungs as a satin column does, with the satin column's
-defaults. Its lines run through pairs of points placed in each section as the top stitches' pairs are, every
-`running_stitch_tolerance_mm`, with no compensation and nothing at random
-([ripple stitch](strokes.md#ripple-stitch-m108)).
+defaults but for the ripple's own `reverse_rails` and `swap_satin_rails`. Its lines run through pairs of
+points placed in each section as the top stitches' pairs are, every `running_stitch_tolerance_mm`, with no
+compensation and nothing at random. A satin guide's copies lie on such pairs too, and its middle is measured
+through pairs moved in to the middle of the column, half its width from each rail
+([ripple stitch](strokes.md#ripple-stitch-m108-m1011)).
 
 ## Compensation
 

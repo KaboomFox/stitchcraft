@@ -93,6 +93,20 @@ deviation = "DEV-RUN-002"
 types = ["ripple_stitch"]
 within_mm = 0.3
 
+# Guided ripples whose copies of a small curved line grow as they go round a guide, as the Ondulamarif fonts
+# draw a few of their signs: each program's running stitch places the line's needle points its own way, and
+# the copies, scaled up, carry the difference out with them. Medium's and XL's period is 56.0 × 32.4 mm here
+# and 55.2 × 32.2 mm in Ink/Stitch, XL's º 45.8 × 37.8 mm and 44.6 × 37.6 mm, each program's needle points
+# within 1.2 mm of the other's stitches. Drawn with a square in place of its line, the period sews the same 593
+# needle points in both programs, and the º the same 414, their locks aside.
+[[excuse]]
+measures = ["stitches", "size", "overlap"]
+deviation = "DEV-RUN-002"
+types = ["ripple_stitch"]
+fonts = ["ondulamarif_Medium", "ondulamarif_XL"]
+glyphs = [".", "º", "%"]
+within_mm = 0.6
+
 # A move-to with nothing drawn after it, where Ink/Stitch sews a needle point and StitchCraft nothing: checked
 # by leaving such needle points out of Ink/Stitch's file, with the jumps and the trim that lead to them. Kum
 # Tsoan relief's V ends a path with one, 24 mm above the glyph, and its size is 64.4 × 91.4 mm in Ink/Stitch.
@@ -197,14 +211,3 @@ measures = ["stitches"]
 deviation = "DEV-FILL-030"
 fonts = ["colorful"]
 glyphs = ["F"]
-
-# Known differences: follow-up work, not yet explained by the ledger or fixed.
-
-# Ripple stitches along a guide line, which StitchCraft leaves out (SC-W0802): each ripple shrinks to its target
-# point, where Ink/Stitch moves the copies of its line along the guide. The Ondulamarif fonts draw their
-# punctuation and the accents of their XL letters so.
-[[known]]
-measures = ["stitches", "size", "overlap"]
-follow_up = "M10.11 sews ripples along a guide line"
-codes = ["SC-W0802"]
-saying = "guide line"
