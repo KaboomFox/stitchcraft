@@ -22,7 +22,7 @@ fn req_svg_001_an_inkscape_document_in_millimetres() {
     assert_eq!(ids(&svg), ["svg:rect1:fill", "svg:rect1:stroke", "svg:circle1:fill", "svg:path1:stroke", "svg:ellipse1:fill"]);
     let e = svg.design.elements();
     // The rectangle, moved by its layer's translate(10,5): a fill and a stroke along the same outline.
-    assert_eq!(e[0].shape, Shape::Fill { path: e[1].shape.path().clone(), rule: FillRule::NonZero });
+    assert_eq!(e[0].shape, Shape::Fill { path: e[1].shape.path().clone(), rule: FillRule::NonZero, gradient: None });
     assert!(matches!(e[1].shape, Shape::Stroke { .. }));
     all_at(&ends(&e[0])[0], &[(10.0, 5.0), (40.0, 5.0), (40.0, 25.0), (10.0, 25.0)]);
     assert!(e[0].shape.path().subpaths[0].closed);

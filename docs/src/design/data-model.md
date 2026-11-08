@@ -80,7 +80,20 @@ pub struct DesignSettings {          // since M3.8; read from an Ink/Stitch file
 
 pub enum Shape {
     Stroke { path: Path, width: Mm, join: Join, cap: Cap },  // an outline: running stitch and the other stroke methods
-    Fill { path: Path, rule: FillRule },           // an area: its boundary, and which parts are inside
+    Fill { path: Path, rule: FillRule, gradient: Option<Gradient> },  // an area: its boundary, which parts are inside,
+                                                                      // and since M10.12 its linear gradient
+}
+
+pub struct Gradient {                // since M10.12: a fill's linear gradient, placed by its host
+    pub start: Point,                // where offset 0 lies, in the design's millimetres, every transform applied
+    pub end: Point,                  // where offset 1 lies
+    pub stops: Vec<GradientStop>,    // 2 or more, in order
+}
+
+pub struct GradientStop {
+    pub offset: f64,                 // from 0 to 1, never before the stop before
+    pub colour: Rgb,
+    pub opacity: f64,                // from 0 to 1; 0 is transparent
 }
 
 pub enum Join { Miter { limit: f64 }, Round, Bevel }   // a stroke's corners; Join::UNSET is a miter limited at 5
@@ -120,12 +133,31 @@ Documents repeat ids, so adapters make theirs unique with `stitchcraft_core::Lab
 label repeated in a document `~2`, `~3` and so on, in every adapter alike.
 
 Invariants, checked by `Design::new`: element ids are unique, and every point is finite and within
-±10,000 mm, as far as machine-file coordinates go. No stroke is narrower than 0, a miter limit is a
-finite number of at least 1, and the settings' lengths are not negative. Adapters drop what they cannot
+±10,000 mm, as far as machine-file coordinates go, a gradient's start and end among them. No stroke is
+narrower than 0, a miter limit is a finite number of at least 1, and the settings' lengths are not negative.
+A gradient has 2 stops or more, its offsets and opacities from 0 to 1, each offset at or after the one before. Adapters drop what they cannot
 represent with a diagnostic of their own, so a failed check is a bug in the adapter (`SC-E0009`).
-`Design::moved` gives the design moved by an offset, every point of its elements and its origin and stop
-position, checked the same way. VectorCraft's Test Sheet filter draws a test sheet in the middle of the
+`Design::moved` gives the design moved by an offset, every point of its elements, their gradients' among
+them, and its origin and stop position, checked the same way. VectorCraft's Test Sheet filter draws a test sheet in the middle of the
 artboard with it (`REQ-VC-015`).
+
+**Gradients.** A fill painted with a linear gradient keeps it in its shape (M10.12): the gradient's start
+and end, and its stops, each an offset, a colour and an opacity. A linear gradient fill sews its colours
+([gradient fill](algorithms/gradient.md)), and every other method sews the element's thread, which the host
+reads as the first colour a viewer shows of it. The host applies the gradient's own units and transforms and
+the shape's, and gives the 2 points in the design's millimetres, as it gives the path. So the engine reads no
+host's paint rules, and the points move with the path. Whatever builds a fill anew from another, a design
+moved or a sheet's clone of a fill, must say what becomes of its gradient, and the type makes it say so.
+These other places were weighed and left:
+
+- A field of the element beside its thread. A stroke has no use for it, and code that copies an element
+  with `..element.clone()` and moves its path would keep its gradient where it was, without a word.
+- A kind of shape of its own beside `Fill`. Every reader of a fill's area would then have 2 kinds to read.
+- A setting among the element's parameters. The registry, the dialogs and the files' settings would hold a
+  paint, and no host keeps one there.
+- The gradient as its host writes it, with its units and its transforms, placed by the engine. Each host
+  has rules of its own for that, as SVG's bounding box units and VectorCraft's placement fitted to a box,
+  and the adapters already apply them to paths.
 
 **Commands.** Ink/Stitch's start, end and target commands, and VectorCraft's start, end and target markers,
 are an element's hints (M8.4, the target marker M10.8), its points checked and moved with the rest. Clip

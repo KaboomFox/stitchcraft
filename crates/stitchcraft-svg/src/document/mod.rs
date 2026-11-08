@@ -743,7 +743,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         for (part, colour) in parts {
             let Some(colour) = colour else { continue };
             let shape = if part == "fill" {
-                Shape::Fill { path: path.clone(), rule: style.fill_rule }
+                Shape::Fill { path: path.clone(), rule: style.fill_rule, gradient: None }
             } else {
                 let Some(width) = self.stroke_width(style, map) else {
                     self.unusable(label, format!("The stroke of `{label}` cannot be stitched: it is too wide to measure. It is left out."));

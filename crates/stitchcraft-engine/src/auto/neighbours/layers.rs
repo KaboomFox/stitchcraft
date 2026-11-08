@@ -171,7 +171,7 @@ pub(in crate::auto) fn flattened<'d>(design: &'d Design, rules: &[Option<AutoPar
             Given::Drawn => sewing.push((index, Cow::Borrowed(element))),
             Given::Region { parts, hidden } => {
                 flattened += usize::from(hidden && !(background && index == 0));
-                let shape = Shape::Fill { path: outline(&parts), rule: FillRule::NonZero };
+                let shape = Shape::Fill { path: outline(&parts), rule: FillRule::NonZero, gradient: None };
                 sewing.push((index, Cow::Owned(Element { shape, ..element.clone() })));
             }
         }
@@ -190,7 +190,7 @@ fn id(elements: &[Element], index: usize) -> Option<ElementId> {
 /// to join, or that bounds no area, is no layer: it is sewn as it is drawn, and its fill says what it says
 /// of it then.
 fn layer(element: &Element, rules: Option<&AutoParams>, budget: &Budget) -> Option<Layer> {
-    let (true, Some(rules), Shape::Fill { path, rule }) = (element.automatic, rules, &element.shape) else { return None };
+    let (true, Some(rules), Shape::Fill { path, rule, .. }) = (element.automatic, rules, &element.shape) else { return None };
     let drawn = parts_of(path, *rule, &mut budget.meter()).ok()?.ok().filter(|parts| !parts.is_empty())?;
     let bounds = envelope(&drawn)?;
     Some(Layer { rules: rules.clone(), shown: drawn.clone(), drawn, bounds, closed: Vec::new(), unfound: false })

@@ -53,10 +53,10 @@ impl Drawing {
         let Some(source) = self.elements.iter().find(|e| e.id == of) else {
             return Err(SheetError::Said(format!("{of} is not drawn before its clone")));
         };
-        let Shape::Fill { path, rule } = &source.shape else { return Err(SheetError::Said(format!("{of} is not a fill"))) };
+        let Shape::Fill { path, rule, gradient } = &source.shape else { return Err(SheetError::Said(format!("{of} is not a fill"))) };
         let [a, b, c, d, e, f] = map;
         let moved = |p: Point| Point::new(a * p.x() + c * p.y() + e, b * p.x() + d * p.y() + f);
-        let shape = Shape::Fill { path: path.map(moved)?, rule: *rule };
+        let shape = Shape::Fill { path: path.map(moved)?, rule: *rule, gradient: gradient.as_ref().map(|gradient| gradient.map(moved)).transpose()? };
         let mut params = source.params.clone();
         params.set(ANGLE, angle);
         let id = ElementId::new(format!("{}:{name}", self.sheet))?;
@@ -172,7 +172,7 @@ impl Drawing {
     /// A fill named `name` of the area its closed `rings` bound by the even-odd rule, so a ring inside
     /// another is a hole whichever way it runs, sewn with `thread` and the Ink/Stitch `params`.
     pub fn fill(&mut self, name: &str, rings: Vec<Subpath>, thread: &Thread, params: &[(&str, &str)]) -> Result<(), SheetError> {
-        self.add(name, Shape::Fill { path: Path { subpaths: rings }, rule: FillRule::EvenOdd }, thread, params)
+        self.add(name, Shape::Fill { path: Path { subpaths: rings }, rule: FillRule::EvenOdd, gradient: None }, thread, params)
     }
 
     /// The shapes of `picture`, each named after the picture with `half` before it

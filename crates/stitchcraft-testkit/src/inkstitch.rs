@@ -343,7 +343,7 @@ mod tests {
             &RED,
             &[("fill_underlay", "false")],
         );
-        let square = Element { shape: Shape::Fill { path: square.shape.path().clone(), rule: FillRule::EvenOdd }, ..square };
+        let square = Element { shape: Shape::Fill { path: square.shape.path().clone(), rule: FillRule::EvenOdd, gradient: None }, ..square };
         let curve = Path {
             subpaths: vec![Subpath {
                 start: p(30.0, 15.0),

@@ -34,7 +34,7 @@ fn places(pieces: &[[(f64, f64); 2]]) -> Vec<(f64, f64)> {
 fn req_route_009_auto_run_takes_strokes_of_every_method_and_leaves_the_rest_as_they_are() {
     let square = Path { subpaths: vec![Subpath { closed: true, ..line(&[(0.0, 0.0), (5.0, 0.0), (5.0, 5.0)]) }] };
     let elements = [
-        element("fill", Shape::Fill { path: square, rule: FillRule::EvenOdd }, &[]),
+        element("fill", Shape::Fill { path: square, rule: FillRule::EvenOdd, gradient: None }, &[]),
         bar("column", (0.0, 10.0), 10.0),
         Element { automatic: true, ..stroke("auto", &[(0.0, 20.0), (5.0, 20.0)], &[]) },
         stroke("method", &[(0.0, 30.0), (5.0, 30.0)], &[("stroke_method", "sideways")]),
