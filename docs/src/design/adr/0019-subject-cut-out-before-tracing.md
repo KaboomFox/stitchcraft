@@ -85,6 +85,15 @@ The middle of the photo lies on the turf beside the dog's leg, and MobileSAM cut
 did given the whole photo as the box. On the turf photo the whole photo as the box gave the turf too.
 GrabCut from IS-Net's map lost the leg on the photo's left in each photo, at an IoU of 0.879 on the turf.
 
+PhotoCraft, VectorCraft's sibling app for photos, has Remove Background, which
+`photocraft-cli run PHOTO --cmd layer.removeBackground --out FILE` runs without a window. It finds the
+subject without a model, by saliency and GrabCut, and its code says it works for a distinct object on a
+fairly plain background (`crates/algo/src/segment/subject.rs`, `main` at `535ea2d`). Called as `stitch`
+calls VectorCraft to trace, it wouldn't need a model or a download, so the owner asked for it to be tried.
+PhotoCraft 0.21.0 ran it on the 2 photos in 1.0 to 1.1 s each and kept the dog at an IoU of 0.594 on turf,
+with the chair legs and the yellow line beside it, and of 0.233 running, with most of the yard behind the
+dog. So `stitch` runs models of its own instead ([below](#decision)).
+
 tract ran the chosen models in a Rust program of its own on the same 2 photos, from the JPEG file to the
 PNG file of the cut-out, with one thread:
 
