@@ -1821,6 +1821,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- CI: the jobs that fetch VectorCraft's pinned release or wasmtime take its archive from the Actions cache,
+  so that an outage of GitHub's downloads doesn't fail them. On 8 November GitHub answered release
+  downloads with 504s and reset connections for an hour, and the 3 jobs that run VectorCraft's pinned
+  release failed on every pull request. `gates` failed later that day on a 504 from wasmtime's release. A
+  pull request takes the copy a run on `main` kept, under the pinned version and SHA-256, and checks it like
+  a download. curl also tries a download again after any error, every 10 seconds for a minute. Before, it
+  tried a 504 again 3 times within 7 seconds, and a reset connection not at all.
 - An auto-run route's run under the others keeps its stroke's `underlays_first` (`REQ-ROUTE-011`), as a run
   under a satin column keeps its column's. It took only the stroke's running stitch length and tolerance,
   or its manual stitch. An element on top that set it could then sit alone between 2 runs that didn't, and
