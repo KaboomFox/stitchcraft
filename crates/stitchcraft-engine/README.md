@@ -52,7 +52,8 @@ may turn. Since M10.6 a tartan fill weaves the warp and weft of its sett in rows
 routed as a tatami fill's rows after the same underlay and sewn in its own thread, its narrow stripes as
 runs (`generators::tartan`). Since M10.8 a ripple stitch sews lines that run along a satin column, read as
 a satin column reads its rails and rungs, or copies of a line that shrink to its target point, as one
-running stitch (`generators::ripple`).
+running stitch (`generators::ripple`). Since M10.11 the copies can follow a guide line or stand between a
+satin guide's rails. A grid may cross them. Clips cut the ripple and route its pieces as a tatami fill's rows.
 Since M13.1 a shape without settings, read with `--auto`, is digitized automatically before anything else
 (`auto`). A line no wider than the design's narrowest satin stroke runs, a line up to 7 mm wide becomes
 satin columns along its centre line, and a wider line becomes the tatami fill of the area it paints
