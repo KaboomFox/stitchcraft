@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-10a8c3e2.js";
+            window.path_to_searchindex_js = "../searchindex-7c1797ad.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-58fb2aa1.js"></script>
@@ -199,7 +199,14 @@ each). A tartan or a gradient fill sews in more threads than its element’s own
 run’s thread in <code>Stitched::colours</code>, with whether the run ends a colour block, which a trim follows when
 <code>trim_after</code> is on. The sewing order reads its threads from the element’s shape and settings, in
 <code>generate::colours</code>
-(<a href="../design/engine-pipeline.html#several-threads-in-one-element">several threads in one element</a>).</li>
+(<a href="../design/engine-pipeline.html#several-threads-in-one-element">several threads in one element</a>).
+Give the type every setting that Ink/Stitch gives it, the shared ones too, such as
+<code>max_stitch_length_mm</code> or the underlay’s. Once the engine sews the type, <code>cargo xtask docs --check</code>
+fails on each registered row of the <a href="../design/inkstitch-compat-contract.html">compatibility contract</a>
+that gives the type its key while the key’s declaration leaves the type out. Add the type to that
+declaration’s stitch types. Where Ink/Stitch’s sewing of the type doesn’t read the setting, give the
+reason in an <code>[[unapplied]]</code> entry of <code>conformance/inkstitch-params.toml</code> instead
+(<a href="../design/params.html#completeness-req-prm-001">the contract check</a>).</li>
 <li><strong>Make the cases pass.</strong> Run <code>cargo xtask conformance --filter &lt;area&gt;</code>; switch the requirements to
 <code>active</code>.</li>
 <li><strong>Docs.</strong> <code>cargo xtask docs</code> regenerates the parameter pages. Write the user-facing page in

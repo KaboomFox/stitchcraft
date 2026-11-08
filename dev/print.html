@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-10a8c3e2.js";
+            window.path_to_searchindex_js = "searchindex-7c1797ad.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-58fb2aa1.js"></script>
@@ -6725,6 +6725,15 @@ the engine’s <code>req_prm_001_every_registered_parameter_is_complete</code> t
 be in the <a href="#inkstitch-compatibility-contract">compatibility contract</a> with a compatible type and the default
 Ink/Stitch sews, and one of StitchCraft’s own must not take an Ink/Stitch key. Deviations must name ledger
 entries, and the lock and method identifiers must equal Ink/Stitch’s.</p>
+<p>The contract check also runs the other way. A row of the contract is registered when the registry
+declares its key for any of the row’s stitch types. Each stitch type of a registered row that the engine
+sews must then be one that a declaration of the key applies to. The engine sews the stitch types it plans
+without <code>SC-W0011</code>. A stitch type sewn as another is read as that one, as a legacy fill is read as a tatami
+fill (<code>DEV-FILL-014</code>). Ink/Stitch’s settings window shows some settings for a stitch type whose sewing
+doesn’t read them, and a deviation can leave a setting out. For those, an <code>[[unapplied]]</code> entry in
+<code>conformance/inkstitch-params.toml</code> names the stitch type and the keys, with the reason. An entry that
+excuses nothing fails the check, so the list can’t go stale. A row that the registry declares for none of
+its stitch types is planned, and the check leaves it out.</p>
 <h2 id="naming-rules"><a class="header" href="#naming-rules">Naming rules</a></h2>
 <ol>
 <li>
@@ -14095,10 +14104,13 @@ registry uses these names as its keys so files move between the tools unchanged
 <li><strong>Checked against:</strong> Ink/Stitch <code>main</code> at <code>d59c9ab</code> (2026-09-17). The last line counts the declarations.</li>
 <li><strong>Facts only:</strong> names, types, units, defaults and applicability. Ink/Stitch’s descriptions are GPL text
 and are not copied; StitchCraft’s own help text lives in the <a href="#parameter-registry">parameter registry</a>.</li>
-<li><strong>Machine-readable source:</strong> <code>conformance/inkstitch-params.toml</code>; this page is generated from it and
-from the parameter registry by <code>cargo xtask docs</code>, and <code>cargo xtask docs --check</code> fails if they disagree:
-a parameter declared with an Ink/Stitch origin must be listed here with a compatible type, and its
-default must be the value Ink/Stitch sews.</li>
+<li><strong>Machine-readable source:</strong> <code>conformance/inkstitch-params.toml</code>. <code>cargo xtask docs</code> generates this page
+from it and from the parameter registry, and <code>cargo xtask docs --check</code> fails if they disagree. A
+parameter declared with an Ink/Stitch origin must be listed here with a compatible type, and its default
+must be the value Ink/Stitch sews. In the other direction, a registered row’s parameter must apply to
+each stitch type of the row that StitchCraft sews, unless the section
+<a href="#settings-a-stitch-type-does-not-take">Settings a stitch type does not take</a> gives the reason. A
+stitch type sewn as another takes that one’s settings, as a legacy fill takes a tatami fill’s.</li>
 <li><strong>Default</strong> is the value Ink/Stitch’s settings window shows. For a few parameters its code sews another
 value when a file sets none, and the cell gives that value after the default, as in <code>0.1 (0.2 when unset)</code>. <code>—</code> means no default: the value is derived from another parameter or the shape.</li>
 <li><strong>StitchCraft</strong> says whether the <a href="#parameters-12">parameter registry</a> declares the
@@ -14306,6 +14318,20 @@ planned.</li>
 <tr><td><code>clone</code></td><td>toggle</td><td>—</td><td>true</td><td>clones</td><td>P2 (M8)</td><td>applied: off, the clone sews nothing, and is listed (<code>SC-I0805</code>)</td></tr>
 <tr><td><code>angle</code></td><td>float</td><td>deg</td><td>—</td><td>clones</td><td>P2 (M8)</td><td>applied: the angle of every fill the clone shows, in place of the one the clone turns it to</td></tr>
 <tr><td><code>flip_angle</code></td><td>boolean</td><td>—</td><td>false</td><td>clones</td><td>P2 (M8)</td><td>applied: reverses the angle of every fill the clone shows</td></tr>
+</tbody>
+</table>
+</div>
+<h2 id="settings-a-stitch-type-does-not-take"><a class="header" href="#settings-a-stitch-type-does-not-take">Settings a stitch type does not take</a></h2>
+<p>Ink/Stitch gives each stitch type here the settings beside it, and StitchCraft’s registry doesn’t, for the
+reason given. They are the <code>[[unapplied]]</code> entries of <code>conformance/inkstitch-params.toml</code>. Every other
+stitch type that StitchCraft sews takes the registered settings that its rows give it.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Element</th><th>Stitch type</th><th>Settings</th><th>Reason</th></tr>
+</thead>
+<tbody>
+<tr><td>fill</td><td><code>cross_stitch</code></td><td><code>fill_underlay</code>, <code>fill_underlay_angle</code>, <code>fill_underlay_row_spacing_mm</code>, <code>fill_underlay_max_stitch_length_mm</code>, <code>fill_underlay_inset_mm</code>, <code>fill_underlay_skip_last</code>, <code>underlay_underpath</code></td><td>Ink/Stitch’s settings window shows the underlay’s settings for every fill method, and its cross stitch sews no underlay. Its fill element’s <code>to_stitch_groups</code> sews the underlay for every method but <code>legacy_fill</code> and <code>cross_stitch</code>, and a cross stitch’s stitches come from <code>do_cross_stitch</code> alone (lib/elements/fill_stitch.py at d59c9ab). StitchCraft’s cross stitch sews no underlay either.</td></tr>
 </tbody>
 </table>
 </div>
@@ -16254,7 +16280,14 @@ each). A tartan or a gradient fill sews in more threads than its element’s own
 run’s thread in <code>Stitched::colours</code>, with whether the run ends a colour block, which a trim follows when
 <code>trim_after</code> is on. The sewing order reads its threads from the element’s shape and settings, in
 <code>generate::colours</code>
-(<a href="#several-threads-in-one-element">several threads in one element</a>).</li>
+(<a href="#several-threads-in-one-element">several threads in one element</a>).
+Give the type every setting that Ink/Stitch gives it, the shared ones too, such as
+<code>max_stitch_length_mm</code> or the underlay’s. Once the engine sews the type, <code>cargo xtask docs --check</code>
+fails on each registered row of the <a href="#inkstitch-compatibility-contract">compatibility contract</a>
+that gives the type its key while the key’s declaration leaves the type out. Add the type to that
+declaration’s stitch types. Where Ink/Stitch’s sewing of the type doesn’t read the setting, give the
+reason in an <code>[[unapplied]]</code> entry of <code>conformance/inkstitch-params.toml</code> instead
+(<a href="#completeness-req-prm-001">the contract check</a>).</li>
 <li><strong>Make the cases pass.</strong> Run <code>cargo xtask conformance --filter &lt;area&gt;</code>; switch the requirements to
 <code>active</code>.</li>
 <li><strong>Docs.</strong> <code>cargo xtask docs</code> regenerates the parameter pages. Write the user-facing page in
@@ -16290,8 +16323,11 @@ preset, or a group: VectorCraft 0.14 takes 256 parameters, 64 of them outside gr
 <li><strong>Regenerate docs:</strong> <code>cargo xtask docs</code> writes the reference page, the JSON Schema and the
 compatibility contract’s StitchCraft column, and checks the declaration against the contract. An
 Ink/Stitch parameter needs a compatible type and the default Ink/Stitch sews, and a deliberate
-difference needs an entry in <code>conformance/deviations.toml</code>. Add a before/after shot if the effect is
-visual.</li>
+difference needs an entry in <code>conformance/deviations.toml</code>. Its declaration must also apply to each
+stitch type that StitchCraft sews among those its contract rows give it, unless an <code>[[unapplied]]</code>
+entry in <code>conformance/inkstitch-params.toml</code> gives the reason
+(<a href="#completeness-req-prm-001">the contract check</a>). Add a before/after shot if the
+effect is visual.</li>
 <li><strong>Changing</strong> an existing parameter’s meaning, unit or default is a breaking change: add a migration
 and a case with old input, and a changelog line.</li>
 </ol>

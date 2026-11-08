@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-10a8c3e2.js";
+            window.path_to_searchindex_js = "../searchindex-7c1797ad.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-58fb2aa1.js"></script>
@@ -199,8 +199,11 @@ preset, or a group: VectorCraft 0.14 takes 256 parameters, 64 of them outside gr
 <li><strong>Regenerate docs:</strong> <code>cargo xtask docs</code> writes the reference page, the JSON Schema and the
 compatibility contract’s StitchCraft column, and checks the declaration against the contract. An
 Ink/Stitch parameter needs a compatible type and the default Ink/Stitch sews, and a deliberate
-difference needs an entry in <code>conformance/deviations.toml</code>. Add a before/after shot if the effect is
-visual.</li>
+difference needs an entry in <code>conformance/deviations.toml</code>. Its declaration must also apply to each
+stitch type that StitchCraft sews among those its contract rows give it, unless an <code>[[unapplied]]</code>
+entry in <code>conformance/inkstitch-params.toml</code> gives the reason
+(<a href="../design/params.html#completeness-req-prm-001">the contract check</a>). Add a before/after shot if the
+effect is visual.</li>
 <li><strong>Changing</strong> an existing parameter’s meaning, unit or default is a breaking change: add a migration
 and a case with old input, and a changelog line.</li>
 </ol>
