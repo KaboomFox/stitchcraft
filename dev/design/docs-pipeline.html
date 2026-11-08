@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-47462788.js";
+            window.path_to_searchindex_js = "../searchindex-2419d4b9.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-61f039c5.js"></script>
@@ -336,7 +336,9 @@ stall without failing. On 2026-11-01 its install ran for 49 minutes until it was
 takes under 2. So each <code>apt-get</code> has a time limit, 3 minutes to update the package lists and 5 to
 install, and an install that stalls or fails is tried again, 3 times in all. A desktop that can’t be
 installed fails its job with an error that says so. The jobs that use the action stop after 30 minutes,
-or 45 for the refresh, where GitHub’s limit is 6 hours.</p>
+or 45 for the refresh, where GitHub’s limit is 6 hours. The window probe and <code>shots-ui</code> take the pinned
+release’s archive from the Actions cache when a run kept it, as the
+<a href="compatibility-gate.html#level-b--end-to-end-slower-tens-of-minutes">compatibility gate</a> explains.</p>
 <p><strong>Screenshots: the same pixels, but for the frame timings.</strong> The window opens at 1440 × 900 pixels, drawn
 by llvmpipe, and a screenshot takes about 0.65 s. Above the status bar, screenshots of one window match
 to the pixel. The screenshots of two starts of the app match there too, and so did two runs on GitHub’s

@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-47462788.js";
+            window.path_to_searchindex_js = "../../searchindex-2419d4b9.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-61f039c5.js"></script>
@@ -248,8 +248,9 @@ Auto effect
 </ul>
 <h2 id="how-it-chooses-the-stitches"><a class="header" href="#how-it-chooses-the-stitches">How it chooses the stitches</a></h2>
 <p>Automatic digitizing chooses the stitches of each shape without settings. A shape with settings sews as they
-say. Each picture below shows shapes sewn as drawn, as a design sews without <code>--auto</code>, and then digitized
-automatically. <a href="../../design/image-to-embroidery.html">Image to embroidery</a> gives every rule in full.</p>
+say. The pictures below show shapes as they are drawn, and then digitized automatically. Without <code>--auto</code>,
+each of those shapes sews as one <a href="tatami-fill.html">tatami fill</a>, whatever its width.
+<a href="../../design/image-to-embroidery.html">Image to embroidery</a> gives every rule in full.</p>
 <h3 id="stitches-by-width"><a class="header" href="#stitches-by-width">Stitches by width</a></h3>
 <p>A shape’s width at a place is the diameter of the largest circle that fits inside it there:</p>
 <div class="table-wrapper">
@@ -272,11 +273,11 @@ pictures are drawn from <code>docs/fixtures/widths.svg</code>, a line 0.6 mm wid
 16 mm across, each traced as an area.</p>
 <p><strong>As drawn</strong></p>
 <!-- shot: auto-widths-drawn -->
-<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/auto-widths-drawn.png" alt="A blue line 0.6 mm wide, a red letter C 3 mm wide and a gold disc 16 mm across, each traced as an area and sewn as drawn: a tatami fill each"><span class="img-wrapper"><img src="../../images/generated/auto-widths-drawn.png" alt="A blue line 0.6 mm wide, a red letter C 3 mm wide and a gold disc 16 mm across, each traced as an area and sewn as drawn: a tatami fill each"></span></label></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/auto-widths-drawn.png" alt="3 shapes as drawn, in flat colours in a row on white. On the left lies a blue line 18 mm long and 0.6 mm wide. Beside it are a red letter C 16 mm tall and 3 mm wide, open to the right, and a gold disc 16 mm across."><span class="img-wrapper"><img src="../../images/generated/auto-widths-drawn.png" alt="3 shapes as drawn, in flat colours in a row on white. On the left lies a blue line 18 mm long and 0.6 mm wide. Beside it are a red letter C 16 mm tall and 3 mm wide, open to the right, and a gold disc 16 mm across."></span></label></p>
 <!-- /shot -->
 <p><strong>Digitized</strong></p>
 <!-- shot: auto-widths -->
-<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/auto-widths.png" alt="The same shapes digitized automatically. The line runs along its middle, tripled, and the C sews as a satin column between its edges. The disc is still a tatami fill."><span class="img-wrapper"><img src="../../images/generated/auto-widths.png" alt="The same shapes digitized automatically. The line runs along its middle, tripled, and the C sews as a satin column between its edges. The disc is still a tatami fill."></span></label></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/auto-widths.png" alt="The same shapes digitized automatically. The line runs along its middle, tripled, and the C sews as a satin column between its edges. The disc sews as a tatami fill."><span class="img-wrapper"><img src="../../images/generated/auto-widths.png" alt="The same shapes digitized automatically. The line runs along its middle, tripled, and the C sews as a satin column between its edges. The disc sews as a tatami fill."></span></label></p>
 <!-- /shot -->
 <h3 id="shapes-in-parts"><a class="header" href="#shapes-in-parts">Shapes in parts</a></h3>
 <p>A shape can be broad in one place and narrow in another, such as a letter with thin serifs or a balloon
@@ -285,15 +286,15 @@ the fill. The pictures are drawn from <code>docs/fixtures/parts.svg</code>, a lo
 balloon on a string 0.8 mm wide, each one area.</p>
 <p><strong>As drawn</strong></p>
 <!-- shot: auto-parts-drawn -->
-<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/auto-parts-drawn.png" alt="A red lollipop, a disc 14 mm across on a stick 2.4 mm wide, and a blue balloon 12 mm by 15 mm on a string 0.8 mm wide, each one area, sewn as drawn: a tatami fill each"><span class="img-wrapper"><img src="../../images/generated/auto-parts-drawn.png" alt="A red lollipop, a disc 14 mm across on a stick 2.4 mm wide, and a blue balloon 12 mm by 15 mm on a string 0.8 mm wide, each one area, sewn as drawn: a tatami fill each"></span></label></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/auto-parts-drawn.png" alt="2 shapes as drawn, side by side in flat colours on white, each one area. On the left is a red lollipop, a disc 14 mm across on a stick 2.4 mm wide. On the right is a blue balloon 12 mm wide and 15 mm tall on a string 0.8 mm wide. The stick and the string end level at the bottom."><span class="img-wrapper"><img src="../../images/generated/auto-parts-drawn.png" alt="2 shapes as drawn, side by side in flat colours on white, each one area. On the left is a red lollipop, a disc 14 mm across on a stick 2.4 mm wide. On the right is a blue balloon 12 mm wide and 15 mm tall on a string 0.8 mm wide. The stick and the string end level at the bottom."></span></label></p>
 <!-- /shot -->
 <p><strong>Digitized</strong></p>
 <!-- shot: auto-parts -->
-<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/auto-parts.png" alt="The same shapes digitized automatically. The discs are tatami fills as before, and the stick sews as a satin column and the string as a triple run, each into its fill."><span class="img-wrapper"><img src="../../images/generated/auto-parts.png" alt="The same shapes digitized automatically. The discs are tatami fills as before, and the stick sews as a satin column and the string as a triple run, each into its fill."></span></label></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/auto-parts.png" alt="The same shapes digitized automatically. The lollipop’s disc and the balloon sew as tatami fills. The stick sews as a satin column and the string as a triple run, each into its fill."><span class="img-wrapper"><img src="../../images/generated/auto-parts.png" alt="The same shapes digitized automatically. The lollipop’s disc and the balloon sew as tatami fills. The stick sews as a satin column and the string as a triple run, each into its fill."></span></label></p>
 <!-- /shot -->
 <h3 id="neighbours"><a class="header" href="#neighbours">Neighbours</a></h3>
-<p>The shapes of a traced picture meet, and sewn as drawn they sew badly there. Digitizing mends that in 4
-steps:</p>
+<p>The shapes of a traced picture meet, and sewn without <code>--auto</code> they sew badly there. Digitizing mends that
+in 4 steps:</p>
 <ol>
 <li><strong>The background.</strong> The lowest shape, when it covers the whole picture with the other shapes drawn
 on it, is the background, the fabric’s own colour, and is left out (<code>SC-W0906</code>, and
@@ -312,11 +313,12 @@ fabric between them once sewn. Each area reaches 0.4 mm under the shapes sewn af
 touches (<code>SC-I0904</code>, <code>auto_overlap_mm</code>). An area filled whole under its details is cut away under them,
 0.4 mm inside their edges, so that each place sews once.</li>
 </ol>
-<p>The pictures are drawn from <code>docs/fixtures/traced-badge.svg</code>, a badge traced on white: as drawn, the white
-is sewn too.</p>
+<p>The pictures are drawn from <code>docs/fixtures/traced-badge.svg</code>, a badge traced on white with its colours
+abutting. Without <code>--auto</code>, the white round the badge sews too, and each colour sews up to the next with no
+overlap.</p>
 <p><strong>As drawn</strong></p>
 <!-- shot: traced-badge-drawn -->
-<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/traced-badge-drawn.png" alt="The traced badge sewn as drawn. Its white background sews too, and each colour is a tatami fill over the colours under it."><span class="img-wrapper"><img src="../../images/generated/traced-badge-drawn.png" alt="The traced badge sewn as drawn. Its white background sews too, and each colour is a tatami fill over the colours under it."></span></label></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/traced-badge-drawn.png" alt="The traced badge as drawn, 60 mm square, in 4 flat colours that meet edge to edge. White fills the square round a red disc 50 mm across. A blue square 20 mm wide lies in the middle of the disc, and a gold disc 10 mm across in the middle of the blue square."><span class="img-wrapper"><img src="../../images/generated/traced-badge-drawn.png" alt="The traced badge as drawn, 60 mm square, in 4 flat colours that meet edge to edge. White fills the square round a red disc 50 mm across. A blue square 20 mm wide lies in the middle of the disc, and a gold disc 10 mm across in the middle of the blue square."></span></label></p>
 <!-- /shot -->
 <p><strong>Digitized</strong></p>
 <!-- shot: auto-badge -->

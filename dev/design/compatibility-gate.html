@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-47462788.js";
+            window.path_to_searchindex_js = "../searchindex-2419d4b9.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-61f039c5.js"></script>
@@ -244,7 +244,11 @@ the costs.</li>
 <p>Uses VectorCraft’s own command line, <code>vectorcraft-cli run</code>. For <code>stable</code> and <code>prerelease</code> it is the
 binary in the release’s Linux archive (VectorCraft’s <code>packaging/linux/package.sh</code> puts it there). The
 archive is checked against the SHA-256 the pins file records for the pinned release, or against the one
-the release’s <code>SHA256SUMS.txt</code> lists for a newer release. For the branch tracks it is built from the
+the release’s <code>SHA256SUMS.txt</code> lists for a newer release. curl tries a download again after any error,
+every 10 seconds for a minute, so a short outage of GitHub’s downloads passes. For a longer one, as on
+8 November 2026, the jobs that run the pinned release keep its archive in the Actions cache under its
+version and SHA-256 (<code>.github/actions/vectorcraft-archive</code>), and a pull request uses the copy a run on
+<code>main</code> kept, checked like a download. For the branch tracks it is built from the
 branch, with a cached target directory. <code>cargo xtask compat track &lt;track&gt; --ref &lt;tag|sha&gt;</code> runs both
 levels and writes the track’s result for the report, and <code>cargo xtask compat e2e</code> runs Level B alone.</p>
 <p>The scenarios are data files in <code>compat/scenarios/*.toml</code>, each one or more runs of <code>vectorcraft-cli</code>. A
