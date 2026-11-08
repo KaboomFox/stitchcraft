@@ -116,6 +116,7 @@
     - [0016 Ink/Stitch files imported into VectorCraft](design/adr/0016-inkstitch-files-imported-by-stitchcraft.md)
     - [0017 Routing in one engine function](design/adr/0017-routing-is-one-engine-function.md)
     - [0018 Underlays first, a setting of each element](design/adr/0018-underlays-first-is-a-setting-of-each-element.md)
+    - [0019 Subject cut out before tracing](design/adr/0019-subject-cut-out-before-tracing.md)
 
 # Plan
 
