@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-b1e7cc84.js";
+            window.path_to_searchindex_js = "../searchindex-983ed72e.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-4715bfff.js"></script>
+        <script src="../toc-8dd45193.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -387,6 +387,8 @@ generators StitchCraft has come first, and the steps that make new kinds of shap
 <tr><td>M13.10 ✅</td><td><code>stitch plan picture.png</code> and <code>stitch export picture.png</code> trace a PNG or JPEG file with VectorCraft’s command line, in the machine’s threads, and sew it digitized automatically. A coded error when VectorCraft isn’t installed</td><td>a Level B case plans a picture through <code>stitch</code> on every track</td></tr>
 <tr><td>M13.11 ✅</td><td>Pictures for what sews without them. User pages for satin columns and tatami fills, the tatami fill’s page also saying how Ink/Stitch’s legacy fill sews, each with its pictures. A page on automatic digitizing, with pictures of shapes before and after, and screenshots in the how-to <a href="../user/how-to/vectorcraft-columns-and-presets.html">Satin columns and presets in VectorCraft</a></td><td><code>UNSHOWN</code> in <code>xtask/src/stitch_pages.rs</code> empty, so every stitch type sewn has a page with pictures</td></tr>
 <tr><td>M13.12 ✅</td><td>Traced layers flattened before digitizing. Each automatic area sews only what shows of it under the areas drawn over it, and what shows of the background inside the picture sews too. An area wider than a satin column somewhere is digitized whole under the details that fill its holes, moves back in paint order before them and is cut away under them, while outlines and letters keep their holes. A disc or a square no wider than a satin column is a dot, filled wherever it lies. TS-13D sews an emblem and a button, each traced abutting and stacked</td><td><code>REQ-AUTO-023</code>’s cases and <code>REQ-AUTO-016</code>’s dot case pass; a stacked and an abutting trace of the test pictures sew the same shapes; TS-13D drawn</td></tr>
+<tr><td>M13.13 ✅ 🧪</td><td>Subject cut-out for photos, decided, as an option off by default. A photo’s background, such as turf, a fence or tyres behind a dog, traces into many shapes, and the background rule leaves out one shape, the lowest, when it lies behind everything. On 2026-11-08 the owner asked for the cut-out in StitchCraft, in the flow that sews pictures. The step chooses where the cut-out runs, the model and its licence, the runtime, how the model is fetched, how a user corrects a cut-out, how replays and CI do without the model, and how cases measure a cut-out</td><td>Decision recorded in the design, with measurements: <a href="../design/adr/0019-subject-cut-out-before-tracing.html">ADR-0019</a>, accepted on 2026-11-08. <code>--subject</code> cuts the subject out before VectorCraft traces the picture. MobileSAM, run by tract in <code>stitch</code>, cuts it out of a box that U²-Net-p finds or the user gives, with points of the subject and of what isn’t. On the owner’s 2 photos of her dog it kept the dog at an IoU of 0.985 and 0.988, without the tyre that U²-Net-p, U²-Net and IS-Net kept</td></tr>
+<tr><td>M13.14</td><td>The subject cut-out, as M13.13 decided (<a href="../design/image-to-embroidery.html#subject-cut-out">subject cut-out</a>). <code>--subject</code> on <code>stitch plan</code> and <code>stitch export</code> makes a picture’s background transparent and crops the picture to its subject before VectorCraft traces it. <code>--subject-box</code>, <code>--subject-point</code> and <code>--not-subject</code> correct it, <code>--cutout</code> writes it, and <code>stitch cutout</code> writes it alone, for VectorCraft’s own flow. <code>stitch</code> fetches the models on first use, pinned by SHA-256, and a bug-report bundle replays without them</td><td>Its requirements active (<code>REQ-CLI-014</code> to <code>REQ-CLI-019</code>), cases on the owner’s 2 photos with their masks checked by hand and on pictures drawn in code, and a user page with pictures</td></tr>
 </tbody>
 </table>
 </div>
@@ -560,7 +562,7 @@ start and end their previews at the markers.</p>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../design/adr/0018-underlays-first-is-a-setting-of-each-element.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../design/adr/0019-subject-cut-out-before-tracing.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
@@ -574,7 +576,7 @@ start and end their previews at the markers.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../design/adr/0018-underlays-first-is-a-setting-of-each-element.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../design/adr/0019-subject-cut-out-before-tracing.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-b1e7cc84.js";
+            window.path_to_searchindex_js = "../searchindex-983ed72e.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-4715bfff.js"></script>
+        <script src="../toc-8dd45193.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -854,6 +854,83 @@ the report.</p>
 <p>StitchCraft traces nothing itself. A tracer of its own would repeat VectorCraft’s, which a harness
 measures. It would also trace a picture otherwise than VectorCraft does, and the command line would then
 sew it unlike the tutorial’s flow.</p>
+<h2 id="subject-cut-out"><a class="header" href="#subject-cut-out">Subject cut-out</a></h2>
+<p>A photo’s background traces into shapes of its own, such as turf, a fence or tyres behind a dog. The
+background rule leaves out one shape, the lowest, when it lies behind everything (<a href="#neighbours">Neighbours</a>).
+So <code>--subject</code> cuts a picture’s subject out before VectorCraft traces it, as spike M13.13 decided
+(<a href="adr/0019-subject-cut-out-before-tracing.html">ADR-0019</a>) and M13.14 is to build (<code>REQ-CLI-014</code> to
+<code>REQ-CLI-019</code>, planned). It is off by default, and a picture given without it is traced as
+<a href="#pictures-from-the-command-line">above</a>.</p>
+<p><strong>The steps.</strong> With <code>--subject</code>, <code>stitch</code> changes the picture before the 4 steps VectorCraft takes:</p>
+<ol>
+<li>It decodes the picture as its file stores the pixels, with the <code>image</code> crate, as VectorCraft decodes it.</li>
+<li>It finds the subject’s box. <code>--subject-box X0,Y0,X1,Y1</code> gives it in the picture’s pixels. Otherwise
+U²-Net-p maps how likely each pixel is to belong to the main subject, at 320 × 320 px. The box is the
+one round the piece of the map above a half with the most of the map in it, scaled back to the picture.</li>
+<li>MobileSAM cuts the subject out of the box. Its encoder takes the picture once, its longer side at
+1,024 px and the rest padded to a square. Its decoder takes the box’s 2 corners and the points of
+<code>--subject-point</code> and <code>--not-subject</code>, and gives a map of 256 × 256 values. Scaled to the picture and
+put through the logistic function, the map is each pixel’s alpha, 0 to 255.</li>
+<li>The picture with that alpha, cropped to the box round the pixels of an alpha of 128 or more, is written
+as a PNG file. <code>file.place</code> places it where it would place the picture, so <code>--size</code> and the hoop fit
+the subject.</li>
+</ol>
+<p>Image Trace leaves out the pixels whose alpha is under 128, and gives a pixel on the cut edge the colour
+beside it (VectorCraft’s <code>crates/trace</code> at <code>3f8d7a0</code>). The trace then contains the subject alone, with no
+background for the background rule to find. If MobileSAM keeps none of the pixels, or if U²-Net-p’s map has
+no piece above a half and no box is given, a coded error says so and suggests <code>--subject-box</code>. <code>stitch</code>
+then writes the report alone, as when VectorCraft can’t trace.</p>
+<p><strong>Correcting a cut-out.</strong> A cut-out is wrong when the box contains more than the subject and MobileSAM keeps
+it, or when MobileSAM keeps less than the subject. <code>--not-subject X,Y</code> marks a point of what isn’t the
+subject, and <code>--subject-point X,Y</code> a point of what is, each as often as needed and in the picture’s pixels.
+The decoder takes the points with the box, U²-Net-p’s when the user gives none, since a point without a box
+can lose much of the subject. <code>--cutout FILE</code> writes the cut-out beside the machine file, with the other
+files asked for, all or none, so that the user can see what was kept.</p>
+<p><strong>In VectorCraft.</strong> A filter can’t read or replace a placed image, and a plug-in couldn’t run the models
+within its budget (ADR-0019, decision 2). <code>stitch cutout PICTURE -o FILE</code> writes the cut-out alone, with
+the same options. The user places it where they would place the photo, and traces it with Image Trace as
+the tutorial does. A picture whose background another program made transparent traces as its subject too,
+without <code>--subject</code>.</p>
+<p><strong>The models</strong> are 3 ONNX files, 49.1 MB together, which tract runs in <code>stitchcraft-cutout</code>, a crate of the
+apps’ layer that only <code>stitch</code> depends on:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>File</th><th>Model</th><th>Its weights’ licence</th><th style="text-align: right">Size</th></tr>
+</thead>
+<tbody>
+<tr><td><code>u2netp.onnx</code></td><td><a href="https://github.com/xuebinqin/U-2-Net">U²-Net-p</a>, 1.1 million parameters</td><td>Apache-2.0</td><td style="text-align: right">4.6 MB</td></tr>
+<tr><td><code>mobilesam-encoder.onnx</code></td><td><a href="https://github.com/ChaoningZhang/MobileSAM">MobileSAM</a>’s encoder, 5.7 million parameters</td><td>Apache-2.0</td><td style="text-align: right">28.0 MB</td></tr>
+<tr><td><code>mobilesam-decoder.onnx</code></td><td>MobileSAM’s decoder, 4.1 million parameters</td><td>Apache-2.0</td><td style="text-align: right">16.5 MB</td></tr>
+</tbody>
+</table>
+</div>
+<p>The repository pins each file’s address, size and SHA-256, and none of the files is committed. A script kept
+beside the pins exports them from the authors’ checkpoints, and a StitchCraft release publishes them as
+assets. <code>stitch</code> fetches them with curl on first use into the folder <code>STITCHCRAFT_MODELS</code> names, or else
+<code>stitchcraft/models</code> in the user’s cache folder, which <code>cargo xtask corpus</code> uses for the fonts too. It
+checks each file’s SHA-256 before it uses the file. When a file can’t be fetched or its sum differs, a coded
+error names each file’s address, size and SHA-256 and the folder it belongs in, and <code>stitch</code> writes the
+report alone. NOTICE names the models and their licences.</p>
+<p><strong>Replays.</strong> The models run in <code>stitch</code> alone, and their results may differ in their last bits from one
+processor to another. A bug-report bundle of a picture already contains the document VectorCraft traced.
+With <code>--subject</code> it also records the models’ SHA-256 sums, the box and the points, and leaves the picture
+out. Its replay runs without the models and without VectorCraft.</p>
+<p><strong>Measured.</strong> The cut-out was measured on the owner’s 2 photos of her dog, against masks checked by eye
+(<a href="adr/0019-subject-cut-out-before-tracing.html">ADR-0019</a>). The cut-out from U²-Net-p’s box kept the dog at an intersection over union (IoU) of 0.985 on turf and 0.988
+running. It kept 0.2 % and 0.3 % of the dog’s area wrongly and lost 1.3 % and 0.9 % of it. U²-Net-p alone
+kept the tyre behind the running dog, 19.8 % of the dog’s area. On the 2.1 GHz Xeon of the
+<a href="tdd.html">technical design</a>, with one thread, onnxruntime took 0.5 s for U²-Net-p, 1.6 s for MobileSAM’s
+encoder and 0.1 s for its decoder. tract took 1.0 to 1.2 s, 2.5 to 2.9 s and 0.15 to 0.23 s. In Rust, with
+tract, the whole cut-out of a photo took 5.1 to 5.4 s and 343 MB at most.</p>
+<p><strong>Cases</strong> (M13.14). The 2 photos are committed as prepared, 1,200 px wide, with a mask of each checked by
+hand, and recorded in <code>conformance/fixtures/README.md</code>. The owner took them of her own dog and gave them
+under the MIT licence. The models’ outputs for them are fixtures too, U²-Net-p’s map and MobileSAM’s map of
+each prompt. The cases of the box, the marks, the alpha, the crop and the file run on those fixtures without
+the models. Pictures drawn in code, a disc on a striped ground with a square that touches it, have exact
+masks, and test the marks. A job of its own fetches the models and runs them on the photos and the drawn
+pictures. It compares their maps with the fixtures, and each cut-out with its mask, which it must match at
+an IoU of 0.97 or more, with at most 2 % of the subject’s area kept wrongly and 3 % lost.</p>
 <h2 id="testing"><a class="header" href="#testing">Testing</a></h2>
 <ul>
 <li>
@@ -861,7 +938,8 @@ sew it unlike the tutorial’s flow.</p>
 </li>
 <li>
 <p>The test pictures are drawn in code, as the test sheets are (<code>stitchcraft_engine::testsheets::pictures</code>),
-and no logo or picture of anyone else’s is used.</p>
+and no logo or picture of anyone else’s is used. From M13.14 the subject cut-out’s cases also use 2
+photos of the owner’s dog (<a href="#subject-cut-out">above</a>).</p>
 </li>
 <li>
 <p>Each test picture’s automatic plan is compared with its plan in paint order: colour changes, jumps,
