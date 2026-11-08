@@ -26,8 +26,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     line are known differences, left to M10.11.
   - An `inkstitch` case of a sheet may judge a part of it alone, the elements whose ids start with its
     `elements`.
-  - A `reverse` setting on a fill is now a ripple stitch's, which the fill leaves to its node's stroke
-    without a word. `SC-W0105` named it before.
+  - A legacy fill still names its `reverse` (`SC-W0105`), which a ripple stitch now reads too. Ink/Stitch
+    reads a fill's `reverse` for its legacy fill alone, and a fill of another method now leaves it to its
+    node's stroke without a word, where `SC-W0105` named it before.
   - Golden changed: `TS-17C.pes`, for the ripple stitches below the network.
 - M10.13: auto-run routing (`REQ-ROUTE-009` to `REQ-ROUTE-013`, `REQ-VC-020`). `stitchcraft_engine::route`
   routes running stitches as Ink/Stitch's Auto-Route Running Stitch does, with `Tool::Runs`. With Add nodes
