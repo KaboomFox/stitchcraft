@@ -4,6 +4,11 @@ Ink/Stitch's extensions import wxPython as its package loads, and writing a mach
 window. So every name resolves to an inert placeholder: a class that takes any arguments, any attribute and
 any operation, and any `wx.*` submodule is a module of such names. `cargo xtask conformance --differential`
 puts this folder first on Ink/Stitch's module path. Written for StitchCraft, under its licence.
+
+One name is no placeholder. Ink/Stitch's tartan reads each stripe's colour with `wx.Colour`, and without a
+running app it reads the colour with inkex instead, as wxPython raises `PyNoAppError` then. So `wx.Colour`
+raises that error, an exception class of the stub's own, and the tartan reads its colours as it does when
+it writes a file from the command line.
 """
 import importlib.abc
 import importlib.machinery
@@ -51,6 +56,15 @@ class _Meta(type):
 
 class Inert(_Inert, metaclass=_Meta):
     pass
+
+
+class PyNoAppError(Exception):
+    """What wxPython raises when it is asked for what only a running app gives."""
+
+
+def Colour(*args, **kwargs):  # noqa: N802 (wxPython's name)
+    """A colour, which only a running app gives: none runs here."""
+    raise PyNoAppError("wx.App must be created first")
 
 
 _MADE = {}
