@@ -35,7 +35,8 @@ Elements next to each other in sewing order form a run when each sets the toggle
 thread. A trim or a stop after an element ends its run. A run sews the underlays of its elements in their
 order, then their top stitches in the same order. An element without underlay, such as a running stitch,
 sews in the second pass. An element that joins no run sews as it does without the setting, and `SC-I0506`
-names it.
+names it. [Auto-Route Satin Columns](route-satin-columns.md) keeps the toggle on the pieces and the runs it
+makes of columns that set it. A route of them sews its underlays along it, up to each trim.
 
 ## Travel and previews
 
