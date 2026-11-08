@@ -125,6 +125,17 @@ a row in the fixtures index stating its origin and licence (`--check`). Large re
 repositories of their own, as VectorCraft's do, and are never committed. `cargo xtask corpus` fetches
 Ink/Stitch's fonts at a commit and with a SHA-256 this repository pins ([fonts](fonts.md#the-corpus)).
 
+The `font` kind reads one font of that corpus with the font reader and plans each of its glyphs, as the
+glyph differential plans a glyph (`REQ-FONT-008`, `xtask/src/conformance/font.rs`). It names the font's
+folder and the glyphs it has in each direction:
+
+```toml
+{{#include ../../../conformance/cases/fonts/small-font.toml}}
+```
+
+Without the corpus the case is skipped, and says so. In CI every job that runs `cargo xtask ci` fetches the
+corpus first (`.github/actions/fonts`), and the case runs.
+
 The engine's cases build their small designs with `stitchcraft_testkit::designs`. It also reads a plan's
 shape at a glance: `J L4 S5 L4` is a jump, 4 lock stitches, 5 needle points of stitching and 4 more lock
 stitches. Its strokes are as wide as an SVG stroke whose style says nothing, and `widened` gives one a
