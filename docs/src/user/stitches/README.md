@@ -9,6 +9,7 @@ stroke or the fill of a shape, and each sews in its own thread colour.
 | [Bean stitch](running.md#bean-stitch-and-repeats) | strokes, each stitch sewn 3 times or more | now |
 | [Manual stitch](running.md#manual-stitch) | strokes whose nodes are the needle points | now |
 | [Zigzag stroke](zigzag.md) | strokes as wide as their line: light borders, couched looks | now |
+| [Ripple stitch](ripple-stitch.md) | strokes, in lines that shrink to a point or run along a column from edge to edge | now |
 | [Satin column](satin-column.md) | wide strokes and borders | now |
 | [E-stitch](e-stitch.md) | satin columns as appliqué edges: a spine along one rail, with spikes to the other | now |
 | [S-stitch](s-stitch.md) | satin columns sewn one way at a time: a stitch across at each step, joined along the edges | now |

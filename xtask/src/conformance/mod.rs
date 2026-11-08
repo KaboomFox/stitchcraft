@@ -255,7 +255,9 @@ fn check_differential(root: &Path, data: &[cases::DataCase], findings: &mut Find
             cases::Subject::File(design) if !root.join("conformance").join(design).is_file() => {
                 findings.error(format!("{}: the design `{design}` is not in conformance/", case.file));
             }
-            cases::Subject::Sheet(id) if !stitchcraft_engine::testsheets::find(id).is_some_and(|sheet| sheet.designed()) => {
+            cases::Subject::Sheet(id) | cases::Subject::Part { sheet: id, .. }
+                if !stitchcraft_engine::testsheets::find(id).is_some_and(|sheet| sheet.designed()) =>
+            {
                 findings.error(format!("{}: `{id}` is no test sheet drawn as a design", case.file));
             }
             cases::Subject::Letters(letters) => {
@@ -263,7 +265,7 @@ fn check_differential(root: &Path, data: &[cases::DataCase], findings: &mut Find
                     findings.error(format!("{}: {e}", case.file));
                 }
             }
-            cases::Subject::File(_) | cases::Subject::Sheet(_) => {}
+            cases::Subject::File(_) | cases::Subject::Sheet(_) | cases::Subject::Part { .. } => {}
         }
         for (measure, deviation) in excused {
             if differential::Measure::named(measure).is_none() {

@@ -136,8 +136,9 @@ impl TestSheet {
     /// their shapes; clips ([`Element::clips`]), which it would draw as clip groups; the design's origin or
     /// stop position ([`DesignSettings::origin`], [`DesignSettings::stop_position`]), which it would draw as
     /// markers; or its turn on export ([`DesignSettings::rotate_on_export`]), which the Design Settings filter
-    /// would keep. VectorCraft's Test Sheet filter draws and keeps none of them. The sheets that do are those
-    /// drawn from a file, which [`TestSheet::drawable`] leaves out, as the tests check.
+    /// would keep. VectorCraft's Test Sheet filter draws and keeps none of them. The sheets that do, TS-16,
+    /// drawn from a file, and TS-17C, whose ripple aims at a target point and which is routed, are sheets
+    /// [`TestSheet::drawable`] leaves out, as the tests check.
     ///
     /// [`Element::hints`]: crate::design::Element::hints
     /// [`Element::clips`]: crate::design::Element::clips
@@ -518,7 +519,7 @@ pub static SHEETS: &[TestSheet] = &[
     },
     TestSheet {
         id: "TS-17C",
-        title: "Ripples, routing and layers: satin letters and a network of lines, as drawn and routed, and crossing columns",
+        title: "Ripples, routing and layers: satin letters and a network of lines, as drawn and routed, crossing columns and 3 ripple stitches",
         checks: &[
             "Top: the word ROUTE in satin columns 3 mm wide, sewn as drawn, column by column. Below it: the same letters as auto-satin routing joins them, cut into pieces, with running stitches under the satins and a trim between letters.",
             "Count the jump threads of each half, within each letter and between the letters. The routed half should have none within a letter. Its file asks for a trim between letters, which a machine that obeys trims cuts.",
@@ -527,8 +528,10 @@ pub static SHEETS: &[TestSheet] = &[
             "Below the letters, in red: 6 bean-stitched lines, a rail, a post across it, a brace, a hook, a line that crosses itself and a tick, sewn as drawn on the left and as auto-run routing joins them on the right. Count the jump threads of each: the routed network should jump only to the line that crosses itself and back, trimming before each jump.",
             "On the routed network, do the plain runs under the bean stitches show beside them, where a branch is sewn out and back?",
             "The time each half takes, from its first stitch to its last.",
-            "At the bottom, in red: 2 satin columns 5 mm wide that cross, a bar and a post, each with a contour and a zigzag underlay. On the left they sew as drawn, so the post's underlay lies on the bar's top stitches. On the right they sew with their underlays first: both underlays, then both tops. Compare the 2 crossings: does the right one lie flatter, with less bulk or fewer stitches showing through where the columns meet?",
+            "Below the network, in red: 2 satin columns 5 mm wide that cross, a bar and a post, each with a contour and a zigzag underlay. On the left they sew as drawn, so the post's underlay lies on the bar's top stitches. On the right they sew with their underlays first: both underlays, then both tops. Compare the 2 crossings: does the right one lie flatter, with less bulk or fewer stitches showing through where the columns meet?",
             "On the right, the needle goes back from the post's underlay to the bar for the top stitches. Does its way there show, or a jump thread or its locks where it jumps?",
+            "Bottom row, in green: 3 ripple stitches. On the left, a rainbow of 7 lines sewn back and forth between 2 arches. In the middle, 8 copies of a wave that shrink to a point 20 mm above it, each meeting the next at a point. On the right, a circle that spirals in to its middle.",
+            "Do the ripples' lines lie evenly apart, and does each turn or meet the next where its neighbours do, without a loop of thread or a stitch across?",
         ],
         profile: REFERENCE,
         drawn: Drawn::Routed(ts17c::drawing, &[Code::StitchesMerged]),
@@ -574,12 +577,13 @@ mod tests {
         // The TS-13 sheets' shapes are digitized automatically, and no other sheet's are.
         let digitized: Vec<&str> = SHEETS.iter().filter(|sheet| sheet.digitized()).map(|sheet| sheet.id).collect();
         assert_eq!(digitized, ["TS-13A", "TS-13B", "TS-13C", "TS-13D"]);
-        // TS-16 alone places and clips its elements, as an Ink/Stitch file does, and it alone is drawn from a
-        // file.
+        // TS-16 places and clips its elements, as an Ink/Stitch file does, and it alone is drawn from a file.
+        // TS-17C aims a ripple at a target point, and is routed. A host draws neither.
         let filed: Vec<&str> = SHEETS.iter().filter(|sheet| sheet.uses_file_features()).map(|sheet| sheet.id).collect();
-        assert_eq!(filed, ["TS-16"]);
+        assert_eq!(filed, ["TS-16", "TS-17C"]);
+        assert!(SHEETS.iter().filter(|sheet| sheet.uses_file_features()).all(|sheet| !sheet.drawable()));
         let from_file: Vec<&str> = SHEETS.iter().filter(|sheet| matches!(sheet.drawn, Drawn::FromFile(..))).map(|sheet| sheet.id).collect();
-        assert_eq!(from_file, filed);
+        assert_eq!(from_file, ["TS-16"]);
     }
 
     #[test]

@@ -241,8 +241,8 @@ its stitch types is planned, and the check leaves it out.
    family accepts, and the JSON Schema gives the defaults under `x-stitchcraft.family_defaults`.
 7. **A family's own kind and range.** Some of Ink/Stitch's keys differ by more than their default from
    one family to another. Its `zigzag_spacing_mm` is a list for a zigzag stroke and one number for a satin
-   column, and a meander fill reads it as a number that defaults to 0. Its ripple stitch reads a
-   `staggers` of 0 as no stagger, but a tatami fill's range starts at 0.01. Such a key is declared again
+   column, and a meander fill reads it as a number that defaults to 0. Its ripple stitch's `join_style`
+   is flat or a point, where a contour fill's is round, mitred or bevelled. Such a key is declared again
    for the family that reads it its own way, in a declaration for that family's stitch types
    (`REQ-PRM-005`). The registry's audit lets a key have one declaration for each family at most, and an
    element reads the key as its family's declaration says. `find_for` finds a family's declaration, and

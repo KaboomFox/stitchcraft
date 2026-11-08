@@ -53,6 +53,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Stroke parameters](params/stroke.md) | 1 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
 | [Running parameters](params/running.md) | 4 | Running stitch, Ripple stitch |
 | [Repeat parameters](params/repeat.md) | 2 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
+| [Ripple parameters](params/ripple.md) | 10 | Ripple stitch |
 | [Zigzag stroke parameters](params/zigzag-stroke.md) | 3 | Zigzag stitch |
 | [Satin parameters](params/satin.md) | 34 | Satin column, E-stitch, S-stitch, Zigzag satin |
 | [Pull parameters](params/pull.md) | 2 | Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill |
@@ -99,6 +100,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`end_at_nearest_point`](params/satin.md#end_at_nearest_point) | End at nearest point | Satin parameters |
 | [`end_row_spacing_mm`](params/tatami.md#end_row_spacing_mm) | End row spacing | Tatami parameters |
 | [`expand_mm`](params/tatami.md#expand_mm) | Expand | Tatami parameters |
+| [`exponent`](params/ripple.md#exponent) | Spacing exponent | Ripple parameters |
 | [`fill`](params/fill.md#fill) | Sew the fill | Fill parameters |
 | [`fill_coverage`](params/cross.md#fill_coverage) | Coverage | Cross parameters |
 | [`fill_method`](params/fill.md#fill_method) | Fill method | Fill parameters |
@@ -108,9 +110,13 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`fill_underlay_max_stitch_length_mm`](params/tatami.md#fill_underlay_max_stitch_length_mm) | Underlay longest stitch | Tatami parameters |
 | [`fill_underlay_row_spacing_mm`](params/tatami.md#fill_underlay_row_spacing_mm) | Underlay row spacing | Tatami parameters |
 | [`fill_underlay_skip_last`](params/tatami.md#fill_underlay_skip_last) | Skip last underlay stitch | Tatami parameters |
+| [`flip_copies`](params/ripple.md#flip_copies) | Back and forth | Ripple parameters |
+| [`flip_exponent`](params/ripple.md#flip_exponent) | Flip the spacing | Ripple parameters |
 | [`force_lock_stitches`](params/common.md#force_lock_stitches) | Always lock | Common parameters |
 | [`gap_fill_rows`](params/tatami.md#gap_fill_rows) | Gap-filling rows | Tatami parameters |
+| [`join_style`](params/ripple.md#join_style) | Join style | Ripple parameters |
 | [`join_style`](params/contour.md#join_style) | Join style | Contour parameters |
+| [`line_count`](params/ripple.md#line_count) | Lines | Ripple parameters |
 | [`lock_custom_end`](params/common.md#lock_custom_end) | Custom end lock | Common parameters |
 | [`lock_custom_start`](params/common.md#lock_custom_start) | Custom start lock | Common parameters |
 | [`lock_end`](params/common.md#lock_end) | End lock | Common parameters |
@@ -125,6 +131,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`meander_pattern`](params/meander.md#meander_pattern) | Pattern | Meander parameters |
 | [`meander_scale_percent`](params/meander.md#meander_scale_percent) | Pattern scale | Meander parameters |
 | [`min_jump_stitch_length_mm`](params/common.md#min_jump_stitch_length_mm) | Shortest jump | Common parameters |
+| [`min_line_dist_mm`](params/ripple.md#min_line_dist_mm) | Least distance between lines | Ripple parameters |
 | [`min_random_split_length_mm`](params/satin.md#min_random_split_length_mm) | Shortest split stitch | Satin parameters |
 | [`min_stitch_length_mm`](params/common.md#min_stitch_length_mm) | Shortest stitch | Common parameters |
 | [`pattern_size_mm`](params/cross.md#pattern_size_mm) | Cell size | Cross parameters |
@@ -140,6 +147,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`random_zigzag_spacing_percent`](params/satin.md#random_zigzag_spacing_percent) | Random zigzag spacing | Satin parameters |
 | [`repeats`](params/repeat.md#repeats) | Repeats | Repeat parameters |
 | [`repeats`](params/path-fill.md#repeats) | Repeats | Path fill parameters |
+| [`reverse`](params/ripple.md#reverse) | Reverse | Ripple parameters |
 | [`reverse_rails`](params/satin.md#reverse_rails) | Reverse rails | Satin parameters |
 | [`row_spacing_mm`](params/tatami.md#row_spacing_mm) | Row spacing | Tatami parameters |
 | [`running_stitch_length_mm`](params/running.md#running_stitch_length_mm) | Stitch length | Running parameters |
@@ -149,10 +157,13 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`satin_method`](params/satin.md#satin_method) | Method | Satin parameters |
 | [`short_stitch_distance_mm`](params/satin.md#short_stitch_distance_mm) | Short stitch distance | Satin parameters |
 | [`short_stitch_inset`](params/satin.md#short_stitch_inset) | Short stitch inset | Satin parameters |
+| [`skip_end`](params/ripple.md#skip_end) | Skip last lines | Ripple parameters |
 | [`skip_last`](params/tatami.md#skip_last) | Skip last stitch | Tatami parameters |
+| [`skip_start`](params/ripple.md#skip_start) | Skip first lines | Ripple parameters |
 | [`smoothness_mm`](params/path-fill.md#smoothness_mm) | Smoothness | Path fill parameters |
 | [`split_method`](params/satin.md#split_method) | Split method | Satin parameters |
 | [`split_staggers`](params/satin.md#split_staggers) | Staggers | Satin parameters |
+| [`staggers`](params/ripple.md#staggers) | Staggers | Ripple parameters |
 | [`staggers`](params/tatami.md#staggers) | Staggers | Tatami parameters |
 | [`start_at_nearest_point`](params/satin.md#start_at_nearest_point) | Start at nearest point | Satin parameters |
 | [`stop_after`](params/common.md#stop_after) | Stop after | Common parameters |

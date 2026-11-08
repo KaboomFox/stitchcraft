@@ -17,6 +17,7 @@ use stitchcraft_engine::generate::generate;
 use stitchcraft_engine::generators::manual::manual_stitch;
 use stitchcraft_engine::generators::passes::RepeatParams;
 use stitchcraft_engine::generators::pull::PullParams;
+use stitchcraft_engine::generators::ripple::{Ripple, RippleParams, ripple_stitch};
 use stitchcraft_engine::generators::running::{RunningParams, running_stitch};
 use stitchcraft_engine::generators::satin::{SatinParams, satin_stitch};
 use stitchcraft_engine::generators::tatami::rows::Grid;
@@ -29,7 +30,7 @@ use stitchcraft_engine::normalize::satin::{Shape, recognize};
 use stitchcraft_engine::plan;
 use stitchcraft_params::{ParamSet, StitchType};
 use stitchcraft_plan::profiles::REFERENCE;
-use stitchcraft_testkit::designs::{RED, line, messages, polylines, rings};
+use stitchcraft_testkit::designs::{RED, fill, line, messages, polylines, rings};
 use stitchcraft_testkit::satins::{ladder, satin_lengths};
 
 /// The machine's shortest stitch, as the engine gives it to a stroke on the reference machine.
@@ -79,6 +80,21 @@ fn zigzag(path: &Path, width: f64, params: &ParamSet, meter: &mut Meter) -> Resu
     zigzag_stroke(path, Mm::new(width).unwrap(), &zigzag, &passes, Mm::new(SHORTEST).unwrap(), meter)
 }
 
+/// The ripple stitch along `path` sewn with `params`, aiming at the middle of its hull.
+fn ripple(path: &Path, params: &ParamSet, meter: &mut Meter) -> Result<Stitched, Exhausted> {
+    let ripple = Ripple {
+        ripple: RippleParams::from_set(params).unwrap().params,
+        running: RunningParams::from_set(params).unwrap().params,
+        passes: RepeatParams::from_set(params).unwrap().params,
+        satin: SatinParams::from_set_as(params, StitchType::RippleStitch).unwrap().params,
+        min_stitch: Mm::new(SHORTEST).unwrap(),
+        target: None,
+        unapplied: Vec::new(),
+        clipped: false,
+    };
+    ripple_stitch(path, &ripple, &SplitMix64::new(1), meter)
+}
+
 fn manual(path: &Path, longest: Option<f64>, params: &ParamSet, meter: &mut Meter) -> Result<Stitched, Exhausted> {
     let passes = RepeatParams::from_set(params).unwrap().params;
     manual_stitch(path, longest.map(|mm| Mm::new(mm).unwrap()), &passes, Mm::new(SHORTEST).unwrap(), meter)
@@ -122,6 +138,23 @@ fn req_gen_004_repeats_and_bean_stitch_stop_at_the_stitches_left() {
     let nodes: Vec<(f64, f64)> = (0..=100).map(|x| (f64::from(x), 0.0)).collect();
     let stitches = polylines(&[&nodes]);
     stops_early(2_101, 100, |meter| manual(&stitches, None, &set(&[("bean_stitch_repeats", "10")]), meter));
+}
+
+#[test]
+fn req_gen_004_a_ripple_stops_at_the_stitches_left() {
+    // A line 100 mm long in 1,000 lines of 0.6 mm stitches, each a copy of the line shrunk towards its
+    // middle: some 85,000 needle points.
+    let line = polylines(&[&[(0.0, 0.0), (100.0, 0.0)]]);
+    let dense = set(&[("line_count", "1000"), ("running_stitch_length_mm", "0.6")]);
+    let points = spent(u32::MAX, |meter| ripple(&line, &dense, meter)).sewn.unwrap();
+    assert!(points > 80_000, "{points}");
+    stops_early(points, 1_000, |meter| ripple(&line, &dense, meter));
+    // A column 100 mm long, its pairs every 0.01 mm, the least tolerance: 10,001 pairs, laid out before
+    // any line is sewn.
+    let column = ladder(100.0, 4.0, &[]);
+    let fine = set(&[("line_count", "10"), ("running_stitch_tolerance_mm", "0.01")]);
+    let points = spent(u32::MAX, |meter| ripple(&column, &fine, meter)).sewn.unwrap();
+    stops_early(points, 1_000, |meter| ripple(&column, &fine, meter));
 }
 
 #[test]
@@ -199,6 +232,11 @@ fn req_gen_004_an_element_spends_a_stitch_for_each_needle_point_it_gives() {
         ("s-stitch", Box::new(|m| satin(&ladder(20.0, 4.0, &[]), &set(&[("satin_method", "s_stitch"), ("max_stitch_length_mm", "1.5")]), m))),
         ("zigzag satin", Box::new(|m| satin(&ladder(20.0, 4.0, &[]), &set(&[("satin_method", "zigzag"), ("max_stitch_length_mm", "1.5")]), m))),
         ("tatami", Box::new(|m| tatami((20.0, 20.0), rows(0.4, 3.0), &[rows(2.0, 3.0)], m))),
+        // Lines that meet at a point list it twice, and joins drop their ends.
+        ("ripple", Box::new(|m| ripple(&curl, &set(&[("join_style", "1"), ("repeats", "3"), ("bean_stitch_repeats", "1 0")]), m))),
+        ("ripple joined", Box::new(|m| ripple(&curl, &set(&[("staggers", "2.5"), ("line_count", "4")]), m))),
+        ("ripple column", Box::new(|m| ripple(&ladder(20.0, 4.0, &[10.0]), &set(&[("line_count", "5")]), m))),
+        ("ripple spiral", Box::new(|m| ripple(&square, &set(&[("line_count", "3")]), m))),
     ];
     for (name, generator) in &cases {
         let sewn = spent(u32::MAX, generator);
@@ -232,7 +270,7 @@ fn req_gen_004_each_element_is_given_what_the_ones_before_it_left() {
             line("a", (0.0, 0.0), 100.0, &RED, &[]),
             line("b", (0.0, 5.0), 100.0, &RED, &[]),
             line("c", (0.0, 10.0), 100.0, &RED, &[]),
-            line("d", (0.0, 15.0), 10.0, &RED, &[("stroke_method", "ripple_stitch")]),
+            fill("d", &[&[(0.0, 15.0), (10.0, 15.0), (10.0, 20.0)]], &RED, &[("fill_method", "guided_fill")]),
         ];
         let design = Design::new(elements, DesignSettings::default()).unwrap();
         plan(&design, REFERENCE, &Budget { max_stitches: stitches, ..Budget::DEFAULT })
