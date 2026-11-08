@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2aec8e4d.js";
+            window.path_to_searchindex_js = "../searchindex-74c61774.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-9e6a4383.js"></script>
@@ -452,7 +452,9 @@ are StitchCraft’s own). A case excuses a measure with the entry that explains 
 the difference as excused. An excuse for a measure that agrees fails the case, so that every reason in
 the ledger is still true. Where the differential can undo a deviation in Ink/Stitch’s file, it measures
 the file again without it. The excuse then counts only if the measure agrees. Ink/Stitch’s jumps that go
-nowhere (<code>DEV-FMT-001</code>) excuse as many trims and jumps as there are of them, and no more. Where both files
+nowhere (<code>DEV-FMT-001</code>) excuse as many trims and jumps as there are of them, and no more. Within a colour
+block, pystitch writes such a jump after lock stitches an element forces as it writes one after a trim of
+the plan. Only as many are left out there as Ink/Stitch’s file has trims more than StitchCraft’s. Where both files
 change thread at the same colour blocks, Ink/Stitch’s threads, named by other entries of Brother’s palette
 (<code>DEV-THREAD-001</code>), take StitchCraft’s names. StitchCraft fits each stitch to the machine (<code>DEV-FIN-001</code>),
 so to undo that, Ink/Stitch’s stitches longer than the machine’s longest are split and its needle points
@@ -529,12 +531,16 @@ may be wider than the reference hoop. Every night the case sews 4 glyphs of each
 21,179, in 6 parts. A glyph whose stitch types StitchCraft doesn’t sew yet is listed, and joins the
 comparison with M10’s steps. An element whose setting StitchCraft can’t read is left out with <code>SC-E0101</code>,
 where Ink/Stitch sews the setting’s default: its glyph is excused by <code>DEV-PRM-001</code> and not compared. A glyph
-neither program writes a file of agrees. Ink/Stitch writes none when it finds nothing to sew or an element
-it can’t sew, and StitchCraft none when an element is left out with an error, as <code>stitch plan</code> does.</p>
+neither program writes a file of agrees. Ink/Stitch writes none when it finds nothing to sew, an element it
+can’t sew or elements that sew no stitch, as of a glyph of one empty path, and StitchCraft none when an
+element is left out with an error, as <code>stitch plan</code> does. <code>--font</code> sews the glyphs of the fonts it names
+alone, so that the fonts a weekly run found differing sew again in minutes.</p>
 <p>The corpus can’t have an excuse for each of its glyphs. <code>conformance/inkstitch/glyphs.toml</code> excuses a
 measure by an entry of the ledger for the glyphs where its cause is. A diagnostic picks them, such as
 <code>SC-I0703</code> where StitchCraft splits stitches longer than the machine’s longest, and so do a stitch type, a
-setting and a font. The excuses the differential can check are checked as a case’s are. StitchCraft’s
+setting and a font. A cause that only the drawing of a few glyphs shows, such as a rung that rounding leaves
+a hair short of a rail, is named by its glyphs, and an excuse that names <code>sewn</code> explains a glyph that only one
+program sews. The excuses the differential can check are checked as a case’s are. StitchCraft’s
 running stitches place their needle points otherwise (<code>DEV-RUN-002</code>), and that excuse counts only where each
 program’s thread lies within 0.3 mm of the other’s, for 0.9 of it. The report, <code>target/conformance/fonts.md</code>,
 has a row for each font, the glyphs each excuse excused, and each glyph that differs with its measures.</p>

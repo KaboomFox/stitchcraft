@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-2aec8e4d.js";
+            window.path_to_searchindex_js = "searchindex-74c61774.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e6a4383.js"></script>
@@ -4546,7 +4546,7 @@ first length.</p>
 <li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill, Circular fill</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
-<li><strong>DEV-RUN-003.</strong> No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column’s travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Where a satin column’s parts meet nearer than the shortest stitch, the needle’s way between them gives way to the next part’s first point, and so does an underlay’s last point or the column’s start, which moves there; beside a top stitch’s end, which stays where it is, the next part’s points that near it give way instead. Ink/Stitch’s running stitch has no shortest stitch, and it joins a satin column’s parts as they are; its plan later drops stitches of at most 0.1 mm (its default), keeping the stitch before.</li>
+<li><strong>DEV-RUN-003.</strong> No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column’s travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Where a satin column’s parts meet nearer than the shortest stitch, the needle’s way between them gives way to the next part’s first point, and so does an underlay’s last point or the column’s start, which moves there; beside a top stitch’s end, which stays where it is, the next part’s points that near it give way instead. Ink/Stitch’s running stitch has no shortest stitch, and it joins a satin column’s parts as they are; its plan later drops stitches no longer than the element’s shortest stitch, 0.1 mm by default, keeping the stitch before. Beside an underlay’s last point, it drops the top stitches’ first needle points, and the column’s end is shorter.</li>
 <li><strong>DEV-SAT-005.</strong> A satin column’s travel, and a tatami fill’s, take the first of the lengths running_stitch_length_mm gives. Ink/Stitch reads a satin’s or a fill’s value as one number, and sews a value of several with 2.5 mm, the default.</li>
 </ul>
 </li>
@@ -4853,7 +4853,7 @@ each one is at most this long.</p>
 <li><strong>Default:</strong> <code>3</code></li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
-<li><strong>DEV-RUN-003.</strong> No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column’s travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Where a satin column’s parts meet nearer than the shortest stitch, the needle’s way between them gives way to the next part’s first point, and so does an underlay’s last point or the column’s start, which moves there; beside a top stitch’s end, which stays where it is, the next part’s points that near it give way instead. Ink/Stitch’s running stitch has no shortest stitch, and it joins a satin column’s parts as they are; its plan later drops stitches of at most 0.1 mm (its default), keeping the stitch before.</li>
+<li><strong>DEV-RUN-003.</strong> No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column’s travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Where a satin column’s parts meet nearer than the shortest stitch, the needle’s way between them gives way to the next part’s first point, and so does an underlay’s last point or the column’s start, which moves there; beside a top stitch’s end, which stays where it is, the next part’s points that near it give way instead. Ink/Stitch’s running stitch has no shortest stitch, and it joins a satin column’s parts as they are; its plan later drops stitches no longer than the element’s shortest stitch, 0.1 mm by default, keeping the stitch before. Beside an underlay’s last point, it drops the top stitches’ first needle points, and the column’s end is shorter.</li>
 </ul>
 </li>
 </ul>
@@ -4906,7 +4906,7 @@ one is at most this long.</p>
 <li><strong>Default:</strong> <code>3</code></li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
-<li><strong>DEV-RUN-003.</strong> No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column’s travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Where a satin column’s parts meet nearer than the shortest stitch, the needle’s way between them gives way to the next part’s first point, and so does an underlay’s last point or the column’s start, which moves there; beside a top stitch’s end, which stays where it is, the next part’s points that near it give way instead. Ink/Stitch’s running stitch has no shortest stitch, and it joins a satin column’s parts as they are; its plan later drops stitches of at most 0.1 mm (its default), keeping the stitch before.</li>
+<li><strong>DEV-RUN-003.</strong> No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column’s travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Where a satin column’s parts meet nearer than the shortest stitch, the needle’s way between them gives way to the next part’s first point, and so does an underlay’s last point or the column’s start, which moves there; beside a top stitch’s end, which stays where it is, the next part’s points that near it give way instead. Ink/Stitch’s running stitch has no shortest stitch, and it joins a satin column’s parts as they are; its plan later drops stitches no longer than the element’s shortest stitch, 0.1 mm by default, keeping the stitch before. Beside an underlay’s last point, it drops the top stitches’ first needle points, and the column’s end is shorter.</li>
 </ul>
 </li>
 </ul>
@@ -8097,7 +8097,9 @@ same polylines in both, which decide where the needle points go, where subpaths 
 drawn as one path gets its rungs. A path read from SVG has the subpaths a viewer draws, and inkex, which
 Ink/Stitch reads files with, does not always count them alike (<code>DEV-SVG-011</code>). The reader finds where
 each pair of subpaths meets, crossing or touching. A point the two share counts once, and a rung that
-ends exactly on a rail meets it.</p>
+ends exactly on a rail meets it. So does a rung whose end rounding leaves a hair short of the rail, by
+less than a billionth of a segment’s length. Ink/Stitch’s test is exact, and with 3 subpaths it can take
+such a rung for a rail (<code>DEV-SAT-013</code>).</p>
 <p>StitchCraft tells rails from rungs as Ink/Stitch does, and a file sews the same in both.</p>
 <ol>
 <li>A subpath that is one point is left out, with <code>SC-W0205</code>.</li>
@@ -8245,6 +8247,10 @@ wins. <code>none</code>, <code>first</code>, <code>second</code> and <code>both<
 <li>Of 2 rails that are rings, each ending where it starts (closed with <code>Z</code>, or drawn back to its start),
 rail B first starts at its node nearest rail A’s first node, before any reversal (<code>DEV-SAT-009</code>).
 Ink/Stitch takes each ring’s own start, and warns that a closed rail has no definite start.
+Rail B takes only a node whose line from rail A’s first node crosses none of the drawn rungs, unless
+every node’s line crosses one. Started past a rung, each part of rail B between rungs would pair with
+rail A’s next part. In Emilio 20 tricolore’s E, both rings of the bowl start at a step, and the outer
+ring’s node nearest the inner ring’s start lies past the rung across the step.
 VectorCraft’s Make Compound Path, from 0.10.0, turns the front of 2 rings round, which starts it at
 what was its last node. Rings sewn from their own starts then get stitches across the column. A node,
 not the nearest point, keeps rings that start together as drawn, with a rung across their starts where
@@ -8696,7 +8702,7 @@ a stroke selected with it crosses its rails. No step plans such a tool in Stitch
 <tr><td><code>REQ-SAT-014</code></td><td>Ending at its nearest point, a column ends on its outline nearest the next stitch. Every part is cut in 2 there, at its own needle point when one lies within the shortest stitch of the cut. The column sews the first halves, then the second halves from the line’s end, and stitches the end last</td></tr>
 <tr><td><code>REQ-SAT-015</code></td><td>A column drawn as one subpath whose stroke is no wider than the design’s narrowest satin stroke sews as a stroke would, with <code>SC-W0212</code>. It offers its first point, as a stroke does</td></tr>
 <tr><td><code>REQ-SAT-018</code></td><td>A column whose needle points all lie within its shortest stitch of its first sews nothing, with <code>SC-W0215</code>, and the rest of the design is planned. A zigzag satin with no stitch across sews nothing either, not even its underlays</td></tr>
-<tr><td><code>REQ-SAT-019</code></td><td>Of 2 rings, the second starts at its node nearest the first’s first node, its nodes too. The stitches go straight across whatever node each ring was drawn from and however it is closed, and rings drawn alike keep their starts (<code>DEV-SAT-009</code>)</td></tr>
+<tr><td><code>REQ-SAT-019</code></td><td>Of 2 rings, the second starts at its node nearest the first’s first node that no drawn rung lies before, its nodes too. The stitches go straight across whatever node each ring was drawn from and however it is closed, and rings drawn alike keep their starts (<code>DEV-SAT-009</code>)</td></tr>
 <tr><td><code>REQ-SAT-020</code></td><td>An E-stitch sews each of a satin column’s pairs as a spike: from the first rail’s inset point across to the second’s and back through the same splits. The stitch across splits as a top stitch across does, by default into the fewest equal parts</td></tr>
 <tr><td><code>REQ-SAT-021</code></td><td>Between spikes an E-stitch goes along the first rail in one stitch. Where the zigzag spacing is longer than the longest stitch, that stitch splits with no randomness: into the fewest equal parts by default, at whole multiples of the longest stitch by the simple and staggered methods</td></tr>
 <tr><td><code>REQ-SAT-022</code></td><td>Each stretch of pairs in a row whose stitches lean more than 45° from square to the column, to a tenth of a degree, gets one <code>SC-W0208</code> at the middle of its middle pair, whatever the satin method. The column runs halfway between its 2 rails. Stitches square to a rail, and stitches at 45°, give none</td></tr>
@@ -9798,7 +9804,9 @@ agree. These differ:</p>
 of its objects, which follows where they lie in memory, where StitchCraft’s order is fixed. Where the needle
 and the end lie nearest one group of several, it sews another group first, from that group’s join nearest
 the end. And with neither, it starts each group at the first good join it finds of one cross alone
-(<code>DEV-FILL-028</code>).</li>
+(<code>DEV-FILL-028</code>). Of parts that reach equally far left, StitchCraft sews first the one whose leftmost point
+lies highest. Ink/Stitch sews first the one shapely gives first once it has repaired and grown the shape,
+which can be the lower (<code>DEV-FILL-029</code>).</li>
 <li><strong>Cells covered exactly half.</strong> On a file whose <code>viewBox</code> is in millimetres, Ink/Stitch writes the drawing’s
 scale with 6 decimals, 3.779528 pixels to the millimetre, against 3.7795275… for its grid. Its drawing is
 then a ten-millionth larger than its grid, about the page’s origin. A cell that a part covers exactly half
@@ -11261,8 +11269,8 @@ overlapping by 1.000 in each. The other 69 differ as the ledger explains,
 <code>conformance/inkstitch/glyphs.toml</code> naming the glyphs each excuse is for. A glyph may differ in more than
 one way. A twentieth of every glyph, the seventh of 20 parts, holds 1,059 glyphs. Of them 699 agree, 238
 are listed and 122 differ as the ledger explains. It found the last 3 rows of the table, which the sample
-has none of, and a glyph neither program writes a file of, which agrees: the U of Apex simple small, whose
-satin column neither can sew.</p>
+has none of, and a glyph neither program wrote a file of, which agreed: the U of Apex simple small, whose
+satin column neither could sew then.</p>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -11289,6 +11297,36 @@ Ink/Stitch sews Initials XL’s B in 9,804 stitches, against StitchCraft’s 9,8
 of its viewBox’s shape, Cooper Marif’s 7 overlaps by 0.999, against 0.573. Without its needle points nearer
 the one before than 0.3 mm, Ink/Stitch sews Honoka’s 服 in 1,889 stitches, against StitchCraft’s 1,935 and its
 own 3,101.</p>
+<p><strong>Every glyph.</strong> The first run of every glyph, on 3 November 2026 at <code>c31df0d4</code>, found 56 glyphs that differ
+by more than the ledger explained and 11 that didn’t sew, in 20 fonts. The 11 are glyphs of one empty path,
+such as Egyptian’s spaces and Noble’s tilde. Ink/Stitch doesn’t write a file of them and says it didn’t
+find an element to sew, and StitchCraft writes none with <code>SC-E0010</code>, so they agree now. <code>--font</code> sews the 20
+fonts’ 4,961 glyphs alone, and M8.6 sorted the 56 by their causes:</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Cause</th><th>Glyphs</th><th>What M8.6 did</th></tr>
+</thead>
+<tbody>
+<tr><td>Running stitch outlines whose needle points set the bounds the files are aligned by, round the fills of 22 of Western Light’s glyphs and beside satin columns in 3 glyphs of other fonts</td><td>25</td><td>Excused by <code>DEV-RUN-002</code>, checked within 0.3 mm</td></tr>
+<tr><td>Corners of 2 subpaths that meet but for rounding, 2e-15 to 7e-15 CSS pixels apart, so shapely repairs the shape, in 14 cross stitch glyphs of Egyptian’s 2 sizes and in Jaquarda Bastarda 9’s ®</td><td>15</td><td>Excused by <code>DEV-FILL-001</code>, for the glyphs named</td></tr>
+<tr><td>A rung that rounding leaves a hair short of a rail, which Ink/Stitch takes for a rail, in 3 glyphs of AGS Garamond and in Apex simple’s q in both its sizes</td><td>5</td><td>The V, which StitchCraft didn’t sew, is fixed and agrees now. <code>DEV-SAT-013</code> excuses the other 4</td></tr>
+<tr><td>Fills that run along their own edges (<code>SC-I0313</code>), in Califragilistic</td><td>3</td><td>Excused by <code>DEV-FILL-001</code></td></tr>
+<tr><td>Cross stitch parts that reach equally far left after the repair, in Egyptian small’s ǘ and ӳ</td><td>2</td><td>Excused by <code>DEV-FILL-029</code></td></tr>
+<tr><td>Satin rings that start apart, in Initials XL’s comma and Alchemy’s 🜂</td><td>2</td><td>Excused by <code>DEV-SAT-009</code></td></tr>
+<tr><td>The second of 2 satin rings started past a rung, its stitches leaning up to 89°, in Emilio 20 tricolore’s E</td><td>1</td><td>Fixed: it starts at its nearest node that no rung lies before</td></tr>
+<tr><td>Travel under a tatami fill’s rows, in Alchemy’s ¯</td><td>1</td><td>Excused by <code>DEV-FILL-007</code></td></tr>
+<tr><td>Jumps that go nowhere after lock stitches 2 satin columns force, in DejaVu’s Ä</td><td>1</td><td><code>DEV-FMT-001</code>, now undone within colour blocks too</td></tr>
+<tr><td>Top stitches that Ink/Stitch’s plan drops beside the underlay’s last point, 0.4 mm off each tip of Manga Impact’s &amp;</td><td>1</td><td>Excused by <code>DEV-RUN-003</code></td></tr>
+</tbody>
+</table>
+</div>
+<p>Run again on 8 November 2026 with these changes, the 20 fonts’ glyphs give 4,644 that agree and 317 that
+differ as the ledger explains. None differ otherwise or are known follow-up work, and every one sews.
+The rung fix also lets StitchCraft sew the x and the U of Apex simple, in both its sizes, which neither
+program sewed before. Ink/Stitch still calls their columns not stitchable, and <code>DEV-SAT-013</code> excuses them.
+A scan of every glyph file’s satin columns found 5 more fonts with columns the 2 fixes could change. Run
+again too, their 562 glyphs agree, but for 2 that excuses made before M8.6 explain.</p>
 <h2 id="fonts-ported-by-other-programs"><a class="header" href="#fonts-ported-by-other-programs">Fonts ported by other programs</a></h2>
 <div class="table-wrapper">
 <table>
@@ -13277,7 +13315,9 @@ are StitchCraft’s own). A case excuses a measure with the entry that explains 
 the difference as excused. An excuse for a measure that agrees fails the case, so that every reason in
 the ledger is still true. Where the differential can undo a deviation in Ink/Stitch’s file, it measures
 the file again without it. The excuse then counts only if the measure agrees. Ink/Stitch’s jumps that go
-nowhere (<code>DEV-FMT-001</code>) excuse as many trims and jumps as there are of them, and no more. Where both files
+nowhere (<code>DEV-FMT-001</code>) excuse as many trims and jumps as there are of them, and no more. Within a colour
+block, pystitch writes such a jump after lock stitches an element forces as it writes one after a trim of
+the plan. Only as many are left out there as Ink/Stitch’s file has trims more than StitchCraft’s. Where both files
 change thread at the same colour blocks, Ink/Stitch’s threads, named by other entries of Brother’s palette
 (<code>DEV-THREAD-001</code>), take StitchCraft’s names. StitchCraft fits each stitch to the machine (<code>DEV-FIN-001</code>),
 so to undo that, Ink/Stitch’s stitches longer than the machine’s longest are split and its needle points
@@ -13354,12 +13394,16 @@ may be wider than the reference hoop. Every night the case sews 4 glyphs of each
 21,179, in 6 parts. A glyph whose stitch types StitchCraft doesn’t sew yet is listed, and joins the
 comparison with M10’s steps. An element whose setting StitchCraft can’t read is left out with <code>SC-E0101</code>,
 where Ink/Stitch sews the setting’s default: its glyph is excused by <code>DEV-PRM-001</code> and not compared. A glyph
-neither program writes a file of agrees. Ink/Stitch writes none when it finds nothing to sew or an element
-it can’t sew, and StitchCraft none when an element is left out with an error, as <code>stitch plan</code> does.</p>
+neither program writes a file of agrees. Ink/Stitch writes none when it finds nothing to sew, an element it
+can’t sew or elements that sew no stitch, as of a glyph of one empty path, and StitchCraft none when an
+element is left out with an error, as <code>stitch plan</code> does. <code>--font</code> sews the glyphs of the fonts it names
+alone, so that the fonts a weekly run found differing sew again in minutes.</p>
 <p>The corpus can’t have an excuse for each of its glyphs. <code>conformance/inkstitch/glyphs.toml</code> excuses a
 measure by an entry of the ledger for the glyphs where its cause is. A diagnostic picks them, such as
 <code>SC-I0703</code> where StitchCraft splits stitches longer than the machine’s longest, and so do a stitch type, a
-setting and a font. The excuses the differential can check are checked as a case’s are. StitchCraft’s
+setting and a font. A cause that only the drawing of a few glyphs shows, such as a rung that rounding leaves
+a hair short of a rail, is named by its glyphs, and an excuse that names <code>sewn</code> explains a glyph that only one
+program sews. The excuses the differential can check are checked as a case’s are. StitchCraft’s
 running stitches place their needle points otherwise (<code>DEV-RUN-002</code>), and that excuse counts only where each
 program’s thread lies within 0.3 mm of the other’s, for 0.9 of it. The report, <code>target/conformance/fonts.md</code>,
 has a row for each font, the glyphs each excuse excused, and each glyph that differs with its measures.</p>
@@ -15668,7 +15712,7 @@ needle points to the other shapes in their group or take some out, are not plann
 <tr><td>M8.3 ✅</td><td>Older files updated. The changes Ink/Stitch’s update makes to the settings of a file of an older version apply, now that those settings are read (<a href="#file-versions">file versions</a>). In a file of version 1 or 2, a zigzag stroke’s <code>pull_compensation_mm</code> is halved into <code>stroke_pull_compensation_mm</code>. A satin column there starts and ends where it is drawn, with <code>start_at_nearest_point</code> and <code>end_at_nearest_point</code> off. In a file of version 1 to 3, a fill with <code>auto_fill</code> off is a legacy fill, and the method <code>auto_fill</code> is a tatami fill. 167 of the 178 glyph files of Ink/Stitch’s fonts are of versions 1 to 3</td><td><code>REQ-SVG-007</code> extended, <code>SC-I0818</code> counting the shapes changed, and a differential case for each change</td></tr>
 <tr><td>M8.4 ✅</td><td>Start and end positions. Ink/Stitch’s <code>starting_point</code> and <code>ending_point</code> commands place where the element tied to them starts and ends, at their symbols. The markers <code>stitch:start</code> and <code>stitch:end</code> do the same in a VectorCraft document, each at its middle. A fill starts nearest its start position and its last part ends nearest the end position, with every fill method, the legacy fill sewn as a tatami fill among them, but the contour fill, which uses the start alone. Its first part starts nearest the start position, and each part after where the one before ended, where Ink/Stitch starts each nearest the command (<code>DEV-FILL-023</code>). A satin column starts at its start position and runs along its centre line to its first stitch. It ends at its end position, unless that lies within 5 px (1.32 mm) of the column’s end. Strokes don’t use them, as in Ink/Stitch. The element before a fill or a satin column with a start position ends nearest it. In a file of version 1 or 2, each of these commands is first moved to its connector’s end on the object, as the update moves it. 2,548 such commands start or end the elements of glyphs in 14 of Ink/Stitch’s fonts. From this step the <code>target_point</code> command centres a circular fill (M7.9), and from M10.8 it aims a ripple stitch</td><td><code>REQ-GEN-001</code> rewritten for these stitch types and active, <code>REQ-FILL-CIR-008</code>, <code>REQ-VC-009</code> updated, differential cases for the commands, the update’s move and the target point, and TS-16’s first part drawn for MC-11, which the differential sews in both programs</td></tr>
 <tr><td>M8.5 ✅</td><td>Clip paths. Fills and strokes are cut to the clip paths of the shape and of the groups around it, links and switches among them, with the region code of M5.1. A fill’s area is cut before its underlay and <code>expand_mm</code>, and a stroke’s line where it crosses a clip, each piece sewn on its own, as Ink/Stitch cuts them. Clips belong to the design’s elements (<code>Element::clips</code>). The engine cuts them for every reader, and automatic digitizing cuts its shapes first. A clip path’s area is the one a viewer clips to, its children’s together by their <code>clip-rule</code>, with a group’s children as Inkscape draws them. It lies in the user space of what it clips, or of a shape’s box. Where Ink/Stitch’s area differs, as when it takes the largest subpath for the outline and every other subpath for a hole, the ledger says how (<code>DEV-SVG-016</code> to <code>DEV-SVG-020</code>). Satin columns are sewn whole, as in Ink/Stitch, with <code>SC-W0217</code>. A shape wholly outside its clips isn’t sewn (<code>SC-W0013</code>). Inkscape’s power clips are read from their clip paths, as a viewer draws them. Masks stay unapplied, as in Ink/Stitch. The glyphs of 5 of Ink/Stitch’s fonts are clipped 187 times, mostly running stitches and guided fills</td><td><code>REQ-SVG-011</code> and <code>REQ-GEN-005</code> active, and <code>SC-W0802</code> no longer naming the clip paths applied. 7 differential cases, 2 that agree and 5 that differ as the ledger says, and TS-16’s part drawn for MC-11, which Ink/Stitch sews as StitchCraft does</td></tr>
-<tr><td>M8.6 (partly ✅)</td><td>Ink/Stitch’s fonts as a corpus. <code>cargo xtask corpus</code> downloads inkstitch/embroidery-fonts at a commit this repository pins, and checks its SHA-256. The files are never committed. The corpus takes the fonts whose licence file is the OFL, CC0, CC BY or CC BY-SA, 131 of the 142 fonts at <code>c7e3a05</code> (<a href="#inkstitchs-fonts">fonts</a>). The differential sews each glyph as a design of its own, its layer shown and the others left out, in both programs. The glyphs of stitch types StitchCraft doesn’t sew yet are listed, and join the corpus with M10’s steps. Done but for the first weekly run: the sample and a twentieth of every glyph sew as in Ink/Stitch, or differ as the ledger explains (<a href="#the-corpus">the corpus</a>)</td><td>A pinned sample of each font’s glyphs runs every night, and every glyph every week. Each glyph sews as in Ink/Stitch, or its difference is excused by the ledger or reproduced as a bug by a case of its own</td></tr>
+<tr><td>M8.6 ✅</td><td>Ink/Stitch’s fonts as a corpus. <code>cargo xtask corpus</code> downloads inkstitch/embroidery-fonts at a commit this repository pins, and checks its SHA-256. The files are never committed. The corpus takes the fonts whose licence file is the OFL, CC0, CC BY or CC BY-SA, 131 of the 142 fonts at <code>c7e3a05</code> (<a href="#inkstitchs-fonts">fonts</a>). The differential sews each glyph as a design of its own, its layer shown and the others left out, in both programs. The glyphs of stitch types StitchCraft doesn’t sew yet are listed, and join the corpus with M10’s steps. Done: the first run of every glyph found 56 glyphs that differ beyond the ledger, in 20 fonts. 2 were bugs, now fixed, and the ledger explains the others by their causes. Its 11 glyphs that didn’t sew, of one empty path, agree (<a href="#the-corpus">the corpus</a>)</td><td>A pinned sample of each font’s glyphs runs every night, and every glyph every week. Each glyph sews as in Ink/Stitch, or its difference is excused by the ledger or reproduced as a bug by a case of its own</td></tr>
 <tr><td>M8.7 ✅</td><td>Clipping in VectorCraft documents. A clip group’s art is cut to its clipping object as M8.5 cuts an SVG file’s shapes, in place of <code>SC-W0807</code>’s note that the clipping isn’t applied. The clipping object’s area is the one VectorCraft clips to, whatever its paints, and hidden or not. A path clips by its fill rule and a compound path by its own, a nested clip group by its clipping object, and another group or a layer by its members that show. Clip groups inside one another give one clip each, shared by the elements they cut. A satin column is sewn whole there too. Text, images and live objects in a clipping object are named, and left out of the clip. A clipping object under StitchCraft’s effects is named too, as VectorCraft clips the preview to the stitches they draw of it</td><td><code>REQ-VC-005</code> updated and <code>REQ-VC-017</code> active, and a Level B case in which VectorCraft’s Make Clipping Mask clips a fill and a stroke, which <code>stitch export</code> and the exporters sew cut</td></tr>
 <tr><td>M8.8 ✅</td><td>Origin and stop position. Ink/Stitch’s <code>origin</code> command gives the design’s origin, which goes to the hoop’s centre, and its <code>stop_position</code> command the stop position, which the frame moves to before each stop (<code>REQ-ASM-005</code>). Each is the point where its symbol is placed, wherever it is, in <code>&lt;defs&gt;</code> and hidden layers too, as Ink/Stitch finds them. Planning a design with 2 origins, or with 2 stop positions and a stop, ends with an error (<code>SC-E0819</code>). Ink/Stitch doesn’t write a machine file of it either. In a VectorCraft document, objects named <code>stitch:origin</code> and <code>stitch:stop-position</code> mark them, each at its middle. The differential measures the design’s place too, the middle of its box from where the machine starts, which the origin moves</td><td><code>REQ-SVG-003</code>, <code>REQ-ASM-005</code> and <code>REQ-VC-009</code> updated, 2 differential cases that agree by every measure, the place among them, and TS-16’s part drawn for MC-11</td></tr>
 <tr><td>M8.9 ✅</td><td>Rotation on export. The design setting <code>rotate_on_export</code> turns the plan about the hoop’s centre once the origin is there, before the hoop is checked, as Ink/Stitch turns the machine file it writes, the stop position’s jumps with it. <code>90</code> turns it right, and <code>-90</code> left. Any other number of degrees turns it that much, as Ink/Stitch’s writer does, and a whole number of quarter turns rounds nothing. The SVG adapter reads it from the file’s metadata, and VectorCraft’s Design Settings filter keeps it with a document, offering none, left and right</td><td><code>REQ-SVG-005</code>, <code>REQ-VC-013</code> and <code>REQ-ASM-005</code> updated, 2 differential cases, a quarter turn and 45°, that agree by every measure, and TS-16 turned for MC-11</td></tr>

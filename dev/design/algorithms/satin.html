@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-2aec8e4d.js";
+            window.path_to_searchindex_js = "../../searchindex-74c61774.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-9e6a4383.js"></script>
@@ -207,7 +207,9 @@ same polylines in both, which decide where the needle points go, where subpaths 
 drawn as one path gets its rungs. A path read from SVG has the subpaths a viewer draws, and inkex, which
 Ink/Stitch reads files with, does not always count them alike (<code>DEV-SVG-011</code>). The reader finds where
 each pair of subpaths meets, crossing or touching. A point the two share counts once, and a rung that
-ends exactly on a rail meets it.</p>
+ends exactly on a rail meets it. So does a rung whose end rounding leaves a hair short of the rail, by
+less than a billionth of a segment’s length. Ink/Stitch’s test is exact, and with 3 subpaths it can take
+such a rung for a rail (<code>DEV-SAT-013</code>).</p>
 <p>StitchCraft tells rails from rungs as Ink/Stitch does, and a file sews the same in both.</p>
 <ol>
 <li>A subpath that is one point is left out, with <code>SC-W0205</code>.</li>
@@ -355,6 +357,10 @@ wins. <code>none</code>, <code>first</code>, <code>second</code> and <code>both<
 <li>Of 2 rails that are rings, each ending where it starts (closed with <code>Z</code>, or drawn back to its start),
 rail B first starts at its node nearest rail A’s first node, before any reversal (<code>DEV-SAT-009</code>).
 Ink/Stitch takes each ring’s own start, and warns that a closed rail has no definite start.
+Rail B takes only a node whose line from rail A’s first node crosses none of the drawn rungs, unless
+every node’s line crosses one. Started past a rung, each part of rail B between rungs would pair with
+rail A’s next part. In Emilio 20 tricolore’s E, both rings of the bowl start at a step, and the outer
+ring’s node nearest the inner ring’s start lies past the rung across the step.
 VectorCraft’s Make Compound Path, from 0.10.0, turns the front of 2 rings round, which starts it at
 what was its last node. Rings sewn from their own starts then get stitches across the column. A node,
 not the nearest point, keeps rings that start together as drawn, with a rung across their starts where
@@ -806,7 +812,7 @@ a stroke selected with it crosses its rails. No step plans such a tool in Stitch
 <tr><td><code>REQ-SAT-014</code></td><td>Ending at its nearest point, a column ends on its outline nearest the next stitch. Every part is cut in 2 there, at its own needle point when one lies within the shortest stitch of the cut. The column sews the first halves, then the second halves from the line’s end, and stitches the end last</td></tr>
 <tr><td><code>REQ-SAT-015</code></td><td>A column drawn as one subpath whose stroke is no wider than the design’s narrowest satin stroke sews as a stroke would, with <code>SC-W0212</code>. It offers its first point, as a stroke does</td></tr>
 <tr><td><code>REQ-SAT-018</code></td><td>A column whose needle points all lie within its shortest stitch of its first sews nothing, with <code>SC-W0215</code>, and the rest of the design is planned. A zigzag satin with no stitch across sews nothing either, not even its underlays</td></tr>
-<tr><td><code>REQ-SAT-019</code></td><td>Of 2 rings, the second starts at its node nearest the first’s first node, its nodes too. The stitches go straight across whatever node each ring was drawn from and however it is closed, and rings drawn alike keep their starts (<code>DEV-SAT-009</code>)</td></tr>
+<tr><td><code>REQ-SAT-019</code></td><td>Of 2 rings, the second starts at its node nearest the first’s first node that no drawn rung lies before, its nodes too. The stitches go straight across whatever node each ring was drawn from and however it is closed, and rings drawn alike keep their starts (<code>DEV-SAT-009</code>)</td></tr>
 <tr><td><code>REQ-SAT-020</code></td><td>An E-stitch sews each of a satin column’s pairs as a spike: from the first rail’s inset point across to the second’s and back through the same splits. The stitch across splits as a top stitch across does, by default into the fewest equal parts</td></tr>
 <tr><td><code>REQ-SAT-021</code></td><td>Between spikes an E-stitch goes along the first rail in one stitch. Where the zigzag spacing is longer than the longest stitch, that stitch splits with no randomness: into the fewest equal parts by default, at whole multiples of the longest stitch by the simple and staggered methods</td></tr>
 <tr><td><code>REQ-SAT-022</code></td><td>Each stretch of pairs in a row whose stitches lean more than 45° from square to the column, to a tenth of a degree, gets one <code>SC-W0208</code> at the middle of its middle pair, whatever the satin method. The column runs halfway between its 2 rails. Stitches square to a rail, and stitches at 45°, give none</td></tr>

@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-2aec8e4d.js";
+            window.path_to_searchindex_js = "../../searchindex-74c61774.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-9e6a4383.js"></script>
@@ -404,7 +404,9 @@ agree. These differ:</p>
 of its objects, which follows where they lie in memory, where StitchCraft’s order is fixed. Where the needle
 and the end lie nearest one group of several, it sews another group first, from that group’s join nearest
 the end. And with neither, it starts each group at the first good join it finds of one cross alone
-(<code>DEV-FILL-028</code>).</li>
+(<code>DEV-FILL-028</code>). Of parts that reach equally far left, StitchCraft sews first the one whose leftmost point
+lies highest. Ink/Stitch sews first the one shapely gives first once it has repaired and grown the shape,
+which can be the lower (<code>DEV-FILL-029</code>).</li>
 <li><strong>Cells covered exactly half.</strong> On a file whose <code>viewBox</code> is in millimetres, Ink/Stitch writes the drawing’s
 scale with 6 decimals, 3.779528 pixels to the millimetre, against 3.7795275… for its grid. Its drawing is
 then a ten-millionth larger than its grid, about the page’s origin. A cell that a part covers exactly half
