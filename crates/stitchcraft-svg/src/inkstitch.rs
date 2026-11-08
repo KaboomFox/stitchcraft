@@ -21,18 +21,18 @@
 //!   object and everything in it; an `ignore_layer` command leaves out every layer it is in. Each is
 //!   listed (`SC-I0805`).
 //!
-//! The other commands: `trim` and `stop` turn on the object's `trim_after` and `stop_after`, exactly as
-//! the settings would. `starting_point` and `ending_point` give the start and end positions of the object's
-//! fills and satin columns, and `target_point` the point a circular fill turns round (`REQ-GEN-001`,
-//! `REQ-FILL-CIR-008`): each at its symbol's place, the `<use>` element's `x` and `y` under its transform
-//! and those of the elements above it, as Ink/Stitch places it (`lib/commands.py`). With 2 of one kind on an
-//! object, the first connector in the file counts, as in Ink/Stitch. Each connector's end on its object is
-//! kept too: Ink/Stitch's update of a file of version 1 or 2 moves start and end commands there
-//! ([`crate::version`]). `origin` and `stop_position` stand alone, wherever they are: each gives the design
-//! its origin, which goes to the hoop's centre, or the stop position the frame moves to before each stop
+//! The other commands: `trim` and `stop` turn on the object's `trim_after` and `stop_after`, exactly as the
+//! settings would. `starting_point` and `ending_point` give the start and end positions of the object's fills and
+//! satin columns, and `target_point` the point a circular fill turns round and a ripple stitch aims at
+//! (`REQ-GEN-001`, `REQ-FILL-CIR-008`, `REQ-RIP-002`): each at its symbol's place, the `<use>` element's `x` and
+//! `y` under its transform and those of the elements above it, as Ink/Stitch places it (`lib/commands.py`). With
+//! 2 of one kind on an object, the first connector in the file counts, as in Ink/Stitch. Each connector's end on
+//! its object is kept too: Ink/Stitch's update of a file of version 1 or 2 moves start and end commands there
+//! ([`crate::version`]). `origin` and `stop_position` stand alone, wherever they are: each gives the design its
+//! origin, which goes to the hoop's centre, or the stop position the frame moves to before each stop
 //! (`REQ-ASM-005`), at its symbol's place, as Ink/Stitch's `global_command` finds them. Ink/Stitch refuses to
-//! write a file with 2 origins, or 2 stop positions and a stop, and so does StitchCraft (`SC-E0819`). The
-//! rest feed Ink/Stitch's own tools, so they change nothing StitchCraft sews. Before its file version 3, Ink/Stitch
+//! write a file with 2 origins, or 2 stop positions and a stop, and so does StitchCraft (`SC-E0819`). The rest
+//! feed Ink/Stitch's own tools, so they change nothing StitchCraft sews. Before its file version 3, Ink/Stitch
 //! named 7 commands otherwise ([`RENAMED`]); they are read as the commands they became.
 //!
 //! **Ink/Stitch's own content** is what tells its updater that a file is one of its own

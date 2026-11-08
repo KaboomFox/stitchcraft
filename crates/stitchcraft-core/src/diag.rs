@@ -417,7 +417,8 @@ registry! {
     /// needle points are a tatami fill's, as in Ink/Stitch. Ink/Stitch sews a legacy fill's rows in
     /// stretches that join, each on its own and back and forth; its `flip` starts the rows from the other
     /// side, and its `reverse` sews the fill backwards. A tatami fill routes its rows and joins them with
-    /// travel stitches, and StitchCraft keeps `flip` and `reverse` without reading them (`SC-W0105`).
+    /// travel stitches, and StitchCraft keeps `flip` and `reverse` without reading them: `SC-W0105` names
+    /// `flip`, and `reverse`, a ripple stitch's setting too, is left to the node's stroke.
     ///
     /// To sew the fill alike in both, set its fill method to tatami fill and turn `fill_underlay` off.
     FillLegacyAsTatami = "SC-W0314", Warning, "Legacy fill sewn as a tatami fill without underlay";
@@ -556,7 +557,7 @@ registry! {
     ///
     /// The message gives both settings and the number of lines. Lower `skip_start` or `skip_end`, or give
     /// the ripple more lines.
-    RippleSkipsAll = "SC-W0408", Warning, "Ripple stitch's skips leave no line; none skipped";
+    RippleSkipsAll = "SC-W0408", Warning, "Ripple stitch's skips would leave out every line; every line sewn";
 
     /// A lock stitch would have been shorter than 0.2 mm, the shortest stitch a lock may have. The needle
     /// would go back into the hole it just left, which can cut the thread and does not lock it. Each such

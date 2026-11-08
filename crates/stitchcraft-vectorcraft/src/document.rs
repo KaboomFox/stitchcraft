@@ -57,8 +57,9 @@
 //! **Names** (`REQ-VC-009`). ABI v1 has no command objects, so a name gives Ink/Stitch's commands, read
 //! once the objects VectorCraft draws nothing of are left out ([`marker`]). `stitch:ignore` leaves an object
 //! or a layer out with everything in it, and `SC-I0811` lists it. `stitch:start` and `stitch:end` mark
-//! where the shape grouped with them starts or ends: the marker is never stitched, and `SC-W0807` names it
-//! until the generators start and end at such hints (M8). `stitch:origin` and `stitch:stop-position`, anywhere
+//! where the shape grouped with them starts or ends, and `stitch:target` the point its ripple stitch or
+//! circular fill aims at: the marker is never stitched, and `SC-W0807` names one that isn't used
+//! ([`Reader::markers`]). `stitch:origin` and `stitch:stop-position`, anywhere
 //! in the document, give the design its origin and its stop position (`REQ-ASM-005`), as Ink/Stitch's commands
 //! do in an SVG file, and 2 origins, or 2 stop positions in a design that stops, are an error (`SC-E0819`).
 //! `stitch:route-start` and `stitch:route-end` mark where the routing filters start and end a route
@@ -370,6 +371,9 @@ enum Marker {
     Start,
     /// Where it ends.
     End,
+    /// The point it aims at: where its ripple stitch shrinks to (`REQ-RIP-002`), or what its circular fill
+    /// turns round (`REQ-FILL-CIR-008`).
+    Target,
     /// The design's origin, which goes to the hoop's centre.
     Origin,
     /// The design's stop position, where the frame moves before each stop.
@@ -383,10 +387,11 @@ enum Marker {
 }
 
 /// The word after `stitch:` of each marker StitchCraft reads.
-const MARKERS: [(&str, Marker); 7] = [
+const MARKERS: [(&str, Marker); 8] = [
     ("ignore", Marker::Ignore),
     ("start", Marker::Start),
     ("end", Marker::End),
+    ("target", Marker::Target),
     ("origin", Marker::Origin),
     ("stop-position", Marker::StopPosition),
     ("route-start", Marker::RouteStart),
@@ -519,13 +524,14 @@ impl Reader {
         if let Some(marked) = node.name.as_deref().and_then(marker) {
             let container = node.kind.as_ref().map(|kind| kind.name.as_str()).filter(|kind| matches!(*kind, "layer" | "group"));
             let shown = called(node, &container.map_or_else(|| "The object".to_string(), |kind| format!("The {kind}")));
-            let (verb, noun) = match marked {
-                Marker::Start => ("starts", "start"),
+            let (what, noun) = match marked {
+                Marker::Start => ("where the shapes grouped with it start", "start"),
+                Marker::Target => ("the point the shapes grouped with it aim at", "target"),
                 Marker::Origin => ("", "origin"),
                 Marker::StopPosition => ("", "stop-position"),
                 Marker::RouteStart => ("", "route-start"),
                 Marker::RouteEnd => ("", "route-end"),
-                _ => ("ends", "end"),
+                _ => ("where the shapes grouped with it end", "end"),
             };
             match (marked, container) {
                 // The routing filters read it, and it is never stitched.
@@ -542,18 +548,18 @@ impl Reader {
                     self.warn(Code::VcObjectIgnored, Some(&label), message, Some("Rename it to stitch it."));
                     return Ok(());
                 }
-                (Marker::Start | Marker::End, None) => {
+                (Marker::Start | Marker::End | Marker::Target, None) => {
                     // The group it is in places its shapes there, and it is not stitched.
                     if !around.markers.iter().any(|used| std::ptr::eq(*used, node)) {
                         let message = format!(
-                            "{shown} would mark where the shapes grouped with it {verb}, and is not stitched. It is not used: it has no \
-                             point that reads, or another {noun} marker in its group comes first."
+                            "{shown} would mark {what}, and is not stitched. It is not used: it has no point that reads, or another \
+                             {noun} marker in its group comes first."
                         );
                         self.feature(&label, message, Some(&format!("Keep one {noun} marker in a group, drawn as a small path.")));
                     }
                     return Ok(());
                 }
-                (Marker::Start | Marker::End, Some(kind)) => {
+                (Marker::Start | Marker::End | Marker::Target, Some(kind)) => {
                     let message = format!("{shown} is named as a {noun} marker, which a {kind} can't be, and the name is ignored.");
                     self.feature(&label, message, Some(&format!("Name a small path grouped with the shape stitch:{noun}.")));
                 }
@@ -651,7 +657,8 @@ impl Reader {
         // Its own markers place what it holds, before those of the groups around it. Its hints differ from
         // theirs only where it has markers of its own.
         let (hints, markers) = self.markers(kind)?;
-        let hints = Hints { start: hints.start.or(around.hints.start), end: hints.end.or(around.hints.end), target: None };
+        let hints =
+            Hints { start: hints.start.or(around.hints.start), end: hints.end.or(around.hints.end), target: hints.target.or(around.hints.target) };
         let placed = !markers.is_empty();
         let markers: Rc<[&'a Node]> = if markers.is_empty() { Rc::clone(&around.markers) } else { markers.into() };
         let inside = (gives || paints.is_some() || placed || clipped.is_some()).then(|| Around {
@@ -706,16 +713,21 @@ impl Reader {
         Ok(())
     }
 
-    /// The start and end markers among `kind`'s children, a group's or a layer's (`REQ-VC-009`): the first of
-    /// each kind that shows and has a point that reads gives where the fills and satin columns it holds
-    /// start or end, the middle of its anchors ([`geometry::middle`]). Each such marker is used.
+    /// The start, end and target markers among `kind`'s children, a group's or a layer's (`REQ-VC-009`): the
+    /// first of each kind that shows and has a point that reads gives where the fills and satin columns it
+    /// holds start or end, or the point its ripple stitches and circular fills aim at, the middle of its
+    /// anchors ([`geometry::middle`]). Each such marker is used.
     fn markers<'a>(&mut self, kind: &'a Kind) -> Result<(Hints, Vec<&'a Node>), Diagnostic> {
         let (mut hints, mut used) = (Hints::default(), Vec::new());
         for child in &kind.children {
-            let Some(marked @ (Marker::Start | Marker::End)) = child.name.as_deref().and_then(marker) else { continue };
+            let Some(marked @ (Marker::Start | Marker::End | Marker::Target)) = child.name.as_deref().and_then(marker) else { continue };
             // A group or a layer is never a marker, and one that doesn't show places nothing.
             let Some(own) = child.kind.as_ref().filter(|k| !matches!(k.name.as_str(), "layer" | "group")) else { continue };
-            let place = if marked == Marker::Start { &mut hints.start } else { &mut hints.end };
+            let place = match marked {
+                Marker::Start => &mut hints.start,
+                Marker::End => &mut hints.end,
+                _ => &mut hints.target,
+            };
             if place.is_some() || !child.visible || !shows(child.opacity) {
                 continue;
             }

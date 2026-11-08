@@ -272,8 +272,9 @@ fn diag_sc_w0505_a_trim_or_stop_after_an_element_that_sews_nothing_is_named() {
     // Too small for a stitch, a stitch type not sewn yet, and a stop alone: none of them sews, so their
     // trims and stops have nothing to come after.
     let tiny = line("tiny", (0.0, 0.0), 0.1, &RED, &[("trim_after", "true")]);
-    let square =
-        Path { subpaths: vec![Subpath { start: p(0.0, 5.0), segments: vec![Segment::Line(p(5.0, 5.0)), Segment::Line(p(5.0, 10.0))], closed: true }] };
+    let square = Path {
+        subpaths: vec![Subpath { start: p(0.0, 5.0), segments: vec![Segment::Line(p(5.0, 5.0)), Segment::Line(p(5.0, 10.0))], closed: true }],
+    };
     let guided = Element {
         shape: Shape::Fill { path: square, rule: FillRule::EvenOdd },
         ..line("guided", (0.0, 5.0), 1.0, &RED, &[("fill_method", "guided_fill"), ("trim_after", "true"), ("stop_after", "true")])
