@@ -35,7 +35,9 @@
 //! The lines and the triangles they cross are a part's [`Skeleton`], which also keeps where each point of a
 //! line lies, on a chord, in a junction or at a tip, and which triangle each piece of a line crosses. A
 //! part no wider than a satin column sews a column along each of its lines ([`columns`]), between its own
-//! outlines, its lines found with only the branches to a tip left out as bumps ([`Bumps`]).
+//! outlines, its lines found with only the branches to a tip and the teeth of a traced outline left out as
+//! bumps ([`Bumps`]). Such a part cut from a broad one ends along each cut: its triangles with a corner on
+//! the cut lie in that end, as a cap's do ([`Role::Cut`]), and a line that reaches them ends there.
 
 mod columns;
 
@@ -65,17 +67,25 @@ pub(crate) const CAP_BUMP: f64 = 1.0;
 
 /// Which branches from a junction to an end no longer than [`BUMP`] times the junction triangle's longest
 /// edge are bumps, left out of the lines.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 enum Bumps {
     /// Every one: a narrow part's lines.
     All,
-    /// Only one that ends at a tip, a corner the line runs on to, and ends at its junction too, the 2 other
+    /// Only one that ends at a tip, a corner the line runs on to, and at its junction too, the 2 other
     /// branches there running on most nearly straight, as the corners of a slanted or a wide square end do
-    /// beside the one the line runs on to. One that ends in a cap is an arm with an end of its own, as each
-    /// arm of the crossbar of a t is, which a column beside it would cover with stitches out along the arm;
-    /// and one to a tip that another runs on into is that line's end, as each leg of an A runs on into a
-    /// corner of its flat top. A part's columns' lines ([`columns`]).
-    Tips,
+    /// beside the one the line runs on to; and a tooth, a branch to a cap that is no wider than `narrowest`, the
+    /// narrowest satin column, at one of its chords, and reaches no further than [`CAP_BUMP`] times the junction
+    /// triangle's longest edge, or than `narrowest` beside a junction narrower than that. A tooth is a step of a
+    /// traced outline: as a column of its own it would run as a
+    /// line of a few stitches beside the column it leaves, and its junction would cut that column there. Any
+    /// other branch that ends in a cap is an arm with an end of its own, as each arm of the crossbar of a t is,
+    /// which a column beside it would cover with stitches out along the arm; and one to a tip that another runs
+    /// on into is that line's end, as each leg of an A runs on into a corner of its flat top. A part's columns'
+    /// lines ([`columns`]).
+    Tips {
+        /// The narrowest satin column, in millimetres.
+        narrowest: f64,
+    },
 }
 
 /// A centre line.
@@ -98,17 +108,18 @@ impl Line {
 /// The centre lines of `part`, cut into triangles with no edge of the part longer than `longest`, in the
 /// order they are sewn, with `meter`'s work; none for a dot. A triangulation that loses its shape is a bug.
 pub(crate) fn centre_lines(part: &Polygon, longest: f64, meter: &mut Meter) -> Result<Result<Vec<Line>, Broken>, Exhausted> {
-    match skeleton(part, longest, Bumps::All, meter)? {
+    match skeleton(part, longest, Bumps::All, &[], meter)? {
         Ok(skeleton) => Ok(Ok(skeleton.sewn(meter)?)),
         Err(broken) => Ok(Err(broken)),
     }
 }
 
 /// The skeleton of `part`, cut into triangles with no edge of the part longer than `longest`, its `bumps`
-/// left out, with `meter`'s work. A triangulation that loses its shape is a bug.
-fn skeleton(part: &Polygon, longest: f64, bumps: Bumps, meter: &mut Meter) -> Result<Result<Skeleton, Broken>, Exhausted> {
+/// left out, and its triangles beside `cuts`, where it was cut from a broad part, in its ends' caps, with
+/// `meter`'s work. A triangulation that loses its shape is a bug.
+fn skeleton(part: &Polygon, longest: f64, bumps: Bumps, cuts: &[[Point; 2]], meter: &mut Meter) -> Result<Result<Skeleton, Broken>, Exhausted> {
     match triangulation::triangulate(part, longest, meter)? {
-        Ok(triangulation) => Ok(Ok(Skeleton::of(triangulation, bumps, meter)?)),
+        Ok(triangulation) => Ok(Ok(Skeleton::of(triangulation, bumps, cuts, meter)?)),
         Err(broken) => Ok(Err(broken)),
     }
 }
@@ -124,10 +135,12 @@ pub(crate) struct Skeleton {
 }
 
 impl Skeleton {
-    /// The centre lines through the triangles of `triangulation`, its `bumps` left out, with `meter`'s work.
-    fn of(triangulation: Triangulation, bumps: Bumps, meter: &mut Meter) -> Result<Skeleton, Exhausted> {
-        let roles = roles(&triangulation, meter)?;
+    /// The centre lines through the triangles of `triangulation`, its `bumps` left out and its triangles beside
+    /// `cuts` in its ends' caps, with `meter`'s work.
+    fn of(triangulation: Triangulation, bumps: Bumps, cuts: &[[Point; 2]], meter: &mut Meter) -> Result<Skeleton, Exhausted> {
+        let roles = roles(&triangulation, cuts, meter)?;
         let mut graph = Graph::of(&triangulation, &roles, meter)?;
+        graph.exits = cuts.iter().map(|[a, b]| a.lerp(*b, 0.5)).collect();
         graph.prune(bumps, meter)?;
         let pairs = graph.pairs(meter)?;
         let walked = graph.lines(&pairs, meter)?;
@@ -174,6 +187,10 @@ enum Role {
     Cap,
     /// It is an end whose corner is a tip, which the line runs on to: the corner's index.
     Tip(usize),
+    /// It has a corner on a cut, where the part was cut from a broad one, and lies in the end along the cut:
+    /// the cut's place among the cuts. The line ends at its chords, where the part goes on into the broad
+    /// part.
+    Cut(usize),
 }
 
 /// How many chords triangle `t` has.
@@ -208,17 +225,30 @@ fn cap_reach(triangulation: &Triangulation, roles: &[Role], at: Point, touched: 
 }
 
 /// What each triangle of `triangulation` is to the centre line, with `meter`'s work: a unit for each triangle,
-/// and for each corner tested. An end is a cap when the circle on its chord holds its corner, and a tip when
-/// it doesn't. Each cap then grows across the chords while the circle on each holds every corner of the cap:
-/// on through a strip triangle, and on through a junction that caps reach on 2 of its sides, across its third
-/// chord. Which end grows first makes no difference.
-fn roles(triangulation: &Triangulation, meter: &mut Meter) -> Result<Vec<Role>, Exhausted> {
+/// for each corner tested, and for each cut each point is looked for on. A triangle with a corner on one of
+/// `cuts`, where the part was cut from a broad one, lies in a cap: the column ends along the cut there, and a
+/// line that ran into the cut's corners would run along it instead (`columns`). An end is a cap when the
+/// circle on its chord holds its corner, and a tip when it doesn't. Each cap then grows across the chords
+/// while the circle on each holds every corner of the cap: on through a strip triangle, and on through a
+/// junction that caps reach on 2 of its sides, across its third chord. Which end grows first makes no
+/// difference.
+fn roles(triangulation: &Triangulation, cuts: &[[Point; 2]], meter: &mut Meter) -> Result<Vec<Role>, Exhausted> {
     let Triangulation { points, triangles } = triangulation;
-    let mut roles = vec![Role::Line; triangles.len()];
+    // The cut each point lies on, if any.
+    let mut on_cut = Vec::with_capacity(points.len());
+    for &q in points {
+        meter.charge(u64::try_from(cuts.len()).unwrap_or(u64::MAX))?;
+        on_cut.push(cuts.iter().position(|cut| columns::on_cut(q, std::slice::from_ref(cut))));
+    }
+    let at_cut = |triangle: &Triangle| triangle.corners.iter().find_map(|&c| on_cut.get(c).copied().flatten());
+    let mut roles: Vec<Role> = triangles.iter().map(|triangle| at_cut(triangle).map_or(Role::Line, Role::Cut)).collect();
     // Each cap as it grows: the triangle it reached last, the chord of it to cross next, and its corners.
     let mut growing: Vec<(usize, usize, Vec<usize>)> = Vec::new();
     for (end, triangle) in triangles.iter().enumerate() {
         meter.charge(1)?;
+        if at_cut(triangle).is_some() {
+            continue;
+        }
         let Some(k) = (0..3).find(|&k| triangle.across[k].is_some()).filter(|_| chords(triangle) == 1) else { continue };
         let (a, b) = triangle.edge(k);
         let role = if holds(points, a, b, &[triangle.corners[k]]) { Role::Cap } else { Role::Tip(triangle.corners[k]) };
@@ -272,6 +302,14 @@ struct Graph {
     /// How far the part reaches beyond each point through the caps it touches, to the farthest corner of their
     /// triangles: 0 for a point that touches none. A line's end beside a round or a square end touches its cap.
     beyond: Vec<f64>,
+    /// How wide the part is across each point that is the middle of a chord: the chord's length; 0 for any
+    /// other point.
+    across: Vec<f64>,
+    /// The cut whose end each point is the middle of a chord into, by its place among the cuts: where the line
+    /// leaves the part; `None` for any other point.
+    cut: Vec<Option<usize>>,
+    /// The middle of each cut, by its place among the cuts: where a line that leaves the part through it goes.
+    exits: Vec<Point>,
     /// The triangle each piece of the line between 2 points crosses, by the 2 points ([`edge`]).
     inside: BTreeMap<(usize, usize), usize>,
 }
@@ -287,11 +325,11 @@ impl Graph {
         let corner = |i: usize| points.get(i).copied();
         for (t, (triangle, role)) in triangles.iter().zip(roles).enumerate() {
             meter.charge(1)?;
-            if *role == Role::Cap {
+            if matches!(role, Role::Cap | Role::Cut(_)) {
                 continue;
             }
             // A junction beside a cap is joined only to its other chords: a junction with one left is where the
-            // line ends, at its middle.
+            // line ends, at its middle. A chord into a cut's end is a branch, where the line leaves the part.
             let junction = chords(triangle) == 3;
             let mut ends = Vec::with_capacity(3);
             for k in 0..3 {
@@ -303,6 +341,12 @@ impl Graph {
                         let (i, j) = triangle.edge(k);
                         let (Some(a), Some(b)) = (corner(i), corner(j)) else { continue };
                         let node = graph.add(a.lerp(b, 0.5), None, Node::Chord { triangles: key, corners: (i, j) });
+                        if let Some(slot) = graph.across.get_mut(node) {
+                            *slot = a.distance(b);
+                        }
+                        if let (Some(slot), Some(&Role::Cut(cut))) = (graph.cut.get_mut(node), roles.get(u)) {
+                            *slot = Some(cut);
+                        }
                         at_chord.insert(key, node);
                         node
                     }
@@ -348,7 +392,17 @@ impl Graph {
 
     /// A graph with no points.
     fn new() -> Graph {
-        Graph { points: Vec::new(), nodes: Vec::new(), links: Vec::new(), size: Vec::new(), beyond: Vec::new(), inside: BTreeMap::new() }
+        Graph {
+            points: Vec::new(),
+            nodes: Vec::new(),
+            links: Vec::new(),
+            size: Vec::new(),
+            beyond: Vec::new(),
+            across: Vec::new(),
+            cut: Vec::new(),
+            exits: Vec::new(),
+            inside: BTreeMap::new(),
+        }
     }
 
     /// Adds point `p`, lying where `node` says, a junction's middle when it has a `size`, and gives its index.
@@ -358,6 +412,8 @@ impl Graph {
         self.links.push(Vec::new());
         self.size.push(size);
         self.beyond.push(0.0);
+        self.across.push(0.0);
+        self.cut.push(None);
         self.points.len() - 1
     }
 
@@ -379,6 +435,17 @@ impl Graph {
     /// How many points point `p` is joined to.
     fn degree(&self, p: usize) -> usize {
         self.links.get(p).map_or(0, Vec::len)
+    }
+
+    /// The shortest chord whose middle is a point of `path`, in millimetres: infinite when there is none.
+    fn narrowest(&self, path: &[usize]) -> f64 {
+        path.iter().filter_map(|&p| self.across.get(p)).filter(|&&across| across > 0.0).fold(f64::INFINITY, |least, &across| least.min(across))
+    }
+
+    /// The cut that the point `p` leads into, by its place among the cuts: the middle of a chord into the end
+    /// along a cut, where the line leaves the part.
+    fn cut_at(&self, p: usize) -> Option<usize> {
+        self.cut.get(p).copied().flatten()
     }
 
     /// The point `p`.
@@ -413,7 +480,7 @@ impl Graph {
     /// Leaves out the `bumps`: at each junction, the shortest, until no junction has one.
     fn prune(&mut self, bumps: Bumps, meter: &mut Meter) -> Result<(), Exhausted> {
         loop {
-            let pairs = if bumps == Bumps::Tips { self.pairs(meter)? } else { BTreeMap::new() };
+            let pairs = if bumps == Bumps::All { BTreeMap::new() } else { self.pairs(meter)? };
             let mut shortest: Option<(f64, usize, usize, Vec<usize>)> = None;
             for junction in self.junctions() {
                 let size = self.size.get(junction).copied().flatten().unwrap_or(0.0);
@@ -425,7 +492,16 @@ impl Graph {
                     let ends_there = pairs.get(&junction).is_none_or(|&(a, b)| first != a && first != b);
                     let tip = matches!(self.nodes.get(end), Some(Node::Tip { .. }));
                     let times = if tip { BUMP } else { CAP_BUMP };
-                    let bump = self.degree(end) == 1 && reach <= times * size && (bumps == Bumps::All || tip && ends_there);
+                    let within = reach <= times * size;
+                    // A branch into a cut is where the line leaves the part, and no bump.
+                    let into_cut = self.cut_at(end).is_some();
+                    // A tooth, a step of a traced outline, is as narrow as a line somewhere along its branch,
+                    // and its chords widen towards the column it leaves.
+                    let tooth = match bumps {
+                        Bumps::Tips { narrowest } => !tip && self.narrowest(&path) <= narrowest && (within || reach <= narrowest),
+                        Bumps::All => false,
+                    };
+                    let bump = self.degree(end) == 1 && !into_cut && (within && (bumps == Bumps::All || tip && ends_there) || tooth);
                     if bump && shortest.as_ref().is_none_or(|(best, ..)| reach < *best) {
                         shortest = Some((reach, junction, first, path));
                     }
@@ -441,7 +517,9 @@ impl Graph {
 
     /// At each junction, the 2 branches that run on most nearly straight, as the neighbours they start
     /// with: the pair whose directions are most nearly opposite, each measured to the first of its points
-    /// at least as far from the junction's middle as the junction's longest edge, or to its last point.
+    /// at least as far from the junction's middle as the junction's longest edge, or to its last point. A
+    /// branch into a cut is measured to the cut's middle, and where there is one, the pair holds a branch into
+    /// a cut and no other branch into the same cut, if any pair does.
     fn pairs(&self, meter: &mut Meter) -> Result<BTreeMap<usize, (usize, usize)>, Exhausted> {
         let mut pairs = BTreeMap::new();
         for junction in self.junctions() {
@@ -451,23 +529,27 @@ impl Graph {
             for &first in self.links.get(junction).into_iter().flatten() {
                 let path = self.branch(junction, first, meter)?;
                 let far = path.iter().map(|&p| self.point(p)).find(|&p| centre.distance(p) >= size).or_else(|| path.last().map(|&p| self.point(p)));
+                // A branch into a cut leaves the part through the cut, towards its middle.
+                let cut = path.last().and_then(|&end| self.cut_at(end));
+                let far = cut.and_then(|cut| self.exits.get(cut).copied()).or(far);
                 let (dx, dy) = far.map_or((0.0, 0.0), |p| (p.x() - centre.x(), p.y() - centre.y()));
-                directions.push((first, dx, dy));
+                directions.push(Direction { first, dx, dy, cut });
             }
-            let cosine = |a: &(usize, f64, f64), b: &(usize, f64, f64)| {
-                let lengths = math::hypot(a.1, a.2) * math::hypot(b.1, b.2);
-                if lengths > 0.0 { (a.1 * b.1 + a.2 * b.2) / lengths } else { 1.0 }
-            };
-            let mut best: Option<(f64, usize, usize)> = None;
+            // A branch into a cut runs on, as the part goes on into the broad part beyond it, and 2 branches into
+            // one cut would run the line along it: of the pairs that run on so, when there are any, the one that
+            // runs on most nearly straight.
+            let leaves = directions.iter().any(|d| d.cut.is_some());
+            let running = |a: &Direction, b: &Direction| !leaves || (a.cut.is_some() || b.cut.is_some()) && (a.cut.is_none() || a.cut != b.cut);
+            let mut best: Option<(bool, f64, usize, usize)> = None;
             for (i, a) in directions.iter().enumerate() {
                 for b in directions.iter().skip(i + 1) {
-                    let c = cosine(a, b);
-                    if best.is_none_or(|(least, ..)| c < least) {
-                        best = Some((c, a.0, b.0));
+                    let (runs, c) = (running(a, b), a.cosine(b));
+                    if best.is_none_or(|(ran, least, ..)| (runs, -c) > (ran, -least)) {
+                        best = Some((runs, c, a.first, b.first));
                     }
                 }
             }
-            if let Some((_, a, b)) = best {
+            if let Some((_, _, a, b)) = best {
                 pairs.insert(junction, (a, b));
             }
         }
@@ -497,6 +579,13 @@ impl Graph {
             }
         }
         lines.retain(|line| line.nodes.len() >= 2);
+        // A line that leads into a cut runs into it, to the broad part it was cut from, and ends there.
+        for line in &mut lines {
+            let leads = |node: Option<&usize>| node.is_some_and(|&node| self.cut_at(node).is_some());
+            if !line.closed && leads(line.nodes.first()) && !leads(line.nodes.last()) {
+                line.nodes.reverse();
+            }
+        }
         Ok(lines)
     }
 
@@ -534,6 +623,25 @@ impl Graph {
                 _ => return Ok(Walked { nodes, closed: false }),
             }
         }
+    }
+}
+
+/// The way a branch leaves a junction ([`Graph::pairs`]).
+struct Direction {
+    /// The branch's first point.
+    first: usize,
+    /// How far along x, then along y, the branch goes from the junction's middle.
+    dx: f64,
+    dy: f64,
+    /// The cut it leads into, when it ends at one ([`Graph::cut_at`]).
+    cut: Option<usize>,
+}
+
+impl Direction {
+    /// The cosine of the angle between this way and `other`: 1 for a way of no length.
+    fn cosine(&self, other: &Direction) -> f64 {
+        let lengths = math::hypot(self.dx, self.dy) * math::hypot(other.dx, other.dy);
+        if lengths > 0.0 { (self.dx * other.dx + self.dy * other.dy) / lengths } else { 1.0 }
     }
 }
 

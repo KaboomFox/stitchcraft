@@ -117,7 +117,7 @@ fn req_auto_014_a_line_ends_beside_its_cap_which_reaches_to_the_farthest_corner_
     // triangles deep. Each end of the line reaches on through its cap to the end's corners, and no further.
     let strip = part(&[(0.0, 0.0), (6.0, 0.0), (6.0, 0.6), (0.0, 0.6)], &[]);
     let triangulation = triangulation::triangulate(&strip, 0.15, &mut meter()).unwrap().unwrap();
-    let roles = roles(&triangulation, &mut meter()).unwrap();
+    let roles = roles(&triangulation, &[], &mut meter()).unwrap();
     let caps = |left: bool| {
         roles
             .iter()
@@ -198,7 +198,7 @@ fn walked_points(graph: &Graph, walked: &Walked) -> (Vec<(f64, f64)>, bool) {
 
 /// The centre lines through the triangles of `triangulation`, in the order they are sewn.
 fn through(triangulation: &Triangulation) -> Vec<Line> {
-    Skeleton::of(triangulation.clone(), Bumps::All, &mut meter()).unwrap().sewn(&mut meter()).unwrap()
+    Skeleton::of(triangulation.clone(), Bumps::All, &[], &mut meter()).unwrap().sewn(&mut meter()).unwrap()
 }
 
 #[test]
@@ -223,6 +223,104 @@ fn req_auto_014_a_junctions_bumps_are_left_out_the_shortest_first() {
     };
     assert_eq!(reaching(0.5), [1, 2]);
     assert_eq!(reaching(0.6), [1, 2, 3]);
+}
+
+#[test]
+fn req_auto_016_a_branch_into_a_cut_is_no_bump() {
+    // A junction 1 mm across with 2 long branches and one 0.5 mm long: a bump, unless its end is the middle of
+    // a chord into a cut, where the part goes on into the broad part it was cut from.
+    let pruned = |cut: Option<usize>| {
+        let mut short = graph(&[((0.0, 0.0), Some(1.0)), ((10.0, 0.0), None), ((-10.0, 0.0), None), ((0.0, 0.5), None)], &[(0, 1), (0, 2), (0, 3)]);
+        short.cut[3] = cut;
+        short.prune(Bumps::All, &mut meter()).unwrap();
+        short.links[0].clone()
+    };
+    assert_eq!(pruned(None), [1, 2]);
+    assert_eq!(pruned(Some(0)), [1, 2, 3]);
+}
+
+#[test]
+fn req_auto_016_a_tooth_is_a_bump_and_an_arm_or_a_tip_is_not() {
+    // A junction 2 mm across with 2 long branches, and a third to (0, 1.5), within the junction's longest
+    // edge, whose chord is `across` wide: a tooth, and so a bump, when that is no wider than the narrowest
+    // satin stroke, 1 mm. A branch with no chord is an arm.
+    let narrowest = 1.0;
+    let pruned = |size: f64, reach: f64, across: f64| {
+        let mut toothed =
+            graph(&[((0.0, 0.0), Some(size)), ((10.0, 0.0), None), ((-10.0, 0.0), None), ((0.0, reach), None)], &[(0, 1), (0, 2), (0, 3)]);
+        toothed.across[3] = across;
+        toothed.prune(Bumps::Tips { narrowest }, &mut meter()).unwrap();
+        toothed.links[0].len()
+    };
+    assert_eq!(pruned(2.0, 1.5, 1.0), 2);
+    assert_eq!(pruned(2.0, 1.5, 1.01), 3);
+    assert_eq!(pruned(2.0, 1.5, 0.0), 3);
+    // Beside a junction 0.5 mm across, a tooth reaches as far as the narrowest stroke is wide, and no further.
+    assert_eq!(pruned(0.5, 1.0, 0.8), 2);
+    assert_eq!(pruned(0.5, 1.05, 0.8), 3);
+    // As narrow and as short, a branch to a tip that the line runs on into is the line's end: here the tip
+    // runs on straight from the branch to (10, 0).
+    let mut tipped = graph(&[((0.0, 0.0), Some(2.0)), ((10.0, 0.0), None), ((0.0, 10.0), None)], &[(0, 1), (0, 2)]);
+    let tip = tipped.add(p(-1.5, 0.0), None, Node::Tip { triangle: 0 });
+    tipped.join(0, tip, 0);
+    tipped.across[tip] = 0.8;
+    tipped.prune(Bumps::Tips { narrowest }, &mut meter()).unwrap();
+    assert_eq!(tipped.links[0], [1, 2, tip]);
+}
+
+#[test]
+fn req_auto_016_a_branch_into_a_cut_runs_on_towards_the_cuts_middle() {
+    // A junction with branches along x either way, and a short one up into a cut whose middle lies at
+    // (10, 0.5): the branch into the cut runs on, measured towards the cut's middle, with the branch running
+    // the other way, to (-10, 0). Measured to its own end it would run on with neither more than the other.
+    let mut leaving = graph(&[((0.0, 0.0), Some(1.0)), ((10.0, 0.0), None), ((-10.0, 0.0), None), ((0.0, 0.5), None)], &[(0, 1), (0, 2), (0, 3)]);
+    leaving.cut[3] = Some(0);
+    leaving.exits = vec![p(10.0, 0.5)];
+    assert_eq!(leaving.pairs(&mut meter()).unwrap().get(&0), Some(&(2, 3)));
+    // 2 branches into one cut never run on into each other, which would run the line along the cut, but 2
+    // into 2 cuts do, a bar between 2 broad parts.
+    let into = |cuts: [usize; 2]| {
+        let mut two = graph(&[((0.0, 0.0), Some(1.0)), ((0.0, 10.0), None), ((-0.5, 0.0), None), ((0.5, 0.0), None)], &[(0, 1), (0, 2), (0, 3)]);
+        (two.cut[2], two.cut[3]) = (Some(cuts[0]), Some(cuts[1]));
+        two.exits = vec![p(-10.0, 0.0), p(10.0, 0.0)];
+        two.pairs(&mut meter()).unwrap().get(&0).copied()
+    };
+    assert_eq!(into([0, 0]), Some((1, 2)));
+    assert_eq!(into([0, 1]), Some((2, 3)));
+}
+
+#[test]
+fn req_auto_016_a_line_into_a_cut_ends_there() {
+    // A line of 3 points, walked from its first: turned round when only its first leads into a cut, so that
+    // it ends at the cut, and as walked when its last does, or both do.
+    let walked = |cuts: [Option<usize>; 2]| {
+        let mut row = graph(&[((0.0, 0.0), None), ((1.0, 0.0), None), ((2.0, 0.0), None)], &[(0, 1), (1, 2)]);
+        (row.cut[0], row.cut[2]) = (cuts[0], cuts[1]);
+        row.lines(&BTreeMap::new(), &mut meter()).unwrap().into_iter().map(|line| line.nodes).collect::<Vec<_>>()
+    };
+    assert_eq!(walked([Some(0), None]), [vec![2, 1, 0]]);
+    assert_eq!(walked([None, Some(0)]), [vec![0, 1, 2]]);
+    assert_eq!(walked([Some(0), Some(1)]), [vec![0, 1, 2]]);
+}
+
+#[test]
+fn req_auto_016_triangles_with_a_corner_on_a_cut_lie_in_its_end() {
+    // A strip 1 mm wide and 10 mm long cut from a broad part along its right end: the triangles with a corner
+    // on the cut are its end, and the line stops at the chord where they start, which leads into the cut.
+    let strip = part(&[(0.0, 0.0), (10.0, 0.0), (10.0, 1.0), (0.0, 1.0)], &[]);
+    let cut = [p(10.0, 0.0), p(10.0, 1.0)];
+    let triangulation = triangulation::triangulate(&strip, 0.5, &mut meter()).unwrap().unwrap();
+    let roles = roles(&triangulation, &[cut], &mut meter()).unwrap();
+    for (triangle, role) in triangulation.triangles.iter().zip(&roles) {
+        let touches = triangle.corners.iter().any(|&c| (triangulation.points[c].x() - 10.0).abs() <= 1e-6);
+        assert_eq!(*role == Role::Cut(0), touches, "{triangle:?} {role:?}");
+    }
+    let skeleton = Skeleton::of(triangulation, Bumps::Tips { narrowest: 1.0 }, &[cut], &mut meter()).unwrap();
+    let [line] = skeleton.walked.as_slice() else { panic!("{:?}", skeleton.walked) };
+    let last = *line.nodes.last().unwrap();
+    assert_eq!(skeleton.graph.cut_at(last), Some(0));
+    assert!(skeleton.graph.point(last).x() < 10.0 && skeleton.graph.across[last] > 0.9, "{:?}", skeleton.graph.point(last));
+    assert_eq!(skeleton.graph.exits, [p(10.0, 0.5)]);
 }
 
 #[test]

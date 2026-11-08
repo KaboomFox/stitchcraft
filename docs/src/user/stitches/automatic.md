@@ -66,12 +66,14 @@ roadmap.
 **Digitized**
 
 <!-- shot: auto-pear -->
-![The traced pear digitized automatically. Its 3 greens sew as tatami fills, and its stem as a satin column and a running stitch. The light grey square is left out.](../../images/generated/auto-pear.png)
+![The traced pear digitized automatically. Its 3 greens sew as tatami fills, with satin columns at the narrow ends of the olive and dark olive bands. Its stem sews as a satin column and a running stitch, and the light grey square is left out. Thin threads run straight from the stem to the bands' ends, 4 jumps that the machine doesn't cut.](../../images/generated/auto-pear.png)
 <!-- /shot -->
 
 The photo is drawn in code for these pages. `stitch plan` traced it 90 mm across with VectorCraft 0.19.0, into
 `docs/fixtures/traced-pear.vectorcraft`. The pear's shading became 3 bands of green, and the backdrop the
-4th colour, which is left out as the picture's background.
+4th colour, which is left out as the picture's background. The thread of each darker band sews a side of
+the stem too, between the band's 2 ends. The thin straight lines are the jumps to the stem and back, which
+the reference machine leaves for you to cut by hand ([machine profiles](../reference/profiles.md)).
 
 To digitize a photo:
 
