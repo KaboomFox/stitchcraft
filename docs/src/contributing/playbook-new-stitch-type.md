@@ -19,6 +19,13 @@ gates catch anything you miss.
    `trim_after` is on. The sewing order reads its threads from the element's shape and settings, in
    `generate::colours`
    ([several threads in one element](../design/engine-pipeline.md#several-threads-in-one-element)).
+   Give the type every setting that Ink/Stitch gives it, the shared ones too, such as
+   `max_stitch_length_mm` or the underlay's. Once the engine sews the type, `cargo xtask docs --check`
+   fails on each registered row of the [compatibility contract](../design/inkstitch-compat-contract.md)
+   that gives the type its key while the key's declaration leaves the type out. Add the type to that
+   declaration's stitch types. Where Ink/Stitch's sewing of the type doesn't read the setting, give the
+   reason in an `[[unapplied]]` entry of `conformance/inkstitch-params.toml` instead
+   ([the contract check](../design/params.md#completeness-req-prm-001)).
 6. **Make the cases pass.** Run `cargo xtask conformance --filter <area>`; switch the requirements to
    `active`.
 7. **Docs.** `cargo xtask docs` regenerates the parameter pages. Write the user-facing page in
