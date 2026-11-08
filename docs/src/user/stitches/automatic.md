@@ -83,6 +83,44 @@ To digitize a photo:
   Auto effect
   ([from a picture to a machine file](../tutorials/picture-to-machine-file.md#2-trace-the-picture-in-those-threads)).
 
+## A photo with its background removed
+
+A photo's background, such as the turf a dog stands on, traces into shapes of its own, which sew too. To sew
+the subject alone, remove the background first, in any program that makes it transparent, and save the
+photo as a PNG file. Image Trace leaves transparent pixels out, so the photo traces into its subject's shapes
+alone ([pictures from the command line](../../design/image-to-embroidery.md#pictures-from-the-command-line)).
+Then `stitch plan dog.png --colours 9 --size 100 -o dog.pes`, or Image Trace in VectorCraft, traces and
+digitizes it as any photo. The owner's photos of her dog were made that way: each was cut out by a mask,
+checked by hand, until `--subject` cuts a photo's subject out itself (M13.14).
+
+**The photo, cut out**
+
+<!-- shot: auto-dog-photo -->
+![The owner's photo of her dog running towards the camera, cut out of its background: a tricolour dog, black, white and tan, its mouth open and its ears flying, on white.](../../images/generated/auto-dog-photo.png)
+<!-- /shot -->
+
+**Traced in 9 threads**
+
+<!-- shot: auto-dog-traced -->
+![The running dog traced in 9 of the machine's threads: its fur in flat patches of black, dark and light greys and white, its legs and cheeks tan, its mouth dark brown. The patches' edges are ragged where the fur's shading crossed from one thread to the next.](../../images/generated/auto-dog-traced.png)
+<!-- /shot -->
+
+**Digitized**
+
+<!-- shot: auto-dog -->
+![The traced running dog digitized automatically. Its broad patches sew as tatami fills, and its strands of fur as satin columns and triple runs between them, in black, greys, white, tan and dark brown. Thin threads run straight between patches of one colour, jumps that the machine doesn't cut.](../../images/generated/auto-dog.png)
+<!-- /shot -->
+
+`stitch plan` traced the cut-out 100 mm tall with VectorCraft 0.22.0, into
+`docs/fixtures/traced-dog-running-9.vectorcraft`. The fur's shading became flat patches in 9 threads, which
+digitize as fills, satin columns and triple runs by their width. No fabric shows where the dog has a colour,
+but the dog still lays a stitch where it shouldn't: a satin column of its dark grey fur fans its stitches
+round a lighter grey patch that bites into its side, and one crosses it. M13.16 of the
+[roadmap](../../plan/roadmap.md) removes it, and the like stitches of the other traced dogs
+([image to embroidery](../../design/image-to-embroidery.md#sewing-order) has their numbers). The thin
+straight lines are jumps between patches of one colour, which the reference machine leaves for you to cut by
+hand.
+
 ## How it chooses the stitches
 
 Automatic digitizing chooses the stitches of each shape without settings. A shape with settings sews as they

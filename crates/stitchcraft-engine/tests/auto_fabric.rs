@@ -1,7 +1,9 @@
 //! What automatic digitizing leaves of a picture (`REQ-AUTO-025`, `REQ-AUTO-026`): no fabric bare where the
 //! picture has a colour, and no thread that shows where it should not. Each test picture and the traced pear
 //! that the docs show are planned with their stitches where they draw their shapes, and measured as
-//! `stitchcraft_testkit::fabric` measures any design.
+//! `stitchcraft_testkit::fabric` measures any design. So are the pieces of the traced dogs whose fabric showed,
+//! each a case of the rule that covers it now: the whole dogs are `tests/auto_photos.rs`'s, in the release
+//! build.
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
@@ -20,7 +22,10 @@ fn strand() -> Design {
     Design::new(vec![automatic(fill("strand", &[&club], &RED, &[]))], DesignSettings::default()).unwrap()
 }
 
-/// Each test picture, the strand and the traced pear by name, digitized automatically and planned in place.
+/// Each test picture, the strand, the traced pear and the pieces of the traced dogs by name, digitized
+/// automatically and planned in place. The dog on turf's paw left a wedge of 1.8 mm² bare beside a sliver of
+/// its outline, which its column's rail ran out along and back, and 4 shapes of the running dog's ear left
+/// 1.4 mm² bare inside a column whose line ran along its other side.
 fn planned() -> Vec<(String, Design, StitchPlan)> {
     let mut designs: Vec<(String, Design)> = pictures::all()
         .into_iter()
@@ -29,6 +34,8 @@ fn planned() -> Vec<(String, Design, StitchPlan)> {
         .collect();
     designs.push(("strand".to_string(), strand()));
     designs.push(("pear".to_string(), pictures::pear()));
+    designs.push(("paw".to_string(), pictures::dog_shapes("dog-on-turf-6", &["vc:69:fill"])));
+    designs.push(("ear".to_string(), pictures::dog_shapes("dog-running-6", &["vc:5:fill", "vc:6:fill", "vc:28:fill", "vc:50:fill"])));
     designs
         .into_iter()
         .map(|(name, design)| {
@@ -78,6 +85,8 @@ fn req_auto_026_digitized_pictures_lay_no_thread_that_shows_where_it_should_not(
         ("button-stacked", 6, 0),
         ("strand", 0, 0),
         ("pear", 0, 4),
+        ("paw", 0, 1),
+        ("ear", 1, 8),
     ];
     assert_eq!(apart, recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps)));
 }

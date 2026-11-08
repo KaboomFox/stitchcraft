@@ -321,7 +321,7 @@ fn ts13_the_jump_threads_that_its_stitches_sew_down() {
     // For each sheet, as drawn and digitized, how many jump threads it leaves and how many of them a later
     // stitch of their colour sews down, as recorded in the design (`image-to-embroidery.md` › Testing).
     // Digitized, the letters of TS-13B sew as columns with jumps between them.
-    for (id, recorded) in [("TS-13A", [(8, 0), (12, 4)]), ("TS-13B", [(6, 0), (35, 15)]), ("TS-13C", [(9, 4), (6, 1)]), ("TS-13D", [(1, 0), (10, 3)])]
+    for (id, recorded) in [("TS-13A", [(8, 0), (12, 4)]), ("TS-13B", [(6, 0), (37, 16)]), ("TS-13C", [(9, 4), (6, 1)]), ("TS-13D", [(1, 0), (10, 3)])]
     {
         let threads = jump_threads(&sheet(id).1);
         let half = |stops: usize| {

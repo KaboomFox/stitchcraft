@@ -94,6 +94,14 @@ pub fn dogs() -> Vec<(String, Design)> {
         .collect()
 }
 
+/// The shapes `ids` of the traced dog `name` ([`dogs`]) alone, in their paint order: a piece of the picture
+/// that a case digitizes in the tests' debug build, where a whole dog takes too long.
+pub fn dog_shapes(name: &str, ids: &[&str]) -> Design {
+    let dog = traced(&format!("traced-{name}.vectorcraft"));
+    let shapes = dog.elements().iter().filter(|element| ids.contains(&element.id.to_string().as_str())).cloned().collect();
+    Design::new(shapes, dog.settings.clone()).unwrap()
+}
+
 /// The VectorCraft document `fixture` of the docs' fixtures, read as `--auto` reads it, every shape
 /// automatic.
 #[allow(clippy::disallowed_methods)] // a test reads the docs' fixture from the repository

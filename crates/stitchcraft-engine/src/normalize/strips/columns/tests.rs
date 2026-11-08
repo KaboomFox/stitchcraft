@@ -982,3 +982,21 @@ fn req_auto_016_a_line_that_leaves_through_a_cut_just_past_a_junction_turns_nowh
     skeleton.graph.cut[0] = Some(0);
     assert_eq!(cornered(&skeleton, &[Walked { nodes: vec![0, 1, 2, 3], closed: true }]), [open(&[1, 2, 3]), open(&[3, 0, 1])]);
 }
+
+#[test]
+fn req_auto_016_a_rail_cuts_across_a_sliver_narrower_than_a_thread_at_its_base() {
+    // A rail along a straight edge runs out along a sliver 0.3 mm wide at its base and 0.5 mm deep, as the
+    // outline of the traced dog's paw does beside a notch, and back: it cuts across the sliver's base. A corner
+    // of 90°, and a sliver 0.5 mm wide at its base, stay on it.
+    let unslivered_points = |at: &[(f64, f64)]| {
+        let points: Vec<Point> = at.iter().map(|&(x, y)| p(x, y)).collect();
+        let kept = unslivered(&points, (0..points.len()).collect(), &mut Budget::DEFAULT.meter()).unwrap();
+        kept.into_iter().map(|i| (points[i].x(), points[i].y())).collect::<Vec<_>>()
+    };
+    let sliver = [(0.0, 0.0), (1.0, 0.0), (2.0, 0.0), (2.1, -0.5), (2.3, 0.0), (3.0, 0.0), (4.0, 0.0)];
+    assert_eq!(unslivered_points(&sliver), vec![(0.0, 0.0), (1.0, 0.0), (2.0, 0.0), (2.3, 0.0), (3.0, 0.0), (4.0, 0.0)]);
+    let corner = [(0.0, 0.0), (1.0, 0.0), (1.2, 0.0), (1.2, 0.2), (1.2, 1.0)];
+    assert_eq!(unslivered_points(&corner), corner.to_vec());
+    let wide = [(0.0, 0.0), (2.0, 0.0), (2.25, -1.0), (2.5, 0.0), (4.0, 0.0)];
+    assert_eq!(unslivered_points(&wide), wide.to_vec());
+}
