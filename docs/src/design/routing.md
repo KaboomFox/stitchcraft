@@ -57,8 +57,8 @@ pub struct Piece {
 
 It reads each element with the design's settings, as the generators read it. A satin column's rails and
 rungs are read as the satin generators read them, made first for a column drawn as one path. Among satin
-columns a stroke is read by its first subpath, and routing running stitches, by each of its subpaths. An
-element it doesn't take stays as it is, out of `replaced`, and `SC-I1002` says why. It writes ordinary elements, which every
+columns a stroke is read by its first subpath, and routing running stitches, by each of its subpaths. The
+function leaves an element it can't route as it is, out of `replaced`, and `SC-I1002` says why. It writes ordinary elements, which every
 host sews as it sews any. Each piece says which element it comes from, so that a host can place and name
 it. The function charges its budget for every loop over pieces, and keeps them in ordered collections.
 Ties go to the earlier element and to the earlier piece along it, so a route is the same on every platform
@@ -96,7 +96,7 @@ Ink/Stitch's Auto-Route Satin Columns routes a selection in these steps:
    their nearest ends, and of all such sets of jumps the one whose lengths add up to the least is taken,
    a minimum spanning tree of the groups. With it, each element is joined to the next by the shortest
    jump between their ends, which the route can take only forwards. A jump is added only where no link
-   already leads from its one end to its other: Ink/Stitch's graph holds one link between 2 places, so
+   already leads from its one end to its other. Ink/Stitch's graph has one link between 2 places, so
    there its jump is that link.
 4. **Ends.** The route starts at the end nearest its start, or at the leftmost end, and stops at the end
    nearest its end, or at the rightmost end. With Preserve order, the route starts at one of the first
@@ -157,14 +157,13 @@ Ink/Stitch's Auto-Route Running Stitch routes a selection of strokes in these st
    apart are cut too. Without the option, no line is cut, and lines meet only at the points they share.
 3. **Pieces.** Each stretch of a line between 2 cuts is cut at its own points into straight pieces, the
    graph's links from each point to the next. The places, the jumps, the ends and the way are found as for
-   satin columns (steps 3 to 5 above). With Preserve order, the parts of each stroke that its own pieces
-   don't join, such as subpaths apart, are also joined each to each, by a jump the route can take either
-   way.
+   satin columns (steps 3 to 5 above). With Preserve order, a stroke whose pieces don't join up, such as one
+   with subpaths apart, also has its parts joined each to each, by a jump the route can take either way.
 4. **Under and on top.** A piece the route passes twice is under the others the first time and on top the
    last time: the route runs out along a branch under, and back along it on top.
-5. **Elements.** Pieces in a row make one element, until a jump comes, the route goes from on top to under
-   or back, a piece on top comes from another stroke, or a piece under comes from a stroke whose run under
-   the others sews otherwise.
+5. **Elements.** Pieces in a row make one element, which ends at a jump and where the route turns from on
+   top to under or back. It also ends before a piece on top from another stroke, or a piece under from a
+   stroke whose run under the others sews otherwise.
 6. **Settings.** An element on top is a copy of its stroke with the stroke's settings, but an even number
    of repeats is lowered by 1, so that it ends at its far end. One under the others is a running stitch
    with its stroke's running stitch length and tolerance, or a manual stitch where the stroke is one,
@@ -172,7 +171,7 @@ Ink/Stitch's Auto-Route Running Stitch routes a selection of strokes in these st
    positions or target point.
 7. **Trims.** With Trim jump stitches, off as the dialog opens, a jump longer than 0.75 mm trims the thread
    after the element before it, and the elements under the others right after a trim are left out. The
-   route adds no trim at its end, but where it ends with a long jump back, that jump trims.
+   route doesn't trim at its end, but where it ends with a long jump back, that jump trims.
 8. **Names.** AutoRun 1, AutoRun Underpath 2, and on, counting every element made, those a trim leaves out
    not among them.
 
@@ -187,8 +186,8 @@ ledger:
   lines only where its cuts agree to 16 digits, so slanted lines it cuts can miss each other
   (`DEV-ROUTE-007`).
 - 2 lines that meet in several stretches, or in a stretch and at a point, are cut wherever they meet, and a
-  stretch between 2 cuts is kept however short, where Ink/Stitch cuts such lines nowhere and leaves out a
-  stretch of 0.1 CSS pixels or less (`DEV-ROUTE-008`).
+  stretch between 2 cuts is routed however short it is. Ink/Stitch cuts such lines nowhere, and leaves out
+  a stretch of 0.1 CSS pixels or less (`DEV-ROUTE-008`).
 - Each element has the settings and the thread of the stroke it runs along. Ink/Stitch gives a stretch on
   top that a run under the others follows the settings of the stroke that run goes along, and a run under
   several strokes the last one's (`DEV-ROUTE-006`).
