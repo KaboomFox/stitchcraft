@@ -1,7 +1,13 @@
 # TS-17C's M10.11 part, its wave: a ripple stitch whose 8 copies follow an arch, shrinking to 30 % and turning with
-# it (REQ-RIP-019).
+# it (REQ-RIP-019). The copies are made from the curve's running stitch, whose needle points each program places
+# its own way: each program's needle points lie within 0.23 mm of the other's stitches, and their threads overlap
+# by 0.84. Drawn with straight segments instead of the curve, the wave sews the same 65 needle points in both,
+# their locks aside.
 id = "inkstitch-ts17c-guided-line"
 requirements = ["REQ-RIP-019"]
 kind = "inkstitch"
 sheet = "TS-17C"
 elements = "ts17c:guided:line"
+
+[excused]
+overlap = "DEV-RUN-002"
