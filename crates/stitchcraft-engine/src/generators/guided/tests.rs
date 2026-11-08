@@ -131,6 +131,14 @@ fn req_fill_gdd_004_rows_are_taken_by_their_first_points_along_the_diagonal_of_t
     let mut level = vec![row(0.0, 5.0), row(0.0, 1.0)];
     copies::sorted(&mut level, meter).unwrap();
     assert_eq!(level, [row(0.0, 1.0), row(0.0, 5.0)]);
+    // Off the origin, the diagonal weighs x and y by the box's own width and height: 1 and 2 mm here, so the
+    // row 2 mm down comes after the row 1 mm across, and with the box turned the other way, before it.
+    let mut tall = vec![row(10.0, 12.0), row(11.0, 10.0), row(10.0, 10.0)];
+    copies::sorted(&mut tall, meter).unwrap();
+    assert_eq!(tall, [row(10.0, 10.0), row(11.0, 10.0), row(10.0, 12.0)]);
+    let mut wide = vec![row(12.0, 10.0), row(10.0, 11.0), row(10.0, 10.0)];
+    copies::sorted(&mut wide, meter).unwrap();
+    assert_eq!(wide, [row(10.0, 10.0), row(10.0, 11.0), row(12.0, 10.0)]);
 }
 
 /// The x of each needle point of the `i`-th row taken along the line from (0, 0) to (20, 0), stitched as
@@ -239,6 +247,22 @@ fn diag_sc_w0332_a_part_no_copy_of_the_guide_meets_sews_as_a_tatami_fill_at_the_
     assert_eq!(codes(&sewn), [Code::FillGuidedMissed]);
     let points = sewn.runs.remove(0);
     assert!(points.windows(2).any(|w| w[0].distance(w[1]) > 2.0 && (w[0].y() - 2.0).abs() < 1e-9 && (w[1].y() - 2.0).abs() < 1e-9), "{points:?}");
+}
+
+#[test]
+fn diag_sc_w0332_a_missed_part_s_tatami_rows_run_along_the_line_between_the_guide_s_ends() {
+    // A guide up the page to the right, at 45° as Ink/Stitch counts angles, 1 mm across from the origin's
+    // diagonal: its copies, 2 mm apart, lie 1 and 3 mm across, either side of a strip 0.6 mm wide along it 2 mm
+    // across. The tatami fill's rows at 45°, counted from the origin, lie 2 mm across, along the strip.
+    let r = std::f64::consts::FRAC_1_SQRT_2;
+    let at = |across: f64, along: f64| p((across + along) * r, (across - along) * r);
+    let strip = Polygon { outline: vec![at(1.7, 0.0), at(2.3, 0.0), at(2.3, 10.0), at(1.7, 10.0), at(1.7, 0.0)], holes: Vec::new() };
+    let (start, end) = (at(1.0, -5.0), at(1.0, 15.0));
+    let missed = sew(&strip, &guided(&[(start.x(), start.y()), (end.x(), end.y())], 2.0));
+    assert_eq!(codes(&missed), [Code::FillGuidedMissed]);
+    let points: Vec<Point> = missed.runs.concat();
+    let along = points.windows(2).filter(|w| w[0].distance(w[1]) > 2.0 && ((w[1].x() - w[0].x()) + (w[1].y() - w[0].y())).abs() < 1e-6).count();
+    assert!(along >= 3, "{points:?}");
 }
 
 #[test]

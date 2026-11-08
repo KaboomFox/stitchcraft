@@ -771,9 +771,9 @@ The differential compares the sheet with Ink/Stitch's sewing of it (`REQ-FILL-CI
 
 ## Guided fill (P3)
 
-Rows that follow a guide line drawn with the fill, instead of a straight angle. From M10.9 the guide is
-copied across each part a row spacing at a time, its copies cut by the part, and the lines inside routed as
-a circular fill's pieces are, after the tatami fill's underlay ([guided fill](guided.md)). Ink/Stitch's
+Rows that follow a guide line drawn with the fill. From M10.9 the guide is copied across each part a row
+spacing at a time, its copies cut by the part, and the lines inside routed as a circular fill's pieces are,
+after the tatami fill's underlay ([guided fill](guided.md)). Ink/Stitch's
 parallel offset and buffer strategies, which offset the guide instead, come with M10.10.
 
 ## Linear gradient fill (P3)

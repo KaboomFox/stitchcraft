@@ -329,7 +329,9 @@ weft apart and 3 rows a thread, and another has stripes sewn as runs. The `tarta
 `tartan-parts` and `tartan-stop` cases add stripes left unsewn or sewn in the colour before them, a sett
 moved by its offsets, a disc round a hole in stitches 3 mm long, a fill in 2 parts with its rows at 30° and one row a thread, and
 a fill that stops at its end with its runs sewn as bean stitches (`REQ-FILL-TRT-011`). Every stripe is one of
-Brother's threads, so both files name each thread as itself. The `ts17c-ripple-` cases check each of TS-17C's
+Brother's threads, so both files name each thread as itself. The `inkstitch-ts17b-guided` case judges
+TS-17B's guided leaf alone, its rows copies of an S-shaped guide from tip to tip over its underlay
+(`REQ-FILL-GDD-008`). The `ts17c-ripple-` cases check each of TS-17C's
 ripple stitches on its own, the one along a column and the 2 that shrink to a target point (`REQ-RIP-011`).
 The `ts17c-guided-` cases check its guided ripples so (`REQ-RIP-019`). A wave and a zigzag cut to a circle
 follow guide lines. A circle and a diamond stand between satin guides' rails, the diamond at its guide's

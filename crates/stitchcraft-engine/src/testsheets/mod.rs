@@ -91,9 +91,9 @@ enum Drawn {
     /// a document would sew otherwise, and only `stitch testsheet` writes it.
     DesignedById(fn() -> Result<Drawing, SheetError>, &'static [Code]),
     /// As [`Drawn::Designed`], but the design holds what an Ink/Stitch file gives its elements, which a host
-    /// would draw as objects of their own: start and end positions, clips, and the design's origin and stop
-    /// position, or keep with the document: its turn on export ([`TestSheet::uses_file_features`]), as TS-16's
-    /// does. Only `stitch testsheet` and the differential's SVG file draw it.
+    /// would draw as objects of their own: start and end positions, clips, guide lines, and the design's origin
+    /// and stop position, or keep with the document: its turn on export ([`TestSheet::uses_file_features`]), as
+    /// TS-16's does and TS-17B's guided leaf. Only `stitch testsheet` and the differential's SVG file draw it.
     FromFile(fn() -> Result<Drawing, SheetError>, &'static [Code]),
     /// As [`Drawn::Designed`], but part of it is routed (`crate::route`), into pieces cut at points along its
     /// columns that a document's points hold only to within a unit in their last place. Drawn into a
@@ -138,9 +138,9 @@ impl TestSheet {
     /// stop position ([`DesignSettings::origin`], [`DesignSettings::stop_position`]), which it would draw as
     /// markers; or its turn on export ([`DesignSettings::rotate_on_export`]), which the Design Settings filter
     /// would keep. VectorCraft's Test Sheet filter draws and keeps none of them. The sheets that do, TS-16,
-    /// drawn from a file, and TS-17C, whose ripple aims at a target point and which is routed, are sheets
-    /// [`TestSheet::drawable`] leaves out, as the tests check. A tartan's sett isn't one: VectorCraft's fill
-    /// dialog holds it from M10.7.
+    /// drawn from a file, TS-17B, whose guided leaf copies a guide line, a marker grouped with the leaf, and
+    /// TS-17C, whose ripple aims at a target point and which is routed, are sheets [`TestSheet::drawable`]
+    /// leaves out, as the tests check. A tartan's sett isn't one: VectorCraft's fill dialog holds it from M10.7.
     ///
     /// [`Element::hints`]: crate::design::Element::hints
     /// [`Element::clips`]: crate::design::Element::clips
@@ -521,17 +521,18 @@ pub static SHEETS: &[TestSheet] = &[
     },
     TestSheet {
         id: "TS-17B",
-        title: "New fills: tartan",
+        title: "New fills: tartan and guided",
         checks: &[
             "Each sample is a tartan fill 40 mm square, trimmed after each colour. Top row, left to right: a sett of red, white, Prussian blue and deep gold, mirrored at its ends, then one of emerald green, black and white, repeated, then a warp of red and black under a weft of blue and white. Bottom row: blue and black with a white stripe 0.5 mm wide and a red one 0.8 mm wide, each sewn as a run along its middle, then deep gold, black and tangerine turned 30° and scaled by 150 %, then blue, white, red and black in a herringbone 3 mm wide.",
             "Do the warp and the weft read as a weave, each colour's stripes crossing the other direction's in a twill of rows 2 by 2?",
             "On the herringbone, do the rows turn at each band's edge into columns of chevrons, and do the weft's rows run on from band to band without a gap?",
             "Do the runs lie flat along the middles of their stripes, on top of the fills, and do they show as lines of their own colour?",
             "Where the rows of one colour are joined along a stripe's edge, does the join show?",
+            "Fourth row, on the left: a leaf from its bottom left tip to its top right one, sewn as a guided fill in emerald green over its underlay, trimmed after. Its rows are copies of an S-shaped line from tip to tip, 0.25 mm apart. Do the rows bend with the S, and do they keep their spacing round its bends? Where do they crowd or open up?",
             "How many times does the thread change, and how long does the sheet take? Each tartan sews its underlay in its own thread, then each colour once.",
         ],
         profile: REFERENCE,
-        drawn: Drawn::Designed(ts17b::tartans, &[]),
+        drawn: Drawn::FromFile(ts17b::sheet, &[]),
     },
     TestSheet {
         id: "TS-17C",
@@ -595,14 +596,14 @@ mod tests {
         // The TS-13 sheets' shapes are digitized automatically, and no other sheet's are.
         let digitized: Vec<&str> = SHEETS.iter().filter(|sheet| sheet.digitized()).map(|sheet| sheet.id).collect();
         assert_eq!(digitized, ["TS-13A", "TS-13B", "TS-13C", "TS-13D"]);
-        // TS-16 places and clips its elements, as an Ink/Stitch file does, and it alone is drawn from a file.
-        // TS-17C aims a ripple at a target point, and is routed. A host draws neither. TS-17B's tartans set
-        // setts, which VectorCraft's fill dialog holds from M10.7.
+        // TS-16 places and clips its elements, as an Ink/Stitch file does, and TS-17B's leaf copies a guide: both
+        // are drawn from a file. TS-17C aims a ripple at a target point, and is routed. A host draws none of
+        // them. TS-17B's tartans set setts, which VectorCraft's fill dialog holds from M10.7.
         let filed: Vec<&str> = SHEETS.iter().filter(|sheet| sheet.uses_file_features()).map(|sheet| sheet.id).collect();
-        assert_eq!(filed, ["TS-16", "TS-17C"]);
+        assert_eq!(filed, ["TS-16", "TS-17B", "TS-17C"]);
         assert!(SHEETS.iter().filter(|sheet| sheet.uses_file_features()).all(|sheet| !sheet.drawable()));
         let from_file: Vec<&str> = SHEETS.iter().filter(|sheet| matches!(sheet.drawn, Drawn::FromFile(..))).map(|sheet| sheet.id).collect();
-        assert_eq!(from_file, ["TS-16"]);
+        assert_eq!(from_file, ["TS-16", "TS-17B"]);
     }
 
     #[test]
@@ -632,7 +633,7 @@ mod tests {
             drawable,
             [
                 "TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D",
-                "TS-17A", "TS-17B"
+                "TS-17A"
             ]
         );
     }
@@ -684,8 +685,9 @@ mod tests {
         // origin, so 87.25 mm below it once turned. Its lines with drawn locks lie 20 and 30 mm left of the
         // origin, so above it once turned, their locks inside the 30 mm.
         assert_eq!(about("TS-16"), [110.0, 117.248737342, -5.0, 28.624368671]);
-        // TS-17B's tartans 40 mm square, 3 to a row 45 mm apart: the runs reach the squares' sides.
-        assert_eq!(about("TS-17B"), [130.0, 85.0, 0.0, 0.0]);
+        // TS-17B's tartans 40 mm square, 3 to a row 45 mm apart: the runs reach the squares' sides. Its guided
+        // leaf reaches down to its bottom tip at y = 172.
+        assert_eq!(about("TS-17B"), [130.0, 172.0, 0.0, 0.0]);
         // Each TS-10 frame is its hoop's whole field, as its title and checks say, and fits no smaller hoop.
         let hoops = [("ts-10a", "4 × 4 in", &BROTHER_PE800_4X4), ("TS-10B", "5 × 7 in", REFERENCE), ("TS-10C", "small", &BROTHER_PE800_SMALL)];
         for (id, hoop, profile) in hoops {
