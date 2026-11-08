@@ -1,7 +1,7 @@
 //! Satin columns of 2 closed rails, rings (`REQ-SAT-019`, `DEV-SAT-009`), through the engine's satin
-//! stitch. The second ring starts at its corner nearest the first ring's start before the rails are
-//! turned, so the stitches go straight across whichever corner each ring was drawn from and whichever way
-//! it turns. VectorCraft's Make Compound Path, from 0.10.0, turns the front of 2 rings round, which starts
+//! stitch. The second ring starts at its corner nearest the first ring's start that no drawn rung lies
+//! before, before the rails are turned, so the stitches go straight across whichever corner each ring was
+//! drawn from and whichever way it turns. VectorCraft's Make Compound Path, from 0.10.0, turns the front of 2 rings round, which starts
 //! it at what was its last corner: a quarter of the way round a circle.
 
 // Test code may unwrap, panic and index (clippy.toml allows it in tests, and this extends it to the
@@ -96,6 +96,41 @@ fn req_sat_019_rings_drawn_alike_keep_a_rung_across_their_starts() {
     // and its stitches lean far along the column on the top and left sides (SC-W0208).
     assert!(warnings.len() == 2 && warnings.iter().all(|w| w.starts_with("warning SC-W0208:")), "{warnings:?}");
     assert_eq!(across(&points)[0], [p(10.0, 0.0), p(8.0, 4.0)]);
+    let longest = longest_across(&points);
+    assert!(longest <= ACROSS_AT_MOST, "a stitch {longest} mm long crosses the ring");
+}
+
+#[test]
+fn req_sat_019_rings_that_start_across_a_step_keep_their_starts_where_the_rungs_pair_them() {
+    // The bowl of a letter, stepped at one corner, as Emilio 20 tricolore draws its E: both rings start at
+    // the step, the inner at its inside corner and the outer at its outside one, and a rung crosses the step
+    // on each side of the starts, as one crosses each other corner and side. The outer ring's node before its
+    // start lies nearer the inner ring's start, past the rung across the step's top. Started there, it met
+    // the rungs in another order than the inner ring, each of its parts paired with the inner ring's next,
+    // and its stitches leaned up to 89°, across as much as 20.9 mm.
+    let inner: &[(f64, f64)] = &[(20.75, 10.75), (20.75, 16.75), (3.75, 16.75), (3.75, 3.75), (15.0, 3.75), (15.0, 10.75)];
+    let outer: &[(f64, f64)] = &[(24.5, 7.75), (24.5, 20.5), (0.0, 20.5), (0.0, 0.0), (18.75, 0.0), (18.75, 7.75)];
+    let mut path = rings(&[inner, outer]);
+    let rungs: &[&[(f64, f64)]] = &[
+        &[(20.25, 11.45), (25.0, 11.45)],
+        &[(20.25, 15.0), (25.0, 15.0)],
+        &[(20.25, 16.25), (25.0, 21.0)],
+        &[(12.0, 16.25), (12.0, 21.0)],
+        &[(4.25, 16.25), (-0.5, 21.0)],
+        &[(-0.5, 10.0), (4.25, 10.0)],
+        &[(4.25, 4.25), (-0.5, -0.5)],
+        &[(8.0, -0.5), (8.0, 4.25)],
+        &[(14.5, 4.25), (19.25, -0.5)],
+        &[(14.5, 5.0), (19.25, 5.0)],
+        &[(14.625, 11.05), (19.125, 7.45)],
+        &[(20.25, 11.25), (20.25, 7.25)],
+    ];
+    path.subpaths.extend(polylines(rungs).subpaths);
+    let (points, warnings) = sewn_satin(&path, &[NO_SHORT_STITCHES, ("reverse_rails", "none")]);
+    // Between the rungs on each side of a corner, the inner ring's part is shorter than the outer's, and its
+    // stitches fan to the rung across the corner, 2 sections a little past 45° (SC-W0208).
+    assert!(warnings.len() == 2 && warnings.iter().all(|w| w.starts_with("warning SC-W0208:")), "{warnings:?}");
+    assert_eq!(across(&points)[0], [p(20.75, 10.75), p(24.5, 7.75)]);
     let longest = longest_across(&points);
     assert!(longest <= ACROSS_AT_MOST, "a stitch {longest} mm long crosses the ring");
 }

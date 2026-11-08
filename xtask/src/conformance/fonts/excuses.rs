@@ -7,8 +7,9 @@
 //! excuse names the measures and the ledger's entry that explains them, and when it holds: for a glyph that
 //! StitchCraft says a diagnostic of (`codes`, and `saying`, words of the message), whose elements are of a
 //! stitch type (`types`), all of them of these stitch types (`only_types`), or set an Ink/Stitch setting to
-//! something other than nothing or 0 (`settings`), or of a font (`fonts`). An excuse without conditions holds
-//! for every glyph.
+//! something other than nothing or 0 (`settings`), of a font (`fonts`), or named so (`glyphs`). An excuse
+//! without conditions holds for every glyph. A cause that only the drawing of a few glyphs shows, such as a
+//! rung that misses a rail but for rounding, is named by the glyphs it shows in.
 //!
 //! **Explained where it can be.** A measure that differs is excused by the first excuse that holds for the
 //! glyph and names the measure. Where the differential can undo the deviation in Ink/Stitch's file
@@ -18,6 +19,10 @@
 //! same lines. Where an excuse doesn't hold so, the next is tried, and with none left the glyph differs by
 //! more than the first explains. The report counts the glyphs each excuse excused, so that one that excuses
 //! nothing in the weekly run can be dropped.
+//!
+//! **A glyph one program sews.** A glyph that one program sews and the other writes no file of has no
+//! measures to compare. An excuse that names [`SEWN`] among its measures explains it, unless it asks how
+//! near the threads lie, which takes both files.
 //!
 //! **Known differences.** A difference found and not yet explained or fixed is follow-up work. The file
 //! lists it as `[[known]]`, with the same conditions and a `follow_up` that says what is known of it in place
@@ -37,6 +42,8 @@ use crate::util;
 
 /// The excuses, relative to the repository root.
 pub const EXCUSES: &str = "conformance/inkstitch/glyphs.toml";
+/// What an excuse names among its measures to explain a glyph that one program sews and the other doesn't.
+pub const SEWN: &str = "sewn";
 
 /// What StitchCraft says and reads of a glyph, which an excuse's conditions ask about.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
@@ -78,6 +85,8 @@ struct Entry {
     #[serde(default)]
     fonts: Vec<String>,
     #[serde(default)]
+    glyphs: Vec<String>,
+    #[serde(default)]
     within_mm: Option<f64>,
 }
 
@@ -95,6 +104,8 @@ struct File {
 pub struct Excuse {
     /// The measures it excuses.
     pub measures: Vec<Measure>,
+    /// Whether it explains a glyph that only one program sews ([`SEWN`]).
+    pub sewn: bool,
     /// The entry of the deviations ledger that explains them, or for a known difference what is known of it.
     pub reason: String,
     /// The glyph's conditions; an empty one asks nothing.
@@ -104,6 +115,7 @@ pub struct Excuse {
     only_types: Vec<String>,
     settings: Vec<String>,
     fonts: Vec<String>,
+    glyphs: Vec<String>,
     /// How near each program's thread must lie to the other's, in millimetres, for it to hold.
     within_mm: Option<f64>,
 }
@@ -111,20 +123,30 @@ pub struct Excuse {
 impl Excuse {
     /// The excuse or known difference `entry` gives, for `reason`.
     fn of(reason: String, entry: Entry) -> Result<Excuse, String> {
-        let measures =
-            entry.measures.iter().map(|m| Measure::named(m).ok_or(format!("{EXCUSES}: `{m}` is not a measure"))).collect::<Result<Vec<_>, _>>()?;
-        if measures.is_empty() {
+        let sewn = entry.measures.iter().any(|m| m == SEWN);
+        let measures = entry
+            .measures
+            .iter()
+            .filter(|m| *m != SEWN)
+            .map(|m| Measure::named(m).ok_or(format!("{EXCUSES}: `{m}` is not a measure")))
+            .collect::<Result<Vec<_>, _>>()?;
+        if measures.is_empty() && !sewn {
             return Err(format!("{EXCUSES}: `{reason}` names no measure"));
         }
         if entry.within_mm.is_some_and(|mm| !(mm > 0.0 && mm.is_finite())) {
             return Err(format!("{EXCUSES}: `{reason}` asks for threads within a distance that is no length above 0"));
         }
-        let Entry { codes, saying, types, only_types, settings, fonts, within_mm, .. } = entry;
-        Ok(Excuse { measures, reason, codes, saying, types, only_types, settings, fonts, within_mm })
+        let Entry { codes, saying, types, only_types, settings, fonts, glyphs, within_mm, .. } = entry;
+        Ok(Excuse { measures, sewn, reason, codes, saying, types, only_types, settings, fonts, glyphs, within_mm })
     }
 
-    /// Whether it holds for a glyph of `font` with `traits`.
-    fn holds(&self, font: &str, traits: &Traits) -> bool {
+    /// The names of the measures it excuses, [`SEWN`] last.
+    pub fn named(&self) -> Vec<&'static str> {
+        self.measures.iter().map(|m| m.name()).chain(self.sewn.then_some(SEWN)).collect()
+    }
+
+    /// Whether it holds for the glyph `glyph` of `font`, with `traits`.
+    fn holds(&self, font: &str, glyph: &str, traits: &Traits) -> bool {
         let any = |wanted: &[String], has: &[&str]| wanted.is_empty() || has.iter().any(|h| wanted.iter().any(|w| w == h));
         let said = (self.codes.is_empty() && self.saying.is_none())
             || traits.said.iter().any(|(code, message)| {
@@ -132,7 +154,7 @@ impl Excuse {
             });
         let settings: Vec<&str> = traits.settings.iter().map(String::as_str).collect();
         let only = self.only_types.is_empty() || (!traits.types.is_empty() && traits.types.iter().all(|t| self.only_types.iter().any(|o| o == t)));
-        said && only && any(&self.types, &traits.types) && any(&self.settings, &settings) && any(&self.fonts, &[font])
+        said && only && any(&self.types, &traits.types) && any(&self.settings, &settings) && any(&self.fonts, &[font]) && any(&self.glyphs, &[glyph])
     }
 
     /// Its conditions, as the report gives them.
@@ -158,6 +180,9 @@ impl Excuse {
         }
         if !self.fonts.is_empty() {
             parts.push(format!("the font is {}", list(&self.fonts)));
+        }
+        if !self.glyphs.is_empty() {
+            parts.push(format!("the glyph is {}", list(&self.glyphs)));
         }
         if let Some(mm) = self.within_mm {
             parts.push(format!("each program's thread lies within {mm} mm of the other's"));
@@ -195,12 +220,14 @@ impl Excuses {
         Ok(Excuses { excuses: excuses.collect::<Result<_, _>>()?, known: known.collect::<Result<_, _>>()? })
     }
 
-    /// The verdict on a glyph of `font` with `traits` whose measures are `rows`: StitchCraft's plan and its
-    /// measures `ours`, against Ink/Stitch's plan and measures `theirs`. With it, the excuses and then the
-    /// known differences used, by their place in the file, the known differences' places after the excuses'.
+    /// The verdict on the glyph `glyph` of `font`, with `traits`, whose measures are `rows`: StitchCraft's plan
+    /// and its measures `ours`, against Ink/Stitch's plan and measures `theirs`. With it, the excuses and then
+    /// the known differences used, by their place in the file, the known differences' places after the
+    /// excuses'.
     pub fn judge(
         &self,
         font: &str,
+        glyph: &str,
         traits: &Traits,
         rows: &[Compared],
         ours: (&StitchPlan, &Measured),
@@ -212,7 +239,7 @@ impl Excuses {
         for (measure, mine, other, _) in rows.iter().filter(|row| !row.3) {
             let said = differential::differs(*measure, mine, other);
             let mut failed = None;
-            let holding = self.excuses.iter().enumerate().filter(|(_, e)| e.measures.contains(measure) && e.holds(font, traits));
+            let holding = self.excuses.iter().enumerate().filter(|(_, e)| e.measures.contains(measure) && e.holds(font, glyph, traits));
             let found = holding.into_iter().find_map(|(place, excuse)| {
                 let deviation = &excuse.reason;
                 if let Some(mm) = excuse.within_mm.filter(|_| !near(excuse)) {
@@ -242,7 +269,8 @@ impl Excuses {
             });
             let how = failed.unwrap_or(said);
             let follow_up = || {
-                let mut holding = self.known.iter().enumerate().filter(|(_, k)| k.measures.contains(measure) && k.holds(font, traits) && near(k));
+                let mut holding =
+                    self.known.iter().enumerate().filter(|(_, k)| k.measures.contains(measure) && k.holds(font, glyph, traits) && near(k));
                 holding.next().map(|(place, k)| (self.excuses.len() + place, format!("{how} (known: {})", k.reason)))
             };
             match found.map(|found| (found, true)).or_else(|| follow_up().map(|known| (known, false))) {
@@ -267,6 +295,21 @@ impl Excuses {
             Verdict::Agrees
         };
         (verdict, used)
+    }
+
+    /// The verdict on the glyph `glyph` of `font`, with `traits`, that only one program sews, as `how` says:
+    /// excused by the first excuse that names [`SEWN`] and holds for it, or else known by the first known
+    /// difference that does. One that asks how near the threads lie holds for no such glyph. With it, the
+    /// excuse or known difference used, by its place as [`Excuses::judge`] gives it.
+    pub fn judge_alone(&self, font: &str, glyph: &str, traits: &Traits, how: String) -> (Verdict, BTreeSet<usize>) {
+        let holding = |list: &[Excuse]| list.iter().position(|e| e.sewn && e.within_mm.is_none() && e.holds(font, glyph, traits));
+        if let Some((place, excuse)) = holding(&self.excuses).and_then(|place| Some((place, self.excuses.get(place)?))) {
+            return (Verdict::Excused(vec![format!("{how}, as {} says", excuse.reason)]), BTreeSet::from([place]));
+        }
+        if let Some((place, known)) = holding(&self.known).and_then(|place| Some((place, self.known.get(place)?))) {
+            return (Verdict::Known(vec![format!("{how} (known: {})", known.reason)]), BTreeSet::from([self.excuses.len() + place]));
+        }
+        (Verdict::Differs(vec![how]), BTreeSet::new())
     }
 }
 
@@ -316,20 +359,21 @@ saying = "stitch pattern"
     fn an_excuse_holds_where_its_conditions_all_do() {
         let [threads, clamped, meander, random, pattern] = <[Excuse; 5]>::try_from(Excuses::parse(FILE).unwrap().excuses).unwrap();
         let none = traits(&[], &[], &[]);
-        assert!(threads.holds("any", &none));
-        assert!(!clamped.holds("any", &none) && clamped.holds("any", &traits(&[], &[("SC-W0102", "clamped")], &[])));
+        assert!(threads.holds("any", "a", &none));
+        assert!(!clamped.holds("any", "a", &none) && clamped.holds("any", "a", &traits(&[], &[("SC-W0102", "clamped")], &[])));
         assert!(
-            meander.holds("x", &traits(&["running_stitch", "meander_fill"], &[], &[])) && !meander.holds("x", &traits(&["tatami_fill"], &[], &[]))
+            meander.holds("x", "a", &traits(&["running_stitch", "meander_fill"], &[], &[]))
+                && !meander.holds("x", "a", &traits(&["tatami_fill"], &[], &[]))
         );
         // Every condition must hold: the setting and the font.
         let set = traits(&[], &[], &["random_width_increase_percent"]);
-        assert!(random.holds("magnolia", &set) && !random.holds("other", &set) && !random.holds("magnolia", &none));
+        assert!(random.holds("magnolia", "a", &set) && !random.holds("other", "a", &set) && !random.holds("magnolia", "a", &none));
         // The code, with the words.
-        assert!(pattern.holds("x", &traits(&[], &[("SC-W0802", "`p1` is an Ink/Stitch stitch pattern")], &[])));
-        assert!(!pattern.holds("x", &traits(&[], &[("SC-W0802", "a clip path")], &[])));
-        assert!(!pattern.holds("x", &traits(&[], &[("SC-W0804", "an Ink/Stitch stitch pattern")], &[])));
+        assert!(pattern.holds("x", "a", &traits(&[], &[("SC-W0802", "`p1` is an Ink/Stitch stitch pattern")], &[])));
+        assert!(!pattern.holds("x", "a", &traits(&[], &[("SC-W0802", "a clip path")], &[])));
+        assert!(!pattern.holds("x", "a", &traits(&[], &[("SC-W0804", "an Ink/Stitch stitch pattern")], &[])));
         let words = Excuses::parse("[[excuse]]\nmeasures = [\"size\"]\ndeviation = \"D\"\nsaying = \"far\"").unwrap().excuses;
-        assert!(words[0].holds("x", &traits(&[], &[("SC-W0013", "too far")], &[])) && !words[0].holds("x", &none));
+        assert!(words[0].holds("x", "a", &traits(&[], &[("SC-W0013", "too far")], &[])) && !words[0].holds("x", "a", &none));
     }
 
     #[test]
@@ -347,6 +391,35 @@ saying = "stitch pattern"
         );
         let words = Excuses::parse("[[excuse]]\nmeasures = [\"size\"]\ndeviation = \"D\"\nsaying = \"far\"").unwrap().excuses;
         assert_eq!(words[0].conditions(), "StitchCraft says a diagnostic saying \"far\"");
+    }
+
+    #[test]
+    fn an_excuse_may_hold_only_for_glyphs_it_names() {
+        let file = "[[excuse]]\nmeasures = [\"overlap\"]\ndeviation = \"DEV-SAT-013\"\nfonts = [\"f\"]\nglyphs = [\"Đ\", \"J\"]\n";
+        let excuses = Excuses::parse(file).unwrap().excuses;
+        let excuse = excuses.first().unwrap();
+        let none = traits(&[], &[], &[]);
+        assert!(excuse.holds("f", "Đ", &none) && excuse.holds("f", "J", &none));
+        assert!(!excuse.holds("f", "D", &none) && !excuse.holds("g", "J", &none));
+        assert_eq!(excuse.conditions(), "the font is `f`; the glyph is `Đ`, `J`");
+    }
+
+    #[test]
+    fn a_glyph_only_one_program_sews_is_explained_by_an_excuse_that_names_it_sewn() {
+        let file = "[[excuse]]\nmeasures = [\"stitches\"]\ndeviation = \"DEV-FILL-018\"\n\n\
+                    [[excuse]]\nmeasures = [\"overlap\", \"sewn\"]\ndeviation = \"DEV-RUN-002\"\nwithin_mm = 0.3\n\n\
+                    [[excuse]]\nmeasures = [\"sewn\"]\ndeviation = \"DEV-SAT-013\"\nglyphs = [\"Đ\"]\n\n\
+                    [[known]]\nmeasures = [\"sewn\"]\nfollow_up = \"M9.8\"\nglyphs = [\"X\"]\n\n\
+                    [[known]]\nmeasures = [\"sewn\"]\nfollow_up = \"M9.9\"\nglyphs = [\"J\"]\n";
+        let excuses = Excuses::parse(file).unwrap();
+        assert_eq!(excuses.excuses.iter().map(Excuse::named).collect::<Vec<_>>(), [vec!["stitches"], vec!["overlap", "sewn"], vec!["sewn"]]);
+        let how = "Ink/Stitch sews nothing (it can't), and StitchCraft sews the glyph";
+        let judged = |glyph: &str| excuses.judge_alone("f", glyph, &Traits::default(), how.to_string());
+        assert_eq!(judged("Đ"), (Verdict::Excused(vec![format!("{how}, as DEV-SAT-013 says")]), BTreeSet::from([2])));
+        assert_eq!(judged("J"), (Verdict::Known(vec![format!("{how} (known: M9.9)")]), BTreeSet::from([4])));
+        // An excuse that names only measures of both files, or asks how near the threads lie, explains no such
+        // glyph.
+        assert_eq!(judged("V"), (Verdict::Differs(vec![how.to_string()]), BTreeSet::new()));
     }
 
     #[test]
@@ -387,9 +460,10 @@ saying = "stitch pattern"
         let excuses = Excuses::parse(file).unwrap().excuses;
         let excuse = excuses.first().unwrap();
         assert!(
-            excuse.holds("x", &traits(&["running_stitch"], &[], &[])) && excuse.holds("x", &traits(&["running_stitch", "manual_stitch"], &[], &[]))
+            excuse.holds("x", "a", &traits(&["running_stitch"], &[], &[]))
+                && excuse.holds("x", "a", &traits(&["running_stitch", "manual_stitch"], &[], &[]))
         );
-        assert!(!excuse.holds("x", &traits(&["running_stitch", "satin_column"], &[], &[])) && !excuse.holds("x", &traits(&[], &[], &[])));
+        assert!(!excuse.holds("x", "a", &traits(&["running_stitch", "satin_column"], &[], &[])) && !excuse.holds("x", "a", &traits(&[], &[], &[])));
         assert_eq!(
             excuse.conditions(),
             "every element is a `running_stitch`, `manual_stitch`; each program's thread lies within 0.3 mm of the other's"
@@ -422,7 +496,7 @@ saying = "stitch pattern"
             let ours = line(20, 0.0);
             let (measured, their_measures) = (Measured::of(&ours).unwrap(), Measured::of(theirs).unwrap());
             let rows = differential::compare(&measured, &their_measures);
-            excuses.judge("f", &Traits::default(), &rows, (&ours, &measured), (theirs, &their_measures))
+            excuses.judge("f", "a", &Traits::default(), &rows, (&ours, &measured), (theirs, &their_measures))
         };
         let (verdict, used) = judged(&line(10, 0.0));
         assert_eq!(verdict, Verdict::Excused(vec!["stitches differ: StitchCraft 21, Ink/Stitch 11, as DEV-RUN-002 says".to_string()]));
@@ -447,7 +521,7 @@ saying = "stitch pattern"
         let judged = |font: &str, ours: &StitchPlan, theirs: &StitchPlan| {
             let (measured, their_measures) = (Measured::of(ours).unwrap(), Measured::of(theirs).unwrap());
             let rows = differential::compare(&measured, &their_measures);
-            excuses.judge(font, &Traits::default(), &rows, (ours, &measured), (theirs, &their_measures))
+            excuses.judge(font, "a", &Traits::default(), &rows, (ours, &measured), (theirs, &their_measures))
         };
         // The palette can't explain threads that change at other blocks; in font f that is known.
         let (ours, theirs) = (plan_of(&[red, blue], 5.0), plan_of(&[red, red], 5.0));
@@ -483,7 +557,7 @@ saying = "stitch pattern"
         let judged = |ours: &StitchPlan, theirs: &StitchPlan| {
             let (measured, their_measures) = (Measured::of(ours).unwrap(), Measured::of(theirs).unwrap());
             let rows = differential::compare(&measured, &their_measures);
-            excuses.judge("f", &Traits::default(), &rows, (ours, &measured), (theirs, &their_measures))
+            excuses.judge("f", "a", &Traits::default(), &rows, (ours, &measured), (theirs, &their_measures))
         };
         // A line 10 mm long, centred as a PES file is. Ink/Stitch's has a needle point 20 mm off, and the
         // design is centred with it.
@@ -538,7 +612,7 @@ saying = "stitch pattern"
         let judged = |ours: &StitchPlan, theirs: &StitchPlan, traits: &Traits| {
             let (measured, their_measures) = (Measured::of(ours).unwrap(), Measured::of(theirs).unwrap());
             let rows = differential::compare(&measured, &their_measures);
-            excuses.judge("f", traits, &rows, (ours, &measured), (theirs, &their_measures))
+            excuses.judge("f", "a", traits, &rows, (ours, &measured), (theirs, &their_measures))
         };
         let none = traits(&[], &[], &[]);
         let ours = plan_of(&[vermilion, blue], 5.0);

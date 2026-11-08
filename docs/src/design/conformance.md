@@ -284,7 +284,9 @@ are StitchCraft's own). A case excuses a measure with the entry that explains it
 the difference as excused. An excuse for a measure that agrees fails the case, so that every reason in
 the ledger is still true. Where the differential can undo a deviation in Ink/Stitch's file, it measures
 the file again without it. The excuse then counts only if the measure agrees. Ink/Stitch's jumps that go
-nowhere (`DEV-FMT-001`) excuse as many trims and jumps as there are of them, and no more. Where both files
+nowhere (`DEV-FMT-001`) excuse as many trims and jumps as there are of them, and no more. Within a colour
+block, pystitch writes such a jump after lock stitches an element forces as it writes one after a trim of
+the plan. Only as many are left out there as Ink/Stitch's file has trims more than StitchCraft's. Where both files
 change thread at the same colour blocks, Ink/Stitch's threads, named by other entries of Brother's palette
 (`DEV-THREAD-001`), take StitchCraft's names. StitchCraft fits each stitch to the machine (`DEV-FIN-001`),
 so to undo that, Ink/Stitch's stitches longer than the machine's longest are split and its needle points
@@ -363,13 +365,17 @@ may be wider than the reference hoop. Every night the case sews 4 glyphs of each
 21,179, in 6 parts. A glyph whose stitch types StitchCraft doesn't sew yet is listed, and joins the
 comparison with M10's steps. An element whose setting StitchCraft can't read is left out with `SC-E0101`,
 where Ink/Stitch sews the setting's default: its glyph is excused by `DEV-PRM-001` and not compared. A glyph
-neither program writes a file of agrees. Ink/Stitch writes none when it finds nothing to sew or an element
-it can't sew, and StitchCraft none when an element is left out with an error, as `stitch plan` does.
+neither program writes a file of agrees. Ink/Stitch writes none when it finds nothing to sew, an element it
+can't sew or elements that sew no stitch, as of a glyph of one empty path, and StitchCraft none when an
+element is left out with an error, as `stitch plan` does. `--font` sews the glyphs of the fonts it names
+alone, so that the fonts a weekly run found differing sew again in minutes.
 
 The corpus can't have an excuse for each of its glyphs. `conformance/inkstitch/glyphs.toml` excuses a
 measure by an entry of the ledger for the glyphs where its cause is. A diagnostic picks them, such as
 `SC-I0703` where StitchCraft splits stitches longer than the machine's longest, and so do a stitch type, a
-setting and a font. The excuses the differential can check are checked as a case's are. StitchCraft's
+setting and a font. A cause that only the drawing of a few glyphs shows, such as a rung that rounding leaves
+a hair short of a rail, is named by its glyphs, and an excuse that names `sewn` explains a glyph that only one
+program sews. The excuses the differential can check are checked as a case's are. StitchCraft's
 running stitches place their needle points otherwise (`DEV-RUN-002`), and that excuse counts only where each
 program's thread lies within 0.3 mm of the other's, for 0.9 of it. The report, `target/conformance/fonts.md`,
 has a row for each font, the glyphs each excuse excused, and each glyph that differs with its measures.
