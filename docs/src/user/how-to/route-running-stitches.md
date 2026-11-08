@@ -14,7 +14,7 @@ line that crosses itself lies above them, and a tick starts 0.5 mm below the rai
 lines are routed with Trim jump stitches on. Dashed lines are jumps:
 
 <!-- shot: routing-lines -->
-![TS-17C's network of 6 running stitches drawn as thin lines, twice: on the left as drawn, and on the right as Auto-Route Running Stitch routes them with Trim jump stitches on. A rail along the bottom, a post across it, a brace from the post down to the rail, a hook curving up from the rail, a line that crosses itself above them, and a tick beside the rail. Dashed lines are jumps, and orange rings mark lock stitches. As drawn, the machine jumps from each line to the next. Routed, it jumps only out to the line apart and back, and trims before each of those jumps. It reaches the tick, 0.5 mm off the rail, with a stitch.](../../images/generated/routing-lines.png)
+![TS-17C's network of 6 running stitches drawn as thin lines, twice: on the left sewn line by line, and on the right as Auto-Route Running Stitch routes them with Trim jump stitches on. A rail along the bottom, a post across it, a brace from the post down to the rail, a hook curving up from the rail, a line that crosses itself above them, and a tick beside the rail. Dashed lines are jumps, and orange rings mark lock stitches. Sewn line by line, the machine jumps from each line to the next. Routed, it jumps only out to the line apart and back, and trims before each of those jumps. It reaches the tick, 0.5 mm off the rail, with a stitch.](../../images/generated/routing-lines.png)
 <!-- /shot -->
 
 On the left, the needle jumps from each line to the next. On the right, it sews along the rail and turns
