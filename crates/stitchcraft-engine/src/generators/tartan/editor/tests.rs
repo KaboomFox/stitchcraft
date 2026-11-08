@@ -113,6 +113,29 @@ fn req_fill_trt_015_the_setting_written_reads_back_as_the_sett() {
 }
 
 #[test]
+fn req_fill_trt_015_a_number_json_can_t_write_is_written_as_0() {
+    // NaN and the infinities have no form in JSON: each is written as 0, and the setting stays an object of JSON.
+    let draft = Draft::from_code("(#ff0000)5 (#0000ff)5", 0.2).unwrap().draft;
+    let odd = Draft { rotate: f64::NAN, offset: [f64::INFINITY, 2.5], narrowest: f64::NEG_INFINITY, ..draft.clone() };
+    let setting = odd.setting();
+    assert_eq!(
+        setting,
+        r#"{"symmetry": true, "equal_warp_weft": true, "rotate": 0, "scale": 100.0, "offset_x": 0, "offset_y": 2.5, "palette": "(#ff0000)/5 (#0000ff)/5", "min_stripe_width": 0}"#
+    );
+    let json: serde_json::Value = serde_json::from_str(&setting).unwrap();
+    for key in ["rotate", "offset_x", "min_stripe_width"] {
+        assert_eq!(json[key].as_f64(), Some(0.0), "{key}");
+    }
+    // The fill reads it back with those 0s.
+    let read = sett::read(&setting).unwrap().sett;
+    assert_eq!((read.rotate, read.scale, read.offset, read.narrowest), (0.0, 100.0, [0.0, 2.5], 0.0));
+    // A scale written as 0 is one the fill refuses, as it refuses every scale of 0 % or less.
+    let unscaled = Draft { scale: f64::INFINITY, ..draft }.setting();
+    assert!(unscaled.contains(r#""scale": 0, "#), "{unscaled}");
+    assert_eq!(sett::read(&unscaled).unwrap_err(), "its `scale` is 0, and a sett is scaled by more than 0 %");
+}
+
+#[test]
 fn diag_sc_w0328_the_editor_names_letters_the_register_doesn_t_use() {
     let drafted = Draft::from_code("B24 X4 B24 QZ2", 0.2).unwrap();
     assert_eq!(drafted.unread, ["X", "QZ"]);

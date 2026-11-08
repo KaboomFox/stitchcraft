@@ -85,7 +85,7 @@ impl Draft {
     }
 
     /// The `tartan` setting of the sett: an object of JSON as Ink/Stitch's editor saves it, its keys in the
-    /// order that editor writes them.
+    /// order that editor writes them. NaN and the infinities, which JSON can't write, are written as 0.
     pub fn setting(&self) -> String {
         let number = |n: f64| serde_json::Number::from_f64(n).map_or_else(|| "0".to_string(), |n| n.to_string());
         format!(

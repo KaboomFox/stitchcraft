@@ -375,6 +375,9 @@ mod tests {
              shortest stitch (1.5 mm), and needle points of its stripes are left out."
         );
         assert!(too_fine(&warp, &weft, -45.0, 1.0, 1.4).is_none());
+        // Bands half as wide: a row crosses at most half as much of a stripe, 0.71 mm.
+        assert!(too_fine(&warp, &weft, -45.0, 0.5, 0.7).is_none());
+        assert!(too_fine(&warp, &weft, -45.0, 0.5, 0.8).unwrap().message.contains("each row crosses a stripe in at most 0.71 mm"));
         assert!(too_fine(&warp, &weft, -45.0, 1.5, 2.2).unwrap().message.starts_with("This tartan's narrowest stripe sewn as a fill is 1.5 mm wide"));
     }
 
