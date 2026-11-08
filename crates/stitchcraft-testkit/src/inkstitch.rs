@@ -342,12 +342,12 @@ mod tests {
         let text = svg(&written, &DesignSettings::default()).unwrap();
         assert!(text.contains(&format!("<inkstitch:inkstitch_svg_version>{CURRENT}</inkstitch:inkstitch_svg_version>")), "{text}");
         assert!(text.contains("viewBox=\"0 0 56 30\""), "the design's own coordinates: {text}");
-        assert!(text.contains("stroke=\"#0000ff\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"square\""), "{text}");
+        assert!(text.contains("stroke=\"#0000c8\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"square\""), "{text}");
         assert_eq!(read(&text), (kept(&written), DesignSettings::default()));
         // Painted by style attributes, as Inkscape paints, the file is read back the same.
         let styled = svg_styled(&written, &DesignSettings::default()).unwrap();
-        assert!(styled.contains("style=\"fill:#ff0000;fill-rule:evenodd;stroke:none\""), "{styled}");
-        assert!(styled.contains("style=\"fill:none;stroke:#0000ff;stroke-width:2;stroke-linejoin:round;stroke-linecap:square\""), "{styled}");
+        assert!(styled.contains("style=\"fill:#c80000;fill-rule:evenodd;stroke:none\""), "{styled}");
+        assert!(styled.contains("style=\"fill:none;stroke:#0000c8;stroke-width:2;stroke-linejoin:round;stroke-linecap:square\""), "{styled}");
         assert_eq!(read(&styled), (kept(&written), DesignSettings::default()));
     }
 

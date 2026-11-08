@@ -244,7 +244,7 @@ fn the_filter_stops_before_vectorcraft_would() {
         assert_eq!(refused.to_string(), "error SC-E0004: Reading the selected paths needs more work than VectorCraft lets a filter do.");
     }
     // Routing runs out, with the engine's word.
-    let routed = replaced(&objects[1..], Tool::Satins.defaults(), 100 * PER_UNIT).err().unwrap();
+    let routed = replaced(&objects[1..], Tool::Satins, Tool::Satins.defaults(), 100 * PER_UNIT).err().unwrap();
     assert!(routed.to_string().starts_with("error SC-E0004: Routing these elements needed more than the work budget"), "{routed}");
 }
 
