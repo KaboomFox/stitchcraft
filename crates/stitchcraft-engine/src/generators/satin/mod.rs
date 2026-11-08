@@ -450,15 +450,7 @@ impl Column {
             drawn: rng.clone(),
         };
         if column.sections.is_empty() {
-            warnings.push(
-                Diagnostic::new(
-                    Code::SatinNoSection,
-                    "Every section of this satin column has no length on one of its rails, so it has nothing to sew.",
-                )
-                .with_fix(Fix::Hint(
-                    "Move the rungs so that each meets both rails away from their ends, or lower `push_compensation_mm`.".to_string(),
-                )),
-            );
+            warnings.push(no_section());
             return Ok((column, warnings));
         }
         let Top { placed, stitches, peaks } = top_stitches(&column.sections, params, pull, lengths, rng, meter)?;
@@ -539,6 +531,32 @@ impl Column {
         }
         Ok(Stitched { runs: vec![run], colours: Vec::new(), warnings })
     }
+}
+
+/// `SC-E0216`: no section of the column has length on both rails, so it has nothing to sew.
+fn no_section() -> Diagnostic {
+    Diagnostic::new(Code::SatinNoSection, "Every section of this satin column has no length on one of its rails, so it has nothing to sew.")
+        .with_fix(Fix::Hint("Move the rungs so that each meets both rails away from their ends, or lower `push_compensation_mm`.".to_string()))
+}
+
+/// The pairs of points across `satin` that a ripple stitch's lines run through
+/// (`docs/src/design/algorithms/strokes.md` › Ripple stitch): every `spacing` millimetres along the column's
+/// sections, placed as its top stitches' pairs are, with no compensation and nothing at random, its rails
+/// read as `params` say. What the reading says goes to `warnings`, and `SC-E0216`, with no pair, when no
+/// section has length. Each pair is the first rail's point, then the second's.
+pub(crate) fn ripple_pairs(
+    satin: &Satin,
+    params: &SatinParams,
+    spacing: f64,
+    warnings: &mut Vec<Diagnostic>,
+    meter: &mut Meter,
+) -> Result<Vec<[Point; 2]>, Exhausted> {
+    let sections = column::sections(satin, params, warnings, meter)?;
+    if sections.is_empty() {
+        warnings.push(no_section());
+        return Ok(Vec::new());
+    }
+    pairs::pairs(&sections, spacing, &mut Processor::inset([0.0; 2], [0.0; 2]), meter)
 }
 
 /// `SC-W0215` for a column left out: one with no stitch `across`, which only a zigzag satin of a single

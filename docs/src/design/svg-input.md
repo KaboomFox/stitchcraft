@@ -233,8 +233,8 @@ them (`REQ-SVG-003`).
   reads too, and `SC-I0805` lists each object left out. The
   `starting_point` and `ending_point` commands give the start and end positions of every element of the
   shape they are tied to, which its fills and satin columns start and end at (`REQ-GEN-001`). The
-  `target_point` command gives the point its circular fill turns round (`REQ-FILL-CIR-008`), and from
-  M10 the point its ripple stitch aims at. Each is at its symbol's place: the `<use>` element's `x` and
+  `target_point` command gives the point its circular fill turns round (`REQ-FILL-CIR-008`) and its
+  ripple stitch aims at (`REQ-RIP-002`). Each is at its symbol's place: the `<use>` element's `x` and
   `y` under the transforms of the use and of the groups above it, as Ink/Stitch places it. Of 2 commands
   of a kind on a shape, the first connector in the file counts. A command whose place doesn't read is
   named with `SC-W0802` and left out, and so are those of a shape digitized automatically, whose parts

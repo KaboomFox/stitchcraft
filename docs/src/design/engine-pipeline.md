@@ -119,9 +119,11 @@ circular fill, sewn from M7.9, sews a spiral round the middle of each part after
 routes the spiral's pieces as a tatami fill routes its rows ([fills](algorithms/fills.md#circular-fill)).
 A cross stitch fill, sewn from M10.1, sews a cross in each cell of a grid that each part covers enough of,
 with no underlay, the crosses that meet in one run. From M10.2 it sews each of Ink/Stitch's 12 methods, its
-half crosses in rows routed as a tatami fill's ([cross stitch](algorithms/cross-stitch.md)).
-The other stroke, satin and fill methods are skipped with `SC-W0011` until their milestones. An element whose parameters are wrong (`SC-E0101`) is skipped too, and
-the rest of the design still plans.
+half crosses in rows routed as a tatami fill's ([cross stitch](algorithms/cross-stitch.md)). A ripple
+stitch, sewn from M10.8, sews lines along a column or towards a target point as one running stitch
+([ripple stitch](algorithms/strokes.md#ripple-stitch-m108)), and every stroke method is then sewn. The
+other fill methods are skipped with `SC-W0011` until their milestones. An element whose parameters are
+wrong (`SC-E0101`) is skipped too, and the rest of the design still plans.
 
 Each element is generated with the shortest stitch for it: the larger of the machine's (the profile's
 `min_stitch`) and the element's `min_stitch_length_mm`, or the design's shortest stitch when the element
@@ -357,7 +359,7 @@ to the other axis and rounds nothing (`stitchcraft_engine::design::Turn`).
 | Command | Effect | From |
 |---|---|---|
 | Start / end point | The element's start and end positions, which take the place of the needle before it and of the next element's offer for fills and satin columns (`REQ-GEN-001`). The SVG adapter reads Ink/Stitch's commands, and the VectorCraft adapter its markers named `stitch:start` and `stitch:end` | M8.4 |
-| Target point | The point a circular fill turns round, in place of its parts' centroids (`REQ-FILL-CIR-008`), and from M10 the ripple stitch's target | M8.4, M10 |
+| Target point | The point a circular fill turns round, in place of its parts' centroids (`REQ-FILL-CIR-008`), and a ripple stitch aims at, in place of its hull's centroid (`REQ-RIP-002`) | M8.4, M10.8 |
 | Trim after, stop after | `trim_after` and `stop_after` on the element's last group (see the connection table). The SVG adapter reads Ink/Stitch's trim and stop commands as these settings. | M3.8 (engine), M3 (adapter) |
 | Ignore object / ignore layer | The adapter drops the element and says so in the report (`REQ-ASM-004`). The VectorCraft adapter reads them from the name `stitch:ignore` | M3 (SVG), M6 (VectorCraft) |
 | Origin | The design setting `origin`. The SVG adapter reads Ink/Stitch's `origin` command, and the VectorCraft adapter its marker named `stitch:origin` | M3.8 (engine), M8.8 (adapters) |

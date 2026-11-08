@@ -77,6 +77,9 @@ pub stitchcraft_core::diag::Code::ParamForOtherFamily
 pub stitchcraft_core::diag::Code::ParamInvalid
 pub stitchcraft_core::diag::Code::ParamUnknown
 pub stitchcraft_core::diag::Code::PreviewTooLarge
+pub stitchcraft_core::diag::Code::RippleLinesCut
+pub stitchcraft_core::diag::Code::RippleNotSewnYet
+pub stitchcraft_core::diag::Code::RippleSkipsAll
 pub stitchcraft_core::diag::Code::RouteLeftOut
 pub stitchcraft_core::diag::Code::RouteNothing
 pub stitchcraft_core::diag::Code::RoutePieceReadOtherwise
@@ -322,6 +325,9 @@ pub stitchcraft_core::Code::ParamForOtherFamily
 pub stitchcraft_core::Code::ParamInvalid
 pub stitchcraft_core::Code::ParamUnknown
 pub stitchcraft_core::Code::PreviewTooLarge
+pub stitchcraft_core::Code::RippleLinesCut
+pub stitchcraft_core::Code::RippleNotSewnYet
+pub stitchcraft_core::Code::RippleSkipsAll
 pub stitchcraft_core::Code::RouteLeftOut
 pub stitchcraft_core::Code::RouteNothing
 pub stitchcraft_core::Code::RoutePieceReadOtherwise

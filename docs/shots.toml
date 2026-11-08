@@ -209,7 +209,7 @@ kind = "stitch"
 sheet = "TS-17C"
 style = "realistic"
 scale = 4.0
-alt = "TS-17C as it will sew. In blue, the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E's arms. Below them the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next. Below the routed letters, in red, a network of 6 bean-stitched lines, twice: on the left sewn as drawn, line by line, with a jump thread from each line to the next, and on the right routed, sewn in one go but for the jump to the line that crosses itself, above the others, and back. At the bottom, in red, 2 crosses of satin columns 5 mm wide, a bar and a post each, as drawn on the left and with their underlays first on the right, which look alike from above."
+alt = "TS-17C as it will sew. In blue, the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E's arms. Below them the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next. Below the routed letters, in red, a network of 6 bean-stitched lines, twice: on the left sewn as drawn, line by line, with a jump thread from each line to the next, and on the right routed, sewn in one go but for the jump to the line that crosses itself, above the others, and back. Below the network, in red, 2 crosses of satin columns 5 mm wide, a bar and a post each, as drawn on the left and with their underlays first on the right, which look alike from above. At the bottom, in green, 3 ripple stitches: a rainbow of 7 arches, a wave whose copies shrink to a point above it, and a circle that spirals in to its middle."
 
 [[shot]]
 id = "testsheet-ts-17b"
@@ -311,6 +311,41 @@ panels = [
   { caption = "0°", params = { stroke_method = "zigzag_stitch", zigzag_spacing_mm = "1" } },
   { caption = "45°", params = { stroke_method = "zigzag_stitch", zigzag_spacing_mm = "1", zigzag_angle = "45" } },
   { caption = "−45°", params = { stroke_method = "zigzag_stitch", zigzag_spacing_mm = "1", zigzag_angle = "-45" } },
+]
+
+[[shot]]
+id = "ripple-kinds"
+kind = "stitch"
+sheet = "TS-17C"
+elements = ["ts17c:ripple:"]
+style = "realistic"
+scale = 8.0
+alt = "TS-17C's 3 ripple stitches in green. On the left, a rainbow: 7 arches sewn back and forth from the outer edge of a column drawn as 2 arches and a rung to its inner edge. In the middle, a wave and its copies, which shrink to a point 20 mm above its middle, each copy meeting the next at a point. On the right, a circle 22 mm across that spirals in to its middle."
+
+[[shot]]
+id = "ripple-lines"
+kind = "stitch"
+fixture = "docs/fixtures/ripple.svg"
+style = "simple"
+scale = 10.0
+alt = "An arch 30 mm across sewn as a ripple stitch of 8 lines, its copies shrinking to the middle of the half disc it bounds"
+panels = [
+  { caption = "Evenly spaced", params = { stroke_method = "ripple_stitch", line_count = "8" } },
+  { caption = "Exponent 2", params = { stroke_method = "ripple_stitch", line_count = "8", exponent = "2" } },
+  { caption = "Exponent 2, flipped", params = { stroke_method = "ripple_stitch", line_count = "8", exponent = "2", flip_exponent = "true" } },
+]
+
+[[shot]]
+id = "ripple-joins"
+kind = "stitch"
+fixture = "docs/fixtures/ripple.svg"
+style = "simple"
+scale = 10.0
+alt = "An arch 30 mm across sewn as a ripple stitch of 8 lines"
+panels = [
+  { caption = "Flat join", params = { stroke_method = "ripple_stitch", line_count = "8" } },
+  { caption = "Point join", params = { stroke_method = "ripple_stitch", line_count = "8", join_style = "1" } },
+  { caption = "One way", params = { stroke_method = "ripple_stitch", line_count = "8", flip_copies = "false" } },
 ]
 
 [[shot]]

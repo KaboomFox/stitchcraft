@@ -578,6 +578,105 @@ rationale = "The zigzag stroke is built from Ink/Stitch's behaviour, and the dif
 milestone = "M7"
 status = "active"
 
+[[req]]
+id = "REQ-RIP-001"
+area = "strokes/ripple"
+level = "L2"
+statement = "A ripple stitch's lines are its subpaths that move, flattened within a tenth of a CSS pixel. 2 lines or more are a satin column's rails and rungs, and its lines run between the rails, from the first to the second. 1 open line ripples towards its target point, and 1 line whose ends lie nearer each other than 0.05 CSS pixels spirals in to it. A subpath of one point, lines shorter together than the shortest stitch and a ripple whose every line is one point sew nothing, and SC-W0401 says so."
+rationale = "Ink/Stitch's ripple stitch, read at d59c9ab (lib/stitches/ripple_stitch.py): a file sews the same ripple in both."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-RIP-002"
+area = "strokes/ripple"
+level = "L2"
+statement = "A ripple's target point is the position its target_point command or its stitch:target marker gives, or else the centroid of the convex hull of its line's points: the middle of the 2 farthest apart where they lie in a line, and the point itself where they are one. A ripple along a column has none."
+rationale = "Ink/Stitch's ripple stitch aims at the target_point command, or else at the centroid of the stroke's hull, read at d59c9ab (lib/elements/stroke.py)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-RIP-003"
+area = "strokes/ripple"
+level = "L2"
+statement = "A ripple has line_count lines. With min_line_dist_mm, it has the shortest of its measures (the pairs across the column, or the lines from the outline's points to the target point) divided by min_line_dist_mm and rounded up, 1 less where that differs from line_count in parity, at least 1 and at most 1,000, or 999 where 1,000 would change the parity (SC-W0407). A length of 0 among the measures counts only when it is the last. A closed line and the point join then add 1 line, and a ripple along a column has at least 2."
+rationale = "Ink/Stitch counts a ripple's lines so, read at d59c9ab, and keeping the parity keeps the ripple's end on one side however large it is drawn."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-RIP-004"
+area = "strokes/ripple"
+level = "L2"
+statement = "Of n lines, line k lies (k / (n - 1)) raised to exponent of the way along each measure, from the first rail to the second or from the outline to the target point, and with flip_exponent at 1 less the place of line n - 1 - k. One line lies at 0, or 1 flipped. A line at 0 is the first rail or the outline exactly, and at 1 the second rail or the target point, and a line towards the target point reaches it nowhere else, unless the outline does."
+rationale = "Ink/Stitch places a ripple's lines so, read at d59c9ab."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-RIP-005"
+area = "strokes/ripple"
+level = "L2"
+statement = "skip_start leaves out the first lines and skip_end the last. Where together they reach the number of lines, every line is sewn, and SC-W0408 says so."
+rationale = "Ink/Stitch leaves out no line when the skips would leave none, read at d59c9ab."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-RIP-006"
+area = "strokes/ripple"
+level = "L2"
+statement = "A closed line's lines, the point join's, and those along a column without flip_copies bend into the next line, line k at measure i of m lying i / (m - 1) of the way to line k + 1, and the last line is left out. The point join flips every other line, towards a target point always and along a column with flip_copies, which then lies (m - 1 - i) / (m - 1) of the way. With flip_copies, lines along a column or towards a target point are sewn one at a time, every other one from its end, joined flat by a straight running stitch or meeting at a point, where the meeting needle point is listed twice. A closed line's lines, and the others without flip_copies, are one running stitch through all their points."
+rationale = "Ink/Stitch bends and sews a ripple's lines so, read at d59c9ab."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-RIP-007"
+area = "strokes/ripple"
+level = "L2"
+statement = "Each line of a ripple is sewn as a running stitch with the stroke's running_stitch_length_mm and running_stitch_tolerance_mm, and its stitches keep within the tolerance of the line through its points, as REQ-RUN-002 says of a stroke's."
+rationale = "Ink/Stitch sews each ripple line as a running stitch, read at d59c9ab."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-RIP-008"
+area = "strokes/ripple"
+level = "L2"
+statement = "With staggers other than 0, line i of the lines sewn one at a time is placed from ((i / staggers) mod 1) of the sum of the stitch lengths before its start, along its first segment lengthened back, in proportion less where that segment is shorter than 0.1 CSS pixels. Its first needle point is its start, and the needle points before it, or nearer it than the shortest stitch, are left out. A line of no length sews its one point, but nothing staggered at a phase of 0."
+rationale = "Ink/Stitch staggers a ripple's lines so, read at d59c9ab and run as a black box: lines side by side don't line their needle points up."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-RIP-009"
+area = "strokes/ripple"
+level = "L2"
+statement = "reverse sews the whole ripple from its last needle point. repeats and bean_stitch_repeats then sew it as a running stitch's (REQ-RUN-004), and random lengths draw from a stream of the element's generator for each line."
+rationale = "Ink/Stitch reverses a ripple before its repeats and bean stitch, read at d59c9ab."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-RIP-010"
+area = "strokes/ripple"
+level = "L2"
+statement = "What M10.11 sews is left out: a ripple along a column reads its rails with reverse_rails, swap_satin_rails and push_compensation_mm at their defaults, and a ripple cut to clips is sewn whole, each with SC-W0406. The settings of guided ripples are not declared, and SC-W0105 names each one a stroke sets."
+rationale = "A ripple sews as M10.8 defines it until M10.11 sews the rest, and says what it leaves out."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-RIP-011"
+area = "strokes/ripple"
+level = "L3"
+statement = "The ripple stitches StitchCraft sews TS-17C with, along a column of rails and rungs, an open line towards a target point and a closed line spiralling in to its own, written as an SVG file with their Ink/Stitch parameters, sew in the Ink/Stitch that conformance/inkstitch/pin.toml names, run as a black box, as StitchCraft sews the sheet, by the measures of REQ-SVG-008 and within their tolerances. A measure that a case excuses with an entry of the deviations ledger may differ."
+rationale = "The ripple stitch is built from Ink/Stitch's behaviour, and the differential is how a file is shown to sew the same in both."
+milestone = "M10"
+status = "active"
+
 # ── Lock stitches and assembly ─────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -1759,7 +1858,7 @@ status = "active"
 id = "REQ-VC-009"
 area = "vectorcraft"
 level = "L2"
-statement = "An object or a layer named `stitch:ignore`, alone or followed by white space and a note, is left out with everything in it, and listed (SC-I0811). An object named `stitch:start` or `stitch:end` that is neither a group nor a layer is never stitched, and gives the shapes of the group or layer it is in, and of the groups inside it, their start or end position: the centre of the box round its anchors (REQ-GEN-001). The first such marker of each kind that shows counts, a group's before those of the groups around it; another, or one with no anchor that reads, is named (SC-W0807), and so are the markers of a shape digitized automatically, which uses none. An object named `stitch:origin` or `stitch:stop-position` that is neither a group nor a layer is never stitched either, and gives the design its origin or its stop position (REQ-ASM-005), the centre of the box round its anchors, wherever it is; 2 origins, or 2 stop positions in a design with a stop, end planning (SC-E0819), and one with no anchor that reads is named (SC-W0807). A group or a layer so named, and any other name that begins with `stitch:`, is named as well, and the name is otherwise ignored. The names are read after any white space, in any mix of upper and lower case."
+statement = "An object or a layer named `stitch:ignore`, alone or followed by white space and a note, is left out with everything in it, and listed (SC-I0811). An object named `stitch:start` or `stitch:end` that is neither a group nor a layer is never stitched, and gives the shapes of the group or layer it is in, and of the groups inside it, their start or end position: the centre of the box round its anchors (REQ-GEN-001). An object named `stitch:target` gives them so the point their ripple stitches and circular fills aim at (REQ-RIP-002, REQ-FILL-CIR-008). The first such marker of each kind that shows counts, a group's before those of the groups around it; another, or one with no anchor that reads, is named (SC-W0807), and so are the markers of a shape digitized automatically, which uses none. An object named `stitch:origin` or `stitch:stop-position` that is neither a group nor a layer is never stitched either, and gives the design its origin or its stop position (REQ-ASM-005), the centre of the box round its anchors, wherever it is; 2 origins, or 2 stop positions in a design with a stop, end planning (SC-E0819), and one with no anchor that reads is named (SC-W0807). A group or a layer so named, and any other name that begins with `stitch:`, is named as well, and the name is otherwise ignored. The names are read after any white space, in any mix of upper and lower case."
 rationale = "ABI v1 gives a plug-in no command objects of its own. The names VectorCraft's Layers panel edits can carry them, as Ink/Stitch's ignore commands and its start and end positions do."
 milestone = "M6"
 status = "active"
