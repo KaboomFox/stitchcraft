@@ -1,6 +1,6 @@
 # Stroke generators
 
-<!-- implements: crates/stitchcraft-engine/src/generators/mod.rs, crates/stitchcraft-engine/src/generators/running/**, crates/stitchcraft-engine/src/generators/manual.rs, crates/stitchcraft-engine/src/generators/zigzag/**, crates/stitchcraft-engine/src/generators/passes.rs, crates/stitchcraft-engine/src/normalize/stroke.rs, crates/stitchcraft-engine/src/normalize/along.rs -->
+<!-- implements: crates/stitchcraft-engine/src/generators/mod.rs, crates/stitchcraft-engine/src/generators/running/**, crates/stitchcraft-engine/src/generators/manual.rs, crates/stitchcraft-engine/src/generators/zigzag/**, crates/stitchcraft-engine/src/generators/ripple/**, crates/stitchcraft-engine/src/generators/passes.rs, crates/stitchcraft-engine/src/normalize/stroke.rs, crates/stitchcraft-engine/src/normalize/along.rs -->
 
 Strokes follow a path. Shape: `StrokePath` (an ordered list of polylines, corners marked, from the
 normalizer). Phase P1 (M3) unless noted.
@@ -21,7 +21,8 @@ width alone, so a zigzag stroke's zigzag ends square at a cut, half its width ei
 Ink/Stitch closes each piece of a cut closed zigzag stroke, which StitchCraft sews open (`DEV-RUN-009`), and
 sews a line that also touches its clip at a point whole, which StitchCraft cuts as any other
 (`DEV-RUN-010`). Wholly outside its clips, a stroke isn't sewn (`SC-W0013`), and the element before it ends
-nearest the first piece they leave.
+nearest the first piece they leave. A ripple stitch is sewn whole until M10.11 cuts its lines
+([ripple stitch](#not-sewn-yet)).
 
 ## Running stitch
 
@@ -282,13 +283,197 @@ are sewn. A closed zigzag's last needle point moves onto its first before they a
 can be the only short one, as at a teardrop's tip. Ink/Stitch's shortest stitch is 0.1 mm by default, and
 it sews such a zigzag as it is.
 
-## Ripple stitch (P3, M10)
+## Ripple stitch (M10.8)
 
-A series of copies of the stroke, each progressively scaled, offset or interpolated towards a target
-point (or between two rails for "satin-guided ripple"), joined into one continuous running stitch.
-Parameters: `line_count`, `min_line_dist_mm`, `staggers`, `skip_start`, `skip_end`, `flip_copies`,
-`exponent`, `flip_exponent`, `reverse`, `grid_size_mm`, `grid_first`, `scale_axis`, `scale_start`,
-`scale_end`, `rotate_ripples`, `join_style`, `satin_guide_pattern_position`, `reverse_rails`,
-`swap_satin_rails`, plus running stitch parameters for each line. Design to be completed at M10; the
-properties will include "lines never cross the target point" and "each line is within tolerance of its
-interpolated curve".
+A ripple stitch sews lines that spread out from the stroke: copies of its line that shrink towards a
+point, or lines along a satin column from one of its rails to the other. All of them are sewn as one
+running stitch. It suits light textures that fade to a point, such as a shell. Its lines may cross.
+StitchCraft sews it as Ink/Stitch sews its ripple stitch (`stroke_method` `ripple_stitch`),
+read at `d59c9ab` (`lib/stitches/ripple_stitch.py` and the ripple settings in `lib/elements/stroke.py`).
+
+**Parameters:** `line_count`, `min_line_dist_mm`, `exponent`, `flip_exponent`, `skip_start`,
+`skip_end`, `flip_copies`, `join_style`, `staggers` and `reverse` (`RippleParams`). Each line is sewn
+with the running stitch's settings, its length and tolerance, random length and `random_seed`, and the
+whole ripple with `repeats` and `bean_stitch_repeats`. Guided ripples arrive with M10.11
+([not sewn yet](#not-sewn-yet)).
+
+### The stroke's lines
+
+The stroke's subpaths are flattened as a shape's outline is, within a tenth of a CSS pixel, and each one
+that moves is a line. A subpath that is one point is not stitched (`SC-W0401`). Lines shorter together
+than the shortest stitch sew nothing, and `SC-W0401` gives their length. The lines say which ripple the
+stroke sews:
+
+- **2 lines or more** are a satin column's rails and rungs, read by the satin column's own code
+  ([satin](satin.md#recognizing-rails-and-rungs)), and the ripple runs along the column, its lines between
+  the rails.
+- **1 open line** ripples towards a target point.
+- **1 closed line**, whose ends lie within 0.05 CSS pixels of each other, spirals in to the target point.
+
+### The target point
+
+Ink/Stitch's `target_point` command tied to the stroke gives the target point, read as the start and end
+commands are read ([SVG input](../svg-input.md#inkstitch-objects)). In a VectorCraft document a path named
+`stitch:target` grouped with the stroke gives it, at the middle of the box round its anchors
+([VectorCraft integration](../vectorcraft-integration.md#commands-in-v1)). Without either, the target
+point is the centroid of the convex hull of the stroke's lines, as GEOS finds a polygon's centroid. Where
+the lines' points all lie in a line, the hull is the segment between the 2 farthest apart, and the target
+point its middle. One point is its own hull.
+
+### Places
+
+Each line has a place `t`, from 0 to 1. Of `n` lines, line `k` is at `(k / (n − 1))` raised to the power
+`exponent`, which is at least 0.1. With `flip_exponent`, line `k` is at 1 less the place of line
+`n − 1 − k`. Above 1, the exponent packs the lines together towards the first line, and below 1 towards
+the last. With 1 line, its place is 0, or 1 with `flip_exponent`.
+
+- **Along a column.** Pairs of points are placed across the column every `running_stitch_tolerance_mm`,
+  as a satin column places its pairs ([satin](satin.md#top-stitches-method-satin_column)), with no
+  compensation and nothing at random. The rails are read with a satin column's defaults, cut into
+  sections at their rungs. The second rail is turned where it runs against the first (`reverse_rails`
+  automatic). The rails keep their order and their length. Line `k` goes through the point `t` of the way from each pair's point on
+  the first rail to its point on the second. The first line lies along the first rail and the last along
+  the second.
+- **Towards a target point.** The line is first sewn as a running stitch with the stroke's stitch lengths
+  and tolerance, without random length ([placement](#placement)). Its needle points are the outline. Line
+  `k` goes through the point `t` of the way from each point of the outline to the target point: the
+  outline shrunk towards the target point by `1 − t`. The first line is the outline itself, and a line at
+  `t` 1 is the target point alone. Another line reaches the target point only where the outline does.
+
+### How many lines
+
+1. `line_count` gives the count. With `min_line_dist_mm`, the count is the shortest length among the
+   column's pairs, or among the lines from the outline's points to the target point, divided by
+   `min_line_dist_mm` and rounded up. The count then keeps the parity of `line_count`, odd or even, by
+   being 1 less where it differs, so that the ripple ends on the same side however large the stroke is
+   drawn. It is at least 1, and at most 1,000, or 999 where 1,000 would change its parity. `SC-W0407`
+   says when it is cut, where Ink/Stitch sews every line (`DEV-RIP-002`). `line_count` itself stops at
+   1,000. A pair or a line of length 0 counts as Ink/Stitch counts it: the shortest is taken from those
+   after it, and is 0 when it is the last. So a column whose rails meet at its end takes the least count,
+   whatever `min_line_dist_mm` says.
+2. A closed line and the point join (`join_style` 1) add 1 line, since bending makes one line of 2.
+3. A ripple along a column has at least 2 lines.
+
+### Bent lines
+
+A closed line's lines and the point join's bend into the next line. So do the lines along a column without
+`flip_copies`. At the outline's point or the column's pair `i` of `m`, line `k` lies `i / (m − 1)` of the
+way from its own point to line `k + 1`'s. It starts on its own start and ends on the next line's end. The
+point join flips every other line, counted from the first of the count, towards a target point always
+and along a column with `flip_copies` on. Such a line lies `1 − i / (m − 1)` of the way, so it starts on
+the next line's start and ends on its own end. The last line bends into none and is left out, and the
+bent lines are 1 fewer than the count. A closed line's lines, bent, run on from one to the next in a
+spiral that ends at the target point.
+
+### Skipping lines
+
+`skip_start` leaves out the first lines and `skip_end` the last. Ink/Stitch leaves out none where they
+add up to the number of lines or more, and so does StitchCraft. `SC-W0408` says so.
+
+### Sewing the lines
+
+#### One line at a time
+
+Lines along a column or towards a target point with `flip_copies` on, the default, are sewn one at a time,
+each as a running stitch of its own with the stroke's stitch lengths and tolerance. A line of 1 point,
+from a column of 1 pair, is left out.
+
+- **Flat join** (`join_style` 0, the default). Every other line, counted from the first sewn, is sewn
+  from its end. The ripple goes back and forth. A straight running stitch joins each line's last
+  needle point to the next line's first.
+- **Point join** (`join_style` 1). The lines are bent, and every other line, counted from the first of
+  the count, is sewn from its end. Each line then starts where the one before ended, and nothing joins
+  them.
+- **Staggers.** With `staggers` 0, a line is placed from the end it is sewn from, and a line of no length
+  sews its one point. With any other value, line `i`, counted from the first sewn, is placed from its
+  start, `((i / staggers) mod 1)` of the sum of the stitch lengths before it, so that the needle points of
+  lines side by side don't line up. The line is lengthened back along its first segment by that much, or
+  in proportion less where the segment is shorter than 0.1 CSS pixels, and sewn as a running stitch. The
+  needle points before the line's start are left out, and the start is the first needle point. A needle
+  point nearer the start than the shortest stitch is left out too. The line is then sewn from its end
+  where it turns back. A line of no length sews its one point, but nothing at a phase of 0, as Ink/Stitch
+  at `d59c9ab` sews it when run as a black box. `staggers` is 1 when a file sets none. Each line is then
+  placed from its start. Ink/Stitch's settings window shows 0.
+- With random length, each line draws from its own stream of the element's generator, keyed by its place
+  among the lines sewn.
+
+#### One run
+
+A closed line's lines, and the others with `flip_copies` off, are sewn as one running stitch through all
+their points in order. Each line is sewn from its start, and the needle goes straight from one line's end
+to the next one's start.
+
+#### The whole ripple
+
+`reverse` sews the whole ripple backwards, from its last needle point. `repeats` and
+`bean_stitch_repeats` apply as for a running stitch ([repeats and bean stitch](#repeats-and-bean-stitch)).
+A line sewn one at a time that starts where the one before ended lists that needle point again, as
+Ink/Stitch lists it, and it takes a step of the bean list each time. A ripple starts and ends where its
+stitches do, whatever its neighbours. It offers the element before it its first subpath's start, as every
+stroke does. Lines near the target point can be shorter than the shortest stitch. Finalize then leaves out
+their needle points that lie too near the one before ([finalize](../engine-pipeline.md#5-finalize)).
+
+The lines' points come from arithmetic, square roots and powers (`stitchcraft_core::math`) alone, and
+every platform places them alike. Each point of each line costs a unit of work, and the points must fit
+in the stitches the budget has left before they are made.
+
+### Not sewn yet
+
+M10.11 sews guided ripples: guide lines and satin guides, `scale_axis`, `scale_start`, `scale_end`,
+`rotate_ripples`, `satin_guide_pattern_position`, the anchor line, `grid_size_mm`, `grid_first` and
+`manual_pattern_placement`. The registry doesn't declare their settings yet. A stroke keeps them, and
+`SC-W0105` names each. The SVG reader leaves a guide line or an anchor line out and names it (`SC-W0802`),
+and the ripple sews as this section says. Ink/Stitch reads a column's rails with the element's
+`reverse_rails`, `swap_satin_rails` and `push_compensation_mm`. StitchCraft reads them with the defaults,
+automatic, false and 0, and `SC-W0406` names each one set otherwise. A ripple cut to clips is sewn whole,
+and `SC-W0406` says so. Ink/Stitch cuts its stitches to the clips and routes the pieces.
+
+### Compared with Ink/Stitch
+
+The lines, their places and their count are Ink/Stitch's. The running stitches along each line, along the
+joins and along the outline that a ripple towards a target point is made from place their needle points
+as StitchCraft's running stitch does (`DEV-RUN-001` to `DEV-RUN-005`). So the outline's points differ a
+little, and the copies made from them. With `min_line_dist_mm`, the count towards a target point is
+measured from those points, and can differ by 2 where the shortest length falls near a whole number of
+`min_line_dist_mm`. Ink/Stitch sews nothing of lines shorter together than 0.1 CSS pixels, and StitchCraft
+nothing of lines shorter together than the shortest stitch (`DEV-RUN-004`).
+
+Ink/Stitch starts a staggered line where its stitches have run the phase from the stretch's start,
+measured along them. Where the stretch is the whole phase, that is the line's start, or near it where the
+stitches cut a bend. Where the first segment is shorter than 0.1 CSS pixels, the stretch is shorter than
+the phase, and Ink/Stitch leaves the rest of the phase of the line unsewn. StitchCraft starts every line at
+its start (`DEV-RIP-001`).
+
+### Properties (conformance)
+
+- A stroke of 2 lines or more ripples along the column its rails and rungs make, a stroke of 1 open line
+  towards its target point, and a stroke of 1 closed line in a spiral to it (`REQ-RIP-001`).
+- The target point is the stroke's `target_point` command or `stitch:target` marker, or else the centroid
+  of the convex hull of its lines (`REQ-RIP-002`).
+- The count is `line_count`, or what `min_line_dist_mm` gives with the parity of `line_count` kept, 1 more
+  for a closed line or the point join, at least 2 along a column and at most 1,000 (`REQ-RIP-003`).
+- Line `k` lies at its place, `(k / (n − 1))^exponent`, or flipped, between the rails or towards the
+  target point. A copy of the outline reaches the target point only at place 1, or where the outline does
+  (`REQ-RIP-004`).
+- `skip_start` and `skip_end` leave out lines at each end, and the ripple keeps every line when together
+  they would leave out all of them (`REQ-RIP-005`).
+- With `flip_copies`, the lines are sewn back and forth, joined flat by straight running stitches or at a
+  point. Without it, and for a closed line, they are sewn as one running stitch (`REQ-RIP-006`).
+- Each line's stitches keep within the running stitch's tolerance of the line through its points
+  (`REQ-RIP-007`).
+- Staggered lines start their needle points `((i / staggers) mod 1)` of the stitch lengths' sum before
+  their start. A line of no length sews its one point, but nothing when staggered at a phase of 0
+  (`REQ-RIP-008`).
+- `reverse` sews the ripple backwards, then `repeats` and `bean_stitch_repeats` sew it as a running
+  stitch's (`REQ-RIP-009`).
+- What M10.11 sews is left out with a coded warning, and the ripple sews as this section says
+  (`REQ-RIP-010`).
+- TS-17C's ripples sew in Ink/Stitch as in StitchCraft (`REQ-RIP-011`).
+
+### Diagnostics
+
+`SC-W0401` for a subpath that is one point and for lines too short for the shortest stitch, `SC-W0406` for
+what a ripple doesn't sew yet, `SC-W0407` for a count cut to 1,000 lines and `SC-W0408` for skips that
+would leave out every line. A ripple along a column says what the satin column's reading of its rails and rungs
+says (`SC-W0202`, `SC-W0203`, `SC-W0205`, `SC-W0207`, `SC-W0210`), and `SC-E0216` when no section of the
+column has length.

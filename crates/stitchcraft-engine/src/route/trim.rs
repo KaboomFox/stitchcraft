@@ -21,7 +21,7 @@ pub const TRIMMED: f64 = 1.0;
 
 /// What an element hides of a jump.
 #[derive(Clone, Debug, PartialEq)]
-pub(super) enum Outline {
+pub(crate) enum Outline {
     /// Line segments, each from one point to the next: a column's rails, or a stroke's hull when its points
     /// lie in a line. They hide only what runs along them.
     Lines(Vec<[Point; 2]>),
@@ -31,7 +31,7 @@ pub(super) enum Outline {
 
 /// The convex hull of `points`: a polygon when they don't all lie in a line, and otherwise the segment
 /// between the 2 farthest apart, or nothing for one point. Each point looked at charges `meter` a unit.
-pub(super) fn hull(points: &[Point], meter: &mut Meter) -> Result<Outline, Exhausted> {
+pub(crate) fn hull(points: &[Point], meter: &mut Meter) -> Result<Outline, Exhausted> {
     let mut sorted = points.to_vec();
     meter.charge(u64::try_from(sorted.len()).unwrap_or(u64::MAX))?;
     sorted.sort_by(|a, b| a.x().total_cmp(&b.x()).then(a.y().total_cmp(&b.y())));

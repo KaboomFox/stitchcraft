@@ -5,6 +5,31 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M10.8: ripple stitch, between rails and towards a target point (`REQ-RIP-001` to `REQ-RIP-011`). A stroke
+  whose `stroke_method` is `ripple_stitch` sews lines that spread out from it, as Ink/Stitch's ripple stitch
+  does, all of them one running stitch. A stroke of 2 lines or more is a satin column's rails and rungs, and
+  its lines run from the first rail to the second. Copies of a stroke's one open line shrink to its target
+  point, and a closed line spirals in to it. The target point is Ink/Stitch's `target_point` command, or in
+  a VectorCraft document a path named `stitch:target` grouped with the stroke, and otherwise the centroid of
+  the line's hull. The settings are Ink/Stitch's, with its names and defaults: `line_count`,
+  `min_line_dist_mm`, `exponent`, `flip_exponent`, `skip_start`, `skip_end`, `flip_copies`, `join_style`,
+  `staggers` and `reverse`. Each line is sewn with the running stitch's length and tolerance, and the
+  ripple with repeats and bean stitch.
+  - New codes: `SC-W0406` for what M10.11 sews, which a ripple leaves out. `SC-W0407` for more than 1,000
+    lines, and `SC-W0408` for skips that would leave out every line.
+  - TS-17C draws 3 ripple stitches in green at its bottom, below M10.15's crossing columns. The differential
+    sews each in Ink/Stitch too. The ripple along a column agrees by every measure. The wave and the spiral
+    agree by every measure but the overlap of their threads, which `DEV-RUN-002` explains: their copies are
+    made from their line's running stitch.
+  - In the glyph differential, 144 of the 324 glyphs of the 3 Ondulamarif fonts agree and 141 differ as the
+    ledger explains, which excuses a ripple's threads by `DEV-RUN-002`. The 39 whose ripples follow a guide
+    line are known differences, left to M10.11.
+  - An `inkstitch` case of a sheet may judge a part of it alone, the elements whose ids start with its
+    `elements`.
+  - A legacy fill still names its `reverse` (`SC-W0105`), which a ripple stitch now reads too. Ink/Stitch
+    reads a fill's `reverse` for its legacy fill alone, and a fill of another method now leaves it to its
+    node's stroke without a word, where `SC-W0105` named it before.
+  - Golden changed: `TS-17C.pes`, for the ripple stitches at the bottom.
 - M10.15: underlays first (`REQ-ASM-008` to `REQ-ASM-010`), as ADR-0018 decided. Consecutive elements in one
   thread that set `underlays_first`, a toggle every stitch type shares, StitchCraft's own and off by
   default, sew all their underlays before any of their top stitches. A trim or a stop ends a run. An element
@@ -2547,6 +2572,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-17C.pes` (M10.8). The sheet gains 3 ripple stitches at its
+  bottom, below M10.15's crossing columns, in green after a second colour change. The plan spans 82 × 153 mm,
+  and sews 5,115 stitches, 285 more. The letters, the network and the crossing columns sew as before, but
+  for the last stitches of the right-hand post, which now end on its left rail, towards the ripples.
 - Changed `conformance/golden/testsheets/TS-17A.pes` (M10.2). The sheet gains 2 rows after 2 more colour
   changes. Its green row sews squares of upright and dense upright crosses, then of double and Smyrna
   crosses, and its black row squares of half crosses and a square turned 30° with its grid. The plan spans

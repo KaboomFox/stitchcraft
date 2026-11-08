@@ -106,7 +106,10 @@ the sample's 524 glyphs, 357 agree by every measure. 98 are of stitch types Stit
 which the report lists, 66 of them in cross stitch and the rest in tartan fills, ripples and guided fills.
 They join the comparison with M10's steps, the simple crosses with M10.1 and Jersey 15's double crosses
 with M10.2. Sewn alone with M10.2, every one of Jersey 15's 162 glyphs agrees, the 2 programs' threads
-overlapping by 1.000 in each. The other 69 differ as the ledger explains,
+overlapping by 1.000 in each. Ripples join with M10.8. Of the 324 glyphs of the 3 Ondulamarif fonts, sewn
+alone, 144 agree and 141 differ as the ledger explains, most of them by where each program's running stitch
+places the needle points of a ripple's lines. The other 39 ripple along a guide line, which M10.11 sews. The
+sample's other 69 differ as the ledger explains,
 `conformance/inkstitch/glyphs.toml` naming the glyphs each excuse is for. A glyph may differ in more than
 one way. A twentieth of every glyph, the seventh of 20 parts, holds 1,059 glyphs. Of them 699 agree, 238
 are listed and 122 differ as the ledger explains. It found the last 3 rows of the table, which the sample

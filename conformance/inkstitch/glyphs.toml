@@ -83,6 +83,16 @@ types = ["running_stitch"]
 fonts = ["decadent_flowers_monogram"]
 within_mm = 0.3
 
+# Ripple stitches, whose lines are running stitches, through copies of a line or between a column's rails:
+# each program places their needle points its own way, more of them on tight curves, so their threads lie a
+# little apart. Ondulamarif S's letters take up to a fifth more stitches here, each program's needle points
+# within 0.2 mm of the other's stitches.
+[[excuse]]
+measures = ["stitches", "overlap"]
+deviation = "DEV-RUN-002"
+types = ["ripple_stitch"]
+within_mm = 0.3
+
 # A move-to with nothing drawn after it, where Ink/Stitch sews a needle point and StitchCraft nothing: checked
 # by leaving such needle points out of Ink/Stitch's file, with the jumps and the trim that lead to them. Kum
 # Tsoan relief's V ends a path with one, 24 mm above the glyph, and its size is 64.4 × 91.4 mm in Ink/Stitch.
@@ -169,3 +179,12 @@ measures = ["size"]
 deviation = "DEV-RUN-003"
 fonts = ["manga_impact"]
 glyphs = ["&"]
+
+# Ripple stitches along a guide line, which StitchCraft leaves out (SC-W0802): each ripple shrinks to its target
+# point, where Ink/Stitch moves the copies of its line along the guide. The Ondulamarif fonts draw their
+# punctuation and the accents of their XL letters so.
+[[known]]
+measures = ["stitches", "size", "overlap"]
+follow_up = "M10.11 sews ripples along a guide line"
+codes = ["SC-W0802"]
+saying = "guide line"

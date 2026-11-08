@@ -38,7 +38,7 @@ use std::borrow::Cow;
 use stitchcraft_core::{Budget, Code, Diagnostic, Exhausted, Meter, Mm, Point, SplitMix64};
 use stitchcraft_params::kinds::{Choice, Toggle};
 use stitchcraft_params::{
-    ChoiceOption, Family, ParamKind, ParamSet, ParamSpec, StitchType, Validated, left_to_others, params, read_param, unknown_keys,
+    ChoiceOption, Family, ParamKind, ParamSet, ParamSpec, StitchType, Validated, find, left_to_others, params, read_param, unknown_keys,
 };
 use stitchcraft_plan::{MachineProfile, Rgb};
 
@@ -51,6 +51,7 @@ use crate::generators::manual::{self, manual_stitch};
 use crate::generators::meander::{self, Meander, MeanderParams, meander_fill};
 use crate::generators::passes::{PathFillParams, RepeatParams};
 use crate::generators::pull::PullParams;
+use crate::generators::ripple::{self, Ripple, RippleParams, ripple_stitch};
 use crate::generators::running::raised;
 use crate::generators::running::{RunningParams, running_stitch};
 use crate::generators::satin::{self, SATIN_COLUMN, SatinLengths, SatinParams, satin_stitch};
@@ -120,8 +121,9 @@ params! {
 
     "Stroke" {
         /// The stitch the path is sewn with. A running stitch goes along it and a zigzag across it, and manual
-        /// stitch puts a needle point on each of its nodes. Ripple stitch arrives in a later version, and
-        /// until then an element set to it is skipped (`SC-W0011`).
+        /// stitch puts a needle point on each of its nodes. A ripple stitch sews lines that spread out from
+        /// the path to its target point, or along it from one rail to the other where it is drawn as a satin
+        /// column's rails and rungs.
         stroke_method: Choice = "running_stitch", label "Method", choices STROKE_METHODS;
     }
 }
@@ -260,7 +262,8 @@ fn setting<K: ParamKind>(set: &ParamSet, specs: &[ParamSpec], key: &str, diagnos
 /// it, read first and alone: a fill's `fill_method`, and a stroke's `satin_method` when its
 /// `satin_column` is on, or else its `stroke_method`. A satin column too narrow to stitch across is sewn
 /// as a stroke, as in Ink/Stitch, and `SC-W0212` says so (`REQ-SAT-015`). A fill set to Ink/Stitch's legacy
-/// fill is a tatami fill, which `SC-W0314` says, and sews no underlay ([`legacy`], `REQ-FILL-005`). `None`
+/// fill is a tatami fill, which `SC-W0314` says, and sews no underlay ([`legacy`], `REQ-FILL-005`). Each of
+/// its own settings that it sets, [`LEGACY_ONLY`], is named with `SC-W0105`. `None`
 /// when one of them cannot be read, which `diagnostics` says.
 fn stitch_type(element: &Element, settings: &DesignSettings, diagnostics: &mut Vec<Diagnostic>) -> Option<StitchType> {
     let set = &element.params;
@@ -285,12 +288,25 @@ fn stitch_type(element: &Element, settings: &DesignSettings, diagnostics: &mut V
     };
     let chosen = method_type(family, setting::<Choice>(set, specs, family.method_param(), diagnostics)?, diagnostics)?;
     if chosen == StitchType::LegacyFill {
+        // `unknown_keys` named those that no stitch type reads, and here the others are named: a ripple stitch
+        // reads a `reverse` of its own, which doesn't make it the fill's.
+        for key in LEGACY_ONLY.into_iter().filter(|key| set.get(key).is_some() && find(PARAMETERS, key).is_some()) {
+            let message = format!(
+                "`{key}` is a setting of Ink/Stitch's legacy fill, which StitchCraft does not sew; it was kept but does not change the stitches."
+            );
+            diagnostics.push(Diagnostic::new(Code::ParamUnknown, message));
+        }
         let message = "This element's fill method is Ink/Stitch's legacy fill, which StitchCraft does not sew, so it is sewn as a tatami \
                        fill without underlay.";
         diagnostics.push(Diagnostic::new(Code::FillLegacyAsTatami, message));
     }
     Some(sewn_as(chosen))
 }
+
+/// The settings of Ink/Stitch's legacy fill that StitchCraft keeps without reading (`DEV-FILL-014`): `flip`
+/// starts its rows from the other side, and `reverse` sews it backwards. Ink/Stitch's other fills read
+/// neither.
+const LEGACY_ONLY: [&str; 2] = ["flip", "reverse"];
 
 /// The stitch type that sews an element set to `asked`: itself, but for Ink/Stitch's legacy fill, which
 /// StitchCraft does not build and sews as a tatami fill without underlay (`REQ-FILL-005`).
@@ -334,6 +350,10 @@ fn sew(
         Shape::Stroke { path, width, join, .. } if sewing.stitch_type.family() == Family::Satin => {
             clip_not_applied(element, diagnostics);
             satin_column(&sewing, neighbours, (path, *width, *join), &mut rng, diagnostics, meter)?
+        }
+        // A ripple stitch is sewn whole, whatever its clips, until M10.11 cuts its lines (`SC-W0406`).
+        Shape::Stroke { path, .. } if sewing.stitch_type == StitchType::RippleStitch => {
+            ripple(&sewing, path, !element.clips.is_empty(), &rng, diagnostics, meter)?
         }
         Shape::Stroke { path, width, .. } => {
             let Some(path) = cut::stroke(path, &element.clips, cut_line(sewing.stitch_type), diagnostics, meter)? else { return Ok(None) };
@@ -818,7 +838,9 @@ pub(crate) fn cut_line(stitch_type: StitchType) -> cut::Line {
 }
 
 /// A stroke's stitches as `sewing` says, varied at random by streams of its `rng`, or `None` when it is
-/// skipped: its `path` is `width` wide, which a zigzag stroke is. Its `stroke_method` picks the generator.
+/// skipped: its `path` is `width` wide, which a zigzag stroke is. Its `stroke_method` picks the generator,
+/// a running stitch for every method but manual stitch and zigzag stitch: [`sew`] sends a ripple stitch to
+/// [`ripple`].
 fn stroke(
     sewing: &Sewing,
     path: &Path,
@@ -830,10 +852,6 @@ fn stroke(
     let passes = sewing.read(RepeatParams::from_set_as, diagnostics);
     let Some(Shared { min_stitch, max_stitch, .. }) = sewing.shared else { return Ok(None) };
     match sewing.stitch_type {
-        StitchType::RunningStitch => {
-            let (Some(running), Some(passes)) = (sewing.read(RunningParams::from_set_as, diagnostics), passes) else { return Ok(None) };
-            Ok(Some(running_stitch(path, &running, &passes, min_stitch, rng, meter)?))
-        }
         StitchType::ManualStitch => {
             let Some(passes) = passes else { return Ok(None) };
             Ok(Some(manual_stitch(path, max_stitch, &passes, min_stitch, meter)?))
@@ -842,12 +860,33 @@ fn stroke(
             let (Some(zigzag), Some(passes)) = (sewing.read(ZigzagStrokeParams::from_set_as, diagnostics), passes) else { return Ok(None) };
             Ok(Some(zigzag_stroke(path, width, &zigzag, &passes, min_stitch, meter)?))
         }
-        other => {
-            let method = other.id();
-            diagnostics.push(not_yet(&format!("This element's stroke method, `{method}`, is not sewn by this version of StitchCraft yet")));
-            Ok(None)
+        _ => {
+            let (Some(running), Some(passes)) = (sewing.read(RunningParams::from_set_as, diagnostics), passes) else { return Ok(None) };
+            Ok(Some(running_stitch(path, &running, &passes, min_stitch, rng, meter)?))
         }
     }
+}
+
+/// A ripple stitch's stitches along `path` as `sewing` says, its random lengths drawn from streams of its
+/// `rng`, or `None` when it is skipped. It aims at its design's target point, and is sewn whole, and says
+/// so, when it is `clipped`. A satin column's settings are read as a ripple reads them, at their defaults:
+/// a ripple along a column applies none yet, and [`ripple::unapplied`] names those the element sets.
+fn ripple(
+    sewing: &Sewing,
+    path: &Path,
+    clipped: bool,
+    rng: &SplitMix64,
+    diagnostics: &mut Vec<Diagnostic>,
+    meter: &mut Meter,
+) -> Result<Option<Stitched>, Exhausted> {
+    let own = sewing.read(RippleParams::from_set_as, diagnostics);
+    let running = sewing.read(RunningParams::from_set_as, diagnostics);
+    let passes = sewing.read(RepeatParams::from_set_as, diagnostics);
+    let satin = sewing.read(SatinParams::from_set_as, diagnostics);
+    let (Some(own), Some(running), Some(passes), Some(satin), Some(shared)) = (own, running, passes, satin, sewing.shared) else { return Ok(None) };
+    let unapplied = ripple::unapplied(&sewing.set);
+    let ripple = Ripple { ripple: own, running, passes, satin, min_stitch: shared.min_stitch, target: sewing.hints.target, unapplied, clipped };
+    Ok(Some(ripple_stitch(path, &ripple, rng, meter)?))
 }
 
 /// What `element` offers the element before it to end near, read from its shape, its settings and the

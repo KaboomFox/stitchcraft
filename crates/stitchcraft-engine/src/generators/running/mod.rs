@@ -50,11 +50,11 @@ use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::units::at_least;
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Meter, Mm, Point};
 
-use crate::design::Path;
+use crate::design::{Path, Subpath};
 use crate::generators::passes::{self, RepeatParams, Turn};
 use crate::generators::{Stitched, TooSmall, made, mm, settled, too_small};
 use crate::normalize::along::Along;
-use crate::normalize::stroke::{self, distance_to_segment};
+use crate::normalize::stroke::{self, Piece, distance_to_segment};
 
 /// The share of the curve tolerance that flattening may use; the stitches have the rest.
 const FLATTEN_SHARE: f64 = 0.1;
@@ -94,26 +94,51 @@ fn sewn(
     let stroke = stroke::flatten(path, tolerance * FLATTEN_SHARE, meter)?;
     let mut runs = Vec::with_capacity(stroke.pieces.len());
     for (index, piece) in stroke.pieces.iter().enumerate() {
-        let along = Along::new(&piece.points, meter)?;
-        let length = along.length();
-        let skipped = if piece.points.len() < 2 {
-            TooSmall::Point
-        } else if !at_least(length, min) {
-            TooSmall::Short(length)
-        } else if let Some(run) = stitch_piece(&along, (&piece.corners, index), &mut lengths, min, tolerance * (1.0 - FLATTEN_SHARE), meter)? {
-            runs.push(passes::sew(&run, passes.repeats, &passes.bean_stitch_repeats, Turn::Listed, meter)?);
-            continue;
-        } else {
-            TooSmall::Curled(length)
-        };
-        warnings.push(too_small(skipped, min));
+        match stitched(piece, index, &mut lengths, (min, tolerance), meter)? {
+            Ok(run) => runs.push(passes::sew(&run, passes.repeats, &passes.bean_stitch_repeats, Turn::Listed, meter)?),
+            Err(skipped) => warnings.push(too_small(skipped, min)),
+        }
     }
     Ok(Stitched { runs, colours: Vec::new(), warnings })
 }
 
+/// The needle points of `piece`, the `index`-th of a stroke flattened within a tenth of `tolerance`, with
+/// stitches of `lengths` no shorter than `min` that keep within the rest of it; or why it is not stitched.
+fn stitched(
+    piece: &Piece,
+    index: usize,
+    lengths: &mut Lengths,
+    (min, tolerance): (f64, f64),
+    meter: &mut Meter,
+) -> Result<Result<Vec<Point>, TooSmall>, Exhausted> {
+    let along = Along::new(&piece.points, meter)?;
+    let length = along.length();
+    Ok(if piece.points.len() < 2 {
+        Err(TooSmall::Point)
+    } else if !at_least(length, min) {
+        Err(TooSmall::Short(length))
+    } else {
+        stitch_piece(&along, (&piece.corners, index), lengths, min, tolerance * (1.0 - FLATTEN_SHARE), meter)?.ok_or(TooSmall::Curled(length))
+    })
+}
+
+/// The needle points of the running stitch along `subpath`, placed as a stroke's are, in stitches of the
+/// lengths of `pattern` within `tolerance`, no shorter than `min_stitch`, without random length; or why it
+/// is too small for a stitch. A ripple stitch shrinks this outline towards its target point
+/// (`crate::generators::ripple`), as Ink/Stitch shrinks the running stitch along the stroke.
+pub(crate) fn outline(
+    subpath: &Subpath,
+    pattern: &[f64],
+    (tolerance, min_stitch): (f64, f64),
+    meter: &mut Meter,
+) -> Result<Result<Vec<Point>, TooSmall>, Exhausted> {
+    let piece = stroke::piece(subpath, tolerance * FLATTEN_SHARE, meter)?;
+    stitched(&piece, 0, &mut Lengths { pattern: pattern.to_vec(), next: 0, random: None }, (min_stitch, tolerance), meter)
+}
+
 /// The pattern of stitch lengths the parameter `key` gives, each raised to at least twice the shortest
 /// stitch, with `SC-W0402` for the ones that were.
-fn pattern(key: &str, lengths: &[Mm], min: f64, warnings: &mut Vec<Diagnostic>) -> Vec<f64> {
+pub(crate) fn pattern(key: &str, lengths: &[Mm], min: f64, warnings: &mut Vec<Diagnostic>) -> Vec<f64> {
     let floor = 2.0 * min;
     let short: Vec<String> = lengths.iter().map(|l| l.get()).filter(|l| !at_least(*l, floor)).map(mm).collect();
     let pattern: Vec<f64> = lengths.iter().map(|l| l.get().max(floor)).collect();
@@ -164,8 +189,20 @@ pub(crate) fn along_line_varied(
     (rng, piece): (&SplitMix64, usize),
     meter: &mut Meter,
 ) -> Result<Vec<Point>, Exhausted> {
+    along_pattern(points, (&[length], tolerance, min_stitch), jitter, (rng, piece), meter)
+}
+
+/// [`along_line_varied`] in stitches of the lengths of `pattern`, taken in turn from the line's start: a
+/// ripple stitch's lines and the straight runs that join them (`crate::generators::ripple`).
+pub(crate) fn along_pattern(
+    points: &[Point],
+    (pattern, tolerance, min_stitch): (&[f64], f64, f64),
+    jitter: Option<f64>,
+    (rng, piece): (&SplitMix64, usize),
+    meter: &mut Meter,
+) -> Result<Vec<Point>, Exhausted> {
     let random = jitter.map(|jitter| Random::new(jitter, rng));
-    sewn_along(points, Lengths { pattern: vec![length], next: 0, random }, piece, tolerance, min_stitch, meter)
+    sewn_along(points, Lengths { pattern: pattern.to_vec(), next: 0, random }, piece, tolerance, min_stitch, meter)
 }
 
 /// The running stitch along the polyline `points` with `lengths`, its random draws keyed by `piece`.

@@ -730,3 +730,15 @@ file = "crates/stitchcraft-engine/src/generators/cross/half.rs"
 mutant = "replace * with /"
 line = "const TOLERANCE: f64 = 0.2 * MM_PER_SVG_PX;"
 why = "a half cross's travel runs along the outline of its cells, whose every bend is a right angle, and a running stitch puts a needle point at each bend of more than 30°: between bends the way is straight, and no stitch along it strays from it, so no tolerance changes a stitch"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/ripple/lines.rs"
+mutant = "replace < with <= in shortest"
+line = "lengths.into_iter().fold(0.0, |shortest, length| if shortest == 0.0 || length < shortest { length } else { shortest })"
+why = "a length as long as the shortest so far takes its place, and the shortest stays the same number"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/ripple/sew.rs"
+mutant = "replace <= with < in staggered"
+line = "let on_stretch = |q: &Point| *q != first && q.distance(back) + q.distance(first) <= reach + ON_STRETCH;"
+why = "a needle point on the stretch lies a rounding error from it, far less than ON_STRETCH, and one past the line's start lies twice as far past the reach as it is from the start: no needle point lies exactly ON_STRETCH past the reach"
