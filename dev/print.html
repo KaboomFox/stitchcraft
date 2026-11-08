@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-bfc2b1c2.js";
+            window.path_to_searchindex_js = "searchindex-701c9a47.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-61f039c5.js"></script>
@@ -1148,8 +1148,9 @@ Stitch</strong>.</li>
 own with the stroke effect, named as Ink/Stitch names it, AutoRun 1 for a stretch on top or AutoRun
 Underpath 2 for a run under the others. A stretch on top has the settings of the line it comes from, but an
 even number of repeats is lowered by 1, so that it ends where the next one starts. Runs under the others
-keep only the line’s stitch length and tolerance, without its repeats or bean stitch. The stretches go
-where the topmost line was, in the order they sew, and the lines and markers are gone.</p>
+keep only the line’s stitch length and tolerance and its <strong>Underlays first</strong>, without its repeats or bean
+stitch. The stretches go where the topmost line was, in the order they sew, and the lines and markers are
+gone.</p>
 <h2 id="the-options-1"><a class="header" href="#the-options-1">The options</a></h2>
 <p>The dialog offers Ink/Stitch’s options:</p>
 <ul>
@@ -1207,7 +1208,9 @@ thread. A trim or a stop after an element ends its run. A run sews the underlays
 order, then their top stitches in the same order. An element without underlay, such as a running stitch,
 sews in the second pass. An element that joins no run sews as it does without the setting, and <code>SC-I0506</code>
 names it. <a href="#route-satin-columns">Auto-Route Satin Columns</a> keeps the toggle on the pieces and the runs it
-makes of columns that set it. A route of them sews its underlays along it, up to each trim.</p>
+makes of columns that set it. A route of them sews its underlays along it, up to each trim.
+<a href="#route-running-stitches">Auto-Route Running Stitch</a> keeps it on every stretch it makes of a line that
+sets it, the runs under the others among them.</p>
 <h2 id="travel-and-previews"><a class="header" href="#travel-and-previews">Travel and previews</a></h2>
 <p>Between the 2 passes the needle goes back from the run’s last underlay to its first top stitch. It sews
 straight there or jumps with locks, as between any 2 elements
@@ -11454,12 +11457,12 @@ with subpaths apart, also has its parts joined each to each, by a jump the route
 last time: the route runs out along a branch under, and back along it on top.</li>
 <li><strong>Elements.</strong> Pieces in a row make one element, which ends at a jump and where the route turns from on
 top to under or back. It also ends before a piece on top from another stroke, or a piece under from a
-stroke whose run under the others sews otherwise.</li>
+stroke whose run under the others has other settings (step 6).</li>
 <li><strong>Settings.</strong> An element on top is a copy of its stroke with the stroke’s settings, but an even number
 of repeats is lowered by 1, so that it ends at its far end. One under the others is a running stitch
 with its stroke’s running stitch length and tolerance, or a manual stitch where the stroke is one,
-without repeats or bean stitch. Each has its stroke’s thread and stroke, and none of its clips,
-positions or target point.</li>
+without repeats or bean stitch. It keeps its stroke’s <code>underlays_first</code> too (<a href="#order">order</a>). Each has
+its stroke’s thread and stroke, and none of its clips, positions or target point.</li>
 <li><strong>Trims.</strong> With Trim jump stitches, off as the dialog opens, a jump longer than 0.75 mm trims the thread
 after the element before it, and the elements under the others right after a trim are left out. The
 route doesn’t trim at its end, but where it ends with a long jump back, that jump trims.</li>
@@ -11518,6 +11521,10 @@ keeps it too, so that the run doesn’t part the pieces around it. Pieces in one
 underlays along the route, and the needle then goes back to the first of them for the top stitches. A run
 has no underlay, and sews in the second pass, before the satin that covers it
 (<a href="#underlays-first">underlays first</a>).</p>
+<p>An auto-run route’s run under the others keeps its stroke’s <code>underlays_first</code> for the same reason. Where
+the route runs under the others along 2 strokes that differ in it, it makes 2 elements, each with its own
+stroke’s setting. Each element of the route then sets it where its stroke does. A stroke has no underlay,
+and the route’s elements sew in the second pass in their order.</p>
 <h2 id="requirements"><a class="header" href="#requirements">Requirements</a></h2>
 <p>The routing’s requirements are an area of their own, <code>REQ-ROUTE-…</code>, and the filters’ are among
 <code>REQ-VC-…</code>:</p>
@@ -11537,7 +11544,7 @@ has no underlay, and sews in the second pass, before the satin that covers it
 <tr><td><code>REQ-ROUTE-008</code></td><td>TS-17C’s letters, routed by Ink/Stitch’s tool and by the function, sew alike by every measure of the differential</td><td>M10.4</td></tr>
 <tr><td><code>REQ-ROUTE-009</code></td><td>Auto-run routing takes the strokes, each subpath a line, and leaves the rest as they are</td><td>M10.13</td></tr>
 <tr><td><code>REQ-ROUTE-010</code></td><td>Lines are cut where they cross, touch or run along each other, and at their nearest points within 50 CSS pixels, with Add nodes at intersections</td><td>M10.13</td></tr>
-<tr><td><code>REQ-ROUTE-011</code></td><td>A piece passed twice runs under the others the first time, and each element has its stroke’s settings, a run under the others its lengths alone</td><td>M10.13</td></tr>
+<tr><td><code>REQ-ROUTE-011</code></td><td>A piece passed twice runs under the others the first time, and each element has its stroke’s settings, a run under the others its lengths and <code>underlays_first</code></td><td>M10.13</td></tr>
 <tr><td><code>REQ-ROUTE-012</code></td><td>The pieces are routed as satin columns’ are, a jump longer than 0.75 mm trims with Trim jump stitches, and the elements are named AutoRun and AutoRun Underpath</td><td>M10.13</td></tr>
 <tr><td><code>REQ-ROUTE-013</code></td><td>TS-17C’s network of lines, routed by Ink/Stitch’s tool and by the function, sews alike by every measure of the differential</td><td>M10.13</td></tr>
 <tr><td><code>REQ-VC-018</code></td><td>The Auto-Route Satin Columns filter replaces the selection with the route in one undo step, within a heavy filter’s budget</td><td>M10.4</td></tr>
@@ -13436,10 +13443,11 @@ put the effect on the paths themselves. Objects named <code>stitch:route-start</
 the paths give the route’s ends (<a href="#start-and-end-2">start and end</a>).</p>
 <p><strong>What they write.</strong> A column’s piece is a compound path of its rails and rungs with the column’s satin
 effect, drawn as Stroke to Satin draws a column. A stroke’s stretch, and a run under the others, is a path
-with the stroke effect, which for a run under a column keeps the column’s <code>underlays_first</code>
-(<a href="#order">order</a>). Each is painted with its element’s stroke and named as Ink/Stitch names it, and
-Trim jump stitches turns on <code>trim_after</code> in the effect of the piece before a long jump. In one undo step,
-the pieces replace the paths they come from and the markers used. A filter can’t make a group, where
+with the stroke effect, which for a run under a column keeps the column’s <code>underlays_first</code>, and for a run
+under the others its stroke’s (<a href="#order">order</a>). Each is painted with its element’s stroke and
+named as Ink/Stitch names it, and Trim jump stitches turns on <code>trim_after</code> in the effect of the piece before
+a long jump. In one undo step, the pieces replace the paths they come from and the markers used. A filter
+can’t make a group, where
 Ink/Stitch puts its route in a new group after the last element. So the pieces go in their sewing order
 where the topmost path routed was, in its group or layer. With Preserve order, Ink/Stitch moves each piece
 to the end of its element’s group, and the filter puts the pieces of each path, the runs along it among
