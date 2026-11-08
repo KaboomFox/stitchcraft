@@ -169,7 +169,9 @@ registry! {
 
     /// The design carries a parameter StitchCraft does not know: one from a newer version of StitchCraft
     /// or Ink/Stitch, or one for a stitch type StitchCraft does not support yet. It was kept, so saving
-    /// the design does not lose it, but it does not change the stitches.
+    /// the design does not lose it, but it does not change the stitches. A fill set to Ink/Stitch's legacy
+    /// fill, which StitchCraft sews as a tatami fill (`SC-W0314`), names its `flip` and `reverse` so, though
+    /// a ripple stitch reads a `reverse` of its own.
     ///
     /// The Ink/Stitch compatibility page says when each Ink/Stitch parameter is supported.
     ParamUnknown = "SC-W0105", Warning, "Unknown parameter preserved but ignored";
@@ -581,6 +583,33 @@ registry! {
     /// across a zigzag `w` wide at a spacing `s` is √(w² + (s/2)²) long. Make the zigzag wider, the stroke
     /// or its pull compensation, or space it out, until that is at least the shortest stitch.
     ZigzagTooNarrow = "SC-W0405", Warning, "Zigzag stitch shorter than the shortest stitch; the zigzag sews narrower";
+
+    /// A ripple stitch asks for something StitchCraft doesn't sew yet, so it sews without it. Clips cut
+    /// Ink/Stitch's ripples, and StitchCraft sews a ripple whole. A ripple along a column, a stroke of 2
+    /// lines or more drawn as a satin column's rails and rungs, reads its rails with the satin column's
+    /// defaults: `reverse_rails` automatic, `swap_satin_rails` off and no `push_compensation_mm`, which
+    /// Ink/Stitch applies to it. Guided ripples, and the ripple settings they use, arrive with M10.11, and
+    /// `SC-W0105` names each of those settings until then.
+    ///
+    /// The message says what is not applied. Draw the ripple's lines where it should sew, and its rails
+    /// running the same way, the first where the ripple starts.
+    RippleNotSewnYet = "SC-W0406", Warning, "Ripple stitch setting not sewn yet; sewn without it";
+
+    /// `min_line_dist_mm` gives a ripple stitch more than 1,000 lines, so it sews 1,000, or 999 to keep the
+    /// count's parity, odd or even, as `line_count` has it. The count is the shortest distance from the
+    /// stroke's line to its target point, or across its column, divided by `min_line_dist_mm`, and a very
+    /// short distance between the lines on a large shape gives thousands of lines that sew into a solid
+    /// patch.
+    ///
+    /// The message gives the count asked for and the count sewn. Set a larger `min_line_dist_mm`.
+    RippleLinesCut = "SC-W0407", Warning, "Ripple stitch of more than 1,000 lines; cut to 1,000";
+
+    /// A ripple stitch's `skip_start` and `skip_end` together leave out as many lines as it has, or more, so
+    /// they would leave none to sew. No line is left out, as Ink/Stitch does.
+    ///
+    /// The message gives both settings and the number of lines. Lower `skip_start` or `skip_end`, or give
+    /// the ripple more lines.
+    RippleSkipsAll = "SC-W0408", Warning, "Ripple stitch's skips would leave out every line; every line sewn";
 
     /// A lock stitch would have been shorter than 0.2 mm, the shortest stitch a lock may have. The needle
     /// would go back into the hole it just left, which can cut the thread and does not lock it. Each such

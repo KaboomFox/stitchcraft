@@ -332,7 +332,11 @@ pub fn run(root: &Path, subject: &Subject, excused: &BTreeMap<String, String>, o
             let path = root.join("conformance").join(design);
             (inkstitch.pes(root, &path), sewn(&path, design))
         }
-        Subject::Sheet(id) => match sheet(root, id) {
+        Subject::Sheet(id) => match sheet(root, id, None) {
+            Ok(path) => (inkstitch.pes(root, &path).and_then(|bytes| kept(&path, bytes)), sewn(&path, id)),
+            Err(e) => return outcome.failures.push(e),
+        },
+        Subject::Part { sheet: id, elements } => match sheet(root, id, Some(elements)) {
             Ok(path) => (inkstitch.pes(root, &path).and_then(|bytes| kept(&path, bytes)), sewn(&path, id)),
             Err(e) => return outcome.failures.push(e),
         },
@@ -461,16 +465,28 @@ pub(super) fn kept(svg: &Path, bytes: Vec<u8>) -> Result<Vec<u8>, String> {
 /// The test sheet `id` as both programs are given it: the SVG file, written to [`WRITTEN`], of the elements
 /// StitchCraft sews the sheet with, automatic digitizing's for its automatic shapes, with their parameters,
 /// which StitchCraft's SVG reader reads as they were written (`REQ-SVG-009`). The elements Ink/Stitch would
-/// sew otherwise are left out.
-fn sheet(root: &Path, id: &str) -> Result<PathBuf, String> {
+/// sew otherwise are left out. With `part`, only the elements whose ids start with it, and the file is named
+/// after it too.
+fn sheet(root: &Path, id: &str, part: Option<&str>) -> Result<PathBuf, String> {
     let sheet = testsheets::find(id).ok_or_else(|| format!("there is no test sheet `{id}`"))?;
     let design =
         sheet.design().ok_or_else(|| format!("{id} is drawn stitch by stitch, and is no design to write"))?.map_err(|e| format!("{id}: {e}"))?;
     let clones = sheet.clones().unwrap_or(Ok(Vec::new())).map_err(|e| format!("{id}: {e}"))?;
-    let (elements, _) = stitchcraft_engine::auto::digitized(&design, &Budget::DEFAULT);
-    let elements = stitchcraft_testkit::inkstitch::sewn_alike(&elements);
+    let (all, _) = stitchcraft_engine::auto::digitized(&design, &Budget::DEFAULT);
+    let elements: Vec<_> = stitchcraft_testkit::inkstitch::sewn_alike(&all)
+        .into_iter()
+        .filter(|element| part.is_none_or(|part| element.id.as_str().starts_with(part)))
+        .collect();
+    let mut name = id.to_ascii_lowercase();
+    if let Some(part) = part {
+        if elements.is_empty() {
+            return Err(format!("{id} has no element whose id starts with `{part}`"));
+        }
+        name = format!("{name}-{}", part.replace(':', "-").trim_end_matches('-'));
+    }
+    let clones: Vec<_> = clones.into_iter().filter(|clone| elements.iter().any(|element| element.id == clone.element)).collect();
     let svg = stitchcraft_testkit::inkstitch::svg_with(&elements, &design.settings, &clones).map_err(|e| format!("{id}: {e}"))?;
-    let path = root.join(WRITTEN).join(format!("{}.svg", id.to_ascii_lowercase()));
+    let path = root.join(WRITTEN).join(format!("{name}.svg"));
     let written = path.parent().map_or(Ok(()), std::fs::create_dir_all).and_then(|()| std::fs::write(&path, svg));
     written.map_err(|e| format!("{}: {e}", util::rel(&path)))?;
     Ok(path)
@@ -575,7 +591,7 @@ mod tests {
         // TS-17C's crossing columns with their underlays first: Ink/Stitch would sew each one's underlay just
         // before its top stitches. Its file draws every other element of the sheet, the pair as drawn among them.
         let root = util::root().join("target/xtask-tests/differential-sheet");
-        let text = std::fs::read_to_string(sheet(&root, "TS-17C").unwrap()).unwrap();
+        let text = std::fs::read_to_string(sheet(&root, "TS-17C", None).unwrap()).unwrap();
         let design = testsheets::find("TS-17C").unwrap().design().unwrap().unwrap();
         assert_eq!(text.matches("<path id=\"e").count(), design.elements().len() - 2);
         assert!(!text.contains("underlays_first"), "{text}");

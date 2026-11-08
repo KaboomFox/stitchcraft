@@ -174,11 +174,11 @@ fn req_gen_002_an_element_that_cannot_be_sewn_is_skipped_and_the_rest_still_plan
         shape: Shape::Fill { path: square, rule: FillRule::NonZero },
         ..line("fill", (0.0, 0.0), 1.0, &RED, &[("fill_method", "guided_fill")])
     };
-    let ripple = line("ripple", (0.0, 5.0), 10.0, &RED, &[("stroke_method", "ripple_stitch")]);
+    let guided = Element { params: [("fill_method", "guided_fill")].into_iter().collect(), id: ElementId::new("guided").unwrap(), ..fill.clone() };
     let wrong = line("wrong", (0.0, 10.0), 10.0, &RED, &[("running_stitch_length_mm", "long")]);
     let unknown = line("unknown", (0.0, 12.0), 10.0, &RED, &[("stroke_method", "sparkle_stitch")]);
     let fine = line("fine", (0.0, 15.0), 10.0, &RED, &[]);
-    let outcome = sewn(vec![fill, ripple, wrong, unknown, fine]);
+    let outcome = sewn(vec![fill, guided, wrong, unknown, fine]);
     assert_eq!(shape_of(&outcome), "J L4 S5 L4");
     assert_eq!(outcome.plan.unwrap().elements.iter().map(ElementId::as_str).collect::<Vec<_>>(), ["fine"]);
     let codes: Vec<(Code, Option<&str>)> = outcome.diagnostics.iter().map(|d| (d.code, d.element.as_ref().map(ElementId::as_str))).collect();
@@ -186,7 +186,7 @@ fn req_gen_002_an_element_that_cannot_be_sewn_is_skipped_and_the_rest_still_plan
         codes,
         [
             (Code::StitchTypeNotYet, Some("fill")),
-            (Code::StitchTypeNotYet, Some("ripple")),
+            (Code::StitchTypeNotYet, Some("guided")),
             (Code::ParamInvalid, Some("wrong")),
             (Code::ParamInvalid, Some("unknown"))
         ]
@@ -252,11 +252,7 @@ fn an_element_sews_with_the_longer_of_the_machine_s_shortest_stitch_and_its_own(
 
 #[test]
 fn diag_sc_w0011_a_stitch_type_not_sewn_yet_is_named() {
-    let ripple = sewn(vec![line("r", (0.0, 0.0), 10.0, &RED, &[("stroke_method", "ripple_stitch")]), line("ok", (0.0, 5.0), 10.0, &RED, &[])]);
-    assert_eq!(
-        messages(&ripple),
-        ["warning SC-W0011: This element's stroke method, `ripple_stitch`, is not sewn by this version of StitchCraft yet, so it is skipped."]
-    );
+    // Every stroke method is sewn: a fill method is not yet.
     let square =
         Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0)), Segment::Line(p(5.0, 5.0))], closed: true }] };
     let fill = Element {
@@ -276,9 +272,15 @@ fn diag_sc_w0505_a_trim_or_stop_after_an_element_that_sews_nothing_is_named() {
     // Too small for a stitch, a stitch type not sewn yet, and a stop alone: none of them sews, so their
     // trims and stops have nothing to come after.
     let tiny = line("tiny", (0.0, 0.0), 0.1, &RED, &[("trim_after", "true")]);
-    let ripple = line("ripple", (0.0, 5.0), 10.0, &RED, &[("stroke_method", "ripple_stitch"), ("trim_after", "true"), ("stop_after", "true")]);
+    let square = Path {
+        subpaths: vec![Subpath { start: p(0.0, 5.0), segments: vec![Segment::Line(p(5.0, 5.0)), Segment::Line(p(5.0, 10.0))], closed: true }],
+    };
+    let guided = Element {
+        shape: Shape::Fill { path: square, rule: FillRule::EvenOdd },
+        ..line("guided", (0.0, 5.0), 1.0, &RED, &[("fill_method", "guided_fill"), ("trim_after", "true"), ("stop_after", "true")])
+    };
     let stop = line("stop", (0.0, 10.0), 0.1, &RED, &[("stop_after", "true")]);
-    let outcome = sewn(vec![tiny, ripple, stop, line("ok", (0.0, 15.0), 10.0, &RED, &[])]);
+    let outcome = sewn(vec![tiny, guided, stop, line("ok", (0.0, 15.0), 10.0, &RED, &[])]);
     assert_eq!(shape_of(&outcome), "J L4 S5 L4");
     let left_out: Vec<(String, Option<&str>)> = outcome
         .diagnostics
@@ -290,7 +292,7 @@ fn diag_sc_w0505_a_trim_or_stop_after_an_element_that_sews_nothing_is_named() {
         left_out,
         [
             ("warning SC-W0505: This element sews no stitch, so the trim after it is left out.".to_string(), Some("tiny")),
-            ("warning SC-W0505: This element sews no stitch, so the trim and the stop after it are left out.".to_string(), Some("ripple")),
+            ("warning SC-W0505: This element sews no stitch, so the trim and the stop after it are left out.".to_string(), Some("guided")),
             ("warning SC-W0505: This element sews no stitch, so the stop after it is left out.".to_string(), Some("stop")),
         ]
     );

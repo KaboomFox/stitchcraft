@@ -96,7 +96,7 @@ release takes:
 
 | Plug-in id | Kind | Stitch types | Notes |
 |---|---|---|---|
-| `<ns>.stroke` | live effect | running, bean, manual (P1), zigzag (M7.2), ripple (later) | `stroke_method` choice selects the variant |
+| `<ns>.stroke` | live effect | running, bean, manual (P1), zigzag (M7.2), ripple (M10.8) | `stroke_method` choice selects the variant |
 | `<ns>.satin` | live effect | satin (P1), E (M7.3), S (M7.4), zigzag (M7.5) | rails and rungs from the object's compound path |
 | `<ns>.fill` | live effect | tatami (P1); contour, meander, circular (P2) | `fill_method` choice |
 | `<ns>.auto` | live effect | the stitches automatic digitizing chooses by width (M13.7) | on a group, previews each path inside ([image to embroidery](image-to-embroidery.md)) |
@@ -606,6 +606,7 @@ note can follow it:
 |---|---|---|
 | `stitch:ignore` | `ignore_object`, `ignore_layer` | Leaves the object or the layer out with everything in it, and lists it with `SC-I0811` |
 | `stitch:start`, `stitch:end` | `starting_point`, `ending_point` | Gives the shapes of the group or layer it is in, and of the groups inside it, their start or end position: the centre of the box round its anchors. Their fills and satin columns start or end there (`REQ-GEN-001`). The marker is left out of the stitches. The first marker of each kind that shows counts, a group's own before those of the groups round it. `SC-W0807` names another, one with no anchor that reads, and the markers of a shape digitized automatically, which places its own. A group or a layer is never a marker: `SC-W0807` names it, and what it holds is read as under any other name |
+| `stitch:target` | `target_point` | From M10.8, gives the shapes of the group or layer it is in, and of the groups inside it, the point they aim at: the centre of the box round its anchors. Their ripple stitches shrink or spiral to it (`REQ-RIP-002`), and their circular fills turn round it (`REQ-FILL-CIR-008`). It is read as the start and end markers are, and `SC-W0807` names the same ones |
 | `stitch:origin`, `stitch:stop-position` | `origin`, `stop_position` | Gives the design its origin, which goes to the hoop's centre, or the stop position the frame moves to before each stop (`REQ-ASM-005`): the centre of the box round its anchors, wherever the marker is (M8.8). The marker is left out of the stitches. 2 origins, or 2 stop positions in a design with a stop, are an error (`SC-E0819`), as Ink/Stitch doesn't write a file with 2 such commands. `SC-W0807` names a marker with no anchor that reads, which places nothing, and a group or a layer of either name, which is never a marker |
 | `stitch:route-start`, `stitch:route-end` | `autoroute_start`, `autoroute_end` | From M10.4, marks where the routing filters start and end a route, at the centre of the box round its anchors, when it is selected with the paths they route. The filters delete it with the paths ([routing filters](#tools-the-routing-filters)). `stitch export` leaves it out of the stitches. Before M10.4 the reader reads the name as the row below says |
 | Any other word after `stitch:` | | Ignores the name, and `SC-W0807` names the object, in case the word is a misspelt marker |

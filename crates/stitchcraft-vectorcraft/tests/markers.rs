@@ -1,6 +1,6 @@
 //! What a name that begins with `stitch:` asks of StitchCraft (`REQ-VC-009`): VectorCraft's plug-in ABI v1
-//! has no command objects, so an object's or a layer's name carries Ink/Stitch's ignore commands and its
-//! start and end positions.
+//! has no command objects, so an object's or a layer's name carries Ink/Stitch's ignore commands, its start
+//! and end positions and its target point.
 
 // Test code may unwrap, panic and index (clippy.toml allows it in tests, but not in their helpers).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
@@ -107,9 +107,46 @@ fn req_vc_009_a_stitch_name_stitchcraft_does_not_read_is_named_and_stitched() {
     assert_eq!(
         hint.as_deref(),
         Some(
-            "StitchCraft reads stitch:ignore, stitch:start, stitch:end, stitch:origin, stitch:stop-position, stitch:route-start and stitch:route-end."
+            "StitchCraft reads stitch:ignore, stitch:start, stitch:end, stitch:target, stitch:origin, stitch:stop-position, stitch:route-start \
+             and stitch:route-end."
         )
     );
+}
+
+#[test]
+fn req_vc_009_a_target_marker_gives_the_shapes_grouped_with_it_the_point_they_aim_at() {
+    // As Ink/Stitch's target_point command does (REQ-RIP-002, REQ-FILL-CIR-008): at the middle of its anchors,
+    // for its group's shapes and those of the groups inside it. A group's own comes before those of the groups
+    // round it, and the first of a group counts: another is named, unused.
+    let inner = format!(
+        r#"{{"id": 7, "kind": {{"type": "group", "children": [{}, {}]}}}}"#,
+        square(8, 100.0, 0.0, RED),
+        named(&square(11, 120.0, 0.0, RED), "stitch:target")
+    );
+    let group = format!(
+        r#"{{"id": 3, "kind": {{"type": "group", "children": [{}, {}, {}, {inner}]}}}}"#,
+        square(2, 0.0, 0.0, RED),
+        named(&square(4, 10.0, 20.0, RED), "Stitch:Target the middle"),
+        named(&square(9, 60.0, 60.0, RED), "stitch:target")
+    );
+    let read = read_ok(&document(4, &[group, square(10, 200.0, 0.0, RED)].join(",")));
+    assert_eq!(ids(&read), ["vc:2:fill", "vc:8:fill", "vc:10:fill"]);
+    let at = |x: f64, y: f64| Some(Point::new((x + 18.0) * 25.4 / 72.0, (y + 18.0) * 25.4 / 72.0).unwrap());
+    let near = |got: Hints, want: Option<Point>| {
+        (got.start, got.end) == (None, None) && got.target.zip(want).map_or(got.target == want, |(got, want)| got.distance(want) < 1e-9)
+    };
+    let hints: Vec<Hints> = read.design.elements().iter().map(|e| e.hints).collect();
+    assert!(near(hints[0], at(10.0, 20.0)) && near(hints[1], at(120.0, 0.0)) && near(hints[2], None), "{hints:?}");
+    assert_eq!(said(&read), [about(NAMED, 9)]);
+    let message = "The object \"stitch:target\" would mark the point the shapes grouped with it aim at, and is not stitched. It is not used: it has no \
+                   point that reads, or another target marker in its group comes first.";
+    assert_eq!(read.warnings[0].message, message);
+    // A group so named is never a marker.
+    let group = named(&format!(r#"{{"id": 3, "kind": {{"type": "group", "children": [{}]}}}}"#, square(4, 0.0, 0.0, RED)), "stitch:target");
+    let read = read_ok(&document(4, &group));
+    assert_eq!((ids(&read), said(&read)), (vec!["vc:4:fill"], vec![about(NAMED, 3)]));
+    let message = "The group \"stitch:target\" is named as a target marker, which a group can't be, and the name is ignored.";
+    assert_eq!(read.warnings[0].message, message);
 }
 
 #[test]

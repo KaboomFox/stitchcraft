@@ -40,6 +40,7 @@ pub mod meander;
 mod next;
 pub mod passes;
 pub mod pull;
+pub mod ripple;
 pub mod running;
 pub mod satin;
 pub(crate) mod smoothing;
