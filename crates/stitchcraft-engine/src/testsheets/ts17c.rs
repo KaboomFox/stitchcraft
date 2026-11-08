@@ -122,12 +122,8 @@ pub(super) fn guided(d: &mut Drawing, thread: &Thread) -> Result<(), SheetError>
     let name = |sample: &str| format!("guided:{sample}");
     let [along, closed, grid, anchored, clipped] = GUIDED;
     // A wave 6 mm wide whose 8 copies follow an arch from its middle, shrinking to 30 %.
-    d.along(
-        &name(along),
-        curve((2.0, 170.0), (4.0, 167.0), (6.0, 173.0), (8.0, 170.0))?,
-        thread,
-        &[RIPPLE, ("line_count", "8"), ("scale_end", "30")],
-    )?;
+    let wave = curve((2.0, 170.0), (4.0, 167.0), (6.0, 173.0), (8.0, 170.0))?;
+    d.along(&name(along), wave, thread, &[RIPPLE, ("line_count", "8"), ("scale_end", "30")])?;
     d.guide(vec![curve((5.0, 170.0), (10.0, 160.0), (18.0, 160.0), (24.0, 170.0))?], 0.5, &[])?;
     // A circle 5 mm across whose copies follow 2 rails at least 3 mm apart, as Ondulamarif XL's accents do.
     let ripple_closed = [RIPPLE, ("min_line_dist_mm", "3"), ("running_stitch_tolerance_mm", "0.1")];

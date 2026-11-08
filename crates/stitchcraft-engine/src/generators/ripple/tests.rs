@@ -675,3 +675,34 @@ fn req_rip_012_copies_along_a_guide_line_are_of_the_outline_placed_again_and_oth
     let by_hand = [("line_count", "3"), ("scale_end", "100"), ("manual_pattern_placement", "true")];
     assert_eq!(built(line.clone(), &by_hand), copied(&[p(0.0, 0.0), p(10.0, 0.0)], &line, &by_hand));
 }
+
+#[test]
+fn diag_sc_w0409_a_guide_line_of_no_length_leaves_the_ripple_aiming_at_its_target() {
+    let target = Some(p(5.0, 5.0));
+    let guide = RippleGuide::Line { path: open(&[&[(1.0, 1.0), (1.0, 1.0)]]), nodes: false };
+    let guided = Ripple { guide: Some(guide), ..ripple(&[], target) };
+    let stitched = ripple_stitch(&line(), &guided, &SplitMix64::new(7), &mut Budget::DEFAULT.meter()).unwrap();
+    let message = "warning SC-W0409: This ripple stitch's guide can't be used: its guide line has no length. It is sewn without it.";
+    assert_eq!(said(&stitched), [message]);
+    assert_eq!(stitched.runs, sewn(&line(), &[], target).runs);
+}
+
+#[test]
+fn req_rip_012_a_guide_of_more_than_1000_points_places_1000_copies_and_says_so() {
+    let points: Vec<(f64, f64)> = (0..1001).map(|k| (0.0, f64::from(k) * 0.1)).collect();
+    let guide = RippleGuide::Line { path: open(&[&points]), nodes: false };
+    let at_points = Ripple { guide: Some(guide), ..ripple(&[("satin_guide_pattern_position", "render_at_rungs")], None) };
+    let stitched = ripple_stitch(&line(), &at_points, &SplitMix64::new(7), &mut Budget::DEFAULT.meter()).unwrap();
+    assert_eq!(said(&stitched), ["warning SC-W0407: This ripple stitch's guide has 1001 places for copies, more than 1000, so it sews 1000."]);
+}
+
+#[test]
+fn diag_sc_w0013_a_ripple_outside_its_clips_sews_nothing() {
+    let far = Clip::of(path(&[&[(50.0, 50.0), (60.0, 50.0), (60.0, 60.0), (50.0, 60.0), (50.0, 50.0)]], true), crate::design::FillRule::NonZero);
+    let clipped = Ripple { clips: vec![far], ..ripple(&[], Some(p(5.0, 5.0))) };
+    let stitched = ripple_stitch(&line(), &clipped, &SplitMix64::new(7), &mut Budget::DEFAULT.meter()).unwrap();
+    assert_eq!(
+        (stitched.runs.len(), said(&stitched)),
+        (0, vec!["warning SC-W0013: Its clip paths leave nothing of this ripple stitch, so it sews nothing.".to_string()])
+    );
+}
