@@ -207,7 +207,7 @@ kind = "stitch"
 sheet = "TS-17C"
 style = "realistic"
 scale = 4.0
-alt = "TS-17C as it will sew, in blue: the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E's arms. At the bottom the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next."
+alt = "TS-17C as it will sew, in blue: the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E's arms. Below them the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next. At the bottom, in red, 2 crosses of satin columns 5 mm wide, a bar and a post each, as drawn on the left and with their underlays first on the right, which look alike from above."
 
 # ── How-to pages ────────────────────────────────────────────────────────────────────────────────────
 
@@ -217,8 +217,19 @@ kind = "stitch"
 sheet = "TS-17C"
 style = "simple"
 scale = 4.0
-alt = "TS-17C's letters ROUTE drawn as thin lines, twice: at the top as drawn, and at the bottom as Auto-Route Satin Columns routes them. Dashed lines are jumps, which the reference machine leaves as threads to cut by hand, and orange rings mark lock stitches. The routed letters jump only from one letter to the next."
+alt = "TS-17C's letters ROUTE drawn as thin lines, twice: at the top as drawn, and below them as Auto-Route Satin Columns routes them. Dashed lines are jumps, which the reference machine leaves as threads to cut by hand, and orange rings mark lock stitches. The routed letters jump only from one letter to the next. At the bottom are the sheet's 2 crosses of red satin columns."
 
+[[shot]]
+id = "underlays-first"
+kind = "stitch"
+fixture = "docs/fixtures/crossing.svg"
+style = "realistic"
+scale = 20.0
+alt = "2 red satin columns 5 mm wide and 16 mm long that cross, a bar and a post, each with a contour and a zigzag underlay, sewn with their stitches 1.2 mm apart so that the underlays show. As drawn, where they cross, the post's zigzag underlay lies on the bar's top stitches. With their underlays first, the bar's top stitches lie on both underlays there, under the post's"
+panels = [
+  { caption = "As drawn", params = { satin_column = "true", contour_underlay = "true", zigzag_underlay = "true", zigzag_spacing_mm = "1.2" } },
+  { caption = "Underlays first", params = { satin_column = "true", contour_underlay = "true", zigzag_underlay = "true", zigzag_spacing_mm = "1.2", underlays_first = "true" } },
+]
 
 [[shot]]
 id = "testsheet-ts-16"

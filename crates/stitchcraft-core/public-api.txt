@@ -105,6 +105,7 @@ pub stitchcraft_core::diag::Code::ThreadsShareColor
 pub stitchcraft_core::diag::Code::TooLargeForFormat
 pub stitchcraft_core::diag::Code::TooManyColorChanges
 pub stitchcraft_core::diag::Code::TrimOrStopLeftOut
+pub stitchcraft_core::diag::Code::UnderlaysFirstAlone
 pub stitchcraft_core::diag::Code::UnreadableFile
 pub stitchcraft_core::diag::Code::VcCliNotStarted
 pub stitchcraft_core::diag::Code::VcEffectUnchanged
@@ -342,6 +343,7 @@ pub stitchcraft_core::Code::ThreadsShareColor
 pub stitchcraft_core::Code::TooLargeForFormat
 pub stitchcraft_core::Code::TooManyColorChanges
 pub stitchcraft_core::Code::TrimOrStopLeftOut
+pub stitchcraft_core::Code::UnderlaysFirstAlone
 pub stitchcraft_core::Code::UnreadableFile
 pub stitchcraft_core::Code::VcCliNotStarted
 pub stitchcraft_core::Code::VcEffectUnchanged

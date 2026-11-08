@@ -5,6 +5,19 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M10.15: underlays first (`REQ-ASM-008` to `REQ-ASM-010`), as ADR-0018 decided. Consecutive elements in one
+  thread that set `underlays_first`, a toggle every stitch type shares, StitchCraft's own and off by
+  default, sew all their underlays before any of their top stitches. A trim or a stop ends a run. An element
+  alone sews as it does without the setting, and the new note `SC-I0506` says so.
+  - Satin columns and tatami, contour, meander and circular fills sew their underlay and their top as 2
+    layers, from one reading of the element and within its work. Their top stitches take the random numbers
+    they take without the setting. An element without underlay sews whole with the top stitches.
+  - Each stitch family's dialog in VectorCraft shows the toggle in a section Sewing order. An SVG shape keeps
+    it as `inkstitch:underlays_first`, which Ink/Stitch doesn't read, and `SC-W0802` names it on a group. A
+    route's runs under a column keep it, so that the route sews its underlays along it.
+  - TS-17C sews 2 red satin columns that cross, as drawn beside the same 2 with their underlays first, for
+    MC-12, and a how-to page shows them. The differential's file of TS-17C leaves that pair out, as
+    Ink/Stitch would sew it otherwise. Golden changed: `TS-17C.pes`, for the new pair.
 - M8.6: the first run of every glyph of Ink/Stitch's fonts, explained (`REQ-FONT-001`). On 3 November 2026
   it found 56 glyphs that differ beyond the ledger and 11 that didn't sew, in 20 fonts. 2 were bugs, now
   fixed, and the ledger explains the others by their causes. Run again on those fonts, 4,644 of their 4,961

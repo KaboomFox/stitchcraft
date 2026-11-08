@@ -8,6 +8,7 @@
 use stitchcraft_core::{Budget, Code, Point};
 use stitchcraft_engine::design::{Design, DesignSettings, Element};
 use stitchcraft_engine::plan;
+use stitchcraft_engine::route::{Options, Route, Tool, route};
 use stitchcraft_engine::testsheets;
 use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::{Role, StitchKind, StitchPlan, Thread};
@@ -206,6 +207,28 @@ fn req_asm_009_an_element_without_underlay_sews_in_the_second_pass() {
     let plan = planned(vec![across, run, down]).plan.unwrap();
     let sewn = [("across", Role::Underlay), ("down", Role::Underlay), ("across", Role::Top), ("line", Role::Top), ("down", Role::Top)];
     assert_eq!(layers(&plan), owned(&sewn));
+}
+
+#[test]
+fn req_asm_009_a_route_sews_its_pieces_underlays_along_it_then_its_top_stitches() {
+    // Routed, the crossing columns are cut into pieces, with runs under the satin between some of them. Each
+    // run keeps its column's setting, so that the route is one run: the pieces' underlays in its order, then
+    // the pieces and the runs (ADR-0018). The columns' rungs lie away from the crossing.
+    let column = |id: &str, a: [(f64, f64); 2], b: [(f64, f64); 2], rung: [(f64, f64); 2]| {
+        along(id, polylines(&[&a, &b, &rung]), &RED, &[COLUMN[0], COLUMN[1], COLUMN[2], FIRST])
+    };
+    let bar = column("bar", [(0.0, 8.0), (30.0, 8.0)], [(0.0, 12.0), (30.0, 12.0)], [(5.0, 7.0), (5.0, 13.0)]);
+    let post = column("post", [(13.0, -5.0), (13.0, 25.0)], [(17.0, -5.0), (17.0, 25.0)], [(12.0, 0.0), (18.0, 0.0)]);
+    let how = Route { tool: Tool::Satins, options: Options::default(), start: None, end: None };
+    let routed = route(&[bar, post], &how, &DesignSettings::default(), &Budget::DEFAULT);
+    assert!(routed.diagnostics.is_empty(), "{:?}", routed.diagnostics);
+    assert!(routed.pieces.iter().any(|piece| piece.under), "the route runs under the satin");
+    assert!(routed.pieces.iter().all(|piece| piece.element.params.get(FIRST.0) == Some("true")));
+    let outcome = planned(routed.pieces.iter().map(|piece| piece.element.clone()).collect());
+    assert!(outcome.diagnostics.iter().all(|d| d.code == Code::StitchesMerged), "{:?}", messages(&outcome));
+    let pieces = routed.pieces.iter().filter(|piece| !piece.under).map(|piece| (piece.element.id.as_str(), Role::Underlay));
+    let sewn: Vec<(&str, Role)> = pieces.chain(routed.pieces.iter().map(|piece| (piece.element.id.as_str(), Role::Top))).collect();
+    assert_eq!(layers(&outcome.plan.unwrap()), owned(&sewn));
 }
 
 #[test]

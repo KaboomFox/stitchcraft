@@ -110,8 +110,8 @@ Ink/Stitch's Auto-Route Satin Columns routes a selection in these steps:
    column's settings, but an odd number of centre walk repeats is lowered by 1, to no fewer than 2, so that
    the piece sews from its start ([underlays](algorithms/satin.md#underlays)). A run under a column takes the
    column's running stitch length, or else its centre walk's or its contour's stitch length, its
-   shortest jump and its bean stitch repeats, where the column sets them. A stroke's stretch takes the
-   stroke's.
+   shortest jump, its bean stitch repeats and its `underlays_first`, where the column sets them. A
+   stroke's stretch takes the stroke's.
 7. **Trims.** With Trim jump stitches, a jump that runs more than 1 mm outside the 2 elements it joins
    trims the thread after the piece before it. A column counts as its rails, lines that hide only what
    runs along them, and a stroke as the convex hull of its subpaths, so a jump exactly 1 mm long between 2
@@ -194,9 +194,11 @@ by the shapes each overlaps in the whole design ([sewing order](image-to-embroid
 routed design is drawn in its sewing order, which `stitch plan` keeps. `--sort-colours` moves routed
 pieces as it moves the other elements with settings, and isn't meant for a routed design.
 
-A column's piece keeps `underlays_first` with the rest of its column's settings, and a run has no
-underlay. Pieces in one thread that set it sew their underlays along the route, and the needle then goes
-back to the first of them for the top stitches ([underlays first](engine-pipeline.md#underlays-first)).
+A column's piece keeps `underlays_first` with the rest of its column's settings, and a run under the column
+keeps it too, so that the run doesn't part the pieces around it. Pieces in one thread that set it sew their
+underlays along the route, and the needle then goes back to the first of them for the top stitches. A run
+has no underlay, and sews in the second pass, before the satin that covers it
+([underlays first](engine-pipeline.md#underlays-first)).
 
 ## Requirements
 
