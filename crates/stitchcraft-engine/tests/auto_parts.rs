@@ -132,3 +132,21 @@ fn req_auto_019_a_tapering_narrow_part_ends_flat_along_its_cut() {
         assert!(start.max(end) > 6.5 && start.min(end) < 0.5, "{start} {end}");
     }
 }
+
+#[test]
+fn req_auto_019_a_point_ends_flat_along_its_cut_however_sharp_its_tip() {
+    // A square 20 mm a side with a point on its right side, 12 mm across where it leaves the square, its tip
+    // from 30° to 45°: the square is filled, and the point sews as a satin column from its tip to its cut,
+    // where its rails end at the cut's 2 ends, more than 6 mm apart. With a tip of 45°, the column's line ran
+    // into a corner of the cut, and the column sewed its stitches into a fan there that left a wedge bare.
+    for apex in [30.0_f64, 36.0, 40.0, 45.0] {
+        let (sin, cos) = sin_cos((apex / 2.0).to_radians());
+        let tip = 20.0 + 6.0 * cos / sin;
+        let out = made(&shape("point", &[(0.0, 0.0), (20.0, 0.0), (20.0, 4.0), (tip, 10.0), (20.0, 16.0), (20.0, 20.0), (0.0, 20.0)]));
+        let [fill, column] = out.elements.as_slice() else { panic!("{apex}: {:?}", out.elements) };
+        assert!(matches!(fill.shape, Shape::Fill { .. }), "{apex}: {:?}", fill.shape);
+        let [one, other] = rails(column);
+        let (start, end) = (one[0].distance(other[0]), one.last().unwrap().distance(*other.last().unwrap()));
+        assert!(start.max(end) > 6.0 && start.min(end) < 0.5, "{apex}: {start} {end}");
+    }
+}

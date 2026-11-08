@@ -1,12 +1,13 @@
-//! The ripple stitch's unit cases (`REQ-RIP-001` to `REQ-RIP-010`). Its diagnostics in a plan are in
-//! `tests/ripple.rs`, through the engine's public API.
+//! The ripple stitch's unit cases (`REQ-RIP-001` to `REQ-RIP-010`, `REQ-RIP-015`, `REQ-RIP-016`). Its
+//! diagnostics in a plan are in `tests/ripple.rs`, and its guides, grid and clips in `tests/ripple_guided.rs`,
+//! through the engine's public API. Where a guide places its copies is in `guided/tests.rs`.
 
 use stitchcraft_core::{Budget, math};
 
-use super::lines::{CLOSED, MOST, bent, count, kind_of, lines, places, shortest, skipped, target};
-use super::sew::one_at_a_time;
+use super::lines::{CLOSED, MOST, bent, count, kind_of, lines, places, shortest, skipped, skipped_as, target};
+use super::sew::{manual, one_at_a_time};
 use super::*;
-use crate::design::{Segment, Subpath};
+use crate::design::{Join, Segment, Subpath};
 use crate::normalize::stroke::distance_to_segment;
 
 fn p(x: f64, y: f64) -> Point {
@@ -42,18 +43,24 @@ fn square() -> Path {
     path(&[&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0), (0.0, 0.0)]], true)
 }
 
-/// A ripple set as `with` says, for a machine whose shortest stitch is 0.3 mm, aiming at `target`.
+/// A ripple set as `with` says, for a machine whose shortest stitch is 0.3 mm, aiming at `target`: its
+/// column's rails read with its own `reverse_rails` and `swap_satin_rails`, as the engine reads them.
 fn ripple(with: &[(&str, &str)], target: Option<Point>) -> Ripple {
     let set: ParamSet = with.iter().copied().collect();
+    let own = RippleParams::from_set(&set).unwrap().params;
+    let satin = SatinParams::from_set_as(&set, StitchType::RippleStitch).unwrap().params;
     Ripple {
-        ripple: RippleParams::from_set(&set).unwrap().params,
+        satin: SatinParams { reverse_rails: own.reverse_rails, swap_satin_rails: own.swap_satin_rails, ..satin },
+        ripple: own,
         running: RunningParams::from_set(&set).unwrap().params,
         passes: RepeatParams::from_set(&set).unwrap().params,
-        satin: SatinParams::from_set_as(&set, StitchType::RippleStitch).unwrap().params,
         min_stitch: Mm::new(0.3).unwrap(),
+        jump: Mm::new(3.0).unwrap(),
         target,
+        guide: None,
+        anchor: None,
         unapplied: unapplied(&set),
-        clipped: false,
+        clips: Vec::new(),
     }
 }
 
@@ -91,7 +98,7 @@ fn along_x(xs: &[f64], y: f64) -> Vec<(f64, f64)> {
 
 /// How lines are sewn in these cases: in stitches of 2.5 mm within 0.2 mm, the shortest 0.3 mm.
 fn sewing(rng: &SplitMix64, staggers: f64, point: bool, skip_start: usize) -> Sewing<'_> {
-    Sewing { pattern: &[2.5], tolerance: 0.2, min: 0.3, jitter: None, rng, staggers, point, skip_start }
+    Sewing { pattern: &[2.5], tolerance: 0.2, min: 0.3, jitter: None, rng, staggers, point, skip_start, flip: true }
 }
 
 /// `lines` sewn one at a time as `sewing` says, to a thousandth of a millimetre.
@@ -556,42 +563,25 @@ fn req_rip_009_random_lengths_draw_from_a_stream_for_each_line() {
 }
 
 #[test]
-fn req_rip_010_the_satin_column_s_settings_that_turn_its_rails_are_named_and_not_applied() {
-    // Named when they read as other than their defaults, or don't read at all.
+fn req_rip_010_push_compensation_along_a_column_is_named_and_not_applied() {
+    // Named when it reads as other than 0, or doesn't read at all.
     let named = |pairs: &[(&str, &str)]| unapplied(&pairs.iter().copied().collect());
     assert_eq!(named(&[]), Vec::<&str>::new());
-    assert_eq!(named(&[("reverse_rails", "automatic"), ("swap_satin_rails", "false"), ("push_compensation_mm", "0 0")]), Vec::<&str>::new());
-    assert_eq!(named(&[("reverse_rails", "none")]), [REVERSE_RAILS]);
-    assert_eq!(named(&[("reverse_rails", "maybe")]), [REVERSE_RAILS]);
-    assert_eq!(named(&[("swap_satin_rails", "true")]), [SWAP_SATIN_RAILS]);
+    assert_eq!(named(&[("push_compensation_mm", "0 0")]), Vec::<&str>::new());
     assert_eq!(named(&[("push_compensation_mm", "0 0.5")]), [PUSH_COMPENSATION]);
     assert_eq!(named(&[("push_compensation_mm", "0.5")]), [PUSH_COMPENSATION]);
     assert_eq!(named(&[("push_compensation_mm", "-0.5 0")]), [PUSH_COMPENSATION]);
-    assert_eq!(named(&[("push_compensation_mm", "wide"), ("swap_satin_rails", "yes")]), [SWAP_SATIN_RAILS, PUSH_COMPENSATION]);
-    assert!([REVERSE_RAILS, SWAP_SATIN_RAILS, PUSH_COMPENSATION].iter().all(|key| SatinParams::SPECS.iter().any(|spec| spec.key == *key)));
-    // Along a column they are said, and the rails are read with their defaults.
-    let settings = [("line_count", "3"), ("reverse_rails", "both"), ("swap_satin_rails", "true"), ("push_compensation_mm", "1")];
-    let column_ripple = sewn(&column(), &settings, None);
-    assert_eq!(column_ripple.runs, sewn(&column(), &[("line_count", "3")], None).runs);
-    let all_3 = "warning SC-W0406: This ripple stitch sets `reverse_rails`, `swap_satin_rails` and `push_compensation_mm`, which StitchCraft doesn't apply to ripple stitch yet, so its column is read with their defaults.";
-    assert_eq!(said(&column_ripple), [all_3]);
-    let one = sewn(&column(), &[("line_count", "3"), ("swap_satin_rails", "true")], None);
-    let only = "warning SC-W0406: This ripple stitch sets `swap_satin_rails`, which StitchCraft doesn't apply to ripple stitch yet, so its column is read with their defaults.";
-    assert_eq!(said(&one), [only]);
-    let two = sewn(&column(), &[("line_count", "3"), ("reverse_rails", "both"), ("swap_satin_rails", "true")], None);
-    assert!(said(&two)[0].contains("sets `reverse_rails` and `swap_satin_rails`, which"), "{:?}", said(&two));
-    // Towards a target point Ink/Stitch doesn't read them either, and nothing is said.
-    assert_eq!(sewn(&line(), &settings, None).warnings, Vec::new());
-}
-
-#[test]
-fn req_rip_010_a_ripple_cut_to_clips_is_sewn_whole_and_says_so() {
-    let clipped = Ripple { clipped: true, ..ripple(&[("line_count", "3")], None) };
-    let whole = ripple_stitch(&line(), &clipped, &SplitMix64::new(7), &mut Budget::DEFAULT.meter()).unwrap();
-    assert_eq!(whole.runs, sewn(&line(), &[("line_count", "3")], None).runs);
-    let message =
-        "warning SC-W0406: This ripple stitch is cut to clip paths, which StitchCraft doesn't apply to ripple stitch yet, so it is sewn whole.";
-    assert_eq!(said(&whole), [message]);
+    assert_eq!(named(&[("push_compensation_mm", "wide")]), [PUSH_COMPENSATION]);
+    // The rails' own settings are the ripple's, and applied (`REQ-RIP-018`).
+    assert_eq!(named(&[("reverse_rails", "both"), ("swap_satin_rails", "true")]), Vec::<&str>::new());
+    assert!(SatinParams::SPECS.iter().any(|spec| spec.key == PUSH_COMPENSATION));
+    // Along a column it is said, and the rails are read without it.
+    let pushed = sewn(&column(), &[("line_count", "3"), ("push_compensation_mm", "1")], None);
+    assert_eq!(pushed.runs, sewn(&column(), &[("line_count", "3")], None).runs);
+    let message = "warning SC-W0406: This ripple stitch sets `push_compensation_mm`, which StitchCraft doesn't apply to ripple stitch, so its column is read without it.";
+    assert_eq!(said(&pushed), [message]);
+    // Towards a target point Ink/Stitch doesn't read it either, and nothing is said.
+    assert_eq!(sewn(&line(), &[("push_compensation_mm", "1")], None).warnings, Vec::new());
 }
 
 #[test]
@@ -610,4 +600,109 @@ fn every_point_of_every_line_costs_work_and_every_needle_point_a_stitch() {
     assert_eq!(left(Budget { max_stitches: 100, max_work: u64::MAX }).1, 92, "8 needle points");
     assert_eq!(left(Budget { max_stitches: 7, max_work: u64::MAX }).0, Err(Exhausted::Stitches));
     assert_eq!(left(Budget { max_stitches: 100, max_work: 20 }).0, Err(Exhausted::Work));
+}
+
+#[test]
+fn req_rip_015_a_column_s_grid_lines_lose_the_lines_the_skips_leave_out() {
+    let lines: Vec<Vec<Point>> = (0..4).map(|k| vec![p(0.0, f64::from(k))]).collect();
+    let ys = |kept: Vec<Vec<Point>>| kept.iter().map(|line| line[0].y()).collect::<Vec<_>>();
+    assert_eq!(ys(skipped_as(lines.clone(), [1, 1], true)), [1.0, 2.0]);
+    assert_eq!(ys(skipped_as(lines.clone(), [0, 3], true)), [0.0]);
+    // Skips that leave the ripple none leave the grid's lines all, and more than they have leave none.
+    assert_eq!(ys(skipped_as(lines.clone(), [3, 2], false)), [0.0, 1.0, 2.0, 3.0]);
+    assert_eq!(ys(skipped_as(lines, [3, 2], true)), Vec::<f64>::new());
+}
+
+#[test]
+fn req_rip_016_lines_placed_by_hand_are_sewn_through_their_points_joined_by_even_stitches() {
+    let lines = vec![vec![p(-4.0, 0.0), p(0.0, 0.0), p(4.0, 0.0)], vec![p(-4.0, 10.0), p(0.0, 10.0), p(4.0, 10.0)]];
+    let sewn = |flip: bool| rounded(&manual(&lines, flip, 2.5, &mut Budget::DEFAULT.meter()).unwrap());
+    // With flip_copies the first line from its end, then 10 mm in 4 stitches to the next.
+    let flipped = [(4.0, 0.0), (0.0, 0.0), (-4.0, 0.0), (-4.0, 2.5), (-4.0, 5.0), (-4.0, 7.5), (-4.0, 10.0), (0.0, 10.0), (4.0, 10.0)];
+    assert_eq!(sewn(true), flipped);
+    // Without it, 12.81 mm in 6 stitches.
+    let straight = [
+        [(-4.0, 0.0), (0.0, 0.0), (4.0, 0.0)].as_slice(),
+        &[(2.667, 1.667), (1.333, 3.333), (0.0, 5.0), (-1.333, 6.667), (-2.667, 8.333)],
+        &[(-4.0, 10.0), (0.0, 10.0), (4.0, 10.0)],
+    ];
+    assert_eq!(sewn(false), straight.concat());
+    // A join no longer than the stitch length is one stitch, and each point is a stitch and a unit of work.
+    let near = vec![vec![p(0.0, 0.0), p(1.0, 0.0)], vec![p(1.0, 2.5), p(2.0, 2.5)]];
+    let mut meter = Budget { max_stitches: 4, max_work: 4 }.meter();
+    assert_eq!(rounded(&manual(&near, false, 2.5, &mut meter).unwrap()), [(0.0, 0.0), (1.0, 0.0), (1.0, 2.5), (2.0, 2.5)]);
+    assert_eq!((meter.stitches_left(), meter.work_left()), (0, 0));
+    assert_eq!(manual(&near, false, 2.5, &mut Budget { max_stitches: 3, max_work: 100 }.meter()), Err(Exhausted::Stitches));
+    assert_eq!(manual(&near, false, 2.5, &mut Budget { max_stitches: 100, max_work: 3 }.meter()), Err(Exhausted::Work));
+    // No stitch length cuts nothing.
+    assert_eq!(manual(&near, false, 0.0, &mut Budget::DEFAULT.meter()).unwrap().len(), 4);
+}
+
+#[test]
+fn req_rip_012_copies_along_a_guide_line_are_of_the_outline_placed_again_and_others_of_the_outline_itself() {
+    // A curve's outline is its running stitch. Along a guide line, the copies are of that outline sewn again at
+    // the same lengths, which moves its needle points. A satin guide's copies, and copies placed by hand, are of
+    // the outline itself.
+    let curve = Subpath { start: p(0.0, 0.0), segments: vec![Segment::Cubic(p(3.0, 6.0), p(7.0, -6.0), p(10.0, 0.0))], closed: false };
+    let meter = &mut Budget::DEFAULT.meter();
+    let points = stroke::flattened(&curve, meter).unwrap();
+    let rng = SplitMix64::new(7);
+    let built = |guide: RippleGuide, with: &[(&str, &str)]| {
+        let ripple = Ripple { guide: Some(guide), ..ripple(with, None) };
+        let built = one_line(&curve, &points, &ripple, (&[2.5], None, &rng), &mut Vec::new(), &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+        built.lines
+    };
+    let copied = |outline: &[Point], guide: &RippleGuide, with: &[(&str, &str)]| {
+        let own = ripple(with, None).ripple;
+        let placing = Placing { own: &own, adds: false, closed: false, anchor: None };
+        guided::copies(outline, guide, &placing, &mut Vec::new(), &mut Budget::DEFAULT.meter()).unwrap().unwrap().lines
+    };
+    let outline = running::outline(&curve, &[2.5], (0.2, 0.3), meter).unwrap().unwrap();
+    let again = running::along_pattern(&outline, (&[2.5], 0.2, 0.3), None, (&rng, 0), meter).unwrap();
+    assert_ne!(again, outline, "the outline placed again differs");
+    let line = RippleGuide::Line { path: open(&[&[(0.0, 0.0), (0.0, 10.0)]]), nodes: false };
+    let with = [("line_count", "3"), ("scale_end", "100")];
+    assert_eq!(built(line.clone(), &with), copied(&again, &line, &with));
+    let rails = SatinParams::from_set(&ParamSet::new()).unwrap().params;
+    let satin = RippleGuide::Satin {
+        path: open(&[&[(0.0, 0.0), (20.0, 0.0)], &[(0.0, 4.0), (20.0, 4.0)]]),
+        width: Mm::ZERO,
+        join: Join::UNSET,
+        params: Box::new(rails),
+    };
+    assert_eq!(built(satin.clone(), &with), copied(&outline, &satin, &with));
+    // By hand, the copies are of the curve's nodes.
+    let by_hand = [("line_count", "3"), ("scale_end", "100"), ("manual_pattern_placement", "true")];
+    assert_eq!(built(line.clone(), &by_hand), copied(&[p(0.0, 0.0), p(10.0, 0.0)], &line, &by_hand));
+}
+
+#[test]
+fn diag_sc_w0409_a_guide_line_of_no_length_leaves_the_ripple_aiming_at_its_target() {
+    let target = Some(p(5.0, 5.0));
+    let guide = RippleGuide::Line { path: open(&[&[(1.0, 1.0), (1.0, 1.0)]]), nodes: false };
+    let guided = Ripple { guide: Some(guide), ..ripple(&[], target) };
+    let stitched = ripple_stitch(&line(), &guided, &SplitMix64::new(7), &mut Budget::DEFAULT.meter()).unwrap();
+    let message = "warning SC-W0409: This ripple stitch's guide can't be used: its guide line has no length. It is sewn without it.";
+    assert_eq!(said(&stitched), [message]);
+    assert_eq!(stitched.runs, sewn(&line(), &[], target).runs);
+}
+
+#[test]
+fn req_rip_012_a_guide_of_more_than_1000_points_places_1000_copies_and_says_so() {
+    let points: Vec<(f64, f64)> = (0..1001).map(|k| (0.0, f64::from(k) * 0.1)).collect();
+    let guide = RippleGuide::Line { path: open(&[&points]), nodes: false };
+    let at_points = Ripple { guide: Some(guide), ..ripple(&[("satin_guide_pattern_position", "render_at_rungs")], None) };
+    let stitched = ripple_stitch(&line(), &at_points, &SplitMix64::new(7), &mut Budget::DEFAULT.meter()).unwrap();
+    assert_eq!(said(&stitched), ["warning SC-W0407: This ripple stitch's guide has 1001 places for copies, more than 1000, so it sews 1000."]);
+}
+
+#[test]
+fn diag_sc_w0013_a_ripple_outside_its_clips_sews_nothing() {
+    let far = Clip::of(path(&[&[(50.0, 50.0), (60.0, 50.0), (60.0, 60.0), (50.0, 60.0), (50.0, 50.0)]], true), crate::design::FillRule::NonZero);
+    let clipped = Ripple { clips: vec![far], ..ripple(&[], Some(p(5.0, 5.0))) };
+    let stitched = ripple_stitch(&line(), &clipped, &SplitMix64::new(7), &mut Budget::DEFAULT.meter()).unwrap();
+    assert_eq!(
+        (stitched.runs.len(), said(&stitched)),
+        (0, vec!["warning SC-W0013: Its clip paths leave nothing of this ripple stitch, so it sews nothing.".to_string()])
+    );
 }

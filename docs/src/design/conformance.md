@@ -145,7 +145,8 @@ method (`sewn_ladder`) and compare its needle points with the ones they expect, 
 `stitchcraft_engine::testsheets::pictures` draws in code and the TS-13 sheets sew too, each with the
 edges where its shapes meet. `stitchcraft_testkit::pictures` places them where the cases measure them.
 There are 3 stripes side by side, and a badge, a row of badges, an emblem and a button, each traced
-abutting or stacked ([image to embroidery](image-to-embroidery.md#testing)).
+abutting or stacked ([image to embroidery](image-to-embroidery.md#testing)). The cases sew the pear that the
+docs show too, a photo that VectorCraft traced into ragged shapes (`stitchcraft_testkit::pictures::pear`).
 
 ## Levels
 
@@ -226,6 +227,8 @@ Metrics are defined once in `stitchcraft-testkit::metrics` so every case measure
 | Stitch length | Min, max and distribution of `Normal` stitch lengths by role |
 | Furrows | Longest run of rows whose needle points align within 0.1 mm |
 | Topology | Holes and components of the region vs. of the stitched area |
+| Bare fabric | The design painted at 0.05 mm as a viewer paints it, its background left out: the largest patch the top stitches leave bare, once opened with a disc as wide as the thread (`stitchcraft_testkit::fabric`) |
+| Thread astray | The longest stretch of a stitch that shows on another colour or on bare fabric, or of an underlay or travel stitch that shows at all. Moves between elements and jump threads are counted apart |
 
 Coverage is defined since M5.9 and edge coverage since M13.2, and the other metrics arrive with the cases that
 need them. `stitchcraft-testkit::stitches` reads back what a test sheet's stitches show against its
@@ -296,14 +299,15 @@ where a path's move-to draws nothing after it, is left out with the jumps and th
 
 `REQ-SVG-008`, `REQ-AUTO-021`, `REQ-AUTO-022`, `REQ-RUN-013`, `REQ-SAT-029`, `REQ-FILL-CON-008`,
 `REQ-FILL-CIR-007`, `REQ-FILL-CRS-007`, `REQ-FILL-CRS-012`, `REQ-FONT-001`, `REQ-ROUTE-008`,
-`REQ-ROUTE-013` and `REQ-RIP-011` are the requirements of level L3. The other runs of the suite leave them and their cases to this one. The corpus is
+`REQ-ROUTE-013`, `REQ-RIP-011` and `REQ-RIP-019` are the requirements of level L3. The other runs of the suite leave them and their cases to this one. The corpus is
 designs the SVG reader sews in full, with their settings (`REQ-SVG-009`), trim and stop commands and the file
 version. A case may name a test sheet drawn as a design instead (`sheet`). With `elements`, the measures
 judge only the sheet's elements whose ids start with it. Both programs sew an SVG file
 of the elements StitchCraft sews the sheet with, written with their parameters, their start, end and
 target positions as Ink/Stitch's commands and their clips as clip paths, the design's origin and stop
 position as commands too, and its turn on export (`stitchcraft_testkit::inkstitch`), which StitchCraft's
-reader reads back unchanged (`REQ-PRM-003`). The file leaves out an element that sets a setting of
+reader reads back unchanged (`REQ-PRM-003`). An element's guide line and anchor line are paths beside it
+in its own group, each started with Ink/Stitch's marker, the guide with its stroke and its settings. The file leaves out an element that sets a setting of
 StitchCraft's own that its stitch type reads, which Ink/Stitch would pass over and sew otherwise
 (`sewn_alike`). So TS-17C's file has no crossing columns with their underlays first. An element a sheet
 draws as a clone of another is written as a `<use>` of it, and each command in a group with its
@@ -327,6 +331,9 @@ moved by its offsets, a disc round a hole in stitches 3 mm long, a fill in 2 par
 a fill that stops at its end with its runs sewn as bean stitches (`REQ-FILL-TRT-011`). Every stripe is one of
 Brother's threads, so both files name each thread as itself. The `ts17c-ripple-` cases check each of TS-17C's
 ripple stitches on its own, the one along a column and the 2 that shrink to a target point (`REQ-RIP-011`).
+The `ts17c-guided-` cases check its guided ripples so (`REQ-RIP-019`). A wave and a zigzag cut to a circle
+follow guide lines. A circle and a diamond stand between satin guides' rails, the diamond at its guide's
+rungs with an anchor line, and a column has a grid across it.
 TS-02B to TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills' sheet, are cases of
 `REQ-SVG-008` (M8.2). The `drawn-locks` case and TS-16 check custom locks drawn as
 paths, of each kind of command, which both programs sew at the same nodes (`REQ-LCK-005`).

@@ -1,13 +1,14 @@
-# TS-17C as M10.4, M10.13, M10.15 and M10.8 draw it: the word ROUTE in satin letters with a centre walk
+# TS-17C as M10.4, M10.13, M10.15, M10.8 and M10.11 draw it: the word ROUTE in satin letters with a centre walk
 # underlay, sewn as drawn above, and below routed by stitchcraft_engine::route with Auto-Route Satin Columns'
 # options at their defaults: cut into pieces, run under the satins that cover the runs, and trimmed between
 # letters. Below the letters, a network of 6 bean-stitched running stitches, sewn as drawn on the left, and on
 # the right routed by Auto-Route Running Stitch with Trim jump stitches on. Below the network, 2 satin columns
-# that cross, as drawn on the left and with their underlays first on the right (REQ-ASM-009). At the bottom,
-# 3 ripple stitches: along a column, towards a target point and in a spiral. The sheet draws only as the
-# engine says that pieces meeting within the shortest stitch merge their stitches there (SC-I0504), which it
-# then leaves unsaid. The invariants (REQ-PLAN-…) run on the sheet's plan, and the golden file is the bytes
-# MC-12 sews.
+# that cross, as drawn on the left and with their underlays first on the right (REQ-ASM-009). Below them,
+# 3 ripple stitches: along a column, towards a target point and in a spiral. At the bottom, 5 guided ripples:
+# along a guide line, between a satin guide's rails, with a grid, at a satin guide's rungs along an anchor line,
+# and cut to a circle. The sheet draws only as the engine says that pieces meeting within the shortest stitch
+# merge their stitches there (SC-I0504), which it then leaves unsaid. The invariants (REQ-PLAN-…) run on the
+# sheet's plan, and the golden file is the bytes MC-12 sews.
 id = "ts-17c"
 requirements = ["REQ-PLAN-001", "REQ-PLAN-002", "REQ-PLAN-003", "REQ-PLAN-005", "REQ-PLAN-006", "REQ-PLAN-007", "REQ-PRF-002", "REQ-FMT-001", "REQ-ASM-009"]
 kind = "testsheet"
@@ -15,6 +16,6 @@ sheet = "TS-17C"
 profile = "brother-pe800-5x7"
 
 [expect]
-size_mm = [82.0, 153.036506]
+size_mm = [101.077039, 175.0]
 diagnostics = []
 golden = ["golden/testsheets/TS-17C.pes"]

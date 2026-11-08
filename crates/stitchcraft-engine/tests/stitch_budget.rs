@@ -88,9 +88,12 @@ fn ripple(path: &Path, params: &ParamSet, meter: &mut Meter) -> Result<Stitched,
         passes: RepeatParams::from_set(params).unwrap().params,
         satin: SatinParams::from_set_as(params, StitchType::RippleStitch).unwrap().params,
         min_stitch: Mm::new(SHORTEST).unwrap(),
+        jump: Mm::new(3.0).unwrap(),
         target: None,
+        guide: None,
+        anchor: None,
         unapplied: Vec::new(),
-        clipped: false,
+        clips: Vec::new(),
     };
     ripple_stitch(path, &ripple, &SplitMix64::new(1), meter)
 }

@@ -194,7 +194,10 @@ part sews a satin column along each of its centre lines, between its own outline
   more than 60°, so that the column before a corner covers it and the one after ends under it, as an arm
   of a T ends under its bar. A branch of the line is a column of its own however short, as each arm of a
   t's crossbar is. A branch to the second sharp corner of an end is a bump instead, sewn with the column
-  beside it. A column's rails are the part's outline on either side, and its rungs lie square to it.
+  beside it. So is a tooth, a step of a traced outline as narrow as the narrowest satin stroke somewhere
+  and no longer than its junction is wide. A column of its own, it would sew a short line beside the column
+  and cut that column in 2. A column's rails are the part's outline on either side, and its rungs lie
+  square to it.
 - **Their ends.** A column that ends where another runs on ends under it: it sews first, and is 0.4 mm
   longer at that end, by its push compensation, so that no fabric shows where they meet. Otherwise a column
   ends at its farthest point along its line, flat along the end's edge when that lies within 20° of square
@@ -239,7 +242,8 @@ as a digitizer sews a balloon's string over the balloon:
   there in a point at one of its corners. Each narrow part is cut square there instead, at a chord across
   it square to the way its sides run on, from the end of the arc that lies farther along that way. What
   lies past the chord goes to the fill. A column ends flat along the cut, however long it is, so that a
-  star's points end along the star's middle.
+  star's points end along the star's middle. The triangles that touch the cut are the column's end, and
+  its line stops where they start ([centre lines](algorithms/centre-lines.md#columns)).
 - **What sews.** Each narrow part sews as a part of its own. One narrower than
   `min_satin_stroke_width_mm` everywhere runs along its centre line, and one no wider than 7 mm sews as
   satin columns. Any other stays in the fill. The fill is the shape without its narrow parts. It sews
@@ -528,6 +532,33 @@ after another, and the row changes thread twice. Its red discs touch, and the ne
 the next without a jump. The row jumps 7 times instead of 9. `tests/auto_pictures.rs` keeps the numbers
 from falling back.
 
+**What shows** (`REQ-AUTO-025`, `REQ-AUTO-026`). Digitized, a picture's stitches should cover the fabric
+wherever it has a colour, and lay thread only where it has that thread's colour.
+`stitchcraft_testkit::fabric` measures both on any design and its plan, a photo traced into shapes as well
+as a test picture. It paints the picture on a grid of 0.05 mm as a viewer paints it, each place in the
+colour of the last shape drawn over it, the background left out but where it shows inside the picture. Bare fabric is the part of the
+picture's colours that the top stitches leave uncovered, each stitch's thread 0.4 mm wide, opened with a
+disc as wide as the thread: a sliver narrower than a thread beside a running stitch closes as the thread
+spreads. A patch of 1 mm² or more, the smallest area that digitizing sews, fails. A top stitch is astray
+where it shows on another colour or on bare fabric for 1 mm or more, past the 0.4 mm that the overlap and
+pull compensation reach. An underlay or travel stitch is astray wherever it shows, and any stitch astray
+fails. The moves sewn on from one element to the next (`REQ-ASM-002`) and the jump threads that the PE800
+leaves are counted apart.
+
+| Test picture, digitized | Largest bare patch | Longest stretch astray | Moves astray | Jump threads |
+|---|---:|---:|---:|---:|
+| Stripes, 3 abutting | 0 | 0.10 mm | 0 | 0 |
+| Badge, abutting or stacked | 0 | 0.35 mm | 0 | 0 |
+| Badges in a row, abutting or stacked | 0 | 0.40 mm | 0 | 4 |
+| Emblem, abutting or stacked | 0 | 0.35 mm | 0 | 2 |
+| Button, abutting or stacked | 0 | 0.40 mm | 6 | 0 |
+| Traced pear | 0 | 0.70 mm | 0 | 4 |
+
+The button's 7 dots sew on from one to the next, each move 2.7 mm long across its yellow. The pear's olive
+and dark olive bands each sew a column at both ends, and each of their threads sews a side of the stem
+between those ends, so its 4 jump threads all run from the stem. `tests/auto_fabric.rs` keeps the moves and
+the jump threads as measured.
+
 ## Settings
 
 The rules' values are StitchCraft's own parameters, registered as any other
@@ -756,6 +787,10 @@ an IoU of 0.97 or more, with at most 2 % of the subject's area kept wrongly and 
   size. There the white round each star is narrower than a satin column, and sews as a column round the
   star, while the navy is one fill under the disc and the bars. The PE800 cuts no jump, and the sew-out
   reports where a shape sews down the thread of a jump before it.
+- `tests/auto_fabric.rs` measures what each test picture and the traced pear of the user pages leave bare
+  and lay astray, digitized ([Sewing order](#sewing-order)). The pear is read from
+  `docs/fixtures/traced-pear.vectorcraft`, a photo that VectorCraft traced, with the ragged edges a trace
+  has.
 - `tests/auto_sheets.rs` answers the TS-13 checks that the sheets' own stitches can, moved to where each sheet
   draws its shapes (`stitchcraft_testkit::pictures::sheet`). Where the bar runs on beside the square, each
   ends its rows at its own edge. The specks sew as the disc, and no shape sews over one drawn over it. A line

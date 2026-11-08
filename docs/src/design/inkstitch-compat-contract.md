@@ -61,7 +61,7 @@ registry uses these names as its keys so files move between the tools unchanged
 | `stroke_method` | combo | — | 0 | all | P1 (M3) | [registered](../user/reference/params/stroke.md#stroke_method) |
 | `repeats` | int | — | 1 | `running_stitch`, `ripple_stitch`, `zigzag_stitch` | P1 (M3) | [registered](../user/reference/params/repeat.md#repeats) |
 | `bean_stitch_repeats` | str | — | 0 | `running_stitch`, `ripple_stitch`, `manual_stitch`, `zigzag_stitch` | P1 (M3) | [registered](../user/reference/params/repeat.md#bean_stitch_repeats) |
-| `manual_pattern_placement` | boolean | — | false | `ripple_stitch` | P3 (M10) | planned |
+| `manual_pattern_placement` | boolean | — | false | `ripple_stitch` | P3 (M10) | [registered](../user/reference/params/ripple.md#manual_pattern_placement) |
 | `running_stitch_length_mm` | string | mm | 2.5 | `running_stitch`, `ripple_stitch` | P1 (M3) | [registered](../user/reference/params/running.md#running_stitch_length_mm) |
 | `running_stitch_tolerance_mm` | float | mm | 0.2 | `running_stitch`, `ripple_stitch` | P1 (M3) | [deviates](../user/reference/params/running.md#running_stitch_tolerance_mm) |
 | `enable_random_stitch_length` | boolean | — | false | `running_stitch`, `ripple_stitch` | P1 (M3) | [registered](../user/reference/params/running.md#enable_random_stitch_length) |
@@ -72,7 +72,7 @@ registry uses these names as its keys so files move between the tools unchanged
 | `zigzag_angle` | float | ° | 0 | `zigzag_stitch` | P2 (M7) | [registered](../user/reference/params/zigzag-stroke.md#zigzag_angle) |
 | `line_count` | int | — | 10 | `ripple_stitch` | P3 (M10) | [registered](../user/reference/params/ripple.md#line_count) |
 | `min_line_dist_mm` | float | mm | — | `ripple_stitch` | P3 (M10) | [registered](../user/reference/params/ripple.md#min_line_dist_mm) |
-| `satin_guide_pattern_position` | combo | — | default | `ripple_stitch` | P3 (M10) | planned |
+| `satin_guide_pattern_position` | combo | — | default | `ripple_stitch` | P3 (M10) | [registered](../user/reference/params/ripple.md#satin_guide_pattern_position) |
 | `staggers` | int | — | 0 (1 when unset) | `ripple_stitch` | P3 (M10) | [registered](../user/reference/params/ripple.md#staggers) |
 | `skip_start` | int | — | 0 | `ripple_stitch` | P3 (M10) | [registered](../user/reference/params/ripple.md#skip_start) |
 | `skip_end` | int | — | 0 | `ripple_stitch` | P3 (M10) | [registered](../user/reference/params/ripple.md#skip_end) |
@@ -80,14 +80,14 @@ registry uses these names as its keys so files move between the tools unchanged
 | `exponent` | float | — | 1 | `ripple_stitch` | P3 (M10) | [registered](../user/reference/params/ripple.md#exponent) |
 | `flip_exponent` | boolean | — | false | `ripple_stitch` | P3 (M10) | [registered](../user/reference/params/ripple.md#flip_exponent) |
 | `reverse` | boolean | — | false | `ripple_stitch` | P3 (M10) | [registered](../user/reference/params/ripple.md#reverse) |
-| `reverse_rails` | combo | — | automatic | `ripple_stitch` | P3 (M10) | planned |
-| `swap_satin_rails` | boolean | — | false | `ripple_stitch` | P3 (M10) | planned |
-| `grid_size_mm` | float | mm | 0 | `ripple_stitch` | P3 (M10) | planned |
-| `grid_first` | boolean | — | false | `ripple_stitch` | P3 (M10) | planned |
-| `scale_axis` | dropdown | — | 0 | `ripple_stitch` | P3 (M10) | planned |
-| `scale_start` | float | % | 100 | `ripple_stitch` | P3 (M10) | planned |
-| `scale_end` | float | % | 0.0 | `ripple_stitch` | P3 (M10) | planned |
-| `rotate_ripples` | boolean | — | true | `ripple_stitch` | P3 (M10) | planned |
+| `reverse_rails` | combo | — | automatic | `ripple_stitch` | P3 (M10) | [registered](../user/reference/params/ripple.md#reverse_rails) |
+| `swap_satin_rails` | boolean | — | false | `ripple_stitch` | P3 (M10) | [registered](../user/reference/params/ripple.md#swap_satin_rails) |
+| `grid_size_mm` | float | mm | 0 | `ripple_stitch` | P3 (M10) | [registered](../user/reference/params/ripple.md#grid_size_mm) |
+| `grid_first` | boolean | — | false | `ripple_stitch` | P3 (M10) | [registered](../user/reference/params/ripple.md#grid_first) |
+| `scale_axis` | dropdown | — | 0 | `ripple_stitch` | P3 (M10) | [registered](../user/reference/params/ripple.md#scale_axis) |
+| `scale_start` | float | % | 100 | `ripple_stitch` | P3 (M10) | [registered](../user/reference/params/ripple.md#scale_start) |
+| `scale_end` | float | % | 0.0 | `ripple_stitch` | P3 (M10) | [registered](../user/reference/params/ripple.md#scale_end) |
+| `rotate_ripples` | boolean | — | true | `ripple_stitch` | P3 (M10) | [registered](../user/reference/params/ripple.md#rotate_ripples) |
 | `join_style` | dropdown | — | 0 | `ripple_stitch` | P3 (M10) | [registered](../user/reference/params/ripple.md#join_style) |
 | `random_seed` | random_seed | — | — | `running_stitch`, `ripple_stitch` | P1 (M3) | [registered](../user/reference/params/common.md#random_seed) |
 
@@ -343,4 +343,4 @@ change Ink/Stitch's updater makes (`lib/update.py`), in StitchCraft's words.
 | 4 | a fill with `auto_fill` off gets `fill_method` `legacy_fill`, and `auto_fill` is removed | applied to the shapes whose fill is sewn, unless digitized automatically (`DEV-FILL-014` says how a legacy fill sews) |
 | 4 | `fill_method` `auto_fill` becomes `tatami_fill` | applied to the shapes whose fill is sewn, unless digitized automatically |
 
-_145 parameter declarations, 127 registered in StitchCraft._
+_145 parameter declarations, 137 registered in StitchCraft._

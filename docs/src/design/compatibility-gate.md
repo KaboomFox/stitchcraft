@@ -66,7 +66,11 @@ checks:
 Uses VectorCraft's own command line, `vectorcraft-cli run`. For `stable` and `prerelease` it is the
 binary in the release's Linux archive (VectorCraft's `packaging/linux/package.sh` puts it there). The
 archive is checked against the SHA-256 the pins file records for the pinned release, or against the one
-the release's `SHA256SUMS.txt` lists for a newer release. For the branch tracks it is built from the
+the release's `SHA256SUMS.txt` lists for a newer release. curl tries a download again after any error,
+every 10 seconds for a minute, so a short outage of GitHub's downloads passes. For a longer one, as on
+8 November 2026, the jobs that run the pinned release keep its archive in the Actions cache under its
+version and SHA-256 (`.github/actions/vectorcraft-archive`), and a pull request uses the copy a run on
+`main` kept, checked like a download. For the branch tracks it is built from the
 branch, with a cached target directory. `cargo xtask compat track <track> --ref <tag|sha>` runs both
 levels and writes the track's result for the report, and `cargo xtask compat e2e` runs Level B alone.
 
