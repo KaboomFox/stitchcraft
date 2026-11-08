@@ -430,7 +430,7 @@ rule, since the run is partial). `cargo xtask ci` runs the whole suite; the docs
 ### Cases in the release build
 
 A case may be too slow for the tests' debug build. The owner's dog photos are: traced into about a hundred
-shapes, each dog takes some 45 s there to digitize and measure, and 2 to 4 s in the release build. Such a
+shapes, each dog takes some 45 to 70 s there to digitize and measure, and some 6 s in the release build. Such a
 case is ignored in the debug build alone, with a reason of a fixed form that says where it runs, and a step
 of CI runs its test file in the release build:
 

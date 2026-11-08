@@ -208,15 +208,20 @@ part sews a satin column along each of its centre lines, between its own outline
   first in that order sews first, and the last ends on top of it.
 - **Their width.** A column is as wide as the circles that fit inside the part along its line, as a narrow
   part is, without the piece of its line into a tip's corner. One no wider than the design's narrowest
-  satin stroke runs along its line as a triple run, unless the part is wider than that stroke somewhere
-  along the line but at its ends: the largest circle centred on a point of the line, its 2 ends left out,
-  that fits inside the part. A running stitch covers a thread's width along its line, so where the part is
-  wider, the fabric beside the line shows unless an area sewn before it reaches under it. Measured on
-  average alone, the strands of fur in the owner's traced dog that widened at an end ran, and so did its
-  small blobs, each beside other lines, and they left fabric bare. A line's end lies where it meets another
-  line, whose circle the junction's corners bound, or where it runs into a corner, so it measures that and
-  not the column. Where the strokes of the M of TS-13B's word 4 mm tall meet, they are 1.05 to 1.12 mm wide
-  for about 0.6 mm, and those strokes, 0.72 mm wide, sew as satin columns.
+  satin stroke runs along its line as a triple run, unless the column is wider than that stroke somewhere
+  along its line, but at its 2 ends, or reaches farther than that from its line beside it. Both are
+  measured inside the column's own outline, the triangles round its line. A running stitch covers a
+  thread's width along its line, so where the column is wider, the fabric beside the line shows unless an
+  area sewn before it reaches under it. Measured on average alone, the strands of fur in the owner's traced
+  dog that widened at an end ran, and so did its small blobs, each beside other lines, and they left fabric
+  bare. So did a column whose line ran along one side of a bump 1.4 mm across: the bump's triangles were the
+  column's, and its line never reached them. Where 2 strokes meet, the part is wider than either, by where
+  the junction's triangle has its corners. Measured inside the part, the circle at the junction of a T in
+  strokes 0.9 mm wide was up to 1.13 mm, and the T's bar sewed as a satin column one way round and as a
+  triple run mirrored. A column's own outline crosses to the other column there. A line's end lies where it
+  meets another line or runs into a corner, and measures that. On TS-13B, the outer legs of the M 4 mm
+  tall, 0.81 mm wide on average, are 1.05 mm wide where the M's middle strokes meet them, inside their own
+  outlines, and sew as satin columns.
 - **A dot.** A part whose every line is shorter than half its width along it is a dot, and stays in the
   fill, as a part whose line has no length does. A disc or a square has no way to run, and its lines are
   only what its triangles leave of its middle. Its corners lie on one circle, where the triangulation
@@ -560,12 +565,30 @@ leaves are counted apart.
 | Badges in a row, abutting or stacked | 0 | 0.40 mm | 0 | 4 |
 | Emblem, abutting or stacked | 0 | 0.35 mm | 0 | 2 |
 | Button, abutting or stacked | 0 | 0.40 mm | 6 | 0 |
-| Traced pear | 0 | 0.70 mm | 0 | 4 |
+| Traced pear | 0 | 0.95 mm | 0 | 4 |
+| Traced dog on turf, 6 threads | 0.81 mm² | 1.55 mm | 6 | 115 |
+| Traced dog on turf, 9 threads | 0.92 mm² | 1.95 mm | 4 | 131 |
+| Traced running dog, 6 threads | 0.63 mm² | 0.78 mm | 3 | 102 |
+| Traced running dog, 9 threads | 0.61 mm² | 1.39 mm | 10 | 117 |
 
 The button's 7 dots sew on from one to the next, each move 2.7 mm long across its yellow. The pear's olive
 and dark olive bands each sew a column at both ends, and each of their threads sews a side of the stem
 between those ends, so its 4 jump threads all run from the stem. `tests/auto_fabric.rs` keeps the moves and
 the jump threads as measured.
+
+The owner's dog, traced from her 2 photos in 6 and in 9 threads (M13.15, `docs/fixtures/README.md` › The
+traced dogs), still lays 3 stitches astray, one in each of 3 of the traced dogs. 2 are satin stitches that fan round a shape biting into their column's side and cross it. The
+third is the straight move, 2.25 mm long, between 2 lines of one narrow part, which is a stitch because it
+is shorter than the collapse length. `tests/auto_photos.rs` lists each, with where it lies and why, and its
+case fails on any other stitch astray and on any listed one that no longer is. M13.16 of the
+[roadmap](../plan/roadmap.md) removes them. The dogs' moves astray are moves from one element to the next,
+as the button's are. Their jump threads, 102 to 131, are the design's limit as it stands: each thread sews
+its shapes one after another and jumps between those that don't touch, and the PE800 cuts no jump. A step
+of its own, which waits on the owner, would run the thread under shapes sewn later instead. Each dog takes
+too long to digitize and measure in the tests' debug build, so CI's `perf` job runs these cases in the
+release build ([conformance](conformance.md#cases-in-the-release-build)). The pieces of the dogs that
+showed fabric before the rules above, the paw of the dog on turf and the running dog's ear, are cases of
+`tests/auto_fabric.rs` too.
 
 ## Settings
 
@@ -738,7 +761,7 @@ sew it unlike the tutorial's flow.
   | Sheet | As drawn: jump threads | sewn down | Digitized: jump threads | sewn down |
   |---|---:|---:|---:|---:|
   | TS-13A | 8 | 0 | 12 | 4 |
-  | TS-13B | 6 | 0 | 35 | 15 |
+  | TS-13B | 6 | 0 | 37 | 16 |
   | TS-13C | 9 | 4 | 6 | 1 |
   | TS-13D | 1 | 0 | 10 | 3 |
 

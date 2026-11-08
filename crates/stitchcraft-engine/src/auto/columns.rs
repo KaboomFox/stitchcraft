@@ -10,12 +10,16 @@
 //! - **Width.** Each column is as wide as the circles that fit inside the part centred on its line, on
 //!   average, as a narrow part is, which gives its underlay and its triple run. One no wider than the
 //!   design's narrowest satin stroke on average is too narrow to stitch across, and runs along its line as a
-//!   running stitch instead, tripled from the narrowest triple run, unless the part is wider than that stroke
-//!   somewhere along its line, but at its ends ([`runs`]). A running stitch covers a thread's width along its
-//!   line, and where the part is wider, the fabric beside the line shows unless an area beside it reaches
-//!   under it. Measured on average alone, a traced photo's strands of fur that widened at an end ran, and
-//!   so did blobs, with only other lines beside them. A line's end lies where it meets another line, whose
-//!   circle the junction's corners bound, or runs into a corner, and measures that, not the column.
+//!   running stitch instead, tripled from the narrowest triple run, unless the column is wider than that
+//!   stroke somewhere along its line but at its ends, or reaches farther than that from its line beside it,
+//!   each measured inside its own outline ([`runs`]). A running stitch covers a thread's width along its
+//!   line, and where the column is wider, the fabric beside the line shows unless an area beside it reaches
+//!   under it. Measured on average alone, a traced photo's strands of fur that widened at an end ran, and so
+//!   did blobs, with only other lines beside them, and so did a column that took in a bump 1.4 mm across that
+//!   its line never reaches. Where 2 strokes meet, the part is wider than either, by where the junction's
+//!   triangle has its corners, and a circle inside the part measures the meeting, so that a letter and its
+//!   mirror image sewed otherwise. The column's own outline crosses to the other column there. A line's end
+//!   lies where it meets another line or runs into a corner, and measures that.
 //! - **Order.** A column that ends under another sews first, then the longest, and each next the one with
 //!   an end nearest where the last one ended, sewn from that end; a ring from its rung nearest.
 //! - **Settings.** Each column's underlay is its width's ([`super::underlay`]). One that ends under another
@@ -37,7 +41,7 @@
 
 use stitchcraft_core::{Code, Diagnostic, ElementId, Exhausted, Fix, Meter, Mm, Point};
 
-use super::narrow::{Edges, Width, piece, width};
+use super::narrow::{Edges, farthest, piece, widest, width};
 use super::{AutoParams, at_most};
 use crate::design::Path;
 use crate::generators::mm;
@@ -93,8 +97,11 @@ pub(super) fn columns(part: &Polygon, narrowest: Mm, rules: &AutoParams, cuts: &
     let edges = Edges::of(part, piece(part), meter)?;
     let mut widths = Vec::with_capacity(found.len());
     for column in &found {
-        let Some(width) = width(&edges, std::slice::from_ref(&column.line), meter)? else { return Ok(Made::Unmade) };
-        widths.push(width);
+        let Some(average) = width(&edges, std::slice::from_ref(&column.line), meter)? else { return Ok(Made::Unmade) };
+        // Where it meets another column the part is wider than either, and its own outline isn't.
+        let outline = column.outline();
+        let own = Edges::of(&outline, piece(part), meter)?;
+        widths.push(Width { average, widest: widest(&own, &column.line, meter)?, farthest: farthest(&column.line, &outline, meter)? });
     }
     if found.iter().zip(&widths).all(|(column, width)| column.walked.length() < DOT * width.average.get()) {
         return Ok(Made::Dot);
@@ -114,11 +121,26 @@ pub(super) fn columns(part: &Polygon, narrowest: Mm, rules: &AutoParams, cuts: &
     Ok(Made::Columns(sewn))
 }
 
+/// A column's width along its line.
+#[derive(Clone, Copy, Debug, PartialEq)]
+struct Width {
+    /// The diameter of the largest circle that fits inside its part centred on each point of its line,
+    /// averaged along it: its width ([`width`]).
+    average: Mm,
+    /// The diameter of the largest circle that fits inside its own outline centred on a point of its line but
+    /// an open line's 2 ends, in millimetres ([`widest`]).
+    widest: f64,
+    /// How far its own outline reaches from its line beside it, in millimetres ([`farthest`]).
+    farthest: f64,
+}
+
 /// Whether a column of `width` along its line is too narrow to stitch across and runs along its line instead,
 /// for an area whose narrowest satin stroke is `narrowest`: no wider than that stroke on average, nor anywhere
-/// along its line but at its ends.
+/// along its line inside its own outline but at its ends, and its outline reaching no farther than that from
+/// the line beside it, each to the micrometre.
 fn runs(width: Width, narrowest: Mm) -> bool {
-    at_most(width.average, narrowest) && at_most(width.widest, narrowest)
+    let within = |length: f64| super::micrometres(length) <= super::micrometres(narrowest.get());
+    at_most(width.average, narrowest) && within(width.widest) && within(width.farthest)
 }
 
 /// `columns` in the order they are sewn, each with its place among them, turned to start where it is sewn
@@ -275,14 +297,32 @@ mod tests {
     }
 
     #[test]
-    fn req_auto_016_a_column_runs_no_wider_than_the_narrowest_stroke_on_average_nor_anywhere_but_its_ends() {
-        let (mm, measured) = (
-            |length: f64| Mm::new(length).unwrap(),
-            |average: f64, widest: f64| Width { average: Mm::new(average).unwrap(), widest: Mm::new(widest).unwrap() },
-        );
-        assert!(runs(measured(0.8, 1.0), mm(1.0)));
-        assert!(!runs(measured(0.8, 1.001), mm(1.0)));
-        assert!(!runs(measured(1.001, 0.9), mm(1.0)));
+    fn req_auto_016_a_column_runs_no_wider_than_the_narrowest_stroke_on_average_at_its_widest_or_reach() {
+        let mm = |length: f64| Mm::new(length).unwrap();
+        let measured = |average: f64, widest: f64, farthest: f64| Width { average: mm(average), widest, farthest };
+        assert!(runs(measured(0.8, 1.0, 1.0), mm(1.0)));
+        assert!(!runs(measured(0.8, 1.001, 0.5), mm(1.0)));
+        assert!(!runs(measured(0.8, 0.9, 1.001), mm(1.0)));
+        assert!(!runs(measured(1.001, 0.9, 0.5), mm(1.0)));
+    }
+
+    #[test]
+    fn req_auto_016_a_narrow_letters_junctions_leave_it_running() {
+        // A T 14.5 mm tall in strokes 0.9 mm wide, upright and mirrored. Where its stem meets its bar, the
+        // circle at the junction's middle, on the bar's line, is up to 1.13 mm wide, by where the junction's
+        // triangle has its corners, which mirroring changes. Measured there, the bar sewed a satin column one
+        // way round and a triple run the other (`tests/transformed.rs`). The junction measures where the
+        // strokes meet, not the bar, and both run, either way round.
+        for flip in [1.0, -1.0] {
+            let t = part(
+                &[(0.0, 0.0), (8.0, 0.0), (8.0, 0.9), (4.45, 0.9), (4.45, 14.5), (3.55, 14.5), (3.55, 0.9), (0.0, 0.9)].map(|(x, y)| (flip * x, y)),
+                &[],
+            );
+            let Made::Columns(sewn) = columns(&t, Mm::new(1.0).unwrap(), &AutoParams::defaults(), &[], &mut Budget::DEFAULT.meter()).unwrap() else {
+                panic!("no columns")
+            };
+            assert!(sewn.len() == 2 && sewn.iter().all(|s| matches!(s, Sewn::Running { .. })), "{flip}: {sewn:?}");
+        }
     }
 
     #[test]

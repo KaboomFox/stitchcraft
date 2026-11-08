@@ -5,6 +5,21 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.15: the owner's dog photos as test pictures (`REQ-AUTO-025`, `REQ-AUTO-026`). Louise Fox's 2 photos of
+  her dog, each cut out by a mask checked by hand, are docs fixtures, with the 4 documents VectorCraft 0.22.0
+  traced from them 100 mm tall in 6 and in 9 threads (`docs/fixtures/README.md` › The traced dogs). A test
+  keeps each cut-out's hash.
+  - The engine's cases digitize each dog and measure what shows (`tests/auto_photos.rs`). They take too long
+    in the tests' debug build, so CI's `perf` job runs them in the release build. The conformance runner
+    reports such a case as run there, and `conformance --check` checks that a step of `ci.yml` runs its file
+    in the release build (`docs/src/design/conformance.md` › Cases in the release build).
+  - No dog leaves a patch of fabric bare: the largest is 0.92 mm². 3 stitches still show where they should
+    not, each listed with its cause in the case, which fails on any other and on any that no longer does.
+    M13.16 removes them. The dogs' 102 to 131 jump threads are recorded as the design's limit.
+  - What the dogs found is fixed: a column's width is measured inside its own outline, and a rail cuts across
+    a sliver (Fixed, below). Pieces of the dogs are cases of the debug suite.
+  - The automatic digitizing page shows the running dog: the cut-out, its trace and its stitches. A picture
+    shot draws a PNG fixture on white.
 - M10.12: linear gradient fill (`REQ-FILL-GRD-001` to `REQ-FILL-GRD-009`, `REQ-SVG-014`, `REQ-VC-022`).
   `fill_method` `linear_gradient_fill` sews Ink/Stitch's linear gradient fill, which was skipped with
   `SC-W0011`.
@@ -1847,14 +1862,20 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
-- Automatic digitizing: a column of a part that is narrow on average, but wider than the narrowest satin
-  stroke somewhere along its line, is stitched across instead of run along its middle (`REQ-AUTO-016`). The
-  owner's traced dog left 38 to 81 patches of fabric bare, 2 to 3.6 % of the dog, the largest 2.4 to
-  7.4 mm²: strands of fur that widened at an end, and small blobs, ran as lines beside other lines, which
-  reach under nothing. The circle at a line's end measures the junction or the corner it meets and is left
-  out. On TS-13B, 4 strokes of the word 4 mm tall, 0.72 mm wide and wider where the M's strokes meet, sew
-  as satin columns: the sheet sews 14,480 stitches, 59 more, with 2 jumps fewer, and one more stitch leans
-  49.5° where the strokes meet (`SC-W0208`).
+- Automatic digitizing: a column of a part that is narrow on average is stitched across instead of run along
+  its middle when it is wider than the narrowest satin stroke somewhere along its line, or reaches farther
+  than that from its line, each measured inside its own outline (`REQ-AUTO-016`). The owner's traced dog left
+  38 to 81 patches of fabric bare, 2 to 3.6 % of the dog, the largest 2.4 to 7.4 mm²: strands of fur that
+  widened at an end, small blobs, and a bump 1.4 mm across that a column's line never reached ran as lines
+  beside other lines. Measured inside the part, the circle where 2 strokes meet depends on where the
+  junction's triangle has its corners, and a T in strokes 0.9 mm wide sewed its bar as a satin column one
+  way round and as a triple run mirrored. On TS-13B, the outer legs of the M 4 mm tall sew as satin columns,
+  and the traced pear's stem sews its olive side as one too.
+- Automatic digitizing: an open column's rail cuts across a sliver of the outline narrower than a thread at
+  its base, instead of running out along it and back (`REQ-AUTO-016`). The satin's pairs followed the rail
+  up the sliver, the next step grew past it, and one stitch spanned 2.3 mm of rail, so the traced dog's paw
+  left a wedge of 1.8 mm² bare. The traced pear sews 4,810 stitches, 9 more with its stem's satin column,
+  and its longest stretch astray is 0.95 mm, from 0.70 mm.
 - Automatic digitizing: a narrow part cut from a broad one ends along its cut, its column no longer fanning
   into a corner of the cut (`REQ-AUTO-016`, `REQ-AUTO-019`). The traced pear in the docs left a wedge of
   fabric 4.6 mm² bare at its left edge, where its olive band's narrow end met the pale green. The column's
@@ -2709,11 +2730,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
-- Changed `conformance/golden/testsheets/TS-13B.pes` (automatic digitizing, a column wider than the
-  narrowest satin stroke along its line). The digitized word 4 mm tall sews 4 strokes of its M and A as
-  satin columns instead of triple runs: 0.72 mm wide, they widen to 1.03 to 1.12 mm where they meet. The
-  plan sews 14,480 stitches, 59 more, with 55 jumps and 54 trims, 2 fewer of each, and its digitized half
-  leaves 35 jump threads on the PE800 instead of 37, 15 of them sewn down as before.
+- Changed `conformance/golden/testsheets/TS-13B.pes` (M13.15, a column's width measured inside its own
+  outline). The digitized word 4 mm tall sews the 2 outer legs of its M as satin columns instead of triple
+  runs: 0.81 mm wide on average, they are 1.05 mm wide inside their own outlines where the M's middle
+  strokes meet them. The plan sews 14,460 stitches, 39 more, with 57 jumps and 56 trims as before, and its
+  digitized half leaves 37 jump threads on the PE800, 16 of them sewn down, one more.
 - Changed `conformance/golden/testsheets/TS-17B.pes` (M10.12). The sheet gains a third row of 3 linear
   gradients 40 mm square below its tartans. They sew in 7 colour blocks, a trim after each. The plan
   spans 130 × 130 mm and sews 45,390 stitches with 35 jumps, 7,395 and 7 more. The 5 tartans and the

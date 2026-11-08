@@ -106,10 +106,15 @@ then sews as it did: write the sheet again before sewing it, and check that its 
 stopped running along its cut into one of the cut's corners, where it sewed a fan of stitches and left
 fabric bare beside it. The column now ends along the whole cut. TS-13C's digitized star then sews its
 right-hand point from its tip to its cut. At MC-8, look at each point's end along its cut for fabric
-showing at the cut's corners. Later that day a column narrow on average but wider than the narrowest satin
-stroke somewhere along its line became a satin column instead of a triple run. TS-13B's word 4 mm tall
-then sews 4 strokes of its M and A, 0.72 mm wide, as satin columns. Do they sew as cleanly as the triple
-runs beside them, and does the M keep its shape where its strokes meet?
+showing at the cut's corners. Later that day M13.15 measured the column's width inside its own outline,
+and made an open column's rail cut across a sliver of the outline narrower than a thread. TS-13B's word
+4 mm tall then sews the outer legs of its M as satin columns, 1.05 mm wide where the M's middle strokes meet
+them. Do they sew as cleanly as the triple runs beside them, and does the M keep its shape?
+
+MC-8 also sews one of the owner's traced dogs, `docs/fixtures/traced-dog-running-9.vectorcraft`, 100 mm
+tall: `stitch plan docs/fixtures/traced-dog-running-9.vectorcraft --auto -o dog.pes`. Does the fur read as
+fur, the face and the eyes as hers, and do its 117 jump threads, which the PE800 doesn't cut, take long to
+snip? One satin stitch of its dark grey fur crosses a lighter grey patch beside it (M13.16): does it show?
 
 ## Report template
 

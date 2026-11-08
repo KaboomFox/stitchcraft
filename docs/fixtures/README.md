@@ -15,9 +15,9 @@ traced: `traced-pear.vectorcraft` ([below](#the-traced-pear)) and the owner's do
 | `traced-pear.vectorcraft` | The photo of a pear that the `auto-pear-photo` shot draws, traced 90 mm across in 4 of those threads: a light grey backdrop, and the pear in 3 bands of green | automatic digitizing's photo: the `auto-pear-traced` and `auto-pear` shots, and the engine's cases of what a digitized picture leaves bare and lays astray (`stitchcraft_testkit::pictures::pear`) |
 | `dog-on-turf-cutout.png` | The owner's photo of her dog on artificial turf, looking up at the camera, cut out of the turf: the dog on a transparent background, 191 × 410 pixels | traced into the 2 documents below |
 | `dog-running-cutout.png` | Her photo of the dog running towards the camera, cut out the same way, 183 × 372 pixels | automatic digitizing's dog: the `auto-dog-photo` shot, and traced into the 2 documents below |
-| `traced-dog-on-turf-6.vectorcraft` | The dog on turf, traced 100 mm tall in 6 of the machine's threads: black, greys and white | the engine's cases of what a digitized picture leaves bare and lays astray (`stitchcraft_testkit::pictures::dogs`) |
+| `traced-dog-on-turf-6.vectorcraft` | The dog on turf, traced 100 mm tall in 6 of the machine's threads: black, greys and white | the engine's cases of what a digitized picture leaves bare and lays astray (`stitchcraft_testkit::pictures::dogs`), and its paw alone (`dog_shapes`) |
 | `traced-dog-on-turf-9.vectorcraft` | The dog on turf, traced 100 mm tall in 9 threads, a front leg tan | the same cases |
-| `traced-dog-running-6.vectorcraft` | The running dog, traced 100 mm tall in 6 threads, its legs tan | the same cases |
+| `traced-dog-running-6.vectorcraft` | The running dog, traced 100 mm tall in 6 threads, its legs tan | the same cases, and 4 shapes of its ear alone (`dog_shapes`) |
 | `traced-dog-running-9.vectorcraft` | The running dog, traced 100 mm tall in 9 threads, its mouth dark brown | the `auto-dog-traced` and `auto-dog` shots, and the same cases |
 | `wave.svg` | A smooth wave | running stitch length |
 | `zigzag.svg` | The same wave, drawn 3 mm wide | the zigzag stroke's spacing and angle, and a satin column drawn as one path |
