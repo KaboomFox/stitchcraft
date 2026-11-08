@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-540bc9d0.js";
+            window.path_to_searchindex_js = "../../searchindex-76997358.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-01637e9f.js"></script>
+        <script src="../../toc-bd1465a9.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -241,6 +241,9 @@
 <tr><td><a href="#sc-w0403"><code>SC-W0403</code></a></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td></tr>
 <tr><td><a href="#sc-w0404"><code>SC-W0404</code></a></td><td>Warning</td><td>Hand-placed stitch longer than max_stitch_length_mm; kept for the shortest stitch</td></tr>
 <tr><td><a href="#sc-w0405"><code>SC-W0405</code></a></td><td>Warning</td><td>Zigzag stitch shorter than the shortest stitch; the zigzag sews narrower</td></tr>
+<tr><td><a href="#sc-w0406"><code>SC-W0406</code></a></td><td>Warning</td><td>Ripple stitch setting not sewn yet; sewn without it</td></tr>
+<tr><td><a href="#sc-w0407"><code>SC-W0407</code></a></td><td>Warning</td><td>Ripple stitch of more than 1,000 lines; cut to 1,000</td></tr>
+<tr><td><a href="#sc-w0408"><code>SC-W0408</code></a></td><td>Warning</td><td>Ripple stitch’s skips would leave out every line; every line sewn</td></tr>
 <tr><td><a href="#sc-w0502"><code>SC-W0502</code></a></td><td>Warning</td><td>Lock stitch shorter than 0.2 mm; lengthened</td></tr>
 <tr><td><a href="#sc-w0503"><code>SC-W0503</code></a></td><td>Warning</td><td>Custom lock cannot be sewn as written</td></tr>
 <tr><td><a href="#sc-i0504"><code>SC-I0504</code></a></td><td>Info</td><td>Stitches shorter than the shortest stitch merged</td></tr>
@@ -365,7 +368,9 @@ warning.</p>
 <p><strong>Warning</strong> — Unknown parameter preserved but ignored</p>
 <p>The design carries a parameter StitchCraft does not know: one from a newer version of StitchCraft
 or Ink/Stitch, or one for a stitch type StitchCraft does not support yet. It was kept, so saving
-the design does not lose it, but it does not change the stitches.</p>
+the design does not lose it, but it does not change the stitches. A fill set to Ink/Stitch’s legacy
+fill, which StitchCraft sews as a tatami fill (<code>SC-W0314</code>), names its <code>flip</code> and <code>reverse</code> so, though
+a ripple stitch reads a <code>reverse</code> of its own.</p>
 <p>The Ink/Stitch compatibility page says when each Ink/Stitch parameter is supported.</p>
 <h2 id="sc-i0106"><a class="header" href="#sc-i0106">SC-I0106</a></h2>
 <p><strong>Info</strong> — Value only the node’s other stitch type reads; default used here</p>
@@ -684,6 +689,30 @@ Ink/Stitch’s shortest stitch is 0.1 mm by default, and it sews such a zigzag a
 <p>The message gives how many stitches are that short and the shortest. On a straight path, a stitch
 across a zigzag <code>w</code> wide at a spacing <code>s</code> is √(w² + (s/2)²) long. Make the zigzag wider, the stroke
 or its pull compensation, or space it out, until that is at least the shortest stitch.</p>
+<h2 id="sc-w0406"><a class="header" href="#sc-w0406">SC-W0406</a></h2>
+<p><strong>Warning</strong> — Ripple stitch setting not sewn yet; sewn without it</p>
+<p>A ripple stitch asks for something StitchCraft doesn’t sew yet, so it sews without it. Clips cut
+Ink/Stitch’s ripples, and StitchCraft sews a ripple whole. A ripple along a column, a stroke of 2
+lines or more drawn as a satin column’s rails and rungs, reads its rails with the satin column’s
+defaults: <code>reverse_rails</code> automatic, <code>swap_satin_rails</code> off and no <code>push_compensation_mm</code>, which
+Ink/Stitch applies to it. Guided ripples, and the ripple settings they use, arrive with M10.11, and
+<code>SC-W0105</code> names each of those settings until then.</p>
+<p>The message says what is not applied. Draw the ripple’s lines where it should sew, and its rails
+running the same way, the first where the ripple starts.</p>
+<h2 id="sc-w0407"><a class="header" href="#sc-w0407">SC-W0407</a></h2>
+<p><strong>Warning</strong> — Ripple stitch of more than 1,000 lines; cut to 1,000</p>
+<p><code>min_line_dist_mm</code> gives a ripple stitch more than 1,000 lines, so it sews 1,000, or 999 to keep the
+count’s parity, odd or even, as <code>line_count</code> has it. The count is the shortest distance from the
+stroke’s line to its target point, or across its column, divided by <code>min_line_dist_mm</code>, and a very
+short distance between the lines on a large shape gives thousands of lines that sew into a solid
+patch.</p>
+<p>The message gives the count asked for and the count sewn. Set a larger <code>min_line_dist_mm</code>.</p>
+<h2 id="sc-w0408"><a class="header" href="#sc-w0408">SC-W0408</a></h2>
+<p><strong>Warning</strong> — Ripple stitch’s skips would leave out every line; every line sewn</p>
+<p>A ripple stitch’s <code>skip_start</code> and <code>skip_end</code> together leave out as many lines as it has, or more, so
+they would leave none to sew. No line is left out, as Ink/Stitch does.</p>
+<p>The message gives both settings and the number of lines. Lower <code>skip_start</code> or <code>skip_end</code>, or give
+the ripple more lines.</p>
 <h2 id="sc-w0502"><a class="header" href="#sc-w0502">SC-W0502</a></h2>
 <p><strong>Warning</strong> — Lock stitch shorter than 0.2 mm; lengthened</p>
 <p>A lock stitch would have been shorter than 0.2 mm, the shortest stitch a lock may have. The needle

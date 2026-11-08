@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-540bc9d0.js";
+            window.path_to_searchindex_js = "../searchindex-76997358.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-01637e9f.js"></script>
+        <script src="../toc-bd1465a9.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -284,7 +284,7 @@ release takes:</p>
 <tr><th>Plug-in id</th><th>Kind</th><th>Stitch types</th><th>Notes</th></tr>
 </thead>
 <tbody>
-<tr><td><code>&lt;ns&gt;.stroke</code></td><td>live effect</td><td>running, bean, manual (P1), zigzag (M7.2), ripple (later)</td><td><code>stroke_method</code> choice selects the variant</td></tr>
+<tr><td><code>&lt;ns&gt;.stroke</code></td><td>live effect</td><td>running, bean, manual (P1), zigzag (M7.2), ripple (M10.8)</td><td><code>stroke_method</code> choice selects the variant</td></tr>
 <tr><td><code>&lt;ns&gt;.satin</code></td><td>live effect</td><td>satin (P1), E (M7.3), S (M7.4), zigzag (M7.5)</td><td>rails and rungs from the object’s compound path</td></tr>
 <tr><td><code>&lt;ns&gt;.fill</code></td><td>live effect</td><td>tatami (P1); contour, meander, circular (P2)</td><td><code>fill_method</code> choice</td></tr>
 <tr><td><code>&lt;ns&gt;.auto</code></td><td>live effect</td><td>the stitches automatic digitizing chooses by width (M13.7)</td><td>on a group, previews each path inside (<a href="image-to-embroidery.html">image to embroidery</a>)</td></tr>
@@ -779,6 +779,7 @@ note can follow it:</p>
 <tbody>
 <tr><td><code>stitch:ignore</code></td><td><code>ignore_object</code>, <code>ignore_layer</code></td><td>Leaves the object or the layer out with everything in it, and lists it with <code>SC-I0811</code></td></tr>
 <tr><td><code>stitch:start</code>, <code>stitch:end</code></td><td><code>starting_point</code>, <code>ending_point</code></td><td>Gives the shapes of the group or layer it is in, and of the groups inside it, their start or end position: the centre of the box round its anchors. Their fills and satin columns start or end there (<code>REQ-GEN-001</code>). The marker is left out of the stitches. The first marker of each kind that shows counts, a group’s own before those of the groups round it. <code>SC-W0807</code> names another, one with no anchor that reads, and the markers of a shape digitized automatically, which places its own. A group or a layer is never a marker: <code>SC-W0807</code> names it, and what it holds is read as under any other name</td></tr>
+<tr><td><code>stitch:target</code></td><td><code>target_point</code></td><td>From M10.8, gives the shapes of the group or layer it is in, and of the groups inside it, the point they aim at: the centre of the box round its anchors. Their ripple stitches shrink or spiral to it (<code>REQ-RIP-002</code>), and their circular fills turn round it (<code>REQ-FILL-CIR-008</code>). It is read as the start and end markers are, and <code>SC-W0807</code> names the same ones</td></tr>
 <tr><td><code>stitch:origin</code>, <code>stitch:stop-position</code></td><td><code>origin</code>, <code>stop_position</code></td><td>Gives the design its origin, which goes to the hoop’s centre, or the stop position the frame moves to before each stop (<code>REQ-ASM-005</code>): the centre of the box round its anchors, wherever the marker is (M8.8). The marker is left out of the stitches. 2 origins, or 2 stop positions in a design with a stop, are an error (<code>SC-E0819</code>), as Ink/Stitch doesn’t write a file with 2 such commands. <code>SC-W0807</code> names a marker with no anchor that reads, which places nothing, and a group or a layer of either name, which is never a marker</td></tr>
 <tr><td><code>stitch:route-start</code>, <code>stitch:route-end</code></td><td><code>autoroute_start</code>, <code>autoroute_end</code></td><td>From M10.4, marks where the routing filters start and end a route, at the centre of the box round its anchors, when it is selected with the paths they route. The filters delete it with the paths (<a href="#tools-the-routing-filters">routing filters</a>). <code>stitch export</code> leaves it out of the stitches. Before M10.4 the reader reads the name as the row below says</td></tr>
 <tr><td>Any other word after <code>stitch:</code></td><td></td><td>Ignores the name, and <code>SC-W0807</code> names the object, in case the word is a misspelt marker</td></tr>

@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-540bc9d0.js";
+            window.path_to_searchindex_js = "searchindex-76997358.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-01637e9f.js"></script>
+        <script src="toc-bd1465a9.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -823,7 +823,7 @@ holds Ink/Stitch’s settings for that kind of stitch, and the object shows its 
 art. The thread is the colour of the object’s fill for a fill, and of its stroke for a stroke or a satin
 column.</p>
 <p>From VectorCraft 0.14 each setting has a label and its unit, in the sections of the
-<a href="#parameters-12">parameter reference</a>. Rest the pointer on a label for its help, or press the
+<a href="#parameters-13">parameter reference</a>. Rest the pointer on a label for its help, or press the
 button after the field for its page in the reference. A setting shows only when it applies: a satin’s
 staggers show for staggered splits. VectorCraft before 0.14 lists every setting, each under its Ink/Stitch
 name.</p>
@@ -1289,6 +1289,7 @@ stroke or the fill of a shape, and each sews in its own thread colour.</p>
 <tr><td><a href="#bean-stitch-and-repeats">Bean stitch</a></td><td>strokes, each stitch sewn 3 times or more</td><td>now</td></tr>
 <tr><td><a href="#manual-stitch">Manual stitch</a></td><td>strokes whose nodes are the needle points</td><td>now</td></tr>
 <tr><td><a href="#zigzag-stroke">Zigzag stroke</a></td><td>strokes as wide as their line: light borders, couched looks</td><td>now</td></tr>
+<tr><td><a href="#ripple-stitch">Ripple stitch</a></td><td>strokes, in lines that shrink to a point or run along a column from edge to edge</td><td>now</td></tr>
 <tr><td><a href="#satin-column">Satin column</a></td><td>wide strokes and borders</td><td>now</td></tr>
 <tr><td><a href="#e-stitch">E-stitch</a></td><td>satin columns as appliqué edges: a spine along one rail, with spikes to the other</td><td>now</td></tr>
 <tr><td><a href="#s-stitch">S-stitch</a></td><td>satin columns sewn one way at a time: a stitch across at each step, joined along the edges</td><td>now</td></tr>
@@ -1476,6 +1477,100 @@ that is one point is left out, and <code>SC-W0401</code> names it.</p>
 <li><a href="#stroke-parameters">the stroke method</a></li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="ripple-stitch"><a class="header" href="#ripple-stitch">Ripple stitch</a></h1>
+<!-- stitch-types: ripple_stitch -->
+<p>A ripple stitch sews lines that spread out from a stroke. Copies of its line shrink towards a point, or
+lines run along a satin column from one of its edges to the other. Every line is a running stitch, and the
+whole ripple sews as one run. Use it for light textures that fade to a point, such as a shell or the rings
+round a flower’s heart. Set an element’s <code>stroke_method</code> to <code>ripple_stitch</code> for it.</p>
+<p>In VectorCraft, set the StitchCraft Stroke effect’s <code>stroke_method</code> to <code>ripple_stitch</code>. In an SVG file, the
+line’s settings are Ink/Stitch’s attributes (<a href="user/stitches#setting-parameters">setting parameters</a>).</p>
+<p>TS-17C sews one ripple of each kind:</p>
+<!-- shot: ripple-kinds -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/ripple-kinds.png" alt="TS-17C’s 3 ripple stitches in green. On the left, a rainbow: 7 arches sewn back and forth from the outer edge of a column drawn as 2 arches and a rung to its inner edge. In the middle, a wave and its copies, which shrink to a point 20 mm above its middle, each copy meeting the next at a point. On the right, a circle 22 mm across that spirals in to its middle."><span class="img-wrapper"><img src="images/generated/ripple-kinds.png" alt="TS-17C’s 3 ripple stitches in green. On the left, a rainbow: 7 arches sewn back and forth from the outer edge of a column drawn as 2 arches and a rung to its inner edge. In the middle, a wave and its copies, which shrink to a point 20 mm above its middle, each copy meeting the next at a point. On the right, a circle 22 mm across that spirals in to its middle."></span></label></p>
+<!-- /shot -->
+<h2 id="kinds-of-ripple"><a class="header" href="#kinds-of-ripple">Kinds of ripple</a></h2>
+<p>The stroke’s lines give the kind of ripple:</p>
+<ul>
+<li><strong>An open line</strong> ripples towards its target point. Each copy of the line is the one before it shrunk
+towards the point, and the last copy shrinks to the point.</li>
+<li><strong>A closed line</strong> spirals in to its target point, each turn a smaller copy of the line.</li>
+<li><strong>2 lines or more</strong> are a satin column’s rails and rungs, drawn as for a <a href="#satin-column">satin column</a>.
+The first line lies on the first rail and the last on the second, and the lines between follow both.</li>
+</ul>
+<p>A part of the path that is one point sews nothing, and <code>SC-W0401</code> names it.</p>
+<h2 id="the-target-point"><a class="header" href="#the-target-point">The target point</a></h2>
+<p>In an SVG file, Ink/Stitch’s target point command tied to the stroke places the point the ripple shrinks
+to. In a VectorCraft document, a small path named <code>stitch:target</code> grouped with the stroke places it, at the
+middle of the box round its anchors. Without either, the target point is the middle of the area the line
+spans, the centroid of its convex hull. A ripple along a column has no target point.</p>
+<h2 id="how-many-lines"><a class="header" href="#how-many-lines">How many lines</a></h2>
+<p><code>line_count</code> is the number of lines, 10 by default, the stroke’s own line and the target point among them.
+With <code>min_line_dist_mm</code>, the count is the shortest distance from the line to the target point, or across
+the column, divided by it. The count keeps the parity of <code>line_count</code>, odd or even, so that the ripple ends
+on the same side however large it is drawn. A ripple has 1,000 lines at most (<code>SC-W0407</code>).</p>
+<p><code>exponent</code> spaces the lines. At 1 they lie evenly apart, and above 1 they crowd towards the first line.
+<code>flip_exponent</code> crowds them towards the last line instead.</p>
+<!-- shot: ripple-lines -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: center">Evenly spaced</th><th style="text-align: center">Exponent 2</th><th style="text-align: center">Exponent 2, flipped</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/ripple-lines-1.png" alt="An arch 30 mm across sewn as a ripple stitch of 8 lines, its copies shrinking to the middle of the half disc it bounds, Evenly spaced"><span class="img-wrapper"><img src="images/generated/ripple-lines-1.png" alt="An arch 30 mm across sewn as a ripple stitch of 8 lines, its copies shrinking to the middle of the half disc it bounds, Evenly spaced"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/ripple-lines-2.png" alt="An arch 30 mm across sewn as a ripple stitch of 8 lines, its copies shrinking to the middle of the half disc it bounds, Exponent 2"><span class="img-wrapper"><img src="images/generated/ripple-lines-2.png" alt="An arch 30 mm across sewn as a ripple stitch of 8 lines, its copies shrinking to the middle of the half disc it bounds, Exponent 2"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/ripple-lines-3.png" alt="An arch 30 mm across sewn as a ripple stitch of 8 lines, its copies shrinking to the middle of the half disc it bounds, Exponent 2, flipped"><span class="img-wrapper"><img src="images/generated/ripple-lines-3.png" alt="An arch 30 mm across sewn as a ripple stitch of 8 lines, its copies shrinking to the middle of the half disc it bounds, Exponent 2, flipped"></span></label></td></tr>
+</tbody>
+</table>
+</div>
+<!-- /shot -->
+<p><code>skip_start</code> leaves out the first lines, such as the stroke’s own line, and <code>skip_end</code> the last, such as
+the lines that crowd round the target point. Skips that together would leave out every line leave out none
+(<code>SC-W0408</code>).</p>
+<h2 id="joins"><a class="header" href="#joins">Joins</a></h2>
+<p>With <code>flip_copies</code> on, the default, every other line is sewn backwards, and the ripple goes back and
+forth. <code>join_style</code> sets how each line meets the next. With the flat join, <code>0</code> and the default, a straight
+run of stitches joins each line’s end to the next line’s start. With the point join, <code>1</code>, each line bends
+into the next so that they meet at a point, and the ripple has a line more to bend.</p>
+<p>With <code>flip_copies</code> off, every line is sewn the same way, and the needle goes straight from each line’s end
+to the next line’s start. A spiral is always sewn so.</p>
+<!-- shot: ripple-joins -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: center">Flat join</th><th style="text-align: center">Point join</th><th style="text-align: center">One way</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/ripple-joins-1.png" alt="An arch 30 mm across sewn as a ripple stitch of 8 lines, Flat join"><span class="img-wrapper"><img src="images/generated/ripple-joins-1.png" alt="An arch 30 mm across sewn as a ripple stitch of 8 lines, Flat join"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/ripple-joins-2.png" alt="An arch 30 mm across sewn as a ripple stitch of 8 lines, Point join"><span class="img-wrapper"><img src="images/generated/ripple-joins-2.png" alt="An arch 30 mm across sewn as a ripple stitch of 8 lines, Point join"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/ripple-joins-3.png" alt="An arch 30 mm across sewn as a ripple stitch of 8 lines, One way"><span class="img-wrapper"><img src="images/generated/ripple-joins-3.png" alt="An arch 30 mm across sewn as a ripple stitch of 8 lines, One way"></span></label></td></tr>
+</tbody>
+</table>
+</div>
+<!-- /shot -->
+<h2 id="staggers"><a class="header" href="#staggers">Staggers</a></h2>
+<p><code>staggers</code> moves where each line’s needle points fall, so that the needle points of lines side by side
+don’t line up. Each line’s needle points start a staggers-th of the stitch length further back than the
+line’s before. At 0, every line is placed from the end it is sewn from. The default, 1, places every
+line’s needle points from its start. Ink/Stitch’s settings window shows 0, and it sews a file that sets
+none as 1.</p>
+<h2 id="stitches-repeats-and-bean-stitch"><a class="header" href="#stitches-repeats-and-bean-stitch">Stitches, repeats and bean stitch</a></h2>
+<p>Each line is sewn with the running stitch’s <code>running_stitch_length_mm</code> and <code>running_stitch_tolerance_mm</code>,
+and with random stitch lengths when they are on. <code>reverse</code> sews the whole ripple backwards. <code>repeats</code> and
+<code>bean_stitch_repeats</code> then sew it as they sew a <a href="#bean-stitch-and-repeats">running stitch</a>.
+Lines near the target point can be shorter than the shortest stitch the machine sews well, and StitchCraft
+leaves their needle points out when it finishes the plan (<code>SC-I0504</code>).</p>
+<h2 id="not-sewn-yet"><a class="header" href="#not-sewn-yet">Not sewn yet</a></h2>
+<p>Guided ripples arrive with M10.11. Their copies of the line follow a guide line or a satin guide, and a
+grid can cross them. A stroke keeps their settings, and <code>SC-W0105</code> names each. A ripple
+cut to clip paths is sewn whole, and <code>SC-W0406</code> says so. A ripple along a column reads its rails with a
+satin column’s defaults, and <code>SC-W0406</code> names each setting of the column’s rails that the stroke sets.</p>
+<h2 id="parameters-2"><a class="header" href="#parameters-2">Parameters</a></h2>
+<p>The reference lists each parameter with its range and default:</p>
+<ul>
+<li><a href="#ripple-parameters">ripple stitch</a></li>
+<li><a href="#running-parameters">running stitch</a></li>
+<li><a href="#repeat-parameters">repeats and bean stitch</a></li>
+<li><a href="#stroke-parameters">the stroke method</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="satin-column"><a class="header" href="#satin-column">Satin column</a></h1>
 <!-- stitch-types: satin_column -->
 <p>A satin column sews a band with stitches straight across it, close side by side, so that the thread lies
@@ -1557,7 +1652,7 @@ some of them in along their stitches, by default, to spread them out: <code>shor
 and <code>short_stitch_distance_mm</code> which points crowd.</p>
 <p>Every satin method warns of stitches that lean far along the band and of stitches long enough to snag,
 as the <a href="#leaning-and-long-stitches">S-stitch page</a> describes.</p>
-<h2 id="parameters-2"><a class="header" href="#parameters-2">Parameters</a></h2>
+<h2 id="parameters-3"><a class="header" href="#parameters-3">Parameters</a></h2>
 <p>The reference gives each setting’s range and default:</p>
 <ul>
 <li><a href="#satin-parameters">satin column</a>, the underlays and split stitches included</li>
@@ -1609,7 +1704,7 @@ may snag, and <code>SC-W0209</code> names it.</p>
 <p>Without enough rungs, the points of the 2 rails pair up by length alone, and where one rail runs on ahead
 of the other the spikes lean along the band. Where they lean more than 45° from square to it, <code>SC-W0208</code>
 names the place to add a rung. Every satin method gives both warnings.</p>
-<h2 id="parameters-3"><a class="header" href="#parameters-3">Parameters</a></h2>
+<h2 id="parameters-4"><a class="header" href="#parameters-4">Parameters</a></h2>
 <p>An E-stitch reads every setting of a satin column, from its underlays and compensation to its random
 variation and where it starts and ends. The reference lists each one with its range and default:</p>
 <ul>
@@ -1658,7 +1753,7 @@ longest stitch, the steps are longer than it.</p>
 <p>Where the stitches lean more than 45° from square to the band, without enough rungs, <code>SC-W0208</code> names the
 place to add one, and <code>SC-W0209</code> names a top stitch longer than 12 mm, which may snag. Every satin method
 gives both.</p>
-<h2 id="parameters-4"><a class="header" href="#parameters-4">Parameters</a></h2>
+<h2 id="parameters-5"><a class="header" href="#parameters-5">Parameters</a></h2>
 <p>Every satin column setting applies to an S-stitch too, its underlays, compensation and random variation
 included. The reference gives each one’s range and default:</p>
 <ul>
@@ -1707,7 +1802,7 @@ reference says.</p>
 <a href="#leaning-and-long-stitches">S-stitch page</a> describes. <code>SC-W0208</code> measures how the rails pair
 up, where a satin column’s stitches across would go. The slant every zigzag stitch has by design, the
 more the wider the spacing and the narrower the band, is left out of it.</p>
-<h2 id="parameters-5"><a class="header" href="#parameters-5">Parameters</a></h2>
+<h2 id="parameters-6"><a class="header" href="#parameters-6">Parameters</a></h2>
 <p>Every satin column setting applies to a zigzag satin too, its underlays, compensation and random variation
 included. The reference gives each one’s range and default:</p>
 <ul>
@@ -1798,7 +1893,7 @@ as a tatami fill without underlay, and says so (<code>SC-W0314</code>). Its rows
 fill’s are.
 Its flip and reverse settings are kept, and not read (<code>SC-W0105</code>). Set <code>fill_method</code> to <code>tatami_fill</code> to
 sew the fill with its underlay.</p>
-<h2 id="parameters-6"><a class="header" href="#parameters-6">Parameters</a></h2>
+<h2 id="parameters-7"><a class="header" href="#parameters-7">Parameters</a></h2>
 <p>The reference gives each setting’s range and default:</p>
 <ul>
 <li><a href="#fill-parameters">fill</a>, which chooses the fill method</li>
@@ -1901,7 +1996,7 @@ and 3 there and back twice.</p>
 <p>Before its rings, each part of the fill sews the tatami fill’s underlay, on by default
 (<a href="#underlay">tatami fill</a>): rows square to the fill’s <code>angle</code>, which turns only the
 underlay here. <code>expand_mm</code> grows the area before its rings are laid.</p>
-<h2 id="parameters-7"><a class="header" href="#parameters-7">Parameters</a></h2>
+<h2 id="parameters-8"><a class="header" href="#parameters-8">Parameters</a></h2>
 <p>The reference gives each setting’s range and default:</p>
 <ul>
 <li><a href="#fill-parameters">fill</a>, which chooses the fill method</li>
@@ -2013,7 +2108,7 @@ and <code>repeats</code> work as they do for a contour fill
 <p>Before its line, each part of the fill sews the tatami fill’s underlay, on by default
 (<a href="#underlay">tatami fill</a>): rows square to the fill’s <code>angle</code>, which turns only the
 underlay here. <code>expand_mm</code> grows the area before the tiling is laid over it.</p>
-<h2 id="parameters-8"><a class="header" href="#parameters-8">Parameters</a></h2>
+<h2 id="parameters-9"><a class="header" href="#parameters-9">Parameters</a></h2>
 <p>The reference gives each setting’s range and default:</p>
 <ul>
 <li><a href="#fill-parameters">fill</a>, which chooses the fill method</li>
@@ -2101,7 +2196,7 @@ pieces. The repeats work as they do for a contour fill
 <p>Before its spiral, each part of the fill sews the tatami fill’s underlay, on by default
 (<a href="#underlay">tatami fill</a>): rows square to the fill’s <code>angle</code>. <code>expand_mm</code> grows the area
 before the spiral is laid over it.</p>
-<h2 id="parameters-9"><a class="header" href="#parameters-9">Parameters</a></h2>
+<h2 id="parameters-10"><a class="header" href="#parameters-10">Parameters</a></h2>
 <p>The reference gives each setting’s range and default:</p>
 <ul>
 <li><a href="#fill-parameters">fill</a>, which chooses the fill method</li>
@@ -2259,7 +2354,7 @@ element, from end to end through the middles of the crosses on the way. The cros
 stitches.</p>
 <p>A grid so fine that a cross’s shortest stitches are shorter than the machine’s shortest stitch loses some of
 its needle points, and its crosses their shape: <code>SC-W0321</code> says so. A cross stitch fill has no underlay.</p>
-<h2 id="parameters-10"><a class="header" href="#parameters-10">Parameters</a></h2>
+<h2 id="parameters-11"><a class="header" href="#parameters-11">Parameters</a></h2>
 <p>The reference gives each setting’s range and default:</p>
 <ul>
 <li><a href="#cross-parameters">cross stitch</a>, the grid, the coverage and the crosses</li>
@@ -2507,7 +2602,7 @@ work. When the design has a stop position, the frame moves there before each sto
 test sheet TS-02 checks what the reference machine does. DST has no trim command. StitchCraft writes a trim
 there as 3 short jumps that end where they started, and a DST machine set to cut at 3 jumps in a row
 cuts there. The <a href="#machine-formats">machine formats</a> design says how each format records a trim.</p>
-<h2 id="parameters-11"><a class="header" href="#parameters-11">Parameters</a></h2>
+<h2 id="parameters-12"><a class="header" href="#parameters-12">Parameters</a></h2>
 <p><a href="#common-parameters">Common parameters</a> lists each of these settings with its range and
 default.</p>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -2575,7 +2670,7 @@ it plans for, and warns beyond a profile’s comfort zone where the profile has 
 <tr><td><a href="#diagnostic-codes">Diagnostic codes</a></td><td>generated from the diagnostics registry</td><td>available</td></tr>
 <tr><td><a href="#glossary">Glossary</a></td><td>hand-written</td><td>available</td></tr>
 <tr><td><a href="#vectorcraft-compatibility">VectorCraft compatibility</a></td><td>generated from the compatibility gate’s record, <code>compat/supported.toml</code></td><td>available</td></tr>
-<tr><td><a href="#parameters-12">Parameters</a> (one page per stitch type)</td><td>generated from the parameter registry</td><td>available</td></tr>
+<tr><td><a href="#parameters-13">Parameters</a> (one page per stitch type)</td><td>generated from the parameter registry</td><td>available</td></tr>
 <tr><td><a href="#inkstitch-compatibility-contract">Ink/Stitch compatibility contract</a></td><td>generated from <code>conformance/inkstitch-params.toml</code> and the parameter registry</td><td>available</td></tr>
 </tbody>
 </table>
@@ -3242,13 +3337,14 @@ Arguments:
 <li>The square turned 30° sews its crosses square to its own sides, as a letter turned along a path sews its own. Do its rows of crosses run along its edges, with no part cell along them?</li>
 <li>How long does the sheet take?</li>
 </ul>
-<h2 id="ts-17c--ripples-routing-and-layers-satin-letters-and-a-network-of-lines-as-drawn-and-routed-and-crossing-columns"><a class="header" href="#ts-17c--ripples-routing-and-layers-satin-letters-and-a-network-of-lines-as-drawn-and-routed-and-crossing-columns">TS-17C — Ripples, routing and layers: satin letters and a network of lines, as drawn and routed, and crossing columns</a></h2>
-<p>82.0 × 125.0 mm · 4830 stitches, 23 jumps, 22 trims, 1 colour change, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<h2 id="ts-17c--ripples-routing-and-layers-satin-letters-and-a-network-of-lines-as-drawn-and-routed-crossing-columns-and-3-ripple-stitches"><a class="header" href="#ts-17c--ripples-routing-and-layers-satin-letters-and-a-network-of-lines-as-drawn-and-routed-crossing-columns-and-3-ripple-stitches">TS-17C — Ripples, routing and layers: satin letters and a network of lines, as drawn and routed, crossing columns and 3 ripple stitches</a></h2>
+<p>82.0 × 153.0 mm · 5115 stitches, 26 jumps, 25 trims, 2 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
-<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-17c.png" alt="TS-17C as it will sew. In blue, the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E’s arms. Below them the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next. Below the routed letters, in red, a network of 6 bean-stitched lines, twice: on the left sewn as drawn, line by line, with a jump thread from each line to the next, and on the right routed, sewn in one go but for the jump to the line that crosses itself, above the others, and back. At the bottom, in red, 2 crosses of satin columns 5 mm wide, a bar and a post each, as drawn on the left and with their underlays first on the right, which look alike from above."><span class="img-wrapper"><img src="images/generated/testsheet-ts-17c.png" alt="TS-17C as it will sew. In blue, the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E’s arms. Below them the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next. Below the routed letters, in red, a network of 6 bean-stitched lines, twice: on the left sewn as drawn, line by line, with a jump thread from each line to the next, and on the right routed, sewn in one go but for the jump to the line that crosses itself, above the others, and back. At the bottom, in red, 2 crosses of satin columns 5 mm wide, a bar and a post each, as drawn on the left and with their underlays first on the right, which look alike from above."></span></label></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-17c.png" alt="TS-17C as it will sew. In blue, the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E’s arms. Below them the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next. Below the routed letters, in red, a network of 6 bean-stitched lines, twice: on the left sewn as drawn, line by line, with a jump thread from each line to the next, and on the right routed, sewn in one go but for the jump to the line that crosses itself, above the others, and back. Below the network, in red, 2 crosses of satin columns 5 mm wide, a bar and a post each, as drawn on the left and with their underlays first on the right, which look alike from above. At the bottom, in green, 3 ripple stitches: a rainbow of 7 arches, a wave whose copies shrink to a point above it, and a circle that spirals in to its middle."><span class="img-wrapper"><img src="images/generated/testsheet-ts-17c.png" alt="TS-17C as it will sew. In blue, the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E’s arms. Below them the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next. Below the routed letters, in red, a network of 6 bean-stitched lines, twice: on the left sewn as drawn, line by line, with a jump thread from each line to the next, and on the right routed, sewn in one go but for the jump to the line that crosses itself, above the others, and back. Below the network, in red, 2 crosses of satin columns 5 mm wide, a bar and a post each, as drawn on the left and with their underlays first on the right, which look alike from above. At the bottom, in green, 3 ripple stitches: a rainbow of 7 arches, a wave whose copies shrink to a point above it, and a circle that spirals in to its middle."></span></label></p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/routing-letters.png" alt="TS-17C’s letters ROUTE drawn as thin lines, twice: at the top as drawn, and at the bottom as Auto-Route Satin Columns routes them. Dashed lines are jumps, which the reference machine leaves as threads to cut by hand, and orange rings mark lock stitches. The routed letters jump only from one letter to the next."><span class="img-wrapper"><img src="images/generated/routing-letters.png" alt="TS-17C’s letters ROUTE drawn as thin lines, twice: at the top as drawn, and at the bottom as Auto-Route Satin Columns routes them. Dashed lines are jumps, which the reference machine leaves as threads to cut by hand, and orange rings mark lock stitches. The routed letters jump only from one letter to the next."></span></label></p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/routing-lines.png" alt="TS-17C’s network of 6 running stitches drawn as thin lines, twice: on the left as drawn, and on the right as Auto-Route Running Stitch routes them with Trim jump stitches on. A rail along the bottom, a post across it, a brace from the post down to the rail, a hook curving up from the rail, a line that crosses itself above them, and a tick beside the rail. Dashed lines are jumps, and orange rings mark lock stitches. As drawn, the machine jumps from each line to the next. Routed, it jumps only out to the line apart and back, and trims before each of those jumps. It reaches the tick, 0.5 mm off the rail, with a stitch."><span class="img-wrapper"><img src="images/generated/routing-lines.png" alt="TS-17C’s network of 6 running stitches drawn as thin lines, twice: on the left as drawn, and on the right as Auto-Route Running Stitch routes them with Trim jump stitches on. A rail along the bottom, a post across it, a brace from the post down to the rail, a hook curving up from the rail, a line that crosses itself above them, and a tick beside the rail. Dashed lines are jumps, and orange rings mark lock stitches. As drawn, the machine jumps from each line to the next. Routed, it jumps only out to the line apart and back, and trims before each of those jumps. It reaches the tick, 0.5 mm off the rail, with a stitch."></span></label></p>
-<p>Threads: Blue, Red.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/ripple-kinds.png" alt="TS-17C’s 3 ripple stitches in green. On the left, a rainbow: 7 arches sewn back and forth from the outer edge of a column drawn as 2 arches and a rung to its inner edge. In the middle, a wave and its copies, which shrink to a point 20 mm above its middle, each copy meeting the next at a point. On the right, a circle 22 mm across that spirals in to its middle."><span class="img-wrapper"><img src="images/generated/ripple-kinds.png" alt="TS-17C’s 3 ripple stitches in green. On the left, a rainbow: 7 arches sewn back and forth from the outer edge of a column drawn as 2 arches and a rung to its inner edge. In the middle, a wave and its copies, which shrink to a point 20 mm above its middle, each copy meeting the next at a point. On the right, a circle 22 mm across that spirals in to its middle."></span></label></p>
+<p>Threads: Blue, Red, Emerald Green.</p>
 <p>After sewing, check:</p>
 <ul>
 <li>Top: the word ROUTE in satin columns 3 mm wide, sewn as drawn, column by column. Below it: the same letters as auto-satin routing joins them, cut into pieces, with running stitches under the satins and a trim between letters.</li>
@@ -3258,8 +3354,10 @@ Arguments:
 <li>Below the letters, in red: 6 bean-stitched lines, a rail, a post across it, a brace, a hook, a line that crosses itself and a tick, sewn as drawn on the left and as auto-run routing joins them on the right. Count the jump threads of each: the routed network should jump only to the line that crosses itself and back, trimming before each jump.</li>
 <li>On the routed network, do the plain runs under the bean stitches show beside them, where a branch is sewn out and back?</li>
 <li>The time each half takes, from its first stitch to its last.</li>
-<li>At the bottom, in red: 2 satin columns 5 mm wide that cross, a bar and a post, each with a contour and a zigzag underlay. On the left they sew as drawn, so the post’s underlay lies on the bar’s top stitches. On the right they sew with their underlays first: both underlays, then both tops. Compare the 2 crossings: does the right one lie flatter, with less bulk or fewer stitches showing through where the columns meet?</li>
+<li>Below the network, in red: 2 satin columns 5 mm wide that cross, a bar and a post, each with a contour and a zigzag underlay. On the left they sew as drawn, so the post’s underlay lies on the bar’s top stitches. On the right they sew with their underlays first: both underlays, then both tops. Compare the 2 crossings: does the right one lie flatter, with less bulk or fewer stitches showing through where the columns meet?</li>
 <li>On the right, the needle goes back from the post’s underlay to the bar for the top stitches. Does its way there show, or a jump thread or its locks where it jumps?</li>
+<li>Bottom row, in green: 3 ripple stitches. On the left, a rainbow of 7 lines sewn back and forth between 2 arches. In the middle, 8 copies of a wave that shrink to a point 20 mm above it, each meeting the next at a point. On the right, a circle that spirals in to its middle.</li>
+<li>Do the ripples’ lines lie evenly apart, and does each turn or meet the next where its neighbours do, without a loop of thread or a stitch across?</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from the registry in `stitchcraft-core/src/diag.rs`. Edit the source, not this page. -->
 <h1 id="diagnostic-codes"><a class="header" href="#diagnostic-codes">Diagnostic codes</a></h1>
@@ -3322,6 +3420,9 @@ Arguments:
 <tr><td><a href="#sc-w0403"><code>SC-W0403</code></a></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td></tr>
 <tr><td><a href="#sc-w0404"><code>SC-W0404</code></a></td><td>Warning</td><td>Hand-placed stitch longer than max_stitch_length_mm; kept for the shortest stitch</td></tr>
 <tr><td><a href="#sc-w0405"><code>SC-W0405</code></a></td><td>Warning</td><td>Zigzag stitch shorter than the shortest stitch; the zigzag sews narrower</td></tr>
+<tr><td><a href="#sc-w0406"><code>SC-W0406</code></a></td><td>Warning</td><td>Ripple stitch setting not sewn yet; sewn without it</td></tr>
+<tr><td><a href="#sc-w0407"><code>SC-W0407</code></a></td><td>Warning</td><td>Ripple stitch of more than 1,000 lines; cut to 1,000</td></tr>
+<tr><td><a href="#sc-w0408"><code>SC-W0408</code></a></td><td>Warning</td><td>Ripple stitch’s skips would leave out every line; every line sewn</td></tr>
 <tr><td><a href="#sc-w0502"><code>SC-W0502</code></a></td><td>Warning</td><td>Lock stitch shorter than 0.2 mm; lengthened</td></tr>
 <tr><td><a href="#sc-w0503"><code>SC-W0503</code></a></td><td>Warning</td><td>Custom lock cannot be sewn as written</td></tr>
 <tr><td><a href="#sc-i0504"><code>SC-I0504</code></a></td><td>Info</td><td>Stitches shorter than the shortest stitch merged</td></tr>
@@ -3446,7 +3547,9 @@ warning.</p>
 <p><strong>Warning</strong> — Unknown parameter preserved but ignored</p>
 <p>The design carries a parameter StitchCraft does not know: one from a newer version of StitchCraft
 or Ink/Stitch, or one for a stitch type StitchCraft does not support yet. It was kept, so saving
-the design does not lose it, but it does not change the stitches.</p>
+the design does not lose it, but it does not change the stitches. A fill set to Ink/Stitch’s legacy
+fill, which StitchCraft sews as a tatami fill (<code>SC-W0314</code>), names its <code>flip</code> and <code>reverse</code> so, though
+a ripple stitch reads a <code>reverse</code> of its own.</p>
 <p>The Ink/Stitch compatibility page says when each Ink/Stitch parameter is supported.</p>
 <h2 id="sc-i0106"><a class="header" href="#sc-i0106">SC-I0106</a></h2>
 <p><strong>Info</strong> — Value only the node’s other stitch type reads; default used here</p>
@@ -3765,6 +3868,30 @@ Ink/Stitch’s shortest stitch is 0.1 mm by default, and it sews such a zigzag a
 <p>The message gives how many stitches are that short and the shortest. On a straight path, a stitch
 across a zigzag <code>w</code> wide at a spacing <code>s</code> is √(w² + (s/2)²) long. Make the zigzag wider, the stroke
 or its pull compensation, or space it out, until that is at least the shortest stitch.</p>
+<h2 id="sc-w0406"><a class="header" href="#sc-w0406">SC-W0406</a></h2>
+<p><strong>Warning</strong> — Ripple stitch setting not sewn yet; sewn without it</p>
+<p>A ripple stitch asks for something StitchCraft doesn’t sew yet, so it sews without it. Clips cut
+Ink/Stitch’s ripples, and StitchCraft sews a ripple whole. A ripple along a column, a stroke of 2
+lines or more drawn as a satin column’s rails and rungs, reads its rails with the satin column’s
+defaults: <code>reverse_rails</code> automatic, <code>swap_satin_rails</code> off and no <code>push_compensation_mm</code>, which
+Ink/Stitch applies to it. Guided ripples, and the ripple settings they use, arrive with M10.11, and
+<code>SC-W0105</code> names each of those settings until then.</p>
+<p>The message says what is not applied. Draw the ripple’s lines where it should sew, and its rails
+running the same way, the first where the ripple starts.</p>
+<h2 id="sc-w0407"><a class="header" href="#sc-w0407">SC-W0407</a></h2>
+<p><strong>Warning</strong> — Ripple stitch of more than 1,000 lines; cut to 1,000</p>
+<p><code>min_line_dist_mm</code> gives a ripple stitch more than 1,000 lines, so it sews 1,000, or 999 to keep the
+count’s parity, odd or even, as <code>line_count</code> has it. The count is the shortest distance from the
+stroke’s line to its target point, or across its column, divided by <code>min_line_dist_mm</code>, and a very
+short distance between the lines on a large shape gives thousands of lines that sew into a solid
+patch.</p>
+<p>The message gives the count asked for and the count sewn. Set a larger <code>min_line_dist_mm</code>.</p>
+<h2 id="sc-w0408"><a class="header" href="#sc-w0408">SC-W0408</a></h2>
+<p><strong>Warning</strong> — Ripple stitch’s skips would leave out every line; every line sewn</p>
+<p>A ripple stitch’s <code>skip_start</code> and <code>skip_end</code> together leave out as many lines as it has, or more, so
+they would leave none to sew. No line is left out, as Ink/Stitch does.</p>
+<p>The message gives both settings and the number of lines. Lower <code>skip_start</code> or <code>skip_end</code>, or give
+the ripple more lines.</p>
 <h2 id="sc-w0502"><a class="header" href="#sc-w0502">SC-W0502</a></h2>
 <p><strong>Warning</strong> — Lock stitch shorter than 0.2 mm; lengthened</p>
 <p>A lock stitch would have been shorter than 0.2 mm, the shortest stitch a lock may have. The needle
@@ -4280,7 +4407,7 @@ The route joins lines that meet only at points they share, and jumps between the
 <p>The message counts the lines. Route fewer running stitches at a time, or turn Add nodes at
 intersections off and draw a node of both lines wherever 2 meet.</p>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from the parameter registry (`stitchcraft-engine/src/registry.rs`) and the deviations ledger. Edit the declaration, not this page. -->
-<h1 id="parameters-12"><a class="header" href="#parameters-12">Parameters</a></h1>
+<h1 id="parameters-13"><a class="header" href="#parameters-13">Parameters</a></h1>
 <p>Every setting a design element can carry, by the key a design stores it under. A parameter that Ink/Stitch
 also has keeps Ink/Stitch’s key, meaning and default, so files move between the two tools unchanged
 (<a href="#inkstitch-compatibility-contract">compatibility contract</a>). Where StitchCraft reads or sews one
@@ -4330,6 +4457,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#stroke-parameters">Stroke parameters</a></td><td>1</td><td>Running stitch, Ripple stitch, Zigzag stitch, Manual stitch</td></tr>
 <tr><td><a href="#running-parameters">Running parameters</a></td><td>4</td><td>Running stitch, Ripple stitch</td></tr>
 <tr><td><a href="#repeat-parameters">Repeat parameters</a></td><td>2</td><td>Running stitch, Ripple stitch, Zigzag stitch, Manual stitch</td></tr>
+<tr><td><a href="#ripple-parameters">Ripple parameters</a></td><td>10</td><td>Ripple stitch</td></tr>
 <tr><td><a href="#zigzag-stroke-parameters">Zigzag stroke parameters</a></td><td>3</td><td>Zigzag stitch</td></tr>
 <tr><td><a href="#satin-parameters">Satin parameters</a></td><td>34</td><td>Satin column, E-stitch, S-stitch, Zigzag satin</td></tr>
 <tr><td><a href="#pull-parameters">Pull parameters</a></td><td>2</td><td>Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill</td></tr>
@@ -4381,6 +4509,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#end_at_nearest_point"><code>end_at_nearest_point</code></a></td><td>End at nearest point</td><td>Satin parameters</td></tr>
 <tr><td><a href="#end_row_spacing_mm"><code>end_row_spacing_mm</code></a></td><td>End row spacing</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#expand_mm"><code>expand_mm</code></a></td><td>Expand</td><td>Tatami parameters</td></tr>
+<tr><td><a href="#exponent"><code>exponent</code></a></td><td>Spacing exponent</td><td>Ripple parameters</td></tr>
 <tr><td><a href="#fill"><code>fill</code></a></td><td>Sew the fill</td><td>Fill parameters</td></tr>
 <tr><td><a href="#fill_coverage"><code>fill_coverage</code></a></td><td>Coverage</td><td>Cross parameters</td></tr>
 <tr><td><a href="#fill_method"><code>fill_method</code></a></td><td>Fill method</td><td>Fill parameters</td></tr>
@@ -4390,9 +4519,13 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#fill_underlay_max_stitch_length_mm"><code>fill_underlay_max_stitch_length_mm</code></a></td><td>Underlay longest stitch</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#fill_underlay_row_spacing_mm"><code>fill_underlay_row_spacing_mm</code></a></td><td>Underlay row spacing</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#fill_underlay_skip_last"><code>fill_underlay_skip_last</code></a></td><td>Skip last underlay stitch</td><td>Tatami parameters</td></tr>
+<tr><td><a href="#flip_copies"><code>flip_copies</code></a></td><td>Back and forth</td><td>Ripple parameters</td></tr>
+<tr><td><a href="#flip_exponent"><code>flip_exponent</code></a></td><td>Flip the spacing</td><td>Ripple parameters</td></tr>
 <tr><td><a href="#force_lock_stitches"><code>force_lock_stitches</code></a></td><td>Always lock</td><td>Common parameters</td></tr>
 <tr><td><a href="#gap_fill_rows"><code>gap_fill_rows</code></a></td><td>Gap-filling rows</td><td>Tatami parameters</td></tr>
-<tr><td><a href="#join_style"><code>join_style</code></a></td><td>Join style</td><td>Contour parameters</td></tr>
+<tr><td><a href="#join_style"><code>join_style</code></a></td><td>Join style</td><td>Ripple parameters</td></tr>
+<tr><td><a href="#join_style-1"><code>join_style</code></a></td><td>Join style</td><td>Contour parameters</td></tr>
+<tr><td><a href="#line_count"><code>line_count</code></a></td><td>Lines</td><td>Ripple parameters</td></tr>
 <tr><td><a href="#lock_custom_end"><code>lock_custom_end</code></a></td><td>Custom end lock</td><td>Common parameters</td></tr>
 <tr><td><a href="#lock_custom_start"><code>lock_custom_start</code></a></td><td>Custom start lock</td><td>Common parameters</td></tr>
 <tr><td><a href="#lock_end"><code>lock_end</code></a></td><td>End lock</td><td>Common parameters</td></tr>
@@ -4407,6 +4540,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#meander_pattern"><code>meander_pattern</code></a></td><td>Pattern</td><td>Meander parameters</td></tr>
 <tr><td><a href="#meander_scale_percent"><code>meander_scale_percent</code></a></td><td>Pattern scale</td><td>Meander parameters</td></tr>
 <tr><td><a href="#min_jump_stitch_length_mm"><code>min_jump_stitch_length_mm</code></a></td><td>Shortest jump</td><td>Common parameters</td></tr>
+<tr><td><a href="#min_line_dist_mm"><code>min_line_dist_mm</code></a></td><td>Least distance between lines</td><td>Ripple parameters</td></tr>
 <tr><td><a href="#min_random_split_length_mm"><code>min_random_split_length_mm</code></a></td><td>Shortest split stitch</td><td>Satin parameters</td></tr>
 <tr><td><a href="#min_stitch_length_mm"><code>min_stitch_length_mm</code></a></td><td>Shortest stitch</td><td>Common parameters</td></tr>
 <tr><td><a href="#pattern_size_mm"><code>pattern_size_mm</code></a></td><td>Cell size</td><td>Cross parameters</td></tr>
@@ -4422,6 +4556,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#random_zigzag_spacing_percent"><code>random_zigzag_spacing_percent</code></a></td><td>Random zigzag spacing</td><td>Satin parameters</td></tr>
 <tr><td><a href="#repeats"><code>repeats</code></a></td><td>Repeats</td><td>Repeat parameters</td></tr>
 <tr><td><a href="#repeats-2"><code>repeats</code></a></td><td>Repeats</td><td>Path fill parameters</td></tr>
+<tr><td><a href="#reverse"><code>reverse</code></a></td><td>Reverse</td><td>Ripple parameters</td></tr>
 <tr><td><a href="#reverse_rails"><code>reverse_rails</code></a></td><td>Reverse rails</td><td>Satin parameters</td></tr>
 <tr><td><a href="#row_spacing_mm"><code>row_spacing_mm</code></a></td><td>Row spacing</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#running_stitch_length_mm"><code>running_stitch_length_mm</code></a></td><td>Stitch length</td><td>Running parameters</td></tr>
@@ -4431,11 +4566,14 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#satin_method"><code>satin_method</code></a></td><td>Method</td><td>Satin parameters</td></tr>
 <tr><td><a href="#short_stitch_distance_mm"><code>short_stitch_distance_mm</code></a></td><td>Short stitch distance</td><td>Satin parameters</td></tr>
 <tr><td><a href="#short_stitch_inset"><code>short_stitch_inset</code></a></td><td>Short stitch inset</td><td>Satin parameters</td></tr>
+<tr><td><a href="#skip_end"><code>skip_end</code></a></td><td>Skip last lines</td><td>Ripple parameters</td></tr>
 <tr><td><a href="#skip_last"><code>skip_last</code></a></td><td>Skip last stitch</td><td>Tatami parameters</td></tr>
+<tr><td><a href="#skip_start"><code>skip_start</code></a></td><td>Skip first lines</td><td>Ripple parameters</td></tr>
 <tr><td><a href="#smoothness_mm"><code>smoothness_mm</code></a></td><td>Smoothness</td><td>Path fill parameters</td></tr>
 <tr><td><a href="#split_method"><code>split_method</code></a></td><td>Split method</td><td>Satin parameters</td></tr>
 <tr><td><a href="#split_staggers"><code>split_staggers</code></a></td><td>Staggers</td><td>Satin parameters</td></tr>
-<tr><td><a href="#staggers"><code>staggers</code></a></td><td>Staggers</td><td>Tatami parameters</td></tr>
+<tr><td><a href="#staggers-1"><code>staggers</code></a></td><td>Staggers</td><td>Ripple parameters</td></tr>
+<tr><td><a href="#staggers-2"><code>staggers</code></a></td><td>Staggers</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#start_at_nearest_point"><code>start_at_nearest_point</code></a></td><td>Start at nearest point</td><td>Satin parameters</td></tr>
 <tr><td><a href="#stop_after"><code>stop_after</code></a></td><td>Stop after</td><td>Common parameters</td></tr>
 <tr><td><a href="#stroke_method"><code>stroke_method</code></a></td><td>Method</td><td>Stroke parameters</td></tr>
@@ -4681,8 +4819,9 @@ read it, and sews each element’s underlay just before its own top stitches.</p
 <h2 id="stroke"><a class="header" href="#stroke">Stroke</a></h2>
 <h3 id="stroke_method"><a class="header" href="#stroke_method"><code>stroke_method</code></a></h3>
 <p><strong>Method.</strong> The stitch the path is sewn with. A running stitch goes along it and a zigzag across it, and manual
-stitch puts a needle point on each of its nodes. Ripple stitch arrives in a later version, and
-until then an element set to it is skipped (<code>SC-W0011</code>).</p>
+stitch puts a needle point on each of its nodes. A ripple stitch sews lines that spread out from
+the path to its target point, or along it from one rail to the other where it is drawn as a satin
+column’s rails and rungs.</p>
 <ul>
 <li><strong>Accepts:</strong> one of <code>running_stitch</code> (Running stitch), <code>ripple_stitch</code> (Ripple stitch), <code>zigzag_stitch</code> (Zigzag stitch), <code>manual_stitch</code> (Manual stitch)</li>
 <li><strong>Default:</strong> <code>running_stitch</code></li>
@@ -4796,6 +4935,97 @@ drawing shows it. On a curve the turned stitches point like the spokes of a whee
 <ul>
 <li><strong>Accepts:</strong> an angle from -89 to 89 degrees</li>
 <li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from `RippleParams` in the parameter registry. Edit the declaration, not this page. -->
+<h1 id="ripple-parameters"><a class="header" href="#ripple-parameters">Ripple parameters</a></h1>
+<p>Ripple stitch: copies of a stroke’s line that shrink towards a point, or lines along a satin column from
+one rail to the other, sewn as one running stitch.</p>
+<p>Applies to Ripple stitch.</p>
+<h2 id="ripple"><a class="header" href="#ripple">Ripple</a></h2>
+<h3 id="line_count"><a class="header" href="#line_count"><code>line_count</code></a></h3>
+<p><strong>Lines.</strong> How many lines the ripple sews. The first is the stroke’s own line, or a column’s first rail, and
+the last the target point, or the second rail. With <code>min_line_dist_mm</code>, this keeps only the
+count’s parity, odd or even.</p>
+<ul>
+<li><strong>Accepts:</strong> a whole number from 1 to 1000</li>
+<li><strong>Default:</strong> <code>10</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="min_line_dist_mm"><a class="header" href="#min_line_dist_mm"><code>min_line_dist_mm</code></a></h3>
+<p><strong>Least distance between lines.</strong> How far apart the lines are at least. The count is then the shortest distance from the stroke’s line
+to the target point, or across the column, divided by this and rounded up. Where that differs in
+parity from <code>line_count</code>, it is 1 less, so that the ripple ends on the same side however large it
+is drawn. Empty or 0: <code>line_count</code> gives the count.</p>
+<ul>
+<li><strong>Accepts:</strong> a length from 0.01 to 100 mm, or empty (0 or less counts as empty)</li>
+<li><strong>Default:</strong> empty</li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column’s deviates so. Ink/Stitch reads a manual stitch’s as not set at 0 or below too, and doesn’t warn.</li>
+<li><strong>DEV-RIP-002.</strong> A ripple has 1,000 lines at most, or 999 where 1,000 would change the parity of line_count, and SC-W0407 says when min_line_dist_mm gives more. Ink/Stitch sews every line it gives.</li>
+</ul>
+</li>
+</ul>
+<h3 id="exponent"><a class="header" href="#exponent"><code>exponent</code></a></h3>
+<p><strong>Spacing exponent.</strong> How the lines are spaced. 1 spaces them evenly. Above 1 packs them together towards the first line,
+and below 1 towards the last.</p>
+<ul>
+<li><strong>Accepts:</strong> a number from 0.1 to 100</li>
+<li><strong>Default:</strong> <code>1</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="flip_exponent"><a class="header" href="#flip_exponent"><code>flip_exponent</code></a></h3>
+<p><strong>Flip the spacing.</strong> Pack the lines towards the other end: the spacing the exponent gives starts from the last line.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
+<li><strong>Default:</strong> <code>false</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="skip_start"><a class="header" href="#skip_start"><code>skip_start</code></a></h3>
+<p><strong>Skip first lines.</strong> How many of the first lines are left out, such as the stroke’s own line.</p>
+<ul>
+<li><strong>Accepts:</strong> a whole number from 0 to 1000</li>
+<li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="skip_end"><a class="header" href="#skip_end"><code>skip_end</code></a></h3>
+<p><strong>Skip last lines.</strong> How many of the last lines are left out, such as the lines that crowd round the target point.</p>
+<ul>
+<li><strong>Accepts:</strong> a whole number from 0 to 1000</li>
+<li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="flip_copies"><a class="header" href="#flip_copies"><code>flip_copies</code></a></h3>
+<p><strong>Back and forth.</strong> Sew every other line backwards, so that the ripple goes back and forth. Off, every line is sewn the
+same way, and the needle goes straight from each line’s end to the next line’s start.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
+<li><strong>Default:</strong> <code>true</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="join_style"><a class="header" href="#join_style"><code>join_style</code></a></h3>
+<p><strong>Join style.</strong> How each line meets the next. Flat joins them with a straight run of stitches. Point bends each line
+into the next, so that they meet at a point, and the ripple has 1 line more to bend.</p>
+<ul>
+<li><strong>Accepts:</strong> one of <code>0</code> (Flat), <code>1</code> (Point)</li>
+<li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="staggers-1"><a class="header" href="#staggers-1"><code>staggers</code></a></h3>
+<p><strong>Staggers.</strong> How many lines the needle points take to come back to where they started. Each line’s needle points
+start a staggers-th of the stitch lengths further back than the line’s before, so that lines side
+by side don’t line them up. 0 places every line’s needle points from the end it is sewn from.</p>
+<ul>
+<li><strong>Accepts:</strong> a number from -100 to 100</li>
+<li><strong>Default:</strong> <code>1</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="reverse"><a class="header" href="#reverse"><code>reverse</code></a></h3>
+<p><strong>Reverse.</strong> Sew the whole ripple the other way round, from its last needle point to its first.</p>
+<ul>
+<li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
+<li><strong>Default:</strong> <code>false</code></li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from `SatinParams` in the parameter registry. Edit the declaration, not this page. -->
@@ -5282,7 +5512,7 @@ Rounded up to an even number, so the needle comes back to where the stretch ende
 </li>
 </ul>
 <h2 id="stitches"><a class="header" href="#stitches">Stitches</a></h2>
-<h3 id="staggers"><a class="header" href="#staggers"><code>staggers</code></a></h3>
+<h3 id="staggers-2"><a class="header" href="#staggers-2"><code>staggers</code></a></h3>
 <p><strong>Staggers.</strong> How many rows the needle points take to come back to where they started. Along each row they lie
 the longest stitch (<code>max_stitch_length_mm</code>) apart, a <code>staggers</code>-th of a stitch along from the
 row before’s, so that neighbouring rows never line them up. A fraction draws diagonals that show
@@ -5410,7 +5640,7 @@ spiral turns in, and back out between the turns it made.</p>
 </ul>
 </li>
 </ul>
-<h3 id="join_style"><a class="header" href="#join_style"><code>join_style</code></a></h3>
+<h3 id="join_style-1"><a class="header" href="#join_style-1"><code>join_style</code></a></h3>
 <p><strong>Join style.</strong> How the rings turn at the shape’s corners, as they move in a row spacing at a time: round,
 mitred (pointed, cut off 10 row spacings out) or bevelled (cut straight across).</p>
 <ul>
@@ -6403,7 +6633,7 @@ pub struct ClipShape {
 pub struct Hints {                   // since M8.4: Ink/Stitch's start, end and target commands, VectorCraft's markers
     pub start: Option&lt;Point&gt;,        // its start position, in place of the needle before it (REQ-GEN-001)
     pub end: Option&lt;Point&gt;,          // its end position, in place of the next element's offer
-    pub target: Option&lt;Point&gt;,       // the point a circular fill turns round (REQ-FILL-CIR-008)
+    pub target: Option&lt;Point&gt;,       // what a circular fill turns round and a ripple aims at (REQ-FILL-CIR-008, REQ-RIP-002)
 }
 
 pub struct Reading {                 // since M13.1: what every host's reader is asked
@@ -6462,10 +6692,10 @@ represent with a diagnostic of their own, so a failed check is a bug in the adap
 <code>Design::moved</code> gives the design moved by an offset, every point of its elements and its origin and stop
 position, checked the same way. VectorCraft’s Test Sheet filter draws a test sheet in the middle of the
 artboard with it (<code>REQ-VC-015</code>).</p>
-<p><strong>Commands.</strong> Ink/Stitch’s start, end and target commands, and VectorCraft’s start and end markers, are
-an element’s hints (M8.4), its points checked and moved with the rest. Clip paths are an element’s clips
-(M8.5), and so are VectorCraft’s clipping objects (M8.7), checked and moved with it too, which the engine
-cuts it to (<a href="#engine-pipeline">engine pipeline</a>). A clip’s shapes are shared by the elements it cuts, so
+<p><strong>Commands.</strong> Ink/Stitch’s start, end and target commands, and VectorCraft’s start, end and target markers,
+are an element’s hints (M8.4, the target marker M10.8), its points checked and moved with the rest. Clip
+paths are an element’s clips (M8.5), and so are VectorCraft’s clipping objects (M8.7), checked and moved
+with it too, which the engine cuts it to (<a href="#engine-pipeline">engine pipeline</a>). A clip’s shapes are shared by the elements it cuts, so
 that a clip group of many objects holds its clipping object once. Trims and stops are the element
 parameters <code>trim_after</code> and <code>stop_after</code>, and the origin and stop position are design settings (M3.8), which
 Ink/Stitch’s <code>origin</code> and <code>stop_position</code> commands and VectorCraft’s <code>stitch:origin</code> and <code>stitch:stop-position</code>
@@ -6488,7 +6718,7 @@ every ring. Parts of 3 square CSS pixels (0.21 mm²) or less are left out, with 
 <p>A centre line is made into a <code>Satin</code> of its own, its rails offset from the line by the stroke’s width and
 join (<code>stitchcraft_engine::normalize::centre_line</code>, since M4.9). How rails and rungs are recognised from
 a host path, and made from a centre line, is part of the <a href="#satin-generators">satin design</a>.</p>
-<h2 id="parameters-13"><a class="header" href="#parameters-13">Parameters</a></h2>
+<h2 id="parameters-14"><a class="header" href="#parameters-14">Parameters</a></h2>
 <p><code>ParamSet</code> maps registry keys to typed values; generators receive <em>typed views</em>
 (<code>TatamiParams { row_spacing: Mm, angle: Deg, … }</code>) produced by the registry. See
 <a href="#parameter-registry">parameter registry</a>.</p>
@@ -6867,8 +7097,8 @@ family accepts, and the JSON Schema gives the defaults under <code>x-stitchcraft
 <li>
 <p><strong>A family’s own kind and range.</strong> Some of Ink/Stitch’s keys differ by more than their default from
 one family to another. Its <code>zigzag_spacing_mm</code> is a list for a zigzag stroke and one number for a satin
-column, and a meander fill reads it as a number that defaults to 0. Its ripple stitch reads a
-<code>staggers</code> of 0 as no stagger, but a tatami fill’s range starts at 0.01. Such a key is declared again
+column, and a meander fill reads it as a number that defaults to 0. Its ripple stitch’s <code>join_style</code>
+is flat or a point, where a contour fill’s is round, mitred or bevelled. Such a key is declared again
 for the family that reads it its own way, in a declaration for that family’s stitch types
 (<code>REQ-PRM-005</code>). The registry’s audit lets a key have one declaration for each family at most, and an
 element reads the key as its family’s declaration says. <code>find_for</code> finds a family’s declaration, and
@@ -6893,7 +7123,7 @@ refused (<code>DEV-PRM-001</code>).</p>
 <tr><th style="text-align: left">Output</th><th style="text-align: left">Generated by</th><th style="text-align: left">Checked by</th><th style="text-align: left">Since</th></tr>
 </thead>
 <tbody>
-<tr><td style="text-align: left">The reference pages, the <a href="#parameters-12">index</a> and one page per declaration (<code>docs/src/user/reference/params/*.md</code>), with the deviations ledger’s entries</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left"><code>cargo xtask docs --check</code>, which fails on a stale page and on a page left from a declaration since removed (<code>cargo xtask docs</code> deletes those)</td><td style="text-align: left">M3.1</td></tr>
+<tr><td style="text-align: left">The reference pages, the <a href="#parameters-13">index</a> and one page per declaration (<code>docs/src/user/reference/params/*.md</code>), with the deviations ledger’s entries</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left"><code>cargo xtask docs --check</code>, which fails on a stale page and on a page left from a declaration since removed (<code>cargo xtask docs</code> deletes those)</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left"><code>docs/src/user/reference/params.schema.json</code>: the parameters as JSON values (numbers, booleans, strings, arrays, <code>null</code> for empty), for editors, presets and JSON hosts</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left">same</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left">The <em>StitchCraft</em> column of the <a href="#inkstitch-compatibility-contract">Ink/Stitch compatibility contract</a></td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left">same, plus the cross-checks above</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left">VectorCraft manifests, one for each stitch family’s module, with each parameter’s label, unit, section, help, help page and the values that show it</td><td style="text-align: left">at runtime from the registry, when VectorCraft asks a module for its manifest (<code>stitchcraft-vc-plugin</code>’s <code>manifest</code> and <code>dialog</code>)</td><td style="text-align: left">plug-in tests validate them against VectorCraft’s manifest rules, <code>cargo xtask docs --check</code> finds each help page, the contract tests install them in VectorCraft’s host, and the window probe checks the dialogs’ rows</td><td style="text-align: left">M6.2, and the dialogs M6.10</td></tr>
@@ -7066,6 +7296,9 @@ another.</p>
 <tr><td><code>SC-W0403</code></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td><td>M3</td></tr>
 <tr><td><code>SC-W0404</code></td><td>Warning</td><td>Hand-placed stitch longer than max_stitch_length_mm; kept for the shortest stitch</td><td>M3</td></tr>
 <tr><td><code>SC-W0405</code></td><td>Warning</td><td>Zigzag stitch shorter than the shortest stitch; the zigzag sews narrower</td><td>M7</td></tr>
+<tr><td><code>SC-W0406</code></td><td>Warning</td><td>Ripple stitch setting not sewn yet; sewn without it (clips, and the satin column’s settings that turn, swap or push a column’s rails)</td><td>M10</td></tr>
+<tr><td><code>SC-W0407</code></td><td>Warning</td><td>Ripple stitch of more than 1,000 lines; cut to 1,000, or 999 to keep the parity of <code>line_count</code></td><td>M10</td></tr>
+<tr><td><code>SC-W0408</code></td><td>Warning</td><td>Ripple stitch’s skips would leave out every line; every line sewn</td><td>M10</td></tr>
 <tr><td><code>SC-W0502</code></td><td>Warning</td><td>Lock stitch shorter than 0.2 mm; lengthened</td><td>M3</td></tr>
 <tr><td><code>SC-W0503</code></td><td>Warning</td><td>Custom lock cannot be sewn as written</td><td>M3</td></tr>
 <tr><td><code>SC-I0504</code></td><td>Info</td><td>Stitches shorter than the shortest stitch merged</td><td>M3</td></tr>
@@ -7339,8 +7572,8 @@ them (<code>REQ-SVG-003</code>).</p>
 reads too, and <code>SC-I0805</code> lists each object left out. The
 <code>starting_point</code> and <code>ending_point</code> commands give the start and end positions of every element of the
 shape they are tied to, which its fills and satin columns start and end at (<code>REQ-GEN-001</code>). The
-<code>target_point</code> command gives the point its circular fill turns round (<code>REQ-FILL-CIR-008</code>), and from
-M10 the point its ripple stitch aims at. Each is at its symbol’s place: the <code>&lt;use&gt;</code> element’s <code>x</code> and
+<code>target_point</code> command gives the point its circular fill turns round (<code>REQ-FILL-CIR-008</code>) and its
+ripple stitch aims at (<code>REQ-RIP-002</code>). Each is at its symbol’s place: the <code>&lt;use&gt;</code> element’s <code>x</code> and
 <code>y</code> under the transforms of the use and of the groups above it, as Ink/Stitch places it. Of 2 commands
 of a kind on a shape, the first connector in the file counts. A command whose place doesn’t read is
 named with <code>SC-W0802</code> and left out, and so are those of a shape digitized automatically, whose parts
@@ -7621,9 +7854,11 @@ circular fill, sewn from M7.9, sews a spiral round the middle of each part after
 routes the spiral’s pieces as a tatami fill routes its rows (<a href="#circular-fill-1">fills</a>).
 A cross stitch fill, sewn from M10.1, sews a cross in each cell of a grid that each part covers enough of,
 with no underlay, the crosses that meet in one run. From M10.2 it sews each of Ink/Stitch’s 12 methods, its
-half crosses in rows routed as a tatami fill’s (<a href="#cross-stitch-1">cross stitch</a>).
-The other stroke, satin and fill methods are skipped with <code>SC-W0011</code> until their milestones. An element whose parameters are wrong (<code>SC-E0101</code>) is skipped too, and
-the rest of the design still plans.</p>
+half crosses in rows routed as a tatami fill’s (<a href="#cross-stitch-1">cross stitch</a>). A ripple
+stitch, sewn from M10.8, sews lines along a column or towards a target point as one running stitch
+(<a href="#ripple-stitch-m108">ripple stitch</a>), and every stroke method is then sewn. The
+other fill methods are skipped with <code>SC-W0011</code> until their milestones. An element whose parameters are
+wrong (<code>SC-E0101</code>) is skipped too, and the rest of the design still plans.</p>
 <p>Each element is generated with the shortest stitch for it: the larger of the machine’s (the profile’s
 <code>min_stitch</code>) and the element’s <code>min_stitch_length_mm</code>, or the design’s shortest stitch when the element
 sets none. A satin column is given its longest stitch as well, the element’s <code>max_stitch_length_mm</code>,
@@ -7845,7 +8080,7 @@ to the other axis and rounds nothing (<code>stitchcraft_engine::design::Turn</co
 </thead>
 <tbody>
 <tr><td>Start / end point</td><td>The element’s start and end positions, which take the place of the needle before it and of the next element’s offer for fills and satin columns (<code>REQ-GEN-001</code>). The SVG adapter reads Ink/Stitch’s commands, and the VectorCraft adapter its markers named <code>stitch:start</code> and <code>stitch:end</code></td><td>M8.4</td></tr>
-<tr><td>Target point</td><td>The point a circular fill turns round, in place of its parts’ centroids (<code>REQ-FILL-CIR-008</code>), and from M10 the ripple stitch’s target</td><td>M8.4, M10</td></tr>
+<tr><td>Target point</td><td>The point a circular fill turns round, in place of its parts’ centroids (<code>REQ-FILL-CIR-008</code>), and a ripple stitch aims at, in place of its hull’s centroid (<code>REQ-RIP-002</code>)</td><td>M8.4, M10.8</td></tr>
 <tr><td>Trim after, stop after</td><td><code>trim_after</code> and <code>stop_after</code> on the element’s last group (see the connection table). The SVG adapter reads Ink/Stitch’s trim and stop commands as these settings.</td><td>M3.8 (engine), M3 (adapter)</td></tr>
 <tr><td>Ignore object / ignore layer</td><td>The adapter drops the element and says so in the report (<code>REQ-ASM-004</code>). The VectorCraft adapter reads them from the name <code>stitch:ignore</code></td><td>M3 (SVG), M6 (VectorCraft)</td></tr>
 <tr><td>Origin</td><td>The design setting <code>origin</code>. The SVG adapter reads Ink/Stitch’s <code>origin</code> command, and the VectorCraft adapter its marker named <code>stitch:origin</code></td><td>M3.8 (engine), M8.8 (adapters)</td></tr>
@@ -8005,7 +8240,7 @@ rests on is welcome when it helps the next reader check it again
 (<a href="#adr-0012-read-inkstitchs-source-never-copy-it">ADR-0012</a>).</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="stroke-generators"><a class="header" href="#stroke-generators">Stroke generators</a></h1>
-<!-- implements: crates/stitchcraft-engine/src/generators/mod.rs, crates/stitchcraft-engine/src/generators/running/**, crates/stitchcraft-engine/src/generators/manual.rs, crates/stitchcraft-engine/src/generators/zigzag/**, crates/stitchcraft-engine/src/generators/passes.rs, crates/stitchcraft-engine/src/normalize/stroke.rs, crates/stitchcraft-engine/src/normalize/along.rs -->
+<!-- implements: crates/stitchcraft-engine/src/generators/mod.rs, crates/stitchcraft-engine/src/generators/running/**, crates/stitchcraft-engine/src/generators/manual.rs, crates/stitchcraft-engine/src/generators/zigzag/**, crates/stitchcraft-engine/src/generators/ripple/**, crates/stitchcraft-engine/src/generators/passes.rs, crates/stitchcraft-engine/src/normalize/stroke.rs, crates/stitchcraft-engine/src/normalize/along.rs -->
 <p>Strokes follow a path. Shape: <code>StrokePath</code> (an ordered list of polylines, corners marked, from the
 normalizer). Phase P1 (M3) unless noted.</p>
 <p>A stroke starts where it is drawn and ends where it is drawn, as in Ink/Stitch. Its generator is given its
@@ -8023,7 +8258,8 @@ width alone, so a zigzag stroke’s zigzag ends square at a cut, half its width 
 Ink/Stitch closes each piece of a cut closed zigzag stroke, which StitchCraft sews open (<code>DEV-RUN-009</code>), and
 sews a line that also touches its clip at a point whole, which StitchCraft cuts as any other
 (<code>DEV-RUN-010</code>). Wholly outside its clips, a stroke isn’t sewn (<code>SC-W0013</code>), and the element before it ends
-nearest the first piece they leave.</p>
+nearest the first piece they leave. A ripple stitch is sewn whole until M10.11 cuts its lines
+(<a href="#not-sewn-yet-1">ripple stitch</a>).</p>
 <h2 id="running-stitch-2"><a class="header" href="#running-stitch-2">Running stitch</a></h2>
 <p>The workhorse: outlines, details, travel, underlay.</p>
 <p><strong>Parameters:</strong> <code>running_stitch_length_mm</code> (one length or a repeating pattern of lengths, <code>LengthList</code>),
@@ -8255,15 +8491,176 @@ shorter than the shortest stitch (<code>SC-I0504</code>). At the default spacing
 are sewn. A closed zigzag’s last needle point moves onto its first before they are counted. That stitch
 can be the only short one, as at a teardrop’s tip. Ink/Stitch’s shortest stitch is 0.1 mm by default, and
 it sews such a zigzag as it is.</p>
-<h2 id="ripple-stitch-p3-m10"><a class="header" href="#ripple-stitch-p3-m10">Ripple stitch (P3, M10)</a></h2>
-<p>A series of copies of the stroke, each progressively scaled, offset or interpolated towards a target
-point (or between two rails for “satin-guided ripple”), joined into one continuous running stitch.
-Parameters: <code>line_count</code>, <code>min_line_dist_mm</code>, <code>staggers</code>, <code>skip_start</code>, <code>skip_end</code>, <code>flip_copies</code>,
-<code>exponent</code>, <code>flip_exponent</code>, <code>reverse</code>, <code>grid_size_mm</code>, <code>grid_first</code>, <code>scale_axis</code>, <code>scale_start</code>,
-<code>scale_end</code>, <code>rotate_ripples</code>, <code>join_style</code>, <code>satin_guide_pattern_position</code>, <code>reverse_rails</code>,
-<code>swap_satin_rails</code>, plus running stitch parameters for each line. Design to be completed at M10; the
-properties will include “lines never cross the target point” and “each line is within tolerance of its
-interpolated curve”.</p>
+<h2 id="ripple-stitch-m108"><a class="header" href="#ripple-stitch-m108">Ripple stitch (M10.8)</a></h2>
+<p>A ripple stitch sews lines that spread out from the stroke: copies of its line that shrink towards a
+point, or lines along a satin column from one of its rails to the other. All of them are sewn as one
+running stitch. It suits light textures that fade to a point, such as a shell. Its lines may cross.
+StitchCraft sews it as Ink/Stitch sews its ripple stitch (<code>stroke_method</code> <code>ripple_stitch</code>),
+read at <code>d59c9ab</code> (<code>lib/stitches/ripple_stitch.py</code> and the ripple settings in <code>lib/elements/stroke.py</code>).</p>
+<p><strong>Parameters:</strong> <code>line_count</code>, <code>min_line_dist_mm</code>, <code>exponent</code>, <code>flip_exponent</code>, <code>skip_start</code>,
+<code>skip_end</code>, <code>flip_copies</code>, <code>join_style</code>, <code>staggers</code> and <code>reverse</code> (<code>RippleParams</code>). Each line is sewn
+with the running stitch’s settings, its length and tolerance, random length and <code>random_seed</code>, and the
+whole ripple with <code>repeats</code> and <code>bean_stitch_repeats</code>. Guided ripples arrive with M10.11
+(<a href="#not-sewn-yet-1">not sewn yet</a>).</p>
+<h3 id="the-strokes-lines"><a class="header" href="#the-strokes-lines">The stroke’s lines</a></h3>
+<p>The stroke’s subpaths are flattened as a shape’s outline is, within a tenth of a CSS pixel, and each one
+that moves is a line. A subpath that is one point is not stitched (<code>SC-W0401</code>). Lines shorter together
+than the shortest stitch sew nothing, and <code>SC-W0401</code> gives their length. The lines say which ripple the
+stroke sews:</p>
+<ul>
+<li><strong>2 lines or more</strong> are a satin column’s rails and rungs, read by the satin column’s own code
+(<a href="#recognizing-rails-and-rungs">satin</a>), and the ripple runs along the column, its lines between
+the rails.</li>
+<li><strong>1 open line</strong> ripples towards a target point.</li>
+<li><strong>1 closed line</strong>, whose ends lie within 0.05 CSS pixels of each other, spirals in to the target point.</li>
+</ul>
+<h3 id="the-target-point-1"><a class="header" href="#the-target-point-1">The target point</a></h3>
+<p>Ink/Stitch’s <code>target_point</code> command tied to the stroke gives the target point, read as the start and end
+commands are read (<a href="#inkstitch-objects">SVG input</a>). In a VectorCraft document a path named
+<code>stitch:target</code> grouped with the stroke gives it, at the middle of the box round its anchors
+(<a href="#commands-in-v1">VectorCraft integration</a>). Without either, the target
+point is the centroid of the convex hull of the stroke’s lines, as GEOS finds a polygon’s centroid. Where
+the lines’ points all lie in a line, the hull is the segment between the 2 farthest apart, and the target
+point its middle. One point is its own hull.</p>
+<h3 id="places"><a class="header" href="#places">Places</a></h3>
+<p>Each line has a place <code>t</code>, from 0 to 1. Of <code>n</code> lines, line <code>k</code> is at <code>(k / (n − 1))</code> raised to the power
+<code>exponent</code>, which is at least 0.1. With <code>flip_exponent</code>, line <code>k</code> is at 1 less the place of line
+<code>n − 1 − k</code>. Above 1, the exponent packs the lines together towards the first line, and below 1 towards
+the last. With 1 line, its place is 0, or 1 with <code>flip_exponent</code>.</p>
+<ul>
+<li><strong>Along a column.</strong> Pairs of points are placed across the column every <code>running_stitch_tolerance_mm</code>,
+as a satin column places its pairs (<a href="#top-stitches-method-satin_column">satin</a>), with no
+compensation and nothing at random. The rails are read with a satin column’s defaults, cut into
+sections at their rungs. The second rail is turned where it runs against the first (<code>reverse_rails</code>
+automatic). The rails keep their order and their length. Line <code>k</code> goes through the point <code>t</code> of the way from each pair’s point on
+the first rail to its point on the second. The first line lies along the first rail and the last along
+the second.</li>
+<li><strong>Towards a target point.</strong> The line is first sewn as a running stitch with the stroke’s stitch lengths
+and tolerance, without random length (<a href="#placement">placement</a>). Its needle points are the outline. Line
+<code>k</code> goes through the point <code>t</code> of the way from each point of the outline to the target point: the
+outline shrunk towards the target point by <code>1 − t</code>. The first line is the outline itself, and a line at
+<code>t</code> 1 is the target point alone. Another line reaches the target point only where the outline does.</li>
+</ul>
+<h3 id="how-many-lines-1"><a class="header" href="#how-many-lines-1">How many lines</a></h3>
+<ol>
+<li><code>line_count</code> gives the count. With <code>min_line_dist_mm</code>, the count is the shortest length among the
+column’s pairs, or among the lines from the outline’s points to the target point, divided by
+<code>min_line_dist_mm</code> and rounded up. The count then keeps the parity of <code>line_count</code>, odd or even, by
+being 1 less where it differs, so that the ripple ends on the same side however large the stroke is
+drawn. It is at least 1, and at most 1,000, or 999 where 1,000 would change its parity. <code>SC-W0407</code>
+says when it is cut, where Ink/Stitch sews every line (<code>DEV-RIP-002</code>). <code>line_count</code> itself stops at
+1,000. A pair or a line of length 0 counts as Ink/Stitch counts it: the shortest is taken from those
+after it, and is 0 when it is the last. So a column whose rails meet at its end takes the least count,
+whatever <code>min_line_dist_mm</code> says.</li>
+<li>A closed line and the point join (<code>join_style</code> 1) add 1 line, since bending makes one line of 2.</li>
+<li>A ripple along a column has at least 2 lines.</li>
+</ol>
+<h3 id="bent-lines"><a class="header" href="#bent-lines">Bent lines</a></h3>
+<p>A closed line’s lines and the point join’s bend into the next line. So do the lines along a column without
+<code>flip_copies</code>. At the outline’s point or the column’s pair <code>i</code> of <code>m</code>, line <code>k</code> lies <code>i / (m − 1)</code> of the
+way from its own point to line <code>k + 1</code>’s. It starts on its own start and ends on the next line’s end. The
+point join flips every other line, counted from the first of the count, towards a target point always
+and along a column with <code>flip_copies</code> on. Such a line lies <code>1 − i / (m − 1)</code> of the way, so it starts on
+the next line’s start and ends on its own end. The last line bends into none and is left out, and the
+bent lines are 1 fewer than the count. A closed line’s lines, bent, run on from one to the next in a
+spiral that ends at the target point.</p>
+<h3 id="skipping-lines"><a class="header" href="#skipping-lines">Skipping lines</a></h3>
+<p><code>skip_start</code> leaves out the first lines and <code>skip_end</code> the last. Ink/Stitch leaves out none where they
+add up to the number of lines or more, and so does StitchCraft. <code>SC-W0408</code> says so.</p>
+<h3 id="sewing-the-lines"><a class="header" href="#sewing-the-lines">Sewing the lines</a></h3>
+<h4 id="one-line-at-a-time"><a class="header" href="#one-line-at-a-time">One line at a time</a></h4>
+<p>Lines along a column or towards a target point with <code>flip_copies</code> on, the default, are sewn one at a time,
+each as a running stitch of its own with the stroke’s stitch lengths and tolerance. A line of 1 point,
+from a column of 1 pair, is left out.</p>
+<ul>
+<li><strong>Flat join</strong> (<code>join_style</code> 0, the default). Every other line, counted from the first sewn, is sewn
+from its end. The ripple goes back and forth. A straight running stitch joins each line’s last
+needle point to the next line’s first.</li>
+<li><strong>Point join</strong> (<code>join_style</code> 1). The lines are bent, and every other line, counted from the first of
+the count, is sewn from its end. Each line then starts where the one before ended, and nothing joins
+them.</li>
+<li><strong>Staggers.</strong> With <code>staggers</code> 0, a line is placed from the end it is sewn from, and a line of no length
+sews its one point. With any other value, line <code>i</code>, counted from the first sewn, is placed from its
+start, <code>((i / staggers) mod 1)</code> of the sum of the stitch lengths before it, so that the needle points of
+lines side by side don’t line up. The line is lengthened back along its first segment by that much, or
+in proportion less where the segment is shorter than 0.1 CSS pixels, and sewn as a running stitch. The
+needle points before the line’s start are left out, and the start is the first needle point. A needle
+point nearer the start than the shortest stitch is left out too. The line is then sewn from its end
+where it turns back. A line of no length sews its one point, but nothing at a phase of 0, as Ink/Stitch
+at <code>d59c9ab</code> sews it when run as a black box. <code>staggers</code> is 1 when a file sets none. Each line is then
+placed from its start. Ink/Stitch’s settings window shows 0.</li>
+<li>With random length, each line draws from its own stream of the element’s generator, keyed by its place
+among the lines sewn.</li>
+</ul>
+<h4 id="one-run"><a class="header" href="#one-run">One run</a></h4>
+<p>A closed line’s lines, and the others with <code>flip_copies</code> off, are sewn as one running stitch through all
+their points in order. Each line is sewn from its start, and the needle goes straight from one line’s end
+to the next one’s start.</p>
+<h4 id="the-whole-ripple"><a class="header" href="#the-whole-ripple">The whole ripple</a></h4>
+<p><code>reverse</code> sews the whole ripple backwards, from its last needle point. <code>repeats</code> and
+<code>bean_stitch_repeats</code> apply as for a running stitch (<a href="#repeats-and-bean-stitch-1">repeats and bean stitch</a>).
+A line sewn one at a time that starts where the one before ended lists that needle point again, as
+Ink/Stitch lists it, and it takes a step of the bean list each time. A ripple starts and ends where its
+stitches do, whatever its neighbours. It offers the element before it its first subpath’s start, as every
+stroke does. Lines near the target point can be shorter than the shortest stitch. Finalize then leaves out
+their needle points that lie too near the one before (<a href="#5-finalize">finalize</a>).</p>
+<p>The lines’ points come from arithmetic, square roots and powers (<code>stitchcraft_core::math</code>) alone, and
+every platform places them alike. Each point of each line costs a unit of work, and the points must fit
+in the stitches the budget has left before they are made.</p>
+<h3 id="not-sewn-yet-1"><a class="header" href="#not-sewn-yet-1">Not sewn yet</a></h3>
+<p>M10.11 sews guided ripples: guide lines and satin guides, <code>scale_axis</code>, <code>scale_start</code>, <code>scale_end</code>,
+<code>rotate_ripples</code>, <code>satin_guide_pattern_position</code>, the anchor line, <code>grid_size_mm</code>, <code>grid_first</code> and
+<code>manual_pattern_placement</code>. The registry doesn’t declare their settings yet. A stroke keeps them, and
+<code>SC-W0105</code> names each. The SVG reader leaves a guide line or an anchor line out and names it (<code>SC-W0802</code>),
+and the ripple sews as this section says. Ink/Stitch reads a column’s rails with the element’s
+<code>reverse_rails</code>, <code>swap_satin_rails</code> and <code>push_compensation_mm</code>. StitchCraft reads them with the defaults,
+automatic, false and 0, and <code>SC-W0406</code> names each one set otherwise. A ripple cut to clips is sewn whole,
+and <code>SC-W0406</code> says so. Ink/Stitch cuts its stitches to the clips and routes the pieces.</p>
+<h3 id="compared-with-inkstitch"><a class="header" href="#compared-with-inkstitch">Compared with Ink/Stitch</a></h3>
+<p>The lines, their places and their count are Ink/Stitch’s. The running stitches along each line, along the
+joins and along the outline that a ripple towards a target point is made from place their needle points
+as StitchCraft’s running stitch does (<code>DEV-RUN-001</code> to <code>DEV-RUN-005</code>). So the outline’s points differ a
+little, and the copies made from them. With <code>min_line_dist_mm</code>, the count towards a target point is
+measured from those points, and can differ by 2 where the shortest length falls near a whole number of
+<code>min_line_dist_mm</code>. Ink/Stitch sews nothing of lines shorter together than 0.1 CSS pixels, and StitchCraft
+nothing of lines shorter together than the shortest stitch (<code>DEV-RUN-004</code>).</p>
+<p>Ink/Stitch starts a staggered line where its stitches have run the phase from the stretch’s start,
+measured along them. Where the stretch is the whole phase, that is the line’s start, or near it where the
+stitches cut a bend. Where the first segment is shorter than 0.1 CSS pixels, the stretch is shorter than
+the phase, and Ink/Stitch leaves the rest of the phase of the line unsewn. StitchCraft starts every line at
+its start (<code>DEV-RIP-001</code>).</p>
+<h3 id="properties-conformance-2"><a class="header" href="#properties-conformance-2">Properties (conformance)</a></h3>
+<ul>
+<li>A stroke of 2 lines or more ripples along the column its rails and rungs make, a stroke of 1 open line
+towards its target point, and a stroke of 1 closed line in a spiral to it (<code>REQ-RIP-001</code>).</li>
+<li>The target point is the stroke’s <code>target_point</code> command or <code>stitch:target</code> marker, or else the centroid
+of the convex hull of its lines (<code>REQ-RIP-002</code>).</li>
+<li>The count is <code>line_count</code>, or what <code>min_line_dist_mm</code> gives with the parity of <code>line_count</code> kept, 1 more
+for a closed line or the point join, at least 2 along a column and at most 1,000 (<code>REQ-RIP-003</code>).</li>
+<li>Line <code>k</code> lies at its place, <code>(k / (n − 1))^exponent</code>, or flipped, between the rails or towards the
+target point. A copy of the outline reaches the target point only at place 1, or where the outline does
+(<code>REQ-RIP-004</code>).</li>
+<li><code>skip_start</code> and <code>skip_end</code> leave out lines at each end, and the ripple keeps every line when together
+they would leave out all of them (<code>REQ-RIP-005</code>).</li>
+<li>With <code>flip_copies</code>, the lines are sewn back and forth, joined flat by straight running stitches or at a
+point. Without it, and for a closed line, they are sewn as one running stitch (<code>REQ-RIP-006</code>).</li>
+<li>Each line’s stitches keep within the running stitch’s tolerance of the line through its points
+(<code>REQ-RIP-007</code>).</li>
+<li>Staggered lines start their needle points <code>((i / staggers) mod 1)</code> of the stitch lengths’ sum before
+their start. A line of no length sews its one point, but nothing when staggered at a phase of 0
+(<code>REQ-RIP-008</code>).</li>
+<li><code>reverse</code> sews the ripple backwards, then <code>repeats</code> and <code>bean_stitch_repeats</code> sew it as a running
+stitch’s (<code>REQ-RIP-009</code>).</li>
+<li>What M10.11 sews is left out with a coded warning, and the ripple sews as this section says
+(<code>REQ-RIP-010</code>).</li>
+<li>TS-17C’s ripples sew in Ink/Stitch as in StitchCraft (<code>REQ-RIP-011</code>).</li>
+</ul>
+<h3 id="diagnostics-2"><a class="header" href="#diagnostics-2">Diagnostics</a></h3>
+<p><code>SC-W0401</code> for a subpath that is one point and for lines too short for the shortest stitch, <code>SC-W0406</code> for
+what a ripple doesn’t sew yet, <code>SC-W0407</code> for a count cut to 1,000 lines and <code>SC-W0408</code> for skips that
+would leave out every line. A ripple along a column says what the satin column’s reading of its rails and rungs
+says (<code>SC-W0202</code>, <code>SC-W0203</code>, <code>SC-W0205</code>, <code>SC-W0207</code>, <code>SC-W0210</code>), and <code>SC-E0216</code> when no section of the
+column has length.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="satin-generators"><a class="header" href="#satin-generators">Satin generators</a></h1>
 <!-- implements: crates/stitchcraft-engine/src/normalize/satin.rs, crates/stitchcraft-engine/src/normalize/near.rs, crates/stitchcraft-engine/src/normalize/centre_line.rs, crates/stitchcraft-engine/src/generators/satin/**, crates/stitchcraft-engine/src/generators/pull.rs -->
@@ -8480,6 +8877,10 @@ compensation leaves them, at more than 2 points doesn’t say which points pair,
 Ink/Stitch leaves it out. Such a rung crosses a node whose rail turns back across it.</p>
 <p>Where the pairing leaves stitches leaning far along the column, <code>SC-W0208</code> names the place to add a rung
 (<a href="#leaning-and-long-stitches-2">Leaning and long stitches</a>).</p>
+<p>A ripple stitch along a column reads its rails and rungs as a satin column does, with the satin column’s
+defaults. Its lines run through pairs of points placed in each section as the top stitches’ pairs are, every
+<code>running_stitch_tolerance_mm</code>, with no compensation and nothing at random
+(<a href="#ripple-stitch-m108">ripple stitch</a>).</p>
 <h2 id="compensation-2"><a class="header" href="#compensation-2">Compensation</a></h2>
 <p>Thread under tension pulls the fabric in across a satin column, which then sews narrower than it is
 drawn. The stitches also push the fabric out at the column’s ends, and it sews longer. StitchCraft makes
@@ -8880,7 +9281,7 @@ a stroke selected with it crosses its rails. No step plans such a tool in Stitch
 </tbody>
 </table>
 </div>
-<h2 id="properties-conformance-2"><a class="header" href="#properties-conformance-2">Properties (conformance)</a></h2>
+<h2 id="properties-conformance-3"><a class="header" href="#properties-conformance-3">Properties (conformance)</a></h2>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -8918,7 +9319,7 @@ a stroke selected with it crosses its rails. No step plans such a tool in Stitch
 </div>
 <p>Machine checkpoint MC-3 sews a width ladder (1–10 mm) and an underlay comparison to tune defaults
 (<a href="#machine-testing-protocol">machine testing</a>).</p>
-<h2 id="diagnostics-2"><a class="header" href="#diagnostics-2">Diagnostics</a></h2>
+<h2 id="diagnostics-3"><a class="header" href="#diagnostics-3">Diagnostics</a></h2>
 <p><code>SC-E0201</code>, <code>SC-W0202</code>, <code>SC-W0203</code>, <code>SC-W0205</code>, <code>SC-W0206</code> (a contour underlay too short for its insets
 keeps its length), <code>SC-W0207</code>, <code>SC-W0208</code> (stitches leaning more than 45° from square to the column),
 <code>SC-W0209</code> (a top stitch longer than 12 mm), <code>SC-W0210</code>, <code>SC-W0211</code>, <code>SC-W0212</code>, <code>SC-W0213</code>, <code>SC-E0214</code>,
@@ -9410,7 +9811,7 @@ Underlay has no gap-fill rows.</p>
 the outline’s start, as Ink/Stitch sews it, and <code>SC-W0305</code> says so (since M5.4). A layer of underlay with
 no row is sewn so too, and <code>SC-I0308</code> says so (since M5.6). Where the fill rule leaves every face empty,
 the fill sews nothing, and <code>SC-W0303</code> says so.</p>
-<h3 id="properties-conformance-3"><a class="header" href="#properties-conformance-3">Properties (conformance)</a></h3>
+<h3 id="properties-conformance-4"><a class="header" href="#properties-conformance-4">Properties (conformance)</a></h3>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -9778,9 +10179,11 @@ it take pull compensation, random stitch lengths or gap-filling rows, which Ink/
 use for, but its area grows by <code>expand_mm</code> as in Ink/Stitch. It is a tatami fill in every other way too.
 The element before it ends near its area, and its rows are routed and joined by travel stitches as a
 tatami fill’s are, between its start and end positions where it has them. Ink/Stitch’s legacy fill takes
-its parts in order of their distance from its start command and uses it no further (<code>DEV-FILL-014</code>). <code>flip</code> and <code>reverse</code> are not planned,
-and a design that sets them gets <code>SC-W0105</code>. The VectorCraft plug-in’s fill dialog does not offer the
-method.</p>
+its parts in order of their distance from its start command and uses it no further (<code>DEV-FILL-014</code>).
+<code>flip</code> and <code>reverse</code> are not planned, and a legacy fill that sets them gets <code>SC-W0105</code>, though a ripple
+stitch reads a <code>reverse</code> of its own (M10.8). Ink/Stitch reads them for its legacy fill alone, so a fill
+of another method leaves <code>reverse</code> to the node’s stroke without a word, as it leaves every stroke’s
+setting. The VectorCraft plug-in’s fill dialog does not offer the method.</p>
 <h2 id="references"><a class="header" href="#references">References</a></h2>
 <ul>
 <li>D. Hilbert, “Über die stetige Abbildung einer Linie auf ein Flächenstück,” <em>Mathematische Annalen</em> 38, 1891.</li>
@@ -9801,7 +10204,7 @@ loops. Half crosses sew one diagonal in each cell, in rows.</p>
 mm with 2 or 4 threads. They draw each letter as rectangles of whole cells, grown by 0.1 mm, on a grid
 that starts at each rectangle’s corner (<code>canvas_grid_origin</code> off). Jersey 15, the 25th, sews its 238
 elements as double crosses of 2 threads, grown so and on such a grid, of the default 3 mm cells.</p>
-<h2 id="parameters-14"><a class="header" href="#parameters-14">Parameters</a></h2>
+<h2 id="parameters-15"><a class="header" href="#parameters-15">Parameters</a></h2>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -10033,7 +10436,7 @@ keep them, and the turned square’s grid starts at its own corner. The differen
 Ink/Stitch’s sewing of it (<code>REQ-FILL-CRS-007</code>, <code>REQ-FILL-CRS-012</code>), and the case <code>inkstitch-cross-methods</code>
 adds each method’s flipped variant, turned grids, and half crosses in pieces, round a hole and through a
 corner.</p>
-<h2 id="properties-conformance-4"><a class="header" href="#properties-conformance-4">Properties (conformance)</a></h2>
+<h2 id="properties-conformance-5"><a class="header" href="#properties-conformance-5">Properties (conformance)</a></h2>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -10204,7 +10607,7 @@ long, keeping its shape. A custom lock’s path is enlarged to 500 % at most, th
 <li>A lock of steps that a sharp turn would fold onto itself is sewn straight (<a href="#placement-2">placement</a>).</li>
 </ul>
 <p><code>SC-W0502</code> reports each of these, with the size. The half stitch never needs them.</p>
-<h2 id="compared-with-inkstitch"><a class="header" href="#compared-with-inkstitch">Compared with Ink/Stitch</a></h2>
+<h2 id="compared-with-inkstitch-1"><a class="header" href="#compared-with-inkstitch-1">Compared with Ink/Stitch</a></h2>
 <p>Read at <code>d59c9ab</code> (<a href="#adr-0012-read-inkstitchs-source-never-copy-it">ADR-0012</a>). The ids, how a custom lock’s text is read,
 and which size parameter applies to which lock are the same. The shapes differ (<code>DEV-LCK-001</code>):</p>
 <ul>
@@ -11509,7 +11912,10 @@ the sample’s 524 glyphs, 357 agree by every measure. 98 are of stitch types St
 which the report lists, 66 of them in cross stitch and the rest in tartan fills, ripples and guided fills.
 They join the comparison with M10’s steps, the simple crosses with M10.1 and Jersey 15’s double crosses
 with M10.2. Sewn alone with M10.2, every one of Jersey 15’s 162 glyphs agrees, the 2 programs’ threads
-overlapping by 1.000 in each. The other 69 differ as the ledger explains,
+overlapping by 1.000 in each. Ripples join with M10.8. Of the 324 glyphs of the 3 Ondulamarif fonts, sewn
+alone, 144 agree and 141 differ as the ledger explains, most of them by where each program’s running stitch
+places the needle points of a ripple’s lines. The other 39 ripple along a guide line, which M10.11 sews. The
+sample’s other 69 differ as the ledger explains,
 <code>conformance/inkstitch/glyphs.toml</code> naming the glyphs each excuse is for. A glyph may differ in more than
 one way. A twentieth of every glyph, the seventh of 20 parts, holds 1,059 glyphs. Of them 699 agree, 238
 are listed and 122 differ as the ledger explains. It found the last 3 rows of the table, which the sample
@@ -12217,7 +12623,7 @@ release takes:</p>
 <tr><th>Plug-in id</th><th>Kind</th><th>Stitch types</th><th>Notes</th></tr>
 </thead>
 <tbody>
-<tr><td><code>&lt;ns&gt;.stroke</code></td><td>live effect</td><td>running, bean, manual (P1), zigzag (M7.2), ripple (later)</td><td><code>stroke_method</code> choice selects the variant</td></tr>
+<tr><td><code>&lt;ns&gt;.stroke</code></td><td>live effect</td><td>running, bean, manual (P1), zigzag (M7.2), ripple (M10.8)</td><td><code>stroke_method</code> choice selects the variant</td></tr>
 <tr><td><code>&lt;ns&gt;.satin</code></td><td>live effect</td><td>satin (P1), E (M7.3), S (M7.4), zigzag (M7.5)</td><td>rails and rungs from the object’s compound path</td></tr>
 <tr><td><code>&lt;ns&gt;.fill</code></td><td>live effect</td><td>tatami (P1); contour, meander, circular (P2)</td><td><code>fill_method</code> choice</td></tr>
 <tr><td><code>&lt;ns&gt;.auto</code></td><td>live effect</td><td>the stitches automatic digitizing chooses by width (M13.7)</td><td>on a group, previews each path inside (<a href="#image-to-embroidery">image to embroidery</a>)</td></tr>
@@ -12712,6 +13118,7 @@ note can follow it:</p>
 <tbody>
 <tr><td><code>stitch:ignore</code></td><td><code>ignore_object</code>, <code>ignore_layer</code></td><td>Leaves the object or the layer out with everything in it, and lists it with <code>SC-I0811</code></td></tr>
 <tr><td><code>stitch:start</code>, <code>stitch:end</code></td><td><code>starting_point</code>, <code>ending_point</code></td><td>Gives the shapes of the group or layer it is in, and of the groups inside it, their start or end position: the centre of the box round its anchors. Their fills and satin columns start or end there (<code>REQ-GEN-001</code>). The marker is left out of the stitches. The first marker of each kind that shows counts, a group’s own before those of the groups round it. <code>SC-W0807</code> names another, one with no anchor that reads, and the markers of a shape digitized automatically, which places its own. A group or a layer is never a marker: <code>SC-W0807</code> names it, and what it holds is read as under any other name</td></tr>
+<tr><td><code>stitch:target</code></td><td><code>target_point</code></td><td>From M10.8, gives the shapes of the group or layer it is in, and of the groups inside it, the point they aim at: the centre of the box round its anchors. Their ripple stitches shrink or spiral to it (<code>REQ-RIP-002</code>), and their circular fills turn round it (<code>REQ-FILL-CIR-008</code>). It is read as the start and end markers are, and <code>SC-W0807</code> names the same ones</td></tr>
 <tr><td><code>stitch:origin</code>, <code>stitch:stop-position</code></td><td><code>origin</code>, <code>stop_position</code></td><td>Gives the design its origin, which goes to the hoop’s centre, or the stop position the frame moves to before each stop (<code>REQ-ASM-005</code>): the centre of the box round its anchors, wherever the marker is (M8.8). The marker is left out of the stitches. 2 origins, or 2 stop positions in a design with a stop, are an error (<code>SC-E0819</code>), as Ink/Stitch doesn’t write a file with 2 such commands. <code>SC-W0807</code> names a marker with no anchor that reads, which places nothing, and a group or a layer of either name, which is never a marker</td></tr>
 <tr><td><code>stitch:route-start</code>, <code>stitch:route-end</code></td><td><code>autoroute_start</code>, <code>autoroute_end</code></td><td>From M10.4, marks where the routing filters start and end a route, at the centre of the box round its anchors, when it is selected with the paths they route. The filters delete it with the paths (<a href="#tools-the-routing-filters">routing filters</a>). <code>stitch export</code> leaves it out of the stitches. Before M10.4 the reader reads the name as the row below says</td></tr>
 <tr><td>Any other word after <code>stitch:</code></td><td></td><td>Ignores the name, and <code>SC-W0807</code> names the object, in case the word is a misspelt marker</td></tr>
@@ -13574,10 +13981,11 @@ nearer the one before than the machine’s shortest stitch left out. A needle po
 where a path’s move-to draws nothing after it, is left out with the jumps and the trim that lead to it
 (<code>DEV-SVG-011</code>).</p>
 <p><code>REQ-SVG-008</code>, <code>REQ-AUTO-021</code>, <code>REQ-AUTO-022</code>, <code>REQ-RUN-013</code>, <code>REQ-SAT-029</code>, <code>REQ-FILL-CON-008</code>,
-<code>REQ-FILL-CIR-007</code>, <code>REQ-FILL-CRS-007</code>, <code>REQ-FILL-CRS-012</code>, <code>REQ-FONT-001</code>, <code>REQ-ROUTE-008</code> and
-<code>REQ-ROUTE-013</code> are the requirements of level L3. The other runs of the suite leave them and their cases to this one. The corpus is
+<code>REQ-FILL-CIR-007</code>, <code>REQ-FILL-CRS-007</code>, <code>REQ-FILL-CRS-012</code>, <code>REQ-FONT-001</code>, <code>REQ-ROUTE-008</code>,
+<code>REQ-ROUTE-013</code> and <code>REQ-RIP-011</code> are the requirements of level L3. The other runs of the suite leave them and their cases to this one. The corpus is
 designs the SVG reader sews in full, with their settings (<code>REQ-SVG-009</code>), trim and stop commands and the file
-version. A case may name a test sheet drawn as a design instead (<code>sheet</code>). Both programs sew an SVG file
+version. A case may name a test sheet drawn as a design instead (<code>sheet</code>). With <code>elements</code>, the measures
+judge only the sheet’s elements whose ids start with it. Both programs sew an SVG file
 of the elements StitchCraft sews the sheet with, written with their parameters, their start, end and
 target positions as Ink/Stitch’s commands and their clips as clip paths, the design’s origin and stop
 position as commands too, and its turn on export (<code>stitchcraft_testkit::inkstitch</code>), which StitchCraft’s
@@ -13596,7 +14004,9 @@ letter whose slanted edges cut their cells in half (<code>REQ-FILL-CRS-007</code
 upright, dense upright, double, Smyrna and half crosses, and simple crosses on a grid turned 30°. The
 <code>cross-methods</code> case adds each full cross’s flipped variant, grids turned on the canvas and from a part’s
 own corner, and half crosses round a hole, through cells that meet at a corner and in 2 pieces of one
-part (<code>REQ-FILL-CRS-012</code>). TS-02B to TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills’
+part (<code>REQ-FILL-CRS-012</code>). The <code>ts17c-ripple-</code> cases check each of TS-17C’s ripple stitches on its own,
+the one along a column and the 2 that shrink to a target point (<code>REQ-RIP-011</code>). TS-02B to TS-09, the sheets of
+MC-2 to MC-4, and TS-11C, the meander fills’
 sheet, are cases of <code>REQ-SVG-008</code> (M8.2). The <code>drawn-locks</code> case and TS-16 check custom locks drawn as
 paths, of each kind of command, which both programs sew at the same nodes (<code>REQ-LCK-005</code>).
 <code>conformance/inkstitch/README.md</code> says how to run it by hand and how to add a case.</p>
@@ -14232,7 +14642,7 @@ each stitch type of the row that StitchCraft sews, unless the section
 stitch type sewn as another takes that one’s settings, as a legacy fill takes a tatami fill’s.</li>
 <li><strong>Default</strong> is the value Ink/Stitch’s settings window shows. For a few parameters its code sews another
 value when a file sets none, and the cell gives that value after the default, as in <code>0.1 (0.2 when unset)</code>. <code>—</code> means no default: the value is derived from another parameter or the shape.</li>
-<li><strong>StitchCraft</strong> says whether the <a href="#parameters-12">parameter registry</a> declares the
+<li><strong>StitchCraft</strong> says whether the <a href="#parameters-13">parameter registry</a> declares the
 parameter. <em>planned</em>: not yet; a design that sets it keeps it unchanged and gets <code>SC-W0105</code>. <em>not
 planned</em>: never, and a design that sets it gets the same.
 <em>registered</em>: StitchCraft reads and checks it under the same key, meaning and default; it changes the
@@ -14289,16 +14699,16 @@ planned.</li>
 <tr><td><code>zigzag_spacing_mm</code></td><td>string</td><td>mm</td><td>0.4</td><td><code>zigzag_stitch</code></td><td>P2 (M7)</td><td><a href="#zigzag_spacing_mm">registered</a></td></tr>
 <tr><td><code>stroke_pull_compensation_mm</code></td><td>float</td><td>mm (each side)</td><td>0</td><td><code>zigzag_stitch</code></td><td>P2 (M7)</td><td><a href="#stroke_pull_compensation_mm">registered</a></td></tr>
 <tr><td><code>zigzag_angle</code></td><td>float</td><td>°</td><td>0</td><td><code>zigzag_stitch</code></td><td>P2 (M7)</td><td><a href="#zigzag_angle">registered</a></td></tr>
-<tr><td><code>line_count</code></td><td>int</td><td>—</td><td>10</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>min_line_dist_mm</code></td><td>float</td><td>mm</td><td>—</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
+<tr><td><code>line_count</code></td><td>int</td><td>—</td><td>10</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="#line_count">registered</a></td></tr>
+<tr><td><code>min_line_dist_mm</code></td><td>float</td><td>mm</td><td>—</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="#min_line_dist_mm">registered</a></td></tr>
 <tr><td><code>satin_guide_pattern_position</code></td><td>combo</td><td>—</td><td>default</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>staggers</code></td><td>int</td><td>—</td><td>0 (1 when unset)</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>skip_start</code></td><td>int</td><td>—</td><td>0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>skip_end</code></td><td>int</td><td>—</td><td>0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>flip_copies</code></td><td>boolean</td><td>—</td><td>true</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>exponent</code></td><td>float</td><td>—</td><td>1</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>flip_exponent</code></td><td>boolean</td><td>—</td><td>false</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>reverse</code></td><td>boolean</td><td>—</td><td>false</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
+<tr><td><code>staggers</code></td><td>int</td><td>—</td><td>0 (1 when unset)</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="#staggers-1">registered</a></td></tr>
+<tr><td><code>skip_start</code></td><td>int</td><td>—</td><td>0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="#skip_start">registered</a></td></tr>
+<tr><td><code>skip_end</code></td><td>int</td><td>—</td><td>0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="#skip_end">registered</a></td></tr>
+<tr><td><code>flip_copies</code></td><td>boolean</td><td>—</td><td>true</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="#flip_copies">registered</a></td></tr>
+<tr><td><code>exponent</code></td><td>float</td><td>—</td><td>1</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="#exponent">registered</a></td></tr>
+<tr><td><code>flip_exponent</code></td><td>boolean</td><td>—</td><td>false</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="#flip_exponent">registered</a></td></tr>
+<tr><td><code>reverse</code></td><td>boolean</td><td>—</td><td>false</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="#reverse">registered</a></td></tr>
 <tr><td><code>reverse_rails</code></td><td>combo</td><td>—</td><td>automatic</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>swap_satin_rails</code></td><td>boolean</td><td>—</td><td>false</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>grid_size_mm</code></td><td>float</td><td>mm</td><td>0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
@@ -14307,7 +14717,7 @@ planned.</li>
 <tr><td><code>scale_start</code></td><td>float</td><td>%</td><td>100</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>scale_end</code></td><td>float</td><td>%</td><td>0.0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>rotate_ripples</code></td><td>boolean</td><td>—</td><td>true</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>join_style</code></td><td>dropdown</td><td>—</td><td>0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
+<tr><td><code>join_style</code></td><td>dropdown</td><td>—</td><td>0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="#join_style">registered</a></td></tr>
 <tr><td><code>random_seed</code></td><td>random_seed</td><td>—</td><td>—</td><td><code>running_stitch</code>, <code>ripple_stitch</code></td><td>P1 (M3)</td><td><a href="#random_seed">registered</a></td></tr>
 </tbody>
 </table>
@@ -14373,7 +14783,7 @@ planned.</li>
 <tr><td><code>fill_method</code></td><td>combo</td><td>—</td><td>0</td><td>all</td><td>P1 (M5)</td><td><a href="#fill_method">registered</a></td></tr>
 <tr><td><code>guided_fill_strategy</code></td><td>dropdown</td><td>—</td><td>0</td><td><code>guided_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>contour_strategy</code></td><td>dropdown</td><td>—</td><td>0</td><td><code>contour_fill</code></td><td>P2 (M7)</td><td><a href="#contour_strategy">registered</a></td></tr>
-<tr><td><code>join_style</code></td><td>dropdown</td><td>—</td><td>0</td><td><code>contour_fill</code></td><td>P2 (M7)</td><td><a href="#join_style">registered</a></td></tr>
+<tr><td><code>join_style</code></td><td>dropdown</td><td>—</td><td>0</td><td><code>contour_fill</code></td><td>P2 (M7)</td><td><a href="#join_style-1">registered</a></td></tr>
 <tr><td><code>avoid_self_crossing</code></td><td>boolean</td><td>—</td><td>false</td><td><code>contour_fill</code></td><td>P2 (M7)</td><td><a href="#avoid_self_crossing">registered</a></td></tr>
 <tr><td><code>clockwise</code></td><td>boolean</td><td>—</td><td>true</td><td><code>contour_fill</code></td><td>P2 (M7)</td><td><a href="#clockwise">registered</a></td></tr>
 <tr><td><code>meander_pattern</code></td><td>combo</td><td>—</td><td>0</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td><a href="#meander_pattern">deviates</a></td></tr>
@@ -14390,7 +14800,7 @@ planned.</li>
 <tr><td><code>row_spacing_mm</code></td><td>float</td><td>mm</td><td>0.25</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code>; read by <code>meander_fill</code></td><td>P1 (M5)</td><td><a href="#row_spacing_mm">registered</a></td></tr>
 <tr><td><code>end_row_spacing_mm</code></td><td>float</td><td>mm</td><td>—</td><td><code>tatami_fill</code>, <code>circular_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="#end_row_spacing_mm">deviates</a></td></tr>
 <tr><td><code>stitch_position_method</code></td><td>combo</td><td>—</td><td>0</td><td><code>guided_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>staggers</code></td><td>int</td><td>—</td><td>4</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code>; read by <code>circular_fill</code>, <code>contour_fill</code>, <code>meander_fill</code></td><td>P1 (M5)</td><td><a href="#staggers">registered</a></td></tr>
+<tr><td><code>staggers</code></td><td>int</td><td>—</td><td>4</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code>; read by <code>circular_fill</code>, <code>contour_fill</code>, <code>meander_fill</code></td><td>P1 (M5)</td><td><a href="#staggers-2">registered</a></td></tr>
 <tr><td><code>skip_last</code></td><td>boolean</td><td>—</td><td>false</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>legacy_fill</code>; read by <code>circular_fill</code></td><td>P1 (M5)</td><td><a href="#skip_last">registered</a></td></tr>
 <tr><td><code>flip</code></td><td>boolean</td><td>—</td><td>false</td><td><code>legacy_fill</code></td><td>—</td><td>not planned</td></tr>
 <tr><td><code>reverse</code></td><td>boolean</td><td>—</td><td>false</td><td><code>legacy_fill</code></td><td>—</td><td>not planned</td></tr>
@@ -14602,7 +15012,7 @@ change Ink/Stitch’s updater makes (<code>lib/update.py</code>), in StitchCraft
 </tbody>
 </table>
 </div>
-<p><em>145 parameter declarations, 113 registered in StitchCraft.</em></p>
+<p><em>145 parameter declarations, 123 registered in StitchCraft.</em></p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="architecture-decision-records"><a class="header" href="#architecture-decision-records">Architecture decision records</a></h1>
 <p>Short records of decisions that shape the code, with their context and the alternatives we rejected.
@@ -16028,7 +16438,7 @@ element’s underlay just before that element’s top stitches.</p>
 <tr><td>M10.5 ✅</td><td>Several threads in one element, as the tartan and gradient fills need them. A generator gives each group of needle points its own thread, and assembly changes thread inside the element. Each colour block is trimmed after when the element’s <code>trim_after</code> is on, as Ink/Stitch trims a tartan’s or a gradient’s. <code>--sort-colours</code> and automatic digitizing keep an element’s colours together and in their order. The report, the previews and both exporters show every thread. A live effect in VectorCraft still paints its preview with the object’s own paint, and a tartan’s preview shows one colour. No stitch type sews several threads before M10.6. Until then the cases give assembly the groups such a generator will give (<a href="#several-threads-in-one-element">several threads in one element</a>)</td><td><code>REQ-ASM-006</code>, <code>REQ-ASM-007</code>, <code>REQ-AUTO-024</code> and <code>REQ-THREAD-003</code>. An element of 3 threads sews 3 colour blocks with the colour changes and trims Ink/Stitch’s plan gives them, and every golden file of an element with one thread stays as it was</td></tr>
 <tr><td>M10.6</td><td>Tartan fill without herringbone, as Ink/Stitch sews it. Its sett is Ink/Stitch’s <code>tartan</code> attribute, which the compatibility contract lists from M8.1. The sett’s palette code gives each stripe a colour and a width, for warp and weft alike or for each its own. The sett is mirrored at its ends or repeated, and scaled, turned and moved as a whole. Ink/Stitch writes a repeated sett’s code as a list, which is read too. Stripes narrower than the sett’s least width sew as runs along their middles, after the fills. Rows at <code>tartan_angle</code> to the stripes, a row spacing apart and staggered, go to warp and weft in turns of <code>rows_per_thread</code>. Each row is cut by its stripes and the region, and each colour’s rows are routed as one fill, after the tatami fill’s underlay. <code>stop_at_ending_point</code> ends the last colour at the end point. The step chooses how VectorCraft’s fill dialog sets the sett. 4 of Ink/Stitch’s fonts sew tartan fills</td><td>requirements written. TS-17B’s tartans sew in Ink/Stitch as in StitchCraft by every measure of the differential, a user page shows tartan fills in pictures, and TS-17B is drawn for MC-12</td></tr>
 <tr><td>M10.7</td><td>Herringbone tartans and an editor for setts. With <code>herringbone_width_mm</code> above 0 the rows run in bands that wide, each band’s rows slanting the other way from the band before, and the weft’s rows are joined across the bands, as Ink/Stitch sews them. 3 of the 4 tartan fonts sew herringbones 1.6 to 5 mm wide. The editor makes a sett from its stripes or from a code. The code is Ink/Stitch’s palette code, or a threadcount from the Scottish Register of Tartans with the width of a thread. Its colour letters come from the register’s published shades, in a table of StitchCraft’s own. The step chooses whether VectorCraft shows the editor as a filter or in the fill dialog</td><td>requirements written. TS-17B’s herringbones sew in Ink/Stitch as in StitchCraft by every measure of the differential, and the user page shows them and the editor</td></tr>
-<tr><td>M10.8</td><td>Ripple stitch between rails and towards a target, as Ink/Stitch sews it. A stroke drawn as a satin column, with rails and rungs, ripples in lines along the column, the first on one rail and the last on the other. Copies of an open line shrink towards the target point, and a closed line spirals in to it. The target is Ink/Stitch’s <code>target_point</code> command, read as M8.4 reads the start and end commands, and otherwise the middle of the stroke’s convex hull. The step chooses how a VectorCraft document marks a target. <code>line_count</code> gives the lines, or <code>min_line_dist_mm</code> with the count’s parity kept, spaced by <code>exponent</code> and <code>flip_exponent</code>, less <code>skip_start</code> and <code>skip_end</code>. The lines sew as one running stitch, back and forth with <code>flip_copies</code> and joined flat or at a point (<code>join_style</code>). <code>staggers</code>, <code>reverse</code>, <code>repeats</code> and bean stitch apply to it. 3 of Ink/Stitch’s fonts sew ripples, most of them along columns</td><td>requirements written. TS-17C’s ripples sew in Ink/Stitch as in StitchCraft by every measure of the differential, a user page shows ripple stitch in pictures, and the type is listed for MC-12</td></tr>
+<tr><td>M10.8 ✅</td><td>Ripple stitch between rails and towards a target, as Ink/Stitch sews it (<a href="#ripple-stitch-m108">strokes</a>). A stroke drawn as a satin column, with rails and rungs, ripples in lines along the column, the first on one rail and the last on the other. Copies of an open line shrink towards the target point, and a closed line spirals in to it. The target is Ink/Stitch’s <code>target_point</code> command, read as M8.4 reads the start and end commands, and otherwise the middle of the stroke’s convex hull. A VectorCraft document marks it with a path named <code>stitch:target</code>, grouped with the stroke as <code>stitch:start</code> is. <code>line_count</code> gives the lines, or <code>min_line_dist_mm</code> with the count’s parity kept, spaced by <code>exponent</code> and <code>flip_exponent</code>, less <code>skip_start</code> and <code>skip_end</code>. The lines sew as one running stitch, back and forth with <code>flip_copies</code> and joined flat or at a point (<code>join_style</code>). <code>staggers</code>, <code>reverse</code>, <code>repeats</code> and bean stitch apply to it. 3 of Ink/Stitch’s fonts sew ripples, most of them along columns. What M10.11 sews is left out with a coded warning</td><td>requirements written (<code>REQ-RIP-001</code> to <code>REQ-RIP-011</code>, <code>REQ-VC-009</code> updated) with <code>SC-W0406</code> to <code>SC-W0408</code>. TS-17C’s 3 ripples sew in Ink/Stitch as in StitchCraft by every measure of the differential, but the overlap of the wave’s and the spiral’s threads, which <code>DEV-RUN-002</code> explains. In the glyph differential, 285 of the 324 glyphs of the 3 Ondulamarif fonts agree or differ as the ledger explains, and the 39 whose ripples follow a guide line are left to M10.11. A user page shows ripple stitch in pictures, and TS-17C is drawn with the ripples for MC-12 (2026-11-08)</td></tr>
 <tr><td>M10.9</td><td>Guided fill with its guide copied, as Ink/Stitch sews it. The guide line is a stroke with Ink/Stitch’s guide-line marker in the fill’s group, and the step chooses how a VectorCraft document marks one. The rows are copies of the guide moved square to the line between its ends, or at <code>guided_fill_angle</code>, a row spacing apart, smoothed by <code>smoothness_mm</code> and cut by the region. Each row’s needle points start a <code>staggers</code>-th of a stitch further along than the row before’s, placed by <code>stitch_position_method</code>. The rows are routed as M7.9 routes curved pieces, with the travel under them, after the tatami fill’s underlay. Where no copy of the guide meets the region, the fill sews a tatami fill at the angle of the guide’s ends, and a fill without a guide sews a tatami fill with a warning. Barstitch cloudy, an Ink/Stitch font, sews 735 guided fills, all copied</td><td>requirements written. TS-17B’s copied guided fills sew in Ink/Stitch as in StitchCraft by every measure of the differential, a user page shows guided fill in pictures, and the type is listed for MC-12</td></tr>
 <tr><td>M10.10</td><td>Guided fill’s parallel offset and buffer strategies and the anchor line, as Ink/Stitch sews them. Parallel offset makes each row an offset curve of the guide, a row spacing past the last, and the rows keep their distance where copies would crowd. Buffer makes closed rows round the guide, of one subpath or more. Rows that close inside the region are joined to the rows round them and to those that meet its outline, and the fill is sewn as one route. A stroke with Ink/Stitch’s anchor-line marker sets where each closed row’s needle points start</td><td>requirements written. TS-17B’s offset and buffered guided fills sew in Ink/Stitch as in StitchCraft by every measure of the differential, and the user page shows each strategy</td></tr>
 <tr><td>M10.11</td><td>Guided ripples, as Ink/Stitch sews them. With a guide line, copies of the stroke move along it, scaled from <code>scale_start</code> to <code>scale_end</code> on <code>scale_axis</code>, and turned with the guide while <code>rotate_ripples</code> is on. A satin column as the guide, or a guide of several subpaths, sets the copies between its rails, as <code>satin_guide_pattern_position</code> places them, with <code>reverse_rails</code> and <code>swap_satin_rails</code>. The anchor line across the stroke sets the copies’ direction. <code>grid_size_mm</code> adds lines across the ripples, sewn first with <code>grid_first</code>, and <code>manual_pattern_placement</code> keeps the stroke’s own nodes as needle points. A clip path cuts the ripples as M8.5 cuts a stroke, and the pieces are routed as a tatami fill’s rows. Ondulamarif XL sews 48 closed lines on satin guides</td><td>requirements written. TS-17C’s guided ripples sew in Ink/Stitch as in StitchCraft by every measure of the differential, and the user page shows them</td></tr>
@@ -16207,7 +16617,7 @@ middle of the artboard (<code>REQ-VC-015</code>). A checkpoint can so sew a shee
 <tr><td><strong>TS-16</strong> An Ink/Stitch file (M8)</td><td>A design written as Ink/Stitch writes a file, which <code>stitch plan</code> reads, each step of M8 drawing its part. Its fill and its satin column start and end at Ink/Stitch’s commands. From M8.4 a red fill 40 × 30 mm sews from its top-right corner to its bottom-left one, and a blue satin column 40 mm long starts in its middle and ends three quarters along. From M8.5 a green fill is cut by its clip path, a circle, to a quarter of a disc, and a black zigzag running stitch by a U-shaped one into 2 pieces. From M8.8 the origin lies off the design’s middle, on the blue column’s top edge 10 mm in from its left end, and a stop after the blue column sends the frame to a stop position 20 mm right of the fill and 10 mm above it. From M8.9 the file turns the design right on export, about its origin, so its first 4 parts sew 100 mm wide and 40 mm tall. From M8.10 a clone of the red fill, turned 45° right, sews after them, in red, below the fill once the design is turned: its rows turn with it, and it starts and ends at the corners turned from the fill’s. From M8.13 2 black lines 40 mm long sew last, above the rest once the design is turned, each locked at both ends with a custom lock drawn as a path and trimmed after: straight lines and a curve at 100 %, and lines and an arc at 150 %. It is sewn beside the PES file the differential’s Ink/Stitch writes of it</td><td>Where each element starts and ends, against its commands. Whether the clipped edges sew where the clip path cuts them, and the clone’s rows lie at its turned angle. Do the drawn locks hold when the tail is pulled? Whether the machine puts the origin or the design’s middle at the hoop’s centre, where the frame waits at the stop, and whether the design sews turned right about its origin. Every difference between the 2 sew-outs</td><td>MC-11</td></tr>
 <tr><td><strong>TS-17A</strong> Cross stitch (M10)</td><td>Cross stitch fills (M10.1, M10.2), drawn before MC-12, each trimmed after, a row to a thread, every sample but the turned square on the canvas’s grid. From M10.1, in red, squares 24 mm wide of simple crosses on grids of 2 and 3 mm, with 2 and 4 threads. Below them in blue, the 2 mm square with 2 threads and the 3 mm one with 4, flipped, and a K 24 mm tall drawn as Ink/Stitch’s cross-stitch fonts draw their letters, on a 2 mm grid with 2 threads, grown by 0.1 mm, its slanted edges cutting their cells in half. From M10.2, in green, squares of upright, dense upright, double and Smyrna crosses on the 3 mm grid, the double crosses with 2 threads as Jersey 15 sews them. Below them in black, squares of half crosses with 3 threads, plain and flipped, and a square 18 mm wide turned 30° with its grid, as lettering along a path turns a glyph’s (114 × 114 mm)</td><td>Whether every cross’s top diagonal lies the same way, and whether the stitches through the cells’ middles show. Fabric between the crosses at 2 and 4 threads, and the grid that reads best at the letter’s size. How the layers of the double and Smyrna crosses look, and whether the half crosses’ travel stitches show on their edges. Gaps between the dense upright crosses, and the turned square’s stepped edges. The time the sheet takes</td><td>MC-12</td></tr>
 <tr><td><strong>TS-17B</strong> New fills (M10)</td><td>Tartan, guided and linear gradient fills (M10.6, M10.7, M10.9, M10.10, M10.12), drawn before MC-12, each trimmed after. Tartans 40 mm square, their setts mirrored at the ends or repeated, one with a weft that differs from its warp and one with stripes narrow enough to sew as runs, beside herringbones 3 mm wide. Leaves filled along an S-shaped guide, copied, offset and buffered. Rectangles in gradients of 2 and 3 stops, one of them transparent</td><td>Whether a tartan’s warp and weft read as a weave and its runs lie flat on its fills, and how its herringbone turns. The spacing of the guided rows round the guide’s bends, and where the copied rows crowd. Whether a gradient’s colours blend with no step between its sections, and whether the transparent stop leaves a clean gap. Colour changes, jumps and time</td><td>MC-12</td></tr>
-<tr><td><strong>TS-17C</strong> Ripples and routing (M10)</td><td>Ripple stitches (M10.8, M10.11), drawn before MC-12, along a column of rails and rungs, from an open line towards a target point and from a closed line spiralling in. Ripples along a guide line and closed lines on a satin guide, beside a ripple with a grid. The routing tools (M10.4, M10.13): satin letters as drawn beside the same letters after auto-satin routing, and a network of running stitches as drawn beside it after auto-run routing. Drawn from M10.4 with its part, the word ROUTE in satin letters 20 mm tall with a centre walk underlay, as drawn above and routed 30 mm below. From M10.13, below them in red, 6 bean-stitched running stitches that cross, branch and pass near each other, as drawn on the left and routed with trims on the right. From M10.15, at the bottom in red, a bar and a post that cross at their middles, satin columns 5 mm wide and 30 mm long with a contour and a zigzag underlay, as drawn on the left and with their underlays first on the right. The other parts are to come with their steps. 2 satin columns of one thread that cross, as drawn beside the same 2 with their underlays first (M10.15)</td><td>Whether the ripples’ lines keep their spacing, and how their joins look. Jumps, trims and time on the routed halves against the halves as drawn, and whether the runs under the satins show, and under the bean stitches of the lines. Whether the crossing columns, their underlays sewn first, lie flatter than as drawn. The height of each crossing above the fabric, with calipers. Whether the bar’s satin bulges or its underlay shows where the post crosses it. How the needle goes back from the post’s underlay to the bar</td><td>MC-12</td></tr>
+<tr><td><strong>TS-17C</strong> Ripples and routing (M10)</td><td>Ripple stitches (M10.8, M10.11), drawn before MC-12, along a column of rails and rungs, from an open line towards a target point and from a closed line spiralling in. Ripples along a guide line and closed lines on a satin guide, beside a ripple with a grid. The routing tools (M10.4, M10.13): satin letters as drawn beside the same letters after auto-satin routing, and a network of running stitches as drawn beside it after auto-run routing. Drawn from M10.4 with its part, the word ROUTE in satin letters 20 mm tall with a centre walk underlay, as drawn above and routed 30 mm below. From M10.13, below them in red, 6 bean-stitched running stitches that cross, branch and pass near each other, as drawn on the left and routed with trims on the right. From M10.15, below the network in red, a bar and a post that cross at their middles, satin columns 5 mm wide and 30 mm long with a contour and a zigzag underlay, as drawn on the left and with their underlays first on the right. From M10.8, at the bottom in green, below the crossing columns, a ripple of 7 lines sewn back and forth along a column between 2 arches, drawn with rails and a rung. Beside it, the 8 copies of a wave shrink to a target point 20 mm above it and meet at points. On the right, a circle spirals in to its middle. The other parts are to come with their steps. 2 satin columns of one thread that cross, as drawn beside the same 2 with their underlays first (M10.15)</td><td>Whether the ripples’ lines keep their spacing, and how their joins look. Jumps, trims and time on the routed halves against the halves as drawn, and whether the runs under the satins show, and under the bean stitches of the lines. Whether the crossing columns, their underlays sewn first, lie flatter than as drawn. The height of each crossing above the fabric, with calipers. Whether the bar’s satin bulges or its underlay shows where the post crosses it. How the needle goes back from the post’s underlay to the bar</td><td>MC-12</td></tr>
 </tbody>
 </table>
 </div>
@@ -16226,7 +16636,7 @@ middle of the artboard (<code>REQ-VC-015</code>). A checkpoint can so sew a shee
 <tr><td>MC-8</td><td>M13.12</td><td>TS-13, from <code>stitch testsheet</code> or drawn in VectorCraft by the Test Sheet filter with the Auto effect</td><td>Do pictures digitized automatically sew better than the same shapes in paint order? Are the widest satin column, the narrowest triple run, the overlap, the underlays by width and the columns’ pull compensation right?</td></tr>
 <tr><td>MC-6</td><td>M7</td><td>TS-11A and TS-11B, from <code>stitch testsheet</code> or drawn in VectorCraft by the Test Sheet filter, and TS-11C from <code>stitch testsheet</code></td><td>New stitch types acceptable? Are their defaults right?</td></tr>
 <tr><td>MC-11</td><td>M8</td><td>TS-16, from <code>stitch testsheet</code>, beside Ink/Stitch’s machine file of it, which the differential keeps (<code>target/conformance/differential/ts-16.inkstitch.pes</code>)</td><td>Does an Ink/Stitch file sew from StitchCraft’s machine file as it does from Ink/Stitch’s?</td></tr>
-<tr><td>MC-12</td><td>M10</td><td>TS-17A, TS-17B, TS-17C, from <code>stitch testsheet</code> or drawn in VectorCraft by the Test Sheet filter, but TS-17C only from <code>stitch testsheet</code>, as a document’s coordinates round the points where its routed letters are cut, and a piece of its T then sews its first stitch 0.05 mm off</td><td>New stitch types acceptable, and their defaults right? Do the routed designs leave fewer jump threads than the same elements as drawn? Do satin columns that cross lie flatter with their underlays first?</td></tr>
+<tr><td>MC-12</td><td>M10</td><td>TS-17A, TS-17B, TS-17C, from <code>stitch testsheet</code> or drawn in VectorCraft by the Test Sheet filter, but TS-17C only from <code>stitch testsheet</code>, as a document’s coordinates round the points where its routed letters are cut, and a piece of its T then sews its first stitch 0.05 mm off</td><td>New stitch types acceptable, and their defaults right? Do ripple stitches keep their lines apart and their joins neat? Are there fewer jump threads on the routed designs than on the same elements as drawn? With their underlays first, do satin columns that cross lie flatter?</td></tr>
 <tr><td>MC-9</td><td>M14</td><td>TS-14</td><td>Do the fonts sew legibly across the heights they claim?</td></tr>
 <tr><td>MC-10</td><td>M15</td><td>TS-15</td><td>Do fonts ported automatically sew as legibly as fonts digitized by hand, from the least height of their range?</td></tr>
 <tr><td>MC-7</td><td>M12</td><td>all</td><td>Release regression</td></tr>

@@ -35,10 +35,10 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-540bc9d0.js";
+            window.path_to_searchindex_js = "../../../searchindex-76997358.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../toc-01637e9f.js"></script>
+        <script src="../../../toc-bd1465a9.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -187,8 +187,9 @@
 <h2 id="stroke"><a class="header" href="#stroke">Stroke</a></h2>
 <h3 id="stroke_method"><a class="header" href="#stroke_method"><code>stroke_method</code></a></h3>
 <p><strong>Method.</strong> The stitch the path is sewn with. A running stitch goes along it and a zigzag across it, and manual
-stitch puts a needle point on each of its nodes. Ripple stitch arrives in a later version, and
-until then an element set to it is skipped (<code>SC-W0011</code>).</p>
+stitch puts a needle point on each of its nodes. A ripple stitch sews lines that spread out from
+the path to its target point, or along it from one rail to the other where it is drawn as a satin
+column’s rails and rungs.</p>
 <ul>
 <li><strong>Accepts:</strong> one of <code>running_stitch</code> (Running stitch), <code>ripple_stitch</code> (Ripple stitch), <code>zigzag_stitch</code> (Zigzag stitch), <code>manual_stitch</code> (Manual stitch)</li>
 <li><strong>Default:</strong> <code>running_stitch</code></li>

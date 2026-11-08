@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-540bc9d0.js";
+            window.path_to_searchindex_js = "../../searchindex-76997358.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-01637e9f.js"></script>
+        <script src="../../toc-bd1465a9.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -917,9 +917,11 @@ it take pull compensation, random stitch lengths or gap-filling rows, which Ink/
 use for, but its area grows by <code>expand_mm</code> as in Ink/Stitch. It is a tatami fill in every other way too.
 The element before it ends near its area, and its rows are routed and joined by travel stitches as a
 tatami fill’s are, between its start and end positions where it has them. Ink/Stitch’s legacy fill takes
-its parts in order of their distance from its start command and uses it no further (<code>DEV-FILL-014</code>). <code>flip</code> and <code>reverse</code> are not planned,
-and a design that sets them gets <code>SC-W0105</code>. The VectorCraft plug-in’s fill dialog does not offer the
-method.</p>
+its parts in order of their distance from its start command and uses it no further (<code>DEV-FILL-014</code>).
+<code>flip</code> and <code>reverse</code> are not planned, and a legacy fill that sets them gets <code>SC-W0105</code>, though a ripple
+stitch reads a <code>reverse</code> of its own (M10.8). Ink/Stitch reads them for its legacy fill alone, so a fill
+of another method leaves <code>reverse</code> to the node’s stroke without a word, as it leaves every stroke’s
+setting. The VectorCraft plug-in’s fill dialog does not offer the method.</p>
 <h2 id="references"><a class="header" href="#references">References</a></h2>
 <ul>
 <li>D. Hilbert, “Über die stetige Abbildung einer Linie auf ein Flächenstück,” <em>Mathematische Annalen</em> 38, 1891.</li>

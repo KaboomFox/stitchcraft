@@ -592,6 +592,22 @@
         "unit": "mm"
       }
     },
+    "exponent": {
+      "default": 1.0,
+      "description": "How the lines are spaced. 1 spaces them evenly. Above 1 packs them together towards the first line, and below 1 towards the last.",
+      "maximum": 100.0,
+      "minimum": 0.1,
+      "title": "Spacing exponent",
+      "type": "number",
+      "x-stitchcraft": {
+        "applies_to": [
+          "ripple_stitch"
+        ],
+        "group": "Ripple",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
     "fill": {
       "default": true,
       "description": "Whether the fill is sewn. Off, it sews nothing, and the shape's outline, if it has one, is sewn as its stroke settings say. The element before it still ends near it, as Ink/Stitch's does.",
@@ -790,6 +806,34 @@
         "stability": "stable"
       }
     },
+    "flip_copies": {
+      "default": true,
+      "description": "Sew every other line backwards, so that the ripple goes back and forth. Off, every line is sewn the same way, and the needle goes straight from each line's end to the next line's start.",
+      "title": "Back and forth",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "applies_to": [
+          "ripple_stitch"
+        ],
+        "group": "Ripple",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
+    "flip_exponent": {
+      "default": false,
+      "description": "Pack the lines towards the other end: the spacing the exponent gives starts from the last line.",
+      "title": "Flip the spacing",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "applies_to": [
+          "ripple_stitch"
+        ],
+        "group": "Ripple",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
     "force_lock_stitches": {
       "default": false,
       "description": "Lock the end of every group of stitches, and jump to the next, even where the needle would otherwise go straight on to it. The end lock is sewn even where `ties` leaves it out, manual stitch gets the locks it otherwise goes without, and a fill whose top rows `expand_mm` cuts into pieces locks each piece on its own.",
@@ -818,20 +862,58 @@
       }
     },
     "join_style": {
-      "default": "0",
-      "description": "How the rings turn at the shape's corners, as they move in a row spacing at a time: round, mitred (pointed, cut off 10 row spacings out) or bevelled (cut straight across).",
-      "enum": [
-        "0",
-        "1",
-        "2"
-      ],
-      "title": "Join style",
-      "type": "string",
+      "anyOf": [
+        {
+          "default": "0",
+          "description": "How each line meets the next. Flat joins them with a straight run of stitches. Point bends each line into the next, so that they meet at a point, and the ripple has 1 line more to bend.",
+          "enum": [
+            "0",
+            "1"
+          ],
+          "title": "Join style",
+          "type": "string",
+          "x-stitchcraft": {
+            "applies_to": [
+              "ripple_stitch"
+            ],
+            "group": "Ripple",
+            "origin": "inkstitch",
+            "stability": "stable"
+          }
+        },
+        {
+          "default": "0",
+          "description": "How the rings turn at the shape's corners, as they move in a row spacing at a time: round, mitred (pointed, cut off 10 row spacings out) or bevelled (cut straight across).",
+          "enum": [
+            "0",
+            "1",
+            "2"
+          ],
+          "title": "Join style",
+          "type": "string",
+          "x-stitchcraft": {
+            "applies_to": [
+              "contour_fill"
+            ],
+            "group": "Contour",
+            "origin": "inkstitch",
+            "stability": "stable"
+          }
+        }
+      ]
+    },
+    "line_count": {
+      "default": 10,
+      "description": "How many lines the ripple sews. The first is the stroke's own line, or a column's first rail, and the last the target point, or the second rail. With `min_line_dist_mm`, this keeps only the count's parity, odd or even.",
+      "maximum": 1000,
+      "minimum": 1,
+      "title": "Lines",
+      "type": "integer",
       "x-stitchcraft": {
         "applies_to": [
-          "contour_fill"
+          "ripple_stitch"
         ],
-        "group": "Contour",
+        "group": "Ripple",
         "origin": "inkstitch",
         "stability": "stable"
       }
@@ -1221,6 +1303,26 @@
         "unit": "mm"
       }
     },
+    "min_line_dist_mm": {
+      "default": null,
+      "description": "How far apart the lines are at least. The count is then the shortest distance from the stroke's line to the target point, or across the column, divided by this and rounded up. Where that differs in parity from `line_count`, it is 1 less, so that the ripple ends on the same side however large it is drawn. Empty or 0: `line_count` gives the count.",
+      "maximum": 100.0,
+      "minimum": 0.01,
+      "title": "Least distance between lines",
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-stitchcraft": {
+        "applies_to": [
+          "ripple_stitch"
+        ],
+        "group": "Ripple",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "mm"
+      }
+    },
     "min_random_split_length_mm": {
       "default": null,
       "description": "With a random split phase, also split stitches longer than this but no longer than the longest stitch. 0 splits every stitch. Empty: the longest stitch.",
@@ -1592,6 +1694,20 @@
         }
       ]
     },
+    "reverse": {
+      "default": false,
+      "description": "Sew the whole ripple the other way round, from its last needle point to its first.",
+      "title": "Reverse",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "applies_to": [
+          "ripple_stitch"
+        ],
+        "group": "Ripple",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
     "reverse_rails": {
       "default": "automatic",
       "description": "Which rails are sewn against the way they are drawn, so that both run the same way. Automatic reverses the second rail when it runs against the first.",
@@ -1807,6 +1923,22 @@
         "unit": "%"
       }
     },
+    "skip_end": {
+      "default": 0,
+      "description": "How many of the last lines are left out, such as the lines that crowd round the target point.",
+      "maximum": 1000,
+      "minimum": 0,
+      "title": "Skip last lines",
+      "type": "integer",
+      "x-stitchcraft": {
+        "applies_to": [
+          "ripple_stitch"
+        ],
+        "group": "Ripple",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
     "skip_last": {
       "default": false,
       "description": "Leave out the needle point at the end of each row, or of each piece of a circular fill's spiral. It lies close to the start of the next, and leaving it out lowers the stitch count and the density along the fill's edge.",
@@ -1818,6 +1950,22 @@
           "circular_fill"
         ],
         "group": "Stitches",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
+    "skip_start": {
+      "default": 0,
+      "description": "How many of the first lines are left out, such as the stroke's own line.",
+      "maximum": 1000,
+      "minimum": 0,
+      "title": "Skip first lines",
+      "type": "integer",
+      "x-stitchcraft": {
+        "applies_to": [
+          "ripple_stitch"
+        ],
+        "group": "Ripple",
         "origin": "inkstitch",
         "stability": "stable"
       }
@@ -1888,23 +2036,43 @@
       }
     },
     "staggers": {
-      "default": 4.0,
-      "description": "How many rows the needle points take to come back to where they started. Along each row they lie the longest stitch (`max_stitch_length_mm`) apart, a `staggers`-th of a stitch along from the row before's, so that neighbouring rows never line them up. A fraction draws diagonals that show less than whole numbers do. A negative number staggers the rows the other way, and 0 counts as 1, which lines every row's points up, as in Ink/Stitch. A contour or meander fill staggers its underlay's rows so.",
-      "maximum": 100.0,
-      "minimum": -100.0,
-      "title": "Staggers",
-      "type": "number",
-      "x-stitchcraft": {
-        "applies_to": [
-          "tatami_fill",
-          "contour_fill",
-          "meander_fill",
-          "circular_fill"
-        ],
-        "group": "Stitches",
-        "origin": "inkstitch",
-        "stability": "stable"
-      }
+      "anyOf": [
+        {
+          "default": 1.0,
+          "description": "How many lines the needle points take to come back to where they started. Each line's needle points start a staggers-th of the stitch lengths further back than the line's before, so that lines side by side don't line them up. 0 places every line's needle points from the end it is sewn from.",
+          "maximum": 100.0,
+          "minimum": -100.0,
+          "title": "Staggers",
+          "type": "number",
+          "x-stitchcraft": {
+            "applies_to": [
+              "ripple_stitch"
+            ],
+            "group": "Ripple",
+            "origin": "inkstitch",
+            "stability": "stable"
+          }
+        },
+        {
+          "default": 4.0,
+          "description": "How many rows the needle points take to come back to where they started. Along each row they lie the longest stitch (`max_stitch_length_mm`) apart, a `staggers`-th of a stitch along from the row before's, so that neighbouring rows never line them up. A fraction draws diagonals that show less than whole numbers do. A negative number staggers the rows the other way, and 0 counts as 1, which lines every row's points up, as in Ink/Stitch. A contour or meander fill staggers its underlay's rows so.",
+          "maximum": 100.0,
+          "minimum": -100.0,
+          "title": "Staggers",
+          "type": "number",
+          "x-stitchcraft": {
+            "applies_to": [
+              "tatami_fill",
+              "contour_fill",
+              "meander_fill",
+              "circular_fill"
+            ],
+            "group": "Stitches",
+            "origin": "inkstitch",
+            "stability": "stable"
+          }
+        }
+      ]
     },
     "start_at_nearest_point": {
       "default": true,
@@ -1936,7 +2104,7 @@
     },
     "stroke_method": {
       "default": "running_stitch",
-      "description": "The stitch the path is sewn with. A running stitch goes along it and a zigzag across it, and manual stitch puts a needle point on each of its nodes. Ripple stitch arrives in a later version, and until then an element set to it is skipped (`SC-W0011`).",
+      "description": "The stitch the path is sewn with. A running stitch goes along it and a zigzag across it, and manual stitch puts a needle point on each of its nodes. A ripple stitch sews lines that spread out from the path to its target point, or along it from one rail to the other where it is drawn as a satin column's rails and rungs.",
       "enum": [
         "running_stitch",
         "ripple_stitch",
@@ -2336,6 +2504,22 @@
         ],
         "name": "RepeatParams",
         "title": "Repeat parameters"
+      },
+      {
+        "keys": [
+          "line_count",
+          "min_line_dist_mm",
+          "exponent",
+          "flip_exponent",
+          "skip_start",
+          "skip_end",
+          "flip_copies",
+          "join_style",
+          "staggers",
+          "reverse"
+        ],
+        "name": "RippleParams",
+        "title": "Ripple parameters"
       },
       {
         "keys": [

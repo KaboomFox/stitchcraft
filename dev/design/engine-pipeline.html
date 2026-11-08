@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-540bc9d0.js";
+            window.path_to_searchindex_js = "../searchindex-76997358.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-01637e9f.js"></script>
+        <script src="../toc-bd1465a9.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -289,9 +289,11 @@ circular fill, sewn from M7.9, sews a spiral round the middle of each part after
 routes the spiral’s pieces as a tatami fill routes its rows (<a href="algorithms/fills.html#circular-fill">fills</a>).
 A cross stitch fill, sewn from M10.1, sews a cross in each cell of a grid that each part covers enough of,
 with no underlay, the crosses that meet in one run. From M10.2 it sews each of Ink/Stitch’s 12 methods, its
-half crosses in rows routed as a tatami fill’s (<a href="algorithms/cross-stitch.html">cross stitch</a>).
-The other stroke, satin and fill methods are skipped with <code>SC-W0011</code> until their milestones. An element whose parameters are wrong (<code>SC-E0101</code>) is skipped too, and
-the rest of the design still plans.</p>
+half crosses in rows routed as a tatami fill’s (<a href="algorithms/cross-stitch.html">cross stitch</a>). A ripple
+stitch, sewn from M10.8, sews lines along a column or towards a target point as one running stitch
+(<a href="algorithms/strokes.html#ripple-stitch-m108">ripple stitch</a>), and every stroke method is then sewn. The
+other fill methods are skipped with <code>SC-W0011</code> until their milestones. An element whose parameters are
+wrong (<code>SC-E0101</code>) is skipped too, and the rest of the design still plans.</p>
 <p>Each element is generated with the shortest stitch for it: the larger of the machine’s (the profile’s
 <code>min_stitch</code>) and the element’s <code>min_stitch_length_mm</code>, or the design’s shortest stitch when the element
 sets none. A satin column is given its longest stitch as well, the element’s <code>max_stitch_length_mm</code>,
@@ -513,7 +515,7 @@ to the other axis and rounds nothing (<code>stitchcraft_engine::design::Turn</co
 </thead>
 <tbody>
 <tr><td>Start / end point</td><td>The element’s start and end positions, which take the place of the needle before it and of the next element’s offer for fills and satin columns (<code>REQ-GEN-001</code>). The SVG adapter reads Ink/Stitch’s commands, and the VectorCraft adapter its markers named <code>stitch:start</code> and <code>stitch:end</code></td><td>M8.4</td></tr>
-<tr><td>Target point</td><td>The point a circular fill turns round, in place of its parts’ centroids (<code>REQ-FILL-CIR-008</code>), and from M10 the ripple stitch’s target</td><td>M8.4, M10</td></tr>
+<tr><td>Target point</td><td>The point a circular fill turns round, in place of its parts’ centroids (<code>REQ-FILL-CIR-008</code>), and a ripple stitch aims at, in place of its hull’s centroid (<code>REQ-RIP-002</code>)</td><td>M8.4, M10.8</td></tr>
 <tr><td>Trim after, stop after</td><td><code>trim_after</code> and <code>stop_after</code> on the element’s last group (see the connection table). The SVG adapter reads Ink/Stitch’s trim and stop commands as these settings.</td><td>M3.8 (engine), M3 (adapter)</td></tr>
 <tr><td>Ignore object / ignore layer</td><td>The adapter drops the element and says so in the report (<code>REQ-ASM-004</code>). The VectorCraft adapter reads them from the name <code>stitch:ignore</code></td><td>M3 (SVG), M6 (VectorCraft)</td></tr>
 <tr><td>Origin</td><td>The design setting <code>origin</code>. The SVG adapter reads Ink/Stitch’s <code>origin</code> command, and the VectorCraft adapter its marker named <code>stitch:origin</code></td><td>M3.8 (engine), M8.8 (adapters)</td></tr>

@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-540bc9d0.js";
+            window.path_to_searchindex_js = "../../searchindex-76997358.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-01637e9f.js"></script>
+        <script src="../../toc-bd1465a9.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -231,6 +231,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/stroke.html">Stroke parameters</a></td><td>1</td><td>Running stitch, Ripple stitch, Zigzag stitch, Manual stitch</td></tr>
 <tr><td><a href="params/running.html">Running parameters</a></td><td>4</td><td>Running stitch, Ripple stitch</td></tr>
 <tr><td><a href="params/repeat.html">Repeat parameters</a></td><td>2</td><td>Running stitch, Ripple stitch, Zigzag stitch, Manual stitch</td></tr>
+<tr><td><a href="params/ripple.html">Ripple parameters</a></td><td>10</td><td>Ripple stitch</td></tr>
 <tr><td><a href="params/zigzag-stroke.html">Zigzag stroke parameters</a></td><td>3</td><td>Zigzag stitch</td></tr>
 <tr><td><a href="params/satin.html">Satin parameters</a></td><td>34</td><td>Satin column, E-stitch, S-stitch, Zigzag satin</td></tr>
 <tr><td><a href="params/pull.html">Pull parameters</a></td><td>2</td><td>Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill</td></tr>
@@ -282,6 +283,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/satin.html#end_at_nearest_point"><code>end_at_nearest_point</code></a></td><td>End at nearest point</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/tatami.html#end_row_spacing_mm"><code>end_row_spacing_mm</code></a></td><td>End row spacing</td><td>Tatami parameters</td></tr>
 <tr><td><a href="params/tatami.html#expand_mm"><code>expand_mm</code></a></td><td>Expand</td><td>Tatami parameters</td></tr>
+<tr><td><a href="params/ripple.html#exponent"><code>exponent</code></a></td><td>Spacing exponent</td><td>Ripple parameters</td></tr>
 <tr><td><a href="params/fill.html#fill"><code>fill</code></a></td><td>Sew the fill</td><td>Fill parameters</td></tr>
 <tr><td><a href="params/cross.html#fill_coverage"><code>fill_coverage</code></a></td><td>Coverage</td><td>Cross parameters</td></tr>
 <tr><td><a href="params/fill.html#fill_method"><code>fill_method</code></a></td><td>Fill method</td><td>Fill parameters</td></tr>
@@ -291,9 +293,13 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/tatami.html#fill_underlay_max_stitch_length_mm"><code>fill_underlay_max_stitch_length_mm</code></a></td><td>Underlay longest stitch</td><td>Tatami parameters</td></tr>
 <tr><td><a href="params/tatami.html#fill_underlay_row_spacing_mm"><code>fill_underlay_row_spacing_mm</code></a></td><td>Underlay row spacing</td><td>Tatami parameters</td></tr>
 <tr><td><a href="params/tatami.html#fill_underlay_skip_last"><code>fill_underlay_skip_last</code></a></td><td>Skip last underlay stitch</td><td>Tatami parameters</td></tr>
+<tr><td><a href="params/ripple.html#flip_copies"><code>flip_copies</code></a></td><td>Back and forth</td><td>Ripple parameters</td></tr>
+<tr><td><a href="params/ripple.html#flip_exponent"><code>flip_exponent</code></a></td><td>Flip the spacing</td><td>Ripple parameters</td></tr>
 <tr><td><a href="params/common.html#force_lock_stitches"><code>force_lock_stitches</code></a></td><td>Always lock</td><td>Common parameters</td></tr>
 <tr><td><a href="params/tatami.html#gap_fill_rows"><code>gap_fill_rows</code></a></td><td>Gap-filling rows</td><td>Tatami parameters</td></tr>
+<tr><td><a href="params/ripple.html#join_style"><code>join_style</code></a></td><td>Join style</td><td>Ripple parameters</td></tr>
 <tr><td><a href="params/contour.html#join_style"><code>join_style</code></a></td><td>Join style</td><td>Contour parameters</td></tr>
+<tr><td><a href="params/ripple.html#line_count"><code>line_count</code></a></td><td>Lines</td><td>Ripple parameters</td></tr>
 <tr><td><a href="params/common.html#lock_custom_end"><code>lock_custom_end</code></a></td><td>Custom end lock</td><td>Common parameters</td></tr>
 <tr><td><a href="params/common.html#lock_custom_start"><code>lock_custom_start</code></a></td><td>Custom start lock</td><td>Common parameters</td></tr>
 <tr><td><a href="params/common.html#lock_end"><code>lock_end</code></a></td><td>End lock</td><td>Common parameters</td></tr>
@@ -308,6 +314,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/meander.html#meander_pattern"><code>meander_pattern</code></a></td><td>Pattern</td><td>Meander parameters</td></tr>
 <tr><td><a href="params/meander.html#meander_scale_percent"><code>meander_scale_percent</code></a></td><td>Pattern scale</td><td>Meander parameters</td></tr>
 <tr><td><a href="params/common.html#min_jump_stitch_length_mm"><code>min_jump_stitch_length_mm</code></a></td><td>Shortest jump</td><td>Common parameters</td></tr>
+<tr><td><a href="params/ripple.html#min_line_dist_mm"><code>min_line_dist_mm</code></a></td><td>Least distance between lines</td><td>Ripple parameters</td></tr>
 <tr><td><a href="params/satin.html#min_random_split_length_mm"><code>min_random_split_length_mm</code></a></td><td>Shortest split stitch</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/common.html#min_stitch_length_mm"><code>min_stitch_length_mm</code></a></td><td>Shortest stitch</td><td>Common parameters</td></tr>
 <tr><td><a href="params/cross.html#pattern_size_mm"><code>pattern_size_mm</code></a></td><td>Cell size</td><td>Cross parameters</td></tr>
@@ -323,6 +330,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/satin.html#random_zigzag_spacing_percent"><code>random_zigzag_spacing_percent</code></a></td><td>Random zigzag spacing</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/repeat.html#repeats"><code>repeats</code></a></td><td>Repeats</td><td>Repeat parameters</td></tr>
 <tr><td><a href="params/path-fill.html#repeats"><code>repeats</code></a></td><td>Repeats</td><td>Path fill parameters</td></tr>
+<tr><td><a href="params/ripple.html#reverse"><code>reverse</code></a></td><td>Reverse</td><td>Ripple parameters</td></tr>
 <tr><td><a href="params/satin.html#reverse_rails"><code>reverse_rails</code></a></td><td>Reverse rails</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/tatami.html#row_spacing_mm"><code>row_spacing_mm</code></a></td><td>Row spacing</td><td>Tatami parameters</td></tr>
 <tr><td><a href="params/running.html#running_stitch_length_mm"><code>running_stitch_length_mm</code></a></td><td>Stitch length</td><td>Running parameters</td></tr>
@@ -332,10 +340,13 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/satin.html#satin_method"><code>satin_method</code></a></td><td>Method</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#short_stitch_distance_mm"><code>short_stitch_distance_mm</code></a></td><td>Short stitch distance</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#short_stitch_inset"><code>short_stitch_inset</code></a></td><td>Short stitch inset</td><td>Satin parameters</td></tr>
+<tr><td><a href="params/ripple.html#skip_end"><code>skip_end</code></a></td><td>Skip last lines</td><td>Ripple parameters</td></tr>
 <tr><td><a href="params/tatami.html#skip_last"><code>skip_last</code></a></td><td>Skip last stitch</td><td>Tatami parameters</td></tr>
+<tr><td><a href="params/ripple.html#skip_start"><code>skip_start</code></a></td><td>Skip first lines</td><td>Ripple parameters</td></tr>
 <tr><td><a href="params/path-fill.html#smoothness_mm"><code>smoothness_mm</code></a></td><td>Smoothness</td><td>Path fill parameters</td></tr>
 <tr><td><a href="params/satin.html#split_method"><code>split_method</code></a></td><td>Split method</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/satin.html#split_staggers"><code>split_staggers</code></a></td><td>Staggers</td><td>Satin parameters</td></tr>
+<tr><td><a href="params/ripple.html#staggers"><code>staggers</code></a></td><td>Staggers</td><td>Ripple parameters</td></tr>
 <tr><td><a href="params/tatami.html#staggers"><code>staggers</code></a></td><td>Staggers</td><td>Tatami parameters</td></tr>
 <tr><td><a href="params/satin.html#start_at_nearest_point"><code>start_at_nearest_point</code></a></td><td>Start at nearest point</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/common.html#stop_after"><code>stop_after</code></a></td><td>Stop after</td><td>Common parameters</td></tr>
