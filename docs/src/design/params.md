@@ -186,6 +186,16 @@ be in the [compatibility contract](inkstitch-compat-contract.md) with a compatib
 Ink/Stitch sews, and one of StitchCraft's own must not take an Ink/Stitch key. Deviations must name ledger
 entries, and the lock and method identifiers must equal Ink/Stitch's.
 
+The contract check also runs the other way. A row of the contract is registered when the registry
+declares its key for any of the row's stitch types. Each stitch type of a registered row that the engine
+sews must then be one that a declaration of the key applies to. The engine sews the stitch types it plans
+without `SC-W0011`. A stitch type sewn as another is read as that one, as a legacy fill is read as a tatami
+fill (`DEV-FILL-014`). Ink/Stitch's settings window shows some settings for a stitch type whose sewing
+doesn't read them, and a deviation can leave a setting out. For those, an `[[unapplied]]` entry in
+`conformance/inkstitch-params.toml` names the stitch type and the keys, with the reason. An entry that
+excuses nothing fails the check, so the list can't go stale. A row that the registry declares for none of
+its stitch types is planned, and the check leaves it out.
+
 ## Naming rules
 
 1. If Ink/Stitch has the parameter with the same meaning, **use its attribute name verbatim**
