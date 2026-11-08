@@ -521,10 +521,14 @@ impl<'a> Style<'a> {
     /// The style of an element that inherits this one and declares `declared`; `None` when the element
     /// has `display: none`, which hides it and everything inside it.
     pub fn child(&self, declared: &Declared<'a, '_>) -> Option<Style<'a>> {
+        let hidden = declared.get("display").is_some_and(|v| v.eq_ignore_ascii_case("none"));
+        (!hidden).then(|| self.inherited(declared))
+    }
+
+    /// The style of an element that inherits this one and declares `declared`, whatever its `display`: an
+    /// Ink/Stitch helper's, which steers its shapes even when hidden.
+    pub(crate) fn inherited(&self, declared: &Declared<'a, '_>) -> Style<'a> {
         let get = |property: &str| declared.get(property);
-        if get("display").is_some_and(|v| v.eq_ignore_ascii_case("none")) {
-            return None;
-        }
         let mut style = *self;
         let [context_fill, context_stroke] = self.context;
         let in_context = |paint| match paint {
@@ -587,7 +591,7 @@ impl<'a> Style<'a> {
                 *marked = names_something(value);
             }
         }
-        Some(style)
+        style
     }
 
     /// Whether anything this element paints can be seen.

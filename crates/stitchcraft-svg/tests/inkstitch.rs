@@ -19,7 +19,7 @@ fn setting<'s>(svg: &'s stitchcraft_svg::Svg, key: &str) -> Vec<(&'s str, Option
 
 /// Each element's id and its hints, as the commands tied to its shape place it (`REQ-GEN-001`).
 fn hints(svg: &stitchcraft_svg::Svg) -> Vec<(&str, Hints)> {
-    svg.design.elements().iter().map(|e| (e.id.as_str(), e.hints)).collect()
+    svg.design.elements().iter().map(|e| (e.id.as_str(), e.hints.clone())).collect()
 }
 
 /// A point in millimetres.
@@ -42,14 +42,14 @@ fn drawing(body: &str) -> String {
 fn req_svg_003_commands_connectors_and_helper_paths_are_not_stitched() {
     let svg = svg(fixture("inkstitch-objects.svg"));
     // Neither the command symbols, nor their connectors, nor the guide line, the pattern sample or the
-    // connector between two shapes: only the design itself.
+    // connector between two shapes: only the design itself. The guide line steers its group's ripple
+    // stitches, and has none to steer here, which needs no word.
     assert_eq!(ids(&svg), ["svg:outline:stroke", "svg:badge:fill", "svg:badge:stroke"]);
     assert_eq!(
         warnings(&svg),
         [
             "info SC-I0805: `template` is left out: an Ink/Stitch `ignore_object` command is attached to it.",
             "info SC-I0805: `notes` is left out, with everything in it: its Ink/Stitch setting `ignore_object` is on.",
-            "warning SC-W0802: `guide` is an Ink/Stitch guide line, a helper for other shapes, so it is not stitched; StitchCraft does not apply guide lines yet.",
             "warning SC-W0802: `sample` is an Ink/Stitch stitch pattern, a helper for the other shapes in its group, so it is not stitched; StitchCraft does not apply patterns yet.",
             "warning SC-W0802: `flow` is a connector (drawn with Inkscape's connector tool), which Ink/Stitch does not stitch; it is left out.",
             "info SC-I0805: `layer2` is left out, with everything in it: an Ink/Stitch `ignore_layer` command is in it.",
@@ -129,7 +129,7 @@ fn req_svg_003_start_end_and_target_commands_place_the_shapes_they_are_tied_to()
     assert_eq!(
         hints(&svg),
         [
-            ("svg:patch:fill", Hints { start: Some(p(50.0, 40.0)), end: Some(p(10.0, 10.0)), target: Some(p(30.0, 25.0)) }),
+            ("svg:patch:fill", Hints { start: Some(p(50.0, 40.0)), end: Some(p(10.0, 10.0)), target: Some(p(30.0, 25.0)), ..Hints::default() }),
             ("svg:line:stroke", Hints { end: Some(p(90.0, 60.0)), ..Hints::default() }),
             ("svg:path@2:stroke", Hints::default()),
         ]
@@ -331,7 +331,7 @@ fn req_svg_003_helper_markers_are_ink_stitch_s_own_and_on_the_start() {
     assert_eq!(
         warnings(&svg),
         [
-            "warning SC-W0802: `anchor` is an Ink/Stitch anchor line, a helper for other shapes, so it is not stitched; StitchCraft does not apply anchor lines yet.",
+            "warning SC-W0802: `anchor` is an Ink/Stitch anchor line, a helper for other shapes, and steers nothing: it is in no group, and Ink/Stitch's helpers steer the shapes of their group.",
             "warning SC-W0802: `arrow` has markers (arrowheads and the like), which are not stitched.",
             "warning SC-W0802: `end-only` has markers (arrowheads and the like), which are not stitched.",
             "warning SC-W0802: `attribute` has markers (arrowheads and the like), which are not stitched.",
