@@ -23,7 +23,9 @@ of the paint it draws over the others, which is how a graphic style applied to a
 From M6.5 Ink/Stitch's commands can be written in an object's or a layer's name. `stitch:ignore` leaves
 it out, and `stitch:start` and `stitch:end` mark where the shape grouped with them starts or ends
 (`REQ-VC-009`), which its fills and satin columns do from M8.4 (`REQ-GEN-001`). From M8.8 `stitch:origin`
-and `stitch:stop-position`, anywhere, give the design its origin and stop position (`REQ-ASM-005`). From M8.7
+and `stitch:stop-position`, anywhere, give the design its origin and stop position (`REQ-ASM-005`). From
+M10.11 `stitch:guide` and `stitch:anchor` give the ripple stitches grouped with them their guide and anchor
+line (`REQ-RIP-012` to `REQ-RIP-014`). From M8.7
 the first object of a clip group or a clipping layer, its clipping object, cuts what it holds as VectorCraft
 clips it (`REQ-VC-017`, `src/document/clip.rs`). Each element made inside keeps a clip of the area of each
 clipping object round it, shared with the other elements it cuts. The engine cuts the element to them as it

@@ -172,7 +172,7 @@ impl<'a> Layered<'a> {
             }
         };
         let (Some(common), Some(Shared { min_stitch, .. }), Some(sews)) = (common, sewing.shared, sews) else { return Ok(None) };
-        let (stitch_type, hints) = (sewing.stitch_type, element.hints);
+        let (stitch_type, hints) = (sewing.stitch_type, element.hints.clone());
         Ok(Some(Layered { element, common, stitch_type, min_stitch, hints, rng, sews, work: 0 }))
     }
 

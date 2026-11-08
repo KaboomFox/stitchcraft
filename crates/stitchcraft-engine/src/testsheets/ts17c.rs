@@ -30,14 +30,22 @@
 //! then both tops (`REQ-ASM-009`), for MC-12 to compare. Ink/Stitch has no such order, so the differential's
 //! file of the sheet leaves the right-hand pair out (`stitchcraft_testkit::inkstitch`).
 //!
-//! M10.8's part, at the bottom from y = 132, below the crossing columns: 3 ripple stitches in green
-//! ([`RIPPLES`]), one of each kind (`REQ-RIP-001`). On the left, a rainbow: a column drawn with rails and
-//! rungs between 2 arches, whose 7 lines run back and forth from the outer arch to the inner one. In the
-//! middle, a wave whose 8 copies shrink to a target point above it, as Ink/Stitch's target point command
-//! places it, each meeting the next at a point. On the right, a circle that spirals in to its middle. The
-//! differential sews each in Ink/Stitch too (`REQ-RIP-011`).
+//! M10.8's part, from y = 132, below the crossing columns: 3 ripple stitches in green ([`RIPPLES`]), one of
+//! each kind (`REQ-RIP-001`). On the left, a rainbow: a column drawn with rails and rungs between 2 arches,
+//! whose 7 lines run back and forth from the outer arch to the inner one. In the middle, a wave whose 8 copies
+//! shrink to a target point above it, as Ink/Stitch's target point command places it, each meeting the next at
+//! a point. On the right, a circle that spirals in to its middle. The differential sews each in Ink/Stitch
+//! too (`REQ-RIP-011`).
+//!
+//! M10.11's part, at the bottom from y = 162, 8 mm below M10.8's: 5 guided ripples and a grid in green
+//! ([`GUIDED`]). A wave's 8 copies follow an arch, shrinking to 30 % and turning with it (`REQ-RIP-012`). A
+//! circle's copies follow a satin guide of 2 rails, 3 mm apart at least, centred between them as Ondulamarif's
+//! accents are (`REQ-RIP-013`). A column's lines get a grid across them, sewn first (`REQ-RIP-015`). A thin
+//! diamond's copies lie at a satin guide's rungs, stretched across it along an anchor line (`REQ-RIP-014`).
+//! A zigzag's 7 copies along a straight guide, sewn through their own nodes, are cut to a circle and routed
+//! (`REQ-RIP-016`, `REQ-RIP-017`). The differential sews each in Ink/Stitch too (`REQ-RIP-019`).
 
-use super::designed::{Drawing, KAPPA, Start};
+use super::designed::{Drawing, KAPPA, Start, round_from};
 use super::sketch::SheetError;
 use super::{BLUE, EMERALD_GREEN, RED, thread};
 use crate::design::{Segment, Subpath};
@@ -76,6 +84,9 @@ pub const RIPPLES: [&str; 3] = ["column", "towards", "spiral"];
 /// The setting that sews a stroke as a ripple stitch.
 const RIPPLE: (&str, &str) = ("stroke_method", "ripple_stitch");
 
+/// The guided ripples and the grid, by name, in the order they are drawn.
+pub const GUIDED: [&str; 5] = ["line", "closed", "grid", "anchor", "clip"];
+
 /// Draws TS-17C.
 pub(super) fn drawing() -> Result<Drawing, SheetError> {
     let blue = thread(BLUE)?;
@@ -92,8 +103,57 @@ pub(super) fn drawing() -> Result<Drawing, SheetError> {
     d.routed(&lines, &Route { tool: Tool::Runs, options: trimmed, start: None, end: None })?;
     crossing(&mut d, "crossing-drawn", 0.0, &red, &[])?;
     crossing(&mut d, "crossing-first", BESIDE, &red, &[("underlays_first", "true")])?;
-    ripples(&mut d, &thread(EMERALD_GREEN)?)?;
+    let green = thread(EMERALD_GREEN)?;
+    ripples(&mut d, &green)?;
+    guided(&mut d, &green)?;
     Ok(d)
+}
+
+/// The guided ripples and the grid at the bottom, from y = 162, sewn with `thread` ([`GUIDED`]).
+pub(super) fn guided(d: &mut Drawing, thread: &Thread) -> Result<(), SheetError> {
+    let point = |x: f64, y: f64| Point::new(x, y);
+    let line = |from: (f64, f64), to: (f64, f64)| -> Result<Subpath, SheetError> {
+        Ok(Subpath { start: point(from.0, from.1)?, segments: vec![Segment::Line(point(to.0, to.1)?)], closed: false })
+    };
+    let curve = |from: (f64, f64), a: (f64, f64), b: (f64, f64), to: (f64, f64)| -> Result<Subpath, SheetError> {
+        let segments = vec![Segment::Cubic(point(a.0, a.1)?, point(b.0, b.1)?, point(to.0, to.1)?)];
+        Ok(Subpath { start: point(from.0, from.1)?, segments, closed: false })
+    };
+    let name = |sample: &str| format!("guided:{sample}");
+    let [along, closed, grid, anchored, clipped] = GUIDED;
+    // A wave 6 mm wide whose 8 copies follow an arch from its middle, shrinking to 30 %.
+    let wave = curve((2.0, 170.0), (4.0, 167.0), (6.0, 173.0), (8.0, 170.0))?;
+    d.along(&name(along), wave, thread, &[RIPPLE, ("line_count", "8"), ("scale_end", "30")])?;
+    d.guide(vec![curve((5.0, 170.0), (10.0, 160.0), (18.0, 160.0), (24.0, 170.0))?], 0.5, &[])?;
+    // A circle 5 mm across whose copies follow 2 rails at least 3 mm apart, as Ondulamarif XL's accents do.
+    let ripple_closed = [RIPPLE, ("min_line_dist_mm", "3"), ("running_stitch_tolerance_mm", "0.1")];
+    d.circle(&name(closed), (31.0, 169.0), 2.5, Start::Top, thread, &ripple_closed)?;
+    let rails =
+        vec![curve((30.0, 164.0), (36.0, 162.0), (42.0, 162.0), (48.0, 164.0))?, curve((30.0, 174.0), (36.0, 176.0), (42.0, 176.0), (48.0, 174.0))?];
+    d.guide(rails, 0.5, &[])?;
+    // A column of 5 lines between rails 12 mm long, its grid's lines 3 mm apart across them, sewn first.
+    let column = vec![line((54.0, 163.0), (66.0, 163.0))?, line((54.0, 175.0), (66.0, 175.0))?, line((60.0, 162.6), (60.0, 175.4))?];
+    d.strokes(&name(grid), column, thread, &[RIPPLE, ("line_count", "5"), ("grid_size_mm", "3"), ("grid_first", "true")])?;
+    // A thin diamond whose copies lie at a satin guide's rungs, its anchor line across its middle.
+    let corners = [(74.0, 168.5), (76.0, 169.0), (74.0, 169.5)];
+    let diamond = Subpath {
+        start: point(72.0, 169.0)?,
+        segments: corners.iter().map(|&(x, y)| Ok(Segment::Line(point(x, y)?))).collect::<Result<_, SheetError>>()?,
+        closed: true,
+    };
+    d.strokes(&name(anchored), vec![diamond], thread, &[RIPPLE, ("satin_guide_pattern_position", "render_at_rungs")])?;
+    let mut ladder = vec![line((70.0, 163.0), (82.0, 163.0))?, line((70.0, 175.0), (82.0, 175.0))?];
+    for x in [73.0, 76.0, 79.0] {
+        ladder.push(line((x, 162.6), (x, 175.4))?);
+    }
+    d.guide(ladder, 0.5, &[])?;
+    d.anchor((72.0, 169.0), (76.0, 169.0))?;
+    // A zigzag whose 7 copies along a straight guide are sewn through their nodes and cut to a circle.
+    let zigzag = [(88.0, 163.0), (90.0, 166.0), (88.0, 169.0), (90.0, 172.0), (88.0, 175.0)];
+    d.polyline(&name(clipped), &zigzag, thread, &[RIPPLE, ("line_count", "7"), ("scale_end", "100"), ("manual_pattern_placement", "true")])?;
+    d.guide(vec![line((89.0, 169.0), (103.0, 169.0))?], 0.5, &[])?;
+    d.clip(vec![round_from((96.0, 169.0), 5.5, Start::Top)?]);
+    Ok(())
 }
 
 /// The ripple stitches at the bottom, from y = 132, sewn with `thread`: a rainbow between 2 arches, a wave that
@@ -431,17 +491,84 @@ mod tests {
         assert!(ripples.iter().all(|ripple| ripple.thread == green));
         let targets: Vec<Option<Point>> = ripples.iter().map(|ripple| ripple.hints.target).collect();
         assert_eq!(targets, [None, Some(Point::new(46.0, 132.0).unwrap()), None]);
-        // From y = 132, 7 mm below the crossing columns, the lowest elements above them, and last on the sheet.
+        // From y = 132, 7 mm below the crossing columns, the lowest elements above them, and before the guided
+        // ripples, the last on the sheet.
         let ys: Vec<f64> = ripples.iter().flat_map(|ripple| ripple.shape.path().points().map(|q| q.y()).collect::<Vec<_>>()).collect();
-        assert!(ys.iter().all(|&y| y >= 132.0), "{ys:?}");
+        assert!(ys.iter().all(|&y| (132.0..=160.0).contains(&y)), "{ys:?}");
         let above: Vec<f64> = sheet_elements("ts17c:")
             .iter()
-            .filter(|element| !element.id.as_str().starts_with("ts17c:ripple:"))
+            .filter(|element| !element.id.as_str().starts_with("ts17c:ripple:") && !element.id.as_str().starts_with("ts17c:guided:"))
             .flat_map(|element| element.shape.path().points().map(|q| q.y()).collect::<Vec<_>>())
             .collect();
         assert_eq!(above.iter().copied().fold(f64::NEG_INFINITY, f64::max), 125.0);
         let design = super::super::find("TS-17C").unwrap().design().unwrap().unwrap();
-        assert_eq!(design.elements()[design.elements().len() - RIPPLES.len()..], ripples);
+        let last = design.elements().len() - GUIDED.len();
+        assert_eq!(design.elements()[last - RIPPLES.len()..last], ripples);
+    }
+
+    #[test]
+    fn ts17c_s_guided_ripples_follow_a_line_a_satin_guide_and_its_rungs_and_one_is_clipped() {
+        let drawn: [(&str, &[&str], &[&str]); 5] = [
+            // A wave and the arch its copies follow, each a curve.
+            ("line", &["M2,170 C4,167 6,173 8,170"], &["M5,170 C10,160 18,160 24,170"]),
+            // A circle of radius 2.5 about (31, 169), clockwise from its top, and 2 curved rails.
+            (
+                "closed",
+                &[
+                    "M31,166.5 C32.381,166.5 33.5,167.619 33.5,169 C33.5,170.381 32.381,171.5 31,171.5 C29.619,171.5 28.5,170.381 28.5,169 C28.5,167.619 29.619,166.5 31,166.5 Z",
+                ],
+                &["M30,164 C36,162 42,162 48,164", "M30,174 C36,176 42,176 48,174"],
+            ),
+            // A column's rails and its rung, with no guide.
+            ("grid", &["M54,163 L66,163", "M54,175 L66,175", "M60,162.6 L60,175.4"], &[]),
+            // A thin diamond, and a ladder of 2 rails and 3 rungs.
+            (
+                "anchor",
+                &["M72,169 L74,168.5 L76,169 L74,169.5 Z"],
+                &["M70,163 L82,163", "M70,175 L82,175", "M73,162.6 L73,175.4", "M76,162.6 L76,175.4", "M79,162.6 L79,175.4"],
+            ),
+            // A zigzag and the straight line its copies follow.
+            ("clip", &["M88,163 L90,166 L88,169 L90,172 L88,175"], &["M89,169 L103,169"]),
+        ];
+        assert_eq!(drawn.map(|(name, _, _)| name), GUIDED);
+        let guided = sheet_elements("ts17c:guided:");
+        let path_of = |path: &crate::design::Path| svg(&Element { shape: crate::design::Shape::stroke(path.clone()), ..guided[0].clone() });
+        let found: Vec<(String, Vec<String>, Vec<String>)> = guided
+            .iter()
+            .map(|ripple| (ripple.id.to_string(), svg(ripple), ripple.hints.guide.as_ref().map(|guide| path_of(&guide.path)).unwrap_or_default()))
+            .collect();
+        let strings = |list: &[&str]| list.iter().map(ToString::to_string).collect::<Vec<_>>();
+        let want: Vec<(String, Vec<String>, Vec<String>)> =
+            drawn.iter().map(|(name, ripple, guide)| (format!("ts17c:guided:{name}"), strings(ripple), strings(guide))).collect();
+        assert_eq!(found, want);
+        // Each a ripple stitch in green, with its own settings; the guides set none.
+        let settings: [&[(&str, &str)]; 5] = [
+            &[("line_count", "8"), ("scale_end", "30"), RIPPLE],
+            &[("min_line_dist_mm", "3"), ("running_stitch_tolerance_mm", "0.1"), RIPPLE],
+            &[("grid_first", "true"), ("grid_size_mm", "3"), ("line_count", "5"), RIPPLE],
+            &[("satin_guide_pattern_position", "render_at_rungs"), RIPPLE],
+            &[("line_count", "7"), ("manual_pattern_placement", "true"), ("scale_end", "100"), RIPPLE],
+        ];
+        assert!(guided.iter().zip(settings).all(|(ripple, settings)| ripple.params.iter().eq(settings.iter().copied())), "{guided:?}");
+        let green = thread(EMERALD_GREEN).unwrap();
+        assert!(
+            guided
+                .iter()
+                .all(|ripple| ripple.thread == green && ripple.hints.guide.as_ref().is_none_or(|guide| guide.params.iter().next().is_none()))
+        );
+        // The diamond's anchor line runs across its middle, and the zigzag is cut to a circle of radius 5.5 about
+        // (96, 169).
+        let anchors: Vec<Option<[Point; 2]>> = guided.iter().map(|ripple| ripple.hints.anchor).collect();
+        assert_eq!(anchors, [None, None, None, Some([Point::new(72.0, 169.0).unwrap(), Point::new(76.0, 169.0).unwrap()]), None]);
+        let clips: Vec<usize> = guided.iter().map(|ripple| ripple.clips.len()).collect();
+        assert_eq!(clips, [0, 0, 0, 0, 1]);
+        let circle = crate::design::Path { subpaths: vec![round_from((96.0, 169.0), 5.5, Start::Top).unwrap()] };
+        assert_eq!(guided[4].clips[0], crate::design::Clip::of(circle, crate::design::FillRule::NonZero));
+        // From y = 162, below the ripples above, whose wave's curve reaches y = 154.3, and last on the sheet.
+        let ys: Vec<f64> = guided.iter().flat_map(|ripple| ripple.shape.path().points().map(|q| q.y()).collect::<Vec<_>>()).collect();
+        assert!(ys.iter().all(|&y| (162.0..=176.0).contains(&y)), "{ys:?}");
+        let design = super::super::find("TS-17C").unwrap().design().unwrap().unwrap();
+        assert_eq!(design.elements()[design.elements().len() - GUIDED.len()..], guided);
     }
 
     #[test]
