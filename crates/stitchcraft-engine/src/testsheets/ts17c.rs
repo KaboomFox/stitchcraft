@@ -22,10 +22,17 @@
 //! its cuts agree to the last digits (`DEV-ROUTE-007`). The other lines pass within 13.2 mm of each other,
 //! so the route cuts them at their nearest points. The differential routes the lines on the left with
 //! Ink/Stitch's tool too (`REQ-ROUTE-013`).
+//!
+//! M10.8's part, below the network: 3 ripple stitches in green ([`ripples`]), one of each kind
+//! (`REQ-RIP-001`). On the left, a rainbow: a column drawn with rails and rungs between 2 arches, whose 7 lines
+//! run back and forth from the outer arch to the inner one. In the middle, a wave whose 8 copies shrink to a
+//! target point above it, as Ink/Stitch's target point command places it, each meeting the next at a point.
+//! On the right, a circle that spirals in to its middle. The differential sews each in Ink/Stitch too
+//! (`REQ-RIP-011`).
 
 use super::designed::{Drawing, KAPPA, Start};
 use super::sketch::SheetError;
-use super::{BLUE, RED, thread};
+use super::{BLUE, EMERALD_GREEN, RED, thread};
 use crate::design::{Segment, Subpath};
 use crate::route::{Options, Route, Tool};
 use stitchcraft_core::Point;
@@ -49,6 +56,12 @@ pub const LINES: [&str; 6] = ["rail", "post", "brace", "hook", "loop", "tick"];
 /// Each line's settings: a running stitch 3 mm long, sewn there and back, and each stitch 3 times over.
 const LINE_SETTINGS: [(&str, &str); 3] = [("running_stitch_length_mm", "3"), ("repeats", "2"), ("bean_stitch_repeats", "1")];
 
+/// The ripple stitches, by name, in the order they are drawn.
+pub const RIPPLES: [&str; 3] = ["column", "towards", "spiral"];
+
+/// The setting that sews a stroke as a ripple stitch.
+const RIPPLE: (&str, &str) = ("stroke_method", "ripple_stitch");
+
 /// Draws TS-17C.
 pub(super) fn drawing() -> Result<Drawing, SheetError> {
     let blue = thread(BLUE)?;
@@ -63,7 +76,33 @@ pub(super) fn drawing() -> Result<Drawing, SheetError> {
     network(&mut lines, "lines-routed", BESIDE, &red)?;
     let trimmed = Options { trim: true, ..Tool::Runs.defaults() };
     d.routed(&lines, &Route { tool: Tool::Runs, options: trimmed, start: None, end: None })?;
+    ripples(&mut d, &thread(EMERALD_GREEN)?)?;
     Ok(d)
+}
+
+/// The ripple stitches below the network, sewn with `thread`: a rainbow between 2 arches, a wave that shrinks
+/// to a point above it and a circle that spirals in to its middle.
+pub(super) fn ripples(d: &mut Drawing, thread: &Thread) -> Result<(), SheetError> {
+    let point = |x: f64, y: f64| Point::new(x, y);
+    // An arch: half a circle of radius `r` about (14, 112), from its left end over the top.
+    let arch = |r: f64| -> Result<Subpath, SheetError> {
+        let (cx, cy, k) = (14.0, 112.0, KAPPA * r);
+        let segments = vec![
+            Segment::Cubic(point(cx - r, cy - k)?, point(cx - k, cy - r)?, point(cx, cy - r)?),
+            Segment::Cubic(point(cx + k, cy - r)?, point(cx + r, cy - k)?, point(cx + r, cy)?),
+        ];
+        Ok(Subpath { start: point(cx - r, cy)?, segments, closed: false })
+    };
+    // The rainbow: arches of radius 14 and 7, the rails, and a rung across their tops reaching 0.4 mm past them.
+    let rung = Subpath { start: point(14.0, 97.6)?, segments: vec![Segment::Line(point(14.0, 105.4)?)], closed: false };
+    d.strokes("ripple:column", vec![arch(14.0)?, arch(7.0)?, rung], thread, &[RIPPLE, ("line_count", "7")])?;
+    // The wave, 24 mm long, and its target point 20 mm above its middle.
+    let curve = Segment::Cubic(point(40.0, 108.0)?, point(52.0, 124.0)?, point(58.0, 116.0)?);
+    let wave = Subpath { start: point(34.0, 116.0)?, segments: vec![curve], closed: false };
+    d.along("ripple:towards", wave, thread, &[RIPPLE, ("line_count", "8"), ("join_style", "1")])?;
+    d.target((46.0, 96.0))?;
+    // The circle, 22 mm across, from its top.
+    d.circle("ripple:spiral", (71.0, 107.0), 11.0, Start::Top, thread, &[RIPPLE, ("line_count", "6")])
 }
 
 /// The network of lines, named after `half`, `right` mm right of where it is drawn first, sewn with
@@ -322,6 +361,48 @@ mod tests {
         let (xs, ys): (Vec<f64>, Vec<f64>) = points.iter().map(|q| (q.x(), q.y())).unzip();
         let span = |vs: &[f64]| (vs.iter().copied().fold(f64::INFINITY, f64::min), vs.iter().copied().fold(f64::NEG_INFINITY, f64::max));
         assert_eq!((span(&xs), span(&ys)), ((BESIDE, BESIDE + 38.0), (61.0, 85.0)));
+    }
+
+    #[test]
+    fn ts17c_s_ripples_are_a_rainbow_a_wave_towards_its_target_and_a_spiral() {
+        let drawn: [(&str, &[&str]); 3] = [
+            // Arches of radius 14 and 7 about (14, 112), each quarter a curve whose control points lie 0.552 of the
+            // radius from its ends, and a rung across their tops.
+            (
+                "column",
+                &[
+                    "M0,112 C0,104.268 6.268,98 14,98 C21.732,98 28,104.268 28,112",
+                    "M7,112 C7,108.134 10.134,105 14,105 C17.866,105 21,108.134 21,112",
+                    "M14,97.6 L14,105.4",
+                ],
+            ),
+            ("towards", &["M34,116 C40,108 52,124 58,116"]),
+            // A circle of radius 11 about (71, 107), clockwise from its top.
+            (
+                "spiral",
+                &["M71,96 C77.075,96 82,100.925 82,107 C82,113.075 77.075,118 71,118 C64.925,118 60,113.075 60,107 C60,100.925 64.925,96 71,96 Z"],
+            ),
+        ];
+        assert_eq!(drawn.map(|(name, _)| name), RIPPLES);
+        let ripples = sheet_elements("ts17c:ripple:");
+        let found: Vec<(String, Vec<String>)> = ripples.iter().map(|ripple| (ripple.id.to_string(), svg(ripple))).collect();
+        let want: Vec<(String, Vec<String>)> =
+            drawn.iter().map(|(name, subpaths)| (format!("ts17c:ripple:{name}"), subpaths.iter().map(ToString::to_string).collect())).collect();
+        assert_eq!(found, want);
+        // Each a ripple stitch in green, with its own count; the wave's lines meet at points, and it aims 20 mm
+        // above its middle.
+        let settings: [&[(&str, &str)]; 3] =
+            [&[("line_count", "7"), RIPPLE], &[("join_style", "1"), ("line_count", "8"), RIPPLE], &[("line_count", "6"), RIPPLE]];
+        assert!(ripples.iter().zip(settings).all(|(ripple, settings)| ripple.params.iter().eq(settings.iter().copied())), "{ripples:?}");
+        let green = thread(EMERALD_GREEN).unwrap();
+        assert!(ripples.iter().all(|ripple| ripple.thread == green));
+        let targets: Vec<Option<Point>> = ripples.iter().map(|ripple| ripple.hints.target).collect();
+        assert_eq!(targets, [None, Some(Point::new(46.0, 96.0).unwrap()), None]);
+        // Below the network, whose lowest point lies at y = 85, and last on the sheet.
+        let ys: Vec<f64> = ripples.iter().flat_map(|ripple| ripple.shape.path().points().map(|q| q.y()).collect::<Vec<_>>()).collect();
+        assert!(ys.iter().all(|&y| y > 85.0 + 10.0), "{ys:?}");
+        let design = super::super::find("TS-17C").unwrap().design().unwrap().unwrap();
+        assert_eq!(design.elements()[design.elements().len() - RIPPLES.len()..], ripples);
     }
 
     #[test]

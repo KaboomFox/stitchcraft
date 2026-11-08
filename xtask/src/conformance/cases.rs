@@ -78,6 +78,8 @@ struct CaseFile {
     route: Option<toml::Table>,
     #[serde(default)]
     sample: Option<usize>,
+    #[serde(default)]
+    elements: Option<String>,
 }
 
 /// What a test-sheet or plan case expects.
@@ -138,6 +140,9 @@ pub enum Subject {
     /// automatic digitizing's for its automatic shapes, written with their parameters as an SVG file
     /// (`stitchcraft_testkit::inkstitch`).
     Sheet(String),
+    /// A part of a test sheet drawn as a design (`sheet` and `elements`): the elements whose ids start with
+    /// `elements`, written as [`Subject::Sheet`] writes them, so that the measures judge them alone.
+    Part { sheet: String, elements: String },
     /// Letters drawn for the case (`[letters]`), for its centre lines.
     Letters(Letters),
 }
@@ -212,6 +217,10 @@ pub fn load_cases(root: &Path, findings: &mut Findings) -> Vec<DataCase> {
             findings.error(format!("{file}: only a fonts case takes a `sample`"));
             continue;
         }
+        if case.elements.is_some() && !(case.kind == "inkstitch" && case.sheet.is_some() && route.is_none()) {
+            findings.error(format!("{file}: only an inkstitch case of a sheet that routes nothing compares a part of it, with `elements`"));
+            continue;
+        }
         let spec = match (case.kind.as_str(), case.sheet, case.design, case.profile, case.expect, case.files) {
             ("testsheet", Some(sheet), None, Some(profile), Some(expect), None) if excused.is_none() => Spec::Testsheet { sheet, profile, expect },
             ("plan", None, Some(design), Some(profile), Some(expect), None) if excused.is_none() => Spec::Plan { design, profile, expect },
@@ -220,7 +229,11 @@ pub fn load_cases(root: &Path, findings: &mut Findings) -> Vec<DataCase> {
                 Spec::Inkstitch { subject: Subject::File(design), excused: excused.unwrap_or_default(), route }
             }
             ("inkstitch", Some(sheet), None, None, None, None) => {
-                Spec::Inkstitch { subject: Subject::Sheet(sheet), excused: excused.unwrap_or_default(), route }
+                let subject = match case.elements {
+                    Some(elements) => Subject::Part { sheet, elements },
+                    None => Subject::Sheet(sheet),
+                };
+                Spec::Inkstitch { subject, excused: excused.unwrap_or_default(), route }
             }
             ("testsheet", ..) => {
                 findings.error(format!("{file}: a testsheet case needs `sheet`, `profile` and `[expect]`, and nothing else"));

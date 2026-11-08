@@ -22,6 +22,7 @@
   - [Stitch types](user/stitches/README.md)
     - [Running stitch](user/stitches/running.md)
     - [Zigzag stroke](user/stitches/zigzag.md)
+    - [Ripple stitch](user/stitches/ripple-stitch.md)
     - [Satin column](user/stitches/satin-column.md)
     - [E-stitch](user/stitches/e-stitch.md)
     - [S-stitch](user/stitches/s-stitch.md)

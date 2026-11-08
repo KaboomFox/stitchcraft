@@ -14,6 +14,7 @@ which VectorCraft traced ([below](#the-traced-pear)). Test inputs live in `confo
 | `traced-pear.vectorcraft` | The photo of a pear that the `auto-pear-photo` shot draws, traced 90 mm across in 4 of those threads: a light grey backdrop, and the pear in 3 bands of green | automatic digitizing's photo: the `auto-pear-traced` and `auto-pear` shots |
 | `wave.svg` | A smooth wave | running stitch length |
 | `zigzag.svg` | The same wave, drawn 3 mm wide | the zigzag stroke's spacing and angle, and a satin column drawn as one path |
+| `ripple.svg` | An arch, half a circle 30 mm across, open at the bottom | the ripple stitch's lines and joins |
 | `e-stitch.svg` | A curved band 4 mm wide between 2 rails | the E-stitch's spacing and swapped rails |
 | `s-stitch.svg` | A curved band 6 mm wide between 2 rails | the S-stitch's spacing and split stitches, the zigzag satin's spacing and its look beside a satin column, and the satin column's spacing and underlays |
 | `half-disc.svg` | A half disc: a straight side with 2 corners, and a curve | running stitch tolerance |

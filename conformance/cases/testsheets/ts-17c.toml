@@ -1,8 +1,9 @@
-# TS-17C as M10.4 and M10.13 draw it: the word ROUTE in satin letters with a centre walk underlay, sewn as drawn
-# above, and below routed by stitchcraft_engine::route with Auto-Route Satin Columns' options at their
+# TS-17C as M10.4, M10.13 and M10.8 draw it: the word ROUTE in satin letters with a centre walk underlay, sewn
+# as drawn above, and below routed by stitchcraft_engine::route with Auto-Route Satin Columns' options at their
 # defaults: cut into pieces, run under the satins that cover the runs, and trimmed between letters. Below the
 # letters, a network of 6 bean-stitched running stitches, sewn as drawn on the left, and on the right routed
-# by Auto-Route Running Stitch with Trim jump stitches on. The sheet draws only as the engine says that pieces
+# by Auto-Route Running Stitch with Trim jump stitches on. At the bottom, 3 ripple stitches: along a column,
+# towards a target point and in a spiral. The sheet draws only as the engine says that pieces
 # meeting within the shortest stitch merge their stitches there (SC-I0504), which it then leaves unsaid. The
 # invariants (REQ-PLAN-…) run on the sheet's plan, and the golden file is the bytes MC-12 sews.
 id = "ts-17c"
@@ -12,6 +13,6 @@ sheet = "TS-17C"
 profile = "brother-pe800-5x7"
 
 [expect]
-size_mm = [82.0, 85.0]
+size_mm = [82.0, 117.036506]
 diagnostics = []
 golden = ["golden/testsheets/TS-17C.pes"]
