@@ -311,6 +311,11 @@ mod tests {
         assert_eq!(said, [Code::FillTartanNoStripe]);
         let tartan = tartan.unwrap();
         assert!(tartan.warp.is_empty() && tartan.weft.is_empty());
+        // A weft that sews nothing leaves the warp's stripes, and nothing to say.
+        let (tartan, said) = read(&[("tartan", r#"{"palette": "(#ff0000)/5 | (#0000ff)?5"}"#)], 0.3);
+        assert_eq!(said, []);
+        let tartan = tartan.unwrap();
+        assert!(!tartan.warp.is_empty() && tartan.weft.is_empty());
     }
 
     #[test]
@@ -345,5 +350,10 @@ mod tests {
         assert_eq!(narrowest(&[band(RED, 2.0), Item::Band { colour: None, width: 0.0 }, band(RED, 0.0)]), Some(2.0));
         assert_eq!(narrowest(&[Item::Band { colour: None, width: 3.0 }]), None);
         assert_eq!(narrowest(&[]), None);
+        // 2 reds that meet are one band of 2, wider than either; an unsewn band of no width between them
+        // leaves them one; and a red band of no width leaves blue's 5 the narrowest.
+        assert_eq!(narrowest(&[band(RED, 1.0), band(RED, 1.0), band(BLUE, 5.0)]), Some(2.0));
+        assert_eq!(narrowest(&[band(RED, 1.0), Item::Band { colour: None, width: 0.0 }, band(RED, 1.0), band(BLUE, 5.0)]), Some(2.0));
+        assert_eq!(narrowest(&[band(RED, 0.0), band(BLUE, 5.0)]), Some(5.0));
     }
 }

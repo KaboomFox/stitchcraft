@@ -143,6 +143,9 @@ fn req_fill_trt_001_a_palette_s_width_is_its_wide_stripes_or_else_its_narrow_one
     // Without a wide one, the narrow ones but those left unsewn, a continued one among them.
     let narrow = [stripe(RED, 0.5, Look::Sewn), stripe(BLUE, 0.25, Look::Continued), stripe(GREEN, 0.75, Look::Gap)];
     assert_eq!(sett.width(&narrow), 0.75);
+    assert_eq!(sett.width(&[stripe(RED, 0.5, Look::Sewn), stripe(GREEN, 0.25, Look::Gap)]), 0.5);
+    // A continued stripe as wide as the narrowest is neither wide nor narrow.
+    assert_eq!(sett.width(&[stripe(RED, 0.5, Look::Sewn), stripe(BLUE, 1.0, Look::Continued)]), 0.5);
     assert_eq!(sett.width(&[]), 0.0);
 }
 
@@ -204,4 +207,37 @@ fn req_fill_trt_002_stripes_are_scaled_and_a_stripe_as_wide_as_the_narrowest_is_
     assert_eq!(at_limit.full(&at_limit.warp), [band(RED, 2.0), band(RED, 0.5), Item::Run(BLUE), band(RED, 0.5), band(RED, 0.5)]);
     // No stripes, no sett.
     assert_eq!(at_limit.full(&[]), []);
+}
+
+#[test]
+fn req_fill_trt_002_a_stripe_is_compared_with_the_narrowest_in_ink_stitch_s_pixels() {
+    // At 40 %, a stripe of 2.5 mm is 1 mm, as wide as the narrowest, and sews as a run in blue, the first
+    // stripe wider; one of 1.1 mm at 100 % is wider, and sews as a band.
+    let limit = sett("(#ff0000)/2.5 (#0000ff)/5", r#", "scale": 40"#);
+    assert_eq!(limit.full(&limit.warp), [band(BLUE, 0.5), Item::Run(RED), band(BLUE, 2.5), band(BLUE, 0.5), band(BLUE, 2.5)]);
+    let wider = sett("(#ff0000)/2 (#0000ff)/1.1", "");
+    assert_eq!(wider.full(&wider.warp), [band(RED, 2.0), band(BLUE, 1.1)]);
+    // At 8 %, a stripe of 7.5 mm is 0.6 mm, but in Ink/Stitch's pixels a little more than a narrowest of 0.6 mm,
+    // so it sews as a band.
+    let over = sett("(#ff0000)/7.5 (#0000ff)/7.5", r#", "scale": 8, "min_stripe_width": 0.6"#);
+    assert_eq!(over.full(&over.warp), [band(RED, 7.5 * 0.08), band(BLUE, 7.5 * 0.08)]);
+}
+
+#[test]
+fn req_fill_trt_002_a_run_after_a_run_widens_the_band_between_them_by_both_halves() {
+    let twice = sett("(#ff0000)4 (#ffffff)0.5 (#00ff00)0.5 (#0000ff)3", r#", "symmetry": false"#);
+    assert_eq!(
+        twice.full(&twice.warp),
+        [band(RED, 4.0), band(RED, 0.25), Item::Run(WHITE), band(RED, 0.5), Item::Run(GREEN), band(BLUE, 3.25), band(BLUE, 0.25)]
+    );
+}
+
+#[test]
+fn req_fill_trt_002_the_first_fill_is_the_first_stripe_wider_than_the_narrowest_once_scaled() {
+    // At 200 %, red's 0.75 mm is 1.5 mm, and white's 0.5 mm is 1 mm, as wide as the narrowest.
+    let scaled = sett("(#ffffff)0.5 (#ff0000)0.75 (#0000ff)3", r#", "scale": 200"#);
+    assert_eq!(scaled.first_fill(&scaled.warp), Some(RED));
+    // Green, as wide as the narrowest, is a run, not the first fill.
+    let level = sett("(#ffffff)0.5 (#00ff00)1 (#ff0000)4", "");
+    assert_eq!(level.first_fill(&level.warp), Some(RED));
 }

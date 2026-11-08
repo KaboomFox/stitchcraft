@@ -209,10 +209,9 @@ fn top(
             groups.extend(thinned(vec![run], min).into_iter().map(|run| Group { colour, kind: Kind::Fill, run }));
         }
     }
-    let mut from = if tartan.stop_at_end { start } else { groups.last().and_then(|group| group.run.last().copied()).or(start) };
-    let fills_sewn = groups.len();
+    let mut from = start;
     for (colour, lines) in runs {
-        if !tartan.stop_at_end && groups.len() > fills_sewn {
+        if !tartan.stop_at_end {
             from = groups.last().and_then(|group| group.run.last().copied()).or(from);
         }
         let Some(sewn) = lines_sewn(piece, &rings, &lines, &given, from, end, meter, warnings)? else { continue };
