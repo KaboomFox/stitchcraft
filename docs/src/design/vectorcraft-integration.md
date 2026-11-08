@@ -473,10 +473,11 @@ the paths give the route's ends ([start and end](routing.md#start-and-end)).
 
 **What they write.** A column's piece is a compound path of its rails and rungs with the column's satin
 effect, drawn as Stroke to Satin draws a column. A stroke's stretch, and a run under the others, is a path
-with the stroke effect, which for a run under a column keeps the column's `underlays_first`
-([order](routing.md#order)). Each is painted with its element's stroke and named as Ink/Stitch names it, and
-Trim jump stitches turns on `trim_after` in the effect of the piece before a long jump. In one undo step,
-the pieces replace the paths they come from and the markers used. A filter can't make a group, where
+with the stroke effect, which for a run under a column keeps the column's `underlays_first`, and for a run
+under the others its stroke's ([order](routing.md#order)). Each is painted with its element's stroke and
+named as Ink/Stitch names it, and Trim jump stitches turns on `trim_after` in the effect of the piece before
+a long jump. In one undo step, the pieces replace the paths they come from and the markers used. A filter
+can't make a group, where
 Ink/Stitch puts its route in a new group after the last element. So the pieces go in their sewing order
 where the topmost path routed was, in its group or layer. With Preserve order, Ink/Stitch moves each piece
 to the end of its element's group, and the filter puts the pieces of each path, the runs along it among

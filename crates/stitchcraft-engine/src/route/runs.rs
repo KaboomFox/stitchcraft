@@ -7,14 +7,18 @@
 //!    passed once or twice: along the way from the start to the end once, and off it out and back.
 //! 3. **Pieces in a row** are one element, until a jump comes, the route goes from on top to under or back,
 //!    a piece on top comes from another stroke, or a piece under from a stroke whose run under the others
-//!    sews otherwise: another thread, another stitch length or tolerance, a manual stitch or not.
+//!    has other settings: another thread, another stitch length or tolerance, a manual stitch or not, or
+//!    another `underlays_first`.
 //! 4. **Elements.** One on top is a copy of its stroke, its path the pieces', its settings the stroke's,
 //!    but an even number of repeats is lowered by 1, so that it ends at its far end. One under the others
 //!    is a running stitch along its pieces with the stroke's running stitch length and tolerance, or a
-//!    manual stitch where the stroke is one, without repeats or bean stitch. Each is the stroke's thread and
-//!    stroke, and neither keeps the stroke's clips, positions or target point: the route places its ends.
-//!    Ink/Stitch gives an element on top the settings of the stroke of the element under the others that
-//!    follows it, and an element under the others along several strokes the last one's (`DEV-ROUTE-006`).
+//!    manual stitch where the stroke is one, without repeats or bean stitch. It keeps the stroke's
+//!    `underlays_first` too, as a run under a satin column keeps its column's (`super::sew`), so that it
+//!    doesn't part the run of underlays first of the elements around it (`crate::underlays_first`). Each is
+//!    the stroke's thread and stroke, and neither keeps the stroke's clips, positions or target point: the
+//!    route places its ends. Ink/Stitch gives an element on top the settings of the stroke of the element
+//!    under the others that follows it, and an element under the others along several strokes the last
+//!    one's (`DEV-ROUTE-006`).
 //! 5. **Trims.** With Trim jump stitches, a jump longer than [`RUN_TRIMMED`] trims the thread after the
 //!    element before it, and the elements under the others right after a trim are left out, as the needle
 //!    no longer needs them. Of 2 jumps in a row, Ink/Stitch looks only at the first (`DEV-ROUTE-009`).
@@ -27,7 +31,7 @@ use stitchcraft_core::{Exhausted, Meter, Point};
 use stitchcraft_params::{ParamSet, StitchType};
 
 use crate::auto::numbered;
-use crate::common::TRIM_AFTER;
+use crate::common::{TRIM_AFTER, UNDERLAYS_FIRST};
 use crate::design::{Element, Hints, Path, Segment, Shape, Subpath};
 use crate::normalize::satin::SAME_POINT;
 use crate::route::graph::{Graph, Link, Step};
@@ -119,7 +123,11 @@ fn long(graph: &Graph, step: &Step) -> bool {
 }
 
 /// Whether a piece of the stroke `next` goes on the element being made of the stroke `being`, `under` the
-/// others or on top: on top, when they are one stroke; under, when their runs under the others sew alike.
+/// others or on top: on top, when they are one stroke; under, when their runs under the others have one
+/// thread and the same settings (`underneath`). Those settings take in `underlays_first`, so the runs under
+/// 2 strokes that differ in it are 2 elements, each with its own stroke's setting. That is as the design
+/// asks (ADR-0018): one element can't both set it and not, and a run of underlays first must take in no
+/// piece of a stroke that doesn't set it, and lose none of a stroke that does.
 fn same(being: usize, next: usize, under: bool, (strokes, elements): (&[Stroke], &[Element])) -> bool {
     if being == next {
         return true;
@@ -133,10 +141,12 @@ fn same(being: usize, next: usize, under: bool, (strokes, elements): (&[Stroke],
 }
 
 /// The settings of a run under the others along `element`, a stroke sewn as `stitch_type`: its running
-/// stitch length and tolerance, where it sets them, and its method where it is a manual stitch.
+/// stitch length and tolerance and its `underlays_first`, where it sets them, and its method where it is a
+/// manual stitch. The run keeps `underlays_first` as a run under a satin column keeps its column's, so that
+/// it doesn't part a run of underlays first along the route (ADR-0018).
 fn underneath(element: &Element, stitch_type: StitchType) -> ParamSet {
     let mut params = ParamSet::new();
-    for key in [RUN_LENGTH, TOLERANCE] {
+    for key in [RUN_LENGTH, TOLERANCE, UNDERLAYS_FIRST] {
         if let Some(value) = element.params.get(key) {
             params.set(key, value);
         }

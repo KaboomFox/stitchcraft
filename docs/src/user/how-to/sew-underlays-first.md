@@ -37,6 +37,8 @@ order, then their top stitches in the same order. An element without underlay, s
 sews in the second pass. An element that joins no run sews as it does without the setting, and `SC-I0506`
 names it. [Auto-Route Satin Columns](route-satin-columns.md) keeps the toggle on the pieces and the runs it
 makes of columns that set it. A route of them sews its underlays along it, up to each trim.
+[Auto-Route Running Stitch](route-running-stitches.md) keeps it on every stretch it makes of a line that
+sets it, the runs under the others among them.
 
 ## Travel and previews
 
