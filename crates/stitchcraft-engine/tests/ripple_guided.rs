@@ -189,11 +189,35 @@ fn req_rip_015_a_column_s_grid_runs_through_its_pairs_a_grid_size_apart() {
     assert_eq!((grid.first(), grid.last()), (Some(&(10.0, 4.0)), Some(&(-10.0, 0.0))));
     let xs: Vec<f64> = grid.iter().filter(|(_, y)| *y == 2.0).map(|(x, _)| *x).collect();
     assert_eq!(xs, [10.0, 5.0, 0.0, -5.0, -10.0]);
-    // Without flip_copies the lines bend into each other along the column, every other one flipped, and so do
-    // the grid's.
+    // Without flip_copies the lines bend into each other along the column, and so do the lines the grid
+    // crosses. Every other grid line runs the other way, and they are all sewn as they run, joined flat: from
+    // (10, 4), the ripple's end, down, then up the next line, as a zigzag.
     let one_way = runs(&column(), &ripple(&[("line_count", "3"), ("grid_size_mm", "5"), ("flip_copies", "false")], None, None, Vec::new()));
-    assert_eq!(one_way.len(), 2);
-    assert!(one_way[1].iter().all(|&(x, y)| (-10.0..=10.0).contains(&x) && (0.0..=4.0).contains(&y)), "{:?}", one_way[1]);
+    let zigzag = [
+        down(10.0, &[4.0, 2.0]),
+        vec![(8.333, 1.833), (6.667, 1.667)],
+        down(5.0, &[1.5, 3.5]),
+        vec![(3.333, 3.333), (1.667, 3.167)],
+        down(0.0, &[3.0, 1.0]),
+        vec![(-1.667, 0.833), (-3.333, 0.667)],
+        down(-5.0, &[0.5, 2.5]),
+        vec![(-6.667, 2.333), (-8.333, 2.167)],
+        down(-10.0, &[2.0, 0.0]),
+    ];
+    assert_eq!((one_way.len(), one_way[0].last()), (2, Some(&(10.0, 4.0))));
+    assert_eq!(one_way[1], zigzag.concat());
+}
+
+#[test]
+fn req_rip_015_a_grid_sews_its_lines_from_its_first_whatever_the_ripple_left_out() {
+    // 5 copies, 2.5 mm apart, joined at points: 4 lines that bend from one copy into the next, the first left
+    // out. The grid's lines run through the 3 left, from the corner nearest the ripple's end, (−2, 10). With
+    // the point join and flip_copies, the second is sewn from its end, as the ripple's skips don't count.
+    let with = [("line_count", "4"), ("scale_end", "100"), ("grid_size_mm", "2"), ("join_style", "1"), ("skip_start", "1")];
+    let pointed = runs(&short(), &ripple(&with, guide_line(&[(0.0, 0.0), (0.0, 10.0)]), None, Vec::new()));
+    let lines = [(2.0, 2.5), (0.0, 3.75), (-2.0, 5.0), (0.0, 6.25), (2.0, 7.5), (0.0, 8.75), (-2.0, 10.0)];
+    let grid = [down(-2.0, &[10.0, 7.5, 5.0]), down(0.0, &[3.75, 6.25, 8.75]), down(2.0, &[7.5, 5.0, 2.5])];
+    assert_eq!(pointed, [lines.to_vec(), grid.concat()]);
 }
 
 #[test]
