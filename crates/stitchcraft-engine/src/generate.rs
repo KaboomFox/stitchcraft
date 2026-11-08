@@ -49,6 +49,7 @@ use crate::generators::manual::{self, manual_stitch};
 use crate::generators::meander::{self, Meander, MeanderParams, meander_fill};
 use crate::generators::passes::{PathFillParams, RepeatParams};
 use crate::generators::pull::PullParams;
+use crate::generators::ripple::{self, Ripple, RippleParams, ripple_stitch};
 use crate::generators::running::raised;
 use crate::generators::running::{RunningParams, running_stitch};
 use crate::generators::satin::{self, SATIN_COLUMN, SatinLengths, SatinParams, satin_stitch};
@@ -117,8 +118,9 @@ params! {
 
     "Stroke" {
         /// The stitch the path is sewn with. A running stitch goes along it and a zigzag across it, and manual
-        /// stitch puts a needle point on each of its nodes. Ripple stitch arrives in a later version, and
-        /// until then an element set to it is skipped (`SC-W0011`).
+        /// stitch puts a needle point on each of its nodes. A ripple stitch sews lines that spread out from
+        /// the path to its target point, or along it from one rail to the other where it is drawn as a satin
+        /// column's rails and rungs.
         stroke_method: Choice = "running_stitch", label "Method", choices STROKE_METHODS;
     }
 }
@@ -331,6 +333,10 @@ fn sew(
                 diagnostics.push(Diagnostic::new(Code::SatinClipNotApplied, message));
             }
             satin_column(&sewing, (path, *width, *join), &mut rng, diagnostics, meter)?
+        }
+        // A ripple stitch is sewn whole, whatever its clips, until M10.11 cuts its lines (`SC-W0406`).
+        Shape::Stroke { path, .. } if sewing.stitch_type == StitchType::RippleStitch => {
+            ripple(&sewing, path, !element.clips.is_empty(), &rng, diagnostics, meter)?
         }
         Shape::Stroke { path, width, .. } => {
             let Some(path) = cut::stroke(path, &element.clips, cut_line(sewing.stitch_type), diagnostics, meter)? else { return Ok(None) };
@@ -732,7 +738,9 @@ fn cut_line(stitch_type: StitchType) -> cut::Line {
 }
 
 /// A stroke's stitches as `sewing` says, varied at random by streams of its `rng`, or `None` when it is
-/// skipped: its `path` is `width` wide, which a zigzag stroke is. Its `stroke_method` picks the generator.
+/// skipped: its `path` is `width` wide, which a zigzag stroke is. Its `stroke_method` picks the generator,
+/// a running stitch for every method but manual stitch and zigzag stitch: [`sew`] sends a ripple stitch to
+/// [`ripple`].
 fn stroke(
     sewing: &Sewing,
     path: &Path,
@@ -744,10 +752,6 @@ fn stroke(
     let passes = sewing.read(RepeatParams::from_set_as, diagnostics);
     let Some(Shared { min_stitch, max_stitch, .. }) = sewing.shared else { return Ok(None) };
     match sewing.stitch_type {
-        StitchType::RunningStitch => {
-            let (Some(running), Some(passes)) = (sewing.read(RunningParams::from_set_as, diagnostics), passes) else { return Ok(None) };
-            Ok(Some(running_stitch(path, &running, &passes, min_stitch, rng, meter)?))
-        }
         StitchType::ManualStitch => {
             let Some(passes) = passes else { return Ok(None) };
             Ok(Some(manual_stitch(path, max_stitch, &passes, min_stitch, meter)?))
@@ -756,12 +760,33 @@ fn stroke(
             let (Some(zigzag), Some(passes)) = (sewing.read(ZigzagStrokeParams::from_set_as, diagnostics), passes) else { return Ok(None) };
             Ok(Some(zigzag_stroke(path, width, &zigzag, &passes, min_stitch, meter)?))
         }
-        other => {
-            let method = other.id();
-            diagnostics.push(not_yet(&format!("This element's stroke method, `{method}`, is not sewn by this version of StitchCraft yet")));
-            Ok(None)
+        _ => {
+            let (Some(running), Some(passes)) = (sewing.read(RunningParams::from_set_as, diagnostics), passes) else { return Ok(None) };
+            Ok(Some(running_stitch(path, &running, &passes, min_stitch, rng, meter)?))
         }
     }
+}
+
+/// A ripple stitch's stitches along `path` as `sewing` says, its random lengths drawn from streams of its
+/// `rng`, or `None` when it is skipped. It aims at its design's target point, and is sewn whole, and says
+/// so, when it is `clipped`. A satin column's settings are read as a ripple reads them, at their defaults:
+/// a ripple along a column applies none yet, and [`ripple::unapplied`] names those the element sets.
+fn ripple(
+    sewing: &Sewing,
+    path: &Path,
+    clipped: bool,
+    rng: &SplitMix64,
+    diagnostics: &mut Vec<Diagnostic>,
+    meter: &mut Meter,
+) -> Result<Option<Stitched>, Exhausted> {
+    let own = sewing.read(RippleParams::from_set_as, diagnostics);
+    let running = sewing.read(RunningParams::from_set_as, diagnostics);
+    let passes = sewing.read(RepeatParams::from_set_as, diagnostics);
+    let satin = sewing.read(SatinParams::from_set_as, diagnostics);
+    let (Some(own), Some(running), Some(passes), Some(satin), Some(shared)) = (own, running, passes, satin, sewing.shared) else { return Ok(None) };
+    let unapplied = ripple::unapplied(&sewing.set);
+    let ripple = Ripple { ripple: own, running, passes, satin, min_stitch: shared.min_stitch, target: sewing.hints.target, unapplied, clipped };
+    Ok(Some(ripple_stitch(path, &ripple, rng, meter)?))
 }
 
 /// What `element` offers the element before it to end near, read from its shape, its settings and the

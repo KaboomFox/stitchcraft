@@ -185,7 +185,9 @@ pub(crate) fn flattened(subpath: &Subpath, meter: &mut Meter) -> Result<Vec<Poin
     Ok(piece(subpath, SHAPE_TOLERANCE, meter)?.points)
 }
 
-fn piece(subpath: &Subpath, tolerance: f64, meter: &mut Meter) -> Result<Piece, Exhausted> {
+/// `subpath` as a polyline within `tolerance` millimetres of it, with its corners: one piece of
+/// [`flatten`]'s.
+pub(crate) fn piece(subpath: &Subpath, tolerance: f64, meter: &mut Meter) -> Result<Piece, Exhausted> {
     // The segments that do not move are dropped, so what is left starts where the subpath does.
     let mut points = vec![subpath.start];
     let mut corners = Vec::new();

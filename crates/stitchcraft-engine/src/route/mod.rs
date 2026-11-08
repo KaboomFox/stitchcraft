@@ -33,7 +33,7 @@
 mod graph;
 mod read;
 mod sew;
-mod trim;
+pub(crate) mod trim;
 
 pub use read::PIECE;
 pub use trim::TRIMMED;
