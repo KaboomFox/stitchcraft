@@ -672,6 +672,13 @@ otherwise, as in its own panel. The count takes in the background's colour. A pi
 JPEG file, has colours between its shapes' colours, which may trace as threads of their own. A `--colours`
 equal to the number of colours the picture has keeps them out. A badge in 3 colours on white traces in 4.
 
+**A transparent background.** Image Trace leaves a picture's transparent pixels out (`crates/trace/src/lib.rs`
+in VectorCraft's repository, read at `3f8d7a0`). So a PNG file whose background was made transparent traces
+into its subject's shapes alone, and there is no background to leave out. The owner's dog photos, cut out
+that way, traced into shapes that cover the dog to within 0.2 % of its area (`docs/fixtures/README.md` ›
+The traced dogs). Until `--subject` cuts a photo's subject out (M13.14), removing the background in another
+program first is how a photo sews its subject alone.
+
 **When VectorCraft can't trace.** A command line that can't be started, missing from the `PATH` or from
 the path named, is `SC-E0815`, which says how to install it, or to trace the picture in VectorCraft. One
 that fails or doesn't save the document is `SC-E0816`, which ends with what it said. Then nothing is written but

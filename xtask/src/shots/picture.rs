@@ -12,11 +12,15 @@
 //!   `docs/fixtures/traced-pear.vectorcraft` is the document VectorCraft traced it into
 //!   (`docs/fixtures/README.md`). A test keeps the hash of the picture it traced, so a change to the picture
 //!   fails it until the picture is traced again.
+//! - **A PNG file** (`fixture` ending in `.png`): its pixels on white ([`on_white`]), as a drawing program
+//!   shows a picture with a transparent background. The owner's dog, cut out of her photos, is such a file,
+//!   and the dogs VectorCraft traced keep the hash of the cut-out each was traced from, as the pear does.
 //!
-//! Both are compared byte for byte, as `stitch` shots are. The photo is computed with additions,
+//! All are compared byte for byte, as `stitch` shots are. The photo is computed with additions,
 //! multiplications, divisions, square roots and `stitchcraft_core::math::exp`, and its grain comes from
 //! `SplitMix64`. The areas' curves are flattened by the engine, so that tiny-skia fills only polygons, and
-//! tiny-skia writes the PNG file. So every platform makes the same bytes (`docs/src/design/determinism.md`).
+//! tiny-skia writes the PNG file. A PNG file's pixels are drawn on white with additions of bytes. So every
+//! platform makes the same bytes (`docs/src/design/determinism.md`).
 
 use std::path::Path;
 
@@ -25,7 +29,7 @@ use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::{Budget, math};
 use stitchcraft_engine::design::{FillRule, Reading, Shape};
 use stitchcraft_engine::normalize::stroke::{self, SHAPE_TOLERANCE};
-use tiny_skia::{Color, Paint, PathBuilder, Pixmap, Transform};
+use tiny_skia::{Color, Paint, PathBuilder, Pixmap, PremultipliedColorU8, Transform};
 
 use super::Shot;
 use crate::util;
@@ -41,11 +45,16 @@ type Draw = fn() -> Result<Vec<u8>, String>;
 /// The pictures drawn in code, by the names shots give them.
 const DRAWN: &[(&str, Draw)] = &[("pear", pear)];
 
-/// What is wrong with the picture shot `shot`'s declaration: it draws a design or a picture drawn in code,
-/// and sets nothing of another kind.
+/// What is wrong with the picture shot `shot`'s declaration: it draws a design, a PNG file or a picture drawn
+/// in code, and sets nothing of another kind.
 pub(super) fn problems(shot: &Shot) -> Vec<String> {
     let mut found = Vec::new();
     match (shot.fixture.as_deref(), shot.picture.as_deref()) {
+        (Some(fixture), None) if is_png(fixture) => {
+            if shot.scale.is_some() {
+                found.push("a PNG file has pixels of its own: `scale` is for a design".to_string());
+            }
+        }
         (Some(_), None) => {}
         (None, Some(name)) if DRAWN.iter().any(|(known, _)| *known == name) => {
             if shot.scale.is_some() {
@@ -66,13 +75,20 @@ fn names() -> String {
     DRAWN.iter().map(|(name, _)| format!("`{name}`")).collect::<Vec<_>>().join(", ")
 }
 
-/// The PNG file of the picture shot `shot`: its design's areas drawn flat, or its picture drawn in code.
+/// Whether the fixture `fixture` is a PNG file, by its extension in any case.
+fn is_png(fixture: &str) -> bool {
+    Path::new(fixture).extension().is_some_and(|extension| extension.eq_ignore_ascii_case("png"))
+}
+
+/// The PNG file of the picture shot `shot`: its design's areas drawn flat, its PNG file on white, or its
+/// picture drawn in code.
 pub(super) fn make(root: &Path, shot: &Shot) -> Result<Vec<u8>, String> {
     let found = problems(shot);
     if !found.is_empty() {
         return Err(found.join("; "));
     }
     match (shot.fixture.as_deref(), shot.picture.as_deref()) {
+        (Some(fixture), _) if is_png(fixture) => on_white(&util::read_bytes(&root.join(fixture))?).map_err(|e| format!("{fixture}: {e}")),
         (Some(fixture), _) => flat(root, fixture, shot),
         (None, Some(name)) => DRAWN.iter().find(|(known, _)| *known == name).map_or_else(|| Err(format!("no picture `{name}`")), |(_, draw)| draw()),
         (None, None) => Err("a picture shot draws a design or a picture drawn in code".to_string()),
@@ -186,6 +202,21 @@ fn shrink(large: &Pixmap, width: u32, height: u32) -> Result<Pixmap, String> {
     }
     let size = tiny_skia::IntSize::from_wh(width, height).ok_or("a picture with no pixels")?;
     Pixmap::from_vec(out, size).ok_or_else(|| "the averaged pixels make no picture".to_string())
+}
+
+/// The PNG file `png` drawn on white, as a PNG file of its size: each pixel over white, so that a transparent
+/// pixel shows the white and an opaque one its own colour.
+fn on_white(png: &[u8]) -> Result<Vec<u8>, String> {
+    let mut picture = Pixmap::decode_png(png).map_err(|e| format!("not a PNG file tiny-skia reads ({e})"))?;
+    for pixel in picture.pixels_mut() {
+        // A premultiplied colour over white is its own channels and the white its alpha leaves: no channel is
+        // above its alpha, so none passes 255.
+        let white = 255 - pixel.alpha();
+        let over = |channel: u8| channel.saturating_add(white);
+        let opaque = PremultipliedColorU8::from_rgba(over(pixel.red()), over(pixel.green()), over(pixel.blue()), 255);
+        *pixel = opaque.ok_or("a pixel over white is opaque")?;
+    }
+    picture.encode_png().map_err(|e| format!("the PNG encoder failed: {e}"))
 }
 
 /// The pear photo's side, in pixels: it is square.
@@ -343,6 +374,10 @@ mod tests {
 
     /// The FNV-1a hash of the [`pear`] picture that `docs/fixtures/traced-pear.vectorcraft` was traced from.
     const TRACED: u64 = 0x8483_29eb_1e5d_8063;
+    /// The FNV-1a hashes of the cut-outs that the traced dogs, `docs/fixtures/traced-dog-*.vectorcraft`, were
+    /// traced from.
+    const CUTOUTS: [(&str, u64); 2] =
+        [("docs/fixtures/dog-on-turf-cutout.png", 0xde73_4bc6_5f95_c09c), ("docs/fixtures/dog-running-cutout.png", 0xae60_ee3b_09db_0e71)];
 
     /// The picture shot that `toml` declares, named `probe`.
     fn shot(toml: &str) -> Shot {
@@ -368,6 +403,47 @@ mod tests {
         }
         let stitched = problems(&shot("fixture = \"docs/fixtures/emblem.svg\"\nauto = true\nstyle = \"simple\""));
         assert_eq!(stitched, ["`sheet`, `elements`, `panels`, `auto` and `style` are a stitch shot's"]);
+        // A PNG file, its extension in any case, is drawn at its own pixels.
+        for png in ["docs/fixtures/dog-running-cutout.png", "photo.PNG"] {
+            assert_eq!(problems(&shot(&format!("fixture = \"{png}\""))), Vec::<String>::new(), "{png}");
+        }
+        let scaled = problems(&shot("fixture = \"docs/fixtures/dog-running-cutout.png\"\nscale = 2.0"));
+        assert_eq!(scaled, ["a PNG file has pixels of its own: `scale` is for a design"]);
+    }
+
+    #[test]
+    fn a_png_file_is_drawn_on_white() {
+        // An opaque red pixel, a blue one half transparent and a transparent one, premultiplied.
+        let mut picture = Pixmap::new(3, 1).unwrap();
+        let pixels = [(255, 0, 0, 255), (0, 0, 128, 128), (0, 0, 0, 0)].map(|(r, g, b, a)| PremultipliedColorU8::from_rgba(r, g, b, a).unwrap());
+        picture.pixels_mut().copy_from_slice(&pixels);
+        let drawn = Pixmap::decode_png(&on_white(&picture.encode_png().unwrap()).unwrap()).unwrap();
+        assert_eq!((0..3).map(|x| pixel(&drawn, x, 0)).collect::<Vec<_>>(), [[255, 0, 0, 255], [127, 127, 255, 255], [255, 255, 255, 255]]);
+        assert!(on_white(b"no picture").unwrap_err().starts_with("not a PNG file tiny-skia reads"));
+    }
+
+    #[test]
+    fn a_cut_out_is_drawn_at_its_own_pixels_its_background_white() {
+        let png = make(&util::root(), &shot("fixture = \"docs/fixtures/dog-running-cutout.png\"")).unwrap();
+        let picture = Pixmap::decode_png(&png).unwrap();
+        assert_eq!((picture.width(), picture.height()), (183, 372));
+        // The transparent corner is white, and the white blaze below the dog's eyes keeps its own colour.
+        assert_eq!(pixel(&picture, 0, 0), [255, 255, 255, 255]);
+        assert_eq!(pixel(&picture, 90, 120), [245, 246, 246, 255]);
+        let missing = make(&util::root(), &shot("fixture = \"docs/fixtures/no-such-cutout.png\"")).unwrap_err();
+        assert!(missing.contains("no-such-cutout.png"), "{missing}");
+    }
+
+    #[test]
+    fn the_traced_dogs_were_traced_from_the_cut_outs() {
+        for (cutout, traced) in CUTOUTS {
+            let bytes = util::read_bytes(&util::root().join(cutout)).unwrap();
+            assert_eq!(
+                stitchcraft_core::rng::fnv1a64(&bytes),
+                traced,
+                "{cutout} changed: trace it again into the documents docs/fixtures/README.md names, and keep its hash in CUTOUTS"
+            );
+        }
     }
 
     #[test]
