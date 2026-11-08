@@ -57,7 +57,7 @@ use crate::generators::running::{self, RunningParams};
 use crate::generators::satin::{self, PUSH_COMPENSATION, SatinParams};
 use crate::generators::tatami::sew::Travel;
 use crate::generators::{Stitched, TooSmall, made, mm, settled, too_small};
-use crate::normalize::region::clipped;
+use crate::normalize::region::{Unjoined, clipped};
 use crate::normalize::satin::{Shape, recognize};
 use crate::normalize::stroke::{self, SHAPE_TOLERANCE};
 
@@ -301,8 +301,13 @@ fn sewn(path: &Path, ripple: &Ripple, rng: &SplitMix64, meter: &mut Meter) -> Re
     // themselves.
     let reverse_odd = kind != Kind::Spiral && !own.flip_copies && !point;
     let grid = grid.and_then(|_| Some(grid::lines(crossed.as_ref().unwrap_or(&kept), reverse_odd, *run.last()?)));
-    let Some(runs) = finished(run, grid, ripple, &sewing, &mut warnings, meter)? else { return Ok(nothing(warnings)) };
-    Ok(Stitched { runs, colours: Vec::new(), warnings })
+    match finished(run, grid, ripple, (&sewing, &mut warnings), meter)? {
+        Ok(runs) => Ok(Stitched { runs, colours: Vec::new(), warnings }),
+        Err(why) => {
+            warnings.push(why);
+            Ok(nothing(warnings))
+        }
+    }
 }
 
 /// A ripple of one line, `points`, the subpath `subpath` flattened: copies of its outline along its guide,
@@ -394,27 +399,19 @@ fn laid(
 
 /// The ripple's runs, from its needle points `run` and its `grid`'s lines: cut to its clips and routed,
 /// repeated, the grid's lines sewn after it as `sewing` says, all of it backwards with `grid_first`, then
-/// bean-stitched. `None` when its clips leave nothing of it, which `warnings` says.
+/// bean-stitched. What its clips' routes say goes to `warnings`. `Err` with what to say when its clips leave
+/// nothing of it.
 fn finished(
     run: Vec<Point>,
     grid: Option<Vec<Vec<Point>>>,
     ripple: &Ripple,
-    sewing: &Sewing,
-    warnings: &mut Vec<Diagnostic>,
+    (sewing, warnings): (&Sewing, &mut Vec<Diagnostic>),
     meter: &mut Meter,
-) -> Result<Option<Vec<Vec<Point>>>, Exhausted> {
+) -> Result<Result<Vec<Vec<Point>>, Diagnostic>, Exhausted> {
     let own = &ripple.ripple;
-    let parts = if ripple.clips.is_empty() {
-        None
-    } else {
-        match clipped(&ripple.clips, meter)? {
-            Ok(parts) => Some(parts),
-            Err(unjoined) => {
-                warnings.push(unjoined.clip());
-                return Ok(None);
-            }
-        }
-    };
+    let parts = if ripple.clips.is_empty() { None } else { Some(clipped(&ripple.clips, meter)?) };
+    // An area that doesn't join into rings is a bug ([`Unjoined`]), which no drawing tried makes.
+    let Ok(parts) = parts.transpose() else { return Ok(Err(Unjoined.clip())) };
     let travel = Travel {
         length: sewing.pattern.first().copied().unwrap_or(2.0 * sewing.min),
         tolerance: sewing.tolerance,
@@ -428,8 +425,7 @@ fn finished(
         None => vec![run],
     };
     if groups.is_empty() {
-        warnings.push(Diagnostic::new(Code::ClippedAway, "Its clip paths leave nothing of this ripple stitch, so it sews nothing."));
-        return Ok(None);
+        return Ok(Err(Diagnostic::new(Code::ClippedAway, "Its clip paths leave nothing of this ripple stitch, so it sews nothing.")));
     }
     let repeats = ripple.passes.repeats;
     groups = groups.iter().map(|group| repeated(group, repeats, meter)).collect::<Result<_, _>>()?;
@@ -447,7 +443,7 @@ fn finished(
     }
     let beans = &ripple.passes.bean_stitch_repeats;
     let runs = groups.iter().map(|group| passes::sew(group, 1, beans, Turn::Listed, meter)).collect::<Result<_, _>>()?;
-    Ok(Some(runs))
+    Ok(Ok(runs))
 }
 
 /// `group` sewn `repeats` times, there and back, as Ink/Stitch repeats each of a ripple's groups: each pass

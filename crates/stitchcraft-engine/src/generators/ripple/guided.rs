@@ -550,3 +550,6 @@ const RUNGS: &str = "render_at_rungs";
 
 /// `satin_guide_pattern_position`'s option that places copies where they clear each other.
 const ADAPTIVE: &str = "adaptive";
+
+#[cfg(test)]
+mod tests;

@@ -1,13 +1,14 @@
-//! The ripple stitch in a plan, through the engine's public API: its target point and what it says
-//! (`REQ-RIP-002`, `REQ-RIP-010`, `SC-W0406` to `SC-W0408`). Its unit cases are in
-//! `src/generators/ripple/tests.rs`.
+//! The ripple stitch in a plan, through the engine's public API: its target point, its guide, its clips and
+//! what it says (`REQ-RIP-002`, `REQ-RIP-010`, `REQ-RIP-012`, `REQ-RIP-017`, `SC-W0406` to `SC-W0408`). Its
+//! unit cases are in `src/generators/ripple/tests.rs`, and its guides, grid and clips needle point by needle
+//! point in `tests/ripple_guided.rs`.
 
 // Test code may unwrap, index and panic (clippy.toml allows the first 2 in tests).
 #![allow(clippy::unwrap_used, clippy::indexing_slicing, clippy::panic)]
 
-use stitchcraft_core::Point;
+use stitchcraft_core::{Mm, Point};
 use stitchcraft_engine::PlanOutcome;
-use stitchcraft_engine::design::{Element, Hints, Path};
+use stitchcraft_engine::design::{Element, Guide, Hints, Join, Path};
 use stitchcraft_plan::{Role, Stitch, StitchKind};
 use stitchcraft_testkit::designs::{RED, along, clipped, messages, p, planned, polylines};
 
@@ -49,27 +50,31 @@ fn req_rip_002_a_ripple_aims_at_the_target_point_its_design_gives() {
 }
 
 #[test]
-fn req_rip_010_the_settings_of_guided_ripples_are_kept_and_named() {
-    let outcome = planned(vec![ripple(line(), &[("grid_size_mm", "2"), ("rotate_ripples", "false")])]);
-    let named = |key: &str| format!("warning SC-W0105: `{key}` is not a StitchCraft parameter; it was kept but does not change the stitches.");
-    assert_eq!(messages(&outcome), [named("grid_size_mm"), named("rotate_ripples")]);
-    assert_eq!(sewn(&outcome), sewn(&planned(vec![ripple(line(), &[])])));
+fn req_rip_012_a_guide_grouped_with_the_ripple_carries_its_copies() {
+    // The guide runs down from the line's start, 10 mm: the 3 copies lie at y = 0, 5 and 10.
+    let guide = Guide { path: polylines(&[&[(-10.0, 0.0), (-10.0, 10.0)]]), width: Mm::ZERO, join: Join::UNSET, params: Default::default() };
+    let hints = Hints { guide: Some(guide), ..Hints::default() };
+    let outcome = planned(vec![Element { hints, ..ripple(line(), &[("line_count", "3"), ("scale_end", "100")]) }]);
+    assert_eq!(messages(&outcome), Vec::<String>::new());
+    let points = sewn(&outcome);
+    for y in [0.0, 5.0, 10.0] {
+        assert!([-10.0, 10.0].iter().all(|&x| points.iter().any(|q| q.distance(p(x, y)) < 1e-6)), "{y}: {points:?}");
+    }
+    assert!(points.iter().all(|q| (-1e-6..=10.0 + 1e-6).contains(&q.y())), "{points:?}");
 }
 
 #[test]
-fn diag_sc_w0406_a_ripple_cut_to_clips_is_sewn_whole() {
-    let whole = planned(vec![ripple(line(), &[])]);
+fn req_rip_017_a_ripple_cut_to_clips_sews_what_lies_inside_them() {
     let cut = planned(vec![clipped(ripple(line(), &[]), &[&[(-5.0, -5.0), (5.0, -5.0), (5.0, 5.0), (-5.0, 5.0)]])]);
-    let message =
-        "warning SC-W0406: This ripple stitch is cut to clip paths, which StitchCraft doesn't apply to ripple stitch yet, so it is sewn whole.";
-    assert_eq!(messages(&cut), [message]);
-    assert_eq!(sewn(&cut), sewn(&whole));
+    assert_eq!(messages(&cut), Vec::<String>::new());
+    let points = sewn(&cut);
+    assert!(!points.is_empty() && points.iter().all(|q| q.x().abs() <= 5.0 + 1e-6), "{points:?}");
 }
 
 #[test]
-fn diag_sc_w0406_a_ripple_along_a_column_reads_its_rails_with_their_defaults() {
-    let outcome = planned(vec![ripple(column(), &[("swap_satin_rails", "true")])]);
-    let message = "warning SC-W0406: This ripple stitch sets `swap_satin_rails`, which StitchCraft doesn't apply to ripple stitch yet, so its column is read with their defaults.";
+fn diag_sc_w0406_push_compensation_along_a_column_is_named_and_not_applied() {
+    let outcome = planned(vec![ripple(column(), &[("push_compensation_mm", "1")])]);
+    let message = "warning SC-W0406: This ripple stitch sets `push_compensation_mm`, which StitchCraft doesn't apply to ripple stitch, so its column is read without it.";
     assert_eq!(messages(&outcome), [message]);
     assert_eq!(sewn(&outcome), sewn(&planned(vec![ripple(column(), &[])])));
 }

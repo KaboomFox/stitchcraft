@@ -1,0 +1,7 @@
+# TS-17C's M10.11 part, its wave: a ripple stitch whose 8 copies follow an arch, shrinking to 30 % and turning with
+# it (REQ-RIP-019).
+id = "inkstitch-ts17c-guided-line"
+requirements = ["REQ-RIP-019"]
+kind = "inkstitch"
+sheet = "TS-17C"
+elements = "ts17c:guided:line"
