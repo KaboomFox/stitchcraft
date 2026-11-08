@@ -102,6 +102,12 @@ jobs:
         continue-on-error: true
         working-directory: vectorcraft
         run: cargo build --release --locked -p vectorcraft-cli
+      # Only the stable track runs the pinned release, which the cache keeps. The pre-release track fetches its
+      # release's archive, and the branch tracks build their vectorcraft-cli.
+      - name: VectorCraft's pinned release, from the Actions cache when a run kept it
+        id: archive
+        if: matrix.track == 'stable'
+        uses: ./.github/actions/vectorcraft-archive
       # Builds the plug-in's modules for wasm32, hello and one for each stitch family, notes their sizes, and
       # writes the track's result in target/compat/results for the report.
       - name: Both levels against VectorCraft ${{ steps.ref.outputs.ref }}
@@ -114,6 +120,15 @@ jobs:
           else
             cargo xtask compat track "$TRACK" --ref "$REF"
           fi
+      # Only an archive whose SHA-256 matched is ever at that path (.github/actions/vectorcraft-archive). A
+      # scheduled run tests the latest stable release, and while that is newer than the pinned one, the pinned
+      # archive isn't fetched and nothing is kept.
+      - name: Keep VectorCraft's pinned release in the Actions cache
+        if: ${{ !cancelled() && steps.archive.outcome == 'success' && steps.archive.outputs.hit != 'true' && hashFiles(steps.archive.outputs.path) != '' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.archive.outputs.path }}
+          key: ${{ steps.archive.outputs.key }}
       - name: Nothing to test on this track
         if: steps.ref.outputs.ref == ''
         run: echo "VectorCraft has no ${{ matrix.track }} build right now." >> "$GITHUB_STEP_SUMMARY"
@@ -225,8 +240,18 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: A desktop without a screen (Xvfb, Mesa, D-Bus, AT-SPI)
         uses: ./.github/actions/desktop
+      - name: VectorCraft's pinned release, from the Actions cache when a run kept it
+        id: archive
+        uses: ./.github/actions/vectorcraft-archive
       - name: VectorCraft's window, photographed and driven through its accessibility tree
         run: cargo xtask compat window
+      # Only an archive whose SHA-256 matched is ever at that path (.github/actions/vectorcraft-archive).
+      - name: Keep VectorCraft's pinned release in the Actions cache
+        if: ${{ !cancelled() && steps.archive.outcome == 'success' && steps.archive.outputs.hit != 'true' && hashFiles(steps.archive.outputs.path) != '' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.archive.outputs.path }}
+          key: ${{ steps.archive.outputs.key }}
       - name: Keep the screenshots, the tree and the app's logs
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
