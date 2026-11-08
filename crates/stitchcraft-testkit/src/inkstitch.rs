@@ -359,7 +359,9 @@ mod tests {
         let read = stitchcraft_svg::read(text.as_bytes(), &Budget::DEFAULT).unwrap();
         assert!(read.warnings.is_empty(), "{:?}", read.warnings);
         let elements = read.design.elements();
-        let others = text.matches("inkscape:connection-start").count() + text.matches("<path clip-rule").count();
+        // Connectors, clip paths and guide and anchor lines are no elements of their own.
+        let helpers = text.matches("marker-start:url(#inkstitch-").count();
+        let others = text.matches("inkscape:connection-start").count() + text.matches("<path clip-rule").count() + helpers;
         let clones = text.matches(" xlink:href=\"#e").count();
         assert_eq!(elements.len(), text.matches("<path ").count() - others + clones, "an element for each path and each clone");
         (kept(elements), read.design.settings)
