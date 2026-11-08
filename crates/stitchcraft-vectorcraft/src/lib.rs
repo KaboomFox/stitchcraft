@@ -39,6 +39,7 @@ mod document;
 mod effect;
 pub mod filter;
 mod geometry;
+mod gradient;
 pub mod settings;
 mod values;
 mod wire;

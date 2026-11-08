@@ -1,0 +1,5 @@
+# A red square without a gradient, at 30°: its colour fades out along the angle (SC-W0329).
+id = "inkstitch-gradient-fade"
+requirements = ["REQ-SVG-008", "REQ-FILL-GRD-009"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/gradient-fade.svg"

@@ -133,11 +133,11 @@ pub(crate) fn planned(design: &stitchcraft_engine::design::Design) -> (Vec<u8>, 
     (stitchcraft_formats::encode(&plan, stitchcraft_plan::FormatId::PesV1, "test").unwrap().bytes, said)
 }
 
-/// An element sewn in red, green and blue, as a linear gradient fill of 3 stops will be (`REQ-ASM-006`): a red
+/// An element sewn in red, green and blue, as a linear gradient fill of 3 stops is (`REQ-ASM-006`): a red
 /// stroke of 3 lines 10 mm long and 5 mm apart, trimmed after, generated as `stitch export` generates it,
-/// and its 3 groups given those threads, each ending a colour block. No stitch type gives its groups threads
-/// of their own yet. The other crates' cases take the same element from `stitchcraft_testkit::designs`,
-/// which this crate doesn't depend on.
+/// and its 3 groups given those threads, each ending a colour block. Made by hand, its stitches are few
+/// and plain. The other crates' cases take the same element from `stitchcraft_testkit::designs`, which this
+/// crate doesn't depend on.
 pub(crate) fn three_threads() -> (stitchcraft_engine::design::Element, stitchcraft_engine::generate::Generated) {
     use stitchcraft_core::{Budget, ElementId, Point};
     use stitchcraft_engine::design::{DesignSettings, Element, Path, Segment, Shape, Subpath};

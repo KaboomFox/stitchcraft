@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkstitch="http://inkstitch.org/namespace" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="100mm" height="100mm" viewBox="0 0 100 100">
+  <metadata><inkstitch:inkstitch_svg_version>4</inkstitch:inkstitch_svg_version></metadata>
+  <defs>
+    <linearGradient id="stops"><stop offset="0" style="stop-color:#ed171f"/><stop offset="0.5" style="stop-color:#0a55a3"/></linearGradient>
+    <linearGradient id="before" xlink:href="#stops" x1="-100" y1="30" x2="-60" y2="30" gradientUnits="userSpaceOnUse"/>
+  </defs>
+  <path id="square" d="M 10,10 H 50 V 50 H 10 Z" style="fill:url(#before)" inkstitch:fill_method="linear_gradient_fill"
+        inkstitch:fill_underlay="False" inkstitch:trim_after="True"/>
+</svg>

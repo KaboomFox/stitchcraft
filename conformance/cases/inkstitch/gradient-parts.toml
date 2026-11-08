@@ -1,0 +1,5 @@
+# 2 rectangles of one fill under a slanted gradient, which stops at its end before a black line.
+id = "inkstitch-gradient-parts"
+requirements = ["REQ-SVG-008", "REQ-FILL-GRD-009"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/gradient-parts.svg"

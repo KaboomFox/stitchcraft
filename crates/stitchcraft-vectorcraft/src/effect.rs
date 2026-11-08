@@ -45,6 +45,7 @@ use stitchcraft_plan::{Rgb, Thread};
 use crate::PREVIEW_LEVEL;
 use crate::document::{ON_THE_OBJECT, stroke_style};
 use crate::geometry::{self, UNUSABLE_HINT};
+use crate::gradient;
 use crate::values::{settings, text};
 use crate::wire::{EffectInput, EffectObject, EffectStroke, Paint};
 use crate::writer::Geometry;
@@ -85,9 +86,17 @@ pub struct AutoEffect {
 /// on one of its object's fills or strokes, `SC-W0808` when the object's path cannot be used, and
 /// `SC-E0004` when reading it needs more work than the budget allows.
 pub fn read_effect(family: Family, input: &[u8], params: &[u8], budget: &Budget) -> Result<Effect, Diagnostic> {
-    let Given { path, rule, strokes, mut params, preview_level, .. } = given(input, params, budget)?;
+    let Given { path, rule, fills, strokes, mut params, preview_level } = given(input, params, budget)?;
     let (shape, stroked) = match family {
-        Family::Fill => (Shape::Fill { path, rule }, false),
+        Family::Fill => {
+            // A linear gradient fill sews the topmost fill's linear gradient, as `stitch export` does.
+            let topmost = fills.iter().rev().flatten().find(|paint| paint.paints()).filter(|_| gradient::sews(params.get("fill_method")));
+            let sewn = match topmost {
+                Some(paint) => gradient::linear(paint, &path, &mut budget.meter()).map_err(|_| too_much())?,
+                None => None,
+            };
+            (Shape::Fill { path, rule, gradient: sewn.and_then(|linear| linear.gradient) }, false)
+        }
         Family::Stroke | Family::Satin => {
             params.set(SATIN_COLUMN, if family == Family::Satin { "true" } else { "false" });
             match followed(&strokes) {
@@ -106,7 +115,7 @@ pub fn read_auto_effect(input: &[u8], params: &[u8], budget: &Budget) -> Result<
     let Given { path, rule, fills, strokes, params, preview_level } = given(input, params, budget)?;
     let mut elements = Vec::new();
     if fills.iter().flatten().any(Paint::paints) {
-        elements.push(element(FILL, Shape::Fill { path: path.clone(), rule }, params.clone(), true)?);
+        elements.push(element(FILL, Shape::Fill { path: path.clone(), rule, gradient: None }, params.clone(), true)?);
     }
     if let Some((_, width, join, cap)) = followed(&strokes) {
         elements.push(element(STROKE, Shape::Stroke { path, width, join, cap }, params, true)?);
@@ -152,10 +161,15 @@ fn given(input: &[u8], params: &[u8], budget: &Budget) -> Result<Given, Diagnost
             let message = format!("{}, so the live effect leaves the object as it is.", why.why());
             return Err(Diagnostic::new(Code::VcGeometryUnusable, message).with_fix(Fix::Hint(UNUSABLE_HINT.to_string())));
         }
-        Err(_) => return Err(Diagnostic::new(Code::BudgetExhausted, "Reading the live effect's object needed more work than the budget allows.")),
+        Err(_) => return Err(too_much()),
     };
     let rule = if fill_rule.as_deref() == Some("evenodd") { FillRule::EvenOdd } else { FillRule::NonZero };
     Ok(Given { path, rule, fills, strokes, params: settings(&params), preview_level: params.get(PREVIEW_LEVEL).and_then(text) })
+}
+
+/// `SC-E0004`: reading the live effect's object needs more work than the budget allows.
+fn too_much() -> Diagnostic {
+    Diagnostic::new(Code::BudgetExhausted, "Reading the live effect's object needed more work than the budget allows.")
 }
 
 /// A live effect's element `vc:effect:<what>`, of `shape` with `params`, automatic or not.
@@ -286,7 +300,7 @@ mod tests {
         let params =
             br#"{"row_spacing_mm": 0.3, "underpath": false, "fill_method": "tatami_fill", "preview_level": "rows", "_context": {"mode": "effect"}}"#;
         let fill = read_effect(Family::Fill, &input(&square(), "evenodd"), params, &Budget::DEFAULT).unwrap();
-        assert!(matches!(&fill.element.shape, Shape::Fill { rule: FillRule::EvenOdd, path } if path.subpaths.len() == 1));
+        assert!(matches!(&fill.element.shape, Shape::Fill { rule: FillRule::EvenOdd, path, .. } if path.subpaths.len() == 1));
         let read: Vec<(&str, &str)> = fill.element.params.iter().collect();
         assert_eq!(read, [("fill_method", "tatami_fill"), ("row_spacing_mm", "0.3"), ("underpath", "false")]);
         // The preview level is the plug-in's, beside the element.

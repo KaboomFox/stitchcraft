@@ -391,7 +391,7 @@ fn made_by(element: &Element, settings: &DesignSettings, rules: &AutoParams, met
 /// code can't join, a bug, is itself as it is, and its fill says so.
 fn areas(element: &Element, settings: &DesignSettings, rules: &AutoParams, meter: &mut Meter) -> Result<Digitized, Exhausted> {
     let as_it_is = itself(element, Some(Stitches::Fill));
-    let Shape::Fill { path, rule } = &element.shape else { return Ok(as_it_is) };
+    let Shape::Fill { path, rule, .. } = &element.shape else { return Ok(as_it_is) };
     let Ok(parts) = parts_of(path, *rule, meter)? else { return Ok(as_it_is) };
     Ok(sewn(element, narrow::sorted(&element.id, parts, settings.min_satin_stroke_width, rules, meter)?, rules))
 }
@@ -409,7 +409,7 @@ fn sewn(element: &Element, sorted: narrow::Parts, rules: &AutoParams) -> Digitiz
     let (rest, after) = split_after(&element.params);
     let mut made = Digitized { diagnostics: sorted.said, ..Digitized::default() };
     if !sorted.filled.is_empty() {
-        let shape = Shape::Fill { path: outline(&sorted.filled), rule: FillRule::NonZero };
+        let shape = Shape::Fill { path: outline(&sorted.filled), rule: FillRule::NonZero, gradient: None };
         made.add(part(element, element.id.clone(), shape, rest.clone()), None);
     }
     let mut satin = false;
@@ -511,7 +511,10 @@ fn columns(element: &Element, path: &Path, style: Style, rules: &AutoParams, met
         match painted(&alone, style, meter)? {
             Painted::Area { rings, parts } => {
                 made.diagnostics.push(cannot_follow(&id, directions.is_none()));
-                made.add(part(element, id, Shape::Fill { path: fill_path(parts, &rings), rule: FillRule::NonZero }, rest.clone()), None);
+                made.add(
+                    part(element, id, Shape::Fill { path: fill_path(parts, &rings), rule: FillRule::NonZero, gradient: None }, rest.clone()),
+                    None,
+                );
                 fill = true;
             }
             Painted::Nothing => made.diagnostics.push(too_small(TooSmall::Point, 0.0).with_element(element.id.clone())),
@@ -553,7 +556,7 @@ fn filled(element: &Element, path: &Path, style: Style, meter: &mut Meter) -> Re
     let mut made = Digitized::default();
     match painted(path, style, meter)? {
         Painted::Area { rings, parts } => {
-            let shape = Shape::Fill { path: fill_path(parts, &rings), rule: FillRule::NonZero };
+            let shape = Shape::Fill { path: fill_path(parts, &rings), rule: FillRule::NonZero, gradient: None };
             made.add(part(element, element.id.clone(), shape, element.params.clone()), None);
             made.stitches = Some(Stitches::FilledStroke);
         }
@@ -770,7 +773,7 @@ mod tests {
             holes: Vec::new(),
         };
         let (square, strip) = (rect((0.0, 0.0), (10.0, 10.0)), rect((20.0, 0.0), (30.0, 0.6)));
-        let shape = Shape::Fill { path: outline(&[square.clone(), strip.clone()]), rule: FillRule::NonZero };
+        let shape = Shape::Fill { path: outline(&[square.clone(), strip.clone()]), rule: FillRule::NonZero, gradient: None };
         let thread = stitchcraft_plan::Thread::new(stitchcraft_plan::Rgb::new(0, 0, 0));
         let area = Element {
             id: ElementId::new("area").unwrap(),
