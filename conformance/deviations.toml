@@ -73,7 +73,7 @@ area = "strokes/running"
 summary = "No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column's travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Where a satin column's parts meet nearer than the shortest stitch, the needle's way between them gives way to the next part's first point, and so does an underlay's last point or the column's start, which moves there; beside a top stitch's end, which stays where it is, the next part's points that near it give way instead. Ink/Stitch's running stitch has no shortest stitch, and it joins a satin column's parts as they are; its plan later drops stitches no longer than the element's shortest stitch, 0.1 mm by default, keeping the stitch before. Beside an underlay's last point, it drops the top stitches' first needle points, and the column's end is shorter."
 reason = "The machine's shortest stitch is a limit: honoured where the stitches are placed, it never costs a corner or leaves an over-long stitch. A top stitch's end is where the column ends, so it stays. In M8.6's every-glyph run, Ink/Stitch at d59c9ab, run as a black box (ADR-0001, decision 6), sews Manga Impact's &, whose satin columns set a shortest stitch of 0.5 mm, 16.2 × 26.0 mm, and StitchCraft 16.4 × 26.8 mm. Each of its 2 tips ends a column whose top stitches start there, beside the zigzag underlay's last point, and Ink/Stitch drops their first 3 or 4 needle points. With a shortest stitch of 0.1 mm, both sew the & 16.4 × 26.8 mm."
 requirements = ["REQ-RUN-001", "REQ-RUN-003", "REQ-SAT-004", "REQ-SAT-010", "REQ-SAT-011", "REQ-SAT-013", "REQ-SAT-014"]
-params = ["running_stitch_length_mm", "center_walk_underlay_stitch_length_mm", "contour_underlay_stitch_length_mm"]
+params = ["running_stitch_length_mm", "center_walk_underlay_stitch_length_mm", "contour_underlay_stitch_length_mm", "grid_size_mm"]
 
 [[deviation]]
 id = "DEV-RUN-004"
@@ -144,10 +144,31 @@ requirements = ["REQ-RIP-008"]
 [[deviation]]
 id = "DEV-RIP-002"
 area = "strokes/ripple"
-summary = "A ripple has 1,000 lines at most, or 999 where 1,000 would change the parity of line_count, and SC-W0407 says when min_line_dist_mm gives more. Ink/Stitch sews every line it gives."
+summary = "A ripple has 1,000 lines at most, or 999 where 1,000 would change the parity of line_count, and SC-W0407 says when min_line_dist_mm gives more. A guide places 1,000 copies at most, and SC-W0407 says when its points, its rungs or the places an adaptive satin guide finds clear are more. Ink/Stitch sews every line and every copy it gives."
 reason = "1,000 lines across 400 mm lie 0.4 mm apart, as close as a thread is wide, and more sew a solid patch rather than a ripple. Each line's points cost work and stitches within the budget (REQ-RIP-003)."
-requirements = ["REQ-RIP-003"]
-params = ["min_line_dist_mm"]
+requirements = ["REQ-RIP-003", "REQ-RIP-012", "REQ-RIP-013"]
+params = ["min_line_dist_mm", "satin_guide_pattern_position"]
+
+[[deviation]]
+id = "DEV-RIP-003"
+area = "strokes/ripple"
+summary = "A ripple stitch its clips leave nothing of sews nothing, and SC-W0013 says so. Ink/Stitch sews it whole: TS-17C's clipped zigzag, its clip moved away from it, sews its 7 copies uncut in Ink/Stitch at d59c9ab, run as a black box."
+reason = "A clip says where the stitches go, and a ripple wholly outside it has none there, as a stroke or a fill wholly outside its clips has none (REQ-GEN-005, REQ-RIP-017). Ink/Stitch's routing of a clipped ripple was read at d59c9ab (lib/stitches/ripple_stitch.py), which sews the ripple as it is when the clip leaves no line of it."
+requirements = ["REQ-RIP-017"]
+
+[[deviation]]
+id = "DEV-RIP-004"
+area = "strokes/ripple"
+summary = "A guide that can't place copies, a guide line of no length or a satin guide whose rails give no pair, is left out, SC-W0409 says why, and the ripple sews as it would without the guide, towards its target point. Ink/Stitch at d59c9ab, run as a black box, stacks TS-17C's wave's copies on the point of a guide line of no length, each scaled about it from scale_start to scale_end, and stops with an error where the copies are placed by hand, as its clipped zigzag's are."
+reason = "A guide of no length is drawn by mistake, and it gives the copies no way to go: the warning says so, and the ripple still sews as the stroke draws it (REQ-RIP-012, REQ-RIP-013)."
+requirements = ["REQ-RIP-012", "REQ-RIP-013"]
+
+[[deviation]]
+id = "DEV-RIP-005"
+area = "strokes/ripple"
+summary = "Between a satin guide's rails, a closed line with no anchor line is centred on each pair where its ends lie within 0.05 CSS pixels of each other, as a closed line spirals. Ink/Stitch centres it only where its outline's first and last points are the same point, and otherwise stretches it across each pair from its first point to its last, which lie almost together. TS-17C's circle, its last point moved 0.002 mm from its first, sews copies that run more than 10 m from the start in Ink/Stitch at d59c9ab, run as a black box, and 20.8 × 6.4 mm here."
+reason = "A line that a ripple sews as closed, in a spiral (REQ-RIP-001), is closed between a guide's rails too, so a path whose ends were drawn almost together sews as it looks. Ink/Stitch's satin guides were read at d59c9ab (lib/stitches/ripple_stitch.py)."
+requirements = ["REQ-RIP-013"]
 
 [[deviation]]
 id = "DEV-SAT-001"
