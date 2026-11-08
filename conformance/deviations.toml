@@ -312,7 +312,7 @@ id = "DEV-FILL-007"
 area = "fill/tatami"
 summary = "Travel under a tatami fill's rows follows Ink/Stitch's lines and costs, and its way can differ in 4 details. Where 2 ways cost the same, StitchCraft's search goes on from the lower-numbered of 2 nodes as near, where Ink/Stitch's graph library goes on from the one it queued first, so the 2 can take different ways. The rings the costs measure from are simplified within 0.5 mm by StitchCraft's own rule, which keeps the first of 2 points as far from a line. Before the way is smoothed it is cut into points 10 px apart by StitchCraft's running stitch, which puts a point on each corner of the way, where Ink/Stitch's evenly spaced points may cut a corner by up to 4 px. Where no line joins 2 points, as for a hole too small for any line to reach, the needle runs along the rings and rows, where Ink/Stitch goes straight."
 reason = "The search, the simplification and the running stitch are StitchCraft's own, the same on every platform (docs/src/design/determinism.md), and the lines and their costs are Ink/Stitch's. Ink/Stitch travels between 2 rings only from the fill's start to its end, before any row is sewn, but StitchCraft also travels between rings to pair nodes (DEV-FILL-006), after rows are sewn, where a straight way would cross them and show. Ink/Stitch's behaviour was read at d59c9ab (lib/stitches/tatami_fill.py: build_travel_graph, process_travel_edges, build_travel_edges, travel; lib/utils/smoothing.py; lib/utils/clamp_path.py; lib/stitches/running_stitch.py), and networkx's shortest_path at its documented API."
-requirements = ["REQ-FILL-TAT-005"]
+requirements = ["REQ-FILL-TAT-005", "REQ-FILL-GDD-007"]
 
 [[deviation]]
 id = "DEV-FILL-008"
@@ -491,6 +491,27 @@ area = "fill/tartan"
 summary = "A herringbone's weft line is sewn whole wherever it passes a point it passed before. Ink/Stitch cuts each weft colour's lines by the piece with its geometry library, which breaks a line where it finds the line meets itself, and routes the pieces apart. Near the outline a weft line can run twice along the same stretch of a stripe's edge, and whether the library finds a meeting there hangs on the last bits of its arithmetic. Where it breaks a line inside the piece, the break's ends are nodes inside it, which its fill's route then reaches by sewing rows a second time (DEV-FILL-006)."
 reason = "A meeting found by rounding is no place the design asks the thread to stop, and a line sewn whole needs no route to its pieces. In M10.7's every-glyph run, Colorful's F breaks one pink weft line in 3 at a point the line passes twice, along a stripe's edge 1.7 mm inside the outline. Ink/Stitch's weft lines, taken from its own functions run as a black box, are as long as StitchCraft's, 917.76 mm, and differ only in that break. The 3 pieces leave 2 nodes of odd degree in its fill's graph, and its graph library then sews 14 rows, 398 mm, a second time: Ink/Stitch sews F's pink in 746 stitches and StitchCraft in 548. Joined back into one line, the same graph needs no repair. Ink/Stitch's behaviour was read at d59c9ab (lib/stitches/tartan_fill.py: _get_weft_herringbone_color_segments; lib/stitches/tatami_fill.py: build_fill_stitch_graph, graph_make_valid)."
 requirements = ["REQ-FILL-TRT-014"]
+
+[[deviation]]
+id = "DEV-FILL-033"
+area = "fill/guided"
+summary = "A guided fill with staggers of 0 counts them as 1, so every row starts at its first point. Ink/Stitch divides by the staggers to place each row's stagger, and stops with a division by zero."
+reason = "A setting a file can hold sews something rather than nothing, and 1 is the count that staggers no row, as 0 asks. Ink/Stitch's own guard sets 1 for 0 and then divides by the setting it read, read at d59c9ab (lib/stitches/guided_fill.py: _apply_stagger)."
+requirements = ["REQ-FILL-GDD-005"]
+
+[[deviation]]
+id = "DEV-FILL-034"
+area = "fill/guided"
+summary = "A guide line that starts and ends at one point once it is made one line sews the fill as a tatami fill with its own settings, with SC-W0331. Ink/Stitch stops with an error on a guide of no length, and on a figure of 8 drawn from its crossing, whose repair gives the line between its ends. It dissolves a guide that runs back along itself into the stretches it covers, and copies those, where StitchCraft takes the line between its ends, which here has no length."
+reason = "An error loses the whole design, and a tatami fill with the element's settings is what Ink/Stitch sews without a guide. The way a dissolved guide runs is the order GEOS gives its pieces, which no documentation fixes, and that way turns the copies. Ink/Stitch was run as a black box at d59c9ab: a guide from (20, 40) to itself, and a figure of 8 drawn from its crossing, end in an IndexError (lib/stitches/guided_fill.py: extend_line), and a guide drawn from (20, 40) to (30, 40) and back sews rows level with it."
+requirements = ["REQ-FILL-GDD-001", "REQ-FILL-GDD-002"]
+
+[[deviation]]
+id = "DEV-FILL-035"
+area = "fill/guided"
+summary = "The guide's lengthened ends lie where its line between its ends takes them. Ink/Stitch moves each by up to 0.01 px along x and y at random, to steer clear of a bug of its geometry library, so its copies' ends differ from run to run by that much."
+reason = "StitchCraft is deterministic (docs/src/design/determinism.md), and the lengthened ends lie outside the part, where no row is sewn: the lines inside it move by far less than a stitch's tolerance. Read at d59c9ab (lib/stitches/guided_fill.py: extend_line)."
+requirements = ["REQ-FILL-GDD-002"]
 
 [[deviation]]
 id = "DEV-SVG-001"

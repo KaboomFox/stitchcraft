@@ -737,8 +737,10 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         // sews by the rules; any other is updated as Ink/Stitch updates a file of its version.
         let automatic = self.auto && !node.attributes().any(|a| inkstitch::is_setting(&a));
         let mut hints = self.hints(label, automatic, commands);
+        // A fill's guide line is never a satin column (`REQ-SVG-015`).
+        let mut fill_guide = None;
         if !automatic {
-            self.guided(node, (group.0, &group.1), &mut hints)?;
+            fill_guide = self.guided(node, (group.0, &group.1), &mut hints)?;
             let styled_stroke = declared.in_style("stroke").last().is_some_and(|stroke| !stroke.trim().eq_ignore_ascii_case("none"));
             let shape = version::Shape {
                 fill: fill.is_some(),
@@ -788,7 +790,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 thread: Thread::new(colour),
                 params: params.clone(),
                 automatic,
-                hints: hints.clone(),
+                hints: if part == "fill" { Hints { guide: fill_guide.clone(), ..hints.clone() } } else { hints.clone() },
                 clips: clips.clone(),
             });
             if self.frames.is_empty() {

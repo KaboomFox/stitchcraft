@@ -423,6 +423,15 @@ status = "active"
 # ── Generators: shared ─────────────────────────────────────────────────────────────────────────────
 
 [[req]]
+id = "REQ-SVG-015"
+area = "svg"
+level = "L2"
+statement = "A fill's guide line is the first guide line of its group that is no satin column, and its stroke's the first satin guide or else the first guide line (REQ-RIP-013). A shape filled and stroked can so have 2 guides, and a fill whose group has a satin guide alone has none (REQ-FILL-GDD-001)."
+rationale = "Ink/Stitch's fill asks its group for guide lines without satin columns, and its stroke asks for them with satin columns first, read at d59c9ab (lib/elements/element.py: get_guide_lines; lib/elements/stroke.py: get_guide_line; lib/marker.py: get_marker_elements)."
+milestone = "M10"
+status = "active"
+
+[[req]]
 id = "REQ-GEN-001"
 area = "generators"
 level = "L2"
@@ -1898,6 +1907,80 @@ rationale = "Ink/Stitch's tartan reads these codes, read at d59c9ab (lib/tartan/
 milestone = "M10"
 status = "active"
 
+# ── Guided fill ────────────────────────────────────────────────────────────────────────────────────
+
+[[req]]
+id = "REQ-FILL-GDD-001"
+area = "fill/guided"
+level = "L2"
+statement = "A guided fill sews rows that copy its guide line (REQ-SVG-015, REQ-VC-023) when its guided_fill_strategy is 0, copy, the default (REQ-FILL-GDD-002 to REQ-FILL-GDD-007). Set to 1, parallel offset, or 2, buffer, it is skipped until M10.10 sews them, and SC-W0011 names the strategy. Without a guide line, or with one that starts and ends at one point once it is made one line, it sews as a tatami fill with its own settings, and SC-W0331 says so (DEV-FILL-034). A part no copy of the guide meets sews as a tatami fill at the angle of the line between the guide's ends, with the guided fill's row spacing, longest stitch, staggers and skip_last, but no end spacing, random lengths, pull compensation or rows that fill gaps, and SC-W0332 counts those parts."
+rationale = "Ink/Stitch's guided fill sews so, and falls back to its tatami fill without a guide line or where no copy meets the shape, read at d59c9ab (lib/elements/fill_stitch.py: do_guided_fill, guided_fill_strategy; lib/stitches/guided_fill.py: guided_fill, fallback)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-GDD-002"
+area = "fill/guided"
+level = "L2"
+statement = "The guide is the guide line's first subpath, flattened as an outline is. Where it crosses or touches itself, it is cut into pieces there. The pieces that come back to where they began are left out, and 2 that meet end to end where no other piece meets them are joined, up to 4 times over, until one line is left. A guide still in pieces after that, or one that runs back along itself, is the straight line from its first point to its last (DEV-FILL-034). A closed guide then leaves out its last 2 points. The guide is lengthened at both ends, straight on along the line from its first point to its last, by the larger of the distances from its ends to the corner of the part's bounds farthest from each (DEV-FILL-035)."
+rationale = "Ink/Stitch makes its guide ready so, read at d59c9ab (lib/stitches/guided_fill.py: prepare_copy_guide, repair_non_simple_line, extend_line), with GEOS's union and line merge checked with shapely 2.2 on GEOS 3.14."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-GDD-003"
+area = "fill/guided"
+level = "L2"
+statement = "The copies move a row spacing at a time square to the line from the guide's first point to its last, turned a right angle clockwise as the drawing shows it, or with guided_fill_angle set, at that angle clockwise from the x axis as drawn. Copy k lies k row spacings from the guide. Where the lengthened guide meets the part, the copies start from it. Elsewhere they start from the copy whose number is the distance from the part's centroid to the nearest point of the lengthened guide in whole row spacings, rounded down, and negative where the centroid lies behind the guide as the copies move."
+rationale = "Ink/Stitch moves and counts its copies so, read at d59c9ab (lib/stitches/guided_fill.py: _get_direction_and_start_row, _get_start_row), and its settings window says the angle changes how far apart the rows lie."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-GDD-004"
+area = "fill/guided"
+level = "L2"
+statement = "From the copy they start from, the copies go on one way and then the other until one misses the box round the part, and each copy that meets the part, its outline included, is a row. With smoothness_mm each copy is smoothed first, as a contour fill's path is. The rows are taken in the order of their first points: 2 rows by x and then by y, and more by how far along the diagonal of the box round their first points each lies, from its corner of least x and y. Rows as far along keep the order they were found in."
+rationale = "Ink/Stitch finds and orders its rows so, read at d59c9ab (lib/stitches/guided_fill.py: intersect_region_with_grating_guideline, _sort_segments; lib/utils/smoothing.py: smooth_path)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-GDD-005"
+area = "fill/guided"
+level = "L2"
+statement = "Row i, counted from 0 in the order the rows are taken, is smoothed again by smoothness_mm, keeps its first point, and is stitched from i / staggers of a longest stitch along it, its whole turns left out. Staggers of 0 count as 1 (DEV-FILL-033). Its corners are the joins where it turns by 45° or more, at least twice running_stitch_tolerance_mm apart. With stitch_position_method flexible, the default, its stitches are spread evenly between its corners. With flexible_stagger they are whole longest stitches from where the stagger starts it, a needle point on each corner, and the last stitch whatever is left. With random lengths on, they are drawn as a running stitch draws them, from a stream of the element's seed that the row's number keys. A stitch that strays from the row by more than running_stitch_tolerance_mm is split as a running stitch's is."
+rationale = "Ink/Stitch staggers and stitches its rows so, read at d59c9ab (lib/stitches/guided_fill.py: _stagger_and_cut_segments, _apply_stagger; lib/stitches/running_stitch.py: running_stitch, path_to_curves, stitch_curve_evenly_strict). Spread evenly, a row's needle points keep their stagger near its start only, as Ink/Stitch's do."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-GDD-006"
+area = "fill/guided"
+level = "L2"
+statement = "Each stitched row is cut at every point where it crosses or touches one of the part's rings, but not where it runs along one. A stretch between 2 cuts, or between a cut and the row's end, is a line of the fill when the part holds its middle fifth, from 40 % to 60 % of its length: none of that fifth outside the part, and some of it inside, off the rings. Each line runs the row's way and keeps the row's needle points between its cuts."
+rationale = "Ink/Stitch cuts its rows so, read at d59c9ab (lib/stitches/guided_fill.py: _linestring_to_segments), with GEOS's cuts and containment checked with shapely 2.2 on GEOS 3.14."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-GDD-007"
+area = "fill/guided"
+level = "L2"
+statement = "A guided fill sews its parts as a tatami fill does (REQ-FILL-TAT-008), each with the tatami fill's underlay first (REQ-FILL-TAT-011), and then its lines over the part grown by expand_mm (REQ-FILL-TAT-012). They are routed as a circular fill's pieces are (REQ-FILL-CIR-004): each a row between its ends, sewn once with all its needle points from the end the route enters it by, and without its last with skip_last. The needle travels between them as a tatami fill's does (REQ-FILL-TAT-005), its lines under the rows turned from guided_fill_angle, or from 0 where that is empty. With bean_stitch_repeats, the stitches shorter than the shortest stitch are left out first, and then each stitch of the lines is sewn back and forth, but the travel."
+rationale = "Ink/Stitch routes and sews its guided fill's lines with its tatami fill's graph and travel, read at d59c9ab (lib/stitches/guided_fill.py: guided_fill, path_to_stitches; lib/stitches/tatami_fill.py: build_fill_stitch_graph, build_travel_graph, find_stitch_path, travel)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-GDD-008"
+area = "fill/guided"
+level = "L3"
+statement = "The guided fill StitchCraft sews TS-17B's leaf with, its rows along an S-shaped guide, written as an SVG file with its Ink/Stitch parameters and its guide line, sews in the Ink/Stitch that conformance/inkstitch/pin.toml names, run as a black box, as StitchCraft sews the sheet, by the measures of REQ-SVG-008 and within their tolerances. A measure that a case excuses with an entry of the deviations ledger may differ."
+rationale = "The guided fill is built from Ink/Stitch's behaviour, and the differential is how a file is shown to sew the same in both."
+milestone = "M10"
+status = "active"
+
 # ── VectorCraft ────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -2067,6 +2150,15 @@ area = "vectorcraft"
 level = "L2"
 statement = "From VectorCraft 0.14 the fill effect's dialog shows a tartan's sett, its `tartan` setting, as text, while the fill method is the tartan fill. From VectorCraft 0.15, StitchCraft Tartan, a filter, sets the sett of the selected paths from its dialog's code, the width of a thread and how the sett is laid, as the editor for setts makes one (REQ-FILL-TRT-015): a path whose own first StitchCraft effect is the fill effect gets `fill_method` set to `tartan_fill` and `tartan` to the setting, its other settings as they were, and a path with no StitchCraft effect gets the fill effect with those 2 settings. The others stay as they are. It changes nothing, with SC-E0821, for a code that can't be read, names letters the register uses for no colour or gives no stripe, for a setting longer than the dialog's text holds, and for a selection without a path that takes the sett."
 rationale = "A live effect is given only the settings its manifest declares, so the fill's dialog must hold the sett for its preview to sew it, and a code is what a person has: Ink/Stitch's own palette code, or the register's threadcount (docs/src/design/vectorcraft-integration.md › A tartan's sett)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-VC-023"
+area = "vectorcraft"
+level = "L2"
+statement = "A path named `stitch:guide` gives the guided fills of the group or layer it is in, and of the groups inside it, the line their rows copy, its first subpath, as it gives their ripple stitches the line their copies follow (REQ-VC-009). The fill effect's dialog shows stitch_position_method while the fill method is the guided fill. It leaves out guided_fill_strategy, which offers copying alone until M10.10, and guided_fill_angle, which can be empty where a number in VectorCraft's dialog can't, so the effect sews both at their defaults. A live effect is given no marker beside its object, so its preview of a guided fill sews the tatami fill that SC-W0331 names, and `stitch export` sews the rows."
+rationale = "One marker steers both stitch types that copy a guide in Ink/Stitch, so a design drawn for one reads the same for the other (docs/src/design/vectorcraft-integration.md › Commands in v1)."
 milestone = "M10"
 status = "active"
 

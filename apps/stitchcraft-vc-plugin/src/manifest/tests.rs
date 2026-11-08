@@ -283,11 +283,17 @@ fn each_kind_is_declared_as_one_value_or_left_out() {
     assert_eq!(schema(&spec(Kind::AngleList { optional: true }, ""), &[]), None);
     assert_eq!(schema(&spec(Kind::Seed, ""), &[]), None);
     assert_eq!(schema(&spec(Kind::Text { max_bytes: 9 }, ""), &[]), None);
-    // A choice leaves out an option a text is shown for alone, and is left out when that is its default.
+    // A choice leaves out an option a text is shown for alone, and is left out when that is its default, or
+    // when 1 option is left: there is nothing to choose.
     const OPTIONS: &[ChoiceOption] = &[ChoiceOption::new("half", "Half"), ChoiceOption::new("custom", "Custom")];
     let choice = spec(Kind::Choice { options: OPTIONS }, "half");
     let shape = ParamSpec { key: "shape", visible_when: Some(Condition { key: "p", any_of: &["custom"] }), ..spec(Kind::Text { max_bytes: 9 }, "") };
-    assert_eq!(schema(&choice, &[choice, shape]), Some(Schema::Choice { options: vec!["half"], default: "half" }));
+    assert_eq!(schema(&choice, &[choice, shape]), None);
+    const THREE: &[ChoiceOption] = &[ChoiceOption::new("half", "Half"), ChoiceOption::new("full", "Full"), ChoiceOption::new("custom", "Custom")];
+    let three = spec(Kind::Choice { options: THREE }, "half");
+    assert_eq!(schema(&three, &[three, shape]), Some(Schema::Choice { options: vec!["half", "full"], default: "half" }));
+    const KEPT: &[ChoiceOption] = &[ChoiceOption::new("0", "Copy"), ChoiceOption::kept("1", "Parallel offset")];
+    assert_eq!(schema(&spec(Kind::Choice { options: KEPT }, "0"), &[]), None);
     let both = ParamSpec { visible_when: Some(Condition { key: "p", any_of: &["half", "custom"] }), ..shape };
     assert_eq!(schema(&choice, &[choice, both]), Some(Schema::Choice { options: vec!["half", "custom"], default: "half" }));
     let size = ParamSpec { kind: Kind::Count { min: 1, max: 9 }, ..shape };

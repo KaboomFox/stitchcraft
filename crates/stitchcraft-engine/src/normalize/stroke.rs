@@ -103,6 +103,36 @@ pub(crate) fn polyline(points: &[Point]) -> Piece {
     Piece { points: kept, corners }
 }
 
+/// The cosine of 45°: a join turns by 45° or more when the cosine of its turn is at most this.
+const WIDE_CORNER_COS: f64 = std::f64::consts::FRAC_1_SQRT_2;
+
+/// The polyline `points` as a piece, without points that repeat the one before, with a corner where
+/// Ink/Stitch's running stitch takes one (read at `d59c9ab`): at each join that turns by 45° or more and lies
+/// at least `apart` along the polyline from the join before it that turns so, or from its start. A guided
+/// fill stitches its rows so, whose gentler joins its stagger runs on through (`crate::generators::guided`).
+pub(crate) fn polyline_wide(points: &[Point], apart: f64) -> Piece {
+    let mut kept = Vec::with_capacity(points.len());
+    for point in points {
+        push(&mut kept, *point);
+    }
+    let mut corners = Vec::new();
+    let mut since = kept.first().zip(kept.get(1)).map_or(0.0, |(a, b)| a.distance(*b));
+    for (i, w) in kept.windows(3).enumerate() {
+        let [a, b, c] = w else { continue };
+        let (before, after) = ((b.x() - a.x(), b.y() - a.y()), (c.x() - b.x(), c.y() - b.y()));
+        let dot = before.0 * after.0 + before.1 * after.1;
+        let lengths = a.distance(*b) * b.distance(*c);
+        if dot <= WIDE_CORNER_COS * lengths {
+            if since >= apart {
+                corners.push(i + 1);
+            }
+            since = 0.0;
+        }
+        since += b.distance(*c);
+    }
+    Piece { points: kept, corners }
+}
+
 /// The line segments of the polyline `points`, each from a point to the next.
 pub(crate) fn segments(points: &[Point]) -> impl Iterator<Item = (Point, Point)> + '_ {
     points.iter().copied().zip(points.iter().copied().skip(1))
