@@ -39,7 +39,7 @@ fn rails(element: &Element) -> [Vec<Point>; 2] {
 
 /// The area the fill `element` sews, in square millimetres.
 fn area(element: &Element) -> f64 {
-    let Shape::Fill { path, rule } = &element.shape else { panic!("`{}` is not a fill: {:?}", element.id, element.shape) };
+    let Shape::Fill { path, rule, .. } = &element.shape else { panic!("`{}` is not a fill: {:?}", element.id, element.shape) };
     region::build(path, *rule, &mut Budget::DEFAULT.meter()).unwrap().region.area()
 }
 

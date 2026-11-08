@@ -15,7 +15,7 @@ use std::sync::Arc;
 use stitchcraft_core::units::MACHINE_LIMIT;
 use stitchcraft_core::{Code, Diagnostic, ElementId, Mm, Point, Rect};
 use stitchcraft_params::ParamSet;
-use stitchcraft_plan::Thread;
+use stitchcraft_plan::{Rgb, Thread};
 
 mod turn;
 
@@ -175,7 +175,51 @@ pub enum Shape {
         path: Path,
         /// Which parts are inside.
         rule: FillRule,
+        /// The linear gradient it is painted with, since M10.12: the colours a linear gradient fill sews.
+        /// `None` for a fill of one colour, the element's thread's.
+        gradient: Option<Gradient>,
     },
+}
+
+/// A linear gradient a fill is painted with, as its host draws it, in the design's millimetres (M10.12): the
+/// way its colours lie, which a linear gradient fill sews in threads of their own
+/// (`docs/src/design/algorithms/gradient.md`). Its host places it with every transform applied, so it moves
+/// with the fill's path.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Gradient {
+    /// Where its stops' offsets start, at 0.
+    pub start: Point,
+    /// Where they end, at 1. A gradient whose end is its start has no way of its own.
+    pub end: Point,
+    /// Its stops, in order: 2 or more, their offsets from 0 to 1, each at or after the one before.
+    pub stops: Vec<GradientStop>,
+}
+
+/// One stop of a [`Gradient`]: where its colour lies, the colour, and how opaque it is.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct GradientStop {
+    /// How far from the gradient's start towards its end, from 0 to 1.
+    pub offset: f64,
+    /// Its colour.
+    pub colour: Rgb,
+    /// How opaque it is, from 0 to 1. A stop of 0 is transparent, and a gradient fill leaves its rows out.
+    pub opacity: f64,
+}
+
+impl Gradient {
+    /// Whether its stops are as [`Gradient::stops`] says: 2 or more, their offsets and opacities numbers from
+    /// 0 to 1, each offset at or after the one before.
+    pub fn is_ordered(&self) -> bool {
+        let unit = |value: f64| (0.0..=1.0).contains(&value);
+        self.stops.len() >= 2
+            && self.stops.iter().all(|stop| unit(stop.offset) && unit(stop.opacity))
+            && self.stops.windows(2).all(|pair| pair.first().map(|s| s.offset) <= pair.get(1).map(|s| s.offset))
+    }
+
+    /// The same gradient, its start and end moved by `f`, or `f`'s error, as [`Hints::map`] moves hints.
+    pub fn map<E>(&self, f: impl Fn(Point) -> Result<Point, E>) -> Result<Gradient, E> {
+        Ok(Gradient { start: f(self.start)?, end: f(self.end)?, stops: self.stops.clone() })
+    }
 }
 
 impl Shape {
@@ -469,7 +513,12 @@ impl Design {
                 return Err(Diagnostic::new(Code::InternalCheckFailed, format!("Two elements of the design have the id `{}`.", element.id)));
             }
             let clips = element.clips.iter().flat_map(Clip::points);
-            if element.shape.path().points().chain(element.hints.points()).chain(clips).any(far) {
+            let gradient = match &element.shape {
+                Shape::Fill { gradient: Some(gradient), .. } => Some(gradient),
+                _ => None,
+            };
+            let painted = gradient.into_iter().flat_map(|gradient| [gradient.start, gradient.end]);
+            if element.shape.path().points().chain(element.hints.points()).chain(clips).chain(painted).any(far) {
                 return Err(Diagnostic::new(Code::InternalCheckFailed, format!("Element `{}` lies more than 10 m from the origin.", element.id))
                     .with_element(element.id.clone()));
             }
@@ -477,6 +526,14 @@ impl Design {
                 && (width.get() < 0.0 || matches!(join, Join::Miter { limit } if !(limit >= 1.0 && limit.is_finite())))
             {
                 let message = format!("Element `{}` has a stroke narrower than 0, or a miter limit below 1.", element.id);
+                return Err(Diagnostic::new(Code::InternalCheckFailed, message).with_element(element.id.clone()));
+            }
+            if gradient.is_some_and(|gradient| !gradient.is_ordered()) {
+                let message = format!(
+                    "Element `{}` has a gradient with fewer than 2 stops, or with an offset or an opacity outside 0 to 1 or before the stop \
+                     before it.",
+                    element.id
+                );
                 return Err(Diagnostic::new(Code::InternalCheckFailed, message).with_element(element.id.clone()));
             }
         }
@@ -507,8 +564,8 @@ impl Design {
         Rect::around(self.elements.iter().flat_map(|e| e.shape.path().points()))
     }
 
-    /// The design moved by `by`, `[dx, dy]` in millimetres: every point of its elements, their hints, and its
-    /// origin and stop position, as a host draws a design somewhere else (`REQ-VC-015`). `SC-E0009`, as from
+    /// The design moved by `by`, `[dx, dy]` in millimetres: every point of its elements, their hints and
+    /// gradients, and its origin and stop position, as a host draws a design somewhere else (`REQ-VC-015`). `SC-E0009`, as from
     /// [`Design::new`], when a point would lie more than 10 m from the origin.
     pub fn moved(&self, [dx, dy]: [f64; 2]) -> Result<Design, Diagnostic> {
         let point = |p: Point| {
@@ -519,7 +576,9 @@ impl Design {
         let elements = self.elements.iter().map(|element| {
             let shape = match &element.shape {
                 Shape::Stroke { path, width, join, cap } => Shape::Stroke { path: path.map(point)?, width: *width, join: *join, cap: *cap },
-                Shape::Fill { path, rule } => Shape::Fill { path: path.map(point)?, rule: *rule },
+                Shape::Fill { path, rule, gradient } => {
+                    Shape::Fill { path: path.map(point)?, rule: *rule, gradient: gradient.as_ref().map(|gradient| gradient.map(point)).transpose()? }
+                }
             };
             let shapes = |clip: &Clip| {
                 clip.shapes.iter().map(|shape| Ok(ClipShape { path: shape.path.map(point)?, rule: shape.rule })).collect::<Result<_, Diagnostic>>()
@@ -598,7 +657,8 @@ mod tests {
         let (start, end, target) = (Some(p(1.0, 1.0)), Some(p(4.0, 1.0)), Some(p(2.0, 2.0)));
         let hints = Hints { start, end, target, guide: Some(guide.clone()), anchor: Some([p(0.0, 0.0), p(1.0, 1.0)]) };
         let clips = vec![Clip::of(line(p(0.0, 0.0), p(1.0, 2.0)), FillRule::EvenOdd)];
-        let fill = Element { shape: Shape::Fill { path: quad, rule: FillRule::EvenOdd }, hints, clips, ..element("q", Path::default()) };
+        let fill =
+            Element { shape: Shape::Fill { path: quad, rule: FillRule::EvenOdd, gradient: None }, hints, clips, ..element("q", Path::default()) };
         let settings = DesignSettings { origin: Some(p(5.0, 5.0)), stop_position: Some(p(-1.0, 0.0)), ..DesignSettings::default() };
         let design = Design::new(vec![element("c", curve), fill, element("l", line(p(-2.0, 1.0), p(3.0, 1.0)))], settings).unwrap();
         let moved = design.moved([3.0, -2.0]).unwrap();
@@ -658,6 +718,54 @@ mod tests {
         assert_eq!(Design::new(far, DesignSettings::default()).unwrap_err().code, Code::InternalCheckFailed);
         // The limit is the reach of machine files: 10 m either way.
         assert_eq!(WORKING_LIMIT_MM, 10_000.0);
+    }
+
+    /// A fill of the unit square painted with a gradient from `start` to `end` through `stops`, each an offset
+    /// and an opacity, in red.
+    fn painted(start: Point, end: Point, stops: &[(f64, f64)]) -> Element {
+        let red = Rgb::new(237, 23, 31);
+        let stops = stops.iter().map(|&(offset, opacity)| GradientStop { offset, colour: red, opacity }).collect();
+        let shape = Shape::Fill { path: line(p(0.0, 0.0), p(1.0, 1.0)), rule: FillRule::NonZero, gradient: Some(Gradient { start, end, stops }) };
+        Element { shape, ..element("painted", Path::default()) }
+    }
+
+    #[test]
+    fn a_gradient_has_2_stops_or_more_in_order_from_0_to_1_and_lies_within_reach() {
+        let checked = |element: Element| Design::new(vec![element], DesignSettings::default()).map_err(|problem| problem.code);
+        let (start, end) = (p(0.0, 0.0), p(10.0, 0.0));
+        // 2 stops at one offset, the offsets and opacities at their ends, and a start that is its end.
+        for stops in [&[(0.0, 1.0), (1.0, 1.0)][..], &[(0.0, 0.0), (0.5, 1.0), (0.5, 0.0), (1.0, 1.0)], &[(0.3, 1.0), (0.3, 1.0)]] {
+            assert!(checked(painted(start, end, stops)).is_ok(), "{stops:?}");
+        }
+        assert!(checked(painted(start, start, &[(0.0, 1.0), (1.0, 1.0)])).is_ok());
+        // Fewer than 2 stops, an offset or an opacity outside 0 to 1 or not a number, and an offset before the
+        // one before.
+        for stops in [
+            &[][..],
+            &[(0.0, 1.0)],
+            &[(-0.01, 1.0), (1.0, 1.0)],
+            &[(0.0, 1.0), (1.01, 1.0)],
+            &[(f64::NAN, 1.0), (1.0, 1.0)],
+            &[(0.0, 1.0), (1.0, 1.01)],
+            &[(0.0, -0.01), (1.0, 1.0)],
+            &[(0.0, 1.0), (0.6, 1.0), (0.5, 1.0)],
+        ] {
+            let problem = Design::new(vec![painted(start, end, stops)], DesignSettings::default()).unwrap_err();
+            assert_eq!((problem.code, problem.element.map(|e| e.to_string())), (Code::InternalCheckFailed, Some("painted".to_string())), "{stops:?}");
+        }
+        // Its start and end are points of the design, within its reach.
+        let far = p(0.0, WORKING_LIMIT_MM + 1.0);
+        assert_eq!(checked(painted(far, end, &[(0.0, 1.0), (1.0, 1.0)])), Err(Code::InternalCheckFailed));
+        assert_eq!(checked(painted(start, far, &[(0.0, 1.0), (1.0, 1.0)])), Err(Code::InternalCheckFailed));
+        // They don't widen its bounds: a viewer draws none of them.
+        let design = Design::new(vec![painted(start, p(50.0, 0.0), &[(0.0, 1.0), (1.0, 1.0)])], DesignSettings::default()).unwrap();
+        assert_eq!(design.bounds().map(|b| (b.width(), b.height())), Some((1.0, 1.0)));
+        // Moved, a gradient's start and end move with its path, and its stops stay as they were.
+        let moved = design.moved([2.0, -1.0]).unwrap();
+        let Shape::Fill { gradient: Some(gradient), .. } = &moved.elements()[0].shape else { panic!("a gradient") };
+        assert_eq!((gradient.start, gradient.end), (p(2.0, -1.0), p(52.0, -1.0)));
+        assert_eq!(moved.moved([-2.0, 1.0]).unwrap(), design);
+        assert_eq!(design.moved([0.0, WORKING_LIMIT_MM]).unwrap_err().code, Code::InternalCheckFailed);
     }
 
     #[test]

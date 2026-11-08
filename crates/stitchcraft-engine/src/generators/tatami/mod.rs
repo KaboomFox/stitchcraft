@@ -47,17 +47,25 @@ pub const ANGLE: &str = "angle";
 /// spiral, which its end spacing spaces, its `skip_last` shortens and its `underpath` travels under.
 const ROUTED: &[StitchType] = &[StitchType::TatamiFill, StitchType::CircularFill];
 
-/// The stitch types whose rows `skip_last` shortens: those [`ROUTED`], and a tartan fill's lines, which are
-/// routed as a tatami fill's rows are, though Ink/Stitch's settings window doesn't show it for them.
-const SKIPPED: &[StitchType] = &[StitchType::TatamiFill, StitchType::CircularFill, StitchType::TartanFill];
+/// The stitch types whose rows `skip_last` shortens: those [`ROUTED`], and a linear gradient fill's rows and a
+/// tartan fill's lines, which are routed as a tatami fill's rows are, though Ink/Stitch's settings window
+/// doesn't show it for a tartan.
+const SKIPPED: &[StitchType] = &[StitchType::TatamiFill, StitchType::CircularFill, StitchType::LinearGradientFill, StitchType::TartanFill];
 
 /// The stitch types its rows, its expand and its underlay apply to: a contour fill takes them as Ink/Stitch's
 /// does, sewing its rings the row spacing apart over the part expanded, after the same underlay, a meander
 /// fill sews its path over the part expanded after the same underlay, a circular fill its spiral, its
-/// circles the row spacing apart, and a tartan fill its rows, staggered as a tatami fill's are. An element
-/// of a run of underlays first sews its underlay apart when it is one of them (`crate::underlays_first`).
-pub(crate) const UNDERLAID: &[StitchType] =
-    &[StitchType::TatamiFill, StitchType::ContourFill, StitchType::MeanderFill, StitchType::CircularFill, StitchType::TartanFill];
+/// circles the row spacing apart, and a linear gradient or tartan fill its rows, staggered as a tatami fill's
+/// are. An element of a run of underlays first sews its underlay apart when it is one of them
+/// (`crate::underlays_first`).
+pub(crate) const UNDERLAID: &[StitchType] = &[
+    StitchType::TatamiFill,
+    StitchType::ContourFill,
+    StitchType::MeanderFill,
+    StitchType::CircularFill,
+    StitchType::LinearGradientFill,
+    StitchType::TartanFill,
+];
 
 /// The key of the setting that turns a fill's underlay on ([`TatamiParams::fill_underlay`]), which the order
 /// of a run of underlays first reads alone (`crate::underlays_first`).
@@ -70,6 +78,7 @@ const EXPANDED: &[StitchType] = &[
     StitchType::ContourFill,
     StitchType::MeanderFill,
     StitchType::CircularFill,
+    StitchType::LinearGradientFill,
     StitchType::TartanFill,
     StitchType::CrossStitch,
 ];

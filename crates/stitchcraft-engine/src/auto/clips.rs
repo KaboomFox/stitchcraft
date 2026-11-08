@@ -51,12 +51,12 @@ pub(super) fn cut(design: &Design, budget: &Budget, said: &mut Vec<Diagnostic>) 
 fn shown(element: &Element, told: &mut Vec<Diagnostic>, budget: &Budget) -> Option<Shape> {
     let meter = &mut budget.meter();
     let left = match &element.shape {
-        Shape::Fill { path, rule } => region::build_clipped(path, *rule, &element.clips, meter).map(|built| {
+        Shape::Fill { path, rule, .. } => region::build_clipped(path, *rule, &element.clips, meter).map(|built| {
             if built.region.parts.is_empty() {
                 told.extend(built.diagnostics);
                 return None;
             }
-            Some(Shape::Fill { path: outline(&built.region.parts), rule: FillRule::NonZero })
+            Some(Shape::Fill { path: outline(&built.region.parts), rule: FillRule::NonZero, gradient: None })
         }),
         Shape::Stroke { path, width, join, cap } => cut::stroke(path, &element.clips, stroke::flattened, told, meter)
             .map(|cut| cut.map(|path| Shape::Stroke { path: path.into_owned(), width: *width, join: *join, cap: *cap })),
@@ -89,7 +89,7 @@ mod tests {
         }
         segments.push(Segment::Line(p(x + side / 2.0, y)));
         let path = Path { subpaths: vec![Subpath { start: p(x + side / 2.0, y), segments, closed: true }] };
-        let shape = Shape::Fill { path, rule: FillRule::NonZero };
+        let shape = Shape::Fill { path, rule: FillRule::NonZero, gradient: None };
         let (id, thread) = (ElementId::new(id).unwrap(), Thread::new(Rgb::new(0, 0, 0)));
         Element { id, name: None, shape, thread, params: ParamSet::default(), automatic, hints: Default::default(), clips }
     }
