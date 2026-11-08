@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-74c61774.js";
+            window.path_to_searchindex_js = "searchindex-2eb64bcb.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-9e6a4383.js"></script>
@@ -13841,10 +13841,15 @@ or 45 for the refresh, where GitHub’s limit is 6 hours.</p>
 <p><strong>Screenshots: the same pixels, but for the frame timings.</strong> The window opens at 1440 × 900 pixels, drawn
 by llvmpipe, and a screenshot takes about 0.65 s. Above the status bar, screenshots of one window match
 to the pixel. The screenshots of two starts of the app match there too, and so did two runs on GitHub’s
-runners, in all but a few runs. In 3 of the 97 runs from 1 to 3 November 2026, the second start differed
-from the first in 19,159 pixels above the status bar, the same number each time, for a reason not yet
-known. The probe’s notice gives each start’s time to its screenshot and the fingerprint of its pixels
-there, and a failure says where they differ and what <code>ui.inspect</code> shows differently. The status bar
+runners, in all but a few runs. In 3 of the 97 runs from 1 to 3 November 2026, and in 1 on 8 November,
+the second start differed from the first in 19,159 pixels above the status bar, the same number each
+time. The run on 8 November showed why: <code>ui.inspect</code> gave the 2 starts the same canvas and the same middle
+of the view, at zooms of 4.9812 and 4.9883. VectorCraft fits a document’s view to the canvas of the first
+frame that shows it, and that canvas can still change by a pixel as the window settles. So the probe
+waits until 2 inspections in a row show the canvas in one place, and then fits the artboard again
+(View › Fit Artboard in Window) before each start’s screenshot. The notice gives each start’s time to its
+screenshot and the fingerprint of its pixels there, and a failure says where they differ and what
+<code>ui.inspect</code> shows differently. The status bar
 differs, since it shows the frame timings (“render 4.4 ms · ui 1.4 ms · 24 fps”), which change with every
 frame. VectorCraft’s own visual fixtures record where that text is, as text that changes. So the
 generator crops each picture to the menu or dialog it shows. A picture of the whole window leaves the
