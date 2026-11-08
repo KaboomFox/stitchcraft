@@ -21,6 +21,7 @@ use crate::generators::passes::{PathFillParams, RepeatParams};
 use crate::generators::pull::PullParams;
 use crate::generators::running::RunningParams;
 use crate::generators::satin::SatinParams;
+use crate::generators::tartan::TartanParams;
 use crate::generators::tatami::TatamiParams;
 use crate::generators::zigzag::ZigzagStrokeParams;
 
@@ -38,6 +39,7 @@ pub const PARAMETERS: &[&ParamGroup] = &[
     &ContourParams::GROUP,
     &MeanderParams::GROUP,
     &CrossParams::GROUP,
+    &TartanParams::GROUP,
     &PathFillParams::GROUP,
     &AutoParams::GROUP,
 ];
