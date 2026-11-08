@@ -240,6 +240,47 @@ fn req_route_011_each_element_has_the_settings_of_the_stroke_it_runs_along() {
 }
 
 #[test]
+fn req_route_011_a_run_under_the_others_keeps_its_stroke_s_underlays_first() {
+    // Every stroke of the network sets `underlays_first`, and so does every element of its route, each run
+    // under the others too. The route's elements in one thread are then one run of underlays first
+    // (`REQ-ASM-008`). The route goes the way it goes without the setting.
+    let first: Vec<Element> =
+        network().into_iter().map(|line| Element { params: [("underlays_first", "true")].into_iter().collect(), ..line }).collect();
+    let routed_first = routed(&first, Tool::Runs.defaults(), [None, None]);
+    let without: Vec<String> = sewn(&routed_first).into_iter().filter(|(.., params, _)| *params != ["underlays_first=true"]).map(|s| s.0).collect();
+    assert_eq!(without, Vec::<String>::new());
+    assert_eq!(names_and_points(&routed_first), names_and_points(&routed(&network(), Tool::Runs.defaults(), [None, None])));
+}
+
+#[test]
+fn req_route_011_strokes_that_differ_in_underlays_first_share_no_run_under_the_others() {
+    // The rail and the post set it, and the brace doesn't. The run under the post and then the brace is 2
+    // elements, and only the post's sets it. One element can't both set it and not, and a run of underlays
+    // first takes in no piece of a stroke that doesn't set it.
+    let first = [("underlays_first", "true")];
+    let lines = [
+        stroke("e0", &[(10.0, 32.0), (48.0, 32.0)], &first),
+        stroke("e1", &[(16.0, 12.0), (16.0, 35.0)], &first),
+        stroke("e2", &[(16.0, 18.0), (30.0, 32.0)], &[]),
+    ];
+    let routed = routed(&lines, Tool::Runs.defaults(), [None, None]);
+    let sets: Vec<(String, usize, bool)> =
+        sewn(&routed).into_iter().map(|(name, from, _, params, _)| (name, from, params == ["underlays_first=true"])).collect();
+    let want = [
+        ("AutoRun 1", 0, true),
+        ("AutoRun Underpath 2", 1, true),
+        ("AutoRun Underpath 3", 2, false),
+        ("AutoRun 4", 2, false),
+        ("AutoRun Underpath 5", 1, true),
+        ("AutoRun 6", 1, true),
+        ("AutoRun Underpath 7", 1, true),
+        ("AutoRun 8", 1, true),
+        ("AutoRun 9", 0, true),
+    ];
+    assert_eq!(sets, want.map(|(name, from, sets)| (name.to_string(), from, sets)));
+}
+
+#[test]
 fn req_route_011_an_even_number_of_repeats_is_lowered_by_1_on_top_and_an_odd_one_kept() {
     let repeats = |set: &str| {
         let routed = routed(&[stroke("s", &[(0.0, 0.0), (10.0, 0.0)], &[("repeats", set)])], Tool::Runs.defaults(), [None, None]);
