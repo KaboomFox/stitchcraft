@@ -90,7 +90,7 @@ guide-line marker. The guide steers the strokes grouped with it, and is not sewn
 document, name a path grouped with the stroke `stitch:guide`. TS-17C sews a guided ripple of each kind:
 
 <!-- shot: ripple-guided -->
-![TS-17C's 5 guided ripples in green. From the left: 8 copies of a wave follow an arch, shrinking to a third of its size and turning with it. Copies of a small circle run between 2 curved rails, spiralling on from one to the next. A column of 5 lines has a grid across it, its lines 3 mm apart. Copies of a thin diamond stand across a ladder at its rungs, their points on its rails. Copies of a zigzag run along a line and are cut to a circle.](../../images/generated/ripple-guided.png)
+![TS-17C's 5 guided ripples in green. From the left: 8 copies of a wave follow an arch, shrinking to 30 % of its size and turning with it. Copies of a small circle run between 2 curved rails, spiralling on from one to the next. A column of 5 lines has a grid across it, its lines 3 mm apart. Copies of a thin diamond stand across a ladder at its rungs, their points on its rails. Copies of a zigzag run along a line and are cut to a circle.](../../images/generated/ripple-guided.png)
 <!-- /shot -->
 
 ### Along a guide line
