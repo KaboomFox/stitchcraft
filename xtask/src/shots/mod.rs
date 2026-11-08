@@ -286,14 +286,19 @@ fn part(sheet: &testsheets::TestSheet, shot: &Shot) -> Result<StitchPlan, String
     }
     let design = sheet.design().ok_or_else(|| format!("{id} is drawn stitch by stitch, and has no elements to pick"))?;
     let design = design.map_err(|e| format!("{id} could not be drawn: {e}"))?;
-    let picked: Vec<Element> =
-        design.elements().iter().filter(|element| shot.elements.iter().any(|start| element.id.as_str().starts_with(start.as_str()))).cloned().collect();
+    let picked: Vec<Element> = design
+        .elements()
+        .iter()
+        .filter(|element| shot.elements.iter().any(|start| element.id.as_str().starts_with(start.as_str())))
+        .cloned()
+        .collect();
     if picked.is_empty() {
         return Err(format!("{id} has no element whose id starts with {}", shot.elements.join(" or ")));
     }
     let part = Design::new(picked, design.settings).map_err(|d| format!("{id}: {d}"))?;
     let outcome = stitchcraft_engine::plan(&part, sheet.profile, &Budget::DEFAULT);
-    let said: Vec<String> = outcome.diagnostics.iter().filter(|d| !shot.allow.iter().any(|code| code == d.code.id())).map(ToString::to_string).collect();
+    let said: Vec<String> =
+        outcome.diagnostics.iter().filter(|d| !shot.allow.iter().any(|code| code == d.code.id())).map(ToString::to_string).collect();
     if !said.is_empty() {
         return Err(format!("{id}: {}", said.join("; ")));
     }
@@ -443,7 +448,10 @@ mod tests {
         assert!(letters.len() == 1 && lines.len() == 1 && letters != lines);
         let picked = |starts: &[&str]| part_of("TS-17C", &part(starts)).unwrap().stitches().count();
         assert!(picked(&["ts17c:drawn:"]) < picked(&["ts17c:drawn:", "ts17c:routed:"]));
-        for (bad, why) in [(part(&["ts17c:nothing"]), "no element whose id starts with ts17c:nothing"), (Shot { elements: vec!["a".into()], ..probe(Some("TS-01"), None, &[]) }, "stitch by stitch")] {
+        for (bad, why) in [
+            (part(&["ts17c:nothing"]), "no element whose id starts with ts17c:nothing"),
+            (Shot { elements: vec!["a".into()], ..probe(Some("TS-01"), None, &[]) }, "stitch by stitch"),
+        ] {
             let refused = stitch(&root, &bad);
             assert!(refused.as_ref().is_err_and(|e| e.contains(why)), "{refused:?}");
         }

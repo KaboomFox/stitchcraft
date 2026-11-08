@@ -274,11 +274,13 @@ fn cut(lines: &mut [Line], snap: &mut Snap<Point>, meter: &mut Meter) -> Result<
     Ok(())
 }
 
-/// Where `first` and `second` are cut as the module's docs say, each cut its side of `first`, its side of
-/// `second`, and their points on each; `None` when they lie farther apart than [`NEAR`]. Where they meet,
-/// the points where they do; otherwise their nearest points, measured from `first`. Each pair of sides
-/// compared charges `meter` a unit.
-fn compared(first: &Line, second: &Line, meter: &mut Meter) -> Result<Option<Vec<(usize, usize, Point, Point)>>, Exhausted> {
+/// A cut of 2 lines: the side of the first it lies on, the side of the second, and its points on each.
+type Cut = (usize, usize, Point, Point);
+
+/// Where `first` and `second` are cut as the module's docs say; `None` when they lie farther apart than
+/// [`NEAR`]. Where they meet, the points where they do; otherwise their nearest points, measured from
+/// `first`. Each pair of sides compared charges `meter` a unit.
+fn compared(first: &Line, second: &Line, meter: &mut Meter) -> Result<Option<Vec<Cut>>, Exhausted> {
     let mut distance = f64::INFINITY;
     let mut nearest = None;
     let mut met = Vec::new();

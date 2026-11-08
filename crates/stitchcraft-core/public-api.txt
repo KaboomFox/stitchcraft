@@ -74,6 +74,7 @@ pub stitchcraft_core::diag::Code::PreviewTooLarge
 pub stitchcraft_core::diag::Code::RouteLeftOut
 pub stitchcraft_core::diag::Code::RouteNothing
 pub stitchcraft_core::diag::Code::RoutePieceReadOtherwise
+pub stitchcraft_core::diag::Code::RouteTooManyLines
 pub stitchcraft_core::diag::Code::SatinCentreLineFailed
 pub stitchcraft_core::diag::Code::SatinCentreLinePartsLeftOut
 pub stitchcraft_core::diag::Code::SatinClipNotApplied
@@ -311,6 +312,7 @@ pub stitchcraft_core::Code::PreviewTooLarge
 pub stitchcraft_core::Code::RouteLeftOut
 pub stitchcraft_core::Code::RouteNothing
 pub stitchcraft_core::Code::RoutePieceReadOtherwise
+pub stitchcraft_core::Code::RouteTooManyLines
 pub stitchcraft_core::Code::SatinCentreLineFailed
 pub stitchcraft_core::Code::SatinCentreLinePartsLeftOut
 pub stitchcraft_core::Code::SatinClipNotApplied

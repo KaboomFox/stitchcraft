@@ -98,7 +98,10 @@ fn req_route_010_a_line_is_cut_where_it_crosses_or_touches_itself_in_order_along
     let touching = cut_lines(&[&[(0.0, 0.0), (10.0, 0.0), (10.0, 5.0), (5.0, 0.0), (5.0, -5.0)]]);
     assert_eq!(places(&touching[0]), [(0.0, 0.0), (5.0, 0.0), (10.0, 0.0), (10.0, 5.0), (5.0, 0.0), (5.0, -5.0)]);
     // A line that runs back along itself is cut where it turns back over itself, and keeps both stretches.
-    assert_eq!(cut_lines(&[&[(0.0, 0.0), (10.0, 0.0), (5.0, 0.0)]]), [vec![[(0.0, 0.0), (5.0, 0.0)], [(5.0, 0.0), (10.0, 0.0)], [(10.0, 0.0), (5.0, 0.0)]]]);
+    assert_eq!(
+        cut_lines(&[&[(0.0, 0.0), (10.0, 0.0), (5.0, 0.0)]]),
+        [vec![[(0.0, 0.0), (5.0, 0.0)], [(5.0, 0.0), (10.0, 0.0)], [(10.0, 0.0), (5.0, 0.0)]]]
+    );
     // A closed line meets itself only at its ends, and a line that turns without crossing itself isn't cut.
     assert_eq!(cut_lines(&[&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 0.0)]])[0].len(), 3);
     assert_eq!(cut_lines(&[&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)]])[0].len(), 3);
@@ -119,7 +122,10 @@ fn req_route_010_lines_are_cut_where_they_cross_touch_or_run_along_each_other_at
     assert_eq!(slanted[0][0][1], slanted[1][0][1]);
     // A line that ends on another cuts it there, and a line through a node of another cuts it at that node.
     assert_eq!(cut_lines(&[&[(0.0, 0.0), (10.0, 0.0)], &[(5.0, 0.0), (5.0, 6.0)]])[0], [[(0.0, 0.0), (5.0, 0.0)], [(5.0, 0.0), (10.0, 0.0)]]);
-    assert_eq!(cut_lines(&[&[(0.0, 0.0), (5.0, 0.0), (10.0, 0.0)], &[(5.0, -2.0), (5.0, 6.0)]])[0], [[(0.0, 0.0), (5.0, 0.0)], [(5.0, 0.0), (10.0, 0.0)]]);
+    assert_eq!(
+        cut_lines(&[&[(0.0, 0.0), (5.0, 0.0), (10.0, 0.0)], &[(5.0, -2.0), (5.0, 6.0)]])[0],
+        [[(0.0, 0.0), (5.0, 0.0)], [(5.0, 0.0), (10.0, 0.0)]]
+    );
     // Lines that run along each other are each cut where the other ends, so the stretch they share is a piece
     // of each between the same 2 places (`DEV-ROUTE-005`).
     let along = cut_lines(&[&[(0.0, 0.0), (10.0, 0.0)], &[(6.0, 0.0), (14.0, 0.0)]]);
@@ -167,7 +173,9 @@ fn diag_sc_w1004_more_lines_than_the_cap_are_cut_by_none() {
     // 2 lines that cross, and more lines 20 mm apart, out of reach of each other.
     let routed = |count: usize| {
         let mut elements = vec![stroke("a", &[(-10.0, -5.0), (-10.0, 5.0)], &[]), stroke("b", &[(-15.0, 0.0), (-5.0, 0.0)], &[])];
-        elements.extend((0..count - 2).map(|k| stroke(&format!("s{k}"), &[(20.0 * (k % 40) as f64, 20.0 * (k / 40) as f64), (20.0 * (k % 40) as f64 + 1.0, 20.0 * (k / 40) as f64)], &[])));
+        elements.extend((0..count - 2).map(|k| {
+            stroke(&format!("s{k}"), &[(20.0 * (k % 40) as f64, 20.0 * (k / 40) as f64), (20.0 * (k % 40) as f64 + 1.0, 20.0 * (k / 40) as f64)], &[])
+        }));
         read_all(&elements, true)
     };
     let (cut, said) = routed(MOST_LINES);
@@ -176,10 +184,8 @@ fn diag_sc_w1004_more_lines_than_the_cap_are_cut_by_none() {
     assert_eq!(uncut[0].pieces.len(), 1);
     assert_eq!(
         said,
-        [
-            "warning SC-W1004: There are 1001 lines to route, more than the 1000 that are cut where they cross and pass near each other, so \
-             they are routed as drawn, each cut only where it crosses itself."
-        ]
+        ["warning SC-W1004: There are 1001 lines to route, more than the 1000 that are cut where they cross and pass near each other, so \
+             they are routed as drawn, each cut only where it crosses itself."]
     );
 }
 

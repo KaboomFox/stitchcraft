@@ -108,20 +108,20 @@ fn req_vc_020_the_route_replaces_the_strokes_and_sews_as_the_engine_routes_them(
     let out = ran(&selection, &json!({}));
     // The fill and the satin column stay, the brace's place holds the first element and the rest go above
     // it; the rail and the post are gone.
-    let names: Vec<Option<String>> = (1..=8).map(|k| Some(if [2, 4, 6].contains(&k) { format!("AutoRun Underpath {k}") } else { format!("AutoRun {k}") })).collect();
+    let names: Vec<Option<String>> =
+        (1..=8).map(|k| Some(if [2, 4, 6].contains(&k) { format!("AutoRun Underpath {k}") } else { format!("AutoRun {k}") })).collect();
     let mut want = vec![(Some(5), None), (Some(6), None), (Some(4), names[0].clone())];
     want.extend(names[1..].iter().map(|name| (None, name.clone())));
     assert_eq!(listed(&out), want);
     assert_eq!((out["objects"][0].clone(), out["objects"][1].clone()), (json!({"id": 5}), json!({"id": 6})), "given back as they are");
     // Kept, the elements sew as the engine routes the strokes.
     let read = stitchcraft_vectorcraft::read(&kept_all(&out), &Budget::DEFAULT).unwrap();
-    let engine = routed_by_the_engine(&[selection[0].clone(), selection[2].clone(), selection[4].clone()], &Route {
-        tool: Tool::Runs,
-        options: Tool::Runs.defaults(),
-        start: None,
-        end: None,
-    });
-    let pieces: Vec<_> = read.design.elements().iter().filter(|e| e.name.as_deref().is_some_and(|name| name.starts_with("AutoRun"))).cloned().collect();
+    let engine = routed_by_the_engine(
+        &[selection[0].clone(), selection[2].clone(), selection[4].clone()],
+        &Route { tool: Tool::Runs, options: Tool::Runs.defaults(), start: None, end: None },
+    );
+    let pieces: Vec<_> =
+        read.design.elements().iter().filter(|e| e.name.as_deref().is_some_and(|name| name.starts_with("AutoRun"))).cloned().collect();
     let pieces = Design::new(pieces, read.design.settings).unwrap();
     assert!(alike(&stitches(&pieces), &stitches(&engine)), "{} and {} stitches", stitches(&pieces).len(), stitches(&engine).len());
 }
@@ -159,8 +159,12 @@ fn req_vc_020_a_long_jump_trims_and_with_preserve_order_each_path_s_elements_tak
     let [rail, post, brace] = network(&json!({}));
     let apart = object(7, None, &[(40.0, 37.0), (46.0, 37.0)], &json!([record("stroke", &json!({}))]));
     let out = ran(&[rail.clone(), post.clone(), brace.clone(), apart.clone()], &json!({"trim": true}));
-    let trimmed: Vec<bool> =
-        out["objects"].as_array().unwrap().iter().map(|o| o["effects"].as_array().unwrap().iter().any(|e| e["params"]["trim_after"] == json!(true))).collect();
+    let trimmed: Vec<bool> = out["objects"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|o| o["effects"].as_array().unwrap().iter().any(|e| e["params"]["trim_after"] == json!(true)))
+        .collect();
     assert_eq!(trimmed.iter().filter(|trims| **trims).count(), 2, "before the jump to the line apart, and before the jump back: {trimmed:?}");
     // With Preserve order, each path's elements, the runs along it among them, take its place.
     let ordered = ran(&[rail, post, brace, apart], &json!({"preserve_order": true}));
@@ -202,7 +206,12 @@ fn diag_sc_e0820_a_selection_with_no_stroke_to_route_or_2_markers_of_a_kind_is_r
         )
     );
     let [rail, post, _] = network(&json!({}));
-    let twice = [object(8, Some("stitch:route-end"), &[(0.0, 0.0), (1.0, 0.0)], &json!([])), rail, post, object(9, Some("stitch:route-end"), &[(9.0, 9.0), (10.0, 9.0)], &json!([]))];
+    let twice = [
+        object(8, Some("stitch:route-end"), &[(0.0, 0.0), (1.0, 0.0)], &json!([])),
+        rail,
+        post,
+        object(9, Some("stitch:route-end"), &[(9.0, 9.0), (10.0, 9.0)], &json!([])),
+    ];
     assert_eq!(
         declined(&twice),
         "error SC-E0820: 2 objects selected are named stitch:route-end, and a route has one end, so nothing was routed. Select one \
