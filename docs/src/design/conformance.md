@@ -145,7 +145,8 @@ method (`sewn_ladder`) and compare its needle points with the ones they expect, 
 `stitchcraft_engine::testsheets::pictures` draws in code and the TS-13 sheets sew too, each with the
 edges where its shapes meet. `stitchcraft_testkit::pictures` places them where the cases measure them.
 There are 3 stripes side by side, and a badge, a row of badges, an emblem and a button, each traced
-abutting or stacked ([image to embroidery](image-to-embroidery.md#testing)).
+abutting or stacked ([image to embroidery](image-to-embroidery.md#testing)). The cases sew the pear that the
+docs show too, a photo that VectorCraft traced into ragged shapes (`stitchcraft_testkit::pictures::pear`).
 
 ## Levels
 
@@ -226,6 +227,8 @@ Metrics are defined once in `stitchcraft-testkit::metrics` so every case measure
 | Stitch length | Min, max and distribution of `Normal` stitch lengths by role |
 | Furrows | Longest run of rows whose needle points align within 0.1 mm |
 | Topology | Holes and components of the region vs. of the stitched area |
+| Bare fabric | The design painted at 0.05 mm as a viewer paints it, its background left out: the largest patch the top stitches leave bare, once opened with a disc as wide as the thread (`stitchcraft_testkit::fabric`) |
+| Thread astray | The longest stretch of a stitch that shows on another colour or on bare fabric, or of an underlay or travel stitch that shows at all. Moves between elements and jump threads are counted apart |
 
 Coverage is defined since M5.9 and edge coverage since M13.2, and the other metrics arrive with the cases that
 need them. `stitchcraft-testkit::stitches` reads back what a test sheet's stitches show against its
