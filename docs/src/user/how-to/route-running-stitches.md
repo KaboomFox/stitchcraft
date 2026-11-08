@@ -42,8 +42,9 @@ The route replaces the lines in one step, which **Edit › Undo** takes back. Ea
 own with the stroke effect, named as Ink/Stitch names it, AutoRun 1 for a stretch on top or AutoRun
 Underpath 2 for a run under the others. A stretch on top has the settings of the line it comes from, but an
 even number of repeats is lowered by 1, so that it ends where the next one starts. Runs under the others
-keep only the line's stitch length and tolerance, without its repeats or bean stitch. The stretches go
-where the topmost line was, in the order they sew, and the lines and markers are gone.
+keep only the line's stitch length and tolerance and its **Underlays first**, without its repeats or bean
+stitch. The stretches go where the topmost line was, in the order they sew, and the lines and markers are
+gone.
 
 ## The options
 
