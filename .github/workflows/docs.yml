@@ -76,8 +76,18 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: A desktop without a screen (Xvfb, Mesa, D-Bus, AT-SPI)
         uses: ./.github/actions/desktop
+      - name: VectorCraft's pinned release, from the Actions cache when a run kept it
+        id: archive
+        uses: ./.github/actions/vectorcraft-archive
       - name: VectorCraft's pictures are current
         run: cargo xtask shots --vectorcraft --check
+      # Only an archive whose SHA-256 matched is ever at that path (.github/actions/vectorcraft-archive).
+      - name: Keep VectorCraft's pinned release in the Actions cache
+        if: ${{ !cancelled() && steps.archive.outcome == 'success' && steps.archive.outputs.hit != 'true' && hashFiles(steps.archive.outputs.path) != '' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.archive.outputs.path }}
+          key: ${{ steps.archive.outputs.key }}
       - name: Keep the new pictures, and what VectorCraft drew and its window recorded
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
