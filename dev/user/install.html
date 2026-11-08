@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-1975b613.js";
+            window.path_to_searchindex_js = "../searchindex-2aec8e4d.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-8178bdeb.js"></script>
+        <script src="../toc-9e6a4383.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -208,17 +208,19 @@ cargo build -p stitchcraft-vc-plugin --release --target wasm32-unknown-unknown -
 </code></pre>
 <p>The build writes <code>target/wasm32-unknown-unknown/release/stitchcraft_vc_plugin.wasm</code>. Copy it into a
 folder for plug-ins as <code>stitchcraft-fill.wasm</code>. Build again with <code>--features stroke</code>, <code>--features satin</code>,
-<code>--features auto</code>, <code>--features pes</code>, <code>--features dst</code>, <code>--features settings</code>, <code>--features testsheet</code> and
-<code>--features stroke-to-satin</code>, and copy the file each time, as <code>stitchcraft-stroke.wasm</code>, <code>stitchcraft-satin.wasm</code>,
-<code>stitchcraft-auto.wasm</code>, <code>stitchcraft-pes.wasm</code>, <code>stitchcraft-dst.wasm</code>, <code>stitchcraft-settings.wasm</code>,
-<code>stitchcraft-testsheet.wasm</code> and <code>stitchcraft-stroke-to-satin.wasm</code>. VectorCraft 0.13 and earlier refuse the
-exporters.</p>
+<code>--features auto</code>, <code>--features pes</code>, <code>--features dst</code>, <code>--features settings</code>, <code>--features testsheet</code>,
+<code>--features stroke-to-satin</code> and <code>--features route-satins</code>, and copy the file each time, as
+<code>stitchcraft-stroke.wasm</code>, <code>stitchcraft-satin.wasm</code>, <code>stitchcraft-auto.wasm</code>, <code>stitchcraft-pes.wasm</code>,
+<code>stitchcraft-dst.wasm</code>, <code>stitchcraft-settings.wasm</code>, <code>stitchcraft-testsheet.wasm</code>,
+<code>stitchcraft-stroke-to-satin.wasm</code> and <code>stitchcraft-route-satins.wasm</code>. VectorCraft 0.13 and earlier refuse
+the exporters.</p>
 <p>In VectorCraft’s desktop app, choose that folder in <strong>Edit › Preferences › Plug-ins &amp; Scratch Disks ›
 Additional Plug-ins Folder</strong>, which is under <strong>Performance &amp; Storage</strong> up to VectorCraft 0.14. VectorCraft
-installs the plug-ins in it whenever it starts, all but Stroke to Satin. It asks for more work than a
-filter usually may do, which VectorCraft lets you allow when you install it on its own: choose <strong>Object ›
-Plug-ins › Install Plug-in…</strong> and pick <code>stitchcraft-stroke-to-satin.wasm</code>. VectorCraft asks you first, and
-once you allow it, keeps it and installs it again when it starts. The effects are under <strong>Effect › Plug-ins</strong>, the formats in <strong>File ›
+installs the plug-ins in it whenever it starts, all but Stroke to Satin and Auto-Route Satin Columns. They
+ask for more work than a filter usually may do, which VectorCraft lets you allow when you install each on
+its own. Choose <strong>Object › Plug-ins › Install Plug-in…</strong> and pick <code>stitchcraft-stroke-to-satin.wasm</code>, and
+install <code>stitchcraft-route-satins.wasm</code> the same way. VectorCraft asks you first, and once you allow one,
+keeps it and installs it again when it starts. The effects are under <strong>Effect › Plug-ins</strong>, the formats in <strong>File ›
 Export › Export As</strong>, and the filters under <strong>Object › Plug-ins</strong>. In VectorCraft on the web, open each
 file with <strong>File › Open</strong> instead, once each time VectorCraft is opened. <a href="how-to/embroider-a-vectorcraft-design.html">Embroider a VectorCraft
 design</a> shows how to use them.</p>

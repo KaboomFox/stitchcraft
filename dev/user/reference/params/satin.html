@@ -35,10 +35,10 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-1975b613.js";
+            window.path_to_searchindex_js = "../../../searchindex-2aec8e4d.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../toc-8178bdeb.js"></script>
+        <script src="../../../toc-9e6a4383.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -228,7 +228,11 @@ reverses the second rail when it runs against the first.</p>
 <ul>
 <li><strong>Accepts:</strong> one of <code>automatic</code> (Automatic), <code>none</code> (Neither), <code>first</code> (The first), <code>second</code> (The second), <code>both</code> (Both)</li>
 <li><strong>Default:</strong> <code>automatic</code></li>
-<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-ROUTE-002.</strong> A piece of a satin column is drawn with the column’s rails in the column’s order, a rail that reverse_rails names turned back, so that the piece’s settings, the column’s, swap and turn its rails as they swap and turn the column’s. With swap_satin_rails, Ink/Stitch draws a piece with its rails as the column sews them, already swapped, and the piece’s own setting swaps them again: the piece sews its satin the other way round from the column.</li>
+</ul>
+</li>
 </ul>
 <h3 id="swap_satin_rails"><a class="header" href="#swap_satin_rails"><code>swap_satin_rails</code></a></h3>
 <p><strong>Swap rails.</strong> Make the second rail the first, which sews first in each pair and starts the column. An S-stitch
@@ -236,7 +240,11 @@ starts on the second rail instead, and sews every other stitch from it.</p>
 <ul>
 <li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
 <li><strong>Default:</strong> <code>false</code></li>
-<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+<li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
+<ul>
+<li><strong>DEV-ROUTE-002.</strong> A piece of a satin column is drawn with the column’s rails in the column’s order, a rail that reverse_rails names turned back, so that the piece’s settings, the column’s, swap and turn its rails as they swap and turn the column’s. With swap_satin_rails, Ink/Stitch draws a piece with its rails as the column sews them, already swapped, and the piece’s own setting swaps them again: the piece sews its satin the other way round from the column.</li>
+</ul>
+</li>
 </ul>
 <h2 id="start-and-end"><a class="header" href="#start-and-end">Start and end</a></h2>
 <h3 id="start_at_nearest_point"><a class="header" href="#start_at_nearest_point"><code>start_at_nearest_point</code></a></h3>

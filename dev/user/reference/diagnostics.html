@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-1975b613.js";
+            window.path_to_searchindex_js = "../../searchindex-2aec8e4d.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-8178bdeb.js"></script>
+        <script src="../../toc-9e6a4383.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -259,6 +259,7 @@
 <tr><td><a href="#sc-i0805"><code>SC-I0805</code></a></td><td>Info</td><td>Object left out, as the file asks</td></tr>
 <tr><td><a href="#sc-i0818"><code>SC-I0818</code></a></td><td>Info</td><td>Ink/Stitch file from an older version, read as Ink/Stitch updates it</td></tr>
 <tr><td><a href="#sc-e0819"><code>SC-E0819</code></a></td><td>Error</td><td>More than one origin or stop position</td></tr>
+<tr><td><a href="#sc-e0820"><code>SC-E0820</code></a></td><td>Error</td><td>VectorCraft selection not routed</td></tr>
 <tr><td><a href="#sc-w0804"><code>SC-W0804</code></a></td><td>Warning</td><td>Element geometry invalid or out of range</td></tr>
 <tr><td><a href="#sc-w0803"><code>SC-W0803</code></a></td><td>Warning</td><td>VectorCraft file from a newer format version; read best-effort</td></tr>
 <tr><td><a href="#sc-e0806"><code>SC-E0806</code></a></td><td>Error</td><td>VectorCraft file could not be read</td></tr>
@@ -281,6 +282,9 @@
 <tr><td><a href="#sc-w0906"><code>SC-W0906</code></a></td><td>Warning</td><td>Background left out</td></tr>
 <tr><td><a href="#sc-i0907"><code>SC-I0907</code></a></td><td>Info</td><td>Elements sewn in an order of their own</td></tr>
 <tr><td><a href="#sc-i0908"><code>SC-I0908</code></a></td><td>Info</td><td>Layers flattened</td></tr>
+<tr><td><a href="#sc-e1001"><code>SC-E1001</code></a></td><td>Error</td><td>Nothing to route</td></tr>
+<tr><td><a href="#sc-i1002"><code>SC-I1002</code></a></td><td>Info</td><td>Element left out of the route</td></tr>
+<tr><td><a href="#sc-w1003"><code>SC-W1003</code></a></td><td>Warning</td><td>Piece of a routed satin column may sew otherwise</td></tr>
 </tbody>
 </table>
 </div>
@@ -853,6 +857,18 @@ names in Ink/Stitch.</p>
 written, as Ink/Stitch writes none (<code>REQ-ASM-005</code>). 2 stop positions in a design without a stop
 change nothing.</p>
 <p>The message names the command or marker and counts them. Delete or rename all but one.</p>
+<h2 id="sc-e0820"><a class="header" href="#sc-e0820">SC-E0820</a></h2>
+<p><strong>Error</strong> — VectorCraft selection not routed</p>
+<p>StitchCraft’s Auto-Route Satin Columns, a filter in VectorCraft, routes the selected paths whose own
+StitchCraft effects make them satin columns, with the paths among them whose own effects make them
+strokes, which show where the needle may travel. A path sewn by a group’s effect, or by none, is left
+as it is. The route runs between the objects named <code>stitch:route-start</code> and <code>stitch:route-end</code>
+selected with the paths. It changed nothing, because nothing was selected, because no selected path has
+a satin effect of its own, or because 2 markers of a kind were selected, and which one counts isn’t
+known, as Ink/Stitch’s tool stops at 2 <code>autoroute_start</code> or <code>autoroute_end</code> commands.</p>
+<p>The message says which. Select the satin columns to route, and put StitchCraft’s Satin effect on the
+paths themselves rather than on their group. Keep one start marker and one end marker in the
+selection.</p>
 <h2 id="sc-w0804"><a class="header" href="#sc-w0804">SC-W0804</a></h2>
 <p><strong>Warning</strong> — Element geometry invalid or out of range</p>
 <p>An element’s geometry cannot be used: its path data or its list of points has an error (the path is
@@ -1125,6 +1141,33 @@ part that shows can’t be found is sewn as it is drawn, in its place, or left o
 background; one whose holes can’t be found keeps them open; one that can’t be moved keeps its place;
 and one whose region can’t be given is sewn as it is drawn. To sew a shape as it is drawn, give it
 settings: in VectorCraft, apply StitchCraft’s Fill, Stroke or Satin effect to it.</p>
+<h2 id="sc-e1001"><a class="header" href="#sc-e1001">SC-E1001</a></h2>
+<p><strong>Error</strong> — Nothing to route</p>
+<p>Routing joins satin columns, and the running stitches among them, into one route, as Ink/Stitch’s
+Auto-Route Satin Columns does: StitchCraft Auto-Route Satin Columns in VectorCraft, and lettering in a
+font whose <code>auto_satin</code> is on. It routed nothing, because none of the elements it was given is a
+satin column it can route: they are fills, strokes alone, or columns left out of the route
+(<code>SC-I1002</code>). Nothing changed.</p>
+<p>The message counts the elements given. Give the satin columns to route, with the running stitches among
+them that show where the needle may travel.</p>
+<h2 id="sc-i1002"><a class="header" href="#sc-i1002">SC-I1002</a></h2>
+<p><strong>Info</strong> — Element left out of the route</p>
+<p>Routing takes satin columns, and the strokes among them, which show where the needle may travel. This
+element is kept as it is, in its place: it is a fill, a shape digitized automatically, an element whose
+settings don’t read, a satin column whose rails can’t be made, a column or a stroke of no length, or a
+stroke whose first subpath ends where it starts, which shows no way between 2 places. Ink/Stitch’s
+tool leaves a fill and an element of no length as they are too.</p>
+<p>The message says why. Nothing needs doing unless the element was meant to be routed: then give it
+settings that read, draw it as a satin column, or open the stroke’s first subpath.</p>
+<h2 id="sc-w1003"><a class="header" href="#sc-w1003">SC-W1003</a></h2>
+<p><strong>Warning</strong> — Piece of a routed satin column may sew otherwise</p>
+<p>Routing cuts each satin column into pieces along its centre line, each drawn with its share of the
+column’s rails and rungs and a rung more at an end where it needs one, so that it sews the pairs the
+column sews along it. This piece, read back as any satin column is, has other rails or pairs other
+points: the column’s rails cross each other there, or a rung crosses a rail twice. It is kept in the
+route, and may sew otherwise than the column did there.</p>
+<p>The message names the column. Draw the column with rails that don’t cross and rungs that cross each
+rail once, with more rungs where it turns sharply.</p>
 
                     </main>
 

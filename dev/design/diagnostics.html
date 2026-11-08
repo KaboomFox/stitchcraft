@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-1975b613.js";
+            window.path_to_searchindex_js = "../searchindex-2aec8e4d.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-8178bdeb.js"></script>
+        <script src="../toc-9e6a4383.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -213,6 +213,7 @@ probably not what you want) or <code>I</code> (info) + four digits grouped by ar
 <tr><td>0700–0799</td><td>Machine profile (hoop, limits)</td></tr>
 <tr><td>0800–0899</td><td>Hosts (SVG, VectorCraft)</td></tr>
 <tr><td>0900 to 0999</td><td>Automatic digitizing (<a href="image-to-embroidery.html">image to embroidery</a>)</td></tr>
+<tr><td>1000 to 1099</td><td>Routing (<a href="routing.html">routing tools</a>)</td></tr>
 </tbody>
 </table>
 </div>
@@ -347,6 +348,7 @@ another.</p>
 <tr><td><code>SC-E0817</code></td><td>Error</td><td>VectorCraft test sheet not drawn (in the middle of the artboard, parts of the sheet would lie more than 10 m from the document’s origin)</td><td>M6</td></tr>
 <tr><td><code>SC-I0818</code></td><td>Info</td><td>Ink/Stitch file from an older version, read as Ink/Stitch updates it (the shapes given a default or a setting whose meaning has changed since, such as a fill’s 3 mm stitches before its file version 4, counted for each change)</td><td>M3</td></tr>
 <tr><td><code>SC-E0819</code></td><td>Error</td><td>More than one origin or stop position (Ink/Stitch’s <code>origin</code> command, or more than one object named <code>stitch:origin</code>, 2 or more times, or its <code>stop_position</code> command or <code>stitch:stop-position</code> in a design that stops: no machine file is written, as Ink/Stitch writes none)</td><td>M8</td></tr>
+<tr><td><code>SC-E0820</code></td><td>Error</td><td>VectorCraft selection not routed (no selected path has a satin effect of its own, or 2 objects selected mark the route’s start, or 2 its end: nothing changes)</td><td>M10</td></tr>
 <tr><td><code>SC-I0901</code></td><td>Info</td><td>Shapes digitized automatically (<code>--auto</code>, or VectorCraft’s Auto effect), counted by their stitches (running stitches, satin columns or tatami fills)</td><td>M13</td></tr>
 <tr><td><code>SC-I0902</code></td><td>Info</td><td>Satin column can’t be made; filled (a part of an automatic line that turns more tightly than it is wide, is shorter than a CSS pixel or is a dot its cap draws, or a part of an automatic area whose triangles don’t make a column round one of its lines or whose column would be read back otherwise)</td><td>M13</td></tr>
 <tr><td><code>SC-W0903</code></td><td>Warning</td><td>Line too wide to fill; left out (an automatic line whose filled area would reach more than 10 m from the origin)</td><td>M13</td></tr>
@@ -355,6 +357,9 @@ another.</p>
 <tr><td><code>SC-W0906</code></td><td>Warning</td><td>Background left out (the lowest shape, an automatic area that covers the whole design under the other shapes, unless it switches <code>auto_ignore_background</code> off; what shows of it inside the picture is sewn)</td><td>M13</td></tr>
 <tr><td><code>SC-I0907</code></td><td>Info</td><td>Elements sewn in an order of their own (automatic elements, and with <code>--sort-colours</code> every element, sewn in the order StitchCraft chooses, with the thread changes of each order; an element or an order that needs more work than the budget allows keeps paint order)</td><td>M13</td></tr>
 <tr><td><code>SC-I0908</code></td><td>Info</td><td>Layers flattened (each automatic area sews what shows of it under the automatic areas drawn over it, and an area wider than a satin column somewhere is digitized whole under the areas that fill its holes, which sew after it)</td><td>M13</td></tr>
+<tr><td><code>SC-E1001</code></td><td>Error</td><td>Nothing to route (no satin column the route can take among its elements: they stay as they were)</td><td>M10</td></tr>
+<tr><td><code>SC-I1002</code></td><td>Info</td><td>Element left out of the route (a fill, a shape digitized automatically, settings that don’t read, rails that can’t be made, no length, or a stroke whose first subpath ends where it starts: kept as it is)</td><td>M10</td></tr>
+<tr><td><code>SC-W1003</code></td><td>Warning</td><td>Piece of a routed satin column may sew otherwise (read back, it has other rails or pairs other points: it is kept)</td><td>M10</td></tr>
 </tbody>
 </table>
 </div>
