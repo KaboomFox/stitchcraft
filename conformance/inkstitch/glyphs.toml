@@ -1,12 +1,13 @@
 # The differences of the glyph differential (M8.6, xtask/src/conformance/fonts/excuses.rs) that the
 # deviations ledger explains: each glyph of Ink/Stitch's fonts, sewn alone in Ink/Stitch and in StitchCraft.
-# An excuse names the measures it excuses, the ledger's entry that explains them (conformance/deviations.toml),
-# and the glyphs it holds for: those StitchCraft says a diagnostic of (`codes`, and `saying`, words of its
-# message), whose elements are of a stitch type (`types`), all of these types (`only_types`), or set an
-# Ink/Stitch setting to something other than nothing or 0 (`settings`), or of a font (`fonts`). An excuse
-# without them holds for every glyph. Where the differential can undo the deviation in Ink/Stitch's file, the
-# excuse holds only when the measure then agrees, and with `within_mm` only where each program's thread lies
-# that near the other's. Otherwise the next one that holds is tried.
+# An excuse names the measures it excuses, and `sewn` for a glyph that one program sews and the other doesn't,
+# the ledger's entry that explains them (conformance/deviations.toml), and the glyphs it holds for: those
+# StitchCraft says a diagnostic of (`codes`, and `saying`, words of its message), whose elements are of a
+# stitch type (`types`), all of these types (`only_types`), or set an Ink/Stitch setting to something other
+# than nothing or 0 (`settings`), of a font (`fonts`), or named so (`glyphs`). An excuse without them holds for
+# every glyph. Where the differential can undo the deviation in Ink/Stitch's file, the excuse holds only when
+# the measure then agrees, and with `within_mm` only where each program's thread lies that near the other's.
+# Otherwise the next one that holds is tried.
 
 # Each program names a thread by its own entry of Brother's palette: checked by naming Ink/Stitch's threads
 # as StitchCraft names them, where both change thread at the same colour blocks.
@@ -88,3 +89,83 @@ within_mm = 0.3
 [[excuse]]
 measures = ["size", "place", "trims", "jumps", "overlap"]
 deviation = "DEV-SVG-011"
+
+# The excuses below explain the glyphs that M8.6's first run of every glyph found differing, by their causes.
+
+# A fill that StitchCraft says runs along its own edge, or that the nonzero rule fills inside twice, which
+# Ink/Stitch's repair of its shape fills otherwise. Califragilistic's Ð, ò and ] leave parts empty that
+# Ink/Stitch fills, and its ] sews 2,370 stitches there, with 7 trims, where StitchCraft sews 1,791 and 2.
+[[excuse]]
+measures = ["stitches", "trims", "jumps", "overlap"]
+deviation = "DEV-FILL-001"
+codes = ["SC-I0306", "SC-I0313"]
+
+# Cross stitch glyphs of Egyptian and Jaquarda Bastarda 9 whose subpaths meet at corners that rounding
+# moves 2e-15 to 7e-15 CSS pixels apart. shapely calls the shape not valid, and the repair fills a counter,
+# or in the ® leaves a part empty, where no information names the fill: the drawing's own subpaths don't
+# run along each other.
+[[excuse]]
+measures = ["stitches", "overlap"]
+deviation = "DEV-FILL-001"
+fonts = ["egyptian", "egyptian_small", "jaquarda_bastarda_9"]
+glyphs = ["4", "Д", "Ы", "д", "₲", "₵", "◁", "®"]
+
+# A cross stitch fill's parts that reach equally far left, after its shape is repaired and grown: Ink/Stitch
+# sews the body of ǘ and ӳ before the accent, and StitchCraft after. Moved 0.1 CSS pixels right, the accent
+# goes after the body in both, and both programs sew the same number of stitches.
+[[excuse]]
+measures = ["stitches"]
+deviation = "DEV-FILL-029"
+fonts = ["egyptian_small"]
+glyphs = ["ǘ", "ӳ"]
+
+# A rung that rounding leaves less than 2e-14 CSS pixels from a rail, which Ink/Stitch takes for a rail. It
+# sews AGS Garamond's J across its rung, and calls the column of its Đ not stitchable, writing no file. Its
+# V has such a rung too, and agrees.
+[[excuse]]
+measures = ["stitches", "size", "overlap", "sewn"]
+deviation = "DEV-SAT-013"
+fonts = ["ags_garamond_latin_grec"]
+glyphs = ["J", "Đ"]
+
+# The same in Apex simple, in both its sizes. Ink/Stitch writes no file of the x and the U, which StitchCraft
+# didn't sew either before M8.6.
+[[excuse]]
+measures = ["stitches", "size", "overlap", "sewn"]
+deviation = "DEV-SAT-013"
+fonts = ["apex_simple_AGS", "apex_simple_small_AGS"]
+glyphs = ["q", "x", "U"]
+
+# Satin columns of 2 rings that start apart: Ink/Stitch sews from one ring's start across to a place part of
+# the way round the other.
+[[excuse]]
+measures = ["stitches", "overlap"]
+deviation = "DEV-SAT-009"
+fonts = ["initials_XL", "alchemy"]
+glyphs = [",", "🜂"]
+
+# Travel under a tatami fill's rows, which takes another way in StitchCraft.
+[[excuse]]
+measures = ["stitches"]
+deviation = "DEV-FILL-007"
+fonts = ["alchemy"]
+glyphs = ["¯"]
+
+# Running stitch outlines whose needle points set the bounds the 2 files are aligned by: the threads lie
+# within 0.3 mm of each other, a little apart. Western Light's are fills inside an outline, and its hyphen
+# overlaps by 0.89 moved back 0.1 mm. Digory Doodles Bean's & and s and Roaring Twenties' ‘ have satin
+# columns too.
+[[excuse]]
+measures = ["stitches", "overlap"]
+deviation = "DEV-RUN-002"
+fonts = ["western_light", "digory_doodles_bean", "roaring_twenties_KOR"]
+glyphs = ["D", "J", "O", "W", "i", "p", "s", "È", "Ê", "Ð", "à", "è", "ì", "í", "ñ", "ý", "2", "8", "’", "!", "*", "-", "&", "‘"]
+within_mm = 0.3
+
+# A satin column's top stitches that start beside where its zigzag underlay left the needle, which Ink/Stitch's
+# plan drops within the column's shortest stitch, 0.5 mm in Manga Impact: each tip of its & ends 0.4 mm short.
+[[excuse]]
+measures = ["size"]
+deviation = "DEV-RUN-003"
+fonts = ["manga_impact"]
+glyphs = ["&"]

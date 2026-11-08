@@ -47,14 +47,20 @@ impl Counts {
 }
 
 /// What a run sewed, in words.
-fn which(options: Options) -> String {
+fn which(options: &Options) -> String {
     let part = options.shard.map(|shard| format!(", part {} of {}", shard.index, shard.count)).unwrap_or_default();
-    if options.every { format!("every glyph{part}") } else { format!("a sample of {} glyphs of each font{part}", options.sample) }
+    let named = options.fonts.join(", ");
+    match (options.every, named.is_empty()) {
+        (true, true) => format!("every glyph{part}"),
+        (true, false) => format!("every glyph of {named}{part}"),
+        (false, true) => format!("a sample of {} glyphs of each font{part}", options.sample),
+        (false, false) => format!("a sample of {} glyphs of each of {named}{part}", options.sample),
+    }
 }
 
 /// Writes the report and the verdicts of `sewn`, the glyphs of `fonts`, under `root`, and puts each font's row
 /// in `outcome`'s details and a line for each font with a glyph that differs or didn't sew in its failures.
-pub fn write(root: &Path, fonts: &[Font], sewn: &[Sewn], excuses: &Excuses, options: Options, outcome: &mut Outcome) {
+pub fn write(root: &Path, fonts: &[Font], sewn: &[Sewn], excuses: &Excuses, options: &Options, outcome: &mut Outcome) {
     let (markdown, failures, details) = markdown(fonts, sewn, excuses, options);
     let json: Vec<serde_json::Value> = sewn.iter().map(json).collect();
     let dir = root.join("target/conformance");
@@ -73,7 +79,7 @@ pub fn write(root: &Path, fonts: &[Font], sewn: &[Sewn], excuses: &Excuses, opti
 
 /// The report of `sewn`, the glyphs of `fonts`; the case's failures, a line for each font with a glyph that
 /// differs or didn't sew; and its details, a table of the fonts, its head first.
-fn markdown(fonts: &[Font], sewn: &[Sewn], excuses: &Excuses, options: Options) -> (String, Vec<String>, Vec<String>) {
+fn markdown(fonts: &[Font], sewn: &[Sewn], excuses: &Excuses, options: &Options) -> (String, Vec<String>, Vec<String>) {
     let mut per_font: BTreeMap<&str, Counts> = BTreeMap::new();
     let mut total = Counts::default();
     let mut listed: BTreeMap<String, (usize, BTreeSet<&str>)> = BTreeMap::new();
@@ -135,8 +141,7 @@ fn markdown(fonts: &[Font], sewn: &[Sewn], excuses: &Excuses, options: Options) 
     }
     md.push_str("\n## Excuses\n\n| Deviation | Measures | For glyphs where | Glyphs excused |\n|---|---|---|---|\n");
     let row = |excuse: &super::excuses::Excuse, place: usize| {
-        let measures: Vec<&str> = excuse.measures.iter().map(|m| m.name()).collect();
-        format!("| {} | {} | {} | {} |", excuse.reason, measures.join(", "), excuse.conditions(), used.get(&place).copied().unwrap_or_default())
+        format!("| {} | {} | {} | {} |", excuse.reason, excuse.named().join(", "), excuse.conditions(), used.get(&place).copied().unwrap_or_default())
     };
     for (place, excuse) in excuses.excuses.iter().enumerate() {
         let _ = writeln!(md, "{}", row(excuse, place));
@@ -210,7 +215,7 @@ mod tests {
     #[test]
     fn the_report_counts_each_font_s_verdicts_and_lists_what_differs() {
         let fonts = [font("a", Licence::Ofl), font("b", Licence::CcBySa), font("c", Licence::Gpl)];
-        let excuses = Excuses::parse("[[excuse]]\nmeasures = [\"threads\"]\ndeviation = \"DEV-THREAD-001\"\n\n[[excuse]]\nmeasures = [\"size\"]\ndeviation = \"DEV-X-001\"\ntypes = [\"meander_fill\"]\n\n[[known]]\nmeasures = [\"size\"]\nfollow_up = \"the sizes of b\"\nfonts = [\"b\"]\n").unwrap();
+        let excuses = Excuses::parse("[[excuse]]\nmeasures = [\"threads\"]\ndeviation = \"DEV-THREAD-001\"\n\n[[excuse]]\nmeasures = [\"size\", \"sewn\"]\ndeviation = \"DEV-X-001\"\ntypes = [\"meander_fill\"]\nglyphs = [\"Đ\"]\n\n[[known]]\nmeasures = [\"size\"]\nfollow_up = \"the sizes of b\"\nfonts = [\"b\"]\n").unwrap();
         let sewn = [
             glyph("a", 0, Verdict::Agrees, &[]),
             glyph("a", 1, Verdict::Excused(vec!["threads differ".into()]), &[0]),
@@ -219,11 +224,16 @@ mod tests {
             glyph("b", 1, Verdict::Failed("Ink/Stitch: it failed".into()), &[]),
             glyph("b", 2, Verdict::Known(vec!["size differ (known: the sizes of b)".into()]), &[2]),
         ];
-        let options = Options { sample: 4, every: false, shard: None };
-        let (md, failures, details) = markdown(&fonts, &sewn, &excuses, options);
+        let options = Options { sample: 4, every: false, fonts: Vec::new(), shard: None };
+        let (md, failures, details) = markdown(&fonts, &sewn, &excuses, &options);
         assert!(md.contains("a sample of 4 glyphs of each font: 6 glyphs of 2 fonts. 1 agree, 1 differ as the ledger explains, 1 differ as known follow-up work, 1 differ otherwise, 1 are listed for stitch types StitchCraft doesn't sew yet, and 1 didn't sew."), "{md}");
         assert!(md.contains("| a | OFL | 3 | 1 | 1 | 0 | 0 | 1 | 0 |\n| b | CC BY-SA | 3 | 0 | 0 | 1 | 1 | 0 | 1 |\n"), "{md}");
-        assert!(md.contains("| DEV-THREAD-001 | threads | every glyph | 1 |\n| DEV-X-001 | size | an element is a `meander_fill` | 0 |"), "{md}");
+        assert!(
+            md.contains(
+                "| DEV-THREAD-001 | threads | every glyph | 1 |\n| DEV-X-001 | size, sewn | an element is a `meander_fill`; the glyph is `Đ` | 0 |"
+            ),
+            "{md}"
+        );
         assert!(md.contains("## Known differences: follow-up work\n\n| Follow-up | Measures | For glyphs where | Glyphs |\n|---|---|---|---|\n| the sizes of b | size | the font is `b` | 1 |"), "{md}");
         assert!(md.contains("- b/ltr.svg glyph 2 `g2` (satin_column): known: size differ (known: the sizes of b)\n"), "{md}");
         assert!(md.contains("| tartan_fill | 1 | a |"), "{md}");
@@ -247,9 +257,18 @@ mod tests {
     #[test]
     fn a_run_says_which_glyphs_it_sewed() {
         let shard = Some(Shard { index: 2, count: 6 });
-        assert_eq!(which(Options { sample: 4, every: false, shard: None }), "a sample of 4 glyphs of each font");
-        assert_eq!(which(Options { sample: 4, every: true, shard }), "every glyph, part 2 of 6");
-        assert_eq!(which(Options { sample: 3, every: false, shard }), "a sample of 3 glyphs of each font, part 2 of 6");
+        let options = |sample: usize, every: bool, fonts: &[&str], shard: Option<Shard>| Options {
+            sample,
+            every,
+            fonts: fonts.iter().map(|font| font.to_string()).collect(),
+            shard,
+        };
+        assert_eq!(which(&options(4, false, &[], None)), "a sample of 4 glyphs of each font");
+        assert_eq!(which(&options(4, true, &[], shard)), "every glyph, part 2 of 6");
+        assert_eq!(which(&options(3, false, &[], shard)), "a sample of 3 glyphs of each font, part 2 of 6");
+        // A run of some fonts names them.
+        assert_eq!(which(&options(4, true, &["egyptian", "noble"], None)), "every glyph of egyptian, noble");
+        assert_eq!(which(&options(4, false, &["noble"], shard)), "a sample of 4 glyphs of each of noble, part 2 of 6");
     }
 
     #[test]
@@ -271,7 +290,7 @@ mod tests {
             &[font("a", Licence::Ofl)],
             &[glyph("a", 0, Verdict::Agrees, &[])],
             &Excuses::default(),
-            Options { sample: 4, every: true, shard: None },
+            &Options { sample: 4, every: true, fonts: Vec::new(), shard: None },
             &mut outcome,
         );
         assert!(
@@ -290,7 +309,7 @@ mod tests {
         // A root it can't write in is said.
         std::fs::write(root.join("file"), "").unwrap();
         let mut failed = outcome.clone();
-        write(&root.join("file"), &[], &[], &Excuses::default(), Options { sample: 4, every: true, shard: None }, &mut failed);
+        write(&root.join("file"), &[], &[], &Excuses::default(), &Options { sample: 4, every: true, fonts: Vec::new(), shard: None }, &mut failed);
         assert!(failed.failures.iter().any(|f| f.contains("target/conformance")), "{:?}", failed.failures);
     }
 }

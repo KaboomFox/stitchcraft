@@ -43,19 +43,21 @@ const INKSTITCH: &str = "conformance/inkstitch-params.toml";
 /// The fixtures, and their index, `README.md`.
 const FIXTURES: &str = "conformance/fixtures";
 
-/// What a run of the glyph differential sews, from the command line: every glyph, not the sample, and only a
-/// part of them.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+/// What a run of the glyph differential sews, from the command line: every glyph, not the sample, only the
+/// glyphs of some fonts, and only a part of them.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct Glyphs {
     /// Every glyph (`--every-glyph`).
     pub every: bool,
+    /// Only these fonts' glyphs, by their folders' names (`--font`), or every font's when there are none.
+    pub fonts: Vec<String>,
     /// Only this part (`--shard`).
     pub shard: Option<fonts::Shard>,
 }
 
 /// `cargo xtask conformance …`, the Ink/Stitch differential with `differential`, which sews the fonts'
 /// glyphs as `glyphs` says.
-pub fn run(check_only: bool, filter: Option<&str>, bless: Option<&str>, differential: bool, glyphs: Glyphs) -> Result<(), String> {
+pub fn run(check_only: bool, filter: Option<&str>, bless: Option<&str>, differential: bool, glyphs: &Glyphs) -> Result<(), String> {
     let filter = filter.map(str::to_ascii_lowercase);
     let root = util::root();
     let mut findings = Findings::default();
@@ -65,6 +67,7 @@ pub fn run(check_only: bool, filter: Option<&str>, bless: Option<&str>, differen
     for case in &mut data {
         if let cases::Spec::Fonts { options } = &mut case.spec {
             options.every = glyphs.every;
+            options.fonts.clone_from(&glyphs.fonts);
             options.shard = glyphs.shard;
         }
     }
