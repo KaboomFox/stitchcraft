@@ -119,9 +119,9 @@ program, with the tool `tool` names and the options it sets by Ink/Stitch's name
 routes, each sewn by its own program (`REQ-ROUTE-008`, `REQ-ROUTE-013`). The tool is `satins`, Auto-Route
 Satin Columns, unless `tool = "runs"` names Auto-Route Running Stitch. Ink/Stitch's tool runs as
 `--extension=auto_satin` or `--extension=auto_run`, on the elements painted by `style` attributes, as
-Inkscape paints them: Auto-Route Running Stitch gives the elements it makes the style of their strokes and no
-other paint. It writes the SVG file it routed, `route-<case>.routed.svg`, beside StitchCraft's route as an SVG
-file, `route-<case>.stitchcraft.svg`:
+Inkscape paints them, because Auto-Route Running Stitch gives the elements it makes the style of their
+strokes and none of their other paint. It writes the SVG file it routed, `route-<case>.routed.svg`, beside
+StitchCraft's route as an SVG file, `route-<case>.stitchcraft.svg`:
 
 ```toml
 id = "inkstitch-route-ts17c-lines-in-order"

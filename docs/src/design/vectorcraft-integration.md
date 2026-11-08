@@ -475,7 +475,7 @@ preview in its dialog. Stroke to Satin's run, which makes a column's rails from 
 233 million instructions for one line ([above](#tools-stroke-to-satin-and-test-sheet)). A route makes the
 rails of every column drawn as one path that it routes. The engine's work is priced in instructions, as Stroke to Satin
 prices it: 450 a unit, a tenth of the run's spend for reading the paths and 8 tenths for routing them.
-The filter stops with `SC-E0004` before VectorCraft would stop it. Auto-Route Running Stitch makes no
+The filter stops with `SC-E0004` before VectorCraft would stop it. Auto-Route Running Stitch doesn't make
 rails, and most of its work for many lines is comparing them 2 by 2 for the cuts, at the same price. In
 VectorCraft's host, a contract test routes TS-17C's letters, drawn as lines with the satin effect, and
 another its network of lines with the stroke effect, and each prints what the route takes. With

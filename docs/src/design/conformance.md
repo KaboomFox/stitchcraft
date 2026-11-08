@@ -320,15 +320,15 @@ paths, of each kind of command, which both programs sew at the same nodes (`REQ-
 
 **Routes.** A route is a design of its own, so sewing StitchCraft's route in both programs would compare 2
 sewings of one route. A case with a `[route]` table instead routes elements of a sheet in each program
-(`REQ-ROUTE-008`, `REQ-ROUTE-013`, `xtask/src/conformance/routing.rs`). Ink/Stitch's Auto-Route Satin
-Columns or Auto-Route Running Stitch, as the table's `tool` says, routes the SVG file of the elements, with
-the table's options, and writes its route, which Ink/Stitch sews. `stitchcraft_engine::route` routes the
-same elements with the same options, and StitchCraft sews its route. The 2 PES files are measured as any
-case's. The `route-ts17c` cases route TS-17C's letters as drawn, with the options at their defaults and with
-Preserve order on and trims off. The `route-ts17c-lines` cases route its network of running stitches as
-drawn, with the options at their defaults, with Trim jump stitches on, with Preserve order on, and with Add
-nodes at intersections off. `ts17c` sews the whole sheet, whose lower letters and right-hand lines
-StitchCraft routed, in both programs.
+(`REQ-ROUTE-008`, `REQ-ROUTE-013`, `xtask/src/conformance/routing.rs`). The table's `tool` names
+Ink/Stitch's tool, Auto-Route Satin Columns or Auto-Route Running Stitch, which routes the SVG file of the
+elements with the table's options and writes its route for Ink/Stitch to sew. `stitchcraft_engine::route`
+routes the same elements with the same options, and StitchCraft sews its route. The 2 PES files are
+measured as any case's. The `route-ts17c` cases route TS-17C's letters as drawn, once with the options at
+their defaults and once with Preserve order on and trims off. The `route-ts17c-lines` cases route its
+network of running stitches as drawn, once with the options at their defaults and once each with Trim jump
+stitches on, Preserve order on and Add nodes at intersections off. `ts17c` sews the whole sheet, whose
+lower letters and right-hand lines StitchCraft routed, in both programs.
 
 **Centre lines.** Sewing what StitchCraft chose can't find a choice that is wrong: TS-13B's small T sewed
 a Γ, the left arm of its bar left out of its centre line, and the differential agreed by every measure.
