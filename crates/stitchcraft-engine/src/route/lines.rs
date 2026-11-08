@@ -104,19 +104,20 @@ impl Line {
         self.points.windows(2).enumerate().filter_map(|(k, pair)| Some((k, (*pair.first()?, *pair.get(1)?))))
     }
 
-    /// Cuts it at `p`, a point of its side `side`.
+    /// Cuts it at `p`, a point of its side `side`, or a hair off it, as a point taken through a snap can be:
+    /// as far along it as `p` lies from the side's start, but no farther than the side's end.
     fn cut(&mut self, side: usize, p: Point) {
         let (Some(&start), Some(&from), Some(&to)) = (self.points.get(side), self.along.get(side), self.along.get(side + 1)) else { return };
-        let at = if self.points.get(side + 1) == Some(&p) { to } else { (from + start.distance(p)).min(to) };
-        self.cuts.push((at, p));
+        self.cuts.push(((from + start.distance(p)).min(to), p));
     }
 
     /// The line cut at its cuts: the stretch from each cut, or its start, to the next, or its end, in order,
-    /// each its points; a stretch whose points are all one is left out, and a cut at either end changes
-    /// nothing.
+    /// each its points. Each cut is a point of the 2 stretches it ends and starts, in place of a point of the
+    /// line as far along it. A stretch whose points are all one is left out, so a cut at an end of the line,
+    /// at that end, changes nothing, and of cuts as far along it, the first made is kept.
     fn stretches(&self) -> Vec<Vec<Point>> {
         let (Some(&first), Some(&last), Some(&length)) = (self.points.first(), self.points.last(), self.along.last()) else { return Vec::new() };
-        let mut cuts: Vec<(f64, Point)> = self.cuts.iter().copied().filter(|(at, _)| *at > 0.0 && *at < length).collect();
+        let mut cuts = self.cuts.clone();
         cuts.sort_by(|a, b| a.0.total_cmp(&b.0));
         cuts.dedup_by(|later, earlier| later.0 == earlier.0);
         let bounds: Vec<(f64, Point)> = std::iter::once((0.0, first)).chain(cuts).chain([(length, last)]).collect();
@@ -252,24 +253,20 @@ fn parts(mut line: Line, snap: &mut Snap<Point>, meter: &mut Meter) -> Result<Ve
 /// other, at the point of each nearest the other, the points taken through `snap`. Each pair of lines and
 /// each pair of sides compared charges `meter` a unit.
 fn cut(lines: &mut [Line], snap: &mut Snap<Point>, meter: &mut Meter) -> Result<(), Exhausted> {
-    for i in 0..lines.len() {
-        for j in (i + 1)..lines.len() {
+    let mut rest = lines;
+    while let Some((first, others)) = std::mem::take(&mut rest).split_first_mut() {
+        for second in others.iter_mut() {
             meter.charge(1)?;
-            let (Some(first), Some(second)) = (lines.get(i), lines.get(j)) else { continue };
             if boxes_apart(first.bounds, second.bounds) > NEAR {
                 continue;
             }
             let Some(cuts) = compared(first, second, meter)? else { continue };
             for (k, l, p, q) in cuts {
-                let (p, q) = (snap.snap(p, || p), snap.snap(q, || q));
-                if let Some(first) = lines.get_mut(i) {
-                    first.cut(k, p);
-                }
-                if let Some(second) = lines.get_mut(j) {
-                    second.cut(l, q);
-                }
+                first.cut(k, snap.snap(p, || p));
+                second.cut(l, snap.snap(q, || q));
             }
         }
+        rest = others;
     }
     Ok(())
 }

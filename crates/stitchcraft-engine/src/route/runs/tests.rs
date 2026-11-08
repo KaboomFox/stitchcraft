@@ -268,9 +268,8 @@ fn req_route_011_each_element_keeps_its_stroke_s_thread_and_stroke_and_nothing_t
     let routed = routed(&lines, Tool::Runs.defaults(), [None, None]);
     for (k, piece) in routed.pieces.iter().enumerate() {
         let source = &lines[piece.from];
-        let (Shape::Stroke { width, join, cap, .. }, Shape::Stroke { width: drawn, .. }) = (&piece.element.shape, &source.shape) else {
-            panic!("strokes")
-        };
+        let Shape::Stroke { width, join, cap, .. } = &piece.element.shape else { panic!("{k} is no stroke") };
+        let Shape::Stroke { width: drawn, .. } = &source.shape else { panic!("{} is no stroke", source.id) };
         assert_eq!((&piece.element.thread, width, join, cap), (&source.thread, drawn, &Join::Round, &Cap::Square), "{k}");
         assert_eq!((piece.element.hints, piece.element.clips.len(), piece.element.automatic), (Hints::default(), 0, false), "{k}");
         assert_eq!(piece.element.id, ElementId::new(format!("{}#{}", source.id, k + 1)).unwrap());
@@ -279,6 +278,21 @@ fn req_route_011_each_element_keeps_its_stroke_s_thread_and_stroke_and_nothing_t
     let under: Vec<(usize, u8)> = routed.pieces.iter().take(3).map(|piece| (piece.from, piece.element.thread.color.r)).collect();
     assert_eq!(under, [(0, 10), (1, 20), (2, 30)]);
     assert_eq!(routed.pieces.iter().take(3).map(|piece| piece.under).collect::<Vec<_>>(), [false, true, true]);
+}
+
+#[test]
+fn diag_sc_e1001_a_route_without_a_running_stitch_is_refused() {
+    let said = |elements: &[Element]| {
+        let refused = routed(elements, Tool::Runs.defaults(), [None, None]);
+        assert!(refused.pieces.is_empty() && refused.replaced.is_empty());
+        refused.diagnostics.last().map(|said| (said.to_string(), said.fix.clone()))
+    };
+    let start = "error SC-E1001: There is nothing to route: Auto-Route Running Stitch routes running stitches, and";
+    let hint = Some(stitchcraft_core::Fix::Hint("Give the running stitches to route.".to_string()));
+    assert_eq!(said(&[]), Some((format!("{start} was given no element."), hint.clone())));
+    let column = crate::route::tests::bar("column", (0.0, 10.0), 0.0);
+    assert_eq!(said(std::slice::from_ref(&column)), Some((format!("{start} the element given is none."), hint.clone())));
+    assert_eq!(said(&[column.clone(), column]), Some((format!("{start} none of the 2 elements given is one."), hint)));
 }
 
 #[test]

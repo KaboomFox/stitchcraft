@@ -174,11 +174,11 @@ fn element(made: &Made, (strokes, elements): (&[Stroke], &[Element]), number: us
         id: numbered(&element.id, number)?,
         name: Some(name),
         shape: Shape::Stroke { path, width: *width, join: *join, cap: *cap },
+        thread: element.thread.clone(),
         params,
         automatic: false,
         hints: Hints::default(),
         clips: Vec::new(),
-        ..element.clone()
     };
     Some(Piece { element: run, from: routed.element, under: made.under })
 }

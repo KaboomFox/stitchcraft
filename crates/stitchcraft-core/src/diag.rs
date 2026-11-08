@@ -1038,9 +1038,9 @@ registry! {
     /// Auto-Route Satin Columns does: StitchCraft Auto-Route Satin Columns in VectorCraft, and lettering in a
     /// font whose `auto_satin` is on. It joins running stitches alone as Ink/Stitch's Auto-Route Running
     /// Stitch does, in StitchCraft Auto-Route Running Stitch. It routed nothing, because none of the elements
-    /// it was given is one the tool can route: for satin columns, they are fills, strokes alone, or columns
-    /// left out of the route; for running stitches, they are fills, satin columns, or strokes left out of the
-    /// route (`SC-I1002`). Nothing changed.
+    /// it was given is one the tool can route (`SC-I1002`). Routing satin columns, they are fills, strokes
+    /// alone, or columns left out of the route. Routing running stitches, they are fills, satin columns, or
+    /// strokes left out of the route. Nothing changed.
     ///
     /// The message names the tool and counts the elements given. Give the satin columns to route, with the
     /// running stitches among them that show where the needle may travel, or the running stitches.

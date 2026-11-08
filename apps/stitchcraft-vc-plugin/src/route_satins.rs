@@ -32,7 +32,7 @@
 //! stops with `SC-E0004` before VectorCraft would stop it.
 //!
 //! **Either tool.** The Auto-Route Running Stitch filter ([`crate::route_runs`]) reads, routes and writes as
-//! this one does, with the engine's other tool: [`routed_by`] and [`dialog`] serve both.
+//! this one does, with the engine's other tool: `routed_by` and `dialog` serve both.
 
 use std::collections::{BTreeMap, BTreeSet};
 

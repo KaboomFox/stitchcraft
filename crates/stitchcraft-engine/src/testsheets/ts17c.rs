@@ -267,6 +267,63 @@ mod tests {
         assert!(columns.iter().all(|c| c.params.iter().eq(settings) && c.thread == blue && c.name.is_none()), "{columns:?}");
     }
 
+    /// The lines `network` draws `right` mm right of where they are drawn on the left, named after `half`.
+    fn lines(half: &str, right: f64) -> Vec<Element> {
+        let mut d = Drawing::new("ts17c");
+        network(&mut d, half, right, &thread(RED).unwrap()).unwrap();
+        d.design().unwrap().elements().to_vec()
+    }
+
+    /// TS-17C's elements whose ids start with `prefix`.
+    fn sheet_elements(prefix: &str) -> Vec<Element> {
+        let design = super::super::find("TS-17C").unwrap().design().unwrap().unwrap();
+        design.elements().iter().filter(|element| element.id.as_str().starts_with(prefix)).cloned().collect()
+    }
+
+    #[test]
+    fn ts17c_s_network_is_6_bean_stitched_lines_that_meet_at_their_nodes() {
+        let drawn: [(&str, &str); 6] = [
+            ("rail", "M0,82 L8,82 L20,82 L26,82 L38,82"),
+            ("post", "M8,62 L8,68 L8,82 L8,85"),
+            ("brace", "M8,68 L20,82"),
+            // A quarter circle of radius 10 about (36, 82), its control points 0.552 of the radius from its ends.
+            ("hook", "M26,82 C26,76.477 30.477,72 36,72"),
+            ("loop", "M14,61 L24,67 L24,61 L17,66"),
+            ("tick", "M34,82.5 L35,85"),
+        ];
+        assert_eq!(drawn.map(|(name, _)| name), LINES);
+        let lines = lines("lines-drawn", 0.0);
+        let found: Vec<(String, Vec<String>)> = lines.iter().map(|line| (line.id.to_string(), svg(line))).collect();
+        let want: Vec<(String, Vec<String>)> =
+            drawn.iter().map(|(name, path)| (format!("ts17c:lines-drawn:{name}"), vec![path.to_string()])).collect();
+        assert_eq!(found, want);
+        // Each a running stitch 3 mm long, sewn there and back and bean-stitched, in red.
+        let red = thread(RED).unwrap();
+        assert!(lines.iter().all(|line| LINE_SETTINGS.iter().all(|&(key, value)| line.params.get(key) == Some(value)) && line.thread == red));
+        // The sheet sews them on the left as drawn, below the letters.
+        assert_eq!(sheet_elements("ts17c:lines-drawn:"), lines);
+    }
+
+    #[test]
+    fn ts17c_s_network_on_the_right_is_routed_as_ink_stitch_routes_it() {
+        // As Ink/Stitch's Auto-Route Running Stitch routes the lines on the left with Trim jump stitches on, run
+        // as a black box at d59c9ab: 18 elements, 6 of them runs under the others, and a trim after the run up
+        // the post, before the jump to the line that crosses itself, and after that line, before the jump back.
+        let routed = sheet_elements("ts17c:lines-routed:");
+        let sewn: Vec<(String, bool)> =
+            routed.iter().map(|piece| (piece.name.clone().unwrap_or_default(), piece.params.get("trim_after") == Some("true"))).collect();
+        let under = [2, 4, 7, 10, 13, 16];
+        let name = |n: usize| if under.contains(&n) { format!("AutoRun Underpath {n}") } else { format!("AutoRun {n}") };
+        assert_eq!(sewn, (1..=18).map(|n| (name(n), n == 2 || n == 5)).collect::<Vec<_>>());
+        // 44 mm right of the lines as drawn, from the rail's left end to its right end.
+        let points: Vec<Point> = routed.iter().flat_map(|piece| piece.shape.path().points().collect::<Vec<_>>()).collect();
+        let at = |x: f64, y: f64| Point::new(x + BESIDE, y).unwrap();
+        assert_eq!((points.first(), points.last()), (Some(&at(0.0, 82.0)), Some(&at(38.0, 82.0))));
+        let (xs, ys): (Vec<f64>, Vec<f64>) = points.iter().map(|q| (q.x(), q.y())).unzip();
+        let span = |vs: &[f64]| (vs.iter().copied().fold(f64::INFINITY, f64::min), vs.iter().copied().fold(f64::NEG_INFINITY, f64::max));
+        assert_eq!((span(&xs), span(&ys)), ((BESIDE, BESIDE + 38.0), (61.0, 85.0)));
+    }
+
     #[test]
     fn ts17c_s_routed_letters_are_the_drawn_ones_30_mm_lower() {
         let (drawn, routed) = (columns("drawn", 0.0), columns("routed", BELOW));
