@@ -33,12 +33,12 @@ pub(super) fn cut(row: &[Point], rings: &Rings<'_>, meter: &mut Meter) -> Result
     let on_stretch = |at: f64| along_rings.iter().any(|&[from, to]| at >= from - SAME && at <= to + SAME);
     let mut cuts: Vec<f64> = points.into_iter().filter(|&at| !on_stretch(at)).collect();
     cuts.sort_by(f64::total_cmp);
-    cuts.dedup_by(|a, b| (*a - *b).abs() <= SAME);
     let bounds: Vec<f64> = std::iter::once(0.0).chain(cuts).chain(std::iter::once(along.length())).collect();
     let mut lines = Vec::new();
     for pair in bounds.windows(2) {
         let (from, to) = (pair[0], pair[1]);
         meter.charge(1)?;
+        // A point the row meets 2 sides at, where they join, is 2 cuts: the stretch between them is none.
         if to - from <= SAME {
             continue;
         }

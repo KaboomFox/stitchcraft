@@ -9,7 +9,9 @@
 //! ([`TestSheet::drawable`]). So does TS-16, whose elements start and end at positions and are cut by clips,
 //! which the filter would draw as `stitch:start` and `stitch:end` markers grouped with them and as clip groups,
 //! and whose origin and stop position it would draw as `stitch:origin` and `stitch:stop-position` markers
-//! ([`TestSheet::uses_file_features`]). So does TS-17C, whose lower letters are routed into pieces cut at
+//! ([`TestSheet::uses_file_features`]). So does TS-17B from M10.9, whose guided leaf copies a guide line, a
+//! `stitch:guide` marker the filter would group with it, and a filter makes no group. So does TS-17C, whose
+//! lower letters are routed into pieces cut at
 //! points a document's points hold only to within a unit in their last place: drawn, its T would sew its
 //! first stitch 0.05 mm elsewhere ([`TestSheet::routed`]). Which sheets it draws is known without drawing them
 //! ([`TestSheet::drawable`]): a run that drew every sheet's design to find its own went past the work

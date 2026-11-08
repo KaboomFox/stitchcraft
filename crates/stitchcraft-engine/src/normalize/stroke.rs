@@ -370,6 +370,24 @@ mod tests {
     }
 
     #[test]
+    fn a_wide_corner_turns_by_45_degrees_or_more_and_lies_apart_from_the_last() {
+        // As Ink/Stitch's running stitch takes its corners: 44° is none, 46° is one, and so are 90° and 179°.
+        let turn = |degrees: f64| {
+            let (s, c) = math::sin_cos(math::to_radians(degrees));
+            polyline_wide(&[p(0.0, 0.0), p(10.0, 0.0), p(10.0 + 10.0 * c, 10.0 * s)], 0.4).corners
+        };
+        assert_eq!((turn(44.0), turn(46.0), turn(90.0), turn(179.0)), (vec![], vec![1], vec![1], vec![1]));
+        // A sharp turn within 0.4 of the one before is none, but the next counts from it; at 0.4 it is one.
+        let zigzag = |apart: f64| polyline_wide(&[p(0.0, 0.0), p(1.0, 0.0), p(1.0, apart), p(2.0, apart), p(2.0, 1.0 + apart)], 0.4).corners;
+        assert_eq!(zigzag(0.3), [1, 3]);
+        assert_eq!(zigzag(0.4), [1, 2, 3]);
+        // The first side counts as the stretch before the first join, and a point repeated is left out.
+        let short = polyline_wide(&[p(0.0, 0.0), p(0.3, 0.0), p(0.3, 0.0), p(0.3, 1.0), p(1.3, 1.0)], 0.4);
+        assert_eq!((short.points.len(), short.corners), (4, vec![2]));
+        assert_eq!(polyline_wide(&[], 0.4).corners, Vec::<usize>::new());
+    }
+
+    #[test]
     fn corners_turn_by_more_than_30_degrees() {
         let turn = |degrees: f64| {
             let (s, c) = math::sin_cos(math::to_radians(degrees));

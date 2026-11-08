@@ -23,10 +23,10 @@ middle, sewn as a guided fill with its defaults:
 The guide is a line grouped with the fill and marked as one. It is never sewn.
 
 - **In an SVG file**, a guide line is a path that Ink/Stitch's guide-line marker starts, as for a
-  [ripple stitch](ripple-stitch.md#guides). A fill takes the first such line of its group that is no satin
-  column: a satin guide steers a ripple stitch, and a fill looks past it.
+  [ripple stitch](ripple-stitch.md#guides). The fill takes the first such line of its group that isn't a
+  satin column, since satin guides steer ripple stitches.
 - **In a VectorCraft document**, name a path grouped with the fill `stitch:guide`, as for a ripple stitch.
-  VectorCraft's live preview doesn't show the effect the paths beside its object, so the preview sews the
+  VectorCraft's live preview doesn't show the effect the paths beside its object. The preview sews the
   tatami fill below, and `stitch export` sews the rows.
 
 Draw the guide the way the rows should run. Only its first subpath counts. A guide that crosses itself is
@@ -52,8 +52,8 @@ together than `row_spacing_mm`. These pictures leave the underlay out:
 `smoothness_mm` rounds each copy's corners off before it is sewn, over about 5 times that length, as it
 rounds a [contour fill](contour-fill.md)'s path off.
 
-A part of the area that no copy meets, one thinner than the row spacing between 2 copies, is sewn as a
-tatami fill whose rows run at the angle of the line between the guide's ends, and `SC-W0332` says so.
+The copies can miss a part of the area thinner than the row spacing between 2 of them. That part is sewn as
+a tatami fill whose rows run at the angle of the line between the guide's ends, and `SC-W0332` says so.
 
 ## Stitch positions
 
@@ -65,7 +65,7 @@ then lie along each row:
   `max_stitch_length_mm` each. Most stitches are as long as each other, and the stagger holds near the
   start of each row.
 - **Flexible (stagger)** sews whole stitches of `max_stitch_length_mm` from where the stagger starts the
-  row, and a shorter one at its end. The stagger then holds all along the rows.
+  row, and a shorter one at its end. The stagger then lasts all along the rows.
 
 <!-- shot: guided-stagger -->
 | Flexible | Flexible (stagger) |
@@ -88,9 +88,8 @@ between them.
 ## Not sewn yet
 
 Copying the guide is the default of Ink/Stitch's `guided_fill_strategy`, and the one StitchCraft sews so
-far. Ink/Stitch can also offset the guide, keeping each row a row spacing from the one before, or grow rings
-out from it. Those come with a later version, and until then a fill set to either is left out, and
-`SC-W0011` names it.
+far. Ink/Stitch can also offset the guide by a row spacing at a time, or grow rings out from it. Those come
+with a later version. Until then a fill set to either is left out, and `SC-W0011` names it.
 
 ## Parameters
 
