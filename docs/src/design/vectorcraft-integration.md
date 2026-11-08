@@ -726,9 +726,9 @@ closed path and the width profile, which its stitches don't follow (`SC-W0807`, 
 thread's colour is a solid paint's colour, with CMYK and grey converted by
 VectorCraft's formula without colour management ((1 − c)(1 − k) and 1 − k) and Lab through sRGB. A
 gradient gives the colour of its first stop VectorCraft shows, of an opacity other than 0, with `SC-W0807`
-unless every stop is shown in that colour. A linear gradient fill takes that colour without a word and
-sews the gradient ([below](#a-gradients-geometry)). A gradient whose stops are all of opacity 0 paints nothing,
-as one without stops does. It is left out without a word. A pattern
+unless every stop is shown in that colour. With `fill_method` set to `linear_gradient_fill`, the fill takes
+that colour without a word and sews the gradient ([below](#a-gradients-geometry)). Gradients whose stops are
+all of opacity 0 paint nothing, as those without stops do, and are left out without a word. A pattern
 gives black, with `SC-W0807`. A stroke's width, in points, and its join, with its miter limit (10 when
 the file omits it, as VectorCraft draws it), shape a satin column drawn as one path. A stroke drawn with
 a brush is stitched along its path, without the brush's art, with `SC-W0807`.
