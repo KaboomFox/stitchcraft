@@ -1031,7 +1031,7 @@ mod tests {
     }
 
     #[test]
-    fn a_row_is_given_its_key_by_its_family_s_declaration() {
+    fn req_prm_005_a_row_is_given_its_key_by_its_family_s_declaration() {
         // A zigzag stroke and a meander fill each declare the zigzag spacing their own way: the fill's row is
         // given the key by the fill's declaration, whatever the stroke's applies to.
         let row = "[[param]]\nelement = \"fill\"\nname = \"zigzag_spacing_mm\"\ntype = \"float\"\nunit = \"mm\"\ndefault = \"0\"\n\
