@@ -2006,7 +2006,7 @@ id = "REQ-FILL-GDD-001"
 area = "fill/guided"
 level = "L2"
 statement = "A guided fill sews rows that copy its guide line (REQ-SVG-015, REQ-VC-023) when its guided_fill_strategy is 0, copy, the default (REQ-FILL-GDD-002 to REQ-FILL-GDD-007). Set to 1, parallel offset, or 2, buffer, it is skipped until M10.10 sews them, and SC-W0011 names the strategy. Without a guide line, or with one that starts and ends at one point once it is made one line, it sews as a tatami fill with its own settings, and SC-W0331 says so (DEV-FILL-034). A part no copy of the guide meets sews as a tatami fill at the angle of the line between the guide's ends, with the guided fill's row spacing, longest stitch, staggers and skip_last, but no end spacing, random lengths, pull compensation or rows that fill gaps, and SC-W0332 counts those parts."
-rationale = "Ink/Stitch's guided fill sews so, and falls back to its tatami fill without a guide line or where no copy meets the shape, read at d59c9ab (lib/elements/fill_stitch.py: do_guided_fill, guided_fill_strategy; lib/stitches/guided_fill.py: guided_fill, fallback)."
+rationale = "Ink/Stitch's guided fill sews so, and falls back to its tatami fill without a guide line or where its copies leave no line in the shape, read at d59c9ab (lib/elements/fill_stitch.py: do_guided_fill, guided_fill_strategy; lib/stitches/guided_fill.py: guided_fill, fallback). Where no copy meets a part at all, it stops with an error instead, and StitchCraft falls back there too (DEV-FILL-034)."
 milestone = "M10"
 status = "active"
 

@@ -195,8 +195,8 @@ The Test Sheet filter drew TS-17B from M10.7, each tartan's sett in its fill eff
 row's text, and from M10.12 each of its gradients as a gradient paint
 ([below](#a-gradients-geometry)). From M10.9 the sheet's guided leaf copies a guide line. Drawn into a
 document, the guide would be a `stitch:guide` marker grouped with the leaf, and a filter doesn't make groups.
-Only `stitch testsheet` draws TS-17B now, and the filter draws a linear gradient fill of another sheet with
-its gradient paint.
+Only `stitch testsheet` draws TS-17B now. The filter still draws a linear gradient fill with its gradient
+paint, though no sheet it draws has one.
 
 **How the dialog shows them** (`REQ-VC-012`, M6.10). From 0.14 a parameter can say how the dialog shows
 it, and the plug-in says all of it from the registry (`apps/stitchcraft-vc-plugin/src/dialog.rs`):

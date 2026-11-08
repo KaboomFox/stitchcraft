@@ -108,11 +108,13 @@ forth, and the travel between them is not.
 ## Fallbacks
 
 The copies can miss a part thinner than the row spacing between 2 of them. Such a part is sewn as a tatami
-fill at the angle of the line between the guide's ends, as Ink/Stitch falls back to one there. Its rows lie
-the guided fill's row spacing apart, in its longest stitch with its staggers and `skip_last`. It has no end
-spacing, random lengths, pull compensation or rows that fill gaps, which Ink/Stitch's fallback doesn't pass
-on. `SC-W0332` counts those parts, and `SC-W0305` those too thin for the tatami rows too, which are sewn
-round their outline.
+fill at the angle of the line between the guide's ends. Ink/Stitch falls back to one where its copies meet
+a part but the cut keeps none of them, and where no copy meets the part at all, it stops with an error first
+(`DEV-FILL-034`).
+The tatami fill's rows lie the guided fill's row spacing apart, in its longest stitch with its staggers and
+`skip_last`. It has no end spacing, random lengths, pull compensation or rows that fill gaps, which
+Ink/Stitch's fallback doesn't pass on. `SC-W0332` counts those parts, and `SC-W0305` those too thin for the
+tatami rows too, which are sewn round their outline.
 
 ## Preview
 

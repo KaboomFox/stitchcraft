@@ -23,8 +23,9 @@
 //!    lines not sewn yet (`tatami::sew::lines`). Bean stitch then sews each stitch back and forth, but the
 //!    travel between lines.
 //!
-//! **Without a guide.** A piece no copy meets sews a tatami fill at the angle of the line between the guide's
-//! ends (`SC-W0332`), as Ink/Stitch falls back to it. A fill with no guide, or with one that starts and ends
+//! **Without a guide.** A piece no copy leaves a line in sews a tatami fill at the angle of the line between
+//! the guide's ends (`SC-W0332`), as Ink/Stitch falls back to it, and so does a piece no copy meets, where
+//! Ink/Stitch stops with an error (`DEV-FILL-034`). A fill with no guide, or with one that starts and ends
 //! at one point once it is made one line, sews as a tatami fill with its own settings (`SC-W0331`), as
 //! Ink/Stitch sews one without a guide (`DEV-FILL-034`).
 
@@ -261,9 +262,9 @@ struct Guide {
 }
 
 impl Guide {
-    /// The tatami fill's rows a piece no copy of the guide meets sews: at the angle of the guide's ends, the
-    /// guided fill's row spacing apart, staggered on the tatami fill's grid in its longest stitch, as
-    /// Ink/Stitch falls back to a tatami fill there, without an end spacing, random lengths, gap-filling
+    /// The tatami fill's rows a piece no copy of the guide leaves a line in sews: at the angle of the guide's
+    /// ends, the guided fill's row spacing apart, staggered on the tatami fill's grid in its longest stitch,
+    /// as Ink/Stitch falls back to a tatami fill there, without an end spacing, random lengths, gap-filling
     /// rows or pull compensation.
     fn fallback(&self, guided: &Guided) -> Layer {
         let stitching = Stitching {
