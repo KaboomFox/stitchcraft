@@ -43,21 +43,31 @@ const TATAMI: &[StitchType] = &[StitchType::TatamiFill];
 /// The key of the angle of a fill's rows ([`TatamiParams::angle`]), which an SVG file's clone turns with it.
 pub const ANGLE: &str = "angle";
 
-/// The stitch types whose rows are routed as a tatami fill's are: its own, and a circular fill's pieces of
-/// spiral, which its end spacing spaces, its `skip_last` shortens and its `underpath` travels under.
+/// The stitch types whose rows the end spacing spaces: a tatami fill's own, and a circular fill's circles.
 const ROUTED: &[StitchType] = &[StitchType::TatamiFill, StitchType::CircularFill];
 
-/// The stitch types whose rows `skip_last` shortens: those [`ROUTED`], and a tartan fill's lines, which are
+/// The stitch types whose needle travels under their rows with `underpath`: a tatami fill's own, and a
+/// circular fill's pieces of spiral and a guided fill's lines, which are routed as a tatami fill's rows are.
+const TRAVELLED: &[StitchType] = &[StitchType::TatamiFill, StitchType::CircularFill, StitchType::GuidedFill];
+
+/// The stitch types whose rows `skip_last` shortens: those [`TRAVELLED`], and a tartan fill's lines, which are
 /// routed as a tatami fill's rows are, though Ink/Stitch's settings window doesn't show it for them.
-const SKIPPED: &[StitchType] = &[StitchType::TatamiFill, StitchType::CircularFill, StitchType::TartanFill];
+const SKIPPED: &[StitchType] = &[StitchType::TatamiFill, StitchType::CircularFill, StitchType::GuidedFill, StitchType::TartanFill];
 
 /// The stitch types its rows, its expand and its underlay apply to: a contour fill takes them as Ink/Stitch's
 /// does, sewing its rings the row spacing apart over the part expanded, after the same underlay, a meander
 /// fill sews its path over the part expanded after the same underlay, a circular fill its spiral, its
-/// circles the row spacing apart, and a tartan fill its rows, staggered as a tatami fill's are. An element
-/// of a run of underlays first sews its underlay apart when it is one of them (`crate::underlays_first`).
-pub(crate) const UNDERLAID: &[StitchType] =
-    &[StitchType::TatamiFill, StitchType::ContourFill, StitchType::MeanderFill, StitchType::CircularFill, StitchType::TartanFill];
+/// circles the row spacing apart, a guided fill its copies of its guide the row spacing apart, staggered as
+/// a tatami fill's rows are, and a tartan fill its rows, staggered so too. An element of a run of underlays
+/// first sews its underlay apart when it is one of them (`crate::underlays_first`).
+pub(crate) const UNDERLAID: &[StitchType] = &[
+    StitchType::TatamiFill,
+    StitchType::ContourFill,
+    StitchType::MeanderFill,
+    StitchType::CircularFill,
+    StitchType::GuidedFill,
+    StitchType::TartanFill,
+];
 
 /// The key of the setting that turns a fill's underlay on ([`TatamiParams::fill_underlay`]), which the order
 /// of a run of underlays first reads alone (`crate::underlays_first`).
@@ -70,6 +80,7 @@ const EXPANDED: &[StitchType] = &[
     StitchType::ContourFill,
     StitchType::MeanderFill,
     StitchType::CircularFill,
+    StitchType::GuidedFill,
     StitchType::TartanFill,
     StitchType::CrossStitch,
 ];
@@ -132,7 +143,7 @@ params! {
         /// Travel between rows, or a circular fill's pieces of spiral, runs inside the fill, under those sewn
         /// after it, which hide it. Off, the needle travels along the fill's outline, where the travel can
         /// show along the edge.
-        underpath: Toggle = "true", label "Underpath", applies ROUTED;
+        underpath: Toggle = "true", label "Underpath", applies TRAVELLED;
     }
 
     "Underlay" {

@@ -482,7 +482,7 @@ fn place(group: &ParamGroup, family: Family, default: Option<StitchType>) -> u8 
 /// one value of VectorCraft's kinds means what it means. A text is declared when the dialogs hold it
 /// ([`TEXTS`]). A choice leaves out each option that a text among `siblings` is shown for alone: the text
 /// spells out that option's stitches. A method parameter leaves out the methods StitchCraft sews as another
-/// ([`sewn_as`]).
+/// ([`sewn_as`]). A choice left with fewer than 2 options is not declared.
 pub fn schema(spec: &ParamSpec, siblings: &[ParamSpec]) -> Option<Schema> {
     let number = |min: f64, max: f64, default: f64| Some(Schema::Number { min, max, default });
     let default = spec.kind.parse(spec.default).map(|(value, _)| value)?;
@@ -513,9 +513,10 @@ pub fn schema(spec: &ParamSpec, siblings: &[ParamSpec]) -> Option<Schema> {
             let family = Family::ALL.iter().copied().find(|family| family.method_param() == spec.key);
             let other = |option: &str| family.and_then(|family| StitchType::from_id(family, option)).is_some_and(|t| sewn_as(t) != t);
             // Only the options offered: a design that names one kept for it still reads, but a dialog
-            // doesn't offer it.
+            // doesn't offer it. With 1 option left there is nothing to choose, and the setting keeps its
+            // default: a guided fill's strategy offers copying alone until M10.10.
             let options: Vec<&'static str> = options.iter().filter(|o| o.offered).map(|o| o.id).filter(|o| !spelled(o) && !other(o)).collect();
-            options.contains(&id).then_some(Schema::Choice { options, default: id })
+            (options.len() > 1 && options.contains(&id)).then_some(Schema::Choice { options, default: id })
         }
         (Kind::LengthList { min, max }, Parsed::Lengths(lengths)) => match lengths.as_slice() {
             [length] => number(min, max, length.get()),

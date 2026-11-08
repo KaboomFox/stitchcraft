@@ -68,7 +68,8 @@ pub(crate) fn reads(element: &Element, settings: &DesignSettings) -> bool {
 /// Whether `element`, in a design with `settings`, has an underlay to sew before its top stitches: a satin
 /// column with one of its underlays on, or a fill sewn with one, whose method has the tatami fill's underlay,
 /// with `fill_underlay` on. A fill set to Ink/Stitch's legacy fill has none (`REQ-FILL-005`), nor has one set
-/// not to be sewn. Each setting is read alone, as the element reads it.
+/// not to be sewn, nor a guided fill whose strategy is not sewn yet (`REQ-FILL-GDD-001`). Each setting is read
+/// alone, as the element reads it.
 pub(crate) fn has_underlay(element: &Element, settings: &DesignSettings) -> bool {
     let set = &element.params;
     let on = |specs: &[ParamSpec], key: &str| setting::<Toggle>(set, specs, key, &mut Vec::new()) == Some(true);
@@ -77,7 +78,8 @@ pub(crate) fn has_underlay(element: &Element, settings: &DesignSettings) -> bool
             [CENTER_WALK_UNDERLAY, CONTOUR_UNDERLAY, ZIGZAG_UNDERLAY].iter().any(|key| on(SatinParams::SPECS, key))
         }
         Some(stitch_type) if UNDERLAID.contains(&stitch_type) => {
-            on(FillParams::SPECS, "fill") && !legacy(set) && on(TatamiParams::SPECS, FILL_UNDERLAY)
+            let sewn = stitch_type != StitchType::GuidedFill || super::copied(set);
+            on(FillParams::SPECS, "fill") && !legacy(set) && sewn && on(TatamiParams::SPECS, FILL_UNDERLAY)
         }
         _ => false,
     }

@@ -254,11 +254,13 @@ them (`REQ-SVG-003`).
   M10.11 the adapter reads guide lines and anchor lines, as Ink/Stitch at `d59c9ab` finds them
   (`REQ-RIP-012` to `REQ-RIP-014`). Ink/Stitch looks for a shape's helpers among the other children of its
   group and nowhere else, so the adapter does too. A guide line or an anchor line is a shape with a stroke,
-  hidden or not, whose `style` attribute starts it with Ink/Stitch's marker. The guide is the first satin
-  column among the guide lines, its `satin_column` on, or else the first guide line. The anchor line is the
-  first anchor line that isn't a satin column. Each goes to every element of the shape under the transforms
-  above it. The guide keeps its stroke's width and join and its settings, and the anchor line gives the
-  start and the end of its first subpath ([ripple stitch](algorithms/strokes.md#guided-ripples)). A guide line or an
+  hidden or not, whose `style` attribute starts it with Ink/Stitch's marker. A stroke's guide is the first
+  satin column among the guide lines, its `satin_column` on, or else the first guide line. From M10.9 a
+  fill's guide is the first guide line that is no satin column, as Ink/Stitch's fill looks past satin
+  guides (`REQ-SVG-015`, [guided fill](algorithms/guided.md#the-guide-line)). The anchor line is the first
+  anchor line that isn't a satin column. Each goes to the shape's elements under the transforms above it.
+  The guide keeps its stroke's width and join and its settings, and the anchor line gives the start and the
+  end of its first subpath ([ripple stitch](algorithms/strokes.md#guided-ripples)). A guide line or an
   anchor line in no group steers nothing. Ink/Stitch's pattern helpers aren't applied yet.
 
 `SC-W0802` reports a connector that ties no command, a helper path that isn't applied or steers nothing, an

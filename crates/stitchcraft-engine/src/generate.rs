@@ -24,7 +24,7 @@
 //! itself. A fill whose `fill` setting is off sews nothing, and nothing is said of it (`REQ-FILL-003`).
 //! Another fill's area is built first ([`crate::normalize::region`]), so what is left out of it is said
 //! even when its settings cannot be used, and its `fill_method` then picks the generator: a tatami fill
-//! ([`crate::generators::tatami`]), a contour, meander, circular or tartan fill, or a cross stitch.
+//! ([`crate::generators::tatami`]), a contour, meander, circular, guided or tartan fill, or a cross stitch.
 //!
 //! An element is cut to its clips, the clip paths round it, before its generator sees it (`REQ-GEN-005`): a
 //! fill's area when it is built ([`region::build_clipped`]), and a stroke's subpaths where they cross a
@@ -47,6 +47,7 @@ use crate::design::{Clip, DesignSettings, Element, Hints, Join, Path, Shape};
 use crate::generators::circular::{self, Circular, circular_fill};
 use crate::generators::contour::{self, Contour, ContourParams, Stitching, contour_fill};
 use crate::generators::cross::{self, Cross, CrossParams, cross_stitch};
+use crate::generators::guided::{self, Guided, GuidedParams, Plain, RowStitching, guided_fill};
 use crate::generators::manual::{self, manual_stitch};
 use crate::generators::meander::{self, Meander, MeanderParams, meander_fill};
 use crate::generators::passes::{PathFillParams, RepeatParams};
@@ -109,10 +110,10 @@ params! {
 
         /// The stitch the area is filled with. A tatami fill sews rows of running stitches across it, a
         /// contour fill rings that follow its outline inward, a meander fill one line that wanders through a
-        /// tiling, a circular fill a spiral round its middle, and a tartan fill a plaid of rows in the
-        /// colours of its sett. A fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without
-        /// underlay (`SC-W0314`). The other methods arrive in later versions; until then an element set to
-        /// one is skipped (`SC-W0011`).
+        /// tiling, a circular fill a spiral round its middle, a guided fill rows that follow a guide line, and
+        /// a tartan fill a plaid of rows in the colours of its sett. A fill set to Ink/Stitch's legacy fill is
+        /// sewn as a tatami fill without underlay (`SC-W0314`). The other methods arrive in later versions;
+        /// until then an element set to one is skipped (`SC-W0011`).
         fill_method: Choice = "tatami_fill", label "Fill method", choices FILL_METHODS;
     }
 }
@@ -397,8 +398,8 @@ fn top_rows_of(
     }
     let Some(Prepared { region, common, sewing }) = prepare(element, settings, profile, diagnostics, meter)? else { return Ok(None) };
     // A contour, meander or circular fill has no rows: the preview shows its path, round the rings, through
-    // the tile as the element's seed lays it, or along the spiral's pieces. A cross stitch fill shows its
-    // crosses' bars, or its half crosses' diagonals.
+    // the tile as the element's seed lays it, or along the spiral's pieces. A guided fill shows the lines its
+    // copies of its guide sew. A cross stitch fill shows its crosses' bars, or its half crosses' diagonals.
     match sewing.stitch_type {
         StitchType::ContourFill => {
             let Some(contour) = contour_settings(&sewing, diagnostics) else { return Ok(None) };
@@ -407,6 +408,11 @@ fn top_rows_of(
         StitchType::CircularFill => {
             let Some(circular) = circular_settings(&sewing, diagnostics) else { return Ok(None) };
             return circular::top_path(&region, &circular, meter).map(Some);
+        }
+        StitchType::GuidedFill => {
+            let Some(guided) = guided_settings(&sewing, diagnostics) else { return Ok(None) };
+            let rng = SplitMix64::for_element(element.id.as_str(), common.as_ref().and_then(|common| common.random_seed));
+            return guided::top_path(&region, &guided, &rng, meter).map(Some);
         }
         StitchType::MeanderFill => {
             let Some(meander) = meander_settings(&sewing, diagnostics) else { return Ok(None) };
@@ -554,6 +560,7 @@ enum FillMethod {
     Contour(Contour),
     Meander(Meander),
     Circular(Circular),
+    Guided(Box<Guided>),
     Cross(Cross),
     Tartan(Tartan),
 }
@@ -566,6 +573,7 @@ impl FillMethod {
             StitchType::ContourFill => contour_settings(sewing, diagnostics).map(FillMethod::Contour),
             StitchType::MeanderFill => meander_settings(sewing, diagnostics).map(FillMethod::Meander),
             StitchType::CircularFill => circular_settings(sewing, diagnostics).map(FillMethod::Circular),
+            StitchType::GuidedFill => guided_settings(sewing, diagnostics).map(|guided| FillMethod::Guided(Box::new(guided))),
             StitchType::CrossStitch => cross_settings(sewing, diagnostics).map(FillMethod::Cross),
             StitchType::TartanFill => tartan_settings(sewing, diagnostics).map(FillMethod::Tartan),
             _ => fill_settings(sewing, diagnostics).map(FillMethod::Tatami),
@@ -586,6 +594,7 @@ impl FillMethod {
             FillMethod::Contour(contour) => contour_fill(region, contour, needle, rng, meter),
             FillMethod::Meander(meander) => meander_fill(region, meander, needle, next, rng, meter),
             FillMethod::Circular(circular) => circular_fill(region, circular, needle, next, rng, meter),
+            FillMethod::Guided(guided) => guided_fill(region, guided, needle, next, rng, meter),
             FillMethod::Cross(cross) => cross_stitch(region, cross, needle, next, meter),
             FillMethod::Tatami(fill) => tatami_fill(region, fill, needle, next, rng, meter),
             FillMethod::Tartan(tartan) => tartan_fill(region, tartan, needle, next, rng, meter),
@@ -600,6 +609,7 @@ impl FillMethod {
             FillMethod::Contour(contour) => Some((&contour.underlay, contour.inset, contour.travel)),
             FillMethod::Meander(meander) => Some((&meander.underlay, meander.inset, meander.travel)),
             FillMethod::Circular(circular) => Some((&circular.underlay, circular.inset, circular.travel)),
+            FillMethod::Guided(guided) => Some((&guided.underlay, guided.inset, guided.travel)),
             FillMethod::Tartan(tartan) => Some((&tartan.underlay, tartan.inset, tartan.travel)),
             FillMethod::Cross(_) => None,
         }
@@ -613,6 +623,12 @@ impl FillMethod {
             FillMethod::Contour(contour) => contour.underlay.clear(),
             FillMethod::Meander(meander) => meander.underlay.clear(),
             FillMethod::Circular(circular) => circular.underlay.clear(),
+            FillMethod::Guided(guided) => {
+                guided.underlay.clear();
+                if let Some(plain) = &mut guided.plain.fill {
+                    plain.underlay.clear();
+                }
+            }
             FillMethod::Tartan(tartan) => tartan.underlay.clear(),
             FillMethod::Cross(_) => {}
         }
@@ -718,6 +734,62 @@ fn circular_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Opti
         force_locks: shared.force_locks,
         travel,
         target: sewing.hints.target,
+    })
+}
+
+/// The guided fill `sewing` describes, its settings read as a guided fill reads them: copies of its design's
+/// guide line the row spacing apart, over each part grown by `expand_mm`, after the tatami fill's underlay,
+/// stitched in its longest stitch within the running stitch's tolerance, its needle travelling in the
+/// running stitch's length and tolerance between them, routed as a tatami fill's rows are. With it, the
+/// tatami fill it sews without a guide it can use, the element's settings read as a tatami fill's, as
+/// Ink/Stitch sews a guided fill without a guide, and what that reading says that this one doesn't. `None`
+/// when they cannot be read, or when its strategy is not sewn yet (`SC-W0011`), which `diagnostics` says.
+/// Its longest stitch, its underlay's, and its running stitch's length are raised as a tatami fill's are.
+fn guided_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Option<Guided> {
+    // A strategy not sewn yet skips the element before its other settings are read.
+    let own = sewing.read(GuidedParams::from_set_as, diagnostics)?;
+    if own.guided_fill_strategy != guided::COPY {
+        let id = own.guided_fill_strategy;
+        let name = guided::STRATEGIES.iter().find(|strategy| strategy.id == id).map_or(id, |strategy| strategy.label).to_lowercase();
+        diagnostics.push(not_yet(&format!(
+            "This element's fill method, `guided_fill`, with its strategy `{id}` ({name}), is not sewn by this version of StitchCraft yet"
+        )));
+        return None;
+    }
+    let tatami = sewing.read(TatamiParams::from_set_as, diagnostics);
+    let running = sewing.read(RunningParams::from_set_as, diagnostics);
+    let path = sewing.read(PathFillParams::from_set_as, diagnostics);
+    let (Some(mut tatami), Some(running), Some(path), Some(shared)) = (tatami, running, path, sewing.shared) else {
+        return None;
+    };
+    let (longest, travel) = fill_lengths(&mut tatami, &running, shared, diagnostics)?;
+    let jitter = running.enable_random_stitch_length.then_some(running.random_stitch_length_jitter_percent / 100.0);
+    // Read as a tatami fill's, the settings say again some of what they said, which is left out.
+    let as_tatami = Sewing { set: Cow::Borrowed(sewing.set.as_ref()), stitch_type: StitchType::TatamiFill, hints: sewing.hints.clone(), ..*sewing };
+    let mut said = Vec::new();
+    let plain = fill_settings(&as_tatami, &mut said);
+    said.retain(|diagnostic| !diagnostics.contains(diagnostic));
+    let stitching = RowStitching {
+        length: longest.get(),
+        tolerance: running.running_stitch_tolerance_mm.get(),
+        jitter,
+        staggers: tatami.staggers,
+        position: own.position(),
+    };
+    Some(Guided {
+        guide: sewing.hints.guide.as_ref().map(|guide| guide.path.clone()),
+        spacing: tatami.row_spacing_mm.get(),
+        angle: own.guided_fill_angle,
+        smoothness: path.smoothness_mm.get(),
+        stitching,
+        skip_last: tatami.skip_last,
+        beans: path.bean_stitch_repeats,
+        underlay: tatami.underlay(longest, travel),
+        inset: tatami.fill_underlay_inset_mm.get(),
+        expand: tatami.expand_mm.get(),
+        force_locks: shared.force_locks,
+        travel,
+        plain: Plain { fill: plain, said },
     })
 }
 
@@ -958,13 +1030,13 @@ fn ripple(
 /// a satin column its rails as they are sewn when it starts at its nearest point and otherwise its first
 /// rail's start. A satin column too narrow to stitch across is a stroke (`REQ-SAT-015`). A tatami fill, a
 /// fill set to Ink/Stitch's legacy fill, which is sewn as one (`REQ-FILL-005`), and a contour, meander,
-/// circular, tartan or cross stitch fill start at their point nearest the needle and offer their area, their parts,
+/// circular, guided, tartan or cross stitch fill start at their point nearest the needle and offer their area, their parts,
 /// even when set not to be sewn, as Ink/Stitch's next element is the next in the drawing. Where its stitch
 /// type is known, an
 /// element offers what Ink/Stitch's would, even of a method StitchCraft does not sew yet (ADR 0014): a
 /// stroke of any method its first point, as Ink/Stitch's strokes all do, and a satin column of any method
 /// its rails. A fill of a method StitchCraft does not sew offers nothing, since what it would offer is not
-/// known. Neither does an element whose shape cannot be read, or the settings its offer depends on: those
+/// known, and nor does a guided fill of a strategy it doesn't sew. Neither does an element whose shape cannot be read, or the settings its offer depends on: those
 /// that choose its stitch type, and a satin column's. They are read as its stitch type reads them. A fill
 /// of any method, or a satin column, with a start position offers that, where it starts (`REQ-GEN-001`). A
 /// fill cut to its clips offers what they leave of its area, a stroke the first point of the first piece
@@ -987,7 +1059,7 @@ pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -
                     | StitchType::CircularFill
                     | StitchType::CrossStitch
                     | StitchType::TartanFill
-            ) =>
+            ) && !(stitch_type == StitchType::GuidedFill && copied(&element.params)) =>
         {
             return None;
         }
@@ -1008,6 +1080,12 @@ pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -
         return Some(Approach::Shape(satin::sewn_rails(&rails, &params, meter).ok()?.into()));
     }
     satin::first_point(&rails, &params, meter).ok()?.map(Approach::Point)
+}
+
+/// Whether `set`, a guided fill's, copies its guide, the one strategy sewn so far (`REQ-FILL-GDD-001`). Read
+/// alone, as the guided fill reads it, which says what is wrong with it.
+fn copied(set: &ParamSet) -> bool {
+    setting::<Choice>(set, GuidedParams::SPECS, guided::STRATEGY, &mut Vec::new()) == Some(guided::COPY)
 }
 
 /// The stitch type that sews `element` in a design with `settings`, as [`generate`] picks it. `None` if a
@@ -1168,8 +1246,11 @@ mod tests {
         let line = Shape::stroke(Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0))], closed: false }] });
         assert_eq!(laid(&line, &[], &Budget::DEFAULT), Rows { segments: None, diagnostics: vec![] });
         assert_eq!(laid(&square, &[("fill", "false")], &Budget::DEFAULT), Rows { segments: None, diagnostics: vec![] });
-        let guided = laid(&square, &[("fill_method", "guided_fill")], &Budget::DEFAULT);
-        assert_eq!((guided.segments, codes(&guided.diagnostics)), (None, vec![Code::StitchTypeNotYet]));
+        let offset = laid(&square, &[("fill_method", "guided_fill"), ("guided_fill_strategy", "1")], &Budget::DEFAULT);
+        assert_eq!((offset.segments, codes(&offset.diagnostics)), (None, vec![Code::StitchTypeNotYet]));
+        // A guided fill without a guide shows the rows of the tatami fill it sews.
+        let unguided = laid(&square, &[("fill_method", "guided_fill")], &Budget::DEFAULT);
+        assert_eq!(unguided.segments.map(|segments| segments.len()), Some(40));
         // A tartan fill shows the lines of its colours, without a sett Ink/Stitch's default one's, which it
         // says, and nothing when its sett can't be read.
         let tartan = laid(&square, &[("fill_method", "tartan_fill")], &Budget::DEFAULT);
@@ -1214,8 +1295,8 @@ mod tests {
         let mut said = Vec::new();
         assert!(sew(&wrong, StitchType::TartanFill, shared(Mm::new(4.0).ok()), &mut said).is_none());
         assert_eq!(codes(&said), [Code::ParamInvalid]);
-        // A method not sewn yet, whose settings it does not read, wrong as they are here.
-        let tatami = [("row_spacing_mm", "wide")].into_iter().collect();
+        // A guided fill's strategy not sewn yet, whose settings it does not read, wrong as they are here.
+        let tatami = [("row_spacing_mm", "wide"), ("guided_fill_strategy", "2")].into_iter().collect();
         let sewn = sew(&tatami, StitchType::GuidedFill, shared(Mm::new(4.0).ok()), &mut diagnostics);
         assert_eq!((sewn.is_none(), codes(&diagnostics)), (true, vec![Code::StitchTypeNotYet]));
         // A contour fill without a longest stitch is the same bug as a tatami fill's.

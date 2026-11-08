@@ -1060,7 +1060,7 @@ name = "guided_fill_angle"
 type = "float"
 unit = "deg"
 default = "—"
-applies_to = ["guided_fill"]
+applies_to = ["guided_fill", "0"]
 phase = "P3"
 milestone = "M10"
 

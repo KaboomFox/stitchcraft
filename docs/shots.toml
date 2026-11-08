@@ -699,6 +699,41 @@ panels = [
 ]
 
 [[shot]]
+id = "guided-fill"
+kind = "stitch"
+fixture = "docs/fixtures/guided.svg"
+style = "realistic"
+scale = 10.0
+alt = "A green leaf 42 mm long sewn as a guided fill over its underlay. Its rows are copies of an S-shaped line along its middle, 0.25 mm apart, so they bend with it from tip to tip"
+panels = [
+  { caption = "Guided fill", params = { fill_method = "guided_fill" } },
+]
+
+[[shot]]
+id = "guided-angle"
+kind = "stitch"
+fixture = "docs/fixtures/guided.svg"
+style = "simple"
+scale = 8.0
+alt = "A leaf 42 mm long sewn without underlay as a guided fill, its rows copies of an S-shaped line along its middle, 1 mm apart"
+panels = [
+  { caption = "Square to the guide", params = { fill_method = "guided_fill", fill_underlay = "false", row_spacing_mm = "1" } },
+  { caption = "Copy angle 45°", params = { fill_method = "guided_fill", fill_underlay = "false", row_spacing_mm = "1", guided_fill_angle = "45" } },
+]
+
+[[shot]]
+id = "guided-stagger"
+kind = "stitch"
+fixture = "docs/fixtures/guided.svg"
+style = "simple"
+scale = 8.0
+alt = "A leaf 42 mm long sewn without underlay as a guided fill, its rows 1 mm apart in stitches of 4 mm staggered over 4 rows"
+panels = [
+  { caption = "Flexible", params = { fill_method = "guided_fill", fill_underlay = "false", row_spacing_mm = "1", max_stitch_length_mm = "4" } },
+  { caption = "Flexible (stagger)", params = { fill_method = "guided_fill", fill_underlay = "false", row_spacing_mm = "1", max_stitch_length_mm = "4", stitch_position_method = "flexible_stagger" } },
+]
+
+[[shot]]
 id = "cross-stitch"
 kind = "stitch"
 fixture = "docs/fixtures/heart.svg"

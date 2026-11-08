@@ -18,7 +18,7 @@ path as it is. A contour fill's spirals are not smoothed.
 
 - **Accepts:** a length from 0 to 100 mm
 - **Default:** `0`
-- **Applies to:** Contour fill, Meander fill
+- **Applies to:** Contour fill, Meander fill, Guided fill
 - **Ink/Stitch:** same key and default; StitchCraft differs:
   - **DEV-FILL-017.** Before inner to outer's path is smoothed, StitchCraft's running stitch cuts it into points 5 times smoothness_mm apart, a point on each corner, where Ink/Stitch's evenly spaced points may cut a corner by up to twice the smoothness, as for a tatami fill's travel (DEV-FILL-007). The smoothed path is then cut where its rings began, at the same share of its length, and each piece is a span of the running stitch. The path lies where Ink/Stitch's does but takes more stitches: TS-11B's leaf, smoothed by 0.5 mm, takes 973 where its rings unsmoothed take 903, against Ink/Stitch's 830 and 828, 17 % more than Ink/Stitch's where the sheet's samples that are not smoothed take 2 to 12 % more.
 
@@ -44,5 +44,5 @@ tartan fill sews its runs so, its rows and its travel once.
 
 - **Accepts:** 1 to 16 whole numbers from 0 to 10, separated by spaces
 - **Default:** `0`
-- **Applies to:** Contour fill, Meander fill, Circular fill, Tartan fill
+- **Applies to:** Contour fill, Meander fill, Circular fill, Guided fill, Tartan fill
 - **Ink/Stitch:** same key, meaning and default

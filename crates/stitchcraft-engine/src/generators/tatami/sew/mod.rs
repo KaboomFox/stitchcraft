@@ -421,7 +421,7 @@ pub(crate) fn shrunk_away(code: Code, key: &str, what: &str, gone: usize, parts:
 
 /// `SC-W0305` for the `outlined` pieces of the `tops` sewn with top rows that found no row and went round
 /// the outline: the parts of the fill, or the pieces `expand_mm` cut them into.
-fn too_thin(outlined: usize, parts: usize) -> Option<Diagnostic> {
+pub(crate) fn too_thin(outlined: usize, parts: usize) -> Option<Diagnostic> {
     let message = match (outlined, parts) {
         (0, _) => return None,
         (1, 1) => "This fill is too thin for a row of stitches at its row spacing, so it is sewn as a running stitch round its outline.".to_string(),
@@ -462,6 +462,23 @@ fn append(runs: &mut Vec<Vec<Point>>, more: Vec<Vec<Point>>, jump: f64) {
         _ => runs.push(first),
     }
     runs.extend(more);
+}
+
+/// The runs `layer` sews over `piece`, from the point of its rings nearest `start` to the point nearest `end`,
+/// or back to where it started without an `end`, as a tatami fill's top rows over one piece, and whether it
+/// found no row and went round the outline. A jump the route needs is said in `warnings`. A guided fill sews
+/// a piece that no copy of its guide meets so (`crate::generators::guided`).
+pub(crate) fn layer_sewn(
+    piece: &Polygon,
+    layer: &Layer,
+    start: Option<Point>,
+    end: Option<Point>,
+    rng: &mut SplitMix64,
+    meter: &mut Meter,
+    warnings: &mut Vec<Diagnostic>,
+) -> Result<(Vec<Vec<Point>>, bool), Exhausted> {
+    let part = Part { polygon: piece, rings: Rings::new(piece, meter)? };
+    part.sew(layer, start, end, rng, meter, warnings)
 }
 
 /// A part, with its rings measured once for all its layers.

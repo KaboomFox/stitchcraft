@@ -553,7 +553,9 @@ fn compatible(kind: Kind, their_type: &str, unit: &str) -> bool {
         // A meander's scale is 1 percentage or 2, across and down, which Ink/Stitch's window shows as 1.
         Kind::PercentPair { .. } => their_type == "float" && matches!(unit, "% (each side)" | "%"),
         Kind::PercentList { .. } => their_type == "float" && unit == "%",
-        Kind::Angle | Kind::BoundedAngle { .. } | Kind::AngleList { .. } => their_type == "float" && matches!(unit, "deg" | "degrees" | "°"),
+        Kind::Angle | Kind::OptionalAngle | Kind::BoundedAngle { .. } | Kind::AngleList { .. } => {
+            their_type == "float" && matches!(unit, "deg" | "degrees" | "°")
+        }
         // Ink/Stitch reads a cross stitch's fill coverage as a whole number, and its fonts write it as 50.0 too,
         // which it sews as its default, 50: a percentage reads both.
         Kind::Percent { .. } => matches!(their_type, "float" | "int") && matches!(unit, "%" | "± %"),
