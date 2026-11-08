@@ -49,7 +49,7 @@ fn star() -> Vec<(f64, f64)> {
 /// its own region.
 fn sewn_on(profile: &MachineProfile, parts: &[&[(f64, f64)]], params: &[(&str, &str)]) -> (StitchPlan, f64) {
     let element = fill("fill", parts, &RED, params);
-    let Shape::Fill { path, rule } = &element.shape else { panic!("a fill has a fill's shape") };
+    let Shape::Fill { path, rule, .. } = &element.shape else { panic!("a fill has a fill's shape") };
     let region = build(path, *rule, &mut Budget::DEFAULT.meter()).unwrap().region;
     let design = Design::new(vec![element], DesignSettings { origin: Some(p(0.0, 0.0)), ..DesignSettings::default() }).unwrap();
     let outcome = plan(&design, profile, &Budget::DEFAULT);

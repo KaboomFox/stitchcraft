@@ -5,6 +5,8 @@
 //!   no length, rings of no area, hair-thin and self-touching shapes, rings twice over, and a path of 10⁶
 //!   points.
 //! - [`designs`]: small designs for the engine's cases, and a plan's shape at a glance.
+//! - [`fabric`]: what a plan leaves of a picture: the fabric its thread leaves bare where the picture has a
+//!   colour, and the thread that shows where the picture has another colour or none.
 //! - [`satins`]: satin columns sewn as an element is, and their needle points read back in pairs.
 //! - [`plans`]: canonical stitch plans behind the format golden files.
 //! - [`equivalence`]: when two plans make a machine do the same thing (round-trip tests).
@@ -32,6 +34,7 @@
 pub mod degenerate;
 pub mod designs;
 pub mod equivalence;
+pub mod fabric;
 pub mod fuzz;
 pub mod inkstitch;
 pub mod metrics;

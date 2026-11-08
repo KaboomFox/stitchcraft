@@ -78,7 +78,7 @@ fn drawn(picture: &Picture, across: f32) -> Result<Vec<u8>, String> {
     let margin = (PIXELS as f32 - across * PER_MM) / 2.0;
     let place = Transform::from_translate(margin, margin).pre_scale(PER_MM, PER_MM);
     for element in &picture.elements {
-        let Shape::Fill { path, rule: FillRule::NonZero } = &element.shape else { return Err(format!("{} is no area", element.id)) };
+        let Shape::Fill { path, rule: FillRule::NonZero, .. } = &element.shape else { return Err(format!("{} is no area", element.id)) };
         let mut outline = PathBuilder::new();
         #[allow(clippy::cast_possible_truncation)]
         let at = |p: stitchcraft_core::Point| (p.x() as f32, p.y() as f32);

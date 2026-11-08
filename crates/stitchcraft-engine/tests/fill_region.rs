@@ -33,7 +33,7 @@ fn fill(id: &str, path: Path, rule: FillRule) -> Element {
     Element {
         id: ElementId::new(id).unwrap(),
         name: None,
-        shape: Shape::Fill { path, rule },
+        shape: Shape::Fill { path, rule, gradient: None },
         thread: RED,
         params: ParamSet::default(),
         automatic: false,

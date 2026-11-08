@@ -9,9 +9,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   under, and the reader of Ink/Stitch's font format is built (`REQ-FONT-002` to `REQ-FONT-008`). The owner
   accepts the decision or changes it, and creates the font repository.
   - The fonts would be kept in `KaboomFox/stitchcraft-fonts`. This repository would pin them by a commit
-    and the SHA-256 of its archive, as it pins the corpus. They would be StitchCraft's own fonts and Ink/Stitch's fonts under the OFL,
-    CC0, CC BY or CC BY-SA, each with its licence file and a row of the repository's manifest. `stitch` would
-    find them in the folders it reads, and the VectorCraft plug-in would build in those a list names.
+    and the SHA-256 of its archive, as it pins the corpus. They would be StitchCraft's own fonts and
+    Ink/Stitch's fonts under the OFL, CC0, CC BY or CC BY-SA, each with its licence file and a row of the
+    repository's manifest. `stitch` would find them in the folders it reads, and the VectorCraft plug-in
+    would build in those a list names.
   - Of the 131 fonts the corpus takes, 7 rest on a permission their originals' authors gave for Ink/Stitch
     alone, and would stay out until their authors allow more. A person would read 10 more before they join.
   - `stitchcraft_svg::font::read` reads a font from the files of its folder. It reads `font.json`, each key
@@ -26,6 +27,43 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     corpus into every job that runs `cargo xtask ci`.
   - New codes: `SC-E1101`, `SC-W1102`, `SC-W1103`, `SC-W1104` and `SC-I1105`. The glyph differential cuts
     its glyphs with the reader's code, and xtask no longer reads XML itself.
+- M13.13, a spike: ADR-0019 decides to cut a photo's subject out before VectorCraft traces it, as an
+  option off by default. The owner accepted it on 2026-11-08, and M13.14 builds it.
+  - `--subject` on `stitch plan` and `stitch export` is to make the picture's background transparent and
+    crop the picture to its subject. Image Trace leaves out transparent pixels, so the background no
+    longer traces into shapes.
+  - MobileSAM, under the Apache-2.0 licence, cuts the subject out of a box that U²-Net-p finds or
+    `--subject-box` gives, with `--subject-point` and `--not-subject` points. On the owner's 2 photos of her
+    dog it kept the dog at an IoU of 0.985 and 0.988. U²-Net-p, U²-Net and IS-Net alone kept a tyre behind
+    the running dog, 18 to 20 % of the dog's area. PhotoCraft's Remove Background, which runs without a
+    model, kept the dog at 0.594 and 0.233, with much of the yard round it.
+  - tract runs the models in `stitch` alone. `stitch` fetches them on first use from a StitchCraft release
+    and checks them against SHA-256 sums the repository pins. A bug-report bundle replays from the traced
+    document without them. `deny.toml` is to let `rand` and `getrandom` in through `tract-onnx-opl` alone,
+    an exception the owner accepted with the ADR.
+  - M13.14's requirements are written as planned, `REQ-CLI-014` to `REQ-CLI-019`.
+- M10.12: linear gradient fill (`REQ-FILL-GRD-001` to `REQ-FILL-GRD-009`, `REQ-SVG-014`, `REQ-VC-022`).
+  `fill_method` `linear_gradient_fill` sews Ink/Stitch's linear gradient fill, which was skipped with
+  `SC-W0011`.
+  - A fill's shape keeps its linear gradient, its start and end in the design's millimetres and its stops.
+    The SVG reader places it as a viewer does, through the gradients its `href` names, in user units or in
+    shares of the shape's box, after its `gradientTransform`. The VectorCraft reader places a gradient paint
+    by its `geom`, or fits it to the object at its angle as VectorCraft does, in `stitch export` and in the
+    fill's live effect.
+  - Rows square to the gradient, a row spacing apart and staggered, cover each piece. Between 2 stops they go
+    to the 2 colours in Ink/Stitch's fixed pattern, and a transparent stop leaves its rows out. Each colour's
+    rows are routed as a tatami fill's, after the tatami fill's underlay in the first stop's colour, each
+    colour a colour block in its own thread, trimmed after with `trim_after`. With `stop_at_ending_point`
+    the last 2 colours sew on to the fill's end.
+  - New codes: `SC-W0329`, a linear gradient fill without a gradient, whose colour fades out along `angle`,
+    and `SC-W0330`, a stop passed over. The deviations ledger gains `DEV-FILL-031`, `DEV-FILL-032` and
+    `DEV-SVG-027`.
+  - The Test Sheet filter draws a linear gradient fill with its gradient paint, which VectorCraft keeps, so
+    it draws TS-17B's gradients too.
+  - TS-17B gains 3 gradients for MC-12 in a third row, and the differential sews them and 6 files of
+    gradients in Ink/Stitch too. They agree by every measure, but where the ledger excuses them. A user page
+    has pictures of gradient fills. Golden changed: `TS-17B.pes`, for its new row of gradients, below M10.7's
+    herringbone.
 - M10.11: guided ripples (`REQ-RIP-012` to `REQ-RIP-019`). A ripple stitch with a guide sews copies of its
   line along the guide, as Ink/Stitch's guided ripple does.
   - Along a guide line, each copy moves to its place and scales from `scale_start` to `scale_end` percent
@@ -1846,6 +1884,23 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- Automatic digitizing: a narrow part cut from a broad one ends along its cut, its column no longer fanning
+  into a corner of the cut (`REQ-AUTO-016`, `REQ-AUTO-019`). The traced pear in the docs left a wedge of
+  fabric 4.6 mm² bare at its left edge, where its olive band's narrow end met the pale green. The column's
+  line ran on along the cut into one of its corners, and the column sewed its stitches into a fan there,
+  with a few stitches running single along the wedge's edge. The triangles beside a cut are now the
+  column's end, which no line enters, and a column ends along the whole cut, however the cut lies to its
+  line. A tooth of a traced outline, a step as narrow as the narrowest satin stroke, is a bump of the column
+  beside it instead of a column of its own. The narrow ends of the pear's olive and dark olive bands at its
+  top right, filled until now with `SC-I0902`, sew as satin columns.
+  - Each of those bands then has a column at both ends, and its thread jumps to the stem between them and
+    back: the pear leaves 4 jump threads on the PE800 instead of 3. Where the dark olive band's top end
+    meets its fill, its rail runs round 2 steps of the trace, and one stitch leans 46.9° (`SC-W0208`).
+  - New measures in `stitchcraft_testkit::fabric` take any design and its plan, a traced photo too. They
+    find the fabric the top stitches leave bare where the picture has a colour, and the thread that shows
+    where it should not. `REQ-AUTO-025` and `REQ-AUTO-026` hold the test pictures and the pear to them. The
+    pear's long straight lines from its stem are jump threads, which the PE800 doesn't cut, and no thread
+    travels on top of another colour.
 - CI: the jobs that fetch VectorCraft's pinned release or wasmtime take its archive from the Actions cache,
   so that an outage of GitHub's downloads doesn't fail them. On 8 November GitHub answered release
   downloads with 504s and reset connections for an hour, and the 3 jobs that run VectorCraft's pinned
@@ -2683,6 +2738,16 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-17B.pes` (M10.12). The sheet gains a third row of 3 linear
+  gradients 40 mm square below its tartans. They sew in 7 colour blocks, a trim after each. The plan
+  spans 130 × 130 mm and sews 45,390 stitches with 35 jumps, 7,395 and 7 more. The 5 tartans and the
+  herringbone's first colour sew as before, 22.5 mm higher in the file, whose middle moved down with the
+  new row. The herringbone's other 4 colours are routed otherwise, now that the gradients come after them.
+- Changed `conformance/golden/testsheets/TS-13C.pes` (automatic digitizing, the end of a column along its
+  cut). The digitized star's right-hand point now sews from its tip to its cut, ending beside the star's
+  middle, as its line now ends at the triangles that touch the cut. Its underlay runs out to the tip first.
+  The last 68 needle points of the file lie in another order, and 46 of them in other places. The plan sews
+  10,311 stitches with 25 jumps, as before, and every other shape as before.
 - Changed `conformance/golden/testsheets/TS-17C.pes` (M10.11). The sheet gains 5 guided ripples at its
   bottom, below M10.8's ripples, in their green after a trim. The plan spans 101.1 × 175 mm, and sews 5,425
   stitches, 310 more. What the sheet sewed before sews as before, each needle point within the 0.1 mm the

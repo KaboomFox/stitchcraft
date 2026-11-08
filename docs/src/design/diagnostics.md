@@ -143,6 +143,8 @@ another.
 | `SC-W0326` | Warning | Tartan sett with no stripe to sew; only the underlay sewn (as in Ink/Stitch) | M10 |
 | `SC-W0327` | Warning | Tartan sett too fine for the shortest stitch; needle points left out | M10 |
 | `SC-W0328` | Warning | Tartan stripe's colour can't be read; left out (as Ink/Stitch leaves it) | M10 |
+| `SC-W0329` | Warning | Linear gradient fill without a linear gradient; its colour fades out | M10 |
+| `SC-W0330` | Warning | Gradient stop within 2 rows of the blend before; passed over | M10 |
 | `SC-W0401` | Warning | Path too small for the shortest stitch; skipped | M3 |
 | `SC-W0402` | Warning | Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest | M3 |
 | `SC-W0403` | Warning | Hand-placed stitch shorter than the shortest stitch; point left out | M3 |

@@ -33,6 +33,7 @@
     - [Meander fill](user/stitches/meander-fill.md)
     - [Circular fill](user/stitches/circular-fill.md)
     - [Tartan fill](user/stitches/tartan-fill.md)
+    - [Linear gradient fill](user/stitches/linear-gradient-fill.md)
     - [Cross stitch](user/stitches/cross-stitch.md)
     - [Automatic digitizing](user/stitches/automatic.md)
     - [Lock stitches, trims and stops](user/stitches/locks.md)
@@ -80,6 +81,7 @@
       - [Offset curves](design/algorithms/offset.md)
     - [Fills](design/algorithms/fills.md)
       - [Tartan fill](design/algorithms/tartan.md)
+      - [Linear gradient fill](design/algorithms/gradient.md)
       - [Cross stitch](design/algorithms/cross-stitch.md)
     - [Lock stitches](design/algorithms/locks.md)
     - [Centre lines](design/algorithms/centre-lines.md)
@@ -115,6 +117,7 @@
     - [0016 Ink/Stitch files imported into VectorCraft](design/adr/0016-inkstitch-files-imported-by-stitchcraft.md)
     - [0017 Routing in one engine function](design/adr/0017-routing-is-one-engine-function.md)
     - [0018 Underlays first, a setting of each element](design/adr/0018-underlays-first-is-a-setting-of-each-element.md)
+    - [0019 Subject cut out before tracing](design/adr/0019-subject-cut-out-before-tracing.md)
     - [0020 Fonts from a repository of their own](design/adr/0020-fonts-from-a-repository-of-their-own.md)
 
 # Plan

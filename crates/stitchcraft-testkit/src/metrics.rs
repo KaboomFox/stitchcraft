@@ -236,38 +236,48 @@ fn covered_share(region: &Region, stitches: &[[Point; 2]], reach: f64, pixel: f6
 
 /// The pixels over a region's bounding box: the first pixel's centre half a pixel in from its corner where
 /// x and y are least.
-struct Grid {
+pub(crate) struct Grid {
     first: Point,
     pixel: f64,
-    columns: usize,
-    rows: usize,
+    pub(crate) columns: usize,
+    pub(crate) rows: usize,
 }
 
 impl Grid {
-    fn new(bounds: Rect, pixel: f64) -> Grid {
+    pub(crate) fn new(bounds: Rect, pixel: f64) -> Grid {
         let count = |extent: f64| index((extent / pixel).ceil());
         let first = Point::new(bounds.min().x() + pixel / 2.0, bounds.min().y() + pixel / 2.0).unwrap_or(bounds.min());
         Grid { first, pixel, columns: count(bounds.width()), rows: count(bounds.height()) }
     }
 
     /// The centre of column `column`, along x.
-    fn x(&self, column: usize) -> f64 {
+    pub(crate) fn x(&self, column: usize) -> f64 {
         self.first.x() + column as f64 * self.pixel
     }
 
     /// The centre of row `row`, along y.
-    fn y(&self, row: usize) -> f64 {
+    pub(crate) fn y(&self, row: usize) -> f64 {
         self.first.y() + row as f64 * self.pixel
     }
 
     /// The columns whose centres lie from `low` to `high`, both included.
-    fn columns_within(&self, low: f64, high: f64) -> std::ops::Range<usize> {
+    pub(crate) fn columns_within(&self, low: f64, high: f64) -> std::ops::Range<usize> {
         within(low - self.first.x(), high - self.first.x(), self.pixel, self.columns)
     }
 
     /// The rows whose centres lie from `low` to `high`, both included.
-    fn rows_within(&self, low: f64, high: f64) -> std::ops::Range<usize> {
+    pub(crate) fn rows_within(&self, low: f64, high: f64) -> std::ops::Range<usize> {
         within(low - self.first.y(), high - self.first.y(), self.pixel, self.rows)
+    }
+
+    /// The column and the row of the pixel that holds `p`, the one whose centre lies within half a pixel of
+    /// it, the greater on a tie; `None` outside the grid.
+    pub(crate) fn holding(&self, p: Point) -> Option<(usize, usize)> {
+        let place = |value: f64, first: f64, count: usize| {
+            let k = ((value - first) / self.pixel + 0.5).floor();
+            (k >= 0.0 && index(k) < count).then(|| index(k))
+        };
+        Some((place(p.x(), self.first.x(), self.columns)?, place(p.y(), self.first.y(), self.rows)?))
     }
 }
 
@@ -281,14 +291,14 @@ fn within(low: f64, high: f64, pixel: f64, count: usize) -> std::ops::Range<usiz
 
 /// `value`, a whole number, as an index: 0 below 0 and for NaN, saturated far above.
 #[allow(clippy::cast_possible_truncation)] // a saturating cast, clamped by callers
-fn index(value: f64) -> usize {
+pub(crate) fn index(value: f64) -> usize {
     value.max(0.0) as usize
 }
 
 /// The stretches inside `rings` along the line at height `y`, by the even-odd rule: from each crossing of
 /// a ring to the next, every other one. A side crosses the line where one end lies at or below it and the
 /// other above, so a vertex on the line counts once.
-fn spans(rings: &[&[Point]], y: f64) -> Vec<(f64, f64)> {
+pub(crate) fn spans(rings: &[&[Point]], y: f64) -> Vec<(f64, f64)> {
     let mut crossings: Vec<f64> = rings
         .iter()
         .flat_map(|ring| ring.windows(2))
@@ -305,13 +315,13 @@ fn spans(rings: &[&[Point]], y: f64) -> Vec<(f64, f64)> {
 /// least x to its greatest; `None` where the line passes farther away. The thread is the union of the
 /// discs round both ends and the band between them, and the line crosses each in a stretch, or misses it;
 /// the thread being convex, the stretches it crosses join into one.
-fn crossing(a: Point, b: Point, reach: f64, y: f64) -> Option<(f64, f64)> {
+pub(crate) fn crossing(a: Point, b: Point, reach: f64, y: f64) -> Option<(f64, f64)> {
     let pieces = [disc(a, reach, y), disc(b, reach, y), band(a, b, reach, y)];
     pieces.into_iter().flatten().reduce(|(low, high), (l, h)| (low.min(l), high.max(h)))
 }
 
 /// Where the line at height `y` crosses the disc of radius `reach` round `centre`.
-fn disc(centre: Point, reach: f64, y: f64) -> Option<(f64, f64)> {
+pub(crate) fn disc(centre: Point, reach: f64, y: f64) -> Option<(f64, f64)> {
     let rise = y - centre.y();
     let left = reach * reach - rise * rise;
     (left >= 0.0).then(|| (centre.x() - left.sqrt(), centre.x() + left.sqrt()))
@@ -319,7 +329,7 @@ fn disc(centre: Point, reach: f64, y: f64) -> Option<(f64, f64)> {
 
 /// Where the line at height `y` crosses the band of points within `reach` of the stitch from `a` to `b`
 /// whose foot on its line falls between its ends; `None` for a stitch of no length, which is its discs.
-fn band(a: Point, b: Point, reach: f64, y: f64) -> Option<(f64, f64)> {
+pub(crate) fn band(a: Point, b: Point, reach: f64, y: f64) -> Option<(f64, f64)> {
     let (dx, dy) = (b.x() - a.x(), b.y() - a.y());
     let squared = dx * dx + dy * dy;
     if squared == 0.0 {
@@ -516,5 +526,10 @@ mod tests {
         assert_eq!(grid.columns_within(1.9, 7.0), 9..10);
         assert_eq!(grid.rows_within(-3.0, 1.0), 0..0);
         assert_eq!(grid.rows_within(2.3, 2.2), 3..3);
+        // The pixel that holds a point: its centre within half a pixel, and none outside the grid.
+        assert_eq!(grid.holding(p(1.07, 2.44)), Some((0, 4)));
+        assert_eq!(grid.holding(p(1.12, 2.02)), Some((1, 0)));
+        assert_eq!(grid.holding(p(0.99, 2.2)), None);
+        assert_eq!(grid.holding(p(1.5, 2.5)), None);
     }
 }

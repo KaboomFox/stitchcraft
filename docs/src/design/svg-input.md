@@ -85,7 +85,8 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
 ## Colour and visibility
 
 - `fill`, `stroke`, `color` and `currentColor` give the thread colour. A gradient gives its first colour
-  and a pattern its fallback colour, each with a warning. A gradient of one colour, such as an Inkscape
+  and a pattern its fallback colour, each with a warning. A linear gradient fill's linear gradient gives its
+  first colour without one, and the fill sews the gradient ([below](#gradients)). A gradient of one colour, such as an Inkscape
   swatch, gives that colour without one. Its first colour is that of its first stop a viewer shows, one
   not fully transparent and of a `stop-opacity` above 0. A gradient without stops paints nothing, as in a
   viewer. So do one whose stops a viewer doesn't show and a reference to an element the file does not
@@ -122,6 +123,35 @@ out. The engine never sees SVG ([architecture](architecture.md#hosts-ports-and-a
 - Ink/Stitch sews a fill's linear gradient in its first stop, and a swatch in its colour, like the
   adapter, but every other gradient and every pattern in black, whatever colour is written after it
   (`DEV-SVG-013`).
+
+## Gradients
+
+A shape whose `inkstitch:fill_method` is `linear_gradient_fill` sews the linear gradient its fill is
+painted with ([linear gradient fill](algorithms/gradient.md)). The reader places it as a viewer does, in
+the design's millimetres, once it has read the shape's outline (`REQ-SVG-014`).
+
+A gradient takes what it doesn't say from the gradient its `href` names, and that one from the next, each
+once and at most 16 deep. Inkscape keeps a gradient's stops in one gradient and its vector in another that
+names it. The vector's `x1`, `y1`, `x2` and `y2` come from the nearest linear gradient that gives each.
+`gradientUnits` and `gradientTransform` come from the nearest gradient that gives them, a radial one too.
+The stops come from the first gradient that has any.
+
+With `gradientUnits="userSpaceOnUse"`, as Inkscape writes it, the vector is in user units, and a percentage
+is a share of the viewport. Otherwise it is in shares of the box round the shape's outline, curves and all,
+SVG's default. A gradient without a vector then runs along the box's top from its left side to its right.
+The `gradientTransform` applies before the box and the shape's own transforms.
+
+A stop's offset is a number or a percentage, kept from 0 to 1 and never before the stop before. A stop's
+colour is its `stop-color`, the nearest `color` for `currentColor`, or black where the stop doesn't give a
+usable one. Its opacity is its `stop-opacity` times its colour's alpha.
+
+A gradient of fewer than 2 stops, or in a box whose width or height is 0, places none, and the fill sews
+its colour fading out (`SC-W0329`). A length or a transform that can't be used is named with `SC-W0804`,
+and left as a viewer leaves it. A gradient more than 10 m from the origin is named and not sewn. A radial
+gradient is no linear gradient: its first colour is sewn, with the warning a gradient gives.
+
+Ink/Stitch reads the gradient's own vector as user units, whatever its units, and none from the gradients
+it names. A gradient without a vector of its own sews in its last colour there (`DEV-SVG-027`).
 
 ## Clip paths
 

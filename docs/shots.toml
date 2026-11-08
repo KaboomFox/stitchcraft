@@ -217,7 +217,7 @@ kind = "stitch"
 sheet = "TS-17B"
 style = "realistic"
 scale = 4.0
-alt = "TS-17B as it will sew: 6 tartans 40 mm square in 2 rows, all woven in rows that slant across their stripes. In the top row, left to right, are stripes of red, white, Prussian blue and gold mirrored at their ends, stripes of green, black and white repeated, and a warp of red and black under a weft of blue and white. Below are blue and black stripes with thin white and red lines along their middles, stripes of gold, black and tangerine turned 30°, and stripes of blue, white, red and black in a herringbone, their rows in narrow upright bands slanting one way and then the other."
+alt = "TS-17B as it will sew: 6 tartans and 3 linear gradients 40 mm square in 3 rows. The tartans are woven in rows that slant across their stripes. In the top row, left to right, are stripes of red, white, Prussian blue and gold mirrored at their ends, stripes of green, black and white repeated, and a warp of red and black under a weft of blue and white. Below are blue and black stripes with thin white and red lines along their middles, stripes of gold, black and tangerine turned 30°, and stripes of blue, white, red and black in a herringbone, their rows in narrow upright bands slanting one way and then the other. In the bottom row, red blends into blue up to the right and gold through white into green down to the right. The last square's tangerine thins out to bare fabric, and Prussian blue grows from it down to the left."
 
 # ── How-to pages ────────────────────────────────────────────────────────────────────────────────────
 
@@ -788,6 +788,33 @@ panels = [
 ]
 
 [[shot]]
+id = "gradient-stops"
+kind = "stitch"
+fixture = "docs/fixtures/gradient.svg"
+style = "realistic"
+scale = 8.0
+layout = "rows"
+alt = "3 squares 30 mm a side sewn as linear gradient fills without underlay, each colour's rows in its own thread and square to its gradient. Red blends into blue across the first square and deep gold through white into emerald green up the second. In the third, tangerine thins out to bare fabric, and Prussian blue grows from it down the square"
+panels = [
+  { caption = "Rows 0.25 mm apart", params = { fill_underlay = "false" } },
+  { caption = "Rows 0.5 mm apart", params = { fill_underlay = "false", row_spacing_mm = "0.5" } },
+]
+
+[[shot]]
+id = "gradient-fade"
+kind = "stitch"
+fixture = "docs/fixtures/fill.svg"
+allow = ["SC-W0329"]
+style = "realistic"
+scale = 8.0
+alt = "The patch with a round hole sewn as a linear gradient fill without a gradient. Its own colour fades out along its angle as its rows thin out to none"
+panels = [
+  { caption = "At 0°", params = { fill_method = "linear_gradient_fill", fill_underlay = "false" } },
+  { caption = "At 30°", params = { fill_method = "linear_gradient_fill", fill_underlay = "false", angle = "30" } },
+  { caption = "At 90°", params = { fill_method = "linear_gradient_fill", fill_underlay = "false", angle = "90" } },
+]
+
+[[shot]]
 id = "cross-methods"
 kind = "stitch"
 fixture = "docs/fixtures/heart.svg"
@@ -970,8 +997,8 @@ fixture = "docs/fixtures/traced-pear.vectorcraft"
 auto = true
 style = "realistic"
 scale = 5.0
-allow = ["SC-I0901", "SC-I0902", "SC-W0906", "SC-I0907", "SC-I0904", "SC-I0504"]
-alt = "The traced pear digitized automatically. Its 3 greens sew as tatami fills, and its stem as a satin column and a running stitch. The light grey square is left out."
+allow = ["SC-I0901", "SC-W0906", "SC-I0907", "SC-I0904", "SC-W0208", "SC-I0504"]
+alt = "The traced pear digitized automatically. Its 3 greens sew as tatami fills, with satin columns at the narrow ends of the olive and dark olive bands. Its stem sews as a satin column and a running stitch, and the light grey square is left out. Thin threads run straight from the stem to the bands' ends, 4 jumps that the machine doesn't cut."
 
 [[shot]]
 id = "auto-widths-drawn"
