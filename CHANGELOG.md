@@ -26,7 +26,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - TS-17B is drawn with 5 tartans for MC-12, and the differential sews them and 4 files of tartans in
     Ink/Stitch too: they agree by every measure. Its wxPython stand-in raises `PyNoAppError` for
     `wx.Colour`, as wxPython does without an app, so Ink/Stitch reads a tartan's colours as from the
-    command line. A user page has pictures of tartan fills. Golden added: `TS-17B.pes`.
+    command line. The glyph differential now sews the 5 tartan fonts' glyphs, which it listed until now.
+    The 35 that set a herringbone are known differences until M10.7, and so is the S-stitch satin column of
+    Colorful's ’, which starts elsewhere than Ink/Stitch's. A user page has pictures of tartan fills. Golden
+    added: `TS-17B.pes`.
 - M10.4: auto-satin routing. `stitchcraft_engine::route` routes satin columns, and the strokes among them,
   as Ink/Stitch's Auto-Route Satin Columns does. Each column is cut into pieces at most 1 mm long along its
   centre line, and the groups of pieces are joined by the shortest jumps in all. A stretch passed twice is
