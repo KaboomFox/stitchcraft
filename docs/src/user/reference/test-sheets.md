@@ -454,9 +454,9 @@ After sewing, check:
 - The square turned 30° sews its crosses square to its own sides, as a letter turned along a path sews its own. Do its rows of crosses run along its edges, with no part cell along them?
 - How long does the sheet take?
 
-## TS-17C — Ripples and routing: satin letters as drawn and routed
+## TS-17C — Ripples, routing and layers: satin letters as drawn and routed, and crossing columns
 
-82.0 × 50.6 mm · 3271 stitches, 12 jumps, 11 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
+82.0 × 125.0 mm · 4322 stitches, 14 jumps, 13 trims, 1 colour change, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -464,7 +464,7 @@ Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](p
 
 ![TS-17C's letters ROUTE drawn as thin lines, twice: at the top as drawn, and at the bottom as Auto-Route Satin Columns routes them. Dashed lines are jumps, which the reference machine leaves as threads to cut by hand, and orange rings mark lock stitches. The routed letters jump only from one letter to the next.](../../images/generated/routing-letters.png)
 
-Threads: Blue.
+Threads: Blue, Red.
 
 After sewing, check:
 
@@ -473,3 +473,5 @@ After sewing, check:
 - On the routed half, do the running stitches under the satins show anywhere, at a column's edge, at its ends or where 2 columns meet?
 - Where a routed column is cut into pieces, is the satin even across the cut, or does a gap, a ridge or a stitch out of line show?
 - The time each half takes, from its first stitch to its last.
+- At the bottom, in red: 2 satin columns 5 mm wide that cross, a bar and a post, each with a contour and a zigzag underlay. On the left they sew as drawn, so the post's underlay lies on the bar's top stitches. On the right they sew with their underlays first: both underlays, then both tops. Compare the 2 crossings: does the right one lie flatter, with less bulk or fewer stitches showing through where the columns meet?
+- On the right, the needle goes back from the post's underlay to the bar for the top stitches. Does its way there show, or a jump thread or its locks where it jumps?
