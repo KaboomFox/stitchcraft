@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-2eb64bcb.js";
+            window.path_to_searchindex_js = "searchindex-10a8c3e2.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-9e6a4383.js"></script>
+        <script src="toc-58fb2aa1.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -258,17 +258,17 @@ cargo build -p stitchcraft-vc-plugin --release --target wasm32-unknown-unknown -
 <p>The build writes <code>target/wasm32-unknown-unknown/release/stitchcraft_vc_plugin.wasm</code>. Copy it into a
 folder for plug-ins as <code>stitchcraft-fill.wasm</code>. Build again with <code>--features stroke</code>, <code>--features satin</code>,
 <code>--features auto</code>, <code>--features pes</code>, <code>--features dst</code>, <code>--features settings</code>, <code>--features testsheet</code>,
-<code>--features stroke-to-satin</code> and <code>--features route-satins</code>, and copy the file each time, as
-<code>stitchcraft-stroke.wasm</code>, <code>stitchcraft-satin.wasm</code>, <code>stitchcraft-auto.wasm</code>, <code>stitchcraft-pes.wasm</code>,
+<code>--features stroke-to-satin</code>, <code>--features route-satins</code> and <code>--features route-runs</code>, and copy the file each
+time, as <code>stitchcraft-stroke.wasm</code>, <code>stitchcraft-satin.wasm</code>, <code>stitchcraft-auto.wasm</code>, <code>stitchcraft-pes.wasm</code>,
 <code>stitchcraft-dst.wasm</code>, <code>stitchcraft-settings.wasm</code>, <code>stitchcraft-testsheet.wasm</code>,
-<code>stitchcraft-stroke-to-satin.wasm</code> and <code>stitchcraft-route-satins.wasm</code>. VectorCraft 0.13 and earlier refuse
-the exporters.</p>
+<code>stitchcraft-stroke-to-satin.wasm</code>, <code>stitchcraft-route-satins.wasm</code> and <code>stitchcraft-route-runs.wasm</code>.
+VectorCraft 0.13 and earlier refuse the exporters.</p>
 <p>In VectorCraft’s desktop app, choose that folder in <strong>Edit › Preferences › Plug-ins &amp; Scratch Disks ›
 Additional Plug-ins Folder</strong>, which is under <strong>Performance &amp; Storage</strong> up to VectorCraft 0.14. VectorCraft
-installs the plug-ins in it whenever it starts, all but Stroke to Satin and Auto-Route Satin Columns. They
+installs the plug-ins in it whenever it starts, all but Stroke to Satin and the 2 Auto-Route filters. They
 ask for more work than a filter usually may do, which VectorCraft lets you allow when you install each on
 its own. Choose <strong>Object › Plug-ins › Install Plug-in…</strong> and pick <code>stitchcraft-stroke-to-satin.wasm</code>, and
-install <code>stitchcraft-route-satins.wasm</code> the same way. VectorCraft asks you first, and once you allow one,
+install <code>stitchcraft-route-satins.wasm</code> and <code>stitchcraft-route-runs.wasm</code> the same way. VectorCraft asks you first, and once you allow one,
 keeps it and installs it again when it starts. The effects are under <strong>Effect › Plug-ins</strong>, the formats in <strong>File ›
 Export › Export As</strong>, and the filters under <strong>Object › Plug-ins</strong>. In VectorCraft on the web, open each
 file with <strong>File › Open</strong> instead, once each time VectorCraft is opened. <a href="#embroider-a-vectorcraft-design">Embroider a VectorCraft
@@ -640,6 +640,8 @@ what is done where shapes meet.</li>
 VectorCraft’s own commands and Graphic Styles</li>
 <li><a href="#route-satin-columns">Route satin columns</a> in VectorCraft, as Ink/Stitch’s Auto-Route Satin Columns
 routes them</li>
+<li><a href="#route-running-stitches">Route running stitches</a> in VectorCraft, as Ink/Stitch’s Auto-Route Running
+Stitch routes them</li>
 <li><a href="#report-a-bug">Report a bug</a> with a bundle that reproduces it (<code>stitch bug-report</code>)</li>
 </ul>
 <p>Planned, each with the milestone that brings its feature:</p>
@@ -1107,6 +1109,65 @@ its place.</li>
 <p>The filter leaves the document as it was and says why (<code>SC-E0820</code>) when no selected path has the satin
 effect of its own, or when 2 objects of the selection mark the start, or 2 the end. A selection too large
 for the work a filter may do stops with <code>SC-E0004</code>: route fewer columns at a time.</p>
+<div style="break-before: page; page-break-before: always;"></div>
+<h1 id="route-running-stitches"><a class="header" href="#route-running-stitches">Route running stitches</a></h1>
+<p>A design drawn line by line jumps from the end of each line to the start of the next, and each jump
+leaves a thread to trim. StitchCraft Auto-Route Running Stitch, a filter in VectorCraft, sews the same
+lines in an order of its own, as Ink/Stitch’s Auto-Route Running Stitch does. It cuts the lines where they
+cross, so that the route can turn there. Where the route has to pass a stretch twice, it runs along it
+first under the stitches it sews over it later. It jumps only where the lines lie apart.</p>
+<h2 id="what-routing-changes-1"><a class="header" href="#what-routing-changes-1">What routing changes</a></h2>
+<p>TS-17C shows it, below its satin letters. On the left, 6 lines are sewn as drawn. Along the bottom lies a
+rail, with a post across it and a brace from the post down to the rail. A hook curves up from the rail, a
+line that crosses itself lies above them, and a tick starts 0.5 mm below the rail. On the right, the same
+lines are routed with Trim jump stitches on. Dashed lines are jumps:</p>
+<!-- shot: routing-lines -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/routing-lines.png" alt="TS-17C’s network of 6 running stitches drawn as thin lines, twice: on the left as drawn, and on the right as Auto-Route Running Stitch routes them with Trim jump stitches on. A rail along the bottom, a post across it, a brace from the post down to the rail, a hook curving up from the rail, a line that crosses itself above them, and a tick beside the rail. Dashed lines are jumps, and orange rings mark lock stitches. As drawn, the machine jumps from each line to the next. Routed, it jumps only out to the line apart and back, and trims before each of those jumps. It reaches the tick, 0.5 mm off the rail, with a stitch."><span class="img-wrapper"><img src="images/generated/routing-lines.png" alt="TS-17C’s network of 6 running stitches drawn as thin lines, twice: on the left as drawn, and on the right as Auto-Route Running Stitch routes them with Trim jump stitches on. A rail along the bottom, a post across it, a brace from the post down to the rail, a hook curving up from the rail, a line that crosses itself above them, and a tick beside the rail. Dashed lines are jumps, and orange rings mark lock stitches. As drawn, the machine jumps from each line to the next. Routed, it jumps only out to the line apart and back, and trims before each of those jumps. It reaches the tick, 0.5 mm off the rail, with a stitch."></span></label></p>
+<!-- /shot -->
+<p>On the left, the needle jumps from each line to the next. On the right, it sews along the rail and turns
+up each branch, running out along it under and back on top. It jumps only to the line apart and back. The
+lines on TS-17C are bean-stitched, and the runs under them are not, so they hide under the bolder stitches.
+To sew the network as drawn beside it routed, write the sheet with <code>stitch testsheet TS-17C</code>, its letters
+above.</p>
+<h2 id="route-a-selection-in-vectorcraft-1"><a class="header" href="#route-a-selection-in-vectorcraft-1">Route a selection in VectorCraft</a></h2>
+<p>Auto-Route Running Stitch is a heavy filter too, from VectorCraft 0.17. Install
+<code>stitchcraft-route-runs.wasm</code> as you install the <a href="#route-satin-columns">satin columns’ filter</a>, and allow
+it (<a href="#install-stitchcraft">install</a>). StitchCraft Stroke must be installed as well, since the route’s lines have
+its effect.</p>
+<ol>
+<li>Give each line the stroke effect itself, with <strong>Effect › Plug-ins › StitchCraft Stroke</strong>, whatever its
+stroke method. A path that sews by its group’s effect stays as it is, and so does a satin column.</li>
+<li>Mark the route’s start and end as for satin columns. A small path named <code>stitch:route-start</code> marks the
+start, and one named <code>stitch:route-end</code> the end. Without them, the route runs from the leftmost point of
+a line to the rightmost.</li>
+<li>Select the lines and the markers, and choose <strong>Object › Plug-ins › StitchCraft Auto-Route Running
+Stitch</strong>.</li>
+</ol>
+<p>The route replaces the lines in one step, which <strong>Edit › Undo</strong> takes back. Each stretch is a line of its
+own with the stroke effect, named as Ink/Stitch names it, AutoRun 1 for a stretch on top or AutoRun
+Underpath 2 for a run under the others. A stretch on top has the settings of the line it comes from, but an
+even number of repeats is lowered by 1, so that it ends where the next one starts. Runs under the others
+keep only the line’s stitch length and tolerance, without its repeats or bean stitch. The stretches go
+where the topmost line was, in the order they sew, and the lines and markers are gone.</p>
+<h2 id="the-options-1"><a class="header" href="#the-options-1">The options</a></h2>
+<p>The dialog offers Ink/Stitch’s options:</p>
+<ul>
+<li><strong>Add nodes at intersections</strong>, on at first: the lines are cut where they cross or touch, and where 2
+pass within 13.2 mm of each other, at their nearest points, so that the route can turn or jump there. Turn
+it off for lines you have drawn with a node of both wherever they meet. The route then meets them only
+there.</li>
+<li><strong>Preserve order of running stitches</strong>: the lines are sewn in the order they are drawn, each joined to
+the next by its shortest jump. The route adds only the runs under the others it needs, and each line’s
+stretches take its place.</li>
+<li><strong>Trim jump stitches</strong>, off at first: the thread is trimmed after a stretch that a jump longer than
+0.75 mm follows. A run under the others right after a trim is left out, as the needle no longer needs it.</li>
+</ul>
+<h2 id="when-it-refuses-1"><a class="header" href="#when-it-refuses-1">When it refuses</a></h2>
+<p>The filter leaves the document as it was and says why (<code>SC-E0820</code>) when no selected path has the stroke
+effect of its own, or when 2 objects of the selection mark the start, or 2 the end. A selection too large
+for the work a filter may do stops with <code>SC-E0004</code>: route fewer lines at a time. Of more than 1,000 lines,
+counting each subpath, none is cut where it meets another (<code>SC-W1004</code>), and the route meets them only at the
+nodes they share.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="report-a-bug"><a class="header" href="#report-a-bug">Report a bug</a></h1>
 <p>When StitchCraft gets a design wrong, a maintainer needs one file to see what you saw: a <strong>bug-report
@@ -3133,18 +3194,21 @@ Arguments:
 <li>The square turned 30° sews its crosses square to its own sides, as a letter turned along a path sews its own. Do its rows of crosses run along its edges, with no part cell along them?</li>
 <li>How long does the sheet take?</li>
 </ul>
-<h2 id="ts-17c--ripples-and-routing-satin-letters-as-drawn-and-routed"><a class="header" href="#ts-17c--ripples-and-routing-satin-letters-as-drawn-and-routed">TS-17C — Ripples and routing: satin letters as drawn and routed</a></h2>
-<p>82.0 × 50.6 mm · 3271 stitches, 12 jumps, 11 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<h2 id="ts-17c--ripples-and-routing-satin-letters-and-a-network-of-lines-as-drawn-and-routed"><a class="header" href="#ts-17c--ripples-and-routing-satin-letters-and-a-network-of-lines-as-drawn-and-routed">TS-17C — Ripples and routing: satin letters and a network of lines, as drawn and routed</a></h2>
+<p>82.0 × 85.0 mm · 3787 stitches, 21 jumps, 20 trims, 1 colour change, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
-<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-17c.png" alt="TS-17C as it will sew, in blue: the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E’s arms. At the bottom the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next."><span class="img-wrapper"><img src="images/generated/testsheet-ts-17c.png" alt="TS-17C as it will sew, in blue: the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E’s arms. At the bottom the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next."></span></label></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-17c.png" alt="TS-17C as it will sew. In blue, the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E’s arms. Below them the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next. At the bottom, in red, a network of 6 bean-stitched lines, twice: on the left sewn as drawn, line by line, with a jump thread from each line to the next, and on the right routed, sewn in one go but for the jump to the line that crosses itself, above the others, and back."><span class="img-wrapper"><img src="images/generated/testsheet-ts-17c.png" alt="TS-17C as it will sew. In blue, the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E’s arms. Below them the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next. At the bottom, in red, a network of 6 bean-stitched lines, twice: on the left sewn as drawn, line by line, with a jump thread from each line to the next, and on the right routed, sewn in one go but for the jump to the line that crosses itself, above the others, and back."></span></label></p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/routing-letters.png" alt="TS-17C’s letters ROUTE drawn as thin lines, twice: at the top as drawn, and at the bottom as Auto-Route Satin Columns routes them. Dashed lines are jumps, which the reference machine leaves as threads to cut by hand, and orange rings mark lock stitches. The routed letters jump only from one letter to the next."><span class="img-wrapper"><img src="images/generated/routing-letters.png" alt="TS-17C’s letters ROUTE drawn as thin lines, twice: at the top as drawn, and at the bottom as Auto-Route Satin Columns routes them. Dashed lines are jumps, which the reference machine leaves as threads to cut by hand, and orange rings mark lock stitches. The routed letters jump only from one letter to the next."></span></label></p>
-<p>Threads: Blue.</p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/routing-lines.png" alt="TS-17C’s network of 6 running stitches drawn as thin lines, twice: on the left as drawn, and on the right as Auto-Route Running Stitch routes them with Trim jump stitches on. A rail along the bottom, a post across it, a brace from the post down to the rail, a hook curving up from the rail, a line that crosses itself above them, and a tick beside the rail. Dashed lines are jumps, and orange rings mark lock stitches. As drawn, the machine jumps from each line to the next. Routed, it jumps only out to the line apart and back, and trims before each of those jumps. It reaches the tick, 0.5 mm off the rail, with a stitch."><span class="img-wrapper"><img src="images/generated/routing-lines.png" alt="TS-17C’s network of 6 running stitches drawn as thin lines, twice: on the left as drawn, and on the right as Auto-Route Running Stitch routes them with Trim jump stitches on. A rail along the bottom, a post across it, a brace from the post down to the rail, a hook curving up from the rail, a line that crosses itself above them, and a tick beside the rail. Dashed lines are jumps, and orange rings mark lock stitches. As drawn, the machine jumps from each line to the next. Routed, it jumps only out to the line apart and back, and trims before each of those jumps. It reaches the tick, 0.5 mm off the rail, with a stitch."></span></label></p>
+<p>Threads: Blue, Red.</p>
 <p>After sewing, check:</p>
 <ul>
-<li>Top: the word ROUTE in satin columns 3 mm wide, sewn as drawn, column by column. Bottom: the same letters as auto-satin routing joins them, cut into pieces, with running stitches under the satins and a trim between letters.</li>
+<li>Top: the word ROUTE in satin columns 3 mm wide, sewn as drawn, column by column. Below it: the same letters as auto-satin routing joins them, cut into pieces, with running stitches under the satins and a trim between letters.</li>
 <li>Count the jump threads of each half, within each letter and between the letters. The routed half should have none within a letter. Its file asks for a trim between letters, which a machine that obeys trims cuts.</li>
 <li>On the routed half, do the running stitches under the satins show anywhere, at a column’s edge, at its ends or where 2 columns meet?</li>
 <li>Where a routed column is cut into pieces, is the satin even across the cut, or does a gap, a ridge or a stitch out of line show?</li>
+<li>Bottom, in red: 6 bean-stitched lines, a rail, a post across it, a brace, a hook, a line that crosses itself and a tick, sewn as drawn on the left and as auto-run routing joins them on the right. Count the jump threads of each: the routed network should jump only to the line that crosses itself and back, trimming before each jump.</li>
+<li>On the routed network, do the plain runs under the bean stitches show beside them, where a branch is sewn out and back?</li>
 <li>The time each half takes, from its first stitch to its last.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from the registry in `stitchcraft-core/src/diag.rs`. Edit the source, not this page. -->
@@ -3252,6 +3316,7 @@ Arguments:
 <tr><td><a href="#sc-e1001"><code>SC-E1001</code></a></td><td>Error</td><td>Nothing to route</td></tr>
 <tr><td><a href="#sc-i1002"><code>SC-I1002</code></a></td><td>Info</td><td>Element left out of the route</td></tr>
 <tr><td><a href="#sc-w1003"><code>SC-W1003</code></a></td><td>Warning</td><td>Piece of a routed satin column may sew otherwise</td></tr>
+<tr><td><a href="#sc-w1004"><code>SC-W1004</code></a></td><td>Warning</td><td>Too many lines to cut where they cross</td></tr>
 </tbody>
 </table>
 </div>
@@ -3828,14 +3893,16 @@ change nothing.</p>
 <p><strong>Error</strong> — VectorCraft selection not routed</p>
 <p>StitchCraft’s Auto-Route Satin Columns, a filter in VectorCraft, routes the selected paths whose own
 StitchCraft effects make them satin columns, with the paths among them whose own effects make them
-strokes, which show where the needle may travel. A path sewn by a group’s effect, or by none, is left
-as it is. The route runs between the objects named <code>stitch:route-start</code> and <code>stitch:route-end</code>
-selected with the paths. It changed nothing, because nothing was selected, because no selected path has
-a satin effect of its own, or because 2 markers of a kind were selected, and which one counts isn’t
-known, as Ink/Stitch’s tool stops at 2 <code>autoroute_start</code> or <code>autoroute_end</code> commands.</p>
-<p>The message says which. Select the satin columns to route, and put StitchCraft’s Satin effect on the
-paths themselves rather than on their group. Keep one start marker and one end marker in the
-selection.</p>
+strokes, which show where the needle may travel. Its Auto-Route Running Stitch routes the selected
+paths whose own effects make them strokes. A path sewn by a group’s effect, or by none, is left as it
+is. The route runs between the objects named <code>stitch:route-start</code> and <code>stitch:route-end</code> selected with
+the paths. It changed nothing, because nothing was selected, because no selected path has an effect of
+its own that the filter routes, or because 2 markers of a kind were selected, and which one counts isn’t
+known, as Ink/Stitch’s Auto-Route Satin Columns stops at 2 <code>autoroute_start</code> or <code>autoroute_end</code>
+commands.</p>
+<p>The message says which. Select the satin columns or the running stitches to route, and put
+StitchCraft’s Satin or Stroke effect on the paths themselves rather than on their group. Keep one start
+marker and one end marker in the selection.</p>
 <h2 id="sc-w0804"><a class="header" href="#sc-w0804">SC-W0804</a></h2>
 <p><strong>Warning</strong> — Element geometry invalid or out of range</p>
 <p>An element’s geometry cannot be used: its path data or its list of points has an error (the path is
@@ -4112,20 +4179,25 @@ settings: in VectorCraft, apply StitchCraft’s Fill, Stroke or Satin effect to 
 <p><strong>Error</strong> — Nothing to route</p>
 <p>Routing joins satin columns, and the running stitches among them, into one route, as Ink/Stitch’s
 Auto-Route Satin Columns does: StitchCraft Auto-Route Satin Columns in VectorCraft, and lettering in a
-font whose <code>auto_satin</code> is on. It routed nothing, because none of the elements it was given is a
-satin column it can route: they are fills, strokes alone, or columns left out of the route
-(<code>SC-I1002</code>). Nothing changed.</p>
-<p>The message counts the elements given. Give the satin columns to route, with the running stitches among
-them that show where the needle may travel.</p>
+font whose <code>auto_satin</code> is on. It joins running stitches alone as Ink/Stitch’s Auto-Route Running
+Stitch does, in StitchCraft Auto-Route Running Stitch. It routed nothing, because none of the elements
+it was given is one the tool can route (<code>SC-I1002</code>). Routing satin columns, they are fills, strokes
+alone, or columns left out of the route. Routing running stitches, they are fills, satin columns, or
+strokes left out of the route. Nothing changed.</p>
+<p>The message names the tool and counts the elements given. Give the satin columns to route, with the
+running stitches among them that show where the needle may travel, or the running stitches.</p>
 <h2 id="sc-i1002"><a class="header" href="#sc-i1002">SC-I1002</a></h2>
 <p><strong>Info</strong> — Element left out of the route</p>
-<p>Routing takes satin columns, and the strokes among them, which show where the needle may travel. This
-element is kept as it is, in its place: it is a fill, a shape digitized automatically, an element whose
-settings don’t read, a satin column whose rails can’t be made, a column or a stroke of no length, or a
-stroke whose first subpath ends where it starts, which shows no way between 2 places. Ink/Stitch’s
-tool leaves a fill and an element of no length as they are too.</p>
+<p>Routing takes satin columns, and the strokes among them, which show where the needle may travel, or
+running stitches alone. This element is kept as it is, in its place: it is a fill, a shape digitized
+automatically, an element whose settings don’t read, a satin column whose rails can’t be made, a
+column or a stroke of no length, or a stroke whose first subpath ends where it starts, which shows no
+way between 2 places. Routing running stitches, it is also a satin column, which that tool doesn’t
+take. Ink/Stitch’s tools leave a fill as it is too, and Auto-Route Satin Columns an element of no
+length.</p>
 <p>The message says why. Nothing needs doing unless the element was meant to be routed: then give it
-settings that read, draw it as a satin column, or open the stroke’s first subpath.</p>
+settings that read, draw it as a satin column or as a stroke, as the tool takes it, or open the
+stroke’s first subpath.</p>
 <h2 id="sc-w1003"><a class="header" href="#sc-w1003">SC-W1003</a></h2>
 <p><strong>Warning</strong> — Piece of a routed satin column may sew otherwise</p>
 <p>Routing cuts each satin column into pieces along its centre line, each drawn with its share of the
@@ -4135,6 +4207,16 @@ points: the column’s rails cross each other there, or a rung crosses a rail tw
 route, and may sew otherwise than the column did there.</p>
 <p>The message names the column. Draw the column with rails that don’t cross and rungs that cross each
 rail once, with more rungs where it turns sharply.</p>
+<h2 id="sc-w1004"><a class="header" href="#sc-w1004">SC-W1004</a></h2>
+<p><strong>Warning</strong> — Too many lines to cut where they cross</p>
+<p>Routing running stitches cuts each line where it crosses or touches another, and where 2 pass within
+50 CSS pixels (13.2 mm) of each other, at their nearest points, so that the route can turn there. That
+compares every pair of lines, so it is done for at most 1,000 lines, each subpath a line and each part
+of one that crosses itself another. These are more, so no line is cut by another: they are routed as
+drawn, each cut only where it crosses itself, as with Ink/Stitch’s Add nodes at intersections off.
+The route joins lines that meet only at points they share, and jumps between the others.</p>
+<p>The message counts the lines. Route fewer running stitches at a time, or turn Add nodes at
+intersections off and draw a node of both lines wherever 2 meet.</p>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from the parameter registry (`stitchcraft-engine/src/registry.rs`) and the deviations ledger. Edit the declaration, not this page. -->
 <h1 id="parameters-12"><a class="header" href="#parameters-12">Parameters</a></h1>
 <p>Every setting a design element can carry, by the key a design stores it under. A parameter that Ink/Stitch
@@ -6922,7 +7004,7 @@ another.</p>
 <tr><td><code>SC-E0817</code></td><td>Error</td><td>VectorCraft test sheet not drawn (in the middle of the artboard, parts of the sheet would lie more than 10 m from the document’s origin)</td><td>M6</td></tr>
 <tr><td><code>SC-I0818</code></td><td>Info</td><td>Ink/Stitch file from an older version, read as Ink/Stitch updates it (the shapes given a default or a setting whose meaning has changed since, such as a fill’s 3 mm stitches before its file version 4, counted for each change)</td><td>M3</td></tr>
 <tr><td><code>SC-E0819</code></td><td>Error</td><td>More than one origin or stop position (Ink/Stitch’s <code>origin</code> command, or more than one object named <code>stitch:origin</code>, 2 or more times, or its <code>stop_position</code> command or <code>stitch:stop-position</code> in a design that stops: no machine file is written, as Ink/Stitch writes none)</td><td>M8</td></tr>
-<tr><td><code>SC-E0820</code></td><td>Error</td><td>VectorCraft selection not routed (no selected path has a satin effect of its own, or 2 objects selected mark the route’s start, or 2 its end: nothing changes)</td><td>M10</td></tr>
+<tr><td><code>SC-E0820</code></td><td>Error</td><td>VectorCraft selection not routed (no selected path has an effect of its own that the filter routes, satin for Auto-Route Satin Columns and stroke for Auto-Route Running Stitch, or 2 objects selected mark the route’s start, or 2 its end: nothing changes)</td><td>M10</td></tr>
 <tr><td><code>SC-I0901</code></td><td>Info</td><td>Shapes digitized automatically (<code>--auto</code>, or VectorCraft’s Auto effect), counted by their stitches (running stitches, satin columns or tatami fills)</td><td>M13</td></tr>
 <tr><td><code>SC-I0902</code></td><td>Info</td><td>Satin column can’t be made; filled (a part of an automatic line that turns more tightly than it is wide, is shorter than a CSS pixel or is a dot its cap draws, or a part of an automatic area whose triangles don’t make a column round one of its lines or whose column would be read back otherwise)</td><td>M13</td></tr>
 <tr><td><code>SC-W0903</code></td><td>Warning</td><td>Line too wide to fill; left out (an automatic line whose filled area would reach more than 10 m from the origin)</td><td>M13</td></tr>
@@ -6931,9 +7013,10 @@ another.</p>
 <tr><td><code>SC-W0906</code></td><td>Warning</td><td>Background left out (the lowest shape, an automatic area that covers the whole design under the other shapes, unless it switches <code>auto_ignore_background</code> off; what shows of it inside the picture is sewn)</td><td>M13</td></tr>
 <tr><td><code>SC-I0907</code></td><td>Info</td><td>Elements sewn in an order of their own (automatic elements, and with <code>--sort-colours</code> every element, sewn in the order StitchCraft chooses, with the thread changes of each order; an element or an order that needs more work than the budget allows keeps paint order)</td><td>M13</td></tr>
 <tr><td><code>SC-I0908</code></td><td>Info</td><td>Layers flattened (each automatic area sews what shows of it under the automatic areas drawn over it, and an area wider than a satin column somewhere is digitized whole under the areas that fill its holes, which sew after it)</td><td>M13</td></tr>
-<tr><td><code>SC-E1001</code></td><td>Error</td><td>Nothing to route (no satin column the route can take among its elements: they stay as they were)</td><td>M10</td></tr>
-<tr><td><code>SC-I1002</code></td><td>Info</td><td>Element left out of the route (a fill, a shape digitized automatically, settings that don’t read, rails that can’t be made, no length, or a stroke whose first subpath ends where it starts: kept as it is)</td><td>M10</td></tr>
+<tr><td><code>SC-E1001</code></td><td>Error</td><td>Nothing to route (no element the tool can take among those given, a satin column for Auto-Route Satin Columns or a stroke for Auto-Route Running Stitch: they stay as they were)</td><td>M10</td></tr>
+<tr><td><code>SC-I1002</code></td><td>Info</td><td>Element left out of the route (a fill, a shape digitized automatically, settings that don’t read, rails that can’t be made, no length, a stroke whose first subpath ends where it starts, or a satin column among running stitches: kept as it is)</td><td>M10</td></tr>
 <tr><td><code>SC-W1003</code></td><td>Warning</td><td>Piece of a routed satin column may sew otherwise (read back, it has other rails or pairs other points: it is kept)</td><td>M10</td></tr>
+<tr><td><code>SC-W1004</code></td><td>Warning</td><td>Too many lines to cut where they cross (more than 1,000 lines routed as running stitches: none is cut by another, as with Add nodes at intersections off)</td><td>M10</td></tr>
 </tbody>
 </table>
 </div>
@@ -10266,8 +10349,8 @@ M8.12’s document writer can write the routed document (<a href="#after-10">roa
 <pre><code class="language-rust ignore">pub fn route(elements: &amp;[Element], how: &amp;Route, settings: &amp;DesignSettings, budget: &amp;Budget) -&gt; Routed;
 
 pub struct Route {
-    pub tool: Tool,              // Satins, as Auto-Route Satin Columns routes; Runs comes with M10.13
-    pub options: Options,        // the tool's options, as its dialog sets them
+    pub tool: Tool,              // Satins, as Auto-Route Satin Columns routes, or Runs, as Auto-Route Running Stitch does
+    pub options: Options,        // the tool's options, as its dialog sets them: tool.defaults() as it opens
     pub start: Option&lt;Point&gt;,
     pub end: Option&lt;Point&gt;,
 }
@@ -10281,12 +10364,12 @@ pub struct Routed {
 pub struct Piece {
     pub element: Element,        // a column's piece, a stroke's stretch, or a run under the others
     pub from: usize,             // the element it was made from, by its place in `elements`
-    pub under: bool,             // a run that a column's satin, sewn after it, covers
+    pub under: bool,             // a run that the stitches sewn after it cover
 }</code></pre>
 <p>It reads each element with the design’s settings, as the generators read it. A satin column’s rails and
-rungs are read as the satin generators read them, made first for a column drawn as one path, and a stroke
-is read by its first subpath. An element it doesn’t take stays as it is, out of <code>replaced</code>, and <code>SC-I1002</code>
-says why. It writes ordinary elements, which every
+rungs are read as the satin generators read them, made first for a column drawn as one path. Among satin
+columns a stroke is read by its first subpath, and routing running stitches, by each of its subpaths. The
+function leaves an element it can’t route as it is, out of <code>replaced</code>, and <code>SC-I1002</code> says why. It writes ordinary elements, which every
 host sews as it sews any. Each piece says which element it comes from, so that a host can place and name
 it. The function charges its budget for every loop over pieces, and keeps them in ordered collections.
 Ties go to the earlier element and to the earlier piece along it, so a route is the same on every platform
@@ -10296,19 +10379,20 @@ and in every host. A route that needs more work than the budget allows gives bac
 <div class="table-wrapper">
 <table>
 <thead>
-<tr><th>Option</th><th>Tool</th><th>What it does</th></tr>
+<tr><th>Option</th><th>Tool</th><th>Default</th><th>What it does</th></tr>
 </thead>
 <tbody>
-<tr><td>Preserve order</td><td>both</td><td>Each element is joined to the next in the order they come in, which the route keeps</td></tr>
-<tr><td>Trim jump stitches</td><td>both</td><td>The thread is trimmed after a piece that a long jump follows</td></tr>
-<tr><td>Keep original paths</td><td>satin columns</td><td>The host keeps the original elements beside the route</td></tr>
-<tr><td>Add nodes at intersections</td><td>running stitches, on by default</td><td>Strokes are split where they cross or pass near each other</td></tr>
+<tr><td>Preserve order</td><td>both</td><td>off</td><td>Each element is joined to the next in the order they come in, which the route keeps</td></tr>
+<tr><td>Trim jump stitches</td><td>both</td><td>on for satin columns, off for running stitches</td><td>The thread is trimmed after a piece that a long jump follows</td></tr>
+<tr><td>Keep original paths</td><td>satin columns</td><td>off</td><td>The host keeps the original elements beside the route</td></tr>
+<tr><td>Add nodes at intersections</td><td>running stitches</td><td>on</td><td>Strokes are cut where they cross, touch or pass near each other</td></tr>
 </tbody>
 </table>
 </div>
-<p>Each option is declared once beside the function, in <code>OPTIONS</code>, with Ink/Stitch’s name, label and default
-and a help of its own. The filters’ dialogs are made from those declarations, as the stitch types’ dialogs
-are made from the registry, and so are the differential’s command lines.</p>
+<p>Each tool declares its options once beside the function, in the list <code>Tool::options</code> gives, with
+Ink/Stitch’s names, labels and defaults and a help of their own. The filters’ dialogs are made from those
+declarations, as the stitch types’ dialogs are made from the registry, and so are the differential’s command
+lines.</p>
 <h2 id="auto-satin-m104"><a class="header" href="#auto-satin-m104">Auto-satin (M10.4)</a></h2>
 <p>Ink/Stitch’s Auto-Route Satin Columns routes a selection in these steps:</p>
 <ol>
@@ -10324,7 +10408,9 @@ piece. The pieces’ ends are where the route can go, and 2 ends at the same poi
 <li><strong>Jumps.</strong> Pieces joined end to end form groups. Without Preserve order, the jumps join the groups at
 their nearest ends, and of all such sets of jumps the one whose lengths add up to the least is taken,
 a minimum spanning tree of the groups. With it, each element is joined to the next by the shortest
-jump between their ends, which the route can take only forwards.</li>
+jump between their ends, which the route can take only forwards. A jump is added only where no link
+already leads from its one end to its other. Ink/Stitch’s graph has one link between 2 places, so
+there its jump is that link.</li>
 <li><strong>Ends.</strong> The route starts at the end nearest its start, or at the leftmost end, and stops at the end
 nearest its end, or at the rightmost end. With Preserve order, the route starts at one of the first
 element’s ends and stops at one of the last element’s.</li>
@@ -10368,28 +10454,59 @@ graph keeps the one added later (<code>DEV-ROUTE-005</code>).</li>
 <p>How the searches break ties, and which published algorithms they are, is in the module docs of
 <code>stitchcraft_engine::route</code>.</p>
 <h2 id="auto-run-m1013"><a class="header" href="#auto-run-m1013">Auto-run (M10.13)</a></h2>
-<p>Ink/Stitch’s Auto-Route Running Stitch routes a selection of strokes the same way, with these
-differences:</p>
+<p>Ink/Stitch’s Auto-Route Running Stitch routes a selection of strokes in these steps:</p>
 <ol>
-<li><strong>What it routes.</strong> Strokes of every stroke method. Each subpath is a line, cut where it crosses
-itself.</li>
-<li><strong>Splits.</strong> With Add nodes at intersections, each line is also cut where it crosses or touches
-another. 2 lines that pass within 50 CSS pixels (13.2 mm) of each other without touching are cut where
-they come nearest. A stretch shorter than 0.1 CSS pixels is left out. Without the option, each subpath
-is one line, cut only where it crosses itself.</li>
-<li><strong>Pieces.</strong> Each stretch between 2 points of a line is a piece. Pieces meet at the points they share.
-The jumps, the ends and the way are found as for satin columns.</li>
-<li><strong>Elements.</strong> Pieces in a row make one element, until a jump comes, the run goes from on top to under
-or back, or a piece on top comes from another stroke. A piece passed twice is under the first time and
-on top the second time.</li>
-<li><strong>Settings.</strong> An element on top keeps its stroke’s settings, but an even number of repeats is lowered
-by 1, so that it ends at its far end. Under the others, an element is a running stitch with the
-stroke’s stitch length and tolerance, without repeats or bean stitch, and a manual stitch where the
-stroke was one.</li>
-<li><strong>Trims.</strong> With Trim jump stitches, a jump longer than 0.75 mm trims the thread after the element
-before it, and the elements under the others right after a trim are left out.</li>
-<li><strong>Names.</strong> AutoRun 1, AutoRun Underpath 2, and on, counting every element.</li>
+<li><strong>What it routes.</strong> Strokes, whatever their stroke method. Each subpath is a line, flattened within 0.1
+CSS pixels, or a manual stitch’s nodes. A satin column and a fill stay as they are. StitchCraft also
+leaves as it is a shape digitized automatically, an element whose settings don’t read, and a stroke of
+no length, which Ink/Stitch deletes. <code>SC-I1002</code> names each.</li>
+<li><strong>Cuts.</strong> With Add nodes at intersections, a line is first cut where it crosses or touches itself, into
+lines in order along it. Then each line is compared with each line after it, a stroke’s own subpaths and
+their parts among them. 2 lines are cut where they cross, touch or run along each other. 2 that pass
+within 50 CSS pixels (13.2 mm) of each other without touching are each cut at its point nearest the
+other, found as the geometry library finds the first of equally near points, and lines exactly 50 pixels
+apart are cut too. Without the option, no line is cut, and lines meet only at the points they share.</li>
+<li><strong>Pieces.</strong> Each stretch of a line between 2 cuts is cut at its own points into straight pieces, the
+graph’s links from each point to the next. The places, the jumps, the ends and the way are found as for
+satin columns (steps 3 to 5 above). With Preserve order, a stroke whose pieces don’t join up, such as one
+with subpaths apart, also has its parts joined each to each, by a jump the route can take either way.</li>
+<li><strong>Under and on top.</strong> A piece the route passes twice is under the others the first time and on top the
+last time: the route runs out along a branch under, and back along it on top.</li>
+<li><strong>Elements.</strong> Pieces in a row make one element, which ends at a jump and where the route turns from on
+top to under or back. It also ends before a piece on top from another stroke, or a piece under from a
+stroke whose run under the others sews otherwise.</li>
+<li><strong>Settings.</strong> An element on top is a copy of its stroke with the stroke’s settings, but an even number
+of repeats is lowered by 1, so that it ends at its far end. One under the others is a running stitch
+with its stroke’s running stitch length and tolerance, or a manual stitch where the stroke is one,
+without repeats or bean stitch. Each has its stroke’s thread and stroke, and none of its clips,
+positions or target point.</li>
+<li><strong>Trims.</strong> With Trim jump stitches, off as the dialog opens, a jump longer than 0.75 mm trims the thread
+after the element before it, and the elements under the others right after a trim are left out. The
+route doesn’t trim at its end, but where it ends with a long jump back, that jump trims.</li>
+<li><strong>Names.</strong> AutoRun 1, AutoRun Underpath 2, and on, counting every element made, those a trim leaves out
+not among them.</li>
 </ol>
+<p>Comparing every 2 lines costs work that grows as the square of their count, so of more than 1,000 lines,
+none is cut by another, and <code>SC-W1004</code> says so. The lines are then routed as with the option off.</p>
+<p>StitchCraft routes as Ink/Stitch does in each of these steps, and differs in a few places, each in the
+ledger:</p>
+<ul>
+<li>2 lines that cross are cut at one point, and a cut within a millionth of a millimetre of a point already
+cut or drawn is that point. Ink/Stitch cuts each line at the crossing’s projection onto it, and joins 2
+lines only where its cuts agree to 16 digits, so slanted lines it cuts can miss each other
+(<code>DEV-ROUTE-007</code>).</li>
+<li>2 lines that meet in several stretches, or in a stretch and at a point, are cut wherever they meet, and a
+stretch between 2 cuts is routed however short it is. Ink/Stitch cuts such lines nowhere, and leaves out
+a stretch of 0.1 CSS pixels or less (<code>DEV-ROUTE-008</code>).</li>
+<li>Each element has the settings and the thread of the stroke it runs along. Ink/Stitch gives a stretch on
+top that a run under the others follows the settings of the stroke that run goes along, and a run under
+several strokes the last one’s (<code>DEV-ROUTE-006</code>).</li>
+<li>Either of 2 jumps in a row trims when it is long, where Ink/Stitch looks only at the first
+(<code>DEV-ROUTE-009</code>).</li>
+<li>With Preserve order, a stroke’s parts are joined at the ends of their pieces, so all of them are sewn,
+where Ink/Stitch can leave a subpath apart unsewn (<code>DEV-ROUTE-010</code>). 2 pieces that join the same 2 places
+are both sewn, as for satin columns (<code>DEV-ROUTE-005</code>).</li>
+</ul>
 <h2 id="start-and-end-2"><a class="header" href="#start-and-end-2">Start and end</a></h2>
 <p>Ink/Stitch’s <code>autoroute_start</code> and <code>autoroute_end</code> commands are tied to one of the elements selected,
 and each marks the point where its symbol is. Their connectors are hidden, and the symbols can be moved
@@ -10402,7 +10519,7 @@ that sews every line exactly twice and that no step plans, starts at the <code>a
 <p>In a VectorCraft document, from M10.4, an object named <code>stitch:route-start</code> or <code>stitch:route-end</code> marks
 the route’s start or end at the centre of the box round its anchors, as <code>stitch:start</code> marks a shape’s
 start (<a href="#commands-in-v1">commands in v1</a>). The markers a filter reads are those
-among the paths it is given, selected with them or lying in a selected group. The filter refuses a
+among the paths it is given, selected with them or lying in a selected group. Each filter refuses a
 selection with 2 markers of a kind, with a coded error, since a filter can’t warn. It deletes the
 markers it used, unless the original paths are kept. A marker without an anchor that reads marks
 nothing, and stays. <code>stitch export</code> leaves route markers
@@ -10436,15 +10553,17 @@ back to the first of them for the top stitches (<a href="#underlays-first">under
 <tr><td><code>REQ-ROUTE-006</code></td><td>A route is the same each time, and one that runs out of work leaves the elements as they were, with <code>SC-E0004</code></td><td>M10.4</td></tr>
 <tr><td><code>REQ-ROUTE-007</code></td><td>What a route takes and leaves, and how its pieces are named</td><td>M10.4</td></tr>
 <tr><td><code>REQ-ROUTE-008</code></td><td>TS-17C’s letters, routed by Ink/Stitch’s tool and by the function, sew alike by every measure of the differential</td><td>M10.4</td></tr>
+<tr><td><code>REQ-ROUTE-009</code></td><td>Auto-run routing takes the strokes, each subpath a line, and leaves the rest as they are</td><td>M10.13</td></tr>
+<tr><td><code>REQ-ROUTE-010</code></td><td>Lines are cut where they cross, touch or run along each other, and at their nearest points within 50 CSS pixels, with Add nodes at intersections</td><td>M10.13</td></tr>
+<tr><td><code>REQ-ROUTE-011</code></td><td>A piece passed twice runs under the others the first time, and each element has its stroke’s settings, a run under the others its lengths alone</td><td>M10.13</td></tr>
+<tr><td><code>REQ-ROUTE-012</code></td><td>The pieces are routed as satin columns’ are, a jump longer than 0.75 mm trims with Trim jump stitches, and the elements are named AutoRun and AutoRun Underpath</td><td>M10.13</td></tr>
+<tr><td><code>REQ-ROUTE-013</code></td><td>TS-17C’s network of lines, routed by Ink/Stitch’s tool and by the function, sews alike by every measure of the differential</td><td>M10.13</td></tr>
 <tr><td><code>REQ-VC-018</code></td><td>The Auto-Route Satin Columns filter replaces the selection with the route in one undo step, within a heavy filter’s budget</td><td>M10.4</td></tr>
-<tr><td><code>REQ-VC-019</code></td><td>It reads the route markers selected with the paths, and refuses 2 of a kind</td><td>M10.4</td></tr>
+<tr><td><code>REQ-VC-019</code></td><td>Both filters read the route markers selected with the paths, and refuse 2 of a kind</td><td>M10.4, M10.13</td></tr>
+<tr><td><code>REQ-VC-020</code></td><td>The Auto-Route Running Stitch filter replaces the selected strokes with the route in one undo step, within a heavy filter’s budget</td><td>M10.13</td></tr>
 </tbody>
 </table>
 </div>
-<p>M10.13 adds the requirements of Auto-Route Running Stitch. Strokes are split where they cross, and where
-2 pass within 13.2 mm of each other unless the option is off. A run under the others sews without repeats
-or bean stitch, and a stretch on top keeps its settings, an even number of repeats lowered by 1. A jump
-longer than 0.75 mm trims.</p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="image-to-embroidery"><a class="header" href="#image-to-embroidery">Image to embroidery</a></h1>
 <!-- implements: crates/stitchcraft-engine/src/auto/**, apps/stitchcraft-cli/src/commands/palette.rs, apps/stitchcraft-cli/src/trace.rs -->
@@ -12000,7 +12119,7 @@ from 0.14 the keys that say how the dialog shows a parameter), so a manifest Vec
 the tests before a release.</p>
 <p><strong>Modules.</strong> The plug-in crate builds one module for each family, chosen by a Cargo feature named after
 the family: <code>stroke</code>, <code>satin</code> or <code>fill</code>, one for each machine format, by its extension: <code>pes</code> or <code>dst</code>, and
-one for each filter: <code>settings</code>, <code>stroke-to-satin</code>, <code>testsheet</code> and <code>route-satins</code>. Without one it builds M0.6’s <em>hello</em>
+one for each filter: <code>settings</code>, <code>stroke-to-satin</code>, <code>testsheet</code>, <code>route-satins</code> and <code>route-runs</code>. Without one it builds M0.6’s <em>hello</em>
 effect. The modules contain the same code, which the native tests run whichever it is, and the feature only
 picks the manifest and the run that <code>vc_manifest</code> and <code>vc_run</code> serve. <code>cargo xtask compat contract</code> builds
 every module, notes their sizes and loads them into VectorCraft’s host.</p>
@@ -12310,7 +12429,8 @@ Stitch (<code>&lt;ns&gt;.route-runs</code>) routes strokes.</p>
 <p><strong>What they read.</strong> VectorCraft gives a filter the selected paths in paint order, with the paths in the
 selected groups and layers, and Preserve order keeps that order. Each path routes as a satin column when
 the first of its own StitchCraft effects that is on is the satin effect, and as a stroke when it is the
-stroke effect. VectorCraft gives a
+stroke effect. Auto-Route Running Stitch takes the strokes alone, and leaves a satin column as it is, as
+Ink/Stitch’s tool leaves one. VectorCraft gives a
 filter each path’s own effect records, and none of its groups’. So a path that sews by a group’s effect
 (<code>REQ-VC-006</code>) stays as it is, as Ink/Stitch’s tool leaves a fill. So does a path without a StitchCraft
 effect of its own. A selection with nothing to route is refused with a coded error, whose hint says to
@@ -12324,8 +12444,8 @@ the pieces replace the paths they come from and the markers used. A filter can�
 Ink/Stitch puts its route in a new group after the last element. So the pieces go in their sewing order
 where the topmost path routed was, in its group or layer. With Preserve order, Ink/Stitch moves each piece
 to the end of its element’s group, and the filter puts the pieces of each path, the runs along it among
-them, where the path was, in sewing order. With Keep original paths, the paths and markers stay as they
-are, and the route goes above the topmost path. A group the run leaves empty stays in the document. Each
+them, where the path was, in sewing order. With Keep original paths, an option of Auto-Route Satin Columns
+alone, the paths and markers stay as they are, and the route goes above the topmost path. A group the run leaves empty stays in the document. Each
 piece keeps the other effects of the path it comes from, as Stroke to Satin keeps a line’s. Its paint is
 that path’s stroke 1 CSS pixel wide, or black for a path without a stroke.</p>
 <p><strong>Budget.</strong> Both are heavy filters (VectorCraft 0.17), as Stroke to Satin is. Each run gets 1 G
@@ -12334,9 +12454,12 @@ preview in its dialog. Stroke to Satin’s run, which makes a column’s rails f
 233 million instructions for one line (<a href="#tools-stroke-to-satin-and-test-sheet">above</a>). A route makes the
 rails of every column drawn as one path that it routes. The engine’s work is priced in instructions, as Stroke to Satin
 prices it: 450 a unit, a tenth of the run’s spend for reading the paths and 8 tenths for routing them.
-The filter stops with <code>SC-E0004</code> before VectorCraft would stop it. In VectorCraft’s host, a contract test
-routes TS-17C’s letters, drawn as lines with the satin effect, and prints what the route takes. With
-VectorCraft’s command line, a Level B case routes 2 lines and checks that the route exports as <code>stitch export</code> sews it.</p>
+The filter stops with <code>SC-E0004</code> before VectorCraft would stop it. Auto-Route Running Stitch doesn’t make
+rails, and most of its work for many lines is comparing them 2 by 2 for the cuts, at the same price. In
+VectorCraft’s host, a contract test routes TS-17C’s letters, drawn as lines with the satin effect, and
+another its network of lines with the stroke effect, and each prints what the route takes. With
+VectorCraft’s command line, a Level B case of each filter routes 2 or 3 lines and checks that the route
+exports as <code>stitch export</code> sews it.</p>
 <h3 id="live-effect-previews-within-v1-budgets"><a class="header" href="#live-effect-previews-within-v1-budgets">Live-effect previews within v1 budgets</a></h3>
 <p>A live effect gets 50 million instructions, plus 4,000 for each byte of its input, and 5 seconds. Spike
 M0.6 measured what JSON costs in VectorCraft’s host (<code>wasmi</code> 2.0, in VectorCraft 0.12.0 and on <code>main</code> at
@@ -13325,8 +13448,8 @@ nearer the one before than the machine’s shortest stitch left out. A needle po
 where a path’s move-to draws nothing after it, is left out with the jumps and the trim that lead to it
 (<code>DEV-SVG-011</code>).</p>
 <p><code>REQ-SVG-008</code>, <code>REQ-AUTO-021</code>, <code>REQ-AUTO-022</code>, <code>REQ-RUN-013</code>, <code>REQ-SAT-029</code>, <code>REQ-FILL-CON-008</code>,
-<code>REQ-FILL-CIR-007</code>, <code>REQ-FILL-CRS-007</code>, <code>REQ-FILL-CRS-012</code>, <code>REQ-FONT-001</code> and <code>REQ-ROUTE-008</code> are the
-requirements of level L3. The other runs of the suite leave them and their cases to this one. The corpus is
+<code>REQ-FILL-CIR-007</code>, <code>REQ-FILL-CRS-007</code>, <code>REQ-FILL-CRS-012</code>, <code>REQ-FONT-001</code>, <code>REQ-ROUTE-008</code> and
+<code>REQ-ROUTE-013</code> are the requirements of level L3. The other runs of the suite leave them and their cases to this one. The corpus is
 designs the SVG reader sews in full, with their settings (<code>REQ-SVG-009</code>), trim and stop commands and the file
 version. A case may name a test sheet drawn as a design instead (<code>sheet</code>). Both programs sew an SVG file
 of the elements StitchCraft sews the sheet with, written with their parameters, their start, end and
@@ -13351,12 +13474,15 @@ paths, of each kind of command, which both programs sew at the same nodes (<code
 <code>conformance/inkstitch/README.md</code> says how to run it by hand and how to add a case.</p>
 <p><strong>Routes.</strong> A route is a design of its own, so sewing StitchCraft’s route in both programs would compare 2
 sewings of one route. A case with a <code>[route]</code> table instead routes elements of a sheet in each program
-(<code>REQ-ROUTE-008</code>, <code>xtask/src/conformance/routing.rs</code>). Ink/Stitch’s Auto-Route Satin Columns routes the
-SVG file of the elements, with the table’s options, and writes its route, which Ink/Stitch sews.
-<code>stitchcraft_engine::route</code> routes the same elements with the same options, and StitchCraft sews its route.
-The 2 PES files are measured as any case’s. The <code>route-ts17c</code> cases route TS-17C’s letters as drawn, with
-the options at their defaults and with Preserve order on and trims off, and <code>ts17c</code> sews the whole sheet,
-whose lower letters StitchCraft routed, in both programs.</p>
+(<code>REQ-ROUTE-008</code>, <code>REQ-ROUTE-013</code>, <code>xtask/src/conformance/routing.rs</code>). The table’s <code>tool</code> names
+Ink/Stitch’s tool, Auto-Route Satin Columns or Auto-Route Running Stitch, which routes the SVG file of the
+elements with the table’s options and writes its route for Ink/Stitch to sew. <code>stitchcraft_engine::route</code>
+routes the same elements with the same options, and StitchCraft sews its route. The 2 PES files are
+measured as any case’s. The <code>route-ts17c</code> cases route TS-17C’s letters as drawn, once with the options at
+their defaults and once with Preserve order on and trims off. The <code>route-ts17c-lines</code> cases route its
+network of running stitches as drawn, once with the options at their defaults and once each with Trim jump
+stitches on, Preserve order on and Add nodes at intersections off. <code>ts17c</code> sews the whole sheet, whose
+lower letters and right-hand lines StitchCraft routed, in both programs.</p>
 <p><strong>Centre lines.</strong> Sewing what StitchCraft chose can’t find a choice that is wrong: TS-13B’s small T sewed
 a Γ, the left arm of its bar left out of its centre line, and the differential agreed by every measure.
 The <code>centre-lines</code> cases compare a step before the stitches (<code>REQ-AUTO-022</code>,
@@ -15762,7 +15888,7 @@ element’s underlay just before that element’s top stitches.</p>
 <tr><td>M10.10</td><td>Guided fill’s parallel offset and buffer strategies and the anchor line, as Ink/Stitch sews them. Parallel offset makes each row an offset curve of the guide, a row spacing past the last, and the rows keep their distance where copies would crowd. Buffer makes closed rows round the guide, of one subpath or more. Rows that close inside the region are joined to the rows round them and to those that meet its outline, and the fill is sewn as one route. A stroke with Ink/Stitch’s anchor-line marker sets where each closed row’s needle points start</td><td>requirements written. TS-17B’s offset and buffered guided fills sew in Ink/Stitch as in StitchCraft by every measure of the differential, and the user page shows each strategy</td></tr>
 <tr><td>M10.11</td><td>Guided ripples, as Ink/Stitch sews them. With a guide line, copies of the stroke move along it, scaled from <code>scale_start</code> to <code>scale_end</code> on <code>scale_axis</code>, and turned with the guide while <code>rotate_ripples</code> is on. A satin column as the guide, or a guide of several subpaths, sets the copies between its rails, as <code>satin_guide_pattern_position</code> places them, with <code>reverse_rails</code> and <code>swap_satin_rails</code>. The anchor line across the stroke sets the copies’ direction. <code>grid_size_mm</code> adds lines across the ripples, sewn first with <code>grid_first</code>, and <code>manual_pattern_placement</code> keeps the stroke’s own nodes as needle points. A clip path cuts the ripples as M8.5 cuts a stroke, and the pieces are routed as a tatami fill’s rows. Ondulamarif XL sews 48 closed lines on satin guides</td><td>requirements written. TS-17C’s guided ripples sew in Ink/Stitch as in StitchCraft by every measure of the differential, and the user page shows them</td></tr>
 <tr><td>M10.12</td><td>Linear gradient fill, as Ink/Stitch sews it. The fill’s linear gradient is read with its stops, their colours and the transforms of its vector, from SVG and from VectorCraft’s paints. Rows square to the gradient’s vector, a row spacing apart and staggered, cover the region. Between 2 stops the rows go to the 2 colours in a fixed pattern that gives the second colour more of them towards its stop, and a transparent stop leaves its rows out. Each colour’s rows are routed as one fill, with the travel stitches on the outline, in the order of the stops. The underlay sews in the first stop’s colour. Without a gradient, the fill’s colour fades out along <code>angle</code>, with a warning</td><td>requirements written. TS-17B’s gradients sew in Ink/Stitch as in StitchCraft by every measure of the differential, a user page shows gradient fills in pictures, and the type is listed for MC-12</td></tr>
-<tr><td>M10.13</td><td>Auto-run routing, as Ink/Stitch’s Auto-Route Running Stitch routes, with M10.4’s function, which StitchCraft Auto-Route Running Stitch, a heavy filter of its own, calls in VectorCraft (<a href="#adr-0017-routing-is-one-engine-function-which-vectorcrafts-filters-and-lettering-call">ADR-0017</a>). Running stitches are split where they cross, and at their nearest points where 2 pass within 50 CSS pixels (13.2 mm) of each other, unless the user turns that off. The pieces are routed as M10.4 routes a satin’s pieces, between the same markers. A piece the route passes twice is sewn first as a plain running stitch underneath, without repeats or bean stitch. The pieces on top keep their settings, an even number of repeats lowered by 1. A jump longer than 0.75 mm is trimmed when the user asks</td><td>requirements written. TS-17C’s network of lines, routed by Ink/Stitch’s tool and by StitchCraft’s function, sews alike by every measure of the differential. The filter routes it within a heavy filter’s budget in VectorCraft’s host, and a how-to page shows lines before and after in pictures</td></tr>
+<tr><td>M10.13 ✅</td><td>Auto-run routing, as Ink/Stitch’s Auto-Route Running Stitch routes, with M10.4’s function, which StitchCraft Auto-Route Running Stitch, a heavy filter of its own, calls in VectorCraft (<a href="#adr-0017-routing-is-one-engine-function-which-vectorcrafts-filters-and-lettering-call">ADR-0017</a>, <a href="#auto-run-m1013">routing tools</a>). Running stitches are split where they cross, and at their nearest points where 2 pass within 50 CSS pixels (13.2 mm) of each other, unless the user turns that off. The pieces are routed as M10.4 routes a satin’s pieces, between the same markers. A piece the route passes twice is sewn first as a plain running stitch underneath, without repeats or bean stitch. The pieces on top keep their settings, an even number of repeats lowered by 1. A jump longer than 0.75 mm is trimmed when the user asks</td><td>requirements written (<code>REQ-ROUTE-009</code> to <code>REQ-ROUTE-013</code>, <code>REQ-VC-020</code>). TS-17C’s network of lines, routed by Ink/Stitch’s tool and by StitchCraft’s function, sews alike by every measure of the differential, once with the options at their defaults and once each with Trim jump stitches on, Preserve order on and Add nodes at intersections off. A contract test routes it, drawn as lines with the stroke effect, with the filter within a heavy filter’s budget in VectorCraft’s host, and a Level B case routes 3 lines with VectorCraft’s command line. A how-to page shows lines before and after in pictures, and TS-17C is drawn with them for MC-12 (2026-11-08)</td></tr>
 <tr><td>M10.14 ✅ 🧪</td><td>Per-layer ordering. Today an element’s top stitches follow its underlay at once. The step chooses how a design sets the underlays of a group of elements to sew before their top stitches, as a setting of the group or of each element. It also chooses how VectorCraft documents and SVG files keep the setting, whether automatic digitizing uses it, and what Ink/Stitch sews from such a file. Ink/Stitch has no such order at <code>d59c9ab</code>, and its experimental sew stack, not planned here, sews each element’s layers one after another</td><td>Decision recorded in the design, <a href="#adr-0018-underlays-first-is-a-setting-of-each-element-shared-by-runs-of-elements-in-one-thread">ADR-0018</a>: <code>underlays_first</code>, a toggle every stitch type shares, StitchCraft’s own and off by default. Consecutive elements that set it and sew in one thread form a run, which a trim or a stop ends, and a run sews all its underlays before its top stitches, each layer with its own neighbours. VectorCraft documents keep it in the objects’ effects, a group’s effect giving it to every path in the group, and SVG files as <code>inkstitch:underlays_first</code> on each shape, which Ink/Stitch doesn’t read. Automatic digitizing and lettering don’t set it (2026-11-03)</td></tr>
 <tr><td>M10.15</td><td>Per-layer ordering, as <a href="#adr-0018-underlays-first-is-a-setting-of-each-element-shared-by-runs-of-elements-in-one-thread">ADR-0018</a> decided (<a href="#underlays-first">underlays first</a>). The registry declares <code>underlays_first</code> among the settings every stitch type shares, off by default and StitchCraft’s own, so each stitch family’s dialog in VectorCraft shows it, and an SVG shape keeps it as an <code>inkstitch:</code> attribute. Consecutive elements that set it and sew in one thread form a run, which ends after a trim or a stop. A run of 2 or more sews its elements’ underlays in their order, then their top stitches in the same order. The generators sew an element’s underlay and its top apart, each from the needle before it to what the next layer offers, from one reading of the element and within its budget. Assembly tags the underlays’ stitches underlay, and puts the last element’s trim or stop after its top stitches. A note names an element whose setting joins no run</td><td>requirements written, and a design without the setting plans as before, every golden file unchanged. TS-17C sews 2 satin columns of one thread that cross, as drawn beside the same 2 with their underlays first, and the user page shows them. Ink/Stitch has no such order, and no differential case applies. The differential’s file of TS-17C leaves that pair out</td></tr>
 <tr><td>MC-12 🧵</td><td><strong>TS-17A</strong>, <strong>TS-17B</strong> and <strong>TS-17C</strong> (samplers of cross stitch, of the new fills, and of the ripples and routing tools); kit: <code>stitch testsheet</code></td><td>report filed; the new types’ defaults confirmed</td></tr>
@@ -15936,7 +16062,7 @@ middle of the artboard (<code>REQ-VC-015</code>). A checkpoint can so sew a shee
 <tr><td><strong>TS-16</strong> An Ink/Stitch file (M8)</td><td>A design written as Ink/Stitch writes a file, which <code>stitch plan</code> reads, each step of M8 drawing its part. Its fill and its satin column start and end at Ink/Stitch’s commands. From M8.4 a red fill 40 × 30 mm sews from its top-right corner to its bottom-left one, and a blue satin column 40 mm long starts in its middle and ends three quarters along. From M8.5 a green fill is cut by its clip path, a circle, to a quarter of a disc, and a black zigzag running stitch by a U-shaped one into 2 pieces. From M8.8 the origin lies off the design’s middle, on the blue column’s top edge 10 mm in from its left end, and a stop after the blue column sends the frame to a stop position 20 mm right of the fill and 10 mm above it. From M8.9 the file turns the design right on export, about its origin, so its first 4 parts sew 100 mm wide and 40 mm tall. From M8.10 a clone of the red fill, turned 45° right, sews after them, in red, below the fill once the design is turned: its rows turn with it, and it starts and ends at the corners turned from the fill’s. From M8.13 2 black lines 40 mm long sew last, above the rest once the design is turned, each locked at both ends with a custom lock drawn as a path and trimmed after: straight lines and a curve at 100 %, and lines and an arc at 150 %. It is sewn beside the PES file the differential’s Ink/Stitch writes of it</td><td>Where each element starts and ends, against its commands. Whether the clipped edges sew where the clip path cuts them, and the clone’s rows lie at its turned angle. Do the drawn locks hold when the tail is pulled? Whether the machine puts the origin or the design’s middle at the hoop’s centre, where the frame waits at the stop, and whether the design sews turned right about its origin. Every difference between the 2 sew-outs</td><td>MC-11</td></tr>
 <tr><td><strong>TS-17A</strong> Cross stitch (M10)</td><td>Cross stitch fills (M10.1, M10.2), drawn before MC-12, each trimmed after, a row to a thread, every sample but the turned square on the canvas’s grid. From M10.1, in red, squares 24 mm wide of simple crosses on grids of 2 and 3 mm, with 2 and 4 threads. Below them in blue, the 2 mm square with 2 threads and the 3 mm one with 4, flipped, and a K 24 mm tall drawn as Ink/Stitch’s cross-stitch fonts draw their letters, on a 2 mm grid with 2 threads, grown by 0.1 mm, its slanted edges cutting their cells in half. From M10.2, in green, squares of upright, dense upright, double and Smyrna crosses on the 3 mm grid, the double crosses with 2 threads as Jersey 15 sews them. Below them in black, squares of half crosses with 3 threads, plain and flipped, and a square 18 mm wide turned 30° with its grid, as lettering along a path turns a glyph’s (114 × 114 mm)</td><td>Whether every cross’s top diagonal lies the same way, and whether the stitches through the cells’ middles show. Fabric between the crosses at 2 and 4 threads, and the grid that reads best at the letter’s size. How the layers of the double and Smyrna crosses look, and whether the half crosses’ travel stitches show on their edges. Gaps between the dense upright crosses, and the turned square’s stepped edges. The time the sheet takes</td><td>MC-12</td></tr>
 <tr><td><strong>TS-17B</strong> New fills (M10)</td><td>Tartan, guided and linear gradient fills (M10.6, M10.7, M10.9, M10.10, M10.12), drawn before MC-12, each trimmed after. Tartans 40 mm square, their setts mirrored at the ends or repeated, one with a weft that differs from its warp and one with stripes narrow enough to sew as runs, beside herringbones 3 mm wide. Leaves filled along an S-shaped guide, copied, offset and buffered. Rectangles in gradients of 2 and 3 stops, one of them transparent</td><td>Whether a tartan’s warp and weft read as a weave and its runs lie flat on its fills, and how its herringbone turns. The spacing of the guided rows round the guide’s bends, and where the copied rows crowd. Whether a gradient’s colours blend with no step between its sections, and whether the transparent stop leaves a clean gap. Colour changes, jumps and time</td><td>MC-12</td></tr>
-<tr><td><strong>TS-17C</strong> Ripples and routing (M10)</td><td>Ripple stitches (M10.8, M10.11), drawn before MC-12, along a column of rails and rungs, from an open line towards a target point and from a closed line spiralling in. Ripples along a guide line and closed lines on a satin guide, beside a ripple with a grid. The routing tools (M10.4, M10.13): satin letters as drawn beside the same letters after auto-satin routing, and a network of running stitches as drawn beside it after auto-run routing. Drawn from M10.4 with its part, the word ROUTE in satin letters 20 mm tall with a centre walk underlay, as drawn above and routed 30 mm below, the other parts to come with their steps. 2 satin columns of one thread that cross, as drawn beside the same 2 with their underlays first (M10.15)</td><td>Whether the ripples’ lines keep their spacing, and how their joins look. Jumps, trims and time on the routed halves against the halves as drawn, and whether the runs under the satins show. Whether the crossing columns, their underlays sewn first, lie flatter than as drawn</td><td>MC-12</td></tr>
+<tr><td><strong>TS-17C</strong> Ripples and routing (M10)</td><td>Ripple stitches (M10.8, M10.11), drawn before MC-12, along a column of rails and rungs, from an open line towards a target point and from a closed line spiralling in. Ripples along a guide line and closed lines on a satin guide, beside a ripple with a grid. The routing tools (M10.4, M10.13): satin letters as drawn beside the same letters after auto-satin routing, and a network of running stitches as drawn beside it after auto-run routing. Drawn from M10.4 with its part, the word ROUTE in satin letters 20 mm tall with a centre walk underlay, as drawn above and routed 30 mm below. From M10.13, below them in red, 6 bean-stitched running stitches that cross, branch and pass near each other, as drawn on the left and routed with trims on the right. The other parts are to come with their steps. 2 satin columns of one thread that cross, as drawn beside the same 2 with their underlays first (M10.15)</td><td>Whether the ripples’ lines keep their spacing, and how their joins look. Jumps, trims and time on the routed halves against the halves as drawn, and whether the runs under the satins show, and under the bean stitches of the lines. Whether the crossing columns, their underlays sewn first, lie flatter than as drawn</td><td>MC-12</td></tr>
 </tbody>
 </table>
 </div>
