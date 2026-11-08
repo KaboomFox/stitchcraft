@@ -442,7 +442,13 @@ mod tests {
     #[test]
     fn a_shot_of_a_sheet_s_elements_plans_those_alone() {
         let root = util::root();
-        let part = |starts: &[&str]| Shot { elements: starts.iter().map(ToString::to_string).collect(), ..probe(Some("TS-17C"), None, &[]) };
+        // Each part leaves out needle points too near the one before, as docs/shots.toml allows its shots to.
+        let allow = vec!["SC-I0504".to_string()];
+        let part = |starts: &[&str]| Shot {
+            elements: starts.iter().map(ToString::to_string).collect(),
+            allow: allow.clone(),
+            ..probe(Some("TS-17C"), None, &[])
+        };
         // TS-17C's letters alone, as drawn and routed, and its lines alone: each a picture of its own.
         let (letters, lines) = (stitch(&root, &part(&["ts17c:drawn:", "ts17c:routed:"])).unwrap(), stitch(&root, &part(&["ts17c:lines-"])).unwrap());
         assert!(letters.len() == 1 && lines.len() == 1 && letters != lines);
