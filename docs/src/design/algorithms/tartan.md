@@ -188,8 +188,12 @@ Ink/Stitch's geometry library divides a run's length by the stitch length in pix
 is a whole number its rounding can give one stitch more. A run 40 mm long in stitches of 2.5 mm takes 17
 stitches there, against 16 here.
 
-The glyph differential sews the tartan fonts' glyphs too. Those that set a herringbone are sewn otherwise
-until M10.7, and `conformance/inkstitch/glyphs.toml` lists them as known.
+The glyph differential sews the tartan fonts' 313 glyphs too. Their files are older than Ink/Stitch's
+version 4, and there a fill without a longest stitch of its own sews stitches 3 mm long, as Ink/Stitch
+updates it ([files of older versions](../svg-input.md#files-of-older-inkstitch-versions)). 277 of the glyphs
+agree, or differ only as the ledger explains. The 35 that set a herringbone are sewn otherwise until M10.7,
+and `conformance/inkstitch/glyphs.toml` lists them as known. It lists Colorful's ’ as known too: its
+S-stitch satin column starts elsewhere than Ink/Stitch's.
 
 ## Test sheet
 

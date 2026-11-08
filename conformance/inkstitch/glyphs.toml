@@ -88,3 +88,24 @@ within_mm = 0.3
 [[excuse]]
 measures = ["size", "place", "trims", "jumps", "overlap"]
 deviation = "DEV-SVG-011"
+
+# Known differences: follow-up work, not yet explained by the ledger or fixed.
+
+# Ink/Stitch's tartan herringbones, which StitchCraft sews as straight rows until M10.7 and says so
+# (SC-W0324). 35 glyphs of Colorful, Emilio 20 tartan and Kum Tsoan tartan set herringbones 1.6 to 5 mm
+# wide and differ in their stitches, and 5 of them in their trims and jumps too: Colorful's Œ takes 2,201
+# stitches in StitchCraft and 2,862 in Ink/Stitch.
+[[known]]
+measures = ["stitches", "trims", "jumps"]
+follow_up = "M10.7 sews tartan herringbones"
+codes = ["SC-W0324"]
+
+# Colorful's ’ (glyph 111): its S-stitch satin column, sewn alone without the glyph's tartan, overlaps
+# Ink/Stitch's by 0.575, with the same 81 stitches and size. It starts 1.7 mm from where Ink/Stitch's starts,
+# and its needle points along the rails lie elsewhere. The glyph was listed until M10.6 sewed its tartan.
+[[known]]
+measures = ["overlap"]
+follow_up = "the S-stitch satin column of Colorful's ’ starts elsewhere than Ink/Stitch's"
+fonts = ["colorful"]
+codes = ["SC-W0208"]
+saying = "73.8°"
