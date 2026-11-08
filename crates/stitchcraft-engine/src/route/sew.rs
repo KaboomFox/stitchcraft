@@ -36,7 +36,7 @@ use crate::route::trim::{self, TRIMMED};
 use crate::route::{Options, Piece};
 
 /// The key of a running stitch's length.
-const RUN_LENGTH: &str = "running_stitch_length_mm";
+pub(super) const RUN_LENGTH: &str = "running_stitch_length_mm";
 
 /// The keys of the lengths a run under a column takes its stitch length from, the first the column sets.
 const RUN_LENGTHS: [&str; 3] = [RUN_LENGTH, "center_walk_underlay_stitch_length_mm", "contour_underlay_stitch_length_mm"];

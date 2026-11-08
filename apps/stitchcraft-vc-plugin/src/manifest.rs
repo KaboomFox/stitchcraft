@@ -66,6 +66,7 @@ use stitchcraft_vectorcraft::settings::SETTINGS_FILTER;
 pub use stitchcraft_vectorcraft::{PREVIEW_LEVEL, plugin_id};
 
 use crate::dialog::{self, Ui, registry_ui};
+use crate::route_runs::ROUTE_RUNS;
 use crate::route_satins::ROUTE_SATINS;
 use crate::stroke_to_satin::STROKE_TO_SATIN;
 use crate::testsheet::TESTSHEET;
@@ -325,6 +326,25 @@ pub fn route_satins() -> Manifest {
                       Auto-Route Satin Columns does: each column cut where the route needs, runs under the satin and long jumps trimmed. \
                       StitchCraft Satin and Stroke must be installed.",
         params: crate::route_satins::options(),
+        extensions: Vec::new(),
+        budget: BudgetClass::Heavy,
+    }
+}
+
+/// The manifest of the Auto-Route Running Stitch filter, which replaces the selected running stitches with one
+/// route ([`crate::route_runs`]): a heavy filter, from VectorCraft 0.17, whose dialog offers Ink/Stitch's
+/// options.
+pub fn route_runs() -> Manifest {
+    Manifest {
+        id: plugin_id(ROUTE_RUNS),
+        name: "StitchCraft Auto-Route Running Stitch",
+        version: env!("CARGO_PKG_VERSION"),
+        kind: "filter",
+        author: AUTHOR,
+        description: "Replaces the selected running stitches with one route through them, as Ink/Stitch's Auto-Route Running Stitch \
+                      does: the lines cut where they cross, runs under the others where the route passes twice, and long jumps trimmed. \
+                      StitchCraft Stroke must be installed.",
+        params: crate::route_runs::options(),
         extensions: Vec::new(),
         budget: BudgetClass::Heavy,
     }

@@ -10,10 +10,22 @@
 //! circles, and the T and the E have strokes that branch, so the route cuts columns and runs under them.
 //! The differential routes the letters above with Ink/Stitch's tool too, and compares what both sew
 //! (`REQ-ROUTE-008`).
+//!
+//! M10.13's part, below the letters: a network of 6 running stitches in red ([`LINES`]), each sewn there and
+//! back with bean stitch. On the left it is sewn as drawn, line by line. On the right, [`BESIDE`] mm over,
+//! the same lines are sewn as `stitchcraft_engine::route` routes them with Auto-Route Running Stitch, its
+//! Trim jump stitches on (`REQ-ROUTE-009` to `REQ-ROUTE-012`). A rail crosses a post, and a brace and a
+//! hook, a curve, stand on them, so the route sews a loop and branches, the branches under the others
+//! first. A line that crosses itself lies apart, and a tick lies 0.5 mm off the rail, so the route jumps to
+//! both, and trims after the long jump only. The lines meet where both are drawn through a node, as
+//! Ink/Stitch's help says to draw lines for routing: its graph joins 2 lines it cuts elsewhere only where
+//! its cuts agree to the last digits (`DEV-ROUTE-007`). The other lines pass within 13.2 mm of each other,
+//! so the route cuts them at their nearest points. The differential routes the lines on the left with
+//! Ink/Stitch's tool too (`REQ-ROUTE-013`).
 
 use super::designed::{Drawing, KAPPA, Start};
 use super::sketch::SheetError;
-use super::{BLUE, thread};
+use super::{BLUE, RED, thread};
 use crate::design::{Segment, Subpath};
 use crate::route::{Options, Route, Tool};
 use stitchcraft_core::Point;
@@ -28,6 +40,15 @@ pub const LETTERS: [&str; 11] = ["r-stem", "r-bowl", "r-leg", "o", "u", "t-bar",
 /// Each column's settings: a centre walk underlay, as lettering's columns have.
 const SETTINGS: [(&str, &str); 1] = [("center_walk_underlay", "true")];
 
+/// How far right of the network as drawn its routed copy lies (mm).
+pub const BESIDE: f64 = 44.0;
+
+/// The network's lines, by name, in the order they are drawn.
+pub const LINES: [&str; 6] = ["rail", "post", "brace", "hook", "loop", "tick"];
+
+/// Each line's settings: a running stitch 3 mm long, sewn there and back, and each stitch 3 times over.
+const LINE_SETTINGS: [(&str, &str); 3] = [("running_stitch_length_mm", "3"), ("repeats", "2"), ("bean_stitch_repeats", "1")];
+
 /// Draws TS-17C.
 pub(super) fn drawing() -> Result<Drawing, SheetError> {
     let blue = thread(BLUE)?;
@@ -35,8 +56,38 @@ pub(super) fn drawing() -> Result<Drawing, SheetError> {
     letters(&mut d, "drawn", 0.0, &blue)?;
     let mut routed = Drawing::new("ts17c");
     letters(&mut routed, "routed", BELOW, &blue)?;
-    d.routed(&routed, &Route { tool: Tool::Satins, options: Options::default(), start: None, end: None })?;
+    d.routed(&routed, &Route { tool: Tool::Satins, options: Tool::Satins.defaults(), start: None, end: None })?;
+    let red = thread(RED)?;
+    network(&mut d, "lines-drawn", 0.0, &red)?;
+    let mut lines = Drawing::new("ts17c");
+    network(&mut lines, "lines-routed", BESIDE, &red)?;
+    let trimmed = Options { trim: true, ..Tool::Runs.defaults() };
+    d.routed(&lines, &Route { tool: Tool::Runs, options: trimmed, start: None, end: None })?;
     Ok(d)
+}
+
+/// The network of lines, named after `half`, `right` mm right of where it is drawn first, sewn with
+/// `thread`. A rail along the bottom, through nodes where the others meet it; a post that crosses it, through
+/// a node where the brace leaves it; the brace from the post down to the rail, and a hook, a quarter circle,
+/// up from the rail to the right. Apart from them, a line that crosses itself, and a tick 0.5 mm below the
+/// rail.
+pub(super) fn network(d: &mut Drawing, half: &str, right: f64, thread: &Thread) -> Result<(), SheetError> {
+    let at = |points: &[(f64, f64)]| points.iter().map(|&(x, y)| (x + right, y)).collect::<Vec<_>>();
+    let name = |line: &str| format!("{half}:{line}");
+    d.polyline(&name("rail"), &at(&[(0.0, 82.0), (8.0, 82.0), (20.0, 82.0), (26.0, 82.0), (38.0, 82.0)]), thread, &LINE_SETTINGS)?;
+    d.polyline(&name("post"), &at(&[(8.0, 62.0), (8.0, 68.0), (8.0, 82.0), (8.0, 85.0)]), thread, &LINE_SETTINGS)?;
+    d.polyline(&name("brace"), &at(&[(8.0, 68.0), (20.0, 82.0)]), thread, &LINE_SETTINGS)?;
+    // A quarter circle of radius 10 about (36, 82), from the rail up to (36, 72).
+    let k = 10.0 * KAPPA;
+    let point = |x: f64, y: f64| Point::new(x + right, y);
+    let hook = Subpath {
+        start: point(26.0, 82.0)?,
+        segments: vec![Segment::Cubic(point(26.0, 82.0 - k)?, point(36.0 - k, 72.0)?, point(36.0, 72.0)?)],
+        closed: false,
+    };
+    d.along(&name("hook"), hook, thread, &LINE_SETTINGS)?;
+    d.polyline(&name("loop"), &at(&[(14.0, 61.0), (24.0, 67.0), (24.0, 61.0), (17.0, 66.0)]), thread, &LINE_SETTINGS)?;
+    d.polyline(&name("tick"), &at(&[(34.0, 82.5), (35.0, 85.0)]), thread, &LINE_SETTINGS)
 }
 
 /// The letters ROUTE, their columns named after `half`, `down` mm below the top, sewn with `thread`.
@@ -216,6 +267,63 @@ mod tests {
         assert!(columns.iter().all(|c| c.params.iter().eq(settings) && c.thread == blue && c.name.is_none()), "{columns:?}");
     }
 
+    /// The lines `network` draws `right` mm right of where they are drawn on the left, named after `half`.
+    fn lines(half: &str, right: f64) -> Vec<Element> {
+        let mut d = Drawing::new("ts17c");
+        network(&mut d, half, right, &thread(RED).unwrap()).unwrap();
+        d.design().unwrap().elements().to_vec()
+    }
+
+    /// TS-17C's elements whose ids start with `prefix`.
+    fn sheet_elements(prefix: &str) -> Vec<Element> {
+        let design = super::super::find("TS-17C").unwrap().design().unwrap().unwrap();
+        design.elements().iter().filter(|element| element.id.as_str().starts_with(prefix)).cloned().collect()
+    }
+
+    #[test]
+    fn ts17c_s_network_is_6_bean_stitched_lines_that_meet_at_their_nodes() {
+        let drawn: [(&str, &str); 6] = [
+            ("rail", "M0,82 L8,82 L20,82 L26,82 L38,82"),
+            ("post", "M8,62 L8,68 L8,82 L8,85"),
+            ("brace", "M8,68 L20,82"),
+            // A quarter circle of radius 10 about (36, 82), its control points 0.552 of the radius from its ends.
+            ("hook", "M26,82 C26,76.477 30.477,72 36,72"),
+            ("loop", "M14,61 L24,67 L24,61 L17,66"),
+            ("tick", "M34,82.5 L35,85"),
+        ];
+        assert_eq!(drawn.map(|(name, _)| name), LINES);
+        let lines = lines("lines-drawn", 0.0);
+        let found: Vec<(String, Vec<String>)> = lines.iter().map(|line| (line.id.to_string(), svg(line))).collect();
+        let want: Vec<(String, Vec<String>)> =
+            drawn.iter().map(|(name, path)| (format!("ts17c:lines-drawn:{name}"), vec![path.to_string()])).collect();
+        assert_eq!(found, want);
+        // Each a running stitch 3 mm long, sewn there and back and bean-stitched, in red.
+        let red = thread(RED).unwrap();
+        assert!(lines.iter().all(|line| LINE_SETTINGS.iter().all(|&(key, value)| line.params.get(key) == Some(value)) && line.thread == red));
+        // The sheet sews them on the left as drawn, below the letters.
+        assert_eq!(sheet_elements("ts17c:lines-drawn:"), lines);
+    }
+
+    #[test]
+    fn ts17c_s_network_on_the_right_is_routed_as_ink_stitch_routes_it() {
+        // As Ink/Stitch's Auto-Route Running Stitch routes the lines on the left with Trim jump stitches on, run
+        // as a black box at d59c9ab: 18 elements, 6 of them runs under the others, and a trim after the run up
+        // the post, before the jump to the line that crosses itself, and after that line, before the jump back.
+        let routed = sheet_elements("ts17c:lines-routed:");
+        let sewn: Vec<(String, bool)> =
+            routed.iter().map(|piece| (piece.name.clone().unwrap_or_default(), piece.params.get("trim_after") == Some("true"))).collect();
+        let under = [2, 4, 7, 10, 13, 16];
+        let name = |n: usize| if under.contains(&n) { format!("AutoRun Underpath {n}") } else { format!("AutoRun {n}") };
+        assert_eq!(sewn, (1..=18).map(|n| (name(n), n == 2 || n == 5)).collect::<Vec<_>>());
+        // 44 mm right of the lines as drawn, from the rail's left end to its right end.
+        let points: Vec<Point> = routed.iter().flat_map(|piece| piece.shape.path().points().collect::<Vec<_>>()).collect();
+        let at = |x: f64, y: f64| Point::new(x + BESIDE, y).unwrap();
+        assert_eq!((points.first(), points.last()), (Some(&at(0.0, 82.0)), Some(&at(38.0, 82.0))));
+        let (xs, ys): (Vec<f64>, Vec<f64>) = points.iter().map(|q| (q.x(), q.y())).unzip();
+        let span = |vs: &[f64]| (vs.iter().copied().fold(f64::INFINITY, f64::min), vs.iter().copied().fold(f64::NEG_INFINITY, f64::max));
+        assert_eq!((span(&xs), span(&ys)), ((BESIDE, BESIDE + 38.0), (61.0, 85.0)));
+    }
+
     #[test]
     fn ts17c_s_routed_letters_are_the_drawn_ones_30_mm_lower() {
         let (drawn, routed) = (columns("drawn", 0.0), columns("routed", BELOW));
@@ -235,8 +343,9 @@ mod tests {
         // The letters as drawn, then the pieces of the route of those below, each named after its column. The
         // route sews each letter in one go, and the jump to the next letter, more than 1 mm long, trims.
         let design = super::super::find("TS-17C").unwrap().design().unwrap().unwrap();
-        let (drawn, pieces) = design.elements().split_at(LETTERS.len());
+        let (drawn, rest) = design.elements().split_at(LETTERS.len());
         assert_eq!(drawn, columns("drawn", 0.0).as_slice());
+        let pieces: Vec<&Element> = rest.iter().take_while(|piece| piece.id.as_str().starts_with("ts17c:routed:")).collect();
         let letter = |piece: &Element| piece.id.as_str().strip_prefix("ts17c:routed:").and_then(|name| name.chars().next());
         let sewn: Vec<(Option<char>, bool)> = pieces.iter().map(|piece| (letter(piece), piece.params.get("trim_after") == Some("true"))).collect();
         for (k, &(of, trims)) in sewn.iter().enumerate() {
