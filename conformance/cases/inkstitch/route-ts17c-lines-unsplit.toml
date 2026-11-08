@@ -1,0 +1,12 @@
+# TS-17C's network of running stitches as drawn, routed with Add nodes at intersections off: the lines meet only
+# at the nodes they share, and nothing is cut where it crosses or passes near another (REQ-ROUTE-013). Each
+# program sews its own route.
+id = "inkstitch-route-ts17c-lines-unsplit"
+requirements = ["REQ-ROUTE-013"]
+kind = "inkstitch"
+sheet = "TS-17C"
+
+[route]
+elements = "ts17c:lines-drawn:"
+tool = "runs"
+break_up = false

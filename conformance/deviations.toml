@@ -677,6 +677,41 @@ requirements = ["REQ-ROUTE-001"]
 [[deviation]]
 id = "DEV-ROUTE-005"
 area = "routing"
-summary = "2 pieces that join the same 2 places, such as a stroke from one end of a column's piece to its other, are both routed and sewn. Ink/Stitch's graph holds one link between 2 places, and the piece added later replaces the one before, which its route then doesn't sew."
-reason = "Every piece of the elements a route takes is sewn (REQ-ROUTE-002). Ink/Stitch's graph was read at d59c9ab (lib/stitches/auto_satin.py), and networkx's Graph keeps one edge between 2 nodes."
-requirements = ["REQ-ROUTE-002"]
+summary = "2 pieces that join the same 2 places are both routed and sewn: a stroke from one end of a column's piece to its other, or the stretch 2 running stitches share where they run along each other, or a line that runs back along itself. Ink/Stitch's graph holds one link between 2 places, and the piece added later replaces the one before, which its route then doesn't sew. Its Auto-Route Running Stitch also merges a line's stretch that runs back over itself into one before it cuts the line."
+reason = "Every piece of the elements a route takes is sewn (REQ-ROUTE-002, REQ-ROUTE-011). Ink/Stitch's graph was read at d59c9ab (lib/stitches/auto_satin.py and auto_run.py), and networkx's Graph keeps one edge between 2 nodes. Auto-Route Running Stitch nodes a line with shapely's unary_union, which, run on a line that runs back over itself, gives the stretch it covers twice once."
+requirements = ["REQ-ROUTE-002", "REQ-ROUTE-011"]
+
+[[deviation]]
+id = "DEV-ROUTE-006"
+area = "routing"
+summary = "Each element of an auto-run route has the settings of the stroke it runs along, and a run under the others along 2 strokes whose runs sew otherwise is 2 elements. Ink/Stitch gives a stretch on top that a run under the others follows the settings and the colour of the stroke that run goes along, and a run under the others along several strokes the settings of the last. Run as a black box at d59c9ab on a rail, a post and a brace of 3 settings, it sews the rail's first stretch and the brace's stretch on top with the post's settings, and the run under the post and the brace as a manual stitch, the brace's method."
+reason = "A stretch of a stroke sews as the stroke does, with its own stitch length, repeats and colour (REQ-ROUTE-011). Ink/Stitch's tool was read at d59c9ab (path_to_elements in lib/stitches/auto_run.py): it takes the settings of the stroke of the piece it is at when it ends the element before. Where every stroke has the same settings and thread, as on TS-17C, both programs sew alike."
+requirements = ["REQ-ROUTE-011"]
+
+[[deviation]]
+id = "DEV-ROUTE-007"
+area = "routing"
+summary = "2 lines that cross are cut at one point, the point where they cross, and a cut within a millionth of a millimetre of a point already on a line or cut before is that point, so the lines meet at one place of the route's graph. Ink/Stitch cuts each line at the crossing's projection onto it, and keys its graph's places by their coordinates written with 16 digits: where the 2 cuts differ in a last digit, its lines don't meet there, and its route joins them by a jump of no length, which ends an element. Run as a black box at d59c9ab, 4 slanted lines that cross 5 times met at 1 of their crossings, and a rail and a post that cross at right angles, 8 and 82 mm from the origin, didn't meet."
+reason = "Lines that cross on the drawing meet in the route, whatever rounding their coordinates take (REQ-ROUTE-010). Ink/Stitch's cuts were read at d59c9ab (LineSegments and build_graph in lib/stitches/auto_run.py). TS-17C's lines meet where both are drawn through a node, where Ink/Stitch's lines meet too."
+requirements = ["REQ-ROUTE-010"]
+
+[[deviation]]
+id = "DEV-ROUTE-008"
+area = "routing"
+summary = "2 lines that meet in several stretches, or in a stretch and at a point, are cut at the ends of each stretch and at each point. A stretch of a line between 2 cuts is kept however short it is. Ink/Stitch takes only a crossing in one point or several, or one stretch, and cuts lines that meet otherwise nowhere, so its route doesn't turn from one to the other where they meet. It leaves out a stretch 0.1 CSS pixels long or shorter, which its route doesn't sew. Run as a black box at d59c9ab, a line along which another runs for 2 stretches was cut nowhere, and a line crossed by 2 others 0.01 mm apart lost the stretch between them."
+reason = "A route can turn wherever lines meet, and every stretch of the strokes it takes is sewn (REQ-ROUTE-010). Ink/Stitch's cuts were read at d59c9ab (LineSegments in lib/stitches/auto_run.py), which takes a Point, a MultiPoint or a LineString from shapely's intersection and nothing else, and keeps a stretch only when it is longer than 0.1."
+requirements = ["REQ-ROUTE-010"]
+
+[[deviation]]
+id = "DEV-ROUTE-009"
+area = "routing"
+summary = "Of 2 jumps in a row in an auto-run route, either one longer than 0.75 mm trims the thread after the element before them, with Trim jump stitches. Ink/Stitch looks only at the first. Run as a black box at d59c9ab on a rail, a short line 5 mm from it and a line 0.53 mm from the short line's end, its route jumps back from the last to the rail in 2 jumps, 0.53 mm and 5 mm, and doesn't trim, so the needle crosses 5.35 mm untrimmed."
+reason = "With Trim jump stitches, no jump longer than 0.75 mm is left untrimmed (REQ-ROUTE-012). Ink/Stitch's trims were read at d59c9ab (path_to_elements in lib/stitches/auto_run.py): it decides a trim only at a jump that ends an element."
+requirements = ["REQ-ROUTE-012"]
+
+[[deviation]]
+id = "DEV-ROUTE-010"
+area = "routing"
+summary = "With Preserve order, the parts of a stroke that its own pieces don't join, such as subpaths apart, are joined each to each at their nearest places, ends of their pieces, so the route sews every part. Ink/Stitch joins a stroke's subpaths at their nearest points, which may be no place of its graph, and its route then never reaches a subpath that the other jumps don't join. Run as a black box at d59c9ab on 3 lines whose middle one has a second subpath 28 mm below its first, its route leaves the second subpath unsewn, and deletes it with the stroke."
+reason = "Every piece of the strokes a route takes is sewn (REQ-ROUTE-012). Ink/Stitch's jumps were read at d59c9ab (_add_ordered_jumps and _insert_jump in lib/stitches/utils/autoroute.py)."
+requirements = ["REQ-ROUTE-012"]

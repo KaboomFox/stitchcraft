@@ -11,6 +11,8 @@ Each guide solves one problem:
   VectorCraft's own commands and Graphic Styles
 - [Route satin columns](route-satin-columns.md) in VectorCraft, as Ink/Stitch's Auto-Route Satin Columns
   routes them
+- [Route running stitches](route-running-stitches.md) in VectorCraft, as Ink/Stitch's Auto-Route Running
+  Stitch routes them
 - [Sew underlays first](sew-underlays-first.md) where satin columns cross, or a border lies over a fill
 - [Report a bug](report-a-bug.md) with a bundle that reproduces it (`stitch bug-report`)
 

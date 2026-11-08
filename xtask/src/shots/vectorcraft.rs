@@ -124,9 +124,14 @@ fn problems(shot: &Shot) -> Vec<String> {
             }
         }
     }
-    let stitch_fields = shot.sheet.is_some() || shot.fixture.is_some() || !shot.panels.is_empty() || !shot.allow.is_empty() || shot.style.is_some();
+    let stitch_fields = shot.sheet.is_some()
+        || !shot.elements.is_empty()
+        || shot.fixture.is_some()
+        || !shot.panels.is_empty()
+        || !shot.allow.is_empty()
+        || shot.style.is_some();
     if stitch_fields {
-        found.push("`sheet`, `fixture`, `panels`, `allow` and `style` are a stitch shot's".to_string());
+        found.push("`sheet`, `elements`, `fixture`, `panels`, `allow` and `style` are a stitch shot's".to_string());
     }
     if shot.picture.is_some() {
         found.push("`picture` is a picture shot's".to_string());
