@@ -8,20 +8,20 @@ first under the stitches it sews over it later. It jumps only where the lines li
 
 ## What routing changes
 
-TS-17C shows it, below its satin letters. On the left, 6 lines are sewn as drawn. Along the bottom lies a
+TS-17C shows it, below its satin letters. On the left, 6 lines are sewn line by line. Along the bottom lies a
 rail, with a post across it and a brace from the post down to the rail. A hook curves up from the rail, a
 line that crosses itself lies above them, and a tick starts 0.5 mm below the rail. On the right, the same
 lines are routed with Trim jump stitches on. Dashed lines are jumps:
 
 <!-- shot: routing-lines -->
-![TS-17C's network of 6 running stitches drawn as thin lines, twice: on the left as drawn, and on the right as Auto-Route Running Stitch routes them with Trim jump stitches on. A rail along the bottom, a post across it, a brace from the post down to the rail, a hook curving up from the rail, a line that crosses itself above them, and a tick beside the rail. Dashed lines are jumps, and orange rings mark lock stitches. As drawn, the machine jumps from each line to the next. Routed, it jumps only out to the line apart and back, and trims before each of those jumps. It reaches the tick, 0.5 mm off the rail, with a stitch.](../../images/generated/routing-lines.png)
+![TS-17C's network of 6 running stitches drawn as thin lines, twice: on the left sewn line by line, and on the right as Auto-Route Running Stitch routes them with Trim jump stitches on. A rail along the bottom, a post across it, a brace from the post down to the rail, a hook curving up from the rail, a line that crosses itself above them, and a tick beside the rail. Dashed lines are jumps, and orange rings mark lock stitches. Sewn line by line, the machine jumps from each line to the next. Routed, it jumps only out to the line apart and back, and trims before each of those jumps. It reaches the tick, 0.5 mm off the rail, with a stitch.](../../images/generated/routing-lines.png)
 <!-- /shot -->
 
 On the left, the needle jumps from each line to the next. On the right, it sews along the rail and turns
 up each branch, running out along it under and back on top. It jumps only to the line apart and back. The
 lines on TS-17C are bean-stitched, and the runs under them are not, so they hide under the bolder stitches.
-To sew the network as drawn beside it routed, write the sheet with `stitch testsheet TS-17C`, its letters
-above.
+To sew the network line by line beside it routed, write the sheet with `stitch testsheet TS-17C`, its
+letters above.
 
 ## Route a selection in VectorCraft
 

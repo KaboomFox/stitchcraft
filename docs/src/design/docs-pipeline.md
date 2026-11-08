@@ -163,7 +163,9 @@ stall without failing. On 2026-11-01 its install ran for 49 minutes until it was
 takes under 2. So each `apt-get` has a time limit, 3 minutes to update the package lists and 5 to
 install, and an install that stalls or fails is tried again, 3 times in all. A desktop that can't be
 installed fails its job with an error that says so. The jobs that use the action stop after 30 minutes,
-or 45 for the refresh, where GitHub's limit is 6 hours.
+or 45 for the refresh, where GitHub's limit is 6 hours. The window probe and `shots-ui` take the pinned
+release's archive from the Actions cache when a run kept it, as the
+[compatibility gate](compatibility-gate.md#level-b--end-to-end-slower-tens-of-minutes) explains.
 
 **Screenshots: the same pixels, but for the frame timings.** The window opens at 1440 × 900 pixels, drawn
 by llvmpipe, and a screenshot takes about 0.65 s. Above the status bar, screenshots of one window match
