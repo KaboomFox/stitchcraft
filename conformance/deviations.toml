@@ -222,6 +222,13 @@ reason = "The element before ends near where the column starts, so the needle's 
 requirements = ["REQ-GEN-001", "REQ-GEN-003"]
 
 [[deviation]]
+id = "DEV-SAT-013"
+area = "satin"
+summary = "2 subpaths of a satin column meet where they cross or touch but for rounding: a meeting a billionth of a segment's length past its end counts. Ink/Stitch counts only an exact one (shapely's intersects), and a rung that rounding leaves a hair short of a rail meets only the other rail there. With 3 subpaths, Ink/Stitch then takes that rung and the rail it meets as the rails, and the other rail as a rung that reaches neither. It sews the column between them, or where that sews no stitch, sews nothing, calling the column not stitchable."
+reason = "A rung drawn to end on a rail meets it, whatever the arithmetic of the drawing program or of the transforms leaves of its end, and the drawing's edges are the rails (REQ-SAT-005). Ink/Stitch's rule was read at d59c9ab (lib/elements/satin_column/satin_column.py: rail_indices, validation_errors). In M8.6's every-glyph run, 5 glyphs have a rung that ends less than 2e-14 CSS pixels from a rail: AGS Garamond's J, V and Đ and Apex simple's q, in both its sizes. Ink/Stitch, run as a black box (ADR-0001, decision 6), sews the J in 324 stitches across its rung and StitchCraft in 375 between its rails, their threads overlapping by 0.65, and writes no file of the Đ. StitchCraft sewed nothing of the V before M8.6 (SC-E0216): it looked first at the boxes round the subpaths, exactly, and took the rung and a rail for the rails as Ink/Stitch does. The V it sews now agrees with Ink/Stitch's within the differential's tolerances. Since then it sews Apex simple's x and U too, in both its sizes, which Ink/Stitch calls not stitchable."
+requirements = ["REQ-SAT-005"]
+
+[[deviation]]
 id = "DEV-FILL-001"
 area = "fill"
 summary = "A fill's region follows its fill rule. Ink/Stitch takes the subpath of the largest area as the outline and every other subpath as a hole, whatever the fill rule, and repairs a shape that is not valid. The repair merges the subpaths' lines, a stretch drawn twice into one, and fills the faces they bound by how deeply they nest, which fills every face beside the outside. Where the nonzero rule fills a part inside that the subpaths wind round twice the same way, such as a ring drawn inside another the same way round, or the overlap of 2 shapes drawn the same way round, StitchCraft fills it (SC-I0306) and Ink/Stitch leaves it empty. Where the fill rule leaves a part beside the outside empty, which subpaths running along each other bound, such as a notch drawn as a hole along the outline or a subpath drawn twice, StitchCraft leaves it empty (SC-I0313) and Ink/Stitch fills it."
