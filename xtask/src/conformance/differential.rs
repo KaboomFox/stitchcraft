@@ -245,8 +245,8 @@ impl Inkstitch {
         }
     }
 
-    /// What Ink/Stitch's command line wrote, `what`, run with `arguments` on the SVG file `design`. It
-    /// fails when Ink/Stitch does: it ends with a status other than 0, as on an error it didn't expect.
+    /// What Ink/Stitch's command line wrote, `what`, run with `arguments` on the SVG file `design`, as
+    /// [`ended`] reads how it ended.
     fn ran(&self, root: &Path, arguments: &[&str], design: &Path, what: &str) -> Result<Ran, String> {
         let config = configured(root)?;
         let output = Command::new(&self.python)
@@ -260,14 +260,26 @@ impl Inkstitch {
             .env("PYTHONDONTWRITEBYTECODE", "1")
             .output()
             .map_err(|e| format!("{}: {e}", self.python))?;
-        if output.status.success() && !output.stdout.is_empty() {
-            return Ok(Ran::Wrote(output.stdout));
-        }
-        let stderr = String::from_utf8_lossy(&output.stderr);
-        let tail: Vec<&str> = stderr.lines().rev().take(8).collect();
-        let said = format!("Ink/Stitch wrote no {what} ({}): {}", output.status, tail.into_iter().rev().collect::<Vec<_>>().join(" / "));
-        if output.status.success() { Ok(Ran::Nothing(said)) } else { Err(said) }
+        ended(output.status.success(), &output.status.to_string(), output.stdout, &String::from_utf8_lossy(&output.stderr), what)
     }
+}
+
+/// What Ink/Stitch says when it finds no element that sews a stitch, and ends with the status 1: a glyph of
+/// one empty path, say.
+const NO_STITCHES: &str = "no selected stitchable element";
+
+/// What Ink/Stitch's command line gave, `what`, from whether it ended with the status 0 (`success`), the
+/// status as it is said, and what it wrote to its standard output and its standard error. It wrote nothing
+/// when it ended well with nothing written, as when it finds an element it can't sew, or when it found
+/// nothing that sews a stitch ([`NO_STITCHES`]). It failed when it ended otherwise, as on an error it
+/// didn't expect.
+fn ended(success: bool, status: &str, stdout: Vec<u8>, stderr: &str, what: &str) -> Result<Ran, String> {
+    if success && !stdout.is_empty() {
+        return Ok(Ran::Wrote(stdout));
+    }
+    let tail: Vec<&str> = stderr.lines().rev().take(8).collect();
+    let said = format!("Ink/Stitch wrote no {what} ({status}): {}", tail.into_iter().rev().collect::<Vec<_>>().join(" / "));
+    if success || stderr.contains(NO_STITCHES) { Ok(Ran::Nothing(said)) } else { Err(said) }
 }
 
 /// What Ink/Stitch's command line gave, when it ran to its end.
@@ -516,6 +528,29 @@ mod tests {
 
     fn p(x: f64, y: f64) -> Point {
         Point::new(x, y).unwrap()
+    }
+
+    #[test]
+    fn ink_stitch_writes_nothing_where_it_finds_nothing_to_sew_and_fails_otherwise() {
+        let none = "Traceback / There is no selected stitchable element. Please run Troubleshoot.";
+        // What it wrote, when it ended well.
+        assert_eq!(ended(true, "exit status: 0", b"#PES".to_vec(), "", "PES file"), Ok(Ran::Wrote(b"#PES".to_vec())));
+        // Nothing written, ending well: an element it can't sew, of which it says why.
+        assert_eq!(
+            ended(true, "exit status: 0", Vec::new(), "a\nb\nThis satin column has a different setup.", "PES file"),
+            Ok(Ran::Nothing("Ink/Stitch wrote no PES file (exit status: 0): a / b / This satin column has a different setup.".to_string()))
+        );
+        // Nothing to sew, of which it says so and ends with 1: a glyph of one empty path.
+        assert_eq!(
+            ended(false, "exit status: 1", Vec::new(), none, "PES file"),
+            Ok(Ran::Nothing(format!("Ink/Stitch wrote no PES file (exit status: 1): {none}")))
+        );
+        // Any other ending is a failure, what it wrote too, with the last 8 lines it said.
+        let said: String = (1..=10).map(|n| format!("line {n}\n")).collect();
+        assert_eq!(
+            ended(false, "exit status: 2", b"#PES".to_vec(), &said, "PES file"),
+            Err("Ink/Stitch wrote no PES file (exit status: 2): line 3 / line 4 / line 5 / line 6 / line 7 / line 8 / line 9 / line 10".to_string())
+        );
     }
 
     #[test]
