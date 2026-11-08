@@ -10,7 +10,7 @@ use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan, invariants, profile
 use stitchcraft_render::{Settings, Style};
 
 use super::cases::{DataCase, RustCase, SheetExpect, Spec, Subject};
-use super::{centre_lines, differential, fonts, oracle, routing};
+use super::{centre_lines, differential, font, fonts, oracle, routing};
 use crate::util;
 
 /// How one case went.
@@ -71,6 +71,7 @@ pub fn run_data_case(root: &Path, case: &DataCase, bless: bool) -> Outcome {
         Spec::Inkstitch { subject, excused, .. } => differential::run(root, subject, excused, &mut outcome),
         Spec::CentreLines { subject } => centre_lines::run(root, subject, &mut outcome),
         Spec::Fonts { options } => fonts::run(root, options, &mut outcome),
+        Spec::Font { font: folder, glyphs } => font::run(root, folder, glyphs, &mut outcome),
     }
     outcome
 }

@@ -115,6 +115,11 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-I1002`](#sc-i1002) | Info | Element left out of the route |
 | [`SC-W1003`](#sc-w1003) | Warning | Piece of a routed satin column may sew otherwise |
 | [`SC-W1004`](#sc-w1004) | Warning | Too many lines to cut where they cross |
+| [`SC-E1101`](#sc-e1101) | Error | Font could not be read |
+| [`SC-W1102`](#sc-w1102) | Warning | Font setting not read, its default kept |
+| [`SC-W1103`](#sc-w1103) | Warning | Font file not read |
+| [`SC-W1104`](#sc-w1104) | Warning | Glyph left out |
+| [`SC-I1105`](#sc-i1105) | Info | Font read as Ink/Stitch reads it |
 
 ## SC-E0004
 
@@ -1553,3 +1558,66 @@ The route joins lines that meet only at points they share, and jumps between the
 
 The message counts the lines. Route fewer running stitches at a time, or turn Add nodes at
 intersections off and draw a node of both lines wherever 2 meet.
+
+## SC-E1101
+
+**Error** — Font could not be read
+
+A font in Ink/Stitch's format is a folder. Its `font.json` gives the font's settings, and a glyph file
+for each direction it sews in, such as `ltr.svg`, or a folder of them, draws its glyphs. This font
+wasn't read: its `font.json` is missing, compressed, or doesn't hold an object of settings, it has no
+glyph file StitchCraft reads, or a glyph file isn't SVG that StitchCraft reads. Nothing of it can be
+sewn.
+
+The message names the file and says what is wrong with it. Ink/Stitch's Font Management › Generate
+JSON writes a `font.json`. A glyph file opened in Inkscape and saved again as Inkscape SVG reads.
+
+## SC-W1102
+
+**Warning** — Font setting not read, its default kept
+
+A setting in the font's `font.json` has a value of another type than the setting takes, such as a
+text where it takes a number, or a word it doesn't take. The setting keeps Ink/Stitch's default, and
+the rest of the font is read. An entry of a list or a table that isn't of its type, such as a kerning
+pair whose value is a text, is left out, and the others are read.
+
+The message names the setting, what it takes and what the file gives. The font settings page of the
+user's guide lists what each setting takes. Correct the value in `font.json`, or write the file again
+with Ink/Stitch's Font Management › Edit JSON.
+
+## SC-W1103
+
+**Warning** — Font file not read
+
+A glyph file of the font is compressed with xz, as Ink/Stitch's own packages ship their fonts.
+StitchCraft reads glyph files of plain SVG, so the glyphs drawn in this one are left out. The font's
+other glyph files are read.
+
+The message names the file. Unpack it with `xz --decompress`: the fonts in Ink/Stitch's source
+repository are plain SVG.
+
+## SC-W1104
+
+**Warning** — Glyph left out
+
+A glyph of the font is left out, as Ink/Stitch's lettering leaves it out. Lettering places each glyph
+by its box, the space its paths take across, and this glyph has none: its layer has no path, or a path
+in it draws nothing, such as one of empty path data. Or its file's baseline guide doesn't give a
+place, and every glyph of the file is left out. Text that needs the glyph sews the font's default
+glyph in its place.
+
+The message names the glyph or the file. Draw the glyph with paths and delete the paths in its layer
+that draw nothing, or place the baseline guide again in Inkscape.
+
+## SC-I1105
+
+**Info** — Font read as Ink/Stitch reads it
+
+The font was read as Ink/Stitch's lettering reads it, in a way its author may not expect. A key of
+`font.json` that the format doesn't have changes nothing. Of 2 glyphs of one name in a direction, the
+later counts. A glyph file without a guide labelled `baseline` puts its glyphs' baseline at the page's
+top. A font without a glyph file for its `default_variant` sews its first direction by default.
+
+The message says which. Nothing needs doing when the font sews as wanted. Otherwise correct the key,
+delete or rename the glyph drawn twice, add the baseline guide, or set `default_variant` to a
+direction the font has.
