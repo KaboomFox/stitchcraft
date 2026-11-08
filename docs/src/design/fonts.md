@@ -110,8 +110,8 @@ overlapping by 1.000 in each. The other 69 differ as the ledger explains,
 `conformance/inkstitch/glyphs.toml` naming the glyphs each excuse is for. A glyph may differ in more than
 one way. A twentieth of every glyph, the seventh of 20 parts, holds 1,059 glyphs. Of them 699 agree, 238
 are listed and 122 differ as the ledger explains. It found the last 3 rows of the table, which the sample
-has none of, and a glyph neither program writes a file of, which agrees: the U of Apex simple small, whose
-satin column neither can sew.
+has none of, and a glyph neither program wrote a file of, which agreed: the U of Apex simple small, whose
+satin column neither could sew then.
 
 | Difference | Sample | Twentieth | Explained by |
 |---|---|---|---|
@@ -133,6 +133,32 @@ Ink/Stitch sews Initials XL's B in 9,804 stitches, against StitchCraft's 9,805 a
 of its viewBox's shape, Cooper Marif's 7 overlaps by 0.999, against 0.573. Without its needle points nearer
 the one before than 0.3 mm, Ink/Stitch sews Honoka's 服 in 1,889 stitches, against StitchCraft's 1,935 and its
 own 3,101.
+
+**Every glyph.** The first run of every glyph, on 3 November 2026 at `c31df0d4`, found 56 glyphs that differ
+by more than the ledger explained and 11 that didn't sew, in 20 fonts. The 11 are glyphs of one empty path,
+such as Egyptian's spaces and Noble's tilde. Ink/Stitch doesn't write a file of them and says it didn't
+find an element to sew, and StitchCraft writes none with `SC-E0010`, so they agree now. `--font` sews the 20
+fonts' 4,961 glyphs alone, and M8.6 sorted the 56 by their causes:
+
+| Cause | Glyphs | What M8.6 did |
+|---|---|---|
+| Running stitch outlines whose needle points set the bounds the files are aligned by, round the fills of 22 of Western Light's glyphs and beside satin columns in 3 glyphs of other fonts | 25 | Excused by `DEV-RUN-002`, checked within 0.3 mm |
+| Corners of 2 subpaths that meet but for rounding, 2e-15 to 7e-15 CSS pixels apart, so shapely repairs the shape, in 14 cross stitch glyphs of Egyptian's 2 sizes and in Jaquarda Bastarda 9's ® | 15 | Excused by `DEV-FILL-001`, for the glyphs named |
+| A rung that rounding leaves a hair short of a rail, which Ink/Stitch takes for a rail, in 3 glyphs of AGS Garamond and in Apex simple's q in both its sizes | 5 | The V, which StitchCraft didn't sew, is fixed and agrees now. `DEV-SAT-013` excuses the other 4 |
+| Fills that run along their own edges (`SC-I0313`), in Califragilistic | 3 | Excused by `DEV-FILL-001` |
+| Cross stitch parts that reach equally far left after the repair, in Egyptian small's ǘ and ӳ | 2 | Excused by `DEV-FILL-029` |
+| Satin rings that start apart, in Initials XL's comma and Alchemy's 🜂 | 2 | Excused by `DEV-SAT-009` |
+| The second of 2 satin rings started past a rung, its stitches leaning up to 89°, in Emilio 20 tricolore's E | 1 | Fixed: it starts at its nearest node that no rung lies before |
+| Travel under a tatami fill's rows, in Alchemy's ¯ | 1 | Excused by `DEV-FILL-007` |
+| Jumps that go nowhere after lock stitches 2 satin columns force, in DejaVu's Ä | 1 | `DEV-FMT-001`, now undone within colour blocks too |
+| Top stitches that Ink/Stitch's plan drops beside the underlay's last point, 0.4 mm off each tip of Manga Impact's & | 1 | Excused by `DEV-RUN-003` |
+
+Run again on 8 November 2026 with these changes, the 20 fonts' glyphs give 4,644 that agree and 317 that
+differ as the ledger explains. None differ otherwise or are known follow-up work, and every one sews.
+The rung fix also lets StitchCraft sew the x and the U of Apex simple, in both its sizes, which neither
+program sewed before. Ink/Stitch still calls their columns not stitchable, and `DEV-SAT-013` excuses them.
+A scan of every glyph file's satin columns found 5 more fonts with columns the 2 fixes could change. Run
+again too, their 562 glyphs agree, but for 2 that excuses made before M8.6 explain.
 
 ## Fonts ported by other programs
 
