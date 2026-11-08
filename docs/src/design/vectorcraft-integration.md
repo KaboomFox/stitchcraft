@@ -123,12 +123,12 @@ test validates each against VectorCraft's manifest rules (id charset, ≤ 64 par
 from 0.14 the keys that say how the dialog shows a parameter), so a manifest VectorCraft would refuse fails
 the tests before a release.
 
-**Modules.** The plug-in crate builds one module for each family, chosen by a Cargo feature named after
-the family: `stroke`, `satin` or `fill`, one for each machine format, by its extension: `pes` or `dst`, and
-one for each filter: `settings`, `stroke-to-satin`, `testsheet`, `route-satins`, `route-runs` and `tartan`. Without one it builds M0.6's *hello*
-effect. The modules contain the same code, which the native tests run whichever it is, and the feature only
-picks the manifest and the run that `vc_manifest` and `vc_run` serve. `cargo xtask compat contract` builds
-every module, notes their sizes and loads them into VectorCraft's host.
+**Modules.** The plug-in crate builds one module for each family, chosen by a Cargo feature named after the
+family: `stroke`, `satin` or `fill`, one for each machine format, by its extension: `pes` or `dst`, and one
+for each filter: `settings`, `stroke-to-satin`, `testsheet`, `route-satins`, `route-runs` and `tartan`.
+Without one it builds M0.6's *hello* effect. The modules contain the same code, which the native tests run
+whichever it is, and the feature only picks the manifest and the run that `vc_manifest` and `vc_run` serve.
+`cargo xtask compat contract` builds every module, notes their sizes and loads them into VectorCraft's host.
 
 **Manifests.** A family's manifest is made from the registry when VectorCraft asks for it, so a parameter
 added to the registry shows in the dialog without another change. A key that several families declare,
@@ -145,14 +145,14 @@ what the parameter means:
 - an optional length that 0 leaves unset as a number from 0;
 - a tartan's sett as a text, from M10.7 ([below](#a-tartans-sett)).
 
-The other texts, seeds, and settings left empty to take another's value keep their defaults. In the
-registry today they are the custom locks' steps, `random_seed`, a fill underlay's angles, and a satin's
-zigzag underlay insets and its shortest random split. A choice leaves out the options that a text spells out, which are
-the custom locks, and `fill_method` leaves out Ink/Stitch's legacy fill, which StitchCraft sews as a
-tatami fill (`REQ-FILL-005`). `satin_column` belongs to the effect, which sets it from its family. The dialog opens
-with the group that declares the family's method. The groups only the family uses, for its default
-method, come next, then those it shares with the other families, then those of its other methods, such as
-the zigzag stroke's. The settings every element shares come last, as in Ink/Stitch's dialogs.
+The other texts, seeds, and settings left empty to take another's value keep their defaults. In the registry
+today they are the custom locks' steps, `random_seed`, a fill underlay's angles, and a satin's zigzag underlay
+insets and its shortest random split. A choice leaves out the options that a text spells out, which are the
+custom locks, and `fill_method` leaves out Ink/Stitch's legacy fill, which StitchCraft sews as a tatami fill
+(`REQ-FILL-005`). `satin_column` belongs to the effect, which sets it from its family. The dialog opens with
+the group that declares the family's method. The groups only the family uses, for its default method, come
+next, then those it shares with the other families, then those of its other methods, such as the zigzag
+stroke's. The settings every element shares come last, as in Ink/Stitch's dialogs.
 
 #### A tartan's sett
 
@@ -169,22 +169,23 @@ and chose both of the ways open to it (`REQ-VC-021`):
   has 63 parameters, within the 64 its manifest is checked against, and it is the only text a dialog
   declares (`manifest::TEXTS`).
 - **StitchCraft Tartan, a light filter**, writes the row from what a person has, a palette code or a
-  threadcount in the register's colour letters, with the width of a thread, the sett's turn, its scale, how far it is moved and the width up to which a stripe sews
-  as a run (`apps/stitchcraft-vc-plugin/src/tartan.rs`). It is Ink/Stitch's editor reading a code
-  ([the editor](algorithms/tartan.md#the-editor)). A selected path whose own first StitchCraft effect is the
-  fill effect gets the tartan fill and the sett, its other settings kept as VectorCraft gave them. A path
-  with no StitchCraft effect gets the fill effect with those 2 settings, and VectorCraft fills in the rest. A
-  filter can't warn, so a code it can't read, letters the register uses for no colour, a code without a
-  stripe, a setting longer than the row's 4,096 characters, and a selection without a path to take the sett
-  leave the drawing as it was, with `SC-E0821`. Records a filter gives are kept from 0.15, and before it the filter
+  threadcount in the register's colour letters, with the width of a thread, the sett's turn, its scale, how
+  far it is moved and the width up to which a stripe sews as a run
+  (`apps/stitchcraft-vc-plugin/src/tartan.rs`). It is Ink/Stitch's editor reading a code ([the
+  editor](algorithms/tartan.md#the-editor)). A selected path whose own first StitchCraft effect is the fill
+  effect gets the tartan fill and the sett, its other settings kept as VectorCraft gave them. A path with no
+  StitchCraft effect gets the fill effect with those 2 settings, and VectorCraft fills in the rest. A filter
+  can't warn, so a code it can't read, letters the register uses for no colour, a code without a stripe, a
+  setting longer than the row's 4,096 characters, and a selection without a path to take the sett leave the
+  drawing as it was, with `SC-E0821`. Records a filter gives are kept from 0.15, and before it the filter
   declines with `SC-E0813`.
 
 The rejected ways each failed a part of the job. The filter alone would write a key the fill's manifest
 doesn't declare. The preview never gets such a key, and the canvas would show Ink/Stitch's default sett while
 File › Export sewed the filter's. With the row alone, a person would write an object of JSON by hand on one
-line. A threadcount, the form the register gives a sett in, wouldn't read there. A filter that drew the stripes as
-objects of their own would lose the weave, which comes from routing every colour's rows over the whole
-shape.
+line. A threadcount, the form the register gives a sett in, wouldn't read there. A filter that drew the
+stripes as objects of their own would lose the weave, which comes from routing every colour's rows over the
+whole shape.
 
 **What it costs.** A text is a kind of parameter VectorCraft 0.14 brought, and 0.12 and 0.13 refuse a
 manifest with one whole. So from M10.7 the fill effect installs from VectorCraft 0.14, as the exporters
