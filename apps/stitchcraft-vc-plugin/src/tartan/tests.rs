@@ -53,6 +53,7 @@ fn req_vc_021_the_dialog_takes_a_code_a_thread_s_width_and_how_the_sett_is_laid(
     assert_eq!(schema("thread_width_mm"), Schema::Number { min: 0.01, max: 10.0, default: 0.2 });
     assert_eq!(schema("rotate"), Schema::Number { min: -180.0, max: 180.0, default: 0.0 });
     assert_eq!(schema("scale"), Schema::Number { min: 1.0, max: 1_000.0, default: 100.0 });
+    assert_eq!(schema("offset_x"), Schema::Number { min: -1_000.0, max: 1_000.0, default: 0.0 });
     assert_eq!(schema("offset_y"), Schema::Number { min: -1_000.0, max: 1_000.0, default: 0.0 });
     assert_eq!(schema("min_stripe_width"), Schema::Number { min: 0.0, max: 100.0, default: 1.0 });
     let units: Vec<Option<&str>> = manifest.params.iter().map(|(_, param)| param.ui.unit).collect();

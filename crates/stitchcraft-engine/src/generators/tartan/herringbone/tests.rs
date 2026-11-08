@@ -126,6 +126,10 @@ fn req_fill_trt_014_a_band_s_weft_rows_near_a_stripe_are_joined_end_to_start() {
     // A join longer than the running stitch is cut into equal stitches: rows 1 and 4 lie 1.5 mm apart.
     let zigzag = herringbone.zigzag(0, [0.0, 0.5], 1.0, meter).unwrap();
     assert_eq!(rounded(zigzag.get(..5).unwrap()), [(0.0, -2.0), (2.0, 0.0), (2.0, 0.5), (0.0, -1.5), (0.0, -0.75)]);
+    // A row that ends on the stripe's top edge reaches it: row 5 ends 2.5 mm down, so the zigzag of a stripe from
+    // there starts at row 4, which is joined to it.
+    let zigzag = herringbone.zigzag(0, [2.5, 4.0], 2.5, meter).unwrap();
+    assert_eq!(rounded(zigzag.get(..3).unwrap()), [(0.0, 0.0), (2.0, 2.0), (2.0, 2.5)]);
     // A stripe below every row reaches none.
     assert!(herringbone.zigzag(0, [10.5, 12.0], 2.5, meter).unwrap().is_empty());
 }
@@ -143,6 +147,10 @@ fn req_fill_trt_014_a_zigzag_s_pieces_inside_a_stripe_are_those_longer_than_half
     assert_eq!(cut(&inside, [1.0, 3.0]).len(), 1);
     assert_eq!(cut(&inside, [1.0, 3.0]).first().map(Vec::len), Some(4));
     assert!(cut(&[p(0.0, 0.0), p(2.0, 1.0), p(4.0, 0.0)], [1.0, 3.0]).is_empty());
+    // A line that leaves the stripe and comes back at a corner on its edge gives 2 pieces, the second from that
+    // corner: the stretch that only touches the edge is no piece, and joins none.
+    let back = [p(0.0, 2.0), p(1.0, 4.0), p(2.0, 3.0), p(3.0, 2.0)];
+    assert_eq!(cut(&back, [1.0, 3.0]), [vec![p(0.0, 2.0), p(0.5, 3.0)], vec![p(2.0, 3.0), p(3.0, 2.0)]]);
     // Half a pixel is left out, and a hair more kept.
     assert!(cut(&[p(0.0, 0.0), p(0.0, SHORTEST_STRETCH)], [-1.0, 1.0]).is_empty());
     assert_eq!(cut(&[p(0.0, 0.0), p(0.0, SHORTEST_STRETCH + 1e-9)], [-1.0, 1.0]).len(), 1);
@@ -161,6 +169,7 @@ fn req_fill_trt_014_a_segment_s_stretch_between_bounds_is_where_it_enters_and_le
     assert_eq!(within(p(15.0, 5.0), p(-5.0, 5.0), least, most), Some((0.25, 0.75)));
     // Along a side or square to one: in when the other coordinate is, out when not.
     assert_eq!(within(p(0.0, 2.0), p(0.0, 8.0), least, most), Some((0.0, 1.0)));
+    assert_eq!(within(p(10.0, 2.0), p(10.0, 8.0), least, most), Some((0.0, 1.0)));
     assert_eq!(within(p(10.5, 2.0), p(10.5, 8.0), least, most), None);
     assert_eq!(within(p(-0.5, 2.0), p(-0.5, 8.0), least, most), None);
     // Missing the bounds, and touching a corner.
@@ -261,12 +270,71 @@ fn req_fill_trt_014_the_first_band_s_line_turns_the_edges_round_past_their_middl
     assert_eq!(chain(vec![vec![p(15.0, 10.0), p(14.0, 12.0)]]), [(14.0, 12.0), (15.0, 10.0)]);
     // A hair past halfway, the edge turns round, and the line runs to its end nearer the left side.
     assert_eq!(chain(vec![vec![p(15.000_001, 10.0), p(14.0, 12.0)]]), [(15.000_001, 10.0), (14.0, 12.0)]);
+    // With its ends as far along the edge as each other, the line keeps its way, as in Ink/Stitch.
+    assert_eq!(chain(vec![vec![p(14.0, 10.0), p(14.0, 12.0)]]), [(14.0, 10.0), (14.0, 12.0)]);
     // A point as near one edge as the other is on the first, the bottom one here: the line after the first,
     // which starts halfway between the edges, is sewn from its start, as the first ended on the bottom edge.
     let tie = vec![vec![p(21.0, 11.0), p(22.0, 10.0)], vec![p(2.0, 12.0), p(1.0, 10.0)]];
     let tied = chain(tie);
     assert_eq!((tied.get(..2), tied.last(), tied.len()), (Some([(1.0, 10.0), (2.0, 12.0)].as_slice()), Some(&(22.0, 10.0)), 11));
     assert!(chain(Vec::new()).is_empty());
+}
+
+/// `line` moved `dx` mm right.
+fn moved(line: &[Point], dx: f64) -> Vec<Point> {
+    line.iter().map(|q| p(q.x() + dx, q.y())).collect()
+}
+
+#[test]
+fn req_fill_trt_014_the_bands_are_joined_alike_wherever_the_box_lies() {
+    // The cases above with the box and every line moved 10 mm right: the same line, moved as far.
+    let tartan = tartan(&[]);
+    let chain = |banded: &[Vec<Vec<Point>>], dx: f64, degrees: f64| {
+        let box_ = frame([dx, 0.0], [dx + 30.0, 30.0]);
+        let piece = square(0.0, 30.0);
+        let laying = Laying { turn: Turn::new(box_.middle, degrees), ..laying(&piece, ([0.0, 0.0], [30.0, 30.0]), &box_, &tartan, Direction::Weft) };
+        let banded = banded.iter().map(|lines| lines.iter().map(|line| moved(line, dx)).collect()).collect();
+        chained(banded, [10.0, 12.0], &laying, &mut Budget::DEFAULT.meter()).unwrap()
+    };
+    let halfway = vec![vec![vec![p(15.0, 10.0), p(14.0, 12.0)]]];
+    for (lines, degrees) in [(banded(), 0.0), (banded(), 180.0), (halfway, 0.0)] {
+        let here = chain(&lines, 0.0, degrees);
+        assert_eq!(rounded(&chain(&lines, 10.0, degrees)), rounded(&moved(&here, 10.0)), "{degrees}°: {here:?}");
+    }
+}
+
+#[test]
+fn req_fill_trt_014_a_stripe_narrower_than_a_millimetre_is_joined_as_a_wider_one() {
+    // The bands' lines above in a stripe a quarter as high, from 10 to 10.5 mm down: each line starts on the edge
+    // it starts on in the wider stripe, so the line they make is that stripe's, a quarter as high.
+    let (box_, tartan) = (frame([0.0, 0.0], [30.0, 30.0]), tartan(&[]));
+    let piece = square(0.0, 30.0);
+    let squeezed = |line: &[Point]| -> Vec<Point> { line.iter().map(|q| p(q.x(), 10.0 + (q.y() - 10.0) / 4.0)).collect() };
+    for degrees in [0.0, 180.0] {
+        let laying = Laying { turn: Turn::new(box_.middle, degrees), ..laying(&piece, ([0.0, 0.0], [30.0, 30.0]), &box_, &tartan, Direction::Weft) };
+        let narrow = banded().iter().map(|lines| lines.iter().map(|line| squeezed(line)).collect()).collect();
+        let found = chained(narrow, [10.0, 10.5], &laying, &mut Budget::DEFAULT.meter()).unwrap();
+        let wide = chained(banded(), [10.0, 12.0], &laying, &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(rounded(&found), rounded(&squeezed(&wide)), "{degrees}°");
+    }
+}
+
+#[test]
+fn the_weft_s_lines_are_moved_right_and_down_by_0_00123_pixel_before_they_are_cut() {
+    // 0.00123 pixel, in millimetres.
+    assert!((NUDGE - 0.000_325_437_5).abs() < 1e-15);
+    // A stripe from 3 to 4 mm down, across the bands of a box 10 mm wide, over a piece larger than the box: the
+    // line reaches the stripe's edges and the first band's left side, each moved by the nudge.
+    let tartan = Tartan { herringbone: 2.0, spacing: 0.5, ..tartan(&[]) };
+    let box_ = frame([0.0, 0.0], [10.0, 8.0]);
+    let piece = square(-5.0, 15.0);
+    let laying = laying(&piece, ([-5.0, -5.0], [15.0, 15.0]), &box_, &tartan, Direction::Weft);
+    let herringbone = Herringbone::new(&box_, &tartan, &mut Budget::DEFAULT.meter()).unwrap();
+    let points = herringbone.stripe(&laying, [3.0, 4.0], &mut Budget::DEFAULT.meter()).unwrap().concat();
+    let (xs, ys) = (points.iter().map(|q| q.x()), points.iter().map(|q| q.y()));
+    let found = (xs.fold(f64::INFINITY, f64::min), ys.clone().fold(f64::INFINITY, f64::min), ys.fold(f64::NEG_INFINITY, f64::max));
+    let expected = (NUDGE, 3.0 + NUDGE, 4.0 + NUDGE);
+    assert!((found.0 - expected.0).abs() < 1e-9 && (found.1 - expected.1).abs() < 1e-9 && (found.2 - expected.2).abs() < 1e-9, "{found:?}");
 }
 
 #[test]
@@ -283,6 +351,9 @@ fn req_fill_trt_013_the_warp_is_laid_band_by_band_the_second_fourth_and_so_on_fi
     herringbone.warp(&laying, &walked, &mut fills, &mut Budget::DEFAULT.meter()).unwrap();
     let colours: Vec<Rgb> = fills.iter().map(|(colour, _)| *colour).collect();
     assert_eq!(colours, [BLUE, RED]);
+    // Blue is laid in every band it meets, the first too, whose last half millimetre it covers.
+    let blue = fills.iter().find(|(colour, _)| *colour == BLUE).map(|(_, lines)| lines.iter().flatten().map(|q| q.x()).fold(f64::INFINITY, f64::min));
+    assert!(blue.is_some_and(|x| x < 2.0), "{blue:?}");
     // Every line lies in the square, and none runs on to its rings: each starts and ends on a band's edge or a
     // stripe's, or the square's.
     let inside = |q: &Point| (-1e-9..=10.0 + 1e-9).contains(&q.x()) && (-1e-9..=10.0 + 1e-9).contains(&q.y());
