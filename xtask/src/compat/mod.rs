@@ -394,12 +394,26 @@ mod tests {
     fn the_modules_are_hello_each_family_s_and_each_format_s() {
         assert_eq!(
             modules(),
-            ["hello", "stroke", "satin", "fill", "auto", "pes", "dst", "settings", "stroke-to-satin", "testsheet", "route-satins", "route-runs"]
+            [
+                "hello",
+                "stroke",
+                "satin",
+                "fill",
+                "auto",
+                "pes",
+                "dst",
+                "settings",
+                "stroke-to-satin",
+                "testsheet",
+                "route-satins",
+                "route-runs",
+                "tartan"
+            ]
         );
         let kinds: Vec<&str> = modules().into_iter().map(kind).collect();
         assert_eq!(
             kinds,
-            ["effect", "effect", "effect", "effect", "effect", "exporter", "exporter", "filter", "filter", "filter", "filter", "filter"]
+            ["effect", "effect", "effect", "effect", "effect", "exporter", "exporter", "filter", "filter", "filter", "filter", "filter", "filter"]
         );
         assert_eq!(modules().into_iter().filter(|name| heavy(name)).collect::<Vec<_>>(), ["stroke-to-satin", "route-satins", "route-runs"]);
         let sizes = [("hello", 1024), ("fill", 5000)];

@@ -39,6 +39,7 @@ fn every_scenario_checks_only_what_its_runs_export() {
             "route-satins",
             "settings",
             "stroke-to-satin",
+            "tartan",
             "testsheets",
             "trace"
         ]

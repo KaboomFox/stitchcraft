@@ -47,7 +47,9 @@ checks:
    keeps, unless their dialog names another (`REQ-VC-013`). Stroke to Satin installs as a heavy filter,
    and makes each of M6.4's lines into a column that the PES exporter writes as it wrote the line
    (`REQ-VC-014`). Test Sheet draws each sheet into a new document, which the PES exporter writes within
-   an export's budget (`REQ-VC-015`). The effect records they give are admitted as `plugin.run` admits
+   an export's budget (`REQ-VC-015`). StitchCraft Tartan sets a square's sett, which the PES exporter writes
+   as it writes a square whose sett was set by hand (`REQ-VC-021`). The effect records they give are
+   admitted as `plugin.run` admits
    them, by the manifests of the installed live effects.
 5. Error paths: invalid parameters are rejected by the host with the expected message.
 6. Budget: the *hello* plug-in's cost for each byte of JSON it reads and writes stays within a quarter

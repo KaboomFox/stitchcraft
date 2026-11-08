@@ -143,17 +143,50 @@ fn req_fill_005_the_fill_dialog_offers_every_method_but_legacy_fill() {
 }
 
 #[test]
-fn the_fill_dialog_offers_a_tartan_s_numbers_and_not_its_sett() {
-    // A sett is a text, which VectorCraft 0.12 and 0.13 refuse in a manifest: the dialog holds none before
-    // M10.7, and a tartan fill made in it sews Ink/Stitch's default sett (vectorcraft-integration.md).
+fn req_vc_021_the_fill_dialog_holds_a_tartan_s_sett_as_text_after_its_method() {
+    // From M10.7 the sett is a text field, which VectorCraft 0.12 and 0.13 refuse in a manifest, so the fill
+    // effect installs from 0.14 (vectorcraft-integration.md). StitchCraft Tartan writes it.
     let fill = family(Family::Fill);
     let keys: Vec<&str> = fill.params.iter().map(|(key, _)| *key).collect();
-    for key in ["tartan_angle", "rows_per_thread", "herringbone_width_mm", "stop_at_ending_point"] {
+    for key in ["tartan", "tartan_angle", "rows_per_thread", "herringbone_width_mm", "stop_at_ending_point"] {
         assert!(keys.contains(&key), "{key}");
     }
-    assert!(!keys.contains(&"tartan"));
-    // 62 of the 64 that every release VectorCraft's gate tests takes.
+    let (at, sett) = fill.params.iter().enumerate().find(|(_, (key, _))| *key == "tartan").map(|(at, (_, param))| (at, param)).unwrap();
+    assert_eq!(sett.schema, Schema::Text { default: "", max_length: 4_096 });
+    assert_eq!(sett.schema.default_value(), Value::from(""));
+    // It shows only for the tartan fill, after the method that shows it.
+    assert_eq!(sett.ui.visible_when, [("fill_method", vec![Value::from("tartan_fill")])]);
+    assert!(keys.iter().position(|key| *key == "fill_method").is_some_and(|method| method < at));
+    assert_eq!(sett.ui.label, Some("Sett"));
+    // No other text: the custom locks' and the other texts keep their defaults.
+    let texts = |manifest: &Manifest| manifest.params.iter().filter(|(_, param)| matches!(param.schema, Schema::Text { .. })).count();
+    assert_eq!(texts(&fill), 1);
+    assert_eq!((texts(&family(Family::Stroke)), texts(&family(Family::Satin))), (0, 0));
+    // 63 of the 64 that every release VectorCraft's gate tests takes.
     assert!(keys.len() <= limits::MAX_PARAMS, "{}", keys.len());
+    validate(&serde_json::to_vec(&fill).unwrap()).unwrap();
+}
+
+#[test]
+fn a_text_is_declared_as_vectorcraft_reads_one() {
+    let text = Schema::Text { default: "ab", max_length: 2 };
+    assert_eq!(serde_json::to_value(&text).unwrap(), json!({"type": "string", "default": "ab", "maxLength": 2}));
+    let checked = |spec: Value| valid_spec(&spec);
+    assert_eq!(checked(json!({"type": "string"})), Ok(()));
+    assert_eq!(checked(json!({"type": "string", "default": "ab", "maxLength": 2})), Ok(()));
+    let wrong = Err("`maxLength` must be 1–4096, and the default a text no longer".to_string());
+    for spec in [
+        json!({"type": "string", "default": "abc", "maxLength": 2}),
+        json!({"type": "string", "maxLength": 0}),
+        json!({"type": "string", "maxLength": 4_097}),
+        json!({"type": "string", "maxLength": -1}),
+        json!({"type": "string", "default": 7}),
+    ] {
+        assert_eq!(checked(spec.clone()), wrong, "{spec}");
+    }
+    assert_eq!(checked(json!({"type": "string", "maxLength": 4_096})), Ok(()));
+    // A default counts in characters, as VectorCraft counts them.
+    assert_eq!(checked(json!({"type": "string", "default": "éé", "maxLength": 2})), Ok(()));
 }
 
 #[test]
@@ -196,6 +229,7 @@ fn req_vc_002_a_record_of_the_defaults_reads_as_no_settings_at_all() {
                 Schema::Int { min, max, default } => default.clamp(min, max).to_string(),
                 Schema::Bool { default } => default.to_string(),
                 Schema::Choice { default, .. } => default.to_string(),
+                Schema::Text { default, .. } => default.to_string(),
             };
             let mut set = ParamSet::new();
             set.set(key, stored.as_str());

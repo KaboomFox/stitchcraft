@@ -265,17 +265,17 @@ fn req_fill_trt_005_a_row_gives_its_stretch_inside_the_band_but_one_of_half_a_pi
     let (piece, box_, tartan) = (square(), frame(-10.0, 20.0), super::super::tests::tartan(&[]));
     let laying = laying(&piece, &box_, &tartan);
     let rows = level(&[5.0], 2.0);
-    let stretch = |band: [f64; 2]| laying.stretch(band, &rows, 0, false);
+    let stretch = |band: [f64; 2]| laying.stretch(band, &rows.row(0).unwrap(), false);
     // From one edge of the band to the other, with the row's needle points between them but those on them.
     assert_eq!(stretch([4.0, 8.0]), Some(vec![p(4.0, 5.0), p(6.0, 5.0), p(8.0, 5.0)]));
     assert_eq!(stretch([3.0, 9.0]), Some(vec![p(3.0, 5.0), p(4.0, 5.0), p(6.0, 5.0), p(8.0, 5.0), p(9.0, 5.0)]));
-    assert_eq!(laying.stretch([4.0, 8.0], &rows, 0, true), Some(vec![p(8.0, 5.0), p(6.0, 5.0), p(4.0, 5.0)]));
+    assert_eq!(laying.stretch([4.0, 8.0], &rows.row(0).unwrap(), true), Some(vec![p(8.0, 5.0), p(6.0, 5.0), p(4.0, 5.0)]));
     // Half a pixel is 0.1323 mm: a stretch of 2⁻³ mm is left out, and one of 9 × 2⁻⁶ mm kept.
     assert_eq!(stretch([5.0, 5.125]), None);
     assert_eq!(stretch([5.0, 5.140_625]), Some(vec![p(5.0, 5.0), p(5.140_625, 5.0)]));
     // A level row crosses the box only between its top and bottom sides, or on them.
     let rows = level(&[-10.5, -10.0, 5.0, 20.0, 20.5], 30.0);
-    let crossing: Vec<bool> = (0..5).map(|k| laying.stretch([4.0, 8.0], &rows, k, false).is_some()).collect();
+    let crossing: Vec<bool> = (0..5).map(|k| laying.stretch([4.0, 8.0], &rows.row(k).unwrap(), false).is_some()).collect();
     assert_eq!(crossing, [false, true, true, true, false]);
 }
 
@@ -299,13 +299,13 @@ fn req_fill_trt_005_a_band_s_stretches_are_joined_along_its_edge_but_at_the_ring
     // In the square, rows 3 mm apart cross a band from 3 to 6 mm, every other one back: one zigzag, its joins
     // 2 stitches of 1.5 mm each, run on from its ends to the outline.
     let square = square();
-    let zigzag = laying(&square, &box_, &tartan).band([3.0, 6.0], &level(&[2.0, 5.0, 8.0], 30.0), meter).unwrap();
+    let zigzag = laying(&square, &box_, &tartan).band([3.0, 6.0], &level(&[2.0, 5.0, 8.0], 30.0).taken(Direction::Warp), true, meter).unwrap();
     let joined = [p(3.0, 0.0), p(3.0, 2.0), p(6.0, 2.0), p(6.0, 3.5), p(6.0, 5.0), p(3.0, 5.0), p(3.0, 6.5), p(3.0, 8.0), p(6.0, 8.0), p(6.0, 10.0)];
     assert_eq!(zigzag, [joined]);
     // In the triangle, the second row's stretch starts on its long side, and so does the third's: each starts
     // a line of its own, and the third's, outside, is cut away.
     let triangle = triangle();
-    let lines = laying(&triangle, &box_, &tartan).band([3.0, 6.0], &level(&[1.0, 4.0, 7.0], 30.0), meter).unwrap();
+    let lines = laying(&triangle, &box_, &tartan).band([3.0, 6.0], &level(&[1.0, 4.0, 7.0], 30.0).taken(Direction::Warp), true, meter).unwrap();
     assert_eq!(lines, [vec![p(3.0, 0.0), p(3.0, 1.0), p(6.0, 1.0), p(6.0, 0.0)], vec![p(6.0, 4.0), p(3.0, 4.0), p(3.0, 5.5), p(3.0, 7.0)]]);
 }
 
