@@ -113,7 +113,13 @@ fn req_vc_002_the_dialog_opens_with_the_method_and_ends_with_the_settings_every_
     assert_eq!(fill[..3], ["fill", "fill_method", "angle"]);
     assert!(place(&fill, "underlay_underpath") < place(&fill, "running_stitch_length_mm"));
     assert!(place(&fill, "pull_compensation_mm") < place(&fill, "ties"));
-    assert_eq!(fill[fill.len() - 2..], ["max_stitch_length_mm", PREVIEW_LEVEL]);
+    assert_eq!(fill[fill.len() - 3..], ["max_stitch_length_mm", "underlays_first", PREVIEW_LEVEL]);
+    // Every family's dialog ends with the sewing order, StitchCraft's own toggle, off by default (M10.15).
+    for each in Family::ALL {
+        let params = family(*each).params;
+        let order = params.iter().rev().nth(1).map(|(key, param)| (*key, param.schema.clone(), param.ui.group, param.ui.label));
+        assert_eq!(order, Some(("underlays_first", Schema::Bool { default: false }, Some("Sewing order"), Some("Underlays first"))), "{each:?}");
+    }
     let stroke = keys(Family::Stroke);
     assert_eq!(stroke[..3], ["stroke_method", "repeats", "bean_stitch_repeats"]);
     assert_eq!(stroke[3], "running_stitch_length_mm");

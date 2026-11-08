@@ -687,6 +687,33 @@ rationale = "Ink/Stitch gives the stitch group of each colour of a tartan or a l
 milestone = "M10"
 status = "active"
 
+[[req]]
+id = "REQ-ASM-008"
+area = "plan/assembly"
+level = "L2"
+statement = "Before the elements are generated, in the order stage 0 gives, consecutive elements that set `underlays_first` and sew in one thread, compared by colour, form a run, which ends after an element with `trim_after` or `stop_after`. An element sewn in several threads, or whose settings don't read, is in no run, and parts the elements on either side of it. An element that sets it and joins no run sews as it does without it, and SC-I0506 names it, unless its settings don't read, which SC-E0101 says."
+rationale = "Sewing every underlay of elements that cross or overlap before any of their top stitches lays every underlay on the fabric under every top stitch (ADR-0018). A run keeps one thread, so the design's colour changes stay as they were, and a trim keeps 2 runs next to each other apart."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-ASM-009"
+area = "plan/assembly"
+level = "L2"
+statement = "A run of 2 elements or more sews the underlays of its elements in their order, then the top stitches of every element in the same order. An element with an underlay, a satin column with one of its underlays on or a fill whose method has one with `fill_underlay` on, is generated as 2 layers, and every other element whole, in the second pass. Each layer starts near the last needle point sewn before it and ends near what the next layer's element offers (REQ-GEN-003), from one reading of its element: its start position places the start of its underlay, and its end position the end of its top. The 2 layers share the element's work budget, and each spends the design's stitches on the needle points it makes. The top stitches take the random numbers they take outside a run. The underlays' stitches are tagged underlay, each element is one element of the plan, and the run's last element's trim or stop follows its top stitches."
+rationale = "Ink/Stitch has no such order (read at d59c9ab): it sews each element's underlay just before its top stitches, and the differential has no case for it. MC-12 sews 2 satin columns that cross both ways on TS-17C, to see which lies flatter."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-ASM-010"
+area = "plan/assembly"
+level = "L2"
+statement = "A design without `underlays_first` plans as it did before M10.15, word for word, and so does an element that sets it off, or that joins no run but for SC-I0506. Every golden file the suite compares stayed as it was, but TS-17C's, which sews the setting."
+rationale = "The setting is StitchCraft's own and off by default (ADR-0018): files that don't set it must sew as they did, in StitchCraft and in Ink/Stitch alike."
+milestone = "M10"
+status = "active"
+
 # ── Finalize and check ─────────────────────────────────────────────────────────────────────────────
 
 [[req]]

@@ -31,6 +31,8 @@
 //! clip's outline (`region::cut`). A satin column is sewn whole, as in Ink/Stitch (`SC-W0217`), and an
 //! element its clips leave nothing of sews nothing (`SC-W0013`).
 
+pub(crate) mod layered;
+
 use std::borrow::Cow;
 
 use stitchcraft_core::{Budget, Code, Diagnostic, Exhausted, Meter, Mm, Point, SplitMix64};
@@ -54,10 +56,11 @@ use crate::generators::running::{RunningParams, running_stitch};
 use crate::generators::satin::{self, SATIN_COLUMN, SatinLengths, SatinParams, satin_stitch};
 use crate::generators::tatami::TatamiParams;
 use crate::generators::tatami::rows::Segment;
-use crate::generators::tatami::sew::{Fill, Pull, Travel, tatami_fill, top_rows};
+use crate::generators::tatami::sew::{Fill, Layer as FillLayer, Pull, Travel, tatami_fill, top_rows};
 use crate::generators::zigzag::{ZigzagStrokeParams, zigzag_stroke};
-use crate::generators::{Approach, Colour, Neighbours, Stitched, method, mm};
+use crate::generators::{Approach, Colour, Layer, Neighbours, Stitched, method, mm};
 use crate::normalize::region::{self, Region, cut};
+use crate::normalize::satin::Satin;
 use crate::normalize::stroke;
 use crate::registry::PARAMETERS;
 
@@ -137,6 +140,10 @@ pub struct Generated {
     pub colours: Vec<Colour>,
     /// The shortest stitch it was sewn with, which finalize holds its stitches to as well.
     pub min_stitch: Mm,
+    /// Which of its stitches these are: all of them, or one of the 2 layers of an element in a run of
+    /// underlays first (`crate::underlays_first`). Assembly tags an underlay's stitches underlay, and puts
+    /// the element's trim and stop after its top stitches.
+    pub layer: Layer,
 }
 
 /// What generating one element gives.
@@ -320,17 +327,13 @@ fn sew(
     diagnostics: &mut Vec<Diagnostic>,
     meter: &mut Meter,
 ) -> Result<Option<Generated>, Exhausted> {
-    let Some(Prepared { region, common, sewing }) = prepare(element, settings, profile, neighbours, diagnostics, meter)? else { return Ok(None) };
+    let Some(Prepared { region, common, sewing }) = prepare(element, settings, profile, diagnostics, meter)? else { return Ok(None) };
     let mut rng = SplitMix64::for_element(element.id.as_str(), common.as_ref().and_then(|common| common.random_seed));
     let stitched = match &element.shape {
-        Shape::Fill { .. } => fill(&sewing, &region, &mut rng, diagnostics, meter)?,
+        Shape::Fill { .. } => fill(&sewing, neighbours, &region, &mut rng, diagnostics, meter)?,
         Shape::Stroke { path, width, join, .. } if sewing.stitch_type.family() == Family::Satin => {
-            if !element.clips.is_empty() {
-                let message = "This satin column is cut to clip paths, which StitchCraft doesn't apply to a satin column, so it is sewn whole, \
-                               as Ink/Stitch sews it.";
-                diagnostics.push(Diagnostic::new(Code::SatinClipNotApplied, message));
-            }
-            satin_column(&sewing, (path, *width, *join), &mut rng, diagnostics, meter)?
+            clip_not_applied(element, diagnostics);
+            satin_column(&sewing, neighbours, (path, *width, *join), &mut rng, diagnostics, meter)?
         }
         Shape::Stroke { path, width, .. } => {
             let Some(path) = cut::stroke(path, &element.clips, cut_line(sewing.stitch_type), diagnostics, meter)? else { return Ok(None) };
@@ -339,7 +342,17 @@ fn sew(
     };
     let (Some(common), Some(Shared { min_stitch, .. }), Some(stitched)) = (common, sewing.shared, stitched) else { return Ok(None) };
     diagnostics.extend(stitched.warnings);
-    Ok(Some(Generated { common, stitch_type: sewing.stitch_type, groups: stitched.runs, colours: stitched.colours, min_stitch }))
+    Ok(Some(Generated { common, stitch_type: sewing.stitch_type, groups: stitched.runs, colours: stitched.colours, min_stitch, layer: Layer::Whole }))
+}
+
+/// `SC-W0217` in `diagnostics` when `element`, a satin column, is cut to clip paths, which StitchCraft doesn't
+/// apply to a satin column (`REQ-GEN-005`).
+fn clip_not_applied(element: &Element, diagnostics: &mut Vec<Diagnostic>) {
+    if !element.clips.is_empty() {
+        let message = "This satin column is cut to clip paths, which StitchCraft doesn't apply to a satin column, so it is sewn whole, as \
+                       Ink/Stitch sews it.";
+        diagnostics.push(Diagnostic::new(Code::SatinClipNotApplied, message));
+    }
 }
 
 /// The segments of a fill's top rows, or `None` when it is skipped or is not a fill; what it says about it
@@ -354,8 +367,7 @@ fn top_rows_of(
     if !matches!(element.shape, Shape::Fill { .. }) {
         return Ok(None);
     }
-    let neighbours = Neighbours::default();
-    let Some(Prepared { region, common, sewing }) = prepare(element, settings, profile, &neighbours, diagnostics, meter)? else { return Ok(None) };
+    let Some(Prepared { region, common, sewing }) = prepare(element, settings, profile, diagnostics, meter)? else { return Ok(None) };
     // A contour, meander or circular fill has no rows: the preview shows its path, round the rings, through
     // the tile as the element's seed lays it, or along the spiral's pieces. A cross stitch fill shows its
     // crosses' bars, or its half crosses' diagonals.
@@ -399,7 +411,6 @@ fn prepare<'a>(
     element: &'a Element,
     settings: &DesignSettings,
     profile: &MachineProfile,
-    neighbours: &'a Neighbours,
     diagnostics: &mut Vec<Diagnostic>,
     meter: &mut Meter,
 ) -> Result<Option<Prepared<'a>>, Exhausted> {
@@ -433,7 +444,7 @@ fn prepare<'a>(
         jump: common.jump_length(settings.collapse_len),
         force_locks: common.force_lock_stitches,
     });
-    Ok(Some(Prepared { region, common, sewing: Sewing { set, stitch_type, shared, neighbours, hints: element.hints } }))
+    Ok(Some(Prepared { region, common, sewing: Sewing { set, stitch_type, shared, hints: element.hints } }))
 }
 
 /// What the settings every stitch type shares give an element's generator.
@@ -458,8 +469,6 @@ struct Sewing<'a> {
     /// What the settings every stitch type shares give it; `None` when they cannot be read, which was
     /// said.
     shared: Option<Shared>,
-    /// Where the elements before it left the needle, and what the next one offers to end near.
-    neighbours: &'a Neighbours,
     /// Where its design says it starts and ends, and the point it aims at (`REQ-GEN-001`).
     hints: Hints,
 }
@@ -482,13 +491,11 @@ fn too_narrow(path: &Path, width: Mm, settings: &DesignSettings) -> bool {
     path.subpaths.len() <= 1 && width.get() <= settings.min_satin_stroke_width.get()
 }
 
-/// A fill's stitches over its `region` as `sewing` says, varied at random by its `rng`, or `None` when it
-/// is skipped. Its `fill_method` picks the generator. A tatami fill's needle travels in the first of the
-/// running stitch's lengths, at least twice the shortest stitch, and within its tolerance, between its top
-/// rows and between the rows of its underlay (`DEV-SAT-005`), and a contour fill's between the rows of its
-/// underlay.
+/// A fill's stitches over its `region` as `sewing` says, between its `neighbours`, varied at random by its
+/// `rng`, or `None` when it is skipped. Its `fill_method` picks the generator ([`FillMethod`]).
 fn fill(
     sewing: &Sewing,
+    neighbours: &Neighbours,
     region: &Region,
     rng: &mut SplitMix64,
     diagnostics: &mut Vec<Diagnostic>,
@@ -497,25 +504,80 @@ fn fill(
     // Its start and end positions take the place of the needle and the next element's offer
     // (`REQ-GEN-001`). The contour fill, which ends where its rings end, uses the start alone.
     let end = sewing.hints.end.map(Approach::Point);
-    let (needle, next) = (sewing.hints.start.or(sewing.neighbours.needle), end.as_ref().or(sewing.neighbours.next.as_ref()));
-    if sewing.stitch_type == StitchType::ContourFill {
-        let Some(contour) = contour_settings(sewing, diagnostics) else { return Ok(None) };
-        return Ok(Some(contour_fill(region, &contour, needle, rng, meter)?));
+    let (needle, next) = (sewing.hints.start.or(neighbours.needle), end.as_ref().or(neighbours.next.as_ref()));
+    let Some(method) = FillMethod::read(sewing, diagnostics) else { return Ok(None) };
+    Ok(Some(method.sew(region, needle, next, rng, meter)?))
+}
+
+/// A fill's settings, read as its `fill_method` reads them: what its generator sews from. A tatami fill's
+/// needle travels in the first of the running stitch's lengths, at least twice the shortest stitch, and
+/// within its tolerance, between its top rows and between the rows of its underlay (`DEV-SAT-005`), and a
+/// contour fill's between the rows of its underlay.
+#[derive(Clone, Debug)]
+enum FillMethod {
+    Tatami(Fill),
+    Contour(Contour),
+    Meander(Meander),
+    Circular(Circular),
+    Cross(Cross),
+}
+
+impl FillMethod {
+    /// The settings of the fill `sewing` describes; `None` when they cannot be read, or when its fill method
+    /// is not sewn yet (`SC-W0011`), which `diagnostics` says.
+    fn read(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Option<FillMethod> {
+        match sewing.stitch_type {
+            StitchType::ContourFill => contour_settings(sewing, diagnostics).map(FillMethod::Contour),
+            StitchType::MeanderFill => meander_settings(sewing, diagnostics).map(FillMethod::Meander),
+            StitchType::CircularFill => circular_settings(sewing, diagnostics).map(FillMethod::Circular),
+            StitchType::CrossStitch => cross_settings(sewing, diagnostics).map(FillMethod::Cross),
+            _ => fill_settings(sewing, diagnostics).map(FillMethod::Tatami),
+        }
     }
-    if sewing.stitch_type == StitchType::MeanderFill {
-        let Some(meander) = meander_settings(sewing, diagnostics) else { return Ok(None) };
-        return Ok(Some(meander_fill(region, &meander, needle, next, rng, meter)?));
+
+    /// The fill sewn over `region` by its generator, from the `needle` to near what `next` offers, its
+    /// random variation drawn from `rng`.
+    fn sew(
+        &self,
+        region: &Region,
+        needle: Option<Point>,
+        next: Option<&Approach>,
+        rng: &mut SplitMix64,
+        meter: &mut Meter,
+    ) -> Result<Stitched, Exhausted> {
+        match self {
+            FillMethod::Contour(contour) => contour_fill(region, contour, needle, rng, meter),
+            FillMethod::Meander(meander) => meander_fill(region, meander, needle, next, rng, meter),
+            FillMethod::Circular(circular) => circular_fill(region, circular, needle, next, rng, meter),
+            FillMethod::Cross(cross) => cross_stitch(region, cross, needle, next, meter),
+            FillMethod::Tatami(fill) => tatami_fill(region, fill, needle, next, rng, meter),
+        }
     }
-    if sewing.stitch_type == StitchType::CircularFill {
-        let Some(circular) = circular_settings(sewing, diagnostics) else { return Ok(None) };
-        return Ok(Some(circular_fill(region, &circular, needle, next, rng, meter)?));
+
+    /// Its underlay's layers, the inset of the parts they are sewn over and the needle's travel: the tatami
+    /// fill's underlay, which every fill method with one sews. `None` for a cross stitch, which has none.
+    fn underlay(&self) -> Option<(&[FillLayer], f64, Travel)> {
+        match self {
+            FillMethod::Tatami(fill) => Some((&fill.underlay, fill.inset, fill.top.travel)),
+            FillMethod::Contour(contour) => Some((&contour.underlay, contour.inset, contour.travel)),
+            FillMethod::Meander(meander) => Some((&meander.underlay, meander.inset, meander.travel)),
+            FillMethod::Circular(circular) => Some((&circular.underlay, circular.inset, circular.travel)),
+            FillMethod::Cross(_) => None,
+        }
     }
-    if sewing.stitch_type == StitchType::CrossStitch {
-        let Some(cross) = cross_settings(sewing, diagnostics) else { return Ok(None) };
-        return Ok(Some(cross_stitch(region, &cross, needle, next, meter)?));
+
+    /// The same fill without its underlay: what its top sews alone.
+    fn without_underlay(&self) -> FillMethod {
+        let mut top = self.clone();
+        match &mut top {
+            FillMethod::Tatami(fill) => fill.underlay.clear(),
+            FillMethod::Contour(contour) => contour.underlay.clear(),
+            FillMethod::Meander(meander) => meander.underlay.clear(),
+            FillMethod::Circular(circular) => circular.underlay.clear(),
+            FillMethod::Cross(_) => {}
+        }
+        top
     }
-    let Some(fill) = fill_settings(sewing, diagnostics) else { return Ok(None) };
-    Ok(Some(tatami_fill(region, &fill, needle, next, rng, meter)?))
 }
 
 /// The contour fill `sewing` describes, its settings read as a contour fill reads them: its rings the row
@@ -702,26 +764,50 @@ fn fill_pull(pull: &PullParams, diagnostics: &mut Vec<Diagnostic>) -> Pull {
     Pull { mm: mm.map(|value| value.max(0.0)), share: percent.map(|value| value.max(0.0) / 100.0) }
 }
 
-/// A satin column's stitches as `sewing` says, varied at random by its `rng`, or `None` when it is skipped:
-/// its path is `width` wide with `join` at its corners when it is its centre line. Its `satin_method` picks
-/// the generator. Its travel between underlays, and its way to its start and end, take the first of the
-/// running stitch's lengths and its tolerance.
+/// A satin column's stitches as `sewing` says, between its `neighbours`, varied at random by its `rng`, or
+/// `None` when it is skipped: its path is `width` wide with `join` at its corners when it is its centre
+/// line ([`SatinRead`]).
 fn satin_column(
     sewing: &Sewing,
-    (path, width, join): (&Path, Mm, Join),
+    neighbours: &Neighbours,
+    shape: (&Path, Mm, Join),
     rng: &mut SplitMix64,
     diagnostics: &mut Vec<Diagnostic>,
     meter: &mut Meter,
 ) -> Result<Option<Stitched>, Exhausted> {
-    let Some(params) = sewing.read(SatinParams::from_set_as, diagnostics) else { return Ok(None) };
-    let Some(rails) = satin::rails(path, width, join, diagnostics, meter)? else { return Ok(None) };
-    let running = sewing.read(RunningParams::from_set_as, diagnostics);
-    let pull = sewing.read(PullParams::from_set_as, diagnostics);
-    let (Some(Shared { min_stitch, max_stitch, jump, .. }), Some(running), Some(pull)) = (sewing.shared, running, pull) else { return Ok(None) };
-    // The registry reads a list of 1 length or more.
-    let Some(&travel) = running.running_stitch_length_mm.first() else { return Ok(None) };
-    let lengths = SatinLengths { min_stitch, max_stitch, travel, tolerance: running.running_stitch_tolerance_mm, jump };
-    Ok(Some(satin_stitch(&rails, &params, &pull, lengths, sewing.neighbours, &sewing.hints, rng, meter)?))
+    let Some(SatinRead { rails, params, pull, lengths }) = SatinRead::read(sewing, shape, diagnostics, meter)? else { return Ok(None) };
+    Ok(Some(satin_stitch(&rails, &params, &pull, lengths, neighbours, &sewing.hints, rng, meter)?))
+}
+
+/// A satin column's settings, read as its `satin_method` reads them, and its rails: what its generator sews
+/// from. Its travel between underlays, and its way to its start and end, take the first of the running
+/// stitch's lengths and its tolerance.
+struct SatinRead {
+    rails: Satin,
+    params: SatinParams,
+    pull: PullParams,
+    lengths: SatinLengths,
+}
+
+impl SatinRead {
+    /// The satin column `sewing` describes, its path `width` wide with `join` at its corners when it is its
+    /// centre line; `None` when it is skipped, which `diagnostics` says.
+    fn read(
+        sewing: &Sewing,
+        (path, width, join): (&Path, Mm, Join),
+        diagnostics: &mut Vec<Diagnostic>,
+        meter: &mut Meter,
+    ) -> Result<Option<SatinRead>, Exhausted> {
+        let Some(params) = sewing.read(SatinParams::from_set_as, diagnostics) else { return Ok(None) };
+        let Some(rails) = satin::rails(path, width, join, diagnostics, meter)? else { return Ok(None) };
+        let running = sewing.read(RunningParams::from_set_as, diagnostics);
+        let pull = sewing.read(PullParams::from_set_as, diagnostics);
+        let (Some(Shared { min_stitch, max_stitch, jump, .. }), Some(running), Some(pull)) = (sewing.shared, running, pull) else { return Ok(None) };
+        // The registry reads a list of 1 length or more.
+        let Some(&travel) = running.running_stitch_length_mm.first() else { return Ok(None) };
+        let lengths = SatinLengths { min_stitch, max_stitch, travel, tolerance: running.running_stitch_tolerance_mm, jump };
+        Ok(Some(SatinRead { rails, params, pull, lengths }))
+    }
 }
 
 /// The line a stroke sewn as `stitch_type` is cut to its clips along (`REQ-GEN-005`): a manual stitch's
@@ -990,8 +1076,8 @@ mod tests {
         let neighbours = Neighbours::default();
         let sew = |set: &ParamSet, stitch_type, shared, diagnostics: &mut Vec<Diagnostic>| {
             let (rng, meter) = (&mut SplitMix64::new(1), &mut Budget::DEFAULT.meter());
-            let sewing = Sewing { set: Cow::Borrowed(set), stitch_type, shared, neighbours: &neighbours, hints: Hints::default() };
-            fill(&sewing, &region, rng, diagnostics, meter).unwrap()
+            let sewing = Sewing { set: Cow::Borrowed(set), stitch_type, shared, hints: Hints::default() };
+            fill(&sewing, &neighbours, &region, rng, diagnostics, meter).unwrap()
         };
         let mut diagnostics = Vec::new();
         let sewn = sew(&ParamSet::new(), StitchType::TatamiFill, shared(Mm::new(4.0).ok()), &mut diagnostics);
@@ -1014,6 +1100,28 @@ mod tests {
         let mut diagnostics = Vec::new();
         let sewn = sew(&ParamSet::new(), StitchType::TatamiFill, shared(None), &mut diagnostics);
         assert_eq!((sewn.is_none(), codes(&diagnostics)), (true, vec![Code::InternalCheckFailed]));
+    }
+
+    #[test]
+    fn each_fill_method_with_an_underlay_gives_it_and_sews_its_top_without_it() {
+        // The underlay a fill in a run of underlays first sews apart, and the fill without it that sews its top.
+        let shared =
+            Some(Shared { min_stitch: Mm::new(0.3).unwrap(), max_stitch: Mm::new(4.0).ok(), jump: Mm::new(3.0).unwrap(), force_locks: false });
+        let methods = [
+            (StitchType::TatamiFill, true),
+            (StitchType::ContourFill, true),
+            (StitchType::MeanderFill, true),
+            (StitchType::CircularFill, true),
+            (StitchType::CrossStitch, false),
+        ];
+        for (stitch_type, underlaid) in methods {
+            let set = ParamSet::new();
+            let sewing = Sewing { set: Cow::Borrowed(&set), stitch_type, shared, hints: Hints::default() };
+            let method = FillMethod::read(&sewing, &mut Vec::new()).unwrap();
+            let layers = |method: &FillMethod| method.underlay().map(|(layers, inset, travel)| (layers.len(), inset, travel.min_stitch));
+            assert_eq!(layers(&method), underlaid.then_some((1, 0.0, 0.3)), "{stitch_type:?}");
+            assert_eq!(layers(&method.without_underlay()), underlaid.then_some((0, 0.0, 0.3)), "{stitch_type:?}");
+        }
     }
 
     #[test]
