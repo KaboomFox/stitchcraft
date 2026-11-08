@@ -13,8 +13,8 @@
 //!    target point, and 1 closed line spirals in to it.
 //! 2. **Measures.** Every line runs through a point of each measure, a pair of points. Along a column they
 //!    are the pairs a satin column places every `running_stitch_tolerance_mm`, without compensation
-//!    ([`satin::ripple_pairs`]). Towards a target point they are the needle points of the line's running
-//!    stitch, its outline ([`running::outline`]), each paired with the target point (the `lines` module).
+//!    (`satin::ripple_pairs`). Towards a target point they are the needle points of the line's running
+//!    stitch, its outline (`running::outline`), each paired with the target point (the `lines` module).
 //! 3. **Count, places and lines.** `line_count`, or what `min_line_dist_mm` gives with its parity kept. Line
 //!    `k` of `n` lies at `(k / (n − 1))^exponent` of the way along each measure, flipped with
 //!    `flip_exponent`.

@@ -195,12 +195,6 @@ fn req_rip_002_the_target_point_is_the_given_one_or_the_middle_of_the_hull() {
 
 #[test]
 fn req_rip_003_the_count_is_line_count_or_what_min_line_dist_mm_gives_with_its_parity() {
-    // Ink/Stitch's shortest: a length of 0 is taken, and the next replaces it, so the last 0 stays.
-    assert_eq!(shortest([3.0, 2.0, 5.0]), 2.0);
-    assert_eq!(shortest([0.0, 4.0, 3.0]), 3.0);
-    assert_eq!(shortest([2.0, 0.0, 5.0]), 5.0);
-    assert_eq!(shortest([2.0, 5.0, 0.0]), 0.0);
-    assert_eq!(shortest([]), 0.0);
     let read = |with: &[(&str, &str)]| ripple(with, None).ripple;
     let plain = |lines: usize| Count { lines, cut: None };
     // `line_count`, 1 more for a closed line or the point join, at least 2 along a column.
@@ -237,6 +231,16 @@ fn req_rip_003_the_count_is_line_count_or_what_min_line_dist_mm_gives_with_its_p
     let closed = count(&read(&[("min_line_dist_mm", "1"), ("line_count", "9")]), 1001.0, (true, false));
     assert_eq!(closed, Count { lines: 1000, cut: Some(1001.0) });
     assert_eq!(count(&read(&[("min_line_dist_mm", "1"), ("line_count", "3")]), 0.0, (false, true)), plain(2));
+}
+
+#[test]
+fn req_rip_003_the_shortest_measure_is_ink_stitch_s_and_a_ripple_counts_its_lines_so() {
+    // Ink/Stitch's shortest: a length of 0 is taken, and the next replaces it, so the last 0 stays.
+    assert_eq!(shortest([3.0, 2.0, 5.0]), 2.0);
+    assert_eq!(shortest([0.0, 4.0, 3.0]), 3.0);
+    assert_eq!(shortest([2.0, 0.0, 5.0]), 5.0);
+    assert_eq!(shortest([2.0, 5.0, 0.0]), 0.0);
+    assert_eq!(shortest([]), 0.0);
     // A target point on the line: the measure there has no length, and the next one counts. A line 10 mm
     // long aiming at its middle with lines 1 mm apart has 2 lines, the line and the target point, from 2.5 mm.
     let middle = run(&line(), &[("min_line_dist_mm", "1"), ("staggers", "0")], None);
