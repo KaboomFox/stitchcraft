@@ -64,11 +64,12 @@ fn req_vc_009_start_and_end_markers_place_the_shapes_grouped_with_them() {
     // as everything hidden is.
     let inner = format!(r#"{{"id": 7, "kind": {{"type": "group", "children": [{}]}}}}"#, square(8, 100.0, 0.0, RED));
     let group = format!(
-        r#"{{"id": 3, "kind": {{"type": "group", "children": [{}, {}, {}, {inner}, {}]}}}}"#,
+        r#"{{"id": 3, "kind": {{"type": "group", "children": [{}, {}, {}, {inner}, {}, {}]}}}}"#,
         square(2, 0.0, 0.0, RED),
         named(&square(4, 2.0, 2.0, RED), "stitch:start"),
         named(&square(5, 30.0, 30.0, RED), "Stitch:End 2"),
-        named(&square(9, 60.0, 60.0, RED), "stitch:start")
+        named(&square(9, 60.0, 60.0, RED), "stitch:start"),
+        named(&square(11, 90.0, 90.0, RED), "stitch:end")
     );
     let hidden = named(&square(6, 50.0, 0.0, RED), "stitch:start").replacen("{\"name\"", "{\"visible\": false, \"name\"", 1);
     let read = read_ok(&document(4, &[group, hidden, square(10, 200.0, 0.0, RED)].join(",")));
@@ -78,8 +79,9 @@ fn req_vc_009_start_and_end_markers_place_the_shapes_grouped_with_them() {
     let placed = Hints { start: at(2.0, 2.0), end: at(30.0, 30.0), target: None, ..Hints::default() };
     let hints: Vec<Hints> = read.design.elements().iter().map(|e| e.hints.clone()).collect();
     assert_eq!(hints, [placed.clone(), placed, Hints::default()]);
-    assert_eq!(said(&read), [about(NAMED, 9)]);
+    assert_eq!(said(&read), [about(NAMED, 9), about(NAMED, 11)]);
     assert!(read.warnings[0].message.contains("another start marker in its group comes first"), "{}", read.warnings[0]);
+    assert!(read.warnings[1].message.contains("another end marker in its group comes first"), "{}", read.warnings[1]);
 }
 
 #[test]
@@ -324,11 +326,20 @@ fn req_vc_009_guide_and_anchor_markers_steer_the_ripple_stitches_grouped_with_th
         named(&polyline(5, &[(0.0, 0.0), (0.0, 72.0)]), "stitch:guide the arch"),
         named(&rails, "stitch:guide"),
         named(&polyline(10, &[(10.0, 0.0), (10.0, 36.0), (20.0, 36.0)]), "Stitch:Anchor"),
+        named(&polyline(11, &[(0.0, 0.0), (9.0, 9.0)]), "stitch:anchor"),
     ];
     let read = read_ok(&document(4, &format!(r#"{{"id": 3, "kind": {{"type": "group", "children": [{}]}}}}"#, objects.join(","))));
     assert_eq!(ids(&read), ["vc:2:fill"]);
-    // The second guide is named, unused.
-    assert_eq!(said(&read), [about(NAMED, 6)]);
+    // The second guide and the second anchor are named, unused, each by what it would mark.
+    assert_eq!(said(&read), [about(NAMED, 6), about(NAMED, 11)]);
+    let unused = |noun: &str, what: &str| {
+        format!(
+            "The object \"stitch:{noun}\" would mark {what}, and is not stitched. It is not used: it has no point that reads, or another \
+             {noun} marker in its group comes first."
+        )
+    };
+    assert_eq!(read.warnings[0].message, unused("guide", "the line the ripple stitches grouped with it follow"));
+    assert_eq!(read.warnings[1].message, unused("anchor", "the line across the ripple stitches grouped with it"));
     let hints = &read.design.elements()[0].hints;
     let guide = hints.guide.as_ref().unwrap();
     assert_eq!(guide.path, Path { subpaths: vec![in_mm(&[(0.0, 0.0), (0.0, 72.0)])] });

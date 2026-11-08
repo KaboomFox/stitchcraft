@@ -7,9 +7,9 @@
 mod common;
 
 use common::{ids, svg, warnings};
-use stitchcraft_core::{Mm, Point};
+use stitchcraft_core::{Budget, Mm, Point};
 use stitchcraft_engine::design::{Guide, Join, Path, Segment, Subpath};
-use stitchcraft_svg::Svg;
+use stitchcraft_svg::{Svg, read};
 
 /// A point in millimetres.
 fn p(x: f64, y: f64) -> Point {
@@ -131,4 +131,23 @@ fn req_rip_012_helpers_steer_only_the_shapes_beside_them_in_their_group() {
     )));
     let guided: Vec<(&str, bool)> = steered(&file).into_iter().map(|(id, guide, _)| (id, guide.is_some())).collect();
     assert_eq!(guided, [("svg:inner:stroke", false), ("svg:a:stroke", true), ("svg:b:stroke", true)]);
+}
+
+#[test]
+fn req_rip_012_a_group_is_looked_through_for_helpers_once() {
+    // Its children are looked at once for guide and anchor lines, at a unit of work each, whatever the number
+    // of its shapes: 40 shapes in a group cost little more than the same shapes alone, and not 40 looks of 40.
+    let cost = |text: &str| -> u64 {
+        let fits = |work: u64| read(text.as_bytes(), &Budget { max_stitches: 1, max_work: work }).is_ok();
+        let (mut low, mut high) = (0, 1 << 20);
+        assert!(fits(high));
+        while high - low > 1 {
+            let middle = (low + high) / 2;
+            if fits(middle) { high = middle } else { low = middle }
+        }
+        high
+    };
+    let shapes: String = (0..40).map(|k| format!(r#"<rect x="{k}" width="0.5" height="0.5"/>"#)).collect();
+    let (alone, grouped) = (cost(&drawing(&shapes)), cost(&drawing(&format!("<g>{shapes}</g>"))));
+    assert!(grouped > alone && grouped <= alone + 2 * 40, "{alone} {grouped}");
 }

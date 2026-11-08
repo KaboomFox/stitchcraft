@@ -364,6 +364,21 @@ fn req_rip_013_adaptive_places_a_copy_where_its_box_clears_the_last_one_s_moved_
     // Each copy is the zigzag turned 90° and doubled, its ends on the pair's.
     let first = copied(&zigzag, &column, &[("satin_guide_pattern_position", "adaptive")], false, None);
     assert_eq!(first[0], [(0.0, 0.0), (-1.0, 2.0), (1.0, 3.0), (0.0, 4.0)]);
+    // Wherever the zigzag lies, its ends land on the pairs: moved by (3, 5), or turned a quarter round, it
+    // places the same copies.
+    let moved: Vec<(f64, f64)> = zigzag.iter().map(|&(x, y)| (x + 3.0, y + 5.0)).collect();
+    assert_eq!(copied(&moved, &column, &[("satin_guide_pattern_position", "adaptive")], false, None), first);
+    let turned: Vec<(f64, f64)> = zigzag.iter().map(|&(x, y)| (-y, x)).collect();
+    assert_eq!(copied(&turned, &column, &[("satin_guide_pattern_position", "adaptive")], false, None), first);
+    // As in Ink/Stitch, the box is moved back across the guide the same way whichever way the copies run. With
+    // the rails swapped they run the other way, and the box moved back lies behind each copy: the zigzag, 1 mm
+    // tall and doubled across the column, is copied (1 − 0.5) × 2 mm apart, where the other way (1 + 0.5) × 2.
+    let swapped = satin_guide(&COLUMN, &[("swap_satin_rails", "true")]);
+    let with = [("min_line_dist_mm", "0.5"), ("satin_guide_pattern_position", "adaptive")];
+    let swapped_starts: Vec<f64> = copied(&zigzag, &swapped, &with, false, None).iter().map(|copy| copy[0].0).collect();
+    assert_eq!(swapped_starts[..4], [0.0, 1.005, 2.011, 3.016]);
+    assert_eq!(swapped_starts.len(), 20);
+    assert_eq!(starts(&[("min_line_dist_mm", "0.5")]), [0.0, 3.016, 6.033, 9.049, 12.065, 15.081, 18.098]);
 }
 
 #[test]
@@ -403,6 +418,9 @@ fn a_guide_reads_as_a_satin_column_where_it_is_one_or_has_several_subpaths() {
     assert_eq!(said, ["warning SC-W0409: This ripple stitch's guide can't be used: its satin guide's settings don't read. It is sewn without it."]);
     let (_, said) = read(&COLUMN[..2], &[("zigzag_spacing_mm", "wide"), ("swap_satin_rails", "maybe")]);
     assert_eq!(said.len(), 1, "{said:?}");
+    let (none, said) = read(&COLUMN[..2], &[("zigzag_spacing_mm", "200"), ("contour_underlay", "maybe")]);
+    assert_eq!(none, None);
+    assert!(said.len() == 2 && said[0].starts_with("warning SC-W0102") && said[1].starts_with("warning SC-W0409"), "{said:?}");
     let (some, said) = read(&COLUMN[..2], &[("zigzag_spacing_mm", "200")]);
     assert!(some.is_some() && said.len() == 1 && said[0].starts_with("warning SC-W0102"), "{said:?}");
 }
@@ -438,6 +456,8 @@ fn directions_turns_and_scales_are_plain_arithmetic() {
     assert_eq!(spaced(2.0, 5.0, 1), [2.0]);
     assert_eq!(spaced(0.0, 1.0, 0), Vec::<f64>::new());
     assert_eq!(spaced(0.1, 0.2, 4).last(), Some(&0.2));
+    // 1 + 3 × (−0.7 / 3) is 0.30000000000000004, and the last is the end itself.
+    assert_eq!(spaced(1.0, 0.3, 4).last(), Some(&0.3));
     assert_eq!(bounds(&[p(1.0, 5.0), p(-2.0, 3.0), p(4.0, 4.0)]), ([-2.0, 3.0], [4.0, 5.0]));
     assert_eq!(bounds(&[]), ([0.0, 0.0], [0.0, 0.0]));
     assert_eq!(capped(MOST), (MOST, None));
@@ -461,6 +481,7 @@ fn a_line_s_centroid_is_its_segments_middles_weighed_by_length() {
 fn boxes_that_share_a_point_are_not_disjoint() {
     let square = |x: f64, y: f64, side: f64| [[x, y], [x, y + side], [x + side, y + side], [x + side, y]];
     assert!(disjoint(&square(0.0, 0.0, 1.0), &square(2.0, 0.0, 1.0)));
+    assert!(disjoint(&square(0.0, 0.0, 1.0), &square(0.0, 2.0, 1.0)));
     assert!(!disjoint(&square(0.0, 0.0, 1.0), &square(1.0, 0.0, 1.0)), "they touch along x = 1");
     assert!(!disjoint(&square(0.0, 0.0, 2.0), &square(1.0, 1.0, 2.0)));
     // A diamond that only its own side's line holds apart from a square.
@@ -473,4 +494,23 @@ fn boxes_that_share_a_point_are_not_disjoint() {
     assert!(!disjoint(&segment(0.0, 1.0), &segment(1.0, 2.0)));
     assert!(disjoint(&[[0.0, 0.0]; 4], &[[1.0, 0.0]; 4]));
     assert!(!disjoint(&[[1.0, 0.0]; 4], &[[1.0, 0.0]; 4]));
+}
+
+#[test]
+fn a_turned_box_is_held_apart_by_the_line_square_to_its_side() {
+    // A box 4 by 1 turned 30°, and a square 0.2 a side 0.2 beyond its long side: only the line square to that
+    // side, at 120°, has them on each side of it. Along x, along y, and at -30° and 60°, their shadows meet.
+    let (cos, sin) = (3.0_f64.sqrt() / 2.0, 0.5);
+    let at = |u: f64, v: f64| [u * cos - v * sin, u * sin + v * cos];
+    let turned = [at(0.0, 0.0), at(4.0, 0.0), at(4.0, 1.0), at(0.0, 1.0)];
+    let square = |[x, y]: [f64; 2]| [[x, y], [x + 0.2, y], [x + 0.2, y + 0.2], [x, y + 0.2]];
+    assert!(disjoint(&turned, &square(at(2.0, 1.3))));
+    // Moved 0.4 back across that side, it overlaps the box.
+    assert!(!disjoint(&turned, &square(at(2.0, 0.9))));
+    // A trapezoid's slanted side holds apart a square beyond it, where no line along or square to its other
+    // sides does.
+    let trapezoid = [[0.0, 0.0], [0.0, 4.0], [4.0, 2.0], [4.0, 0.0]];
+    let square = |x: f64, y: f64| [[x, y], [x, y + 0.5], [x + 0.5, y + 0.5], [x + 0.5, y]];
+    assert!(disjoint(&trapezoid, &square(1.25, 3.5)));
+    assert!(!disjoint(&trapezoid, &square(1.25, 3.0)));
 }
