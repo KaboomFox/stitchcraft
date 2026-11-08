@@ -147,6 +147,9 @@ another.
 | `SC-W0403` | Warning | Hand-placed stitch shorter than the shortest stitch; point left out | M3 |
 | `SC-W0404` | Warning | Hand-placed stitch longer than max_stitch_length_mm; kept for the shortest stitch | M3 |
 | `SC-W0405` | Warning | Zigzag stitch shorter than the shortest stitch; the zigzag sews narrower | M7 |
+| `SC-W0406` | Warning | Ripple stitch setting not sewn yet; sewn without it (clips, and the satin column's settings that turn, swap or push a column's rails) | M10 |
+| `SC-W0407` | Warning | Ripple stitch of more than 1,000 lines; cut to 1,000, or 999 to keep the parity of `line_count` | M10 |
+| `SC-W0408` | Warning | Ripple stitch's skips would leave out every line; every line sewn | M10 |
 | `SC-W0502` | Warning | Lock stitch shorter than 0.2 mm; lengthened | M3 |
 | `SC-W0503` | Warning | Custom lock cannot be sewn as written | M3 |
 | `SC-I0504` | Info | Stitches shorter than the shortest stitch merged | M3 |

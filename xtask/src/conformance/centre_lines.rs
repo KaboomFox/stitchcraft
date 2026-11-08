@@ -275,6 +275,8 @@ fn shapes(root: &Path, subject: &Subject) -> Result<Shapes, String> {
             Ok(Shapes { named: automatic_of(&design), settings: design.settings, name })
         }
         Subject::Letters(letters) => Ok(Shapes { named: drawn(letters)?, settings: DesignSettings::default(), name: "letters".to_string() }),
+        // `load_cases` gives a part of a sheet to inkstitch cases alone.
+        Subject::Part { sheet, .. } => Err(format!("a centre-lines case draws the whole of {sheet}, not a part")),
     }
 }
 

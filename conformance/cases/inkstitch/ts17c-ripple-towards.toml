@@ -1,0 +1,12 @@
+# TS-17C's M10.8 part, its wave: a ripple stitch of an open line whose 8 copies shrink to the point its target
+# command places, the lines meeting at points (REQ-RIP-011). The copies are made from the line's running
+# stitch, whose needle points each program places its own way along the curve: each program's needle points
+# lie within 0.18 mm of the other's stitches, and their threads overlap by 0.83.
+id = "inkstitch-ts17c-ripple-towards"
+requirements = ["REQ-RIP-011"]
+kind = "inkstitch"
+sheet = "TS-17C"
+elements = "ts17c:ripple:towards"
+
+[excused]
+overlap = "DEV-RUN-002"

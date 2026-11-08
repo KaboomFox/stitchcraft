@@ -467,9 +467,9 @@ fn req_gen_003_what_an_element_offers_comes_from_its_shape_and_settings() {
     assert_eq!(approach(&method("meander_fill"), &DesignSettings::default(), &Budget::DEFAULT), area);
     assert_eq!(approach(&method("tartan_fill"), &DesignSettings::default(), &Budget::DEFAULT), area);
     assert_eq!(approach(&method("guided_fill"), &DesignSettings::default(), &Budget::DEFAULT), None);
-    // A stroke of a method not sewn yet still offers its first point, as Ink/Stitch's strokes of every
-    // method do (ADR 0014), so the element before it ends as it does in Ink/Stitch. So does a stroke whose
-    // running stitch settings cannot be read: its offer does not depend on them.
+    // A ripple stitch offers its first point too, as Ink/Stitch's strokes of every method do (ADR 0014), so
+    // the element before it ends as it does in Ink/Stitch. So does a stroke whose running stitch settings
+    // cannot be read: its offer does not depend on them.
     for params in [&[("stroke_method", "ripple_stitch")][..], &[("running_stitch_length_mm", "lots")]] {
         let other = Element { params: params.iter().copied().collect(), ..stroke.clone() };
         assert_eq!(approach(&other, &DesignSettings::default(), &Budget::DEFAULT), Some(Approach::Point(p(2.0, 3.0))), "{params:?}");

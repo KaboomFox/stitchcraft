@@ -1,0 +1,7 @@
+# TS-17C's M10.8 part, its rainbow: a ripple stitch along a column drawn with rails and rungs, whose 7 lines run
+# back and forth from the outer arch to the inner one (REQ-RIP-011).
+id = "inkstitch-ts17c-ripple-column"
+requirements = ["REQ-RIP-011"]
+kind = "inkstitch"
+sheet = "TS-17C"
+elements = "ts17c:ripple:column"
