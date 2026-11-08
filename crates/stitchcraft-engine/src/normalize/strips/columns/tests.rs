@@ -953,6 +953,11 @@ fn req_auto_016_a_line_that_leaves_through_a_cut_just_past_a_junction_turns_nowh
     assert_eq!(cut(&turned_early, false), [open(&[0, 1]), open(&[1, 2, 3])]);
     assert_eq!(leaving(&turned_early, 0), [open(&[0, 1, 2, 3])]);
     assert_eq!(leaving(&turned_early, 3), [open(&[0, 1]), open(&[1, 2, 3])]);
+    // So for a longer line whose junction is the last but one of its points.
+    let longer = [((-7.5, 0.0), None), ((-5.0, 0.0), None), ((-2.5, 0.0), None), ((0.0, 0.0), Some(1.0)), ((0.0, 5.0), None)];
+    let mut skeleton = drawn(&longer);
+    skeleton.graph.cut[4] = Some(0);
+    assert_eq!(cornered(&skeleton, &[open(&[0, 1, 2, 3, 4])]), [open(&[0, 1, 2, 3, 4])]);
     let lens = [((5.0, -3.0), None), ((0.0, 0.0), Some(1.0)), ((5.0, 3.0), None), ((10.0, 0.0), Some(1.0))];
     let mut skeleton = drawn(&lens);
     skeleton.graph.cut[0] = Some(0);
