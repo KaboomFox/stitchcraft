@@ -27,7 +27,7 @@
 //! as an angle of 0 does.
 
 use stitchcraft_core::units::MM_PER_SVG_PX;
-use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Mm, Point};
+use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Mm, Point, Severity};
 
 use stitchcraft_params::{StitchType, toggle};
 
@@ -80,7 +80,7 @@ pub enum RippleGuide {
 /// `reverse_rails` and `swap_satin_rails` for a satin guide's rails: a satin column when its own
 /// `satin_column` is on or it has several subpaths, as Ink/Stitch reads a guide, and otherwise a line, its
 /// nodes for a guide sewn as a manual stitch. `None`, with the reason in `diagnostics`, when a satin guide's
-/// settings don't read.
+/// settings don't read: what reading them warns of, and `SC-W0409` in place of its errors ([`unsaid`]).
 pub fn guide(guide: &Guide, own: &RippleParams, diagnostics: &mut Vec<Diagnostic>) -> Option<RippleGuide> {
     let satin = guide.params.get(SATIN_COLUMN).and_then(toggle) == Some(true) || guide.path.subpaths.len() > 1;
     if !satin {
@@ -94,7 +94,7 @@ pub fn guide(guide: &Guide, own: &RippleParams, diagnostics: &mut Vec<Diagnostic
             Some(RippleGuide::Satin { path: guide.path.clone(), width: guide.width, join: guide.join, params: Box::new(params) })
         }
         Err(problems) => {
-            diagnostics.extend(problems);
+            diagnostics.extend(unsaid(problems));
             diagnostics.push(unusable("its satin guide's settings don't read", "Correct the satin guide's settings."));
             None
         }
@@ -136,8 +136,9 @@ pub(super) struct Placing<'a> {
 }
 
 /// The copies of `outline` that `guide` places as `placing` says, or `None` when it places none: what is
-/// wrong with the guide then goes to `warnings`, and the ripple sews without it. Every point of every copy
-/// costs a unit of `meter`'s work, and the copies must fit in the stitches left.
+/// wrong with the guide then goes to `warnings`, and the ripple sews without it, its satin guide's errors
+/// left to `SC-W0409` ([`unsaid`]). Every point of every copy costs a unit of `meter`'s work, and the copies
+/// must fit in the stitches left.
 pub(super) fn copies(
     outline: &[Point],
     guide: &RippleGuide,
@@ -160,7 +161,7 @@ pub(super) fn copies(
                 Some(rails) => satin::ripple_sections(rails, params, &mut said, meter)?,
                 None => Vec::new(),
             };
-            warnings.extend(said);
+            warnings.extend(unsaid(said));
             if sections.is_empty() {
                 warnings.push(unusable("its satin guide has no rails to place copies between", DRAW_GUIDE));
                 return Ok(None);
@@ -532,6 +533,12 @@ fn disjoint(a: &[[f64; 2]; 4], b: &[[f64; 2]; 4]) -> bool {
         let ((a_low, a_high), (b_low, b_high)) = (shadow(a, axis), shadow(b, axis));
         a_high < b_low || b_high < a_low
     })
+}
+
+/// What reading a satin guide said, but its errors: an error would refuse the ripple, which sews without the
+/// guide instead, and `SC-W0409` says why.
+fn unsaid(said: Vec<Diagnostic>) -> impl Iterator<Item = Diagnostic> {
+    said.into_iter().filter(|said| said.code.severity() != Severity::Error)
 }
 
 /// `SC-W0409`: a ripple stitch's guide or anchor line can't place its copies, because `why`, so the ripple

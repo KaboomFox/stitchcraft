@@ -64,6 +64,25 @@ fn req_rip_012_a_guide_grouped_with_the_ripple_carries_its_copies() {
 }
 
 #[test]
+fn diag_sc_w0409_a_satin_guide_that_can_t_be_read_leaves_the_ripple_sewn_without_it() {
+    // A satin guide of 2 points has no rails, and one whose settings don't read is no satin guide: neither
+    // stops the plan, and the ripple sews as it would with no guide.
+    let unguided = sewn(&planned(vec![ripple(line(), &[("line_count", "3")])]));
+    let satin = |path: Path, params: &[(&str, &str)]| Guide { path, width: Mm::ZERO, join: Join::UNSET, params: params.iter().copied().collect() };
+    for guide in [
+        satin(polylines(&[&[(5.0, 5.0)], &[(6.0, 6.0)]]), &[]),
+        satin(polylines(&[&[(-10.0, 5.0), (10.0, 5.0)], &[(-10.0, 9.0), (10.0, 9.0)]]), &[("zigzag_spacing_mm", "wide")]),
+    ] {
+        let hints = Hints { guide: Some(guide), ..Hints::default() };
+        let outcome = planned(vec![Element { hints, ..ripple(line(), &[("line_count", "3")]) }]);
+        let said = messages(&outcome);
+        assert!(said.iter().all(|message| !message.starts_with("error")), "{said:?}");
+        assert!(said.last().is_some_and(|last| last.starts_with("warning SC-W0409")), "{said:?}");
+        assert_eq!(sewn(&outcome), unguided);
+    }
+}
+
+#[test]
 fn req_rip_017_a_ripple_cut_to_clips_sews_what_lies_inside_them() {
     let cut = planned(vec![clipped(ripple(line(), &[]), &[&[(-5.0, -5.0), (5.0, -5.0), (5.0, 5.0), (-5.0, 5.0)]])]);
     assert_eq!(messages(&cut), Vec::<String>::new());

@@ -396,10 +396,15 @@ fn a_guide_reads_as_a_satin_column_where_it_is_one_or_has_several_subpaths() {
         let Some(RippleGuide::Satin { width, join, params, .. }) = read(subpaths, with).0 else { panic!("{subpaths:?}") };
         assert_eq!((width, join, params.reverse_rails, params.swap_satin_rails), (Mm::new(2.0).unwrap(), Join::Round, "second", true));
     }
-    // Its own settings that don't read leave it out, said.
+    // Its own settings that don't read leave it out, said by SC-W0409 alone: their error would refuse the
+    // ripple, which sews without the guide. What reading them warns of is kept.
     let (none, said) = read(&COLUMN[..2], &[("zigzag_spacing_mm", "wide")]);
     assert_eq!(none, None);
-    assert!(said.len() >= 2 && said.last().is_some_and(|last| last.contains("SC-W0409") && last.contains("settings don't read")), "{said:?}");
+    assert_eq!(said, ["warning SC-W0409: This ripple stitch's guide can't be used: its satin guide's settings don't read. It is sewn without it."]);
+    let (_, said) = read(&COLUMN[..2], &[("zigzag_spacing_mm", "wide"), ("swap_satin_rails", "maybe")]);
+    assert_eq!(said.len(), 1, "{said:?}");
+    let (some, said) = read(&COLUMN[..2], &[("zigzag_spacing_mm", "200")]);
+    assert!(some.is_some() && said.len() == 1 && said[0].starts_with("warning SC-W0102"), "{said:?}");
 }
 
 #[test]

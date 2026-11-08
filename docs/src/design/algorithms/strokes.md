@@ -430,7 +430,8 @@ centred. The copies along a guide line don't use it. One whose ends are one poin
 A guide line of no length can't place copies. A satin guide can't place them when its rails don't make a
 section, and it can't when its middle has no length or its first pair has no width. `SC-W0409` says why,
 and the ripple sews as it would without the guide (`DEV-RIP-004`). A satin guide whose own settings don't
-read is left out so too, with what reading them says.
+read is left out so too. What reading a satin guide warns of is said, but not its errors, which would refuse
+the ripple: `SC-W0409` says why the guide is left out instead.
 
 ### Bent lines
 
