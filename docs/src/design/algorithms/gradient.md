@@ -84,8 +84,8 @@ The stops are taken in order, each with its row, and the rows go to their colour
 1. **The first stop** takes rows 0 to its own row, when its row is past row 0.
 2. **Each stop after it** blends with the colour before it. The blend starts at the row after the last
    blend, or after the first stop's row, and its length is the rows from there to the stop's row. Where
-   that row and the stop's row both lie before row 0, the stop blends nothing, and the next stop blends
-   from it.
+   the stop's row and the row before its blend both lie before row 0, the stop blends nothing. The next
+   stop then blends from it.
 3. **A blend of 2 rows or fewer** is no blend. The stop is passed over, and the next blend starts a row
    further on. That leaves a row out, and the next stop blends from the colour before the passed one.
    `SC-W0330` says so where the row left out crosses the piece. A gradient whose start and end are one point
@@ -93,8 +93,9 @@ The stops are taken in order, each with its row, and the rows go to their colour
 4. **After the last blend**, every row left takes the last stop's colour.
 
 A blend lays its rows in a fixed pattern, and it can end a row or 2 before the stop's row, or past it. The
-next blend starts where it ended. The blends never give row 0 to a colour. Only the first stop does. A row
-past the last is left out, and so are the rows of a transparent stop. Stops of one colour share their rows.
+next blend starts where it ended. The blends never give row 0 to a colour, which only the first stop's rows
+or those after the last blend can take. A row past the last is left out, and so are the rows of a
+transparent stop. Stops of one colour share their rows.
 
 **A blend's pattern.** Say the blend is T rows long, and n is the whole square root of T. Its first half is
 laid one row after the other, in rounds 1 to n:
@@ -162,7 +163,8 @@ A preview too costly to sew shows each colour's rows inside the pieces, without 
 The differential sews TS-17B's gradients and 6 files of its own in both programs (`REQ-FILL-GRD-009`).
 Their colour blocks are the same, in the same threads, with the same trims and jumps, but where the
 ledger explains otherwise. Where the counts of stitches agree within the differential's 10 %, StitchCraft sews
-0.4 to 8 % fewer than Ink/Stitch. StitchCraft differs where the drawing and Ink/Stitch's sewing part:
+0.4 to 8 % fewer than Ink/Stitch in the differential's own files, and 9 % fewer over the whole of TS-17B,
+whose tartans count too. StitchCraft differs where the drawing and Ink/Stitch's sewing part:
 
 - Ink/Stitch works out the underlay's angle from the gradient before it applies the gradient's
   `gradientTransform`. The underlay of a turned gradient then doesn't lie along it. StitchCraft's lies along

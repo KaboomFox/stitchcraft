@@ -8,9 +8,10 @@
 mod common;
 
 use common::{at, svg, warnings};
+use stitchcraft_core::Budget;
 use stitchcraft_engine::design::{Gradient, Shape};
 use stitchcraft_plan::Rgb;
-use stitchcraft_svg::Svg;
+use stitchcraft_svg::{Svg, read};
 
 const RED: Rgb = Rgb::new(255, 0, 0);
 const BLUE: Rgb = Rgb::new(0, 0, 255);
@@ -90,10 +91,13 @@ fn req_svg_014_without_units_a_gradient_lies_in_shares_of_the_shape_s_box() {
     let turned = gradient_of(&read, "turned").unwrap();
     at(turned.start, 10.0, 20.0);
     at(turned.end, 10.0, 30.0);
-    // A box with no height paints nothing in a viewer: no gradient to sew.
+    // A box with no height paints nothing in a viewer: no gradient to sew. Nor does one with no width.
     let flat =
         svg(file(&red_blue("flat", ""), r#"<path id="flat" d="M 0 5 H 20 H 0 Z" fill="url(#flat)" inkstitch:fill_method="linear_gradient_fill"/>"#));
     assert_eq!(gradient_of(&flat, "flat"), None);
+    let thin =
+        svg(file(&red_blue("thin", ""), r#"<path id="thin" d="M 5 0 V 20 V 0 Z" fill="url(#thin)" inkstitch:fill_method="linear_gradient_fill"/>"#));
+    assert_eq!(gradient_of(&thin, "thin"), None);
 }
 
 #[test]
@@ -114,6 +118,21 @@ fn req_svg_014_a_gradient_takes_what_it_doesn_t_say_from_the_gradient_it_names()
         <linearGradient id="loop-b" xlink:href="#loop-a"/>"##;
     let gradient = gradient_of(&svg(file(defs, &graded("b", "loop-b", r#"width="10" height="10""#))), "b").unwrap();
     at(gradient.end, 10.0, 0.0);
+}
+
+#[test]
+fn req_svg_014_a_loop_of_names_is_followed_once_round() {
+    // Each gradient followed is a unit of the budget, and a loop is followed once round: a fill's gradient
+    // naming one that names it back costs what it costs where that one names an id the file lacks.
+    let defs = |back: &str| {
+        format!(
+            r##"<linearGradient id="ga" xlink:href="#{back}" gradientUnits="userSpaceOnUse" x2="10"><stop offset="0" stop-color="red"/><stop offset="1" stop-color="blue"/></linearGradient>
+            <linearGradient id="gb" xlink:href="#ga"/>"##
+        )
+    };
+    let cost = |text: String| (1..100_000).find(|&work| read(text.as_bytes(), &Budget { max_stitches: 1, max_work: work }).is_ok()).unwrap();
+    let body = graded("a", "gb", r#"width="10" height="10""#);
+    assert_eq!(cost(file(&defs("gb"), &body)), cost(file(&defs("gx"), &body)));
 }
 
 #[test]

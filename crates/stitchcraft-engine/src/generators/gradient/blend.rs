@@ -7,10 +7,11 @@
 //! the same blend in both programs.
 //!
 //! **The stops in turn.** The first stop takes the rows from row 0 to its own. Each stop after it blends
-//! with the colour before it, over the rows from where the last blend ended to its own row. A blend of 2 rows
-//! or fewer is no blend: the stop is passed over, and the next blend starts a row further on and blends from
-//! the colour before it. After the last blend, the rows left take the last stop's colour. Rows before row 0
-//! or past the last are left out, and only the first stop gives row 0 a colour.
+//! with the colour before it, over the rows from where the last blend ended to its own row, unless both lie
+//! before row 0: then it blends nothing, and the next stop blends from it. A blend of 2 rows or fewer is no
+//! blend: the stop is passed over, and the next blend starts a row further on and blends from the colour
+//! before it. After the last blend, the rows left take the last stop's colour. Rows before row 0 or past the
+//! last are left out, and no blend gives row 0 a colour.
 //!
 //! **What costs.** Each row a blend lays is charged to the meter, those it lays outside the rows too: a
 //! gradient may reach far past its fill.
@@ -240,6 +241,15 @@ mod tests {
         // 2 stops before row 0: the second takes over from the first without a blend, and every row is its.
         let shares = shared(&[(-30, 0), (-10, 1)], 2, 20);
         assert_eq!(shares.rows, [vec![], (0..=20).collect::<Vec<_>>()]);
+        // A third stop then blends from the second: of the blend of 13 rows from row -2, the second colour
+        // takes rows 2, 3, 8 and 5, and the first colour none. Row 0 is left out.
+        let shares = shared(&[(-5, 0), (-3, 1), (10, 2)], 3, 20);
+        assert_eq!(shares.rows[1], [2, 3, 8, 5]);
+        assert!(shares.rows[0].is_empty() && shares.passed.is_empty() && !shares.rows.concat().contains(&0), "{shares:?}");
+        // From before row 0 to row 0 is a blend of 2 rows, which passes its stop over: the rows after it, row 0
+        // among them, take its colour.
+        let shares = shared(&[(-2, 0), (0, 1)], 2, 10);
+        assert_eq!((shares.rows, shares.passed), (vec![vec![], (0..=10).collect()], vec![(1, -1)]));
         // From before row 0 to past it: the blend's rows from row 1 on, the first half's all before it.
         let shares = shared(&[(-6, 0), (6, 1)], 2, 20);
         assert_eq!(shares.rows[0], [3, 1]);

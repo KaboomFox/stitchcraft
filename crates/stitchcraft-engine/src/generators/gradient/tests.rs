@@ -213,9 +213,39 @@ fn req_fill_grd_008_several_parts_sew_each_colour_in_one_stretch() {
     assert_eq!(threads(&stitched, BLACK), [(RED, false), (RED, true), (RED, false), (RED, true), (BLUE, true), (BLUE, true)]);
     let left = |run: &Vec<Point>| run.iter().all(|q| q.x() <= 20.0 + 1e-9);
     assert_eq!(stitched.runs.iter().map(left).collect::<Vec<_>>(), [true, true, false, false, true, false]);
-    // In one part, no sort.
+    // In one part, no sort: an underlay in a colour that sews again last stays first.
     let one = sewn(&region(&[(0.0, 0.0, 20.0, 20.0)]), &fill, Some(p(0.0, 0.0)));
     assert_eq!(threads(&one, BLACK), [(RED, false), (RED, true), (BLUE, true)]);
+    let gradient = along(0.0, 20.0, &[(0.0, RED, 0.0), (0.5, BLUE, 1.0), (1.0, RED, 1.0)]);
+    let fill = GradientFill { underlay: underlay(90.0), ..filled(Colouring::Gradient(gradient)) };
+    let one = sewn(&region(&[(0.0, 0.0, 20.0, 20.0)]), &fill, Some(p(0.0, 0.0)));
+    assert_eq!(threads(&one, BLACK), [(RED, false), (BLUE, true), (RED, true)]);
+}
+
+#[test]
+fn diag_sc_w0309_an_expand_that_shrinks_the_fill_away_sews_its_rows_over_all_of_it() {
+    // A strip 2 mm wide shrunk by 1.5 mm on every side leaves nothing: the rows cover the whole strip, and
+    // that is said of the fill as a whole.
+    let gradient = along(0.0, 20.0, &[(0.0, RED, 1.0), (1.0, BLUE, 1.0)]);
+    let fill = GradientFill { expand: -1.5, ..filled(Colouring::Gradient(gradient)) };
+    let stitched = sewn(&region(&[(0.0, 0.0, 20.0, 2.0)]), &fill, None);
+    let said: Vec<&str> = stitched.warnings.iter().map(|d| d.message.as_str()).collect();
+    assert_eq!(said, ["`expand_mm` shrinks this fill away entirely, so its top rows are sewn over all of it."]);
+    assert_eq!(stitched.warnings[0].code, Code::FillExpandShrinksAway);
+    assert_eq!(threads(&stitched, BLACK), [(RED, true), (BLUE, true)]);
+    let ys = stitched.runs.concat().iter().map(|q| q.y()).fold((f64::INFINITY, f64::NEG_INFINITY), |(a, b), y| (a.min(y), b.max(y)));
+    assert!(ys.0 < 1e-9 && ys.1 > 2.0 - 1e-9, "{ys:?}");
+}
+
+#[test]
+fn the_needle_travels_between_a_colour_s_rows_along_the_outline_with_underpath_on_too() {
+    // Ink/Stitch routes a gradient's colours with underpath off whatever it says: the frame 10 mm wide sews the
+    // same either way, though under the rows the needle could cross between them.
+    let gradient = along(0.0, 10.0, &[(0.0, RED, 1.0), (0.5, WHITE, 1.0), (1.0, BLUE, 1.0)]);
+    let fill = GradientFill { underlay: underlay(0.0), ..filled(Colouring::Gradient(gradient)) };
+    let under = GradientFill { travel: Travel { underpath: true, ..TRAVEL }, ..fill.clone() };
+    let frame = Region { parts: vec![crate::generators::tatami::fixture::frame()] };
+    assert_eq!(sewn(&frame, &under, Some(p(0.0, 0.0))).runs, sewn(&frame, &fill, Some(p(0.0, 0.0))).runs);
 }
 
 #[test]

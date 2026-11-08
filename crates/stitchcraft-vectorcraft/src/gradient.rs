@@ -217,6 +217,24 @@ mod tests {
     }
 
     #[test]
+    fn curves_away_from_the_origin_turn_where_they_turn_back() {
+        // Each curve starts at (3, 7), its bounds round where it turns back along x or along y.
+        let within = |segment: Segment, least: Point, most: Point| {
+            let path = Path { subpaths: vec![Subpath { start: p(3.0, 7.0), segments: vec![segment], closed: false }] };
+            let (a, b) = bounds(&path, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+            assert!(a.distance(least) < 1e-12 && b.distance(most) < 1e-12, "{a:?} {b:?}");
+        };
+        // The curves of the case above, moved: rising to y = 12, and turning 8 / (2√3) either side of y = 7.
+        within(Segment::Quad(p(8.0, 17.0), p(13.0, 7.0)), p(3.0, 7.0), p(13.0, 12.0));
+        let turn = 8.0 / (2.0 * 3f64.sqrt());
+        within(Segment::Cubic(p(3.0, 15.0), p(13.0, -1.0), p(13.0, 7.0)), p(3.0, 7.0 - turn), p(13.0, 7.0 + turn));
+        // Turning back along x half way, at x = 8.
+        within(Segment::Quad(p(13.0, 12.0), p(3.0, 17.0)), p(3.0, 7.0), p(8.0, 17.0));
+        // A curve that would turn back before its start, at t = -1, doesn't: its ends bound it.
+        within(Segment::Quad(p(4.0, 8.0), p(6.0, 10.0)), p(3.0, 7.0), p(6.0, 10.0));
+    }
+
+    #[test]
     fn fitting_a_gradient_charges_each_segment() {
         let paint: Paint = serde_json::from_value(json!({"type": "gradient", "gradient": {"stops": [
             {"offset": 0, "color": {"model": "rgb", "r": 1, "g": 0, "b": 0}},
@@ -231,6 +249,39 @@ mod tests {
         assert_eq!((read.start, read.end), (p(0.0, 5.0), p(10.0, 5.0)));
         // Without a path to fit to, there is no gradient.
         assert!(linear(&paint, &Path { subpaths: Vec::new() }, &mut Budget::DEFAULT.meter()).unwrap().is_none());
+    }
+
+    #[test]
+    fn a_gradient_is_fitted_to_bounds_wherever_they_lie() {
+        // The rectangle from (20, 30) to (30, 50): at 0° from its left side to its right through its middle, and
+        // at 90° from its bottom to its top.
+        let rectangle = Path {
+            subpaths: vec![Subpath {
+                start: p(20.0, 30.0),
+                segments: vec![Segment::Line(p(30.0, 30.0)), Segment::Line(p(30.0, 50.0)), Segment::Line(p(20.0, 50.0))],
+                closed: true,
+            }],
+        };
+        let meter = &mut Budget::DEFAULT.meter();
+        let (start, end) = fitted(&rectangle, 0.0, meter).unwrap().unwrap();
+        assert!(start.distance(p(20.0, 40.0)) < 1e-9 && end.distance(p(30.0, 40.0)) < 1e-9, "{start:?} {end:?}");
+        let (start, end) = fitted(&rectangle, 90.0, meter).unwrap().unwrap();
+        assert!(start.distance(p(25.0, 50.0)) < 1e-9 && end.distance(p(25.0, 30.0)) < 1e-9, "{start:?} {end:?}");
+    }
+
+    #[test]
+    fn a_midpoint_half_way_as_an_f32_writes_it_says_nothing() {
+        // Read from text, as a point's coordinates are.
+        let paint = |midpoint: f64| -> Paint {
+            let paint = json!({"type": "gradient", "gradient": {"stops": [
+                {"offset": 0, "color": {"model": "rgb", "r": 1, "g": 0, "b": 0}, "midpoint": midpoint},
+                {"offset": 1, "color": {"model": "rgb", "r": 0, "g": 0, "b": 1}}
+            ]}, "geom": {"start": [0, 0], "end": [10, 0]}});
+            serde_json::from_str(&paint.to_string()).unwrap()
+        };
+        let notes = |midpoint: f64| linear(&paint(midpoint), &Path { subpaths: Vec::new() }, &mut Budget::DEFAULT.meter()).unwrap().unwrap().notes;
+        assert!(notes(0.5).is_empty() && notes(f64::from(0.5_f32 + f32::EPSILON)).is_empty());
+        assert_eq!(notes(0.501).len(), 1);
     }
 
     #[test]
