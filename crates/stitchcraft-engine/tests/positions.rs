@@ -135,7 +135,7 @@ fn req_gen_001_a_fill_or_a_satin_column_with_a_start_position_offers_it() {
     let settings = DesignSettings::default();
     let start = Some(p(15.0, -5.0));
     let offer = |element: Element| approach(&placed(element, start, None), &settings, &Budget::DEFAULT);
-    for method in ["tatami_fill", "contour_fill", "legacy_fill", "tartan_fill"] {
+    for method in ["tatami_fill", "contour_fill", "legacy_fill", "tartan_fill", "guided_fill"] {
         assert_eq!(offer(square(method)), Some(Approach::Point(p(15.0, -5.0))), "{method}");
     }
     assert_eq!(offer(column(&[])), Some(Approach::Point(p(15.0, -5.0))));

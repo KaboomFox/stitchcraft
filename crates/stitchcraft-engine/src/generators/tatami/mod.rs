@@ -47,16 +47,27 @@ pub const ANGLE: &str = "angle";
 /// spiral, which its end spacing spaces, its `skip_last` shortens and its `underpath` travels under.
 const ROUTED: &[StitchType] = &[StitchType::TatamiFill, StitchType::CircularFill];
 
+/// The stitch types whose rows `skip_last` shortens: those [`ROUTED`], and a tartan fill's lines, which are
+/// routed as a tatami fill's rows are, though Ink/Stitch's settings window doesn't show it for them.
+const SKIPPED: &[StitchType] = &[StitchType::TatamiFill, StitchType::CircularFill, StitchType::TartanFill];
+
 /// The stitch types its rows, its expand and its underlay apply to: a contour fill takes them as Ink/Stitch's
 /// does, sewing its rings the row spacing apart over the part expanded, after the same underlay, a meander
-/// fill sews its path over the part expanded after the same underlay, and a circular fill its spiral, its
-/// circles the row spacing apart.
-const UNDERLAID: &[StitchType] = &[StitchType::TatamiFill, StitchType::ContourFill, StitchType::MeanderFill, StitchType::CircularFill];
+/// fill sews its path over the part expanded after the same underlay, a circular fill its spiral, its
+/// circles the row spacing apart, and a tartan fill its rows, staggered as a tatami fill's are.
+const UNDERLAID: &[StitchType] =
+    &[StitchType::TatamiFill, StitchType::ContourFill, StitchType::MeanderFill, StitchType::CircularFill, StitchType::TartanFill];
 
 /// The stitch types each part of whose area grows by `expand_mm`: those [`UNDERLAID`], and a cross stitch
 /// fill, whose cells the grown part covers, as in Ink/Stitch.
-const EXPANDED: &[StitchType] =
-    &[StitchType::TatamiFill, StitchType::ContourFill, StitchType::MeanderFill, StitchType::CircularFill, StitchType::CrossStitch];
+const EXPANDED: &[StitchType] = &[
+    StitchType::TatamiFill,
+    StitchType::ContourFill,
+    StitchType::MeanderFill,
+    StitchType::CircularFill,
+    StitchType::TartanFill,
+    StitchType::CrossStitch,
+];
 
 params! {
     /// Tatami fill: rows of running stitches across the fill's area, the needle points of neighbouring rows
@@ -109,7 +120,7 @@ params! {
         /// Leave out the needle point at the end of each row, or of each piece of a circular fill's spiral. It
         /// lies close to the start of the next, and leaving it out lowers the stitch count and the density
         /// along the fill's edge.
-        skip_last: Toggle = "false", label "Skip last stitch", applies ROUTED;
+        skip_last: Toggle = "false", label "Skip last stitch", applies SKIPPED;
     }
 
     "Travel" {

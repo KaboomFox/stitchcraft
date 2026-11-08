@@ -14,8 +14,8 @@ use stitchcraft_params::{Origin, StitchType, params};
 /// stitch along their lines, satin columns, whatever their method, between their underlays and on their
 /// way to their start and from their end, tatami fills between their rows, contour fills between the
 /// rows of their underlay and, keeping to the tolerance, along their rings, meander fills between the
-/// rows of their underlay and along their path, and circular fills along their spiral and between its
-/// pieces.
+/// rows of their underlay and along their path, circular fills along their spiral and between its
+/// pieces, and tartan fills between their rows, along their warp's runs and where their rows join.
 const RUNS: &[StitchType] = &[
     StitchType::RunningStitch,
     StitchType::RippleStitch,
@@ -27,6 +27,7 @@ const RUNS: &[StitchType] = &[
     StitchType::ContourFill,
     StitchType::MeanderFill,
     StitchType::CircularFill,
+    StitchType::TartanFill,
 ];
 
 /// The stitch types whose stitches may vary in length at random: running and ripple stitch along their
