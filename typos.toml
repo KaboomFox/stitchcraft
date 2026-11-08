@@ -20,3 +20,6 @@ flate = "flate"
 # Creative Commons licence names, CC BY-ND and CC BY-NC-ND (the fonts corpus, M8.6).
 ND = "ND"
 nd = "nd"
+# Font names in Ink/Stitch's library: AGS Garamond, Apex simple AGS (the fonts corpus, M8.6).
+AGS = "AGS"
+ags = "ags"
