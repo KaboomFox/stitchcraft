@@ -15,7 +15,7 @@ use super::designed::{Drawing, KAPPA, Start};
 use super::sketch::SheetError;
 use super::{BLUE, thread};
 use crate::design::{Segment, Subpath};
-use crate::route::{Options, Route, Tool};
+use crate::route::{Route, Tool};
 use stitchcraft_core::Point;
 use stitchcraft_plan::Thread;
 
@@ -35,7 +35,7 @@ pub(super) fn drawing() -> Result<Drawing, SheetError> {
     letters(&mut d, "drawn", 0.0, &blue)?;
     let mut routed = Drawing::new("ts17c");
     letters(&mut routed, "routed", BELOW, &blue)?;
-    d.routed(&routed, &Route { tool: Tool::Satins, options: Options::default(), start: None, end: None })?;
+    d.routed(&routed, &Route { tool: Tool::Satins, options: Tool::Satins.defaults(), start: None, end: None })?;
     Ok(d)
 }
 

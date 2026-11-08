@@ -458,7 +458,7 @@ mod tests {
 
     #[test]
     fn a_route_that_says_anything_is_not_drawn() {
-        let how = Route { tool: crate::route::Tool::Satins, options: crate::route::Options::default(), start: None, end: None };
+        let how = Route { tool: crate::route::Tool::Satins, options: crate::route::Tool::Satins.defaults(), start: None, end: None };
         let Err(SheetError::Said(said)) = Drawing::new("routed").routed(&Drawing::new("nothing"), &how) else { panic!("routed nothing") };
         assert!(said.starts_with("error SC-E1001: "), "{said}");
         // Nor is a route that sews its column but says that it leaves a fill as it is.
