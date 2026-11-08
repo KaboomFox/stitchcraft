@@ -329,7 +329,11 @@ pub fn run(root: &Path, subject: &Subject, excused: &BTreeMap<String, String>, o
             let path = root.join("conformance").join(design);
             (inkstitch.pes(root, &path), sewn(&path, design))
         }
-        Subject::Sheet(id) => match sheet(root, id) {
+        Subject::Sheet(id) => match sheet(root, id, None) {
+            Ok(path) => (inkstitch.pes(root, &path).and_then(|bytes| kept(&path, bytes)), sewn(&path, id)),
+            Err(e) => return outcome.failures.push(e),
+        },
+        Subject::Part { sheet: id, elements } => match sheet(root, id, Some(elements)) {
             Ok(path) => (inkstitch.pes(root, &path).and_then(|bytes| kept(&path, bytes)), sewn(&path, id)),
             Err(e) => return outcome.failures.push(e),
         },
@@ -457,15 +461,25 @@ pub(super) fn kept(svg: &Path, bytes: Vec<u8>) -> Result<Vec<u8>, String> {
 
 /// The test sheet `id` as both programs are given it: the SVG file, written to [`WRITTEN`], of the elements
 /// StitchCraft sews the sheet with, automatic digitizing's for its automatic shapes, with their parameters,
-/// which StitchCraft's SVG reader reads as they were written (`REQ-SVG-009`).
-fn sheet(root: &Path, id: &str) -> Result<PathBuf, String> {
+/// which StitchCraft's SVG reader reads as they were written (`REQ-SVG-009`). With `part`, only the elements
+/// whose ids start with it, and the file is named after it too.
+fn sheet(root: &Path, id: &str, part: Option<&str>) -> Result<PathBuf, String> {
     let sheet = testsheets::find(id).ok_or_else(|| format!("there is no test sheet `{id}`"))?;
     let design =
         sheet.design().ok_or_else(|| format!("{id} is drawn stitch by stitch, and is no design to write"))?.map_err(|e| format!("{id}: {e}"))?;
     let clones = sheet.clones().unwrap_or(Ok(Vec::new())).map_err(|e| format!("{id}: {e}"))?;
-    let (elements, _) = stitchcraft_engine::auto::digitized(&design, &Budget::DEFAULT);
+    let (all, _) = stitchcraft_engine::auto::digitized(&design, &Budget::DEFAULT);
+    let elements: Vec<_> = all.iter().filter(|element| part.is_none_or(|part| element.id.as_str().starts_with(part))).cloned().collect();
+    let mut name = id.to_ascii_lowercase();
+    if let Some(part) = part {
+        if elements.is_empty() {
+            return Err(format!("{id} has no element whose id starts with `{part}`"));
+        }
+        name = format!("{name}-{}", part.replace(':', "-").trim_end_matches('-'));
+    }
+    let clones: Vec<_> = clones.into_iter().filter(|clone| elements.iter().any(|element| element.id == clone.element)).collect();
     let svg = stitchcraft_testkit::inkstitch::svg_with(&elements, &design.settings, &clones).map_err(|e| format!("{id}: {e}"))?;
-    let path = root.join(WRITTEN).join(format!("{}.svg", id.to_ascii_lowercase()));
+    let path = root.join(WRITTEN).join(format!("{name}.svg"));
     let written = path.parent().map_or(Ok(()), std::fs::create_dir_all).and_then(|()| std::fs::write(&path, svg));
     written.map_err(|e| format!("{}: {e}", util::rel(&path)))?;
     Ok(path)

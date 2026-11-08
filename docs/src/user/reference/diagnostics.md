@@ -60,7 +60,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0405`](#sc-w0405) | Warning | Zigzag stitch shorter than the shortest stitch; the zigzag sews narrower |
 | [`SC-W0406`](#sc-w0406) | Warning | Ripple stitch setting not sewn yet; sewn without it |
 | [`SC-W0407`](#sc-w0407) | Warning | Ripple stitch of more than 1,000 lines; cut to 1,000 |
-| [`SC-W0408`](#sc-w0408) | Warning | Ripple stitch's skips leave no line; none skipped |
+| [`SC-W0408`](#sc-w0408) | Warning | Ripple stitch's skips would leave out every line; every line sewn |
 | [`SC-W0502`](#sc-w0502) | Warning | Lock stitch shorter than 0.2 mm; lengthened |
 | [`SC-W0503`](#sc-w0503) | Warning | Custom lock cannot be sewn as written |
 | [`SC-I0504`](#sc-i0504) | Info | Stitches shorter than the shortest stitch merged |
@@ -737,7 +737,7 @@ The message gives the count asked for and the count sewn. Set a larger `min_line
 
 ## SC-W0408
 
-**Warning** — Ripple stitch's skips leave no line; none skipped
+**Warning** — Ripple stitch's skips would leave out every line; every line sewn
 
 A ripple stitch's `skip_start` and `skip_end` together leave out as many lines as it has, or more, so
 they would leave none to sew. No line is left out, as Ink/Stitch does.
