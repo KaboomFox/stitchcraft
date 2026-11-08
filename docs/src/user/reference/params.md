@@ -49,7 +49,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 
 | Group | Parameters | Applies to |
 |---|---|---|
-| [Common parameters](params/common.md) | 16 | every stitch type |
+| [Common parameters](params/common.md) | 17 | every stitch type |
 | [Stroke parameters](params/stroke.md) | 1 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
 | [Running parameters](params/running.md) | 4 | Running stitch, Ripple stitch |
 | [Repeat parameters](params/repeat.md) | 2 | Running stitch, Ripple stitch, Zigzag stitch, Manual stitch |
@@ -168,6 +168,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`ties`](params/common.md#ties) | Lock stitches | Common parameters |
 | [`trim_after`](params/common.md#trim_after) | Trim after | Common parameters |
 | [`underlay_underpath`](params/tatami.md#underlay_underpath) | Underlay underpath | Tatami parameters |
+| [`underlays_first`](params/common.md#underlays_first) | Underlays first | Common parameters |
 | [`underpath`](params/tatami.md#underpath) | Underpath | Tatami parameters |
 | [`zigzag_angle`](params/zigzag-stroke.md#zigzag_angle) | Zigzag angle | Zigzag stroke parameters |
 | [`zigzag_spacing_mm`](params/zigzag-stroke.md#zigzag_spacing_mm) | Zigzag spacing | Zigzag stroke parameters |

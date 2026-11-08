@@ -162,8 +162,9 @@ wrong, where Ink/Stitch gives it an editor of its own. So a tartan fill made in 
 Ink/Stitch's default sett, and `stitch export` says so (`SC-W0325`). A file from Ink/Stitch keeps its
 setts, which `stitch plan` sews. M10.7's editor for setts decides how VectorCraft sets one, as a filter or
 as a row of the fill dialog, and with it whether the fill plug-in asks for VectorCraft 0.14. With the
-tartan's 4 numbers the fill dialog has 61 parameters, 3 short of what releases before 0.14 take. The
-Test Sheet filter doesn't draw TS-17B, whose tartans have setts (`TestSheet::uses_file_features`).
+tartan's 4 numbers and M10.15's `underlays_first` the fill dialog has 62 parameters, 2 short of what
+releases before 0.14 take. The Test Sheet filter doesn't draw TS-17B, whose tartans have setts
+(`TestSheet::uses_file_features`).
 
 **How the dialog shows them** (`REQ-VC-012`, M6.10). From 0.14 a parameter can say how the dialog shows
 it, and the plug-in says all of it from the registry (`apps/stitchcraft-vc-plugin/src/dialog.rs`):
@@ -472,7 +473,8 @@ the paths give the route's ends ([start and end](routing.md#start-and-end)).
 
 **What they write.** A column's piece is a compound path of its rails and rungs with the column's satin
 effect, drawn as Stroke to Satin draws a column. A stroke's stretch, and a run under the others, is a path
-with the stroke effect. Each is painted with its element's stroke and named as Ink/Stitch names it, and
+with the stroke effect, which for a run under a column keeps the column's `underlays_first`
+([order](routing.md#order)). Each is painted with its element's stroke and named as Ink/Stitch names it, and
 Trim jump stitches turns on `trim_after` in the effect of the piece before a long jump. In one undo step,
 the pieces replace the paths they come from and the markers used. A filter can't make a group, where
 Ink/Stitch puts its route in a new group after the last element. So the pieces go in their sewing order

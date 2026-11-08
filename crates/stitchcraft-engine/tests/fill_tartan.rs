@@ -330,6 +330,25 @@ fn req_fill_trt_010_a_herringbone_sews_straight_rows_until_m10_7() {
 }
 
 #[test]
+fn req_asm_008_a_tartan_sewn_in_several_threads_joins_no_run_of_underlays_first() {
+    // A tartan and a square fill beside it in the tartan's own thread, both setting `underlays_first`: the
+    // tartan sews its underlay in its own thread and its stripes in red and blue, so it joins no run, and the
+    // fill is left alone. Each sews as without the setting, and SC-I0506 says why of each.
+    let first = ("underlays_first", "true");
+    let beside = |more: &[(&str, &str)]| fill("beside", &[&[(25.0, -20.0), (45.0, -20.0), (45.0, 0.0), (25.0, 0.0)]], &OWN, more);
+    let set = planned(vec![tartan(&[("tartan", RED_BLUE), first]), beside(&[first])]);
+    let unset = planned(vec![tartan(&[("tartan", RED_BLUE)]), beside(&[])]);
+    assert_eq!(set.plan, unset.plan);
+    let notes: Vec<(&str, bool)> = set
+        .diagnostics
+        .iter()
+        .map(|d| (d.element.as_ref().map_or("", |id| id.as_str()), d.code == Code::UnderlaysFirstAlone && d.message.contains("several threads")))
+        .collect();
+    assert_eq!(notes, [("tartan", true), ("beside", false)], "{:?}", messages(&set));
+    assert!(set.diagnostics.iter().all(|d| d.code == Code::UnderlaysFirstAlone));
+}
+
+#[test]
 fn a_tartan_s_diagnostics_name_it_and_one_it_can_t_read_is_skipped() {
     // Its sett can't be read: skipped, the next element sewn all the same.
     let next = fill("next", &[&[(30.0, 0.0), (40.0, 0.0), (40.0, 10.0), (30.0, 10.0)]], &OWN, &[]);

@@ -625,6 +625,18 @@ registry! {
     /// Make the element sew, or set the trim or stop on the element before it.
     TrimOrStopLeftOut = "SC-W0505", Warning, "Trim or stop after an element that sews nothing; left out";
 
+    /// The element sets `underlays_first`, but its setting joins no run, so it sews its underlay just before
+    /// its top stitches, as it does without the setting. A run is 2 or more elements next to each other in
+    /// sewing order that set it and sew in one thread, with no trim or stop between them. The run sews all
+    /// their underlays first, then their top stitches. This element is alone: the elements next to it don't
+    /// set it, or sew in another thread, or a trim or a stop parts them. An element sewn in several threads
+    /// is in no run either.
+    ///
+    /// The message says which. Set `underlays_first` on the elements that cross or overlap this one too,
+    /// give them its thread, or move the trim or the stop between them. Nothing needs doing if the element
+    /// should sew as it does.
+    UnderlaysFirstAlone = "SC-I0506", Info, "Underlays first joins no run; the element sews as without it";
+
     /// The file format can record only a limited number of colour changes and stops (PES: 255). This
     /// design has more, so the file was not written.
     ///

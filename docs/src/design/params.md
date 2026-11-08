@@ -176,6 +176,16 @@ requires each to be StitchCraft's own, since Ink/Stitch digitizes nothing automa
 stitch type of its own, and to have a key no other declaration has. The reference pages say they apply to automatic
 elements, and the JSON Schema marks each with `x-stitchcraft.automatic`.
 
+### Settings of StitchCraft's own that stitch types read
+
+From M10.15, `underlays_first` is one of the settings every stitch type shares, declared in
+`CommonParams` with StitchCraft's origin, off by default and experimental
+([underlays first](engine-pipeline.md#underlays-first)). Each stitch family's dialog in VectorCraft shows
+it, as it shows the others of `CommonParams`. Its key is in Ink/Stitch's namespace in an SVG file, where
+Ink/Stitch passes it over ([SVG input](svg-input.md#settings-of-a-shape)). Should a later Ink/Stitch
+declare a setting of that name, the contract's check below fails, and a migration renames StitchCraft's
+([versioning](#versioning-and-migration)).
+
 ### Completeness (REQ-PRM-001)
 
 A declaration that compiles can still be wrong: an empty range, a default outside it, a repeated option,

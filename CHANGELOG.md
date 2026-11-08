@@ -25,6 +25,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     M10.7, and says so.
   - VectorCraft's fill dialog offers the tartan's numbers, but no sett before M10.7, so a tartan made there
     sews Ink/Stitch's default sett. The compatibility contract lists the `tartan` attribute as registered.
+  - A tartan in a run of M10.15's underlays first sews its underlay and its top as 2 layers, as the other
+    fills do. Most tartans sew in several threads, and so join no run.
   - TS-17B is drawn with 5 tartans for MC-12, and the differential sews them and 4 files of tartans in
     Ink/Stitch too: they agree by every measure. Its wxPython stand-in raises `PyNoAppError` for
     `wx.Colour`, as wxPython does without an app, so Ink/Stitch reads a tartan's colours as from the
@@ -32,6 +34,20 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     The 35 that set a herringbone are known differences until M10.7, and so is the S-stitch satin column of
     Colorful's ’, which starts elsewhere than Ink/Stitch's. A user page has pictures of tartan fills. Golden
     added: `TS-17B.pes`.
+- M10.15: underlays first (`REQ-ASM-008` to `REQ-ASM-010`), as ADR-0018 decided. Consecutive elements in one
+  thread that set `underlays_first`, a toggle every stitch type shares, StitchCraft's own and off by
+  default, sew all their underlays before any of their top stitches. A trim or a stop ends a run. An element
+  alone sews as it does without the setting, and the new note `SC-I0506` says so.
+  - Satin columns and tatami, contour, meander and circular fills sew their underlay and their top as 2
+    layers, from one reading of the element and within its work. Their top stitches take the random numbers
+    they take without the setting. An element without underlay sews whole with the top stitches.
+  - Each stitch family's dialog in VectorCraft shows the toggle in a section Sewing order. An SVG shape keeps
+    it as `inkstitch:underlays_first`, which Ink/Stitch doesn't read, and `SC-W0802` names it on a group. A
+    route's runs under a column keep it, so that the route sews its underlays along it.
+  - TS-17C sews 2 red satin columns that cross, as drawn beside the same 2 with their underlays first, for
+    MC-12, below its network of lines, and a how-to page shows them. The differential's file of TS-17C
+    leaves that pair out, as Ink/Stitch would sew it otherwise. Golden changed: `TS-17C.pes`, for the new
+    pair.
 - M10.13: auto-run routing (`REQ-ROUTE-009` to `REQ-ROUTE-013`, `REQ-VC-020`). `stitchcraft_engine::route`
   routes running stitches as Ink/Stitch's Auto-Route Running Stitch does, with `Tool::Runs`. With Add nodes
   at intersections, each stroke's lines are cut where they cross themselves and each other, and where 2

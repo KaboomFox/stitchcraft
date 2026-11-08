@@ -472,13 +472,13 @@ After sewing, check:
 - Where the rows of one colour are joined along a stripe's edge, does the join show?
 - How many times does the thread change, and how long does the sheet take? Each tartan sews its underlay in its own thread, then each colour once.
 
-## TS-17C — Ripples and routing: satin letters and a network of lines, as drawn and routed
+## TS-17C — Ripples, routing and layers: satin letters and a network of lines, as drawn and routed, and crossing columns
 
-82.0 × 85.0 mm · 3787 stitches, 21 jumps, 20 trims, 1 colour change, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
+82.0 × 125.0 mm · 4830 stitches, 23 jumps, 22 trims, 1 colour change, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
-![TS-17C as it will sew. In blue, the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E's arms. Below them the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next. At the bottom, in red, a network of 6 bean-stitched lines, twice: on the left sewn as drawn, line by line, with a jump thread from each line to the next, and on the right routed, sewn in one go but for the jump to the line that crosses itself, above the others, and back.](../../images/generated/testsheet-ts-17c.png)
+![TS-17C as it will sew. In blue, the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E's arms. Below them the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next. Below the routed letters, in red, a network of 6 bean-stitched lines, twice: on the left sewn as drawn, line by line, with a jump thread from each line to the next, and on the right routed, sewn in one go but for the jump to the line that crosses itself, above the others, and back. At the bottom, in red, 2 crosses of satin columns 5 mm wide, a bar and a post each, as drawn on the left and with their underlays first on the right, which look alike from above.](../../images/generated/testsheet-ts-17c.png)
 
 ![TS-17C's letters ROUTE drawn as thin lines, twice: at the top as drawn, and at the bottom as Auto-Route Satin Columns routes them. Dashed lines are jumps, which the reference machine leaves as threads to cut by hand, and orange rings mark lock stitches. The routed letters jump only from one letter to the next.](../../images/generated/routing-letters.png)
 
@@ -492,6 +492,8 @@ After sewing, check:
 - Count the jump threads of each half, within each letter and between the letters. The routed half should have none within a letter. Its file asks for a trim between letters, which a machine that obeys trims cuts.
 - On the routed half, do the running stitches under the satins show anywhere, at a column's edge, at its ends or where 2 columns meet?
 - Where a routed column is cut into pieces, is the satin even across the cut, or does a gap, a ridge or a stitch out of line show?
-- Bottom, in red: 6 bean-stitched lines, a rail, a post across it, a brace, a hook, a line that crosses itself and a tick, sewn as drawn on the left and as auto-run routing joins them on the right. Count the jump threads of each: the routed network should jump only to the line that crosses itself and back, trimming before each jump.
+- Below the letters, in red: 6 bean-stitched lines, a rail, a post across it, a brace, a hook, a line that crosses itself and a tick, sewn as drawn on the left and as auto-run routing joins them on the right. Count the jump threads of each: the routed network should jump only to the line that crosses itself and back, trimming before each jump.
 - On the routed network, do the plain runs under the bean stitches show beside them, where a branch is sewn out and back?
 - The time each half takes, from its first stitch to its last.
+- At the bottom, in red: 2 satin columns 5 mm wide that cross, a bar and a post, each with a contour and a zigzag underlay. On the left they sew as drawn, so the post's underlay lies on the bar's top stitches. On the right they sew with their underlays first: both underlays, then both tops. Compare the 2 crossings: does the right one lie flatter, with less bulk or fewer stitches showing through where the columns meet?
+- On the right, the needle goes back from the post's underlay to the bar for the top stitches. Does its way there show, or a jump thread or its locks where it jumps?

@@ -9,8 +9,10 @@
 //! 4. **Elements.** A column's pieces are cut from it ([`Cuttable::piece`]). A column's piece keeps its
 //!    settings, but an odd number of centre walk repeats is lowered by 1, to no fewer than 2, so that it
 //!    sews from its start. A run under a column takes the column's running stitch length, or else its centre
-//!    walk's or its contour's, its shortest jump and its bean stitch, where it sets them, and a run along a
-//!    stroke the stroke's. Each is the element's thread and stroke. A column's piece keeps the column's clips
+//!    walk's or its contour's, its shortest jump, its bean stitch and its `underlays_first`, where it sets
+//!    them, and a run along a stroke the stroke's. A route's pieces and runs that set `underlays_first` so
+//!    sew one run of underlays first, unless a trim parts them (`REQ-ASM-009`). Each is the element's thread
+//!    and stroke. A column's piece keeps the column's clips
 //!    too, which leave a satin column whole, and a run, a path of its own, keeps none. Neither keeps the
 //!    element's start and end positions or its target point: the route places its ends.
 //! 5. **Trims.** A jump longer than [`TRIMMED`] outside the elements it joins ([`trim::outside`]) trims after
@@ -26,7 +28,7 @@ use stitchcraft_core::{Code, Diagnostic, Exhausted, Fix, Meter, Point};
 use stitchcraft_params::ParamSet;
 
 use crate::auto::numbered;
-use crate::common::{MIN_JUMP_STITCH_LENGTH, TRIM_AFTER};
+use crate::common::{MIN_JUMP_STITCH_LENGTH, TRIM_AFTER, UNDERLAYS_FIRST};
 use crate::design::{Element, Hints, Path, Segment, Shape, Subpath};
 use crate::generators::passes::BEAN_STITCH_REPEATS;
 use crate::normalize::satin::SAME_POINT;
@@ -211,7 +213,7 @@ pub(super) fn run(routed: &Routable, elements: &[Element], points: &[Point], und
     if let Some(length) = RUN_LENGTHS.iter().find_map(|key| element.params.get(key)) {
         params.set(RUN_LENGTH, length);
     }
-    for key in [MIN_JUMP_STITCH_LENGTH, BEAN_STITCH_REPEATS] {
+    for key in [MIN_JUMP_STITCH_LENGTH, BEAN_STITCH_REPEATS, UNDERLAYS_FIRST] {
         if let Some(value) = element.params.get(key) {
             params.set(key, value);
         }

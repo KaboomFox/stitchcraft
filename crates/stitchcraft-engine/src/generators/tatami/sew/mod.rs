@@ -206,7 +206,7 @@ fn sewn(
         top: fill.top.travel,
         ends_near: true,
     };
-    let sewn = parts_sewn(region, &parts, needle, next, rng, meter, &mut top)?;
+    let sewn = parts_sewn(region, &parts, needle, next, rng, meter, Some(&mut top))?;
     let mut warnings = sewn.warnings;
     warnings.extend(too_thin(outlined, tops));
     warnings.extend(sewn.tally.said());
@@ -234,6 +234,33 @@ pub(crate) struct Parts<'f> {
     pub(crate) ends_near: bool,
 }
 
+/// The underlay of a fill over `region` sewn alone, as `underlay` and `inset` say, without its top: the
+/// first of the fill's 2 layers in a run of underlays first (`crate::underlays_first`). The parts nearest
+/// the needle go first, as [`parts_sewn`] takes them, and each layer of a part ends near the next part, the
+/// last part's near the fill's next stitch from what `next` offers, as the top would. The next layer, the
+/// next element's or the fill's own top, then starts near it. Its runs are thinned to `travel`'s
+/// shortest stitch as the fill's are, and `SC-I0308` and `SC-W0310` are said of it. It draws no random
+/// number, as an underlay varies nothing at random, so the top takes the numbers it takes outside a run.
+#[allow(clippy::too_many_arguments)] // The area, the underlay, and where: each its own input.
+pub(crate) fn underlay_sewn(
+    region: &Region,
+    underlay: &[Layer],
+    inset: f64,
+    travel: Travel,
+    needle: Option<Point>,
+    next: Option<&Approach>,
+    rng: &mut SplitMix64,
+    meter: &mut Meter,
+) -> Result<Stitched, Exhausted> {
+    settled(meter, |meter| {
+        let parts = Parts { underlay, inset, expand: 0.0, force_locks: false, top: travel, ends_near: true };
+        let sewn = parts_sewn(region, &parts, needle, next, rng, meter, None)?;
+        let mut warnings = sewn.warnings;
+        warnings.extend(sewn.tally.said());
+        Ok(Stitched { runs: sewn.runs, colours: Vec::new(), warnings })
+    })
+}
+
 /// A fill's top over one piece of a part (the first polygon), the part as drawn being the second: the runs
 /// it sews from the needle (the first point), to end near the second where it has one, drawing from the
 /// generator and charging the meter, and what it says.
@@ -250,8 +277,9 @@ pub(crate) struct PartsSewn {
 
 /// The runs of a fill over `region` as `parts` says, each piece's top sewn by `top`: the parts nearest the
 /// needle first, in each the layers of its underlay in order, each back to where it started, then its top
-/// over each piece of the part grown, from where the last ended. Runs nearer each other than the jump length
-/// go on as one, and each part's runs are thinned to the shortest stitch.
+/// over each piece of the part grown, from where the last ended. With no `top`, the underlay alone, whose
+/// last layer of each part then ends where the top would ([`underlay_sewn`]). Runs nearer each other than
+/// the jump length go on as one, and each part's runs are thinned to the shortest stitch.
 pub(crate) fn parts_sewn(
     region: &Region,
     parts: &Parts,
@@ -259,7 +287,7 @@ pub(crate) fn parts_sewn(
     next: Option<&Approach>,
     rng: &mut SplitMix64,
     meter: &mut Meter,
-    top: &mut Top,
+    mut top: Option<&mut Top>,
 ) -> Result<PartsSewn, Exhausted> {
     let ordered = in_order(region, needle, meter)?;
     let end = if parts.ends_near { next.map(|next| next.next_stitch(Own::Area(&region.parts), meter)).transpose()?.flatten() } else { None };
@@ -271,16 +299,19 @@ pub(crate) fn parts_sewn(
             (true, Some(after)) => nearest_pair(&rings_of(polygon), &rings_of(after), meter)?.map(|(on, _)| on),
             (true, None) => end,
         };
-        let mut sewn = underlay(parts, polygon, &mut needle, &mut said, rng, meter)?;
-        let (pieces, gone) = pieces(polygon, parts.expand, &mut said.warnings, meter)?;
-        said.tally.expand_gone += usize::from(gone);
-        for (k, piece) in pieces.iter().enumerate() {
-            let top_runs = top(piece, polygon, needle, here, rng, meter, &mut said.warnings)?;
-            needle = top_runs.iter().rev().find_map(|run| run.last().copied()).or(needle);
-            if k > 0 && parts.force_locks {
-                sewn.extend(top_runs);
-            } else {
-                append(&mut sewn, top_runs, parts.top.jump);
+        // Sewn alone, each layer ends where the top would, rather than where it started.
+        let mut sewn = underlay(parts, polygon, &mut needle, here.filter(|_| top.is_none()), &mut said, rng, meter)?;
+        if let Some(top) = top.as_deref_mut() {
+            let (pieces, gone) = pieces(polygon, parts.expand, &mut said.warnings, meter)?;
+            said.tally.expand_gone += usize::from(gone);
+            for (k, piece) in pieces.iter().enumerate() {
+                let top_runs = top(piece, polygon, needle, here, rng, meter, &mut said.warnings)?;
+                needle = top_runs.iter().rev().find_map(|run| run.last().copied()).or(needle);
+                if k > 0 && parts.force_locks {
+                    sewn.extend(top_runs);
+                } else {
+                    append(&mut sewn, top_runs, parts.top.jump);
+                }
             }
         }
         let sewn = thinned(sewn, parts.top.min_stitch);
@@ -291,13 +322,14 @@ pub(crate) fn parts_sewn(
 }
 
 /// The runs of the layers of `parts`' underlay over `polygon` shrunk by its inset, each layer from the needle
-/// back to where it started, joined into runs as each layer's jump length allows; none without underlay.
-/// The needle moves on to where the last ended, and what is said and counted goes to `said`. A tartan fill
-/// sews the same underlay before its colours.
+/// to near `end`, or back to where it started without one, joined into runs as each layer's jump length
+/// allows; none without underlay. The needle moves on to where the last ended, and what is said and counted
+/// goes to `said`. A tartan fill sews the same underlay before its colours.
 pub(crate) fn underlay(
     parts: &Parts,
     polygon: &Polygon,
     needle: &mut Option<Point>,
+    end: Option<Point>,
     said: &mut PartsSewn,
     rng: &mut SplitMix64,
     meter: &mut Meter,
@@ -311,7 +343,7 @@ pub(crate) fn underlay(
     for piece in &pieces {
         let part = Part { polygon: piece, rings: Rings::new(piece, meter)? };
         for layer in parts.underlay {
-            let (layer_runs, rowless) = part.sew(layer, *needle, None, rng, meter, &mut said.warnings)?;
+            let (layer_runs, rowless) = part.sew(layer, *needle, end, rng, meter, &mut said.warnings)?;
             said.tally.bare += usize::from(rowless);
             *needle = layer_runs.iter().rev().find_map(|run| run.last().copied()).or(*needle);
             append(&mut sewn, layer_runs, layer.travel.jump);
