@@ -453,6 +453,31 @@ fn req_rip_007_each_line_s_stitches_keep_within_the_tolerance_of_the_line() {
 }
 
 #[test]
+fn req_rip_007_the_running_stitch_a_ripple_shrinks_lies_on_its_curve_within_a_tenth_of_the_tolerance() {
+    // A quarter circle of radius 10 mm about the origin, drawn as one curve whose control points lie 0.552
+    // of the radius from its ends, which strays from the circle by less than 0.003 mm. The running stitch
+    // that a ripple shrinks towards its target point flattens it within a tenth of the 0.2 mm tolerance and
+    // places its needle points on the flattened line, so each lies within 0.02 mm of the curve.
+    let k = 10.0 * 0.552_284_75;
+    let quarter = Subpath { start: p(10.0, 0.0), segments: vec![Segment::Cubic(p(10.0, k), p(k, 10.0), p(0.0, 10.0))], closed: false };
+    let points = crate::generators::running::outline(&quarter, &[2.5], (0.2, 0.3), &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    assert!(points.len() >= 7, "{points:?}");
+    let off = points.iter().map(|q| ((q.x() * q.x() + q.y() * q.y()).sqrt() - 10.0).abs()).fold(0.0, f64::max);
+    assert!(off < 0.023, "a needle point lies {off} mm off the circle");
+}
+
+#[test]
+fn req_rip_008_a_line_is_lengthened_back_along_its_first_segment_whichever_way_it_runs() {
+    // The case below with lines that run along y: line 1 is placed from 2.25 mm before its start, back along
+    // its first segment, and sewn from its end.
+    let rng = SplitMix64::new(0);
+    let down = [vec![p(0.0, 0.0), p(0.0, 10.0)], vec![p(1.0, 0.0), p(1.0, 10.0)]];
+    let along_y = |ys: &[f64], x: f64| ys.iter().map(|&y| (x, y)).collect::<Vec<_>>();
+    let want = [along_y(&[0.0, 2.5, 5.0, 7.5, 10.0], 0.0), along_y(&[10.0, 7.55, 5.1, 2.65, 0.0], 1.0)];
+    assert_eq!(one_by_one(&down, &sewing(&rng, -10.0, false, 0)), want.concat());
+}
+
+#[test]
 fn req_rip_008_line_i_s_needle_points_start_its_phase_before_its_start() {
     // 3 lines 10 mm long, 2 mm apart, with 3 staggers: line i is placed from (i / 3) of 2.5 mm before its
     // start. Line 1 from 0.833 mm before, in 5 stitches of 2.167 mm, sewn from its end. Line 2 from 1.667 mm

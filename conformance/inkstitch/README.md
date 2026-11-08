@@ -126,9 +126,9 @@ threads = "DEV-THREAD-001"
 A case may name a test sheet drawn as a design, `sheet = "TS-13A"`, in place of `design`. Both programs
 sew an SVG file of the elements StitchCraft sews the sheet with, automatic digitizing's for its automatic
 shapes, each with its parameters (`stitchcraft_testkit::inkstitch`), which StitchCraft's SVG reader reads
-as they were written (`REQ-SVG-009`). With `elements` beside `sheet`, the file holds only the elements whose
-ids start with it, and the measures judge that part of the sheet on its own, as the `ts17c-ripple-` cases
-judge each of TS-17C's ripple stitches:
+as they were written (`REQ-SVG-009`). With `elements` beside `sheet`, the file draws the elements whose ids
+start with it and leaves the rest of the sheet out. The measures then judge that part on its own, as the
+`ts17c-ripple-` cases judge each of TS-17C's ripple stitches:
 
 ```toml
 id = "inkstitch-ts17c-ripple-column"
