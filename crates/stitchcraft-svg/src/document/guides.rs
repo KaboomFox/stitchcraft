@@ -13,9 +13,10 @@
 //! - **The anchor line** is the first anchor that is not a satin column: the start and the end of its first
 //!   subpath, which set where a satin guide places each copy's ends.
 //!
-//! A group's children are looked at once, to find whether any is a helper, and only a group that has one
-//! is read again for each shape in it. A helper whose path or transform can't be used is left out, as a
-//! viewer leaves it out.
+//! A helper steers its shapes even when `display: none` hides it, as Ink/Stitch at `d59c9ab` follows a
+//! hidden guide line, run as a black box. A group's children are looked at once, to find whether any is a
+//! helper, and only a group that has one is read again for each shape in it. A helper whose path or
+//! transform can't be used is left out, as a viewer leaves it out.
 
 use roxmltree::Node;
 use stitchcraft_core::{Diagnostic, Mm};
@@ -45,7 +46,7 @@ impl<'a, 'input> Reader<'_, 'a, 'input> {
             let Some(Kind::Shape(geometry)) = Kind::of(child.tag_name().name()).filter(|_| self.is_svg(child)) else { continue };
             let declared = self.declared(child)?;
             let Some(helper @ (Helper::GuideLine | Helper::AnchorLine)) = Helper::of(&declared) else { continue };
-            let Some(own) = style.child(&declared) else { continue };
+            let own = style.inherited(&declared);
             // A helper without a stroke steers nothing.
             if matches!(own.stroke, Paint::Plain(Plain::None)) {
                 continue;

@@ -200,12 +200,3 @@ measures = ["size", "overlap"]
 follow_up = "the S-stitch satin column of Colorful's ’ sews otherwise than Ink/Stitch's"
 fonts = ["colorful"]
 glyphs = ["’"]
-
-# Ripple stitches along a guide line, which StitchCraft leaves out (SC-W0802): each ripple shrinks to its target
-# point, where Ink/Stitch moves the copies of its line along the guide. The Ondulamarif fonts draw their
-# punctuation and the accents of their XL letters so.
-[[known]]
-measures = ["stitches", "size", "overlap"]
-follow_up = "M10.11 sews ripples along a guide line"
-codes = ["SC-W0802"]
-saying = "guide line"

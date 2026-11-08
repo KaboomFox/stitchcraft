@@ -1,6 +1,6 @@
 //! What a name that begins with `stitch:` asks of StitchCraft (`REQ-VC-009`): VectorCraft's plug-in ABI v1
 //! has no command objects, so an object's or a layer's name carries Ink/Stitch's ignore commands, its start
-//! and end positions and its target point.
+//! and end positions, its target point, and its guide and anchor lines.
 
 // Test code may unwrap, panic and index (clippy.toml allows it in tests, but not in their helpers).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
@@ -9,7 +9,7 @@ mod common;
 
 use common::{RED, document, ids, read_ok, said, square};
 use stitchcraft_core::{Budget, Code, Point};
-use stitchcraft_engine::design::{Hints, Reading};
+use stitchcraft_engine::design::{Hints, Path, Reading, Segment, Subpath};
 use stitchcraft_vectorcraft::read_with;
 
 const IGNORED: Code = Code::VcObjectIgnored;
@@ -107,8 +107,8 @@ fn req_vc_009_a_stitch_name_stitchcraft_does_not_read_is_named_and_stitched() {
     assert_eq!(
         hint.as_deref(),
         Some(
-            "StitchCraft reads stitch:ignore, stitch:start, stitch:end, stitch:target, stitch:origin, stitch:stop-position, stitch:route-start \
-             and stitch:route-end."
+            "StitchCraft reads stitch:ignore, stitch:start, stitch:end, stitch:target, stitch:guide, stitch:anchor, stitch:origin, \
+             stitch:stop-position, stitch:route-start and stitch:route-end."
         )
     );
 }
@@ -292,4 +292,54 @@ fn diag_sc_e0819_two_origin_markers_or_two_stop_position_markers_and_a_stop_end_
         assert_eq!(read.design.settings.origin.or(read.design.settings.stop_position), None);
     }
     assert!(twice("stitch:stop-position", false).warnings.is_empty());
+}
+
+/// An open path `id` through `points`, in points, which no paint paints.
+fn polyline(id: u32, points: &[(f64, f64)]) -> String {
+    let anchors: Vec<String> = points.iter().map(|(x, y)| format!(r#"{{"p": [{x}, {y}]}}"#)).collect();
+    format!(r#"{{"id": {id}, "kind": {{"type": "path", "path": {{"subpaths": [{{"closed": false, "anchors": [{}]}}]}}}}}}"#, anchors.join(", "))
+}
+
+/// The open subpath through `points`, given in points, in millimetres.
+fn in_mm(points: &[(f64, f64)]) -> Subpath {
+    let at = |(x, y): (f64, f64)| Point::new(x * 25.4 / 72.0, y * 25.4 / 72.0).unwrap();
+    Subpath { start: at(points[0]), segments: points[1..].iter().map(|&q| Segment::Line(at(q))).collect(), closed: false }
+}
+
+#[test]
+fn req_vc_009_guide_and_anchor_markers_steer_the_ripple_stitches_grouped_with_them() {
+    // As Ink/Stitch's guide and anchor lines do (REQ-RIP-012 to REQ-RIP-014): a path named stitch:guide gives
+    // its group's shapes the line their copies follow, a compound path a satin guide's rails, and one named
+    // stitch:anchor the line across them, from its first subpath's start to its end. A hidden one is not used,
+    // and none is stitched.
+    let rails = format!(
+        r#"{{"id": 6, "kind": {{"type": "compound", "children": [{}, {}]}}}}"#,
+        polyline(7, &[(0.0, 0.0), (72.0, 0.0)]),
+        polyline(8, &[(0.0, 36.0), (72.0, 36.0)])
+    );
+    let hidden = named(&polyline(9, &[(0.0, 0.0), (0.0, 9.0)]), "stitch:guide").replacen(r#"{"name""#, r#"{"visible": false, "name""#, 1);
+    let objects = [
+        square(2, 100.0, 0.0, RED),
+        hidden,
+        named(&polyline(5, &[(0.0, 0.0), (0.0, 72.0)]), "stitch:guide the arch"),
+        named(&rails, "stitch:guide"),
+        named(&polyline(10, &[(10.0, 0.0), (10.0, 36.0), (20.0, 36.0)]), "Stitch:Anchor"),
+    ];
+    let read = read_ok(&document(4, &format!(r#"{{"id": 3, "kind": {{"type": "group", "children": [{}]}}}}"#, objects.join(","))));
+    assert_eq!(ids(&read), ["vc:2:fill"]);
+    // The second guide is named, unused.
+    assert_eq!(said(&read), [about(NAMED, 6)]);
+    let hints = &read.design.elements()[0].hints;
+    let guide = hints.guide.as_ref().unwrap();
+    assert_eq!(guide.path, Path { subpaths: vec![in_mm(&[(0.0, 0.0), (0.0, 72.0)])] });
+    let anchor = hints.anchor.unwrap();
+    assert!(anchor[0].distance(in_mm(&[(10.0, 0.0)]).start) < 1e-12 && anchor[1].distance(in_mm(&[(20.0, 36.0)]).start) < 1e-12, "{anchor:?}");
+    // The rails alone: a satin guide of 2 subpaths.
+    let read = read_ok(&document(
+        4,
+        &format!(r#"{{"id": 3, "kind": {{"type": "group", "children": [{}, {}]}}}}"#, square(2, 100.0, 0.0, RED), named(&rails, "stitch:guide")),
+    ));
+    let guide = read.design.elements()[0].hints.guide.clone().unwrap();
+    assert_eq!(guide.path, Path { subpaths: vec![in_mm(&[(0.0, 0.0), (72.0, 0.0)]), in_mm(&[(0.0, 36.0), (72.0, 36.0)])] });
+    assert_eq!(said(&read), []);
 }

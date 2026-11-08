@@ -607,11 +607,13 @@ fn req_svg_012_reading_a_clone_costs_work_and_a_clone_bomb_runs_out_of_it() {
     body.push_str(r##"</defs><use xlink:href="#l20"/>"##);
     let refused = read(drawing(&body).as_bytes(), &Budget { max_stitches: 1, max_work: 1_000_000 }).unwrap_err();
     assert_eq!(refused.code, Code::BudgetExhausted);
-    // Drawing a clone costs what drawing its source does, and more: following its clones first.
+    // Drawing a clone costs what drawing its source does, and more: following its clones first. Only the
+    // document's own reading, and the look at the group's 2 children for Ink/Stitch's guide lines, which the
+    // clone takes from its source, are paid once.
     let cost = |text: &str| (1..100_000).find(|&work| read(text.as_bytes(), &Budget { max_stitches: 1, max_work: work }).is_ok()).unwrap();
     let alone = cost(&drawing(r##"<g id="g"><rect width="1" height="1"/><rect x="2" width="1" height="1"/></g>"##));
     let cloned = cost(&drawing(r##"<g id="g"><rect width="1" height="1"/><rect x="2" width="1" height="1"/></g><use xlink:href="#g"/>"##));
-    assert!(cloned > 2 * alone - 10, "{alone} {cloned}");
+    assert!(cloned > 2 * alone - 12, "{alone} {cloned}");
 }
 
 #[test]
