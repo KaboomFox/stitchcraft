@@ -43,6 +43,7 @@ use stitchcraft_core::{Exhausted, Meter, Point};
 use stitchcraft_plan::Rgb;
 
 use super::Tartan;
+use super::herringbone::Herringbone;
 use super::sett::{Item, PX};
 use crate::generators::made;
 use crate::normalize::near::nearest_to_point;
@@ -55,7 +56,7 @@ const ON_RINGS: f64 = 0.005 * PX;
 /// How far inside the piece a line's end must lie to run on to its rings, in millimetres: 0.05 pixel.
 const INSIDE: f64 = 0.05 * PX;
 /// The shortest stretch of row kept, in millimetres: half a pixel.
-const SHORTEST_STRETCH: f64 = 0.5 * PX;
+pub(super) const SHORTEST_STRETCH: f64 = 0.5 * PX;
 /// The shortest run kept, in millimetres.
 const SHORTEST_RUN: f64 = 0.5;
 
@@ -88,7 +89,7 @@ impl Turn {
     }
 
     /// Where it takes the direction (`x`, `y`).
-    fn direction(self, (x, y): (f64, f64)) -> (f64, f64) {
+    pub(super) fn direction(self, (x, y): (f64, f64)) -> (f64, f64) {
         (x * self.cos - y * self.sin, x * self.sin + y * self.cos)
     }
 }
@@ -115,33 +116,47 @@ pub(crate) fn lay(piece: &Polygon, tartan: &Tartan, meter: &mut Meter) -> Result
         holes: piece.holes.iter().map(|hole| hole.iter().map(|&p| back.apply(p)).collect()).collect(),
     };
     let Some(reach) = bounds(&turned.outline, meter)? else { return Ok(Lines::default()) };
-    let rows = Rows::new(&frame, tartan, meter)?;
+    let walked = [walk(&tartan.warp, Direction::Warp, &frame, meter)?, walk(&tartan.weft, Direction::Weft, &frame, meter)?];
+    let rings: Vec<&[Point]> = turned.rings().collect();
+    let laying = |direction| Laying { frame: &frame, tartan, piece: &turned, reach, rings: rings.clone(), direction, turn };
     let mut lines = Lines::default();
-    for (direction, items) in [(Direction::Warp, &tartan.warp), (Direction::Weft, &tartan.weft)] {
-        let walked = walk(items, direction, &frame, meter)?;
-        let laying = Laying { frame: &frame, tartan, piece: &turned, reach, rings: turned.rings().collect(), direction, turn };
-        for (colour, bands) in &walked.bands {
-            let mut colour_lines = Vec::new();
-            for &band in bands {
-                colour_lines.extend(laying.band(band, &rows, meter)?);
+    let [warp, weft] = &walked;
+    if tartan.herringbone > 0.0 {
+        let herringbone = Herringbone::new(&frame, tartan, meter)?;
+        herringbone.warp(&laying(Direction::Warp), warp, &mut lines.fills, meter)?;
+        herringbone.weft(&laying(Direction::Weft), weft, &mut lines.fills, meter)?;
+    } else {
+        let rows = Rows::new(&frame, tartan, meter)?;
+        for (direction, walked) in [(Direction::Warp, warp), (Direction::Weft, weft)] {
+            let laying = laying(direction);
+            let taken = rows.taken(direction);
+            for (colour, bands) in &walked.bands {
+                let mut colour_lines = Vec::new();
+                for &band in bands {
+                    colour_lines.extend(laying.band(band, &taken, true, meter)?);
+                }
+                add(&mut lines.fills, *colour, colour_lines, false);
             }
-            add(&mut lines.fills, *colour, colour_lines);
         }
+    }
+    for (direction, walked) in [(Direction::Warp, warp), (Direction::Weft, weft)] {
+        let laying = laying(direction);
         for (colour, at) in &walked.runs {
             let mut runs = Vec::new();
             for &x in at {
                 runs.extend(laying.run(x, meter)?);
             }
-            add(&mut lines.runs, *colour, runs);
+            add(&mut lines.runs, *colour, runs, false);
         }
     }
     Ok(lines)
 }
 
 /// Adds `more` lines of `colour` to `to`, after the colour's own, or as a colour of their own after the rest:
-/// a colour without lines is left out.
-fn add(to: &mut Vec<(Rgb, Vec<Vec<Point>>)>, colour: Rgb, more: Vec<Vec<Point>>) {
-    if more.is_empty() {
+/// a colour without lines is left out, unless `listed` keeps it, as Ink/Stitch lists a herringbone's weft
+/// colours whose stripes reach the piece, lines or none ([`super::herringbone`]).
+pub(super) fn add(to: &mut Vec<(Rgb, Vec<Vec<Point>>)>, colour: Rgb, more: Vec<Vec<Point>>, listed: bool) {
+    if more.is_empty() && !listed {
         return;
     }
     match to.iter_mut().find(|(c, _)| *c == colour) {
@@ -152,10 +167,10 @@ fn add(to: &mut Vec<(Rgb, Vec<Vec<Point>>)>, colour: Rgb, more: Vec<Vec<Point>>)
 
 /// The box the stripes and rows cover, in the sett's frame, and the middle they turn about.
 #[derive(Clone, Copy, Debug, PartialEq)]
-struct Frame {
-    min: [f64; 2],
-    max: [f64; 2],
-    middle: Point,
+pub(super) struct Frame {
+    pub(super) min: [f64; 2],
+    pub(super) max: [f64; 2],
+    pub(super) middle: Point,
 }
 
 impl Frame {
@@ -171,7 +186,7 @@ impl Frame {
 }
 
 /// The least x and y of some points, and the greatest.
-type Bounds = ([f64; 2], [f64; 2]);
+pub(super) type Bounds = ([f64; 2], [f64; 2]);
 
 /// The least x and y of `points` and the greatest, `None` for no points. A unit of `meter` for each point.
 fn bounds(points: &[Point], meter: &mut Meter) -> Result<Option<Bounds>, Exhausted> {
@@ -188,7 +203,7 @@ fn bounds(points: &[Point], meter: &mut Meter) -> Result<Option<Bounds>, Exhaust
 /// Which stripes: the warp's, upright bands laid from the box's left side, or the weft's, level ones from its
 /// top.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Direction {
+pub(super) enum Direction {
     Warp,
     Weft,
 }
@@ -215,9 +230,9 @@ impl Direction {
 /// runs, each colour in the order the sett first reaches it, by its bands or its runs, as Ink/Stitch keeps
 /// one list of a direction's colours.
 #[derive(Debug, Default)]
-struct Walked {
-    bands: Vec<(Rgb, Vec<[f64; 2]>)>,
-    runs: Vec<(Rgb, Vec<f64>)>,
+pub(super) struct Walked {
+    pub(super) bands: Vec<(Rgb, Vec<[f64; 2]>)>,
+    pub(super) runs: Vec<(Rgb, Vec<f64>)>,
 }
 
 /// The bands and runs `items` lay along `direction`'s axis of `frame`, from its least side to past its
@@ -297,35 +312,66 @@ impl Rows {
             starts.push(rows.apply(Point::new(minx, y).unwrap_or(frame.middle)));
             points.push(needle_points(k, length, tartan, meter)?);
         }
-        // Ink/Stitch sorts each direction's rows by their starts, x first, which the left side turned by the
-        // sett's angle and the rows' runs along one way or the other.
-        let left = Turn::new(frame.middle, tartan.sett.rotate + tartan.angle).direction((0.0, 1.0));
-        let forwards = left.0 > 0.0 || (left.0 == 0.0 && left.1 > 0.0);
-        let per = usize::try_from(tartan.rows_per_thread.max(1)).unwrap_or(1);
-        let mut taken = [Vec::new(), Vec::new()];
-        let order: Vec<usize> = if forwards { (0..=count).collect() } else { (0..=count).rev().collect() };
-        for k in order {
-            let direction = usize::from(k % (2 * per) >= per);
-            if let Some(list) = taken.get_mut(direction) {
-                let back = list.len() % 2 == 1;
-                list.push((k, back));
-            }
-        }
+        // The rows start on the box's left side, which the sett's angle and the rows' turn.
+        let side = Turn::new(frame.middle, tartan.sett.rotate + tartan.angle).direction((0.0, 1.0));
+        let taken = in_turns(count, tartan.rows_per_thread, side);
         Ok(Rows { starts, along, length, points, taken })
     }
 
-    /// Row `k`'s point `t` along it.
-    fn at(&self, k: usize, t: f64) -> Option<Point> {
-        let start = self.starts.get(k)?;
-        Point::new(start.x() + t * self.along.0, start.y() + t * self.along.1).ok()
+    /// Row `k`.
+    fn row(&self, k: usize) -> Option<Row<'_>> {
+        Some(Row { start: *self.starts.get(k)?, along: self.along, length: self.length, points: self.points.get(k)? })
     }
+
+    /// `direction`'s rows, in the order it takes them.
+    fn taken(&self, direction: Direction) -> Vec<Taken<'_>> {
+        let list = self.taken.get(direction.axis()).map(Vec::as_slice).unwrap_or_default();
+        list.iter().filter_map(|&(k, back)| Some((self.row(k)?, back))).collect()
+    }
+}
+
+/// One row across the box, in the sett's frame: where it starts, the way it runs, how long it is, and how far
+/// along it its needle points lie, its ends included.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(super) struct Row<'r> {
+    pub(super) start: Point,
+    pub(super) along: (f64, f64),
+    pub(super) length: f64,
+    pub(super) points: &'r [f64],
+}
+
+impl Row<'_> {
+    /// Its point `t` along it.
+    pub(super) fn at(&self, t: f64) -> Option<Point> {
+        Point::new(self.start.x() + t * self.along.0, self.start.y() + t * self.along.1).ok()
+    }
+}
+
+/// A row as a direction takes it: the row, and whether it is sewn back, from its end.
+pub(super) type Taken<'r> = (Row<'r>, bool);
+
+/// Rows 0 to `count` in the order Ink/Stitch sorts them, by their starts, x first, on a side whose way, turned
+/// as the rows are, is `side`: from the end of the side it sorts first. They go to 2 lists in turns of `per`, the
+/// first `per` of every 2 × `per` to the first list, the warp's for straight rows, and the others to the second.
+/// Every other row of each list runs back.
+pub(super) fn in_turns(count: usize, per: u32, side: (f64, f64)) -> [Vec<(usize, bool)>; 2] {
+    let forwards = side.0 > 0.0 || (side.0 == 0.0 && side.1 > 0.0);
+    let per = usize::try_from(per.max(1)).unwrap_or(1);
+    let mut taken = [Vec::new(), Vec::new()];
+    let order: Vec<usize> = if forwards { (0..=count).collect() } else { (0..=count).rev().collect() };
+    for k in order {
+        let Some(list) = taken.get_mut(usize::from(k % (2 * per) >= per)) else { break };
+        let back = list.len() % 2 == 1;
+        list.push((k, back));
+    }
+    taken
 }
 
 /// How far along row `k`, `length` long, its needle points lie: its start, then the longest stitch apart
 /// from a `staggers`-th of a stitch further on than the row before's, as Ink/Stitch places them, then its
 /// end. Without 2 such points between its ends, its ends alone. A unit of `meter` for each point, spent
 /// before they are made.
-fn needle_points(k: usize, length: f64, tartan: &Tartan, meter: &mut Meter) -> Result<Vec<f64>, Exhausted> {
+pub(super) fn needle_points(k: usize, length: f64, tartan: &Tartan, meter: &mut Meter) -> Result<Vec<f64>, Exhausted> {
     let staggers = if tartan.staggers == 0.0 { 1.0 } else { tartan.staggers };
     let first = (k as f64 / staggers).rem_euclid(1.0) * tartan.longest;
     let count = steps(((length - first) / tartan.longest).ceil(), 0);
@@ -341,37 +387,37 @@ fn needle_points(k: usize, length: f64, tartan: &Tartan, meter: &mut Meter) -> R
 
 /// `steps`, a whole number of steps, as a count: `least` for one that is no number or less than it, and
 /// `usize::MAX` for one past it, as `as` saturates, which no meter allows.
-fn steps(steps: f64, least: usize) -> usize {
+pub(super) fn steps(steps: f64, least: usize) -> usize {
     #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
     let count = steps as usize;
     if steps.is_nan() { least } else { count.max(least) }
 }
 
 /// What laying a direction's bands and runs over a piece needs.
-struct Laying<'l> {
-    frame: &'l Frame,
-    tartan: &'l Tartan,
+pub(super) struct Laying<'l> {
+    pub(super) frame: &'l Frame,
+    pub(super) tartan: &'l Tartan,
     /// The piece, in the sett's frame, its bounds and its rings.
-    piece: &'l Polygon,
-    reach: Bounds,
-    rings: Vec<&'l [Point]>,
-    direction: Direction,
+    pub(super) piece: &'l Polygon,
+    pub(super) reach: Bounds,
+    pub(super) rings: Vec<&'l [Point]>,
+    pub(super) direction: Direction,
     /// The sett's turn, which takes the lines back to the piece's frame.
-    turn: Turn,
+    pub(super) turn: Turn,
 }
 
 /// A stretch of a row inside a band: its points from the end it is sewn from.
 type Stretch = Vec<Point>;
 
 impl Laying<'_> {
-    /// The lines `band`, from one side to the other along the direction's axis, makes of the direction's
-    /// rows over the piece, turned back to the piece's frame.
-    fn band(&self, band: [f64; 2], rows: &Rows, meter: &mut Meter) -> Result<Vec<Vec<Point>>, Exhausted> {
-        let taken = rows.taken.get(self.direction.axis()).map(Vec::as_slice).unwrap_or_default();
+    /// The lines `band`, from one side to the other along the direction's axis, makes of the rows `taken`
+    /// over the piece, turned back to the piece's frame. With `run_on`, a line that ends inside the piece runs
+    /// on to its rings, as straight rows' lines do and a herringbone's don't.
+    pub(super) fn band(&self, band: [f64; 2], taken: &[Taken<'_>], run_on: bool, meter: &mut Meter) -> Result<Vec<Vec<Point>>, Exhausted> {
         let mut stretches: Vec<Stretch> = Vec::new();
-        for &(k, back) in taken {
+        for (row, back) in taken {
             meter.charge(1)?;
-            if let Some(stretch) = self.stretch(band, rows, k, back) {
+            if let Some(stretch) = self.stretch(band, row, *back) {
                 stretches.push(stretch);
             }
         }
@@ -393,7 +439,9 @@ impl Laying<'_> {
         let mut lines = Vec::new();
         for zigzag in zigzags.iter().filter(|zigzag| zigzag.len() >= 2) {
             for mut line in inside(zigzag, std::slice::from_ref(self.piece), meter)? {
-                self.run_on(&mut line, meter)?;
+                if run_on {
+                    self.run_on(&mut line, meter)?;
+                }
                 made(meter, line.len())?;
                 lines.push(line.into_iter().map(|p| self.turn.apply(p)).collect());
             }
@@ -401,13 +449,13 @@ impl Laying<'_> {
         Ok(lines)
     }
 
-    /// The stretch of row `k` inside `band`, from the end the row runs from, or back; `None` where the row
+    /// The stretch of `row` inside `band`, from the end the row runs from, or `back`; `None` where the row
     /// misses the band or crosses it for half a pixel or less.
-    fn stretch(&self, band: [f64; 2], rows: &Rows, k: usize, back: bool) -> Option<Stretch> {
-        let start = rows.starts.get(k)?;
-        let (mut lo, mut hi) = (0.0_f64, rows.length);
+    fn stretch(&self, band: [f64; 2], row: &Row<'_>, back: bool) -> Option<Stretch> {
+        let start = row.start;
+        let (mut lo, mut hi) = (0.0_f64, row.length);
         for axis in 0..2 {
-            let (from, way) = if axis == 0 { (start.x(), rows.along.0) } else { (start.y(), rows.along.1) };
+            let (from, way) = if axis == 0 { (start.x(), row.along.0) } else { (start.y(), row.along.1) };
             let (least, most) = if axis == self.direction.axis() {
                 (band[0], band[1])
             } else {
@@ -425,9 +473,8 @@ impl Laying<'_> {
         if (hi - lo).partial_cmp(&SHORTEST_STRETCH) != Some(Ordering::Greater) {
             return None;
         }
-        let ts = rows.points.get(k)?;
-        let inner = ts.iter().copied().filter(|&t| t > lo && t < hi);
-        let mut stretch: Vec<Point> = std::iter::once(lo).chain(inner).chain(std::iter::once(hi)).filter_map(|t| rows.at(k, t)).collect();
+        let inner = row.points.iter().copied().filter(|&t| t > lo && t < hi);
+        let mut stretch: Vec<Point> = std::iter::once(lo).chain(inner).chain(std::iter::once(hi)).filter_map(|t| row.at(t)).collect();
         if back {
             stretch.reverse();
         }
@@ -457,7 +504,7 @@ impl Laying<'_> {
     }
 
     /// Whether `p` lies within [`ON_RINGS`] of the piece's rings.
-    fn on_rings(&self, p: Point, meter: &mut Meter) -> Result<bool, Exhausted> {
+    pub(super) fn on_rings(&self, p: Point, meter: &mut Meter) -> Result<bool, Exhausted> {
         self.within(p, ON_RINGS, meter)
     }
 
@@ -548,7 +595,7 @@ impl Laying<'_> {
 
 /// The straight line from `a` to `b` in equal steps no longer than `longest`, both ends included. A unit of
 /// `meter` for each point, spent before they are made.
-fn segmentized(a: Point, b: Point, longest: f64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+pub(super) fn segmentized(a: Point, b: Point, longest: f64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
     let count = steps((a.distance(b) / longest).ceil(), 1);
     meter.charge(u64::try_from(count).unwrap_or(u64::MAX).saturating_add(1))?;
     Ok((0..=count).map(|i| if i == count { b } else { a.lerp(b, i as f64 / count as f64) }).collect())

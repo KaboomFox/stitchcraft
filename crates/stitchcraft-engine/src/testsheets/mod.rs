@@ -92,9 +92,8 @@ enum Drawn {
     DesignedById(fn() -> Result<Drawing, SheetError>, &'static [Code]),
     /// As [`Drawn::Designed`], but the design holds what an Ink/Stitch file gives its elements, which a host
     /// would draw as objects of their own: start and end positions, clips, and the design's origin and stop
-    /// position, or keep with the document: its turn on export, or a setting its dialogs don't hold, a
-    /// tartan's sett ([`TestSheet::uses_file_features`]), as TS-16's and TS-17B's. Only `stitch testsheet`
-    /// and the differential's SVG file draw it.
+    /// position, or keep with the document: its turn on export ([`TestSheet::uses_file_features`]), as TS-16's
+    /// does. Only `stitch testsheet` and the differential's SVG file draw it.
     FromFile(fn() -> Result<Drawing, SheetError>, &'static [Code]),
     /// As [`Drawn::Designed`], but part of it is routed (`crate::route`), into pieces cut at points along its
     /// columns that a document's points hold only to within a unit in their last place. Drawn into a
@@ -138,9 +137,9 @@ impl TestSheet {
     /// their shapes; clips ([`Element::clips`]), which it would draw as clip groups; the design's origin or
     /// stop position ([`DesignSettings::origin`], [`DesignSettings::stop_position`]), which it would draw as
     /// markers; or its turn on export ([`DesignSettings::rotate_on_export`]), which the Design Settings filter
-    /// would keep. A tartan's sett is one too, as TS-17B's are: VectorCraft's fill dialog holds none before
-    /// M10.7. VectorCraft's Test Sheet filter draws and keeps none of them. The sheets that do are those
-    /// drawn from a file, which [`TestSheet::drawable`] leaves out, as the tests check.
+    /// would keep. VectorCraft's Test Sheet filter draws and keeps none of them. The sheets that do are those
+    /// drawn from a file, which [`TestSheet::drawable`] leaves out, as the tests check. A tartan's sett isn't
+    /// one: VectorCraft's fill dialog holds it from M10.7.
     ///
     /// [`Element::hints`]: crate::design::Element::hints
     /// [`Element::clips`]: crate::design::Element::clips
@@ -204,11 +203,9 @@ pub struct Cloned {
     pub map: [f64; 6],
 }
 
-/// Whether `design` holds any of what an Ink/Stitch file gives it ([`TestSheet::uses_file_features`]), a
-/// tartan's sett among them, which VectorCraft's fill dialog doesn't hold before M10.7.
+/// Whether `design` holds any of what an Ink/Stitch file gives it ([`TestSheet::uses_file_features`]).
 fn filed(design: &Design) -> bool {
-    let sett = |element: &crate::design::Element| element.params.get("tartan").is_some_and(|sett| !sett.trim().is_empty());
-    let marked = |element: &crate::design::Element| element.hints != Hints::default() || !element.clips.is_empty() || sett(element);
+    let marked = |element: &crate::design::Element| element.hints != Hints::default() || !element.clips.is_empty();
     let settings = &design.settings;
     settings.origin.is_some() || settings.stop_position.is_some() || settings.rotate_on_export.turns() || design.elements().iter().any(marked)
 }
@@ -525,14 +522,15 @@ pub static SHEETS: &[TestSheet] = &[
         id: "TS-17B",
         title: "New fills: tartan",
         checks: &[
-            "Each sample is a tartan fill 40 mm square, trimmed after each colour. Top row, left to right: a sett of red, white, Prussian blue and deep gold, mirrored at its ends, then one of emerald green, black and white, repeated, then a warp of red and black under a weft of blue and white. Bottom row: blue and black with a white stripe 0.5 mm wide and a red one 0.8 mm wide, each sewn as a run along its middle, then deep gold, black and tangerine turned 30° and scaled by 150 %.",
+            "Each sample is a tartan fill 40 mm square, trimmed after each colour. Top row, left to right: a sett of red, white, Prussian blue and deep gold, mirrored at its ends, then one of emerald green, black and white, repeated, then a warp of red and black under a weft of blue and white. Bottom row: blue and black with a white stripe 0.5 mm wide and a red one 0.8 mm wide, each sewn as a run along its middle, then deep gold, black and tangerine turned 30° and scaled by 150 %, then blue, white, red and black in a herringbone 3 mm wide.",
             "Do the warp and the weft read as a weave, each colour's stripes crossing the other direction's in a twill of rows 2 by 2?",
+            "On the herringbone, do the rows turn at each band's edge into columns of chevrons, and do the weft's rows run on from band to band without a gap?",
             "Do the runs lie flat along the middles of their stripes, on top of the fills, and do they show as lines of their own colour?",
             "Where the rows of one colour are joined along a stripe's edge, does the join show?",
             "How many times does the thread change, and how long does the sheet take? Each tartan sews its underlay in its own thread, then each colour once.",
         ],
         profile: REFERENCE,
-        drawn: Drawn::FromFile(ts17b::tartans, &[]),
+        drawn: Drawn::Designed(ts17b::tartans, &[]),
     },
     TestSheet {
         id: "TS-17C",
@@ -592,10 +590,10 @@ mod tests {
         // The TS-13 sheets' shapes are digitized automatically, and no other sheet's are.
         let digitized: Vec<&str> = SHEETS.iter().filter(|sheet| sheet.digitized()).map(|sheet| sheet.id).collect();
         assert_eq!(digitized, ["TS-13A", "TS-13B", "TS-13C", "TS-13D"]);
-        // TS-16 alone places and clips its elements, as an Ink/Stitch file does, TS-17B alone sets tartans'
-        // setts, and they alone are drawn from a file.
+        // TS-16 alone places and clips its elements, as an Ink/Stitch file does, and it alone is drawn from a
+        // file. TS-17B's tartans set setts, which VectorCraft's fill dialog holds from M10.7.
         let filed: Vec<&str> = SHEETS.iter().filter(|sheet| sheet.uses_file_features()).map(|sheet| sheet.id).collect();
-        assert_eq!(filed, ["TS-16", "TS-17B"]);
+        assert_eq!(filed, ["TS-16"]);
         let from_file: Vec<&str> = SHEETS.iter().filter(|sheet| matches!(sheet.drawn, Drawn::FromFile(..))).map(|sheet| sheet.id).collect();
         assert_eq!(from_file, filed);
     }
@@ -627,7 +625,7 @@ mod tests {
             drawable,
             [
                 "TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D",
-                "TS-17A"
+                "TS-17A", "TS-17B"
             ]
         );
     }

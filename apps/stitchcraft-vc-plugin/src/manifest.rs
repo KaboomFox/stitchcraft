@@ -7,7 +7,8 @@
 //! VectorCraft's rules, so one VectorCraft would refuse fails these tests instead of a user's install
 //! (`REQ-VC-002`).
 //!
-//! **What a manifest can hold.** VectorCraft's parameters are numbers, whole numbers, toggles and choices.
+//! **What a manifest can hold.** VectorCraft's parameters are numbers, whole numbers, toggles and choices,
+//! and from 0.14 texts.
 //! Each always has a value: a record VectorCraft stores holds every declared parameter, at its default
 //! when the user left it, and keys the manifest doesn't declare are dropped. So a parameter is declared
 //! when one such value means what the parameter means:
@@ -15,12 +16,14 @@
 //! - a length, angle, percentage or number as a number in its range, and a count as a whole number;
 //! - a list or a pair whose default is one value as that value, which stands for the whole list or for
 //!   both sides, as one value does in Ink/Stitch;
-//! - an optional length that 0 leaves unset as a number from 0, 0 being unset, as in Ink/Stitch.
+//! - an optional length that 0 leaves unset as a number from 0, 0 being unset, as in Ink/Stitch;
+//! - a tartan's sett as text ([`TEXTS`]), which StitchCraft Tartan writes (M10.7). VectorCraft 0.12 and
+//!   0.13 refuse a manifest with a text, so the fill effect installs from 0.14.
 //!
-//! The rest keep their defaults in VectorCraft: texts, seeds, and settings left empty to take another's
-//! value. A choice leaves out the options whose stitches a text spells out, such as the custom locks,
-//! since the dialog cannot hold the text, and the methods StitchCraft sews as another: Ink/Stitch's legacy
-//! fill, sewn as a tatami fill (`REQ-FILL-005`). `satin_column` is set by the effect itself, by which
+//! The rest keep their defaults in VectorCraft: the other texts, seeds, and settings left empty to take
+//! another's value. A choice leaves out the options whose stitches a text spells out, such as the custom
+//! locks, since the dialog doesn't hold that text, and the methods StitchCraft sews as another: Ink/Stitch's
+//! legacy fill, sewn as a tatami fill (`REQ-FILL-005`). `satin_column` is set by the effect itself, by which
 //! family it is ([`SATIN_COLUMN`]).
 //!
 //! **Order.** The dialog lists parameters in the manifest's order, which is the registry's within each
@@ -46,7 +49,8 @@
 //! VectorCraft refuses an exporter before 0.14, which is when its kind came.
 //!
 //! **Filters.** The Design Settings filter's dialog holds the design settings and the machine
-//! ([`settings`]), and the Test Sheet filter's the sheet to draw ([`testsheet`]). Stroke to Satin has no
+//! ([`settings`]), the Test Sheet filter's the sheet to draw ([`testsheet`]), and the Tartan filter's a
+//! sett's code and how the sett is laid ([`tartan`]). Stroke to Satin has no
 //! dialog, and asks for a heavy budget, which only a filter may, from VectorCraft 0.17 ([`BudgetClass`],
 //! [`stroke_to_satin`]). Releases before 0.17 ignore the key, and give it a light filter's budget.
 
@@ -58,6 +62,7 @@ use stitchcraft_core::Mm;
 use stitchcraft_engine::common::CommonParams;
 use stitchcraft_engine::generate::sewn_as;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
+use stitchcraft_engine::generators::tartan::SETT;
 use stitchcraft_engine::registry::PARAMETERS;
 use stitchcraft_params::{Empty, Family, Kind, ParamGroup, ParamSpec, StitchType, Value as Parsed, find_for};
 use stitchcraft_plan::FormatId;
@@ -69,6 +74,7 @@ use crate::dialog::{self, Ui, registry_ui};
 use crate::route_runs::ROUTE_RUNS;
 use crate::route_satins::ROUTE_SATINS;
 use crate::stroke_to_satin::STROKE_TO_SATIN;
+use crate::tartan::TARTAN;
 use crate::testsheet::TESTSHEET;
 use crate::{export, preview};
 
@@ -92,7 +98,13 @@ pub mod limits {
     pub const MAX_EXTENSIONS: usize = 8;
     /// Longest file extension, in characters.
     pub const MAX_EXTENSION_CHARS: usize = 16;
+    /// Most characters a text holds (from VectorCraft 0.14).
+    pub const MAX_TEXT: usize = 4_096;
 }
+
+/// The texts the dialogs hold, as text fields: a tartan's sett, which StitchCraft Tartan writes. The other
+/// texts keep their defaults in VectorCraft.
+pub const TEXTS: [&str; 1] = [SETT];
 
 /// Who the plug-ins are by.
 const AUTHOR: &str = "StitchCraft contributors";
@@ -190,6 +202,15 @@ pub enum Schema {
         /// Its value when the user leaves it.
         default: &'static str,
     },
+    /// A text field, from VectorCraft 0.14.
+    #[serde(rename = "string")]
+    Text {
+        /// Its value when the user leaves it.
+        default: &'static str,
+        /// The most characters it holds: VectorCraft cuts a longer text to as many.
+        #[serde(rename = "maxLength")]
+        max_length: usize,
+    },
 }
 
 impl Schema {
@@ -201,6 +222,7 @@ impl Schema {
             Schema::Int { min, max, default } => Value::from(*default.clamp(min, max)),
             Schema::Bool { default } => Value::Bool(*default),
             Schema::Choice { default, .. } => Value::from(*default),
+            Schema::Text { default, .. } => Value::from(*default),
         }
     }
 }
@@ -350,6 +372,25 @@ pub fn route_runs() -> Manifest {
     }
 }
 
+/// The manifest of the Tartan filter, which sets the sett of the selected paths' tartan fills from a code of
+/// its stripes ([`crate::tartan`]): a light filter, from VectorCraft 0.15, whose dialog takes the code and
+/// how the sett is laid.
+pub fn tartan() -> Manifest {
+    Manifest {
+        id: plugin_id(TARTAN),
+        name: "StitchCraft Tartan",
+        version: env!("CARGO_PKG_VERSION"),
+        kind: "filter",
+        author: AUTHOR,
+        description: "Sets the sett of the selected paths' tartan fills from a code of its stripes, as Ink/Stitch's tartan editor does: a \
+                      palette code, or a threadcount in the Scottish Register of Tartans' colour letters. A path without a StitchCraft \
+                      effect gets the fill effect. StitchCraft Fill must be installed.",
+        params: crate::tartan::options(),
+        extensions: Vec::new(),
+        budget: BudgetClass::Light,
+    }
+}
+
 /// The manifest of the Test Sheet filter, which draws a test sheet into the document ([`crate::testsheet`]).
 pub fn testsheet() -> Manifest {
     Manifest {
@@ -438,9 +479,10 @@ fn place(group: &ParamGroup, family: Family, default: Option<StitchType>) -> u8 
 }
 
 /// How a manifest declares `spec`, one of the parameters `siblings` declared together, or `None` when no
-/// one value of VectorCraft's kinds means what it means. A choice leaves out each option that a text
-/// among `siblings` is shown for alone: the text spells out that option's stitches. A method parameter
-/// leaves out the methods StitchCraft sews as another ([`sewn_as`]).
+/// one value of VectorCraft's kinds means what it means. A text is declared when the dialogs hold it
+/// ([`TEXTS`]). A choice leaves out each option that a text among `siblings` is shown for alone: the text
+/// spells out that option's stitches. A method parameter leaves out the methods StitchCraft sews as another
+/// ([`sewn_as`]).
 pub fn schema(spec: &ParamSpec, siblings: &[ParamSpec]) -> Option<Schema> {
     let number = |min: f64, max: f64, default: f64| Some(Schema::Number { min, max, default });
     let default = spec.kind.parse(spec.default).map(|(value, _)| value)?;
@@ -458,6 +500,9 @@ pub fn schema(spec: &ParamSpec, siblings: &[ParamSpec]) -> Option<Schema> {
             _ => None,
         },
         (Kind::Toggle, Parsed::Toggle(on)) => Some(Schema::Bool { default: on }),
+        (Kind::Text { max_bytes }, Parsed::Text(_)) if TEXTS.contains(&spec.key) => {
+            Some(Schema::Text { default: spec.default, max_length: max_bytes.min(limits::MAX_TEXT) })
+        }
         (Kind::Choice { options }, Parsed::Choice(id)) => {
             let spelled = |option: &str| {
                 siblings.iter().any(|other| {
@@ -647,7 +692,15 @@ fn valid_spec(spec: &Value) -> Result<(), String> {
                 Some(_) => Err("default is not one of the options".into()),
             }
         }
-        _ => Err("`type` must be number, int, bool or choice".into()),
+        Some("string") => {
+            let most = spec.get("maxLength").map_or(Some(limits::MAX_TEXT), |most| most.as_u64().and_then(|most| usize::try_from(most).ok()));
+            let default = spec.get("default").map_or(Some(""), Value::as_str);
+            match (most, default) {
+                (Some(most), Some(default)) if (1..=limits::MAX_TEXT).contains(&most) && default.chars().count() <= most => Ok(()),
+                _ => Err(format!("`maxLength` must be 1–{}, and the default a text no longer", limits::MAX_TEXT)),
+            }
+        }
+        _ => Err("`type` must be number, int, bool, choice or string".into()),
     }
 }
 

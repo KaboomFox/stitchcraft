@@ -301,11 +301,11 @@ fn live_effect(name: &str) -> Option<Module> {
 }
 
 /// The role in the accessibility tree of the control VectorCraft's dialog gives a parameter of the type
-/// `schema` (its `form::schema_fields`): a text field for a number, a checkbox for a toggle, and a drop-down
-/// list for a choice.
+/// `schema` (its `form::schema_fields`): a text field for a number or a text, a checkbox for a toggle, and a
+/// drop-down list for a choice.
 fn control(schema: &Schema) -> &'static str {
     match schema {
-        Schema::Number { .. } | Schema::Int { .. } => "text_field",
+        Schema::Number { .. } | Schema::Int { .. } | Schema::Text { .. } => "text_field",
         Schema::Bool { .. } => "check_box",
         Schema::Choice { .. } => "combo_box",
     }

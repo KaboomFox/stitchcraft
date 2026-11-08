@@ -14,9 +14,13 @@
 //! the warp. Slashes, which mark a sett's pivots, and the dots of a repeated sett are passed over, and so is
 //! any text between stripes: Ink/Stitch writes a repeated sett's code as a list, `...['(#ff0000)5.0',
 //! '(#00ff00)2.0']...`, which reads the same. Whether the sett is mirrored is its `symmetry` setting, not its
-//! code. A colour that can't be read leaves its stripe unsewn (`SC-W0328`). Ink/Stitch's other codes, a
-//! threadcount from the Scottish Register of Tartans or a code of colour letters, come with M10.7's editor,
-//! and until then the sett can't be read (`SC-E0323`).
+//! code. A colour that can't be read leaves its stripe unsewn (`SC-W0328`).
+//!
+//! **Codes of colour letters** (milestone M10.7). Ink/Stitch's tartan reads 2 more codes, as its editor
+//! does ([`coded`]): a threadcount of colour letters, each followed by its count of threads, `B/24 W4 R/2`,
+//! whose letters stand for the Scottish Register of Tartans' shades ([`super::shades`]), and the threadcount
+//! the register's search gives, with a palette of its own. Each thread is 0.5 mm wide as the fill reads them,
+//! and as wide as the editor is told when it makes a sett ([`super::editor`]).
 //!
 //! **The full sett** ([`Sett::full`]). A stripe no wider than `min_stripe_width`, once scaled, sews as a run
 //! along its middle, and its width goes to the stripes beside it, half before and half after. As Ink/Stitch
@@ -31,11 +35,14 @@ use stitchcraft_plan::Rgb;
 
 /// The sett Ink/Stitch sews for a tartan without one: stripes 5 mm wide of a thread almost black, 5 mm left
 /// unsewn between them, mirrored at both ends.
-pub(crate) const DEFAULT_PALETTE: &str = "(#101010)/5.0 (#FFFFFF)/?5.0";
+pub const DEFAULT_PALETTE: &str = "(#101010)/5.0 (#FFFFFF)/?5.0";
 
-/// How a stripe of a palette code is sewn.
+/// How wide the fill reads each thread of a threadcount, in millimetres, as Ink/Stitch's fill reads one.
+pub(crate) const FILL_THREAD: f64 = 0.5;
+
+/// How a stripe of a sett is sewn.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum Look {
+pub enum Look {
     /// In its colour.
     Sewn,
     /// Not at all: a `?` before its width, or a colour that can't be read.
@@ -44,15 +51,15 @@ pub(crate) enum Look {
     Continued,
 }
 
-/// A stripe as its palette code gives it.
+/// A stripe of a sett, as its code gives it.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub(crate) struct Stripe {
+pub struct Stripe {
     /// Its colour; black for a colour that can't be read.
-    pub(crate) colour: Rgb,
+    pub colour: Rgb,
     /// Its width in millimetres, before the sett is scaled.
-    pub(crate) width: f64,
+    pub width: f64,
     /// How it is sewn.
-    pub(crate) look: Look,
+    pub look: Look,
 }
 
 /// A tartan's sett, as its setting gives it.
@@ -155,28 +162,48 @@ fn truth(object: &Map<String, Value>, key: &str, default: bool) -> Result<bool, 
     }
 }
 
-/// The sett palette code `code` gives with `settings`.
-fn palette(code: &str, settings: Settings) -> Result<Read, String> {
+/// What a code gives: each direction's stripes, and the colours that couldn't be read, each left unsewn.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct Coded {
+    /// The warp's stripes and the weft's: the warp's without a `|`.
+    pub(crate) warp: Vec<Stripe>,
+    pub(crate) weft: Vec<Stripe>,
+    /// Whether the code has no `|`, and the weft is the warp.
+    pub(crate) same: bool,
+    /// The colours that couldn't be read, in the code's order.
+    pub(crate) unread: Vec<String>,
+}
+
+/// The stripes `code` gives, as Ink/Stitch's tartan reads a code, each thread of a threadcount `thread` mm wide:
+/// slashes and the dots of a repeated sett are passed over, and a code is a threadcount of the register's
+/// search when it says `Threadcount` ([`registered`]), a palette code when it has a bracket ([`stripes`]), and
+/// otherwise colour letters ([`lettered`]). A palette code's `|` parts the warp's stripes from the weft's. A
+/// threadcount's or colour letters' stripes are all the warp's, and with a `|` anywhere in the code the weft
+/// has none. Why not, when the code can't be read.
+pub(crate) fn coded(code: &str, thread: f64) -> Result<Coded, String> {
     let same = !code.contains('|');
     let code = code.replace('/', "").replace("...", "");
-    if code.contains("Threadcount") {
-        return Err("its code is a threadcount, which StitchCraft reads from M10.7".to_string());
-    }
     let mut unread = Vec::new();
-    let (warp, weft) = if code.contains('(') {
+    let (warp, weft) = if code.contains("Threadcount") {
+        (registered(&code, thread, &mut unread)?, None)
+    } else if code.contains('(') {
         let mut directions = code.split('|');
         let warp = directions.next().map(|warp| stripes(warp, &mut unread)).transpose()?.unwrap_or_default();
         let weft = directions.next().map(|weft| stripes(weft, &mut unread)).transpose()?;
         if directions.next().is_some() {
             return Err("its code has more than one `|`".to_string());
         }
-        let weft = weft.unwrap_or_else(|| warp.clone());
         (warp, weft)
-    } else if lettered(&code) {
-        return Err("its code is one of colour letters, which StitchCraft reads from M10.7".to_string());
     } else {
-        (Vec::new(), Vec::new())
+        (lettered(&code, thread, &mut unread)?, None)
     };
+    let weft = if same { warp.clone() } else { weft.unwrap_or_default() };
+    Ok(Coded { warp, weft, same, unread })
+}
+
+/// The sett palette code `code` gives with `settings`.
+fn palette(code: &str, settings: Settings) -> Result<Read, String> {
+    let Coded { warp, weft, same, unread } = coded(code, FILL_THREAD)?;
     let Settings { rotate, scale, offset, mirrored, narrowest } = settings;
     let mut sett = Sett { warp, weft, rotate, scale, offset, mirrored, narrowest, margin: 0.0 };
     sett.margin = sett.width(&sett.warp).max(sett.width(&sett.weft));
@@ -194,21 +221,117 @@ fn palette(code: &str, settings: Settings) -> Result<Read, String> {
     Ok(Read { sett: Sett { warp, weft, ..sett }, unread })
 }
 
-/// Whether `code`, which has no brackets, is a code of colour letters, each followed by its count of
-/// threads, as Ink/Stitch reads one: `B24 W4 R2`.
-fn lettered(code: &str) -> bool {
-    let mut chars = code.chars().peekable();
-    while let Some(c) = chars.next() {
-        if !c.is_ascii_alphabetic() {
-            continue;
-        }
-        while chars.next_if(char::is_ascii_alphabetic).is_some() {}
-        let _ = chars.next_if(|c| matches!(c, '?' | '*'));
-        if chars.peek().is_some_and(|c| c.is_ascii_digit() || *c == '.') {
-            return true;
+/// The stripes of `code`, colour letters each followed by a `?`, a `*` or neither and its count of threads,
+/// `B24 W4 R2`, as Ink/Stitch reads them: letters without a count are passed over, each count is `thread` mm a
+/// thread, and the letters stand for the register's shades ([`super::shades`]). Letters the register doesn't
+/// use leave their stripe unsewn, and `unread` gets them. Why not, when a count isn't a number.
+fn lettered(code: &str, thread: f64, unread: &mut Vec<String>) -> Result<Vec<Stripe>, String> {
+    let mut found = Vec::new();
+    let mut rest = code;
+    while let Some(start) = rest.find(|c: char| c.is_ascii_alphabetic()) {
+        let (letters, after) = split_letters(rest.get(start..).unwrap_or_default());
+        let (look, after) = match after.chars().next() {
+            Some('?') => (Look::Gap, after.get(1..).unwrap_or_default()),
+            Some('*') => (Look::Continued, after.get(1..).unwrap_or_default()),
+            _ => (Look::Sewn, after),
+        };
+        let (count, after) = split_count(after);
+        rest = after;
+        if !count.is_empty() {
+            found.push(lettered_stripe(letters, look, threads(count)? * thread, super::shades::shade(letters), unread));
         }
     }
-    false
+    Ok(found)
+}
+
+/// The run of letters `text` starts with, and the text after it.
+fn split_letters(text: &str) -> (&str, &str) {
+    text.split_at(text.find(|c: char| !c.is_ascii_alphabetic()).unwrap_or(text.len()))
+}
+
+/// The run of digits and points `text` starts with, a count of threads, and the text after it.
+fn split_count(text: &str) -> (&str, &str) {
+    text.split_at(text.find(|c: char| !(c.is_ascii_digit() || c == '.')).unwrap_or(text.len()))
+}
+
+/// The number of threads `count` says; why not, when it isn't a number.
+fn threads(count: &str) -> Result<f64, String> {
+    count.parse().map_err(|_| format!("the count `{count}` of a stripe isn't a number"))
+}
+
+/// A stripe of `letters`, sewn as `look` says and `width` mm wide, in `colour`: unsewn, its letters added to
+/// `unread`, without one.
+fn lettered_stripe(letters: &str, look: Look, width: f64, colour: Option<Rgb>, unread: &mut Vec<String>) -> Stripe {
+    match colour {
+        Some(colour) => Stripe { colour, width, look },
+        None => {
+            unread.push(letters.to_string());
+            Stripe { colour: Rgb::new(0, 0, 0), width, look: Look::Gap }
+        }
+    }
+}
+
+/// The stripes of a threadcount of the register's search, as Ink/Stitch reads one: the line after the last
+/// line that says `Threadcount:`, of letters each followed by its count, `B24W4B24R2K24G24W2`, each count
+/// `thread` mm a thread, in the colours of the line after the last that says `Pallet:`,
+/// `B=0000FFBLUE;W=FFFFFFWHITE;` ([`pallet`]). Letters the palette doesn't name leave their stripe unsewn,
+/// and `unread` gets them. Why not, when letters have no count or a count isn't a number.
+fn registered(code: &str, thread: f64, unread: &mut Vec<String>) -> Result<Vec<Stripe>, String> {
+    // Its lines, broken where Python breaks lines, a carriage return and a line feed together once.
+    let code = code.replace("\r\n", "\n");
+    let lines: Vec<&str> = code.split(['\n', '\r', '\u{b}', '\u{c}', '\u{1c}', '\u{1d}', '\u{1e}', '\u{85}', '\u{2028}', '\u{2029}']).collect();
+    let (mut counts, mut colours) = ("", Vec::new());
+    for (i, line) in lines.iter().enumerate() {
+        let Some(&next) = lines.get(i + 1) else { break };
+        if line.contains("Threadcount:") {
+            counts = next;
+        } else if line.contains("Pallet:") {
+            colours = pallet(next);
+        }
+    }
+    let mut found = Vec::new();
+    let mut rest = counts;
+    while let Some(start) = rest.find(|c: char| c.is_ascii_alphabetic()) {
+        let (letters, after) = split_letters(rest.get(start..).unwrap_or_default());
+        let (count, after) = split_count(after);
+        rest = after;
+        if count.is_empty() {
+            return Err(format!("the letters `{letters}` of its threadcount have no count"));
+        }
+        let colour = colours.iter().rev().find(|(named, _)| *named == letters).map(|&(_, colour)| colour);
+        found.push(lettered_stripe(letters, Look::Sewn, threads(count)? * thread, colour, unread));
+    }
+    Ok(found)
+}
+
+/// The colours of a registered threadcount's palette, `B=0000FFBLUE;W=FFFFFFWHITE;`, as Ink/Stitch reads them:
+/// letters, `=`, a `#` or none, and 6 hexadecimal digits, of which only a and f may be in lower case, its
+/// pattern; what follows them is passed over.
+fn pallet(line: &str) -> Vec<(&str, Rgb)> {
+    let hex = |c: &u8| c.is_ascii_digit() || matches!(*c, b'a' | b'f' | b'A'..=b'F');
+    let bytes = line.as_bytes();
+    let mut found = Vec::new();
+    let mut at = 0;
+    while let Some(&c) = bytes.get(at) {
+        if !c.is_ascii_alphabetic() {
+            at += 1;
+            continue;
+        }
+        let end = bytes.get(at..).and_then(|rest| rest.iter().position(|c| !c.is_ascii_alphabetic())).map_or(bytes.len(), |n| at + n);
+        let digits = end + 1 + usize::from(bytes.get(end + 1) == Some(&b'#'));
+        let value = bytes.get(digits..digits + 6).filter(|value| bytes.get(end) == Some(&b'=') && value.iter().all(hex));
+        match (value, line.get(at..end)) {
+            (Some(value), Some(letters)) => {
+                let channel = |i: usize| value.get(i..i + 2).and_then(|pair| u8::from_str_radix(std::str::from_utf8(pair).ok()?, 16).ok());
+                if let (Some(r), Some(g), Some(b)) = (channel(0), channel(2), channel(4)) {
+                    found.push((letters, Rgb::new(r, g, b)));
+                }
+                at = digits + 6;
+            }
+            _ => at = end,
+        }
+    }
+    found
 }
 
 /// The stripes of one direction of a palette code, each a colour in brackets, a `?` or a `*` or neither, then

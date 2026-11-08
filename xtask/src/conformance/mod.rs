@@ -95,8 +95,13 @@ pub fn run(check_only: bool, filter: Option<&str>, bless: Option<&str>, differen
     for r in requirements.iter().filter(|r| r.status == "active" && !covered.contains(r.id.as_str())) {
         findings.error(format!("{} is active but no case covers it", r.id));
     }
-    // Every registered code is reachable and renders: a `diag_` case produces it from real input.
-    for code in codes.iter().filter(|c| !covered.contains(*c)) {
+    // Every registered code is reachable and renders: a `diag_` case produces it from real input. A retired code
+    // is given by nothing, and none produces it.
+    let gone: BTreeSet<&str> = Code::ALL.iter().filter(|code| retired(**code)).map(|code| code.id()).collect();
+    for code in gone.iter().filter(|c| covered.contains(*c)) {
+        findings.error(format!("{code} is retired, but a diag_ case names it: StitchCraft no longer gives it"));
+    }
+    for code in codes.iter().filter(|c| !covered.contains(*c) && !gone.contains(*c)) {
         findings.error(format!(
             "{code} is registered but no diag_ case produces it (name a test diag_{}_<what>)",
             code.to_ascii_lowercase().replace('-', "_")
@@ -188,13 +193,19 @@ pub fn run(check_only: bool, filter: Option<&str>, bless: Option<&str>, differen
             findings.error(format!("{} is active but has no passing case", r.id));
         }
     }
-    for (code, verdict) in report::code_verdicts(&outcomes).into_iter().filter(|_| filter.is_none()) {
+    for (code, verdict) in report::code_verdicts(&outcomes).into_iter().filter(|(code, _)| filter.is_none() && !retired(*code)) {
         if !verdict.acceptable(util::in_ci()) {
             findings.error(format!("{} has no passing diag_ case", code.id()));
         }
     }
     let failed = outcomes.iter().filter(|o| o.failed()).count();
     findings.finish("conformance", &format!("{summary}; {} cases run, {failed} failed; report in target/conformance/report.md", outcomes.len()))
+}
+
+/// Whether `code` is retired: registered still, with "(retired)" at the end of its title, as codes are never
+/// reused, and given by nothing (`docs/src/design/diagnostics.md`).
+fn retired(code: Code) -> bool {
+    code.title().ends_with("(retired)")
 }
 
 /// Checks the requirements themselves and returns their ids.
@@ -314,6 +325,12 @@ fn commit() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_retired_code_says_so_at_the_end_of_its_title() {
+        assert!(retired(Code::FillTartanHerringboneNotYet));
+        assert!(!retired(Code::FillTartanTooFine));
+    }
 
     #[test]
     fn requirement_id_format() {
