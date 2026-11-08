@@ -45,12 +45,29 @@ fn req_auto_025_digitized_pictures_leave_no_patch_of_fabric_bare() {
 
 #[test]
 fn req_auto_026_digitized_pictures_lay_no_thread_that_shows_where_it_should_not() {
-    let shown: Vec<String> = planned()
-        .iter()
-        .filter_map(|(name, design, plan)| {
-            let astray = fabric::astray(design, plan);
-            (astray.longest >= ASTRAY).then(|| format!("{name}: {:?}, the longest {:.3} mm", astray.stitches, astray.longest))
-        })
-        .collect();
+    let (mut shown, mut apart) = (Vec::new(), Vec::new());
+    for (name, design, plan) in planned() {
+        let astray = fabric::astray(&design, &plan);
+        if astray.longest >= ASTRAY {
+            shown.push(format!("{name}: {:?}, the longest {:.3} mm", astray.stitches, astray.longest));
+        }
+        apart.push((name, astray.moves.len(), astray.jumps.len()));
+    }
     assert!(shown.is_empty(), "{shown:#?}");
+    // The moves sewn on from one element to the next, and the jump threads that the PE800 leaves, are as the
+    // design page records them (image-to-embroidery.md › Sewing order): the button's dots sew on from one to
+    // the next across its yellow, and each of the pear's 2 darker bands jumps to the stem between its ends.
+    let recorded = [
+        ("stripes", 0, 0),
+        ("badge-abutting", 0, 0),
+        ("badge-stacked", 0, 0),
+        ("badges-abutting", 0, 4),
+        ("badges-stacked", 0, 4),
+        ("emblem-abutting", 0, 2),
+        ("button-abutting", 6, 0),
+        ("emblem-stacked", 0, 2),
+        ("button-stacked", 6, 0),
+        ("pear", 0, 4),
+    ];
+    assert_eq!(apart, recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps)));
 }
