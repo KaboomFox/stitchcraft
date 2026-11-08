@@ -29,8 +29,8 @@
 //!
 //! Every link looked at charges a unit of the meter's work.
 
-use std::collections::BTreeMap;
 use std::collections::btree_map::Entry;
+use std::collections::{BTreeMap, BTreeSet};
 
 use stitchcraft_core::{Exhausted, Meter, Point};
 
@@ -162,10 +162,16 @@ impl Graph {
         self.join(ends[0], ends[1], self.links.len() - 1, true);
     }
 
-    /// Adds a jump from `from` to `to`.
+    /// Adds a jump from `from` to `to`, which a graph with directions takes only that way.
     fn jump(&mut self, from: usize, to: usize) {
         self.links.push(Link::Jump { ends: [from, to] });
         self.join(from, to, self.links.len() - 1, false);
+    }
+
+    /// Adds a jump between `a` and `b` that the route can take either way, as it takes a piece.
+    fn jump_both_ways(&mut self, a: usize, b: usize) {
+        self.links.push(Link::Jump { ends: [a, b] });
+        self.join(a, b, self.links.len() - 1, true);
     }
 
     /// The links into `place`, with the place each comes from.
@@ -290,6 +296,53 @@ impl Graph {
             if let Some((_, a, b)) = self.nearest(&from, &to, meter)? {
                 self.jump(a, b);
             }
+        }
+        Ok(())
+    }
+
+    /// Joins the parts of `element` that its own pieces don't join, each to each, by the shortest jump between
+    /// their places, which the route can take either way: with Preserve order, the subpaths of a stroke that
+    /// lie apart. The parts come in the order of their first places, and each pair is joined at its nearest
+    /// places, the first of equally near ones ([`Graph::nearest`]). Each link and each pair of places looked
+    /// at charges `meter` a unit.
+    pub(super) fn join_parts(&mut self, element: usize, meter: &mut Meter) -> Result<(), Exhausted> {
+        let mut next: BTreeMap<usize, Vec<usize>> = BTreeMap::new();
+        for link in &self.links {
+            meter.charge(1)?;
+            if let Link::Piece { element: of, ends: [a, b], .. } = *link
+                && of == element
+            {
+                next.entry(a).or_default().push(b);
+                next.entry(b).or_default().push(a);
+            }
+        }
+        let mut seen = BTreeSet::new();
+        let mut parts: Vec<Vec<usize>> = Vec::new();
+        for &first in next.keys() {
+            if !seen.insert(first) {
+                continue;
+            }
+            let (mut part, mut todo) = (vec![first], vec![first]);
+            while let Some(place) = todo.pop() {
+                for &other in next.get(&place).map_or(&[][..], Vec::as_slice) {
+                    meter.charge(1)?;
+                    if seen.insert(other) {
+                        part.push(other);
+                        todo.push(other);
+                    }
+                }
+            }
+            part.sort_unstable();
+            parts.push(part);
+        }
+        let mut jumps = Vec::new();
+        for (i, first) in parts.iter().enumerate() {
+            for second in parts.iter().skip(i + 1) {
+                jumps.extend(self.nearest(first, second, meter)?.map(|(_, a, b)| (a, b)));
+            }
+        }
+        for (a, b) in jumps {
+            self.jump_both_ways(a, b);
         }
         Ok(())
     }

@@ -1034,22 +1034,27 @@ registry! {
 
     /// Routing joins satin columns, and the running stitches among them, into one route, as Ink/Stitch's
     /// Auto-Route Satin Columns does: StitchCraft Auto-Route Satin Columns in VectorCraft, and lettering in a
-    /// font whose `auto_satin` is on. It routed nothing, because none of the elements it was given is a
-    /// satin column it can route: they are fills, strokes alone, or columns left out of the route
-    /// (`SC-I1002`). Nothing changed.
+    /// font whose `auto_satin` is on. It joins running stitches alone as Ink/Stitch's Auto-Route Running
+    /// Stitch does, in StitchCraft Auto-Route Running Stitch. It routed nothing, because none of the elements
+    /// it was given is one the tool can route: for satin columns, they are fills, strokes alone, or columns
+    /// left out of the route; for running stitches, they are fills, satin columns, or strokes left out of the
+    /// route (`SC-I1002`). Nothing changed.
     ///
-    /// The message counts the elements given. Give the satin columns to route, with the running stitches among
-    /// them that show where the needle may travel.
+    /// The message names the tool and counts the elements given. Give the satin columns to route, with the
+    /// running stitches among them that show where the needle may travel, or the running stitches.
     RouteNothing = "SC-E1001", Error, "Nothing to route";
 
-    /// Routing takes satin columns, and the strokes among them, which show where the needle may travel. This
-    /// element is kept as it is, in its place: it is a fill, a shape digitized automatically, an element whose
-    /// settings don't read, a satin column whose rails can't be made, a column or a stroke of no length, or a
-    /// stroke whose first subpath ends where it starts, which shows no way between 2 places. Ink/Stitch's
-    /// tool leaves a fill and an element of no length as they are too.
+    /// Routing takes satin columns, and the strokes among them, which show where the needle may travel, or
+    /// running stitches alone. This element is kept as it is, in its place: it is a fill, a shape digitized
+    /// automatically, an element whose settings don't read, a satin column whose rails can't be made, a
+    /// column or a stroke of no length, or a stroke whose first subpath ends where it starts, which shows no
+    /// way between 2 places. Routing running stitches, it is also a satin column, which that tool doesn't
+    /// take. Ink/Stitch's tools leave a fill as it is too, and Auto-Route Satin Columns an element of no
+    /// length.
     ///
     /// The message says why. Nothing needs doing unless the element was meant to be routed: then give it
-    /// settings that read, draw it as a satin column, or open the stroke's first subpath.
+    /// settings that read, draw it as a satin column or as a stroke, as the tool takes it, or open the
+    /// stroke's first subpath.
     RouteLeftOut = "SC-I1002", Info, "Element left out of the route";
 
     /// Routing cuts each satin column into pieces along its centre line, each drawn with its share of the
@@ -1061,6 +1066,17 @@ registry! {
     /// The message names the column. Draw the column with rails that don't cross and rungs that cross each
     /// rail once, with more rungs where it turns sharply.
     RoutePieceReadOtherwise = "SC-W1003", Warning, "Piece of a routed satin column may sew otherwise";
+
+    /// Routing running stitches cuts each line where it crosses or touches another, and where 2 pass within
+    /// 50 CSS pixels (13.2 mm) of each other, at their nearest points, so that the route can turn there. That
+    /// compares every pair of lines, so it is done for at most 1,000 lines, each subpath a line and each part
+    /// of one that crosses itself another. These are more, so no line is cut by another: they are routed as
+    /// drawn, each cut only where it crosses itself, as with Ink/Stitch's Add nodes at intersections off.
+    /// The route joins lines that meet only at points they share, and jumps between the others.
+    ///
+    /// The message counts the lines. Route fewer running stitches at a time, or turn Add nodes at
+    /// intersections off and draw a node of both lines wherever 2 meet.
+    RouteTooManyLines = "SC-W1004", Warning, "Too many lines to cut where they cross";
 }
 
 impl Code {
