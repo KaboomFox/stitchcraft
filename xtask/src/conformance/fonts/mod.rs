@@ -14,16 +14,18 @@
 //! fixed by the pinned corpus: the font's glyphs are taken in the order of its files, sorted by path, and of
 //! the glyphs in each file, and the sample takes those at the places `i·n/k`, rounded down, of `n` glyphs,
 //! for `i` from 0 to `k` − 1. So it spreads over the font, its first glyph among them, and moves only when
-//! the pin does.
+//! the pin does. A run may sew the glyphs of some fonts alone ([`Options::fonts`]), so that the fonts a
+//! weekly run found differing can be sewn again in minutes, where a part of every glyph takes hours.
 //!
 //! **What a glyph gives** ([`Verdict`]). A glyph agrees when every measure lies within its tolerance. A
 //! measure that differs may be excused by the ledger, or be a known difference, follow-up work, as
-//! [`excuses`] says. A glyph whose stitch types
-//! StitchCraft doesn't sew yet (`SC-W0011`) is listed with them and not sewn in Ink/Stitch: it joins the
-//! comparison with M10's steps. A glyph with an element whose setting StitchCraft can't read, which it
+//! [`excuses`] says, and so may a glyph that one program sews and the other doesn't. A glyph whose stitch
+//! types StitchCraft doesn't sew yet (`SC-W0011`) is listed with them and not sewn in Ink/Stitch: it joins
+//! the comparison with M10's steps. A glyph with an element whose setting StitchCraft can't read, which it
 //! refuses (`SC-E0101`) and Ink/Stitch sews at the setting's default, is excused by [`REFUSED`] and not
 //! compared. A glyph neither program writes a file of agrees: Ink/Stitch writes none when it finds nothing
-//! to sew or an element it can't sew, and StitchCraft none when an element is left out with an error, as
+//! to sew, an element it can't sew or elements that sew no stitch, such as a glyph of one empty path, and
+//! StitchCraft none when it has nothing to stitch (`SC-E0010`) or an element is left out with an error, as
 //! `stitch plan` does. A glyph that a program fails on is said, with why. The case fails when a glyph
 //! differs by a measure no excuse explains, or a program fails on it, as a case of the differential does.
 //!
@@ -68,12 +70,14 @@ pub fn machine() -> MachineProfile {
 }
 
 /// Which glyphs a run sews.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Options {
     /// The glyphs of each font in the sample.
     pub sample: usize,
     /// Every glyph, not the sample.
     pub every: bool,
+    /// Only the glyphs of these fonts, by their folders' names, or of every font when there are none.
+    pub fonts: Vec<String>,
     /// Only this part of them.
     pub shard: Option<Shard>,
 }
@@ -173,7 +177,7 @@ struct Sewn {
 }
 
 /// Runs the glyph differential with `options`: the fonts' verdicts go to `outcome`.
-pub fn run(root: &Path, options: Options, outcome: &mut Outcome) {
+pub fn run(root: &Path, options: &Options, outcome: &mut Outcome) {
     let Some(inkstitch) = Inkstitch::ready(root, outcome) else { return };
     let corpus = match corpus::unpacked(root) {
         Ok(Some(corpus)) => corpus,
@@ -194,11 +198,17 @@ pub fn run(root: &Path, options: Options, outcome: &mut Outcome) {
 }
 
 /// The glyphs `options` asks for, of the fonts the corpus takes, each with its place in its file, and what
-/// kept a glyph file from being read.
-fn jobs(fonts: &[Font], options: Options) -> (Vec<Job>, Vec<String>) {
+/// kept a glyph file from being read or a font named from being sewn.
+fn jobs(fonts: &[Font], options: &Options) -> (Vec<Job>, Vec<String>) {
     let mut jobs = Vec::new();
-    let mut problems = Vec::new();
-    for font in fonts.iter().filter(|font| font.licence.taken()) {
+    let taken: Vec<&Font> = fonts.iter().filter(|font| font.licence.taken()).collect();
+    let mut problems: Vec<String> = options
+        .fonts
+        .iter()
+        .filter(|name| !taken.iter().any(|font| font.name == **name))
+        .map(|name| format!("there is no font `{name}` among the fonts the corpus takes"))
+        .collect();
+    for font in taken.into_iter().filter(|font| options.fonts.is_empty() || options.fonts.contains(&font.name)) {
         let mut of_font = Vec::new();
         for file in &font.files {
             match util::read(&font.dir.join(file)).and_then(|text| glyphs::glyphs(&text)) {
@@ -305,18 +315,23 @@ fn sew(root: &Path, inkstitch: &Inkstitch, job: Job, design: &str, excuses: &Exc
                     match (ours, theirs) {
                         (Some((our_plan, ours)), Some((their_plan, theirs))) => {
                             sewn.rows = differential::compare(&ours, &theirs);
-                            let (verdict, used) = excuses.judge(&sewn.job.font, &sewn.traits, &sewn.rows, (our_plan, &ours), (their_plan, &theirs));
+                            let (verdict, used) =
+                                excuses.judge(&sewn.job.font, &sewn.job.name, &sewn.traits, &sewn.rows, (our_plan, &ours), (their_plan, &theirs));
                             sewn.used = used;
                             verdict
                         }
                         // Neither program writes a file of the glyph, or a file that sews.
                         (None, None) => Verdict::Agrees,
-                        (None, Some(_)) => {
-                            Verdict::Differs(vec![format!("StitchCraft sews nothing ({}), and Ink/Stitch sews the glyph", nothing.join("; "))])
-                        }
-                        (Some(_), None) => {
-                            let said = written.err().unwrap_or_else(|| "its file sews nothing".to_string());
-                            Verdict::Differs(vec![format!("Ink/Stitch sews nothing ({said}), and StitchCraft sews the glyph")])
+                        (ours, _) => {
+                            let how = if ours.is_none() {
+                                format!("StitchCraft sews nothing ({}), and Ink/Stitch sews the glyph", nothing.join("; "))
+                            } else {
+                                let said = written.err().unwrap_or_else(|| "its file sews nothing".to_string());
+                                format!("Ink/Stitch sews nothing ({said}), and StitchCraft sews the glyph")
+                            };
+                            let (verdict, used) = excuses.judge_alone(&sewn.job.font, &sewn.job.name, &sewn.traits, how);
+                            sewn.used = used;
+                            verdict
                         }
                     }
                 }
@@ -414,6 +429,35 @@ mod tests {
     }
 
     #[test]
+    fn a_run_may_sew_the_glyphs_of_the_fonts_it_names_alone() {
+        use crate::corpus::licence::Licence;
+        let dir = util::root().join("target/xtask-tests/fonts-jobs");
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("ltr.svg"), GLYPHS).unwrap();
+        let font = |name: &str, licence: Licence| Font { name: name.into(), licence, files: vec!["ltr.svg".into()], dir: dir.clone() };
+        let fonts = [font("a", Licence::Ofl), font("b", Licence::CcBySa), font("c", Licence::Gpl)];
+        let options = |every: bool, named: &[&str]| Options { sample: 1, every, fonts: named.iter().map(|n| n.to_string()).collect(), shard: None };
+        let sewn = |options: &Options| {
+            let (jobs, problems) = jobs(&fonts, options);
+            (jobs.into_iter().map(|job| format!("{} {}", job.font, job.name)).collect::<Vec<_>>(), problems)
+        };
+        // Every font the corpus takes, or those named alone; a font it doesn't take, or none of that name, is said.
+        assert_eq!(sewn(&options(true, &[])), (vec!["a l".to_string(), "a x".into(), "b l".into(), "b x".into()], Vec::new()));
+        assert_eq!(sewn(&options(true, &["b"])), (vec!["b l".to_string(), "b x".into()], Vec::new()));
+        assert_eq!(sewn(&options(false, &["a", "b"])), (vec!["a l".to_string(), "b l".into()], Vec::new()));
+        assert_eq!(
+            sewn(&options(true, &["c", "d", "a"])),
+            (
+                vec!["a l".to_string(), "a x".into()],
+                vec![
+                    "there is no font `c` among the fonts the corpus takes".to_string(),
+                    "there is no font `d` among the fonts the corpus takes".into()
+                ]
+            )
+        );
+    }
+
+    #[test]
     fn a_glyph_s_design_is_written_under_its_font_and_file() {
         let job = Job { font: "f".into(), file: "ltr/latin.svg".into(), index: 7, name: "A".into() };
         assert_eq!(job.path(Path::new("/r")), Path::new("/r").join(WRITTEN).join("f").join("ltr/latin-0007.svg"));
@@ -492,6 +536,18 @@ mod tests {
         assert_eq!(made.nothing.len(), 1, "{:?}", made.nothing);
         assert!(made.nothing.first().unwrap().starts_with("SC-E0216: "), "{:?}", made.nothing);
         assert_eq!(traits.types, ["running_stitch", "satin_column"]);
+    }
+
+    #[test]
+    fn stitchcraft_writes_no_file_of_a_glyph_of_one_empty_path() {
+        // As Egyptian's spaces and Noble's tilde: a glyph whose one path draws nothing. Ink/Stitch writes no
+        // file of it either, and the 2 agree.
+        let empty = GLYPHS.replace(r#"<path d="M2 2 L18 2""#, r#"<path d="""#);
+        let mut traits = Traits::default();
+        let made = ours(design(&empty, 0).as_bytes(), " ", &mut traits).unwrap();
+        assert!(made.plan.is_none() && made.refused.is_empty() && made.listed.is_empty(), "{made:?}");
+        assert_eq!(made.nothing.len(), 1, "{:?}", made.nothing);
+        assert!(made.nothing.first().unwrap().starts_with("SC-E0010: "), "{:?}", made.nothing);
     }
 
     #[test]
