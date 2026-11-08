@@ -208,7 +208,15 @@ part sews a satin column along each of its centre lines, between its own outline
   first in that order sews first, and the last ends on top of it.
 - **Their width.** A column is as wide as the circles that fit inside the part along its line, as a narrow
   part is, without the piece of its line into a tip's corner. One no wider than the design's narrowest
-  satin stroke runs along its line as a triple run.
+  satin stroke runs along its line as a triple run, unless the part is wider than that stroke somewhere
+  along the line but at its ends: the largest circle centred on a point of the line, its 2 ends left out,
+  that fits inside the part. A running stitch covers a thread's width along its line, so where the part is
+  wider, the fabric beside the line shows unless an area sewn before it reaches under it. Measured on
+  average alone, the strands of fur in the owner's traced dog that widened at an end ran, and so did its
+  small blobs, each beside other lines, and they left fabric bare. A line's end lies where it meets another
+  line, whose circle the junction's corners bound, or where it runs into a corner, so it measures that and
+  not the column. Where the strokes of the M of TS-13B's word 4 mm tall meet, they are 1.05 to 1.12 mm wide
+  for about 0.6 mm, and those strokes, 0.72 mm wide, sew as satin columns.
 - **A dot.** A part whose every line is shorter than half its width along it is a dot, and stays in the
   fill, as a part whose line has no length does. A disc or a square has no way to run, and its lines are
   only what its triangles leave of its middle. Its corners lie on one circle, where the triangulation
@@ -730,7 +738,7 @@ sew it unlike the tutorial's flow.
   | Sheet | As drawn: jump threads | sewn down | Digitized: jump threads | sewn down |
   |---|---:|---:|---:|---:|
   | TS-13A | 8 | 0 | 12 | 4 |
-  | TS-13B | 6 | 0 | 37 | 15 |
+  | TS-13B | 6 | 0 | 35 | 15 |
   | TS-13C | 9 | 4 | 6 | 1 |
   | TS-13D | 1 | 0 | 10 | 3 |
 

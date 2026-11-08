@@ -1825,6 +1825,14 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- Automatic digitizing: a column of a part that is narrow on average, but wider than the narrowest satin
+  stroke somewhere along its line, is stitched across instead of run along its middle (`REQ-AUTO-016`). The
+  owner's traced dog left 38 to 81 patches of fabric bare, 2 to 3.6 % of the dog, the largest 2.4 to
+  7.4 mm²: strands of fur that widened at an end, and small blobs, ran as lines beside other lines, which
+  reach under nothing. The circle at a line's end measures the junction or the corner it meets and is left
+  out. On TS-13B, 4 strokes of the word 4 mm tall, 0.72 mm wide and wider where the M's strokes meet, sew
+  as satin columns: the sheet sews 14,480 stitches, 59 more, with 2 jumps fewer, and one more stitch leans
+  49.5° where the strokes meet (`SC-W0208`).
 - Automatic digitizing: a narrow part cut from a broad one ends along its cut, its column no longer fanning
   into a corner of the cut (`REQ-AUTO-016`, `REQ-AUTO-019`). The traced pear in the docs left a wedge of
   fabric 4.6 mm² bare at its left edge, where its olive band's narrow end met the pale green. The column's
@@ -2679,6 +2687,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-13B.pes` (automatic digitizing, a column wider than the
+  narrowest satin stroke along its line). The digitized word 4 mm tall sews 4 strokes of its M and A as
+  satin columns instead of triple runs: 0.72 mm wide, they widen to 1.03 to 1.12 mm where they meet. The
+  plan sews 14,480 stitches, 59 more, with 55 jumps and 54 trims, 2 fewer of each, and its digitized half
+  leaves 35 jump threads on the PE800 instead of 37, 15 of them sewn down as before.
 - Changed `conformance/golden/testsheets/TS-13C.pes` (automatic digitizing, the end of a column along its
   cut). The digitized star's right-hand point now sews from its tip to its cut, ending beside the star's
   middle, as its line now ends at the triangles that touch the cut. Its underlay runs out to the tip first.

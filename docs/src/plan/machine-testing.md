@@ -106,7 +106,10 @@ then sews as it did: write the sheet again before sewing it, and check that its 
 stopped running along its cut into one of the cut's corners, where it sewed a fan of stitches and left
 fabric bare beside it. The column now ends along the whole cut. TS-13C's digitized star then sews its
 right-hand point from its tip to its cut. At MC-8, look at each point's end along its cut for fabric
-showing at the cut's corners.
+showing at the cut's corners. Later that day a column narrow on average but wider than the narrowest satin
+stroke somewhere along its line became a satin column instead of a triple run. TS-13B's word 4 mm tall
+then sews 4 strokes of its M and A, 0.72 mm wide, as satin columns. Do they sew as cleanly as the triple
+runs beside them, and does the M keep its shape where its strokes meet?
 
 ## Report template
 

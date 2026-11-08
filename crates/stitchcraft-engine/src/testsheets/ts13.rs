@@ -53,10 +53,11 @@ pub(super) const NEIGHBOURS_SAY: [Code; 13] = [
 /// What the engine says of TS-13B, in order: how many shapes it digitized, the order, the areas that reach
 /// under others, the stitches that lean where the M's strokes meet at sharp angles, and the needle points
 /// left out.
-pub(super) const LETTERS_SAY: [Code; 10] = [
+pub(super) const LETTERS_SAY: [Code; 11] = [
     AutoDigitized,
     AutoOrder,
     AutoUnder,
+    SatinStitchesLean,
     SatinStitchesLean,
     SatinStitchesLean,
     SatinStitchesLean,
@@ -175,7 +176,7 @@ mod tests {
         // changes with any change to what a picture sews.
         for (id, size, stitches) in [
             ("TS-13A", [125.992, 168.0], 24_396),
-            ("TS-13B", [110.453, 148.4], 14_421),
+            ("TS-13B", [110.453, 148.4], 14_480),
             ("TS-13C", [111.391, 107.74], 10_311),
             ("TS-13D", [115.0, 108.386], 26_816),
         ] {

@@ -971,7 +971,7 @@ auto = true
 style = "realistic"
 scale = 5.0
 allow = ["SC-I0901", "SC-W0906", "SC-I0907", "SC-I0904", "SC-W0208", "SC-I0504"]
-alt = "The traced pear digitized automatically. Its 3 greens sew as tatami fills, with satin columns at the narrow ends of the olive and dark olive bands. Its stem sews as a satin column and a running stitch, and the light grey square is left out. Thin threads run straight from the stem to the bands' ends, 4 jumps that the machine doesn't cut."
+alt = "The traced pear digitized automatically. Its 3 greens sew as tatami fills, with satin columns at the narrow ends of the olive and dark olive bands. Its stem sews as 2 satin columns side by side, olive and dark olive, and the light grey square is left out. Thin threads run straight from the stem to the bands' ends, 4 jumps that the machine doesn't cut."
 
 [[shot]]
 id = "auto-widths-drawn"
