@@ -34,6 +34,11 @@
 //! end in user space, which both programs read (`REQ-SVG-014`). The reader takes the fill's thread from the
 //! gradient's first stop that shows, so an element whose thread is another colour reads back in that one.
 //!
+//! An element's guide line and anchor line are Ink/Stitch's helpers (`REQ-RIP-012` to `REQ-RIP-014`): paths
+//! whose `style` starts them with its guide-line or anchor-line marker, beside the element's path in the
+//! group round it, which both programs look in. The guide keeps its stroke's width and join and its settings,
+//! and the anchor is a line from its first end to its last.
+//!
 //! An element the design's file draws as a clone of another ([`Cloned`], as TS-16's does) is a `<use>` of
 //! that element's path under the clone's transform (`REQ-SVG-012`), in its place. Both programs read it as
 //! what the clone shows: the source's shape and positions moved, and its settings, the fill's angle turned
@@ -149,10 +154,18 @@ fn written(elements: &[Element], settings: &DesignSettings, clones: &[Cloned], s
         for k in (1..=groups).rev() {
             out.push_str(&format!("  <g{}>\n", clip(k)));
         }
+        // A guide and an anchor lie beside the path, in the group round it: one of their own, or the innermost
+        // clip's.
+        let helpers = helpers(index, element);
+        let wrapped = groups == 0 && !helpers.is_empty();
+        if wrapped {
+            out.push_str("  <g>\n");
+        }
         let own = if element.clips.is_empty() { String::new() } else { clip(0) };
         let painted = painted(index, element, styled);
         out.push_str(&format!("  <path id=\"e{index}\" {painted}{own}{parameters} d=\"{}\"/>\n", data(element.shape.path())));
-        out.push_str(&"  </g>\n".repeat(groups));
+        out.push_str(&helpers);
+        out.push_str(&"  </g>\n".repeat(groups + usize::from(wrapped)));
         out.push_str(&commands(index, element));
     }
     for (name, at) in globals {
@@ -160,6 +173,34 @@ fn written(elements: &[Element], settings: &DesignSettings, clones: &[Cloned], s
     }
     out.push_str("</svg>\n");
     Ok(out)
+}
+
+/// The guide line and the anchor line of the element `index`, `element`, as Ink/Stitch draws its helpers: a
+/// path each, its `style` starting it with Ink/Stitch's marker, with a stroke. The guide keeps its stroke's
+/// width and join, and its settings as `inkstitch:` attributes.
+fn helpers(index: usize, element: &Element) -> String {
+    let mut out = String::new();
+    if let Some(guide) = &element.hints.guide {
+        let mut style = vec!["fill:none".to_string(), "stroke:#000000".to_string(), format!("stroke-width:{}", guide.width.get())];
+        style.extend(match guide.join {
+            Join::Miter { limit } => vec!["stroke-linejoin:miter".to_string(), format!("stroke-miterlimit:{limit}")],
+            Join::Round => vec!["stroke-linejoin:round".to_string()],
+            Join::Bevel => vec!["stroke-linejoin:bevel".to_string()],
+        });
+        style.push("marker-start:url(#inkstitch-guide-line-marker)".to_string());
+        let settings: String = guide.params.iter().map(|(key, value)| format!(" inkstitch:{key}=\"{}\"", escaped(value))).collect();
+        out.push_str(&format!("  <path id=\"e{index}-guide\" style=\"{}\"{settings} d=\"{}\"/>\n", style.join(";"), data(&guide.path)));
+    }
+    if let Some([from, to]) = element.hints.anchor {
+        out.push_str(&format!(
+            "  <path id=\"e{index}-anchor\" style=\"fill:none;stroke:#000000;stroke-width:0.1;marker-start:url(#inkstitch-anchor-line-marker)\" d=\"M {},{} L {},{}\"/>\n",
+            from.x(),
+            from.y(),
+            to.x(),
+            to.y()
+        ));
+    }
+    out
 }
 
 /// Which of an element's hints a command is written for.
@@ -354,7 +395,9 @@ mod tests {
         let read = stitchcraft_svg::read(text.as_bytes(), &Budget::DEFAULT).unwrap();
         assert!(read.warnings.is_empty(), "{:?}", read.warnings);
         let elements = read.design.elements();
-        let others = text.matches("inkscape:connection-start").count() + text.matches("<path clip-rule").count();
+        // Connectors, clip paths and guide and anchor lines are no elements of their own.
+        let helpers = text.matches("marker-start:url(#inkstitch-").count();
+        let others = text.matches("inkscape:connection-start").count() + text.matches("<path clip-rule").count() + helpers;
         let clones = text.matches(" xlink:href=\"#e").count();
         assert_eq!(elements.len(), text.matches("<path ").count() - others + clones, "an element for each path and each clone");
         (kept(elements), read.design.settings)
@@ -365,7 +408,7 @@ mod tests {
         let parameters = |element: &Element| element.params.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect();
         elements
             .iter()
-            .map(|element| (element.shape.clone(), element.thread.color, parameters(element), element.hints, element.clips.clone()))
+            .map(|element| (element.shape.clone(), element.thread.color, parameters(element), element.hints.clone(), element.clips.clone()))
             .collect()
     }
 
@@ -408,7 +451,10 @@ mod tests {
         // A fill that starts and ends at its corners and turns round a point off its middle, and a line with
         // a start alone: each hint a command tied to its element, which the reader places where it was.
         let square = fill("square", &[&[(10.0, 10.0), (20.0, 10.0), (20.0, 20.0), (10.0, 20.0)]], &RED, &[("fill_method", "circular_fill")]);
-        let square = Element { hints: Hints { start: Some(p(10.0, 10.0)), end: Some(p(20.5, 20.25)), target: Some(p(12.0, 18.0)) }, ..square };
+        let square = Element {
+            hints: Hints { start: Some(p(10.0, 10.0)), end: Some(p(20.5, 20.25)), target: Some(p(12.0, 18.0)), ..Hints::default() },
+            ..square
+        };
         let line = along("line", polylines(&[&[(30.0, 5.0), (40.0, 5.0)]]), &BLUE, &[]);
         let line = Element { hints: Hints { start: Some(p(31.0, 5.0)), ..Hints::default() }, ..line };
         let written = [square, line];
@@ -553,12 +599,12 @@ mod tests {
         // A square that starts and ends at its corners, and its clone turned a quarter right about (20, 0): its
         // corners and positions turned, and its rows, at 0°, turned to -90°, as the reader turns them.
         let square = fill("square", &[&[(0.0, 0.0), (10.0, 0.0), (10.0, 5.0), (0.0, 5.0)]], &RED, &[("row_spacing_mm", "0.4")]);
-        let square = Element { hints: Hints { start: Some(p(10.0, 0.0)), end: Some(p(0.0, 5.0)), target: None }, ..square };
+        let square = Element { hints: Hints { start: Some(p(10.0, 0.0)), end: Some(p(0.0, 5.0)), ..Hints::default() }, ..square };
         let map = [0.0, 1.0, -1.0, 0.0, 20.0, -20.0];
         let turned = |x: f64, y: f64| p(-y + 20.0, x - 20.0);
         let ring = vec![&[(20.0, -20.0), (20.0, -10.0), (15.0, -10.0), (15.0, -20.0)][..]];
         let clone = fill("clone", &ring, &RED, &[("angle", "-90"), ("row_spacing_mm", "0.4")]);
-        let clone = Element { hints: Hints { start: Some(turned(10.0, 0.0)), end: Some(turned(0.0, 5.0)), target: None }, ..clone };
+        let clone = Element { hints: Hints { start: Some(turned(10.0, 0.0)), end: Some(turned(0.0, 5.0)), ..Hints::default() }, ..clone };
         let cloned = Cloned { element: clone.id.clone(), of: square.id.clone(), map };
         let written = [square, clone];
         let text = svg_with(&written, &DesignSettings::default(), std::slice::from_ref(&cloned)).unwrap();

@@ -1,0 +1,7 @@
+# TS-17C's M10.11 part, its grid: a ripple stitch along a column whose grid's lines cross its own 3 mm apart, sewn
+# first (REQ-RIP-019).
+id = "inkstitch-ts17c-guided-grid"
+requirements = ["REQ-RIP-019"]
+kind = "inkstitch"
+sheet = "TS-17C"
+elements = "ts17c:guided:grid"

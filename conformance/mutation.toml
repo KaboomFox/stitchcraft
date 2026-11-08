@@ -744,6 +744,36 @@ line = "let on_stretch = |q: &Point| *q != first && q.distance(back) + q.distanc
 why = "a needle point on the stretch lies a rounding error from it, far less than ON_STRETCH, and one past the line's start lies twice as far past the reach as it is from the start: no needle point lies exactly ON_STRETCH past the reach"
 
 [[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/ripple/sew.rs"
+mutant = "replace > with >= in between"
+line = "if !(parts > 1.0 && parts.is_finite()) {"
+why = "a join no longer than the stitch length is 1 part, and the points between part 1 and part 1 are none either way"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/ripple/mod.rs"
+mutant = "replace * with + in sewn"
+line = "sew::manual(&kept, own.flip_copies, pattern.first().copied().unwrap_or(2.0 * min), meter)?"
+why = "running::pattern never gives an empty pattern, so its first length is always there and the fallback is never used"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/ripple/mod.rs"
+mutant = "replace * with / in sewn"
+line = "sew::manual(&kept, own.flip_copies, pattern.first().copied().unwrap_or(2.0 * min), meter)?"
+why = "running::pattern never gives an empty pattern, so its first length is always there and the fallback is never used"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/ripple/mod.rs"
+mutant = "replace * with + in finished"
+line = "length: sewing.pattern.first().copied().unwrap_or(2.0 * sewing.min),"
+why = "the sewing's pattern is running::pattern's, never empty, so its first length is always there and the fallback is never used"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/ripple/mod.rs"
+mutant = "replace * with / in finished"
+line = "length: sewing.pattern.first().copied().unwrap_or(2.0 * sewing.min),"
+why = "the sewing's pattern is running::pattern's, never empty, so its first length is always there and the fallback is never used"
+
+[[equivalent]]
 file = "crates/stitchcraft-engine/src/generators/tartan/herringbone.rs"
 mutant = "replace && with || in Herringbone::warp"
 line = "for &stripe in stripes.iter().filter(|s| s[0] <= reach_right && s[1] >= reach_left && s[0] <= right && s[1] >= left) {"

@@ -95,7 +95,7 @@ use serde_json::Value;
 use stitchcraft_core::Point;
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, Mm};
 use stitchcraft_engine::auto::{self, Stitches};
-use stitchcraft_engine::design::{Cap, Clip, Design, DesignSettings, Element, FillRule, Gradient, Hints, Join, Path, Reading, Segment, Shape};
+use stitchcraft_engine::design::{Cap, Clip, Design, DesignSettings, Element, FillRule, Gradient, Guide, Hints, Join, Path, Reading, Segment, Shape};
 use stitchcraft_engine::generate::stops_after;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_params::stitch_type::Family;
@@ -375,6 +375,10 @@ enum Marker {
     /// The point it aims at: where its ripple stitch shrinks to (`REQ-RIP-002`), or what its circular fill
     /// turns round (`REQ-FILL-CIR-008`).
     Target,
+    /// The line its ripple stitch's copies follow (`REQ-RIP-012`, `REQ-RIP-013`).
+    Guide,
+    /// The line across its ripple stitch that sets a satin guide's copies (`REQ-RIP-014`).
+    Anchor,
     /// The design's origin, which goes to the hoop's centre.
     Origin,
     /// The design's stop position, where the frame moves before each stop.
@@ -388,11 +392,13 @@ enum Marker {
 }
 
 /// The word after `stitch:` of each marker StitchCraft reads.
-const MARKERS: [(&str, Marker); 8] = [
+const MARKERS: [(&str, Marker); 10] = [
     ("ignore", Marker::Ignore),
     ("start", Marker::Start),
     ("end", Marker::End),
     ("target", Marker::Target),
+    ("guide", Marker::Guide),
+    ("anchor", Marker::Anchor),
     ("origin", Marker::Origin),
     ("stop-position", Marker::StopPosition),
     ("route-start", Marker::RouteStart),
@@ -528,6 +534,8 @@ impl Reader {
             let (what, noun) = match marked {
                 Marker::Start => ("where the shapes grouped with it start", "start"),
                 Marker::Target => ("the point the shapes grouped with it aim at", "target"),
+                Marker::Guide => ("the line the ripple stitches grouped with it follow", "guide"),
+                Marker::Anchor => ("the line across the ripple stitches grouped with it", "anchor"),
                 Marker::Origin => ("", "origin"),
                 Marker::StopPosition => ("", "stop-position"),
                 Marker::RouteStart => ("", "route-start"),
@@ -549,7 +557,7 @@ impl Reader {
                     self.warn(Code::VcObjectIgnored, Some(&label), message, Some("Rename it to stitch it."));
                     return Ok(());
                 }
-                (Marker::Start | Marker::End | Marker::Target, None) => {
+                (Marker::Start | Marker::End | Marker::Target | Marker::Guide | Marker::Anchor, None) => {
                     // The group it is in places its shapes there, and it is not stitched.
                     if !around.markers.iter().any(|used| std::ptr::eq(*used, node)) {
                         let message = format!(
@@ -560,7 +568,7 @@ impl Reader {
                     }
                     return Ok(());
                 }
-                (Marker::Start | Marker::End | Marker::Target, Some(kind)) => {
+                (Marker::Start | Marker::End | Marker::Target | Marker::Guide | Marker::Anchor, Some(kind)) => {
                     let message = format!("{shown} is named as a {noun} marker, which a {kind} can't be, and the name is ignored.");
                     self.feature(&label, message, Some(&format!("Name a small path grouped with the shape stitch:{noun}.")));
                 }
@@ -658,8 +666,13 @@ impl Reader {
         // Its own markers place what it holds, before those of the groups around it. Its hints differ from
         // theirs only where it has markers of its own.
         let (hints, markers) = self.markers(kind)?;
-        let hints =
-            Hints { start: hints.start.or(around.hints.start), end: hints.end.or(around.hints.end), target: hints.target.or(around.hints.target) };
+        let hints = Hints {
+            start: hints.start.or(around.hints.start),
+            end: hints.end.or(around.hints.end),
+            target: hints.target.or(around.hints.target),
+            guide: hints.guide.or_else(|| around.hints.guide.clone()),
+            anchor: hints.anchor.or(around.hints.anchor),
+        };
         let placed = !markers.is_empty();
         let markers: Rc<[&'a Node]> = if markers.is_empty() { Rc::clone(&around.markers) } else { markers.into() };
         let inside = (gives || paints.is_some() || placed || clipped.is_some()).then(|| Around {
@@ -700,7 +713,7 @@ impl Reader {
                         levels: inside.levels,
                         painters: Rc::default(),
                         clipping: true,
-                        hints: inside.hints,
+                        hints: inside.hints.clone(),
                         markers: Rc::clone(&inside.markers),
                         clips: around.clips.clone(),
                     };
@@ -714,27 +727,64 @@ impl Reader {
         Ok(())
     }
 
-    /// The start, end and target markers among `kind`'s children, a group's or a layer's (`REQ-VC-009`): the
-    /// first of each kind that shows and has a point that reads gives where the fills and satin columns it
-    /// holds start or end, or the point its ripple stitches and circular fills aim at, the middle of its
-    /// anchors ([`geometry::middle`]). Each such marker is used.
+    /// The start, end, target, guide and anchor markers among `kind`'s children, a group's or a layer's
+    /// (`REQ-VC-009`): the first of each kind that shows and has a point that reads gives where the fills and
+    /// satin columns it holds start or end, or the point its ripple stitches and circular fills aim at, the
+    /// middle of its anchors ([`geometry::middle`]). A guide gives the line its ripple stitches' copies follow,
+    /// its path, a satin guide where it has several subpaths, and an anchor the start and end of its first
+    /// subpath (`REQ-RIP-012` to `REQ-RIP-014`). Each such marker is used.
     fn markers<'a>(&mut self, kind: &'a Kind) -> Result<(Hints, Vec<&'a Node>), Diagnostic> {
         let (mut hints, mut used) = (Hints::default(), Vec::new());
         for child in &kind.children {
-            let Some(marked @ (Marker::Start | Marker::End | Marker::Target)) = child.name.as_deref().and_then(marker) else { continue };
+            let Some(marked @ (Marker::Start | Marker::End | Marker::Target | Marker::Guide | Marker::Anchor)) =
+                child.name.as_deref().and_then(marker)
+            else {
+                continue;
+            };
             // A group or a layer is never a marker, and one that doesn't show places nothing.
             let Some(own) = child.kind.as_ref().filter(|k| !matches!(k.name.as_str(), "layer" | "group")) else { continue };
-            let place = match marked {
-                Marker::Start => &mut hints.start,
-                Marker::End => &mut hints.end,
-                _ => &mut hints.target,
+            let taken = match marked {
+                Marker::Start => hints.start.is_some(),
+                Marker::End => hints.end.is_some(),
+                Marker::Target => hints.target.is_some(),
+                Marker::Guide => hints.guide.is_some(),
+                _ => hints.anchor.is_some(),
             };
-            if place.is_some() || !child.visible || !shows(child.opacity) {
+            if taken || !child.visible || !shows(child.opacity) {
                 continue;
             }
-            let data: Vec<&PathData> = own.path.iter().collect();
-            if let Some(at) = geometry::middle(&data, &mut self.meter).map_err(|_| exhausted())? {
-                *place = Some(at);
+            // A compound path's paths are its subpaths.
+            let data: Vec<&PathData> = match own.name.as_str() {
+                "compound" => {
+                    own.children.iter().filter_map(|c| c.kind.as_ref()).filter(|k| k.name == "path").filter_map(|k| k.path.as_ref()).collect()
+                }
+                _ => own.path.iter().collect(),
+            };
+            let found = match marked {
+                Marker::Guide | Marker::Anchor => {
+                    let Ok(path) = geometry::path(&data, &mut self.meter).map_err(|_| exhausted())? else { continue };
+                    let Some(first) = path.subpaths.first() else { continue };
+                    let end = if first.closed { first.start } else { first.segments.last().map_or(first.start, |segment| segment.end()) };
+                    if marked == Marker::Anchor {
+                        hints.anchor = Some([first.start, end]);
+                    } else {
+                        let (_, join, _) = stroke_style(None, None, None, None);
+                        hints.guide = Some(Guide { path, width: Mm::ZERO, join, params: ParamSet::new() });
+                    }
+                    true
+                }
+                _ => {
+                    let at = geometry::middle(&data, &mut self.meter).map_err(|_| exhausted())?;
+                    let place = match marked {
+                        Marker::Start => &mut hints.start,
+                        Marker::End => &mut hints.end,
+                        _ => &mut hints.target,
+                    };
+                    *place = at;
+                    at.is_some()
+                }
+            };
+            if found {
                 used.push(child);
             }
         }
@@ -811,12 +861,12 @@ impl Reader {
         let (effects, auto) = if gives { (own.as_slice(), own_auto) } else { (&around.effects[..], around.auto) };
         let made = self.elements.len();
         if effects.is_empty() {
-            self.by_paints(node, label, &path, rule, auto, around.hints)?;
+            self.by_paints(node, label, &path, rule, auto, around.hints.clone())?;
         } else {
             // Each group around that paints is a step more in finding the thread and the stroke.
             self.charge(around.painters.len() as u64)?;
             let paints = Part::new(&node.appearance.items);
-            self.by_effects(node, label, &path, rule, effects, &painting(label, &paints, around), around.hints)?;
+            self.by_effects(node, label, &path, rule, effects, &painting(label, &paints, around), &around.hints)?;
         }
         self.cut(made, &around.clips)
     }
@@ -870,7 +920,7 @@ impl Reader {
             let Some(thread) = self.thread(label, item.paint.as_ref()) else { continue };
             fills += 1;
             let shape = Shape::Fill { path: self.copy(path)?, rule, gradient: None };
-            self.element(node, label, &rank("fill", fills), shape, thread, params.clone(), automatic, hints)?;
+            self.element(node, label, &rank("fill", fills), shape, thread, params.clone(), automatic, hints.clone())?;
         }
         // VectorCraft paints the items in order, the first lowest, and the fills are sewn first.
         let items = &node.appearance.items;
@@ -901,7 +951,7 @@ impl Reader {
             }
             strokes += 1;
             let shape = Shape::Stroke { path: self.copy(path)?, width, join, cap };
-            self.element(node, label, &rank("stroke", strokes), shape, thread, params.clone(), automatic, hints)?;
+            self.element(node, label, &rank("stroke", strokes), shape, thread, params.clone(), automatic, hints.clone())?;
         }
         Ok(())
     }
@@ -918,7 +968,7 @@ impl Reader {
         rule: FillRule,
         effects: &[(Family, &Value)],
         painting: &Painting,
-        hints: Hints,
+        hints: &Hints,
     ) -> Result<(), Diagnostic> {
         let (mut counts, mut black): (BTreeMap<Family, u32>, _) = (BTreeMap::new(), None);
         // Found when the first effect that needs it comes, each once.
@@ -956,7 +1006,7 @@ impl Reader {
             let count = counts.entry(*family).or_default();
             *count = count.saturating_add(1);
             let what = rank(family.id(), *count);
-            self.element(node, label, &what, shape, thread, set, false, hints)?;
+            self.element(node, label, &what, shape, thread, set, false, hints.clone())?;
         }
         Ok(())
     }

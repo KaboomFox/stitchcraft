@@ -293,14 +293,16 @@ impl Clip {
     }
 }
 
-/// Where an element starts and ends, and the point it aims at, as a design gives them: Ink/Stitch's
-/// `starting_point`, `ending_point` and `target_point` commands, or a VectorCraft document's `stitch:start`,
-/// `stitch:end` and `stitch:target` markers. Each is a place in the design, in millimetres, which need not
-/// lie on the element. A start or end position takes the place of the needle before the element, or of what
-/// the element after it offers, for the stitch types that use them (`REQ-GEN-001`, [`crate::generate`]). A
+/// Where an element starts and ends, the point it aims at and the lines that guide it, as a design gives
+/// them: Ink/Stitch's `starting_point`, `ending_point` and `target_point` commands and its guide-line and
+/// anchor-line markers, or a VectorCraft document's `stitch:start`, `stitch:end`, `stitch:target`,
+/// `stitch:guide` and `stitch:anchor` markers. Each is in the design's millimetres, and need not lie on the
+/// element. A start or end position takes the place of the needle before the element, or of what the
+/// element after it offers, for the stitch types that use them (`REQ-GEN-001`, [`crate::generate`]). A
 /// circular fill's spirals turn round its target point (`REQ-FILL-CIR-008`), and a ripple stitch's lines
-/// shrink towards it (`REQ-RIP-002`).
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+/// shrink towards it (`REQ-RIP-002`). A ripple stitch's copies follow its guide line, set across it as its
+/// anchor line says (`REQ-RIP-012` to `REQ-RIP-014`).
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct Hints {
     /// Where it starts.
     pub start: Option<Point>,
@@ -308,18 +310,55 @@ pub struct Hints {
     pub end: Option<Point>,
     /// The point it aims at.
     pub target: Option<Point>,
+    /// The line its copies follow.
+    pub guide: Option<Guide>,
+    /// The line across it that says where a copy's ends lie between a satin guide's rails: the start and
+    /// the end of the marker's first subpath.
+    pub anchor: Option<[Point; 2]>,
 }
 
 impl Hints {
-    /// Each position it has.
-    pub fn points(&self) -> impl Iterator<Item = Point> {
-        [self.start, self.end, self.target].into_iter().flatten()
+    /// Each point it has: its positions, its guide line's points and its anchor line's ends.
+    pub fn points(&self) -> impl Iterator<Item = Point> + '_ {
+        let guide = self.guide.iter().flat_map(|guide| guide.path.points());
+        [self.start, self.end, self.target].into_iter().flatten().chain(guide).chain(self.anchor.into_iter().flatten())
     }
 
-    /// The same positions, each moved by `f`, or `f`'s error.
+    /// The same hints, each point moved by `f`, or `f`'s error.
     pub fn map<E>(&self, f: impl Fn(Point) -> Result<Point, E>) -> Result<Hints, E> {
-        Ok(Hints { start: self.start.map(&f).transpose()?, end: self.end.map(&f).transpose()?, target: self.target.map(&f).transpose()? })
+        let guide = match &self.guide {
+            Some(guide) => Some(Guide { path: guide.path.map(&f)?, ..guide.clone() }),
+            None => None,
+        };
+        let anchor = match self.anchor {
+            Some([from, to]) => Some([f(from)?, f(to)?]),
+            None => None,
+        };
+        Ok(Hints {
+            start: self.start.map(&f).transpose()?,
+            end: self.end.map(&f).transpose()?,
+            target: self.target.map(&f).transpose()?,
+            guide,
+            anchor,
+        })
     }
+}
+
+/// A guide line, as a design draws it: Ink/Stitch's guide-line marker on a shape grouped with the element, or a
+/// VectorCraft document's `stitch:guide` marker. It is never stitched itself. A ripple stitch's copies follow
+/// it (`REQ-RIP-012`), or lie between its rails when it is a satin column or has several subpaths
+/// (`REQ-RIP-013`).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Guide {
+    /// Its path, in millimetres.
+    pub path: Path,
+    /// Its stroke's width, which gives a satin column drawn as one path its rails.
+    pub width: Mm,
+    /// How its stroke turns its corners, for the same rails.
+    pub join: Join,
+    /// Its own settings, as the design gives them: whether it is a satin column (`satin_column`), how its
+    /// rails are read, and its `stroke_method`, whose manual stitch makes its nodes its points.
+    pub params: ParamSet,
 }
 
 /// What a host is asked when it reads a document into a design, the same for every host.
@@ -613,7 +652,10 @@ mod tests {
             subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Cubic(p(0.0, -5.0), p(10.0, 5.0), p(10.0, 0.0))], closed: true }],
         };
         let quad = Path { subpaths: vec![Subpath { start: p(1.0, 1.0), segments: vec![Segment::Quad(p(2.0, 3.0), p(4.0, 1.0))], closed: false }] };
-        let hints = Hints { start: Some(p(1.0, 1.0)), end: Some(p(4.0, 1.0)), target: Some(p(2.0, 2.0)) };
+        // A guide keeps its width, its join and its settings.
+        let guide = Guide { path: line(p(0.0, 1.0), p(2.0, 3.0)), width: Mm::new(1.0).unwrap(), join: Join::Round, params: ParamSet::new() };
+        let (start, end, target) = (Some(p(1.0, 1.0)), Some(p(4.0, 1.0)), Some(p(2.0, 2.0)));
+        let hints = Hints { start, end, target, guide: Some(guide.clone()), anchor: Some([p(0.0, 0.0), p(1.0, 1.0)]) };
         let clips = vec![Clip::of(line(p(0.0, 0.0), p(1.0, 2.0)), FillRule::EvenOdd)];
         let fill =
             Element { shape: Shape::Fill { path: quad, rule: FillRule::EvenOdd, gradient: None }, hints, clips, ..element("q", Path::default()) };
@@ -627,7 +669,9 @@ mod tests {
         };
         assert_eq!(points(&moved).len(), points(&design).len());
         assert!(points(&moved).iter().zip(points(&design)).all(|(a, b)| (a.x(), a.y()) == (b.x() + 3.0, b.y() - 2.0)));
-        assert_eq!(moved.elements()[1].hints, Hints { start: Some(p(4.0, -1.0)), end: Some(p(7.0, -1.0)), target: Some(p(5.0, 0.0)) });
+        let (start, end, target) = (Some(p(4.0, -1.0)), Some(p(7.0, -1.0)), Some(p(5.0, 0.0)));
+        let guide = Some(Guide { path: line(p(3.0, -1.0), p(5.0, 1.0)), ..guide });
+        assert_eq!(moved.elements()[1].hints, Hints { start, end, target, guide, anchor: Some([p(3.0, -2.0), p(4.0, -1.0)]) });
         assert_eq!(moved.elements()[1].clips, [Clip::of(line(p(3.0, -2.0), p(4.0, 0.0)), FillRule::EvenOdd)]);
         assert_eq!((moved.settings.origin, moved.settings.stop_position), (Some(p(8.0, 3.0)), Some(p(2.0, -2.0))));
         // Each element as it was but for its points: its id, kind of shape, thread and settings.
@@ -652,11 +696,21 @@ mod tests {
             Hints { start: Some(p(0.0, WORKING_LIMIT_MM + 1.0)), ..Hints::default() },
             Hints { end: Some(p(0.0, WORKING_LIMIT_MM + 1.0)), ..Hints::default() },
             Hints { target: Some(p(0.0, WORKING_LIMIT_MM + 1.0)), ..Hints::default() },
+            Hints { anchor: Some([p(0.0, 0.0), p(0.0, WORKING_LIMIT_MM + 1.0)]), ..Hints::default() },
+            Hints {
+                guide: Some(Guide {
+                    path: line(p(0.0, 0.0), p(0.0, WORKING_LIMIT_MM + 1.0)),
+                    width: Mm::ZERO,
+                    join: Join::UNSET,
+                    params: ParamSet::new(),
+                }),
+                ..Hints::default()
+            },
         ] {
-            let far = vec![Element { hints, ..element("hinted", line(p(0.0, 0.0), p(1.0, 0.0))) }];
+            let far = vec![Element { hints: hints.clone(), ..element("hinted", line(p(0.0, 0.0), p(1.0, 0.0))) }];
             assert_eq!(Design::new(far, DesignSettings::default()).unwrap_err().code, Code::InternalCheckFailed, "{hints:?}");
         }
-        let near = Hints { start: Some(p(0.0, WORKING_LIMIT_MM)), end: Some(p(5.0, 5.0)), target: Some(p(-5.0, 5.0)) };
+        let near = Hints { start: Some(p(0.0, WORKING_LIMIT_MM)), end: Some(p(5.0, 5.0)), target: Some(p(-5.0, 5.0)), ..Hints::default() };
         assert!(Design::new(vec![Element { hints: near, ..element("near", line(p(0.0, 0.0), p(1.0, 0.0))) }], DesignSettings::default()).is_ok());
         // So is a clip's.
         let clips = vec![Clip::of(line(p(0.0, 0.0), p(WORKING_LIMIT_MM + 1.0, 0.0)), FillRule::NonZero)];
