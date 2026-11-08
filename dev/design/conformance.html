@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2419d4b9.js";
+            window.path_to_searchindex_js = "../searchindex-6f6103dc.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-61f039c5.js"></script>
@@ -463,14 +463,15 @@ where a path’s move-to draws nothing after it, is left out with the jumps and 
 (<code>DEV-SVG-011</code>).</p>
 <p><code>REQ-SVG-008</code>, <code>REQ-AUTO-021</code>, <code>REQ-AUTO-022</code>, <code>REQ-RUN-013</code>, <code>REQ-SAT-029</code>, <code>REQ-FILL-CON-008</code>,
 <code>REQ-FILL-CIR-007</code>, <code>REQ-FILL-CRS-007</code>, <code>REQ-FILL-CRS-012</code>, <code>REQ-FONT-001</code>, <code>REQ-ROUTE-008</code>,
-<code>REQ-ROUTE-013</code> and <code>REQ-RIP-011</code> are the requirements of level L3. The other runs of the suite leave them and their cases to this one. The corpus is
+<code>REQ-ROUTE-013</code>, <code>REQ-RIP-011</code> and <code>REQ-RIP-019</code> are the requirements of level L3. The other runs of the suite leave them and their cases to this one. The corpus is
 designs the SVG reader sews in full, with their settings (<code>REQ-SVG-009</code>), trim and stop commands and the file
 version. A case may name a test sheet drawn as a design instead (<code>sheet</code>). With <code>elements</code>, the measures
 judge only the sheet’s elements whose ids start with it. Both programs sew an SVG file
 of the elements StitchCraft sews the sheet with, written with their parameters, their start, end and
 target positions as Ink/Stitch’s commands and their clips as clip paths, the design’s origin and stop
 position as commands too, and its turn on export (<code>stitchcraft_testkit::inkstitch</code>), which StitchCraft’s
-reader reads back unchanged (<code>REQ-PRM-003</code>). The file leaves out an element that sets a setting of
+reader reads back unchanged (<code>REQ-PRM-003</code>). An element’s guide line and anchor line are paths beside it
+in its own group, each started with Ink/Stitch’s marker, the guide with its stroke and its settings. The file leaves out an element that sets a setting of
 StitchCraft’s own that its stitch type reads, which Ink/Stitch would pass over and sew otherwise
 (<code>sewn_alike</code>). So TS-17C’s file has no crossing columns with their underlays first. An element a sheet
 draws as a clone of another is written as a <code>&lt;use&gt;</code> of it, and each command in a group with its
@@ -494,6 +495,9 @@ moved by its offsets, a disc round a hole in stitches 3 mm long, a fill in 2 par
 a fill that stops at its end with its runs sewn as bean stitches (<code>REQ-FILL-TRT-011</code>). Every stripe is one of
 Brother’s threads, so both files name each thread as itself. The <code>ts17c-ripple-</code> cases check each of TS-17C’s
 ripple stitches on its own, the one along a column and the 2 that shrink to a target point (<code>REQ-RIP-011</code>).
+The <code>ts17c-guided-</code> cases check its guided ripples so (<code>REQ-RIP-019</code>). A wave and a zigzag cut to a circle
+follow guide lines. A circle and a diamond stand between satin guides’ rails, the diamond at its guide’s
+rungs with an anchor line, and a column has a grid across it.
 TS-02B to TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills’ sheet, are cases of
 <code>REQ-SVG-008</code> (M8.2). The <code>drawn-locks</code> case and TS-16 check custom locks drawn as
 paths, of each kind of command, which both programs sew at the same nodes (<code>REQ-LCK-005</code>).

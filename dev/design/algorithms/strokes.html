@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-2419d4b9.js";
+            window.path_to_searchindex_js = "../../searchindex-6f6103dc.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-61f039c5.js"></script>
@@ -199,8 +199,8 @@ width alone, so a zigzag stroke’s zigzag ends square at a cut, half its width 
 Ink/Stitch closes each piece of a cut closed zigzag stroke, which StitchCraft sews open (<code>DEV-RUN-009</code>), and
 sews a line that also touches its clip at a point whole, which StitchCraft cuts as any other
 (<code>DEV-RUN-010</code>). Wholly outside its clips, a stroke isn’t sewn (<code>SC-W0013</code>), and the element before it ends
-nearest the first piece they leave. A ripple stitch is sewn whole until M10.11 cuts its lines
-(<a href="#not-sewn-yet">ripple stitch</a>).</p>
+nearest the first piece they leave. A ripple stitch cuts its needle points instead, and routes the pieces
+(<a href="#clips">clips</a>).</p>
 <h2 id="running-stitch"><a class="header" href="#running-stitch">Running stitch</a></h2>
 <p>The workhorse: outlines, details, travel, underlay.</p>
 <p><strong>Parameters:</strong> <code>running_stitch_length_mm</code> (one length or a repeating pattern of lengths, <code>LengthList</code>),
@@ -434,17 +434,19 @@ shorter than the shortest stitch (<code>SC-I0504</code>). At the default spacing
 are sewn. A closed zigzag’s last needle point moves onto its first before they are counted. That stitch
 can be the only short one, as at a teardrop’s tip. Ink/Stitch’s shortest stitch is 0.1 mm by default, and
 it sews such a zigzag as it is.</p>
-<h2 id="ripple-stitch-m108"><a class="header" href="#ripple-stitch-m108">Ripple stitch (M10.8)</a></h2>
+<h2 id="ripple-stitch-m108-m1011"><a class="header" href="#ripple-stitch-m108-m1011">Ripple stitch (M10.8, M10.11)</a></h2>
 <p>A ripple stitch sews lines that spread out from the stroke: copies of its line that shrink towards a
-point, or lines along a satin column from one of its rails to the other. All of them are sewn as one
-running stitch. It suits light textures that fade to a point, such as a shell. Its lines may cross.
-StitchCraft sews it as Ink/Stitch sews its ripple stitch (<code>stroke_method</code> <code>ripple_stitch</code>),
-read at <code>d59c9ab</code> (<code>lib/stitches/ripple_stitch.py</code> and the ripple settings in <code>lib/elements/stroke.py</code>).</p>
+point or follow a guide, or lines along a satin column from one of its rails to the other. They are sewn
+as one running stitch, and a grid’s lines and a clip’s parts as runs of their own. It suits light textures
+that fade to a point, such as a shell. Its lines may cross. StitchCraft sews it as Ink/Stitch sews its
+ripple stitch (<code>stroke_method</code> <code>ripple_stitch</code>), read at <code>d59c9ab</code> (<code>lib/stitches/ripple_stitch.py</code>, the
+ripple settings in <code>lib/elements/stroke.py</code>, and how it finds its helpers in <code>lib/marker.py</code>).</p>
 <p><strong>Parameters:</strong> <code>line_count</code>, <code>min_line_dist_mm</code>, <code>exponent</code>, <code>flip_exponent</code>, <code>skip_start</code>,
-<code>skip_end</code>, <code>flip_copies</code>, <code>join_style</code>, <code>staggers</code> and <code>reverse</code> (<code>RippleParams</code>). Each line is sewn
-with the running stitch’s settings, its length and tolerance, random length and <code>random_seed</code>, and the
-whole ripple with <code>repeats</code> and <code>bean_stitch_repeats</code>. Guided ripples arrive with M10.11
-(<a href="#not-sewn-yet">not sewn yet</a>).</p>
+<code>skip_end</code>, <code>flip_copies</code>, <code>join_style</code>, <code>staggers</code>, <code>reverse</code> and <code>manual_pattern_placement</code>, the rails’
+<code>reverse_rails</code> and <code>swap_satin_rails</code>, a guide’s <code>satin_guide_pattern_position</code>, <code>scale_axis</code>,
+<code>scale_start</code>, <code>scale_end</code> and <code>rotate_ripples</code>, and the grid’s <code>grid_size_mm</code> and <code>grid_first</code>
+(<code>RippleParams</code>). Each line is sewn with the running stitch’s settings, its length and tolerance, random
+length and <code>random_seed</code>, and the whole ripple with <code>repeats</code> and <code>bean_stitch_repeats</code>.</p>
 <h3 id="the-strokes-lines"><a class="header" href="#the-strokes-lines">The stroke’s lines</a></h3>
 <p>The stroke’s subpaths are flattened as a shape’s outline is, within a tenth of a CSS pixel, and each one
 that moves is a line. A subpath that is one point is not stitched (<code>SC-W0401</code>). Lines shorter together
@@ -454,8 +456,9 @@ stroke sews:</p>
 <li><strong>2 lines or more</strong> are a satin column’s rails and rungs, read by the satin column’s own code
 (<a href="satin.html#recognizing-rails-and-rungs">satin</a>), and the ripple runs along the column, its lines between
 the rails.</li>
-<li><strong>1 open line</strong> ripples towards a target point.</li>
-<li><strong>1 closed line</strong>, whose ends lie within 0.05 CSS pixels of each other, spirals in to the target point.</li>
+<li><strong>1 open line</strong> ripples towards a target point, or along its guide (<a href="#guided-ripples">guided ripples</a>).</li>
+<li><strong>1 closed line</strong>, whose ends lie within 0.05 CSS pixels of each other, spirals in to the target point,
+or along its guide.</li>
 </ul>
 <h3 id="the-target-point"><a class="header" href="#the-target-point">The target point</a></h3>
 <p>Ink/Stitch’s <code>target_point</code> command tied to the stroke gives the target point, read as the start and end
@@ -473,13 +476,16 @@ the last. With 1 line, its place is 0, or 1 with <code>flip_exponent</code>.</p>
 <ul>
 <li><strong>Along a column.</strong> Pairs of points are placed across the column every <code>running_stitch_tolerance_mm</code>,
 as a satin column places its pairs (<a href="satin.html#top-stitches-method-satin_column">satin</a>), with no
-compensation and nothing at random. The rails are read with a satin column’s defaults, cut into
-sections at their rungs. The second rail is turned where it runs against the first (<code>reverse_rails</code>
-automatic). The rails keep their order and their length. Line <code>k</code> goes through the point <code>t</code> of the way from each pair’s point on
-the first rail to its point on the second. The first line lies along the first rail and the last along
-the second.</li>
+compensation and nothing at random. The rails are read as a satin column reads its own, with the
+ripple’s <code>reverse_rails</code> and <code>swap_satin_rails</code> and the satin column’s defaults for its other settings,
+and cut into sections at their rungs (<code>REQ-RIP-018</code>). With <code>reverse_rails</code> automatic, the second rail is
+turned where it runs against the first. Line <code>k</code> goes through the point <code>t</code> of the way from each pair’s
+point on the first rail to its point on the second. The first line lies along the first rail and the
+last along the second.</li>
 <li><strong>Towards a target point.</strong> The line is first sewn as a running stitch with the stroke’s stitch lengths
-and tolerance, without random length (<a href="#placement">placement</a>). Its needle points are the outline. Line
+and tolerance, without random length (<a href="#placement">placement</a>). Its needle points are the outline, a
+grid size apart with <code>grid_size_mm</code> (<a href="#the-grid">the grid</a>). With <code>manual_pattern_placement</code> the outline
+is the first subpath’s nodes instead, and its curves’ control points are left out. Line
 <code>k</code> goes through the point <code>t</code> of the way from each point of the outline to the target point: the
 outline shrunk towards the target point by <code>1 − t</code>. The first line is the outline itself, and a line at
 <code>t</code> 1 is the target point alone. Another line reaches the target point only where the outline does.</li>
@@ -498,6 +504,70 @@ whatever <code>min_line_dist_mm</code> says.</li>
 <li>A closed line and the point join (<code>join_style</code> 1) add 1 line, since bending makes one line of 2.</li>
 <li>A ripple along a column has at least 2 lines.</li>
 </ol>
+<h3 id="guided-ripples"><a class="header" href="#guided-ripples">Guided ripples</a></h3>
+<p>A ripple of 1 line can follow a guide instead of shrinking towards its target point (<code>REQ-RIP-012</code> to
+<code>REQ-RIP-014</code>). In an SVG file, a path in the stroke’s group with Ink/Stitch’s guide-line or anchor-line
+start marker is a helper (<a href="../svg-input.html#inkstitch-objects">SVG input</a>). In a VectorCraft document, a
+path in the stroke’s group named <code>stitch:guide</code> or <code>stitch:anchor</code> is one
+(<a href="../vectorcraft-integration.html#commands-in-v1">VectorCraft integration</a>). Each copy is the outline moved,
+then turned about a point and scaled about it along x and y, in that order. A copy’s points keep the
+outline’s order, so point <code>j</code> of every copy lies on one line across the ripple, the line a grid sews.
+Copies are counted as lines are (<a href="#how-many-lines">how many lines</a>), and bend and are sewn as lines are.</p>
+<h4 id="along-a-guide-line"><a class="header" href="#along-a-guide-line">Along a guide line</a></h4>
+<p>A guide of 1 subpath is a guide line, flattened as a shape’s outline is, or taken through its nodes where
+it is a manual stitch. Unless <code>manual_pattern_placement</code> is on, the outline is placed again along itself
+at the same stitch lengths, as Ink/Stitch places it.</p>
+<ul>
+<li><strong>Count and places.</strong> The copies are counted along the guide’s length, and lie at the places
+<code>exponent</code> and <code>flip_exponent</code> give along it. With <code>satin_guide_pattern_position</code> <code>render_at_rungs</code>, a
+copy lies at each point of the guide instead. A guide of more than 1,000 points sews 1,000 copies, and
+<code>SC-W0407</code> says so (<code>DEV-RIP-002</code>).</li>
+<li><strong>Moving.</strong> Each copy moves by the way from the guide’s start to its place.</li>
+<li><strong>Turning.</strong> With <code>rotate_ripples</code>, the default, each copy after the first turns about its place by the
+angle from the guide’s direction at its start to the direction from the copy before’s place. The
+start’s direction is taken over the guide’s first 0.1 CSS pixels.</li>
+<li><strong>Scaling.</strong> Copy <code>i</code> of <code>n</code> is scaled about its place by an even step from <code>scale_start</code> to <code>scale_end</code>
+percent. <code>scale_axis</code> 1 scales along x alone and 2 along y alone. 3 scales nothing, and 0, the default,
+scales along both axes. A file without <code>scale_end</code> sets 0, and the copies shrink to the guide’s end.</li>
+</ul>
+<h4 id="between-a-satin-guides-rails"><a class="header" href="#between-a-satin-guides-rails">Between a satin guide’s rails</a></h4>
+<p>A guide that is a satin column, its <code>satin_column</code> on, or that has several subpaths, is a satin guide. Its
+rails are read with its own settings, but the ripple’s <code>reverse_rails</code> and <code>swap_satin_rails</code>, and cut at
+its rungs. Each copy lies on a pair of points across the guide, from its first rail to its second. It
+moves to the pair’s first point, and turns and scales about it so that the outline’s ends lie on the
+pair’s points.</p>
+<ul>
+<li><strong>Line count</strong>, <code>satin_guide_pattern_position</code>’s default. The pairs lie at an even spacing, as a satin
+column places its pairs. Their count comes from the length of the guide’s middle, as it comes from a
+guide line’s length. The middle is the line through the middles of the guide’s pairs at its own zigzag
+spacing.</li>
+<li><strong>At the rungs</strong> (<code>render_at_rungs</code>). A pair lies at the end of each section.</li>
+<li><strong>Adaptive.</strong> Pairs are tried every 0.1 CSS pixels. The outline, turned so that the line between its
+ends runs along x, has a box round it. A copy is kept on a pair where its box clears the last kept
+copy’s box moved across the guide by <code>min_line_dist_mm</code>, or by 0.1 CSS pixels without it. Past 1,000
+such places, the copies are 1,000 (<code>SC-W0407</code>). As in Ink/Stitch, the box moves to the left of the line
+from the pair’s first point to its second, in the drawing’s own coordinates, whichever way the guide
+runs. Where it runs with its first rail on the left, each copy clears the last by <code>min_line_dist_mm</code>.
+The other way, their boxes overlap by as much.</li>
+</ul>
+<p>A guide whose rails close places its first pair again at its end, and that copy is left out, as is the
+only pair of a guide too short for 2. Between a satin guide’s rails, <code>exponent</code>, <code>flip_exponent</code>,
+<code>scale_start</code> and <code>scale_end</code> place nothing.</p>
+<p>A closed line with no anchor line, its ends within 0.05 CSS pixels, is placed otherwise (<code>DEV-RIP-005</code>).
+Each copy is centred on its pair’s middle by the outline’s centroid, as GEOS finds a line’s. It is scaled by
+its pair’s width over the first pair’s, on <code>scale_axis</code>, and with <code>rotate_ripples</code> it turns as its pair
+turns from the first. At the rungs, the copies lie at every section’s end but the guide’s own end.</p>
+<h4 id="the-anchor-line"><a class="header" href="#the-anchor-line">The anchor line</a></h4>
+<p>An anchor line says which points of the outline lie on a satin guide’s pairs: the start and the end of
+its first subpath, in place of the outline’s ends. A closed line with an anchor line is placed so, and not
+centred. The copies along a guide line don’t use it. One whose ends are one point is left out with
+<code>SC-W0409</code>.</p>
+<h4 id="a-guide-that-cant-place-copies"><a class="header" href="#a-guide-that-cant-place-copies">A guide that can’t place copies</a></h4>
+<p>A guide line of no length can’t place copies. A satin guide can’t place them when its rails don’t make a
+section, and it can’t when its middle has no length or its first pair has no width. <code>SC-W0409</code> says why,
+and the ripple sews as it would without the guide (<code>DEV-RIP-004</code>). A satin guide whose own settings don’t
+read is left out so too. What reading a satin guide warns of is said, but not its errors, which would refuse
+the ripple: <code>SC-W0409</code> says why the guide is left out instead.</p>
 <h3 id="bent-lines"><a class="header" href="#bent-lines">Bent lines</a></h3>
 <p>A closed line’s lines and the point join’s bend into the next line. So do the lines along a column without
 <code>flip_copies</code>. At the outline’s point or the column’s pair <code>i</code> of <code>m</code>, line <code>k</code> lies <code>i / (m − 1)</code> of the
@@ -539,26 +609,47 @@ among the lines sewn.</li>
 <p>A closed line’s lines, and the others with <code>flip_copies</code> off, are sewn as one running stitch through all
 their points in order. Each line is sewn from its start, and the needle goes straight from one line’s end
 to the next one’s start.</p>
+<h4 id="through-their-own-points"><a class="header" href="#through-their-own-points">Through their own points</a></h4>
+<p>With <code>manual_pattern_placement</code>, each line’s points are its needle points (<code>REQ-RIP-016</code>). With
+<code>flip_copies</code>, every other line is sewn from its end, the first among them. A straight run joins each line
+to the next, cut into the fewest even stitches no longer than the first stitch length.</p>
 <h4 id="the-whole-ripple"><a class="header" href="#the-whole-ripple">The whole ripple</a></h4>
-<p><code>reverse</code> sews the whole ripple backwards, from its last needle point. <code>repeats</code> and
-<code>bean_stitch_repeats</code> apply as for a running stitch (<a href="#repeats-and-bean-stitch">repeats and bean stitch</a>).
-A line sewn one at a time that starts where the one before ended lists that needle point again, as
-Ink/Stitch lists it, and it takes a step of the bean list each time. A ripple starts and ends where its
+<p><code>reverse</code> sews the whole ripple backwards, from its last needle point. <code>repeats</code> sews each of its runs
+there and back, and <code>bean_stitch_repeats</code> then sews each run as a running stitch’s
+(<a href="#repeats-and-bean-stitch">repeats and bean stitch</a>). A line sewn one at a time that starts where the one
+before ended lists that needle point again, as Ink/Stitch lists it, and it takes a step of the bean list
+each time. So does a run’s turn, where a pass after the first starts. A ripple starts and ends where its
 stitches do, whatever its neighbours. It offers the element before it its first subpath’s start, as every
 stroke does. Lines near the target point can be shorter than the shortest stitch. Finalize then leaves out
 their needle points that lie too near the one before (<a href="../engine-pipeline.html#5-finalize">finalize</a>).</p>
 <p>The lines’ points come from arithmetic, square roots and powers (<code>stitchcraft_core::math</code>) alone, and
 every platform places them alike. Each point of each line costs a unit of work, and the points must fit
 in the stitches the budget has left before they are made.</p>
-<h3 id="not-sewn-yet"><a class="header" href="#not-sewn-yet">Not sewn yet</a></h3>
-<p>M10.11 sews guided ripples: guide lines and satin guides, <code>scale_axis</code>, <code>scale_start</code>, <code>scale_end</code>,
-<code>rotate_ripples</code>, <code>satin_guide_pattern_position</code>, the anchor line, <code>grid_size_mm</code>, <code>grid_first</code> and
-<code>manual_pattern_placement</code>. The registry doesn’t declare their settings yet. A stroke keeps them, and
-<code>SC-W0105</code> names each. The SVG reader leaves a guide line or an anchor line out and names it (<code>SC-W0802</code>),
-and the ripple sews as this section says. Ink/Stitch reads a column’s rails with the element’s
-<code>reverse_rails</code>, <code>swap_satin_rails</code> and <code>push_compensation_mm</code>. StitchCraft reads them with the defaults,
-automatic, false and 0, and <code>SC-W0406</code> names each one set otherwise. A ripple cut to clips is sewn whole,
-and <code>SC-W0406</code> says so. Ink/Stitch cuts its stitches to the clips and routes the pieces.</p>
+<h3 id="the-grid"><a class="header" href="#the-grid">The grid</a></h3>
+<p>With <code>grid_size_mm</code>, the ripple sews a grid too (<code>REQ-RIP-015</code>). Grid line <code>j</code> runs across the ripple’s own
+lines, through point <code>j</code> of every line left after the skips. The outline’s needle points, or a
+column’s pairs, lie a grid size apart, raised to twice the shortest stitch as a stitch length is
+(<code>SC-W0402</code>, <code>DEV-RUN-003</code>). Without <code>flip_copies</code>, where the lines run one way and join flat, every other
+grid line runs the other way. The grid then starts at its corner nearest the ripple’s last needle point,
+the first of them when several are as near: its first or its last line, from its start or its end. It is
+sewn as the lines are sewn one at a time, every other one from its end only with <code>flip_copies</code>, as a run
+of its own after the ripple’s. Its run is not repeated. <code>grid_first</code> sews every run backwards and in the
+other order, so that the grid comes first.</p>
+<h3 id="clips"><a class="header" href="#clips">Clips</a></h3>
+<p>A ripple cut to clips sews the pieces of its needle points that lie inside them (<code>REQ-RIP-017</code>), cut where
+they cross the edges of the clips’ area as a stroke’s line is cut. Its lines cross those edges again and
+again, so the pieces are many and short. A part of the area routes its pieces as a tatami fill routes its
+rows (<a href="fills.html#3-routing-every-segment-once">routing</a>), sewing each piece once as it lies. Between pieces
+the needle goes along the part’s outline, never under them, from the outline’s point nearest the first
+piece’s start to its point nearest the last piece’s end. Every part is a run of its own. The parts come in
+the order of their first pieces along the ripple, and the part of the last piece comes last. The travel
+before a part’s first piece and after its last is left out. With a grid, the ripple’s runs keep the travel
+after their last piece, and the grid’s runs the travel before their first. The needle then goes along the
+outline from the ripple’s end to the grid. Runs are repeated after that. A ripple wholly outside its clips
+isn’t sewn (<code>SC-W0013</code>, <code>DEV-RIP-003</code>).</p>
+<h3 id="not-applied"><a class="header" href="#not-applied">Not applied</a></h3>
+<p>Ink/Stitch reads a column’s rails with the element’s <code>push_compensation_mm</code>, which StitchCraft leaves at 0.
+<code>SC-W0406</code> names it when it is set to anything else.</p>
 <h3 id="compared-with-inkstitch"><a class="header" href="#compared-with-inkstitch">Compared with Ink/Stitch</a></h3>
 <p>The lines, their places and their count are Ink/Stitch’s. The running stitches along each line, along the
 joins and along the outline that a ripple towards a target point is made from place their needle points
@@ -567,6 +658,10 @@ little, and the copies made from them. With <code>min_line_dist_mm</code>, the c
 measured from those points, and can differ by 2 where the shortest length falls near a whole number of
 <code>min_line_dist_mm</code>. Ink/Stitch sews nothing of lines shorter together than 0.1 CSS pixels, and StitchCraft
 nothing of lines shorter together than the shortest stitch (<code>DEV-RUN-004</code>).</p>
+<p>A guided ripple’s copies are made of the outline’s running stitch too, and differ as it does. Drawn with
+straight sides, TS-17C’s guided wave and circle sew the same needle points in both programs, their locks
+aside. StitchCraft sews otherwise on purpose where a guide can’t place copies, where a ripple lies wholly
+outside its clips, and where a closed line’s ends almost meet (<code>DEV-RIP-003</code> to <code>DEV-RIP-005</code>).</p>
 <p>Ink/Stitch starts a staggered line where its stitches have run the phase from the stretch’s start,
 measured along them. Where the stretch is the whole phase, that is the line’s start, or near it where the
 stitches cut a bend. Where the first segment is shorter than 0.1 CSS pixels, the stretch is shorter than
@@ -594,14 +689,26 @@ their start. A line of no length sews its one point, but nothing when staggered 
 (<code>REQ-RIP-008</code>).</li>
 <li><code>reverse</code> sews the ripple backwards, then <code>repeats</code> and <code>bean_stitch_repeats</code> sew it as a running
 stitch’s (<code>REQ-RIP-009</code>).</li>
-<li>What M10.11 sews is left out with a coded warning, and the ripple sews as this section says
-(<code>REQ-RIP-010</code>).</li>
+<li><code>push_compensation_mm</code> along a column is named and not applied (<code>REQ-RIP-010</code>).</li>
 <li>TS-17C’s ripples sew in Ink/Stitch as in StitchCraft (<code>REQ-RIP-011</code>).</li>
+<li>Copies follow a guide line, moved, turned with it and scaled from <code>scale_start</code> to <code>scale_end</code>
+(<code>REQ-RIP-012</code>).</li>
+<li>A satin guide places each copy’s ends on a pair across it, or centres a closed line on each pair
+(<code>REQ-RIP-013</code>), and an anchor line’s ends take the place of the outline’s (<code>REQ-RIP-014</code>).</li>
+<li>A grid’s lines join the same point of every line, start nearest the ripple’s end and sew as a run of
+their own, first with <code>grid_first</code> (<code>REQ-RIP-015</code>).</li>
+<li>With <code>manual_pattern_placement</code>, the lines are sewn through their own points (<code>REQ-RIP-016</code>).</li>
+<li>Clips cut the ripple’s needle points, and each part of their area routes its pieces (<code>REQ-RIP-017</code>).</li>
+<li>A column and a satin guide read their rails with the ripple’s <code>reverse_rails</code> and <code>swap_satin_rails</code>
+(<code>REQ-RIP-018</code>).</li>
+<li>TS-17C’s guided ripples sew in Ink/Stitch as in StitchCraft (<code>REQ-RIP-019</code>).</li>
 </ul>
 <h3 id="diagnostics-2"><a class="header" href="#diagnostics-2">Diagnostics</a></h3>
 <p><code>SC-W0401</code> for a subpath that is one point and for lines too short for the shortest stitch, <code>SC-W0406</code> for
-what a ripple doesn’t sew yet, <code>SC-W0407</code> for a count cut to 1,000 lines and <code>SC-W0408</code> for skips that
-would leave out every line. A ripple along a column says what the satin column’s reading of its rails and rungs
+<code>push_compensation_mm</code> along a column, <code>SC-W0407</code> for a count or a guide’s places cut to 1,000, <code>SC-W0408</code>
+for skips that would leave out every line, and <code>SC-W0409</code> for a guide or an anchor line that can’t place
+copies. <code>SC-W0013</code> says when the ripple lies wholly outside its clips, and <code>SC-W0402</code> when the grid size is
+raised. A ripple along a column says what the satin column’s reading of its rails and rungs
 says (<code>SC-W0202</code>, <code>SC-W0203</code>, <code>SC-W0205</code>, <code>SC-W0207</code>, <code>SC-W0210</code>), and <code>SC-E0216</code> when no section of the
 column has length.</p>
 

@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2419d4b9.js";
+            window.path_to_searchindex_js = "../searchindex-6f6103dc.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-61f039c5.js"></script>
@@ -322,9 +322,10 @@ another.</p>
 <tr><td><code>SC-W0403</code></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td><td>M3</td></tr>
 <tr><td><code>SC-W0404</code></td><td>Warning</td><td>Hand-placed stitch longer than max_stitch_length_mm; kept for the shortest stitch</td><td>M3</td></tr>
 <tr><td><code>SC-W0405</code></td><td>Warning</td><td>Zigzag stitch shorter than the shortest stitch; the zigzag sews narrower</td><td>M7</td></tr>
-<tr><td><code>SC-W0406</code></td><td>Warning</td><td>Ripple stitch setting not sewn yet; sewn without it (clips, and the satin column’s settings that turn, swap or push a column’s rails)</td><td>M10</td></tr>
+<tr><td><code>SC-W0406</code></td><td>Warning</td><td>Ripple stitch setting not applied; sewn without it (the satin column’s <code>push_compensation_mm</code> along a column)</td><td>M10</td></tr>
 <tr><td><code>SC-W0407</code></td><td>Warning</td><td>Ripple stitch of more than 1,000 lines; cut to 1,000, or 999 to keep the parity of <code>line_count</code></td><td>M10</td></tr>
 <tr><td><code>SC-W0408</code></td><td>Warning</td><td>Ripple stitch’s skips would leave out every line; every line sewn</td><td>M10</td></tr>
+<tr><td><code>SC-W0409</code></td><td>Warning</td><td>Ripple stitch’s guide can’t place its copies; sewn without it</td><td>M10</td></tr>
 <tr><td><code>SC-W0502</code></td><td>Warning</td><td>Lock stitch shorter than 0.2 mm; lengthened</td><td>M3</td></tr>
 <tr><td><code>SC-W0503</code></td><td>Warning</td><td>Custom lock cannot be sewn as written</td><td>M3</td></tr>
 <tr><td><code>SC-I0504</code></td><td>Info</td><td>Stitches shorter than the shortest stitch merged</td><td>M3</td></tr>

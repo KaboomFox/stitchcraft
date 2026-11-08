@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2419d4b9.js";
+            window.path_to_searchindex_js = "../searchindex-6f6103dc.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-61f039c5.js"></script>
@@ -248,7 +248,7 @@ planned.</li>
 <tr><td><code>stroke_method</code></td><td>combo</td><td>—</td><td>0</td><td>all</td><td>P1 (M3)</td><td><a href="../user/reference/params/stroke.html#stroke_method">registered</a></td></tr>
 <tr><td><code>repeats</code></td><td>int</td><td>—</td><td>1</td><td><code>running_stitch</code>, <code>ripple_stitch</code>, <code>zigzag_stitch</code></td><td>P1 (M3)</td><td><a href="../user/reference/params/repeat.html#repeats">registered</a></td></tr>
 <tr><td><code>bean_stitch_repeats</code></td><td>str</td><td>—</td><td>0</td><td><code>running_stitch</code>, <code>ripple_stitch</code>, <code>manual_stitch</code>, <code>zigzag_stitch</code></td><td>P1 (M3)</td><td><a href="../user/reference/params/repeat.html#bean_stitch_repeats">registered</a></td></tr>
-<tr><td><code>manual_pattern_placement</code></td><td>boolean</td><td>—</td><td>false</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
+<tr><td><code>manual_pattern_placement</code></td><td>boolean</td><td>—</td><td>false</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#manual_pattern_placement">registered</a></td></tr>
 <tr><td><code>running_stitch_length_mm</code></td><td>string</td><td>mm</td><td>2.5</td><td><code>running_stitch</code>, <code>ripple_stitch</code></td><td>P1 (M3)</td><td><a href="../user/reference/params/running.html#running_stitch_length_mm">registered</a></td></tr>
 <tr><td><code>running_stitch_tolerance_mm</code></td><td>float</td><td>mm</td><td>0.2</td><td><code>running_stitch</code>, <code>ripple_stitch</code></td><td>P1 (M3)</td><td><a href="../user/reference/params/running.html#running_stitch_tolerance_mm">deviates</a></td></tr>
 <tr><td><code>enable_random_stitch_length</code></td><td>boolean</td><td>—</td><td>false</td><td><code>running_stitch</code>, <code>ripple_stitch</code></td><td>P1 (M3)</td><td><a href="../user/reference/params/running.html#enable_random_stitch_length">registered</a></td></tr>
@@ -259,7 +259,7 @@ planned.</li>
 <tr><td><code>zigzag_angle</code></td><td>float</td><td>°</td><td>0</td><td><code>zigzag_stitch</code></td><td>P2 (M7)</td><td><a href="../user/reference/params/zigzag-stroke.html#zigzag_angle">registered</a></td></tr>
 <tr><td><code>line_count</code></td><td>int</td><td>—</td><td>10</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#line_count">registered</a></td></tr>
 <tr><td><code>min_line_dist_mm</code></td><td>float</td><td>mm</td><td>—</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#min_line_dist_mm">registered</a></td></tr>
-<tr><td><code>satin_guide_pattern_position</code></td><td>combo</td><td>—</td><td>default</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
+<tr><td><code>satin_guide_pattern_position</code></td><td>combo</td><td>—</td><td>default</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#satin_guide_pattern_position">registered</a></td></tr>
 <tr><td><code>staggers</code></td><td>int</td><td>—</td><td>0 (1 when unset)</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#staggers">registered</a></td></tr>
 <tr><td><code>skip_start</code></td><td>int</td><td>—</td><td>0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#skip_start">registered</a></td></tr>
 <tr><td><code>skip_end</code></td><td>int</td><td>—</td><td>0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#skip_end">registered</a></td></tr>
@@ -267,14 +267,14 @@ planned.</li>
 <tr><td><code>exponent</code></td><td>float</td><td>—</td><td>1</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#exponent">registered</a></td></tr>
 <tr><td><code>flip_exponent</code></td><td>boolean</td><td>—</td><td>false</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#flip_exponent">registered</a></td></tr>
 <tr><td><code>reverse</code></td><td>boolean</td><td>—</td><td>false</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#reverse">registered</a></td></tr>
-<tr><td><code>reverse_rails</code></td><td>combo</td><td>—</td><td>automatic</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>swap_satin_rails</code></td><td>boolean</td><td>—</td><td>false</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>grid_size_mm</code></td><td>float</td><td>mm</td><td>0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>grid_first</code></td><td>boolean</td><td>—</td><td>false</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>scale_axis</code></td><td>dropdown</td><td>—</td><td>0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>scale_start</code></td><td>float</td><td>%</td><td>100</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>scale_end</code></td><td>float</td><td>%</td><td>0.0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>rotate_ripples</code></td><td>boolean</td><td>—</td><td>true</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td>planned</td></tr>
+<tr><td><code>reverse_rails</code></td><td>combo</td><td>—</td><td>automatic</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#reverse_rails">registered</a></td></tr>
+<tr><td><code>swap_satin_rails</code></td><td>boolean</td><td>—</td><td>false</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#swap_satin_rails">registered</a></td></tr>
+<tr><td><code>grid_size_mm</code></td><td>float</td><td>mm</td><td>0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#grid_size_mm">registered</a></td></tr>
+<tr><td><code>grid_first</code></td><td>boolean</td><td>—</td><td>false</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#grid_first">registered</a></td></tr>
+<tr><td><code>scale_axis</code></td><td>dropdown</td><td>—</td><td>0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#scale_axis">registered</a></td></tr>
+<tr><td><code>scale_start</code></td><td>float</td><td>%</td><td>100</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#scale_start">registered</a></td></tr>
+<tr><td><code>scale_end</code></td><td>float</td><td>%</td><td>0.0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#scale_end">registered</a></td></tr>
+<tr><td><code>rotate_ripples</code></td><td>boolean</td><td>—</td><td>true</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#rotate_ripples">registered</a></td></tr>
 <tr><td><code>join_style</code></td><td>dropdown</td><td>—</td><td>0</td><td><code>ripple_stitch</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/ripple.html#join_style">registered</a></td></tr>
 <tr><td><code>random_seed</code></td><td>random_seed</td><td>—</td><td>—</td><td><code>running_stitch</code>, <code>ripple_stitch</code></td><td>P1 (M3)</td><td><a href="../user/reference/params/common.html#random_seed">registered</a></td></tr>
 </tbody>
@@ -570,7 +570,7 @@ change Ink/Stitch’s updater makes (<code>lib/update.py</code>), in StitchCraft
 </tbody>
 </table>
 </div>
-<p><em>145 parameter declarations, 127 registered in StitchCraft.</em></p>
+<p><em>145 parameter declarations, 137 registered in StitchCraft.</em></p>
 
                     </main>
 

@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-2419d4b9.js";
+            window.path_to_searchindex_js = "../../searchindex-6f6103dc.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-61f039c5.js"></script>
@@ -247,9 +247,10 @@
 <tr><td><a href="#sc-w0403"><code>SC-W0403</code></a></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td></tr>
 <tr><td><a href="#sc-w0404"><code>SC-W0404</code></a></td><td>Warning</td><td>Hand-placed stitch longer than max_stitch_length_mm; kept for the shortest stitch</td></tr>
 <tr><td><a href="#sc-w0405"><code>SC-W0405</code></a></td><td>Warning</td><td>Zigzag stitch shorter than the shortest stitch; the zigzag sews narrower</td></tr>
-<tr><td><a href="#sc-w0406"><code>SC-W0406</code></a></td><td>Warning</td><td>Ripple stitch setting not sewn yet; sewn without it</td></tr>
+<tr><td><a href="#sc-w0406"><code>SC-W0406</code></a></td><td>Warning</td><td>Ripple stitch setting not applied; sewn without it</td></tr>
 <tr><td><a href="#sc-w0407"><code>SC-W0407</code></a></td><td>Warning</td><td>Ripple stitch of more than 1,000 lines; cut to 1,000</td></tr>
 <tr><td><a href="#sc-w0408"><code>SC-W0408</code></a></td><td>Warning</td><td>Ripple stitch’s skips would leave out every line; every line sewn</td></tr>
+<tr><td><a href="#sc-w0409"><code>SC-W0409</code></a></td><td>Warning</td><td>Ripple stitch’s guide can’t place its copies; sewn without it</td></tr>
 <tr><td><a href="#sc-w0502"><code>SC-W0502</code></a></td><td>Warning</td><td>Lock stitch shorter than 0.2 mm; lengthened</td></tr>
 <tr><td><a href="#sc-w0503"><code>SC-W0503</code></a></td><td>Warning</td><td>Custom lock cannot be sewn as written</td></tr>
 <tr><td><a href="#sc-i0504"><code>SC-I0504</code></a></td><td>Info</td><td>Stitches shorter than the shortest stitch merged</td></tr>
@@ -742,29 +743,40 @@ Ink/Stitch’s shortest stitch is 0.1 mm by default, and it sews such a zigzag a
 across a zigzag <code>w</code> wide at a spacing <code>s</code> is √(w² + (s/2)²) long. Make the zigzag wider, the stroke
 or its pull compensation, or space it out, until that is at least the shortest stitch.</p>
 <h2 id="sc-w0406"><a class="header" href="#sc-w0406">SC-W0406</a></h2>
-<p><strong>Warning</strong> — Ripple stitch setting not sewn yet; sewn without it</p>
-<p>A ripple stitch asks for something StitchCraft doesn’t sew yet, so it sews without it. Clips cut
-Ink/Stitch’s ripples, and StitchCraft sews a ripple whole. A ripple along a column, a stroke of 2
-lines or more drawn as a satin column’s rails and rungs, reads its rails with the satin column’s
-defaults: <code>reverse_rails</code> automatic, <code>swap_satin_rails</code> off and no <code>push_compensation_mm</code>, which
-Ink/Stitch applies to it. Guided ripples, and the ripple settings they use, arrive with M10.11, and
-<code>SC-W0105</code> names each of those settings until then.</p>
-<p>The message says what is not applied. Draw the ripple’s lines where it should sew, and its rails
-running the same way, the first where the ripple starts.</p>
+<p><strong>Warning</strong> — Ripple stitch setting not applied; sewn without it</p>
+<p>A ripple stitch sets something StitchCraft doesn’t apply to it, so it sews without it. A ripple along a
+column, a stroke of 2 lines or more drawn as a satin column’s rails and rungs, reads its rails without
+the satin column’s <code>push_compensation_mm</code>, which Ink/Stitch applies to it though its settings window
+doesn’t show it for a ripple.</p>
+<p>The message says what is not applied. Draw the rails as long as the ripple should run, and leave push
+compensation at 0.</p>
 <h2 id="sc-w0407"><a class="header" href="#sc-w0407">SC-W0407</a></h2>
 <p><strong>Warning</strong> — Ripple stitch of more than 1,000 lines; cut to 1,000</p>
 <p><code>min_line_dist_mm</code> gives a ripple stitch more than 1,000 lines, so it sews 1,000, or 999 to keep the
 count’s parity, odd or even, as <code>line_count</code> has it. The count is the shortest distance from the
-stroke’s line to its target point, or across its column, divided by <code>min_line_dist_mm</code>, and a very
-short distance between the lines on a large shape gives thousands of lines that sew into a solid
-patch.</p>
-<p>The message gives the count asked for and the count sewn. Set a larger <code>min_line_dist_mm</code>.</p>
+stroke’s line to its target point, or across its column, or the length of its guide, divided by
+<code>min_line_dist_mm</code>, and a very short distance between the lines on a large shape gives thousands of
+lines that sew into a solid patch. A guide that places a copy at each of its points or rungs
+(<code>render_at_rungs</code>), or wherever the copies clear each other (<code>adaptive</code>), places at most 1,000 too.</p>
+<p>The message gives the count asked for and the count sewn. Set a larger <code>min_line_dist_mm</code>, or place
+the copies by <code>line_count</code>.</p>
 <h2 id="sc-w0408"><a class="header" href="#sc-w0408">SC-W0408</a></h2>
 <p><strong>Warning</strong> — Ripple stitch’s skips would leave out every line; every line sewn</p>
 <p>A ripple stitch’s <code>skip_start</code> and <code>skip_end</code> together leave out as many lines as it has, or more, so
 they would leave none to sew. No line is left out, as Ink/Stitch does.</p>
 <p>The message gives both settings and the number of lines. Lower <code>skip_start</code> or <code>skip_end</code>, or give
 the ripple more lines.</p>
+<h2 id="sc-w0409"><a class="header" href="#sc-w0409">SC-W0409</a></h2>
+<p><strong>Warning</strong> — Ripple stitch’s guide can’t place its copies; sewn without it</p>
+<p>A ripple stitch’s guide line can’t place its copies, so the ripple sews without it, towards its
+target point or spiralling in to it, as it would with no guide. The guide has no length, its satin
+column has no rails to place copies between, its middle has no length or its first pair of points no
+width, or it is too short for a pair, or its settings don’t read. Ink/Stitch at <code>d59c9ab</code>, run as a
+black box, stacks the copies of a guide line of no length on its point, and stops with an error where
+they are placed by hand (<code>DEV-RIP-004</code>). An anchor line whose ends are one point is left out the same
+way, and the copies’ ends are the line’s own.</p>
+<p>The message says what is wrong with the guide. Draw the guide as a line with length, or as a satin
+column of 2 rails, grouped with the ripple, and the anchor line across the ripple’s line.</p>
 <h2 id="sc-w0502"><a class="header" href="#sc-w0502">SC-W0502</a></h2>
 <p><strong>Warning</strong> — Lock stitch shorter than 0.2 mm; lengthened</p>
 <p>A lock stitch would have been shorter than 0.2 mm, the shortest stitch a lock may have. The needle

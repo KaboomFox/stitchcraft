@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2419d4b9.js";
+            window.path_to_searchindex_js = "../searchindex-6f6103dc.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-61f039c5.js"></script>
@@ -420,10 +420,19 @@ commands. Before its file version 3, Ink/Stitch named 7 of them otherwise, such 
 where Ink/Stitch renames them only in the files it updates and sews the old symbol elsewhere
 (<code>DEV-SVG-014</code>).</li>
 <li><strong>Connectors</strong> tie a command to its object.</li>
-<li><strong>Helper paths</strong> have one of Ink/Stitch’s start markers. They steer the stitches of other objects.</li>
+<li><strong>Helper paths</strong> have one of Ink/Stitch’s start markers. They steer the stitches of other objects. From
+M10.11 the adapter reads guide lines and anchor lines, as Ink/Stitch at <code>d59c9ab</code> finds them
+(<code>REQ-RIP-012</code> to <code>REQ-RIP-014</code>). Ink/Stitch looks for a shape’s helpers among the other children of its
+group and nowhere else, so the adapter does too. A guide line or an anchor line is a shape with a stroke,
+hidden or not, whose <code>style</code> attribute starts it with Ink/Stitch’s marker. The guide is the first satin
+column among the guide lines, its <code>satin_column</code> on, or else the first guide line. The anchor line is the
+first anchor line that isn’t a satin column. Each goes to every element of the shape under the transforms
+above it. The guide keeps its stroke’s width and join and its settings, and the anchor line gives the
+start and the end of its first subpath (<a href="algorithms/strokes.html#guided-ripples">ripple stitch</a>). A guide line or an
+anchor line in no group steers nothing. Ink/Stitch’s pattern helpers aren’t applied yet.</li>
 </ul>
-<p><code>SC-W0802</code> reports a connector that ties no command, a helper path, an <code>ignore_layer</code> command in no layer,
-and a command on an object that is not stitched. The module docs of <code>crates/stitchcraft-svg/src/inkstitch.rs</code> describe how the adapter
+<p><code>SC-W0802</code> reports a connector that ties no command, a helper path that isn’t applied or steers nothing, an
+<code>ignore_layer</code> command in no layer, and a command on an object that is not stitched. The module docs of <code>crates/stitchcraft-svg/src/inkstitch.rs</code> describe how the adapter
 finds these objects, with the Ink/Stitch files they were read from.</p>
 <h2 id="clones"><a class="header" href="#clones">Clones</a></h2>
 <p>A clone is a <code>&lt;use&gt;</code> element that names another element, its source. Inkscape makes one with Edit › Clone ›

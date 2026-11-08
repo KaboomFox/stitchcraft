@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-2419d4b9.js";
+            window.path_to_searchindex_js = "../searchindex-6f6103dc.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-61f039c5.js"></script>
@@ -232,7 +232,8 @@ way, and parts too small to sew are left out with <code>SC-W0303</code>
 <li><strong>Satins:</strong> classify subpaths into rails and rungs (<a href="algorithms/satin.html#recognizing-rails-and-rungs">satin</a>), or make
 them from a column’s centre line (<a href="algorithms/satin.html#single-path-satin">single-path satin</a>).</li>
 <li><strong>Strokes:</strong> each subpath becomes its own path piece, in document order.</li>
-<li><strong>Commands</strong> become hints (start/end/target points) on the element.</li>
+<li><strong>Commands</strong> become hints (start/end/target points) on the element, and from M10.11 so do a ripple’s
+guide line and anchor line.</li>
 <li><strong>Clips:</strong> an element’s clips cut it, each the areas of its shapes together by their rules
 (<code>REQ-GEN-005</code>). A fill’s region is cut when it is built (<code>region::build_clipped</code>), before its underlay,
 <code>expand_mm</code> and its method see it. For a stroke, the subpaths are cut at their crossings with a clip’s
@@ -290,8 +291,9 @@ routes the spiral’s pieces as a tatami fill routes its rows (<a href="algorith
 A cross stitch fill, sewn from M10.1, sews a cross in each cell of a grid that each part covers enough of,
 with no underlay, the crosses that meet in one run. From M10.2 it sews each of Ink/Stitch’s 12 methods, its
 half crosses in rows routed as a tatami fill’s (<a href="algorithms/cross-stitch.html">cross stitch</a>). A ripple
-stitch, sewn from M10.8, sews lines along a column or towards a target point as one running stitch
-(<a href="algorithms/strokes.html#ripple-stitch-m108">ripple stitch</a>), and every stroke method is then sewn. The
+stitch, sewn from M10.8, sews lines along a column or towards a target point as one running stitch, and
+from M10.11 copies along a guide, a grid across them, and the pieces its clips leave, routed
+(<a href="algorithms/strokes.html#ripple-stitch-m108-m1011">ripple stitch</a>). Every stroke method is then sewn. The
 other fill methods are skipped with <code>SC-W0011</code> until their milestones. An element whose parameters are
 wrong (<code>SC-E0101</code>) is skipped too, and the rest of the design still plans.</p>
 <p>Each element is generated with the shortest stitch for it: the larger of the machine’s (the profile’s
@@ -519,6 +521,7 @@ to the other axis and rounds nothing (<code>stitchcraft_engine::design::Turn</co
 <tbody>
 <tr><td>Start / end point</td><td>The element’s start and end positions, which take the place of the needle before it and of the next element’s offer for fills and satin columns (<code>REQ-GEN-001</code>). The SVG adapter reads Ink/Stitch’s commands, and the VectorCraft adapter its markers named <code>stitch:start</code> and <code>stitch:end</code></td><td>M8.4</td></tr>
 <tr><td>Target point</td><td>The point a circular fill turns round, in place of its parts’ centroids (<code>REQ-FILL-CIR-008</code>), and a ripple stitch aims at, in place of its hull’s centroid (<code>REQ-RIP-002</code>)</td><td>M8.4, M10.8</td></tr>
+<tr><td>Guide line, anchor line</td><td>The line a ripple stitch’s copies follow, and the line across them whose ends lie on a satin guide’s pairs (<code>REQ-RIP-012</code> to <code>REQ-RIP-014</code>). Ink/Stitch draws them as paths with its start markers, which the SVG adapter finds in the element’s group. The VectorCraft adapter reads its markers named <code>stitch:guide</code> and <code>stitch:anchor</code></td><td>M10.11</td></tr>
 <tr><td>Trim after, stop after</td><td><code>trim_after</code> and <code>stop_after</code> on the element’s last group (see the connection table). The SVG adapter reads Ink/Stitch’s trim and stop commands as these settings.</td><td>M3.8 (engine), M3 (adapter)</td></tr>
 <tr><td>Ignore object / ignore layer</td><td>The adapter drops the element and says so in the report (<code>REQ-ASM-004</code>). The VectorCraft adapter reads them from the name <code>stitch:ignore</code></td><td>M3 (SVG), M6 (VectorCraft)</td></tr>
 <tr><td>Origin</td><td>The design setting <code>origin</code>. The SVG adapter reads Ink/Stitch’s <code>origin</code> command, and the VectorCraft adapter its marker named <code>stitch:origin</code></td><td>M3.8 (engine), M8.8 (adapters)</td></tr>

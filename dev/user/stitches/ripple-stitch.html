@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-2419d4b9.js";
+            window.path_to_searchindex_js = "../../searchindex-6f6103dc.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-61f039c5.js"></script>
@@ -182,10 +182,11 @@
                     <main>
                         <h1 id="ripple-stitch"><a class="header" href="#ripple-stitch">Ripple stitch</a></h1>
 <!-- stitch-types: ripple_stitch -->
-<p>A ripple stitch sews lines that spread out from a stroke. Copies of its line shrink towards a point, or
-lines run along a satin column from one of its edges to the other. Every line is a running stitch, and the
-whole ripple sews as one run. Use it for light textures that fade to a point, such as a shell or the rings
-round a flower’s heart. Set an element’s <code>stroke_method</code> to <code>ripple_stitch</code> for it.</p>
+<p>A ripple stitch sews lines that spread out from a stroke. Copies of its line shrink towards a point or
+follow a guide, or lines run along a satin column from one of its edges to the other. Every line is a
+running stitch, and the whole ripple sews as one run. Use it for light textures that fade to a point, such
+as a shell or the rings round a flower’s heart. With a guide, it repeats a pattern along a curve. Set an
+element’s <code>stroke_method</code> to <code>ripple_stitch</code> for it.</p>
 <p>In VectorCraft, set the StitchCraft Stroke effect’s <code>stroke_method</code> to <code>ripple_stitch</code>. In an SVG file, the
 line’s settings are Ink/Stitch’s attributes (<a href="./#setting-parameters">setting parameters</a>).</p>
 <p>TS-17C sews one ripple of each kind:</p>
@@ -196,8 +197,10 @@ line’s settings are Ink/Stitch’s attributes (<a href="./#setting-parameters"
 <p>The stroke’s lines give the kind of ripple:</p>
 <ul>
 <li><strong>An open line</strong> ripples towards its target point. Each copy of the line is the one before it shrunk
-towards the point, and the last copy shrinks to the point.</li>
-<li><strong>A closed line</strong> spirals in to its target point, each turn a smaller copy of the line.</li>
+towards the point, and the last copy shrinks to the point. With a <a href="#guides">guide</a>, its copies follow the
+guide instead.</li>
+<li><strong>A closed line</strong> spirals in to its target point, each turn a smaller copy of the line. With a guide, its
+copies follow the guide.</li>
 <li><strong>2 lines or more</strong> are a satin column’s rails and rungs, drawn as for a <a href="satin-column.html">satin column</a>.
 The first line lies on the first rail and the last on the second, and the lines between follow both.</li>
 </ul>
@@ -254,17 +257,94 @@ don’t line up. Each line’s needle points start a staggers-th of the stitch l
 line’s before. At 0, every line is placed from the end it is sewn from. The default, 1, places every
 line’s needle points from its start. Ink/Stitch’s settings window shows 0, and it sews a file that sets
 none as 1.</p>
+<h2 id="guides"><a class="header" href="#guides">Guides</a></h2>
+<p>A guide makes a ripple’s copies of its line follow it, in place of shrinking towards a point. In an SVG
+file, Ink/Stitch’s Selection to guide line makes a path a guide line: it starts the path with Ink/Stitch’s
+guide-line marker. The guide steers the strokes grouped with it, and is not sewn. In a VectorCraft
+document, name a path grouped with the stroke <code>stitch:guide</code>. TS-17C sews a guided ripple of each kind:</p>
+<!-- shot: ripple-guided -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/ripple-guided.png" alt="TS-17C’s 5 guided ripples in green. From the left: 8 copies of a wave follow an arch, shrinking to 30 % of its size and turning with it. Copies of a small circle run between 2 curved rails, spiralling on from one to the next. A column of 5 lines has a grid across it, its lines 3 mm apart. Copies of a thin diamond stand across a ladder at its rungs, their points on its rails. Copies of a zigzag run along a line and are cut to a circle."><span class="img-wrapper"><img src="../../images/generated/ripple-guided.png" alt="TS-17C’s 5 guided ripples in green. From the left: 8 copies of a wave follow an arch, shrinking to 30 % of its size and turning with it. Copies of a small circle run between 2 curved rails, spiralling on from one to the next. A column of 5 lines has a grid across it, its lines 3 mm apart. Copies of a thin diamond stand across a ladder at its rungs, their points on its rails. Copies of a zigzag run along a line and are cut to a circle."></span></label></p>
+<!-- /shot -->
+<h3 id="along-a-guide-line"><a class="header" href="#along-a-guide-line">Along a guide line</a></h3>
+<p>A guide of one line moves the copies along it, from its start to its end. Each copy moves to its place
+along the guide, and with <code>rotate_ripples</code> on, the default, it turns as the guide turns. The copies grow or
+shrink evenly from <code>scale_start</code> to <code>scale_end</code> percent, 100 and 0 by default, so that they shrink to
+nothing at the guide’s end. <code>scale_axis</code> scales them across alone, <code>1</code>, down alone, <code>2</code>, or not at all,
+<code>3</code>. <code>line_count</code>, <code>min_line_dist_mm</code> and <code>exponent</code> place the copies along the guide as they place a
+ripple’s lines. With <code>satin_guide_pattern_position</code> set to <code>render_at_rungs</code>, a copy lies at each point of
+the guide instead. Ink/Stitch asks for such a guide to be a manual stitch, whose points are its nodes. A
+guide of curves has a point wherever it is flattened.</p>
+<!-- shot: ripple-guide-line -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: center">Turning, to 40 %</th><th style="text-align: center">Not turning</th><th style="text-align: center">Turning, full size</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/ripple-guide-line-1.png" alt="A wave 12 mm long sewn as a ripple stitch of 7 copies along an arch, its guide line, Turning, to 40 %"><span class="img-wrapper"><img src="../../images/generated/ripple-guide-line-1.png" alt="A wave 12 mm long sewn as a ripple stitch of 7 copies along an arch, its guide line, Turning, to 40 %"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/ripple-guide-line-2.png" alt="A wave 12 mm long sewn as a ripple stitch of 7 copies along an arch, its guide line, Not turning"><span class="img-wrapper"><img src="../../images/generated/ripple-guide-line-2.png" alt="A wave 12 mm long sewn as a ripple stitch of 7 copies along an arch, its guide line, Not turning"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/ripple-guide-line-3.png" alt="A wave 12 mm long sewn as a ripple stitch of 7 copies along an arch, its guide line, Turning, full size"><span class="img-wrapper"><img src="../../images/generated/ripple-guide-line-3.png" alt="A wave 12 mm long sewn as a ripple stitch of 7 copies along an arch, its guide line, Turning, full size"></span></label></td></tr>
+</tbody>
+</table>
+</div>
+<!-- /shot -->
+<h3 id="between-a-satin-guides-rails"><a class="header" href="#between-a-satin-guides-rails">Between a satin guide’s rails</a></h3>
+<p>A guide drawn as a <a href="satin-column.html">satin column</a>, with 2 rails and rungs, sets each copy across it: the
+copy turns and stretches so that the ends of the line lie on the 2 rails. The ripple’s <code>reverse_rails</code> and
+<code>swap_satin_rails</code> say how its rails are read. <code>satin_guide_pattern_position</code> places the copies:</p>
+<ul>
+<li><strong>Line count</strong>, the default, spreads them evenly along the band, as many as <code>line_count</code> or
+<code>min_line_dist_mm</code> gives.</li>
+<li><strong>At the rungs</strong> sets one at the end of each section between rungs.</li>
+<li><strong>Adaptive</strong> sets each one as soon as the box round it clears the one before by <code>min_line_dist_mm</code>.
+That holds where the guide runs with its first rail on the left, as Ink/Stitch places them. With the
+first rail on the right, the boxes overlap by <code>min_line_dist_mm</code> instead.</li>
+</ul>
+<!-- shot: ripple-satin-guide -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: center">Line count, 6</th><th style="text-align: center">At the rungs</th><th style="text-align: center">Adaptive, 1 mm apart</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/ripple-satin-guide-1.png" alt="A zigzag sewn as a ripple stitch whose copies stand across a curved band between 2 rails with 3 rungs, its satin guide, Line count, 6"><span class="img-wrapper"><img src="../../images/generated/ripple-satin-guide-1.png" alt="A zigzag sewn as a ripple stitch whose copies stand across a curved band between 2 rails with 3 rungs, its satin guide, Line count, 6"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/ripple-satin-guide-2.png" alt="A zigzag sewn as a ripple stitch whose copies stand across a curved band between 2 rails with 3 rungs, its satin guide, At the rungs"><span class="img-wrapper"><img src="../../images/generated/ripple-satin-guide-2.png" alt="A zigzag sewn as a ripple stitch whose copies stand across a curved band between 2 rails with 3 rungs, its satin guide, At the rungs"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/ripple-satin-guide-3.png" alt="A zigzag sewn as a ripple stitch whose copies stand across a curved band between 2 rails with 3 rungs, its satin guide, Adaptive, 1 mm apart"><span class="img-wrapper"><img src="../../images/generated/ripple-satin-guide-3.png" alt="A zigzag sewn as a ripple stitch whose copies stand across a curved band between 2 rails with 3 rungs, its satin guide, Adaptive, 1 mm apart"></span></label></td></tr>
+</tbody>
+</table>
+</div>
+<!-- /shot -->
+<p>A closed line, such as a small circle, is centred between the rails instead. It grows and shrinks as the
+band widens and narrows, and turns as the band turns when <code>rotate_ripples</code> is on.</p>
+<h3 id="the-anchor-line"><a class="header" href="#the-anchor-line">The anchor line</a></h3>
+<p>An anchor line sets which points of the line lie on a satin guide’s rails: the start and the end of the
+anchor line, in place of the line’s own ends. Draw it across the line, and Ink/Stitch’s Selection to anchor
+line marks it in an SVG file. In a VectorCraft document, name a path grouped with the stroke
+<code>stitch:anchor</code>. A closed line with an anchor line is stretched across the rails so too, not centred.</p>
+<h3 id="unusable-guides"><a class="header" href="#unusable-guides">Unusable guides</a></h3>
+<p>A guide line of no length can’t place copies, and neither can a satin guide whose rails can’t be read.
+<code>SC-W0409</code> says why, and the ripple sews as if it had no guide, towards its target point. An anchor line
+whose ends are one point is left out the same way.</p>
+<h2 id="grids"><a class="header" href="#grids">Grids</a></h2>
+<p><code>grid_size_mm</code> adds a grid: lines across the ripple’s own, each through the same point of every line. The
+needle points of the line, or the pairs across a column, then lie the grid size apart, and so do the
+grid’s lines. The grid sews after the ripple as a run of its own, starting at its corner nearest where the
+ripple ended. <code>grid_first</code> sews the grid first, and the whole ripple backwards.</p>
+<h2 id="placing-the-copies-by-hand"><a class="header" href="#placing-the-copies-by-hand">Placing the copies by hand</a></h2>
+<p>With <code>manual_pattern_placement</code> on, the copies are made of the nodes of the line as you drew them, in place
+of its running stitch. Each copy is sewn through its own nodes, and a straight run of even stitches joins
+it to the next. With <code>flip_copies</code> on, every other copy is sewn backwards, the first among them.</p>
+<h2 id="clip-paths"><a class="header" href="#clip-paths">Clip paths</a></h2>
+<p>A ripple cut to clip paths sews only what lies inside them. Its lines cross the clip’s edges again and
+again, so StitchCraft sews the pieces inside as a fill sews its rows, going along the clip’s edge from one
+to the next, without a jump between them. A ripple wholly outside its clip paths isn’t sewn, and
+<code>SC-W0013</code> says so.</p>
 <h2 id="stitches-repeats-and-bean-stitch"><a class="header" href="#stitches-repeats-and-bean-stitch">Stitches, repeats and bean stitch</a></h2>
 <p>Each line is sewn with the running stitch’s <code>running_stitch_length_mm</code> and <code>running_stitch_tolerance_mm</code>,
-and with random stitch lengths when they are on. <code>reverse</code> sews the whole ripple backwards. <code>repeats</code> and
-<code>bean_stitch_repeats</code> then sew it as they sew a <a href="running.html#bean-stitch-and-repeats">running stitch</a>.
-Lines near the target point can be shorter than the shortest stitch the machine sews well, and StitchCraft
-leaves their needle points out when it finishes the plan (<code>SC-I0504</code>).</p>
-<h2 id="not-sewn-yet"><a class="header" href="#not-sewn-yet">Not sewn yet</a></h2>
-<p>Guided ripples arrive with M10.11. Their copies of the line follow a guide line or a satin guide, and a
-grid can cross them. A stroke keeps their settings, and <code>SC-W0105</code> names each. A ripple
-cut to clip paths is sewn whole, and <code>SC-W0406</code> says so. A ripple along a column reads its rails with a
-satin column’s defaults, and <code>SC-W0406</code> names each setting of the column’s rails that the stroke sets.</p>
+and with random stitch lengths when they are on. <code>reverse</code> sews the whole ripple backwards. <code>repeats</code> sews
+each run there and back, and <code>bean_stitch_repeats</code> then sews it as it sews a
+<a href="running.html#bean-stitch-and-repeats">running stitch</a>. Lines near the target point can be shorter than the
+shortest stitch the machine sews well, and StitchCraft leaves their needle points out when it finishes the
+plan (<code>SC-I0504</code>).</p>
+<h2 id="not-applied"><a class="header" href="#not-applied">Not applied</a></h2>
+<p>A ripple along a column reads its rails without <code>push_compensation_mm</code>, which Ink/Stitch applies to them,
+and <code>SC-W0406</code> names it when it is set.</p>
 <h2 id="parameters"><a class="header" href="#parameters">Parameters</a></h2>
 <p>The reference lists each parameter with its range and default:</p>
 <ul>
