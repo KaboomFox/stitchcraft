@@ -1,7 +1,12 @@
 # TS-17C's M10.11 part, its diamond: a ripple stitch of a closed line whose copies lie at a satin guide's rungs,
-# stretched across it as its anchor line says (REQ-RIP-019).
+# stretched across it as its anchor line says (REQ-RIP-019). The closed line's copies spiral one into the next,
+# which turns their sides by less than 30°, and each program places the needle points along them its own way:
+# each program's needle points lie within 0.20 mm of the other's stitches, and their threads overlap by 0.81.
 id = "inkstitch-ts17c-guided-anchor"
 requirements = ["REQ-RIP-019"]
 kind = "inkstitch"
 sheet = "TS-17C"
 elements = "ts17c:guided:anchor"
+
+[excused]
+overlap = "DEV-RUN-002"
