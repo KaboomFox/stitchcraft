@@ -141,8 +141,7 @@ fn markdown(fonts: &[Font], sewn: &[Sewn], excuses: &Excuses, options: &Options)
     }
     md.push_str("\n## Excuses\n\n| Deviation | Measures | For glyphs where | Glyphs excused |\n|---|---|---|---|\n");
     let row = |excuse: &super::excuses::Excuse, place: usize| {
-        let measures: Vec<&str> = excuse.measures.iter().map(|m| m.name()).collect();
-        format!("| {} | {} | {} | {} |", excuse.reason, measures.join(", "), excuse.conditions(), used.get(&place).copied().unwrap_or_default())
+        format!("| {} | {} | {} | {} |", excuse.reason, excuse.named().join(", "), excuse.conditions(), used.get(&place).copied().unwrap_or_default())
     };
     for (place, excuse) in excuses.excuses.iter().enumerate() {
         let _ = writeln!(md, "{}", row(excuse, place));
@@ -216,7 +215,7 @@ mod tests {
     #[test]
     fn the_report_counts_each_font_s_verdicts_and_lists_what_differs() {
         let fonts = [font("a", Licence::Ofl), font("b", Licence::CcBySa), font("c", Licence::Gpl)];
-        let excuses = Excuses::parse("[[excuse]]\nmeasures = [\"threads\"]\ndeviation = \"DEV-THREAD-001\"\n\n[[excuse]]\nmeasures = [\"size\"]\ndeviation = \"DEV-X-001\"\ntypes = [\"meander_fill\"]\n\n[[known]]\nmeasures = [\"size\"]\nfollow_up = \"the sizes of b\"\nfonts = [\"b\"]\n").unwrap();
+        let excuses = Excuses::parse("[[excuse]]\nmeasures = [\"threads\"]\ndeviation = \"DEV-THREAD-001\"\n\n[[excuse]]\nmeasures = [\"size\", \"sewn\"]\ndeviation = \"DEV-X-001\"\ntypes = [\"meander_fill\"]\nglyphs = [\"Đ\"]\n\n[[known]]\nmeasures = [\"size\"]\nfollow_up = \"the sizes of b\"\nfonts = [\"b\"]\n").unwrap();
         let sewn = [
             glyph("a", 0, Verdict::Agrees, &[]),
             glyph("a", 1, Verdict::Excused(vec!["threads differ".into()]), &[0]),
@@ -229,7 +228,12 @@ mod tests {
         let (md, failures, details) = markdown(&fonts, &sewn, &excuses, &options);
         assert!(md.contains("a sample of 4 glyphs of each font: 6 glyphs of 2 fonts. 1 agree, 1 differ as the ledger explains, 1 differ as known follow-up work, 1 differ otherwise, 1 are listed for stitch types StitchCraft doesn't sew yet, and 1 didn't sew."), "{md}");
         assert!(md.contains("| a | OFL | 3 | 1 | 1 | 0 | 0 | 1 | 0 |\n| b | CC BY-SA | 3 | 0 | 0 | 1 | 1 | 0 | 1 |\n"), "{md}");
-        assert!(md.contains("| DEV-THREAD-001 | threads | every glyph | 1 |\n| DEV-X-001 | size | an element is a `meander_fill` | 0 |"), "{md}");
+        assert!(
+            md.contains(
+                "| DEV-THREAD-001 | threads | every glyph | 1 |\n| DEV-X-001 | size, sewn | an element is a `meander_fill`; the glyph is `Đ` | 0 |"
+            ),
+            "{md}"
+        );
         assert!(md.contains("## Known differences: follow-up work\n\n| Follow-up | Measures | For glyphs where | Glyphs |\n|---|---|---|---|\n| the sizes of b | size | the font is `b` | 1 |"), "{md}");
         assert!(md.contains("- b/ltr.svg glyph 2 `g2` (satin_column): known: size differ (known: the sizes of b)\n"), "{md}");
         assert!(md.contains("| tartan_fill | 1 | a |"), "{md}");
