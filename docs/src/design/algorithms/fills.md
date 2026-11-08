@@ -778,9 +778,12 @@ parallel offset and buffer strategies, which offset the guide instead, come with
 
 ## Linear gradient fill (P3)
 
-A tatami variant whose rows alternate between the colours of a linear gradient with a probability that
-follows the gradient position, producing a blend from interleaved threads; one colour block per stop.
-Specified at M10. The rows of each stop will be a colour block in a thread of their own
+Rows square to the fill's linear gradient, which go to its stops' colours in a fixed pattern between each 2
+stops, from M10.12 ([linear gradient fill](gradient.md)). Its rows are cut by the region and its
+colours' rows routed as a tatami fill's rows are, each part after the tatami fill's underlay in the first
+stop's colour, which the sewing of a tatami fill's parts lends it. `skip_last` shortens its rows, and the
+tatami fill's `expand_mm` grows its parts. A colour's rows sew in that colour's thread as a colour block
+for each part, and the underlay ends no colour block
 ([several threads in one element](../engine-pipeline.md#several-threads-in-one-element)).
 
 ## Tartan fill (P3)

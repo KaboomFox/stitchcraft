@@ -347,4 +347,3 @@ fn a_row_at_random_lengths_varies_them_whatever_its_steps() {
     assert!(random.iter().all(|q| q.1 == 0.0 && (0.0..=30.0).contains(&q.0)), "{random:?}");
     assert_eq!((random.first(), random.last()), (Some(&(0.0, 0.0)), Some(&(30.0, 0.0))));
 }
-

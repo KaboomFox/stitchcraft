@@ -186,12 +186,43 @@ fn req_vc_015_the_filter_s_manifest_offers_the_sheets_drawn_as_designs() {
     assert_eq!((manifest.id.as_str(), manifest.kind, manifest.budget), ("dev.stitchcraft.testsheet", "filter", BudgetClass::Light));
     let [(SHEET, sheet)] = manifest.params.as_slice() else { panic!("{:?}", manifest.params) };
     let ids = vec![
-        "TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D",
-        "TS-17A",
+        "TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D", "TS-17A",
     ];
     assert_eq!(sheet.schema, Schema::Choice { options: ids, default: "TS-02B" });
     // Its help names what each sheet tests, from the sheets themselves.
     let help = sheet.ui.help.as_deref().unwrap();
     assert!(sheets().all(|sheet| help.contains(&format!("{}: {}", sheet.id, sheet.title))), "{help}");
     assert!(sheet.ui.help_url.as_deref().is_some_and(|url| url.ends_with(PAGE)), "{:?}", sheet.ui.help_url);
+}
+
+#[test]
+fn req_vc_015_a_linear_gradient_fill_is_drawn_with_its_gradient_and_sews_as_it() {
+    // A filter gives VectorCraft a gradient paint with its placement, which VectorCraft keeps as it is given
+    // (`docs/plugins.md` there, Output). A sheet's fill made a linear gradient fill of 3 stops, the middle one
+    // transparent, is drawn with its gradient, and the document sews as the engine sews the fill.
+    use stitchcraft_engine::design::{Gradient, GradientStop};
+    use stitchcraft_plan::Rgb;
+    let is_fill = |element: &&Element| matches!(element.shape, Shape::Fill { .. }) && !element.automatic;
+    let (sheet, mut element, settings) = sheets()
+        .find_map(|sheet| {
+            let design = placed(sheet, None).ok()?;
+            let element = design.elements().iter().find(is_fill)?.clone();
+            Some((sheet, element, design.settings))
+        })
+        .unwrap();
+    let start = element.shape.path().subpaths[0].start;
+    let end = Point::new(start.x() + 20.0, start.y() + 10.0).unwrap();
+    let stops = vec![
+        GradientStop { offset: 0.0, colour: Rgb::new(237, 23, 31), opacity: 1.0 },
+        GradientStop { offset: 0.5, colour: Rgb::new(240, 240, 240), opacity: 0.0 },
+        GradientStop { offset: 1.0, colour: Rgb::new(10, 85, 163), opacity: 1.0 },
+    ];
+    if let Shape::Fill { gradient, .. } = &mut element.shape {
+        *gradient = Some(Gradient { start, end, stops });
+    }
+    element.params.set("fill_method", "linear_gradient_fill");
+    let one = Design::new(vec![element.clone()], settings).unwrap();
+    let out = serde_json::to_value(object(sheet, &element, &one, &declared()).unwrap()).unwrap();
+    assert_eq!((out["fills"][0]["type"].as_str(), out["fills"][0]["gradient"]["kind"].as_str()), (Some("gradient"), Some("Linear")));
+    assert_eq!(sewn(&document(&[kept(&out, 10)])), planned(&one));
 }

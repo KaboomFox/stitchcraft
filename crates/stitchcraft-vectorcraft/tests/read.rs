@@ -65,7 +65,7 @@ fn req_vc_001_points_are_millimetres_and_paints_are_threads() {
     let square = element(&drawing, "vc:2:fill");
     assert_eq!(square.name.as_deref(), Some("Square"));
     assert_eq!((square.thread.color, square.thread.name.as_deref()), (Rgb::new(255, 0, 0), Some("Red")));
-    let Shape::Fill { path, rule: FillRule::NonZero } = &square.shape else { panic!("{:?}", square.shape) };
+    let Shape::Fill { path, rule: FillRule::NonZero, .. } = &square.shape else { panic!("{:?}", square.shape) };
     let sub = &path.subpaths[0];
     assert!(sub.closed && close(sub.start, p(72.0, 72.0)));
     let corners = [p(144.0, 72.0), p(144.0, 144.0), p(72.0, 144.0), p(72.0, 72.0)];
@@ -79,7 +79,7 @@ fn req_vc_001_points_are_millimetres_and_paints_are_threads() {
     assert_eq!(outline.thread.color, Rgb::new(0, 0, 0));
     // A compound path is one shape of all its paths' subpaths, with its own rule and paint (CMYK cyan).
     let ring = element(&drawing, "vc:3:fill");
-    let Shape::Fill { path, rule: FillRule::EvenOdd } = &ring.shape else { panic!("{:?}", ring.shape) };
+    let Shape::Fill { path, rule: FillRule::EvenOdd, .. } = &ring.shape else { panic!("{:?}", ring.shape) };
     assert_eq!(path.subpaths.len(), 2);
     assert!(path.subpaths.iter().all(|s| s.closed && s.segments.len() == 4 && s.segments.iter().all(|g| matches!(g, Segment::Cubic(..)))));
     assert!(close(path.subpaths[0].start, p(324.0, 108.0)) && close(path.subpaths[1].start, p(306.0, 108.0)));

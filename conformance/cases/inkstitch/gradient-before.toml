@@ -1,0 +1,11 @@
+# Both stops lie before the square's first row. StitchCraft sews every row in the last stop's colour, as a viewer
+# paints the square; Ink/Stitch sews a band of 63 rows of it and leaves the rest bare (DEV-FILL-032).
+id = "inkstitch-gradient-before"
+requirements = ["REQ-SVG-008", "REQ-FILL-GRD-009"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/gradient-before.svg"
+
+[excused]
+stitches = "DEV-FILL-032"
+size = "DEV-FILL-032"
+overlap = "DEV-FILL-032"

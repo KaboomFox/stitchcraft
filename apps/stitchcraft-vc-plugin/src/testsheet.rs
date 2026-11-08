@@ -22,7 +22,8 @@
 //! else the first ([`placed`]). TS-17A moves by whole multiples of 6 mm, so that its crosses keep their cells
 //! on the canvas's grids of 2 and 3 mm, which lie on the document's origin ([`TestSheet::step`]). Each element is an object, named by its id, in sewing order, bottom first.
 //! It has the element's path, a compound path for more than one subpath, its thread as the paint its family
-//! sews with, a fill's fill or a stroke's and a satin column's stroke, and its settings as the record of
+//! sews with, a fill's fill or a stroke's and a satin column's stroke, a gradient fill's gradient as its fill
+//! (VectorCraft keeps a filter's gradient paint as it is given), and its settings as the record of
 //! its family's StitchCraft effect. A shape the sheet digitizes automatically, as the TS-13 sheets' top
 //! halves are ([`TestSheet::digitized`]), has the Auto effect's record instead (`REQ-VC-016`). Each setting
 //! is the value its dialog row takes, and reads back as the setting it was (`record_params`); one a record
@@ -48,7 +49,7 @@ use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::registry::PARAMETERS;
 use stitchcraft_engine::testsheets::{SHEETS, TestSheet};
 use stitchcraft_params::{Family, ParamSet, ParamSpec, StitchType, find_for};
-use stitchcraft_vectorcraft::filter::{self, Given, Out, Record, solid, stroke};
+use stitchcraft_vectorcraft::filter::{self, Given, Out, Record, gradient, solid, stroke};
 use stitchcraft_vectorcraft::{effect_error, param_text};
 
 use crate::Module;
@@ -158,7 +159,11 @@ fn object(sheet: &TestSheet, element: &Element, design: &Design, declared: &[(Mo
     let record = Record::ours(effect.name(), &record_params(effect, &element.params, schemas).map_err(bug)?).map_err(written)?;
     let path = element.shape.path();
     let out = Out::default().with_name(element.id.to_string()).with_path(path, path.subpaths.len() > 1).map_err(written)?;
-    let paint = solid(element.thread.color).map_err(written)?;
+    // A linear gradient fill's paint is its gradient, which it sews.
+    let paint = match &element.shape {
+        Shape::Fill { gradient: Some(painted), .. } => gradient(painted).map_err(written)?,
+        _ => solid(element.thread.color).map_err(written)?,
+    };
     Ok(match &element.shape {
         Shape::Fill { rule, .. } => out.with_fill_rule(*rule).with_fills(vec![paint]),
         Shape::Stroke { width, join, cap, .. } => out.with_strokes(vec![stroke(&paint, *width, *join, *cap).map_err(written)?]),

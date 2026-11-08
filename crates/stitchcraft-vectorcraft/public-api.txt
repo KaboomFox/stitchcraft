@@ -40,6 +40,7 @@ pub stitchcraft_vectorcraft::filter::Stroke::join: stitchcraft_engine::design::J
 pub stitchcraft_vectorcraft::filter::Stroke::width: stitchcraft_core::units::Mm
 impl stitchcraft_vectorcraft::filter::Stroke
 pub fn stitchcraft_vectorcraft::filter::Stroke::as_wide_as(&self, stitchcraft_core::units::Mm) -> core::result::Result<alloc::boxed::Box<serde_json::raw::RawValue>, serde_json::error::Error>
+pub fn stitchcraft_vectorcraft::filter::gradient(&stitchcraft_engine::design::Gradient) -> core::result::Result<alloc::boxed::Box<serde_json::raw::RawValue>, serde_json::error::Error>
 pub fn stitchcraft_vectorcraft::filter::output(&[stitchcraft_vectorcraft::filter::Out]) -> core::result::Result<alloc::vec::Vec<u8>, serde_json::error::Error>
 pub fn stitchcraft_vectorcraft::filter::path_data(&stitchcraft_engine::design::Path) -> core::result::Result<alloc::boxed::Box<serde_json::raw::RawValue>, serde_json::error::Error>
 pub fn stitchcraft_vectorcraft::filter::read(&[u8], &[u8]) -> core::result::Result<stitchcraft_vectorcraft::filter::Given, stitchcraft_core::diag::Diagnostic>

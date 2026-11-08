@@ -52,13 +52,18 @@ const SHAPES: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="40mm" he
 /// Checks that each stitch type the engine sews has its page, with pictures, among `pages` (every Markdown
 /// file, as `cargo xtask docs --check` reads them).
 pub fn check(root: &Path, pages: &[(PathBuf, String)], findings: &mut Findings) -> Result<(), String> {
-    checked(root, pages, UNSHOWN, findings)
+    checked(root, pages, (UNSHOWN, &sewn()?), findings)
 }
 
-/// [`check`], with `unshown` the stitch types still without a page, each with the roadmap step that writes it.
-fn checked(root: &Path, pages: &[(PathBuf, String)], unshown: &[(StitchType, &str)], findings: &mut Findings) -> Result<(), String> {
+/// [`check`], with `unshown` the stitch types still without a page, each with the roadmap step that writes it,
+/// and `sewn` those the engine sews.
+fn checked(
+    root: &Path,
+    pages: &[(PathBuf, String)],
+    (unshown, sewn): (&[(StitchType, &str)], &[StitchType]),
+    findings: &mut Findings,
+) -> Result<(), String> {
     let folder = root.join(FOLDER);
-    let sewn = sewn()?;
     let shots = shots::load(root)?;
     let mut claimed: BTreeMap<StitchType, Vec<String>> = BTreeMap::new();
     for (path, text) in pages.iter().filter(|(path, _)| path.starts_with(&folder)) {
@@ -80,7 +85,7 @@ fn checked(root: &Path, pages: &[(PathBuf, String)], unshown: &[(StitchType, &st
             findings.error(format!("{page}: a stitch type's page shows at least {PICTURES} pictures, and this one shows {pictures}"));
         }
     }
-    for t in &sewn {
+    for t in sewn {
         let pages = claimed.get(t).map_or(&[][..], Vec::as_slice);
         let waiting = unshown.iter().find(|(u, _)| u == t).map(|(_, step)| step);
         match (pages, waiting) {
@@ -145,7 +150,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_engine_sews_the_stitch_types_of_m1_to_m10_9() {
+    fn the_engine_sews_the_stitch_types_of_m1_to_m10_12() {
         let ids: Vec<&str> = sewn().unwrap().iter().map(|t| t.id()).collect();
         assert_eq!(
             ids,
@@ -163,6 +168,7 @@ mod tests {
                 "meander_fill",
                 "circular_fill",
                 "guided_fill",
+                "linear_gradient_fill",
                 "tartan_fill",
                 "cross_stitch",
                 "legacy_fill"
@@ -177,12 +183,13 @@ mod tests {
     }
 
     /// The findings of [`checked`] over the pages `pages`, written in the stitch types' folder, with the
-    /// stitch types `unshown` still without a page.
-    fn findings(pages: &[(&str, &str)], unshown: &[(StitchType, &str)]) -> Findings {
+    /// stitch types `unshown` still without a page, and every stitch type the engine sews sewn but `unsewn`.
+    fn findings(pages: &[(&str, &str)], unshown: &[(StitchType, &str)], unsewn: &[StitchType]) -> Findings {
         let root = util::root();
         let pages: Vec<(PathBuf, String)> = pages.iter().map(|(name, text)| (root.join(FOLDER).join(name), (*text).to_string())).collect();
+        let sewn: Vec<StitchType> = sewn().unwrap().into_iter().filter(|t| !unsewn.contains(t)).collect();
         let mut findings = Findings::default();
-        checked(&root, &pages, unshown, &mut findings).unwrap();
+        checked(&root, &pages, (unshown, &sewn), &mut findings).unwrap();
         findings
     }
 
@@ -211,6 +218,8 @@ mod tests {
                 ("guided-fill.md", &page("guided_fill", &["guided-guides", "guided-stagger"])),
             ],
             &[(StitchType::SatinColumn, "M13.11"), (StitchType::TatamiFill, "M13.11"), (StitchType::LegacyFill, "M13.11")],
+            // From M10.12 every stitch type is sewn: one taken for not sewn yet, as each was before its step.
+            &[StitchType::LinearGradientFill],
         );
         let folder = FOLDER;
         let pictures = found.errors.iter().find(|e| e.contains("zigzag.md")).unwrap();
@@ -238,7 +247,7 @@ mod tests {
     fn every_stitch_type_sewn_has_its_page_since_m13_11() {
         // Nothing waits for a page any more: a type sewn without one is an error, not a warning.
         assert!(UNSHOWN.is_empty());
-        let found = findings(&[("running.md", &page("running_stitch, manual_stitch", &["running-length", "manual"]))], UNSHOWN);
+        let found = findings(&[("running.md", &page("running_stitch, manual_stitch", &["running-length", "manual"]))], UNSHOWN, &[]);
         let unclaimed =
             "Satin column (`satin_column`) is sewn, and no page in docs/src/user/stitches claims it with `<!-- stitch-types: satin_column -->`";
         assert!(found.errors.iter().any(|e| e == unclaimed), "{:#?}", found.errors);

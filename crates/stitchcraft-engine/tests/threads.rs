@@ -1,9 +1,9 @@
 //! Several threads in one element (M10.5): assembly's cases (`REQ-ASM-006`, `REQ-ASM-007`).
 //!
-//! No stitch type gives its groups threads of their own yet. Tartan fills will from M10.6, and gradient
-//! fills from M10.12. So each case gives assembly what such a generator would: an element generated as
-//! `plan` generates it, its groups then given their colours (`stitchcraft_testkit::designs::threaded`), and
-//! assembled and finalized as `plan` assembles and finalizes them.
+//! Tartan fills (M10.6) and linear gradient fills (M10.12) give their groups threads of their own. Each
+//! case here gives assembly what such a generator gives, with stitches few and plain: an element generated
+//! as `plan` generates it, its groups then given their colours (`stitchcraft_testkit::designs::threaded`),
+//! and assembled and finalized as `plan` assembles and finalizes them.
 //!
 //! The shapes Ink/Stitch's plan gives them, run as a black box at `d59c9ab` on a linear gradient fill of 3
 //! stops and on a tartan of 3 colours, with its stitch-plan cache off, and written as CSV, its runs of
