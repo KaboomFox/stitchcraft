@@ -1,0 +1,7 @@
+# TS-17C's M10.11 part, its zigzag: a ripple stitch whose 7 copies along a straight guide are sewn through their
+# own nodes and cut to a circle, the pieces routed as a tatami fill's rows (REQ-RIP-019).
+id = "inkstitch-ts17c-guided-clip"
+requirements = ["REQ-RIP-019"]
+kind = "inkstitch"
+sheet = "TS-17C"
+elements = "ts17c:guided:clip"

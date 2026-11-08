@@ -2,8 +2,8 @@
 
 # Ripple parameters
 
-Ripple stitch: copies of a stroke's line that shrink towards a point, or lines along a satin column from
-one rail to the other, sewn as one running stitch.
+Ripple stitch: copies of a stroke's line that shrink towards a point or follow a guide line, or lines
+along a satin column from one rail to the other, sewn as one running stitch.
 
 Applies to Ripple stitch.
 
@@ -12,8 +12,8 @@ Applies to Ripple stitch.
 ### `line_count`
 
 **Lines.** How many lines the ripple sews. The first is the stroke's own line, or a column's first rail, and
-the last the target point, or the second rail. With `min_line_dist_mm`, this keeps only the
-count's parity, odd or even.
+the last the target point, or the second rail. Along a guide, how many copies of the line it
+places. With `min_line_dist_mm`, this keeps only the count's parity, odd or even.
 
 - **Accepts:** a whole number from 1 to 1000
 - **Default:** `10`
@@ -22,15 +22,15 @@ count's parity, odd or even.
 ### `min_line_dist_mm`
 
 **Least distance between lines.** How far apart the lines are at least. The count is then the shortest distance from the stroke's line
-to the target point, or across the column, divided by this and rounded up. Where that differs in
-parity from `line_count`, it is 1 less, so that the ripple ends on the same side however large it
-is drawn. Empty or 0: `line_count` gives the count.
+to the target point, or across the column, or the guide's length, divided by this and rounded up.
+Where that differs in parity from `line_count`, it is 1 less, so that the ripple ends on the same
+side however large it is drawn. Empty or 0: `line_count` gives the count.
 
 - **Accepts:** a length from 0.01 to 100 mm, or empty (0 or less counts as empty)
 - **Default:** empty
 - **Ink/Stitch:** same key and default; StitchCraft differs:
   - **DEV-PRM-003.** An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column's deviates so. Ink/Stitch reads a manual stitch's as not set at 0 or below too, and doesn't warn.
-  - **DEV-RIP-002.** A ripple has 1,000 lines at most, or 999 where 1,000 would change the parity of line_count, and SC-W0407 says when min_line_dist_mm gives more. Ink/Stitch sews every line it gives.
+  - **DEV-RIP-002.** A ripple has 1,000 lines at most, or 999 where 1,000 would change the parity of line_count, and SC-W0407 says when min_line_dist_mm gives more. A guide places 1,000 copies at most, and SC-W0407 says when its points, its rungs or the places an adaptive satin guide finds clear are more. Ink/Stitch sews every line and every copy it gives.
 
 ### `exponent`
 
@@ -96,6 +96,107 @@ by side don't line them up. 0 places every line's needle points from the end it 
 ### `reverse`
 
 **Reverse.** Sew the whole ripple the other way round, from its last needle point to its first.
+
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
+- **Default:** `false`
+- **Ink/Stitch:** same key, meaning and default
+
+### `manual_pattern_placement`
+
+**Sew the line's own nodes.** Sew each line through the points it is made of, and nothing between them: the stroke's nodes,
+copied, where a line is copied, and the stitch length is not used along the lines. A straight run
+of stitches no longer than the stitch length joins each line to the next.
+
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
+- **Default:** `false`
+- **Ink/Stitch:** same key, meaning and default
+
+## Rails
+
+### `reverse_rails`
+
+**Reverse rails.** Which rails of the column the ripple runs along, or of its satin guide, are read against the way
+they are drawn, so that both run the same way. Automatic reverses the second rail when it runs
+against the first.
+
+- **Accepts:** one of `automatic` (Automatic), `none` (Neither), `first` (The first), `second` (The second), `both` (Both)
+- **Default:** `automatic`
+- **Ink/Stitch:** same key and default; StitchCraft differs:
+  - **DEV-ROUTE-002.** A piece of a satin column is drawn with the column's rails in the column's order, a rail that reverse_rails names turned back, so that the piece's settings, the column's, swap and turn its rails as they swap and turn the column's. With swap_satin_rails, Ink/Stitch draws a piece with its rails as the column sews them, already swapped, and the piece's own setting swaps them again: the piece sews its satin the other way round from the column.
+
+### `swap_satin_rails`
+
+**Swap rails.** Make the second rail of the column, or of the satin guide, the first: the ripple starts on it.
+
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
+- **Default:** `false`
+- **Ink/Stitch:** same key and default; StitchCraft differs:
+  - **DEV-ROUTE-002.** A piece of a satin column is drawn with the column's rails in the column's order, a rail that reverse_rails names turned back, so that the piece's settings, the column's, swap and turn its rails as they swap and turn the column's. With swap_satin_rails, Ink/Stitch draws a piece with its rails as the column sews them, already swapped, and the piece's own setting swaps them again: the piece sews its satin the other way round from the column.
+
+## Guide
+
+### `satin_guide_pattern_position`
+
+**Copies along the guide.** Where the copies lie along a guide. Line count places them as `line_count` or `min_line_dist_mm`
+says, spread along the guide. At the rungs places one at each point of a guide line, or at each
+rung of a satin guide. Adaptive places one wherever it clears the last by `min_line_dist_mm`
+between a satin guide's rails.
+
+- **Accepts:** one of `default` (Line count), `render_at_rungs` (At the rungs), `adaptive` (Adaptive)
+- **Default:** `default`
+- **Ink/Stitch:** same key and default; StitchCraft differs:
+  - **DEV-RIP-002.** A ripple has 1,000 lines at most, or 999 where 1,000 would change the parity of line_count, and SC-W0407 says when min_line_dist_mm gives more. A guide places 1,000 copies at most, and SC-W0407 says when its points, its rungs or the places an adaptive satin guide finds clear are more. Ink/Stitch sews every line and every copy it gives.
+
+### `scale_axis`
+
+**Scale axis.** Which way the copies are scaled along a guide line, and along a satin guide for a closed line:
+both ways, across (x), down (y), or neither.
+
+- **Accepts:** one of `0` (Both), `1` (Across), `2` (Down), `3` (Neither)
+- **Default:** `0`
+- **Ink/Stitch:** same key, meaning and default
+
+### `scale_start`
+
+**First copy's size.** How large the first copy along a guide line is, in percent of the line.
+
+- **Accepts:** a percentage from -1000 to 1000
+- **Default:** `100`
+- **Ink/Stitch:** same key, meaning and default
+
+### `scale_end`
+
+**Last copy's size.** How large the last copy along a guide line is, in percent of the line. The copies between grow or
+shrink evenly from the first's size to this.
+
+- **Accepts:** a percentage from -1000 to 1000
+- **Default:** `0`
+- **Ink/Stitch:** same key, meaning and default
+
+### `rotate_ripples`
+
+**Turn with the guide.** Turn each copy as the guide turns: by the angle from the guide's start to the way it runs there,
+or for a closed line on a satin guide, as the rails' pairs turn from the first.
+
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
+- **Default:** `true`
+- **Ink/Stitch:** same key, meaning and default
+
+## Grid
+
+### `grid_size_mm`
+
+**Grid size.** How far apart the lines across the ripple's lines are: the ripple then sews a grid, its own lines
+and lines across them through every point they share. Empty or 0: no grid.
+
+- **Accepts:** a length from 0.01 to 100 mm, or empty (0 or less counts as empty)
+- **Default:** `0`
+- **Ink/Stitch:** same key and default; StitchCraft differs:
+  - **DEV-RUN-003.** No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column's travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Where a satin column's parts meet nearer than the shortest stitch, the needle's way between them gives way to the next part's first point, and so does an underlay's last point or the column's start, which moves there; beside a top stitch's end, which stays where it is, the next part's points that near it give way instead. Ink/Stitch's running stitch has no shortest stitch, and it joins a satin column's parts as they are; its plan later drops stitches no longer than the element's shortest stitch, 0.1 mm by default, keeping the stitch before. Beside an underlay's last point, it drops the top stitches' first needle points, and the column's end is shorter.
+
+### `grid_first`
+
+**Grid first.** Sew the grid before the ripple's own lines, the whole ripple backwards.
 
 - **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `false`

@@ -172,14 +172,14 @@ fn a_route_s_pieces_keep_their_element_s_thread_and_a_column_s_its_clips_but_non
     // it. Its pieces start and end where the route cuts it. A column's piece is a copy of the column, its clip
     // with it, which leaves a satin column whole, and the run is a path of its own, which nothing clips.
     let mut elements = two();
-    elements[0].hints = Hints { start: Some(p(6.5, 5.0)), end: Some(p(6.5, 25.0)), target: Some(p(6.5, 15.0)) };
+    elements[0].hints = Hints { start: Some(p(6.5, 5.0)), end: Some(p(6.5, 25.0)), target: Some(p(6.5, 15.0)), ..Hints::default() };
     let square = Path { subpaths: vec![Subpath { closed: true, ..line(&[(0.0, 0.0), (30.0, 0.0), (30.0, 30.0), (0.0, 30.0)]) }] };
     elements[0].clips = vec![Clip::of(square, FillRule::NonZero)];
     let routed = routed(&elements, Tool::Satins.defaults(), [None, None]);
     // Routed as `two` is: the upright's first piece, the run under it, the satin back up and the bar.
     assert_eq!(routed.pieces.iter().map(|piece| (piece.from, piece.under)).collect::<Vec<_>>(), [(0, false), (0, true), (0, false), (1, false)]);
     for piece in &routed.pieces {
-        assert_eq!((&piece.element.thread, piece.element.hints), (&elements[piece.from].thread, Hints::default()), "{}", piece.element.id);
+        assert_eq!((&piece.element.thread, piece.element.hints.clone()), (&elements[piece.from].thread, Hints::default()), "{}", piece.element.id);
     }
     let clipped: Vec<usize> = routed.pieces.iter().map(|piece| piece.element.clips.len()).collect();
     assert_eq!(clipped, [1, 0, 1, 0]);

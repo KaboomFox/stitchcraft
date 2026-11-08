@@ -90,6 +90,7 @@ use crate::version::{self, Updated, Version};
 mod clip;
 mod clone;
 mod gradient;
+mod guides;
 mod root;
 
 use clip::Link;
@@ -257,6 +258,8 @@ struct Reader<'b, 'a, 'input> {
     frames: Vec<Frame<'a, 'input>>,
     /// The clones in the document that sew something: a trim or a stop command on one is applied.
     sewn_clones: BTreeSet<Place>,
+    /// Whether each group looked at holds a guide line or an anchor line (`guides`).
+    helper_groups: BTreeMap<Place, bool>,
 }
 
 impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
@@ -285,6 +288,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             links: Vec::new(),
             frames: Vec::new(),
             sewn_clones: BTreeSet::new(),
+            helper_groups: BTreeMap::new(),
         }
     }
 
@@ -497,6 +501,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         let Some(style) = inherited.child(&declared) else { return Ok(Context::Hidden) };
         let label = self.cloned_label(label(node, tag, n));
         let commands = self.commands(node)?;
+        let group = (map, *inherited);
         if self.own_object(node, kind, &label, (&declared, &style), &commands) {
             return Ok(Context::Hidden);
         }
@@ -567,7 +572,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 if style.shown() {
                     effects(self, &label);
                     let label = self.claim(label, tag, n)?;
-                    self.shape(node, geometry, &label, (map, clipped), (&style, &declared), &commands)?;
+                    self.shape(node, geometry, &label, (map, clipped, group), (&style, &declared), &commands)?;
                 }
                 Ok(Context::Hidden)
             }
@@ -659,8 +664,22 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             return true;
         }
         if let (Kind::Shape(_), Some(helper)) = (kind, Helper::of(declared)) {
+            // A guide line or an anchor line steers the shapes of its group (`guides`), and one in no group
+            // steers nothing.
+            let grouped = node.parent_element().is_some_and(|parent| self.is_svg(parent) && parent.tag_name().name() == "g");
             let (what, helpers) = helper.what();
-            self.note(Some(label), format!("`{label}` is {what}, so it is not stitched; StitchCraft does not apply {helpers} yet."), None);
+            match helper {
+                Helper::Pattern => {
+                    self.note(Some(label), format!("`{label}` is {what}, so it is not stitched; StitchCraft does not apply {helpers} yet."), None);
+                }
+                _ if !grouped => {
+                    let message = format!(
+                        "`{label}` is {what}, and steers nothing: it is in no group, and Ink/Stitch's helpers steer the shapes of their group."
+                    );
+                    self.note(Some(label), message, Some("Group it with the shapes it should steer."));
+                }
+                _ => {}
+            }
             return true;
         }
         false
@@ -675,13 +694,14 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
 
     /// The design elements of a shape that is shown, `label` its own: one per paint it paints with, each in
     /// millimetres by `map` and cut to its own clips and those of the chain from `clipped` (`clip`), with the
-    /// `commands` that apply to it.
+    /// `commands` that apply to it and the guide and anchor lines of its `group`, drawn with the map and the
+    /// style it gives (`guides`).
     fn shape(
         &mut self,
         node: Node<'a, 'input>,
         geometry: Geometry,
         label: &str,
-        (map, clipped): (Affine, Option<usize>),
+        (map, clipped, group): (Affine, Option<usize>, (Affine, Style<'a>)),
         (style, declared): (&Style<'a>, &Declared<'a, 'input>),
         commands: &[Applied],
     ) -> Result<(), Diagnostic> {
@@ -737,8 +757,9 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         // A shape without Ink/Stitch's settings is digitized automatically when the user asks for it, and
         // sews by the rules; any other is updated as Ink/Stitch updates a file of its version.
         let automatic = self.auto && !node.attributes().any(|a| inkstitch::is_setting(&a));
-        let hints = self.hints(label, automatic, commands);
+        let mut hints = self.hints(label, automatic, commands);
         if !automatic {
+            self.guided(node, (group.0, &group.1), &mut hints)?;
             let styled_stroke = declared.in_style("stroke").last().is_some_and(|stroke| !stroke.trim().eq_ignore_ascii_case("none"));
             let shape = version::Shape {
                 fill: fill.is_some(),
@@ -788,7 +809,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 thread: Thread::new(colour),
                 params: params.clone(),
                 automatic,
-                hints,
+                hints: hints.clone(),
                 clips: clips.clone(),
             });
             if self.frames.is_empty() {
@@ -1082,7 +1103,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             placed
         };
         let [start, end, target] = PLACING;
-        Hints { start: at(start, true), end: at(end, true), target: at(target, false) }
+        Hints { start: at(start, true), end: at(end, true), target: at(target, false), ..Hints::default() }
     }
 
     /// `SC-W0804` (geometry that cannot be used) about `label`.

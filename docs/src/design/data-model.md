@@ -44,7 +44,7 @@ pub struct Element {
     pub thread: Thread,
     pub params: ParamSet,            // as the host stores them; validated against the registry when planned
     pub automatic: bool,             // since M13.1: a shape without settings, read with --auto, whose stitches StitchCraft chooses
-    pub hints: Hints,                // since M8.4: where its design says it starts and ends, and the point it aims at
+    pub hints: Hints,                // since M8.4: where its design says it starts and ends, the point it aims at, its guide
     pub clips: Vec<Clip>,            // since M8.5: it sews only what lies inside every one (REQ-GEN-005)
 }
 
@@ -61,6 +61,15 @@ pub struct Hints {                   // since M8.4: Ink/Stitch's start, end and 
     pub start: Option<Point>,        // its start position, in place of the needle before it (REQ-GEN-001)
     pub end: Option<Point>,          // its end position, in place of the next element's offer
     pub target: Option<Point>,       // what a circular fill turns round and a ripple aims at (REQ-FILL-CIR-008, REQ-RIP-002)
+    pub guide: Option<Guide>,        // since M10.11: the line a ripple's copies follow (REQ-RIP-012, REQ-RIP-013)
+    pub anchor: Option<[Point; 2]>,  // since M10.11: the ends a satin guide's copies land on (REQ-RIP-014)
+}
+
+pub struct Guide {                   // since M10.11: Ink/Stitch's guide line, VectorCraft's stitch:guide marker
+    pub path: Path,                  // in the design's millimetres: a line, or a satin guide's rails and rungs
+    pub width: Mm,                   // its stroke's width, for a satin guide drawn as one path
+    pub join: Join,                  // how its stroke turns its corners
+    pub params: ParamSet,            // its own settings, which say whether it is a satin column and how to read it
 }
 
 pub struct Reading {                 // since M13.1: what every host's reader is asked
@@ -160,7 +169,9 @@ These other places were weighed and left:
   and the adapters already apply them to paths.
 
 **Commands.** Ink/Stitch's start, end and target commands, and VectorCraft's start, end and target markers,
-are an element's hints (M8.4, the target marker M10.8), its points checked and moved with the rest. Clip
+are an element's hints (M8.4, the target marker M10.8), its points checked and moved with the rest. So are
+Ink/Stitch's guide lines and anchor lines, and VectorCraft's `stitch:guide` and `stitch:anchor` markers
+(M10.11), a guide's every point included. Clip
 paths are an element's clips (M8.5), and so are VectorCraft's clipping objects (M8.7), checked and moved
 with it too, which the engine cuts it to ([engine pipeline](engine-pipeline.md)). A clip's shapes are shared by the elements it cuts, so
 that a clip group of many objects holds its clipping object once. Trims and stops are the element

@@ -1,0 +1,14 @@
+# TS-17C's M10.11 part, its circle: a ripple stitch of a closed line whose copies follow a satin guide of 2 rails,
+# 3 mm apart at least, centred between them and spiralling on from one to the next (REQ-RIP-019). The circle, 5 mm
+# across, is sewn within 0.1 mm, and StitchCraft's running stitch takes more stitches round it than Ink/Stitch's:
+# 104 here and 86 there, each program's needle points within 0.25 mm of the other's stitches, their threads
+# overlapping by 0.76. Drawn as a square, the circle sews the same 90 needle points in both, their locks aside.
+id = "inkstitch-ts17c-guided-closed"
+requirements = ["REQ-RIP-019"]
+kind = "inkstitch"
+sheet = "TS-17C"
+elements = "ts17c:guided:closed"
+
+[excused]
+stitches = "DEV-RUN-002"
+overlap = "DEV-RUN-002"

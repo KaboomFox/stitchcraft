@@ -593,7 +593,14 @@ mod tests {
         let root = util::root().join("target/xtask-tests/differential-sheet");
         let text = std::fs::read_to_string(sheet(&root, "TS-17C", None).unwrap()).unwrap();
         let design = testsheets::find("TS-17C").unwrap().design().unwrap().unwrap();
-        assert_eq!(text.matches("<path id=\"e").count(), design.elements().len() - 2);
+        // Each element is a path whose id is `e` and its index. A guided ripple's guide line and anchor line
+        // lie beside it, their ids its own with `-guide` and `-anchor` after it: Ink/Stitch's helpers, which
+        // are no elements of their own. TS-17C's guided ripples have 4 guides and 1 anchor line.
+        let ids: Vec<&str> = text.split("<path id=\"e").skip(1).filter_map(|rest| rest.split('"').next()).collect();
+        let elements = ids.iter().filter(|id| id.bytes().all(|byte| byte.is_ascii_digit())).count();
+        assert_eq!(elements, design.elements().len() - 2);
+        let helpers = |kind: &str| ids.iter().filter(|id| id.ends_with(kind)).count();
+        assert_eq!((helpers("-guide"), helpers("-anchor"), ids.len() - elements), (4, 1, 5), "{ids:?}");
         assert!(!text.contains("underlays_first"), "{text}");
         assert_eq!(text.matches("inkstitch:contour_underlay=\"true\"").count(), 2, "the pair as drawn");
     }

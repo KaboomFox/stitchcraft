@@ -27,6 +27,32 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     gradients in Ink/Stitch too. They agree by every measure, but where the ledger excuses them. A user page
     has pictures of gradient fills. Golden changed: `TS-17B.pes`, for its new row of gradients, below M10.7's
     herringbone.
+- M10.11: guided ripples (`REQ-RIP-012` to `REQ-RIP-019`). A ripple stitch with a guide sews copies of its
+  line along the guide, as Ink/Stitch's guided ripple does.
+  - Along a guide line, each copy moves to its place and scales from `scale_start` to `scale_end` percent
+    on `scale_axis`. It turns with the guide while `rotate_ripples` is on, and `render_at_rungs` sets a copy
+    at each point of the guide.
+  - A satin guide, a satin column or a guide of several subpaths, sets each copy across its rails where
+    `satin_guide_pattern_position` places it, evenly spaced or at the rungs. `adaptive` places each copy
+    wherever it clears the last. A closed line is centred between the rails, and an anchor line says which
+    points of the line lie on them. The ripple's `reverse_rails` and `swap_satin_rails` read the guide's
+    rails, and a column's.
+  - `grid_size_mm` adds a grid across the ripple's lines, sewn after them, or first with `grid_first`.
+    `manual_pattern_placement` sews the line through its own nodes. Clip paths cut a ripple's needle
+    points, and each part of their area routes the pieces as a tatami fill routes its rows.
+  - The SVG reader takes Ink/Stitch's guide lines and anchor lines from the shape's group, hidden ones too,
+    as Ink/Stitch finds them. A VectorCraft document marks them with paths named `stitch:guide` and
+    `stitch:anchor`.
+  - New settings: `manual_pattern_placement`, `reverse_rails`, `swap_satin_rails`,
+    `satin_guide_pattern_position`, `scale_axis`, `scale_start`, `scale_end`, `rotate_ripples`,
+    `grid_size_mm` and `grid_first`. New code: `SC-W0409` for a guide that can't place copies.
+    `SC-W0406` now names only a column's `push_compensation_mm`, and `SC-W0407` also a guide's places
+    beyond 1,000. New deviations: `DEV-RIP-003` to `DEV-RIP-005`.
+  - TS-17C draws 5 guided ripples at its bottom for MC-12. The differential sews each in Ink/Stitch too. The
+    grid and the clipped zigzag agree by every measure, and the wave, the diamond and the circle by every
+    measure that `DEV-RUN-002` leaves. Every one of the 324 glyphs of the Ondulamarif fonts agrees or
+    differs as the ledger explains, and the known difference M10.8 left them with is gone.
+  - A user page shows guided ripples in pictures.
 - M10.7: herringbone tartans and an editor for setts (`REQ-FILL-TRT-012` to `REQ-FILL-TRT-016`,
   `REQ-VC-021`).
   - With `herringbone_width_mm` above 0 a tartan's rows lie in bands that wide, each band's rows slanting at
@@ -2658,6 +2684,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-17C.pes` (M10.11). The sheet gains 5 guided ripples at its
+  bottom, below M10.8's ripples, in their green after a trim. The plan spans 101.1 × 175 mm, and sews 5,425
+  stitches, 310 more. What the sheet sewed before sews as before, each needle point within the 0.1 mm the
+  file rounds to, since the sheet's middle moved.
 - Added `conformance/golden/testsheets/TS-17B.pes` (M10.6), the tartans of the new fills' sheet that MC-12
   sews: 23 colour blocks, 28,658 stitches.
 - Changed `conformance/golden/testsheets/TS-17C.pes` (M10.8). The sheet gains 3 ripple stitches at its

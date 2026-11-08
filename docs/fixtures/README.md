@@ -15,6 +15,8 @@ which VectorCraft traced ([below](#the-traced-pear)). Test inputs live in `confo
 | `wave.svg` | A smooth wave | running stitch length |
 | `zigzag.svg` | The same wave, drawn 3 mm wide | the zigzag stroke's spacing and angle, and a satin column drawn as one path |
 | `ripple.svg` | An arch, half a circle 30 mm across, open at the bottom | the ripple stitch's lines and joins |
+| `ripple-guide.svg` | A wave 12 mm long, grouped with an arch that Ink/Stitch's guide-line marker makes a guide | the ripple stitch's guide lines |
+| `ripple-satin-guide.svg` | A zigzag, grouped with a satin guide: a curved band 12 mm wide between 2 rails, with 3 rungs | the ripple stitch's satin guides |
 | `e-stitch.svg` | A curved band 4 mm wide between 2 rails | the E-stitch's spacing and swapped rails |
 | `s-stitch.svg` | A curved band 6 mm wide between 2 rails | the S-stitch's spacing and split stitches, the zigzag satin's spacing and its look beside a satin column, and the satin column's spacing and underlays |
 | `crossing.svg` | 2 bands 5 mm wide and 16 mm long between 2 rails each, a bar and a post that cross at their middles | satin columns sewn as drawn and with their underlays first |
