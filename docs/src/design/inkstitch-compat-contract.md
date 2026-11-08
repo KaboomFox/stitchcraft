@@ -10,10 +10,13 @@ registry uses these names as its keys so files move between the tools unchanged
 - **Checked against:** Ink/Stitch `main` at `d59c9ab` (2026-09-17). The last line counts the declarations.
 - **Facts only:** names, types, units, defaults and applicability. Ink/Stitch's descriptions are GPL text
   and are not copied; StitchCraft's own help text lives in the [parameter registry](params.md).
-- **Machine-readable source:** `conformance/inkstitch-params.toml`; this page is generated from it and
-  from the parameter registry by `cargo xtask docs`, and `cargo xtask docs --check` fails if they disagree:
-  a parameter declared with an Ink/Stitch origin must be listed here with a compatible type, and its
-  default must be the value Ink/Stitch sews.
+- **Machine-readable source:** `conformance/inkstitch-params.toml`. `cargo xtask docs` generates this page
+  from it and from the parameter registry, and `cargo xtask docs --check` fails if they disagree. A
+  parameter declared with an Ink/Stitch origin must be listed here with a compatible type, and its default
+  must be the value Ink/Stitch sews. In the other direction, a registered row's parameter must apply to
+  each stitch type of the row that StitchCraft sews, unless the section
+  [Settings a stitch type does not take](#settings-a-stitch-type-does-not-take) gives the reason. A
+  stitch type sewn as another takes that one's settings, as a legacy fill takes a tatami fill's.
 - **Default** is the value Ink/Stitch's settings window shows. For a few parameters its code sews another
   value when a file sets none, and the cell gives that value after the default, as in `0.1 (0.2 when
   unset)`. `—` means no default: the value is derived from another parameter or the shape.
@@ -199,6 +202,16 @@ registry uses these names as its keys so files move between the tools unchanged
 | `clone` | toggle | — | true | clones | P2 (M8) | applied: off, the clone sews nothing, and is listed (`SC-I0805`) |
 | `angle` | float | deg | — | clones | P2 (M8) | applied: the angle of every fill the clone shows, in place of the one the clone turns it to |
 | `flip_angle` | boolean | — | false | clones | P2 (M8) | applied: reverses the angle of every fill the clone shows |
+
+## Settings a stitch type does not take
+
+Ink/Stitch gives each stitch type here the settings beside it, and StitchCraft's registry doesn't, for the
+reason given. They are the `[[unapplied]]` entries of `conformance/inkstitch-params.toml`. Every other
+stitch type that StitchCraft sews takes the registered settings that its rows give it.
+
+| Element | Stitch type | Settings | Reason |
+|---|---|---|---|
+| fill | `cross_stitch` | `fill_underlay`, `fill_underlay_angle`, `fill_underlay_row_spacing_mm`, `fill_underlay_max_stitch_length_mm`, `fill_underlay_inset_mm`, `fill_underlay_skip_last`, `underlay_underpath` | Ink/Stitch's settings window shows the underlay's settings for every fill method, and its cross stitch sews no underlay. Its fill element's `to_stitch_groups` sews the underlay for every method but `legacy_fill` and `cross_stitch`, and a cross stitch's stitches come from `do_cross_stitch` alone (lib/elements/fill_stitch.py at d59c9ab). StitchCraft's cross stitch sews no underlay either. |
 
 ## Method identifiers
 

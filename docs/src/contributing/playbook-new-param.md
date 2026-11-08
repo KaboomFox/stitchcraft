@@ -17,7 +17,10 @@
 6. **Regenerate docs:** `cargo xtask docs` writes the reference page, the JSON Schema and the
    compatibility contract's StitchCraft column, and checks the declaration against the contract. An
    Ink/Stitch parameter needs a compatible type and the default Ink/Stitch sews, and a deliberate
-   difference needs an entry in `conformance/deviations.toml`. Add a before/after shot if the effect is
-   visual.
+   difference needs an entry in `conformance/deviations.toml`. Its declaration must also apply to each
+   stitch type that StitchCraft sews among those its contract rows give it, unless an `[[unapplied]]`
+   entry in `conformance/inkstitch-params.toml` gives the reason
+   ([the contract check](../design/params.md#completeness-req-prm-001)). Add a before/after shot if the
+   effect is visual.
 7. **Changing** an existing parameter's meaning, unit or default is a breaking change: add a migration
    and a case with old input, and a changelog line.
