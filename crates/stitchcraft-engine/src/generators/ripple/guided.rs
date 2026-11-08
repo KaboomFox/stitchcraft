@@ -80,7 +80,8 @@ pub enum RippleGuide {
 /// `reverse_rails` and `swap_satin_rails` for a satin guide's rails: a satin column when its own
 /// `satin_column` is on or it has several subpaths, as Ink/Stitch reads a guide, and otherwise a line, its
 /// nodes for a guide sewn as a manual stitch. `None`, with the reason in `diagnostics`, when a satin guide's
-/// settings don't read: what reading them warns of, and `SC-W0409` in place of its errors ([`unsaid`]).
+/// settings don't read: what reading them warns of, and `SC-W0409` in place of their errors, which would refuse
+/// the ripple.
 pub fn guide(guide: &Guide, own: &RippleParams, diagnostics: &mut Vec<Diagnostic>) -> Option<RippleGuide> {
     let satin = guide.params.get(SATIN_COLUMN).and_then(toggle) == Some(true) || guide.path.subpaths.len() > 1;
     if !satin {
