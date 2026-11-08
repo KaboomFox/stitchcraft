@@ -2701,6 +2701,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-17B.pes` (M10.12). The sheet gains a third row of 3 linear
+  gradients 40 mm square below its tartans. They sew in 7 colour blocks, a trim after each. The plan
+  spans 130 × 130 mm and sews 45,390 stitches with 35 jumps, 7,395 and 7 more. The 5 tartans and the
+  herringbone's first colour sew as before, 22.5 mm higher in the file, whose middle moved down with the
+  new row. The herringbone's other 4 colours are routed otherwise, now that the gradients come after them.
 - Changed `conformance/golden/testsheets/TS-13C.pes` (automatic digitizing, the end of a column along its
   cut). The digitized star's right-hand point now sews from its tip to its cut, ending beside the star's
   middle, as its line now ends at the triangles that touch the cut. Its underlay runs out to the tip first.
