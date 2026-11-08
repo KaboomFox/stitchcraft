@@ -368,7 +368,8 @@ fn req_route_006_a_route_is_the_same_each_time_and_runs_out_of_work_without_a_pi
     let once = routed(&drawn, Tool::Satins.defaults(), [None, None]);
     assert_eq!(once, routed(&drawn, Tool::Satins.defaults(), [None, None]));
     let small = Budget { max_work: 10_000, ..Budget::DEFAULT };
-    let out = route(&drawn, &Route { tool: Tool::Satins, options: Tool::Satins.defaults(), start: None, end: None }, &DesignSettings::default(), &small);
+    let out =
+        route(&drawn, &Route { tool: Tool::Satins, options: Tool::Satins.defaults(), start: None, end: None }, &DesignSettings::default(), &small);
     assert!(out.pieces.is_empty() && out.replaced.is_empty());
     assert_eq!(
         out.diagnostics.iter().map(ToString::to_string).collect::<Vec<_>>(),

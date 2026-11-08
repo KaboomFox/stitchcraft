@@ -11,9 +11,12 @@ fn routed(elements: &[Element], options: Options, [start, end]: [Option<Point>; 
     route(elements, &Route { tool: Tool::Runs, options, start, end }, &DesignSettings::default(), &Budget::DEFAULT)
 }
 
-/// Each element of the route: its name, the element it comes from, whether it runs under the others, its
+/// An element of a route: its name, the element it comes from, whether it runs under the others, its
 /// settings as `key=value`, and its points.
-fn sewn(routed: &crate::route::Routed) -> Vec<(String, usize, bool, Vec<String>, Vec<(f64, f64)>)> {
+type Sewn = (String, usize, bool, Vec<String>, Vec<(f64, f64)>);
+
+/// Each element of the route ([`Sewn`]).
+fn sewn(routed: &crate::route::Routed) -> Vec<Sewn> {
     routed
         .pieces
         .iter()
@@ -106,7 +109,8 @@ fn req_route_012_a_jump_longer_than_0_75_mm_trims_and_the_runs_under_the_others_
         .map(|(name, points)| (name.to_string(), points)),
     );
     assert_eq!(names_and_points(&routed), want);
-    let trims: Vec<String> = sewn(&routed).into_iter().filter(|(.., params, _)| params.contains(&"trim_after=true".to_string())).map(|s| s.0).collect();
+    let trims: Vec<String> =
+        sewn(&routed).into_iter().filter(|(.., params, _)| params.contains(&"trim_after=true".to_string())).map(|s| s.0).collect();
     assert_eq!(trims, ["AutoRun 8", "AutoRun 13"]);
     assert_eq!(RUN_TRIMMED, 0.75);
     // A jump exactly 0.75 mm long doesn't trim, and a hair longer does.
@@ -134,7 +138,8 @@ fn req_route_012_any_long_jump_of_2_in_a_row_trims_where_ink_stitch_looks_only_a
         stroke("c", &[(29.6, 55.35), (22.0, 59.0)], &[]),
     ];
     let routed = routed_trimmed(&lines);
-    let trims: Vec<(String, bool)> = sewn(&routed).into_iter().map(|(name, .., params, _)| (name, params.contains(&"trim_after=true".to_string()))).collect();
+    let trims: Vec<(String, bool)> =
+        sewn(&routed).into_iter().map(|(name, .., params, _)| (name, params.contains(&"trim_after=true".to_string()))).collect();
     let want = [("AutoRun 1", true), ("AutoRun 2", false), ("AutoRun Underpath 3", false), ("AutoRun 4", true), ("AutoRun 5", false)];
     assert_eq!(trims, want.map(|(name, trims)| (name.to_string(), trims)));
 }
@@ -191,7 +196,14 @@ fn req_route_012_with_preserve_order_every_subpath_of_a_stroke_is_sewn() {
     };
     let lines = [stroke("e0", &[(10.0, 40.0), (30.0, 40.0)], &[]), middle, stroke("e2", &[(62.0, 40.0), (80.0, 40.0)], &[])];
     let routed = routed(&lines, Options { preserve_order: true, ..Tool::Runs.defaults() }, [None, None]);
-    let below: Vec<&(String, Vec<(f64, f64)>)> = names_and_points(&routed).iter().filter(|(_, points)| points.iter().any(|q| q.1 == 70.0)).cloned().collect::<Vec<_>>().leak().iter().collect();
+    let below: Vec<&(String, Vec<(f64, f64)>)> = names_and_points(&routed)
+        .iter()
+        .filter(|(_, points)| points.iter().any(|q| q.1 == 70.0))
+        .cloned()
+        .collect::<Vec<_>>()
+        .leak()
+        .iter()
+        .collect();
     assert_eq!(below.len(), 2, "out under and back on top: {below:?}");
     assert_eq!(routed.pieces.iter().map(|piece| piece.from).collect::<Vec<_>>().first(), Some(&0));
     assert_eq!(routed.pieces.last().map(|piece| piece.from), Some(2));
@@ -242,7 +254,8 @@ fn req_route_011_an_even_number_of_repeats_is_lowered_by_1_on_top_and_an_odd_one
 fn req_route_011_each_element_keeps_its_stroke_s_thread_and_stroke_and_nothing_that_places_it() {
     // The rail, the post and the brace of the network, each with a thread, a stroke, positions and a clip of
     // its own.
-    let square = Path { subpaths: vec![Subpath { closed: true, ..crate::route::tests::line(&[(0.0, 0.0), (60.0, 0.0), (60.0, 60.0), (0.0, 60.0)]) }] };
+    let square =
+        Path { subpaths: vec![Subpath { closed: true, ..crate::route::tests::line(&[(0.0, 0.0), (60.0, 0.0), (60.0, 60.0), (0.0, 60.0)]) }] };
     let dress = |mut element: Element, colour: u8, width: f64| {
         element.thread = Thread::new(Rgb::new(colour, 0, 0));
         element.shape = Shape::Stroke { path: element.shape.path().clone(), width: Mm::new(width).unwrap(), join: Join::Round, cap: Cap::Square };
@@ -255,7 +268,9 @@ fn req_route_011_each_element_keeps_its_stroke_s_thread_and_stroke_and_nothing_t
     let routed = routed(&lines, Tool::Runs.defaults(), [None, None]);
     for (k, piece) in routed.pieces.iter().enumerate() {
         let source = &lines[piece.from];
-        let (Shape::Stroke { width, join, cap, .. }, Shape::Stroke { width: drawn, .. }) = (&piece.element.shape, &source.shape) else { panic!("strokes") };
+        let (Shape::Stroke { width, join, cap, .. }, Shape::Stroke { width: drawn, .. }) = (&piece.element.shape, &source.shape) else {
+            panic!("strokes")
+        };
         assert_eq!((&piece.element.thread, width, join, cap), (&source.thread, drawn, &Join::Round, &Cap::Square), "{k}");
         assert_eq!((piece.element.hints, piece.element.clips.len(), piece.element.automatic), (Hints::default(), 0, false), "{k}");
         assert_eq!(piece.element.id, ElementId::new(format!("{}#{}", source.id, k + 1)).unwrap());
@@ -271,7 +286,9 @@ fn a_point_that_repeats_the_one_before_to_within_a_millionth_of_a_millimetre_is_
     let element = stroke("s", &[(0.0, 0.0), (10.0, 0.0)], &[]);
     let routed = [Stroke { element: 0, stitch_type: StitchType::RunningStitch, repeats: 1, pieces: Vec::new() }];
     let made = |points: Vec<Point>| Made { stroke: 0, under: true, points };
-    let piece = super::element(&made(vec![p(0.0, 0.0), p(5e-7, 0.0), p(1e-6, 0.0), p(10.0, 0.0)]), (&routed, std::slice::from_ref(&element)), 3, false).unwrap();
+    let piece =
+        super::element(&made(vec![p(0.0, 0.0), p(5e-7, 0.0), p(1e-6, 0.0), p(10.0, 0.0)]), (&routed, std::slice::from_ref(&element)), 3, false)
+            .unwrap();
     assert_eq!(lines_of(&piece.element), [vec![p(0.0, 0.0), p(1e-6, 0.0), p(10.0, 0.0)]]);
     assert_eq!(piece.element.name.as_deref(), Some("AutoRun Underpath 3"));
     // A run whose points are all one is none.

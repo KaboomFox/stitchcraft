@@ -80,7 +80,11 @@ pub(super) fn network(d: &mut Drawing, half: &str, right: f64, thread: &Thread) 
     // A quarter circle of radius 10 about (36, 82), from the rail up to (36, 72).
     let k = 10.0 * KAPPA;
     let point = |x: f64, y: f64| Point::new(x + right, y);
-    let hook = Subpath { start: point(26.0, 82.0)?, segments: vec![Segment::Cubic(point(26.0, 82.0 - k)?, point(36.0 - k, 72.0)?, point(36.0, 72.0)?)], closed: false };
+    let hook = Subpath {
+        start: point(26.0, 82.0)?,
+        segments: vec![Segment::Cubic(point(26.0, 82.0 - k)?, point(36.0 - k, 72.0)?, point(36.0, 72.0)?)],
+        closed: false,
+    };
     d.along(&name("hook"), hook, thread, &LINE_SETTINGS)?;
     d.polyline(&name("loop"), &at(&[(14.0, 61.0), (24.0, 67.0), (24.0, 61.0), (17.0, 66.0)]), thread, &LINE_SETTINGS)?;
     d.polyline(&name("tick"), &at(&[(34.0, 82.5), (35.0, 85.0)]), thread, &LINE_SETTINGS)
