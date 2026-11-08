@@ -460,9 +460,9 @@ After sewing, check:
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
-![TS-17C as it will sew, in blue: the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E's arms. At the bottom the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next.](../../images/generated/testsheet-ts-17c.png)
+![TS-17C as it will sew, in blue: the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E's arms. Below them the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next. At the bottom, in red, 2 crosses of satin columns 5 mm wide, a bar and a post each, as drawn on the left and with their underlays first on the right, which look alike from above.](../../images/generated/testsheet-ts-17c.png)
 
-![TS-17C's letters ROUTE drawn as thin lines, twice: at the top as drawn, and at the bottom as Auto-Route Satin Columns routes them. Dashed lines are jumps, which the reference machine leaves as threads to cut by hand, and orange rings mark lock stitches. The routed letters jump only from one letter to the next.](../../images/generated/routing-letters.png)
+![TS-17C's letters ROUTE drawn as thin lines, twice: at the top as drawn, and below them as Auto-Route Satin Columns routes them. Dashed lines are jumps, which the reference machine leaves as threads to cut by hand, and orange rings mark lock stitches. The routed letters jump only from one letter to the next. At the bottom are the sheet's 2 crosses of red satin columns.](../../images/generated/routing-letters.png)
 
 Threads: Blue, Red.
 

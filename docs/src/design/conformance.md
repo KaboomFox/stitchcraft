@@ -302,9 +302,12 @@ version. A case may name a test sheet drawn as a design instead (`sheet`). Both 
 of the elements StitchCraft sews the sheet with, written with their parameters, their start, end and
 target positions as Ink/Stitch's commands and their clips as clip paths, the design's origin and stop
 position as commands too, and its turn on export (`stitchcraft_testkit::inkstitch`), which StitchCraft's
-reader reads back unchanged (`REQ-PRM-003`). An element a sheet draws as a clone of another is written as
-a `<use>` of it, and each command in a group with its connector, as Ink/Stitch's Attach Commands writes
-them, since Ink/Stitch moves a command its clone copies only from a group. Automatic digitizing chooses
+reader reads back unchanged (`REQ-PRM-003`). The file leaves out an element that sets a setting of
+StitchCraft's own that its stitch type reads, which Ink/Stitch would pass over and sew otherwise
+(`sewn_alike`). So TS-17C's file has no crossing columns with their underlays first. An element a sheet
+draws as a clone of another is written as a `<use>` of it, and each command in a group with its
+connector, as Ink/Stitch's Attach Commands writes them, since Ink/Stitch moves a command its clone copies
+only from a group. Automatic digitizing chooses
 ordinary elements with Ink/Stitch's parameters, so Ink/Stitch can sew what StitchCraft chose, and the
 TS-13 sheets check StitchCraft's stitches of those choices against Ink/Stitch's (`REQ-AUTO-021`). TS-11B
 checks the contour fills so, each strategy and join style among them (`REQ-FILL-CON-008`), and its
