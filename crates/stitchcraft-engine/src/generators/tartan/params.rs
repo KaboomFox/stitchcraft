@@ -26,6 +26,10 @@ use crate::generators::tatami::sew::{Layer, Travel};
 /// The stitch types a tartan fill's own settings apply to.
 const TARTAN: &[StitchType] = &[StitchType::TartanFill];
 
+/// The stitch types whose colours can travel on to the fill's end: a tartan fill's, and a linear gradient
+/// fill's, which reads no other setting of its own.
+const STOPPING: &[StitchType] = &[StitchType::LinearGradientFill, StitchType::TartanFill];
+
 params! {
     /// Tartan fill: rows of running stitches across the fill, a twill of warp and weft that weaves a plaid.
     /// The sett gives the stripes, each a colour and a width, and the rows go to the warp's stripes and the
@@ -56,11 +60,14 @@ params! {
         /// before. 0 sews straight rows. StitchCraft sews herringbones from M10.7, and until then the rows are
         /// sewn without them, which `SC-W0324` says.
         herringbone_width_mm: Length = "0", label "Herringbone width", range (0.0, 100.0);
+    }
 
-        /// End every colour at the fill's end position, or near the next element: each colour then travels
-        /// from where the fill starts and to where it ends. Off, each colour starts where the one before ended
-        /// and ends with its last row, and only the fill's runs travel on towards its end.
-        stop_at_ending_point: Toggle = "false", label "Stop at the end position";
+    "Colours" {
+        /// End the fill's colours at its end position, or near the next element. A tartan fill's every colour
+        /// then travels from where the fill starts to where it ends, and a linear gradient fill's last 2
+        /// colours travel on to the end after their rows. Off, each colour ends with its last row, and a
+        /// tartan starts each colour where the one before ended, and only its runs travel on towards its end.
+        stop_at_ending_point: Toggle = "false", label "Stop at the end position", applies STOPPING;
     }
 }
 

@@ -24,7 +24,8 @@
 //! itself. A fill whose `fill` setting is off sews nothing, and nothing is said of it (`REQ-FILL-003`).
 //! Another fill's area is built first ([`crate::normalize::region`]), so what is left out of it is said
 //! even when its settings cannot be used, and its `fill_method` then picks the generator: a tatami fill
-//! ([`crate::generators::tatami`]), a contour, meander, circular or tartan fill, or a cross stitch.
+//! ([`crate::generators::tatami`]), a contour, meander, circular, linear gradient or tartan fill, or a cross
+//! stitch.
 //!
 //! An element is cut to its clips, the clip paths round it, before its generator sees it (`REQ-GEN-005`): a
 //! fill's area when it is built ([`region::build_clipped`]), and a stroke's subpaths where they cross a
@@ -38,15 +39,17 @@ use std::borrow::Cow;
 use stitchcraft_core::{Budget, Code, Diagnostic, Exhausted, Meter, Mm, Point, SplitMix64};
 use stitchcraft_params::kinds::{Choice, Toggle};
 use stitchcraft_params::{
-    ChoiceOption, Family, ParamKind, ParamSet, ParamSpec, StitchType, Validated, find, left_to_others, params, read_param, unknown_keys,
+    ChoiceOption, Family, ParamKind, ParamSet, ParamSpec, StitchType, Validated, find, left_to_others, normalized_angle, params, read_param,
+    unknown_keys,
 };
 use stitchcraft_plan::{MachineProfile, Rgb};
 
 use crate::common::{CommonParams, STOP_AFTER, TRIM_AFTER};
-use crate::design::{DesignSettings, Element, Hints, Join, Path, Shape};
+use crate::design::{DesignSettings, Element, Gradient, Hints, Join, Path, Shape};
 use crate::generators::circular::{self, Circular, circular_fill};
 use crate::generators::contour::{self, Contour, ContourParams, Stitching, contour_fill};
 use crate::generators::cross::{self, Cross, CrossParams, cross_stitch};
+use crate::generators::gradient::{self, Colouring, GradientFill, Stitching as GradientStitching, gradient_fill};
 use crate::generators::manual::{self, manual_stitch};
 use crate::generators::meander::{self, Meander, MeanderParams, meander_fill};
 use crate::generators::passes::{PathFillParams, RepeatParams};
@@ -109,8 +112,8 @@ params! {
 
         /// The stitch the area is filled with. A tatami fill sews rows of running stitches across it, a
         /// contour fill rings that follow its outline inward, a meander fill one line that wanders through a
-        /// tiling, a circular fill a spiral round its middle, and a tartan fill a plaid of rows in the
-        /// colours of its sett. A fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without
+        /// tiling, a circular fill a spiral round its middle, a linear gradient fill rows in the colours of
+        /// its linear gradient, and a tartan fill a plaid of rows in the colours of its sett. A fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without
         /// underlay (`SC-W0314`). The other methods arrive in later versions; until then an element set to
         /// one is skipped (`SC-W0011`).
         fill_method: Choice = "tatami_fill", label "Fill method", choices FILL_METHODS;
@@ -248,16 +251,19 @@ pub fn stops_after(element: &Element) -> bool {
 
 /// The colours of the threads `element` sews in, in their order, read before it is generated, as the
 /// sewing order needs them (`crate::auto`, `REQ-AUTO-024`): its own thread's, for every stitch type but a
-/// tartan fill. A tartan gives its runs threads of their own ([`Stitched::colours`]), and they are read here
-/// from its settings alone: its own thread for its underlay, when it has one, then the colours of its sett
-/// ([`tartan::threads`]). M10.12's gradient fill will give its stops' so too.
+/// tartan or a linear gradient fill. Those give their runs threads of their own ([`Stitched::colours`]), read
+/// here from their settings and paint alone. A tartan's own thread sews its underlay, when it has one, then
+/// the colours of its sett ([`tartan::threads`]). A gradient's first stop's colour sews its underlay, then the
+/// colours of its stops ([`gradient::threads`]).
 pub(crate) fn colours(element: &Element) -> Vec<Rgb> {
     let own = element.thread.color;
-    if !matches!(element.shape, Shape::Fill { .. }) || stitch_type_of(element, &DesignSettings::default()) != Some(StitchType::TartanFill) {
-        return vec![own];
+    let Shape::Fill { gradient, .. } = &element.shape else { return vec![own] };
+    let underlay = || setting::<Toggle>(&element.params, TatamiParams::SPECS, "fill_underlay", &mut Vec::new()).unwrap_or(true);
+    match stitch_type_of(element, &DesignSettings::default()) {
+        Some(StitchType::TartanFill) => tartan::threads(&element.params, own, underlay()),
+        Some(StitchType::LinearGradientFill) => gradient::threads(gradient.as_ref(), own, underlay()),
+        _ => vec![own],
     }
-    let underlay = setting::<Toggle>(&element.params, TatamiParams::SPECS, "fill_underlay", &mut Vec::new()).unwrap_or(true);
-    tartan::threads(&element.params, own, underlay)
 }
 
 /// The value of the parameter `key` of the declaration whose parameters are `specs`, read alone from `set`,
@@ -398,7 +404,7 @@ fn top_rows_of(
     let Some(Prepared { region, common, sewing }) = prepare(element, settings, profile, diagnostics, meter)? else { return Ok(None) };
     // A contour, meander or circular fill has no rows: the preview shows its path, round the rings, through
     // the tile as the element's seed lays it, or along the spiral's pieces. A cross stitch fill shows its
-    // crosses' bars, or its half crosses' diagonals.
+    // crosses' bars, or its half crosses' diagonals. A tartan or a linear gradient fill shows every colour's lines.
     match sewing.stitch_type {
         StitchType::ContourFill => {
             let Some(contour) = contour_settings(&sewing, diagnostics) else { return Ok(None) };
@@ -420,6 +426,11 @@ fn top_rows_of(
         StitchType::TartanFill => {
             let Some(tartan) = tartan_settings(&sewing, diagnostics) else { return Ok(None) };
             return tartan::top_path(&region, &tartan, meter).map(Some);
+        }
+        StitchType::LinearGradientFill => {
+            let Some(fill) = gradient_settings(&sewing, diagnostics) else { return Ok(None) };
+            let rng = SplitMix64::for_element(element.id.as_str(), common.as_ref().and_then(|common| common.random_seed));
+            return gradient::top_path(&region, &fill, &rng, meter).map(Some);
         }
         _ => {}
     }
@@ -477,7 +488,11 @@ fn prepare<'a>(
         force_locks: common.force_lock_stitches,
     });
     let own = element.thread.color;
-    Ok(Some(Prepared { region, common, sewing: Sewing { set, stitch_type, shared, hints: element.hints, own } }))
+    let gradient = match &element.shape {
+        Shape::Fill { gradient, .. } => gradient.as_ref(),
+        Shape::Stroke { .. } => None,
+    };
+    Ok(Some(Prepared { region, common, sewing: Sewing { set, stitch_type, shared, hints: element.hints, own, gradient } }))
 }
 
 /// What the settings every stitch type shares give an element's generator.
@@ -506,6 +521,8 @@ struct Sewing<'a> {
     hints: Hints,
     /// Its own thread's colour, which a tartan fill sews its underlay in.
     own: Rgb,
+    /// The linear gradient a fill is painted with, which a linear gradient fill sews.
+    gradient: Option<&'a Gradient>,
 }
 
 /// A declaration's `from_set_as`, which reads its parameters as an element of a stitch type reads them.
@@ -556,6 +573,7 @@ enum FillMethod {
     Circular(Circular),
     Cross(Cross),
     Tartan(Tartan),
+    Gradient(GradientFill),
 }
 
 impl FillMethod {
@@ -568,6 +586,7 @@ impl FillMethod {
             StitchType::CircularFill => circular_settings(sewing, diagnostics).map(FillMethod::Circular),
             StitchType::CrossStitch => cross_settings(sewing, diagnostics).map(FillMethod::Cross),
             StitchType::TartanFill => tartan_settings(sewing, diagnostics).map(FillMethod::Tartan),
+            StitchType::LinearGradientFill => gradient_settings(sewing, diagnostics).map(FillMethod::Gradient),
             _ => fill_settings(sewing, diagnostics).map(FillMethod::Tatami),
         }
     }
@@ -589,6 +608,7 @@ impl FillMethod {
             FillMethod::Cross(cross) => cross_stitch(region, cross, needle, next, meter),
             FillMethod::Tatami(fill) => tatami_fill(region, fill, needle, next, rng, meter),
             FillMethod::Tartan(tartan) => tartan_fill(region, tartan, needle, next, rng, meter),
+            FillMethod::Gradient(fill) => gradient_fill(region, fill, needle, next, rng, meter),
         }
     }
 
@@ -601,6 +621,7 @@ impl FillMethod {
             FillMethod::Meander(meander) => Some((&meander.underlay, meander.inset, meander.travel)),
             FillMethod::Circular(circular) => Some((&circular.underlay, circular.inset, circular.travel)),
             FillMethod::Tartan(tartan) => Some((&tartan.underlay, tartan.inset, tartan.travel)),
+            FillMethod::Gradient(fill) => Some((&fill.underlay, fill.inset, fill.travel)),
             FillMethod::Cross(_) => None,
         }
     }
@@ -614,6 +635,7 @@ impl FillMethod {
             FillMethod::Meander(meander) => meander.underlay.clear(),
             FillMethod::Circular(circular) => circular.underlay.clear(),
             FillMethod::Tartan(tartan) => tartan.underlay.clear(),
+            FillMethod::Gradient(fill) => fill.underlay.clear(),
             FillMethod::Cross(_) => {}
         }
         top
@@ -759,6 +781,47 @@ fn tartan_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Option
         own: sewing.own,
     };
     own.tartan(given, diagnostics)
+}
+
+/// The linear gradient fill `sewing` describes, its settings read as a linear gradient fill reads them: the
+/// tatami fill's rows, `skip_last`, expand and underlay, the running stitch's length and tolerance for its
+/// travel, its random lengths, and `stop_at_ending_point`. Its rows lie square to its gradient. Without one,
+/// they lie square to `angle`, along which its own colour fades out, which `SC-W0329` says. Its underlay runs
+/// along the gradient unless `fill_underlay_angle` sets its angles. `None` when its settings cannot be read,
+/// which `diagnostics` says. Its longest stitch, its underlay's, and its running stitch's length are raised as
+/// a tatami fill's are. Its needle travels along the outline, never under its rows, as Ink/Stitch's does.
+fn gradient_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Option<GradientFill> {
+    let tatami = sewing.read(TatamiParams::from_set_as, diagnostics);
+    let running = sewing.read(RunningParams::from_set_as, diagnostics);
+    let stopping = sewing.read(TartanParams::from_set_as, diagnostics);
+    let (Some(mut tatami), Some(running), Some(stopping), Some(shared)) = (tatami, running, stopping, sewing.shared) else { return None };
+    let colouring = match sewing.gradient {
+        Some(gradient) => {
+            tatami.fill_underlay_angle.get_or_insert_with(|| vec![normalized_angle(gradient::underlay_angle(gradient))]);
+            Colouring::Gradient(gradient.clone())
+        }
+        None => {
+            let message = "This linear gradient fill's shape is painted without a linear gradient, so its own colour fades out along its \
+                           angle, its rows thinning out to none, as Ink/Stitch sews it.";
+            diagnostics.push(Diagnostic::new(Code::FillGradientNone, message));
+            Colouring::Fade(tatami.angle)
+        }
+    };
+    let (longest, travel) = fill_lengths(&mut tatami, &running, shared, diagnostics)?;
+    let jitter = running.random_stitch_length_jitter_percent / 100.0;
+    let random = running.enable_random_stitch_length.then_some((jitter, running.running_stitch_tolerance_mm.get(), shared.min_stitch.get()));
+    Some(GradientFill {
+        colouring,
+        spacing: tatami.row_spacing_mm.get(),
+        stitching: GradientStitching { longest: longest.get(), staggers: tatami.staggers, random },
+        skip_last: tatami.skip_last,
+        stop_at_end: stopping.stop_at_ending_point,
+        underlay: tatami.underlay(longest, travel),
+        inset: tatami.fill_underlay_inset_mm.get(),
+        expand: tatami.expand_mm.get(),
+        travel,
+        own: sewing.own,
+    })
 }
 
 /// The tatami fill `sewing` describes, its settings read as its stitch type reads them; `None` when they
@@ -944,7 +1007,7 @@ fn ripple(
 /// a satin column its rails as they are sewn when it starts at its nearest point and otherwise its first
 /// rail's start. A satin column too narrow to stitch across is a stroke (`REQ-SAT-015`). A tatami fill, a
 /// fill set to Ink/Stitch's legacy fill, which is sewn as one (`REQ-FILL-005`), and a contour, meander,
-/// circular, tartan or cross stitch fill start at their point nearest the needle and offer their area, their parts,
+/// circular, linear gradient, tartan or cross stitch fill start at their point nearest the needle and offer their area, their parts,
 /// even when set not to be sewn, as Ink/Stitch's next element is the next in the drawing. Where its stitch
 /// type is known, an
 /// element offers what Ink/Stitch's would, even of a method StitchCraft does not sew yet (ADR 0014): a
@@ -972,6 +1035,7 @@ pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -
                     | StitchType::MeanderFill
                     | StitchType::CircularFill
                     | StitchType::CrossStitch
+                    | StitchType::LinearGradientFill
                     | StitchType::TartanFill
             ) =>
         {
@@ -1035,7 +1099,7 @@ mod tests {
     use stitchcraft_plan::{Rgb, Thread};
 
     use super::*;
-    use crate::design::{Cap, FillRule, Segment, Subpath};
+    use crate::design::{Cap, FillRule, GradientStop, Segment, Subpath};
 
     fn element(shape: Shape, params: &[(&str, &str)]) -> Element {
         let thread = Thread::new(Rgb::new(0, 0, 0));
@@ -1189,7 +1253,7 @@ mod tests {
         let neighbours = Neighbours::default();
         let sew = |set: &ParamSet, stitch_type, shared, diagnostics: &mut Vec<Diagnostic>| {
             let (rng, meter) = (&mut SplitMix64::new(1), &mut Budget::DEFAULT.meter());
-            let sewing = Sewing { set: Cow::Borrowed(set), stitch_type, shared, hints: Hints::default(), own: Rgb::new(0, 0, 0) };
+            let sewing = Sewing { set: Cow::Borrowed(set), stitch_type, shared, hints: Hints::default(), own: Rgb::new(0, 0, 0), gradient: None };
             fill(&sewing, &neighbours, &region, rng, diagnostics, meter).unwrap()
         };
         let mut diagnostics = Vec::new();
@@ -1250,6 +1314,24 @@ mod tests {
     }
 
     #[test]
+    fn req_fill_grd_008_a_gradient_fill_s_threads_are_read_from_its_paint() {
+        let (black, red, blue) = (Rgb::new(0, 0, 0), Rgb::new(255, 0, 0), Rgb::new(0, 0, 255));
+        let segments = [p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0)].map(Segment::Line).to_vec();
+        let stops = vec![GradientStop { offset: 0.0, colour: red, opacity: 1.0 }, GradientStop { offset: 1.0, colour: blue, opacity: 1.0 }];
+        let square = Shape::Fill {
+            path: Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments, closed: true }] },
+            rule: FillRule::NonZero,
+            gradient: Some(Gradient { start: p(0.0, 0.0), end: p(10.0, 0.0), stops }),
+        };
+        // Its underlay in the first stop's colour, then the stops' colours; without underlay, the colours
+        // alone. Another fill method sews the shape in its own thread.
+        let method = ("fill_method", "linear_gradient_fill");
+        assert_eq!(colours(&element(square.clone(), &[method])), [red, red, blue]);
+        assert_eq!(colours(&element(square.clone(), &[method, ("fill_underlay", "false")])), [red, blue]);
+        assert_eq!(colours(&element(square, &[])), [black]);
+    }
+
+    #[test]
     fn each_fill_method_with_an_underlay_gives_it_and_sews_its_top_without_it() {
         // The underlay a fill in a run of underlays first sews apart, and the fill without it that sews its top.
         let shared =
@@ -1264,7 +1346,7 @@ mod tests {
         ];
         for (stitch_type, underlaid) in methods {
             let set = ParamSet::new();
-            let sewing = Sewing { set: Cow::Borrowed(&set), stitch_type, shared, hints: Hints::default(), own: Rgb::new(0, 0, 0) };
+            let sewing = Sewing { set: Cow::Borrowed(&set), stitch_type, shared, hints: Hints::default(), own: Rgb::new(0, 0, 0), gradient: None };
             let method = FillMethod::read(&sewing, &mut Vec::new()).unwrap();
             let layers = |method: &FillMethod| method.underlay().map(|(layers, inset, travel)| (layers.len(), inset, travel.min_stitch));
             assert_eq!(layers(&method), underlaid.then_some((1, 0.0, 0.3)), "{stitch_type:?}");
