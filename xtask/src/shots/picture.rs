@@ -55,8 +55,8 @@ pub(super) fn problems(shot: &Shot) -> Vec<String> {
         (None, Some(name)) => found.push(format!("there is no picture `{name}` drawn in code (known: {})", names())),
         _ => found.push(format!("a picture shot draws a design (`fixture = \"…\"`) or a picture drawn in code (`picture = \"…\"`: {})", names())),
     }
-    if shot.sheet.is_some() || !shot.panels.is_empty() || shot.auto || shot.style.is_some() {
-        found.push("`sheet`, `panels`, `auto` and `style` are a stitch shot's".to_string());
+    if shot.sheet.is_some() || !shot.elements.is_empty() || !shot.panels.is_empty() || shot.auto || shot.style.is_some() {
+        found.push("`sheet`, `elements`, `panels`, `auto` and `style` are a stitch shot's".to_string());
     }
     found
 }
@@ -367,7 +367,7 @@ mod tests {
             assert!(found.len() == 1 && found[0].starts_with("a picture shot draws a design"), "{found:?}");
         }
         let stitched = problems(&shot("fixture = \"docs/fixtures/emblem.svg\"\nauto = true\nstyle = \"simple\""));
-        assert_eq!(stitched, ["`sheet`, `panels`, `auto` and `style` are a stitch shot's"]);
+        assert_eq!(stitched, ["`sheet`, `elements`, `panels`, `auto` and `style` are a stitch shot's"]);
     }
 
     #[test]

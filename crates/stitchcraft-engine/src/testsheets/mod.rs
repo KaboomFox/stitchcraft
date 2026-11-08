@@ -536,12 +536,14 @@ pub static SHEETS: &[TestSheet] = &[
     },
     TestSheet {
         id: "TS-17C",
-        title: "Ripples and routing: satin letters as drawn and routed",
+        title: "Ripples and routing: satin letters and a network of lines, as drawn and routed",
         checks: &[
-            "Top: the word ROUTE in satin columns 3 mm wide, sewn as drawn, column by column. Bottom: the same letters as auto-satin routing joins them, cut into pieces, with running stitches under the satins and a trim between letters.",
+            "Top: the word ROUTE in satin columns 3 mm wide, sewn as drawn, column by column. Below it: the same letters as auto-satin routing joins them, cut into pieces, with running stitches under the satins and a trim between letters.",
             "Count the jump threads of each half, within each letter and between the letters. The routed half should have none within a letter. Its file asks for a trim between letters, which a machine that obeys trims cuts.",
             "On the routed half, do the running stitches under the satins show anywhere, at a column's edge, at its ends or where 2 columns meet?",
             "Where a routed column is cut into pieces, is the satin even across the cut, or does a gap, a ridge or a stitch out of line show?",
+            "Bottom, in red: 6 bean-stitched lines, a rail, a post across it, a brace, a hook, a line that crosses itself and a tick, sewn as drawn on the left and as auto-run routing joins them on the right. Count the jump threads of each: the routed network should jump only to the line that crosses itself and back, trimming before each jump.",
+            "On the routed network, do the plain runs under the bean stitches show beside them, where a branch is sewn out and back?",
             "The time each half takes, from its first stitch to its last.",
         ],
         profile: REFERENCE,

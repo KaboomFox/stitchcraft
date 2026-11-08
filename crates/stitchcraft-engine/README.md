@@ -88,7 +88,8 @@ to Satin tool (`generators::satin::drawn`). They sew as the column does. A desig
 (`Design::moved`), as a host draws a test sheet (`testsheets`, `TestSheet::design`). Since M10.4 satin
 columns, and the strokes among them, are routed as Ink/Stitch's Auto-Route Satin Columns routes them
 (`route`, `docs/src/design/routing.md`), each column cut into pieces that sew its pairs
-(`generators::satin::cut`).
+(`generators::satin::cut`). Since M10.13 running stitches alone are routed as Ink/Stitch's Auto-Route
+Running Stitch routes them, the lines cut where they cross and pass near each other (`route::Tool::Runs`).
 Since M10.5 a generator may sew groups of an element in threads of their own (`generators::Colour`), as
 the tartan and gradient fills will. Assembly then changes thread inside the element and trims after each
 of its colour blocks when it trims, and the sewing order moves the element as one, by the thread it starts

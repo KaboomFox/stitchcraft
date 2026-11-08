@@ -1,0 +1,11 @@
+# TS-17C's network of running stitches as drawn, routed with Preserve order on: each line joined to the next in
+# the order they are drawn (REQ-ROUTE-013). Each program sews its own route.
+id = "inkstitch-route-ts17c-lines-in-order"
+requirements = ["REQ-ROUTE-013"]
+kind = "inkstitch"
+sheet = "TS-17C"
+
+[route]
+elements = "ts17c:lines-drawn:"
+tool = "runs"
+preserve_order = true
