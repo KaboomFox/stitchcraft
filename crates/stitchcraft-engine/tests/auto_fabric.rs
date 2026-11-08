@@ -8,17 +8,26 @@
 
 use stitchcraft_engine::design::{Design, DesignSettings};
 use stitchcraft_plan::StitchPlan;
-use stitchcraft_testkit::designs::{in_place, rules};
+use stitchcraft_testkit::designs::{RED, automatic, fill, in_place, rules};
 use stitchcraft_testkit::fabric::{self, ASTRAY};
 use stitchcraft_testkit::pictures::{self, Trace};
 
-/// Each test picture and the traced pear by name, digitized automatically and planned in place.
+/// A strand of fur as a traced photo has it, alone: 0.6 mm wide for 6 mm, widening over 1 mm to a head
+/// 1.4 mm wide and 3 mm long, under 1 mm wide on average along its middle. Run along its middle, it left the
+/// head's sides bare.
+fn strand() -> Design {
+    let club = [(0.0, -0.3), (6.0, -0.3), (7.0, -0.7), (10.0, -0.7), (10.0, 0.7), (7.0, 0.7), (6.0, 0.3), (0.0, 0.3)];
+    Design::new(vec![automatic(fill("strand", &[&club], &RED, &[]))], DesignSettings::default()).unwrap()
+}
+
+/// Each test picture, the strand and the traced pear by name, digitized automatically and planned in place.
 fn planned() -> Vec<(String, Design, StitchPlan)> {
     let mut designs: Vec<(String, Design)> = pictures::all()
         .into_iter()
         .chain([Trace::Abutting, Trace::Stacked].into_iter().flat_map(|trace| [pictures::emblem(trace), pictures::button(trace)]))
         .map(|picture| (picture.name, Design::new(picture.elements, DesignSettings::default()).unwrap()))
         .collect();
+    designs.push(("strand".to_string(), strand()));
     designs.push(("pear".to_string(), pictures::pear()));
     designs
         .into_iter()
@@ -67,6 +76,7 @@ fn req_auto_026_digitized_pictures_lay_no_thread_that_shows_where_it_should_not(
         ("button-abutting", 6, 0),
         ("emblem-stacked", 0, 2),
         ("button-stacked", 6, 0),
+        ("strand", 0, 0),
         ("pear", 0, 4),
     ];
     assert_eq!(apart, recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps)));

@@ -127,6 +127,8 @@ jobs:
       - run: .github/scripts/annotated.sh "perf" cargo xtask perf
       - name: The release build plans as the tests' build does (docs/src/design/guardrails.md)
         run: .github/scripts/annotated.sh "release build" cargo test --release --locked -p stitchcraft-engine --test release
+      - name: The traced dogs' cases, too slow for the tests' debug build (docs/src/design/conformance.md)
+        run: .github/scripts/annotated.sh "traced dogs" cargo test --release --locked -p stitchcraft-engine --test auto_photos
 
   tests:
     name: tests (${{ matrix.os }})
