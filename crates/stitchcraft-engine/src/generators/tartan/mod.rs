@@ -32,7 +32,8 @@
 //!
 //! **What shows them.** Each colour's run is a colour block of its thread, trimmed after when the element's
 //! `trim_after` is on, and the underlay sews in the element's thread and ends none
-//! ([`crate::generators::Colour`], `REQ-ASM-006`).
+//! ([`crate::generators::Colour`], `REQ-ASM-006`). A colour of the element's own sews in the element's
+//! thread, named or not, and the others in threads of their colours alone, so that one colour is one thread.
 
 mod params;
 mod sett;
@@ -90,7 +91,7 @@ pub struct Tartan {
     pub(crate) expand: f64,
     /// The needle's travel: its running stitch, the shortest stitch and the jump length.
     pub(crate) travel: Travel,
-    /// The element's own thread's colour, which the underlay sews in.
+    /// The element's own thread's colour, which the underlay sews in, and the stripes of that colour.
     pub(crate) own: Rgb,
 }
 
@@ -161,11 +162,14 @@ fn sewn(
     if ordered.len() > 1 {
         groups = sorted(groups);
     }
+    // A colour of the element's own sews in the element's own thread, named or not, and the others in threads
+    // of their colours alone: a named and an unnamed thread of one colour would be 2 threads, which a machine
+    // file writes as 2 entries of its palette.
     let colours = groups
         .iter()
         .map(|group| match group.kind {
             Kind::Underlay => Colour { thread: None, ends_block: false },
-            Kind::Fill | Kind::Run => Colour { thread: Some(Thread::new(group.colour)), ends_block: true },
+            Kind::Fill | Kind::Run => Colour { thread: (group.colour != tartan.own).then(|| Thread::new(group.colour)), ends_block: true },
         })
         .collect();
     let mut warnings = said.warnings;

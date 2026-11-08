@@ -13,7 +13,12 @@
 //!   and scaled by 150 %.
 //!
 //! Every stripe's colour is one of Brother's threads, so that both programs' PES files name each thread as
-//! itself and the differential compares them as they are.
+//! itself and the differential compares them as they are. A stripe sews in a thread of its colour alone,
+//! unnamed, and so does each tartan's own thread here: a named and an unnamed thread of one colour are 2
+//! threads, which a PES file writes as 2 entries of Brother's palette (`REQ-THREAD-002`), the second of them
+//! another colour. One colour is then one thread across the sheet, as `REQ-RND-001`'s read-back expects.
+
+use stitchcraft_plan::Thread;
 
 use super::designed::{Drawing, polygon};
 use super::sketch::SheetError;
@@ -68,7 +73,9 @@ pub(super) fn tartans() -> Result<Drawing, SheetError> {
     for (i, (name, own, sett)) in TARTANS.iter().enumerate() {
         let (x, y) = ((i % 3) as f64 * PITCH, (i / 3) as f64 * PITCH);
         let outline = polygon(&[(x, y), (x + SIDE, y), (x + SIDE, y + SIDE), (x, y + SIDE)])?;
-        d.fill(name, vec![outline], &thread(*own)?, &[("fill_method", "tartan_fill"), ("tartan", sett), ("trim_after", "true")])?;
+        // The Brother thread's colour alone, as the stripes' threads are (the module's docs).
+        let own = Thread::new(thread(*own)?.color);
+        d.fill(name, vec![outline], &own, &[("fill_method", "tartan_fill"), ("tartan", sett), ("trim_after", "true")])?;
     }
     Ok(d)
 }
@@ -76,6 +83,7 @@ pub(super) fn tartans() -> Result<Drawing, SheetError> {
 #[cfg(test)]
 mod tests {
     use stitchcraft_core::{Point, math};
+    use stitchcraft_plan::palette::BROTHER_PEC;
     use stitchcraft_plan::{Role, StitchKind};
 
     #[test]
@@ -120,6 +128,12 @@ mod tests {
         ];
         let found: Vec<(&str, &str)> = blocks.iter().map(|(name, colour)| (name.as_str(), colour.as_str())).collect();
         assert_eq!(found, expected);
+        // One colour is one thread, so the PES file writes each block as the Brother entry of its colour: a
+        // tartan's own thread named, beside its stripes' unnamed threads, wrote a second Prussian Blue as
+        // Purple and a second Black as Dark Gray.
+        let entries = BROTHER_PEC.assign(plan.color_entries().iter().map(|entry| entry.thread)).unwrap().entries;
+        let written: Vec<String> = entries.iter().map(|entry| entry.color.to_string()).collect();
+        assert_eq!(written, expected.map(|(_, colour)| colour.to_string()));
         let top = |block: usize| -> Vec<Point> {
             plan.blocks[block].stitches.iter().filter(|s| s.kind == StitchKind::Normal && s.origin.role == Role::Top).map(|s| s.at).collect()
         };

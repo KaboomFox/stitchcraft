@@ -465,8 +465,8 @@ rules.
    of the first free element in paint order. Threads are the same when their colours are, as plan assembly
    counts thread changes. A PES file gives different colours different palette entries while they last
    (`REQ-THREAD-002`), so 2 colours are one thread to the machine only past the palette's 64 entries. An
-   element sewn in several threads (M10.5), as a tartan fill is and a gradient fill will be, moves as one, its
-   colours together and in the order its generator sews them. It has the thread sewing when the thread it
+   element sewn in several threads (M10.5), as a tartan fill is and a gradient fill will be, moves as one.
+   Its colours stay together, in the order its generator sews them. It has the thread sewing when the thread it
    starts in is, and leaves the thread it ends in sewing (`REQ-AUTO-024`). Its threads are read before it is
    generated, from its shape and settings.
 4. **The nearest next.** Of the free elements of that thread, the next is the one whose box lies nearest

@@ -313,8 +313,8 @@ letter whose slanted edges cut their cells in half (`REQ-FILL-CRS-007`). It chec
 upright, dense upright, double, Smyrna and half crosses, and simple crosses on a grid turned 30°. The
 `cross-methods` case adds each full cross's flipped variant, grids turned on the canvas and from a part's
 own corner, and half crosses round a hole, through cells that meet at a corner and in 2 pieces of one
-part (`REQ-FILL-CRS-012`). TS-17B checks the tartans: setts mirrored and repeated, a warp and a weft
-apart, narrow stripes sewn as runs, and a sett turned and scaled. The `tartan-marks`, `tartan-hole`,
+part (`REQ-FILL-CRS-012`). TS-17B checks the tartans, with setts mirrored and repeated and a warp and a
+weft apart. Its narrow stripes sew as runs, and one sett is turned and scaled. The `tartan-marks`, `tartan-hole`,
 `tartan-parts` and `tartan-stop` cases add stripes left unsewn or sewn in the colour before them, a sett
 moved by its offsets, a disc round a hole in stitches 3 mm long, a fill in 2 parts with its rows at 30° and one row a thread, and
 a fill that stops at its end with its runs sewn as bean stitches (`REQ-FILL-TRT-011`). Every stripe is one of
