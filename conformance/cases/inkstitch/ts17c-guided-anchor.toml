@@ -1,0 +1,7 @@
+# TS-17C's M10.11 part, its diamond: a ripple stitch of a closed line whose copies lie at a satin guide's rungs,
+# stretched across it as its anchor line says (REQ-RIP-019).
+id = "inkstitch-ts17c-guided-anchor"
+requirements = ["REQ-RIP-019"]
+kind = "inkstitch"
+sheet = "TS-17C"
+elements = "ts17c:guided:anchor"

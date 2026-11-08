@@ -1,10 +1,11 @@
-//! The ripple stitch's unit cases (`REQ-RIP-001` to `REQ-RIP-010`). Its diagnostics in a plan are in
-//! `tests/ripple.rs`, through the engine's public API.
+//! The ripple stitch's unit cases (`REQ-RIP-001` to `REQ-RIP-010`, `REQ-RIP-015`, `REQ-RIP-016`). Its
+//! diagnostics in a plan are in `tests/ripple.rs`, and its guides, grid and clips in `tests/ripple_guided.rs`,
+//! through the engine's public API. Where a guide places its copies is in `guided/tests.rs`.
 
 use stitchcraft_core::{Budget, math};
 
-use super::lines::{CLOSED, MOST, bent, count, kind_of, lines, places, shortest, skipped, target};
-use super::sew::one_at_a_time;
+use super::lines::{CLOSED, MOST, bent, count, kind_of, lines, places, shortest, skipped, skipped_as, target};
+use super::sew::{manual, one_at_a_time};
 use super::*;
 use crate::design::{Segment, Subpath};
 use crate::normalize::stroke::distance_to_segment;
@@ -599,4 +600,40 @@ fn every_point_of_every_line_costs_work_and_every_needle_point_a_stitch() {
     assert_eq!(left(Budget { max_stitches: 100, max_work: u64::MAX }).1, 92, "8 needle points");
     assert_eq!(left(Budget { max_stitches: 7, max_work: u64::MAX }).0, Err(Exhausted::Stitches));
     assert_eq!(left(Budget { max_stitches: 100, max_work: 20 }).0, Err(Exhausted::Work));
+}
+
+#[test]
+fn req_rip_015_a_column_s_grid_lines_lose_the_lines_the_skips_leave_out() {
+    let lines: Vec<Vec<Point>> = (0..4).map(|k| vec![p(0.0, f64::from(k))]).collect();
+    let ys = |kept: Vec<Vec<Point>>| kept.iter().map(|line| line[0].y()).collect::<Vec<_>>();
+    assert_eq!(ys(skipped_as(lines.clone(), [1, 1], true)), [1.0, 2.0]);
+    assert_eq!(ys(skipped_as(lines.clone(), [0, 3], true)), [0.0]);
+    // Skips that leave the ripple none leave the grid's lines all, and more than they have leave none.
+    assert_eq!(ys(skipped_as(lines.clone(), [3, 2], false)), [0.0, 1.0, 2.0, 3.0]);
+    assert_eq!(ys(skipped_as(lines, [3, 2], true)), Vec::<f64>::new());
+}
+
+#[test]
+fn req_rip_016_lines_placed_by_hand_are_sewn_through_their_points_joined_by_even_stitches() {
+    let lines = vec![vec![p(-4.0, 0.0), p(0.0, 0.0), p(4.0, 0.0)], vec![p(-4.0, 10.0), p(0.0, 10.0), p(4.0, 10.0)]];
+    let sewn = |flip: bool| rounded(&manual(&lines, flip, 2.5, &mut Budget::DEFAULT.meter()).unwrap());
+    // With flip_copies the first line from its end, then 10 mm in 4 stitches to the next.
+    let flipped = [(4.0, 0.0), (0.0, 0.0), (-4.0, 0.0), (-4.0, 2.5), (-4.0, 5.0), (-4.0, 7.5), (-4.0, 10.0), (0.0, 10.0), (4.0, 10.0)];
+    assert_eq!(sewn(true), flipped);
+    // Without it, 12.81 mm in 6 stitches.
+    let straight = [
+        [(-4.0, 0.0), (0.0, 0.0), (4.0, 0.0)].as_slice(),
+        &[(2.667, 1.667), (1.333, 3.333), (0.0, 5.0), (-1.333, 6.667), (-2.667, 8.333)],
+        &[(-4.0, 10.0), (0.0, 10.0), (4.0, 10.0)],
+    ];
+    assert_eq!(sewn(false), straight.concat());
+    // A join no longer than the stitch length is one stitch, and each point is a stitch and a unit of work.
+    let near = vec![vec![p(0.0, 0.0), p(1.0, 0.0)], vec![p(1.0, 2.5), p(2.0, 2.5)]];
+    let mut meter = Budget { max_stitches: 4, max_work: 4 }.meter();
+    assert_eq!(rounded(&manual(&near, false, 2.5, &mut meter).unwrap()), [(0.0, 0.0), (1.0, 0.0), (1.0, 2.5), (2.0, 2.5)]);
+    assert_eq!((meter.stitches_left(), meter.work_left()), (0, 0));
+    assert_eq!(manual(&near, false, 2.5, &mut Budget { max_stitches: 3, max_work: 100 }.meter()), Err(Exhausted::Stitches));
+    assert_eq!(manual(&near, false, 2.5, &mut Budget { max_stitches: 100, max_work: 3 }.meter()), Err(Exhausted::Work));
+    // No stitch length cuts nothing.
+    assert_eq!(manual(&near, false, 0.0, &mut Budget::DEFAULT.meter()).unwrap().len(), 4);
 }

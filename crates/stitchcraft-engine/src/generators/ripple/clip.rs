@@ -43,12 +43,10 @@ pub(super) fn routed(
         return Ok(Vec::new());
     };
     let (start, end) = (from.unwrap_or(first), last);
-    // The part each piece lies in, by the middle of its first stretch, as the cut found it inside.
+    // The part each piece lies in, by the middle of its first stretch, as the cut found it inside. Every
+    // piece has a stretch.
     let part_of = |piece: &[Point]| -> usize {
-        let middle = match piece {
-            [a, b, ..] => a.lerp(*b, 0.5),
-            _ => first,
-        };
+        let middle = if let [a, b, ..] = piece { a.lerp(*b, 0.5) } else { first };
         parts.iter().position(|part| part.covers(middle)).unwrap_or(0)
     };
     let mut order: Vec<usize> = Vec::new();
@@ -88,4 +86,26 @@ fn trimmed(Marked { points, travel }: Marked, [lead, tail]: [bool; 2]) -> Option
     let to = if tail { points.len() } else { (0..points.len()).rev().find(|k| !travels(k))? + 1 };
     let kept = points.get(from..to)?.to_vec();
     (!kept.is_empty()).then_some(kept)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn req_rip_017_a_route_s_travel_before_its_first_piece_and_after_its_last_is_left_out_unless_kept() {
+        let points: Vec<Point> = (0..6).map(|k| Point::new(f64::from(k), 0.0).unwrap()).collect();
+        // Points 0 and 1 travel to the first piece, and point 5 after the last.
+        let marked = || Marked { points: points.clone(), travel: vec![true, true, false, true, false, true] };
+        assert_eq!(trimmed(marked(), [false, false]), Some(points[2..5].to_vec()));
+        assert_eq!(trimmed(marked(), [true, false]), Some(points[..5].to_vec()));
+        assert_eq!(trimmed(marked(), [false, true]), Some(points[2..].to_vec()));
+        assert_eq!(trimmed(marked(), [true, true]), Some(points.clone()));
+        // Travel alone, or nothing, leaves nothing.
+        assert_eq!(trimmed(Marked { points: points.clone(), travel: vec![true; 6] }, [false, true]), None);
+        assert_eq!(trimmed(Marked { points: points.clone(), travel: vec![true; 6] }, [true, false]), None);
+        assert_eq!(trimmed(Marked { points: Vec::new(), travel: Vec::new() }, [true, true]), None);
+        // A point with no mark is a piece's.
+        assert_eq!(trimmed(Marked { points: points.clone(), travel: vec![true] }, [false, false]), Some(points[1..].to_vec()));
+    }
 }
