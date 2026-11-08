@@ -162,8 +162,12 @@ as well as the code:
    one, so that no cut-out calls them, and StitchCraft asks tract to put its random operators behind a
    feature.
 5. **Getting the models.** The 3 files, U²-Net-p, MobileSAM's encoder and its decoder, are never committed.
-   The repository pins each one's address, size and SHA-256. A script kept beside the pins exports them once
-   from the authors' checkpoints, and a StitchCraft release publishes them as assets with their licences. On
+   The repository pins each one's address, size and SHA-256. A script kept beside the pins exports
+   MobileSAM's 2 files once from its authors' checkpoint, and a StitchCraft release, `cutout-models-1`,
+   publishes the 3 as assets with their licences. U²-Net-p's author publishes its checkpoint on Google Drive
+   and Baidu alone, so its file is rembg's conversion of that checkpoint to ONNX, as rembg's own release
+   publishes it, the file M13.13 measured. rembg is under the MIT licence, and the weights are under the
+   Apache-2.0 licence, as the author wrote in issue 208. (Amended 2026-11-08, M13.14.) On
    first use `stitch` fetches them with curl, as `cargo xtask corpus` fetches the fonts, into the folder
    `STITCHCRAFT_MODELS` names, or else `stitchcraft/models` in the user's cache folder. It checks each file's
    SHA-256 before each use. A file it can't fetch, or whose sum differs, is a coded error. The error names
@@ -207,8 +211,8 @@ as well as the code:
   without `--subject`, since Image Trace leaves its transparent pixels out.
 - `stitch` is built for WASI to make the golden files. tract's own CI checks tract-onnx for `wasm32-wasip1`,
   and runs tract-core's and tract-linalg's tests there in wasmtime. M13.14 keeps the build of `stitch`
-  working. With `--subject` there, `stitch` can't start curl
-  to fetch the models, and says so with the coded error.
+  working. The cut-out is a feature of `stitch`, on by default, which the WASI build leaves out, and there
+  `--subject` says so with a coded error. (Amended 2026-11-08, M13.14.)
 - An owner action publishes the release with the models, and M13.14's cases fetch them from it.
 - Revisit this if VectorCraft gives plug-ins images and a budget the models fit, or if it cuts a subject
   out itself. Revisit the models when a smaller promptable model under a licence of the list cuts the
@@ -257,6 +261,8 @@ as well as the code:
 - VectorCraft at `3f8d7a0`: `crates/trace/src/lib.rs` and `crates/trace/src/quantize.rs` (transparent pixels
   and cut edges), `docs/plugins.md` (Input, Limits, Not in v1).
 - [MobileSAM](https://github.com/ChaoningZhang/MobileSAM), its `LICENSE` and `weights/mobile_sam.pt`.
+- [rembg](https://github.com/danielgatis/rembg), its `LICENSE.txt`, its README's list of models and its
+  release `v0.0.0`, which publishes `u2netp.onnx`.
 - [Segment Anything](https://github.com/facebookresearch/segment-anything) and
   [SAM 2](https://github.com/facebookresearch/sam2), their README's License sections.
 - [U²-Net](https://github.com/xuebinqin/U-2-Net), its `LICENSE`, and its author's answer in

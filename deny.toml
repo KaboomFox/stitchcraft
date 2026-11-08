@@ -48,9 +48,15 @@ allow-wildcard-paths = true
 # files and the job server of the C build that compiles libFuzzer for the fuzz targets. proptest's rand
 # takes that entropy from getrandom itself since rand 0.10, and through rand_core before: the fuzz targets'
 # proptest still uses rand 0.9.
+# tract-onnx-opl wraps both, directly and through rand_distr, for ONNX's random operators, which tract seeds
+# from the OS when a model gives no seed. The subject cut-out's models have none, and stitchcraft-cutout
+# refuses a model that has one (SC-E1205), so no cut-out calls them (ADR-0019, which the owner accepted with
+# this exception). The exception goes once tract puts its random operators behind a feature, which ADR-0019
+# means to ask of tract.
 deny = [
-    { crate = "rand", wrappers = ["proptest"] },
-    { crate = "getrandom", wrappers = ["rand", "rand_core", "tempfile", "jobserver"] },
+    { crate = "rand", wrappers = ["proptest", "rand_distr", "tract-onnx-opl"] },
+    { crate = "rand_distr", wrappers = ["tract-onnx-opl"] },
+    { crate = "getrandom", wrappers = ["rand", "rand_core", "tempfile", "jobserver", "tract-onnx-opl"] },
 ]
 
 [sources]
