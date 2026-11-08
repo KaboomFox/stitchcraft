@@ -1847,6 +1847,23 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- Automatic digitizing: a narrow part cut from a broad one ends along its cut, its column no longer fanning
+  into a corner of the cut (`REQ-AUTO-016`, `REQ-AUTO-019`). The traced pear in the docs left a wedge of
+  fabric 4.6 mm² bare at its left edge, where its olive band's narrow end met the pale green. The column's
+  line ran on along the cut into one of its corners, and the column sewed its stitches into a fan there,
+  with a few stitches running single along the wedge's edge. The triangles beside a cut are now the
+  column's end, which no line enters, and a column ends along the whole cut, however the cut lies to its
+  line. A tooth of a traced outline, a step as narrow as the narrowest satin stroke, is a bump of the column
+  beside it instead of a column of its own. The narrow ends of the pear's olive and dark olive bands at its
+  top right, filled until now with `SC-I0902`, sew as satin columns.
+  - Each of those bands then has a column at both ends, and its thread jumps to the stem between them and
+    back: the pear leaves 4 jump threads on the PE800 instead of 3. Where the dark olive band's top end
+    meets its fill, its rail runs round 2 steps of the trace, and one stitch leans 46.9° (`SC-W0208`).
+  - New measures in `stitchcraft_testkit::fabric` take any design and its plan, a traced photo too. They
+    find the fabric the top stitches leave bare where the picture has a colour, and the thread that shows
+    where it should not. `REQ-AUTO-025` and `REQ-AUTO-026` hold the test pictures and the pear to them. The
+    pear's long straight lines from its stem are jump threads, which the PE800 doesn't cut, and no thread
+    travels on top of another colour.
 - CI: the jobs that fetch VectorCraft's pinned release or wasmtime take its archive from the Actions cache,
   so that an outage of GitHub's downloads doesn't fail them. On 8 November GitHub answered release
   downloads with 504s and reset connections for an hour, and the 3 jobs that run VectorCraft's pinned
@@ -2684,6 +2701,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-13C.pes` (automatic digitizing, the end of a column along its
+  cut). The digitized star's right-hand point now sews from its tip to its cut, ending beside the star's
+  middle, as its line now ends at the triangles that touch the cut. Its underlay runs out to the tip first.
+  The last 68 needle points of the file lie in another order, and 46 of them in other places. The plan sews
+  10,311 stitches with 25 jumps, as before, and every other shape as before.
 - Changed `conformance/golden/testsheets/TS-17C.pes` (M10.11). The sheet gains 5 guided ripples at its
   bottom, below M10.8's ripples, in their green after a trim. The plan spans 101.1 × 175 mm, and sews 5,425
   stitches, 310 more. What the sheet sewed before sews as before, each needle point within the 0.1 mm the
