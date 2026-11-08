@@ -21,6 +21,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     too. The ripple along a column agrees by every measure. The wave and the spiral agree by every measure
     but the overlap of their threads, which `DEV-RUN-002` explains: their copies are made from their line's
     running stitch.
+  - In the glyph differential, 144 of the 324 glyphs of the 3 Ondulamarif fonts agree and 141 differ as the
+    ledger explains, which excuses a ripple's threads by `DEV-RUN-002`. The 39 whose ripples follow a guide
+    line are known differences, left to M10.11.
   - An `inkstitch` case of a sheet may judge a part of it alone, the elements whose ids start with its
     `elements`.
   - A `reverse` setting on a fill is now a ripple stitch's, which the fill leaves to its node's stroke
