@@ -162,16 +162,36 @@ impl Graph {
         self.join(ends[0], ends[1], self.links.len() - 1, true);
     }
 
-    /// Adds a jump from `from` to `to`, which a graph with directions takes only that way.
-    fn jump(&mut self, from: usize, to: usize) {
-        self.links.push(Link::Jump { ends: [from, to] });
-        self.join(from, to, self.links.len() - 1, false);
+    /// Adds a jump from `from` to `to`, which a graph with directions takes only that way, unless a link leads
+    /// that way already: Ink/Stitch's graph holds one link from a place to another, and a jump added where one
+    /// is takes its place in it. Each link looked at charges `meter` a unit.
+    fn jump(&mut self, from: usize, to: usize, meter: &mut Meter) -> Result<(), Exhausted> {
+        if !self.linked(from, to, meter)? {
+            self.links.push(Link::Jump { ends: [from, to] });
+            self.join(from, to, self.links.len() - 1, false);
+        }
+        Ok(())
     }
 
-    /// Adds a jump between `a` and `b` that the route can take either way, as it takes a piece.
-    fn jump_both_ways(&mut self, a: usize, b: usize) {
-        self.links.push(Link::Jump { ends: [a, b] });
-        self.join(a, b, self.links.len() - 1, true);
+    /// Adds a jump between `a` and `b` that the route can take either way, as it takes a piece, unless links
+    /// lead both ways already. Each link looked at charges `meter` a unit.
+    fn jump_both_ways(&mut self, a: usize, b: usize, meter: &mut Meter) -> Result<(), Exhausted> {
+        if !(self.linked(a, b, meter)? && self.linked(b, a, meter)?) {
+            self.links.push(Link::Jump { ends: [a, b] });
+            self.join(a, b, self.links.len() - 1, true);
+        }
+        Ok(())
+    }
+
+    /// Whether a link leads from `from` to `to`. Each link looked at charges `meter` a unit.
+    fn linked(&self, from: usize, to: usize, meter: &mut Meter) -> Result<bool, Exhausted> {
+        for &(next, _) in self.links_out(from) {
+            meter.charge(1)?;
+            if next == to {
+                return Ok(true);
+            }
+        }
+        Ok(false)
     }
 
     /// The links into `place`, with the place each comes from.
@@ -259,7 +279,7 @@ impl Graph {
             for &(i, _, a, b) in &taken {
                 meter.charge(1)?;
                 if i == group {
-                    self.jump(a, b);
+                    self.jump(a, b, meter)?;
                 }
             }
         }
@@ -294,7 +314,7 @@ impl Graph {
             let &[from, to] = pair else { continue };
             let (from, to) = (self.places_on(from, meter)?, self.places_on(to, meter)?);
             if let Some((_, a, b)) = self.nearest(&from, &to, meter)? {
-                self.jump(a, b);
+                self.jump(a, b, meter)?;
             }
         }
         Ok(())
@@ -342,7 +362,7 @@ impl Graph {
             }
         }
         for (a, b) in jumps {
-            self.jump_both_ways(a, b);
+            self.jump_both_ways(a, b, meter)?;
         }
         Ok(())
     }

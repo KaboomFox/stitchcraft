@@ -1,0 +1,11 @@
+# TS-17C's network of running stitches as drawn, routed by Ink/Stitch's Auto-Route Running Stitch and by
+# StitchCraft's routing with the tool's options at their defaults: lines cut where they cross and where they
+# pass near each other, no trims, their order not kept (REQ-ROUTE-013). Each program sews its own route.
+id = "inkstitch-route-ts17c-lines"
+requirements = ["REQ-ROUTE-013"]
+kind = "inkstitch"
+sheet = "TS-17C"
+
+[route]
+elements = "ts17c:lines-drawn:"
+tool = "runs"
