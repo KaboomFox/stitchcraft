@@ -29,7 +29,7 @@ area = "params"
 summary = "An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column's deviates so. Ink/Stitch reads a manual stitch's as not set at 0 or below too, and doesn't warn."
 reason = "A length below 0 is no length, and the warning says it was read as none (REQ-PRM-002). Ink/Stitch's getters were read at d59c9ab (lib/elements/element.py, lib/stitch_plan/stitch_plan.py; a stroke's and a satin column's longest stitch in lib/elements/stroke.py and lib/elements/satin_column/satin_column.py)."
 requirements = ["REQ-PRM-002"]
-params = ["min_stitch_length_mm", "min_jump_stitch_length_mm", "max_stitch_length_mm", "end_row_spacing_mm", "fill_underlay_row_spacing_mm", "fill_underlay_max_stitch_length_mm", "zigzag_underlay_max_stitch_length_mm"]
+params = ["min_stitch_length_mm", "min_jump_stitch_length_mm", "max_stitch_length_mm", "end_row_spacing_mm", "fill_underlay_row_spacing_mm", "fill_underlay_max_stitch_length_mm", "zigzag_underlay_max_stitch_length_mm", "min_line_dist_mm"]
 
 [[deviation]]
 id = "DEV-PRM-004"
@@ -134,6 +134,21 @@ area = "strokes"
 summary = "A stroke that crosses its clip and also touches the clip's outline at a point is cut as any other, at its crossings. Ink/Stitch's cut then gives a point as well as lines, which it doesn't take, and it sews the stroke whole: 60 mm of a line where 20 mm show."
 reason = "The point adds nothing a viewer shows. Ink/Stitch sews the stroke unclipped when the intersection is not lines alone (lib/elements/stroke.py: _get_clipped_path, read at d59c9ab), as inkstitch-clip-touch shows."
 requirements = ["REQ-GEN-005"]
+[[deviation]]
+id = "DEV-RIP-001"
+area = "strokes/ripple"
+summary = "A staggered ripple line is sewn from its first point. Ink/Stitch sews it from where its stitches have run the line's phase from the start of the stretch it adds before the line. That is the line's first point, or within the tolerance of it where the stitches cut a bend. On a first segment shorter than 0.1 CSS pixels the stretch is shorter than the phase, and Ink/Stitch starts the line the rest of the phase further on."
+reason = "Each line sews all of its length, from the first point its place gives it (REQ-RIP-008). Ink/Stitch's staggering was read at d59c9ab (lib/stitches/ripple_stitch.py)."
+requirements = ["REQ-RIP-008"]
+
+[[deviation]]
+id = "DEV-RIP-002"
+area = "strokes/ripple"
+summary = "A ripple has 1,000 lines at most, or 999 where 1,000 would change the parity of line_count, and SC-W0407 says when min_line_dist_mm gives more. Ink/Stitch sews every line it gives."
+reason = "1,000 lines across 400 mm lie 0.4 mm apart, as close as a thread is wide, and more sew a solid patch rather than a ripple. Each line's points cost work and stitches within the budget (REQ-RIP-003)."
+requirements = ["REQ-RIP-003"]
+params = ["min_line_dist_mm"]
+
 [[deviation]]
 id = "DEV-SAT-001"
 area = "satin"

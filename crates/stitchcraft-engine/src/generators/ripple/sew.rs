@@ -103,14 +103,13 @@ fn staggered(line: &[Point], i: usize, sewing: &Sewing, meter: &mut Meter) -> Re
     if line.iter().all(|point| *point == first) {
         return Ok(if phase > 0.0 { vec![first] } else { Vec::new() });
     }
+    // Lengthened back along the first segment by the phase, or in proportion less on a segment shorter than
+    // `SHORT_SEGMENT`. A segment of no length lengthens it by nothing: its scale, 0 over 0, is no number, which
+    // a point refuses, and the start stays.
     let segment = first.distance(second);
-    let reach = if segment > 0.0 { phase * (segment / SHORT_SEGMENT).min(1.0) } else { 0.0 };
-    let back = if reach > 0.0 {
-        let scale = reach / segment;
-        Point::new(first.x() + (first.x() - second.x()) * scale, first.y() + (first.y() - second.y()) * scale).unwrap_or(first)
-    } else {
-        first
-    };
+    let reach = phase * (segment / SHORT_SEGMENT).min(1.0);
+    let scale = reach / segment;
+    let back = Point::new(first.x() + (first.x() - second.x()) * scale, first.y() + (first.y() - second.y()) * scale).unwrap_or(first);
     let lengthened: Vec<Point> = std::iter::once(back).chain(line.iter().copied()).collect();
     let placed = sewing.along(&lengthened, i, sewing.jitter, meter)?;
     // The needle points on the stretch added lie between `back` and `first`.
