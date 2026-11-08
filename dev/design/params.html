@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-76997358.js";
+            window.path_to_searchindex_js = "../searchindex-bfc2b1c2.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-bd1465a9.js"></script>
+        <script src="../toc-61f039c5.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -366,7 +366,10 @@ its stitch types is planned, and the check leaves it out.</p>
 <ol>
 <li>
 <p>If Ink/Stitch has the parameter with the same meaning, <strong>use its attribute name verbatim</strong>
-(<code>row_spacing_mm</code>). This keeps SVG files compatible with no mapping table.</p>
+(<code>row_spacing_mm</code>). This keeps SVG files compatible with no mapping table. A setting that Ink/Stitch
+saves on the shape and reads as it sews, without a parameter in its window, takes its name too: a
+tartan’s sett, <code>tartan</code>, which its tartan editor writes. The contract lists it with the other attributes,
+as an element’s setting. Ink/Stitch’s window gives it no type or default, and the contract compares none.</p>
 </li>
 <li>
 <p>If our meaning differs, keep the name, mark <code>origin: InkStitchDeviates</code>, and record the difference in

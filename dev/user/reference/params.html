@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-76997358.js";
+            window.path_to_searchindex_js = "../../searchindex-bfc2b1c2.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-bd1465a9.js"></script>
+        <script src="../../toc-61f039c5.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -236,10 +236,11 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/satin.html">Satin parameters</a></td><td>34</td><td>Satin column, E-stitch, S-stitch, Zigzag satin</td></tr>
 <tr><td><a href="params/pull.html">Pull parameters</a></td><td>2</td><td>Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill</td></tr>
 <tr><td><a href="params/fill.html">Fill parameters</a></td><td>2</td><td>Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill</td></tr>
-<tr><td><a href="params/tatami.html">Tatami parameters</a></td><td>15</td><td>Tatami fill, Contour fill, Meander fill, Circular fill</td></tr>
+<tr><td><a href="params/tatami.html">Tatami parameters</a></td><td>15</td><td>Tatami fill, Contour fill, Meander fill, Circular fill, Tartan fill</td></tr>
 <tr><td><a href="params/contour.html">Contour parameters</a></td><td>4</td><td>Contour fill</td></tr>
 <tr><td><a href="params/meander.html">Meander parameters</a></td><td>6</td><td>Meander fill</td></tr>
 <tr><td><a href="params/cross.html">Cross parameters</a></td><td>8</td><td>Cross stitch</td></tr>
+<tr><td><a href="params/tartan.html">Tartan parameters</a></td><td>5</td><td>Tartan fill</td></tr>
 <tr><td><a href="params/path-fill.html">Path fill parameters</a></td><td>3</td><td>Contour fill, Meander fill, Circular fill</td></tr>
 <tr><td><a href="params/auto.html">Auto parameters</a></td><td>5</td><td>automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type</td></tr>
 </tbody>
@@ -297,6 +298,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/ripple.html#flip_exponent"><code>flip_exponent</code></a></td><td>Flip the spacing</td><td>Ripple parameters</td></tr>
 <tr><td><a href="params/common.html#force_lock_stitches"><code>force_lock_stitches</code></a></td><td>Always lock</td><td>Common parameters</td></tr>
 <tr><td><a href="params/tatami.html#gap_fill_rows"><code>gap_fill_rows</code></a></td><td>Gap-filling rows</td><td>Tatami parameters</td></tr>
+<tr><td><a href="params/tartan.html#herringbone_width_mm"><code>herringbone_width_mm</code></a></td><td>Herringbone width</td><td>Tartan parameters</td></tr>
 <tr><td><a href="params/ripple.html#join_style"><code>join_style</code></a></td><td>Join style</td><td>Ripple parameters</td></tr>
 <tr><td><a href="params/contour.html#join_style"><code>join_style</code></a></td><td>Join style</td><td>Contour parameters</td></tr>
 <tr><td><a href="params/ripple.html#line_count"><code>line_count</code></a></td><td>Lines</td><td>Ripple parameters</td></tr>
@@ -333,6 +335,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/ripple.html#reverse"><code>reverse</code></a></td><td>Reverse</td><td>Ripple parameters</td></tr>
 <tr><td><a href="params/satin.html#reverse_rails"><code>reverse_rails</code></a></td><td>Reverse rails</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/tatami.html#row_spacing_mm"><code>row_spacing_mm</code></a></td><td>Row spacing</td><td>Tatami parameters</td></tr>
+<tr><td><a href="params/tartan.html#rows_per_thread"><code>rows_per_thread</code></a></td><td>Rows per thread</td><td>Tartan parameters</td></tr>
 <tr><td><a href="params/running.html#running_stitch_length_mm"><code>running_stitch_length_mm</code></a></td><td>Stitch length</td><td>Running parameters</td></tr>
 <tr><td><a href="params/satin.html#running_stitch_position"><code>running_stitch_position</code></a></td><td>Running stitch position</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/running.html#running_stitch_tolerance_mm"><code>running_stitch_tolerance_mm</code></a></td><td>Curve tolerance</td><td>Running parameters</td></tr>
@@ -350,9 +353,12 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="params/tatami.html#staggers"><code>staggers</code></a></td><td>Staggers</td><td>Tatami parameters</td></tr>
 <tr><td><a href="params/satin.html#start_at_nearest_point"><code>start_at_nearest_point</code></a></td><td>Start at nearest point</td><td>Satin parameters</td></tr>
 <tr><td><a href="params/common.html#stop_after"><code>stop_after</code></a></td><td>Stop after</td><td>Common parameters</td></tr>
+<tr><td><a href="params/tartan.html#stop_at_ending_point"><code>stop_at_ending_point</code></a></td><td>Stop at the end position</td><td>Tartan parameters</td></tr>
 <tr><td><a href="params/stroke.html#stroke_method"><code>stroke_method</code></a></td><td>Method</td><td>Stroke parameters</td></tr>
 <tr><td><a href="params/zigzag-stroke.html#stroke_pull_compensation_mm"><code>stroke_pull_compensation_mm</code></a></td><td>Pull compensation</td><td>Zigzag stroke parameters</td></tr>
 <tr><td><a href="params/satin.html#swap_satin_rails"><code>swap_satin_rails</code></a></td><td>Swap rails</td><td>Satin parameters</td></tr>
+<tr><td><a href="params/tartan.html#tartan"><code>tartan</code></a></td><td>Sett</td><td>Tartan parameters</td></tr>
+<tr><td><a href="params/tartan.html#tartan_angle"><code>tartan_angle</code></a></td><td>Row angle</td><td>Tartan parameters</td></tr>
 <tr><td><a href="params/common.html#ties"><code>ties</code></a></td><td>Lock stitches</td><td>Common parameters</td></tr>
 <tr><td><a href="params/common.html#trim_after"><code>trim_after</code></a></td><td>Trim after</td><td>Common parameters</td></tr>
 <tr><td><a href="params/tatami.html#underlay_underpath"><code>underlay_underpath</code></a></td><td>Underlay underpath</td><td>Tatami parameters</td></tr>

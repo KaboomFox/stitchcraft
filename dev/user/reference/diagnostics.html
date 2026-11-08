@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-76997358.js";
+            window.path_to_searchindex_js = "../../searchindex-bfc2b1c2.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-bd1465a9.js"></script>
+        <script src="../../toc-61f039c5.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -236,6 +236,12 @@
 <tr><td><a href="#sc-w0320"><code>SC-W0320</code></a></td><td>Warning</td><td>Cross stitch with an odd thread count; an even count sewn</td></tr>
 <tr><td><a href="#sc-w0321"><code>SC-W0321</code></a></td><td>Warning</td><td>Cross stitch grid too fine for the shortest stitch; needle points left out</td></tr>
 <tr><td><a href="#sc-w0322"><code>SC-W0322</code></a></td><td>Warning</td><td>Half cross with an even thread count; the odd count above sewn</td></tr>
+<tr><td><a href="#sc-e0323"><code>SC-E0323</code></a></td><td>Error</td><td>Tartan fill’s sett can’t be read; skipped</td></tr>
+<tr><td><a href="#sc-w0324"><code>SC-W0324</code></a></td><td>Warning</td><td>Tartan’s herringbone not sewn yet; rows sewn without it</td></tr>
+<tr><td><a href="#sc-w0325"><code>SC-W0325</code></a></td><td>Warning</td><td>Tartan fill without a sett; Ink/Stitch’s default sett sewn</td></tr>
+<tr><td><a href="#sc-w0326"><code>SC-W0326</code></a></td><td>Warning</td><td>Tartan sett with no stripe to sew; only the underlay sewn</td></tr>
+<tr><td><a href="#sc-w0327"><code>SC-W0327</code></a></td><td>Warning</td><td>Tartan sett too fine for the shortest stitch; needle points left out</td></tr>
+<tr><td><a href="#sc-w0328"><code>SC-W0328</code></a></td><td>Warning</td><td>Tartan stripe’s colour can’t be read; left out</td></tr>
 <tr><td><a href="#sc-w0401"><code>SC-W0401</code></a></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td></tr>
 <tr><td><a href="#sc-w0402"><code>SC-W0402</code></a></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised</td></tr>
 <tr><td><a href="#sc-w0403"><code>SC-W0403</code></a></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td></tr>
@@ -647,6 +653,47 @@ crosses are left out where they lie too near the one before, and the crosses los
 and forth over it, as bean stitch does. An even <code>cross_thread_count</code> sews the odd count above it, as
 in Ink/Stitch, whose own help for the count says that half crosses take an odd one.</p>
 <p>The message gives the count set and the count sewn. Set an odd number.</p>
+<h2 id="sc-e0323"><a class="header" href="#sc-e0323">SC-E0323</a></h2>
+<p><strong>Error</strong> — Tartan fill’s sett can’t be read; skipped</p>
+<p>A tartan fill’s sett is its <code>tartan</code> setting, an object of JSON as Ink/Stitch’s tartan editor saves
+it, whose <code>palette</code> gives the stripes. This one can’t be read: it isn’t JSON, it has no <code>palette</code>, a
+number in it isn’t one, its <code>scale</code> isn’t above 0, its code has more than one <code>|</code>, or a stripe’s width
+isn’t a number. A threadcount or a code of colour letters, which Ink/Stitch’s editor reads too, is
+read from M10.7. The element is skipped.</p>
+<p>The message says what is wrong. Set the sett again in Ink/Stitch’s tartan editor, or write its
+palette code as a colour in brackets and a width for each stripe.</p>
+<h2 id="sc-w0324"><a class="header" href="#sc-w0324">SC-W0324</a></h2>
+<p><strong>Warning</strong> — Tartan’s herringbone not sewn yet; rows sewn without it</p>
+<p>A tartan’s herringbone sews its rows in bands <code>herringbone_width_mm</code> wide, each band’s rows slanting
+the other way from the band before. StitchCraft sews herringbones from M10.7, and until then the rows
+are sewn straight, as a tartan with a width of 0 sews them.</p>
+<p>The message gives the width. Set <code>herringbone_width_mm</code> to 0 for straight rows, or sew the file in
+Ink/Stitch to have the herringbone.</p>
+<h2 id="sc-w0325"><a class="header" href="#sc-w0325">SC-W0325</a></h2>
+<p><strong>Warning</strong> — Tartan fill without a sett; Ink/Stitch’s default sett sewn</p>
+<p>A tartan fill without a sett sews Ink/Stitch’s default one, as Ink/Stitch does: stripes 5 mm wide of a
+thread almost black, with 5 mm left unsewn between them. VectorCraft’s fill dialog holds no sett
+before M10.7, so a tartan fill made there sews this one.</p>
+<p>Set the sett with Ink/Stitch’s tartan editor, and sew the file it saves.</p>
+<h2 id="sc-w0326"><a class="header" href="#sc-w0326">SC-W0326</a></h2>
+<p><strong>Warning</strong> — Tartan sett with no stripe to sew; only the underlay sewn</p>
+<p>Every stripe of this sett is left unsewn: each is marked <code>?</code>, has a colour that can’t be read, or has
+no width, so neither the warp nor the weft has a stripe to sew. Only the fill’s underlay is sewn, as
+in Ink/Stitch.</p>
+<p>Give a stripe a colour and a width.</p>
+<h2 id="sc-w0327"><a class="header" href="#sc-w0327">SC-W0327</a></h2>
+<p><strong>Warning</strong> — Tartan sett too fine for the shortest stitch; needle points left out</p>
+<p>The rows cross a tartan’s narrowest stripe sewn as a fill in stretches shorter than the shortest
+stitch the machine sews well: a warp stripe in its width over the cosine of the rows’ angle to the
+stripes, and a weft stripe over its sine. Needle points too near the one before are left out, so the
+stripe’s rows lose stitches and it can look thin.</p>
+<p>The message gives the stripe’s width, the stretch and the shortest stitch. Widen the stripe, raise
+the sett’s <code>scale</code>, or raise its <code>min_stripe_width</code> so that the stripe sews as a run.</p>
+<h2 id="sc-w0328"><a class="header" href="#sc-w0328">SC-W0328</a></h2>
+<p><strong>Warning</strong> — Tartan stripe’s colour can’t be read; left out</p>
+<p>A stripe’s colour is <code>#</code> and 3 or 6 hexadecimal digits, or a colour name of SVG. This sett names a
+colour that is neither, and its stripes are left unsewn, as Ink/Stitch leaves them.</p>
+<p>The message names the colours. Write each as <code>#</code> and 6 hexadecimal digits.</p>
 <h2 id="sc-w0401"><a class="header" href="#sc-w0401">SC-W0401</a></h2>
 <p><strong>Warning</strong> — Path too small for the shortest stitch; skipped</p>
 <p>A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:

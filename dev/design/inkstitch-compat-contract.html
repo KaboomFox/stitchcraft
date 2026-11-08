@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-76997358.js";
+            window.path_to_searchindex_js = "../searchindex-bfc2b1c2.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-bd1465a9.js"></script>
+        <script src="../toc-61f039c5.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -205,7 +205,8 @@ planned</em>: never, and a design that sets it gets the same.
 <em>registered</em>: StitchCraft reads and checks it under the same key, meaning and default; it changes the
 stitches once its stitch type or feature lands (see <em>Phase</em> and the parameter’s reference entry).
 <em>deviates</em>: registered, with a meaning that differs as its reference entry describes. A clone’s settings
-say what the SVG adapter does with them.</li>
+say what the SVG adapter does with them. An element’s other attribute that the registry declares, such
+as a tartan’s sett, is registered too.</li>
 <li><strong>Applies to</strong> lists the stitch types Ink/Stitch’s settings window shows the parameter for. <em>Read by</em>
 adds those whose sewing reads it without showing it, as a contour fill’s underlay reads the tatami
 fill’s <code>angle</code>, and StitchCraft’s registry gives it those too.</li>
@@ -352,16 +353,16 @@ planned.</li>
 <tr><td><code>gap_fill_rows</code></td><td>int</td><td>rows</td><td>0</td><td><code>tatami_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#gap_fill_rows">registered</a></td></tr>
 <tr><td><code>angle</code></td><td>float</td><td>deg</td><td>0</td><td><code>tatami_fill</code>, <code>legacy_fill</code>; read by <code>circular_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>meander_fill</code>, <code>tartan_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#angle">registered</a></td></tr>
 <tr><td><code>guided_fill_angle</code></td><td>float</td><td>deg</td><td>—</td><td><code>guided_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>tartan_angle</code></td><td>float</td><td>deg</td><td>-45</td><td><code>tartan_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
+<tr><td><code>tartan_angle</code></td><td>float</td><td>deg</td><td>-45</td><td><code>tartan_fill</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/tartan.html#tartan_angle">registered</a></td></tr>
 <tr><td><code>max_stitch_length_mm</code></td><td>float</td><td>mm</td><td>4.0</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code>; read by <code>circular_fill</code>, <code>meander_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/common.html#max_stitch_length_mm">registered</a></td></tr>
 <tr><td><code>row_spacing_mm</code></td><td>float</td><td>mm</td><td>0.25</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code>; read by <code>meander_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#row_spacing_mm">registered</a></td></tr>
 <tr><td><code>end_row_spacing_mm</code></td><td>float</td><td>mm</td><td>—</td><td><code>tatami_fill</code>, <code>circular_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#end_row_spacing_mm">deviates</a></td></tr>
 <tr><td><code>stitch_position_method</code></td><td>combo</td><td>—</td><td>0</td><td><code>guided_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
 <tr><td><code>staggers</code></td><td>int</td><td>—</td><td>4</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code>; read by <code>circular_fill</code>, <code>contour_fill</code>, <code>meander_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#staggers">registered</a></td></tr>
-<tr><td><code>skip_last</code></td><td>boolean</td><td>—</td><td>false</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>legacy_fill</code>; read by <code>circular_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#skip_last">registered</a></td></tr>
+<tr><td><code>skip_last</code></td><td>boolean</td><td>—</td><td>false</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>legacy_fill</code>; read by <code>circular_fill</code>, <code>tartan_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#skip_last">registered</a></td></tr>
 <tr><td><code>flip</code></td><td>boolean</td><td>—</td><td>false</td><td><code>legacy_fill</code></td><td>—</td><td>not planned</td></tr>
 <tr><td><code>reverse</code></td><td>boolean</td><td>—</td><td>false</td><td><code>legacy_fill</code></td><td>—</td><td>not planned</td></tr>
-<tr><td><code>stop_at_ending_point</code></td><td>boolean</td><td>—</td><td>false</td><td><code>linear_gradient_fill</code>, <code>tartan_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
+<tr><td><code>stop_at_ending_point</code></td><td>boolean</td><td>—</td><td>false</td><td><code>linear_gradient_fill</code>, <code>tartan_fill</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/tartan.html#stop_at_ending_point">registered</a></td></tr>
 <tr><td><code>underpath</code></td><td>boolean</td><td>—</td><td>true</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>circular_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#underpath">registered</a></td></tr>
 <tr><td><code>running_stitch_length_mm</code></td><td>float</td><td>mm</td><td>2.5</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>meander_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>; read by <code>contour_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/running.html#running_stitch_length_mm">registered</a></td></tr>
 <tr><td><code>running_stitch_tolerance_mm</code></td><td>float</td><td>mm</td><td>0.1 (0.2 when unset)</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>meander_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/running.html#running_stitch_tolerance_mm">deviates</a></td></tr>
@@ -371,8 +372,8 @@ planned.</li>
 <tr><td><code>bean_stitch_repeats</code></td><td>str</td><td>—</td><td>0</td><td><code>meander_fill</code>, <code>circular_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>tartan_fill</code></td><td>P2 (M7)</td><td><a href="../user/reference/params/path-fill.html#bean_stitch_repeats">registered</a></td></tr>
 <tr><td><code>zigzag_spacing_mm</code></td><td>float</td><td>mm</td><td>0</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td><a href="../user/reference/params/meander.html#zigzag_spacing_mm">registered</a></td></tr>
 <tr><td><code>zigzag_width_mm</code></td><td>float</td><td>mm</td><td>3</td><td><code>meander_fill</code></td><td>P2 (M7)</td><td><a href="../user/reference/params/meander.html#zigzag_width_mm">registered</a></td></tr>
-<tr><td><code>rows_per_thread</code></td><td>int</td><td>—</td><td>2</td><td><code>tartan_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
-<tr><td><code>herringbone_width_mm</code></td><td>int</td><td>mm</td><td>0</td><td><code>tartan_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
+<tr><td><code>rows_per_thread</code></td><td>int</td><td>—</td><td>2</td><td><code>tartan_fill</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/tartan.html#rows_per_thread">registered</a></td></tr>
+<tr><td><code>herringbone_width_mm</code></td><td>int</td><td>mm</td><td>0</td><td><code>tartan_fill</code></td><td>P3 (M10)</td><td><a href="../user/reference/params/tartan.html#herringbone_width_mm">registered</a></td></tr>
 <tr><td><code>pull_compensation_mm</code></td><td>float</td><td>mm (each side)</td><td>0</td><td><code>tatami_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/pull.html#pull_compensation_mm">registered</a></td></tr>
 <tr><td><code>pull_compensation_percent</code></td><td>float</td><td>% (each side)</td><td>0</td><td><code>tatami_fill</code></td><td>P1 (M5)</td><td><a href="../user/reference/params/pull.html#pull_compensation_percent">registered</a></td></tr>
 <tr><td><code>fill_underlay</code></td><td>toggle</td><td>—</td><td>true</td><td>all</td><td>P1 (M5)</td><td><a href="../user/reference/params/tatami.html#fill_underlay">registered</a></td></tr>
@@ -517,7 +518,7 @@ elements, which the registry names (<code>SC-W0105</code>).</p>
 <tr><td><code>layer_visibility</code></td><td>stitch plan</td><td>—</td><td>not planned</td></tr>
 <tr><td><code>sew_stack</code></td><td>sew stack</td><td>—</td><td>not planned</td></tr>
 <tr><td><code>sew_stack_only</code></td><td>sew stack</td><td>—</td><td>not planned</td></tr>
-<tr><td><code>tartan</code></td><td>element</td><td>P3 (M10)</td><td>planned</td></tr>
+<tr><td><code>tartan</code></td><td>element</td><td>P3 (M10)</td><td><a href="../user/reference/params/tartan.html#tartan">registered</a></td></tr>
 <tr><td><code>color_sort_index</code></td><td>lettering</td><td>P3 (M14)</td><td>planned</td></tr>
 <tr><td><code>letter-group</code></td><td>lettering</td><td>P3 (M14)</td><td>planned</td></tr>
 <tr><td><code>lettering</code></td><td>lettering</td><td>P3 (M14)</td><td>planned</td></tr>
@@ -569,7 +570,7 @@ change Ink/Stitch’s updater makes (<code>lib/update.py</code>), in StitchCraft
 </tbody>
 </table>
 </div>
-<p><em>145 parameter declarations, 123 registered in StitchCraft.</em></p>
+<p><em>145 parameter declarations, 127 registered in StitchCraft.</em></p>
 
                     </main>
 
