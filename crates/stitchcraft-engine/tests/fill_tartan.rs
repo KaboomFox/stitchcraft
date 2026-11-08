@@ -18,6 +18,7 @@ use std::f64::consts::SQRT_2;
 use stitchcraft_core::{Budget, Code, Point};
 use stitchcraft_engine::PlanOutcome;
 use stitchcraft_engine::design::{Design, DesignSettings, Element, Hints};
+use stitchcraft_plan::palette::BROTHER_PEC;
 use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::{Rgb, Role, StitchKind, Thread};
 use stitchcraft_testkit::designs::{fill, messages, p, planned};
@@ -216,6 +217,20 @@ fn req_fill_trt_006_the_underlay_then_each_colour_in_its_own_thread_starting_and
     // Without underlay, the colours alone.
     let bare = planned(vec![tartan(&[("tartan", RED_BLUE), ("fill_underlay", "false")])]);
     assert_eq!(threads(&bare), [RED, BLUE]);
+}
+
+#[test]
+fn req_fill_trt_006_a_colour_of_the_element_s_own_sews_in_the_element_s_own_thread() {
+    // A named thread, as a document's swatch or a test sheet gives an element: the blue rows sew in it too,
+    // and red in a thread of its colour alone. A machine file then writes blue as one entry of its palette,
+    // where a named and an unnamed thread of one colour would be 2 threads and 2 entries.
+    let navy = Thread::named(BLUE, "Navy");
+    let element = fill("tartan", &[&SQUARE], &navy, &[("fill_method", "tartan_fill"), ("trim_after", "true"), ("tartan", RED_BLUE)]);
+    let plan = planned(vec![element]).plan.unwrap();
+    let threads: Vec<&Thread> = plan.blocks.iter().map(|block| &block.thread).collect();
+    assert_eq!(threads, [&navy, &Thread::new(RED), &navy]);
+    let entries = BROTHER_PEC.assign(plan.color_entries().iter().map(|entry| entry.thread)).unwrap().entries;
+    assert_eq!(entries.first().map(|e| e.index), entries.last().map(|e| e.index));
 }
 
 #[test]

@@ -7,18 +7,20 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ### Added
 - M10.6: tartan fill without herringbone (`REQ-FILL-TRT-001` to `REQ-FILL-TRT-011`). `fill_method`
   `tartan_fill` sews Ink/Stitch's tartan fill, which was skipped with `SC-W0011`.
-  - The sett is the `tartan` setting as Ink/Stitch's tartan editor saves it: a palette code of stripes, each
-    a colour and a width, for warp and weft alike or apart, mirrored or repeated, scaled, turned and moved.
+  - The sett is the `tartan` setting as Ink/Stitch's tartan editor saves it, a palette code of stripes that
+    gives each a colour and a width. Warp and weft have the same stripes or their own, and the sett is
+    mirrored or repeated, scaled, turned and moved.
     The list the editor writes for a repeated sett reads too. Stripes no wider than `min_stripe_width` sew
     as runs along their middles, after the fills.
   - Rows at `tartan_angle` to the stripes go to the warp and the weft in turns of `rows_per_thread`, their
     needle points the longest stitch apart. Each band's rows are joined along its edges, and each colour's
     lines are routed as a tatami fill's rows, after the tatami fill's underlay in the element's own thread.
     Each colour sews in its own thread, a colour block trimmed after with `trim_after`, and with
-    `stop_at_ending_point` each colour ends where the fill ends.
+    `stop_at_ending_point` each colour ends where the fill ends. A stripe of the element's own colour sews in
+    the element's own thread, so that a PES file writes the colour once.
   - New settings: `tartan`, `tartan_angle`, `rows_per_thread`, `herringbone_width_mm` and
-    `stop_at_ending_point`. A tartan also reads the tatami fill's `skip_last`, as Ink/Stitch's does, its
-    runs read `bean_stitch_repeats`, and `max_stitch_length_mm` applies to it. New codes: `SC-E0323`,
+    `stop_at_ending_point`. A tartan also reads the tatami fill's `skip_last` as Ink/Stitch's does. Its runs
+    read `bean_stitch_repeats`, and `max_stitch_length_mm` applies to it. New codes: `SC-E0323`,
     `SC-W0324`, `SC-W0325`, `SC-W0326`, `SC-W0327` and `SC-W0328`. A herringbone sews straight rows until
     M10.7, and says so.
   - VectorCraft's fill dialog offers the tartan's numbers, but no sett before M10.7, so a tartan made there

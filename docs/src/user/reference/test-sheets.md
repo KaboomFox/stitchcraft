@@ -460,9 +460,9 @@ After sewing, check:
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
-![TS-17B as it will sew: 5 tartans 40 mm square, 3 in the top row and 2 below. Top, left to right: red, white, Prussian blue and gold stripes mirrored at their ends, green, black and white stripes repeated, and a warp of red and black under a weft of blue and white. Below: blue and black with thin white and red lines along the middles of their stripes, and gold, black and tangerine stripes turned 30°, all woven in rows that slant across the stripes.](../../images/generated/testsheet-ts-17b.png)
+![TS-17B as it will sew: 5 tartans 40 mm square in 2 rows, all woven in rows that slant across their stripes. In the top row, left to right, are stripes of red, white, Prussian blue and gold mirrored at their ends, stripes of green, black and white repeated, and a warp of red and black under a weft of blue and white. Below are blue and black stripes with thin white and red lines along their middles, and stripes of gold, black and tangerine turned 30°.](../../images/generated/testsheet-ts-17b.png)
 
-Threads: Prussian Blue, unnamed, unnamed, unnamed, unnamed, Black, unnamed, unnamed, unnamed, Blue, unnamed, unnamed, unnamed, unnamed, Black, unnamed, unnamed, unnamed, unnamed, Tangerine, unnamed, unnamed, unnamed.
+Threads: Prussian Blue (unnamed, #0e1f7c), Red (unnamed, #ed171f), White (unnamed, #f0f0f0), Prussian Blue (unnamed, #0e1f7c), Deep Gold (unnamed, #e8a900), Black (unnamed, #000000), Emerald Green (unnamed, #00673e), Black (unnamed, #000000), White (unnamed, #f0f0f0), Blue (unnamed, #0a55a3), Red (unnamed, #ed171f), Black (unnamed, #000000), Blue (unnamed, #0a55a3), White (unnamed, #f0f0f0), Black (unnamed, #000000), Blue (unnamed, #0a55a3), Black (unnamed, #000000), White (unnamed, #f0f0f0), Red (unnamed, #ed171f), Tangerine (unnamed, #fe9e32), Deep Gold (unnamed, #e8a900), Black (unnamed, #000000), Tangerine (unnamed, #fe9e32).
 
 After sewing, check:
 

@@ -138,10 +138,21 @@ fn test_sheets() -> Result<String, String> {
         for shot in shots.iter().filter(|s| s.kind == "stitch" && s.sheet.as_deref() == Some(sheet.id)) {
             let _ = writeln!(out, "![{}](../../images/generated/{}.png)\n", shot.alt, shot.id);
         }
-        let threads: Vec<String> = plan
-            .color_entries()
+        // A thread without a name is listed by the entry of the palette the sheet's file writes it as, which the
+        // machine shows, when the file's format has a palette: a tartan's stripes are threads of their colours.
+        let entries = plan.color_entries();
+        let written = profile.format.palette().and_then(|id| id.palette().assign(entries.iter().map(|e| e.thread)));
+        let threads: Vec<String> = entries
             .iter()
-            .map(|e| format!("{}{}", e.thread.name.as_deref().unwrap_or("unnamed"), if e.stop { " (stop)" } else { "" }))
+            .enumerate()
+            .map(|(i, e)| {
+                let name = match (&e.thread.name, written.as_ref().and_then(|w| w.entries.get(i))) {
+                    (Some(name), _) => name.clone(),
+                    (None, Some(entry)) => format!("{} (unnamed, {})", entry.name, e.thread.color),
+                    (None, None) => "unnamed".to_string(),
+                };
+                format!("{name}{}", if e.stop { " (stop)" } else { "" })
+            })
             .collect();
         let _ = writeln!(out, "Threads: {}.\n\nAfter sewing, check:\n", threads.join(", "));
         for check in sheet.checks {

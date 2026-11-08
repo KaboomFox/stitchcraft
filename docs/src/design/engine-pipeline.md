@@ -286,8 +286,8 @@ A group without a thread of its own is sewn in its element's, as every group of 
   The element has the thread sewing when the thread it starts in is, and leaves the thread it ends in
   sewing (`REQ-AUTO-024`, [image to embroidery](image-to-embroidery.md#sewing-order)). The order reads each
   element's threads before it is generated, from its shape and settings
-  (`stitchcraft_engine::generate::colours`): its own thread, but for a tartan fill, which gives there its
-  own thread for its underlay, when it has one, and then its sett's colours in the order it sews them. The
+  (`stitchcraft_engine::generate::colours`). Most give their own thread. A tartan fill gives its own thread
+  for its underlay, when it has one, and then its sett's colours in the order it sews them. The
   runs of
   [underlays first](#underlays-first) can ask it which elements are sewn in several threads, which they
   leave out.

@@ -41,21 +41,22 @@ JSON. Its `palette` lists the stripes in order, each a colour in brackets and th
 Each setting the object leaves out takes the value Ink/Stitch's editor starts from. A colour that can't be
 read leaves its stripe unsewn, as in Ink/Stitch, and `SC-W0328` names it. A sett that can't be read skips
 the element, and `SC-E0323` says why. Ink/Stitch's editor can also write a sett as a threadcount of the
-Scottish Register of Tartans, or as colour letters, and StitchCraft reads those from M10.7. A tartan fill
+Scottish Register of Tartans or as colour letters. StitchCraft reads those from M10.7. A tartan fill
 without a sett sews Ink/Stitch's default one: stripes 5 mm wide of a thread almost black, with 5 mm left
 unsewn between them. `SC-W0325` says so.
 
-The VectorCraft plug-in's fill dialog offers the tartan fill, with its row angle, its rows per thread, its
-herringbone width and where its colours end, but it has no field for a sett before M10.7
+The VectorCraft plug-in's fill dialog offers the tartan fill with its row angle and rows per thread, and
+with its herringbone width and where its colours end. It has no field for a sett before M10.7
 ([VectorCraft integration](../../design/vectorcraft-integration.md#a-tartans-sett)). So a tartan fill made
 in VectorCraft sews the default sett. A file from Ink/Stitch keeps its setts, and `stitch plan` sews them.
 
 ## Rows
 
 The rows run across the stripes at `tartan_angle`, -45° by default, so that they slant across the warp and
-the weft alike. They lie `row_spacing_mm` apart, and their needle points lie the longest stitch apart
-(`max_stitch_length_mm`), each row's moved on from the row before's by `staggers`, as a tatami fill's are.
-`rows_per_thread` rows go to the warp, then as many to the weft, and so on: 2 by default, a twill 2 by 2.
+the weft alike. They lie `row_spacing_mm` apart. Their needle points lie the longest stitch apart
+(`max_stitch_length_mm`), and each row's are moved on from the row before's by `staggers`, as a tatami
+fill's are. `rows_per_thread` rows go to the warp and then as many to the weft, over and over. It is 2 by
+default, which weaves a twill 2 by 2.
 More rows to a thread weave a coarser twill. In each stripe, a colour's rows are joined along the stripe's
 edges into one zigzag, which the outline cuts.
 
@@ -76,9 +77,11 @@ and forth, for a bolder line. From one run to the next the needle follows the ou
 ## Colours and their order
 
 Before its colours, each part of the fill sews the tatami fill's underlay in the element's own thread
-([tatami fill](tatami-fill.md#underlay)). Then each colour sews its rows in its own thread: the warp's
-colours in the order they first appear across its stripes, then the weft's others, and the runs last. A
-colour starts and ends with its rows, and between its rows the needle follows the outline. With
+([tatami fill](tatami-fill.md#underlay)). Then each colour sews its rows in its own thread. The warp's
+colours come first, in the order they first appear across its stripes, and then the weft's others. The
+runs come last. A stripe in the element's own colour sews in the element's own thread, and the others in
+threads of their colours. A colour starts and ends with its rows, and between its rows the needle follows
+the outline. With
 `stop_at_ending_point` on, every colour starts where the fill starts and ends where it ends instead.
 Each colour is a colour block of its own, with a trim after it when the fill's `trim_after` is on. A fill
 in several parts sews each part's underlay and colours, and then sorts them by colour, so that each thread
@@ -93,7 +96,7 @@ TS-17B sews 5 tartans 40 mm square for the next machine checkpoint, each in sett
 ([test sheets](../reference/test-sheets.md)).
 
 <!-- shot: testsheet-ts-17b -->
-![TS-17B as it will sew: 5 tartans 40 mm square, 3 in the top row and 2 below. Top, left to right: red, white, Prussian blue and gold stripes mirrored at their ends, green, black and white stripes repeated, and a warp of red and black under a weft of blue and white. Below: blue and black with thin white and red lines along the middles of their stripes, and gold, black and tangerine stripes turned 30°, all woven in rows that slant across the stripes.](../../images/generated/testsheet-ts-17b.png)
+![TS-17B as it will sew: 5 tartans 40 mm square in 2 rows, all woven in rows that slant across their stripes. In the top row, left to right, are stripes of red, white, Prussian blue and gold mirrored at their ends, stripes of green, black and white repeated, and a warp of red and black under a weft of blue and white. Below are blue and black stripes with thin white and red lines along their middles, and stripes of gold, black and tangerine turned 30°.](../../images/generated/testsheet-ts-17b.png)
 <!-- /shot -->
 
 ## Parameters
