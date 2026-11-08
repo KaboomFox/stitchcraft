@@ -315,18 +315,23 @@ fn sew(root: &Path, inkstitch: &Inkstitch, job: Job, design: &str, excuses: &Exc
                     match (ours, theirs) {
                         (Some((our_plan, ours)), Some((their_plan, theirs))) => {
                             sewn.rows = differential::compare(&ours, &theirs);
-                            let (verdict, used) = excuses.judge(&sewn.job.font, &sewn.traits, &sewn.rows, (our_plan, &ours), (their_plan, &theirs));
+                            let (verdict, used) =
+                                excuses.judge(&sewn.job.font, &sewn.job.name, &sewn.traits, &sewn.rows, (our_plan, &ours), (their_plan, &theirs));
                             sewn.used = used;
                             verdict
                         }
                         // Neither program writes a file of the glyph, or a file that sews.
                         (None, None) => Verdict::Agrees,
-                        (None, Some(_)) => {
-                            Verdict::Differs(vec![format!("StitchCraft sews nothing ({}), and Ink/Stitch sews the glyph", nothing.join("; "))])
-                        }
-                        (Some(_), None) => {
-                            let said = written.err().unwrap_or_else(|| "its file sews nothing".to_string());
-                            Verdict::Differs(vec![format!("Ink/Stitch sews nothing ({said}), and StitchCraft sews the glyph")])
+                        (ours, _) => {
+                            let how = if ours.is_none() {
+                                format!("StitchCraft sews nothing ({}), and Ink/Stitch sews the glyph", nothing.join("; "))
+                            } else {
+                                let said = written.err().unwrap_or_else(|| "its file sews nothing".to_string());
+                                format!("Ink/Stitch sews nothing ({said}), and StitchCraft sews the glyph")
+                            };
+                            let (verdict, used) = excuses.judge_alone(&sewn.job.font, &sewn.job.name, &sewn.traits, how);
+                            sewn.used = used;
+                            verdict
                         }
                     }
                 }

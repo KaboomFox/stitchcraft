@@ -79,14 +79,26 @@ each glyph that differs or didn't sew, by font and file, with Ink/Stitch's PES f
 
 `glyphs.toml` excuses a difference StitchCraft makes on purpose by the ledger's entry that explains it. Each
 excuse is for the glyphs where its cause is, picked by the diagnostics StitchCraft gives them (`codes` and
-`saying`), by their stitch types (`types` and `only_types`), or by their settings and fonts (`settings` and
-`fonts`). With `within_mm`, an excuse counts only where each program's thread lies that near the other's:
+`saying`), by their stitch types (`types` and `only_types`), by their settings and fonts (`settings` and
+`fonts`), or by name (`glyphs`). With `within_mm`, an excuse counts only where each program's thread lies
+that near the other's:
 
 ```toml
 [[excuse]]
 measures = ["stitches"]
 deviation = "DEV-FIN-001"
 codes = ["SC-I0703", "SC-I0504"]
+```
+
+A glyph that one program sews, where the other doesn't write a file, has no measures. An excuse that names
+`sewn` among its measures explains it:
+
+```toml
+[[excuse]]
+measures = ["stitches", "size", "overlap", "sewn"]
+deviation = "DEV-SAT-013"
+fonts = ["ags_garamond_latin_grec"]
+glyphs = ["J", "Đ"]
 ```
 
 A difference the weekly run finds that no one has explained yet goes in as `[[known]]`, with a `follow_up`
