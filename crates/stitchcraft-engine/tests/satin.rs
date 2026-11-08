@@ -97,6 +97,19 @@ fn req_sat_005_rails_may_meet_as_a_pointed_column_s_do_at_its_tips() {
 }
 
 #[test]
+fn req_sat_005_a_rung_that_ends_on_a_rail_but_for_rounding_meets_it() {
+    // The rung ends at the right rail's lower end, as drawn, but rounding left its end a ten-trillionth of a
+    // millimetre to the left, beside the box round the rail. It still meets the rail, and the rails are the
+    // 2 that meet only the rung.
+    let (left, right) = (&[(0.0, 0.0), (4.0, 10.0)][..], &[(10.0, 0.0), (6.0, 10.0)][..]);
+    let rung = &[(3.0, 9.0), (6.0 - 1e-13, 10.0)][..];
+    let (satin, warnings) = ladder(&[left, right, rung]);
+    assert_eq!(satin.rails, [points(left), points(right)]);
+    assert_rungs(&satin.rungs, &[[(48.0 / 13.0, 120.0 / 13.0), (6.0, 10.0)]]);
+    assert!(warnings.is_empty(), "{warnings:?}");
+}
+
+#[test]
 fn diag_sc_w0202_two_rungs_across_rails_that_do_not_meet_are_settled_by_length() {
     // A `#`: each of the four subpaths meets two others, and the two longest are the rails.
     let (satin, warnings) = ladder(&[&[(2.0, -1.0), (2.0, 5.0)], LOWER, UPPER, &[(18.0, -1.0), (18.0, 5.0)]]);

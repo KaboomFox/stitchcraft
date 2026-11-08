@@ -44,11 +44,13 @@ fn described(above: Difference, below: usize, bar: u32) -> String {
 }
 
 /// A start of the app with the badge open, recorded as `name`: its screenshot, what `ui.inspect` shows
-/// then, the status bar's first row, and how long the start took until the screenshot. The app quits on
-/// the way out.
+/// then, the status bar's first row, and how long the start took until the screenshot. The view is
+/// fitted again once the canvas has settled, so that each start draws the badge at one zoom. The app
+/// quits on the way out.
 fn start(name: &str) -> Result<(Pixels, Value, u32, Duration), String> {
     let started = Instant::now();
     let mut window = Window::open(&fixture(BADGE)?, name)?;
+    window.fit_again()?;
     let shot = window.screenshot(name)?;
     let took = started.elapsed();
     let bar = window.below_canvas(&shot)?;
@@ -79,11 +81,14 @@ fn the_window_screenshots_the_same_pixels_twice() {
     });
 }
 
-/// In 3 of the 97 runs from 1 to 3 November 2026, the screenshots of the two starts differed in 19,159
-/// pixels above the status bar, the same number each time, for a reason not yet known. So the notice gives
-/// each start's time to its screenshot and the fingerprint of its pixels above the status bar, which `the
-/// same pixels twice` gives for a window of its own, and a failure names what `ui.inspect` shows
-/// differently, the frame timings left out.
+/// In 3 of the 97 runs from 1 to 3 November 2026, and in 1 on 8 November, the screenshots of the two
+/// starts differed in 19,159 pixels above the status bar, the same number each time. The run on 8 November
+/// named the reason: the 2 starts had opened the badge at zooms of 4.9812 and 4.9883, their canvas and the
+/// view's middle alike, so VectorCraft had fitted the view to a canvas that was still settling.
+/// [`start`] now fits the view again once the canvas has settled. The notice gives each start's time to
+/// its screenshot and the fingerprint of its pixels above the status bar, which `the same pixels twice`
+/// gives for a window of its own, and a failure names what `ui.inspect` shows differently, the frame
+/// timings left out.
 #[test]
 fn a_new_start_screenshots_the_same_pixels() {
     let test = "the same pixels after a new start";
