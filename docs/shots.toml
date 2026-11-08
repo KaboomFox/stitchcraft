@@ -217,7 +217,7 @@ kind = "stitch"
 sheet = "TS-17B"
 style = "realistic"
 scale = 4.0
-alt = "TS-17B as it will sew: 5 tartans 40 mm square in 2 rows, all woven in rows that slant across their stripes. In the top row, left to right, are stripes of red, white, Prussian blue and gold mirrored at their ends, stripes of green, black and white repeated, and a warp of red and black under a weft of blue and white. Below are blue and black stripes with thin white and red lines along their middles, and stripes of gold, black and tangerine turned 30°."
+alt = "TS-17B as it will sew: 5 tartans and 3 linear gradients 40 mm square in 3 rows. The tartans are woven in rows that slant across their stripes. In the top row, left to right, are stripes of red, white, Prussian blue and gold mirrored at their ends, stripes of green, black and white repeated, and a warp of red and black under a weft of blue and white. Below are blue and black stripes with thin white and red lines along their middles, and stripes of gold, black and tangerine turned 30°. In the bottom row, red blends into blue up to the right and gold through white into green down to the right. The last square's tangerine thins out to bare fabric, and Prussian blue grows from it down to the left."
 
 # ── How-to pages ────────────────────────────────────────────────────────────────────────────────────
 
@@ -723,6 +723,33 @@ panels = [
   { caption = "Stripes of 0.5 and 0.8 mm as runs", params = { fill_method = "tartan_fill", fill_underlay = "false", tartan = '{"palette": "(#0a55a3)/4 (#f0f0f0)0.5 (#0a55a3)3 (#ed171f)0.8 (#000000)/4"}' } },
   { caption = "Turned 30°, at 150 %", params = { fill_method = "tartan_fill", fill_underlay = "false", tartan = '{"palette": "(#e8a900)/2 (#000000)1.5 (#fe9e32)/2.5", "rotate": 30, "scale": 150}' } },
   { caption = "4 rows per thread", params = { fill_method = "tartan_fill", fill_underlay = "false", rows_per_thread = "4", tartan = '{"palette": "(#e8a900)/2 (#000000)1.5 (#fe9e32)/2.5", "rotate": 30, "scale": 150}' } },
+]
+
+[[shot]]
+id = "gradient-stops"
+kind = "stitch"
+fixture = "docs/fixtures/gradient.svg"
+style = "realistic"
+scale = 8.0
+layout = "rows"
+alt = "3 squares 30 mm a side sewn as linear gradient fills without underlay, each colour's rows in its own thread and square to its gradient. Red blends into blue across the first square and deep gold through white into emerald green up the second. In the third, tangerine thins out to bare fabric, and Prussian blue grows from it down the square"
+panels = [
+  { caption = "Rows 0.25 mm apart", params = { fill_underlay = "false" } },
+  { caption = "Rows 0.5 mm apart", params = { fill_underlay = "false", row_spacing_mm = "0.5" } },
+]
+
+[[shot]]
+id = "gradient-fade"
+kind = "stitch"
+fixture = "docs/fixtures/fill.svg"
+allow = ["SC-W0329"]
+style = "realistic"
+scale = 8.0
+alt = "The patch with a round hole sewn as a linear gradient fill without a gradient. Its own colour fades out along its angle as its rows thin out to none"
+panels = [
+  { caption = "At 0°", params = { fill_method = "linear_gradient_fill", fill_underlay = "false" } },
+  { caption = "At 30°", params = { fill_method = "linear_gradient_fill", fill_underlay = "false", angle = "30" } },
+  { caption = "At 90°", params = { fill_method = "linear_gradient_fill", fill_underlay = "false", angle = "90" } },
 ]
 
 [[shot]]

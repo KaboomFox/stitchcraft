@@ -54,12 +54,16 @@ sewn without them, which `SC-W0324` says.
 - **Default:** `0`
 - **Ink/Stitch:** same key, meaning and default
 
+## Colours
+
 ### `stop_at_ending_point`
 
-**Stop at the end position.** End every colour at the fill's end position, or near the next element: each colour then travels
-from where the fill starts and to where it ends. Off, each colour starts where the one before ended
-and ends with its last row, and only the fill's runs travel on towards its end.
+**Stop at the end position.** End the fill's colours at its end position, or near the next element. A tartan fill's every colour
+then travels from where the fill starts to where it ends, and a linear gradient fill's last 2
+colours travel on to the end after their rows. Off, each colour ends with its last row, and a
+tartan starts each colour where the one before ended, and only its runs travel on towards its end.
 
 - **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `false`
+- **Applies to:** Linear gradient fill, Tartan fill
 - **Ink/Stitch:** same key, meaning and default

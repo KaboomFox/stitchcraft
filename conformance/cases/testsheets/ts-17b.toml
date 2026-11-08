@@ -1,15 +1,17 @@
 # TS-17B's M10.6 parts: 5 tartan fills 40 mm square, their setts mirrored and repeated, a warp and a weft
 # apart, stripes sewn as runs, and a sett turned and scaled (REQ-FILL-TRT-001 to REQ-FILL-TRT-007), each
-# underlay in its sample's own thread and each colour a colour block, trimmed after. The sheet draws only as
+# underlay in its sample's own thread and each colour a colour block, trimmed after. Its M10.12 parts below
+# them: 3 linear gradient fills 40 mm square, of 2 stops and of 3, one of them transparent, each at a slant
+# (REQ-FILL-GRD-001 to REQ-FILL-GRD-006), each underlay in its first colour's block. The sheet draws only as
 # the engine sews it without a word; the diagnostics here are the hoop's, of which there are none. The
 # invariants (REQ-PLAN-…) run on the sheet's plan; the golden file is the bytes MC-12 sews.
 id = "ts-17b"
-requirements = ["REQ-PLAN-001", "REQ-PLAN-002", "REQ-PLAN-003", "REQ-PLAN-005", "REQ-PLAN-006", "REQ-PLAN-007", "REQ-PRF-002", "REQ-FMT-001", "REQ-FILL-TRT-001", "REQ-FILL-TRT-002", "REQ-FILL-TRT-003", "REQ-FILL-TRT-006", "REQ-FILL-TRT-007"]
+requirements = ["REQ-PLAN-001", "REQ-PLAN-002", "REQ-PLAN-003", "REQ-PLAN-005", "REQ-PLAN-006", "REQ-PLAN-007", "REQ-PRF-002", "REQ-FMT-001", "REQ-FILL-TRT-001", "REQ-FILL-TRT-002", "REQ-FILL-TRT-003", "REQ-FILL-TRT-006", "REQ-FILL-TRT-007", "REQ-FILL-GRD-001", "REQ-FILL-GRD-002", "REQ-FILL-GRD-003", "REQ-FILL-GRD-004", "REQ-FILL-GRD-005", "REQ-FILL-GRD-006"]
 kind = "testsheet"
 sheet = "TS-17B"
 profile = "brother-pe800-5x7"
 
 [expect]
-size_mm = [130.0, 85.0]
+size_mm = [130.0, 130.0]
 diagnostics = []
 golden = ["golden/testsheets/TS-17B.pes"]

@@ -454,23 +454,24 @@ After sewing, check:
 - The square turned 30° sews its crosses square to its own sides, as a letter turned along a path sews its own. Do its rows of crosses run along its edges, with no part cell along them?
 - How long does the sheet take?
 
-## TS-17B — New fills: tartan
+## TS-17B — New fills: tartan and linear gradient
 
-130.0 × 85.0 mm · 28658 stitches, 23 jumps, 22 trims, 22 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
+130.0 × 130.0 mm · 36096 stitches, 30 jumps, 29 trims, 29 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
-![TS-17B as it will sew: 5 tartans 40 mm square in 2 rows, all woven in rows that slant across their stripes. In the top row, left to right, are stripes of red, white, Prussian blue and gold mirrored at their ends, stripes of green, black and white repeated, and a warp of red and black under a weft of blue and white. Below are blue and black stripes with thin white and red lines along their middles, and stripes of gold, black and tangerine turned 30°.](../../images/generated/testsheet-ts-17b.png)
+![TS-17B as it will sew: 5 tartans and 3 linear gradients 40 mm square in 3 rows. The tartans are woven in rows that slant across their stripes. In the top row, left to right, are stripes of red, white, Prussian blue and gold mirrored at their ends, stripes of green, black and white repeated, and a warp of red and black under a weft of blue and white. Below are blue and black stripes with thin white and red lines along their middles, and stripes of gold, black and tangerine turned 30°. In the bottom row, red blends into blue up to the right and gold through white into green down to the right. The last square's tangerine thins out to bare fabric, and Prussian blue grows from it down to the left.](../../images/generated/testsheet-ts-17b.png)
 
-Threads: Prussian Blue (unnamed, #0e1f7c), Red (unnamed, #ed171f), White (unnamed, #f0f0f0), Prussian Blue (unnamed, #0e1f7c), Deep Gold (unnamed, #e8a900), Black (unnamed, #000000), Emerald Green (unnamed, #00673e), Black (unnamed, #000000), White (unnamed, #f0f0f0), Blue (unnamed, #0a55a3), Red (unnamed, #ed171f), Black (unnamed, #000000), Blue (unnamed, #0a55a3), White (unnamed, #f0f0f0), Black (unnamed, #000000), Blue (unnamed, #0a55a3), Black (unnamed, #000000), White (unnamed, #f0f0f0), Red (unnamed, #ed171f), Tangerine (unnamed, #fe9e32), Deep Gold (unnamed, #e8a900), Black (unnamed, #000000), Tangerine (unnamed, #fe9e32).
+Threads: Prussian Blue (unnamed, #0e1f7c), Red (unnamed, #ed171f), White (unnamed, #f0f0f0), Prussian Blue (unnamed, #0e1f7c), Deep Gold (unnamed, #e8a900), Black (unnamed, #000000), Emerald Green (unnamed, #00673e), Black (unnamed, #000000), White (unnamed, #f0f0f0), Blue (unnamed, #0a55a3), Red (unnamed, #ed171f), Black (unnamed, #000000), Blue (unnamed, #0a55a3), White (unnamed, #f0f0f0), Black (unnamed, #000000), Blue (unnamed, #0a55a3), Black (unnamed, #000000), White (unnamed, #f0f0f0), Red (unnamed, #ed171f), Tangerine (unnamed, #fe9e32), Deep Gold (unnamed, #e8a900), Black (unnamed, #000000), Tangerine (unnamed, #fe9e32), Red (unnamed, #ed171f), Blue (unnamed, #0a55a3), Deep Gold (unnamed, #e8a900), White (unnamed, #f0f0f0), Emerald Green (unnamed, #00673e), Tangerine (unnamed, #fe9e32), Prussian Blue (unnamed, #0e1f7c).
 
 After sewing, check:
 
-- Each sample is a tartan fill 40 mm square, trimmed after each colour. Top row, left to right: a sett of red, white, Prussian blue and deep gold, mirrored at its ends, then one of emerald green, black and white, repeated, then a warp of red and black under a weft of blue and white. Bottom row: blue and black with a white stripe 0.5 mm wide and a red one 0.8 mm wide, each sewn as a run along its middle, then deep gold, black and tangerine turned 30° and scaled by 150 %.
+- Each sample is 40 mm square, trimmed after each colour. Top row, left to right, tartan fills: a sett of red, white, Prussian blue and deep gold, mirrored at its ends, then one of emerald green, black and white, repeated, then a warp of red and black under a weft of blue and white. Middle row: blue and black with a white stripe 0.5 mm wide and a red one 0.8 mm wide, each sewn as a run along its middle, then deep gold, black and tangerine turned 30° and scaled by 150 %. Bottom row, linear gradient fills: red to blue up to the right, deep gold through white to emerald green down to the right, and tangerine to Prussian blue down to the left through a transparent stop.
 - Do the warp and the weft read as a weave, each colour's stripes crossing the other direction's in a twill of rows 2 by 2?
 - Do the runs lie flat along the middles of their stripes, on top of the fills, and do they show as lines of their own colour?
 - Where the rows of one colour are joined along a stripe's edge, does the join show?
-- How many times does the thread change, and how long does the sheet take? Each tartan sews its underlay in its own thread, then each colour once.
+- Seen from a step away, does each gradient's colour change smoothly, with no step where one stop's rows give way to the next's? Where the transparent stop lies, do tangerine's rows and blue's thin out evenly to bare fabric?
+- How many times does the thread change, and how long does the sheet take? Each tartan sews its underlay in its own thread, then each colour once. Each gradient sews its underlay in its first colour, then each colour once.
 
 ## TS-17C — Ripples, routing and layers: satin letters and a network of lines, as drawn and routed, crossing columns and 3 ripple stitches
 

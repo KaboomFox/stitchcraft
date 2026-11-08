@@ -296,3 +296,14 @@ fn a_piece_without_rows_sews_no_colour() {
 fn coloured_of(piece: &Polygon, fill: &GradientFill) -> Coloured {
     coloured(piece, fill, &SplitMix64::new(1), &mut BTreeSet::new(), &mut Budget::DEFAULT.meter()).unwrap()
 }
+
+#[test]
+fn a_run_sewn_on_in_its_thread_starts_a_shortest_stitch_from_the_run_before() {
+    let group = |colour: Rgb, underlay: bool, xs: &[f64]| Group { colour, underlay, run: xs.iter().map(|&x| p(x, 0.0)).collect() };
+    let runs = |groups: Vec<Group>| groups.into_iter().map(|g| g.run.iter().map(|q| q.x()).collect::<Vec<_>>()).collect::<Vec<_>>();
+    // Red after red's underlay loses its points within 0.3 mm of the underlay's end; blue, another thread, keeps
+    // its own; a run keeps its last point.
+    let groups =
+        vec![group(RED, true, &[0.0, 5.0]), group(RED, false, &[5.0, 5.2, 5.3, 8.0]), group(BLUE, false, &[8.1, 9.0]), group(BLUE, false, &[9.1])];
+    assert_eq!(runs(joined(groups, 0.3)), [vec![0.0, 5.0], vec![5.3, 8.0], vec![8.1, 9.0], vec![9.1]]);
+}
