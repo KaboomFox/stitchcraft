@@ -163,6 +163,25 @@ fn req_auto_016_an_end_along_an_edge_takes_the_whole_straight_edge() {
 }
 
 #[test]
+fn req_auto_016_an_end_along_a_cut_runs_from_its_first_edge_on_the_cut_to_its_last() {
+    // The outline of a column 10 mm long and 3 mm wide, cut from broad parts at both ends: its left end, in 2
+    // pieces from (0, 3) through (0, 1.5) to (0, 0), is the ring's last 2 edges, and its right end the edge
+    // from (10, 0) to (10, 3). An end's places are places of the ring: the left end runs from place 3 to
+    // place 0, round past the ring's last place, and the right end from place 1 to place 2. An arc with no
+    // edge along a cut has no such end.
+    let ring_points = [p(0.0, 0.0), p(10.0, 0.0), p(10.0, 3.0), p(0.0, 3.0), p(0.0, 1.5)];
+    let triangulation = Triangulation { points: ring_points.to_vec(), triangles: Vec::new() };
+    let skeleton = Skeleton { triangulation, graph: Graph::new(), walked: Vec::new() };
+    let outline = Outline { rings: Vec::new(), triangle: BTreeMap::new() };
+    let ring = [0, 1, 2, 3, 4];
+    let cuts = [[p(0.0, 3.0), p(0.0, 0.0)], [p(10.0, 0.0), p(10.0, 3.0)]];
+    let place = Place { skeleton: &skeleton, owner: &[], line: 0, outline: &outline, ring: &ring, cuts: &cuts };
+    assert_eq!(place.along_cut(&[2, 3, 4, 0, 1]), Some((3, 0)));
+    assert_eq!(place.along_cut(&[0, 1, 2, 3]), Some((1, 2)));
+    assert_eq!(place.along_cut(&[0, 1]), None);
+}
+
+#[test]
 fn req_auto_016_a_ring_is_a_closed_column_started_at_a_rung() {
     // A ring 10 mm round the outside and 7 mm round its hole: one closed column, its rails the outside and
     // the hole, the same way round, each ending where it starts, the hole's start its point nearest the
