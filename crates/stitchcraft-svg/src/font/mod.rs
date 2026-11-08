@@ -343,16 +343,16 @@ fn read_glyph_file(
         let fix = "Open the file in Inkscape, check the glyphs drawn in it, and save it again.";
         unreadable(format!("The glyph file `{path}` of the font `{folder}` doesn't read: {}", d.message), fix)
     };
-    let text = text::decode(bytes).map_err(&refused)?;
-    text::check_entities(&text).map_err(&refused)?;
+    let text = text::decode(bytes).map_err(refused)?;
+    text::check_entities(&text).map_err(refused)?;
     meter.charge(glyphs::charge(text.len())).map_err(|_| exhausted(budget, "the font"))?;
-    let doc = document::parse(&text).map_err(&refused)?;
+    let doc = document::parse(&text).map_err(refused)?;
     let root = doc.root_element();
     let (tag, namespace) = (root.tag_name().name(), root.tag_name().namespace());
     if tag != "svg" || namespace.is_some_and(|namespace| namespace != glyphs::SVG) {
         return Err(refused(Diagnostic::new(Code::SvgUnreadable, format!("its root element is <{tag}>, not SVG's <svg>."))));
     }
-    let page = glyphs::page_of(root).map_err(&refused)?;
+    let page = glyphs::page_of(root).map_err(refused)?;
     let baseline = match glyphs::baseline(root, &page) {
         Ok(Some(baseline)) => baseline,
         Ok(None) => {
