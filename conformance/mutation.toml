@@ -654,6 +654,60 @@ line = "if from.point.distance(last) < from.point.distance(first) {"
 why = "the nodes a row joins are its line's ends, at their very coordinates, so the first lies 0 from one end, and the 2 tests differ only when it lies 0 from both: a closed line, which <= turns round. No way runs along a closed line, which leaves its node and comes back to it: a step from a node to itself never makes the node nearer, so the search never takes one, and the network's distances and ways are the same whichever way round the line runs"
 
 [[equivalent]]
+file = "crates/stitchcraft-engine/src/route/trim.rs"
+mutant = "replace <= with < in outside"
+line = "if length <= 0.0 {"
+why = "a jump of no length is 0 mm outside whatever hides it: past the test, its length times what it doesn't hide is 0 too"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/route/trim.rs"
+mutant = "replace > with >= in outside"
+line = "if end > start {"
+why = "`along` and `inside` give only stretches that end past their start, and a stretch's start is raised to the reach so far, so a stretch ends where its start then lies only when it ends at that reach: it adds 0 to what is covered, and the reach stays where it was"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/route/trim.rs"
+mutant = "replace > with >= in along"
+line = "(t > s).then_some([s, t])"
+why = "a segment on the jump's line that meets the jump at one point only, at an end of the jump or being a point itself, then gives a stretch of no length, which hides nothing: `outside` adds a stretch only where its end lies past its start"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/route/trim.rs"
+mutant = "replace > with >= in inside"
+line = "Ok((t > s).then_some([s, t]))"
+why = "a jump that meets the polygon at one point only, at a corner or at an end of the jump, then gives a stretch of no length, which hides nothing: `outside` adds a stretch only where its end lies past its start"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/route/read.rs"
+mutant = "replace / with * in cut_into"
+line = "let count = (length / PIECE).ceil() as usize;"
+why = "`PIECE` is 1 mm, and a length divided by 1 is exactly the length times 1"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/route/graph.rs"
+mutant = "replace + with * in Graph::join_apart"
+line = "for (j, second) in groups.iter().enumerate().skip(i + 1) {"
+why = "each group is then also weighed against itself, whose nearest places are a place and itself, 0 apart: that jump sorts first and is passed over, as it joins a group to itself, so the tree takes the same jumps in the same order, and only the work charged grows"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/route/sew.rs"
+mutant = "delete field name from struct Element expression in satin"
+line = "let piece = Element { id, name: None, shape, params, automatic: false, hints: Hints::default(), ..element.clone() };"
+why = "`pieces` names every piece it makes before it gives them back (`named`), so the name a column's piece is made with is never seen"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/route/sew.rs"
+mutant = "delete field automatic from struct Element expression in satin"
+line = "let piece = Element { id, name: None, shape, params, automatic: false, hints: Hints::default(), ..element.clone() };"
+why = "the route takes no element digitized automatically, which `read` leaves as it is with SC-I1002, so the column a piece is cut from has `automatic` false already"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/route/sew.rs"
+mutant = "delete field automatic from struct Element expression in run"
+line = "let run = Element { id, name: None, shape, params, automatic: false, hints: Hints::default(), clips: Vec::new(), ..element.clone() };"
+why = "the route takes no element digitized automatically, which `read` leaves as it is with SC-I1002, so the element a run is made from has `automatic` false already"
+
+[[equivalent]]
 file = "crates/stitchcraft-engine/src/generators/cross/grid.rs"
 mutant = "replace += with -= in share"
 line = "*sum += sign * (end - start) * ((height(start) + height(end)) / 2.0 - top);"

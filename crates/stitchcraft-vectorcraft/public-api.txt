@@ -11,6 +11,7 @@ pub stitchcraft_vectorcraft::filter::Object::id: u64
 pub stitchcraft_vectorcraft::filter::Object::name: core::option::Option<alloc::string::String>
 impl stitchcraft_vectorcraft::filter::Object
 pub fn stitchcraft_vectorcraft::filter::Object::effects(&self) -> core::option::Option<alloc::vec::Vec<stitchcraft_vectorcraft::filter::Record>>
+pub fn stitchcraft_vectorcraft::filter::Object::middle(&self, &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::option::Option<stitchcraft_core::units::Point>, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_vectorcraft::filter::Object::path(&self, &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::result::Result<stitchcraft_engine::design::Path, &'static str>, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_vectorcraft::filter::Object::quoted_name(&self) -> core::option::Option<alloc::string::String>
 pub fn stitchcraft_vectorcraft::filter::Object::stroke(&self) -> core::option::Option<stitchcraft_vectorcraft::filter::Stroke>
@@ -47,6 +48,9 @@ pub mod stitchcraft_vectorcraft::settings
 pub const stitchcraft_vectorcraft::settings::PROFILE: &str
 pub const stitchcraft_vectorcraft::settings::SETTINGS_FILTER: &str
 pub fn stitchcraft_vectorcraft::settings::kept_data(&stitchcraft_engine::design::DesignSettings, &stitchcraft_plan::profile::MachineProfile) -> serde_json::value::Value
+pub enum stitchcraft_vectorcraft::RouteMarker
+pub stitchcraft_vectorcraft::RouteMarker::End
+pub stitchcraft_vectorcraft::RouteMarker::Start
 pub struct stitchcraft_vectorcraft::AutoEffect
 pub stitchcraft_vectorcraft::AutoEffect::elements: alloc::vec::Vec<stitchcraft_engine::design::Element>
 pub stitchcraft_vectorcraft::AutoEffect::preview_level: core::option::Option<alloc::string::String>
@@ -81,3 +85,4 @@ pub fn stitchcraft_vectorcraft::read_auto_effect(&[u8], &[u8], &stitchcraft_core
 pub fn stitchcraft_vectorcraft::read_effect(stitchcraft_params::stitch_type::Family, &[u8], &[u8], &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_vectorcraft::Effect, stitchcraft_core::diag::Diagnostic>
 pub fn stitchcraft_vectorcraft::read_part(&[u8]) -> &[u8]
 pub fn stitchcraft_vectorcraft::read_with(&[u8], &stitchcraft_core::budget::Budget, stitchcraft_engine::design::Reading) -> core::result::Result<stitchcraft_vectorcraft::VectorCraft, stitchcraft_core::diag::Diagnostic>
+pub fn stitchcraft_vectorcraft::route_marker(&str) -> core::option::Option<stitchcraft_vectorcraft::RouteMarker>

@@ -22,6 +22,7 @@ use crate::common::{STOP_AFTER, TRIM_AFTER};
 use crate::design::{Cap, Clip, Design, DesignSettings, Element, FillRule, Hints, Join, Path, Segment, Shape, Subpath, Turn};
 use crate::generators::satin::{END_AT_NEAREST_POINT, START_AT_NEAREST_POINT};
 use crate::generators::tatami::ANGLE;
+use crate::route::{Route, route};
 
 /// The settings that sew a sheet's satin column as drawn, from its start to its end whatever is around it,
 /// and trim after it, so the columns stand apart.
@@ -102,6 +103,25 @@ impl Drawing {
     pub fn satin_between(&mut self, name: &str, rails: [Subpath; 2], thread: &Thread, params: &[(&str, &str)]) -> Result<(), SheetError> {
         let params = [params, &[("satin_column", "true")]].concat();
         self.stroke(name, rails.into(), thread, &params)
+    }
+
+    /// A satin column named `name` drawn with `subpaths`, its rails and rungs, sewn with `thread` and the
+    /// Ink/Stitch `params`.
+    pub fn satin_drawn(&mut self, name: &str, subpaths: Vec<Subpath>, thread: &Thread, params: &[(&str, &str)]) -> Result<(), SheetError> {
+        let params = [params, &[("satin_column", "true")]].concat();
+        self.stroke(name, subpaths, thread, &params)
+    }
+
+    /// The elements of `drawing`, routed as `how` says, in the design's settings, after the elements drawn so
+    /// far: the route's pieces, each named by its id. A route that says anything is not the route the sheet
+    /// shows, and fails, saying what it said.
+    pub fn routed(&mut self, drawing: &Drawing, how: &Route) -> Result<(), SheetError> {
+        let routed = route(&drawing.elements, how, &self.settings, &Budget::DEFAULT);
+        if !routed.diagnostics.is_empty() || routed.pieces.is_empty() {
+            return Err(SheetError::Said(routed.diagnostics.iter().map(ToString::to_string).collect::<Vec<_>>().join(" ")));
+        }
+        self.elements.extend(routed.pieces.into_iter().map(|piece| piece.element));
+        Ok(())
     }
 
     /// A satin column named `name` between 2 straight rails, each from its first point to its second, sewn
@@ -240,7 +260,7 @@ pub(super) fn open(points: &[(f64, f64)]) -> Result<Subpath, UnitError> {
 
 /// The control points of a quarter circle drawn as a cubic curve lie this share of its radius from its ends,
 /// 4/3 (√2 − 1).
-const KAPPA: f64 = 4.0 / 3.0 * (SQRT_2 - 1.0);
+pub(super) const KAPPA: f64 = 4.0 / 3.0 * (SQRT_2 - 1.0);
 
 /// Where a circle starts and ends: a point where one of its axes crosses it. A circle runs clockwise as seen
 /// from the front, the drawing's y axis pointing down: from its right-hand point down to its bottom.
@@ -434,5 +454,20 @@ mod tests {
         assert!(said.starts_with("warning SC-W0307: "), "{said}");
         assert!(parts().plan_saying(&[Code::FillPartsApart]).is_ok());
         assert!(parts().plan_saying(&[Code::FillPartsApart; 2]).is_err(), "said once, not twice");
+    }
+
+    #[test]
+    fn a_route_that_says_anything_is_not_drawn() {
+        let how = Route { tool: crate::route::Tool::Satins, options: crate::route::Options::default(), start: None, end: None };
+        let Err(SheetError::Said(said)) = Drawing::new("routed").routed(&Drawing::new("nothing"), &how) else { panic!("routed nothing") };
+        assert!(said.starts_with("error SC-E1001: "), "{said}");
+        // Nor is a route that sews its column but says that it leaves a fill as it is.
+        let thread = Thread::new(Rgb::new(0, 0, 0));
+        let mut some = Drawing::new("some");
+        some.satin("column", [[(0.0, 0.0), (10.0, 0.0)], [(0.0, 3.0), (10.0, 3.0)]], &thread, &[]).unwrap();
+        some.fill("fill", vec![polygon(&[(0.0, 10.0), (10.0, 10.0), (10.0, 20.0)]).unwrap()], &thread, &[]).unwrap();
+        assert_eq!(route(&some.elements, &how, &DesignSettings::default(), &Budget::DEFAULT).pieces.len(), 1);
+        let Err(SheetError::Said(said)) = Drawing::new("routed").routed(&some, &how) else { panic!("routed despite what it said") };
+        assert_eq!(said, "info SC-I1002: This element is left out of the route and kept as it is: it is a fill, which a route doesn't take.");
     }
 }

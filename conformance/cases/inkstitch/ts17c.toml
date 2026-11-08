@@ -1,0 +1,6 @@
+# TS-17C's M10.4 part: the satin letters as drawn, and the same letters as StitchCraft's routing routed them,
+# written as an SVG file of satin columns and running stitches, which both programs sew (REQ-ROUTE-008).
+id = "inkstitch-ts17c"
+requirements = ["REQ-ROUTE-008"]
+kind = "inkstitch"
+sheet = "TS-17C"

@@ -56,7 +56,8 @@ reverses the second rail when it runs against the first.
 
 - **Accepts:** one of `automatic` (Automatic), `none` (Neither), `first` (The first), `second` (The second), `both` (Both)
 - **Default:** `automatic`
-- **Ink/Stitch:** same key, meaning and default
+- **Ink/Stitch:** same key and default; StitchCraft differs:
+  - **DEV-ROUTE-002.** A piece of a satin column is drawn with the column's rails in the column's order, a rail that reverse_rails names turned back, so that the piece's settings, the column's, swap and turn its rails as they swap and turn the column's. With swap_satin_rails, Ink/Stitch draws a piece with its rails as the column sews them, already swapped, and the piece's own setting swaps them again: the piece sews its satin the other way round from the column.
 
 ### `swap_satin_rails`
 
@@ -65,7 +66,8 @@ starts on the second rail instead, and sews every other stitch from it.
 
 - **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `false`
-- **Ink/Stitch:** same key, meaning and default
+- **Ink/Stitch:** same key and default; StitchCraft differs:
+  - **DEV-ROUTE-002.** A piece of a satin column is drawn with the column's rails in the column's order, a rail that reverse_rails names turned back, so that the piece's settings, the column's, swap and turn its rails as they swap and turn the column's. With swap_satin_rails, Ink/Stitch draws a piece with its rails as the column sews them, already swapped, and the piece's own setting swaps them again: the piece sews its satin the other way round from the column.
 
 ## Start and end
 

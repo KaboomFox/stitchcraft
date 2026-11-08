@@ -104,7 +104,42 @@ fn req_vc_009_a_stitch_name_stitchcraft_does_not_read_is_named_and_stitched() {
     assert_eq!(ids(&read), ["vc:2:fill", "vc:3:fill"]);
     assert_eq!(said(&read), [about(NAMED, 2), about(NAMED, 3)]);
     let hint = read.warnings[0].fix.as_ref().map(stitchcraft_core::Fix::describe);
-    assert_eq!(hint.as_deref(), Some("StitchCraft reads stitch:ignore, stitch:start, stitch:end, stitch:origin and stitch:stop-position."));
+    assert_eq!(
+        hint.as_deref(),
+        Some(
+            "StitchCraft reads stitch:ignore, stitch:start, stitch:end, stitch:origin, stitch:stop-position, stitch:route-start and stitch:route-end."
+        )
+    );
+}
+
+#[test]
+fn req_vc_019_route_markers_are_left_out_of_the_stitches_without_a_word() {
+    // The routing filters read them (`route_marker`), and `stitch export` sews neither. A group so named is
+    // never a marker, and the name is said to be ignored.
+    let group = named(&format!(r#"{{"id": 4, "kind": {{"type": "group", "children": [{}]}}}}"#, square(5, 100.0, 0.0, RED)), "stitch:route-end");
+    let objects = [named(&square(2, 0.0, 0.0, RED), "stitch:route-start"), named(&square(3, 50.0, 0.0, RED), "  Stitch:Route-End here"), group];
+    let read = read_ok(&document(4, &objects.join(",")));
+    assert_eq!(ids(&read), ["vc:5:fill"]);
+    assert_eq!(said(&read), [about(NAMED, 4)]);
+    assert_eq!(
+        read.warnings[0].message,
+        "The group \"stitch:route-end\" is named stitch:route-end, which a group can't be, and the name is ignored."
+    );
+    // What is said of a group named as either marker names that marker.
+    for name in ["stitch:route-start", "stitch:route-end"] {
+        let group = named(&format!(r#"{{"id": 3, "kind": {{"type": "group", "children": [{}]}}}}"#, square(4, 0.0, 0.0, RED)), name);
+        let read = read_ok(&document(4, &group));
+        assert_eq!((ids(&read), said(&read)), (vec!["vc:4:fill"], vec![about(NAMED, 3)]), "{name}");
+        assert_eq!(read.warnings[0].message, format!("The group \"{name}\" is named {name}, which a group can't be, and the name is ignored."));
+        let hint = read.warnings[0].fix.as_ref().map(stitchcraft_core::Fix::describe);
+        assert_eq!(hint, Some(format!("Name a small path {name}.")));
+    }
+    use stitchcraft_vectorcraft::{RouteMarker, route_marker};
+    assert_eq!(route_marker(" stitch:ROUTE-start note"), Some(RouteMarker::Start));
+    assert_eq!(route_marker("stitch:route-end"), Some(RouteMarker::End));
+    for other in ["stitch:start", "stitch:route-started", "route-start", "stitch:"] {
+        assert_eq!(route_marker(other), None, "{other}");
+    }
 }
 
 #[test]

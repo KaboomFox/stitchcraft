@@ -132,6 +132,13 @@ impl Object {
         Ok(geometry::path(&[data], meter)?.map_err(Unusable::why))
     }
 
+    /// Where it marks a place as a marker (`REQ-VC-019`): the middle of the box round its path's anchors, in
+    /// millimetres, as a document reads a marker's place; `None` without an anchor that reads. Each anchor
+    /// charges `meter` a unit.
+    pub fn middle(&self, meter: &mut Meter) -> Result<Option<Point>, Exhausted> {
+        geometry::middle(&self.path.iter().collect::<Vec<_>>(), meter)
+    }
+
     /// The stroke a stroke or a satin effect on the object would follow: the topmost of its strokes that
     /// paints and is wider than 0, as a live effect follows one; `None` without one. A stroke that doesn't
     /// read paints nothing.
@@ -460,6 +467,17 @@ mod tests {
         assert_eq!(line.subpaths[0].segments, [Segment::Line(p(25.4, 0.0))]);
         let nothing: Object = serde_json::from_value(json!({"id": 1})).unwrap();
         assert_eq!(nothing.path(&mut Budget::DEFAULT.meter()).unwrap(), Err("It draws nothing"));
+    }
+
+    #[test]
+    fn req_vc_019_a_marker_given_to_a_filter_marks_the_middle_of_the_box_round_its_anchors() {
+        let dot = json!({"subpaths": [{"anchors": [{"p": [0, 0], "out": [100, 100]}, {"p": [72, 36]}]}]});
+        let marker: Object = serde_json::from_str(&json!({"id": 2, "name": "stitch:route-start", "path": dot}).to_string()).unwrap();
+        let middle = marker.middle(&mut Budget::DEFAULT.meter()).unwrap().unwrap();
+        assert!((middle.x() - 12.7).abs() < 1e-9 && (middle.y() - 6.35).abs() < 1e-9, "{middle:?}");
+        let nothing: Object = serde_json::from_value(json!({"id": 1})).unwrap();
+        assert_eq!(nothing.middle(&mut Budget::DEFAULT.meter()).unwrap(), None);
+        assert!(marker.middle(&mut Budget { max_work: 0, ..Budget::DEFAULT }.meter()).is_err());
     }
 
     #[test]
