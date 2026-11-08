@@ -107,6 +107,10 @@ enum Command {
         /// Sew every glyph of Ink/Stitch's fonts in the differential, not the nightly sample
         #[arg(long, requires = "differential")]
         every_glyph: bool,
+        /// Sew only the glyphs of this font, named by its folder in the corpus; repeat it for more (`--font
+        /// egyptian --font noble`)
+        #[arg(long = "font", value_name = "NAME", requires = "differential")]
+        fonts: Vec<String>,
         /// Sew only the I-th of N parts of the fonts' glyphs (`--shard 2/6`)
         #[arg(long, value_name = "I/N", requires = "differential", value_parser = conformance::fonts::Shard::parse)]
         shard: Option<conformance::fonts::Shard>,
@@ -275,8 +279,8 @@ fn run(command: Command) -> Result<(), String> {
         Command::Docs { check, pages: None } => docs::run(check),
         Command::Book { no_build } => book::run(no_build),
         Command::Prose { base } => prose::run(&base),
-        Command::Conformance { check, filter, bless, differential, every_glyph, shard } => {
-            conformance::run(check, filter.as_deref(), bless.as_deref(), differential, conformance::Glyphs { every: every_glyph, shard })
+        Command::Conformance { check, filter, bless, differential, every_glyph, fonts, shard } => {
+            conformance::run(check, filter.as_deref(), bless.as_deref(), differential, &conformance::Glyphs { every: every_glyph, fonts, shard })
         }
         Command::Cleanroom => cleanroom::run(),
         Command::UnsafeAudit => unsafe_audit::run(),
@@ -346,6 +350,7 @@ mod tests {
             &["conformance", "--check"],
             &["conformance", "--filter", "ts-01", "--bless", "ts-01"],
             &["conformance", "--differential", "--filter", "inkstitch-fonts", "--every-glyph", "--shard", "2/6"],
+            &["conformance", "--differential", "--filter", "inkstitch-fonts", "--every-glyph", "--font", "egyptian", "--font", "noble"],
             &["corpus"],
             &["compat", "discover", "--json"],
             &["compat", "contract", "--ref", "v0.7.0"],
@@ -386,6 +391,8 @@ mod tests {
             &["mutants"],
             &["mutants", "--record", "--changed", "a"],
             &["conformance", "--every-glyph"],
+            &["conformance", "--font", "egyptian"],
+            &["conformance", "--differential", "--font"],
             &["conformance", "--differential", "--shard", "0/6"],
             &["conformance", "--differential", "--shard", "7/6"],
             &["compat", "e2e"],
