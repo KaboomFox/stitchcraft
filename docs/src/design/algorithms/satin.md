@@ -206,10 +206,10 @@ which is what the tool is asked for.
 - Of 2 rails that are rings, each ending where it starts (closed with `Z`, or drawn back to its start),
   rail B first starts at its node nearest rail A's first node, before any reversal (`DEV-SAT-009`).
   Ink/Stitch takes each ring's own start, and warns that a closed rail has no definite start.
-  Rail B takes only the nodes that no drawn rung crosses the line to, unless a rung crosses the line to
-  every node. Started past a rung, each part of rail B between rungs would pair with rail A's next part:
-  Emilio 20 tricolore's E starts both rings of its bowl at a step, and the outer ring's node nearest the
-  inner ring's start lies past the rung across the step.
+  Rail B takes only a node whose line from rail A's first node crosses none of the drawn rungs, unless
+  every node's line crosses one. Started past a rung, each part of rail B between rungs would pair with
+  rail A's next part. In Emilio 20 tricolore's E, both rings of the bowl start at a step, and the outer
+  ring's node nearest the inner ring's start lies past the rung across the step.
   VectorCraft's Make Compound Path, from 0.10.0, turns the front of 2 rings round, which starts it at
   what was its last node. Rings sewn from their own starts then get stitches across the column. A node,
   not the nearest point, keeps rings that start together as drawn, with a rung across their starts where
