@@ -145,3 +145,44 @@ fn a_join_is_cut_into_equal_stitches_no_longer_than_the_running_stitch() {
     assert!(segmentized(p(0.0, 0.0), p(10.0, 0.0), 2.5, &mut meter(5)).is_ok());
     assert!(segmentized(p(0.0, 0.0), p(10.0, 0.0), 2.5, &mut meter(4)).is_err());
 }
+
+/// A warp band's laying over `piece`, with [`super::super::tests::tartan`]'s settings: the running stitch
+/// 2.5 mm and the longest stitch 4 mm, in a box from -10 to 20 mm both ways.
+fn laying<'l>(piece: &'l Polygon, frame: &'l Frame, tartan: &'l Tartan) -> Laying<'l> {
+    let reach = bounds(&piece.outline, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let rings = piece.rings().collect();
+    Laying { frame, tartan, piece, reach, rings, direction: Direction::Warp, turn: Turn::new(frame.middle, 0.0) }
+}
+
+fn polygon(outline: &[Point]) -> Polygon {
+    Polygon { outline: outline.to_vec(), holes: Vec::new() }
+}
+
+#[test]
+fn req_fill_trt_005_a_line_ending_inside_the_piece_runs_on_along_the_band_s_edge_to_the_nearest_ring() {
+    let square = polygon(&[p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0), p(0.0, 0.0)]);
+    let (box_, tartan) = (frame(-10.0, 20.0), super::super::tests::tartan(&[]));
+    let laying = laying(&square, &box_, &tartan);
+    let meter = &mut Budget::DEFAULT.meter();
+    // A line that starts inside, 4 mm above the outline along the band's upright edge, runs on from its start
+    // down to the outline in 2 stitches of 2 mm; its end on the outline stays.
+    let mut line = vec![p(4.0, 4.0), p(4.0, 10.0)];
+    laying.run_on(&mut line, meter).unwrap();
+    assert_eq!(line, [p(4.0, 0.0), p(4.0, 2.0), p(4.0, 4.0), p(4.0, 10.0)]);
+    // One that ends inside runs on from its end, up to the nearer side.
+    let mut line = vec![p(6.0, 0.0), p(6.0, 7.5)];
+    laying.run_on(&mut line, meter).unwrap();
+    assert_eq!(line, [p(6.0, 0.0), p(6.0, 7.5), p(6.0, 10.0)]);
+}
+
+#[test]
+fn req_fill_trt_007_a_run_s_pieces_of_half_a_millimetre_or_less_are_left_out() {
+    // Under the diagonal of a triangle, a warp run at x = 0.4 crosses it for 0.4 mm and is left out, and one
+    // at x = 5 for 5 mm, in 2 stitches no longer than the running stitch, from the bottom of the box up.
+    let triangle = polygon(&[p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 0.0)]);
+    let (box_, tartan) = (frame(-10.0, 20.0), super::super::tests::tartan(&[]));
+    let laying = laying(&triangle, &box_, &tartan);
+    let meter = &mut Budget::DEFAULT.meter();
+    assert_eq!(laying.run(0.4, meter).unwrap(), Vec::<Vec<Point>>::new());
+    assert_eq!(laying.run(5.0, meter).unwrap(), [vec![p(5.0, 0.0), p(5.0, 2.5), p(5.0, 5.0)]]);
+}

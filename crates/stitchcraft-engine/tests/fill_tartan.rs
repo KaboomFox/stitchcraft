@@ -155,6 +155,24 @@ fn req_fill_trt_004_rows_lie_a_spacing_apart_and_go_to_the_warp_and_the_weft_in_
 }
 
 #[test]
+fn req_fill_trt_004_at_an_angle_of_0_the_rows_run_level_along_the_weft_s_stripes() {
+    // Level rows from the box's left side, its height of 76.57 mm in 307 equal steps from its top: every needle
+    // point of a colour inside the square lies on one. A weft row lies in a band or misses it, and red sews
+    // its weft's bands across the blue warp bands too.
+    let outcome = planned(vec![tartan(&[("tartan", RED_BLUE), ("tartan_angle", "0")])]);
+    let step = 2.0 * REACH / 307.0;
+    let red: Vec<Point> = sewn_in(&outcome, RED).into_iter().filter(|q| !on_outline(*q)).collect();
+    assert!(red.len() > 500, "{}", red.len());
+    let level = |q: &Point| {
+        let k = (q.y() + REACH) / step;
+        (k - k.round()).abs() < NEAR
+    };
+    assert!(red.iter().all(level), "{:?}", red.iter().find(|q| !level(q)));
+    let across = red.iter().filter(|q| in_band(q.y(), REACH, 0.0, 0.0) && !in_band(q.x(), REACH, 0.0, 0.0)).count();
+    assert!(across > 100, "{across}");
+}
+
+#[test]
 fn req_fill_trt_004_a_row_s_needle_points_lie_the_element_s_longest_stitch_apart() {
     // The stitches along each row, from one needle point to the next on the same row: a red stretch crosses
     // its band over 7.07 mm, long enough for whole stitches.
