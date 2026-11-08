@@ -19,7 +19,7 @@
 //!    routed as a tatami fill's rows are, from where the needle was when the piece's colours began towards
 //!    the end the next part or element offers, the needle travelling along the piece's outline between them
 //!    (`tatami::sew::lines`). The travel before its first row and after its last is left out, as Ink/Stitch
-//!    leaves it out ([`stripped`]).
+//!    leaves it out (`stripped`).
 //!
 //! **Several parts.** Each part sews its underlay and its colours. Then, as Ink/Stitch sorts them, the groups
 //! are ordered by where their colour first came, so that each thread sews in one stretch.

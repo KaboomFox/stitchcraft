@@ -161,7 +161,8 @@ A preview too costly to sew shows each colour's rows inside the pieces, without 
 
 The differential sews TS-17B's gradients and 6 files of its own in both programs (`REQ-FILL-GRD-009`).
 Their colour blocks are the same, in the same threads, with the same trims and jumps, but where the
-ledger explains otherwise. StitchCraft differs where the drawing and Ink/Stitch's sewing part:
+ledger explains otherwise. Where the counts of stitches agree within the differential's 10 %, StitchCraft sews
+0.4 to 8 % fewer than Ink/Stitch. StitchCraft differs where the drawing and Ink/Stitch's sewing part:
 
 - Ink/Stitch works out the underlay's angle from the gradient before it applies the gradient's
   `gradientTransform`. The underlay of a turned gradient then doesn't lie along it. StitchCraft's lies along
