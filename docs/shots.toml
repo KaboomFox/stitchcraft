@@ -247,9 +247,9 @@ kind = "stitch"
 fixture = "docs/fixtures/crossing.svg"
 style = "realistic"
 scale = 20.0
-alt = "2 red satin columns 5 mm wide and 16 mm long that cross, a bar and a post, each with a contour and a zigzag underlay, sewn with their stitches 1.2 mm apart so that the underlays show. As drawn, where they cross, the post's zigzag underlay lies on the bar's top stitches. With their underlays first, the bar's top stitches lie on both underlays there, under the post's"
+alt = "2 red satin columns 5 mm wide and 16 mm long that cross, a bar and a post, each with a contour and a zigzag underlay, sewn with their stitches 1.2 mm apart so that the underlays show. Sewn column by column, the post's zigzag underlay lies on the bar's top stitches where they cross. With their underlays first, the bar's top stitches lie on both underlays there, under the post's"
 panels = [
-  { caption = "As drawn", params = { satin_column = "true", contour_underlay = "true", zigzag_underlay = "true", zigzag_spacing_mm = "1.2" } },
+  { caption = "Column by column", params = { satin_column = "true", contour_underlay = "true", zigzag_underlay = "true", zigzag_spacing_mm = "1.2" } },
   { caption = "Underlays first", params = { satin_column = "true", contour_underlay = "true", zigzag_underlay = "true", zigzag_spacing_mm = "1.2", underlays_first = "true" } },
 ]
 
@@ -862,11 +862,10 @@ alt = "The same badge digitized automatically. Its white background is left out,
 
 [[shot]]
 id = "traced-badge-drawn"
-kind = "stitch"
+kind = "picture"
 fixture = "docs/fixtures/traced-badge.svg"
-style = "realistic"
 scale = 6.0
-alt = "The traced badge sewn as drawn. Its white background sews too, and each colour is a tatami fill over the colours under it."
+alt = "The traced badge as drawn, 60 mm square, in 4 flat colours that meet edge to edge. White fills the square round a red disc 50 mm across. A blue square 20 mm wide lies in the middle of the disc, and a gold disc 10 mm across in the middle of the blue square."
 
 # ── Automatic digitizing's 2 kinds of picture (docs/src/user/stitches/automatic.md) ─────────────────
 # The pear's photo was traced into docs/fixtures/traced-pear.vectorcraft with VectorCraft 0.19.0, as
@@ -914,11 +913,10 @@ alt = "The traced pear digitized automatically. Its 3 greens sew as tatami fills
 
 [[shot]]
 id = "auto-widths-drawn"
-kind = "stitch"
+kind = "picture"
 fixture = "docs/fixtures/widths.svg"
-style = "realistic"
 scale = 10.0
-alt = "A blue line 0.6 mm wide, a red letter C 3 mm wide and a gold disc 16 mm across, each traced as an area and sewn as drawn: a tatami fill each"
+alt = "3 shapes as drawn, in flat colours in a row on white. On the left lies a blue line 18 mm long and 0.6 mm wide. Beside it are a red letter C 16 mm tall and 3 mm wide, open to the right, and a gold disc 16 mm across."
 
 [[shot]]
 id = "auto-widths"
@@ -928,15 +926,14 @@ auto = true
 style = "realistic"
 scale = 10.0
 allow = ["SC-I0901"]
-alt = "The same shapes digitized automatically. The line runs along its middle, tripled, and the C sews as a satin column between its edges. The disc is still a tatami fill."
+alt = "The same shapes digitized automatically. The line runs along its middle, tripled, and the C sews as a satin column between its edges. The disc sews as a tatami fill."
 
 [[shot]]
 id = "auto-parts-drawn"
-kind = "stitch"
+kind = "picture"
 fixture = "docs/fixtures/parts.svg"
-style = "realistic"
 scale = 8.0
-alt = "A red lollipop, a disc 14 mm across on a stick 2.4 mm wide, and a blue balloon 12 mm by 15 mm on a string 0.8 mm wide, each one area, sewn as drawn: a tatami fill each"
+alt = "2 shapes as drawn, side by side in flat colours on white, each one area. On the left is a red lollipop, a disc 14 mm across on a stick 2.4 mm wide. On the right is a blue balloon 12 mm wide and 15 mm tall on a string 0.8 mm wide. The stick and the string end level at the bottom."
 
 [[shot]]
 id = "auto-parts"
@@ -946,7 +943,7 @@ auto = true
 style = "realistic"
 scale = 8.0
 allow = ["SC-I0901", "SC-I0904"]
-alt = "The same shapes digitized automatically. The discs are tatami fills as before, and the stick sews as a satin column and the string as a triple run, each into its fill."
+alt = "The same shapes digitized automatically. The lollipop's disc and the balloon sew as tatami fills. The stick sews as a satin column and the string as a triple run, each into its fill."
 [[shot]]
 id = "badge-simple"
 kind = "stitch"
