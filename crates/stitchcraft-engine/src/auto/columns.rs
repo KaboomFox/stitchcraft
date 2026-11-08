@@ -265,7 +265,8 @@ mod tests {
         // head's sides bare. Where the narrowest satin stroke is 1 mm, it is one satin column, and where that
         // stroke is 2 mm, it runs.
         let strand = part(&[(0.0, -0.3), (6.0, -0.3), (7.0, -0.7), (10.0, -0.7), (10.0, 0.7), (7.0, 0.7), (6.0, 0.3), (0.0, 0.3)], &[]);
-        let made = |narrowest: f64| columns(&strand, Mm::new(narrowest).unwrap(), &AutoParams::defaults(), &[], &mut Budget::DEFAULT.meter()).unwrap();
+        let made =
+            |narrowest: f64| columns(&strand, Mm::new(narrowest).unwrap(), &AutoParams::defaults(), &[], &mut Budget::DEFAULT.meter()).unwrap();
         let Made::Columns(sewn) = made(1.0) else { panic!("no columns") };
         let [Sewn::Satin { width, .. }] = sewn.as_slice() else { panic!("{sewn:?}") };
         assert!(width.get() < 1.0, "{width:?}");
@@ -275,7 +276,10 @@ mod tests {
 
     #[test]
     fn req_auto_016_a_column_runs_no_wider_than_the_narrowest_stroke_on_average_nor_anywhere_but_its_ends() {
-        let (mm, measured) = (|length: f64| Mm::new(length).unwrap(), |average: f64, widest: f64| Width { average: Mm::new(average).unwrap(), widest: Mm::new(widest).unwrap() });
+        let (mm, measured) = (
+            |length: f64| Mm::new(length).unwrap(),
+            |average: f64, widest: f64| Width { average: Mm::new(average).unwrap(), widest: Mm::new(widest).unwrap() },
+        );
         assert!(runs(measured(0.8, 1.0), mm(1.0)));
         assert!(!runs(measured(0.8, 1.001), mm(1.0)));
         assert!(!runs(measured(1.001, 0.9), mm(1.0)));

@@ -318,7 +318,10 @@ test diag_sc_e0701_too_wide ... ignored
         let read = verdicts(SAID);
         let expected = BTreeMap::from([
             ("diag_sc_e0701_too_wide", vec![Verdict::Ignored("")]),
-            ("req_auto_025_digitized_dogs_leave_no_patch_of_fabric_bare", vec![Verdict::Ignored("release only: CI's perf job runs tests/auto_photos.rs")]),
+            (
+                "req_auto_025_digitized_dogs_leave_no_patch_of_fabric_bare",
+                vec![Verdict::Ignored("release only: CI's perf job runs tests/auto_photos.rs")],
+            ),
             ("req_auto_026_slow", vec![Verdict::Ignored("too slow")]),
             ("req_plan_002_stitch_lengths", vec![Verdict::Passed]),
             ("req_plan_003_broken", vec![Verdict::Failed]),
