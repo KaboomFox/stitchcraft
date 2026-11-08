@@ -10,21 +10,29 @@
 //! any element is. The elements are put in the order they sew there too: automatic elements, and every
 //! element of a design that asks for its threads sorted, in an order with few thread changes.
 //!
-//! Elements are generated in sewing order, each with its neighbours (`REQ-GEN-003`,
-//! `docs/src/design/adr/0014-generators-see-their-neighbours.md`): the last needle point of the elements
-//! before it that sew any, and what the next element offers to end near. Each is given the stitches the
-//! ones before it left (`REQ-GEN-004`), and one that needs more ends planning there: the design needs more
-//! stitches than it may have, so no plan could come of it, and making the rest would only fill memory.
+//! Then the runs of underlays first are found, in that order ([`crate::underlays_first`]): each element of
+//! a run with an underlay is sewn as 2 layers, its underlay in the run's first pass and its top in the
+//! second, from one reading of it ([`crate::generate::layered`]). Every other element is one step, whole.
+//!
+//! Steps are generated in sewing order, each with its neighbours (`REQ-GEN-003`,
+//! `docs/src/design/adr/0014-generators-see-their-neighbours.md`): the last needle point of the steps
+//! before it that sew any, and what the next step's element offers to end near. Each is given the stitches
+//! the ones before it left (`REQ-GEN-004`), and one that needs more ends planning there: the design needs
+//! more stitches than it may have, so no plan could come of it, and making the rest would only fill memory.
+
+use std::collections::BTreeMap;
 
 use stitchcraft_core::{Budget, Code, Diagnostic};
 use stitchcraft_plan::{MachineProfile, StitchPlan};
 
 use crate::assemble::{Assembled, assemble};
 use crate::auto::digitized;
-use crate::design::Design;
+use crate::design::{Design, Element};
 use crate::finalize::{Finalized, finalize};
-use crate::generate::{Generation, approach, generate_with};
-use crate::generators::Neighbours;
+use crate::generate::layered::{Layered, underlay};
+use crate::generate::{Generated, Generation, approach, generate_with};
+use crate::generators::{Layer, Neighbours};
+use crate::underlays_first::{Candidate, alone, steps};
 
 /// What planning a design gives.
 #[derive(Clone, Debug, PartialEq)]
@@ -42,20 +50,43 @@ pub struct PlanOutcome {
 /// once more, and the design `budget`'s stitches.
 pub fn plan(design: &Design, profile: &MachineProfile, budget: &Budget) -> PlanOutcome {
     let (elements, mut diagnostics) = digitized(design, budget);
-    let mut generated = Vec::new();
+    let candidates: Vec<Candidate> = elements.iter().map(|element| Candidate::of(element, &design.settings)).collect();
+    let (steps, lone) = steps(&candidates);
+    diagnostics.extend(lone.into_iter().filter_map(|(k, why)| elements.get(k).map(|element| alone(element, why))));
+    let mut generated: Vec<(&Element, Generated)> = Vec::new();
     let mut needle = None;
     let mut left = budget.max_stitches;
-    for (i, element) in elements.iter().enumerate() {
-        let neighbours = Neighbours { needle, next: elements.get(i + 1).and_then(|next| approach(next, &design.settings, budget)) };
+    // The elements of a run between their underlay and their top, by their places.
+    let mut held: BTreeMap<usize, Layered> = BTreeMap::new();
+    for (i, step) in steps.iter().enumerate() {
+        let Some(element) = elements.get(step.element) else { continue };
+        let next = steps.get(i + 1).and_then(|next| elements.get(next.element)).and_then(|next| approach(next, &design.settings, budget));
+        let neighbours = Neighbours { needle, next };
         let mut meter = Budget { max_stitches: left, ..*budget }.meter();
-        let Generation { generated: sewn, diagnostics: said } =
-            match generate_with(element, &design.settings, profile, &neighbours, budget, &mut meter) {
-                Ok(generation) => generation,
-                Err(said) => {
-                    diagnostics.extend(said);
-                    return PlanOutcome { plan: None, diagnostics };
-                }
-            };
+        let generation = match step.layer {
+            Layer::Whole => generate_with(element, &design.settings, profile, &neighbours, budget, &mut meter),
+            Layer::Underlay => underlay(element, &design.settings, profile, &neighbours, budget, meter).map(|(generation, layered)| {
+                held.extend(layered.map(|layered| (step.element, layered)));
+                generation
+            }),
+            // An element skipped at its underlay sews nothing more.
+            Layer::Top => held
+                .remove(&step.element)
+                .map_or(Ok(Generation { generated: None, diagnostics: Vec::new() }), |layered| layered.top(&neighbours, budget, left)),
+        };
+        let Generation { generated: sewn, diagnostics: said } = match generation {
+            Ok(generation) => generation,
+            Err(said) => {
+                diagnostics.extend(said);
+                return PlanOutcome { plan: None, diagnostics };
+            }
+        };
+        // A top whose work ran out skips its element: its underlay is left out too, and its stitches come back.
+        if step.layer == Layer::Top && sewn.is_none() {
+            let underlay = generated.iter().position(|(sewing, layer)| sewing.id == element.id && layer.layer == Layer::Underlay);
+            let given = underlay.map(|at| generated.remove(at).1.groups.iter().map(Vec::len).sum::<usize>()).unwrap_or(0);
+            left = left.saturating_add(u32::try_from(given).unwrap_or(u32::MAX));
+        }
         // What a skipped element made before it stopped counts for nothing.
         let made = sewn.as_ref().map_or(0, |sewn| sewn.groups.iter().map(Vec::len).sum::<usize>());
         left = left.saturating_sub(u32::try_from(made).unwrap_or(u32::MAX));

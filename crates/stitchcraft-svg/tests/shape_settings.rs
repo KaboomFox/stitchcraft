@@ -99,6 +99,38 @@ fn req_svg_009_a_group_s_settings_change_nothing_and_are_named() {
 }
 
 #[test]
+fn req_svg_009_underlays_first_is_a_setting_of_a_shape_and_named_on_a_group() {
+    // StitchCraft's own setting, in Ink/Stitch's namespace: on 2 crossing satin columns it is a parameter of
+    // each, which sews both underlays before both tops (`REQ-ASM-009`). On a group it changes nothing, and is
+    // named, as every setting of a group but `ignore_object` is.
+    let column = |id: &str, d: &str| {
+        format!(
+            r#"<path id="{id}" d="{d}" fill="none" stroke="red" inkstitch:satin_column="true" inkstitch:contour_underlay="true"
+                     inkstitch:underlays_first="true"/>"#
+        )
+    };
+    let read = svg(drawing(&format!("{}{}", column("bar", "M 10 48 L 40 48 M 10 52 L 40 52"), column("post", "M 23 35 L 23 65 M 27 35 L 27 65"))));
+    let both = vec![("contour_underlay", "true"), ("satin_column", "true"), ("underlays_first", "true")];
+    assert_eq!(params(&read), [("svg:bar:stroke", both.clone()), ("svg:post:stroke", both)]);
+    assert!(read.warnings.is_empty(), "{:?}", warnings(&read));
+    let outcome = stitchcraft_engine::plan(&read.design, profiles::REFERENCE, &Budget::DEFAULT);
+    assert!(outcome.diagnostics.is_empty(), "{:?}", outcome.diagnostics);
+    let roles: Vec<stitchcraft_plan::Role> = outcome.plan.unwrap().blocks.iter().flat_map(|b| b.stitches.clone()).map(|s| s.origin.role).collect();
+    let underlay = |role: &stitchcraft_plan::Role| *role == stitchcraft_plan::Role::Underlay;
+    let (first_top, last_underlay) = (roles.iter().position(|r| *r == stitchcraft_plan::Role::Top), roles.iter().rposition(underlay));
+    assert!(last_underlay.unwrap() < first_top.unwrap(), "every underlay stitch before every top stitch");
+    // On a group: named, and the rectangle in it sews without it.
+    let grouped =
+        svg(drawing(r#"<g id="group" inkstitch:underlays_first="true"><rect id="patch" x="10" y="10" width="30" height="20" fill="red"/></g>"#));
+    assert_eq!(params(&grouped), [("svg:patch:fill", vec![])]);
+    assert_eq!(
+        warnings(&grouped),
+        ["warning SC-W0802: The group `group` has Ink/Stitch settings, `underlays_first`, which Ink/Stitch reads only from shapes: they change \
+          nothing."]
+    );
+}
+
+#[test]
 fn req_svg_010_stroke_first_sews_a_shape_s_stroke_before_its_fill() {
     // Ink/Stitch's words for yes turn it on, any other text leaves it off, as for its other toggles.
     let order = |value: &str| {

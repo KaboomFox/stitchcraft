@@ -1,13 +1,16 @@
 //! Settings every stitch type shares: lock stitches, a trim or a stop after the element, the shortest
-//! stitch and jump, the longest stitch of the types that split stitches, and the seed of the types that
-//! vary at random.
+//! stitch and jump, the longest stitch of the types that split stitches, the seed of the types that
+//! vary at random, and whether the element sews its underlay with those of its neighbours.
 //!
 //! Plan assembly and finalizing honour them (roadmap M3.7–M3.9); they are declared once, here, with
 //! Ink/Stitch's names and defaults, which are the interoperability contract
-//! (`conformance/inkstitch-params.toml`; `cargo xtask docs --check` compares the two).
+//! (`conformance/inkstitch-params.toml`; `cargo xtask docs --check` compares the two). One is
+//! StitchCraft's own: `underlays_first` (M10.15), which the engine reads before it generates the elements,
+//! to find the runs of elements that sew their underlays before their top stitches
+//! (`crate::underlays_first`, ADR-0018).
 
 use stitchcraft_core::Mm;
-use stitchcraft_params::{Family, Origin, StitchType, params};
+use stitchcraft_params::{Family, Origin, Stability, StitchType, params};
 
 use crate::locks::{LARGEST_SCALE_PERCENT, LOCKS, SIZED_IN_MM, SIZED_IN_PERCENT};
 
@@ -28,6 +31,10 @@ pub const MIN_JUMP_STITCH_LENGTH: &str = "min_jump_stitch_length_mm";
 /// The key of the longest stitch: a tatami fill sews its rows in stitches that long, a contour fill its
 /// rings, a meander fill its underlay's rows, and the stitch types that split stitches split longer ones.
 pub const MAX_STITCH_LENGTH: &str = "max_stitch_length_mm";
+
+/// The key of the setting that sews an element's underlay with those of the elements next to it that set
+/// it too, before their top stitches (`crate::underlays_first`).
+pub const UNDERLAYS_FIRST: &str = "underlays_first";
 
 /// The stitch types with a longest stitch: manual stitch and satin columns, whatever their method, split
 /// longer stitches, a tatami fill sews its rows in stitches that long, and a contour fill its rings. A
@@ -156,6 +163,16 @@ params! {
         /// stitches, another seed others, and elements alike given one seed vary alike. Empty, each element
         /// gets its own.
         random_seed: Seed = "", label "Random seed", applies RANDOMIZED;
+    }
+
+    "Sewing order" {
+        /// Sew this element's underlay with the underlays of the elements next to it that set this too and
+        /// sew in its thread, before any of their top stitches. Where satin columns cross, or a border lies
+        /// over a fill, every underlay then lies under every top stitch. The underlays sew in the elements'
+        /// order, then their top stitches in the same order. A trim or a stop after an element ends the
+        /// elements sewn together, and an element alone sews as it does without this. Ink/Stitch doesn't
+        /// read it, and sews each element's underlay just before its own top stitches.
+        underlays_first: Toggle = "false", label "Underlays first", origin Origin::StitchCraft, stability Stability::Experimental;
     }
 }
 

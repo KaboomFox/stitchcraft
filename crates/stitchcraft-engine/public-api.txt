@@ -62,6 +62,7 @@ pub stitchcraft_engine::common::CommonParams::random_seed: <stitchcraft_params::
 pub stitchcraft_engine::common::CommonParams::stop_after: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::common::CommonParams::ties: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::common::CommonParams::trim_after: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::common::CommonParams::underlays_first: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 impl stitchcraft_engine::common::CommonParams
 pub const stitchcraft_engine::common::CommonParams::GROUP: stitchcraft_params::spec::ParamGroup
 pub const stitchcraft_engine::common::CommonParams::SPECS: &'static [stitchcraft_params::spec::ParamSpec]
@@ -74,6 +75,7 @@ pub const stitchcraft_engine::common::MIN_JUMP_STITCH_LENGTH: &str
 pub const stitchcraft_engine::common::MIN_STITCH_LENGTH: &str
 pub const stitchcraft_engine::common::STOP_AFTER: &str
 pub const stitchcraft_engine::common::TRIM_AFTER: &str
+pub const stitchcraft_engine::common::UNDERLAYS_FIRST: &str
 pub mod stitchcraft_engine::design
 pub enum stitchcraft_engine::design::Cap
 pub stitchcraft_engine::design::Cap::Butt
@@ -207,6 +209,7 @@ pub struct stitchcraft_engine::generate::Generated
 pub stitchcraft_engine::generate::Generated::colours: alloc::vec::Vec<stitchcraft_engine::generators::Colour>
 pub stitchcraft_engine::generate::Generated::common: stitchcraft_engine::common::CommonParams
 pub stitchcraft_engine::generate::Generated::groups: alloc::vec::Vec<alloc::vec::Vec<stitchcraft_core::units::Point>>
+pub stitchcraft_engine::generate::Generated::layer: stitchcraft_engine::generators::Layer
 pub stitchcraft_engine::generate::Generated::min_stitch: stitchcraft_core::units::Mm
 pub stitchcraft_engine::generate::Generated::stitch_type: stitchcraft_params::stitch_type::StitchType
 pub struct stitchcraft_engine::generate::Generation
@@ -616,6 +619,10 @@ pub enum stitchcraft_engine::generators::Approach
 pub stitchcraft_engine::generators::Approach::Area(alloc::vec::Vec<stitchcraft_engine::normalize::region::Polygon>)
 pub stitchcraft_engine::generators::Approach::Point(stitchcraft_core::units::Point)
 pub stitchcraft_engine::generators::Approach::Shape(alloc::vec::Vec<alloc::vec::Vec<stitchcraft_core::units::Point>>)
+pub enum stitchcraft_engine::generators::Layer
+pub stitchcraft_engine::generators::Layer::Top
+pub stitchcraft_engine::generators::Layer::Underlay
+pub stitchcraft_engine::generators::Layer::Whole
 pub struct stitchcraft_engine::generators::Colour
 pub stitchcraft_engine::generators::Colour::ends_block: bool
 pub stitchcraft_engine::generators::Colour::thread: core::option::Option<stitchcraft_plan::thread::Thread>
@@ -767,6 +774,7 @@ pub fn stitchcraft_engine::testsheets::pictures::word((f64, f64), f64) -> core::
 pub mod stitchcraft_engine::testsheets::ts17c
 pub const stitchcraft_engine::testsheets::ts17c::BELOW: f64
 pub const stitchcraft_engine::testsheets::ts17c::BESIDE: f64
+pub const stitchcraft_engine::testsheets::ts17c::CROSSING: [&str; 2]
 pub const stitchcraft_engine::testsheets::ts17c::LETTERS: [&str; 11]
 pub const stitchcraft_engine::testsheets::ts17c::LINES: [&str; 6]
 pub const stitchcraft_engine::testsheets::ts17c::RIPPLES: [&str; 3]

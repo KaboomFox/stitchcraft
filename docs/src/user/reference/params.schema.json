@@ -2211,6 +2211,17 @@
         "stability": "stable"
       }
     },
+    "underlays_first": {
+      "default": false,
+      "description": "Sew this element's underlay with the underlays of the elements next to it that set this too and sew in its thread, before any of their top stitches. Where satin columns cross, or a border lies over a fill, every underlay then lies under every top stitch. The underlays sew in the elements' order, then their top stitches in the same order. A trim or a stop after an element ends the elements sewn together, and an element alone sews as it does without this. Ink/Stitch doesn't read it, and sews each element's underlay just before its own top stitches.",
+      "title": "Underlays first",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "group": "Sewing order",
+        "origin": "stitchcraft",
+        "stability": "experimental"
+      }
+    },
     "underpath": {
       "default": true,
       "description": "Travel between rows, or a circular fill's pieces of spiral, runs inside the fill, under those sewn after it, which hide it. Off, the needle travels along the fill's outline, where the travel can show along the edge.",
@@ -2463,7 +2474,8 @@
           "min_stitch_length_mm",
           "min_jump_stitch_length_mm",
           "max_stitch_length_mm",
-          "random_seed"
+          "random_seed",
+          "underlays_first"
         ],
         "name": "CommonParams",
         "title": "Common parameters"

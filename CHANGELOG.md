@@ -17,10 +17,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   ripple with repeats and bean stitch.
   - New codes: `SC-W0406` for what M10.11 sews, which a ripple leaves out. `SC-W0407` for more than 1,000
     lines, and `SC-W0408` for skips that would leave out every line.
-  - TS-17C draws 3 ripple stitches in green below its network. The differential sews each in Ink/Stitch
-    too. The ripple along a column agrees by every measure. The wave and the spiral agree by every measure
-    but the overlap of their threads, which `DEV-RUN-002` explains: their copies are made from their line's
-    running stitch.
+  - TS-17C draws 3 ripple stitches in green at its bottom, below M10.15's crossing columns. The differential
+    sews each in Ink/Stitch too. The ripple along a column agrees by every measure. The wave and the spiral
+    agree by every measure but the overlap of their threads, which `DEV-RUN-002` explains: their copies are
+    made from their line's running stitch.
   - In the glyph differential, 144 of the 324 glyphs of the 3 Ondulamarif fonts agree and 141 differ as the
     ledger explains, which excuses a ripple's threads by `DEV-RUN-002`. The 39 whose ripples follow a guide
     line are known differences, left to M10.11.
@@ -29,7 +29,21 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - A legacy fill still names its `reverse` (`SC-W0105`), which a ripple stitch now reads too. Ink/Stitch
     reads a fill's `reverse` for its legacy fill alone, and a fill of another method now leaves it to its
     node's stroke without a word, where `SC-W0105` named it before.
-  - Golden changed: `TS-17C.pes`, for the ripple stitches below the network.
+  - Golden changed: `TS-17C.pes`, for the ripple stitches at the bottom.
+- M10.15: underlays first (`REQ-ASM-008` to `REQ-ASM-010`), as ADR-0018 decided. Consecutive elements in one
+  thread that set `underlays_first`, a toggle every stitch type shares, StitchCraft's own and off by
+  default, sew all their underlays before any of their top stitches. A trim or a stop ends a run. An element
+  alone sews as it does without the setting, and the new note `SC-I0506` says so.
+  - Satin columns and tatami, contour, meander and circular fills sew their underlay and their top as 2
+    layers, from one reading of the element and within its work. Their top stitches take the random numbers
+    they take without the setting. An element without underlay sews whole with the top stitches.
+  - Each stitch family's dialog in VectorCraft shows the toggle in a section Sewing order. An SVG shape keeps
+    it as `inkstitch:underlays_first`, which Ink/Stitch doesn't read, and `SC-W0802` names it on a group. A
+    route's runs under a column keep it, so that the route sews its underlays along it.
+  - TS-17C sews 2 red satin columns that cross, as drawn beside the same 2 with their underlays first, for
+    MC-12, below its network of lines, and a how-to page shows them. The differential's file of TS-17C
+    leaves that pair out, as Ink/Stitch would sew it otherwise. Golden changed: `TS-17C.pes`, for the new
+    pair.
 - M10.13: auto-run routing (`REQ-ROUTE-009` to `REQ-ROUTE-013`, `REQ-VC-020`). `stitchcraft_engine::route`
   routes running stitches as Ink/Stitch's Auto-Route Running Stitch does, with `Tool::Runs`. With Add nodes
   at intersections, each stroke's lines are cut where they cross themselves and each other, and where 2
@@ -2558,9 +2572,10 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
-- Changed `conformance/golden/testsheets/TS-17C.pes` (M10.8). The sheet gains 3 ripple stitches below its
-  network, in green after a second colour change. The plan spans 82 × 117 mm, and sews 4,070 stitches, 283
-  more. The letters and the network sew as before.
+- Changed `conformance/golden/testsheets/TS-17C.pes` (M10.8). The sheet gains 3 ripple stitches at its
+  bottom, below M10.15's crossing columns, in green after a second colour change. The plan spans 82 × 153 mm,
+  and sews 5,115 stitches, 285 more. The letters, the network and the crossing columns sew as before, but
+  for the last stitches of the right-hand post, which now end on its left rail, towards the ripples.
 - Changed `conformance/golden/testsheets/TS-17A.pes` (M10.2). The sheet gains 2 rows after 2 more colour
   changes. Its green row sews squares of upright and dense upright crosses, then of double and Smyrna
   crosses, and its black row squares of half crosses and a square turned 30° with its grid. The plan spans

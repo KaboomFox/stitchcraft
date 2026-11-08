@@ -23,12 +23,19 @@
 //! so the route cuts them at their nearest points. The differential routes the lines on the left with
 //! Ink/Stitch's tool too (`REQ-ROUTE-013`).
 //!
-//! M10.8's part, below the network: 3 ripple stitches in green ([`RIPPLES`]), one of each kind
-//! (`REQ-RIP-001`). On the left, a rainbow: a column drawn with rails and rungs between 2 arches, whose 7 lines
-//! run back and forth from the outer arch to the inner one. In the middle, a wave whose 8 copies shrink to a
-//! target point above it, as Ink/Stitch's target point command places it, each meeting the next at a point.
-//! On the right, a circle that spirals in to its middle. The differential sews each in Ink/Stitch too
-//! (`REQ-RIP-011`).
+//! M10.15's part, below the network from y = 95 to 125: 2 satin columns 5 mm wide in red that cross, a bar
+//! and a post 30 mm long, each with a contour and a zigzag underlay ([`CROSSING`]). On the left they are sewn
+//! as drawn: the bar, underlay and top, then the post, whose underlay lies over the bar's top stitches where
+//! they cross. On the right, [`BESIDE`] mm over, the same 2 set `underlays_first` and sew both underlays,
+//! then both tops (`REQ-ASM-009`), for MC-12 to compare. Ink/Stitch has no such order, so the differential's
+//! file of the sheet leaves the right-hand pair out (`stitchcraft_testkit::inkstitch`).
+//!
+//! M10.8's part, at the bottom from y = 132, below the crossing columns: 3 ripple stitches in green
+//! ([`RIPPLES`]), one of each kind (`REQ-RIP-001`). On the left, a rainbow: a column drawn with rails and
+//! rungs between 2 arches, whose 7 lines run back and forth from the outer arch to the inner one. In the
+//! middle, a wave whose 8 copies shrink to a target point above it, as Ink/Stitch's target point command
+//! places it, each meeting the next at a point. On the right, a circle that spirals in to its middle. The
+//! differential sews each in Ink/Stitch too (`REQ-RIP-011`).
 
 use super::designed::{Drawing, KAPPA, Start};
 use super::sketch::SheetError;
@@ -47,7 +54,8 @@ pub const LETTERS: [&str; 11] = ["r-stem", "r-bowl", "r-leg", "o", "u", "t-bar",
 /// Each column's settings: a centre walk underlay, as lettering's columns have.
 const SETTINGS: [(&str, &str); 1] = [("center_walk_underlay", "true")];
 
-/// How far right of the network as drawn its routed copy lies (mm).
+/// How far right of the network as drawn its routed copy lies, and of the crossing columns as drawn their
+/// copy that sews its underlays first (mm).
 pub const BESIDE: f64 = 44.0;
 
 /// The network's lines, by name, in the order they are drawn.
@@ -55,6 +63,12 @@ pub const LINES: [&str; 6] = ["rail", "post", "brace", "hook", "loop", "tick"];
 
 /// Each line's settings: a running stitch 3 mm long, sewn there and back, and each stitch 3 times over.
 const LINE_SETTINGS: [(&str, &str); 3] = [("running_stitch_length_mm", "3"), ("repeats", "2"), ("bean_stitch_repeats", "1")];
+
+/// The crossing columns, by name, in the order they are drawn.
+pub const CROSSING: [&str; 2] = ["bar", "post"];
+
+/// Each crossing column's settings: a contour and a zigzag underlay, as a column 5 mm wide has.
+const CROSSING_SETTINGS: [(&str, &str); 2] = [("contour_underlay", "true"), ("zigzag_underlay", "true")];
 
 /// The ripple stitches, by name, in the order they are drawn.
 pub const RIPPLES: [&str; 3] = ["column", "towards", "spiral"];
@@ -76,17 +90,19 @@ pub(super) fn drawing() -> Result<Drawing, SheetError> {
     network(&mut lines, "lines-routed", BESIDE, &red)?;
     let trimmed = Options { trim: true, ..Tool::Runs.defaults() };
     d.routed(&lines, &Route { tool: Tool::Runs, options: trimmed, start: None, end: None })?;
+    crossing(&mut d, "crossing-drawn", 0.0, &red, &[])?;
+    crossing(&mut d, "crossing-first", BESIDE, &red, &[("underlays_first", "true")])?;
     ripples(&mut d, &thread(EMERALD_GREEN)?)?;
     Ok(d)
 }
 
-/// The ripple stitches below the network, sewn with `thread`: a rainbow between 2 arches, a wave that shrinks
-/// to a point above it and a circle that spirals in to its middle.
+/// The ripple stitches at the bottom, from y = 132, sewn with `thread`: a rainbow between 2 arches, a wave that
+/// shrinks to a point above it and a circle that spirals in to its middle.
 pub(super) fn ripples(d: &mut Drawing, thread: &Thread) -> Result<(), SheetError> {
     let point = |x: f64, y: f64| Point::new(x, y);
-    // An arch: half a circle of radius `r` about (14, 112), from its left end over the top.
+    // An arch: half a circle of radius `r` about (14, 148), from its left end over the top.
     let arch = |r: f64| -> Result<Subpath, SheetError> {
-        let (cx, cy, k) = (14.0, 112.0, KAPPA * r);
+        let (cx, cy, k) = (14.0, 148.0, KAPPA * r);
         let segments = vec![
             Segment::Cubic(point(cx - r, cy - k)?, point(cx - k, cy - r)?, point(cx, cy - r)?),
             Segment::Cubic(point(cx + k, cy - r)?, point(cx + r, cy - k)?, point(cx + r, cy)?),
@@ -94,15 +110,15 @@ pub(super) fn ripples(d: &mut Drawing, thread: &Thread) -> Result<(), SheetError
         Ok(Subpath { start: point(cx - r, cy)?, segments, closed: false })
     };
     // The rainbow: arches of radius 14 and 7, the rails, and a rung across their tops reaching 0.4 mm past them.
-    let rung = Subpath { start: point(14.0, 97.6)?, segments: vec![Segment::Line(point(14.0, 105.4)?)], closed: false };
+    let rung = Subpath { start: point(14.0, 133.6)?, segments: vec![Segment::Line(point(14.0, 141.4)?)], closed: false };
     d.strokes("ripple:column", vec![arch(14.0)?, arch(7.0)?, rung], thread, &[RIPPLE, ("line_count", "7")])?;
     // The wave, 24 mm long, and its target point 20 mm above its middle.
-    let curve = Segment::Cubic(point(40.0, 108.0)?, point(52.0, 124.0)?, point(58.0, 116.0)?);
-    let wave = Subpath { start: point(34.0, 116.0)?, segments: vec![curve], closed: false };
+    let curve = Segment::Cubic(point(40.0, 144.0)?, point(52.0, 160.0)?, point(58.0, 152.0)?);
+    let wave = Subpath { start: point(34.0, 152.0)?, segments: vec![curve], closed: false };
     d.along("ripple:towards", wave, thread, &[RIPPLE, ("line_count", "8"), ("join_style", "1")])?;
-    d.target((46.0, 96.0))?;
+    d.target((46.0, 132.0))?;
     // The circle, 22 mm across, from its top.
-    d.circle("ripple:spiral", (71.0, 107.0), 11.0, Start::Top, thread, &[RIPPLE, ("line_count", "6")])
+    d.circle("ripple:spiral", (71.0, 143.0), 11.0, Start::Top, thread, &[RIPPLE, ("line_count", "6")])
 }
 
 /// The network of lines, named after `half`, `right` mm right of where it is drawn first, sewn with
@@ -127,6 +143,19 @@ pub(super) fn network(d: &mut Drawing, half: &str, right: f64, thread: &Thread) 
     d.along(&name("hook"), hook, thread, &LINE_SETTINGS)?;
     d.polyline(&name("loop"), &at(&[(14.0, 61.0), (24.0, 67.0), (24.0, 61.0), (17.0, 66.0)]), thread, &LINE_SETTINGS)?;
     d.polyline(&name("tick"), &at(&[(34.0, 82.5), (35.0, 85.0)]), thread, &LINE_SETTINGS)
+}
+
+/// 2 satin columns 30 mm long and 5 mm wide that cross at their middles ([`CROSSING`]): a bar along y = 110
+/// from x = 6 to 36, then a post along x = 21 from y = 95 to 125, each between 2 straight rails. They are
+/// named after `half`, drawn `right` mm right of there and sewn with `thread`, their underlays and `more`.
+pub(super) fn crossing(d: &mut Drawing, half: &str, right: f64, thread: &Thread, more: &[(&str, &str)]) -> Result<(), SheetError> {
+    let line = |(x0, y0): (f64, f64), (x1, y1): (f64, f64)| -> Result<Subpath, SheetError> {
+        Ok(Subpath { start: Point::new(x0 + right, y0)?, segments: vec![Segment::Line(Point::new(x1 + right, y1)?)], closed: false })
+    };
+    let settings = [&CROSSING_SETTINGS[..], more].concat();
+    let [bar, post] = CROSSING;
+    d.satin_drawn(&format!("{half}:{bar}"), vec![line((6.0, 107.5), (36.0, 107.5))?, line((6.0, 112.5), (36.0, 112.5))?], thread, &settings)?;
+    d.satin_drawn(&format!("{half}:{post}"), vec![line((18.5, 95.0), (18.5, 125.0))?, line((23.5, 95.0), (23.5, 125.0))?], thread, &settings)
 }
 
 /// The letters ROUTE, their columns named after `half`, `down` mm below the top, sewn with `thread`.
@@ -224,6 +253,8 @@ fn across(from: (f64, f64), to: (f64, f64)) -> [[(f64, f64); 2]; 3] {
 
 #[cfg(test)]
 mod tests {
+    use stitchcraft_plan::{Role, StitchKind};
+
     use super::*;
     use crate::design::Element;
 
@@ -366,21 +397,23 @@ mod tests {
     #[test]
     fn ts17c_s_ripples_are_a_rainbow_a_wave_towards_its_target_and_a_spiral() {
         let drawn: [(&str, &[&str]); 3] = [
-            // Arches of radius 14 and 7 about (14, 112), each quarter a curve whose control points lie 0.552 of the
+            // Arches of radius 14 and 7 about (14, 148), each quarter a curve whose control points lie 0.552 of the
             // radius from its ends, and a rung across their tops.
             (
                 "column",
                 &[
-                    "M0,112 C0,104.268 6.268,98 14,98 C21.732,98 28,104.268 28,112",
-                    "M7,112 C7,108.134 10.134,105 14,105 C17.866,105 21,108.134 21,112",
-                    "M14,97.6 L14,105.4",
+                    "M0,148 C0,140.268 6.268,134 14,134 C21.732,134 28,140.268 28,148",
+                    "M7,148 C7,144.134 10.134,141 14,141 C17.866,141 21,144.134 21,148",
+                    "M14,133.6 L14,141.4",
                 ],
             ),
-            ("towards", &["M34,116 C40,108 52,124 58,116"]),
-            // A circle of radius 11 about (71, 107), clockwise from its top.
+            ("towards", &["M34,152 C40,144 52,160 58,152"]),
+            // A circle of radius 11 about (71, 143), clockwise from its top.
             (
                 "spiral",
-                &["M71,96 C77.075,96 82,100.925 82,107 C82,113.075 77.075,118 71,118 C64.925,118 60,113.075 60,107 C60,100.925 64.925,96 71,96 Z"],
+                &[
+                    "M71,132 C77.075,132 82,136.925 82,143 C82,149.075 77.075,154 71,154 C64.925,154 60,149.075 60,143 C60,136.925 64.925,132 71,132 Z",
+                ],
             ),
         ];
         assert_eq!(drawn.map(|(name, _)| name), RIPPLES);
@@ -397,10 +430,16 @@ mod tests {
         let green = thread(EMERALD_GREEN).unwrap();
         assert!(ripples.iter().all(|ripple| ripple.thread == green));
         let targets: Vec<Option<Point>> = ripples.iter().map(|ripple| ripple.hints.target).collect();
-        assert_eq!(targets, [None, Some(Point::new(46.0, 96.0).unwrap()), None]);
-        // Below the network, whose lowest point lies at y = 85, and last on the sheet.
+        assert_eq!(targets, [None, Some(Point::new(46.0, 132.0).unwrap()), None]);
+        // From y = 132, 7 mm below the crossing columns, the lowest elements above them, and last on the sheet.
         let ys: Vec<f64> = ripples.iter().flat_map(|ripple| ripple.shape.path().points().map(|q| q.y()).collect::<Vec<_>>()).collect();
-        assert!(ys.iter().all(|&y| y > 85.0 + 10.0), "{ys:?}");
+        assert!(ys.iter().all(|&y| y >= 132.0), "{ys:?}");
+        let above: Vec<f64> = sheet_elements("ts17c:")
+            .iter()
+            .filter(|element| !element.id.as_str().starts_with("ts17c:ripple:"))
+            .flat_map(|element| element.shape.path().points().map(|q| q.y()).collect::<Vec<_>>())
+            .collect();
+        assert_eq!(above.iter().copied().fold(f64::NEG_INFINITY, f64::max), 125.0);
         let design = super::super::find("TS-17C").unwrap().design().unwrap().unwrap();
         assert_eq!(design.elements()[design.elements().len() - RIPPLES.len()..], ripples);
     }
@@ -417,6 +456,48 @@ mod tests {
             assert!(above_points.iter().zip(&below_points).all(lower), "{}: {below_points:?}", below.id);
             assert_eq!((above.params.clone(), &above.thread), (below.params.clone(), &below.thread));
         }
+    }
+
+    #[test]
+    fn ts17c_s_crossing_columns_sew_as_drawn_on_the_left_and_their_underlays_first_on_the_right() {
+        let design = super::super::find("TS-17C").unwrap().design().unwrap().unwrap();
+        let pair: Vec<&Element> = design.elements().iter().filter(|e| e.id.as_str().starts_with("ts17c:crossing-")).collect();
+        let found: Vec<(String, Vec<String>)> = pair.iter().map(|column| (column.id.to_string(), svg(column))).collect();
+        let drawn = |half: &str, right: f64| -> [(String, Vec<String>); 2] {
+            let x = |at: f64| (at + right).to_string();
+            [
+                (format!("ts17c:{half}:bar"), vec![format!("M{},107.5 L{},107.5", x(6.0), x(36.0)), format!("M{},112.5 L{},112.5", x(6.0), x(36.0))]),
+                (format!("ts17c:{half}:post"), vec![format!("M{},95 L{},125", x(18.5), x(18.5)), format!("M{},95 L{},125", x(23.5), x(23.5))]),
+            ]
+        };
+        assert_eq!(found, [drawn("crossing-drawn", 0.0), drawn("crossing-first", BESIDE)].concat());
+        // Satin columns with a contour and a zigzag underlay, in red, the right-hand pair with its underlays first.
+        let red = thread(RED).unwrap();
+        let settings = [("contour_underlay", "true"), ("satin_column", "true"), ("zigzag_underlay", "true")];
+        let first = [("contour_underlay", "true"), ("satin_column", "true"), ("underlays_first", "true"), ("zigzag_underlay", "true")];
+        for (k, column) in pair.iter().enumerate() {
+            assert!(column.thread == red && column.params.iter().eq(if k < 2 { &settings[..] } else { &first[..] }.iter().copied()), "{column:?}");
+        }
+        // As sewn: the left pair column by column, all its stitches top, and the right pair's underlays, then
+        // its top stitches.
+        let plan = super::super::find("TS-17C").unwrap().plan().unwrap();
+        let mut layers: Vec<(String, Role)> = Vec::new();
+        for stitch in plan.blocks.iter().flat_map(|block| &block.stitches).filter(|s| s.kind == StitchKind::Normal && s.origin.role != Role::Lock) {
+            let id = plan.element(stitch.origin.element.unwrap()).unwrap().as_str();
+            let Some(name) = id.strip_prefix("ts17c:crossing-") else { continue };
+            if layers.last().is_none_or(|(last, role)| last != name || *role != stitch.origin.role) {
+                layers.push((name.to_string(), stitch.origin.role));
+            }
+        }
+        let sewn = [
+            ("drawn:bar", Role::Top),
+            ("drawn:post", Role::Top),
+            ("first:bar", Role::Underlay),
+            ("first:post", Role::Underlay),
+            ("first:bar", Role::Top),
+            ("first:post", Role::Top),
+        ];
+        assert_eq!(layers, sewn.map(|(name, role)| (name.to_string(), role)));
     }
 
     #[test]
