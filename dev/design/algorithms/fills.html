@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-b0ba40be.js";
+            window.path_to_searchindex_js = "../../searchindex-b1e7cc84.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-61f039c5.js"></script>
+        <script src="../../toc-4715bfff.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -891,9 +891,12 @@ The differential compares the sheet with Ink/Stitch’s sewing of it (<code>REQ-
 (<code>Parallel Offset</code>, <code>Buffer</code>) across the region at <code>row_spacing_mm</code>, each copy clipped to the region and
 sewn with the tatami needle grid (<code>staggers</code>, <code>stitch_position_method</code>). Specified fully at M10.</p>
 <h2 id="linear-gradient-fill-p3"><a class="header" href="#linear-gradient-fill-p3">Linear gradient fill (P3)</a></h2>
-<p>A tatami variant whose rows alternate between the colours of a linear gradient with a probability that
-follows the gradient position, producing a blend from interleaved threads; one colour block per stop.
-Specified at M10. The rows of each stop will be a colour block in a thread of their own
+<p>Rows square to the fill’s linear gradient, which go to its stops’ colours in a fixed pattern between each 2
+stops, from M10.12 (<a href="gradient.html">linear gradient fill</a>). Its rows are cut by the region and its
+colours’ rows routed as a tatami fill’s rows are, each part after the tatami fill’s underlay in the first
+stop’s colour, which the sewing of a tatami fill’s parts lends it. <code>skip_last</code> shortens its rows, and the
+tatami fill’s <code>expand_mm</code> grows its parts. A colour’s rows sew in that colour’s thread as a colour block
+for each part, and the underlay ends no colour block
 (<a href="../engine-pipeline.html#several-threads-in-one-element">several threads in one element</a>).</p>
 <h2 id="tartan-fill-p3"><a class="header" href="#tartan-fill-p3">Tartan fill (P3)</a></h2>
 <p>A woven plaid from a stripe specification, its sett, which gives the warp’s and the weft’s stripes. Each

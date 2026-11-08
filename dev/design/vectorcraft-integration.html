@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-b0ba40be.js";
+            window.path_to_searchindex_js = "../searchindex-b1e7cc84.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-61f039c5.js"></script>
+        <script src="../toc-4715bfff.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -375,7 +375,8 @@ whole shape.</p>
 manifest with one whole. So from M10.7 the fill effect installs from VectorCraft 0.14, as the exporters
 do. Those 2 releases don’t export a machine file either, so a fill made there was only ever a preview.</p>
 <p>The Test Sheet filter draws TS-17B from M10.7, each tartan’s sett in its fill effect’s record as the
-row’s text.</p>
+row’s text, and from M10.12 each of its gradients as a gradient paint
+(<a href="#a-gradients-geometry">below</a>).</p>
 <p><strong>How the dialog shows them</strong> (<code>REQ-VC-012</code>, M6.10). From 0.14 a parameter can say how the dialog shows
 it, and the plug-in says all of it from the registry (<code>apps/stitchcraft-vc-plugin/src/dialog.rs</code>):</p>
 <ul>
@@ -632,7 +633,8 @@ sheet’s design moved by whole millimetres so that its middle is nearest the mi
 <code>_context</code> names (<code>Design::moved</code>). TS-17A moves by whole multiples of 6 mm, which keep its crosses’ cells on
 the canvas’s grids of 2 and 3 mm (<code>TestSheet::step</code>). The turned square’s grid starts at the square’s
 corner, and moves with it. Each element is an object named by its id, with its path and its thread as
-the paint its family sews with. Its settings are its family’s effect record, each the
+the paint its family sews with, a linear gradient fill’s gradient as its fill (<a href="#a-gradients-geometry">below</a>).
+Its settings are its family’s effect record, each the
 value its dialog row takes, which reads back as the setting it was. The objects selected are given back as
 they are, and the sheet goes above them. The document sews as the sheet’s design moved. A fill’s rows lie where the design’s
 origin puts them, so moved they may fall elsewhere across a shape, and the sheet looks the same. The
@@ -802,9 +804,9 @@ finish.</p>
 <p>Paint caveat: a live effect changes only geometry. A fill preview’s ribbons are painted with the object’s
 own fill, and a stroke preview with its stroke. From 0.14 a stroke or a satin effect reads its stroke’s
 style, and still cannot change the paints. Users set the fill/stroke to the thread colour, which they want
-anyway for export. An element sewn in several threads (M10.5), as a tartan fill is and a gradient fill
-will be, previews every group of its stitches with the object’s own paints too. A tartan’s preview shows
-one colour. ABI v1 gives the geometry a live effect returns no paint of its own. The exporters and
+anyway for export. An element sewn in several threads (M10.5), as tartan and linear gradient fills are,
+previews every group of its stitches with the object’s own paints too. A tartan’s preview shows one
+colour, and a linear gradient fill’s the object’s gradient, which paints its stitches where they lie. ABI v1 gives the geometry a live effect returns no paint of its own. The exporters and
 <code>stitch export</code> write each thread, and the command line’s preview draws each (<code>REQ-THREAD-003</code>).</p>
 <h3 id="commands-in-v1"><a class="header" href="#commands-in-v1">Commands in v1</a></h3>
 <p>Ink/Stitch’s commands are symbols linked to an object, and ABI v1 has nothing to link. <code>trim_after</code> and
@@ -904,8 +906,9 @@ closed path and the width profile, which its stitches don’t follow (<code>SC-W
 thread’s colour is a solid paint’s colour, with CMYK and grey converted by
 VectorCraft’s formula without colour management ((1 − c)(1 − k) and 1 − k) and Lab through sRGB. A
 gradient gives the colour of its first stop VectorCraft shows, of an opacity other than 0, with <code>SC-W0807</code>
-unless every stop is shown in that colour. A gradient whose stops are all of opacity 0 paints nothing,
-as one without stops does. It is left out without a word. A pattern
+unless every stop is shown in that colour. With <code>fill_method</code> set to <code>linear_gradient_fill</code>, the fill takes
+that colour without a word and sews the gradient (<a href="#a-gradients-geometry">below</a>). Gradients whose stops are
+all of opacity 0 paint nothing, as those without stops do, and are left out without a word. A pattern
 gives black, with <code>SC-W0807</code>. A stroke’s width, in points, and its join, with its miter limit (10 when
 the file omits it, as VectorCraft draws it), shape a satin column drawn as one path. A stroke drawn with
 a brush is stitched along its path, without the brush’s art, with <code>SC-W0807</code>.</p>
@@ -1005,6 +1008,29 @@ number that doesn’t read or a point more than 10 m from the origin, and a shap
 <code>SC-I0809</code> lists the layers and guides left out because VectorCraft doesn’t print them, and <code>SC-I0811</code> the
 objects and layers left out by their names. The compatibility gate will have each VectorCraft version it
 tests write files for the adapter to read back (Level B, M6.6).</p>
+<h4 id="a-gradients-geometry"><a class="header" href="#a-gradients-geometry">A gradient’s geometry</a></h4>
+<p>A linear gradient fill made in VectorCraft sews the linear gradient of the object’s topmost fill that
+paints, in <code>stitch export</code> and in StitchCraft Fill’s live effect alike (<code>REQ-VC-022</code>, M10.12). VectorCraft’s
+gradient paint keeps its colours apart from where it lies: <code>{"type": "gradient", "gradient": {"kind", "stops"}, "geom"?, "angle"}</code>. Its <code>geom</code> gives the start and end in the document’s coordinates, in points,
+which the reader turns into millimetres. VectorCraft fits a gradient without one to its object each time it
+draws it. The fitted gradient runs through the middle of the object’s bounds round its curves, at <code>angle</code>
+counter-clockwise as the canvas shows it. It is as long as the bounds are across that way. The reader fits
+it alike, charging the budget for each segment it measures (<code>GradientGeom::fit</code> in VectorCraft’s <code>crates/color</code>, read for 0.17.0 to
+0.21.0, and <code>paint.setGradientGeom</code> in its <code>docs/mcp.md</code>).</p>
+<p>Each stop’s offset is kept from 0 to 1 and never before the stop before, and its opacity from 0 to 1, 1 where
+the file leaves it out. Its colour converts as a solid paint’s does, and one that doesn’t read is black, with
+<code>SC-W0807</code>. A stop’s midpoint moves where VectorCraft draws the 2 colours half mixed, which rows of whole
+colours can’t follow, and <code>SC-W0807</code> names a midpoint other than half way. A gradient more than 10 m from the
+origin is named too, and the fill sews its first colour. A radial or freeform gradient, and one of one stop,
+is sewn in its first colour, as other fill methods sew a gradient. A fill without a linear gradient fades its
+own colour out (<code>SC-W0329</code>).</p>
+<p><strong>Decision: the Test Sheet filter draws gradients.</strong> A filter’s output may hold gradient paints in the native format’s
+form, <code>geom</code> among them, which VectorCraft clamps and keeps (its <code>docs/plugins.md</code>, Output). So Test Sheet
+draws a linear gradient fill with its gradient as a gradient paint, its <code>geom</code> in points, and the document
+sews as the sheet’s design (<code>apps/stitchcraft-vc-plugin/src/testsheet/tests.rs</code>). Rejected: a solid paint of
+the first colour, which would sew the fade of <code>SC-W0329</code>. A gradient without its <code>geom</code> was rejected too:
+VectorCraft would fit it to the object’s bounds at its angle, not where the sheet puts it. The filter draws
+TS-17B, which holds gradients from M10.12, and its draw-every-sheet case sews them as the sheet does.</p>
 <h3 id="importing-inkstitch-svgs-into-vectorcraft"><a class="header" href="#importing-inkstitch-svgs-into-vectorcraft">Importing Ink/Stitch SVGs into VectorCraft</a></h3>
 <p>Because VectorCraft up to 0.16 drops <code>inkstitch:*</code> attributes on SVG import, phase 1 offers
 <code>stitch import-inkstitch design.svg -o design.vectorcraft</code>: our SVG adapter reads the Ink/Stitch file

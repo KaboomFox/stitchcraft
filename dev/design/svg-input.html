@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-b0ba40be.js";
+            window.path_to_searchindex_js = "../searchindex-b1e7cc84.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-61f039c5.js"></script>
+        <script src="../toc-4715bfff.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -264,7 +264,8 @@ an <code>ex</code> 8, as with a viewer’s default font. inkex reads them as 0 i
 <h2 id="colour-and-visibility"><a class="header" href="#colour-and-visibility">Colour and visibility</a></h2>
 <ul>
 <li><code>fill</code>, <code>stroke</code>, <code>color</code> and <code>currentColor</code> give the thread colour. A gradient gives its first colour
-and a pattern its fallback colour, each with a warning. A gradient of one colour, such as an Inkscape
+and a pattern its fallback colour, each with a warning. A linear gradient fill’s linear gradient gives its
+first colour without one, and the fill sews the gradient (<a href="#gradients">below</a>). A gradient of one colour, such as an Inkscape
 swatch, gives that colour without one. Its first colour is that of its first stop a viewer shows, one
 not fully transparent and of a <code>stop-opacity</code> above 0. A gradient without stops paints nothing, as in a
 viewer. So do one whose stops a viewer doesn’t show and a reference to an element the file does not
@@ -302,6 +303,28 @@ outside a clone they paint nothing. Ink/Stitch sews them black.</li>
 adapter, but every other gradient and every pattern in black, whatever colour is written after it
 (<code>DEV-SVG-013</code>).</li>
 </ul>
+<h2 id="gradients"><a class="header" href="#gradients">Gradients</a></h2>
+<p>A shape whose <code>inkstitch:fill_method</code> is <code>linear_gradient_fill</code> sews the linear gradient its fill is
+painted with (<a href="algorithms/gradient.html">linear gradient fill</a>). The reader places it as a viewer does, in
+the design’s millimetres, once it has read the shape’s outline (<code>REQ-SVG-014</code>).</p>
+<p>A gradient takes what it doesn’t say from the gradient its <code>href</code> names, and that one from the next, each
+once and at most 16 deep. Inkscape keeps a gradient’s stops in one gradient and its vector in another that
+names it. The vector’s <code>x1</code>, <code>y1</code>, <code>x2</code> and <code>y2</code> come from the nearest linear gradient that gives each.
+<code>gradientUnits</code> and <code>gradientTransform</code> come from the nearest gradient that gives them, a radial one too.
+The stops come from the first gradient that has any.</p>
+<p>With <code>gradientUnits="userSpaceOnUse"</code>, as Inkscape writes it, the vector is in user units, and a percentage
+is a share of the viewport. Otherwise it is in shares of the box round the shape’s outline, curves and all,
+SVG’s default. A gradient without a vector then runs along the box’s top from its left side to its right.
+The <code>gradientTransform</code> applies before the box and the shape’s own transforms.</p>
+<p>A stop’s offset is a number or a percentage, kept from 0 to 1 and never before the stop before. A stop’s
+colour is its <code>stop-color</code>, the nearest <code>color</code> for <code>currentColor</code>, or black where the stop doesn’t give a
+usable one. Its opacity is its <code>stop-opacity</code> times its colour’s alpha.</p>
+<p>A gradient of fewer than 2 stops, or in a box whose width or height is 0, places none, and the fill sews
+its colour fading out (<code>SC-W0329</code>). A length or a transform that can’t be used is named with <code>SC-W0804</code>,
+and left as a viewer leaves it. A gradient more than 10 m from the origin is named and not sewn. A radial
+gradient is no linear gradient: its first colour is sewn, with the warning a gradient gives.</p>
+<p>Ink/Stitch reads the gradient’s own vector as user units, whatever its units, and none from the gradients
+it names. A gradient without a vector of its own sews in its last colour there (<code>DEV-SVG-027</code>).</p>
 <h2 id="clip-paths"><a class="header" href="#clip-paths">Clip paths</a></h2>
 <p>A shape that a <code>clip-path</code> cuts shows only inside it, and sews only what shows (<code>REQ-SVG-011</code>). The
 adapter reads each clip path into a clip of the shape’s elements, and the engine cuts them to it

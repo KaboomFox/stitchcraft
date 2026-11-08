@@ -35,10 +35,10 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-b0ba40be.js";
+            window.path_to_searchindex_js = "../../../searchindex-b1e7cc84.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../../toc-61f039c5.js"></script>
+        <script src="../../../toc-4715bfff.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -227,13 +227,16 @@ band to band along its stripes’ edges. 0 sews straight rows.</p>
 <li><strong>Default:</strong> <code>0</code></li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
+<h2 id="colours"><a class="header" href="#colours">Colours</a></h2>
 <h3 id="stop_at_ending_point"><a class="header" href="#stop_at_ending_point"><code>stop_at_ending_point</code></a></h3>
-<p><strong>Stop at the end position.</strong> End every colour at the fill’s end position, or near the next element: each colour then travels
-from where the fill starts and to where it ends. Off, each colour starts where the one before ended
-and ends with its last row, and only the fill’s runs travel on towards its end.</p>
+<p><strong>Stop at the end position.</strong> End the fill’s colours at its end position, or near the next element. A tartan fill’s every colour
+then travels from where the fill starts to where it ends, and a linear gradient fill’s last 2
+colours travel on to the end after their rows. Off, each colour ends with its last row, and a
+tartan starts each colour where the one before ended, and only its runs travel on towards its end.</p>
 <ul>
 <li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
 <li><strong>Default:</strong> <code>false</code></li>
+<li><strong>Applies to:</strong> Linear gradient fill, Tartan fill</li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 
