@@ -555,7 +555,7 @@ pub stitchcraft_engine::generators::tartan::Look::Gap
 pub stitchcraft_engine::generators::tartan::Look::Sewn
 pub struct stitchcraft_engine::generators::tartan::Sett
 pub struct stitchcraft_engine::generators::tartan::Stripe
-pub stitchcraft_engine::generators::tartan::Stripe::colour: stitchcraft_plan::Rgb
+pub stitchcraft_engine::generators::tartan::Stripe::colour: stitchcraft_plan::thread::Rgb
 pub stitchcraft_engine::generators::tartan::Stripe::look: stitchcraft_engine::generators::tartan::Look
 pub stitchcraft_engine::generators::tartan::Stripe::width: f64
 pub struct stitchcraft_engine::generators::tartan::Tartan
@@ -572,7 +572,7 @@ pub fn stitchcraft_engine::generators::tartan::TartanParams::from_set(&stitchcra
 pub fn stitchcraft_engine::generators::tartan::TartanParams::from_set_as(&stitchcraft_params::set::ParamSet, stitchcraft_params::stitch_type::StitchType) -> core::result::Result<stitchcraft_params::set::Validated<Self>, alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>>
 pub const stitchcraft_engine::generators::tartan::DEFAULT_PALETTE: &str
 pub const stitchcraft_engine::generators::tartan::SETT: &str
-pub fn stitchcraft_engine::generators::tartan::shades() -> impl core::iter::traits::iterator::Iterator<Item = (&'static str, &'static str, stitchcraft_plan::Rgb)>
+pub fn stitchcraft_engine::generators::tartan::shades() -> impl core::iter::traits::iterator::Iterator<Item = (&'static str, &'static str, stitchcraft_plan::thread::Rgb)>
 pub fn stitchcraft_engine::generators::tartan::tartan_fill(&stitchcraft_engine::normalize::region::Region, &stitchcraft_engine::generators::tartan::Tartan, core::option::Option<stitchcraft_core::units::Point>, core::option::Option<&stitchcraft_engine::generators::Approach>, &mut stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_engine::generators::tartan::top_path(&stitchcraft_engine::normalize::region::Region, &stitchcraft_engine::generators::tartan::Tartan, &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::vec::Vec<stitchcraft_engine::generators::tatami::rows::Segment>, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::generators::tatami
