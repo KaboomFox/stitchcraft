@@ -1,6 +1,6 @@
 # Engine pipeline
 
-<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/generators/next.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, apps/stitchcraft-cli/src/commands/plan.rs -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/generate/**, crates/stitchcraft-engine/src/generators/next.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, crates/stitchcraft-engine/src/underlays_first.rs, crates/stitchcraft-engine/src/underlays_first/**, apps/stitchcraft-cli/src/commands/plan.rs -->
 
 From a `Design` to a checked `StitchPlan`. Each stage is a module in `stitchcraft-engine` with its
 own tests; stages communicate only through the types in the [data model](data-model.md).
@@ -191,31 +191,48 @@ order stage 0 chose), by `stitchcraft_engine::assemble`.
 ### Underlays first
 
 From M10.15, consecutive elements that set `underlays_first` sew all their underlays before any of their
-top stitches ([ADR-0018](adr/0018-underlays-first-is-a-setting-of-each-element.md)). The setting is a
-toggle that every stitch type shares, off by default, and StitchCraft's own. Ink/Stitch has no such order.
+top stitches ([ADR-0018](adr/0018-underlays-first-is-a-setting-of-each-element.md),
+`stitchcraft_engine::underlays_first`). The setting is a toggle that every stitch type shares, off by
+default, and StitchCraft's own. Ink/Stitch has no such order.
 
-- **Runs.** The engine finds the runs before stage 3, in the order stage 0 gives. A run is a stretch of
-  consecutive elements that set the toggle and have one thread, compared by colour as above. It ends after
-  an element with `trim_after` or `stop_after`. An element sewn in several threads (M10.5), or skipped
-  for settings that don't read, is in no run. An element that would make a run of one sews as it does
-  without the setting, and a note says why its setting joins nothing.
-- **2 passes.** A run sews its elements' underlays in their order, then their top stitches in the same
-  order. An element without underlay, such as a running stitch or a fill with `fill_underlay` off, sews in
-  the second pass alone. The run's last element keeps its trim or stop after its top stitches.
-- **Layers.** Each element of a run is generated as 2 layers, its underlay and its top, each in its place
-  in the passes. A layer starts near the last needle point sewn before it and ends near what the next
-  layer offers, which is what that layer's element offers ([stage 3](#3-generate)). The element's start
-  position places the start of its first layer, and its end position the end of its top. Its settings are
-  read and its shape built once, and the 2 layers share its work budget. Each layer spends the design's
-  stitches on the needle points it makes. The top stitches take the same random numbers as without the
-  setting, since an underlay draws none.
+- **Runs.** The engine finds the runs before stage 3, in the order stage 0 gives (`REQ-ASM-008`). A run is
+  a stretch of consecutive elements that set the toggle and have one thread, compared by colour as above.
+  It ends after an element with `trim_after` or `stop_after`. An element sewn in several threads (M10.5) is
+  in no run, and nor is one with a setting that its stitch type reads and that doesn't read, which is
+  skipped with `SC-E0101`. Either parts the elements beside it. An element that would make a run of one
+  sews as it does without the setting. `SC-I0506` names it, and an element in several threads that sets
+  the toggle.
+- **What is read first.** Each element's toggle, trim, stop and threads are read from its settings alone,
+  before any element is generated. So are whether its settings read, by the registry's declarations of
+  what its stitch type reads, and whether it has an underlay. A satin column has one with one of its 3
+  underlays on. A tatami, contour, meander or circular fill has one with `fill_underlay` on, unless it is
+  set to Ink/Stitch's legacy fill or not to be sewn.
+- **2 passes.** A run sews the underlays of its elements that have one, in their order, then the top
+  stitches of every element in the same order (`REQ-ASM-009`). An element without underlay, such as a
+  running stitch or a fill with `fill_underlay` off, is generated whole, in its place in the second pass.
+  The run's last element keeps its trim or stop after its top stitches.
+- **Layers.** Each element of a run with an underlay is generated as 2 layers, its underlay and its top
+  (`stitchcraft_engine::generate::layered`). A layer starts near the last needle point sewn before it and
+  ends near what the next layer offers, which is what that layer's element offers ([stage 3](#3-generate)).
+  The element's start position places the start of its underlay, and its end position the end of its
+  top. Its settings are read and its shape built once, before its underlay, and the 2 layers share its
+  work budget. Each layer spends the design's stitches on the needle points it makes. A satin column is
+  placed as it is read, and its top stitches take the random numbers they take without the setting. A
+  fill's underlay draws no random number. Its top draws them from the element's generator as it would
+  without the setting. [Satin](algorithms/satin.md#underlays) and [fills](algorithms/fills.md#6-underlay)
+  say how each sews its 2 layers.
+- **What is left out.** An element skipped as it is read sews neither layer, and nor does one whose work
+  runs out in its top. Its underlay is left out of the plan too, with `SC-E0004`, and its trim or stop with
+  `SC-W0505`. Each layer's diagnostics are said in its place in the passes.
 - **Joins and roles.** Assembly joins the layers as it joins any 2 groups
   ([below](#connecting-consecutive-groups)), and tags the needle points of each underlay layer underlay.
+  The element is one element of the plan, whose stitches lie in both passes.
 
 The needle goes back from a run's last underlay to its first top stitch, with a jump and its locks where
 that is farther than the jump length. Each run has one thread, so the design's colour changes are those
 it has without the setting. `--sort-colours` moves the elements that set the toggle as it moves any
-element with settings, and the runs are made of the elements its order puts side by side.
+element with settings, and the runs are made of the elements its order puts side by side. A design
+without the setting plans as before, every element one step in its place (`REQ-ASM-010`).
 
 ### Connecting consecutive groups
 

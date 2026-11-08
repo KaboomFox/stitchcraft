@@ -12,8 +12,12 @@
 //! in. A fill is painted with its thread's colour by its fill rule, and a stroke with its colour, width,
 //! join and cap. A satin column drawn as one path keeps its stroke's width, which both sew as a column that
 //! wide (`REQ-SAT-016`). Each parameter is an `inkstitch:` attribute of its own name. One of StitchCraft's
-//! own that a stitch type reads is refused, as Ink/Stitch would pass it over and sew otherwise. Automatic
-//! digitizing's own are left out, as no stitch type reads them in either program (`REQ-AUTO-020`).
+//! own that a stitch type reads is refused, as Ink/Stitch would pass it over and sew otherwise: an element
+//! that sets `underlays_first` sews its underlay in a run of them (`REQ-ASM-009`), and in Ink/Stitch just
+//! before its top stitches. The differential writes a sheet's file of the elements both programs sew alike,
+//! [`sewn_alike`], and leaves out the others, as TS-17C's crossing columns with their underlays first.
+//! Automatic digitizing's own are left out, as no stitch type reads them in either program
+//! (`REQ-AUTO-020`).
 //!
 //! An element's start and end positions and its target point are Ink/Stitch's `starting_point`,
 //! `ending_point` and `target_point` commands (`REQ-GEN-001`): a `<use>` of the command's symbol at the
@@ -52,7 +56,7 @@ use stitchcraft_engine::design::Clip;
 use stitchcraft_engine::design::{Cap, DesignSettings, Element, FillRule, Hints, Join, Path, SETTINGS, Segment, Shape, Turn};
 use stitchcraft_engine::registry::PARAMETERS;
 use stitchcraft_engine::testsheets::Cloned;
-use stitchcraft_params::{Origin, ParamGroup};
+use stitchcraft_params::{Origin, ParamGroup, ParamSpec};
 use stitchcraft_svg::inkstitch::INKSTITCH_NS;
 use stitchcraft_svg::version::CURRENT;
 
@@ -220,13 +224,26 @@ fn parameters(element: &Element, registry: &[&ParamGroup]) -> Result<String, Str
             if spec.applies_to.is_empty() {
                 continue;
             }
-            if spec.origin == Origin::StitchCraft {
+            if own(spec) {
                 return Err(format!("{}: `{key}` is StitchCraft's own, and Ink/Stitch would sew the element without it", element.id));
             }
         }
         out.push_str(&format!(" inkstitch:{key}=\"{}\"", escaped(value)));
     }
     Ok(out)
+}
+
+/// Whether `spec` is a setting of StitchCraft's own that a stitch type reads, which Ink/Stitch passes over.
+fn own(spec: &ParamSpec) -> bool {
+    spec.origin == Origin::StitchCraft && !spec.applies_to.is_empty()
+}
+
+/// The elements of `elements` that Ink/Stitch sews as StitchCraft does, in their order: all but those that
+/// set a setting of StitchCraft's own that a stitch type reads, which [`svg`] refuses. The differential
+/// writes a sheet's file of these, so that both programs sew the same design.
+pub fn sewn_alike(elements: &[Element]) -> Vec<Element> {
+    let sets_own = |element: &Element| element.params.iter().any(|(key, _)| stitchcraft_params::find(PARAMETERS, key).is_some_and(own));
+    elements.iter().filter(|element| !sets_own(element)).cloned().collect()
 }
 
 /// `text` with the characters that would end an attribute's value or begin markup in it written as
@@ -261,7 +278,6 @@ mod tests {
     use stitchcraft_core::{Budget, Mm};
     use stitchcraft_engine::design::Subpath;
     use stitchcraft_engine::testsheets;
-    use stitchcraft_params::ParamSpec;
     use stitchcraft_plan::Rgb;
 
     use super::*;
@@ -413,27 +429,33 @@ mod tests {
         let line = |params: &[(&str, &str)]| along("line", polylines(&[&[(0.0, 0.0), (4.0, 0.0)]]), &RED, params);
         let text = svg(&[line(&[("auto_overlap_mm", "0.6"), ("running_stitch_length_mm", "2")])], &DesignSettings::default()).unwrap();
         assert_eq!(read(&text).0, kept(&[line(&[("running_stitch_length_mm", "2")])]));
-        // No parameter of StitchCraft's own is read by a stitch type yet: one in a registry of its own.
-        let running = stitchcraft_params::find(PARAMETERS, "running_stitch_length_mm").unwrap();
-        let own: &'static [ParamSpec] = Box::leak(Box::new([ParamSpec { key: "own_length_mm", origin: Origin::StitchCraft, ..*running }]));
-        let registry = [&*Box::leak(Box::new(ParamGroup { specs: own, ..**PARAMETERS.first().unwrap() }))];
-        assert_eq!(parameters(&line(&[("running_stitch_length_mm", "2")]), &registry), Ok(" inkstitch:running_stitch_length_mm=\"2\"".to_string()));
-        let refused = parameters(&line(&[("own_length_mm", "2")]), &registry).unwrap_err();
-        assert_eq!(refused, "line: `own_length_mm` is StitchCraft's own, and Ink/Stitch would sew the element without it");
+        // `underlays_first` is StitchCraft's own, and every stitch type reads it: Ink/Stitch would sew the
+        // element's underlay just before its top stitches, whatever it says.
+        let refused = svg(&[line(&[("running_stitch_length_mm", "2"), ("underlays_first", "true")])], &DesignSettings::default()).unwrap_err();
+        assert_eq!(refused, "line: `underlays_first` is StitchCraft's own, and Ink/Stitch would sew the element without it");
+        assert!(svg(&[line(&[("underlays_first", "false")])], &DesignSettings::default()).is_err(), "whatever its value");
+        // So the elements both programs sew alike leave it out, and keep the others in their order.
+        let (first, second, third) = (line(&[]), line(&[("underlays_first", "true")]), line(&[("auto_overlap_mm", "0.6")]));
+        assert_eq!(sewn_alike(&[first.clone(), second, third.clone()]), [first, third]);
         assert_eq!(svg(&[], &DesignSettings::default()).unwrap_err(), "no element has a point");
     }
 
     #[test]
     fn req_prm_003_the_file_of_each_sheet_drawn_as_a_design_keeps_the_elements_it_sews() {
         // The TS-13 sheets' shapes as automatic digitizing makes them, each sheet's other elements as they are,
-        // and TS-16's clone a clone in the file.
+        // and TS-16's clone a clone in the file. TS-17C's crossing columns with their underlays first are left
+        // out, as Ink/Stitch would sew them otherwise.
         let mut checked = 0;
         for sheet in testsheets::SHEETS.iter().filter(|sheet| sheet.designed()) {
             let (id, design, clones) = (sheet.id, sheet.design().unwrap().unwrap(), sheet.clones().unwrap().unwrap());
             let (digitized, _) = stitchcraft_engine::auto::digitized(&design, &Budget::DEFAULT);
-            let text = svg_with(&digitized, &design.settings, &clones).unwrap();
+            let alike = sewn_alike(&digitized);
+            let left_out: Vec<&str> = digitized.iter().filter(|e| !alike.contains(e)).map(|e| e.id.as_str()).collect();
+            let own = if id == "TS-17C" { &["ts17c:crossing-first:bar", "ts17c:crossing-first:post"][..] } else { &[] };
+            assert_eq!(left_out, own, "{id}");
+            let text = svg_with(&alike, &design.settings, &clones).unwrap();
             assert_eq!(text.matches("transform=\"matrix(").count(), clones.len(), "{id}");
-            assert_eq!(read(&text), (kept(&digitized), design.settings), "{id}");
+            assert_eq!(read(&text), (kept(&alike), design.settings), "{id}");
             checked += usize::from(sheet.digitized());
         }
         assert!(checked >= 4, "the TS-13 sheets are drawn as designs");
