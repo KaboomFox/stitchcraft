@@ -1,21 +1,22 @@
-//! TS-17B — the new fills, for MC-12: the tartans of M10.6 so far ([`tartans`]), each a tartan fill 40 mm
-//! square with a sett of its own, as Ink/Stitch's tartan editor saves it, and the linear gradients of M10.12
-//! below them ([`gradients`]).
+//! TS-17B — the new fills, for MC-12: the tartans of M10.6 and M10.7 so far ([`tartans`]), each a tartan fill
+//! 40 mm square with a sett of its own, as Ink/Stitch's tartan editor saves it, and the linear gradients of
+//! M10.12 below them ([`gradients`]).
 //!
-//! Drawn from a file (`Drawn::FromFile`): a sett is a setting VectorCraft's fill dialog doesn't hold before
-//! M10.7, so only `stitch testsheet` and the differential's SVG file draw the sheet. Each sample is trimmed
-//! after each colour. A tartan sews its underlay in a thread of its own, a colour of its sett other than its
-//! first stripe's: sewn in that colour, the underlay and the first colour would be one colour block, and the
-//! jump between them would leave its thread under the fill on the reference machine (MC-1). A gradient's
-//! underlay sews in its first stop's colour, as Ink/Stitch sews it, and its first colour runs on from it
-//! along the outline, without a jump.
+//! Drawn as a design (`Drawn::Designed`): from M10.7 VectorCraft's fill dialog holds a tartan's sett, so the
+//! Test Sheet filter draws the sheet too, each gradient as a gradient paint. Each sample is trimmed after each
+//! colour. A tartan sews its underlay in a thread of its own, a colour of its sett other than its first
+//! stripe's: sewn in that colour, the underlay and the first colour would be one colour block, and the jump
+//! between them would leave its thread under the fill on the reference machine (MC-1). A gradient's underlay
+//! sews in its first stop's colour, as Ink/Stitch sews it, and its first colour runs on from it along the
+//! outline, without a jump.
 //!
 //! - **Top row**: a sett mirrored at its ends, one repeated, its code the list Ink/Stitch's editor writes for
 //!   a repeated sett, and a warp and a weft that differ.
-//! - **Middle row**: a sett with stripes narrow enough to sew as runs along their middles, and one turned 30°
-//!   and scaled by 150 %.
+//! - **Middle row**: a sett with stripes narrow enough to sew as runs along their middles, one turned 30°
+//!   and scaled by 150 %, and a herringbone 3 mm wide (M10.7), its rows in bands that slant one way and then
+//!   the other.
 //! - **Bottom row**: linear gradient fills of 2 stops and of 3, the middle stop of the last transparent, each
-//!   at a slant of its own.
+//!   at a slant of its own (M10.12).
 //!
 //! Every stripe's colour is one of Brother's threads, so that both programs' PES files name each thread as
 //! itself and the differential compares them as they are. A stripe sews in a thread of its colour alone,
@@ -41,7 +42,7 @@ const SIDE: f64 = 40.0;
 const PITCH: f64 = 45.0;
 
 /// TS-17B's tartans: each one's name, the Brother PEC index of its own thread, which its underlay sews in,
-/// and its sett as Ink/Stitch's tartan editor saves it.
+/// its sett as Ink/Stitch's tartan editor saves it, and its herringbone's width in millimetres, 0 for none.
 ///
 /// - **mirrored**: red, white, Prussian blue and deep gold, mirrored at its first and last stripes, the weft
 ///   as the warp.
@@ -50,31 +51,43 @@ const PITCH: f64 = 45.0;
 /// - **runs**: blue and black, with a white stripe 0.5 mm wide and a red one 0.8 mm wide, each sewn as a run
 ///   along its middle after the fills.
 /// - **turned**: deep gold, black and tangerine, turned 30° and scaled by 150 %.
-const TARTANS: [(&str, u8, &str); 5] = [
+/// - **herringbone**: blue, white, red and black, mirrored, in a herringbone 3 mm wide.
+const TARTANS: [(&str, u8, &str, &str); 6] = [
     (
         "mirrored",
         PRUSSIAN_BLUE,
         r#"{"symmetry": true, "rotate": 0.0, "scale": 100, "offset_x": 0.0, "offset_y": 0.0, "palette": "(#ed171f)/4.0 (#f0f0f0)1.5 (#0e1f7c)3.0 (#e8a900)/2.0", "min_stripe_width": 1.0}"#,
+        "0",
     ),
     (
         "repeated",
         BLACK,
         r#"{"symmetry": false, "rotate": 0.0, "scale": 100, "offset_x": 0.0, "offset_y": 0.0, "palette": "...['(#00673e)5.0', '(#000000)1.5', '(#00673e)2.0', '(#f0f0f0)2.0']...", "min_stripe_width": 1.0}"#,
+        "0",
     ),
     (
         "apart",
         BLUE,
         r#"{"symmetry": true, "rotate": 0.0, "scale": 100, "offset_x": 0.0, "offset_y": 0.0, "palette": "(#ed171f)/3.0 (#000000)2.0 (#ed171f)/1.5 | (#0a55a3)/2.5 (#f0f0f0)2.0 (#0a55a3)/2.0", "min_stripe_width": 1.0}"#,
+        "0",
     ),
     (
         "runs",
         BLACK,
         r#"{"symmetry": true, "rotate": 0.0, "scale": 100, "offset_x": 0.0, "offset_y": 0.0, "palette": "(#0a55a3)/4.0 (#f0f0f0)0.5 (#0a55a3)3.0 (#ed171f)0.8 (#000000)/4.0", "min_stripe_width": 1.0}"#,
+        "0",
     ),
     (
         "turned",
         TANGERINE,
         r#"{"symmetry": true, "rotate": 30.0, "scale": 150, "offset_x": 0.0, "offset_y": 0.0, "palette": "(#e8a900)/2.0 (#000000)1.5 (#fe9e32)/2.5", "min_stripe_width": 1.0}"#,
+        "0",
+    ),
+    (
+        "herringbone",
+        BLACK,
+        r#"{"symmetry": true, "rotate": 0.0, "scale": 100, "offset_x": 0.0, "offset_y": 0.0, "palette": "(#0a55a3)/3.0 (#f0f0f0)1.5 (#ed171f)2.0 (#000000)/3.0", "min_stripe_width": 1.0}"#,
+        "3",
     ),
 ];
 
@@ -97,9 +110,9 @@ const GRADIENTS: [Sample; 3] = [
     ("clear", &[(0.0, TANGERINE, 1.0), (0.5, WHITE, 0.0), (1.0, PRUSSIAN_BLUE, 1.0)], (31.0, 3.0), (11.0, 39.0)),
 ];
 
-/// Draws TS-17B: the tartans 40 mm square, 3 to a row, each trimmed after, and the gradients below them. The
-/// herringbones of M10.7 come after the tartans in the second row, and the guided fills of M10.9 and M10.10
-/// below the gradients.
+/// Draws TS-17B: the tartans 40 mm square, 3 to a row, each trimmed after, the herringbone of M10.7 last in
+/// the second row, and the gradients below them. The guided fills of M10.9 and M10.10 come below the
+/// gradients.
 pub(super) fn samples() -> Result<Drawing, SheetError> {
     let mut d = tartans()?;
     gradients(&mut d)?;
@@ -109,12 +122,16 @@ pub(super) fn samples() -> Result<Drawing, SheetError> {
 /// The tartans, 3 to a row from the top left.
 fn tartans() -> Result<Drawing, SheetError> {
     let mut d = Drawing::new("ts17b");
-    for (i, (name, own, sett)) in TARTANS.iter().enumerate() {
+    for (i, (name, own, sett, herringbone)) in TARTANS.iter().enumerate() {
         let (x, y) = ((i % 3) as f64 * PITCH, (i / 3) as f64 * PITCH);
         let outline = polygon(&[(x, y), (x + SIDE, y), (x + SIDE, y + SIDE), (x, y + SIDE)])?;
         // The Brother thread's colour alone, as the stripes' threads are (the module's docs).
         let own = Thread::new(thread(*own)?.color);
-        d.fill(name, vec![outline], &own, &[("fill_method", "tartan_fill"), ("tartan", sett), ("trim_after", "true")])?;
+        let mut params = vec![("fill_method", "tartan_fill"), ("tartan", *sett), ("trim_after", "true")];
+        if *herringbone != "0" {
+            params.push(("herringbone_width_mm", *herringbone));
+        }
+        d.fill(name, vec![outline], &own, &params)?;
     }
     Ok(d)
 }
@@ -184,6 +201,11 @@ mod tests {
             ("turned", "#e8a900"),
             ("turned", "#000000"),
             ("turned", "#fe9e32"),
+            ("herringbone", "#000000"),
+            ("herringbone", "#ed171f"),
+            ("herringbone", "#000000"),
+            ("herringbone", "#0a55a3"),
+            ("herringbone", "#f0f0f0"),
             ("two", "#ed171f"),
             ("two", "#0a55a3"),
             ("three", "#e8a900"),
@@ -218,15 +240,22 @@ mod tests {
         let at = |angles: &[f64]| rows.windows(2).filter(|w| angles.iter().any(|&angle| (slant(w[0], w[1]) - angle).abs() < 0.5)).count();
         assert!(at(&[165.0]) * 2 > rows.len(), "{} of {}", at(&[165.0]), rows.len());
         assert!(at(&[30.0, 120.0]) * 4 > rows.len(), "{} of {}", at(&[30.0, 120.0]), rows.len());
+        // The herringbone's rows slant at 45° to its stripes, down to the right in some bands and up to the
+        // right in the others, and each colour sews both.
+        for block in 24..28 {
+            let rows = top(block);
+            let count = |angle: f64| rows.windows(2).filter(|w| w[0].distance(w[1]) > 0.5 && (slant(w[0], w[1]) - angle).abs() < 0.5).count();
+            assert!(count(45.0) > 20 && count(135.0) > 20, "{block}: {} and {}", count(45.0), count(135.0));
+        }
         // The clear sample's gradient runs down to the left, 20 mm left for each 36 mm down. Its rows lie square
         // to it, at 29.05° to the x axis, and its underlay along it, at 119.05°: most of tangerine's stitches run
         // one way or the other, the rest along the square's sides between rows. Tangerine's rows lie on the
         // gradient's start's side of blue's.
-        let tangerine = top(28);
+        let tangerine = top(33);
         let count = |angle: f64| tangerine.windows(2).filter(|w| (slant(w[0], w[1]) - angle).abs() < 0.5).count();
         let (rows, underlay) = (count(29.054_604), count(119.054_604));
         assert!(rows > 300 && underlay > 300 && (rows + underlay) * 4 > tangerine.len() * 3, "{rows} and {underlay} of {}", tangerine.len());
         let along = |points: &[Point]| points.iter().map(|q| -20.0 * q.x() + 36.0 * q.y()).sum::<f64>() / points.len() as f64;
-        assert!(along(&tangerine) < along(&top(29)));
+        assert!(along(&tangerine) < along(&top(34)));
     }
 }

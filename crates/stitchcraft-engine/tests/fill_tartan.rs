@@ -1,6 +1,6 @@
-//! A tartan fill (`REQ-FILL-TRT-003` to `REQ-FILL-TRT-010`), sewn as whole designs: the sett is read and laid
-//! in the generator's modules (`generators::tartan`); these cases sew designs through every stage, with what
-//! is said of them.
+//! A tartan fill (`REQ-FILL-TRT-003` to `REQ-FILL-TRT-009`, and `REQ-FILL-TRT-012` for a herringbone), sewn
+//! as whole designs: the sett is read and laid in the generator's modules (`generators::tartan`); these cases
+//! sew designs through every stage, with what is said of them.
 //!
 //! Each case's square spans -20 to 20 mm both ways. Its middle is the origin, and the smallest circle round
 //! it has a radius of 28.28 mm, half its diagonal. With a sett 10 mm wide, the box the stripes are laid over
@@ -317,16 +317,30 @@ fn req_fill_trt_009_a_tartan_in_parts_sews_each_thread_once() {
     }
 }
 
+/// The ways the stitches of `points` that run along a row slant, as the canvas shows them: `1.0` for down to the
+/// right, `-1.0` for up to the right, of each stitch at 45° longer than 0.5 mm, whichever way it is sewn.
+fn slants(points: &[Point]) -> Vec<f64> {
+    let slant = |pair: &[Point]| {
+        let (dx, dy) = (pair[1].x() - pair[0].x(), pair[1].y() - pair[0].y());
+        (dx.abs() > 0.5 && (dx.abs() - dy.abs()).abs() < 1e-6).then(|| (dx * dy).signum())
+    };
+    let mut slants: Vec<f64> = points.windows(2).filter_map(slant).collect();
+    slants.sort_by(f64::total_cmp);
+    slants.dedup();
+    slants
+}
+
 #[test]
-fn req_fill_trt_010_a_herringbone_sews_straight_rows_until_m10_7() {
-    let straight = planned(vec![tartan(&[("tartan", RED_BLUE)])]);
+fn req_fill_trt_012_a_herringbone_slants_its_rows_both_ways_in_bands() {
+    let straight = planned(vec![tartan(&[("tartan", RED_BLUE), ("tartan_angle", "45")])]);
     let herringbone = planned(vec![tartan(&[("tartan", RED_BLUE), ("herringbone_width_mm", "3")])]);
-    assert_eq!(herringbone.plan, straight.plan);
-    assert_eq!(
-        messages(&herringbone),
-        ["warning SC-W0324: This tartan's herringbone is 3 mm wide, and StitchCraft sews herringbones from M10.7, so its rows are sewn without one."]
-    );
-    assert!(straight.diagnostics.is_empty(), "{:?}", messages(&straight));
+    assert!(herringbone.diagnostics.is_empty() && straight.diagnostics.is_empty(), "{:?}", messages(&herringbone));
+    // Straight rows at 45° all slant one way. A herringbone's slant down to the right in the first band, the
+    // third and so on, and up to the right in the others, in each colour.
+    for colour in [RED, BLUE] {
+        assert_eq!(slants(&sewn_in(&straight, colour)).len(), 1, "{colour}");
+        assert_eq!(slants(&sewn_in(&herringbone, colour)), [-1.0, 1.0], "{colour}");
+    }
 }
 
 #[test]

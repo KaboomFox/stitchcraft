@@ -283,7 +283,8 @@ with only the parameters that apply to it; the shared lock/trim parameters are i
 fails if any family's manifest exceeds 64 parameters or 64 KiB, so adding a parameter that would break
 the limit is caught in the PR, not by a user. A parameter has one value, of a kind every release takes.
 A parameter that needs a text, a seed or several values keeps its default in VectorCraft
-([manifests](vectorcraft-integration.md#plug-ins)). VectorCraft 0.14 adopted richer schemas from the
+([manifests](vectorcraft-integration.md#plug-ins)), but for a tartan's sett, which the fill dialog shows as
+text from M10.7 ([a tartan's sett](vectorcraft-integration.md#a-tartans-sett)). VectorCraft 0.14 adopted richer schemas from the
 [RFC](rfc-vectorcraft-abi-v2.md#p2-rich-parameter-schemas): labels, units, help, groups and conditions, texts
 and lists, and 256 parameters, 64 of them outside groups. Releases before it ignore the labels, units, help,
 groups and conditions, and refuse the rest. Each manifest gives a parameter the registry's label, unit, help

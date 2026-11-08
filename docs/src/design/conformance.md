@@ -319,7 +319,9 @@ upright, dense upright, double, Smyrna and half crosses, and simple crosses on a
 `cross-methods` case adds each full cross's flipped variant, grids turned on the canvas and from a part's
 own corner, and half crosses round a hole, through cells that meet at a corner and in 2 pieces of one
 part (`REQ-FILL-CRS-012`). TS-17B checks the tartans, with setts mirrored and repeated and a warp and a
-weft apart. Its narrow stripes sew as runs, and one sett is turned and scaled. The `tartan-marks`, `tartan-hole`,
+weft apart. Its narrow stripes sew as runs, one sett is turned and scaled, and one is a herringbone. The
+`tartan-herringbone` case adds 4 herringbones turned both ways. One of them lies round a hole, its warp and
+weft apart and 3 rows a thread, and another has stripes sewn as runs. The `tartan-marks`, `tartan-hole`,
 `tartan-parts` and `tartan-stop` cases add stripes left unsewn or sewn in the colour before them, a sett
 moved by its offsets, a disc round a hole in stitches 3 mm long, a fill in 2 parts with its rows at 30° and one row a thread, and
 a fill that stops at its end with its runs sewn as bean stitches (`REQ-FILL-TRT-011`). Every stripe is one of

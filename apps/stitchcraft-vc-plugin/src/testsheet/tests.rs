@@ -65,7 +65,7 @@ fn req_vc_015_each_sheet_drawn_sews_as_its_design_moved_to_the_artboard() {
         drawn_sheets,
         [
             "TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D",
-            "TS-17A"
+            "TS-17A", "TS-17B"
         ]
     );
     // The sheets draw both.
@@ -186,7 +186,8 @@ fn req_vc_015_the_filter_s_manifest_offers_the_sheets_drawn_as_designs() {
     assert_eq!((manifest.id.as_str(), manifest.kind, manifest.budget), ("dev.stitchcraft.testsheet", "filter", BudgetClass::Light));
     let [(SHEET, sheet)] = manifest.params.as_slice() else { panic!("{:?}", manifest.params) };
     let ids = vec![
-        "TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D", "TS-17A",
+        "TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D",
+        "TS-17A", "TS-17B",
     ];
     assert_eq!(sheet.schema, Schema::Choice { options: ids, default: "TS-02B" });
     // Its help names what each sheet tests, from the sheets themselves.

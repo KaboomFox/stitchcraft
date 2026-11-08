@@ -52,8 +52,8 @@ fn req_fill_trt_001_a_setting_that_can_t_be_read_says_why() {
     assert_eq!(why(r#"{"palette": "", "scale": 0}"#), "its `scale` is 0, and a sett is scaled by more than 0 %");
     assert_eq!(why(r#"{"palette": "", "scale": -50}"#), "its `scale` is -50, and a sett is scaled by more than 0 %");
     assert_eq!(why(r#"{"palette": "(#ff0000)5 | (#00ff00)5 | (#0000ff)5"}"#), "its code has more than one `|`");
-    assert_eq!(why(r#"{"palette": "Threadcount: R/4 B4"}"#), "its code is a threadcount, which StitchCraft reads from M10.7");
-    assert_eq!(why(r#"{"palette": "B24 W4 R2"}"#), "its code is one of colour letters, which StitchCraft reads from M10.7");
+    assert_eq!(why(r#"{"palette": "B24 W1.2.3"}"#), "the count `1.2.3` of a stripe isn't a number");
+    assert_eq!(why("{\"palette\": \"Threadcount:\\nB24 W\"}"), "the letters `W` of its threadcount have no count");
     assert_eq!(why(r#"{"palette": "(#ff0000)1.2.3"}"#), "the width `1.2.3` of a stripe isn't a number");
     assert_eq!(why(r#"{"palette": "(#ff0000)5 | (#00ff00)1.2.3"}"#), "the width `1.2.3` of a stripe isn't a number");
 }
@@ -108,13 +108,50 @@ fn diag_sc_w0328_a_colour_that_can_t_be_read_leaves_its_stripe_unsewn_and_is_nam
 }
 
 #[test]
-fn colour_letters_are_letters_with_a_count() {
-    assert!(lettered("B24 W4 R2"));
-    assert!(lettered("R?2"));
-    assert!(lettered("Ab*.5"));
-    assert!(!lettered("abc def"));
-    assert!(!lettered("12 34"));
-    assert!(!lettered(""));
+fn req_fill_trt_016_a_code_of_colour_letters_sews_the_register_s_shades_a_thread_0_5_mm_wide() {
+    // Each count of threads 0.5 mm a thread, as Ink/Stitch's fill reads one; marks as a palette code's; letters
+    // without a count passed over; pivots and the dots of a repeated sett passed over.
+    let letters = read(r#"{"palette": "...B/24 w?4 Dg*2 R KX.5 r0..."}"#).unwrap();
+    let dark_green = Rgb::new(0x00, 0x40, 0x28);
+    assert_eq!(
+        letters.sett.warp,
+        [
+            stripe(BLUE, 12.0, Look::Sewn),
+            stripe(WHITE, 2.0, Look::Gap),
+            stripe(dark_green, 1.0, Look::Continued),
+            stripe(BLACK, 0.25, Look::Gap),
+            stripe(RED, 0.0, Look::Sewn)
+        ]
+    );
+    assert_eq!(letters.sett.weft, letters.sett.warp);
+    // Letters the register doesn't use, `KX`, are named and leave their stripe unsewn.
+    assert_eq!(letters.unread, ["KX"]);
+    // With a `|`, every stripe is the warp's and the weft sews nothing, as Ink/Stitch reads the code.
+    let apart = read(r#"{"palette": "B24 | R2"}"#).unwrap().sett;
+    assert_eq!((apart.warp.len(), apart.weft.len()), (2, 0));
+    // A count of no stripe, or letters alone, give no stripe.
+    assert!(read(r#"{"palette": "B W R"}"#).unwrap().sett.warp.is_empty());
+}
+
+#[test]
+fn req_fill_trt_016_a_registered_threadcount_takes_its_palette_s_colours() {
+    // The last line after `Threadcount:` and after `Pallet:` count, each letter's last colour, with or without
+    // a `#`, and what follows a colour's 6 digits is passed over.
+    let code = "Threadcount:\nB2\nThreadcount:\nB24W4R2X1\nPallet:\nB=FF0000OLD;B=#0000FFBLUE;W=fefefeWHITE;R=FF0000\n";
+    let registered = read(&serde_json::json!({ "palette": code }).to_string()).unwrap();
+    assert_eq!(
+        registered.sett.warp,
+        [stripe(BLUE, 12.0, Look::Sewn), stripe(BLACK, 2.0, Look::Gap), stripe(RED, 1.0, Look::Sewn), stripe(BLACK, 0.5, Look::Gap)]
+    );
+    // White's digits are in lower case, which Ink/Stitch's pattern reads only for a and f: unread, as X.
+    assert_eq!(registered.unread, ["W", "X"]);
+    assert_eq!(
+        pallet("A=aaafff;b=#AF09AF;C=12345;D=1234567;E=#gggggg"),
+        [("A", Rgb::new(0xAA, 0xAF, 0xFF)), ("b", Rgb::new(0xAF, 0x09, 0xAF)), ("D", Rgb::new(0x12, 0x34, 0x56))]
+    );
+    // Without a line after `Threadcount:`, no stripe; a palette line that names nothing, no colour.
+    assert!(read(r#"{"palette": "Threadcount:"}"#).unwrap().sett.warp.is_empty());
+    assert_eq!(pallet("B 0000FF; =FF0000"), []);
 }
 
 #[test]

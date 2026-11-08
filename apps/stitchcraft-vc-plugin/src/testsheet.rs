@@ -206,6 +206,7 @@ fn value(schema: &Schema, text: &str) -> Option<Value> {
         Schema::Int { min, max, .. } => text.trim().parse::<i64>().ok().filter(|v| (*min..=*max).contains(v)).map(Value::from),
         Schema::Bool { .. } => text.trim().parse::<bool>().ok().map(Value::Bool),
         Schema::Choice { options, .. } => options.contains(&text).then(|| Value::from(text)),
+        Schema::Text { max_length, .. } => (text.chars().count() <= *max_length).then(|| Value::from(text)),
     }
 }
 

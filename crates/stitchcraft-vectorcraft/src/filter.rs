@@ -24,7 +24,11 @@
 //! leaves its last anchor out, since VectorCraft closes a subpath back to its first ([`path_data`]). A
 //! colour is an RGB paint the reader reads as the same colour ([`solid`]), a linear gradient a gradient paint
 //! the reader places where it was ([`gradient`]), a stroke has its width, join and cap ([`stroke`]), and a new
-//! StitchCraft effect record has its parameters ([`Record::ours`]).
+//! StitchCraft effect record has its parameters ([`Record::ours`]). A record a filter changes, as StitchCraft
+//! Tartan sets a fill's sett, keeps the rest of its parameters as VectorCraft gave them, written as it gave
+//! them ([`Record::with`]).
+
+use std::collections::BTreeMap;
 
 use serde::de::IgnoredAny;
 use serde::{Deserialize, Deserializer, Serialize};
@@ -217,6 +221,20 @@ impl Record {
         let id = effect_id(name);
         let raw = to_raw_value(&json!({"id": id, "params": params}))?;
         Ok(Record { id, visible: true, raw })
+    }
+
+    /// The record with its parameters `changes` set, each to its value, and everything else as VectorCraft
+    /// gave it, written as it gave it: its other parameters, and whether it is on. Parameters that aren't names
+    /// and values are replaced by `changes` alone.
+    pub fn with(&self, changes: &[(&str, Value)]) -> Result<Record, serde_json::Error> {
+        let mut record: BTreeMap<String, Box<RawValue>> = serde_json::from_str(self.raw.get()).unwrap_or_default();
+        let held = record.get("params").and_then(|params| serde_json::from_str::<BTreeMap<String, Box<RawValue>>>(params.get()).ok());
+        let mut params = held.unwrap_or_default();
+        for (key, value) in changes {
+            params.insert((*key).to_string(), to_raw_value(value)?);
+        }
+        record.insert("params".to_string(), to_raw_value(&params)?);
+        Ok(Record { id: self.id.clone(), visible: self.visible, raw: to_raw_value(&record)? })
     }
 
     /// The stitch family whose StitchCraft effect it is; `None` for any other effect.
@@ -600,6 +618,24 @@ mod tests {
         // Another StitchCraft effect, from a newer StitchCraft, is StitchCraft's, of no family.
         let other = Record::given(&to_raw_value(&json!({"id": "plugin.dev.stitchcraft.auto"})).unwrap());
         assert_eq!((other.family(), other.is_stitchcraft()), (None, true));
+    }
+
+    #[test]
+    fn a_record_with_changed_parameters_keeps_the_rest_as_given() {
+        let given =
+            r#"{"id":"plugin.dev.stitchcraft.fill","params":{"angle":0.30000000000000004,"fill_method":"auto_fill"},"visible":false,"x":[1]}"#;
+        let record = Record::given(&RawValue::from_string(given.to_string()).unwrap());
+        let changed = record.with(&[("fill_method", json!("tartan_fill")), ("tartan", json!("{\"palette\": \"(#ff0000)/4\"}"))]).unwrap();
+        // The number is written as it was given, to the last digit, and the record stays off.
+        let expected = r#"{"id":"plugin.dev.stitchcraft.fill","params":{"angle":0.30000000000000004,"fill_method":"tartan_fill","tartan":"{\"palette\": \"(#ff0000)/4\"}"},"visible":false,"x":[1]}"#;
+        assert_eq!(changed.raw.get(), expected);
+        assert_eq!((changed.family(), changed.visible, changed.id.as_str()), (Some(Family::Fill), false, "plugin.dev.stitchcraft.fill"));
+        // Parameters that aren't names and values, or none, are the changes alone.
+        for given in [r#"{"id":"plugin.dev.stitchcraft.fill","params":7}"#, r#"{"id":"plugin.dev.stitchcraft.fill"}"#] {
+            let record = Record::given(&RawValue::from_string(given.to_string()).unwrap());
+            let changed = record.with(&[("fill_method", json!("tartan_fill"))]).unwrap();
+            assert_eq!(changed.raw.get(), r#"{"id":"plugin.dev.stitchcraft.fill","params":{"fill_method":"tartan_fill"}}"#);
+        }
     }
 
     #[test]
