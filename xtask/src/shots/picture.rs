@@ -115,7 +115,7 @@ fn flat(root: &Path, fixture: &str, shot: &Shot) -> Result<Vec<u8>, String> {
     let mut meter = Budget::DEFAULT.meter();
     let mut areas = Vec::new();
     for element in design.elements() {
-        let Shape::Fill { path, rule } = &element.shape else {
+        let Shape::Fill { path, rule, .. } = &element.shape else {
             return Err(format!("{fixture}: {} is a line: a picture shot draws areas", element.id));
         };
         if !element.clips.is_empty() {

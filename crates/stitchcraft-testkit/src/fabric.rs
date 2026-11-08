@@ -4,12 +4,14 @@
 //! whose stitches lie where the design draws its shapes ([`crate::designs::in_place`]), so that a photo
 //! traced into shapes is measured as the test pictures are.
 //!
-//! **The picture** is the design drawn on a grid of square pixels [`PIXEL`] wide, as a viewer paints it:
-//! each pixel has the colour of the last shape drawn over its centre. An area holds the pixels inside it by
-//! its fill rule. A line holds those within half its width of its path, its corners round, and past an open
-//! end as far as its cap reaches. Each shape is cut to its clips. Digitizing leaves out the picture's
-//! background (`SC-W0906`) but for what shows of it inside the picture. So the background's pixels that the
-//! grid's edge reaches without crossing another shape are bare fabric, as are the pixels no shape holds.
+//! **The picture** is the design drawn on a grid of square pixels [`PIXEL`] wide, as a viewer paints it: each
+//! pixel has the colour of the last shape drawn over its centre, its element's thread. A fill's gradient is
+//! left out, which is right as long as automatic digitizing never makes a linear gradient fill. An area holds
+//! the pixels inside it by its fill rule. A line holds those within half its width of its path, its corners
+//! round, and past an open end as far as its cap reaches. Each shape is cut to its clips. Digitizing leaves
+//! out the picture's background (`SC-W0906`) but for what shows of it inside the picture. So the background's
+//! pixels that the grid's edge reaches without crossing another shape are bare fabric, as are the pixels no
+//! shape holds.
 //!
 //! **Unsewn fabric** ([`unsewn`]) is what of the picture's colours no top stitch covers. A pixel is covered
 //! when its centre lies within half of [`THREAD`] of a top stitch, as [`crate::metrics`] counts coverage. A
@@ -236,7 +238,7 @@ fn background(design: &Design) -> bool {
 /// and caps, each cut to its clips.
 fn held(grid: &Grid, element: &Element) -> Vec<usize> {
     let pixels = match &element.shape {
-        Shape::Fill { path, rule } => {
+        Shape::Fill { path, rule, .. } => {
             let built = region::build_clipped(path, *rule, &element.clips, &mut Budget::DEFAULT.meter()).unwrap();
             filled(grid, &built.region)
         }

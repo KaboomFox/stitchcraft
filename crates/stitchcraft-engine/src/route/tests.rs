@@ -380,7 +380,7 @@ fn req_route_006_a_route_is_the_same_each_time_and_runs_out_of_work_without_a_pi
 #[test]
 fn req_route_007_a_route_takes_columns_and_strokes_and_leaves_the_rest_as_they_are() {
     let square = Path { subpaths: vec![Subpath { closed: true, ..line(&[(0.0, 0.0), (5.0, 0.0), (5.0, 5.0)]) }] };
-    let fill = element("fill", Shape::Fill { path: square, rule: FillRule::EvenOdd }, &[]);
+    let fill = element("fill", Shape::Fill { path: square, rule: FillRule::EvenOdd, gradient: None }, &[]);
     let elements = [fill, bar("a", (0.0, 10.0), 10.0), stroke("dot", &[(1.0, 1.0), (1.0, 1.0)], &[])];
     let routed = routed(&elements, Tool::Satins.defaults(), [None, None]);
     assert_eq!(routed.replaced, [1]);
@@ -430,7 +430,7 @@ fn diag_sc_i1002_an_element_the_route_does_not_take_is_named_with_why() {
     let start = "info SC-I1002: This element is left out of the route and kept as it is: ";
     let square = Path { subpaths: vec![Subpath { closed: true, ..line(&[(0.0, 0.0), (5.0, 0.0), (5.0, 5.0)]) }] };
     assert_eq!(
-        read(element("f", Shape::Fill { path: square.clone(), rule: FillRule::NonZero }, &[])),
+        read(element("f", Shape::Fill { path: square.clone(), rule: FillRule::NonZero, gradient: None }, &[])),
         [format!("{start}it is a fill, which a route doesn't take.")]
     );
     let automatic = Element { automatic: true, ..stroke("s", &[(0.0, 0.0), (5.0, 0.0)], &[]) };

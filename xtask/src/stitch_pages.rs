@@ -145,7 +145,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_engine_sews_the_stitch_types_of_m1_to_m10_8() {
+    fn the_engine_sews_the_stitch_types_of_m1_to_m10_12() {
         let ids: Vec<&str> = sewn().unwrap().iter().map(|t| t.id()).collect();
         assert_eq!(
             ids,
@@ -162,6 +162,7 @@ mod tests {
                 "contour_fill",
                 "meander_fill",
                 "circular_fill",
+                "linear_gradient_fill",
                 "tartan_fill",
                 "cross_stitch",
                 "legacy_fill"
@@ -207,6 +208,7 @@ mod tests {
                 ("circular-fill.md", &page("circular_fill", &["circular-spacing", "circular-travel"])),
                 ("cross-stitch.md", &page("cross_stitch", &["cross-stitch", "cross-coverage"])),
                 ("tartan-fill.md", &page("tartan_fill", &["tartan-setts", "tartan-runs"])),
+                ("linear-gradient-fill.md", &page("linear_gradient_fill", &["gradient-stops", "gradient-fade"])),
             ],
             &[(StitchType::SatinColumn, "M13.11"), (StitchType::TatamiFill, "M13.11"), (StitchType::LegacyFill, "M13.11")],
         );

@@ -399,8 +399,8 @@ mod tests {
 
     #[test]
     fn req_thread_003_the_report_lists_each_thread_of_an_element_sewn_in_3() {
-        // One element in red, green and blue, as a gradient fill of 3 stops sews: no design file makes one
-        // yet, so the report is made of the plan its file would give.
+        // One element in red, green and blue, as a gradient fill of 3 stops sews, planned by hand: the report
+        // is made of the plan a file of one would give.
         let plan = stitchcraft_testkit::designs::three_threads();
         let file = stitchcraft_formats::encode(&plan, FormatId::PesV1, "gradient").unwrap().bytes;
         let back = read_back(&file, &plan).unwrap();

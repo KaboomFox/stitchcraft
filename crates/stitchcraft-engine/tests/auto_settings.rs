@@ -49,7 +49,7 @@ fn setting<'e>(element: &'e Element, key: &str) -> Option<&'e str> {
 
 /// The least and greatest x the fill `element` sews over.
 fn across(element: &Element) -> (f64, f64) {
-    let Shape::Fill { path, rule } = &element.shape else { panic!("`{}` is not a fill: {:?}", element.id, element.shape) };
+    let Shape::Fill { path, rule, .. } = &element.shape else { panic!("`{}` is not a fill: {:?}", element.id, element.shape) };
     let region = region::build(path, *rule, &mut Budget::DEFAULT.meter()).unwrap().region;
     let xs = region.parts.iter().flat_map(|part| part.outline.iter().map(|q| q.x()));
     xs.fold((f64::INFINITY, f64::NEG_INFINITY), |(low, high), x| (low.min(x), high.max(x)))

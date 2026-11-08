@@ -433,7 +433,7 @@ fn area(id: &str, rings: &[&[(f64, f64)]], thread: &Thread) -> Result<Element, S
 
 /// An automatic area named `id`, bounded by the closed `subpaths` under the nonzero rule, sewn with `thread`.
 fn area_of(id: &str, subpaths: Vec<Subpath>, thread: &Thread) -> Result<Element, SheetError> {
-    automatic(id, Shape::Fill { path: Path { subpaths }, rule: FillRule::NonZero }, thread)
+    automatic(id, Shape::Fill { path: Path { subpaths }, rule: FillRule::NonZero, gradient: None }, thread)
 }
 
 /// An automatic line named `id` along `subpaths`, `width` mm wide, ending with `cap`, its corners round, sewn

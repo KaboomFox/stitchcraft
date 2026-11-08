@@ -19,7 +19,7 @@ use super::Cloned;
 use super::pictures::Picture;
 use super::sketch::SheetError;
 use crate::common::{STOP_AFTER, TRIM_AFTER};
-use crate::design::{Cap, Clip, Design, DesignSettings, Element, FillRule, Guide, Hints, Join, Path, Segment, Shape, Subpath, Turn};
+use crate::design::{Cap, Clip, Design, DesignSettings, Element, FillRule, Gradient, Guide, Hints, Join, Path, Segment, Shape, Subpath, Turn};
 use crate::generators::satin::{END_AT_NEAREST_POINT, START_AT_NEAREST_POINT};
 use crate::generators::tatami::ANGLE;
 use crate::route::{Route, route};
@@ -53,10 +53,10 @@ impl Drawing {
         let Some(source) = self.elements.iter().find(|e| e.id == of) else {
             return Err(SheetError::Said(format!("{of} is not drawn before its clone")));
         };
-        let Shape::Fill { path, rule } = &source.shape else { return Err(SheetError::Said(format!("{of} is not a fill"))) };
+        let Shape::Fill { path, rule, gradient } = &source.shape else { return Err(SheetError::Said(format!("{of} is not a fill"))) };
         let [a, b, c, d, e, f] = map;
         let moved = |p: Point| Point::new(a * p.x() + c * p.y() + e, b * p.x() + d * p.y() + f);
-        let shape = Shape::Fill { path: path.map(moved)?, rule: *rule };
+        let shape = Shape::Fill { path: path.map(moved)?, rule: *rule, gradient: gradient.as_ref().map(|gradient| gradient.map(moved)).transpose()? };
         let mut params = source.params.clone();
         params.set(ANGLE, angle);
         let id = ElementId::new(format!("{}:{name}", self.sheet))?;
@@ -172,7 +172,7 @@ impl Drawing {
     /// A fill named `name` of the area its closed `rings` bound by the even-odd rule, so a ring inside
     /// another is a hole whichever way it runs, sewn with `thread` and the Ink/Stitch `params`.
     pub fn fill(&mut self, name: &str, rings: Vec<Subpath>, thread: &Thread, params: &[(&str, &str)]) -> Result<(), SheetError> {
-        self.add(name, Shape::Fill { path: Path { subpaths: rings }, rule: FillRule::EvenOdd }, thread, params)
+        self.add(name, Shape::Fill { path: Path { subpaths: rings }, rule: FillRule::EvenOdd, gradient: None }, thread, params)
     }
 
     /// The shapes of `picture`, each named after the picture with `half` before it
@@ -210,6 +210,14 @@ impl Drawing {
             last.hints.target = Some(point(at)?);
         }
         Ok(())
+    }
+
+    /// A linear gradient for the last element drawn so far, when it is a fill: the paint a linear gradient fill
+    /// sews (`REQ-FILL-GRD-001`).
+    pub fn gradient(&mut self, painted: Gradient) {
+        if let Some(Element { shape: Shape::Fill { gradient, .. }, .. }) = self.elements.last_mut() {
+            *gradient = Some(painted);
+        }
     }
 
     /// A guide line for the last element drawn so far, as Ink/Stitch's guide-line marker on a path grouped with
@@ -389,7 +397,7 @@ pub(super) fn hook((x, y): (f64, f64), way: Way, (straight, radius): (f64, f64),
 }
 
 /// A point from literal coordinates.
-fn point((x, y): (f64, f64)) -> Result<Point, UnitError> {
+pub(super) fn point((x, y): (f64, f64)) -> Result<Point, UnitError> {
     Point::new(x, y)
 }
 
@@ -404,6 +412,7 @@ mod tests {
     use stitchcraft_plan::{Rgb, Thread};
 
     use super::*;
+    use crate::design::GradientStop;
 
     #[test]
     fn a_sheet_the_engine_says_anything_about_does_not_draw() {
@@ -444,11 +453,22 @@ mod tests {
         let said = |result: Result<(), SheetError>| result.unwrap_err().to_string();
         assert_eq!(said(d.clone_of("copy", "fill", identity, "0")), "the engine says: test:fill is not drawn before its clone");
         assert_eq!(said(d.clone_of("copy", "line", identity, "0")), "the engine says: test:line is not a fill");
-        // A fill moved by the map, its hints with it, its angle given.
+        // A gradient is a fill's paint: on a line it paints nothing.
+        let stops = vec![
+            GradientStop { offset: 0.0, colour: Rgb::new(255, 0, 0), opacity: 1.0 },
+            GradientStop { offset: 1.0, colour: Rgb::new(0, 0, 255), opacity: 1.0 },
+        ];
+        let painted = Gradient { start: point((0.0, 0.0)).unwrap(), end: point((4.0, 0.0)).unwrap(), stops: stops.clone() };
+        d.gradient(painted.clone());
+        assert_eq!(d.elements.last().unwrap().shape, Shape::stroke(d.elements.last().unwrap().shape.path().clone()));
+        // A fill moved by the map, its hints and its gradient with it, its angle given.
         d.fill("fill", vec![polygon(&[(0.0, 0.0), (4.0, 0.0), (4.0, 2.0)]).unwrap()], &thread, &[("row_spacing_mm", "0.3")]).unwrap();
         d.positions((4.0, 0.0), (0.0, 0.0)).unwrap();
+        d.gradient(painted);
         d.clone_of("copy", "fill", [0.0, 1.0, -1.0, 0.0, 10.0, 0.0], "-90").unwrap();
         let clone = d.elements.last().unwrap();
+        let moved = Gradient { start: point((10.0, 0.0)).unwrap(), end: point((10.0, 4.0)).unwrap(), stops };
+        assert!(matches!(&clone.shape, Shape::Fill { gradient: Some(gradient), .. } if *gradient == moved), "{:?}", clone.shape);
         let ring = &clone.shape.path().subpaths[0];
         assert_eq!((ring.start, ring.segments[1].end()), (point((10.0, 0.0)).unwrap(), point((8.0, 4.0)).unwrap()));
         assert_eq!((clone.hints.start, clone.hints.end), (Some(point((10.0, 4.0)).unwrap()), Some(point((10.0, 0.0)).unwrap())));
