@@ -2350,3 +2350,21 @@ statement = "An element sewn in several threads (REQ-ASM-006) moves in the order
 rationale = "The order is chosen before the elements are generated, since each is generated between its neighbours (ADR-0014). A tartan's or a gradient's colours are known from its settings and its paint (M10.6, M10.12), and the plan sews them one after another, so the order counts the thread it starts in and the one it ends in."
 milestone = "M10"
 status = "active"
+
+[[req]]
+id = "REQ-AUTO-025"
+area = "auto"
+level = "L2"
+statement = "Digitized automatically, a picture leaves no patch of fabric bare where it has a colour as large as its smallest area, 1 mm² (REQ-AUTO-020): in the shapes that sew, all but the background left out (REQ-AUTO-009), and where the background shows inside the picture. The picture is painted as a viewer paints it, each place in the colour of the last shape drawn over it: an area by its fill rule, and a line within half its width of its path, round at its corners and past an open end as far as its cap reaches, each cut to its clips. A top stitch covers what lies within half a thread, 0.2 mm, of the line between its needle points. A patch is what an opening with a disc a thread across leaves of what no top stitch covers, so that a sliver narrower than a thread beside a running stitch is none, and places that touch at a side or a corner are one patch. The test pictures, among them the emblem and the button of TS-13D, and the traced pear that the documentation shows leave none, measured on a grid of 0.05 mm."
+rationale = "A shape digitized automatically is meant to sew whole. A patch smaller than the smallest area is what digitizing would merge into a neighbour as a speck, and a sliver narrower than a thread closes as the thread spreads. A larger patch shows the fabric, as the traced pear showed a wedge of 4.6 mm² at its left edge, where the column of its olive band's narrow end sewed its stitches into a fan at a corner of its cut."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-026"
+area = "auto"
+level = "L2"
+statement = "Digitized automatically, a picture's elements lay no stitch that shows where it should not for 1 mm or more: a top stitch where the picture, painted as REQ-AUTO-025 paints it, has another colour or none, and an underlay or travel stitch anywhere. A stretch of a stitch shows where no later stitch covers it, as a top stitch covers (REQ-AUTO-025), and a top stitch's stretch beside a place of its own colour lies on its shape's edge. Locks are left out. The overlap of 0.4 mm (REQ-AUTO-007) and a satin column's pull compensation reach less far. A move from one element to the next, sewn on where they lie nearer than the collapse length (REQ-ASM-002), and the jump threads that a machine cutting no jump leaves, are counted apart and not limited. The test pictures and the traced pear lay none."
+rationale = "Thread that travels on top of a colour sewn before it draws a line across that colour, and an underlay or a travel stitch that shows was meant to be hidden. A move or a jump thread goes from one element to the next, which the order of REQ-AUTO-010 chooses, and on a machine that cuts no jump, as the PE800 cuts none (MC-1), each jump thread stays until it is cut by hand."
+milestone = "M13"
+status = "active"
