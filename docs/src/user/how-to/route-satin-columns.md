@@ -12,7 +12,7 @@ TS-17C shows it. Its top half is the word ROUTE in satin letters, sewn column by
 the same letters routed with the filter's options at their defaults. Dashed lines are jumps:
 
 <!-- shot: routing-letters -->
-![TS-17C's letters ROUTE drawn as thin lines, twice: at the top as drawn, and at the bottom as Auto-Route Satin Columns routes them. Dashed lines are jumps, which the reference machine leaves as threads to cut by hand, and orange rings mark lock stitches. The routed letters jump only from one letter to the next.](../../images/generated/routing-letters.png)
+![TS-17C's letters ROUTE drawn as thin lines, twice: at the top sewn column by column, and at the bottom as Auto-Route Satin Columns routes them. Dashed lines are jumps, which the reference machine leaves as threads to cut by hand, and orange rings mark lock stitches. The routed letters jump only from one letter to the next.](../../images/generated/routing-letters.png)
 <!-- /shot -->
 
 At the top, the needle jumps to each letter and to each arm of the E. At the bottom, it sews each letter in
