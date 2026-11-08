@@ -154,7 +154,7 @@ the zigzag stroke's. The settings every element shares come last, as in Ink/Stit
 #### A tartan's sett
 
 The fill dialog offers the tartan fill with its numbers, `tartan_angle`, `rows_per_thread`,
-`herringbone_width_mm` and `stop_at_ending_point`, and holds no sett (M10.6). A sett is a text, which only
+`herringbone_width_mm` and `stop_at_ending_point`, and has no field for a sett (M10.6). A sett is a text, which only
 VectorCraft 0.14 and later hold in a dialog: a fill manifest with a text in it is one that 0.12 and 0.13
 refuse whole, and every release before 0.14 that the compatibility gate tests would lose the fill effect
 for one setting. A row of text is no editor either. A sett written by hand in one line is easy to get

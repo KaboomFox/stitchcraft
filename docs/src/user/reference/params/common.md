@@ -173,11 +173,11 @@ jump. Empty: the document's setting.
 **Longest stitch.** Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as
 its split method says. Empty, a stitch is split only where it is longer than the machine sews. A
 tatami fill sews its rows in stitches this long, and a contour fill its rings. A meander or
-circular fill's underlay sews its rows so.
+circular fill's underlay sews its rows so, and a tartan fill its rows and its weft's runs.
 
 - **Accepts:** a length from 0.1 to 25 mm, or empty (0 or less counts as empty); for fills, a length from 0.1 to 25 mm, empty being the default
 - **Default:** empty, and `4` for fills
-- **Applies to:** Manual stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill, Circular fill
+- **Applies to:** Manual stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill, Circular fill, Tartan fill
 - **Ink/Stitch:** same key and default; StitchCraft differs:
   - **DEV-PRM-003.** An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column's deviates so. Ink/Stitch reads a manual stitch's as not set at 0 or below too, and doesn't warn.
   - **DEV-RUN-006.** No hand-placed stitch is shorter than the shortest stitch. A node closer than that to the needle point before it is left out (SC-W0403), and a stitch longer than max_stitch_length_mm is split into no more parts than keep each at the shortest stitch or longer (SC-W0404). Ink/Stitch splits such a stitch into the fewest equal parts no longer than max_stitch_length_mm, however short they are, and its plan later leaves out stitches of at most 0.1 mm (its default), without a word.

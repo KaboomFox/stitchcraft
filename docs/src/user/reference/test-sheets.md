@@ -466,7 +466,7 @@ Threads: Prussian Blue, unnamed, unnamed, unnamed, unnamed, Black, unnamed, unna
 
 After sewing, check:
 
-- Each sample is a tartan fill 40 mm square, trimmed after each colour. Top row, left to right: a sett of red, white, Prussian blue and deep gold mirrored at its ends; a sett of emerald green, black and white repeated; and a warp of red and black under a weft of blue and white. Bottom row: blue and black with a white stripe 0.5 mm wide and a red one 0.8 mm wide, each sewn as a run along its middle; and deep gold, black and tangerine turned 30° and scaled by 150 %.
+- Each sample is a tartan fill 40 mm square, trimmed after each colour. Top row, left to right: a sett of red, white, Prussian blue and deep gold, mirrored at its ends, then one of emerald green, black and white, repeated, then a warp of red and black under a weft of blue and white. Bottom row: blue and black with a white stripe 0.5 mm wide and a red one 0.8 mm wide, each sewn as a run along its middle, then deep gold, black and tangerine turned 30° and scaled by 150 %.
 - Do the warp and the weft read as a weave, each colour's stripes crossing the other direction's in a twill of rows 2 by 2?
 - Do the runs lie flat along the middles of their stripes, on top of the fills, and do they show as lines of their own colour?
 - Where the rows of one colour are joined along a stripe's edge, does the join show?

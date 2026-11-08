@@ -53,6 +53,7 @@
       - [Contour fill](user/reference/params/contour.md)
       - [Meander fill](user/reference/params/meander.md)
       - [Cross stitch](user/reference/params/cross.md)
+      - [Tartan fill](user/reference/params/tartan.md)
       - [Path fills](user/reference/params/path-fill.md)
       - [Automatic digitizing](user/reference/params/auto.md)
     - [Glossary](user/reference/glossary.md)

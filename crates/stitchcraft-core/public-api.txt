@@ -54,6 +54,12 @@ pub stitchcraft_core::diag::Code::FillPullCompensationNegative
 pub stitchcraft_core::diag::Code::FillRuleNotEvenOdd
 pub stitchcraft_core::diag::Code::FillSmall
 pub stitchcraft_core::diag::Code::FillStretchDrawnTwice
+pub stitchcraft_core::diag::Code::FillTartanColourUnreadable
+pub stitchcraft_core::diag::Code::FillTartanHerringboneNotYet
+pub stitchcraft_core::diag::Code::FillTartanNoSett
+pub stitchcraft_core::diag::Code::FillTartanNoStripe
+pub stitchcraft_core::diag::Code::FillTartanSettUnreadable
+pub stitchcraft_core::diag::Code::FillTartanTooFine
 pub stitchcraft_core::diag::Code::FillTooThin
 pub stitchcraft_core::diag::Code::FillUnderlayInsetShrinksAway
 pub stitchcraft_core::diag::Code::FillUnderlayTooThin
@@ -291,6 +297,12 @@ pub stitchcraft_core::Code::FillPullCompensationNegative
 pub stitchcraft_core::Code::FillRuleNotEvenOdd
 pub stitchcraft_core::Code::FillSmall
 pub stitchcraft_core::Code::FillStretchDrawnTwice
+pub stitchcraft_core::Code::FillTartanColourUnreadable
+pub stitchcraft_core::Code::FillTartanHerringboneNotYet
+pub stitchcraft_core::Code::FillTartanNoSett
+pub stitchcraft_core::Code::FillTartanNoStripe
+pub stitchcraft_core::Code::FillTartanSettUnreadable
+pub stitchcraft_core::Code::FillTartanTooFine
 pub stitchcraft_core::Code::FillTooThin
 pub stitchcraft_core::Code::FillUnderlayInsetShrinksAway
 pub stitchcraft_core::Code::FillUnderlayTooThin
