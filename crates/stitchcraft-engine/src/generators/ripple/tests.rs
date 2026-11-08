@@ -106,6 +106,8 @@ fn req_rip_001_a_stroke_of_one_line_aims_at_its_target_and_of_2_lines_follows_it
     assert_eq!(kind_of(&[p(0.0, 0.0), p(10.0, 0.0), p(0.0, 0.0)]), Kind::Spiral);
     assert_eq!(kind_of(&[p(0.0, 0.0), p(10.0, 0.0), p(0.0, CLOSED)]), Kind::Target, "exactly 0.05 CSS pixels apart");
     assert_eq!(kind_of(&[p(0.0, 0.0), p(10.0, 0.0), p(0.0, CLOSED * 0.99)]), Kind::Spiral);
+    // 0.05 CSS pixels are 0.01323 mm.
+    assert_eq!([0.0132, 0.0133].map(|gap| kind_of(&[p(0.0, 0.0), p(10.0, 0.0), p(0.0, gap)])), [Kind::Spiral, Kind::Target]);
     // 2 lines are a column: its first line lies on the first rail, its last on the second, sewn back and
     // forth.
     let ripple = run(&column(), &[("line_count", "3")], None);
@@ -157,9 +159,11 @@ fn req_rip_001_a_ripple_whose_lines_are_single_points_sews_nothing() {
     // Rails 0.05 mm long: 1 pair across them, so every line is one point.
     let stub = sewn(&open(&[&[(0.0, 0.0), (0.05, 0.0)], &[(0.0, 4.0), (0.05, 4.0)], &[(0.02, -0.5), (0.02, 4.5)]]), &[], None);
     assert_eq!((stub.runs.len(), said(&stub)), (0, vec![message.to_string()]));
-    // 1 line, flipped: the target point alone, at a phase of 0.
-    let point = sewn(&line(), &[("line_count", "1"), ("flip_exponent", "true")], Some(p(5.0, 5.0)));
-    assert_eq!((point.runs.len(), said(&point)), (0, vec![message.to_string()]));
+    // 1 line, flipped: the target point alone, at a phase of 0, or sewn unstaggered as its one point.
+    for staggers in ["1", "0"] {
+        let point = sewn(&line(), &[("line_count", "1"), ("flip_exponent", "true"), ("staggers", staggers)], Some(p(5.0, 5.0)));
+        assert_eq!((point.runs.len(), said(&point)), (0, vec![message.to_string()]), "{staggers}");
+    }
     // A column with no section to sew says so, as a satin column does: the rung cuts the first rail at its
     // start and the second at its end.
     let crossed = open(&[&[(0.0, 0.0), (10.0, 0.0)], &[(0.0, 4.0), (10.0, 4.0)], &[(-5.0, -2.0), (15.0, 6.0)]]);
@@ -468,9 +472,13 @@ fn req_rip_008_line_i_s_needle_points_start_its_phase_before_its_start() {
     let short_first = [two[0].clone(), vec![p(0.0, 1.0), p(0.01, 1.0), p(10.0, 1.0)]];
     let line_1 = along_x(&[10.0, 7.906, 5.811, 3.717, 1.622, 0.0], 1.0);
     assert_eq!(one_by_one(&short_first, &sewing(&rng, 2.0, false, 0)), [along_x(&[0.0, 2.5, 5.0, 7.5, 10.0], 0.0), line_1].concat());
+    // A first segment of no length lengthens the line by nothing.
+    let doubled_start = [two[0].clone(), vec![p(0.0, 1.0), p(0.0, 1.0), p(10.0, 1.0)]];
+    let unstaggered = along_x(&[10.0, 7.5, 5.0, 2.5, 0.0], 1.0);
+    assert_eq!(one_by_one(&doubled_start, &sewing(&rng, 2.0, false, 0)), [along_x(&[0.0, 2.5, 5.0, 7.5, 10.0], 0.0), unstaggered.clone()].concat());
     // A line of 1 point is left out, and still counts: the line after it is sewn from its end.
     let after_a_point = [vec![p(0.0, 0.0)], two[1].clone()];
-    assert_eq!(one_by_one(&after_a_point, &sewing(&rng, 0.0, false, 0)), along_x(&[10.0, 7.5, 5.0, 2.5, 0.0], 1.0));
+    assert_eq!(one_by_one(&after_a_point, &sewing(&rng, 0.0, false, 0)), unstaggered);
 }
 
 #[test]
@@ -512,6 +520,10 @@ fn req_rip_009_random_lengths_draw_from_a_stream_for_each_line() {
     let xs = |y: f64| sewn.iter().filter(|q| q.y() == y).map(|q| q.x()).collect::<Vec<f64>>();
     assert_ne!(xs(0.0), xs(4.0));
     assert_eq!((xs(0.0).first(), xs(0.0).last(), xs(4.0).last()), (Some(&0.0), Some(&20.0), Some(&20.0)));
+    // Each stitch along a line is 2.5 mm, longer or shorter by up to the jitter, 10 % by default.
+    let along: Vec<f64> = sewn.windows(2).filter(|pair| pair[0].y() == pair[1].y()).map(|pair| pair[0].distance(pair[1])).collect();
+    assert!(along.iter().all(|&length| length <= 2.5 * 1.1 + 1e-9), "{along:?}");
+    assert!(along.iter().any(|&length| (length - 2.5).abs() > 0.01), "{along:?}");
 }
 
 #[test]

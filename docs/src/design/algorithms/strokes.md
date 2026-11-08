@@ -347,9 +347,10 @@ the last. With 1 line, its place is 0, or 1 with `flip_exponent`.
    `min_line_dist_mm` and rounded up. The count then keeps the parity of `line_count`, odd or even, by
    being 1 less where it differs, so that the ripple ends on the same side however large the stroke is
    drawn. It is at least 1, and at most 1,000, or 999 where 1,000 would change its parity. `SC-W0407`
-   says when it is cut. `line_count` itself stops at 1,000. A pair or a line of length 0 counts as
-   Ink/Stitch counts it: the shortest is taken from those after it, and is 0 when it is the last. So a
-   column whose rails meet at its end takes the least count, whatever `min_line_dist_mm` says.
+   says when it is cut, where Ink/Stitch sews every line (`DEV-RIP-002`). `line_count` itself stops at
+   1,000. A pair or a line of length 0 counts as Ink/Stitch counts it: the shortest is taken from those
+   after it, and is 0 when it is the last. So a column whose rails meet at its end takes the least count,
+   whatever `min_line_dist_mm` says.
 2. A closed line and the point join (`join_style` 1) add 1 line, since bending makes one line of 2.
 3. A ripple along a column has at least 2 lines.
 
@@ -441,7 +442,7 @@ Ink/Stitch starts a staggered line where its stitches have run the phase from th
 measured along them. Where the stretch is the whole phase, that is the line's start, or near it where the
 stitches cut a bend. Where the first segment is shorter than 0.1 CSS pixels, the stretch is shorter than
 the phase, and Ink/Stitch leaves the rest of the phase of the line unsewn. StitchCraft starts every line at
-its start.
+its start (`DEV-RIP-001`).
 
 ### Properties (conformance)
 

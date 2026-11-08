@@ -126,11 +126,11 @@ pub(super) fn places(n: usize, exponent: f64, flip: bool) -> Vec<f64> {
     if flip { raised.iter().rev().map(|place| 1.0 - place).collect() } else { raised }
 }
 
-/// `k` of `last` as a share from 0 to 1, as `numpy.linspace` lays them out: exactly 1 for `last` itself, and 0
-/// when `last` is 0.
+/// `k` of `last` as a share from 0 to 1, as `numpy.linspace` lays them out: exactly 1 for `last` itself, a number
+/// divided by itself, and 0 when `last` is 0.
 #[allow(clippy::cast_precision_loss)] // Line and point counts are far below 2⁵².
 fn share(k: usize, last: usize) -> f64 {
-    if k == last && last > 0 { 1.0 } else { k as f64 / last.max(1) as f64 }
+    k as f64 / last.max(1) as f64
 }
 
 /// The lines through `measures` at `places`: line `k` through the point its place of the way from each

@@ -89,11 +89,15 @@ impl Change {
     /// it. A zigzag stroke's needle points move to the right of its way and then to the left in turn
     /// (`REQ-RUN-010`), as Ink/Stitch's do, so mirrored or drawn from its end it zigzags across the same band
     /// from the other side. An E-stitch's spikes lie at the pairs a satin column places a spacing apart from
-    /// its start (`REQ-SAT-020`), and the spacing is wide, so drawn from its end they lie elsewhere along it.
+    /// its start (`REQ-SAT-020`), and the spacing is wide, so drawn from its end they lie elsewhere along it. A
+    /// ripple's lines bend from where its line starts to where it ends (`REQ-RIP-006`), as Ink/Stitch's do: a
+    /// spiral turns in the way its line is drawn, and lines that meet at points meet at its other ends drawn
+    /// from its end.
     pub const fn keeps(self, stitch_type: Option<StitchType>) -> bool {
         !matches!(
             (self, stitch_type),
-            (Change::MirrorX | Change::MirrorY | Change::Reverse, Some(StitchType::ZigzagStitch)) | (Change::Reverse, Some(StitchType::EStitch))
+            (Change::MirrorX | Change::MirrorY | Change::Reverse, Some(StitchType::ZigzagStitch))
+                | (Change::Reverse, Some(StitchType::EStitch | StitchType::RippleStitch))
         )
     }
 
@@ -511,5 +515,6 @@ mod tests {
         let turned = compared.iter().find(|(c, _)| *c == Change::HalfTurn).map(|(_, elements)| elements[0].shared);
         assert!(turned.is_some_and(|shared| shared > 0.98), "{turned:?}");
         assert!(Change::Reverse.keeps(Some(StitchType::SatinColumn)) && !Change::Reverse.keeps(Some(StitchType::EStitch)));
+        assert!(!Change::Reverse.keeps(Some(StitchType::RippleStitch)) && Change::MirrorX.keeps(Some(StitchType::RippleStitch)));
     }
 }
