@@ -500,8 +500,9 @@ pub fn schema(spec: &ParamSpec, siblings: &[ParamSpec]) -> Option<Schema> {
             _ => None,
         },
         (Kind::Toggle, Parsed::Toggle(on)) => Some(Schema::Bool { default: on }),
+        // A value reads at most `max_bytes` bytes, 4,096, VectorCraft's longest text too, as the checks pin.
         (Kind::Text { max_bytes }, Parsed::Text(_)) if TEXTS.contains(&spec.key) => {
-            Some(Schema::Text { default: spec.default, max_length: max_bytes.min(limits::MAX_TEXT) })
+            Some(Schema::Text { default: spec.default, max_length: max_bytes })
         }
         (Kind::Choice { options }, Parsed::Choice(id)) => {
             let spelled = |option: &str| {

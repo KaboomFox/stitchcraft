@@ -111,7 +111,7 @@ fn req_vc_021_the_sett_kept_sews_as_its_code_says() {
     let square = object(2, &json!([record("fill", &json!({"fill_underlay": false}), true)]));
     let out = ran(std::slice::from_ref(&square), &json!({"code": "R/8 K4 G/12", "thread_width_mm": 0.5}));
     // VectorCraft keeps what the filter leaves out as it was: here all but the effects.
-    let mut whole = square.clone();
+    let mut whole = square;
     whole["effects"] = out["objects"][0]["effects"].clone();
     let (file, said) = sewn(&document(&[kept(&whole, 2)]));
     assert_eq!(said, Vec::<Code>::new());
@@ -154,6 +154,12 @@ fn diag_sc_e0821_a_sett_longer_than_the_fill_s_sett_holds_changes_nothing() {
 }
 
 #[test]
+fn a_setting_fits_the_sett_s_row_up_to_its_4096_characters() {
+    assert!(fits(&"é".repeat(4_096)));
+    assert!(!fits(&"é".repeat(4_097)));
+}
+
+#[test]
 fn diag_sc_e0821_a_selection_without_a_path_that_takes_the_sett_changes_nothing() {
     assert_eq!(
         refusal(&ran(&[], &json!({}))),
@@ -177,4 +183,9 @@ fn parameters_that_aren_t_json_are_bad_input() {
     // The dialog's defaults set Ink/Stitch's default sett.
     let (_, sett) = given_sett(&ran(&[object(2, &json!([]))], &json!({})), 0);
     assert!(sett.contains(r#""palette": "(#101010)/5 (#ffffff)/?5""#), "{sett}");
+}
+
+#[test]
+fn a_record_the_filter_can_t_write_is_a_bug_it_says_as_one() {
+    assert_eq!(bug("a reason").to_string(), "error SC-E0009: The sett could not be written: a reason.");
 }

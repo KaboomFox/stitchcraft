@@ -40,15 +40,38 @@ JSON. Its `palette` lists the stripes in order, each a colour in brackets and th
 
 Each setting the object leaves out takes the value Ink/Stitch's editor starts from. A colour that can't be
 read leaves its stripe unsewn, as in Ink/Stitch, and `SC-W0328` names it. A sett that can't be read skips
-the element, and `SC-E0323` says why. Ink/Stitch's editor can also write a sett as a threadcount of the
-Scottish Register of Tartans or as colour letters. StitchCraft reads those from M10.7. A tartan fill
-without a sett sews Ink/Stitch's default one: stripes 5 mm wide of a thread almost black, with 5 mm left
-unsewn between them. `SC-W0325` says so.
+the element, and `SC-E0323` says why. A `palette` can also be a threadcount ([below](#colour-letters)). A
+tartan fill without a sett sews Ink/Stitch's default one: stripes 5 mm wide of a thread almost black, with
+5 mm left unsewn between them. `SC-W0325` says so. In VectorCraft, a filter writes the sett for you
+([below](#in-vectorcraft)).
 
-The VectorCraft plug-in's fill dialog offers the tartan fill with its row angle and rows per thread, and
-with its herringbone width and where its colours end. It has no field for a sett before M10.7
-([VectorCraft integration](../../design/vectorcraft-integration.md#a-tartans-sett)). So a tartan fill made
-in VectorCraft sews the default sett. A file from Ink/Stitch keeps its setts, and `stitch plan` sews them.
+## Colour letters
+
+A sett can be written as a threadcount, as the Scottish Register of Tartans writes its setts. Each stripe
+is its colour's letters followed by its count of threads, such as `B/24 W4 B24 R2 K24 G/24`. Each
+thread is 0.5 mm wide, as Ink/Stitch's fill reads it, and the slashes mark the stripes the sett is mirrored
+at. `B` is blue, `W` white, `R` red, `K` black and `G` green, and a light or dark shade adds `L` or `D`
+before the letter: `DG` is dark green. Each letter stands for one of the shades the register publishes, the
+one Ink/Stitch sews for it. A `?` before a count leaves the stripe unsewn, and a `*` sews it in the colour
+before it. Letters the register uses for no colour leave their stripe unsewn, and `SC-W0328` names them.
+
+The register's own search gives a threadcount with a palette, which reads as it is pasted, its lines kept:
+
+```text
+Threadcount:
+K6R20K2Y4W2DG16
+
+Pallet:
+K=101010BLACK;R=C80000RED;Y=E8C000YELLOW;W=FFFFFFWHITE;DG=004028DARK GREEN;
+```
+
+Each letter then takes the palette's colour.
+
+<!-- shot: tartan-codes -->
+| B/24 W4 B24 R2 K24 G/24 | ...DG8 K2 DG8 Y2... | The register's threadcount |
+|:-:|:-:|:-:|
+| ![The square sewn as a tartan fill in setts written as threadcounts, whose colour letters stand for the Scottish Register of Tartans' shades, B/24 W4 B24 R2 K24 G/24](../../images/generated/tartan-codes-1.png) | ![The square sewn as a tartan fill in setts written as threadcounts, whose colour letters stand for the Scottish Register of Tartans' shades, ...DG8 K2 DG8 Y2...](../../images/generated/tartan-codes-2.png) | ![The square sewn as a tartan fill in setts written as threadcounts, whose colour letters stand for the Scottish Register of Tartans' shades, The register's threadcount](../../images/generated/tartan-codes-3.png) |
+<!-- /shot -->
 
 ## Rows
 
@@ -87,16 +110,56 @@ Each colour is a colour block of its own, with a trim after it when the fill's `
 in several parts sews each part's underlay and colours, and then sorts them by colour, so that each thread
 is sewn once.
 
-`herringbone_width_mm` sews herringbones from M10.7. Until then the rows are straight, as they are at a
-width of 0, and `SC-W0324` says so.
+## Herringbone
+
+With `herringbone_width_mm` above 0 the rows lie in upright bands that wide, as a herringbone twill's ribs
+do. Each band's rows slant at 45° to the stripes, the other way from the band before's, whatever
+`tartan_angle` is. The stripes then show columns of chevrons. The warp's rows join along their stripes'
+edges in each band. The weft's rows run on from band to band along the stripes' edges, and each weft stripe
+sews as one line where it crosses the fill. The bands turn with the sett. 4 tartan fonts of Ink/Stitch's library set
+herringbones 1.6 to 5 mm wide.
+
+<!-- shot: tartan-herringbones -->
+| Bands 3 mm wide | Bands 6 mm wide, 3 rows per thread | Bands 3 mm wide, turned 30° |
+|:-:|:-:|:-:|
+| ![The square sewn as a tartan fill in a herringbone, its rows in upright bands that slant one way and then the other, so that the stripes show columns of chevrons, Bands 3 mm wide](../../images/generated/tartan-herringbones-1.png) | ![The square sewn as a tartan fill in a herringbone, its rows in upright bands that slant one way and then the other, so that the stripes show columns of chevrons, Bands 6 mm wide, 3 rows per thread](../../images/generated/tartan-herringbones-2.png) | ![The square sewn as a tartan fill in a herringbone, its rows in upright bands that slant one way and then the other, so that the stripes show columns of chevrons, Bands 3 mm wide, turned 30°](../../images/generated/tartan-herringbones-3.png) |
+<!-- /shot -->
+
+A herringbone's rows cross a stripe in at most the band's width over the cosine of 45°, and wider bands
+keep needle points that narrower ones lose. `SC-W0327` says where a band is too narrow for the shortest
+stitch.
+
+## In VectorCraft
+
+The StitchCraft Fill dialog offers the tartan fill with its row angle, rows per thread, herringbone width
+and where its colours end, and its sett as text in the row Sett, which shows while the fill method is
+`tartan_fill`. The row holds the `tartan` setting as Ink/Stitch saves it, so a sett copied from an
+Ink/Stitch file can be pasted there. The fill effect needs VectorCraft 0.14 for the row.
+
+To write a sett from its code, select the paths and choose **Object › Plug-ins › StitchCraft Tartan**
+(VectorCraft 0.15 and later, with StitchCraft Fill installed). Its dialog takes:
+
+- **Code**: the stripes, as a palette code, `(#0a55a3)/4 (#f0f0f0)1`, or as colour letters with counts of
+  threads, `B/24 W4`. The register's threadcount with its palette reads too. Between `...` the sett repeats,
+  and otherwise it is mirrored.
+- **Thread width**: how wide each thread of a threadcount is, 0.2 mm to start with, as in Ink/Stitch's
+  editor.
+- **Rotate**, **Scale**, **Move right** and **Move down**: how the sett is laid.
+- **Runs up to**: the width up to which a stripe sews as a run, 1 mm to start with.
+
+Each selected path whose StitchCraft effect is the fill effect becomes a tartan fill with that sett, its
+other settings as they were. A path without a StitchCraft effect gets the fill effect. The others stay as
+they are. A code that can't be read, or that names letters the register doesn't use, leaves the drawing as
+it was, and `SC-E0821` says why. So does a selection without a path that can take the sett.
 
 ## Test sheet
 
-TS-17B sews 5 tartans 40 mm square for the next machine checkpoint, each in setts of Brother's threads
-([test sheets](../reference/test-sheets.md)).
+TS-17B sews 6 tartans 40 mm square for the next machine checkpoint, each in setts of Brother's threads,
+the last a herringbone 3 mm wide ([test sheets](../reference/test-sheets.md)). VectorCraft's Test Sheet
+filter draws it too.
 
 <!-- shot: testsheet-ts-17b -->
-![TS-17B as it will sew: 5 tartans 40 mm square in 2 rows, all woven in rows that slant across their stripes. In the top row, left to right, are stripes of red, white, Prussian blue and gold mirrored at their ends, stripes of green, black and white repeated, and a warp of red and black under a weft of blue and white. Below are blue and black stripes with thin white and red lines along their middles, and stripes of gold, black and tangerine turned 30°.](../../images/generated/testsheet-ts-17b.png)
+![TS-17B as it will sew: 6 tartans 40 mm square in 2 rows, all woven in rows that slant across their stripes. In the top row, left to right, are stripes of red, white, Prussian blue and gold mirrored at their ends, stripes of green, black and white repeated, and a warp of red and black under a weft of blue and white. Below are blue and black stripes with thin white and red lines along their middles, stripes of gold, black and tangerine turned 30°, and stripes of blue, white, red and black in a herringbone, their rows in narrow upright bands slanting one way and then the other.](../../images/generated/testsheet-ts-17b.png)
 <!-- /shot -->
 
 ## Parameters

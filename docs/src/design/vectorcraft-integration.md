@@ -106,10 +106,12 @@ release takes:
 | `<ns>.testsheet` | filter (VectorCraft 0.16) | every family | draws a test sheet into the document, each object with its effect (M6.12, [below](#tools-stroke-to-satin-and-test-sheet)) |
 | `<ns>.route-satins` | heavy filter (VectorCraft 0.17) | satin, stroke | routes the selected satin columns, as Ink/Stitch's Auto-Route Satin Columns does (M10.4, [below](#tools-the-routing-filters)) |
 | `<ns>.route-runs` | heavy filter (VectorCraft 0.17) | stroke | routes the selected strokes, as Ink/Stitch's Auto-Route Running Stitch does (M10.13, [below](#tools-the-routing-filters)) |
+| `<ns>.tartan` | filter (VectorCraft 0.15) | fill | sets the sett of the selected paths' tartan fills from a code of its stripes (M10.7, [below](#a-tartans-sett)) |
 
 The tools an object filter was to give are VectorCraft's own commands ([tools](#tools-vectorcrafts-own-commands))
 and M6.12's 2 filters ([Stroke to Satin and Test Sheet](#tools-stroke-to-satin-and-test-sheet)). M10.4
-and M10.13 add 2 routing filters ([routing filters](#tools-the-routing-filters)).
+and M10.13 add 2 routing filters ([routing filters](#tools-the-routing-filters)), and M10.7 one that sets a
+tartan's sett ([a tartan's sett](#a-tartans-sett)).
 
 `<ns>` is a reverse-DNS namespace defined in one constant (`PLUGIN_NAMESPACE`) in the VectorCraft adapter,
 which reads the effect records too. The adapter makes the ids from it, a plug-in's with `plugin_id` and its
@@ -123,7 +125,7 @@ the tests before a release.
 
 **Modules.** The plug-in crate builds one module for each family, chosen by a Cargo feature named after
 the family: `stroke`, `satin` or `fill`, one for each machine format, by its extension: `pes` or `dst`, and
-one for each filter: `settings`, `stroke-to-satin`, `testsheet`, `route-satins` and `route-runs`. Without one it builds M0.6's *hello*
+one for each filter: `settings`, `stroke-to-satin`, `testsheet`, `route-satins`, `route-runs` and `tartan`. Without one it builds M0.6's *hello*
 effect. The modules contain the same code, which the native tests run whichever it is, and the feature only
 picks the manifest and the run that `vc_manifest` and `vc_run` serve. `cargo xtask compat contract` builds
 every module, notes their sizes and loads them into VectorCraft's host.
@@ -140,11 +142,12 @@ what the parameter means:
 - a length, an angle, a percentage or a number as a number in its range, and a count as a whole number;
 - a list or a pair whose default is one value as that value, which stands for the whole list or both
   sides, as in Ink/Stitch;
-- an optional length that 0 leaves unset as a number from 0.
+- an optional length that 0 leaves unset as a number from 0;
+- a tartan's sett as a text, from M10.7 ([below](#a-tartans-sett)).
 
-Texts, seeds, and settings left empty to take another's value keep their defaults. In the registry today
-they are the custom locks' steps, `random_seed`, a fill underlay's angles, a satin's zigzag underlay
-insets and its shortest random split, and a tartan's sett ([below](#a-tartans-sett)). A choice leaves out the options that a text spells out, which are
+The other texts, seeds, and settings left empty to take another's value keep their defaults. In the
+registry today they are the custom locks' steps, `random_seed`, a fill underlay's angles, and a satin's
+zigzag underlay insets and its shortest random split. A choice leaves out the options that a text spells out, which are
 the custom locks, and `fill_method` leaves out Ink/Stitch's legacy fill, which StitchCraft sews as a
 tatami fill (`REQ-FILL-005`). `satin_column` belongs to the effect, which sets it from its family. The dialog opens
 with the group that declares the family's method. The groups only the family uses, for its default
@@ -153,18 +156,42 @@ the zigzag stroke's. The settings every element shares come last, as in Ink/Stit
 
 #### A tartan's sett
 
-The fill dialog offers the tartan fill with its numbers, `tartan_angle`, `rows_per_thread`,
-`herringbone_width_mm` and `stop_at_ending_point`, and has no field for a sett (M10.6). A sett is a text, which only
-VectorCraft 0.14 and later hold in a dialog: a fill manifest with a text in it is one that 0.12 and 0.13
-refuse whole, and every release before 0.14 that the compatibility gate tests would lose the fill effect
-for one setting. A row of text is no editor either. A sett written by hand in one line is easy to get
-wrong, where Ink/Stitch gives it an editor of its own. So a tartan fill made in VectorCraft sews
-Ink/Stitch's default sett, and `stitch export` says so (`SC-W0325`). A file from Ink/Stitch keeps its
-setts, which `stitch plan` sews. M10.7's editor for setts decides how VectorCraft sets one, as a filter or
-as a row of the fill dialog, and with it whether the fill plug-in asks for VectorCraft 0.14. With the
-tartan's 4 numbers and M10.15's `underlays_first` the fill dialog has 62 parameters, 2 short of what
-releases before 0.14 take. The Test Sheet filter doesn't draw TS-17B, whose tartans have setts
-(`TestSheet::uses_file_features`).
+A tartan's sett is one setting, `tartan`, an object of JSON whose code lists the stripes
+([tartan fill](algorithms/tartan.md#the-sett)). M10.6's fill dialog offered the tartan fill with its
+numbers alone, `tartan_angle`, `rows_per_thread`, `herringbone_width_mm` and `stop_at_ending_point`, and a
+tartan fill made in VectorCraft sewed Ink/Stitch's default sett. M10.7 decided how VectorCraft sets a sett,
+and chose both of the ways open to it (`REQ-VC-021`):
+
+- **The fill dialog shows the sett as text**, its row labelled Sett and shown for the tartan fill alone. A
+  live effect is given only the settings its manifest declares, and VectorCraft drops a record's other keys
+  before it runs the effect. So without this row no preview could sew a sett of its own, whatever wrote it.
+  The row also shows the sett an Ink/Stitch file brought, and takes one pasted in. With it the fill dialog
+  has 63 parameters, within the 64 its manifest is checked against, and it is the only text a dialog
+  declares (`manifest::TEXTS`).
+- **StitchCraft Tartan, a light filter**, writes the row from what a person has, a palette code or a
+  threadcount in the register's colour letters, with the width of a thread, the sett's turn, its scale, how far it is moved and the width up to which a stripe sews
+  as a run (`apps/stitchcraft-vc-plugin/src/tartan.rs`). It is Ink/Stitch's editor reading a code
+  ([the editor](algorithms/tartan.md#the-editor)). A selected path whose own first StitchCraft effect is the
+  fill effect gets the tartan fill and the sett, its other settings kept as VectorCraft gave them. A path
+  with no StitchCraft effect gets the fill effect with those 2 settings, and VectorCraft fills in the rest. A
+  filter can't warn, so a code it can't read, letters the register uses for no colour, a code without a
+  stripe, a setting longer than the row's 4,096 characters, and a selection without a path to take the sett
+  leave the drawing as it was, with `SC-E0821`. Records a filter gives are kept from 0.15, and before it the filter
+  declines with `SC-E0813`.
+
+The rejected ways each failed a part of the job. The filter alone would write a key the fill's manifest
+doesn't declare. The preview never gets such a key, and the canvas would show Ink/Stitch's default sett while
+File › Export sewed the filter's. With the row alone, a person would write an object of JSON by hand on one
+line. A threadcount, the form the register gives a sett in, wouldn't read there. A filter that drew the stripes as
+objects of their own would lose the weave, which comes from routing every colour's rows over the whole
+shape.
+
+**What it costs.** A text is a kind of parameter VectorCraft 0.14 brought, and 0.12 and 0.13 refuse a
+manifest with one whole. So from M10.7 the fill effect installs from VectorCraft 0.14, as the exporters
+do. Those 2 releases don't export a machine file either, so a fill made there was only ever a preview.
+
+The Test Sheet filter draws TS-17B from M10.7, each tartan's sett in its fill effect's record as the
+row's text.
 
 **How the dialog shows them** (`REQ-VC-012`, M6.10). From 0.14 a parameter can say how the dialog shows
 it, and the plug-in says all of it from the registry (`apps/stitchcraft-vc-plugin/src/dialog.rs`):
@@ -426,7 +453,7 @@ the filter stops with `SC-E0004` before VectorCraft would. A VectorCraft before 
 filter, which almost every curved line outruns, and stops it with its own error.
 
 **Test Sheet** (`REQ-VC-015`, `apps/stitchcraft-vc-plugin/src/testsheet.rs`) draws one of the sheets
-drawn as designs, TS-02B to TS-09, TS-11A, TS-11B, the TS-13 sheets and TS-17A, into the document: the
+drawn as designs, TS-02B to TS-09, TS-11A, TS-11B, the TS-13 sheets, TS-17A and TS-17B, into the document: the
 sheet's design moved by whole millimetres so that its middle is nearest the middle of the artboard
 `_context` names (`Design::moved`). TS-17A moves by whole multiples of 6 mm, which keep its crosses' cells on
 the canvas's grids of 2 and 3 mm (`TestSheet::step`). The turned square's grid starts at the square's
@@ -450,7 +477,8 @@ The contract test `req_vc_015_each_test_sheet_draws_into_a_document_that_exports
 draws each sheet into a new document in VectorCraft 0.17.0's and 0.18.0's hosts alike, and exports it with
 the PES exporter (2026-10-29). Drawing takes 14 to 25 million instructions, at most half of a light filter's run.
 Exporting takes 23 million to 1.6 billion, at most 17 % of an export's, the most for the fills of TS-07,
-TS-08 and TS-09.
+TS-08 and TS-09. TS-17B joined the sheets drawn in M10.7, after that measure, and the test prints its costs
+with the others'.
 
 ### Tools: the routing filters
 

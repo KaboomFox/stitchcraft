@@ -46,19 +46,20 @@ fn req_fill_trt_015_a_code_with_the_dots_of_a_repeated_sett_repeats() {
 
 #[test]
 fn req_fill_trt_015_the_register_s_threadcount_takes_its_colours_from_its_palette() {
-    let register = "Threadcount:\nB24W4B24R2K24G24W2\n\nPallet:\nB=0000FFBLUE;W=FFFFFFWHITE;R=C80000RED;K=101010BLACK;G=006818GREEN;\n\n\
-                    Threadcount given over a half sett with full count at the pivots.";
+    // A threadcount of the register's form, written for this case, its counts given over half the sett.
+    let register = "Threadcount:\nK6R20K2Y4W2DG16\n\nPallet:\nK=101010BLACK;R=C80000RED;Y=E8C000YELLOW;W=FFFFFFWHITE;DG=004028DARK GREEN;\n\n\
+                    Counts over a half sett.";
     let drafted = Draft::from_code(register, 0.25).unwrap();
     let colours: Vec<Rgb> = drafted.draft.warp.iter().map(|s| s.colour).collect();
-    let (red, black, green) = (Rgb::new(0xC8, 0, 0), Rgb::new(0x10, 0x10, 0x10), Rgb::new(0, 0x68, 0x18));
-    assert_eq!(colours, [BLUE, WHITE, BLUE, red, black, green, WHITE]);
-    assert_eq!(widths(&drafted.draft.warp), [6.0, 1.0, 6.0, 0.5, 6.0, 6.0, 0.5]);
+    let (red, black, yellow, dark_green) = (Rgb::new(0xC8, 0, 0), Rgb::new(0x10, 0x10, 0x10), Rgb::new(0xE8, 0xC0, 0), Rgb::new(0, 0x40, 0x28));
+    assert_eq!(colours, [black, red, black, yellow, WHITE, dark_green]);
+    assert_eq!(widths(&drafted.draft.warp), [1.5, 5.0, 0.5, 1.0, 0.5, 4.0]);
     assert!(drafted.draft.mirrored && drafted.unread.is_empty());
     // A full sett repeats, and lines broken by a carriage return and a line feed read the same.
-    let full = register.replace("over a half sett with full count at the pivots", "over a full sett").replace('\n', "\r\n");
+    let full = register.replace("over a half sett", "over a full sett").replace('\n', "\r\n");
     let drafted = Draft::from_code(&full, 0.25).unwrap();
     assert!(!drafted.draft.mirrored);
-    assert_eq!(drafted.draft.warp.len(), 7);
+    assert_eq!(drafted.draft.warp.len(), 6);
 }
 
 #[test]

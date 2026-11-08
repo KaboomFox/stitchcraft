@@ -272,9 +272,9 @@ fn lettered_stripe(letters: &str, look: Look, width: f64, colour: Option<Rgb>, u
 }
 
 /// The stripes of a threadcount of the register's search, as Ink/Stitch reads one: the line after the last
-/// line that says `Threadcount:`, of letters each followed by its count, `B24W4B24R2K24G24W2`, each count
+/// line that says `Threadcount:`, of letters each followed by its count, `K6R20K2Y4`, each count
 /// `thread` mm a thread, in the colours of the line after the last that says `Pallet:`,
-/// `B=0000FFBLUE;W=FFFFFFWHITE;` ([`pallet`]). Letters the palette doesn't name leave their stripe unsewn,
+/// `K=101010BLACK;R=C80000RED;` ([`pallet`]). Letters the palette doesn't name leave their stripe unsewn,
 /// and `unread` gets them. Why not, when letters have no count or a count isn't a number.
 fn registered(code: &str, thread: f64, unread: &mut Vec<String>) -> Result<Vec<Stripe>, String> {
     // Its lines, broken where Python breaks lines, a carriage return and a line feed together once.
@@ -304,7 +304,7 @@ fn registered(code: &str, thread: f64, unread: &mut Vec<String>) -> Result<Vec<S
     Ok(found)
 }
 
-/// The colours of a registered threadcount's palette, `B=0000FFBLUE;W=FFFFFFWHITE;`, as Ink/Stitch reads them:
+/// The colours of a registered threadcount's palette, `K=101010BLACK;R=C80000RED;`, as Ink/Stitch reads them:
 /// letters, `=`, a `#` or none, and 6 hexadecimal digits, of which only a and f may be in lower case, its
 /// pattern; what follows them is passed over.
 fn pallet(line: &str) -> Vec<(&str, Rgb)> {
