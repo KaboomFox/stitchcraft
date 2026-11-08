@@ -120,6 +120,8 @@ copy turns and stretches so that the ends of the line lie on the 2 rails. The ri
   `min_line_dist_mm` gives.
 - **At the rungs** sets one at the end of each section between rungs.
 - **Adaptive** sets each one as soon as the box round it clears the one before by `min_line_dist_mm`.
+  That holds where the guide runs with its first rail on the left, as Ink/Stitch places them. With the
+  first rail on the right, the boxes overlap by `min_line_dist_mm` instead.
 
 <!-- shot: ripple-satin-guide -->
 | Line count, 6 | At the rungs | Adaptive, 1 mm apart |

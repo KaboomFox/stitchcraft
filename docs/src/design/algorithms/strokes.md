@@ -406,8 +406,11 @@ pair's points.
 - **At the rungs** (`render_at_rungs`). A pair lies at the end of each section.
 - **Adaptive.** Pairs are tried every 0.1 CSS pixels. The outline, turned so that the line between its
   ends runs along x, has a box round it. A copy is kept on a pair where its box clears the last kept
-  copy's box moved back across the guide by `min_line_dist_mm`, or by 0.1 CSS pixels without it. Past
-  1,000 such places, the copies are 1,000 (`SC-W0407`).
+  copy's box moved across the guide by `min_line_dist_mm`, or by 0.1 CSS pixels without it. Past 1,000
+  such places, the copies are 1,000 (`SC-W0407`). As in Ink/Stitch, the box moves to the left of the line
+  from the pair's first point to its second, in the drawing's own coordinates, whichever way the guide
+  runs. Where it runs with its first rail on the left, each copy clears the last by `min_line_dist_mm`.
+  The other way, their boxes overlap by as much.
 
 A guide whose rails close places its first pair again at its end, and that copy is left out, as is the
 only pair of a guide too short for 2. Between a satin guide's rails, `exponent`, `flip_exponent`,
