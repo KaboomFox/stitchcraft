@@ -166,8 +166,9 @@ and chose both of the ways open to it (`REQ-VC-021`):
   live effect is given only the settings its manifest declares, and VectorCraft drops a record's other keys
   before it runs the effect. So without this row no preview could sew a sett of its own, whatever wrote it.
   The row also shows the sett an Ink/Stitch file brought, and takes one pasted in. With it the fill dialog
-  has 63 parameters, within the 64 its manifest is checked against, and it is the only text a dialog
-  declares (`manifest::TEXTS`).
+  had 63 parameters, within the 64 its manifest is checked against, and it is the only text a dialog
+  declares (`manifest::TEXTS`). From M10.9 the guided fill's stitch positions make 64. A setting more needs
+  room made for it.
 - **StitchCraft Tartan, a light filter**, writes the row from what a person has, a palette code or a
   threadcount in the register's colour letters, with the width of a thread, the sett's turn, its scale, how
   far it is moved and the width up to which a stripe sews as a run

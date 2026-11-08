@@ -162,7 +162,8 @@ fn req_vc_021_the_fill_dialog_holds_a_tartan_s_sett_as_text_after_its_method() {
     let texts = |manifest: &Manifest| manifest.params.iter().filter(|(_, param)| matches!(param.schema, Schema::Text { .. })).count();
     assert_eq!(texts(&fill), 1);
     assert_eq!((texts(&family(Family::Stroke)), texts(&family(Family::Satin))), (0, 0));
-    // 63 of the 64 that every release VectorCraft's gate tests takes.
+    // From M10.9 all 64 that every release VectorCraft's gate tests takes, the guided fill's stitch positions the
+    // last: a setting more needs room made for it.
     assert!(keys.len() <= limits::MAX_PARAMS, "{}", keys.len());
     validate(&serde_json::to_vec(&fill).unwrap()).unwrap();
 }
