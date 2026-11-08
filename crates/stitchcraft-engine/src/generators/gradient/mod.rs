@@ -35,6 +35,7 @@ mod rows;
 use std::collections::BTreeSet;
 
 use stitchcraft_core::rng::SplitMix64;
+use stitchcraft_core::units::at_least;
 use stitchcraft_core::{Code, Diagnostic, Exhausted, Meter, Point};
 use stitchcraft_plan::{Rgb, Thread};
 
@@ -168,6 +169,7 @@ fn sewn(
     if ordered.len() > 1 {
         groups = sorted(groups);
     }
+    let groups = joined(groups, fill.travel.min_stitch);
     // A colour of the element's own sews in the element's own thread, named or not, and the others in threads
     // of their colours alone: a named and an unnamed thread of one colour would be 2 threads, which a machine
     // file writes as 2 entries of its palette.
@@ -179,6 +181,22 @@ fn sewn(
     warnings.extend(passed_over(&passed));
     warnings.extend(said.tally.said());
     Ok(Stitched { runs: groups.into_iter().map(|group| group.run).collect(), colours, warnings })
+}
+
+/// `groups`, each run's first needle points left out where they lie nearer than `min_stitch` to where the run
+/// before ended and the 2 sew in one thread, as a colour's first rows run on from the underlay in the first
+/// stop's colour: finalize would leave such a point out (`DEV-FIN-001`). A run keeps its last point.
+fn joined(groups: Vec<Group>, min_stitch: f64) -> Vec<Group> {
+    let mut out: Vec<Group> = Vec::with_capacity(groups.len());
+    for mut group in groups {
+        let before = out.last().filter(|before| before.colour == group.colour).and_then(|before| before.run.last().copied());
+        if let Some(end) = before {
+            let near = group.run.iter().take_while(|q| !at_least(q.distance(end), min_stitch)).count();
+            group.run.drain(..near.min(group.run.len().saturating_sub(1)));
+        }
+        out.push(group);
+    }
+    out
 }
 
 /// `SC-W0330` for the stops of a gradient passed over, by their numbers from 1, where a row they leave out

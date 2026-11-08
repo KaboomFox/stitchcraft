@@ -1,8 +1,9 @@
 # TS-17B's tartans, M10.6's: setts mirrored at their ends and repeated, the repeated one's code the list
 # Ink/Stitch's editor writes, a warp and a weft apart, stripes narrow enough to sew as runs, and a sett turned
 # 30° and scaled by 150 %. Both programs sew the same colour blocks in the same threads, each underlay in its
-# sample's own thread, with the same trims and jumps (REQ-FILL-TRT-011).
+# sample's own thread, with the same trims and jumps (REQ-FILL-TRT-011). Below them M10.12's linear gradients
+# of 2 stops and of 3, one of them transparent, each at a slant of its own (REQ-FILL-GRD-009).
 id = "inkstitch-ts17b"
-requirements = ["REQ-SVG-008", "REQ-FILL-TRT-011"]
+requirements = ["REQ-SVG-008", "REQ-FILL-TRT-011", "REQ-FILL-GRD-009"]
 kind = "inkstitch"
 sheet = "TS-17B"

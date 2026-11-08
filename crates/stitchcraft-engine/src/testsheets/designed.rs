@@ -19,7 +19,7 @@ use super::Cloned;
 use super::pictures::Picture;
 use super::sketch::SheetError;
 use crate::common::{STOP_AFTER, TRIM_AFTER};
-use crate::design::{Cap, Clip, Design, DesignSettings, Element, FillRule, Hints, Join, Path, Segment, Shape, Subpath, Turn};
+use crate::design::{Cap, Clip, Design, DesignSettings, Element, FillRule, Gradient, Hints, Join, Path, Segment, Shape, Subpath, Turn};
 use crate::generators::satin::{END_AT_NEAREST_POINT, START_AT_NEAREST_POINT};
 use crate::generators::tatami::ANGLE;
 use crate::route::{Route, route};
@@ -212,6 +212,14 @@ impl Drawing {
         Ok(())
     }
 
+    /// A linear gradient for the last element drawn so far, when it is a fill: the paint a linear gradient fill
+    /// sews (`REQ-FILL-GRD-001`).
+    pub fn gradient(&mut self, painted: Gradient) {
+        if let Some(Element { shape: Shape::Fill { gradient, .. }, .. }) = self.elements.last_mut() {
+            *gradient = Some(painted);
+        }
+    }
+
     /// A clip for the last element drawn so far, as a clip path round it cuts it (`REQ-GEN-005`): the area its
     /// closed `rings` bound by the nonzero rule.
     pub fn clip(&mut self, rings: Vec<Subpath>) {
@@ -368,7 +376,7 @@ pub(super) fn hook((x, y): (f64, f64), way: Way, (straight, radius): (f64, f64),
 }
 
 /// A point from literal coordinates.
-fn point((x, y): (f64, f64)) -> Result<Point, UnitError> {
+pub(super) fn point((x, y): (f64, f64)) -> Result<Point, UnitError> {
     Point::new(x, y)
 }
 

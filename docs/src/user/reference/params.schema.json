@@ -14,6 +14,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "linear_gradient_fill",
           "tartan_fill"
         ],
         "group": "Rows",
@@ -527,7 +528,8 @@
           "ripple_stitch",
           "tatami_fill",
           "contour_fill",
-          "circular_fill"
+          "circular_fill",
+          "linear_gradient_fill"
         ],
         "group": "Running stitch",
         "origin": "inkstitch",
@@ -586,6 +588,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "linear_gradient_fill",
           "tartan_fill",
           "cross_stitch"
         ],
@@ -652,7 +655,7 @@
     },
     "fill_method": {
       "default": "tatami_fill",
-      "description": "The stitch the area is filled with. A tatami fill sews rows of running stitches across it, a contour fill rings that follow its outline inward, a meander fill one line that wanders through a tiling, a circular fill a spiral round its middle, and a tartan fill a plaid of rows in the colours of its sett. A fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without underlay (`SC-W0314`). The other methods arrive in later versions; until then an element set to one is skipped (`SC-W0011`).",
+      "description": "The stitch the area is filled with. A tatami fill sews rows of running stitches across it, a contour fill rings that follow its outline inward, a meander fill one line that wanders through a tiling, a circular fill a spiral round its middle, a linear gradient fill rows in the colours of its linear gradient, and a tartan fill a plaid of rows in the colours of its sett. A fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without underlay (`SC-W0314`). The other methods arrive in later versions; until then an element set to one is skipped (`SC-W0011`).",
       "enum": [
         "tatami_fill",
         "circular_fill",
@@ -694,6 +697,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "linear_gradient_fill",
           "tartan_fill"
         ],
         "group": "Underlay",
@@ -720,6 +724,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "linear_gradient_fill",
           "tartan_fill"
         ],
         "group": "Underlay",
@@ -741,6 +746,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "linear_gradient_fill",
           "tartan_fill"
         ],
         "group": "Underlay",
@@ -765,6 +771,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "linear_gradient_fill",
           "tartan_fill"
         ],
         "group": "Underlay",
@@ -789,6 +796,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "linear_gradient_fill",
           "tartan_fill"
         ],
         "group": "Underlay",
@@ -808,6 +816,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "linear_gradient_fill",
           "tartan_fill"
         ],
         "group": "Underlay",
@@ -1164,6 +1173,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "linear_gradient_fill",
           "tartan_fill"
         ],
         "family_defaults": {
@@ -1524,7 +1534,8 @@
           "tatami_fill",
           "contour_fill",
           "meander_fill",
-          "circular_fill"
+          "circular_fill",
+          "linear_gradient_fill"
         ],
         "group": "Random variation",
         "origin": "inkstitch",
@@ -1593,7 +1604,8 @@
           "ripple_stitch",
           "tatami_fill",
           "contour_fill",
-          "circular_fill"
+          "circular_fill",
+          "linear_gradient_fill"
         ],
         "group": "Running stitch",
         "origin": "inkstitch",
@@ -1772,6 +1784,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "linear_gradient_fill",
           "tartan_fill"
         ],
         "group": "Rows",
@@ -1822,6 +1835,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "linear_gradient_fill",
           "tartan_fill"
         ],
         "group": "Running stitch",
@@ -1869,6 +1883,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "linear_gradient_fill",
           "tartan_fill"
         ],
         "deviation": "DEV-SAT-006",
@@ -1994,6 +2009,7 @@
         "applies_to": [
           "tatami_fill",
           "circular_fill",
+          "linear_gradient_fill",
           "tartan_fill"
         ],
         "group": "Stitches",
@@ -2113,6 +2129,7 @@
               "contour_fill",
               "meander_fill",
               "circular_fill",
+              "linear_gradient_fill",
               "tartan_fill"
             ],
             "group": "Stitches",
@@ -2152,14 +2169,15 @@
     },
     "stop_at_ending_point": {
       "default": false,
-      "description": "End every colour at the fill's end position, or near the next element: each colour then travels from where the fill starts and to where it ends. Off, each colour starts where the one before ended and ends with its last row, and only the fill's runs travel on towards its end.",
+      "description": "End the fill's colours at its end position, or near the next element. A tartan fill's every colour then travels from where the fill starts to where it ends, and a linear gradient fill's last 2 colours travel on to the end after their rows. Off, each colour ends with its last row, and a tartan starts each colour where the one before ended, and only its runs travel on towards its end.",
       "title": "Stop at the end position",
       "type": "boolean",
       "x-stitchcraft": {
         "applies_to": [
+          "linear_gradient_fill",
           "tartan_fill"
         ],
-        "group": "Tartan",
+        "group": "Colours",
         "origin": "inkstitch",
         "stability": "stable"
       }
@@ -2297,6 +2315,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "linear_gradient_fill",
           "tartan_fill"
         ],
         "group": "Underlay",

@@ -96,7 +96,7 @@ TS-17B sews 5 tartans 40 mm square for the next machine checkpoint, each in sett
 ([test sheets](../reference/test-sheets.md)).
 
 <!-- shot: testsheet-ts-17b -->
-![TS-17B as it will sew: 5 tartans 40 mm square in 2 rows, all woven in rows that slant across their stripes. In the top row, left to right, are stripes of red, white, Prussian blue and gold mirrored at their ends, stripes of green, black and white repeated, and a warp of red and black under a weft of blue and white. Below are blue and black stripes with thin white and red lines along their middles, and stripes of gold, black and tangerine turned 30°.](../../images/generated/testsheet-ts-17b.png)
+![TS-17B as it will sew: 5 tartans and 3 linear gradients 40 mm square in 3 rows. The tartans are woven in rows that slant across their stripes. In the top row, left to right, are stripes of red, white, Prussian blue and gold mirrored at their ends, stripes of green, black and white repeated, and a warp of red and black under a weft of blue and white. Below are blue and black stripes with thin white and red lines along their middles, and stripes of gold, black and tangerine turned 30°. In the bottom row, red blends into blue up to the right and gold through white into green down to the right. The last square's tangerine thins out to bare fabric, and Prussian blue grows from it down to the left.](../../images/generated/testsheet-ts-17b.png)
 <!-- /shot -->
 
 ## Parameters

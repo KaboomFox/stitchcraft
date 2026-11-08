@@ -431,7 +431,8 @@ sheet's design moved by whole millimetres so that its middle is nearest the midd
 `_context` names (`Design::moved`). TS-17A moves by whole multiples of 6 mm, which keep its crosses' cells on
 the canvas's grids of 2 and 3 mm (`TestSheet::step`). The turned square's grid starts at the square's
 corner, and moves with it. Each element is an object named by its id, with its path and its thread as
-the paint its family sews with. Its settings are its family's effect record, each the
+the paint its family sews with, a linear gradient fill's gradient as its fill ([below](#a-gradients-geometry)).
+Its settings are its family's effect record, each the
 value its dialog row takes, which reads back as the setting it was. The objects selected are given back as
 they are, and the sheet goes above them. The document sews as the sheet's design moved. A fill's rows lie where the design's
 origin puts them, so moved they may fall elsewhere across a shape, and the sheet looks the same. The
@@ -589,9 +590,9 @@ finish.
 Paint caveat: a live effect changes only geometry. A fill preview's ribbons are painted with the object's
 own fill, and a stroke preview with its stroke. From 0.14 a stroke or a satin effect reads its stroke's
 style, and still cannot change the paints. Users set the fill/stroke to the thread colour, which they want
-anyway for export. An element sewn in several threads (M10.5), as a tartan fill is and a gradient fill
-will be, previews every group of its stitches with the object's own paints too. A tartan's preview shows
-one colour. ABI v1 gives the geometry a live effect returns no paint of its own. The exporters and
+anyway for export. An element sewn in several threads (M10.5), as tartan and linear gradient fills are,
+previews every group of its stitches with the object's own paints too. A tartan's preview shows one
+colour, and a linear gradient fill's the object's gradient, which paints its stitches where they lie. ABI v1 gives the geometry a live effect returns no paint of its own. The exporters and
 `stitch export` write each thread, and the command line's preview draws each (`REQ-THREAD-003`).
 
 ### Commands in v1
@@ -694,7 +695,8 @@ closed path and the width profile, which its stitches don't follow (`SC-W0807`, 
 thread's colour is a solid paint's colour, with CMYK and grey converted by
 VectorCraft's formula without colour management ((1 − c)(1 − k) and 1 − k) and Lab through sRGB. A
 gradient gives the colour of its first stop VectorCraft shows, of an opacity other than 0, with `SC-W0807`
-unless every stop is shown in that colour. A gradient whose stops are all of opacity 0 paints nothing,
+unless every stop is shown in that colour. A linear gradient fill takes that colour without a word and
+sews the gradient ([below](#a-gradients-geometry)). A gradient whose stops are all of opacity 0 paints nothing,
 as one without stops does. It is left out without a word. A pattern
 gives black, with `SC-W0807`. A stroke's width, in points, and its join, with its miter limit (10 when
 the file omits it, as VectorCraft draws it), shape a satin column drawn as one path. A stroke drawn with
@@ -805,6 +807,34 @@ number that doesn't read or a point more than 10 m from the origin, and a shape 
 `SC-I0809` lists the layers and guides left out because VectorCraft doesn't print them, and `SC-I0811` the
 objects and layers left out by their names. The compatibility gate will have each VectorCraft version it
 tests write files for the adapter to read back (Level B, M6.6).
+
+#### A gradient's geometry
+
+A linear gradient fill made in VectorCraft sews the linear gradient of the object's topmost fill that
+paints, in `stitch export` and in StitchCraft Fill's live effect alike (`REQ-VC-022`, M10.12). VectorCraft's
+gradient paint keeps its colours apart from where it lies: `{"type": "gradient", "gradient": {"kind",
+"stops"}, "geom"?, "angle"}`. Its `geom` gives the start and end in the document's coordinates, in points,
+which the reader turns into millimetres. VectorCraft fits a gradient without one to its object each time it
+draws it. The fitted gradient runs through the middle of the object's bounds round its curves, at `angle`
+counter-clockwise as the canvas shows it. It is as long as the bounds are across that way. The reader fits
+it alike, charging the budget for each segment it measures (`GradientGeom::fit` in VectorCraft's `crates/color`, read for 0.17.0 to
+0.21.0, and `paint.setGradientGeom` in its `docs/mcp.md`).
+
+Each stop's offset is kept from 0 to 1 and never before the stop before, and its opacity from 0 to 1, 1 where
+the file leaves it out. Its colour converts as a solid paint's does, and one that doesn't read is black, with
+`SC-W0807`. A stop's midpoint moves where VectorCraft draws the 2 colours half mixed, which rows of whole
+colours can't follow, and `SC-W0807` names a midpoint other than half way. A gradient more than 10 m from the
+origin is named too, and the fill sews its first colour. A radial or freeform gradient, and one of one stop,
+is sewn in its first colour, as other fill methods sew a gradient. A fill without a linear gradient fades its
+own colour out (`SC-W0329`).
+
+**Decision: the Test Sheet filter draws gradients.** A filter's output may hold gradient paints in the native format's
+form, `geom` among them, which VectorCraft clamps and keeps (its `docs/plugins.md`, Output). So Test Sheet
+draws a linear gradient fill with its gradient as a gradient paint, its `geom` in points, and the document
+sews as the sheet's design (`apps/stitchcraft-vc-plugin/src/testsheet/tests.rs`). Rejected: a solid paint of
+the first colour, which would sew the fade of `SC-W0329`. A gradient without its `geom` was rejected too:
+VectorCraft would fit it to the object's bounds at its angle, not where the sheet puts it. TS-17B holds gradients from
+M10.12, and the filter draws it once VectorCraft can hold its tartans' setts (M10.7).
 
 ### Importing Ink/Stitch SVGs into VectorCraft
 

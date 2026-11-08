@@ -323,7 +323,12 @@ weft apart. Its narrow stripes sew as runs, and one sett is turned and scaled. T
 `tartan-parts` and `tartan-stop` cases add stripes left unsewn or sewn in the colour before them, a sett
 moved by its offsets, a disc round a hole in stitches 3 mm long, a fill in 2 parts with its rows at 30° and one row a thread, and
 a fill that stops at its end with its runs sewn as bean stitches (`REQ-FILL-TRT-011`). Every stripe is one of
-Brother's threads, so both files name each thread as itself. The `ts17c-ripple-` cases check each of TS-17C's
+Brother's threads, so both files name each thread as itself. Below its tartans, TS-17B checks linear gradients
+of 2 stops and of 3, one of them transparent, each at a slant of its own. The `gradient-` cases add a gradient
+of no length, one that a `gradientTransform` turns, a fill in 2 parts that stops at its end, and a fill without a
+gradient (`REQ-FILL-GRD-009`). Their gradients placed in the shape's box and by the gradient their `href`
+names, and stops that all lie before the fill's first row, sew otherwise in Ink/Stitch, as the ledger explains
+(`DEV-SVG-027`, `DEV-FILL-032`). The `ts17c-ripple-` cases check each of TS-17C's
 ripple stitches on its own, the one along a column and the 2 that shrink to a target point (`REQ-RIP-011`).
 TS-02B to TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills' sheet, are cases of
 `REQ-SVG-008` (M8.2). The `drawn-locks` case and TS-16 check custom locks drawn as

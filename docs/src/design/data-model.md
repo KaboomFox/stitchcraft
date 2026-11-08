@@ -141,12 +141,12 @@ represent with a diagnostic of their own, so a failed check is a bug in the adap
 them, and its origin and stop position, checked the same way. VectorCraft's Test Sheet filter draws a test sheet in the middle of the
 artboard with it (`REQ-VC-015`).
 
-**Gradients.** A fill painted with a linear gradient keeps it in its shape (M10.12): the gradient's start
-and end, and its stops, each an offset, a colour and an opacity. A linear gradient fill sews its colours
+**Gradients.** A fill painted with a linear gradient keeps it in its shape (M10.12), as the gradient's
+start and end with its stops, each an offset, a colour and an opacity. A linear gradient fill sews its colours
 ([gradient fill](algorithms/gradient.md)), and every other method sews the element's thread, which the host
-reads as the first colour a viewer shows of it. The host applies the gradient's own units and transforms and
-the shape's, and gives the 2 points in the design's millimetres, as it gives the path. So the engine reads no
-host's paint rules, and the points move with the path. Whatever builds a fill anew from another, a design
+reads as the first colour a viewer shows of it. Before it gives the 2 points in the design's millimetres, as it
+gives the path, the host applies the gradient's own units and transforms and the shape's. A host's paint
+rules stay in its adapter, and the points move with the path. Whatever builds a fill anew from another, a design
 moved or a sheet's clone of a fill, must say what becomes of its gradient, and the type makes it say so.
 These other places were weighed and left:
 
@@ -282,7 +282,7 @@ pub struct Thread {
 ```
 
 An element has one thread of its own, `Element::thread`, which its host reads from its paint. From M10.5 its
-generator may sew some of its groups in threads of their own, as a tartan fill does and a gradient fill will. The
+generator may sew some of its groups in threads of their own, as tartan and linear gradient fills do. The
 element's stitches then lie in several colour blocks of the plan, each block in one thread, and each stitch
 still names its element ([engine pipeline](engine-pipeline.md#several-threads-in-one-element)).
 

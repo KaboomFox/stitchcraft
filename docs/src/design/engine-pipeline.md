@@ -92,7 +92,7 @@ Each element becomes stitch groups (`stitchcraft_engine::generate`): the needle 
 that a jump may separate from the next, in sewing order. A stroke gives one group per subpath, and a part
 too small for a stitch gives none (`SC-W0401`). The element's own settings stay with the element, and
 assembly reads them there: its thread, locks, trim and stop. A generator may give each group a thread of
-its own as well, as a tartan fill does and a gradient fill will ([below](#several-threads-in-one-element)).
+its own as well, as tartan and linear gradient fills do ([below](#several-threads-in-one-element)).
 
 The stitch type picks the generator. A stroke whose `satin_column` setting is on is a satin column,
 whatever its `stroke_method` says, as in Ink/Stitch. Its rails and rungs are recognized, what
@@ -289,7 +289,8 @@ beyond that length can cause.
 From M10.5 a generator may give each group of needle points a thread of its own, and say whether the group
 ends one of the element's colour blocks (`stitchcraft_engine::generators::Colour`). A colour block is what
 the generator sews in one thread before it moves on to another colour or another part. A tartan fill gives
-its colours so from M10.6 ([tartan fill](algorithms/tartan.md)), and a linear gradient fill will from M10.12.
+its colours so from M10.6 ([tartan fill](algorithms/tartan.md)), and a linear gradient fill from M10.12
+([linear gradient fill](algorithms/gradient.md)).
 A group without a thread of its own is sewn in its element's, as every group of the other stitch types is.
 
 - **Thread changes.** Assembly sews the groups in their order and compares each group's thread with the

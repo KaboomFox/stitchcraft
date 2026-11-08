@@ -58,7 +58,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Satin parameters](params/satin.md) | 34 | Satin column, E-stitch, S-stitch, Zigzag satin |
 | [Pull parameters](params/pull.md) | 2 | Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill |
 | [Fill parameters](params/fill.md) | 2 | Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill |
-| [Tatami parameters](params/tatami.md) | 15 | Tatami fill, Contour fill, Meander fill, Circular fill, Tartan fill |
+| [Tatami parameters](params/tatami.md) | 15 | Tatami fill, Contour fill, Meander fill, Circular fill, Linear gradient fill, Tartan fill |
 | [Contour parameters](params/contour.md) | 4 | Contour fill |
 | [Meander parameters](params/meander.md) | 6 | Meander fill |
 | [Cross parameters](params/cross.md) | 8 | Cross stitch |

@@ -1,28 +1,40 @@
 //! TS-17B — the new fills, for MC-12: the tartans of M10.6 so far ([`tartans`]), each a tartan fill 40 mm
-//! square with a sett of its own, as Ink/Stitch's tartan editor saves it.
+//! square with a sett of its own, as Ink/Stitch's tartan editor saves it, and the linear gradients of M10.12
+//! below them ([`gradients`]).
 //!
 //! Drawn from a file (`Drawn::FromFile`): a sett is a setting VectorCraft's fill dialog doesn't hold before
 //! M10.7, so only `stitch testsheet` and the differential's SVG file draw the sheet. Each sample is trimmed
-//! after each colour, and sews its underlay in a thread of its own, a colour of its sett other than its first
-//! stripe's: sewn in that colour, the underlay and the first colour would be one colour block, and the jump
-//! between them would leave its thread under the fill on the reference machine (MC-1).
+//! after each colour. A tartan sews its underlay in a thread of its own, a colour of its sett other than its
+//! first stripe's: sewn in that colour, the underlay and the first colour would be one colour block, and the
+//! jump between them would leave its thread under the fill on the reference machine (MC-1). A gradient's
+//! underlay sews in its first stop's colour, as Ink/Stitch sews it, and its first colour runs on from it
+//! along the outline, without a jump.
 //!
 //! - **Top row**: a sett mirrored at its ends, one repeated, its code the list Ink/Stitch's editor writes for
 //!   a repeated sett, and a warp and a weft that differ.
-//! - **Bottom row**: a sett with stripes narrow enough to sew as runs along their middles, and one turned 30°
+//! - **Middle row**: a sett with stripes narrow enough to sew as runs along their middles, and one turned 30°
 //!   and scaled by 150 %.
+//! - **Bottom row**: linear gradient fills of 2 stops and of 3, the middle stop of the last transparent, each
+//!   at a slant of its own.
 //!
 //! Every stripe's colour is one of Brother's threads, so that both programs' PES files name each thread as
 //! itself and the differential compares them as they are. A stripe sews in a thread of its colour alone,
 //! unnamed, and so does each tartan's own thread here: a named and an unnamed thread of one colour are 2
 //! threads, which a PES file writes as 2 entries of Brother's palette (`REQ-THREAD-002`), the second of them
-//! another colour. One colour is then one thread across the sheet, as `REQ-RND-001`'s read-back expects.
+//! another colour. One colour is then one thread across the sheet, as `REQ-RND-001`'s read-back expects. A
+//! gradient's own thread is its first stop's colour, unnamed, which the SVG and VectorCraft readers give it
+//! back as.
+//!
+//! The gradients slant, so that no gradient's rows fit its reach in a whole number of row spacings, nor
+//! does a stop lie half way between 2 rows: Ink/Stitch counts them in pixels, and its rounding there could
+//! give it a row more (`docs/src/design/algorithms/gradient.md`).
 
 use stitchcraft_plan::Thread;
 
-use super::designed::{Drawing, polygon};
+use super::designed::{Drawing, point, polygon};
 use super::sketch::SheetError;
-use super::{BLACK, BLUE, PRUSSIAN_BLUE, TANGERINE, thread};
+use super::{BLACK, BLUE, DEEP_GOLD, EMERALD_GREEN, PRUSSIAN_BLUE, RED, TANGERINE, WHITE, thread};
+use crate::design::{Gradient, GradientStop};
 
 /// The side of each tartan, and how far apart their corners lie (mm).
 const SIDE: f64 = 40.0;
@@ -66,9 +78,36 @@ const TARTANS: [(&str, u8, &str); 5] = [
     ),
 ];
 
-/// Draws TS-17B: the tartans 40 mm square, 3 to a row, each trimmed after. The herringbones of M10.7 come
-/// after them in the second row, and the guided and gradient fills below.
-pub(super) fn tartans() -> Result<Drawing, SheetError> {
+/// A stop of a gradient: its offset, the Brother PEC index of its colour, and its opacity.
+type Stop = (f64, u8, f64);
+
+/// A gradient of the sheet: its sample's name, its stops, and its start and end from its square's top left
+/// corner.
+type Sample = (&'static str, &'static [Stop], (f64, f64), (f64, f64));
+
+/// TS-17B's gradients, in its bottom row: each one's name, its stops, and its start and end, from its
+/// square's top left corner. Each offset is a binary fraction, which VectorCraft's stops, of 32 bits, keep.
+///
+/// - **two**: red to blue, up to the right, from near the square's bottom left corner to near its top right.
+/// - **three**: deep gold, white and emerald green, down to the right and steeper.
+/// - **clear**: tangerine to Prussian blue, down to the left, through a transparent white half way.
+const GRADIENTS: [Sample; 3] = [
+    ("two", &[(0.0, RED, 1.0), (1.0, BLUE, 1.0)], (2.0, 36.0), (38.0, 6.0)),
+    ("three", &[(0.0, DEEP_GOLD, 1.0), (0.5, WHITE, 1.0), (1.0, EMERALD_GREEN, 1.0)], (6.0, 4.0), (30.0, 37.0)),
+    ("clear", &[(0.0, TANGERINE, 1.0), (0.5, WHITE, 0.0), (1.0, PRUSSIAN_BLUE, 1.0)], (31.0, 3.0), (11.0, 39.0)),
+];
+
+/// Draws TS-17B: the tartans 40 mm square, 3 to a row, each trimmed after, and the gradients below them. The
+/// herringbones of M10.7 come after the tartans in the second row, and the guided fills of M10.9 and M10.10
+/// below the gradients.
+pub(super) fn samples() -> Result<Drawing, SheetError> {
+    let mut d = tartans()?;
+    gradients(&mut d)?;
+    Ok(d)
+}
+
+/// The tartans, 3 to a row from the top left.
+fn tartans() -> Result<Drawing, SheetError> {
     let mut d = Drawing::new("ts17b");
     for (i, (name, own, sett)) in TARTANS.iter().enumerate() {
         let (x, y) = ((i % 3) as f64 * PITCH, (i / 3) as f64 * PITCH);
@@ -80,6 +119,24 @@ pub(super) fn tartans() -> Result<Drawing, SheetError> {
     Ok(d)
 }
 
+/// The gradients, each a linear gradient fill 40 mm square in the third row, in the thread of its first
+/// stop's colour alone.
+fn gradients(d: &mut Drawing) -> Result<(), SheetError> {
+    let y = 2.0 * PITCH;
+    for (i, (name, stops, (x1, y1), (x2, y2))) in GRADIENTS.iter().enumerate() {
+        let x = i as f64 * PITCH;
+        let outline = polygon(&[(x, y), (x + SIDE, y), (x + SIDE, y + SIDE), (x, y + SIDE)])?;
+        let mut sewn = Vec::new();
+        for &(offset, index, opacity) in stops.iter() {
+            sewn.push(GradientStop { offset, colour: thread(index)?.color, opacity });
+        }
+        let own = Thread::new(sewn.first().map_or(thread(BLACK)?.color, |stop| stop.colour));
+        d.fill(name, vec![outline], &own, &[("fill_method", "linear_gradient_fill"), ("trim_after", "true")])?;
+        d.gradient(Gradient { start: point((x + x1, y + y1))?, end: point((x + x2, y + y2))?, stops: sewn });
+    }
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use stitchcraft_core::{Point, math};
@@ -87,7 +144,7 @@ mod tests {
     use stitchcraft_plan::{Role, StitchKind};
 
     #[test]
-    fn ts17b_sews_each_tartan_s_underlay_in_its_own_thread_then_each_colour_once() {
+    fn ts17b_sews_each_sample_s_underlay_then_each_colour_once() {
         let plan = crate::testsheets::find("TS-17B").unwrap().plan().unwrap();
         // Each colour block's sample and thread.
         let blocks: Vec<(String, String)> = plan
@@ -99,8 +156,10 @@ mod tests {
                 (name, block.thread.color.to_string())
             })
             .collect();
-        // Each sample's underlay in its own thread, then the warp's colours and the weft's in the order the
-        // stripes first reach them, and the narrow stripes' runs last.
+        // Each tartan's underlay in its own thread, then the warp's colours and the weft's in the order the
+        // stripes first reach them, and the narrow stripes' runs last. Each gradient's underlay in its first
+        // colour, in the block of that colour's rows, then its other colours in the stops' order, a transparent
+        // one's left out.
         let expected = [
             ("mirrored", "#0e1f7c"),
             ("mirrored", "#ed171f"),
@@ -125,6 +184,13 @@ mod tests {
             ("turned", "#e8a900"),
             ("turned", "#000000"),
             ("turned", "#fe9e32"),
+            ("two", "#ed171f"),
+            ("two", "#0a55a3"),
+            ("three", "#e8a900"),
+            ("three", "#f0f0f0"),
+            ("three", "#00673e"),
+            ("clear", "#fe9e32"),
+            ("clear", "#0e1f7c"),
         ];
         let found: Vec<(&str, &str)> = blocks.iter().map(|(name, colour)| (name.as_str(), colour.as_str())).collect();
         assert_eq!(found, expected);
@@ -152,5 +218,15 @@ mod tests {
         let at = |angles: &[f64]| rows.windows(2).filter(|w| angles.iter().any(|&angle| (slant(w[0], w[1]) - angle).abs() < 0.5)).count();
         assert!(at(&[165.0]) * 2 > rows.len(), "{} of {}", at(&[165.0]), rows.len());
         assert!(at(&[30.0, 120.0]) * 4 > rows.len(), "{} of {}", at(&[30.0, 120.0]), rows.len());
+        // The clear sample's gradient runs down to the left, 20 mm left for each 36 mm down. Its rows lie square
+        // to it, at 29.05° to the x axis, and its underlay along it, at 119.05°: most of tangerine's stitches run
+        // one way or the other, the rest along the square's sides between rows. Tangerine's rows lie on the
+        // gradient's start's side of blue's.
+        let tangerine = top(28);
+        let count = |angle: f64| tangerine.windows(2).filter(|w| (slant(w[0], w[1]) - angle).abs() < 0.5).count();
+        let (rows, underlay) = (count(29.054_604), count(119.054_604));
+        assert!(rows > 300 && underlay > 300 && (rows + underlay) * 4 > tangerine.len() * 3, "{rows} and {underlay} of {}", tangerine.len());
+        let along = |points: &[Point]| points.iter().map(|q| -20.0 * q.x() + 36.0 * q.y()).sum::<f64>() / points.len() as f64;
+        assert!(along(&tangerine) < along(&top(29)));
     }
 }

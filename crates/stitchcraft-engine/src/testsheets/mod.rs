@@ -524,16 +524,17 @@ pub static SHEETS: &[TestSheet] = &[
     },
     TestSheet {
         id: "TS-17B",
-        title: "New fills: tartan",
+        title: "New fills: tartan and linear gradient",
         checks: &[
-            "Each sample is a tartan fill 40 mm square, trimmed after each colour. Top row, left to right: a sett of red, white, Prussian blue and deep gold, mirrored at its ends, then one of emerald green, black and white, repeated, then a warp of red and black under a weft of blue and white. Bottom row: blue and black with a white stripe 0.5 mm wide and a red one 0.8 mm wide, each sewn as a run along its middle, then deep gold, black and tangerine turned 30° and scaled by 150 %.",
+            "Each sample is 40 mm square, trimmed after each colour. Top row, left to right, tartan fills: a sett of red, white, Prussian blue and deep gold, mirrored at its ends, then one of emerald green, black and white, repeated, then a warp of red and black under a weft of blue and white. Middle row: blue and black with a white stripe 0.5 mm wide and a red one 0.8 mm wide, each sewn as a run along its middle, then deep gold, black and tangerine turned 30° and scaled by 150 %. Bottom row, linear gradient fills: red to blue up to the right, deep gold through white to emerald green down to the right, and tangerine to Prussian blue down to the left through a transparent stop.",
             "Do the warp and the weft read as a weave, each colour's stripes crossing the other direction's in a twill of rows 2 by 2?",
             "Do the runs lie flat along the middles of their stripes, on top of the fills, and do they show as lines of their own colour?",
             "Where the rows of one colour are joined along a stripe's edge, does the join show?",
-            "How many times does the thread change, and how long does the sheet take? Each tartan sews its underlay in its own thread, then each colour once.",
+            "Seen from a step away, does each gradient's colour change smoothly, with no step where one stop's rows give way to the next's? Where the transparent stop lies, do tangerine's rows and blue's thin out evenly to bare fabric?",
+            "How many times does the thread change, and how long does the sheet take? Each tartan sews its underlay in its own thread, then each colour once. Each gradient sews its underlay in its first colour, then each colour once.",
         ],
         profile: REFERENCE,
-        drawn: Drawn::FromFile(ts17b::tartans, &[]),
+        drawn: Drawn::FromFile(ts17b::samples, &[]),
     },
     TestSheet {
         id: "TS-17C",
@@ -683,8 +684,9 @@ mod tests {
         // origin, so 87.25 mm below it once turned. Its lines with drawn locks lie 20 and 30 mm left of the
         // origin, so above it once turned, their locks inside the 30 mm.
         assert_eq!(about("TS-16"), [110.0, 117.248737342, -5.0, 28.624368671]);
-        // TS-17B's tartans 40 mm square, 3 to a row 45 mm apart: the runs reach the squares' sides.
-        assert_eq!(about("TS-17B"), [130.0, 85.0, 0.0, 0.0]);
+        // TS-17B's tartans and gradients 40 mm square, 3 to a row 45 mm apart, in 3 rows: the runs reach the
+        // squares' sides.
+        assert_eq!(about("TS-17B"), [130.0, 130.0, 0.0, 0.0]);
         // Each TS-10 frame is its hoop's whole field, as its title and checks say, and fits no smaller hoop.
         let hoops = [("ts-10a", "4 × 4 in", &BROTHER_PE800_4X4), ("TS-10B", "5 × 7 in", REFERENCE), ("TS-10C", "small", &BROTHER_PE800_SMALL)];
         for (id, hoop, profile) in hoops {
