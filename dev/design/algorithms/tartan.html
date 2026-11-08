@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-701c9a47.js";
+            window.path_to_searchindex_js = "../../searchindex-47462788.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-61f039c5.js"></script>
@@ -191,9 +191,8 @@ colours as woven threads do. Each colour’s rows sew in that colour’s thread.
 and <code>lib/tartan/palette.py</code> for the sett, <code>lib/stitches/tartan_fill.py</code> for the stitches, and the fill
 element’s tartan settings in <code>lib/elements/fill_stitch.py</code>. This page describes them in our own words
 (ADR-0012), and the code is written from it. Ink/Stitch was also run as a black box on setts and shapes
-made for the purpose. M10.6 sews tartans without herringbones. M10.7 adds the herringbone, and an editor
-that writes setts from stripes, from Ink/Stitch’s palette code or from a threadcount of the Scottish
-Register of Tartans.</p>
+made for the purpose. M10.6 sews straight rows. M10.7 adds the herringbone, and an editor that writes setts
+from Ink/Stitch’s palette code or from a threadcount of the Scottish Register of Tartans.</p>
 <p>Colorful, Emilio 20 tartan, Kum Tsoan relief, Kum Tsoan tartan and Perspective tricolore, 5 fonts of
 Ink/Stitch’s library at <code>c7e3a05</code>, sew tartan fills. All but the last set herringbones 1.6 to 5 mm wide on
 some of their shapes.</p>
@@ -207,7 +206,7 @@ some of their shapes.</p>
 <tr><td><code>tartan</code></td><td>the sett, an object of JSON as Ink/Stitch’s tartan editor saves it</td><td>empty, for Ink/Stitch’s default sett</td></tr>
 <tr><td><code>tartan_angle</code></td><td>the rows’ angle to the stripes, in degrees</td><td>-45</td></tr>
 <tr><td><code>rows_per_thread</code></td><td>how many rows go to the warp before as many go to the weft</td><td>2</td></tr>
-<tr><td><code>herringbone_width_mm</code></td><td>the width of a herringbone’s bands, 0 for straight rows. M10.7 sews it</td><td>0</td></tr>
+<tr><td><code>herringbone_width_mm</code></td><td>the width of a herringbone’s bands, 0 for straight rows</td><td>0</td></tr>
 <tr><td><code>stop_at_ending_point</code></td><td>whether every colour starts where the piece starts and ends where it ends</td><td>off</td></tr>
 </tbody>
 </table>
@@ -233,12 +232,29 @@ the warp. Ink/Stitch takes the stripes wherever they lie in the text and passes 
 them, such as slashes and the dots of a repeated sett. Its editor writes a repeated sett’s code as a list,
 <code>...['(#00673e)5.0', '(#000000)1.5']...</code>, which reads as its stripes. A colour that can’t be read leaves
 its stripe unsewn, as Ink/Stitch leaves it, with <code>SC-W0328</code>. A code with more than one <code>|</code>, or a width that
-isn’t a number, can’t be read. Ink/Stitch’s 2 other codes, a threadcount and a code of colour letters, are
-read by M10.7’s editor, and until then such a sett can’t be read either.</p>
+isn’t a number, can’t be read.</p>
+<p><strong>Colour letters.</strong> A code without brackets is a threadcount. Each of its stripes is a run of colour letters
+followed by its count of threads, as in <code>B/24 W4 R2</code>, and a <code>?</code> or a <code>*</code> may come between them. Letters
+without a count are passed over, and the fill reads each thread as 0.5 mm wide, as Ink/Stitch’s tartan does.
+The letters, in capitals or not, stand for the shades the Scottish Register of Tartans publishes in “Tartan
+Register colours” (<a href="https://www.tartanregister.gov.uk/docs/Colour_shades.pdf">https://www.tartanregister.gov.uk/docs/Colour_shades.pdf</a>), <code>B</code> for blue and <code>DG</code> for dark
+green. The list gives several shades for most of its 25 letters. StitchCraft’s table
+(<code>generators::tartan::shades</code>) holds, for each letter, the shade of the list that Ink/Stitch sews, so that a
+sett written in letters sews the same threads in both programs. The list is Crown copyright. The register’s
+copyright page (<a href="https://www.tartanregister.gov.uk/copyright">https://www.tartanregister.gov.uk/copyright</a>) lets its text be reused with an
+acknowledgement, which <code>NOTICE</code> gives. Letters the register uses for no colour leave their stripe unsewn, with
+<code>SC-W0328</code>.</p>
+<p><strong>The register’s threadcount.</strong> The register’s search gives a sett as a threadcount with a palette of its
+own. A line saying <code>Threadcount:</code> comes before the stripes, letters and counts run together as
+<code>K6R20K2Y4</code>, and a line saying <code>Pallet:</code> before each letter’s colour, as <code>K=101010BLACK;</code>. A code
+that says <code>Threadcount</code> reads so. Its counts come from the line after the last <code>Threadcount:</code> line. Each
+letter’s colour comes from the line after the last <code>Pallet:</code> line, whose letters, <code>=</code>, a <code>#</code> or none and 6
+hexadecimal digits name a colour. There, letters without a count make the code unreadable. With a <code>|</code>
+anywhere in a code of letters, every stripe is the warp’s and the weft has none, as in Ink/Stitch.</p>
 <p>An empty setting sews Ink/Stitch’s default sett, <code>(#101010)/5.0 (#FFFFFF)/?5.0</code>: stripes 5 mm wide of a
-thread almost black, with 5 mm left unsewn between them. <code>SC-W0325</code> says so. VectorCraft’s fill dialog has
-no field for a sett before M10.7, and a tartan fill made there sews this one
-(<a href="../vectorcraft-integration.html#a-tartans-sett">VectorCraft integration</a>).</p>
+thread almost black, with 5 mm left unsewn between them. <code>SC-W0325</code> says so. VectorCraft’s fill dialog
+shows the setting as text, and StitchCraft Tartan, a filter, writes it from a code (<a href="#the-editor">the
+editor</a>).</p>
 <p><strong>A direction’s width.</strong> Ink/Stitch measures each direction’s stripes, once scaled: the stripes as wide as
 <code>min_stripe_width</code> or wider add up, but for those sewn in the colour before them. A direction without such
 a stripe measures its narrower stripes that are sewn instead. The wider direction’s width widens the box
@@ -299,6 +315,75 @@ left out. Each piece is cut into equal stitches no longer than the running stitc
 longest stitch, along the weft, as Ink/Stitch cuts them.</p>
 <p><strong>Each colour’s lines</strong> are its bands’ in the warp, then in the weft. The colours come in the order of
 their first band or run in the warp’s sett, and then come the weft’s colours that the warp has none of.</p>
+<h2 id="herringbone"><a class="header" href="#herringbone">Herringbone</a></h2>
+<p>With <code>herringbone_width_mm</code> above 0, the rows lie in bands that wide (M10.7). A herringbone twill’s ribs
+turn at the edge of each band, and the cloth shows columns of chevrons: each band’s rows slant the other way
+from the band before’s, and the weft’s rows run on from band to band. Ink/Stitch lays them so in
+<code>lib/stitches/tartan_fill.py</code>, read at <code>d59c9ab</code>. Colorful, Emilio 20 tartan, Kum Tsoan relief and Kum
+Tsoan tartan set herringbones 1.6 to 5 mm wide on 61 of their tartan fills.</p>
+<p><strong>The bands.</strong> In the sett’s frame, before it is turned, the bands stand upright side by side from the
+box’s left side, 0.005 CSS pixel apart so that no 2 bands’ rows meet. Each band is the herringbone’s width,
+and bands are laid while one starts before the box’s right side. The bands turn with the sett. Their rows
+cross the stripes at 45°, whatever <code>tartan_angle</code> is.</p>
+<p><strong>A band’s rows</strong> join its 2 sides, each as long as the box is high plus the band’s width and cut into equal
+steps no longer than the row spacing. A row goes from each step of the left side to the same step of the right
+side. In the first band, the third and so on, the left side starts a band’s width above the box, and the rows
+run down to the right, as the canvas shows them. In the others it starts at the box’s top, and the rows run up
+to the right. The bands so share their rows, each band’s moved across and slanted its own way, and StitchCraft
+works them out once. Along each row the needle points are staggered from the band’s first row, as straight
+rows’ are. In the first band, the third and so on, the first <code>rows_per_thread</code> rows of every 2 ×
+<code>rows_per_thread</code> go to the weft and the others to the warp, and the other way round in the other bands. Each
+direction’s rows of a band are taken in the order straight rows are, every other one sewn back.</p>
+<p><strong>The warp</strong> is laid band by band. The second band, the fourth and so on come first, and then the first, the
+third and so on. In each band, each warp stripe’s rows are joined along the stripe’s edges and cut by the
+piece, as straight rows are, but a line that ends inside the piece doesn’t run on to its rings. A warp colour
+comes in the order of its first line.</p>
+<p><strong>The weft</strong> is joined across the bands. Each band’s weft rows are first joined end to start into one
+zigzag, in stitches no longer than the running stitch. Each weft stripe that lies over the piece cuts every
+band’s zigzag, and a band’s pieces in the stripe longer than half a CSS pixel are joined along the stripe’s
+edges, unless an end lies on the piece’s rings. While an edge of the stripe crosses the piece, the bands’
+lines in the stripe are then joined into one, from the band at one end of the stripe to the band at the
+other. Ink/Stitch takes the stripe’s edges from its outline as its geometry library orders that outline,
+from the corner of least x. With the sett turned less than a quarter turn either way, or a quarter turn
+exactly, the stripe’s lower edge, as the sett’s frame shows it with y down, runs to the right, and the
+bands are taken from the right. Otherwise its upper edge runs to the left, and they are taken from the
+left. The end of the first band’s last line farther along that edge goes on to the next band. Each line
+after it starts at its end on the edge nearer where the line before ended, the first edge on a tie, and is
+joined to it along that edge. Ink/Stitch moves the weft’s lines right and down by 0.00123 pixel before it
+cuts them by the piece, so that a line along the outline falls inside or outside it as there, and StitchCraft
+moves them as much. Every weft colour with a stripe over the piece comes after the warp’s colours, lines or
+none.</p>
+<p><strong>Where a line meets itself.</strong> Ink/Stitch’s geometry library breaks a weft line where it finds the line
+meets itself as it cuts the line by the piece. Near the outline a weft line can run twice along the same
+stretch of a stripe’s edge, and whether the library finds a meeting there hangs on the last bits of its
+arithmetic. StitchCraft sews such a line whole (<code>DEV-FILL-030</code>).</p>
+<p><strong>What it costs.</strong> The budget is charged for every band’s rows as if each were made, their needle points,
+each stripe each band is tested against, and each point of a zigzag, before memory is taken for them.</p>
+<h2 id="the-editor"><a class="header" href="#the-editor">The editor</a></h2>
+<p>Ink/Stitch’s tartan editor makes a sett from stripes picked one by one, or reads a code pasted into it, and
+saves the <code>tartan</code> setting (<code>lib/gui/tartan/</code> and <code>lib/tartan/palette.py</code>, read at <code>d59c9ab</code>). StitchCraft’s
+editor (<code>generators::tartan::editor</code>, M10.7) does what it does with a code.</p>
+<ul>
+<li><strong>Reading.</strong> A code reads as the fill reads it (above), but each thread of a threadcount is as wide as the
+editor is told. Ink/Stitch’s editor starts at 0.2 mm, where its fill reads a thread as 0.5 mm. Whether
+the sett is mirrored comes from the code. A palette code or colour letters between the dots of a repeated
+sett, <code>...</code>, repeat, and so does a register’s threadcount that says <code>full sett</code>. The others are mirrored. The
+colours that can’t be read are named. The sett starts unturned, unscaled and unmoved, with stripes of 1 mm
+or less sewn as runs.</li>
+<li><strong>The code it writes.</strong> Each stripe is its colour in brackets, <code>#</code> and 6 hexadecimal digits, a <code>?</code> before
+the width of a stripe left unsewn and a <code>*</code> before one sewn in the colour before it, and its width in
+millimetres, to a millionth. The first stripe and the last are marked <code>/</code> when the sett is mirrored, and the
+whole lies between <code>...</code> when it repeats. A <code>|</code> comes before the weft’s stripes when they aren’t the warp’s.</li>
+<li><strong>The setting it writes</strong> is the object of JSON Ink/Stitch’s editor saves: <code>symmetry</code>, <code>equal_warp_weft</code>,
+<code>rotate</code>, <code>scale</code>, <code>offset_x</code>, <code>offset_y</code>, <code>palette</code> and <code>min_stripe_width</code>, in that order. The fill reads
+it back as the sett.</li>
+</ul>
+<p><strong>In VectorCraft</strong> the fill dialog holds the <code>tartan</code> setting as text, shown for the tartan fill alone, and
+StitchCraft Tartan, a filter, writes it from a code, the width of a thread and how the sett is laid. A live
+effect is given only the settings its manifest declares, so without the text no preview could sew a sett,
+and a code is easier to get right than an object of JSON. The text needs VectorCraft 0.14, and the filter
+0.15. Why both, and the choices left aside, are in <a href="../vectorcraft-integration.html#a-tartans-sett">VectorCraft
+integration</a>.</p>
 <h2 id="sewing"><a class="header" href="#sewing">Sewing</a></h2>
 <p>A tartan sews its parts in a tatami fill’s order, nearest the needle first (<a href="fills.html#5-parts">fills</a>). Each
 part sews the tatami fill’s underlay first, in the element’s own thread. Then each of its pieces sews its
@@ -331,8 +416,9 @@ own thread for the underlay, then the colours above.</p>
 <p><strong>Stitches.</strong> A needle point nearer the one before than the element’s shortest stitch is left out, as
 finalize would leave it out. Where the rows cross a stripe sewn as a fill in a stretch shorter than the
 shortest stitch, a warp stripe’s width over the cosine of the rows’ angle or a weft stripe’s over its sine,
-<code>SC-W0327</code> says needle points of it are left out. A herringbone width above 0 sews the rows straight, with
-<code>SC-W0324</code>, until M10.7. The budget is charged for the sett’s steps, the rows and their needle points, the
+<code>SC-W0327</code> says needle points of it are left out. A herringbone’s rows cross the stripes at 45°, and a row
+crosses no more of a stripe than its band’s width: a herringbone narrower than the narrowest stripe is said
+instead. The budget is charged for the sett’s steps, the rows and their needle points, the
 bands each row is tested against and the stitches, before memory is taken for them. A sett too fine for the
 budget ends the element with <code>SC-E0004</code>.</p>
 <p>A preview too costly to sew shows each colour’s lines and runs, without the stitches.</p>
@@ -348,21 +434,25 @@ different stretches of the outline, where they pair the graph’s odd nodes diff
 Ink/Stitch’s geometry library divides a run’s length by the stitch length in pixels, and where the quotient
 is a whole number its rounding can give one stitch more. A run 40 mm long in stitches of 2.5 mm takes 17
 stitches there, against 16 here.</p>
+<p>The differential’s herringbones agree too: TS-17B’s, and a file of 4 of them, turned both ways, round a
+hole, with a warp and a weft apart and with stripes sewn as runs. Their weft joins its rows along the bands’
+sides in steps of the row spacing, so StitchCraft leaves out more of Ink/Stitch’s short stitches there, and
+the 2 cases excuse their counts of stitches by <code>DEV-FIN-001</code>.</p>
 <p>The glyph differential sews the tartan fonts’ 313 glyphs too. Their files are older than Ink/Stitch’s
 version 4, and there a fill without a longest stitch of its own sews stitches 3 mm long, as Ink/Stitch
-updates it (<a href="../svg-input.html#files-of-older-inkstitch-versions">files of older versions</a>). 277 of the glyphs
-agree, or differ only as the ledger explains. The 35 that set a herringbone are sewn otherwise until M10.7,
-and <code>conformance/inkstitch/glyphs.toml</code> lists them as known. It lists Colorful’s ’ as known too: its
-S-stitch satin column starts elsewhere than Ink/Stitch’s.</p>
+updates it (<a href="../svg-input.html#files-of-older-inkstitch-versions">files of older versions</a>). All of them agree,
+or differ only as the ledger explains, the 35 that set a herringbone among them. Colorful’s F breaks a weft
+line where Ink/Stitch’s geometry library finds it meets itself (<code>DEV-FILL-030</code>), and Colorful’s ’ starts its
+satin column’s rings where its rungs pair them (<code>DEV-SAT-009</code>).</p>
 <h2 id="test-sheet"><a class="header" href="#test-sheet">Test sheet</a></h2>
-<p>TS-17B sews 5 tartans 40 mm square, each trimmed after its colours (<a href="../../plan/machine-testing.html">machine
+<p>TS-17B sews 6 tartans 40 mm square, each trimmed after its colours (<a href="../../plan/machine-testing.html">machine
 testing</a>). One sett is mirrored at its ends, and one is repeated, written as
 Ink/Stitch’s editor writes it. One has a warp and a weft apart, and one has stripes 0.5 and 0.8 mm wide sewn
-as runs. The last is turned 30° and scaled by 150 %. Each underlay sews in a colour of its sett other than its first
-stripe’s, so the underlay is a colour block of its own: in the first stripe’s colour, the jump from the
-underlay to the rows would leave its thread under them on the reference machine. Every stripe is one of
-Brother’s threads, so both programs’ files name each thread as itself. VectorCraft’s Test Sheet filter
-doesn’t draw TS-17B, as its fill dialog has no field for a sett.</p>
+as runs. One is turned 30° and scaled by 150 %, and the last is a herringbone 3 mm wide. Each underlay sews in
+a colour of its sett other than its first stripe’s, so the underlay is a colour block of its own: in the first
+stripe’s colour, the jump from the underlay to the rows would leave its thread under them on the reference
+machine. Every stripe is one of Brother’s threads, so both programs’ files name each thread as itself.
+VectorCraft’s Test Sheet filter draws TS-17B too, as its fill dialog shows a sett as text from M10.7.</p>
 <h2 id="properties-conformance"><a class="header" href="#properties-conformance">Properties (conformance)</a></h2>
 <div class="table-wrapper">
 <table>
@@ -379,8 +469,13 @@ doesn’t draw TS-17B, as its fill dialog has no field for a sett.</p>
 <tr><td><code>REQ-FILL-TRT-007</code></td><td>The runs after the fills, cut into equal stitches, their travel kept, with bean stitch</td></tr>
 <tr><td><code>REQ-FILL-TRT-008</code></td><td><code>stop_at_ending_point</code> keeps every colour’s travel, from the piece’s start to its end</td></tr>
 <tr><td><code>REQ-FILL-TRT-009</code></td><td>Several parts sort their underlays and colours, then their runs, by colour</td></tr>
-<tr><td><code>REQ-FILL-TRT-010</code></td><td>A herringbone is sewn as straight rows, with <code>SC-W0324</code>, until M10.7</td></tr>
+<tr><td><code>REQ-FILL-TRT-010</code></td><td>Retired by M10.7: a herringbone was sewn as straight rows, with <code>SC-W0324</code></td></tr>
 <tr><td><code>REQ-FILL-TRT-011</code></td><td>TS-17B’s tartans and the differential’s own sew in Ink/Stitch as in StitchCraft by every measure</td></tr>
+<tr><td><code>REQ-FILL-TRT-012</code></td><td>A herringbone’s rows lie in bands that wide, each band’s slanting at 45° the other way from the band before, and go to the warp and the weft in turns that change from band to band</td></tr>
+<tr><td><code>REQ-FILL-TRT-013</code></td><td>Its warp is laid band by band, the second, fourth and so on first, each stripe’s rows joined and cut, without running on to the rings</td></tr>
+<tr><td><code>REQ-FILL-TRT-014</code></td><td>Its weft is joined into a zigzag in each band, cut by each stripe, and joined across the bands along the stripe’s edges while one crosses the piece</td></tr>
+<tr><td><code>REQ-FILL-TRT-015</code></td><td>The editor makes a sett from a code with a thread’s width, and writes its palette code and its setting as Ink/Stitch’s editor does</td></tr>
+<tr><td><code>REQ-FILL-TRT-016</code></td><td>A code of colour letters, or the register’s threadcount, reads in the register’s shades or its own palette</td></tr>
 </tbody>
 </table>
 </div>

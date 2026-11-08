@@ -35,7 +35,7 @@
             const path_to_root = "../../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../../searchindex-701c9a47.js";
+            window.path_to_searchindex_js = "../../../searchindex-47462788.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../../toc-61f039c5.js"></script>
@@ -194,8 +194,8 @@ stripes, each a colour in brackets and its width in millimetres, such as <code>(
 colour of the stripe before it, and a <code>|</code> parts the warp’s stripes from the weft’s. <code>symmetry</code>
 mirrors the sett at its ends rather than repeating it, <code>scale</code> scales it in percent, <code>rotate</code> turns
 it in degrees, <code>offset_x</code> and <code>offset_y</code> move it in millimetres, and stripes no wider than
-<code>min_stripe_width</code> sew as runs. Empty, the fill sews Ink/Stitch’s default sett. VectorCraft’s fill
-dialog doesn’t hold a sett before M10.7.</p>
+<code>min_stripe_width</code> sew as runs. Empty, the fill sews Ink/Stitch’s default sett. In VectorCraft,
+StitchCraft Tartan, a filter, writes the sett from a code of its stripes.</p>
 <ul>
 <li><strong>Accepts:</strong> text of at most 4096 bytes</li>
 <li><strong>Default:</strong> empty</li>
@@ -203,7 +203,8 @@ dialog doesn’t hold a sett before M10.7.</p>
 </ul>
 <h3 id="tartan_angle"><a class="header" href="#tartan_angle"><code>tartan_angle</code></a></h3>
 <p><strong>Row angle.</strong> The angle of the rows to the stripes, in degrees: at -45 they slant across both the warp’s and the
-weft’s stripes, as a woven twill’s do. At 0 or 90 they run along one direction’s stripes.</p>
+weft’s stripes, as a woven twill’s do. At 0 or 90 they run along one direction’s stripes. A
+herringbone’s rows run at 45° to the stripes, whatever this angle.</p>
 <ul>
 <li><strong>Accepts:</strong> an angle in degrees</li>
 <li><strong>Default:</strong> <code>-45</code></li>
@@ -218,9 +219,9 @@ thread make the weave coarser, as a heavier twill.</p>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <h3 id="herringbone_width_mm"><a class="header" href="#herringbone_width_mm"><code>herringbone_width_mm</code></a></h3>
-<p><strong>Herringbone width.</strong> The width of the bands of a herringbone, each band’s rows slanting the other way from the band
-before. 0 sews straight rows. StitchCraft sews herringbones from M10.7, and until then the rows are
-sewn without them, which <code>SC-W0324</code> says.</p>
+<p><strong>Herringbone width.</strong> The width of the bands of a herringbone, each band’s rows slanting at 45° to the stripes the other
+way from the band before, as the ribs of a herringbone twill turn. The weft’s rows are joined from
+band to band along its stripes’ edges. 0 sews straight rows.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from 0 to 100 mm</li>
 <li><strong>Default:</strong> <code>0</code></li>

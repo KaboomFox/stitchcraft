@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-701c9a47.js";
+            window.path_to_searchindex_js = "../../searchindex-47462788.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-61f039c5.js"></script>
@@ -220,14 +220,38 @@ it, and <code>offset_x</code> and <code>offset_y</code> move it, in millimetres.
 </ul>
 <p>Each setting the object leaves out takes the value Ink/Stitch’s editor starts from. A colour that can’t be
 read leaves its stripe unsewn, as in Ink/Stitch, and <code>SC-W0328</code> names it. A sett that can’t be read skips
-the element, and <code>SC-E0323</code> says why. Ink/Stitch’s editor can also write a sett as a threadcount of the
-Scottish Register of Tartans or as colour letters. StitchCraft reads those from M10.7. A tartan fill
-without a sett sews Ink/Stitch’s default one: stripes 5 mm wide of a thread almost black, with 5 mm left
-unsewn between them. <code>SC-W0325</code> says so.</p>
-<p>The VectorCraft plug-in’s fill dialog offers the tartan fill with its row angle and rows per thread, and
-with its herringbone width and where its colours end. It has no field for a sett before M10.7
-(<a href="../../design/vectorcraft-integration.html#a-tartans-sett">VectorCraft integration</a>). So a tartan fill made
-in VectorCraft sews the default sett. A file from Ink/Stitch keeps its setts, and <code>stitch plan</code> sews them.</p>
+the element, and <code>SC-E0323</code> says why. A <code>palette</code> can also be a threadcount (<a href="#colour-letters">below</a>). A
+tartan fill without a sett sews Ink/Stitch’s default one: stripes 5 mm wide of a thread almost black, with
+5 mm left unsewn between them. <code>SC-W0325</code> says so. In VectorCraft, a filter writes the sett for you
+(<a href="#in-vectorcraft">below</a>).</p>
+<h2 id="colour-letters"><a class="header" href="#colour-letters">Colour letters</a></h2>
+<p>A sett can be written as a threadcount, as the Scottish Register of Tartans writes its setts. Each stripe
+is its colour’s letters followed by its count of threads, such as <code>B/24 W4 B24 R2 K24 G/24</code>. Each
+thread is 0.5 mm wide, as Ink/Stitch’s fill reads it, and the slashes mark the stripes the sett is mirrored
+at. <code>B</code> is blue, <code>W</code> white, <code>R</code> red, <code>K</code> black and <code>G</code> green, and a light or dark shade adds <code>L</code> or <code>D</code>
+before the letter: <code>DG</code> is dark green. Each letter stands for one of the shades the register publishes, the
+one Ink/Stitch sews for it. A <code>?</code> before a count leaves the stripe unsewn, and a <code>*</code> sews it in the colour
+before it. Letters the register uses for no colour leave their stripe unsewn, and <code>SC-W0328</code> names them.</p>
+<p>The register’s own search gives a threadcount with a palette, which reads as it is pasted, its lines kept:</p>
+<pre><code class="language-text">Threadcount:
+K6R20K2Y4W2DG16
+
+Pallet:
+K=101010BLACK;R=C80000RED;Y=E8C000YELLOW;W=FFFFFFWHITE;DG=004028DARK GREEN;
+</code></pre>
+<p>Each letter then takes the palette’s colour.</p>
+<!-- shot: tartan-codes -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: center">B/24 W4 B24 R2 K24 G/24</th><th style="text-align: center">…DG8 K2 DG8 Y2…</th><th style="text-align: center">The register’s threadcount</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/tartan-codes-1.png" alt="The square sewn as a tartan fill in setts written as threadcounts, whose colour letters stand for the Scottish Register of Tartans’ shades, B/24 W4 B24 R2 K24 G/24"><span class="img-wrapper"><img src="../../images/generated/tartan-codes-1.png" alt="The square sewn as a tartan fill in setts written as threadcounts, whose colour letters stand for the Scottish Register of Tartans’ shades, B/24 W4 B24 R2 K24 G/24"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/tartan-codes-2.png" alt="The square sewn as a tartan fill in setts written as threadcounts, whose colour letters stand for the Scottish Register of Tartans’ shades, …DG8 K2 DG8 Y2…"><span class="img-wrapper"><img src="../../images/generated/tartan-codes-2.png" alt="The square sewn as a tartan fill in setts written as threadcounts, whose colour letters stand for the Scottish Register of Tartans’ shades, …DG8 K2 DG8 Y2…"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/tartan-codes-3.png" alt="The square sewn as a tartan fill in setts written as threadcounts, whose colour letters stand for the Scottish Register of Tartans’ shades, The register’s threadcount"><span class="img-wrapper"><img src="../../images/generated/tartan-codes-3.png" alt="The square sewn as a tartan fill in setts written as threadcounts, whose colour letters stand for the Scottish Register of Tartans’ shades, The register’s threadcount"></span></label></td></tr>
+</tbody>
+</table>
+</div>
+<!-- /shot -->
 <h2 id="rows"><a class="header" href="#rows">Rows</a></h2>
 <p>The rows run across the stripes at <code>tartan_angle</code>, -45° by default, so that they slant across the warp and
 the weft alike. They lie <code>row_spacing_mm</code> apart. Their needle points lie the longest stitch apart
@@ -265,13 +289,54 @@ the outline. With
 Each colour is a colour block of its own, with a trim after it when the fill’s <code>trim_after</code> is on. A fill
 in several parts sews each part’s underlay and colours, and then sorts them by colour, so that each thread
 is sewn once.</p>
-<p><code>herringbone_width_mm</code> sews herringbones from M10.7. Until then the rows are straight, as they are at a
-width of 0, and <code>SC-W0324</code> says so.</p>
+<h2 id="herringbone"><a class="header" href="#herringbone">Herringbone</a></h2>
+<p>With <code>herringbone_width_mm</code> above 0 the rows lie in upright bands that wide, as a herringbone twill’s ribs do.
+Each band’s rows slant at 45° to the stripes, the other way from the band before’s, whatever <code>tartan_angle</code>
+is. The stripes then show columns of chevrons. The warp’s rows join along their stripes’ edges in each band.
+The weft’s rows run on from band to band along the stripes’ edges, and each weft stripe sews as one line where
+it crosses the fill. The bands turn with the sett. 4 tartan fonts of Ink/Stitch’s library set herringbones 1.6
+to 5 mm wide.</p>
+<!-- shot: tartan-herringbones -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: center">Bands 3 mm wide</th><th style="text-align: center">Bands 6 mm wide, 3 rows per thread</th><th style="text-align: center">Bands 3 mm wide, turned 30°</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/tartan-herringbones-1.png" alt="The square sewn as a tartan fill in a herringbone, its rows in upright bands that slant one way and then the other, so that the stripes show columns of chevrons, Bands 3 mm wide"><span class="img-wrapper"><img src="../../images/generated/tartan-herringbones-1.png" alt="The square sewn as a tartan fill in a herringbone, its rows in upright bands that slant one way and then the other, so that the stripes show columns of chevrons, Bands 3 mm wide"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/tartan-herringbones-2.png" alt="The square sewn as a tartan fill in a herringbone, its rows in upright bands that slant one way and then the other, so that the stripes show columns of chevrons, Bands 6 mm wide, 3 rows per thread"><span class="img-wrapper"><img src="../../images/generated/tartan-herringbones-2.png" alt="The square sewn as a tartan fill in a herringbone, its rows in upright bands that slant one way and then the other, so that the stripes show columns of chevrons, Bands 6 mm wide, 3 rows per thread"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/tartan-herringbones-3.png" alt="The square sewn as a tartan fill in a herringbone, its rows in upright bands that slant one way and then the other, so that the stripes show columns of chevrons, Bands 3 mm wide, turned 30°"><span class="img-wrapper"><img src="../../images/generated/tartan-herringbones-3.png" alt="The square sewn as a tartan fill in a herringbone, its rows in upright bands that slant one way and then the other, so that the stripes show columns of chevrons, Bands 3 mm wide, turned 30°"></span></label></td></tr>
+</tbody>
+</table>
+</div>
+<!-- /shot -->
+<p>A herringbone’s rows cross a stripe in at most the band’s width over the cosine of 45°, and wider bands
+keep needle points that narrower ones lose. <code>SC-W0327</code> says where a band is too narrow for the shortest
+stitch.</p>
+<h2 id="in-vectorcraft"><a class="header" href="#in-vectorcraft">In VectorCraft</a></h2>
+<p>The StitchCraft Fill dialog offers the tartan fill with its row angle, rows per thread, herringbone width
+and where its colours end, and its sett as text in the row Sett, which shows while the fill method is
+<code>tartan_fill</code>. The row holds the <code>tartan</code> setting as Ink/Stitch saves it, so a sett copied from an
+Ink/Stitch file can be pasted there. The fill effect needs VectorCraft 0.14 for the row.</p>
+<p>To write a sett from its code, select the paths and choose <strong>Object › Plug-ins › StitchCraft Tartan</strong>
+(VectorCraft 0.15 and later, with StitchCraft Fill installed). Its dialog takes:</p>
+<ul>
+<li><strong>Code</strong>: the stripes, as a palette code, <code>(#0a55a3)/4 (#f0f0f0)1</code>, or as colour letters with counts of
+threads, <code>B/24 W4</code>. The register’s threadcount with its palette reads too. Between <code>...</code> the sett repeats,
+and otherwise it is mirrored.</li>
+<li><strong>Thread width</strong>: how wide each thread of a threadcount is, 0.2 mm to start with, as in Ink/Stitch’s
+editor.</li>
+<li><strong>Rotate</strong>, <strong>Scale</strong>, <strong>Move right</strong> and <strong>Move down</strong>: how the sett is laid.</li>
+<li><strong>Runs up to</strong>: the width up to which a stripe sews as a run, 1 mm to start with.</li>
+</ul>
+<p>Each selected path whose StitchCraft effect is the fill effect becomes a tartan fill with that sett, its
+other settings as they were. A path without a StitchCraft effect gets the fill effect. The others stay as
+they are. A code that can’t be read, or that names letters the register doesn’t use, leaves the drawing as
+it was, and <code>SC-E0821</code> says why. So does a selection without a path that can take the sett.</p>
 <h2 id="test-sheet"><a class="header" href="#test-sheet">Test sheet</a></h2>
-<p>TS-17B sews 5 tartans 40 mm square for the next machine checkpoint, each in setts of Brother’s threads
-(<a href="../reference/test-sheets.html">test sheets</a>).</p>
+<p>TS-17B sews 6 tartans 40 mm square for the next machine checkpoint, each in setts of Brother’s threads,
+the last a herringbone 3 mm wide (<a href="../reference/test-sheets.html">test sheets</a>). VectorCraft’s Test Sheet
+filter draws it too.</p>
 <!-- shot: testsheet-ts-17b -->
-<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-17b.png" alt="TS-17B as it will sew: 5 tartans 40 mm square in 2 rows, all woven in rows that slant across their stripes. In the top row, left to right, are stripes of red, white, Prussian blue and gold mirrored at their ends, stripes of green, black and white repeated, and a warp of red and black under a weft of blue and white. Below are blue and black stripes with thin white and red lines along their middles, and stripes of gold, black and tangerine turned 30°."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-17b.png" alt="TS-17B as it will sew: 5 tartans 40 mm square in 2 rows, all woven in rows that slant across their stripes. In the top row, left to right, are stripes of red, white, Prussian blue and gold mirrored at their ends, stripes of green, black and white repeated, and a warp of red and black under a weft of blue and white. Below are blue and black stripes with thin white and red lines along their middles, and stripes of gold, black and tangerine turned 30°."></span></label></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/testsheet-ts-17b.png" alt="TS-17B as it will sew: 6 tartans 40 mm square in 2 rows, all woven in rows that slant across their stripes. In the top row, left to right, are stripes of red, white, Prussian blue and gold mirrored at their ends, stripes of green, black and white repeated, and a warp of red and black under a weft of blue and white. Below are blue and black stripes with thin white and red lines along their middles, stripes of gold, black and tangerine turned 30°, and stripes of blue, white, red and black in a herringbone, their rows in narrow upright bands slanting one way and then the other."><span class="img-wrapper"><img src="../../images/generated/testsheet-ts-17b.png" alt="TS-17B as it will sew: 6 tartans 40 mm square in 2 rows, all woven in rows that slant across their stripes. In the top row, left to right, are stripes of red, white, Prussian blue and gold mirrored at their ends, stripes of green, black and white repeated, and a warp of red and black under a weft of blue and white. Below are blue and black stripes with thin white and red lines along their middles, stripes of gold, black and tangerine turned 30°, and stripes of blue, white, red and black in a herringbone, their rows in narrow upright bands slanting one way and then the other."></span></label></p>
 <!-- /shot -->
 <h2 id="parameters"><a class="header" href="#parameters">Parameters</a></h2>
 <p>The reference gives each setting’s range and default:</p>

@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-701c9a47.js";
+            window.path_to_searchindex_js = "../searchindex-47462788.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-61f039c5.js"></script>
@@ -199,9 +199,10 @@ cargo puts <code>stitch</code> in its <code>bin</code> folder, which rustup adds
 <h2 id="the-vectorcraft-plug-ins"><a class="header" href="#the-vectorcraft-plug-ins">The VectorCraft plug-ins</a></h2>
 <p>The plug-ins say how each object of a <a href="https://github.com/storytold/vectorcraft">VectorCraft</a> drawing
 sews, and show its stitches. There are 3, one for each kind of stitch, and 2 more that write PES and DST
-files from VectorCraft’s File › Export, from VectorCraft 0.14. 3 filters change the drawing: one keeps a
-design’s settings and machine with the document and one draws a test sheet, from VectorCraft 0.16, and
-one makes lines into satin columns, from VectorCraft 0.17. All are built from the same source. In the
+files from VectorCraft’s File › Export, from VectorCraft 0.14. Filters change the drawing: one sets a
+tartan’s sett, from VectorCraft 0.15, one keeps a design’s settings and machine with the document and one
+draws a test sheet, from VectorCraft 0.16, and others make lines into satin columns and route stitches,
+from VectorCraft 0.17. All are built from the same source. In the
 <code>stitchcraft</code> folder:</p>
 <pre><code class="language-sh">rustup target add wasm32-unknown-unknown
 cargo build -p stitchcraft-vc-plugin --release --target wasm32-unknown-unknown --features fill
@@ -209,11 +210,12 @@ cargo build -p stitchcraft-vc-plugin --release --target wasm32-unknown-unknown -
 <p>The build writes <code>target/wasm32-unknown-unknown/release/stitchcraft_vc_plugin.wasm</code>. Copy it into a
 folder for plug-ins as <code>stitchcraft-fill.wasm</code>. Build again with <code>--features stroke</code>, <code>--features satin</code>,
 <code>--features auto</code>, <code>--features pes</code>, <code>--features dst</code>, <code>--features settings</code>, <code>--features testsheet</code>,
-<code>--features stroke-to-satin</code>, <code>--features route-satins</code> and <code>--features route-runs</code>, and copy the file each
-time, as <code>stitchcraft-stroke.wasm</code>, <code>stitchcraft-satin.wasm</code>, <code>stitchcraft-auto.wasm</code>, <code>stitchcraft-pes.wasm</code>,
-<code>stitchcraft-dst.wasm</code>, <code>stitchcraft-settings.wasm</code>, <code>stitchcraft-testsheet.wasm</code>,
-<code>stitchcraft-stroke-to-satin.wasm</code>, <code>stitchcraft-route-satins.wasm</code> and <code>stitchcraft-route-runs.wasm</code>.
-VectorCraft 0.13 and earlier refuse the exporters.</p>
+<code>--features stroke-to-satin</code>, <code>--features route-satins</code>, <code>--features route-runs</code> and <code>--features tartan</code>,
+and copy the file each time, as <code>stitchcraft-stroke.wasm</code>, <code>stitchcraft-satin.wasm</code>, <code>stitchcraft-auto.wasm</code>,
+<code>stitchcraft-pes.wasm</code>, <code>stitchcraft-dst.wasm</code>, <code>stitchcraft-settings.wasm</code>, <code>stitchcraft-testsheet.wasm</code>,
+<code>stitchcraft-stroke-to-satin.wasm</code>, <code>stitchcraft-route-satins.wasm</code>, <code>stitchcraft-route-runs.wasm</code> and
+<code>stitchcraft-tartan.wasm</code>. VectorCraft 0.13 and earlier refuse the exporters, and from StitchCraft’s M10.7
+the fill effect too, whose dialog holds a tartan’s sett as text.</p>
 <p>In VectorCraft’s desktop app, choose that folder in <strong>Edit › Preferences › Plug-ins &amp; Scratch Disks ›
 Additional Plug-ins Folder</strong>, which is under <strong>Performance &amp; Storage</strong> up to VectorCraft 0.14. VectorCraft
 installs the plug-ins in it whenever it starts, all but Stroke to Satin and the 2 Auto-Route filters. They
