@@ -766,6 +766,72 @@ fn req_vc_018_auto_route_satin_columns_routes_ts_17c_s_letters_within_a_heavy_fi
     println!("::notice title=auto-route satin columns::TS-17C's letters: {used} of {allowed}");
 }
 
+/// TS-17C's network of lines as drawn on its left, in millimetres (`stitchcraft_engine::testsheets::ts17c`): a
+/// rail through nodes where the others meet it, a post across it, a brace from the post to the rail, a hook,
+/// a quarter circle up from the rail, a line that crosses itself, and a tick 0.5 mm below the rail.
+fn network() -> Vec<PathData> {
+    let at = |x: f64, y: f64| Point::new(pt(x), pt(y));
+    let polyline = |points: &[(f64, f64)]| {
+        let mut line = BezPath::new();
+        for (k, &(x, y)) in points.iter().enumerate() {
+            if k == 0 {
+                line.move_to(at(x, y));
+            } else {
+                line.line_to(at(x, y));
+            }
+        }
+        PathData::from_bezpath(&line)
+    };
+    let k = 10.0 * 4.0 / 3.0 * (std::f64::consts::SQRT_2 - 1.0);
+    let mut hook = BezPath::new();
+    hook.move_to(at(26.0, 82.0));
+    hook.curve_to(at(26.0, 82.0 - k), at(36.0 - k, 72.0), at(36.0, 72.0));
+    vec![
+        polyline(&[(0.0, 82.0), (8.0, 82.0), (20.0, 82.0), (26.0, 82.0), (38.0, 82.0)]),
+        polyline(&[(8.0, 62.0), (8.0, 68.0), (8.0, 82.0), (8.0, 85.0)]),
+        polyline(&[(8.0, 68.0), (20.0, 82.0)]),
+        PathData::from_bezpath(&hook),
+        polyline(&[(14.0, 61.0), (24.0, 67.0), (24.0, 61.0), (17.0, 66.0)]),
+        polyline(&[(34.0, 82.5), (35.0, 85.0)]),
+    ]
+}
+
+/// The path `id` along `path` with the stroke effect, a red stroke a CSS pixel wide.
+fn stroke_line(id: u32, path: &PathData) -> Value {
+    let red = json!({"type": "solid", "color": {"model": "rgb", "r": 0.93, "g": 0.09, "b": 0.12}});
+    let stroke = json!({"kind": "stroke", "paint": red, "width": 0.75});
+    json!({"id": id, "appearance": {"items": [stroke], "effects": [{"id": "plugin.dev.stitchcraft.stroke", "params": {}}]}, "kind": {"type": "path", "path": path}})
+}
+
+/// StitchCraft Auto-Route Running Stitch, from VectorCraft 0.17, is a heavy filter, which VectorCraft's host
+/// gives 1 G instructions, run as `plugin.run` runs it. It replaces TS-17C's network of lines, drawn with the
+/// stroke effect, with one route, its Trim jump stitches on: the topmost line's place holds the first element,
+/// the other lines are gone, and StitchCraft's PES exporter writes the route (`REQ-VC-020`). It prints what the
+/// route takes of what VectorCraft allows (`apps/stitchcraft-vc-plugin/src/route_runs.rs`).
+#[test]
+fn req_vc_020_auto_route_running_stitch_routes_ts_17c_s_network_within_a_heavy_filter_s_budget() {
+    let plugin = registry::install_bytes(&module("route-runs")).unwrap_or_else(|e| panic!("VectorCraft refuses route-runs: {e}"));
+    assert_eq!(plugin.id(), "dev.stitchcraft.route-runs");
+    assert!(plugin.manifest().kind == Kind::Filter && plugin.manifest().budget == Budget::Heavy, "a heavy filter");
+    // VectorCraft admits the elements' records only while StitchCraft Stroke is installed.
+    registry::install_bytes(&module("stroke")).unwrap();
+    let pes = registry::install_bytes(&module("pes")).unwrap();
+    let network = network();
+    let ids: Vec<u32> = (0..network.len()).map(|k| 2 + k as u32).collect();
+    let lines: Vec<Value> = network.iter().zip(&ids).map(|(path, id)| stroke_line(*id, path)).collect();
+    let mut doc = read_document(&lines);
+    let nodes: Vec<NodeId> = ids.iter().map(|id| NodeId(u64::from(*id))).collect();
+    let (used, allowed) = filtered(&plugin, &mut doc, &nodes, &json!({"trim": true}), NodeId(1)).unwrap_or_else(|e| panic!("TS-17C's network: {e}"));
+    // The route's first element, along the rail from its left end, takes the topmost line's place.
+    let (topmost, others) = nodes.split_last().unwrap();
+    assert_eq!(doc.node(*topmost).and_then(|node| node.name.clone()).as_deref(), Some("AutoRun 1"));
+    assert!(others.iter().all(|id| doc.node(*id).is_none()), "the lines routed are gone");
+    let target = export::Target { extension: "pes", name: "Route" };
+    let routed = export::run(&pes, &saved(&doc), &json!({}), target).unwrap_or_else(|e| panic!("the route doesn't export: {e}"));
+    assert!(base64_decoded(&routed.data_base64).starts_with(b"#PES0001"));
+    println!("::notice title=auto-route running stitch::TS-17C's network: {used} of {allowed}");
+}
+
 /// StitchCraft Test Sheet draws each sheet its dialog offers into a new document as `plugin.run` runs it,
 /// within a light filter's budget, each object with its StitchCraft effect, and StitchCraft's PES exporter
 /// writes the document within an export's budget (`REQ-VC-015`). It prints what each takes of what

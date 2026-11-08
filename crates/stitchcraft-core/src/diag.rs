@@ -726,15 +726,17 @@ registry! {
 
     /// StitchCraft's Auto-Route Satin Columns, a filter in VectorCraft, routes the selected paths whose own
     /// StitchCraft effects make them satin columns, with the paths among them whose own effects make them
-    /// strokes, which show where the needle may travel. A path sewn by a group's effect, or by none, is left
-    /// as it is. The route runs between the objects named `stitch:route-start` and `stitch:route-end`
-    /// selected with the paths. It changed nothing, because nothing was selected, because no selected path has
-    /// a satin effect of its own, or because 2 markers of a kind were selected, and which one counts isn't
-    /// known, as Ink/Stitch's tool stops at 2 `autoroute_start` or `autoroute_end` commands.
+    /// strokes, which show where the needle may travel. Its Auto-Route Running Stitch routes the selected
+    /// paths whose own effects make them strokes. A path sewn by a group's effect, or by none, is left as it
+    /// is. The route runs between the objects named `stitch:route-start` and `stitch:route-end` selected with
+    /// the paths. It changed nothing, because nothing was selected, because no selected path has an effect of
+    /// its own that the filter routes, or because 2 markers of a kind were selected, and which one counts isn't
+    /// known, as Ink/Stitch's Auto-Route Satin Columns stops at 2 `autoroute_start` or `autoroute_end`
+    /// commands.
     ///
-    /// The message says which. Select the satin columns to route, and put StitchCraft's Satin effect on the
-    /// paths themselves rather than on their group. Keep one start marker and one end marker in the
-    /// selection.
+    /// The message says which. Select the satin columns or the running stitches to route, and put
+    /// StitchCraft's Satin or Stroke effect on the paths themselves rather than on their group. Keep one start
+    /// marker and one end marker in the selection.
     VcNotRouted = "SC-E0820", Error, "VectorCraft selection not routed";
 
     /// An element's geometry cannot be used: its path data or its list of points has an error (the path is

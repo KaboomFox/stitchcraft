@@ -35,6 +35,7 @@ fn every_scenario_checks_only_what_its_runs_export() {
             "install-and-list",
             "missing-plugin",
             "picture",
+            "route-runs",
             "route-satins",
             "settings",
             "stroke-to-satin",
