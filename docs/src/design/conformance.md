@@ -316,7 +316,7 @@ own corner, and half crosses round a hole, through cells that meet at a corner a
 part (`REQ-FILL-CRS-012`). TS-17B checks the tartans: setts mirrored and repeated, a warp and a weft
 apart, narrow stripes sewn as runs, and a sett turned and scaled. The `tartan-marks`, `tartan-hole`,
 `tartan-parts` and `tartan-stop` cases add stripes left unsewn or sewn in the colour before them, a sett
-moved by its offsets, a disc round a hole, a fill in 2 parts with its rows at 30° and one row a thread, and
+moved by its offsets, a disc round a hole in stitches 3 mm long, a fill in 2 parts with its rows at 30° and one row a thread, and
 a fill that stops at its end with its runs sewn as bean stitches (`REQ-FILL-TRT-011`). Every stripe is one of
 Brother's threads, so both files name each thread as itself. TS-02B to TS-09, the sheets of MC-2 to MC-4,
 and TS-11C, the meander fills' sheet, are cases of `REQ-SVG-008` (M8.2). The `drawn-locks` case and TS-16 check custom locks drawn as
