@@ -138,8 +138,7 @@ checks it against the standard.
   the cases of a real font read the corpus.
 - M15.2's crate, planned as `stitchcraft-fonts`, takes another name, `stitchcraft-outlines`, so that one name
   means one thing.
-- Every CI job that runs `cargo xtask ci` fetches the corpus: 69 MB, kept in the Actions cache under the
-  pin's hash.
+- The corpus, 69 MB, is fetched in 3 more CI jobs, and the Actions cache keeps it under the pin's hash.
 
 ## Alternatives considered
 
