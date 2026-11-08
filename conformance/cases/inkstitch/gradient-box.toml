@@ -1,0 +1,12 @@
+# A gradient without a vector, in its box's shares, and one whose vector is in the gradient it names. StitchCraft
+# places both as a viewer does and sews red and blue in each; Ink/Stitch sews both squares in blue alone
+# (DEV-SVG-027).
+id = "inkstitch-gradient-box"
+requirements = ["REQ-SVG-008", "REQ-FILL-GRD-009"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/gradient-box.svg"
+
+[excused]
+threads = "DEV-SVG-027"
+trims = "DEV-SVG-027"
+jumps = "DEV-SVG-027"

@@ -45,7 +45,7 @@ fn element(id: &str, shape: Shape, thread: &Thread) -> Element {
 /// An automatic area `id`, the square `size` wide from `(x, y)`, sewn with `thread`, a shape of its own.
 fn square(id: &str, (x, y): (f64, f64), size: f64, thread: &Thread) -> Sewn {
     let ring = [(x, y), (x, y + size), (x + size, y + size), (x + size, y)];
-    let shape = Shape::Fill { path: through(&ring, true), rule: FillRule::NonZero };
+    let shape = Shape::Fill { path: through(&ring, true), rule: FillRule::NonZero, gradient: None };
     Sewn { element: element(id, shape, thread), area: Some(AutoParams::defaults()), automatic: true, shape: usize::MAX, part: None }
 }
 
@@ -190,7 +190,7 @@ fn a_shape_whose_paint_cant_be_found_is_boxed_by_its_path() {
     assert_eq!(boxed(line(Join::Miter { limit: 4.0 })), Some([-clipped, -clipped, 10.0 + clipped, clipped]));
     assert_eq!(boxed(line(Join::Miter { limit: 1.0 })), Some([-SQRT_2, -SQRT_2, 10.0 + SQRT_2, SQRT_2]));
     assert_eq!(boxed(line(Join::Round)), Some([-SQRT_2, -SQRT_2, 10.0 + SQRT_2, SQRT_2]));
-    let fill = |path: Path| Shape::Fill { path, rule: FillRule::NonZero };
+    let fill = |path: Path| Shape::Fill { path, rule: FillRule::NonZero, gradient: None };
     assert_eq!(boxed(fill(through(&[(0.0, 0.0), (10.0, 0.0), (10.0, 5.0)], true))), Some([0.0, 0.0, 10.0, 5.0]));
     assert_eq!(boxed(fill(Path::default())), None);
 }

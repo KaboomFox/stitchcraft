@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkstitch="http://inkstitch.org/namespace" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="100mm" height="100mm" viewBox="0 0 100 100">
+  <metadata><inkstitch:inkstitch_svg_version>4</inkstitch:inkstitch_svg_version></metadata>
+  <defs>
+    <linearGradient id="stops"><stop offset="0" style="stop-color:#ed171f"/><stop offset="1" style="stop-color:#0a55a3"/></linearGradient>
+    <linearGradient id="across" xlink:href="#stops" x1="10" y1="35" x2="90" y2="25" gradientUnits="userSpaceOnUse"/>
+  </defs>
+  <path id="parts" d="M 10,10 H 40 V 50 H 10 Z M 60,10 H 90 V 50 H 60 Z" style="fill:url(#across)"
+        inkstitch:fill_method="linear_gradient_fill" inkstitch:stop_at_ending_point="True" inkstitch:trim_after="True"/>
+  <path id="after" d="M 60,70 H 90" style="fill:none;stroke:#000000;stroke-width:0.3"/>
+</svg>
