@@ -81,6 +81,15 @@ pub(crate) enum Layer {
 }
 
 impl Layer {
+    /// Its needle points, each once, whatever its repeats: where it sews.
+    pub(crate) fn points(&self) -> impl Iterator<Item = Point> + '_ {
+        let ways: Vec<&[Point]> = match self {
+            Layer::Walk { way, .. } => vec![way],
+            Layer::Contour([a, b]) | Layer::Zigzag { ways: [a, b], .. } => vec![a, b],
+        };
+        ways.into_iter().flatten().copied()
+    }
+
     /// Its parts, each a run of needle points, as they are sewn when nothing cuts the column.
     pub(crate) fn parts(self, meter: &mut Meter) -> Result<Vec<Vec<Point>>, Exhausted> {
         Ok(match self {
@@ -261,6 +270,16 @@ mod tests {
         let Layer::Zigzag { ways: [there, back], .. } = zigzag(&sections, &params, &mut meter).unwrap() else { panic!("not a zigzag") };
         assert!(there.len() > 2, "{there:?}");
         assert_eq!(usize::try_from(Budget::DEFAULT.max_stitches - meter.stitches_left()).unwrap(), there.len() + back.len());
+    }
+
+    #[test]
+    fn a_layer_s_points_are_where_it_sews_each_once() {
+        // A walk's way once, whatever its repeats, and a contour's sides and a zigzag's ways in the order they
+        // are sewn: what `Column::left_out` judges a column on with its top stitches.
+        let (a, b) = (vec![p(0.0, 0.0), p(5.0, 0.0)], vec![p(5.0, 1.0), p(0.0, 1.0)]);
+        assert_eq!(Layer::Walk { way: a.clone(), repeats: 3 }.points().collect::<Vec<_>>(), a);
+        assert_eq!(Layer::Contour([a.clone(), b.clone()]).points().collect::<Vec<_>>(), [a.clone(), b.clone()].concat());
+        assert_eq!(Layer::Zigzag { ways: [b.clone(), a.clone()], longest: Some(2.0) }.points().collect::<Vec<_>>(), [b, a].concat());
     }
 
     #[test]

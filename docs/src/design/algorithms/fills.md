@@ -336,7 +336,12 @@ never forces locks after a layer of underlay, where assembly would after any gro
 
 From M10.15 a fill in a run of `underlays_first` sews the underlay of every part before any top rows. Its
 underlay and its top rows each start and end by their own neighbours
-([engine pipeline](../engine-pipeline.md#underlays-first)).
+([engine pipeline](../engine-pipeline.md#underlays-first)). Its underlay takes the parts nearest the needle
+first, from its start position when it has one. Each of a part's layers then ends nearest the next part,
+and the last part's nearest what the next layer offers, where the top rows would end
+(`tatami::sew::underlay_sewn`). Its top is the fill sewn without its underlay, which ends at its end
+position when it has one. Every fill method with this underlay sews it so, and a cross stitch fill, which
+has none, is sewn whole in the second pass.
 
 The underlay is sewn on the part shrunk by `fill_underlay_inset_mm`, and the top rows on the part grown by
 `expand_mm`, or shrunk where it is negative (`REQ-FILL-TAT-012`, since M5.7). A part is grown or shrunk

@@ -1,7 +1,8 @@
-# TS-17C as drawn by M10.4 and M10.13: the satin letters as drawn, and the same letters as StitchCraft's routing
-# routed them, then the network of running stitches as drawn, and the same lines as StitchCraft's routing routed
-# them, written as an SVG file of satin columns and running stitches, which both programs sew (REQ-ROUTE-008,
-# REQ-ROUTE-013).
+# TS-17C as drawn by M10.4, M10.13 and M10.15: the satin letters as drawn, and the same letters as StitchCraft's
+# routing routed them, then the network of running stitches as drawn, and the same lines as StitchCraft's routing
+# routed them, then 2 crossing satin columns as drawn, written as an SVG file of satin columns and running
+# stitches, which both programs sew (REQ-ROUTE-008, REQ-ROUTE-013). The file leaves out the same columns with
+# their underlays first, which Ink/Stitch would sew as drawn (REQ-ASM-009).
 id = "inkstitch-ts17c"
 requirements = ["REQ-ROUTE-008", "REQ-ROUTE-013"]
 kind = "inkstitch"

@@ -17,6 +17,7 @@ which VectorCraft traced ([below](#the-traced-pear)). Test inputs live in `confo
 | `ripple.svg` | An arch, half a circle 30 mm across, open at the bottom | the ripple stitch's lines and joins |
 | `e-stitch.svg` | A curved band 4 mm wide between 2 rails | the E-stitch's spacing and swapped rails |
 | `s-stitch.svg` | A curved band 6 mm wide between 2 rails | the S-stitch's spacing and split stitches, the zigzag satin's spacing and its look beside a satin column, and the satin column's spacing and underlays |
+| `crossing.svg` | 2 bands 5 mm wide and 16 mm long between 2 rails each, a bar and a post that cross at their middles | satin columns sewn as drawn and with their underlays first |
 | `half-disc.svg` | A half disc: a straight side with 2 corners, and a curve | running stitch tolerance |
 | `parallel.svg` | 14 rows 0.6 mm apart, sewn as one path | random stitch length |
 | `nodes.svg` | Straight lines and one curve | manual stitch |

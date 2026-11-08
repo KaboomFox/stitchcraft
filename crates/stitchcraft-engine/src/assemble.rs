@@ -15,20 +15,26 @@
 //! comes only after the element's last group (`REQ-ASM-007`). The plan's first colour block takes the
 //! thread of the first group sewn.
 //!
+//! **Underlays first** (M10.15). An element of a run is given as 2 layers, its underlay and its top, each in
+//! its place in the run's passes ([`Layer`]), and each joined to what is before it as any 2 groups are. The
+//! element is one element of the plan, whose stitches are in both places. Its underlay's stitches are tagged
+//! underlay, and its trim and its stop come after its top stitches alone (`REQ-ASM-009`).
+//!
 //! The plan is built in the design's coordinates. Finalize moves it so the design's origin, or the centre
 //! of its stitches, is at the hoop's centre (`REQ-ASM-005`), once it has left out the points the machine
 //! cannot sew. What the machine cannot sew — a stitch too long or too short for it, a design too large for
 //! the hoop — is finalize's to fix or report (M3.9).
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 
 use stitchcraft_core::units::at_least;
-use stitchcraft_core::{Diagnostic, Exhausted, Meter, Mm, Point};
+use stitchcraft_core::{Diagnostic, ElementId, Exhausted, Meter, Mm, Point};
 use stitchcraft_params::StitchType;
 use stitchcraft_plan::{ElementRef, PlanBuilder, Provenance, Role, StitchPlan, Thread};
 
 use crate::design::{DesignSettings, Element};
 use crate::generate::Generated;
+use crate::generators::Layer;
 use crate::locks::{Lock, tie_in, tie_off};
 
 /// A design's stitch plan, before finalize, and what assembly says about it.
@@ -44,7 +50,8 @@ pub struct Assembled {
 }
 
 /// The plan for the generated `elements`, in the order they sew, in a design with `settings`; `None` when no
-/// element has a stitch. Every needle point costs a unit of work and a stitch from `meter`.
+/// element has a stitch. An element of a run of underlays first is there twice, its underlay and its top,
+/// each where it sews. Every needle point costs a unit of work and a stitch from `meter`.
 pub fn assemble(elements: &[(&Element, Generated)], settings: &DesignSettings, meter: &mut Meter) -> Result<Option<Assembled>, Exhausted> {
     let parts: Vec<(&Element, &Generated, Vec<Threaded>)> = elements
         .iter()
@@ -61,20 +68,33 @@ pub fn assemble(elements: &[(&Element, Generated)], settings: &DesignSettings, m
         settings_said: BTreeSet::new(),
     };
     let mut shortest = Vec::with_capacity(parts.len());
+    // Each element's reference, which both layers of an element of a run share.
+    let mut references: BTreeMap<&ElementId, ElementRef> = BTreeMap::new();
     for (element, generated, groups) in &parts {
-        // Each element registered has a stitch, so the stitch budget runs out long before element
-        // references do. `ok_or` takes a value: a closure here would never run, and coverage counts a
-        // closure that never runs as an untested line.
-        let reference = assembly.builder.element(element.id.clone()).ok().ok_or(Exhausted::Stitches)?;
-        shortest.push(generated.min_stitch);
+        let reference = match references.get(&element.id) {
+            Some(&reference) => reference,
+            None => {
+                // Each element registered has a stitch, so the stitch budget runs out long before element
+                // references do. `ok_or` takes a value: a closure here would never run, and coverage counts a
+                // closure that never runs as an untested line.
+                let reference = assembly.builder.element(element.id.clone()).ok().ok_or(Exhausted::Stitches)?;
+                shortest.push(generated.min_stitch);
+                references.insert(&element.id, reference);
+                reference
+            }
+        };
+        let role = if generated.layer == Layer::Underlay { Role::Underlay } else { Role::Top };
         for (index, group) in groups.iter().enumerate() {
-            assembly.join(Group { element, generated, stitches: group.stitches, thread: group.thread, reference }, meter)?;
+            assembly.join(Group { element, generated, stitches: group.stitches, thread: group.thread, reference, role }, meter)?;
             // The trim after the element's last group is `after`'s, with its stop.
             if group.ends_block && generated.common.trim_after && index + 1 < groups.len() {
                 assembly.trim(reference, meter)?;
             }
         }
-        assembly.after(generated, reference, meter)?;
+        // An underlay's element sews its top later: its trim and its stop come after that.
+        if generated.layer != Layer::Underlay {
+            assembly.after(generated, reference, meter)?;
+        }
     }
     assembly.tie_off(meter)?;
     let Assembly { builder, warnings, .. } = assembly;
@@ -104,7 +124,7 @@ fn threaded<'a>(element: &'a Element, generated: &'a Generated) -> Vec<Threaded<
         .collect()
 }
 
-/// One group, with its element and the thread it is sewn in.
+/// One group, with its element, the thread it is sewn in and the role of its stitches.
 #[derive(Clone, Copy)]
 struct Group<'a> {
     element: &'a Element,
@@ -112,6 +132,7 @@ struct Group<'a> {
     stitches: &'a [Point],
     thread: &'a Thread,
     reference: ElementRef,
+    role: Role,
 }
 
 impl Group<'_> {
@@ -171,7 +192,7 @@ impl<'a> Assembly<'a> {
             self.builder.jump(landing, Provenance::new(group.reference, Role::Travel));
         }
         self.stitch(&tie_in, Provenance::new(group.reference, Role::Lock), meter)?;
-        self.stitch(group.stitches, Provenance::new(group.reference, Role::Top), meter)?;
+        self.stitch(group.stitches, Provenance::new(group.reference, group.role), meter)?;
         self.open = Some(group);
         Ok(())
     }

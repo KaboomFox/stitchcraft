@@ -154,6 +154,18 @@ fn each_family_installs_with_an_accepted_manifest() {
     }
 }
 
+/// Each stitch family's dialog has the toggle Underlays first, which VectorCraft's host resolves off unless
+/// the dialog turns it on (M10.15, `REQ-ASM-009`).
+#[test]
+fn req_vc_002_each_family_s_dialog_has_underlays_first_off_unless_turned_on() {
+    for family in FAMILIES {
+        let plugin = registry::install_bytes(&module(family)).unwrap();
+        let resolved = |set: Value| plugin.manifest().resolve_params(&set).unwrap().get("underlays_first").cloned();
+        assert_eq!(resolved(json!({})), Some(json!(false)), "{family}");
+        assert_eq!(resolved(json!({"underlays_first": true})), Some(json!(true)), "{family}");
+    }
+}
+
 /// A path of straight lines through `points`, open, one subpath for each list.
 fn lines(subpaths: &[&[(f64, f64)]]) -> PathData {
     let mut path = BezPath::new();

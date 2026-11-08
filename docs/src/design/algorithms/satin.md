@@ -474,7 +474,13 @@ contour and the zigzag, each one the element turns on, and all of them go into o
 stitches. From M10.15 a column in a run of `underlays_first` sews its underlays apart from its top
 stitches, each layer started and ended by its own neighbours
 ([engine pipeline](../engine-pipeline.md#underlays-first)). Each layer then follows
-[Start and end](#start-and-end) with the parts it sews.
+[Start and end](#start-and-end) with the parts it sews. The column is placed once, its top stitches
+drawing its random numbers, and the 2 layers are sewn from that placing (`generators::satin::Column`). A
+start position places the start of the underlays, and an end position the end of the top stitches. The
+top stitches run from the rails' starts whatever the centre walk's repeats, since the centre walk sews in
+the other layer. In a run, a column is left out whole when every needle point of its underlays and its
+top stitches lies within the shortest stitch of the first (`SC-W0215`). A column with no section sews
+neither layer, and says what it says when it is sewn whole (`SC-E0216`).
 
 Each underlay places pairs of points across the column as the top stitches are placed (step 1 of *Top
 stitches*), along the same sections, after any swap, reversal and push compensation. A pair moves in by
