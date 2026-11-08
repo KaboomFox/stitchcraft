@@ -685,7 +685,7 @@ sew it unlike the tutorial's flow.
 
 A photo's background traces into shapes of its own, such as turf, a fence or tyres behind a dog. The
 background rule leaves out one shape, the lowest, when it lies behind everything ([Neighbours](#neighbours)).
-So `--subject` cuts a picture's subject out before VectorCraft traces it, as spike M13.13 proposed
+So `--subject` cuts a picture's subject out before VectorCraft traces it, as spike M13.13 decided
 ([ADR-0019](adr/0019-subject-cut-out-before-tracing.md)) and M13.14 is to build (`REQ-CLI-014` to
 `REQ-CLI-019`, planned). It is off by default, and a picture given without it is traced as
 [above](#pictures-from-the-command-line).

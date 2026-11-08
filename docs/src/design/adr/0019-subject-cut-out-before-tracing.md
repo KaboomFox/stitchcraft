@@ -2,7 +2,7 @@
 
 <!-- The status line, a label and its value, which the ADR index is checked against. -->
 <!-- vale ai-tells.ColonUsage = NO -->
-**Status:** Proposed · 2026-11-08, spike M13.13
+**Status:** Accepted · 2026-11-08, after spike M13.13
 <!-- vale ai-tells.ColonUsage = YES -->
 
 ## Context

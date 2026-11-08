@@ -5,18 +5,20 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
-- M13.13, a spike: ADR-0019 proposes cutting a photo's subject out before VectorCraft traces it, as an
-  option off by default. The owner accepts it or changes it before M13.14 builds it.
-  - `--subject` on `stitch plan` and `stitch export` would make the picture's background transparent and
-    crop the picture to its subject. Image Trace leaves out transparent pixels, so the background would no
-    longer trace into shapes.
-  - MobileSAM, under the Apache-2.0 licence, would cut the subject out of a box that U²-Net-p finds or
+- M13.13, a spike: ADR-0019 decides to cut a photo's subject out before VectorCraft traces it, as an
+  option off by default. The owner accepted it on 2026-11-08, and M13.14 builds it.
+  - `--subject` on `stitch plan` and `stitch export` is to make the picture's background transparent and
+    crop the picture to its subject. Image Trace leaves out transparent pixels, so the background no
+    longer traces into shapes.
+  - MobileSAM, under the Apache-2.0 licence, cuts the subject out of a box that U²-Net-p finds or
     `--subject-box` gives, with `--subject-point` and `--not-subject` points. On the owner's 2 photos of her
     dog it kept the dog at an IoU of 0.985 and 0.988. U²-Net-p, U²-Net and IS-Net alone kept a tyre behind
-    the running dog, 18 to 20 % of the dog's area.
-  - tract would run the models in `stitch` alone. `stitch` fetches them on first use and checks them
-    against SHA-256 sums the repository pins. A bug-report bundle replays from the traced document without
-    them.
+    the running dog, 18 to 20 % of the dog's area. PhotoCraft's Remove Background, which runs without a
+    model, kept the dog at 0.594 and 0.233, with much of the yard round it.
+  - tract runs the models in `stitch` alone. `stitch` fetches them on first use from a StitchCraft release
+    and checks them against SHA-256 sums the repository pins. A bug-report bundle replays from the traced
+    document without them. `deny.toml` is to let `rand` and `getrandom` in through `tract-onnx-opl` alone,
+    an exception the owner accepted with the ADR.
   - M13.14's requirements are written as planned, `REQ-CLI-014` to `REQ-CLI-019`.
 - M10.11: guided ripples (`REQ-RIP-012` to `REQ-RIP-019`). A ripple stitch with a guide sews copies of its
   line along the guide, as Ink/Stitch's guided ripple does.
