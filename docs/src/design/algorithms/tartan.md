@@ -3,7 +3,7 @@
 <!-- implements: crates/stitchcraft-engine/src/generators/tartan/** -->
 
 A plaid woven of warp and weft, sewn as rows of running stitches across the fill (P3, M10.6). A woven
-tartan's threads cross over and under each other, so each colour shows in the stripes it is woven into,
+tartan's threads cross over and under each other, and each colour shows in the stripes it is woven into,
 both ways. Rows that slant across the stripes of both directions, taken by the warp and the weft in turns,
 give that look: where a warp stripe crosses a weft stripe of another colour, their rows alternate, and the 2
 colours mix as woven threads do. Each colour's rows sew in that colour's thread.
@@ -16,19 +16,19 @@ made for the purpose. M10.6 sews tartans without herringbones. M10.7 adds the he
 that writes setts from stripes, from Ink/Stitch's palette code or from a threadcount of the Scottish
 Register of Tartans.
 
-5 fonts of Ink/Stitch's library at `c7e3a05` sew tartan fills: Colorful, Emilio 20 tartan, Kum Tsoan
-relief, Kum Tsoan tartan and Perspective tricolore. All but the last set herringbones 1.6 to 5 mm wide on
+Colorful, Emilio 20 tartan, Kum Tsoan relief, Kum Tsoan tartan and Perspective tricolore, 5 fonts of
+Ink/Stitch's library at `c7e3a05`, sew tartan fills. All but the last set herringbones 1.6 to 5 mm wide on
 some of their shapes.
 
 ## Parameters
 
 | Key | Meaning | Default |
 |---|---|---|
-| `tartan` | the sett, an object of JSON as Ink/Stitch's tartan editor saves it | empty: Ink/Stitch's default sett |
+| `tartan` | the sett, an object of JSON as Ink/Stitch's tartan editor saves it | empty, for Ink/Stitch's default sett |
 | `tartan_angle` | the rows' angle to the stripes, in degrees | -45 |
-| `rows_per_thread` | how many rows in turn go to the warp, then to the weft | 2 |
+| `rows_per_thread` | how many rows go to the warp before as many go to the weft | 2 |
 | `herringbone_width_mm` | the width of a herringbone's bands, 0 for straight rows. M10.7 sews it | 0 |
-| `stop_at_ending_point` | every colour travels from where the piece starts and on to where it ends | off |
+| `stop_at_ending_point` | whether every colour starts where the piece starts and ends where it ends | off |
 
 A tartan reads the tatami fill's `row_spacing_mm`, `max_stitch_length_mm`, `staggers`, `skip_last` and
 `expand_mm`, its whole underlay, the fill's running stitch and its tolerance for the needle's travel, and
@@ -42,7 +42,7 @@ sett at its ends, or else it repeats. `scale` scales every width, in percent, `r
 in degrees, `offset_x` and `offset_y` move it, in millimetres, and a stripe no wider than
 `min_stripe_width` sews as a run. A key that is missing takes the value Ink/Stitch's editor starts from: no
 turn or offset, mirrored, at 100 %, and runs for stripes of 1 mm or less. The editor's other keys, such as
-`equal_warp_weft` and `output`, change nothing sewn and are passed over. Ink/Stitch stops with an error on a
+`equal_warp_weft` and `output`, don't change what is sewn and are passed over. Ink/Stitch stops with an error on a
 sett that isn't JSON or lacks a key it reads. StitchCraft takes the editor's value for a missing key, and
 skips the element for the rest, with `SC-E0323`, which says why.
 
@@ -98,10 +98,10 @@ and `offset_y`. The circle's radius is found from the piece's convex hull, by th
 method (Welzl's), its points shuffled by a fixed seed so that it is the same every time.
 
 **The stripes.** The warp's full sett is laid from the box's left side as upright bands, and the weft's from
-its top as level bands, each in turn until a band starts past the far side. Bands of one colour that meet
+its top as level bands, one after another until a band starts past the far side. Bands of one colour that meet
 are one band. The whole is turned by `rotate` degrees about the middle of the bounds, counter-clockwise in
-y-up axes, as Ink/Stitch's geometry library turns it. The canvas shows y down, so a positive turn shows
-clockwise there. StitchCraft works in the sett's own frame: it turns the piece back by the sett's angle,
+y-up axes, as Ink/Stitch's geometry library turns it. The canvas shows y down, and there a positive turn
+shows clockwise. StitchCraft works in the sett's own frame: it turns the piece back by the sett's angle,
 where each band is a slab between 2 lines square to an axis, and turns the lines it makes forward again.
 
 **The rows** run across the box at `tartan_angle` to the stripes, from its turned left side to its turned
@@ -111,16 +111,16 @@ further on than the row before's, and both its ends are needle points too. A row
 2 needle points between its ends has its ends alone. The rows go to the warp and the weft in turns of
 `rows_per_thread`. Ink/Stitch sorts each direction's rows by their starts, x first, which takes them from
 one end of the left side or the other, as the sett's angle and the rows' angle turn it. Every other row of
-a direction runs back, so its rows zigzag.
+a direction runs back, and its rows zigzag.
 
 ## A colour's lines
 
 **In each band**, each row of the band's direction that crosses it for more than half a CSS pixel gives its
 stretch inside the band, with the needle points that lie there. Each stretch is joined to the next by a
 straight line along the band's edge, in equal stitches no longer than the running stitch, unless either end
-lies within 0.005 pixel of the piece's rings. So a band's rows make one zigzag, which breaks where the rows
-reach the outline. Only the stretches that reach the piece's bounds count, with one more either side, whose
-joins may cross into it. The zigzag is cut where it leaves the piece. Where a line ends inside the piece,
+lies within 0.005 pixel of the piece's rings. So a band's rows make one zigzag, which breaks at the
+outline. Only the stretches that touch the piece's bounds count, with one more either side, whose joins may
+cross into it. The zigzag is cut where it leaves the piece. Where a line ends inside the piece,
 more than 0.05 pixel from its rings, it runs on from that end along the band's edge to the nearest ring, in
 the running stitch's length.
 
@@ -139,8 +139,8 @@ colours.
 
 **The colours sewn as fills** come in the order above. Their last colour that has runs too moves to the end
 of them, so the thread doesn't change between its rows and its runs. Each colour's lines are routed as a
-tatami fill's rows are routed ([routing](fills.md#3-routing-every-segment-once)), each sewn once, the needle
-travelling along the piece's outline between them, never under the rows. A colour goes from where the colour
+tatami fill's rows are routed ([routing](fills.md#3-routing-every-segment-once)) and sewn once. Between
+them the needle runs along the piece's outline, never under the rows. A colour goes from where the colour
 before it ended, or the needle, towards the end that the next part or element offers. The travel before
 its first line and after its last is left out, so it starts and ends with its rows. Without a needle or an
 end, the outline's second point stands for it, as in Ink/Stitch. Its geometry library rebuilds the outline,
@@ -153,7 +153,7 @@ piece's colours began, after its underlay, and travels on to the end.
 routed the same way, from where the colour before ended towards the end. Their travel is kept, and
 `bean_stitch_repeats` sews each of their stitches back and forth but the travel's.
 
-**Several parts.** Each part sews its underlay and colours in turn. Then, as Ink/Stitch sorts a tartan's
+**Several parts.** Each part sews its underlay and then its colours. Then, as Ink/Stitch sorts a tartan's
 groups, its underlays and colours sewn as fills are ordered by where their colour first comes among them,
 then its runs the same way, so that each thread sews in one stretch. An underlay in a colour a fill sews too
 sorts with that colour.
@@ -168,9 +168,9 @@ from its settings alone, before it is sewn: its own thread for the underlay, the
 finalize would leave it out. Where the rows cross a stripe sewn as a fill in a stretch shorter than the
 shortest stitch, a warp stripe's width over the cosine of the rows' angle or a weft stripe's over its sine,
 `SC-W0327` says needle points of it are left out. A herringbone width above 0 sews the rows straight, with
-`SC-W0324`, until M10.7. Every step of the sett, every row and its needle points, every band each row is
-tested against and every stitch is charged to the budget before memory is taken for it, so a sett too fine
-for the budget ends the element with `SC-E0004`.
+`SC-W0324`, until M10.7. The budget is charged for the sett's steps, the rows and their needle points, the
+bands each row is tested against and the stitches, before memory is taken for them. A sett too fine for the
+budget ends the element with `SC-E0004`.
 
 A preview too costly to sew shows each colour's lines and runs, without the stitches.
 
@@ -200,7 +200,7 @@ testing](../../plan/machine-testing.md)). Each underlay sews in a colour of its 
 stripe's, so the underlay is a colour block of its own: in the first stripe's colour, the jump from the
 underlay to the rows would leave its thread under them on the reference machine. Every stripe is one of
 Brother's threads, so both programs' files name each thread as itself. VectorCraft's Test Sheet filter
-doesn't draw TS-17B, as its fill dialog holds no sett.
+doesn't draw TS-17B, as its fill dialog has no field for a sett.
 
 ## Properties (conformance)
 

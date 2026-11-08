@@ -170,8 +170,11 @@ impl Frame {
     }
 }
 
+/// The least x and y of some points, and the greatest.
+type Bounds = ([f64; 2], [f64; 2]);
+
 /// The least x and y of `points` and the greatest, `None` for no points. A unit of `meter` for each point.
-fn bounds(points: &[Point], meter: &mut Meter) -> Result<Option<([f64; 2], [f64; 2])>, Exhausted> {
+fn bounds(points: &[Point], meter: &mut Meter) -> Result<Option<Bounds>, Exhausted> {
     meter.charge(u64::try_from(points.len()).unwrap_or(u64::MAX))?;
     let Some(first) = points.first() else { return Ok(None) };
     let (mut lo, mut hi) = ([first.x(), first.y()], [first.x(), first.y()]);
@@ -350,7 +353,7 @@ struct Laying<'l> {
     tartan: &'l Tartan,
     /// The piece, in the sett's frame, its bounds and its rings.
     piece: &'l Polygon,
-    reach: ([f64; 2], [f64; 2]),
+    reach: Bounds,
     rings: Vec<&'l [Point]>,
     direction: Direction,
     /// The sett's turn, which takes the lines back to the piece's frame.

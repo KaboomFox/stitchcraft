@@ -86,7 +86,7 @@ fn in_band(v: f64, reach: f64, offset: f64, from: f64) -> bool {
 /// Whether `v` lies on an edge of such a band.
 fn on_edge(v: f64, from: f64) -> bool {
     let at = (v + REACH - from).rem_euclid(5.0);
-    at < NEAR || at > 5.0 - NEAR
+    !(NEAR..=5.0 - NEAR).contains(&at)
 }
 
 /// The row whose line `q` lies on, and whether it lies on one.
@@ -154,6 +154,26 @@ fn req_fill_trt_004_rows_lie_a_spacing_apart_and_go_to_the_warp_and_the_weft_in_
 }
 
 #[test]
+fn req_fill_trt_004_a_row_s_needle_points_lie_the_element_s_longest_stitch_apart() {
+    // The stitches along each row, from one needle point to the next on the same row: a red stretch crosses
+    // its band over 7.07 mm, long enough for whole stitches.
+    let along = |outcome: &PlanOutcome| -> Vec<f64> {
+        let red = sewn_in(outcome, RED);
+        red.windows(2).filter(|w| row(w[0]).1 && row(w[1]).1 && row(w[0]).0 == row(w[1]).0).map(|w| w[0].distance(w[1])).collect()
+    };
+    let near = |lengths: &[f64], length: f64| lengths.iter().filter(|l| (*l - length).abs() < 0.01).count();
+    // By default the rows' stitches are 4 mm long, as Ink/Stitch's fill's are.
+    let default = along(&planned(vec![tartan(&[("tartan", RED_BLUE)])]));
+    assert!(near(&default, 4.0) > 100, "{}", near(&default, 4.0));
+    // The element's own longest stitch sets them: 3 mm, and none longer, but where a needle point closer than
+    // the shortest stitch to the one before is left out.
+    let three = along(&planned(vec![tartan(&[("tartan", RED_BLUE), ("max_stitch_length_mm", "3")])]));
+    assert!(near(&three, 3.0) > 100, "{}", near(&three, 3.0));
+    assert_eq!(near(&three, 4.0), 0);
+    assert!(three.iter().all(|l| *l < 3.0 + 0.5 + NEAR), "{:?}", three.iter().copied().fold(0.0, f64::max));
+}
+
+#[test]
 fn req_fill_trt_005_a_band_s_rows_are_joined_along_its_edges() {
     let outcome = planned(vec![tartan(&[("tartan", RED_BLUE)])]);
     let red = sewn_in(&outcome, RED);
@@ -206,7 +226,7 @@ fn req_fill_trt_007_narrow_stripes_sew_as_runs_after_the_fills_with_bean_stitch(
     let reach = 28.284_271_247_461_9 + 5.0;
     let on_run = |v: f64| {
         let at = (v + reach - 5.25).rem_euclid(5.75);
-        at < NEAR || at > 5.75 - NEAR
+        !(NEAR..=5.75 - NEAR).contains(&at)
     };
     let plain = planned(vec![tartan(&[("tartan", runs)])]);
     assert_eq!(threads(&plain), [OWN.color, RED, BLUE]);

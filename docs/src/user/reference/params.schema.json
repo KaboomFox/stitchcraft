@@ -1063,7 +1063,7 @@
     },
     "max_stitch_length_mm": {
       "default": null,
-      "description": "Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as its split method says. Empty, a stitch is split only where it is longer than the machine sews. A tatami fill sews its rows in stitches this long, and a contour fill its rings. A meander or circular fill's underlay sews its rows so.",
+      "description": "Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as its split method says. Empty, a stitch is split only where it is longer than the machine sews. A tatami fill sews its rows in stitches this long, and a contour fill its rings. A meander or circular fill's underlay sews its rows so, and a tartan fill its rows and its weft's runs.",
       "maximum": 25.0,
       "minimum": 0.1,
       "title": "Longest stitch",
@@ -1081,7 +1081,8 @@
           "tatami_fill",
           "contour_fill",
           "meander_fill",
-          "circular_fill"
+          "circular_fill",
+          "tartan_fill"
         ],
         "family_defaults": {
           "fill": 4.0

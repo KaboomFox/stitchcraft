@@ -29,7 +29,7 @@ JSON. Its `palette` lists the stripes in order, each a colour in brackets and th
 ```
 
 - A colour is `#` and 6 or 3 hexadecimal digits, or a colour name of SVG such as `navy`.
-- A `?` before the width leaves the stripe unsewn, so the fabric shows there. A `*` sews it in the colour
+- A `?` before the width leaves the stripe unsewn, and the fabric shows there. A `*` sews it in the colour
   of the stripe before it.
 - A `|` parts the warp's stripes from the weft's. Without one, the weft is the warp.
 - With `symmetry` on, the sett is mirrored at its first and last stripes, the ones Ink/Stitch's editor marks
@@ -46,7 +46,7 @@ without a sett sews Ink/Stitch's default one: stripes 5 mm wide of a thread almo
 unsewn between them. `SC-W0325` says so.
 
 The VectorCraft plug-in's fill dialog offers the tartan fill, with its row angle, its rows per thread, its
-herringbone width and where its colours end, but it holds no sett before M10.7
+herringbone width and where its colours end, but it has no field for a sett before M10.7
 ([VectorCraft integration](../../design/vectorcraft-integration.md#a-tartans-sett)). So a tartan fill made
 in VectorCraft sews the default sett. A file from Ink/Stitch keeps its setts, and `stitch plan` sews them.
 
@@ -65,7 +65,7 @@ A stripe no wider than `min_stripe_width` is too narrow for rows. It is sewn as 
 its own thread, after every colour's rows, and the stripes beside it share its width. A run along the warp
 sews in stitches no longer than `running_stitch_length_mm`, and one along the weft in stitches no longer
 than `max_stitch_length_mm`, as Ink/Stitch sews them. `bean_stitch_repeats` sews each stitch of a run back
-and forth, for a bolder line. The needle travels between runs along the outline, in the run's colour.
+and forth, for a bolder line. From one run to the next the needle follows the outline, in the run's colour.
 
 <!-- shot: tartan-runs -->
 | Stripes of 0.5 and 0.8 mm as runs | Turned 30°, at 150 % | 4 rows per thread |
@@ -77,9 +77,9 @@ and forth, for a bolder line. The needle travels between runs along the outline,
 
 Before its colours, each part of the fill sews the tatami fill's underlay in the element's own thread
 ([tatami fill](tatami-fill.md#underlay)). Then each colour sews its rows in its own thread: the warp's
-colours in the order its stripes first reach them, then the weft's others, and the runs last. A colour
-starts and ends with its rows, and the needle travels along the outline between them. With
-`stop_at_ending_point` on, every colour travels on from where the fill starts to where it ends instead.
+colours in the order they first appear across its stripes, then the weft's others, and the runs last. A
+colour starts and ends with its rows, and between its rows the needle follows the outline. With
+`stop_at_ending_point` on, every colour starts where the fill starts and ends where it ends instead.
 Each colour is a colour block of its own, with a trim after it when the fill's `trim_after` is on. A fill
 in several parts sews each part's underlay and colours, and then sorts them by colour, so that each thread
 is sewn once.

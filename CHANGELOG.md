@@ -11,20 +11,22 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     a colour and a width, for warp and weft alike or apart, mirrored or repeated, scaled, turned and moved.
     The list the editor writes for a repeated sett reads too. Stripes no wider than `min_stripe_width` sew
     as runs along their middles, after the fills.
-  - Rows at `tartan_angle` to the stripes go to the warp and the weft in turns of `rows_per_thread`. Each
-    band's rows are joined along its edges, and each colour's lines are routed as a tatami fill's rows,
-    after the tatami fill's underlay in the element's own thread. Each colour sews in its own thread, a
-    colour block trimmed after with `trim_after`, and `stop_at_ending_point` keeps its travel to the end.
+  - Rows at `tartan_angle` to the stripes go to the warp and the weft in turns of `rows_per_thread`, their
+    needle points the longest stitch apart. Each band's rows are joined along its edges, and each colour's
+    lines are routed as a tatami fill's rows, after the tatami fill's underlay in the element's own thread.
+    Each colour sews in its own thread, a colour block trimmed after with `trim_after`, and with
+    `stop_at_ending_point` each colour ends where the fill ends.
   - New settings: `tartan`, `tartan_angle`, `rows_per_thread`, `herringbone_width_mm` and
-    `stop_at_ending_point`. A tartan also reads the tatami fill's `skip_last`, as Ink/Stitch's does, and its
-    runs read `bean_stitch_repeats`. New codes: `SC-E0323`, `SC-W0324`, `SC-W0325`, `SC-W0326`,
-    `SC-W0327` and `SC-W0328`. A herringbone sews straight rows until M10.7, and says so.
+    `stop_at_ending_point`. A tartan also reads the tatami fill's `skip_last`, as Ink/Stitch's does, its
+    runs read `bean_stitch_repeats`, and `max_stitch_length_mm` applies to it. New codes: `SC-E0323`,
+    `SC-W0324`, `SC-W0325`, `SC-W0326`, `SC-W0327` and `SC-W0328`. A herringbone sews straight rows until
+    M10.7, and says so.
   - VectorCraft's fill dialog offers the tartan's numbers, but no sett before M10.7, so a tartan made there
     sews Ink/Stitch's default sett. The compatibility contract lists the `tartan` attribute as registered.
   - TS-17B is drawn with 5 tartans for MC-12, and the differential sews them and 4 files of tartans in
     Ink/Stitch too: they agree by every measure. Its wxPython stand-in raises `PyNoAppError` for
     `wx.Colour`, as wxPython does without an app, so Ink/Stitch reads a tartan's colours as from the
-    command line. A user page shows tartan fills in pictures. Golden added: `TS-17B.pes`.
+    command line. A user page has pictures of tartan fills. Golden added: `TS-17B.pes`.
 - M10.4: auto-satin routing. `stitchcraft_engine::route` routes satin columns, and the strokes among them,
   as Ink/Stitch's Auto-Route Satin Columns does. Each column is cut into pieces at most 1 mm long along its
   centre line, and the groups of pieces are joined by the shortest jumps in all. A stretch passed twice is
