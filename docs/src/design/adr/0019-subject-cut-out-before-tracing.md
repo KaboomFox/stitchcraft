@@ -35,9 +35,9 @@ What was measured, on 2026-11-08:
 - **The reference masks** keep the pixels that at least 2 of 3 masks keep. The 3 are SAM ViT-B and
   MobileSAM, each given a box drawn round the dog by hand, and IS-Net. Each reference was then checked by
   eye, region by region in crops at three quarters of the photo's size, the ears, the tail, the legs and
-  the paws among them, and the edge beside the near tyre. Neither had to be corrected. The dog covers 12.9 %
-  of the first photo and 11.3 % of the second. Where fur thins out the masks follow those 3 models, so a
-  difference of 1 % or so lies within their error.
+  the paws among them, and the edge beside the near tyre. Both passed that check unchanged. The dog
+  covers 12.9 % of the first photo and 11.3 % of the second. Where fur thins out the masks follow those
+  3 models, so a difference of 1 % or so lies within their error.
 - **The measures** are a cut-out's intersection over union with the reference mask (IoU), and the share of
   the dog's area it keeps wrongly and the share it loses wrongly. Each mask counts where it is at least a
   half.
