@@ -120,7 +120,10 @@ fn req_asm_009_the_top_stitches_take_the_random_numbers_they_take_outside_a_run(
 
 #[test]
 fn req_asm_009_the_run_s_last_element_trims_and_stops_after_its_top_stitches() {
-    let trimmed = planned(crossing(&[FIRST], &[FIRST, ("trim_after", "true"), ("stop_after", "true")], [&RED, &RED])).plan.unwrap();
+    let outcome = planned(crossing(&[FIRST], &[FIRST, ("trim_after", "true"), ("stop_after", "true")], [&RED, &RED]));
+    // Its top sews, so nothing is left out, and nothing is said.
+    assert!(outcome.diagnostics.is_empty(), "{:?}", messages(&outcome));
+    let trimmed = outcome.plan.unwrap();
     let entries: Vec<_> = trimmed.blocks.iter().flat_map(|block| &block.stitches).collect();
     let last_top = entries.iter().rposition(|s| s.origin.role == Role::Top).unwrap();
     let commands: Vec<(usize, StitchKind)> = entries.iter().enumerate().filter(|(_, s)| s.kind.is_command()).map(|(i, s)| (i, s.kind)).collect();
@@ -232,6 +235,23 @@ fn req_asm_009_a_route_sews_its_pieces_underlays_along_it_then_its_top_stitches(
 }
 
 #[test]
+fn req_asm_009_a_column_with_no_section_in_a_run_is_said_of_as_when_drawn() {
+    // A rung from the first rail's start to the second rail's end leaves the second column no section to sew
+    // (SC-E0216). In a run it sews nothing, and is said of as it is said of sewn as drawn, its trim left out.
+    let diagonal = polylines(&[&[(0.0, 20.0), (10.0, 20.0)], &[(0.0, 24.0), (10.0, 24.0)], &[(-5.0, 18.0), (15.0, 26.0)]]);
+    let codes = |first: &[(&str, &str)]| {
+        let [across, _] = <[Element; 2]>::try_from(crossing(first, &[], [&RED, &RED])).unwrap();
+        let none = along("none", diagonal.clone(), &RED, &[&COLUMN[..], first, &[("trim_after", "true")]].concat());
+        let outcome = planned(vec![across, none]);
+        (outcome.diagnostics.iter().map(|d| d.code).filter(|code| *code != Code::UnderlaysFirstAlone).collect::<Vec<_>>(), outcome.plan.unwrap())
+    };
+    let ((run, planned_run), (drawn, _)) = (codes(&[FIRST]), codes(&[]));
+    assert_eq!(drawn, [Code::SatinNoSection, Code::TrimOrStopLeftOut]);
+    assert_eq!(run, drawn);
+    assert_eq!(layers(&planned_run), owned(&[("across", Role::Underlay), ("across", Role::Top)]));
+}
+
+#[test]
 fn req_asm_009_an_element_of_a_run_that_sews_nothing_leaves_the_others_as_they_are() {
     let [across, _] = <[Element; 2]>::try_from(crossing(&[FIRST], &[], [&RED, &RED])).unwrap();
     let trimmed = Element { params: across.params.iter().chain([("trim_after", "true")]).collect(), ..across.clone() };
@@ -265,12 +285,18 @@ fn req_asm_009_layers_share_their_element_s_work_and_spend_the_design_s_stitches
     let elements = vec![column("long", (0.0, 0.0), (80.0, 0.0), &RED, &[FIRST]), column("short", (40.0, -5.0), (40.0, 5.0), &RED, &[FIRST])];
     let design = Design::new(elements, DesignSettings::default()).unwrap();
     let with = |work: u64| plan(&design, REFERENCE, &Budget { max_work: work, ..Budget::DEFAULT });
-    let sews_long = |work: u64| with(work).plan.is_some_and(|plan| plan.elements.iter().any(|id| id.as_str() == "long"));
+    // The least work the long column needs: the least with which its planning doesn't say it needs more. One
+    // unit less runs out in its top, which needs its work last, once its underlay is sewn.
+    let short_of_work = |work: u64| {
+        let said = with(work).diagnostics;
+        said.iter().any(|d| d.code == Code::BudgetExhausted && d.element.as_ref().is_some_and(|id| id.as_str() == "long"))
+    };
     let (mut low, mut high) = (1_u64, Budget::DEFAULT.max_work);
     while low < high {
         let middle = low + (high - low) / 2;
-        if sews_long(middle) { high = middle } else { low = middle + 1 }
+        if short_of_work(middle) { low = middle + 1 } else { high = middle }
     }
+    assert!(with(low).plan.is_some_and(|plan| plan.elements.iter().any(|id| id.as_str() == "long")), "with {low} the long column sews");
     let short_of = with(low - 1);
     let said: Vec<String> = short_of.diagnostics.iter().map(ToString::to_string).collect();
     assert!(said.iter().any(|s| s.starts_with("error SC-E0004: Planning this element needed more than the work budget")), "{said:?}");

@@ -273,6 +273,16 @@ mod tests {
     }
 
     #[test]
+    fn a_layer_s_points_are_where_it_sews_each_once() {
+        // A walk's way once, whatever its repeats, and a contour's sides and a zigzag's ways in the order they
+        // are sewn: what `Column::left_out` judges a column on with its top stitches.
+        let (a, b) = (vec![p(0.0, 0.0), p(5.0, 0.0)], vec![p(5.0, 1.0), p(0.0, 1.0)]);
+        assert_eq!(Layer::Walk { way: a.clone(), repeats: 3 }.points().collect::<Vec<_>>(), a);
+        assert_eq!(Layer::Contour([a.clone(), b.clone()]).points().collect::<Vec<_>>(), [a.clone(), b.clone()].concat());
+        assert_eq!(Layer::Zigzag { ways: [b.clone(), a.clone()], longest: Some(2.0) }.points().collect::<Vec<_>>(), [b, a].concat());
+    }
+
+    #[test]
     fn parts_are_joined_by_equal_stitches_no_longer_than_the_travel() {
         let meter = &mut Budget::DEFAULT.meter();
         let parts = vec![vec![p(0.0, 0.0), p(1.0, 0.0)], vec![], vec![p(1.0, 5.0)], vec![p(1.0, 6.0)]];

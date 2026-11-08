@@ -95,8 +95,6 @@ pub(crate) struct Layered<'a> {
     sews: Sews,
     /// What is left of the element's work once its underlay is sewn: its layers share it.
     work: u64,
-    /// Whether its underlay sewed a stitch.
-    sewed: bool,
 }
 
 /// What an element of a run sews from.
@@ -127,7 +125,7 @@ pub(crate) fn underlay<'a>(
         let Some(mut layered) = read else { return Ok(None) };
         let generated = layered.sew(Layer::Underlay, neighbours, &mut diagnostics, &mut meter)?;
         meter.settle_stitches(left, generated.groups.iter().map(Vec::len).sum())?;
-        (layered.sewed, layered.work) = (generated.groups.iter().any(|group| !group.is_empty()), meter.work_left());
+        layered.work = meter.work_left();
         Ok(Some((generated, layered)))
     });
     let over = matches!(sewn, Err(Exhausted::Stitches));
@@ -175,13 +173,14 @@ impl<'a> Layered<'a> {
         };
         let (Some(common), Some(Shared { min_stitch, .. }), Some(sews)) = (common, sewing.shared, sews) else { return Ok(None) };
         let (stitch_type, hints) = (sewing.stitch_type, element.hints);
-        Ok(Some(Layered { element, common, stitch_type, min_stitch, hints, rng, sews, work: 0, sewed: false }))
+        Ok(Some(Layered { element, common, stitch_type, min_stitch, hints, rng, sews, work: 0 }))
     }
 
     /// Its top, sewn between its `neighbours` with what is left of its work and the design's `left` stitches,
     /// as [`underlay`] sews its underlay. With its work spent, the element is skipped (`SC-E0004`), and
-    /// `None` is generated: its underlay is then left out too. Its trim or stop is left out with `SC-W0505`
-    /// when neither layer sews a stitch.
+    /// `None` is generated: its underlay is then left out too. Its trim or stop goes after its top, and is
+    /// left out with `SC-W0505` when its top sews no stitch, as when the element is skipped whole: the element
+    /// then sews nothing, as its underlay sews nothing when its top does (a column with no section).
     pub(crate) fn top(mut self, neighbours: &Neighbours, budget: &Budget, left: u32) -> Result<Generation, Vec<Diagnostic>> {
         let element = self.element;
         let mut diagnostics = Vec::new();
@@ -192,7 +191,7 @@ impl<'a> Layered<'a> {
         });
         let over = matches!(sewn, Err(Exhausted::Stitches));
         let generated = within(element, budget, &mut diagnostics, sewn);
-        if !self.sewed && !generated.as_ref().is_some_and(|g| g.groups.iter().any(|group| !group.is_empty())) {
+        if !generated.as_ref().is_some_and(|g| g.groups.iter().any(|group| !group.is_empty())) {
             diagnostics.extend(trim_or_stop_left_out(element));
         }
         let diagnostics = named(element, diagnostics);
