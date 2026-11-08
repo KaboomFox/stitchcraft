@@ -163,12 +163,12 @@ Ink/Stitch's Auto-Route Running Stitch routes a selection of strokes in these st
    last time: the route runs out along a branch under, and back along it on top.
 5. **Elements.** Pieces in a row make one element, which ends at a jump and where the route turns from on
    top to under or back. It also ends before a piece on top from another stroke, or a piece under from a
-   stroke whose run under the others sews otherwise.
+   stroke whose run under the others has other settings (step 6).
 6. **Settings.** An element on top is a copy of its stroke with the stroke's settings, but an even number
    of repeats is lowered by 1, so that it ends at its far end. One under the others is a running stitch
    with its stroke's running stitch length and tolerance, or a manual stitch where the stroke is one,
-   without repeats or bean stitch. Each has its stroke's thread and stroke, and none of its clips,
-   positions or target point.
+   without repeats or bean stitch. It keeps its stroke's `underlays_first` too ([order](#order)). Each has
+   its stroke's thread and stroke, and none of its clips, positions or target point.
 7. **Trims.** With Trim jump stitches, off as the dialog opens, a jump longer than 0.75 mm trims the thread
    after the element before it, and the elements under the others right after a trim are left out. The
    route doesn't trim at its end, but where it ends with a long jump back, that jump trims.
@@ -235,6 +235,11 @@ underlays along the route, and the needle then goes back to the first of them fo
 has no underlay, and sews in the second pass, before the satin that covers it
 ([underlays first](engine-pipeline.md#underlays-first)).
 
+An auto-run route's run under the others keeps its stroke's `underlays_first` for the same reason. Where
+the route runs under the others along 2 strokes that differ in it, it makes 2 elements, each with its own
+stroke's setting. Each element of the route then sets it where its stroke does. A stroke has no underlay,
+and the route's elements sew in the second pass in their order.
+
 ## Requirements
 
 The routing's requirements are an area of their own, `REQ-ROUTE-…`, and the filters' are among
@@ -252,7 +257,7 @@ The routing's requirements are an area of their own, `REQ-ROUTE-…`, and the fi
 | `REQ-ROUTE-008` | TS-17C's letters, routed by Ink/Stitch's tool and by the function, sew alike by every measure of the differential | M10.4 |
 | `REQ-ROUTE-009` | Auto-run routing takes the strokes, each subpath a line, and leaves the rest as they are | M10.13 |
 | `REQ-ROUTE-010` | Lines are cut where they cross, touch or run along each other, and at their nearest points within 50 CSS pixels, with Add nodes at intersections | M10.13 |
-| `REQ-ROUTE-011` | A piece passed twice runs under the others the first time, and each element has its stroke's settings, a run under the others its lengths alone | M10.13 |
+| `REQ-ROUTE-011` | A piece passed twice runs under the others the first time, and each element has its stroke's settings, a run under the others its lengths and `underlays_first` | M10.13 |
 | `REQ-ROUTE-012` | The pieces are routed as satin columns' are, a jump longer than 0.75 mm trims with Trim jump stitches, and the elements are named AutoRun and AutoRun Underpath | M10.13 |
 | `REQ-ROUTE-013` | TS-17C's network of lines, routed by Ink/Stitch's tool and by the function, sews alike by every measure of the differential | M10.13 |
 | `REQ-VC-018` | The Auto-Route Satin Columns filter replaces the selection with the route in one undo step, within a heavy filter's budget | M10.4 |

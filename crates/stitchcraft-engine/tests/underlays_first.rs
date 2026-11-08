@@ -249,8 +249,8 @@ fn req_asm_009_an_auto_run_route_sews_in_one_run_with_the_columns_around_it() {
     assert!(routed.diagnostics.is_empty(), "{:?}", routed.diagnostics);
     assert_eq!(routed.pieces.iter().filter(|piece| piece.under).count(), 2, "out along each arm under the others");
     let [across, down] = <[Element; 2]>::try_from(crossing(&[FIRST], &[FIRST], [&RED, &RED])).unwrap();
-    let route = routed.pieces.iter().map(|piece| piece.element.clone());
-    let outcome = planned(std::iter::once(across).chain(route).chain([down]).collect());
+    let pieces = routed.pieces.iter().map(|piece| piece.element.clone());
+    let outcome = planned(std::iter::once(across).chain(pieces).chain([down]).collect());
     let alone = outcome.diagnostics.iter().filter(|d| d.code == Code::UnderlaysFirstAlone).map(|d| d.element.as_ref().unwrap().as_str());
     assert_eq!(alone.collect::<Vec<_>>(), Vec::<&str>::new());
     let tops = routed.pieces.iter().map(|piece| (piece.element.id.as_str(), Role::Top));
