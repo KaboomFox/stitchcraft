@@ -87,7 +87,7 @@ pub struct AutoEffect {
 pub fn read_effect(family: Family, input: &[u8], params: &[u8], budget: &Budget) -> Result<Effect, Diagnostic> {
     let Given { path, rule, strokes, mut params, preview_level, .. } = given(input, params, budget)?;
     let (shape, stroked) = match family {
-        Family::Fill => (Shape::Fill { path, rule }, false),
+        Family::Fill => (Shape::Fill { path, rule, gradient: None }, false),
         Family::Stroke | Family::Satin => {
             params.set(SATIN_COLUMN, if family == Family::Satin { "true" } else { "false" });
             match followed(&strokes) {
@@ -106,7 +106,7 @@ pub fn read_auto_effect(input: &[u8], params: &[u8], budget: &Budget) -> Result<
     let Given { path, rule, fills, strokes, params, preview_level } = given(input, params, budget)?;
     let mut elements = Vec::new();
     if fills.iter().flatten().any(Paint::paints) {
-        elements.push(element(FILL, Shape::Fill { path: path.clone(), rule }, params.clone(), true)?);
+        elements.push(element(FILL, Shape::Fill { path: path.clone(), rule, gradient: None }, params.clone(), true)?);
     }
     if let Some((_, width, join, cap)) = followed(&strokes) {
         elements.push(element(STROKE, Shape::Stroke { path, width, join, cap }, params, true)?);
@@ -286,7 +286,7 @@ mod tests {
         let params =
             br#"{"row_spacing_mm": 0.3, "underpath": false, "fill_method": "tatami_fill", "preview_level": "rows", "_context": {"mode": "effect"}}"#;
         let fill = read_effect(Family::Fill, &input(&square(), "evenodd"), params, &Budget::DEFAULT).unwrap();
-        assert!(matches!(&fill.element.shape, Shape::Fill { rule: FillRule::EvenOdd, path } if path.subpaths.len() == 1));
+        assert!(matches!(&fill.element.shape, Shape::Fill { rule: FillRule::EvenOdd, path, .. } if path.subpaths.len() == 1));
         let read: Vec<(&str, &str)> = fill.element.params.iter().collect();
         assert_eq!(read, [("fill_method", "tatami_fill"), ("row_spacing_mm", "0.3"), ("underpath", "false")]);
         // The preview level is the plug-in's, beside the element.

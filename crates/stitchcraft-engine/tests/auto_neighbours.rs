@@ -46,7 +46,7 @@ fn ids(elements: &[Element]) -> Vec<&str> {
 
 /// The area the fill `element` sews.
 fn region_of(element: &Element) -> Region {
-    let Shape::Fill { path, rule } = &element.shape else { panic!("`{}` is not a fill: {:?}", element.id, element.shape) };
+    let Shape::Fill { path, rule, .. } = &element.shape else { panic!("`{}` is not a fill: {:?}", element.id, element.shape) };
     region::build(path, *rule, &mut Budget::DEFAULT.meter()).unwrap().region
 }
 

@@ -448,7 +448,7 @@ fn prepare<'a>(
 ) -> Result<Option<Prepared<'a>>, Exhausted> {
     let set = &element.params;
     let region = match &element.shape {
-        Shape::Fill { path, rule } => {
+        Shape::Fill { path, rule, .. } => {
             let Some(true) = setting::<Toggle>(set, FillParams::SPECS, "fill", diagnostics) else { return Ok(None) };
             let built = region::build_clipped(path, *rule, &element.clips, meter)?;
             diagnostics.extend(built.diagnostics);
@@ -977,7 +977,7 @@ pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -
         {
             return None;
         }
-        Shape::Fill { path, rule } => {
+        Shape::Fill { path, rule, .. } => {
             let parts = region::build_clipped(path, *rule, &element.clips, &mut budget.meter()).ok()?.region.parts;
             return (!parts.is_empty()).then_some(Approach::Area(parts));
         }
@@ -1065,7 +1065,11 @@ mod tests {
         // long would sew stitches it merges. Its longest stitch is raised to 0.6 mm, and its underlay's
         // with it, as a running stitch's length is.
         let segments = [p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0)].map(Segment::Line).to_vec();
-        let square = Shape::Fill { path: Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments, closed: true }] }, rule: FillRule::NonZero };
+        let square = Shape::Fill {
+            path: Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments, closed: true }] },
+            rule: FillRule::NonZero,
+            gradient: None,
+        };
         let sewn = |params: &[(&str, &str)]| {
             generate(
                 &element(square.clone(), params),
@@ -1104,7 +1108,11 @@ mod tests {
     #[test]
     fn a_fill_s_top_rows_are_laid_as_its_top_stitches_are_without_sewing_it() {
         let segments = [p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0)].map(Segment::Line).to_vec();
-        let square = Shape::Fill { path: Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments, closed: true }] }, rule: FillRule::NonZero };
+        let square = Shape::Fill {
+            path: Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments, closed: true }] },
+            rule: FillRule::NonZero,
+            gradient: None,
+        };
         let laid = |shape: &Shape, params: &[(&str, &str)], budget: &Budget| {
             rows(&element(shape.clone(), params), &DesignSettings::default(), stitchcraft_plan::profiles::REFERENCE, budget)
         };
@@ -1141,7 +1149,11 @@ mod tests {
         // Nor has a meander fill: its path through its tile, one path in the square, as the element's seed
         // lays it, so that another seed lays another over a square 20 mm a side.
         let segments = [p(20.0, 0.0), p(20.0, 20.0), p(0.0, 20.0)].map(Segment::Line).to_vec();
-        let large = Shape::Fill { path: Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments, closed: true }] }, rule: FillRule::NonZero };
+        let large = Shape::Fill {
+            path: Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments, closed: true }] },
+            rule: FillRule::NonZero,
+            gradient: None,
+        };
         let meander = |seed: &str| laid(&large, &[("fill_method", "meander_fill"), ("random_seed", seed)], &Budget::DEFAULT);
         let wandered = meander("1");
         let path = wandered.segments.clone().unwrap_or_default();
@@ -1218,7 +1230,11 @@ mod tests {
     #[test]
     fn a_tartan_s_threads_are_read_from_its_settings_and_every_other_element_s_is_its_own() {
         let segments = [p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0)].map(Segment::Line).to_vec();
-        let square = Shape::Fill { path: Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments, closed: true }] }, rule: FillRule::NonZero };
+        let square = Shape::Fill {
+            path: Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments, closed: true }] },
+            rule: FillRule::NonZero,
+            gradient: None,
+        };
         let (black, red, blue) = (Rgb::new(0, 0, 0), Rgb::new(255, 0, 0), Rgb::new(0, 0, 255));
         assert_eq!(colours(&element(square.clone(), &[])), [black]);
         let line = Shape::stroke(Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0))], closed: false }] });
@@ -1259,7 +1275,7 @@ mod tests {
     #[test]
     fn the_settings_that_choose_it_give_an_element_s_stitch_type() {
         let path = Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0))], closed: false }] };
-        let fill = || Shape::Fill { path: path.clone(), rule: FillRule::NonZero };
+        let fill = || Shape::Fill { path: path.clone(), rule: FillRule::NonZero, gradient: None };
         let wide = || Shape::Stroke { path: path.clone(), width: Mm::new(3.0).unwrap(), join: Join::UNSET, cap: Cap::Butt };
         let chosen = |shape: Shape, params: &[(&str, &str)]| {
             let mut diagnostics = Vec::new();
@@ -1294,7 +1310,11 @@ mod tests {
         // A circular fill has no rows either: a preview that can't afford its stitches shows the pieces of its
         // spiral, circles 1 mm apart round the middle of the 10 mm square, cut by its sides.
         let segments = [p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0)].map(Segment::Line).to_vec();
-        let square = Shape::Fill { path: Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments, closed: true }] }, rule: FillRule::NonZero };
+        let square = Shape::Fill {
+            path: Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments, closed: true }] },
+            rule: FillRule::NonZero,
+            gradient: None,
+        };
         let params = [("fill_method", "circular_fill"), ("row_spacing_mm", "1")];
         let laid = rows(&element(square, &params), &DesignSettings::default(), stitchcraft_plan::profiles::REFERENCE, &Budget::DEFAULT);
         assert_eq!(laid.diagnostics, Vec::new());
@@ -1312,7 +1332,11 @@ mod tests {
         // A cross stitch fill has no rows: its preview shows the 2 diagonals of each cross. A 4 mm square on
         // the canvas's 2 mm grid covers 4 cells whole, and each sews a cross.
         let segments = [p(4.0, 0.0), p(4.0, 4.0), p(0.0, 4.0)].map(Segment::Line).to_vec();
-        let square = Shape::Fill { path: Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments, closed: true }] }, rule: FillRule::NonZero };
+        let square = Shape::Fill {
+            path: Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments, closed: true }] },
+            rule: FillRule::NonZero,
+            gradient: None,
+        };
         let params = [("fill_method", "cross_stitch"), ("pattern_size_mm", "2")];
         let laid = rows(&element(square, &params), &DesignSettings::default(), stitchcraft_plan::profiles::REFERENCE, &Budget::DEFAULT);
         assert_eq!(laid.diagnostics, Vec::new());

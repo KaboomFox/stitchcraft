@@ -400,7 +400,7 @@ fn as_fill(element: Element) -> Element {
     let start = element.shape.path().points().next().unwrap();
     let (x, y) = (start.x(), start.y());
     let square = polylines(&[&[(x, y), (x + 10.0, y), (x + 10.0, y + 10.0), (x, y + 10.0), (x, y)]]);
-    Element { shape: Shape::Fill { path: square, rule: Default::default() }, ..element }
+    Element { shape: Shape::Fill { path: square, rule: Default::default(), gradient: None }, ..element }
 }
 
 /// The needle points the element `index` sews in `outcome`'s plan, locks left out.

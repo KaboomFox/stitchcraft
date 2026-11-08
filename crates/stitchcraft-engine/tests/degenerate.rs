@@ -37,7 +37,7 @@ fn elements(path: &Path) -> Vec<(String, Element)> {
     let mut all = Vec::new();
     for method in FILL_METHODS {
         for rule in [FillRule::NonZero, FillRule::EvenOdd] {
-            let shape = Shape::Fill { path: path.clone(), rule };
+            let shape = Shape::Fill { path: path.clone(), rule, gradient: None };
             all.push((format!("a fill by {} ({rule:?})", method.id), element(shape, &[("fill_method", method.id)])));
         }
     }

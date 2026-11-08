@@ -168,7 +168,7 @@ pub fn fill(id: &str, parts: &[&[(f64, f64)]], thread: &Thread, params: &[(&str,
     Element {
         id: ElementId::new(id).unwrap(),
         name: None,
-        shape: Shape::Fill { path: rings(parts), rule: FillRule::NonZero },
+        shape: Shape::Fill { path: rings(parts), rule: FillRule::NonZero, gradient: None },
         thread: thread.clone(),
         params: params.iter().copied().collect::<ParamSet>(),
         automatic: false,

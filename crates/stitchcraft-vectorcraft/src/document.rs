@@ -868,7 +868,7 @@ impl Reader {
         for item in node.appearance.items.iter().filter(|item| item.kind == "fill" && drawn(item)) {
             let Some(thread) = self.thread(label, item.paint.as_ref()) else { continue };
             fills += 1;
-            let shape = Shape::Fill { path: self.copy(path)?, rule };
+            let shape = Shape::Fill { path: self.copy(path)?, rule, gradient: None };
             self.element(node, label, &rank("fill", fills), shape, thread, params.clone(), automatic, hints)?;
         }
         // VectorCraft paints the items in order, the first lowest, and the fills are sewn first.
@@ -936,7 +936,7 @@ impl Reader {
                 self.followed(label, *family, &set, path, painting);
             }
             let shape = match family {
-                Family::Fill => Shape::Fill { path: self.copy(path)?, rule },
+                Family::Fill => Shape::Fill { path: self.copy(path)?, rule, gradient: None },
                 Family::Stroke | Family::Satin => {
                     set.set(SATIN_COLUMN, if *family == Family::Satin { "true" } else { "false" });
                     let (width, join, cap) = style.unwrap_or_else(|| {
