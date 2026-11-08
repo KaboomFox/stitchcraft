@@ -148,7 +148,7 @@ fn sewn(
             Some(after) => nearest_pair(&polygon.rings().collect::<Vec<_>>(), &after.rings().collect::<Vec<_>>(), meter)?.map(|(on, _)| on),
             None => end,
         };
-        let below = thinned(underlay(&parts, polygon, &mut needle, &mut said, rng, meter)?, tartan.travel.min_stitch);
+        let below = thinned(underlay(&parts, polygon, &mut needle, None, &mut said, rng, meter)?, tartan.travel.min_stitch);
         groups.extend(below.into_iter().map(|run| Group { colour: tartan.own, kind: Kind::Underlay, run }));
         needle = groups.last().and_then(|group| group.run.last().copied()).or(needle);
         let (pieces, gone) = pieces(polygon, tartan.expand, &mut said.warnings, meter)?;

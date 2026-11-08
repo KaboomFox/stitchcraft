@@ -54,9 +54,14 @@ const SKIPPED: &[StitchType] = &[StitchType::TatamiFill, StitchType::CircularFil
 /// The stitch types its rows, its expand and its underlay apply to: a contour fill takes them as Ink/Stitch's
 /// does, sewing its rings the row spacing apart over the part expanded, after the same underlay, a meander
 /// fill sews its path over the part expanded after the same underlay, a circular fill its spiral, its
-/// circles the row spacing apart, and a tartan fill its rows, staggered as a tatami fill's are.
-const UNDERLAID: &[StitchType] =
+/// circles the row spacing apart, and a tartan fill its rows, staggered as a tatami fill's are. An element
+/// of a run of underlays first sews its underlay apart when it is one of them (`crate::underlays_first`).
+pub(crate) const UNDERLAID: &[StitchType] =
     &[StitchType::TatamiFill, StitchType::ContourFill, StitchType::MeanderFill, StitchType::CircularFill, StitchType::TartanFill];
+
+/// The key of the setting that turns a fill's underlay on ([`TatamiParams::fill_underlay`]), which the order
+/// of a run of underlays first reads alone (`crate::underlays_first`).
+pub(crate) const FILL_UNDERLAY: &str = "fill_underlay";
 
 /// The stitch types each part of whose area grows by `expand_mm`: those [`UNDERLAID`], and a cross stitch
 /// fill, whose cells the grown part covers, as in Ink/Stitch.

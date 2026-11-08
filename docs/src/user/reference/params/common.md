@@ -199,3 +199,19 @@ gets its own.
   - **DEV-SAT-002.** Random satin widths, spacing and splits are drawn from StitchCraft's generator (SplitMix64, seeded from random_seed, or from the element's id when it has none), so the values differ from Ink/Stitch's for the same seed. The ranges are Ink/Stitch's, and so is when a width or a spacing is drawn. Ink/Stitch draws each stitch's splits from a generator of the stitch's own, where StitchCraft draws them from the element's, in the order the stitches are sewn.
   - **DEV-FILL-004.** A tatami fill's random stitch lengths are drawn from StitchCraft's generator (SplitMix64, seeded from random_seed, or from the element's id when it has none), in the order its row segments are sewn, so the values differ from Ink/Stitch's for the same seed. The ranges are Ink/Stitch's: the first point a share of the longest stitch from the segment's start, and each next one a stitch on, longer or shorter by up to the jitter.
   - **DEV-FILL-020.** A meander's path draws its lines and pairs from StitchCraft's generator (SplitMix64, seeded from random_seed, or from the element's id when it has none), and its search for a detour tries the points farthest from the detour's end first, so the path differs from Ink/Stitch's for the same seed. The network's points lie where the tile puts them, where Ink/Stitch rounds each to a whole CSS pixel.
+
+## Sewing order
+
+### `underlays_first`
+
+**Underlays first.** Sew this element's underlay with the underlays of the elements next to it that set this too and
+sew in its thread, before any of their top stitches. Where satin columns cross, or a border lies
+over a fill, every underlay then lies under every top stitch. The underlays sew in the elements'
+order, then their top stitches in the same order. A trim or a stop after an element ends the
+elements sewn together, and an element alone sews as it does without this. Ink/Stitch doesn't
+read it, and sews each element's underlay just before its own top stitches.
+
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
+- **Default:** `false`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version

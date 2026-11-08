@@ -18,6 +18,7 @@
     - [Satin columns and presets in VectorCraft](user/how-to/vectorcraft-columns-and-presets.md)
     - [Route satin columns](user/how-to/route-satin-columns.md)
     - [Route running stitches](user/how-to/route-running-stitches.md)
+    - [Sew underlays first](user/how-to/sew-underlays-first.md)
     - [Report a bug](user/how-to/report-a-bug.md)
   - [Stitch types](user/stitches/README.md)
     - [Running stitch](user/stitches/running.md)

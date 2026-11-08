@@ -191,7 +191,7 @@ fn sewn(region: &Region, contour: &Contour, needle: Option<Point>, rng: &mut Spl
         top: contour.travel,
         ends_near: false,
     };
-    let sewn = parts_sewn(region, &parts, needle, None, rng, meter, &mut top)?;
+    let sewn = parts_sewn(region, &parts, needle, None, rng, meter, Some(&mut top))?;
     let mut warnings = sewn.warnings;
     warnings.extend(tally.said());
     warnings.extend(sewn.tally.said());

@@ -209,7 +209,7 @@ kind = "stitch"
 sheet = "TS-17C"
 style = "realistic"
 scale = 4.0
-alt = "TS-17C as it will sew. In blue, the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E's arms. Below them the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next. At the bottom, in red, a network of 6 bean-stitched lines, twice: on the left sewn as drawn, line by line, with a jump thread from each line to the next, and on the right routed, sewn in one go but for the jump to the line that crosses itself, above the others, and back."
+alt = "TS-17C as it will sew. In blue, the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E's arms. Below them the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next. Below the routed letters, in red, a network of 6 bean-stitched lines, twice: on the left sewn as drawn, line by line, with a jump thread from each line to the next, and on the right routed, sewn in one go but for the jump to the line that crosses itself, above the others, and back. At the bottom, in red, 2 crosses of satin columns 5 mm wide, a bar and a post each, as drawn on the left and with their underlays first on the right, which look alike from above."
 
 [[shot]]
 id = "testsheet-ts-17b"
@@ -241,6 +241,17 @@ style = "simple"
 scale = 6.0
 alt = "TS-17C's network of 6 running stitches drawn as thin lines, twice: on the left as drawn, and on the right as Auto-Route Running Stitch routes them with Trim jump stitches on. A rail along the bottom, a post across it, a brace from the post down to the rail, a hook curving up from the rail, a line that crosses itself above them, and a tick beside the rail. Dashed lines are jumps, and orange rings mark lock stitches. As drawn, the machine jumps from each line to the next. Routed, it jumps only out to the line apart and back, and trims before each of those jumps. It reaches the tick, 0.5 mm off the rail, with a stitch."
 
+[[shot]]
+id = "underlays-first"
+kind = "stitch"
+fixture = "docs/fixtures/crossing.svg"
+style = "realistic"
+scale = 20.0
+alt = "2 red satin columns 5 mm wide and 16 mm long that cross, a bar and a post, each with a contour and a zigzag underlay, sewn with their stitches 1.2 mm apart so that the underlays show. As drawn, where they cross, the post's zigzag underlay lies on the bar's top stitches. With their underlays first, the bar's top stitches lie on both underlays there, under the post's"
+panels = [
+  { caption = "As drawn", params = { satin_column = "true", contour_underlay = "true", zigzag_underlay = "true", zigzag_spacing_mm = "1.2" } },
+  { caption = "Underlays first", params = { satin_column = "true", contour_underlay = "true", zigzag_underlay = "true", zigzag_spacing_mm = "1.2", underlays_first = "true" } },
+]
 
 [[shot]]
 id = "testsheet-ts-16"
