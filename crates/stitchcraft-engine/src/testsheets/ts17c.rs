@@ -23,7 +23,7 @@
 //! so the route cuts them at their nearest points. The differential routes the lines on the left with
 //! Ink/Stitch's tool too (`REQ-ROUTE-013`).
 //!
-//! M10.8's part, below the network: 3 ripple stitches in green ([`ripples`]), one of each kind
+//! M10.8's part, below the network: 3 ripple stitches in green ([`RIPPLES`]), one of each kind
 //! (`REQ-RIP-001`). On the left, a rainbow: a column drawn with rails and rungs between 2 arches, whose 7 lines
 //! run back and forth from the outer arch to the inner one. In the middle, a wave whose 8 copies shrink to a
 //! target point above it, as Ink/Stitch's target point command places it, each meeting the next at a point.
