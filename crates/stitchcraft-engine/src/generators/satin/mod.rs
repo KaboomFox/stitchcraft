@@ -22,9 +22,12 @@
 //! A path of 1 subpath is the column's centre line, and its rails and rungs are made from it as Ink/Stitch
 //! makes them (`normalize::centre_line`), then recognized like any others. [`drawn`] makes such a column
 //! into one drawn with those rails and rungs, which sews as it does: what a host's Stroke to Satin makes.
+//! `cut` cuts a column into pieces drawn so too, each sewing the column's pairs along it, which routing
+//! sews in an order of its own (`crate::route`).
 
 mod column;
 mod compensation;
+pub(crate) mod cut;
 pub mod drawn;
 mod ends;
 mod lie;

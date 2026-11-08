@@ -15,6 +15,7 @@ use std::path::Path;
 
 use serde::Deserialize;
 
+use super::routing::{self, Routing};
 use crate::util::{self, Findings};
 
 pub const REQUIREMENTS: &str = "conformance/requirements.toml";
@@ -74,6 +75,8 @@ struct CaseFile {
     #[serde(default)]
     letters: Option<Letters>,
     #[serde(default)]
+    route: Option<toml::Table>,
+    #[serde(default)]
     sample: Option<usize>,
 }
 
@@ -113,8 +116,9 @@ pub enum Spec {
     Oracle { files: Vec<String> },
     /// Sew `subject` with a pinned Ink/Stitch and with StitchCraft, and compare the machine files by measures
     /// (L3, the Ink/Stitch differential). `excused` names the measures a deviation explains, each with the
-    /// deviation's id.
-    Inkstitch { subject: Subject, excused: BTreeMap<String, String> },
+    /// deviation's id. With `route`, each program first routes the sheet's elements it names, and sews its
+    /// own route (`routing`).
+    Inkstitch { subject: Subject, excused: BTreeMap<String, String>, route: Option<Routing> },
     /// Compare the centre lines of `subject`'s shapes that automatic digitizing sews wholly as running
     /// stitches with the lines a pinned Ink/Stitch's Fill to Stroke draws (L3, the Ink/Stitch differential,
     /// `centre_lines`).
@@ -165,6 +169,18 @@ pub fn load_cases(root: &Path, findings: &mut Findings) -> Vec<DataCase> {
             }
         };
         let excused = case.excused;
+        let route = match case.route.as_ref().map(routing::read) {
+            Some(Ok(route)) if case.kind == "inkstitch" && case.sheet.is_some() => Some(route),
+            Some(Ok(_)) => {
+                findings.error(format!("{file}: only an inkstitch case of a sheet routes, with `[route]`"));
+                continue;
+            }
+            Some(Err(e)) => {
+                findings.error(format!("{file}: {e}"));
+                continue;
+            }
+            None => None,
+        };
         if case.kind == "centre-lines" {
             let subject = match (case.sheet, case.design, case.letters, case.profile, case.expect, case.files, excused) {
                 (Some(sheet), None, None, None, None, None, None) => Subject::Sheet(sheet),
@@ -201,10 +217,10 @@ pub fn load_cases(root: &Path, findings: &mut Findings) -> Vec<DataCase> {
             ("plan", None, Some(design), Some(profile), Some(expect), None) if excused.is_none() => Spec::Plan { design, profile, expect },
             ("oracle", None, None, None, None, Some(files)) if !files.is_empty() && excused.is_none() => Spec::Oracle { files },
             ("inkstitch", None, Some(design), None, None, None) => {
-                Spec::Inkstitch { subject: Subject::File(design), excused: excused.unwrap_or_default() }
+                Spec::Inkstitch { subject: Subject::File(design), excused: excused.unwrap_or_default(), route }
             }
             ("inkstitch", Some(sheet), None, None, None, None) => {
-                Spec::Inkstitch { subject: Subject::Sheet(sheet), excused: excused.unwrap_or_default() }
+                Spec::Inkstitch { subject: Subject::Sheet(sheet), excused: excused.unwrap_or_default(), route }
             }
             ("testsheet", ..) => {
                 findings.error(format!("{file}: a testsheet case needs `sheet`, `profile` and `[expect]`, and nothing else"));
@@ -219,7 +235,8 @@ pub fn load_cases(root: &Path, findings: &mut Findings) -> Vec<DataCase> {
                 continue;
             }
             ("inkstitch", ..) => {
-                findings.error(format!("{file}: an inkstitch case needs `design` or `sheet`, and may have `[excused]`, and nothing else"));
+                findings
+                    .error(format!("{file}: an inkstitch case needs `design` or `sheet`, and may have `[excused]` and `[route]`, and nothing else"));
                 continue;
             }
             (other, ..) => {
