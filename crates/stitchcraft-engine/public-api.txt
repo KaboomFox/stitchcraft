@@ -848,6 +848,7 @@ pub mod stitchcraft_engine::testsheets::ts17c
 pub const stitchcraft_engine::testsheets::ts17c::BELOW: f64
 pub const stitchcraft_engine::testsheets::ts17c::BESIDE: f64
 pub const stitchcraft_engine::testsheets::ts17c::CROSSING: [&str; 2]
+pub const stitchcraft_engine::testsheets::ts17c::GUIDED: [&str; 5]
 pub const stitchcraft_engine::testsheets::ts17c::LETTERS: [&str; 11]
 pub const stitchcraft_engine::testsheets::ts17c::LINES: [&str; 6]
 pub const stitchcraft_engine::testsheets::ts17c::RIPPLES: [&str; 3]
