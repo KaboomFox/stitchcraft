@@ -18,6 +18,10 @@
 //!
 //! **One run.** A spiral's lines, and the others without `flip_copies`, are one running stitch through all
 //! their points in order.
+//!
+//! **Through their own points.** With `manual_pattern_placement` each line's points are its needle points,
+//! every other line sewn from its end with `flip_copies`, from the first. A straight run of even stitches no
+//! longer than the first stitch length joins each line to the next (`REQ-RIP-016`).
 
 use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::units::{MM_PER_SVG_PX, at_least};
@@ -50,6 +54,9 @@ pub(super) struct Sewing<'a> {
     pub(super) point: bool,
     /// How many lines `skip_start` left out, which the point join counts every other line from.
     pub(super) skip_start: usize,
+    /// Whether every other line is sewn from its end (`flip_copies`): a grid's lines are sewn so only with
+    /// it, and a ripple's lines one at a time only with it.
+    pub(super) flip: bool,
 }
 
 impl Sewing<'_> {
@@ -66,7 +73,7 @@ pub(super) fn one_at_a_time(lines: &[Vec<Point>], sewing: &Sewing, meter: &mut M
     for (i, line) in lines.iter().enumerate() {
         // A line of 1 point, from a column of 1 pair, is left out.
         let [first, .., last] = line.as_slice() else { continue };
-        let back = if sewing.point { (i + sewing.skip_start) % 2 == 1 } else { i % 2 == 1 };
+        let back = sewing.flip && if sewing.point { (i + sewing.skip_start) % 2 == 1 } else { i % 2 == 1 };
         let stitched = if sewing.staggers == 0.0 {
             let ordered: Vec<Point> = if back { line.iter().rev().copied().collect() } else { line.clone() };
             if line.iter().all(|point| point == first) { vec![*first] } else { sewing.along(&ordered, i, sewing.jitter, meter)? }
@@ -92,6 +99,35 @@ pub(super) fn one_at_a_time(lines: &[Vec<Point>], sewing: &Sewing, meter: &mut M
 /// `lines` sewn as one run: a running stitch through all their points in order.
 pub(super) fn one_run(lines: &[Vec<Point>], sewing: &Sewing, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
     sewing.along(&lines.concat(), 0, sewing.jitter, meter)
+}
+
+/// `lines` sewn through their own points, as the module says, each run joining 2 lines cut into even
+/// stitches no longer than `length`. Each point costs a unit of `meter`'s work, and every needle point a
+/// stitch.
+pub(super) fn manual(lines: &[Vec<Point>], flip: bool, length: f64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+    let mut run: Vec<Point> = Vec::new();
+    for (i, line) in lines.iter().enumerate() {
+        meter.charge(u64::try_from(line.len()).unwrap_or(u64::MAX))?;
+        let ordered: Vec<Point> = if flip && i % 2 == 0 { line.iter().rev().copied().collect() } else { line.clone() };
+        if let (Some(&from), Some(&to)) = (run.last(), ordered.first()) {
+            run.extend(between(from, to, length));
+        }
+        run.extend(ordered);
+    }
+    meter.charge_stitches(u32::try_from(run.len()).unwrap_or(u32::MAX))?;
+    Ok(run)
+}
+
+/// The points that cut the straight line from `from` to `to` into the fewest even stitches no longer than
+/// `length`, as GEOS densifies a line: none where it is that short already.
+#[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss, clippy::cast_precision_loss)] // A count of stitches, at least 1.
+fn between(from: Point, to: Point, length: f64) -> Vec<Point> {
+    let parts = (from.distance(to) / length).ceil();
+    if !(parts > 1.0 && parts.is_finite()) {
+        return Vec::new();
+    }
+    let parts = parts as u64;
+    (1..parts).map(|k| from.lerp(to, k as f64 / parts as f64)).collect()
 }
 
 /// The needle points of `line`, the `i`-th sewn, from its start, staggered as the module says. A line of no
