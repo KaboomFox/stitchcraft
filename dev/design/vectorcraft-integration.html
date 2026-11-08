@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-7c1797ad.js";
+            window.path_to_searchindex_js = "../searchindex-540bc9d0.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-58fb2aa1.js"></script>
+        <script src="../toc-01637e9f.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -630,7 +630,8 @@ put the effect on the paths themselves. Objects named <code>stitch:route-start</
 the paths give the route’s ends (<a href="routing.html#start-and-end">start and end</a>).</p>
 <p><strong>What they write.</strong> A column’s piece is a compound path of its rails and rungs with the column’s satin
 effect, drawn as Stroke to Satin draws a column. A stroke’s stretch, and a run under the others, is a path
-with the stroke effect. Each is painted with its element’s stroke and named as Ink/Stitch names it, and
+with the stroke effect, which for a run under a column keeps the column’s <code>underlays_first</code>
+(<a href="routing.html#order">order</a>). Each is painted with its element’s stroke and named as Ink/Stitch names it, and
 Trim jump stitches turns on <code>trim_after</code> in the effect of the piece before a long jump. In one undo step,
 the pieces replace the paths they come from and the markers used. A filter can’t make a group, where
 Ink/Stitch puts its route in a new group after the last element. So the pieces go in their sewing order

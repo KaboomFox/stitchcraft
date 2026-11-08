@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-7c1797ad.js";
+            window.path_to_searchindex_js = "../../searchindex-540bc9d0.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-58fb2aa1.js"></script>
+        <script src="../../toc-01637e9f.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -245,6 +245,7 @@
 <tr><td><a href="#sc-w0503"><code>SC-W0503</code></a></td><td>Warning</td><td>Custom lock cannot be sewn as written</td></tr>
 <tr><td><a href="#sc-i0504"><code>SC-I0504</code></a></td><td>Info</td><td>Stitches shorter than the shortest stitch merged</td></tr>
 <tr><td><a href="#sc-w0505"><code>SC-W0505</code></a></td><td>Warning</td><td>Trim or stop after an element that sews nothing; left out</td></tr>
+<tr><td><a href="#sc-i0506"><code>SC-I0506</code></a></td><td>Info</td><td>Underlays first joins no run; the element sews as without it</td></tr>
 <tr><td><a href="#sc-e0601"><code>SC-E0601</code></a></td><td>Error</td><td>Too many colour changes for the file format</td></tr>
 <tr><td><a href="#sc-e0602"><code>SC-E0602</code></a></td><td>Error</td><td>Design too large for the file format</td></tr>
 <tr><td><a href="#sc-e0603"><code>SC-E0603</code></a></td><td>Error</td><td>Machine file could not be read</td></tr>
@@ -727,6 +728,17 @@ stop commands), but it sews no stitch, so there is no place for the trim or the 
 out, as Ink/Stitch leaves it out. Another message says why the element sews nothing, such as an
 automatic area that the areas sewn after it cover whole (<code>SC-I0904</code>).</p>
 <p>Make the element sew, or set the trim or stop on the element before it.</p>
+<h2 id="sc-i0506"><a class="header" href="#sc-i0506">SC-I0506</a></h2>
+<p><strong>Info</strong> — Underlays first joins no run; the element sews as without it</p>
+<p>The element sets <code>underlays_first</code>, but its setting joins no run, so it sews its underlay just before
+its top stitches, as it does without the setting. A run is 2 or more elements next to each other in
+sewing order that set it and sew in one thread, with no trim or stop between them. The run sews all
+their underlays first, then their top stitches. This element is alone: the elements next to it don’t
+set it, or sew in another thread, or a trim or a stop parts them. An element sewn in several threads
+is in no run either.</p>
+<p>The message says which. Set <code>underlays_first</code> on the elements that cross or overlap this one too,
+give them its thread, or move the trim or the stop between them. Nothing needs doing if the element
+should sew as it does.</p>
 <h2 id="sc-e0601"><a class="header" href="#sc-e0601">SC-E0601</a></h2>
 <p><strong>Error</strong> — Too many colour changes for the file format</p>
 <p>The file format can record only a limited number of colour changes and stops (PES: 255). This

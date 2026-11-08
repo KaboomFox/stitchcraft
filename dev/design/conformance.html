@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-7c1797ad.js";
+            window.path_to_searchindex_js = "../searchindex-540bc9d0.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-58fb2aa1.js"></script>
+        <script src="../toc-01637e9f.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -469,12 +469,14 @@ version. A case may name a test sheet drawn as a design instead (<code>sheet</co
 of the elements StitchCraft sews the sheet with, written with their parameters, their start, end and
 target positions as Ink/Stitch’s commands and their clips as clip paths, the design’s origin and stop
 position as commands too, and its turn on export (<code>stitchcraft_testkit::inkstitch</code>), which StitchCraft’s
-reader reads back unchanged (<code>REQ-PRM-003</code>). An element a sheet draws as a clone of another is written as
-a <code>&lt;use&gt;</code> of it, and each command in a group with its connector, as Ink/Stitch’s Attach Commands writes
-them, since Ink/Stitch moves a command its clone copies only from a group. Automatic digitizing chooses
-ordinary elements with Ink/Stitch’s parameters, so Ink/Stitch can sew what StitchCraft chose, and the
-TS-13 sheets check StitchCraft’s stitches of those choices against Ink/Stitch’s (<code>REQ-AUTO-021</code>). TS-11B
-checks the contour fills so, each strategy and join style among them (<code>REQ-FILL-CON-008</code>), and its
+reader reads back unchanged (<code>REQ-PRM-003</code>). The file leaves out an element that sets a setting of
+StitchCraft’s own that its stitch type reads, which Ink/Stitch would pass over and sew otherwise
+(<code>sewn_alike</code>). So TS-17C’s file has no crossing columns with their underlays first. An element a sheet
+draws as a clone of another is written as a <code>&lt;use&gt;</code> of it, and each command in a group with its
+connector, as Ink/Stitch’s Attach Commands writes them, since Ink/Stitch moves a command its clone copies
+only from a group. Automatic digitizing chooses ordinary elements with Ink/Stitch’s parameters, so
+Ink/Stitch can sew what StitchCraft chose, and the TS-13 sheets check StitchCraft’s stitches of those
+choices against Ink/Stitch’s (<code>REQ-AUTO-021</code>). TS-11B checks the contour fills so, each strategy and join style among them (<code>REQ-FILL-CON-008</code>), and its
 circular fills (<code>REQ-FILL-CIR-007</code>). TS-11A checks the zigzag strokes (<code>REQ-RUN-013</code>), and the
 E-stitches, S-stitches and zigzag satins (<code>REQ-SAT-029</code>), along straights and round curves. TS-17A checks
 the simple crosses of cross stitch, on grids of 2 and 3 mm with 2 and 4 threads, flipped, and over a
@@ -495,7 +497,7 @@ routes the same elements with the same options, and StitchCraft sews its route. 
 measured as any case’s. The <code>route-ts17c</code> cases route TS-17C’s letters as drawn, once with the options at
 their defaults and once with Preserve order on and trims off. The <code>route-ts17c-lines</code> cases route its
 network of running stitches as drawn, once with the options at their defaults and once each with Trim jump
-stitches on, Preserve order on and Add nodes at intersections off. <code>ts17c</code> sews the whole sheet, whose
+stitches on, Preserve order on and Add nodes at intersections off. <code>ts17c</code> sews the sheet’s file, whose
 lower letters and right-hand lines StitchCraft routed, in both programs.</p>
 <p><strong>Centre lines.</strong> Sewing what StitchCraft chose can’t find a choice that is wrong: TS-13B’s small T sewed
 a Γ, the left arm of its bar left out of its centre line, and the differential agreed by every measure.

@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-7c1797ad.js";
+            window.path_to_searchindex_js = "../../searchindex-540bc9d0.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-58fb2aa1.js"></script>
+        <script src="../../toc-01637e9f.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -612,7 +612,13 @@ contour and the zigzag, each one the element turns on, and all of them go into o
 stitches. From M10.15 a column in a run of <code>underlays_first</code> sews its underlays apart from its top
 stitches, each layer started and ended by its own neighbours
 (<a href="../engine-pipeline.html#underlays-first">engine pipeline</a>). Each layer then follows
-<a href="#start-and-end">Start and end</a> with the parts it sews.</p>
+<a href="#start-and-end">Start and end</a> with the parts it sews. The column is placed once, its top stitches
+drawing its random numbers, and the 2 layers are sewn from that placing (<code>generators::satin::Column</code>). A
+start position places the start of the underlays, and an end position the end of the top stitches. The
+top stitches run from the rails’ starts whatever the centre walk’s repeats, since the centre walk sews in
+the other layer. In a run, a column is left out whole when every needle point of its underlays and its
+top stitches lies within the shortest stitch of the first (<code>SC-W0215</code>). A column with no section sews
+neither layer, and says what it says when it is sewn whole (<code>SC-E0216</code>).</p>
 <p>Each underlay places pairs of points across the column as the top stitches are placed (step 1 of <em>Top
 stitches</em>), along the same sections, after any swap, reversal and push compensation. A pair moves in by
 its underlay’s insets as negative pull compensation moves it, and nothing varies at random, so turning an

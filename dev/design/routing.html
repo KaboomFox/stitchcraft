@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-7c1797ad.js";
+            window.path_to_searchindex_js = "../searchindex-540bc9d0.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-58fb2aa1.js"></script>
+        <script src="../toc-01637e9f.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -292,8 +292,8 @@ the centre line. Runs in a row along one element are one running stitch. A colum
 column’s settings, but an odd number of centre walk repeats is lowered by 1, to no fewer than 2, so that
 the piece sews from its start (<a href="algorithms/satin.html#underlays">underlays</a>). A run under a column takes the
 column’s running stitch length, or else its centre walk’s or its contour’s stitch length, its
-shortest jump and its bean stitch repeats, where the column sets them. A stroke’s stretch takes the
-stroke’s.</li>
+shortest jump, its bean stitch repeats and its <code>underlays_first</code>, where the column sets them. A
+stroke’s stretch takes the stroke’s.</li>
 <li><strong>Trims.</strong> With Trim jump stitches, a jump that runs more than 1 mm outside the 2 elements it joins
 trims the thread after the piece before it. A column counts as its rails, lines that hide only what
 runs along them, and a stroke as the convex hull of its subpaths, so a jump exactly 1 mm long between 2
@@ -399,9 +399,11 @@ text’s order in lettering. M13.3 orders the automatic elements, and with <code
 by the shapes each overlaps in the whole design (<a href="image-to-embroidery.html#sewing-order">sewing order</a>). A
 routed design is drawn in its sewing order, which <code>stitch plan</code> keeps. <code>--sort-colours</code> moves routed
 pieces as it moves the other elements with settings, and isn’t meant for a routed design.</p>
-<p>A column’s piece keeps <code>underlays_first</code> with the rest of its column’s settings, and a run has no
-underlay. Pieces in one thread that set it sew their underlays along the route, and the needle then goes
-back to the first of them for the top stitches (<a href="engine-pipeline.html#underlays-first">underlays first</a>).</p>
+<p>A column’s piece keeps <code>underlays_first</code> with the rest of its column’s settings, and a run under the column
+keeps it too, so that the run doesn’t part the pieces around it. Pieces in one thread that set it sew their
+underlays along the route, and the needle then goes back to the first of them for the top stitches. A run
+has no underlay, and sews in the second pass, before the satin that covers it
+(<a href="engine-pipeline.html#underlays-first">underlays first</a>).</p>
 <h2 id="requirements"><a class="header" href="#requirements">Requirements</a></h2>
 <p>The routing’s requirements are an area of their own, <code>REQ-ROUTE-…</code>, and the filters’ are among
 <code>REQ-VC-…</code>:</p>

@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-7c1797ad.js";
+            window.path_to_searchindex_js = "../searchindex-540bc9d0.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-58fb2aa1.js"></script>
+        <script src="../toc-01637e9f.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -337,6 +337,14 @@ the empty list, which <code>ParamGroup::automatic</code> tells. No family’s de
 requires each to be StitchCraft’s own, since Ink/Stitch digitizes nothing automatically, to apply to no
 stitch type of its own, and to have a key no other declaration has. The reference pages say they apply to automatic
 elements, and the JSON Schema marks each with <code>x-stitchcraft.automatic</code>.</p>
+<h3 id="settings-of-stitchcrafts-own-that-stitch-types-read"><a class="header" href="#settings-of-stitchcrafts-own-that-stitch-types-read">Settings of StitchCraft’s own that stitch types read</a></h3>
+<p>From M10.15, <code>underlays_first</code> is one of the settings every stitch type shares, declared in
+<code>CommonParams</code> with StitchCraft’s origin, off by default and experimental
+(<a href="engine-pipeline.html#underlays-first">underlays first</a>). Each stitch family’s dialog in VectorCraft shows
+it, as it shows the others of <code>CommonParams</code>. Its key is in Ink/Stitch’s namespace in an SVG file, where
+Ink/Stitch passes it over (<a href="svg-input.html#settings-of-a-shape">SVG input</a>). Should a later Ink/Stitch
+declare a setting of that name, the contract’s check below fails, and a migration renames StitchCraft’s
+(<a href="#versioning-and-migration">versioning</a>).</p>
 <h3 id="completeness-req-prm-001"><a class="header" href="#completeness-req-prm-001">Completeness (REQ-PRM-001)</a></h3>
 <p>A declaration that compiles can still be wrong: an empty range, a default outside it, a repeated option,
 a condition on a parameter that does not exist or that an element could not read it by. <code>stitchcraft_params::audit</code> lists every such problem, and
