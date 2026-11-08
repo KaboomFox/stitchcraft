@@ -66,7 +66,7 @@ roadmap.
 **Digitized**
 
 <!-- shot: auto-pear -->
-![The traced pear digitized automatically. Its 3 greens sew as tatami fills, with satin columns at the narrow ends of the olive and dark olive bands. Its stem sews as a satin column and a running stitch, and the light grey square is left out. Thin threads run straight from the stem to the bands' ends, 4 jumps that the machine doesn't cut.](../../images/generated/auto-pear.png)
+![The traced pear digitized automatically. Its 3 greens sew as tatami fills, with satin columns at the narrow ends of the olive and dark olive bands. Its stem sews as 2 satin columns side by side, olive and dark olive, and the light grey square is left out. Thin threads run straight from the stem to the bands' ends, 4 jumps that the machine doesn't cut.](../../images/generated/auto-pear.png)
 <!-- /shot -->
 
 The photo is drawn in code for these pages. `stitch plan` traced it 90 mm across with VectorCraft 0.19.0, into

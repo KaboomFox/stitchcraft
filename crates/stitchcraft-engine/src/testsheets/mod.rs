@@ -439,7 +439,7 @@ pub static SHEETS: &[TestSheet] = &[
         title: "Pictures digitized automatically: letters and lines traced as areas",
         checks: &[
             "The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left: the word MATCH in block letters 15, 10, 6 and 4 mm tall, top to bottom, each letter traced as an area. Right: 3 windows, top to bottom, whose black lines, traced as areas, are 0.3, 0.6 and 0.9 mm wide. One line runs down each window, and a branch runs across to its right side from it.",
-            "The bottom half changes thread 12 times and jumps 16 times, the top half 4 and 41 times. A letter filled sews in one piece, and digitized it is columns and lines with jumps between them. How long does each half take?",
+            "The bottom half changes thread 12 times and jumps 16 times, the top half 4 and 39 times. A letter filled sews in one piece, and digitized it is columns and lines with jumps between them. How long does each half take?",
             "Which is the smallest word that reads, on each half?",
             "On the top half, the letters from 6 mm tall sew as satin columns between their own edges, and the 4 mm ones as triple runs along their middles. Do the columns' stitches lie square to their strokes, round the C's bend and the A's hole?",
             "Where a column ends under another, 0.4 mm longer, as the T's stem does under its bar, does fabric show there, or a ridge? Does a crossbar sewn as a column of its own, as the H's is, read as one stroke with its stems? The M's and the A's feet should end flat along the baseline, and the C's ends round.",
