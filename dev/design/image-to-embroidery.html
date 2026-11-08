@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-eddbe324.js";
+            window.path_to_searchindex_js = "../searchindex-b0ba40be.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-61f039c5.js"></script>
@@ -368,7 +368,10 @@ part sews a satin column along each of its centre lines, between its own outline
 more than 60°, so that the column before a corner covers it and the one after ends under it, as an arm
 of a T ends under its bar. A branch of the line is a column of its own however short, as each arm of a
 t’s crossbar is. A branch to the second sharp corner of an end is a bump instead, sewn with the column
-beside it. A column’s rails are the part’s outline on either side, and its rungs lie square to it.</li>
+beside it. So is a tooth, a step of a traced outline as narrow as the narrowest satin stroke somewhere
+and no longer than its junction is wide. A column of its own, it would sew a short line beside the column
+and cut that column in 2. A column’s rails are the part’s outline on either side, and its rungs lie
+square to it.</li>
 <li><strong>Their ends.</strong> A column that ends where another runs on ends under it: it sews first, and is 0.4 mm
 longer at that end, by its push compensation, so that no fabric shows where they meet. Otherwise a column
 ends at its farthest point along its line, flat along the end’s edge when that lies within 20° of square
@@ -413,7 +416,8 @@ them, less than half a millimetre wide.</li>
 there in a point at one of its corners. Each narrow part is cut square there instead, at a chord across
 it square to the way its sides run on, from the end of the arc that lies farther along that way. What
 lies past the chord goes to the fill. A column ends flat along the cut, however long it is, so that a
-star’s points end along the star’s middle.</li>
+star’s points end along the star’s middle. The triangles that touch the cut are the column’s end, and
+its line stops where they start (<a href="algorithms/centre-lines.html#columns">centre lines</a>).</li>
 <li><strong>What sews.</strong> Each narrow part sews as a part of its own. One narrower than
 <code>min_satin_stroke_width_mm</code> everywhere runs along its centre line, and one no wider than 7 mm sews as
 satin columns. Any other stays in the fill. The fill is the shape without its narrow parts. It sews
@@ -710,6 +714,37 @@ as Auto Grouping draws it. It changes thread 8 times as drawn. Digitized, each t
 after another, and the row changes thread twice. Its red discs touch, and the needle sews on from one to
 the next without a jump. The row jumps 7 times instead of 9. <code>tests/auto_pictures.rs</code> keeps the numbers
 from falling back.</p>
+<p><strong>What shows</strong> (<code>REQ-AUTO-025</code>, <code>REQ-AUTO-026</code>). Digitized, a picture’s stitches should cover the fabric
+wherever it has a colour, and lay thread only where it has that thread’s colour.
+<code>stitchcraft_testkit::fabric</code> measures both on any design and its plan, a photo traced into shapes as well
+as a test picture. It paints the picture on a grid of 0.05 mm as a viewer paints it, each place in the
+colour of the last shape drawn over it, the background left out but where it shows inside the picture. Bare fabric is the part of the
+picture’s colours that the top stitches leave uncovered, each stitch’s thread 0.4 mm wide, opened with a
+disc as wide as the thread: a sliver narrower than a thread beside a running stitch closes as the thread
+spreads. A patch of 1 mm² or more, the smallest area that digitizing sews, fails. A top stitch is astray
+where it shows on another colour or on bare fabric for 1 mm or more, past the 0.4 mm that the overlap and
+pull compensation reach. An underlay or travel stitch is astray wherever it shows, and any stitch astray
+fails. The moves sewn on from one element to the next (<code>REQ-ASM-002</code>) and the jump threads that the PE800
+leaves are counted apart.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Test picture, digitized</th><th style="text-align: right">Largest bare patch</th><th style="text-align: right">Longest stretch astray</th><th style="text-align: right">Moves astray</th><th style="text-align: right">Jump threads</th></tr>
+</thead>
+<tbody>
+<tr><td>Stripes, 3 abutting</td><td style="text-align: right">0</td><td style="text-align: right">0.10 mm</td><td style="text-align: right">0</td><td style="text-align: right">0</td></tr>
+<tr><td>Badge, abutting or stacked</td><td style="text-align: right">0</td><td style="text-align: right">0.35 mm</td><td style="text-align: right">0</td><td style="text-align: right">0</td></tr>
+<tr><td>Badges in a row, abutting or stacked</td><td style="text-align: right">0</td><td style="text-align: right">0.40 mm</td><td style="text-align: right">0</td><td style="text-align: right">4</td></tr>
+<tr><td>Emblem, abutting or stacked</td><td style="text-align: right">0</td><td style="text-align: right">0.35 mm</td><td style="text-align: right">0</td><td style="text-align: right">2</td></tr>
+<tr><td>Button, abutting or stacked</td><td style="text-align: right">0</td><td style="text-align: right">0.40 mm</td><td style="text-align: right">6</td><td style="text-align: right">0</td></tr>
+<tr><td>Traced pear</td><td style="text-align: right">0</td><td style="text-align: right">0.70 mm</td><td style="text-align: right">0</td><td style="text-align: right">4</td></tr>
+</tbody>
+</table>
+</div>
+<p>The button’s 7 dots sew on from one to the next, each move 2.7 mm long across its yellow. The pear’s olive
+and dark olive bands each sew a column at both ends, and each of their threads sews a side of the stem
+between those ends, so its 4 jump threads all run from the stem. <code>tests/auto_fabric.rs</code> keeps the moves and
+the jump threads as measured.</p>
 <h2 id="settings"><a class="header" href="#settings">Settings</a></h2>
 <p>The rules’ values are StitchCraft’s own parameters, registered as any other
 (<a href="params.html">parameter registry</a>, <a href="../user/reference/params/auto.html">reference</a>), since M13.7
@@ -854,6 +889,12 @@ the emblem and the button, each traced abutting and stacked
 size. There the white round each star is narrower than a satin column, and sews as a column round the
 star, while the navy is one fill under the disc and the bars. The PE800 cuts no jump, and the sew-out
 reports where a shape sews down the thread of a jump before it.</p>
+</li>
+<li>
+<p><code>tests/auto_fabric.rs</code> measures what each test picture and the traced pear of the user pages leave bare
+and lay astray, digitized (<a href="#sewing-order">Sewing order</a>). The pear is read from
+<code>docs/fixtures/traced-pear.vectorcraft</code>, a photo that VectorCraft traced, with the ragged edges a trace
+has.</p>
 </li>
 <li>
 <p><code>tests/auto_sheets.rs</code> answers the TS-13 checks that the sheets’ own stitches can, moved to where each sheet

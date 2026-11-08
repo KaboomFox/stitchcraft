@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-eddbe324.js";
+            window.path_to_searchindex_js = "searchindex-b0ba40be.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-61f039c5.js"></script>
@@ -2673,11 +2673,13 @@ roadmap.</p>
 <!-- /shot -->
 <p><strong>Digitized</strong></p>
 <!-- shot: auto-pear -->
-<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/auto-pear.png" alt="The traced pear digitized automatically. Its 3 greens sew as tatami fills, and its stem as a satin column and a running stitch. The light grey square is left out."><span class="img-wrapper"><img src="images/generated/auto-pear.png" alt="The traced pear digitized automatically. Its 3 greens sew as tatami fills, and its stem as a satin column and a running stitch. The light grey square is left out."></span></label></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/auto-pear.png" alt="The traced pear digitized automatically. Its 3 greens sew as tatami fills, with satin columns at the narrow ends of the olive and dark olive bands. Its stem sews as a satin column and a running stitch, and the light grey square is left out. Thin threads run straight from the stem to the bands’ ends, 4 jumps that the machine doesn’t cut."><span class="img-wrapper"><img src="images/generated/auto-pear.png" alt="The traced pear digitized automatically. Its 3 greens sew as tatami fills, with satin columns at the narrow ends of the olive and dark olive bands. Its stem sews as a satin column and a running stitch, and the light grey square is left out. Thin threads run straight from the stem to the bands’ ends, 4 jumps that the machine doesn’t cut."></span></label></p>
 <!-- /shot -->
 <p>The photo is drawn in code for these pages. <code>stitch plan</code> traced it 90 mm across with VectorCraft 0.19.0, into
 <code>docs/fixtures/traced-pear.vectorcraft</code>. The pear’s shading became 3 bands of green, and the backdrop the
-4th colour, which is left out as the picture’s background.</p>
+4th colour, which is left out as the picture’s background. The thread of each darker band sews a side of
+the stem too, between the band’s 2 ends. The thin straight lines are the jumps to the stem and back, which
+the reference machine leaves for you to cut by hand (<a href="#machine-profiles">machine profiles</a>).</p>
 <p>To digitize a photo:</p>
 <ul>
 <li><code>stitch plan pear.png --colours 4 --size 90 -o pear.pes</code> traces the photo in 4 threads, 90 mm across, and
@@ -11763,6 +11765,12 @@ when the junction’s other 2 branches run on most nearly straight, as beside th
 wide square end. A branch that ends in a cap is an arm with an end of its own. A branch to a tip that
 another branch runs on into is that line’s end: the leg of an A runs on below its crossbar into its
 foot’s sharp corner.</li>
+<li><strong>Teeth.</strong> A traced outline steps where a photo’s shading crosses from one thread to the next, and each
+step gives a branch to a cap. As an arm, it sewed a column of a few stitches beside the column it left,
+and its junction cut that column in 2. So a tooth is a bump too: a branch to a cap whose narrowest chord
+is no longer than the narrowest satin stroke. It reaches no further than the junction triangle’s longest
+edge, or than that stroke’s width if that is more. A tooth narrows to its end, while an arm keeps its
+width.</li>
 <li><strong>Corners.</strong> A line that turns by more than 60° at a junction’s middle, each way measured as a branch’s
 is, is cut there: a column that turned so would sew a fan of stitches into the inside of the corner. Of
 2 such corners within twice the larger junction triangle’s longest edge of each other, as where a V ends
@@ -11787,11 +11795,25 @@ The column ends flat along all of it, as far as it runs straight. A cap can stop
 between an edge’s pieces. A column that ended at that point would leave the other piece on a rail, with
 its stitches leaning towards it. A longer edge runs along the column, as its side does where its line
 turns into a tip. An edge along a cut, where a narrow part was cut from a broad one
-(<a href="#image-to-embroidery">image to embroidery</a>), is the end however long it is: across a tapering
-point, the cut is wider than twice the chord the end begins at. Otherwise the column ends at that point,
-its rails meeting. A column can be only its
+(<a href="#image-to-embroidery">image to embroidery</a>), is the end however long it is and however it lies to
+the line’s way: across a tapering point, the cut is wider than twice the chord the end begins at.
+Otherwise the column ends at that point, its rails meeting. A column can be only its
 end, as a stub beyond a junction is. The chord its end begins at is then on its outline, and its end goes
 round the other way.</li>
+<li><strong>Cuts.</strong> A part cut from a broad one ends along each cut. Its triangles with a corner on the cut lie in
+that end, as a cap’s do, and no line crosses them. A chord where they meet the rest of the part ends a
+branch into the cut, and such a branch is never a bump. At a junction it runs on with the branch that
+runs on most nearly straight towards the cut’s middle, and never with another branch into the same cut,
+which would run the line along the cut. The line then ends at the cut, beside the fill. Its last turn
+before the cut doesn’t cut it in 2, as its last piece runs into the cut’s end. Some lines lie along a cut
+and don’t make a column: those that lead into the same cut at both ends, and those between a cut and a
+junction that another line runs on through. The lines of a set of joined points that leads into a cut
+and comes no farther from it than half its length, as a square end’s cap reaches, are left out too, such
+as a tooth beside the cut. Their triangles go to the column whose end it is. A line that ran on into the
+cut’s triangles turned along the cut to one of its corners. Its column then sewed its stitches into a fan
+at that corner and left a wedge of fabric bare, as the traced pear’s olive band did
+(<a href="#a-photo-in-a-few-colours">automatic digitizing</a>). A part with holes
+rings round them instead, and its outline along a cut is a rail of the ring.</li>
 <li><strong>Rails.</strong> The rails are the outline on either side between the ends, both from the line’s start. A
 ring’s are its outer and inner outline, the same way round, started at a rung whose point on the inner
 one is the inner one’s point nearest its point on the outer, so that a satin column starts them together
@@ -12267,7 +12289,10 @@ part sews a satin column along each of its centre lines, between its own outline
 more than 60°, so that the column before a corner covers it and the one after ends under it, as an arm
 of a T ends under its bar. A branch of the line is a column of its own however short, as each arm of a
 t’s crossbar is. A branch to the second sharp corner of an end is a bump instead, sewn with the column
-beside it. A column’s rails are the part’s outline on either side, and its rungs lie square to it.</li>
+beside it. So is a tooth, a step of a traced outline as narrow as the narrowest satin stroke somewhere
+and no longer than its junction is wide. A column of its own, it would sew a short line beside the column
+and cut that column in 2. A column’s rails are the part’s outline on either side, and its rungs lie
+square to it.</li>
 <li><strong>Their ends.</strong> A column that ends where another runs on ends under it: it sews first, and is 0.4 mm
 longer at that end, by its push compensation, so that no fabric shows where they meet. Otherwise a column
 ends at its farthest point along its line, flat along the end’s edge when that lies within 20° of square
@@ -12312,7 +12337,8 @@ them, less than half a millimetre wide.</li>
 there in a point at one of its corners. Each narrow part is cut square there instead, at a chord across
 it square to the way its sides run on, from the end of the arc that lies farther along that way. What
 lies past the chord goes to the fill. A column ends flat along the cut, however long it is, so that a
-star’s points end along the star’s middle.</li>
+star’s points end along the star’s middle. The triangles that touch the cut are the column’s end, and
+its line stops where they start (<a href="#columns">centre lines</a>).</li>
 <li><strong>What sews.</strong> Each narrow part sews as a part of its own. One narrower than
 <code>min_satin_stroke_width_mm</code> everywhere runs along its centre line, and one no wider than 7 mm sews as
 satin columns. Any other stays in the fill. The fill is the shape without its narrow parts. It sews
@@ -12609,6 +12635,37 @@ as Auto Grouping draws it. It changes thread 8 times as drawn. Digitized, each t
 after another, and the row changes thread twice. Its red discs touch, and the needle sews on from one to
 the next without a jump. The row jumps 7 times instead of 9. <code>tests/auto_pictures.rs</code> keeps the numbers
 from falling back.</p>
+<p><strong>What shows</strong> (<code>REQ-AUTO-025</code>, <code>REQ-AUTO-026</code>). Digitized, a picture’s stitches should cover the fabric
+wherever it has a colour, and lay thread only where it has that thread’s colour.
+<code>stitchcraft_testkit::fabric</code> measures both on any design and its plan, a photo traced into shapes as well
+as a test picture. It paints the picture on a grid of 0.05 mm as a viewer paints it, each place in the
+colour of the last shape drawn over it, the background left out but where it shows inside the picture. Bare fabric is the part of the
+picture’s colours that the top stitches leave uncovered, each stitch’s thread 0.4 mm wide, opened with a
+disc as wide as the thread: a sliver narrower than a thread beside a running stitch closes as the thread
+spreads. A patch of 1 mm² or more, the smallest area that digitizing sews, fails. A top stitch is astray
+where it shows on another colour or on bare fabric for 1 mm or more, past the 0.4 mm that the overlap and
+pull compensation reach. An underlay or travel stitch is astray wherever it shows, and any stitch astray
+fails. The moves sewn on from one element to the next (<code>REQ-ASM-002</code>) and the jump threads that the PE800
+leaves are counted apart.</p>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Test picture, digitized</th><th style="text-align: right">Largest bare patch</th><th style="text-align: right">Longest stretch astray</th><th style="text-align: right">Moves astray</th><th style="text-align: right">Jump threads</th></tr>
+</thead>
+<tbody>
+<tr><td>Stripes, 3 abutting</td><td style="text-align: right">0</td><td style="text-align: right">0.10 mm</td><td style="text-align: right">0</td><td style="text-align: right">0</td></tr>
+<tr><td>Badge, abutting or stacked</td><td style="text-align: right">0</td><td style="text-align: right">0.35 mm</td><td style="text-align: right">0</td><td style="text-align: right">0</td></tr>
+<tr><td>Badges in a row, abutting or stacked</td><td style="text-align: right">0</td><td style="text-align: right">0.40 mm</td><td style="text-align: right">0</td><td style="text-align: right">4</td></tr>
+<tr><td>Emblem, abutting or stacked</td><td style="text-align: right">0</td><td style="text-align: right">0.35 mm</td><td style="text-align: right">0</td><td style="text-align: right">2</td></tr>
+<tr><td>Button, abutting or stacked</td><td style="text-align: right">0</td><td style="text-align: right">0.40 mm</td><td style="text-align: right">6</td><td style="text-align: right">0</td></tr>
+<tr><td>Traced pear</td><td style="text-align: right">0</td><td style="text-align: right">0.70 mm</td><td style="text-align: right">0</td><td style="text-align: right">4</td></tr>
+</tbody>
+</table>
+</div>
+<p>The button’s 7 dots sew on from one to the next, each move 2.7 mm long across its yellow. The pear’s olive
+and dark olive bands each sew a column at both ends, and each of their threads sews a side of the stem
+between those ends, so its 4 jump threads all run from the stem. <code>tests/auto_fabric.rs</code> keeps the moves and
+the jump threads as measured.</p>
 <h2 id="settings-1"><a class="header" href="#settings-1">Settings</a></h2>
 <p>The rules’ values are StitchCraft’s own parameters, registered as any other
 (<a href="#parameter-registry">parameter registry</a>, <a href="#auto-parameters">reference</a>), since M13.7
@@ -12753,6 +12810,12 @@ the emblem and the button, each traced abutting and stacked
 size. There the white round each star is narrower than a satin column, and sews as a column round the
 star, while the navy is one fill under the disc and the bars. The PE800 cuts no jump, and the sew-out
 reports where a shape sews down the thread of a jump before it.</p>
+</li>
+<li>
+<p><code>tests/auto_fabric.rs</code> measures what each test picture and the traced pear of the user pages leave bare
+and lay astray, digitized (<a href="#sewing-order-2">Sewing order</a>). The pear is read from
+<code>docs/fixtures/traced-pear.vectorcraft</code>, a photo that VectorCraft traced, with the ragged edges a trace
+has.</p>
 </li>
 <li>
 <p><code>tests/auto_sheets.rs</code> answers the TS-13 checks that the sheets’ own stitches can, moved to where each sheet
@@ -14874,7 +14937,8 @@ method (<code>sewn_ladder</code>) and compare its needle points with the ones th
 <code>stitchcraft_engine::testsheets::pictures</code> draws in code and the TS-13 sheets sew too, each with the
 edges where its shapes meet. <code>stitchcraft_testkit::pictures</code> places them where the cases measure them.
 There are 3 stripes side by side, and a badge, a row of badges, an emblem and a button, each traced
-abutting or stacked (<a href="#testing">image to embroidery</a>).</p>
+abutting or stacked (<a href="#testing">image to embroidery</a>). The cases sew the pear that the
+docs show too, a photo that VectorCraft traced into ragged shapes (<code>stitchcraft_testkit::pictures::pear</code>).</p>
 <h2 id="levels"><a class="header" href="#levels">Levels</a></h2>
 <h3 id="l0--plan-invariants-every-pr"><a class="header" href="#l0--plan-invariants-every-pr">L0 — Plan invariants (every PR)</a></h3>
 <p>The <a href="#plan-invariants">plan invariants</a> run on <em>every</em> plan the
@@ -14945,6 +15009,8 @@ default budget, so that every way of sewing it shows that it runs out of work on
 <tr><td>Stitch length</td><td>Min, max and distribution of <code>Normal</code> stitch lengths by role</td></tr>
 <tr><td>Furrows</td><td>Longest run of rows whose needle points align within 0.1 mm</td></tr>
 <tr><td>Topology</td><td>Holes and components of the region vs. of the stitched area</td></tr>
+<tr><td>Bare fabric</td><td>The design painted at 0.05 mm as a viewer paints it, its background left out: the largest patch the top stitches leave bare, once opened with a disc as wide as the thread (<code>stitchcraft_testkit::fabric</code>)</td></tr>
+<tr><td>Thread astray</td><td>The longest stretch of a stitch that shows on another colour or on bare fabric, or of an underlay or travel stitch that shows at all. Moves between elements and jump threads are counted apart</td></tr>
 </tbody>
 </table>
 </div>
@@ -17699,7 +17765,11 @@ gained the arm of its bar that it had lost, and the leg of its A 6 mm tall that 
 column like the other. M13.12 then changed what the digitized halves of TS-13A and TS-13B sew, as the
 pictures’ layers are flattened before they are digitized. It also added TS-13D. A TS-13 file written before
 then sews as it did: write the sheet again before sewing it, and check that its stitches number as the
-<a href="#test-sheets">test-sheet reference</a> says.</p>
+<a href="#test-sheets">test-sheet reference</a> says. On 2026-11-08 a narrow part’s column
+stopped running along its cut into one of the cut’s corners, where it sewed a fan of stitches and left
+fabric bare beside it. The column now ends along the whole cut. TS-13C’s digitized star then sews its
+right-hand point from its tip to its cut. At MC-8, look at each point’s end along its cut for fabric
+showing at the cut’s corners.</p>
 <h2 id="report-template"><a class="header" href="#report-template">Report template</a></h2>
 <p>The GitHub issue form <em>Sew-out report</em> asks for these fields; this is the same template for notes kept
 elsewhere:</p>

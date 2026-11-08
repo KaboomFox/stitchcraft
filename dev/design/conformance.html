@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-eddbe324.js";
+            window.path_to_searchindex_js = "../searchindex-b0ba40be.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-61f039c5.js"></script>
@@ -320,7 +320,8 @@ method (<code>sewn_ladder</code>) and compare its needle points with the ones th
 <code>stitchcraft_engine::testsheets::pictures</code> draws in code and the TS-13 sheets sew too, each with the
 edges where its shapes meet. <code>stitchcraft_testkit::pictures</code> places them where the cases measure them.
 There are 3 stripes side by side, and a badge, a row of badges, an emblem and a button, each traced
-abutting or stacked (<a href="image-to-embroidery.html#testing">image to embroidery</a>).</p>
+abutting or stacked (<a href="image-to-embroidery.html#testing">image to embroidery</a>). The cases sew the pear that the
+docs show too, a photo that VectorCraft traced into ragged shapes (<code>stitchcraft_testkit::pictures::pear</code>).</p>
 <h2 id="levels"><a class="header" href="#levels">Levels</a></h2>
 <h3 id="l0--plan-invariants-every-pr"><a class="header" href="#l0--plan-invariants-every-pr">L0 — Plan invariants (every PR)</a></h3>
 <p>The <a href="data-model.html#plan-invariants">plan invariants</a> run on <em>every</em> plan the
@@ -391,6 +392,8 @@ default budget, so that every way of sewing it shows that it runs out of work on
 <tr><td>Stitch length</td><td>Min, max and distribution of <code>Normal</code> stitch lengths by role</td></tr>
 <tr><td>Furrows</td><td>Longest run of rows whose needle points align within 0.1 mm</td></tr>
 <tr><td>Topology</td><td>Holes and components of the region vs. of the stitched area</td></tr>
+<tr><td>Bare fabric</td><td>The design painted at 0.05 mm as a viewer paints it, its background left out: the largest patch the top stitches leave bare, once opened with a disc as wide as the thread (<code>stitchcraft_testkit::fabric</code>)</td></tr>
+<tr><td>Thread astray</td><td>The longest stretch of a stitch that shows on another colour or on bare fabric, or of an underlay or travel stitch that shows at all. Moves between elements and jump threads are counted apart</td></tr>
 </tbody>
 </table>
 </div>
