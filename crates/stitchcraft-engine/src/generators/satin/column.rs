@@ -10,8 +10,12 @@
 //! distances add up to less.
 //!
 //! **Rings.** Of 2 rails that each end where they start, closed with `Z` or drawn back to the start, the
-//! second is started at its node nearest the first's first node before the rails are turned: its line, and
-//! its nodes when they pair up (`DEV-SAT-009`). A drawing program starts a ring where it chooses:
+//! second is started at its node nearest the first's first node before the rails are turned, of the nodes
+//! that no drawn rung crosses the line to: its line, and its nodes when they pair up (`DEV-SAT-009`). A ring
+//! started past a rung would pair each of its parts between rungs with the other ring's next. Emilio 20
+//! tricolore's E starts both rings of its bowl at a step, and the outer ring's node nearest the inner ring's
+//! start lies past the rung across the step: started there, its stitches leaned up to 89°. Where a rung
+//! crosses the line to every node, the nearest is taken. A drawing program starts a ring where it chooses:
 //! VectorCraft's Make Compound Path, from 0.10.0, turns the front of 2 rings round, which starts it at what
 //! was its last node. Ink/Stitch takes each ring's own start, and sews 2 rings that start apart with
 //! stitches across the column, from the start of one to a place part of the way round the other. A node,
@@ -55,6 +59,7 @@ use crate::generators::satin::SatinParams;
 use crate::generators::satin::compensation::pushed;
 use crate::normalize::along::Along;
 use crate::normalize::near::{Look, along_to_segment};
+use crate::normalize::region::geom::{Hit, hit};
 use crate::normalize::satin::{Pairing, Rung, SAME_POINT, Satin, add_once, nearest, shared};
 
 /// How far along the line between a rail's 2 nodes the rung added across rails of 2 nodes meets it, in
@@ -162,7 +167,7 @@ pub(super) fn oriented(satin: &Satin, params: &SatinParams, meter: &mut Meter) -
         rails.swap(0, 1);
     }
     // Rings start together, before they are turned.
-    if let Some(at) = together(satin, params.swap_satin_rails) {
+    if let Some(at) = together(satin, params.swap_satin_rails, meter)? {
         let [_, second] = &mut rails;
         *second = started_at(second, at, meter)?;
     }
@@ -241,13 +246,29 @@ fn is_loop(line: &[Point]) -> bool {
 }
 
 /// Where the rail `satin` sews second starts, when both its rails are rings: its node nearest the first
-/// node of the rail sewn first, the first of those as near. `None` for other rails, and for rails without
-/// nodes, made from a centre line. `swap` is `swap_satin_rails`.
-fn together(satin: &Satin, swap: bool) -> Option<Point> {
+/// node of the rail sewn first, the first of those as near, of the nodes that no drawn rung crosses the line
+/// to. Where a rung crosses the line to every node, its node nearest. `None` for other rails, and for rails
+/// without nodes, made from a centre line. `swap` is `swap_satin_rails`; looking costs `meter` a unit per
+/// node, and a unit per rung for each node looked at.
+fn together(satin: &Satin, swap: bool, meter: &mut Meter) -> Result<Option<Point>, Exhausted> {
     let [drawn_first, drawn_second] = &satin.nodes;
     let (first, second) = if swap { (drawn_second, drawn_first) } else { (drawn_first, drawn_second) };
-    let &to = first.first().filter(|_| satin.rails.iter().all(|rail| is_loop(rail)))?;
-    second.iter().min_by(|a, b| a.distance(to).total_cmp(&b.distance(to))).copied()
+    let Some(&to) = first.first().filter(|_| satin.rails.iter().all(|rail| is_loop(rail))) else { return Ok(None) };
+    let rungs: &[Rung] = match &satin.pairing {
+        Pairing::Rungs(rungs) => rungs,
+        Pairing::Nodes => &[],
+    };
+    meter.charge(u64::try_from(second.len()).unwrap_or(u64::MAX))?;
+    // Nearest first, and of nodes as near, the first: the sort keeps their order.
+    let mut nearest = second.clone();
+    nearest.sort_by(|a, b| a.distance(to).total_cmp(&b.distance(to)));
+    for &node in &nearest {
+        meter.charge(u64::try_from(rungs.len()).unwrap_or(u64::MAX))?;
+        if !rungs.iter().any(|&Rung { points: [a, b], .. }| matches!(hit(to, node, a, b), Hit::Cross(_))) {
+            return Ok(Some(node));
+        }
+    }
+    Ok(nearest.first().copied())
 }
 
 /// The ring `ring`, whose last point is its first again, started at its point nearest `at`, the first of
@@ -267,7 +288,7 @@ fn started_at(ring: &[Point], at: Point, meter: &mut Meter) -> Result<Vec<Point>
 /// at each end ([`ring_nodes`]), and those of the rail sewn second start where its line does
 /// ([`together`]). `swap` is `swap_satin_rails`; looking costs `meter` a unit per node.
 pub(super) fn nodes_started_together(satin: &Satin, swap: bool, meter: &mut Meter) -> Result<[Vec<Point>; 2], Exhausted> {
-    let Some(at) = together(satin, swap) else { return Ok(satin.nodes.clone()) };
+    let Some(at) = together(satin, swap, meter)? else { return Ok(satin.nodes.clone()) };
     let [first, second] = satin.nodes.each_ref().map(|nodes| ring_nodes(nodes));
     Ok(if swap { [started_at(&first, at, meter)?, second] } else { [first, started_at(&second, at, meter)?] })
 }
@@ -444,6 +465,7 @@ mod tests {
             nodes: nodes.map(<[Point]>::to_vec),
             pairing: Pairing::Nodes,
         };
+        let together = |satin: &Satin, swap: bool| super::together(satin, swap, &mut Budget::DEFAULT.meter()).unwrap();
         let rings = satin([&outer, &turned], [&outer, &turned]);
         assert_eq!(together(&rings, false), Some(p(4.0, 4.0)));
         // Swapped, the first ring drawn sews second.
@@ -451,6 +473,32 @@ mod tests {
         // Rails made from a centre line, which have no nodes, and a ring beside an open rail keep their starts.
         assert_eq!(together(&satin([&outer, &turned], [&[], &[]]), false), None);
         assert_eq!(together(&satin([&outer, &turned[..4]], [&outer, &turned[..4]]), false), None);
+    }
+
+    #[test]
+    fn of_2_rings_the_one_sewn_second_starts_at_its_nearest_node_that_no_rung_lies_before() {
+        let ring = |nodes: &[(f64, f64)]| nodes.iter().chain(nodes.first()).map(|&(x, y)| p(x, y)).collect::<Vec<_>>();
+        let rung = |(ax, ay): (f64, f64), (bx, by): (f64, f64)| Rung { points: [p(ax, ay), p(bx, by)], missed: None };
+        let rings = |first: &[Point], second: &[Point], rungs: Vec<Rung>| Satin {
+            rails: [first.to_vec(), second.to_vec()],
+            nodes: [first.to_vec(), second.to_vec()],
+            pairing: Pairing::Rungs(rungs),
+        };
+        let together = |satin: &Satin| super::together(satin, false, &mut Budget::DEFAULT.meter()).unwrap();
+        // Rings stepped at one corner, as Emilio 20 tricolore draws the bowl of its E, both started at the step:
+        // the inner at its inside corner, the outer at its outside one. A rung crosses the step's right side
+        // below the starts, and one its top. The outer ring's nearest node, the step's corner, lies past that
+        // rung, and the next nearest, its start, doesn't.
+        let inner = ring(&[(20.75, 10.75), (20.75, 16.75), (3.75, 16.75), (3.75, 3.75), (15.0, 3.75), (15.0, 10.75)]);
+        let outer = ring(&[(24.5, 6.75), (24.5, 20.5), (0.0, 20.5), (0.0, 0.0), (18.75, 0.0), (18.75, 6.75)]);
+        let step = vec![rung((20.75, 13.0), (24.5, 13.0)), rung((17.0, 10.75), (21.0, 6.75))];
+        assert_eq!(together(&rings(&inner, &outer, step.clone())), Some(p(24.5, 6.75)));
+        // Without the rung across the top, at its node nearest, as without rungs.
+        assert_eq!(together(&rings(&inner, &outer, step[..1].to_vec())), Some(p(18.75, 6.75)));
+        // A rung between the first ring's start and every node of the second: its node nearest.
+        let (left, right) =
+            (ring(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)]), ring(&[(20.0, 0.0), (30.0, 0.0), (30.0, 10.0), (20.0, 10.0)]));
+        assert_eq!(together(&rings(&left, &right, vec![rung((15.0, -100.0), (15.0, 100.0))])), Some(p(20.0, 0.0)));
     }
 
     #[test]

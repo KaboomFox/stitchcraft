@@ -201,7 +201,7 @@ pub fn load_cases(root: &Path, findings: &mut Findings) -> Vec<DataCase> {
         if case.kind == "fonts" {
             match (case.sample, case.sheet, case.design, case.profile, case.expect, case.files, excused) {
                 (Some(sample), None, None, None, None, None, None) if sample > 0 => {
-                    let options = super::fonts::Options { sample, every: false, shard: None };
+                    let options = super::fonts::Options { sample, every: false, fonts: Vec::new(), shard: None };
                     cases.push(DataCase { id: case.id, requirements: case.requirements, file, spec: Spec::Fonts { options } });
                 }
                 _ => findings.error(format!("{file}: a fonts case needs a `sample` of 1 glyph or more, and nothing else")),
