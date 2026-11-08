@@ -18,10 +18,18 @@
 //! Ink/Stitch gives some keys to several elements, with different defaults (`max_stitch_length_mm` has none
 //! on satins and is 4 mm on fills), so a declaration is matched with the rows for the stitch types it
 //! applies to, never by its key alone.
+//!
+//! The check also runs the other way ([`Contract::check_sewn`]). A row that the registry declares for any of
+//! its stitch types must apply to every stitch type of the row that the engine sews. A declaration that
+//! leaves one out ignores a setting that Ink/Stitch sews with, and the other checks don't see it. M10.6's
+//! tartan fill was first written without `max_stitch_length_mm` so. Where Ink/Stitch's sewing of a type
+//! doesn't read a setting that its settings window shows, or a deviation leaves the setting out, an
+//! `[[unapplied]]` entry of the data file gives the reason, and the page lists it.
 
 use std::collections::BTreeSet;
 
 use serde::Deserialize;
+use stitchcraft_engine::generate::sewn_as;
 use stitchcraft_params::{Family, Kind, Origin, ParamGroup, ParamSpec, StitchType, declarations, find_for};
 use stitchcraft_svg::inkstitch::{CLONE_SETTINGS, COMMANDS, READ_ATTRIBUTES};
 
@@ -51,6 +59,23 @@ pub struct Contract {
     renamed_command: Vec<Renamed>,
     #[serde(default)]
     update: Vec<Update>,
+    #[serde(default)]
+    unapplied: Vec<Unapplied>,
+}
+
+/// Settings that Ink/Stitch gives a stitch type StitchCraft sews, and that the registry leaves out of it on
+/// purpose, with the reason ([`Contract::check_sewn`]).
+#[derive(Deserialize)]
+struct Unapplied {
+    /// The element of the settings' rows: `common`, `stroke`, `satin` or `fill`.
+    element: String,
+    /// The stitch type's method id.
+    stitch_type: String,
+    /// The settings' keys.
+    names: Vec<String>,
+    /// Why, in words a reviewer can check: where Ink/Stitch's sewing of the type leaves the settings unread,
+    /// or the deviation (`DEV-…`) that leaves them out.
+    reason: String,
 }
 
 /// One of Ink/Stitch's commands, and where it applies: `object`, `layer` or `document`.
@@ -161,10 +186,13 @@ registry uses these names as its keys so files move between the tools unchanged
 - **Checked against:** Ink/Stitch `main` at `d59c9ab` (2026-09-17). The last line counts the declarations.
 - **Facts only:** names, types, units, defaults and applicability. Ink/Stitch's descriptions are GPL text
   and are not copied; StitchCraft's own help text lives in the [parameter registry](params.md).
-- **Machine-readable source:** `conformance/inkstitch-params.toml`; this page is generated from it and
-  from the parameter registry by `cargo xtask docs`, and `cargo xtask docs --check` fails if they disagree:
-  a parameter declared with an Ink/Stitch origin must be listed here with a compatible type, and its
-  default must be the value Ink/Stitch sews.
+- **Machine-readable source:** `conformance/inkstitch-params.toml`. `cargo xtask docs` generates this page
+  from it and from the parameter registry, and `cargo xtask docs --check` fails if they disagree. A
+  parameter declared with an Ink/Stitch origin must be listed here with a compatible type, and its default
+  must be the value Ink/Stitch sews. In the other direction, a registered row's parameter must apply to
+  each stitch type of the row that StitchCraft sews, unless the section
+  [Settings a stitch type does not take](#settings-a-stitch-type-does-not-take) gives the reason. A
+  stitch type sewn as another takes that one's settings, as a legacy fill takes a tatami fill's.
 - **Default** is the value Ink/Stitch's settings window shows. For a few parameters its code sews another
   value when a file sets none, and the cell gives that value after the default, as in `0.1 (0.2 when
   unset)`. `—` means no default: the value is derived from another parameter or the shape.
@@ -180,6 +208,19 @@ registry uses these names as its keys so files move between the tools unchanged
   fill's `angle`, and StitchCraft's registry gives it those too.
 - **Phase** is when the parameter's stitch type lands ([roadmap](../plan/roadmap.md)); `—` when it is not
   planned.
+";
+
+/// The section of the settings Ink/Stitch gives a stitch type StitchCraft sews, which the registry leaves out
+/// of it, before its rows.
+const UNAPPLIED_INTRO: &str = "
+## Settings a stitch type does not take
+
+Ink/Stitch gives each stitch type here the settings beside it, and StitchCraft's registry doesn't, for the
+reason given. They are the `[[unapplied]]` entries of `conformance/inkstitch-params.toml`. Every other
+stitch type that StitchCraft sews takes the registered settings that its rows give it.
+
+| Element | Stitch type | Settings | Reason |
+|---|---|---|---|
 ";
 
 impl Contract {
@@ -222,6 +263,11 @@ impl Contract {
                     ours
                 ));
             }
+        }
+        md.push_str(UNAPPLIED_INTRO);
+        for u in &self.unapplied {
+            let names = u.names.iter().map(|name| format!("`{name}`")).collect::<Vec<_>>().join(", ");
+            md.push_str(&format!("| {} | `{}` | {names} | {} |\n", u.element, u.stitch_type, u.reason.replace('|', "\\|")));
         }
         md.push_str(
             "\n## Method identifiers\n\nThe values the method parameters take (`stroke_method`, `satin_method`, `fill_method`), with phases. A\n\
@@ -359,6 +405,52 @@ impl Contract {
             }
         }
         problems.extend(contract_versions::check(&self.renamed_command, &self.update));
+        problems
+    }
+
+    /// Where Ink/Stitch gives a stitch type that the engine sews (`sewn`) a setting, and the registry leaves the
+    /// type out, one line each. Only a row that the registry declares for some of its stitch types is
+    /// compared: the page calls it registered. A stitch type sewn as another is read as that one
+    /// ([`sewn_as`]): a legacy fill's settings are a tatami fill's. An `[[unapplied]]` entry excuses a setting
+    /// for a stitch type with the reason, and a setting it lists that needs no excuse, or an entry without a
+    /// reason, is a problem too, so the list can't go stale.
+    pub fn check_sewn(&self, registry: &[&ParamGroup], sewn: &[StitchType]) -> Vec<String> {
+        let mut problems = Vec::new();
+        let mut excused = BTreeSet::new();
+        for row in self.param.iter().filter(|row| declaration(registry, row).is_some()) {
+            for t in row.scope().into_iter().filter(|t| sewn.contains(t)) {
+                let read_as = sewn_as(t);
+                if declarations(registry, &row.name).any(|spec| spec.applies_to.contains(&read_as)) {
+                    continue;
+                }
+                let excuse = self.unapplied.iter().position(|u| u.element == row.element && u.stitch_type == t.id() && u.names.contains(&row.name));
+                let Some(entry) = excuse else {
+                    let read = if read_as == t { String::new() } else { format!(" as `{}`", read_as.id()) };
+                    problems.push(format!(
+                        "`{}` does not apply to `{}` here, but Ink/Stitch gives it `{}` (its {} row), which StitchCraft sews{read}: add the \
+                         stitch type to the key's declaration, or give the reason in an `[[unapplied]]` entry",
+                        row.name,
+                        read_as.id(),
+                        t.id(),
+                        row.element
+                    ));
+                    continue;
+                };
+                excused.insert((entry, row.name.as_str()));
+            }
+        }
+        for (entry, u) in self.unapplied.iter().enumerate() {
+            for name in u.names.iter().filter(|name| !excused.contains(&(entry, name.as_str()))) {
+                problems.push(format!(
+                    "the `[[unapplied]]` entry for `{}` ({}) excuses `{name}`, which needs no excuse: take it out of the entry (the \
+                     registry gives it the stitch type, StitchCraft does not sew the type, or Ink/Stitch does not give it the setting)",
+                    u.stitch_type, u.element
+                ));
+            }
+            if u.reason.trim().is_empty() {
+                problems.push(format!("the `[[unapplied]]` entry for `{}` ({}) gives no reason", u.stitch_type, u.element));
+            }
+        }
         problems
     }
 }
@@ -838,7 +930,9 @@ mod tests {
     fn the_engine_registry_agrees_with_the_committed_contract() {
         let data = crate::util::read(&crate::util::root().join(DATA)).unwrap();
         let registry = stitchcraft_engine::registry::PARAMETERS;
-        assert_eq!(Contract::parse(&data).unwrap().check(registry), Vec::<String>::new());
+        let contract = Contract::parse(&data).unwrap();
+        assert_eq!(contract.check(registry), Vec::<String>::new());
+        assert_eq!(contract.check_sewn(registry, &crate::stitch_pages::sewn().unwrap()), Vec::<String>::new());
     }
 
     #[test]
@@ -887,5 +981,174 @@ mod tests {
     #[test]
     fn bad_data_is_an_error() {
         assert!(Contract::parse("param = 3").is_err());
+    }
+
+    /// The data file with `applies_to` for the row of `row_spacing_mm`, and `more` after it.
+    fn given(applies_to: &str, more: &str) -> Contract {
+        let data = data("0.25").replacen("applies_to = [\"tatami_fill\"]", &format!("applies_to = [{applies_to}]"), 1);
+        Contract::parse(&format!("{data}{more}")).unwrap()
+    }
+
+    /// An `[[unapplied]]` entry.
+    fn entry(element: &str, stitch_type: &str, names: &str, reason: &str) -> String {
+        format!("[[unapplied]]\nelement = \"{element}\"\nstitch_type = \"{stitch_type}\"\nnames = [{names}]\nreason = \"{reason}\"\n")
+    }
+
+    /// The problem reported for a stitch type StitchCraft sews that a registered row gives `key`, and that no
+    /// declaration of the key applies to.
+    fn missing(key: &str, stitch_type: &str, element: &str) -> String {
+        format!(
+            "`{key}` does not apply to `{stitch_type}` here, but Ink/Stitch gives it `{stitch_type}` (its {element} row), which StitchCraft sews: add \
+             the stitch type to the key's declaration, or give the reason in an `[[unapplied]]` entry"
+        )
+    }
+
+    /// The problem reported for a key an `[[unapplied]]` entry excuses that needs no excuse.
+    fn stale(stitch_type: &str, element: &str, key: &str) -> String {
+        format!(
+            "the `[[unapplied]]` entry for `{stitch_type}` ({element}) excuses `{key}`, which needs no excuse: take it out of the entry (the \
+             registry gives it the stitch type, StitchCraft does not sew the type, or Ink/Stitch does not give it the setting)"
+        )
+    }
+
+    const TATAMI_AND_CONTOUR: &[StitchType] = &[StitchType::TatamiFill, StitchType::ContourFill];
+
+    #[test]
+    fn a_stitch_type_sewn_that_a_registered_row_gives_its_key_must_be_given_it_here() {
+        // Ink/Stitch gives the row spacing to contour fills too, and the declaration leaves them out.
+        let contract = given("\"tatami_fill\", \"contour_fill\"", "");
+        let tatami = registry(&[ROW_SPACING]);
+        assert_eq!(contract.check_sewn(&[&tatami], TATAMI_AND_CONTOUR), [missing("row_spacing_mm", "contour_fill", "fill")]);
+        // Given to both, it agrees.
+        const BOTH: &[ParamSpec] = &[ParamSpec { applies_to: TATAMI_AND_CONTOUR, ..ROW_SPACING }];
+        assert_eq!(contract.check_sewn(&[&registry(BOTH)], TATAMI_AND_CONTOUR), Vec::<String>::new());
+        // A stitch type the engine doesn't sew yet is left out until it sews.
+        assert_eq!(contract.check_sewn(&[&tatami], &[StitchType::TatamiFill]), Vec::<String>::new());
+        // A stitch type that reads the key without the window showing it must be given it too.
+        let read = given("\"tatami_fill\"]\nread_by = [\"contour_fill\"", "");
+        assert_eq!(read.check_sewn(&[&tatami], TATAMI_AND_CONTOUR), [missing("row_spacing_mm", "contour_fill", "fill")]);
+        assert_eq!(read.check_sewn(&[&registry(BOTH)], TATAMI_AND_CONTOUR), Vec::<String>::new());
+    }
+
+    #[test]
+    fn a_row_is_given_its_key_by_its_family_s_declaration() {
+        // A zigzag stroke and a meander fill each declare the zigzag spacing their own way: the fill's row is
+        // given the key by the fill's declaration, whatever the stroke's applies to.
+        let row = "[[param]]\nelement = \"fill\"\nname = \"zigzag_spacing_mm\"\ntype = \"float\"\nunit = \"mm\"\ndefault = \"0\"\n\
+                   applies_to = [\"meander_fill\", \"circular_fill\"]\nphase = \"P2\"\nmilestone = \"M7\"\n";
+        let contract = given("\"tatami_fill\"", row);
+        let declared = |name: &'static str, kind, applies_to: &'static [StitchType]| -> ParamGroup {
+            let spec = ParamSpec { key: "zigzag_spacing_mm", kind, default: "0.4", applies_to, ..ROW_SPACING };
+            ParamGroup { name, help: " Spacing.\n", applies_to, specs: Box::leak(Box::new([spec])) }
+        };
+        let stroke = declared("ZigzagStrokeParams", Kind::LengthList { min: 0.01, max: 10.0 }, &[StitchType::ZigzagStitch]);
+        let length = Kind::Length { min: 0.0, max: 10.0, empty: Empty::Never };
+        let both = declared("MeanderFillParams", length, &[StitchType::MeanderFill, StitchType::CircularFill]);
+        let meander = declared("MeanderFillParams", length, &[StitchType::MeanderFill]);
+        let tatami = registry(&[ROW_SPACING]);
+        let sewn = [StitchType::TatamiFill, StitchType::ZigzagStitch, StitchType::MeanderFill, StitchType::CircularFill];
+        assert_eq!(contract.check_sewn(&[&tatami, &stroke, &both], &sewn), Vec::<String>::new());
+        assert_eq!(contract.check_sewn(&[&tatami, &stroke, &meander], &sewn), [missing("zigzag_spacing_mm", "circular_fill", "fill")]);
+    }
+
+    #[test]
+    fn a_row_the_registry_declares_for_none_of_its_stitch_types_is_planned_and_not_compared() {
+        let contract = given("\"tatami_fill\", \"contour_fill\"", "");
+        assert_eq!(contract.check_sewn(&[], TATAMI_AND_CONTOUR), Vec::<String>::new());
+        // Declared for a stitch type the row doesn't cover, the key is still planned for the row's types.
+        const MEANDER: &[ParamSpec] = &[ParamSpec { applies_to: &[StitchType::MeanderFill], ..ROW_SPACING }];
+        assert_eq!(contract.check_sewn(&[&registry(MEANDER)], TATAMI_AND_CONTOUR), Vec::<String>::new());
+    }
+
+    #[test]
+    fn a_stitch_type_sewn_as_another_takes_that_one_s_settings() {
+        // StitchCraft sews a legacy fill as a tatami fill, and reads its settings as a tatami fill's.
+        let sewn = [StitchType::TatamiFill, StitchType::LegacyFill];
+        let contract = given("\"tatami_fill\", \"legacy_fill\"", "");
+        assert_eq!(contract.check_sewn(&[&registry(&[ROW_SPACING])], &sewn), Vec::<String>::new());
+        // A declaration for legacy fills alone is one a legacy fill never reads.
+        const LEGACY: &[ParamSpec] = &[ParamSpec { applies_to: &[StitchType::LegacyFill], ..ROW_SPACING }];
+        assert_eq!(
+            given("\"legacy_fill\"", "").check_sewn(&[&registry(LEGACY)], &sewn),
+            [
+                "`row_spacing_mm` does not apply to `tatami_fill` here, but Ink/Stitch gives it `legacy_fill` (its fill row), which StitchCraft sews as \
+                 `tatami_fill`: add the stitch type to the key's declaration, or give the reason in an `[[unapplied]]` entry"
+            ]
+        );
+    }
+
+    #[test]
+    fn the_lock_sizes_rows_cover_every_stitch_type_whatever_lock_shapes_they_list() {
+        // `zigzag` is a lock shape in a common row, though a satin method has the same id: the row covers every
+        // stitch type, as its declaration must.
+        let data = data("0.25").replacen(
+            "[[param]]",
+            "[[param]]\nelement = \"common\"\nname = \"lock_start_scale_percent\"\ntype = \"float\"\nunit = \"%\"\ndefault = \"100\"\n\
+             applies_to = [\"arrow\", \"zigzag\", \"custom\"]\nphase = \"P1\"\nmilestone = \"M3\"\n[[param]]",
+            1,
+        );
+        let contract = Contract::parse(&data).unwrap();
+        let scale = |applies_to: Vec<StitchType>| -> ParamGroup {
+            let applies_to: &'static [StitchType] = Box::leak(applies_to.into_boxed_slice());
+            let spec = ParamSpec {
+                key: "lock_start_scale_percent",
+                kind: Kind::Percent { min: 10.0, max: 400.0 },
+                default: "100",
+                applies_to,
+                ..ROW_SPACING
+            };
+            ParamGroup { name: "CommonParams", help: " Common.\n", applies_to: StitchType::ALL, specs: Box::leak(Box::new([spec])) }
+        };
+        let tatami = registry(&[ROW_SPACING]);
+        assert_eq!(contract.check_sewn(&[&tatami, &scale(StitchType::ALL.to_vec())], StitchType::ALL), Vec::<String>::new());
+        let but_running = StitchType::ALL.iter().copied().filter(|t| *t != StitchType::RunningStitch).collect();
+        assert_eq!(
+            contract.check_sewn(&[&tatami, &scale(but_running)], StitchType::ALL),
+            [missing("lock_start_scale_percent", "running_stitch", "common")]
+        );
+        // Declared for the satin zigzag alone, the key leaves out every other stitch type sewn.
+        let problems = contract.check_sewn(&[&tatami, &scale(vec![StitchType::SatinZigzag])], &[StitchType::SatinZigzag, StitchType::ZigzagStitch]);
+        assert_eq!(problems, [missing("lock_start_scale_percent", "zigzag_stitch", "common")]);
+    }
+
+    #[test]
+    fn an_unapplied_entry_excuses_a_stitch_type_with_its_reason_and_the_page_lists_it() {
+        let tatami = registry(&[ROW_SPACING]);
+        let excused = given("\"tatami_fill\", \"contour_fill\"", &entry("fill", "contour_fill", "\"row_spacing_mm\"", "Its rings | spaced so."));
+        assert_eq!(excused.check_sewn(&[&tatami], TATAMI_AND_CONTOUR), Vec::<String>::new());
+        let page = excused.render(&[&tatami]);
+        assert!(page.contains("\n## Settings a stitch type does not take\n"), "{page}");
+        assert!(page.contains("| fill | `contour_fill` | `row_spacing_mm` | Its rings \\| spaced so. |\n\n## Method identifiers"), "{page}");
+        // An entry for another element, stitch type or key excuses nothing.
+        for wrong in [
+            entry("satin", "contour_fill", "\"row_spacing_mm\"", "Why."),
+            entry("fill", "meander_fill", "\"row_spacing_mm\"", "Why."),
+            entry("fill", "contour_fill", "\"angle\"", "Why."),
+        ] {
+            let problems = given("\"tatami_fill\", \"contour_fill\"", &wrong).check_sewn(&[&tatami], TATAMI_AND_CONTOUR);
+            assert_eq!(problems.len(), 2, "{wrong}: {problems:?}");
+            assert_eq!(problems[0], missing("row_spacing_mm", "contour_fill", "fill"), "{wrong}");
+            assert!(problems[1].starts_with("the `[[unapplied]]` entry for `"), "{wrong}: {problems:?}");
+        }
+    }
+
+    #[test]
+    fn an_unapplied_entry_that_excuses_nothing_or_gives_no_reason_is_reported() {
+        let tatami = registry(&[ROW_SPACING]);
+        let excuse = entry("fill", "contour_fill", "\"row_spacing_mm\"", "Why.");
+        // Once the registry gives contour fills the key, or while StitchCraft doesn't sew them, it excuses nothing.
+        const BOTH: &[ParamSpec] = &[ParamSpec { applies_to: TATAMI_AND_CONTOUR, ..ROW_SPACING }];
+        let contract = given("\"tatami_fill\", \"contour_fill\"", &excuse);
+        assert_eq!(contract.check_sewn(&[&registry(BOTH)], TATAMI_AND_CONTOUR), [stale("contour_fill", "fill", "row_spacing_mm")]);
+        assert_eq!(contract.check_sewn(&[&tatami], &[StitchType::TatamiFill]), [stale("contour_fill", "fill", "row_spacing_mm")]);
+        // Each key and each entry on its own: the second entry's key is excused, the first entry's is not.
+        let two =
+            entry("fill", "tatami_fill", "\"row_spacing_mm\"", "Why.") + &entry("fill", "contour_fill", "\"row_spacing_mm\", \"angle\"", "Why.");
+        assert_eq!(
+            given("\"tatami_fill\", \"contour_fill\"", &two).check_sewn(&[&tatami], TATAMI_AND_CONTOUR),
+            [stale("tatami_fill", "fill", "row_spacing_mm"), stale("contour_fill", "fill", "angle")]
+        );
+        let blank = given("\"tatami_fill\", \"contour_fill\"", &entry("fill", "contour_fill", "\"row_spacing_mm\"", " "));
+        assert_eq!(blank.check_sewn(&[&tatami], TATAMI_AND_CONTOUR), ["the `[[unapplied]]` entry for `contour_fill` (fill) gives no reason"]);
     }
 }
