@@ -593,7 +593,10 @@ mod tests {
             subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Cubic(p(0.0, -5.0), p(10.0, 5.0), p(10.0, 0.0))], closed: true }],
         };
         let quad = Path { subpaths: vec![Subpath { start: p(1.0, 1.0), segments: vec![Segment::Quad(p(2.0, 3.0), p(4.0, 1.0))], closed: false }] };
-        let hints = Hints { start: Some(p(1.0, 1.0)), end: Some(p(4.0, 1.0)), target: Some(p(2.0, 2.0)), ..Hints::default() };
+        // A guide keeps its width, its join and its settings.
+        let guide = Guide { path: line(p(0.0, 1.0), p(2.0, 3.0)), width: Mm::new(1.0).unwrap(), join: Join::Round, params: ParamSet::new() };
+        let (start, end, target) = (Some(p(1.0, 1.0)), Some(p(4.0, 1.0)), Some(p(2.0, 2.0)));
+        let hints = Hints { start, end, target, guide: Some(guide.clone()), anchor: Some([p(0.0, 0.0), p(1.0, 1.0)]) };
         let clips = vec![Clip::of(line(p(0.0, 0.0), p(1.0, 2.0)), FillRule::EvenOdd)];
         let fill = Element { shape: Shape::Fill { path: quad, rule: FillRule::EvenOdd }, hints, clips, ..element("q", Path::default()) };
         let settings = DesignSettings { origin: Some(p(5.0, 5.0)), stop_position: Some(p(-1.0, 0.0)), ..DesignSettings::default() };
@@ -606,10 +609,9 @@ mod tests {
         };
         assert_eq!(points(&moved).len(), points(&design).len());
         assert!(points(&moved).iter().zip(points(&design)).all(|(a, b)| (a.x(), a.y()) == (b.x() + 3.0, b.y() - 2.0)));
-        assert_eq!(
-            moved.elements()[1].hints,
-            Hints { start: Some(p(4.0, -1.0)), end: Some(p(7.0, -1.0)), target: Some(p(5.0, 0.0)), ..Hints::default() }
-        );
+        let (start, end, target) = (Some(p(4.0, -1.0)), Some(p(7.0, -1.0)), Some(p(5.0, 0.0)));
+        let guide = Some(Guide { path: line(p(3.0, -1.0), p(5.0, 1.0)), ..guide });
+        assert_eq!(moved.elements()[1].hints, Hints { start, end, target, guide, anchor: Some([p(3.0, -2.0), p(4.0, -1.0)]) });
         assert_eq!(moved.elements()[1].clips, [Clip::of(line(p(3.0, -2.0), p(4.0, 0.0)), FillRule::EvenOdd)]);
         assert_eq!((moved.settings.origin, moved.settings.stop_position), (Some(p(8.0, 3.0)), Some(p(2.0, -2.0))));
         // Each element as it was but for its points: its id, kind of shape, thread and settings.
@@ -634,6 +636,16 @@ mod tests {
             Hints { start: Some(p(0.0, WORKING_LIMIT_MM + 1.0)), ..Hints::default() },
             Hints { end: Some(p(0.0, WORKING_LIMIT_MM + 1.0)), ..Hints::default() },
             Hints { target: Some(p(0.0, WORKING_LIMIT_MM + 1.0)), ..Hints::default() },
+            Hints { anchor: Some([p(0.0, 0.0), p(0.0, WORKING_LIMIT_MM + 1.0)]), ..Hints::default() },
+            Hints {
+                guide: Some(Guide {
+                    path: line(p(0.0, 0.0), p(0.0, WORKING_LIMIT_MM + 1.0)),
+                    width: Mm::ZERO,
+                    join: Join::UNSET,
+                    params: ParamSet::new(),
+                }),
+                ..Hints::default()
+            },
         ] {
             let far = vec![Element { hints: hints.clone(), ..element("hinted", line(p(0.0, 0.0), p(1.0, 0.0))) }];
             assert_eq!(Design::new(far, DesignSettings::default()).unwrap_err().code, Code::InternalCheckFailed, "{hints:?}");
