@@ -408,9 +408,9 @@ mod tests {
         assert_eq!(Change::HalfTurn.point(p(1.0, 2.0)), p(-1.0, -2.0));
         assert_eq!(Change::Split.point(p(1.0, 2.0)), p(1.0, 2.0));
         // Its start, end and target positions go with it.
-        let hints = stitchcraft_engine::design::Hints { start: Some(p(1.0, 2.0)), end: None, target: Some(p(3.0, 4.0)) };
+        let hints = stitchcraft_engine::design::Hints { start: Some(p(1.0, 2.0)), end: None, target: Some(p(3.0, 4.0)), ..Default::default() };
         let hinted = Element { hints, ..l_shape().elements()[0].clone() };
-        let mirrored = stitchcraft_engine::design::Hints { start: Some(p(-1.0, 2.0)), end: None, target: Some(p(-3.0, 4.0)) };
+        let mirrored = stitchcraft_engine::design::Hints { start: Some(p(-1.0, 2.0)), end: None, target: Some(p(-3.0, 4.0)), ..Default::default() };
         assert_eq!(Change::MirrorX.element(&hinted).hints, mirrored);
     }
 

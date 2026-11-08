@@ -26,6 +26,11 @@ jobs:
   gates:
     name: gates (cargo xtask ci)
     runs-on: ubuntu-24.04
+    env:
+      # wasmtime, which runs `stitch` as WebAssembly for `cargo xtask wasm --goldens`: its version, and the
+      # SHA-256 of its Linux archive.
+      WASMTIME_VERSION: "49.0.3"
+      WASMTIME_SHA256: 4001225413f208345b980525f31c4080e1873808b38d0ddc7918497340667fbb
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -39,17 +44,36 @@ jobs:
       - uses: ./.github/actions/tools
         with:
           tools: cargo-deny,typos,mdbook,cargo-public-api
+      # A pull request restores the archive a run on main kept, under its version and SHA-256, so an outage
+      # of GitHub's release downloads doesn't fail it. The next step checks the SHA-256 of whatever the cache
+      # gives, and fetches the archive again when the sums differ.
+      - name: wasmtime's archive, from the Actions cache when a run kept it
+        id: wasmtime
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/wasmtime-v${{ env.WASMTIME_VERSION }}-x86_64-linux.tar.xz
+          key: wasmtime-v${{ env.WASMTIME_VERSION }}-x86_64-linux-${{ env.WASMTIME_SHA256 }}
       - name: wasmtime, which runs `stitch` as WebAssembly for `cargo xtask wasm --goldens` (pinned by hash)
-        env:
-          VERSION: "49.0.3"
-          SHA256: 4001225413f208345b980525f31c4080e1873808b38d0ddc7918497340667fbb
         run: |
-          archive="wasmtime-v$VERSION-x86_64-linux"
-          curl --fail --silent --show-error --location --output "$RUNNER_TEMP/$archive.tar.xz" \
-            "https://github.com/bytecodealliance/wasmtime/releases/download/v$VERSION/$archive.tar.xz"
-          echo "$SHA256  $RUNNER_TEMP/$archive.tar.xz" | sha256sum --check --strict
-          tar --extract --xz --file "$RUNNER_TEMP/$archive.tar.xz" --directory "$RUNNER_TEMP"
+          archive="wasmtime-v$WASMTIME_VERSION-x86_64-linux"
+          file="$RUNNER_TEMP/$archive.tar.xz"
+          if ! echo "$WASMTIME_SHA256  $file" | sha256sum --check --status 2>/dev/null; then
+            # curl tries again after any error, every 10 seconds for a minute, as xtask's downloads of
+            # VectorCraft's releases do (xtask/src/compat/release.rs, whose test checks the options here).
+            curl --fail --location --retry-all-errors --retry 6 --retry-delay 10 --retry-max-time 60 --connect-timeout 20 --speed-time 20 \
+              --no-progress-meter --output "$file" \
+              "https://github.com/bytecodealliance/wasmtime/releases/download/v$WASMTIME_VERSION/$archive.tar.xz"
+          fi
+          echo "$WASMTIME_SHA256  $file" | sha256sum --check --strict
+          tar --extract --xz --file "$file" --directory "$RUNNER_TEMP"
           echo "$RUNNER_TEMP/$archive" >> "$GITHUB_PATH"
+      # After the step above, which fails unless the archive's SHA-256 is the pinned one.
+      - name: Keep wasmtime's archive in the Actions cache
+        if: steps.wasmtime.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/wasmtime-v${{ env.WASMTIME_VERSION }}-x86_64-linux.tar.xz
+          key: wasmtime-v${{ env.WASMTIME_VERSION }}-x86_64-linux-${{ env.WASMTIME_SHA256 }}
       - name: The independent reader for REQ-FMT-005 (pyembroidery, pinned by hash)
         uses: ./.github/actions/oracle
       - name: Vale for `cargo xtask prose`, built from its tagged source (Go's checksum database checks it)

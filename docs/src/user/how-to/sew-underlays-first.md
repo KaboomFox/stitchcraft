@@ -9,20 +9,20 @@ file that sets it as if it didn't, each underlay just before its top stitches
 
 ## What it changes
 
-Below, a bar and then a post, each with a contour and a zigzag underlay, sew as drawn and with their
-underlays first. Their stitches lie 1.2 mm apart, wider than usual, to let the underlays show:
+Below, a bar and then a post, each with a contour and a zigzag underlay, sew column by column and then with
+their underlays first. Their stitches lie 1.2 mm apart, wider than usual, to let the underlays show:
 
 <!-- shot: underlays-first -->
-| As drawn | Underlays first |
+| Column by column | Underlays first |
 |:-:|:-:|
-| ![2 red satin columns 5 mm wide and 16 mm long that cross, a bar and a post, each with a contour and a zigzag underlay, sewn with their stitches 1.2 mm apart so that the underlays show. As drawn, where they cross, the post's zigzag underlay lies on the bar's top stitches. With their underlays first, the bar's top stitches lie on both underlays there, under the post's, As drawn](../../images/generated/underlays-first-1.png) | ![2 red satin columns 5 mm wide and 16 mm long that cross, a bar and a post, each with a contour and a zigzag underlay, sewn with their stitches 1.2 mm apart so that the underlays show. As drawn, where they cross, the post's zigzag underlay lies on the bar's top stitches. With their underlays first, the bar's top stitches lie on both underlays there, under the post's, Underlays first](../../images/generated/underlays-first-2.png) |
+| ![2 red satin columns 5 mm wide and 16 mm long that cross, a bar and a post, each with a contour and a zigzag underlay, sewn with their stitches 1.2 mm apart so that the underlays show. Sewn column by column, the post's zigzag underlay lies on the bar's top stitches where they cross. With their underlays first, the bar's top stitches lie on both underlays there, under the post's, Column by column](../../images/generated/underlays-first-1.png) | ![2 red satin columns 5 mm wide and 16 mm long that cross, a bar and a post, each with a contour and a zigzag underlay, sewn with their stitches 1.2 mm apart so that the underlays show. Sewn column by column, the post's zigzag underlay lies on the bar's top stitches where they cross. With their underlays first, the bar's top stitches lie on both underlays there, under the post's, Underlays first](../../images/generated/underlays-first-2.png) |
 <!-- /shot -->
 
-On the left they sew as drawn: the bar's underlay and top stitches, then the post's. Where they cross, the
-post's zigzag underlay lies on the bar's top stitches. On the right the bar's underlay and the post's sew
-first, then the bar's top stitches and the post's. There the bar's top stitches lie on both underlays.
-From above, sewn as dense as usual, the 2 look alike. Machine checkpoint MC-12 sews both on TS-17C, to see
-which crossing lies flatter ([machine testing](../../plan/machine-testing.md)).
+On the left they sew column by column: the bar's underlay and top stitches, then the post's. Where they
+cross, the post's zigzag underlay lies on the bar's top stitches. On the right the bar's underlay and the
+post's sew first, then the bar's top stitches and the post's. There the bar's top stitches lie on both
+underlays. From above, sewn as dense as usual, the 2 look alike. Machine checkpoint MC-12 sews both on
+TS-17C, to see which crossing lies flatter ([machine testing](../../plan/machine-testing.md)).
 
 ## Set it
 

@@ -22,7 +22,7 @@ const NEAR: f64 = 4.0;
 
 /// `element` with the start and end positions `start` and `end`.
 fn placed(element: Element, start: Option<Point>, end: Option<Point>) -> Element {
-    Element { hints: Hints { start, end, target: None }, ..element }
+    Element { hints: Hints { start, end, ..Hints::default() }, ..element }
 }
 
 /// The needle points the element `index` sews in `outcome`'s plan, locks left out.

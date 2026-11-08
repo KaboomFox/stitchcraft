@@ -4,19 +4,22 @@
 //! Design: `docs/src/design/image-to-embroidery.md` › Stitch types by width, and
 //! `docs/src/design/algorithms/centre-lines.md` › Columns. A column covers the triangles of the part
 //! around its line ([`super::Skeleton`]). Its lines are found as a narrow part's are, but a branch is a bump
-//! only when it ends at a tip and at its junction too, the junction's 2 other branches running on
-//! ([`Bumps::Tips`]): a column beside a branch would cover it with stitches across the column and out along
-//! the branch, as a stem would sew the crossbar of a t with stitches from one end of it to the other. So
-//! each arm of a t's crossbar is a column of its own, or runs on through the stem, which ends under it; and a
-//! sharp corner that is a branch sews as part of the column of the arm that runs on into it most nearly
-//! straight.
+//! only when it ends at a tip and at its junction too, the junction's 2 other branches running on, or when
+//! it is a tooth of a traced outline ([`Bumps::Tips`]): a column beside a branch would cover it with stitches
+//! across the column and out along the branch, as a stem would sew the crossbar of a t with stitches from
+//! one end of it to the other. So each arm of a t's crossbar is a column of its own, or runs on through the
+//! stem, which ends under it; and a sharp corner that is a branch sews as part of the column of the arm that
+//! runs on into it most nearly straight.
 //!
 //! 1. **Its lines.** A line that turns by more than [`CORNER`] at a junction's middle, as the line of an L
 //!    does where its corner is a cap beside the junction, is cut there: a column that turned so would sew
 //!    its stitches into a fan at the inside of the corner. The column before the corner covers it, and the
 //!    one after ends under it, as an arm of a T ends under its bar. A line that comes back to a junction it
 //!    ran through, as the line of an R runs up its stem, round its bowl and back, is cut there into the line
-//!    up to the junction and a ring, whose column goes round the hole as a ring's does.
+//!    up to the junction and a ring, whose column goes round the hole as a ring's does. A line that leaves
+//!    the part through a cut just past a junction isn't cut there: its last piece runs into the cut's end. A
+//!    line that only runs along a cut or into one, and the lines of the points beside a cut ([`near_cuts`]),
+//!    make no column.
 //! 2. **Its triangles.** A triangle goes to the line that crosses it, and a junction to the line that runs
 //!    on through it, which crosses it twice, or to the one before it where 2 meet there. The caps of a
 //!    line's ends and the bumps left out of it, which no line crosses, go to the column beside them.
@@ -33,10 +36,14 @@
 //!    tip or to a junction's middle, runs off the column's way. Where an edge of the outline there lies
 //!    across that way, within 20° of square to it, and is no longer than twice that chord, the column ends
 //!    along all of it, as far as it runs straight, past where the end's triangles stop; otherwise at that
-//!    point. A longer edge runs along the column, as its side does where its line turns into a tip, but one
-//!    along a cut, where a narrow part was cut from a broad one (`auto::split`), is the end however long it
-//!    is. A column that is no more than its end, as a stub beyond a junction is, has that chord on its
-//!    outline, and its end goes round the other way.
+//!    point. A longer edge runs along the column, as its side does where its line turns into a tip. An end
+//!    with an edge along a cut, where a narrow part was cut from a broad one (`auto::split`), lies along the
+//!    cut instead, from its first such edge to its last, however long the cut is and however it lies to the
+//!    way. The triangles with a corner on a cut lie in that end, which the line doesn't enter, so that it
+//!    doesn't run along the cut into one of its corners, where the column would fan out. A part with holes
+//!    rings round them instead, its outline along a cut a rail of the ring. A column that is no more than
+//!    its end, as a stub beyond a junction is, has that chord on its outline, and its end goes round the
+//!    other way.
 //! 5. **Its rails** are the outline on either side between its ends, both from the line's start. A ring's
 //!    are its 2 rings, both the same way round, started at a rung whose second point is the inner ring's
 //!    point nearest its first, so that a satin column starts them together (`DEV-SAT-009`).
@@ -56,7 +63,7 @@ use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
 use stitchcraft_core::{Exhausted, Meter, Point, math};
 
-use super::{Bumps, Line, Node, Skeleton, Walked, edge, skeleton};
+use super::{Bumps, Graph, Line, Node, Skeleton, Walked, edge, skeleton};
 use crate::generators::satin::drawn::REACH;
 use crate::normalize::region::{Polygon, geom};
 use crate::normalize::satin::SAME_POINT;
@@ -159,16 +166,20 @@ struct Started {
 }
 
 /// The columns of `part`, one along each of its centre lines, its edges cut into pieces no longer than
-/// `longest`, with `meter`'s work: none for a dot, and `None` when the triangles round a line make no column.
-/// The edges of its outline along `cuts` are where it was cut from a broad part, and an end along one lies
-/// along all of it. A triangulation that loses its shape is a bug.
+/// `longest`, a branch that is no wider than `narrowest` somewhere a tooth ([`Bumps::Tips`]), with `meter`'s
+/// work: none for a dot, and `None` when the triangles round a line make no column. The edges of its outline
+/// along `cuts` are where it was cut from a broad part, and an end along one lies along all of it. Its
+/// triangles with a corner on a cut lie in that end, but for a part with holes: it rings round them, and its
+/// outline along a cut is a rail of the ring. A triangulation that loses its shape is a bug.
 pub(crate) fn columns(
     part: &Polygon,
     longest: f64,
     cuts: &[[Point; 2]],
+    narrowest: f64,
     meter: &mut Meter,
 ) -> Result<Result<Option<Vec<Column>>, Broken>, Exhausted> {
-    match skeleton(part, longest, Bumps::Tips, meter)? {
+    let ends = if part.holes.is_empty() { cuts } else { &[] };
+    match skeleton(part, longest, Bumps::Tips { narrowest }, ends, meter)? {
         Ok(skeleton) => Ok(Ok(built(&skeleton, cuts, meter)?)),
         Err(broken) => Ok(Err(broken)),
     }
@@ -177,7 +188,11 @@ pub(crate) fn columns(
 /// The columns of `skeleton`'s lines, its outline cut along `cuts`, with `meter`'s work; `None` when the
 /// triangles round one make no column.
 fn built(skeleton: &Skeleton, cuts: &[[Point; 2]], meter: &mut Meter) -> Result<Option<Vec<Column>>, Exhausted> {
-    let lines = unlooped(&cornered(skeleton, &skeleton.walked));
+    let near = near_cuts(&skeleton.graph, cuts, meter)?;
+    let lines: Vec<Walked> = unlooped(&cornered(skeleton, &skeleton.walked))
+        .into_iter()
+        .filter(|line| !along_cut(&skeleton.graph, line) && !line.nodes.iter().any(|node| near.contains(node)))
+        .collect();
     if lines.is_empty() {
         return Ok(Some(Vec::new()));
     }
@@ -197,6 +212,61 @@ fn built(skeleton: &Skeleton, cuts: &[[Point; 2]], meter: &mut Meter) -> Result<
     Ok(Some(columns))
 }
 
+/// Whether the open `line`, through `graph`'s points, only runs along a cut or into one: both its ends lead
+/// into the same cut, or one does and the other is a junction's middle where another line runs on, a stub
+/// between that line and the cut. A line between 2 cuts is a bar between 2 broad parts, and sews.
+fn along_cut(graph: &Graph, line: &Walked) -> bool {
+    let (Some(&first), Some(&last)) = (line.nodes.first(), line.nodes.last()) else { return false };
+    if line.closed {
+        return false;
+    }
+    match (graph.cut_at(first), graph.cut_at(last)) {
+        (Some(one), Some(other)) => one == other,
+        (Some(_), None) => graph.degree(last) == 3,
+        (None, Some(_)) => graph.degree(first) == 3,
+        (None, None) => false,
+    }
+}
+
+/// The points of `graph` whose lines lie in the end along one of `cuts`, with `meter`'s work: each set of
+/// points joined to each other that leads into a cut and comes no farther from it than half its length, as a
+/// square end's cap reaches, such as a tooth of a traced outline beside the cut, or a line that runs along it
+/// on the far side of its end. Their triangles go to the column whose end it is.
+fn near_cuts(graph: &Graph, cuts: &[[Point; 2]], meter: &mut Meter) -> Result<BTreeSet<usize>, Exhausted> {
+    let mut near = BTreeSet::new();
+    if cuts.is_empty() {
+        return Ok(near);
+    }
+    let mut seen = vec![false; graph.points.len()];
+    for start in 0..graph.points.len() {
+        if seen.get(start) != Some(&false) || graph.degree(start) == 0 {
+            continue;
+        }
+        // The points joined to `start`, each once.
+        let mut group = vec![start];
+        if let Some(slot) = seen.get_mut(start) {
+            *slot = true;
+        }
+        let mut k = 0;
+        while let Some(&at) = group.get(k) {
+            meter.charge(1)?;
+            for &next in graph.links.get(at).into_iter().flatten() {
+                if let Some(slot @ false) = seen.get_mut(next) {
+                    *slot = true;
+                    group.push(next);
+                }
+            }
+            k += 1;
+        }
+        let Some([a, b]) = group.iter().find_map(|&p| graph.cut_at(p)).and_then(|cut| cuts.get(cut)) else { continue };
+        let reach = a.distance(*b) / 2.0;
+        if group.iter().all(|&p| distance_to_segment(graph.point(p), *a, *b) <= reach) {
+            near.extend(group);
+        }
+    }
+    Ok(near)
+}
+
 /// The lines `walked`, through `skeleton`'s points, cut at each junction's middle where they turn by more than
 /// [`CORNER`]: a closed line with 2 or more such corners becomes as many open lines, each from one to the next.
 fn cornered(skeleton: &Skeleton, walked: &[Walked]) -> Vec<Walked> {
@@ -209,6 +279,12 @@ fn cornered(skeleton: &Skeleton, walked: &[Walked]) -> Vec<Walked> {
         // 2 ways from there, 1 at the sharpest; `None` elsewhere.
         let turn = |i: usize| -> Option<f64> {
             let size = nodes.get(i).and_then(|&node| graph.size.get(node).copied().flatten())?;
+            // A line that leaves the part through a cut just past a junction turns nowhere there: its last piece
+            // runs into the cut's end, where the column ends along the cut.
+            let leaves = |k: usize| nodes.get(k).is_some_and(|&node| graph.cut_at(node).is_some());
+            if !line.closed && (i + 2 == count && leaves(i + 1) || i == 1 && leaves(0)) {
+                return None;
+            }
             let at = nodes.get(i).map_or(Point::ORIGIN, |&node| graph.point(node));
             // The way from the middle to the first point at least `size` away, stepping by `step`. An open line
             // has no way past its ends, and so no turn at them.
@@ -547,11 +623,27 @@ impl Place<'_> {
                 meter.charge(u64::try_from(steps).unwrap_or(u64::MAX))?;
                 let arc: Vec<usize> = (0..=steps).map(|k| (from + k) % n).collect();
                 let true = arc.iter().take(steps).all(|&place| in_region(place)) else { return Ok(None) };
+                // A column cut from a broad part ends along the cut, however it lies to the line's way.
+                if let Some(span) = self.along_cut(&arc) {
+                    return Ok(Some(span));
+                }
                 let points = &self.skeleton.triangulation.points;
                 let chord = points.get(a).zip(points.get(b)).map_or(0.0, |(p, q)| p.distance(*q));
                 Ok(self.farthest(&arc, way, chord))
             }
         }
+    }
+
+    /// Where on the ring the edges of `arc`, places in the ring, that lie along a cut run: from the first such
+    /// edge's first place to the last one's second; `None` when no edge of the arc lies along a cut.
+    fn along_cut(&self, arc: &[usize]) -> Option<(usize, usize)> {
+        let points = &self.skeleton.triangulation.points;
+        let point = |place: usize| self.ring.get(place).and_then(|&p| points.get(p)).copied();
+        let on: Vec<usize> =
+            arc.windows(2).filter(|pair| point(pair[0]).zip(point(pair[1])).is_some_and(|(p, q)| self.cut(p, q))).map(|pair| pair[0]).collect();
+        let (first, last) = (*on.first()?, *on.last()?);
+        let n = self.ring.len();
+        Some((first, (last + 1) % n))
     }
 
     /// The triangles of the column beyond the chord between `corners`, from `beyond` on, with `meter`'s work.
@@ -620,7 +712,7 @@ impl Place<'_> {
     /// Whether the edge from `p` to `q` lies along a cut, to within [`STRAIGHT`]: an end along a cut lies along
     /// all of it, however long, where a column ends at the fill of the broad part it was cut from.
     fn cut(&self, p: Point, q: Point) -> bool {
-        self.cuts.iter().any(|&[a, b]| distance_to_segment(p, a, b) <= STRAIGHT && distance_to_segment(q, a, b) <= STRAIGHT)
+        self.cuts.iter().any(|cut| on_cut(p, std::slice::from_ref(cut)) && on_cut(q, std::slice::from_ref(cut)))
     }
 
     /// The last place of the ring from place `from`, forward round it or back, before its points stop lying on
@@ -649,6 +741,12 @@ impl Place<'_> {
         let length = math::hypot(dx, dy);
         length > 0.0 && ((c.x() - a.x()) * dy - (c.y() - a.y()) * dx).abs() <= STRAIGHT * length
     }
+}
+
+/// Whether `q` lies on one of `cuts`, to within [`STRAIGHT`]: the points the triangulation adds along a cut lie
+/// on it to within the region's grid.
+pub(super) fn on_cut(q: Point, cuts: &[[Point; 2]]) -> bool {
+    cuts.iter().any(|&[a, b]| distance_to_segment(q, a, b) <= STRAIGHT)
 }
 
 /// The rails between the ends at places `a` and `b` of `ring`, each its first and last place in the ring's

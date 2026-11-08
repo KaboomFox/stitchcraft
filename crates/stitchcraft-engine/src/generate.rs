@@ -43,7 +43,7 @@ use stitchcraft_params::{
 use stitchcraft_plan::{MachineProfile, Rgb};
 
 use crate::common::{CommonParams, STOP_AFTER, TRIM_AFTER};
-use crate::design::{DesignSettings, Element, Hints, Join, Path, Shape};
+use crate::design::{Clip, DesignSettings, Element, Hints, Join, Path, Shape};
 use crate::generators::circular::{self, Circular, circular_fill};
 use crate::generators::contour::{self, Contour, ContourParams, Stitching, contour_fill};
 use crate::generators::cross::{self, Cross, CrossParams, cross_stitch};
@@ -359,9 +359,9 @@ fn sew(
             clip_not_applied(element, diagnostics);
             satin_column(&sewing, neighbours, (path, *width, *join), &mut rng, diagnostics, meter)?
         }
-        // A ripple stitch is sewn whole, whatever its clips, until M10.11 cuts its lines (`SC-W0406`).
+        // A ripple stitch cuts its own stitches to its clips, and routes the pieces (`REQ-RIP-017`).
         Shape::Stroke { path, .. } if sewing.stitch_type == StitchType::RippleStitch => {
-            ripple(&sewing, path, !element.clips.is_empty(), &rng, diagnostics, meter)?
+            ripple(&sewing, path, &element.clips, &rng, diagnostics, meter)?
         }
         Shape::Stroke { path, width, .. } => {
             let Some(path) = cut::stroke(path, &element.clips, cut_line(sewing.stitch_type), diagnostics, meter)? else { return Ok(None) };
@@ -477,7 +477,7 @@ fn prepare<'a>(
         force_locks: common.force_lock_stitches,
     });
     let own = element.thread.color;
-    Ok(Some(Prepared { region, common, sewing: Sewing { set, stitch_type, shared, hints: element.hints, own } }))
+    Ok(Some(Prepared { region, common, sewing: Sewing { set, stitch_type, shared, hints: element.hints.clone(), own } }))
 }
 
 /// What the settings every stitch type shares give an element's generator.
@@ -917,14 +917,15 @@ fn stroke(
     }
 }
 
-/// A ripple stitch's stitches along `path` as `sewing` says, its random lengths drawn from streams of its
-/// `rng`, or `None` when it is skipped. It aims at its design's target point, and is sewn whole, and says
-/// so, when it is `clipped`. A satin column's settings are read as a ripple reads them, at their defaults:
-/// a ripple along a column applies none yet, and [`ripple::unapplied`] names those the element sets.
+/// A ripple stitch's stitches along `path` as `sewing` says, cut to `clips`, its random lengths drawn from
+/// streams of its `rng`, or `None` when it is skipped. It aims at its design's target point, and follows its
+/// guide and anchor lines ([`ripple::guide`]). A satin column's settings are read as a ripple reads them, at
+/// their defaults but for the ripple's own `reverse_rails` and `swap_satin_rails`, and
+/// [`ripple::unapplied`] names those the element sets that a ripple doesn't apply.
 fn ripple(
     sewing: &Sewing,
     path: &Path,
-    clipped: bool,
+    clips: &[Clip],
     rng: &SplitMix64,
     diagnostics: &mut Vec<Diagnostic>,
     meter: &mut Meter,
@@ -934,8 +935,21 @@ fn ripple(
     let passes = sewing.read(RepeatParams::from_set_as, diagnostics);
     let satin = sewing.read(SatinParams::from_set_as, diagnostics);
     let (Some(own), Some(running), Some(passes), Some(satin), Some(shared)) = (own, running, passes, satin, sewing.shared) else { return Ok(None) };
-    let unapplied = ripple::unapplied(&sewing.set);
-    let ripple = Ripple { ripple: own, running, passes, satin, min_stitch: shared.min_stitch, target: sewing.hints.target, unapplied, clipped };
+    let satin = SatinParams { reverse_rails: own.reverse_rails, swap_satin_rails: own.swap_satin_rails, ..satin };
+    let guide = sewing.hints.guide.as_ref().and_then(|guide| ripple::guide(guide, &own, diagnostics));
+    let ripple = Ripple {
+        unapplied: ripple::unapplied(&sewing.set),
+        ripple: own,
+        running,
+        passes,
+        satin,
+        min_stitch: shared.min_stitch,
+        jump: shared.jump,
+        target: sewing.hints.target,
+        guide,
+        anchor: sewing.hints.anchor,
+        clips: clips.to_vec(),
+    };
     Ok(Some(ripple_stitch(path, &ripple, rng, meter)?))
 }
 

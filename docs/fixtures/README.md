@@ -11,10 +11,12 @@ which VectorCraft traced ([below](#the-traced-pear)). Test inputs live in `confo
 | `badge.svg` | A red star inside a blue ring | the SVG tutorial: the `badge` shots and the `plan-badge` example; the window probe (`compat/vc-window`) |
 | `traced-badge.svg` | A badge as Image Trace traces it in the Brother threads `stitch palette` writes: a red disc, a blue square and a gold disc, abutting, on white, none with settings | the picture tutorial: the `traced-badge` shots and the `plan-traced-badge` example; automatic digitizing's neighbours |
 | `emblem.svg` | An emblem drawn in layers on white in 4 of those threads, each layer whole and none with settings. A navy square 50 mm wide holds a white disc with a red star on it and 3 gold bars 3 mm tall | automatic digitizing's flat-colour art: the `auto-emblem-picture` and `auto-emblem` shots |
-| `traced-pear.vectorcraft` | The photo of a pear that the `auto-pear-photo` shot draws, traced 90 mm across in 4 of those threads: a light grey backdrop, and the pear in 3 bands of green | automatic digitizing's photo: the `auto-pear-traced` and `auto-pear` shots |
+| `traced-pear.vectorcraft` | The photo of a pear that the `auto-pear-photo` shot draws, traced 90 mm across in 4 of those threads: a light grey backdrop, and the pear in 3 bands of green | automatic digitizing's photo: the `auto-pear-traced` and `auto-pear` shots, and the engine's cases of what a digitized picture leaves bare and lays astray (`stitchcraft_testkit::pictures::pear`) |
 | `wave.svg` | A smooth wave | running stitch length |
 | `zigzag.svg` | The same wave, drawn 3 mm wide | the zigzag stroke's spacing and angle, and a satin column drawn as one path |
 | `ripple.svg` | An arch, half a circle 30 mm across, open at the bottom | the ripple stitch's lines and joins |
+| `ripple-guide.svg` | A wave 12 mm long, grouped with an arch that Ink/Stitch's guide-line marker makes a guide | the ripple stitch's guide lines |
+| `ripple-satin-guide.svg` | A zigzag, grouped with a satin guide: a curved band 12 mm wide between 2 rails, with 3 rungs | the ripple stitch's satin guides |
 | `e-stitch.svg` | A curved band 4 mm wide between 2 rails | the E-stitch's spacing and swapped rails |
 | `s-stitch.svg` | A curved band 6 mm wide between 2 rails | the S-stitch's spacing and split stitches, the zigzag satin's spacing and its look beside a satin column, and the satin column's spacing and underlays |
 | `crossing.svg` | 2 bands 5 mm wide and 16 mm long between 2 rails each, a bar and a post that cross at their middles | satin columns sewn as drawn and with their underlays first |

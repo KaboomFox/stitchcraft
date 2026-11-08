@@ -130,6 +130,12 @@ lines are found as above, but for these steps:
   wide square end. A branch that ends in a cap is an arm with an end of its own. A branch to a tip that
   another branch runs on into is that line's end: the leg of an A runs on below its crossbar into its
   foot's sharp corner.
+- **Teeth.** A traced outline steps where a photo's shading crosses from one thread to the next, and each
+  step gives a branch to a cap. As an arm, it sewed a column of a few stitches beside the column it left,
+  and its junction cut that column in 2. So a tooth is a bump too: a branch to a cap whose narrowest chord
+  is no longer than the narrowest satin stroke. It reaches no further than the junction triangle's longest
+  edge, or than that stroke's width if that is more. A tooth narrows to its end, while an arm keeps its
+  width.
 - **Corners.** A line that turns by more than 60° at a junction's middle, each way measured as a branch's
   is, is cut there: a column that turned so would sew a fan of stitches into the inside of the corner. Of
   2 such corners within twice the larger junction triangle's longest edge of each other, as where a V ends
@@ -154,11 +160,25 @@ lines are found as above, but for these steps:
   between an edge's pieces. A column that ended at that point would leave the other piece on a rail, with
   its stitches leaning towards it. A longer edge runs along the column, as its side does where its line
   turns into a tip. An edge along a cut, where a narrow part was cut from a broad one
-  ([image to embroidery](../image-to-embroidery.md)), is the end however long it is: across a tapering
-  point, the cut is wider than twice the chord the end begins at. Otherwise the column ends at that point,
-  its rails meeting. A column can be only its
+  ([image to embroidery](../image-to-embroidery.md)), is the end however long it is and however it lies to
+  the line's way: across a tapering point, the cut is wider than twice the chord the end begins at.
+  Otherwise the column ends at that point, its rails meeting. A column can be only its
   end, as a stub beyond a junction is. The chord its end begins at is then on its outline, and its end goes
   round the other way.
+- **Cuts.** A part cut from a broad one ends along each cut. Its triangles with a corner on the cut lie in
+  that end, as a cap's do, and no line crosses them. A chord where they meet the rest of the part ends a
+  branch into the cut, and such a branch is never a bump. At a junction it runs on with the branch that
+  runs on most nearly straight towards the cut's middle, and never with another branch into the same cut,
+  which would run the line along the cut. The line then ends at the cut, beside the fill. Its last turn
+  before the cut doesn't cut it in 2, as its last piece runs into the cut's end. Some lines lie along a cut
+  and don't make a column: those that lead into the same cut at both ends, and those between a cut and a
+  junction that another line runs on through. The lines of a set of joined points that leads into a cut
+  and comes no farther from it than half its length, as a square end's cap reaches, are left out too, such
+  as a tooth beside the cut. Their triangles go to the column whose end it is. A line that ran on into the
+  cut's triangles turned along the cut to one of its corners. Its column then sewed its stitches into a fan
+  at that corner and left a wedge of fabric bare, as the traced pear's olive band did
+  ([automatic digitizing](../../user/stitches/automatic.md#a-photo-in-a-few-colours)). A part with holes
+  rings round them instead, and its outline along a cut is a rail of the ring.
 - **Rails.** The rails are the outline on either side between the ends, both from the line's start. A
   ring's are its outer and inner outline, the same way round, started at a rung whose point on the inner
   one is the inner one's point nearest its point on the outer, so that a satin column starts them together
