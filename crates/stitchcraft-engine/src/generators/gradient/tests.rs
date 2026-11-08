@@ -307,3 +307,19 @@ fn a_run_sewn_on_in_its_thread_starts_a_shortest_stitch_from_the_run_before() {
         vec![group(RED, true, &[0.0, 5.0]), group(RED, false, &[5.0, 5.2, 5.3, 8.0]), group(BLUE, false, &[8.1, 9.0]), group(BLUE, false, &[9.1])];
     assert_eq!(runs(joined(groups, 0.3)), [vec![0.0, 5.0], vec![5.3, 8.0], vec![8.1, 9.0], vec![9.1]]);
 }
+
+#[test]
+fn a_stop_passed_over_before_row_0_leaves_out_no_row_of_the_fill() {
+    // A gradient 0.6 mm long ending at row 0, 3 mm left of the square, rows 0.3 mm apart: its first stop lies 2
+    // rows before row 0 and its second at row 0, a blend of 2 rows, which passes the second over. The row the
+    // blend leaves out lies before row 0, so nothing is said, and every row is blue.
+    let gradient = along(-3.6, -3.0, &[(0.0, RED, 1.0), (1.0, BLUE, 1.0)]);
+    let square = region(&[(0.0, 0.0, 20.0, 20.0)]);
+    let fill = filled(Colouring::Gradient(gradient.clone()));
+    let rows = Rows::lay(&square.parts[0], fill.way(), fill.spacing, fill.stitching.longest, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    assert_eq!(rows.stop_rows(&gradient), [-2, 0]);
+    let mut passed = BTreeSet::new();
+    let colours = coloured(&square.parts[0], &fill, &SplitMix64::new(1), &mut passed, &mut Budget::DEFAULT.meter()).unwrap();
+    assert_eq!(colours.iter().map(|(colour, rows)| (*colour, rows.is_empty())).collect::<Vec<_>>(), [(BLUE, false)]);
+    assert!(passed.is_empty(), "{passed:?}");
+}
