@@ -10,10 +10,17 @@
 //! circles, and the T and the E have strokes that branch, so the route cuts columns and runs under them.
 //! The differential routes the letters above with Ink/Stitch's tool too, and compares what both sew
 //! (`REQ-ROUTE-008`).
+//!
+//! M10.15's part, at the bottom: 2 satin columns 5 mm wide in red that cross, a bar and a post 30 mm long,
+//! each with a contour and a zigzag underlay ([`crossing`]). On the left they are sewn as drawn: the bar,
+//! underlay and top, then the post, whose underlay lies over the bar's top stitches where they cross. On
+//! the right, [`FIRST_BESIDE`] mm over, the same 2 set `underlays_first` and sew both underlays, then both
+//! tops (`REQ-ASM-009`), for MC-12 to compare. Ink/Stitch has no such order, so the differential's file of
+//! the sheet leaves the right-hand pair out (`stitchcraft_testkit::inkstitch`).
 
 use super::designed::{Drawing, KAPPA, Start};
 use super::sketch::SheetError;
-use super::{BLUE, thread};
+use super::{BLUE, RED, thread};
 use crate::design::{Segment, Subpath};
 use crate::route::{Options, Route, Tool};
 use stitchcraft_core::Point;
@@ -28,6 +35,15 @@ pub const LETTERS: [&str; 11] = ["r-stem", "r-bowl", "r-leg", "o", "u", "t-bar",
 /// Each column's settings: a centre walk underlay, as lettering's columns have.
 const SETTINGS: [(&str, &str); 1] = [("center_walk_underlay", "true")];
 
+/// How far right of the crossing columns as drawn their copy that sews its underlays first lies (mm).
+pub const FIRST_BESIDE: f64 = 42.0;
+
+/// The crossing columns, by name, in the order they are drawn.
+pub const CROSSING: [&str; 2] = ["bar", "post"];
+
+/// Each crossing column's settings: a contour and a zigzag underlay, as a column 5 mm wide has.
+const CROSSING_SETTINGS: [(&str, &str); 2] = [("contour_underlay", "true"), ("zigzag_underlay", "true")];
+
 /// Draws TS-17C.
 pub(super) fn drawing() -> Result<Drawing, SheetError> {
     let blue = thread(BLUE)?;
@@ -36,7 +52,23 @@ pub(super) fn drawing() -> Result<Drawing, SheetError> {
     let mut routed = Drawing::new("ts17c");
     letters(&mut routed, "routed", BELOW, &blue)?;
     d.routed(&routed, &Route { tool: Tool::Satins, options: Options::default(), start: None, end: None })?;
+    let red = thread(RED)?;
+    crossing(&mut d, "crossing-drawn", 0.0, &red, &[])?;
+    crossing(&mut d, "crossing-first", FIRST_BESIDE, &red, &[("underlays_first", "true")])?;
     Ok(d)
+}
+
+/// 2 satin columns 30 mm long and 5 mm wide that cross at their middles ([`CROSSING`]): a bar along y = 110
+/// from x = 6 to 36, then a post along x = 21 from y = 95 to 125, each between 2 straight rails. They are
+/// named after `half`, drawn `right` mm right of there and sewn with `thread`, their underlays and `more`.
+pub(super) fn crossing(d: &mut Drawing, half: &str, right: f64, thread: &Thread, more: &[(&str, &str)]) -> Result<(), SheetError> {
+    let line = |(x0, y0): (f64, f64), (x1, y1): (f64, f64)| -> Result<Subpath, SheetError> {
+        Ok(Subpath { start: Point::new(x0 + right, y0)?, segments: vec![Segment::Line(Point::new(x1 + right, y1)?)], closed: false })
+    };
+    let settings = [&CROSSING_SETTINGS[..], more].concat();
+    let [bar, post] = CROSSING;
+    d.satin_drawn(&format!("{half}:{bar}"), vec![line((6.0, 107.5), (36.0, 107.5))?, line((6.0, 112.5), (36.0, 112.5))?], thread, &settings)?;
+    d.satin_drawn(&format!("{half}:{post}"), vec![line((18.5, 95.0), (18.5, 125.0))?, line((23.5, 95.0), (23.5, 125.0))?], thread, &settings)
 }
 
 /// The letters ROUTE, their columns named after `half`, `down` mm below the top, sewn with `thread`.
@@ -134,6 +166,8 @@ fn across(from: (f64, f64), to: (f64, f64)) -> [[(f64, f64); 2]; 3] {
 
 #[cfg(test)]
 mod tests {
+    use stitchcraft_plan::{Role, StitchKind};
+
     use super::*;
     use crate::design::Element;
 
@@ -231,12 +265,55 @@ mod tests {
     }
 
     #[test]
+    fn ts17c_s_crossing_columns_sew_as_drawn_on_the_left_and_their_underlays_first_on_the_right() {
+        let design = super::super::find("TS-17C").unwrap().design().unwrap().unwrap();
+        let pair: Vec<&Element> = design.elements().iter().filter(|e| e.id.as_str().starts_with("ts17c:crossing-")).collect();
+        let found: Vec<(String, Vec<String>)> = pair.iter().map(|column| (column.id.to_string(), svg(column))).collect();
+        let drawn = |half: &str, right: f64| -> [(String, Vec<String>); 2] {
+            let x = |at: f64| (at + right).to_string();
+            [
+                (format!("ts17c:{half}:bar"), vec![format!("M{},107.5 L{},107.5", x(6.0), x(36.0)), format!("M{},112.5 L{},112.5", x(6.0), x(36.0))]),
+                (format!("ts17c:{half}:post"), vec![format!("M{},95 L{},125", x(18.5), x(18.5)), format!("M{},95 L{},125", x(23.5), x(23.5))]),
+            ]
+        };
+        assert_eq!(found, [drawn("crossing-drawn", 0.0), drawn("crossing-first", FIRST_BESIDE)].concat());
+        // Satin columns with a contour and a zigzag underlay, in red, the right-hand pair with its underlays first.
+        let red = thread(RED).unwrap();
+        let settings = [("contour_underlay", "true"), ("satin_column", "true"), ("zigzag_underlay", "true")];
+        let first = [("contour_underlay", "true"), ("satin_column", "true"), ("underlays_first", "true"), ("zigzag_underlay", "true")];
+        for (k, column) in pair.iter().enumerate() {
+            assert!(column.thread == red && column.params.iter().eq(if k < 2 { &settings[..] } else { &first[..] }.iter().copied()), "{column:?}");
+        }
+        // As sewn: the left pair column by column, all its stitches top, and the right pair's underlays, then
+        // its top stitches.
+        let plan = super::super::find("TS-17C").unwrap().plan().unwrap();
+        let mut layers: Vec<(String, Role)> = Vec::new();
+        for stitch in plan.blocks.iter().flat_map(|block| &block.stitches).filter(|s| s.kind == StitchKind::Normal && s.origin.role != Role::Lock) {
+            let id = plan.element(stitch.origin.element.unwrap()).unwrap().as_str();
+            let Some(name) = id.strip_prefix("ts17c:crossing-") else { continue };
+            if layers.last().is_none_or(|(last, role)| last != name || *role != stitch.origin.role) {
+                layers.push((name.to_string(), stitch.origin.role));
+            }
+        }
+        let sewn = [
+            ("drawn:bar", Role::Top),
+            ("drawn:post", Role::Top),
+            ("first:bar", Role::Underlay),
+            ("first:post", Role::Underlay),
+            ("first:bar", Role::Top),
+            ("first:post", Role::Top),
+        ];
+        assert_eq!(layers, sewn.map(|(name, role)| (name.to_string(), role)));
+    }
+
+    #[test]
     fn ts17c_s_routed_half_trims_after_each_letter_and_nowhere_else() {
         // The letters as drawn, then the pieces of the route of those below, each named after its column. The
         // route sews each letter in one go, and the jump to the next letter, more than 1 mm long, trims.
         let design = super::super::find("TS-17C").unwrap().design().unwrap().unwrap();
-        let (drawn, pieces) = design.elements().split_at(LETTERS.len());
+        let (drawn, rest) = design.elements().split_at(LETTERS.len());
         assert_eq!(drawn, columns("drawn", 0.0).as_slice());
+        let pieces: Vec<&Element> = rest.iter().take_while(|piece| piece.id.as_str().starts_with("ts17c:routed:")).collect();
         let letter = |piece: &Element| piece.id.as_str().strip_prefix("ts17c:routed:").and_then(|name| name.chars().next());
         let sewn: Vec<(Option<char>, bool)> = pieces.iter().map(|piece| (letter(piece), piece.params.get("trim_after") == Some("true"))).collect();
         for (k, &(of, trims)) in sewn.iter().enumerate() {

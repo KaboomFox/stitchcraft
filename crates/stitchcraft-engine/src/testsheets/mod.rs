@@ -518,13 +518,15 @@ pub static SHEETS: &[TestSheet] = &[
     },
     TestSheet {
         id: "TS-17C",
-        title: "Ripples and routing: satin letters as drawn and routed",
+        title: "Ripples, routing and layers: satin letters as drawn and routed, and crossing columns",
         checks: &[
             "Top: the word ROUTE in satin columns 3 mm wide, sewn as drawn, column by column. Bottom: the same letters as auto-satin routing joins them, cut into pieces, with running stitches under the satins and a trim between letters.",
             "Count the jump threads of each half, within each letter and between the letters. The routed half should have none within a letter. Its file asks for a trim between letters, which a machine that obeys trims cuts.",
             "On the routed half, do the running stitches under the satins show anywhere, at a column's edge, at its ends or where 2 columns meet?",
             "Where a routed column is cut into pieces, is the satin even across the cut, or does a gap, a ridge or a stitch out of line show?",
             "The time each half takes, from its first stitch to its last.",
+            "At the bottom, in red: 2 satin columns 5 mm wide that cross, a bar and a post, each with a contour and a zigzag underlay. On the left they sew as drawn, so the post's underlay lies on the bar's top stitches. On the right they sew with their underlays first: both underlays, then both tops. Compare the 2 crossings: does the right one lie flatter, with less bulk or fewer stitches showing through where the columns meet?",
+            "On the right, the needle goes back from the post's underlay to the bar for the top stitches. Does its way there show, or a jump thread or its locks where it jumps?",
         ],
         profile: REFERENCE,
         drawn: Drawn::Routed(ts17c::drawing, &[Code::StitchesMerged]),
