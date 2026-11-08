@@ -322,9 +322,9 @@ impl Graph {
         for pair in elements.windows(2) {
             let &[from, to] = pair else { continue };
             let (from, to) = (self.places_on(from, meter)?, self.places_on(to, meter)?);
-            if let Some((_, a, b)) = self.nearest(&from, &to, meter)? {
-                self.jump(a, b, meter)?;
-            }
+            // Every element routed has a piece, so both have places, and the nearest of them is found.
+            let Some((_, a, b)) = self.nearest(&from, &to, meter)? else { continue };
+            self.jump(a, b, meter)?;
         }
         Ok(())
     }
