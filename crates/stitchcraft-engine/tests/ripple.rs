@@ -1,7 +1,7 @@
-//! The ripple stitch in a plan, through the engine's public API: its target point, its guide, its clips and
-//! what it says (`REQ-RIP-002`, `REQ-RIP-010`, `REQ-RIP-012`, `REQ-RIP-017`, `SC-W0406` to `SC-W0408`). Its
-//! unit cases are in `src/generators/ripple/tests.rs`, and its guides, grid and clips needle point by needle
-//! point in `tests/ripple_guided.rs`.
+//! The ripple stitch in a plan, through the engine's public API: its target point, its guide, its clips, its
+//! column's rails and what it says (`REQ-RIP-002`, `REQ-RIP-010`, `REQ-RIP-012`, `REQ-RIP-017`, `REQ-RIP-018`,
+//! `SC-W0406` to `SC-W0408`). Its unit cases are in `src/generators/ripple/tests.rs`, and its guides, grid and
+//! clips needle point by needle point in `tests/ripple_guided.rs`.
 
 // Test code may unwrap, index and panic (clippy.toml allows the first 2 in tests).
 #![allow(clippy::unwrap_used, clippy::indexing_slicing, clippy::panic)]
@@ -88,6 +88,20 @@ fn req_rip_017_a_ripple_cut_to_clips_sews_what_lies_inside_them() {
     assert_eq!(messages(&cut), Vec::<String>::new());
     let points = sewn(&cut);
     assert!(!points.is_empty() && points.iter().all(|q| q.x().abs() <= 5.0 + 1e-6), "{points:?}");
+}
+
+#[test]
+fn req_rip_018_a_column_s_rails_are_read_with_the_ripple_s_reverse_rails_and_swap_satin_rails() {
+    // The first needle point: the first rail's start, the second's with swap_satin_rails, and with both rails
+    // reversed, the first's end.
+    let first = |with: &[(&str, &str)]| {
+        let outcome = planned(vec![ripple(column(), &[with, &[("line_count", "3"), ("staggers", "0")]].concat())]);
+        assert_eq!(messages(&outcome), Vec::<String>::new());
+        sewn(&outcome)[0]
+    };
+    assert_eq!(first(&[]), p(-10.0, 0.0));
+    assert_eq!(first(&[("swap_satin_rails", "true")]), p(-10.0, 4.0));
+    assert_eq!(first(&[("reverse_rails", "both")]), p(10.0, 0.0));
 }
 
 #[test]
