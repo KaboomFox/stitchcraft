@@ -5,6 +5,18 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M10.13: auto-run routing (`REQ-ROUTE-009` to `REQ-ROUTE-013`, `REQ-VC-020`). `stitchcraft_engine::route`
+  routes running stitches as Ink/Stitch's Auto-Route Running Stitch does, with `Tool::Runs`. With Add nodes
+  at intersections, each stroke's lines are cut where they cross themselves and each other, and where 2
+  pass within 50 CSS pixels (13.2 mm) of each other, at their nearest points. The pieces are routed through
+  M10.4's graph, a piece passed twice runs under the others first without repeats or bean stitch, a stretch
+  on top keeps its stroke's settings with an even number of repeats lowered by 1, and with Trim jump
+  stitches a jump longer than 0.75 mm trims. Each tool declares its own options, `Tool::options`. In
+  VectorCraft, the heavy filter StitchCraft Auto-Route Running Stitch (`--features route-runs`) replaces the
+  selected strokes with the route. New code: `SC-W1004`, for more lines than are cut. TS-17C draws a network
+  of 6 lines below its letters, as drawn and routed, and the differential routes it with Ink/Stitch's tool
+  with each option. Golden changed: `TS-17C.pes`, for the network below the letters. Fixed: with Preserve
+  order, M10.4's route sewed a jump where a piece already joined the jump's ends.
 - M10.4: auto-satin routing. `stitchcraft_engine::route` routes satin columns, and the strokes among them,
   as Ink/Stitch's Auto-Route Satin Columns does. Each column is cut into pieces at most 1 mm long along its
   centre line, and the groups of pieces are joined by the shortest jumps in all. A stretch passed twice is
