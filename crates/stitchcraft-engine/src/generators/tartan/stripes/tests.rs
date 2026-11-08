@@ -4,7 +4,7 @@ use stitchcraft_core::Budget;
 use stitchcraft_core::math::sin_cos;
 
 use super::*;
-use crate::generators::tatami::fixture::p;
+use crate::generators::tatami::fixture::{Question, costs, p};
 
 const RED: Rgb = Rgb::new(255, 0, 0);
 const BLUE: Rgb = Rgb::new(0, 0, 255);
@@ -40,9 +40,12 @@ fn req_fill_trt_003_the_box_reaches_the_radius_of_the_smallest_circle_round_the_
         })
         .collect();
     assert!((enclosing_radius(&round, meter).unwrap() - 3.0).abs() < 1e-9);
-    // The work is charged.
+    // The work is charged: the hull's points, then the search, which takes them in the order the same
+    // shuffle gives every time.
     assert!(enclosing_radius(&round, &mut Budget { max_work: 10, ..Budget::DEFAULT }.meter()).is_err());
     assert!(enclosing_radius(&round, &mut Budget { max_work: 40, ..Budget::DEFAULT }.meter()).is_err());
+    let search: Question<'_> = Box::new(|meter| enclosing_radius(&round, meter).map(|_| ()));
+    assert_eq!(costs(&[search]), [90]);
 }
 
 #[test]
@@ -57,6 +60,15 @@ fn a_circle_through_3_points_on_a_line_is_across_the_2_farthest_apart() {
 }
 
 #[test]
+fn a_circle_through_3_points_has_its_middle_as_far_from_each() {
+    let circle = Circle::through(p(0.0, 0.0), p(2.0, 0.0), p(0.0, 2.0));
+    assert_eq!(circle.middle, p(1.0, 1.0));
+    assert!((circle.radius - 2.0_f64.sqrt()).abs() < 1e-12, "{circle:?}");
+    // A circle of no radius holds its middle.
+    assert!(Circle { middle: p(1.0, 1.0), radius: 0.0 }.holds(p(1.0, 1.0)));
+}
+
+#[test]
 fn a_convex_hull_keeps_the_corners_once() {
     let meter = &mut Budget::DEFAULT.meter();
     let points = [p(0.0, 0.0), p(2.0, 1.0), p(4.0, 0.0), p(4.0, 4.0), p(2.0, 2.0), p(0.0, 4.0), p(0.0, 0.0), p(2.0, 0.0)];
@@ -64,6 +76,13 @@ fn a_convex_hull_keeps_the_corners_once() {
     hull.sort_by(|a, b| a.x().total_cmp(&b.x()).then(a.y().total_cmp(&b.y())));
     assert_eq!(hull, [p(0.0, 0.0), p(0.0, 4.0), p(4.0, 0.0), p(4.0, 4.0)]);
     assert_eq!(convex_hull(&[p(1.0, 1.0), p(1.0, 1.0)], meter).unwrap(), [p(1.0, 1.0)]);
+    // In order round the hull from its least point, as the 2 chains join: a triangle's 3 corners, and a
+    // square's 4 without the points inside it and along its sides.
+    assert_eq!(convex_hull(&[p(0.0, 4.0), p(4.0, 0.0), p(0.0, 0.0)], meter).unwrap(), [p(0.0, 0.0), p(4.0, 0.0), p(0.0, 4.0)]);
+    let inner = [p(0.0, 0.0), p(4.0, 0.0), p(4.0, 4.0), p(0.0, 4.0), p(2.0, 2.0), p(2.0, 0.0), p(1.0, 3.0)];
+    assert_eq!(convex_hull(&inner, meter).unwrap(), [p(0.0, 0.0), p(4.0, 0.0), p(4.0, 4.0), p(0.0, 4.0)]);
+    // 3 points on a line are its 2 ends.
+    assert_eq!(convex_hull(&[p(0.0, 0.0), p(1.0, 0.0), p(2.0, 0.0)], meter).unwrap(), [p(0.0, 0.0), p(2.0, 0.0)]);
     assert!(convex_hull(&points, &mut Budget { max_work: 7, ..Budget::DEFAULT }.meter()).is_err());
 }
 
@@ -82,6 +101,9 @@ fn req_fill_trt_003_a_full_sett_is_laid_in_turn_bands_of_a_colour_that_meet_made
     // Red and blue 5 mm each from 0 to past 22: red at 0, 10 and 20, blue at 5 and 15.
     let walked = walk(&[band(RED, 5.0), band(BLUE, 5.0)], Direction::Warp, &frame(0.0, 22.0), meter).unwrap();
     assert_eq!(walked.bands, [(RED, vec![[0.0, 5.0], [10.0, 15.0], [20.0, 25.0]]), (BLUE, vec![[5.0, 10.0], [15.0, 20.0]])]);
+    // The sett is laid until it passes the far side: a band that starts on it is laid too.
+    let walked = walk(&[band(RED, 5.0), band(BLUE, 5.0)], Direction::Warp, &frame(0.0, 10.0), meter).unwrap();
+    assert_eq!(walked.bands, [(RED, vec![[0.0, 5.0], [10.0, 15.0]]), (BLUE, vec![[5.0, 10.0]])]);
     // A run between 2 red bands leaves them one, and lies where they meet; an unsewn band parts them. Its
     // colour first comes as a run, so it comes first in the order of both.
     let items = [Item::Run(BLUE), band(RED, 2.0), Item::Run(BLUE), band(RED, 3.0), Item::Band { colour: None, width: 1.0 }, band(BLUE, 1.0)];
@@ -131,6 +153,9 @@ fn a_turn_is_exact_for_quarter_turns_and_undone_by_its_back() {
     let some = Turn::new(p(0.0, 0.0), 30.0);
     let q = some.back().apply(some.apply(p(3.0, -2.0)));
     assert!(q.distance(p(3.0, -2.0)) < 1e-12);
+    // A direction turns as a point turns about the origin.
+    let q = some.apply(p(1.0, 2.0));
+    assert_eq!(some.direction((1.0, 2.0)), (q.x(), q.y()));
 }
 
 #[test]
@@ -160,8 +185,7 @@ fn polygon(outline: &[Point]) -> Polygon {
 
 #[test]
 fn req_fill_trt_005_a_line_ending_inside_the_piece_runs_on_along_the_band_s_edge_to_the_nearest_ring() {
-    let square = polygon(&[p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0), p(0.0, 0.0)]);
-    let (box_, tartan) = (frame(-10.0, 20.0), super::super::tests::tartan(&[]));
+    let (square, box_, tartan) = (square(), frame(-10.0, 20.0), super::super::tests::tartan(&[]));
     let laying = laying(&square, &box_, &tartan);
     let meter = &mut Budget::DEFAULT.meter();
     // A line that starts inside, 4 mm above the outline along the band's upright edge, runs on from its start
@@ -173,6 +197,14 @@ fn req_fill_trt_005_a_line_ending_inside_the_piece_runs_on_along_the_band_s_edge
     let mut line = vec![p(6.0, 0.0), p(6.0, 7.5)];
     laying.run_on(&mut line, meter).unwrap();
     assert_eq!(line, [p(6.0, 0.0), p(6.0, 7.5), p(6.0, 10.0)]);
+    // An end within 0.05 pixel of the outline, 0.0132 mm, stays as it is: 2⁻⁷ mm is within it, and 2⁻⁶ mm
+    // isn't.
+    let mut line = vec![p(4.0, 0.007_812_5), p(4.0, 10.0)];
+    laying.run_on(&mut line, meter).unwrap();
+    assert_eq!(line, [p(4.0, 0.007_812_5), p(4.0, 10.0)]);
+    let mut line = vec![p(4.0, 0.015_625), p(4.0, 10.0)];
+    laying.run_on(&mut line, meter).unwrap();
+    assert_eq!(line, [p(4.0, 0.0), p(4.0, 0.015_625), p(4.0, 10.0)]);
 }
 
 #[test]
@@ -185,4 +217,124 @@ fn req_fill_trt_007_a_run_s_pieces_of_half_a_millimetre_or_less_are_left_out() {
     let meter = &mut Budget::DEFAULT.meter();
     assert_eq!(laying.run(0.4, meter).unwrap(), Vec::<Vec<Point>>::new());
     assert_eq!(laying.run(5.0, meter).unwrap(), [vec![p(5.0, 0.0), p(5.0, 2.5), p(5.0, 5.0)]]);
+}
+
+/// The square from 0 to 10 mm both ways.
+fn square() -> Polygon {
+    polygon(&[p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0), p(0.0, 0.0)])
+}
+
+/// The triangle under the line from (10, 0) to (0, 10).
+fn triangle() -> Polygon {
+    polygon(&[p(0.0, 0.0), p(10.0, 0.0), p(0.0, 10.0), p(0.0, 0.0)])
+}
+
+/// Level rows across a box from -10 to 20 mm, from its left side, one at each of `ys`, with needle points
+/// `step` mm apart and at their ends, each other one run back: all the warp's.
+fn level(ys: &[f64], step: f64) -> Rows {
+    let points: Vec<f64> = (0..).map(|j| f64::from(j) * step).take_while(|&t| t < 30.0).chain([30.0]).collect();
+    Rows {
+        starts: ys.iter().map(|&y| p(-10.0, y)).collect(),
+        along: (1.0, 0.0),
+        length: 30.0,
+        points: vec![points; ys.len()],
+        taken: [(0..ys.len()).map(|k| (k, k % 2 == 1)).collect(), Vec::new()],
+    }
+}
+
+#[test]
+fn req_fill_trt_003_the_margin_is_the_sett_s_width_or_2_rows_per_thread_of_rows_whichever_is_more() {
+    // The square's smallest circle has a radius of √50 round its middle, (5, 5), and the box reaches a margin
+    // further: 2 × 4 rows 0.25 mm apart are 2 mm, more than a sett 1 mm wide and less than one 3 mm wide.
+    let square = square();
+    let radius = 50.0_f64.sqrt();
+    let reach = |margin: f64| {
+        let tartan = Tartan { margin, spacing: 0.25, rows_per_thread: 4, ..super::super::tests::tartan(&[]) };
+        let frame = Frame::of(&square, &tartan, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+        assert_eq!(frame.middle, p(5.0, 5.0));
+        assert!((frame.max[0] - frame.max[1]).abs() + (frame.min[0] - frame.min[1]).abs() < 1e-12, "{frame:?}");
+        (frame.max[0] - 5.0 - radius, 5.0 - radius - frame.min[0])
+    };
+    let near = |(a, b): (f64, f64), margin: f64| (a - margin).abs() < 1e-9 && (b - margin).abs() < 1e-9;
+    assert!(near(reach(1.0), 2.0), "{:?}", reach(1.0));
+    assert!(near(reach(3.0), 3.0), "{:?}", reach(3.0));
+}
+
+#[test]
+fn req_fill_trt_005_a_row_gives_its_stretch_inside_the_band_but_one_of_half_a_pixel_or_less() {
+    let (piece, box_, tartan) = (square(), frame(-10.0, 20.0), super::super::tests::tartan(&[]));
+    let laying = laying(&piece, &box_, &tartan);
+    let rows = level(&[5.0], 2.0);
+    let stretch = |band: [f64; 2]| laying.stretch(band, &rows, 0, false);
+    // From one edge of the band to the other, with the row's needle points between them but those on them.
+    assert_eq!(stretch([4.0, 8.0]), Some(vec![p(4.0, 5.0), p(6.0, 5.0), p(8.0, 5.0)]));
+    assert_eq!(stretch([3.0, 9.0]), Some(vec![p(3.0, 5.0), p(4.0, 5.0), p(6.0, 5.0), p(8.0, 5.0), p(9.0, 5.0)]));
+    assert_eq!(laying.stretch([4.0, 8.0], &rows, 0, true), Some(vec![p(8.0, 5.0), p(6.0, 5.0), p(4.0, 5.0)]));
+    // Half a pixel is 0.1323 mm: a stretch of 2⁻³ mm is left out, and one of 9 × 2⁻⁶ mm kept.
+    assert_eq!(stretch([5.0, 5.125]), None);
+    assert_eq!(stretch([5.0, 5.140_625]), Some(vec![p(5.0, 5.0), p(5.140_625, 5.0)]));
+    // A level row crosses the box only between its top and bottom sides, or on them.
+    let rows = level(&[-10.5, -10.0, 5.0, 20.0, 20.5], 30.0);
+    let crossing: Vec<bool> = (0..5).map(|k| laying.stretch([4.0, 8.0], &rows, k, false).is_some()).collect();
+    assert_eq!(crossing, [false, true, true, true, false]);
+}
+
+#[test]
+fn req_fill_trt_005_the_stretches_kept_are_those_near_the_piece_and_one_more_either_side() {
+    let (piece, box_, tartan) = (square(), frame(-10.0, 20.0), super::super::tests::tartan(&[]));
+    let laying = laying(&piece, &box_, &tartan);
+    let meter = &mut Budget::DEFAULT.meter();
+    // Stretches level with the square but past its right side don't come near it: of 5, the middle one does,
+    // and one more either side is kept. Without one that comes near it, none.
+    let (beside, over) = (vec![p(12.0, 5.0), p(14.0, 5.0)], vec![p(4.0, 5.0), p(6.0, 5.0)]);
+    let stretches = [beside.clone(), beside.clone(), over, beside.clone(), beside.clone()];
+    assert_eq!(laying.near(&stretches, meter).unwrap(), (1, 3));
+    assert_eq!(laying.near(&[beside.clone(), beside], meter).unwrap(), (1, 0));
+}
+
+#[test]
+fn req_fill_trt_005_a_band_s_stretches_are_joined_along_its_edge_but_at_the_rings() {
+    let (box_, tartan) = (frame(-10.0, 20.0), super::super::tests::tartan(&[]));
+    let meter = &mut Budget::DEFAULT.meter();
+    // In the square, rows 3 mm apart cross a band from 3 to 6 mm, every other one back: one zigzag, its joins
+    // 2 stitches of 1.5 mm each, run on from its ends to the outline.
+    let square = square();
+    let zigzag = laying(&square, &box_, &tartan).band([3.0, 6.0], &level(&[2.0, 5.0, 8.0], 30.0), meter).unwrap();
+    let joined = [p(3.0, 0.0), p(3.0, 2.0), p(6.0, 2.0), p(6.0, 3.5), p(6.0, 5.0), p(3.0, 5.0), p(3.0, 6.5), p(3.0, 8.0), p(6.0, 8.0), p(6.0, 10.0)];
+    assert_eq!(zigzag, [joined]);
+    // In the triangle, the second row's stretch starts on its long side, and so does the third's: each starts
+    // a line of its own, and the third's, outside, is cut away.
+    let triangle = triangle();
+    let lines = laying(&triangle, &box_, &tartan).band([3.0, 6.0], &level(&[1.0, 4.0, 7.0], 30.0), meter).unwrap();
+    assert_eq!(lines, [vec![p(3.0, 0.0), p(3.0, 1.0), p(6.0, 1.0), p(6.0, 0.0)], vec![p(6.0, 4.0), p(3.0, 4.0), p(3.0, 5.5), p(3.0, 7.0)]]);
+}
+
+#[test]
+fn req_fill_trt_005_a_stretch_s_end_within_0_005_pixel_of_the_rings_lies_on_them() {
+    let (piece, box_, tartan) = (square(), frame(-10.0, 20.0), super::super::tests::tartan(&[]));
+    let laying = laying(&piece, &box_, &tartan);
+    let meter = &mut Budget::DEFAULT.meter();
+    // 0.005 pixel is 0.0013 mm: 2⁻¹⁰ mm is within it, and 2⁻⁹ mm isn't.
+    assert!(laying.on_rings(p(4.0, 0.000_976_562_5), meter).unwrap());
+    assert!(!laying.on_rings(p(4.0, 0.001_953_125), meter).unwrap());
+}
+
+#[test]
+fn req_fill_trt_005_a_line_runs_on_to_the_nearest_crossing_of_its_band_s_edge_with_a_ring() {
+    let (box_, tartan) = (frame(-10.0, 20.0), super::super::tests::tartan(&[]));
+    let meter = &mut Budget::DEFAULT.meter();
+    // From (4, 5) in the triangle, a warp band's upright edge meets the long side 1 mm up, nearer than the
+    // bottom 5 mm down; a weft band's level edge meets it 1 mm on, nearer than the left side 4 mm back.
+    let triangle = triangle();
+    let warp = laying(&triangle, &box_, &tartan);
+    let weft = Laying { direction: Direction::Weft, ..laying(&triangle, &box_, &tartan) };
+    assert_eq!(warp.crossing(p(4.0, 5.0), meter).unwrap(), Some(p(4.0, 6.0)));
+    assert_eq!(weft.crossing(p(4.0, 5.0), meter).unwrap(), Some(p(5.0, 5.0)));
+    // Of 2 as near, the one on the side the rings list first.
+    let square = square();
+    assert_eq!(laying(&square, &box_, &tartan).crossing(p(5.0, 5.0), meter).unwrap(), Some(p(5.0, 0.0)));
+    // A side whose line crosses the edge, but not the side itself, doesn't count: with the top right corner
+    // pulled out to (10, 8), the line of the side from it to (6, 6) meets x = 4 at (4, 5), off that side.
+    let pulled = polygon(&[p(0.0, 0.0), p(10.0, 0.0), p(10.0, 8.0), p(6.0, 6.0), p(0.0, 6.0), p(0.0, 0.0)]);
+    assert_eq!(laying(&pulled, &box_, &tartan).crossing(p(4.0, 5.25), meter).unwrap(), Some(p(4.0, 6.0)));
 }

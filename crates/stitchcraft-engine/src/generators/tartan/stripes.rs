@@ -379,8 +379,8 @@ impl Laying<'_> {
         let mut zigzags: Vec<Vec<Point>> = vec![Vec::new()];
         for stretch in stretches.get(first..=last).unwrap_or_default() {
             let Some(zigzag) = zigzags.last_mut() else { break };
+            // The stretches lie on rows a spacing apart, so one never starts where the one before ended.
             match (zigzag.last().copied(), stretch.first().copied()) {
-                (Some(end), Some(start)) if end == start => zigzag.extend(stretch.iter().skip(1)),
                 (Some(end), Some(start)) if self.on_rings(end, meter)? || self.on_rings(start, meter)? => zigzags.push(stretch.clone()),
                 (Some(end), Some(start)) => {
                     let join = segmentized(end, start, self.tartan.run_length, meter)?;
@@ -614,8 +614,9 @@ impl Circle {
         let d = 2.0 * (bx * cy - by * cx);
         let (b2, c2) = (bx * bx + by * by, cx * cx + cy * cy);
         let (ux, uy) = ((cy * b2 - by * c2) / d, (bx * c2 - cx * b2) / d);
+        // On a line, `d` is 0, and a middle divided by it is no point.
         match Point::new(a.x() + ux, a.y() + uy) {
-            Ok(middle) if d != 0.0 => Circle { middle, radius: middle.distance(a) },
+            Ok(middle) => Circle { middle, radius: middle.distance(a) },
             _ => [Circle::across(a, b), Circle::across(a, c), Circle::across(b, c)]
                 .into_iter()
                 .max_by(|x, y| x.radius.total_cmp(&y.radius))

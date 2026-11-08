@@ -1,7 +1,7 @@
 //! The tartan's own cases: the order of its colours and groups, the travel left out, and the threads read
 //! for the sewing order.
 
-use stitchcraft_core::Budget;
+use stitchcraft_core::{Budget, Code};
 
 use super::*;
 use crate::generators::tatami::fixture::{p, rectangle};
@@ -10,6 +10,7 @@ const RED: Rgb = Rgb::new(255, 0, 0);
 const LIME: Rgb = Rgb::new(0, 255, 0);
 const BLUE: Rgb = Rgb::new(0, 0, 255);
 const BLACK: Rgb = Rgb::new(0, 0, 0);
+const WHITE: Rgb = Rgb::new(255, 255, 255);
 
 /// A tartan of the full sett `items`, warp and weft alike, with Ink/Stitch's defaults and no underlay.
 pub(super) fn tartan(items: &[Item]) -> Tartan {
@@ -132,4 +133,41 @@ fn a_tartan_s_preview_is_the_lines_of_its_colours_inside_the_fill() {
     let threads: Vec<Option<Rgb>> = sewn.colours.iter().map(|c| c.thread.as_ref().map(|t| t.color)).collect();
     assert_eq!(threads, [Some(RED), Some(BLUE)]);
     assert!(sewn.colours.iter().all(|c| c.ends_block));
+}
+
+fn band(colour: Rgb, width: f64) -> Item {
+    Item::Band { colour: Some(colour), width }
+}
+
+/// Each group's colour and kind, and where its stitches start and end.
+fn ends(groups: &[Group]) -> Vec<(Rgb, Kind, Option<Point>, Option<Point>)> {
+    groups.iter().map(|group| (group.colour, group.kind, group.run.first().copied(), group.run.last().copied())).collect()
+}
+
+#[test]
+fn req_fill_trt_007_each_colour_s_runs_start_where_the_colour_before_ended() {
+    // Red and blue bands with lime and white runs between them, over the 10 × 4 rectangle from its bottom left
+    // corner towards its top right: lime's runs start where blue's rows ended, and white's where lime's ended.
+    let runs = tartan(&[band(RED, 5.0), Item::Run(LIME), band(BLUE, 5.0), Item::Run(WHITE)]);
+    let ends_at = (Some(p(0.0, 0.0)), Some(p(10.0, 4.0)));
+    let groups = top(&rectangle(4.0), &runs, ends_at, &mut Budget::DEFAULT.meter(), &mut Vec::new()).unwrap();
+    let found = ends(&groups);
+    let kinds: Vec<(Rgb, Kind)> = found.iter().map(|&(colour, kind, ..)| (colour, kind)).collect();
+    assert_eq!(kinds, [(RED, Kind::Fill), (BLUE, Kind::Fill), (LIME, Kind::Run), (WHITE, Kind::Run)], "{found:?}");
+    assert!(found.windows(2).skip(1).all(|pair| pair[1].2 == pair[0].3), "{found:?}");
+    // With stop_at_ending_point, every colour starts at the start.
+    let stopped = Tartan { stop_at_end: true, ..runs };
+    let groups = top(&rectangle(4.0), &stopped, ends_at, &mut Budget::DEFAULT.meter(), &mut Vec::new()).unwrap();
+    let found = ends(&groups);
+    assert!(found.iter().all(|&(.., first, _)| first == Some(p(0.0, 0.0))), "{found:?}");
+}
+
+#[test]
+fn diag_sc_w0309_expand_mm_that_shrinks_a_tartan_away_sews_its_rows_over_all_of_it() {
+    let region = Region { parts: vec![rectangle(4.0)] };
+    let shrunk = Tartan { expand: -5.0, ..tartan(&[band(RED, 5.0), band(BLUE, 5.0)]) };
+    let sewn = tartan_fill(&region, &shrunk, None, None, &mut SplitMix64::new(1), &mut Budget::DEFAULT.meter()).unwrap();
+    let said: Vec<(Code, &str)> = sewn.warnings.iter().map(|d| (d.code, d.message.as_str())).collect();
+    assert_eq!(said, [(Code::FillExpandShrinksAway, "`expand_mm` shrinks this fill away entirely, so its top rows are sewn over all of it.")]);
+    assert!(!sewn.runs.is_empty());
 }
