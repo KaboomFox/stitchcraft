@@ -5,6 +5,19 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.13, a spike: ADR-0019 proposes cutting a photo's subject out before VectorCraft traces it, as an
+  option off by default. The owner accepts it or changes it before M13.14 builds it.
+  - `--subject` on `stitch plan` and `stitch export` would make the picture's background transparent and
+    crop the picture to its subject. Image Trace leaves out transparent pixels, so the background would no
+    longer trace into shapes.
+  - MobileSAM, under the Apache-2.0 licence, would cut the subject out of a box that U²-Net-p finds or
+    `--subject-box` gives, with `--subject-point` and `--not-subject` points. On the owner's 2 photos of her
+    dog it kept the dog at an IoU of 0.985 and 0.988. U²-Net-p, U²-Net and IS-Net alone kept a tyre behind
+    the running dog, 18 to 20 % of the dog's area.
+  - tract would run the models in `stitch` alone. `stitch` fetches them on first use and checks them
+    against SHA-256 sums the repository pins. A bug-report bundle replays from the traced document without
+    them.
+  - M13.14's requirements are written as planned, `REQ-CLI-014` to `REQ-CLI-019`.
 - M10.7: herringbone tartans and an editor for setts (`REQ-FILL-TRT-012` to `REQ-FILL-TRT-016`,
   `REQ-VC-021`).
   - With `herringbone_width_mm` above 0 a tartan's rows lie in bands that wide, each band's rows slanting at
