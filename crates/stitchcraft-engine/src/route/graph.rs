@@ -1,5 +1,7 @@
-//! The graph a route is found in (`docs/src/design/routing.md` › Auto-satin): places, the points where
-//! pieces end, joined by links, the pieces themselves and the jumps that join pieces lying apart.
+//! The graph a route is found in (`docs/src/design/routing.md` › Auto-satin and Auto-run): places, the
+//! points where pieces end, joined by links, the pieces themselves and the jumps that join pieces lying
+//! apart. Both tools route through it: a satin column's pieces are stretches of its centre line, and a
+//! stroke's are the straight stretches of its lines.
 //!
 //! **Why a graph of its own, in its order.** Ink/Stitch finds its route with networkx (read at `d59c9ab`),
 //! whose searches meet each place's links in the order they were added. Where 2 ways are as short, the
@@ -17,6 +19,11 @@
 //!   equally near pairs. Of jumps as short, the one between earlier groups is taken first, a group being as
 //!   early as its first place. The jumps are added group by group, each group's in the order the tree took
 //!   them, as networkx lists the tree's edges.
+//! - With Preserve order, each element is joined to the next by the shortest jump between their places,
+//!   one way, and, routing running stitches, the parts of each stroke that its own pieces don't join each
+//!   to each, both ways. A jump is added only where no link already leads from its one place to its other:
+//!   Ink/Stitch's graph holds one link from a place to another, so a jump added where one is takes its
+//!   place in it, and the route goes along that link.
 //! - The way from the start to the end with the fewest links is found by a breadth-first search from both
 //!   ends at once, as networkx's `bidirectional_shortest_path` searches: the side with fewer places to look
 //!   from goes next, the start's side when they are as many, and the ways meet at the first place both
@@ -29,8 +36,8 @@
 //!
 //! Every link looked at charges a unit of the meter's work.
 
-use std::collections::BTreeMap;
 use std::collections::btree_map::Entry;
+use std::collections::{BTreeMap, BTreeSet};
 
 use stitchcraft_core::{Exhausted, Meter, Point};
 
@@ -162,10 +169,38 @@ impl Graph {
         self.join(ends[0], ends[1], self.links.len() - 1, true);
     }
 
-    /// Adds a jump from `from` to `to`.
-    fn jump(&mut self, from: usize, to: usize) {
-        self.links.push(Link::Jump { ends: [from, to] });
-        self.join(from, to, self.links.len() - 1, false);
+    /// Adds a jump from `from` to `to`, which a graph with directions takes only that way, unless a link leads
+    /// that way already: Ink/Stitch's graph holds one link from a place to another, and a jump added where one
+    /// is takes its place in it. Each link looked at charges `meter` a unit.
+    fn jump(&mut self, from: usize, to: usize, meter: &mut Meter) -> Result<(), Exhausted> {
+        if !self.linked(from, to, meter)? {
+            self.links.push(Link::Jump { ends: [from, to] });
+            self.join(from, to, self.links.len() - 1, false);
+        }
+        Ok(())
+    }
+
+    /// Adds a jump between `a` and `b`, places of one element, that the route can take either way, as it takes
+    /// a piece, unless a link joins them already. Such a link leads both ways: a jump that leads one way joins
+    /// an element to the next, and never 2 places of one, or the 2 elements would share a place, and the jump
+    /// would join that place to itself. Each link looked at charges `meter` a unit.
+    fn jump_both_ways(&mut self, a: usize, b: usize, meter: &mut Meter) -> Result<(), Exhausted> {
+        if !self.linked(a, b, meter)? {
+            self.links.push(Link::Jump { ends: [a, b] });
+            self.join(a, b, self.links.len() - 1, true);
+        }
+        Ok(())
+    }
+
+    /// Whether a link leads from `from` to `to`. Each link looked at charges `meter` a unit.
+    fn linked(&self, from: usize, to: usize, meter: &mut Meter) -> Result<bool, Exhausted> {
+        for &(next, _) in self.links_out(from) {
+            meter.charge(1)?;
+            if next == to {
+                return Ok(true);
+            }
+        }
+        Ok(false)
     }
 
     /// The links into `place`, with the place each comes from.
@@ -253,7 +288,7 @@ impl Graph {
             for &(i, _, a, b) in &taken {
                 meter.charge(1)?;
                 if i == group {
-                    self.jump(a, b);
+                    self.jump(a, b, meter)?;
                 }
             }
         }
@@ -287,9 +322,56 @@ impl Graph {
         for pair in elements.windows(2) {
             let &[from, to] = pair else { continue };
             let (from, to) = (self.places_on(from, meter)?, self.places_on(to, meter)?);
-            if let Some((_, a, b)) = self.nearest(&from, &to, meter)? {
-                self.jump(a, b);
+            // Every element routed has a piece, so both have places, and the nearest of them is found.
+            let Some((_, a, b)) = self.nearest(&from, &to, meter)? else { continue };
+            self.jump(a, b, meter)?;
+        }
+        Ok(())
+    }
+
+    /// Joins the parts of `element` that its own pieces don't join, each to each, by the shortest jump between
+    /// their places, which the route can take either way: with Preserve order, the subpaths of a stroke that
+    /// lie apart. The parts come in the order of their first places, and each pair is joined at its nearest
+    /// places, the first of equally near ones ([`Graph::nearest`]). Each link and each pair of places looked
+    /// at charges `meter` a unit.
+    pub(super) fn join_parts(&mut self, element: usize, meter: &mut Meter) -> Result<(), Exhausted> {
+        let mut next: BTreeMap<usize, Vec<usize>> = BTreeMap::new();
+        for link in &self.links {
+            meter.charge(1)?;
+            if let Link::Piece { element: of, ends: [a, b], .. } = *link
+                && of == element
+            {
+                next.entry(a).or_default().push(b);
+                next.entry(b).or_default().push(a);
             }
+        }
+        let mut seen = BTreeSet::new();
+        let mut parts: Vec<Vec<usize>> = Vec::new();
+        for &first in next.keys() {
+            if !seen.insert(first) {
+                continue;
+            }
+            let (mut part, mut todo) = (vec![first], vec![first]);
+            while let Some(place) = todo.pop() {
+                for &other in next.get(&place).map_or(&[][..], Vec::as_slice) {
+                    meter.charge(1)?;
+                    if seen.insert(other) {
+                        part.push(other);
+                        todo.push(other);
+                    }
+                }
+            }
+            part.sort_unstable();
+            parts.push(part);
+        }
+        let mut jumps = Vec::new();
+        for (i, first) in parts.iter().enumerate() {
+            for second in parts.iter().skip(i + 1) {
+                jumps.extend(self.nearest(first, second, meter)?.map(|(_, a, b)| (a, b)));
+            }
+        }
+        for (a, b) in jumps {
+            self.jump_both_ways(a, b, meter)?;
         }
         Ok(())
     }

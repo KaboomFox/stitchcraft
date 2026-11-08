@@ -1,0 +1,34 @@
+# Level B: 3 lines with the stroke effect, a rail, a post across it and a brace from the post to the rail,
+# routed by StitchCraft's Auto-Route Running Stitch, a heavy filter VectorCraft 0.17 installs once the user
+# allows it (docs/src/design/vectorcraft-integration.md). The route replaces them with 8 strokes, 5 on top and
+# 3 runs under them, as the engine's tests route them (`req_route_011_a_network_is_sewn_as_*`). Coordinates
+# are points: the rail runs from 10 to 48 mm across at 32 mm down, the post from 12 to 35 mm down at 16 mm
+# across, and the brace from the post 18 mm down to the rail 30 mm across.
+description = "3 lines with the stroke effect, routed by the Auto-Route Running Stitch filter, become 8 strokes, 3 of them runs under the others, which export as `stitch export` sews them."
+requirements = ["REQ-VC-020"]
+
+[[run]]
+plugins = ["stroke", "route-runs", "pes"]
+steps = [
+  { cmd = "path.create", params = { d = "M 28.346 90.709 L 136.063 90.709" } },
+  { cmd = "path.create", params = { d = "M 45.354 34.016 L 45.354 99.213" } },
+  { cmd = "path.create", params = { d = "M 45.354 51.024 L 85.039 90.709" } },
+  { cmd = "select.all" },
+  { cmd = "paint.setFill", params = { none = true } },
+  { cmd = "paint.setStroke", params = { color = "#ed171f" } },
+  { cmd = "stroke.set", params = { weight = 0.75 } },
+  { apply = "stroke" },
+  { export = "lines.vectorcraft" },
+  { export = "lines.pes" },
+  { cmd = "plugin.run", params = { id = "dev.stitchcraft.route-runs" } },
+  { export = "routed.vectorcraft" },
+  { export = "routed.png" },
+  { export = "routed.pes" },
+]
+
+[expect]
+elements = [
+  { file = "routed.vectorcraft", element = "stroke", count = 8, thread = "#ed171f" },
+]
+exported = [["routed.vectorcraft", "routed.pes"]]
+differ = [["lines.pes", "routed.pes"]]

@@ -11,7 +11,9 @@
 # A "stitch" shot names a style ("realistic" or "simple"), a scale in pixels per millimetre, and what to
 # draw: a test sheet (`sheet = "TS-01"`), or a design that the engine plans for the reference machine as
 # `stitch plan` does, an SVG file (`fixture = "docs/fixtures/wave.svg"`) or a VectorCraft document. It
-# becomes docs/src/images/generated/<id>.png. A design can have panels, each with a caption and parameters set on
+# becomes docs/src/images/generated/<id>.png. A sheet's shot can show part of it, the elements whose ids
+# start with one of `elements = ["ts17c:lines-"]`, planned alone, and their plan may then report only the
+# codes `allow` lists. A design can have panels, each with a caption and parameters set on
 # every element:
 #   panels = [{ caption = "1.5 mm", params = { running_stitch_length_mm = "1.5" } }, …]
 # and then makes <id>-1.png, <id>-2.png and so on. A page shows them side by side between the lines
@@ -207,7 +209,7 @@ kind = "stitch"
 sheet = "TS-17C"
 style = "realistic"
 scale = 4.0
-alt = "TS-17C as it will sew, in blue: the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E's arms. At the bottom the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next."
+alt = "TS-17C as it will sew. In blue, the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E's arms. Below them the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next. At the bottom, in red, a network of 6 bean-stitched lines, twice: on the left sewn as drawn, line by line, with a jump thread from each line to the next, and on the right routed, sewn in one go but for the jump to the line that crosses itself, above the others, and back."
 
 # ── How-to pages ────────────────────────────────────────────────────────────────────────────────────
 
@@ -215,9 +217,21 @@ alt = "TS-17C as it will sew, in blue: the word ROUTE in satin letters 20 mm tal
 id = "routing-letters"
 kind = "stitch"
 sheet = "TS-17C"
+elements = ["ts17c:drawn:", "ts17c:routed:"]
+allow = ["SC-I0504"]
 style = "simple"
 scale = 4.0
 alt = "TS-17C's letters ROUTE drawn as thin lines, twice: at the top as drawn, and at the bottom as Auto-Route Satin Columns routes them. Dashed lines are jumps, which the reference machine leaves as threads to cut by hand, and orange rings mark lock stitches. The routed letters jump only from one letter to the next."
+
+[[shot]]
+id = "routing-lines"
+kind = "stitch"
+sheet = "TS-17C"
+elements = ["ts17c:lines-"]
+allow = ["SC-I0504"]
+style = "simple"
+scale = 6.0
+alt = "TS-17C's network of 6 running stitches drawn as thin lines, twice: on the left as drawn, and on the right as Auto-Route Running Stitch routes them with Trim jump stitches on. A rail along the bottom, a post across it, a brace from the post down to the rail, a hook curving up from the rail, a line that crosses itself above them, and a tick beside the rail. Dashed lines are jumps, and orange rings mark lock stitches. As drawn, the machine jumps from each line to the next. Routed, it jumps only out to the line apart and back, and trims before each of those jumps. It reaches the tick, 0.5 mm off the rail, with a stitch."
 
 
 [[shot]]

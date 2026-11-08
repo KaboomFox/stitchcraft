@@ -153,3 +153,42 @@ fn every_search_charges_the_meter() {
     assert!(chain.walk(&[0], &[], &mut small.meter()).is_err());
     assert!(root(&mut [0, 0], 1, &mut Budget { max_work: 0, ..Budget::DEFAULT }.meter()).is_err());
 }
+
+#[test]
+fn with_preserve_order_no_jump_is_added_where_a_link_already_joins_its_places() {
+    // The first element ends at 2 mm along a rail drawn below them, and the second starts at 6 mm: the
+    // nearest places of the 2 are the ends of a piece of the rail, which already joins them. Ink/Stitch's
+    // graph holds one link between 2 places, so its jump is that piece, and the route runs along the rail.
+    let mut ordered =
+        graph(true, &[(0, &[(0.0, 5.0), (2.0, 0.0)]), (1, &[(6.0, 0.0), (8.0, 5.0)]), (2, &[(0.0, 0.0), (2.0, 0.0), (6.0, 0.0), (9.0, 0.0)])]);
+    ordered.join_in_order(&[0, 1, 2], &mut Budget::DEFAULT.meter()).unwrap();
+    // Only the second element's jump to the rail is added, a jump of no length at the place they share, which
+    // Ink/Stitch adds too and the route never takes.
+    let joined: Vec<[Point; 2]> = jumps(&ordered).iter().map(|ends| ends.map(|place| ordered.places()[place].at)).collect();
+    assert_eq!(joined, [[p(6.0, 0.0), p(6.0, 0.0)]]);
+    // Nor between a stroke's parts, joined each to each both ways, where a link joins them already.
+    ordered.join_parts(2, &mut Budget::DEFAULT.meter()).unwrap();
+    assert_eq!(jumps(&ordered).len(), 1);
+}
+
+#[test]
+fn with_preserve_order_the_parts_of_an_element_are_joined_each_to_each_both_ways() {
+    // An element in 3 parts along a line, 3 and 4 mm apart, and another element across the gap between the
+    // first 2: its own pieces don't join them, so each part is joined to each other at their nearest places.
+    let mut ordered = graph(true, &[(0, &[(0.0, 0.0), (1.0, 0.0)]), (0, &[(4.0, 0.0), (5.0, 0.0)]), (0, &[(9.0, 0.0), (10.0, 0.0)])]);
+    ordered.piece(1, 0, [p(1.0, 0.0), p(4.0, 0.0)]);
+    ordered.join_parts(0, &mut Budget::DEFAULT.meter()).unwrap();
+    // The first 2 are joined by the other element's piece already.
+    assert_eq!(jumps(&ordered), [[1, 4], [3, 4]]);
+    // Each jump goes both ways, as a piece does, and is listed once in the graph without directions, with the
+    // places before it first.
+    let meter = &mut Budget::DEFAULT.meter();
+    assert!(ordered.shortest(4, 1, meter).unwrap().is_some() && ordered.shortest(1, 4, meter).unwrap().is_some());
+    let lists = ordered.undirected(meter).unwrap();
+    assert_eq!(lists[4], [(1, 4), (3, 5), (5, 2)]);
+    // An element in one part, or with no piece, gains no jump.
+    let mut whole = graph(true, &[(0, &[(0.0, 0.0), (1.0, 0.0), (2.0, 0.0)])]);
+    whole.join_parts(0, meter).unwrap();
+    whole.join_parts(7, meter).unwrap();
+    assert!(jumps(&whole).is_empty());
+}
