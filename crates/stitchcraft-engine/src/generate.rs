@@ -733,7 +733,7 @@ fn satin_column(
 /// The line a stroke sewn as `stitch_type` is cut to its clips along (`REQ-GEN-005`): a manual stitch's
 /// nodes, as it sews them, and another stroke's path flattened as a shape's outline is, as Ink/Stitch cuts
 /// them.
-fn cut_line(stitch_type: StitchType) -> cut::Line {
+pub(crate) fn cut_line(stitch_type: StitchType) -> cut::Line {
     if stitch_type == StitchType::ManualStitch { manual::nodes } else { stroke::flattened }
 }
 

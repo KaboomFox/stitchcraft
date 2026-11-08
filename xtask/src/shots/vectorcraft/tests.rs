@@ -84,7 +84,7 @@ fn a_vectorcraft_shot_is_declared_with_its_kind_s_fields() {
             "there is no module `zigzag`",
             "its steps export nothing: the shot exports what it shows",
             "`apply = \"lace\"` names no stitch family",
-            "`sheet`, `fixture`, `panels`, `allow` and `style` are a stitch shot's",
+            "`sheet`, `elements`, `fixture`, `panels`, `allow` and `style` are a stitch shot's",
             "`menu` and `dialog` are a vectorcraft-ui shot's",
         ]
     );

@@ -174,6 +174,6 @@ pub(super) fn cut_into(length: f64) -> usize {
 }
 
 /// `SC-I1002` for `element`, which the route leaves as it is because of `why`.
-fn left(element: &Element, why: &str) -> Diagnostic {
+pub(super) fn left(element: &Element, why: &str) -> Diagnostic {
     Diagnostic::new(Code::RouteLeftOut, format!("This element is left out of the route and kept as it is: {why}.")).with_element(element.id.clone())
 }

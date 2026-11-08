@@ -30,7 +30,9 @@ filter draws the TS-13 sheets with it. From M10.4 a heavy filter, *StitchCraft A
 replaces the selected satin columns, and the strokes among them, with one route through them, as
 Ink/Stitch's tool of that name does, its dialog Ink/Stitch's options (`src/route_satins.rs`, `REQ-VC-018`).
 Paths named `stitch:route-start` and `stitch:route-end` selected with them mark the route's ends
-(`REQ-VC-019`).
+(`REQ-VC-019`). From M10.13 another, *StitchCraft Auto-Route Running Stitch*, replaces the selected running
+stitches with one route as Ink/Stitch's tool of that name does, through the same run
+(`src/route_runs.rs`, `REQ-VC-020`).
 Without a feature the module is M0.6's *hello* effect, which returns the object's geometry unchanged. The
 contract tests measure the host's costs with it (`docs/src/design/vectorcraft-integration.md`).
 
@@ -43,9 +45,9 @@ cargo build -p stitchcraft-vc-plugin --release --target wasm32-unknown-unknown -
 ```
 
 The feature is the family, `stroke`, `satin` or `fill`, `auto` for the Auto effect, the machine format, `pes`
-or `dst`, or the filter, `settings`, `stroke-to-satin`, `testsheet` or `route-satins`. Without one, the build is
+or `dst`, or the filter, `settings`, `stroke-to-satin`, `testsheet`, `route-satins` or `route-runs`. Without one, the build is
 *hello*. Each build writes the same file, so copy it before building the next.
-`cargo xtask compat contract --ref <tag>` builds all eleven into `target/compat/plugins/` and loads them into
+`cargo xtask compat contract --ref <tag>` builds all twelve into `target/compat/plugins/` and loads them into
 VectorCraft's host.
 
 In VectorCraft: **Object › Plug-ins › Install Plug-in…** (or `File › Open` the `.wasm`), then

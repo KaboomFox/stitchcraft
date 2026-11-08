@@ -95,12 +95,12 @@ pub(crate) fn to_side(p: Point, a: Point, b: Point) -> f64 {
 }
 
 /// Whether `p` lies in the box around the side from `a` to `b`, its edges included.
-fn in_box(a: Point, b: Point, p: Point) -> bool {
+pub(crate) fn in_box(a: Point, b: Point, p: Point) -> bool {
     a.x().min(b.x()) <= p.x() && p.x() <= a.x().max(b.x()) && a.y().min(b.y()) <= p.y() && p.y() <= a.y().max(b.y())
 }
 
 /// Whether the boxes around the sides from `a` to `b` and from `c` to `d` overlap, edges included.
-fn boxes_meet(a: Point, b: Point, c: Point, d: Point) -> bool {
+pub(crate) fn boxes_meet(a: Point, b: Point, c: Point, d: Point) -> bool {
     a.x().min(b.x()).max(c.x().min(d.x())) <= a.x().max(b.x()).min(c.x().max(d.x()))
         && a.y().min(b.y()).max(c.y().min(d.y())) <= a.y().max(b.y()).min(c.y().max(d.y()))
 }

@@ -6,7 +6,7 @@
 //! gives a filter: as a satin column when the first of them that is on is the satin effect, and as a stroke
 //! when it is the stroke effect. The others stay as they are: a path with the fill or the Auto effect first,
 //! and one with no StitchCraft effect of its own, which may sew by its group's. The engine routes them
-//! ([`route`]) with the dialog's options, Ink/Stitch's ([`OPTIONS`]), and leaves out what it can't route,
+//! ([`route`]) with the dialog's options, Ink/Stitch's ([`Tool::options`]), and leaves out what it can't route,
 //! a column whose rails can't be made among them: a filter can't warn, and the path stays as it was. Paths
 //! named `stitch:route-start` and `stitch:route-end` mark the route's start and end at the middles of the
 //! boxes round their anchors (`REQ-VC-019`).
@@ -30,6 +30,9 @@
 //! [`HEAVY_FUEL`] instructions. The engine's work is priced at [`PER_UNIT`] instructions a unit, Stroke to
 //! Satin's price: a tenth of what the run may spend reads the paths, and 8 tenths route them. The filter
 //! stops with `SC-E0004` before VectorCraft would stop it.
+//!
+//! **Either tool.** The Auto-Route Running Stitch filter ([`crate::route_runs`]) reads, routes and writes as
+//! this one does, with the engine's other tool: `routed_by` and `dialog` serve both.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -37,7 +40,7 @@ use serde_json::Value;
 use stitchcraft_core::{Code, Diagnostic, ElementId, Fix, Meter, Mm, Point, Severity};
 use stitchcraft_engine::design::{Cap, DesignSettings, Element, Hints, Join, Shape};
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
-use stitchcraft_engine::route::{OPTIONS, Options, Piece, Route, Routed, Tool, route};
+use stitchcraft_engine::route::{Options, Piece, Route, Routed, Tool, route};
 use stitchcraft_params::Family;
 use stitchcraft_plan::{Rgb, Thread};
 use stitchcraft_vectorcraft::filter::{self, Object, Out, Record, solid, stroke};
@@ -65,21 +68,33 @@ const PAGE: &str = "user/how-to/route-satin-columns.html";
 /// The filter's dialog: a toggle for each of Auto-Route Satin Columns' options, with Ink/Stitch's labels and
 /// defaults.
 pub(crate) fn options() -> Vec<(&'static str, Param)> {
-    OPTIONS.iter().map(|option| (option.name, own(Schema::Bool { default: option.default }, option.label, option.help, PAGE))).collect()
+    dialog(Tool::Satins, PAGE)
+}
+
+/// The dialog of a routing filter that routes with `tool`: a toggle for each of its options, with Ink/Stitch's
+/// labels and defaults, its help linking to `page`.
+pub(crate) fn dialog(tool: Tool, page: &'static str) -> Vec<(&'static str, Param)> {
+    tool.options().iter().map(|option| (option.name, own(Schema::Bool { default: option.default }, option.label, option.help, page))).collect()
 }
 
 /// The filter's run on `input`, the selected objects, with `params`, its dialog's: the route, or why there
 /// is none. Parameters that aren't JSON are [`RunError::BadInput`]; an option left out is at its default.
 pub fn run(input: &[u8], params: &[u8]) -> Result<Vec<u8>, RunError> {
+    routed_by(Tool::Satins, input, params)
+}
+
+/// The run of a routing filter that routes with `tool` on `input`, the selected objects, with `params`, its
+/// dialog's, as [`run`] runs.
+pub(crate) fn routed_by(tool: Tool, input: &[u8], params: &[u8]) -> Result<Vec<u8>, RunError> {
     let named: Value = serde_json::from_slice(params).map_err(|_| RunError::BadInput)?;
-    let mut options = Options::default();
-    for option in &OPTIONS {
+    let mut options = tool.defaults();
+    for option in tool.options() {
         if let Some(on) = named.get(option.name).and_then(Value::as_bool) {
             option.set(&mut options, on);
         }
     }
     let spend = spendable(HEAVY_FUEL, input.len(), params.len());
-    let routed = filter::read(input, params).and_then(|given| replaced(&given.objects, options, spend));
+    let routed = filter::read(input, params).and_then(|given| replaced(&given.objects, tool, options, spend));
     match routed {
         Ok(objects) => filter::output(&objects).map_err(|_| RunError::Encode),
         Err(why) => Ok(effect_error(&why)),
@@ -99,14 +114,14 @@ struct Selection {
     markers: Vec<usize>,
 }
 
-/// What the filter gives back for `objects`, the selection, routed with `options` within `spend`
+/// What the filter gives back for `objects`, the selection, routed by `tool` with `options` within `spend`
 /// instructions: the route in the place of the paths it replaces; or why nothing changes.
-fn replaced(objects: &[Object], options: Options, spend: u64) -> Result<Vec<Out>, Diagnostic> {
+fn replaced(objects: &[Object], tool: Tool, options: Options, spend: u64) -> Result<Vec<Out>, Diagnostic> {
     let selection = selected(objects, &mut work(spend, 1, PER_UNIT).meter())?;
-    let how = Route { tool: Tool::Satins, options, start: selection.ends[0], end: selection.ends[1] };
+    let how = Route { tool, options, start: selection.ends[0], end: selection.ends[1] };
     let routed = route(&selection.elements, &how, &DesignSettings::default(), &work(spend, 8, PER_UNIT));
     match routed.diagnostics.iter().find(|said| said.code.severity() == Severity::Error) {
-        Some(said) if said.code == Code::RouteNothing => Err(nothing(objects.len())),
+        Some(said) if said.code == Code::RouteNothing => Err(nothing(tool, objects.len())),
         Some(said) => Err(said.clone()),
         None => written(objects, &selection, &routed, options),
     }
@@ -208,17 +223,27 @@ fn drawn(made: Out, piece: &Piece, from: &Object, declared: &[(Family, Vec<(&'st
     Ok(made.with_fills(Vec::new()).with_strokes(vec![paint]).with_effects(in_place_of_ours(from.effects().unwrap_or_default(), record)))
 }
 
-/// `SC-E0820`: none of the `count` objects selected is a satin column to route.
-fn nothing(count: usize) -> Diagnostic {
+/// `SC-E0820`: none of the `count` objects selected is one `tool` routes.
+fn nothing(tool: Tool, count: usize) -> Diagnostic {
+    let (what, effect, hint) = match tool {
+        Tool::Runs => (
+            "a running stitch",
+            "the stroke effect",
+            "Select the running stitches to route, and put the stroke effect on the paths themselves rather than on their group.",
+        ),
+        _ => (
+            "a satin column",
+            "the satin effect",
+            "Select the satin columns to route, with the strokes among them, and put the satin effect on the paths themselves rather than \
+             on their group.",
+        ),
+    };
     let message = match count {
         0 => "Nothing is selected to route.".to_string(),
         _ => format!(
-            "None of the {count} objects selected is a satin column to route: a path routes as one when its own first StitchCraft effect is \
-             the satin effect."
+            "None of the {count} objects selected is {what} to route: a path routes as one when its own first StitchCraft effect is {effect}."
         ),
     };
-    let hint = "Select the satin columns to route, with the strokes among them, and put the satin effect on the paths themselves rather than \
-                on their group.";
     Diagnostic::new(Code::VcNotRouted, message).with_fix(Fix::Hint(hint.into()))
 }
 
