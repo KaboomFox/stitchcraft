@@ -11,9 +11,9 @@
 //! tatami fill's underlay first, in the element's own thread, and grown by `expand_mm` for its rows. Over
 //! each piece of a part:
 //!
-//! 1. **The sett** ([`sett`]) is read once for the element: the stripes of its palette code, scaled, its
+//! 1. **The sett** (module `sett`) is read once for the element: the stripes of its palette code, scaled, its
 //!    narrow stripes runs, mirrored or repeated.
-//! 2. **Stripes and rows** ([`stripes`]): the sett's stripes and the rows are laid over a box round the
+//! 2. **Stripes and rows** (module `stripes`): the sett's stripes and the rows are laid over a box round the
 //!    piece, turned as the sett is, and each band's rows are joined into zigzags along its edges and cut by
 //!    the piece. Each colour gets the lines of its bands, the warp's first.
 //! 3. **Each colour** in its thread: its lines are routed as a tatami fill's rows are, from where the colour
