@@ -80,7 +80,7 @@ pub fn run(check_only: bool) -> Result<(), String> {
 fn generated_pages(root: &Path, check_only: bool, findings: &mut Findings) -> Result<(), String> {
     let registry = stitchcraft_engine::registry::PARAMETERS;
     let contract = contract_page::Contract::parse(&util::read(&root.join(contract_page::DATA))?)?;
-    for problem in contract.check(registry) {
+    for problem in contract.check(registry).into_iter().chain(contract.check_sewn(registry, &stitch_pages::sewn()?)) {
         findings.error(format!("{}: {problem}", contract_page::DATA));
     }
     let ledger = deviations::parse(&util::read(&root.join(deviations::LEDGER))?)?;
