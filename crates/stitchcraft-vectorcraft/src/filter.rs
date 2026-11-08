@@ -22,10 +22,11 @@
 //! back into millimetres to within a unit in its last place. Each subpath is its anchors, with the handles
 //! of its curves, a quadratic one raised to the cubic it is. A closed subpath that ends where it starts
 //! leaves its last anchor out, since VectorCraft closes a subpath back to its first ([`path_data`]). A
-//! colour is an RGB paint the reader reads as the same colour ([`solid`]), a stroke has its width, join and
-//! cap ([`stroke`]), and a new StitchCraft effect record has its parameters ([`Record::ours`]). A record a
-//! filter changes, as StitchCraft Tartan sets a fill's sett, keeps the rest of its parameters as VectorCraft
-//! gave them, written as it gave them ([`Record::with`]).
+//! colour is an RGB paint the reader reads as the same colour ([`solid`]), a linear gradient a gradient paint
+//! the reader places where it was ([`gradient`]), a stroke has its width, join and cap ([`stroke`]), and a new
+//! StitchCraft effect record has its parameters ([`Record::ours`]). A record a filter changes, as StitchCraft
+//! Tartan sets a fill's sett, keeps the rest of its parameters as VectorCraft gave them, written as it gave
+//! them ([`Record::with`]).
 
 use std::collections::BTreeMap;
 
@@ -35,7 +36,7 @@ use serde_json::value::{RawValue, to_raw_value};
 use serde_json::{Map, Value, json};
 use stitchcraft_core::units::MM_PER_POINT;
 use stitchcraft_core::{Diagnostic, Exhausted, Meter, Mm, Point};
-use stitchcraft_engine::design::{Cap, FillRule, Join, Path, Segment};
+use stitchcraft_engine::design::{Cap, FillRule, Gradient, Join, Path, Segment};
 use stitchcraft_params::{Family, ParamSet};
 use stitchcraft_plan::Rgb;
 
@@ -358,6 +359,28 @@ pub fn solid(color: Rgb) -> Result<Box<RawValue>, serde_json::Error> {
     to_raw_value(&json!({"type": "solid", "color": {"model": "rgb", "r": c(color.r), "g": c(color.g), "b": c(color.b)}}))
 }
 
+/// A linear gradient paint of `gradient`, as a filter gives one (M10.12): `Linear`, each stop's offset,
+/// colour as [`solid`] writes one and opacity, and the gradient's start and end in points as its `geom`,
+/// which the reader places where they were (`src/gradient.rs`).
+pub fn gradient(gradient: &Gradient) -> Result<Box<RawValue>, serde_json::Error> {
+    let c = color::component;
+    let stops: Vec<Value> = gradient
+        .stops
+        .iter()
+        .map(|stop| {
+            let colour = stop.colour;
+            json!({"offset": stop.offset, "color": {"model": "rgb", "r": c(colour.r), "g": c(colour.g), "b": c(colour.b)}, "opacity": stop.opacity})
+        })
+        .collect();
+    let point = |p: Point| json!({"x": p.x() / MM_PER_POINT, "y": p.y() / MM_PER_POINT});
+    to_raw_value(&json!({
+        "type": "gradient",
+        "gradient": {"kind": "Linear", "stops": stops},
+        "geom": {"start": point(gradient.start), "end": point(gradient.end)},
+        "angle": 0
+    }))
+}
+
 /// A stroke as a filter gives one: of `paint`, `width` wide, with `join`'s corners and `cap`'s ends, named
 /// as VectorCraft names them, which the reader reads as the same.
 pub fn stroke(paint: &RawValue, width: Mm, join: Join, cap: Cap) -> Result<Box<RawValue>, serde_json::Error> {
@@ -552,6 +575,26 @@ mod tests {
         for color in [Rgb::new(0, 0, 0), Rgb::new(255, 255, 255), Rgb::new(26, 78, 156), Rgb::new(1, 254, 128)] {
             let paint: Paint = serde_json::from_str(solid(color).unwrap().get()).unwrap();
             assert_eq!(paint.color.as_ref().and_then(color::rgb), Some(color));
+        }
+    }
+
+    #[test]
+    fn a_gradient_written_reads_back_where_it_was() {
+        use stitchcraft_engine::design::GradientStop;
+        let stops = vec![
+            GradientStop { offset: 0.0, colour: Rgb::new(26, 78, 156), opacity: 1.0 },
+            GradientStop { offset: 0.375, colour: Rgb::new(255, 255, 255), opacity: 0.0 },
+            GradientStop { offset: 1.0, colour: Rgb::new(237, 23, 31), opacity: 0.5 },
+        ];
+        let written = Gradient { start: p(10.0, 95.5), end: p(37.25, 120.0), stops };
+        let paint: Paint = serde_json::from_str(gradient(&written).unwrap().get()).unwrap();
+        let square = Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 5.0))], closed: true }] };
+        let read = crate::gradient::linear(&paint, &square, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+        assert!(read.notes.is_empty(), "{:?}", read.notes);
+        let read = read.gradient.unwrap();
+        assert_eq!(read.stops, written.stops);
+        for (a, b) in [(read.start, written.start), (read.end, written.end)] {
+            assert!(a.distance(b) < 1e-12, "{a:?} {b:?}");
         }
     }
 

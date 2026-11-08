@@ -60,7 +60,7 @@ pub(in crate::auto) enum Background {
 /// shape with settings; `None` when the lowest shape is not the background, or sews it.
 pub(in crate::auto) fn background(design: &Design, rules: Option<&AutoParams>, budget: &Budget) -> Option<Background> {
     let [lowest, drawn @ ..] = design.elements() else { return None };
-    let Shape::Fill { path, rule } = &lowest.shape else { return None };
+    let Shape::Fill { path, rule, .. } = &lowest.shape else { return None };
     if !rules.is_some_and(|rules| rules.auto_ignore_background) {
         return None;
     }
@@ -176,7 +176,7 @@ fn filled(mut left: Vec<Polygon>, drawn: &[Element], meter: &mut Meter) -> Resul
     let Some(around) = envelope(&left) else { return Ok(true) };
     for element in drawn {
         meter.charge(1)?;
-        let Shape::Fill { path, rule } = &element.shape else { continue };
+        let Shape::Fill { path, rule, .. } = &element.shape else { continue };
         let points: Vec<Point> = path.points().collect();
         meter.charge(points.len() as u64)?;
         // A path of no points bounds nothing, and builds no region that could fill a part.

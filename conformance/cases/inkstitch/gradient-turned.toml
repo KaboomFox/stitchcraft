@@ -1,0 +1,6 @@
+# 3 stops whose vector a gradientTransform turns 90°, with its underlay. The rows agree; Ink/Stitch lays the
+# underlay along the vector before the turn, which no measure tells apart here (DEV-FILL-031).
+id = "inkstitch-gradient-turned"
+requirements = ["REQ-SVG-008", "REQ-FILL-GRD-009"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/gradient-turned.svg"

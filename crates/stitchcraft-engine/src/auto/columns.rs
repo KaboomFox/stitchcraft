@@ -79,7 +79,7 @@ pub(super) enum Made {
 /// The columns of `part`, an area's whose narrowest satin stroke is `narrowest` and whose settings of the
 /// rules are `rules`, cut from a broad part along `cuts` (`auto::split`), with `meter`'s work.
 pub(super) fn columns(part: &Polygon, narrowest: Mm, rules: &AutoParams, cuts: &[[Point; 2]], meter: &mut Meter) -> Result<Made, Exhausted> {
-    let found = match strips::columns(part, piece(part), cuts, meter)? {
+    let found = match strips::columns(part, piece(part), cuts, narrowest.get(), meter)? {
         Err(_) => return Ok(Made::Broken),
         Ok(None) => return Ok(Made::Unmade),
         Ok(Some(found)) if found.is_empty() => return Ok(Made::Dot),
@@ -221,7 +221,7 @@ mod tests {
     /// The columns of `part` as found, and in the order they are sewn, each with its place among those found.
     fn sewn(part: &Polygon) -> (Vec<Column>, Vec<(usize, Column)>) {
         let mut meter = Budget::DEFAULT.meter();
-        let found = strips::columns(part, piece(part), &[], &mut meter).unwrap().unwrap().unwrap();
+        let found = strips::columns(part, piece(part), &[], 1.0, &mut meter).unwrap().unwrap().unwrap();
         let order = ordered(&found, &mut meter).unwrap();
         (found, order)
     }

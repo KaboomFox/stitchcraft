@@ -156,7 +156,8 @@ method (`sewn_ladder`) and compare its needle points with the ones they expect, 
 `stitchcraft_engine::testsheets::pictures` draws in code and the TS-13 sheets sew too, each with the
 edges where its shapes meet. `stitchcraft_testkit::pictures` places them where the cases measure them.
 There are 3 stripes side by side, and a badge, a row of badges, an emblem and a button, each traced
-abutting or stacked ([image to embroidery](image-to-embroidery.md#testing)).
+abutting or stacked ([image to embroidery](image-to-embroidery.md#testing)). The cases sew the pear that the
+docs show too, a photo that VectorCraft traced into ragged shapes (`stitchcraft_testkit::pictures::pear`).
 
 ## Levels
 
@@ -237,6 +238,8 @@ Metrics are defined once in `stitchcraft-testkit::metrics` so every case measure
 | Stitch length | Min, max and distribution of `Normal` stitch lengths by role |
 | Furrows | Longest run of rows whose needle points align within 0.1 mm |
 | Topology | Holes and components of the region vs. of the stitched area |
+| Bare fabric | The design painted at 0.05 mm as a viewer paints it, its background left out: the largest patch the top stitches leave bare, once opened with a disc as wide as the thread (`stitchcraft_testkit::fabric`) |
+| Thread astray | The longest stretch of a stitch that shows on another colour or on bare fabric, or of an underlay or travel stitch that shows at all. Moves between elements and jump threads are counted apart |
 
 Coverage is defined since M5.9 and edge coverage since M13.2, and the other metrics arrive with the cases that
 need them. `stitchcraft-testkit::stitches` reads back what a test sheet's stitches show against its
@@ -337,7 +340,12 @@ weft apart and 3 rows a thread, and another has stripes sewn as runs. The `tarta
 `tartan-parts` and `tartan-stop` cases add stripes left unsewn or sewn in the colour before them, a sett
 moved by its offsets, a disc round a hole in stitches 3 mm long, a fill in 2 parts with its rows at 30° and one row a thread, and
 a fill that stops at its end with its runs sewn as bean stitches (`REQ-FILL-TRT-011`). Every stripe is one of
-Brother's threads, so both files name each thread as itself. The `ts17c-ripple-` cases check each of TS-17C's
+Brother's threads, so both files name each thread as itself. Below its tartans, TS-17B checks linear gradients
+of 2 stops and of 3, one of them transparent, each at a slant of its own. The `gradient-` cases add a gradient
+of no length, one that a `gradientTransform` turns, a fill in 2 parts that stops at its end, and a fill without a
+gradient (`REQ-FILL-GRD-009`). Their gradients placed in the shape's box and by the gradient their `href`
+names, and stops that all lie before the fill's first row, sew otherwise in Ink/Stitch, as the ledger explains
+(`DEV-SVG-027`, `DEV-FILL-032`). The `ts17c-ripple-` cases check each of TS-17C's
 ripple stitches on its own, the one along a column and the 2 that shrink to a target point (`REQ-RIP-011`).
 The `ts17c-guided-` cases check its guided ripples so (`REQ-RIP-019`). A wave and a zigzag cut to a circle
 follow guide lines. A circle and a diamond stand between satin guides' rails, the diamond at its guide's

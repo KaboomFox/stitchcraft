@@ -537,6 +537,21 @@ registry! {
     /// letters.
     FillTartanColourUnreadable = "SC-W0328", Warning, "Tartan stripe's colour can't be read; left out";
 
+    /// A linear gradient fill sews the colours of the linear gradient its shape is painted with. This shape is
+    /// painted with a plain colour, a gradient of one colour, or a gradient that isn't linear, so its own colour
+    /// fades out along the fill's `angle`, its rows thinning out to none, as Ink/Stitch sews it.
+    ///
+    /// Paint the shape with a linear gradient, or choose another fill method.
+    FillGradientNone = "SC-W0329", Warning, "Linear gradient fill without a linear gradient; its colour fades out";
+
+    /// Between 2 stops of a gradient, the rows go to their 2 colours in a fixed pattern, which takes 3 rows or
+    /// more. This stop lies within 2 rows of where the blend before it ends, so no blend starts at it. The next
+    /// blend starts a row later and blends from the colour before the stop, and the row between is left out,
+    /// as Ink/Stitch sews it. A gradient whose start and end are one point puts all its stops at one row.
+    ///
+    /// The message names the stops. Move them at least 3 row spacings apart.
+    FillGradientStopPassedOver = "SC-W0330", Warning, "Gradient stop within 2 rows of the blend before; passed over";
+
     /// A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
     /// one stitch that short would hammer one spot of the fabric and could break the thread. The part is
     /// a single point (a stray node), shorter than the shortest stitch, or longer but curled up so that

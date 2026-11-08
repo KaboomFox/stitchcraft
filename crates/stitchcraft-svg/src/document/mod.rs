@@ -89,6 +89,7 @@ use crate::version::{self, Updated, Version};
 
 mod clip;
 mod clone;
+mod gradient;
 mod guides;
 pub(crate) mod root;
 
@@ -102,6 +103,17 @@ const MAX_NODES: u32 = 1_000_000;
 const MAX_HOPS: u32 = 16;
 
 const SVG_NS: &str = "http://www.w3.org/2000/svg";
+
+/// What a shape's fill or stroke paints with: the colour its thread takes, and the linear gradient a linear
+/// gradient fill sews, which the reader places once it has read the shape's outline.
+struct Painted<'a, 'input> {
+    colour: Rgb,
+    gradient: Option<Node<'a, 'input>>,
+}
+
+/// The setting that chooses a fill's method, and the method that sews a fill's linear gradient.
+const FILL_METHOD: &str = "fill_method";
+const LINEAR_GRADIENT_FILL: &str = "linear_gradient_fill";
 
 /// What an SVG file holds for StitchCraft.
 #[derive(Clone, Debug, PartialEq)]
@@ -709,12 +721,17 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         (style, declared): (&Style<'a>, &Declared<'a, 'input>),
         commands: &[Applied],
     ) -> Result<(), Diagnostic> {
-        // A line has no inside to fill.
-        let fill = if geometry == Geometry::Line || style.fill_clear { None } else { self.colour(label, "fill", style.fill, style.color)? };
-        let stroke = if style.stroke_clear { None } else { self.colour(label, "stroke", style.stroke, style.color)? };
+        // A line has no inside to fill. A linear gradient fill sews its fill's linear gradient, which is read once
+        // the shape's outline is.
+        let sews_gradient = node.attribute((INKSTITCH_NS, FILL_METHOD)).is_some_and(|method| method.trim() == LINEAR_GRADIENT_FILL);
+        let fill =
+            if geometry == Geometry::Line || style.fill_clear { None } else { self.colour(label, "fill", style.fill, style.color, sews_gradient)? };
+        let stroke = if style.stroke_clear { None } else { self.colour(label, "stroke", style.stroke, style.color, false)? };
         if fill.is_none() && stroke.is_none() {
             return Ok(());
         }
+        let (fill, server) = fill.map_or((None, None), |painted| (Some(painted.colour), painted.gradient));
+        let stroke = stroke.map(|painted| painted.colour);
         if style.has_markers() && matches!(geometry, Geometry::Path | Geometry::Line | Geometry::Polyline | Geometry::Polygon) {
             self.note(Some(label), format!("`{label}` has markers (arrowheads and the like), which are not stitched."), None);
         }
@@ -725,6 +742,10 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
                 self.unusable(label, format!("`{label}` cannot be stitched: {reason}. It is left out."));
                 return Ok(());
             }
+        };
+        let gradient = match server {
+            Some(server) => self.gradient(server, &subs, map, label)?,
+            None => None,
         };
         let mut points = path.points();
         let first = points.next();
@@ -780,7 +801,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         for (part, colour) in parts {
             let Some(colour) = colour else { continue };
             let shape = if part == "fill" {
-                Shape::Fill { path: path.clone(), rule: style.fill_rule }
+                Shape::Fill { path: path.clone(), rule: style.fill_rule, gradient: gradient.clone() }
             } else {
                 let Some(width) = self.stroke_width(style, map) else {
                     self.unusable(label, format!("The stroke of `{label}` cannot be stitched: it is too wide to measure. It is left out."));
@@ -925,19 +946,30 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
     }
 
     /// The colour `label`'s `part` is sewn in, if it paints. A paint server is replaced by a colour, with
-    /// a warning: a gradient by its first colour, a pattern by the fallback colour written after it.
-    fn colour(&mut self, label: &str, part: &str, paint: Paint<'a>, current: Option<Rgb>) -> Result<Option<Rgb>, Diagnostic> {
+    /// a warning: a gradient by its first colour, a pattern by the fallback colour written after it. A linear
+    /// gradient a linear gradient fill sews, `sews_gradient`, is no warning: its first colour is the element's
+    /// thread, and the reader places the gradient for the fill to sew its colours.
+    fn colour(
+        &mut self,
+        label: &str,
+        part: &str,
+        paint: Paint<'a>,
+        current: Option<Rgb>,
+        sews_gradient: bool,
+    ) -> Result<Option<Painted<'a, 'input>>, Diagnostic> {
+        let plain = |colour: Option<Rgb>| colour.map(|colour| Painted { colour, gradient: None });
         let (id, fallback) = match paint {
-            Paint::Plain(plain) => return Ok(plain.colour(current)),
+            Paint::Plain(plain_paint) => return Ok(plain(plain_paint.colour(current))),
             Paint::Server { id, fallback } => (id, fallback.and_then(|f| f.colour(current))),
         };
         // A reference to nothing paints the fallback, or nothing, as in a viewer.
-        let Some(server) = self.by_id(id) else { return Ok(fallback) };
+        let Some(server) = self.by_id(id) else { return Ok(plain(fallback)) };
         let kind = server.tag_name().name();
         if kind == "linearGradient" || kind == "radialGradient" {
             let stops = self.stops(server)?;
+            let sewn = sews_gradient && kind == "linearGradient";
             // A gradient of one colour, such as an Inkscape swatch, is that colour, as in a viewer.
-            if let Some((Some(colour), false)) = stops {
+            if let (Some((Some(colour), false)), false) = (stops, sewn) {
                 self.note(
                     Some(label),
                     format!("The {part} of `{label}` is a gradient; it is stitched in the gradient's first colour, {colour}."),
@@ -946,7 +978,8 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             }
             // A gradient without stops paints nothing, in a viewer too, nor does one whose stops a viewer
             // shows none of.
-            return Ok(stops.and_then(|(colour, _)| colour));
+            let colour = stops.and_then(|(colour, _)| colour);
+            return Ok(colour.map(|colour| Painted { colour, gradient: sewn.then_some(server) }));
         }
         let message = match fallback {
             Some(colour) => {
@@ -955,7 +988,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
             None => format!("The {part} of `{label}` is a `<{kind}>`, which is not stitched; the {part} is left out."),
         };
         self.note(Some(label), message, Some("Give the shape a plain colour."));
-        Ok(fallback)
+        Ok(plain(fallback))
     }
 
     /// The colour of a gradient's first stop that a viewer shows, `None` when it shows none of them, and

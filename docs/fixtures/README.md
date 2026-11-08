@@ -11,7 +11,7 @@ which VectorCraft traced ([below](#the-traced-pear)). Test inputs live in `confo
 | `badge.svg` | A red star inside a blue ring | the SVG tutorial: the `badge` shots and the `plan-badge` example; the window probe (`compat/vc-window`) |
 | `traced-badge.svg` | A badge as Image Trace traces it in the Brother threads `stitch palette` writes: a red disc, a blue square and a gold disc, abutting, on white, none with settings | the picture tutorial: the `traced-badge` shots and the `plan-traced-badge` example; automatic digitizing's neighbours |
 | `emblem.svg` | An emblem drawn in layers on white in 4 of those threads, each layer whole and none with settings. A navy square 50 mm wide holds a white disc with a red star on it and 3 gold bars 3 mm tall | automatic digitizing's flat-colour art: the `auto-emblem-picture` and `auto-emblem` shots |
-| `traced-pear.vectorcraft` | The photo of a pear that the `auto-pear-photo` shot draws, traced 90 mm across in 4 of those threads: a light grey backdrop, and the pear in 3 bands of green | automatic digitizing's photo: the `auto-pear-traced` and `auto-pear` shots |
+| `traced-pear.vectorcraft` | The photo of a pear that the `auto-pear-photo` shot draws, traced 90 mm across in 4 of those threads: a light grey backdrop, and the pear in 3 bands of green | automatic digitizing's photo: the `auto-pear-traced` and `auto-pear` shots, and the engine's cases of what a digitized picture leaves bare and lays astray (`stitchcraft_testkit::pictures::pear`) |
 | `wave.svg` | A smooth wave | running stitch length |
 | `zigzag.svg` | The same wave, drawn 3 mm wide | the zigzag stroke's spacing and angle, and a satin column drawn as one path |
 | `ripple.svg` | An arch, half a circle 30 mm across, open at the bottom | the ripple stitch's lines and joins |
@@ -25,11 +25,12 @@ which VectorCraft traced ([below](#the-traced-pear)). Test inputs live in `confo
 | `nodes.svg` | Straight lines and one curve | manual stitch |
 | `lock.svg` | An 8 mm line | lock shapes |
 | `wide.svg` | A 210 mm border, wider than the reference hoop | the `plan-too-wide` example |
-| `fill.svg` | A patch 32 mm by 20 mm with rounded corners and a round hole | the tatami fill's angle, staggers and underlay; the contour fill's path |
+| `fill.svg` | A patch 32 mm by 20 mm with rounded corners and a round hole | the tatami fill's angle, staggers and underlay; the contour fill's path; the linear gradient fill without a gradient |
 | `star.svg` | A star, its points 15 mm from its middle and its inner corners 6 mm | the contour fill's strategies and corners |
 | `heart.svg` | A heart 32 mm wide and 29 mm tall | cross stitch: its grid, coverage and threads |
 | `meander.svg` | A square 30 mm a side with rounded corners | the meander fill's tiles, scale, angle and line, and the circular fill's spacing and travel |
 | `tartan.svg` | A square 30 mm a side | the tartan fill's setts, runs and turned setts |
+| `gradient.svg` | 3 squares 30 mm a side under linear gradients. The first is red to blue across, and the second deep gold through white to emerald green up to the right. The third is tangerine to Prussian blue down through a transparent white | the linear gradient fill's stops and row spacing |
 | `widths.svg` | A line 0.6 mm wide, a letter C 3 mm wide and a disc 16 mm across, each traced as an area | automatic digitizing's stitches by width |
 | `parts.svg` | A lollipop on a stick 2.4 mm wide and a balloon on a string 0.8 mm wide, each one area | automatic digitizing's shapes in parts |
 | `round-patch.vectorcraft` | The VectorCraft tutorial's patch, as VectorCraft saves the `vectorcraft-patch` shot's steps, which are the tutorial's (`cargo xtask shots --vectorcraft` writes it). A disc and a star have StitchCraft Fill and Stroke, and a border of 2 rails has StitchCraft Satin | the VectorCraft tutorial: the `vectorcraft-patch-sewn` shot and the `export-round-patch` example |

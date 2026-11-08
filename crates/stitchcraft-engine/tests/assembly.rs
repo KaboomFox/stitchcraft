@@ -171,7 +171,7 @@ fn req_gen_002_an_element_that_cannot_be_sewn_is_skipped_and_the_rest_still_plan
     let square =
         Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0)), Segment::Line(p(5.0, 5.0))], closed: true }] };
     let fill = Element {
-        shape: Shape::Fill { path: square, rule: FillRule::NonZero },
+        shape: Shape::Fill { path: square, rule: FillRule::NonZero, gradient: None },
         ..line("fill", (0.0, 0.0), 1.0, &RED, &[("fill_method", "guided_fill")])
     };
     let guided = Element { params: [("fill_method", "guided_fill")].into_iter().collect(), id: ElementId::new("guided").unwrap(), ..fill.clone() };
@@ -256,7 +256,7 @@ fn diag_sc_w0011_a_stitch_type_not_sewn_yet_is_named() {
     let square =
         Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0)), Segment::Line(p(5.0, 5.0))], closed: true }] };
     let fill = Element {
-        shape: Shape::Fill { path: square, rule: FillRule::EvenOdd },
+        shape: Shape::Fill { path: square, rule: FillRule::EvenOdd, gradient: None },
         ..line("f", (0.0, 0.0), 1.0, &RED, &[("fill_method", "guided_fill")])
     };
     let outcome = sewn(vec![fill, line("ok", (0.0, 5.0), 10.0, &RED, &[])]);
@@ -276,7 +276,7 @@ fn diag_sc_w0505_a_trim_or_stop_after_an_element_that_sews_nothing_is_named() {
         subpaths: vec![Subpath { start: p(0.0, 5.0), segments: vec![Segment::Line(p(5.0, 5.0)), Segment::Line(p(5.0, 10.0))], closed: true }],
     };
     let guided = Element {
-        shape: Shape::Fill { path: square, rule: FillRule::EvenOdd },
+        shape: Shape::Fill { path: square, rule: FillRule::EvenOdd, gradient: None },
         ..line("guided", (0.0, 5.0), 1.0, &RED, &[("fill_method", "guided_fill"), ("trim_after", "true"), ("stop_after", "true")])
     };
     let stop = line("stop", (0.0, 10.0), 0.1, &RED, &[("stop_after", "true")]);

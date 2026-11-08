@@ -257,7 +257,7 @@ impl Shapes {
             .iter()
             .zip(&area)
             .map(|(element, area)| match &element.shape {
-                Shape::Fill { path, rule } if area.is_some() => {
+                Shape::Fill { path, rule, .. } if area.is_some() => {
                     parts_of(path, *rule, &mut budget.meter()).ok()?.ok().filter(|parts| !parts.is_empty())
                 }
                 _ => None,
@@ -462,7 +462,9 @@ impl Shapes {
             .zip(changed.into_iter().zip(removed))
             .filter_map(|((element, region), (changed, removed))| match (removed, changed, region) {
                 (true, ..) => None,
-                (false, true, Some(parts)) => Some(Element { shape: Shape::Fill { path: outline(&parts), rule: FillRule::NonZero }, ..element }),
+                (false, true, Some(parts)) => {
+                    Some(Element { shape: Shape::Fill { path: outline(&parts), rule: FillRule::NonZero, gradient: None }, ..element })
+                }
                 _ => Some(element),
             })
             .collect()
@@ -482,7 +484,7 @@ fn paints(element: &Element, stitch_type: StitchType, budget: &Budget) -> Result
     let said =
         |failed: Failed, code: Code, finding: &str, consequence: &str| failed.said(code, finding, consequence, budget.max_work, element.id.clone());
     match (&element.shape, Kind::of(&element.shape, stitch_type)) {
-        (Shape::Fill { path, rule }, _) => Ok(parts_of(path, *rule, meter).ok().and_then(Result::ok).map(|parts| (Kind::Area, parts))),
+        (Shape::Fill { path, rule, .. }, _) => Ok(parts_of(path, *rule, meter).ok().and_then(Result::ok).map(|parts| (Kind::Area, parts))),
         (Shape::Stroke { path, width, join, .. }, Kind::Column) => {
             let Ok(Validated { params, .. }) = SatinParams::from_set_as(&element.params, stitch_type) else { return Ok(None) };
             let Ok(Some(column)) = satin::rails(path, *width, *join, &mut Vec::new(), meter) else { return Ok(None) };

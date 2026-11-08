@@ -168,7 +168,7 @@ pub fn fill(id: &str, parts: &[&[(f64, f64)]], thread: &Thread, params: &[(&str,
     Element {
         id: ElementId::new(id).unwrap(),
         name: None,
-        shape: Shape::Fill { path: rings(parts), rule: FillRule::NonZero },
+        shape: Shape::Fill { path: rings(parts), rule: FillRule::NonZero, gradient: None },
         thread: thread.clone(),
         params: params.iter().copied().collect::<ParamSet>(),
         automatic: false,
@@ -186,6 +186,19 @@ pub fn planned(elements: Vec<Element>) -> PlanOutcome {
 /// `elements` planned for the reference machine with `settings`.
 pub fn planned_with(elements: Vec<Element>, settings: DesignSettings) -> PlanOutcome {
     plan(&Design::new(elements, settings).unwrap(), REFERENCE, &Budget::DEFAULT)
+}
+
+/// `design` planned for the reference machine with its stitches where it draws its shapes: planned with its
+/// origin at the middle of its shapes, which the hoop holds, and moved back by it. A machine file has its
+/// origin there, which moves every stitch by the same amount.
+pub fn in_place(design: &Design) -> PlanOutcome {
+    let Some(bounds) = design.bounds() else { return plan(design, REFERENCE, &Budget::DEFAULT) };
+    let middle = p((bounds.min().x() + bounds.max().x()) / 2.0, (bounds.min().y() + bounds.max().y()) / 2.0);
+    let mut outcome = planned_with(design.elements().to_vec(), DesignSettings { origin: Some(middle), ..design.settings });
+    for stitch in outcome.plan.iter_mut().flat_map(|plan| &mut plan.blocks).flat_map(|block| &mut block.stitches) {
+        stitch.at = p(stitch.at.x() + middle.x(), stitch.at.y() + middle.y());
+    }
+    outcome
 }
 
 /// The colour of a group sewn in `thread` that ends a colour block, which a trim follows when its

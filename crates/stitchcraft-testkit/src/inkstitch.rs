@@ -30,6 +30,10 @@
 //! takes a clip's shapes as one outline and its holes, whatever their rules (`DEV-SVG-016`), so a case that
 //! both sew gives each clip shapes that don't overlap.
 //!
+//! A fill painted with a linear gradient is painted with a `<linearGradient>` of its stops, its start and
+//! end in user space, which both programs read (`REQ-SVG-014`). The reader takes the fill's thread from the
+//! gradient's first stop that shows, so an element whose thread is another colour reads back in that one.
+//!
 //! An element's guide line and anchor line are Ink/Stitch's helpers (`REQ-RIP-012` to `REQ-RIP-014`): paths
 //! whose `style` starts them with its guide-line or anchor-line marker, beside the element's path in the
 //! group round it, which both programs look in. The guide keeps its stroke's width and join and its settings,
@@ -62,6 +66,7 @@ use stitchcraft_engine::design::{Cap, DesignSettings, Element, FillRule, Hints, 
 use stitchcraft_engine::registry::PARAMETERS;
 use stitchcraft_engine::testsheets::Cloned;
 use stitchcraft_params::{Origin, ParamGroup, ParamSpec};
+use stitchcraft_plan::Rgb;
 use stitchcraft_svg::inkstitch::INKSTITCH_NS;
 use stitchcraft_svg::version::CURRENT;
 
@@ -121,14 +126,16 @@ fn written(elements: &[Element], settings: &DesignSettings, clones: &[Cloned], s
         .chain(globals.iter().map(|(name, _)| *name))
         .collect();
     let cloned = |element: &Element| clones.iter().find(|clone| clone.element == element.id);
-    let clip_paths: String =
-        elements.iter().enumerate().filter(|(_, element)| cloned(element).is_none()).map(|(index, element)| clip_paths(index, element)).collect();
-    if !used.is_empty() || !clip_paths.is_empty() {
+    let drawn = || elements.iter().enumerate().filter(|(_, element)| cloned(element).is_none());
+    let clip_paths: String = drawn().map(|(index, element)| clip_paths(index, element)).collect();
+    let gradients: String = drawn().map(|(index, element)| gradient(index, element)).collect();
+    if !used.is_empty() || !clip_paths.is_empty() || !gradients.is_empty() {
         out.push_str("  <defs>\n");
         for name in &used {
             out.push_str(&format!("    <symbol id=\"inkstitch_{name}\"><circle r=\"1\"/></symbol>\n"));
         }
         out.push_str(&clip_paths);
+        out.push_str(&gradients);
         out.push_str("  </defs>\n");
     }
     for (index, element) in elements.iter().enumerate() {
@@ -155,7 +162,8 @@ fn written(elements: &[Element], settings: &DesignSettings, clones: &[Cloned], s
             out.push_str("  <g>\n");
         }
         let own = if element.clips.is_empty() { String::new() } else { clip(0) };
-        out.push_str(&format!("  <path id=\"e{index}\" {}{own}{parameters} d=\"{}\"/>\n", painted(element, styled), data(element.shape.path())));
+        let painted = painted(index, element, styled);
+        out.push_str(&format!("  <path id=\"e{index}\" {painted}{own}{parameters} d=\"{}\"/>\n", data(element.shape.path())));
         out.push_str(&helpers);
         out.push_str(&"  </g>\n".repeat(groups + usize::from(wrapped)));
         out.push_str(&commands(index, element));
@@ -237,6 +245,30 @@ fn clip_paths(index: usize, element: &Element) -> String {
     out
 }
 
+/// The linear gradient the element `index`, `element`, is painted with, as a `<linearGradient>` in user space
+/// with a `<stop>` for each of its stops; nothing for an element without one.
+fn gradient(index: usize, element: &Element) -> String {
+    let Shape::Fill { gradient: Some(gradient), .. } = &element.shape else { return String::new() };
+    let (start, end) = (gradient.start, gradient.end);
+    let mut out = format!(
+        "    <linearGradient id=\"e{index}-gradient\" gradientUnits=\"userSpaceOnUse\" x1=\"{}\" y1=\"{}\" x2=\"{}\" y2=\"{}\">\n",
+        start.x(),
+        start.y(),
+        end.x(),
+        end.y()
+    );
+    for stop in &gradient.stops {
+        out.push_str(&format!("      <stop offset=\"{}\" stop-color=\"{}\" stop-opacity=\"{}\"/>\n", stop.offset, hex(stop.colour), stop.opacity));
+    }
+    out.push_str("    </linearGradient>\n");
+    out
+}
+
+/// `colour` as SVG writes it: `#` and 6 hexadecimal digits.
+fn hex(colour: Rgb) -> String {
+    format!("#{:02x}{:02x}{:02x}", colour.r, colour.g, colour.b)
+}
+
 /// `rule` as SVG writes it.
 const fn rule(rule: FillRule) -> &'static str {
     match rule {
@@ -245,12 +277,15 @@ const fn rule(rule: FillRule) -> &'static str {
     }
 }
 
-/// How `element` is painted, as SVG's properties with their values: its fill, or its stroke.
-fn paint(element: &Element) -> Vec<(&'static str, String)> {
-    let colour = element.thread.color;
-    let colour = format!("#{:02x}{:02x}{:02x}", colour.r, colour.g, colour.b);
+/// How the element `index`, `element`, is painted, as SVG's properties with their values: its fill, its
+/// linear gradient's when it has one, or its stroke.
+fn paint(index: usize, element: &Element) -> Vec<(&'static str, String)> {
+    let colour = hex(element.thread.color);
     match &element.shape {
-        Shape::Fill { rule: fill_rule, .. } => vec![("fill", colour), ("fill-rule", rule(*fill_rule).to_string()), ("stroke", "none".to_string())],
+        Shape::Fill { rule: fill_rule, gradient, .. } => {
+            let fill = if gradient.is_some() { format!("url(#e{index}-gradient)") } else { colour };
+            vec![("fill", fill), ("fill-rule", rule(*fill_rule).to_string()), ("stroke", "none".to_string())]
+        }
         Shape::Stroke { width, join, cap, .. } => {
             let mut properties = vec![("fill", "none".to_string()), ("stroke", colour), ("stroke-width", width.get().to_string())];
             match join {
@@ -269,9 +304,10 @@ fn paint(element: &Element) -> Vec<(&'static str, String)> {
     }
 }
 
-/// How `element` is painted ([`paint`]), as attributes, or with `styled` as one `style` attribute.
-fn painted(element: &Element, styled: bool) -> String {
-    let properties = paint(element);
+/// How the element `index`, `element`, is painted ([`paint`]), as attributes, or with `styled` as one
+/// `style` attribute.
+fn painted(index: usize, element: &Element, styled: bool) -> String {
+    let properties = paint(index, element);
     if styled {
         let style: Vec<String> = properties.iter().map(|(name, value)| format!("{name}:{value}")).collect();
         format!("style=\"{}\"", style.join(";"))
@@ -386,7 +422,7 @@ mod tests {
             &RED,
             &[("fill_underlay", "false")],
         );
-        let square = Element { shape: Shape::Fill { path: square.shape.path().clone(), rule: FillRule::EvenOdd }, ..square };
+        let square = Element { shape: Shape::Fill { path: square.shape.path().clone(), rule: FillRule::EvenOdd, gradient: None }, ..square };
         let curve = Path {
             subpaths: vec![Subpath {
                 start: p(30.0, 15.0),
@@ -450,6 +486,26 @@ mod tests {
         assert!(text.contains(" clip-path=\"url(#e0-clip0)\""), "{text}");
         assert_eq!(text.matches("<path clip-rule=\"evenodd\"").count(), 1, "{text}");
         assert_eq!(read(&text).0, kept(&[square]));
+    }
+
+    #[test]
+    fn req_prm_003_a_fill_s_linear_gradient_is_written_as_one() {
+        // A square under a gradient of 3 stops, its middle one transparent, in the thread of its first stop:
+        // the reader places it where it was, by attributes or by style alike.
+        let stops = [(0.0, RED.color, 1.0), (0.375, Rgb::new(240, 240, 240), 0.0), (1.0, BLUE.color, 0.5)]
+            .map(|(offset, colour, opacity)| stitchcraft_engine::design::GradientStop { offset, colour, opacity })
+            .to_vec();
+        let gradient = stitchcraft_engine::design::Gradient { start: p(10.5, 20.0), end: p(30.25, 12.0), stops };
+        let square = fill("square", &[&[(10.0, 10.0), (30.0, 10.0), (30.0, 30.0), (10.0, 30.0)]], &RED, &[("fill_method", "linear_gradient_fill")]);
+        let square =
+            Element { shape: Shape::Fill { path: square.shape.path().clone(), rule: FillRule::NonZero, gradient: Some(gradient) }, ..square };
+        let text = svg(std::slice::from_ref(&square), &DesignSettings::default()).unwrap();
+        assert!(text.contains(r#"<linearGradient id="e0-gradient" gradientUnits="userSpaceOnUse" x1="10.5" y1="20" x2="30.25" y2="12">"#), "{text}");
+        assert!(text.contains(r##"<stop offset="0.375" stop-color="#f0f0f0" stop-opacity="0"/>"##), "{text}");
+        assert!(text.contains(r##"fill="url(#e0-gradient)""##), "{text}");
+        assert_eq!(read(&text).0, kept(std::slice::from_ref(&square)));
+        let styled = svg_styled(std::slice::from_ref(&square), &DesignSettings::default()).unwrap();
+        assert_eq!(read(&styled).0, kept(&[square]));
     }
 
     #[test]
