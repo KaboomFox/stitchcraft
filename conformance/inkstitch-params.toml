@@ -10,7 +10,8 @@
 # `staggers`, and `row_spacing_mm` and `max_stitch_length_mm` where its own are not set (lib/elements/
 # fill_stitch.py at d59c9ab: to_stitch_groups, do_underlay, fill_underlay_angle,
 # fill_underlay_row_spacing, fill_underlay_max_stitch_length), and a method's own sewing reads what its
-# `do_<method>` function takes from the element, as the circular fill reads `skip_last`. `phase` and `milestone`
+# `do_<method>` function takes from the element, as the circular fill reads `skip_last`, and what the
+# functions it hands the element to take, as the tartan fill reads it too. `phase` and `milestone`
 # are StitchCraft's plan for it, both `—` when it has none. Checked
 # field by field against that commit's declarations and getters with
 # `python3 -I conformance/inkstitch/check_params.py PATH/TO/INKSTITCH`; run it again when moving to a
@@ -1133,7 +1134,7 @@ type = "boolean"
 unit = "—"
 default = "false"
 applies_to = ["tatami_fill", "guided_fill", "linear_gradient_fill", "legacy_fill"]
-read_by = ["circular_fill"]
+read_by = ["circular_fill", "tartan_fill"]
 phase = "P1"
 milestone = "M5"
 

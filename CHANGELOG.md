@@ -5,6 +5,26 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M10.6: tartan fill without herringbone (`REQ-FILL-TRT-001` to `REQ-FILL-TRT-011`). `fill_method`
+  `tartan_fill` sews Ink/Stitch's tartan fill, which was skipped with `SC-W0011`.
+  - The sett is the `tartan` setting as Ink/Stitch's tartan editor saves it: a palette code of stripes, each
+    a colour and a width, for warp and weft alike or apart, mirrored or repeated, scaled, turned and moved.
+    The list the editor writes for a repeated sett reads too. Stripes no wider than `min_stripe_width` sew
+    as runs along their middles, after the fills.
+  - Rows at `tartan_angle` to the stripes go to the warp and the weft in turns of `rows_per_thread`. Each
+    band's rows are joined along its edges, and each colour's lines are routed as a tatami fill's rows,
+    after the tatami fill's underlay in the element's own thread. Each colour sews in its own thread, a
+    colour block trimmed after with `trim_after`, and `stop_at_ending_point` keeps its travel to the end.
+  - New settings: `tartan`, `tartan_angle`, `rows_per_thread`, `herringbone_width_mm` and
+    `stop_at_ending_point`. A tartan also reads the tatami fill's `skip_last`, as Ink/Stitch's does, and its
+    runs read `bean_stitch_repeats`. New codes: `SC-E0323`, `SC-W0324`, `SC-W0325`, `SC-W0326`,
+    `SC-W0327` and `SC-W0328`. A herringbone sews straight rows until M10.7, and says so.
+  - VectorCraft's fill dialog offers the tartan's numbers, but no sett before M10.7, so a tartan made there
+    sews Ink/Stitch's default sett. The compatibility contract lists the `tartan` attribute as registered.
+  - TS-17B is drawn with 5 tartans for MC-12, and the differential sews them and 4 files of tartans in
+    Ink/Stitch too: they agree by every measure. Its wxPython stand-in raises `PyNoAppError` for
+    `wx.Colour`, as wxPython does without an app, so Ink/Stitch reads a tartan's colours as from the
+    command line. A user page shows tartan fills in pictures. Golden added: `TS-17B.pes`.
 - M10.4: auto-satin routing. `stitchcraft_engine::route` routes satin columns, and the strokes among them,
   as Ink/Stitch's Auto-Route Satin Columns does. Each column is cut into pieces at most 1 mm long along its
   centre line, and the groups of pieces are joined by the shortest jumps in all. A stretch passed twice is
@@ -2486,6 +2506,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Added `conformance/golden/testsheets/TS-17B.pes` (M10.6), the tartans of the new fills' sheet that MC-12
+  sews: 23 colour blocks, 28,658 stitches.
 - Changed `conformance/golden/testsheets/TS-17A.pes` (M10.2). The sheet gains 2 rows after 2 more colour
   changes. Its green row sews squares of upright and dense upright crosses, then of double and Smyrna
   crosses, and its black row squares of half crosses and a square turned 30° with its grid. The plan spans

@@ -235,6 +235,17 @@ mod tests {
     }
 
     #[test]
+    fn a_tartan_fill_shows_its_rows_of_ink_stitch_s_default_sett() {
+        // The fill dialog holds no sett before M10.7, so the effect sews Ink/Stitch's default one, and the
+        // warning that says so is `stitch export`'s to report.
+        for level in ["auto", "exact"] {
+            let out = run(Family::Fill, &square(), &[("fill_method", json!("tartan_fill")), (stitchcraft_vectorcraft::PREVIEW_LEVEL, json!(level))]);
+            assert!(out.get("error").is_none(), "{level}: {out}");
+            assert!(!out["objects"][0]["path"]["subpaths"].as_array().unwrap().is_empty(), "{level}");
+        }
+    }
+
+    #[test]
     fn req_vc_016_the_auto_effect_previews_its_object_or_says_why_it_cannot() {
         let run =
             |input: &[u8], set: &[(&str, Value)]| -> Value { serde_json::from_slice(&auto(input, &testing::auto_params(set)).unwrap()).unwrap() };

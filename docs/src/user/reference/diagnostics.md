@@ -53,6 +53,12 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0320`](#sc-w0320) | Warning | Cross stitch with an odd thread count; an even count sewn |
 | [`SC-W0321`](#sc-w0321) | Warning | Cross stitch grid too fine for the shortest stitch; needle points left out |
 | [`SC-W0322`](#sc-w0322) | Warning | Half cross with an even thread count; the odd count above sewn |
+| [`SC-E0323`](#sc-e0323) | Error | Tartan fill's sett can't be read; skipped |
+| [`SC-W0324`](#sc-w0324) | Warning | Tartan's herringbone not sewn yet; rows sewn without it |
+| [`SC-W0325`](#sc-w0325) | Warning | Tartan fill without a sett; Ink/Stitch's default sett sewn |
+| [`SC-W0326`](#sc-w0326) | Warning | Tartan sett with no stripe to sew; only the underlay sewn |
+| [`SC-W0327`](#sc-w0327) | Warning | Tartan sett too fine for the shortest stitch; needle points left out |
+| [`SC-W0328`](#sc-w0328) | Warning | Tartan stripe's colour can't be read; left out |
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
 | [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
@@ -641,6 +647,71 @@ and forth over it, as bean stitch does. An even `cross_thread_count` sews the od
 in Ink/Stitch, whose own help for the count says that half crosses take an odd one.
 
 The message gives the count set and the count sewn. Set an odd number.
+
+## SC-E0323
+
+**Error** — Tartan fill's sett can't be read; skipped
+
+A tartan fill's sett is its `tartan` setting, an object of JSON as Ink/Stitch's tartan editor saves
+it, whose `palette` gives the stripes. This one can't be read: it isn't JSON, it has no `palette`, a
+number in it isn't one, its `scale` isn't above 0, its code has more than one `|`, or a stripe's width
+isn't a number. A threadcount or a code of colour letters, which Ink/Stitch's editor reads too, is
+read from M10.7. The element is skipped.
+
+The message says what is wrong. Set the sett again in Ink/Stitch's tartan editor, or write its
+palette code as a colour in brackets and a width for each stripe.
+
+## SC-W0324
+
+**Warning** — Tartan's herringbone not sewn yet; rows sewn without it
+
+A tartan's herringbone sews its rows in bands `herringbone_width_mm` wide, each band's rows slanting
+the other way from the band before. StitchCraft sews herringbones from M10.7, and until then the rows
+are sewn straight, as a tartan with a width of 0 sews them.
+
+The message gives the width. Set `herringbone_width_mm` to 0 for straight rows, or sew the file in
+Ink/Stitch to have the herringbone.
+
+## SC-W0325
+
+**Warning** — Tartan fill without a sett; Ink/Stitch's default sett sewn
+
+A tartan fill without a sett sews Ink/Stitch's default one, as Ink/Stitch does: stripes 5 mm wide of a
+thread almost black, with 5 mm left unsewn between them. VectorCraft's fill dialog holds no sett
+before M10.7, so a tartan fill made there sews this one.
+
+Set the sett with Ink/Stitch's tartan editor, and sew the file it saves.
+
+## SC-W0326
+
+**Warning** — Tartan sett with no stripe to sew; only the underlay sewn
+
+Every stripe of this sett is left unsewn: each is marked `?`, has a colour that can't be read, or has
+no width, so neither the warp nor the weft has a stripe to sew. Only the fill's underlay is sewn, as
+in Ink/Stitch.
+
+Give a stripe a colour and a width.
+
+## SC-W0327
+
+**Warning** — Tartan sett too fine for the shortest stitch; needle points left out
+
+The rows cross a tartan's narrowest stripe sewn as a fill in stretches shorter than the shortest
+stitch the machine sews well: a warp stripe in its width over the cosine of the rows' angle to the
+stripes, and a weft stripe over its sine. Needle points too near the one before are left out, so the
+stripe's rows lose stitches and it can look thin.
+
+The message gives the stripe's width, the stretch and the shortest stitch. Widen the stripe, raise
+the sett's `scale`, or raise its `min_stripe_width` so that the stripe sews as a run.
+
+## SC-W0328
+
+**Warning** — Tartan stripe's colour can't be read; left out
+
+A stripe's colour is `#` and 3 or 6 hexadecimal digits, or a colour name of SVG. This sett names a
+colour that is neither, and its stripes are left unsewn, as Ink/Stitch leaves them.
+
+The message names the colours. Write each as `#` and 6 hexadecimal digits.
 
 ## SC-W0401
 
