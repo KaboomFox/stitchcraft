@@ -11,13 +11,17 @@
 //! The TS-13 sheets themselves are here too, with their stitches where the sheet draws its shapes
 //! ([`sheet`]), so that a case can measure what a sheet sews against what it draws. A sheet's machine file
 //! has its origin at the middle of its stitches, which moves every stitch by the same amount.
+//!
+//! So is the pear the docs show ([`pear`]), a photo that VectorCraft traced into shapes, whose ragged edges
+//! no picture drawn in code has.
 
-use stitchcraft_engine::design::{Design, DesignSettings};
+use stitchcraft_core::Budget;
+use stitchcraft_engine::design::{Design, Reading};
 pub use stitchcraft_engine::testsheets::pictures::{Picture, Trace};
 use stitchcraft_engine::testsheets::{find, pictures};
 use stitchcraft_plan::{Rgb, StitchPlan, Thread};
 
-use crate::designs::{BLUE, RED, automatic, fill, p, planned_with};
+use crate::designs::{BLUE, RED, automatic, fill, in_place, p};
 
 /// A gold thread.
 pub const GOLD: Thread = Thread::new(Rgb::new(230, 180, 30));
@@ -64,16 +68,20 @@ pub fn button(trace: Trace) -> Picture {
 }
 
 /// The test sheet `id`'s design, and its plan for the reference machine with its stitches where the design
-/// draws them: planned with its origin at the middle of its shapes, which the hoop holds, and moved back by
-/// it.
+/// draws them ([`in_place`]).
 pub fn sheet(id: &str) -> (Design, StitchPlan) {
     let design = find(id).and_then(|sheet| sheet.design()).unwrap_or_else(|| panic!("{id} is no designed sheet")).unwrap();
-    let bounds = design.bounds().unwrap();
-    let middle = p((bounds.min().x() + bounds.max().x()) / 2.0, (bounds.min().y() + bounds.max().y()) / 2.0);
-    let outcome = planned_with(design.elements().to_vec(), DesignSettings { origin: Some(middle), ..design.settings });
-    let mut plan = outcome.plan.unwrap_or_else(|| panic!("{id}: {:?}", outcome.diagnostics));
-    for stitch in plan.blocks.iter_mut().flat_map(|block| &mut block.stitches) {
-        stitch.at = p(stitch.at.x() + middle.x(), stitch.at.y() + middle.y());
-    }
+    let outcome = in_place(&design);
+    let plan = outcome.plan.unwrap_or_else(|| panic!("{id}: {:?}", outcome.diagnostics));
     (design, plan)
+}
+
+/// The photo of a pear that the docs show, traced 90 mm across into 4 of the reference machine's threads by
+/// VectorCraft 0.19.0 (`docs/fixtures/traced-pear.vectorcraft`): a light grey square, the picture's
+/// background, and on it the pear in 3 greens, read as `--auto` reads it, every shape automatic.
+#[allow(clippy::disallowed_methods)] // a test reads the docs' fixture from the repository
+pub fn pear() -> Design {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/fixtures/traced-pear.vectorcraft");
+    let bytes = std::fs::read(path).unwrap();
+    stitchcraft_vectorcraft::read_with(&bytes, &Budget::DEFAULT, Reading { auto: true, ..Reading::default() }).unwrap().design
 }

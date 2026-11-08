@@ -102,7 +102,11 @@ gained the arm of its bar that it had lost, and the leg of its A 6 mm tall that 
 column like the other. M13.12 then changed what the digitized halves of TS-13A and TS-13B sew, as the
 pictures' layers are flattened before they are digitized. It also added TS-13D. A TS-13 file written before
 then sews as it did: write the sheet again before sewing it, and check that its stitches number as the
-[test-sheet reference](../user/reference/test-sheets.md) says.
+[test-sheet reference](../user/reference/test-sheets.md) says. On 2026-11-08 a narrow part's column
+stopped running along its cut into one of the cut's corners, where it sewed a fan of stitches and left
+fabric bare beside it. The column now ends along the whole cut. TS-13C's digitized star then sews its
+right-hand point from its tip to its cut. At MC-8, look at each point's end along its cut for fabric
+showing at the cut's corners.
 
 ## Report template
 
