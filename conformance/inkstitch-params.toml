@@ -1490,6 +1490,24 @@ applies_to = []
 phase = "P2"
 milestone = "M8"
 
+# Settings Ink/Stitch gives a stitch type that StitchCraft sews, which the registry leaves out of it on
+# purpose. `cargo xtask docs --check` requires a registered row's key to apply to every stitch type of the
+# row that the engine sews, and these entries are the exceptions. Each names the rows' element, the stitch
+# type and the keys, with a reason a reviewer can check: the code where Ink/Stitch's sewing of the type
+# leaves the keys unread, though its settings window shows them, or the deviation (`DEV-…`) that leaves
+# them out. The contract page shows the reasons, so a deviation one names must be in the ledger. An entry
+# that excuses nothing fails the check. check_params.py doesn't read them, so read the code a reason names
+# again when moving to a newer commit.
+
+[[unapplied]]
+element = "fill"
+stitch_type = "cross_stitch"
+names = [
+    "fill_underlay", "fill_underlay_angle", "fill_underlay_row_spacing_mm", "fill_underlay_max_stitch_length_mm",
+    "fill_underlay_inset_mm", "fill_underlay_skip_last", "underlay_underpath",
+]
+reason = "Ink/Stitch's settings window shows the underlay's settings for every fill method, and its cross stitch sews no underlay. Its fill element's `to_stitch_groups` sews the underlay for every method but `legacy_fill` and `cross_stitch`, and a cross stitch's stitches come from `do_cross_stitch` alone (lib/elements/fill_stitch.py at d59c9ab). StitchCraft's cross stitch sews no underlay either."
+
 [[method]]
 param = "stroke_method"
 value = "running_stitch"
