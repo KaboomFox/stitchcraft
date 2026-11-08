@@ -870,6 +870,40 @@
         "stability": "stable"
       }
     },
+    "grid_first": {
+      "default": false,
+      "description": "Sew the grid before the ripple's own lines, the whole ripple backwards.",
+      "title": "Grid first",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "applies_to": [
+          "ripple_stitch"
+        ],
+        "group": "Grid",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
+    "grid_size_mm": {
+      "default": null,
+      "description": "How far apart the lines across the ripple's lines are: the ripple then sews a grid, its own lines and lines across them through every point they share. Empty or 0: no grid.",
+      "maximum": 100.0,
+      "minimum": 0.01,
+      "title": "Grid size",
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-stitchcraft": {
+        "applies_to": [
+          "ripple_stitch"
+        ],
+        "group": "Grid",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "mm"
+      }
+    },
     "herringbone_width_mm": {
       "default": 0.0,
       "description": "The width of the bands of a herringbone, each band's rows slanting the other way from the band before. 0 sews straight rows. StitchCraft sews herringbones from M10.7, and until then the rows are sewn without them, which `SC-W0324` says.",
@@ -930,7 +964,7 @@
     },
     "line_count": {
       "default": 10,
-      "description": "How many lines the ripple sews. The first is the stroke's own line, or a column's first rail, and the last the target point, or the second rail. With `min_line_dist_mm`, this keeps only the count's parity, odd or even.",
+      "description": "How many lines the ripple sews. The first is the stroke's own line, or a column's first rail, and the last the target point, or the second rail. Along a guide, how many copies of the line it places. With `min_line_dist_mm`, this keeps only the count's parity, odd or even.",
       "maximum": 1000,
       "minimum": 1,
       "title": "Lines",
@@ -1124,6 +1158,20 @@
           ],
           "key": "lock_start"
         }
+      }
+    },
+    "manual_pattern_placement": {
+      "default": false,
+      "description": "Sew each line through the points it is made of, and nothing between them: the stroke's nodes, copied, where a line is copied, and the stitch length is not used along the lines. A straight run of stitches no longer than the stitch length joins each line to the next.",
+      "title": "Sew the line's own nodes",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "applies_to": [
+          "ripple_stitch"
+        ],
+        "group": "Ripple",
+        "origin": "inkstitch",
+        "stability": "stable"
       }
     },
     "max_cross_stitch_length_mm": {
@@ -1332,7 +1380,7 @@
     },
     "min_line_dist_mm": {
       "default": null,
-      "description": "How far apart the lines are at least. The count is then the shortest distance from the stroke's line to the target point, or across the column, divided by this and rounded up. Where that differs in parity from `line_count`, it is 1 less, so that the ripple ends on the same side however large it is drawn. Empty or 0: `line_count` gives the count.",
+      "description": "How far apart the lines are at least. The count is then the shortest distance from the stroke's line to the target point, or across the column, or the guide's length, divided by this and rounded up. Where that differs in parity from `line_count`, it is 1 less, so that the ripple ends on the same side however large it is drawn. Empty or 0: `line_count` gives the count.",
       "maximum": 100.0,
       "minimum": 0.01,
       "title": "Least distance between lines",
@@ -1736,25 +1784,64 @@
       }
     },
     "reverse_rails": {
-      "default": "automatic",
-      "description": "Which rails are sewn against the way they are drawn, so that both run the same way. Automatic reverses the second rail when it runs against the first.",
-      "enum": [
-        "automatic",
-        "none",
-        "first",
-        "second",
-        "both"
-      ],
-      "title": "Reverse rails",
-      "type": "string",
+      "anyOf": [
+        {
+          "default": "automatic",
+          "description": "Which rails of the column the ripple runs along, or of its satin guide, are read against the way they are drawn, so that both run the same way. Automatic reverses the second rail when it runs against the first.",
+          "enum": [
+            "automatic",
+            "none",
+            "first",
+            "second",
+            "both"
+          ],
+          "title": "Reverse rails",
+          "type": "string",
+          "x-stitchcraft": {
+            "applies_to": [
+              "ripple_stitch"
+            ],
+            "group": "Rails",
+            "origin": "inkstitch",
+            "stability": "stable"
+          }
+        },
+        {
+          "default": "automatic",
+          "description": "Which rails are sewn against the way they are drawn, so that both run the same way. Automatic reverses the second rail when it runs against the first.",
+          "enum": [
+            "automatic",
+            "none",
+            "first",
+            "second",
+            "both"
+          ],
+          "title": "Reverse rails",
+          "type": "string",
+          "x-stitchcraft": {
+            "applies_to": [
+              "satin_column",
+              "e_stitch",
+              "s_stitch",
+              "zigzag"
+            ],
+            "group": "Rails",
+            "origin": "inkstitch",
+            "stability": "stable"
+          }
+        }
+      ]
+    },
+    "rotate_ripples": {
+      "default": true,
+      "description": "Turn each copy as the guide turns: by the angle from the guide's start to the way it runs there, or for a closed line on a satin guide, as the rails' pairs turn from the first.",
+      "title": "Turn with the guide",
+      "type": "boolean",
       "x-stitchcraft": {
         "applies_to": [
-          "satin_column",
-          "e_stitch",
-          "s_stitch",
-          "zigzag"
+          "ripple_stitch"
         ],
-        "group": "Rails",
+        "group": "Guide",
         "origin": "inkstitch",
         "stability": "stable"
       }
@@ -1899,6 +1986,25 @@
         "stability": "stable"
       }
     },
+    "satin_guide_pattern_position": {
+      "default": "default",
+      "description": "Where the copies lie along a guide. Line count places them as `line_count` or `min_line_dist_mm` says, spread along the guide. At the rungs places one at each point of a guide line, or at each rung of a satin guide. Adaptive places one wherever it clears the last by `min_line_dist_mm` between a satin guide's rails.",
+      "enum": [
+        "default",
+        "render_at_rungs",
+        "adaptive"
+      ],
+      "title": "Copies along the guide",
+      "type": "string",
+      "x-stitchcraft": {
+        "applies_to": [
+          "ripple_stitch"
+        ],
+        "group": "Guide",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
     "satin_method": {
       "default": "satin_column",
       "description": "How the column is sewn. A satin column sews stitches straight across it, from one rail to the other and back. An E-stitch sews a spike across the column at each pair and a spine along its first rail between them, an edge for appliqué. An S-stitch sews one stitch across at each pair, every other one the other way, with a step along a rail between them: split by a longest stitch, they cover the column in rows, as a fill does. A zigzag satin sews a zigzag between the rails, every stitch slanting half the spacing along.",
@@ -1920,6 +2026,60 @@
         "group": "Satin column",
         "origin": "inkstitch",
         "stability": "stable"
+      }
+    },
+    "scale_axis": {
+      "default": "0",
+      "description": "Which way the copies are scaled along a guide line, and along a satin guide for a closed line: both ways, across (x), down (y), or neither.",
+      "enum": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ],
+      "title": "Scale axis",
+      "type": "string",
+      "x-stitchcraft": {
+        "applies_to": [
+          "ripple_stitch"
+        ],
+        "group": "Guide",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
+    "scale_end": {
+      "default": 0.0,
+      "description": "How large the last copy along a guide line is, in percent of the line. The copies between grow or shrink evenly from the first's size to this.",
+      "maximum": 1000.0,
+      "minimum": -1000.0,
+      "title": "Last copy's size",
+      "type": "number",
+      "x-stitchcraft": {
+        "applies_to": [
+          "ripple_stitch"
+        ],
+        "group": "Guide",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "%"
+      }
+    },
+    "scale_start": {
+      "default": 100.0,
+      "description": "How large the first copy along a guide line is, in percent of the line.",
+      "maximum": 1000.0,
+      "minimum": -1000.0,
+      "title": "First copy's size",
+      "type": "number",
+      "x-stitchcraft": {
+        "applies_to": [
+          "ripple_stitch"
+        ],
+        "group": "Guide",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "%"
       }
     },
     "short_stitch_distance_mm": {
@@ -2212,21 +2372,39 @@
       }
     },
     "swap_satin_rails": {
-      "default": false,
-      "description": "Make the second rail the first, which sews first in each pair and starts the column. An S-stitch starts on the second rail instead, and sews every other stitch from it.",
-      "title": "Swap rails",
-      "type": "boolean",
-      "x-stitchcraft": {
-        "applies_to": [
-          "satin_column",
-          "e_stitch",
-          "s_stitch",
-          "zigzag"
-        ],
-        "group": "Rails",
-        "origin": "inkstitch",
-        "stability": "stable"
-      }
+      "anyOf": [
+        {
+          "default": false,
+          "description": "Make the second rail of the column, or of the satin guide, the first: the ripple starts on it.",
+          "title": "Swap rails",
+          "type": "boolean",
+          "x-stitchcraft": {
+            "applies_to": [
+              "ripple_stitch"
+            ],
+            "group": "Rails",
+            "origin": "inkstitch",
+            "stability": "stable"
+          }
+        },
+        {
+          "default": false,
+          "description": "Make the second rail the first, which sews first in each pair and starts the column. An S-stitch starts on the second rail instead, and sews every other stitch from it.",
+          "title": "Swap rails",
+          "type": "boolean",
+          "x-stitchcraft": {
+            "applies_to": [
+              "satin_column",
+              "e_stitch",
+              "s_stitch",
+              "zigzag"
+            ],
+            "group": "Rails",
+            "origin": "inkstitch",
+            "stability": "stable"
+          }
+        }
+      ]
     },
     "tartan": {
       "default": "",
@@ -2609,7 +2787,17 @@
           "flip_copies",
           "join_style",
           "staggers",
-          "reverse"
+          "reverse",
+          "manual_pattern_placement",
+          "reverse_rails",
+          "swap_satin_rails",
+          "satin_guide_pattern_position",
+          "scale_axis",
+          "scale_start",
+          "scale_end",
+          "rotate_ripples",
+          "grid_size_mm",
+          "grid_first"
         ],
         "name": "RippleParams",
         "title": "Ripple parameters"

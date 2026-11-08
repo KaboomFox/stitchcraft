@@ -610,9 +610,10 @@ registry! {
     /// A ripple stitch's guide line can't place its copies, so the ripple sews without it, towards its
     /// target point or spiralling in to it, as it would with no guide. The guide has no length, its satin
     /// column has no rails to place copies between, its middle has no length or its first pair of points no
-    /// width, or it is too short for a pair, or its settings don't read. Ink/Stitch fails on most of these,
-    /// and sews nothing of the last. An anchor line whose ends are one point is left out the same way, and
-    /// the copies' ends are the line's own.
+    /// width, or it is too short for a pair, or its settings don't read. Ink/Stitch at `d59c9ab`, run as a
+    /// black box, stacks the copies of a guide line of no length on its point, and stops with an error where
+    /// they are placed by hand (`DEV-RIP-004`). An anchor line whose ends are one point is left out the same
+    /// way, and the copies' ends are the line's own.
     ///
     /// The message says what is wrong with the guide. Draw the guide as a line with length, or as a satin
     /// column of 2 rails, grouped with the ripple, and the anchor line across the ripple's line.
