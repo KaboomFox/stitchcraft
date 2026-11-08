@@ -1,0 +1,50 @@
+# The Linux x86_64 archive of the stable release that compat/vectorcraft.toml pins, from the Actions cache
+# (docs/src/design/compatibility-gate.md › Level B). The window probe and VectorCraft's pictures run that
+# release's app, and Level B of the stable track its command line. A pull request restores the copy a run on
+# main kept, so an outage of GitHub's release downloads doesn't fail its checks. On 2026-11-08 those
+# downloads answered with 504s and reset connections for an hour.
+#
+# The archive goes where `cargo xtask` keeps it, target/compat/<name>/<name>.tar.gz, the path `fetch` in
+# xtask/src/compat/release.rs uses, as a test there checks. The key is the archive's name, which holds the
+# pinned version, and its SHA-256 from the pins file, so a new pin has a new key. The cache holds the archive
+# alone, and each run unpacks it.
+#
+# Each job saves the archive with actions/cache/save after the step that fetches it, when this action
+# restored nothing and the file is there. `fetch` moves a download to that path only once its SHA-256 is the
+# pinned one, so the cache keeps no other.
+name: VectorCraft's pinned release
+description: Restore the pinned stable release's Linux archive from the Actions cache.
+outputs:
+  path:
+    description: Where `cargo xtask` keeps the archive, from the repository's root.
+    value: ${{ steps.pin.outputs.path }}
+  key:
+    description: The cache's key, the archive's name and its SHA-256.
+    value: ${{ steps.pin.outputs.key }}
+  hit:
+    description: "`true` when the cache held the archive under the key."
+    value: ${{ steps.restore.outputs.cache-hit }}
+runs:
+  using: composite
+  steps:
+    - id: pin
+      shell: bash
+      run: |
+        python3 -I - compat/vectorcraft.toml >> "$GITHUB_OUTPUT" <<'EOF'
+        import sys
+        import tomllib
+
+        with open(sys.argv[1], "rb") as pins:
+            stable = tomllib.load(pins)["tracks"]["stable"]
+        version = stable["tag"].removeprefix("v")
+        name = f"vectorcraft-{version}-linux-x86_64"
+        print(f"path=target/compat/{name}/{name}.tar.gz")
+        print(f"key={name}-{stable['linux-x86_64-sha256']}")
+        EOF
+    # `fetch` checks the SHA-256 of whatever the cache gives against the pins file, so a wrong file is
+    # fetched again and never used.
+    - id: restore
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ steps.pin.outputs.path }}
+        key: ${{ steps.pin.outputs.key }}
