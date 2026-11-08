@@ -1,0 +1,76 @@
+# The subject cut-out's models, run by tract (REQ-CLI-019; ADR-0019, decision 8;
+# docs/src/design/conformance.md › Cases with the models). The models are 49 MB, which StitchCraft's release
+# cutout-models-1 publishes and apps/stitchcraft-cutout/models/models.toml pins, so they run in this job
+# alone. It fetches them as `stitch` does, with curl into the folder STITCHCRAFT_MODELS names, checking each
+# against its pin, and runs the cases every other job leaves out as "models only": the cut-outs of the owner's
+# photos and of pictures drawn in code, tract's outputs against those saved as fixtures, and `stitch plan
+# --subject` end to end.
+name: models
+
+on:
+  pull_request:
+    paths:
+      - "apps/stitchcraft-cutout/**"
+      - "apps/stitchcraft-cli/src/subject.rs"
+      - "apps/stitchcraft-cli/src/subject/**"
+      - "apps/stitchcraft-cli/tests/picture.rs"
+      - "conformance/fixtures/cutout/**"
+      - ".github/workflows/models.yml"
+      - "Cargo.lock"
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: models-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+  RUST_BACKTRACE: "1"
+
+jobs:
+  models:
+    name: models (the cut-out's, run by tract)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install --profile minimal
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - name: The models' folder
+        run: echo "STITCHCRAFT_MODELS=$RUNNER_TEMP/models" >> "$GITHUB_ENV"
+      # The pins name the files, so a run restores what a run with the same pins kept. Whatever the cache
+      # gives, the cases check each file against its pin before tract reads it, and fetch it again when it
+      # differs.
+      - name: The models, from the Actions cache when a run kept them
+        id: models
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/models
+          key: cutout-models-${{ hashFiles('apps/stitchcraft-cutout/models/models.toml') }}
+      - name: The models' cases, from the release, checked against their pins
+        run: .github/scripts/annotated.sh "models" cargo test --locked -p stitchcraft-cutout --test models -- --ignored --test-threads=1
+      - name: stitch plan --subject end to end, VectorCraft's command line stood in for
+        run: .github/scripts/annotated.sh "stitch plan --subject" cargo test --locked -p stitchcraft-cli --test picture -- --ignored
+      - name: The models' files and sums, for the job's summary
+        if: always()
+        run: |
+          {
+            echo "### The cut-out's models"
+            echo
+            echo '```'
+            (cd "$STITCHCRAFT_MODELS" 2>/dev/null && ls -l && sha256sum ./*.onnx) || echo "none fetched"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      # After the cases, which fail unless each file matches its pin.
+      - name: Keep the models in the Actions cache
+        if: steps.models.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/models
+          key: cutout-models-${{ hashFiles('apps/stitchcraft-cutout/models/models.toml') }}

@@ -427,6 +427,28 @@ It fails when a case fails or an active requirement has no passing case. `--filt
 cases whose id, test name or requirements contain the text (and skips the "every active requirement"
 rule, since the run is partial). `cargo xtask ci` runs the whole suite; the docs workflow runs `--check`.
 
+### Cases with the models
+
+The subject cut-out's models are 49 MB, which StitchCraft's release `cutout-models-1` publishes
+([image to embroidery](image-to-embroidery.md#subject-cut-out)), so the cases that run them need them
+fetched. Such a case is ignored in every build, with a reason of a fixed form that says where it runs:
+
+```rust
+#[test]
+#[ignore = "models only: the models job runs tests/models.rs"]
+fn req_cli_019_the_cut_out_from_u2netps_box_keeps_each_dog_within_the_bounds() { … }
+```
+
+The models' job, `.github/workflows/models.yml`, fetches the models as `stitch` does, into the folder
+`STITCHCRAFT_MODELS` names, and runs each file that holds such cases with `--ignored`. The runner lists a
+models-only case as skipped with its reason (⏭ in the report), and CI doesn't fail on it as on a missing
+tool: the models' job runs it. A case ignored for any other reason fails, so that no case hides behind
+`#[ignore]`. `--check` finds each models-only case by its attribute: its file must be a test target of its
+own, `<package>/tests/<target>.rs`, and a line of `models.yml` must run `cargo test … -p <package> --test
+<target>` with `--ignored`. Each requirement still needs a case that runs everywhere. `REQ-CLI-019`'s is
+the cut-out of each photo from the models' outputs saved as fixtures, which the models' job checks tract
+still gives.
+
 `cargo xtask conformance --bless <case>` rewrites a data case's golden files. CI refuses a pull request
 that changes files under `conformance/golden/` unless it carries the `golden-change` label and a line in
 `CHANGELOG.md`. For the canonical-plan goldens of the format tests, bless with

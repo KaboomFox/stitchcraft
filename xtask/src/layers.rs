@@ -21,6 +21,10 @@ pub enum Class {
     Testkit,
     /// A shipped binary or plug-in: may depend on any library, never on another app.
     App,
+    /// A library of the apps' layer, which only the app it names may depend on: it may depend on any library,
+    /// and isn't built for the web. The subject cut-out runs models and reads pictures, which no library of
+    /// the layers may (ADR-0019).
+    AppLibrary(&'static str),
     /// Repository tooling: exempt.
     Tool,
 }
@@ -39,6 +43,7 @@ pub const TABLE: &[(&str, Class)] = &[
     ("stitchcraft-cli", Class::App),
     ("stitchcraft-vc-plugin", Class::App),
     ("stitchcraft-xtask", Class::Tool),
+    ("stitchcraft-cutout", Class::AppLibrary("stitchcraft-cli")),
 ];
 
 /// Allowed edges inside one layer: (from, to).
@@ -49,6 +54,7 @@ pub const SAME_LAYER: &[(&str, &str)] = &[("stitchcraft-params", "stitchcraft-co
 /// reader reads XML with roxmltree; xtask cuts the glyph files of Ink/Stitch's fonts with it. The engine
 /// reads a custom lock drawn as a path with svgtypes' path-data parser, the one the SVG adapter reads a
 /// path's `d` with, since the setting's text is the lock in every host (`docs/src/design/algorithms/locks.md`).
+/// Only the subject cut-out decodes photos with image and runs models with tract (ADR-0019).
 pub const RESTRICTED: &[(&str, &[&str])] = &[
     ("clap", &["stitchcraft-cli", "stitchcraft-xtask"]),
     ("rayon", &["stitchcraft-cli"]),
@@ -56,6 +62,8 @@ pub const RESTRICTED: &[(&str, &[&str])] = &[
     ("roxmltree", &["stitchcraft-svg", "stitchcraft-xtask"]),
     ("svgtypes", &["stitchcraft-svg", "stitchcraft-engine"]),
     ("flate2", &["stitchcraft-vectorcraft", "stitchcraft-testkit"]),
+    ("image", &["stitchcraft-cutout"]),
+    ("tract-onnx", &["stitchcraft-cutout"]),
 ];
 
 /// Kind of a dependency edge.
@@ -110,11 +118,13 @@ fn edge_problem(from_name: &str, from: Class, to_name: &str, to: Class, kind: Ki
     match (from, to, kind) {
         (Class::Tool, _, _) => None,
         (_, Class::App, _) => Some(format!("{edge}: nothing may depend on an app")),
+        (Class::App, Class::AppLibrary(owner), _) if owner == from_name => None,
+        (_, Class::AppLibrary(owner), _) => Some(format!("{edge}: only `{owner}` may depend on `{to_name}`")),
         (_, Class::Tool, _) => Some(format!("{edge}: nothing may depend on xtask")),
         (Class::Testkit, Class::Layer(_), _) => None,
         (_, Class::Testkit, Kind::Dev) => None,
         (_, Class::Testkit, _) => Some(format!("{edge}: the testkit is a dev-dependency only")),
-        (Class::App, Class::Layer(_), _) => None,
+        (Class::App | Class::AppLibrary(_), Class::Layer(_), _) => None,
         (Class::Layer(_), Class::Layer(_), Kind::Dev) => None,
         (Class::Layer(a), Class::Layer(b), _) => {
             let allowed = b < a || (a == b && SAME_LAYER.contains(&(from_name, to_name)));
@@ -247,6 +257,31 @@ mod tests {
         let errors = check(&ws);
         assert!(errors.iter().any(|e| e.contains("may not depend on `clap`")), "{errors:?}");
         assert!(errors.iter().any(|e| e.contains("not in the layering table")), "{errors:?}");
+    }
+
+    #[test]
+    fn an_apps_library_has_its_app_alone_as_a_dependent_and_may_use_the_libraries() {
+        let ws = [
+            pkg("stitchcraft-cli", &[("stitchcraft-cutout", Kind::Normal)]),
+            pkg("stitchcraft-cutout", &[("stitchcraft-core", Kind::Normal), ("tract-onnx", Kind::Normal), ("stitchcraft-testkit", Kind::Dev)]),
+            pkg("stitchcraft-core", &[]),
+            pkg("stitchcraft-testkit", &[]),
+        ];
+        assert_eq!(check(&ws), Vec::<String>::new());
+        // Another app, a library or the testkit may not depend on it, even for tests.
+        let ws = [
+            pkg("stitchcraft-vc-plugin", &[("stitchcraft-cutout", Kind::Normal)]),
+            pkg("stitchcraft-engine", &[("stitchcraft-cutout", Kind::Dev)]),
+            pkg("stitchcraft-testkit", &[("stitchcraft-cutout", Kind::Normal)]),
+            pkg("stitchcraft-cutout", &[("stitchcraft-cli", Kind::Normal)]),
+            pkg("stitchcraft-cli", &[]),
+        ];
+        let errors = check(&ws);
+        assert_eq!(errors.iter().filter(|e| e.contains("only `stitchcraft-cli` may depend on `stitchcraft-cutout`")).count(), 3, "{errors:?}");
+        assert!(errors.iter().any(|e| e.contains("`stitchcraft-cutout` → `stitchcraft-cli`: nothing may depend on an app")), "{errors:?}");
+        // Only it runs models and decodes photos.
+        let errors = check(&[pkg("stitchcraft-cli", &[("image", Kind::Normal), ("tract-onnx", Kind::Normal)])]);
+        assert_eq!(errors.len(), 2, "{errors:?}");
     }
 
     #[test]

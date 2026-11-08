@@ -36,6 +36,7 @@ probably not what you want) or `I` (info) + four digits grouped by area:
 | 0800–0899 | Hosts (SVG, VectorCraft) |
 | 0900 to 0999 | Automatic digitizing ([image to embroidery](image-to-embroidery.md)) |
 | 1000 to 1099 | Routing ([routing tools](routing.md)) |
+| 1200 to 1299 | Subject cut-out ([image to embroidery](image-to-embroidery.md#subject-cut-out)) |
 
 Codes are never reused. A retired code keeps its page with "retired in vX".
 

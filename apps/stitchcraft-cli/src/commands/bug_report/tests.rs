@@ -216,6 +216,7 @@ fn req_cli_002_a_bug_found_while_planning_writes_a_bundle() {
         report: None,
         reading: ReadingArgs::default(),
         tracing: TracingArgs::default(),
+        subject: crate::cli::SubjectArgs::default(),
     };
     let out = guarded(&Command::Plan(plan), || panic!("a test of the panic guard"));
     assert_eq!(out.status, Status::Bug);
@@ -332,6 +333,7 @@ fn pes<'a>(path: &'a Path, name: &'a str, design: &'a [u8]) -> Run<'a> {
         profile: profiles::REFERENCE,
         format: FormatId::PesV1,
         says: None,
+        subject: None,
     }
 }
 
@@ -342,6 +344,60 @@ fn bundled(path: &Path, name: &str, written: PathBuf) -> PathBuf {
     let run = pes(path, name, &design);
     write(&written, &super::bundle(&run, borrowed(&guarded_sew(&run, Phase::Plan)))).unwrap();
     written
+}
+
+#[test]
+fn req_cli_018_a_bundle_of_a_picture_cut_out_keeps_the_record_and_no_picture_and_replays_without_the_models() {
+    let dir = TempDir::new("bug-report");
+    // A photo whose subject was cut out, and the document VectorCraft traced the cut-out into, read with
+    // `--auto`, as `stitch plan dog.jpg --subject` reads it.
+    let traced = std::fs::read(conformance("fixtures/vectorcraft/traced-badge.vectorcraft")).unwrap();
+    let sum = |file: &str, sha256: &str| crate::subject::ModelSum { file: file.to_string(), sha256: sha256.to_string() };
+    let record = crate::subject::Record {
+        models: vec![
+            sum("u2netp.onnx", &"1".repeat(64)),
+            sum("mobilesam-encoder.onnx", &"2".repeat(64)),
+            sum("mobilesam-decoder.onnx", &"3".repeat(64)),
+        ],
+        subject_box: [161.25, 223.25, 742.5, 1289.26875],
+        box_from: "u2netp".to_string(),
+        subject_points: Vec::new(),
+        not_subject: vec![[640.0, 720.0]],
+        crop: [173, 226, 673, 1290],
+    };
+    let run = Run {
+        source: Source::VectorCraft,
+        reading: Reading { auto: true, ..Reading::default() },
+        subject: Some(&record),
+        ..pes(Path::new("dog.jpg"), "dog", &traced)
+    };
+    let bundle = dir.join("dog.bug-report.json");
+    write(&bundle, &super::bundle(&run, borrowed(&guarded_sew(&run, Phase::Plan)))).unwrap();
+    // It keeps the record, and the traced document in the picture's place.
+    let written = json(&bundle);
+    assert_eq!(serde_json::from_value::<crate::subject::Record>(written["subject"].clone()).unwrap(), record);
+    assert_eq!(written["subject"]["not_subject"], serde_json::json!([[640.0, 720.0]]));
+    assert!(written["subject"].get("subject_points").is_none(), "{written}");
+    assert_eq!(written["design"]["vectorcraft"].as_str().map(str::as_bytes), Some(traced.as_slice()));
+    assert_eq!(
+        written["design"].as_object().unwrap().keys().filter(|key| !["file", "name", "sha256", "vectorcraft"].contains(&key.as_str())).count(),
+        0
+    );
+    // Replayed from the document alone: no model and no VectorCraft run.
+    let out = replayed(&bundle);
+    assert_eq!(out.status, Status::Done, "{}{}", out.stdout, out.stderr);
+    assert!(
+        out.stdout.contains("\n  subject       cut out of the box 161.25,223.25,742.5,1289.26875 first: the document VectorCraft traced is replayed, without the models\n"),
+        "{}",
+        out.stdout
+    );
+    assert!(out.stdout.ends_with("\nreproduced\n"), "{}", out.stdout);
+    // A bundle of a run without `--subject`, and one written before the record was, have none.
+    let without = changed(&bundle, "without.json", |v| {
+        v.as_object_mut().unwrap().remove("subject");
+    });
+    let out = replayed(&without);
+    assert!(out.status == Status::Done && !out.stdout.contains("  subject  "), "{}", out.stdout);
 }
 
 #[test]
@@ -461,6 +517,7 @@ fn req_cli_013_a_picture_is_bundled_as_the_document_vectorcraft_traces() {
         report: None,
         reading: ReadingArgs::default(),
         tracing: TracingArgs::default(),
+        subject: crate::cli::SubjectArgs::default(),
     };
     let out = guarded(&Command::Plan(plan), || panic!("a test of the panic guard"));
     assert_eq!(out.status, Status::Bug);

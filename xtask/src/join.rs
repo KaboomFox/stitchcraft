@@ -261,14 +261,14 @@ fn class(requirement: &str) -> String {
 }
 
 /// Rows for VectorCraft's layering table: libraries at their rank (VectorCraft's rule is "only strictly
-/// lower layers"), the testkit as its testkit, apps and tooling exempt.
+/// lower layers"), the testkit as its testkit, apps, their libraries and tooling exempt.
 fn layering_rows(ranks: &std::collections::BTreeMap<String, u8>) -> String {
     let mut rows = String::new();
     for (name, class) in TABLE {
         let row = match class {
             Class::Layer(_) => format!("Class::Layer({})", ranks.get(*name).copied().unwrap_or(0)),
             Class::Testkit => "Class::Testkit".to_string(),
-            Class::App | Class::Tool => "Class::Exempt".to_string(),
+            Class::App | Class::AppLibrary(_) | Class::Tool => "Class::Exempt".to_string(),
         };
         rows.push_str(&format!("    (\"{name}\", {row}),\n"));
     }

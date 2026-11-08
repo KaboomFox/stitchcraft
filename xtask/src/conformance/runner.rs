@@ -9,7 +9,7 @@ use stitchcraft_engine::testsheets;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan, invariants, profiles};
 use stitchcraft_render::{Settings, Style};
 
-use super::cases::{DataCase, RustCase, SheetExpect, Spec, Subject};
+use super::cases::{DataCase, MODELS_ONLY, RustCase, SheetExpect, Spec, Subject};
 use super::{centre_lines, differential, fonts, oracle, routing};
 use crate::util;
 
@@ -216,19 +216,8 @@ pub fn run_rust_cases(root: &Path, cases: &[RustCase]) -> Result<Vec<Outcome>, S
         .output()
         .map_err(|e| format!("cargo test: {e}"))?;
     let stdout = String::from_utf8_lossy(&output.stdout);
-    // `test path::to::req_plan_002_stitch_lengths ... ok`
-    let mut results: BTreeMap<&str, Vec<bool>> = BTreeMap::new();
-    for line in stdout.lines() {
-        let Some(rest) = line.strip_prefix("test ") else { continue };
-        let Some((path, verdict)) = rest.split_once(" ... ") else { continue };
-        let name = path.rsplit("::").next().unwrap_or(path);
-        match verdict.trim() {
-            "ok" => results.entry(name).or_default().push(true),
-            "FAILED" => results.entry(name).or_default().push(false),
-            _ => {}
-        }
-    }
-    if !output.status.success() && results.values().all(|r| r.iter().all(|ok| *ok)) {
+    let results = verdicts(&stdout);
+    if !output.status.success() && results.values().flatten().all(|verdict| *verdict != Verdict::Failed) {
         let stderr = String::from_utf8_lossy(&output.stderr);
         let tail: Vec<&str> = stderr.lines().rev().take(15).collect();
         return Err(format!("cargo test failed before running the cases:\n{}", tail.into_iter().rev().collect::<Vec<_>>().join("\n")));
@@ -236,11 +225,7 @@ pub fn run_rust_cases(root: &Path, cases: &[RustCase]) -> Result<Vec<Outcome>, S
     Ok(cases
         .iter()
         .map(|case| {
-            let failures = match results.get(case.name.as_str()) {
-                None => vec!["did not run (is it a #[test]? does it compile?)".to_string()],
-                Some(runs) if runs.iter().all(|ok| *ok) => Vec::new(),
-                Some(_) => vec!["the test failed (run `cargo test` for details)".to_string()],
-            };
+            let (failures, skipped) = judged(results.get(case.name.as_str()).map(Vec::as_slice));
             Outcome {
                 case: case.name.clone(),
                 kind: "rust",
@@ -248,10 +233,117 @@ pub fn run_rust_cases(root: &Path, cases: &[RustCase]) -> Result<Vec<Outcome>, S
                 requirements: vec![case.covers.clone()],
                 failures,
                 outputs: Vec::new(),
-                skipped: None,
+                skipped,
                 notes: Vec::new(),
                 details: Vec::new(),
             }
         })
         .collect())
+}
+
+/// What `cargo test` said of a test.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Verdict<'a> {
+    /// `ok`.
+    Passed,
+    /// `FAILED`.
+    Failed,
+    /// `ignored`, with the reason its `ignore` attribute gives, empty when it gives none.
+    Ignored(&'a str),
+}
+
+/// The verdicts `cargo test` printed in `stdout`, by the test's function name, each test binary that holds a
+/// test of that name giving one: `test path::to::req_plan_002_stitch_lengths ... ok`, `... FAILED`, `...
+/// ignored` or `... ignored, REASON`.
+fn verdicts(stdout: &str) -> BTreeMap<&str, Vec<Verdict<'_>>> {
+    let mut results: BTreeMap<&str, Vec<Verdict<'_>>> = BTreeMap::new();
+    for line in stdout.lines() {
+        let Some(rest) = line.strip_prefix("test ") else { continue };
+        let Some((path, said)) = rest.split_once(" ... ") else { continue };
+        let name = path.rsplit("::").next().unwrap_or(path);
+        let verdict = match said.trim() {
+            "ok" => Verdict::Passed,
+            "FAILED" => Verdict::Failed,
+            "ignored" => Verdict::Ignored(""),
+            said => match said.strip_prefix("ignored, ") {
+                Some(reason) => Verdict::Ignored(reason),
+                None => continue,
+            },
+        };
+        results.entry(name).or_default().push(verdict);
+    }
+    results
+}
+
+/// How a case went from the verdicts of its runs, `runs`, or `None` when no test of its name ran: its
+/// failures, and where it runs instead when it is ignored as models only ([`MODELS_ONLY`]). Ignored for any
+/// other reason, it fails: no case may hide behind `#[ignore]`.
+fn judged(runs: Option<&[Verdict<'_>]>) -> (Vec<String>, Option<String>) {
+    let Some(runs) = runs else { return (vec!["did not run (is it a #[test]? does it compile?)".to_string()], None) };
+    if runs.contains(&Verdict::Failed) {
+        return (vec!["the test failed (run `cargo test` for details)".to_string()], None);
+    }
+    let reasons: Vec<&str> = runs.iter().filter_map(|verdict| if let Verdict::Ignored(reason) = verdict { Some(*reason) } else { None }).collect();
+    match reasons.iter().find(|reason| !reason.starts_with(MODELS_ONLY)) {
+        Some(reason) => {
+            let why = if reason.is_empty() { String::new() } else { format!(" (\"{reason}\")") };
+            (vec![format!("it is ignored{why}: a case may be ignored only as \"{MODELS_ONLY}…\"")], None)
+        }
+        None if runs.contains(&Verdict::Passed) => (Vec::new(), None),
+        None => (Vec::new(), reasons.first().map(ToString::to_string)),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// What `cargo test` prints of 5 tests of 2 test binaries: one passes, one fails, one is ignored as models
+    /// only, one is ignored for another reason and one with none.
+    const SAID: &str = "\
+running 3 tests
+test tests::req_plan_002_stitch_lengths ... ok
+test req_cli_019_the_cut_out_from_u2netps_box_keeps_each_dog_within_the_bounds ... ignored, models only: the models job runs tests/models.rs
+test req_cli_014_slow ... ignored, too slow
+test result: FAILED. 1 passed; 1 failed; 2 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+running 2 tests
+test req_plan_003_broken ... FAILED
+test diag_sc_e0701_too_wide ... ignored
+";
+
+    #[test]
+    fn the_runner_reads_each_tests_verdict_and_why_it_was_ignored() {
+        let read = verdicts(SAID);
+        let expected = BTreeMap::from([
+            ("diag_sc_e0701_too_wide", vec![Verdict::Ignored("")]),
+            ("req_cli_014_slow", vec![Verdict::Ignored("too slow")]),
+            (
+                "req_cli_019_the_cut_out_from_u2netps_box_keeps_each_dog_within_the_bounds",
+                vec![Verdict::Ignored("models only: the models job runs tests/models.rs")],
+            ),
+            ("req_plan_002_stitch_lengths", vec![Verdict::Passed]),
+            ("req_plan_003_broken", vec![Verdict::Failed]),
+        ]);
+        assert_eq!(read, expected);
+        // A line that is no test's verdict is no case's.
+        assert!(verdicts("test result: ok. 3 passed\ntest req_plan_001_x ... bench: 12 ns/iter\n").is_empty());
+    }
+
+    #[test]
+    fn a_case_ignored_as_models_only_runs_in_the_models_job_and_any_other_ignored_case_fails() {
+        let models = Verdict::Ignored("models only: the models job runs tests/models.rs");
+        assert_eq!(judged(Some(&[Verdict::Passed])), (Vec::new(), None));
+        assert_eq!(judged(Some(&[models])), (Vec::new(), Some("models only: the models job runs tests/models.rs".to_string())));
+        // Passed in one test binary, it passed, whatever another left out.
+        assert_eq!(judged(Some(&[models, Verdict::Passed])), (Vec::new(), None));
+        assert_eq!(judged(Some(&[Verdict::Passed, Verdict::Failed])).0, ["the test failed (run `cargo test` for details)"]);
+        assert_eq!(judged(Some(&[models, Verdict::Failed])).0, ["the test failed (run `cargo test` for details)"]);
+        let (failures, skipped) = judged(Some(&[Verdict::Ignored("too slow")]));
+        assert_eq!(failures, ["it is ignored (\"too slow\"): a case may be ignored only as \"models only: …\""]);
+        assert_eq!(skipped, None);
+        let (failures, _) = judged(Some(&[models, Verdict::Ignored("")]));
+        assert_eq!(failures, ["it is ignored: a case may be ignored only as \"models only: …\""]);
+        assert_eq!(judged(None).0, ["did not run (is it a #[test]? does it compile?)"]);
+    }
 }
