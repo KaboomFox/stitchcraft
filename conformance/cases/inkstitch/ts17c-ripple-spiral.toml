@@ -1,0 +1,12 @@
+# TS-17C's M10.8 part, its circle: a ripple stitch of a closed line that spirals in to the middle of its hull
+# (REQ-RIP-011). The spiral's turns are made from the circle's running stitch, whose needle points each
+# program places its own way: each program's needle points lie within 0.27 mm of the other's stitches, and
+# their threads overlap by 0.75.
+id = "inkstitch-ts17c-ripple-spiral"
+requirements = ["REQ-RIP-011"]
+kind = "inkstitch"
+sheet = "TS-17C"
+elements = "ts17c:ripple:spiral"
+
+[excused]
+overlap = "DEV-RUN-002"

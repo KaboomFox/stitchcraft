@@ -39,7 +39,7 @@ mod lines;
 mod read;
 mod runs;
 mod sew;
-mod trim;
+pub(crate) mod trim;
 
 pub use lines::{MOST_LINES, NEAR};
 pub use read::PIECE;

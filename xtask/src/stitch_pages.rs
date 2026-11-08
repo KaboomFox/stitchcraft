@@ -145,7 +145,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn the_engine_sews_the_stitch_types_of_m1_to_m10_6() {
+    fn the_engine_sews_the_stitch_types_of_m1_to_m10_8() {
         let ids: Vec<&str> = sewn().unwrap().iter().map(|t| t.id()).collect();
         assert_eq!(
             ids,
@@ -153,6 +153,7 @@ mod tests {
                 "running_stitch",
                 "manual_stitch",
                 "zigzag_stitch",
+                "ripple_stitch",
                 "satin_column",
                 "e_stitch",
                 "s_stitch",
@@ -196,6 +197,7 @@ mod tests {
             &[
                 ("running.md", &page("running_stitch, manual_stitch", &["running-length", "manual"])),
                 ("zigzag.md", &page("zigzag_stitch", &["testsheet-ts-01"])),
+                ("ripple-stitch.md", &page("ripple_stitch", &["ripple-kinds", "ripple-lines"])),
                 ("e-stitch.md", &page("e_stitch, guided_fill, no_such_type", &["e-stitch-spacing", "e-stitch-swapped"])),
                 ("s-stitch.md", &page("s_stitch", &["s-stitch-spacing", "s-stitch-split"])),
                 ("s-stitch-again.md", &page("s_stitch", &["s-stitch-spacing", "s-stitch-split"])),

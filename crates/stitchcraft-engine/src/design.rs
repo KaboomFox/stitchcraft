@@ -250,11 +250,12 @@ impl Clip {
 }
 
 /// Where an element starts and ends, and the point it aims at, as a design gives them: Ink/Stitch's
-/// `starting_point`, `ending_point` and `target_point` commands, or a VectorCraft document's `stitch:start`
-/// and `stitch:end` markers. Each is a place in the design, in millimetres, which need not lie on the
-/// element. A start or end position takes the place of the needle before the element, or of what the element
-/// after it offers, for the stitch types that use them (`REQ-GEN-001`, [`crate::generate`]). A circular
-/// fill's spirals turn round its target point (`REQ-FILL-CIR-008`).
+/// `starting_point`, `ending_point` and `target_point` commands, or a VectorCraft document's `stitch:start`,
+/// `stitch:end` and `stitch:target` markers. Each is a place in the design, in millimetres, which need not
+/// lie on the element. A start or end position takes the place of the needle before the element, or of what
+/// the element after it offers, for the stitch types that use them (`REQ-GEN-001`, [`crate::generate`]). A
+/// circular fill's spirals turn round its target point (`REQ-FILL-CIR-008`), and a ripple stitch's lines
+/// shrink towards it (`REQ-RIP-002`).
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Hints {
     /// Where it starts.

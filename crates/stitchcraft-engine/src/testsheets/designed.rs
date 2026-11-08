@@ -97,6 +97,12 @@ impl Drawing {
         self.stroke(name, vec![path], thread, params)
     }
 
+    /// A stroke of several `subpaths`, as a ripple stitch's rails and rungs are, named `name`, sewn with
+    /// `thread` and the Ink/Stitch `params`.
+    pub fn strokes(&mut self, name: &str, subpaths: Vec<Subpath>, thread: &Thread, params: &[(&str, &str)]) -> Result<(), SheetError> {
+        self.stroke(name, subpaths, thread, params)
+    }
+
     /// A stroke along `path`, `width` mm wide, named `name`, sewn with `thread` and the Ink/Stitch `params`:
     /// a zigzag stroke sews across its path as wide as it is drawn.
     pub fn wide(&mut self, name: &str, path: Subpath, width: f64, thread: &Thread, params: &[(&str, &str)]) -> Result<(), SheetError> {
@@ -193,6 +199,15 @@ impl Drawing {
     pub fn positions(&mut self, start: (f64, f64), end: (f64, f64)) -> Result<(), SheetError> {
         if let Some(last) = self.elements.last_mut() {
             last.hints = Hints { start: Some(point(start)?), end: Some(point(end)?), target: None };
+        }
+        Ok(())
+    }
+
+    /// A target point for the last element drawn so far, as Ink/Stitch's target point command gives it: the
+    /// point its ripple stitch shrinks towards (`REQ-RIP-002`); none before the first.
+    pub fn target(&mut self, at: (f64, f64)) -> Result<(), SheetError> {
+        if let Some(last) = self.elements.last_mut() {
+            last.hints.target = Some(point(at)?);
         }
         Ok(())
     }
@@ -387,11 +402,12 @@ mod tests {
     }
 
     #[test]
-    fn a_stop_or_positions_or_a_clip_before_any_element_change_nothing() {
+    fn a_stop_positions_a_target_or_a_clip_before_any_element_change_nothing() {
         // Each is for the last element drawn so far, and there is none yet.
         let mut d = Drawing::new("none");
         d.stop();
         assert!(d.positions((0.0, 0.0), (1.0, 1.0)).is_ok());
+        assert!(d.target((1.0, 0.0)).is_ok());
         d.clip(vec![polygon(&[(0.0, 0.0), (1.0, 0.0), (1.0, 1.0)]).unwrap()]);
         assert!(d.elements.is_empty());
     }
