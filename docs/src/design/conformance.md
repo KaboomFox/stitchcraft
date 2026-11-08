@@ -329,7 +329,12 @@ weft apart and 3 rows a thread, and another has stripes sewn as runs. The `tarta
 `tartan-parts` and `tartan-stop` cases add stripes left unsewn or sewn in the colour before them, a sett
 moved by its offsets, a disc round a hole in stitches 3 mm long, a fill in 2 parts with its rows at 30° and one row a thread, and
 a fill that stops at its end with its runs sewn as bean stitches (`REQ-FILL-TRT-011`). Every stripe is one of
-Brother's threads, so both files name each thread as itself. The `ts17c-ripple-` cases check each of TS-17C's
+Brother's threads, so both files name each thread as itself. Below its tartans, TS-17B checks linear gradients
+of 2 stops and of 3, one of them transparent, each at a slant of its own. The `gradient-` cases add a gradient
+of no length, one that a `gradientTransform` turns, a fill in 2 parts that stops at its end, and a fill without a
+gradient (`REQ-FILL-GRD-009`). Their gradients placed in the shape's box and by the gradient their `href`
+names, and stops that all lie before the fill's first row, sew otherwise in Ink/Stitch, as the ledger explains
+(`DEV-SVG-027`, `DEV-FILL-032`). The `ts17c-ripple-` cases check each of TS-17C's
 ripple stitches on its own, the one along a column and the 2 that shrink to a target point (`REQ-RIP-011`).
 The `ts17c-guided-` cases check its guided ripples so (`REQ-RIP-019`). A wave and a zigzag cut to a circle
 follow guide lines. A circle and a diamond stand between satin guides' rails, the diamond at its guide's

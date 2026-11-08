@@ -21,8 +21,8 @@ its stroke settings say. The element before it still ends near it, as Ink/Stitch
 
 **Fill method.** The stitch the area is filled with. A tatami fill sews rows of running stitches across it, a
 contour fill rings that follow its outline inward, a meander fill one line that wanders through a
-tiling, a circular fill a spiral round its middle, and a tartan fill a plaid of rows in the
-colours of its sett. A fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without
+tiling, a circular fill a spiral round its middle, a linear gradient fill rows in the colours of
+its linear gradient, and a tartan fill a plaid of rows in the colours of its sett. A fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without
 underlay (`SC-W0314`). The other methods arrive in later versions; until then an element set to
 one is skipped (`SC-W0011`).
 

@@ -420,6 +420,15 @@ rationale = "A fill's angle is fixed to the page in Ink/Stitch, not to its shape
 milestone = "M8"
 status = "active"
 
+[[req]]
+id = "REQ-SVG-014"
+area = "svg"
+level = "L2"
+statement = "A linear gradient fill's gradient is its fill's linear gradient, placed as a viewer places it, in the design's millimetres: its x1, y1, x2 and y2 from the nearest linear gradient of its href chain that gives each, in user units with gradientUnits userSpaceOnUse and otherwise in shares of the shape's bounding box, after the gradientTransform, all taken from the nearest gradient that gives them, and the element's own transforms; its stops from the first gradient of the chain that has any, each offset a number or a percentage kept from 0 to 1 and never before the stop before, its colour its stop-color, the nearest color for currentColor and black where it says nothing usable, and its opacity its stop-opacity times the colour's alpha. A gradient of fewer than 2 stops, or in a box with no width or no height, places none. A part of it that can't be used is named with SC-W0804 and left as a viewer leaves it, and a gradient more than 10 m from the origin is named and not sewn. A fill of another method, or under a radial gradient, is sewn in the gradient's first colour, with SC-W0802."
+rationale = "Ink/Stitch's linear gradient fill sews the gradient its shape is painted with (lib/elements/fill_stitch.py at d59c9ab), and Inkscape keeps a gradient's stops in one gradient and its vector in another that names it. Ink/Stitch reads neither the box's shares nor the vector of the gradient named (DEV-SVG-027)."
+milestone = "M10"
+status = "active"
+
 # ── Generators: shared ─────────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -1898,6 +1907,89 @@ rationale = "Ink/Stitch's tartan reads these codes, read at d59c9ab (lib/tartan/
 milestone = "M10"
 status = "active"
 
+# ── Linear gradient fill ─────────────────────────────────────────────────────────────────────────────
+
+[[req]]
+id = "REQ-FILL-GRD-001"
+area = "fill/gradient"
+level = "L2"
+statement = "A linear gradient fill sews the linear gradient its shape is painted with: its start and end in the design's millimetres and its stops, each an offset from 0 to 1, a colour and an opacity, as the adapters place them (REQ-SVG-014, REQ-VC-022). A shape painted without a linear gradient sews its own colour fading out along `angle`, at 0° to the right and turning clockwise as the canvas shows it: its colour at row 0 and a transparent stop a row past the last, with SC-W0329."
+rationale = "Ink/Stitch's linear gradient fill, read at d59c9ab (lib/stitches/linear_gradient_fill.py, lib/elements/fill_stitch.py), which warns of a fill without a linear gradient and sews its colour fading out. Run as a black box on a square of one colour at 0° and at 30°, its rows thin out along the same way as StitchCraft's."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-GRD-002"
+area = "fill/gradient"
+level = "L2"
+statement = "A linear gradient fill's rows lie square to the way along its gradient, from its start to its end, or along x for a gradient whose start and end are one point. Each row runs that way turned a quarter turn clockwise as the canvas shows it. Each piece of the fill, grown by expand_mm, gets rows of its own: along the gradient, from a longest stitch before the piece's nearest point to a longest stitch past its farthest, in the fewest equal steps no longer than row_spacing_mm, a row at each end of each step. Across the gradient, each row runs from a row spacing before the outline to a row spacing past it."
+rationale = "Ink/Stitch's rows, read at d59c9ab (lib/stitches/linear_gradient_fill.py, lib/elements/fill_stitch.py), run as a black box on gradients across a square and of no length in its middle, whose rows sew in the colours StitchCraft's sew in, row by row."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-GRD-003"
+area = "fill/gradient"
+level = "L2"
+statement = "Along each row of a linear gradient fill, from its first end, row k's needle points lie the longest stitch apart, the first k ÷ staggers of a stitch on, less its whole stitches, a staggers of 0 counting as 1, and they stop short of the row's last end. Each end of the row is a needle point too where the point nearest it lies more than half a row spacing away, and a row with room for fewer than 2 points is its 2 ends. With random stitch lengths, a row is a running stitch from its first end to its last, drawn from a stream of the element's generator that the row's number keys."
+rationale = "Ink/Stitch's needle points, read at d59c9ab (lib/stitches/linear_gradient_fill.py, lib/elements/fill_stitch.py). Ink/Stitch seeds each row's random lengths itself, which StitchCraft can't match (DEV-FILL-004)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-GRD-004"
+area = "fill/gradient"
+level = "L2"
+statement = "Each stop of a linear gradient fill lies at a row: the gradient's start's row plus the gradient's length times the stop's offset, counted in row spacings and rounded to the nearest whole number, halves to the even one. The start's row is the row spacings from row 0 to the start along the gradient, no more than the rows' whole length, rounded the same way. Where that is 0, it is minus the row spacings from the start to row 0, no more than the gradient's length."
+rationale = "Ink/Stitch counts in row spacings though its rows lie a little closer, read at d59c9ab (lib/stitches/linear_gradient_fill.py, lib/elements/fill_stitch.py), and run as a black box on gradients across a square, with stops at one offset, and of no length in its middle, its stops sew at the rows StitchCraft's do."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-GRD-005"
+area = "fill/gradient"
+level = "L2"
+statement = "A linear gradient fill's rows go to its stops' colours in the stops' order. The first stop takes rows 0 to its own row. Each stop after it blends with the colour before it, from the row after the last blend to its own row: of a blend of T rows, the first half in rounds 1 to the whole square root of T of runs of the first colour, each ended by a row of the second, the runs sharing the round's rows of the first colour as evenly as they go, half the rows past the square going to the first runs, and no run longer than the last of the round before; the half ends at the first row of the first colour 2 rows short of half the blend or later, with one row of the second colour. The second half is the first backwards in the other colours. A blend of 2 rows or fewer passes its stop over: the next blend starts a row later and blends from the colour before it, and SC-W0330 names the stop where the row left out crosses the fill. A stop whose row and the row before its blend both lie before row 0 blends nothing, and the next stop blends from it. After the last blend, the rows left take the last stop's colour. A transparent stop's rows are left out, so are the rows past the last, and stops of one colour share their rows."
+rationale = "Ink/Stitch's pattern of rows, read at d59c9ab (lib/stitches/linear_gradient_fill.py, lib/elements/fill_stitch.py), run as a black box on a blend across a square, one with a transparent stop between 2 others, stops at one offset, and a gradient of no length, whose rows go to the colours StitchCraft's go to. It sews no rows after the last blend where every stop lies before the fill (DEV-FILL-032)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-GRD-006"
+area = "fill/gradient"
+level = "L2"
+statement = "Each part of a linear gradient fill sews the tatami fill's underlay in the first stop's colour, transparent or not, its rows along the gradient unless fill_underlay_angle sets their angles, and ending no colour block. Then each colour that sews rows in the part, in the order the stops first give them, is routed over its rows as a tatami fill's rows are, from where the needle was when the part's colours began towards the end the next part or element offers, along the outline between rows. The stitches before a colour's first needle point on a row and after its last are left out, but the part's first colour keeps those before it after an underlay. Each colour is a colour block of its own thread: the element's own thread for its own colour, named or not, and a thread of the colour alone for the others."
+rationale = "Ink/Stitch's order of colours and its stripped ends, read at d59c9ab (lib/stitches/linear_gradient_fill.py, lib/elements/fill_stitch.py) (remove_start_end_travel). Run as a black box on gradients with an underlay, it sews the underlay in the first stop's colour and each colour as a colour block, as StitchCraft does. Its underlay of a turned gradient lies otherwise (DEV-FILL-031)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-GRD-007"
+area = "fill/gradient"
+level = "L2"
+statement = "With stop_at_ending_point on, the last 2 colours of each part of a linear gradient fill keep their stitches after their last row, along the outline to the end."
+rationale = "Ink/Stitch strips the end of every colour but the last 2 when the setting is on, read at d59c9ab (lib/stitches/linear_gradient_fill.py, lib/elements/fill_stitch.py)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-GRD-008"
+area = "fill/gradient"
+level = "L2"
+statement = "A linear gradient fill of several parts sews each part's underlay and colours, then orders them by where their colour first comes among them, so that each thread sews in one stretch. The sewing order reads the fill's threads before it is sewn, from its paint and settings alone: the first stop's colour for the underlay when it has one, then the colours of the stops that aren't transparent, each once, in their order (REQ-AUTO-024)."
+rationale = "Ink/Stitch sorts a gradient's groups by colour when the fill has several parts, read at d59c9ab (lib/stitches/linear_gradient_fill.py, lib/elements/fill_stitch.py), and run as a black box, its plan of a gradient in 2 parts sews each thread once."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-GRD-009"
+area = "fill/gradient"
+level = "L3"
+statement = "The linear gradient fills StitchCraft sews TS-17B's gradients with, of 2 stops and of 3, one of them transparent, written as an SVG file with their Ink/Stitch parameters, sew in the Ink/Stitch that conformance/inkstitch/pin.toml names, run as a black box, as StitchCraft sews the sheet, by the measures of REQ-SVG-008 and within their tolerances. So do the gradients of the differential's own files: a gradient of no length, one turned by its gradientTransform, one in 2 parts with stop_at_ending_point, a fill without a gradient, and gradients placed in the shape's box and by the gradient their href names. A measure that a case excuses with an entry of the deviations ledger may differ."
+rationale = "The linear gradient fill is built from Ink/Stitch's behaviour, and the differential is how a file is shown to sew the same in both."
+milestone = "M10"
+status = "active"
+
 # ── VectorCraft ────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -2085,6 +2177,15 @@ area = "vectorcraft"
 level = "L2"
 statement = "From VectorCraft 0.17, StitchCraft's Auto-Route Running Stitch, a heavy filter, routes the selected paths whose own StitchCraft effects make them strokes, as auto-run routing routes elements (REQ-ROUTE-009 to REQ-ROUTE-012), and replaces them with the route in one undo step, within a heavy filter's budget. Each element of the route is a path with the stroke effect, its element's stroke and the name the route gives it, and a trim turns on the effect's trim_after. The elements go in their sewing order where the topmost path routed was, or with Preserve order each where the path it comes from was. The paths the route doesn't take, a satin column among them, stay as they are. Its dialog offers the tool's options, made from their declarations."
 rationale = "Ink/Stitch's tool replaces the selection with its route, which the user then edits as any objects (ADR-0017). A filter can't make a group, so the route goes where the topmost path was, where Ink/Stitch puts its new group after the last element."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-VC-022"
+area = "vectorcraft"
+level = "L2"
+statement = "A linear gradient fill made in VectorCraft, in `stitch export` and in StitchCraft Fill's live effect, sews the linear gradient of the object's topmost fill that paints: placed by its geom, in points, or without one fitted to the object's bounds round its curves at its angle, counter-clockwise as the canvas shows it, through their middle and as long as the bounds are across that way; its stops' offsets kept from 0 to 1 and never before the stop before, their opacities from 0 to 1 and 1 when left out, and a colour that doesn't read black. SC-W0807 names a midpoint other than half way, a colour that doesn't read, and a gradient more than 10 m from the origin, which isn't sewn. A radial or freeform gradient, and one of one stop, is sewn in its first colour. The Test Sheet filter draws a linear gradient fill with its gradient as a gradient paint with its geom, which VectorCraft keeps, and the document sews as the sheet's design."
+rationale = "VectorCraft's gradient paint keeps its colours apart from where it lies, and fits a gradient without a placement to its object each time it draws it (crates/color of its source, GradientGeom::fit, read for 0.17.0 to 0.21.0). A filter's output may hold gradient paints, which VectorCraft clamps and keeps (docs/plugins.md there, Output)."
 milestone = "M10"
 status = "active"
 

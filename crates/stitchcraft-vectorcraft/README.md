@@ -47,6 +47,9 @@ From M6.12 `src/filter.rs` reads the selected objects VectorCraft gives a filter
 and the stroke a satin column would follow, and writes the objects StitchCraft's tools give back: paths in
 points, paints, strokes and effect records (`REQ-VC-014`, `REQ-VC-015`). What it hands back unchanged, a
 paint, a record or an opacity, it writes as the text VectorCraft gave, so VectorCraft keeps it as it was.
+From M10.12 a linear gradient fill sews the linear gradient of its object's topmost fill, placed by its
+`geom` or fitted to the object at its angle as VectorCraft fits it (`REQ-VC-022`, `src/gradient.rs`), and a
+filter gives a gradient back as a gradient paint with its `geom`.
 `EXTENSIONS` lists the documents' file name extensions, a template's among them, by which `stitch plan`
 tells a document from an SVG file. `read_part` is the part of a file the reader reads, which a bug-report
 bundle keeps: a plain file's JSON, without the images and other data after it. `plugin_id`, `effect_id`

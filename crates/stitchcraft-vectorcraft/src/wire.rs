@@ -211,6 +211,20 @@ pub(crate) struct Paint {
     pub swatch: Option<String>,
     #[serde(default)]
     pub gradient: Option<Gradient>,
+    /// Where a gradient lies on its object, in document coordinates; `None` to fit it to the object's bounds
+    /// at `angle`, as VectorCraft draws a gradient it hasn't placed.
+    #[serde(default)]
+    pub geom: Option<Geom>,
+    /// The angle, in degrees counter-clockwise, a gradient without `geom` is fitted at; 0 when left out.
+    #[serde(default)]
+    pub angle: Option<f64>,
+}
+
+/// Where a gradient lies: its start and its end, in points.
+#[derive(Deserialize)]
+pub(crate) struct Geom {
+    pub start: WirePoint,
+    pub end: WirePoint,
 }
 
 impl Paint {
@@ -269,20 +283,27 @@ pub(crate) enum Model {
     Other,
 }
 
-/// A gradient: its stops, in order.
+/// A gradient: its kind, `Linear`, `Radial` or `Freeform`, and its stops, in order.
 #[derive(Deserialize)]
 pub(crate) struct Gradient {
+    #[serde(default)]
+    pub kind: Option<String>,
     #[serde(default)]
     pub stops: Vec<Stop>,
 }
 
-/// A gradient's stop: its colour, and its opacity, 1 when the file omits it.
+/// A gradient's stop: where it lies along the gradient, from 0 to 1, its colour, its opacity, 1 when the
+/// file omits it, and the midpoint to the next stop, where the 2 colours are half mixed.
 #[derive(Deserialize)]
 pub(crate) struct Stop {
+    #[serde(default)]
+    pub offset: Option<f64>,
     #[serde(default)]
     pub color: Option<Color>,
     #[serde(default)]
     pub opacity: Option<f64>,
+    #[serde(default)]
+    pub midpoint: Option<f64>,
 }
 
 impl Stop {

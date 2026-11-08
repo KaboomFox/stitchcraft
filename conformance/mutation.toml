@@ -802,3 +802,39 @@ file = "apps/stitchcraft-vc-plugin/src/tartan.rs"
 mutant = "replace += with -= in set"
 line = "taken += 1;"
 why = "taken, an i32 that starts at 0, is only compared with 0: counted down for each path that takes the sett, it is 0 just when no path does, as it is counted up, so the same selections are refused"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/gradient/blend.rs"
+mutant = "replace < with <= in share"
+line = "if before < 0 && stop.row < 0 {"
+why = "the test of before, not of the stop's row, which a case notices: the 2 differ only where before is 0 and the stop's row less. A design's gradient's offsets never fall (Gradient::is_ordered), so neither do its stops' rows. Before is 0 only at a first stop at row 0, or after a stop at row 0 or past it, and no stop after either lies before row 0. Switched on, it shares the rows of 50,000 random ordered stops as the code does"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/gradient/blend.rs"
+mutant = "replace - with + in half"
+line = "let (each, more) = ((rounds - round) / round, (rounds - round) % round);"
+why = "the subtraction before % round, not the one before / round, which a case notices: round runs from 1 to rounds, so rounds - round and rounds + round are both at least 0 and differ by 2 × round, and leave the same remainder. Switched on, it lays the halves of blends of -10 to 2,999 rows as the code does"
+
+[[equivalent]]
+file = "crates/stitchcraft-vectorcraft/src/gradient.rs"
+mutant = "replace > with >= in linear"
+line = "if gradient.stops.iter().any(|stop| stop.midpoint.is_some_and(|m| (m - 0.5).abs() > HALF_WAY)) {"
+why = "no midpoint lies exactly HALF_WAY from 0.5: from 0.25 to 1 the difference is exact, a whole number of 2^-54, and the f64 nearest 10^-6, whose lowest bit is 2^-72, is none; past those it is at least 0.25"
+
+[[equivalent]]
+file = "crates/stitchcraft-vectorcraft/src/gradient.rs"
+mutant = "replace == with != in turns"
+line = "let c: Vec<f64> = controls.iter().map(|p| if axis == 0 { p.0 } else { p.1 }).collect();"
+why = "the loop takes both axes, so the mutant looks along y first and along x second: it finds the same turns in the other order, and the points they give only widen a box, in any order"
+
+[[equivalent]]
+file = "crates/stitchcraft-vectorcraft/src/gradient.rs"
+mutant = "replace > with >= in turns"
+line = "found.into_iter().filter(|t| *t > 0.0 && *t < 1.0)"
+why = "a turn at t = 0 adds the curve's start, which the box holds already: de Casteljau's steps at 0 give the first control point's coordinates, as numbers equal"
+
+[[equivalent]]
+file = "crates/stitchcraft-vectorcraft/src/gradient.rs"
+mutant = "replace < with <= in turns"
+line = "found.into_iter().filter(|t| *t > 0.0 && *t < 1.0)"
+why = "a turn at t = 1 adds the curve's end, which the box holds already: de Casteljau's steps at 1 give the last control point's coordinates exactly"
