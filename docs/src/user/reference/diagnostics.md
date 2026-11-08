@@ -220,7 +220,9 @@ warning.
 
 The design carries a parameter StitchCraft does not know: one from a newer version of StitchCraft
 or Ink/Stitch, or one for a stitch type StitchCraft does not support yet. It was kept, so saving
-the design does not lose it, but it does not change the stitches.
+the design does not lose it, but it does not change the stitches. A fill set to Ink/Stitch's legacy
+fill, which StitchCraft sews as a tatami fill (`SC-W0314`), names its `flip` and `reverse` so, though
+a ripple stitch reads a `reverse` of its own.
 
 The Ink/Stitch compatibility page says when each Ink/Stitch parameter is supported.
 
@@ -556,8 +558,7 @@ compensation, random stitch lengths or gap-filling rows, which legacy fill has n
 needle points are a tatami fill's, as in Ink/Stitch. Ink/Stitch sews a legacy fill's rows in
 stretches that join, each on its own and back and forth; its `flip` starts the rows from the other
 side, and its `reverse` sews the fill backwards. A tatami fill routes its rows and joins them with
-travel stitches, and StitchCraft keeps `flip` and `reverse` without reading them: `SC-W0105` names
-`flip`, and `reverse`, a ripple stitch's setting too, is left to the node's stroke.
+travel stitches, and StitchCraft keeps `flip` and `reverse` without reading them (`SC-W0105`).
 
 To sew the fill alike in both, set its fill method to tatami fill and turn `fill_underlay` off.
 

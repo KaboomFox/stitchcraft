@@ -806,9 +806,10 @@ use for, but its area grows by `expand_mm` as in Ink/Stitch. It is a tatami fill
 The element before it ends near its area, and its rows are routed and joined by travel stitches as a
 tatami fill's are, between its start and end positions where it has them. Ink/Stitch's legacy fill takes
 its parts in order of their distance from its start command and uses it no further (`DEV-FILL-014`).
-`flip` and `reverse` are not planned. A design that sets `flip` gets `SC-W0105`. `reverse` is a ripple
-stitch's setting too (M10.8), and a fill leaves it to the node's stroke without a word, as it leaves every
-stroke's setting. The VectorCraft plug-in's fill dialog does not offer the method.
+`flip` and `reverse` are not planned, and a legacy fill that sets them gets `SC-W0105`, though a ripple
+stitch reads a `reverse` of its own (M10.8). Ink/Stitch reads them for its legacy fill alone, so a fill
+of another method leaves `reverse` to the node's stroke without a word, as it leaves every stroke's
+setting. The VectorCraft plug-in's fill dialog does not offer the method.
 
 ## References
 

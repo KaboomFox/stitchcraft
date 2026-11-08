@@ -79,8 +79,24 @@ fn diag_sc_w0314_a_legacy_fill_says_it_is_sewn_as_a_tatami_fill() {
     );
     same(&flipped, &after_a_fill("legacy_fill", &[]));
     assert_eq!(messages(&after_a_fill("tatami_fill", &[])), Vec::<String>::new());
-    // `reverse`, a ripple stitch's setting too, is left to the node's stroke without a word.
+}
+
+#[test]
+fn diag_sc_w0105_a_legacy_fill_names_its_reverse_which_a_ripple_stitch_reads_too() {
+    // Ink/Stitch's legacy fill sews backwards with `reverse`, which StitchCraft keeps without reading
+    // (`DEV-FILL-014`). A ripple stitch reads a `reverse` of its own (M10.8), and the fill still names it.
+    let legacy = "warning SC-W0314: This element's fill method is Ink/Stitch's legacy fill, which StitchCraft does not sew, so it is \
+                  sewn as a tatami fill without underlay.";
+    let reverse = "warning SC-W0105: `reverse` is a setting of Ink/Stitch's legacy fill, which StitchCraft does not sew; it was kept but \
+                   does not change the stitches.";
     let reversed = after_a_fill("legacy_fill", &[("reverse", "true")]);
-    assert_eq!(messages(&reversed), messages(&flipped)[1..]);
+    assert_eq!(messages(&reversed), [reverse, legacy]);
     same(&reversed, &after_a_fill("legacy_fill", &[]));
+    // With `flip`, which no stitch type reads, each is named once.
+    let both = after_a_fill("legacy_fill", &[("flip", "true"), ("reverse", "true")]);
+    let flip = "warning SC-W0105: `flip` is not a StitchCraft parameter; it was kept but does not change the stitches.";
+    assert_eq!(messages(&both), [flip, reverse, legacy]);
+    // Ink/Stitch reads a fill's `reverse` for its legacy fill alone, so a tatami fill leaves it to the node's
+    // stroke without a word, as it leaves every stroke's setting.
+    assert_eq!(messages(&after_a_fill("tatami_fill", &[("reverse", "true")])), Vec::<String>::new());
 }

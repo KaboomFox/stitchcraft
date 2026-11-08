@@ -36,7 +36,7 @@ use std::borrow::Cow;
 use stitchcraft_core::{Budget, Code, Diagnostic, Exhausted, Meter, Mm, Point, SplitMix64};
 use stitchcraft_params::kinds::{Choice, Toggle};
 use stitchcraft_params::{
-    ChoiceOption, Family, ParamKind, ParamSet, ParamSpec, StitchType, Validated, left_to_others, params, read_param, unknown_keys,
+    ChoiceOption, Family, ParamKind, ParamSet, ParamSpec, StitchType, Validated, find, left_to_others, params, read_param, unknown_keys,
 };
 use stitchcraft_plan::{MachineProfile, Rgb};
 
@@ -255,7 +255,8 @@ fn setting<K: ParamKind>(set: &ParamSet, specs: &[ParamSpec], key: &str, diagnos
 /// it, read first and alone: a fill's `fill_method`, and a stroke's `satin_method` when its
 /// `satin_column` is on, or else its `stroke_method`. A satin column too narrow to stitch across is sewn
 /// as a stroke, as in Ink/Stitch, and `SC-W0212` says so (`REQ-SAT-015`). A fill set to Ink/Stitch's legacy
-/// fill is a tatami fill, which `SC-W0314` says, and sews no underlay ([`legacy`], `REQ-FILL-005`). `None`
+/// fill is a tatami fill, which `SC-W0314` says, and sews no underlay ([`legacy`], `REQ-FILL-005`). Each of
+/// its own settings that it sets, [`LEGACY_ONLY`], is named with `SC-W0105`. `None`
 /// when one of them cannot be read, which `diagnostics` says.
 fn stitch_type(element: &Element, settings: &DesignSettings, diagnostics: &mut Vec<Diagnostic>) -> Option<StitchType> {
     let set = &element.params;
@@ -280,12 +281,25 @@ fn stitch_type(element: &Element, settings: &DesignSettings, diagnostics: &mut V
     };
     let chosen = method_type(family, setting::<Choice>(set, specs, family.method_param(), diagnostics)?, diagnostics)?;
     if chosen == StitchType::LegacyFill {
+        // `unknown_keys` named those that no stitch type reads, and here the others are named: a ripple stitch
+        // reads a `reverse` of its own, which doesn't make it the fill's.
+        for key in LEGACY_ONLY.into_iter().filter(|key| set.get(key).is_some() && find(PARAMETERS, key).is_some()) {
+            let message = format!(
+                "`{key}` is a setting of Ink/Stitch's legacy fill, which StitchCraft does not sew; it was kept but does not change the stitches."
+            );
+            diagnostics.push(Diagnostic::new(Code::ParamUnknown, message));
+        }
         let message = "This element's fill method is Ink/Stitch's legacy fill, which StitchCraft does not sew, so it is sewn as a tatami \
                        fill without underlay.";
         diagnostics.push(Diagnostic::new(Code::FillLegacyAsTatami, message));
     }
     Some(sewn_as(chosen))
 }
+
+/// The settings of Ink/Stitch's legacy fill that StitchCraft keeps without reading (`DEV-FILL-014`): `flip`
+/// starts its rows from the other side, and `reverse` sews it backwards. Ink/Stitch's other fills read
+/// neither.
+const LEGACY_ONLY: [&str; 2] = ["flip", "reverse"];
 
 /// The stitch type that sews an element set to `asked`: itself, but for Ink/Stitch's legacy fill, which
 /// StitchCraft does not build and sews as a tatami fill without underlay (`REQ-FILL-005`).
