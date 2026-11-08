@@ -844,6 +844,45 @@ fn req_vc_020_auto_route_running_stitch_routes_ts_17c_s_network_within_a_heavy_f
     println!("::notice title=auto-route running stitch::TS-17C's network: {used} of {allowed}");
 }
 
+/// StitchCraft Tartan, a filter of VectorCraft 0.15, run as `plugin.run` runs it within a light filter's budget:
+/// it gives the selected square's fill effect the tartan fill and the sett of its code, which the fill's
+/// manifest declares as a text from 0.14, and StitchCraft's PES exporter writes the square as it writes one whose
+/// sett was set by hand (`REQ-VC-021`). It prints what the run takes of what VectorCraft allows.
+#[test]
+fn req_vc_021_stitchcraft_tartan_sets_a_fill_s_sett_which_exports_as_one_set_by_hand() {
+    let plugin = registry::install_bytes(&module("tartan")).unwrap_or_else(|e| panic!("VectorCraft refuses tartan: {e}"));
+    assert_eq!(plugin.id(), "dev.stitchcraft.tartan");
+    assert!(plugin.manifest().kind == Kind::Filter && plugin.manifest().budget == Budget::Light, "a light filter");
+    // VectorCraft admits the fill effect's records only while StitchCraft Fill is installed, and its manifest
+    // holds the sett as a text.
+    let fill = registry::install_bytes(&module("fill")).unwrap();
+    let sett = fill.manifest().params.iter().find(|(key, _)| key == "tartan").map(|(_, param)| param.spec.clone());
+    assert!(matches!(sett, Some(ParamSpec::Text { max_length: 4_096, .. })), "{sett:?}");
+    let pes = registry::install_bytes(&module("pes")).unwrap();
+    let target = export::Target { extension: "pes", name: "Tartan" };
+    let square = |params: &Value| filled(2, (0.0, 0.0), (30.0, 30.0), params);
+    let mut doc = read_document(&[square(&json!({"angle": 30}))]);
+    let before = export::run(&pes, &saved(&doc), &json!({}), target).unwrap();
+    let set = json!({"code": "R/8 K4 G/12", "thread_width_mm": 0.5});
+    let (used, allowed) = filtered(&plugin, &mut doc, &[NodeId(2)], &set, NodeId(1)).unwrap_or_else(|e| panic!("the sett isn't set: {e}"));
+    // The record keeps its other settings, and holds the tartan fill and the sett.
+    let effects = &doc.node(NodeId(2)).unwrap().appearance.effects;
+    let params = &effects.first().unwrap().params;
+    assert_eq!((params["fill_method"].as_str(), params["angle"].as_f64()), (Some("tartan_fill"), Some(30.0)));
+    let written = params["tartan"].as_str().unwrap().to_string();
+    assert!(written.contains(r#""palette": "(#ff0000)/4 (#000000)2 (#289c18)/6""#), "{written}");
+    let set_by_filter = export::run(&pes, &saved(&doc), &json!({}), target).unwrap_or_else(|e| panic!("the tartan doesn't export: {e}"));
+    let by_hand = read_document(&[square(&json!({"angle": 30, "fill_method": "tartan_fill", "tartan": written}))]);
+    let set_by_hand = export::run(&pes, &saved(&by_hand), &json!({}), target).unwrap();
+    assert!(base64_decoded(&set_by_filter.data_base64).starts_with(b"#PES0001"));
+    assert_eq!(set_by_filter.data_base64, set_by_hand.data_base64);
+    assert_ne!(set_by_filter.data_base64, before.data_base64);
+    // A code it can't read changes nothing, and says why.
+    let refused = filtered(&plugin, &mut doc, &[NodeId(2)], &json!({"code": "B1.2.3"}), NodeId(1)).unwrap_err();
+    assert!(refused.contains("SC-E0821"), "{refused}");
+    println!("::notice title=tartan::a 30 mm square's sett set in {used} of {allowed} instructions");
+}
+
 /// StitchCraft Test Sheet draws each sheet its dialog offers into a new document as `plugin.run` runs it,
 /// within a light filter's budget, each object with its StitchCraft effect, and StitchCraft's PES exporter
 /// writes the document within an export's budget (`REQ-VC-015`). It prints what each takes of what

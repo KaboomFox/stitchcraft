@@ -503,7 +503,7 @@ registry! {
     /// of 0 sews them, and this warning said so.
     ///
     /// Plan the file again with this StitchCraft to sew the herringbone.
-    FillTartanHerringboneNotYet = "SC-W0324", Warning, "Tartan's herringbone not sewn yet; rows sewn without it (retired)";
+    FillTartanHerringboneNotYet = "SC-W0324", Warning, "Tartan's herringbone sewn as straight rows (retired)";
 
     /// A tartan fill without a sett sews Ink/Stitch's default one, as Ink/Stitch does: stripes 5 mm wide of a
     /// thread almost black, with 5 mm left unsewn between them. VectorCraft's fill dialog holds no sett

@@ -126,12 +126,17 @@ fn setting(named: &Value) -> Result<String, Diagnostic> {
     let [rotate, scale, offset_x, offset_y, narrowest] = LAID.map(|(key, .., default, _)| number(key, default));
     let draft = Draft { rotate, scale, offset: [offset_x, offset_y], narrowest, ..drafted.draft };
     let setting = draft.setting();
-    if setting.chars().count() > limits::MAX_TEXT {
+    if !fits(&setting) {
         let message =
             format!("The sett's setting is {} characters long, and the fill's Sett holds at most {}.", setting.chars().count(), limits::MAX_TEXT);
         return Err(refused(&message));
     }
     Ok(setting)
+}
+
+/// Whether `setting` fits the fill's Sett, a text of at most [`limits::MAX_TEXT`] characters.
+fn fits(setting: &str) -> bool {
+    setting.chars().count() <= limits::MAX_TEXT
 }
 
 /// What the filter gives back for `objects`, the selection, with the sett `setting`: each path that takes it

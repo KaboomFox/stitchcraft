@@ -30,9 +30,10 @@ To update StitchCraft, run `git pull` in the `stitchcraft` folder and the `cargo
 
 The plug-ins say how each object of a [VectorCraft](https://github.com/storytold/vectorcraft) drawing
 sews, and show its stitches. There are 3, one for each kind of stitch, and 2 more that write PES and DST
-files from VectorCraft's File › Export, from VectorCraft 0.14. 3 filters change the drawing: one keeps a
-design's settings and machine with the document and one draws a test sheet, from VectorCraft 0.16, and
-one makes lines into satin columns, from VectorCraft 0.17. All are built from the same source. In the
+files from VectorCraft's File › Export, from VectorCraft 0.14. Filters change the drawing: one sets a
+tartan's sett, from VectorCraft 0.15, one keeps a design's settings and machine with the document and one
+draws a test sheet, from VectorCraft 0.16, and others make lines into satin columns and route stitches,
+from VectorCraft 0.17. All are built from the same source. In the
 `stitchcraft` folder:
 
 ```sh
@@ -43,11 +44,12 @@ cargo build -p stitchcraft-vc-plugin --release --target wasm32-unknown-unknown -
 The build writes `target/wasm32-unknown-unknown/release/stitchcraft_vc_plugin.wasm`. Copy it into a
 folder for plug-ins as `stitchcraft-fill.wasm`. Build again with `--features stroke`, `--features satin`,
 `--features auto`, `--features pes`, `--features dst`, `--features settings`, `--features testsheet`,
-`--features stroke-to-satin`, `--features route-satins` and `--features route-runs`, and copy the file each
-time, as `stitchcraft-stroke.wasm`, `stitchcraft-satin.wasm`, `stitchcraft-auto.wasm`, `stitchcraft-pes.wasm`,
-`stitchcraft-dst.wasm`, `stitchcraft-settings.wasm`, `stitchcraft-testsheet.wasm`,
-`stitchcraft-stroke-to-satin.wasm`, `stitchcraft-route-satins.wasm` and `stitchcraft-route-runs.wasm`.
-VectorCraft 0.13 and earlier refuse the exporters.
+`--features stroke-to-satin`, `--features route-satins`, `--features route-runs` and `--features tartan`,
+and copy the file each time, as `stitchcraft-stroke.wasm`, `stitchcraft-satin.wasm`, `stitchcraft-auto.wasm`,
+`stitchcraft-pes.wasm`, `stitchcraft-dst.wasm`, `stitchcraft-settings.wasm`, `stitchcraft-testsheet.wasm`,
+`stitchcraft-stroke-to-satin.wasm`, `stitchcraft-route-satins.wasm`, `stitchcraft-route-runs.wasm` and
+`stitchcraft-tartan.wasm`. VectorCraft 0.13 and earlier refuse the exporters, and from StitchCraft's M10.7
+the fill effect too, whose dialog holds a tartan's sett as text.
 
 In VectorCraft's desktop app, choose that folder in **Edit › Preferences › Plug-ins & Scratch Disks ›
 Additional Plug-ins Folder**, which is under **Performance & Storage** up to VectorCraft 0.14. VectorCraft
