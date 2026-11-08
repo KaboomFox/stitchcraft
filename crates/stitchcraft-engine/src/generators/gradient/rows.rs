@@ -42,8 +42,8 @@ impl Way {
     }
 
     /// The way at `degrees` turned clockwise from x as the canvas shows it, where a fill without a gradient
-    /// fades. A cosine or a sine within 2.5 × 10⁻¹⁶ of 0 is 0, as in Ink/Stitch's geometry library, so that
-    /// quarter turns are exact.
+    /// fades. A cosine or a sine less than 2.5 × 10⁻¹⁶ from 0 is 0, as in shapely, which turns Ink/Stitch's
+    /// rows, so that quarter turns are exact.
     pub(crate) fn at(degrees: f64) -> Way {
         let (sin, cos) = sin_cos(to_radians(degrees));
         let snapped = |value: f64| if value.abs() < 2.5e-16 { 0.0 } else { value };
@@ -214,6 +214,8 @@ mod tests {
         assert_eq!(Way::of_gradient(p(3.0, 3.0), p(3.0, 3.0)), Way { along: (1.0, 0.0), across: (0.0, 1.0) });
         assert_eq!(Way::at(0.0), Way { along: (1.0, 0.0), across: (0.0, 1.0) });
         assert_eq!(Way::at(90.0), Way { along: (0.0, 1.0), across: (-1.0, 0.0) });
+        // A sine of 2.5 × 10⁻¹⁶ itself is no rounding error, as in shapely, which rotates Ink/Stitch's rows.
+        assert_eq!(Way::at(1.432_394_487_827_058_2e-14).along, (1.0, 2.5e-16));
         // A piece without points has no rows, and every point of the outline and every row is charged.
         assert_eq!(
             Rows::lay(&Polygon { outline: Vec::new(), holes: Vec::new() }, Way::at(0.0), 0.25, 3.0, &mut Budget::DEFAULT.meter()).unwrap(),
@@ -250,6 +252,8 @@ mod tests {
         // point 0.125 mm from the last end leaves that out.
         assert_eq!(points(1, 16.0), [0.125, 2.125, 4.125, 6.125, 8.0]);
         assert_eq!(points(15, 16.0), [0.0, 1.875, 3.875, 5.875, 7.875]);
+        // A last point 0.25 mm from the last end, more than half a spacing, keeps the end.
+        assert_eq!(points(14, 16.0), [0.0, 1.75, 3.75, 5.75, 7.75, 8.0]);
         assert_eq!(points(1, 16.0 * 2.0 / 2.25), [0.0, 0.140625, 2.140625, 4.140625, 6.140625, 8.0]);
         // A staggers of 0 counts as 1, which starts every row on its first end; a negative one staggers back.
         assert_eq!(points(3, 0.0), [0.0, 2.0, 4.0, 6.0, 8.0]);
@@ -260,6 +264,10 @@ mod tests {
         let ends = short.needle_points(1, &stitching, &SplitMix64::new(1), &mut Budget::DEFAULT.meter()).unwrap();
         assert_eq!(ends.len(), 2);
         assert_eq!(Some((ends[0], ends[1])), short.ends(1));
+        // One with room for 2 has them, and its last end past them.
+        let stitching = Stitching { longest: 2.0, staggers: 16.0, random: None };
+        let two = short.needle_points(1, &stitching, &SplitMix64::new(1), &mut Budget::DEFAULT.meter()).unwrap();
+        assert_eq!(two.iter().map(|q| ((q.y() + 0.25) * 1e6).round() / 1e6).collect::<Vec<_>>(), [0.125, 2.125, 4.0]);
     }
 
     #[test]

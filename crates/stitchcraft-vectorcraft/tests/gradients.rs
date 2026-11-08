@@ -109,6 +109,15 @@ fn req_vc_022_each_stop_is_kept_in_range_and_what_rows_can_t_follow_is_said() {
 }
 
 #[test]
+fn req_vc_022_the_thread_is_the_colour_of_the_first_stop_vectorcraft_shows() {
+    // A transparent red first stop: the fill sews in blue, the first stop that shows, with every stop kept.
+    let written = [stop(0.0, [1.0, 0.0, 0.0], &json!({"opacity": 0})), stop(1.0, [0.0, 0.0, 1.0], &json!({}))];
+    let read = read_ok(&document(4, &filled(2, 0.0, &paint("Linear", &written, &json!({})), "linear_gradient_fill")));
+    let (gradient, thread) = sewn(&read, 2);
+    assert_eq!((stops(&gradient.unwrap()), thread), (vec![(0.0, RED, 0.0), (1.0, BLUE, 1.0)], BLUE));
+}
+
+#[test]
 fn req_vc_022_only_a_linear_gradient_fill_sews_a_linear_gradient() {
     // A tatami fill, a radial gradient, and a gradient of one stop: each sewn in its first colour, the 2
     // gradients of 2 colours said to be.

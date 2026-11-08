@@ -116,6 +116,20 @@ fn diag_sc_w0329_a_fill_painted_without_a_gradient_fades_its_own_colour_out_alon
 }
 
 #[test]
+fn req_fill_grd_003_random_stitch_lengths_vary_the_rows_stitches_by_the_jitter() {
+    // A fill's longest stitch, 4 mm, give or take 10 %, the default jitter: the stitches vary, and none is
+    // longer than 4.4 mm with a stitch shorter than the shortest, 0.3 mm, joined to it.
+    let random = [("fill_underlay", "false"), ("enable_random_stitch_length", "true")];
+    let outcome = planned(vec![graded(&[&SQUARE], &OWN, Some(red_blue()), &random)]);
+    assert!(warnings(&outcome).is_empty(), "{:?}", messages(&outcome));
+    let lengths: Vec<f64> = blocks(&outcome, Role::Top).iter().flat_map(|(_, points)| points.windows(2).map(|w| w[0].distance(w[1]))).collect();
+    let longest = lengths.iter().copied().fold(0.0, f64::max);
+    assert!(longest <= 4.7 + 1e-9, "{longest}");
+    let varied = lengths.iter().filter(|&&length| length > 3.0 && (length - 4.0).abs() > 0.05).count();
+    assert!(varied > 100, "{varied} of {}", lengths.len());
+}
+
+#[test]
 fn req_fill_grd_006_the_underlay_sews_in_the_first_stop_s_colour_along_the_gradient() {
     // The underlay sews in red, the first stop's colour, in the block of red's rows, and runs along the
     // gradient: level, across the top's upright rows. A trim after each colour, none after the underlay.

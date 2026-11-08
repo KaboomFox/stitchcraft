@@ -257,5 +257,16 @@ mod tests {
         assert!(rows > 300 && underlay > 300 && (rows + underlay) * 4 > tangerine.len() * 3, "{rows} and {underlay} of {}", tangerine.len());
         let along = |points: &[Point]| points.iter().map(|q| -20.0 * q.x() + 36.0 * q.y()).sum::<f64>() / points.len() as f64;
         assert!(along(&tangerine) < along(&top(34)));
+        // The gradients lie side by side, 45 mm apart: the first block of each, which holds its underlay over
+        // the whole square, reaches the square's top left corner.
+        let corner = |block: usize| {
+            let at = plan.blocks[block].stitches.iter().filter(|s| s.kind == StitchKind::Normal).map(|s| s.at);
+            at.fold((f64::INFINITY, f64::INFINITY), |(x, y), q| (x.min(q.x()), y.min(q.y())))
+        };
+        let two = corner(28);
+        for (block, x) in [(30, 45.0), (33, 90.0)] {
+            let (cx, cy) = corner(block);
+            assert!((cx - two.0 - x).abs() < 0.5 && (cy - two.1).abs() < 0.5, "{block}: ({cx}, {cy}) beside {two:?}");
+        }
     }
 }
