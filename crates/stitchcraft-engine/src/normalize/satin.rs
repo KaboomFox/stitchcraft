@@ -29,8 +29,9 @@
 //! satin column's path, so its rails have Ink/Stitch's points, which decide where the column's stitches
 //! go, where subpaths meet, and where a column drawn as one path gets rungs. 2 subpaths meet where their
 //! polylines share a point, crossing or touching. A point where segments meet end to end is found twice
-//! and counted once, so a rung that ends exactly on a rail meets it once. Work is charged to the meter:
-//! one unit per pair of segments looked at.
+//! and counted once, so a rung that ends exactly on a rail meets it once. A rung whose end rounding left
+//! a hair short of the rail meets it too, where Ink/Stitch's exact test finds no meeting (`DEV-SAT-013`).
+//! Work is charged to the meter: one unit per pair of segments looked at.
 
 use std::collections::BTreeMap;
 
@@ -50,7 +51,8 @@ pub(crate) const SAME_POINT: f64 = 1e-6;
 
 /// How far past either end of a segment, as a fraction of its length, a point still lies on it. Where two
 /// segments end at one node, as the rails of a pointed column do at its tip, rounding can put the
-/// computed meeting a hair beyond the end of either.
+/// computed meeting a hair beyond the end of either, and a rung drawn to end on a rail can end a hair short
+/// of it (`DEV-SAT-013`).
 const ON_SEGMENT: f64 = 1e-9;
 
 /// A satin column's rails, and what pairs their points.
@@ -339,9 +341,16 @@ fn bounds(points: &[Point]) -> [f64; 4] {
     })
 }
 
-/// Whether two bounding boxes share a point.
+/// Whether two bounding boxes share a point, each grown by [`ON_SEGMENT`] of its width and height: a
+/// segment inside a box is no longer than those, so a meeting [`shared`] finds past a segment's end lies in
+/// its box grown so, even where rounding leaves a rung's end beside the box round the rail it ends on.
 fn overlap(a: [f64; 4], b: [f64; 4]) -> bool {
-    a[0] <= b[2] && b[0] <= a[2] && a[1] <= b[3] && b[1] <= a[3]
+    let grown = |[x0, y0, x1, y1]: [f64; 4]| {
+        let by = ON_SEGMENT * ((x1 - x0) + (y1 - y0));
+        [x0 - by, y0 - by, x1 + by, y1 + by]
+    };
+    let ([ax0, ay0, ax1, ay1], [bx0, by0, bx1, by1]) = (grown(a), grown(b));
+    ax0 <= bx1 && bx0 <= ax1 && ay0 <= by1 && by0 <= ay1
 }
 
 #[cfg(test)]
@@ -411,6 +420,16 @@ mod tests {
     }
 
     #[test]
+    fn boxes_a_hair_apart_overlap_as_far_as_a_meeting_lies_past_a_segment_s_end() {
+        // Each box grows by a billionth of its width and height, 2e-9 here, 4e-9 between the two.
+        let unit = [0.0, 0.0, 1.0, 1.0];
+        let right = |gap: f64| [1.0 + gap, 0.0, 2.0 + gap, 1.0];
+        let below = |gap: f64| [0.0, 1.0 + gap, 1.0, 2.0 + gap];
+        assert!(overlap(unit, right(3e-9)) && overlap(unit, below(3e-9)));
+        assert!(!overlap(unit, right(5e-9)) && !overlap(unit, below(5e-9)));
+    }
+
+    #[test]
     fn boxes_overlap_when_they_share_a_point() {
         let unit = [0.0, 0.0, 1.0, 1.0];
         assert!(overlap(unit, [1.0, 1.0, 2.0, 2.0]), "a corner");
@@ -419,6 +438,8 @@ mod tests {
         assert!(!overlap(unit, [-2.0, 0.0, -1.0, 1.0]), "to the left");
         assert!(!overlap(unit, [0.0, 1.5, 1.0, 2.0]), "below");
         assert!(!overlap(unit, [0.0, -2.0, 1.0, -1.0]), "above");
+        // The box of a point grows by nothing, and 2 at one point share it.
+        assert!(overlap([1.0, 1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0]), "one point");
         assert_eq!(bounds(&[p(1.0, 5.0), p(-2.0, 3.0), p(0.0, 7.0)]), [-2.0, 3.0, 1.0, 7.0]);
     }
 

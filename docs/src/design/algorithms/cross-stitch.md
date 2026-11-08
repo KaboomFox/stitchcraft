@@ -243,7 +243,9 @@ agree. These differ:
   of its objects, which follows where they lie in memory, where StitchCraft's order is fixed. Where the needle
   and the end lie nearest one group of several, it sews another group first, from that group's join nearest
   the end. And with neither, it starts each group at the first good join it finds of one cross alone
-  (`DEV-FILL-028`).
+  (`DEV-FILL-028`). Of parts that reach equally far left, StitchCraft sews first the one whose leftmost point
+  lies highest. Ink/Stitch sews first the one shapely gives first once it has repaired and grown the shape,
+  which can be the lower (`DEV-FILL-029`).
 - **Cells covered exactly half.** On a file whose `viewBox` is in millimetres, Ink/Stitch writes the drawing's
   scale with 6 decimals, 3.779528 pixels to the millimetre, against 3.7795275… for its grid. Its drawing is
   then a ten-millionth larger than its grid, about the page's origin. A cell that a part covers exactly half
