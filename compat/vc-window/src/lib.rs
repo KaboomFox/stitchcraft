@@ -150,6 +150,28 @@ impl Window {
         }
     }
 
+    /// Fits the document's artboard in the window again, once 2 inspections in a row show the canvas in
+    /// one place. VectorCraft fits a document's view to the canvas of the first frame that shows it, and
+    /// that frame's canvas can be a little larger or smaller than the canvas the window settles at. Two
+    /// starts of the app then open one document at zooms a hair apart, and every pixel of the drawing
+    /// moves (`docs/src/design/docs-pipeline.md`).
+    pub fn fit_again(&mut self) -> Result<(), String> {
+        let started = Instant::now();
+        let mut before = Value::Null;
+        loop {
+            let canvas = self.inspect()?.get("canvasRect").cloned().unwrap_or(Value::Null);
+            if !canvas.is_null() && canvas == before {
+                break;
+            }
+            if started.elapsed() > START {
+                return Err(self.failed(&format!("waited {START:?} for the canvas to stay in one place; it was at {canvas}")));
+            }
+            before = canvas;
+            std::thread::sleep(POLL);
+        }
+        self.call("engine.execute", json!({"command": "view.fitArtboard", "params": {}})).map(|_| ())
+    }
+
     /// Whether `ui.inspect` shows what `done` looks for within `wait`.
     pub fn shows(&mut self, wait: Duration, done: impl Fn(&Value) -> bool) -> Result<bool, String> {
         let started = Instant::now();
