@@ -1536,6 +1536,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- `cargo xtask docs --check` compares the Ink/Stitch contract with the parameter registry the other way
+  too. A registered row of `conformance/inkstitch-params.toml` gives its key to stitch types, and each of
+  those that the engine sews must be one that the key's declaration applies to, unless an `[[unapplied]]`
+  entry gives the reason. M10.6's tartan fill left `max_stitch_length_mm` out at first, and no gate noticed
+  it. The check found the 7 underlay settings that Ink/Stitch's settings window shows for a cross stitch,
+  whose sewing reads none of them, and an entry gives the reason. The contract page lists the entries.
 - Mutation testing on a pull request runs in 16 parts instead of 8. The lines M7.7 changes hold 654
   mutants, and 5 of 8 parts ran past the jobs' limit of an hour and a half.
 - The machine's stitch limits hold for the plan, and a machine file's stitches are within 0.14 mm of the
