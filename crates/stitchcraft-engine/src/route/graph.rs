@@ -1,5 +1,7 @@
-//! The graph a route is found in (`docs/src/design/routing.md` › Auto-satin): places, the points where
-//! pieces end, joined by links, the pieces themselves and the jumps that join pieces lying apart.
+//! The graph a route is found in (`docs/src/design/routing.md` › Auto-satin and Auto-run): places, the
+//! points where pieces end, joined by links, the pieces themselves and the jumps that join pieces lying
+//! apart. Both tools route through it: a satin column's pieces are stretches of its centre line, and a
+//! stroke's are the straight stretches of its lines.
 //!
 //! **Why a graph of its own, in its order.** Ink/Stitch finds its route with networkx (read at `d59c9ab`),
 //! whose searches meet each place's links in the order they were added. Where 2 ways are as short, the
@@ -17,6 +19,11 @@
 //!   equally near pairs. Of jumps as short, the one between earlier groups is taken first, a group being as
 //!   early as its first place. The jumps are added group by group, each group's in the order the tree took
 //!   them, as networkx lists the tree's edges.
+//! - With Preserve order, each element is joined to the next by the shortest jump between their places,
+//!   one way, and, routing running stitches, the parts of each stroke that its own pieces don't join each
+//!   to each, both ways. A jump is added only where no link already leads from its one place to its other:
+//!   Ink/Stitch's graph holds one link from a place to another, so a jump added where one is takes its
+//!   place in it, and the route goes along that link.
 //! - The way from the start to the end with the fewest links is found by a breadth-first search from both
 //!   ends at once, as networkx's `bidirectional_shortest_path` searches: the side with fewer places to look
 //!   from goes next, the start's side when they are as many, and the ways meet at the first place both
