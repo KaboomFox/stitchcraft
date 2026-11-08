@@ -37,7 +37,7 @@ pub(super) fn filled(id: &str, parts: &[Polygon]) -> Element {
     Element {
         id: ElementId::new(id).unwrap(),
         name: None,
-        shape: Shape::Fill { path: outline(parts), rule: FillRule::NonZero },
+        shape: Shape::Fill { path: outline(parts), rule: FillRule::NonZero, gradient: None },
         thread: Thread::new(Rgb::new(0, 0, 0)),
         params: ParamSet::default(),
         automatic: false,

@@ -412,7 +412,7 @@ fn may_lead(shapes: &[Random], from: usize, to: usize) -> bool {
 /// The area of the part of the fill `element` inside the box `[min x, min y, max x, max y]`, in square
 /// millimetres: each ring of its region clipped to the box, a hole's taken from its outline's. 0 for a line.
 fn inside(element: &Element, bounds: [f64; 4]) -> f64 {
-    let Shape::Fill { path, rule } = &element.shape else { return 0.0 };
+    let Shape::Fill { path, rule, .. } = &element.shape else { return 0.0 };
     let region = region::build(path, *rule, &mut Budget::DEFAULT.meter()).unwrap().region;
     let clipped = |ring: &[Point]| clipped_area(ring.iter().map(|p| (p.x(), p.y())).collect(), bounds);
     region.parts.iter().map(|part| clipped(&part.outline) - part.holes.iter().map(|hole| clipped(hole)).sum::<f64>()).sum()

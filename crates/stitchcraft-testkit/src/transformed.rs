@@ -143,7 +143,10 @@ impl Change {
         }
         changed.shape = match element.shape.clone() {
             Shape::Stroke { width, join, cap, .. } => Shape::Stroke { path, width, join, cap },
-            Shape::Fill { rule, .. } => Shape::Fill { path, rule },
+            Shape::Fill { rule, gradient, .. } => {
+                let gradient = gradient.map(|gradient| gradient.map(|q| Ok::<Point, ()>(self.point(q))).unwrap());
+                Shape::Fill { path, rule, gradient }
+            }
         };
         if self.mirrors() {
             for key in DIRECTIONS {
@@ -330,7 +333,7 @@ fn stitches(design: &Design, plan: &StitchPlan) -> BTreeMap<String, Vec<[Point; 
         .iter()
         .filter(|element| element.automatic)
         .filter_map(|element| match &element.shape {
-            Shape::Fill { path, rule } => Some((element.id.as_str(), region::build(path, *rule, &mut Budget::DEFAULT.meter()).unwrap().region)),
+            Shape::Fill { path, rule, .. } => Some((element.id.as_str(), region::build(path, *rule, &mut Budget::DEFAULT.meter()).unwrap().region)),
             Shape::Stroke { .. } => None,
         })
         .collect();

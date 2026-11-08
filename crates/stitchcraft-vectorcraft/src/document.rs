@@ -95,7 +95,7 @@ use serde_json::Value;
 use stitchcraft_core::Point;
 use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Labels, Meter, Mm};
 use stitchcraft_engine::auto::{self, Stitches};
-use stitchcraft_engine::design::{Cap, Clip, Design, DesignSettings, Element, FillRule, Guide, Hints, Join, Path, Reading, Segment, Shape};
+use stitchcraft_engine::design::{Cap, Clip, Design, DesignSettings, Element, FillRule, Gradient, Guide, Hints, Join, Path, Reading, Segment, Shape};
 use stitchcraft_engine::generate::stops_after;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_params::stitch_type::Family;
@@ -110,6 +110,7 @@ mod clip;
 /// ([the module](self)).
 pub const HELD_PER_BYTE: usize = 32;
 use crate::geometry::{self, UNUSABLE_HINT};
+use crate::gradient;
 use crate::values::{sews, text};
 use crate::wire::{self, Dash, Effect, Item, Kind, Node, Paint, PathData, Profile, Stop, shows};
 use crate::{AUTO, FORMAT, color, effect_name, settings};
@@ -920,7 +921,7 @@ impl Reader {
         for item in node.appearance.items.iter().filter(|item| item.kind == "fill" && drawn(item)) {
             let Some(thread) = self.thread(label, item.paint.as_ref()) else { continue };
             fills += 1;
-            let shape = Shape::Fill { path: self.copy(path)?, rule };
+            let shape = Shape::Fill { path: self.copy(path)?, rule, gradient: None };
             self.element(node, label, &rank("fill", fills), shape, thread, params.clone(), automatic, hints.clone())?;
         }
         // VectorCraft paints the items in order, the first lowest, and the fills are sewn first.
@@ -974,7 +975,12 @@ impl Reader {
         let (mut counts, mut black): (BTreeMap<Family, u32>, _) = (BTreeMap::new(), None);
         // Found when the first effect that needs it comes, each once.
         for (family, params) in effects {
+            // A linear gradient fill sews the topmost fill's linear gradient, which its thread is the first
+            // colour of, and which is no paint it doesn't sew.
+            let method = params.get("fill_method").and_then(Value::as_str);
+            let sewn = if *family == Family::Fill && gradient::sews(method) { self.gradient_of(painting, path)? } else { None };
             let (thread, style) = match family {
+                Family::Fill if sewn.is_some() => (sewn.as_ref().map(|(thread, _)| thread.clone()), None),
                 Family::Fill => (self.fill_of(painting).or_else(|| self.stroke_of(painting).map(|(thread, _)| thread)), None),
                 Family::Stroke | Family::Satin => match self.stroke_of(painting) {
                     Some((thread, style)) => (Some(thread), Some(style)),
@@ -988,7 +994,7 @@ impl Reader {
                 self.followed(label, *family, &set, path, painting);
             }
             let shape = match family {
-                Family::Fill => Shape::Fill { path: self.copy(path)?, rule },
+                Family::Fill => Shape::Fill { path: self.copy(path)?, rule, gradient: sewn.map(|(_, gradient)| gradient) },
                 Family::Stroke | Family::Satin => {
                     set.set(SATIN_COLUMN, if *family == Family::Satin { "true" } else { "false" });
                     let (width, join, cap) = style.unwrap_or_else(|| {
@@ -1208,6 +1214,22 @@ impl Reader {
         let message = format!("{} has no paint to take a thread colour from, and is sewn in black.", called(node, "The object"));
         self.feature(label, message, Some("Give it a fill or a stroke in the thread's colour."));
         Thread::new(BLACK)
+    }
+
+    /// The linear gradient of the topmost fill among `painting`'s paints, an opaque one before others, placed
+    /// on `path` as VectorCraft places it ([`gradient::linear`]), and the thread of its first stop VectorCraft
+    /// shows, which a fill of one colour would sew. What of it isn't sewn is said. `None` when that fill is no
+    /// linear gradient of 2 stops or more, lies too far away to sew, or VectorCraft shows none of its stops;
+    /// `SC-E0004` when fitting it to `path` needs more work than the budget allows.
+    fn gradient_of(&mut self, painting: &Painting, path: &Path) -> Result<Option<(Thread, Gradient)>, Diagnostic> {
+        let Some((label, part)) = first_of(painting, |part| part.fill) else { return Ok(None) };
+        let Some(paint) = part.fill.and_then(|(item, _)| item.paint.as_ref()) else { return Ok(None) };
+        let Some(linear) = gradient::linear(paint, path, &mut self.meter).map_err(|_| exhausted())? else { return Ok(None) };
+        for note in linear.notes {
+            self.feature(label, note, None);
+        }
+        let first = linear.gradient.as_ref().and_then(|gradient| gradient.stops.iter().find(|stop| stop.opacity > 0.0)).map(|stop| stop.colour);
+        Ok(first.zip(linear.gradient).map(|(first, gradient)| (Thread::new(first), gradient)))
     }
 
     /// The thread of `paint`: `None` for no paint, and for a gradient without a stop VectorCraft shows,

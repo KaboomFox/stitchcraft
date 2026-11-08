@@ -33,6 +33,10 @@ shape, and that of each group round it, is a clip of the shape's elements, which
 of what it clips or in shares of a shape's box. A group's children count, as Inkscape draws them, and a
 clip path's own `clip-path` cuts it too. `SC-W0802` names what isn't applied.
 
+Since M10.12 a linear gradient fill's linear gradient is placed as a viewer places it, through the gradients
+its `href` names, in user units or in shares of the shape's box, and after its `gradientTransform`, for the
+fill to sew its colours (`REQ-SVG-014`, `src/document/gradient.rs`).
+
 Since M8.10 a clone, a `<use>` of an element other than a command's symbol, sews what it shows in its
 own place in the document's order (`REQ-SVG-012`, `src/document/clone.rs`). The reader draws its source
 again under the use's map and style, a symbol in the viewport the use gives it. Each element it sews is

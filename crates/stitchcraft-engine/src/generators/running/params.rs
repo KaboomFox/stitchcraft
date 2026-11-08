@@ -15,8 +15,8 @@ use stitchcraft_params::{Origin, StitchType, params};
 /// way to their start and from their end, tatami fills between their rows, contour fills between the
 /// rows of their underlay and, keeping to the tolerance, along their rings, meander fills between the
 /// rows of their underlay and along their path, circular fills along their spiral and between its
-/// pieces, guided fills between their rows and, keeping to the tolerance, along them, and tartan fills
-/// between their rows, along their warp's runs and where their rows join.
+/// pieces, guided fills between their rows and, keeping to the tolerance, along them, linear gradient fills
+/// between their rows, and tartan fills between their rows, along their warp's runs and where their rows join.
 const RUNS: &[StitchType] = &[
     StitchType::RunningStitch,
     StitchType::RippleStitch,
@@ -29,12 +29,13 @@ const RUNS: &[StitchType] = &[
     StitchType::MeanderFill,
     StitchType::CircularFill,
     StitchType::GuidedFill,
+    StitchType::LinearGradientFill,
     StitchType::TartanFill,
 ];
 
 /// The stitch types whose stitches may vary in length at random: running and ripple stitch along their
-/// lines, a tatami or guided fill along its rows, a contour fill along its rings and a circular fill along
-/// its spiral.
+/// lines, a tatami, guided or linear gradient fill along its rows, a contour fill along its rings and a
+/// circular fill along its spiral.
 const RANDOM_LENGTHS: &[StitchType] = &[
     StitchType::RunningStitch,
     StitchType::RippleStitch,
@@ -42,6 +43,7 @@ const RANDOM_LENGTHS: &[StitchType] = &[
     StitchType::ContourFill,
     StitchType::CircularFill,
     StitchType::GuidedFill,
+    StitchType::LinearGradientFill,
 ];
 
 params! {

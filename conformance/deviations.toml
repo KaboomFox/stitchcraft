@@ -493,6 +493,20 @@ reason = "A meeting found by rounding is no place the design asks the thread to 
 requirements = ["REQ-FILL-TRT-014"]
 
 [[deviation]]
+id = "DEV-FILL-031"
+area = "fill/gradient"
+summary = "A linear gradient fill's underlay, unless fill_underlay_angle sets its angles, runs along the gradient as the file draws it, after its gradientTransform. Ink/Stitch takes the underlay's angle from the gradient's x1, y1, x2 and y2 before it applies the gradientTransform, so a turned gradient's underlay lies along the vector as it was before the turn, not square to the rows."
+reason = "The underlay crosses the top rows, which lie square to the gradient as drawn (docs/src/design/algorithms/gradient.md › Sewing). Ink/Stitch's angle was read at d59c9ab (lib/elements/fill_stitch.py, the gradient's underlay angle). Run as a black box (ADR-0001, decision 6) on a square under a gradient from (10, 30) to (50, 30) turned 90° about (30, 30), its underlay's rows run across the canvas and its top rows across it too. The same gradient drawn from (30, 10) to (30, 50) without a transform sews its underlay down the canvas, as StitchCraft sews both."
+requirements = ["REQ-FILL-GRD-006"]
+
+[[deviation]]
+id = "DEV-FILL-032"
+area = "fill/gradient"
+summary = "Where every stop of a linear gradient fill lies at a row before the fill's first, every row sews in the last stop's colour. Ink/Stitch takes as many rows from the far end back as the last blend's end lies before row 0, sews them in the last colour, and leaves the rest of the fill unsewn."
+reason = "A viewer paints the fill past the gradient's last stop in its colour, and so does StitchCraft (REQ-FILL-GRD-005). Ink/Stitch's rows after the last blend were read at d59c9ab (lib/stitches/linear_gradient_fill.py), a slice from a negative row. Run as a black box (ADR-0001, decision 6) on a square 40 mm a side from x = 10 under a gradient from x = -100 to -60, its stops at 0 and 0.5, it sewed 63 rows in a band 15.4 mm wide and left the rest of the square bare, where StitchCraft sews the square's 161 rows."
+requirements = ["REQ-FILL-GRD-005"]
+
+[[deviation]]
 id = "DEV-FILL-033"
 area = "fill/guided"
 summary = "A guided fill with staggers of 0 counts them as 1, so every row starts at its first point. Ink/Stitch divides by the staggers to place each row's stagger, and stops with a division by zero."
@@ -708,6 +722,13 @@ area = "svg"
 summary = "Ink/Stitch's stitch patterns are not applied. A path whose style starts it with Ink/Stitch's pattern marker is a helper, which SC-W0802 names, and the other shapes in its group sew without it. Ink/Stitch adds a needle point wherever their stitches cross a pattern's stroke, and leaves out their needle points inside a pattern's fill."
 reason = "Stitch patterns are not planned (docs/src/plan/roadmap.md, M8), and the warning names each one, so a design that relies on one is seen to sew otherwise. Ink/Stitch's patterns were read at d59c9ab (lib/patterns.py). 6 of Ink/Stitch's fonts use them. Ink/Stitch at d59c9ab, run as a black box (ADR-0001, decision 6), sews Initials XL's B in 12,158 stitches, and in 9,804 without its 6 patterns. StitchCraft sews it in 9,805."
 requirements = ["REQ-SVG-003"]
+
+[[deviation]]
+id = "DEV-SVG-027"
+area = "svg"
+summary = "A linear gradient is placed as a viewer places it: in shares of the shape's bounding box unless its gradientUnits are userSpaceOnUse, and with the x1, y1, x2 and y2 and the units of the gradients its href names where it doesn't give them. Ink/Stitch reads the gradient's own x1, y1, x2 and y2 as user units whatever its units, 0 for one it leaves out, and reads none from the gradient its href names. A gradient without a vector of its own then has one of no length at the origin, and Ink/Stitch sews the whole fill in its last colour."
+reason = "The SVG reader takes the drawing as a viewer shows it (docs/src/design/svg-input.md), and Inkscape's own gradients keep their stops in one gradient and their vector, in user space, in another that names it. Ink/Stitch's reading was read at d59c9ab (lib/stitches/linear_gradient_fill.py, the gradient's vector from inkex). Run as a black box (ADR-0001, decision 6) on a square under a gradient without x1, y1, x2 and y2, and on one whose vector is in the gradient it names, it sewed both squares in the last colour."
+requirements = ["REQ-SVG-014"]
 
 [[deviation]]
 id = "DEV-ROUTE-001"

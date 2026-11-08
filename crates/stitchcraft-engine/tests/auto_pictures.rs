@@ -104,7 +104,7 @@ fn satin(element: &Element) -> bool {
 
 /// The area the fill `element` sews, in square millimetres.
 fn area(element: &Element) -> f64 {
-    let Shape::Fill { path, rule } = &element.shape else { panic!("`{}` is not a fill", element.id) };
+    let Shape::Fill { path, rule, .. } = &element.shape else { panic!("`{}` is not a fill", element.id) };
     region::build(path, *rule, &mut Budget::DEFAULT.meter()).unwrap().region.area()
 }
 

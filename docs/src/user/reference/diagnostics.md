@@ -59,6 +59,8 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0326`](#sc-w0326) | Warning | Tartan sett with no stripe to sew; only the underlay sewn |
 | [`SC-W0327`](#sc-w0327) | Warning | Tartan sett too fine for the shortest stitch; needle points left out |
 | [`SC-W0328`](#sc-w0328) | Warning | Tartan stripe's colour can't be read; left out |
+| [`SC-W0329`](#sc-w0329) | Warning | Linear gradient fill without a linear gradient; its colour fades out |
+| [`SC-W0330`](#sc-w0330) | Warning | Gradient stop within 2 rows of the blend before; passed over |
 | [`SC-W0331`](#sc-w0331) | Warning | Guided fill without a guide line; sewn as a tatami fill |
 | [`SC-W0332`](#sc-w0332) | Warning | Guided fill's copies of its guide meet no part; sewn as a tatami fill |
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
@@ -727,6 +729,27 @@ Ink/Stitch leaves them.
 
 The message names the colours. Write each as `#` and 6 hexadecimal digits, or as the register's
 letters.
+
+## SC-W0329
+
+**Warning** — Linear gradient fill without a linear gradient; its colour fades out
+
+A linear gradient fill sews the colours of the linear gradient its shape is painted with. This shape is
+painted with a plain colour, a gradient of one colour, or a gradient that isn't linear, so its own colour
+fades out along the fill's `angle`, its rows thinning out to none, as Ink/Stitch sews it.
+
+Paint the shape with a linear gradient, or choose another fill method.
+
+## SC-W0330
+
+**Warning** — Gradient stop within 2 rows of the blend before; passed over
+
+Between 2 stops of a gradient, the rows go to their 2 colours in a fixed pattern, which takes 3 rows or
+more. This stop lies within 2 rows of where the blend before it ends, so no blend starts at it. The next
+blend starts a row later and blends from the colour before the stop, and the row between is left out,
+as Ink/Stitch sews it. A gradient whose start and end are one point puts all its stops at one row.
+
+The message names the stops. Move them at least 3 row spacings apart.
 
 ## SC-W0331
 

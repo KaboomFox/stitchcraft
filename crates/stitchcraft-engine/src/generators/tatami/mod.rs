@@ -50,22 +50,25 @@ const ROUTED: &[StitchType] = &[StitchType::TatamiFill, StitchType::CircularFill
 /// circular fill's pieces of spiral and a guided fill's lines, which are routed as a tatami fill's rows are.
 const TRAVELLED: &[StitchType] = &[StitchType::TatamiFill, StitchType::CircularFill, StitchType::GuidedFill];
 
-/// The stitch types whose rows `skip_last` shortens: those [`TRAVELLED`], and a tartan fill's lines, which are
-/// routed as a tatami fill's rows are, though Ink/Stitch's settings window doesn't show it for them.
-const SKIPPED: &[StitchType] = &[StitchType::TatamiFill, StitchType::CircularFill, StitchType::GuidedFill, StitchType::TartanFill];
+/// The stitch types whose rows `skip_last` shortens: those [`TRAVELLED`], and a linear gradient fill's rows
+/// and a tartan fill's lines, which are routed as a tatami fill's rows are, though Ink/Stitch's settings
+/// window doesn't show it for a tartan.
+const SKIPPED: &[StitchType] =
+    &[StitchType::TatamiFill, StitchType::CircularFill, StitchType::GuidedFill, StitchType::LinearGradientFill, StitchType::TartanFill];
 
 /// The stitch types its rows, its expand and its underlay apply to: a contour fill takes them as Ink/Stitch's
 /// does, sewing its rings the row spacing apart over the part expanded, after the same underlay, a meander
 /// fill sews its path over the part expanded after the same underlay, a circular fill its spiral, its
-/// circles the row spacing apart, a guided fill its copies of its guide the row spacing apart, staggered as
-/// a tatami fill's rows are, and a tartan fill its rows, staggered so too. An element of a run of underlays
-/// first sews its underlay apart when it is one of them (`crate::underlays_first`).
+/// circles the row spacing apart, a guided fill its copies of its guide the row spacing apart, and a linear
+/// gradient or tartan fill its rows, staggered as a tatami fill's are. An element of a run of underlays first
+/// sews its underlay apart when it is one of them (`crate::underlays_first`).
 pub(crate) const UNDERLAID: &[StitchType] = &[
     StitchType::TatamiFill,
     StitchType::ContourFill,
     StitchType::MeanderFill,
     StitchType::CircularFill,
     StitchType::GuidedFill,
+    StitchType::LinearGradientFill,
     StitchType::TartanFill,
 ];
 
@@ -81,6 +84,7 @@ const EXPANDED: &[StitchType] = &[
     StitchType::MeanderFill,
     StitchType::CircularFill,
     StitchType::GuidedFill,
+    StitchType::LinearGradientFill,
     StitchType::TartanFill,
     StitchType::CrossStitch,
 ];

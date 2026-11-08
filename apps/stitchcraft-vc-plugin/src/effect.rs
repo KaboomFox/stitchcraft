@@ -228,8 +228,9 @@ mod tests {
 
     #[test]
     fn what_cannot_be_sewn_is_the_live_effect_s_error() {
-        // A method that arrives in a later version is said, rather than the object vanishing.
-        assert!(error(&run(Family::Fill, &square(), &[("fill_method", json!("linear_gradient_fill"))])).starts_with("warning SC-W0011: "));
+        // What can't be sewn is said, rather than the object vanishing. From M10.12 the dialog offers no method
+        // that arrives in a later version, and a guided fill's strategies that do, which a record could hold
+        // only as a setting the dialog doesn't declare, VectorCraft drops before it runs the effect.
         assert!(error(&run(Family::Fill, &square(), &[("fill_method", json!("plaid"))])).starts_with("error SC-E0101: "));
         assert!(error(&run(Family::Stroke, &json!({"subpaths": []}), &[])).starts_with("warning SC-W0808: It draws nothing"));
     }

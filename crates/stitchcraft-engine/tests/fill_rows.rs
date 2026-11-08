@@ -188,7 +188,7 @@ fn a_fill_s_settings_are_checked_before_fills_are_sewn() {
     let fill = Element {
         id: ElementId::new("dense").unwrap(),
         name: None,
-        shape: Shape::Fill { path: square, rule: FillRule::NonZero },
+        shape: Shape::Fill { path: square, rule: FillRule::NonZero, gradient: None },
         thread: RED,
         params,
         automatic: false,

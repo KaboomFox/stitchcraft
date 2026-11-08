@@ -142,6 +142,8 @@ another.
 | `SC-W0326` | Warning | Tartan sett with no stripe to sew; only the underlay sewn (as in Ink/Stitch) | M10 |
 | `SC-W0327` | Warning | Tartan sett too fine for the shortest stitch; needle points left out | M10 |
 | `SC-W0328` | Warning | Tartan stripe's colour can't be read; left out (as Ink/Stitch leaves it) | M10 |
+| `SC-W0329` | Warning | Linear gradient fill without a linear gradient; its colour fades out | M10 |
+| `SC-W0330` | Warning | Gradient stop within 2 rows of the blend before; passed over | M10 |
 | `SC-W0331` | Warning | Guided fill without a guide line; sewn as a tatami fill (also for a guide that starts and ends at one point, with the fill's own settings, as Ink/Stitch sews one without a guide) | M10 |
 | `SC-W0332` | Warning | Guided fill's copies of its guide meet no part; sewn as a tatami fill (that part, at the angle of the guide's ends, as Ink/Stitch falls back) | M10 |
 | `SC-W0401` | Warning | Path too small for the shortest stitch; skipped | M3 |

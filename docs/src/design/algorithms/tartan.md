@@ -293,8 +293,9 @@ stitches there, against 16 here.
 
 The differential's herringbones agree too: TS-17B's, and a file of 4 of them, turned both ways, round a
 hole, with a warp and a weft apart and with stripes sewn as runs. Their weft joins its rows along the bands'
-sides in steps of the row spacing, so StitchCraft leaves out more of Ink/Stitch's short stitches there, and
-the 2 cases excuse their counts of stitches by `DEV-FIN-001`.
+sides in steps of the row spacing, so StitchCraft leaves out more of Ink/Stitch's short stitches there. The
+file of 4 excuses its count of stitches by `DEV-FIN-001`. TS-17B's whole count agrees within the
+differential's 10 % all the same, its gradients' stitches counted with its tartans' (M10.12).
 
 The glyph differential sews the tartan fonts' 313 glyphs too. Their files are older than Ink/Stitch's
 version 4, and there a fill without a longest stitch of its own sews stitches 3 mm long, as Ink/Stitch

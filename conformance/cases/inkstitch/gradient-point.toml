@@ -1,0 +1,5 @@
+# A gradient of no length in the square's middle: every stop at one row, the second passed over (SC-W0330).
+id = "inkstitch-gradient-point"
+requirements = ["REQ-SVG-008", "REQ-FILL-GRD-009"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/gradient-point.svg"
