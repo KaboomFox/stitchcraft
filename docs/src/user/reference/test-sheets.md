@@ -489,7 +489,7 @@ Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](p
 
 ![TS-17C's 3 ripple stitches in green. On the left, a rainbow: 7 arches sewn back and forth from the outer edge of a column drawn as 2 arches and a rung to its inner edge. In the middle, a wave and its copies, which shrink to a point 20 mm above its middle, each copy meeting the next at a point. On the right, a circle 22 mm across that spirals in to its middle.](../../images/generated/ripple-kinds.png)
 
-![TS-17C's 5 guided ripples in green. From the left: 8 copies of a wave follow an arch, shrinking to a third of its size and turning with it. Copies of a small circle run between 2 curved rails, spiralling on from one to the next. A column of 5 lines has a grid across it, its lines 3 mm apart. Copies of a thin diamond stand across a ladder at its rungs, their points on its rails. Copies of a zigzag run along a line and are cut to a circle.](../../images/generated/ripple-guided.png)
+![TS-17C's 5 guided ripples in green. From the left: 8 copies of a wave follow an arch, shrinking to 30 % of its size and turning with it. Copies of a small circle run between 2 curved rails, spiralling on from one to the next. A column of 5 lines has a grid across it, its lines 3 mm apart. Copies of a thin diamond stand across a ladder at its rungs, their points on its rails. Copies of a zigzag run along a line and are cut to a circle.](../../images/generated/ripple-guided.png)
 
 Threads: Blue, Red, Emerald Green.
 
