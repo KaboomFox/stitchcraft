@@ -5,6 +5,25 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M10.12: linear gradient fill (`REQ-FILL-GRD-001` to `REQ-FILL-GRD-009`, `REQ-SVG-014`, `REQ-VC-022`).
+  `fill_method` `linear_gradient_fill` sews Ink/Stitch's linear gradient fill, which was skipped with
+  `SC-W0011`.
+  - A fill's shape keeps its linear gradient, its start and end in the design's millimetres and its stops.
+    The SVG reader places it as a viewer does, through the gradients its `href` names, in user units or in
+    shares of the shape's box, after its `gradientTransform`. The VectorCraft reader places a gradient paint by its `geom`, or fits it to the
+    object at its angle as VectorCraft does, in `stitch export` and in the fill's live effect.
+  - Rows square to the gradient, a row spacing apart and staggered, cover each piece. Between 2 stops they go
+    to the 2 colours in Ink/Stitch's fixed pattern, and a transparent stop leaves its rows out. Each colour's
+    rows are routed as a tatami fill's, after the tatami fill's underlay in the first stop's colour, each
+    colour a colour block in its own thread, trimmed after with `trim_after`. With `stop_at_ending_point`
+    the last 2 colours sew on to the fill's end.
+  - New codes: `SC-W0329`, a linear gradient fill without a gradient, whose colour fades out along `angle`,
+    and `SC-W0330`, a stop passed over. The deviations ledger gains `DEV-FILL-031`, `DEV-FILL-032` and
+    `DEV-SVG-027`.
+  - The Test Sheet filter draws a linear gradient fill with its gradient paint, which VectorCraft keeps.
+  - TS-17B gains 3 gradients for MC-12 in a third row, and the differential sews them and 6 files of
+    gradients in Ink/Stitch too. They agree by every measure, but where the ledger excuses them. A user page
+    has pictures of gradient fills. Golden changed: `TS-17B.pes`, for its new row of gradients.
 - M10.6: tartan fill without herringbone (`REQ-FILL-TRT-001` to `REQ-FILL-TRT-011`). `fill_method`
   `tartan_fill` sews Ink/Stitch's tartan fill, which was skipped with `SC-W0011`.
   - The sett is the `tartan` setting as Ink/Stitch's tartan editor saves it, a palette code of stripes that

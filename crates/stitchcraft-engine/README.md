@@ -52,7 +52,9 @@ may turn. Since M10.6 a tartan fill weaves the warp and weft of its sett in rows
 routed as a tatami fill's rows after the same underlay and sewn in its own thread, its narrow stripes as
 runs (`generators::tartan`). Since M10.8 a ripple stitch sews lines that run along a satin column, read as
 a satin column reads its rails and rungs, or copies of a line that shrink to its target point, as one
-running stitch (`generators::ripple`).
+running stitch (`generators::ripple`). Since M10.12 a linear gradient fill shares out the colours of its
+shape's linear gradient among rows square to it, each colour's rows routed as a tatami fill's rows and
+sewn in its own thread (`generators::gradient`).
 Since M13.1 a shape without settings, read with `--auto`, is digitized automatically before anything else
 (`auto`). A line no wider than the design's narrowest satin stroke runs, a line up to 7 mm wide becomes
 satin columns along its centre line, and a wider line becomes the tatami fill of the area it paints
@@ -93,7 +95,7 @@ columns, and the strokes among them, are routed as Ink/Stitch's Auto-Route Satin
 (`generators::satin::cut`). Since M10.13 running stitches alone are routed as Ink/Stitch's Auto-Route
 Running Stitch routes them, the lines cut where they cross and pass near each other (`route::Tool::Runs`).
 Since M10.5 a generator may sew groups of an element in threads of their own (`generators::Colour`), as
-the tartan and gradient fills will. Assembly then changes thread inside the element and trims after each
+the tartan and linear gradient fills do. Assembly then changes thread inside the element and trims after each
 of its colour blocks when it trims, and the sewing order moves the element as one, by the thread it starts
 in and the one it ends in (`generate::colours`).
 Design:
