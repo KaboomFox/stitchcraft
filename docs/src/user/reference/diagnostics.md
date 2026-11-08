@@ -54,7 +54,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0321`](#sc-w0321) | Warning | Cross stitch grid too fine for the shortest stitch; needle points left out |
 | [`SC-W0322`](#sc-w0322) | Warning | Half cross with an even thread count; the odd count above sewn |
 | [`SC-E0323`](#sc-e0323) | Error | Tartan fill's sett can't be read; skipped |
-| [`SC-W0324`](#sc-w0324) | Warning | Tartan's herringbone not sewn yet; rows sewn without it |
+| [`SC-W0324`](#sc-w0324) | Warning | Tartan's herringbone sewn as straight rows (retired) |
 | [`SC-W0325`](#sc-w0325) | Warning | Tartan fill without a sett; Ink/Stitch's default sett sewn |
 | [`SC-W0326`](#sc-w0326) | Warning | Tartan sett with no stripe to sew; only the underlay sewn |
 | [`SC-W0327`](#sc-w0327) | Warning | Tartan sett too fine for the shortest stitch; needle points left out |
@@ -88,6 +88,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-I0818`](#sc-i0818) | Info | Ink/Stitch file from an older version, read as Ink/Stitch updates it |
 | [`SC-E0819`](#sc-e0819) | Error | More than one origin or stop position |
 | [`SC-E0820`](#sc-e0820) | Error | VectorCraft selection not routed |
+| [`SC-E0821`](#sc-e0821) | Error | VectorCraft tartan's sett not set |
 | [`SC-W0804`](#sc-w0804) | Warning | Element geometry invalid or out of range |
 | [`SC-W0803`](#sc-w0803) | Warning | VectorCraft file from a newer format version; read best-effort |
 | [`SC-E0806`](#sc-e0806) | Error | VectorCraft file could not be read |
@@ -661,24 +662,25 @@ The message gives the count set and the count sewn. Set an odd number.
 **Error** — Tartan fill's sett can't be read; skipped
 
 A tartan fill's sett is its `tartan` setting, an object of JSON as Ink/Stitch's tartan editor saves
-it, whose `palette` gives the stripes. This one can't be read: it isn't JSON, it has no `palette`, a
-number in it isn't one, its `scale` isn't above 0, its code has more than one `|`, or a stripe's width
-isn't a number. A threadcount or a code of colour letters, which Ink/Stitch's editor reads too, is
-read from M10.7. The element is skipped.
+it, whose `palette` gives the stripes: a palette code, a threadcount of colour letters or the
+threadcount the Scottish Register of Tartans' search gives. This one can't be read: it isn't JSON, it
+has no `palette`, a number in it isn't one, its `scale` isn't above 0, its code has more than one `|`,
+a stripe's width or count isn't a number, or letters of a register's threadcount have no count. The
+element is skipped.
 
-The message says what is wrong. Set the sett again in Ink/Stitch's tartan editor, or write its
-palette code as a colour in brackets and a width for each stripe.
+The message says what is wrong. Set the sett again with VectorCraft's StitchCraft Tartan filter or
+Ink/Stitch's tartan editor, or write its palette code as a colour in brackets and a width for each
+stripe.
 
 ## SC-W0324
 
-**Warning** — Tartan's herringbone not sewn yet; rows sewn without it
+**Warning** — Tartan's herringbone sewn as straight rows (retired)
 
-A tartan's herringbone sews its rows in bands `herringbone_width_mm` wide, each band's rows slanting
-the other way from the band before. StitchCraft sews herringbones from M10.7, and until then the rows
-are sewn straight, as a tartan with a width of 0 sews them.
+Retired in M10.7, which sews tartans' herringbones: StitchCraft no longer gives this code. Before
+M10.7, a tartan whose `herringbone_width_mm` was above 0 sewed straight rows, as a tartan with a width
+of 0 sews them, and this warning said so.
 
-The message gives the width. Set `herringbone_width_mm` to 0 for straight rows, or sew the file in
-Ink/Stitch to have the herringbone.
+Plan the file again with this StitchCraft to sew the herringbone.
 
 ## SC-W0325
 
@@ -716,10 +718,13 @@ the sett's `scale`, or raise its `min_stripe_width` so that the stripe sews as a
 
 **Warning** — Tartan stripe's colour can't be read; left out
 
-A stripe's colour is `#` and 3 or 6 hexadecimal digits, or a colour name of SVG. This sett names a
-colour that is neither, and its stripes are left unsewn, as Ink/Stitch leaves them.
+A stripe's colour is `#` and 3 or 6 hexadecimal digits or a colour name of SVG, in a palette code, and
+the letters of one of the Scottish Register of Tartans' shades, or of a colour of its own palette, in a
+threadcount. This sett names a colour that is none of these, and its stripes are left unsewn, as
+Ink/Stitch leaves them.
 
-The message names the colours. Write each as `#` and 6 hexadecimal digits.
+The message names the colours. Write each as `#` and 6 hexadecimal digits, or as the register's
+letters.
 
 ## SC-W0401
 
@@ -1114,6 +1119,21 @@ commands.
 The message says which. Select the satin columns or the running stitches to route, and put
 StitchCraft's Satin or Stroke effect on the paths themselves rather than on their group. Keep one start
 marker and one end marker in the selection.
+
+## SC-E0821
+
+**Error** — VectorCraft tartan's sett not set
+
+StitchCraft Tartan, a filter in VectorCraft, sets the sett of the selected paths' tartan fills from a
+code: a palette code, a threadcount of colour letters, or the threadcount the Scottish Register of
+Tartans' search gives. A path takes the sett when its own first StitchCraft effect is the fill effect,
+or when it has none, and the filter then gives it the fill effect. It changed nothing: nothing was
+selected, no selected path takes a sett, or the code can't be read, names letters the register uses
+for no colour, which the fill would leave unsewn, gives no stripe, or makes a setting longer than the
+fill's Sett holds.
+
+The message says which. Select the paths to sew as a tartan, and write each stripe as a colour in
+brackets and its width, or as the register's colour letters and a count of threads.
 
 ## SC-W0804
 

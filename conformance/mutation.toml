@@ -772,3 +772,33 @@ file = "crates/stitchcraft-engine/src/generators/ripple/mod.rs"
 mutant = "replace * with / in finished"
 line = "length: sewing.pattern.first().copied().unwrap_or(2.0 * sewing.min),"
 why = "the sewing's pattern is running::pattern's, never empty, so its first length is always there and the fallback is never used"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/tartan/herringbone.rs"
+mutant = "replace && with || in Herringbone::warp"
+line = "for &stripe in stripes.iter().filter(|s| s[0] <= reach_right && s[1] >= reach_left && s[0] <= right && s[1] >= left) {"
+why = "the test only saves work: a stripe that misses the band crosses none of its rows, and the stretches of a stripe that misses the piece's bounds lie outside them, so Laying::band lays no line for either. Letting more stripes past it lays the same lines, and only the work charged grows"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/tartan/herringbone.rs"
+mutant = "replace > with >= in chained"
+line = "let rightwards = cos > 0.0 || (cos == 0.0 && sin > 0.0);"
+why = "a turn's cosine and sine are never both 0: where the cosine is 0, the sine is 1 or -1, so more than 0 and at least 0 agree"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/tartan/herringbone.rs"
+mutant = "replace <= with > in chained"
+line = "let on_first = |p: Point| (p.y() - first_edge).abs() <= (p.y() - second_edge).abs();"
+why = "on_first is only compared with itself, to tell whether 2 points lie nearer the same edge, and with > it gives the opposite answer for every point, whose coordinates are always numbers: both answers turn round together, so the same lines are turned"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/tartan/stripes.rs"
+mutant = "replace > with >= in in_turns"
+line = "let forwards = side.0 > 0.0 || (side.0 == 0.0 && side.1 > 0.0);"
+why = "both callers give the way of an upright side turned by a Turn, (-sin, cos) of its angle, never (0, 0): where its x is 0 the sine is 0 and the cosine 1 or -1, so more than 0 and at least 0 agree"
+
+[[equivalent]]
+file = "apps/stitchcraft-vc-plugin/src/tartan.rs"
+mutant = "replace += with -= in set"
+line = "taken += 1;"
+why = "taken, an i32 that starts at 0, is only compared with 0: counted down for each path that takes the sett, it is 0 just when no path does, as it is counted up, so the same selections are refused"

@@ -50,7 +50,9 @@ that it covers enough of, the crosses that share a join in one run (`generators:
 sews each of Ink/Stitch's 12 methods, the half crosses in rows routed as a tatami fill's, on a grid that
 may turn. Since M10.6 a tartan fill weaves the warp and weft of its sett in rows, each colour's lines
 routed as a tatami fill's rows after the same underlay and sewn in its own thread, its narrow stripes as
-runs (`generators::tartan`). Since M10.8 a ripple stitch sews lines that run along a satin column, read as
+runs (`generators::tartan`). Since M10.7 its rows can lie in a herringbone's bands, and its editor makes a
+sett from a code or a threadcount (`generators::tartan::editor`).
+Since M10.8 a ripple stitch sews lines that run along a satin column, read as
 a satin column reads its rails and rungs, or copies of a line that shrink to its target point, as one
 running stitch (`generators::ripple`). Since M10.11 the copies can follow a guide line or stand between a
 satin guide's rails. A grid may cross them. Clips cut the ripple and route its pieces as a tatami fill's rows.

@@ -137,7 +137,7 @@ another.
 | `SC-W0321` | Warning | Cross stitch grid too fine for the shortest stitch; needle points left out | M10 |
 | `SC-W0322` | Warning | Half cross with an even thread count; the odd count above sewn (as Ink/Stitch sews it) | M10 |
 | `SC-E0323` | Error | Tartan fill's sett can't be read; skipped (not JSON, no palette, or a threadcount or colour letters before M10.7) | M10 |
-| `SC-W0324` | Warning | Tartan's herringbone not sewn yet; rows sewn without it, until M10.7 sews it | M10 |
+| `SC-W0324` | Warning | Tartan's herringbone sewn as straight rows (retired): M10.7 sews herringbones | M10 |
 | `SC-W0325` | Warning | Tartan fill without a sett; Ink/Stitch's default sett sewn (as Ink/Stitch sews it) | M10 |
 | `SC-W0326` | Warning | Tartan sett with no stripe to sew; only the underlay sewn (as in Ink/Stitch) | M10 |
 | `SC-W0327` | Warning | Tartan sett too fine for the shortest stitch; needle points left out | M10 |
@@ -185,6 +185,7 @@ another.
 | `SC-I0818` | Info | Ink/Stitch file from an older version, read as Ink/Stitch updates it (the shapes given a default or a setting whose meaning has changed since, such as a fill's 3 mm stitches before its file version 4, counted for each change) | M3 |
 | `SC-E0819` | Error | More than one origin or stop position (Ink/Stitch's `origin` command, or more than one object named `stitch:origin`, 2 or more times, or its `stop_position` command or `stitch:stop-position` in a design that stops: no machine file is written, as Ink/Stitch writes none) | M8 |
 | `SC-E0820` | Error | VectorCraft selection not routed (no selected path has an effect of its own that the filter routes, satin for Auto-Route Satin Columns and stroke for Auto-Route Running Stitch, or 2 objects selected mark the route's start, or 2 its end: nothing changes) | M10 |
+| `SC-E0821` | Error | VectorCraft tartan's sett not set (StitchCraft Tartan's code can't be read, names letters the register uses for no colour, lacks a stripe or makes a setting longer than the fill's Sett holds, or no selected path takes a sett: nothing changes) | M10 |
 | `SC-I0901` | Info | Shapes digitized automatically (`--auto`, or VectorCraft's Auto effect), counted by their stitches (running stitches, satin columns or tatami fills) | M13 |
 | `SC-I0902` | Info | Satin column can't be made; filled (a part of an automatic line that turns more tightly than it is wide, is shorter than a CSS pixel or is a dot its cap draws, or a part of an automatic area whose triangles don't make a column round one of its lines or whose column would be read back otherwise) | M13 |
 | `SC-W0903` | Warning | Line too wide to fill; left out (an automatic line whose filled area would reach more than 10 m from the origin) | M13 |

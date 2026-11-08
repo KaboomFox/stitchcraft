@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkstitch="http://inkstitch.org/namespace"
+     width="100mm" height="100mm" viewBox="0 0 100 100">
+  <metadata><inkstitch:inkstitch_svg_version>4</inkstitch:inkstitch_svg_version></metadata>
+  <path id="square" d="M 10,10 H 50 V 50 H 10 Z" style="fill:#0e1f7c" inkstitch:fill_method="tartan_fill"
+        inkstitch:tartan="{&quot;symmetry&quot;: true, &quot;rotate&quot;: 0.0, &quot;scale&quot;: 100, &quot;offset_x&quot;: 0.0, &quot;offset_y&quot;: 0.0, &quot;palette&quot;: &quot;(#ed171f)/4.0 (#f0f0f0)1.5 (#0e1f7c)3.0 (#e8a900)/2.0&quot;, &quot;min_stripe_width&quot;: 1.0}"
+        inkstitch:herringbone_width_mm="3" inkstitch:trim_after="True"/>
+  <path id="turned" d="M 55,10 H 95 V 50 H 55 Z" style="fill:#000000" inkstitch:fill_method="tartan_fill"
+        inkstitch:tartan="{&quot;symmetry&quot;: true, &quot;rotate&quot;: -30.0, &quot;scale&quot;: 100, &quot;offset_x&quot;: 0.0, &quot;offset_y&quot;: 0.0, &quot;palette&quot;: &quot;(#e8a900)/2.0 (#000000)1.5 (#fe9e32)/2.5&quot;, &quot;min_stripe_width&quot;: 1.0}"
+        inkstitch:herringbone_width_mm="3" inkstitch:fill_underlay="False" inkstitch:trim_after="True"/>
+  <path id="disc" d="M 48,75 A 18,18 0 1 1 12,75 A 18,18 0 1 1 48,75 Z M 36,75 A 6,6 0 1 0 24,75 A 6,6 0 1 0 36,75 Z"
+        style="fill:#0a55a3;fill-rule:evenodd" inkstitch:fill_method="tartan_fill"
+        inkstitch:tartan="{&quot;symmetry&quot;: true, &quot;rotate&quot;: 30.0, &quot;scale&quot;: 100, &quot;offset_x&quot;: 0.0, &quot;offset_y&quot;: 0.0, &quot;palette&quot;: &quot;(#ed171f)/3.0 (#000000)2.0 (#ed171f)/1.5 | (#0a55a3)/2.5 (#f0f0f0)2.0 (#0a55a3)/2.0&quot;, &quot;min_stripe_width&quot;: 1.0}"
+        inkstitch:herringbone_width_mm="2" inkstitch:rows_per_thread="3" inkstitch:trim_after="True"/>
+  <path id="runs" d="M 55,55 H 95 V 95 H 55 Z" style="fill:#000000" inkstitch:fill_method="tartan_fill"
+        inkstitch:tartan="{&quot;symmetry&quot;: true, &quot;rotate&quot;: 0.0, &quot;scale&quot;: 100, &quot;offset_x&quot;: 0.0, &quot;offset_y&quot;: 0.0, &quot;palette&quot;: &quot;(#0a55a3)/4.0 (#f0f0f0)0.5 (#0a55a3)3.0 (#ed171f)0.8 (#000000)/4.0&quot;, &quot;min_stripe_width&quot;: 1.0}"
+        inkstitch:herringbone_width_mm="5" inkstitch:trim_after="True"/>
+</svg>

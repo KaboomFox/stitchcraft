@@ -21,6 +21,7 @@ pub(super) fn tartan(items: &[Item]) -> Tartan {
         weft: items.to_vec(),
         margin: 10.0,
         angle: -45.0,
+        herringbone: 0.0,
         spacing: 0.25,
         longest: 4.0,
         staggers: 4.0,
