@@ -112,12 +112,12 @@ is sewn once.
 
 ## Herringbone
 
-With `herringbone_width_mm` above 0 the rows lie in upright bands that wide, as a herringbone twill's ribs
-do. Each band's rows slant at 45° to the stripes, the other way from the band before's, whatever
-`tartan_angle` is. The stripes then show columns of chevrons. The warp's rows join along their stripes'
-edges in each band. The weft's rows run on from band to band along the stripes' edges, and each weft stripe
-sews as one line where it crosses the fill. The bands turn with the sett. 4 tartan fonts of Ink/Stitch's library set
-herringbones 1.6 to 5 mm wide.
+With `herringbone_width_mm` above 0 the rows lie in upright bands that wide, as a herringbone twill's ribs do.
+Each band's rows slant at 45° to the stripes, the other way from the band before's, whatever `tartan_angle`
+is. The stripes then show columns of chevrons. The warp's rows join along their stripes' edges in each band.
+The weft's rows run on from band to band along the stripes' edges, and each weft stripe sews as one line where
+it crosses the fill. The bands turn with the sett. 4 tartan fonts of Ink/Stitch's library set herringbones 1.6
+to 5 mm wide.
 
 <!-- shot: tartan-herringbones -->
 | Bands 3 mm wide | Bands 6 mm wide, 3 rows per thread | Bands 3 mm wide, turned 30° |

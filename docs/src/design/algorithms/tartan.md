@@ -57,15 +57,15 @@ isn't a number, can't be read.
 
 **Colour letters.** A code without brackets is a threadcount. Each of its stripes is a run of colour letters
 followed by its count of threads, as in `B/24 W4 R2`, and a `?` or a `*` may come between them. Letters
-without a count are passed over, and the fill reads each thread as 0.5 mm wide, as Ink/Stitch's tartan does. The letters, in capitals
-or not, stand for the shades the Scottish Register of Tartans publishes in "Tartan Register colours"
-(<https://www.tartanregister.gov.uk/docs/Colour_shades.pdf>), `B` for blue and `DG` for dark green. The
-list gives several shades for most of its 25 letters. StitchCraft's table (`generators::tartan::shades`)
-holds, for each letter, the shade of the list that Ink/Stitch sews, so that a sett written in letters sews
-the same threads in both programs. The list is
-Crown copyright. The register's copyright page (<https://www.tartanregister.gov.uk/copyright>) lets its
-text be reused with an acknowledgement, which `NOTICE` gives. Letters the register uses for no colour leave
-their stripe unsewn, with `SC-W0328`.
+without a count are passed over, and the fill reads each thread as 0.5 mm wide, as Ink/Stitch's tartan does.
+The letters, in capitals or not, stand for the shades the Scottish Register of Tartans publishes in "Tartan
+Register colours" (<https://www.tartanregister.gov.uk/docs/Colour_shades.pdf>), `B` for blue and `DG` for dark
+green. The list gives several shades for most of its 25 letters. StitchCraft's table
+(`generators::tartan::shades`) holds, for each letter, the shade of the list that Ink/Stitch sews, so that a
+sett written in letters sews the same threads in both programs. The list is Crown copyright. The register's
+copyright page (<https://www.tartanregister.gov.uk/copyright>) lets its text be reused with an
+acknowledgement, which `NOTICE` gives. Letters the register uses for no colour leave their stripe unsewn, with
+`SC-W0328`.
 
 **The register's threadcount.** The register's search gives a sett as a threadcount with a palette of its
 own. A line saying `Threadcount:` comes before the stripes, letters and counts run together as
@@ -164,20 +164,20 @@ box's left side, 0.005 CSS pixel apart so that no 2 bands' rows meet. Each band 
 and bands are laid while one starts before the box's right side. The bands turn with the sett. Their rows
 cross the stripes at 45°, whatever `tartan_angle` is.
 
-**A band's rows** join its 2 sides, each as long as the box is high plus the band's width and cut into
-equal steps no longer than the row spacing. A row goes from each step of the left side to the same step of
-the right side. In the first band, the third and so on, the left side starts a band's width above the box,
-and the rows run down to the right, as the canvas shows them. In the others it starts at the box's top, and
-the rows run up to the right. The bands so share their rows, each band's moved across and slanted its own
-way, and StitchCraft works them out once. Along each row the needle points are staggered from the band's first row,
-as straight rows' are. In the first band, the third and so on, the first `rows_per_thread` rows of every
-2 × `rows_per_thread` go to the weft and the others to the warp, and the other way round in the other bands.
-Each direction's rows of a band are taken in the order straight rows are, every other one sewn back.
+**A band's rows** join its 2 sides, each as long as the box is high plus the band's width and cut into equal
+steps no longer than the row spacing. A row goes from each step of the left side to the same step of the right
+side. In the first band, the third and so on, the left side starts a band's width above the box, and the rows
+run down to the right, as the canvas shows them. In the others it starts at the box's top, and the rows run up
+to the right. The bands so share their rows, each band's moved across and slanted its own way, and StitchCraft
+works them out once. Along each row the needle points are staggered from the band's first row, as straight
+rows' are. In the first band, the third and so on, the first `rows_per_thread` rows of every 2 ×
+`rows_per_thread` go to the weft and the others to the warp, and the other way round in the other bands. Each
+direction's rows of a band are taken in the order straight rows are, every other one sewn back.
 
 **The warp** is laid band by band. The second band, the fourth and so on come first, and then the first, the
-third and so on. In each band, each warp stripe's rows are joined along the stripe's edges and cut by the piece, as
-straight rows are, but a line that ends inside the piece doesn't run on to its rings. A warp colour comes
-in the order of its first line.
+third and so on. In each band, each warp stripe's rows are joined along the stripe's edges and cut by the
+piece, as straight rows are, but a line that ends inside the piece doesn't run on to its rings. A warp colour
+comes in the order of its first line.
 
 **The weft** is joined across the bands. Each band's weft rows are first joined end to start into one
 zigzag, in stitches no longer than the running stitch. Each weft stripe that lies over the piece cuts every
@@ -308,11 +308,11 @@ satin column's rings where its rungs pair them (`DEV-SAT-009`).
 TS-17B sews 6 tartans 40 mm square, each trimmed after its colours ([machine
 testing](../../plan/machine-testing.md)). One sett is mirrored at its ends, and one is repeated, written as
 Ink/Stitch's editor writes it. One has a warp and a weft apart, and one has stripes 0.5 and 0.8 mm wide sewn
-as runs. One is turned 30° and scaled by 150 %, and the last is a herringbone 3 mm wide. Each underlay sews in a colour of its sett other than its first
-stripe's, so the underlay is a colour block of its own: in the first stripe's colour, the jump from the
-underlay to the rows would leave its thread under them on the reference machine. Every stripe is one of
-Brother's threads, so both programs' files name each thread as itself. VectorCraft's Test Sheet filter
-draws TS-17B too, as its fill dialog shows a sett as text from M10.7.
+as runs. One is turned 30° and scaled by 150 %, and the last is a herringbone 3 mm wide. Each underlay sews in
+a colour of its sett other than its first stripe's, so the underlay is a colour block of its own: in the first
+stripe's colour, the jump from the underlay to the rows would leave its thread under them on the reference
+machine. Every stripe is one of Brother's threads, so both programs' files name each thread as itself.
+VectorCraft's Test Sheet filter draws TS-17B too, as its fill dialog shows a sett as text from M10.7.
 
 ## Properties (conformance)
 
