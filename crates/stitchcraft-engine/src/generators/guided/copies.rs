@@ -222,10 +222,27 @@ impl Bounds {
 
 #[cfg(test)]
 mod tests {
+    use stitchcraft_core::Budget;
+
     use super::*;
+    use crate::generators::tatami::fixture::rectangle;
 
     fn p(x: f64, y: f64) -> Point {
         Point::new(x, y).unwrap()
+    }
+
+    #[test]
+    fn a_line_meets_a_piece_it_crosses_or_lies_in() {
+        let meter = &mut Budget::DEFAULT.meter();
+        let piece = rectangle(4.0);
+        let rings = Rings::new(&piece, meter).unwrap();
+        let met = |xy: &[(f64, f64)], meter: &mut Meter| meets(&xy.iter().map(|&(x, y)| p(x, y)).collect::<Vec<_>>(), &rings, meter).unwrap();
+        assert!(met(&[(-1.0, 2.0), (11.0, 2.0)], meter), "across it");
+        assert!(met(&[(2.0, 1.0), (3.0, 2.0)], meter), "inside it");
+        // Past its top left corner, over the box of both sides there, meeting neither.
+        assert!(!met(&[(-1.0, 3.5), (1.0, 5.5)], meter));
+        // A line of no points meets nothing.
+        assert!(!met(&[], meter));
     }
 
     #[test]

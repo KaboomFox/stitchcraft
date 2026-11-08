@@ -336,6 +336,9 @@ fn a_row_in_step_sews_whole_stitches_from_its_start_round_its_corners() {
     assert_eq!(row(&[(0.0, 0.0), (1.2, 0.0)], 0.2, None, true), [(0.0, 0.0), (0.6, 0.0), (1.2, 0.0)]);
     // Nothing to sew, nothing sewn.
     assert_eq!(row(&[], 3.0, None, true), Vec::<(f64, f64)>::new());
+    // A row shorter than the shortest stitch, 0.3 mm here, is sewn as its ends, spread or in step.
+    let short = [(0.0, 0.0), (0.1, 0.0)];
+    assert_eq!((row(&short, 3.0, None, false), row(&short, 3.0, None, true)), (short.to_vec(), short.to_vec()));
 }
 
 #[test]

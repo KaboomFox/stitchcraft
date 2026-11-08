@@ -194,6 +194,25 @@ fn a_fill_is_sewn_by_its_method_and_without_a_longest_stitch_is_a_bug() {
     let tatami = [("row_spacing_mm", "wide"), ("guided_fill_strategy", "2")].into_iter().collect();
     let sewn = sew(&tatami, StitchType::GuidedFill, shared(Mm::new(4.0).ok()), &mut diagnostics);
     assert_eq!((sewn.is_none(), codes(&diagnostics)), (true, vec![Code::StitchTypeNotYet]));
+    // Copying its guide, it reads them, and is skipped.
+    let wrong = [("row_spacing_mm", "wide")].into_iter().collect();
+    let mut said = Vec::new();
+    assert!(sew(&wrong, StitchType::GuidedFill, shared(Mm::new(4.0).ok()), &mut said).is_none());
+    assert_eq!(codes(&said), [Code::ParamInvalid]);
+    // Every other method reads its own settings: only a bug would bring one to the tatami fill's, which
+    // skip it rather than sew it as a tatami fill.
+    let set = ParamSet::new();
+    let other = Sewing {
+        set: Cow::Borrowed(&set),
+        stitch_type: StitchType::GuidedFill,
+        shared: shared(Mm::new(4.0).ok()),
+        hints: Hints::default(),
+        own: Rgb::new(0, 0, 0),
+        gradient: None,
+    };
+    let mut said = Vec::new();
+    assert!(fill_settings(&other, &mut said).is_none());
+    assert_eq!(codes(&said), [Code::StitchTypeNotYet]);
     // A contour fill without a longest stitch is the same bug as a tatami fill's.
     let mut diagnostics = Vec::new();
     assert!(sew(&ParamSet::new(), StitchType::ContourFill, shared(None), &mut diagnostics).is_none());
@@ -254,6 +273,7 @@ fn each_fill_method_with_an_underlay_gives_it_and_sews_its_top_without_it() {
         (StitchType::ContourFill, true),
         (StitchType::MeanderFill, true),
         (StitchType::CircularFill, true),
+        (StitchType::GuidedFill, true),
         (StitchType::TartanFill, true),
         (StitchType::LinearGradientFill, true),
         (StitchType::CrossStitch, false),
@@ -266,6 +286,21 @@ fn each_fill_method_with_an_underlay_gives_it_and_sews_its_top_without_it() {
         assert_eq!(layers(&method), underlaid.then_some((1, 0.0, 0.3)), "{stitch_type:?}");
         assert_eq!(layers(&method.without_underlay()), underlaid.then_some((0, 0.0, 0.3)), "{stitch_type:?}");
     }
+    // A guided fill's top leaves out the underlay of the tatami fill it sews without a guide too.
+    let set = ParamSet::new();
+    let sewing = Sewing {
+        set: Cow::Borrowed(&set),
+        stitch_type: StitchType::GuidedFill,
+        shared,
+        hints: Hints::default(),
+        own: Rgb::new(0, 0, 0),
+        gradient: None,
+    };
+    let method = FillMethod::read(&sewing, &mut Vec::new()).unwrap();
+    let FillMethod::Guided(guided) = &method else { panic!("{method:?}") };
+    let FillMethod::Guided(top) = method.without_underlay() else { panic!("{method:?}") };
+    let plain = |guided: &Guided| guided.plain.fill.as_ref().map(|fill| fill.underlay.len());
+    assert_eq!((plain(guided), plain(&top)), (Some(1), Some(0)));
 }
 
 #[test]
