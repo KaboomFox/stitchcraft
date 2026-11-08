@@ -1,0 +1,4 @@
+id = "inkstitch-tartan-stop"
+requirements = ["REQ-SVG-008", "REQ-FILL-TRT-011"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/tartan-stop.svg"

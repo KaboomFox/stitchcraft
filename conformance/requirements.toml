@@ -1509,6 +1509,107 @@ rationale = "The other cross stitch methods are built from Ink/Stitch's behaviou
 milestone = "M10"
 status = "active"
 
+# ── Tartan fill ────────────────────────────────────────────────────────────────────────────────────
+
+[[req]]
+id = "REQ-FILL-TRT-001"
+area = "fill/tartan"
+level = "L2"
+statement = "A tartan fill's sett is its Ink/Stitch `tartan` setting, an object of JSON. Its `palette` code gives each stripe a colour in brackets, `#` and 3 or 6 hexadecimal digits or a colour name of SVG, and then its width in millimetres. A `?` before the width leaves the stripe unsewn and a `*` sews it in the colour of the last stripe sewn as a fill. A `|` parts the warp's stripes from the weft's, and without one the weft is the warp. Slashes, the dots of a repeated sett and any text between stripes are passed over, so the list Ink/Stitch writes for a repeated sett reads as its stripes. `rotate`, `scale`, `offset_x`, `offset_y` (by their sizes), `symmetry` and `min_stripe_width` take, when missing, the values Ink/Stitch's editor starts from. A direction whose stripes measure no width, or that sews no stripe in its own colour, sews nothing. An empty sett is Ink/Stitch's default, with SC-W0325, a colour that can't be read leaves its stripe unsewn, with SC-W0328, and a sett that can't be read, a threadcount or a code of colour letters among them, skips the element with SC-E0323."
+rationale = "Ink/Stitch's sett, read at d59c9ab (lib/tartan/utils.py: get_tartan_settings, get_tartan_stripes; lib/tartan/palette.py: update_from_code, parse_inkstitch_code, get_palette_width), which its tartan editor saves, and which its files and the 5 fonts of its library that sew tartans count on. Ink/Stitch stops with an error on a sett that isn't JSON or lacks a key, where StitchCraft says why or takes the editor's value."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-TRT-002"
+area = "fill/tartan"
+level = "L2"
+statement = "A sett's stripes are scaled by `scale` percent, and a stripe sewn in its own colour no wider than `min_stripe_width`, compared in CSS pixels, sews as a run along its middle: half its width goes to the stripe before it and half to those after it, each widened until a stripe left unsewn or sewn in the colour before it takes the half, or the next run gives its own. A run before any stripe sewn as a fill lies in the colour of the first stripe wider than the narrowest for a mirrored sett, and of the last for a repeated one. With `symmetry` on the sett is mirrored: it goes back from its last step but one to its second, the 2 it turns at and a run at either sewn once. Otherwise it repeats."
+rationale = "Ink/Stitch's full sett, read at d59c9ab (lib/tartan/utils.py: _stripes_to_sett, _get_last_fill_color) and run as a black box on setts with runs inside, first and last, mirrored and repeated, which lays a half stripe after each run more than once."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-TRT-003"
+area = "fill/tartan"
+level = "L2"
+statement = "Each piece of a tartan fill's parts, grown by expand_mm, has its stripes laid over a square round the middle of its bounds, as wide either way as the radius of the smallest circle round the piece plus a margin: the wider direction's stripes, or 2 rows per thread of rows, whichever is more. The square's left and top sides move out by the offsets. The warp's full sett is laid from the left side as upright bands and the weft's from the top as level bands, each in turn until a band starts past the far side, and all is turned by `rotate` degrees about the middle of the bounds. Bands of a colour that meet are one band, and a run lies along the line between 2 bands."
+rationale = "Ink/Stitch's stripes, read at d59c9ab (lib/stitches/tartan_fill.py: _get_dimensions, _get_rotation_center; lib/tartan/utils.py: stripes_to_shapes, _merge_polygons), and run as a black box on squares with turned and moved setts."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-TRT-004"
+area = "fill/tartan"
+level = "L2"
+statement = "A tartan's rows run across the square at `tartan_angle` to its stripes, from its turned left side to its turned right side, starting at the steps that cut the side's length into equal parts no longer than the row spacing. Along each row its needle points lie the longest stitch apart from a staggers-th of a stitch further on than the row before's, and its ends are points too. Rows go to the warp and the weft in turns of `rows_per_thread`, and each direction's rows are taken from the end of the left side sorted first by x, then y, every other one running back."
+rationale = "Ink/Stitch's rows, read at d59c9ab (lib/stitches/tartan_fill.py: _generate_tartan_lines, _split_warp_weft, _sort_lines; lib/stitches/utils/stitches.py: apply_stitches)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-TRT-005"
+area = "fill/tartan"
+level = "L2"
+statement = "In each band, each row of the band's direction that crosses it for more than half a CSS pixel gives its stretch inside the band, with its needle points, and each stretch is joined to the next by straight stitches no longer than the running stitch, unless either end lies within 0.005 pixel of the piece's rings. The zigzag is cut where it leaves the piece, and a line that ends inside the piece more than 0.05 pixel from its rings runs on along the band's edge to the nearest ring. Each colour's lines are the warp's bands' and then the weft's."
+rationale = "Ink/Stitch's lines of a colour, read at d59c9ab (lib/stitches/tartan_fill.py: _get_tartan_color_segments, _get_segment_lines, _get_connector, _connect_lines_to_outline)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-TRT-006"
+area = "fill/tartan"
+level = "L2"
+statement = "A tartan sews each part's underlay first, the tatami fill's, in the element's own thread, ending no colour block. Then each colour sewn as a fill, the warp's in the order its stripes first reach them and then the weft's, the last colour that has runs too moved to the end, sews its lines in its own thread, a colour block each: routed as a tatami fill's rows, the needle travelling along the outline between them, from where the colour before ended, or the needle, towards the end the next part or element offers, and without the travel before its first line and after its last. Without a needle or an end, the outline's second point stands for it."
+rationale = "Ink/Stitch's colours sewn as fills, read at d59c9ab (lib/stitches/tartan_fill.py: tartan_fill, _get_fill_stitch_groups, _segments_to_stitch_group; lib/stitches/linear_gradient_fill.py: remove_start_end_travel; lib/tartan/utils.py: sort_fills_and_strokes) and run as a black box, its plan of 3 colours a colour block each, with a trim after each when trim_after is on."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-TRT-007"
+area = "fill/tartan"
+level = "L2"
+statement = "A tartan's runs sew after every colour's lines, each colour's in its own thread and a colour block, the colour it shares with the fills first: the pieces of each run longer than 0.5 mm, in equal stitches no longer than the running stitch along the warp and the longest stitch along the weft, routed as a tatami fill's rows from where the last colour ended towards the end, their travel kept, and with bean_stitch_repeats on every stitch but the travel."
+rationale = "Ink/Stitch's runs, read at d59c9ab (lib/tartan/utils.py: _get_linestrings; lib/stitches/tartan_fill.py: _get_color_runs, _get_run_stitch_groups)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-TRT-008"
+area = "fill/tartan"
+level = "L2"
+statement = "With stop_at_ending_point on, every colour of a tartan keeps its travel, each colour sewn as a fill travelling from where the piece starts, and each colour's runs too, to the end the next part or element offers."
+rationale = "Ink/Stitch's stop_at_ending_point, read at d59c9ab (lib/stitches/tartan_fill.py: _get_fill_stitch_groups, _get_run_stitch_groups), where a colour then keeps its travel and starts where the fill starts."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-TRT-009"
+area = "fill/tartan"
+level = "L2"
+statement = "A tartan of several parts sews each part's underlay and colours in turn, and then, as Ink/Stitch sorts them, its underlays and colours sewn as fills each by where its colour first comes among them, then its runs the same way, so that each thread sews in one stretch."
+rationale = "Ink/Stitch's sort of a tartan's groups, read at d59c9ab (lib/elements/fill_stitch.py: to_stitch_groups, color_sort)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-TRT-010"
+area = "fill/tartan"
+level = "L2"
+statement = "A tartan with herringbone_width_mm above 0 sews its rows without a herringbone, as a tartan with a width of 0 sews them, and SC-W0324 says so, until M10.7 sews herringbones."
+rationale = "No silent fallbacks (AGENTS.md): a herringbone is planned for M10.7."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-FILL-TRT-011"
+area = "fill/tartan"
+level = "L3"
+statement = "The tartan fills StitchCraft sews TS-17B's tartans with, their setts mirrored and repeated, alike and apart in warp and weft, turned and scaled, and with stripes narrow enough to sew as runs, written as an SVG file with their Ink/Stitch parameters, sew in the Ink/Stitch that conformance/inkstitch/pin.toml names, run as a black box, as StitchCraft sews the sheet, by the measures of REQ-SVG-008 and within their tolerances. So do the tartans of the differential's own files: a sett with stripes left unsewn or sewn in the colour before them, moved by its offsets, a disc round a hole, 2 parts with rows at 30° and one row a thread, and a fill that stops at its end with its runs sewn as bean stitches. A measure that a case excuses with an entry of the deviations ledger may differ."
+rationale = "The tartan fill is built from Ink/Stitch's behaviour, and the differential is how a file is shown to sew the same in both."
+milestone = "M10"
+status = "active"
+
 # ── VectorCraft ────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]
