@@ -127,6 +127,7 @@ pub stitchcraft_core::diag::Code::VcNotConverted
 pub stitchcraft_core::diag::Code::VcNotPrinted
 pub stitchcraft_core::diag::Code::VcNotRouted
 pub stitchcraft_core::diag::Code::VcObjectIgnored
+pub stitchcraft_core::diag::Code::VcSettNotSet
 pub stitchcraft_core::diag::Code::VcSettingIgnored
 pub stitchcraft_core::diag::Code::VcSheetNotDrawn
 pub stitchcraft_core::diag::Code::VcTooOld
@@ -376,6 +377,7 @@ pub stitchcraft_core::Code::VcNotConverted
 pub stitchcraft_core::Code::VcNotPrinted
 pub stitchcraft_core::Code::VcNotRouted
 pub stitchcraft_core::Code::VcObjectIgnored
+pub stitchcraft_core::Code::VcSettNotSet
 pub stitchcraft_core::Code::VcSettingIgnored
 pub stitchcraft_core::Code::VcSheetNotDrawn
 pub stitchcraft_core::Code::VcTooOld

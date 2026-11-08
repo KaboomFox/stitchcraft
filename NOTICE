@@ -27,6 +27,11 @@ Entries are added here when a data table is derived from a third-party source.
   in a row cut the thread — comes from public descriptions (Brother's support pages, Wilcom's
   documentation, the EduTech Wiki's DST page) and agrees with pyembroidery's reader (MIT), observed the
   same way.
+- Tartan colour shades (crates/stitchcraft-engine/src/generators/tartan/shades.rs): for each of 25 colour
+  letters, the name and value of one of its shades, chosen from "Tartan Register colours"
+  (https://www.tartanregister.gov.uk/docs/Colour_shades.pdf). Crown copyright; source: the Scottish
+  Register of Tartans, "Tartan Register colours". Re-used free of charge, as the register's copyright terms
+  allow for its website's material (https://www.tartanregister.gov.uk/copyright).
 
 Third-party files
 -----------------

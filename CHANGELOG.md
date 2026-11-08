@@ -13,7 +13,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - A satin guide, a satin column or a guide of several subpaths, sets each copy across its rails where
     `satin_guide_pattern_position` places it, evenly spaced or at the rungs. `adaptive` places each copy
     wherever it clears the last. A closed line is centred between the rails, and an anchor line says which
-    points of the line lie on them. The ripple's `reverse_rails` and `swap_satin_rails` read the guide's rails, and a column's.
+    points of the line lie on them. The ripple's `reverse_rails` and `swap_satin_rails` read the guide's
+    rails, and a column's.
   - `grid_size_mm` adds a grid across the ripple's lines, sewn after them, or first with `grid_first`.
     `manual_pattern_placement` sews the line through its own nodes. Clip paths cut a ripple's needle
     points, and each part of their area routes the pieces as a tatami fill routes its rows.
@@ -30,6 +31,26 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     measure that `DEV-RUN-002` leaves. Every one of the 324 glyphs of the Ondulamarif fonts agrees or
     differs as the ledger explains, and the known difference M10.8 left them with is gone.
   - A user page shows guided ripples in pictures.
+- M10.7: herringbone tartans and an editor for setts (`REQ-FILL-TRT-012` to `REQ-FILL-TRT-016`,
+  `REQ-VC-021`).
+  - With `herringbone_width_mm` above 0 a tartan's rows lie in bands that wide, each band's rows slanting at
+    45° the other way from the band before, as Ink/Stitch sews them. The warp is laid band by band, and the
+    weft's rows are joined into a zigzag in each band and across the bands along each stripe's edges.
+    `SC-W0324` is retired: a herringbone no longer sews straight rows.
+  - A sett's code can be a threadcount of colour letters, `B/24 W4`, or the threadcount the Scottish
+    Register of Tartans' search gives with its palette. The letters stand for the register's shades, in a
+    table of StitchCraft's own, acknowledged in `NOTICE`.
+  - The editor for setts (`generators::tartan::editor`) makes a sett from a code with the width of a
+    thread, and writes its palette code and its `tartan` setting as Ink/Stitch's editor does.
+  - VectorCraft's fill dialog shows the sett as text, labelled Sett, for the tartan fill. A text needs
+    VectorCraft 0.14, so the fill effect now installs from 0.14, as the exporters do. StitchCraft Tartan
+    (`--features tartan`), a filter from VectorCraft 0.15, sets the selected paths' sett from a code, the
+    width of a thread and how the sett is laid, and says why when it can't (`SC-E0821`).
+  - TS-17B gains a herringbone 3 mm wide, and the Test Sheet filter draws TS-17B. The differential sews it
+    and a file of 4 herringbones alike in both programs, and the glyph differential the tartan fonts' 35
+    herringbone glyphs, which were known differences. `DEV-FILL-030` excuses Colorful's F. Ink/Stitch breaks
+    a weft line where its geometry library finds the line meets itself, and StitchCraft doesn't.
+    `DEV-SAT-009` excuses Colorful's ’. Golden changed: `TS-17B.pes`, with the herringbone.
 - M10.6: tartan fill without herringbone (`REQ-FILL-TRT-001` to `REQ-FILL-TRT-011`). `fill_method`
   `tartan_fill` sews Ink/Stitch's tartan fill, which was skipped with `SC-W0011`.
   - The sett is the `tartan` setting as Ink/Stitch's tartan editor saves it, a palette code of stripes that
