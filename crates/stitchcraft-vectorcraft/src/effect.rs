@@ -45,6 +45,7 @@ use stitchcraft_plan::{Rgb, Thread};
 use crate::PREVIEW_LEVEL;
 use crate::document::{ON_THE_OBJECT, stroke_style};
 use crate::geometry::{self, UNUSABLE_HINT};
+use crate::gradient;
 use crate::values::{settings, text};
 use crate::wire::{EffectInput, EffectObject, EffectStroke, Paint};
 use crate::writer::Geometry;
@@ -85,9 +86,17 @@ pub struct AutoEffect {
 /// on one of its object's fills or strokes, `SC-W0808` when the object's path cannot be used, and
 /// `SC-E0004` when reading it needs more work than the budget allows.
 pub fn read_effect(family: Family, input: &[u8], params: &[u8], budget: &Budget) -> Result<Effect, Diagnostic> {
-    let Given { path, rule, strokes, mut params, preview_level, .. } = given(input, params, budget)?;
+    let Given { path, rule, fills, strokes, mut params, preview_level } = given(input, params, budget)?;
     let (shape, stroked) = match family {
-        Family::Fill => (Shape::Fill { path, rule, gradient: None }, false),
+        Family::Fill => {
+            // A linear gradient fill sews the topmost fill's linear gradient, as `stitch export` does.
+            let topmost = fills.iter().rev().flatten().find(|paint| paint.paints()).filter(|_| gradient::sews(params.get("fill_method")));
+            let sewn = match topmost {
+                Some(paint) => gradient::linear(paint, &path, &mut budget.meter()).map_err(|_| too_much())?,
+                None => None,
+            };
+            (Shape::Fill { path, rule, gradient: sewn.and_then(|linear| linear.gradient) }, false)
+        }
         Family::Stroke | Family::Satin => {
             params.set(SATIN_COLUMN, if family == Family::Satin { "true" } else { "false" });
             match followed(&strokes) {
@@ -152,10 +161,15 @@ fn given(input: &[u8], params: &[u8], budget: &Budget) -> Result<Given, Diagnost
             let message = format!("{}, so the live effect leaves the object as it is.", why.why());
             return Err(Diagnostic::new(Code::VcGeometryUnusable, message).with_fix(Fix::Hint(UNUSABLE_HINT.to_string())));
         }
-        Err(_) => return Err(Diagnostic::new(Code::BudgetExhausted, "Reading the live effect's object needed more work than the budget allows.")),
+        Err(_) => return Err(too_much()),
     };
     let rule = if fill_rule.as_deref() == Some("evenodd") { FillRule::EvenOdd } else { FillRule::NonZero };
     Ok(Given { path, rule, fills, strokes, params: settings(&params), preview_level: params.get(PREVIEW_LEVEL).and_then(text) })
+}
+
+/// `SC-E0004`: reading the live effect's object needs more work than the budget allows.
+fn too_much() -> Diagnostic {
+    Diagnostic::new(Code::BudgetExhausted, "Reading the live effect's object needed more work than the budget allows.")
 }
 
 /// A live effect's element `vc:effect:<what>`, of `shape` with `params`, automatic or not.
