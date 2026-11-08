@@ -41,8 +41,11 @@ fn line(points: &[(f64, f64)]) -> Subpath {
     Subpath { start: p(points[0].0, points[0].1), segments: points[1..].iter().map(|&(x, y)| Segment::Line(p(x, y))).collect(), closed: false }
 }
 
+/// An element's id, its guide and its anchor line.
+type Steered<'s> = (&'s str, Option<Guide>, Option<[Point; 2]>);
+
 /// Each element's id, its guide and its anchor line.
-fn steered(svg: &Svg) -> Vec<(&str, Option<Guide>, Option<[Point; 2]>)> {
+fn steered(svg: &Svg) -> Vec<Steered<'_>> {
     svg.design.elements().iter().map(|e| (e.id.as_str(), e.hints.guide.clone(), e.hints.anchor)).collect()
 }
 

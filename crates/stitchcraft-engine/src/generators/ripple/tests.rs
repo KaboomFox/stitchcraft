@@ -7,7 +7,7 @@ use stitchcraft_core::{Budget, math};
 use super::lines::{CLOSED, MOST, bent, count, kind_of, lines, places, shortest, skipped, skipped_as, target};
 use super::sew::{manual, one_at_a_time};
 use super::*;
-use crate::design::{Segment, Subpath};
+use crate::design::{Join, Segment, Subpath};
 use crate::normalize::stroke::distance_to_segment;
 
 fn p(x: f64, y: f64) -> Point {
@@ -636,4 +636,42 @@ fn req_rip_016_lines_placed_by_hand_are_sewn_through_their_points_joined_by_even
     assert_eq!(manual(&near, false, 2.5, &mut Budget { max_stitches: 100, max_work: 3 }.meter()), Err(Exhausted::Work));
     // No stitch length cuts nothing.
     assert_eq!(manual(&near, false, 0.0, &mut Budget::DEFAULT.meter()).unwrap().len(), 4);
+}
+
+#[test]
+fn req_rip_012_copies_along_a_guide_line_are_of_the_outline_placed_again_and_others_of_the_outline_itself() {
+    // A curve's outline is its running stitch. Along a guide line, the copies are of that outline sewn again at
+    // the same lengths, which moves its needle points. A satin guide's copies, and copies placed by hand, are of
+    // the outline itself.
+    let curve = Subpath { start: p(0.0, 0.0), segments: vec![Segment::Cubic(p(3.0, 6.0), p(7.0, -6.0), p(10.0, 0.0))], closed: false };
+    let meter = &mut Budget::DEFAULT.meter();
+    let points = stroke::flattened(&curve, meter).unwrap();
+    let rng = SplitMix64::new(7);
+    let built = |guide: RippleGuide, with: &[(&str, &str)]| {
+        let ripple = Ripple { guide: Some(guide), ..ripple(with, None) };
+        let built = one_line(&curve, &points, &ripple, (&[2.5], None, &rng), &mut Vec::new(), &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+        built.lines
+    };
+    let copied = |outline: &[Point], guide: &RippleGuide, with: &[(&str, &str)]| {
+        let own = ripple(with, None).ripple;
+        let placing = Placing { own: &own, adds: false, closed: false, anchor: None };
+        guided::copies(outline, guide, &placing, &mut Vec::new(), &mut Budget::DEFAULT.meter()).unwrap().unwrap().lines
+    };
+    let outline = running::outline(&curve, &[2.5], (0.2, 0.3), meter).unwrap().unwrap();
+    let again = running::along_pattern(&outline, (&[2.5], 0.2, 0.3), None, (&rng, 0), meter).unwrap();
+    assert_ne!(again, outline, "the outline placed again differs");
+    let line = RippleGuide::Line { path: open(&[&[(0.0, 0.0), (0.0, 10.0)]]), nodes: false };
+    let with = [("line_count", "3"), ("scale_end", "100")];
+    assert_eq!(built(line.clone(), &with), copied(&again, &line, &with));
+    let rails = SatinParams::from_set(&ParamSet::new()).unwrap().params;
+    let satin = RippleGuide::Satin {
+        path: open(&[&[(0.0, 0.0), (20.0, 0.0)], &[(0.0, 4.0), (20.0, 4.0)]]),
+        width: Mm::ZERO,
+        join: Join::UNSET,
+        params: Box::new(rails),
+    };
+    assert_eq!(built(satin.clone(), &with), copied(&outline, &satin, &with));
+    // By hand, the copies are of the curve's nodes.
+    let by_hand = [("line_count", "3"), ("scale_end", "100"), ("manual_pattern_placement", "true")];
+    assert_eq!(built(line.clone(), &by_hand), copied(&[p(0.0, 0.0), p(10.0, 0.0)], &line, &by_hand));
 }

@@ -367,6 +367,20 @@ fn req_rip_013_adaptive_places_a_copy_where_its_box_clears_the_last_one_s_moved_
 }
 
 #[test]
+fn req_rip_013_an_adaptive_guide_places_1000_copies_at_most_and_says_how_many_places_it_found() {
+    // A line 1 mm long across rails 1 mm apart and 100 mm long: each copy is a segment across them, and with
+    // min_line_dist_mm 0.01 each clears the last, so every pair, 0.1 CSS pixels apart, holds one.
+    let sections = vec![[vec![p(0.0, 0.0), p(100.0, 0.0)], vec![p(0.0, 1.0), p(100.0, 1.0)]]];
+    let meter = &mut Budget::DEFAULT.meter();
+    let tried = satin::ripple_pairs(&sections, ADAPTIVE_STEP, 0.0, meter).unwrap().len();
+    assert!(tried > MOST, "{tried}");
+    let own = own(&[("min_line_dist_mm", "0.01")]);
+    let copies = adaptive(&[p(0.0, 0.0), p(1.0, 0.0)], &sections, (p(0.0, 0.0), 1.0, [1.0, 0.0]), &own, meter).unwrap();
+    assert_eq!((copies.lines.len(), copies.cut), (MOST, Some(Cut::Places(tried))));
+    assert_eq!(rounded(&copies.lines[1]), [(0.026, 0.0), (0.026, 1.0)]);
+}
+
+#[test]
 fn a_guide_reads_as_a_satin_column_where_it_is_one_or_has_several_subpaths() {
     let own = own(&[("reverse_rails", "second"), ("swap_satin_rails", "true")]);
     let read = |subpaths: &[&[(f64, f64)]], with: &[(&str, &str)]| {
