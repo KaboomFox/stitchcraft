@@ -84,8 +84,9 @@ To digitize a photo:
 ## How it chooses the stitches
 
 Automatic digitizing chooses the stitches of each shape without settings. A shape with settings sews as they
-say. Each picture below shows shapes sewn as drawn, as a design sews without `--auto`, and then digitized
-automatically. [Image to embroidery](../../design/image-to-embroidery.md) gives every rule in full.
+say. The pictures below show shapes as they are drawn, and then digitized automatically. Without `--auto`,
+each of those shapes sews as one [tatami fill](tatami-fill.md), whatever its width.
+[Image to embroidery](../../design/image-to-embroidery.md) gives every rule in full.
 
 ### Stitches by width
 
@@ -108,13 +109,13 @@ pictures are drawn from `docs/fixtures/widths.svg`, a line 0.6 mm wide, a letter
 **As drawn**
 
 <!-- shot: auto-widths-drawn -->
-![A blue line 0.6 mm wide, a red letter C 3 mm wide and a gold disc 16 mm across, each traced as an area and sewn as drawn: a tatami fill each](../../images/generated/auto-widths-drawn.png)
+![3 shapes as drawn, in flat colours in a row on white. On the left lies a blue line 18 mm long and 0.6 mm wide. Beside it are a red letter C 16 mm tall and 3 mm wide, open to the right, and a gold disc 16 mm across.](../../images/generated/auto-widths-drawn.png)
 <!-- /shot -->
 
 **Digitized**
 
 <!-- shot: auto-widths -->
-![The same shapes digitized automatically. The line runs along its middle, tripled, and the C sews as a satin column between its edges. The disc is still a tatami fill.](../../images/generated/auto-widths.png)
+![The same shapes digitized automatically. The line runs along its middle, tripled, and the C sews as a satin column between its edges. The disc sews as a tatami fill.](../../images/generated/auto-widths.png)
 <!-- /shot -->
 
 ### Shapes in parts
@@ -127,19 +128,19 @@ balloon on a string 0.8 mm wide, each one area.
 **As drawn**
 
 <!-- shot: auto-parts-drawn -->
-![A red lollipop, a disc 14 mm across on a stick 2.4 mm wide, and a blue balloon 12 mm by 15 mm on a string 0.8 mm wide, each one area, sewn as drawn: a tatami fill each](../../images/generated/auto-parts-drawn.png)
+![2 shapes as drawn, side by side in flat colours on white, each one area. On the left is a red lollipop, a disc 14 mm across on a stick 2.4 mm wide. On the right is a blue balloon 12 mm wide and 15 mm tall on a string 0.8 mm wide. The stick and the string end level at the bottom.](../../images/generated/auto-parts-drawn.png)
 <!-- /shot -->
 
 **Digitized**
 
 <!-- shot: auto-parts -->
-![The same shapes digitized automatically. The discs are tatami fills as before, and the stick sews as a satin column and the string as a triple run, each into its fill.](../../images/generated/auto-parts.png)
+![The same shapes digitized automatically. The lollipop's disc and the balloon sew as tatami fills. The stick sews as a satin column and the string as a triple run, each into its fill.](../../images/generated/auto-parts.png)
 <!-- /shot -->
 
 ### Neighbours
 
-The shapes of a traced picture meet, and sewn as drawn they sew badly there. Digitizing mends that in 4
-steps:
+The shapes of a traced picture meet, and sewn without `--auto` they sew badly there. Digitizing mends that
+in 4 steps:
 
 1. **The background.** The lowest shape, when it covers the whole picture with the other shapes drawn
    on it, is the background, the fabric's own colour, and is left out (`SC-W0906`, and
@@ -158,13 +159,14 @@ steps:
    touches (`SC-I0904`, `auto_overlap_mm`). An area filled whole under its details is cut away under them,
    0.4 mm inside their edges, so that each place sews once.
 
-The pictures are drawn from `docs/fixtures/traced-badge.svg`, a badge traced on white: as drawn, the white
-is sewn too.
+The pictures are drawn from `docs/fixtures/traced-badge.svg`, a badge traced on white with its colours
+abutting. Without `--auto`, the white round the badge sews too, and each colour sews up to the next with no
+overlap.
 
 **As drawn**
 
 <!-- shot: traced-badge-drawn -->
-![The traced badge sewn as drawn. Its white background sews too, and each colour is a tatami fill over the colours under it.](../../images/generated/traced-badge-drawn.png)
+![The traced badge as drawn, 60 mm square, in 4 flat colours that meet edge to edge. White fills the square round a red disc 50 mm across. A blue square 20 mm wide lies in the middle of the disc, and a gold disc 10 mm across in the middle of the blue square.](../../images/generated/traced-badge-drawn.png)
 <!-- /shot -->
 
 **Digitized**
