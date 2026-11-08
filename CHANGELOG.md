@@ -20,6 +20,28 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     document without them. `deny.toml` is to let `rand` and `getrandom` in through `tract-onnx-opl` alone,
     an exception the owner accepted with the ADR.
   - M13.14's requirements are written as planned, `REQ-CLI-014` to `REQ-CLI-019`.
+- M10.12: linear gradient fill (`REQ-FILL-GRD-001` to `REQ-FILL-GRD-009`, `REQ-SVG-014`, `REQ-VC-022`).
+  `fill_method` `linear_gradient_fill` sews Ink/Stitch's linear gradient fill, which was skipped with
+  `SC-W0011`.
+  - A fill's shape keeps its linear gradient, its start and end in the design's millimetres and its stops.
+    The SVG reader places it as a viewer does, through the gradients its `href` names, in user units or in
+    shares of the shape's box, after its `gradientTransform`. The VectorCraft reader places a gradient paint
+    by its `geom`, or fits it to the object at its angle as VectorCraft does, in `stitch export` and in the
+    fill's live effect.
+  - Rows square to the gradient, a row spacing apart and staggered, cover each piece. Between 2 stops they go
+    to the 2 colours in Ink/Stitch's fixed pattern, and a transparent stop leaves its rows out. Each colour's
+    rows are routed as a tatami fill's, after the tatami fill's underlay in the first stop's colour, each
+    colour a colour block in its own thread, trimmed after with `trim_after`. With `stop_at_ending_point`
+    the last 2 colours sew on to the fill's end.
+  - New codes: `SC-W0329`, a linear gradient fill without a gradient, whose colour fades out along `angle`,
+    and `SC-W0330`, a stop passed over. The deviations ledger gains `DEV-FILL-031`, `DEV-FILL-032` and
+    `DEV-SVG-027`.
+  - The Test Sheet filter draws a linear gradient fill with its gradient paint, which VectorCraft keeps, so
+    it draws TS-17B's gradients too.
+  - TS-17B gains 3 gradients for MC-12 in a third row, and the differential sews them and 6 files of
+    gradients in Ink/Stitch too. They agree by every measure, but where the ledger excuses them. A user page
+    has pictures of gradient fills. Golden changed: `TS-17B.pes`, for its new row of gradients, below M10.7's
+    herringbone.
 - M10.11: guided ripples (`REQ-RIP-012` to `REQ-RIP-019`). A ripple stitch with a guide sews copies of its
   line along the guide, as Ink/Stitch's guided ripple does.
   - Along a guide line, each copy moves to its place and scales from `scale_start` to `scale_end` percent
@@ -2694,6 +2716,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed `conformance/golden/testsheets/TS-17B.pes` (M10.12). The sheet gains a third row of 3 linear
+  gradients 40 mm square below its tartans. They sew in 7 colour blocks, a trim after each. The plan
+  spans 130 × 130 mm and sews 45,390 stitches with 35 jumps, 7,395 and 7 more. The 5 tartans and the
+  herringbone's first colour sew as before, 22.5 mm higher in the file, whose middle moved down with the
+  new row. The herringbone's other 4 colours are routed otherwise, now that the gradients come after them.
 - Changed `conformance/golden/testsheets/TS-13C.pes` (automatic digitizing, the end of a column along its
   cut). The digitized star's right-hand point now sews from its tip to its cut, ending beside the star's
   middle, as its line now ends at the triangles that touch the cut. Its underlay runs out to the tip first.

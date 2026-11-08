@@ -29,7 +29,14 @@ fn p(x: f64, y: f64) -> Point {
 /// A square 10 mm a side, filled.
 fn square(params: &[(&str, &str)]) -> Element {
     let segments = [p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0)].map(Segment::Line).to_vec();
-    element(Shape::Fill { path: Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments, closed: true }] }, rule: FillRule::NonZero }, params)
+    element(
+        Shape::Fill {
+            path: Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments, closed: true }] },
+            rule: FillRule::NonZero,
+            gradient: None,
+        },
+        params,
+    )
 }
 
 /// A satin column of the subpaths `rails`, with `params`.
