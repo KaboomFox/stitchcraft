@@ -13,7 +13,8 @@ them: the tatami fill's underlay, which every fill method but those `to_stitch_g
 reads `angle`, `running_stitch_length_mm`, `running_stitch_tolerance_mm` and `staggers`, and
 `row_spacing_mm` and `max_stitch_length_mm` where its own are not set (`UNDERLAY_READS`). A method's own
 sewing, its `do_<method>` function, reads the properties it takes from the element, as the circular fill
-reads `skip_last` (`method_reads`). The script finds those methods and what each reads in Ink/Stitch's
+reads `skip_last`, and so do the functions it hands the element to, as the tartan fill reads `skip_last`
+in its own module (`method_reads`). The script finds those methods and what each reads in Ink/Stitch's
 code, and compares each row with them.
 
 A declared default is what Ink/Stitch's settings window shows. What it sews for a file that sets no value
@@ -333,7 +334,8 @@ def underlay(root):
 def method_reads(root, theirs):
     """{fill method: the parameters it reads as it sews}: the element's properties that its `do_<method>`
     function reads as `self.<property>`, each the parameter whose `@param` declares it. A method that hands
-    the element to a function of its own reads there too, which this doesn't follow."""
+    the element to a function of its own, as the tartan fill hands it to `tartan_fill`, reads there too: in
+    every function of that function's module that takes the element (`handed_reads`)."""
     properties = {fact["property"]: name for (section, name), fact in theirs.items() if section == "fill" and fact["property"]}
     methods = methods_of(root, "fill")
     tree = ast.parse((root / ELEMENTS["fill"]).read_text(encoding="utf-8"))
@@ -341,8 +343,46 @@ def method_reads(root, theirs):
     for node in ast.walk(tree):
         if isinstance(node, ast.FunctionDef) and node.name.removeprefix("do_") in methods and node.name.startswith("do_"):
             used = {n.attr for n in ast.walk(node) if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name) and n.value.id == "self"}
+            for call in ast.walk(node):
+                handed = isinstance(call, ast.Call) and any(isinstance(a, ast.Name) and a.id == "self" for a in call.args)
+                if handed and isinstance(call.func, ast.Name):
+                    used |= handed_reads(root, call.func.id)
             reads[node.name.removeprefix("do_")] = {properties[attr] for attr in used if attr in properties}
     return reads
+
+
+# Where the functions the fill element hands itself to are imported from, by name (`handed_reads`).
+STITCHES = "lib/stitches/__init__.py"
+
+
+def handed_reads(root, function):
+    """The element's properties read in the module of `function`, a function of `lib/stitches` the fill
+    element hands itself to: in each of its functions, `<parameter>.<property>` for each parameter annotated
+    as the element, `FillStitch`. An empty set for a function imported from anywhere else."""
+    package = ast.parse((root / STITCHES).read_text(encoding="utf-8"))
+    modules = [
+        n.module for n in package.body
+        if isinstance(n, ast.ImportFrom) and n.level == 1 and n.module and any(a.name == function and a.asname is None for a in n.names)
+    ]
+    if not modules:
+        return set()
+    tree = ast.parse((root / "lib/stitches" / f"{modules[0]}.py").read_text(encoding="utf-8"))
+    used = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.FunctionDef):
+            continue
+        names = {a.arg for a in node.args.args if a.annotation is not None and literal_name(a.annotation) == "FillStitch"}
+        used |= {n.attr for n in ast.walk(node) if isinstance(n, ast.Attribute) and isinstance(n.value, ast.Name) and n.value.id in names}
+    return used
+
+
+def literal_name(annotation):
+    """The name an annotation gives, written as a name or as a string: `FillStitch` or `'FillStitch'`."""
+    if isinstance(annotation, ast.Name):
+        return annotation.id
+    if isinstance(annotation, ast.Constant) and isinstance(annotation.value, str):
+        return annotation.value
+    return None
 
 
 def meander_tiles(root):

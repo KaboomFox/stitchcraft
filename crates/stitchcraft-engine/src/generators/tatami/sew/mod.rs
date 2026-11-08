@@ -214,7 +214,8 @@ fn sewn(
 }
 
 /// What a fill sews over each part of its region but its own top: its underlay's layers over the part shrunk
-/// by `inset`, then its top over the part grown by `expand`, for a tatami fill and a contour fill alike.
+/// by `inset`, then its top over the part grown by `expand`, for a tatami fill and a contour fill alike, and
+/// a tartan fill's underlay ([`underlay`]).
 pub(crate) struct Parts<'f> {
     /// The underlay's layers, in the order they are sewn.
     pub(crate) underlay: &'f [Layer],
@@ -291,35 +292,20 @@ pub(crate) fn parts_sewn(
     let ordered = in_order(region, needle, meter)?;
     let end = if parts.ends_near { next.map(|next| next.next_stitch(Own::Area(&region.parts), meter)).transpose()?.flatten() } else { None };
     let mut needle = needle;
-    let (mut runs, mut warnings) = (Vec::new(), Vec::new());
-    let mut tally = Tally { parts: ordered.len(), ..Tally::default() };
+    let mut said = PartsSewn { runs: Vec::new(), warnings: Vec::new(), tally: Tally { parts: ordered.len(), ..Tally::default() } };
     for (i, polygon) in ordered.iter().enumerate() {
         let here = match (parts.ends_near, ordered.get(i + 1)) {
             (false, _) => None,
             (true, Some(after)) => nearest_pair(&rings_of(polygon), &rings_of(after), meter)?.map(|(on, _)| on),
             (true, None) => end,
         };
-        let mut sewn = Vec::new();
-        if !parts.underlay.is_empty() {
-            let (pieces, gone) = pieces(polygon, -parts.inset, &mut warnings, meter)?;
-            tally.inset_gone += usize::from(gone);
-            // Sewn alone, each layer ends where the top would, rather than where it started.
-            let end = here.filter(|_| top.is_none());
-            for piece in &pieces {
-                let part = Part { polygon: piece, rings: Rings::new(piece, meter)? };
-                for layer in parts.underlay {
-                    let (layer_runs, rowless) = part.sew(layer, needle, end, rng, meter, &mut warnings)?;
-                    tally.bare += usize::from(rowless);
-                    needle = layer_runs.iter().rev().find_map(|run| run.last().copied()).or(needle);
-                    append(&mut sewn, layer_runs, layer.travel.jump);
-                }
-            }
-        }
+        // Sewn alone, each layer ends where the top would, rather than where it started.
+        let mut sewn = underlay(parts, polygon, &mut needle, here.filter(|_| top.is_none()), &mut said, rng, meter)?;
         if let Some(top) = top.as_deref_mut() {
-            let (pieces, gone) = pieces(polygon, parts.expand, &mut warnings, meter)?;
-            tally.expand_gone += usize::from(gone);
+            let (pieces, gone) = pieces(polygon, parts.expand, &mut said.warnings, meter)?;
+            said.tally.expand_gone += usize::from(gone);
             for (k, piece) in pieces.iter().enumerate() {
-                let top_runs = top(piece, polygon, needle, here, rng, meter, &mut warnings)?;
+                let top_runs = top(piece, polygon, needle, here, rng, meter, &mut said.warnings)?;
                 needle = top_runs.iter().rev().find_map(|run| run.last().copied()).or(needle);
                 if k > 0 && parts.force_locks {
                     sewn.extend(top_runs);
@@ -328,15 +314,48 @@ pub(crate) fn parts_sewn(
                 }
             }
         }
-        let sewn: Vec<Vec<Point>> = sewn
-            .into_iter()
-            .map(|run| thin(run, |a, b| !at_least(a.distance(*b), parts.top.min_stitch), |_| false, |_, _| ()))
-            .filter(|run| !run.is_empty())
-            .collect();
+        let sewn = thinned(sewn, parts.top.min_stitch);
         needle = sewn.iter().rev().find_map(|run| run.last().copied()).or(needle);
-        runs.extend(sewn);
+        said.runs.extend(sewn);
     }
-    Ok(PartsSewn { runs, warnings, tally })
+    Ok(said)
+}
+
+/// The runs of the layers of `parts`' underlay over `polygon` shrunk by its inset, each layer from the needle
+/// to near `end`, or back to where it started without one, joined into runs as each layer's jump length
+/// allows; none without underlay. The needle moves on to where the last ended, and what is said and counted
+/// goes to `said`. A tartan fill sews the same underlay before its colours.
+pub(crate) fn underlay(
+    parts: &Parts,
+    polygon: &Polygon,
+    needle: &mut Option<Point>,
+    end: Option<Point>,
+    said: &mut PartsSewn,
+    rng: &mut SplitMix64,
+    meter: &mut Meter,
+) -> Result<Vec<Vec<Point>>, Exhausted> {
+    let mut sewn = Vec::new();
+    if parts.underlay.is_empty() {
+        return Ok(sewn);
+    }
+    let (pieces, gone) = pieces(polygon, -parts.inset, &mut said.warnings, meter)?;
+    said.tally.inset_gone += usize::from(gone);
+    for piece in &pieces {
+        let part = Part { polygon: piece, rings: Rings::new(piece, meter)? };
+        for layer in parts.underlay {
+            let (layer_runs, rowless) = part.sew(layer, *needle, end, rng, meter, &mut said.warnings)?;
+            said.tally.bare += usize::from(rowless);
+            *needle = layer_runs.iter().rev().find_map(|run| run.last().copied()).or(*needle);
+            append(&mut sewn, layer_runs, layer.travel.jump);
+        }
+    }
+    Ok(sewn)
+}
+
+/// `runs` thinned to `min_stitch`, as finalize thins them: each needle point nearer the one before than it
+/// left out, but a run's last, and a run left without points left out with it.
+pub(crate) fn thinned(runs: Vec<Vec<Point>>, min_stitch: f64) -> Vec<Vec<Point>> {
+    runs.into_iter().map(|run| thin(run, |a, b| !at_least(a.distance(*b), min_stitch), |_| false, |_, _| ())).filter(|run| !run.is_empty()).collect()
 }
 
 /// The segments of the top rows of the tatami `fill` over `region`, each part grown by its `expand` as
@@ -357,12 +376,12 @@ pub fn top_rows(region: &Region, fill: &Fill, meter: &mut Meter) -> Result<Vec<S
 #[derive(Default)]
 pub(crate) struct Tally {
     /// The parts sewn.
-    parts: usize,
+    pub(crate) parts: usize,
     /// The layers of underlay that found no row.
-    bare: usize,
+    pub(crate) bare: usize,
     /// The parts that `expand` and that `inset` left nothing of.
-    expand_gone: usize,
-    inset_gone: usize,
+    pub(crate) expand_gone: usize,
+    pub(crate) inset_gone: usize,
 }
 
 impl Tally {

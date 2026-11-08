@@ -21,7 +21,7 @@ which copies Ink/Stitch's code ([ADR-0001](../../docs/src/design/adr/0001-licens
 | `fonts.toml` | Ink/Stitch's fonts, the corpus of the glyph differential: their repository and commit, with the SHA-256 of the archive GitHub makes of it |
 | `glyphs.toml` | The glyph differential's excuses: the measures the deviations ledger explains, and for which glyphs |
 | `requirements.txt` | The Python packages that Ink/Stitch runs with, pinned by version and hash |
-| `stubs/wx/` | A stand-in for wxPython, which Ink/Stitch's extensions import as they load and writing a file never uses |
+| `stubs/wx/` | A stand-in for wxPython, which Ink/Stitch's extensions import as they load and writing a file never uses. Its `wx.Colour` raises `PyNoAppError`, as wxPython does without an app. Ink/Stitch's tartan then reads its colours with inkex, as it does from the command line |
 
 ## Running the differential by hand
 

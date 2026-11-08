@@ -7,7 +7,10 @@
 //! the default Ink/Stitch sews, because defaults are part of the contract (`docs/src/design/params.md` ›
 //! Naming rules); one with StitchCraft's own origin must not; the lock and method identifiers must match.
 //! The SVG adapter's commands and clone settings must be Ink/Stitch's, and the attributes it reads must be
-//! listed; the file versions' changes and renamed commands are checked by [`crate::contract_versions`]. A
+//! listed; the file versions' changes and renamed commands are checked by [`crate::contract_versions`]. An
+//! element's setting that Ink/Stitch declares no parameter for, such as a tartan's sett, which its own
+//! editor writes, is an attribute of kind `element`: the registry may declare it with an Ink/Stitch
+//! origin, and the attributes' table links it as registered ([`Contract::setting`]). A
 //! clone's settings belong to no stitch type, so their StitchCraft column says what the adapter does with
 //! each (`stitchcraft_svg::inkstitch::CLONE_SETTINGS`), as the commands' does.
 //!
@@ -202,7 +205,8 @@ registry uses these names as its keys so files move between the tools unchanged
   *registered*: StitchCraft reads and checks it under the same key, meaning and default; it changes the
   stitches once its stitch type or feature lands (see *Phase* and the parameter's reference entry).
   *deviates*: registered, with a meaning that differs as its reference entry describes. A clone's settings
-  say what the SVG adapter does with them.
+  say what the SVG adapter does with them. An element's other attribute that the registry declares, such
+  as a tartan's sett, is registered too.
 - **Applies to** lists the stitch types Ink/Stitch's settings window shows the parameter for. *Read by*
   adds those whose sewing reads it without showing it, as a contour fill's underlay reads the tatami
   fill's `angle`, and StitchCraft's registry gives it those too.
@@ -311,10 +315,12 @@ impl Contract {
              | Attribute | Kind | Phase | StitchCraft |\n|---|---|---|---|\n",
         );
         for a in &self.attribute {
-            let ours = match (READ_ATTRIBUTES.contains(&a.name.as_str()), a.milestone.as_str()) {
-                (true, _) => "read",
-                (false, NOT_PLANNED) => "not planned",
-                (false, _) => "planned",
+            let declared = registry.iter().find_map(|group| group.specs.iter().find(|s| s.key == a.name).map(|_| *group));
+            let ours = match (READ_ATTRIBUTES.contains(&a.name.as_str()), declared.filter(|_| a.kind == SETTING), a.milestone.as_str()) {
+                (true, ..) => "read".to_string(),
+                (false, Some(group), _) => format!("[registered](../user/reference/{})", param_pages::anchor(group, &a.name)),
+                (false, None, NOT_PLANNED) => "not planned".to_string(),
+                (false, None, _) => "planned".to_string(),
             };
             md.push_str(&format!("| `{}` | {} | {} | {ours} |\n", a.name, a.kind.replace('_', " "), phase(&a.phase, &a.milestone)));
         }
@@ -322,6 +328,12 @@ impl Contract {
         let registered = self.param.iter().filter(|p| declaration(registry, p).is_some()).count();
         md.push_str(&format!("\n_{} parameter declarations, {registered} registered in StitchCraft._\n", self.param.len()));
         md
+    }
+
+    /// Whether `key` is an element's setting that Ink/Stitch declares no parameter for: an attribute of kind
+    /// [`SETTING`], such as a tartan's sett, which Ink/Stitch's tartan editor writes and its fill reads.
+    fn setting(&self, key: &str) -> bool {
+        self.attribute.iter().any(|a| a.name == key && a.kind == SETTING)
     }
 
     /// Where `registry` and the data file disagree, one line each.
@@ -333,13 +345,18 @@ impl Contract {
             // StitchCraft's own would read a value written for Ink/Stitch's meaning. A declaration is
             // compared with the rows for its stitch types (`REQ-PRM-005`).
             let named = self.param.iter().any(|p| p.name == key);
-            match (spec.origin, named) {
-                (Origin::StitchCraft, false) => {}
-                (Origin::StitchCraft, true) => {
+            match (spec.origin, named, self.setting(key)) {
+                (Origin::StitchCraft, false, false) => {}
+                (Origin::StitchCraft, true, _) => {
                     problems.push(format!("`{key}` is an Ink/Stitch parameter ({DATA}): declare it with an Ink/Stitch origin"));
                 }
-                (_, false) => problems.push(format!("`{key}` is declared with an Ink/Stitch origin, but {DATA} has no such parameter")),
-                (origin, true) => {
+                (Origin::StitchCraft, false, true) => {
+                    problems.push(format!("`{key}` is an Ink/Stitch element's setting ({DATA}): declare it with an Ink/Stitch origin"));
+                }
+                // Ink/Stitch's settings window doesn't show it, so it has no type or default to compare.
+                (_, false, true) => {}
+                (_, false, false) => problems.push(format!("`{key}` is declared with an Ink/Stitch origin, but {DATA} has no such parameter")),
+                (origin, true, _) => {
                     let rows: Vec<&Param> = self.param.iter().filter(|p| p.name == key && p.covers(spec.applies_to)).collect();
                     let uncovered: Vec<String> =
                         spec.applies_to.iter().filter(|t| !rows.iter().any(|p| p.covers(&[**t]))).map(|t| format!("`{}`", t.id())).collect();
@@ -503,6 +520,9 @@ fn declaration<'r>(registry: &[&'r ParamGroup], row: &Param) -> Option<(&'r Para
     registry.iter().find_map(|group| group.specs.iter().find(|s| s.key == row.name && row.covers(s.applies_to)).map(|spec| (*group, spec)))
 }
 
+/// The kind of attribute that is an element's own setting, not declared as a parameter ([`Contract::setting`]).
+const SETTING: &str = "element";
+
 /// The milestone of a row StitchCraft does not plan to support.
 const NOT_PLANNED: &str = "—";
 
@@ -523,7 +543,9 @@ fn status(registry: &[&ParamGroup], row: &Param) -> String {
 /// Whether a StitchCraft kind can hold the values of an Ink/Stitch type and unit.
 fn compatible(kind: Kind, their_type: &str, unit: &str) -> bool {
     match kind {
-        Kind::Length { .. } => their_type == "float" && matches!(unit, "mm" | "mm/cycle"),
+        // Ink/Stitch's window shows a tartan's herringbone width in whole millimetres, and its code reads it as
+        // a float, as it reads the other lengths.
+        Kind::Length { .. } => matches!(their_type, "float" | "int") && matches!(unit, "mm" | "mm/cycle"),
         Kind::LengthList { .. } => matches!(their_type, "float" | "string" | "str") && unit.starts_with("mm"),
         // A cross stitch's cells and its grid's offset are 1 length or 2, across and down, which Ink/Stitch reads as
         // it reads a value for each side.
@@ -964,6 +986,43 @@ mod tests {
         assert!(page.contains("| `stroke_first` | element | P1 (M8) | read |"), "{page}");
         assert!(page.contains("| `tartan` | element | P3 (M10) | planned |"), "{page}");
         assert!(page.contains("| `sew_stack` | sew stack | — | not planned |"), "{page}");
+    }
+
+    #[test]
+    fn an_element_s_setting_the_registry_declares_is_registered_and_takes_an_ink_stitch_origin() {
+        const SETT: ParamSpec = ParamSpec {
+            key: "tartan",
+            label: "Sett",
+            help: " The sett.\n",
+            kind: Kind::Text { max_bytes: 10_000 },
+            default: "",
+            family_defaults: &[],
+            group: "Tartan",
+            applies_to: &[StitchType::TartanFill],
+            visible_when: None,
+            stability: Stability::Stable,
+            origin: Origin::InkStitch,
+        };
+        const OURS: &[ParamSpec] = &[ParamSpec { origin: Origin::StitchCraft, ..SETT }];
+        let tartan =
+            |kind: &str| format!("{}[[attribute]]\nname = \"tartan\"\nkind = \"{kind}\"\nphase = \"P3\"\nmilestone = \"M10\"\n", data("0.25"));
+        let theirs = ParamGroup { name: "TartanParams", help: " Tartan.\n", applies_to: &[StitchType::TartanFill], specs: &[SETT] };
+        let ours = ParamGroup { specs: OURS, ..theirs };
+        let contract = Contract::parse(&tartan("element")).unwrap();
+        assert_eq!(contract.check(&[&theirs]), Vec::<String>::new());
+        assert!(contract.render(&[&theirs]).contains("| `tartan` | element | P3 (M10) | [registered](../user/reference/params/tartan.md#tartan) |"));
+        assert_eq!(
+            contract.check(&[&ours]),
+            ["`tartan` is an Ink/Stitch element's setting (conformance/inkstitch-params.toml): declare it with an Ink/Stitch origin"]
+        );
+        // An attribute of another kind is no setting of an element's: neither registered nor declared.
+        let contract = Contract::parse(&tartan("pattern")).unwrap();
+        assert_eq!(
+            contract.check(&[&theirs]),
+            ["`tartan` is declared with an Ink/Stitch origin, but conformance/inkstitch-params.toml has no such parameter"]
+        );
+        assert!(contract.render(&[&theirs]).contains("| `tartan` | pattern | P3 (M10) | planned |"));
+        assert_eq!(contract.check(&[&ours]), Vec::<String>::new());
     }
 
     #[test]

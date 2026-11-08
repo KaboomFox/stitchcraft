@@ -39,8 +39,10 @@ twice, 4 there and back 4 times.
 **Bean stitch.** How many times to go back and forth over each stitch of the fill's path, before its repeats: 1
 sews every stitch three times (there, back and there again), 2 five times. Several numbers
 separated by spaces are taken in turn along the stitches: "1 0" makes every other stitch bold.
-A circular fill's travel between the pieces of its spiral is sewn once, and takes its turn.
+A circular fill's travel between the pieces of its spiral is sewn once, and takes its turn. A
+tartan fill sews its runs so, its rows and its travel once.
 
 - **Accepts:** 1 to 16 whole numbers from 0 to 10, separated by spaces
 - **Default:** `0`
+- **Applies to:** Contour fill, Meander fill, Circular fill, Tartan fill
 - **Ink/Stitch:** same key, meaning and default

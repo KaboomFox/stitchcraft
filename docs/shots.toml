@@ -211,6 +211,14 @@ style = "realistic"
 scale = 4.0
 alt = "TS-17C as it will sew. In blue, the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E's arms. Below them the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next. Below the routed letters, in red, a network of 6 bean-stitched lines, twice: on the left sewn as drawn, line by line, with a jump thread from each line to the next, and on the right routed, sewn in one go but for the jump to the line that crosses itself, above the others, and back. Below the network, in red, 2 crosses of satin columns 5 mm wide, a bar and a post each, as drawn on the left and with their underlays first on the right, which look alike from above. At the bottom, in green, 3 ripple stitches: a rainbow of 7 arches, a wave whose copies shrink to a point above it, and a circle that spirals in to its middle."
 
+[[shot]]
+id = "testsheet-ts-17b"
+kind = "stitch"
+sheet = "TS-17B"
+style = "realistic"
+scale = 4.0
+alt = "TS-17B as it will sew: 5 tartans 40 mm square in 2 rows, all woven in rows that slant across their stripes. In the top row, left to right, are stripes of red, white, Prussian blue and gold mirrored at their ends, stripes of green, black and white repeated, and a warp of red and black under a weft of blue and white. Below are blue and black stripes with thin white and red lines along their middles, and stripes of gold, black and tangerine turned 30°."
+
 # ── How-to pages ────────────────────────────────────────────────────────────────────────────────────
 
 [[shot]]
@@ -689,6 +697,32 @@ alt = "A red heart 32 mm wide in cross stitch on a 3 mm grid with 4 threads, eac
 panels = [
   { caption = "Simple cross", params = { fill_method = "cross_stitch" } },
   { caption = "Flipped", params = { fill_method = "cross_stitch", cross_stitch_method = "simple_cross_flipped" } },
+]
+
+[[shot]]
+id = "tartan-setts"
+kind = "stitch"
+fixture = "docs/fixtures/tartan.svg"
+style = "realistic"
+scale = 8.0
+alt = "A square 30 mm a side sewn as a tartan fill in 3 setts, its rows slanting across the stripes so that the warp's and the weft's colours weave"
+panels = [
+  { caption = "Mirrored", params = { fill_method = "tartan_fill", fill_underlay = "false", tartan = '{"palette": "(#ed171f)/4 (#f0f0f0)1.5 (#0e1f7c)3 (#e8a900)/2"}' } },
+  { caption = "Repeated", params = { fill_method = "tartan_fill", fill_underlay = "false", tartan = '{"palette": "(#00673e)5 (#000000)1.5 (#00673e)2 (#f0f0f0)2", "symmetry": false}' } },
+  { caption = "Warp and weft apart", params = { fill_method = "tartan_fill", fill_underlay = "false", tartan = '{"palette": "(#ed171f)/3 (#000000)2 (#ed171f)/1.5 | (#0a55a3)/2.5 (#f0f0f0)2 (#0a55a3)/2"}' } },
+]
+
+[[shot]]
+id = "tartan-runs"
+kind = "stitch"
+fixture = "docs/fixtures/tartan.svg"
+style = "realistic"
+scale = 8.0
+alt = "The square sewn as a tartan fill with stripes narrow enough to sew as runs along their middles, and with a sett turned and scaled"
+panels = [
+  { caption = "Stripes of 0.5 and 0.8 mm as runs", params = { fill_method = "tartan_fill", fill_underlay = "false", tartan = '{"palette": "(#0a55a3)/4 (#f0f0f0)0.5 (#0a55a3)3 (#ed171f)0.8 (#000000)/4"}' } },
+  { caption = "Turned 30°, at 150 %", params = { fill_method = "tartan_fill", fill_underlay = "false", tartan = '{"palette": "(#e8a900)/2 (#000000)1.5 (#fe9e32)/2.5", "rotate": 30, "scale": 150}' } },
+  { caption = "4 rows per thread", params = { fill_method = "tartan_fill", fill_underlay = "false", rows_per_thread = "4", tartan = '{"palette": "(#e8a900)/2 (#000000)1.5 (#fe9e32)/2.5", "rotate": 30, "scale": 150}' } },
 ]
 
 [[shot]]

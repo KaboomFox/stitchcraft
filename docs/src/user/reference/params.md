@@ -58,10 +58,11 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Satin parameters](params/satin.md) | 34 | Satin column, E-stitch, S-stitch, Zigzag satin |
 | [Pull parameters](params/pull.md) | 2 | Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill |
 | [Fill parameters](params/fill.md) | 2 | Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill |
-| [Tatami parameters](params/tatami.md) | 15 | Tatami fill, Contour fill, Meander fill, Circular fill |
+| [Tatami parameters](params/tatami.md) | 15 | Tatami fill, Contour fill, Meander fill, Circular fill, Tartan fill |
 | [Contour parameters](params/contour.md) | 4 | Contour fill |
 | [Meander parameters](params/meander.md) | 6 | Meander fill |
 | [Cross parameters](params/cross.md) | 8 | Cross stitch |
+| [Tartan parameters](params/tartan.md) | 5 | Tartan fill |
 | [Path fill parameters](params/path-fill.md) | 3 | Contour fill, Meander fill, Circular fill |
 | [Auto parameters](params/auto.md) | 5 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
 
@@ -114,6 +115,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`flip_exponent`](params/ripple.md#flip_exponent) | Flip the spacing | Ripple parameters |
 | [`force_lock_stitches`](params/common.md#force_lock_stitches) | Always lock | Common parameters |
 | [`gap_fill_rows`](params/tatami.md#gap_fill_rows) | Gap-filling rows | Tatami parameters |
+| [`herringbone_width_mm`](params/tartan.md#herringbone_width_mm) | Herringbone width | Tartan parameters |
 | [`join_style`](params/ripple.md#join_style) | Join style | Ripple parameters |
 | [`join_style`](params/contour.md#join_style) | Join style | Contour parameters |
 | [`line_count`](params/ripple.md#line_count) | Lines | Ripple parameters |
@@ -150,6 +152,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`reverse`](params/ripple.md#reverse) | Reverse | Ripple parameters |
 | [`reverse_rails`](params/satin.md#reverse_rails) | Reverse rails | Satin parameters |
 | [`row_spacing_mm`](params/tatami.md#row_spacing_mm) | Row spacing | Tatami parameters |
+| [`rows_per_thread`](params/tartan.md#rows_per_thread) | Rows per thread | Tartan parameters |
 | [`running_stitch_length_mm`](params/running.md#running_stitch_length_mm) | Stitch length | Running parameters |
 | [`running_stitch_position`](params/satin.md#running_stitch_position) | Running stitch position | Satin parameters |
 | [`running_stitch_tolerance_mm`](params/running.md#running_stitch_tolerance_mm) | Curve tolerance | Running parameters |
@@ -167,9 +170,12 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`staggers`](params/tatami.md#staggers) | Staggers | Tatami parameters |
 | [`start_at_nearest_point`](params/satin.md#start_at_nearest_point) | Start at nearest point | Satin parameters |
 | [`stop_after`](params/common.md#stop_after) | Stop after | Common parameters |
+| [`stop_at_ending_point`](params/tartan.md#stop_at_ending_point) | Stop at the end position | Tartan parameters |
 | [`stroke_method`](params/stroke.md#stroke_method) | Method | Stroke parameters |
 | [`stroke_pull_compensation_mm`](params/zigzag-stroke.md#stroke_pull_compensation_mm) | Pull compensation | Zigzag stroke parameters |
 | [`swap_satin_rails`](params/satin.md#swap_satin_rails) | Swap rails | Satin parameters |
+| [`tartan`](params/tartan.md#tartan) | Sett | Tartan parameters |
+| [`tartan_angle`](params/tartan.md#tartan_angle) | Row angle | Tartan parameters |
 | [`ties`](params/common.md#ties) | Lock stitches | Common parameters |
 | [`trim_after`](params/common.md#trim_after) | Trim after | Common parameters |
 | [`underlay_underpath`](params/tatami.md#underlay_underpath) | Underlay underpath | Tatami parameters |

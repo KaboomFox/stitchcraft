@@ -5,6 +5,35 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M10.6: tartan fill without herringbone (`REQ-FILL-TRT-001` to `REQ-FILL-TRT-011`). `fill_method`
+  `tartan_fill` sews Ink/Stitch's tartan fill, which was skipped with `SC-W0011`.
+  - The sett is the `tartan` setting as Ink/Stitch's tartan editor saves it, a palette code of stripes that
+    gives each a colour and a width. Warp and weft have the same stripes or their own, and the sett is
+    mirrored or repeated, scaled, turned and moved.
+    The list the editor writes for a repeated sett reads too. Stripes no wider than `min_stripe_width` sew
+    as runs along their middles, after the fills.
+  - Rows at `tartan_angle` to the stripes go to the warp and the weft in turns of `rows_per_thread`, their
+    needle points the longest stitch apart. Each band's rows are joined along its edges, and each colour's
+    lines are routed as a tatami fill's rows, after the tatami fill's underlay in the element's own thread.
+    Each colour sews in its own thread, a colour block trimmed after with `trim_after`, and with
+    `stop_at_ending_point` each colour ends where the fill ends. A stripe of the element's own colour sews in
+    the element's own thread, so that a PES file writes the colour once.
+  - New settings: `tartan`, `tartan_angle`, `rows_per_thread`, `herringbone_width_mm` and
+    `stop_at_ending_point`. A tartan also reads the tatami fill's `skip_last` as Ink/Stitch's does. Its runs
+    read `bean_stitch_repeats`, and `max_stitch_length_mm` applies to it. New codes: `SC-E0323`,
+    `SC-W0324`, `SC-W0325`, `SC-W0326`, `SC-W0327` and `SC-W0328`. A herringbone sews straight rows until
+    M10.7, and says so.
+  - VectorCraft's fill dialog offers the tartan's numbers, but no sett before M10.7, so a tartan made there
+    sews Ink/Stitch's default sett. The compatibility contract lists the `tartan` attribute as registered.
+  - A tartan in a run of M10.15's underlays first sews its underlay and its top as 2 layers, as the other
+    fills do. Most tartans sew in several threads, and so join no run.
+  - TS-17B is drawn with 5 tartans for MC-12, and the differential sews them and 4 files of tartans in
+    Ink/Stitch too: they agree by every measure. Its wxPython stand-in raises `PyNoAppError` for
+    `wx.Colour`, as wxPython does without an app, so Ink/Stitch reads a tartan's colours as from the
+    command line. The glyph differential now sews the 5 tartan fonts' glyphs, which it listed until now.
+    The 35 that set a herringbone are known differences until M10.7, and so is the S-stitch satin column of
+    Colorful's ’, which starts elsewhere than Ink/Stitch's. A user page has pictures of tartan fills. Golden
+    added: `TS-17B.pes`.
 - M10.8: ripple stitch, between rails and towards a target point (`REQ-RIP-001` to `REQ-RIP-011`). A stroke
   whose `stroke_method` is `ripple_stitch` sews lines that spread out from it, as Ink/Stitch's ripple stitch
   does, all of them one running stitch. A stroke of 2 lines or more is a satin column's rails and rungs, and
@@ -2572,6 +2601,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Added `conformance/golden/testsheets/TS-17B.pes` (M10.6), the tartans of the new fills' sheet that MC-12
+  sews: 23 colour blocks, 28,658 stitches.
 - Changed `conformance/golden/testsheets/TS-17C.pes` (M10.8). The sheet gains 3 ripple stitches at its
   bottom, below M10.15's crossing columns, in green after a second colour change. The plan spans 82 × 153 mm,
   and sews 5,115 stitches, 285 more. The letters, the network and the crossing columns sew as before, but

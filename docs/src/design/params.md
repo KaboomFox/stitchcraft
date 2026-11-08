@@ -209,7 +209,10 @@ its stitch types is planned, and the check leaves it out.
 ## Naming rules
 
 1. If Ink/Stitch has the parameter with the same meaning, **use its attribute name verbatim**
-   (`row_spacing_mm`). This keeps SVG files compatible with no mapping table.
+   (`row_spacing_mm`). This keeps SVG files compatible with no mapping table. A setting that Ink/Stitch
+   saves on the shape and reads as it sews, without a parameter in its window, takes its name too: a
+   tartan's sett, `tartan`, which its tartan editor writes. The contract lists it with the other attributes,
+   as an element's setting. Ink/Stitch's window gives it no type or default, and the contract compares none.
 2. If our meaning differs, keep the name, mark `origin: InkStitchDeviates`, and record the difference in
    the deviations ledger (`conformance/deviations.toml`). An entry that changes how other keys of
    Ink/Stitch's read or sew lists them under `params`, and each key's reference entry shows it.

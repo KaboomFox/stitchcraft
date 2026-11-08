@@ -180,6 +180,27 @@ deviation = "DEV-RUN-003"
 fonts = ["manga_impact"]
 glyphs = ["&"]
 
+# Known differences: follow-up work, not yet explained by the ledger or fixed.
+
+# Ink/Stitch's tartan herringbones, which StitchCraft sews as straight rows until M10.7 and says so
+# (SC-W0324). 35 glyphs of Colorful, Emilio 20 tartan and Kum Tsoan tartan set herringbones 1.6 to 5 mm
+# wide and differ in their stitches, and 5 of them in their trims and jumps too: Colorful's Œ takes 2,201
+# stitches in StitchCraft and 2,862 in Ink/Stitch.
+[[known]]
+measures = ["stitches", "trims", "jumps"]
+follow_up = "M10.7 sews tartan herringbones"
+codes = ["SC-W0324"]
+
+# Colorful's ’: its S-stitch satin column, sewn alone without the glyph's tartan, sews otherwise than
+# Ink/Stitch's. Before M8.6's satin changes (#237) it overlapped Ink/Stitch's by 0.575, with the same 81
+# stitches and size, starting 1.7 mm from where Ink/Stitch's starts. Since them it takes 91 stitches, 10.6 ×
+# 13.0 mm against 10.0 × 12.8 mm, and overlaps by 0.417. The glyph was listed until M10.6 sewed its tartan.
+[[known]]
+measures = ["size", "overlap"]
+follow_up = "the S-stitch satin column of Colorful's ’ sews otherwise than Ink/Stitch's"
+fonts = ["colorful"]
+glyphs = ["’"]
+
 # Ripple stitches along a guide line, which StitchCraft leaves out (SC-W0802): each ripple shrinks to its target
 # point, where Ink/Stitch moves the copies of its line along the guide. The Ondulamarif fonts draw their
 # punctuation and the accents of their XL letters so.

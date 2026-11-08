@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkstitch="http://inkstitch.org/namespace"
+     width="100mm" height="100mm" viewBox="0 0 100 100">
+  <metadata><inkstitch:inkstitch_svg_version>4</inkstitch:inkstitch_svg_version></metadata>
+  <path id="parts" d="M 5,10 H 30 V 40 H 5 Z M 40,10 H 65 V 40 H 40 Z" style="fill:#ed171f" inkstitch:fill_method="tartan_fill"
+        inkstitch:tartan="{&quot;symmetry&quot;: true, &quot;rotate&quot;: 0.0, &quot;scale&quot;: 100, &quot;offset_x&quot;: 0.0, &quot;offset_y&quot;: 0.0, &quot;palette&quot;: &quot;(#ed171f)/3.0 (#70bc1f)2.0 (#0a55a3)/0.5&quot;, &quot;min_stripe_width&quot;: 1.0}"
+        inkstitch:trim_after="True"
+        inkstitch:tartan_angle="30" inkstitch:rows_per_thread="1"/>
+</svg>

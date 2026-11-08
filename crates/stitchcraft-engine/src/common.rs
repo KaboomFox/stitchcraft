@@ -39,7 +39,7 @@ pub const UNDERLAYS_FIRST: &str = "underlays_first";
 /// The stitch types with a longest stitch: manual stitch and satin columns, whatever their method, split
 /// longer stitches, a tatami fill sews its rows in stitches that long, and a contour fill its rings. A
 /// meander or circular fill's underlay sews its rows so, its path or spiral sewn in the running stitch's
-/// length.
+/// length. A tartan fill sews its rows and its weft's runs so, as Ink/Stitch's does.
 const LONGEST: &[StitchType] = &[
     StitchType::ManualStitch,
     StitchType::SatinColumn,
@@ -50,6 +50,7 @@ const LONGEST: &[StitchType] = &[
     StitchType::ContourFill,
     StitchType::MeanderFill,
     StitchType::CircularFill,
+    StitchType::TartanFill,
 ];
 
 /// The stitch types that vary at random, and so take a seed: running stitch's random lengths (ripple
@@ -152,7 +153,7 @@ params! {
         /// Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as
         /// its split method says. Empty, a stitch is split only where it is longer than the machine sews. A
         /// tatami fill sews its rows in stitches this long, and a contour fill its rings. A meander or
-        /// circular fill's underlay sews its rows so.
+        /// circular fill's underlay sews its rows so, and a tartan fill its rows and its weft's runs.
         max_stitch_length_mm: OptionalLength = "", label "Longest stitch", range (0.1, 25.0), applies LONGEST,
             defaults [Family::Fill => "4"];
     }
@@ -222,7 +223,12 @@ mod tests {
             matches!(t.family(), Family::Satin)
                 || matches!(
                     t,
-                    StitchType::ManualStitch | StitchType::TatamiFill | StitchType::ContourFill | StitchType::MeanderFill | StitchType::CircularFill
+                    StitchType::ManualStitch
+                        | StitchType::TatamiFill
+                        | StitchType::ContourFill
+                        | StitchType::MeanderFill
+                        | StitchType::CircularFill
+                        | StitchType::TartanFill
                 )
         };
         assert_eq!(longest.applies_to, StitchType::ALL.iter().copied().filter(has).collect::<Vec<_>>());
@@ -236,8 +242,9 @@ mod tests {
             StitchType::ContourFill,
             StitchType::MeanderFill,
             StitchType::CircularFill,
+            StitchType::TartanFill,
         ];
-        assert_eq!(types.map(longest_for), [None, None, Some(4.0), Some(4.0), Some(4.0), Some(4.0)]);
+        assert_eq!(types.map(longest_for), [None, None, Some(4.0), Some(4.0), Some(4.0), Some(4.0), Some(4.0)]);
         // A running stitch reads none, whatever the element sets.
         let set: ParamSet = [(MAX_STITCH_LENGTH, "abc")].into_iter().collect();
         assert_eq!(CommonParams::from_set_as(&set, StitchType::RunningStitch).unwrap().params.max_stitch_length_mm, None);

@@ -143,6 +143,20 @@ fn req_fill_005_the_fill_dialog_offers_every_method_but_legacy_fill() {
 }
 
 #[test]
+fn the_fill_dialog_offers_a_tartan_s_numbers_and_not_its_sett() {
+    // A sett is a text, which VectorCraft 0.12 and 0.13 refuse in a manifest: the dialog holds none before
+    // M10.7, and a tartan fill made in it sews Ink/Stitch's default sett (vectorcraft-integration.md).
+    let fill = family(Family::Fill);
+    let keys: Vec<&str> = fill.params.iter().map(|(key, _)| *key).collect();
+    for key in ["tartan_angle", "rows_per_thread", "herringbone_width_mm", "stop_at_ending_point"] {
+        assert!(keys.contains(&key), "{key}");
+    }
+    assert!(!keys.contains(&"tartan"));
+    // 62 of the 64 that every release VectorCraft's gate tests takes.
+    assert!(keys.len() <= limits::MAX_PARAMS, "{}", keys.len());
+}
+
+#[test]
 fn req_prm_005_each_family_s_dialog_has_its_own_declaration_of_a_key() {
     // A list for zigzag strokes and one length for satin columns, each with its own range and default.
     const SATIN: &[ParamSpec] = &[ParamSpec {

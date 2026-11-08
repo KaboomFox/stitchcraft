@@ -45,6 +45,9 @@ pub const PATH_FILLS: &[StitchType] = &[StitchType::ContourFill, StitchType::Mea
 /// The path fills whose path can be smoothed: a circular fill's spiral cannot, as in Ink/Stitch.
 const SMOOTHED: &[StitchType] = &[StitchType::ContourFill, StitchType::MeanderFill];
 
+/// The fills whose stitches bean stitch sews back and forth: the path fills', and a tartan fill's runs.
+const BEANED: &[StitchType] = &[StitchType::ContourFill, StitchType::MeanderFill, StitchType::CircularFill, StitchType::TartanFill];
+
 params! {
     /// A fill sewn as a path, a contour, meander or circular fill's: how the path is smoothed, and its
     /// repeats and bean stitch, which Ink/Stitch declares for its fills apart from a stroke's. Bean stitch
@@ -67,8 +70,9 @@ params! {
         /// How many times to go back and forth over each stitch of the fill's path, before its repeats: 1
         /// sews every stitch three times (there, back and there again), 2 five times. Several numbers
         /// separated by spaces are taken in turn along the stitches: "1 0" makes every other stitch bold.
-        /// A circular fill's travel between the pieces of its spiral is sewn once, and takes its turn.
-        bean_stitch_repeats: CountList = "0", label "Bean stitch", range (0, 10);
+        /// A circular fill's travel between the pieces of its spiral is sewn once, and takes its turn. A
+        /// tartan fill sews its runs so, its rows and its travel once.
+        bean_stitch_repeats: CountList = "0", label "Bean stitch", range (0, 10), applies BEANED;
     }
 }
 

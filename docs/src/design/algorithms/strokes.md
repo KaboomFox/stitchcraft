@@ -126,7 +126,9 @@ Where 2 segments meet smoothly nothing more is needed.
   far again, the other way round, so `k` repeats sew 2^(k−1) passes ([fills](fills.md#stitches)).
 - A circular fill's bean stitch leaves out the stitches that run between the pieces of its spiral, but
   each of those stitches takes a step of the list, as in Ink/Stitch
-  ([circular fill](fills.md#circular-fill)).
+  ([circular fill](fills.md#circular-fill)). A tartan fill takes the fills' bean stitch for its runs
+  alone, the needle's travel between them left out the same way, and its rows and its needle's travel
+  take the running stitch's length, as a tatami fill's travel does ([tartan fill](tartan.md#a-colours-lines)).
 
 ### Random length
 
