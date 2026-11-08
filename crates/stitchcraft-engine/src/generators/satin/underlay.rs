@@ -81,6 +81,15 @@ pub(crate) enum Layer {
 }
 
 impl Layer {
+    /// Its needle points, each once, whatever its repeats: where it sews.
+    pub(crate) fn points(&self) -> impl Iterator<Item = Point> + '_ {
+        let ways: Vec<&[Point]> = match self {
+            Layer::Walk { way, .. } => vec![way],
+            Layer::Contour([a, b]) | Layer::Zigzag { ways: [a, b], .. } => vec![a, b],
+        };
+        ways.into_iter().flatten().copied()
+    }
+
     /// Its parts, each a run of needle points, as they are sewn when nothing cuts the column.
     pub(crate) fn parts(self, meter: &mut Meter) -> Result<Vec<Vec<Point>>, Exhausted> {
         Ok(match self {
