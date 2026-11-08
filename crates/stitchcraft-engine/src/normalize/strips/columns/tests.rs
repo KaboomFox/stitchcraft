@@ -36,7 +36,7 @@ fn piece(part: &Polygon) -> f64 {
 
 /// The columns of `part`, `None` when its triangles make none, or the triangulation's failure.
 fn made(part: &Polygon) -> Result<Option<Vec<Column>>, Broken> {
-    columns(part, piece(part), &[], &mut Budget::DEFAULT.meter()).unwrap()
+    columns(part, piece(part), &[], 1.0, &mut Budget::DEFAULT.meter()).unwrap()
 }
 
 /// The columns of `part`.
@@ -160,6 +160,25 @@ fn req_auto_016_an_end_along_an_edge_takes_the_whole_straight_edge() {
     // Beyond a chord of 1.45 mm, the 3 mm edge is too long, and runs along the column: the end is at its
     // farthest point.
     assert_eq!(place.farthest(&[1, 2, 3], (1.0, 0.0), 1.45), Some((1, 1)));
+}
+
+#[test]
+fn req_auto_016_an_end_along_a_cut_runs_from_its_first_edge_on_the_cut_to_its_last() {
+    // The outline of a column 10 mm long and 3 mm wide, cut from broad parts at both ends: its left end, in 2
+    // pieces from (0, 3) through (0, 1.5) to (0, 0), is the ring's last 2 edges, and its right end the edge
+    // from (10, 0) to (10, 3). An end's places are places of the ring: the left end runs from place 3 to
+    // place 0, round past the ring's last place, and the right end from place 1 to place 2. An arc with no
+    // edge along a cut has no such end.
+    let ring_points = [p(0.0, 0.0), p(10.0, 0.0), p(10.0, 3.0), p(0.0, 3.0), p(0.0, 1.5)];
+    let triangulation = Triangulation { points: ring_points.to_vec(), triangles: Vec::new() };
+    let skeleton = Skeleton { triangulation, graph: Graph::new(), walked: Vec::new() };
+    let outline = Outline { rings: Vec::new(), triangle: BTreeMap::new() };
+    let ring = [0, 1, 2, 3, 4];
+    let cuts = [[p(0.0, 3.0), p(0.0, 0.0)], [p(10.0, 0.0), p(10.0, 3.0)]];
+    let place = Place { skeleton: &skeleton, owner: &[], line: 0, outline: &outline, ring: &ring, cuts: &cuts };
+    assert_eq!(place.along_cut(&[2, 3, 4, 0, 1]), Some((3, 0)));
+    assert_eq!(place.along_cut(&[0, 1, 2, 3]), Some((1, 2)));
+    assert_eq!(place.along_cut(&[0, 1]), None);
 }
 
 #[test]
@@ -404,7 +423,7 @@ fn req_auto_016_a_dot_has_no_column() {
     // A square 1 mm across in 2 triangles: the circle on its diagonal holds every corner, so the caps of its
     // ends meet, and it has no line.
     let dot = part(&[(0.0, 0.0), (1.0, 0.0), (1.0, 1.0), (0.0, 1.0)], &[]);
-    assert_eq!(columns(&dot, 10.0, &[], &mut Budget::DEFAULT.meter()).unwrap().unwrap(), Some(Vec::new()));
+    assert_eq!(columns(&dot, 10.0, &[], 1.0, &mut Budget::DEFAULT.meter()).unwrap().unwrap(), Some(Vec::new()));
 }
 
 #[test]
@@ -506,7 +525,7 @@ fn a_rings_column_is_the_same_whichever_of_its_outlines_comes_first() {
     let inner = arc(0.0, 0.0, 7.0, 24, 0.0, std::f64::consts::TAU);
     let shape = part(&outer[..24], &[&inner[..24]]);
     let mut meter = Budget::DEFAULT.meter();
-    let skeleton = skeleton(&shape, piece(&shape), Bumps::Tips, &mut meter).unwrap().unwrap();
+    let skeleton = skeleton(&shape, piece(&shape), Bumps::Tips { narrowest: 1.0 }, &[], &mut meter).unwrap().unwrap();
     let lines = unlooped(&cornered(&skeleton, &skeleton.walked));
     let [walked] = lines.as_slice() else { panic!("{} lines", lines.len()) };
     let owner = owners(&skeleton, &lines, &mut meter).unwrap().unwrap();
@@ -564,7 +583,7 @@ fn rails_that_run_opposite_ways_give_no_rungs() {
     // the edge across from it: the column has no way there, and no rung is drawn.
     let band = part(&[(0.0, 0.0), (20.0, 0.0), (20.0, 3.0), (0.0, 3.0)], &[]);
     let mut meter = Budget::DEFAULT.meter();
-    let skeleton = skeleton(&band, piece(&band), Bumps::Tips, &mut meter).unwrap().unwrap();
+    let skeleton = skeleton(&band, piece(&band), Bumps::Tips { narrowest: 1.0 }, &[], &mut meter).unwrap().unwrap();
     let lines = unlooped(&cornered(&skeleton, &skeleton.walked));
     let owner = owners(&skeleton, &lines, &mut meter).unwrap().unwrap();
     let [column] = found(&band).try_into().unwrap();
@@ -834,4 +853,132 @@ fn req_auto_019_an_end_along_a_cut_lies_along_all_of_it() {
         assert!(place.cut(p(10.0, 0.0), p(10.0, 2.0)));
         assert!(!place.cut(p(10.0, 0.0), p(12.0, 3.0)) && !place.cut(p(8.0, 0.0), p(10.0, 3.0)));
     });
+}
+
+/// The columns of `part`, cut from a broad part along `cuts`.
+fn cut_along(part: &Polygon, cuts: &[[Point; 2]]) -> Vec<Column> {
+    columns(part, piece(part), cuts, 1.0, &mut Budget::DEFAULT.meter()).unwrap().unwrap().unwrap()
+}
+
+#[test]
+fn req_auto_016_a_column_ends_along_its_cut_however_the_cut_lies() {
+    // A band 3 mm wide whose end slants 30° from square to it: that end is no edge to end along, and its
+    // column ends at its farthest corner, but cut from a broad part along it, the column ends along the cut.
+    let rise = 3.0 * math::tan(math::to_radians(30.0));
+    let band = part(&[(0.0, 0.0), (20.0, 0.0), (20.0 + rise, 3.0), (0.0, 3.0)], &[]);
+    // The rails' points at the column's end on the right.
+    let right = |column: &Column| {
+        let ends = [column.rails.each_ref().map(|rail| rail[0]), column.rails.each_ref().map(|rail| *rail.last().unwrap())];
+        ends.into_iter().max_by(|a, b| (a[0].x() + a[1].x()).total_cmp(&(b[0].x() + b[1].x()))).unwrap()
+    };
+    let [plain] = found(&band).try_into().unwrap();
+    assert!(right(&plain).iter().all(|&q| same(q, p(20.0 + rise, 3.0))), "{:?}", plain.rails);
+    let [cut] = cut_along(&band, &[[p(20.0, 0.0), p(20.0 + rise, 3.0)]]).try_into().unwrap();
+    let along = right(&cut);
+    assert!(along.iter().any(|&q| same(q, p(20.0, 0.0))) && along.iter().any(|&q| same(q, p(20.0 + rise, 3.0))), "{along:?}");
+}
+
+#[test]
+fn req_auto_016_a_ring_cut_from_a_broad_part_stays_a_ring() {
+    // A ring 2 mm wide whose outline runs along a cut for one of its pieces: a part with a hole rings round
+    // it, and its outline along the cut is a rail of the ring.
+    let outer = arc(0.0, 0.0, 10.0, 48, 0.0, std::f64::consts::TAU);
+    let inner = arc(0.0, 0.0, 8.0, 48, 0.0, std::f64::consts::TAU);
+    let ring = part(&outer[..48], &[&inner[..48]]);
+    let cut = [p(outer[0].0, outer[0].1), p(outer[1].0, outer[1].1)];
+    let [column] = cut_along(&ring, &[cut]).try_into().unwrap();
+    assert!(column.closed, "{:?}", column.rails);
+}
+
+#[test]
+fn a_point_on_a_cut_lies_within_a_millionth_of_a_millimetre_of_it() {
+    let cuts = [[p(0.0, 0.0), p(4.0, 0.0)]];
+    assert!(on_cut(p(2.0, 1e-6), &cuts) && on_cut(p(4.0, 0.0), &cuts));
+    assert!(!on_cut(p(2.0, 2e-6), &cuts) && !on_cut(p(4.000_002, 0.0), &cuts));
+    assert!(!on_cut(p(2.0, 0.0), &[]));
+}
+
+/// Whether a line through `nodes` of a junction's middle at (5, 0), joined to points at (0, 0), (10, 0) and
+/// (5, 5), `closed` or not, lies along a cut, those 3 points leading into the cuts `cuts` says.
+fn along(cuts: [Option<usize>; 3], nodes: &[usize], closed: bool) -> bool {
+    let mut skeleton = drawn(&[((0.0, 0.0), None), ((5.0, 0.0), Some(1.0)), ((10.0, 0.0), None), ((5.0, 5.0), None)]);
+    for (a, b) in [(0, 1), (1, 2), (1, 3)] {
+        skeleton.graph.join(a, b, 0);
+    }
+    for (node, cut) in [0, 2, 3].into_iter().zip(cuts) {
+        skeleton.graph.cut[node] = cut;
+    }
+    along_cut(&skeleton.graph, &Walked { nodes: nodes.to_vec(), closed })
+}
+
+#[test]
+fn req_auto_016_a_line_along_a_cut_makes_no_column() {
+    // Both ends into one cut, it runs along the cut; into 2 cuts, it is a bar between 2 broad parts.
+    assert!(along([Some(0), Some(0), None], &[0, 1, 2], false));
+    assert!(!along([Some(0), Some(1), None], &[0, 1, 2], false));
+    // One end into a cut and the other a junction's middle, it is a stub between the cut and the line that
+    // runs on there, either way round; the other an end of the part, it is a column.
+    assert!(along([Some(0), None, None], &[0, 1], false));
+    assert!(along([None, Some(0), None], &[1, 2], false));
+    assert!(!along([Some(0), None, None], &[0, 1, 2], false));
+    assert!(!along([None, Some(0), None], &[0, 1, 2], false));
+    assert!(!along([None, None, None], &[0, 1, 2], false));
+    // A ring, and a line of no points, lie along none.
+    assert!(!along([Some(0), Some(0), None], &[0, 1, 2], true));
+    assert!(!along([Some(0), Some(0), None], &[], false));
+}
+
+#[test]
+fn req_auto_016_the_points_beside_a_cut_lie_in_its_end() {
+    // A cut from (0, 0) to (4, 0), 4 mm long, and sets of joined points: one that leads into it and comes
+    // no farther from it than 2 mm, half its length; one that leads into it and reaches 2.01 mm from it; one
+    // that leads into no cut; and a point joined to none.
+    let cuts = [[p(0.0, 0.0), p(4.0, 0.0)]];
+    let mut skeleton = drawn(&[
+        ((1.0, 0.5), None),
+        ((1.0, 2.0), None),
+        ((3.0, 0.5), None),
+        ((3.0, 2.01), None),
+        ((10.0, 0.5), None),
+        ((10.0, 3.0), None),
+        ((20.0, 20.0), None),
+    ]);
+    for (a, b) in [(0, 1), (2, 3), (4, 5)] {
+        skeleton.graph.join(a, b, 0);
+    }
+    (skeleton.graph.cut[0], skeleton.graph.cut[2]) = (Some(0), Some(0));
+    assert_eq!(near_cuts(&skeleton.graph, &cuts, &mut Budget::DEFAULT.meter()).unwrap(), BTreeSet::from([0, 1]));
+    assert!(near_cuts(&skeleton.graph, &[], &mut Budget::DEFAULT.meter()).unwrap().is_empty());
+    // Each point looked at costs a unit of work.
+    let mut small = Budget { max_stitches: 10, max_work: 3 }.meter();
+    assert_eq!(near_cuts(&skeleton.graph, &cuts, &mut small), Err(Exhausted::Work));
+}
+
+#[test]
+fn req_auto_016_a_line_that_leaves_through_a_cut_just_past_a_junction_turns_nowhere_there() {
+    // A line that turns by 90° at a junction 1 mm across is cut there, but not when the point after the
+    // junction is its last and leads into a cut, nor when the point before it is its first and does: its last
+    // piece runs into the cut's end. A point into a cut farther along the line, or a ring, changes nothing.
+    let turned_late = [((-5.0, 0.0), None), ((-2.5, 0.0), None), ((0.0, 0.0), Some(1.0)), ((0.0, 5.0), None)];
+    let turned_early = [((-5.0, 0.0), None), ((0.0, 0.0), Some(1.0)), ((0.0, 2.5), None), ((0.0, 5.0), None)];
+    let leaving = |points: &[((f64, f64), Option<f64>)], node: usize| {
+        let mut skeleton = drawn(points);
+        skeleton.graph.cut[node] = Some(0);
+        cornered(&skeleton, &[open(&[0, 1, 2, 3])])
+    };
+    assert_eq!(cut(&turned_late, false), [open(&[0, 1, 2]), open(&[2, 3])]);
+    assert_eq!(leaving(&turned_late, 3), [open(&[0, 1, 2, 3])]);
+    assert_eq!(leaving(&turned_late, 0), [open(&[0, 1, 2]), open(&[2, 3])]);
+    assert_eq!(cut(&turned_early, false), [open(&[0, 1]), open(&[1, 2, 3])]);
+    assert_eq!(leaving(&turned_early, 0), [open(&[0, 1, 2, 3])]);
+    assert_eq!(leaving(&turned_early, 3), [open(&[0, 1]), open(&[1, 2, 3])]);
+    // So for a longer line whose junction is the last but one of its points.
+    let longer = [((-7.5, 0.0), None), ((-5.0, 0.0), None), ((-2.5, 0.0), None), ((0.0, 0.0), Some(1.0)), ((0.0, 5.0), None)];
+    let mut skeleton = drawn(&longer);
+    skeleton.graph.cut[4] = Some(0);
+    assert_eq!(cornered(&skeleton, &[open(&[0, 1, 2, 3, 4])]), [open(&[0, 1, 2, 3, 4])]);
+    let lens = [((5.0, -3.0), None), ((0.0, 0.0), Some(1.0)), ((5.0, 3.0), None), ((10.0, 0.0), Some(1.0))];
+    let mut skeleton = drawn(&lens);
+    skeleton.graph.cut[0] = Some(0);
+    assert_eq!(cornered(&skeleton, &[Walked { nodes: vec![0, 1, 2, 3], closed: true }]), [open(&[1, 2, 3]), open(&[3, 0, 1])]);
 }
