@@ -138,7 +138,7 @@ fn sewn(
         top: circular.travel,
         ends_near: true,
     };
-    let sewn = parts_sewn(region, &parts, needle, next, rng, meter, &mut top)?;
+    let sewn = parts_sewn(region, &parts, needle, next, rng, meter, Some(&mut top))?;
     let mut warnings = sewn.warnings;
     warnings.extend(tally.said());
     warnings.extend(sewn.tally.said());

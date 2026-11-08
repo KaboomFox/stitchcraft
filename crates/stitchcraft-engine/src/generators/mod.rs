@@ -24,6 +24,12 @@
 //! ([`Stitched::colours`], `REQ-ASM-006`), as Ink/Stitch's tartan and gradient fills sew each colour.
 //! Plan assembly changes thread inside the element where they change, and trims after each colour block
 //! when the element's `trim_after` is on (`REQ-ASM-007`).
+//!
+//! An element in a run of underlays first is sewn as 2 [`Layer`]s, its underlay and its top, each with
+//! neighbours of its own (`crate::underlays_first`, ADR-0018). A satin column and the fills with an
+//! underlay sew each layer from one reading of the element: the satin column's `Column`, and a fill's
+//! settings and area, its underlay over every part (`tatami::sew::underlay_sewn`) and its top over every
+//! part without it.
 
 pub mod circular;
 pub mod contour;
@@ -58,6 +64,19 @@ pub enum Approach {
     Shape(Vec<Vec<Point>>),
     /// It starts at the point of this area nearest the needle: a tatami fill's parts.
     Area(Vec<Polygon>),
+}
+
+/// Which of an element's stitches are sewn: all of them, or one of the 2 layers an element of a run of
+/// underlays first is sewn as (`REQ-ASM-009`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Layer {
+    /// Its underlay and its top stitches, as every element outside a run is sewn.
+    #[default]
+    Whole,
+    /// Its underlay alone, which its run sews before any top stitch.
+    Underlay,
+    /// Its top stitches alone, which its run sews after every underlay.
+    Top,
 }
 
 /// An element's neighbours in sewing order (`REQ-GEN-003`).

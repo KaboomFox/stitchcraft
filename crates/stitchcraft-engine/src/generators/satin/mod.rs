@@ -52,7 +52,7 @@ pub(crate) use crate::generators::satin::lie::LONG_STITCH;
 use crate::generators::satin::pairs::Pair;
 use crate::generators::satin::split::Splitter;
 use crate::generators::satin::underlay::Peaks;
-use crate::generators::{Neighbours, Stitched, method, mm, settled};
+use crate::generators::{Layer, Neighbours, Stitched, method, mm, settled};
 use crate::normalize::centre_line::{Made, rails_and_rungs};
 use crate::normalize::satin::{Pairing, Recognition, Rung, Satin, Shape, recognize};
 
@@ -382,78 +382,161 @@ pub fn satin_stitch(
     rng: &mut SplitMix64,
     meter: &mut Meter,
 ) -> Result<Stitched, Exhausted> {
-    settled(meter, |meter| sewn(satin, params, pull, lengths, neighbours, hints, rng, meter))
+    settled(meter, |meter| {
+        let (column, mut warnings) = Column::new(satin, params, pull, lengths, rng, meter)?;
+        let sewn = column.sew(Layer::Whole, neighbours, hints, meter)?;
+        warnings.extend(sewn.warnings);
+        Ok(Stitched { warnings, ..sewn })
+    })
 }
 
-/// [`satin_stitch`], before its stitches are settled.
-#[allow(clippy::too_many_arguments)] // As `satin_stitch`.
-fn sewn(
-    satin: &Satin,
-    params: &SatinParams,
-    pull: &PullParams,
+/// A satin column placed once: its sections, its top stitches and its underlays, from which [`Column::sew`]
+/// sews it whole, as [`satin_stitch`] does, or sews either of the 2 layers of a column in a run of underlays
+/// first, each from its own neighbours (`crate::underlays_first`). Placing it draws every random number the
+/// column draws, so its top stitches are the same in either case.
+#[derive(Clone, Debug)]
+pub(crate) struct Column {
+    satin: Satin,
+    params: SatinParams,
+    pull: PullParams,
     lengths: SatinLengths,
-    neighbours: &Neighbours,
-    hints: &Hints,
-    rng: &mut SplitMix64,
-    meter: &mut Meter,
-) -> Result<Stitched, Exhausted> {
-    let mut warnings = Vec::new();
-    let sections = column::sections(satin, params, &mut warnings, meter)?;
-    if sections.is_empty() {
-        warnings.push(
-            Diagnostic::new(Code::SatinNoSection, "Every section of this satin column has no length on one of its rails, so it has nothing to sew.")
+    /// Its sections, empty when it has nothing to sew.
+    sections: Vec<Section>,
+    /// The pairs of its top stitches as placed and compensated.
+    placed: Vec<Pair>,
+    /// Its top stitches, from the rails' starts to their ends.
+    top: Vec<Point>,
+    /// Whether it sews a stitch across: a zigzag satin of a single pair doesn't.
+    across: bool,
+    /// Whether its centre walk ends at its end, after which the rest of it is sewn from its end.
+    odd: bool,
+    /// Its pairs at the zigzag spacing, with no compensation and nothing random, which places are found by.
+    cuts: Vec<Pair>,
+    /// Its underlays, in the order they are sewn.
+    layers: Vec<underlay::Layer>,
+    /// The needle's travel between its pieces, raised to keep to the shortest stitch.
+    travel: f64,
+    /// The generator as the top stitches found it: a zigzag satin's outline draws from a copy (`outline`).
+    drawn: SplitMix64,
+}
+
+impl Column {
+    /// The satin column `satin` placed as `params` say, with an element's stitch `lengths`, its random
+    /// variation drawn from the element's `rng`, and what placing it says.
+    pub(crate) fn new(
+        satin: &Satin,
+        params: &SatinParams,
+        pull: &PullParams,
+        lengths: SatinLengths,
+        rng: &mut SplitMix64,
+        meter: &mut Meter,
+    ) -> Result<(Column, Vec<Diagnostic>), Exhausted> {
+        let mut warnings = Vec::new();
+        let sections = column::sections(satin, params, &mut warnings, meter)?;
+        let min_stitch = lengths.min_stitch.get();
+        let mut column = Column {
+            satin: satin.clone(),
+            params: params.clone(),
+            pull: pull.clone(),
+            lengths,
+            sections,
+            placed: Vec::new(),
+            top: Vec::new(),
+            across: false,
+            odd: underlay::ends_at_end(params),
+            cuts: Vec::new(),
+            layers: Vec::new(),
+            travel: lengths.travel.get(),
+            drawn: rng.clone(),
+        };
+        if column.sections.is_empty() {
+            warnings.push(
+                Diagnostic::new(
+                    Code::SatinNoSection,
+                    "Every section of this satin column has no length on one of its rails, so it has nothing to sew.",
+                )
                 .with_fix(Fix::Hint(
                     "Move the rungs so that each meets both rails away from their ends, or lower `push_compensation_mm`.".to_string(),
                 )),
-        );
-        return Ok(Stitched { runs: Vec::new(), colours: Vec::new(), warnings });
+            );
+            return Ok((column, warnings));
+        }
+        let Top { placed, stitches, peaks } = top_stitches(&column.sections, params, pull, lengths, rng, meter)?;
+        (column.placed, column.across, column.top) = (placed, !stitches.is_empty(), stitches);
+        column.cuts = pairs::pairs(&column.sections, params.zigzag_spacing_mm.get(), &mut Processor::inset([0.0; 2], [0.0; 2]), meter)?;
+        warnings.extend(lie::leaning(&column.cuts, min_stitch));
+        column.layers = underlay::underlays(&column.sections, params, min_stitch, peaks, &mut warnings, meter)?;
+        // The needle's travel between the pieces and the line it follows to the start and the end keep to the
+        // shortest stitch alike: the length is raised once, with one warning.
+        column.travel = raised("running_stitch_length_mm", lengths.travel, min_stitch, &mut warnings);
+        Ok((column, warnings))
     }
-    // The generator as the top stitches find it: a zigzag satin's outline draws from a copy (`outline`).
-    let drawn = rng.clone();
-    let Top { placed, stitches: mut top, peaks } = top_stitches(&sections, params, pull, lengths, rng, meter)?;
-    let across = !top.is_empty();
-    let odd = underlay::ends_at_end(params);
-    if odd {
-        top.reverse();
+
+    /// `SC-W0215` when the column is left out whole in a run of underlays first: when it has no stitch
+    /// across, or when its own needle points, its underlays' and its top stitches', all lie within the
+    /// shortest stitch of its first. Its layers then sew nothing.
+    pub(crate) fn left_out(&self) -> Option<Diagnostic> {
+        let mut own: Vec<Point> = self.layers.iter().flat_map(underlay::Layer::points).collect();
+        own.extend_from_slice(&self.top);
+        too_small(self.across, &own, self.lengths.min_stitch.get())
     }
-    let cuts = pairs::pairs(&sections, params.zigzag_spacing_mm.get(), &mut Processor::inset([0.0; 2], [0.0; 2]), meter)?;
-    warnings.extend(lie::leaning(&cuts, lengths.min_stitch.get()));
-    let layers = underlay::underlays(&sections, params, lengths.min_stitch.get(), peaks, &mut warnings, meter)?;
-    // The needle's travel between the pieces and the line it follows to the start and the end keep to the
-    // shortest stitch alike: the length is raised once, with one warning.
-    let travel = raised("running_stitch_length_mm", lengths.travel, lengths.min_stitch.get(), &mut warnings);
-    // A start or end position takes the place of the needle or the next element, whatever the settings say.
-    let needle = neighbours.needle.filter(|_| params.start_at_nearest_point && hints.start.is_none());
-    let next = neighbours.next.as_ref().filter(|_| params.end_at_nearest_point && hints.end.is_none());
-    let pieces = if needle.is_none() && next.is_none() && hints.start.is_none() && hints.end.is_none() {
-        ends::sewn(layers, top, meter)?
-    } else {
-        let guides = Guides::new(&sections, params, lengths, travel, cuts, meter)?;
-        let outline = outline(&sections, params, pull, placed, drawn, meter)?;
-        let edges: [Vec<Point>; 2] = [outline.iter().map(|[a, _]| *a).collect(), outline.iter().map(|[_, b]| *b).collect()];
-        let outline = [edges[0].as_slice(), edges[1].as_slice()];
-        let start = match (hints.start, needle) {
-            (Some(start), _) => Some(start),
-            (None, Some(needle)) => guides.start(needle, outline, lengths.jump.get(), meter)?,
-            (None, None) => None,
+
+    /// The column's `layer`, sewn from where its `neighbours` leave the needle to near what the next one
+    /// offers, as its settings say (the `ends` module), and what sewing it says. Whole, its underlays come
+    /// first, then its top stitches, from the rails' starts to their ends, or from their ends after an odd
+    /// centre walk, and the start and end positions of its `hints` take the place of its neighbours,
+    /// whatever its settings say (`REQ-GEN-001`). Its underlay alone starts at its start position, and its
+    /// top stitches alone, from the rails' starts, end at its end position. A column left out whole sews
+    /// nothing (`SC-W0215`).
+    pub(crate) fn sew(&self, layer: Layer, neighbours: &Neighbours, hints: &Hints, meter: &mut Meter) -> Result<Stitched, Exhausted> {
+        let nothing = Stitched { runs: Vec::new(), colours: Vec::new(), warnings: Vec::new() };
+        let (params, min_stitch) = (&self.params, self.lengths.min_stitch.get());
+        if self.sections.is_empty() {
+            return Ok(nothing);
+        }
+        // Its top stitches alone have no centre walk before them, and run from the rails' starts.
+        let (layers, mut top, odd, hints) = match layer {
+            Layer::Whole => (self.layers.clone(), self.top.clone(), self.odd, *hints),
+            Layer::Underlay => (self.layers.clone(), Vec::new(), self.odd, Hints { end: None, ..*hints }),
+            Layer::Top => (Vec::new(), self.top.clone(), false, Hints { start: None, ..*hints }),
         };
-        let end = match (hints.end, next) {
-            (Some(end), _) => guides.end_at(end),
-            (None, Some(next)) => {
-                let [first, second] = column::sewn_rails(satin, params, meter)?;
-                guides.end(next, [&first, &second], outline, meter)?
-            }
-            (None, None) => None,
+        if odd {
+            top.reverse();
+        }
+        // A start or end position takes the place of the needle or the next element, whatever the settings say.
+        let needle = neighbours.needle.filter(|_| params.start_at_nearest_point && hints.start.is_none());
+        let next = neighbours.next.as_ref().filter(|_| params.end_at_nearest_point && hints.end.is_none());
+        let pieces = if needle.is_none() && next.is_none() && hints.start.is_none() && hints.end.is_none() {
+            ends::sewn(layers, top, meter)?
+        } else {
+            let guides = Guides::new(&self.sections, params, self.lengths, self.travel, self.cuts.clone(), meter)?;
+            let outline = outline(&self.sections, params, &self.pull, self.placed.clone(), self.drawn.clone(), meter)?;
+            let edges: [Vec<Point>; 2] = [outline.iter().map(|[a, _]| *a).collect(), outline.iter().map(|[_, b]| *b).collect()];
+            let outline = [edges[0].as_slice(), edges[1].as_slice()];
+            let start = match (hints.start, needle) {
+                (Some(start), _) => Some(start),
+                (None, Some(needle)) => guides.start(needle, outline, self.lengths.jump.get(), meter)?,
+                (None, None) => None,
+            };
+            let end = match (hints.end, next) {
+                (Some(end), _) => guides.end_at(end),
+                (None, Some(next)) => {
+                    let [first, second] = column::sewn_rails(&self.satin, params, meter)?;
+                    guides.end(next, [&first, &second], outline, meter)?
+                }
+                (None, None) => None,
+            };
+            guides.pieces(layers, top, start, end, odd, meter)?
         };
-        guides.pieces(layers, top, start, end, odd, meter)?
-    };
-    warnings.extend(lie::longest(pieces.iter().filter_map(ends::Piece::top)));
-    let run = ends::join(pieces, travel, lengths.min_stitch.get(), meter)?;
-    if let Some(left_out) = too_small(across, &run, lengths.min_stitch.get()) {
-        warnings.push(left_out);
-        return Ok(Stitched { runs: Vec::new(), colours: Vec::new(), warnings });
+        let mut warnings: Vec<Diagnostic> = lie::longest(pieces.iter().filter_map(ends::Piece::top)).into_iter().collect();
+        let run = ends::join(pieces, self.travel, min_stitch, meter)?;
+        // A column in a run is left out whole or not at all (`Column::left_out`).
+        if let Some(left_out) = too_small(self.across, &run, min_stitch).filter(|_| layer == Layer::Whole) {
+            warnings.push(left_out);
+            return Ok(Stitched { warnings, ..nothing });
+        }
+        Ok(Stitched { runs: vec![run], colours: Vec::new(), warnings })
     }
-    Ok(Stitched { runs: vec![run], colours: Vec::new(), warnings })
 }
 
 /// `SC-W0215` for a column left out: one with no stitch `across`, which only a zigzag satin of a single
