@@ -181,11 +181,12 @@ measures = ["stitches", "trims", "jumps"]
 follow_up = "M10.7 sews tartan herringbones"
 codes = ["SC-W0324"]
 
-# Colorful's ’: its S-stitch satin column, sewn alone without the glyph's tartan, overlaps Ink/Stitch's by
-# 0.575, with the same 81 stitches and size. It starts 1.7 mm from where Ink/Stitch's starts, and its needle
-# points along the rails lie elsewhere. The glyph was listed until M10.6 sewed its tartan.
+# Colorful's ’: its S-stitch satin column, sewn alone without the glyph's tartan, sews otherwise than
+# Ink/Stitch's. Before M8.6's satin changes (#237) it overlapped Ink/Stitch's by 0.575, with the same 81
+# stitches and size, starting 1.7 mm from where Ink/Stitch's starts. Since them it takes 91 stitches, 10.6 ×
+# 13.0 mm against 10.0 × 12.8 mm, and overlaps by 0.417. The glyph was listed until M10.6 sewed its tartan.
 [[known]]
-measures = ["overlap"]
-follow_up = "the S-stitch satin column of Colorful's ’ starts elsewhere than Ink/Stitch's"
+measures = ["size", "overlap"]
+follow_up = "the S-stitch satin column of Colorful's ’ sews otherwise than Ink/Stitch's"
 fonts = ["colorful"]
 glyphs = ["’"]
