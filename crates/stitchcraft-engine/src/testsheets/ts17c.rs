@@ -24,7 +24,7 @@
 //! Ink/Stitch's tool too (`REQ-ROUTE-013`).
 //!
 //! M10.15's part, at the bottom: 2 satin columns 5 mm wide in red that cross, a bar and a post 30 mm long,
-//! each with a contour and a zigzag underlay ([`crossing`]). On the left they are sewn as drawn: the bar,
+//! each with a contour and a zigzag underlay ([`CROSSING`]). On the left they are sewn as drawn: the bar,
 //! underlay and top, then the post, whose underlay lies over the bar's top stitches where they cross. On
 //! the right, [`BESIDE`] mm over, the same 2 set `underlays_first` and sew both underlays, then both
 //! tops (`REQ-ASM-009`), for MC-12 to compare. Ink/Stitch has no such order, so the differential's file of
