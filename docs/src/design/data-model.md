@@ -250,7 +250,7 @@ pub struct Thread {
 ```
 
 An element has one thread of its own, `Element::thread`, which its host reads from its paint. From M10.5 its
-generator may sew some of its groups in threads of their own, as a tartan or a gradient fill will. The
+generator may sew some of its groups in threads of their own, as a tartan fill does and a gradient fill will. The
 element's stitches then lie in several colour blocks of the plan, each block in one thread, and each stitch
 still names its element ([engine pipeline](engine-pipeline.md#several-threads-in-one-element)).
 

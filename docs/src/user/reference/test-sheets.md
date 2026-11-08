@@ -454,6 +454,24 @@ After sewing, check:
 - The square turned 30° sews its crosses square to its own sides, as a letter turned along a path sews its own. Do its rows of crosses run along its edges, with no part cell along them?
 - How long does the sheet take?
 
+## TS-17B — New fills: tartan
+
+130.0 × 85.0 mm · 28658 stitches, 23 jumps, 22 trims, 22 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
+
+Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
+
+![TS-17B as it will sew: 5 tartans 40 mm square, 3 in the top row and 2 below. Top, left to right: red, white, Prussian blue and gold stripes mirrored at their ends, green, black and white stripes repeated, and a warp of red and black under a weft of blue and white. Below: blue and black with thin white and red lines along the middles of their stripes, and gold, black and tangerine stripes turned 30°, all woven in rows that slant across the stripes.](../../images/generated/testsheet-ts-17b.png)
+
+Threads: Prussian Blue, unnamed, unnamed, unnamed, unnamed, Black, unnamed, unnamed, unnamed, Blue, unnamed, unnamed, unnamed, unnamed, Black, unnamed, unnamed, unnamed, unnamed, Tangerine, unnamed, unnamed, unnamed.
+
+After sewing, check:
+
+- Each sample is a tartan fill 40 mm square, trimmed after each colour. Top row, left to right: a sett of red, white, Prussian blue and deep gold mirrored at its ends; a sett of emerald green, black and white repeated; and a warp of red and black under a weft of blue and white. Bottom row: blue and black with a white stripe 0.5 mm wide and a red one 0.8 mm wide, each sewn as a run along its middle; and deep gold, black and tangerine turned 30° and scaled by 150 %.
+- Do the warp and the weft read as a weave, each colour's stripes crossing the other direction's in a twill of rows 2 by 2?
+- Do the runs lie flat along the middles of their stripes, on top of the fills, and do they show as lines of their own colour?
+- Where the rows of one colour are joined along a stripe's edge, does the join show?
+- How many times does the thread change, and how long does the sheet take? Each tartan sews its underlay in its own thread, then each colour once.
+
 ## TS-17C — Ripples and routing: satin letters as drawn and routed
 
 82.0 × 50.6 mm · 3271 stitches, 12 jumps, 11 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand

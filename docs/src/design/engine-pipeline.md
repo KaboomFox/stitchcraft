@@ -92,7 +92,7 @@ Each element becomes stitch groups (`stitchcraft_engine::generate`): the needle 
 that a jump may separate from the next, in sewing order. A stroke gives one group per subpath, and a part
 too small for a stitch gives none (`SC-W0401`). The element's own settings stay with the element, and
 assembly reads them there: its thread, locks, trim and stop. A generator may give each group a thread of
-its own as well, which a tartan or a gradient fill needs ([below](#several-threads-in-one-element)).
+its own as well, as a tartan fill does and a gradient fill will ([below](#several-threads-in-one-element)).
 
 The stitch type picks the generator. A stroke whose `satin_column` setting is on is a satin column,
 whatever its `stroke_method` says, as in Ink/Stitch. Its rails and rungs are recognized, what
@@ -268,9 +268,9 @@ beyond that length can cause.
 
 From M10.5 a generator may give each group of needle points a thread of its own, and say whether the group
 ends one of the element's colour blocks (`stitchcraft_engine::generators::Colour`). A colour block is what
-the generator sews in one thread before it moves on to another colour or another part. A tartan fill will
-give its colours so from M10.6, and a linear gradient fill from M10.12. A group without a thread of its
-own is sewn in its element's, as every group of the other stitch types is.
+the generator sews in one thread before it moves on to another colour or another part. A tartan fill gives
+its colours so from M10.6 ([tartan fill](algorithms/tartan.md)), and a linear gradient fill will from M10.12.
+A group without a thread of its own is sewn in its element's, as every group of the other stitch types is.
 
 - **Thread changes.** Assembly sews the groups in their order and compares each group's thread with the
   one sewing, as it compares 2 elements' threads. At a change the group before ties off and a colour block
@@ -286,8 +286,9 @@ own is sewn in its element's, as every group of the other stitch types is.
   The element has the thread sewing when the thread it starts in is, and leaves the thread it ends in
   sewing (`REQ-AUTO-024`, [image to embroidery](image-to-embroidery.md#sewing-order)). The order reads each
   element's threads before it is generated, from its shape and settings
-  (`stitchcraft_engine::generate::colours`): its own thread, for each stitch type sewn so far. A stitch
-  type that gives its groups threads of their own will give them there too. The runs of
+  (`stitchcraft_engine::generate::colours`): its own thread, but for a tartan fill, which gives there its
+  own thread for its underlay, when it has one, and then its sett's colours in the order it sews them. The
+  runs of
   [underlays first](#underlays-first) can ask it which elements are sewn in several threads, which they
   leave out.
 - **What shows them.** The machine files, the previews and the report read the plan's colour blocks, so
@@ -304,10 +305,11 @@ each when `trim_after` is on and none when it is off. In 2 parts, the colours ar
 once, and each part's colour is trimmed after: 2 trims in each thread. Its tartan sews its underlay in its
 own fill's thread without a trim after it, then a trim after each colour.
 
-No stitch type gives its groups threads of their own yet. The engine has no hook for tests, since assembly
+Assembly's own cases don't depend on a tartan's sett. The engine has no hook for tests, since assembly
 takes generated elements as its input. A case generates an element as `plan` does and puts its groups in
 threads of their own. It then assembles and finalizes the element as `plan` does
-(`stitchcraft_testkit::designs::threaded`). The order's cases give it each element's threads directly.
+(`stitchcraft_testkit::designs::threaded`). The order's cases give it each element's threads directly, and
+a tartan's cases sew whole designs (`crates/stitchcraft-engine/tests/fill_tartan.rs`).
 
 ### Origin, stop position and turn on export
 
