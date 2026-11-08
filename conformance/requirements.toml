@@ -2136,6 +2136,60 @@ milestone = "M13"
 status = "active"
 
 [[req]]
+id = "REQ-CLI-014"
+area = "cli"
+level = "L1"
+statement = "With `--subject`, and only then, `stitch plan` and `stitch export` cut a picture's subject out before VectorCraft's command line traces it (REQ-CLI-012, ADR-0019). `stitch` decodes the picture as its file stores the pixels, MobileSAM run by tract cuts the subject out of a box, and the picture, with an alpha of 0 to 255 from MobileSAM's map and cropped to the box round the pixels of an alpha of 128 or more, is the PNG file `file.place` places. The box is the one `--subject-box` gives, or else the one round the piece of U²-Net-p's map above a half that holds the most of the map. `--cutout FILE` writes the cut-out with the other files asked for, all or none (REQ-CLI-006), and `stitch cutout PICTURE -o FILE` writes it alone."
+rationale = "A photo's background traces into many shapes, which the background rule (REQ-AUTO-009) doesn't leave out, and Image Trace leaves out a pixel whose alpha is under 128. Cropped to the subject, the cut-out sews at the size `--size` or the hoop gives. Measured when M13.13 decided, MobileSAM cut the dog out of both test photos from U²-Net-p's box, where U²-Net-p alone kept a tyre behind it."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-CLI-015"
+area = "cli"
+level = "L1"
+statement = "`--subject-box X0,Y0,X1,Y1` gives the subject's box, and `--subject-point X,Y` and `--not-subject X,Y` give points of the subject and of what isn't it, each as often as needed, in the picture's pixels as its file stores them. MobileSAM's decoder takes the points with the box, U²-Net-p's when none is given. A box with no area or reaching past the picture, a point outside it, and any of these options without `--subject` are usage errors."
+rationale = "A cut-out made without help is sometimes wrong with confidence, and the user must be able to correct it. On the test photo of the dog running, a point of the dog and a point of the tyre without a box lost a third of the dog, and with a box they kept it (ADR-0019)."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-CLI-016"
+area = "cli"
+level = "L1"
+statement = "The models' 3 files, U²-Net-p and MobileSAM's encoder and decoder, are pinned in the repository by address, size and SHA-256, and are never committed. On first use `stitch` fetches them with curl into the folder `STITCHCRAFT_MODELS` names, or else `stitchcraft/models` in the user's cache folder, and it checks a file's SHA-256 before each use. A file that can't be fetched, or whose SHA-256 differs from the pin, is a coded error that names each file's address, size and SHA-256 and the folder it belongs in. Nothing is then written but the report, and `stitch` ends with exit status 1."
+rationale = "The models are 49.1 MB, too large to commit, and a file other than the one pinned would cut a subject out otherwise. Offline, the user can fetch the files elsewhere and put them in the folder."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-CLI-017"
+area = "cli"
+level = "L1"
+statement = "When MobileSAM keeps no pixel of the picture, or U²-Net-p's map has no piece above a half and no box is given, a coded error says so and suggests `--subject-box`. Nothing is then written but the report, and `stitch` ends with exit status 1."
+rationale = "A picture traced whole after the user asked for its subject would sew its background. No silent fallbacks."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-CLI-018"
+area = "cli"
+level = "L1"
+statement = "A bug-report bundle of a picture cut out with `--subject` holds the document VectorCraft traced, as for any picture (REQ-CLI-012), with the models' SHA-256 sums, the box and the points, and no picture. Its replay needs neither the models nor VectorCraft."
+rationale = "A model's results may differ in their last bits from one processor to another, so a plan is reproducible from the traced document and not from the photo. A bundle keeps the part of a design its reader reads, and leaves pictures out."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-CLI-019"
+area = "cli"
+level = "L2"
+statement = "On each of the 2 test photos of the owner's dog, the cut-out from U²-Net-p's box keeps the dog with an intersection over union of 0.97 or more against its mask checked by hand, keeps at most 2 % of the dog's area wrongly and loses at most 3 % of it. On the photo of the dog running, a `--not-subject` point on the tyre behind the dog keeps the cut-out within the same bounds."
+rationale = "When M13.13 decided, onnxruntime's cut-outs measured 0.985 and 0.988, with 0.3 % of the dog's area kept wrongly at most, and the salient models alone kept the tyre, 18 to 20 % of the dog's area (ADR-0019). The bounds leave room for another runtime's rounding."
+milestone = "M13"
+status = "planned"
+
+[[req]]
 id = "REQ-AUTO-001"
 area = "auto"
 level = "L2"
