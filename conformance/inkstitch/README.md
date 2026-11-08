@@ -90,7 +90,7 @@ deviation = "DEV-FIN-001"
 codes = ["SC-I0703", "SC-I0504"]
 ```
 
-A glyph that one program sews, where the other doesn't write a file, has no measures. An excuse that names
+A glyph that one program sews, where the other doesn't write a file, can't be measured. An excuse that names
 `sewn` among its measures explains it:
 
 ```toml
