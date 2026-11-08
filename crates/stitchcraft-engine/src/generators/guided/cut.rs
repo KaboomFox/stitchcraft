@@ -129,6 +129,10 @@ mod tests {
         assert_eq!(cut_by(&frame(), &[(-1.0, 2.0), (11.0, 2.0)]), [vec![(0.0, 2.0), (4.0, 2.0)], vec![(6.0, 2.0), (10.0, 2.0)]]);
         // Wholly outside, nothing.
         assert!(cut_by(&part, &[(-1.0, -1.0), (11.0, -1.0)]).is_empty());
+        // Past the top left corner, over the box of both sides there, meeting neither: nothing.
+        assert!(cut_by(&part, &[(-1.0, 3.5), (1.0, 5.5)]).is_empty());
+        // Out past that corner and in through the top: one line, from where it enters.
+        assert_eq!(cut_by(&part, &[(-1.0, 3.5), (1.0, 5.5), (3.0, 3.0)]), [vec![(2.2, 4.0), (3.0, 3.0)]]);
     }
 
     #[test]
