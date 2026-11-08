@@ -357,8 +357,8 @@ fn req_svg_007_a_start_or_end_command_of_a_file_before_version_3_works_at_its_co
     let p = |x: f64, y: f64| Some(Point::new(x, y).unwrap());
     for v in ["1", "2"] {
         let old = read(v);
-        let hints = old.design.elements()[0].hints;
-        assert_eq!(hints, Hints { start: p(45.0, 35.0), end: p(12.0, 12.0), target: p(90.0, 5.0) }, "version {v}");
+        let hints = old.design.elements()[0].hints.clone();
+        assert_eq!(hints, Hints { start: p(45.0, 35.0), end: p(12.0, 12.0), target: p(90.0, 5.0), ..Hints::default() }, "version {v}");
         assert_eq!(
             warnings(&old),
             [format!(
@@ -368,6 +368,6 @@ fn req_svg_007_a_start_or_end_command_of_a_file_before_version_3_works_at_its_co
         );
     }
     let current = read("3");
-    assert_eq!(current.design.elements()[0].hints, Hints { start: p(70.0, 60.0), end: p(80.0, 80.0), target: p(90.0, 5.0) });
+    assert_eq!(current.design.elements()[0].hints, Hints { start: p(70.0, 60.0), end: p(80.0, 80.0), target: p(90.0, 5.0), ..Hints::default() });
     assert!(current.warnings.is_empty(), "{:?}", warnings(&current));
 }

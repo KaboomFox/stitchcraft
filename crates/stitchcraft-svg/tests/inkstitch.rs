@@ -19,7 +19,7 @@ fn setting<'s>(svg: &'s stitchcraft_svg::Svg, key: &str) -> Vec<(&'s str, Option
 
 /// Each element's id and its hints, as the commands tied to its shape place it (`REQ-GEN-001`).
 fn hints(svg: &stitchcraft_svg::Svg) -> Vec<(&str, Hints)> {
-    svg.design.elements().iter().map(|e| (e.id.as_str(), e.hints)).collect()
+    svg.design.elements().iter().map(|e| (e.id.as_str(), e.hints.clone())).collect()
 }
 
 /// A point in millimetres.
@@ -129,7 +129,7 @@ fn req_svg_003_start_end_and_target_commands_place_the_shapes_they_are_tied_to()
     assert_eq!(
         hints(&svg),
         [
-            ("svg:patch:fill", Hints { start: Some(p(50.0, 40.0)), end: Some(p(10.0, 10.0)), target: Some(p(30.0, 25.0)) }),
+            ("svg:patch:fill", Hints { start: Some(p(50.0, 40.0)), end: Some(p(10.0, 10.0)), target: Some(p(30.0, 25.0)), ..Hints::default() }),
             ("svg:line:stroke", Hints { end: Some(p(90.0, 60.0)), ..Hints::default() }),
             ("svg:path@2:stroke", Hints::default()),
         ]

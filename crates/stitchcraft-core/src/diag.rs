@@ -580,24 +580,24 @@ registry! {
     /// or its pull compensation, or space it out, until that is at least the shortest stitch.
     ZigzagTooNarrow = "SC-W0405", Warning, "Zigzag stitch shorter than the shortest stitch; the zigzag sews narrower";
 
-    /// A ripple stitch asks for something StitchCraft doesn't sew yet, so it sews without it. Clips cut
-    /// Ink/Stitch's ripples, and StitchCraft sews a ripple whole. A ripple along a column, a stroke of 2
-    /// lines or more drawn as a satin column's rails and rungs, reads its rails with the satin column's
-    /// defaults: `reverse_rails` automatic, `swap_satin_rails` off and no `push_compensation_mm`, which
-    /// Ink/Stitch applies to it. Guided ripples, and the ripple settings they use, arrive with M10.11, and
-    /// `SC-W0105` names each of those settings until then.
+    /// A ripple stitch sets something StitchCraft doesn't apply to it, so it sews without it. A ripple along a
+    /// column, a stroke of 2 lines or more drawn as a satin column's rails and rungs, reads its rails without
+    /// the satin column's `push_compensation_mm`, which Ink/Stitch applies to it though its settings window
+    /// doesn't show it for a ripple.
     ///
-    /// The message says what is not applied. Draw the ripple's lines where it should sew, and its rails
-    /// running the same way, the first where the ripple starts.
-    RippleNotSewnYet = "SC-W0406", Warning, "Ripple stitch setting not sewn yet; sewn without it";
+    /// The message says what is not applied. Draw the rails as long as the ripple should run, and leave push
+    /// compensation at 0.
+    RippleNotSewnYet = "SC-W0406", Warning, "Ripple stitch setting not applied; sewn without it";
 
     /// `min_line_dist_mm` gives a ripple stitch more than 1,000 lines, so it sews 1,000, or 999 to keep the
     /// count's parity, odd or even, as `line_count` has it. The count is the shortest distance from the
-    /// stroke's line to its target point, or across its column, divided by `min_line_dist_mm`, and a very
-    /// short distance between the lines on a large shape gives thousands of lines that sew into a solid
-    /// patch.
+    /// stroke's line to its target point, or across its column, or the length of its guide, divided by
+    /// `min_line_dist_mm`, and a very short distance between the lines on a large shape gives thousands of
+    /// lines that sew into a solid patch. A guide that places a copy at each of its points or rungs
+    /// (`render_at_rungs`), or wherever the copies clear each other (`adaptive`), places at most 1,000 too.
     ///
-    /// The message gives the count asked for and the count sewn. Set a larger `min_line_dist_mm`.
+    /// The message gives the count asked for and the count sewn. Set a larger `min_line_dist_mm`, or place
+    /// the copies by `line_count`.
     RippleLinesCut = "SC-W0407", Warning, "Ripple stitch of more than 1,000 lines; cut to 1,000";
 
     /// A ripple stitch's `skip_start` and `skip_end` together leave out as many lines as it has, or more, so
@@ -606,6 +606,17 @@ registry! {
     /// The message gives both settings and the number of lines. Lower `skip_start` or `skip_end`, or give
     /// the ripple more lines.
     RippleSkipsAll = "SC-W0408", Warning, "Ripple stitch's skips would leave out every line; every line sewn";
+
+    /// A ripple stitch's guide line can't place its copies, so the ripple sews without it, towards its
+    /// target point or spiralling in to it, as it would with no guide. The guide has no length, its satin
+    /// column has no rails to place copies between, its middle has no length or its first pair of points no
+    /// width, or it is too short for a pair, or its settings don't read. Ink/Stitch fails on most of these,
+    /// and sews nothing of the last. An anchor line whose ends are one point is left out the same way, and
+    /// the copies' ends are the line's own.
+    ///
+    /// The message says what is wrong with the guide. Draw the guide as a line with length, or as a satin
+    /// column of 2 rails, grouped with the ripple, and the anchor line across the ripple's line.
+    RippleGuideUnusable = "SC-W0409", Warning, "Ripple stitch's guide can't place its copies; sewn without it";
 
     /// A lock stitch would have been shorter than 0.2 mm, the shortest stitch a lock may have. The needle
     /// would go back into the hole it just left, which can cut the thread and does not lock it. Each such

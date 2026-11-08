@@ -75,9 +75,9 @@ fn req_vc_009_start_and_end_markers_place_the_shapes_grouped_with_them() {
     assert_eq!(ids(&read), ["vc:2:fill", "vc:8:fill", "vc:10:fill"]);
     // The middle of a 36 pt square, in millimetres.
     let at = |x: f64, y: f64| Some(Point::new((x + 18.0) * 25.4 / 72.0, (y + 18.0) * 25.4 / 72.0).unwrap());
-    let placed = Hints { start: at(2.0, 2.0), end: at(30.0, 30.0), target: None };
-    let hints: Vec<Hints> = read.design.elements().iter().map(|e| e.hints).collect();
-    assert_eq!(hints, [placed, placed, Hints::default()]);
+    let placed = Hints { start: at(2.0, 2.0), end: at(30.0, 30.0), target: None, ..Hints::default() };
+    let hints: Vec<Hints> = read.design.elements().iter().map(|e| e.hints.clone()).collect();
+    assert_eq!(hints, [placed.clone(), placed, Hints::default()]);
     assert_eq!(said(&read), [about(NAMED, 9)]);
     assert!(read.warnings[0].message.contains("another start marker in its group comes first"), "{}", read.warnings[0]);
 }
@@ -132,11 +132,11 @@ fn req_vc_009_a_target_marker_gives_the_shapes_grouped_with_it_the_point_they_ai
     let read = read_ok(&document(4, &[group, square(10, 200.0, 0.0, RED)].join(",")));
     assert_eq!(ids(&read), ["vc:2:fill", "vc:8:fill", "vc:10:fill"]);
     let at = |x: f64, y: f64| Some(Point::new((x + 18.0) * 25.4 / 72.0, (y + 18.0) * 25.4 / 72.0).unwrap());
-    let near = |got: Hints, want: Option<Point>| {
+    let near = |got: &Hints, want: Option<Point>| {
         (got.start, got.end) == (None, None) && got.target.zip(want).map_or(got.target == want, |(got, want)| got.distance(want) < 1e-9)
     };
-    let hints: Vec<Hints> = read.design.elements().iter().map(|e| e.hints).collect();
-    assert!(near(hints[0], at(10.0, 20.0)) && near(hints[1], at(120.0, 0.0)) && near(hints[2], None), "{hints:?}");
+    let hints: Vec<Hints> = read.design.elements().iter().map(|e| e.hints.clone()).collect();
+    assert!(near(&hints[0], at(10.0, 20.0)) && near(&hints[1], at(120.0, 0.0)) && near(&hints[2], None), "{hints:?}");
     assert_eq!(said(&read), [about(NAMED, 9)]);
     let message = "The object \"stitch:target\" would mark the point the shapes grouped with it aim at, and is not stitched. It is not used: it has no \
                    point that reads, or another target marker in its group comes first.";

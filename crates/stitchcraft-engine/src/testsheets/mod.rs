@@ -537,7 +537,7 @@ pub static SHEETS: &[TestSheet] = &[
     },
     TestSheet {
         id: "TS-17C",
-        title: "Ripples, routing and layers: satin letters and a network of lines, as drawn and routed, crossing columns and 3 ripple stitches",
+        title: "Ripples, routing and layers: satin letters and a network of lines, as drawn and routed, crossing columns, and ripple stitches with and without guides",
         checks: &[
             "Top: the word ROUTE in satin columns 3 mm wide, sewn as drawn, column by column. Below it: the same letters as auto-satin routing joins them, cut into pieces, with running stitches under the satins and a trim between letters.",
             "Count the jump threads of each half, within each letter and between the letters. The routed half should have none within a letter. Its file asks for a trim between letters, which a machine that obeys trims cuts.",
@@ -548,8 +548,10 @@ pub static SHEETS: &[TestSheet] = &[
             "The time each half takes, from its first stitch to its last.",
             "Below the network, in red: 2 satin columns 5 mm wide that cross, a bar and a post, each with a contour and a zigzag underlay. On the left they sew as drawn, so the post's underlay lies on the bar's top stitches. On the right they sew with their underlays first: both underlays, then both tops. Compare the 2 crossings: does the right one lie flatter, with less bulk or fewer stitches showing through where the columns meet?",
             "On the right, the needle goes back from the post's underlay to the bar for the top stitches. Does its way there show, or a jump thread or its locks where it jumps?",
-            "Bottom row, in green: 3 ripple stitches. On the left, a rainbow of 7 lines sewn back and forth between 2 arches. In the middle, 8 copies of a wave that shrink to a point 20 mm above it, each meeting the next at a point. On the right, a circle that spirals in to its middle.",
+            "Below the columns, in green: 3 ripple stitches. On the left, a rainbow of 7 lines sewn back and forth between 2 arches. In the middle, 8 copies of a wave that shrink to a point 20 mm above it, each meeting the next at a point. On the right, a circle that spirals in to its middle.",
             "Do the ripples' lines lie evenly apart, and does each turn or meet the next where its neighbours do, without a loop of thread or a stitch across?",
+            "Bottom row, in green: guided ripples. From the left, 8 copies of a wave follow an arch, shrinking to a third and turning with it. Copies of a small circle run between 2 curved rails, spiralling on from one to the next. A column of 5 lines has a grid across it, sewn first. Copies of a thin diamond stand across a ladder at its rungs. Copies of a zigzag are cut to a circle.",
+            "Do the guided copies keep their spacing along the guide, and does the clipped one sew only inside its circle, with no jump thread between its pieces?",
         ],
         profile: REFERENCE,
         drawn: Drawn::Routed(ts17c::drawing, &[Code::StitchesMerged]),

@@ -19,7 +19,7 @@ use super::Cloned;
 use super::pictures::Picture;
 use super::sketch::SheetError;
 use crate::common::{STOP_AFTER, TRIM_AFTER};
-use crate::design::{Cap, Clip, Design, DesignSettings, Element, FillRule, Hints, Join, Path, Segment, Shape, Subpath, Turn};
+use crate::design::{Cap, Clip, Design, DesignSettings, Element, FillRule, Guide, Hints, Join, Path, Segment, Shape, Subpath, Turn};
 use crate::generators::satin::{END_AT_NEAREST_POINT, START_AT_NEAREST_POINT};
 use crate::generators::tatami::ANGLE;
 use crate::route::{Route, route};
@@ -198,7 +198,7 @@ impl Drawing {
     /// give them (`REQ-GEN-001`); none before the first.
     pub fn positions(&mut self, start: (f64, f64), end: (f64, f64)) -> Result<(), SheetError> {
         if let Some(last) = self.elements.last_mut() {
-            last.hints = Hints { start: Some(point(start)?), end: Some(point(end)?), target: None };
+            last.hints = Hints { start: Some(point(start)?), end: Some(point(end)?), ..Hints::default() };
         }
         Ok(())
     }
@@ -208,6 +208,27 @@ impl Drawing {
     pub fn target(&mut self, at: (f64, f64)) -> Result<(), SheetError> {
         if let Some(last) = self.elements.last_mut() {
             last.hints.target = Some(point(at)?);
+        }
+        Ok(())
+    }
+
+    /// A guide line for the last element drawn so far, as Ink/Stitch's guide-line marker on a path grouped with
+    /// it gives it: `subpaths`, a stroke `width` mm wide, with the Ink/Stitch `params`. Its ripple stitch's
+    /// copies follow it (`REQ-RIP-012`), or lie between its rails when it is a satin column or has several
+    /// subpaths (`REQ-RIP-013`). None before the first.
+    pub fn guide(&mut self, subpaths: Vec<Subpath>, width: f64, params: &[(&str, &str)]) -> Result<(), SheetError> {
+        if let Some(last) = self.elements.last_mut() {
+            let params = params.iter().copied().collect();
+            last.hints.guide = Some(Guide { path: Path { subpaths }, width: Mm::new(width)?, join: Join::UNSET, params });
+        }
+        Ok(())
+    }
+
+    /// An anchor line for the last element drawn so far, from `from` to `to`, as Ink/Stitch's anchor-line
+    /// marker gives it: where a satin guide places each copy's ends (`REQ-RIP-014`). None before the first.
+    pub fn anchor(&mut self, from: (f64, f64), to: (f64, f64)) -> Result<(), SheetError> {
+        if let Some(last) = self.elements.last_mut() {
+            last.hints.anchor = Some([point(from)?, point(to)?]);
         }
         Ok(())
     }
