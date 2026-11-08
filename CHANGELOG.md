@@ -32,6 +32,25 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     The 35 that set a herringbone are known differences until M10.7, and so is the S-stitch satin column of
     Colorful's ’, which starts elsewhere than Ink/Stitch's. A user page has pictures of tartan fills. Golden
     added: `TS-17B.pes`.
+- M8.6: the first run of every glyph of Ink/Stitch's fonts, explained (`REQ-FONT-001`). On 3 November 2026
+  it found 56 glyphs that differ beyond the ledger and 11 that didn't sew, in 20 fonts. 2 were bugs, now
+  fixed, and the ledger explains the others by their causes. Run again on those fonts, 4,644 of their 4,961
+  glyphs agree and 317 differ as the ledger explains, and none differ otherwise or didn't sew.
+  - `--font NAME` sews the glyphs of the fonts it names alone. The fonts a weekly run found differing then
+    sew again in minutes.
+  - A glyph of one empty path agrees. Ink/Stitch doesn't write a file of it and says it didn't find an
+    element to sew, and StitchCraft writes none with `SC-E0010`. Ink/Stitch failing with another message
+    still fails the glyph.
+  - An excuse of `conformance/inkstitch/glyphs.toml` may name the glyphs it holds for (`glyphs`), where only
+    the drawing of a few glyphs shows the cause. One that names `sewn` among its measures explains a glyph
+    that only one program sews, as AGS Garamond's Đ, of which Ink/Stitch doesn't write a file.
+  - `DEV-SAT-013`: a rung that rounding leaves a hair short of a rail meets it, where Ink/Stitch's exact test
+    takes it for a rail. `DEV-FILL-029`: cross stitch parts that reach equally far left go in a fixed order,
+    where Ink/Stitch keeps shapely's after it repairs and grows the shape. The glyphs of the run are
+    evidence for `DEV-RUN-002`, `DEV-RUN-003`, `DEV-FILL-001`, `DEV-SAT-009` and `DEV-FMT-001`.
+  - The differential leaves out Ink/Stitch's jumps that go nowhere within a colour block too, as many as its
+    file has trims more than StitchCraft's. pystitch writes a jump after lock stitches that an element forces
+    as it writes one after a trim of the plan.
 - M10.4: auto-satin routing. `stitchcraft_engine::route` routes satin columns, and the strokes among them,
   as Ink/Stitch's Auto-Route Satin Columns does. Each column is cut into pieces at most 1 mm long along its
   centre line, and the groups of pieces are joined by the shortest jumps in all. A stretch passed twice is
@@ -1701,6 +1720,16 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- Of a satin column of 2 rings, the second starts at its node nearest the first ring's start that no drawn
+  rung lies before (`REQ-SAT-019`, `DEV-SAT-009`). Emilio 20 tricolore's E starts both rings of its bowl at a
+  step, and the outer ring's nearest node lay past the rung across the step. Started there, each part of
+  the ring between rungs paired with the inner ring's next, the stitches leaned up to 89°, and the next
+  element began behind a jump that Ink/Stitch doesn't make.
+- A rung that rounding leaves a hair short of a rail meets it (`REQ-SAT-005`, `DEV-SAT-013`). The meeting
+  test looked first at the boxes round the 2 subpaths, exactly, and missed a rung whose end lay beside the
+  box round the rail it ends on, by 1.5e-14 CSS pixels in AGS Garamond's V. With 3 subpaths the rung and
+  the other rail were then taken for the rails, and the V sewed nothing (`SC-E0216`). Apex simple's x and
+  U, in both its sizes, sew now too, where neither program sewed them before.
 - A stitch at the very edge of what counts as long enough could fall past that edge as finalize moved the
   plan to the hoop's centre, which rounds each point. The check then refused the plan as a bug (`SC-E0009`),
   and nothing was written. The degenerate corpus's random paths found it in a satin column whose rails

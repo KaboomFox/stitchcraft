@@ -32,7 +32,9 @@ same polylines in both, which decide where the needle points go, where subpaths 
 drawn as one path gets its rungs. A path read from SVG has the subpaths a viewer draws, and inkex, which
 Ink/Stitch reads files with, does not always count them alike (`DEV-SVG-011`). The reader finds where
 each pair of subpaths meets, crossing or touching. A point the two share counts once, and a rung that
-ends exactly on a rail meets it.
+ends exactly on a rail meets it. So does a rung whose end rounding leaves a hair short of the rail, by
+less than a billionth of a segment's length. Ink/Stitch's test is exact, and with 3 subpaths it can take
+such a rung for a rail (`DEV-SAT-013`).
 
 StitchCraft tells rails from rungs as Ink/Stitch does, and a file sews the same in both.
 
@@ -204,6 +206,10 @@ which is what the tool is asked for.
 - Of 2 rails that are rings, each ending where it starts (closed with `Z`, or drawn back to its start),
   rail B first starts at its node nearest rail A's first node, before any reversal (`DEV-SAT-009`).
   Ink/Stitch takes each ring's own start, and warns that a closed rail has no definite start.
+  Rail B takes only a node whose line from rail A's first node crosses none of the drawn rungs, unless
+  every node's line crosses one. Started past a rung, each part of rail B between rungs would pair with
+  rail A's next part. In Emilio 20 tricolore's E, both rings of the bowl start at a step, and the outer
+  ring's node nearest the inner ring's start lies past the rung across the step.
   VectorCraft's Make Compound Path, from 0.10.0, turns the front of 2 rings round, which starts it at
   what was its last node. Rings sewn from their own starts then get stitches across the column. A node,
   not the nearest point, keeps rings that start together as drawn, with a rung across their starts where
@@ -670,7 +676,7 @@ a stroke selected with it crosses its rails. No step plans such a tool in Stitch
 | `REQ-SAT-014` | Ending at its nearest point, a column ends on its outline nearest the next stitch. Every part is cut in 2 there, at its own needle point when one lies within the shortest stitch of the cut. The column sews the first halves, then the second halves from the line's end, and stitches the end last |
 | `REQ-SAT-015` | A column drawn as one subpath whose stroke is no wider than the design's narrowest satin stroke sews as a stroke would, with `SC-W0212`. It offers its first point, as a stroke does |
 | `REQ-SAT-018` | A column whose needle points all lie within its shortest stitch of its first sews nothing, with `SC-W0215`, and the rest of the design is planned. A zigzag satin with no stitch across sews nothing either, not even its underlays |
-| `REQ-SAT-019` | Of 2 rings, the second starts at its node nearest the first's first node, its nodes too. The stitches go straight across whatever node each ring was drawn from and however it is closed, and rings drawn alike keep their starts (`DEV-SAT-009`) |
+| `REQ-SAT-019` | Of 2 rings, the second starts at its node nearest the first's first node that no drawn rung lies before, its nodes too. The stitches go straight across whatever node each ring was drawn from and however it is closed, and rings drawn alike keep their starts (`DEV-SAT-009`) |
 | `REQ-SAT-020` | An E-stitch sews each of a satin column's pairs as a spike: from the first rail's inset point across to the second's and back through the same splits. The stitch across splits as a top stitch across does, by default into the fewest equal parts |
 | `REQ-SAT-021` | Between spikes an E-stitch goes along the first rail in one stitch. Where the zigzag spacing is longer than the longest stitch, that stitch splits with no randomness: into the fewest equal parts by default, at whole multiples of the longest stitch by the simple and staggered methods |
 | `REQ-SAT-022` | Each stretch of pairs in a row whose stitches lean more than 45° from square to the column, to a tenth of a degree, gets one `SC-W0208` at the middle of its middle pair, whatever the satin method. The column runs halfway between its 2 rails. Stitches square to a rail, and stitches at 45°, give none |

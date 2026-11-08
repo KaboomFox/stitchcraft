@@ -27,7 +27,11 @@ pub const LONE: &str = "DEV-SVG-011";
 ///
 /// - [`NOWHERE`]: each jump that goes nowhere at the start of a colour block or right after a stop, where
 ///   Ink/Stitch's plan has no trim, and the trim it carries, as every jump of a PES file does. StitchCraft
-///   writes no such record (`REQ-FMT-010`).
+///   writes no such record (`REQ-FMT-010`). Within a block, Ink/Stitch's plan jumps where the needle is after
+///   lock stitches an element forces (`force_lock_stitches`), and after a trim the plan asks for, which
+///   pystitch writes alike. StitchCraft's file has the trims the plan asks for, so of the jumps that go
+///   nowhere within blocks, the first ones are left out with their trims, as many as Ink/Stitch's file then
+///   has trims more than StitchCraft's.
 /// - [`PALETTE`]: each thread named by StitchCraft's entry, when both files change thread at the same
 ///   colour blocks: as many blocks, and 2 of them of one thread in one file just when they are in the other.
 ///   Then only the entries chosen differ. Otherwise the file stays as it is, and the threads still differ.
@@ -45,10 +49,10 @@ pub const LONE: &str = "DEV-SVG-011";
 pub fn undone(deviation: &str, theirs: &StitchPlan, ours: &StitchPlan) -> Option<StitchPlan> {
     let shortest = profiles::REFERENCE.min_stitch.get();
     match deviation {
-        NOWHERE => Some(without_jumps_nowhere(theirs)),
+        NOWHERE => Some(without_jumps_nowhere(theirs, ours)),
         PALETTE => Some(named_as(theirs, ours)),
         FITTED => Some(split(&without_short(theirs, shortest), profiles::REFERENCE.max_stitch.get())),
-        LONE => Some(in_middle_of(without_jumps_nowhere(&without_lone_points(theirs, shortest)), theirs)),
+        LONE => Some(in_middle_of(without_jumps_nowhere(&without_lone_points(theirs, shortest), ours), theirs)),
         _ => None,
     }
 }
@@ -201,9 +205,23 @@ fn split(plan: &StitchPlan, longest: f64) -> StitchPlan {
     plan
 }
 
-/// `plan` without the jumps that go nowhere at the start of a colour block or right after a stop, nor the
-/// trims they carry ([`undone`]).
-fn without_jumps_nowhere(plan: &StitchPlan) -> StitchPlan {
+/// `plan` without the jumps that go nowhere where Ink/Stitch's plan has no trim, nor the trims they carry
+/// ([`undone`]): at the start of a colour block or right after a stop, and within a block the first ones, as
+/// many as `plan` then has trims more than `ours`.
+fn without_jumps_nowhere(plan: &StitchPlan, ours: &StitchPlan) -> StitchPlan {
+    let started = dropping_nowhere(plan, |starts, _| starts);
+    let mut more = started.stats().trims.saturating_sub(ours.stats().trims);
+    dropping_nowhere(&started, |_, carried| {
+        let dropped = carried && more > 0;
+        more -= usize::from(dropped);
+        dropped
+    })
+}
+
+/// `plan` without each jump that goes nowhere that `drops` leaves out, nor the trim it carries, as every
+/// jump of a PES file but the first does. `drops` hears whether the jump starts a colour block or comes right
+/// after a stop, and whether it carries a trim.
+fn dropping_nowhere(plan: &StitchPlan, mut drops: impl FnMut(bool, bool) -> bool) -> StitchPlan {
     let mut plan = plan.clone();
     let mut needle = None;
     for block in &mut plan.blocks {
@@ -213,7 +231,8 @@ fn without_jumps_nowhere(plan: &StitchPlan) -> StitchPlan {
                 // The trim a PES file's jump carries, and what comes before it.
                 let carried = kept.last().is_some_and(|before| before.kind == StitchKind::Trim);
                 let before = kept.len().saturating_sub(usize::from(carried));
-                if kept.get(..before).and_then(<[_]>::last).is_none_or(|before| before.kind == StitchKind::Stop) {
+                let starts = kept.get(..before).and_then(<[_]>::last).is_none_or(|before| before.kind == StitchKind::Stop);
+                if drops(starts, carried) {
                     kept.truncate(before);
                     continue;
                 }
@@ -277,6 +296,52 @@ mod tests {
         assert_eq!(without.stats().stitches, plan.stats().stitches);
         // A deviation the differential can't undo excuses as it is.
         assert_eq!(undone("DEV-LCK-001", &plan, &plan), None);
+    }
+
+    #[test]
+    fn jumps_that_go_nowhere_within_a_block_are_undone_as_far_as_ink_stitch_s_file_trims_more() {
+        use stitchcraft_plan::{PlanBuilder, Provenance, Role, Thread};
+        let red = Thread::new(Rgb::new(237, 23, 31));
+        let (top, travel) = (Provenance::plan(Role::Top), Provenance::plan(Role::Travel));
+        // As DejaVu's Ä in Ink/Stitch's file: twice, lock stitches an element forces, then a jump where the
+        // needle is, which pystitch writes with a trim. Then a jump where the needle is without one.
+        let mut builder = PlanBuilder::new(red.clone());
+        builder.jump(p(0.0, 0.0), travel);
+        builder.stitch(p(0.0, 0.0), top);
+        builder.stitch(p(10.0, 0.0), top);
+        for y in [5.0, 9.0] {
+            builder.trim(None);
+            builder.jump(builder.needle(), travel);
+            builder.stitch(p(10.0, y), top);
+        }
+        builder.jump(p(10.0, 9.0), travel);
+        builder.stitch(p(14.0, 9.0), top);
+        let theirs = builder.finish();
+        // StitchCraft's file, with `trims` trims where its needle moves.
+        let ours = |trims: u32| {
+            let mut builder = PlanBuilder::new(red.clone());
+            builder.stitch(p(0.0, 0.0), top);
+            for i in 1..=trims {
+                builder.trim(None);
+                builder.jump(p(f64::from(i), 0.0), travel);
+                builder.stitch(p(f64::from(i), 0.0), top);
+            }
+            builder.finish()
+        };
+        let counts = |trims: u32| {
+            let undone = undone(NOWHERE, &theirs, &ours(trims)).unwrap();
+            (undone.stats().trims, undone.stats().jumps)
+        };
+        // With no trim in StitchCraft's file both go, with 1 the first goes, and with 2 or more neither.
+        assert_eq!([0, 1, 2, 3].map(counts), [(0, 2), (1, 3), (2, 4), (2, 4)]);
+        let kinds = |plan: &StitchPlan| plan.blocks[0].stitches.iter().map(|s| (s.kind, s.at.y())).collect::<Vec<_>>();
+        let (n, j, t) = (StitchKind::Normal, StitchKind::Jump, StitchKind::Trim);
+        assert_eq!(
+            kinds(&undone(NOWHERE, &theirs, &ours(1)).unwrap()),
+            [(j, 0.0), (n, 0.0), (n, 0.0), (n, 5.0), (t, 5.0), (j, 5.0), (n, 9.0), (j, 9.0), (n, 9.0)]
+        );
+        // A needle point Ink/Stitch sews alone is left out with what leads to it, then these jumps go as here.
+        assert_eq!(undone(LONE, &theirs, &ours(0)).unwrap().stats().trims, 0);
     }
 
     #[test]
