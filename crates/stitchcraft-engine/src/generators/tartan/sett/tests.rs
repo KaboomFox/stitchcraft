@@ -174,6 +174,12 @@ fn req_fill_trt_002_a_narrow_stripe_s_halves_widen_the_stripes_beside_it_and_the
 fn req_fill_trt_002_a_repeated_sett_starts_its_first_run_in_its_last_stripe_s_colour() {
     let repeated = sett("(#ffffff)0.5 (#ff0000)4 (#0000ff)3", r#", "symmetry": false"#);
     assert_eq!(repeated.full(&repeated.warp), [band(BLUE, 0.25), Item::Run(WHITE), band(RED, 4.25), band(BLUE, 3.25), band(BLUE, 0.25)]);
+    // A pass that ends with a stripe sewn in the colour before it ends in that colour: the first run lies in
+    // red, the last colour of a stripe sewn as a fill in its own colour, and the continued stripe takes the
+    // run's half too.
+    let continued = sett("(#ffffff)0.5 (#ff0000)4 (#0000ff)*3", r#", "symmetry": false"#);
+    assert_eq!(continued.first_fill(&continued.warp), Some(RED));
+    assert_eq!(continued.full(&continued.warp), [band(RED, 0.25), Item::Run(WHITE), band(RED, 4.25), band(RED, 3.25)]);
 }
 
 #[test]
