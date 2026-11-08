@@ -425,7 +425,8 @@ mod tests {
     #[test]
     fn a_release_only_case_is_in_a_test_target_that_a_step_of_ci_runs_in_the_release_build() {
         assert_eq!(test_target("crates/stitchcraft-engine/tests/auto_photos.rs"), Some(("stitchcraft-engine", "auto_photos")));
-        for elsewhere in ["crates/stitchcraft-engine/src/auto/mod.rs", "crates/stitchcraft-engine/tests/auto/mod.rs", "tests/x.rs", "a/b/tests/x.txt"] {
+        for elsewhere in ["crates/stitchcraft-engine/src/auto/mod.rs", "crates/stitchcraft-engine/tests/auto/mod.rs", "tests/x.rs", "a/b/tests/x.txt"]
+        {
             assert_eq!(test_target(elsewhere), None, "{elsewhere}");
         }
         let workflow = "      - run: cargo test --release --locked -p stitchcraft-engine --test release\n        run: .github/scripts/annotated.sh \"dogs\" cargo test --release --locked -p stitchcraft-engine --test auto_photos\n      - run: cargo test --locked -p stitchcraft-cli --test picture\n";
@@ -450,8 +451,12 @@ mod tests {
             file: file.into(),
             release_only: Some(format!("{}CI's perf job runs it", cases::RELEASE_ONLY)),
         };
-        check_release_only(&root, &[case("crates/stitchcraft-engine/src/auto/mod.rs"), case("crates/stitchcraft-engine/tests/nowhere.rs")], &mut findings)
-            .unwrap();
+        check_release_only(
+            &root,
+            &[case("crates/stitchcraft-engine/src/auto/mod.rs"), case("crates/stitchcraft-engine/tests/nowhere.rs")],
+            &mut findings,
+        )
+        .unwrap();
         assert_eq!(findings.errors.len(), 2, "{:?}", findings.errors);
         assert!(findings.errors[0].contains("belong in a test file of their own"), "{}", findings.errors[0]);
         assert!(findings.errors[1].contains("--test nowhere"), "{}", findings.errors[1]);
