@@ -8,7 +8,7 @@
 use stitchcraft_core::{Budget, Code, Point};
 use stitchcraft_engine::design::{Design, DesignSettings, Element};
 use stitchcraft_engine::plan;
-use stitchcraft_engine::route::{Options, Route, Tool, route};
+use stitchcraft_engine::route::{Route, Tool, route};
 use stitchcraft_engine::testsheets;
 use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_plan::{Role, StitchKind, StitchPlan, Thread};
@@ -219,7 +219,7 @@ fn req_asm_009_a_route_sews_its_pieces_underlays_along_it_then_its_top_stitches(
     };
     let bar = column("bar", [(0.0, 8.0), (30.0, 8.0)], [(0.0, 12.0), (30.0, 12.0)], [(5.0, 7.0), (5.0, 13.0)]);
     let post = column("post", [(13.0, -5.0), (13.0, 25.0)], [(17.0, -5.0), (17.0, 25.0)], [(12.0, 0.0), (18.0, 0.0)]);
-    let how = Route { tool: Tool::Satins, options: Options::default(), start: None, end: None };
+    let how = Route { tool: Tool::Satins, options: Tool::Satins.defaults(), start: None, end: None };
     let routed = route(&[bar, post], &how, &DesignSettings::default(), &Budget::DEFAULT);
     assert!(routed.diagnostics.is_empty(), "{:?}", routed.diagnostics);
     assert!(routed.pieces.iter().any(|piece| piece.under), "the route runs under the satin");
