@@ -1799,6 +1799,14 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- An auto-run route's run under the others keeps its stroke's `underlays_first` (`REQ-ROUTE-011`), as a run
+  under a satin column keeps its column's. It took only the stroke's running stitch length and tolerance,
+  or its manual stitch. An element on top that set it could then sit alone between 2 runs that didn't, and
+  `SC-I0506` named it. The runs also parted the run of underlays first of the elements around the route. Of
+  a cross routed between 2 crossing columns, all in one thread and setting it, the second column's underlay
+  sewed after the route's runs under the others. It now sews right after the first column's underlay. Where
+  the route runs under the others along 2 strokes that differ in the setting, it makes 2 elements, each with
+  its own stroke's setting. A route of strokes without the setting is as it was, TS-17C's network among them.
 - Of a satin column of 2 rings, the second starts at its node nearest the first ring's start that no drawn
   rung lies before (`REQ-SAT-019`, `DEV-SAT-009`). Emilio 20 tricolore's E starts both rings of its bowl at a
   step, and the outer ring's nearest node lay past the rung across the step. Started there, each part of
