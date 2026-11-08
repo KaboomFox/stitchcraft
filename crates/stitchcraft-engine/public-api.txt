@@ -100,6 +100,7 @@ pub const fn stitchcraft_engine::design::Segment::end(self) -> stitchcraft_core:
 pub fn stitchcraft_engine::design::Segment::points(self) -> impl core::iter::traits::iterator::Iterator<Item = stitchcraft_core::units::Point>
 pub enum stitchcraft_engine::design::Shape
 pub stitchcraft_engine::design::Shape::Fill
+pub stitchcraft_engine::design::Shape::Fill::gradient: core::option::Option<stitchcraft_engine::design::Gradient>
 pub stitchcraft_engine::design::Shape::Fill::path: stitchcraft_engine::design::Path
 pub stitchcraft_engine::design::Shape::Fill::rule: stitchcraft_engine::design::FillRule
 pub stitchcraft_engine::design::Shape::Stroke
@@ -148,6 +149,17 @@ pub stitchcraft_engine::design::Element::name: core::option::Option<alloc::strin
 pub stitchcraft_engine::design::Element::params: stitchcraft_params::set::ParamSet
 pub stitchcraft_engine::design::Element::shape: stitchcraft_engine::design::Shape
 pub stitchcraft_engine::design::Element::thread: stitchcraft_plan::thread::Thread
+pub struct stitchcraft_engine::design::Gradient
+pub stitchcraft_engine::design::Gradient::end: stitchcraft_core::units::Point
+pub stitchcraft_engine::design::Gradient::start: stitchcraft_core::units::Point
+pub stitchcraft_engine::design::Gradient::stops: alloc::vec::Vec<stitchcraft_engine::design::GradientStop>
+impl stitchcraft_engine::design::Gradient
+pub fn stitchcraft_engine::design::Gradient::is_ordered(&self) -> bool
+pub fn stitchcraft_engine::design::Gradient::map<E>(&self, impl core::ops::function::Fn(stitchcraft_core::units::Point) -> core::result::Result<stitchcraft_core::units::Point, E>) -> core::result::Result<stitchcraft_engine::design::Gradient, E>
+pub struct stitchcraft_engine::design::GradientStop
+pub stitchcraft_engine::design::GradientStop::colour: stitchcraft_plan::thread::Rgb
+pub stitchcraft_engine::design::GradientStop::offset: f64
+pub stitchcraft_engine::design::GradientStop::opacity: f64
 pub struct stitchcraft_engine::design::Hints
 pub stitchcraft_engine::design::Hints::end: core::option::Option<stitchcraft_core::units::Point>
 pub stitchcraft_engine::design::Hints::start: core::option::Option<stitchcraft_core::units::Point>
@@ -345,6 +357,10 @@ impl stitchcraft_engine::generators::cross::params::CrossParams
 pub fn stitchcraft_engine::generators::cross::params::CrossParams::cross(&self, f64, stitchcraft_core::units::Mm, &mut alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>) -> stitchcraft_engine::generators::cross::Cross
 pub fn stitchcraft_engine::generators::cross::cross_stitch(&stitchcraft_engine::normalize::region::Region, &stitchcraft_engine::generators::cross::Cross, core::option::Option<stitchcraft_core::units::Point>, core::option::Option<&stitchcraft_engine::generators::Approach>, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_engine::generators::cross::top_path(&stitchcraft_engine::normalize::region::Region, &stitchcraft_engine::generators::cross::Cross, &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::vec::Vec<stitchcraft_engine::generators::tatami::rows::Segment>, stitchcraft_core::budget::Exhausted>
+pub mod stitchcraft_engine::generators::gradient
+pub struct stitchcraft_engine::generators::gradient::GradientFill
+pub fn stitchcraft_engine::generators::gradient::gradient_fill(&stitchcraft_engine::normalize::region::Region, &stitchcraft_engine::generators::gradient::GradientFill, core::option::Option<stitchcraft_core::units::Point>, core::option::Option<&stitchcraft_engine::generators::Approach>, &mut stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_engine::generators::gradient::top_path(&stitchcraft_engine::normalize::region::Region, &stitchcraft_engine::generators::gradient::GradientFill, &stitchcraft_core::rng::SplitMix64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::vec::Vec<stitchcraft_engine::generators::tatami::rows::Segment>, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::generators::manual
 pub fn stitchcraft_engine::generators::manual::manual_stitch(&stitchcraft_engine::design::Path, core::option::Option<stitchcraft_core::units::Mm>, &stitchcraft_engine::generators::passes::RepeatParams, stitchcraft_core::units::Mm, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_engine::generators::Stitched, stitchcraft_core::budget::Exhausted>
 pub mod stitchcraft_engine::generators::meander

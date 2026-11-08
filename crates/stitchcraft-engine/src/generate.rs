@@ -1239,6 +1239,13 @@ mod tests {
         assert_eq!(codes(&tartan.diagnostics), [Code::FillTartanNoSett]);
         let unread = laid(&square, &[("fill_method", "tartan_fill"), ("tartan", "{")], &Budget::DEFAULT);
         assert_eq!((unread.segments, codes(&unread.diagnostics)), (None, vec![Code::FillTartanSettUnreadable]));
+        // A linear gradient fill shows its colours' rows, its own colour's fading out without a gradient, which
+        // it says, and nothing when its settings can't be read.
+        let gradient = laid(&square, &[("fill_method", "linear_gradient_fill")], &Budget::DEFAULT);
+        assert!(gradient.segments.is_some_and(|segments| !segments.is_empty()));
+        assert_eq!(codes(&gradient.diagnostics), [Code::FillGradientNone]);
+        let unread = laid(&square, &[("fill_method", "linear_gradient_fill"), ("row_spacing_mm", "wide")], &Budget::DEFAULT);
+        assert_eq!((unread.segments, codes(&unread.diagnostics)), (None, vec![Code::ParamInvalid]));
         let spent = laid(&square, &[], &Budget { max_stitches: 1, max_work: 10 });
         assert_eq!((spent.segments, codes(&spent.diagnostics)), (None, vec![Code::BudgetExhausted]));
         assert!(spent.diagnostics.iter().all(|d| d.element.as_ref().map(ElementId::as_str) == Some("e")));
@@ -1342,6 +1349,7 @@ mod tests {
             (StitchType::MeanderFill, true),
             (StitchType::CircularFill, true),
             (StitchType::TartanFill, true),
+            (StitchType::LinearGradientFill, true),
             (StitchType::CrossStitch, false),
         ];
         for (stitch_type, underlaid) in methods {
