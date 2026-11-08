@@ -45,6 +45,7 @@
       - [Running stitch](user/reference/params/running.md)
       - [Repeats and bean stitch](user/reference/params/repeat.md)
       - [Zigzag stroke](user/reference/params/zigzag-stroke.md)
+      - [Ripple stitch](user/reference/params/ripple.md)
       - [Satin column](user/reference/params/satin.md)
       - [Pull compensation](user/reference/params/pull.md)
       - [Fill](user/reference/params/fill.md)

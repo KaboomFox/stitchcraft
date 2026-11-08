@@ -14,7 +14,7 @@
 //! is its first needle point, and needle points nearer the start than the shortest stitch are left out too.
 //! A line of no length, as a ripple's last line at its target point is, sews its one point, but none at a
 //! phase of 0. Ink/Stitch at `d59c9ab`, run as a black box, sews it so: lengthening it by a phase above 0
-//! moves its first point a ten-millionth of a millimetre, and it sews that stitch, which its plan drops.
+//! moves its first point by a rounding error, which gives it a stitch to sew.
 //!
 //! **One run.** A spiral's lines, and the others without `flip_copies`, are one running stitch through all
 //! their points in order.

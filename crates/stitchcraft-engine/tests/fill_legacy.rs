@@ -79,4 +79,8 @@ fn diag_sc_w0314_a_legacy_fill_says_it_is_sewn_as_a_tatami_fill() {
     );
     same(&flipped, &after_a_fill("legacy_fill", &[]));
     assert_eq!(messages(&after_a_fill("tatami_fill", &[])), Vec::<String>::new());
+    // `reverse`, a ripple stitch's setting too, is left to the node's stroke without a word.
+    let reversed = after_a_fill("legacy_fill", &[("reverse", "true")]);
+    assert_eq!(messages(&reversed), messages(&flipped)[1..]);
+    same(&reversed, &after_a_fill("legacy_fill", &[]));
 }

@@ -273,9 +273,8 @@ fn rails_not_applied(keys: &[&str]) -> Diagnostic {
         Some((last, rest)) if !rest.is_empty() => format!("{} and {last}", rest.join(", ")),
         _ => named.concat(),
     };
-    let message = format!(
-        "This ripple stitch sets {named}, which StitchCraft doesn't apply to ripple stitch yet, so its column is read with their defaults."
-    );
+    let message =
+        format!("This ripple stitch sets {named}, which StitchCraft doesn't apply to ripple stitch yet, so its column is read with their defaults.");
     not_sewn_yet(&message, "Draw the rails running the same way, the first where the ripple starts, and leave these settings at their defaults.")
 }
 
@@ -288,7 +287,8 @@ fn capped(given: f64, count: usize) -> Diagnostic {
 /// `SC-W0408`: `skips`, `skip_start` and `skip_end`, would leave out every one of the ripple's `total` lines,
 /// and leave out none.
 fn skips_all([start, end]: [usize; 2], total: usize) -> Diagnostic {
-    let message =
-        format!("`skip_start` and `skip_end` leave out {start} and {end} of this ripple stitch's {total} lines, which would leave none, so no line is left out.");
+    let message = format!(
+        "`skip_start` and `skip_end` leave out {start} and {end} of this ripple stitch's {total} lines, which would leave none, so no line is left out."
+    );
     Diagnostic::new(Code::RippleSkipsAll, message).with_fix(Fix::Hint("Lower `skip_start` or `skip_end`.".to_string()))
 }

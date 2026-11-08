@@ -5,8 +5,9 @@
 //! Every line runs through a point of each of the ripple's measures, pairs of points: line `k` through the
 //! point its place `t` of the way from each measure's first point to its second. Along a column the measures
 //! are the satin column's pairs across it, and towards a target point the needle points of the line's
-//! running stitch, each paired with the target point. Points are mixed as Ink/Stitch mixes them, `a · (1 −
-//! t) + b · t` ([`Point::lerp`]), so a line at a place of 0 or 1 lies exactly on a measure's end.
+//! running stitch, each paired with the target point. Points are mixed as `a · (1 − t) + b · t`
+//! ([`Point::lerp`]), as Ink/Stitch mixes them when it bends lines, so a line at a place of 0 or 1 lies
+//! exactly on a measure's end, as Ink/Stitch's does.
 
 use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Exhausted, Meter, Point, math};

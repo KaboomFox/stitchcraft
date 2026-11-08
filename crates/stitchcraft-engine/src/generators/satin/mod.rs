@@ -453,9 +453,8 @@ fn sewn(
 
 /// `SC-E0216`: no section of the column has length on both rails, so it has nothing to sew.
 fn no_section() -> Diagnostic {
-    Diagnostic::new(Code::SatinNoSection, "Every section of this satin column has no length on one of its rails, so it has nothing to sew.").with_fix(
-        Fix::Hint("Move the rungs so that each meets both rails away from their ends, or lower `push_compensation_mm`.".to_string()),
-    )
+    Diagnostic::new(Code::SatinNoSection, "Every section of this satin column has no length on one of its rails, so it has nothing to sew.")
+        .with_fix(Fix::Hint("Move the rungs so that each meets both rails away from their ends, or lower `push_compensation_mm`.".to_string()))
 }
 
 /// The pairs of points across `satin` that a ripple stitch's lines run through

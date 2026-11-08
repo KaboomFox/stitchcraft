@@ -250,6 +250,11 @@ Ink/Stitch leaves it out. Such a rung crosses a node whose rail turns back acros
 Where the pairing leaves stitches leaning far along the column, `SC-W0208` names the place to add a rung
 ([Leaning and long stitches](#leaning-and-long-stitches)).
 
+A ripple stitch along a column reads its rails and rungs as a satin column does, with the satin column's
+defaults. Its lines run through pairs of points placed in each section as the top stitches' pairs are, every
+`running_stitch_tolerance_mm`, with no compensation and nothing at random
+([ripple stitch](strokes.md#ripple-stitch-m108)).
+
 ## Compensation
 
 Thread under tension pulls the fabric in across a satin column, which then sews narrower than it is

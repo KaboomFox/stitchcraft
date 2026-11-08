@@ -390,16 +390,17 @@ from a column of 1 pair, is left out.
   in proportion less where the segment is shorter than 0.1 CSS pixels, and sewn as a running stitch. The
   needle points before the line's start are left out, and the start is the first needle point. A needle
   point nearer the start than the shortest stitch is left out too. The line is then sewn from its end
-  where it turns back, and a line of no length sews nothing. `staggers` is 1 when a file sets none. Each
-  line is then placed from its start. Ink/Stitch's settings window shows 0.
+  where it turns back. A line of no length sews its one point, but nothing at a phase of 0, as Ink/Stitch
+  at `d59c9ab` sews it when run as a black box. `staggers` is 1 when a file sets none. Each line is then
+  placed from its start. Ink/Stitch's settings window shows 0.
 - With random length, each line draws from its own stream of the element's generator, keyed by its place
   among the lines sewn.
 
 #### One run
 
 A closed line's lines, and the others with `flip_copies` off, are sewn as one running stitch through all
-their points in order. Each line is sewn from its start, and the needle goes straight from
-one line's end to the next one's start.
+their points in order. Each line is sewn from its start, and the needle goes straight from one line's end
+to the next one's start.
 
 #### The whole ripple
 
@@ -408,7 +409,8 @@ one line's end to the next one's start.
 A line sewn one at a time that starts where the one before ended lists that needle point again, as
 Ink/Stitch lists it, and it takes a step of the bean list each time. A ripple starts and ends where its
 stitches do, whatever its neighbours. It offers the element before it its first subpath's start, as every
-stroke does.
+stroke does. Lines near the target point can be shorter than the shortest stitch. Finalize then leaves out
+their needle points that lie too near the one before ([finalize](../engine-pipeline.md#5-finalize)).
 
 The lines' points come from arithmetic, square roots and powers (`stitchcraft_core::math`) alone, and
 every platform places them alike. Each point of each line costs a unit of work, and the points must fit
@@ -420,10 +422,10 @@ M10.11 sews guided ripples: guide lines and satin guides, `scale_axis`, `scale_s
 `rotate_ripples`, `satin_guide_pattern_position`, the anchor line, `grid_size_mm`, `grid_first` and
 `manual_pattern_placement`. The registry doesn't declare their settings yet. A stroke keeps them, and
 `SC-W0105` names each. The SVG reader leaves a guide line or an anchor line out and names it (`SC-W0802`),
-and the ripple sews as this section says. A ripple along a column whose `reverse_rails` or
-`swap_satin_rails` is set to other than their defaults, automatic and false, sews with the defaults, and
-`SC-W0406` names the settings. A ripple cut to clips is sewn whole, and `SC-W0406` says so. Ink/Stitch cuts
-its stitches to the clips and routes the pieces.
+and the ripple sews as this section says. Ink/Stitch reads a column's rails with the element's
+`reverse_rails`, `swap_satin_rails` and `push_compensation_mm`. StitchCraft reads them with the defaults,
+automatic, false and 0, and `SC-W0406` names each one set otherwise. A ripple cut to clips is sewn whole,
+and `SC-W0406` says so. Ink/Stitch cuts its stitches to the clips and routes the pieces.
 
 ### Compared with Ink/Stitch
 
@@ -434,6 +436,12 @@ little, and the copies made from them. With `min_line_dist_mm`, the count toward
 measured from those points, and can differ by 2 where the shortest length falls near a whole number of
 `min_line_dist_mm`. Ink/Stitch sews nothing of lines shorter together than 0.1 CSS pixels, and StitchCraft
 nothing of lines shorter together than the shortest stitch (`DEV-RUN-004`).
+
+Ink/Stitch starts a staggered line where its stitches have run the phase from the stretch's start,
+measured along them. Where the stretch is the whole phase, that is the line's start, or near it where the
+stitches cut a bend. Where the first segment is shorter than 0.1 CSS pixels, the stretch is shorter than
+the phase, and Ink/Stitch leaves the rest of the phase of the line unsewn. StitchCraft starts every line at
+its start.
 
 ### Properties (conformance)
 
@@ -453,7 +461,8 @@ nothing of lines shorter together than the shortest stitch (`DEV-RUN-004`).
 - Each line's stitches keep within the running stitch's tolerance of the line through its points
   (`REQ-RIP-007`).
 - Staggered lines start their needle points `((i / staggers) mod 1)` of the stitch lengths' sum before
-  their start, and a staggered line of no length is left out (`REQ-RIP-008`).
+  their start. A line of no length sews its one point, but nothing when staggered at a phase of 0
+  (`REQ-RIP-008`).
 - `reverse` sews the ripple backwards, then `repeats` and `bean_stitch_repeats` sew it as a running
   stitch's (`REQ-RIP-009`).
 - What M10.11 sews is left out with a coded warning, and the ripple sews as this section says
