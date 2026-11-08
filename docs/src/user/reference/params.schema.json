@@ -872,7 +872,7 @@
     },
     "herringbone_width_mm": {
       "default": 0.0,
-      "description": "The width of the bands of a herringbone, each band's rows slanting the other way from the band before. 0 sews straight rows. StitchCraft sews herringbones from M10.7, and until then the rows are sewn without them, which `SC-W0324` says.",
+      "description": "The width of the bands of a herringbone, each band's rows slanting at 45° to the stripes the other way from the band before, as the ribs of a herringbone twill turn. The weft's rows are joined from band to band along its stripes' edges. 0 sews straight rows.",
       "maximum": 100.0,
       "minimum": 0.0,
       "title": "Herringbone width",
@@ -2230,7 +2230,7 @@
     },
     "tartan": {
       "default": "",
-      "description": "The sett, as Ink/Stitch's tartan editor saves it: an object of JSON whose `palette` gives the stripes, each a colour in brackets and its width in millimetres, such as `(#0000ff)/2.4 (#ffffff)0.4 (#ff0000)/2.4`. A `?` before a width leaves its stripe unsewn, a `*` sews it in the colour of the stripe before it, and a `|` parts the warp's stripes from the weft's. `symmetry` mirrors the sett at its ends rather than repeating it, `scale` scales it in percent, `rotate` turns it in degrees, `offset_x` and `offset_y` move it in millimetres, and stripes no wider than `min_stripe_width` sew as runs. Empty, the fill sews Ink/Stitch's default sett. VectorCraft's fill dialog doesn't hold a sett before M10.7.",
+      "description": "The sett, as Ink/Stitch's tartan editor saves it: an object of JSON whose `palette` gives the stripes, each a colour in brackets and its width in millimetres, such as `(#0000ff)/2.4 (#ffffff)0.4 (#ff0000)/2.4`. A `?` before a width leaves its stripe unsewn, a `*` sews it in the colour of the stripe before it, and a `|` parts the warp's stripes from the weft's. `symmetry` mirrors the sett at its ends rather than repeating it, `scale` scales it in percent, `rotate` turns it in degrees, `offset_x` and `offset_y` move it in millimetres, and stripes no wider than `min_stripe_width` sew as runs. Empty, the fill sews Ink/Stitch's default sett. In VectorCraft, StitchCraft Tartan, a filter, writes the sett from a code of its stripes.",
       "maxLength": 4096,
       "title": "Sett",
       "type": "string",
@@ -2245,7 +2245,7 @@
     },
     "tartan_angle": {
       "default": -45.0,
-      "description": "The angle of the rows to the stripes, in degrees: at -45 they slant across both the warp's and the weft's stripes, as a woven twill's do. At 0 or 90 they run along one direction's stripes.",
+      "description": "The angle of the rows to the stripes, in degrees: at -45 they slant across both the warp's and the weft's stripes, as a woven twill's do. At 0 or 90 they run along one direction's stripes. A herringbone's rows run at 45° to the stripes, whatever this angle.",
       "title": "Row angle",
       "type": "number",
       "x-stitchcraft": {
