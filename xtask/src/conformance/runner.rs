@@ -70,7 +70,7 @@ pub fn run_data_case(root: &Path, case: &DataCase, bless: bool) -> Outcome {
         }
         Spec::Inkstitch { subject, excused, .. } => differential::run(root, subject, excused, &mut outcome),
         Spec::CentreLines { subject } => centre_lines::run(root, subject, &mut outcome),
-        Spec::Fonts { options } => fonts::run(root, *options, &mut outcome),
+        Spec::Fonts { options } => fonts::run(root, options, &mut outcome),
     }
     outcome
 }
