@@ -63,11 +63,13 @@ OFL, CC0, CC BY or CC BY-SA, and the others. No font file is ever committed.
 The `inkstitch-fonts` case (`conformance/cases/inkstitch/fonts.toml`) cuts each glyph out of its glyph file
 as a design of its own, its group shown and the other glyphs left out, which both programs sew. A run sews
 the case's `sample` of glyphs of each font, or every glyph with `--every-glyph`, and `--shard 2/6` sews the
-second of 6 parts of them:
+second of 6 parts of them. `--font egyptian` sews only the glyphs of the font in that folder of the corpus,
+and each font takes a `--font` of its own. So the fonts a weekly run found differing sew again in minutes:
 
 ```sh
 cargo xtask conformance --differential --filter inkstitch-fonts                  # the nightly sample
 cargo xtask conformance --differential --filter inkstitch-fonts --every-glyph    # every glyph, for hours
+cargo xtask conformance --differential --filter inkstitch-fonts --every-glyph --font egyptian --font noble
 ```
 
 The report is `target/conformance/fonts.md`, with a row for each font, the excuses with the glyphs each
