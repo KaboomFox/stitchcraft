@@ -343,7 +343,7 @@ pub fn solid(color: Rgb) -> Result<Box<RawValue>, serde_json::Error> {
 
 /// A linear gradient paint of `gradient`, as a filter gives one (M10.12): `Linear`, each stop's offset,
 /// colour as [`solid`] writes one and opacity, and the gradient's start and end in points as its `geom`,
-/// which the reader places where they were ([`crate::gradient`]).
+/// which the reader places where they were (`src/gradient.rs`).
 pub fn gradient(gradient: &Gradient) -> Result<Box<RawValue>, serde_json::Error> {
     let c = color::component;
     let stops: Vec<Value> = gradient

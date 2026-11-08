@@ -216,7 +216,7 @@ impl Gradient {
             && self.stops.windows(2).all(|pair| pair.first().map(|s| s.offset) <= pair.get(1).map(|s| s.offset))
     }
 
-    /// The same gradient, its start and end moved by `f`, or `f`'s error, as [`Path::map`] moves a path.
+    /// The same gradient, its start and end moved by `f`, or `f`'s error, as [`Hints::map`] moves hints.
     pub fn map<E>(&self, f: impl Fn(Point) -> Result<Point, E>) -> Result<Gradient, E> {
         Ok(Gradient { start: f(self.start)?, end: f(self.end)?, stops: self.stops.clone() })
     }
