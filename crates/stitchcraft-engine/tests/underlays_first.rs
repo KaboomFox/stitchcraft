@@ -235,6 +235,31 @@ fn req_asm_009_a_route_sews_its_pieces_underlays_along_it_then_its_top_stitches(
 }
 
 #[test]
+fn req_asm_009_an_auto_run_route_sews_in_one_run_with_the_columns_around_it() {
+    // A cross of 2 strokes, routed by Auto-Route Running Stitch: along the bar, out along each arm under the
+    // others and back on top, then on along the bar. Each run under the others keeps its stroke's setting.
+    // So the crossing columns and the route between them are one run: both columns' underlays, then their
+    // top stitches with the route's elements between them (ADR-0018).
+    let cross = [
+        along("bar", polylines(&[&[(36.0, 10.0), (56.0, 10.0)]]), &RED, &[FIRST]),
+        along("arm", polylines(&[&[(46.0, 0.0), (46.0, 20.0)]]), &RED, &[FIRST]),
+    ];
+    let how = Route { tool: Tool::Runs, options: Tool::Runs.defaults(), start: None, end: None };
+    let routed = route(&cross, &how, &DesignSettings::default(), &Budget::DEFAULT);
+    assert!(routed.diagnostics.is_empty(), "{:?}", routed.diagnostics);
+    assert_eq!(routed.pieces.iter().filter(|piece| piece.under).count(), 2, "out along each arm under the others");
+    let [across, down] = <[Element; 2]>::try_from(crossing(&[FIRST], &[FIRST], [&RED, &RED])).unwrap();
+    let pieces = routed.pieces.iter().map(|piece| piece.element.clone());
+    let outcome = planned(std::iter::once(across).chain(pieces).chain([down]).collect());
+    let alone = outcome.diagnostics.iter().filter(|d| d.code == Code::UnderlaysFirstAlone).map(|d| d.element.as_ref().unwrap().as_str());
+    assert_eq!(alone.collect::<Vec<_>>(), Vec::<&str>::new());
+    let tops = routed.pieces.iter().map(|piece| (piece.element.id.as_str(), Role::Top));
+    let first = [("across", Role::Underlay), ("down", Role::Underlay), ("across", Role::Top)];
+    let sewn: Vec<(&str, Role)> = first.into_iter().chain(tops).chain([("down", Role::Top)]).collect();
+    assert_eq!(layers(&outcome.plan.unwrap()), owned(&sewn));
+}
+
+#[test]
 fn req_asm_009_a_column_with_no_section_in_a_run_is_said_of_as_when_drawn() {
     // A rung from the first rail's start to the second rail's end leaves the second column no section to sew
     // (SC-E0216). In a run it sews nothing, and is said of as it is said of sewn as drawn, its trim left out.
