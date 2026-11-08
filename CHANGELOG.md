@@ -32,6 +32,18 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     The 35 that set a herringbone are known differences until M10.7, and so is the S-stitch satin column of
     Colorful's ’, which starts elsewhere than Ink/Stitch's. A user page has pictures of tartan fills. Golden
     added: `TS-17B.pes`.
+- M10.13: auto-run routing (`REQ-ROUTE-009` to `REQ-ROUTE-013`, `REQ-VC-020`). `stitchcraft_engine::route`
+  routes running stitches as Ink/Stitch's Auto-Route Running Stitch does, with `Tool::Runs`. With Add nodes
+  at intersections, each stroke's lines are cut where they cross themselves and each other, and where 2
+  pass within 50 CSS pixels (13.2 mm) of each other, at their nearest points. The pieces are routed through
+  M10.4's graph, a piece passed twice runs under the others first without repeats or bean stitch, a stretch
+  on top keeps its stroke's settings with an even number of repeats lowered by 1, and with Trim jump
+  stitches a jump longer than 0.75 mm trims. Each tool declares its own options, `Tool::options`. In
+  VectorCraft, the heavy filter StitchCraft Auto-Route Running Stitch (`--features route-runs`) replaces the
+  selected strokes with the route. New code: `SC-W1004`, for more lines than are cut. TS-17C draws a network
+  of 6 lines below its letters, as drawn and routed, and the differential routes it with Ink/Stitch's tool
+  with each option. Golden changed: `TS-17C.pes`, for the network below the letters. Fixed: with Preserve
+  order, M10.4's route sewed a jump where a piece already joined the jump's ends.
 - M8.6: the first run of every glyph of Ink/Stitch's fonts, explained (`REQ-FONT-001`). On 3 November 2026
   it found 56 glyphs that differ beyond the ledger and 11 that didn't sew, in 20 fonts. 2 were bugs, now
   fixed, and the ledger explains the others by their causes. Run again on those fonts, 4,644 of their 4,961

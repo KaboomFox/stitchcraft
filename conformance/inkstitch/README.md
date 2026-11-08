@@ -129,20 +129,24 @@ shapes, each with its parameters (`stitchcraft_testkit::inkstitch`), which Stitc
 as they were written (`REQ-SVG-009`).
 
 A sheet's case with a `[route]` table routes the sheet's elements whose ids start with `elements` in each
-program, with the options it sets by Ink/Stitch's names, and compares the 2 routes, each sewn by its own
-program (`REQ-ROUTE-008`). Ink/Stitch's tool runs as `--extension=auto_satin`, and writes the SVG file it
-routed, `route-<case>.routed.svg`, beside StitchCraft's route as an SVG file, `route-<case>.stitchcraft.svg`:
+program, with the tool `tool` names and the options it sets by Ink/Stitch's names, and compares the 2
+routes, each sewn by its own program (`REQ-ROUTE-008`, `REQ-ROUTE-013`). The tool is `satins`, Auto-Route
+Satin Columns, unless `tool = "runs"` names Auto-Route Running Stitch. Ink/Stitch's tool runs as
+`--extension=auto_satin` or `--extension=auto_run`, on the elements painted by `style` attributes, as
+Inkscape paints them, because Auto-Route Running Stitch gives the elements it makes the style of their
+strokes and none of their other paint. It writes the SVG file it routed, `route-<case>.routed.svg`, beside
+StitchCraft's route as an SVG file, `route-<case>.stitchcraft.svg`:
 
 ```toml
-id = "inkstitch-route-ts17c-in-order"
-requirements = ["REQ-ROUTE-008"]
+id = "inkstitch-route-ts17c-lines-in-order"
+requirements = ["REQ-ROUTE-013"]
 kind = "inkstitch"
 sheet = "TS-17C"
 
 [route]
-elements = "ts17c:drawn:"
+elements = "ts17c:lines-drawn:"
+tool = "runs"
 preserve_order = true
-trim = false
 ```
 
 A `centre-lines` case names its shapes with `sheet`, `design` or a `[letters]` table, and has no
