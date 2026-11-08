@@ -44,7 +44,7 @@ use stitchcraft_params::{ChoiceOption, Origin, StitchType, params};
 use crate::design::{Hints, Join, Path};
 use crate::generators::pull::PullParams;
 use crate::generators::running::raised;
-use crate::generators::satin::column::Section;
+pub(crate) use crate::generators::satin::column::Section;
 pub(crate) use crate::generators::satin::column::{first_point, sewn_rails};
 use crate::generators::satin::compensation::Processor;
 use crate::generators::satin::ends::Guides;
@@ -490,9 +490,9 @@ impl Column {
         }
         // Its top stitches alone have no centre walk before them, and run from the rails' starts.
         let (layers, mut top, odd, hints) = match layer {
-            Layer::Whole => (self.layers.clone(), self.top.clone(), self.odd, *hints),
-            Layer::Underlay => (self.layers.clone(), Vec::new(), self.odd, Hints { end: None, ..*hints }),
-            Layer::Top => (Vec::new(), self.top.clone(), false, Hints { start: None, ..*hints }),
+            Layer::Whole => (self.layers.clone(), self.top.clone(), self.odd, hints.clone()),
+            Layer::Underlay => (self.layers.clone(), Vec::new(), self.odd, Hints { end: None, ..hints.clone() }),
+            Layer::Top => (Vec::new(), self.top.clone(), false, Hints { start: None, ..hints.clone() }),
         };
         if odd {
             top.reverse();
@@ -539,24 +539,29 @@ fn no_section() -> Diagnostic {
         .with_fix(Fix::Hint("Move the rungs so that each meets both rails away from their ends, or lower `push_compensation_mm`.".to_string()))
 }
 
-/// The pairs of points across `satin` that a ripple stitch's lines run through
-/// (`docs/src/design/algorithms/strokes.md` › Ripple stitch): every `spacing` millimetres along the column's
-/// sections, placed as its top stitches' pairs are, with no compensation and nothing at random, its rails
-/// read as `params` say. What the reading says goes to `warnings`, and `SC-E0216`, with no pair, when no
-/// section has length. Each pair is the first rail's point, then the second's.
-pub(crate) fn ripple_pairs(
+/// The sections of `satin` that a ripple stitch reads (`docs/src/design/algorithms/strokes.md` › Ripple
+/// stitch): its rails swapped, turned and pushed as `params` say, cut at its rungs, the column a ripple's
+/// lines run along or the satin guide its copies lie across. What the reading says goes to `warnings`, and
+/// `SC-E0216`, with no section, when none has length.
+pub(crate) fn ripple_sections(
     satin: &Satin,
     params: &SatinParams,
-    spacing: f64,
     warnings: &mut Vec<Diagnostic>,
     meter: &mut Meter,
-) -> Result<Vec<[Point; 2]>, Exhausted> {
+) -> Result<Vec<Section>, Exhausted> {
     let sections = column::sections(satin, params, warnings, meter)?;
     if sections.is_empty() {
         warnings.push(no_section());
-        return Ok(Vec::new());
     }
-    pairs::pairs(&sections, spacing, &mut Processor::inset([0.0; 2], [0.0; 2]), meter)
+    Ok(sections)
+}
+
+/// The pairs of points across `sections` that a ripple stitch's lines run through, or its copies lie on:
+/// every `spacing` millimetres, placed as a satin column's top stitches' pairs are, with no compensation and
+/// nothing at random, each point moved in by `inset`, a share of the pair's width. An inset of 0.5 puts both
+/// on the column's middle. Each pair is the first rail's point, then the second's.
+pub(crate) fn ripple_pairs(sections: &[Section], spacing: f64, inset: f64, meter: &mut Meter) -> Result<Vec<[Point; 2]>, Exhausted> {
+    pairs::pairs(sections, spacing, &mut Processor::inset([0.0; 2], [inset; 2]), meter)
 }
 
 /// `SC-W0215` for a column left out: one with no stitch `across`, which only a zigzag satin of a single

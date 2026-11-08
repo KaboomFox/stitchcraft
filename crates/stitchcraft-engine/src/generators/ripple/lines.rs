@@ -172,3 +172,14 @@ pub(super) fn skipped(mut lines: Vec<Vec<Point>>, [start, end]: [usize; 2]) -> (
     lines.drain(..start);
     (lines, Some(start))
 }
+
+/// `lines` without the first `skip[0]` and the last `skip[1]` when `apply`, as a ripple's skips leave out the
+/// points of the lines a column's grid crosses, which can be more or fewer than the ripple's own: none when
+/// they would leave out every one.
+pub(super) fn skipped_as(lines: Vec<Vec<Point>>, [start, end]: [usize; 2], apply: bool) -> Vec<Vec<Point>> {
+    if !apply {
+        return lines;
+    }
+    let to = lines.len().saturating_sub(end);
+    lines.into_iter().take(to).skip(start).collect()
+}
