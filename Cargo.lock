@@ -718,6 +718,7 @@ name = "stitchcraft-engine"
 version = "0.0.1"
 dependencies = [
  "proptest",
+ "serde_json",
  "stitchcraft-core",
  "stitchcraft-params",
  "stitchcraft-plan",

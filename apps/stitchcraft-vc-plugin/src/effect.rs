@@ -229,9 +229,20 @@ mod tests {
     #[test]
     fn what_cannot_be_sewn_is_the_live_effect_s_error() {
         // A method that arrives in a later version is said, rather than the object vanishing.
-        assert!(error(&run(Family::Fill, &square(), &[("fill_method", json!("tartan_fill"))])).starts_with("warning SC-W0011: "));
+        assert!(error(&run(Family::Fill, &square(), &[("fill_method", json!("guided_fill"))])).starts_with("warning SC-W0011: "));
         assert!(error(&run(Family::Fill, &square(), &[("fill_method", json!("plaid"))])).starts_with("error SC-E0101: "));
         assert!(error(&run(Family::Stroke, &json!({"subpaths": []}), &[])).starts_with("warning SC-W0808: It draws nothing"));
+    }
+
+    #[test]
+    fn a_tartan_fill_shows_its_rows_of_ink_stitch_s_default_sett() {
+        // The fill dialog holds no sett before M10.7, so the effect sews Ink/Stitch's default one, and the
+        // warning that says so is `stitch export`'s to report.
+        for level in ["auto", "exact"] {
+            let out = run(Family::Fill, &square(), &[("fill_method", json!("tartan_fill")), (stitchcraft_vectorcraft::PREVIEW_LEVEL, json!(level))]);
+            assert!(out.get("error").is_none(), "{level}: {out}");
+            assert!(!out["objects"][0]["path"]["subpaths"].as_array().unwrap().is_empty(), "{level}");
+        }
     }
 
     #[test]

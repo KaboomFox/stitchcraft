@@ -9,9 +9,9 @@
 //! numbers from its own generator, which its underlay leaves as it was. So the top stitches take the random
 //! numbers they take outside a run.
 //!
-//! **Which elements.** A satin column with an underlay on, and a tatami, contour, meander or circular fill
-//! whose underlay is on, are sewn in 2 layers here ([`has_underlay`]). Every other element of a run sews
-//! nothing first, and is generated whole in the second pass, as [`super::generate`] generates it.
+//! **Which elements.** A satin column with an underlay on, and a tatami, contour, meander, circular or
+//! tartan fill whose underlay is on, are sewn in 2 layers here ([`has_underlay`]). Every other element of a
+//! run sews nothing first, and is generated whole in the second pass, as [`super::generate`] generates it.
 //!
 //! **What the order reads first.** Before any element is generated, the order reads whether each sets
 //! `underlays_first` ([`sets`]), whether a trim or a stop follows it ([`ends`]), whether its settings read

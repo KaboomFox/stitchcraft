@@ -13,7 +13,8 @@
           "tatami_fill",
           "contour_fill",
           "meander_fill",
-          "circular_fill"
+          "circular_fill",
+          "tartan_fill"
         ],
         "group": "Rows",
         "origin": "inkstitch",
@@ -139,7 +140,7 @@
           "default": [
             0
           ],
-          "description": "How many times to go back and forth over each stitch of the fill's path, before its repeats: 1 sews every stitch three times (there, back and there again), 2 five times. Several numbers separated by spaces are taken in turn along the stitches: \"1 0\" makes every other stitch bold. A circular fill's travel between the pieces of its spiral is sewn once, and takes its turn.",
+          "description": "How many times to go back and forth over each stitch of the fill's path, before its repeats: 1 sews every stitch three times (there, back and there again), 2 five times. Several numbers separated by spaces are taken in turn along the stitches: \"1 0\" makes every other stitch bold. A circular fill's travel between the pieces of its spiral is sewn once, and takes its turn. A tartan fill sews its runs so, its rows and its travel once.",
           "items": {
             "maximum": 10,
             "minimum": 0,
@@ -153,7 +154,8 @@
             "applies_to": [
               "contour_fill",
               "meander_fill",
-              "circular_fill"
+              "circular_fill",
+              "tartan_fill"
             ],
             "group": "Repeats",
             "origin": "inkstitch",
@@ -584,6 +586,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "tartan_fill",
           "cross_stitch"
         ],
         "group": "Rows",
@@ -649,7 +652,7 @@
     },
     "fill_method": {
       "default": "tatami_fill",
-      "description": "The stitch the area is filled with. A tatami fill sews rows of running stitches across it, a contour fill rings that follow its outline inward, a meander fill one line that wanders through a tiling, and a circular fill a spiral round its middle. A fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without underlay (`SC-W0314`). The other methods arrive in later versions; until then an element set to one is skipped (`SC-W0011`).",
+      "description": "The stitch the area is filled with. A tatami fill sews rows of running stitches across it, a contour fill rings that follow its outline inward, a meander fill one line that wanders through a tiling, a circular fill a spiral round its middle, and a tartan fill a plaid of rows in the colours of its sett. A fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without underlay (`SC-W0314`). The other methods arrive in later versions; until then an element set to one is skipped (`SC-W0011`).",
       "enum": [
         "tatami_fill",
         "circular_fill",
@@ -690,7 +693,8 @@
           "tatami_fill",
           "contour_fill",
           "meander_fill",
-          "circular_fill"
+          "circular_fill",
+          "tartan_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -715,7 +719,8 @@
           "tatami_fill",
           "contour_fill",
           "meander_fill",
-          "circular_fill"
+          "circular_fill",
+          "tartan_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -735,7 +740,8 @@
           "tatami_fill",
           "contour_fill",
           "meander_fill",
-          "circular_fill"
+          "circular_fill",
+          "tartan_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -758,7 +764,8 @@
           "tatami_fill",
           "contour_fill",
           "meander_fill",
-          "circular_fill"
+          "circular_fill",
+          "tartan_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -781,7 +788,8 @@
           "tatami_fill",
           "contour_fill",
           "meander_fill",
-          "circular_fill"
+          "circular_fill",
+          "tartan_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -799,7 +807,8 @@
           "tatami_fill",
           "contour_fill",
           "meander_fill",
-          "circular_fill"
+          "circular_fill",
+          "tartan_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -859,6 +868,23 @@
         "group": "Rows",
         "origin": "inkstitch",
         "stability": "stable"
+      }
+    },
+    "herringbone_width_mm": {
+      "default": 0.0,
+      "description": "The width of the bands of a herringbone, each band's rows slanting the other way from the band before. 0 sews straight rows. StitchCraft sews herringbones from M10.7, and until then the rows are sewn without them, which `SC-W0324` says.",
+      "maximum": 100.0,
+      "minimum": 0.0,
+      "title": "Herringbone width",
+      "type": "number",
+      "x-stitchcraft": {
+        "applies_to": [
+          "tartan_fill"
+        ],
+        "group": "Tartan",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "mm"
       }
     },
     "join_style": {
@@ -1119,7 +1145,7 @@
     },
     "max_stitch_length_mm": {
       "default": null,
-      "description": "Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as its split method says. Empty, a stitch is split only where it is longer than the machine sews. A tatami fill sews its rows in stitches this long, and a contour fill its rings. A meander or circular fill's underlay sews its rows so.",
+      "description": "Manual stitch splits a stitch longer than this into equal parts, and a satin column splits it as its split method says. Empty, a stitch is split only where it is longer than the machine sews. A tatami fill sews its rows in stitches this long, and a contour fill its rings. A meander or circular fill's underlay sews its rows so, and a tartan fill its rows and its weft's runs.",
       "maximum": 25.0,
       "minimum": 0.1,
       "title": "Longest stitch",
@@ -1137,7 +1163,8 @@
           "tatami_fill",
           "contour_fill",
           "meander_fill",
-          "circular_fill"
+          "circular_fill",
+          "tartan_fill"
         ],
         "family_defaults": {
           "fill": 4.0
@@ -1744,12 +1771,29 @@
           "tatami_fill",
           "contour_fill",
           "meander_fill",
-          "circular_fill"
+          "circular_fill",
+          "tartan_fill"
         ],
         "group": "Rows",
         "origin": "inkstitch",
         "stability": "stable",
         "unit": "mm"
+      }
+    },
+    "rows_per_thread": {
+      "default": 2,
+      "description": "How many rows in a row go to the warp's stripes, before as many go to the weft's. More rows to a thread make the weave coarser, as a heavier twill.",
+      "maximum": 100,
+      "minimum": 1,
+      "title": "Rows per thread",
+      "type": "integer",
+      "x-stitchcraft": {
+        "applies_to": [
+          "tartan_fill"
+        ],
+        "group": "Tartan",
+        "origin": "inkstitch",
+        "stability": "stable"
       }
     },
     "running_stitch_length_mm": {
@@ -1777,7 +1821,8 @@
           "tatami_fill",
           "contour_fill",
           "meander_fill",
-          "circular_fill"
+          "circular_fill",
+          "tartan_fill"
         ],
         "group": "Running stitch",
         "origin": "inkstitch",
@@ -1823,7 +1868,8 @@
           "tatami_fill",
           "contour_fill",
           "meander_fill",
-          "circular_fill"
+          "circular_fill",
+          "tartan_fill"
         ],
         "deviation": "DEV-SAT-006",
         "group": "Running stitch",
@@ -1947,7 +1993,8 @@
       "x-stitchcraft": {
         "applies_to": [
           "tatami_fill",
-          "circular_fill"
+          "circular_fill",
+          "tartan_fill"
         ],
         "group": "Stitches",
         "origin": "inkstitch",
@@ -2065,7 +2112,8 @@
               "tatami_fill",
               "contour_fill",
               "meander_fill",
-              "circular_fill"
+              "circular_fill",
+              "tartan_fill"
             ],
             "group": "Stitches",
             "origin": "inkstitch",
@@ -2098,6 +2146,20 @@
       "type": "boolean",
       "x-stitchcraft": {
         "group": "Trims and stops",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
+    "stop_at_ending_point": {
+      "default": false,
+      "description": "End every colour at the fill's end position, or near the next element: each colour then travels from where the fill starts and to where it ends. Off, each colour starts where the one before ended and ends with its last row, and only the fill's runs travel on towards its end.",
+      "title": "Stop at the end position",
+      "type": "boolean",
+      "x-stitchcraft": {
+        "applies_to": [
+          "tartan_fill"
+        ],
+        "group": "Tartan",
         "origin": "inkstitch",
         "stability": "stable"
       }
@@ -2166,6 +2228,36 @@
         "stability": "stable"
       }
     },
+    "tartan": {
+      "default": "",
+      "description": "The sett, as Ink/Stitch's tartan editor saves it: an object of JSON whose `palette` gives the stripes, each a colour in brackets and its width in millimetres, such as `(#0000ff)/2.4 (#ffffff)0.4 (#ff0000)/2.4`. A `?` before a width leaves its stripe unsewn, a `*` sews it in the colour of the stripe before it, and a `|` parts the warp's stripes from the weft's. `symmetry` mirrors the sett at its ends rather than repeating it, `scale` scales it in percent, `rotate` turns it in degrees, `offset_x` and `offset_y` move it in millimetres, and stripes no wider than `min_stripe_width` sew as runs. Empty, the fill sews Ink/Stitch's default sett. VectorCraft's fill dialog doesn't hold a sett before M10.7.",
+      "maxLength": 4096,
+      "title": "Sett",
+      "type": "string",
+      "x-stitchcraft": {
+        "applies_to": [
+          "tartan_fill"
+        ],
+        "group": "Tartan",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
+    "tartan_angle": {
+      "default": -45.0,
+      "description": "The angle of the rows to the stripes, in degrees: at -45 they slant across both the warp's and the weft's stripes, as a woven twill's do. At 0 or 90 they run along one direction's stripes.",
+      "title": "Row angle",
+      "type": "number",
+      "x-stitchcraft": {
+        "applies_to": [
+          "tartan_fill"
+        ],
+        "group": "Tartan",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "°"
+      }
+    },
     "ties": {
       "default": "0",
       "description": "Where the element gets lock stitches: a few tiny stitches that stop the thread from unravelling where its stitching starts and ends.",
@@ -2204,7 +2296,8 @@
           "tatami_fill",
           "contour_fill",
           "meander_fill",
-          "circular_fill"
+          "circular_fill",
+          "tartan_fill"
         ],
         "group": "Underlay",
         "origin": "inkstitch",
@@ -2642,6 +2735,17 @@
         ],
         "name": "CrossParams",
         "title": "Cross parameters"
+      },
+      {
+        "keys": [
+          "tartan",
+          "tartan_angle",
+          "rows_per_thread",
+          "herringbone_width_mm",
+          "stop_at_ending_point"
+        ],
+        "name": "TartanParams",
+        "title": "Tartan parameters"
       },
       {
         "keys": [

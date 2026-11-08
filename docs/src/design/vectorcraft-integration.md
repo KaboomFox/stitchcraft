@@ -144,12 +144,27 @@ what the parameter means:
 
 Texts, seeds, and settings left empty to take another's value keep their defaults. In the registry today
 they are the custom locks' steps, `random_seed`, a fill underlay's angles, a satin's zigzag underlay
-insets and its shortest random split. A choice leaves out the options that a text spells out, which are
+insets and its shortest random split, and a tartan's sett ([below](#a-tartans-sett)). A choice leaves out the options that a text spells out, which are
 the custom locks, and `fill_method` leaves out Ink/Stitch's legacy fill, which StitchCraft sews as a
 tatami fill (`REQ-FILL-005`). `satin_column` belongs to the effect, which sets it from its family. The dialog opens
 with the group that declares the family's method. The groups only the family uses, for its default
 method, come next, then those it shares with the other families, then those of its other methods, such as
 the zigzag stroke's. The settings every element shares come last, as in Ink/Stitch's dialogs.
+
+#### A tartan's sett
+
+The fill dialog offers the tartan fill with its numbers, `tartan_angle`, `rows_per_thread`,
+`herringbone_width_mm` and `stop_at_ending_point`, and has no field for a sett (M10.6). A sett is a text, which only
+VectorCraft 0.14 and later hold in a dialog: a fill manifest with a text in it is one that 0.12 and 0.13
+refuse whole, and every release before 0.14 that the compatibility gate tests would lose the fill effect
+for one setting. A row of text is no editor either. A sett written by hand in one line is easy to get
+wrong, where Ink/Stitch gives it an editor of its own. So a tartan fill made in VectorCraft sews
+Ink/Stitch's default sett, and `stitch export` says so (`SC-W0325`). A file from Ink/Stitch keeps its
+setts, which `stitch plan` sews. M10.7's editor for setts decides how VectorCraft sets one, as a filter or
+as a row of the fill dialog, and with it whether the fill plug-in asks for VectorCraft 0.14. With the
+tartan's 4 numbers and M10.15's `underlays_first` the fill dialog has 62 parameters, 2 short of what
+releases before 0.14 take. The Test Sheet filter doesn't draw TS-17B, whose tartans have setts
+(`TestSheet::uses_file_features`).
 
 **How the dialog shows them** (`REQ-VC-012`, M6.10). From 0.14 a parameter can say how the dialog shows
 it, and the plug-in says all of it from the registry (`apps/stitchcraft-vc-plugin/src/dialog.rs`):
@@ -574,9 +589,9 @@ finish.
 Paint caveat: a live effect changes only geometry. A fill preview's ribbons are painted with the object's
 own fill, and a stroke preview with its stroke. From 0.14 a stroke or a satin effect reads its stroke's
 style, and still cannot change the paints. Users set the fill/stroke to the thread colour, which they want
-anyway for export. An element sewn in several threads (M10.5), as a tartan or a gradient fill will be,
-previews every group of its stitches with the object's own paints too. A tartan's preview shows one
-colour. ABI v1 gives the geometry a live effect returns no paint of its own. The exporters and
+anyway for export. An element sewn in several threads (M10.5), as a tartan fill is and a gradient fill
+will be, previews every group of its stitches with the object's own paints too. A tartan's preview shows
+one colour. ABI v1 gives the geometry a live effect returns no paint of its own. The exporters and
 `stitch export` write each thread, and the command line's preview draws each (`REQ-THREAD-003`).
 
 ### Commands in v1

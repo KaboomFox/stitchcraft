@@ -18,6 +18,7 @@ stroke or the fill of a shape, and each sews in its own thread colour.
 | [Contour fill](contour-fill.md) | areas, in rings that follow the outline inward, sewn as one line | now |
 | [Meander fill](meander-fill.md) | areas, in one line that wanders along the sides of a tiling | now |
 | [Circular fill](circular-fill.md) | areas, in a spiral round their middle | now |
+| [Tartan fill](tartan-fill.md) | areas, in a plaid of rows that weave the colours of a sett's stripes, each in its own thread | now |
 | [Cross stitch](cross-stitch.md) | areas, in crosses on a grid, as counted cross stitch and Ink/Stitch's cross-stitch fonts | now |
 
 Every element also gets [lock stitches](locks.md) where its stitching starts and ends, and a trim or a

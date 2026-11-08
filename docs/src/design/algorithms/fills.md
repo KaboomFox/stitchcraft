@@ -784,10 +784,13 @@ Specified at M10. The rows of each stop will be a colour block in a thread of th
 
 ## Tartan fill (P3)
 
-A woven plaid from a stripe specification (sett): warp and weft stripes become fills at `tartan_angle`
-with `rows_per_thread` and optional herringbone. Specified at M10. The underlay sews in the fill's own
-thread and ends no colour block, and each colour's rows, then its runs, sew in that colour's thread, each
-a colour block (M10.5).
+A woven plaid from a stripe specification, its sett, which gives the warp's and the weft's stripes. Each
+colour's rows slant across them at `tartan_angle` and are taken in turns of `rows_per_thread`, sewn without
+herringbone from M10.6 ([tartan fill](tartan.md)). Its colours' lines are routed as a tatami fill's rows are, each part
+after the tatami fill's underlay, which the sewing of a tatami fill's parts lends it, layers and all. Its
+needle points are thinned to the shortest stitch as a tatami fill's are, and `skip_last` shortens its rows.
+The underlay sews in the fill's own thread and ends no colour block, and each colour's rows, then its runs,
+sew in that colour's thread, each a colour block (M10.5).
 
 ## Cross stitch (P3)
 

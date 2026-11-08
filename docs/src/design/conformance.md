@@ -318,10 +318,15 @@ letter whose slanted edges cut their cells in half (`REQ-FILL-CRS-007`). It chec
 upright, dense upright, double, Smyrna and half crosses, and simple crosses on a grid turned 30°. The
 `cross-methods` case adds each full cross's flipped variant, grids turned on the canvas and from a part's
 own corner, and half crosses round a hole, through cells that meet at a corner and in 2 pieces of one
-part (`REQ-FILL-CRS-012`). The `ts17c-ripple-` cases check each of TS-17C's ripple stitches on its own,
-the one along a column and the 2 that shrink to a target point (`REQ-RIP-011`). TS-02B to TS-09, the sheets of
-MC-2 to MC-4, and TS-11C, the meander fills'
-sheet, are cases of `REQ-SVG-008` (M8.2). The `drawn-locks` case and TS-16 check custom locks drawn as
+part (`REQ-FILL-CRS-012`). TS-17B checks the tartans, with setts mirrored and repeated and a warp and a
+weft apart. Its narrow stripes sew as runs, and one sett is turned and scaled. The `tartan-marks`, `tartan-hole`,
+`tartan-parts` and `tartan-stop` cases add stripes left unsewn or sewn in the colour before them, a sett
+moved by its offsets, a disc round a hole in stitches 3 mm long, a fill in 2 parts with its rows at 30° and one row a thread, and
+a fill that stops at its end with its runs sewn as bean stitches (`REQ-FILL-TRT-011`). Every stripe is one of
+Brother's threads, so both files name each thread as itself. The `ts17c-ripple-` cases check each of TS-17C's
+ripple stitches on its own, the one along a column and the 2 that shrink to a target point (`REQ-RIP-011`).
+TS-02B to TS-09, the sheets of MC-2 to MC-4, and TS-11C, the meander fills' sheet, are cases of
+`REQ-SVG-008` (M8.2). The `drawn-locks` case and TS-16 check custom locks drawn as
 paths, of each kind of command, which both programs sew at the same nodes (`REQ-LCK-005`).
 `conformance/inkstitch/README.md` says how to run it by hand and how to add a case.
 

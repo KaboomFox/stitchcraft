@@ -21,7 +21,8 @@
 //! stitch, found as Ink/Stitch's geometry library finds it, by the rules of the `next` module.
 //!
 //! A generator sews its runs in its element's thread, unless it gives them threads of their own
-//! ([`Stitched::colours`], `REQ-ASM-006`), as Ink/Stitch's tartan and gradient fills sew each colour.
+//! ([`Stitched::colours`], `REQ-ASM-006`), as a tartan fill sews each colour of its sett, and as a gradient
+//! fill will sew each of its stops, both as Ink/Stitch's do.
 //! Plan assembly changes thread inside the element where they change, and trims after each colour block
 //! when the element's `trim_after` is on (`REQ-ASM-007`).
 //!
@@ -43,6 +44,7 @@ pub mod ripple;
 pub mod running;
 pub mod satin;
 pub(crate) mod smoothing;
+pub mod tartan;
 pub mod tatami;
 pub mod zigzag;
 

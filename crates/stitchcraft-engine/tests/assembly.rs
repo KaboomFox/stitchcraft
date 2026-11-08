@@ -172,7 +172,7 @@ fn req_gen_002_an_element_that_cannot_be_sewn_is_skipped_and_the_rest_still_plan
         Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0)), Segment::Line(p(5.0, 5.0))], closed: true }] };
     let fill = Element {
         shape: Shape::Fill { path: square, rule: FillRule::NonZero },
-        ..line("fill", (0.0, 0.0), 1.0, &RED, &[("fill_method", "tartan_fill")])
+        ..line("fill", (0.0, 0.0), 1.0, &RED, &[("fill_method", "guided_fill")])
     };
     let guided = Element { params: [("fill_method", "guided_fill")].into_iter().collect(), id: ElementId::new("guided").unwrap(), ..fill.clone() };
     let wrong = line("wrong", (0.0, 10.0), 10.0, &RED, &[("running_stitch_length_mm", "long")]);
@@ -257,12 +257,12 @@ fn diag_sc_w0011_a_stitch_type_not_sewn_yet_is_named() {
         Path { subpaths: vec![Subpath { start: p(0.0, 0.0), segments: vec![Segment::Line(p(5.0, 0.0)), Segment::Line(p(5.0, 5.0))], closed: true }] };
     let fill = Element {
         shape: Shape::Fill { path: square, rule: FillRule::EvenOdd },
-        ..line("f", (0.0, 0.0), 1.0, &RED, &[("fill_method", "tartan_fill")])
+        ..line("f", (0.0, 0.0), 1.0, &RED, &[("fill_method", "guided_fill")])
     };
     let outcome = sewn(vec![fill, line("ok", (0.0, 5.0), 10.0, &RED, &[])]);
     assert_eq!(
         messages(&outcome),
-        ["warning SC-W0011: This element's fill method, `tartan_fill`, is not sewn by this version of StitchCraft yet, so it is skipped."]
+        ["warning SC-W0011: This element's fill method, `guided_fill`, is not sewn by this version of StitchCraft yet, so it is skipped."]
     );
     assert_eq!(outcome.diagnostics[0].element.as_ref().map(ElementId::as_str), Some("f"));
 }
