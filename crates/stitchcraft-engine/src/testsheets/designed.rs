@@ -91,6 +91,12 @@ impl Drawing {
         self.stroke(name, vec![line(first, rest)?], thread, params)
     }
 
+    /// A stroke along `path`, named `name`, sewn with `thread` and the Ink/Stitch `params`, drawn as a
+    /// polyline's stroke is.
+    pub fn along(&mut self, name: &str, path: Subpath, thread: &Thread, params: &[(&str, &str)]) -> Result<(), SheetError> {
+        self.stroke(name, vec![path], thread, params)
+    }
+
     /// A stroke along `path`, `width` mm wide, named `name`, sewn with `thread` and the Ink/Stitch `params`:
     /// a zigzag stroke sews across its path as wide as it is drawn.
     pub fn wide(&mut self, name: &str, path: Subpath, width: f64, thread: &Thread, params: &[(&str, &str)]) -> Result<(), SheetError> {

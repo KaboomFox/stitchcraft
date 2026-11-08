@@ -6,7 +6,7 @@
 //! gives a filter: as a satin column when the first of them that is on is the satin effect, and as a stroke
 //! when it is the stroke effect. The others stay as they are: a path with the fill or the Auto effect first,
 //! and one with no StitchCraft effect of its own, which may sew by its group's. The engine routes them
-//! ([`route`]) with the dialog's options, Ink/Stitch's ([`OPTIONS`]), and leaves out what it can't route,
+//! ([`route`]) with the dialog's options, Ink/Stitch's ([`Tool::options`]), and leaves out what it can't route,
 //! a column whose rails can't be made among them: a filter can't warn, and the path stays as it was. Paths
 //! named `stitch:route-start` and `stitch:route-end` mark the route's start and end at the middles of the
 //! boxes round their anchors (`REQ-VC-019`).
@@ -37,7 +37,7 @@ use serde_json::Value;
 use stitchcraft_core::{Code, Diagnostic, ElementId, Fix, Meter, Mm, Point, Severity};
 use stitchcraft_engine::design::{Cap, DesignSettings, Element, Hints, Join, Shape};
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
-use stitchcraft_engine::route::{OPTIONS, Options, Piece, Route, Routed, Tool, route};
+use stitchcraft_engine::route::{Options, Piece, Route, Routed, Tool, route};
 use stitchcraft_params::Family;
 use stitchcraft_plan::{Rgb, Thread};
 use stitchcraft_vectorcraft::filter::{self, Object, Out, Record, solid, stroke};
@@ -65,15 +65,15 @@ const PAGE: &str = "user/how-to/route-satin-columns.html";
 /// The filter's dialog: a toggle for each of Auto-Route Satin Columns' options, with Ink/Stitch's labels and
 /// defaults.
 pub(crate) fn options() -> Vec<(&'static str, Param)> {
-    OPTIONS.iter().map(|option| (option.name, own(Schema::Bool { default: option.default }, option.label, option.help, PAGE))).collect()
+    Tool::Satins.options().iter().map(|option| (option.name, own(Schema::Bool { default: option.default }, option.label, option.help, PAGE))).collect()
 }
 
 /// The filter's run on `input`, the selected objects, with `params`, its dialog's: the route, or why there
 /// is none. Parameters that aren't JSON are [`RunError::BadInput`]; an option left out is at its default.
 pub fn run(input: &[u8], params: &[u8]) -> Result<Vec<u8>, RunError> {
     let named: Value = serde_json::from_slice(params).map_err(|_| RunError::BadInput)?;
-    let mut options = Options::default();
-    for option in &OPTIONS {
+    let mut options = Tool::Satins.defaults();
+    for option in Tool::Satins.options() {
         if let Some(on) = named.get(option.name).and_then(Value::as_bool) {
             option.set(&mut options, on);
         }

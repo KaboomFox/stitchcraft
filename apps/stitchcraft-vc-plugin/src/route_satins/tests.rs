@@ -122,7 +122,7 @@ fn req_vc_018_the_route_replaces_the_columns_and_sews_as_the_engine_routes_them(
     let pieces = read.design;
     let engine = routed_by_the_engine(
         &[selection[0].clone(), selection[2].clone()],
-        &Route { tool: Tool::Satins, options: Options::default(), start: None, end: None },
+        &Route { tool: Tool::Satins, options: Tool::Satins.defaults(), start: None, end: None },
     );
     let (a, b) = (stitches(&pieces), stitches(&engine));
     assert!(a.len() == b.len() && a.iter().zip(&b).all(|((k, p), (l, q))| k == l && p.distance(*q) < 1e-6), "{} and {} stitches", a.len(), b.len());
@@ -185,7 +185,7 @@ fn req_vc_019_markers_selected_with_the_paths_start_and_end_the_route_and_are_de
     let ids: Vec<Option<u64>> = listed(&out).iter().map(|(id, _)| *id).collect();
     assert!(!ids.contains(&Some(5)) && !ids.contains(&Some(6)), "{ids:?}");
     // The route starts at the bar's middle, runs under its right half, and ends at the upright's foot.
-    let how = Route { tool: Tool::Satins, options: Options::default(), start: Some(p(21.0, 6.5)), end: Some(p(6.5, 26.0)) };
+    let how = Route { tool: Tool::Satins, options: Tool::Satins.defaults(), start: Some(p(21.0, 6.5)), end: Some(p(6.5, 26.0)) };
     let read = stitchcraft_vectorcraft::read(&kept_all(&out), &Budget::DEFAULT).unwrap();
     let (a, b) = (stitches(&read.design), stitches(&routed_by_the_engine(&[upright.clone(), bar.clone()], &how)));
     assert!(a.len() == b.len() && a.iter().zip(&b).all(|((k, p), (l, q))| k == l && p.distance(*q) < 1e-6), "{} and {} stitches", a.len(), b.len());
@@ -244,7 +244,7 @@ fn the_filter_stops_before_vectorcraft_would() {
         assert_eq!(refused.to_string(), "error SC-E0004: Reading the selected paths needs more work than VectorCraft lets a filter do.");
     }
     // Routing runs out, with the engine's word.
-    let routed = replaced(&objects[1..], Options::default(), 100 * PER_UNIT).err().unwrap();
+    let routed = replaced(&objects[1..], Tool::Satins.defaults(), 100 * PER_UNIT).err().unwrap();
     assert!(routed.to_string().starts_with("error SC-E0004: Routing these elements needed more than the work budget"), "{routed}");
 }
 
@@ -281,7 +281,7 @@ fn req_vc_018_lines_with_the_satin_effect_route_as_the_columns_the_engine_makes_
     let names: Vec<Option<String>> = listed(&out).into_iter().map(|(_, name)| name).collect();
     assert_eq!(names, ["AutoSatin 1", "AutoSatin Running Stitch 2", "AutoSatin 3", "AutoSatin 4"].map(|name| Some(name.to_string())));
     let read = stitchcraft_vectorcraft::read(&kept_all(&out), &Budget::DEFAULT).unwrap();
-    let engine = routed_by_the_engine(&[upright, bar], &Route { tool: Tool::Satins, options: Options::default(), start: None, end: None });
+    let engine = routed_by_the_engine(&[upright, bar], &Route { tool: Tool::Satins, options: Tool::Satins.defaults(), start: None, end: None });
     let (a, b) = (stitches(&read.design), stitches(&engine));
     assert!(a.len() == b.len() && a.iter().zip(&b).all(|((k, p), (l, q))| k == l && p.distance(*q) < 1e-6), "{} and {} stitches", a.len(), b.len());
 }

@@ -70,6 +70,18 @@ pub fn svg(elements: &[Element], settings: &DesignSettings) -> Result<String, St
 /// [`svg`], with the elements `clones` names drawn as clones of others; or why they can't be, as for `svg`,
 /// or a clone of an element that isn't there.
 pub fn svg_with(elements: &[Element], settings: &DesignSettings, clones: &[Cloned]) -> Result<String, String> {
+    written(elements, settings, clones, false)
+}
+
+/// [`svg`], each element painted by a `style` attribute, as Inkscape paints a path, rather than by
+/// attributes of their own. Ink/Stitch's Auto-Route Running Stitch gives the elements it makes the style of
+/// the stroke each comes from, and nothing else of its paint, so the strokes it routes are written so.
+pub fn svg_styled(elements: &[Element], settings: &DesignSettings) -> Result<String, String> {
+    written(elements, settings, &[], true)
+}
+
+/// [`svg_with`], each element painted by a `style` attribute when `styled`.
+fn written(elements: &[Element], settings: &DesignSettings, clones: &[Cloned], styled: bool) -> Result<String, String> {
     let Some(bounds) = Rect::around(elements.iter().flat_map(|element| element.shape.path().points())) else {
         return Err("no element has a point".to_string());
     };
@@ -127,7 +139,7 @@ pub fn svg_with(elements: &[Element], settings: &DesignSettings, clones: &[Clone
             out.push_str(&format!("  <g{}>\n", clip(k)));
         }
         let own = if element.clips.is_empty() { String::new() } else { clip(0) };
-        out.push_str(&format!("  <path id=\"e{index}\" {}{own}{parameters} d=\"{}\"/>\n", paint(element), data(element.shape.path())));
+        out.push_str(&format!("  <path id=\"e{index}\" {}{own}{parameters} d=\"{}\"/>\n", painted(element, styled), data(element.shape.path())));
         out.push_str(&"  </g>\n".repeat(groups));
         out.push_str(&commands(index, element));
     }
@@ -188,25 +200,38 @@ const fn rule(rule: FillRule) -> &'static str {
     }
 }
 
-/// How `element` is painted, as attributes: its fill, or its stroke.
-fn paint(element: &Element) -> String {
+/// How `element` is painted, as SVG's properties with their values: its fill, or its stroke.
+fn paint(element: &Element) -> Vec<(&'static str, String)> {
     let colour = element.thread.color;
     let colour = format!("#{:02x}{:02x}{:02x}", colour.r, colour.g, colour.b);
     match &element.shape {
-        Shape::Fill { rule: fill_rule, .. } => format!("fill=\"{colour}\" fill-rule=\"{}\" stroke=\"none\"", rule(*fill_rule)),
+        Shape::Fill { rule: fill_rule, .. } => vec![("fill", colour), ("fill-rule", rule(*fill_rule).to_string()), ("stroke", "none".to_string())],
         Shape::Stroke { width, join, cap, .. } => {
-            let join = match join {
-                Join::Miter { limit } => format!("stroke-linejoin=\"miter\" stroke-miterlimit=\"{limit}\""),
-                Join::Round => "stroke-linejoin=\"round\"".to_string(),
-                Join::Bevel => "stroke-linejoin=\"bevel\"".to_string(),
-            };
+            let mut properties = vec![("fill", "none".to_string()), ("stroke", colour), ("stroke-width", width.get().to_string())];
+            match join {
+                Join::Miter { limit } => properties.extend([("stroke-linejoin", "miter".to_string()), ("stroke-miterlimit", limit.to_string())]),
+                Join::Round => properties.push(("stroke-linejoin", "round".to_string())),
+                Join::Bevel => properties.push(("stroke-linejoin", "bevel".to_string())),
+            }
             let cap = match cap {
                 Cap::Butt => "butt",
                 Cap::Round => "round",
                 Cap::Square => "square",
             };
-            format!("fill=\"none\" stroke=\"{colour}\" stroke-width=\"{}\" {join} stroke-linecap=\"{cap}\"", width.get())
+            properties.push(("stroke-linecap", cap.to_string()));
+            properties
         }
+    }
+}
+
+/// How `element` is painted ([`paint`]), as attributes, or with `styled` as one `style` attribute.
+fn painted(element: &Element, styled: bool) -> String {
+    let properties = paint(element);
+    if styled {
+        let style: Vec<String> = properties.iter().map(|(name, value)| format!("{name}:{value}")).collect();
+        format!("style=\"{}\"", style.join(";"))
+    } else {
+        properties.iter().map(|(name, value)| format!("{name}=\"{value}\"")).collect::<Vec<_>>().join(" ")
     }
 }
 
@@ -317,7 +342,13 @@ mod tests {
         let text = svg(&written, &DesignSettings::default()).unwrap();
         assert!(text.contains(&format!("<inkstitch:inkstitch_svg_version>{CURRENT}</inkstitch:inkstitch_svg_version>")), "{text}");
         assert!(text.contains("viewBox=\"0 0 56 30\""), "the design's own coordinates: {text}");
+        assert!(text.contains("stroke=\"#0000ff\" stroke-width=\"2\" stroke-linejoin=\"round\" stroke-linecap=\"square\""), "{text}");
         assert_eq!(read(&text), (kept(&written), DesignSettings::default()));
+        // Painted by style attributes, as Inkscape paints, the file is read back the same.
+        let styled = svg_styled(&written, &DesignSettings::default()).unwrap();
+        assert!(styled.contains("style=\"fill:#ff0000;fill-rule:evenodd;stroke:none\""), "{styled}");
+        assert!(styled.contains("style=\"fill:none;stroke:#0000ff;stroke-width:2;stroke-linejoin:round;stroke-linecap:square\""), "{styled}");
+        assert_eq!(read(&styled), (kept(&written), DesignSettings::default()));
     }
 
     #[test]
