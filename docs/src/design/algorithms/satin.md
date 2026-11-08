@@ -32,7 +32,9 @@ same polylines in both, which decide where the needle points go, where subpaths 
 drawn as one path gets its rungs. A path read from SVG has the subpaths a viewer draws, and inkex, which
 Ink/Stitch reads files with, does not always count them alike (`DEV-SVG-011`). The reader finds where
 each pair of subpaths meets, crossing or touching. A point the two share counts once, and a rung that
-ends exactly on a rail meets it.
+ends exactly on a rail meets it. So does a rung whose end rounding leaves a hair short of the rail, by
+less than a billionth of a segment's length. Ink/Stitch's test is exact, and with 3 subpaths it can take
+such a rung for a rail (`DEV-SAT-013`).
 
 StitchCraft tells rails from rungs as Ink/Stitch does, and a file sews the same in both.
 
