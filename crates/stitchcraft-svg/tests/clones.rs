@@ -52,7 +52,7 @@ fn p(x: f64, y: f64) -> Point {
 }
 
 /// `hints`, each point to the micrometre, as (x, y) pairs.
-fn placed(hints: Hints) -> [Option<(f64, f64)>; 3] {
+fn placed(hints: &Hints) -> [Option<(f64, f64)>; 3] {
     [hints.start, hints.end, hints.target].map(|at| at.map(|q| ((q.x() * 1000.0).round() / 1000.0, (q.y() * 1000.0).round() / 1000.0)))
 }
 
@@ -325,8 +325,8 @@ fn req_svg_012_commands_tied_to_its_source_go_with_a_clone() {
     )));
     assert_eq!(ids(&file), ["svg:square:fill", "svg:c/square:fill"]);
     // Each at its symbol's place, which the clone turns about (50, 50).
-    assert_eq!(placed(element(&file, "svg:square:fill").hints), [Some((31.0, 10.0)), Some((9.0, 20.0)), None]);
-    assert_eq!(placed(element(&file, "svg:c/square:fill").hints), [Some((90.0, 31.0)), Some((80.0, 9.0)), None]);
+    assert_eq!(placed(&element(&file, "svg:square:fill").hints), [Some((31.0, 10.0)), Some((9.0, 20.0)), None]);
+    assert_eq!(placed(&element(&file, "svg:c/square:fill").hints), [Some((90.0, 31.0)), Some((80.0, 9.0)), None]);
     assert_eq!(setting(&file, "trim_after"), [("svg:square:fill", Some("true")), ("svg:c/square:fill", Some("true"))]);
     assert!(warnings(&file).is_empty(), "{:?}", warnings(&file));
 }
@@ -345,7 +345,7 @@ fn req_svg_012_a_clone_of_a_group_copies_the_commands_inside_it() {
         command("s1", "starting_point", (11.0, 0.0), "a"),
         command("s3", "starting_point", (0.0, 51.0), "c"),
     )));
-    let starts: Vec<(&str, Option<(f64, f64)>)> = file.design.elements().iter().map(|e| (e.id.as_str(), placed(e.hints)[0])).collect();
+    let starts: Vec<(&str, Option<(f64, f64)>)> = file.design.elements().iter().map(|e| (e.id.as_str(), placed(&e.hints)[0])).collect();
     assert_eq!(
         starts,
         [
@@ -683,7 +683,7 @@ fn req_svg_012_ink_stitch_s_update_moves_a_command_a_clone_copies_once() {
           <use id="s" xlink:href="#inkstitch_fill_start" x="20" y="5"/>
           <use id="c" xlink:href="#square" x="30"/></svg>"##);
     // Each is at its connector's end on the square, where the update moves it, and the clone's moved with it.
-    let starts: Vec<_> = file.design.elements().iter().map(|e| placed(e.hints)[0]).collect();
+    let starts: Vec<_> = file.design.elements().iter().map(|e| placed(&e.hints)[0]).collect();
     assert_eq!(starts, [Some((10.0, 5.0)), Some((40.0, 5.0))]);
     assert!(
         warnings(&file)[0].ends_with(": 1 start or end command works at its connector's end on its object, as before version 3."),

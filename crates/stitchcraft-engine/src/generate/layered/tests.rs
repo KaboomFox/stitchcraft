@@ -143,7 +143,7 @@ fn req_asm_009_a_fill_s_underlay_starts_at_its_start_position_and_its_top_ends_a
     // A square that starts at its corner (10, 10) and ends at (0, 10): its underlay starts nearest the
     // start, whatever the needle, and its top ends nearest the end, whatever comes next.
     let mut fill = square(&[]);
-    fill.hints = Hints { start: Some(p(10.0, 10.0)), end: Some(p(0.0, 10.0)), target: None };
+    fill.hints = Hints { start: Some(p(10.0, 10.0)), end: Some(p(0.0, 10.0)), target: None, ..Hints::default() };
     let mut layered = read(&fill).0.unwrap();
     let neighbours = Neighbours { needle: Some(p(-5.0, -5.0)), next: Some(Approach::Point(p(20.0, -5.0))) };
     let (meter, diagnostics) = (&mut Budget::DEFAULT.meter(), &mut Vec::new());
@@ -163,7 +163,7 @@ fn req_asm_009_a_satin_column_s_underlay_starts_at_its_start_position_and_its_to
     // next layer offers, not at the end position. Its top starts at the right end, nearest the needle, not at
     // the start position, and ends at the end position.
     let mut satin_column = column(&[("contour_underlay", "true"), ("zigzag_underlay", "true")]);
-    satin_column.hints = Hints { start: Some(p(0.0, 2.0)), end: Some(p(0.0, 2.0)), target: None };
+    satin_column.hints = Hints { start: Some(p(0.0, 2.0)), end: Some(p(0.0, 2.0)), target: None, ..Hints::default() };
     let mut layered = read(&satin_column).0.unwrap();
     let neighbours = Neighbours { needle: Some(p(25.0, 2.0)), next: Some(Approach::Point(p(25.0, 2.0))) };
     let (meter, diagnostics) = (&mut Budget::DEFAULT.meter(), &mut Vec::new());

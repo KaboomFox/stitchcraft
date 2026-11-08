@@ -259,7 +259,7 @@ fn req_route_011_each_element_keeps_its_stroke_s_thread_and_stroke_and_nothing_t
     let dress = |mut element: Element, colour: u8, width: f64| {
         element.thread = Thread::new(Rgb::new(colour, 0, 0));
         element.shape = Shape::Stroke { path: element.shape.path().clone(), width: Mm::new(width).unwrap(), join: Join::Round, cap: Cap::Square };
-        element.hints = Hints { start: Some(p(1.0, 1.0)), end: Some(p(2.0, 2.0)), target: Some(p(3.0, 3.0)) };
+        element.hints = Hints { start: Some(p(1.0, 1.0)), end: Some(p(2.0, 2.0)), target: Some(p(3.0, 3.0)), ..Hints::default() };
         element.clips = vec![Clip::of(square.clone(), FillRule::NonZero)];
         element.name = Some("Drawn".to_string());
         element
@@ -271,7 +271,7 @@ fn req_route_011_each_element_keeps_its_stroke_s_thread_and_stroke_and_nothing_t
         let Shape::Stroke { width, join, cap, .. } = &piece.element.shape else { panic!("{k} is no stroke") };
         let Shape::Stroke { width: drawn, .. } = &source.shape else { panic!("{} is no stroke", source.id) };
         assert_eq!((&piece.element.thread, width, join, cap), (&source.thread, drawn, &Join::Round, &Cap::Square), "{k}");
-        assert_eq!((piece.element.hints, piece.element.clips.len(), piece.element.automatic), (Hints::default(), 0, false), "{k}");
+        assert_eq!((piece.element.hints.clone(), piece.element.clips.len(), piece.element.automatic), (Hints::default(), 0, false), "{k}");
         assert_eq!(piece.element.id, ElementId::new(format!("{}#{}", source.id, k + 1)).unwrap());
     }
     // The run under the post and then the brace, of 2 threads, is 2 elements, each with its own.

@@ -42,18 +42,24 @@ fn square() -> Path {
     path(&[&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0), (0.0, 0.0)]], true)
 }
 
-/// A ripple set as `with` says, for a machine whose shortest stitch is 0.3 mm, aiming at `target`.
+/// A ripple set as `with` says, for a machine whose shortest stitch is 0.3 mm, aiming at `target`: its
+/// column's rails read with its own `reverse_rails` and `swap_satin_rails`, as the engine reads them.
 fn ripple(with: &[(&str, &str)], target: Option<Point>) -> Ripple {
     let set: ParamSet = with.iter().copied().collect();
+    let own = RippleParams::from_set(&set).unwrap().params;
+    let satin = SatinParams::from_set_as(&set, StitchType::RippleStitch).unwrap().params;
     Ripple {
-        ripple: RippleParams::from_set(&set).unwrap().params,
+        satin: SatinParams { reverse_rails: own.reverse_rails, swap_satin_rails: own.swap_satin_rails, ..satin },
+        ripple: own,
         running: RunningParams::from_set(&set).unwrap().params,
         passes: RepeatParams::from_set(&set).unwrap().params,
-        satin: SatinParams::from_set_as(&set, StitchType::RippleStitch).unwrap().params,
         min_stitch: Mm::new(0.3).unwrap(),
+        jump: Mm::new(3.0).unwrap(),
         target,
+        guide: None,
+        anchor: None,
         unapplied: unapplied(&set),
-        clipped: false,
+        clips: Vec::new(),
     }
 }
 
@@ -91,7 +97,7 @@ fn along_x(xs: &[f64], y: f64) -> Vec<(f64, f64)> {
 
 /// How lines are sewn in these cases: in stitches of 2.5 mm within 0.2 mm, the shortest 0.3 mm.
 fn sewing(rng: &SplitMix64, staggers: f64, point: bool, skip_start: usize) -> Sewing<'_> {
-    Sewing { pattern: &[2.5], tolerance: 0.2, min: 0.3, jitter: None, rng, staggers, point, skip_start }
+    Sewing { pattern: &[2.5], tolerance: 0.2, min: 0.3, jitter: None, rng, staggers, point, skip_start, flip: true }
 }
 
 /// `lines` sewn one at a time as `sewing` says, to a thousandth of a millimetre.
@@ -556,42 +562,25 @@ fn req_rip_009_random_lengths_draw_from_a_stream_for_each_line() {
 }
 
 #[test]
-fn req_rip_010_the_satin_column_s_settings_that_turn_its_rails_are_named_and_not_applied() {
-    // Named when they read as other than their defaults, or don't read at all.
+fn req_rip_010_push_compensation_along_a_column_is_named_and_not_applied() {
+    // Named when it reads as other than 0, or doesn't read at all.
     let named = |pairs: &[(&str, &str)]| unapplied(&pairs.iter().copied().collect());
     assert_eq!(named(&[]), Vec::<&str>::new());
-    assert_eq!(named(&[("reverse_rails", "automatic"), ("swap_satin_rails", "false"), ("push_compensation_mm", "0 0")]), Vec::<&str>::new());
-    assert_eq!(named(&[("reverse_rails", "none")]), [REVERSE_RAILS]);
-    assert_eq!(named(&[("reverse_rails", "maybe")]), [REVERSE_RAILS]);
-    assert_eq!(named(&[("swap_satin_rails", "true")]), [SWAP_SATIN_RAILS]);
+    assert_eq!(named(&[("push_compensation_mm", "0 0")]), Vec::<&str>::new());
     assert_eq!(named(&[("push_compensation_mm", "0 0.5")]), [PUSH_COMPENSATION]);
     assert_eq!(named(&[("push_compensation_mm", "0.5")]), [PUSH_COMPENSATION]);
     assert_eq!(named(&[("push_compensation_mm", "-0.5 0")]), [PUSH_COMPENSATION]);
-    assert_eq!(named(&[("push_compensation_mm", "wide"), ("swap_satin_rails", "yes")]), [SWAP_SATIN_RAILS, PUSH_COMPENSATION]);
-    assert!([REVERSE_RAILS, SWAP_SATIN_RAILS, PUSH_COMPENSATION].iter().all(|key| SatinParams::SPECS.iter().any(|spec| spec.key == *key)));
-    // Along a column they are said, and the rails are read with their defaults.
-    let settings = [("line_count", "3"), ("reverse_rails", "both"), ("swap_satin_rails", "true"), ("push_compensation_mm", "1")];
-    let column_ripple = sewn(&column(), &settings, None);
-    assert_eq!(column_ripple.runs, sewn(&column(), &[("line_count", "3")], None).runs);
-    let all_3 = "warning SC-W0406: This ripple stitch sets `reverse_rails`, `swap_satin_rails` and `push_compensation_mm`, which StitchCraft doesn't apply to ripple stitch yet, so its column is read with their defaults.";
-    assert_eq!(said(&column_ripple), [all_3]);
-    let one = sewn(&column(), &[("line_count", "3"), ("swap_satin_rails", "true")], None);
-    let only = "warning SC-W0406: This ripple stitch sets `swap_satin_rails`, which StitchCraft doesn't apply to ripple stitch yet, so its column is read with their defaults.";
-    assert_eq!(said(&one), [only]);
-    let two = sewn(&column(), &[("line_count", "3"), ("reverse_rails", "both"), ("swap_satin_rails", "true")], None);
-    assert!(said(&two)[0].contains("sets `reverse_rails` and `swap_satin_rails`, which"), "{:?}", said(&two));
-    // Towards a target point Ink/Stitch doesn't read them either, and nothing is said.
-    assert_eq!(sewn(&line(), &settings, None).warnings, Vec::new());
-}
-
-#[test]
-fn req_rip_010_a_ripple_cut_to_clips_is_sewn_whole_and_says_so() {
-    let clipped = Ripple { clipped: true, ..ripple(&[("line_count", "3")], None) };
-    let whole = ripple_stitch(&line(), &clipped, &SplitMix64::new(7), &mut Budget::DEFAULT.meter()).unwrap();
-    assert_eq!(whole.runs, sewn(&line(), &[("line_count", "3")], None).runs);
-    let message =
-        "warning SC-W0406: This ripple stitch is cut to clip paths, which StitchCraft doesn't apply to ripple stitch yet, so it is sewn whole.";
-    assert_eq!(said(&whole), [message]);
+    assert_eq!(named(&[("push_compensation_mm", "wide")]), [PUSH_COMPENSATION]);
+    // The rails' own settings are the ripple's, and applied (`REQ-RIP-018`).
+    assert_eq!(named(&[("reverse_rails", "both"), ("swap_satin_rails", "true")]), Vec::<&str>::new());
+    assert!(SatinParams::SPECS.iter().any(|spec| spec.key == PUSH_COMPENSATION));
+    // Along a column it is said, and the rails are read without it.
+    let pushed = sewn(&column(), &[("line_count", "3"), ("push_compensation_mm", "1")], None);
+    assert_eq!(pushed.runs, sewn(&column(), &[("line_count", "3")], None).runs);
+    let message = "warning SC-W0406: This ripple stitch sets `push_compensation_mm`, which StitchCraft doesn't apply to ripple stitch, so its column is read without it.";
+    assert_eq!(said(&pushed), [message]);
+    // Towards a target point Ink/Stitch doesn't read it either, and nothing is said.
+    assert_eq!(sewn(&line(), &[("push_compensation_mm", "1")], None).warnings, Vec::new());
 }
 
 #[test]
