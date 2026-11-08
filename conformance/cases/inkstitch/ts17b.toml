@@ -1,8 +1,13 @@
-# TS-17B's tartans, M10.6's: setts mirrored at their ends and repeated, the repeated one's code the list
-# Ink/Stitch's editor writes, a warp and a weft apart, stripes narrow enough to sew as runs, and a sett turned
-# 30° and scaled by 150 %. Both programs sew the same colour blocks in the same threads, each underlay in its
-# sample's own thread, with the same trims and jumps (REQ-FILL-TRT-011).
+# TS-17B's tartans: setts mirrored at their ends and repeated, the repeated one's code the list Ink/Stitch's
+# editor writes, a warp and a weft apart, stripes narrow enough to sew as runs, a sett turned 30° and scaled
+# by 150 %, and from M10.7 a herringbone 3 mm wide. Both programs sew the same colour blocks in the same
+# threads, each underlay in its sample's own thread, with the same trims and jumps (REQ-FILL-TRT-011). The
+# herringbone's weft joins its rows along the bands' sides in steps of the row spacing, 0.25 mm, which
+# Ink/Stitch's file keeps and StitchCraft leaves out below the machine's shortest stitch (DEV-FIN-001).
 id = "inkstitch-ts17b"
 requirements = ["REQ-SVG-008", "REQ-FILL-TRT-011"]
 kind = "inkstitch"
 sheet = "TS-17B"
+
+[excused]
+stitches = "DEV-FIN-001"

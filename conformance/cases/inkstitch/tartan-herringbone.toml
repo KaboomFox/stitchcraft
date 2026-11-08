@@ -1,3 +1,9 @@
+# Herringbones of 4 tartans (REQ-FILL-TRT-012 to REQ-FILL-TRT-014): a square of TS-17B's mirrored sett in bands
+# 3 mm wide, a square turned -30° without underlay, a disc round a hole whose warp and weft differ, turned 30°
+# in bands 2 mm wide with 3 rows a thread, and a square with stripes sewn as runs in bands 5 mm wide. Both
+# programs sew the same colour blocks in the same order, with the same trims and jumps. Ink/Stitch's file
+# keeps the needle points nearer each other than the machine's shortest stitch, which StitchCraft leaves out
+# (DEV-FIN-001).
 id = "inkstitch-tartan-herringbone"
 requirements = ["REQ-SVG-008", "REQ-FILL-TRT-011"]
 kind = "inkstitch"
