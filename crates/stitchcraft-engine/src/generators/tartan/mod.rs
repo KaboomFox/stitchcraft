@@ -1,6 +1,6 @@
-//! Tartan fill without herringbone (milestone M10.6): a plaid woven of warp and weft, each colour's rows sewn
-//! in its own thread, as Ink/Stitch sews its tartan fill (`docs/src/design/algorithms/tartan.md`,
-//! `REQ-FILL-TRT-001` to `REQ-FILL-TRT-010`, read at `d59c9ab`).
+//! Tartan fill (milestones M10.6 and M10.7): a plaid woven of warp and weft, each colour's rows sewn in its own
+//! thread, straight or in a herringbone, as Ink/Stitch sews its tartan fill (`docs/src/design/algorithms/tartan.md`,
+//! `REQ-FILL-TRT-001` to `REQ-FILL-TRT-016`, read at `d59c9ab`).
 //!
 //! **Why a twill of rows.** A woven tartan's warp and weft threads cross over and under one another, so each
 //! colour shows in the stripes it is woven into, both ways. Rows slanting across both directions' stripes,
@@ -15,7 +15,9 @@
 //!    narrow stripes runs, mirrored or repeated.
 //! 2. **Stripes and rows** (module `stripes`): the sett's stripes and the rows are laid over a box round the
 //!    piece, turned as the sett is, and each band's rows are joined into zigzags along its edges and cut by
-//!    the piece. Each colour gets the lines of its bands, the warp's first.
+//!    the piece. Each colour gets the lines of its bands, the warp's first. A herringbone (module
+//!    `herringbone`) lays its rows in bands of their own, slanting one way and then the other, and joins the
+//!    weft's across them.
 //! 3. **Each colour** in its thread: its lines are routed as a tatami fill's rows are, from where the colour
 //!    before it ended, or the needle, to the end the next part or element offers, the needle travelling
 //!    along the piece's outline between them (`tatami::sew::lines`). The travel before its first line and
@@ -35,13 +37,17 @@
 //! ([`crate::generators::Colour`], `REQ-ASM-006`). A colour of the element's own sews in the element's
 //! thread, named or not, and the others in threads of their colours alone, so that one colour is one thread.
 
+pub mod editor;
+mod herringbone;
 mod params;
 mod sett;
+mod shades;
 mod stripes;
 
 pub(crate) use params::Given;
-pub use params::TartanParams;
-pub use sett::Sett;
+pub use params::{SETT, TartanParams};
+pub use sett::{DEFAULT_PALETTE, Look, Sett, Stripe};
+pub use shades::shades;
 use stitchcraft_core::rng::SplitMix64;
 use stitchcraft_core::{Diagnostic, Exhausted, Meter, Point};
 use stitchcraft_params::ParamSet;
@@ -68,6 +74,8 @@ pub struct Tartan {
     pub(crate) margin: f64,
     /// The rows' angle to the stripes, in degrees (`tartan_angle`).
     pub(crate) angle: f64,
+    /// The width of the herringbone's bands, in millimetres; 0 for straight rows (`herringbone_width_mm`).
+    pub(crate) herringbone: f64,
     /// How far apart the rows are, at most, in millimetres.
     pub(crate) spacing: f64,
     /// How far apart the needle points along a row are, in millimetres: the longest stitch.

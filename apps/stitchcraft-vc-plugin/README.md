@@ -32,7 +32,9 @@ Ink/Stitch's tool of that name does, its dialog Ink/Stitch's options (`src/route
 Paths named `stitch:route-start` and `stitch:route-end` selected with them mark the route's ends
 (`REQ-VC-019`). From M10.13 another, *StitchCraft Auto-Route Running Stitch*, replaces the selected running
 stitches with one route as Ink/Stitch's tool of that name does, through the same run
-(`src/route_runs.rs`, `REQ-VC-020`).
+(`src/route_runs.rs`, `REQ-VC-020`). From M10.7 *StitchCraft Tartan*, a filter of VectorCraft 0.15, sets the
+selected paths' tartan fills' sett from a code of its stripes, which the fill dialog then shows as text from
+VectorCraft 0.14 (`src/tartan.rs`, `REQ-VC-021`).
 Without a feature the module is M0.6's *hello* effect, which returns the object's geometry unchanged. The
 contract tests measure the host's costs with it (`docs/src/design/vectorcraft-integration.md`).
 
@@ -45,9 +47,9 @@ cargo build -p stitchcraft-vc-plugin --release --target wasm32-unknown-unknown -
 ```
 
 The feature is the family, `stroke`, `satin` or `fill`, `auto` for the Auto effect, the machine format, `pes`
-or `dst`, or the filter, `settings`, `stroke-to-satin`, `testsheet`, `route-satins` or `route-runs`. Without one, the build is
-*hello*. Each build writes the same file, so copy it before building the next.
-`cargo xtask compat contract --ref <tag>` builds all twelve into `target/compat/plugins/` and loads them into
+or `dst`, or the filter, `settings`, `stroke-to-satin`, `testsheet`, `route-satins`, `route-runs` or `tartan`.
+Without one, the build is *hello*. Each build writes the same file, so copy it before building the next.
+`cargo xtask compat contract --ref <tag>` builds all thirteen into `target/compat/plugins/` and loads them into
 VectorCraft's host.
 
 In VectorCraft: **Object › Plug-ins › Install Plug-in…** (or `File › Open` the `.wasm`), then

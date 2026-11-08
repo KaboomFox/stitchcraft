@@ -4,10 +4,11 @@
 //! stays within VectorCraft's 64 (`docs/src/design/vectorcraft-integration.md`), one for the Auto effect,
 //! which chooses the stitches by width (M13.7), one for each machine format, an exporter (VectorCraft
 //! 0.14), and one for each filter: Design Settings (VectorCraft 0.16), Stroke to Satin, a heavy filter
-//! (VectorCraft 0.17), Test Sheet, and Auto-Route Satin Columns and Auto-Route Running Stitch, heavy filters.
+//! (VectorCraft 0.17), Test Sheet, Auto-Route Satin Columns and Auto-Route Running Stitch, heavy filters, and
+//! Tartan (VectorCraft 0.15).
 //! Which plug-in a module is is chosen when it is built, by a feature: `stroke`, `satin`, `fill` or `auto`
 //! for a live effect, `pes` or `dst` for an exporter, and `settings`, `stroke-to-satin`, `testsheet`,
-//! `route-satins` or `route-runs` for a filter ([`MODULE`]). Without one it is the M0.6 *hello* effect,
+//! `route-satins`, `route-runs` or `tartan` for a filter ([`MODULE`]). Without one it is the M0.6 *hello* effect,
 //! which the contract tests measure the host's costs with. Everything a module does is ordinary code,
 //! built into every module and tested natively, whichever it is.
 //!
@@ -26,6 +27,7 @@
 //!   among them, replaced with one route;
 //! - [`route_runs`]: what the Auto-Route Running Stitch filter does: the selected running stitches replaced
 //!   with one route;
+//! - [`tartan`]: what the Tartan filter does: the selected paths' tartan fills given the sett of a code;
 //! - `abi`: the exported functions VectorCraft calls. It is the single place in StitchCraft allowed to use
 //!   `unsafe`, because the ABI passes raw pointers into linear memory. This crate therefore does not carry
 //!   `#![forbid(unsafe_code)]`; the workspace denies `unsafe` and only `abi.rs` opts out, which
@@ -41,6 +43,7 @@ pub mod route_runs;
 pub mod route_satins;
 pub mod settings;
 pub mod stroke_to_satin;
+pub mod tartan;
 pub mod testsheet;
 
 #[cfg(test)]
@@ -78,10 +81,13 @@ pub enum Module {
     /// The Auto-Route Running Stitch filter, a heavy one, which replaces the selected running stitches with one
     /// route.
     RouteRuns,
+    /// The Tartan filter, which sets the sett of the selected paths' tartan fills from a code of its stripes.
+    Tartan,
 }
 
 /// What this build of the module is, by its features: the first of `fill`, `satin`, `stroke`, `auto`, `pes`,
-/// `dst`, `settings`, `stroke-to-satin`, `testsheet`, `route-satins` and `route-runs`, or *hello* without any.
+/// `dst`, `settings`, `stroke-to-satin`, `testsheet`, `route-satins`, `route-runs` and `tartan`, or *hello*
+/// without any.
 pub const MODULE: Module = if cfg!(feature = "fill") {
     Module::Family(Family::Fill)
 } else if cfg!(feature = "satin") {
@@ -104,6 +110,8 @@ pub const MODULE: Module = if cfg!(feature = "fill") {
     Module::RouteSatins
 } else if cfg!(feature = "route-runs") {
     Module::RouteRuns
+} else if cfg!(feature = "tartan") {
+    Module::Tartan
 } else {
     Module::Hello
 };
@@ -114,7 +122,7 @@ impl Module {
     pub fn all() -> Vec<Module> {
         let families = Family::ALL.iter().map(|family| Module::Family(*family));
         let exporters = FormatId::ALL.iter().map(|format| Module::Exporter(*format));
-        let filters = [Module::Settings, Module::StrokeToSatin, Module::TestSheet, Module::RouteSatins, Module::RouteRuns];
+        let filters = [Module::Settings, Module::StrokeToSatin, Module::TestSheet, Module::RouteSatins, Module::RouteRuns, Module::Tartan];
         std::iter::once(Module::Hello).chain(families).chain([Module::Auto]).chain(exporters).chain(filters).collect()
     }
 
@@ -131,6 +139,7 @@ impl Module {
             Module::TestSheet => testsheet::TESTSHEET,
             Module::RouteSatins => route_satins::ROUTE_SATINS,
             Module::RouteRuns => route_runs::ROUTE_RUNS,
+            Module::Tartan => tartan::TARTAN,
         }
     }
 
@@ -146,6 +155,7 @@ impl Module {
             Module::TestSheet => manifest::testsheet(),
             Module::RouteSatins => manifest::route_satins(),
             Module::RouteRuns => manifest::route_runs(),
+            Module::Tartan => manifest::tartan(),
         }
     }
 
@@ -163,6 +173,7 @@ impl Module {
             Module::TestSheet => testsheet::run(input, params),
             Module::RouteSatins => route_satins::run(input, params),
             Module::RouteRuns => route_runs::run(input, params),
+            Module::Tartan => tartan::run(input, params),
         }
     }
 }
@@ -185,7 +196,8 @@ mod tests {
         feature = "stroke-to-satin",
         feature = "testsheet",
         feature = "route-satins",
-        feature = "route-runs"
+        feature = "route-runs",
+        feature = "tartan"
     )))]
     fn without_a_feature_the_module_is_hello() {
         assert_eq!(MODULE, Module::Hello);
@@ -208,7 +220,21 @@ mod tests {
         assert!(rows["objects"][0]["path"]["subpaths"].as_array().is_some_and(|ribbons| ribbons.len() > 4), "{rows}");
         assert_eq!(
             Module::all().into_iter().map(Module::name).collect::<Vec<_>>(),
-            ["hello", "stroke", "satin", "fill", "auto", "pes", "dst", "settings", "stroke-to-satin", "testsheet", "route-satins", "route-runs"]
+            [
+                "hello",
+                "stroke",
+                "satin",
+                "fill",
+                "auto",
+                "pes",
+                "dst",
+                "settings",
+                "stroke-to-satin",
+                "testsheet",
+                "route-satins",
+                "route-runs",
+                "tartan"
+            ]
         );
         // A filter is given the selection: Auto-Route Satin Columns refuses an empty one.
         assert_eq!(Module::RouteSatins.manifest(), manifest::route_satins());
@@ -217,6 +243,9 @@ mod tests {
         assert_eq!(Module::RouteRuns.manifest(), manifest::route_runs());
         let refused = read(Module::RouteRuns.run(br#"{"objects": []}"#, br#"{"_context": {}}"#));
         assert!(refused["error"].as_str().is_some_and(|error| error.starts_with("error SC-E0820")), "{refused}");
+        assert_eq!(Module::Tartan.manifest(), manifest::tartan());
+        let refused = read(Module::Tartan.run(br#"{"objects": []}"#, br#"{"_context": {}}"#));
+        assert!(refused["error"].as_str().is_some_and(|error| error.starts_with("error SC-E0821")), "{refused}");
         // An exporter is given a whole document, and returns a machine file.
         for format in FormatId::ALL {
             assert_eq!(Module::Exporter(*format).manifest(), manifest::exporter(*format));

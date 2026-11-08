@@ -19,8 +19,8 @@ stripes, each a colour in brackets and its width in millimetres, such as `(#0000
 colour of the stripe before it, and a `|` parts the warp's stripes from the weft's. `symmetry`
 mirrors the sett at its ends rather than repeating it, `scale` scales it in percent, `rotate` turns
 it in degrees, `offset_x` and `offset_y` move it in millimetres, and stripes no wider than
-`min_stripe_width` sew as runs. Empty, the fill sews Ink/Stitch's default sett. VectorCraft's fill
-dialog doesn't hold a sett before M10.7.
+`min_stripe_width` sew as runs. Empty, the fill sews Ink/Stitch's default sett. In VectorCraft,
+StitchCraft Tartan, a filter, writes the sett from a code of its stripes.
 
 - **Accepts:** text of at most 4096 bytes
 - **Default:** empty
@@ -29,7 +29,8 @@ dialog doesn't hold a sett before M10.7.
 ### `tartan_angle`
 
 **Row angle.** The angle of the rows to the stripes, in degrees: at -45 they slant across both the warp's and the
-weft's stripes, as a woven twill's do. At 0 or 90 they run along one direction's stripes.
+weft's stripes, as a woven twill's do. At 0 or 90 they run along one direction's stripes. A
+herringbone's rows run at 45° to the stripes, whatever this angle.
 
 - **Accepts:** an angle in degrees
 - **Default:** `-45`
@@ -46,9 +47,9 @@ thread make the weave coarser, as a heavier twill.
 
 ### `herringbone_width_mm`
 
-**Herringbone width.** The width of the bands of a herringbone, each band's rows slanting the other way from the band
-before. 0 sews straight rows. StitchCraft sews herringbones from M10.7, and until then the rows are
-sewn without them, which `SC-W0324` says.
+**Herringbone width.** The width of the bands of a herringbone, each band's rows slanting at 45° to the stripes the other
+way from the band before, as the ribs of a herringbone twill turn. The weft's rows are joined from
+band to band along its stripes' edges. 0 sews straight rows.
 
 - **Accepts:** a length from 0 to 100 mm
 - **Default:** `0`

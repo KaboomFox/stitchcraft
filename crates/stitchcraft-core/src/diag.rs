@@ -487,22 +487,23 @@ registry! {
     FillCrossThreadsEven = "SC-W0322", Warning, "Half cross with an even thread count; the odd count above sewn";
 
     /// A tartan fill's sett is its `tartan` setting, an object of JSON as Ink/Stitch's tartan editor saves
-    /// it, whose `palette` gives the stripes. This one can't be read: it isn't JSON, it has no `palette`, a
-    /// number in it isn't one, its `scale` isn't above 0, its code has more than one `|`, or a stripe's width
-    /// isn't a number. A threadcount or a code of colour letters, which Ink/Stitch's editor reads too, is
-    /// read from M10.7. The element is skipped.
+    /// it, whose `palette` gives the stripes: a palette code, a threadcount of colour letters or the
+    /// threadcount the Scottish Register of Tartans' search gives. This one can't be read: it isn't JSON, it
+    /// has no `palette`, a number in it isn't one, its `scale` isn't above 0, its code has more than one `|`,
+    /// a stripe's width or count isn't a number, or letters of a register's threadcount have no count. The
+    /// element is skipped.
     ///
-    /// The message says what is wrong. Set the sett again in Ink/Stitch's tartan editor, or write its
-    /// palette code as a colour in brackets and a width for each stripe.
+    /// The message says what is wrong. Set the sett again with VectorCraft's StitchCraft Tartan filter or
+    /// Ink/Stitch's tartan editor, or write its palette code as a colour in brackets and a width for each
+    /// stripe.
     FillTartanSettUnreadable = "SC-E0323", Error, "Tartan fill's sett can't be read; skipped";
 
-    /// A tartan's herringbone sews its rows in bands `herringbone_width_mm` wide, each band's rows slanting
-    /// the other way from the band before. StitchCraft sews herringbones from M10.7, and until then the rows
-    /// are sewn straight, as a tartan with a width of 0 sews them.
+    /// Retired in M10.7, which sews tartans' herringbones: StitchCraft no longer gives this code. Before
+    /// M10.7, a tartan whose `herringbone_width_mm` was above 0 sewed straight rows, as a tartan with a width
+    /// of 0 sews them, and this warning said so.
     ///
-    /// The message gives the width. Set `herringbone_width_mm` to 0 for straight rows, or sew the file in
-    /// Ink/Stitch to have the herringbone.
-    FillTartanHerringboneNotYet = "SC-W0324", Warning, "Tartan's herringbone not sewn yet; rows sewn without it";
+    /// Plan the file again with this StitchCraft to sew the herringbone.
+    FillTartanHerringboneNotYet = "SC-W0324", Warning, "Tartan's herringbone sewn as straight rows (retired)";
 
     /// A tartan fill without a sett sews Ink/Stitch's default one, as Ink/Stitch does: stripes 5 mm wide of a
     /// thread almost black, with 5 mm left unsewn between them. VectorCraft's fill dialog holds no sett
@@ -527,10 +528,13 @@ registry! {
     /// the sett's `scale`, or raise its `min_stripe_width` so that the stripe sews as a run.
     FillTartanTooFine = "SC-W0327", Warning, "Tartan sett too fine for the shortest stitch; needle points left out";
 
-    /// A stripe's colour is `#` and 3 or 6 hexadecimal digits, or a colour name of SVG. This sett names a
-    /// colour that is neither, and its stripes are left unsewn, as Ink/Stitch leaves them.
+    /// A stripe's colour is `#` and 3 or 6 hexadecimal digits or a colour name of SVG, in a palette code, and
+    /// the letters of one of the Scottish Register of Tartans' shades, or of a colour of its own palette, in a
+    /// threadcount. This sett names a colour that is none of these, and its stripes are left unsewn, as
+    /// Ink/Stitch leaves them.
     ///
-    /// The message names the colours. Write each as `#` and 6 hexadecimal digits.
+    /// The message names the colours. Write each as `#` and 6 hexadecimal digits, or as the register's
+    /// letters.
     FillTartanColourUnreadable = "SC-W0328", Warning, "Tartan stripe's colour can't be read; left out";
 
     /// A linear gradient fill sews the colours of the linear gradient its shape is painted with. This shape is
@@ -841,6 +845,18 @@ registry! {
     /// StitchCraft's Satin or Stroke effect on the paths themselves rather than on their group. Keep one start
     /// marker and one end marker in the selection.
     VcNotRouted = "SC-E0820", Error, "VectorCraft selection not routed";
+
+    /// StitchCraft Tartan, a filter in VectorCraft, sets the sett of the selected paths' tartan fills from a
+    /// code: a palette code, a threadcount of colour letters, or the threadcount the Scottish Register of
+    /// Tartans' search gives. A path takes the sett when its own first StitchCraft effect is the fill effect,
+    /// or when it has none, and the filter then gives it the fill effect. It changed nothing: nothing was
+    /// selected, no selected path takes a sett, or the code can't be read, names letters the register uses
+    /// for no colour, which the fill would leave unsewn, gives no stripe, or makes a setting longer than the
+    /// fill's Sett holds.
+    ///
+    /// The message says which. Select the paths to sew as a tartan, and write each stripe as a colour in
+    /// brackets and its width, or as the register's colour letters and a count of threads.
+    VcSettNotSet = "SC-E0821", Error, "VectorCraft tartan's sett not set";
 
     /// An element's geometry cannot be used: its path data or its list of points has an error (the path is
     /// stitched up to the error, as SVG viewers draw it), its transform is not valid (it is skipped with

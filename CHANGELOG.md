@@ -10,8 +10,9 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   `SC-W0011`.
   - A fill's shape keeps its linear gradient, its start and end in the design's millimetres and its stops.
     The SVG reader places it as a viewer does, through the gradients its `href` names, in user units or in
-    shares of the shape's box, after its `gradientTransform`. The VectorCraft reader places a gradient paint by its `geom`, or fits it to the
-    object at its angle as VectorCraft does, in `stitch export` and in the fill's live effect.
+    shares of the shape's box, after its `gradientTransform`. The VectorCraft reader places a gradient paint
+    by its `geom`, or fits it to the object at its angle as VectorCraft does, in `stitch export` and in the
+    fill's live effect.
   - Rows square to the gradient, a row spacing apart and staggered, cover each piece. Between 2 stops they go
     to the 2 colours in Ink/Stitch's fixed pattern, and a transparent stop leaves its rows out. Each colour's
     rows are routed as a tatami fill's, after the tatami fill's underlay in the first stop's colour, each
@@ -20,10 +21,32 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - New codes: `SC-W0329`, a linear gradient fill without a gradient, whose colour fades out along `angle`,
     and `SC-W0330`, a stop passed over. The deviations ledger gains `DEV-FILL-031`, `DEV-FILL-032` and
     `DEV-SVG-027`.
-  - The Test Sheet filter draws a linear gradient fill with its gradient paint, which VectorCraft keeps.
+  - The Test Sheet filter draws a linear gradient fill with its gradient paint, which VectorCraft keeps, so
+    it draws TS-17B's gradients too.
   - TS-17B gains 3 gradients for MC-12 in a third row, and the differential sews them and 6 files of
     gradients in Ink/Stitch too. They agree by every measure, but where the ledger excuses them. A user page
-    has pictures of gradient fills. Golden changed: `TS-17B.pes`, for its new row of gradients.
+    has pictures of gradient fills. Golden changed: `TS-17B.pes`, for its new row of gradients, below M10.7's
+    herringbone.
+- M10.7: herringbone tartans and an editor for setts (`REQ-FILL-TRT-012` to `REQ-FILL-TRT-016`,
+  `REQ-VC-021`).
+  - With `herringbone_width_mm` above 0 a tartan's rows lie in bands that wide, each band's rows slanting at
+    45° the other way from the band before, as Ink/Stitch sews them. The warp is laid band by band, and the
+    weft's rows are joined into a zigzag in each band and across the bands along each stripe's edges.
+    `SC-W0324` is retired: a herringbone no longer sews straight rows.
+  - A sett's code can be a threadcount of colour letters, `B/24 W4`, or the threadcount the Scottish
+    Register of Tartans' search gives with its palette. The letters stand for the register's shades, in a
+    table of StitchCraft's own, acknowledged in `NOTICE`.
+  - The editor for setts (`generators::tartan::editor`) makes a sett from a code with the width of a
+    thread, and writes its palette code and its `tartan` setting as Ink/Stitch's editor does.
+  - VectorCraft's fill dialog shows the sett as text, labelled Sett, for the tartan fill. A text needs
+    VectorCraft 0.14, so the fill effect now installs from 0.14, as the exporters do. StitchCraft Tartan
+    (`--features tartan`), a filter from VectorCraft 0.15, sets the selected paths' sett from a code, the
+    width of a thread and how the sett is laid, and says why when it can't (`SC-E0821`).
+  - TS-17B gains a herringbone 3 mm wide, and the Test Sheet filter draws TS-17B. The differential sews it
+    and a file of 4 herringbones alike in both programs, and the glyph differential the tartan fonts' 35
+    herringbone glyphs, which were known differences. `DEV-FILL-030` excuses Colorful's F. Ink/Stitch breaks
+    a weft line where its geometry library finds the line meets itself, and StitchCraft doesn't.
+    `DEV-SAT-009` excuses Colorful's ’. Golden changed: `TS-17B.pes`, with the herringbone.
 - M10.6: tartan fill without herringbone (`REQ-FILL-TRT-001` to `REQ-FILL-TRT-011`). `fill_method`
   `tartan_fill` sews Ink/Stitch's tartan fill, which was skipped with `SC-W0011`.
   - The sett is the `tartan` setting as Ink/Stitch's tartan editor saves it, a palette code of stripes that

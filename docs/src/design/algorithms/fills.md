@@ -788,8 +788,9 @@ for each part, and the underlay ends no colour block
 ## Tartan fill (P3)
 
 A woven plaid from a stripe specification, its sett, which gives the warp's and the weft's stripes. Each
-colour's rows slant across them at `tartan_angle` and are taken in turns of `rows_per_thread`, sewn without
-herringbone from M10.6 ([tartan fill](tartan.md)). Its colours' lines are routed as a tatami fill's rows are, each part
+colour's rows slant across them at `tartan_angle` and are taken in turns of `rows_per_thread` (M10.6), or
+lie in the bands of a herringbone, which slant one way and then the other (M10.7, [tartan fill](tartan.md)).
+Its colours' lines are routed as a tatami fill's rows are, each part
 after the tatami fill's underlay, which the sewing of a tatami fill's parts lends it, layers and all. Its
 needle points are thinned to the shortest stitch as a tatami fill's are, and `skip_last` shortens its rows.
 The underlay sews in the fill's own thread and ends no colour block, and each colour's rows, then its runs,

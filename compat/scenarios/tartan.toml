@@ -1,0 +1,29 @@
+# Level B: a square with StitchCraft's fill effect, its sett then set by StitchCraft Tartan from a threadcount,
+# a filter VectorCraft 0.15 installs (docs/src/design/vectorcraft-integration.md). The fill effect's record
+# keeps the tartan fill and the sett, which its dialog holds as text from VectorCraft 0.14, and the PES file
+# exported after the filter ran is what `stitch export` writes of the document, and differs from the one
+# exported before. Its colour letters are red, black and green, each thread 0.5 mm wide. Coordinates are
+# points: the square is 30 mm a side.
+description = "A fill's sett, set by the Tartan filter from a threadcount, is kept with its effect, and exports as `stitch export` sews it."
+requirements = ["REQ-VC-021"]
+
+[[run]]
+plugins = ["fill", "tartan", "pes"]
+steps = [
+  { cmd = "shape.rectangle", params = { x = 0, y = 0, width = 85.039, height = 85.039 } },
+  { cmd = "paint.setFill", params = { color = "#0e1f7c" } },
+  { apply = "fill" },
+  { export = "square.png" },
+  { export = "square.pes" },
+  { cmd = "plugin.run", params = { id = "dev.stitchcraft.tartan", params = { code = "R/8 K4 G/12", thread_width_mm = 0.5 } } },
+  { export = "tartan.vectorcraft" },
+  { export = "tartan.png" },
+  { export = "tartan.pes" },
+]
+
+[expect]
+elements = [
+  { file = "tartan.vectorcraft", element = "fill", count = 1, params = { fill_method = "tartan_fill", tartan = '{"symmetry": true, "equal_warp_weft": true, "rotate": 0.0, "scale": 100.0, "offset_x": 0.0, "offset_y": 0.0, "palette": "(#ff0000)/4 (#000000)2 (#289c18)/6", "min_stripe_width": 1.0}' } },
+]
+exported = [["tartan.vectorcraft", "tartan.pes"]]
+differ = [["square.pes", "tartan.pes"]]
