@@ -26,7 +26,7 @@ The guide is a line grouped with the fill and marked as one. It is never sewn.
   [ripple stitch](ripple-stitch.md#guides). The fill takes the first such line of its group that isn't a
   satin column, since satin guides steer ripple stitches.
 - **In a VectorCraft document**, name a path grouped with the fill `stitch:guide`, as for a ripple stitch.
-  VectorCraft's live preview doesn't show the effect the paths beside its object. The preview sews the
+  VectorCraft runs a live effect on its object alone, without the paths beside it. The preview then sews the
   tatami fill below, and `stitch export` sews the rows.
 
 Draw the guide the way the rows should run. Only its first subpath counts. A guide that crosses itself is

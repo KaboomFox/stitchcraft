@@ -564,7 +564,8 @@ registry! {
 
     /// No copy of this guided fill's guide line meets a part of the fill, so that part is sewn as a tatami
     /// fill whose rows run at the angle of the line between the guide's ends, as Ink/Stitch falls back to
-    /// one. The copies move a row spacing at a time square to that line, or at `guided_fill_angle`, from
+    /// one where its copies leave no line in a part. Where no copy meets the part at all, Ink/Stitch stops
+    /// with an error instead. The copies move a row spacing at a time square to that line, or at `guided_fill_angle`, from
     /// the copy nearest the part outward, while they meet the part's bounds. A copy angle near the guide's
     /// own direction moves them along the guide, past a small part, and a guide far from a part can place
     /// its nearest copy beyond it.
