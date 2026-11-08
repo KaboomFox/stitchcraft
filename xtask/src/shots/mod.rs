@@ -69,6 +69,10 @@ pub struct Shot {
     /// `stitch` shots: the test sheet to draw.
     #[serde(default)]
     pub sheet: Option<String>,
+    /// `stitch` shots of a test sheet: only its elements whose ids start with one of these, planned alone, for
+    /// a picture of part of the sheet. Without any, the whole sheet.
+    #[serde(default)]
+    pub elements: Vec<String>,
     /// `stitch` shots: or else a design of the repository, an SVG file or a VectorCraft document, planned
     /// by the engine for the reference machine. `picture` shots: a design whose areas are drawn flat.
     #[serde(default)]
@@ -259,8 +263,9 @@ pub fn stitch(root: &Path, shot: &Shot) -> Result<Vec<Vec<u8>>, String> {
         (Some(_), None) if !shot.panels.is_empty() => return Err("a test sheet is drawn as it is: panels are for designs (`fixture`)".to_string()),
         (Some(id), None) => {
             let sheet = testsheets::find(id).ok_or_else(|| format!("there is no test sheet `{id}`"))?;
-            (vec![sheet.plan().map_err(|e| format!("{id} could not be drawn: {e}"))?], sheet.profile)
+            (vec![part(sheet, shot)?], sheet.profile)
         }
+        (None, Some(_)) if !shot.elements.is_empty() => return Err("`elements` picks a test sheet's elements: a design is drawn whole".to_string()),
         (None, Some(fixture)) => (designs(root, fixture, shot)?, REFERENCE),
         _ => return Err("a stitch shot names a test sheet (`sheet = \"TS-01\"`) or a design (`fixture = \"…\"`)".to_string()),
     };
@@ -270,6 +275,34 @@ pub fn stitch(root: &Path, shot: &Shot) -> Result<Vec<Vec<u8>>, String> {
             stitchcraft_render::preview(plan, machine.trims, settings, &mut Budget::DEFAULT.meter()).map(|image| image.png).map_err(|e| e.to_string())
         })
         .collect()
+}
+
+/// The plan of `sheet`, or of the part of it the elements of `shot` pick, planned as the sheet is planned, and
+/// saying only the diagnostic codes `shot` allows.
+fn part(sheet: &testsheets::TestSheet, shot: &Shot) -> Result<StitchPlan, String> {
+    let id = sheet.id;
+    if shot.elements.is_empty() {
+        return sheet.plan().map_err(|e| format!("{id} could not be drawn: {e}"));
+    }
+    let design = sheet.design().ok_or_else(|| format!("{id} is drawn stitch by stitch, and has no elements to pick"))?;
+    let design = design.map_err(|e| format!("{id} could not be drawn: {e}"))?;
+    let picked: Vec<Element> = design
+        .elements()
+        .iter()
+        .filter(|element| shot.elements.iter().any(|start| element.id.as_str().starts_with(start.as_str())))
+        .cloned()
+        .collect();
+    if picked.is_empty() {
+        return Err(format!("{id} has no element whose id starts with {}", shot.elements.join(" or ")));
+    }
+    let part = Design::new(picked, design.settings).map_err(|d| format!("{id}: {d}"))?;
+    let outcome = stitchcraft_engine::plan(&part, sheet.profile, &Budget::DEFAULT);
+    let said: Vec<String> =
+        outcome.diagnostics.iter().filter(|d| !shot.allow.iter().any(|code| code == d.code.id())).map(ToString::to_string).collect();
+    if !said.is_empty() {
+        return Err(format!("{id}: {}", said.join("; ")));
+    }
+    outcome.plan.ok_or_else(|| format!("{id}'s elements {} have no plan", shot.elements.join(", ")))
 }
 
 /// The plans of the design in `fixture`, read as `stitch plan` reads it: one per panel of `shot`, each with
@@ -366,6 +399,7 @@ mod tests {
             kind: "stitch".to_string(),
             alt: "A probe".to_string(),
             sheet: sheet.map(str::to_string),
+            elements: Vec::new(),
             fixture: fixture.map(str::to_string),
             picture: None,
             panels,
@@ -403,5 +437,36 @@ mod tests {
         // A test sheet is drawn as it is: panels would name images that are never drawn.
         let sheet = stitch(&root, &probe(Some("TS-01"), None, &["1.5", "4"]));
         assert!(sheet.as_ref().is_err_and(|e| e.contains("panels")), "{sheet:?}");
+    }
+
+    #[test]
+    fn a_shot_of_a_sheet_s_elements_plans_those_alone() {
+        let root = util::root();
+        // Each part leaves out needle points too near the one before, as docs/shots.toml allows its shots to.
+        let allow = vec!["SC-I0504".to_string()];
+        let part = |starts: &[&str]| Shot {
+            elements: starts.iter().map(ToString::to_string).collect(),
+            allow: allow.clone(),
+            ..probe(Some("TS-17C"), None, &[])
+        };
+        // TS-17C's letters alone, as drawn and routed, and its lines alone: each a picture of its own.
+        let (letters, lines) = (stitch(&root, &part(&["ts17c:drawn:", "ts17c:routed:"])).unwrap(), stitch(&root, &part(&["ts17c:lines-"])).unwrap());
+        assert!(letters.len() == 1 && lines.len() == 1 && letters != lines);
+        let picked = |starts: &[&str]| part_of("TS-17C", &part(starts)).unwrap().stitches().count();
+        assert!(picked(&["ts17c:drawn:"]) < picked(&["ts17c:drawn:", "ts17c:routed:"]));
+        for (bad, why) in [
+            (part(&["ts17c:nothing"]), "no element whose id starts with ts17c:nothing"),
+            (Shot { elements: vec!["a".into()], ..probe(Some("TS-01"), None, &[]) }, "stitch by stitch"),
+        ] {
+            let refused = stitch(&root, &bad);
+            assert!(refused.as_ref().is_err_and(|e| e.contains(why)), "{refused:?}");
+        }
+        let fixture = Shot { elements: vec!["e".into()], ..probe(None, Some("docs/fixtures/wave.svg"), &[]) };
+        assert!(stitch(&root, &fixture).is_err_and(|e| e.contains("`elements` picks a test sheet's elements")));
+    }
+
+    /// The plan [`part`] gives of the sheet `id` for `shot`.
+    fn part_of(id: &str, shot: &Shot) -> Result<StitchPlan, String> {
+        part(testsheets::find(id).unwrap(), shot)
     }
 }

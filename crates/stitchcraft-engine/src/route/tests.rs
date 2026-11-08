@@ -81,7 +81,7 @@ pub(super) fn two() -> Vec<Element> {
 
 #[test]
 fn req_route_002_a_stretch_passed_twice_runs_under_the_satin_that_covers_it_as_ink_stitch_routes_it() {
-    let routed = routed(&two(), Options::default(), [None, None]);
+    let routed = routed(&two(), Tool::Satins.defaults(), [None, None]);
     // Ink/Stitch's route: the upright's first piece as satin, a run down its centre line to its foot, satin
     // back up over the run to the first piece, a trim, and the bar whole, trimmed after.
     assert_eq!(
@@ -142,7 +142,7 @@ fn req_route_001_a_column_is_cut_into_as_few_equal_pieces_as_keep_each_at_most_1
 #[test]
 fn req_route_001_a_column_routed_whole_from_end_to_end_is_one_piece_with_its_own_rungs() {
     // A bar from the leftmost place to the rightmost: the way is every piece, sewn as one stretch.
-    let routed = routed(&[bar("b", (0.0, 10.0), 0.0)], Options::default(), [None, None]);
+    let routed = routed(&[bar("b", (0.0, 10.0), 0.0)], Tool::Satins.defaults(), [None, None]);
     assert_eq!(summary(&routed), [("AutoSatin 1".to_string(), 0, false, true)]);
     let lines = lines_of(&routed.pieces[0].element);
     assert_eq!(lines.len(), 3, "its 2 rails and its rung: {lines:?}");
@@ -157,7 +157,7 @@ fn req_route_001_a_piece_at_an_end_of_its_column_reaches_the_end_of_its_rails_wh
     // end to end of the rails, and keeps the setting, which shortens it when it sews as it shortens the column.
     for push in ["1", "0.5 0", "0 0.5", "-1"] {
         let pushed = bar("b", (0.0, 10.0), 0.0).with(&[("push_compensation_mm", push)]);
-        let routed = routed(&[pushed], Options::default(), [None, None]);
+        let routed = routed(&[pushed], Tool::Satins.defaults(), [None, None]);
         assert_eq!(summary(&routed), [("AutoSatin 1".to_string(), 0, false, true)], "{push}");
         let lines = lines_of(&routed.pieces[0].element);
         let ends = [lines[0][0], lines[0][1], lines[1][0], lines[1][1]];
@@ -175,7 +175,7 @@ fn a_route_s_pieces_keep_their_element_s_thread_and_a_column_s_its_clips_but_non
     elements[0].hints = Hints { start: Some(p(6.5, 5.0)), end: Some(p(6.5, 25.0)), target: Some(p(6.5, 15.0)) };
     let square = Path { subpaths: vec![Subpath { closed: true, ..line(&[(0.0, 0.0), (30.0, 0.0), (30.0, 30.0), (0.0, 30.0)]) }] };
     elements[0].clips = vec![Clip::of(square, FillRule::NonZero)];
-    let routed = routed(&elements, Options::default(), [None, None]);
+    let routed = routed(&elements, Tool::Satins.defaults(), [None, None]);
     // Routed as `two` is: the upright's first piece, the run under it, the satin back up and the bar.
     assert_eq!(routed.pieces.iter().map(|piece| (piece.from, piece.under)).collect::<Vec<_>>(), [(0, false), (0, true), (0, false), (1, false)]);
     for piece in &routed.pieces {
@@ -191,7 +191,7 @@ fn req_route_002_runs_take_the_column_s_lengths_and_a_piece_its_settings_but_odd
     let settings = |params: &[(&str, &str)]| {
         let mut elements = two();
         elements[0] = column("e0", &[&[(5.0, 5.0), (5.0, 25.0)], &[(8.0, 5.0), (8.0, 25.0)], &[(4.0, 15.0), (9.0, 15.0)]], params);
-        let routed = routed(&elements, Options::default(), [None, None]);
+        let routed = routed(&elements, Tool::Satins.defaults(), [None, None]);
         (routed.pieces[0].element.params.clone(), routed.pieces[1].element.params.clone())
     };
     let (piece, run) = settings(&[
@@ -223,7 +223,7 @@ fn req_route_002_a_stroke_among_the_columns_runs_each_time_the_route_passes_it()
     // along it, with its own length, instead of jumping.
     let mut elements = two();
     elements.push(stroke("way", &[(6.5, 25.0), (15.0, 6.5)], &[("running_stitch_length_mm", "2"), ("repeats", "3")]));
-    let along = routed(&elements, Options::default(), [None, None]);
+    let along = routed(&elements, Tool::Satins.defaults(), [None, None]);
     let runs: Vec<&Piece> = along.pieces.iter().filter(|piece| piece.from == 2).collect();
     assert_eq!(runs.len(), 1, "{:?}", summary(&along));
     assert!(!runs[0].under);
@@ -232,7 +232,7 @@ fn req_route_002_a_stroke_among_the_columns_runs_each_time_the_route_passes_it()
     assert!(near(way[0][0], (6.5, 25.0)) && near(way[0][1], (15.0, 6.5)), "{way:?}");
     // Drawn the other way, it runs the way the route goes.
     elements[2] = stroke("way", &[(15.0, 6.5), (6.5, 25.0)], &[]);
-    let back = routed(&elements, Options::default(), [None, None]);
+    let back = routed(&elements, Tool::Satins.defaults(), [None, None]);
     let run = back.pieces.iter().find(|piece| piece.from == 2).unwrap();
     assert!(near(lines_of(&run.element)[0][0], (6.5, 25.0)), "{:?}", lines_of(&run.element));
 }
@@ -264,14 +264,14 @@ fn req_route_003_jumps_join_the_groups_that_lie_apart_as_short_in_all_as_they_ca
 fn req_route_003_with_preserve_order_the_elements_keep_their_order_and_gain_only_cuts_and_runs() {
     // Given right to left, the bars are sewn right to left, each joined to the next by its shortest jump.
     let elements = [bar("c", (40.0, 50.0), 0.0), bar("b", (20.0, 30.0), 0.0), bar("a", (0.0, 10.0), 0.0)];
-    let options = Options { preserve_order: true, ..Options::default() };
+    let options = Options { preserve_order: true, ..Tool::Satins.defaults() };
     let routed = routed(&elements, options, [None, None]);
     let from: Vec<usize> = routed.pieces.iter().map(|piece| piece.from).collect();
     assert!(from.windows(2).all(|pair| pair[0] <= pair[1]), "{from:?}");
     assert_eq!(from.first(), Some(&0));
     assert_eq!(from.last(), Some(&2));
     // Without it, the route runs from the leftmost end to the rightmost.
-    let free = routed_from(&elements, Options::default());
+    let free = routed_from(&elements, Tool::Satins.defaults());
     assert_eq!(free, [2, 1, 0]);
 }
 
@@ -284,19 +284,19 @@ fn routed_from(elements: &[Element], options: Options) -> Vec<usize> {
 fn req_route_004_a_route_starts_and_stops_at_the_ends_nearest_its_start_and_end() {
     let elements = [bar("a", (0.0, 10.0), 0.0), bar("b", (20.0, 30.0), 0.0)];
     // From the right: the route starts at the right bar's right end and ends at the left bar's left end.
-    let routed = routed(&elements, Options::default(), [Some(p(31.0, 1.0)), Some(p(-1.0, 1.0))]);
+    let routed = routed(&elements, Tool::Satins.defaults(), [Some(p(31.0, 1.0)), Some(p(-1.0, 1.0))]);
     assert_eq!(routed.pieces.iter().map(|piece| piece.from).collect::<Vec<_>>(), [1, 0]);
     let first = lines_of(&routed.pieces[0].element);
     assert!(near(first[0][0], (30.0, 0.0)), "sewn from its right end: {first:?}");
     // Without them, from the leftmost to the rightmost.
-    assert_eq!(routed_from(&elements, Options::default()), [0, 1]);
+    assert_eq!(routed_from(&elements, Tool::Satins.defaults()), [0, 1]);
 }
 
 #[test]
 fn req_route_004_with_preserve_order_a_route_starts_on_the_first_element_and_ends_on_the_last() {
     // The start lies at the second bar, but with Preserve order the route starts on the first.
     let elements = [bar("a", (0.0, 10.0), 0.0), bar("b", (20.0, 30.0), 0.0)];
-    let options = Options { preserve_order: true, ..Options::default() };
+    let options = Options { preserve_order: true, ..Tool::Satins.defaults() };
     let routed = routed(&elements, options, [Some(p(25.0, 1.0)), None]);
     assert_eq!(routed.pieces.first().map(|piece| piece.from), Some(0));
     // It starts at the first bar's end nearest the start, and runs under it to its other end and back.
@@ -308,7 +308,7 @@ fn req_route_004_with_preserve_order_a_route_starts_on_the_first_element_and_end
 #[test]
 fn req_route_004_a_single_column_with_a_start_and_no_end_runs_from_the_start_back_to_its_own_start() {
     let elements = [Element { name: Some("Bar".to_string()), ..bar("a", (0.0, 10.0), 0.0) }];
-    let single = routed(&elements, Options::default(), [Some(p(6.0, 5.0)), None]);
+    let single = routed(&elements, Tool::Satins.defaults(), [Some(p(6.0, 5.0)), None]);
     assert_eq!(single.pieces.len(), 2);
     // The run is a path of its own, which takes no name, though the column has one.
     let run = &single.pieces[0];
@@ -320,13 +320,13 @@ fn req_route_004_a_single_column_with_a_start_and_no_end_runs_from_the_start_bac
     // A start nearest the column's start leaves the column alone.
     let alone = route(
         &elements,
-        &Route { tool: Tool::Satins, options: Options::default(), start: Some(p(-3.0, 1.5)), end: None },
+        &Route { tool: Tool::Satins, options: Tool::Satins.defaults(), start: Some(p(-3.0, 1.5)), end: None },
         &DesignSettings::default(),
         &Budget::DEFAULT,
     );
     assert_eq!(alone.pieces.iter().map(|piece| piece.element.clone()).collect::<Vec<_>>(), elements);
     // With an end too, it is routed as any route.
-    let both = routed(&elements, Options::default(), [Some(p(6.0, 5.0)), Some(p(11.0, 1.5))]);
+    let both = routed(&elements, Tool::Satins.defaults(), [Some(p(6.0, 5.0)), Some(p(11.0, 1.5))]);
     assert_eq!(both.pieces.iter().filter(|piece| piece.under).count(), 1, "{:?}", summary(&both));
 }
 
@@ -334,7 +334,7 @@ fn req_route_004_a_single_column_with_a_start_and_no_end_runs_from_the_start_bac
 fn req_route_005_a_jump_more_than_1_mm_outside_the_elements_trims_and_the_runs_after_a_trim_are_left_out() {
     // Bars end to end: the jump between their centre lines' ends trims when it is longer than 1 mm (exactly
     // 1 mm is in `sew`'s tests), and the last piece trims after it.
-    let apart = |gap: f64| summary(&routed(&[bar("a", (0.0, 10.0), 0.0), bar("b", (10.0 + gap, 20.0), 0.0)], Options::default(), [None, None]));
+    let apart = |gap: f64| summary(&routed(&[bar("a", (0.0, 10.0), 0.0), bar("b", (10.0 + gap, 20.0), 0.0)], Tool::Satins.defaults(), [None, None]));
     assert_eq!(apart(0.5).iter().map(|s| s.3).collect::<Vec<_>>(), [false, true]);
     assert_eq!(apart(2.0).iter().map(|s| s.3).collect::<Vec<_>>(), [true, true]);
     assert_eq!(TRIMMED, 1.0);
@@ -342,9 +342,9 @@ fn req_route_005_a_jump_more_than_1_mm_outside_the_elements_trims_and_the_runs_a
     // bar back to its left end, jumps to the upright 1 mm down, runs up to its top and sews it down. The jump
     // trims, and the run right after it is left out.
     let runs = |options: Options| summary(&routed(&two(), options, [Some(p(20.0, 6.5)), Some(p(6.5, 25.0))])).iter().filter(|s| s.2).count();
-    assert_eq!((runs(Options::default()), runs(Options { trim: false, ..Options::default() })), (1, 2));
+    assert_eq!((runs(Tool::Satins.defaults()), runs(Options { trim: false, ..Tool::Satins.defaults() })), (1, 2));
     // Without trims, nothing trims.
-    let untrimmed = routed(&two(), Options { trim: false, ..Options::default() }, [None, None]);
+    let untrimmed = routed(&two(), Options { trim: false, ..Tool::Satins.defaults() }, [None, None]);
     assert!(summary(&untrimmed).iter().all(|s| !s.3));
 }
 
@@ -354,7 +354,7 @@ fn req_route_005_a_jump_within_a_stroke_s_hull_is_not_long() {
     // them runs inside the hull, and doesn't trim.
     let wound = stroke("s", &[(0.0, 0.0), (0.0, 10.0), (20.0, 10.0), (20.0, -10.0), (5.0, -10.0), (5.0, -3.0)], &[]);
     let trims = |s: Element| {
-        summary(&routed(&[bar("a", (8.0, 18.0), -4.0), s], Options::default(), [None, None])).iter().map(|s| (s.1, s.3)).collect::<Vec<_>>()
+        summary(&routed(&[bar("a", (8.0, 18.0), -4.0), s], Tool::Satins.defaults(), [None, None])).iter().map(|s| (s.1, s.3)).collect::<Vec<_>>()
     };
     assert_eq!(trims(wound), [(1, false), (0, true)]);
     // A straight stroke to the same end has a hull that is a line, outside which the jump runs.
@@ -365,10 +365,11 @@ fn req_route_005_a_jump_within_a_stroke_s_hull_is_not_long() {
 fn req_route_006_a_route_is_the_same_each_time_and_runs_out_of_work_without_a_piece() {
     let elements = crate::testsheets::find("TS-17C").unwrap().design().unwrap().unwrap().elements().to_vec();
     let drawn: Vec<Element> = elements.into_iter().filter(|e| e.id.as_str().starts_with("ts17c:drawn:")).collect();
-    let once = routed(&drawn, Options::default(), [None, None]);
-    assert_eq!(once, routed(&drawn, Options::default(), [None, None]));
+    let once = routed(&drawn, Tool::Satins.defaults(), [None, None]);
+    assert_eq!(once, routed(&drawn, Tool::Satins.defaults(), [None, None]));
     let small = Budget { max_work: 10_000, ..Budget::DEFAULT };
-    let out = route(&drawn, &Route { tool: Tool::Satins, options: Options::default(), start: None, end: None }, &DesignSettings::default(), &small);
+    let out =
+        route(&drawn, &Route { tool: Tool::Satins, options: Tool::Satins.defaults(), start: None, end: None }, &DesignSettings::default(), &small);
     assert!(out.pieces.is_empty() && out.replaced.is_empty());
     assert_eq!(
         out.diagnostics.iter().map(ToString::to_string).collect::<Vec<_>>(),
@@ -381,7 +382,7 @@ fn req_route_007_a_route_takes_columns_and_strokes_and_leaves_the_rest_as_they_a
     let square = Path { subpaths: vec![Subpath { closed: true, ..line(&[(0.0, 0.0), (5.0, 0.0), (5.0, 5.0)]) }] };
     let fill = element("fill", Shape::Fill { path: square, rule: FillRule::EvenOdd }, &[]);
     let elements = [fill, bar("a", (0.0, 10.0), 10.0), stroke("dot", &[(1.0, 1.0), (1.0, 1.0)], &[])];
-    let routed = routed(&elements, Options::default(), [None, None]);
+    let routed = routed(&elements, Tool::Satins.defaults(), [None, None]);
     assert_eq!(routed.replaced, [1]);
     assert_eq!(routed.pieces.iter().map(|piece| piece.from).collect::<Vec<_>>(), [1]);
     let said: Vec<(Code, String)> = routed.diagnostics.iter().map(|d| (d.code, d.element.as_ref().unwrap().to_string())).collect();
@@ -393,14 +394,14 @@ fn req_route_007_pieces_are_named_and_with_preserve_order_keep_their_column_s_na
     let mut elements = two();
     elements[0].name = Some("Upright".to_string());
     let names = |options: Options| summary(&routed(&elements, options, [None, None])).into_iter().map(|s| s.0).collect::<Vec<_>>();
-    assert_eq!(names(Options::default()), ["AutoSatin 1", "AutoSatin Running Stitch 2", "AutoSatin 3", "AutoSatin 4"]);
-    let kept = Options { preserve_order: true, ..Options::default() };
+    assert_eq!(names(Tool::Satins.defaults()), ["AutoSatin 1", "AutoSatin Running Stitch 2", "AutoSatin 3", "AutoSatin 4"]);
+    let kept = Options { preserve_order: true, ..Tool::Satins.defaults() };
     assert_eq!(names(kept), ["Upright", "AutoSatin Running Stitch 1", "Upright", "AutoSatin 2"]);
 }
 
 #[test]
 fn diag_sc_e1001_a_route_without_a_satin_column_is_refused() {
-    let said = |elements: &[Element]| routed(elements, Options::default(), [None, None]).diagnostics.last().map(ToString::to_string);
+    let said = |elements: &[Element]| routed(elements, Tool::Satins.defaults(), [None, None]).diagnostics.last().map(ToString::to_string);
     assert_eq!(
         said(&[]).as_deref(),
         Some("error SC-E1001: There is nothing to route: Auto-Route Satin Columns routes satin columns, and was given no element.")
@@ -414,7 +415,7 @@ fn diag_sc_e1001_a_route_without_a_satin_column_is_refused() {
         said(&[line.clone(), line]).as_deref(),
         Some("error SC-E1001: There is nothing to route: Auto-Route Satin Columns routes satin columns, and none of the 2 elements given is one.")
     );
-    let refused = routed(&[], Options::default(), [None, None]);
+    let refused = routed(&[], Tool::Satins.defaults(), [None, None]);
     assert!(refused.pieces.is_empty() && refused.replaced.is_empty());
 }
 
@@ -471,7 +472,7 @@ fn diag_sc_w1003_a_piece_read_back_otherwise_is_kept_and_named() {
     // as the rung: read back, its rails are taken by their length.
     let mut elements = two();
     elements[0] = column("x", &[&[(5.0, 5.0), (8.0, 25.0)], &[(8.0, 5.0), (5.0, 25.0)], &[(4.0, 5.4), (9.0, 5.4)], &[(4.0, 20.0), (9.0, 20.0)]], &[]);
-    let routed = routed(&elements, Options::default(), [None, None]);
+    let routed = routed(&elements, Tool::Satins.defaults(), [None, None]);
     assert_eq!(routed.pieces.len(), 4, "{:?}", summary(&routed));
     assert_eq!(routed.diagnostics.len(), 1, "{:?}", routed.diagnostics);
     let said = routed.diagnostics.first().unwrap();
@@ -485,26 +486,43 @@ fn diag_sc_w1003_a_piece_read_back_otherwise_is_kept_and_named() {
 
 #[test]
 fn the_options_are_ink_stitch_s_with_their_labels_and_defaults() {
-    let named: Vec<(&str, &str, bool)> = OPTIONS.iter().map(|option| (option.name, option.label, option.default)).collect();
+    let named = |tool: Tool| tool.options().iter().map(|option| (option.name, option.label, option.default)).collect::<Vec<_>>();
     assert_eq!(
-        named,
+        named(Tool::Satins),
         [
             ("trim", "Trim jump stitches", true),
             ("preserve_order", "Preserve order of satin columns", false),
             ("keep_originals", "Keep original paths", false)
         ]
     );
-    assert_eq!(Options::default(), Options { trim: true, preserve_order: false, keep_originals: false });
-    let mut options = Options::default();
-    for option in &OPTIONS {
-        let was = option.get(&options);
-        option.set(&mut options, !was);
-        assert_eq!(option.get(&options), !was, "{}", option.name);
-        assert!(!option.help.is_empty());
-    }
-    assert_eq!(options, Options { trim: false, preserve_order: true, keep_originals: true });
-    assert_eq!(RouteOption::named("trim").map(|option| option.label), Some("Trim jump stitches"));
-    assert!(RouteOption::named("sort").is_none());
+    assert_eq!(
+        named(Tool::Runs),
+        [
+            ("break_up", "Add nodes at intersections", true),
+            ("preserve_order", "Preserve order of running stitches", false),
+            ("trim", "Trim jump stitches", false)
+        ]
+    );
+    // An option a tool doesn't have is off.
+    assert_eq!(Tool::Satins.defaults(), Options { trim: true, preserve_order: false, keep_originals: false, break_up: false });
+    assert_eq!(Tool::Runs.defaults(), Options { trim: false, preserve_order: false, keep_originals: false, break_up: true });
+    // Each option reads and sets its own field and no other.
+    let flipped = |tool: Tool| {
+        let mut options = tool.defaults();
+        for option in tool.options() {
+            let was = option.get(&options);
+            option.set(&mut options, !was);
+            assert_eq!(option.get(&options), !was, "{}", option.name);
+            assert!(!option.help.is_empty());
+        }
+        options
+    };
+    assert_eq!(flipped(Tool::Satins), Options { trim: false, preserve_order: true, keep_originals: true, break_up: false });
+    assert_eq!(flipped(Tool::Runs), Options { trim: true, preserve_order: true, keep_originals: false, break_up: false });
+    assert_eq!(Tool::Satins.option("trim").map(|option| option.label), Some("Trim jump stitches"));
+    assert_eq!(Tool::Runs.option("break_up").map(|option| option.default), Some(true));
+    assert!(Tool::Satins.option("break_up").is_none() && Tool::Runs.option("keep_originals").is_none() && Tool::Runs.option("sort").is_none());
+    assert_eq!([Tool::Satins, Tool::Runs].map(Tool::name), ["Auto-Route Satin Columns", "Auto-Route Running Stitch"]);
 }
 
 #[test]
@@ -520,7 +538,7 @@ fn req_route_002_a_stroke_joining_the_ends_of_a_column_s_piece_is_sewn_and_so_is
     // The stroke joins the bar's places 3 and 4 mm along, as the bar's piece between them does: the route
     // runs along the stroke and back, and sews the bar whole as satin (`DEV-ROUTE-005`).
     let elements = [bar("a", (0.0, 10.0), 0.0), stroke("s", &[(3.0, 1.5), (4.0, 1.5)], &[])];
-    let both = routed(&elements, Options::default(), [None, None]);
+    let both = routed(&elements, Tool::Satins.defaults(), [None, None]);
     assert_eq!(summary(&both).iter().map(|s| (s.1, s.2)).collect::<Vec<_>>(), [(0, false), (1, false), (1, false), (0, false)]);
     let satin: Vec<Vec<Point>> = both.pieces.iter().filter(|piece| piece.from == 0).map(|piece| lines_of(&piece.element)[0].clone()).collect();
     assert!(near(satin[0][0], (0.0, 0.0)) && near(satin[0][1], (satin[1][0].x(), satin[1][0].y())) && near(satin[1][1], (10.0, 0.0)), "{satin:?}");

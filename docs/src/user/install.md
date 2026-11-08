@@ -43,18 +43,18 @@ cargo build -p stitchcraft-vc-plugin --release --target wasm32-unknown-unknown -
 The build writes `target/wasm32-unknown-unknown/release/stitchcraft_vc_plugin.wasm`. Copy it into a
 folder for plug-ins as `stitchcraft-fill.wasm`. Build again with `--features stroke`, `--features satin`,
 `--features auto`, `--features pes`, `--features dst`, `--features settings`, `--features testsheet`,
-`--features stroke-to-satin` and `--features route-satins`, and copy the file each time, as
-`stitchcraft-stroke.wasm`, `stitchcraft-satin.wasm`, `stitchcraft-auto.wasm`, `stitchcraft-pes.wasm`,
+`--features stroke-to-satin`, `--features route-satins` and `--features route-runs`, and copy the file each
+time, as `stitchcraft-stroke.wasm`, `stitchcraft-satin.wasm`, `stitchcraft-auto.wasm`, `stitchcraft-pes.wasm`,
 `stitchcraft-dst.wasm`, `stitchcraft-settings.wasm`, `stitchcraft-testsheet.wasm`,
-`stitchcraft-stroke-to-satin.wasm` and `stitchcraft-route-satins.wasm`. VectorCraft 0.13 and earlier refuse
-the exporters.
+`stitchcraft-stroke-to-satin.wasm`, `stitchcraft-route-satins.wasm` and `stitchcraft-route-runs.wasm`.
+VectorCraft 0.13 and earlier refuse the exporters.
 
 In VectorCraft's desktop app, choose that folder in **Edit › Preferences › Plug-ins & Scratch Disks ›
 Additional Plug-ins Folder**, which is under **Performance & Storage** up to VectorCraft 0.14. VectorCraft
-installs the plug-ins in it whenever it starts, all but Stroke to Satin and Auto-Route Satin Columns. They
+installs the plug-ins in it whenever it starts, all but Stroke to Satin and the 2 Auto-Route filters. They
 ask for more work than a filter usually may do, which VectorCraft lets you allow when you install each on
 its own. Choose **Object › Plug-ins › Install Plug-in…** and pick `stitchcraft-stroke-to-satin.wasm`, and
-install `stitchcraft-route-satins.wasm` the same way. VectorCraft asks you first, and once you allow one,
+install `stitchcraft-route-satins.wasm` and `stitchcraft-route-runs.wasm` the same way. VectorCraft asks you first, and once you allow one,
 keeps it and installs it again when it starts. The effects are under **Effect › Plug-ins**, the formats in **File ›
 Export › Export As**, and the filters under **Object › Plug-ins**. In VectorCraft on the web, open each
 file with **File › Open** instead, once each time VectorCraft is opened. [Embroider a VectorCraft

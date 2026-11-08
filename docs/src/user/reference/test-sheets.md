@@ -454,22 +454,26 @@ After sewing, check:
 - The square turned 30° sews its crosses square to its own sides, as a letter turned along a path sews its own. Do its rows of crosses run along its edges, with no part cell along them?
 - How long does the sheet take?
 
-## TS-17C — Ripples and routing: satin letters as drawn and routed
+## TS-17C — Ripples and routing: satin letters and a network of lines, as drawn and routed
 
-82.0 × 50.6 mm · 3271 stitches, 12 jumps, 11 trims, 0 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
+82.0 × 85.0 mm · 3787 stitches, 21 jumps, 20 trims, 1 colour change, 0 stops · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
-![TS-17C as it will sew, in blue: the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E's arms. At the bottom the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next.](../../images/generated/testsheet-ts-17c.png)
+![TS-17C as it will sew. In blue, the word ROUTE in satin letters 20 mm tall, twice. At the top the letters are sewn as drawn, column by column, and the machine jumps from each letter to the next and to each of the E's arms. Below them the same letters are routed, cut into pieces with runs under the satin, and jump only from one letter to the next. At the bottom, in red, a network of 6 bean-stitched lines, twice: on the left sewn as drawn, line by line, with a jump thread from each line to the next, and on the right routed, sewn in one go but for the jump to the line that crosses itself, above the others, and back.](../../images/generated/testsheet-ts-17c.png)
 
 ![TS-17C's letters ROUTE drawn as thin lines, twice: at the top as drawn, and at the bottom as Auto-Route Satin Columns routes them. Dashed lines are jumps, which the reference machine leaves as threads to cut by hand, and orange rings mark lock stitches. The routed letters jump only from one letter to the next.](../../images/generated/routing-letters.png)
 
-Threads: Blue.
+![TS-17C's network of 6 running stitches drawn as thin lines, twice: on the left as drawn, and on the right as Auto-Route Running Stitch routes them with Trim jump stitches on. A rail along the bottom, a post across it, a brace from the post down to the rail, a hook curving up from the rail, a line that crosses itself above them, and a tick beside the rail. Dashed lines are jumps, and orange rings mark lock stitches. As drawn, the machine jumps from each line to the next. Routed, it jumps only out to the line apart and back, and trims before each of those jumps. It reaches the tick, 0.5 mm off the rail, with a stitch.](../../images/generated/routing-lines.png)
+
+Threads: Blue, Red.
 
 After sewing, check:
 
-- Top: the word ROUTE in satin columns 3 mm wide, sewn as drawn, column by column. Bottom: the same letters as auto-satin routing joins them, cut into pieces, with running stitches under the satins and a trim between letters.
+- Top: the word ROUTE in satin columns 3 mm wide, sewn as drawn, column by column. Below it: the same letters as auto-satin routing joins them, cut into pieces, with running stitches under the satins and a trim between letters.
 - Count the jump threads of each half, within each letter and between the letters. The routed half should have none within a letter. Its file asks for a trim between letters, which a machine that obeys trims cuts.
 - On the routed half, do the running stitches under the satins show anywhere, at a column's edge, at its ends or where 2 columns meet?
 - Where a routed column is cut into pieces, is the satin even across the cut, or does a gap, a ridge or a stitch out of line show?
+- Bottom, in red: 6 bean-stitched lines, a rail, a post across it, a brace, a hook, a line that crosses itself and a tick, sewn as drawn on the left and as auto-run routing joins them on the right. Count the jump threads of each: the routed network should jump only to the line that crosses itself and back, trimming before each jump.
+- On the routed network, do the plain runs under the bean stitches show beside them, where a branch is sewn out and back?
 - The time each half takes, from its first stitch to its last.
