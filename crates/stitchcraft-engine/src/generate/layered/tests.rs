@@ -157,6 +157,29 @@ fn req_asm_009_a_fill_s_underlay_starts_at_its_start_position_and_its_top_ends_a
 }
 
 #[test]
+fn req_asm_009_a_satin_column_s_underlay_starts_at_its_start_position_and_its_top_ends_at_its_end_position() {
+    // A column 20 mm long that starts and ends at its left end, between a needle and a next element both past
+    // its right end. Its underlay starts at the start position and ends at the right end, nearest what the
+    // next layer offers, not at the end position. Its top starts at the right end, nearest the needle, not at
+    // the start position, and ends at the end position.
+    let mut satin_column = column(&[("contour_underlay", "true"), ("zigzag_underlay", "true")]);
+    satin_column.hints = Hints { start: Some(p(0.0, 2.0)), end: Some(p(0.0, 2.0)), target: None };
+    let mut layered = read(&satin_column).0.unwrap();
+    let neighbours = Neighbours { needle: Some(p(25.0, 2.0)), next: Some(Approach::Point(p(25.0, 2.0))) };
+    let (meter, diagnostics) = (&mut Budget::DEFAULT.meter(), &mut Vec::new());
+    let underlay = layered.sew(Layer::Underlay, &neighbours, diagnostics, meter).unwrap();
+    let top = layered.sew(Layer::Top, &neighbours, diagnostics, meter).unwrap();
+    let ends = |generated: &Generated| {
+        let points: Vec<Point> = generated.groups.iter().flatten().copied().collect();
+        (points.first().copied().unwrap(), points.last().copied().unwrap())
+    };
+    let ((under_first, under_last), (top_first, top_last)) = (ends(&underlay), ends(&top));
+    assert!(under_first.x() < 2.0 && under_last.x() > 18.0, "{under_first:?} to {under_last:?}");
+    assert!(top_first.x() > 18.0 && top_last.x() < 2.0, "{top_first:?} to {top_last:?}");
+    assert!(diagnostics.is_empty(), "{diagnostics:?}");
+}
+
+#[test]
 fn req_gen_004_each_layer_spends_the_design_s_stitches_and_one_short_ends_planning() {
     let settings = DesignSettings::default();
     let (budget, neighbours) = (Budget::DEFAULT, Neighbours::default());
@@ -187,10 +210,12 @@ fn req_gen_002_a_layer_whose_work_runs_out_skips_its_element() {
     let (generation, layered) = sewn(Budget { max_work: 10, ..budget }.meter());
     let said: Vec<Code> = generation.diagnostics.iter().map(|d| d.code).collect();
     assert_eq!((generation.generated.is_none(), layered.is_none(), said), (true, true, vec![Code::BudgetExhausted, Code::TrimOrStopLeftOut]));
-    // Out of work in its top: skipped there, its trim said left out only when its underlay sewed nothing.
+    // Out of work in its top: skipped there, and the plan leaves out its underlay with it, so the element
+    // sews nothing and its trim is left out too, as when it is skipped whole.
     let (_, layered) = sewn(budget.meter());
     let mut layered = layered.unwrap();
     layered.work = 10;
     let top = layered.top(&neighbours, &budget, budget.max_stitches).unwrap();
-    assert_eq!((top.generated, top.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>()), (None, vec![Code::BudgetExhausted]));
+    let said = top.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>();
+    assert_eq!((top.generated, said), (None, vec![Code::BudgetExhausted, Code::TrimOrStopLeftOut]));
 }

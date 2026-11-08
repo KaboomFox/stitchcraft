@@ -474,8 +474,10 @@ impl Column {
 
     /// `SC-W0215` when the column is left out whole in a run of underlays first: when it has no stitch
     /// across, or when its own needle points, its underlays' and its top stitches', all lie within the
-    /// shortest stitch of its first. Its layers then sew nothing.
+    /// shortest stitch of its first. Its layers then sew nothing. A column with no section to sew isn't: it
+    /// has said so (`SC-E0216`), and its layers sew nothing, as it sews nothing whole.
     pub(crate) fn left_out(&self) -> Option<Diagnostic> {
+        let [_, ..] = self.sections.as_slice() else { return None };
         let mut own: Vec<Point> = self.layers.iter().flat_map(underlay::Layer::points).collect();
         own.extend_from_slice(&self.top);
         too_small(self.across, &own, self.lengths.min_stitch.get())
