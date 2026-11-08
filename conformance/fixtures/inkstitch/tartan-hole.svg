@@ -4,5 +4,5 @@
   <metadata><inkstitch:inkstitch_svg_version>4</inkstitch:inkstitch_svg_version></metadata>
   <path id="hole" d="M 50,30 A 20,20 0 1 1 10,30 A 20,20 0 1 1 50,30 Z M 22,22 V 38 H 38 V 22 Z" style="fill:#0a55a3" inkstitch:fill_method="tartan_fill"
         inkstitch:tartan="{&quot;symmetry&quot;: true, &quot;rotate&quot;: 0.0, &quot;scale&quot;: 100, &quot;offset_x&quot;: 0.0, &quot;offset_y&quot;: 0.0, &quot;palette&quot;: &quot;(#ed171f)/3.0 (#70bc1f)2.0 (#0a55a3)/4.0&quot;, &quot;min_stripe_width&quot;: 1.0}"
-        inkstitch:trim_after="True"/>
+        inkstitch:max_stitch_length_mm="3" inkstitch:trim_after="True"/>
 </svg>
