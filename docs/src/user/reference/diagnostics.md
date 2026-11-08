@@ -62,6 +62,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0503`](#sc-w0503) | Warning | Custom lock cannot be sewn as written |
 | [`SC-I0504`](#sc-i0504) | Info | Stitches shorter than the shortest stitch merged |
 | [`SC-W0505`](#sc-w0505) | Warning | Trim or stop after an element that sews nothing; left out |
+| [`SC-I0506`](#sc-i0506) | Info | Underlays first joins no run; the element sews as without it |
 | [`SC-E0601`](#sc-e0601) | Error | Too many colour changes for the file format |
 | [`SC-E0602`](#sc-e0602) | Error | Design too large for the file format |
 | [`SC-E0603`](#sc-e0603) | Error | Machine file could not be read |
@@ -763,6 +764,21 @@ out, as Ink/Stitch leaves it out. Another message says why the element sews noth
 automatic area that the areas sewn after it cover whole (`SC-I0904`).
 
 Make the element sew, or set the trim or stop on the element before it.
+
+## SC-I0506
+
+**Info** — Underlays first joins no run; the element sews as without it
+
+The element sets `underlays_first`, but its setting joins no run, so it sews its underlay just before
+its top stitches, as it does without the setting. A run is 2 or more elements next to each other in
+sewing order that set it and sew in one thread, with no trim or stop between them. The run sews all
+their underlays first, then their top stitches. This element is alone: the elements next to it don't
+set it, or sew in another thread, or a trim or a stop parts them. An element sewn in several threads
+is in no run either.
+
+The message says which. Set `underlays_first` on the elements that cross or overlap this one too,
+give them its thread, or move the trim or the stop between them. Nothing needs doing if the element
+should sew as it does.
 
 ## SC-E0601
 
