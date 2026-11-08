@@ -682,13 +682,18 @@ pub mod stitchcraft_engine::registry
 pub const stitchcraft_engine::registry::PARAMETERS: &[&stitchcraft_params::spec::ParamGroup]
 pub mod stitchcraft_engine::route
 #[non_exhaustive] pub enum stitchcraft_engine::route::Tool
+pub stitchcraft_engine::route::Tool::Runs
 pub stitchcraft_engine::route::Tool::Satins
+impl stitchcraft_engine::route::Tool
+pub fn stitchcraft_engine::route::Tool::defaults(self) -> stitchcraft_engine::route::Options
+pub const fn stitchcraft_engine::route::Tool::name(self) -> &'static str
+pub fn stitchcraft_engine::route::Tool::option(self, &str) -> core::option::Option<&'static stitchcraft_engine::route::RouteOption>
+pub const fn stitchcraft_engine::route::Tool::options(self) -> &'static [stitchcraft_engine::route::RouteOption]
 pub struct stitchcraft_engine::route::Options
+pub stitchcraft_engine::route::Options::break_up: bool
 pub stitchcraft_engine::route::Options::keep_originals: bool
 pub stitchcraft_engine::route::Options::preserve_order: bool
 pub stitchcraft_engine::route::Options::trim: bool
-impl core::default::Default for stitchcraft_engine::route::Options
-pub fn stitchcraft_engine::route::Options::default() -> stitchcraft_engine::route::Options
 pub struct stitchcraft_engine::route::Piece
 pub stitchcraft_engine::route::Piece::element: stitchcraft_engine::design::Element
 pub stitchcraft_engine::route::Piece::from: usize
@@ -705,14 +710,17 @@ pub stitchcraft_engine::route::RouteOption::label: &'static str
 pub stitchcraft_engine::route::RouteOption::name: &'static str
 impl stitchcraft_engine::route::RouteOption
 pub fn stitchcraft_engine::route::RouteOption::get(&self, &stitchcraft_engine::route::Options) -> bool
-pub fn stitchcraft_engine::route::RouteOption::named(&str) -> core::option::Option<&'static stitchcraft_engine::route::RouteOption>
 pub fn stitchcraft_engine::route::RouteOption::set(&self, &mut stitchcraft_engine::route::Options, bool)
 pub struct stitchcraft_engine::route::Routed
 pub stitchcraft_engine::route::Routed::diagnostics: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
 pub stitchcraft_engine::route::Routed::pieces: alloc::vec::Vec<stitchcraft_engine::route::Piece>
 pub stitchcraft_engine::route::Routed::replaced: alloc::vec::Vec<usize>
-pub const stitchcraft_engine::route::OPTIONS: [stitchcraft_engine::route::RouteOption; 3]
+pub const stitchcraft_engine::route::MOST_LINES: usize
+pub const stitchcraft_engine::route::NEAR: f64
 pub const stitchcraft_engine::route::PIECE: f64
+pub const stitchcraft_engine::route::RUN_OPTIONS: [stitchcraft_engine::route::RouteOption; 3]
+pub const stitchcraft_engine::route::RUN_TRIMMED: f64
+pub const stitchcraft_engine::route::SATIN_OPTIONS: [stitchcraft_engine::route::RouteOption; 3]
 pub const stitchcraft_engine::route::TRIMMED: f64
 pub fn stitchcraft_engine::route::route(&[stitchcraft_engine::design::Element], &stitchcraft_engine::route::Route, &stitchcraft_engine::design::DesignSettings, &stitchcraft_core::budget::Budget) -> stitchcraft_engine::route::Routed
 pub mod stitchcraft_engine::testsheets
@@ -737,9 +745,10 @@ pub fn stitchcraft_engine::testsheets::pictures::window((f64, f64), f64) -> core
 pub fn stitchcraft_engine::testsheets::pictures::word((f64, f64), f64) -> core::result::Result<stitchcraft_engine::testsheets::pictures::Picture, stitchcraft_engine::testsheets::SheetError>
 pub mod stitchcraft_engine::testsheets::ts17c
 pub const stitchcraft_engine::testsheets::ts17c::BELOW: f64
+pub const stitchcraft_engine::testsheets::ts17c::BESIDE: f64
 pub const stitchcraft_engine::testsheets::ts17c::CROSSING: [&str; 2]
-pub const stitchcraft_engine::testsheets::ts17c::FIRST_BESIDE: f64
 pub const stitchcraft_engine::testsheets::ts17c::LETTERS: [&str; 11]
+pub const stitchcraft_engine::testsheets::ts17c::LINES: [&str; 6]
 pub enum stitchcraft_engine::testsheets::SheetError
 pub stitchcraft_engine::testsheets::SheetError::Budget(stitchcraft_core::budget::Exhausted)
 pub stitchcraft_engine::testsheets::SheetError::ElementId(stitchcraft_core::element::ElementIdError)

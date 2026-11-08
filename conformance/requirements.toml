@@ -1075,6 +1075,51 @@ rationale = "A route is a design of its own, so each program routes the letters 
 milestone = "M10"
 status = "active"
 
+[[req]]
+id = "REQ-ROUTE-009"
+area = "route"
+level = "L2"
+statement = "Auto-run routing takes the strokes, whatever their stroke method, each subpath a line: flattened within 0.1 CSS pixels, or a manual stitch's nodes, a point that repeats the one before left out. A fill, a satin column, a shape digitized automatically, an element whose settings don't read and a stroke of no length stay as they are, each named by SC-I1002, and given no stroke the route takes, routing is refused with SC-E1001. The route's elements replace the strokes it takes, in its sewing order."
+rationale = "Ink/Stitch's Auto-Route Running Stitch takes the selected strokes so, each subpath a line of its graph (lib/extensions/auto_run.py and lib/stitches/auto_run.py, read at d59c9ab)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-ROUTE-010"
+area = "route"
+level = "L2"
+statement = "With Add nodes at intersections, auto-run routing cuts a line where it crosses or touches itself, into lines in order along it. It then cuts each line where it crosses, touches or runs along another, and where 2 lines pass within 50 CSS pixels (13.2 mm) of each other without touching, at the point of each nearest the other, found as the geometry library Ink/Stitch uses finds it. Lines exactly 50 CSS pixels apart are cut. 2 lines that cross are cut at one point, and a cut within a millionth of a millimetre of a point drawn or cut before is that point. A stretch of a line between 2 cuts is kept however short it is. Without the option, no line is cut. Of more than 1,000 lines, none is cut by another, and SC-W1004 says so. The points of each stretch, each to the next, are the route's pieces."
+rationale = "Ink/Stitch cuts the lines so, comparing each pair (LineSegments in lib/stitches/auto_run.py, read at d59c9ab), so that the route can turn where lines meet and jump where they pass near each other. Its cuts of 2 lines that cross can miss each other by a rounding error, and it leaves out a stretch of 0.1 CSS pixels or less (DEV-ROUTE-007, DEV-ROUTE-008)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-ROUTE-011"
+area = "route"
+level = "L2"
+statement = "A piece that an auto-run route passes twice is sewn under the others the first time, and on top the last time. Pieces in a row are one element until a jump comes, the route goes from on top to under or back, a piece on top comes from another stroke, or a piece under comes from a stroke whose run under the others sews otherwise. An element on top is a copy of its stroke, with the stroke's settings and an even number of repeats lowered by 1. One under the others is a running stitch with the stroke's running stitch length and tolerance, or a manual stitch where the stroke is one, without repeats or bean stitch. Each has its stroke's thread and stroke, and none of its clips, positions or target point."
+rationale = "A run that the stitches sewn after it cover moves the needle without a jump. Ink/Stitch's tool sews a stretch passed twice so, and lowers the repeats so that each stretch ends at its far end (path_to_elements and create_element in lib/stitches/auto_run.py, read at d59c9ab). It gives some elements another stroke's settings (DEV-ROUTE-006)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-ROUTE-012"
+area = "route"
+level = "L2"
+statement = "An auto-run route joins and walks its pieces as REQ-ROUTE-003 and REQ-ROUTE-004 say. With Preserve order, the parts of each stroke that its own pieces don't join are also joined, each to each, by the shortest jump between their ends, which the route takes either way. With Trim jump stitches, a jump longer than 0.75 mm trims the thread after the element before it, whichever jump of a row it is, and the elements under the others right after a trim are left out. Without it, the route trims nothing. The elements are named AutoRun and a number, or AutoRun Underpath and a number for one under the others, counting every element made."
+rationale = "Ink/Stitch's tool trims and names its elements so (path_to_elements and create_element in lib/stitches/auto_run.py, read at d59c9ab). Of a row of jumps it looks only at the first, and it joins a stroke's subpaths at points that may be no nodes of its graph (DEV-ROUTE-009, DEV-ROUTE-010)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-ROUTE-013"
+area = "route"
+level = "L3"
+statement = "TS-17C's network of running stitches as drawn, routed by the Auto-Route Running Stitch of the Ink/Stitch that conformance/inkstitch/pin.toml names, run as a black box, and by StitchCraft's routing with the same options, each route sewn by its own program, sew alike by the measures of REQ-SVG-008 and within their tolerances: with the tool's options at their defaults, with Trim jump stitches on, with Preserve order on, and with Add nodes at intersections off. The sheet's routed network, sewn by both programs, sews alike too. A measure that a case excuses with an entry of the deviations ledger may differ."
+rationale = "A route is a design of its own, so each program routes the lines itself, and the differential compares what each route sews."
+milestone = "M10"
+status = "active"
+
 # ── Fill region ────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -1703,8 +1748,17 @@ status = "active"
 id = "REQ-VC-019"
 area = "vectorcraft"
 level = "L2"
-statement = "Auto-Route Satin Columns routes from the selected object named `stitch:route-start` and to the one named `stitch:route-end`, each at the centre of the box round its anchors, and deletes them with the paths. It refuses with SC-E0820, and nothing changes, a selection with nothing selected, with no path whose own effects make it a satin column, or with 2 markers of a kind. A VectorCraft before 0.15, which keeps no effect record a filter gives, makes it decline with SC-E0813. `stitch export` leaves both markers out of the stitches without a word, as it leaves out the other markers."
-rationale = "Ink/Stitch marks a route's ends with its autoroute_start and autoroute_end commands, and stops at 2 of a kind (lib/extensions/auto_satin.py, read at d59c9ab). ABI v1 gives a filter no command objects, and names mark them, as stitch:start marks a shape's start (REQ-VC-009)."
+statement = "Auto-Route Satin Columns and Auto-Route Running Stitch route from the selected object named `stitch:route-start` and to the one named `stitch:route-end`, each at the centre of the box round its anchors, and delete them with the paths. Each refuses with SC-E0820, and nothing changes, a selection with nothing selected, with no path whose own effects make it one the filter routes, a satin column or a stroke, or with 2 markers of a kind. A VectorCraft before 0.15, which keeps no effect record a filter gives, makes them decline with SC-E0813. `stitch export` leaves both markers out of the stitches without a word, as it leaves out the other markers."
+rationale = "Ink/Stitch marks a route's ends with its autoroute_start and autoroute_end commands. Auto-Route Satin Columns stops at 2 of a kind, and Auto-Route Running Stitch takes the first (lib/extensions/auto_satin.py and auto_run.py, read at d59c9ab), which a filter, which can't warn, can't choose. ABI v1 gives a filter no command objects, and names mark them, as stitch:start marks a shape's start (REQ-VC-009)."
+milestone = "M10"
+status = "active"
+
+[[req]]
+id = "REQ-VC-020"
+area = "vectorcraft"
+level = "L2"
+statement = "From VectorCraft 0.17, StitchCraft's Auto-Route Running Stitch, a heavy filter, routes the selected paths whose own StitchCraft effects make them strokes, as auto-run routing routes elements (REQ-ROUTE-009 to REQ-ROUTE-012), and replaces them with the route in one undo step, within a heavy filter's budget. Each element of the route is a path with the stroke effect, its element's stroke and the name the route gives it, and a trim turns on the effect's trim_after. The elements go in their sewing order where the topmost path routed was, or with Preserve order each where the path it comes from was. The paths the route doesn't take, a satin column among them, stay as they are. Its dialog offers the tool's options, made from their declarations."
+rationale = "Ink/Stitch's tool replaces the selection with its route, which the user then edits as any objects (ADR-0017). A filter can't make a group, so the route goes where the topmost path was, where Ink/Stitch puts its new group after the last element."
 milestone = "M10"
 status = "active"
 

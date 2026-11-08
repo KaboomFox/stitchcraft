@@ -91,6 +91,12 @@ impl Drawing {
         self.stroke(name, vec![line(first, rest)?], thread, params)
     }
 
+    /// A stroke along `path`, named `name`, sewn with `thread` and the Ink/Stitch `params`, drawn as a
+    /// polyline's stroke is.
+    pub fn along(&mut self, name: &str, path: Subpath, thread: &Thread, params: &[(&str, &str)]) -> Result<(), SheetError> {
+        self.stroke(name, vec![path], thread, params)
+    }
+
     /// A stroke along `path`, `width` mm wide, named `name`, sewn with `thread` and the Ink/Stitch `params`:
     /// a zigzag stroke sews across its path as wide as it is drawn.
     pub fn wide(&mut self, name: &str, path: Subpath, width: f64, thread: &Thread, params: &[(&str, &str)]) -> Result<(), SheetError> {
@@ -458,7 +464,7 @@ mod tests {
 
     #[test]
     fn a_route_that_says_anything_is_not_drawn() {
-        let how = Route { tool: crate::route::Tool::Satins, options: crate::route::Options::default(), start: None, end: None };
+        let how = Route { tool: crate::route::Tool::Satins, options: crate::route::Tool::Satins.defaults(), start: None, end: None };
         let Err(SheetError::Said(said)) = Drawing::new("routed").routed(&Drawing::new("nothing"), &how) else { panic!("routed nothing") };
         assert!(said.starts_with("error SC-E1001: "), "{said}");
         // Nor is a route that sews its column but says that it leaves a fill as it is.
