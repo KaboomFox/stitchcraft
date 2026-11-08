@@ -143,11 +143,19 @@ fn req_route_010_lines_that_pass_within_13_2_mm_are_cut_at_their_nearest_points(
     let apart = |gap: f64| cut_lines(&[&[(0.0, 0.0), (16.0, 0.0)], &[(5.0, gap), (5.0, gap + 5.0)]])[0].len();
     assert_eq!(apart(5.0), 2);
     assert_eq!(cut_lines(&[&[(0.0, 0.0), (20.0, 0.0)], &[(5.0, 5.0), (5.0, 10.0)]])[0], [[(0.0, 0.0), (5.0, 0.0)], [(5.0, 0.0), (20.0, 0.0)]]);
+    assert_eq!(cut_lines(&[&[(5.0, 5.0), (5.0, 10.0)], &[(0.0, 0.0), (20.0, 0.0)]])[1], [[(0.0, 0.0), (5.0, 0.0)], [(5.0, 0.0), (20.0, 0.0)]]);
     // 13.2 mm apart, exactly 50 CSS pixels, they are cut; a hair farther, they aren't.
     assert_eq!((apart(NEAR), apart(NEAR.next_up())), (2, 1));
-    // Of equally near points, the one nearest the other's start: the rail is cut below the bar's start.
+    // Of equally near points, the one nearest the other's start: the rail is cut below the bar's start, and
+    // below its first side's start where 2 of its sides are as near.
     let below = |bar: &[(f64, f64)]| places(&cut_lines(&[&[(0.0, 0.0), (20.0, 0.0)], bar])[0])[1];
     assert_eq!((below(&[(5.0, 5.0), (15.0, 5.0)]), below(&[(15.0, 5.0), (5.0, 5.0)])), ((5.0, 0.0), (15.0, 0.0)));
+    assert_eq!(below(&[(5.0, 5.0), (10.0, 5.0), (15.0, 5.0)]), (5.0, 0.0));
+    // Boxes within 13.2 mm of each other hold lines that may pass farther apart: the slanted line passes the
+    // rail's end 15.8 mm off, and neither is cut.
+    let slanted: &[(f64, f64)] = &[(25.0, 30.0), (35.0, 5.0)];
+    assert!(boxes_apart([0.0, 0.0, 20.0, 0.0], [25.0, 5.0, 35.0, 30.0]) < NEAR);
+    assert_eq!(cut_lines(&[&[(0.0, 0.0), (20.0, 0.0)], slanted]), [vec![[(0.0, 0.0), (20.0, 0.0)]], vec![[(25.0, 30.0), (35.0, 5.0)]]]);
     // Lines that touch are cut only where they touch.
     assert_eq!(cut_lines(&[&[(0.0, 0.0), (20.0, 0.0)], &[(5.0, 0.0), (8.0, 6.0)]])[0].len(), 2);
 }
@@ -204,6 +212,17 @@ fn a_line_is_cut_at_its_own_points_once_and_a_cut_at_an_end_changes_nothing() {
     assert_eq!(line.cuts.iter().map(|cut| cut.0).collect::<Vec<_>>(), [4.0, 4.0, 10.0, 10.0, 0.0, 7.0]);
     let stretches = line.stretches();
     assert_eq!(stretches, [vec![p(0.0, 0.0), p(4.0, 0.0)], vec![p(4.0, 0.0), p(7.0, 0.0)], vec![p(7.0, 0.0), p(10.0, 0.0)]]);
+    // A cut a hair off the line, as a point taken through the snap can be, is a point of the stretches it ends
+    // and starts, in place of the line's point as far along it, and at the line's end, a stretch on to it.
+    let mut off = Line::new(0, vec![p(0.0, 0.0), p(4.0, 0.0), p(10.0, 0.0)]);
+    off.cut(0, p(4.0, 1e-7));
+    off.cut(1, p(10.0, 1e-7));
+    assert_eq!(off.cuts.iter().map(|cut| cut.0).collect::<Vec<_>>(), [4.0, 10.0]);
+    let (hair, end) = (p(4.0, 1e-7), p(10.0, 1e-7));
+    assert_eq!(off.stretches(), [vec![p(0.0, 0.0), hair], vec![hair, end], vec![end, p(10.0, 0.0)]]);
+    let mut longer = Line::new(0, vec![p(0.0, 0.0), p(4.0, 0.0), p(10.0, 0.0), p(12.0, 0.0)]);
+    longer.cut(0, hair);
+    assert_eq!(longer.stretches(), [vec![p(0.0, 0.0), hair], vec![hair, p(10.0, 0.0), p(12.0, 0.0)]]);
     // 2 cuts at one point a hair apart along the line leave no stretch between them.
     let mut twice = Line::new(0, vec![p(0.0, 0.0), p(10.0, 0.0)]);
     twice.cuts = vec![(5.0, p(5.0, 0.0)), (5.000_000_1, p(5.0, 0.0))];
@@ -221,6 +240,10 @@ fn sides_meet_where_they_cross_where_one_ends_on_the_other_and_where_they_overla
     assert_eq!(meet([(0.0, 0.0), (10.0, 0.0)], [(10.0, 0.0), (12.0, 3.0)]), [(10.0, 0.0)]);
     assert_eq!(meet([(0.0, 0.0), (10.0, 0.0)], [(6.0, 0.0), (14.0, 0.0)]), [(6.0, 0.0), (10.0, 0.0)]);
     assert_eq!(meet([(6.0, 0.0), (14.0, 0.0)], [(0.0, 0.0), (10.0, 0.0)]), [(10.0, 0.0), (6.0, 0.0)]);
+    // Slanted: where they cross, worked out from the 4 ends, and where one ends on the other, that end only.
+    let crossing = meet([(1.0, 2.0), (9.0, 6.0)], [(3.0, 7.0), (6.0, 1.0)]);
+    assert!(crossing.len() == 1 && (crossing[0].0 - 4.6).abs() < 1e-12 && (crossing[0].1 - 3.8).abs() < 1e-12, "{crossing:?}");
+    assert_eq!(meet([(0.0, 0.0), (10.0, 10.0)], [(5.0, 5.0), (8.0, 2.0)]), [(5.0, 5.0)]);
     // Apart, side by side, in one line apart, or crossing the other's line beyond its end: nowhere.
     assert!(meet([(0.0, 0.0), (10.0, 0.0)], [(4.0, 1.0), (4.0, 3.0)]).is_empty());
     assert!(meet([(0.0, 0.0), (10.0, 2.0)], [(0.0, 1.0), (10.0, 3.0)]).is_empty());

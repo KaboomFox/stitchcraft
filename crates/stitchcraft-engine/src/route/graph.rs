@@ -180,10 +180,12 @@ impl Graph {
         Ok(())
     }
 
-    /// Adds a jump between `a` and `b` that the route can take either way, as it takes a piece, unless links
-    /// lead both ways already. Each link looked at charges `meter` a unit.
+    /// Adds a jump between `a` and `b`, places of one element, that the route can take either way, as it takes
+    /// a piece, unless a link joins them already. Such a link leads both ways: a jump that leads one way joins
+    /// an element to the next, and never 2 places of one, or the 2 elements would share a place, and the jump
+    /// would join that place to itself. Each link looked at charges `meter` a unit.
     fn jump_both_ways(&mut self, a: usize, b: usize, meter: &mut Meter) -> Result<(), Exhausted> {
-        if !(self.linked(a, b, meter)? && self.linked(b, a, meter)?) {
+        if !self.linked(a, b, meter)? {
             self.links.push(Link::Jump { ends: [a, b] });
             self.join(a, b, self.links.len() - 1, true);
         }
