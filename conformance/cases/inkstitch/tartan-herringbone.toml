@@ -1,0 +1,7 @@
+id = "inkstitch-tartan-herringbone"
+requirements = ["REQ-SVG-008", "REQ-FILL-TRT-011"]
+kind = "inkstitch"
+design = "fixtures/inkstitch/tartan-herringbone.svg"
+
+[excused]
+stitches = "DEV-FIN-001"

@@ -8,9 +8,8 @@
 //!
 //! **What changes as they are read.** A sett that can't be read skips the element (`SC-E0323`), and an empty
 //! one sews Ink/Stitch's default (`SC-W0325`). A colour that can't be read leaves its stripe unsewn
-//! (`SC-W0328`), a sett with no stripe to sew sews its underlay alone (`SC-W0326`), and one whose stripes are
-//! too narrow for the shortest stitch loses needle points (`SC-W0327`). A herringbone sews from M10.7, and
-//! until then the rows are sewn without it (`SC-W0324`).
+//! (`SC-W0328`), a sett with no stripe to sew sews its underlay alone (`SC-W0326`), and one whose stripes, or
+//! whose herringbone's bands, are too narrow for the shortest stitch loses needle points (`SC-W0327`).
 
 use stitchcraft_core::math::{cos, sin, to_radians};
 use stitchcraft_core::units::at_least;
@@ -26,6 +25,10 @@ use crate::generators::tatami::sew::{Layer, Travel};
 /// The stitch types a tartan fill's own settings apply to.
 const TARTAN: &[StitchType] = &[StitchType::TartanFill];
 
+/// The key of the setting that holds a tartan's sett, as Ink/Stitch names it. VectorCraft's fill dialog
+/// shows it as text, which StitchCraft Tartan, a filter, writes.
+pub const SETT: &str = "tartan";
+
 params! {
     /// Tartan fill: rows of running stitches across the fill, a twill of warp and weft that weaves a plaid.
     /// The sett gives the stripes, each a colour and a width, and the rows go to the warp's stripes and the
@@ -40,21 +43,22 @@ params! {
         /// colour of the stripe before it, and a `|` parts the warp's stripes from the weft's. `symmetry`
         /// mirrors the sett at its ends rather than repeating it, `scale` scales it in percent, `rotate` turns
         /// it in degrees, `offset_x` and `offset_y` move it in millimetres, and stripes no wider than
-        /// `min_stripe_width` sew as runs. Empty, the fill sews Ink/Stitch's default sett. VectorCraft's fill
-        /// dialog doesn't hold a sett before M10.7.
+        /// `min_stripe_width` sew as runs. Empty, the fill sews Ink/Stitch's default sett. In VectorCraft,
+        /// StitchCraft Tartan, a filter, writes the sett from a code of its stripes.
         tartan: Text = "", label "Sett";
 
         /// The angle of the rows to the stripes, in degrees: at -45 they slant across both the warp's and the
-        /// weft's stripes, as a woven twill's do. At 0 or 90 they run along one direction's stripes.
+        /// weft's stripes, as a woven twill's do. At 0 or 90 they run along one direction's stripes. A
+        /// herringbone's rows run at 45° to the stripes, whatever this angle.
         tartan_angle: Angle = "-45", label "Row angle";
 
         /// How many rows in a row go to the warp's stripes, before as many go to the weft's. More rows to a
         /// thread make the weave coarser, as a heavier twill.
         rows_per_thread: Count = "2", label "Rows per thread", range (1, 100);
 
-        /// The width of the bands of a herringbone, each band's rows slanting the other way from the band
-        /// before. 0 sews straight rows. StitchCraft sews herringbones from M10.7, and until then the rows are
-        /// sewn without them, which `SC-W0324` says.
+        /// The width of the bands of a herringbone, each band's rows slanting at 45° to the stripes the other
+        /// way from the band before, as the ribs of a herringbone twill turn. The weft's rows are joined from
+        /// band to band along its stripes' edges. 0 sews straight rows.
         herringbone_width_mm: Length = "0", label "Herringbone width", range (0.0, 100.0);
 
         /// End every colour at the fill's end position, or near the next element: each colour then travels
@@ -109,20 +113,14 @@ impl TartanParams {
             );
             diagnostics.push(Diagnostic::new(Code::FillTartanColourUnreadable, message));
         }
-        if self.herringbone_width_mm.get() > 0.0 {
-            let message = format!(
-                "This tartan's herringbone is {} mm wide, and StitchCraft sews herringbones from M10.7, so its rows are sewn without one.",
-                mm(self.herringbone_width_mm.get())
-            );
-            diagnostics.push(Diagnostic::new(Code::FillTartanHerringboneNotYet, message));
-        }
         let sett = read.sett;
         let (warp, weft) = (sett.full(&sett.warp), sett.full(&sett.weft));
         if warp.is_empty() && weft.is_empty() {
             let message = "This tartan's sett sews none of its stripes, so only the fill's underlay is sewn, as in Ink/Stitch.";
             diagnostics.push(Diagnostic::new(Code::FillTartanNoStripe, message));
         }
-        diagnostics.extend(too_fine(&warp, &weft, self.tartan_angle, given.min_stitch.get()));
+        let herringbone = self.herringbone_width_mm.get();
+        diagnostics.extend(too_fine(&warp, &weft, self.tartan_angle, herringbone, given.min_stitch.get()));
         let Given { spacing, staggers, skip_last, underlay, inset, expand, longest, travel, beans, own, .. } = given;
         Some(Tartan {
             margin: sett.margin,
@@ -130,6 +128,7 @@ impl TartanParams {
             warp,
             weft,
             angle: self.tartan_angle,
+            herringbone,
             spacing,
             longest: longest.get(),
             staggers,
@@ -149,22 +148,36 @@ impl TartanParams {
 
 /// `SC-W0327` when the rows at `angle` to the stripes cross the narrowest band of `warp` or `weft` sewn as a
 /// fill in a stretch shorter than `min_stitch`: a warp band in its width over the cosine of the angle, and a
-/// weft band over its sine. Bands of a colour that meet are one, as the fill lays them.
-fn too_fine(warp: &[Item], weft: &[Item], angle: f64, min_stitch: f64) -> Option<Diagnostic> {
-    let radians = to_radians(angle);
+/// weft band over its sine. Bands of a colour that meet are one, as the fill lays them. A herringbone
+/// `herringbone` mm wide, above 0, slants its rows at 45° whatever the angle, and a row crosses no more of a
+/// stripe than its band's width: a herringbone narrower than the narrowest stripe is said instead.
+fn too_fine(warp: &[Item], weft: &[Item], angle: f64, herringbone: f64, min_stitch: f64) -> Option<Diagnostic> {
+    let radians = to_radians(if herringbone > 0.0 { 45.0 } else { angle });
     let slant = |items: &[Item], across: f64| narrowest(items).map(|width| (width, width / across.abs()));
     let crossed = [slant(warp, cos(radians)), slant(weft, sin(radians))];
     let (width, stretch) = crossed.into_iter().flatten().filter(|(_, stretch)| stretch.is_finite()).min_by(|a, b| a.1.total_cmp(&b.1))?;
+    let banded = herringbone > 0.0 && herringbone < width;
+    let stretch = if banded { stretch * herringbone / width } else { stretch };
     if at_least(stretch, min_stitch) {
         return None;
     }
-    let message = format!(
-        "This tartan's narrowest stripe sewn as a fill is {} mm wide, so each row crosses it in {} mm, shorter than the shortest stitch ({} mm), \
-         and needle points of its stripes are left out.",
-        mm(width),
-        mm(stretch),
-        mm(min_stitch)
-    );
+    let message = if banded {
+        format!(
+            "This tartan's herringbone is {} mm wide, narrower than its stripes, so each row crosses a stripe in at most {} mm, shorter than the \
+             shortest stitch ({} mm), and needle points of its stripes are left out.",
+            mm(herringbone),
+            mm(stretch),
+            mm(min_stitch)
+        )
+    } else {
+        format!(
+            "This tartan's narrowest stripe sewn as a fill is {} mm wide, so each row crosses it in {} mm, shorter than the shortest stitch ({} mm), \
+             and needle points of its stripes are left out.",
+            mm(width),
+            mm(stretch),
+            mm(min_stitch)
+        )
+    };
     Some(Diagnostic::new(Code::FillTartanTooFine, message))
 }
 
@@ -234,6 +247,13 @@ mod tests {
     }
 
     #[test]
+    fn the_sett_s_key_is_its_text_setting() {
+        let sett = TartanParams::SPECS.iter().find(|spec| spec.key == SETT).unwrap();
+        assert!(matches!(sett.kind, stitchcraft_params::Kind::Text { .. }));
+        assert_eq!((sett.default, sett.label), ("", "Sett"));
+    }
+
+    #[test]
     fn a_tartan_takes_its_own_settings_and_what_it_is_given() {
         let sett = r#"{"palette": "(#ff0000)/5 (#0000ff)/5"}"#;
         let (tartan, said) = read(&[("tartan", sett), ("tartan_angle", "-30"), ("rows_per_thread", "3"), ("stop_at_ending_point", "true")], 0.3);
@@ -299,10 +319,11 @@ mod tests {
     }
 
     #[test]
-    fn diag_sc_w0324_a_herringbone_is_said_and_sewn_straight() {
-        let (tartan, said) = read(&[("tartan", r#"{"palette": "(#ff0000)/5 (#0000ff)/5"}"#), ("herringbone_width_mm", "3")], 0.3);
-        assert_eq!(said, [Code::FillTartanHerringboneNotYet]);
-        assert!(tartan.is_some());
+    fn req_fill_trt_012_a_herringbone_takes_its_width_and_says_nothing() {
+        let sett = r#"{"palette": "(#ff0000)/5 (#0000ff)/5"}"#;
+        let (tartan, said) = read(&[("tartan", sett), ("herringbone_width_mm", "3")], 0.3);
+        assert_eq!((tartan.unwrap().herringbone, said), (3.0, vec![]));
+        assert_eq!(read(&[("tartan", sett)], 0.3).0.unwrap().herringbone, 0.0);
     }
 
     #[test]
@@ -324,17 +345,37 @@ mod tests {
         let sett = r#"{"palette": "(#ff0000)/1.5 (#0000ff)/1.5"}"#;
         assert_eq!(read(&[("tartan", sett)], 2.0).1, []);
         assert_eq!(read(&[("tartan", sett)], 2.2).1, [Code::FillTartanTooFine]);
-        let message = too_fine(&[band(RED, 1.5), band(BLUE, 1.5)], &[], -45.0, 2.2).unwrap().message;
+        let message = too_fine(&[band(RED, 1.5), band(BLUE, 1.5)], &[], -45.0, 0.0, 2.2).unwrap().message;
         assert_eq!(
             message,
             "This tartan's narrowest stripe sewn as a fill is 1.5 mm wide, so each row crosses it in 2.12 mm, shorter than the shortest stitch \
              (2.2 mm), and needle points of its stripes are left out."
         );
         // Rows along the warp's stripes never cross them, and the weft's are crossed square to them.
-        assert!(too_fine(&[band(RED, 1.5)], &[band(BLUE, 1.5)], 90.0, 1.5).is_none());
-        assert!(too_fine(&[band(RED, 1.5)], &[band(BLUE, 1.5)], 90.0, 1.6).is_some());
+        assert!(too_fine(&[band(RED, 1.5)], &[band(BLUE, 1.5)], 90.0, 0.0, 1.5).is_none());
+        assert!(too_fine(&[band(RED, 1.5)], &[band(BLUE, 1.5)], 90.0, 0.0, 1.6).is_some());
         // Nothing sewn as a fill, nothing to say.
-        assert!(too_fine(&[Item::Run(RED)], &[], -45.0, 10.0).is_none());
+        assert!(too_fine(&[Item::Run(RED)], &[], -45.0, 0.0, 10.0).is_none());
+    }
+
+    #[test]
+    fn diag_sc_w0327_a_herringbone_s_rows_cross_its_stripes_at_45_within_its_bands() {
+        // A herringbone's rows run at 45° whatever the angle: at 90°, straight rows would cross the weft's
+        // 1.5 mm stripes square, in 1.5 mm, and the herringbone's rows cross them in 2.12 mm.
+        let (warp, weft) = ([band(RED, 1.5)], [band(BLUE, 1.5)]);
+        assert!(too_fine(&warp, &weft, 90.0, 0.0, 1.6).is_some());
+        assert!(too_fine(&warp, &weft, 90.0, 2.0, 1.6).is_none());
+        assert!(too_fine(&warp, &weft, 90.0, 2.0, 2.2).is_some());
+        // A band narrower than the stripes is all a row crosses of one: 1 mm bands, 1.41 mm, and a band as
+        // wide as the stripe crosses it whole.
+        let message = too_fine(&warp, &weft, -45.0, 1.0, 1.5).unwrap().message;
+        assert_eq!(
+            message,
+            "This tartan's herringbone is 1 mm wide, narrower than its stripes, so each row crosses a stripe in at most 1.41 mm, shorter than the \
+             shortest stitch (1.5 mm), and needle points of its stripes are left out."
+        );
+        assert!(too_fine(&warp, &weft, -45.0, 1.0, 1.4).is_none());
+        assert!(too_fine(&warp, &weft, -45.0, 1.5, 2.2).unwrap().message.starts_with("This tartan's narrowest stripe sewn as a fill is 1.5 mm wide"));
     }
 
     #[test]
