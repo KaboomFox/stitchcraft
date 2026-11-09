@@ -10,6 +10,7 @@ docs` rewrites them, and CI fails when one is stale.
 | [File formats](formats.md) | generated from the format registry | available |
 | [Test sheets](test-sheets.md) | generated from the test-sheet registry | available |
 | [Diagnostic codes](diagnostics.md) | generated from the diagnostics registry | available |
+| [Font settings](font-settings.md) | generated from the font reader's table of the keys of `font.json` | available |
 | [Glossary](glossary.md) | hand-written | available |
 | [VectorCraft compatibility](compatibility.md) | generated from the compatibility gate's record, `compat/supported.toml` | available |
 | [Parameters](params.md) (one page per stitch type) | generated from the parameter registry | available |
