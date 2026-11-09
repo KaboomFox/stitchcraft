@@ -51,15 +51,16 @@ pub const SAME_LAYER: &[(&str, &str)] = &[("stitchcraft-params", "stitchcraft-co
 
 /// External crates allowed only in the listed packages (normal dependencies). Only the renderer draws with
 /// tiny-skia; xtask reads VectorCraft's pictures with it, to compare them within a tolerance. Only the SVG
-/// reader reads XML with roxmltree; xtask cuts the glyph files of Ink/Stitch's fonts with it. The engine
-/// reads a custom lock drawn as a path with svgtypes' path-data parser, the one the SVG adapter reads a
-/// path's `d` with, since the setting's text is the lock in every host (`docs/src/design/algorithms/locks.md`).
-/// Only the subject cut-out decodes photos with image and runs models with tract (ADR-0019).
+/// reader reads XML with roxmltree, the glyph files of fonts among it, which the glyph differential cuts with
+/// the font reader. The engine reads a custom lock drawn as a path with svgtypes' path-data parser, the one
+/// the SVG adapter reads a path's `d` with, since the setting's text is the lock in every host
+/// (`docs/src/design/algorithms/locks.md`). Only the subject cut-out decodes photos with image and runs
+/// models with tract (ADR-0019).
 pub const RESTRICTED: &[(&str, &[&str])] = &[
     ("clap", &["stitchcraft-cli", "stitchcraft-xtask"]),
     ("rayon", &["stitchcraft-cli"]),
     ("tiny-skia", &["stitchcraft-render", "stitchcraft-xtask"]),
-    ("roxmltree", &["stitchcraft-svg", "stitchcraft-xtask"]),
+    ("roxmltree", &["stitchcraft-svg"]),
     ("svgtypes", &["stitchcraft-svg", "stitchcraft-engine"]),
     ("flate2", &["stitchcraft-vectorcraft", "stitchcraft-testkit"]),
     ("image", &["stitchcraft-cutout"]),

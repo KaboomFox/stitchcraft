@@ -111,7 +111,7 @@ pub fn write(dir: &Path, requirements: &[Requirement], outcomes: &[Outcome], com
         })).collect::<Vec<_>>(),
         "cases": outcomes.iter().map(|o| json!({
             "case": o.case, "kind": o.kind, "file": o.file, "requirements": o.requirements,
-            "passed": o.passed(), "failures": o.failures, "skipped": o.skipped,
+            "passed": o.passed(), "failures": o.failures, "skipped": o.skipped, "details": o.details,
         })).collect::<Vec<_>>(),
     });
     std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
