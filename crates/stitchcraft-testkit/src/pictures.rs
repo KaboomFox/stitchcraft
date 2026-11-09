@@ -99,7 +99,7 @@ pub fn dogs() -> Vec<(String, Design)> {
 pub fn dog_shapes(name: &str, ids: &[&str]) -> Design {
     let dog = traced(&format!("traced-{name}.vectorcraft"));
     let shapes = dog.elements().iter().filter(|element| ids.contains(&element.id.to_string().as_str())).cloned().collect();
-    Design::new(shapes, dog.settings.clone()).unwrap()
+    Design::new(shapes, dog.settings).unwrap()
 }
 
 /// The VectorCraft document `fixture` of the docs' fixtures, read as `--auto` reads it, every shape

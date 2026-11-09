@@ -990,7 +990,7 @@ fn req_auto_016_a_rail_cuts_across_a_sliver_narrower_than_a_thread_at_its_base()
     // of 90°, and a sliver 0.5 mm wide at its base, stay on it.
     let unslivered_points = |at: &[(f64, f64)]| {
         let points: Vec<Point> = at.iter().map(|&(x, y)| p(x, y)).collect();
-        let kept = unslivered(&points, (0..points.len()).collect(), &mut Budget::DEFAULT.meter()).unwrap();
+        let kept = unslivered(&points, &(0..points.len()).collect::<Vec<_>>(), &mut Budget::DEFAULT.meter()).unwrap();
         kept.into_iter().map(|i| (points[i].x(), points[i].y())).collect::<Vec<_>>()
     };
     let sliver = [(0.0, 0.0), (1.0, 0.0), (2.0, 0.0), (2.1, -0.5), (2.3, 0.0), (3.0, 0.0), (4.0, 0.0)];

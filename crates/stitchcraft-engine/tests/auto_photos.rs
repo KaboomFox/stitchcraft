@@ -93,8 +93,8 @@ const ASTRAY: [Astray; 3] = [
 ];
 
 /// `value` to a hundredth, as a whole number of hundredths.
-fn hundredths(value: f64) -> i64 {
-    (value * 100.0).round() as i64
+fn hundredths(value: f64) -> f64 {
+    (value * 100.0).round()
 }
 
 #[test]

@@ -1011,7 +1011,7 @@ id = "auto-dog-traced"
 kind = "picture"
 fixture = "docs/fixtures/traced-dog-running-9.vectorcraft"
 scale = 3.7
-alt = "The running dog traced in 9 of the machine's threads: its fur in flat patches of black, dark and light greys and white, its legs and cheeks tan, its mouth dark brown. The patches' edges are ragged where the fur's shading crossed from one thread to the next."
+alt = "The running dog traced in 9 of the machine's threads, in flat patches. Its back and ears are black and grey, and its face and chest white. Its legs and cheeks are tan, and its mouth dark brown. The patches' edges are ragged where the fur's shading crossed from one thread to the next."
 
 [[shot]]
 id = "auto-dog"

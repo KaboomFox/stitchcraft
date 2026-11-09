@@ -584,7 +584,7 @@ fn strip(
     let (Some(a), Some(b)) = (place.range(&start, meter)?, place.range(&finish, meter)?) else { return Ok(None) };
     let Some(rails) = rails(ring, a, b) else { return Ok(None) };
     let [one, other] = rails;
-    let rails = [unslivered(points, one, meter)?, unslivered(points, other, meter)?];
+    let rails = [unslivered(points, &one, meter)?, unslivered(points, &other, meter)?];
     let candidates = rungs(skeleton, owner, line, &rails, meter)?;
     let lengths = rails.each_ref().map(|rail| length(points, rail));
     let rungs = ordered(candidates, lengths);
@@ -804,7 +804,7 @@ fn rails(ring: &[usize], (a0, a1): (usize, usize), (b0, b1): (usize, usize)) -> 
 /// rail that runs back, the step grows past the sliver to the next rung, and one stitch spans the whole
 /// piece of rail between: the paw of the traced dog on turf left a wedge of 1.8 mm² bare beside a sliver
 /// 0.3 mm wide at its base and 0.5 mm long. A unit of `meter`'s work for each point looked at.
-fn unslivered(points: &[Point], rail: Vec<usize>, meter: &mut Meter) -> Result<Vec<usize>, Exhausted> {
+fn unslivered(points: &[Point], rail: &[usize], meter: &mut Meter) -> Result<Vec<usize>, Exhausted> {
     let point = |k: usize| rail.get(k).and_then(|&i| points.get(i)).copied();
     let mut kept = Vec::with_capacity(rail.len());
     let mut i = 0;

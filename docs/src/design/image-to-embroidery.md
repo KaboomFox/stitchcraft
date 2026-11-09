@@ -215,7 +215,7 @@ part sews a satin column along each of its centre lines, between its own outline
   area sewn before it reaches under it. Measured on average alone, the strands of fur in the owner's traced
   dog that widened at an end ran, and so did its small blobs, each beside other lines, and they left fabric
   bare. So did a column whose line ran along one side of a bump 1.4 mm across: the bump's triangles were the
-  column's, and its line never reached them. Where 2 strokes meet, the part is wider than either, by where
+  column's, far from its line. Where 2 strokes meet, the part is wider than either, by where
   the junction's triangle has its corners. Measured inside the part, the circle at the junction of a T in
   strokes 0.9 mm wide was up to 1.13 mm, and the T's bar sewed as a satin column one way round and as a
   triple run mirrored. A column's own outline crosses to the other column there. A line's end lies where it
@@ -577,9 +577,9 @@ between those ends, so its 4 jump threads all run from the stem. `tests/auto_fab
 the jump threads as measured.
 
 The owner's dog, traced from her 2 photos in 6 and in 9 threads (M13.15, `docs/fixtures/README.md` › The
-traced dogs), still lays 3 stitches astray, one in each of 3 of the traced dogs. 2 are satin stitches that fan round a shape biting into their column's side and cross it. The
-third is the straight move, 2.25 mm long, between 2 lines of one narrow part, which is a stitch because it
-is shorter than the collapse length. `tests/auto_photos.rs` lists each, with where it lies and why, and its
+traced dogs), still lays 3 stitches astray, one in each of 3 of the traced dogs. 2 are satin stitches that
+fan round a shape biting into their column's side and cross it. The third is the straight move, 2.25 mm
+long, between 2 lines of one narrow part, which is a stitch because it is shorter than the collapse length. `tests/auto_photos.rs` lists each, with where it lies and why, and its
 case fails on any other stitch astray and on any listed one that no longer is. M13.16 of the
 [roadmap](../plan/roadmap.md) removes them. The dogs' moves astray are moves from one element to the next,
 as the button's are. Their jump threads, 102 to 131, are the design's limit as it stands: each thread sews
@@ -703,13 +703,6 @@ otherwise, as in its own panel. The count takes in the background's colour. A pi
 JPEG file, has colours between its shapes' colours, which may trace as threads of their own. A `--colours`
 equal to the number of colours the picture has keeps them out. A badge in 3 colours on white traces in 4.
 
-**A transparent background.** Image Trace leaves a picture's transparent pixels out (`crates/trace/src/lib.rs`
-in VectorCraft's repository, read at `3f8d7a0`). So a PNG file whose background was made transparent traces
-into its subject's shapes alone, and there is no background to leave out. The owner's dog photos, cut out
-that way, traced into shapes that cover the dog to within 0.2 % of its area (`docs/fixtures/README.md` ›
-The traced dogs). Until `--subject` cuts a photo's subject out (M13.14), removing the background in another
-program first is how a photo sews its subject alone.
-
 **When VectorCraft can't trace.** A command line that can't be started, missing from the `PATH` or from
 the path named, is `SC-E0815`, which says how to install it, or to trace the picture in VectorCraft. One
 that fails or doesn't save the document is `SC-E0816`, which ends with what it said. Then nothing is written but
@@ -759,7 +752,8 @@ files asked for, all or none, so that the user can see what was kept.
 within its budget (ADR-0019, decision 2). `stitch cutout PICTURE -o FILE` writes the cut-out alone, with
 the same options. The user places it where they would place the photo, and traces it with Image Trace as
 the tutorial does. A picture whose background another program made transparent traces as its subject too,
-without `--subject`.
+without `--subject`. The owner's traced dogs were made so (M13.15, `docs/fixtures/README.md` › The traced
+dogs).
 
 **The models** are 3 ONNX files, 49.1 MB together, which tract runs in `stitchcraft-cutout`, a crate of the
 apps' layer that only `stitch` depends on:
@@ -804,8 +798,9 @@ an IoU of 0.97 or more, with at most 2 % of the subject's area kept wrongly and 
 
 - Each rule gets its requirements and failing cases before its code ([ADR-0008](adr/0008-conformance-first.md)).
 - The test pictures are drawn in code, as the test sheets are (`stitchcraft_engine::testsheets::pictures`),
-  and no logo or picture of anyone else's is used. From M13.14 the subject cut-out's cases also use 2
-  photos of the owner's dog ([above](#subject-cut-out)).
+  and no logo or picture of anyone else's is used. From M13.15 the owner's dog, cut out of her 2 photos
+  and traced, is a test picture too ([sewing order](#sewing-order)), and from M13.14 the subject cut-out's
+  cases use the photos ([above](#subject-cut-out)).
 - Each test picture's automatic plan is compared with its plan in paint order: colour changes, jumps,
   trims, stitches, and how much of each shape and of each shared edge the stitches cover
   (`stitchcraft_testkit::metrics`). The cases measure the pictures where `stitchcraft_testkit::pictures`
