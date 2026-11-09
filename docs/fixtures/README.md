@@ -67,20 +67,20 @@ wide and saved as a JPEG file without metadata. The photo of the dog running fir
 away, as they held a person. Neither photo is in the repository: only the cut-outs made from them are.
 
 **The masks.** A mask is 255 where a photo shows the dog, made for each photo by spike M13.13. A pixel is the
-dog's where at least 2 of the masks of 3 models keep it: SAM ViT-B and MobileSAM, each given a box drawn round
-the dog by hand, and IS-Net. The holes were then filled, and the pieces of fewer than 2,000 pixels apart from
-the dog were dropped. Each mask was checked by eye, region by region, in crops at three quarters of the
-photo's size, and needed no correction. They keep a little of what shows through the fur at its edges, such
-as the yellow line through the tip of the tail on turf.
+dog's where at least 2 of 3 models keep it. 2 of the models, SAM ViT-B and MobileSAM, were each given a box
+drawn round the dog by hand. The third was IS-Net. The holes were then filled, and the pieces of fewer than
+2,000 pixels apart from the dog were dropped. Each mask was checked by eye, region by region, in crops at
+three quarters of the photo's size, and was used as it was. They keep a little of what shows through the fur
+at its edges, such as the yellow line through the tip of the tail on turf.
 
 **The cut-outs.** `dog-on-turf-cutout.png` and `dog-running-cutout.png` are the photos with their masks as
-alpha. Each is cropped to its mask's box with a margin of 8 pixels, as far as the photo reaches, and scaled
-down to a third of the photo's size: each pixel averages a block of 3 × 3 pixels of the photo, over the dog's
-pixels only, so that the turf colours none of the dog's edge. A pixel is opaque where the dog fills at least
-half of its block, and transparent elsewhere, where it keeps nothing of the photo. At 100 mm tall a pixel is
-then 0.24 mm, finer than a thread 0.4 mm wide. At a quarter of the photo's size, the dogs traced in 4 threads
-lost their eyes. Removing the background before VectorCraft traces a photo is what `--subject` will do
-(M13.14), and until then the cut-outs stand in for it.
+alpha. Each is cropped to its mask's box with a margin of 8 pixels, within the photo. It is then scaled down
+to a third of the photo's size. Each pixel averages the dog's pixels of a block of 3 × 3 pixels of the
+photo, so that the turf doesn't colour the dog's edge. A pixel is opaque where the dog fills at least half of
+its block, and transparent elsewhere, its colour cleared. At 100 mm tall a pixel is then 0.24 mm, finer than
+a thread 0.4 mm wide. At a quarter of the photo's size, the dogs traced in 4 threads lost their eyes.
+`--subject` will remove the background before VectorCraft traces a photo (M13.14). Until then, the cut-outs
+are made as above.
 
 **The traces.** VectorCraft 0.22.0's command line (MIT OR Apache-2.0, © 2026 ArtCraft Team and the
 VectorCraft contributors), from the Linux release archive whose SHA-256 `compat/vectorcraft.toml` pins,

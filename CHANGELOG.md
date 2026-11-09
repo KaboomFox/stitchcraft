@@ -13,11 +13,12 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     in the tests' debug build, so CI's `perf` job runs them in the release build. The conformance runner
     reports such a case as run there, and `conformance --check` checks that a step of `ci.yml` runs its file
     in the release build (`docs/src/design/conformance.md` › Cases in the release build).
-  - No dog leaves a patch of fabric bare: the largest is 0.92 mm². 3 stitches still show where they should
-    not, each listed with its cause in the case, which fails on any other and on any that no longer does.
-    M13.16 removes them. The dogs' 102 to 131 jump threads are recorded as the design's limit.
-  - What the dogs found is fixed: a column's width is measured inside its own outline, and a rail cuts across
-    a sliver (Fixed, below). Pieces of the dogs are cases of the debug suite.
+  - Every dog's largest bare patch is under 1 mm², 0.92 mm² at most. The case lists the 3 stitches that
+    still show where they should not, each with its cause. It fails on a stitch it doesn't list, and on a
+    listed one that is gone. M13.16 removes them. The dogs' 102 to 131 jump threads are recorded as the
+    design's limit.
+  - 2 fixes came from the dogs (Fixed, below): a column's width is measured inside its own outline, and a
+    rail cuts across slivers narrower than a thread. Pieces of the dogs are cases of the debug suite.
   - The automatic digitizing page shows the running dog: the cut-out, its trace and its stitches. A picture
     shot draws a PNG fixture on white.
 - M13.13, a spike: ADR-0019 decides to cut a photo's subject out before VectorCraft traces it, as an
@@ -1877,20 +1878,20 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
-- Automatic digitizing: a column of a part that is narrow on average is stitched across instead of run along
-  its middle when it is wider than the narrowest satin stroke somewhere along its line, or reaches farther
-  than that from its line, each measured inside its own outline (`REQ-AUTO-016`). The owner's traced dog left
-  38 to 81 patches of fabric bare, 2 to 3.6 % of the dog, the largest 2.4 to 7.4 mm²: strands of fur that
-  widened at an end, small blobs, and a bump 1.4 mm across that a column's line never reached ran as lines
-  beside other lines. Measured inside the part, the circle where 2 strokes meet depends on where the
-  junction's triangle has its corners, and a T in strokes 0.9 mm wide sewed its bar as a satin column one
-  way round and as a triple run mirrored. On TS-13B, the outer legs of the M 4 mm tall sew as satin columns,
-  and the traced pear's stem sews its olive side as one too.
-- Automatic digitizing: an open column's rail cuts across a sliver of the outline narrower than a thread at
-  its base, instead of running out along it and back (`REQ-AUTO-016`). The satin's pairs followed the rail
-  up the sliver, the next step grew past it, and one stitch spanned 2.3 mm of rail, so the traced dog's paw
-  left a wedge of 1.8 mm² bare. The traced pear sews 4,810 stitches, 9 more with its stem's satin column,
-  and its longest stretch astray is 0.95 mm, from 0.70 mm.
+- Automatic digitizing: a column that is narrow on average sews as a satin column when it is wider than the
+  narrowest satin stroke somewhere along its line, or reaches farther than that from its line. Both are
+  measured inside the column's own outline (`REQ-AUTO-016`). The owner's traced dog left 38 to 81 patches of
+  fabric bare, 2 to 3.6 % of the dog, the largest 2.4 to 7.4 mm². Strands of fur that widened at an end ran
+  as lines beside other lines, and so did small blobs. So did a column whose line ran along one side of a
+  bump 1.4 mm across, though the bump's triangles were the column's. Measured inside the part, the circle
+  where 2 strokes meet depends on where the junction's triangle has its corners, and a T in strokes 0.9 mm
+  wide sewed its bar as a satin column one way round and as a triple run mirrored. On TS-13B, the outer legs
+  of the M 4 mm tall sew as satin columns, and the traced pear's stem sews its olive side as one too.
+- Automatic digitizing: an open column's rail cuts straight across the base of each of the outline's slivers
+  narrower than a thread there (`REQ-AUTO-016`). The satin's pairs followed the rail up a sliver, the next
+  step grew past it, and one stitch spanned 2.3 mm of rail, so the traced dog's paw left a wedge of 1.8 mm²
+  bare. The traced pear sews 4,810 stitches, 9 more with its stem's satin column, and its longest stretch
+  astray is 0.95 mm, from 0.70 mm.
 - Automatic digitizing: a narrow part cut from a broad one ends along its cut, its column no longer fanning
   into a corner of the cut (`REQ-AUTO-016`, `REQ-AUTO-019`). The traced pear in the docs left a wedge of
   fabric 4.6 mm² bare at its left edge, where its olive band's narrow end met the pale green. The column's

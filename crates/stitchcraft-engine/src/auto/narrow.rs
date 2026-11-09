@@ -280,7 +280,9 @@ pub(super) fn farthest(line: &Line, outline: &Polygon, meter: &mut Meter) -> Res
         for &p in ring {
             meter.charge(u64::try_from(pieces.len()).unwrap_or(u64::MAX))?;
             let near = pieces.iter().map(|&(a, b)| distance_to_segment(p, a, b)).fold(f64::INFINITY, f64::min);
-            let beyond = ends.iter().any(|end| end.distance(p) <= near + 1e-9);
+            // An end lies on the line, no nearer the corner than the line is: the corner lies beyond it when it
+            // is the line's nearest point, to within a rounding error.
+            let beyond = ends.iter().any(|end| end.distance(p) <= near + ROUNDING);
             if !beyond && near.is_finite() {
                 farthest = farthest.max(near);
             }
@@ -288,6 +290,10 @@ pub(super) fn farthest(line: &Line, outline: &Polygon, meter: &mut Meter) -> Res
     }
     Ok(farthest)
 }
+
+/// How much nearer than an end of a line its nearest point to a corner may be, in millimetres, and the end
+/// still be that point: a rounding error.
+const ROUNDING: f64 = 1e-9;
 
 /// How wide a line's end may measure and still be a tip, a corner of its part's outline, in millimetres:
 /// a corner lies on the outline, and measures nothing but a rounding error.
@@ -669,7 +675,7 @@ mod tests {
         assert_eq!(farthest(&line, &plain, &mut Budget::DEFAULT.meter()).unwrap(), 0.0);
         // Closed, the line has no ends, and the band's corners are beside it.
         let ring = Line { closed: true, ..line };
-        assert!((farthest(&ring, &plain, &mut Budget::DEFAULT.meter()).unwrap() - 0.5_f64.hypot(0.3)).abs() < 1e-12);
+        assert!((farthest(&ring, &plain, &mut Budget::DEFAULT.meter()).unwrap() - (0.5_f64 * 0.5 + 0.3 * 0.3).sqrt()).abs() < 1e-12);
     }
 
     #[test]
