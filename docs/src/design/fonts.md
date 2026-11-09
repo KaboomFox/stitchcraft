@@ -168,7 +168,7 @@ again too, their 562 glyphs agree, but for 2 that excuses made before M8.6 expla
 
 ## Licences in the font repository
 
-[ADR-0020](adr/0020-fonts-from-a-repository-of-their-own.md), proposed, sets which licences StitchCraft's
+[ADR-0020](adr/0020-fonts-from-a-repository-of-their-own.md) sets which licences StitchCraft's
 font repository takes and how a font's licence is checked when it joins. Read on 8 November 2026, each of
 the 131 licence files the corpus takes at `c7e3a05` names an allowed licence first. 32 of them also point
 at the terms of the font each was made from, or at a permission its author gave:
@@ -190,8 +190,7 @@ reads the 10 of the last 2 kinds before they join.
 
 `stitchcraft_svg::font::read` reads a font in Ink/Stitch's format from the files of its folder, as
 Ink/Stitch's lettering reads it at `d59c9ab` (`lib/lettering/font.py`, `font_variant.py` and `glyph.py`),
-run as a black box on fonts drawn for it ([ADR-0020](adr/0020-fonts-from-a-repository-of-their-own.md),
-proposed). M14.2's lettering sets text with what it reads, as `REQ-FONT-002` to `REQ-FONT-008` say.
+run as a black box on fonts drawn for it ([ADR-0020](adr/0020-fonts-from-a-repository-of-their-own.md)). M14.2's lettering sets text with what it reads, as `REQ-FONT-002` to `REQ-FONT-008` say.
 
 - **Settings.** `font.json` is UTF-8 text, with or without a byte order mark, and holds an object of
   settings. Each key that Ink/Stitch reads is read at Ink/Stitch's default where the file lacks it, as the
@@ -348,7 +347,7 @@ Apache-2.0, in a folder for each in its repository.
 [storytold/craft-fonts](https://github.com/storytold/craft-fonts), an optional build input
 (`CRAFT_FONTS_DIR`), with each font's licence text beside it (VectorCraft's `docs/development.md` at
 `1505384`). Embroidery fonts in Ink/Stitch's format come from a repository of their own,
-`KaboomFox/stitchcraft-fonts`, as [ADR-0020](adr/0020-fonts-from-a-repository-of-their-own.md) proposes. A
+`KaboomFox/stitchcraft-fonts`, as [ADR-0020](adr/0020-fonts-from-a-repository-of-their-own.md) decides. A
 ported font is made on the user's computer from a font the user has.
 
 ## Glyph rules
@@ -384,11 +383,10 @@ coverage and stitches. TS-15 sews 3 ported fonts beside the fonts digitized by h
 
 ## Decisions for the owner
 
-- **The font repository and its licences, and the reader** (M14.1).
-  [ADR-0020](adr/0020-fonts-from-a-repository-of-their-own.md) proposes `KaboomFox/stitchcraft-fonts`,
-  pinned as the corpus is, under the OFL, CC0, CC BY and CC BY-SA. It keeps out the 7 fonts above whose
-  originals' authors allowed them for Ink/Stitch alone, and reads fonts with the reader above. The owner
-  accepts it, or changes it, and creates the repository.
+- **The font repository and its licences, and the reader** (M14.1): decided. The owner accepted
+  [ADR-0020](adr/0020-fonts-from-a-repository-of-their-own.md) on 2026-11-08, as it was written. The owner creates
+  `KaboomFox/stitchcraft-fonts` before M14.2 pins it, and reads the licence files of the 10 fonts the ADR
+  names before they join.
 - **When M15 comes.** The roadmap places it after M14 and before M11 and 1.0. M15.1 and M15.2 can go ahead
   beside M14. Moving M15 after 1.0 brings 1.0 sooner.
 - **Which ported fonts are written.** Text in any installed font can be sewn as a design, as Wilcom and Hatch

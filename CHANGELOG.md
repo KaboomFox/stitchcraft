@@ -5,16 +5,16 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
-- M14.1, a spike: ADR-0020 proposes where StitchCraft's embroidery fonts live and which licences they may be
+- M14.1, a spike: ADR-0020 decides where StitchCraft's embroidery fonts live and which licences they may be
   under, and the reader of Ink/Stitch's font format is built (`REQ-FONT-002` to `REQ-FONT-008`). The owner
-  accepts the decision or changes it, and creates the font repository.
-  - The fonts would be kept in `KaboomFox/stitchcraft-fonts`. This repository would pin them by a commit
-    and the SHA-256 of its archive, as it pins the corpus. They would be StitchCraft's own fonts and
+  accepted the decision on 2026-11-08, and creates the font repository before M14.2 pins it.
+  - The fonts will be kept in `KaboomFox/stitchcraft-fonts`. This repository will pin them by a commit
+    and the SHA-256 of its archive, as it pins the corpus. They will be StitchCraft's own fonts and
     Ink/Stitch's fonts under the OFL, CC0, CC BY or CC BY-SA, each with its licence file and a row of the
-    repository's manifest. `stitch` would find them in the folders it reads, and the VectorCraft plug-in
-    would build in those a list names.
+    repository's manifest. `stitch` will find them in the folders it reads, and the VectorCraft plug-in
+    will build in those a list names.
   - Of the 131 fonts the corpus takes, 7 rest on a permission their originals' authors gave for Ink/Stitch
-    alone, and would stay out until their authors allow more. A person would read 10 more before they join.
+    alone, and stay out until their authors allow more. A person reads 10 more before they join.
   - `stitchcraft_svg::font::read` reads a font from the files of its folder. It reads `font.json`, each key
     Ink/Stitch reads at Ink/Stitch's default, and the glyph files of each direction. Each glyph is a design
     of its own, with the box and the baseline lettering places it by. The user's guide lists the keys on a
