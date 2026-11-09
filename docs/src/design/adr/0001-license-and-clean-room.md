@@ -2,7 +2,7 @@
 
 <!-- The status line, a label and its value, which the ADR index is checked against. -->
 <!-- vale ai-tells.ColonUsage = NO -->
-**Status:** Accepted · 2026-10-08 · decision 2 replaced by [ADR-0012](0012-read-dont-copy.md) · decision 4 amended for fonts by [ADR-0020](0020-fonts-from-a-repository-of-their-own.md), proposed
+**Status:** Accepted · 2026-10-08 · decision 2 replaced by [ADR-0012](0012-read-dont-copy.md) · decision 4 amended for fonts by [ADR-0020](0020-fonts-from-a-repository-of-their-own.md)
 <!-- vale ai-tells.ColonUsage = YES -->
 
 ## Context
@@ -26,7 +26,7 @@ around it is permissively licensed.
    point ([compatibility contract](../inkstitch-compat-contract.md)).
 4. Not copied, ever: Ink/Stitch code, docs text, parameter descriptions, lock-stitch shape data, meander
    tiles, fonts, palettes compiled by Ink/Stitch, images. *Amended for fonts by
-   [ADR-0020](0020-fonts-from-a-repository-of-their-own.md), proposed. No font file enters this repository.
+   [ADR-0020](0020-fonts-from-a-repository-of-their-own.md). No font file enters this repository.
    The fonts of Ink/Stitch's library whose licence allows it are copied whole into StitchCraft's font
    repository, with their licence files.*
 5. Format facts may be taken from MIT-licensed pyembroidery/pystitch with attribution in `NOTICE`;

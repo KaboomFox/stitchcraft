@@ -2,7 +2,7 @@
 
 <!-- The status line, a label and its value, which the ADR index is checked against. -->
 <!-- vale ai-tells.ColonUsage = NO -->
-**Status:** Proposed · 2026-11-08, spike M14.1 · amends decision 4 of [ADR-0001](0001-license-and-clean-room.md)
+**Status:** Accepted · 2026-11-08, after spike M14.1 · amends decision 4 of [ADR-0001](0001-license-and-clean-room.md)
 <!-- vale ai-tells.ColonUsage = YES -->
 
 ## Context

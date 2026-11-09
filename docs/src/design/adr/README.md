@@ -6,7 +6,7 @@ supersedes the old one.
 
 | ADR | Title | Status |
 |---|---|---|
-| [0001](0001-license-and-clean-room.md) | MIT OR Apache-2.0, clean-room from Ink/Stitch | Accepted (decision 2 replaced by 0012, decision 4 amended for fonts by 0020, proposed) |
+| [0001](0001-license-and-clean-room.md) | MIT OR Apache-2.0, clean-room from Ink/Stitch | Accepted (decision 2 replaced by 0012, decision 4 amended for fonts by 0020) |
 | [0002](0002-host-agnostic-engine-plugin-first.md) | Host-agnostic engine; VectorCraft ABI v1 plug-in first | Accepted |
 | [0003](0003-parameter-registry.md) | One parameter registry generates everything | Accepted |
 | [0004](0004-determinism.md) | Determinism by construction | Accepted |
@@ -25,7 +25,7 @@ supersedes the old one.
 | [0017](0017-routing-is-one-engine-function.md) | Routing is one engine function, which VectorCraft's filters and lettering call | Accepted (spike M10.3) |
 | [0018](0018-underlays-first-is-a-setting-of-each-element.md) | Underlays first is a setting of each element, shared by runs of elements in one thread | Accepted (spike M10.14) |
 | [0019](0019-subject-cut-out-before-tracing.md) | A photo's subject is cut out by `stitch` before VectorCraft traces it | Accepted (spike M13.13) |
-| [0020](0020-fonts-from-a-repository-of-their-own.md) | Embroidery fonts come from a repository of their own, under licences that allow shared adaptations | Proposed (spike M14.1) |
+| [0020](0020-fonts-from-a-repository-of-their-own.md) | Embroidery fonts come from a repository of their own, under licences that allow shared adaptations | Accepted (spike M14.1) |
 
 `cargo xtask docs --check` fails if an ADR file is missing from this table or its status here differs
 from the file's status line.
