@@ -14,7 +14,9 @@
 //! setting, are applied. It reads style sheets as editors write them, with element, class and id
 //! selectors (`REQ-SVG-006`), and a file an older Ink/Stitch saved as Ink/Stitch updates it ([`version`],
 //! `REQ-SVG-007`). Since M8 it reads every `inkstitch:*` setting of a shape, Ink/Stitch's commands, clip
-//! paths, and clones (`<use>`), which sew what they show where they show it.
+//! paths, and clones (`<use>`), which sew what they show where they show it. Since M14.1 [`font`] reads an
+//! embroidery font in Ink/Stitch's format, a folder of a `font.json` and glyph files, each glyph a design of
+//! its own.
 //!
 //! Its invariants:
 //!
@@ -29,6 +31,7 @@
 #![forbid(unsafe_code)]
 
 mod document;
+pub mod font;
 pub mod inkstitch;
 mod path;
 mod settings;

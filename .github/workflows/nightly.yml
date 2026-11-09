@@ -31,6 +31,8 @@ jobs:
           tools: cargo-deny,typos,mdbook
       - name: The independent reader for REQ-FMT-005 (pyembroidery, pinned by hash)
         uses: ./.github/actions/oracle
+      - name: Ink/Stitch's fonts for REQ-FONT-008 (pinned by SHA-256)
+        uses: ./.github/actions/fonts
       # The API snapshots are the pinned toolchain's rustdoc output, and the prose lint is Vale's, so neither
       # says anything about the newest compiler (xtask/src/ci.rs).
       - run: cargo xtask ci --skip api,prose

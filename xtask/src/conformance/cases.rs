@@ -80,6 +80,10 @@ struct CaseFile {
     sample: Option<usize>,
     #[serde(default)]
     elements: Option<String>,
+    #[serde(default)]
+    font: Option<String>,
+    #[serde(default)]
+    glyphs: Option<BTreeMap<String, usize>>,
 }
 
 /// What a test-sheet or plan case expects.
@@ -129,6 +133,9 @@ pub enum Spec {
     /// sample of the case's `sample` glyphs of each font, or every glyph and a part of them, as the run's
     /// options say.
     Fonts { options: super::fonts::Options },
+    /// Read the corpus's font in the folder `font` with the font reader, which has `glyphs` glyphs in each
+    /// direction by its id, and plan each glyph (`font`).
+    Font { font: String, glyphs: BTreeMap<String, usize> },
 }
 
 /// What an Ink/Stitch differential case gives both programs.
@@ -186,6 +193,10 @@ pub fn load_cases(root: &Path, findings: &mut Findings) -> Vec<DataCase> {
             }
             None => None,
         };
+        if case.kind != "font" && (case.font.is_some() || case.glyphs.is_some()) {
+            findings.error(format!("{file}: only a font case names a `font` and its `[glyphs]`"));
+            continue;
+        }
         if case.kind == "centre-lines" {
             let subject = match (case.sheet, case.design, case.letters, case.profile, case.expect, case.files, excused) {
                 (Some(sheet), None, None, None, None, None, None) => Subject::Sheet(sheet),
@@ -215,6 +226,15 @@ pub fn load_cases(root: &Path, findings: &mut Findings) -> Vec<DataCase> {
         }
         if case.sample.is_some() {
             findings.error(format!("{file}: only a fonts case takes a `sample`"));
+            continue;
+        }
+        if case.kind == "font" {
+            match (case.font, case.glyphs, case.sheet, case.design, case.profile, case.expect, case.files, excused, route, case.elements) {
+                (Some(font), Some(glyphs), None, None, None, None, None, None, None, None) if !glyphs.is_empty() => {
+                    cases.push(DataCase { id: case.id, requirements: case.requirements, file, spec: Spec::Font { font, glyphs } });
+                }
+                _ => findings.error(format!("{file}: a font case needs a `font` and its `[glyphs]` by direction, and nothing else")),
+            }
             continue;
         }
         if case.elements.is_some() && !(case.kind == "inkstitch" && case.sheet.is_some() && route.is_none()) {
@@ -253,7 +273,7 @@ pub fn load_cases(root: &Path, findings: &mut Findings) -> Vec<DataCase> {
                 continue;
             }
             (other, ..) => {
-                findings.error(format!("{file}: unknown case kind `{other}` (known: testsheet, plan, oracle, inkstitch, centre-lines, fonts)"));
+                findings.error(format!("{file}: unknown case kind `{other}` (known: testsheet, plan, oracle, inkstitch, centre-lines, fonts, font)"));
                 continue;
             }
         };

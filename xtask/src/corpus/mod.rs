@@ -13,19 +13,18 @@
 //! Markdown files. `cargo clean` keeps it, and every worktree shares one copy. The archive is unpacked into a
 //! folder of its own and moved into place whole ([`unpacked`]), so a folder in place was unpacked completely.
 //!
-//! **The fonts the corpus takes** ([`fonts`]): each font's licence file names its licence
-//! ([`licence::Licence::of`]), and the corpus takes the fonts under the OFL, CC0 or the public domain, CC BY
-//! or CC BY-SA. At `c7e3a05` that is 131 of the 142 fonts. The others are listed, and their glyphs never
-//! sewn. Each font's glyph files are every SVG file in its folder, `ltr.svg` and the rest, or a folder of them
-//! for a direction a large font splits ([`glyphs`]).
-
-pub mod glyphs;
-pub mod licence;
+//! **The fonts the corpus takes** ([`fonts`]): each font's licence file names its licence, as the font
+//! reader reads it ([`Licence::of`], `stitchcraft_svg::font::licence`), and the corpus takes the fonts under
+//! the OFL, CC0 or the public domain, CC BY or CC BY-SA. At `c7e3a05` that is 131 of the 142 fonts. The
+//! others are listed, and their glyphs never sewn. Each font's glyph files are every SVG file in its folder,
+//! `ltr.svg` and the rest, or a folder of them for a direction a large font splits, and the font reader's
+//! cutter makes each glyph a design ([`stitchcraft_svg::font::each_glyph`]).
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
-use licence::Licence;
+use stitchcraft_core::Budget;
+pub use stitchcraft_svg::font::licence::{self, Licence};
 
 use crate::util;
 
@@ -200,11 +199,17 @@ fn licence_of(dir: &Path) -> Result<Licence, String> {
     }
 }
 
-/// Whether `path` is a licence file: `LICENSE`, `LICENCE`, or either with `.txt` or `.md`, in any case.
+/// Whether `path` is a licence file, by the font reader's rule ([`licence::is_licence_file`]).
 fn is_licence(path: &Path) -> bool {
-    let name = path.file_name().map(|name| name.to_string_lossy().to_lowercase()).unwrap_or_default();
-    let stem = name.strip_suffix(".txt").or_else(|| name.strip_suffix(".md")).unwrap_or(&name);
-    path.is_file() && (stem == "license" || stem == "licence")
+    let name = path.file_name().map(|name| name.to_string_lossy().into_owned()).unwrap_or_default();
+    path.is_file() && licence::is_licence_file(&name)
+}
+
+/// The labels of the glyphs of the glyph file `bytes`, in the order of the file.
+pub fn labels(bytes: &[u8]) -> Result<Vec<String>, String> {
+    let mut labels = Vec::new();
+    stitchcraft_svg::font::each_glyph(bytes, &Budget::DEFAULT, &|_| false, &mut |_, cut| labels.push(cut.label)).map_err(|d| d.message)?;
+    Ok(labels)
 }
 
 /// `cargo xtask corpus`: fetches the corpus where it isn't yet, and says what it holds.
@@ -215,7 +220,7 @@ pub fn run() -> Result<(), String> {
     let fonts = fonts(&corpus)?;
     let (taken, left): (Vec<&Font>, Vec<&Font>) = fonts.iter().partition(|font| font.licence.taken());
     let files: Vec<PathBuf> = taken.iter().flat_map(|font| font.files.iter().map(|file| font.dir.join(file))).collect();
-    let glyphs = files.iter().map(|file| Ok(glyphs::glyphs(&util::read(file)?)?.len())).sum::<Result<usize, String>>()?;
+    let glyphs = files.iter().map(|file| Ok(labels(&util::read_bytes(file)?)?.len())).sum::<Result<usize, String>>()?;
     println!("corpus: {} at {} in {}", pin.repository, pin.short(), corpus.display());
     println!(
         "corpus: {} of {} fonts, with {} glyph files and {glyphs} glyphs, are under the OFL, CC0, CC BY or CC BY-SA",
