@@ -4,7 +4,8 @@
 //! **The glyphs.** The corpus is Ink/Stitch's fonts at the commit `conformance/inkstitch/fonts.toml` pins,
 //! which `cargo xtask corpus` fetches ([`crate::corpus`]), and of them the fonts whose licence file is the
 //! OFL, CC0, CC BY or CC BY-SA. Each glyph is cut out of its glyph file as a design of its own, its group
-//! shown and the other glyphs left out ([`crate::corpus::glyphs`]). The design is written to [`WRITTEN`],
+//! shown and the other glyphs left out, as the font reader cuts it ([`stitchcraft_svg::font::each_glyph`]).
+//! The design is written to [`WRITTEN`],
 //! read and planned by StitchCraft for the [`machine`], as `stitch plan` plans it, and sewn by Ink/Stitch
 //! ([`super::differential`]). Both PES files are read back by StitchCraft's reader and measured as the
 //! differential's cases are. Glyphs run side by side, as many at a time as the computer has cores.
@@ -48,7 +49,7 @@ use stitchcraft_plan::{MachineProfile, StitchPlan, profiles};
 
 use super::differential::{self, Compared, Inkstitch, Measured, Ran};
 use super::runner::Outcome;
-use crate::corpus::{self, Font, glyphs};
+use crate::corpus::{self, Font};
 use crate::util;
 use excuses::{Excuses, Traits};
 
@@ -211,7 +212,7 @@ fn jobs(fonts: &[Font], options: &Options) -> (Vec<Job>, Vec<String>) {
     for font in taken.into_iter().filter(|font| options.fonts.is_empty() || options.fonts.contains(&font.name)) {
         let mut of_font = Vec::new();
         for file in &font.files {
-            match util::read(&font.dir.join(file)).and_then(|text| glyphs::glyphs(&text)) {
+            match util::read_bytes(&font.dir.join(file)).and_then(|bytes| corpus::labels(&bytes)) {
                 Ok(names) => of_font.extend(names.into_iter().enumerate().map(|(index, name)| Job {
                     font: font.name.clone(),
                     file: file.clone(),
@@ -260,16 +261,18 @@ fn sew_all(root: &Path, inkstitch: &Inkstitch, fonts: &[Font], jobs: &[Job], exc
             let of_file: Vec<&Job> = jobs.iter().skip(at).take_while(|job| job.font == first.font && job.file == first.file).collect();
             at += of_file.len();
             let font = fonts.iter().find(|font| font.name == first.font);
-            let text = font.map_or(Err(format!("no font {}", first.font)), |font| util::read(&font.dir.join(&first.file)));
+            let bytes = font.map_or(Err(format!("no font {}", first.font)), |font| util::read_bytes(&font.dir.join(&first.file)));
             // Each design goes to a worker as soon as it is made, and waits while every worker is busy.
             let mut sent = BTreeSet::new();
-            let made = text.and_then(|text| {
-                glyphs::each_design(&text, &|index| of_file.iter().any(|job| job.index == index), &mut |index, glyph| {
-                    if let (Some(job), Some(design)) = (of_file.iter().find(|job| job.index == index), glyph.design) {
+            let wanted = |index: usize| of_file.iter().any(|job| job.index == index);
+            let made = bytes.and_then(|bytes| {
+                stitchcraft_svg::font::each_glyph(&bytes, &Budget::DEFAULT, &wanted, &mut |index, cut| {
+                    if let (Some(job), Some(design)) = (of_file.iter().find(|job| job.index == index), cut.design) {
                         sent.insert(index);
                         let _ = send.send(((*job).clone(), Ok(design)));
                     }
                 })
+                .map_err(|d| format!("the glyph file doesn't read: {}", d.message))
             });
             for job in of_file.into_iter().filter(|job| !sent.contains(&job.index)) {
                 let why = made.clone().err().unwrap_or(format!("no glyph {} in the file", job.index));
@@ -484,7 +487,10 @@ mod tests {
 
     /// The design of the `index`-th glyph of the glyph file `text`.
     fn design(text: &str, index: usize) -> String {
-        glyphs::designs(text, &|i| i == index).unwrap().into_iter().find_map(|glyph| glyph.design).unwrap()
+        let mut design = None;
+        stitchcraft_svg::font::each_glyph(text.as_bytes(), &Budget::DEFAULT, &|i| i == index, &mut |_, cut| design = design.take().or(cut.design))
+            .unwrap();
+        design.unwrap()
     }
 
     #[test]

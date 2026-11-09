@@ -17,7 +17,9 @@ stitchcraft-params = { workspace = true }
 stitchcraft-plan = { workspace = true }
 stitchcraft-engine = { workspace = true }
 roxmltree = { workspace = true }
+serde_json = { workspace = true }
 svgtypes = { workspace = true }
+unicode-normalization = { workspace = true }
 
 [dev-dependencies]
 proptest = { workspace = true }

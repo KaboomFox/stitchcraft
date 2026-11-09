@@ -1,0 +1,11 @@
+# One font of the corpus read by the font reader, and each of its glyphs planned (M14.1): Ink/Stitch Small
+# Font, under the OFL, from the cache `cargo xtask corpus` fills. Never a font file in this repository.
+id = "font-small-font"
+requirements = ["REQ-FONT-008"]
+kind = "font"
+font = "small_font"
+
+# Its glyphs in each direction, as Ink/Stitch's lettering counts them.
+[glyphs]
+ltr = 98
+rtl = 89
