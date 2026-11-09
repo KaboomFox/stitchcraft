@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-983ed72e.js";
+            window.path_to_searchindex_js = "../searchindex-c29fc1bf.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-8dd45193.js"></script>
+        <script src="../toc-143ab13b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -226,7 +226,7 @@ tools: stitchcraft-xtask (`xtask/`, run as `cargo xtask`)
 <tr><td><code>stitchcraft-engine</code></td><td>L2</td><td><code>Design</code>/<code>Element</code>/<code>Shape</code>, automatic digitizing, normalization, generators, plan assembly, finalizing for the machine, and from M10.4 routing</td><td>depend on formats, render or any adapter</td></tr>
 <tr><td><code>stitchcraft-formats</code></td><td>L2</td><td>readers/writers (PES/PEC, DST, …), quantization, format limits</td><td>depend on engine (it encodes <em>plans</em>)</td></tr>
 <tr><td><code>stitchcraft-render</code></td><td>L2</td><td>CPU preview images of plans (thread look, simple look, overlays)</td><td>depend on engine</td></tr>
-<tr><td><code>stitchcraft-svg</code></td><td>L3</td><td>SVG → <code>Design</code> (geometry, styles, <code>inkstitch:*</code> attributes, commands), plan → SVG</td><td>contain stitch logic</td></tr>
+<tr><td><code>stitchcraft-svg</code></td><td>L3</td><td>SVG → <code>Design</code> (geometry, styles, <code>inkstitch:*</code> attributes, commands), plan → SVG, and embroidery fonts in Ink/Stitch’s format (<code>font</code>, M14.1)</td><td>contain stitch logic</td></tr>
 <tr><td><code>stitchcraft-vectorcraft</code></td><td>L3</td><td><code>.vectorcraft</code> → <code>Design</code> (commands in names included), effect records ↔ <code>ParamSet</code>, plug-in JSON objects</td><td>contain stitch logic</td></tr>
 <tr><td><code>stitchcraft-testkit</code></td><td>test</td><td>fixtures, <code>proptest</code> strategies (from the registry), invariant assertions</td><td>be a normal dependency</td></tr>
 <tr><td><code>stitchcraft-cli</code></td><td>app</td><td>the <code>stitch</code> command; all filesystem access, and the one program StitchCraft starts, VectorCraft’s command line, which traces a picture (<a href="adr/0015-pictures-traced-by-vectorcraft.html">ADR-0015</a>)</td><td>contain engine logic</td></tr>
@@ -262,6 +262,7 @@ GPL/AGPL/LGPL.</p>
 <tr><td>Deterministic transcendental math</td><td><code>libm</code> 0.2</td><td>MIT</td><td>core</td></tr>
 <tr><td>Errors</td><td><code>thiserror</code> 2</td><td>MIT/Apache</td><td>all libraries</td></tr>
 <tr><td>XML / SVG syntax</td><td><code>roxmltree</code>, <code>svgtypes</code></td><td>MIT/Apache</td><td>svg, and engine for <code>svgtypes</code>’ path-data parser alone, which reads a custom lock drawn as a path</td></tr>
+<tr><td>A font’s <code>font.json</code>, and its glyph names in Unicode’s NFC</td><td><code>serde_json</code>, <code>unicode-normalization</code> 0.1</td><td>MIT/Apache, and Unicode-3.0 for its tables</td><td>svg</td></tr>
 <tr><td><code>.vectorcraft</code> documents: JSON, its coordinates read exactly, unpacked from gzip by a Rust backend</td><td><code>serde</code>, <code>serde_json</code>, <code>flate2</code> 1</td><td>MIT/Apache</td><td>vectorcraft</td></tr>
 <tr><td>Rasterizing previews, and reading VectorCraft’s pictures to compare them</td><td><code>tiny-skia</code> 0.11</td><td>BSD-3-Clause</td><td>render, xtask</td></tr>
 <tr><td>JSON reports, and the plug-in’s JSON</td><td><code>serde_json</code></td><td>MIT/Apache</td><td>cli, vc-plugin</td></tr>
@@ -361,6 +362,7 @@ VectorCraft reports the plug-in as failed.</p>
 <tr><td>A machine profile</td><td><code>crates/stitchcraft-plan/src/profiles/</code> (data)</td><td>machine-testing record</td></tr>
 <tr><td>A diagnostic</td><td>the diagnostics registry in <code>stitchcraft-core</code></td><td>explanation text + a case that triggers it</td></tr>
 <tr><td>SVG/Ink/Stitch parsing</td><td><code>stitchcraft-svg</code></td><td>compatibility contract row</td></tr>
+<tr><td>An embroidery font in Ink/Stitch’s format, its settings and glyphs</td><td><code>stitchcraft_svg::font</code>, from M14.1</td><td>the <a href="fonts.html#the-reader">fonts</a> page, and its key in the reader’s table, which the font settings page is written from</td></tr>
 <tr><td>VectorCraft document reading</td><td><code>stitchcraft-vectorcraft</code></td><td>compatibility gate scenario</td></tr>
 <tr><td>A CLI subcommand</td><td><code>apps/stitchcraft-cli/src/commands/</code></td><td><code>trycmd</code> example in the docs</td></tr>
 <tr><td>A repo check</td><td><code>xtask/src/</code></td><td><code>cargo xtask ci</code> step list and the <a href="guardrails.html">guardrails</a> page</td></tr>

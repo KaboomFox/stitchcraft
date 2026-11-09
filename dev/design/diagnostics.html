@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-983ed72e.js";
+            window.path_to_searchindex_js = "../searchindex-c29fc1bf.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-8dd45193.js"></script>
+        <script src="../toc-143ab13b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -214,6 +214,7 @@ probably not what you want) or <code>I</code> (info) + four digits grouped by ar
 <tr><td>0800–0899</td><td>Hosts (SVG, VectorCraft)</td></tr>
 <tr><td>0900 to 0999</td><td>Automatic digitizing (<a href="image-to-embroidery.html">image to embroidery</a>)</td></tr>
 <tr><td>1000 to 1099</td><td>Routing (<a href="routing.html">routing tools</a>)</td></tr>
+<tr><td>1100 to 1199</td><td>Fonts and lettering (<a href="fonts.html#the-reader">fonts</a>)</td></tr>
 </tbody>
 </table>
 </div>
@@ -375,6 +376,11 @@ another.</p>
 <tr><td><code>SC-I1002</code></td><td>Info</td><td>Element left out of the route (a fill, a shape digitized automatically, settings that don’t read, rails that can’t be made, no length, a stroke whose first subpath ends where it starts, or a satin column among running stitches: kept as it is)</td><td>M10</td></tr>
 <tr><td><code>SC-W1003</code></td><td>Warning</td><td>Piece of a routed satin column may sew otherwise (read back, it has other rails or pairs other points: it is kept)</td><td>M10</td></tr>
 <tr><td><code>SC-W1004</code></td><td>Warning</td><td>Too many lines to cut where they cross (more than 1,000 lines routed as running stitches: none is cut by another, as with Add nodes at intersections off)</td><td>M10</td></tr>
+<tr><td><code>SC-E1101</code></td><td>Error</td><td>Font could not be read (a <code>font.json</code> that is missing or isn’t an object of settings, or glyph files that are missing or aren’t SVG StitchCraft reads: nothing of the font is sewn)</td><td>M14</td></tr>
+<tr><td><code>SC-W1102</code></td><td>Warning</td><td>Font setting not read, its default kept (a value in <code>font.json</code> of another type than its key takes, which keeps Ink/Stitch’s default, or an entry of a list or a table of another type, which is left out)</td><td>M14</td></tr>
+<tr><td><code>SC-W1103</code></td><td>Warning</td><td>Font file not read (a glyph file compressed with xz, as in Ink/Stitch’s packages: its glyphs are left out)</td><td>M14</td></tr>
+<tr><td><code>SC-W1104</code></td><td>Warning</td><td>Glyph left out (a glyph whose paths give it no box, or every glyph of a file whose baseline guide doesn’t give a place, as Ink/Stitch’s lettering leaves them out)</td><td>M14</td></tr>
+<tr><td><code>SC-I1105</code></td><td>Info</td><td>Font read as Ink/Stitch reads it (a key the format doesn’t have, a glyph drawn twice in a direction, of which the later counts, a file without a baseline guide, or a font without glyphs for its <code>default_variant</code>, which sews its first direction)</td><td>M14</td></tr>
 </tbody>
 </table>
 </div>

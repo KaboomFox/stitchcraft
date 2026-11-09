@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-983ed72e.js";
+            window.path_to_searchindex_js = "../searchindex-c29fc1bf.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-8dd45193.js"></script>
+        <script src="../toc-143ab13b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -492,7 +492,7 @@ its licence file states. M15 ports ordinary fonts into the same format.</p>
 <tr><th>Step</th><th>Deliverable</th><th>Done when</th></tr>
 </thead>
 <tbody>
-<tr><td>M14.1 🧪</td><td>The font repository, the licences it takes, and a reader for a font in Ink/Stitch’s format (<a href="../design/fonts.html">fonts</a>), from Ink/Stitch’s public documentation of it and its font files</td><td>ADR-0001 amended for fonts; one font read, its glyphs sewn</td></tr>
+<tr><td>M14.1 ✅ 🧪</td><td>The font repository, the licences it takes, and a reader for a font in Ink/Stitch’s format (<a href="../design/fonts.html">fonts</a>), from Ink/Stitch’s public documentation of it and its font files</td><td>ADR-0001 amended for fonts; one font read, its glyphs sewn. <a href="../design/adr/0020-fonts-from-a-repository-of-their-own.html">ADR-0020</a>, accepted on 2026-11-08, amends ADR-0001’s decision 4. It keeps the fonts in <code>KaboomFox/stitchcraft-fonts</code> under the OFL, CC0, CC BY and CC BY-SA, pinned as the corpus is, and never in this repository. <code>stitchcraft_svg::font</code> reads a font (<a href="../design/fonts.html#the-reader">the reader</a>), and Ink/Stitch Small Font’s 187 glyphs read and plan (<code>REQ-FONT-002</code> to <code>REQ-FONT-008</code>)</td></tr>
 <tr><td>M14.2</td><td><code>stitch lettering</code> sets text in a font. Its glyphs are placed by the font’s advances and kerning, with the spacing of letters, words and lines and the alignment the user sets. The scale stays within the heights the font sews at, and a warning names the font’s range outside them. A character the font lacks sews as the font’s default glyph, and a warning names it. In a font whose <code>auto_satin</code> is on, as in Ink/Stitch Small Font and Medium Font, M10.4’s function routes the text’s satin columns and running stitches in their order, before the trims, as Ink/Stitch’s lettering routes them (<a href="../design/routing.html">routing tools</a>)</td><td>its requirements active</td></tr>
 <tr><td>M14.3</td><td>Lettering along a path, on its top, its baseline or its bottom, or stretched along it. The colours of a multicolour font sorted, a trim after each letter, word or line as chosen, and lines sewn back and forth</td><td>same</td></tr>
 <tr><td>M14.4</td><td>Lettering in VectorCraft: a text object sews in the embroidery font its StitchCraft setting names, read from the document’s text. The step chooses how the setting is given, as an effect or a name. It also chooses where the plug-ins find the fonts, since a plug-in can’t read files. They can be built in from the font repository, as VectorCraft builds in craft-fonts. A preview of the font in VectorCraft waits for a live effect to be given more than its object’s geometry and paints (<a href="../design/rfc-vectorcraft-abi-v2.html">RFC</a>, P6)</td><td>a Level B case</td></tr>
@@ -520,7 +520,7 @@ and M15.2 don’t depend on M14, and can go ahead beside it.</p>
 </thead>
 <tbody>
 <tr><td>M15.1 🧪</td><td>Font files and a corpus. The step compares the crates that read and shape fonts, skrifa with harfrust as in VectorCraft and ttf-parser with rustybuzz. Each is checked against <code>deny.toml</code>, the wasm build and the budget. A corpus of the 36 OFL fonts on Google Fonts that Ink/Stitch’s fonts were digitized from, each with the Ink/Stitch font made from it, fetched by <code>cargo xtask corpus</code> at pinned commits and never committed</td><td>Decision recorded in an ADR, with each crate’s cost measured: the instructions to outline and shape a line of text, and the plug-in’s size with them</td></tr>
-<tr><td>M15.2</td><td>Glyph outlines. A crate of its own, <code>stitchcraft-fonts</code>, reads TrueType, OpenType and collection files, with a variable font at its default, at a named instance or at axis values. It shapes text with the font’s advances, kerning, ligatures and marks. It gives each glyph’s outline unhinted, in font units, with its components placed. A character the font lacks is named by a warning. Fonts are untrusted input, read within the budget and fuzzed, and test fonts are built in code</td><td>its requirements active, a fuzz target, and every font of the corpus read</td></tr>
+<tr><td>M15.2</td><td>Glyph outlines. A crate of its own, <code>stitchcraft-outlines</code>, reads TrueType, OpenType and collection files, with a variable font at its default, at a named instance or at axis values. It shapes text with the font’s advances, kerning, ligatures and marks. It gives each glyph’s outline unhinted, in font units, with its components placed. A character the font lacks is named by a warning. Fonts are untrusted input, read within the budget and fuzzed, and test fonts are built in code</td><td>its requirements active, a fuzz target, and every font of the corpus read</td></tr>
 <tr><td>M15.3</td><td>Glyphs digitized. <code>stitch lettering --font Font.ttf</code> sets text in a font file, with M14.2’s spacing, alignment and trims, at a height given as the capitals’ height. Each glyph is an automatic element, its contours filled by the nonzero rule and digitized by M13’s rules at that height. M13’s rules for specks and the background don’t apply to glyphs, and every contour sews</td><td>its requirements active. The corpus’s glyphs digitized at 3 heights, with their jumps, filled parts and columns shorter than 1 mm counted as the baseline the next steps are measured against</td></tr>
 <tr><td>M15.4</td><td>A sample sheet. <code>stitch font sample</code> sews a font’s glyphs at its least and greatest heights, with pangrams and the font’s kerning pairs. It reports each glyph’s stitch types, jumps and warnings. TS-15 is drawn</td><td>the docs show a sample sheet in pictures</td></tr>
 <tr><td>M15.5</td><td>Dots and marks. A part of a glyph whose centre line has no length, such as an i-dot, a full stop or an umlaut’s dot, sews as one satin column across it. A part too small for a column sews as stitches back and forth inside it, with its locks inside it</td><td>its requirements active, and every dot of the corpus’s glyphs sewn at the least heights measured</td></tr>
@@ -562,7 +562,7 @@ start and end their previews at the markers.</p>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="prev" href="../design/adr/0019-subject-cut-out-before-tracing.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                            <a rel="prev" href="../design/adr/0020-fonts-from-a-repository-of-their-own.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
@@ -576,7 +576,7 @@ start and end their previews at the markers.</p>
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="prev" href="../design/adr/0019-subject-cut-out-before-tracing.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                    <a rel="prev" href="../design/adr/0020-fonts-from-a-repository-of-their-own.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 

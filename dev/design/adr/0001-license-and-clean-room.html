@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-983ed72e.js";
+            window.path_to_searchindex_js = "../../searchindex-c29fc1bf.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-8dd45193.js"></script>
+        <script src="../../toc-143ab13b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,7 +181,10 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="adr-0001-mit-or-apache-20-clean-room-from-inkstitch"><a class="header" href="#adr-0001-mit-or-apache-20-clean-room-from-inkstitch">ADR-0001: MIT OR Apache-2.0, clean-room from Ink/Stitch</a></h1>
-<p><strong>Status:</strong> Accepted · 2026-10-08 · decision 2 replaced by <a href="0012-read-dont-copy.html">ADR-0012</a></p>
+<!-- The status line, a label and its value, which the ADR index is checked against. -->
+<!-- vale ai-tells.ColonUsage = NO -->
+<p><strong>Status:</strong> Accepted · 2026-10-08 · decision 2 replaced by <a href="0012-read-dont-copy.html">ADR-0012</a> · decision 4 amended for fonts by <a href="0020-fonts-from-a-repository-of-their-own.html">ADR-0020</a></p>
+<!-- vale ai-tells.ColonUsage = YES -->
 <h2 id="context"><a class="header" href="#context">Context</a></h2>
 <p>Ink/Stitch, the behaviour reference, is GPL-3.0. VectorCraft, the host, is MIT OR Apache-2.0 and its
 <code>AGENTS.md</code> forbids GPL/AGPL code in its tree. A port of Ink/Stitch’s Python to Rust would be a
@@ -200,7 +203,10 @@ and <strong>never open, copy or transliterate Ink/Stitch source code</strong>. <
 and command names match Ink/Stitch’s SVG attributes, because reading and writing the same files is the
 point (<a href="../inkstitch-compat-contract.html">compatibility contract</a>).</li>
 <li>Not copied, ever: Ink/Stitch code, docs text, parameter descriptions, lock-stitch shape data, meander
-tiles, fonts, palettes compiled by Ink/Stitch, images.</li>
+tiles, fonts, palettes compiled by Ink/Stitch, images. <em>Amended for fonts by
+<a href="0020-fonts-from-a-repository-of-their-own.html">ADR-0020</a>. No font file enters this repository.
+The fonts of Ink/Stitch’s library whose licence allows it are copied whole into StitchCraft’s font
+repository, with their licence files.</em></li>
 <li>Format facts may be taken from MIT-licensed pyembroidery/pystitch with attribution in <code>NOTICE</code>;
 prefer public specifications where they exist.</li>
 <li>Running Ink/Stitch as a black-box oracle for metric comparisons (conformance L3) is allowed: it

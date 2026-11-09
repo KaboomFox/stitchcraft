@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-983ed72e.js";
+            window.path_to_searchindex_js = "../searchindex-c29fc1bf.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-8dd45193.js"></script>
+        <script src="../toc-143ab13b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -300,6 +300,23 @@ requirement. Fixtures are small files under <code>conformance/fixtures/</code>, 
 a row in the fixtures index stating its origin and licence (<code>--check</code>). Large real-world corpora live in
 repositories of their own, as VectorCraft’s do, and are never committed. <code>cargo xtask corpus</code> fetches
 Ink/Stitch’s fonts at a commit and with a SHA-256 this repository pins (<a href="fonts.html#the-corpus">fonts</a>).</p>
+<p>The <code>font</code> kind reads one font of that corpus with the font reader and plans each of its glyphs, as the
+glyph differential plans a glyph (<code>REQ-FONT-008</code>, <code>xtask/src/conformance/font.rs</code>). It names the font’s
+folder and the glyphs it has in each direction:</p>
+<pre><code class="language-toml"># One font of the corpus read by the font reader, and each of its glyphs planned (M14.1): Ink/Stitch Small
+# Font, under the OFL, from the cache `cargo xtask corpus` fills. Never a font file in this repository.
+id = "font-small-font"
+requirements = ["REQ-FONT-008"]
+kind = "font"
+font = "small_font"
+
+# Its glyphs in each direction, as Ink/Stitch's lettering counts them.
+[glyphs]
+ltr = 98
+rtl = 89
+</code></pre>
+<p>Without the corpus the case is skipped, and says so. In CI every job that runs <code>cargo xtask ci</code> fetches the
+corpus first (<code>.github/actions/fonts</code>), and the case runs.</p>
 <p>The engine’s cases build their small designs with <code>stitchcraft_testkit::designs</code>. It also reads a plan’s
 shape at a glance: <code>J L4 S5 L4</code> is a jump, 4 lock stitches, 5 needle points of stitching and 4 more lock
 stitches. Its strokes are as wide as an SVG stroke whose style says nothing, and <code>widened</code> gives one a

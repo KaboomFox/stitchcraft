@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-983ed72e.js";
+            window.path_to_searchindex_js = "../searchindex-c29fc1bf.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-8dd45193.js"></script>
+        <script src="../toc-143ab13b.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -181,6 +181,7 @@
                 <div id="mdbook-content" class="content">
                     <main>
                         <h1 id="fonts"><a class="header" href="#fonts">Fonts</a></h1>
+<!-- implements: crates/stitchcraft-svg/src/font/** -->
 <p>Lettering sews text in a font. M14 sets text in embroidery fonts, digitized glyph by glyph in Ink/Stitch’s
 font format. M15 ports an ordinary TrueType or OpenType font automatically. It reads each glyph’s outline at
 the height the text is set and works out how the glyph sews (<a href="../plan/roadmap.html">roadmap</a>). This page
@@ -342,6 +343,86 @@ The rung fix also lets StitchCraft sew the x and the U of Apex simple, in both i
 program sewed before. Ink/Stitch still calls their columns not stitchable, and <code>DEV-SAT-013</code> excuses them.
 A scan of every glyph file’s satin columns found 5 more fonts with columns the 2 fixes could change. Run
 again too, their 562 glyphs agree, but for 2 that excuses made before M8.6 explain.</p>
+<h2 id="licences-in-the-font-repository"><a class="header" href="#licences-in-the-font-repository">Licences in the font repository</a></h2>
+<p><a href="adr/0020-fonts-from-a-repository-of-their-own.html">ADR-0020</a> sets which licences StitchCraft’s
+font repository takes and how a font’s licence is checked when it joins. Read on 8 November 2026, each of
+the 131 licence files the corpus takes at <code>c7e3a05</code> names an allowed licence first. 32 of them also point
+at the terms of the font each was made from, or at a permission its author gave:</p>
+<ul>
+<li>15 point at an original under the OFL or in the public domain, such as Magnolia Script, Linux Libertine
+and Apex Lake, or under DejaVu’s licence.</li>
+<li>7 point at an original that its author’s own terms let anyone use, without a word on shared
+adaptations, and at its author’s leave to use it for Ink/Stitch. Aventurina, Bluenesia Satin, Cherry for
+inkstitch, Cherry for Kaalleen, DinoMouse72, Learning curve and Monicha are these 7.</li>
+<li>7 are the Emilio 20 fonts, whose original the files name as under CC BY-SA and “used and distributed with
+permission from the author”.</li>
+<li>3 draw animals of the Emoji Embroidery Project, whose author allowed their use in fonts for Ink/Stitch.
+The 3 are Animals Alphabet, Alphabet des animaux and Tieralphabet.</li>
+</ul>
+<p>The ADR keeps the 7 of the second kind out until their authors allow sharing beyond Ink/Stitch, and a person
+reads the 10 of the last 2 kinds before they join.</p>
+<h2 id="the-reader"><a class="header" href="#the-reader">The reader</a></h2>
+<p><code>stitchcraft_svg::font::read</code> reads a font in Ink/Stitch’s format from the files of its folder, as
+Ink/Stitch’s lettering reads it at <code>d59c9ab</code> (<code>lib/lettering/font.py</code>, <code>font_variant.py</code> and <code>glyph.py</code>),
+run as a black box on fonts drawn for it (<a href="adr/0020-fonts-from-a-repository-of-their-own.html">ADR-0020</a>). M14.2’s lettering sets text with what it reads, as <code>REQ-FONT-002</code> to <code>REQ-FONT-008</code> say.</p>
+<ul>
+<li><strong>Settings.</strong> <code>font.json</code> is UTF-8 text, with or without a byte order mark, and holds an object of
+settings. Each key that Ink/Stitch reads is read at Ink/Stitch’s default where the file lacks it, as the
+<a href="../user/reference/font-settings.html">font settings</a> page gives them. A value of another type keeps the
+default (<code>SC-W1102</code>), and a key Ink/Stitch doesn’t read is ignored (<code>SC-I1105</code>). A font without a
+<code>font.json</code> that holds an object isn’t read (<code>SC-E1101</code>). Ink/Stitch loads such a font with every setting
+at its default and leaves it out of its list of fonts, as it has no name.</li>
+<li><strong>Directions.</strong> A direction’s glyph files are <code>ltr.svg</code>, then the SVG files directly in a folder <code>ltr</code>
+by their names, and the same for <code>rtl</code>, <code>ttb</code> and <code>btt</code>. An older font names its files <code>→.svg</code>, <code>←.svg</code>,
+<code>↓.svg</code> and <code>↑.svg</code>, as Ink/Stitch Small Font’s README describes them. Ink/Stitch takes a folder’s files
+in the order the system lists them in, which differs from system to system. 2 fonts at <code>c7e3a05</code> draw a
+glyph in 2 files of a direction. Roman bicolor AGS draws 66 glyphs in its <code>mono.svg</code> and again in its
+<code>zbi.svg</code>, whose name sorts after it, and AGS Garamond’s full stop is in both its files. A file
+compressed with xz isn’t read (<code>SC-W1103</code>).</li>
+<li><strong>Glyphs.</strong> Each group labelled <code>GlyphLayer-</code> and a name is a glyph, wherever it lies. Its name is its
+label in Unicode’s NFC, so the ohm sign is the Greek omega, and of 2 glyphs of one name in a direction the
+later counts (<code>SC-I1105</code>). Its design is the one the glyph differential cuts and sews
+(<a href="#the-corpus">the corpus</a>), read by the SVG reader with what the reader says of it.</li>
+<li><strong>The box.</strong> A glyph’s box spans the x of the points that its <code>&lt;path&gt;</code> elements reach, connectors’
+aside. A subpath reaches its ends and its curves’ turning points, and a move-to that draws nothing
+reaches its place. Hidden paths count,
+and so does a glyph inside the glyph. Ink/Stitch’s lettering places each glyph by its box’s left edge,
+and advances a glyph without an advance of its own to its right edge. A path whose transform doesn’t
+read counts where it lies without it, where the SVG reader leaves it out of the design (<code>SC-W0804</code>).
+Ink/Stitch leaves a glyph out when its group has no path, or when a path in it draws nothing, such as one
+of empty path data. StitchCraft leaves it out too (<code>SC-W1104</code>). 12 glyphs at <code>c7e3a05</code> are left out so,
+11 of them of one empty path.</li>
+<li><strong>The baseline.</strong> A glyph file’s baseline is its first guide labelled <code>baseline</code>. Inkscape writes the
+guide’s y up from the page’s bottom, and the baseline lies the page’s height in user units less that y
+below the top. The page’s height is the viewBox’s, or else the root’s height in pixels, and 0 when the
+root has no height in a unit, as 2 of Ink/Stitch’s glyph files have none. Without the guide the
+baseline is the page’s top (<code>SC-I1105</code>).</li>
+<li><strong>Lengths.</strong> The reader gives every length in millimetres. The box and the baseline lie on the glyph
+file’s page, as the glyph’s design does, and the advances, the kerning, the space and the leading are
+converted from <code>font.json</code>’s CSS pixels. A pair’s kerning is the value for its 2 labels with a space
+between them, or else joined, as older fonts write 195,269 of the 1,816,358 pairs at <code>c7e3a05</code>. A
+glyph’s advance is its own, or else <code>horiz_adv_x_default</code>, or else its box’s right edge.</li>
+<li><strong>The licence.</strong> The licence file, and the licence it names first, as the corpus reads it.</li>
+</ul>
+<p><strong>Measured against Ink/Stitch.</strong> On 8 November 2026 both programs read the 142 fonts of <code>c7e3a05</code>. They
+found the same 21,502 glyphs in the same directions, and the same default direction for each font. 21,132
+glyphs have the same left edge, width and baseline within a micrometre. The numbers from Ink/Stitch have
+6 digits, such as 11.3386 for StitchCraft’s 11.338584. The other 370 differ for 2 causes:</p>
+<ul>
+<li>303 are the glyphs of the 3 fonts whose glyph files draw a viewBox of another shape than the page, which
+StitchCraft centres and Ink/Stitch doesn’t (<code>DEV-SVG-025</code>). Their boxes lie right of Ink/Stitch’s, as their
+designs do: 30.0 mm in Califragilistic, 16.5 mm in Cooper Marif and 24.8 mm in InfiniPicto.</li>
+<li>67 are the glyphs drawn in 2 files of a direction, which Ink/Stitch took in the system’s order.</li>
+</ul>
+<p>Ink/Stitch Small Font, under the OFL, is the corpus’s case of a real font (<code>REQ-FONT-008</code>). Its 98
+left-to-right and 89 right-to-left glyphs read with nothing said, and plan in 17,890 stitches for the
+reference machine with a hoop 400 mm a side.</p>
+<p><strong>For M14.2.</strong> Ink/Stitch’s lettering looks a glyph’s advance and kerning up by its label, and takes a label
+longer than 11 characters from its 12th character on, so it looks the advance of Allegria 55’s glyph
+<code>Inkscape_logo</code> up as <code>go</code>. In a word, it adds each glyph’s left edge to the place it sets the glyph at, but
+the first glyph’s. So the centring of the 3 fonts above moves their words, and not only their glyphs. For a
+direction the font has no file for, Ink/Stitch finds a direction without glyphs, where <code>Font::variant</code> finds
+none. M14.2 chooses how StitchCraft’s lettering sets these.</p>
 <h2 id="fonts-ported-by-other-programs"><a class="header" href="#fonts-ported-by-other-programs">Fonts ported by other programs</a></h2>
 <div class="table-wrapper">
 <table>
@@ -441,8 +522,9 @@ Apache-2.0, in a folder for each in its repository.</p>
 <p><strong>Where fonts live.</strong> VectorCraft’s shared fonts are in
 <a href="https://github.com/storytold/craft-fonts">storytold/craft-fonts</a>, an optional build input
 (<code>CRAFT_FONTS_DIR</code>), with each font’s licence text beside it (VectorCraft’s <code>docs/development.md</code> at
-<code>1505384</code>). Embroidery fonts in Ink/Stitch’s format come from a repository of their own (M14.1). A ported
-font is made on the user’s computer from a font the user has.</p>
+<code>1505384</code>). Embroidery fonts in Ink/Stitch’s format come from a repository of their own,
+<code>KaboomFox/stitchcraft-fonts</code>, as <a href="adr/0020-fonts-from-a-repository-of-their-own.html">ADR-0020</a> decides. A
+ported font is made on the user’s computer from a font the user has.</p>
 <h2 id="glyph-rules"><a class="header" href="#glyph-rules">Glyph rules</a></h2>
 <p>M13 digitizes a traced shape by its width at the size it sews (<a href="image-to-embroidery.html">image to embroidery</a>).
 A glyph is such a shape, and M13’s rules do most of the work, from centre lines and junctions to rings and
@@ -478,6 +560,10 @@ coverage and stitches. TS-15 sews 3 ported fonts beside the fonts digitized by h
 (<a href="../plan/machine-testing.html">machine testing</a>).</p>
 <h2 id="decisions-for-the-owner"><a class="header" href="#decisions-for-the-owner">Decisions for the owner</a></h2>
 <ul>
+<li><strong>The font repository and its licences, and the reader</strong> (M14.1): decided. The owner accepted
+<a href="adr/0020-fonts-from-a-repository-of-their-own.html">ADR-0020</a> on 2026-11-08, as it was written. The owner creates
+<code>KaboomFox/stitchcraft-fonts</code> before M14.2 pins it, and reads the licence files of the 10 fonts the ADR
+names before they join.</li>
 <li><strong>When M15 comes.</strong> The roadmap places it after M14 and before M11 and 1.0. M15.1 and M15.2 can go ahead
 beside M14. Moving M15 after 1.0 brings 1.0 sooner.</li>
 <li><strong>Which ported fonts are written.</strong> Text in any installed font can be sewn as a design, as Wilcom and Hatch
