@@ -114,7 +114,7 @@ them. Do they sew as cleanly as the triple runs beside them, and does the M keep
 MC-8 also sews one of the owner's traced dogs, `docs/fixtures/traced-dog-running-9.vectorcraft`, 100 mm
 tall: `stitch plan docs/fixtures/traced-dog-running-9.vectorcraft --auto -o dog.pes`. Does the fur read as
 fur, the face and the eyes as hers, and do its 117 jump threads, which the PE800 doesn't cut, take long to
-snip (M13.17)? One satin stitch of its dark grey fur crosses a lighter grey patch beside it (M13.16): does it show?
+snip (M13.17)? One satin stitch of its dark grey fur crosses a lighter grey patch beside it (M13.18): does it show?
 
 ## Report template
 

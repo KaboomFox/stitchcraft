@@ -73,6 +73,7 @@ impl Style {
 pub struct Settings {
     style: Style,
     scale: f32,
+    fabric: Option<Rgb>,
 }
 
 impl Settings {
@@ -88,7 +89,7 @@ impl Settings {
     /// `style` at `scale` pixels per millimetre; `None` unless the scale is within
     /// [`MIN_SCALE`](Self::MIN_SCALE)..=[`MAX_SCALE`](Self::MAX_SCALE).
     pub fn new(style: Style, scale: f32) -> Option<Settings> {
-        (Self::MIN_SCALE..=Self::MAX_SCALE).contains(&scale).then_some(Settings { style, scale })
+        (Self::MIN_SCALE..=Self::MAX_SCALE).contains(&scale).then_some(Settings { style, scale, fabric: None })
     }
 
     /// The style.
@@ -99,6 +100,21 @@ impl Settings {
     /// Pixels per millimetre.
     pub const fn scale(self) -> f32 {
         self.scale
+    }
+
+    /// These settings with the design drawn on fabric of the colour `fabric` instead of the style's own
+    /// (`REQ-RND-003`): a design has to cover on fabric of any colour, and black shows what cream hides.
+    #[must_use]
+    pub const fn on(self, fabric: Rgb) -> Settings {
+        Settings { fabric: Some(fabric), ..self }
+    }
+
+    /// The colour of the fabric under the design: the one [`on`](Self::on) named, or else the style's own.
+    pub const fn fabric(self) -> Rgb {
+        match self.fabric {
+            Some(fabric) => fabric,
+            None => self.style.background(),
+        }
     }
 }
 

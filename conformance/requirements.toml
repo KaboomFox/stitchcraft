@@ -239,6 +239,15 @@ rationale = "Documentation images are compared byte for byte on every pull reque
 milestone = "M2"
 status = "active"
 
+[[req]]
+id = "REQ-RND-003"
+area = "render"
+level = "L2"
+statement = "A preview is drawn on fabric of the colour its settings name (`Settings::on`), and of the style's own colour when they name none: unbleached cotton for realistic previews and white for simple ones. A docs shot names the colour with its `fabric` key, and the user page of automatic digitizing shows the traced pear and the traced dog on black fabric beside cream."
+rationale = "The fabric's colour can't be chosen and may be black. Fabric that shows through a design is hard to see on cream and plain on black, so a picture on black shows whether a design covers (REQ-AUTO-027)."
+milestone = "M13"
+status = "planned"
+
 # ── Parameters ─────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -2658,3 +2667,30 @@ statement = "Digitized automatically, a picture's elements lay no stitch that sh
 rationale = "Thread that travels on top of a colour sewn before it draws a line across that colour, and an underlay or a travel stitch that shows was meant to be hidden. A move or a jump thread goes from one element to the next, which the order of REQ-AUTO-010 chooses, and on a machine that cuts no jump, as the PE800 cuts none (MC-1), each jump thread stays until it is cut by hand."
 milestone = "M13"
 status = "active"
+
+[[req]]
+id = "REQ-AUTO-027"
+area = "auto"
+level = "L2"
+statement = "Digitized automatically, a picture covers its design whatever the fabric's colour: its top stitches leave no gap a thread wide inside the design, and no more than 0.15 % of the design's area bare. The design is what the picture paints, as REQ-AUTO-025 paints it, with the slits between its shapes that are narrower than a thread, 0.4 mm: the painted places closed with a disc a thread across. Its edge, the places on which such a disc doesn't fit inside the design, isn't measured. A place of the rest is bare when no top stitch covers it (REQ-AUTO-025), and open when no thread of any role does. A gap is a place where a disc 0.35 mm across fits on bare places, 7 pixels of the 0.05 mm grid, which fits in every strip 0.4 mm wide wherever it lies on the grid, and gaps that touch at a side or a corner are one. The base layer (REQ-AUTO-028) is underlay, so it covers no bare place, and no open place is left in a gap between neighbours on fabric of any colour. The test pictures, the traced pear and the traced dogs leave no gap and stay within the limit, but for the dogs' gaps between 2 strands sewn as running stitches side by side, which `tests/auto_photos.rs` lists, each with its strands, until M13.18 merges such strands."
+rationale = "The fabric's colour can't be chosen and may be black, so a design must cover by itself. REQ-AUTO-025 passes a patch under 1 mm², and its disc of 9 pixels passes a sliver 0.4 mm wide, which showed as a line between the strands beside the traced dog's nose. Measured on 2026-11-10 before this requirement's step, the pear left no gap and 0.083 % of its design bare, and the 4 traced dogs 7 to 17 gaps each and 0.28 to 0.77 %. With the overlap setting raised to 1.5 mm, which also widens every satin column, the dogs left 0.04 to 0.07 % bare, so the limit is twice what a picture without gaps leaves."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-AUTO-028"
+area = "auto"
+level = "L2"
+statement = "A design with automatic shapes sews one underlay first under all of them, the base layer, unless `auto_base_layer` is off. Its shape is the design's outer shape: the union of what the automatic shapes that sew paint, an area its region and a line the area its stroke covers, once the background is left out (REQ-AUTO-009), the layers are flattened (REQ-AUTO-023) and the specks are merged (REQ-AUTO-008). The union is closed by half a thread, grown by 0.2 mm and shrunk by as much with round joins, so that a slit narrower than a thread between 2 shapes is part of it, and then offset by `auto_base_offset_mm`, -0.6 mm, inwards when negative, with round joins. Its holes are kept unless `auto_base_keep_holes` is off, and a piece smaller than the smallest area (REQ-AUTO-020) is left out. Each piece sews as a tatami fill with the parameters Ink/Stitch's Knockdown Fill writes, at the stitch length `auto_base_stitch_length_mm`, 3 mm: `max_stitch_length_mm` that length, `row_spacing_mm` the length times √3/2 to 4 decimals (2.5981), `staggers` 2, `underpath` off, and an underlay at `fill_underlay_angle` 60 and -60 with `fill_underlay_max_stitch_length_mm` and `fill_underlay_row_spacing_mm` the same and `underlay_underpath` off. Every stitch of it has the underlay's role. It is the element `stitchcraft:base`, a piece after the first named with `#2` and so on, and sews before every automatic element, at the place of the first, whatever the order of REQ-AUTO-010. Its thread is the one that paints the largest area of the picture, as REQ-AUTO-025 paints it, the one painted first of 2 as large, unless `auto_base_thread` names a colour. An automatic tatami fill of a design with a base layer sews no underlay of its own (`fill_underlay` off), and a satin column keeps its own. SC-I0909 says the base layer's area, pieces and thread. A base layer whose shape needs more work than the budget allows is left out with SC-W0910, and every fill then keeps its underlay."
+rationale = "An underlay under each shape stays inside that shape, so the fabric shows wherever 2 shapes leave a gap. One underlay under the whole design puts thread there, steadies the fabric as one piece, and replaces the fills' own underlays, 601 of the 11,996 stitches of the running dog traced in 9 threads. Ink/Stitch has it as its Knockdown Fill tool, whose behaviour was read at d59c9ab and is told on the design page in our words (ADR-0012). Its fill parameters are the interoperability contract, and StitchCraft's tatami fill has each of them. Run as a black box on that dog's 107 fills with an offset of -0.6 mm, the tool makes one piece of 1,767 mm² that sews in 1,418 stitches at a stitch length of 3 mm. An underlay sewn with the top's role would count as cover in the measures of REQ-AUTO-025 to REQ-AUTO-027."
+milestone = "M13"
+status = "planned"
+
+[[req]]
+id = "REQ-AUTO-029"
+area = "auto"
+level = "L2"
+statement = "An automatic shape reaches the overlap, `auto_overlap_mm`, 1 mm by default, under each shape sewn after it from where it touches that shape, and no further than that shape. An area grows, as REQ-AUTO-007 grew it by 0.4 mm. A satin column of a line or of a part (REQ-AUTO-016) sews past a rail by the overlap where a shape sewn after it runs along that rail for more than half the rail's length, and by its pull compensation, `auto_pull_compensation_mm`, 0.4 mm, past a rail with no such shape, so that it grows no wider over a colour sewn before it or over fabric. An area is cut away under a shape sewn after it that covers part of it, the overlap inside that shape's edge, and a shape narrower than twice the overlap lies on the area whole. A stitch under a shape sewn after it is covered, so the overlap lays no thread astray (REQ-AUTO-026)."
+rationale = "Shapes that only meet show fabric between them once the thread pulls in, and 0.4 mm closed the edges of fills but left 7 to 17 gaps a thread wide on each traced dog. Digitizing guides extend the colour sewn first under its neighbour by 1 to 1.5 mm on large areas and about 1 mm on small ones, and mySewnet's manual says that compensation doesn't prevent gaps between neighbours and that overlap does (the owner's research, 2026-11-09). With today's setting raised to 1 mm, which also widens every satin column on both sides, the 4 dogs' 44 gaps fell to 6, and at 1.5 mm to 2. Widening a column on both sides laid 26 to 37 stitches astray on each dog at 1 mm, so a column reaches only under a shape sewn after it."
+milestone = "M13"
+status = "planned"
