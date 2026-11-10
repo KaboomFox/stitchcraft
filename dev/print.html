@@ -36,10 +36,10 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-f4c2b644.js";
+            window.path_to_searchindex_js = "searchindex-d0853a6a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="toc-143ab13b.js"></script>
+        <script src="toc-e1a9b9d0.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -825,7 +825,7 @@ holds Ink/Stitch’s settings for that kind of stitch, and the object shows its 
 art. The thread is the colour of the object’s fill for a fill, and of its stroke for a stroke or a satin
 column.</p>
 <p>From VectorCraft 0.14 each setting has a label and its unit, in the sections of the
-<a href="#parameters-14">parameter reference</a>. Rest the pointer on a label for its help, or press the
+<a href="#parameters-15">parameter reference</a>. Rest the pointer on a label for its help, or press the
 button after the field for its page in the reference. A setting shows only when it applies: a satin’s
 staggers show for staggered splits. VectorCraft before 0.14 lists every setting, each under its Ink/Stitch
 name.</p>
@@ -1303,6 +1303,7 @@ stroke or the fill of a shape, and each sews in its own thread colour.</p>
 <tr><td><a href="#contour-fill">Contour fill</a></td><td>areas, in rings that follow the outline inward, sewn as one line</td><td>now</td></tr>
 <tr><td><a href="#meander-fill">Meander fill</a></td><td>areas, in one line that wanders along the sides of a tiling</td><td>now</td></tr>
 <tr><td><a href="#circular-fill">Circular fill</a></td><td>areas, in a spiral round their middle</td><td>now</td></tr>
+<tr><td><a href="#guided-fill">Guided fill</a></td><td>areas, in rows that bend with a guide line drawn beside them</td><td>now</td></tr>
 <tr><td><a href="#tartan-fill">Tartan fill</a></td><td>areas, in a plaid of rows that weave the colours of a sett’s stripes, each in its own thread</td><td>now</td></tr>
 <tr><td><a href="#linear-gradient-fill">Linear gradient fill</a></td><td>areas, in rows that blend the colours of a linear gradient, each in its own thread</td><td>now</td></tr>
 <tr><td><a href="#cross-stitch">Cross stitch</a></td><td>areas, in crosses on a grid, as counted cross stitch and Ink/Stitch’s cross-stitch fonts</td><td>now</td></tr>
@@ -2294,6 +2295,112 @@ pieces, and its underlay and expanding</li>
 <li><a href="#common-parameters">the settings every element shares</a>, the random seed among them</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="guided-fill"><a class="header" href="#guided-fill">Guided fill</a></h1>
+<!-- stitch-types: guided_fill -->
+<p>A guided fill covers an area with rows that bend with a line you draw beside it, the guide. Where a tatami
+fill lays straight rows, a leaf or a ribbon reads better with rows that run along its shape, and the guide
+says how they run. The fill copies the guide across the area a row spacing at a time, and each copy inside
+the area is a row. Set a fill’s <code>fill_method</code> to <code>guided_fill</code> for it.</p>
+<p>Its settings are set as every stitch type’s are (<a href="user/stitches#setting-parameters">setting parameters</a>).</p>
+<p>Here is the leaf of <code>docs/fixtures/guided.svg</code>, 42 mm long, grouped with an S-shaped guide along its
+middle, sewn as a guided fill with its defaults:</p>
+<!-- shot: guided-fill -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: center">Guided fill</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/guided-fill-1.png" alt="A green leaf 42 mm long sewn as a guided fill over its underlay. Its rows are copies of an S-shaped line along its middle, 0.25 mm apart, so they bend with it from tip to tip, Guided fill"><span class="img-wrapper"><img src="images/generated/guided-fill-1.png" alt="A green leaf 42 mm long sewn as a guided fill over its underlay. Its rows are copies of an S-shaped line along its middle, 0.25 mm apart, so they bend with it from tip to tip, Guided fill"></span></label></td></tr>
+</tbody>
+</table>
+</div>
+<!-- /shot -->
+<h2 id="the-guide"><a class="header" href="#the-guide">The guide</a></h2>
+<p>The guide is a line grouped with the fill and marked as one. It is never sewn.</p>
+<ul>
+<li><strong>In an SVG file</strong>, a guide line is a path that Ink/Stitch’s guide-line marker starts, as for a
+<a href="#guides">ripple stitch</a>. The fill takes the first such line of its group that isn’t a
+satin column, since satin guides steer ripple stitches.</li>
+<li><strong>In a VectorCraft document</strong>, name a path grouped with the fill <code>stitch:guide</code>, as for a ripple stitch.
+VectorCraft runs a live effect on its object alone, without the paths beside it. The preview then sews the
+tatami fill below, and <code>stitch export</code> sews the rows.</li>
+</ul>
+<p>Draw the guide the way the rows should run. Only its first subpath counts. A guide that crosses itself is
+cut where it does, and its loops are left out. One that closes on itself is opened just before its last
+point. It needn’t reach across the fill: each copy is lengthened straight on at both ends, past the area.</p>
+<p>A fill without a guide, or with one that starts and ends at one point, is sewn as a
+<a href="#tatami-fill">tatami fill</a> with its own settings, and <code>SC-W0331</code> says so.</p>
+<h2 id="the-copies"><a class="header" href="#the-copies">The copies</a></h2>
+<p>The copies move a row spacing apart, square to the line between the guide’s ends, turned clockwise from
+it. With <code>guided_fill_angle</code> set, they move at that angle instead, in degrees clockwise from horizontal.
+An angle near the guide’s own direction moves them along it more than across it, and brings the rows closer
+together than <code>row_spacing_mm</code>. These pictures leave the underlay out:</p>
+<!-- shot: guided-angle -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: center">Square to the guide</th><th style="text-align: center">Copy angle 45°</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/guided-angle-1.png" alt="A leaf 42 mm long sewn without underlay as a guided fill, its rows copies of an S-shaped line along its middle, 1 mm apart, Square to the guide"><span class="img-wrapper"><img src="images/generated/guided-angle-1.png" alt="A leaf 42 mm long sewn without underlay as a guided fill, its rows copies of an S-shaped line along its middle, 1 mm apart, Square to the guide"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/guided-angle-2.png" alt="A leaf 42 mm long sewn without underlay as a guided fill, its rows copies of an S-shaped line along its middle, 1 mm apart, Copy angle 45°"><span class="img-wrapper"><img src="images/generated/guided-angle-2.png" alt="A leaf 42 mm long sewn without underlay as a guided fill, its rows copies of an S-shaped line along its middle, 1 mm apart, Copy angle 45°"></span></label></td></tr>
+</tbody>
+</table>
+</div>
+<!-- /shot -->
+<p><code>smoothness_mm</code> rounds each copy’s corners off before it is sewn, over about 5 times that length, as it
+rounds a <a href="#contour-fill">contour fill</a>’s path off.</p>
+<p>The copies can miss a part of the area thinner than the row spacing between 2 of them. That part is sewn as
+a tatami fill whose rows run at the angle of the line between the guide’s ends, and <code>SC-W0332</code> says so.</p>
+<h2 id="stitch-positions"><a class="header" href="#stitch-positions">Stitch positions</a></h2>
+<p>Each row starts a <code>staggers</code>-th of a stitch further along than the row before, so that the needle points of
+neighbouring rows don’t line up, as a tatami fill’s don’t. <code>stitch_position_method</code> says how the stitches
+then lie along each row:</p>
+<ul>
+<li><strong>Flexible</strong>, the default, spreads each row’s stitches evenly between its corners, at most
+<code>max_stitch_length_mm</code> each. Most stitches are as long as each other, and the stagger holds near the
+start of each row.</li>
+<li><strong>Flexible (stagger)</strong> sews whole stitches of <code>max_stitch_length_mm</code> from where the stagger starts the
+row, and a shorter one at its end. The stagger then lasts all along the rows.</li>
+</ul>
+<!-- shot: guided-stagger -->
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th style="text-align: center">Flexible</th><th style="text-align: center">Flexible (stagger)</th></tr>
+</thead>
+<tbody>
+<tr><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/guided-stagger-1.png" alt="A leaf 42 mm long sewn without underlay as a guided fill, its rows 1 mm apart in stitches of 4 mm staggered over 4 rows, Flexible"><span class="img-wrapper"><img src="images/generated/guided-stagger-1.png" alt="A leaf 42 mm long sewn without underlay as a guided fill, its rows 1 mm apart in stitches of 4 mm staggered over 4 rows, Flexible"></span></label></td><td style="text-align: center"><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/guided-stagger-2.png" alt="A leaf 42 mm long sewn without underlay as a guided fill, its rows 1 mm apart in stitches of 4 mm staggered over 4 rows, Flexible (stagger)"><span class="img-wrapper"><img src="images/generated/guided-stagger-2.png" alt="A leaf 42 mm long sewn without underlay as a guided fill, its rows 1 mm apart in stitches of 4 mm staggered over 4 rows, Flexible (stagger)"></span></label></td></tr>
+</tbody>
+</table>
+</div>
+<!-- /shot -->
+<p>With <code>enable_random_stitch_length</code> the stitches vary in length, as a running stitch’s do, and
+<code>random_seed</code> chooses them.</p>
+<h2 id="underlay-travel-and-bean-stitch"><a class="header" href="#underlay-travel-and-bean-stitch">Underlay, travel and bean stitch</a></h2>
+<p>Before its rows, each part of the fill sews the tatami fill’s underlay, on by default
+(<a href="#underlay">tatami fill</a>). <code>expand_mm</code> grows the area before the rows are laid over it. The
+rows are sewn in the order a tatami fill’s rows with the same ends would be, and the needle runs between
+them under the rows sewn later, or with <code>underpath</code> off along the outline. <code>skip_last</code> leaves out the last
+needle point of each row. Bean stitch sews each stitch of the rows back and forth, but not the travel
+between them.</p>
+<h2 id="not-sewn-yet"><a class="header" href="#not-sewn-yet">Not sewn yet</a></h2>
+<p>Copying the guide is the default of Ink/Stitch’s <code>guided_fill_strategy</code>, and the one StitchCraft sews so
+far. Ink/Stitch can also offset the guide by a row spacing at a time, or grow rings out from it. Those come
+with a later version. Until then a fill set to either is left out, and <code>SC-W0011</code> names it.</p>
+<h2 id="parameters-11"><a class="header" href="#parameters-11">Parameters</a></h2>
+<p>The reference gives each setting’s range and default:</p>
+<ul>
+<li><a href="#fill-parameters">fill</a>, which chooses the fill method</li>
+<li><a href="#guided-parameters">guided fill</a>, its copy angle and stitch positions</li>
+<li><a href="#tatami-parameters">tatami fill</a>, its row spacing, staggers, the needle’s way between rows,
+and its underlay and expanding</li>
+<li><a href="#path-fill-parameters">path fills</a>, its smoothness and bean stitch</li>
+<li><a href="#running-parameters">running stitch</a>, its tolerance and random lengths</li>
+<li><a href="#common-parameters">the settings every element shares</a>, the longest stitch and the random
+seed among them</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="tartan-fill"><a class="header" href="#tartan-fill">Tartan fill</a></h1>
 <!-- stitch-types: tartan_fill -->
 <p>A tartan fill covers an area with a plaid. Stripes of colour run across it one way, the warp, and down it
@@ -2452,7 +2559,7 @@ filter draws it too.</p>
 <!-- shot: testsheet-ts-17b -->
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-17b.png" alt="TS-17B as it will sew: 6 tartans and 3 linear gradients 40 mm square in 3 rows. The tartans are woven in rows that slant across their stripes. In the top row, left to right, are stripes of red, white, Prussian blue and gold mirrored at their ends, stripes of green, black and white repeated, and a warp of red and black under a weft of blue and white. Below are blue and black stripes with thin white and red lines along their middles, stripes of gold, black and tangerine turned 30°, and stripes of blue, white, red and black in a herringbone, their rows in narrow upright bands slanting one way and then the other. In the bottom row, red blends into blue up to the right and gold through white into green down to the right. The last square’s tangerine thins out to bare fabric, and Prussian blue grows from it down to the left."><span class="img-wrapper"><img src="images/generated/testsheet-ts-17b.png" alt="TS-17B as it will sew: 6 tartans and 3 linear gradients 40 mm square in 3 rows. The tartans are woven in rows that slant across their stripes. In the top row, left to right, are stripes of red, white, Prussian blue and gold mirrored at their ends, stripes of green, black and white repeated, and a warp of red and black under a weft of blue and white. Below are blue and black stripes with thin white and red lines along their middles, stripes of gold, black and tangerine turned 30°, and stripes of blue, white, red and black in a herringbone, their rows in narrow upright bands slanting one way and then the other. In the bottom row, red blends into blue up to the right and gold through white into green down to the right. The last square’s tangerine thins out to bare fabric, and Prussian blue grows from it down to the left."></span></label></p>
 <!-- /shot -->
-<h2 id="parameters-11"><a class="header" href="#parameters-11">Parameters</a></h2>
+<h2 id="parameters-12"><a class="header" href="#parameters-12">Parameters</a></h2>
 <p>The reference gives each setting’s range and default:</p>
 <ul>
 <li><a href="#tartan-parameters">tartan</a>, the sett, the rows’ angle, the rows per thread, the herringbone
@@ -2672,7 +2779,7 @@ element, from end to end through the middles of the crosses on the way. The cros
 stitches.</p>
 <p>A grid so fine that a cross’s shortest stitches are shorter than the machine’s shortest stitch loses some of
 its needle points, and its crosses their shape: <code>SC-W0321</code> says so. A cross stitch fill has no underlay.</p>
-<h2 id="parameters-12"><a class="header" href="#parameters-12">Parameters</a></h2>
+<h2 id="parameters-13"><a class="header" href="#parameters-13">Parameters</a></h2>
 <p>The reference gives each setting’s range and default:</p>
 <ul>
 <li><a href="#cross-parameters">cross stitch</a>, the grid, the coverage and the crosses</li>
@@ -2954,7 +3061,7 @@ work. When the design has a stop position, the frame moves there before each sto
 test sheet TS-02 checks what the reference machine does. DST has no trim command. StitchCraft writes a trim
 there as 3 short jumps that end where they started, and a DST machine set to cut at 3 jumps in a row
 cuts there. The <a href="#machine-formats">machine formats</a> design says how each format records a trim.</p>
-<h2 id="parameters-13"><a class="header" href="#parameters-13">Parameters</a></h2>
+<h2 id="parameters-14"><a class="header" href="#parameters-14">Parameters</a></h2>
 <p><a href="#common-parameters">Common parameters</a> lists each of these settings with its range and
 default.</p>
 <div style="break-before: page; page-break-before: always;"></div>
@@ -3023,7 +3130,7 @@ it plans for, and warns beyond a profile’s comfort zone where the profile has 
 <tr><td><a href="#font-settings">Font settings</a></td><td>generated from the font reader’s table of the keys of <code>font.json</code></td><td>available</td></tr>
 <tr><td><a href="#glossary">Glossary</a></td><td>hand-written</td><td>available</td></tr>
 <tr><td><a href="#vectorcraft-compatibility">VectorCraft compatibility</a></td><td>generated from the compatibility gate’s record, <code>compat/supported.toml</code></td><td>available</td></tr>
-<tr><td><a href="#parameters-14">Parameters</a> (one page per stitch type)</td><td>generated from the parameter registry</td><td>available</td></tr>
+<tr><td><a href="#parameters-15">Parameters</a> (one page per stitch type)</td><td>generated from the parameter registry</td><td>available</td></tr>
 <tr><td><a href="#inkstitch-compatibility-contract">Ink/Stitch compatibility contract</a></td><td>generated from <code>conformance/inkstitch-params.toml</code> and the parameter registry</td><td>available</td></tr>
 </tbody>
 </table>
@@ -3691,11 +3798,10 @@ Arguments:
 <li>How long does the sheet take?</li>
 </ul>
 <h2 id="ts-17b--new-fills"><a class="header" href="#ts-17b--new-fills">TS-17B — New fills</a></h2>
-<p>130.0 × 130.0 mm · 45390 stitches, 35 jumps, 34 trims, 34 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>130.0 × 172.0 mm · 46419 stitches, 36 jumps, 35 trims, 35 colour changes, 0 stops · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
-<p>Drawn as a design, which VectorCraft’s Test Sheet filter draws too.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-17b.png" alt="TS-17B as it will sew: 6 tartans and 3 linear gradients 40 mm square in 3 rows. The tartans are woven in rows that slant across their stripes. In the top row, left to right, are stripes of red, white, Prussian blue and gold mirrored at their ends, stripes of green, black and white repeated, and a warp of red and black under a weft of blue and white. Below are blue and black stripes with thin white and red lines along their middles, stripes of gold, black and tangerine turned 30°, and stripes of blue, white, red and black in a herringbone, their rows in narrow upright bands slanting one way and then the other. In the bottom row, red blends into blue up to the right and gold through white into green down to the right. The last square’s tangerine thins out to bare fabric, and Prussian blue grows from it down to the left."><span class="img-wrapper"><img src="images/generated/testsheet-ts-17b.png" alt="TS-17B as it will sew: 6 tartans and 3 linear gradients 40 mm square in 3 rows. The tartans are woven in rows that slant across their stripes. In the top row, left to right, are stripes of red, white, Prussian blue and gold mirrored at their ends, stripes of green, black and white repeated, and a warp of red and black under a weft of blue and white. Below are blue and black stripes with thin white and red lines along their middles, stripes of gold, black and tangerine turned 30°, and stripes of blue, white, red and black in a herringbone, their rows in narrow upright bands slanting one way and then the other. In the bottom row, red blends into blue up to the right and gold through white into green down to the right. The last square’s tangerine thins out to bare fabric, and Prussian blue grows from it down to the left."></span></label></p>
-<p>Threads: Prussian Blue (unnamed, #0e1f7c), Red (unnamed, #ed171f), White (unnamed, #f0f0f0), Prussian Blue (unnamed, #0e1f7c), Deep Gold (unnamed, #e8a900), Black (unnamed, #000000), Emerald Green (unnamed, #00673e), Black (unnamed, #000000), White (unnamed, #f0f0f0), Blue (unnamed, #0a55a3), Red (unnamed, #ed171f), Black (unnamed, #000000), Blue (unnamed, #0a55a3), White (unnamed, #f0f0f0), Black (unnamed, #000000), Blue (unnamed, #0a55a3), Black (unnamed, #000000), White (unnamed, #f0f0f0), Red (unnamed, #ed171f), Tangerine (unnamed, #fe9e32), Deep Gold (unnamed, #e8a900), Black (unnamed, #000000), Tangerine (unnamed, #fe9e32), Black (unnamed, #000000), Red (unnamed, #ed171f), Black (unnamed, #000000), Blue (unnamed, #0a55a3), White (unnamed, #f0f0f0), Red (unnamed, #ed171f), Blue (unnamed, #0a55a3), Deep Gold (unnamed, #e8a900), White (unnamed, #f0f0f0), Emerald Green (unnamed, #00673e), Tangerine (unnamed, #fe9e32), Prussian Blue (unnamed, #0e1f7c).</p>
+<p>Threads: Prussian Blue (unnamed, #0e1f7c), Red (unnamed, #ed171f), White (unnamed, #f0f0f0), Prussian Blue (unnamed, #0e1f7c), Deep Gold (unnamed, #e8a900), Black (unnamed, #000000), Emerald Green (unnamed, #00673e), Black (unnamed, #000000), White (unnamed, #f0f0f0), Blue (unnamed, #0a55a3), Red (unnamed, #ed171f), Black (unnamed, #000000), Blue (unnamed, #0a55a3), White (unnamed, #f0f0f0), Black (unnamed, #000000), Blue (unnamed, #0a55a3), Black (unnamed, #000000), White (unnamed, #f0f0f0), Red (unnamed, #ed171f), Tangerine (unnamed, #fe9e32), Deep Gold (unnamed, #e8a900), Black (unnamed, #000000), Tangerine (unnamed, #fe9e32), Black (unnamed, #000000), Red (unnamed, #ed171f), Black (unnamed, #000000), Blue (unnamed, #0a55a3), White (unnamed, #f0f0f0), Red (unnamed, #ed171f), Blue (unnamed, #0a55a3), Deep Gold (unnamed, #e8a900), White (unnamed, #f0f0f0), Emerald Green (unnamed, #00673e), Tangerine (unnamed, #fe9e32), Prussian Blue (unnamed, #0e1f7c), Emerald Green (unnamed, #00673e).</p>
 <p>After sewing, check:</p>
 <ul>
 <li>Each sample is 40 mm square, trimmed after each colour. Top row, left to right, tartan fills: a sett of red, white, Prussian blue and deep gold, mirrored at its ends, then one of emerald green, black and white, repeated, then a warp of red and black under a weft of blue and white. Middle row: blue and black with a white stripe 0.5 mm wide and a red one 0.8 mm wide, each sewn as a run along its middle, then deep gold, black and tangerine turned 30° and scaled by 150 %, then blue, white, red and black in a herringbone 3 mm wide. Bottom row, linear gradient fills: red to blue up to the right, deep gold through white to emerald green down to the right, and tangerine to Prussian blue down to the left through a transparent stop.</li>
@@ -3704,6 +3810,7 @@ Arguments:
 <li>Do the runs lie flat along the middles of their stripes, on top of the fills, and do they show as lines of their own colour?</li>
 <li>Where the rows of one colour are joined along a stripe’s edge, does the join show?</li>
 <li>Seen from a step away, does each gradient’s colour change smoothly, with no step where one stop’s rows give way to the next’s? Where the transparent stop lies, do tangerine’s rows and blue’s thin out evenly to bare fabric?</li>
+<li>Fourth row, on the left: a leaf from its bottom left tip to its top right one, sewn as a guided fill in emerald green over its underlay, trimmed after. Its rows are copies of an S-shaped line from tip to tip, 0.25 mm apart. Do the rows bend with the S, and do they keep their spacing round its bends? Where do they crowd or open up?</li>
 <li>How many times does the thread change, and how long does the sheet take? Each tartan sews its underlay in its own thread, then each colour once. Each gradient sews its underlay in its first colour, then each colour once.</li>
 </ul>
 <h2 id="ts-17c--ripples-routing-and-layers-satin-letters-and-a-network-of-lines-as-drawn-and-routed-crossing-columns-and-ripple-stitches-with-and-without-guides"><a class="header" href="#ts-17c--ripples-routing-and-layers-satin-letters-and-a-network-of-lines-as-drawn-and-routed-crossing-columns-and-ripple-stitches-with-and-without-guides">TS-17C — Ripples, routing and layers: satin letters and a network of lines, as drawn and routed, crossing columns, and ripple stitches with and without guides</a></h2>
@@ -3795,6 +3902,8 @@ Arguments:
 <tr><td><a href="#sc-w0328"><code>SC-W0328</code></a></td><td>Warning</td><td>Tartan stripe’s colour can’t be read; left out</td></tr>
 <tr><td><a href="#sc-w0329"><code>SC-W0329</code></a></td><td>Warning</td><td>Linear gradient fill without a linear gradient; its colour fades out</td></tr>
 <tr><td><a href="#sc-w0330"><code>SC-W0330</code></a></td><td>Warning</td><td>Gradient stop within 2 rows of the blend before; passed over</td></tr>
+<tr><td><a href="#sc-w0331"><code>SC-W0331</code></a></td><td>Warning</td><td>Guided fill without a guide line; sewn as a tatami fill</td></tr>
+<tr><td><a href="#sc-w0332"><code>SC-W0332</code></a></td><td>Warning</td><td>Guided fill’s copies of its guide meet no part; sewn as a tatami fill</td></tr>
 <tr><td><a href="#sc-w0401"><code>SC-W0401</code></a></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td></tr>
 <tr><td><a href="#sc-w0402"><code>SC-W0402</code></a></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised</td></tr>
 <tr><td><a href="#sc-w0403"><code>SC-W0403</code></a></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td></tr>
@@ -4271,6 +4380,26 @@ more. This stop lies within 2 rows of where the blend before it ends, so no blen
 blend starts a row later and blends from the colour before the stop, and the row between is left out,
 as Ink/Stitch sews it. A gradient whose start and end are one point puts all its stops at one row.</p>
 <p>The message names the stops. Move them at least 3 row spacings apart.</p>
+<h2 id="sc-w0331"><a class="header" href="#sc-w0331">SC-W0331</a></h2>
+<p><strong>Warning</strong> — Guided fill without a guide line; sewn as a tatami fill</p>
+<p>A guided fill’s rows are copies of its guide line, a line grouped with the fill and marked as one:
+a stroke with Ink/Stitch’s guide-line marker in an SVG file, or a path named <code>stitch:guide</code> in a
+VectorCraft document. This fill has none, or its guide starts and ends at one point once it is made
+one line, so it is sewn as a tatami fill with its own settings, its angle and the rest, as Ink/Stitch
+sews a guided fill without a guide. A satin column marked as a guide guides a ripple stitch, not a
+fill. VectorCraft’s live preview shows no marker to the fill effect, so it sews the tatami fill, and
+<code>stitch export</code> sews the rows.</p>
+<p>Group a line marked as a guide with the fill, drawn the way its rows should run.</p>
+<h2 id="sc-w0332"><a class="header" href="#sc-w0332">SC-W0332</a></h2>
+<p><strong>Warning</strong> — Guided fill’s copies of its guide meet no part; sewn as a tatami fill</p>
+<p>No copy of this guided fill’s guide line meets a part of the fill, so that part is sewn as a tatami
+fill whose rows run at the angle of the line between the guide’s ends, as Ink/Stitch falls back to
+one where its copies leave no line in a part. Where no copy meets the part at all, Ink/Stitch stops
+with an error instead. The copies move a row spacing at a time square to that line, or at <code>guided_fill_angle</code>, from
+the copy nearest the part outward, while they meet the part’s bounds. A copy angle near the guide’s
+own direction moves them along the guide, past a small part, and a guide far from a part can place
+its nearest copy beyond it.</p>
+<p>The message counts the parts. Draw the guide across the fill, or clear <code>guided_fill_angle</code>.</p>
 <h2 id="sc-w0401"><a class="header" href="#sc-w0401">SC-W0401</a></h2>
 <p><strong>Warning</strong> — Path too small for the shortest stitch; skipped</p>
 <p>A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
@@ -4954,7 +5083,7 @@ direction the font has.</p>
 </table>
 </div>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from the parameter registry (`stitchcraft-engine/src/registry.rs`) and the deviations ledger. Edit the declaration, not this page. -->
-<h1 id="parameters-14"><a class="header" href="#parameters-14">Parameters</a></h1>
+<h1 id="parameters-15"><a class="header" href="#parameters-15">Parameters</a></h1>
 <p>Every setting a design element can carry, by the key a design stores it under. A parameter that Ink/Stitch
 also has keeps Ink/Stitch’s key, meaning and default, so files move between the two tools unchanged
 (<a href="#inkstitch-compatibility-contract">compatibility contract</a>). Where StitchCraft reads or sews one
@@ -5009,10 +5138,11 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#satin-parameters">Satin parameters</a></td><td>34</td><td>Satin column, E-stitch, S-stitch, Zigzag satin</td></tr>
 <tr><td><a href="#pull-parameters">Pull parameters</a></td><td>2</td><td>Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill</td></tr>
 <tr><td><a href="#fill-parameters">Fill parameters</a></td><td>2</td><td>Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill</td></tr>
-<tr><td><a href="#tatami-parameters">Tatami parameters</a></td><td>15</td><td>Tatami fill, Contour fill, Meander fill, Circular fill, Linear gradient fill, Tartan fill</td></tr>
+<tr><td><a href="#tatami-parameters">Tatami parameters</a></td><td>15</td><td>Tatami fill, Contour fill, Meander fill, Circular fill, Guided fill, Linear gradient fill, Tartan fill</td></tr>
 <tr><td><a href="#contour-parameters">Contour parameters</a></td><td>4</td><td>Contour fill</td></tr>
 <tr><td><a href="#meander-parameters">Meander parameters</a></td><td>6</td><td>Meander fill</td></tr>
 <tr><td><a href="#cross-parameters">Cross parameters</a></td><td>8</td><td>Cross stitch</td></tr>
+<tr><td><a href="#guided-parameters">Guided parameters</a></td><td>3</td><td>Guided fill</td></tr>
 <tr><td><a href="#tartan-parameters">Tartan parameters</a></td><td>5</td><td>Tartan fill</td></tr>
 <tr><td><a href="#path-fill-parameters">Path fill parameters</a></td><td>3</td><td>Contour fill, Meander fill, Circular fill</td></tr>
 <tr><td><a href="#auto-parameters">Auto parameters</a></td><td>5</td><td>automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type</td></tr>
@@ -5073,6 +5203,8 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#gap_fill_rows"><code>gap_fill_rows</code></a></td><td>Gap-filling rows</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#grid_first"><code>grid_first</code></a></td><td>Grid first</td><td>Ripple parameters</td></tr>
 <tr><td><a href="#grid_size_mm"><code>grid_size_mm</code></a></td><td>Grid size</td><td>Ripple parameters</td></tr>
+<tr><td><a href="#guided_fill_angle"><code>guided_fill_angle</code></a></td><td>Copy angle</td><td>Guided parameters</td></tr>
+<tr><td><a href="#guided_fill_strategy"><code>guided_fill_strategy</code></a></td><td>Strategy</td><td>Guided parameters</td></tr>
 <tr><td><a href="#herringbone_width_mm"><code>herringbone_width_mm</code></a></td><td>Herringbone width</td><td>Tartan parameters</td></tr>
 <tr><td><a href="#join_style"><code>join_style</code></a></td><td>Join style</td><td>Ripple parameters</td></tr>
 <tr><td><a href="#join_style-1"><code>join_style</code></a></td><td>Join style</td><td>Contour parameters</td></tr>
@@ -5134,6 +5266,7 @@ numbers, <code>true</code>/<code>false</code>, strings and arrays instead, and <
 <tr><td><a href="#staggers-1"><code>staggers</code></a></td><td>Staggers</td><td>Ripple parameters</td></tr>
 <tr><td><a href="#staggers-2"><code>staggers</code></a></td><td>Staggers</td><td>Tatami parameters</td></tr>
 <tr><td><a href="#start_at_nearest_point"><code>start_at_nearest_point</code></a></td><td>Start at nearest point</td><td>Satin parameters</td></tr>
+<tr><td><a href="#stitch_position_method"><code>stitch_position_method</code></a></td><td>Stitch positions</td><td>Guided parameters</td></tr>
 <tr><td><a href="#stop_after"><code>stop_after</code></a></td><td>Stop after</td><td>Common parameters</td></tr>
 <tr><td><a href="#stop_at_ending_point"><code>stop_at_ending_point</code></a></td><td>Stop at the end position</td><td>Tartan parameters</td></tr>
 <tr><td><a href="#stroke_method"><code>stroke_method</code></a></td><td>Method</td><td>Stroke parameters</td></tr>
@@ -5334,7 +5467,7 @@ circular fill’s underlay sews its rows so, and a tartan fill its rows and its 
 <ul>
 <li><strong>Accepts:</strong> a length from 0.1 to 25 mm, or empty (0 or less counts as empty); for fills, a length from 0.1 to 25 mm, empty being the default</li>
 <li><strong>Default:</strong> empty, and <code>4</code> for fills</li>
-<li><strong>Applies to:</strong> Manual stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill, Circular fill, Linear gradient fill, Tartan fill</li>
+<li><strong>Applies to:</strong> Manual stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill, Circular fill, Guided fill, Linear gradient fill, Tartan fill</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
 <li><strong>DEV-PRM-003.</strong> An optional length below 0 is read as not set, as 0 is, and SC-W0102 says so. Ink/Stitch reads it as a length and sews what that gives. A min_jump_stitch_length_mm below 0 puts a locked jump between every 2 groups of stitches. Of max_stitch_length_mm, only a satin column’s deviates so. Ink/Stitch reads a manual stitch’s as not set at 0 or below too, and doesn’t warn.</li>
@@ -5351,7 +5484,7 @@ gets its own.</p>
 <ul>
 <li><strong>Accepts:</strong> a number or any text, or empty to derive it from the element</li>
 <li><strong>Default:</strong> empty</li>
-<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill, Circular fill, Linear gradient fill</li>
+<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill, Circular fill, Guided fill, Linear gradient fill</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
 <li><strong>DEV-RUN-005.</strong> A running stitch’s random lengths are drawn from StitchCraft’s generator (SplitMix64, seeded from random_seed, or from the element’s id when it has none), so the values differ from Ink/Stitch’s for the same seed. They are placed otherwise too. StitchCraft draws a stitch’s length and its span’s phase from 2 numbers, starts a phase only where a span starts, and scales each span’s stitches to end on its corner. Ink/Stitch draws one number for both a stitch’s length and its phase, starts a new phase after each stitch the tolerance shortened as well, and leaves what is left before a corner as the last stitch. Both key each span’s draws by its place in its subpath; StitchCraft’s keys hold the subpath’s place in the path too, where Ink/Stitch’s start again in each subpath, so subpaths drawn alike sew alike there.</li>
@@ -5404,7 +5537,7 @@ first length.</p>
 <ul>
 <li><strong>Accepts:</strong> 1 to 16 lengths from 0.1 to 25 mm, separated by spaces</li>
 <li><strong>Default:</strong> <code>2.5</code></li>
-<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill, Circular fill, Linear gradient fill, Tartan fill</li>
+<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill, Circular fill, Guided fill, Linear gradient fill, Tartan fill</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
 <li><strong>DEV-RUN-003.</strong> No running stitch is shorter than the shortest stitch, measured straight: corners keep their needle before other points do, a stitch a drop makes too long is split, and lengths below twice the shortest stitch are raised (SC-W0402). A satin column’s travel length is raised the same way, for the straight stitches that join its parts as for its line to the start and the end. Where a satin column’s parts meet nearer than the shortest stitch, the needle’s way between them gives way to the next part’s first point, and so does an underlay’s last point or the column’s start, which moves there; beside a top stitch’s end, which stays where it is, the next part’s points that near it give way instead. Ink/Stitch’s running stitch has no shortest stitch, and it joins a satin column’s parts as they are; its plan later drops stitches no longer than the element’s shortest stitch, 0.1 mm by default, keeping the stitch before. Beside an underlay’s last point, it drops the top stitches’ first needle points, and the column’s end is shorter.</li>
@@ -5419,7 +5552,7 @@ do a contour fill’s rings.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from 0.01 to 5 mm</li>
 <li><strong>Default:</strong> <code>0.2</code></li>
-<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill, Circular fill, Linear gradient fill, Tartan fill</li>
+<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill, Contour fill, Meander fill, Circular fill, Guided fill, Linear gradient fill, Tartan fill</li>
 <li><strong>Ink/Stitch:</strong> same key; StitchCraft differs:
 <ul>
 <li><strong>DEV-SAT-006.</strong> A satin column’s and a tatami fill’s running_stitch_tolerance_mm defaults to 0.2 mm, the value Ink/Stitch sews when a file sets none. Ink/Stitch’s settings window shows 0.1 mm.</li>
@@ -5433,7 +5566,7 @@ line their needle holes up, which avoids moiré patterns.</p>
 <ul>
 <li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
 <li><strong>Default:</strong> <code>false</code></li>
-<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Tatami fill, Contour fill, Circular fill, Linear gradient fill</li>
+<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Tatami fill, Contour fill, Circular fill, Guided fill, Linear gradient fill</li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <h3 id="random_stitch_length_jitter_percent"><a class="header" href="#random_stitch_length_jitter_percent"><code>random_stitch_length_jitter_percent</code></a></h3>
@@ -5444,7 +5577,7 @@ element’s <code>random_seed</code>.</p>
 <li><strong>Accepts:</strong> a percentage from 0 to 100</li>
 <li><strong>Default:</strong> <code>10</code></li>
 <li><strong>Shown when</strong> <a href="#enable_random_stitch_length"><code>enable_random_stitch_length</code></a> is <code>true</code></li>
-<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Tatami fill, Contour fill, Circular fill, Linear gradient fill</li>
+<li><strong>Applies to:</strong> Running stitch, Ripple stitch, Tatami fill, Contour fill, Circular fill, Guided fill, Linear gradient fill</li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from `RepeatParams` in the parameter registry. Edit the declaration, not this page. -->
@@ -6082,10 +6215,11 @@ its stroke settings say. The element before it still ends near it, as Ink/Stitch
 <h3 id="fill_method"><a class="header" href="#fill_method"><code>fill_method</code></a></h3>
 <p><strong>Fill method.</strong> The stitch the area is filled with. A tatami fill sews rows of running stitches across it, a
 contour fill rings that follow its outline inward, a meander fill one line that wanders through a
-tiling, a circular fill a spiral round its middle, a linear gradient fill rows in the colours of
-its linear gradient, and a tartan fill a plaid of rows in the colours of its sett. A fill set to Ink/Stitch’s legacy fill is sewn as a tatami fill without
-underlay (<code>SC-W0314</code>). The other methods arrive in later versions; until then an element set to
-one is skipped (<code>SC-W0011</code>).</p>
+tiling, a circular fill a spiral round its middle, a guided fill rows that follow a guide line, a
+linear gradient fill rows in the colours of its linear gradient, and a tartan fill a plaid of rows
+in the colours of its sett. A fill set to Ink/Stitch’s legacy fill is sewn as a tatami fill without
+underlay (<code>SC-W0314</code>). A guided fill’s strategies that offset its guide arrive in a later version,
+and until then an element set to one is skipped (<code>SC-W0011</code>).</p>
 <ul>
 <li><strong>Accepts:</strong> one of <code>tatami_fill</code> (Tatami fill), <code>circular_fill</code> (Circular fill), <code>contour_fill</code> (Contour fill), <code>cross_stitch</code> (Cross stitch), <code>guided_fill</code> (Guided fill), <code>linear_gradient_fill</code> (Linear gradient fill), <code>meander_fill</code> (Meander fill), <code>tartan_fill</code> (Tartan fill), <code>legacy_fill</code> (Legacy fill)</li>
 <li><strong>Default:</strong> <code>tatami_fill</code></li>
@@ -6101,7 +6235,7 @@ one is skipped (<code>SC-W0011</code>).</p>
 offset so that they never line up. Ink/Stitch’s default fill. A contour fill takes its row spacing,
 its expand and its underlay from these settings too, a meander fill its expand and its underlay, and a
 circular fill all but its gap-filling rows.</p>
-<p>Applies to Tatami fill, Contour fill, Meander fill, Circular fill, Linear gradient fill, Tartan fill.</p>
+<p>Applies to Tatami fill, Contour fill, Meander fill, Circular fill, Guided fill, Linear gradient fill, Tartan fill.</p>
 <h2 id="rows-2"><a class="header" href="#rows-2">Rows</a></h2>
 <h3 id="angle-2"><a class="header" href="#angle-2"><code>angle</code></a></h3>
 <p><strong>Angle.</strong> The direction of the rows, in degrees counter-clockwise from horizontal: 0 sews horizontal rows
@@ -6152,7 +6286,7 @@ the rows in from the edge.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from -10 to 10 mm</li>
 <li><strong>Default:</strong> <code>0</code></li>
-<li><strong>Applies to:</strong> Tatami fill, Contour fill, Meander fill, Circular fill, Linear gradient fill, Tartan fill, Cross stitch</li>
+<li><strong>Applies to:</strong> Tatami fill, Contour fill, Meander fill, Circular fill, Guided fill, Linear gradient fill, Tartan fill, Cross stitch</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
 <li><strong>DEV-FILL-008.</strong> Where fill_underlay_inset_mm, or a negative expand_mm, cuts a part into pieces, the pieces are sewn in order of their point of least x, and of least y among pieces level with each other, each with its least x within a nanometre of the one before. GEOS gives them in the order it walks its graph, which Ink/Stitch sews them in. Of 2,000 random polygons grown or shrunk, 85 gave 2 or more pieces, and 81 of those came in the same order; the 4 others had a sliver among their pieces. For pieces level at their least x, GEOS’s order turns on where the ring’s points start: 2 squares one above the other, shrunk apart, give the lower first when the ring is listed from the bottom and the upper first when it is listed from the top, and 310 of 400 random such shapes, listed from random points, gave the lower first. Each piece’s top rows start at the point nearest the needle after the piece before, where Ink/Stitch starts every piece’s top rows nearest the needle as it was before the first.</li>
@@ -6195,7 +6329,7 @@ along the fill’s edge.</p>
 <ul>
 <li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
 <li><strong>Default:</strong> <code>false</code></li>
-<li><strong>Applies to:</strong> Tatami fill, Circular fill, Linear gradient fill, Tartan fill</li>
+<li><strong>Applies to:</strong> Tatami fill, Circular fill, Guided fill, Linear gradient fill, Tartan fill</li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <h2 id="travel"><a class="header" href="#travel">Travel</a></h2>
@@ -6206,7 +6340,7 @@ show along the edge.</p>
 <ul>
 <li><strong>Accepts:</strong> true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false</li>
 <li><strong>Default:</strong> <code>true</code></li>
-<li><strong>Applies to:</strong> Tatami fill, Circular fill</li>
+<li><strong>Applies to:</strong> Tatami fill, Circular fill, Guided fill</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
 <li><strong>DEV-FILL-011.</strong> With underpath off, or in a part the gratings of lines miss, the needle travels between 2 points of one ring the shorter way round it, by length, and on a tie the way that does not pass the ring’s start. Ink/Stitch’s travel along the outline counts nodes instead: its graph has a node every CSS pixel along the outline’s sides, and at their corners and the rows’ ends, and its edges carry no length, so the way with fewer nodes is taken. That is about the shorter way, but a way past many short sides, as round a curve drawn in short pieces, has more nodes for its length, and the way with fewer nodes can be the longer.</li>
@@ -6389,6 +6523,44 @@ other and back. 0 sews it as a running stitch.</p>
 <li><strong>Default:</strong> <code>3</code></li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
+<div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from `GuidedParams` in the parameter registry. Edit the declaration, not this page. -->
+<h1 id="guided-parameters"><a class="header" href="#guided-parameters">Guided parameters</a></h1>
+<p>Guided fill: rows that follow a guide line drawn with the fill, copied across its area. The guide is a
+line grouped with the fill and marked as one: Ink/Stitch’s guide-line marker on a stroke in an SVG
+file, or a path named <code>stitch:guide</code> in a VectorCraft document. A fill without one sews as a tatami
+fill (<code>SC-W0331</code>).</p>
+<p>Applies to Guided fill.</p>
+<h2 id="guided-fill-1"><a class="header" href="#guided-fill-1">Guided fill</a></h2>
+<h3 id="guided_fill_strategy"><a class="header" href="#guided_fill_strategy"><code>guided_fill_strategy</code></a></h3>
+<p><strong>Strategy.</strong> How the rows follow the guide. Copy moves copies of the guide across the fill, a row spacing
+apart. Ink/Stitch’s parallel offset and buffer arrive in a later version, and until then a fill set
+to one is skipped (<code>SC-W0011</code>).</p>
+<ul>
+<li><strong>Accepts:</strong> one of <code>0</code> (Copy), or one of the 2 other values kept for designs that name them, read as the help above says: <code>1</code>, <code>2</code></li>
+<li><strong>Default:</strong> <code>0</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="guided_fill_angle"><a class="header" href="#guided_fill_angle"><code>guided_fill_angle</code></a></h3>
+<p><strong>Copy angle.</strong> The direction the guide’s copies move in, in degrees clockwise from horizontal as the drawing shows
+it. Empty, they move square to the line between the guide’s ends. A direction near the guide’s own
+brings the rows closer together than the row spacing, and the copies then reach only as far as the
+guide is long.</p>
+<ul>
+<li><strong>Accepts:</strong> an angle in degrees, or empty</li>
+<li><strong>Default:</strong> empty</li>
+<li><strong>Shown when</strong> <a href="#guided_fill_strategy"><code>guided_fill_strategy</code></a> is <code>0</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
+<h3 id="stitch_position_method"><a class="header" href="#stitch_position_method"><code>stitch_position_method</code></a></h3>
+<p><strong>Stitch positions.</strong> Where the needle points lie along each row. Flexible spreads a row’s stitches evenly between its
+corners. Flexible (stagger) sews whole stitches of the longest stitch from where the row’s stagger
+starts it, round its corners, and the last one shorter, so that the rows’ needle points keep their
+stagger.</p>
+<ul>
+<li><strong>Accepts:</strong> one of <code>flexible</code> (Flexible), <code>flexible_stagger</code> (Flexible (stagger))</li>
+<li><strong>Default:</strong> <code>flexible</code></li>
+<li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
+</ul>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from `CrossParams` in the parameter registry. Edit the declaration, not this page. -->
 <h1 id="cross-parameters"><a class="header" href="#cross-parameters">Cross parameters</a></h1>
 <p>Cross stitch: a cross in each cell of a grid laid over the fill, where the fill covers enough of the
@@ -6564,7 +6736,7 @@ path as it is. A contour fill’s spirals are not smoothed.</p>
 <ul>
 <li><strong>Accepts:</strong> a length from 0 to 100 mm</li>
 <li><strong>Default:</strong> <code>0</code></li>
-<li><strong>Applies to:</strong> Contour fill, Meander fill</li>
+<li><strong>Applies to:</strong> Contour fill, Meander fill, Guided fill</li>
 <li><strong>Ink/Stitch:</strong> same key and default; StitchCraft differs:
 <ul>
 <li><strong>DEV-FILL-017.</strong> Before inner to outer’s path is smoothed, StitchCraft’s running stitch cuts it into points 5 times smoothness_mm apart, a point on each corner, where Ink/Stitch’s evenly spaced points may cut a corner by up to twice the smoothness, as for a tatami fill’s travel (DEV-FILL-007). The smoothed path is then cut where its rings began, at the same share of its length, and each piece is a span of the running stitch. The path lies where Ink/Stitch’s does but takes more stitches: TS-11B’s leaf, smoothed by 0.5 mm, takes 973 where its rings unsmoothed take 903, against Ink/Stitch’s 830 and 828, 17 % more than Ink/Stitch’s where the sheet’s samples that are not smoothed take 2 to 12 % more.</li>
@@ -6590,7 +6762,7 @@ tartan fill sews its runs so, its rows and its travel once.</p>
 <ul>
 <li><strong>Accepts:</strong> 1 to 16 whole numbers from 0 to 10, separated by spaces</li>
 <li><strong>Default:</strong> <code>0</code></li>
-<li><strong>Applies to:</strong> Contour fill, Meander fill, Circular fill, Tartan fill</li>
+<li><strong>Applies to:</strong> Contour fill, Meander fill, Circular fill, Guided fill, Tartan fill</li>
 <li><strong>Ink/Stitch:</strong> same key, meaning and default</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div><!-- Generated by `cargo xtask docs` from `AutoParams` in the parameter registry. Edit the declaration, not this page. -->
@@ -7489,7 +7661,7 @@ every ring. Parts of 3 square CSS pixels (0.21 mm²) or less are left out, with 
 <p>A centre line is made into a <code>Satin</code> of its own, its rails offset from the line by the stroke’s width and
 join (<code>stitchcraft_engine::normalize::centre_line</code>, since M4.9). How rails and rungs are recognised from
 a host path, and made from a centre line, is part of the <a href="#satin-generators">satin design</a>.</p>
-<h2 id="parameters-15"><a class="header" href="#parameters-15">Parameters</a></h2>
+<h2 id="parameters-16"><a class="header" href="#parameters-16">Parameters</a></h2>
 <p><code>ParamSet</code> maps registry keys to typed values; generators receive <em>typed views</em>
 (<code>TatamiParams { row_spacing: Mm, angle: Deg, … }</code>) produced by the registry. See
 <a href="#parameter-registry">parameter registry</a>.</p>
@@ -7748,6 +7920,7 @@ version and a registry schema version arrive with the first release, together wi
 <tr><td><code>OptionalLengthPair</code>, <code>OptionalPercentPair</code></td><td><code>Option&lt;[Mm; 2]&gt;</code>, <code>Option&lt;[f64; 2]&gt;</code></td><td>as <code>LengthPair</code> and <code>PercentPair</code>, or empty: the setting then comes from another one, as a zigzag underlay’s inset comes from the contour’s. 0 is a value, as Ink/Stitch reads it</td><td><code>float</code>, unit <code>mm (each side)</code> or <code>% (each side)</code>, no default</td></tr>
 <tr><td><code>PercentList</code></td><td><code>Vec&lt;f64&gt;</code></td><td>1 to 16 percentages, each in range (levels like <code>"15 30"</code>)</td><td><code>float</code>, unit <code>%</code>, read as a list</td></tr>
 <tr><td><code>CountList</code></td><td><code>Vec&lt;u32&gt;</code></td><td>1–16 whole numbers, each in range</td><td><code>string</code>/<code>int</code> lists</td></tr>
+<tr><td><code>OptionalAngle</code></td><td><code>Option&lt;f64&gt;</code></td><td>an <code>Angle</code>, or empty: a guided fill’s copies then move square to its guide, as Ink/Stitch reads an empty <code>guided_fill_angle</code></td><td><code>float</code> or <code>null</code>, unit <code>deg</code>, no default; a VectorCraft dialog doesn’t declare it</td></tr>
 <tr><td><code>OptionalAngleList</code></td><td><code>Option&lt;Vec&lt;f64&gt;&gt;</code></td><td>1 to 16 angles, each read as an <code>Angle</code>. Empty, the setting comes from another one, as a fill’s underlay angles come from its angle</td><td><code>float</code>, unit <code>deg</code>, read as a list, no default</td></tr>
 <tr><td><code>Text</code></td><td><code>String</code></td><td>stripped of the white space round it, as Ink/Stitch strips it, then at most 4,096 bytes. A grammar of its own, such as a custom lock’s, is checked where it is used</td><td><code>string</code></td></tr>
 </tbody>
@@ -7897,7 +8070,7 @@ refused (<code>DEV-PRM-001</code>).</p>
 <tr><th style="text-align: left">Output</th><th style="text-align: left">Generated by</th><th style="text-align: left">Checked by</th><th style="text-align: left">Since</th></tr>
 </thead>
 <tbody>
-<tr><td style="text-align: left">The reference pages, the <a href="#parameters-14">index</a> and one page per declaration (<code>docs/src/user/reference/params/*.md</code>), with the deviations ledger’s entries</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left"><code>cargo xtask docs --check</code>, which fails on a stale page and on a page left from a declaration since removed (<code>cargo xtask docs</code> deletes those)</td><td style="text-align: left">M3.1</td></tr>
+<tr><td style="text-align: left">The reference pages, the <a href="#parameters-15">index</a> and one page per declaration (<code>docs/src/user/reference/params/*.md</code>), with the deviations ledger’s entries</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left"><code>cargo xtask docs --check</code>, which fails on a stale page and on a page left from a declaration since removed (<code>cargo xtask docs</code> deletes those)</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left"><code>docs/src/user/reference/params.schema.json</code>: the parameters as JSON values (numbers, booleans, strings, arrays, <code>null</code> for empty), for editors, presets and JSON hosts</td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left">same</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left">The <em>StitchCraft</em> column of the <a href="#inkstitch-compatibility-contract">Ink/Stitch compatibility contract</a></td><td style="text-align: left"><code>cargo xtask docs</code></td><td style="text-align: left">same, plus the cross-checks above</td><td style="text-align: left">M3.1</td></tr>
 <tr><td style="text-align: left">VectorCraft manifests, one for each stitch family’s module, with each parameter’s label, unit, section, help, help page and the values that show it</td><td style="text-align: left">at runtime from the registry, when VectorCraft asks a module for its manifest (<code>stitchcraft-vc-plugin</code>’s <code>manifest</code> and <code>dialog</code>)</td><td style="text-align: left">plug-in tests validate them against VectorCraft’s manifest rules, <code>cargo xtask docs --check</code> finds each help page, the contract tests install them in VectorCraft’s host, and the window probe checks the dialogs’ rows</td><td style="text-align: left">M6.2, and the dialogs M6.10</td></tr>
@@ -8075,6 +8248,8 @@ another.</p>
 <tr><td><code>SC-W0328</code></td><td>Warning</td><td>Tartan stripe’s colour can’t be read; left out (as Ink/Stitch leaves it)</td><td>M10</td></tr>
 <tr><td><code>SC-W0329</code></td><td>Warning</td><td>Linear gradient fill without a linear gradient; its colour fades out</td><td>M10</td></tr>
 <tr><td><code>SC-W0330</code></td><td>Warning</td><td>Gradient stop within 2 rows of the blend before; passed over</td><td>M10</td></tr>
+<tr><td><code>SC-W0331</code></td><td>Warning</td><td>Guided fill without a guide line; sewn as a tatami fill (also for a guide that starts and ends at one point, with the fill’s own settings, as Ink/Stitch sews one without a guide)</td><td>M10</td></tr>
+<tr><td><code>SC-W0332</code></td><td>Warning</td><td>Guided fill’s copies of its guide meet no part; sewn as a tatami fill (that part, at the angle of the guide’s ends, the fallback Ink/Stitch has for a part its copies meet and the cut leaves empty, while it stops with an error where the copies miss the part, <code>DEV-FILL-034</code>)</td><td>M10</td></tr>
 <tr><td><code>SC-W0401</code></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td><td>M3</td></tr>
 <tr><td><code>SC-W0402</code></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest</td><td>M3</td></tr>
 <tr><td><code>SC-W0403</code></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td><td>M3</td></tr>
@@ -8407,11 +8582,13 @@ where Ink/Stitch renames them only in the files it updates and sews the old symb
 M10.11 the adapter reads guide lines and anchor lines, as Ink/Stitch at <code>d59c9ab</code> finds them
 (<code>REQ-RIP-012</code> to <code>REQ-RIP-014</code>). Ink/Stitch looks for a shape’s helpers among the other children of its
 group and nowhere else, so the adapter does too. A guide line or an anchor line is a shape with a stroke,
-hidden or not, whose <code>style</code> attribute starts it with Ink/Stitch’s marker. The guide is the first satin
-column among the guide lines, its <code>satin_column</code> on, or else the first guide line. The anchor line is the
-first anchor line that isn’t a satin column. Each goes to every element of the shape under the transforms
-above it. The guide keeps its stroke’s width and join and its settings, and the anchor line gives the
-start and the end of its first subpath (<a href="#guided-ripples">ripple stitch</a>). A guide line or an
+hidden or not, whose <code>style</code> attribute starts it with Ink/Stitch’s marker. A stroke’s guide is the first
+satin column among the guide lines, its <code>satin_column</code> on, or else the first guide line. From M10.9 a
+fill’s guide is the first guide line that is no satin column, as Ink/Stitch’s fill looks past satin
+guides (<code>REQ-SVG-015</code>, <a href="#the-guide-line">guided fill</a>). The anchor line is the first
+anchor line that isn’t a satin column. Each goes to the shape’s elements under the transforms above it.
+The guide keeps its stroke’s width and join and its settings, and the anchor line gives the start and the
+end of its first subpath (<a href="#guided-ripples">ripple stitch</a>). A guide line or an
 anchor line in no group steers nothing. Ink/Stitch’s pattern helpers aren’t applied yet.</li>
 </ul>
 <p><code>SC-W0802</code> reports a connector that ties no command, a helper path that isn’t applied or steers nothing, an
@@ -8681,13 +8858,19 @@ underlay, reading the running stitch’s tolerance and random lengths for its pa
 and sews one path through it after the same underlay (<a href="#meander-fill-1">fills</a>). A
 circular fill, sewn from M7.9, sews a spiral round the middle of each part after that underlay too, and
 routes the spiral’s pieces as a tatami fill routes its rows (<a href="#circular-fill-1">fills</a>).
+A guided fill, sewn from M10.9, copies its guide line across each part after that underlay, and routes the
+lines its copies leave inside the part as the circular fill routes its pieces
+(<a href="#guided-fill-2">guided fill</a>). Its strategy is read first: until M10.10 one that offsets the guide
+skips the element, and its other settings are not read. Without a guide it can use, it sews the tatami fill
+its settings make, which the generate step reads too, saying only what reading them as a guided fill’s
+didn’t. A guided fill offers the element before it its area, as a tatami fill does.
 A cross stitch fill, sewn from M10.1, sews a cross in each cell of a grid that each part covers enough of,
 with no underlay, the crosses that meet in one run. From M10.2 it sews each of Ink/Stitch’s 12 methods, its
 half crosses in rows routed as a tatami fill’s (<a href="#cross-stitch-1">cross stitch</a>). A ripple
 stitch, sewn from M10.8, sews lines along a column or towards a target point as one running stitch, and
 from M10.11 copies along a guide, a grid across them, and the pieces its clips leave, routed
 (<a href="#ripple-stitch-m108-m1011">ripple stitch</a>). Every stroke method is then sewn. The
-other fill methods are skipped with <code>SC-W0011</code> until their milestones. An element whose parameters are
+linear gradient fill is skipped with <code>SC-W0011</code> until its milestone. An element whose parameters are
 wrong (<code>SC-E0101</code>) is skipped too, and the rest of the design still plans.</p>
 <p>Each element is generated with the shortest stitch for it: the larger of the machine’s (the profile’s
 <code>min_stitch</code>) and the element’s <code>min_stitch_length_mm</code>, or the design’s shortest stitch when the element
@@ -8765,8 +8948,9 @@ the toggle.</li>
 <li><strong>What is read first.</strong> Each element’s toggle, trim, stop and threads are read from its settings alone,
 before any element is generated. So are whether its settings read, by the registry’s declarations of
 what its stitch type reads, and whether it has an underlay. A satin column has one with one of its 3
-underlays on. A tatami, contour, meander, circular or tartan fill has one with <code>fill_underlay</code> on, unless
-it is set to Ink/Stitch’s legacy fill or not to be sewn. A tartan with an underlay sews it in its own
+underlays on. A tatami, contour, meander, circular, guided or tartan fill has one with <code>fill_underlay</code> on,
+unless it is set to Ink/Stitch’s legacy fill or not to be sewn, or a guided fill’s strategy is not sewn
+yet. A tartan with an underlay sews it in its own
 thread before its stripes’ colours, and so joins no run unless its sett sews no stripe.</li>
 <li><strong>2 passes.</strong> A run sews the underlays of its elements that have one, in their order, then the top
 stitches of every element in the same order (<code>REQ-ASM-009</code>). An element without underlay, such as a
@@ -9021,6 +9205,7 @@ conformance suite checks.</p>
 <tr><td><a href="#stroke-generators">Strokes</a></td><td>running, bean, manual, random-length, zigzag stroke, ripple</td></tr>
 <tr><td><a href="#satin-generators">Satin</a></td><td>satin column, E-stitch, S-stitch, zigzag satin, underlays</td></tr>
 <tr><td><a href="#fill-generators">Fills</a></td><td>tatami, contour, meander, circular, guided, linear gradient, tartan</td></tr>
+<tr><td><a href="#guided-fill-2">Guided fill</a></td><td>rows that copy a guide line drawn with the fill across it, cut by it and routed as a tatami fill’s rows</td></tr>
 <tr><td><a href="#tartan-fill-1">Tartan fill</a></td><td>a plaid of warp and weft, each colour’s rows in its own thread, its narrow stripes as runs</td></tr>
 <tr><td><a href="#cross-stitch-1">Cross stitch</a></td><td>simple, upright, dense upright, double, Smyrna and half crosses on a grid, each plain or flipped, and the turned grid</td></tr>
 <tr><td><a href="#lock-stitches-1">Lock stitches</a></td><td>the tie-in and tie-off at the ends of an element’s stitching</td></tr>
@@ -9158,6 +9343,13 @@ every platform places the same stitches.</p>
 <p><strong>Compared with Ink/Stitch:</strong> the same parameters, meanings and defaults; the placement differs in four
 documented ways, <code>DEV-RUN-001</code> to <code>DEV-RUN-004</code> in the deviations ledger (<code>conformance/deviations.toml</code>),
 and random length draws and places its lengths in other ways (<code>DEV-RUN-005</code>).</p>
+<p><strong>A guided fill’s rows</strong> are stitched as these steps stitch a span, but with Ink/Stitch’s own corners
+(<code>along_row</code>, <a href="#the-stitches">guided fill</a>). There a join that turns by 45° or more is a corner,
+unless it lies within twice the tolerance along the row of the turn before it. A row’s stagger runs on through the gentler joins
+where a copy of its guide meets its lengthened ends, which this page’s 30° rule would make corners. With
+<code>flexible_stagger</code> its needle points lie whole stitches apart from its start, round its corners, and its
+last stitch is what is left. The fill’s settings, its bean stitch among them, reach the registry’s groups
+of the running stitch and of the path fills too.</p>
 <p><strong>Satin underlays</strong> walk lines made point by point by the satin generator
 (<a href="#underlays-2">satin</a>), and steps 2 to 5 place their stitches, with each walk’s own length and
 tolerance. Such a line is a polyline already, and each join that turns by more than 30° is a corner. A
@@ -11096,9 +11288,10 @@ The differential compares the sheet with Ink/Stitch’s sewing of it (<code>REQ-
 </table>
 </div>
 <h2 id="guided-fill-p3"><a class="header" href="#guided-fill-p3">Guided fill (P3)</a></h2>
-<p>Rows that follow a guide line instead of a straight angle: the guide is copied (<code>Copy</code>) or offset
-(<code>Parallel Offset</code>, <code>Buffer</code>) across the region at <code>row_spacing_mm</code>, each copy clipped to the region and
-sewn with the tatami needle grid (<code>staggers</code>, <code>stitch_position_method</code>). Specified fully at M10.</p>
+<p>Rows that follow a guide line drawn with the fill. From M10.9 the guide is copied across each part a row
+spacing at a time, its copies cut by the part, and the lines inside routed as a circular fill’s pieces are,
+after the tatami fill’s underlay (<a href="#guided-fill-2">guided fill</a>). Ink/Stitch’s
+parallel offset and buffer strategies, which offset the guide instead, come with M10.10.</p>
 <h2 id="linear-gradient-fill-p3"><a class="header" href="#linear-gradient-fill-p3">Linear gradient fill (P3)</a></h2>
 <p>Rows square to the fill’s linear gradient, which go to its stops’ colours in a fixed pattern between each 2
 stops, from M10.12 (<a href="#linear-gradient-fill-1">linear gradient fill</a>). Its rows are cut by the region and its
@@ -11143,6 +11336,132 @@ setting. The VectorCraft plug-in’s fill dialog does not offer the method.</p>
 <li>D. Hilbert, “Über die stetige Abbildung einer Linie auf ein Flächenstück,” <em>Mathematische Annalen</em> 38, 1891.</li>
 </ul>
 <div style="break-before: page; page-break-before: always;"></div>
+<h1 id="guided-fill-2"><a class="header" href="#guided-fill-2">Guided fill</a></h1>
+<!-- implements: crates/stitchcraft-engine/src/generators/guided/** -->
+<p>Rows that bend with a line the designer draws beside the fill (P3, M10.9). The guide line says how the
+rows run, so that they can follow a shape that curves, and the fill copies it across each part a row spacing
+at a time. StitchCraft sews
+Ink/Stitch’s copy strategy as Ink/Stitch sews it (read at <code>d59c9ab</code>, <code>lib/stitches/guided_fill.py</code> and the
+fill element’s guided fill settings in <code>lib/elements/fill_stitch.py</code>, described here in our own words,
+ADR-0012). Ink/Stitch’s parallel offset and buffer strategies come with M10.10. Until then a fill set to one
+of them is skipped, and <code>SC-W0011</code> names the strategy (<code>REQ-FILL-GDD-001</code>).</p>
+<h2 id="the-guide-line"><a class="header" href="#the-guide-line">The guide line</a></h2>
+<p>The guide line is a path grouped with the fill and marked as a guide, and is never stitched itself. In an
+SVG file Ink/Stitch’s guide-line marker starts it. Of the paths so marked in its group, the fill takes the
+first that isn’t a satin column, since Ink/Stitch’s fill looks past satin guides, which steer ripple
+stitches (<code>REQ-SVG-015</code>). VectorCraft documents name it <code>stitch:guide</code>, the marker a ripple stitch reads
+too (<code>REQ-VC-023</code>). Only the marker’s first subpath is copied.</p>
+<p>The engine makes that subpath one open line before it copies it (<code>REQ-FILL-GDD-002</code>):</p>
+<ol>
+<li><strong>Flattened</strong> as a fill’s outline is.</li>
+<li><strong>Made one line.</strong> A copy of a line that crosses itself crosses itself too, and its rows would cross
+each other. So the line is cut into pieces where it crosses or touches itself. A piece that comes back
+to where it began, a loop, is left out, and 2 pieces that meet end to end where no third meets them are
+joined. This is done up to 4 times, until one line is left. A line still in pieces after that, or one
+that runs back along itself, is replaced by the straight line from its first point to its last.</li>
+<li><strong>Opened.</strong> A closed line has no line between its ends to copy it by, so its last 2 points are left out:
+the end it closes on and the point before it.</li>
+<li><strong>Lengthened</strong> straight on at both ends, along the line from its first point to its last. Each end goes
+out by the larger of the distances from the 2 ends to the corner of the part’s bounds farthest from each.
+Every copy then starts and ends outside the part, however far it is moved.</li>
+</ol>
+<p>After step 2, a guide of no length, or one drawn there and back, starts and ends at one point. It doesn’t
+give a line to copy it by, and the fill is sewn as a tatami fill with its own settings, as Ink/Stitch sews a
+guided fill without a guide. <code>SC-W0331</code> says why (<code>DEV-FILL-034</code>). Ink/Stitch moves
+each lengthened end by up to 0.01 px at random, and StitchCraft doesn’t (<code>DEV-FILL-035</code>).</p>
+<h2 id="the-copies-1"><a class="header" href="#the-copies-1">The copies</a></h2>
+<p>The copies move a row spacing at a time. Without <code>guided_fill_angle</code> they move square to the line between
+the guide’s ends, turned a right angle clockwise from it as the drawing shows it. With it, they move at that
+angle, clockwise from the x axis as drawn. Copy <code>k</code> lies <code>k</code> row spacings from the guide that way, so an
+angle near the guide’s own direction moves the copies mostly along it, and brings the rows closer together
+than the row spacing (<code>REQ-FILL-GDD-003</code>).</p>
+<p>Where the lengthened guide meets the part, the copies start from it, copy 0. Elsewhere they start from the
+copy nearest the part’s centroid. Its number counts the whole row spacings, rounded down, from the nearest
+point of the lengthened guide to the centroid. The number is negative where the centroid lies behind the
+guide as the copies move. From there the copies go on outward, one way and then the other, until one misses
+the box round the part. The copies that meet the part are its rows, those that touch its outline among
+them. With <code>smoothness_mm</code> each copy is smoothed first, as a contour fill’s path is smoothed
+(<code>REQ-FILL-GDD-004</code>).</p>
+<p>The rows are then taken in the order of their first points. Of 2 rows, the one with the smaller x comes
+first, and then the one with the smaller y. More rows are taken by how far along the diagonal of the box
+round their first points each lies, from the box’s corner of least x and y. Rows as far along keep the order
+they were found in. That order counts each row’s stagger and keys its random lengths.</p>
+<h2 id="the-stitches"><a class="header" href="#the-stitches">The stitches</a></h2>
+<p>Row <code>i</code>, from 0 in the order the rows are taken, is smoothed again by <code>smoothness_mm</code> and stitched as
+<code>stitch_position_method</code> says (<code>REQ-FILL-GDD-005</code>). It keeps its first point, and its needle points start
+<code>i / staggers</code> of a longest stitch along it, with its whole turns left out. With 4 staggers, the second row
+starts a quarter of a stitch on, the third half a stitch on, and the fifth where the first did. Staggers of
+0 count as 1, where Ink/Stitch divides by them and stops (<code>DEV-FILL-033</code>). Each row is lengthened well past
+the part. Its needle points keep their place inside it.</p>
+<p>A row’s corners are where Ink/Stitch’s running stitch takes them. A join that turns by 45° or more is one,
+unless it lies within twice <code>running_stitch_tolerance_mm</code> along the row of the turn before it. The gentler
+joins where a copy meets its lengthened ends aren’t corners. The stagger runs on through them.</p>
+<ul>
+<li><strong>Flexible</strong>, the default, spreads a row’s stitches evenly between its corners, at most the longest
+stitch each. The rows’ needle points keep their stagger near the start of each row, and drift from it
+where a row’s stitches are spread.</li>
+<li><strong>Flexible (stagger)</strong> sews whole longest stitches from where the stagger starts the row, a needle point
+on each corner, and the last stitch whatever is left. The stagger then lasts the whole row long.</li>
+</ul>
+<p>With random lengths on, the stitches are drawn as a running stitch draws them, from a stream of the
+element’s seed that the row’s number keys, whatever the position method. Either way, a stitch that strays
+from its row by more than the tolerance is split there, as a running stitch’s is.</p>
+<h2 id="cutting-the-rows"><a class="header" href="#cutting-the-rows">Cutting the rows</a></h2>
+<p>The stitched row is cut by the part (<code>REQ-FILL-GDD-006</code>). It is cut at every point where it crosses one of
+the part’s rings or touches one, but not where it runs along one. For such a stretch Ink/Stitch’s geometry
+library gives a line, and Ink/Stitch cuts at points only. A stretch between 2 cuts, or between a cut and the
+row’s end, is a line of the fill when the part contains its middle fifth, from 40 % to 60 % of its length.
+That fifth lies nowhere outside the part, and partly inside it, off the rings. Each line runs the row’s way
+and keeps the row’s needle points between its cuts.</p>
+<h2 id="sewing-the-lines-1"><a class="header" href="#sewing-the-lines-1">Sewing the lines</a></h2>
+<p>A guided fill sews its parts as a tatami fill sews them, nearest the needle first, each with the tatami
+fill’s underlay before its lines and grown by <code>expand_mm</code> for them (<code>REQ-FILL-GDD-007</code>). The shared part loop
+does that (<a href="#5-parts">section 5</a>). Its lines are routed as a circular fill’s pieces are, each a row
+of the tatami fill’s route between its ends (<a href="#sewing">a circular fill’s sewing</a>). Each is sewn
+once with all its needle points, from the end the route enters it by, and without its last with <code>skip_last</code>.
+From line to line the needle goes as a tatami fill’s does, under the lines not sewn yet with <code>underpath</code>
+on. The lines it follows under them are turned from <code>guided_fill_angle</code>, or from 0 when it is empty, as
+Ink/Stitch turns them.</p>
+<p>With <code>bean_stitch_repeats</code>, the stitches shorter than the shortest stitch are left out first, so that each
+stitch the bean stitch sews back over is one the machine sews. Then each stitch of the lines is sewn back and
+forth, and the travel between them is not.</p>
+<h2 id="fallbacks"><a class="header" href="#fallbacks">Fallbacks</a></h2>
+<p>The copies can miss a part thinner than the row spacing between 2 of them. Such a part is sewn as a tatami
+fill at the angle of the line between the guide’s ends. Ink/Stitch falls back to one where its copies meet
+a part but the cut keeps none of them, and where no copy meets the part at all, it stops with an error first
+(<code>DEV-FILL-034</code>).
+The tatami fill’s rows lie the guided fill’s row spacing apart, in its longest stitch with its staggers and
+<code>skip_last</code>. It has no end spacing, random lengths, pull compensation or rows that fill gaps, which
+Ink/Stitch’s fallback doesn’t pass on. <code>SC-W0332</code> counts those parts, and <code>SC-W0305</code> those too thin for the
+tatami rows too, which are sewn round their outline.</p>
+<h2 id="preview"><a class="header" href="#preview">Preview</a></h2>
+<p>A preview too costly to sew shows the segments the lines inside each part run along. A part that falls
+back to a tatami fill shows its rows. The preview is given the element’s random generator, so that random
+lengths cut the lines where sewing would.</p>
+<h2 id="cost"><a class="header" href="#cost">Cost</a></h2>
+<p>Each point of the guide, of its copies and of their stitches charges a unit of work. Looking for where the
+guide meets itself tests only the sides whose spans along x overlap, a unit for each pair. Testing a copy
+against the part, and cutting a row by it, look only at the sides of the rings near each stitch. Sewing
+charges a stitch for each needle point, and a preview’s budget allows any number of them.</p>
+<h2 id="properties-conformance-5"><a class="header" href="#properties-conformance-5">Properties (conformance)</a></h2>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>Requirement</th><th>Property</th></tr>
+</thead>
+<tbody>
+<tr><td><code>REQ-FILL-GDD-001</code></td><td>The copy strategy sews, and the others are skipped with <code>SC-W0011</code>. A fill without a usable guide sews its own tatami fill with <code>SC-W0331</code>. A part the copies miss falls back to a tatami fill with <code>SC-W0332</code></td></tr>
+<tr><td><code>REQ-FILL-GDD-002</code></td><td>The guide is its first subpath made one open line, lengthened at both ends past the part</td></tr>
+<tr><td><code>REQ-FILL-GDD-003</code></td><td>The copies move square to the guide’s ends or at <code>guided_fill_angle</code>, starting from the guide where it meets the part and elsewhere from the copy nearest the centroid</td></tr>
+<tr><td><code>REQ-FILL-GDD-004</code></td><td>The copies that meet the part are its rows, smoothed, in the order of their first points</td></tr>
+<tr><td><code>REQ-FILL-GDD-005</code></td><td>Each row is staggered by a <code>staggers</code>-th of a stitch from the one before, and stitched as <code>stitch_position_method</code> places its needle points</td></tr>
+<tr><td><code>REQ-FILL-GDD-006</code></td><td>The rows are cut where they cross the rings, and the stretches whose middle fifth the part contains are the lines</td></tr>
+<tr><td><code>REQ-FILL-GDD-007</code></td><td>The lines are routed as a tatami fill’s rows after its underlay, the travel under them turned from the copy angle, and bean stitch leaves the travel out</td></tr>
+<tr><td><code>REQ-FILL-GDD-008</code></td><td>TS-17B’s leaf sews in Ink/Stitch as in StitchCraft by the differential’s measures</td></tr>
+</tbody>
+</table>
+</div>
+<div style="break-before: page; page-break-before: always;"></div>
 <h1 id="tartan-fill-1"><a class="header" href="#tartan-fill-1">Tartan fill</a></h1>
 <!-- implements: crates/stitchcraft-engine/src/generators/tartan/** -->
 <p>A plaid woven of warp and weft, sewn as rows of running stitches across the fill (P3, M10.6). A woven
@@ -11159,7 +11478,7 @@ from Ink/Stitch’s palette code or from a threadcount of the Scottish Register 
 <p>Colorful, Emilio 20 tartan, Kum Tsoan relief, Kum Tsoan tartan and Perspective tricolore, 5 fonts of
 Ink/Stitch’s library at <code>c7e3a05</code>, sew tartan fills. All but the last set herringbones 1.6 to 5 mm wide on
 some of their shapes.</p>
-<h2 id="parameters-16"><a class="header" href="#parameters-16">Parameters</a></h2>
+<h2 id="parameters-17"><a class="header" href="#parameters-17">Parameters</a></h2>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -11417,7 +11736,7 @@ a colour of its sett other than its first stripe’s, so the underlay is a colou
 stripe’s colour, the jump from the underlay to the rows would leave its thread under them on the reference
 machine. Every stripe is one of Brother’s threads, so both programs’ files name each thread as itself.
 VectorCraft’s Test Sheet filter draws TS-17B too, as its fill dialog shows a sett as text from M10.7.</p>
-<h2 id="properties-conformance-5"><a class="header" href="#properties-conformance-5">Properties (conformance)</a></h2>
+<h2 id="properties-conformance-6"><a class="header" href="#properties-conformance-6">Properties (conformance)</a></h2>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -11456,7 +11775,7 @@ thread.</p>
 the fill element’s gradient, its underlay and its order of colours. What follows puts that behaviour in our
 own words (ADR-0012), and the generator is written from these words. Ink/Stitch was also run as a black box
 on gradients made for the purpose, with the cases below.</p>
-<h2 id="parameters-17"><a class="header" href="#parameters-17">Parameters</a></h2>
+<h2 id="parameters-18"><a class="header" href="#parameters-18">Parameters</a></h2>
 <p>A gradient fill has one setting of its own, <code>stop_at_ending_point</code>, which it shares with the tartan fill.
 It reads the tatami fill’s <code>row_spacing_mm</code>, <code>max_stitch_length_mm</code>, <code>staggers</code>, <code>skip_last</code> and
 <code>expand_mm</code>, its whole underlay, and <code>angle</code>, which turns the rows of a fill without a gradient and that
@@ -11607,7 +11926,7 @@ them off that edge.</p>
 and deep gold through white into emerald green down to the right. The last blends tangerine into Prussian
 blue down to the left, through a transparent white. Every stop’s colour is one of Brother’s threads, so both programs’ files name each thread
 as itself. Each gradient’s own thread is its first stop’s colour, unnamed, as the stops’ threads are.</p>
-<h2 id="properties-conformance-6"><a class="header" href="#properties-conformance-6">Properties (conformance)</a></h2>
+<h2 id="properties-conformance-7"><a class="header" href="#properties-conformance-7">Properties (conformance)</a></h2>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -11642,7 +11961,7 @@ loops. Half crosses sew one diagonal in each cell, in rows.</p>
 mm with 2 or 4 threads. They draw each letter as rectangles of whole cells, grown by 0.1 mm, on a grid
 that starts at each rectangle’s corner (<code>canvas_grid_origin</code> off). Jersey 15, the 25th, sews its 238
 elements as double crosses of 2 threads, grown so and on such a grid, of the default 3 mm cells.</p>
-<h2 id="parameters-18"><a class="header" href="#parameters-18">Parameters</a></h2>
+<h2 id="parameters-19"><a class="header" href="#parameters-19">Parameters</a></h2>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -11874,7 +12193,7 @@ keep them, and the turned square’s grid starts at its own corner. The differen
 Ink/Stitch’s sewing of it (<code>REQ-FILL-CRS-007</code>, <code>REQ-FILL-CRS-012</code>), and the case <code>inkstitch-cross-methods</code>
 adds each method’s flipped variant, turned grids, and half crosses in pieces, round a hole and through a
 corner.</p>
-<h2 id="properties-conformance-7"><a class="header" href="#properties-conformance-7">Properties (conformance)</a></h2>
+<h2 id="properties-conformance-8"><a class="header" href="#properties-conformance-8">Properties (conformance)</a></h2>
 <div class="table-wrapper">
 <table>
 <thead>
@@ -14398,8 +14717,9 @@ and chose both of the ways open to it (<code>REQ-VC-021</code>):</p>
 live effect is given only the settings its manifest declares, and VectorCraft drops a record’s other keys
 before it runs the effect. So without this row no preview could sew a sett of its own, whatever wrote it.
 The row also shows the sett an Ink/Stitch file brought, and takes one pasted in. With it the fill dialog
-has 63 parameters, within the 64 its manifest is checked against, and it is the only text a dialog
-declares (<code>manifest::TEXTS</code>).</li>
+had 63 parameters, within the 64 its manifest is checked against, and it is the only text a dialog
+declares (<code>manifest::TEXTS</code>). From M10.9 the guided fill’s stitch positions make 64. A setting more needs
+room made for it.</li>
 <li><strong>StitchCraft Tartan, a light filter</strong>, writes the row from what a person has, a palette code or a
 threadcount in the register’s colour letters, with the width of a thread, the sett’s turn, its scale, how
 far it is moved and the width up to which a stripe sews as a run
@@ -14421,9 +14741,12 @@ whole shape.</p>
 <p><strong>What it costs.</strong> A text is a kind of parameter VectorCraft 0.14 brought, and 0.12 and 0.13 refuse a
 manifest with one whole. So from M10.7 the fill effect installs from VectorCraft 0.14, as the exporters
 do. Those 2 releases don’t export a machine file either, so a fill made there was only ever a preview.</p>
-<p>The Test Sheet filter draws TS-17B from M10.7, each tartan’s sett in its fill effect’s record as the
+<p>The Test Sheet filter drew TS-17B from M10.7, each tartan’s sett in its fill effect’s record as the
 row’s text, and from M10.12 each of its gradients as a gradient paint
-(<a href="#a-gradients-geometry">below</a>).</p>
+(<a href="#a-gradients-geometry">below</a>). From M10.9 the sheet’s guided leaf copies a guide line. Drawn into a
+document, the guide would be a <code>stitch:guide</code> marker grouped with the leaf, and a filter doesn’t make groups.
+Only <code>stitch testsheet</code> draws TS-17B now. The filter still draws a linear gradient fill with its gradient
+paint, though no sheet it draws has one.</p>
 <p><strong>How the dialog shows them</strong> (<code>REQ-VC-012</code>, M6.10). From 0.14 a parameter can say how the dialog shows
 it, and the plug-in says all of it from the registry (<code>apps/stitchcraft-vc-plugin/src/dialog.rs</code>):</p>
 <ul>
@@ -14675,7 +14998,7 @@ PES exporter writes each column’s file as it wrote the line’s (2026-10-29):<
 the filter stops with <code>SC-E0004</code> before VectorCraft would. A VectorCraft before 0.17 runs it as a light
 filter, which almost every curved line outruns, and stops it with its own error.</p>
 <p><strong>Test Sheet</strong> (<code>REQ-VC-015</code>, <code>apps/stitchcraft-vc-plugin/src/testsheet.rs</code>) draws one of the sheets
-drawn as designs, TS-02B to TS-09, TS-11A, TS-11B, the TS-13 sheets, TS-17A and TS-17B, into the document: the
+drawn as designs, TS-02B to TS-09, TS-11A, TS-11B, the TS-13 sheets and TS-17A, into the document: the
 sheet’s design moved by whole millimetres so that its middle is nearest the middle of the artboard
 <code>_context</code> names (<code>Design::moved</code>). TS-17A moves by whole multiples of 6 mm, which keep its crosses’ cells on
 the canvas’s grids of 2 and 3 mm (<code>TestSheet::step</code>). The turned square’s grid starts at the square’s
@@ -14699,8 +15022,8 @@ record (M13.7, <code>REQ-VC-016</code>), and StitchCraft Auto must be installed 
 draws each sheet into a new document in VectorCraft 0.17.0’s and 0.18.0’s hosts alike, and exports it with
 the PES exporter (2026-10-29). Drawing takes 14 to 25 million instructions, at most half of a light filter’s run.
 Exporting takes 23 million to 1.6 billion, at most 17 % of an export’s, the most for the fills of TS-07,
-TS-08 and TS-09. TS-17B joined the sheets drawn in M10.7, after that measure, and the test prints its costs
-with the others’.</p>
+TS-08 and TS-09. TS-17B joined the sheets drawn in M10.7, after that measure, and left them in M10.9. The
+test prints each sheet’s costs.</p>
 <h3 id="tools-the-routing-filters"><a class="header" href="#tools-the-routing-filters">Tools: the routing filters</a></h3>
 <p>From M10.4 and M10.13, 2 filters in Object › Plug-ins route the selection with the engine’s routing
 function, as Ink/Stitch’s tools route theirs (<a href="#routing-tools">routing tools</a>,
@@ -14870,7 +15193,7 @@ note can follow it:</p>
 <tr><td><code>stitch:ignore</code></td><td><code>ignore_object</code>, <code>ignore_layer</code></td><td>Leaves the object or the layer out with everything in it, and lists it with <code>SC-I0811</code></td></tr>
 <tr><td><code>stitch:start</code>, <code>stitch:end</code></td><td><code>starting_point</code>, <code>ending_point</code></td><td>Gives the shapes of the group or layer it is in, and of the groups inside it, their start or end position: the centre of the box round its anchors. Their fills and satin columns start or end there (<code>REQ-GEN-001</code>). The marker is left out of the stitches. The first marker of each kind that shows counts, a group’s own before those of the groups round it. <code>SC-W0807</code> names another, one with no anchor that reads, and the markers of a shape digitized automatically, which places its own. A group or a layer is never a marker: <code>SC-W0807</code> names it, and what it holds is read as under any other name</td></tr>
 <tr><td><code>stitch:target</code></td><td><code>target_point</code></td><td>From M10.8, gives the shapes of the group or layer it is in, and of the groups inside it, the point they aim at: the centre of the box round its anchors. Their ripple stitches shrink or spiral to it (<code>REQ-RIP-002</code>), and their circular fills turn round it (<code>REQ-FILL-CIR-008</code>). It is read as the start and end markers are, and <code>SC-W0807</code> names the same ones</td></tr>
-<tr><td><code>stitch:guide</code>, <code>stitch:anchor</code></td><td>Ink/Stitch’s guide-line and anchor-line markers, which mark paths rather than tie commands</td><td>From M10.11, gives the shapes of the group or layer it is in, and of the groups inside it, the line their ripple stitches’ copies follow, or the line across those copies whose ends lie on a satin guide’s pairs (<code>REQ-RIP-012</code> to <code>REQ-RIP-014</code>). The marked path is the guide, and one of several subpaths, or a compound path, is a satin guide, its rails read with a satin column’s defaults but for the ripple’s <code>reverse_rails</code> and <code>swap_satin_rails</code>. Only the start and the end of an anchor’s first subpath count. The marker is left out of the stitches. It is read as the start and end markers are, and <code>SC-W0807</code> names the same ones</td></tr>
+<tr><td><code>stitch:guide</code>, <code>stitch:anchor</code></td><td>Ink/Stitch’s guide-line and anchor-line markers, which mark paths rather than tie commands</td><td>From M10.11, gives the shapes of the group or layer it is in, and of the groups inside it, the line their ripple stitches’ copies follow, or the line across those copies whose ends lie on a satin guide’s pairs (<code>REQ-RIP-012</code> to <code>REQ-RIP-014</code>). The marked path is the guide, and one of several subpaths, or a compound path, is a satin guide, its rails read with a satin column’s defaults but for the ripple’s <code>reverse_rails</code> and <code>swap_satin_rails</code>. From M10.9 a guide also gives their guided fills the line their rows copy, its first subpath (<code>REQ-VC-023</code>). In Ink/Stitch too, one guide line steers both. Only the start and the end of an anchor’s first subpath count. The marker is left out of the stitches. It is read as the start and end markers are, and <code>SC-W0807</code> names the same ones</td></tr>
 <tr><td><code>stitch:origin</code>, <code>stitch:stop-position</code></td><td><code>origin</code>, <code>stop_position</code></td><td>Gives the design its origin, which goes to the hoop’s centre, or the stop position the frame moves to before each stop (<code>REQ-ASM-005</code>): the centre of the box round its anchors, wherever the marker is (M8.8). The marker is left out of the stitches. 2 origins, or 2 stop positions in a design with a stop, are an error (<code>SC-E0819</code>), as Ink/Stitch doesn’t write a file with 2 such commands. <code>SC-W0807</code> names a marker with no anchor that reads, which places nothing, and a group or a layer of either name, which is never a marker</td></tr>
 <tr><td><code>stitch:route-start</code>, <code>stitch:route-end</code></td><td><code>autoroute_start</code>, <code>autoroute_end</code></td><td>From M10.4, marks where the routing filters start and end a route, at the centre of the box round its anchors, when it is selected with the paths they route. The filters delete it with the paths (<a href="#tools-the-routing-filters">routing filters</a>). <code>stitch export</code> leaves it out of the stitches. Before M10.4 the reader reads the name as the row below says</td></tr>
 <tr><td>Any other word after <code>stitch:</code></td><td></td><td>Ignores the name, and <code>SC-W0807</code> names the object, in case the word is a misspelt marker</td></tr>
@@ -14881,9 +15204,10 @@ note can follow it:</p>
 effect is given its object’s geometry, with its fills and strokes from VectorCraft 0.14 (VectorCraft’s
 <code>docs/plugins.md</code>, Input), never its name. So
 VectorCraft’s preview still shows the stitches of an object these names leave out, a marker included,
-when it has a StitchCraft effect or is in a group that has one. <code>stitch export</code> leaves them out. The RFC’s
-sixth proposal, still open in that part, would let a live effect read the markers beside its object, so
-its preview could start and end at them.</p>
+when it has a StitchCraft effect or is in a group that has one. <code>stitch export</code> leaves them out. A guided
+fill’s preview doesn’t see the guide beside its object. It sews the tatami fill <code>SC-W0331</code> names, and
+<code>stitch export</code> sews the rows along the guide. The RFC’s sixth proposal, still open in that part, would let a live
+effect read the markers beside its object, so its preview could start and end at them.</p>
 <h3 id="reading-vectorcraft-files-stitchcraft-vectorcraft"><a class="header" href="#reading-vectorcraft-files-stitchcraft-vectorcraft">Reading <code>.vectorcraft</code> files (<code>stitchcraft-vectorcraft</code>)</a></h3>
 <p><code>stitchcraft_vectorcraft::read</code> turns a <code>.vectorcraft</code> file into a design, and reports what it left out
 or simplified, as the SVG adapter does for SVG files. It reads the format as VectorCraft documents it
@@ -15819,7 +16143,9 @@ of 2 stops and of 3, one of them transparent, each at a slant of its own. The <c
 of no length, one that a <code>gradientTransform</code> turns, a fill in 2 parts that stops at its end, and a fill without a
 gradient (<code>REQ-FILL-GRD-009</code>). Their gradients placed in the shape’s box and by the gradient their <code>href</code>
 names, and stops that all lie before the fill’s first row, sew otherwise in Ink/Stitch, as the ledger explains
-(<code>DEV-SVG-027</code>, <code>DEV-FILL-032</code>). The <code>ts17c-ripple-</code> cases check each of TS-17C’s
+(<code>DEV-SVG-027</code>, <code>DEV-FILL-032</code>). The <code>inkstitch-ts17b-guided</code> case judges TS-17B’s guided
+leaf alone, its rows copies of an S-shaped guide from tip to tip over its underlay (<code>REQ-FILL-GDD-008</code>).
+The <code>ts17c-ripple-</code> cases check each of TS-17C’s
 ripple stitches on its own, the one along a column and the 2 that shrink to a target point (<code>REQ-RIP-011</code>).
 The <code>ts17c-guided-</code> cases check its guided ripples so (<code>REQ-RIP-019</code>). A wave and a zigzag cut to a circle
 follow guide lines. A circle and a diamond stand between satin guides’ rails, the diamond at its guide’s
@@ -16485,7 +16811,7 @@ each stitch type of the row that StitchCraft sews, unless the section
 stitch type sewn as another takes that one’s settings, as a legacy fill takes a tatami fill’s.</li>
 <li><strong>Default</strong> is the value Ink/Stitch’s settings window shows. For a few parameters its code sews another
 value when a file sets none, and the cell gives that value after the default, as in <code>0.1 (0.2 when unset)</code>. <code>—</code> means no default: the value is derived from another parameter or the shape.</li>
-<li><strong>StitchCraft</strong> says whether the <a href="#parameters-14">parameter registry</a> declares the
+<li><strong>StitchCraft</strong> says whether the <a href="#parameters-15">parameter registry</a> declares the
 parameter. <em>planned</em>: not yet; a design that sets it keeps it unchanged and gets <code>SC-W0105</code>. <em>not
 planned</em>: never, and a design that sets it gets the same.
 <em>registered</em>: StitchCraft reads and checks it under the same key, meaning and default; it changes the
@@ -16625,7 +16951,7 @@ planned.</li>
 <tbody>
 <tr><td><code>fill</code></td><td>toggle</td><td>—</td><td>true</td><td>all</td><td>P1 (M5)</td><td><a href="#fill">registered</a></td></tr>
 <tr><td><code>fill_method</code></td><td>combo</td><td>—</td><td>0</td><td>all</td><td>P1 (M5)</td><td><a href="#fill_method">registered</a></td></tr>
-<tr><td><code>guided_fill_strategy</code></td><td>dropdown</td><td>—</td><td>0</td><td><code>guided_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
+<tr><td><code>guided_fill_strategy</code></td><td>dropdown</td><td>—</td><td>0</td><td><code>guided_fill</code></td><td>P3 (M10)</td><td><a href="#guided_fill_strategy">registered</a></td></tr>
 <tr><td><code>contour_strategy</code></td><td>dropdown</td><td>—</td><td>0</td><td><code>contour_fill</code></td><td>P2 (M7)</td><td><a href="#contour_strategy">registered</a></td></tr>
 <tr><td><code>join_style</code></td><td>dropdown</td><td>—</td><td>0</td><td><code>contour_fill</code></td><td>P2 (M7)</td><td><a href="#join_style-1">registered</a></td></tr>
 <tr><td><code>avoid_self_crossing</code></td><td>boolean</td><td>—</td><td>false</td><td><code>contour_fill</code></td><td>P2 (M7)</td><td><a href="#avoid_self_crossing">registered</a></td></tr>
@@ -16638,12 +16964,12 @@ planned.</li>
 <tr><td><code>expand_mm</code></td><td>float</td><td>mm</td><td>0</td><td>all</td><td>P1 (M5)</td><td><a href="#expand_mm">registered</a></td></tr>
 <tr><td><code>gap_fill_rows</code></td><td>int</td><td>rows</td><td>0</td><td><code>tatami_fill</code></td><td>P1 (M5)</td><td><a href="#gap_fill_rows">registered</a></td></tr>
 <tr><td><code>angle</code></td><td>float</td><td>deg</td><td>0</td><td><code>tatami_fill</code>, <code>legacy_fill</code>; read by <code>circular_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>meander_fill</code>, <code>tartan_fill</code></td><td>P1 (M5)</td><td><a href="#angle-2">registered</a></td></tr>
-<tr><td><code>guided_fill_angle</code></td><td>float</td><td>deg</td><td>—</td><td><code>guided_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
+<tr><td><code>guided_fill_angle</code></td><td>float</td><td>deg</td><td>—</td><td><code>guided_fill</code>, <code>0</code></td><td>P3 (M10)</td><td><a href="#guided_fill_angle">registered</a></td></tr>
 <tr><td><code>tartan_angle</code></td><td>float</td><td>deg</td><td>-45</td><td><code>tartan_fill</code></td><td>P3 (M10)</td><td><a href="#tartan_angle">registered</a></td></tr>
 <tr><td><code>max_stitch_length_mm</code></td><td>float</td><td>mm</td><td>4.0</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code>; read by <code>circular_fill</code>, <code>meander_fill</code></td><td>P1 (M5)</td><td><a href="#max_stitch_length_mm">registered</a></td></tr>
 <tr><td><code>row_spacing_mm</code></td><td>float</td><td>mm</td><td>0.25</td><td><code>tatami_fill</code>, <code>contour_fill</code>, <code>guided_fill</code>, <code>circular_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code>; read by <code>meander_fill</code></td><td>P1 (M5)</td><td><a href="#row_spacing_mm">registered</a></td></tr>
 <tr><td><code>end_row_spacing_mm</code></td><td>float</td><td>mm</td><td>—</td><td><code>tatami_fill</code>, <code>circular_fill</code>, <code>legacy_fill</code></td><td>P1 (M5)</td><td><a href="#end_row_spacing_mm">deviates</a></td></tr>
-<tr><td><code>stitch_position_method</code></td><td>combo</td><td>—</td><td>0</td><td><code>guided_fill</code></td><td>P3 (M10)</td><td>planned</td></tr>
+<tr><td><code>stitch_position_method</code></td><td>combo</td><td>—</td><td>0</td><td><code>guided_fill</code></td><td>P3 (M10)</td><td><a href="#stitch_position_method">registered</a></td></tr>
 <tr><td><code>staggers</code></td><td>int</td><td>—</td><td>4</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>tartan_fill</code>, <code>legacy_fill</code>; read by <code>circular_fill</code>, <code>contour_fill</code>, <code>meander_fill</code></td><td>P1 (M5)</td><td><a href="#staggers-2">registered</a></td></tr>
 <tr><td><code>skip_last</code></td><td>boolean</td><td>—</td><td>false</td><td><code>tatami_fill</code>, <code>guided_fill</code>, <code>linear_gradient_fill</code>, <code>legacy_fill</code>; read by <code>circular_fill</code>, <code>tartan_fill</code></td><td>P1 (M5)</td><td><a href="#skip_last">registered</a></td></tr>
 <tr><td><code>flip</code></td><td>boolean</td><td>—</td><td>false</td><td><code>legacy_fill</code></td><td>—</td><td>not planned</td></tr>
@@ -16856,7 +17182,7 @@ change Ink/Stitch’s updater makes (<code>lib/update.py</code>), in StitchCraft
 </tbody>
 </table>
 </div>
-<p><em>145 parameter declarations, 137 registered in StitchCraft.</em></p>
+<p><em>145 parameter declarations, 140 registered in StitchCraft.</em></p>
 <div style="break-before: page; page-break-before: always;"></div>
 <h1 id="architecture-decision-records"><a class="header" href="#architecture-decision-records">Architecture decision records</a></h1>
 <p>Short records of decisions that shape the code, with their context and the alternatives we rejected.
@@ -18763,7 +19089,7 @@ element’s underlay just before that element’s top stitches.</p>
 <tr><td>M10.6 ✅</td><td>Tartan fill without herringbone, as Ink/Stitch sews it (<a href="#tartan-fill-1">tartan fill</a>). Its sett is Ink/Stitch’s <code>tartan</code> attribute, an object of JSON, which the registry reads and the compatibility contract lists as registered. The sett’s palette code gives each stripe a colour and a width, for warp and weft alike or for each its own, and the list Ink/Stitch writes for a repeated sett reads too. The sett is mirrored at its ends or repeated, and scaled, turned and moved as a whole. Stripes no wider than the sett’s least width sew as runs along their middles, after the fills. Rows at <code>tartan_angle</code> to the stripes, a row spacing apart and staggered, go to warp and weft in turns of <code>rows_per_thread</code>, and each band’s rows are joined along its edges and cut by the region. Each colour’s lines are routed as a tatami fill’s rows, after the tatami fill’s underlay in the element’s own thread, each colour a colour block of its own thread. With <code>stop_at_ending_point</code>, every colour ends where the fill ends. VectorCraft’s fill dialog offers the tartan’s numbers but has no field for a sett before M10.7, so a tartan made there sews Ink/Stitch’s default sett (<code>SC-W0325</code>). 5 of Ink/Stitch’s fonts sew tartan fills, and 4 of them set herringbones, which sew straight rows until M10.7 (<code>SC-W0324</code>)</td><td><code>REQ-FILL-TRT-001</code> to <code>REQ-FILL-TRT-011</code>. TS-17B’s 5 tartans, and 4 files of the differential’s own, sew in Ink/Stitch as in StitchCraft by every measure of the differential. The <a href="#tartan-fill">user page</a> has pictures of tartan fills, and TS-17B is drawn for MC-12</td></tr>
 <tr><td>M10.7 ✅</td><td>Herringbone tartans and an editor for setts, as Ink/Stitch sews and edits them (<a href="#herringbone-1">tartan fill</a>). With <code>herringbone_width_mm</code> above 0 the rows lie in upright bands that wide, each band’s rows slanting at 45° the other way from the band before, and the warp and the weft take them in turns that change from band to band. The warp is laid band by band, and the weft’s rows are joined into a zigzag in each band and then across the bands along each stripe’s edges. The editor makes a sett from a palette code or a threadcount with the width of a thread, and writes the code and the setting Ink/Stitch’s editor saves. The fill reads threadcounts of colour letters and the register’s own threadcount too, their letters in the Scottish Register of Tartans’ shades, in a table of StitchCraft’s own. VectorCraft gets both: the fill dialog shows the sett as text, from VectorCraft 0.14, and StitchCraft Tartan, a filter, writes it from a code (<a href="#a-tartans-sett">VectorCraft integration</a>). The Test Sheet filter draws TS-17B</td><td><code>REQ-FILL-TRT-012</code> to <code>REQ-FILL-TRT-016</code> and <code>REQ-VC-021</code>, with <code>SC-E0821</code>, and <code>SC-W0324</code> retired with <code>REQ-FILL-TRT-010</code>. TS-17B’s herringbone 3 mm wide and a file of 4 herringbones sew in Ink/Stitch as in StitchCraft by every measure of the differential, their stitches once <code>DEV-FIN-001</code> is undone. The 5 tartan fonts’ 313 glyphs agree or differ as the ledger explains, Colorful’s F by <code>DEV-FILL-030</code>. The user page shows herringbones and setts written as threadcounts</td></tr>
 <tr><td>M10.8 ✅</td><td>Ripple stitch between rails and towards a target, as Ink/Stitch sews it (<a href="#ripple-stitch-m108-m1011">strokes</a>). A stroke drawn as a satin column, with rails and rungs, ripples in lines along the column, the first on one rail and the last on the other. Copies of an open line shrink towards the target point, and a closed line spirals in to it. The target is Ink/Stitch’s <code>target_point</code> command, read as M8.4 reads the start and end commands, and otherwise the middle of the stroke’s convex hull. A VectorCraft document marks it with a path named <code>stitch:target</code>, grouped with the stroke as <code>stitch:start</code> is. <code>line_count</code> gives the lines, or <code>min_line_dist_mm</code> with the count’s parity kept, spaced by <code>exponent</code> and <code>flip_exponent</code>, less <code>skip_start</code> and <code>skip_end</code>. The lines sew as one running stitch, back and forth with <code>flip_copies</code> and joined flat or at a point (<code>join_style</code>). <code>staggers</code>, <code>reverse</code>, <code>repeats</code> and bean stitch apply to it. 3 of Ink/Stitch’s fonts sew ripples, most of them along columns. What M10.11 sews is left out with a coded warning</td><td>requirements written (<code>REQ-RIP-001</code> to <code>REQ-RIP-011</code>, <code>REQ-VC-009</code> updated) with <code>SC-W0406</code> to <code>SC-W0408</code>. TS-17C’s 3 ripples sew in Ink/Stitch as in StitchCraft by every measure of the differential, but the overlap of the wave’s and the spiral’s threads, which <code>DEV-RUN-002</code> explains. In the glyph differential, 285 of the 324 glyphs of the 3 Ondulamarif fonts agree or differ as the ledger explains, and the 39 whose ripples follow a guide line are left to M10.11. A user page shows ripple stitch in pictures, and TS-17C is drawn with the ripples for MC-12 (2026-11-08)</td></tr>
-<tr><td>M10.9</td><td>Guided fill with its guide copied, as Ink/Stitch sews it. The guide line is a stroke with Ink/Stitch’s guide-line marker in the fill’s group, and the step chooses how a VectorCraft document marks one. The rows are copies of the guide moved square to the line between its ends, or at <code>guided_fill_angle</code>, a row spacing apart, smoothed by <code>smoothness_mm</code> and cut by the region. Each row’s needle points start a <code>staggers</code>-th of a stitch further along than the row before’s, placed by <code>stitch_position_method</code>. The rows are routed as M7.9 routes curved pieces, with the travel under them, after the tatami fill’s underlay. Where no copy of the guide meets the region, the fill sews a tatami fill at the angle of the guide’s ends, and a fill without a guide sews a tatami fill with a warning. Barstitch cloudy, an Ink/Stitch font, sews 735 guided fills, all copied</td><td>requirements written. TS-17B’s copied guided fills sew in Ink/Stitch as in StitchCraft by every measure of the differential, a user page shows guided fill in pictures, and the type is listed for MC-12</td></tr>
+<tr><td>M10.9 ✅</td><td>Guided fill with its guide copied, as Ink/Stitch sews it (<a href="#guided-fill-2">guided fill</a>). The guide line is a stroke with Ink/Stitch’s guide-line marker in the fill’s group, or in a VectorCraft document a path named <code>stitch:guide</code> grouped with the fill, as a guided ripple’s. The rows are copies of the guide moved square to the line between its ends, or at <code>guided_fill_angle</code>, a row spacing apart, smoothed by <code>smoothness_mm</code> and cut by the region. Each row’s needle points start a <code>staggers</code>-th of a stitch further along than the row before’s, placed by <code>stitch_position_method</code>. The rows are routed as M7.9 routes curved pieces, with the travel under them, after the tatami fill’s underlay. Where no copy of the guide meets the region, the fill sews a tatami fill at the angle of the guide’s ends, and a fill without a guide sews a tatami fill with a warning. Barstitch cloudy, an Ink/Stitch font, sews 735 guided fills, all copied</td><td><code>REQ-FILL-GDD-001</code> to <code>REQ-FILL-GDD-008</code>, <code>REQ-SVG-015</code> and <code>REQ-VC-023</code>, with <code>SC-W0331</code> and <code>SC-W0332</code>. TS-17B’s guided leaf sews in Ink/Stitch as in StitchCraft by every measure of the differential. Of the 157 glyphs of Barstitch cloudy, an Ink/Stitch font of guided fills, 2 agree and 155 differ as the ledger explains, 3 of them because Ink/Stitch stops with an error (<code>DEV-FILL-034</code>). The <a href="#guided-fill">user page</a> shows guided fill in pictures, and the type is listed for MC-12 (2026-11-08)</td></tr>
 <tr><td>M10.10</td><td>Guided fill’s parallel offset and buffer strategies and the anchor line, as Ink/Stitch sews them. Parallel offset makes each row an offset curve of the guide, a row spacing past the last, and the rows keep their distance where copies would crowd. Buffer makes closed rows round the guide, of one subpath or more. Rows that close inside the region are joined to the rows round them and to those that meet its outline, and the fill is sewn as one route. A stroke with Ink/Stitch’s anchor-line marker sets where each closed row’s needle points start</td><td>requirements written. TS-17B’s offset and buffered guided fills sew in Ink/Stitch as in StitchCraft by every measure of the differential, and the user page shows each strategy</td></tr>
 <tr><td>M10.11 ✅</td><td>Guided ripples, as Ink/Stitch sews them (<a href="#guided-ripples">strokes</a>). With a guide line, copies of the stroke move along it, scaled from <code>scale_start</code> to <code>scale_end</code> on <code>scale_axis</code>, and turned with the guide while <code>rotate_ripples</code> is on. A satin column as the guide, or a guide of several subpaths, sets the copies between its rails, as <code>satin_guide_pattern_position</code> places them, with <code>reverse_rails</code> and <code>swap_satin_rails</code>. The anchor line across the stroke sets the copies’ direction. <code>grid_size_mm</code> adds lines across the ripples, sewn first with <code>grid_first</code>, and <code>manual_pattern_placement</code> keeps the stroke’s own nodes as needle points. A clip path cuts the ripples as M8.5 cuts a stroke, and the pieces are routed as a tatami fill’s rows. Ondulamarif XL sews 48 closed lines on satin guides</td><td>requirements written (<code>REQ-RIP-012</code> to <code>REQ-RIP-019</code>, <code>REQ-RIP-010</code>, <code>REQ-SVG-003</code> and <code>REQ-VC-009</code> updated) with <code>SC-W0409</code>. TS-17C’s 5 guided ripples sew in Ink/Stitch as in StitchCraft by every measure of the differential, but the overlap of the wave’s, the diamond’s and the circle’s threads and the circle’s stitches, which <code>DEV-RUN-002</code> explains. Every one of the 324 glyphs of the 3 Ondulamarif fonts agrees or differs as the ledger explains. A user page shows guided ripples in pictures, and TS-17C is drawn with them for MC-12 (2026-11-08)</td></tr>
 <tr><td>M10.12 ✅</td><td>Linear gradient fill, as Ink/Stitch sews it (<a href="#linear-gradient-fill-1">linear gradient fill</a>). The SVG reader places a fill’s linear gradient as a viewer does, through the gradients its <code>href</code> names and after its <code>gradientTransform</code>, and the VectorCraft reader places a gradient paint by its <code>geom</code> or fits it to the object at its angle. Rows square to the gradient, a row spacing apart and staggered, cover each piece, and each stop lies at a row. Between 2 stops the rows go to the 2 colours in Ink/Stitch’s fixed pattern, and a transparent stop leaves its rows out. A stop within 2 rows of the blend before is passed over (<code>SC-W0330</code>). Each colour’s rows are routed as a tatami fill’s, along the outline, in the order of the stops, after the tatami fill’s underlay in the first stop’s colour, each colour a colour block of its own thread. Without a gradient, the fill’s colour fades out along <code>angle</code> (<code>SC-W0329</code>). The Test Sheet filter draws a gradient fill with its gradient paint</td><td><code>REQ-FILL-GRD-001</code> to <code>REQ-FILL-GRD-009</code>, <code>REQ-SVG-014</code> and <code>REQ-VC-022</code>. TS-17B’s 3 gradients, and 6 files of the differential’s own, sew in Ink/Stitch as in StitchCraft by every measure of the differential, but where the ledger excuses them. The <a href="#linear-gradient-fill">user page</a> has pictures of gradient fills, and the type is listed for MC-12</td></tr>
@@ -18940,7 +19266,7 @@ middle of the artboard (<code>REQ-VC-015</code>). A checkpoint can so sew a shee
 <tr><td><strong>TS-15</strong> Fonts ported automatically (M15)</td><td>3 fonts from Google Fonts, a sans, a serif and a script, each ported at 3 heights beside the font Ink/Stitch digitized by hand from it, at the same heights. A word in satin columns 0.4, 0.6, 0.8 and 1 mm wide beside the same word in triple runs. <code>stitch testsheet</code> draws it with the fonts of the corpus</td><td>Whether every ported glyph reads at the least height, with its dots, serifs and counters. The jump threads inside letters and between them. Whether the ported letters read as well as the letters digitized by hand beside them, and the narrowest satin column that sews a letter cleanly</td><td>MC-10</td></tr>
 <tr><td><strong>TS-16</strong> An Ink/Stitch file (M8)</td><td>A design written as Ink/Stitch writes a file, which <code>stitch plan</code> reads, each step of M8 drawing its part. Its fill and its satin column start and end at Ink/Stitch’s commands. From M8.4 a red fill 40 × 30 mm sews from its top-right corner to its bottom-left one, and a blue satin column 40 mm long starts in its middle and ends three quarters along. From M8.5 a green fill is cut by its clip path, a circle, to a quarter of a disc, and a black zigzag running stitch by a U-shaped one into 2 pieces. From M8.8 the origin lies off the design’s middle, on the blue column’s top edge 10 mm in from its left end, and a stop after the blue column sends the frame to a stop position 20 mm right of the fill and 10 mm above it. From M8.9 the file turns the design right on export, about its origin, so its first 4 parts sew 100 mm wide and 40 mm tall. From M8.10 a clone of the red fill, turned 45° right, sews after them, in red, below the fill once the design is turned: its rows turn with it, and it starts and ends at the corners turned from the fill’s. From M8.13 2 black lines 40 mm long sew last, above the rest once the design is turned, each locked at both ends with a custom lock drawn as a path and trimmed after: straight lines and a curve at 100 %, and lines and an arc at 150 %. It is sewn beside the PES file the differential’s Ink/Stitch writes of it</td><td>Where each element starts and ends, against its commands. Whether the clipped edges sew where the clip path cuts them, and the clone’s rows lie at its turned angle. Do the drawn locks hold when the tail is pulled? Whether the machine puts the origin or the design’s middle at the hoop’s centre, where the frame waits at the stop, and whether the design sews turned right about its origin. Every difference between the 2 sew-outs</td><td>MC-11</td></tr>
 <tr><td><strong>TS-17A</strong> Cross stitch (M10)</td><td>Cross stitch fills (M10.1, M10.2), drawn before MC-12, each trimmed after, a row to a thread, every sample but the turned square on the canvas’s grid. From M10.1, in red, squares 24 mm wide of simple crosses on grids of 2 and 3 mm, with 2 and 4 threads. Below them in blue, the 2 mm square with 2 threads and the 3 mm one with 4, flipped, and a K 24 mm tall drawn as Ink/Stitch’s cross-stitch fonts draw their letters, on a 2 mm grid with 2 threads, grown by 0.1 mm, its slanted edges cutting their cells in half. From M10.2, in green, squares of upright, dense upright, double and Smyrna crosses on the 3 mm grid, the double crosses with 2 threads as Jersey 15 sews them. Below them in black, squares of half crosses with 3 threads, plain and flipped, and a square 18 mm wide turned 30° with its grid, as lettering along a path turns a glyph’s (114 × 114 mm)</td><td>Whether every cross’s top diagonal lies the same way, and whether the stitches through the cells’ middles show. Fabric between the crosses at 2 and 4 threads, and the grid that reads best at the letter’s size. How the layers of the double and Smyrna crosses look, and whether the half crosses’ travel stitches show on their edges. Gaps between the dense upright crosses, and the turned square’s stepped edges. The time the sheet takes</td><td>MC-12</td></tr>
-<tr><td><strong>TS-17B</strong> New fills (M10)</td><td>Tartan, guided and linear gradient fills (M10.6, M10.7, M10.9, M10.10, M10.12), drawn before MC-12, each trimmed after. From M10.6, 5 tartans 40 mm square, 3 to a row, each underlay in a thread of its own. Their setts are mirrored at the ends or repeated, and one has a weft that differs from its warp. Another has stripes 0.5 and 0.8 mm wide sewn as runs, and one is turned 30° and scaled by 150 %. From M10.7, a herringbone 3 mm wide of blue, white, red and black ends the second row. Leaves filled along an S-shaped guide, copied, offset and buffered. From M10.12, 3 squares 40 mm a side in a third row, in linear gradients of 2 and 3 stops at slants of their own, the last one’s middle stop transparent, each underlay in its first colour</td><td>Whether a tartan’s warp and weft read as a weave and its runs lie flat on its fills, and how its herringbone turns. The spacing of the guided rows round the guide’s bends, and where the copied rows crowd. Whether a gradient’s colours blend with no step between its sections, and whether the transparent stop leaves a clean gap. Colour changes, jumps and time</td><td>MC-12</td></tr>
+<tr><td><strong>TS-17B</strong> New fills (M10)</td><td>Tartan, guided and linear gradient fills (M10.6, M10.7, M10.9, M10.10, M10.12), drawn before MC-12, each trimmed after. From M10.6, 5 tartans 40 mm square, 3 to a row, each underlay in a thread of its own. Their setts are mirrored at the ends or repeated, and one has a weft that differs from its warp. Another has stripes 0.5 and 0.8 mm wide sewn as runs, and one is turned 30° and scaled by 150 %. From M10.7, a herringbone 3 mm wide of blue, white, red and black ends the second row. From M10.12, 3 squares 40 mm a side in a third row, in linear gradients of 2 and 3 stops at slants of their own, the last one’s middle stop transparent, each underlay in its first colour. From M10.9, the fourth row starts with a leaf 48 mm from tip to tip, from the bottom left to the top right of a 40 mm square, in emerald green over its underlay. Its guided fill copies an S-shaped guide from tip to tip, 0.25 mm apart. Leaves offset and buffered come with M10.10. From M10.9 only <code>stitch testsheet</code> draws the sheet: the leaf’s guide is a marker the Test Sheet filter would have to group with it (130 × 172 mm)</td><td>Whether a tartan’s warp and weft read as a weave and its runs lie flat on its fills, and how its herringbone turns. The spacing of the guided rows round the guide’s bends, and where the copied rows crowd. Whether a gradient’s colours blend with no step between its sections, and whether the transparent stop leaves a clean gap. Colour changes, jumps and time</td><td>MC-12</td></tr>
 <tr><td><strong>TS-17C</strong> Ripples and routing (M10)</td><td>Ripple stitches (M10.8, M10.11), drawn before MC-12, along a column of rails and rungs, from an open line towards a target point and from a closed line spiralling in. Ripples along a guide line and closed lines on a satin guide, beside a ripple with a grid. The routing tools (M10.4, M10.13): satin letters as drawn beside the same letters after auto-satin routing, and a network of running stitches as drawn beside it after auto-run routing. Drawn from M10.4 with its part, the word ROUTE in satin letters 20 mm tall with a centre walk underlay, as drawn above and routed 30 mm below. From M10.13, below them in red, 6 bean-stitched running stitches that cross, branch and pass near each other, as drawn on the left and routed with trims on the right. From M10.15, below the network in red, a bar and a post that cross at their middles, satin columns 5 mm wide and 30 mm long with a contour and a zigzag underlay, as drawn on the left and with their underlays first on the right. From M10.8, in green below the crossing columns, a ripple of 7 lines sewn back and forth along a column between 2 arches, drawn with rails and a rung. Beside it, the 8 copies of a wave shrink to a target point 20 mm above it and meet at points. On the right, a circle spirals in to its middle. From M10.11, at the bottom in green, 5 guided ripples. 8 copies of a wave follow an arch, shrinking to 30 % as they turn with it. Copies of a circle 5 mm across follow 2 curved rails, centred between them. A column of 5 lines has a grid across it 3 mm apart, sewn first, and copies of a thin diamond stand across a ladder at its rungs, an anchor line across its middle. Last, 7 copies of a zigzag along a straight guide, sewn through their nodes, are cut to a circle. 2 satin columns of one thread that cross, as drawn beside the same 2 with their underlays first (M10.15)</td><td>Whether the ripples’ lines and the guided copies keep their spacing, how their joins look, and if the grid lies flat across its column with the clipped zigzag’s pieces joined by no visible thread. Jumps, trims and time on the routed halves against the halves as drawn, and whether the runs under the satins show, and under the bean stitches of the lines. Whether the crossing columns, their underlays sewn first, lie flatter than as drawn. The height of each crossing above the fabric, with calipers. Whether the bar’s satin bulges or its underlay shows where the post crosses it. How the needle goes back from the post’s underlay to the bar</td><td>MC-12</td></tr>
 </tbody>
 </table>
@@ -18960,7 +19286,7 @@ middle of the artboard (<code>REQ-VC-015</code>). A checkpoint can so sew a shee
 <tr><td>MC-8</td><td>M13.12</td><td>TS-13, from <code>stitch testsheet</code> or drawn in VectorCraft by the Test Sheet filter with the Auto effect</td><td>Do pictures digitized automatically sew better than the same shapes in paint order? Are the widest satin column, the narrowest triple run, the overlap, the underlays by width and the columns’ pull compensation right?</td></tr>
 <tr><td>MC-6</td><td>M7</td><td>TS-11A and TS-11B, from <code>stitch testsheet</code> or drawn in VectorCraft by the Test Sheet filter, and TS-11C from <code>stitch testsheet</code></td><td>New stitch types acceptable? Are their defaults right?</td></tr>
 <tr><td>MC-11</td><td>M8</td><td>TS-16, from <code>stitch testsheet</code>, beside Ink/Stitch’s machine file of it, which the differential keeps (<code>target/conformance/differential/ts-16.inkstitch.pes</code>)</td><td>Does an Ink/Stitch file sew from StitchCraft’s machine file as it does from Ink/Stitch’s?</td></tr>
-<tr><td>MC-12</td><td>M10</td><td>TS-17A, TS-17B, TS-17C, from <code>stitch testsheet</code> or drawn in VectorCraft by the Test Sheet filter, but TS-17C only from <code>stitch testsheet</code>: a document’s coordinates round the points where TS-17C’s routed letters are cut, and a piece of its T then sews its first stitch 0.05 mm off. The filter draws TS-17B’s linear gradients as gradient paints, which sew as the sheet does (M10.12)</td><td>New stitch types acceptable, and their defaults right? Do ripple stitches keep their lines apart and their joins neat, and do guided copies follow their guides? Are there fewer jump threads on the routed designs than on the same elements as drawn? With their underlays first, do satin columns that cross lie flatter? Does each linear gradient blend its colours with no step between its stops?</td></tr>
+<tr><td>MC-12</td><td>M10</td><td>TS-17A, TS-17B, TS-17C, from <code>stitch testsheet</code> or drawn in VectorCraft by the Test Sheet filter, but TS-17B and TS-17C only from <code>stitch testsheet</code>. TS-17B’s guided leaf copies a guide that a filter can’t group with it (M10.9). A document’s coordinates round the points where TS-17C’s routed letters are cut, and a piece of its T then sews its first stitch 0.05 mm off. In M10.12 the filter drew TS-17B’s linear gradients as gradient paints, which sew as the engine sews them</td><td>New stitch types acceptable, and their defaults right? Do ripple stitches keep their lines apart and their joins neat, and do guided copies follow their guides? Are there fewer jump threads on the routed designs than on the same elements as drawn? With their underlays first, do satin columns that cross lie flatter? Does each linear gradient blend its colours with no step between its stops? From M10.9, does a guided fill’s rows bend with its guide and keep their spacing round its bends?</td></tr>
 <tr><td>MC-9</td><td>M14</td><td>TS-14</td><td>Do the fonts sew legibly across the heights they claim?</td></tr>
 <tr><td>MC-10</td><td>M15</td><td>TS-15</td><td>Do fonts ported automatically sew as legibly as fonts digitized by hand, from the least height of their range?</td></tr>
 <tr><td>MC-7</td><td>M12</td><td>all</td><td>Release regression</td></tr>

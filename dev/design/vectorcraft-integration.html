@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f4c2b644.js";
+            window.path_to_searchindex_js = "../searchindex-d0853a6a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-143ab13b.js"></script>
+        <script src="../toc-e1a9b9d0.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -351,8 +351,9 @@ and chose both of the ways open to it (<code>REQ-VC-021</code>):</p>
 live effect is given only the settings its manifest declares, and VectorCraft drops a record’s other keys
 before it runs the effect. So without this row no preview could sew a sett of its own, whatever wrote it.
 The row also shows the sett an Ink/Stitch file brought, and takes one pasted in. With it the fill dialog
-has 63 parameters, within the 64 its manifest is checked against, and it is the only text a dialog
-declares (<code>manifest::TEXTS</code>).</li>
+had 63 parameters, within the 64 its manifest is checked against, and it is the only text a dialog
+declares (<code>manifest::TEXTS</code>). From M10.9 the guided fill’s stitch positions make 64. A setting more needs
+room made for it.</li>
 <li><strong>StitchCraft Tartan, a light filter</strong>, writes the row from what a person has, a palette code or a
 threadcount in the register’s colour letters, with the width of a thread, the sett’s turn, its scale, how
 far it is moved and the width up to which a stripe sews as a run
@@ -374,9 +375,12 @@ whole shape.</p>
 <p><strong>What it costs.</strong> A text is a kind of parameter VectorCraft 0.14 brought, and 0.12 and 0.13 refuse a
 manifest with one whole. So from M10.7 the fill effect installs from VectorCraft 0.14, as the exporters
 do. Those 2 releases don’t export a machine file either, so a fill made there was only ever a preview.</p>
-<p>The Test Sheet filter draws TS-17B from M10.7, each tartan’s sett in its fill effect’s record as the
+<p>The Test Sheet filter drew TS-17B from M10.7, each tartan’s sett in its fill effect’s record as the
 row’s text, and from M10.12 each of its gradients as a gradient paint
-(<a href="#a-gradients-geometry">below</a>).</p>
+(<a href="#a-gradients-geometry">below</a>). From M10.9 the sheet’s guided leaf copies a guide line. Drawn into a
+document, the guide would be a <code>stitch:guide</code> marker grouped with the leaf, and a filter doesn’t make groups.
+Only <code>stitch testsheet</code> draws TS-17B now. The filter still draws a linear gradient fill with its gradient
+paint, though no sheet it draws has one.</p>
 <p><strong>How the dialog shows them</strong> (<code>REQ-VC-012</code>, M6.10). From 0.14 a parameter can say how the dialog shows
 it, and the plug-in says all of it from the registry (<code>apps/stitchcraft-vc-plugin/src/dialog.rs</code>):</p>
 <ul>
@@ -628,7 +632,7 @@ PES exporter writes each column’s file as it wrote the line’s (2026-10-29):<
 the filter stops with <code>SC-E0004</code> before VectorCraft would. A VectorCraft before 0.17 runs it as a light
 filter, which almost every curved line outruns, and stops it with its own error.</p>
 <p><strong>Test Sheet</strong> (<code>REQ-VC-015</code>, <code>apps/stitchcraft-vc-plugin/src/testsheet.rs</code>) draws one of the sheets
-drawn as designs, TS-02B to TS-09, TS-11A, TS-11B, the TS-13 sheets, TS-17A and TS-17B, into the document: the
+drawn as designs, TS-02B to TS-09, TS-11A, TS-11B, the TS-13 sheets and TS-17A, into the document: the
 sheet’s design moved by whole millimetres so that its middle is nearest the middle of the artboard
 <code>_context</code> names (<code>Design::moved</code>). TS-17A moves by whole multiples of 6 mm, which keep its crosses’ cells on
 the canvas’s grids of 2 and 3 mm (<code>TestSheet::step</code>). The turned square’s grid starts at the square’s
@@ -652,8 +656,8 @@ record (M13.7, <code>REQ-VC-016</code>), and StitchCraft Auto must be installed 
 draws each sheet into a new document in VectorCraft 0.17.0’s and 0.18.0’s hosts alike, and exports it with
 the PES exporter (2026-10-29). Drawing takes 14 to 25 million instructions, at most half of a light filter’s run.
 Exporting takes 23 million to 1.6 billion, at most 17 % of an export’s, the most for the fills of TS-07,
-TS-08 and TS-09. TS-17B joined the sheets drawn in M10.7, after that measure, and the test prints its costs
-with the others’.</p>
+TS-08 and TS-09. TS-17B joined the sheets drawn in M10.7, after that measure, and left them in M10.9. The
+test prints each sheet’s costs.</p>
 <h3 id="tools-the-routing-filters"><a class="header" href="#tools-the-routing-filters">Tools: the routing filters</a></h3>
 <p>From M10.4 and M10.13, 2 filters in Object › Plug-ins route the selection with the engine’s routing
 function, as Ink/Stitch’s tools route theirs (<a href="routing.html">routing tools</a>,
@@ -823,7 +827,7 @@ note can follow it:</p>
 <tr><td><code>stitch:ignore</code></td><td><code>ignore_object</code>, <code>ignore_layer</code></td><td>Leaves the object or the layer out with everything in it, and lists it with <code>SC-I0811</code></td></tr>
 <tr><td><code>stitch:start</code>, <code>stitch:end</code></td><td><code>starting_point</code>, <code>ending_point</code></td><td>Gives the shapes of the group or layer it is in, and of the groups inside it, their start or end position: the centre of the box round its anchors. Their fills and satin columns start or end there (<code>REQ-GEN-001</code>). The marker is left out of the stitches. The first marker of each kind that shows counts, a group’s own before those of the groups round it. <code>SC-W0807</code> names another, one with no anchor that reads, and the markers of a shape digitized automatically, which places its own. A group or a layer is never a marker: <code>SC-W0807</code> names it, and what it holds is read as under any other name</td></tr>
 <tr><td><code>stitch:target</code></td><td><code>target_point</code></td><td>From M10.8, gives the shapes of the group or layer it is in, and of the groups inside it, the point they aim at: the centre of the box round its anchors. Their ripple stitches shrink or spiral to it (<code>REQ-RIP-002</code>), and their circular fills turn round it (<code>REQ-FILL-CIR-008</code>). It is read as the start and end markers are, and <code>SC-W0807</code> names the same ones</td></tr>
-<tr><td><code>stitch:guide</code>, <code>stitch:anchor</code></td><td>Ink/Stitch’s guide-line and anchor-line markers, which mark paths rather than tie commands</td><td>From M10.11, gives the shapes of the group or layer it is in, and of the groups inside it, the line their ripple stitches’ copies follow, or the line across those copies whose ends lie on a satin guide’s pairs (<code>REQ-RIP-012</code> to <code>REQ-RIP-014</code>). The marked path is the guide, and one of several subpaths, or a compound path, is a satin guide, its rails read with a satin column’s defaults but for the ripple’s <code>reverse_rails</code> and <code>swap_satin_rails</code>. Only the start and the end of an anchor’s first subpath count. The marker is left out of the stitches. It is read as the start and end markers are, and <code>SC-W0807</code> names the same ones</td></tr>
+<tr><td><code>stitch:guide</code>, <code>stitch:anchor</code></td><td>Ink/Stitch’s guide-line and anchor-line markers, which mark paths rather than tie commands</td><td>From M10.11, gives the shapes of the group or layer it is in, and of the groups inside it, the line their ripple stitches’ copies follow, or the line across those copies whose ends lie on a satin guide’s pairs (<code>REQ-RIP-012</code> to <code>REQ-RIP-014</code>). The marked path is the guide, and one of several subpaths, or a compound path, is a satin guide, its rails read with a satin column’s defaults but for the ripple’s <code>reverse_rails</code> and <code>swap_satin_rails</code>. From M10.9 a guide also gives their guided fills the line their rows copy, its first subpath (<code>REQ-VC-023</code>). In Ink/Stitch too, one guide line steers both. Only the start and the end of an anchor’s first subpath count. The marker is left out of the stitches. It is read as the start and end markers are, and <code>SC-W0807</code> names the same ones</td></tr>
 <tr><td><code>stitch:origin</code>, <code>stitch:stop-position</code></td><td><code>origin</code>, <code>stop_position</code></td><td>Gives the design its origin, which goes to the hoop’s centre, or the stop position the frame moves to before each stop (<code>REQ-ASM-005</code>): the centre of the box round its anchors, wherever the marker is (M8.8). The marker is left out of the stitches. 2 origins, or 2 stop positions in a design with a stop, are an error (<code>SC-E0819</code>), as Ink/Stitch doesn’t write a file with 2 such commands. <code>SC-W0807</code> names a marker with no anchor that reads, which places nothing, and a group or a layer of either name, which is never a marker</td></tr>
 <tr><td><code>stitch:route-start</code>, <code>stitch:route-end</code></td><td><code>autoroute_start</code>, <code>autoroute_end</code></td><td>From M10.4, marks where the routing filters start and end a route, at the centre of the box round its anchors, when it is selected with the paths they route. The filters delete it with the paths (<a href="#tools-the-routing-filters">routing filters</a>). <code>stitch export</code> leaves it out of the stitches. Before M10.4 the reader reads the name as the row below says</td></tr>
 <tr><td>Any other word after <code>stitch:</code></td><td></td><td>Ignores the name, and <code>SC-W0807</code> names the object, in case the word is a misspelt marker</td></tr>
@@ -834,9 +838,10 @@ note can follow it:</p>
 effect is given its object’s geometry, with its fills and strokes from VectorCraft 0.14 (VectorCraft’s
 <code>docs/plugins.md</code>, Input), never its name. So
 VectorCraft’s preview still shows the stitches of an object these names leave out, a marker included,
-when it has a StitchCraft effect or is in a group that has one. <code>stitch export</code> leaves them out. The RFC’s
-sixth proposal, still open in that part, would let a live effect read the markers beside its object, so
-its preview could start and end at them.</p>
+when it has a StitchCraft effect or is in a group that has one. <code>stitch export</code> leaves them out. A guided
+fill’s preview doesn’t see the guide beside its object. It sews the tatami fill <code>SC-W0331</code> names, and
+<code>stitch export</code> sews the rows along the guide. The RFC’s sixth proposal, still open in that part, would let a live
+effect read the markers beside its object, so its preview could start and end at them.</p>
 <h3 id="reading-vectorcraft-files-stitchcraft-vectorcraft"><a class="header" href="#reading-vectorcraft-files-stitchcraft-vectorcraft">Reading <code>.vectorcraft</code> files (<code>stitchcraft-vectorcraft</code>)</a></h3>
 <p><code>stitchcraft_vectorcraft::read</code> turns a <code>.vectorcraft</code> file into a design, and reports what it left out
 or simplified, as the SVG adapter does for SVG files. It reads the format as VectorCraft documents it

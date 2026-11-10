@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f4c2b644.js";
+            window.path_to_searchindex_js = "../searchindex-d0853a6a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-143ab13b.js"></script>
+        <script src="../toc-e1a9b9d0.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -320,6 +320,8 @@ another.</p>
 <tr><td><code>SC-W0328</code></td><td>Warning</td><td>Tartan stripe’s colour can’t be read; left out (as Ink/Stitch leaves it)</td><td>M10</td></tr>
 <tr><td><code>SC-W0329</code></td><td>Warning</td><td>Linear gradient fill without a linear gradient; its colour fades out</td><td>M10</td></tr>
 <tr><td><code>SC-W0330</code></td><td>Warning</td><td>Gradient stop within 2 rows of the blend before; passed over</td><td>M10</td></tr>
+<tr><td><code>SC-W0331</code></td><td>Warning</td><td>Guided fill without a guide line; sewn as a tatami fill (also for a guide that starts and ends at one point, with the fill’s own settings, as Ink/Stitch sews one without a guide)</td><td>M10</td></tr>
+<tr><td><code>SC-W0332</code></td><td>Warning</td><td>Guided fill’s copies of its guide meet no part; sewn as a tatami fill (that part, at the angle of the guide’s ends, the fallback Ink/Stitch has for a part its copies meet and the cut leaves empty, while it stops with an error where the copies miss the part, <code>DEV-FILL-034</code>)</td><td>M10</td></tr>
 <tr><td><code>SC-W0401</code></td><td>Warning</td><td>Path too small for the shortest stitch; skipped</td><td>M3</td></tr>
 <tr><td><code>SC-W0402</code></td><td>Warning</td><td>Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest</td><td>M3</td></tr>
 <tr><td><code>SC-W0403</code></td><td>Warning</td><td>Hand-placed stitch shorter than the shortest stitch; point left out</td><td>M3</td></tr>

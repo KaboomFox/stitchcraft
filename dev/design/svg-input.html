@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f4c2b644.js";
+            window.path_to_searchindex_js = "../searchindex-d0853a6a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-143ab13b.js"></script>
+        <script src="../toc-e1a9b9d0.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -447,11 +447,13 @@ where Ink/Stitch renames them only in the files it updates and sews the old symb
 M10.11 the adapter reads guide lines and anchor lines, as Ink/Stitch at <code>d59c9ab</code> finds them
 (<code>REQ-RIP-012</code> to <code>REQ-RIP-014</code>). Ink/Stitch looks for a shape’s helpers among the other children of its
 group and nowhere else, so the adapter does too. A guide line or an anchor line is a shape with a stroke,
-hidden or not, whose <code>style</code> attribute starts it with Ink/Stitch’s marker. The guide is the first satin
-column among the guide lines, its <code>satin_column</code> on, or else the first guide line. The anchor line is the
-first anchor line that isn’t a satin column. Each goes to every element of the shape under the transforms
-above it. The guide keeps its stroke’s width and join and its settings, and the anchor line gives the
-start and the end of its first subpath (<a href="algorithms/strokes.html#guided-ripples">ripple stitch</a>). A guide line or an
+hidden or not, whose <code>style</code> attribute starts it with Ink/Stitch’s marker. A stroke’s guide is the first
+satin column among the guide lines, its <code>satin_column</code> on, or else the first guide line. From M10.9 a
+fill’s guide is the first guide line that is no satin column, as Ink/Stitch’s fill looks past satin
+guides (<code>REQ-SVG-015</code>, <a href="algorithms/guided.html#the-guide-line">guided fill</a>). The anchor line is the first
+anchor line that isn’t a satin column. Each goes to the shape’s elements under the transforms above it.
+The guide keeps its stroke’s width and join and its settings, and the anchor line gives the start and the
+end of its first subpath (<a href="algorithms/strokes.html#guided-ripples">ripple stitch</a>). A guide line or an
 anchor line in no group steers nothing. Ink/Stitch’s pattern helpers aren’t applied yet.</li>
 </ul>
 <p><code>SC-W0802</code> reports a connector that ties no command, a helper path that isn’t applied or steers nothing, an

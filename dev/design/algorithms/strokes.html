@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-f4c2b644.js";
+            window.path_to_searchindex_js = "../../searchindex-d0853a6a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-143ab13b.js"></script>
+        <script src="../../toc-e1a9b9d0.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -263,6 +263,13 @@ every platform places the same stitches.</p>
 <p><strong>Compared with Ink/Stitch:</strong> the same parameters, meanings and defaults; the placement differs in four
 documented ways, <code>DEV-RUN-001</code> to <code>DEV-RUN-004</code> in the deviations ledger (<code>conformance/deviations.toml</code>),
 and random length draws and places its lengths in other ways (<code>DEV-RUN-005</code>).</p>
+<p><strong>A guided fill’s rows</strong> are stitched as these steps stitch a span, but with Ink/Stitch’s own corners
+(<code>along_row</code>, <a href="guided.html#the-stitches">guided fill</a>). There a join that turns by 45° or more is a corner,
+unless it lies within twice the tolerance along the row of the turn before it. A row’s stagger runs on through the gentler joins
+where a copy of its guide meets its lengthened ends, which this page’s 30° rule would make corners. With
+<code>flexible_stagger</code> its needle points lie whole stitches apart from its start, round its corners, and its
+last stitch is what is left. The fill’s settings, its bean stitch among them, reach the registry’s groups
+of the running stitch and of the path fills too.</p>
 <p><strong>Satin underlays</strong> walk lines made point by point by the satin generator
 (<a href="satin.html#underlays">satin</a>), and steps 2 to 5 place their stitches, with each walk’s own length and
 tolerance. Such a line is a polyline already, and each join that turns by more than 30° is a corner. A

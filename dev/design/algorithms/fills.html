@@ -35,10 +35,10 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-f4c2b644.js";
+            window.path_to_searchindex_js = "../../searchindex-d0853a6a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../../toc-143ab13b.js"></script>
+        <script src="../../toc-e1a9b9d0.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -887,9 +887,10 @@ The differential compares the sheet with Ink/Stitch’s sewing of it (<code>REQ-
 </table>
 </div>
 <h2 id="guided-fill-p3"><a class="header" href="#guided-fill-p3">Guided fill (P3)</a></h2>
-<p>Rows that follow a guide line instead of a straight angle: the guide is copied (<code>Copy</code>) or offset
-(<code>Parallel Offset</code>, <code>Buffer</code>) across the region at <code>row_spacing_mm</code>, each copy clipped to the region and
-sewn with the tatami needle grid (<code>staggers</code>, <code>stitch_position_method</code>). Specified fully at M10.</p>
+<p>Rows that follow a guide line drawn with the fill. From M10.9 the guide is copied across each part a row
+spacing at a time, its copies cut by the part, and the lines inside routed as a circular fill’s pieces are,
+after the tatami fill’s underlay (<a href="guided.html">guided fill</a>). Ink/Stitch’s
+parallel offset and buffer strategies, which offset the guide instead, come with M10.10.</p>
 <h2 id="linear-gradient-fill-p3"><a class="header" href="#linear-gradient-fill-p3">Linear gradient fill (P3)</a></h2>
 <p>Rows square to the fill’s linear gradient, which go to its stops’ colours in a fixed pattern between each 2
 stops, from M10.12 (<a href="gradient.html">linear gradient fill</a>). Its rows are cut by the region and its
@@ -942,7 +943,7 @@ setting. The VectorCraft plug-in’s fill dialog does not offer the method.</p>
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                             </a>
 
-                            <a rel="next prefetch" href="../../design/algorithms/tartan.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                            <a rel="next prefetch" href="../../design/algorithms/guided.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                                 <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                             </a>
 
@@ -956,7 +957,7 @@ setting. The VectorCraft plug-in’s fill dialog does not offer the method.</p>
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M41.4 233.4c-12.5 12.5-12.5 32.8 0 45.3l160 160c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L109.3 256 246.6 118.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0l-160 160z"/></svg></span>
                     </a>
 
-                    <a rel="next prefetch" href="../../design/algorithms/tartan.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                    <a rel="next prefetch" href="../../design/algorithms/guided.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
                         <span class=fa-svg><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><!--! Font Awesome Free 6.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc. --><path d="M278.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L210.7 256 73.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z"/></svg></span>
                     </a>
             </nav>

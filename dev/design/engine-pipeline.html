@@ -35,10 +35,10 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-f4c2b644.js";
+            window.path_to_searchindex_js = "../searchindex-d0853a6a.js";
         </script>
         <!-- Start loading toc.js asap -->
-        <script src="../toc-143ab13b.js"></script>
+        <script src="../toc-e1a9b9d0.js"></script>
     </head>
     <body>
     <div id="mdbook-help-container">
@@ -288,13 +288,19 @@ underlay, reading the running stitch’s tolerance and random lengths for its pa
 and sews one path through it after the same underlay (<a href="algorithms/fills.html#meander-fill">fills</a>). A
 circular fill, sewn from M7.9, sews a spiral round the middle of each part after that underlay too, and
 routes the spiral’s pieces as a tatami fill routes its rows (<a href="algorithms/fills.html#circular-fill">fills</a>).
+A guided fill, sewn from M10.9, copies its guide line across each part after that underlay, and routes the
+lines its copies leave inside the part as the circular fill routes its pieces
+(<a href="algorithms/guided.html">guided fill</a>). Its strategy is read first: until M10.10 one that offsets the guide
+skips the element, and its other settings are not read. Without a guide it can use, it sews the tatami fill
+its settings make, which the generate step reads too, saying only what reading them as a guided fill’s
+didn’t. A guided fill offers the element before it its area, as a tatami fill does.
 A cross stitch fill, sewn from M10.1, sews a cross in each cell of a grid that each part covers enough of,
 with no underlay, the crosses that meet in one run. From M10.2 it sews each of Ink/Stitch’s 12 methods, its
 half crosses in rows routed as a tatami fill’s (<a href="algorithms/cross-stitch.html">cross stitch</a>). A ripple
 stitch, sewn from M10.8, sews lines along a column or towards a target point as one running stitch, and
 from M10.11 copies along a guide, a grid across them, and the pieces its clips leave, routed
 (<a href="algorithms/strokes.html#ripple-stitch-m108-m1011">ripple stitch</a>). Every stroke method is then sewn. The
-other fill methods are skipped with <code>SC-W0011</code> until their milestones. An element whose parameters are
+linear gradient fill is skipped with <code>SC-W0011</code> until its milestone. An element whose parameters are
 wrong (<code>SC-E0101</code>) is skipped too, and the rest of the design still plans.</p>
 <p>Each element is generated with the shortest stitch for it: the larger of the machine’s (the profile’s
 <code>min_stitch</code>) and the element’s <code>min_stitch_length_mm</code>, or the design’s shortest stitch when the element
@@ -372,8 +378,9 @@ the toggle.</li>
 <li><strong>What is read first.</strong> Each element’s toggle, trim, stop and threads are read from its settings alone,
 before any element is generated. So are whether its settings read, by the registry’s declarations of
 what its stitch type reads, and whether it has an underlay. A satin column has one with one of its 3
-underlays on. A tatami, contour, meander, circular or tartan fill has one with <code>fill_underlay</code> on, unless
-it is set to Ink/Stitch’s legacy fill or not to be sewn. A tartan with an underlay sews it in its own
+underlays on. A tatami, contour, meander, circular, guided or tartan fill has one with <code>fill_underlay</code> on,
+unless it is set to Ink/Stitch’s legacy fill or not to be sewn, or a guided fill’s strategy is not sewn
+yet. A tartan with an underlay sews it in its own
 thread before its stripes’ colours, and so joins no run unless its sett sews no stripe.</li>
 <li><strong>2 passes.</strong> A run sews the underlays of its elements that have one, in their order, then the top
 stitches of every element in the same order (<code>REQ-ASM-009</code>). An element without underlay, such as a
