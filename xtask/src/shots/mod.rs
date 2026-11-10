@@ -30,8 +30,8 @@ use stitchcraft_cli::commands::plan::Source;
 use stitchcraft_core::Budget;
 use stitchcraft_engine::design::{Design, Element};
 use stitchcraft_engine::testsheets;
-use stitchcraft_plan::StitchPlan;
 use stitchcraft_plan::profiles::REFERENCE;
+use stitchcraft_plan::{Rgb, StitchPlan};
 use stitchcraft_render::{Settings, Style};
 
 use crate::compat::scenario::Step;
@@ -95,6 +95,10 @@ pub struct Shot {
     /// `stitch` shots: `realistic` (the default) or `simple`.
     #[serde(default)]
     pub style: Option<String>,
+    /// `stitch` shots: the colour of the fabric the design is drawn on, as `#rrggbb`: the style's own when
+    /// absent, unbleached cotton or white (`REQ-RND-003`).
+    #[serde(default)]
+    pub fabric: Option<String>,
     /// `stitch` shots, and `picture` shots of a design: pixels per millimetre (the renderer's default when
     /// absent). `vectorcraft-render` shots: pixels per point, VectorCraft's `--scale` (1 when absent).
     #[serde(default)]
@@ -247,7 +251,17 @@ fn foreign(shot: &Shot) -> Vec<String> {
     if shot.picture.is_some() && shot.kind != picture::KIND {
         found.push("`picture` is a picture shot's".to_string());
     }
+    if shot.fabric.is_some() && shot.kind != "stitch" {
+        found.push("`fabric` is a stitch shot's".to_string());
+    }
     found
+}
+
+/// The fabric colour `colour` names, written `#rrggbb`.
+fn fabric(colour: &str) -> Result<Rgb, String> {
+    let hex = colour.strip_prefix('#').filter(|hex| hex.len() == 6 && hex.bytes().all(|byte| byte.is_ascii_hexdigit()));
+    let rgb = hex.and_then(|hex| u32::from_str_radix(hex, 16).ok());
+    rgb.map(Rgb::from_hex).ok_or_else(|| format!("the fabric colour `{colour}` is not written `#rrggbb`"))
 }
 
 /// The PNG files of a `stitch` shot, one per image it makes ([`Shot::images`]).
@@ -257,6 +271,10 @@ pub fn stitch(root: &Path, shot: &Shot) -> Result<Vec<Vec<u8>>, String> {
     let scale = shot.scale.unwrap_or(Settings::DEFAULT_SCALE);
     let settings = Settings::new(style, scale)
         .ok_or_else(|| format!("scale {scale} is outside {} to {} pixels per millimetre", Settings::MIN_SCALE, Settings::MAX_SCALE))?;
+    let settings = match shot.fabric.as_deref() {
+        Some(colour) => settings.on(fabric(colour)?),
+        None => settings,
+    };
     // Each picture shows what the machine its plan is for sews: the sheet's hoop, or the reference machine.
     let (plans, machine) = match (shot.sheet.as_deref(), shot.fixture.as_deref()) {
         // A sheet is drawn as it is: panels would name images that are never drawn.
@@ -406,6 +424,7 @@ mod tests {
             auto: false,
             allow: Vec::new(),
             style: Some("simple".to_string()),
+            fabric: None,
             scale: Some(2.0),
             report: String::new(),
             layout: Layout::Columns,
@@ -427,6 +446,27 @@ mod tests {
         assert!(foreign(&shot("kind = \"stitch\"\nfixture = \"docs/fixtures/wave.svg\"")).is_empty());
         assert_eq!(foreign(&shot("kind = \"stitch\"\npicture = \"pear\"")), ["`picture` is a picture shot's"]);
         assert!(foreign(&shot("kind = \"picture\"\npicture = \"pear\"")).is_empty());
+        assert_eq!(foreign(&shot("kind = \"picture\"\npicture = \"pear\"\nfabric = \"#000000\"")), ["`fabric` is a stitch shot's"]);
+        assert!(foreign(&shot("kind = \"stitch\"\nsheet = \"TS-01\"\nfabric = \"#000000\"")).is_empty());
+    }
+
+    #[test]
+    fn a_stitch_shot_is_drawn_on_the_fabric_it_names() {
+        // The corner of a picture, which no thread reaches, has the fabric's colour: the style's own, white
+        // for the simple style, unless the shot names one (`REQ-RND-003`).
+        let root = util::root();
+        let corner = |colour: Option<&str>| {
+            let shot = Shot { fabric: colour.map(str::to_string), ..probe(Some("TS-01"), None, &[]) };
+            let image = stitch(&root, &shot)?.remove(0);
+            let pixel = tiny_skia::Pixmap::decode_png(&image).map_err(|e| e.to_string())?.pixel(0, 0).ok_or("no pixel")?;
+            Ok::<_, String>((pixel.red(), pixel.green(), pixel.blue()))
+        };
+        assert_eq!(corner(None), Ok((255, 255, 255)));
+        assert_eq!(corner(Some("#000000")), Ok((0, 0, 0)));
+        assert_eq!(corner(Some("#1a2B3c")), Ok((0x1a, 0x2b, 0x3c)));
+        for bad in ["black", "000000", "#00000", "#0000000", "#00000g", "#+00000"] {
+            assert_eq!(corner(Some(bad)), Err(format!("the fabric colour `{bad}` is not written `#rrggbb`")));
+        }
     }
 
     #[test]

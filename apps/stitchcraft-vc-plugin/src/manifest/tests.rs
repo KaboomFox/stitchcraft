@@ -67,7 +67,10 @@ fn req_vc_016_the_auto_effect_s_dialog_holds_the_rules_settings_and_its_preview_
     assert_eq!(validate(&text(&manifest)), Ok(()));
     assert_eq!((manifest.id.as_str(), manifest.kind), ("dev.stitchcraft.auto", "effect"));
     let keys: Vec<&str> = manifest.params.iter().map(|(key, _)| *key).collect();
-    assert_eq!(keys, [MAX_SATIN_WIDTH, MIN_TRIPLE_RUN_WIDTH, OVERLAP, MIN_AREA, IGNORE_BACKGROUND, PREVIEW_LEVEL]);
+    let (pull, base) =
+        ("auto_pull_compensation_mm", ["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_offset_mm", "auto_base_keep_holes"]);
+    let rules = [MAX_SATIN_WIDTH, MIN_TRIPLE_RUN_WIDTH, OVERLAP, pull, MIN_AREA, IGNORE_BACKGROUND];
+    assert_eq!(keys, [&rules[..], &base[..], &[PREVIEW_LEVEL]].concat());
     // Each setting's row has the registry's label, unit, section, help and page, and always shows: the
     // dialog has no method.
     for (key, param) in manifest.params.iter().filter(|(key, _)| *key != PREVIEW_LEVEL) {

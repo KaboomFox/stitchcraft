@@ -151,13 +151,10 @@ fn req_auto_016_a_column_that_ends_under_another_sews_first_and_reaches_under_it
     let push = setting(stem, PUSH_COMPENSATION).unwrap();
     assert!(push == format!("{under} 0") || push == format!("0 {under}"), "{push}");
     assert_eq!(setting(bar, PUSH_COMPENSATION), None);
-    // A stem up to 2 mm wide is longer by the overlap there, 1 mm, and a wider one by its pull compensation
-    // (REQ-AUTO-029).
-    for (width, longer) in [(1.5, "-1"), (2.0, "-1"), (2.01, "-0.4"), (2.5, "-0.4")] {
-        let out = made(&t(width));
-        let push = setting(&out.elements[0], PUSH_COMPENSATION).unwrap();
-        assert!(push == format!("{longer} 0") || push == format!("0 {longer}"), "{width} mm: {push}");
-    }
+    // A narrow stem is longer by its pull compensation too, not by the overlap of 1 mm (REQ-AUTO-029).
+    let narrow = made(&t(1.5));
+    let push = setting(&narrow.elements[0], PUSH_COMPENSATION).unwrap();
+    assert!(push == format!("{under} 0") || push == format!("0 {under}"), "{push}");
     // The stem's end under the bar is the bar's side, from the stem's one side to its other.
     let ends: Vec<Point> = stem_rails.iter().flat_map(|rail| [rail[0], *rail.last().unwrap()]).filter(|q| q.y() < 3.0 + 1e-9).collect();
     assert_eq!(ends.len(), 2, "{stem_rails:?}");

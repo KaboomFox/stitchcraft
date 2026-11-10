@@ -86,8 +86,9 @@ fn pictures() -> Vec<(String, Design)> {
     designs.push(("pear".to_string(), pictures::pear()));
     designs.push(("paw".to_string(), pictures::dog_shapes("dog-on-turf-6", &["vc:69:fill"])));
     designs.push(("ear".to_string(), pictures::dog_shapes("dog-running-6", &["vc:5:fill", "vc:6:fill", "vc:28:fill", "vc:50:fill"])));
-    // A column 4.4 mm wide of the dog's blaze ends under another: pushed on by the overlap of 1 mm, its last
-    // stitches skewed and left 3.2 mm² bare at (41.1, 42.4).
+    // A column 4.4 mm wide of the dog's blaze ends under another. When a column's end was tried 1 mm longer,
+    // by the overlap, its last stitches skewed and left 3.2 mm² bare at (41.1, 42.4): it is its pull
+    // compensation longer.
     designs.push(("blaze".to_string(), pictures::dog_shapes("dog-running-6", &["vc:81:fill", "vc:66:fill", "vc:56:fill", "vc:38:fill"])));
     designs
 }

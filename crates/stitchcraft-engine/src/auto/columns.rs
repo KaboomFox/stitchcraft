@@ -23,8 +23,7 @@
 //! - **Order.** A column that ends under another sews first, then the longest, and each next the one with
 //!   an end nearest where the last one ended, sewn from that end; a ring from its rung nearest.
 //! - **Settings.** Each column's underlay is its width's ([`super::underlay`]). One that ends under another
-//!   is its area's overlap longer at that end, by its push compensation, and so reaches under it, as an area
-//!   reaches under the shapes sewn after it.
+//!   is its pull compensation longer at that end, by its push compensation, and so reaches under it.
 //! - **A dot.** A part whose every line is shorter than half its width there is a dot, which stays in the
 //!   fill, as one with no line does. Such a part has no way to run, as a disc or a square has none, and its
 //!   lines are only what its triangles leave of its middle: corners that lie on one circle tie, and how each
@@ -85,12 +84,6 @@ pub(super) enum Made {
     Broken,
 }
 
-/// The widest column that reaches its area's overlap under the column it ends under, in millimetres. A wider
-/// one reaches its pull compensation there, as every column did while the overlap was 0.4 mm. Pushed on by 1
-/// mm, a column 4.4 mm wide of the traced running dog skewed its last stitches and left 3.2 mm² of the
-/// dog's blaze bare (`tests/auto_cover.rs`, the piece "blaze").
-const REACHING: f64 = 2.0;
-
 /// The columns of `part`, an area's whose narrowest satin stroke is `narrowest` and whose settings of the
 /// rules are `rules`, cut from a broad part along `cuts` (`auto::split`), with `meter`'s work.
 pub(super) fn columns(part: &Polygon, narrowest: Mm, rules: &AutoParams, cuts: &[[Point; 2]], meter: &mut Meter) -> Result<Made, Exhausted> {
@@ -120,7 +113,9 @@ pub(super) fn columns(part: &Polygon, narrowest: Mm, rules: &AutoParams, cuts: &
             sewn.push(Sewn::Running { line: column.walked, width });
             continue;
         }
-        let reach = if width.get() <= REACHING { rules.auto_overlap_mm.get() } else { rules.auto_pull_compensation_mm.get() };
+        // A column that ends under another is its pull compensation longer there, not the overlap: pushed
+        // on by 1 mm, a column skews its last stitch across what lies beside the other column (`REQ-AUTO-029`).
+        let reach = rules.auto_pull_compensation_mm.get();
         let push = column.under.map(|under| if under.is_some() { -reach } else { 0.0 });
         let Ok(drawn) = drawn::from_rails(column.rails, column.rungs, push, meter)? else { return Ok(Made::Unmade) };
         sewn.push(Sewn::Satin { path: drawn.path(), width, push });
