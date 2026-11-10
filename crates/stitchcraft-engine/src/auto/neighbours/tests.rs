@@ -153,7 +153,14 @@ fn an_area_costs_a_unit_for_each_shape_sewn_after_it_far_from_it() {
     // A fill with settings far from them, sewn after them, whose region takes thousands of units to build.
     let with_far = || {
         let mut sewn = sewn();
-        sewn.push(Sewn { element: filled("far", &[circle((100.0, 100.0), 10.0, 2_000)]), area: None, automatic: false, reach: None, shape: 0, part: None });
+        sewn.push(Sewn {
+            element: filled("far", &[circle((100.0, 100.0), 10.0, 2_000)]),
+            area: None,
+            automatic: false,
+            reach: None,
+            shape: 0,
+            part: None,
+        });
         sewn
     };
     let (alone, far) = (least_work(|budget| reached(sewn(), budget).1), least_work(|budget| reached(with_far(), budget).1));
@@ -168,7 +175,8 @@ fn a_speck_costs_a_unit_for_each_area_far_from_it() {
         sewn.push(Sewn {
             element: filled("far", &[circle((100.0, 100.0), 10.0, 2_000)]),
             area: Some(AutoParams::defaults()),
-            automatic: true, reach: None,
+            automatic: true,
+            reach: None,
             shape: 0,
             part: None,
         });
@@ -199,7 +207,10 @@ fn a_column_whose_area_needs_more_work_than_its_budget_allows_is_said_and_reache
     // The square as it is sewn, and what is said of the column, each shape's paint found with `work`.
     let sewn = |work: u64| {
         let settings = DesignSettings::default();
-        let sewn = vec![area("square", (0.0, 0.0), (10.0, 10.0)), Sewn { element: column(), area: None, automatic: false, reach: None, shape: 0, part: None }];
+        let sewn = vec![
+            area("square", (0.0, 0.0), (10.0, 10.0)),
+            Sewn { element: column(), area: None, automatic: false, reach: None, shape: 0, part: None },
+        ];
         let mut shapes = Shapes::new(sewn, &settings, &Budget { max_work: work, ..Budget::DEFAULT });
         let _ = under::reached(&mut shapes, &Budget::DEFAULT);
         let said = std::mem::take(&mut shapes.said);
@@ -243,7 +254,8 @@ fn a_speck_rejoins_the_rest_of_its_area_or_is_left_out_when_it_shares_no_edge() 
     let parts = Sewn {
         element: filled("parts", &[square((0.0, 0.0), (10.0, 10.0)), square((10.02, 0.0), (10.52, 1.0))]),
         area: Some(AutoParams::defaults()),
-        automatic: true, reach: None,
+        automatic: true,
+        reach: None,
         shape: 0,
         part: None,
     };
@@ -409,4 +421,44 @@ fn a_speck_is_smaller_than_the_smallest_area() {
     // One exactly as large is sewn, and one the least bit smaller is a speck.
     let smallest = AutoParams::defaults().auto_min_area_mm2;
     assert!(!speck(smallest, smallest) && speck(smallest.next_down(), smallest) && !speck(smallest.next_up(), smallest));
+}
+
+#[test]
+fn a_column_whose_neighbours_need_more_work_than_the_budget_keeps_its_pull_compensation_and_says_so() {
+    // An automatic satin column 3 mm wide, its rails of 21 points, and a square sewn after it along its
+    // second rail.
+    let rail = |y: f64| {
+        let mut points = (0..=20).map(|k| p(f64::from(k) * 0.5, y));
+        let start = points.next().unwrap();
+        Subpath { start, segments: points.map(Segment::Line).collect(), closed: false }
+    };
+    let column = Element {
+        id: ElementId::new("column").unwrap(),
+        shape: Shape::stroke(Path { subpaths: vec![rail(10.0), rail(13.0)] }),
+        params: [("satin_column", "true"), ("pull_compensation_mm", "0.4")].into_iter().collect(),
+        ..filled("column", &[])
+    };
+    // The column's pull compensation and what is said, its neighbours found with `work`.
+    let reached = |work: u64| {
+        let column = Sewn { element: column.clone(), area: None, automatic: true, reach: Some(1.0), shape: 0, part: None };
+        let settings = DesignSettings::default();
+        let mut shapes = Shapes::new(vec![column, area("square", (0.0, 13.0), (10.0, 23.0))], &settings, &Budget::DEFAULT);
+        let said = under::reached(&mut shapes, &Budget { max_work: work, ..Budget::DEFAULT });
+        (shapes.into_elements().remove(0).params.get("pull_compensation_mm").map(str::to_string), said)
+    };
+    // With the default budget it sews 1 mm past the rail the square runs along, and 0.4 mm past the other.
+    let (pull, said) = reached(Budget::DEFAULT.max_work);
+    assert!(matches!(pull.as_deref(), Some("0.4 1" | "1 0.4")), "{pull:?}");
+    let [counted] = said.as_slice() else { panic!("{said:?}") };
+    assert_eq!(counted.to_string(), "info SC-I0904: 1 satin column sews 1 mm past a rail, under the shape sewn after it there.");
+    // With any less than that takes, it keeps its pull compensation, and that is said of it.
+    let least = least_work(|budget| reached(budget.max_work).1);
+    assert!(least > 20, "{least}");
+    for work in 0..least {
+        let (pull, said) = reached(work);
+        assert_eq!(pull.as_deref(), Some("0.4"), "{work}");
+        let [said] = said.as_slice() else { panic!("{work}: {said:?}") };
+        assert_eq!((said.code, said.element.as_ref().map(ElementId::as_str)), (Code::AutoUnder, Some("column")), "{work}");
+        assert!(said.message.ends_with("so it sews its pull compensation past both rails."), "{work}: {}", said.message);
+    }
 }

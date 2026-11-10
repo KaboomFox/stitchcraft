@@ -227,7 +227,7 @@ fn req_auto_016_the_areas_sewn_before_a_column_reach_under_it() {
     let ids: Vec<&str> = out.iter().map(|e| e.id.as_str()).collect();
     assert_eq!(ids, ["left", "right", "band"]);
     assert_eq!(setting(&out[2], SATIN_COLUMN), Some("true"));
-    assert!((area(&out[0]) - 110.0).abs() < 0.11 && (area(&out[1]) - 110.0).abs() < 0.11, "{} {}", area(&out[0]), area(&out[1]));
+    assert!((area(&out[0]) - 110.0).abs() < 0.12 && (area(&out[1]) - 110.0).abs() < 0.12, "{} {}", area(&out[0]), area(&out[1]));
 }
 
 #[test]

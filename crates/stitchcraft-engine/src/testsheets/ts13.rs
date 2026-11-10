@@ -32,7 +32,7 @@ use super::sketch::SheetError;
 /// What the engine says of TS-13A, in order: how many shapes it digitized; the stacked badge's blue square,
 /// which sews what shows of it, and the badges' red discs, digitized whole under the shapes in their holes;
 /// each speck round the disc, 6 merged into it and 1 left out; the order; the areas that reach under others
-/// and the red discs cut away under the shapes on them; the specks in paint order, sewn in parts; and the
+/// and the red discs cut away under the shapes on them; the base layer; the specks in paint order, sewn in parts; and the
 /// needle points left out where rows end close together.
 pub(super) const NEIGHBOURS_SAY: [Code; 14] = [
     AutoDigitized,
@@ -52,12 +52,13 @@ pub(super) const NEIGHBOURS_SAY: [Code; 14] = [
 ];
 
 /// What the engine says of TS-13B, in order: how many shapes it digitized, the order, the areas that reach
-/// under others, the stitches that lean where the M's strokes meet at sharp angles, and the needle points
+/// under others, the base layer, the stitches that lean where the M's strokes meet at sharp angles, and the needle points
 /// left out.
-pub(super) const LETTERS_SAY: [Code; 10] = [
+pub(super) const LETTERS_SAY: [Code; 11] = [
     AutoDigitized,
     AutoOrder,
     AutoUnder,
+    AutoBase,
     SatinStitchesLean,
     SatinStitchesLean,
     SatinStitchesLean,
@@ -69,8 +70,8 @@ pub(super) const LETTERS_SAY: [Code; 10] = [
 
 /// What the engine says of TS-13C, in order: how many shapes it digitized, the pupils and hairs that no
 /// satin column can follow, filled; the face, digitized whole under the eyes in its holes; the order; the
-/// areas that reach under others; the eyes, sewn in parts in both halves; and the needle points left out.
-pub(super) const LINES_AND_PARTS_SAY: [Code; 12] = [
+/// areas that reach under others; the base layer; the eyes, sewn in parts in both halves; and the needle points left out.
+pub(super) const LINES_AND_PARTS_SAY: [Code; 13] = [
     AutoDigitized,
     AutoSatinFilled,
     AutoSatinFilled,
@@ -80,6 +81,7 @@ pub(super) const LINES_AND_PARTS_SAY: [Code; 12] = [
     AutoLayers,
     AutoOrder,
     AutoUnder,
+    AutoBase,
     FillPartsApart,
     FillPartsApart,
     StitchesMerged,
@@ -87,9 +89,9 @@ pub(super) const LINES_AND_PARTS_SAY: [Code; 12] = [
 
 /// What the engine says of TS-13D, in order: how many shapes it digitized; the white round each emblem, a
 /// square ring along which no satin column can be drawn, filled; the areas that sew only what shows of them
-/// and those digitized whole under their details; the order; and the areas that reach under others and those
-/// cut away under their details.
-pub(super) const LAYERS_SAY: [Code; 6] = [AutoDigitized, AutoSatinFilled, AutoSatinFilled, AutoLayers, AutoOrder, AutoUnder];
+/// and those digitized whole under their details; the order; the areas that reach under others and those
+/// cut away under their details; and the base layer.
+pub(super) const LAYERS_SAY: [Code; 7] = [AutoDigitized, AutoSatinFilled, AutoSatinFilled, AutoLayers, AutoOrder, AutoUnder, AutoBase];
 
 /// The check of every TS-13 sheet that asks where a jump thread is sewn down: the reference machine cuts
 /// none (MC-1), and the sheets sew their pictures as the engine plans any design.
@@ -175,10 +177,10 @@ mod tests {
         // Each sheet's size, its conformance case's to the micrometre, and its stitches: what MC-8 sews, which
         // changes with any change to what a picture sews.
         for (id, size, stitches) in [
-            ("TS-13A", [125.992, 168.0], 24_396),
-            ("TS-13B", [110.453, 148.4], 14_460),
-            ("TS-13C", [111.391, 107.74], 10_311),
-            ("TS-13D", [115.0, 108.386], 26_816),
+            ("TS-13A", [126.001, 167.75], 25_880),
+            ("TS-13B", [110.597, 148.4], 15_480),
+            ("TS-13C", [111.397, 107.5], 11_229),
+            ("TS-13D", [115.0, 108.386], 27_559),
         ] {
             let plan = find(id).unwrap().plan().unwrap();
             let bounds = plan.bounds().unwrap();
@@ -252,17 +254,19 @@ mod tests {
             let [(a, b), (c, d)] = halves(&plan);
             let said = format!("The bottom half changes thread {a} times and jumps {b} times, the top half {c} and {d} times.");
             assert!(sheet.checks.iter().any(|check| check.contains(&said)), "{id}: {said}");
-            // Digitized, no sheet changes thread more often. A letter digitized is columns, with jumps between
-            // them, where a letter filled sews in one piece: TS-13B jumps more than twice as often digitized.
-            assert!(c <= a, "{id}: {said}");
+            // Digitized, no sheet changes thread more often but TS-13C: its base layer sews in the thread
+            // that paints the most, and the shapes on it start in the thread the half as drawn ends with. A
+            // letter digitized is columns, with jumps between them, where a letter filled sews in one piece:
+            // TS-13B jumps more than twice as often digitized.
+            assert_eq!(c > a, id == "TS-13C", "{id}: {said}");
             assert_eq!(d > 2 * b, id == "TS-13B", "{id}: {said}");
         }
     }
 
     #[test]
     fn ts13a_says_which_of_the_square_and_the_bar_reaches_under_the_other() {
-        // Digitized, the bar sews first, in the blue the half as drawn ends with, and reaches 0.4 mm under the
-        // square where they meet. The square, sewn after it, keeps its edge (REQ-AUTO-007). As drawn, neither
+        // Digitized, the bar sews first of the shapes and reaches 1 mm, the overlap, under the square where
+        // they meet. The square, sewn after it, keeps its edge (REQ-AUTO-007). As drawn, neither
         // reaches under the other.
         let sheet = find("TS-13A").unwrap();
         let plan = sheet.plan().unwrap();
@@ -279,7 +283,7 @@ mod tests {
         let (bar, square) = (extent("ts13a:auto:parted:bar"), extent("ts13a:auto:parted:square"));
         let (drawn_bar, drawn_square) = (extent("ts13a:drawn:parted:bar"), extent("ts13a:drawn:parted:square"));
         assert!(bar.0 < square.0, "the bar sews first");
-        assert!((drawn_bar.1 - bar.1 - 0.4).abs() < 1e-6, "the bar reaches 0.4 mm under the square: {bar:?}, drawn {drawn_bar:?}");
+        assert!((drawn_bar.1 - bar.1 - 1.0).abs() < 0.01, "the bar reaches 1 mm under the square: {bar:?}, drawn {drawn_bar:?}");
         assert!((square.1 - drawn_square.1).abs() < 1e-6 && (square.2 - drawn_square.2).abs() < 1e-6, "{square:?}, drawn {drawn_square:?}");
         assert!(sheet.checks.iter().any(|check| check.contains("the bar, sewn first, reaches under the square only where they meet")));
     }

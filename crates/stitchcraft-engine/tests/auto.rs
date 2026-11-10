@@ -81,10 +81,14 @@ fn pull() -> f64 {
 
 #[test]
 fn req_auto_002_an_area_fills_and_a_line_up_to_the_narrowest_satin_runs() {
-    // An automatic area sews as the same area without settings does: a tatami fill.
-    let square = fill("square", &[&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)]], &RED, &[]);
-    // Without a base layer, that is: on one the area would sew no underlay of its own (REQ-AUTO-028).
-    assert_eq!(needle_points(&planned(unbased(vec![automatic(square.clone())]))), needle_points(&planned(vec![square.clone()])));
+    // An automatic area sews as the same area without settings does, a tatami fill, with its turns kept as
+    // stitches (REQ-FILL-TAT-014). Without a base layer, that is: on one the area sews no underlay of its
+    // own (REQ-AUTO-028).
+    let ring: &[(f64, f64)] = &[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)];
+    let square = fill("square", &[ring], &RED, &[]);
+    let turning = fill("square", &[ring], &RED, &[("turn_stitches", "true")]);
+    assert_eq!(needle_points(&planned(unbased(vec![automatic(square.clone())]))), needle_points(&planned(vec![turning])));
+    assert_ne!(needle_points(&planned(vec![automatic(square.clone())])), needle_points(&planned(vec![square.clone()])));
     assert_eq!(made(&square), vec![square]);
     // A line no wider than 1 mm, the narrowest satin stroke unless the design sets it, runs, exactly 1 mm
     // included: below 0.5 mm as the same line without settings does, and from there tripled (REQ-AUTO-015).

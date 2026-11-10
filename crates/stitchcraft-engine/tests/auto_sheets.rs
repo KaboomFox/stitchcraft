@@ -90,9 +90,11 @@ fn req_auto_007_ts13a_where_the_bar_runs_on_apart_from_the_square_the_fabric_bet
     let bar = corners(drawn(design, "ts13a:auto:parted:bar"));
     let (side, gap, half, bottom) = (bar[0].x(), bar[4].x(), bar[4].y(), bar[3].y());
     assert!((gap - side - 0.5).abs() < 1e-9, "{bar:?}");
-    // Below where they meet, clear of the corner by a row or 2.
+    // Below where they meet, clear of the corner by the overlap, which the bar reaches round it, and a row
+    // or 2.
     let beside = |prefix: &str| -> Vec<f64> {
-        needles(plan, prefix).into_iter().filter(|q| q.y() > half + 0.5 && q.y() < bottom - 0.5).map(|q| q.x()).collect()
+        let clear = half + rules().auto_overlap_mm.get() + 0.5;
+        needles(plan, prefix).into_iter().filter(|q| q.y() > clear && q.y() < bottom - 0.5).map(|q| q.x()).collect()
     };
     let square = beside("ts13a:auto:parted:square").into_iter().fold(f64::NEG_INFINITY, f64::max);
     let bar = beside("ts13a:auto:parted:bar").into_iter().fold(f64::INFINITY, f64::min);
@@ -321,7 +323,7 @@ fn ts13_the_jump_threads_that_its_stitches_sew_down() {
     // For each sheet, as drawn and digitized, how many jump threads it leaves and how many of them a later
     // stitch of their colour sews down, as recorded in the design (`image-to-embroidery.md` › Testing).
     // Digitized, the letters of TS-13B sew as columns with jumps between them.
-    for (id, recorded) in [("TS-13A", [(8, 0), (12, 4)]), ("TS-13B", [(6, 0), (37, 16)]), ("TS-13C", [(9, 4), (6, 1)]), ("TS-13D", [(1, 0), (10, 3)])]
+    for (id, recorded) in [("TS-13A", [(8, 0), (16, 4)]), ("TS-13B", [(6, 0), (42, 21)]), ("TS-13C", [(9, 4), (8, 1)]), ("TS-13D", [(1, 0), (13, 3)])]
     {
         let threads = jump_threads(&sheet(id).1);
         let half = |stops: usize| {

@@ -204,8 +204,9 @@ fn req_auto_020_a_value_out_of_range_is_its_nearest_and_one_that_doesnt_read_sew
     assert_eq!((unread.elements.len(), unread.stitches), (0, None));
     let [error] = unread.diagnostics.as_slice() else { panic!("{:?}", unread.diagnostics) };
     assert_eq!((error.code, error.element.as_ref().map(|id| id.as_str())), (Code::ParamInvalid, Some("band")));
-    // In a design, the others still sew.
+    // In a design, the others still sew, on the base layer of the lowest shape whose settings read: the
+    // band's, which turn it off, don't.
     let (out, said) = sewn(vec![with(band, &[(MAX_SATIN_WIDTH, "wide")]), rectangle("other", (40.0, 0.0), (50.0, 10.0), true)]);
-    assert_eq!(out.iter().map(|element| element.id.as_str()).collect::<Vec<_>>(), ["other"]);
+    assert_eq!(out.iter().map(|element| element.id.as_str()).collect::<Vec<_>>(), ["stitchcraft:base", "other"]);
     assert_eq!(said.iter().filter(|d| d.code == Code::ParamInvalid).count(), 1);
 }

@@ -55,7 +55,8 @@ pub(super) fn reached(shapes: &mut Shapes, budget: &Budget) -> Vec<Diagnostic> {
             match widened(shapes, index, overlap, &mut budget.meter()) {
                 Ok(reaches) => columns.extend(reaches.then_some(overlap)),
                 Err(failed) => {
-                    let (finding, consequence) = ("where this satin column meets the shapes sewn after it", "it sews its pull compensation past both rails");
+                    let (finding, consequence) =
+                        ("where this satin column meets the shapes sewn after it", "it sews its pull compensation past both rails");
                     said.push(failed.said(Code::AutoUnder, finding, consequence, budget.max_work, id));
                 }
             }

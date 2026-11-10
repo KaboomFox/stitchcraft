@@ -1,17 +1,19 @@
 $ stitch plan traced-badge.svg --auto -o traced-badge.pes --preview traced-badge.png
 traced-badge.svg
-  file      traced-badge.pes (PES v1, 9025 bytes)
-  sha256    cedb094606974cca18e43dda6d4f98c169d95ccda39c6a5f19a4eb07ab73d305
+  file      traced-badge.pes (PES v1, 9463 bytes)
+  sha256    d1df12e9e1073c7710f9607807c6a49ea2b04c503ea71823f2481bf593571a34
   profile   brother-pe800-5x7 (Brother PE800 with its 5 × 7 in hoop)
-  size      50.0 × 50.0 mm
-  stitches  3770 stitches, 3 jumps, 2 trims, 2 colour changes, 0 stops
+  size      50.0 × 49.6 mm
+  stitches  3989 stitches, 3 jumps, 2 trims, 2 colour changes, 0 stops
   trims     the machine makes none of them: cut the jump threads by hand
   threads   1. unnamed (#ed171f), shown as Brother PEC 5 "Red"
             2. unnamed (#0a55a3), shown as Brother PEC 2 "Blue"
             3. unnamed (#e8a900), shown as Brother PEC 11 "Deep Gold"
-  preview   traced-badge.png (432 × 432 pixels)
+  preview   traced-badge.png (432 × 429 pixels)
 info SC-I0901: 3 shapes are digitized automatically: all sew as tatami fills.
 warning SC-W0906 (svg:white:fill): This area covers the whole design under the other shapes, so it is left out as the picture's background.
   hint: To sew it, give it settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it.
 info SC-I0908: 2 areas are digitized whole under the areas that fill their holes, which sew after them.
-info SC-I0904: 2 areas are cut away under the areas sewn after them, 0.4 mm inside their edges.
+info SC-I0904: 2 areas are cut away under the areas sewn after them, 1 mm inside their edges.
+info SC-I0909: A base layer of 1869.04 mm² in 1 piece sews first under the design, in the thread #ed171f.
+  hint: To sew the design without a base layer, turn `auto_base_layer` off.
