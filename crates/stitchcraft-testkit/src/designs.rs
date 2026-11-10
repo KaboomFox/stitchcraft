@@ -84,6 +84,16 @@ pub fn automatic(element: Element) -> Element {
     Element { automatic: true, ..element }
 }
 
+/// `elements` as a design that sews no base layer (`REQ-AUTO-028`): the lowest automatic one turns
+/// `auto_base_layer` off, and the design goes by its settings. The cases of the rules for a shape and its
+/// neighbours draw their shapes so, and then read only the elements those shapes sew as.
+pub fn unbased(mut elements: Vec<Element>) -> Vec<Element> {
+    if let Some(lowest) = elements.iter_mut().find(|element| element.automatic) {
+        lowest.params.set("auto_base_layer", "false");
+    }
+    elements
+}
+
 /// The settings of the rules that automatic digitizing goes by for a shape that sets none, each its
 /// default (`REQ-AUTO-020`).
 pub fn rules() -> AutoParams {

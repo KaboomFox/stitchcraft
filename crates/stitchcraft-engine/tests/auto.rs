@@ -14,7 +14,7 @@ use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule,
 use stitchcraft_engine::normalize::region;
 use stitchcraft_engine::normalize::stroke::SHAPE_TOLERANCE;
 use stitchcraft_params::ParamSet;
-use stitchcraft_testkit::designs::{RED, along, automatic, capped, fill, messages, p, planned, polylines, rules, widened};
+use stitchcraft_testkit::designs::{RED, along, automatic, capped, fill, messages, p, planned, polylines, rules, unbased, widened};
 
 /// The needle points the design sews, in order.
 fn needle_points(outcome: &PlanOutcome) -> Vec<Point> {
@@ -36,11 +36,11 @@ fn with(element: Element, params: &[(&str, &str)]) -> Element {
 }
 
 /// The settings automatic digitizing gives a satin column `width` millimetres wide (`REQ-AUTO-018`): the
-/// satin column on, the underlay of its width, pull compensation of the overlap, and no end near the next
+/// satin column on, the underlay of its width, the rules' pull compensation, and no end near the next
 /// element.
 fn satin(width: f64) -> Vec<(&'static str, String)> {
     let mut params =
-        vec![("satin_column", "true".to_string()), ("pull_compensation_mm", overlap().to_string()), ("end_at_nearest_point", "false".to_string())];
+        vec![("satin_column", "true".to_string()), ("pull_compensation_mm", pull().to_string()), ("end_at_nearest_point", "false".to_string())];
     params.extend(underlay(Mm::new(width).unwrap()).iter().map(|&key| (key, "true".to_string())));
     params
 }
@@ -74,16 +74,17 @@ fn stitches(width: f64) -> Stitches {
     Stitches::of_stroke(Mm::new(width).unwrap(), &DesignSettings::default(), &rules())
 }
 
-/// The overlap an automatic area reaches under its neighbours with by default, in millimetres.
-fn overlap() -> f64 {
-    rules().auto_overlap_mm.get()
+/// How far a satin column sews past a rail with no shape sewn after it beside it by default, in millimetres.
+fn pull() -> f64 {
+    rules().auto_pull_compensation_mm.get()
 }
 
 #[test]
 fn req_auto_002_an_area_fills_and_a_line_up_to_the_narrowest_satin_runs() {
     // An automatic area sews as the same area without settings does: a tatami fill.
     let square = fill("square", &[&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)]], &RED, &[]);
-    assert_eq!(needle_points(&planned(vec![automatic(square.clone())])), needle_points(&planned(vec![square.clone()])));
+    // Without a base layer, that is: on one the area would sew no underlay of its own (REQ-AUTO-028).
+    assert_eq!(needle_points(&planned(unbased(vec![automatic(square.clone())]))), needle_points(&planned(vec![square.clone()])));
     assert_eq!(made(&square), vec![square]);
     // A line no wider than 1 mm, the narrowest satin stroke unless the design sets it, runs, exactly 1 mm
     // included: below 0.5 mm as the same line without settings does, and from there tripled (REQ-AUTO-015).
@@ -114,9 +115,9 @@ fn req_auto_003_a_line_up_to_7_mm_is_a_satin_column_as_wide_as_it_is_drawn() {
     let sewn = needle_points(&planned(vec![automatic(line)]));
     assert_eq!(sewn, needle_points(&planned(vec![column])));
     // As wide as drawn once the thread pulls it in: its stitches cross the line from one edge to the other
-    // and reach the overlap past each, 1.9 mm each side of it (REQ-AUTO-018).
+    // and reach its pull compensation past each, 1.9 mm each side of it (REQ-AUTO-018).
     let off_the_first_leg = sewn.iter().filter(|q| q.x() < 15.0).map(|q| q.y().abs()).fold(0.0, f64::max);
-    assert!((off_the_first_leg - 1.5 - overlap()).abs() < 0.05, "{off_the_first_leg}");
+    assert!((off_the_first_leg - 1.5 - pull()).abs() < 0.05, "{off_the_first_leg}");
 }
 
 #[test]
@@ -242,10 +243,11 @@ fn req_auto_004_a_line_wider_than_7_mm_fills_the_area_it_paints() {
     // A miter longer than its limit is cut square: a bevel.
     let limited = joined(&corner, Join::Miter { limit: 1.2 });
     assert!(near(area(&made(&limited)[0]), 387.5, 0.0), "{}", area(&made(&limited)[0]));
-    // Planned, it sews as a fill, with nothing wrong said of it.
+    // Planned, it sews as a fill on its base layer, with nothing wrong said of it.
     let outcome = planned(vec![automatic(straight)]);
     assert!(!needle_points(&outcome).is_empty());
-    assert!(messages(&outcome).iter().all(|m| m.starts_with("info SC-I0901")), "{:?}", messages(&outcome));
+    let said = messages(&outcome);
+    assert!(matches!(said.as_slice(), [digitized, base] if digitized.starts_with("info SC-I0901") && base.starts_with("info SC-I0909")), "{said:?}");
 }
 
 #[test]
@@ -280,7 +282,7 @@ fn diag_sc_i0901_counts_the_shapes_digitized_by_their_stitches() {
     let column = automatic(drawn("column", &[(0.0, 30.0), (20.0, 30.0)], 3.0));
     let wide = automatic(drawn("wide", &[(0.0, 45.0), (20.0, 45.0)], 10.0));
     let set = drawn("set", &[(0.0, 60.0), (20.0, 60.0)], 3.0);
-    let said = messages(&planned(vec![area, thin, column.clone(), wide, set]));
+    let said = messages(&planned(unbased(vec![area, thin, column.clone(), wide, set])));
     assert_eq!(said, ["info SC-I0901: 4 shapes are digitized automatically: 1 sews as a running stitch, 1 as a satin column and 2 as tatami fills."]);
     assert_eq!(messages(&planned(vec![column])), ["info SC-I0901: 1 shape is digitized automatically: it sews as a satin column."]);
     let two = (0..2).map(|i| automatic(drawn(&format!("c{i}"), &[(0.0, f64::from(i) * 10.0), (20.0, f64::from(i) * 10.0)], 3.0))).collect();
@@ -426,7 +428,8 @@ fn req_auto_004_parts_too_small_to_sew_are_named() {
         messages(&planned(vec![automatic(line)])),
         [
             "info SC-I0901: 1 shape is digitized automatically: it sews as a tatami fill.",
-            "info SC-I0905: A part of this area, of 0.1 mm², is too small to sew and shares no edge with an automatic area, so it is left out."
+            "info SC-I0905: A part of this area, of 0.1 mm², is too small to sew and shares no edge with an automatic area, so it is left out.",
+            "info SC-I0909: A base layer of 165.44 mm² in 1 piece sews first under the design, in the thread #c80000."
         ]
     );
 }

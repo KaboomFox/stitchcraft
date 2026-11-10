@@ -22,7 +22,7 @@
 //! its pictures: which shapes it digitized, what it did with the specks and the stacked badge, and so on.
 
 use stitchcraft_core::Code::{
-    self, AutoDigitized, AutoLayers, AutoOrder, AutoSatinFilled, AutoSpeck, AutoUnder, FillPartsApart, SatinStitchesLean, StitchesMerged,
+    self, AutoBase, AutoDigitized, AutoLayers, AutoOrder, AutoSatinFilled, AutoSpeck, AutoUnder, FillPartsApart, SatinStitchesLean, StitchesMerged,
 };
 
 use super::designed::Drawing;
@@ -34,7 +34,7 @@ use super::sketch::SheetError;
 /// each speck round the disc, 6 merged into it and 1 left out; the order; the areas that reach under others
 /// and the red discs cut away under the shapes on them; the specks in paint order, sewn in parts; and the
 /// needle points left out where rows end close together.
-pub(super) const NEIGHBOURS_SAY: [Code; 13] = [
+pub(super) const NEIGHBOURS_SAY: [Code; 14] = [
     AutoDigitized,
     AutoLayers,
     AutoSpeck,
@@ -46,6 +46,7 @@ pub(super) const NEIGHBOURS_SAY: [Code; 13] = [
     AutoSpeck,
     AutoOrder,
     AutoUnder,
+    AutoBase,
     FillPartsApart,
     StitchesMerged,
 ];

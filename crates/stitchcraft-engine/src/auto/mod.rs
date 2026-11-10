@@ -838,6 +838,7 @@ mod tests {
             (Code::AutoSpeck, &[MIN_AREA]),
             (Code::AutoBackground, &[IGNORE_BACKGROUND]),
             (Code::AutoLayers, &[MAX_SATIN_WIDTH]),
+            (Code::AutoBase, &["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_offset_mm"]),
         ];
         for (code, keys) in explained {
             let text = code.explanation();

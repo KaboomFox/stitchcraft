@@ -15,7 +15,7 @@ use stitchcraft_engine::design::{Design, DesignSettings, Element, Shape};
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::normalize::region;
 use stitchcraft_plan::{Rgb, StitchPlan};
-use stitchcraft_testkit::designs::{messages, planned, rules};
+use stitchcraft_testkit::designs::{messages, planned, rules, unbased};
 use stitchcraft_testkit::metrics::edge_coverage;
 use stitchcraft_testkit::pictures::{self, Picture, Trace};
 
@@ -82,7 +82,7 @@ fn req_auto_007_a_stacked_trace_sews_what_an_abutting_one_does() {
 
 /// The elements `picture` sews, digitized, in the order they sew, and what is said of them.
 fn digitized(picture: &Picture) -> (Vec<Element>, Vec<Diagnostic>) {
-    let design = Design::new(picture.elements.clone(), DesignSettings::default()).unwrap();
+    let design = Design::new(unbased(picture.elements.clone()), DesignSettings::default()).unwrap();
     let (elements, said) = auto::digitized(&design, &Budget::DEFAULT);
     (elements.into_owned(), said)
 }
