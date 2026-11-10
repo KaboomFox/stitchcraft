@@ -166,8 +166,9 @@ and chose both of the ways open to it (`REQ-VC-021`):
   live effect is given only the settings its manifest declares, and VectorCraft drops a record's other keys
   before it runs the effect. So without this row no preview could sew a sett of its own, whatever wrote it.
   The row also shows the sett an Ink/Stitch file brought, and takes one pasted in. With it the fill dialog
-  has 63 parameters, within the 64 its manifest is checked against, and it is the only text a dialog
-  declares (`manifest::TEXTS`).
+  had 63 parameters, within the 64 its manifest is checked against, and it is the only text a dialog
+  declares (`manifest::TEXTS`). From M10.9 the guided fill's stitch positions make 64. A setting more needs
+  room made for it.
 - **StitchCraft Tartan, a light filter**, writes the row from what a person has, a palette code or a
   threadcount in the register's colour letters, with the width of a thread, the sett's turn, its scale, how
   far it is moved and the width up to which a stripe sews as a run
@@ -191,9 +192,12 @@ whole shape.
 manifest with one whole. So from M10.7 the fill effect installs from VectorCraft 0.14, as the exporters
 do. Those 2 releases don't export a machine file either, so a fill made there was only ever a preview.
 
-The Test Sheet filter draws TS-17B from M10.7, each tartan's sett in its fill effect's record as the
+The Test Sheet filter drew TS-17B from M10.7, each tartan's sett in its fill effect's record as the
 row's text, and from M10.12 each of its gradients as a gradient paint
-([below](#a-gradients-geometry)).
+([below](#a-gradients-geometry)). From M10.9 the sheet's guided leaf copies a guide line. Drawn into a
+document, the guide would be a `stitch:guide` marker grouped with the leaf, and a filter doesn't make groups.
+Only `stitch testsheet` draws TS-17B now. The filter still draws a linear gradient fill with its gradient
+paint, though no sheet it draws has one.
 
 **How the dialog shows them** (`REQ-VC-012`, M6.10). From 0.14 a parameter can say how the dialog shows
 it, and the plug-in says all of it from the registry (`apps/stitchcraft-vc-plugin/src/dialog.rs`):
@@ -455,7 +459,7 @@ the filter stops with `SC-E0004` before VectorCraft would. A VectorCraft before 
 filter, which almost every curved line outruns, and stops it with its own error.
 
 **Test Sheet** (`REQ-VC-015`, `apps/stitchcraft-vc-plugin/src/testsheet.rs`) draws one of the sheets
-drawn as designs, TS-02B to TS-09, TS-11A, TS-11B, the TS-13 sheets, TS-17A and TS-17B, into the document: the
+drawn as designs, TS-02B to TS-09, TS-11A, TS-11B, the TS-13 sheets and TS-17A, into the document: the
 sheet's design moved by whole millimetres so that its middle is nearest the middle of the artboard
 `_context` names (`Design::moved`). TS-17A moves by whole multiples of 6 mm, which keep its crosses' cells on
 the canvas's grids of 2 and 3 mm (`TestSheet::step`). The turned square's grid starts at the square's
@@ -480,8 +484,8 @@ The contract test `req_vc_015_each_test_sheet_draws_into_a_document_that_exports
 draws each sheet into a new document in VectorCraft 0.17.0's and 0.18.0's hosts alike, and exports it with
 the PES exporter (2026-10-29). Drawing takes 14 to 25 million instructions, at most half of a light filter's run.
 Exporting takes 23 million to 1.6 billion, at most 17 % of an export's, the most for the fills of TS-07,
-TS-08 and TS-09. TS-17B joined the sheets drawn in M10.7, after that measure, and the test prints its costs
-with the others'.
+TS-08 and TS-09. TS-17B joined the sheets drawn in M10.7, after that measure, and left them in M10.9. The
+test prints each sheet's costs.
 
 ### Tools: the routing filters
 
@@ -639,7 +643,7 @@ note can follow it:
 | `stitch:ignore` | `ignore_object`, `ignore_layer` | Leaves the object or the layer out with everything in it, and lists it with `SC-I0811` |
 | `stitch:start`, `stitch:end` | `starting_point`, `ending_point` | Gives the shapes of the group or layer it is in, and of the groups inside it, their start or end position: the centre of the box round its anchors. Their fills and satin columns start or end there (`REQ-GEN-001`). The marker is left out of the stitches. The first marker of each kind that shows counts, a group's own before those of the groups round it. `SC-W0807` names another, one with no anchor that reads, and the markers of a shape digitized automatically, which places its own. A group or a layer is never a marker: `SC-W0807` names it, and what it holds is read as under any other name |
 | `stitch:target` | `target_point` | From M10.8, gives the shapes of the group or layer it is in, and of the groups inside it, the point they aim at: the centre of the box round its anchors. Their ripple stitches shrink or spiral to it (`REQ-RIP-002`), and their circular fills turn round it (`REQ-FILL-CIR-008`). It is read as the start and end markers are, and `SC-W0807` names the same ones |
-| `stitch:guide`, `stitch:anchor` | Ink/Stitch's guide-line and anchor-line markers, which mark paths rather than tie commands | From M10.11, gives the shapes of the group or layer it is in, and of the groups inside it, the line their ripple stitches' copies follow, or the line across those copies whose ends lie on a satin guide's pairs (`REQ-RIP-012` to `REQ-RIP-014`). The marked path is the guide, and one of several subpaths, or a compound path, is a satin guide, its rails read with a satin column's defaults but for the ripple's `reverse_rails` and `swap_satin_rails`. Only the start and the end of an anchor's first subpath count. The marker is left out of the stitches. It is read as the start and end markers are, and `SC-W0807` names the same ones |
+| `stitch:guide`, `stitch:anchor` | Ink/Stitch's guide-line and anchor-line markers, which mark paths rather than tie commands | From M10.11, gives the shapes of the group or layer it is in, and of the groups inside it, the line their ripple stitches' copies follow, or the line across those copies whose ends lie on a satin guide's pairs (`REQ-RIP-012` to `REQ-RIP-014`). The marked path is the guide, and one of several subpaths, or a compound path, is a satin guide, its rails read with a satin column's defaults but for the ripple's `reverse_rails` and `swap_satin_rails`. From M10.9 a guide also gives their guided fills the line their rows copy, its first subpath (`REQ-VC-023`). In Ink/Stitch too, one guide line steers both. Only the start and the end of an anchor's first subpath count. The marker is left out of the stitches. It is read as the start and end markers are, and `SC-W0807` names the same ones |
 | `stitch:origin`, `stitch:stop-position` | `origin`, `stop_position` | Gives the design its origin, which goes to the hoop's centre, or the stop position the frame moves to before each stop (`REQ-ASM-005`): the centre of the box round its anchors, wherever the marker is (M8.8). The marker is left out of the stitches. 2 origins, or 2 stop positions in a design with a stop, are an error (`SC-E0819`), as Ink/Stitch doesn't write a file with 2 such commands. `SC-W0807` names a marker with no anchor that reads, which places nothing, and a group or a layer of either name, which is never a marker |
 | `stitch:route-start`, `stitch:route-end` | `autoroute_start`, `autoroute_end` | From M10.4, marks where the routing filters start and end a route, at the centre of the box round its anchors, when it is selected with the paths they route. The filters delete it with the paths ([routing filters](#tools-the-routing-filters)). `stitch export` leaves it out of the stitches. Before M10.4 the reader reads the name as the row below says |
 | Any other word after `stitch:` | | Ignores the name, and `SC-W0807` names the object, in case the word is a misspelt marker |
@@ -648,9 +652,10 @@ Hiding an object leaves it out too, without a word, and a name on a hidden objec
 effect is given its object's geometry, with its fills and strokes from VectorCraft 0.14 (VectorCraft's
 `docs/plugins.md`, Input), never its name. So
 VectorCraft's preview still shows the stitches of an object these names leave out, a marker included,
-when it has a StitchCraft effect or is in a group that has one. `stitch export` leaves them out. The RFC's
-sixth proposal, still open in that part, would let a live effect read the markers beside its object, so
-its preview could start and end at them.
+when it has a StitchCraft effect or is in a group that has one. `stitch export` leaves them out. A guided
+fill's preview doesn't see the guide beside its object. It sews the tatami fill `SC-W0331` names, and
+`stitch export` sews the rows along the guide. The RFC's sixth proposal, still open in that part, would let a live
+effect read the markers beside its object, so its preview could start and end at them.
 
 ### Reading `.vectorcraft` files (`stitchcraft-vectorcraft`)
 

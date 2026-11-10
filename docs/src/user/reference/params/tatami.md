@@ -7,7 +7,7 @@ offset so that they never line up. Ink/Stitch's default fill. A contour fill tak
 its expand and its underlay from these settings too, a meander fill its expand and its underlay, and a
 circular fill all but its gap-filling rows.
 
-Applies to Tatami fill, Contour fill, Meander fill, Circular fill, Linear gradient fill, Tartan fill.
+Applies to Tatami fill, Contour fill, Meander fill, Circular fill, Guided fill, Linear gradient fill, Tartan fill.
 
 ## Rows
 
@@ -58,7 +58,7 @@ the rows in from the edge.
 
 - **Accepts:** a length from -10 to 10 mm
 - **Default:** `0`
-- **Applies to:** Tatami fill, Contour fill, Meander fill, Circular fill, Linear gradient fill, Tartan fill, Cross stitch
+- **Applies to:** Tatami fill, Contour fill, Meander fill, Circular fill, Guided fill, Linear gradient fill, Tartan fill, Cross stitch
 - **Ink/Stitch:** same key and default; StitchCraft differs:
   - **DEV-FILL-008.** Where fill_underlay_inset_mm, or a negative expand_mm, cuts a part into pieces, the pieces are sewn in order of their point of least x, and of least y among pieces level with each other, each with its least x within a nanometre of the one before. GEOS gives them in the order it walks its graph, which Ink/Stitch sews them in. Of 2,000 random polygons grown or shrunk, 85 gave 2 or more pieces, and 81 of those came in the same order; the 4 others had a sliver among their pieces. For pieces level at their least x, GEOS's order turns on where the ring's points start: 2 squares one above the other, shrunk apart, give the lower first when the ring is listed from the bottom and the upper first when it is listed from the top, and 310 of 400 random such shapes, listed from random points, gave the lower first. Each piece's top rows start at the point nearest the needle after the piece before, where Ink/Stitch starts every piece's top rows nearest the needle as it was before the first.
   - **DEV-FILL-024.** A cross stitch fill's part that a negative expand_mm shrinks away entirely is sewn at its own size, with SC-W0309, as every fill's part is. Ink/Stitch shrinks a cross stitch fill's shape as a whole, and keeps it as drawn only when nothing at all is left, so where other parts are left, a part shrunk away sews no cross.
@@ -99,7 +99,7 @@ along the fill's edge.
 
 - **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `false`
-- **Applies to:** Tatami fill, Circular fill, Linear gradient fill, Tartan fill
+- **Applies to:** Tatami fill, Circular fill, Guided fill, Linear gradient fill, Tartan fill
 - **Ink/Stitch:** same key, meaning and default
 
 ## Travel
@@ -112,7 +112,7 @@ show along the edge.
 
 - **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `true`
-- **Applies to:** Tatami fill, Circular fill
+- **Applies to:** Tatami fill, Circular fill, Guided fill
 - **Ink/Stitch:** same key and default; StitchCraft differs:
   - **DEV-FILL-011.** With underpath off, or in a part the gratings of lines miss, the needle travels between 2 points of one ring the shorter way round it, by length, and on a tie the way that does not pass the ring's start. Ink/Stitch's travel along the outline counts nodes instead: its graph has a node every CSS pixel along the outline's sides, and at their corners and the rows' ends, and its edges carry no length, so the way with fewer nodes is taken. That is about the shorter way, but a way past many short sides, as round a curve drawn in short pieces, has more nodes for its length, and the way with fewer nodes can be the longer.
   - **DEV-FILL-013.** In a part the gratings of lines miss, with underpath on, the needle travels along the part's rings, as with underpath off. Ink/Stitch also travels along the outline there, but it smooths every way it travels with underpath on, as it smooths a way under the rows: the way cuts the outline's corners inside the part, and is kept inside it where it leaves it.

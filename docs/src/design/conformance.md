@@ -345,7 +345,9 @@ of 2 stops and of 3, one of them transparent, each at a slant of its own. The `g
 of no length, one that a `gradientTransform` turns, a fill in 2 parts that stops at its end, and a fill without a
 gradient (`REQ-FILL-GRD-009`). Their gradients placed in the shape's box and by the gradient their `href`
 names, and stops that all lie before the fill's first row, sew otherwise in Ink/Stitch, as the ledger explains
-(`DEV-SVG-027`, `DEV-FILL-032`). The `ts17c-ripple-` cases check each of TS-17C's
+(`DEV-SVG-027`, `DEV-FILL-032`). The `inkstitch-ts17b-guided` case judges TS-17B's guided
+leaf alone, its rows copies of an S-shaped guide from tip to tip over its underlay (`REQ-FILL-GDD-008`).
+The `ts17c-ripple-` cases check each of TS-17C's
 ripple stitches on its own, the one along a column and the 2 that shrink to a target point (`REQ-RIP-011`).
 The `ts17c-guided-` cases check its guided ripples so (`REQ-RIP-019`). A wave and a zigzag cut to a circle
 follow guide lines. A circle and a diamond stand between satin guides' rails, the diamond at its guide's

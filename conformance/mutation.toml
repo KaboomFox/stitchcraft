@@ -786,6 +786,30 @@ line = "length: sewing.pattern.first().copied().unwrap_or(2.0 * sewing.min),"
 why = "the sewing's pattern is running::pattern's, never empty, so its first length is always there and the fallback is never used"
 
 [[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/guided/cut.rs"
+mutant = "replace > with >= in held"
+line = "let mut ends: Vec<f64> = along_rings.iter().flat_map(|&[from, to]| [from, to]).filter(|&at| at > a && at < b).collect();"
+why = "an end of a stretch along a ring that lies exactly at a adds a part of no length there, whose middle is that end, on the stretch, so it is passed over as any part along a ring; only the work charged grows"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/guided/cut.rs"
+mutant = "replace < with <= in held"
+line = "let mut ends: Vec<f64> = along_rings.iter().flat_map(|&[from, to]| [from, to]).filter(|&at| at > a && at < b).collect();"
+why = "an end of a stretch along a ring that lies exactly at b adds a part of no length there, whose middle is that end, on the stretch, so it is passed over as any part along a ring; only the work charged grows"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/guided/line.rs"
+mutant = "replace > with >= in meetings"
+line = "let closed = sides > 2 && line.first() == line.last();"
+why = "a line of 2 sides has one pair of sides, which follow each other whether the line counts as closed or not"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/generators/running/mod.rs"
+mutant = "replace < with <= in along_row"
+line = "while let Some(corner) = corners.next_if(|corner| corner.at < at) {"
+why = "a corner exactly a whole number of stitches along is put before the needle point at its place and not after it, and space keeps the corner and leaves the other out in either order: the same needle points, and only the work charged changes, by a unit"
+
+[[equivalent]]
 file = "crates/stitchcraft-engine/src/generators/tartan/herringbone.rs"
 mutant = "replace && with || in Herringbone::warp"
 line = "for &stripe in stripes.iter().filter(|s| s[0] <= reach_right && s[1] >= reach_left && s[0] <= right && s[1] >= left) {"
