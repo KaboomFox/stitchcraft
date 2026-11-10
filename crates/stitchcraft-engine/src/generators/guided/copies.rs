@@ -259,4 +259,56 @@ mod tests {
         assert_eq!(bounds.farthest(p(0.0, 0.0)), (100.0_f64 + 16.0).sqrt());
         assert_eq!(bounds.farthest(p(-3.0, 2.0)), (169.0_f64 + 4.0).sqrt());
     }
+
+    #[test]
+    fn a_box_is_met_by_a_segment_that_ends_on_its_edge_and_not_by_one_past_its_far_corner() {
+        let bounds = Bounds::of(&[p(0.0, 0.0), p(10.0, 4.0)]);
+        assert!(bounds.meets(p(-1.0, 2.0), p(0.0, 2.0)), "ending on its left edge");
+        // Out of its span along x before it reaches its span along y.
+        assert!(!bounds.meets(p(8.0, -3.0), p(12.0, 1.0)), "past its far corner");
+    }
+
+    #[test]
+    fn a_line_of_one_point_meets_the_box_that_holds_the_point() {
+        let meter = &mut Budget::DEFAULT.meter();
+        let bounds = Bounds::of(&[p(0.0, 0.0), p(10.0, 4.0)]);
+        assert!(bounds.met_by(&[p(5.0, 1.0)], meter).unwrap());
+        assert!(bounds.met_by(&[p(10.0, 4.0)], meter).unwrap(), "on its corner");
+        assert!(!bounds.met_by(&[p(5.0, 5.0)], meter).unwrap(), "over it");
+        assert!(!bounds.met_by(&[p(11.0, 1.0)], meter).unwrap(), "beside it");
+        assert!(!bounds.met_by(&[], meter).unwrap());
+    }
+
+    #[test]
+    fn the_unit_vector_between_points_at_one_place_is_nothing() {
+        assert_eq!(unit(p(1.0, 2.0), p(4.0, 6.0)), [0.6, 0.8]);
+        assert_eq!(unit(p(1.0, 2.0), p(1.0, 2.0)), [0.0, 0.0]);
+    }
+
+    #[test]
+    fn req_fill_gdd_003_the_copies_start_whole_spacings_from_the_line_s_point_nearest_the_centroid() {
+        // A 10 × 4 piece, its centroid at (5, 2), and copies 2 mm apart.
+        let meter = &mut Budget::DEFAULT.meter();
+        let piece = rectangle(4.0);
+        let rings = Rings::new(&piece, meter).unwrap();
+        let mut from = |line: &[(f64, f64)], step: [f64; 2]| {
+            let line: Vec<Point> = line.iter().map(|&(x, y)| p(x, y)).collect();
+            start(&piece, &rings, &line, step, 2.0, meter).unwrap()
+        };
+        // A line across the piece: from the line itself.
+        assert_eq!(from(&[(-1.0, 2.0), (11.0, 2.0)], [0.0, 1.0]), 0);
+        // 12 mm left of the centroid: 6 spacings, ahead of copies that move right and behind those that move left.
+        let left = [(-7.0, 9.0), (-7.0, -5.0)];
+        assert_eq!(from(&left, [1.0, 0.0]), 6);
+        assert_eq!(from(&left, [-1.0, 0.0]), -6);
+        // The nearest point lies on the nearer side: 7 mm to the left, not 9 mm below.
+        assert_eq!(from(&[(-2.0, 9.0), (-2.0, -7.0), (12.0, -7.0)], [1.0, 0.0]), 3);
+        // Of 2 points as near, the first along the line counts: the one to the left, behind copies that move left.
+        assert_eq!(from(&[(-2.0, 9.0), (-2.0, -5.0), (12.0, -5.0)], [-1.0, 0.0]), -3);
+        // Ahead or behind is measured along the way the copies move: from a point 6 mm left of the centroid and
+        // 6 mm before it along y, ahead for copies that move more along x than back along y, and behind otherwise.
+        let corner = [(-9.0, -4.0), (-1.0, -4.0)];
+        assert_eq!(from(&corner, [0.8, -0.6]), 4);
+        assert_eq!(from(&corner, [0.6, -0.8]), -4);
+    }
 }

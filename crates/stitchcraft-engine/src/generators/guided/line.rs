@@ -155,6 +155,7 @@ mod tests {
     use stitchcraft_core::Budget;
 
     use super::*;
+    use crate::generators::tatami::fixture::costs;
 
     fn points(xy: &[(f64, f64)]) -> Vec<Point> {
         xy.iter().map(|&(x, y)| Point::new(x, y).unwrap()).collect()
@@ -225,5 +226,55 @@ mod tests {
     fn finding_where_a_guide_meets_itself_is_charged_to_the_budget() {
         let s = points(&[(0.0, 0.0), (3.0, 1.0), (6.0, -1.0), (9.0, 0.0)]);
         assert!(prepared(&s, &mut Budget { max_stitches: 10, max_work: 1 }.meter()).is_err());
+    }
+
+    #[test]
+    fn req_fill_gdd_002_loops_4_deep_take_the_4_rounds_there_are() {
+        // A spiral inward and straight out across its 4 turns: each round leaves out the innermost loop left, and
+        // the fourth leaves the line from the start to the first crossing and out.
+        let spiral = [
+            (0.0, 0.0),
+            (20.0, 0.0),
+            (20.0, 20.0),
+            (0.0, 20.0),
+            (0.0, 2.0),
+            (18.0, 2.0),
+            (18.0, 18.0),
+            (2.0, 18.0),
+            (2.0, 4.0),
+            (16.0, 4.0),
+            (16.0, 16.0),
+            (4.0, 16.0),
+            (4.0, 6.0),
+            (14.0, 6.0),
+            (14.0, 14.0),
+            (10.0, 14.0),
+            (10.0, -2.0),
+        ];
+        assert_eq!(ready(&spiral), Some(vec![(0.0, 0.0), (10.0, 0.0), (10.0, -2.0)]));
+    }
+
+    #[test]
+    fn req_fill_gdd_002_a_closed_guide_is_cut_where_its_last_side_crosses_another() {
+        // A figure of 8 drawn from a corner so that its last side crosses its second: the loop between is left
+        // out, and the loop left, closed, loses its last 2 points.
+        let eight = [(0.0, 10.0), (0.0, 0.0), (10.0, 10.0), (10.0, 0.0), (0.0, 10.0)];
+        assert_eq!(ready(&eight), Some(vec![(0.0, 10.0), (0.0, 0.0)]));
+    }
+
+    #[test]
+    fn req_fill_gdd_002_a_closed_guide_whose_first_point_is_drawn_twice_is_opened_as_any_other() {
+        let square = [(0.0, 0.0), (0.0, 0.0), (4.0, 0.0), (4.0, 4.0), (0.0, 4.0), (0.0, 0.0)];
+        assert_eq!(ready(&square), Some(vec![(0.0, 0.0), (4.0, 0.0), (4.0, 4.0)]));
+        // 4 points at one place: closed, and still at one place without its last 2.
+        assert_eq!(ready(&[(1.0, 1.0); 4]), None);
+    }
+
+    #[test]
+    fn a_closed_guide_that_meets_itself_nowhere_costs_the_looks_at_its_sides_alone() {
+        // A square: 5 pairs of its 4 sides have spans along x that overlap, all but its left and right sides. Its
+        // first and last sides meet at its start alone, where it is not cut, so no piece is made.
+        let square = points(&[(0.0, 0.0), (4.0, 0.0), (4.0, 4.0), (0.0, 4.0), (0.0, 0.0)]);
+        assert_eq!(costs(&[Box::new(|meter| prepared(&square, meter).map(|_| ()))]), [5]);
     }
 }
