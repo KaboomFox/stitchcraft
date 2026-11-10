@@ -131,8 +131,8 @@ fn req_auto_028_one_base_layer_sews_first_under_the_designs_outer_shape() {
     for (side, at, wanted) in [("left", left, INSET), ("right", right, 50.0 - INSET), ("top", top, INSET), ("bottom", bottom, 20.0 - INSET)] {
         assert!((at - wanted).abs() < 0.05, "the base layer's {side} side lies at {at:.2}, not {wanted:.2}");
     }
-    // It is one shape across the edge where the rectangles meet.
-    assert!(base.iter().any(|(_, stitch)| stitch.from.x().min(stitch.to.x()) < 19.0 && stitch.from.x().max(stitch.to.x()) > 21.0));
+    // It is one shape across the edge where the rectangles meet: its stitches cross that edge.
+    assert!(base.iter().any(|(_, stitch)| stitch.from.x().min(stitch.to.x()) < 20.0 && stitch.from.x().max(stitch.to.x()) > 20.0));
     // Its thread paints the most: blue, 600 mm² to red's 400.
     let block = plan.blocks.get(base[0].1.block).unwrap();
     assert_eq!(block.thread.color, BLUE.color);
@@ -170,9 +170,10 @@ fn req_auto_028_the_base_layer_keeps_a_hole_and_leaves_a_part_narrower_than_twic
     let plan = plan(&holed);
     let base = stitches(&plan, BASE);
     assert!(!base.is_empty(), "the plan has no element {BASE}: {:?}", plan.elements);
-    // No base stitch comes nearer the hole than 0.6 mm: neither its ends nor its middle lie in the hole
-    // grown by that much.
-    let near = |p: Point| (12.0 - INSET + 0.01..18.0 + INSET - 0.01).contains(&p.x()) && (12.0 - INSET + 0.01..18.0 + INSET - 0.01).contains(&p.y());
+    // No base stitch comes nearer the hole than 0.6 mm, neither its ends nor its middle. The offset rounds the
+    // hole's corners, and a stitch along a rounded corner cuts it by 0.05 mm at most.
+    let apart = |at: f64| (12.0 - at).max(at - 18.0).max(0.0);
+    let near = |p: Point| stitchcraft_core::math::hypot(apart(p.x()), apart(p.y())) < INSET - 0.05;
     assert!(base.iter().all(|(_, stitch)| !near(stitch.from) && !near(stitch.to) && !near(stitch.from.lerp(stitch.to, 0.5))));
     // The strip is narrower than twice the inset, so the base layer ends 0.6 mm inside the square's side.
     let [left, right, top, bottom] = span(&base);

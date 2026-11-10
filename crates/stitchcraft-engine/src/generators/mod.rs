@@ -81,6 +81,10 @@ pub enum Layer {
     Underlay,
     /// Its top stitches alone, which its run sews after every underlay.
     Top,
+    /// All of its stitches, each an underlay stitch in the plan: a design's base layer (`crate::auto`,
+    /// `REQ-AUTO-028`), whose top rows lie under the design's shapes as its underlay does. Planning names
+    /// what a base layer generated so, and no generator is asked for it.
+    Base,
 }
 
 /// An element's neighbours in sewing order (`REQ-GEN-003`).

@@ -48,7 +48,7 @@ pub(super) fn filled(id: &str, parts: &[Polygon]) -> Element {
 
 /// An automatic area `id`, the square from `(x0, y0)` to `(x1, y1)`.
 fn area(id: &str, from: (f64, f64), to: (f64, f64)) -> Sewn {
-    Sewn { element: filled(id, &[square(from, to)]), area: Some(AutoParams::defaults()), automatic: true, shape: 0, part: None }
+    Sewn { element: filled(id, &[square(from, to)]), area: Some(AutoParams::defaults()), automatic: true, reach: None, shape: 0, part: None }
 }
 
 /// The least work with which `step` says what it says with the default budget, found by halving: with a
@@ -114,7 +114,7 @@ fn a_narrow_line_covered_whole_sews_nothing_unless_finding_that_needs_more_work_
     let shape = Shape::Stroke { path: Path { subpaths: vec![middle] }, width: Mm::new(0.6).unwrap(), join: Join::Round, cap: Cap::Round };
     let line = Element { shape, ..filled("line", &[]) };
     let sewn = |to: (f64, f64)| {
-        let line = Sewn { element: line.clone(), area: None, automatic: true, shape: 0, part: Some(strip.clone()) };
+        let line = Sewn { element: line.clone(), area: None, automatic: true, reach: None, shape: 0, part: Some(strip.clone()) };
         vec![line, area("cover", (0.0, 0.0), to)]
     };
     let ids = |elements: &[Element]| elements.iter().map(|element| element.id.to_string()).collect::<Vec<_>>();
@@ -153,7 +153,7 @@ fn an_area_costs_a_unit_for_each_shape_sewn_after_it_far_from_it() {
     // A fill with settings far from them, sewn after them, whose region takes thousands of units to build.
     let with_far = || {
         let mut sewn = sewn();
-        sewn.push(Sewn { element: filled("far", &[circle((100.0, 100.0), 10.0, 2_000)]), area: None, automatic: false, shape: 0, part: None });
+        sewn.push(Sewn { element: filled("far", &[circle((100.0, 100.0), 10.0, 2_000)]), area: None, automatic: false, reach: None, shape: 0, part: None });
         sewn
     };
     let (alone, far) = (least_work(|budget| reached(sewn(), budget).1), least_work(|budget| reached(with_far(), budget).1));
@@ -168,7 +168,7 @@ fn a_speck_costs_a_unit_for_each_area_far_from_it() {
         sewn.push(Sewn {
             element: filled("far", &[circle((100.0, 100.0), 10.0, 2_000)]),
             area: Some(AutoParams::defaults()),
-            automatic: true,
+            automatic: true, reach: None,
             shape: 0,
             part: None,
         });
@@ -199,7 +199,7 @@ fn a_column_whose_area_needs_more_work_than_its_budget_allows_is_said_and_reache
     // The square as it is sewn, and what is said of the column, each shape's paint found with `work`.
     let sewn = |work: u64| {
         let settings = DesignSettings::default();
-        let sewn = vec![area("square", (0.0, 0.0), (10.0, 10.0)), Sewn { element: column(), area: None, automatic: false, shape: 0, part: None }];
+        let sewn = vec![area("square", (0.0, 0.0), (10.0, 10.0)), Sewn { element: column(), area: None, automatic: false, reach: None, shape: 0, part: None }];
         let mut shapes = Shapes::new(sewn, &settings, &Budget { max_work: work, ..Budget::DEFAULT });
         let _ = under::reached(&mut shapes, &Budget::DEFAULT);
         let said = std::mem::take(&mut shapes.said);
@@ -243,7 +243,7 @@ fn a_speck_rejoins_the_rest_of_its_area_or_is_left_out_when_it_shares_no_edge() 
     let parts = Sewn {
         element: filled("parts", &[square((0.0, 0.0), (10.0, 10.0)), square((10.02, 0.0), (10.52, 1.0))]),
         area: Some(AutoParams::defaults()),
-        automatic: true,
+        automatic: true, reach: None,
         shape: 0,
         part: None,
     };
