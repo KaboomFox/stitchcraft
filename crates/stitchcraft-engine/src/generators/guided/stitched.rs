@@ -49,24 +49,30 @@ pub struct RowStitching {
 }
 
 /// The needle points of `copy`, the `i`-th row taken, stitched as `guided` says, its random lengths, when
-/// they vary, drawn from the stream of `rng` its place keys: its first point, then the running stitch from
-/// its stagger to its end. Costs as the smoothing and the running stitch do.
+/// they vary, drawn from the stream of `rng` its place keys: smoothed ([`smoothed`]), then stitched with
+/// its stagger counted from its place ([`stitched`]). Costs as the smoothing and the running stitch do.
 pub(super) fn row(copy: &[Point], i: usize, guided: &Guided, rng: &SplitMix64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
-    let smoothed;
-    let line = if guided.smoothness > 0.0 {
-        smoothed = smooth(copy, guided.smoothness, guided.travel.min_stitch, meter)?;
-        &smoothed
-    } else {
-        copy
-    };
+    #[allow(clippy::cast_precision_loss)] // Row counts are far below 2⁵².
+    stitched(&smoothed(copy, guided, meter)?, i as f64, i, guided, rng, meter)
+}
+
+/// `line` smoothed by `smoothness_mm`, as a contour fill's path is; as it is without.
+pub(super) fn smoothed(line: &[Point], guided: &Guided, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+    if guided.smoothness > 0.0 { smooth(line, guided.smoothness, guided.travel.min_stitch, meter) } else { Ok(line.to_vec()) }
+}
+
+/// The needle points of `line` stitched as `guided` says: its first point, then the running stitch from
+/// `(place / staggers) mod 1` of a longest stitch along it to its end, its random lengths, when they vary,
+/// drawn from the stream of `rng` that `key` keys. A row's place is its number in the order the rows are
+/// taken, and a buffer's ring's the row spacings it lies from the guide. Costs as the running stitch does.
+pub(super) fn stitched(line: &[Point], place: f64, key: usize, guided: &Guided, rng: &SplitMix64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
     let Some(&first) = line.first() else { return Ok(Vec::new()) };
     let RowStitching { length, tolerance, jitter, staggers, position } = guided.stitching;
     let staggers = if staggers == 0.0 { 1.0 } else { staggers };
-    #[allow(clippy::cast_precision_loss)] // Row counts are far below 2⁵².
-    let phase = (i as f64 / staggers).rem_euclid(1.0) * length;
+    let phase = (place / staggers).rem_euclid(1.0) * length;
     let along = Along::new(line, meter)?;
     let rest = along.part(phase.min(along.length()), along.length());
     let lengths = (length, tolerance, guided.travel.min_stitch);
-    let stitches = along_row(&rest, lengths, jitter, (rng, i), position == Position::Stagger, meter)?;
+    let stitches = along_row(&rest, lengths, jitter, (rng, key), position == Position::Stagger, meter)?;
     Ok(std::iter::once(first).chain(stitches).collect())
 }
