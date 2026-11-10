@@ -46,7 +46,7 @@ tools: stitchcraft-xtask (`xtask/`, run as `cargo xtask`)
 | `stitchcraft-engine` | L2 | `Design`/`Element`/`Shape`, automatic digitizing, normalization, generators, plan assembly, finalizing for the machine, and from M10.4 routing | depend on formats, render or any adapter |
 | `stitchcraft-formats` | L2 | readers/writers (PES/PEC, DST, …), quantization, format limits | depend on engine (it encodes *plans*) |
 | `stitchcraft-render` | L2 | CPU preview images of plans (thread look, simple look, overlays) | depend on engine |
-| `stitchcraft-svg` | L3 | SVG → `Design` (geometry, styles, `inkstitch:*` attributes, commands), plan → SVG | contain stitch logic |
+| `stitchcraft-svg` | L3 | SVG → `Design` (geometry, styles, `inkstitch:*` attributes, commands), plan → SVG, and embroidery fonts in Ink/Stitch's format (`font`, M14.1) | contain stitch logic |
 | `stitchcraft-vectorcraft` | L3 | `.vectorcraft` → `Design` (commands in names included), effect records ↔ `ParamSet`, plug-in JSON objects | contain stitch logic |
 | `stitchcraft-testkit` | test | fixtures, `proptest` strategies (from the registry), invariant assertions | be a normal dependency |
 | `stitchcraft-cli` | app | the `stitch` command; all filesystem access, and the one program StitchCraft starts, VectorCraft's command line, which traces a picture ([ADR-0015](adr/0015-pictures-traced-by-vectorcraft.md)) | contain engine logic |
@@ -79,6 +79,7 @@ GPL/AGPL/LGPL.
 | Deterministic transcendental math | `libm` 0.2 | MIT | core |
 | Errors | `thiserror` 2 | MIT/Apache | all libraries |
 | XML / SVG syntax | `roxmltree`, `svgtypes` | MIT/Apache | svg, and engine for `svgtypes`' path-data parser alone, which reads a custom lock drawn as a path |
+| A font's `font.json`, and its glyph names in Unicode's NFC | `serde_json`, `unicode-normalization` 0.1 | MIT/Apache, and Unicode-3.0 for its tables | svg |
 | `.vectorcraft` documents: JSON, its coordinates read exactly, unpacked from gzip by a Rust backend | `serde`, `serde_json`, `flate2` 1 | MIT/Apache | vectorcraft |
 | Rasterizing previews, and reading VectorCraft's pictures to compare them | `tiny-skia` 0.11 | BSD-3-Clause | render, xtask |
 | JSON reports, and the plug-in's JSON | `serde_json` | MIT/Apache | cli, vc-plugin |
@@ -186,6 +187,7 @@ VectorCraft reports the plug-in as failed.
 | A machine profile | `crates/stitchcraft-plan/src/profiles/` (data) | machine-testing record |
 | A diagnostic | the diagnostics registry in `stitchcraft-core` | explanation text + a case that triggers it |
 | SVG/Ink/Stitch parsing | `stitchcraft-svg` | compatibility contract row |
+| An embroidery font in Ink/Stitch's format, its settings and glyphs | `stitchcraft_svg::font`, from M14.1 | the [fonts](fonts.md#the-reader) page, and its key in the reader's table, which the font settings page is written from |
 | VectorCraft document reading | `stitchcraft-vectorcraft` | compatibility gate scenario |
 | A CLI subcommand | `apps/stitchcraft-cli/src/commands/` | `trycmd` example in the docs |
 | A repo check | `xtask/src/` | `cargo xtask ci` step list and the [guardrails](guardrails.md) page |

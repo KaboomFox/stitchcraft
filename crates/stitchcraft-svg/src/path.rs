@@ -54,6 +54,9 @@ pub struct Sub {
 pub struct Outline {
     /// The subpaths before any error.
     pub subs: Vec<Sub>,
+    /// Where each move-to that draws nothing leaves the pen, as `M 1 2` alone or `M 1 2 Z`: no subpath, but
+    /// a point that a font's glyph box counts, as Ink/Stitch's lettering counts it ([`crate::font`]).
+    pub lone: Vec<V>,
     /// What was wrong with the data, if anything.
     pub error: Option<String>,
 }
@@ -72,13 +75,16 @@ pub fn path_data(data: &str, meter: &mut Meter) -> Result<Outline, Exhausted> {
             }
         }
     }
-    Ok(Outline { subs: b.finish(), error })
+    let (subs, lone) = b.finish();
+    Ok(Outline { subs, lone, error })
 }
 
 /// Turns path commands into subpaths, tracking the pen and the last control point.
 #[derive(Default)]
 struct Builder {
     subs: Vec<Sub>,
+    /// The starts of the subpaths that drew nothing.
+    lone: Vec<V>,
     current: Option<Sub>,
     pen: V,
     start: V,
@@ -151,14 +157,16 @@ impl Builder {
     }
 
     fn end_subpath(&mut self) {
-        if let Some(sub) = self.current.take().filter(|s| !s.segs.is_empty()) {
-            self.subs.push(sub);
+        match self.current.take() {
+            Some(sub) if sub.segs.is_empty() => self.lone.push(sub.start),
+            Some(sub) => self.subs.push(sub),
+            None => {}
         }
     }
 
-    fn finish(mut self) -> Vec<Sub> {
+    fn finish(mut self) -> (Vec<Sub>, Vec<V>) {
         self.end_subpath();
-        self.subs
+        (self.subs, self.lone)
     }
 }
 
@@ -306,13 +314,22 @@ pub fn polyline(points: &str, closed: bool) -> Outline {
         Some((&start, rest)) if !rest.is_empty() => vec![Sub { start, segs: rest.iter().map(|&p| Seg::Line(p)).collect(), closed }],
         _ => Vec::new(),
     };
-    Outline { subs, error }
+    Outline { subs, lone: Vec::new(), error }
 }
 
 /// The box round what `subs` draw, in their user units, as SVG's `getBBox` gives it: the least x and y, and
 /// the width and height. Curves are bounded where they turn, not by their control points, so the box is
 /// what a clip path's `objectBoundingBox` units are of (`crate::document`). `None` when they draw nothing.
 pub fn bounds(subs: &[Sub]) -> Option<(f64, f64, f64, f64)> {
+    let points = reached(subs);
+    let (x0, y0) = points.iter().fold((f64::INFINITY, f64::INFINITY), |(x, y), p| (x.min(p.0), y.min(p.1)));
+    let (x1, y1) = points.iter().fold((f64::NEG_INFINITY, f64::NEG_INFINITY), |(x, y), p| (x.max(p.0), y.max(p.1)));
+    (!points.is_empty()).then_some((x0, y0, x1 - x0, y1 - y0))
+}
+
+/// The points [`bounds`] takes the box of: each subpath's start, each segment's end, and each point where a
+/// curve turns along x or y.
+pub fn reached(subs: &[Sub]) -> Vec<V> {
     let mut points: Vec<V> = Vec::new();
     for sub in subs {
         let mut from = sub.start;
@@ -333,9 +350,7 @@ pub fn bounds(subs: &[Sub]) -> Option<(f64, f64, f64, f64)> {
             from = to;
         }
     }
-    let (x0, y0) = points.iter().fold((f64::INFINITY, f64::INFINITY), |(x, y), p| (x.min(p.0), y.min(p.1)));
-    let (x1, y1) = points.iter().fold((f64::NEG_INFINITY, f64::NEG_INFINITY), |(x, y), p| (x.max(p.0), y.max(p.1)));
-    (!points.is_empty()).then_some((x0, y0, x1 - x0, y1 - y0))
+    points
 }
 
 /// Where between 0 and 1 the Bézier curve of the control points `ps` (3 or 4) turns along x or y: where the
@@ -378,6 +393,18 @@ fn cubic_at(p0: V, c1: V, c2: V, p1: V, t: f64) -> V {
     let u = 1.0 - t;
     let (w0, w1, w2, w3) = (u * u * u, 3.0 * u * u * t, 3.0 * u * t * t, t * t * t);
     (w0 * p0.0 + w1 * c1.0 + w2 * c2.0 + w3 * p1.0, w0 * p0.1 + w1 * c1.1 + w2 * c2.1 + w3 * p1.1)
+}
+
+/// `subs` with each point mapped through `map`, still as subpaths: a Bézier curve's control points mapped
+/// make the mapped curve, so [`bounds`] of the result bound the curves where they turn after the map.
+pub fn mapped(subs: &[Sub], map: Affine) -> Vec<Sub> {
+    let point = |v: V| map.apply(v.0, v.1);
+    let seg = |seg: &Seg| match *seg {
+        Seg::Line(end) => Seg::Line(point(end)),
+        Seg::Quad(control, end) => Seg::Quad(point(control), point(end)),
+        Seg::Cubic(first, second, end) => Seg::Cubic(point(first), point(second), point(end)),
+    };
+    subs.iter().map(|sub| Sub { start: point(sub.start), segs: sub.segs.iter().map(seg).collect(), closed: sub.closed }).collect()
 }
 
 /// `subs` mapped through `map` into millimetres, or why they cannot be: a number too large to compute
@@ -663,12 +690,17 @@ mod tests {
         assert!(o.error.is_some());
         let o = outline("L 10 10");
         assert!(o.subs.is_empty() && o.error.is_some(), "path data must start with a move-to");
-        assert_eq!(outline("M 5 5"), Outline::default(), "a lone move-to draws nothing");
+        // A lone move-to draws nothing, and the place it leaves the pen at is kept, which a glyph's box counts.
+        assert_eq!(outline("M 5 5"), Outline { lone: vec![(5.0, 5.0)], ..Outline::default() }, "a lone move-to draws nothing");
         // Nor after a closed subpath, which stays closed: a satin column drawn as that line is a closed one.
         for data in ["M 0 0 L 10 0 L 10 10 Z M 50 50", "M 0 0 L 10 0 L 10 10 Z M 50 50 Z"] {
             let o = outline(data);
-            assert_eq!((o.subs.len(), o.subs[0].closed), (1, true), "{data}");
+            assert_eq!((o.subs.len(), o.subs[0].closed, o.lone.as_slice()), (1, true, &[(50.0, 50.0)][..]), "{data}");
         }
+        // A move-to that another follows draws nothing either, and one closed at once neither.
+        assert_eq!(outline("M 1 2 M 3 4 L 5 6").lone, [(1.0, 2.0)]);
+        assert_eq!(outline("M 1 2 Z L 3 4").lone, [(1.0, 2.0)]);
+        assert_eq!(outline("M 1 2 L 3 4 Z Z").lone, Vec::<V>::new());
     }
 
     #[test]
