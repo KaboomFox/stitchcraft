@@ -183,6 +183,14 @@ lines are found as above, but for these steps:
   ring's are its outer and inner outline, the same way round, started at a rung whose point on the inner
   one is the inner one's point nearest its point on the outer, so that a satin column starts them together
   (`DEV-SAT-009`).
+- **Slivers.** An open column's rail runs straight across the base of each of the outline's slivers: where
+  the rail comes back to within a thread's width, 0.4 mm, of a point it passed, and a point between lies
+  farther from the line between those 2 than they lie apart. A satin column places each pair of needle
+  points the zigzag spacing across the column from the one before, as Ink/Stitch does. When a pair is placed
+  off that, it scales the step. Along a rail that runs back, the step grew past the sliver to the next rung,
+  and one stitch spanned the piece of rail between. A sliver 0.3 mm wide at its base and 0.5 mm deep, between
+  a notch and the edge beside it, left a wedge of 1.8 mm² bare in the traced dog's paw. A sliver that narrow
+  is too narrow for a stitch across the column.
 - **Rungs.** A triangle with one edge on a rail and its third corner on the other gives a rung from that
   corner, at a right angle to the column's way there. The rung ends where it meets the edge, or at the
   edge's nearer end if it misses it. The column's way is the mean of its 2 rails' ways, the corner's rail's

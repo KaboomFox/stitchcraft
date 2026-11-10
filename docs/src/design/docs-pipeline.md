@@ -48,7 +48,7 @@ docs check, whatever its file name.
 | Kind | Made by | Compared by | Notes |
 |---|---|---|---|
 | `stitch` | `stitchcraft-render` ([rendering](rendering.md)) from a test sheet, or from a design the engine plans, an SVG file or a VectorCraft document | **exact bytes** (rendering is deterministic) | Stitch-type illustrations, parameter comparisons, diagnostics examples |
-| `picture` | xtask (`xtask/src/shots/picture.rs`): a design's areas filled flat in their colours, or a photo drawn in code | **exact bytes** | The pictures [automatic digitizing](../user/stitches/automatic.md) starts from |
+| `picture` | xtask (`xtask/src/shots/picture.rs`) fills a design's areas flat in their colours. It draws a PNG file on white too, and the pear's photo in code | **exact bytes** | The pictures [automatic digitizing](../user/stitches/automatic.md) starts from |
 | `vectorcraft-render` | `vectorcraft-cli` of the pinned stable release, with the plug-in's modules installed: the canvas after the shot's `steps`, exported as PNG at `scale` pixels per point | perceptual tolerance (≤ 0.2 % of pixels differing by more than 8/255 in a channel, and ≤ 8 of them in any square of 16 pixels a side) | How the previews look in VectorCraft's canvas, without its window |
 | `vectorcraft-ui` | VectorCraft's window, of the same release, with the document `vectorcraft-cli` drew. The shot's menu path and the family's row are pressed through the accessibility tree, and the screenshot is cropped to the menus or the dialog | the same tolerance | Menus and dialogs, in a desktop without a screen ([VectorCraft's window in CI](#vectorcrafts-window-in-ci)) |
 | `photo` | a person, of a real sew-out | presence + metadata record (machine, fabric, commit, checkpoint) | Never regenerated; listed with their sew-out report |
@@ -87,7 +87,9 @@ alt = "The pear photo traced in 4 of the machine's threads…"
 
 With a `fixture`, each area of the design is filled in its thread's colour, the lowest first, as a drawing
 program shows it. The areas are filled 4 times larger without anti-aliasing, and each block of 4 × 4 pixels
-is then averaged into one, so that the white under 2 areas doesn't show along the edge they share. With
+is then averaged into one, so that the white under 2 areas doesn't show along the edge they share. A
+`fixture` that is a PNG file is drawn at its own pixels, on white, as a drawing program shows a picture with
+a transparent background. The owner's dog, cut out of her photo, is drawn so. With
 `picture = "pear"` in place of a `fixture`, the picture is a photo xtask draws in code, with soft shading and
 a little grain, so that the docs show a photo with no licence to keep. VectorCraft traced that photo once
 into `docs/fixtures/traced-pear.vectorcraft`, which the shots plan without VectorCraft. A test keeps the hash
