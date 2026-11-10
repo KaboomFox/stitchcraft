@@ -39,3 +39,28 @@ licence. Fixtures written for StitchCraft are under the repository's licence (MI
 | `geometry/shapely-centre-line.txt` | 1,200 questions about random lines and rings, each with shapely's answer. Some cut a line in half by length or find a point along it. Others place a point along a line or test whether a segment crosses it once. The rest find where a closed line's start rung crosses its stroke's edge twice | `REQ-SAT-017`: the centre-line tests in `crates/stitchcraft-engine/src/normalize/centre_line.rs` | Written by shapely 2.2.0 (BSD-3-Clause, with GEOS 3.14.1) with `conformance/oracle/centre_line.py` |
 | `geometry/shapely-buffer.txt` | 538 polygons, shrunk or grown, each with shapely's answer, among them polygons with holes and polygons shrunk just past nothing. 330 have a tatami fill's round corners. The other 208 have a contour fill's round, mitred or bevelled corners, or round corners of 4 segments | `REQ-FILL-TAT-012`, `REQ-FILL-CON-001`: the buffer tests in `crates/stitchcraft-engine/src/normalize/offset/buffer.rs` | Written by shapely 2.2.0 (BSD-3-Clause, with GEOS 3.14.1) with `conformance/oracle/buffer.py` |
 | `geometry/shapely-rows.txt` | 812 polygons of grid squares and half squares, many with holes, each with the pieces of rows shapely cuts with it | `REQ-FILL-TAT-010` and `REQ-FILL-TAT-001`: the tests of the rows and of their routing in `crates/stitchcraft-engine/src/generators/tatami/` | Written by shapely 2.2.0 (BSD-3-Clause, with GEOS 3.14.1) with `conformance/oracle/rows.py` |
+| `cutout/dog-on-turf.jpg`, `cutout/dog-running.jpg` | The owner's 2 photos of her dog, as prepared for test pictures, 1,200 px wide. In one the dog stands on turf beside chair legs and a yellow line. In the other it runs towards the camera with 2 tractor tyres, a fence and a shed behind it | `REQ-CLI-019` and the subject cut-out's cases (`apps/stitchcraft-cutout/tests/`) | Photos by Louise Fox, given under the MIT licence: [the dog photos](#the-dog-photos) |
+| `cutout/dog-on-turf-mask.png`, `cutout/dog-running-mask.png` | Each photo's mask checked by hand, the photo's size, 255 where the dog is and 0 elsewhere | `REQ-CLI-019`: what each cut-out is scored against | Made from the photos for StitchCraft's spike M13.13: [the dog photos](#the-dog-photos) |
+| `cutout/dog-on-turf-u2netp.png`, `cutout/dog-running-u2netp.png`, `cutout/dog-on-turf-auto-logits.png`, `cutout/dog-running-auto-logits.png`, `cutout/dog-running-tyre-logits.png` | The models' outputs for the photos, as 16-bit greyscale PNG files. U²-Net-p's map of each, 320 × 320 values from 0 to 1, each times 65,535. MobileSAM's decoder's map, 256 × 256 logits, each times 256 plus 32,768, for U²-Net-p's box on each photo, and for that box and a point on the running dog's tyre that isn't the subject | `REQ-CLI-019`: the steps after the models, without them (`tests/photos.rs`), and what the models' job compares tract's outputs with (`tests/models.rs`) | Written by `tests/models.rs` with `STITCHCRAFT_CUTOUT_BLESS` set, from what tract 0.23.10 gave with the models of the release `cutout-models-1`: [the dog photos](#the-dog-photos) |
+| `cutout/drawn-u2netp.png`, `cutout/drawn-disc-logits.png`, `cutout/drawn-square-logits.png` | The models' outputs for the picture `apps/stitchcraft-cutout/tests/common/mod.rs` draws, a red disc on grey stripes that touches a blue square, saved as the photos' are. U²-Net-p's map, and the decoder's map for a point of the disc and one of the square in U²-Net-p's box, and for a box round the square alone | `REQ-CLI-015`: the marks and the crop, against the picture's exact masks (`tests/photos.rs`), and what the models' job compares tract's outputs with (`tests/models.rs`) | Written by `tests/models.rs` with `STITCHCRAFT_CUTOUT_BLESS` set, as the photos' are |
+| `cutout/stand-in-u2netp.onnx`, `cutout/stand-in-encoder.onnx`, `cutout/stand-in-decoder.onnx` | Stand-ins for the cut-out's 3 models: tiny ONNX models with their inputs and outputs, whose outputs a test can tell from their inputs | The tract runner's cases, and `stitch plan --subject`'s and `stitch cutout`'s, without the models | Written for StitchCraft by `cutout/make_stand_ins.py` with onnx 1.23.2 |
+| `cutout/random-operator.onnx` | An ONNX model of one RandomUniform node | `SC-E1205`: a model with a random operator is refused | Written for StitchCraft by `cutout/make_stand_ins.py` with onnx 1.23.2 |
+| `cutout/make_stand_ins.py` | The script that writes the stand-ins and the model with a random operator | The fixtures above | Hand-written for StitchCraft |
+
+## The dog photos
+
+The owner, Louise Fox (GitHub: KaboomFox), took both photos of her own dog, and gave them to the project on
+2026-11-08 under the MIT licence. They were prepared for test pictures, and no other photo of hers is in the
+repository:
+
+- `dog-on-turf.jpg` was scaled from 1,536 × 2,048 px to 1,200 × 1,600 px.
+- `dog-running.jpg` had its left 160 px cut away, where a person stood, and was then scaled to 1,200 × 1,786
+  px.
+- Both were saved as JPEG files at quality 90, without metadata. Neither original carried location data.
+
+The masks were made for spike M13.13 (ADR-0019). Each keeps the pixels that at least 2 of 3 masks keep: SAM
+ViT-B's and MobileSAM's, each given a box drawn round the dog by hand, and IS-Net's. Each was then checked
+by eye, region by region, in crops at three quarters of the photo's size, the ears, the tail, the legs, the
+paws and the edge beside the near tyre among them, and passed unchanged. Where fur thins out the masks follow
+those models, so a difference of 1 % or so of the dog's area lies within their error. Like the photos, the
+masks and the models' outputs for them are under the MIT licence, © Louise Fox.

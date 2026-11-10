@@ -1,0 +1,264 @@
+# The subject cut-out's models (ADR-0019, decisions 5 and 8; apps/stitchcraft-cutout/README.md › The models;
+# docs/src/design/conformance.md › Cases with the models). The 3 files are 49 MB and never committed:
+# apps/stitchcraft-cutout/models/models.toml pins each by address, size and SHA-256, and a StitchCraft release
+# publishes them. This workflow makes that release, and runs the cases that need the models.
+#
+# - `build` makes the release's folder from the authors' own files. It exports MobileSAM's 2 files, fetches
+#   U²-Net-p's as rembg publishes it, and stops unless each file has its pinned size and SHA-256.
+# - `models` runs the cases every other job leaves out as "models only": the cut-outs of the owner's photos and
+#   of a picture drawn in code, tract's outputs against those saved as fixtures, and `stitch plan --subject`
+#   end to end. It takes the models from the release when that exists, as `stitch` does, and from `build`
+#   until then.
+# - `publish` creates the release from `build`'s folder, once. It runs only when the owner starts this
+#   workflow by hand on main and types the release's tag. A pull request builds and checks, and publishes
+#   nothing.
+name: models
+
+on:
+  pull_request:
+    paths:
+      - "apps/stitchcraft-cutout/**"
+      - "apps/stitchcraft-cli/src/subject.rs"
+      - "apps/stitchcraft-cli/src/subject/**"
+      - "apps/stitchcraft-cli/tests/picture.rs"
+      - "conformance/fixtures/cutout/**"
+      - ".github/workflows/models.yml"
+      - "Cargo.lock"
+  push:
+    branches: [main]
+    paths:
+      - "apps/stitchcraft-cutout/**"
+      - "apps/stitchcraft-cli/src/subject.rs"
+      - "apps/stitchcraft-cli/src/subject/**"
+      - "apps/stitchcraft-cli/tests/picture.rs"
+      - "conformance/fixtures/cutout/**"
+      - ".github/workflows/models.yml"
+      - "Cargo.lock"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "To publish the release, type the tag that models.toml's addresses name. Empty: build and check only."
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: read
+
+# A run started by hand is never cancelled, so that a publish is never cut short: a second one waits for it,
+# and then finds the release made.
+concurrency:
+  group: models-${{ github.event.pull_request.number || format('{0}-{1}', github.event_name, github.ref) }}
+  cancel-in-progress: ${{ github.event_name != 'workflow_dispatch' }}
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+  RUST_BACKTRACE: "1"
+
+jobs:
+  build:
+    name: build (the release's folder, from the authors' files)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    outputs:
+      tag: ${{ steps.pins.outputs.tag }}
+      title: ${{ steps.pins.outputs.title }}
+      repository: ${{ steps.pins.outputs.repository }}
+    env:
+      MODELS: apps/stitchcraft-cutout/models
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # requirements.txt pins the wheels of CPython 3.13.
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.13"
+      - name: What models.toml pins
+        id: pins
+        run: python -I "$MODELS/release.py" pins >> "$GITHUB_OUTPUT"
+      # Before the long steps, so that a publish that can't happen stops the run at once.
+      - name: A publish is asked for on main alone, by the tag models.toml names
+        if: github.event_name == 'workflow_dispatch' && inputs.tag != ''
+        env:
+          TYPED: ${{ inputs.tag }}
+          TAG: ${{ steps.pins.outputs.tag }}
+          RELEASES: ${{ steps.pins.outputs.repository }}
+        run: |
+          if [ "$GITHUB_REF" != "refs/heads/main" ]; then
+            echo "::error::A release is published from main alone, and this run is on $GITHUB_REF_NAME. Leave the tag empty to build and check here."
+            exit 1
+          fi
+          if [ "$TYPED" != "$TAG" ]; then
+            echo "::error::The tag typed isn't the one models.toml names, $TAG. Nothing is published."
+            exit 1
+          fi
+          if [ "$GITHUB_REPOSITORY" != "$RELEASES" ]; then
+            echo "::error::models.toml's addresses name a release of $RELEASES, and this is $GITHUB_REPOSITORY. Nothing is published."
+            exit 1
+          fi
+      - name: MobileSAM's repository, at the commit models.toml pins
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ steps.pins.outputs.mobilesam }}
+          ref: ${{ steps.pins.outputs.commit }}
+          path: mobilesam
+          persist-credentials: false
+      - name: What export.py runs with, each wheel pinned by its hash
+        run: |
+          python -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/pip" install --no-cache-dir --require-hashes -r "$MODELS/requirements.txt"
+      # export.py checks the checkout's commit and the checkpoint's size and SHA-256 against models.toml first.
+      - name: MobileSAM's encoder and decoder, exported from its authors' checkpoint
+        run: |
+          "$RUNNER_TEMP/venv/bin/python" -I "$MODELS/export.py" mobilesam "$RUNNER_TEMP/cutout/release"
+      - name: A second export gives the same bytes
+        run: |
+          "$RUNNER_TEMP/venv/bin/python" -I "$MODELS/export.py" mobilesam "$RUNNER_TEMP/again"
+          (cd "$RUNNER_TEMP/cutout/release" && sha256sum ./*.onnx) > "$RUNNER_TEMP/first.txt"
+          (cd "$RUNNER_TEMP/again" && sha256sum ./*.onnx) > "$RUNNER_TEMP/second.txt"
+          if ! diff "$RUNNER_TEMP/first.txt" "$RUNNER_TEMP/second.txt"; then
+            echo "::error::2 exports on this runner gave different bytes: $(tr '\n' ' ' < "$RUNNER_TEMP/first.txt")and then $(tr '\n' ' ' < "$RUNNER_TEMP/second.txt")"
+            exit 1
+          fi
+      - name: U²-Net-p's file, as rembg publishes it
+        if: ${{ !cancelled() }}
+        run: |
+          "$RUNNER_TEMP/venv/bin/python" -I "$MODELS/release.py" fetch "$RUNNER_TEMP/cutout/release"
+      # Also after a second export that differed, so that one run says both what differs between 2 exports
+      # and what differs from the pins.
+      - name: Each file against its pin, then the release's folder and notes
+        if: ${{ !cancelled() }}
+        run: |
+          "$RUNNER_TEMP/venv/bin/python" -I "$MODELS/release.py" assemble "$RUNNER_TEMP/cutout/release" "$RUNNER_TEMP/cutout/notes.md"
+      # Kept when a file differs from its pin too, so that 2 runs' files can be compared.
+      - name: The folder and the notes, kept as the run's artifact
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ steps.pins.outputs.tag }}
+          path: ${{ runner.temp }}/cutout
+          if-no-files-found: error
+          retention-days: 14
+
+  models:
+    name: models (the cut-out's, run by tract)
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      TAG: ${{ needs.build.outputs.tag }}
+      RELEASES: ${{ needs.build.outputs.repository }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: rustup toolchain install --profile minimal
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - name: The models' folder
+        run: echo "STITCHCRAFT_MODELS=$RUNNER_TEMP/models" >> "$GITHUB_ENV"
+      # GitHub answers 200 for a published release and 404 for none. Any other answer stops the job, which
+      # doesn't guess where to take the models from.
+      - name: Whether the release that models.toml names exists
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            --header "Authorization: Bearer $GH_TOKEN" --header "Accept: application/vnd.github+json" \
+            "$GITHUB_API_URL/repos/$RELEASES/releases/tags/$TAG")
+          case "$status" in
+            200) echo "from=release" >> "$GITHUB_OUTPUT" ;;
+            404) echo "from=build" >> "$GITHUB_OUTPUT" ;;
+            *)
+              echo "::error::GitHub answered $status when asked for the release $TAG of $RELEASES."
+              exit 1
+              ;;
+          esac
+      # With the release, the folder stays empty and the cases fetch each file as `stitch` does. Without it,
+      # they find the build job's files there, which that job checked against their pins.
+      - name: The build job's folder, until the release exists
+        if: steps.release.outputs.from == 'build'
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ${{ needs.build.outputs.tag }}
+          path: ${{ runner.temp }}/cutout
+      - name: Its models, in the models' folder
+        if: steps.release.outputs.from == 'build'
+        run: |
+          mkdir -p "$STITCHCRAFT_MODELS"
+          cp "$RUNNER_TEMP"/cutout/release/*.onnx "$STITCHCRAFT_MODELS/"
+      # Whatever the source, the cases check each file against its pin before tract reads it.
+      - name: The models' cases, each file checked against its pin
+        run: .github/scripts/annotated.sh "models" cargo test --locked -p stitchcraft-cutout --test models -- --ignored --test-threads=1
+      - name: stitch plan --subject end to end, VectorCraft's command line stood in for
+        run: .github/scripts/annotated.sh "stitch plan --subject" cargo test --locked -p stitchcraft-cli --test picture -- --ignored
+      - name: Where the models came from, their files and sums, for the job's summary
+        if: always()
+        env:
+          FROM: ${{ steps.release.outputs.from }}
+        run: |
+          {
+            echo "### The cut-out's models"
+            echo
+            case "$FROM" in
+              release) echo "Fetched from the release \`$TAG\` of $RELEASES, as \`stitch\` fetches them." ;;
+              build) echo "The release \`$TAG\` of $RELEASES doesn't exist yet, so these are the build job's files, which it checked against their pins." ;;
+              *) echo "The job stopped before it knew where to take the models from." ;;
+            esac
+            echo
+            echo '```'
+            (cd "$STITCHCRAFT_MODELS" 2>/dev/null && ls -l && sha256sum ./*.onnx) || echo "none in the models' folder"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  # The one job that writes to the repository. Nothing starts it but the owner: a run started by hand on
+  # main, with the release's tag typed. The cases have passed on the very files it publishes.
+  publish:
+    name: publish (the release, when the owner asks on main)
+    needs: [build, models]
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.tag != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TYPED: ${{ inputs.tag }}
+      TAG: ${{ needs.build.outputs.tag }}
+      TITLE: ${{ needs.build.outputs.title }}
+      RELEASES: ${{ needs.build.outputs.repository }}
+    steps:
+      - name: The tag typed is the one models.toml names, on main
+        run: |
+          if [ -z "$TAG" ] || [ "$TYPED" != "$TAG" ] || [ "$GITHUB_REF" != "refs/heads/main" ] || [ "$GITHUB_REPOSITORY" != "$RELEASES" ]; then
+            echo "::error::Nothing is published: the tag typed must be the one models.toml names, on main of the repository its addresses name."
+            exit 1
+          fi
+      # A published file is never replaced: a new set of models takes a new tag in models.toml. A draft of
+      # that name counts too, and so does a tag without a release.
+      - name: Neither the release nor its tag exists yet
+        run: |
+          releases=$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate --jq '.[] | select(.tag_name == env.TAG) | .html_url')
+          if [ -n "$releases" ]; then
+            echo "::error::The release $TAG exists already, and a published file is never replaced: $releases"
+            exit 1
+          fi
+          status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' \
+            --header "Authorization: Bearer $GH_TOKEN" --header "Accept: application/vnd.github+json" \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG")
+          if [ "$status" != "404" ]; then
+            echo "::error::GitHub answered $status when asked for the tag $TAG, which must not exist yet. Nothing is published."
+            exit 1
+          fi
+      - name: The build job's folder and notes
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ${{ needs.build.outputs.tag }}
+          path: ${{ runner.temp }}/cutout
+      - name: Every file of the folder against its sum
+        working-directory: ${{ runner.temp }}/cutout/release
+        run: sha256sum --check --strict SHA256SUMS.txt
+      - name: The release, which isn't the latest one
+        working-directory: ${{ runner.temp }}/cutout
+        run: |
+          url=$(gh release create "$TAG" release/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "$TITLE" --notes-file notes.md --latest=false)
+          echo "Published $url" | tee -a "$GITHUB_STEP_SUMMARY"

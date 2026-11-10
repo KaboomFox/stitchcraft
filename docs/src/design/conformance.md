@@ -460,6 +460,32 @@ Its file must be a test target of its own, `<package>/tests/<target>.rs`, and a 
 as release only in every build fails `--check` too, as the release build would leave it out as well. Each
 requirement still needs a case that runs in the debug build.
 
+### Cases with the models
+
+The subject cut-out's models are 49 MB, which StitchCraft's release `cutout-models-1` publishes
+([image to embroidery](image-to-embroidery.md#subject-cut-out)), so the cases that run them need them
+fetched. Such a case is ignored in every build, with a reason of a fixed form that says where it runs:
+
+```rust
+#[test]
+#[ignore = "models only: the models job runs tests/models.rs"]
+fn req_cli_019_the_cut_out_from_u2netps_box_keeps_each_dog_within_the_bounds() { … }
+```
+
+The models' job, in `.github/workflows/models.yml`, runs each file that holds such cases with `--ignored`,
+with the models in the folder `STITCHCRAFT_MODELS` names. When the release exists, the job leaves that folder
+empty, and the cases fetch the models from the release as `stitch` does. Until the owner has published it,
+the job puts there the files the workflow's build job has just made from the authors' own, and its summary
+says which of the 2 sources it used. From either, a file must match its pin before tract reads it. The runner lists a
+models-only case as skipped with its reason (⏭ in the report), and CI doesn't fail on it as on a missing
+tool: the models' job runs it. A case ignored for any other reason fails, so that no case hides behind
+`#[ignore]`. `--check` finds each models-only case by its attribute: its file must be a test target of its
+own, `<package>/tests/<target>.rs`, and a line of `models.yml` must run `cargo test … -p <package> --test
+<target>` with `--ignored`. `stitch`'s `tests/picture.rs` has a harness of its own, which prints the same reason
+for its models-only case, so that case has no attribute for `--check` to find. Each requirement still needs a case that runs everywhere. `REQ-CLI-019`'s is
+the cut-out of each photo from the models' outputs saved as fixtures, which the models' job checks tract
+still gives.
+
 `cargo xtask conformance --bless <case>` rewrites a data case's golden files. CI refuses a pull request
 that changes files under `conformance/golden/` unless it carries the `golden-change` label and a line in
 `CHANGELOG.md`. For the canonical-plan goldens of the format tests, bless with

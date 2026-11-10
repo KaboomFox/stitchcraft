@@ -26,6 +26,8 @@ stitchcraft-render = { path = "crates/stitchcraft-render" }
 stitchcraft-svg = { path = "crates/stitchcraft-svg" }
 stitchcraft-vectorcraft = { path = "crates/stitchcraft-vectorcraft" }
 stitchcraft-testkit = { path = "crates/stitchcraft-testkit" }
+# Its `models` feature, the cut-out itself, is `stitchcraft-cli`'s `cutout` feature to turn on.
+stitchcraft-cutout = { path = "apps/stitchcraft-cutout", default-features = false }
 
 # foundation
 # Pure-Rust transcendental functions: identical results on every platform, including wasm32
@@ -54,6 +56,12 @@ sha2 = "0.11"
 # VectorCraft input (stitchcraft-vectorcraft; `cargo xtask layers` restricts flate2): gzip, unpacked by a
 # Rust backend that builds for wasm32. The versions VectorCraft's lockfile already carries.
 flate2 = { version = "1", default-features = false, features = ["rust_backend"] }
+
+# The subject cut-out (stitchcraft-cutout only; `cargo xtask layers` restricts both, ADR-0019): photos decoded
+# and the cut-out encoded, and the models run from their ONNX files, in Rust. tract-onnx's default feature
+# brings transformer operators, which no model of the cut-out has.
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png"] }
+tract-onnx = { version = "0.23.10", default-features = false }
 
 # tests (stitchcraft-testkit and dev-dependencies only)
 proptest = "1"

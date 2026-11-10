@@ -291,10 +291,18 @@ pub struct RustCase {
     pub covers: String,
     /// Where it is defined.
     pub file: String,
+    /// Why every build leaves it out when only the models' job runs it: the reason its `#[ignore = "…"]`
+    /// gives, which starts with [`MODELS_ONLY`].
+    pub models_only: Option<String>,
     /// Why the tests' debug build leaves it out when it runs only in the release build: the reason its
     /// `#[cfg_attr(debug_assertions, ignore = "…")]` gives, which starts with [`RELEASE_ONLY`].
     pub release_only: Option<String>,
 }
+
+/// How the reason a case ignored in every build gives starts when it needs the subject cut-out's models,
+/// which the models' job fetches and runs it with: `ignore = "models only: the models job runs
+/// tests/models.rs"` (`docs/src/design/conformance.md` › Cases with the models).
+pub const MODELS_ONLY: &str = "models only: ";
 
 /// How the reason a case ignored in the tests' debug build gives starts when it runs only in the release
 /// build, which a step of CI runs: `ignore = "release only: CI's perf job runs tests/auto_photos.rs"`. A
@@ -318,8 +326,9 @@ pub fn discover_rust_cases(root: &Path, findings: &mut Findings) -> Vec<RustCase
                     ));
                 }
                 let release_only = release_only(before);
+                let models_only = models_only(before);
                 match requirement_of_test(name).or_else(|| code_of_test(name)) {
-                    Some(covers) => cases.push(RustCase { name: name.to_string(), covers, file, release_only }),
+                    Some(covers) => cases.push(RustCase { name: name.to_string(), covers, file, models_only, release_only }),
                     None if name.starts_with("req_") => {
                         findings.error(format!("{file}: `{name}` starts with req_ but names no requirement (req_<area>_<nnn>_<what>)"));
                     }
@@ -334,6 +343,15 @@ pub fn discover_rust_cases(root: &Path, findings: &mut Findings) -> Vec<RustCase
 /// The attributes and comments just above a function, the end of `before`, nearest first.
 fn attributes<'a>(before: &'a [&'a str]) -> impl Iterator<Item = &'a str> {
     before.iter().rev().map(|line| line.trim()).take_while(|line| line.starts_with("#[") || line.starts_with("//"))
+}
+
+/// The reason the attributes just above a function, the end of `before`, give for ignoring it when it starts
+/// with [`MODELS_ONLY`]: `#[ignore = "models only: …"]`.
+fn models_only(before: &[&str]) -> Option<String> {
+    attributes(before).find_map(|line| {
+        let reason = line.strip_prefix("#[ignore = \"")?.strip_suffix("\"]")?;
+        reason.starts_with(MODELS_ONLY).then(|| reason.to_string())
+    })
 }
 
 /// The reason the attributes just above a function, the end of `before`, give for ignoring it in the debug
@@ -400,6 +418,21 @@ mod tests {
         assert_eq!(code_of_test("diag_sc_i0001").as_deref(), Some("SC-I0001"));
         for bad in ["diag_sc_x0701_x", "diag_sc_e701_x", "diag_e0701_x", "diag_sc_e07010_x", "req_sc_e0701"] {
             assert_eq!(code_of_test(bad), None, "{bad}");
+        }
+    }
+
+    #[test]
+    fn a_case_ignored_as_models_only_says_where_it_runs() {
+        let reason = "models only: the models job runs tests/models.rs";
+        let attribute = format!("    #[ignore = \"{reason}\"]");
+        for before in [vec!["/// Docs.", "#[test]", attribute.as_str()], vec!["fn other() {}", attribute.as_str(), "// Why.", "#[test]"]] {
+            assert_eq!(models_only(&before).as_deref(), Some(reason), "{before:?}");
+        }
+        // Another reason, or the attribute above a line of code in between, makes no models-only case.
+        let elsewhere = ["#[ignore = \"slow\"]", "#[test]"];
+        let further = [attribute.as_str(), "fn helper() {}", "#[test]"];
+        for before in [&elsewhere[..], &further[..], &[][..]] {
+            assert_eq!(models_only(before), None, "{before:?}");
         }
     }
 

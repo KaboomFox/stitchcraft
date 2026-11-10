@@ -1,0 +1,41 @@
+# The subject cut-out's models: 3 ONNX files, never committed (ADR-0019, decision 5). `stitch` fetches each
+# from its address with curl into the folder STITCHCRAFT_MODELS names, or else `stitchcraft/models` in the
+# user's cache folder, and checks its size and SHA-256 before each use (apps/stitchcraft-cutout/README.md).
+
+# Where the files were made from, which export.py checks.
+
+# MobileSAM's checkpoint, in its authors' repository. export.py exports the encoder and the decoder from it.
+[source.mobilesam]
+repository = "https://github.com/ChaoningZhang/MobileSAM"
+commit = "f706ad9c4eb7f219c00d9050e46328518ffb65d2"
+checkpoint = "weights/mobile_sam.pt"
+size = 40728226
+sha256 = "6dbb90523a35330fedd7f1d3dfc66f995213d81b29a5ca8108dbcdd4e37d6c2f"
+
+# U²-Net-p, as rembg converted its author's checkpoint to ONNX. The author publishes the checkpoint on Google
+# Drive and Baidu only, and rembg's release is where the ONNX file is distributed. It is released as it is.
+[source.u2netp]
+address = "https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2netp.onnx"
+size = 4574861
+sha256 = "309c8469258dda742793dce0ebea8e6dd393174f89934733ecc8b14c76f4ddd8"
+
+# The files `stitch` fetches: the release cutout-models-1 publishes each, with the licences, a NOTICE text and
+# the export record. Its tag doesn't start with `v`, which would start the docs workflow.
+
+[model.u2netp]
+file = "u2netp.onnx"
+address = "https://github.com/KaboomFox/stitchcraft/releases/download/cutout-models-1/u2netp.onnx"
+size = 4574861
+sha256 = "309c8469258dda742793dce0ebea8e6dd393174f89934733ecc8b14c76f4ddd8"
+
+[model.encoder]
+file = "mobilesam-encoder.onnx"
+address = "https://github.com/KaboomFox/stitchcraft/releases/download/cutout-models-1/mobilesam-encoder.onnx"
+size = 27969741
+sha256 = "047b16d8c829fb9f313acb9943bafd4d9f98b7fbd8f3d19149f221cfeefe0327"
+
+[model.decoder]
+file = "mobilesam-decoder.onnx"
+address = "https://github.com/KaboomFox/stitchcraft/releases/download/cutout-models-1/mobilesam-decoder.onnx"
+size = 16501737
+sha256 = "9a2323557afaa8fecb9bd278ba6a3333ff41d960f4c2120e650aa0d7e00032d9"

@@ -5,6 +5,22 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.14: the subject cut-out, as ADR-0019 decided (`REQ-CLI-014` to `REQ-CLI-019`). `stitch plan PHOTO
+  --subject`, and so `stitch export`, cuts a photo's subject out before VectorCraft traces it, so that its
+  background isn't sewn. It is off by default, and nothing sews differently without it.
+  - U²-Net-p finds the subject's box, and MobileSAM cuts the subject out inside it. `--subject-box`,
+    `--subject-point` and `--not-subject` correct a cut-out, and `--cutout FILE` writes it. `stitch cutout`
+    writes it alone, to place in VectorCraft. On the owner's 2 photos of her dog the cut-out keeps the dog
+    at an IoU of 0.985 and 0.987.
+  - tract runs the 3 models in a new crate, `stitchcraft-cutout`, which only `stitch` depends on. `stitch`
+    fetches them on first use, 49 MB, and checks each against its pinned SHA-256 before each use. GitHub
+    Actions builds the release that publishes them from their authors' own files, and the owner publishes
+    it by starting the `models` workflow by hand.
+  - New diagnostics, `SC-E1201` to `SC-E1205`, `SC-I1206` and `SC-E1207`. A bug-report bundle records the
+    cut-out, and replays without the models.
+  - The cut-out is `stitch`'s `cutout` feature, on by default. The release `stitch` for Linux is 33.1 MB
+    with it and 6.6 MB without it.
+  - A how-to, Cut a photo's subject out, and the models' place in the install page.
 - M13.15: the owner's dog photos as test pictures (`REQ-AUTO-025`, `REQ-AUTO-026`). Louise Fox's 2 photos of
   her dog, each cut out by a mask checked by hand, are docs fixtures, with the 4 documents VectorCraft 0.22.0
   traced from them 100 mm tall in 6 and in 9 threads (`docs/fixtures/README.md` › The traced dogs). A test

@@ -51,6 +51,9 @@ pub enum Command {
     /// Write a machine's threads as a GIMP palette (.gpl), which VectorCraft loads as a swatch library, so
     /// that Image Trace traces a picture in them.
     Palette(PaletteArgs),
+    /// Cut a picture's subject out, a PNG or JPEG file, as `stitch plan --subject` does before VectorCraft
+    /// traces it, and write the cut-out alone (PNG): to place in VectorCraft instead of the picture.
+    Cutout(CutoutArgs),
     /// Explain a diagnostic code, such as SC-W0702.
     Explain {
         /// The code.
@@ -94,6 +97,73 @@ pub struct PlanArgs {
     /// How a picture is traced.
     #[command(flatten)]
     pub tracing: TracingArgs,
+    /// How a picture's subject is cut out first.
+    #[command(flatten)]
+    pub subject: SubjectArgs,
+}
+
+/// `--subject` and the options that go with it: a picture's subject cut out before VectorCraft traces it
+/// (ADR-0019).
+#[derive(Debug, Default, Args)]
+pub struct SubjectArgs {
+    /// Cut the picture's subject out before VectorCraft traces it, so that its background isn't sewn: the
+    /// rest is made transparent, and the picture cropped to what is kept.
+    #[arg(long)]
+    pub subject: bool,
+    /// Where the subject is, and isn't.
+    #[command(flatten)]
+    pub marks: MarkArgs,
+    /// Also write the cut-out (PNG), with the other files, to see what was kept.
+    #[arg(long, value_name = "FILE")]
+    pub cutout: Option<PathBuf>,
+}
+
+impl SubjectArgs {
+    /// Whether any option is given, which only a picture takes.
+    pub fn given(&self) -> bool {
+        self.subject || self.marks.given() || self.cutout.is_some()
+    }
+}
+
+/// The marks that correct a cut-out, in the picture's pixels as its file stores them, from its left and top
+/// edges.
+#[derive(Debug, Default, Args)]
+pub struct MarkArgs {
+    /// The subject's box, from its left and top edges to its right and bottom ones; by default the box round
+    /// the main subject that U²-Net-p finds.
+    #[arg(long, value_name = "X0,Y0,X1,Y1", value_parser = stitchcraft_cutout::PixelBox::parse, allow_hyphen_values = true)]
+    pub subject_box: Option<stitchcraft_cutout::PixelBox>,
+    /// A point of the subject, as often as needed.
+    #[arg(long, value_name = "X,Y", value_parser = stitchcraft_cutout::Point::parse, allow_hyphen_values = true)]
+    pub subject_point: Vec<stitchcraft_cutout::Point>,
+    /// A point of what isn't the subject, as often as needed.
+    #[arg(long, value_name = "X,Y", value_parser = stitchcraft_cutout::Point::parse, allow_hyphen_values = true)]
+    pub not_subject: Vec<stitchcraft_cutout::Point>,
+}
+
+impl MarkArgs {
+    /// Whether any mark is given.
+    pub fn given(&self) -> bool {
+        self.marks().given()
+    }
+
+    /// The marks, as the cut-out takes them.
+    pub fn marks(&self) -> stitchcraft_cutout::Marks {
+        stitchcraft_cutout::Marks { subject_box: self.subject_box, subject: self.subject_point.clone(), not_subject: self.not_subject.clone() }
+    }
+}
+
+/// `stitch cutout`.
+#[derive(Debug, Args)]
+pub struct CutoutArgs {
+    /// The picture: a PNG or JPEG file.
+    pub picture: PathBuf,
+    /// The cut-out to write (PNG).
+    #[arg(long, short)]
+    pub output: PathBuf,
+    /// Where the subject is, and isn't.
+    #[command(flatten)]
+    pub marks: MarkArgs,
 }
 
 /// How `stitch plan` traces a picture with VectorCraft's command line (ADR-0015): options for a picture

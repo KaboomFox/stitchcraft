@@ -1258,6 +1258,62 @@ registry! {
     /// delete or rename the glyph drawn twice, add the baseline guide, or set `default_variant` to a
     /// direction the font has.
     FontReadAsInkStitch = "SC-I1105", Info, "Font read as Ink/Stitch reads it";
+
+    /// `--subject` and `stitch cutout` cut a picture's subject out with 3 models, which `stitch` fetches with
+    /// curl on first use into the folder `STITCHCRAFT_MODELS` names, or else `stitchcraft/models` in your
+    /// cache folder, and checks before each use. A file couldn't be fetched, or isn't the one pinned. Nothing
+    /// was written but the report.
+    ///
+    /// The message says why, and names each file's address, size and SHA-256 and the folder. Offline, fetch
+    /// the files elsewhere and put them in the folder. Without `--subject`, the picture plans as before.
+    CutoutModelsNotReady = "SC-E1201", Error, "Subject cut-out's models not ready";
+
+    /// `--subject` cuts a picture's subject out of a box: the one `--subject-box` gives, or else the one
+    /// U²-Net-p finds round the main subject. U²-Net-p found none, as no part of its map reaches a half, or
+    /// MobileSAM kept no pixel. Nothing was written but the report.
+    ///
+    /// Give the subject's box with `--subject-box X0,Y0,X1,Y1`, in the picture's pixels, and mark a point of
+    /// the subject with `--subject-point X,Y` if nothing is kept still.
+    CutoutNoSubject = "SC-E1202", Error, "No subject found to cut out";
+
+    /// `--subject` and `stitch cutout` decode the picture themselves. It isn't a PNG or JPEG file the cut-out
+    /// reads, or it is more than 16,384 px on a side or 50 megapixels in all. Nothing was written but the
+    /// report.
+    ///
+    /// The message says why. Give a PNG or JPEG file within those sizes, or plan the picture without
+    /// `--subject`.
+    CutoutPictureUnreadable = "SC-E1203", Error, "Picture could not be read for the cut-out";
+
+    /// The cut-out's models are checked against their pins before each use, so a model `stitch` can't run
+    /// is no file changed in the folder: tract, which runs the models, refused it on this computer. Nothing
+    /// was written but the report.
+    ///
+    /// The message ends with what tract said. Please report it at StitchCraft's issues with the message.
+    /// Without `--subject`, the picture plans as before.
+    CutoutModelUnrunnable = "SC-E1204", Error, "Cut-out model could not be run";
+
+    /// tract seeds a model's random operator from the computer's own randomness when the model gives no
+    /// seed, so a model with one would cut a picture out otherwise on each run. The pinned models have none,
+    /// and `stitch` refuses any model that has one, before it runs. Nothing was written but the report.
+    ///
+    /// The message names the model and the operator. It can't come from the pinned files: please report it.
+    CutoutModelRandom = "SC-E1205", Error, "Cut-out model has a random operator";
+
+    /// `--subject` cut the picture's subject out before VectorCraft traced it, or `stitch cutout` cut it out:
+    /// MobileSAM kept the pixels of an alpha of 128 or more, which Image Trace keeps, and the picture was
+    /// cropped to them, everything else transparent.
+    ///
+    /// The message gives the box the subject was cut out of, which `--subject-box` gave or U²-Net-p found,
+    /// how much of the picture is kept, and the cut-out's size. To correct it, give another box, or mark
+    /// points with `--subject-point` and `--not-subject`. `--cutout FILE` writes the cut-out to look at.
+    CutoutMade = "SC-I1206", Info, "Subject cut out";
+
+    /// A build of `stitch` may leave the subject cut-out out, and its models and tract with it: its `cutout`
+    /// feature, on by default. This `stitch` was built without it, as the WASI build that makes StitchCraft's
+    /// golden files is, so `--subject` and `stitch cutout` can't run. Nothing was written but the report.
+    ///
+    /// Plan the picture without `--subject`, or use a `stitch` built with its default features.
+    CutoutLeftOut = "SC-E1207", Error, "Subject cut-out left out of this build";
 }
 
 impl Code {

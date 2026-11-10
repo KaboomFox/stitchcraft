@@ -5,7 +5,9 @@
 //!
 //! `cargo xtask wasm --goldens` checks that they compute there as they do natively: `stitch`, built for
 //! WASI and run by wasmtime, makes every golden file of the conformance cases byte for byte
-//! (`conformance::made_as_wasm`). `cargo xtask ci` runs it as the `wasm-goldens` gate.
+//! (`conformance::made_as_wasm`). `cargo xtask ci` runs it as the `wasm-goldens` gate. That `stitch` is
+//! built without its default features, so without the subject cut-out (its `cutout` feature), which no
+//! golden file comes from: `docs/src/design/image-to-embroidery.md` › Subject cut-out says why.
 
 use crate::layers::{Class, TABLE};
 use crate::util;
@@ -51,8 +53,8 @@ pub fn goldens() -> Result<(), String> {
         return Err(format!("the golden files are made as WebAssembly with the {WASI} target and wasmtime: {WASI_INSTALL}"));
     }
     let mut cmd = util::cargo();
-    cmd.args(["build", "--release", "--locked", "--target", WASI, "-p", "stitchcraft-cli"]);
-    util::run(cmd, &format!("cargo build --target {WASI} -p stitchcraft-cli"))?;
+    cmd.args(["build", "--release", "--locked", "--target", WASI, "-p", "stitchcraft-cli", "--no-default-features"]);
+    util::run(cmd, &format!("cargo build --target {WASI} -p stitchcraft-cli --no-default-features"))?;
     let alike = crate::conformance::made_as_wasm(&util::root().join("target").join(WASI).join("release/stitch.wasm"))?;
     println!("wasm: {alike} golden files made as WebAssembly ({WASI}, wasmtime), byte for byte");
     Ok(())
