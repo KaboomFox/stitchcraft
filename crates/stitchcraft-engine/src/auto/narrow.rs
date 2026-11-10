@@ -224,12 +224,11 @@ fn perimeter(part: &Polygon) -> f64 {
 
 /// The width of a part along `lines`, its centre lines, whose edges `edges` holds: the diameter of the largest
 /// circle that fits inside it centred on each of their points, twice the point's distance from the nearest
-/// edge of its outline and holes, averaged along the lines. A line that ends at a tip runs on into the
-/// corner so that its stitches reach it, where the circle shrinks to nothing: the piece that leads into it
-/// is left out, unless the lines have no other. Counted, it pulled a leg of a letter A 1.08 mm wide under
-/// 1 mm, and the leg sewed as a line beside the other leg's satin column
-/// (`req_auto_016_a_letters_legs_sew_alike`). `None` for lines of no length, a dot's. A unit of `meter`'s
-/// work for each point and edge.
+/// edge of its outline and holes, averaged along the lines. A line that ends at a tip runs on into the corner so
+/// that its stitches reach it, where the circle shrinks to nothing: the piece that leads into it is left out,
+/// unless the lines have no other. Counted, it pulled a leg of a letter A 1.08 mm wide under 1 mm, and the leg
+/// sewed as a line beside the other leg's satin column (`req_auto_016_a_letters_legs_sew_alike`). `None` for
+/// lines of no length, a dot's. A unit of `meter`'s work for each point and edge.
 pub(super) fn width(edges: &Edges, lines: &[Line], meter: &mut Meter) -> Result<Option<Mm>, Exhausted> {
     // The width times the length, and the length, of the pieces that lead into no tip, then of all of them.
     let (mut kept, mut all) = ((0.0, 0.0), (0.0, 0.0));
@@ -254,6 +253,47 @@ pub(super) fn width(edges: &Edges, lines: &[Line], meter: &mut Meter) -> Result<
     let (sum, length) = if kept.1 > 0.0 { kept } else { all };
     Ok(if length > 0.0 { Mm::new(sum / length).ok() } else { None })
 }
+
+/// The diameter of the largest circle centred on a point of `line`, but an open line's 2 ends, that fits
+/// inside the outline whose edges `edges` holds: where that outline is widest along the line, 0 when the line
+/// has no such point. A unit of `meter`'s work for each point and edge.
+pub(super) fn widest(edges: &Edges, line: &Line, meter: &mut Meter) -> Result<f64, Exhausted> {
+    let ends = if line.closed { 0 } else { 1 };
+    let inside = line.points.get(ends..line.points.len().saturating_sub(ends)).unwrap_or_default();
+    let mut widest = 0.0_f64;
+    for &p in inside {
+        widest = widest.max(2.0 * edges.nearest(p, meter)?);
+    }
+    Ok(widest)
+}
+
+/// How far the farthest corner of `outline` beside `line` lies from it, in millimetres: of the corners nearer
+/// a point of the line between its ends than either end of an open line, for those no nearer the line than
+/// to an end lie beyond the end, in its cap. 0 when none is. A unit of `meter`'s work for each corner and
+/// piece of the line.
+pub(super) fn farthest(line: &Line, outline: &Polygon, meter: &mut Meter) -> Result<f64, Exhausted> {
+    let closing = if line.closed { line.points.first().zip(line.points.last()).map(|(&first, &last)| (last, first)) } else { None };
+    let pieces: Vec<(Point, Point)> = segments(&line.points).chain(closing).collect();
+    let ends = if line.closed { Vec::new() } else { line.points.first().into_iter().chain(line.points.last()).copied().collect() };
+    let mut farthest = 0.0_f64;
+    for ring in outline.rings() {
+        for &p in ring {
+            meter.charge(u64::try_from(pieces.len()).unwrap_or(u64::MAX))?;
+            let near = pieces.iter().map(|&(a, b)| distance_to_segment(p, a, b)).fold(f64::INFINITY, f64::min);
+            // An end lies on the line, no nearer the corner than the line is: the corner lies beyond it when it
+            // is the line's nearest point, to within a rounding error.
+            let beyond = ends.iter().any(|end| end.distance(p) <= near + ROUNDING);
+            if !beyond && near.is_finite() {
+                farthest = farthest.max(near);
+            }
+        }
+    }
+    Ok(farthest)
+}
+
+/// How much nearer than an end of a line its nearest point to a corner may be, in millimetres, and the end
+/// still be that point: a rounding error.
+const ROUNDING: f64 = 1e-9;
 
 /// How wide a line's end may measure and still be a tip, a corner of its part's outline, in millimetres:
 /// a corner lies on the outline, and measures nothing but a rounding error.
@@ -599,8 +639,43 @@ mod tests {
         let strip = outline(&[(0.0, 0.0), (10.0, 0.0), (10.0, 1.0), (0.0, 1.0)]);
         let line = Line { points: [(5.0, 0.1), (5.0, 0.5), (6.0, 0.5)].map(|(x, y)| Point::new(x, y).unwrap()).to_vec(), closed: false };
         let edges = Edges::of(&strip, piece(&strip), &mut Budget::DEFAULT.meter()).unwrap();
-        let found = width(&edges, &[line], &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+        let found = width(&edges, std::slice::from_ref(&line), &mut Budget::DEFAULT.meter()).unwrap().unwrap();
         assert!((found.get() - (0.4 * 0.6 + 1.0) / 1.4).abs() < 1e-12, "{found:?}");
+        // Widest at its middle point, 1 mm wide, its ends left out: a line of 2 points has no other.
+        assert!((widest(&edges, &line, &mut Budget::DEFAULT.meter()).unwrap() - 1.0).abs() < 1e-12);
+        let ends = Line { points: line.points[..2].to_vec(), closed: false };
+        assert_eq!(widest(&edges, &ends, &mut Budget::DEFAULT.meter()).unwrap(), 0.0);
+    }
+
+    #[test]
+    fn a_line_is_widest_where_the_largest_circle_on_it_but_at_its_ends_fits() {
+        // A band 0.6 mm wide for 5 mm with a head 1.3 mm wide for 3 mm. A line along the band and into the
+        // head, ending on its middle, measures the head at its end alone: 0.6 mm at its widest. Run on
+        // through the head, it is 1.3 mm at its widest there, and closed into a ring, at its ends too.
+        let club = outline(&[(0.0, -0.3), (5.0, -0.3), (5.0, -0.65), (8.0, -0.65), (8.0, 0.65), (5.0, 0.65), (5.0, 0.3), (0.0, 0.3)]);
+        let edges = Edges::of(&club, piece(&club), &mut Budget::DEFAULT.meter()).unwrap();
+        let measured = |points: &[(f64, f64)], closed: bool| {
+            let line = Line { points: points.iter().map(|&(x, y)| Point::new(x, y).unwrap()).collect(), closed };
+            widest(&edges, &line, &mut Budget::DEFAULT.meter()).unwrap()
+        };
+        assert!((measured(&[(0.5, 0.0), (2.5, 0.0), (4.5, 0.0), (6.5, 0.0)], false) - 0.6).abs() < 1e-12);
+        assert!((measured(&[(0.5, 0.0), (2.5, 0.0), (6.5, 0.0), (7.35, 0.0)], false) - 1.3).abs() < 1e-12);
+        assert!((measured(&[(6.5, 0.0), (2.5, 0.0), (0.5, 0.0)], true) - 1.3).abs() < 1e-12);
+    }
+
+    #[test]
+    fn an_outline_reaches_from_its_line_as_far_as_its_farthest_corner_beside_it() {
+        // A band 0.6 mm wide and 8 mm long, its line along its middle from 0.5 mm to 7.5 mm, and a bump on its
+        // side 1.4 mm tall: the bump's corners are 1.7 mm from the line. The band's own corners lie beyond the
+        // line's ends, nearer them than any point between, and without the bump it has no corner beside them.
+        let line = Line { points: [(0.5, 0.0), (7.5, 0.0)].map(|(x, y)| Point::new(x, y).unwrap()).to_vec(), closed: false };
+        let band = outline(&[(0.0, -0.3), (8.0, -0.3), (8.0, 0.3), (5.0, 0.3), (5.0, 1.7), (3.0, 1.7), (3.0, 0.3), (0.0, 0.3)]);
+        assert!((farthest(&line, &band, &mut Budget::DEFAULT.meter()).unwrap() - 1.7).abs() < 1e-12);
+        let plain = outline(&[(0.0, -0.3), (8.0, -0.3), (8.0, 0.3), (0.0, 0.3)]);
+        assert_eq!(farthest(&line, &plain, &mut Budget::DEFAULT.meter()).unwrap(), 0.0);
+        // Closed, the line has no ends, and the band's corners are beside it.
+        let ring = Line { closed: true, ..line };
+        assert!((farthest(&ring, &plain, &mut Budget::DEFAULT.meter()).unwrap() - (0.5_f64 * 0.5 + 0.3 * 0.3).sqrt()).abs() < 1e-12);
     }
 
     #[test]

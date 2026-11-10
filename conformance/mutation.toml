@@ -408,6 +408,18 @@ line = "(lengths > 0.0).then(|| (a.0 * b.0 + a.1 * b.1) / lengths)"
 why = "a way of no length, past an open line's end, makes the cosine 0 over 0, which is not a number, and a cosine that is not a number is no corner, as no cosine is"
 
 [[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/strips/columns.rs"
+mutant = "replace < with <= in unslivered"
+line = "while i < rail.len() {"
+why = "past the rail's last point there is no point to keep and none to walk on from, so the turn it adds keeps nothing and ends the walk at once"
+
+[[equivalent]]
+file = "crates/stitchcraft-engine/src/normalize/strips/columns.rs"
+mutant = "replace + with * in unslivered"
+line = "let deep = (i + 1..j).filter_map(point).any(|between| distance_to_segment(between, from, to) > base);"
+why = "the points between then start with the one the search walks from, an end of the segment they are measured from: it lies 0 from that segment, never farther than a base longer than 0"
+
+[[equivalent]]
 file = "crates/stitchcraft-engine/src/testsheets/pictures.rs"
 mutant = "replace * with / in end"
 line = "let (out, on) = ((cos, -sin), (-sin * way, -cos * way));"
@@ -428,7 +440,7 @@ why = "the sine is as high either side of a quarter turn, so the string's top is
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/auto/columns.rs"
 mutant = "replace < with <= in columns"
-line = "if found.iter().zip(&widths).all(|(column, width)| column.walked.length() < DOT * width.get()) {"
+line = "if found.iter().zip(&widths).all(|(column, width)| column.walked.length() < DOT * width.average.get()) {"
 why = "only a part whose every line is at most half as long as it is wide, one exactly half, tells the 2 apart, and no case can aim at that: a line runs through the centres of the part's triangles and the width averages the circles centred on it, so the 2 meet exactly only by a coincidence of rounding. The parts near the bound fall well to either side of it: a disc's or a square's lines are 0.4 times as long as it is wide, and a rectangle's, once its corners don't tie, more than 0.75 times"
 
 [[equivalent]]

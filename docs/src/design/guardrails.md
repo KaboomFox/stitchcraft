@@ -70,7 +70,9 @@ compiler can get that wrong where the debug build is right. Rust 1.97.0 did: its
 the end of a vector while planning a satin column drawn as one closed path, and crashed or sewed stitches
 from elsewhere. So the `perf` job, which builds the release profile anyway, also runs the engine's release
 tests (`crates/stitchcraft-engine/tests/release.rs`) in it: shapes a release build once planned wrong,
-whose plan they check.
+whose plan they check. It runs the cases too slow for the debug build there too, the traced dogs'
+(`crates/stitchcraft-engine/tests/auto_photos.rs`), which the debug build leaves out
+([cases in the release build](conformance.md#cases-in-the-release-build)).
 
 ## Design rules (reviewed, partly linted)
 
