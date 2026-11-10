@@ -92,6 +92,14 @@ every platform places the same stitches.
 documented ways, `DEV-RUN-001` to `DEV-RUN-004` in the deviations ledger (`conformance/deviations.toml`),
 and random length draws and places its lengths in other ways (`DEV-RUN-005`).
 
+**A guided fill's rows** are stitched as these steps stitch a span, but with Ink/Stitch's own corners
+(`along_row`, [guided fill](guided.md#the-stitches)). There a join that turns by 45° or more is a corner,
+unless it lies within twice the tolerance along the row of the turn before it. A row's stagger runs on through the gentler joins
+where a copy of its guide meets its lengthened ends, which this page's 30° rule would make corners. With
+`flexible_stagger` its needle points lie whole stitches apart from its start, round its corners, and its
+last stitch is what is left. The fill's settings, its bean stitch among them, reach the registry's groups
+of the running stitch and of the path fills too.
+
 **Satin underlays** walk lines made point by point by the satin generator
 ([satin](satin.md#underlays)), and steps 2 to 5 place their stitches, with each walk's own length and
 tolerance. Such a line is a polyline already, and each join that turns by more than 30° is a corner. A

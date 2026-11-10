@@ -1,0 +1,7 @@
+# TS-17B's M10.9 part, its leaf: a guided fill whose rows copy an S-shaped guide from tip to tip, over the
+# tatami fill's underlay, written with its guide line beside it in its group (REQ-FILL-GDD-008).
+id = "inkstitch-ts17b-guided"
+requirements = ["REQ-FILL-GDD-008"]
+kind = "inkstitch"
+sheet = "TS-17B"
+elements = "ts17b:guided:"

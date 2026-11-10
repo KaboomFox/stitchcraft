@@ -5,6 +5,34 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M10.9: guided fill with its guide copied (`REQ-FILL-GDD-001` to `REQ-FILL-GDD-008`, `REQ-SVG-015`,
+  `REQ-VC-023`). `fill_method` `guided_fill` sews Ink/Stitch's guided fill with its default strategy, which
+  copies the guide, where it was skipped with `SC-W0011`.
+  - The guide line is a path in the fill's group whose `style` starts with Ink/Stitch's guide-line marker,
+    the first that isn't a satin column. A VectorCraft document groups a path named `stitch:guide` with the
+    fill, as it does for a guided ripple. The fill copies the guide's first subpath, made one open line and
+    lengthened past the fill at both ends.
+  - The copies move a row spacing at a time, square to the line between the guide's ends or at
+    `guided_fill_angle`, outward from the guide where it meets a part and otherwise from the copy nearest the
+    part's centroid. Each is smoothed by `smoothness_mm`, its needle points start a `staggers`-th of a stitch
+    further along than the row before's, `stitch_position_method` places them, and the part cuts it into the
+    fill's lines. These are routed as a circular fill's pieces, after the tatami fill's underlay, the needle
+    travelling under the lines still to sew.
+  - New settings: `guided_fill_strategy`, `guided_fill_angle`, an angle that may be left empty, and
+    `stitch_position_method`. Ink/Stitch's other strategies, parallel offset and buffer, are still skipped
+    with `SC-W0011` until M10.10. The fill dialog offers the stitch positions. A choice left with one option
+    is no longer declared, so the strategy isn't, and neither is the copy angle, which may be empty.
+  - New codes: `SC-W0331`, a guided fill without a guide it can copy, sewn as a tatami fill with its own
+    settings, and `SC-W0332`, which counts the parts the copies miss, each sewn as a tatami fill at the angle
+    of the guide's ends. New deviations: `DEV-FILL-033` to `DEV-FILL-035`.
+  - TS-17B gains a guided leaf in a fourth row for MC-12. The Test Sheet filter can't group a guide with its
+    fill, so only `stitch testsheet` draws TS-17B from now on. The differential sews the leaf in Ink/Stitch
+    too, and it agrees by every measure. Of the 157 glyphs of Barstitch cloudy, an Ink/Stitch font of guided
+    fills, 2 agree and 155 differ as the ledger explains. The trims and jumps between its fills differ where
+    their clip path's cut outlines start (`DEV-FILL-005`), and Ink/Stitch stops with an error on 3 of them
+    (`DEV-FILL-034`). A user page has pictures of guided fills.
+  - Golden changed: `TS-17B.pes`, for the guided leaf below M10.12's gradients. With the leaf after it, the
+    third gradient's last colour ends on its square's side nearest the leaf, and so starts on the other.
 - M13.15: the owner's dog photos as test pictures (`REQ-AUTO-025`, `REQ-AUTO-026`). Louise Fox's 2 photos of
   her dog, each cut out by a mask checked by hand, are docs fixtures, with the 4 documents VectorCraft 0.22.0
   traced from them 100 mm tall in 6 and in 9 threads (`docs/fixtures/README.md` › The traced dogs). A test

@@ -95,9 +95,11 @@ fn req_asm_009_a_satin_column_or_a_fill_with_its_underlay_on_has_an_underlay() {
         assert!(has(column(&[(underlay, "true"), ("satin_method", "e_stitch")])), "{underlay}");
     }
     // A fill's is on by default, for every method with one.
-    for method in ["tatami_fill", "contour_fill", "meander_fill", "circular_fill"] {
+    for method in ["tatami_fill", "contour_fill", "meander_fill", "circular_fill", "guided_fill", "tartan_fill"] {
         assert!(has(square(&[("fill_method", method)])), "{method}");
     }
+    // A guided fill whose strategy is not sewn yet sews none.
+    assert!(!has(square(&[("fill_method", "guided_fill"), ("guided_fill_strategy", "1")])));
     assert!(!has(square(&[("fill_underlay", "false")])));
     assert!(!has(square(&[("fill_method", "cross_stitch")])));
     // Ink/Stitch's legacy fill is sewn without underlay, and a fill set not to be sewn sews none.

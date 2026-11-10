@@ -58,10 +58,11 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Satin parameters](params/satin.md) | 34 | Satin column, E-stitch, S-stitch, Zigzag satin |
 | [Pull parameters](params/pull.md) | 2 | Satin column, E-stitch, S-stitch, Zigzag satin, Tatami fill |
 | [Fill parameters](params/fill.md) | 2 | Tatami fill, Circular fill, Contour fill, Cross stitch, Guided fill, Linear gradient fill, Meander fill, Tartan fill, Legacy fill |
-| [Tatami parameters](params/tatami.md) | 15 | Tatami fill, Contour fill, Meander fill, Circular fill, Linear gradient fill, Tartan fill |
+| [Tatami parameters](params/tatami.md) | 15 | Tatami fill, Contour fill, Meander fill, Circular fill, Guided fill, Linear gradient fill, Tartan fill |
 | [Contour parameters](params/contour.md) | 4 | Contour fill |
 | [Meander parameters](params/meander.md) | 6 | Meander fill |
 | [Cross parameters](params/cross.md) | 8 | Cross stitch |
+| [Guided parameters](params/guided.md) | 3 | Guided fill |
 | [Tartan parameters](params/tartan.md) | 5 | Tartan fill |
 | [Path fill parameters](params/path-fill.md) | 3 | Contour fill, Meander fill, Circular fill |
 | [Auto parameters](params/auto.md) | 5 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
@@ -117,6 +118,8 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`gap_fill_rows`](params/tatami.md#gap_fill_rows) | Gap-filling rows | Tatami parameters |
 | [`grid_first`](params/ripple.md#grid_first) | Grid first | Ripple parameters |
 | [`grid_size_mm`](params/ripple.md#grid_size_mm) | Grid size | Ripple parameters |
+| [`guided_fill_angle`](params/guided.md#guided_fill_angle) | Copy angle | Guided parameters |
+| [`guided_fill_strategy`](params/guided.md#guided_fill_strategy) | Strategy | Guided parameters |
 | [`herringbone_width_mm`](params/tartan.md#herringbone_width_mm) | Herringbone width | Tartan parameters |
 | [`join_style`](params/ripple.md#join_style) | Join style | Ripple parameters |
 | [`join_style`](params/contour.md#join_style) | Join style | Contour parameters |
@@ -178,6 +181,7 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [`staggers`](params/ripple.md#staggers) | Staggers | Ripple parameters |
 | [`staggers`](params/tatami.md#staggers) | Staggers | Tatami parameters |
 | [`start_at_nearest_point`](params/satin.md#start_at_nearest_point) | Start at nearest point | Satin parameters |
+| [`stitch_position_method`](params/guided.md#stitch_position_method) | Stitch positions | Guided parameters |
 | [`stop_after`](params/common.md#stop_after) | Stop after | Common parameters |
 | [`stop_at_ending_point`](params/tartan.md#stop_at_ending_point) | Stop at the end position | Tartan parameters |
 | [`stroke_method`](params/stroke.md#stroke_method) | Method | Stroke parameters |

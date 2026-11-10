@@ -6,7 +6,9 @@
 # Ink/Stitch's file keeps and StitchCraft leaves out below the machine's shortest stitch (DEV-FIN-001). Below
 # them M10.12's linear gradients of 2 stops and of 3, one of them transparent, each at a slant of its own
 # (REQ-FILL-GRD-009). With their rows, the whole sheet's stitches agree within the differential's 10 %, and
-# the herringbone's own case (tartan-herringbone.toml) excuses its difference.
+# the herringbone's own case (tartan-herringbone.toml) excuses its difference. From M10.9 the sheet ends with
+# a leaf whose guided fill copies an S-shaped guide, which the inkstitch-ts17b-guided case judges alone
+# (REQ-FILL-GDD-008).
 id = "inkstitch-ts17b"
 requirements = ["REQ-SVG-008", "REQ-FILL-TRT-011", "REQ-FILL-GRD-009"]
 kind = "inkstitch"

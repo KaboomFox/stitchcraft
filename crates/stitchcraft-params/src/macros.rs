@@ -153,6 +153,9 @@ macro_rules! __param_kind {
     (Angle; ; ;) => {
         $crate::Kind::Angle
     };
+    (OptionalAngle; ; ;) => {
+        $crate::Kind::OptionalAngle
+    };
     (BoundedAngle; $min:expr, $max:expr; ;) => {
         $crate::Kind::BoundedAngle { min: $min, max: $max }
     };

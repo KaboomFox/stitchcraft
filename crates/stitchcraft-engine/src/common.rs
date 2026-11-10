@@ -37,10 +37,10 @@ pub const MAX_STITCH_LENGTH: &str = "max_stitch_length_mm";
 pub const UNDERLAYS_FIRST: &str = "underlays_first";
 
 /// The stitch types with a longest stitch: manual stitch and satin columns, whatever their method, split
-/// longer stitches, a tatami fill sews its rows in stitches that long, and a contour fill its rings. A
-/// meander or circular fill's underlay sews its rows so, its path or spiral sewn in the running stitch's
-/// length. A linear gradient fill sews its rows so, and a tartan fill its rows and its weft's runs, as
-/// Ink/Stitch's do.
+/// longer stitches, a tatami fill sews its rows in stitches that long, a contour fill its rings and a guided
+/// fill its rows. A meander or circular fill's underlay sews its rows so, its path or spiral sewn in the
+/// running stitch's length. A linear gradient fill sews its rows so, and a tartan fill its rows and its
+/// weft's runs, as Ink/Stitch's do.
 const LONGEST: &[StitchType] = &[
     StitchType::ManualStitch,
     StitchType::SatinColumn,
@@ -51,13 +51,14 @@ const LONGEST: &[StitchType] = &[
     StitchType::ContourFill,
     StitchType::MeanderFill,
     StitchType::CircularFill,
+    StitchType::GuidedFill,
     StitchType::LinearGradientFill,
     StitchType::TartanFill,
 ];
 
 /// The stitch types that vary at random, and so take a seed: running stitch's random lengths (ripple
 /// stitch sews its lines with them), a satin column's random widths and spacing, whatever its method, a
-/// tatami, contour, circular or linear gradient fill's random stitch lengths, and a meander fill's path.
+/// tatami, contour, circular, guided or linear gradient fill's random stitch lengths, and a meander fill's path.
 const RANDOMIZED: &[StitchType] = &[
     StitchType::RunningStitch,
     StitchType::RippleStitch,
@@ -69,6 +70,7 @@ const RANDOMIZED: &[StitchType] = &[
     StitchType::ContourFill,
     StitchType::MeanderFill,
     StitchType::CircularFill,
+    StitchType::GuidedFill,
     StitchType::LinearGradientFill,
 ];
 
@@ -231,6 +233,7 @@ mod tests {
                         | StitchType::ContourFill
                         | StitchType::MeanderFill
                         | StitchType::CircularFill
+                        | StitchType::GuidedFill
                         | StitchType::LinearGradientFill
                         | StitchType::TartanFill
                 )
@@ -246,10 +249,11 @@ mod tests {
             StitchType::ContourFill,
             StitchType::MeanderFill,
             StitchType::CircularFill,
+            StitchType::GuidedFill,
             StitchType::LinearGradientFill,
             StitchType::TartanFill,
         ];
-        assert_eq!(types.map(longest_for), [None, None, Some(4.0), Some(4.0), Some(4.0), Some(4.0), Some(4.0), Some(4.0)]);
+        assert_eq!(types.map(longest_for), [None, None, Some(4.0), Some(4.0), Some(4.0), Some(4.0), Some(4.0), Some(4.0), Some(4.0)]);
         // A running stitch reads none, whatever the element sets.
         let set: ParamSet = [(MAX_STITCH_LENGTH, "abc")].into_iter().collect();
         assert_eq!(CommonParams::from_set_as(&set, StitchType::RunningStitch).unwrap().params.max_stitch_length_mm, None);
@@ -268,6 +272,7 @@ mod tests {
                         | StitchType::ContourFill
                         | StitchType::MeanderFill
                         | StitchType::CircularFill
+                        | StitchType::GuidedFill
                         | StitchType::LinearGradientFill
                 )
         };

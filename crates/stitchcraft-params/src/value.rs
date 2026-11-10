@@ -48,6 +48,8 @@ pub enum Value {
     Length(Option<Mm>),
     /// An angle in degrees, in (−180, 180].
     Angle(f64),
+    /// An angle in degrees, in (−180, 180]; `None` for an optional angle left empty.
+    OptionalAngle(Option<f64>),
     /// A percentage.
     Percent(f64),
     /// A number without a unit.
@@ -84,8 +86,13 @@ impl Value {
         let join = |items: Vec<String>| items.join(" ");
         match self {
             Value::Length(Some(mm)) => mm.get().to_string(),
-            Value::Length(None) | Value::Seed(None) | Value::LengthPair(None) | Value::PercentPair(None) | Value::Angles(None) => String::new(),
-            Value::Angle(v) | Value::Percent(v) | Value::Number(v) | Value::Area(v) => v.to_string(),
+            Value::Length(None)
+            | Value::OptionalAngle(None)
+            | Value::Seed(None)
+            | Value::LengthPair(None)
+            | Value::PercentPair(None)
+            | Value::Angles(None) => String::new(),
+            Value::Angle(v) | Value::OptionalAngle(Some(v)) | Value::Percent(v) | Value::Number(v) | Value::Area(v) => v.to_string(),
             Value::Count(n) => n.to_string(),
             Value::Toggle(on) => on.to_string(),
             Value::Choice(id) => (*id).to_string(),
@@ -121,6 +128,8 @@ impl Kind {
                 Some((Value::Length(Some(Mm::new(mm).ok()?)), clamped))
             }
             Kind::Angle => Some((Value::Angle(angle(text)?), false)),
+            Kind::OptionalAngle if text.is_empty() => Some((Value::OptionalAngle(None), false)),
+            Kind::OptionalAngle => Some((Value::OptionalAngle(Some(angle(text)?)), false)),
             Kind::BoundedAngle { min, max } => {
                 let (held, clamped) = clamp(degrees(text)?, min, max);
                 Some((Value::Angle(held), clamped))
@@ -421,6 +430,18 @@ mod tests {
         // An angle worked out means what the same angle typed in does: a fill's 135° plus 90°.
         assert_eq!(normalized_angle(135.0 + 90.0), -135.0);
         assert_eq!(normalized_angle(-540.0), 180.0);
+    }
+
+    #[test]
+    fn an_optional_angle_is_normalized_or_empty() {
+        // Empty is no angle, and 0 is one, as Ink/Stitch reads a guided fill's copy angle.
+        for (raw, degrees) in [(" ", None), ("0", Some(0.0)), ("190", Some(-170.0)), ("-90deg", Some(-90.0))] {
+            assert_eq!(Kind::OptionalAngle.parse(raw), Some((Value::OptionalAngle(degrees), false)), "{raw}");
+        }
+        for bad in ["x", "30 45", "NaN"] {
+            assert_eq!(Kind::OptionalAngle.parse(bad), None, "{bad}");
+        }
+        assert_eq!((Value::OptionalAngle(None).to_raw(), Value::OptionalAngle(Some(-30.0)).to_raw()), (String::new(), "-30".to_string()));
     }
 
     #[test]

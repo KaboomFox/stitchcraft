@@ -6,10 +6,12 @@
 //! else, so a helper at the document's root steers nothing. A helper is a shape whose `style` attribute
 //! starts it with Ink/Stitch's guide-line or anchor-line marker ([`Helper::of`]) and has a stroke.
 //!
-//! - **The guide line** is the first such guide that is a satin column, its `satin_column` setting on, or
-//!   else the first that is not. Its path in millimetres, under its own transform and the group's, its
-//!   stroke's width and join, and its settings go to every element of the shape. The engine reads it as a
-//!   line, or as a satin column where it is one or has several subpaths.
+//! - **The guide line** of a stroke is the first such guide that is a satin column, its `satin_column`
+//!   setting on, or else the first that is not. Its path in millimetres, under its own transform and the
+//!   group's, its stroke's width and join, and its settings go to the shape's stroke. The engine reads it as
+//!   a line, or as a satin column where it is one or has several subpaths.
+//! - **The guide line** of a fill is the first that is not a satin column, as Ink/Stitch's fill looks only
+//!   at those (`REQ-SVG-015`). A guided fill copies its first subpath.
 //! - **The anchor line** is the first anchor that is not a satin column: the start and the end of its first
 //!   subpath, which set where a satin guide places each copy's ends.
 //!
@@ -33,12 +35,18 @@ use crate::transform::{self, Affine};
 const SATIN_COLUMN: &str = "satin_column";
 
 impl<'a, 'input> Reader<'_, 'a, 'input> {
-    /// `hints` with the guide line and the anchor line that steer the shape `node`, found among the children
-    /// of its group, which is drawn with the map `map` and the style `style`.
-    pub(super) fn guided(&mut self, node: Node<'a, 'input>, (map, style): (Affine, &Style<'a>), hints: &mut Hints) -> Result<(), Diagnostic> {
-        let Some(group) = node.parent_element().filter(|parent| self.is_svg(*parent) && parent.tag_name().name() == "g") else { return Ok(()) };
+    /// `hints` with the guide line and the anchor line that steer the stroke of the shape `node`, found among
+    /// the children of its group, which is drawn with the map `map` and the style `style`, and the guide line
+    /// that steers its fill.
+    pub(super) fn guided(
+        &mut self,
+        node: Node<'a, 'input>,
+        (map, style): (Affine, &Style<'a>),
+        hints: &mut Hints,
+    ) -> Result<Option<Guide>, Diagnostic> {
+        let Some(group) = node.parent_element().filter(|parent| self.is_svg(*parent) && parent.tag_name().name() == "g") else { return Ok(None) };
         if !self.has_helpers(group)? {
-            return Ok(());
+            return Ok(None);
         }
         let (mut satin, mut line, mut anchor) = (None, None, None);
         for child in group.children().filter(Node::is_element) {
@@ -76,9 +84,9 @@ impl<'a, 'input> Reader<'_, 'a, 'input> {
                 line = Some(guide);
             }
         }
-        hints.guide = satin.or(line);
+        hints.guide = satin.or_else(|| line.clone());
         hints.anchor = anchor;
-        Ok(())
+        Ok(line)
     }
 
     /// Whether any child of `group` is a guide line or an anchor line, looked at once for each group: one unit

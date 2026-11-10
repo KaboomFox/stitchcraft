@@ -61,6 +61,8 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0328`](#sc-w0328) | Warning | Tartan stripe's colour can't be read; left out |
 | [`SC-W0329`](#sc-w0329) | Warning | Linear gradient fill without a linear gradient; its colour fades out |
 | [`SC-W0330`](#sc-w0330) | Warning | Gradient stop within 2 rows of the blend before; passed over |
+| [`SC-W0331`](#sc-w0331) | Warning | Guided fill without a guide line; sewn as a tatami fill |
+| [`SC-W0332`](#sc-w0332) | Warning | Guided fill's copies of its guide meet no part; sewn as a tatami fill |
 | [`SC-W0401`](#sc-w0401) | Warning | Path too small for the shortest stitch; skipped |
 | [`SC-W0402`](#sc-w0402) | Warning | Stitch length below twice the shortest stitch; raised |
 | [`SC-W0403`](#sc-w0403) | Warning | Hand-placed stitch shorter than the shortest stitch; point left out |
@@ -753,6 +755,34 @@ blend starts a row later and blends from the colour before the stop, and the row
 as Ink/Stitch sews it. A gradient whose start and end are one point puts all its stops at one row.
 
 The message names the stops. Move them at least 3 row spacings apart.
+
+## SC-W0331
+
+**Warning** — Guided fill without a guide line; sewn as a tatami fill
+
+A guided fill's rows are copies of its guide line, a line grouped with the fill and marked as one:
+a stroke with Ink/Stitch's guide-line marker in an SVG file, or a path named `stitch:guide` in a
+VectorCraft document. This fill has none, or its guide starts and ends at one point once it is made
+one line, so it is sewn as a tatami fill with its own settings, its angle and the rest, as Ink/Stitch
+sews a guided fill without a guide. A satin column marked as a guide guides a ripple stitch, not a
+fill. VectorCraft's live preview shows no marker to the fill effect, so it sews the tatami fill, and
+`stitch export` sews the rows.
+
+Group a line marked as a guide with the fill, drawn the way its rows should run.
+
+## SC-W0332
+
+**Warning** — Guided fill's copies of its guide meet no part; sewn as a tatami fill
+
+No copy of this guided fill's guide line meets a part of the fill, so that part is sewn as a tatami
+fill whose rows run at the angle of the line between the guide's ends, as Ink/Stitch falls back to
+one where its copies leave no line in a part. Where no copy meets the part at all, Ink/Stitch stops
+with an error instead. The copies move a row spacing at a time square to that line, or at `guided_fill_angle`, from
+the copy nearest the part outward, while they meet the part's bounds. A copy angle near the guide's
+own direction moves them along the guide, past a small part, and a guide far from a part can place
+its nearest copy beyond it.
+
+The message counts the parts. Draw the guide across the fill, or clear `guided_fill_angle`.
 
 ## SC-W0401
 

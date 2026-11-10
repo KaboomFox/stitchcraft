@@ -103,6 +103,36 @@ pub(crate) fn polyline(points: &[Point]) -> Piece {
     Piece { points: kept, corners }
 }
 
+/// The cosine of 45°: a join turns by 45° or more when the cosine of its turn is at most this.
+const WIDE_CORNER_COS: f64 = std::f64::consts::FRAC_1_SQRT_2;
+
+/// The polyline `points` as a piece, without points that repeat the one before, with a corner where
+/// Ink/Stitch's running stitch takes one (read at `d59c9ab`): at each join that turns by 45° or more and lies
+/// at least `apart` along the polyline from the join before it that turns so, or from its start. A guided
+/// fill stitches its rows so, whose gentler joins its stagger runs on through (`crate::generators::guided`).
+pub(crate) fn polyline_wide(points: &[Point], apart: f64) -> Piece {
+    let mut kept = Vec::with_capacity(points.len());
+    for point in points {
+        push(&mut kept, *point);
+    }
+    let mut corners = Vec::new();
+    let mut since = kept.first().zip(kept.get(1)).map_or(0.0, |(a, b)| a.distance(*b));
+    for (i, w) in kept.windows(3).enumerate() {
+        let [a, b, c] = w else { continue };
+        let (before, after) = ((b.x() - a.x(), b.y() - a.y()), (c.x() - b.x(), c.y() - b.y()));
+        let dot = before.0 * after.0 + before.1 * after.1;
+        let lengths = a.distance(*b) * b.distance(*c);
+        if dot <= WIDE_CORNER_COS * lengths {
+            if since >= apart {
+                corners.push(i + 1);
+            }
+            since = 0.0;
+        }
+        since += b.distance(*c);
+    }
+    Piece { points: kept, corners }
+}
+
 /// The line segments of the polyline `points`, each from a point to the next.
 pub(crate) fn segments(points: &[Point]) -> impl Iterator<Item = (Point, Point)> + '_ {
     points.iter().copied().zip(points.iter().copied().skip(1))
@@ -337,6 +367,24 @@ mod tests {
         let piece = &flat(&square, 0.1).pieces[0];
         assert_eq!(piece.points, [p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0), p(0.0, 0.0)]);
         assert_eq!(piece.corners, [1, 2, 3]);
+    }
+
+    #[test]
+    fn a_wide_corner_turns_by_45_degrees_or_more_and_lies_apart_from_the_last() {
+        // As Ink/Stitch's running stitch takes its corners: 44° is none, 46° is one, and so are 90° and 179°.
+        let turn = |degrees: f64| {
+            let (s, c) = math::sin_cos(math::to_radians(degrees));
+            polyline_wide(&[p(0.0, 0.0), p(10.0, 0.0), p(10.0 + 10.0 * c, 10.0 * s)], 0.4).corners
+        };
+        assert_eq!((turn(44.0), turn(46.0), turn(90.0), turn(179.0)), (vec![], vec![1], vec![1], vec![1]));
+        // A sharp turn within 0.4 of the one before is none, but the next counts from it; at 0.4 it is one.
+        let zigzag = |apart: f64| polyline_wide(&[p(0.0, 0.0), p(1.0, 0.0), p(1.0, apart), p(2.0, apart), p(2.0, 1.0 + apart)], 0.4).corners;
+        assert_eq!(zigzag(0.3), [1, 3]);
+        assert_eq!(zigzag(0.4), [1, 2, 3]);
+        // The first side counts as the stretch before the first join, and a point repeated is left out.
+        let short = polyline_wide(&[p(0.0, 0.0), p(0.3, 0.0), p(0.3, 0.0), p(0.3, 1.0), p(1.3, 1.0)], 0.4);
+        assert_eq!((short.points.len(), short.corners), (4, vec![2]));
+        assert_eq!(polyline_wide(&[], 0.4).corners, Vec::<usize>::new());
     }
 
     #[test]

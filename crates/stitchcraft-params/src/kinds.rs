@@ -42,6 +42,8 @@ kinds! {
     OptionalLengthWithZero => Option<Mm>, |v| if let Value::Length(mm) = v { Some(mm) } else { None };
     /// An angle in degrees, in (−180, 180].
     Angle => f64, |v| if let Value::Angle(degrees) = v { Some(degrees) } else { None };
+    /// An angle in degrees, in (−180, 180], that may be left empty (`None`), 0 being an angle.
+    OptionalAngle => Option<f64>, |v| if let Value::OptionalAngle(degrees) = v { Some(degrees) } else { None };
     /// An angle in degrees within the declaration's range, as given.
     BoundedAngle => f64, |v| if let Value::Angle(degrees) = v { Some(degrees) } else { None };
     /// A percentage.

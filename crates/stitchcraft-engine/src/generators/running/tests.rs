@@ -311,3 +311,60 @@ fn stitches_that_stray_exactly_the_budget_keep_to_it() {
     assert!(keeps_to(&needles, &along, 1.0, &mut meter).unwrap());
     assert!(!keeps_to(&needles, &along, 0.999, &mut meter).unwrap());
 }
+
+/// The needle points `along_row` puts along the polyline `xy`, in stitches of `length` within 0.2 mm, the
+/// shortest 0.3 mm, at random lengths with `jitter`, and in whole stitches from the start with `in_step`.
+fn row(xy: &[(f64, f64)], length: f64, jitter: Option<f64>, in_step: bool) -> Vec<(f64, f64)> {
+    let points: Vec<Point> = xy.iter().map(|&(x, y)| Point::new(x, y).unwrap()).collect();
+    let needles = along_row(&points, (length, 0.2, 0.3), jitter, (&SplitMix64::new(7), 0), in_step, &mut Budget::DEFAULT.meter()).unwrap();
+    needles.iter().map(|q| ((q.x() * 1e9).round() / 1e9, (q.y() * 1e9).round() / 1e9)).collect()
+}
+
+#[test]
+fn a_row_in_step_sews_whole_stitches_from_its_start_round_its_corners() {
+    // Round a corner at (10, 0): needle points every 3 mm along the row, the corner one of them, and the
+    // last stitch what is left.
+    let corner = [(0.0, 0.0), (10.0, 0.0), (10.0, 10.0)];
+    let stepped = [(0.0, 0.0), (3.0, 0.0), (6.0, 0.0), (9.0, 0.0), (10.0, 0.0), (10.0, 2.0), (10.0, 5.0), (10.0, 8.0), (10.0, 10.0)];
+    assert_eq!(row(&corner, 3.0, None, true), stepped);
+    // Spread evenly instead, between the corners: 4 stitches of 2.5 mm on each side.
+    let even = [(0.0, 0.0), (2.5, 0.0), (5.0, 0.0), (7.5, 0.0), (10.0, 0.0), (10.0, 2.5), (10.0, 5.0), (10.0, 7.5), (10.0, 10.0)];
+    assert_eq!(row(&corner, 3.0, None, false), even);
+    // A row a whole number of stitches long ends on its last stitch, sewn once.
+    assert_eq!(row(&[(0.0, 0.0), (9.0, 0.0)], 3.0, None, true), [(0.0, 0.0), (3.0, 0.0), (6.0, 0.0), (9.0, 0.0)]);
+    // Stitches shorter than twice the shortest are lengthened to it, 0.6 mm here.
+    assert_eq!(row(&[(0.0, 0.0), (1.2, 0.0)], 0.2, None, true), [(0.0, 0.0), (0.6, 0.0), (1.2, 0.0)]);
+    // Nothing to sew, nothing sewn.
+    assert_eq!(row(&[], 3.0, None, true), Vec::<(f64, f64)>::new());
+    // A row shorter than the shortest stitch, 0.3 mm here, is sewn as its ends, spread or in step.
+    let short = [(0.0, 0.0), (0.1, 0.0)];
+    assert_eq!((row(&short, 3.0, None, false), row(&short, 3.0, None, true)), (short.to_vec(), short.to_vec()));
+}
+
+#[test]
+fn a_row_at_random_lengths_varies_them_whatever_its_steps() {
+    let line = [(0.0, 0.0), (30.0, 0.0)];
+    let random = row(&line, 3.0, Some(0.5), true);
+    assert_eq!(random, row(&line, 3.0, Some(0.5), false));
+    assert_ne!(random, row(&line, 3.0, None, false));
+    assert!(random.iter().all(|q| q.1 == 0.0 && (0.0..=30.0).contains(&q.0)), "{random:?}");
+    assert_eq!((random.first(), random.last()), (Some(&(0.0, 0.0)), Some(&(30.0, 0.0))));
+}
+
+#[test]
+fn a_row_s_corners_are_its_wide_joins_at_least_twice_the_tolerance_apart() {
+    // 2 right-angle joins 1 mm apart, with a tolerance of 0.2 mm: both are corners, and the stitches are spread
+    // between them, one of them 1 mm long.
+    let step = [(0.0, 0.0), (10.0, 0.0), (10.0, 1.0), (20.0, 1.0)];
+    let even = [(0.0, 0.0), (2.5, 0.0), (5.0, 0.0), (7.5, 0.0), (10.0, 0.0), (10.0, 1.0), (12.5, 1.0), (15.0, 1.0), (17.5, 1.0), (20.0, 1.0)];
+    assert_eq!(row(&step, 3.0, None, false), even);
+}
+
+#[test]
+fn a_row_in_step_keeps_its_corner_over_a_needle_point_too_near_it() {
+    // A whole stitch ends 0.15 mm before the corner at (9.15, 0), nearer than the shortest stitch: the corner is
+    // kept and that needle point left out, and the stitch to the corner, 3.15 mm now, is halved. So is the last.
+    let corner = [(0.0, 0.0), (9.15, 0.0), (9.15, 9.0)];
+    let kept = [(0.0, 0.0), (3.0, 0.0), (6.0, 0.0), (7.575, 0.0), (9.15, 0.0), (9.15, 2.85), (9.15, 5.85), (9.15, 7.425), (9.15, 9.0)];
+    assert_eq!(row(&corner, 3.0, None, true), kept);
+}
