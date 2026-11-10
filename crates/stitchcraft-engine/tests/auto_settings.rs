@@ -15,7 +15,10 @@ use stitchcraft_engine::generators::pull::PULL_COMPENSATION;
 use stitchcraft_engine::normalize::region;
 use stitchcraft_engine::registry::PARAMETERS;
 use stitchcraft_params::{Family, Origin, ParamSet, Stability, find, find_for};
-use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, polylines, rules, widened};
+use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, polylines, rules, unbased, widened};
+
+/// The key of a satin column's pull compensation among the rules' settings.
+const PULL: &str = "auto_pull_compensation_mm";
 
 /// `element` with the settings `params` added.
 fn with(element: Element, params: &[(&str, &str)]) -> Element {
@@ -57,7 +60,7 @@ fn across(element: &Element) -> (f64, f64) {
 
 /// The elements `elements`, automatic, sew as, and what is said of them.
 fn sewn(elements: Vec<Element>) -> (Vec<Element>, Vec<Diagnostic>) {
-    let design = Design::new(elements.into_iter().map(automatic).collect(), DesignSettings::default()).unwrap();
+    let design = Design::new(unbased(elements.into_iter().map(automatic).collect()), DesignSettings::default()).unwrap();
     let (out, said) = digitized(&design, &Budget::DEFAULT);
     (out.into_owned(), said)
 }
@@ -71,7 +74,10 @@ fn messages(said: &[Diagnostic], code: Code) -> Vec<String> {
 fn req_auto_020_the_rules_settings_are_stitchcraft_s_own_and_no_stitch_type_reads_them() {
     assert!(PARAMETERS.contains(&&AutoParams::GROUP) && AutoParams::GROUP.automatic());
     let defaults: Vec<(&str, &str)> = AutoParams::SPECS.iter().map(|spec| (spec.key, spec.default)).collect();
-    assert_eq!(defaults, [(MAX_SATIN_WIDTH, "7"), (MIN_TRIPLE_RUN_WIDTH, "0.5"), (OVERLAP, "0.4"), (MIN_AREA, "1"), (IGNORE_BACKGROUND, "true")]);
+    let widths = [(MAX_SATIN_WIDTH, "7"), (MIN_TRIPLE_RUN_WIDTH, "0.5")];
+    let neighbours = [(OVERLAP, "1"), (PULL, "0.4"), (MIN_AREA, "1"), (IGNORE_BACKGROUND, "true")];
+    let base = [("auto_base_layer", "true"), ("auto_base_stitch_length_mm", "3"), ("auto_base_offset_mm", "-0.6"), ("auto_base_keep_holes", "true")];
+    assert_eq!(defaults, [&widths[..], &neighbours[..], &base[..]].concat());
     for spec in AutoParams::SPECS {
         assert_eq!((spec.origin, spec.stability), (Origin::StitchCraft, Stability::Experimental), "{}", spec.key);
         // Registered, and so known to every host, but no family's settings show it.
@@ -80,7 +86,9 @@ fn req_auto_020_the_rules_settings_are_stitchcraft_s_own_and_no_stitch_type_read
     }
     let read = rules();
     assert_eq!((read.auto_max_satin_width_mm, read.auto_min_triple_run_width_mm), (Mm::new(7.0).unwrap(), Mm::new(0.5).unwrap()));
-    assert_eq!((read.auto_overlap_mm.get(), read.auto_min_area_mm2, read.auto_ignore_background), (0.4, 1.0, true));
+    assert_eq!((read.auto_overlap_mm.get(), read.auto_min_area_mm2, read.auto_ignore_background), (1.0, 1.0, true));
+    assert_eq!((read.auto_pull_compensation_mm.get(), read.auto_base_layer, read.auto_base_keep_holes), (0.4, true, true));
+    assert_eq!((read.auto_base_stitch_length_mm.get(), read.auto_base_offset_mm.get()), (3.0, -0.6));
 }
 
 #[test]
@@ -93,8 +101,8 @@ fn req_auto_020_a_line_is_a_satin_column_up_to_its_own_widest_satin_column() {
         assert_eq!(Stitches::of_stroke(Mm::new(5.0).unwrap(), &settings, &own), stitches, "{widest}");
         assert_eq!(made(&element).stitches, Some(stitches), "{widest}");
     }
-    // A satin column has the overlap of the line it sews as its pull compensation.
-    let column = made(&with(line, &[(OVERLAP, "0.6")]));
+    // A satin column has the pull compensation of the line it sews, whatever the line's overlap.
+    let column = made(&with(line, &[(PULL, "0.6"), (OVERLAP, "1.5")]));
     assert_eq!(setting(&column.elements[0], PULL_COMPENSATION), Some("0.6"));
 }
 
@@ -133,8 +141,8 @@ fn req_auto_020_an_area_reaches_its_own_overlap_under_the_shapes_sewn_after_it()
     let ids: Vec<&str> = out.iter().map(|element| element.id.as_str()).collect();
     assert_eq!(ids, ["lower", "upper", "beside"]);
     let reach = |id: &str| across(out.iter().find(|element| element.id.as_str() == id).unwrap()).1 - 10.0;
-    assert!((reach("lower") - 0.8).abs() < 1e-6 && (reach("upper") - 0.4).abs() < 1e-6, "{} {}", reach("lower"), reach("upper"));
-    assert_eq!(messages(&said, Code::AutoUnder), ["2 areas reach 0.4 to 0.8 mm under the shapes sewn after them that they touch."]);
+    assert!((reach("lower") - 0.8).abs() < 1e-6 && (reach("upper") - 1.0).abs() < 1e-6, "{} {}", reach("lower"), reach("upper"));
+    assert_eq!(messages(&said, Code::AutoUnder), ["2 areas reach 0.8 to 1 mm under the shapes sewn after them that they touch."]);
 }
 
 #[test]
@@ -182,9 +190,9 @@ fn req_auto_020_the_lowest_shape_sews_when_it_switches_the_background_off() {
 
 #[test]
 fn req_auto_020_a_value_out_of_range_is_its_nearest_and_one_that_doesnt_read_sews_nothing() {
-    // An overlap of 5 mm is read as 2 mm, the most it takes, and said.
+    // A pull compensation of 5 mm is read as 2 mm, the most it takes, and said.
     let band = rectangle("band", (0.0, 0.0), (30.0, 5.0), true);
-    let clamped = made(&with(band.clone(), &[(OVERLAP, "5")]));
+    let clamped = made(&with(band.clone(), &[(PULL, "5")]));
     let [warning, ..] = clamped.diagnostics.as_slice() else { panic!("{:?}", clamped.diagnostics) };
     assert_eq!(
         (warning.code, warning.severity(), warning.element.as_ref().map(|id| id.as_str())),

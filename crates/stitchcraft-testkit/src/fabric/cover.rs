@@ -57,6 +57,9 @@ pub struct Cover {
     pub open: f64,
     /// How many gaps the threads of every role leave.
     pub open_gaps: usize,
+    /// Each gap the top stitches leave: the box round its pixels' centres, its area in square millimetres, and
+    /// the shape most of it lies in, by id (`between shapes` for a slit), the largest gap first.
+    pub places: Vec<(Rect, f64, String)>,
     /// The 10 shapes with the most bare fabric, by id, each with its bare area in square millimetres, the
     /// most first: `between shapes` names the slits.
     pub shapes: Vec<(String, f64)>,
@@ -103,6 +106,18 @@ pub fn cover(design: &Design, plan: &StitchPlan, gap: f64) -> Cover {
         place.and_then(|place| design.elements().get(place)).map_or_else(|| "between shapes".to_string(), |element| element.id.to_string())
     };
     let mut shapes: Vec<(String, f64)> = by_shape.into_iter().map(|(place, pixels)| (name(place), area(pixels))).collect();
+    let mut places: Vec<(Rect, f64, String)> = gaps
+        .iter()
+        .filter_map(|group| {
+            let mut owners: BTreeMap<Option<usize>, usize> = BTreeMap::new();
+            for &at in group {
+                *owners.entry(picture.owner[at]).or_default() += 1;
+            }
+            let most = owners.into_iter().max_by_key(|(_, pixels)| *pixels).map(|(place, _)| name(place))?;
+            Some((Rect::around(group.iter().map(|&at| picture.centre(at)))?, area(group.len()), most))
+        })
+        .collect();
+    places.sort_by(|a, b| b.1.total_cmp(&a.1));
     shapes.sort_by(|a, b| b.1.total_cmp(&a.1));
     shapes.truncate(10);
     Cover {
@@ -115,6 +130,7 @@ pub fn cover(design: &Design, plan: &StitchPlan, gap: f64) -> Cover {
         at: largest.and_then(|group| Rect::around(group.iter().map(|&at| picture.centre(at)))),
         open: area(count(&open)),
         open_gaps: open_gaps.len(),
+        places,
         shapes,
     }
 }

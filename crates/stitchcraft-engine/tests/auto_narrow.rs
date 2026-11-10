@@ -12,7 +12,7 @@ use stitchcraft_engine::design::{Design, DesignSettings, Element, Shape};
 use stitchcraft_engine::generators::passes::BEAN_STITCH_REPEATS;
 use stitchcraft_engine::normalize::region;
 use stitchcraft_engine::normalize::stroke::distance_to_segment;
-use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, messages, p, planned, polylines, widened};
+use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, messages, p, planned, polylines, unbased, widened};
 
 /// What the automatic `element` sews as, in a design with `settings`.
 fn made_with(element: &Element, settings: &DesignSettings) -> Digitized {
@@ -54,7 +54,7 @@ fn area(element: &Element) -> f64 {
 
 /// The elements `elements` are sewn as, in a design with the default settings, and what is said of them.
 fn sewn(elements: Vec<Element>) -> (Vec<Element>, Vec<Diagnostic>) {
-    let design = Design::new(elements, DesignSettings::default()).unwrap();
+    let design = Design::new(unbased(elements), DesignSettings::default()).unwrap();
     let (out, said) = digitized(&design, &Budget::DEFAULT);
     (out.into_owned(), said)
 }
@@ -143,7 +143,7 @@ fn req_auto_013_broad_parts_and_specks_stay_filled_and_the_narrow_ones_run_after
 #[test]
 fn req_auto_013_the_areas_sewn_before_a_narrow_part_reach_under_it() {
     // 2 red squares, and a blue strip 0.6 mm wide between them, as a trace whose colours abut draws them. The
-    // strip runs, after both squares, which it borders, and each square reaches 0.4 mm under it.
+    // strip runs, after both squares, which it borders, and each square reaches under it as far as it is wide, less than the overlap.
     let red = |id: &str, from: (f64, f64), to: (f64, f64)| automatic(shape(id, &[rectangle(from, to)], &[]));
     let blue = automatic(fill("strip", &[&rectangle((10.0, 0.0), (10.6, 10.0))], &BLUE, &[]));
     let (out, said) = sewn(vec![red("left", (0.0, 0.0), (10.0, 10.0)), blue, red("right", (10.6, 0.0), (20.6, 10.0))]);
@@ -155,7 +155,7 @@ fn req_auto_013_the_areas_sewn_before_a_narrow_part_reach_under_it() {
     assert!((area(&out[1]) - 104.0).abs() < 0.05, "{}", area(&out[1]));
     assert!(area(&out[0]) > 103.99 && area(&out[1]) > 103.99);
     let said: Vec<String> = said.iter().map(ToString::to_string).collect();
-    assert!(said.contains(&"info SC-I0904: 2 areas reach 0.4 mm under the shapes sewn after them that they touch.".to_string()), "{said:?}");
+    assert!(said.contains(&"info SC-I0904: 2 areas reach 1 mm under the shapes sewn after them that they touch.".to_string()), "{said:?}");
 }
 
 #[test]

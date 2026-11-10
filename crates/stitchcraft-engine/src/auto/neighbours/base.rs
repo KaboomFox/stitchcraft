@@ -11,11 +11,16 @@
 //!   [`CLOSING`], half a thread, and shrunk by as much, which closes the slits narrower than a thread, and
 //!   then offset by `auto_base_offset_mm`. Growing by a length and then moving the edge in by the rest is
 //!   the same shape, found in 2 steps.
-//! - **Pieces.** Each part of that shape is one fill, without its holes when `auto_base_keep_holes` is off,
-//!   and a part smaller than the smallest area is left out, as a speck is.
+//! - **Pieces.** Each part of that shape is one fill, without its holes when `auto_base_keep_holes` is off.
+//!   A part smaller than the smallest area is left out, as a speck is, and so is a part with no room for a
+//!   row: one on which a disc as wide as the base layer's row spacing fits nowhere. Its fill would find no
+//!   row and sew round its outline with a warning, under a column that sews an underlay of its own.
 //! - **Thread.** The thread that paints the largest area, the first drawn of 2 as large. A part's columns
 //!   each paint their part, which counts once.
 //! - **Underlay.** Every automatic area then sews no underlay of its own: the base layer is its underlay.
+//!
+//! A design whose automatic shapes sew as lines and columns alone has no base layer: a column sews the
+//! underlay of its width, and a base layer would only lie under that.
 //!
 //! The design goes by the settings its lowest automatic shape has for the base layer. A shape that needs
 //! more work than the budget allows leaves the design without a base layer, said with `SC-W0910`, and each
@@ -82,11 +87,14 @@ pub(super) fn laid(shapes: &mut Shapes, rules: &AutoParams, taken: &mut Labels, 
 }
 
 /// The pieces of the base layer under the automatic elements of `shapes` and their area, with `meter`'s
-/// work; `None` when they paint nothing. With a piece, the automatic areas' underlays are turned off.
+/// work; `None` when they paint nothing or none of them is an area. With a piece, the automatic areas'
+/// underlays are turned off.
 fn pieces(shapes: &mut Shapes, rules: &AutoParams, taken: &mut Labels, meter: &mut Meter) -> Result<Option<(Vec<Element>, f64)>, Failed> {
     let mut painted: Vec<Polygon> = Vec::new();
     // How much each thread paints, in the order the threads are first drawn.
     let mut threads: Vec<(Thread, f64)> = Vec::new();
+    // Whether an automatic area sews: a design of lines and columns alone has no base layer.
+    let mut filled = false;
     for index in 0..shapes.len() {
         meter.charge(1)?;
         if !shapes.automatic(index) {
@@ -99,6 +107,7 @@ fn pieces(shapes: &mut Shapes, rules: &AutoParams, taken: &mut Labels, meter: &m
             continue;
         }
         painted.extend_from_slice(parts);
+        filled |= shapes.is_area(index);
         match threads.iter_mut().find(|(thread, _)| thread.color == element.thread.color) {
             Some((_, sum)) => *sum += area_of(parts),
             None => threads.push((element.thread.clone(), area_of(parts))),
@@ -110,14 +119,19 @@ fn pieces(shapes: &mut Shapes, rules: &AutoParams, taken: &mut Labels, meter: &m
             most = Some((thread, area));
         }
     }
-    let Some((thread, _)) = most else { return Ok(None) };
+    let Some((thread, _)) = most.filter(|_| filled) else { return Ok(None) };
     let grown = joined(buffered(&joined(union([painted.as_slice()], meter))?, CLOSING, meter))?;
     let shape = joined(buffered(&grown, rules.auto_base_offset_mm.get() - CLOSING, meter))?;
+    let spacing = rules.auto_base_stitch_length_mm.get() * ROWS;
     let mut kept = Vec::new();
     for piece in shape {
         meter.charge(1)?;
         let piece = if rules.auto_base_keep_holes { piece } else { Polygon { holes: Vec::new(), ..piece } };
-        if !speck(piece.area(), rules.auto_min_area_mm2) {
+        if speck(piece.area(), rules.auto_min_area_mm2) {
+            continue;
+        }
+        // A piece has room for a row where a disc as wide as the row spacing fits on it.
+        if !joined(buffered(std::slice::from_ref(&piece), -spacing / 2.0, meter))?.is_empty() {
             kept.push(piece);
         }
     }

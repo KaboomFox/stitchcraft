@@ -68,6 +68,9 @@ fn pictures() -> Vec<(String, Design)> {
     designs.push(("pear".to_string(), pictures::pear()));
     designs.push(("paw".to_string(), pictures::dog_shapes("dog-on-turf-6", &["vc:69:fill"])));
     designs.push(("ear".to_string(), pictures::dog_shapes("dog-running-6", &["vc:5:fill", "vc:6:fill", "vc:28:fill", "vc:50:fill"])));
+    // A column 4.4 mm wide of the dog's blaze ends under another: pushed on by the overlap of 1 mm, its last
+    // stitches skewed and left 3.2 mm² bare at (41.1, 42.4).
+    designs.push(("blaze".to_string(), pictures::dog_shapes("dog-running-6", &["vc:81:fill", "vc:66:fill", "vc:56:fill", "vc:38:fill"])));
     designs
 }
 
@@ -170,11 +173,14 @@ fn req_auto_028_the_base_layer_keeps_a_hole_and_leaves_a_part_narrower_than_twic
     let plan = plan(&holed);
     let base = stitches(&plan, BASE);
     assert!(!base.is_empty(), "the plan has no element {BASE}: {:?}", plan.elements);
-    // No base stitch comes nearer the hole than 0.6 mm, neither its ends nor its middle. The offset rounds the
-    // hole's corners, and a stitch along a rounded corner cuts it by 0.05 mm at most.
+    // The base layer's rows end 0.6 mm from the hole. The offset rounds the hole's corners, and the stitches
+    // that travel along the hole's edge between rows stray up to 0.2 mm from it, a fill's travel tolerance,
+    // so no base stitch comes nearer the hole than 0.4 mm, neither its ends nor its middle.
     let apart = |at: f64| (12.0 - at).max(at - 18.0).max(0.0);
-    let near = |p: Point| stitchcraft_core::math::hypot(apart(p.x()), apart(p.y())) < INSET - 0.05;
-    assert!(base.iter().all(|(_, stitch)| !near(stitch.from) && !near(stitch.to) && !near(stitch.from.lerp(stitch.to, 0.5))));
+    let near = |p: Point| stitchcraft_core::math::hypot(apart(p.x()), apart(p.y())) < INSET - 0.2;
+    let nearer: Vec<[Point; 2]> =
+        base.iter().filter(|(_, stitch)| near(stitch.from) || near(stitch.to) || near(stitch.from.lerp(stitch.to, 0.5))).map(|(_, stitch)| [stitch.from, stitch.to]).collect();
+    assert!(nearer.is_empty(), "{nearer:?}");
     // The strip is narrower than twice the inset, so the base layer ends 0.6 mm inside the square's side.
     let [left, right, top, bottom] = span(&base);
     assert!((left - INSET).abs() < 0.05 && (right - (30.0 - INSET)).abs() < 0.05, "{left} to {right}");

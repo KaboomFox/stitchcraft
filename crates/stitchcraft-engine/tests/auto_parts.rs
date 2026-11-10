@@ -13,7 +13,7 @@ use stitchcraft_engine::generators::passes::BEAN_STITCH_REPEATS;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::normalize::region;
 use stitchcraft_engine::normalize::satin::{Shape as Read, recognize};
-use stitchcraft_testkit::designs::{RED, automatic, fill};
+use stitchcraft_testkit::designs::{RED, automatic, fill, unbased};
 
 /// What the automatic `element` sews as, in a design with the default settings.
 fn made(element: &Element) -> Digitized {
@@ -82,13 +82,12 @@ fn req_auto_019_a_narrow_part_too_narrow_for_satin_runs_along_its_centre_line() 
 
 #[test]
 fn req_auto_019_the_fill_reaches_under_the_columns_sewn_over_it() {
-    // Digitized with its neighbours, the square reaches 0.4 mm under the tab's column, 3 mm wide: 1.2 mm²
-    // more.
-    let design = Design::new(vec![automatic(flag(3.0))], DesignSettings::default()).unwrap();
+    // Digitized with its neighbours, the square reaches 1 mm under the tab's column, 3 mm wide: 3 mm² more.
+    let design = Design::new(unbased(vec![automatic(flag(3.0))]), DesignSettings::default()).unwrap();
     let (out, _) = digitized(&design, &Budget::DEFAULT);
     let ids: Vec<&str> = out.iter().map(|e| e.id.as_str()).collect();
     assert_eq!(ids, ["flag", "flag#2"]);
-    assert!((area(&out[0]) - 401.2).abs() < 0.1, "{}", area(&out[0]));
+    assert!((area(&out[0]) - 403.0).abs() < 0.1, "{}", area(&out[0]));
 }
 
 #[test]

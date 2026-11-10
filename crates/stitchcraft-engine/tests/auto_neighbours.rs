@@ -1,5 +1,5 @@
-//! Automatic shapes beside each other (`REQ-AUTO-007` to `REQ-AUTO-009`): an area reaches 0.4 mm under the
-//! shapes sewn after it that it touches, and is cut away under the areas sewn after it that cover it; a speck
+//! Automatic shapes beside each other (`REQ-AUTO-007` to `REQ-AUTO-009`): an area reaches the overlap, 1 mm,
+//! under the shapes sewn after it that it touches, and is cut away under the areas sewn after it that cover it; a speck
 //! merges into the area it shares the longest edge with; and the picture's background is left out.
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
@@ -9,7 +9,7 @@ use stitchcraft_core::{Budget, Code, Diagnostic};
 use stitchcraft_engine::auto::digitized;
 use stitchcraft_engine::design::{Design, DesignSettings, Element, Shape};
 use stitchcraft_engine::normalize::region::{self, Region};
-use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, messages, planned, polylines, rings, widened};
+use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, messages, planned, polylines, rings, unbased, widened};
 
 /// An automatic rectangle `id` from `(x0, y0)` to `(x1, y1)`.
 fn rect(id: &str, (x0, y0): (f64, f64), (x1, y1): (f64, f64)) -> Element {
@@ -29,7 +29,7 @@ fn line(id: &str, points: &[(f64, f64)], width: f64) -> Element {
 
 /// The elements `elements` are sewn as, in a design with the default settings, and what is said of them.
 fn sewn(elements: Vec<Element>) -> (Vec<Element>, Vec<Diagnostic>) {
-    let design = Design::new(elements, DesignSettings::default()).unwrap();
+    let design = Design::new(unbased(elements), DesignSettings::default()).unwrap();
     let (out, said) = digitized(&design, &Budget::DEFAULT);
     (out.into_owned(), said)
 }
@@ -80,24 +80,28 @@ const TOUCHING: f64 = stitchcraft_engine::auto::TOUCHING + 1e-9;
 
 /// How much more than the strip along an edge 2 areas share an area may gain reaching under the other:
 /// past each end of the edge, a strip [`TOUCHING`] wide, as long as the overlap and [`TOUCHING`] together.
-const PAST_ENDS: f64 = 2.0 * (0.4 + TOUCHING) * TOUCHING;
+const PAST_ENDS: f64 = 2.0 * (OVERLAP + TOUCHING) * TOUCHING;
+
+/// The overlap an automatic area reaches under its neighbours with by default, in millimetres
+/// (`REQ-AUTO-029`).
+const OVERLAP: f64 = 1.0;
 
 #[test]
-fn req_auto_007_an_area_reaches_0_4_mm_under_the_area_sewn_after_it_that_it_touches() {
+fn req_auto_007_an_area_reaches_the_overlap_under_the_area_sewn_after_it_that_it_touches() {
     let (out, diagnostics) =
         sewn(vec![rect("left", (0.0, 0.0), (10.0, 10.0)), rect("right", (10.0, 0.0), (20.0, 10.0)), rect("apart", (21.0, 0.0), (31.0, 10.0))]);
     assert_eq!(ids(&out), ["left", "right", "apart"]);
-    // `left` grows 0.4 mm into `right` along the edge they share, and nowhere else.
+    // `left` grows 1 mm into `right` along the edge they share, and nowhere else.
     let left = named(&out, "left");
     let [x0, y0, x1, y1] = bounds(left);
-    assert!(near(x1, 10.4, 1e-6) && near(x0, 0.0, 1e-9), "{:?}", bounds(left));
+    assert!(near(x1, 10.0 + OVERLAP, 1e-6) && near(x0, 0.0, 1e-9), "{:?}", bounds(left));
     assert!(near(y0, 0.0, TOUCHING) && near(y1, 10.0, TOUCHING), "{:?}", bounds(left));
-    assert!(near(area(left), 104.0, PAST_ENDS), "{}", area(left));
+    assert!(near(area(left), 110.0, PAST_ENDS), "{}", area(left));
     // `right` touches no shape sewn after it, 1 mm from `apart`, and the last is sewn last: both as drawn.
     for (id, element) in [("right", rect("right", (10.0, 0.0), (20.0, 10.0))), ("apart", rect("apart", (21.0, 0.0), (31.0, 10.0)))] {
         assert_eq!(named(&out, id).shape, element.shape, "{id}");
     }
-    assert_eq!(said(&diagnostics, Code::AutoUnder), ["info SC-I0904: 1 area reaches 0.4 mm under the shapes sewn after it that it touches."]);
+    assert_eq!(said(&diagnostics, Code::AutoUnder), ["info SC-I0904: 1 area reaches 1 mm under the shapes sewn after it that it touches."]);
 }
 
 #[test]
@@ -107,12 +111,12 @@ fn req_auto_007_areas_reach_under_the_shape_sewn_after_them_both() {
     // reaches round its corner under the bar, a quarter of a circle as wide as the overlap.
     let (out, diagnostics) =
         sewn(vec![rect("low", (0.0, 0.0), (10.0, 10.0)), rect("high", (0.0, 10.0), (10.0, 20.0)), rect("bar", (10.0, 0.0), (20.0, 20.0))]);
-    let corner = std::f64::consts::PI * 0.4 * 0.4 / 4.0;
-    assert!(near(area(named(&out, "low")), 108.0 + corner, 2.0 * PAST_ENDS), "{}", area(named(&out, "low")));
-    assert!(near(area(named(&out, "high")), 104.0 + corner, PAST_ENDS), "{}", area(named(&out, "high")));
+    let corner = std::f64::consts::PI * OVERLAP * OVERLAP / 4.0;
+    assert!(near(area(named(&out, "low")), 120.0 + corner, 2.0 * PAST_ENDS), "{}", area(named(&out, "low")));
+    assert!(near(area(named(&out, "high")), 110.0 + corner, PAST_ENDS), "{}", area(named(&out, "high")));
     let [x0, y0, x1, y1] = bounds(named(&out, "low"));
-    assert!(near(x0, 0.0, TOUCHING) && near(y0, 0.0, TOUCHING) && near(x1, 10.4, 1e-6) && near(y1, 10.4, 1e-6), "{:?}", bounds(named(&out, "low")));
-    assert_eq!(said(&diagnostics, Code::AutoUnder), ["info SC-I0904: 2 areas reach 0.4 mm under the shapes sewn after them that they touch."]);
+    assert!(near(x0, 0.0, TOUCHING) && near(y0, 0.0, TOUCHING) && near(x1, 10.0 + OVERLAP, 1e-6) && near(y1, 10.0 + OVERLAP, 1e-6), "{:?}", bounds(named(&out, "low")));
+    assert_eq!(said(&diagnostics, Code::AutoUnder), ["info SC-I0904: 2 areas reach 1 mm under the shapes sewn after them that they touch."]);
 }
 
 #[test]
@@ -126,7 +130,7 @@ fn req_auto_007_an_area_reaches_under_no_shape_that_comes_near_without_touching(
     let (out, _) = sewn(vec![rect("left", (0.0, 0.0), (10.0, 10.0)), rect("right", (10.05, 0.0), (20.0, 10.0))]);
     let left = named(&out, "left");
     assert_eq!(region_of(left).parts.len(), 1);
-    assert!(near(bounds(left)[2], 10.4, 1e-6), "{:?}", bounds(left));
+    assert!(near(bounds(left)[2], 10.0 + OVERLAP, 1e-6), "{:?}", bounds(left));
 }
 
 #[test]
@@ -135,18 +139,18 @@ fn req_auto_007_an_area_reaches_under_a_shape_only_where_they_touch() {
     // from it, too far to touch.
     let ell = automatic(fill("ell", &[&[(8.0, 10.0), (10.2, 10.0), (10.2, 0.0), (20.0, 0.0), (20.0, 12.0), (8.0, 12.0)]], &BLUE, &[]));
     let (out, _) = sewn(vec![rect("square", (0.0, 0.0), (10.0, 10.0)), ell]);
-    // The square reaches 0.4 mm under the L along the 2 mm they share and round the corner there, and no
+    // The square reaches 1 mm under the L along the 2 mm they share and round the corner there, and no
     // further down its right side than the overlap from that corner.
     let square = named(&out, "square");
-    assert!(near(area(square), 100.0 + 2.0 * 0.4, 0.4), "{}", area(square));
+    assert!(near(area(square), 100.0 + 2.0 * OVERLAP, OVERLAP), "{}", area(square));
     let region = region_of(square);
     let beside =
         region.parts.iter().flat_map(|part| part.outline.iter()).filter(|p| p.x() > 10.0 + 1e-9).map(|p| p.y()).fold(f64::INFINITY, f64::min);
-    assert!(beside > 10.0 - 0.4 - TOUCHING, "{beside}");
+    assert!(beside > 10.0 - OVERLAP - TOUCHING, "{beside}");
 }
 
 #[test]
-fn req_auto_007_an_area_covered_by_an_area_sewn_after_it_is_cut_away_0_4_mm_inside_its_edge() {
+fn req_auto_007_an_area_covered_by_an_area_sewn_after_it_is_cut_away_the_overlap_inside_its_edge() {
     // A shape away from the others, so that the lowest is no background (REQ-AUTO-009).
     let far = || rect("far", (40.0, 0.0), (45.0, 5.0));
     let over = || rect("over", (10.0, 10.0), (20.0, 20.0));
@@ -156,11 +160,11 @@ fn req_auto_007_an_area_covered_by_an_area_sewn_after_it_is_cut_away_0_4_mm_insi
     // edges, wider than a satin column: so it has no narrow parts (REQ-AUTO-019).
     let (abutting, abutting_said) = sewn(vec![holed("under", (0.0, 0.0), (30.0, 30.0), (10.0, 10.0), (20.0, 20.0)), over(), far()]);
     // Either way, the upper area fills a hole of the lower one, which is digitized whole under it
-    // (REQ-AUTO-023) and sewn up to 0.4 mm inside its edge: 900 mm² less a 9.2 mm square.
+    // (REQ-AUTO-023) and sewn up to 1 mm inside its edge: 900 mm² less an 8 mm square.
     for (out, said_of) in [(&stacked, &stacked_said), (&abutting, &abutting_said)] {
-        assert!(near(area(named(out, "under")), 900.0 - 9.2 * 9.2, 0.05), "{}", area(named(out, "under")));
+        assert!(near(area(named(out, "under")), 900.0 - 8.0 * 8.0, 0.05), "{}", area(named(out, "under")));
         assert_eq!(named(out, "over").shape, over().shape);
-        assert_eq!(said(said_of, Code::AutoUnder), ["info SC-I0904: 1 area is cut away under the areas sewn after it, 0.4 mm inside their edges."]);
+        assert_eq!(said(said_of, Code::AutoUnder), ["info SC-I0904: 1 area is cut away under the areas sewn after it, 1 mm inside their edges."]);
     }
     // So the stacked trace sews the stitches of the abutting one.
     let stitches = |elements: Vec<Element>| planned(elements).plan.unwrap().stitches().count();
@@ -189,7 +193,7 @@ fn req_auto_007_an_area_covered_whole_by_an_area_sewn_after_it_sews_nothing() {
 
 #[test]
 fn req_auto_007_an_area_covered_whole_sews_nothing_however_near_the_edge_of_what_covers_it() {
-    // 60 mm² under the cover's left edge: cut 0.4 mm inside that edge, it would leave a sliver 0.3 mm wide
+    // 60 mm² under the cover's left edge: cut 1 mm inside that edge, it would leave a sliver 0.9 mm wide
     // that the cover sews over. It is 7.5 mm wide, wider than a satin column, which a part as narrow as that
     // sews as (REQ-AUTO-016).
     let (out, diagnostics) =
@@ -232,12 +236,12 @@ fn req_auto_007_a_column_or_a_line_sewn_after_an_area_goes_over_it() {
     let column = line("column", &[(-5.0, 5.0), (15.0, 5.0)], 3.0);
     let running = line("running", &[(-5.0, 2.0), (15.0, 2.0)], 0.5);
     let (out, _) = sewn(vec![rect("square", (0.0, 0.0), (10.0, 10.0)), column, running]);
-    // The square is sewn whole, and reaches 0.4 mm under the column where the column crosses its edges, on
-    // both sides: 2 strips 0.4 mm by 3 mm. A running line is too narrow to reach under.
+    // The square is sewn whole, and reaches 1 mm under the column where the column crosses its edges, on
+    // both sides: 2 strips 1 mm by 3 mm. A running line is too narrow to reach under.
     let square = named(&out, "square");
-    assert!(near(area(square), 100.0 + 2.0 * 0.4 * 3.0, 4.0 * 0.4 * TOUCHING), "{}", area(square));
+    assert!(near(area(square), 100.0 + 2.0 * OVERLAP * 3.0, 4.0 * OVERLAP * TOUCHING), "{}", area(square));
     let [x0, y0, x1, y1] = bounds(square);
-    assert!(near(x0, -0.4, 1e-6) && near(x1, 10.4, 1e-6) && near(y0, 0.0, 1e-9) && near(y1, 10.0, 1e-9), "{:?}", bounds(square));
+    assert!(near(x0, -OVERLAP, 1e-6) && near(x1, 10.0 + OVERLAP, 1e-6) && near(y0, 0.0, 1e-9) && near(y1, 10.0, 1e-9), "{:?}", bounds(square));
 }
 
 #[test]
@@ -248,7 +252,7 @@ fn req_auto_007_an_area_reaches_under_a_satin_column_whichever_way_its_rails_are
         let column = along("column", polylines(&[&[(0.0, 10.0), (10.0, 10.0)], &second]), &BLUE, &[("satin_column", "true")]);
         let (out, _) = sewn(vec![rect("square", (0.0, 0.0), (10.0, 10.0)), column]);
         let square = named(&out, "square");
-        assert!(near(area(square), 104.0, PAST_ENDS), "{second:?}: {}", area(square));
+        assert!(near(area(square), 110.0, PAST_ENDS), "{second:?}: {}", area(square));
     }
 }
 
@@ -260,7 +264,7 @@ fn req_auto_007_shapes_with_settings_are_sewn_as_drawn() {
     assert_eq!(area(named(&out, "left")), 100.0);
     // ...but an automatic area reaches under one sewn after it.
     let (out, _) = sewn(vec![rect("left", (0.0, 0.0), (10.0, 10.0)), set(rect("right", (10.0, 0.0), (20.0, 10.0)))]);
-    assert!(near(area(named(&out, "left")), 104.0, PAST_ENDS), "{}", area(named(&out, "left")));
+    assert!(near(area(named(&out, "left")), 110.0, PAST_ENDS), "{}", area(named(&out, "left")));
     assert_eq!(area(named(&out, "right")), 100.0);
 }
 
@@ -483,7 +487,7 @@ fn req_auto_009_a_design_of_one_area_with_its_own_stroke_sews_it() {
 #[test]
 fn req_auto_009_a_background_that_needs_more_work_to_find_than_the_budget_allows_is_sewn_and_said_to_be() {
     let design =
-        Design::new(vec![rect("background", (0.0, 0.0), (30.0, 20.0)), rect("logo", (5.0, 5.0), (15.0, 15.0))], DesignSettings::default()).unwrap();
+        Design::new(unbased(vec![rect("background", (0.0, 0.0), (30.0, 20.0)), rect("logo", (5.0, 5.0), (15.0, 15.0))]), DesignSettings::default()).unwrap();
     let with = |work: u64| {
         let (out, diagnostics) = digitized(&design, &Budget { max_work: work, ..Budget::DEFAULT });
         let digitized = ids(&out).iter().map(ToString::to_string).collect::<Vec<_>>();
@@ -572,7 +576,7 @@ fn req_auto_009_what_shows_of_the_background_inside_the_picture_is_sewn() {
 #[test]
 fn req_auto_023_an_area_closes_only_the_holes_its_details_fill() {
     // A square with 2 holes: a square drawn after it fills one, and fabric shows through the other. The square
-    // is digitized whole under its detail, cut away under it 0.4 mm inside its edge, and keeps the other hole
+    // is digitized whole under its detail, cut away under it 1 mm inside its edge, and keeps the other hole
     // as drawn.
     let square = automatic(fill(
         "square",
@@ -596,7 +600,7 @@ fn req_auto_023_an_area_closes_only_the_holes_its_details_fill() {
         .map(|ring| region::Polygon { outline: ring.clone(), holes: Vec::new() }.area())
         .collect();
     assert!(
-        holes.len() == 2 && holes.iter().any(|&hole| near(hole, 64.0, 1e-6)) && holes.iter().any(|&hole| near(hole, 9.2 * 9.2, 1e-6)),
+        holes.len() == 2 && holes.iter().any(|&hole| near(hole, 64.0, 1e-6)) && holes.iter().any(|&hole| near(hole, 8.0 * 8.0, 1e-6)),
         "{holes:?}"
     );
 }
@@ -616,33 +620,33 @@ fn req_auto_008_a_speck_left_out_leaves_out_the_stop_after_it() {
 #[test]
 fn req_auto_023_an_area_drawn_under_others_sews_what_shows_of_it() {
     // A bar along the bottom, a square drawn over its middle: what shows of the bar is its 2 ends, which sew
-    // first and reach 0.4 mm under the square along the edges they share with it, and round the corners at
+    // first and reach 1 mm under the square along the edges they share with it, and round the corners at
     // their ends, a quarter of a circle as wide as the overlap each (REQ-AUTO-007).
     let (out, diagnostics) =
         sewn(vec![rect("bar", (0.0, 0.0), (30.0, 10.0)), rect("square", (10.0, -5.0), (20.0, 15.0)), rect("far", (40.0, 0.0), (45.0, 5.0))]);
     let bar = named(&out, "bar");
     assert_eq!(region_of(bar).parts.len(), 2);
-    let corners = std::f64::consts::PI * 0.4 * 0.4;
-    assert!(near(area(bar), 200.0 + 2.0 * 0.4 * 10.0 + corners, 4.0 * PAST_ENDS), "{}", area(bar));
+    let corners = std::f64::consts::PI * OVERLAP * OVERLAP;
+    assert!(near(area(bar), 200.0 + 2.0 * OVERLAP * 10.0 + corners, 4.0 * PAST_ENDS), "{}", area(bar));
     assert_eq!(named(&out, "square").shape, rect("square", (10.0, -5.0), (20.0, 15.0)).shape);
     assert_eq!(said(&diagnostics, Code::AutoLayers), ["info SC-I0908: 1 area sews only what shows of it under the areas drawn over it."]);
-    assert_eq!(said(&diagnostics, Code::AutoUnder), ["info SC-I0904: 1 area reaches 0.4 mm under the shapes sewn after it that it touches."]);
+    assert_eq!(said(&diagnostics, Code::AutoUnder), ["info SC-I0904: 1 area reaches 1 mm under the shapes sewn after it that it touches."]);
 }
 
 #[test]
 fn req_auto_023_an_area_moves_back_under_the_details_that_fill_its_holes() {
     // An abutting trace drew the detail first, then the square with a hole where it lies: the square is
-    // digitized whole, sews first, and is cut away under the detail, 0.4 mm inside its edge.
+    // digitized whole, sews first, and is cut away under the detail, 1 mm inside its edge.
     let square = || holed("square", (0.0, 0.0), (30.0, 30.0), (10.0, 10.0), (20.0, 20.0));
     let (out, diagnostics) = sewn(vec![rect("detail", (10.0, 10.0), (20.0, 20.0)), square(), rect("far", (40.0, 0.0), (45.0, 5.0))]);
     assert_eq!(ids(&out), ["square", "detail", "far"]);
     let whole = named(&out, "square");
-    assert!(near(area(whole), 900.0 - 9.2 * 9.2, 0.05) && region_of(whole).parts[0].holes.len() == 1, "{}", area(whole));
+    assert!(near(area(whole), 900.0 - 8.0 * 8.0, 0.05) && region_of(whole).parts[0].holes.len() == 1, "{}", area(whole));
     assert_eq!(
         said(&diagnostics, Code::AutoLayers),
         ["info SC-I0908: 1 area is digitized whole under the areas that fill its holes, which sew after it."]
     );
-    assert_eq!(said(&diagnostics, Code::AutoUnder), ["info SC-I0904: 1 area is cut away under the areas sewn after it, 0.4 mm inside their edges."]);
+    assert_eq!(said(&diagnostics, Code::AutoUnder), ["info SC-I0904: 1 area is cut away under the areas sewn after it, 1 mm inside their edges."]);
 }
 
 #[test]
@@ -736,7 +740,7 @@ fn req_auto_023_an_area_and_one_in_its_hole_round_a_part_of_it_both_sew() {
     ]);
     assert_eq!(ids(&out)[..2], ["white", "red"], "{:?}", said(&diagnostics, Code::AutoUnder));
     assert!(near(area(named(&out, "red")), 3600.0 - 900.0 + 100.0, 1e-6), "{}", area(named(&out, "red")));
-    assert!(area(named(&out, "white")) > 900.0 - 9.2 * 9.2 - 1e-6, "{}", area(named(&out, "white")));
+    assert!(area(named(&out, "white")) > 900.0 - 8.0 * 8.0 - 1e-6, "{}", area(named(&out, "white")));
 }
 
 #[test]
@@ -758,8 +762,8 @@ fn req_auto_023_a_hole_that_areas_and_a_part_of_the_area_fill_together_closes() 
     );
     assert_eq!(
         said(&diagnostics, Code::AutoUnder),
-        ["info SC-I0904: 1 area reaches 0.4 mm under the shapes sewn after it that it touches. 1 area is cut away under the areas sewn after \
-          it, 0.4 mm inside their edges."]
+        ["info SC-I0904: 1 area reaches 1 mm under the shapes sewn after it that it touches. 1 area is cut away under the areas sewn after \
+          it, 1 mm inside their edges."]
     );
 }
 
@@ -843,8 +847,8 @@ fn diag_sc_i0904_areas_reach_under_the_shapes_sewn_after_them_or_are_cut_away() 
     let [summary] = said(&diagnostics, Code::AutoUnder).try_into().unwrap();
     assert_eq!(
         summary,
-        "info SC-I0904: 2 areas reach 0.4 mm under the shapes sewn after them that they touch. 1 area is cut away under the areas sewn after it, \
-         0.4 mm inside their edges."
+        "info SC-I0904: 2 areas reach 1 mm under the shapes sewn after them that they touch. 1 area is cut away under the areas sewn after it, \
+         1 mm inside their edges."
     );
     assert_eq!(Code::AutoUnder.id(), "SC-I0904");
 }

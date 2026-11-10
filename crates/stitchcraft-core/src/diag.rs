@@ -1086,7 +1086,7 @@ registry! {
     /// The message gives the line's width. Check the line's stroke width.
     AutoAreaTooLarge = "SC-W0903", Warning, "Line too wide to fill; left out";
 
-    /// `--auto` makes each automatic area reach its overlap, 0.4 mm unless it sets another
+    /// `--auto` makes each automatic area reach its overlap, 1 mm unless it sets another
     /// (`auto_overlap_mm`), under the shapes sewn after it, from where it touches them. The thread pulls
     /// stitches in from the edges of their shape, and without the overlap fabric shows between shapes that
     /// only meet. Where an area sewn after it covers part of it, as the details on an area digitized whole
@@ -1167,13 +1167,16 @@ registry! {
 
     /// `--auto` sews one base layer under the whole design before anything else, so that fabric of any
     /// colour shows less where 2 shapes leave a slit between them. Its shape is what the automatic shapes
-    /// paint together, with the slits narrower than a thread closed, 0.6 mm inside the outer edge unless
-    /// the design sets another offset (`auto_base_offset_mm`). It is an open fill of stitches 3 mm long in
-    /// 3 directions (`auto_base_stitch_length_mm`), in the thread that paints the largest area, and every
-    /// stitch of it is underlay. The fills on it sew no underlay of their own.
+    /// paint together, with the slits narrower than a thread closed, offset by -0.6 mm, which is inwards,
+    /// unless the design sets another offset (`auto_base_offset_mm`). It is an open fill of stitches 3 mm
+    /// long in 3 directions (`auto_base_stitch_length_mm`), in the thread that paints the largest area, and
+    /// every stitch of it is underlay. The fills on it sew no underlay of their own. A piece of it that has
+    /// no room for a row of those stitches is left out, as under a satin column that stands alone, which
+    /// sews the underlay of its width.
     ///
     /// The message gives its area, how many pieces it has and its thread. A design that is nowhere wide
-    /// enough for one has none, and the message says so. To sew the design without a base layer, turn
+    /// enough for one has none, and the message says so. A design whose shapes all sew as lines and
+    /// columns has none either, and nothing is said. To sew the design without a base layer, turn
     /// `auto_base_layer` off: each fill then sews the underlay of its settings.
     AutoBase = "SC-I0909", Info, "Base layer sewn under the design";
 
