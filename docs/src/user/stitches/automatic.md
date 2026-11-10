@@ -66,7 +66,7 @@ roadmap.
 **Digitized**
 
 <!-- shot: auto-pear -->
-![The traced pear digitized automatically. Its 3 greens sew as tatami fills, with satin columns at the narrow ends of the olive and dark olive bands. Its stem sews as a satin column and a running stitch, and the light grey square is left out. Thin threads run straight from the stem to the bands' ends, 4 jumps that the machine doesn't cut.](../../images/generated/auto-pear.png)
+![The traced pear digitized automatically. Its 3 greens sew as tatami fills, with satin columns at the narrow ends of the olive and dark olive bands. Its stem sews as 2 satin columns side by side, olive and dark olive, and the light grey square is left out. Thin threads run straight from the stem to the bands' ends, 4 jumps that the machine doesn't cut.](../../images/generated/auto-pear.png)
 <!-- /shot -->
 
 The photo is drawn in code for these pages. `stitch plan` traced it 90 mm across with VectorCraft 0.19.0, into
@@ -82,6 +82,45 @@ To digitize a photo:
 - In VectorCraft, trace it with Image Trace's **Colors** set to 4, then give the traced shapes StitchCraft's
   Auto effect
   ([from a picture to a machine file](../tutorials/picture-to-machine-file.md#2-trace-the-picture-in-those-threads)).
+
+## A photo with its background removed
+
+A photo's background, such as the turf a dog stands on, traces into shapes of its own, which sew too. To sew
+the subject alone, remove the background first, in any program that makes it transparent, and save the
+photo as a PNG file. Image Trace leaves transparent pixels out. The photo then traces into its subject's
+shapes alone ([subject cut-out](../../design/image-to-embroidery.md#subject-cut-out)).
+Then `stitch plan dog.png --colours 9 --size 100 -o dog.pes`, or Image Trace in VectorCraft, traces and
+digitizes it as any photo. The owner's photos of her dog were made that way. A mask checked by hand cut
+each out, as `--subject` will from M13.14.
+
+**The photo, cut out**
+
+<!-- shot: auto-dog-photo -->
+![The owner's photo of her dog running towards the camera, cut out of its background: a tricolour dog, black, white and tan, its mouth open and its ears flying, on white.](../../images/generated/auto-dog-photo.png)
+<!-- /shot -->
+
+**Traced in 9 threads**
+
+<!-- shot: auto-dog-traced -->
+![The running dog traced in 9 of the machine's threads, in flat patches. Its back and ears are black and grey, and its face and chest white. Its legs and cheeks are tan, and its mouth dark brown. The patches' edges are ragged where the fur's shading crossed from one thread to the next.](../../images/generated/auto-dog-traced.png)
+<!-- /shot -->
+
+**Digitized**
+
+<!-- shot: auto-dog -->
+![The traced running dog digitized automatically. Its broad patches sew as tatami fills, and its strands of fur as satin columns and triple runs between them, in black, greys, white, tan and dark brown. Thin threads run straight between patches of one colour, jumps that the machine doesn't cut.](../../images/generated/auto-dog.png)
+<!-- /shot -->
+
+`stitch plan` traced the cut-out 100 mm tall with VectorCraft 0.22.0, into
+`docs/fixtures/traced-dog-running-9.vectorcraft`. The fur's shading became flat patches in 9 threads, which
+digitize as fills, satin columns and triple runs by their width. The fabric is covered where the dog has a
+colour. One stitch still lies where it shouldn't. A satin column of the dog's dark grey fur fans its
+stitches round a lighter grey patch that bites into its side, and that stitch crosses the patch. M13.16 of
+the [roadmap](../../plan/roadmap.md) removes it, and the like stitches of the other traced dogs
+([image to embroidery](../../design/image-to-embroidery.md#sewing-order) has their numbers). The thin
+straight lines are jumps between patches of one colour, which the reference machine leaves for you to cut by
+hand, as it leaves the pear's. M13.17 runs the thread under the patches sewn later instead, where they cover
+it.
 
 ## How it chooses the stitches
 
