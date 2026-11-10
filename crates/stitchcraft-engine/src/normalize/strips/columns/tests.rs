@@ -982,3 +982,43 @@ fn req_auto_016_a_line_that_leaves_through_a_cut_just_past_a_junction_turns_nowh
     skeleton.graph.cut[0] = Some(0);
     assert_eq!(cornered(&skeleton, &[Walked { nodes: vec![0, 1, 2, 3], closed: true }]), [open(&[1, 2, 3]), open(&[3, 0, 1])]);
 }
+
+#[test]
+fn req_auto_016_a_rail_cuts_across_a_sliver_narrower_than_a_thread_at_its_base() {
+    // A rail along a straight edge runs out along a sliver 0.3 mm wide at its base and 0.5 mm deep, as the
+    // outline of the traced dog's paw does beside a notch, and back: it cuts across the sliver's base. A corner
+    // of 90°, and a sliver 0.5 mm wide at its base, stay on it.
+    let unslivered_points = |at: &[(f64, f64)]| {
+        let points: Vec<Point> = at.iter().map(|&(x, y)| p(x, y)).collect();
+        let kept = unslivered(&points, &(0..points.len()).collect::<Vec<_>>(), &mut Budget::DEFAULT.meter()).unwrap();
+        kept.into_iter().map(|i| (points[i].x(), points[i].y())).collect::<Vec<_>>()
+    };
+    let sliver = [(0.0, 0.0), (1.0, 0.0), (2.0, 0.0), (2.1, -0.5), (2.3, 0.0), (3.0, 0.0), (4.0, 0.0)];
+    assert_eq!(unslivered_points(&sliver), vec![(0.0, 0.0), (1.0, 0.0), (2.0, 0.0), (2.3, 0.0), (3.0, 0.0), (4.0, 0.0)]);
+    let corner = [(0.0, 0.0), (1.0, 0.0), (1.2, 0.0), (1.2, 0.2), (1.2, 1.0)];
+    assert_eq!(unslivered_points(&corner), corner.to_vec());
+    let wide = [(0.0, 0.0), (2.0, 0.0), (2.25, -1.0), (2.5, 0.0), (4.0, 0.0)];
+    assert_eq!(unslivered_points(&wide), wide.to_vec());
+    // At the bounds: a sliver exactly a thread wide at its base is cut across, and one exactly as deep as it is
+    // wide there stays.
+    let thread = [(-1.0, 0.0), (0.0, 0.0), (0.2, 1.0), (SLIVER, 0.0), (1.5, 0.0)];
+    assert_eq!(p(0.0, 0.0).distance(p(SLIVER, 0.0)), SLIVER);
+    assert_eq!(unslivered_points(&thread), vec![(-1.0, 0.0), (0.0, 0.0), (SLIVER, 0.0), (1.5, 0.0)]);
+    let square = [(-1.0, 0.0), (0.0, 0.0), (0.125, 0.25), (0.25, 0.0), (1.5, 0.0)];
+    assert_eq!(distance_to_segment(p(0.125, 0.25), p(0.0, 0.0), p(0.25, 0.0)), p(0.0, 0.0).distance(p(0.25, 0.0)));
+    assert_eq!(unslivered_points(&square), square.to_vec());
+}
+
+#[test]
+fn the_search_for_slivers_spends_a_unit_of_work_for_each_point_looked_at() {
+    // From each of a rail's 5 points, each later point but the next is looked at with the points between: 2, 3
+    // and 4 points from the first, 2 and 3 from the second and 2 from the third, 16 in all.
+    let points = [(-1.0, 0.0), (0.0, 0.0), (0.125, 0.25), (0.25, 0.0), (1.5, 0.0)].map(|(x, y)| p(x, y));
+    let within = |work: u64| {
+        let mut meter = Budget { max_work: work, ..Budget::DEFAULT }.meter();
+        unslivered(&points, &[0, 1, 2, 3, 4], &mut meter).map(|kept| (kept.len(), meter.work_left()))
+    };
+    assert_eq!(within(20), Ok((5, 4)));
+    assert_eq!(within(16), Ok((5, 0)));
+    assert_eq!(within(15), Err(Exhausted::Work));
+}
