@@ -3,8 +3,9 @@
 Small designs for the docs' pictures (`docs/shots.toml`) and command-line examples (`docs/examples.toml`),
 in SVG and in VectorCraft's format. `cargo xtask docs` and `cargo xtask shots` plan them with the engine,
 so a page always shows what StitchCraft does with them today. Each one is hand-written for StitchCraft and
-shows one thing, but for `round-patch.vectorcraft`, which VectorCraft writes, and `traced-pear.vectorcraft`,
-which VectorCraft traced ([below](#the-traced-pear)). Test inputs live in `conformance/fixtures/`.
+shows one thing, but for `round-patch.vectorcraft`, which VectorCraft writes, and the pictures VectorCraft
+traced: `traced-pear.vectorcraft` ([below](#the-traced-pear)) and the owner's dog, cut out of her photos
+([the traced dogs](#the-traced-dogs)). Test inputs live in `conformance/fixtures/`.
 
 | Fixture | Shows | Used by |
 |---|---|---|
@@ -12,6 +13,12 @@ which VectorCraft traced ([below](#the-traced-pear)). Test inputs live in `confo
 | `traced-badge.svg` | A badge as Image Trace traces it in the Brother threads `stitch palette` writes: a red disc, a blue square and a gold disc, abutting, on white, none with settings | the picture tutorial: the `traced-badge` shots and the `plan-traced-badge` example; automatic digitizing's neighbours |
 | `emblem.svg` | An emblem drawn in layers on white in 4 of those threads, each layer whole and none with settings. A navy square 50 mm wide holds a white disc with a red star on it and 3 gold bars 3 mm tall | automatic digitizing's flat-colour art: the `auto-emblem-picture` and `auto-emblem` shots |
 | `traced-pear.vectorcraft` | The photo of a pear that the `auto-pear-photo` shot draws, traced 90 mm across in 4 of those threads: a light grey backdrop, and the pear in 3 bands of green | automatic digitizing's photo: the `auto-pear-traced` and `auto-pear` shots, and the engine's cases of what a digitized picture leaves bare and lays astray (`stitchcraft_testkit::pictures::pear`) |
+| `dog-on-turf-cutout.png` | The owner's photo of her dog on artificial turf, looking up at the camera, cut out of the turf: the dog on a transparent background, 191 × 410 pixels | traced into the 2 documents below |
+| `dog-running-cutout.png` | Her photo of the dog running towards the camera, cut out the same way, 183 × 372 pixels | automatic digitizing's dog: the `auto-dog-photo` shot, and traced into the 2 documents below |
+| `traced-dog-on-turf-6.vectorcraft` | The dog on turf, traced 100 mm tall in 6 of the machine's threads: black, greys and white | the engine's cases of what a digitized picture leaves bare and lays astray (`stitchcraft_testkit::pictures::dogs`), and its paw alone (`dog_shapes`) |
+| `traced-dog-on-turf-9.vectorcraft` | The dog on turf, traced 100 mm tall in 9 threads, a front leg tan | the same cases |
+| `traced-dog-running-6.vectorcraft` | The running dog, traced 100 mm tall in 6 threads, its legs tan | the same cases, and 4 shapes of its ear alone (`dog_shapes`) |
+| `traced-dog-running-9.vectorcraft` | The running dog, traced 100 mm tall in 9 threads, its mouth dark brown | the `auto-dog-traced` and `auto-dog` shots, and the same cases |
 | `wave.svg` | A smooth wave | running stitch length |
 | `zigzag.svg` | The same wave, drawn 3 mm wide | the zigzag stroke's spacing and angle, and a satin column drawn as one path |
 | `ripple.svg` | An arch, half a circle 30 mm across, open at the bottom | the ripple stitch's lines and joins |
@@ -51,3 +58,46 @@ stitch plan docs/src/images/generated/auto-pear-photo.png -o pear.pes --colours 
 The document is kept as VectorCraft saved it. The shots plan it without VectorCraft. A test in
 `xtask/src/shots/picture.rs` keeps the hash of the photo it was traced from. When the photo changes, the test
 fails until the new photo is traced the same way and the test keeps its hash.
+
+## The traced dogs
+
+The 2 photos of a dog are Louise Fox's, of her own dog. She gave them to StitchCraft on 2026-11-08 under the
+MIT licence. Before they reached the repository, each was scaled down from 1536 × 2048 pixels to 1200 pixels
+wide and saved as a JPEG file without metadata. The photo of the dog running first had its left 160 pixels cut
+away, as they held a person. Neither photo is in the repository: only the cut-outs made from them are.
+
+**The masks.** A mask is 255 where a photo shows the dog, made for each photo by spike M13.13. A pixel is the
+dog's where at least 2 of 3 models keep it. 2 of the models, SAM ViT-B and MobileSAM, were each given a box
+drawn round the dog by hand. The third was IS-Net. The holes were then filled, and the pieces of fewer than
+2,000 pixels apart from the dog were dropped. Each mask was checked by eye, region by region, in crops at
+three quarters of the photo's size, and was used as it was. They keep a little of what shows through the fur
+at its edges, such as the yellow line through the tip of the tail on turf.
+
+**The cut-outs.** `dog-on-turf-cutout.png` and `dog-running-cutout.png` are the photos with their masks as
+alpha. Each is cropped to its mask's box with a margin of 8 pixels, within the photo. It is then scaled down
+to a third of the photo's size. Each pixel averages the dog's pixels of a block of 3 × 3 pixels of the
+photo, so that the turf doesn't colour the dog's edge. A pixel is opaque where the dog fills at least half of
+its block, and transparent elsewhere, its colour cleared. At 100 mm tall a pixel is then 0.24 mm, finer than
+a thread 0.4 mm wide. At a quarter of the photo's size, the dogs traced in 4 threads lost their eyes.
+`--subject` will remove the background before VectorCraft traces a photo (M13.14). Until then, the cut-outs
+are made as above.
+
+**The traces.** VectorCraft 0.22.0's command line (MIT OR Apache-2.0, © 2026 ArtCraft Team and the
+VectorCraft contributors), from the Linux release archive whose SHA-256 `compat/vectorcraft.toml` pins,
+wrote the 4 documents. `stitch plan` ran it to trace each cut-out 100 mm tall in 6 and in 9 threads, with
+the steps of [a picture from the command line](../src/design/image-to-embroidery.md#pictures-from-the-command-line):
+
+```sh
+stitch plan docs/fixtures/dog-running-cutout.png -o dog.pes --colours 9 --size 100 \
+  --traced docs/fixtures/traced-dog-running-9.vectorcraft --vectorcraft-cli PATH/TO/vectorcraft-cli
+```
+
+Image Trace leaves the transparent pixels out, so every shape of a document is the dog's: the area the
+shapes cover differs from the cut-out's dog by 0.2 % of it. In 6 threads both dogs keep a middle grey where
+their fur is shaded, which fewer threads lose, and the running dog has its tan legs. 9 threads are the fewest
+that give the dog on turf tan legs too, which 8 trace in warm grey. VectorCraft saves a document whose
+indented JSON would be larger than 1 MiB without indenting it, so each of these 4 is 236 to 265 KB. In 4 or
+5 threads they would stay under that size, indented, and be 0.87 to 1 MB. The documents are kept as
+VectorCraft saved them, and the shots and cases plan them without VectorCraft. A test in
+`xtask/src/shots/picture.rs` keeps the hash of each cut-out. When a cut-out changes, the test fails until it
+is traced again the same way and the test keeps its new hash.

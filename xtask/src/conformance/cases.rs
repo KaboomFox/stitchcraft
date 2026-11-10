@@ -294,12 +294,20 @@ pub struct RustCase {
     /// Why every build leaves it out when only the models' job runs it: the reason its `#[ignore = "…"]`
     /// gives, which starts with [`MODELS_ONLY`].
     pub models_only: Option<String>,
+    /// Why the tests' debug build leaves it out when it runs only in the release build: the reason its
+    /// `#[cfg_attr(debug_assertions, ignore = "…")]` gives, which starts with [`RELEASE_ONLY`].
+    pub release_only: Option<String>,
 }
 
 /// How the reason a case ignored in every build gives starts when it needs the subject cut-out's models,
 /// which the models' job fetches and runs it with: `ignore = "models only: the models job runs
 /// tests/models.rs"` (`docs/src/design/conformance.md` › Cases with the models).
 pub const MODELS_ONLY: &str = "models only: ";
+
+/// How the reason a case ignored in the tests' debug build gives starts when it runs only in the release
+/// build, which a step of CI runs: `ignore = "release only: CI's perf job runs tests/auto_photos.rs"`. A
+/// case may be ignored for no other reason (`docs/src/design/conformance.md` › Cases in the release build).
+pub const RELEASE_ONLY: &str = "release only: ";
 
 /// Every `fn req_…` and `fn diag_…` in the workspace's crates and apps, in file order.
 pub fn discover_rust_cases(root: &Path, findings: &mut Findings) -> Vec<RustCase> {
@@ -310,9 +318,17 @@ pub fn discover_rust_cases(root: &Path, findings: &mut Findings) -> Vec<RustCase
             let lines: Vec<&str> = text.lines().collect();
             for (at, name) in lines.iter().enumerate().filter_map(|(at, line)| test_name(line).map(|name| (at, name))) {
                 let file = util::rel(&path);
-                let models_only = models_only(lines.get(..at).unwrap_or_default());
+                let before = lines.get(..at).unwrap_or_default();
+                if ignored_everywhere(before) {
+                    findings.error(format!(
+                        "{file}: `{name}` is ignored as release only in every build: ignore it in the debug build alone, with \
+                         #[cfg_attr(debug_assertions, ignore = \"{RELEASE_ONLY}…\")]"
+                    ));
+                }
+                let release_only = release_only(before);
+                let models_only = models_only(before);
                 match requirement_of_test(name).or_else(|| code_of_test(name)) {
-                    Some(covers) => cases.push(RustCase { name: name.to_string(), covers, file, models_only }),
+                    Some(covers) => cases.push(RustCase { name: name.to_string(), covers, file, models_only, release_only }),
                     None if name.starts_with("req_") => {
                         findings.error(format!("{file}: `{name}` starts with req_ but names no requirement (req_<area>_<nnn>_<what>)"));
                     }
@@ -336,6 +352,21 @@ fn models_only(before: &[&str]) -> Option<String> {
         let reason = line.strip_prefix("#[ignore = \"")?.strip_suffix("\"]")?;
         reason.starts_with(MODELS_ONLY).then(|| reason.to_string())
     })
+}
+
+/// The reason the attributes just above a function, the end of `before`, give for ignoring it in the debug
+/// build when it starts with [`RELEASE_ONLY`]: `#[cfg_attr(debug_assertions, ignore = "release only: …")]`.
+fn release_only(before: &[&str]) -> Option<String> {
+    attributes(before).find_map(|line| {
+        let reason = line.strip_prefix("#[cfg_attr(debug_assertions, ignore = \"")?.strip_suffix("\")]")?;
+        reason.starts_with(RELEASE_ONLY).then(|| reason.to_string())
+    })
+}
+
+/// Whether the attributes just above a function, the end of `before`, ignore it as release only in some
+/// other way than in the debug build alone, so that the release build would leave it out too.
+fn ignored_everywhere(before: &[&str]) -> bool {
+    release_only(before).is_none() && attributes(before).any(|line| line.contains(&format!("ignore = \"{RELEASE_ONLY}")))
 }
 
 /// The function name if `line` defines `fn req_…` or `fn diag_…`.
@@ -403,6 +434,27 @@ mod tests {
         for before in [&elsewhere[..], &further[..], &[][..]] {
             assert_eq!(models_only(before), None, "{before:?}");
         }
+    }
+
+    #[test]
+    fn a_case_ignored_in_the_debug_build_alone_says_where_it_runs() {
+        let reason = "release only: CI's perf job runs tests/auto_photos.rs";
+        let attribute = format!("    #[cfg_attr(debug_assertions, ignore = \"{reason}\")]");
+        for before in [vec!["/// Docs.", "#[test]", attribute.as_str()], vec!["fn other() {}", attribute.as_str(), "// Why.", "#[test]"]] {
+            assert_eq!(release_only(&before).as_deref(), Some(reason), "{before:?}");
+            assert!(!ignored_everywhere(&before), "{before:?}");
+        }
+        // Another reason, or the attribute above a line of code in between, makes no release-only case.
+        let elsewhere = ["#[cfg_attr(debug_assertions, ignore = \"slow\")]", "#[test]"];
+        let further = [attribute.as_str(), "fn helper() {}", "#[test]"];
+        for before in [&elsewhere[..], &further[..]] {
+            assert_eq!(release_only(before), None, "{before:?}");
+            assert!(!ignored_everywhere(before), "{before:?}");
+        }
+        // Ignored as release only in every build, the release build would leave it out too.
+        let everywhere = ["#[test]", "#[ignore = \"release only: CI's perf job runs tests/auto_photos.rs\"]"];
+        assert_eq!(release_only(&everywhere), None);
+        assert!(ignored_everywhere(&everywhere));
     }
 
     #[test]

@@ -438,6 +438,28 @@ It fails when a case fails or an active requirement has no passing case. `--filt
 cases whose id, test name or requirements contain the text (and skips the "every active requirement"
 rule, since the run is partial). `cargo xtask ci` runs the whole suite; the docs workflow runs `--check`.
 
+### Cases in the release build
+
+A case may be too slow for the tests' debug build, as the owner's traced dogs are. Each dog is about a
+hundred shapes, and takes some 45 to 70 s there to digitize and measure, against some 6 s in the release
+build. Such a
+case is ignored in the debug build alone, with a reason of a fixed form that says where it runs, and a step
+of CI runs its test file in the release build:
+
+```rust
+#[test]
+#[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
+fn req_auto_025_digitized_dogs_leave_no_patch_of_fabric_bare() { … }
+```
+
+The runner, which runs the debug build, lists such a case as skipped with its reason (⏭ in the report),
+and CI doesn't fail on it as on a missing tool: the release step runs it. A case ignored any other way
+fails, so that no case hides behind `#[ignore]`. `--check` finds each release-only case by its attribute.
+Its file must be a test target of its own, `<package>/tests/<target>.rs`, and a line of
+`.github/workflows/ci.yml` must run `cargo test --release … -p <package> --test <target>`. A case ignored
+as release only in every build fails `--check` too, as the release build would leave it out as well. Each
+requirement still needs a case that runs in the debug build.
+
 ### Cases with the models
 
 The subject cut-out's models are 49 MB, which StitchCraft's release `cutout-models-1` publishes
