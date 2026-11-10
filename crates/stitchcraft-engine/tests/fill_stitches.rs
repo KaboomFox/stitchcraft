@@ -15,7 +15,7 @@ use stitchcraft_engine::generators::tatami::TatamiParams;
 use stitchcraft_engine::generators::tatami::rows::Grid;
 use stitchcraft_engine::generators::tatami::stitches::{Stitching, row_points};
 use stitchcraft_params::{ParamSet, StitchType};
-use stitchcraft_testkit::designs::p;
+use stitchcraft_testkit::designs::{RED, fill, p, planned};
 
 /// Rows at `angle`, 0.25 mm apart, sewn in stitches of 4 mm staggered over 4 rows: Ink/Stitch's defaults.
 fn stitching(angle: f64) -> Stitching {
@@ -235,4 +235,30 @@ proptest! {
             prop_assert!(last == end || last.distance(end) <= 0.1 + 1e-9, "ends at its end, or within 0.1 mm of it");
         }
     }
+}
+
+#[test]
+fn req_fill_tat_014_with_turn_stitches_every_row_starts_and_ends_at_the_outline() {
+    // A rectangle 20 by 10 mm in rows 0.25 mm apart, on the reference machine, whose shortest stitch is 0.3
+    // mm. The x of the needle points nearest each side on each row, the fill's first and last rows aside.
+    let ends = |turns: &str| -> Vec<(f64, f64)> {
+        let settings = [("turn_stitches", turns), ("fill_underlay", "false")];
+        let outcome = planned(vec![fill("stripe", &[&[(0.0, 0.0), (20.0, 0.0), (20.0, 10.0), (0.0, 10.0)]], &RED, &settings)]);
+        let points: Vec<Point> = outcome.plan.unwrap().stitches().map(|stitch| stitch.at).collect();
+        (2..39)
+            .map(|row| {
+                let on_row = points.iter().filter(|q| (q.y() - 0.25 * f64::from(row)).abs() < 0.03).map(|q| q.x());
+                on_row.fold((f64::INFINITY, f64::NEG_INFINITY), |(least, most), x| (least.min(x), most.max(x)))
+            })
+            .collect()
+    };
+    // Without them a turn of 0.25 mm loses its second needle point, and the row after it starts at its
+    // first needle point inside the outline: more than a quarter of the rows stop 0.5 mm or more short of a
+    // side.
+    let short = |ends: &[(f64, f64)]| ends.iter().filter(|(least, most)| *least > 0.5 || *most < 19.5).count();
+    let without = ends("false");
+    assert!(short(&without) > without.len() / 4, "{without:?}");
+    // With them every row has a needle point on both sides.
+    let with = ends("true");
+    assert!(with.iter().all(|(least, most)| least.abs() < 1e-6 && (most - 20.0).abs() < 1e-6), "{with:?}");
 }

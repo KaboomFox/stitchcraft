@@ -81,7 +81,10 @@ pub(super) fn laid(shapes: &mut Shapes, rules: &AutoParams, taken: &mut Labels, 
         }
         Err(failed) => {
             let consequence = "the design sews no base layer, and each fill sews the underlay of its settings";
-            Laid { pieces: Vec::new(), said: vec![failed.said_of_all(Code::AutoBaseLeftOut, "the shape of the base layer", consequence, budget.max_work)] }
+            Laid {
+                pieces: Vec::new(),
+                said: vec![failed.said_of_all(Code::AutoBaseLeftOut, "the shape of the base layer", consequence, budget.max_work)],
+            }
         }
     }
 }
@@ -144,7 +147,16 @@ fn pieces(shapes: &mut Shapes, rules: &AutoParams, taken: &mut Labels, meter: &m
         let label = taken.claim(id.as_ref().map(ElementId::as_str).unwrap_or(BASE).to_string(), meter)?;
         let id = ElementId::new(label).ok().ok_or(Failed::Work)?;
         let shape = Shape::Fill { path: outline(std::slice::from_ref(piece)), rule: FillRule::NonZero, gradient: None };
-        pieces.push(Element { id, name: None, shape, thread: thread.clone(), params: params.clone(), automatic: false, hints: Hints::default(), clips: Vec::new() });
+        pieces.push(Element {
+            id,
+            name: None,
+            shape,
+            thread: thread.clone(),
+            params: params.clone(),
+            automatic: false,
+            hints: Hints::default(),
+            clips: Vec::new(),
+        });
     }
     // The base layer is the underlay of the fills on it.
     if !pieces.is_empty() {

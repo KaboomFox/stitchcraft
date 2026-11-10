@@ -102,6 +102,20 @@ along the fill's edge.
 - **Applies to:** Tatami fill, Circular fill, Linear gradient fill, Tartan fill
 - **Ink/Stitch:** same key, meaning and default
 
+### `turn_stitches`
+
+**Keep turn stitches.** Keep the turn between 2 rows as a stitch where the rows lie closer together than the shortest
+stitch: the turn's 2 needle points move apart along it until the stitch between them is the
+shortest stitch. Off, the second of them is left out, as any needle point too near the one before
+it is, and every second row then starts up to a stitch inside the outline, which leaves a notch
+in the fill's edge there. Automatic digitizing turns it on for its fills.
+
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
+- **Default:** `false`
+- **Applies to:** Tatami fill
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
 ## Travel
 
 ### `underpath`

@@ -338,8 +338,11 @@ fn a_columns_box_holds_the_corners_of_its_clipped_miters() {
     let shape = Shape::Stroke { path, width: Mm::new(7.0).unwrap(), join: Join::Miter { limit: 4.0 }, cap: Cap::Butt };
     let column = Element { params: [("satin_column", "true")].into_iter().collect(), ..element("column", shape, &RED) };
     let settings = DesignSettings::default();
-    let mut shapes =
-        Shapes::new(vec![Sewn { element: column.clone(), area: None, automatic: false, reach: None, shape: 0, part: None }], &settings, &Budget::DEFAULT);
+    let mut shapes = Shapes::new(
+        vec![Sewn { element: column.clone(), area: None, automatic: false, reach: None, shape: 0, part: None }],
+        &settings,
+        &Budget::DEFAULT,
+    );
     shapes.find(0);
     let Some((Kind::Column, parts)) = shapes.paint(0) else { panic!("{:?}", shapes.said) };
     let (paint, boxed) = (envelope(parts).unwrap(), drawn(&column).unwrap());

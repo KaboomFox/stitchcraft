@@ -198,8 +198,10 @@ part sews a satin column along each of its centre lines, between its own outline
   and no longer than its junction is wide. A column of its own, it would sew a short line beside the column
   and cut that column in 2. A column's rails are the part's outline on either side, and its rungs lie
   square to it.
-- **Their ends.** A column that ends where another runs on ends under it: it sews first, and is 0.4 mm
-  longer at that end, by its push compensation, so that no fabric shows where they meet. Otherwise a column
+- **Their ends.** A column that ends where another runs on ends under it: it sews first, and is longer at
+  that end, by its push compensation, so that no fabric shows where they meet. A column up to 2 mm wide is
+  longer by the overlap, 1 mm, and a wider one by its pull compensation, 0.4 mm
+  ([Neighbours that overlap](#neighbours-that-overlap)). Otherwise a column
   ends at its farthest point along its line, flat along the end's edge when that lies within 20° of square
   to the column, and at a point otherwise.
 - **Their order.** A column that ends under another sews before it. Then the longest sews first, and each
@@ -260,7 +262,7 @@ as a digitizer sews a balloon's string over the balloon:
 - **What sews.** Each narrow part sews as a part of its own. One narrower than
   `min_satin_stroke_width_mm` everywhere runs along its centre line, and one no wider than 7 mm sews as
   satin columns. Any other stays in the fill. The fill is the shape without its narrow parts. It sews
-  first, and reaches 0.4 mm under the lines and columns sewn over it ([Neighbours](#neighbours)).
+  first, and reaches the overlap, 1 mm, under the lines and columns sewn over it ([Neighbours](#neighbours)).
 
 **Centre lines.** A narrow part's centre line, its width along it and the rungs across it come from a
 constrained Delaunay triangulation of its outline, with points added along its long edges so that no
@@ -298,9 +300,10 @@ compared to the micrometre. These are starting values, and MC-8 confirms or chan
 | Above 4 mm | Contour and zigzag |
 
 A stroke's column is as wide as the stroke, and a part's as its width along its line. Each has a pull
-compensation of 0.4 mm, the overlap an area reaches under the shapes sewn after it: the thread pulls a
-column in from its rails as it pulls an area in from its edges, and stitches that reach that far past
-the rails meet the shapes beside them with no fabric between. A column ends at its rails' ends rather
+compensation of 0.4 mm, a setting of its own (`auto_pull_compensation_mm`): the thread pulls a column in
+from its rails, and stitches that reach that far past them sew the column as wide as drawn. Past a rail
+that a shape sewn after the column runs along, the column sews by the overlap instead
+([Neighbours that overlap](#neighbours-that-overlap)). A column ends at its rails' ends rather
 than at the point nearest the next shape, which would join its ends to the next shape with a straight run
 across it. Fills keep the tatami fill's defaults, underlay included.
 
@@ -363,7 +366,7 @@ mends it in 4 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.
      ring on it and the red showing again as a bullseye in the ring's hole, the ring moves back before the
      red, the bullseye being its detail, and the red's hole is opened again round the ring.
 
-   The overlaps (step 4) then cut the area away under its details, 0.4 mm inside their edges. So a trace
+   The overlaps (step 4) then cut the area away under its details, the overlap inside their edges. So a trace
    that stacks its colours sews as one whose colours abut. An area whose region changed is given its new
    outline, and one whose region is what it was keeps its path as drawn. `SC-I0908` counts the areas that
    sew only what shows of them and those digitized whole under their details.
@@ -381,7 +384,7 @@ mends it in 4 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.
    The test pictures ([Testing](#testing)) sew alike traced either way. An emblem 60 mm wide, a navy
    square with a white disc, a red star on the disc and 3 gold bars, on white, sews the same shapes with
    each thread. The navy square is one tatami fill of 1,848.5 mm², sewn first. The white disc is one fill
-   of 380.7 mm², sewn after it: the disc's 531 mm² less the star, which it reaches 0.4 mm under. The bars
+   of 380.7 mm² as its layers are flattened, sewn after it: the disc's 531 mm² less the star, which it then reaches under. The bars
    sew as satin columns 3.00 mm wide, as drawn, and the star as one fill. The stitches of the 2 traces
    differ by about 1 %, because the traces draw their colours in different orders. A button, a yellow disc
    24 mm across with 7 orange dots in a black rim 2.5 mm wide, sews the same shapes with each thread either
@@ -399,15 +402,17 @@ mends it in 4 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.
    kept under 1 mm², and where it went. A line filled because it is too wide for a column (M13.1) is an area
    too, so a part of it that small is a speck.
 4. **Overlaps** (`REQ-AUTO-007`). Pull draws stitches in from the edges of their shape, so shapes that only
-   meet show fabric between them. Each automatic area reaches 0.4 mm under each area, satin
+   meet show fabric between them. Each automatic area reaches its overlap, 1 mm, under each area, satin
    column, filled line or part's line or column sewn after it, from where it touches that shape, and no
-   further than that shape.
+   further than that shape as it is sewn. The areas are taken from the last sewn to the first, so a shape's
+   own reach counts: across a line narrower than the overlap, an area reaches on under the area beyond it.
    Shapes touch where their edges meet within twice the shapes' tolerance, so a gap that rounding left
    between edges drawn as one closes too. Along an edge where a shape runs on near the area without
-   touching it, the area doesn't reach, and fabric shows between them as drawn. A satin column covers the
+   touching it, the area doesn't reach, and fabric shows between them as drawn, but for the overlap round
+   the end of where they touch. A satin column covers the
    area between its rails as they are sewn, turned to run the same way. Where an area or a part's line or
    column sewn after the area covers part of it, as the details on an area digitized whole do, the area is
-   cut away under that shape, 0.4 mm inside the shape's edge, and that part is sewn once. Sewn whole, it
+   cut away under that shape, the overlap inside the shape's edge, and that part is sewn once. Sewn whole, it
    would sew twice there, stiff and thick. A part of the area that such shapes cover whole sews nothing,
    however near their edge it lies. So does an area they cover whole. A trim or a stop after
    such an area has no place, as after any element that sews nothing (`SC-W0505`). `SC-I0901` counts only
@@ -422,8 +427,8 @@ mends it in 4 steps, in this order (`stitchcraft_engine::auto::neighbours`, M13.
 
 Only automatic areas change. A shape with settings is sewn as they say, and a satin column or a line
 digitized from a stroke or a part keeps its stitches: a column is sewn past its rails by its pull
-compensation, 0.4 mm, as an area is grown under the shapes sewn after it ([Settings by
-width](#settings-by-width)). A fill that bounds no area is left to its fill, which says so.
+compensation, 0.4 mm ([Settings by width](#settings-by-width)), and by the overlap past a rail that a shape
+sewn after it runs along ([Neighbours that overlap](#neighbours-that-overlap)). A fill that bounds no area is left to its fill, which says so.
 The areas are taken from the last sewn to the first, so that each meets the shapes after it as they are
 sewn. Each area has the work budget to itself for its specks and for its overlaps, and costs the work of the
 shapes near it and a unit for each other shape it looks past, not the work of the whole design: what a
@@ -756,8 +761,8 @@ colour of the last shape drawn over it, the background left out but where it sho
 picture's colours that the top stitches leave uncovered, each stitch's thread 0.4 mm wide, opened with a
 disc as wide as the thread: a sliver narrower than a thread beside a running stitch closes as the thread
 spreads. A patch of 1 mm² or more, the smallest area that digitizing sews, fails. A top stitch is astray
-where it shows on another colour or on bare fabric for 1 mm or more, past the 0.4 mm that the overlap and
-pull compensation reach. An underlay or travel stitch is astray wherever it shows, and any stitch astray
+where it shows on another colour or on bare fabric for 1 mm or more, past the 0.4 mm that pull
+compensation reaches. The overlap lies under a shape sewn later, which covers it. An underlay or travel stitch is astray wherever it shows, and any stitch astray
 fails. The moves sewn on from one element to the next (`REQ-ASM-002`) and the jump threads that the PE800
 leaves are counted apart.
 
@@ -803,9 +808,14 @@ The rules' values are StitchCraft's own parameters, registered as any other
 |---|---|---|---|
 | Widest satin column | `auto_max_satin_width_mm` | 7 mm | a line's stitches, a part's columns, the split of a part into broad and narrow parts, an area digitized whole under its details |
 | Narrowest triple run | `auto_min_triple_run_width_mm` | 0.5 mm | a running stitch tripled |
-| Overlap | `auto_overlap_mm` | 0.4 mm | an area reaching under its neighbours and cut away under them, a satin column's pull compensation |
+| Overlap | `auto_overlap_mm` | 1 mm | an area reaching under its neighbours and cut away under them, a satin column past a rail that a shape sewn after it runs along, and the end of a column up to 2 mm wide under another |
+| Pull compensation | `auto_pull_compensation_mm` | 0.4 mm | a satin column past a rail with no shape sewn after it beside it |
 | Smallest area | `auto_min_area_mm2` | 1 mm² | specks, the narrow parts too small to cut from a broad part, and what details may leave of a hole they fill |
 | Leave out the background | `auto_ignore_background` | on | the background, read of the lowest shape |
+| Base layer | `auto_base_layer` | on | whether the design sews one, read of the lowest shape whose settings read, as the 3 below are |
+| Base layer's stitch length | `auto_base_stitch_length_mm` | 3 mm | its rows' stitches and their spacing |
+| Base layer's offset | `auto_base_offset_mm` | −0.6 mm | how far inside the design's outer shape it lies |
+| Base layer keeps holes | `auto_base_keep_holes` | on | whether the outer shape keeps its holes |
 
 The defaults are the values on this page, and MC-8 confirms or changes them. A shape that sets none of the
 settings takes the defaults, and an automatic shape with a setting that doesn't read sews nothing

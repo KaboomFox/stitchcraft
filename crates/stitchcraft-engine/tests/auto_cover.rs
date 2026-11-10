@@ -7,7 +7,7 @@
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
 
-use stitchcraft_core::{Budget, Point};
+use stitchcraft_core::{Budget, Code, Diagnostic, Point};
 use stitchcraft_engine::auto;
 use stitchcraft_engine::design::{Design, DesignSettings, Element};
 use stitchcraft_plan::{Role, SewnStitch, StitchPlan, Thread};
@@ -30,6 +30,24 @@ fn design(elements: Vec<Element>) -> Design {
 /// A rectangle from (`x`, `y`), `wide` by `tall`, as a fill in `thread`.
 fn rect(id: &str, (x, y): (f64, f64), (wide, tall): (f64, f64), thread: &Thread) -> Element {
     fill(id, &[&[(x, y), (x + wide, y), (x + wide, y + tall), (x, y + tall)]], thread, &[])
+}
+
+/// `element` with the settings `params` added.
+fn with(mut element: Element, params: &[(&str, &str)]) -> Element {
+    for (key, value) in params {
+        element.params.set(*key, *value);
+    }
+    element
+}
+
+/// `design` digitized with `work` units of work for each step: the ids of its base layer's pieces, what is
+/// said with `code`, and each other fill's `fill_underlay`.
+fn based(design: &Design, work: u64, code: Code) -> (Vec<String>, Vec<String>, Vec<Option<String>>) {
+    let (elements, said) = auto::digitized(design, &Budget { max_work: work, ..Budget::DEFAULT });
+    let (base, rest): (Vec<&Element>, Vec<&Element>) = elements.iter().partition(|element| element.id.as_str().starts_with(BASE));
+    let said: Vec<String> = said.iter().filter(|d| d.code == code).map(Diagnostic::to_string).collect();
+    let underlays = rest.iter().map(|element| element.params.get("fill_underlay").map(str::to_string)).collect();
+    (base.iter().map(|element| element.id.to_string()).collect(), said, underlays)
 }
 
 /// `design`'s plan with its stitches where it draws its shapes.
@@ -178,12 +196,21 @@ fn req_auto_028_the_base_layer_keeps_a_hole_and_leaves_a_part_narrower_than_twic
     // so no base stitch comes nearer the hole than 0.4 mm, neither its ends nor its middle.
     let apart = |at: f64| (12.0 - at).max(at - 18.0).max(0.0);
     let near = |p: Point| stitchcraft_core::math::hypot(apart(p.x()), apart(p.y())) < INSET - 0.2;
-    let nearer: Vec<[Point; 2]> =
-        base.iter().filter(|(_, stitch)| near(stitch.from) || near(stitch.to) || near(stitch.from.lerp(stitch.to, 0.5))).map(|(_, stitch)| [stitch.from, stitch.to]).collect();
+    let nearer: Vec<[Point; 2]> = base
+        .iter()
+        .filter(|(_, stitch)| near(stitch.from) || near(stitch.to) || near(stitch.from.lerp(stitch.to, 0.5)))
+        .map(|(_, stitch)| [stitch.from, stitch.to])
+        .collect();
     assert!(nearer.is_empty(), "{nearer:?}");
-    // The strip is narrower than twice the inset, so the base layer ends 0.6 mm inside the square's side.
+    // The strip is narrower than twice the inset, so no base stitch lies on it, and the base layer ends 0.6
+    // mm inside the square's sides. Where the strip leaves the right side the edge bulges towards it: the
+    // outer shape, grown by 0.2 mm, is 1.4 mm wide there, and the place 0.8 mm from both of its corners at
+    // x = 30.2 lies 0.387 mm to their left, the root of 0.8² − 0.7².
     let [left, right, top, bottom] = span(&base);
-    assert!((left - INSET).abs() < 0.05 && (right - (30.0 - INSET)).abs() < 0.05, "{left} to {right}");
+    let bulge = 30.2 - 0.387;
+    assert!((left - INSET).abs() < 0.05 && (right - bulge).abs() < 0.05, "{left} to {right}");
+    let past = |p: Point| p.x() > 30.0 - INSET + 0.05 && (p.y() - 15.0).abs() > 0.7;
+    assert!(base.iter().all(|(_, stitch)| !past(stitch.from) && !past(stitch.to)), "{left} to {right}");
     assert!((top - INSET).abs() < 0.05 && (bottom - (30.0 - INSET)).abs() < 0.05, "{top} to {bottom}");
 }
 
@@ -218,4 +245,175 @@ fn req_auto_029_a_satin_column_reaches_1_mm_under_the_neighbour_sewn_after_it_an
     let (under, over) = if red_first { (red_right - 3.0, 3.0 - blue_left) } else { (3.0 - blue_left, red_right - 3.0) };
     assert!((under - OVERLAP).abs() < 0.1, "the column sewn first reaches {under:.2} mm under the other");
     assert!((over - 0.4).abs() < 0.1, "the column sewn after reaches {over:.2} mm over the first");
+}
+
+#[test]
+fn diag_sc_i0909_says_the_base_layers_area_pieces_and_thread() {
+    let work = Budget::DEFAULT.max_work;
+    // 2 squares 20 mm a side, 10 mm apart: 2 pieces 18.8 mm a side, in red, which paints as much as blue and
+    // is drawn first.
+    let apart = design(vec![rect("red", (0.0, 0.0), (20.0, 20.0), &RED), rect("blue", (30.0, 0.0), (20.0, 20.0), &BLUE)]);
+    let (base, said, underlays) = based(&apart, work, Code::AutoBase);
+    assert_eq!(base, [BASE, "stitchcraft:base#2"]);
+    assert_eq!(said, ["info SC-I0909: A base layer of 706.88 mm² in 2 pieces sews first under the design, in the thread #c80000."]);
+    assert_eq!(underlays, [Some("false".to_string()), Some("false".to_string())]);
+    let (_, diagnostics) = auto::digitized(&apart, &Budget::DEFAULT);
+    let hint = diagnostics.iter().find(|d| d.code == Code::AutoBase).unwrap();
+    assert!(format!("{:?}", hint.fix).contains("turn `auto_base_layer` off"), "{:?}", hint.fix);
+    assert_eq!((Code::AutoBase.id(), hint.element.as_ref()), ("SC-I0909", None));
+    // One square: 1 piece.
+    let one = design(vec![rect("red", (0.0, 0.0), (20.0, 20.0), &RED)]);
+    assert_eq!(
+        based(&one, work, Code::AutoBase).1,
+        ["info SC-I0909: A base layer of 353.44 mm² in 1 piece sews first under the design, in the thread #c80000."]
+    );
+    // A square 2 mm a side sews as a dot, filled. 0.6 mm inside its sides nothing is left that is as large
+    // as the smallest area: it has no base layer, that is said, and it keeps the underlay of its settings.
+    let dot = design(vec![rect("dot", (0.0, 0.0), (2.0, 2.0), &RED)]);
+    let (base, said, underlays) = based(&dot, work, Code::AutoBase);
+    let none =
+        "info SC-I0909: No part of the design is wide enough for a base layer, so it sews none, and each fill sews the underlay of its settings.";
+    assert_eq!((base, said, underlays), (Vec::new(), vec![none.to_string()], vec![None]));
+    // An element that has the base layer's id already keeps it, and the base layer's steps aside.
+    let named = design(vec![rect(BASE, (0.0, 0.0), (20.0, 20.0), &RED)]);
+    let (elements, _) = auto::digitized(&named, &Budget::DEFAULT);
+    assert_eq!(elements.iter().map(|element| element.id.as_str()).collect::<Vec<_>>(), ["stitchcraft:base~2", BASE]);
+}
+
+#[test]
+fn diag_sc_w0910_a_base_layer_that_needs_more_work_than_the_budget_is_left_out() {
+    let pair = design(vec![rect("red", (0.0, 0.0), (20.0, 20.0), &RED)]);
+    // The least work that lays the base layer, found by halving. With less, where its shape is what needs
+    // more, the design sews without one, that is said, and each fill keeps its underlay: with each of the
+    // 64 budgets below the least, and with every 37th below those.
+    let laid = |work: u64| !based(&pair, work, Code::AutoBase).0.is_empty();
+    let (mut low, mut enough) = (0_u64, 1 << 20);
+    assert!(laid(enough));
+    while enough - low > 1 {
+        let middle = (low + enough) / 2;
+        if laid(middle) { enough = middle } else { low = middle }
+    }
+    let mut short = 0;
+    for work in (1..enough).filter(|work| enough - work <= 64 || work % 37 == 0) {
+        let (base, said, underlays) = based(&pair, work, Code::AutoBaseLeftOut);
+        if said.is_empty() {
+            continue;
+        }
+        short += 1;
+        let wanted = format!(
+            "warning SC-W0910: Finding the shape of the base layer needed more than the work budget of {work} units, so the design sews no base layer, and each fill sews the underlay of its settings."
+        );
+        assert_eq!((base, said), (Vec::new(), vec![wanted]), "{work}");
+        assert!(underlays.iter().all(|underlay| underlay.as_deref() != Some("false")), "{work}: {underlays:?}");
+    }
+    assert!(short > 0, "no budget up to {enough} leaves the base layer out");
+    assert_eq!(Code::AutoBaseLeftOut.id(), "SC-W0910");
+}
+
+#[test]
+fn req_auto_028_the_base_layer_goes_by_the_settings_of_the_lowest_shape() {
+    let work = Budget::DEFAULT.max_work;
+    let ring: [&[(f64, f64)]; 2] = [&[(0.0, 0.0), (30.0, 0.0), (30.0, 30.0), (0.0, 30.0)], &[(12.0, 12.0), (12.0, 18.0), (18.0, 18.0), (18.0, 12.0)]];
+    let holed =
+        |settings: &[(&str, &str)]| design(vec![with(fill("holed", &ring, &RED, &[]), settings), rect("beside", (30.0, 0.0), (10.0, 30.0), &BLUE)]);
+    // Off: no base layer, nothing said of one, and the fills keep their underlays.
+    let (base, said, underlays) = based(&holed(&[("auto_base_layer", "false")]), work, Code::AutoBase);
+    assert_eq!((base, said, underlays), (Vec::new(), Vec::new(), vec![None, None]));
+    // The setting of a shape above the lowest isn't the design's.
+    let above = design(vec![
+        rect("low", (0.0, 0.0), (20.0, 20.0), &RED),
+        with(rect("high", (20.0, 0.0), (20.0, 20.0), &BLUE), &[("auto_base_layer", "false")]),
+    ]);
+    assert_eq!(based(&above, work, Code::AutoBase).0, [BASE]);
+    // The area of the base layer, as SC-I0909 gives it.
+    let area = |settings: &[(&str, &str)]| -> f64 {
+        let said = based(&holed(settings), work, Code::AutoBase).1;
+        let said = said[0].strip_prefix("info SC-I0909: A base layer of ").unwrap();
+        said.split(' ').next().unwrap().parse().unwrap()
+    };
+    // 40 by 30 mm with a hole 6 mm a side. The outer shape is grown by 0.2 mm and then moved in by 0.8 mm,
+    // which leaves 38.8 by 28.8 mm and a hole 7.2 mm a side with corners rounded at 0.8 mm. Without the
+    // hole, the whole rectangle.
+    let rounded = |radius: f64| (4.0 - std::f64::consts::PI) * radius * radius;
+    assert!((area(&[]) - (38.8 * 28.8 - 7.2 * 7.2 + rounded(0.8))).abs() < 0.02, "{}", area(&[]));
+    let whole = area(&[("auto_base_keep_holes", "false")]);
+    assert!((whole - 38.8 * 28.8).abs() < 0.01, "{whole}");
+    // An offset of -1 mm lies 1 mm inside, and one of 0.5 mm that far outside, its corners rounded.
+    let inside = area(&[("auto_base_offset_mm", "-1")]);
+    assert!((inside - (38.0 * 28.0 - 8.0 * 8.0 + rounded(1.2))).abs() < 0.02, "{inside}");
+    let outside = area(&[("auto_base_offset_mm", "0.5"), ("auto_base_keep_holes", "false")]);
+    assert!((outside - (41.0 * 31.0 - rounded(0.5))).abs() < 0.02, "{outside}");
+    // A stitch length of 2 mm: rows 2 mm times √3/2 apart, in the underlay too.
+    let shorter = holed(&[("auto_base_stitch_length_mm", "2")]);
+    let (elements, _) = auto::digitized(&shorter, &Budget::DEFAULT);
+    let base = elements.iter().find(|element| element.id.as_str() == BASE).unwrap();
+    for (key, value) in [
+        ("max_stitch_length_mm", "2"),
+        ("row_spacing_mm", "1.7321"),
+        ("fill_underlay_max_stitch_length_mm", "2"),
+        ("fill_underlay_row_spacing_mm", "1.7321"),
+    ] {
+        assert_eq!(base.params.get(key), Some(value), "{key}");
+    }
+}
+
+#[test]
+fn req_auto_028_a_piece_with_no_room_for_a_row_and_a_design_of_columns_have_no_base_layer() {
+    let work = Budget::DEFAULT.max_work;
+    // A square 20 mm a side, and 2 small ones apart from it that sew as dots, filled. The one 3.7 mm a side
+    // leaves a piece 2.5 mm a side, on which a disc as wide as the row spacing, 2.6 mm, doesn't fit: it is
+    // left out. The one 3.9 mm a side leaves a piece 2.7 mm a side, which sews.
+    let dots = design(vec![
+        rect("big", (0.0, 0.0), (20.0, 20.0), &RED),
+        rect("small", (30.0, 0.0), (3.7, 3.7), &RED),
+        rect("larger", (40.0, 0.0), (3.9, 3.9), &RED),
+    ]);
+    let (base, said, _) = based(&dots, work, Code::AutoBase);
+    assert_eq!(base, [BASE, "stitchcraft:base#2"]);
+    assert_eq!(said, ["info SC-I0909: A base layer of 360.73 mm² in 2 pieces sews first under the design, in the thread #c80000."]);
+    let (elements, _) = auto::digitized(&dots, &Budget::DEFAULT);
+    let second = elements.iter().find(|element| element.id.as_str() == "stitchcraft:base#2").unwrap();
+    let xs: Vec<f64> = second.shape.path().points().map(|point| point.x()).collect();
+    assert!(xs.iter().all(|x| (40.6 - 1e-6..=43.3 + 1e-6).contains(x)), "{xs:?}");
+    // A band 3 mm wide alone sews as a satin column with the underlay of its width: no base layer, and
+    // nothing is said of one. Beside a square it is part of the design's outer shape, but its piece, 1.8 mm
+    // wide, has no room for a row.
+    let band = || rect("band", (0.0, 30.0), (30.0, 3.0), &RED);
+    assert_eq!(based(&design(vec![band()]), work, Code::AutoBase), (Vec::new(), Vec::new(), vec![None]));
+    let beside = design(vec![rect("big", (0.0, 0.0), (20.0, 20.0), &RED), band()]);
+    assert_eq!(based(&beside, work, Code::AutoBase).0, [BASE]);
+}
+
+#[test]
+fn req_auto_029_a_column_reaches_under_a_neighbour_that_runs_along_more_than_half_of_its_rail() {
+    // A strip 3 mm wide and 30 mm long, a satin column along y, and a blue one beside it from y = 0, sewn
+    // after it: `along` mm of the red column's right rail.
+    let reach = |along: f64| {
+        let strips = design(vec![rect("red", (0.0, 0.0), (3.0, 30.0), &RED), rect("blue", (3.0, 0.0), (3.0, along), &BLUE)]);
+        let (elements, said) = auto::digitized(&strips, &Budget::DEFAULT);
+        let red = elements.iter().find(|element| element.id.as_str() == "red").unwrap();
+        let said: Vec<String> = said.iter().filter(|d| d.code == Code::AutoUnder).map(|d| d.message.clone()).collect();
+        (red.params.get("pull_compensation_mm").map(str::to_string), said)
+    };
+    // Along 14 mm, less than half, the column keeps its pull compensation on both rails. Along 16 mm it
+    // sews 1 mm past the rail beside the rectangle, and 0.4 mm past the other.
+    let (pull, said) = reach(14.0);
+    assert_eq!(pull.as_deref(), Some("0.4"));
+    assert!(said.iter().all(|message| !message.contains("past a rail")), "{said:?}");
+    let (pull, said) = reach(16.0);
+    assert!(matches!(pull.as_deref(), Some("1 0.4" | "0.4 1")), "{pull:?}");
+    assert!(said.iter().any(|message| message.ends_with("1 satin column sews 1 mm past a rail, under the shape sewn after it there.")), "{said:?}");
+    // 2 columns with such a neighbour, one with an overlap of its own.
+    let two = design(vec![
+        rect("red", (0.0, 0.0), (3.0, 30.0), &RED),
+        rect("blue", (3.0, 0.0), (3.0, 30.0), &BLUE),
+        with(rect("gold", (40.0, 0.0), (3.0, 30.0), &RED), &[("auto_overlap_mm", "0.8")]),
+        rect("navy", (43.0, 0.0), (3.0, 30.0), &BLUE),
+    ]);
+    let (_, said) = auto::digitized(&two, &Budget::DEFAULT);
+    let said: Vec<&str> = said.iter().filter(|d| d.code == Code::AutoUnder).map(|d| d.message.as_str()).collect();
+    assert!(
+        said.iter().any(|message| message.ends_with("2 satin columns sew 0.8 to 1 mm past a rail, under the shapes sewn after them there.")),
+        "{said:?}"
+    );
 }

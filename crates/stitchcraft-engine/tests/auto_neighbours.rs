@@ -115,7 +115,11 @@ fn req_auto_007_areas_reach_under_the_shape_sewn_after_them_both() {
     assert!(near(area(named(&out, "low")), 120.0 + corner, 2.0 * PAST_ENDS), "{}", area(named(&out, "low")));
     assert!(near(area(named(&out, "high")), 110.0 + corner, PAST_ENDS), "{}", area(named(&out, "high")));
     let [x0, y0, x1, y1] = bounds(named(&out, "low"));
-    assert!(near(x0, 0.0, TOUCHING) && near(y0, 0.0, TOUCHING) && near(x1, 10.0 + OVERLAP, 1e-6) && near(y1, 10.0 + OVERLAP, 1e-6), "{:?}", bounds(named(&out, "low")));
+    assert!(
+        near(x0, 0.0, TOUCHING) && near(y0, 0.0, TOUCHING) && near(x1, 10.0 + OVERLAP, 1e-6) && near(y1, 10.0 + OVERLAP, 1e-6),
+        "{:?}",
+        bounds(named(&out, "low"))
+    );
     assert_eq!(said(&diagnostics, Code::AutoUnder), ["info SC-I0904: 2 areas reach 1 mm under the shapes sewn after them that they touch."]);
 }
 
@@ -142,7 +146,9 @@ fn req_auto_007_an_area_reaches_under_a_shape_only_where_they_touch() {
     // The square reaches 1 mm under the L along the 2 mm they share and round the corner there, and no
     // further down its right side than the overlap from that corner.
     let square = named(&out, "square");
-    assert!(near(area(square), 100.0 + 2.0 * OVERLAP, OVERLAP), "{}", area(square));
+    // Round the corner it reaches a quarter of a disc above the corner and less than one beside it.
+    let corner = std::f64::consts::PI * OVERLAP * OVERLAP / 4.0;
+    assert!(near(area(square), 100.0 + 2.0 * OVERLAP + 1.5 * corner, 0.5 * corner + PAST_ENDS), "{}", area(square));
     let region = region_of(square);
     let beside =
         region.parts.iter().flat_map(|part| part.outline.iter()).filter(|p| p.x() > 10.0 + 1e-9).map(|p| p.y()).fold(f64::INFINITY, f64::min);
@@ -487,7 +493,8 @@ fn req_auto_009_a_design_of_one_area_with_its_own_stroke_sews_it() {
 #[test]
 fn req_auto_009_a_background_that_needs_more_work_to_find_than_the_budget_allows_is_sewn_and_said_to_be() {
     let design =
-        Design::new(unbased(vec![rect("background", (0.0, 0.0), (30.0, 20.0)), rect("logo", (5.0, 5.0), (15.0, 15.0))]), DesignSettings::default()).unwrap();
+        Design::new(unbased(vec![rect("background", (0.0, 0.0), (30.0, 20.0)), rect("logo", (5.0, 5.0), (15.0, 15.0))]), DesignSettings::default())
+            .unwrap();
     let with = |work: u64| {
         let (out, diagnostics) = digitized(&design, &Budget { max_work: work, ..Budget::DEFAULT });
         let digitized = ids(&out).iter().map(ToString::to_string).collect::<Vec<_>>();

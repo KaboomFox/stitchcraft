@@ -151,9 +151,9 @@ fn req_auto_013_the_areas_sewn_before_a_narrow_part_reach_under_it() {
     assert_eq!(ids, ["left", "right", "strip"]);
     assert!(matches!(out[2].shape, Shape::Stroke { .. }));
     // Each reaches into the strip grown by twice the shapes' tolerance, which adds a little past its ends.
-    assert!((area(&out[0]) - 104.0).abs() < 0.05, "{}", area(&out[0]));
-    assert!((area(&out[1]) - 104.0).abs() < 0.05, "{}", area(&out[1]));
-    assert!(area(&out[0]) > 103.99 && area(&out[1]) > 103.99);
+    // The right square reaches across the strip, 0.6 mm, and the left square 1 mm under the right square as
+    // it is sewn, which lies over the strip.
+    assert!((area(&out[0]) - 110.0).abs() < 0.3 && (area(&out[1]) - 106.5).abs() < 0.3, "{} {}", area(&out[0]), area(&out[1]));
     let said: Vec<String> = said.iter().map(ToString::to_string).collect();
     assert!(said.contains(&"info SC-I0904: 2 areas reach 1 mm under the shapes sewn after them that they touch.".to_string()), "{said:?}");
 }

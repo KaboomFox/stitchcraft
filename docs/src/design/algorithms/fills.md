@@ -246,6 +246,14 @@ Each part's segments are sewn once each, in the order Ink/Stitch routes them
    ends lie farther apart: the spacing over the sine of the angle between edge and rows, 0.35 mm at 45°
    for rows 0.25 mm apart, which the Brother sews.
 
+   `turn_stitches`, StitchCraft's own switch, keeps the handover on such a machine (`REQ-FILL-TAT-014`).
+   A turn is a stitch shorter than the shortest stitch between 2 stitches that run opposite ways. Its 2
+   needle points move apart along the edge, each by half of what the turn falls short, and the turn is
+   then as long as the shortest stitch: 0.3 mm for rows 0.25 mm apart, each point 0.025 mm off its row.
+   A row's last needle point nearer the turn than the shortest stitch is left out for it. The switch is
+   off by default, so a fill with settings sews as before. Automatic digitizing turns it on for its
+   fills, whose edges must cover ([covering the fabric](../image-to-embroidery.md#covering-the-fabric)).
+
 The route follows Ink/Stitch's from the same graph. StitchCraft's rings start where the drawing starts
 them, and Ink/Stitch's where GEOS's overlay starts them, so which stretches are doubled, and with them the
 route, can differ (`DEV-FILL-005`).
@@ -426,6 +434,7 @@ the fill sews nothing, and `SC-W0303` says so.
 | `REQ-FILL-TAT-011` | Before its top rows a part sews a layer of underlay for every angle, which starts and ends at its point nearest the needle, where the top rows then start |
 | `REQ-FILL-TAT-012` | The underlay covers the part shrunk by its inset and the top rows the part grown by `expand_mm`, as shapely buffers it, within a nanometre |
 | `REQ-FILL-TAT-013` | Questions about the rings look only at their sides near each point, line and stitch, and answer as a look at every side would: a 70 mm square with 14 × 14 round holes and a 120 × 60 mm background with 60 detailed holes plan within a tenth of the default work budget |
+| `REQ-FILL-TAT-014` | With `turn_stitches`, a turn between 2 rows closer together than the shortest stitch stays a stitch that long, and every row of a rectangle has a needle point on both sides |
 
 Machine checkpoint MC-4 sews a density ladder, an angle set and a fill-with-outline registration test
 to tune pull compensation ([machine testing](../../plan/machine-testing.md)).

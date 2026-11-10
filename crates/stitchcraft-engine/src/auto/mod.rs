@@ -94,10 +94,10 @@ use crate::common::{STOP_AFTER, TRIM_AFTER};
 use crate::design::{Cap, Design, DesignSettings, Element, FillRule, Hints, Join, Path, Segment, Shape, Subpath, within_working_limit};
 use crate::generators::passes::BEAN_STITCH_REPEATS;
 use crate::generators::pull::PULL_COMPENSATION;
-use crate::generators::tatami::TURN_STITCHES;
 use crate::generators::satin::{
     self, CENTER_WALK_UNDERLAY, CONTOUR_UNDERLAY, END_AT_NEAREST_POINT, PUSH_COMPENSATION, SATIN_COLUMN, ZIGZAG_UNDERLAY,
 };
+use crate::generators::tatami::TURN_STITCHES;
 use crate::generators::{TooSmall, mm, too_small};
 use crate::normalize::region::{self, Polygon, Unjoined};
 use crate::normalize::strips::Line;

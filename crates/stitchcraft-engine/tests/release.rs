@@ -51,7 +51,7 @@ fn req_auto_003_a_closed_line_wider_than_the_circle_it_follows_is_filled_in_a_re
     };
     let outcome = planned(vec![automatic(pupils)]);
     let codes: Vec<Code> = outcome.diagnostics.iter().map(|d| d.code).collect();
-    assert_eq!(codes, [Code::AutoDigitized, Code::AutoSatinFilled, Code::AutoSatinFilled], "{:?}", messages(&outcome));
+    assert_eq!(codes, [Code::AutoDigitized, Code::AutoSatinFilled, Code::AutoSatinFilled, Code::AutoBase], "{:?}", messages(&outcome));
     let points: Vec<Point> = outcome.plan.as_ref().unwrap().stitches().map(|s| s.at).collect();
     let near = |middle: Point| points.iter().filter(|q| q.distance(middle) <= painted + 1e-6).count();
     // Every needle point lies in one of the areas, and each area is sewn.

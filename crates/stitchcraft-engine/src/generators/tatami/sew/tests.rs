@@ -340,3 +340,69 @@ fn where_no_line_leads_the_needle_runs_along_the_rings_and_rows() {
     sewing.ways.network = network;
     assert_eq!(sewing.ways.way(0, 2, meter).unwrap(), Some(points.to_vec()));
 }
+
+/// What [`turned`] makes of the run through `run`, with a shortest stitch of 0.3 mm.
+fn turns_kept(run: &[(f64, f64)]) -> Vec<Point> {
+    turned(vec![run.iter().map(|&(x, y)| p(x, y)).collect()], 0.3, &mut Budget::DEFAULT.meter()).unwrap().remove(0)
+}
+
+/// Whether `run` is the needle points `points`, to a nanometre.
+fn is(run: &[Point], points: &[(f64, f64)]) -> bool {
+    run.len() == points.len() && run.iter().zip(points).all(|(q, &(x, y))| q.distance(p(x, y)) < 1e-9)
+}
+
+#[test]
+fn req_fill_tat_014_a_turn_shorter_than_the_shortest_stitch_becomes_a_stitch_that_long() {
+    // 3 rows 0.25 mm apart, sewn right, left and right: each turn's 2 points move 0.025 mm apart along the
+    // side, and the turn is then 0.3 mm long.
+    let rows = turns_kept(&[(0.0, 0.0), (10.0, 0.0), (10.0, 0.25), (0.0, 0.25), (0.0, 0.5), (10.0, 0.5)]);
+    assert!(is(&rows, &[(0.0, 0.0), (10.0, -0.025), (10.0, 0.275), (0.0, 0.225), (0.0, 0.525), (10.0, 0.5)]), "{rows:?}");
+    // The same left of and above the origin, and with its rows upright.
+    let rows = turns_kept(&[(-20.0, -5.0), (-10.0, -5.0), (-10.0, -4.75), (-20.0, -4.75), (-20.0, -4.5), (-10.0, -4.5)]);
+    assert!(is(&rows, &[(-20.0, -5.0), (-10.0, -5.025), (-10.0, -4.725), (-20.0, -4.775), (-20.0, -4.475), (-10.0, -4.5)]), "{rows:?}");
+    let rows = turns_kept(&[(-5.0, -20.0), (-5.0, -10.0), (-4.75, -10.0), (-4.75, -20.0), (-4.5, -20.0), (-4.5, -10.0)]);
+    assert!(is(&rows, &[(-5.0, -20.0), (-5.025, -10.0), (-4.725, -10.0), (-4.775, -20.0), (-4.475, -20.0), (-4.5, -10.0)]), "{rows:?}");
+    // Rows at 45°: the turn runs square to them, and its points move along it.
+    let (side, by) = (0.25 * std::f64::consts::FRAC_1_SQRT_2, 0.025 * std::f64::consts::FRAC_1_SQRT_2);
+    let rows = turns_kept(&[(0.0, 0.0), (10.0, 10.0), (10.0 + side, 10.0 - side), (side, -side)]);
+    assert!(is(&rows, &[(0.0, 0.0), (10.0 - by, 10.0 + by), (10.0 + side + by, 10.0 - side - by), (side, -side)]), "{rows:?}");
+}
+
+#[test]
+fn req_fill_tat_014_only_a_stitch_between_2_rows_sewn_opposite_ways_is_a_turn() {
+    // A turn as long as the shortest stitch, a short stitch between 2 that run the same way or square to
+    // each other, a turn of no length, and a run too short to have a turn between 2 rows: all stay.
+    let kept: [&[(f64, f64)]; 5] = [
+        &[(0.0, 0.0), (10.0, 0.0), (10.0, 0.3), (0.0, 0.3)],
+        &[(0.0, 0.0), (5.0, 0.0), (5.2, 0.0), (10.0, 0.0)],
+        &[(0.0, 0.0), (0.0, 1.0), (0.2, 1.0), (5.0, 1.0)],
+        &[(0.0, 0.0), (9.9, 0.0), (10.0, 0.0), (10.0, 0.0), (0.0, 0.0)],
+        &[(0.0, 0.0), (10.0, 0.0), (10.0, 0.25)],
+    ];
+    for run in kept {
+        assert!(is(&turns_kept(run), run), "{run:?}: {:?}", turns_kept(run));
+    }
+}
+
+#[test]
+fn req_fill_tat_014_a_needle_point_too_near_a_turn_is_left_out_for_it() {
+    // 0.1 mm before the turn, a row's last needle point would have the turn's first point thinned out: it
+    // is left out. 0.4 mm before it, it stays.
+    let near = turns_kept(&[(0.0, 0.0), (9.9, 0.0), (10.0, 0.0), (10.0, 0.25), (0.0, 0.25)]);
+    assert!(is(&near, &[(0.0, 0.0), (10.0, -0.025), (10.0, 0.275), (0.0, 0.25)]), "{near:?}");
+    let far = turns_kept(&[(0.0, 0.0), (9.6, 0.0), (10.0, 0.0), (10.0, 0.25), (0.0, 0.25)]);
+    assert!(is(&far, &[(0.0, 0.0), (9.6, 0.0), (10.0, -0.025), (10.0, 0.275), (0.0, 0.25)]), "{far:?}");
+    // The run's first needle point stays, however near.
+    let first = turns_kept(&[(9.9, 0.0), (10.0, 0.0), (10.0, 0.25), (0.0, 0.25)]);
+    assert!(is(&first, &[(9.9, 0.0), (10.0, -0.025), (10.0, 0.275), (0.0, 0.25)]), "{first:?}");
+    // So does the second point of the turn before, which a row 0.2 mm long leaves near the next turn.
+    let short = turns_kept(&[(0.0, 0.0), (10.0, 0.0), (10.0, 0.25), (9.8, 0.25), (9.8, 0.5), (20.0, 0.5)]);
+    assert!(is(&short, &[(0.0, 0.0), (10.0, -0.025), (10.0, 0.275), (9.8, 0.225), (9.8, 0.525), (20.0, 0.5)]), "{short:?}");
+}
+
+#[test]
+fn req_fill_tat_014_keeping_turns_costs_a_unit_for_each_needle_point() {
+    let run = || vec![vec![p(0.0, 0.0), p(10.0, 0.0), p(10.0, 0.25), p(0.0, 0.25), p(0.0, 0.5), p(10.0, 0.5)]];
+    let spend = |work: u64| turned(run(), 0.3, &mut Budget { max_stitches: 1, max_work: work }.meter()).is_ok();
+    assert!(spend(6) && !spend(5));
+}
