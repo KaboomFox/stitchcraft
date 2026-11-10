@@ -198,10 +198,9 @@ part sews a satin column along each of its centre lines, between its own outline
   and no longer than its junction is wide. A column of its own, it would sew a short line beside the column
   and cut that column in 2. A column's rails are the part's outline on either side, and its rungs lie
   square to it.
-- **Their ends.** A column that ends where another runs on ends under it: it sews first, and is longer at
-  that end, by its push compensation, so that no fabric shows where they meet. A column up to 2 mm wide is
-  longer by the overlap, 1 mm, and a wider one by its pull compensation, 0.4 mm
-  ([Neighbours that overlap](#neighbours-that-overlap)). Otherwise a column
+- **Their ends.** A column that ends where another runs on ends under it: it sews first, and is 0.4 mm
+  longer at that end, its pull compensation, by its push compensation, so that no fabric shows where they
+  meet. Otherwise a column
   ends at its farthest point along its line, flat along the end's edge when that lies within 20° of square
   to the column, and at a point otherwise.
 - **Their order.** A column that ends under another sews before it. Then the longest sews first, and each
@@ -808,8 +807,8 @@ The rules' values are StitchCraft's own parameters, registered as any other
 |---|---|---|---|
 | Widest satin column | `auto_max_satin_width_mm` | 7 mm | a line's stitches, a part's columns, the split of a part into broad and narrow parts, an area digitized whole under its details |
 | Narrowest triple run | `auto_min_triple_run_width_mm` | 0.5 mm | a running stitch tripled |
-| Overlap | `auto_overlap_mm` | 1 mm | an area reaching under its neighbours and cut away under them, a satin column past a rail that a shape sewn after it runs along, and the end of a column up to 2 mm wide under another |
-| Pull compensation | `auto_pull_compensation_mm` | 0.4 mm | a satin column past a rail with no shape sewn after it beside it |
+| Overlap | `auto_overlap_mm` | 1 mm | an area reaching under its neighbours and cut away under them, a satin column past a rail that a shape sewn after it runs along |
+| Pull compensation | `auto_pull_compensation_mm` | 0.4 mm | a satin column past a rail with no shape sewn after it beside it, and its end under another column |
 | Smallest area | `auto_min_area_mm2` | 1 mm² | specks, the narrow parts too small to cut from a broad part, and what details may leave of a hole they fill |
 | Leave out the background | `auto_ignore_background` | on | the background, read of the lowest shape |
 | Base layer | `auto_base_layer` | on | whether the design sews one, read of the lowest shape whose settings read, as the 3 below are |

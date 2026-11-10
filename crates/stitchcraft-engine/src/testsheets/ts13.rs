@@ -178,7 +178,7 @@ mod tests {
         // changes with any change to what a picture sews.
         for (id, size, stitches) in [
             ("TS-13A", [126.001, 167.75], 25_880),
-            ("TS-13B", [110.597, 148.4], 15_480),
+            ("TS-13B", [110.597, 148.4], 15_418),
             ("TS-13C", [111.397, 107.5], 11_229),
             ("TS-13D", [115.0, 108.386], 27_559),
         ] {

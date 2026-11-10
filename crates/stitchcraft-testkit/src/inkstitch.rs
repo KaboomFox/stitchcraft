@@ -17,7 +17,10 @@
 //! before its top stitches. The differential writes a sheet's file of the elements both programs sew alike,
 //! [`sewn_alike`], and leaves out the others, as TS-17C's crossing columns with their underlays first.
 //! Automatic digitizing's own are left out, as no stitch type reads them in either program
-//! (`REQ-AUTO-020`).
+//! (`REQ-AUTO-020`). So is `turn_stitches` (`REQ-FILL-TAT-014`), which keeps the turn between 2 rows of a
+//! fill as a stitch on a machine whose shortest stitch is longer than the rows lie apart: Ink/Stitch's own
+//! shortest stitch, 0.1 mm, keeps that turn anyway, so it sews the element as StitchCraft does with the
+//! switch on, and nearer than it does with it off.
 //!
 //! An element's start and end positions and its target point are Ink/Stitch's `starting_point`,
 //! `ending_point` and `target_point` commands (`REQ-GEN-001`): a `<use>` of the command's symbol at the
@@ -323,7 +326,7 @@ fn parameters(element: &Element, registry: &[&ParamGroup]) -> Result<String, Str
     let mut out = String::new();
     for (key, value) in element.params.iter() {
         if let Some(spec) = stitchcraft_params::find(registry, key) {
-            if spec.applies_to.is_empty() {
+            if spec.applies_to.is_empty() || key == TURN_STITCHES {
                 continue;
             }
             if own(spec) {
@@ -335,9 +338,13 @@ fn parameters(element: &Element, registry: &[&ParamGroup]) -> Result<String, Str
     Ok(out)
 }
 
-/// Whether `spec` is a setting of StitchCraft's own that a stitch type reads, which Ink/Stitch passes over.
+/// The switch that keeps a fill's turns as stitches, which a file leaves out: Ink/Stitch keeps them without it.
+const TURN_STITCHES: &str = "turn_stitches";
+
+/// Whether `spec` is a setting of StitchCraft's own that a stitch type reads, which Ink/Stitch passes over
+/// and sews otherwise.
 fn own(spec: &ParamSpec) -> bool {
-    spec.origin == Origin::StitchCraft && !spec.applies_to.is_empty()
+    spec.origin == Origin::StitchCraft && !spec.applies_to.is_empty() && spec.key != TURN_STITCHES
 }
 
 /// The elements of `elements` that Ink/Stitch sews as StitchCraft does, in their order: all but those that
@@ -403,9 +410,10 @@ mod tests {
         (kept(elements), read.design.settings)
     }
 
-    /// What a file should keep of `elements`.
+    /// What a file should keep of `elements`: all but `turn_stitches`, which a file leaves out.
     fn kept(elements: &[Element]) -> Vec<Kept> {
-        let parameters = |element: &Element| element.params.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect();
+        let parameters =
+            |element: &Element| element.params.iter().filter(|(k, _)| *k != TURN_STITCHES).map(|(k, v)| (k.to_string(), v.to_string())).collect();
         elements
             .iter()
             .map(|element| (element.shape.clone(), element.thread.color, parameters(element), element.hints.clone(), element.clips.clone()))
@@ -570,6 +578,15 @@ mod tests {
         // So the elements both programs sew alike leave it out, and keep the others in their order.
         let (first, second, third) = (line(&[]), line(&[("underlays_first", "true")]), line(&[("auto_overlap_mm", "0.6")]));
         assert_eq!(sewn_alike(&[first.clone(), second, third.clone()]), [first, third]);
+        // `turn_stitches` is StitchCraft's own too, and a fill reads it, but Ink/Stitch keeps a fill's turns
+        // without it: the file leaves it out, whatever its value, and both programs sew the element.
+        let square = |params: &[(&str, &str)]| fill("square", &[&[(0.0, 0.0), (4.0, 0.0), (4.0, 4.0), (0.0, 4.0)]], &RED, params);
+        for value in ["true", "false"] {
+            let turning = square(&[("turn_stitches", value), ("row_spacing_mm", "0.3")]);
+            let text = svg(std::slice::from_ref(&turning), &DesignSettings::default()).unwrap();
+            assert!(!text.contains("turn_stitches") && text.contains("inkstitch:row_spacing_mm=\"0.3\""), "{text}");
+            assert_eq!(sewn_alike(std::slice::from_ref(&turning)), [turning]);
+        }
         assert_eq!(svg(&[], &DesignSettings::default()).unwrap_err(), "no element has a point");
     }
 
