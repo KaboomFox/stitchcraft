@@ -1,4 +1,8 @@
-//! A font's licence, as its licence file names it.
+//! A font's licence, as its licence file names it (`docs/src/design/fonts.md`, the corpus).
+//!
+//! **Which file.** A font's licence file is a file of its folder named `LICENSE` or `LICENCE`, alone or with
+//! `.txt` or `.md`, in any case ([`is_licence_file`]). Ink/Stitch reads the file `LICENSE`. At `c7e3a05`,
+//! 141 of its fonts name the file so, and 1 names it `license`.
 //!
 //! **Why the licence file.** The licence field of a font's `font.json` disagrees with its licence file for 3
 //! of Ink/Stitch's fonts (`docs/src/design/fonts.md`, Licences), and the file is what grants the rights.
@@ -6,7 +10,7 @@
 //! **Why the licence it names first.** A licence file names the font's own licence first, in a sentence such
 //! as "This font has been adapted for Ink/Stitch and is licensed under the SIL Open Font License". It then
 //! often names or quotes the licence of the font it was made from, which may be another: "The underlying font
-//! is in public domain". So of the names [`NAMES`] lists, the one found earliest in the text is the font's.
+//! is in public domain". So of the names `NAMES` lists, the one found earliest in the text is the font's.
 //! At the same place the longest wins, so `CC-BY-NC-SA` is the non-commercial licence and not CC BY. A name
 //! counts only at the start of a word, after the text is put in lower case and each hyphen or underscore made
 //! a space. A file that names none of them is under another licence, as is a font without one.
@@ -66,7 +70,7 @@ impl Licence {
     /// The licences of the fonts the corpus takes: they allow adaptations to be shared, for any use.
     pub const TAKEN: [Licence; 4] = [Licence::Ofl, Licence::PublicDomain, Licence::CcBy, Licence::CcBySa];
 
-    /// Its name in the report.
+    /// Its name in the reports.
     pub fn name(self) -> &'static str {
         match self {
             Licence::Ofl => "OFL",
@@ -98,6 +102,14 @@ impl Licence {
             .min_by_key(|&(place, _)| place)
             .map_or(Licence::Other, |(_, licence)| licence)
     }
+}
+
+/// Whether a file named `name` is a licence file: `LICENSE` or `LICENCE`, alone or with `.txt` or `.md`, in
+/// any case.
+pub fn is_licence_file(name: &str) -> bool {
+    let name = name.to_lowercase();
+    let stem = name.strip_suffix(".txt").or_else(|| name.strip_suffix(".md")).unwrap_or(&name);
+    stem == "license" || stem == "licence"
 }
 
 #[cfg(test)]
@@ -169,5 +181,20 @@ mod tests {
         assert_eq!(names, ["OFL", "CC0 or public domain", "CC BY", "CC BY-SA"]);
         let others = [Licence::NonCommercial, Licence::NoDerivatives, Licence::Gpl, Licence::Other].map(Licence::name);
         assert_eq!(others, ["CC BY-NC", "CC BY-ND", "GPL", "another licence"]);
+    }
+
+    #[test]
+    fn licence_files_are_found_by_their_names_in_any_case() {
+        for (name, is) in [
+            ("LICENSE", true),
+            ("licence", true),
+            ("License.txt", true),
+            ("LICENCE.md", true),
+            ("LICENSE.pdf", false),
+            ("license-x", false),
+            ("OFL.txt", false),
+        ] {
+            assert_eq!(is_licence_file(name), is, "{name}");
+        }
     }
 }

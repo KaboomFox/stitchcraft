@@ -22,6 +22,7 @@
 mod cases;
 mod centre_lines;
 mod differential;
+mod font;
 pub mod fonts;
 mod oracle;
 mod report;
@@ -348,14 +349,15 @@ mod tests {
     fn every_data_case_but_the_oracle_passes_here() {
         // `cargo test` runs on Linux, macOS and Windows in CI (`ci.yml`), so there each test sheet's and plan's
         // machine files are compared with their golden files byte for byte (docs/src/design/determinism.md).
-        // The oracle needs Python and pyembroidery, which only the gates job installs.
+        // The oracle needs Python and pyembroidery, which only the gates job installs, and a font case needs
+        // Ink/Stitch's fonts, which only the jobs that run the whole suite fetch.
         let root = util::root();
         let mut findings = Findings::default();
         let data = cases::load_cases(&root, &mut findings);
         assert!(findings.errors.is_empty() && data.len() > 10, "{:?}", findings.errors);
         let failed: Vec<String> = data
             .iter()
-            .filter(|case| !matches!(case.spec, cases::Spec::Oracle { .. }) && !is_differential(case))
+            .filter(|case| !matches!(case.spec, cases::Spec::Oracle { .. } | cases::Spec::Font { .. }) && !is_differential(case))
             .map(|case| runner::run_data_case(&root, case, false))
             .filter(|outcome| !outcome.passed())
             .map(|outcome| format!("{} ({}): {}", outcome.case, outcome.file, outcome.failures.join("; ")))

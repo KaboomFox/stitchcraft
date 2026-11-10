@@ -455,3 +455,10 @@ Reading charges the budget for each XML node, path segment and 8 bytes of a tran
 style sheet. Each element is charged for its classes, the style sheet rules tested against it and the
 declarations it takes, and for 8 bytes of its `style` attribute each time it is read: a gradient's stops
 are read again for each shape the gradient paints ([budgets](data-model.md#budgets)).
+
+## Fonts
+
+The adapter also reads embroidery fonts in Ink/Stitch's format, folders of a `font.json` and glyph files,
+with `stitchcraft_svg::font` ([the reader](fonts.md#the-reader)). Each glyph's design is read as an SVG file
+is read, within the budget the whole font shares. A glyph's box and its file's baseline are measured on the
+page the root's size and viewBox give, which the adapter maps the drawing with too.

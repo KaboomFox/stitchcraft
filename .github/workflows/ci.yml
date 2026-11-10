@@ -76,6 +76,8 @@ jobs:
           key: wasmtime-v${{ env.WASMTIME_VERSION }}-x86_64-linux-${{ env.WASMTIME_SHA256 }}
       - name: The independent reader for REQ-FMT-005 (pyembroidery, pinned by hash)
         uses: ./.github/actions/oracle
+      - name: Ink/Stitch's fonts for REQ-FONT-008 (pinned by SHA-256)
+        uses: ./.github/actions/fonts
       - name: Vale for `cargo xtask prose`, built from its tagged source (Go's checksum database checks it)
         env:
           GOTOOLCHAIN: auto

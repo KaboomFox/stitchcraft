@@ -36,6 +36,7 @@ probably not what you want) or `I` (info) + four digits grouped by area:
 | 0800–0899 | Hosts (SVG, VectorCraft) |
 | 0900 to 0999 | Automatic digitizing ([image to embroidery](image-to-embroidery.md)) |
 | 1000 to 1099 | Routing ([routing tools](routing.md)) |
+| 1100 to 1199 | Fonts and lettering ([fonts](fonts.md#the-reader)) |
 
 Codes are never reused. A retired code keeps its page with "retired in vX".
 
@@ -202,3 +203,8 @@ another.
 | `SC-I1002` | Info | Element left out of the route (a fill, a shape digitized automatically, settings that don't read, rails that can't be made, no length, a stroke whose first subpath ends where it starts, or a satin column among running stitches: kept as it is) | M10 |
 | `SC-W1003` | Warning | Piece of a routed satin column may sew otherwise (read back, it has other rails or pairs other points: it is kept) | M10 |
 | `SC-W1004` | Warning | Too many lines to cut where they cross (more than 1,000 lines routed as running stitches: none is cut by another, as with Add nodes at intersections off) | M10 |
+| `SC-E1101` | Error | Font could not be read (a `font.json` that is missing or isn't an object of settings, or glyph files that are missing or aren't SVG StitchCraft reads: nothing of the font is sewn) | M14 |
+| `SC-W1102` | Warning | Font setting not read, its default kept (a value in `font.json` of another type than its key takes, which keeps Ink/Stitch's default, or an entry of a list or a table of another type, which is left out) | M14 |
+| `SC-W1103` | Warning | Font file not read (a glyph file compressed with xz, as in Ink/Stitch's packages: its glyphs are left out) | M14 |
+| `SC-W1104` | Warning | Glyph left out (a glyph whose paths give it no box, or every glyph of a file whose baseline guide doesn't give a place, as Ink/Stitch's lettering leaves them out) | M14 |
+| `SC-I1105` | Info | Font read as Ink/Stitch reads it (a key the format doesn't have, a glyph drawn twice in a direction, of which the later counts, a file without a baseline guide, or a font without glyphs for its `default_variant`, which sews its first direction) | M14 |
