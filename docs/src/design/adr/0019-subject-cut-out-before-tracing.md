@@ -215,7 +215,7 @@ as well as the code:
   and runs tract-core's and tract-linalg's tests there in wasmtime. M13.14 keeps the build of `stitch`
   working. The cut-out is a feature of `stitch`, on by default, which the WASI build leaves out, and there
   `--subject` says so with a coded error. (Amended 2026-11-08, M13.14.)
-- An owner action publishes the release with the models: she starts the workflow that builds it, on `main`,
+- An owner action publishes the release with the models. She starts the workflow that builds it on `main`
   and types its tag. M13.14's cases fetch the models from the release, and run on the files that workflow
   builds until it exists. (Amended 2026-11-09, M13.14.)
 - Revisit this if VectorCraft gives plug-ins images and a budget the models fit, or if it cuts a subject

@@ -147,3 +147,9 @@ fn diag_sc_e1204_a_model_tract_can_not_read_or_run_says_what_tract_said() {
     let said = tract.decode(&embedding, &Prompt { coords: vec![[0.0, 0.0]; 2], labels: vec![2.0, 3.0] }, 10, 10).unwrap_err();
     assert_eq!(said.message, "tract could not run the subject cut-out's model mobilesam-decoder.onnx: its inputs are not MobileSAM's decoder's.");
 }
+
+#[test]
+fn a_side_is_given_to_the_decoder_as_the_same_number() {
+    assert_eq!(float(16_384).to_bits(), 16_384.0_f32.to_bits());
+    assert_eq!(float(1).to_bits(), 1.0_f32.to_bits());
+}

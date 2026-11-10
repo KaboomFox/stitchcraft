@@ -190,6 +190,10 @@ jobs:
         run: .github/scripts/annotated.sh "models" cargo test --locked -p stitchcraft-cutout --test models -- --ignored --test-threads=1
       - name: stitch plan --subject end to end, VectorCraft's command line stood in for
         run: .github/scripts/annotated.sh "stitch plan --subject" cargo test --locked -p stitchcraft-cli --test picture -- --ignored
+      # No other job tests the build that leaves the cut-out out, as the WASI build of the golden files does:
+      # there `--subject` and `stitch cutout` answer SC-E1207.
+      - name: stitch without the cut-out
+        run: .github/scripts/annotated.sh "stitch without the cut-out" cargo test --locked -p stitchcraft-cli --no-default-features
       - name: Where the models came from, their files and sums, for the job's summary
         if: always()
         env:

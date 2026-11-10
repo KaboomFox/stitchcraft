@@ -480,8 +480,8 @@ says which of the 2 sources it used. From either, a file must match its pin befo
 models-only case as skipped with its reason (⏭ in the report), and CI doesn't fail on it as on a missing
 tool: the models' job runs it. A case ignored for any other reason fails, so that no case hides behind
 `#[ignore]`. `--check` finds each models-only case by its attribute: its file must be a test target of its
-own, `<package>/tests/<target>.rs`, and a line of `models.yml` must run `cargo test … -p <package> --test
-<target>` with `--ignored`. `stitch`'s `tests/picture.rs` has a harness of its own, which prints the same reason
+own, `<package>/tests/<target>.rs`, and a line of `models.yml` must run
+`cargo test … -p <package> --test <target>` with `--ignored`. `stitch`'s `tests/picture.rs` has a harness of its own, which prints the same reason
 for its models-only case, so that case has no attribute for `--check` to find. Each requirement still needs a case that runs everywhere. `REQ-CLI-019`'s is
 the cut-out of each photo from the models' outputs saved as fixtures, which the models' job checks tract
 still gives.
