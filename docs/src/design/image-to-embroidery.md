@@ -583,8 +583,8 @@ long, between 2 lines of one narrow part, which is a stitch because it is shorte
 case fails on any other stitch astray and on any listed one that no longer is. M13.16 of the
 [roadmap](../plan/roadmap.md) removes them. The dogs' moves astray are moves from one element to the next,
 as the button's are. Their jump threads, 102 to 131, are the design's limit as it stands: each thread sews
-its shapes one after another and jumps between those that don't touch, and the PE800 cuts no jump. A step
-of its own, which waits on the owner, would run the thread under shapes sewn later instead. Each dog takes
+its shapes one after another and jumps between those that don't touch, and the PE800 cuts no jump. M13.17
+runs the thread under the shapes sewn later instead, which cover it. Each dog takes
 too long to digitize and measure in the tests' debug build, so CI's `perf` job runs these cases in the
 release build ([conformance](conformance.md#cases-in-the-release-build)). The pieces of the dogs that
 showed fabric before the rules above, the paw of the dog on turf and the running dog's ear, are cases of
