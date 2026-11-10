@@ -71,6 +71,20 @@ Windows and Linux downloads, and as a zip of its own for macOS. Put it in a fold
 with `stitch plan --vectorcraft-cli`. Check it with `vectorcraft-cli --version`. Only `stitch plan` uses it,
 to trace a picture.
 
+## The subject cut-out's models
+
+`stitch plan --subject` and `stitch cutout` run 3 models, 49 MB together, which aren't part of the program
+([cut a photo's subject out](how-to/cut-out-a-photos-subject.md)). `stitch` fetches them on first use with
+`curl`, which Windows, macOS and most Linux systems have, from StitchCraft's release
+[`cutout-models-1`](https://github.com/KaboomFox/stitchcraft/releases/tag/cutout-models-1). GitHub builds
+that release from the models' authors' own files, and its notice names the authors and their licences.
+`stitch` checks each file's SHA-256 before each use.
+
+The models are kept in the folder the environment variable `STITCHCRAFT_MODELS` names. Without it, they go
+to `stitchcraft/models` in your cache folder: `$XDG_CACHE_HOME` or `~/.cache`, or `%LOCALAPPDATA%` on
+Windows. On a computer without a network, copy the 3 files there from another one. When a model isn't
+ready, `SC-E1201` names each file's address, size and SHA-256, and the folder.
+
 ## Next
 
 [Sew your first test sheet](tutorials/first-sew-out.md), or [turn an SVG into a PES

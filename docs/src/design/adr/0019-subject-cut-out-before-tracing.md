@@ -164,7 +164,9 @@ as well as the code:
 5. **Getting the models.** The 3 files, U²-Net-p, MobileSAM's encoder and its decoder, are never committed.
    The repository pins each one's address, size and SHA-256. A script kept beside the pins exports
    MobileSAM's 2 files once from its authors' checkpoint, and a StitchCraft release, `cutout-models-1`,
-   publishes the 3 as assets with their licences. U²-Net-p's author publishes its checkpoint on Google Drive
+   publishes the 3 as assets with their licences. GitHub Actions builds the release from the authors' own
+   files, in a workflow that stops unless each file matches its pin, and the owner publishes it by starting
+   that workflow by hand. (Amended 2026-11-09, M13.14.) U²-Net-p's author publishes its checkpoint on Google Drive
    and Baidu alone, so its file is rembg's conversion of that checkpoint to ONNX, as rembg's own release
    publishes it, the file M13.13 measured. rembg is under the MIT licence, and the weights are under the
    Apache-2.0 licence, as the author wrote in issue 208. (Amended 2026-11-08, M13.14.) On
@@ -213,7 +215,9 @@ as well as the code:
   and runs tract-core's and tract-linalg's tests there in wasmtime. M13.14 keeps the build of `stitch`
   working. The cut-out is a feature of `stitch`, on by default, which the WASI build leaves out, and there
   `--subject` says so with a coded error. (Amended 2026-11-08, M13.14.)
-- An owner action publishes the release with the models, and M13.14's cases fetch them from it.
+- An owner action publishes the release with the models: she starts the workflow that builds it, on `main`,
+  and types its tag. M13.14's cases fetch the models from the release, and run on the files that workflow
+  builds until it exists. (Amended 2026-11-09, M13.14.)
 - Revisit this if VectorCraft gives plug-ins images and a budget the models fit, or if it cuts a subject
   out itself. Revisit the models when a smaller promptable model under a licence of the list cuts the
   photos out better, such as EfficientSAM or SAM 2.1's smallest. Revisit the runtime if tract can't run

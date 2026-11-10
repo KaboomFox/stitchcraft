@@ -33,7 +33,8 @@ L1  stitchcraft-plan ◀──────────────────�
       │
 L0  stitchcraft-core ◀── stitchcraft-params
 
-apps:  stitchcraft-cli (bin `stitch`)   stitchcraft-vc-plugin (wasm32 cdylib)
+apps:  stitchcraft-cli (bin `stitch`) ◀── stitchcraft-cutout (its subject cut-out)
+       stitchcraft-vc-plugin (wasm32 cdylib)
 test:  stitchcraft-testkit (dev-dependency only)
 tools: stitchcraft-xtask (`xtask/`, run as `cargo xtask`)
 ```
@@ -50,11 +51,13 @@ tools: stitchcraft-xtask (`xtask/`, run as `cargo xtask`)
 | `stitchcraft-vectorcraft` | L3 | `.vectorcraft` → `Design` (commands in names included), effect records ↔ `ParamSet`, plug-in JSON objects | contain stitch logic |
 | `stitchcraft-testkit` | test | fixtures, `proptest` strategies (from the registry), invariant assertions | be a normal dependency |
 | `stitchcraft-cli` | app | the `stitch` command; all filesystem access, and the one program StitchCraft starts, VectorCraft's command line, which traces a picture ([ADR-0015](adr/0015-pictures-traced-by-vectorcraft.md)) | contain engine logic |
+| `stitchcraft-cutout` | app library | the subject cut-out that `stitch` runs before a photo is traced: reading the photo, running the pinned models with tract, and the cut-out itself ([ADR-0019](adr/0019-subject-cut-out-before-tracing.md)). `image` and `tract-onnx` are allowed here alone | be a dependency of anything but `stitchcraft-cli`; run a model with a random operator |
 | `stitchcraft-vc-plugin` | app | VectorCraft ABI v1 shim + plug-in manifests | contain engine logic; `unsafe` outside `abi.rs` |
 | `stitchcraft-xtask` | tools | gates (`ci`, `layers`, `docs`, `cleanroom`, …), generators, compatibility runs; works from its own folder, on StitchCraft's packages only ([ADR-0011](adr/0011-movable-into-vectorcraft.md)) | ship to users |
 
 Intra-layer edges are allowed only where listed (`stitchcraft-params → stitchcraft-core`). The table
-lives in `xtask/src/layers.rs` and is append-only, like VectorCraft's.
+lives in `xtask/src/layers.rs` and is append-only, like VectorCraft's. An app library (`Class::AppLibrary`
+there) is a library of the apps' layer that only the app it names may depend on.
 
 ### Why this split
 
@@ -83,9 +86,11 @@ GPL/AGPL/LGPL.
 | `.vectorcraft` documents: JSON, its coordinates read exactly, unpacked from gzip by a Rust backend | `serde`, `serde_json`, `flate2` 1 | MIT/Apache | vectorcraft |
 | Rasterizing previews, and reading VectorCraft's pictures to compare them | `tiny-skia` 0.11 | BSD-3-Clause | render, xtask |
 | JSON reports, and the plug-in's JSON | `serde_json` | MIT/Apache | cli, vc-plugin |
-| Content hashes of bug-report bundles | `sha2` 0.11 | MIT/Apache | cli |
+| Content hashes of bug-report bundles, and of the cut-out's models against their pins | `sha2` 0.11 | MIT/Apache | cli, cutout |
+| A photo read for the subject cut-out and resized for its models, and the cut-out written | `image` 0.25 (jpeg, png) | MIT/Apache | cutout |
+| The cut-out's models run from their ONNX files | `tract-onnx` 0.23, without its default features | MIT/Apache | cutout |
 | CLI parsing | `clap` 4 | MIT/Apache | cli, xtask |
-| Tooling's TOML and JSON | `toml`, `toml_edit`, `serde_json` | MIT/Apache | xtask |
+| Tooling's TOML and JSON, and the pins of the cut-out's models | `toml`, `toml_edit`, `serde_json` | MIT/Apache | xtask, and cutout for `toml` alone |
 | Tests | `proptest`, `insta` | MIT/Apache, Apache | dev only |
 
 The engine's geometry is its own, with no crate for curves, regions, offsets, nearest points or graphs:
@@ -164,7 +169,9 @@ A future in-tree VectorCraft crate would be a fifth adapter calling the same fun
 
 Kept minimal: `stitchcraft-engine/experimental` exposes generators whose status is `experimental`
 in the registry (they appear in docs with a badge); `stitchcraft-formats/<format>` flags exist only if
-a format pulls a heavy dependency (none planned). No flag may change the output of a stable generator.
+a format pulls a heavy dependency (none planned). `stitchcraft-cli/cutout`, on by default, builds the subject
+cut-out in through `stitchcraft-cutout/models`, and [image to embroidery](image-to-embroidery.md#subject-cut-out)
+says what a build without it answers. No flag may change the output of a stable generator.
 
 ## WebAssembly constraints
 

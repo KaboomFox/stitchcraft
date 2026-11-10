@@ -777,9 +777,14 @@ of the apps' layer that only `stitch` depends on:
 
 The repository pins each file's address, size and SHA-256 in `apps/stitchcraft-cutout/models/models.toml`,
 and none of the files is committed. StitchCraft's release `cutout-models-1` publishes them, with their
-licences, a notice and the record of how they were made. MobileSAM's 2 files are exported by the script
-beside the pins, `export.py`, from the checkpoint in MobileSAM's repository, with MobileSAM's own code and
-PyTorch's exporter, and `requirements.txt` pins what it ran with. U²-Net-p's author publishes its checkpoint on
+licences, a notice and the record of how they were made. GitHub Actions builds that release from the
+authors' own files, in the workflow `models.yml`. Its build job exports MobileSAM's 2 files with the script
+beside the pins, `export.py`, from the checkpoint in MobileSAM's repository at a pinned commit, with
+MobileSAM's own code and PyTorch's exporter, in the packages `requirements.txt` pins by hash. It exports
+twice, and the 2 exports must agree. It fetches U²-Net-p's file from rembg's release, and stops unless each
+file has its pinned size and SHA-256. The owner publishes the release: she starts the workflow by hand on
+`main` and types the release's tag, and no other run publishes. A release published is never replaced, so a
+new set of models takes a new tag. (Amended 2026-11-09, M13.14.) U²-Net-p's author publishes its checkpoint on
 Google Drive and Baidu alone, so its file is rembg's conversion of it, as rembg's own release publishes it,
 the file M13.13 measured: rembg is under the MIT licence, and the weights under the Apache-2.0 licence, as
 the author wrote in issue 208. (Amended 2026-11-08, M13.14.)
@@ -799,8 +804,9 @@ with `SC-E1207`, which says the build leaves the cut-out out. The WASI build tha
 (`cargo xtask wasm --goldens`) is one. tract's own CI only checks that tract-onnx builds for `wasm32-wasip1`,
 and with `getrandom`'s JavaScript backend chosen (`ci/cross.sh`). It runs tract-core's and tract-linalg's
 tests there, and no model. The golden files never cut a subject out, and without the feature that build
-doesn't depend on tract building for WASI or on `getrandom` there. In the release build, `stitch` is XX with
-the cut-out and YY without it.
+doesn't depend on tract building for WASI or on `getrandom` there. In the release build for Linux x86_64, `stitch` is
+33.1 MB with the cut-out and 6.6 MB without it, or 28.3 MB and 5.8 MB once stripped (2026-11-10). The owner
+accepted the larger program.
 
 **Replays.** The models run in `stitch` alone, and their results may differ in their last bits from one
 processor to another. A bug-report bundle of a picture already contains the document VectorCraft traced.
@@ -825,10 +831,12 @@ under the MIT licence. The models' outputs for them are fixtures too, U²-Net-p'
 each prompt, saved from what tract gave. The cases of the box, the marks, the alpha, the crop and the file
 run on those fixtures without the models, and so does `REQ-CLI-019`'s case of the bounds. Stand-ins for the
 models, tiny ONNX files with their inputs and outputs, run through the same tract runner in the cases of
-`stitch plan --subject` and `stitch cutout`. Pictures drawn in code, a disc on a striped ground with a square
-that touches it, have exact masks, and test the marks and the crop. A job of its own, `models`, fetches the
-models from the release as `stitch` does, and runs the cases that need them, which every other job leaves
-out ([conformance](conformance.md#cases-with-the-models)). It compares tract's maps with the fixtures, and
+`stitch plan --subject` and `stitch cutout`. One picture drawn in code, a red disc
+on grey stripes that touches a blue square, has exact masks. With the models, 2 points on the disc must keep
+the disc alone, and a box round the square the square alone (`REQ-CLI-015`). `REQ-CLI-016`'s case runs
+`stitch plan --subject` end to end where no model can be had, and expects `SC-E1201` and the report alone.
+A job of its own, `models`, runs the cases that need the models, which every other job leaves out, and
+[conformance](conformance.md#cases-with-the-models) says where it takes them from. It compares tract's maps with the fixtures, and
 each cut-out with its mask, which it must match at an IoU of 0.97 or more, with at most 2 % of the subject's
 area kept wrongly and 3 % lost.
 
