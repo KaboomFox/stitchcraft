@@ -106,7 +106,7 @@ mod tests {
     use stitchcraft_core::Budget;
 
     use super::*;
-    use crate::generators::tatami::fixture::{frame, p, rectangle};
+    use crate::generators::tatami::fixture::{costs, frame, p, rectangle};
     use crate::normalize::region::Polygon;
 
     fn cut_by(part: &Polygon, row: &[(f64, f64)]) -> Vec<Vec<(f64, f64)>> {
@@ -180,5 +180,49 @@ mod tests {
         let rings = Rings::new(&part, meter).unwrap();
         let row = [p(-1.0, 1.0), p(11.0, 1.0)];
         assert!(cut(&row, &rings, &mut Budget { max_stitches: 1, max_work: 2 }.meter()).is_err());
+    }
+
+    #[test]
+    fn a_stretch_too_short_to_tell_from_a_point_is_no_line() {
+        // Across the corner at the origin, in through the left side and out through the bottom 4e-10 mm on: the 2
+        // cuts are one point to within 1e-9 mm, and the stretch between them, inside the piece, is none.
+        let part = rectangle(4.0);
+        assert!(cut_by(&part, &[(-1.0, 1.0 + 3e-10), (1.0 + 3e-10, -1.0)]).is_empty());
+    }
+
+    #[test]
+    fn a_stretch_along_a_ring_starts_where_the_row_reaches_the_ring() {
+        // In through the frame's left side and along the bottom of its hole, from 5 to 7 mm along the row, to end
+        // inside: the cut 1 mm along, before the row reaches the hole, is a cut, and the line runs from it.
+        assert_eq!(cut_by(&frame(), &[(-1.0, 1.0), (7.0, 1.0)]), [vec![(0.0, 1.0), (7.0, 1.0)]]);
+    }
+
+    #[test]
+    fn a_stretch_is_asked_about_between_its_own_ends_only() {
+        // Along the bottom side, out below the piece and back in through the bottom: the last stretch, inside, is
+        // a line, whatever lies between it and the stretch along the bottom earlier in the row.
+        let part = rectangle(4.0);
+        let row = [(-1.0, 0.0), (3.0, 0.0), (3.0, -2.0), (6.0, -2.0), (6.0, 2.0)];
+        assert_eq!(cut_by(&part, &row), [vec![(6.0, 0.0), (6.0, 2.0)]]);
+    }
+
+    #[test]
+    fn a_stretch_inside_and_then_along_a_ring_in_its_middle_is_held() {
+        // In through the top, onto the left side and down along it past the corner: the middle fifth of the
+        // stretch from the top lies inside and then along the side, so it is a line, its end outside and all.
+        let part = rectangle(4.0);
+        let row = [(2.0, 6.0), (2.0, 3.0), (0.0, 2.0), (0.0, -2.0)];
+        assert_eq!(cut_by(&part, &row), [vec![(2.0, 4.0), (2.0, 3.0), (0.0, 2.0), (0.0, -2.0)]]);
+    }
+
+    #[test]
+    fn cutting_runs_out_of_a_budget_of_any_less_work_than_it_takes() {
+        // In through the left side, along the bottom and out through the right side: measuring the row, looking
+        // at the rings near each stitch and asking about each stretch's middle all charge the meter.
+        let part = rectangle(4.0);
+        let rings = Rings::new(&part, &mut Budget::DEFAULT.meter()).unwrap();
+        let row = [p(-1.0, 1.0), p(1.0, 1.0), p(2.0, 0.0), p(4.0, 0.0), p(5.0, 1.0), p(11.0, 1.0)];
+        let work = costs(&[Box::new(|meter| cut(&row, &rings, meter).map(|_| ()))]);
+        assert!(work[0] > 12, "{work:?}");
     }
 }

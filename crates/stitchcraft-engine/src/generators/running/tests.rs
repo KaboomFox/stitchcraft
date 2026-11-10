@@ -350,3 +350,21 @@ fn a_row_at_random_lengths_varies_them_whatever_its_steps() {
     assert!(random.iter().all(|q| q.1 == 0.0 && (0.0..=30.0).contains(&q.0)), "{random:?}");
     assert_eq!((random.first(), random.last()), (Some(&(0.0, 0.0)), Some(&(30.0, 0.0))));
 }
+
+#[test]
+fn a_row_s_corners_are_its_wide_joins_at_least_twice_the_tolerance_apart() {
+    // 2 right-angle joins 1 mm apart, with a tolerance of 0.2 mm: both are corners, and the stitches are spread
+    // between them, one of them 1 mm long.
+    let step = [(0.0, 0.0), (10.0, 0.0), (10.0, 1.0), (20.0, 1.0)];
+    let even = [(0.0, 0.0), (2.5, 0.0), (5.0, 0.0), (7.5, 0.0), (10.0, 0.0), (10.0, 1.0), (12.5, 1.0), (15.0, 1.0), (17.5, 1.0), (20.0, 1.0)];
+    assert_eq!(row(&step, 3.0, None, false), even);
+}
+
+#[test]
+fn a_row_in_step_keeps_its_corner_over_a_needle_point_too_near_it() {
+    // A whole stitch ends 0.15 mm before the corner at (9.15, 0), nearer than the shortest stitch: the corner is
+    // kept and that needle point left out, and the stitch to the corner, 3.15 mm now, is halved. So is the last.
+    let corner = [(0.0, 0.0), (9.15, 0.0), (9.15, 9.0)];
+    let kept = [(0.0, 0.0), (3.0, 0.0), (6.0, 0.0), (7.575, 0.0), (9.15, 0.0), (9.15, 2.85), (9.15, 5.85), (9.15, 7.425), (9.15, 9.0)];
+    assert_eq!(row(&corner, 3.0, None, true), kept);
+}

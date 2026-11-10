@@ -139,6 +139,10 @@ fn req_fill_gdd_004_rows_are_taken_by_their_first_points_along_the_diagonal_of_t
     let mut wide = vec![row(12.0, 10.0), row(10.0, 11.0), row(10.0, 10.0)];
     copies::sorted(&mut wide, meter).unwrap();
     assert_eq!(wide, [row(10.0, 10.0), row(10.0, 11.0), row(12.0, 10.0)]);
+    // In a box 4 mm wide and 2 mm tall, 1 mm across counts for more than 1 mm down.
+    let mut flat = vec![row(11.0, 10.0), row(10.0, 11.0), row(14.0, 12.0)];
+    copies::sorted(&mut flat, meter).unwrap();
+    assert_eq!(flat, [row(10.0, 11.0), row(11.0, 10.0), row(14.0, 12.0)]);
 }
 
 /// The x of each needle point of the `i`-th row taken along the line from (0, 0) to (20, 0), stitched as
@@ -329,4 +333,25 @@ fn a_guided_fill_is_charged_to_the_budget() {
     let preview = |work: u64| top_path(&region, &along, &SplitMix64::new(7), &mut Budget { max_stitches: u32::MAX, max_work: work }.meter());
     assert!(preview(Budget::DEFAULT.max_work).is_ok());
     assert!(preview(100).is_err());
+}
+
+#[test]
+fn req_fill_gdd_004_each_copy_is_smoothed_by_smoothness_mm_before_the_rows_are_found() {
+    // A guide with a peak: its copies keep the peak's point, and smoothed by 1 mm they round it.
+    let piece = rectangle(4.0);
+    let peak = [(0.0, -1.0), (5.0, -3.0), (10.0, -1.0)];
+    let sharp = rows(&piece, &guided(&peak, 1.0));
+    let round = rows(&piece, &Guided { smoothness: 1.0, ..guided(&peak, 1.0) });
+    assert!(!sharp.is_empty() && sharp.iter().all(|row| row.len() == 5 && row[2].x() == 5.0), "{sharp:?}");
+    assert!(!round.is_empty() && round.iter().all(|row| row.len() > 5), "{round:?}");
+}
+
+#[test]
+fn a_guide_s_angle_is_that_of_the_line_between_its_ends_counter_clockwise_as_drawn() {
+    let angle = |guide: &[(f64, f64)]| guide_of(&guided(guide, 1.0), &mut Budget::DEFAULT.meter()).unwrap().unwrap().angle;
+    // Up the page to the right, y down: 45°, whatever the guide does between its ends.
+    assert!((angle(&[(2.0, 3.0), (5.0, 0.0)]) - 45.0).abs() < 1e-9);
+    assert!((angle(&[(2.0, 3.0), (9.0, 9.0), (5.0, 0.0)]) - 45.0).abs() < 1e-9);
+    // Down the page to the right: -45°.
+    assert!((angle(&[(2.0, 3.0), (5.0, 6.0)]) + 45.0).abs() < 1e-9);
 }

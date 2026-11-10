@@ -301,6 +301,11 @@ fn each_fill_method_with_an_underlay_gives_it_and_sews_its_top_without_it() {
     let FillMethod::Guided(top) = method.without_underlay() else { panic!("{method:?}") };
     let plain = |guided: &Guided| guided.plain.fill.as_ref().map(|fill| fill.underlay.len());
     assert_eq!((plain(guided), plain(&top)), (Some(1), Some(0)));
+    // Its rows' random lengths vary by the share of a stitch the percentage says.
+    let random: ParamSet = [("enable_random_stitch_length", "true"), ("random_stitch_length_jitter_percent", "30")].into_iter().collect();
+    let method = FillMethod::read(&Sewing { set: Cow::Borrowed(&random), ..sewing }, &mut Vec::new()).unwrap();
+    let FillMethod::Guided(varied) = &method else { panic!("{method:?}") };
+    assert_eq!(varied.stitching.jitter, Some(0.3));
 }
 
 #[test]
