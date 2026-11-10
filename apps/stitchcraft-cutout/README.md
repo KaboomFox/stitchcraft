@@ -46,10 +46,28 @@ or else `stitchcraft/models` in the user's cache folder, and checks each before 
 | `mobilesam-encoder.onnx` | MobileSAM's image encoder (Apache-2.0) | exported from its authors' checkpoint by [`models/export.py`](models/export.py) |
 | `mobilesam-decoder.onnx` | MobileSAM's prompt encoder and mask decoder (Apache-2.0) | the same |
 
-`export.py` checks MobileSAM's checkout and checkpoint against `models.toml` and exports both files with
-PyTorch's TorchScript exporter. [`models/requirements.txt`](models/requirements.txt) pins what it ran with,
-by version and hash. U²-Net's author publishes its checkpoint on Google Drive and Baidu only, so its file is
-rembg's, as `models.toml` says.
+U²-Net's author publishes its checkpoint on Google Drive and Baidu only, so its file is rembg's, as
+`models.toml` says.
+
+**GitHub builds the release, and the owner publishes it** (`.github/workflows/models.yml`):
+
+- The `build` job checks MobileSAM's repository out at the commit `models.toml` pins, and installs
+  [`models/requirements.txt`](models/requirements.txt) with `--require-hashes` on CPython 3.13. It runs
+  [`models/export.py`](models/export.py) twice, and the 2 exports must agree. `export.py` checks the
+  checkout and the checkpoint against `models.toml`, and exports both files with PyTorch's TorchScript
+  exporter.
+- [`models/release.py`](models/release.py) fetches U²-Net-p's file as rembg publishes it, and stops unless
+  each model has its pinned size and SHA-256. Then it assembles the release's folder, the run's artifact:
+  the models, the licences and `NOTICE.txt` of `models/release/`, `export.py`, `requirements.txt`,
+  `SHA256SUMS.txt`, and the export record, `models/release/EXPORT.md` with the run, its tools and the sums.
+- The `models` job runs the cases that need the models. It takes them from the release when that exists,
+  and from the `build` job until then.
+- The `publish` job creates the release from that folder. It runs only when the workflow is started by hand
+  on `main` with the release's tag typed, and refuses when the release or its tag exists. A pull request
+  builds and checks, and publishes nothing.
+
+A new set of models takes a new tag. Change the addresses and the pins in `models.toml` together, then the
+texts of `models/release/`, which `release.py` checks against the pins.
 
 ## Features
 
@@ -63,7 +81,8 @@ builds without the cut-out (its `cutout` feature), as the WASI build that makes 
 - `tests/photos.rs`: the steps on the owner's 2 photos of her dog, from the models' outputs saved as
   fixtures, against masks checked by hand (`REQ-CLI-019`).
 - `tests/models.rs`: the models themselves, ignored as "models only" outside the models' job
-  (`.github/workflows/models.yml`), which fetches them from the release.
+  (`.github/workflows/models.yml`), which takes them from the release or builds them. One picture is drawn in code, a red disc on grey
+  stripes that touches a blue square, whose masks are exact.
 
 The fixtures are in `conformance/fixtures/cutout/`, each with its row in that folder's index.
 

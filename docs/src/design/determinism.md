@@ -77,8 +77,10 @@ settings sew, and `--sort-colours` whether its shapes with settings sew in the o
 each switch only when it was on. A bundle of a run without them is as it always was. The design is an SVG
 file whole, or the part of a VectorCraft document its reader reads, which
 reads as the whole document does. Of a picture, it is the document VectorCraft's command line traced, read
-with `--auto`: VectorCraft's trace is not StitchCraft's to replay, and the replay doesn't need VectorCraft. The
-file also records what came of them:
+with `--auto`: VectorCraft's trace is not StitchCraft's to replay, and the replay doesn't need VectorCraft. When
+`--subject` cut the picture's subject out first, the bundle records the cut-out as well, and its replay needs
+no model ([image to embroidery](image-to-embroidery.md#subject-cut-out), under Replays). The file also
+records what came of them:
 
 - a SHA-256 of each entry of the plan, from each coordinate's bits, its kind, role and element, and each
   block's thread

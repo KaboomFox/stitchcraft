@@ -6,6 +6,7 @@
 [floor]
 stitchcraft-cli = 91
 stitchcraft-core = 96
+stitchcraft-cutout = 98
 stitchcraft-engine = 100
 stitchcraft-formats = 97
 stitchcraft-params = 96

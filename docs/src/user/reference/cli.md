@@ -19,6 +19,7 @@ Commands:
   convert     Write a machine file (PES, PEC or DST) in another format
   profiles    List the built-in machine profiles
   palette     Write a machine's threads as a GIMP palette (.gpl), which VectorCraft loads as a swatch library, so that Image Trace traces a picture in them
+  cutout      Cut a picture's subject out, a PNG or JPEG file, as `stitch plan --subject` does before VectorCraft traces it, and write the cut-out alone (PNG): to place in VectorCraft instead of the picture
   explain     Explain a diagnostic code, such as SC-W0702
   bug-report  Write a bug-report bundle that reproduces what StitchCraft does with a design, or replay one
   help        Print this message or the help of the given subcommand(s)
@@ -83,6 +84,21 @@ Options:
 
       --traced <FILE>
           Also write the document VectorCraft traced a picture into (.vectorcraft), to correct the trace in VectorCraft
+
+      --subject
+          Cut the picture's subject out before VectorCraft traces it, so that its background isn't sewn: the rest is made transparent, and the picture cropped to what is kept
+
+      --subject-box <X0,Y0,X1,Y1>
+          The subject's box, from its left and top edges to its right and bottom ones; by default the box round the main subject that U²-Net-p finds
+
+      --subject-point <X,Y>
+          A point of the subject, as often as needed
+
+      --not-subject <X,Y>
+          A point of what isn't the subject, as often as needed
+
+      --cutout <FILE>
+          Also write the cut-out (PNG), with the other files, to see what was kept
 
   -h, --help
           Print help (see a summary with '-h')
@@ -226,6 +242,34 @@ Options:
 
   -o, --output <OUTPUT>
           The file to write; by default the palette goes to standard output
+
+  -h, --help
+          Print help
+```
+
+## stitch cutout
+
+```text
+Cut a picture's subject out, a PNG or JPEG file, as `stitch plan --subject` does before VectorCraft traces it, and write the cut-out alone (PNG): to place in VectorCraft instead of the picture
+
+Usage: stitch cutout [OPTIONS] --output <OUTPUT> <PICTURE>
+
+Arguments:
+  <PICTURE>
+          The picture: a PNG or JPEG file
+
+Options:
+  -o, --output <OUTPUT>
+          The cut-out to write (PNG)
+
+      --subject-box <X0,Y0,X1,Y1>
+          The subject's box, from its left and top edges to its right and bottom ones; by default the box round the main subject that U²-Net-p finds
+
+      --subject-point <X,Y>
+          A point of the subject, as often as needed
+
+      --not-subject <X,Y>
+          A point of what isn't the subject, as often as needed
 
   -h, --help
           Print help

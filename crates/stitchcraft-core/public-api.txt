@@ -37,6 +37,13 @@ pub stitchcraft_core::diag::Code::BudgetExhausted
 pub stitchcraft_core::diag::Code::BundleUnreadable
 pub stitchcraft_core::diag::Code::ClippedAway
 pub stitchcraft_core::diag::Code::CustomLockUnusable
+pub stitchcraft_core::diag::Code::CutoutLeftOut
+pub stitchcraft_core::diag::Code::CutoutMade
+pub stitchcraft_core::diag::Code::CutoutModelRandom
+pub stitchcraft_core::diag::Code::CutoutModelUnrunnable
+pub stitchcraft_core::diag::Code::CutoutModelsNotReady
+pub stitchcraft_core::diag::Code::CutoutNoSubject
+pub stitchcraft_core::diag::Code::CutoutPictureUnreadable
 pub stitchcraft_core::diag::Code::FillCircularTooSmall
 pub stitchcraft_core::diag::Code::FillContourRingsLeftOut
 pub stitchcraft_core::diag::Code::FillContourSpiralTooShort
@@ -294,6 +301,13 @@ pub stitchcraft_core::Code::BudgetExhausted
 pub stitchcraft_core::Code::BundleUnreadable
 pub stitchcraft_core::Code::ClippedAway
 pub stitchcraft_core::Code::CustomLockUnusable
+pub stitchcraft_core::Code::CutoutLeftOut
+pub stitchcraft_core::Code::CutoutMade
+pub stitchcraft_core::Code::CutoutModelRandom
+pub stitchcraft_core::Code::CutoutModelUnrunnable
+pub stitchcraft_core::Code::CutoutModelsNotReady
+pub stitchcraft_core::Code::CutoutNoSubject
+pub stitchcraft_core::Code::CutoutPictureUnreadable
 pub stitchcraft_core::Code::FillCircularTooSmall
 pub stitchcraft_core::Code::FillContourRingsLeftOut
 pub stitchcraft_core::Code::FillContourSpiralTooShort

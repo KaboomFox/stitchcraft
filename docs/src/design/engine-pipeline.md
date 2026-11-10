@@ -1,6 +1,6 @@
 # Engine pipeline
 
-<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/generate/**, crates/stitchcraft-engine/src/generators/next.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, crates/stitchcraft-engine/src/underlays_first.rs, crates/stitchcraft-engine/src/underlays_first/**, apps/stitchcraft-cli/src/commands/plan.rs -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/generate/**, crates/stitchcraft-engine/src/generators/next.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, crates/stitchcraft-engine/src/underlays_first.rs, crates/stitchcraft-engine/src/underlays_first/**, apps/stitchcraft-cli/src/commands/plan.rs, apps/stitchcraft-cli/src/commands/plan/** -->
 
 From a `Design` to a checked `StitchPlan`. Each stage is a module in `stitchcraft-engine` with its
 own tests; stages communicate only through the types in the [data model](data-model.md).
@@ -452,4 +452,5 @@ It writes a bug-report bundle that reproduces the failure (`REQ-CLI-002`). The c
 | Preview PNG | `stitchcraft-render`, from the *quantized* plan (`REQ-RND-001`), cut where the profile's machine cuts the thread ([rendering](rendering.md)) |
 | Report JSON | The CLI's, with the counts and size of the machine file read back as a machine reads it, its SHA-256, the threads and the diagnostics |
 | Traced document | Of a picture, the document VectorCraft's command line traced it into, which `stitch plan --traced` writes ([image to embroidery](image-to-embroidery.md#pictures-from-the-command-line)) |
+| Cut-out | Of a picture planned with `--subject`, the picture cropped to its subject on a transparent ground, which `stitch plan --cutout` writes ([image to embroidery](image-to-embroidery.md#subject-cut-out)) |
 | Plug-in preview geometry | `stitchcraft-vc-plugin`, from one element's groups whatever their threads, its top rows or its path, by the preview's level ([integration](vectorcraft-integration.md#live-effect-previews-within-v1-budgets)) |

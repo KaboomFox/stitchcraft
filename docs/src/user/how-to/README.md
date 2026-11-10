@@ -14,6 +14,8 @@ Each guide solves one problem:
 - [Route running stitches](route-running-stitches.md) in VectorCraft, as Ink/Stitch's Auto-Route Running
   Stitch routes them
 - [Sew underlays first](sew-underlays-first.md) where satin columns cross, or a border lies over a fill
+- [Cut a photo's subject out](cut-out-a-photos-subject.md) before it is traced, so that its background
+  isn't sewn (`stitch plan --subject`)
 - [Report a bug](report-a-bug.md) with a bundle that reproduces it (`stitch bug-report`)
 
 Planned, each with the milestone that brings its feature:
