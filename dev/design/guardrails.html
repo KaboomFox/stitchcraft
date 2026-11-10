@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-c29fc1bf.js";
+            window.path_to_searchindex_js = "../searchindex-f4c2b644.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-143ab13b.js"></script>
@@ -251,7 +251,9 @@ compiler can get that wrong where the debug build is right. Rust 1.97.0 did: its
 the end of a vector while planning a satin column drawn as one closed path, and crashed or sewed stitches
 from elsewhere. So the <code>perf</code> job, which builds the release profile anyway, also runs the engine’s release
 tests (<code>crates/stitchcraft-engine/tests/release.rs</code>) in it: shapes a release build once planned wrong,
-whose plan they check.</p>
+whose plan they check. It runs the cases too slow for the debug build there too, the traced dogs’
+(<code>crates/stitchcraft-engine/tests/auto_photos.rs</code>), which the debug build leaves out
+(<a href="conformance.html#cases-in-the-release-build">cases in the release build</a>).</p>
 <h2 id="design-rules-reviewed-partly-linted"><a class="header" href="#design-rules-reviewed-partly-linted">Design rules (reviewed, partly linted)</a></h2>
 <ol>
 <li><strong>Everything user-visible is data first.</strong> A stitch type, parameter, diagnostic, profile or format is

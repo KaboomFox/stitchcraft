@@ -35,7 +35,7 @@
             const path_to_root = "../../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../../searchindex-c29fc1bf.js";
+            window.path_to_searchindex_js = "../../searchindex-f4c2b644.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../../toc-143ab13b.js"></script>
@@ -233,7 +233,7 @@ roadmap.</p>
 <!-- /shot -->
 <p><strong>Digitized</strong></p>
 <!-- shot: auto-pear -->
-<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/auto-pear.png" alt="The traced pear digitized automatically. Its 3 greens sew as tatami fills, with satin columns at the narrow ends of the olive and dark olive bands. Its stem sews as a satin column and a running stitch, and the light grey square is left out. Thin threads run straight from the stem to the bands’ ends, 4 jumps that the machine doesn’t cut."><span class="img-wrapper"><img src="../../images/generated/auto-pear.png" alt="The traced pear digitized automatically. Its 3 greens sew as tatami fills, with satin columns at the narrow ends of the olive and dark olive bands. Its stem sews as a satin column and a running stitch, and the light grey square is left out. Thin threads run straight from the stem to the bands’ ends, 4 jumps that the machine doesn’t cut."></span></label></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/auto-pear.png" alt="The traced pear digitized automatically. Its 3 greens sew as tatami fills, with satin columns at the narrow ends of the olive and dark olive bands. Its stem sews as 2 satin columns side by side, olive and dark olive, and the light grey square is left out. Thin threads run straight from the stem to the bands’ ends, 4 jumps that the machine doesn’t cut."><span class="img-wrapper"><img src="../../images/generated/auto-pear.png" alt="The traced pear digitized automatically. Its 3 greens sew as tatami fills, with satin columns at the narrow ends of the olive and dark olive bands. Its stem sews as 2 satin columns side by side, olive and dark olive, and the light grey square is left out. Thin threads run straight from the stem to the bands’ ends, 4 jumps that the machine doesn’t cut."></span></label></p>
 <!-- /shot -->
 <p>The photo is drawn in code for these pages. <code>stitch plan</code> traced it 90 mm across with VectorCraft 0.19.0, into
 <code>docs/fixtures/traced-pear.vectorcraft</code>. The pear’s shading became 3 bands of green, and the backdrop the
@@ -248,6 +248,36 @@ digitizes the shapes. <code>--colours</code> counts the backdrop’s colour too.
 Auto effect
 (<a href="../tutorials/picture-to-machine-file.html#2-trace-the-picture-in-those-threads">from a picture to a machine file</a>).</li>
 </ul>
+<h2 id="a-photo-with-its-background-removed"><a class="header" href="#a-photo-with-its-background-removed">A photo with its background removed</a></h2>
+<p>A photo’s background, such as the turf a dog stands on, traces into shapes of its own, which sew too. To sew
+the subject alone, remove the background first, in any program that makes it transparent, and save the
+photo as a PNG file. Image Trace leaves transparent pixels out. The photo then traces into its subject’s
+shapes alone (<a href="../../design/image-to-embroidery.html#subject-cut-out">subject cut-out</a>).
+Then <code>stitch plan dog.png --colours 9 --size 100 -o dog.pes</code>, or Image Trace in VectorCraft, traces and
+digitizes it as any photo. The owner’s photos of her dog were made that way. A mask checked by hand cut
+each out, as <code>--subject</code> will from M13.14.</p>
+<p><strong>The photo, cut out</strong></p>
+<!-- shot: auto-dog-photo -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/auto-dog-photo.png" alt="The owner’s photo of her dog running towards the camera, cut out of its background: a tricolour dog, black, white and tan, its mouth open and its ears flying, on white."><span class="img-wrapper"><img src="../../images/generated/auto-dog-photo.png" alt="The owner’s photo of her dog running towards the camera, cut out of its background: a tricolour dog, black, white and tan, its mouth open and its ears flying, on white."></span></label></p>
+<!-- /shot -->
+<p><strong>Traced in 9 threads</strong></p>
+<!-- shot: auto-dog-traced -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/auto-dog-traced.png" alt="The running dog traced in 9 of the machine’s threads, in flat patches. Its back and ears are black and grey, and its face and chest white. Its legs and cheeks are tan, and its mouth dark brown. The patches’ edges are ragged where the fur’s shading crossed from one thread to the next."><span class="img-wrapper"><img src="../../images/generated/auto-dog-traced.png" alt="The running dog traced in 9 of the machine’s threads, in flat patches. Its back and ears are black and grey, and its face and chest white. Its legs and cheeks are tan, and its mouth dark brown. The patches’ edges are ragged where the fur’s shading crossed from one thread to the next."></span></label></p>
+<!-- /shot -->
+<p><strong>Digitized</strong></p>
+<!-- shot: auto-dog -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="../../images/generated/auto-dog.png" alt="The traced running dog digitized automatically. Its broad patches sew as tatami fills, and its strands of fur as satin columns and triple runs between them, in black, greys, white, tan and dark brown. Thin threads run straight between patches of one colour, jumps that the machine doesn’t cut."><span class="img-wrapper"><img src="../../images/generated/auto-dog.png" alt="The traced running dog digitized automatically. Its broad patches sew as tatami fills, and its strands of fur as satin columns and triple runs between them, in black, greys, white, tan and dark brown. Thin threads run straight between patches of one colour, jumps that the machine doesn’t cut."></span></label></p>
+<!-- /shot -->
+<p><code>stitch plan</code> traced the cut-out 100 mm tall with VectorCraft 0.22.0, into
+<code>docs/fixtures/traced-dog-running-9.vectorcraft</code>. The fur’s shading became flat patches in 9 threads, which
+digitize as fills, satin columns and triple runs by their width. The fabric is covered where the dog has a
+colour. One stitch still lies where it shouldn’t. A satin column of the dog’s dark grey fur fans its
+stitches round a lighter grey patch that bites into its side, and that stitch crosses the patch. M13.16 of
+the <a href="../../plan/roadmap.html">roadmap</a> removes it, and the like stitches of the other traced dogs
+(<a href="../../design/image-to-embroidery.html#sewing-order">image to embroidery</a> has their numbers). The thin
+straight lines are jumps between patches of one colour, which the reference machine leaves for you to cut by
+hand, as it leaves the pear’s. M13.17 runs the thread under the patches sewn later instead, where they cover
+it.</p>
 <h2 id="how-it-chooses-the-stitches"><a class="header" href="#how-it-chooses-the-stitches">How it chooses the stitches</a></h2>
 <p>Automatic digitizing chooses the stitches of each shape without settings. A shape with settings sews as they
 say. The pictures below show shapes as they are drawn, and then digitized automatically. Without <code>--auto</code>,

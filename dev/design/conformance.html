@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-c29fc1bf.js";
+            window.path_to_searchindex_js = "../searchindex-f4c2b644.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-143ab13b.js"></script>
@@ -606,6 +606,25 @@ run fails.</li>
 <p>It fails when a case fails or an active requirement has no passing case. <code>--filter &lt;text&gt;</code> runs only the
 cases whose id, test name or requirements contain the text (and skips the “every active requirement”
 rule, since the run is partial). <code>cargo xtask ci</code> runs the whole suite; the docs workflow runs <code>--check</code>.</p>
+<h3 id="cases-in-the-release-build"><a class="header" href="#cases-in-the-release-build">Cases in the release build</a></h3>
+<p>A case may be too slow for the tests’ debug build, as the owner’s traced dogs are. Each dog is about a
+hundred shapes, and takes some 45 to 70 s there to digitize and measure, against some 6 s in the release
+build. Such a
+case is ignored in the debug build alone, with a reason of a fixed form that says where it runs, and a step
+of CI runs its test file in the release build:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[test]
+#[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
+fn req_auto_025_digitized_dogs_leave_no_patch_of_fabric_bare() { … }
+<span class="boring">}</span></code></pre>
+<p>The runner, which runs the debug build, lists such a case as skipped with its reason (⏭ in the report),
+and CI doesn’t fail on it as on a missing tool: the release step runs it. A case ignored any other way
+fails, so that no case hides behind <code>#[ignore]</code>. <code>--check</code> finds each release-only case by its attribute.
+Its file must be a test target of its own, <code>&lt;package&gt;/tests/&lt;target&gt;.rs</code>, and a line of
+<code>.github/workflows/ci.yml</code> must run <code>cargo test --release … -p &lt;package&gt; --test &lt;target&gt;</code>. A case ignored
+as release only in every build fails <code>--check</code> too, as the release build would leave it out as well. Each
+requirement still needs a case that runs in the debug build.</p>
 <p><code>cargo xtask conformance --bless &lt;case&gt;</code> rewrites a data case’s golden files. CI refuses a pull request
 that changes files under <code>conformance/golden/</code> unless it carries the <code>golden-change</code> label and a line in
 <code>CHANGELOG.md</code>. For the canonical-plan goldens of the format tests, bless with

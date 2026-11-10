@@ -36,7 +36,7 @@
             const path_to_root = "";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "searchindex-c29fc1bf.js";
+            window.path_to_searchindex_js = "searchindex-f4c2b644.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="toc-143ab13b.js"></script>
@@ -2734,7 +2734,7 @@ roadmap.</p>
 <!-- /shot -->
 <p><strong>Digitized</strong></p>
 <!-- shot: auto-pear -->
-<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/auto-pear.png" alt="The traced pear digitized automatically. Its 3 greens sew as tatami fills, with satin columns at the narrow ends of the olive and dark olive bands. Its stem sews as a satin column and a running stitch, and the light grey square is left out. Thin threads run straight from the stem to the bands’ ends, 4 jumps that the machine doesn’t cut."><span class="img-wrapper"><img src="images/generated/auto-pear.png" alt="The traced pear digitized automatically. Its 3 greens sew as tatami fills, with satin columns at the narrow ends of the olive and dark olive bands. Its stem sews as a satin column and a running stitch, and the light grey square is left out. Thin threads run straight from the stem to the bands’ ends, 4 jumps that the machine doesn’t cut."></span></label></p>
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/auto-pear.png" alt="The traced pear digitized automatically. Its 3 greens sew as tatami fills, with satin columns at the narrow ends of the olive and dark olive bands. Its stem sews as 2 satin columns side by side, olive and dark olive, and the light grey square is left out. Thin threads run straight from the stem to the bands’ ends, 4 jumps that the machine doesn’t cut."><span class="img-wrapper"><img src="images/generated/auto-pear.png" alt="The traced pear digitized automatically. Its 3 greens sew as tatami fills, with satin columns at the narrow ends of the olive and dark olive bands. Its stem sews as 2 satin columns side by side, olive and dark olive, and the light grey square is left out. Thin threads run straight from the stem to the bands’ ends, 4 jumps that the machine doesn’t cut."></span></label></p>
 <!-- /shot -->
 <p>The photo is drawn in code for these pages. <code>stitch plan</code> traced it 90 mm across with VectorCraft 0.19.0, into
 <code>docs/fixtures/traced-pear.vectorcraft</code>. The pear’s shading became 3 bands of green, and the backdrop the
@@ -2749,6 +2749,36 @@ digitizes the shapes. <code>--colours</code> counts the backdrop’s colour too.
 Auto effect
 (<a href="#2-trace-the-picture-in-those-threads">from a picture to a machine file</a>).</li>
 </ul>
+<h2 id="a-photo-with-its-background-removed"><a class="header" href="#a-photo-with-its-background-removed">A photo with its background removed</a></h2>
+<p>A photo’s background, such as the turf a dog stands on, traces into shapes of its own, which sew too. To sew
+the subject alone, remove the background first, in any program that makes it transparent, and save the
+photo as a PNG file. Image Trace leaves transparent pixels out. The photo then traces into its subject’s
+shapes alone (<a href="#subject-cut-out">subject cut-out</a>).
+Then <code>stitch plan dog.png --colours 9 --size 100 -o dog.pes</code>, or Image Trace in VectorCraft, traces and
+digitizes it as any photo. The owner’s photos of her dog were made that way. A mask checked by hand cut
+each out, as <code>--subject</code> will from M13.14.</p>
+<p><strong>The photo, cut out</strong></p>
+<!-- shot: auto-dog-photo -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/auto-dog-photo.png" alt="The owner’s photo of her dog running towards the camera, cut out of its background: a tricolour dog, black, white and tan, its mouth open and its ears flying, on white."><span class="img-wrapper"><img src="images/generated/auto-dog-photo.png" alt="The owner’s photo of her dog running towards the camera, cut out of its background: a tricolour dog, black, white and tan, its mouth open and its ears flying, on white."></span></label></p>
+<!-- /shot -->
+<p><strong>Traced in 9 threads</strong></p>
+<!-- shot: auto-dog-traced -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/auto-dog-traced.png" alt="The running dog traced in 9 of the machine’s threads, in flat patches. Its back and ears are black and grey, and its face and chest white. Its legs and cheeks are tan, and its mouth dark brown. The patches’ edges are ragged where the fur’s shading crossed from one thread to the next."><span class="img-wrapper"><img src="images/generated/auto-dog-traced.png" alt="The running dog traced in 9 of the machine’s threads, in flat patches. Its back and ears are black and grey, and its face and chest white. Its legs and cheeks are tan, and its mouth dark brown. The patches’ edges are ragged where the fur’s shading crossed from one thread to the next."></span></label></p>
+<!-- /shot -->
+<p><strong>Digitized</strong></p>
+<!-- shot: auto-dog -->
+<p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/auto-dog.png" alt="The traced running dog digitized automatically. Its broad patches sew as tatami fills, and its strands of fur as satin columns and triple runs between them, in black, greys, white, tan and dark brown. Thin threads run straight between patches of one colour, jumps that the machine doesn’t cut."><span class="img-wrapper"><img src="images/generated/auto-dog.png" alt="The traced running dog digitized automatically. Its broad patches sew as tatami fills, and its strands of fur as satin columns and triple runs between them, in black, greys, white, tan and dark brown. Thin threads run straight between patches of one colour, jumps that the machine doesn’t cut."></span></label></p>
+<!-- /shot -->
+<p><code>stitch plan</code> traced the cut-out 100 mm tall with VectorCraft 0.22.0, into
+<code>docs/fixtures/traced-dog-running-9.vectorcraft</code>. The fur’s shading became flat patches in 9 threads, which
+digitize as fills, satin columns and triple runs by their width. The fabric is covered where the dog has a
+colour. One stitch still lies where it shouldn’t. A satin column of the dog’s dark grey fur fans its
+stitches round a lighter grey patch that bites into its side, and that stitch crosses the patch. M13.16 of
+the <a href="#roadmap-small-steps-to-the-final-project">roadmap</a> removes it, and the like stitches of the other traced dogs
+(<a href="#sewing-order-2">image to embroidery</a> has their numbers). The thin
+straight lines are jumps between patches of one colour, which the reference machine leaves for you to cut by
+hand, as it leaves the pear’s. M13.17 runs the thread under the patches sewn later instead, where they cover
+it.</p>
 <h2 id="how-it-chooses-the-stitches"><a class="header" href="#how-it-chooses-the-stitches">How it chooses the stitches</a></h2>
 <p>Automatic digitizing chooses the stitches of each shape without settings. A shape with settings sews as they
 say. The pictures below show shapes as they are drawn, and then digitized automatically. Without <code>--auto</code>,
@@ -3572,7 +3602,7 @@ Arguments:
 <li>The machine cuts the thread at thread changes and at the stop, but at no jump, and the pictures sew as any design does: a shape sewn after a jump may sew its thread down. Snip the jump threads at each stop and after sewing. Where is one sewn down, and does it show?</li>
 </ul>
 <h2 id="ts-13b--pictures-digitized-automatically-letters-and-lines-traced-as-areas"><a class="header" href="#ts-13b--pictures-digitized-automatically-letters-and-lines-traced-as-areas">TS-13B — Pictures digitized automatically: letters and lines traced as areas</a></h2>
-<p>110.4 × 148.4 mm · 14421 stitches, 57 jumps, 56 trims, 16 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand</p>
+<p>110.4 × 148.4 mm · 14460 stitches, 57 jumps, 56 trims, 16 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand</p>
 <p>Hoop: the Brother PE800 with its 5 × 7 in hoop, profile <a href="#brother-pe800-5x7"><code>brother-pe800-5x7</code></a>.</p>
 <p>Drawn as a design whose shapes StitchCraft digitizes automatically, as <code>--auto</code> does a shape without settings. VectorCraft’s Test Sheet filter draws it too, those shapes with the Auto effect.</p>
 <p><label class="checkbox-label"><input class="checkbox-img" type="checkbox"><img src="images/generated/testsheet-ts-13b.png" alt="TS-13B as it will sew: the word MATCH in black block letters of 4 sizes, and 3 windows of red, blue and gold areas between black lines, twice. At the top, digitized, the letters are satin columns and the smallest thin runs, and the lines thin runs. At the bottom, in paint order, every letter and line is filled."><span class="img-wrapper"><img src="images/generated/testsheet-ts-13b.png" alt="TS-13B as it will sew: the word MATCH in black block letters of 4 sizes, and 3 windows of red, blue and gold areas between black lines, twice. At the top, digitized, the letters are satin columns and the smallest thin runs, and the lines thin runs. At the bottom, in paint order, every letter and line is filled."></span></label></p>
@@ -12242,6 +12272,14 @@ rings round them instead, and its outline along a cut is a rail of the ring.</li
 ring’s are its outer and inner outline, the same way round, started at a rung whose point on the inner
 one is the inner one’s point nearest its point on the outer, so that a satin column starts them together
 (<code>DEV-SAT-009</code>).</li>
+<li><strong>Slivers.</strong> An open column’s rail runs straight across the base of each of the outline’s slivers: where
+the rail comes back to within a thread’s width, 0.4 mm, of a point it passed, and a point between lies
+farther from the line between those 2 than they lie apart. A satin column places each pair of needle
+points the zigzag spacing across the column from the one before, as Ink/Stitch does. When a pair is placed
+off that, it scales the step. Along a rail that runs back, the step grew past the sliver to the next rung,
+and one stitch spanned the piece of rail between. A sliver 0.3 mm wide at its base and 0.5 mm deep, between
+a notch and the edge beside it, left a wedge of 1.8 mm² bare in the traced dog’s paw. A sliver that narrow
+is too narrow for a stitch across the column.</li>
 <li><strong>Rungs.</strong> A triangle with one edge on a rail and its third corner on the other gives a rung from that
 corner, at a right angle to the column’s way there. The rung ends where it meets the edge, or at the
 edge’s nearer end if it misses it. The column’s way is the mean of its 2 rails’ ways, the corner’s rail’s
@@ -12727,7 +12765,20 @@ at its rung nearest. Where the columns that end under each other go round, as a 
 first in that order sews first, and the last ends on top of it.</li>
 <li><strong>Their width.</strong> A column is as wide as the circles that fit inside the part along its line, as a narrow
 part is, without the piece of its line into a tip’s corner. One no wider than the design’s narrowest
-satin stroke runs along its line as a triple run.</li>
+satin stroke runs along its line as a triple run, unless the column is wider than that stroke somewhere
+along its line, but at its 2 ends, or reaches farther than that from its line beside it. Both are
+measured inside the column’s own outline, the triangles round its line. A running stitch covers a
+thread’s width along its line, so where the column is wider, the fabric beside the line shows unless an
+area sewn before it reaches under it. Measured on average alone, the strands of fur in the owner’s traced
+dog that widened at an end ran, and so did its small blobs, each beside other lines, and they left fabric
+bare. So did a column whose line ran along one side of a bump 1.4 mm across: the bump’s triangles were the
+column’s, far from its line. Where 2 strokes meet, the part is wider than either, by where
+the junction’s triangle has its corners. Measured inside the part, the circle at the junction of a T in
+strokes 0.9 mm wide was up to 1.13 mm, and the T’s bar sewed as a satin column one way round and as a
+triple run mirrored. A column’s own outline crosses to the other column there. A line’s end lies where it
+meets another line or runs into a corner, and measures that. On TS-13B, the outer legs of the M 4 mm
+tall, 0.81 mm wide on average, are 1.05 mm wide where the M’s middle strokes meet them, inside their own
+outlines, and sew as satin columns.</li>
 <li><strong>A dot.</strong> A part whose every line is shorter than half its width along it is a dot, and stays in the
 fill, as a part whose line has no length does. A disc or a square has no way to run, and its lines are
 only what its triangles leave of its middle. Its corners lie on one circle, where the triangulation
@@ -13082,7 +13133,11 @@ leaves are counted apart.</p>
 <tr><td>Badges in a row, abutting or stacked</td><td style="text-align: right">0</td><td style="text-align: right">0.40 mm</td><td style="text-align: right">0</td><td style="text-align: right">4</td></tr>
 <tr><td>Emblem, abutting or stacked</td><td style="text-align: right">0</td><td style="text-align: right">0.35 mm</td><td style="text-align: right">0</td><td style="text-align: right">2</td></tr>
 <tr><td>Button, abutting or stacked</td><td style="text-align: right">0</td><td style="text-align: right">0.40 mm</td><td style="text-align: right">6</td><td style="text-align: right">0</td></tr>
-<tr><td>Traced pear</td><td style="text-align: right">0</td><td style="text-align: right">0.70 mm</td><td style="text-align: right">0</td><td style="text-align: right">4</td></tr>
+<tr><td>Traced pear</td><td style="text-align: right">0</td><td style="text-align: right">0.95 mm</td><td style="text-align: right">0</td><td style="text-align: right">4</td></tr>
+<tr><td>Traced dog on turf, 6 threads</td><td style="text-align: right">0.81 mm²</td><td style="text-align: right">1.55 mm</td><td style="text-align: right">6</td><td style="text-align: right">115</td></tr>
+<tr><td>Traced dog on turf, 9 threads</td><td style="text-align: right">0.92 mm²</td><td style="text-align: right">1.95 mm</td><td style="text-align: right">4</td><td style="text-align: right">131</td></tr>
+<tr><td>Traced running dog, 6 threads</td><td style="text-align: right">0.63 mm²</td><td style="text-align: right">0.78 mm</td><td style="text-align: right">3</td><td style="text-align: right">102</td></tr>
+<tr><td>Traced running dog, 9 threads</td><td style="text-align: right">0.61 mm²</td><td style="text-align: right">1.39 mm</td><td style="text-align: right">10</td><td style="text-align: right">117</td></tr>
 </tbody>
 </table>
 </div>
@@ -13090,6 +13145,19 @@ leaves are counted apart.</p>
 and dark olive bands each sew a column at both ends, and each of their threads sews a side of the stem
 between those ends, so its 4 jump threads all run from the stem. <code>tests/auto_fabric.rs</code> keeps the moves and
 the jump threads as measured.</p>
+<p>The owner’s dog, traced from her 2 photos in 6 and in 9 threads (M13.15, <code>docs/fixtures/README.md</code> › The
+traced dogs), still lays 3 stitches astray, one in each of 3 of the traced dogs. 2 are satin stitches that
+fan round a shape biting into their column’s side and cross it. The third is the straight move, 2.25 mm
+long, between 2 lines of one narrow part, which is a stitch because it is shorter than the collapse length. <code>tests/auto_photos.rs</code> lists each, with where it lies and why, and its
+case fails on any other stitch astray and on any listed one that no longer is. M13.16 of the
+<a href="#roadmap-small-steps-to-the-final-project">roadmap</a> removes them. The dogs’ moves astray are moves from one element to the next,
+as the button’s are. Their jump threads, 102 to 131, are the design’s limit as it stands: each thread sews
+its shapes one after another and jumps between those that don’t touch, and the PE800 cuts no jump. M13.17
+runs the thread under the shapes sewn later instead, which cover it. Each dog takes
+too long to digitize and measure in the tests’ debug build, so CI’s <code>perf</code> job runs these cases in the
+release build (<a href="#cases-in-the-release-build">conformance</a>). The pieces of the dogs that
+showed fabric before the rules above, the paw of the dog on turf and the running dog’s ear, are cases of
+<code>tests/auto_fabric.rs</code> too.</p>
 <h2 id="settings-1"><a class="header" href="#settings-1">Settings</a></h2>
 <p>The rules’ values are StitchCraft’s own parameters, registered as any other
 (<a href="#parameter-registry">parameter registry</a>, <a href="#auto-parameters">reference</a>), since M13.7
@@ -13235,7 +13303,8 @@ files asked for, all or none, so that the user can see what was kept.</p>
 within its budget (ADR-0019, decision 2). <code>stitch cutout PICTURE -o FILE</code> writes the cut-out alone, with
 the same options. The user places it where they would place the photo, and traces it with Image Trace as
 the tutorial does. A picture whose background another program made transparent traces as its subject too,
-without <code>--subject</code>.</p>
+without <code>--subject</code>. The owner’s traced dogs were made so (M13.15, <code>docs/fixtures/README.md</code> › The traced
+dogs).</p>
 <p><strong>The models</strong> are 3 ONNX files, 49.1 MB together, which tract runs in <code>stitchcraft-cutout</code>, a crate of the
 apps’ layer that only <code>stitch</code> depends on:</p>
 <div class="table-wrapper">
@@ -13283,8 +13352,9 @@ an IoU of 0.97 or more, with at most 2 % of the subject’s area kept wrongly an
 </li>
 <li>
 <p>The test pictures are drawn in code, as the test sheets are (<code>stitchcraft_engine::testsheets::pictures</code>),
-and no logo or picture of anyone else’s is used. From M13.14 the subject cut-out’s cases also use 2
-photos of the owner’s dog (<a href="#subject-cut-out">above</a>).</p>
+and no logo or picture of anyone else’s is used. From M13.15 the owner’s dog, cut out of her 2 photos
+and traced, is a test picture too (<a href="#sewing-order-2">sewing order</a>), and from M13.14 the subject cut-out’s
+cases use the photos (<a href="#subject-cut-out">above</a>).</p>
 </li>
 <li>
 <p>Each test picture’s automatic plan is compared with its plan in paint order: colour changes, jumps,
@@ -13339,7 +13409,7 @@ the letters sew as columns with a jump between each 2:</p>
 </thead>
 <tbody>
 <tr><td>TS-13A</td><td style="text-align: right">8</td><td style="text-align: right">0</td><td style="text-align: right">12</td><td style="text-align: right">4</td></tr>
-<tr><td>TS-13B</td><td style="text-align: right">6</td><td style="text-align: right">0</td><td style="text-align: right">37</td><td style="text-align: right">15</td></tr>
+<tr><td>TS-13B</td><td style="text-align: right">6</td><td style="text-align: right">0</td><td style="text-align: right">37</td><td style="text-align: right">16</td></tr>
 <tr><td>TS-13C</td><td style="text-align: right">9</td><td style="text-align: right">4</td><td style="text-align: right">6</td><td style="text-align: right">1</td></tr>
 <tr><td>TS-13D</td><td style="text-align: right">1</td><td style="text-align: right">0</td><td style="text-align: right">10</td><td style="text-align: right">3</td></tr>
 </tbody>
@@ -15837,6 +15907,25 @@ run fails.</li>
 <p>It fails when a case fails or an active requirement has no passing case. <code>--filter &lt;text&gt;</code> runs only the
 cases whose id, test name or requirements contain the text (and skips the “every active requirement”
 rule, since the run is partial). <code>cargo xtask ci</code> runs the whole suite; the docs workflow runs <code>--check</code>.</p>
+<h3 id="cases-in-the-release-build"><a class="header" href="#cases-in-the-release-build">Cases in the release build</a></h3>
+<p>A case may be too slow for the tests’ debug build, as the owner’s traced dogs are. Each dog is about a
+hundred shapes, and takes some 45 to 70 s there to digitize and measure, against some 6 s in the release
+build. Such a
+case is ignored in the debug build alone, with a reason of a fixed form that says where it runs, and a step
+of CI runs its test file in the release build:</p>
+<pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[test]
+#[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
+fn req_auto_025_digitized_dogs_leave_no_patch_of_fabric_bare() { … }
+<span class="boring">}</span></code></pre>
+<p>The runner, which runs the debug build, lists such a case as skipped with its reason (⏭ in the report),
+and CI doesn’t fail on it as on a missing tool: the release step runs it. A case ignored any other way
+fails, so that no case hides behind <code>#[ignore]</code>. <code>--check</code> finds each release-only case by its attribute.
+Its file must be a test target of its own, <code>&lt;package&gt;/tests/&lt;target&gt;.rs</code>, and a line of
+<code>.github/workflows/ci.yml</code> must run <code>cargo test --release … -p &lt;package&gt; --test &lt;target&gt;</code>. A case ignored
+as release only in every build fails <code>--check</code> too, as the release build would leave it out as well. Each
+requirement still needs a case that runs in the debug build.</p>
 <p><code>cargo xtask conformance --bless &lt;case&gt;</code> rewrites a data case’s golden files. CI refuses a pull request
 that changes files under <code>conformance/golden/</code> unless it carries the <code>golden-change</code> label and a line in
 <code>CHANGELOG.md</code>. For the canonical-plan goldens of the format tests, bless with
@@ -16063,7 +16152,9 @@ compiler can get that wrong where the debug build is right. Rust 1.97.0 did: its
 the end of a vector while planning a satin column drawn as one closed path, and crashed or sewed stitches
 from elsewhere. So the <code>perf</code> job, which builds the release profile anyway, also runs the engine’s release
 tests (<code>crates/stitchcraft-engine/tests/release.rs</code>) in it: shapes a release build once planned wrong,
-whose plan they check.</p>
+whose plan they check. It runs the cases too slow for the debug build there too, the traced dogs’
+(<code>crates/stitchcraft-engine/tests/auto_photos.rs</code>), which the debug build leaves out
+(<a href="#cases-in-the-release-build">cases in the release build</a>).</p>
 <h2 id="design-rules-reviewed-partly-linted"><a class="header" href="#design-rules-reviewed-partly-linted">Design rules (reviewed, partly linted)</a></h2>
 <ol>
 <li><strong>Everything user-visible is data first.</strong> A stitch type, parameter, diagnostic, profile or format is
@@ -16150,7 +16241,7 @@ docs check, whatever its file name.</p>
 </thead>
 <tbody>
 <tr><td><code>stitch</code></td><td><code>stitchcraft-render</code> (<a href="#rendering-previews">rendering</a>) from a test sheet, or from a design the engine plans, an SVG file or a VectorCraft document</td><td><strong>exact bytes</strong> (rendering is deterministic)</td><td>Stitch-type illustrations, parameter comparisons, diagnostics examples</td></tr>
-<tr><td><code>picture</code></td><td>xtask (<code>xtask/src/shots/picture.rs</code>): a design’s areas filled flat in their colours, or a photo drawn in code</td><td><strong>exact bytes</strong></td><td>The pictures <a href="#automatic-digitizing">automatic digitizing</a> starts from</td></tr>
+<tr><td><code>picture</code></td><td>xtask (<code>xtask/src/shots/picture.rs</code>) fills a design’s areas flat in their colours. It draws a PNG file on white too, and the pear’s photo in code</td><td><strong>exact bytes</strong></td><td>The pictures <a href="#automatic-digitizing">automatic digitizing</a> starts from</td></tr>
 <tr><td><code>vectorcraft-render</code></td><td><code>vectorcraft-cli</code> of the pinned stable release, with the plug-in’s modules installed: the canvas after the shot’s <code>steps</code>, exported as PNG at <code>scale</code> pixels per point</td><td>perceptual tolerance (≤ 0.2 % of pixels differing by more than 8/255 in a channel, and ≤ 8 of them in any square of 16 pixels a side)</td><td>How the previews look in VectorCraft’s canvas, without its window</td></tr>
 <tr><td><code>vectorcraft-ui</code></td><td>VectorCraft’s window, of the same release, with the document <code>vectorcraft-cli</code> drew. The shot’s menu path and the family’s row are pressed through the accessibility tree, and the screenshot is cropped to the menus or the dialog</td><td>the same tolerance</td><td>Menus and dialogs, in a desktop without a screen (<a href="#vectorcrafts-window-in-ci">VectorCraft’s window in CI</a>)</td></tr>
 <tr><td><code>photo</code></td><td>a person, of a real sew-out</td><td>presence + metadata record (machine, fabric, commit, checkpoint)</td><td>Never regenerated; listed with their sew-out report</td></tr>
@@ -16184,7 +16275,9 @@ alt = "The pear photo traced in 4 of the machine's threads…"
 </code></pre>
 <p>With a <code>fixture</code>, each area of the design is filled in its thread’s colour, the lowest first, as a drawing
 program shows it. The areas are filled 4 times larger without anti-aliasing, and each block of 4 × 4 pixels
-is then averaged into one, so that the white under 2 areas doesn’t show along the edge they share. With
+is then averaged into one, so that the white under 2 areas doesn’t show along the edge they share. A
+<code>fixture</code> that is a PNG file is drawn at its own pixels, on white, as a drawing program shows a picture with
+a transparent background. The owner’s dog, cut out of her photo, is drawn so. With
 <code>picture = "pear"</code> in place of a <code>fixture</code>, the picture is a photo xtask draws in code, with soft shading and
 a little grain, so that the docs show a photo with no licence to keep. VectorCraft traced that photo once
 into <code>docs/fixtures/traced-pear.vectorcraft</code>, which the shots plan without VectorCraft. A test keeps the hash
@@ -18595,6 +18688,9 @@ generators StitchCraft has come first, and the steps that make new kinds of shap
 <tr><td>M13.12 ✅</td><td>Traced layers flattened before digitizing. Each automatic area sews only what shows of it under the areas drawn over it, and what shows of the background inside the picture sews too. An area wider than a satin column somewhere is digitized whole under the details that fill its holes, moves back in paint order before them and is cut away under them, while outlines and letters keep their holes. A disc or a square no wider than a satin column is a dot, filled wherever it lies. TS-13D sews an emblem and a button, each traced abutting and stacked</td><td><code>REQ-AUTO-023</code>’s cases and <code>REQ-AUTO-016</code>’s dot case pass; a stacked and an abutting trace of the test pictures sew the same shapes; TS-13D drawn</td></tr>
 <tr><td>M13.13 ✅ 🧪</td><td>Subject cut-out for photos, decided, as an option off by default. A photo’s background, such as turf, a fence or tyres behind a dog, traces into many shapes, and the background rule leaves out one shape, the lowest, when it lies behind everything. On 2026-11-08 the owner asked for the cut-out in StitchCraft, in the flow that sews pictures. The step chooses where the cut-out runs, the model and its licence, the runtime, how the model is fetched, how a user corrects a cut-out, how replays and CI do without the model, and how cases measure a cut-out</td><td>Decision recorded in the design, with measurements: <a href="#adr-0019-a-photos-subject-is-cut-out-by-stitch-before-vectorcraft-traces-it">ADR-0019</a>, accepted on 2026-11-08. <code>--subject</code> cuts the subject out before VectorCraft traces the picture. MobileSAM, run by tract in <code>stitch</code>, cuts it out of a box that U²-Net-p finds or the user gives, with points of the subject and of what isn’t. On the owner’s 2 photos of her dog it kept the dog at an IoU of 0.985 and 0.988, without the tyre that U²-Net-p, U²-Net and IS-Net kept</td></tr>
 <tr><td>M13.14</td><td>The subject cut-out, as M13.13 decided (<a href="#subject-cut-out">subject cut-out</a>). <code>--subject</code> on <code>stitch plan</code> and <code>stitch export</code> makes a picture’s background transparent and crops the picture to its subject before VectorCraft traces it. <code>--subject-box</code>, <code>--subject-point</code> and <code>--not-subject</code> correct it, <code>--cutout</code> writes it, and <code>stitch cutout</code> writes it alone, for VectorCraft’s own flow. <code>stitch</code> fetches the models on first use, pinned by SHA-256, and a bug-report bundle replays without them</td><td>Its requirements active (<code>REQ-CLI-014</code> to <code>REQ-CLI-019</code>), cases on the owner’s 2 photos with their masks checked by hand and on pictures drawn in code, and a user page with pictures</td></tr>
+<tr><td>M13.15 ✅</td><td>The owner’s 2 photos of her dog as test pictures. Each photo is cut out by its mask, checked by hand, and traced by VectorCraft’s command line 100 mm tall in 6 and in 9 of the machine’s threads. The traced dogs are digitized automatically and measured as the pear is, and what the measures find is fixed or recorded with its reason</td><td><code>REQ-AUTO-025</code>’s cases pass on the dogs, <code>REQ-AUTO-026</code>’s list each stitch astray with its cause, their numbers are recorded in the design, and the user page shows a dog</td></tr>
+<tr><td>M13.16</td><td>The dogs’ stitches astray. A satin column fans its stitches round a shape that bites into its side and crosses it: the dog on turf in 6 threads (<code>vc:9:fill#18</code>) and the running dog in 9 (<code>vc:27:fill</code>). A narrow part’s 2 lines are joined by a straight stitch across another colour, where the needle could sew along the lines already sewn: the dog on turf in 9 (<code>vc:83:fill</code>)</td><td>the dogs’ list of stitches astray in <code>tests/auto_photos.rs</code> is empty</td></tr>
+<tr><td>M13.17</td><td>The jump threads of automatic digitizing. A move between 2 elements of one thread becomes a run under the shapes sewn later, which cover it, instead of a jump thread that the PE800 leaves for cutting by hand, as M10.13’s auto-run routing joins runs (<a href="#auto-run-m1013">routing tools</a>). M13.15 counted the traced dogs’ jumps by kind. The dog on turf jumps between 2 elements of one thread 114 times in 6 threads and 131 times in 9, and the running dog 102 and 117 times. One more jump of the dog on turf in 6 threads lies within an element. Their other jumps, 11, 13, 13 and 19, come with a colour change or start the design, and don’t leave a jump thread</td><td>the dogs’ and the pear’s jump threads fall by the number such runs can replace, with requirements and cases, and the user page says what is left</td></tr>
 </tbody>
 </table>
 </div>
@@ -18882,7 +18978,14 @@ then sews as it did: write the sheet again before sewing it, and check that its 
 stopped running along its cut into one of the cut’s corners, where it sewed a fan of stitches and left
 fabric bare beside it. The column now ends along the whole cut. TS-13C’s digitized star then sews its
 right-hand point from its tip to its cut. At MC-8, look at each point’s end along its cut for fabric
-showing at the cut’s corners.</p>
+showing at the cut’s corners. Later that day M13.15 measured the column’s width inside its own outline,
+and made an open column’s rail cut across the outline’s slivers narrower than a thread. TS-13B’s word
+4 mm tall then sews the outer legs of its M as satin columns, 1.05 mm wide where the M’s middle strokes meet
+them. Do they sew as cleanly as the triple runs beside them, and does the M keep its shape?</p>
+<p>MC-8 also sews one of the owner’s traced dogs, <code>docs/fixtures/traced-dog-running-9.vectorcraft</code>, 100 mm
+tall: <code>stitch plan docs/fixtures/traced-dog-running-9.vectorcraft --auto -o dog.pes</code>. Does the fur read as
+fur, the face and the eyes as hers, and do its 117 jump threads, which the PE800 doesn’t cut, take long to
+snip (M13.17)? One satin stitch of its dark grey fur crosses a lighter grey patch beside it (M13.16): does it show?</p>
 <h2 id="report-template"><a class="header" href="#report-template">Report template</a></h2>
 <p>The GitHub issue form <em>Sew-out report</em> asks for these fields; this is the same template for notes kept
 elsewhere:</p>

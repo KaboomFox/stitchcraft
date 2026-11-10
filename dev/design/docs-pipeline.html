@@ -35,7 +35,7 @@
             const path_to_root = "../";
             const default_light_theme = "light";
             const default_dark_theme = "navy";
-            window.path_to_searchindex_js = "../searchindex-c29fc1bf.js";
+            window.path_to_searchindex_js = "../searchindex-f4c2b644.js";
         </script>
         <!-- Start loading toc.js asap -->
         <script src="../toc-143ab13b.js"></script>
@@ -237,7 +237,7 @@ docs check, whatever its file name.</p>
 </thead>
 <tbody>
 <tr><td><code>stitch</code></td><td><code>stitchcraft-render</code> (<a href="rendering.html">rendering</a>) from a test sheet, or from a design the engine plans, an SVG file or a VectorCraft document</td><td><strong>exact bytes</strong> (rendering is deterministic)</td><td>Stitch-type illustrations, parameter comparisons, diagnostics examples</td></tr>
-<tr><td><code>picture</code></td><td>xtask (<code>xtask/src/shots/picture.rs</code>): a design’s areas filled flat in their colours, or a photo drawn in code</td><td><strong>exact bytes</strong></td><td>The pictures <a href="../user/stitches/automatic.html">automatic digitizing</a> starts from</td></tr>
+<tr><td><code>picture</code></td><td>xtask (<code>xtask/src/shots/picture.rs</code>) fills a design’s areas flat in their colours. It draws a PNG file on white too, and the pear’s photo in code</td><td><strong>exact bytes</strong></td><td>The pictures <a href="../user/stitches/automatic.html">automatic digitizing</a> starts from</td></tr>
 <tr><td><code>vectorcraft-render</code></td><td><code>vectorcraft-cli</code> of the pinned stable release, with the plug-in’s modules installed: the canvas after the shot’s <code>steps</code>, exported as PNG at <code>scale</code> pixels per point</td><td>perceptual tolerance (≤ 0.2 % of pixels differing by more than 8/255 in a channel, and ≤ 8 of them in any square of 16 pixels a side)</td><td>How the previews look in VectorCraft’s canvas, without its window</td></tr>
 <tr><td><code>vectorcraft-ui</code></td><td>VectorCraft’s window, of the same release, with the document <code>vectorcraft-cli</code> drew. The shot’s menu path and the family’s row are pressed through the accessibility tree, and the screenshot is cropped to the menus or the dialog</td><td>the same tolerance</td><td>Menus and dialogs, in a desktop without a screen (<a href="#vectorcrafts-window-in-ci">VectorCraft’s window in CI</a>)</td></tr>
 <tr><td><code>photo</code></td><td>a person, of a real sew-out</td><td>presence + metadata record (machine, fabric, commit, checkpoint)</td><td>Never regenerated; listed with their sew-out report</td></tr>
@@ -271,7 +271,9 @@ alt = "The pear photo traced in 4 of the machine's threads…"
 </code></pre>
 <p>With a <code>fixture</code>, each area of the design is filled in its thread’s colour, the lowest first, as a drawing
 program shows it. The areas are filled 4 times larger without anti-aliasing, and each block of 4 × 4 pixels
-is then averaged into one, so that the white under 2 areas doesn’t show along the edge they share. With
+is then averaged into one, so that the white under 2 areas doesn’t show along the edge they share. A
+<code>fixture</code> that is a PNG file is drawn at its own pixels, on white, as a drawing program shows a picture with
+a transparent background. The owner’s dog, cut out of her photo, is drawn so. With
 <code>picture = "pear"</code> in place of a <code>fixture</code>, the picture is a photo xtask draws in code, with soft shading and
 a little grain, so that the docs show a photo with no licence to keep. VectorCraft traced that photo once
 into <code>docs/fixtures/traced-pear.vectorcraft</code>, which the shots plan without VectorCraft. A test keeps the hash
