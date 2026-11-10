@@ -29,8 +29,6 @@ stitchcraft-testkit = { workspace = true }
 # --vectorcraft`), and the decoder that compares VectorCraft's pictures within a tolerance.
 stitchcraft-vc-plugin = { path = "../apps/stitchcraft-vc-plugin" }
 tiny-skia = { workspace = true }
-# The glyph files of Ink/Stitch's fonts, cut into a design for each glyph (`cargo xtask corpus`).
-roxmltree = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 toml = { workspace = true }

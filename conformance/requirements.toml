@@ -376,6 +376,69 @@ milestone = "M8"
 status = "active"
 
 [[req]]
+id = "REQ-FONT-002"
+area = "fonts"
+level = "L2"
+statement = "A font in Ink/Stitch's format is read from the files of its folder, given as bytes. Its settings are its font.json, UTF-8 text with or without a byte order mark that holds a JSON object. For each direction, ltr, rtl, ttb and btt in that order, its glyph files are the file of the direction's id and .svg, and then the .svg files directly in a folder of that name in the order of their names, or else, when there are none, the file of the direction's arrow and .svg (→, ←, ↓ and ↑). A glyph file compressed with xz is not read, and SC-W1103 names it. Its licence file is the first of the folder's files named LICENSE or LICENCE, alone or with .txt or .md, in any case, and its licence is the one the file names first, as the corpus reads it. A font without a font.json, whose font.json is compressed or holds no object, without a glyph file read, or with a glyph file that is not SVG the reader reads is refused with SC-E1101."
+rationale = "Ink/Stitch's lettering reads a font so, read at d59c9ab (lib/lettering/font.py: Font._load_metadata, _load_license, has_variants; font_variant.py: _get_variant_file_paths) and run as a black box on fonts drawn for it. A font without font.json or with a broken one loads in Ink/Stitch with every setting at its default, and Ink/Stitch's font list leaves it out, as it has no name. StitchCraft refuses it with the reason. Ink/Stitch takes a folder's files in the order the system lists them, and StitchCraft takes them by name, so that a font reads the same everywhere. Ink/Stitch's own packages compress every font file with xz (bin/compress-fonts), and the font repository's files are plain."
+milestone = "M14"
+status = "active"
+
+[[req]]
+id = "REQ-FONT-003"
+area = "fonts"
+level = "L2"
+statement = "Each key of font.json that Ink/Stitch's lettering and font tools read is read into the font's settings, each at Ink/Stitch's default when font.json lacks it, as the font settings page lists them. A key description_ and a language code is the description in that language. A value of another type than its key takes, or a word its key doesn't take, leaves the key at its default, and SC-W1102 names the key, what it takes and what the file gives. An entry of a list or a table that is not of its type is left out, and SC-W1102 names it. Of 2 entries of one name in an object, the later counts. A key the format doesn't have changes nothing, and SC-I1105 names it."
+rationale = "The keys, their meanings and their defaults are those of Ink/Stitch's lettering at d59c9ab (lib/lettering/font.py: the font_metadata properties; lib/extensions/lettering_generate_json.py, which writes them), the interoperability contract, used as they are. At c7e3a05 every one of the 142 fonts' font.json reads, with 26 keys in all, and one font has a key `rev,ersible` that Ink/Stitch doesn't read either."
+milestone = "M14"
+status = "active"
+
+[[req]]
+id = "REQ-FONT-004"
+area = "fonts"
+level = "L2"
+statement = "A glyph file's glyphs are its groups whose inkscape:label starts with GlyphLayer-, wherever they lie, in the order of the file. A glyph's label is the text after GlyphLayer-, and its name the label in Unicode's NFC. Of 2 glyphs of one name in a direction, the later in the order of the files and of each file counts, and SC-I1105 names them. A glyph's design is its glyph file with its group shown and every other drawn element left out, as the glyph differential cuts it (REQ-FONT-001), read by the SVG reader as an SVG file is, with what the reader says of it."
+rationale = "Ink/Stitch's lettering finds glyphs so, read at d59c9ab (lib/lettering/font_variant.py: _load_glyphs) and run as a black box: a later layer of a name replaces the earlier. At c7e3a05, 7 labels in 5 fonts change in NFC, such as Montecarlo's Ω, written as the ohm sign. 4 of them, in Egyptian's 2 sizes, name a character that the same file draws in NFC too. 12 glyph files draw a label twice. Each glyph's design is the one the glyph differential sews in both programs."
+milestone = "M14"
+status = "active"
+
+[[req]]
+id = "REQ-FONT-005"
+area = "fonts"
+level = "L2"
+statement = "A glyph's box spans the x of the points that the path data of the path elements in its group reach, but connectors, whose inkscape:connection-end is set: each subpath's start and segments' ends, each point where a curve turns along x, and where a move-to that draws nothing leaves the pen, under the transforms of the path and of the elements round it, the root's left out, and the root's map into millimetres. Hidden paths and paths of a glyph inside the glyph count, and other shapes and clones don't. Its left edge and width are the box's. A glyph whose group has no such path, or one whose data reaches no point, is left out, as Ink/Stitch's lettering leaves it out, and SC-W1104 names it. A glyph file's baseline is the first guide labelled baseline among the sodipodi:guide children of its first sodipodi:namedview: the page's height in user units less the second of the numbers its position gives between commas, mapped into millimetres as the drawing is. The page's height is the viewBox's, or else the root's height in pixels, and 0 when the root has no height in a unit. Without such a guide the baseline is the page's top, and SC-I1105 says so. A baseline guide whose position doesn't give 2 numbers leaves the file's glyphs out, and SC-W1104 says so."
+rationale = "Lettering places each glyph by its left edge and its file's baseline, and a glyph's advance defaults to its right edge. Ink/Stitch measures them so, read at d59c9ab (lib/lettering/glyph.py: _process_bbox, _process_baseline; lib/svg/guides.py) and run as a black box on fonts drawn for it, and on the baselines of 9 fonts drawn in pixels, in millimetres and in inches. Ink/Stitch drops a glyph whose box fails, and at c7e3a05 that drops 12: 11 of one empty path, such as Egyptian's spaces, and 1 without a path."
+milestone = "M14"
+status = "active"
+
+[[req]]
+id = "REQ-FONT-006"
+area = "fonts"
+level = "L2"
+statement = "The kerning of 2 glyphs, the first before the second, is kerning_pairs' value for their labels with a space between them, or else for their labels joined, or else 0. A glyph's advance is horiz_adv_x's value for its label, or else horiz_adv_x_default, or else its box's right edge. A space's advance is horiz_adv_x_space, and a line's height leading. The reader gives these lengths in millimetres, from the glyph files' CSS pixels. A font sews from size times min_scale to size times max_scale millimetres tall. Its default direction is default_variant's, when the font has glyph files for it, and else its first, and SC-I1105 says so."
+rationale = "Ink/Stitch's lettering reads these keys so, read at d59c9ab (lib/lettering/font.py: _render_glyph, default_variant; lib/gui/lettering/main_panel.py, which shows the heights). At c7e3a05, 195,269 of the fonts' 1,816,358 kerning pairs are written joined, as older fonts write them."
+milestone = "M14"
+status = "active"
+
+[[req]]
+id = "REQ-FONT-007"
+area = "fonts"
+level = "L2"
+statement = "Any bytes as a font's files give a font or a coded error, never a panic, the same on every platform. Reading charges one meter of the budget: a unit per 8 bytes of font.json and of each glyph file, per glyph group, per node and path segment measured for a box, per element cut away and per 8 bytes of each glyph's design, and what the SVG reader charges to read each design. A font that needs more is refused with SC-E0004."
+rationale = "A font is untrusted input. The VectorCraft plug-in reads fonts within its budget, and a crash there stops the module (docs/src/design/architecture.md › WebAssembly constraints). Property tests read malformed fonts and glyph files."
+milestone = "M14"
+status = "active"
+
+[[req]]
+id = "REQ-FONT-008"
+area = "fonts"
+level = "L2"
+statement = "Ink/Stitch Small Font, under the OFL, at the commit conformance/inkstitch/fonts.toml pins, reads from the corpus with no warning, its 98 left-to-right and 89 right-to-left glyphs each with its design, box and baseline, and each of the 187 glyphs plans for the reference machine with a hoop 400 mm a side, as the glyph differential plans a glyph, with no error. The case is skipped, and says so, where the corpus is not fetched, and runs in CI, which fetches it."
+rationale = "One real font read and each of its glyphs sewn is M14.1's done-when. Ink/Stitch Small Font is one of Ink/Stitch's own fonts, drawn by Lex Neva in 2017 for small letters, under the OFL. It sews in both directions, and its 187 glyphs are the count of Ink/Stitch's lettering, run as a black box. Lettering routes it with auto-satin from M14.2."
+milestone = "M14"
+status = "active"
+
+[[req]]
 id = "REQ-SVG-009"
 area = "svg"
 level = "L2"

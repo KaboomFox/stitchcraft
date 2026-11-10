@@ -44,6 +44,7 @@
     - [File formats](user/reference/formats.md)
     - [Test sheets](user/reference/test-sheets.md)
     - [Diagnostic codes](user/reference/diagnostics.md)
+    - [Font settings](user/reference/font-settings.md)
     - [Parameters](user/reference/params.md)
       - [Common parameters](user/reference/params/common.md)
       - [Stroke](user/reference/params/stroke.md)
@@ -117,6 +118,7 @@
     - [0017 Routing in one engine function](design/adr/0017-routing-is-one-engine-function.md)
     - [0018 Underlays first, a setting of each element](design/adr/0018-underlays-first-is-a-setting-of-each-element.md)
     - [0019 Subject cut out before tracing](design/adr/0019-subject-cut-out-before-tracing.md)
+    - [0020 Fonts from a repository of their own](design/adr/0020-fonts-from-a-repository-of-their-own.md)
 
 # Plan
 
