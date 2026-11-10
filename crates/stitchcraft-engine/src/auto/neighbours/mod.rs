@@ -51,6 +51,7 @@
 //! neighbours' to find, and are said when they can't be.
 
 mod background;
+mod base;
 mod layers;
 mod order;
 mod specks;
@@ -61,12 +62,13 @@ pub(super) use layers::flattened;
 
 use std::collections::BTreeSet;
 
-use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Meter, Point};
+use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Labels, Meter, Point};
 use stitchcraft_params::{Family, StitchType, Validated};
 
 use super::{AutoParams, Style, outline, painted};
 use crate::design::{DesignSettings, Element, FillRule, Path, Shape};
 use crate::generate::{stitch_type_of, trim_or_stop_left_out};
+use crate::generators::pull::PULL_COMPENSATION;
 use crate::generators::satin::{self, SatinParams};
 use crate::normalize::region::geom::{self, Envelope};
 use crate::normalize::region::ops::{self, Parts};
@@ -105,6 +107,9 @@ pub(super) struct Sewn {
     /// Whether automatic digitizing made it, so that it moves in the order whether or not the design asks
     /// for every element ordered.
     pub(super) automatic: bool,
+    /// Its area's overlap when automatic digitizing made it a line or a column: how far a satin column sews
+    /// past a rail that a shape sewn after it runs along (`REQ-AUTO-029`). `None` for any other element.
+    pub(super) reach: Option<f64>,
     /// The place in the design of the shape it is a part of: the parts of a shape sewn as several elements
     /// keep their order.
     pub(super) shape: usize,
@@ -115,17 +120,29 @@ pub(super) struct Sewn {
 
 /// `sewn`, its specks merged into their neighbours, put in the order it sews in, every element moving when
 /// `sorted` and only the automatic ones otherwise, and its areas reaching under the shapes sewn after
-/// them; and what is said of them.
-pub(super) fn beside(sewn: Vec<Sewn>, settings: &DesignSettings, budget: &Budget, sorted: bool) -> Beside {
+/// them; and what is said of them. With `base`, the settings the design's base layer goes by and the ids the
+/// design has given out, the base layer sews before the first element that automatic digitizing made
+/// (`base`, `REQ-AUTO-028`).
+pub(super) fn beside(sewn: Vec<Sewn>, settings: &DesignSettings, budget: &Budget, sorted: bool, base: Option<(&AutoParams, &mut Labels)>) -> Beside {
     let moving: Vec<order::Moving> = sewn.iter().map(|sewn| order::Moving { free: sorted || sewn.automatic, shape: sewn.shape }).collect();
+    let made: BTreeSet<ElementId> = sewn.iter().filter(|sewn| sewn.automatic).map(|sewn| sewn.element.id.clone()).collect();
     let mut shapes = Shapes::new(sewn, settings, budget);
     let mut said = specks::merged(&mut shapes, budget);
+    // The base layer lies under the shapes as they are once the specks are merged, before any reaches under
+    // another.
+    let laid = base.map(|(rules, taken)| base::laid(&mut shapes, rules, taken, budget)).unwrap_or_default();
     said.extend(order::ordered(&mut shapes, &moving, budget));
     said.extend(under::reached(&mut shapes, budget));
     said.append(&mut shapes.said);
     said.extend(shapes.unplaced());
+    said.extend(laid.said);
     let sewing = shapes.sewing();
-    Beside { elements: shapes.into_elements(), said, sewing }
+    let mut elements = shapes.into_elements();
+    let base = laid.pieces.iter().map(|piece| piece.id.clone()).collect();
+    // The order leaves the base layer before the first element that automatic digitizing made.
+    let first = elements.iter().position(|element| made.contains(&element.id)).unwrap_or(elements.len());
+    elements.splice(first..first, laid.pieces);
+    Beside { elements, said, sewing, base }
 }
 
 /// What the neighbours make of the elements ([`beside`]).
@@ -136,6 +153,8 @@ pub(super) struct Beside {
     pub(super) said: Vec<Diagnostic>,
     /// The places in the design of the shapes that still sew: some element of each is left.
     pub(super) sewing: BTreeSet<usize>,
+    /// The ids of the base layer's pieces among the elements.
+    pub(super) base: Vec<ElementId>,
 }
 
 /// What a shape paints, to the order and to an automatic area sewn before it.
@@ -187,14 +206,18 @@ impl Failed {
     /// What is said of the element `id` when finding `finding` failed, so that `consequence`: the `work`
     /// a step may use, under `code`, or `SC-E0009` for a region not joined.
     fn said(&self, code: Code, finding: &str, consequence: &str, work: u64, id: ElementId) -> Diagnostic {
-        let diagnostic = match self {
+        self.said_of_all(code, finding, consequence, work).with_element(id)
+    }
+
+    /// [`Self::said`] of the design, naming no element.
+    fn said_of_all(&self, code: Code, finding: &str, consequence: &str, work: u64) -> Diagnostic {
+        match self {
             Failed::Work => Diagnostic::new(code, format!("Finding {finding} needed more than the work budget of {work} units, so {consequence}.")),
             Failed::Unjoined => Diagnostic::new(
                 Code::InternalCheckFailed,
                 format!("Finding {finding}, the edges of a region could not be joined into rings, so {consequence}. This is a bug in StitchCraft."),
             ),
-        };
-        diagnostic.with_element(id)
+        }
     }
 }
 
@@ -220,6 +243,8 @@ struct Shapes {
     changed: Vec<bool>,
     /// Whether each element is left out.
     removed: Vec<bool>,
+    /// Each automatic line's or column's overlap ([`Sewn::reach`]).
+    reach: Vec<Option<f64>>,
     /// What each element that is no automatic area paints, once found: known from the start for a part's
     /// line or column.
     painted: Vec<Option<Painted>>,
@@ -244,12 +269,13 @@ impl Shapes {
     /// drawn, and its fill says what it says of it then.
     fn new(sewn: Vec<Sewn>, settings: &DesignSettings, budget: &Budget) -> Self {
         let count = sewn.len();
-        let (mut painted, mut of_shape) = (Vec::with_capacity(count), Vec::with_capacity(count));
+        let (mut painted, mut of_shape, mut reach) = (Vec::with_capacity(count), Vec::with_capacity(count), Vec::with_capacity(count));
         let (elements, area): (Vec<Element>, Vec<Option<AutoParams>>) = sewn
             .into_iter()
             .map(|sewn| {
                 painted.push(sewn.part.map(|part| Some((Kind::Part, vec![part]))));
                 of_shape.push(sewn.shape);
+                reach.push(sewn.reach);
                 (sewn.element, sewn.area)
             })
             .unzip();
@@ -280,6 +306,7 @@ impl Shapes {
             regions,
             changed: vec![false; count],
             removed: vec![false; count],
+            reach,
             painted,
             bounds: vec![None; count],
             grown: vec![None; count],
@@ -322,6 +349,38 @@ impl Shapes {
             return None;
         }
         self.regions.get(index)?.as_deref()
+    }
+
+    /// Whether automatic digitizing made element `index`: an automatic area, line or column.
+    fn automatic(&self, index: usize) -> bool {
+        self.is_area(index) || self.reach.get(index).is_some_and(Option::is_some)
+    }
+
+    /// The overlap of element `index` when it is a satin column that automatic digitizing made and that
+    /// sews.
+    fn column(&self, index: usize) -> Option<f64> {
+        let satin = self.stitch_types.get(index).copied().flatten().is_some_and(|stitch_type| stitch_type.family() == Family::Satin);
+        if self.left_out(index) || !satin {
+            return None;
+        }
+        *self.reach.get(index)?
+    }
+
+    /// The rails of the satin column `index` as they are sewn, with `meter`'s work; `None` when its settings
+    /// or its rails can't be read.
+    fn rails(&self, index: usize, meter: &mut Meter) -> Result<Option<[Vec<Point>; 2]>, Exhausted> {
+        let (Some(element), Some(&Some(stitch_type))) = (self.elements.get(index), self.stitch_types.get(index)) else { return Ok(None) };
+        rails_of(element, stitch_type, meter)
+    }
+
+    /// Makes the satin column `index` sew `overlap` past each of its rails that `under` names, in the order
+    /// they are sewn, and its pull compensation past the other: Ink/Stitch's `pull_compensation_mm` takes a
+    /// length for each rail.
+    fn reach_past(&mut self, index: usize, under: [bool; 2], overlap: f64) {
+        let Some(element) = self.elements.get_mut(index) else { return };
+        let pull = element.params.get(PULL_COMPENSATION).unwrap_or("0").to_string();
+        let past = under.map(|under| if under { overlap.to_string() } else { pull.clone() });
+        element.params.set(PULL_COMPENSATION, past.join(" ").as_str());
     }
 
     /// Leaves element `index` out.
@@ -433,6 +492,7 @@ impl Shapes {
         self.regions = permuted(take(&mut self.regions), order);
         self.changed = permuted(take(&mut self.changed), order);
         self.removed = permuted(take(&mut self.removed), order);
+        self.reach = permuted(take(&mut self.reach), order);
         self.painted = permuted(take(&mut self.painted), order);
         self.bounds = permuted(take(&mut self.bounds), order);
         self.grown = permuted(take(&mut self.grown), order);
@@ -485,10 +545,8 @@ fn paints(element: &Element, stitch_type: StitchType, budget: &Budget) -> Result
         |failed: Failed, code: Code, finding: &str, consequence: &str| failed.said(code, finding, consequence, budget.max_work, element.id.clone());
     match (&element.shape, Kind::of(&element.shape, stitch_type)) {
         (Shape::Fill { path, rule, .. }, _) => Ok(parts_of(path, *rule, meter).ok().and_then(Result::ok).map(|parts| (Kind::Area, parts))),
-        (Shape::Stroke { path, width, join, .. }, Kind::Column) => {
-            let Ok(Validated { params, .. }) = SatinParams::from_set_as(&element.params, stitch_type) else { return Ok(None) };
-            let Ok(Some(column)) = satin::rails(path, *width, *join, &mut Vec::new(), meter) else { return Ok(None) };
-            let Ok(rails) = satin::sewn_rails(&column, &params, meter) else { return Ok(None) };
+        (Shape::Stroke { .. }, Kind::Column) => {
+            let Ok(Some(rails)) = rails_of(element, stitch_type, meter) else { return Ok(None) };
             let unfound = |failed| {
                 let consequence = format!("the areas sewn before it don't reach under it, and {KEPT}");
                 said(failed, Code::AutoUnder, "what this satin column covers", &consequence)
@@ -500,6 +558,16 @@ fn paints(element: &Element, stitch_type: StitchType, budget: &Budget) -> Result
             stroked(path, style, meter).map_err(|failed| said(failed, Code::AutoOrder, "what this line covers", KEPT))
         }
     }
+}
+
+/// The rails of the satin column `element`, sewn as `stitch_type`, as they are sewn, swapped and turned as
+/// its settings say, with `meter`'s work; `None` for a fill, and for a column whose settings or rails can't
+/// be read.
+fn rails_of(element: &Element, stitch_type: StitchType, meter: &mut Meter) -> Result<Option<[Vec<Point>; 2]>, Exhausted> {
+    let Shape::Stroke { path, width, join, .. } = &element.shape else { return Ok(None) };
+    let Ok(Validated { params, .. }) = SatinParams::from_set_as(&element.params, stitch_type) else { return Ok(None) };
+    let Some(column) = satin::rails(path, *width, *join, &mut Vec::new(), meter)? else { return Ok(None) };
+    Ok(Some(satin::sewn_rails(&column, &params, meter)?))
 }
 
 /// What a line along `path` drawn with `style` paints, with `meter`'s work: the area its stroke paints, or

@@ -94,6 +94,7 @@ use crate::common::{STOP_AFTER, TRIM_AFTER};
 use crate::design::{Cap, Design, DesignSettings, Element, FillRule, Hints, Join, Path, Segment, Shape, Subpath, within_working_limit};
 use crate::generators::passes::BEAN_STITCH_REPEATS;
 use crate::generators::pull::PULL_COMPENSATION;
+use crate::generators::tatami::TURN_STITCHES;
 use crate::generators::satin::{
     self, CENTER_WALK_UNDERLAY, CONTOUR_UNDERLAY, END_AT_NEAREST_POINT, PUSH_COMPENSATION, SATIN_COLUMN, ZIGZAG_UNDERLAY,
 };
@@ -212,7 +213,7 @@ pub fn underlay(width: Mm) -> &'static [&'static str] {
 fn satin_params(params: &ParamSet, width: Mm, rules: &AutoParams) -> ParamSet {
     let mut column = params.clone();
     column.set(SATIN_COLUMN, "true");
-    column.set(PULL_COMPENSATION, rules.auto_overlap_mm.get().to_string().as_str());
+    column.set(PULL_COMPENSATION, rules.auto_pull_compensation_mm.get().to_string().as_str());
     column.set(END_AT_NEAREST_POINT, "false");
     for key in underlay(width) {
         column.set(*key, "true");
@@ -257,8 +258,25 @@ impl Digitized {
 /// `SC-I0907`, `SC-I0904`). A design without automatic elements that doesn't ask for its threads sorted
 /// comes back as it is.
 pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>, Vec<Diagnostic>) {
+    let Sewing { elements, diagnostics, .. } = sewing(design, budget);
+    (elements, diagnostics)
+}
+
+/// What [`sewing`] makes of a design.
+pub(crate) struct Sewing<'d> {
+    /// The elements as they are generated, in the order they sew.
+    pub(crate) elements: Cow<'d, [Element]>,
+    /// What was said of them.
+    pub(crate) diagnostics: Vec<Diagnostic>,
+    /// The ids of the base layer's pieces among the elements (`REQ-AUTO-028`): planning makes every stitch
+    /// of theirs underlay.
+    pub(crate) base: Vec<ElementId>,
+}
+
+/// [`digitized`], with the ids of the base layer's pieces.
+pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     if !design.sort_colours && !design.elements().iter().any(|element| element.automatic) {
-        return (Cow::Borrowed(design.elements()), Vec::new());
+        return Sewing { elements: Cow::Borrowed(design.elements()), diagnostics: Vec::new(), base: Vec::new() };
     }
     let mut diagnostics = Vec::new();
     // Each automatic shape is cut to its clips first, so that what shows of it is digitized and hides others.
@@ -284,7 +302,7 @@ pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>
     let mut sewn = Vec::with_capacity(layers.elements.len());
     for (index, element) in layers.elements {
         if !element.automatic {
-            sewn.push(Sewn { element: element.into_owned(), area: None, automatic: false, shape: index, part: None });
+            sewn.push(Sewn { element: element.into_owned(), area: None, automatic: false, reach: None, shape: index, part: None });
             continue;
         }
         // An automatic element with a setting that doesn't read sews nothing, as `SC-E0101` said.
@@ -301,7 +319,8 @@ pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>
         diagnostics.extend(made.diagnostics);
         let part = |(element, part): (Element, Option<Polygon>)| Sewn {
             area: matches!(element.shape, Shape::Fill { .. }).then(|| rules.clone()),
-            element,
+            reach: matches!(element.shape, Shape::Stroke { .. }).then(|| rules.auto_overlap_mm.get()),
+            element: turning(element),
             automatic: true,
             shape: index,
             part,
@@ -314,7 +333,9 @@ pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>
         _ => {}
     }
     diagnostics.extend(layers.said);
-    let beside = neighbours::beside(sewn, &design.settings, budget, design.sort_colours);
+    // The design goes by its lowest automatic shape's settings of the base layer.
+    let base = rules.iter().flatten().next().filter(|rules| rules.auto_base_layer);
+    let beside = neighbours::beside(sewn, &design.settings, budget, design.sort_colours, base.map(|rules| (rules, &mut taken)));
     diagnostics.extend(beside.said);
     // Of the shapes digitized, those that sew: the areas sewn after one may cover it whole.
     let mut counts = Counts::default();
@@ -322,7 +343,17 @@ pub fn digitized<'d>(design: &'d Design, budget: &Budget) -> (Cow<'d, [Element]>
         counts.add(stitches);
     }
     diagnostics.splice(0..0, counts.said());
-    (Cow::Owned(beside.elements), diagnostics)
+    Sewing { elements: Cow::Owned(beside.elements), diagnostics, base: beside.base }
+}
+
+/// `element` as automatic digitizing made it, a fill with its turns kept as stitches (`turn_stitches`,
+/// `REQ-FILL-TAT-014`): its rows lie closer together than a machine's shortest stitch, and a row that
+/// starts inside the outline leaves a notch of bare fabric in the fill's edge (`REQ-AUTO-027`).
+fn turning(mut element: Element) -> Element {
+    if matches!(element.shape, Shape::Fill { .. }) {
+        element.params.set(TURN_STITCHES, "true");
+    }
+    element
 }
 
 /// `made`, the parts of the automatic `element`, named for the plan with `meter`'s work: each keeps its id,

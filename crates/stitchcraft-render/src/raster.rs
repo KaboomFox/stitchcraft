@@ -136,7 +136,7 @@ impl Scene {
         let (width, height) = image_size(min, max, settings.scale)?;
         let pixmap = Pixmap::new(width, height).ok_or_else(|| internal("no canvas of that size"))?;
         let mut canvas = Canvas { pixmap, min, mm: settings.scale, meter };
-        canvas.pixmap.fill(color(settings.style.background()));
+        canvas.pixmap.fill(color(settings.fabric()));
         match settings.style {
             Style::Realistic => canvas.realistic(self)?,
             Style::Simple => canvas.simple(self)?,

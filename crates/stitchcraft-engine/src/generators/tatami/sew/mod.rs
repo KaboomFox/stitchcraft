@@ -89,7 +89,7 @@ use super::rows::{Segment, rows};
 use super::stitches::{Stitching, row_points};
 use super::travel::{Network, between};
 use super::underpath::Underpath;
-use crate::generators::pull::offset;
+use crate::generators::pull::{away, offset};
 use crate::generators::running::along_line;
 use crate::generators::smoothing::smooth;
 use crate::generators::{Approach, Own, Stitched, covers, settled};
@@ -158,6 +158,42 @@ pub struct Fill {
     /// Whether locks part the element's groups (`force_lock_stitches`): then each piece of top rows after
     /// a part's first is a run of its own, however near, which assembly ties off and jumps to.
     pub force_locks: bool,
+    /// Whether the turn between 2 top rows closer together than the shortest stitch stays a stitch
+    /// (`turn_stitches`, `REQ-FILL-TAT-014`).
+    pub turns: bool,
+}
+
+/// `runs`, a fill's top rows, with each turn between 2 rows kept as a stitch (`REQ-FILL-TAT-014`), with
+/// `meter`'s work, a unit for each needle point. A turn is a stitch shorter than `min_stitch` between 2
+/// stitches that run opposite ways: the end of a row and the start of the next. Thinning leaves its second
+/// point out, and the next row then starts at its first needle point inside the outline. So the turn's 2
+/// points move apart along it, each by half of what it falls short. The needle point before the turn is
+/// left out when it lies nearer the turn than `min_stitch`, since thinning would leave out the turn's first
+/// point for it. It stays when it is the run's first or the turn before moved it.
+fn turned(runs: Vec<Vec<Point>>, min_stitch: f64, meter: &mut Meter) -> Result<Vec<Vec<Point>>, Exhausted> {
+    let mut turned = Vec::with_capacity(runs.len());
+    for mut run in runs {
+        meter.charge(run.len() as u64)?;
+        // The needle points left out, and the place of the last turn's first point.
+        let (mut gone, mut last) = (BTreeSet::new(), None);
+        for at in 1..run.len().saturating_sub(2) {
+            let (Some(&a), Some(&b), Some(&c), Some(&d)) = (run.get(at - 1), run.get(at), run.get(at + 1), run.get(at + 2)) else { continue };
+            let length = b.distance(c);
+            let back = (b.x() - a.x()) * (d.x() - c.x()) + (b.y() - a.y()) * (d.y() - c.y()) < 0.0;
+            if !back || length <= 0.0 || at_least(length, min_stitch) {
+                continue;
+            }
+            let by = 0.5 * (min_stitch - length) / length;
+            let (first, second) = (away(b, c, by), away(c, b, by));
+            run.splice(at..at + 2, [first, second]);
+            if at > 1 && last != Some(at - 2) && !at_least(a.distance(first), min_stitch) {
+                gone.insert(at - 1);
+            }
+            last = Some(at);
+        }
+        turned.push(run.into_iter().enumerate().filter(|(at, _)| !gone.contains(at)).map(|(_, point)| point).collect());
+    }
+    Ok(turned)
 }
 
 /// The stitches of the tatami `fill` over `region`: in each part the layers of its underlay in order, each
@@ -196,7 +232,7 @@ fn sewn(
         let part = Part { polygon: piece, rings: Rings::new(piece, meter)? };
         let (runs, rowless) = part.sew(&fill.top, needle, here, rng, meter, warnings)?;
         (tops, outlined) = (tops + 1, outlined + usize::from(rowless));
-        Ok(runs)
+        if fill.turns { turned(runs, fill.top.travel.min_stitch, meter) } else { Ok(runs) }
     };
     let parts = Parts {
         underlay: &fill.underlay,

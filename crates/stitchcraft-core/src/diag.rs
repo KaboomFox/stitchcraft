@@ -1165,6 +1165,24 @@ registry! {
     /// settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it.
     AutoLayers = "SC-I0908", Info, "Layers flattened";
 
+    /// `--auto` sews one base layer under the whole design before anything else, so that fabric of any
+    /// colour shows less where 2 shapes leave a slit between them. Its shape is what the automatic shapes
+    /// paint together, with the slits narrower than a thread closed, 0.6 mm inside the outer edge unless
+    /// the design sets another offset (`auto_base_offset_mm`). It is an open fill of stitches 3 mm long in
+    /// 3 directions (`auto_base_stitch_length_mm`), in the thread that paints the largest area, and every
+    /// stitch of it is underlay. The fills on it sew no underlay of their own.
+    ///
+    /// The message gives its area, how many pieces it has and its thread. A design that is nowhere wide
+    /// enough for one has none, and the message says so. To sew the design without a base layer, turn
+    /// `auto_base_layer` off: each fill then sews the underlay of its settings.
+    AutoBase = "SC-I0909", Info, "Base layer sewn under the design";
+
+    /// `--auto` could not find the shape of the design's base layer within the work budget, so the design
+    /// sews without one, and every fill sews the underlay of its settings. On dark fabric the slits between
+    /// shapes then show the fabric. Raise the work budget, or simplify the picture: fewer colours and less
+    /// detail in VectorCraft's Image Trace give fewer shapes.
+    AutoBaseLeftOut = "SC-W0910", Warning, "Base layer left out";
+
     /// Routing joins satin columns, and the running stitches among them, into one route, as Ink/Stitch's
     /// Auto-Route Satin Columns does: StitchCraft Auto-Route Satin Columns in VectorCraft, and lettering in a
     /// font whose `auto_satin` is on. It joins running stitches alone as Ink/Stitch's Auto-Route Running

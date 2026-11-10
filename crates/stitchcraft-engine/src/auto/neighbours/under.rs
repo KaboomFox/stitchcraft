@@ -30,7 +30,7 @@
 //! an area costs the work of its neighbours, not of the whole design. The areas are named in the order they
 //! are sewn.
 
-use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Fix, Meter};
+use stitchcraft_core::{Budget, Code, Diagnostic, ElementId, Exhausted, Fix, Meter, Point};
 
 use super::{Failed, Kind, Shapes, TOUCHING, envelope, joined, near, no_area};
 use crate::generators::mm;
@@ -43,13 +43,22 @@ use crate::normalize::region::ops::{area_of, buffered, difference, intersection,
 /// budget allows it and keeps the region it has, and for how many reach under others and how many are cut
 /// away.
 pub(super) fn reached(shapes: &mut Shapes, budget: &Budget) -> Vec<Diagnostic> {
-    // The overlaps of the areas that reach under others, and of those cut away.
-    let (mut reaching, mut cut) = (Vec::new(), Vec::new());
+    // The overlaps of the areas that reach under others, of those cut away, and of the columns that sew
+    // past a rail.
+    let (mut reaching, mut cut, mut columns) = (Vec::new(), Vec::new(), Vec::new());
     let mut said = Vec::new();
     for index in (0..shapes.len()).rev() {
         if shapes.kind(index) == Some(Kind::Part) {
             said.extend(hidden(shapes, index, budget));
-            continue;
+        }
+        if let (Some(id), Some(overlap)) = (shapes.id(index), shapes.column(index)) {
+            match widened(shapes, index, overlap, &mut budget.meter()) {
+                Ok(reaches) => columns.extend(reaches.then_some(overlap)),
+                Err(failed) => {
+                    let (finding, consequence) = ("where this satin column meets the shapes sewn after it", "it sews its pull compensation past both rails");
+                    said.push(failed.said(Code::AutoUnder, finding, consequence, budget.max_work, id));
+                }
+            }
         }
         if shapes.region(index).is_none() {
             continue;
@@ -78,7 +87,7 @@ pub(super) fn reached(shapes: &mut Shapes, budget: &Budget) -> Vec<Diagnostic> {
     }
     // Taken from the last to the first, they are named in the order they are sewn.
     said.reverse();
-    said.extend(counted(&reaching, &cut));
+    said.extend(counted(&reaching, &cut, &columns));
     said
 }
 
@@ -137,6 +146,57 @@ fn later(shapes: &mut Shapes, index: usize, bounds: &Envelope, grown: bool, mete
         }
     }
     Ok((covering, touching))
+}
+
+/// How far apart the places lie where a rail is looked at for a shape beside it, at most, in millimetres.
+const RAIL_STEP: f64 = 0.5;
+
+/// Makes the automatic satin column `index` of `shapes` sew `overlap` past each rail that a shape sewn after
+/// it runs along for more than half the rail's length, with `meter`'s work, and says whether it has such a
+/// rail (`REQ-AUTO-029`). A rail with none keeps the column's pull compensation, so the column grows no
+/// wider over a shape sewn before it or over fabric. A line goes over the column, and a part's line or
+/// column of the column's own shape paints the part the column is in, so neither is a shape beside it.
+fn widened(shapes: &mut Shapes, index: usize, overlap: f64, meter: &mut Meter) -> Result<bool, Failed> {
+    let Some(rails) = shapes.rails(index, meter)? else { return Ok(false) };
+    let points: Vec<Point> = rails.iter().flatten().copied().collect();
+    let bounds = Envelope::of(&points);
+    let mut beside = Vec::new();
+    for later in index + 1..shapes.len() {
+        meter.charge(1)?;
+        let own = shapes.kind(later) == Some(Kind::Part) && shapes.of_shape.get(later) == shapes.of_shape.get(index);
+        if own || shapes.kind(later) == Some(Kind::Line) || !shapes.bounds(later).is_some_and(|other| near(&bounds, TOUCHING, &other)) {
+            continue;
+        }
+        beside.extend(shapes.grown(later, meter)?.into_iter().flatten());
+    }
+    let [first, second] = &rails;
+    let under = [runs_along(first, &beside, meter)?, runs_along(second, &beside, meter)?];
+    if under.contains(&true) {
+        shapes.reach_past(index, under, overlap);
+    }
+    Ok(under.contains(&true))
+}
+
+/// Whether the shapes `beside` cover more than half the length of `rail`, with `meter`'s work: the rail is
+/// looked at in the middle of each stretch of it no longer than [`RAIL_STEP`], for a unit of work and one for
+/// each shape.
+fn runs_along(rail: &[Point], beside: &[Polygon], meter: &mut Meter) -> Result<bool, Exhausted> {
+    let (mut within, mut whole) = (0.0, 0.0);
+    for pair in rail.windows(2) {
+        let [from, to] = pair else { continue };
+        let length = from.distance(*to);
+        let stretches = (length / RAIL_STEP).ceil().max(1.0);
+        let mut at = 0.5;
+        while at < stretches {
+            meter.charge(1 + beside.len() as u64)?;
+            if beside.iter().any(|shape| shape.covers(from.lerp(*to, at / stretches))) {
+                within += length / stretches;
+            }
+            at += 1.0;
+        }
+        whole += length;
+    }
+    Ok(within > 0.5 * whole)
 }
 
 /// What `covering`, the areas sewn after a shape, leave uncovered of `part`, with `meter`'s work.
@@ -206,7 +266,7 @@ fn attached(parts: Vec<Polygon>, of: &[Polygon], meter: &mut Meter) -> Result<Ve
 /// `SC-I0904` for the areas that reach under the shapes sewn after them, by the overlaps in `reaching`, and
 /// the areas cut away under the areas sewn after them, by the overlaps in `cut`; `None` when there are
 /// neither.
-fn counted(reaching: &[f64], cut: &[f64]) -> Option<Diagnostic> {
+fn counted(reaching: &[f64], cut: &[f64], columns: &[f64]) -> Option<Diagnostic> {
     let reach = match reaching {
         [] => None,
         [one] => Some(format!("1 area reaches {} mm under the shapes sewn after it that it touches.", mm(*one))),
@@ -217,7 +277,12 @@ fn counted(reaching: &[f64], cut: &[f64]) -> Option<Diagnostic> {
         [one] => Some(format!("1 area is cut away under the areas sewn after it, {} mm inside their edges.", mm(*one))),
         many => Some(format!("{} areas are cut away under the areas sewn after them, {} mm inside their edges.", many.len(), spread(many))),
     };
-    let message = [reach, cut].into_iter().flatten().collect::<Vec<_>>().join(" ");
+    let columns = match columns {
+        [] => None,
+        [one] => Some(format!("1 satin column sews {} mm past a rail, under the shape sewn after it there.", mm(*one))),
+        many => Some(format!("{} satin columns sew {} mm past a rail, under the shapes sewn after them there.", many.len(), spread(many))),
+    };
+    let message = [reach, cut, columns].into_iter().flatten().collect::<Vec<_>>().join(" ");
     (!message.is_empty()).then(|| Diagnostic::new(Code::AutoUnder, message))
 }
 
