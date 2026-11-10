@@ -1,4 +1,4 @@
-//! What automatic digitizing leaves of the owner's dog (`REQ-AUTO-025`, `REQ-AUTO-026`): her 2 photos, each
+//! What automatic digitizing leaves of the owner's dog (`REQ-AUTO-025` to `REQ-AUTO-027`): her 2 photos, each
 //! cut out by a mask checked by hand and traced by VectorCraft in 6 and in 9 threads (`docs/fixtures/README.md`
 //! › The traced dogs), digitized, planned with their stitches where they draw their shapes, and measured as
 //! `tests/auto_fabric.rs` measures the test pictures.
@@ -6,7 +6,7 @@
 //! **Release only.** A traced dog is about a hundred shapes. In the tests' debug build each takes some 15 s to
 //! digitize and 30 s to measure, so that build leaves these cases out, and CI's `perf` job runs them in the
 //! release build, `cargo test --release --locked -p stitchcraft-engine --test auto_photos`
-//! (`docs/src/design/conformance.md` › Cases in the release build). Each dog is planned once for both cases.
+//! (`docs/src/design/conformance.md` › Cases in the release build). Each dog is planned once for all its cases.
 
 // Test code may unwrap and index (clippy.toml allows it in tests).
 #![allow(clippy::unwrap_used, clippy::panic, clippy::indexing_slicing)]
@@ -16,10 +16,10 @@ use std::sync::OnceLock;
 use stitchcraft_engine::design::Design;
 use stitchcraft_plan::StitchPlan;
 use stitchcraft_testkit::designs::{in_place, rules};
-use stitchcraft_testkit::fabric;
+use stitchcraft_testkit::fabric::{self, BARE, GAP};
 use stitchcraft_testkit::pictures;
 
-/// Each traced dog by name, digitized automatically and planned in place, once for both cases.
+/// Each traced dog by name, digitized automatically and planned in place, once for all the cases.
 fn planned() -> &'static [(String, Design, StitchPlan)] {
     static PLANNED: OnceLock<Vec<(String, Design, StitchPlan)>> = OnceLock::new();
     PLANNED.get_or_init(|| {
@@ -64,7 +64,7 @@ struct Astray {
 }
 
 /// Every stitch of the dogs astray today. The case fails when another stitch is astray, and when one of these
-/// no longer is, so the list shrinks as each is fixed: M13.16 empties it.
+/// no longer is, so the list shrinks as each is fixed: M13.17 and M13.18 empty it.
 const ASTRAY: [Astray; 3] = [
     Astray {
         dog: "dog-on-turf-6",
@@ -72,7 +72,7 @@ const ASTRAY: [Astray; 3] = [
         stitch: [(50.51, 64.73), (56.47, 69.9)],
         length: 7.89,
         cause: "A satin column of dark grey fur fans its stitches round a black shape that bites into its side, and this one crosses the black shape's corner.",
-        step: "M13.16",
+        step: "M13.18",
     },
     Astray {
         dog: "dog-on-turf-9",
@@ -80,7 +80,7 @@ const ASTRAY: [Astray; 3] = [
         stitch: [(50.08, 23.05), (48.93, 21.12)],
         length: 2.25,
         cause: "A narrow part sews 2 lines as one running stitch. The needle goes straight from the end of one to the start of the next, across another colour, and the move, shorter than the 3 mm collapse length, is a stitch.",
-        step: "M13.16",
+        step: "M13.17",
     },
     Astray {
         dog: "dog-running-9",
@@ -88,7 +88,7 @@ const ASTRAY: [Astray; 3] = [
         stitch: [(33.11, 14.46), (37.32, 12.31)],
         length: 4.72,
         cause: "A satin column of dark grey fur fans its stitches round a lighter grey shape that bites into its side, and this one crosses that shape.",
-        step: "M13.16",
+        step: "M13.18",
     },
 ];
 
@@ -122,10 +122,55 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
             (a.dog.to_string(), a.element.to_string(), a.stitch.map(at), hundredths(a.length))
         })
         .collect();
-    assert!(ASTRAY.iter().all(|a| !a.cause.is_empty() && a.step == "M13.16"));
+    assert!(ASTRAY.iter().all(|a| !a.cause.is_empty() && ["M13.17", "M13.18"].contains(&a.step)));
     assert_eq!(found, listed, "the stitches astray, as found and as listed in ASTRAY");
     // The moves sewn on from one element to the next, and the jump threads the PE800 leaves, are as the design
     // page records them (image-to-embroidery.md › Sewing order).
     let recorded = [("dog-on-turf-6", 6, 115), ("dog-on-turf-9", 4, 131), ("dog-running-6", 3, 102), ("dog-running-9", 10, 117)];
     assert_eq!(apart, recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps)));
+}
+
+/// A gap a traced dog still leaves, until the roadmap step that closes it, as [`Astray`] lists a stitch.
+/// Only a gap between 2 strands that sew as running stitches side by side may be listed, which the overlap
+/// of `REQ-AUTO-029` can't close: a running stitch is as wide as its thread.
+struct Gap {
+    /// The dog, by the name `stitchcraft_testkit::pictures::dogs` gives it.
+    dog: &'static str,
+    /// The 2 strands the gap lies between, by their elements.
+    between: [&'static str; 2],
+    /// The middle of the box round the gap, in millimetres, to a tenth.
+    at: (f64, f64),
+    /// The roadmap step that closes it (`docs/src/plan/roadmap.md`).
+    step: &'static str,
+}
+
+/// Every gap of the dogs that M13.18 is left to close: none is listed until M13.16's base layer and overlap
+/// are built and what they leave is looked at, gap by gap.
+const GAPS: [Gap; 0] = [];
+
+#[test]
+#[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
+fn req_auto_027_digitized_dogs_leave_no_gap_a_thread_wide_but_as_listed_and_little_bare() {
+    assert!(
+        GAPS.iter().all(|gap| gap.step == "M13.18" && gap.between.iter().all(|id| !id.is_empty()) && gap.at.0.is_finite() && gap.at.1.is_finite())
+    );
+    let mut found = Vec::new();
+    for (name, design, plan) in planned() {
+        let cover = fabric::cover(design, plan, GAP);
+        let listed = GAPS.iter().filter(|gap| gap.dog == name).count();
+        if cover.gaps != listed || cover.bare_share() > BARE {
+            found.push(format!(
+                "{name}: {} gaps, {listed} listed, of {:.2} mm², the largest {:.3} mm² at {:?}; bare {:.2} of {:.0} mm², {:.3} %, most in {:?}",
+                cover.gaps,
+                cover.in_gaps,
+                cover.largest,
+                cover.at,
+                cover.bare,
+                cover.design,
+                100.0 * cover.bare_share(),
+                cover.shapes.iter().take(3).collect::<Vec<_>>()
+            ));
+        }
+    }
+    assert!(found.is_empty(), "{found:#?}");
 }

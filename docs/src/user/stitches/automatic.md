@@ -115,7 +115,7 @@ each out, as `--subject` will from M13.14.
 `docs/fixtures/traced-dog-running-9.vectorcraft`. The fur's shading became flat patches in 9 threads, which
 digitize as fills, satin columns and triple runs by their width. The fabric is covered where the dog has a
 colour. One stitch still lies where it shouldn't. A satin column of the dog's dark grey fur fans its
-stitches round a lighter grey patch that bites into its side, and that stitch crosses the patch. M13.16 of
+stitches round a lighter grey patch that bites into its side, and that stitch crosses the patch. M13.18 of
 the [roadmap](../../plan/roadmap.md) removes it, and the like stitches of the other traced dogs
 ([image to embroidery](../../design/image-to-embroidery.md#sewing-order) has their numbers). The thin
 straight lines are jumps between patches of one colour, which the reference machine leaves for you to cut by

@@ -204,3 +204,25 @@ fn req_rnd_002_previews_match_their_golden_files() {
         }
     }
 }
+
+#[test]
+fn req_rnd_003_a_preview_is_drawn_on_fabric_of_the_colour_asked_for() {
+    let plan = sampler(0.0);
+    let corner = |settings: Settings| {
+        let image = preview(&plan, TrimSupport::Command, settings, &mut Budget::DEFAULT.meter()).unwrap();
+        let pixel = tiny_skia::Pixmap::decode_png(&image.png).unwrap().pixel(0, 0).unwrap();
+        (pixel.red(), pixel.green(), pixel.blue(), pixel.alpha())
+    };
+    for style in [Style::Realistic, Style::Simple] {
+        let settings = Settings::new(style, 8.0).unwrap();
+        // Unless a colour is asked for, the fabric has the style's own: unbleached cotton or white.
+        let own = settings.fabric();
+        assert_eq!(own, if style == Style::Realistic { Rgb::from_hex(0xF4EFE6) } else { Rgb::from_hex(0xFFFFFF) });
+        assert_eq!(corner(settings), (own.r, own.g, own.b, 255));
+        // On black fabric the corner of the picture, which no thread reaches, is black.
+        let black = settings.on(Rgb::from_hex(0x000000));
+        assert_eq!(black.fabric(), Rgb::from_hex(0x000000));
+        assert_eq!(corner(black), (0, 0, 0, 255), "{style:?}");
+        assert_eq!((black.style(), black.scale()), (style, 8.0));
+    }
+}

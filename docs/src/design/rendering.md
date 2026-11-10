@@ -59,7 +59,7 @@ PES file shows the jump threads its plan does.
 | | Realistic | Simple |
 |---|---|---|
 | Purpose | The finished embroidery | Checking a design |
-| Background | Unbleached cotton `#f4efe6` | White |
+| Background | Unbleached cotton `#f4efe6`, or the fabric colour the settings name (`REQ-RND-003`, planned for M13.16) | White, or that colour |
 | Stitch | Thread 0.4 mm wide (40 wt): dark edge, body, light crest, round ends | Thin line in the thread's colour |
 | Needle hole | (the stitch ends show it) | Dot |
 | Loose jump thread | Thinner thread, on top of what is under it | Dashed, thread colour |

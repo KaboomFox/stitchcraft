@@ -44,6 +44,9 @@ use crate::metrics::{Grid, band, crossing, disc, index, spans};
 pub use crate::metrics::{PIXEL, THREAD};
 use crate::stitches::{JumpThread, jump_threads};
 
+mod cover;
+pub use cover::{BARE, Cover, GAP, cover, painted};
+
 /// How long a stretch of a stitch, in millimetres, may lie where the picture has another colour before the
 /// stitch is astray: past a satin column's rail by its pull compensation, 0.4 mm, and twice that.
 pub const ASTRAY: f64 = 1.0;
@@ -375,25 +378,41 @@ fn neighbours(at: usize, columns: usize, rows: usize, corners: bool) -> impl Ite
 /// `bare`, pixels of a grid `columns` wide and `rows` tall, opened with a disc a thread across: those in a disc
 /// centred on a pixel whose pixels are all bare.
 fn opened(bare: &[bool], columns: usize, rows: usize) -> Vec<bool> {
-    let radius = THREAD / 2.0 / PIXEL;
-    let span = index(radius.floor()) as isize;
-    let disc: Vec<(isize, isize)> = (-span..=span)
-        .flat_map(|dy| (-span..=span).map(move |dx| (dx, dy)))
-        .filter(|&(dx, dy)| ((dx * dx + dy * dy) as f64) <= radius * radius)
-        .collect();
-    let at = |at: usize, (dx, dy): (isize, isize)| {
-        let (x, y) = ((at % columns) as isize + dx, (at / columns) as isize + dy);
-        (x >= 0 && y >= 0 && (x as usize) < columns && (y as usize) < rows).then(|| y as usize * columns + x as usize)
-    };
+    opened_with(bare, columns, rows, THREAD, false)
+}
+
+/// `bare` opened with a disc `across` millimetres across, the pixels beyond the grid taken as bare or not as
+/// `beyond` says.
+fn opened_with(bare: &[bool], columns: usize, rows: usize, across: f64, beyond: bool) -> Vec<bool> {
+    let disc = disc_steps(across);
     let mut opened = vec![false; bare.len()];
-    for centre in (0..bare.len()).filter(|&centre| bare[centre]) {
-        if disc.iter().all(|&step| at(centre, step).is_some_and(|k| bare[k])) {
-            for k in disc.iter().filter_map(|&step| at(centre, step)) {
-                opened[k] = true;
-            }
+    for (centre, _) in fitting(bare, columns, rows, across, beyond).iter().enumerate().filter(|(_, fits)| **fits) {
+        for k in disc.iter().filter_map(|&step| stepped(centre, step, columns, rows)) {
+            opened[k] = true;
         }
     }
     opened
+}
+
+/// The pixels of `bare` that a disc `across` millimetres across, centred on them, fits on: `bare` without
+/// its edge. The pixels beyond the grid are taken as bare or not as `beyond` says.
+fn fitting(bare: &[bool], columns: usize, rows: usize, across: f64, beyond: bool) -> Vec<bool> {
+    let disc = disc_steps(across);
+    let fits = |centre: usize| disc.iter().all(|&step| stepped(centre, step, columns, rows).map_or(beyond, |k| bare[k]));
+    (0..bare.len()).map(|centre| bare[centre] && fits(centre)).collect()
+}
+
+/// The steps from a pixel to each pixel of the disc `across` millimetres across that is centred on it.
+fn disc_steps(across: f64) -> Vec<(isize, isize)> {
+    let radius = across / 2.0 / PIXEL;
+    let span = index(radius.floor()) as isize;
+    (-span..=span).flat_map(|dy| (-span..=span).map(move |dx| (dx, dy))).filter(|&(dx, dy)| ((dx * dx + dy * dy) as f64) <= radius * radius).collect()
+}
+
+/// The pixel `(dx, dy)` away from pixel `at` of a grid `columns` wide and `rows` tall; `None` beyond the grid.
+fn stepped(at: usize, (dx, dy): (isize, isize), columns: usize, rows: usize) -> Option<usize> {
+    let (x, y) = ((at % columns) as isize + dx, (at / columns) as isize + dy);
+    (x >= 0 && y >= 0 && (x as usize) < columns && (y as usize) < rows).then(|| y as usize * columns + x as usize)
 }
 
 /// The groups of `pixels`, of a grid `columns` wide, that touch at a side or a corner, each as its pixels.

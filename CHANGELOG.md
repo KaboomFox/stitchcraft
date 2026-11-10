@@ -5,6 +5,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.16, specified: a design covers the fabric (`REQ-AUTO-027` to `REQ-AUTO-029` and `REQ-RND-003`,
+  planned, with failing cases). The design page says how one underlay sews under the whole design, as
+  Ink/Stitch's Knockdown Fill makes it, and how neighbours overlap by 1 mm.
+  `stitchcraft_testkit::fabric::cover` measures gaps a thread wide. The roadmap's M13.16 is now this step.
+  The moves astray go to M13.17, and the shapes that sew the wrong way to the new M13.18.
 - M13.15: the owner's dog photos as test pictures (`REQ-AUTO-025`, `REQ-AUTO-026`). Louise Fox's 2 photos of
   her dog, each cut out by a mask checked by hand, are docs fixtures, with the 4 documents VectorCraft 0.22.0
   traced from them 100 mm tall in 6 and in 9 threads (`docs/fixtures/README.md` › The traced dogs). A test
