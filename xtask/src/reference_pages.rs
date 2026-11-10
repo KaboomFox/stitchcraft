@@ -21,11 +21,12 @@ const REFERENCE: &str = "docs/src/user/reference";
 
 /// Each page, by its file name in the reference directory, with the function that writes it.
 type Writer = fn() -> Result<String, String>;
-const PAGES: [(&str, Writer); 6] = [
+const PAGES: [(&str, Writer); 7] = [
     ("profiles.md", || Ok(profiles())),
     ("formats.md", || Ok(formats())),
     ("test-sheets.md", test_sheets),
     ("diagnostics.md", || Ok(diagnostics())),
+    ("font-settings.md", || Ok(font_settings())),
     ("cli.md", || Ok(cli())),
     (report::PAGE, report::page),
 ];
@@ -174,6 +175,25 @@ fn diagnostics() -> String {
     }
     for code in Code::ALL {
         let _ = writeln!(out, "\n## {}\n\n**{}** — {}\n\n{}", code.id(), severity(code.severity()), code.title(), code.explanation());
+    }
+    out
+}
+
+/// The settings of a font in Ink/Stitch's format, each key of its `font.json` with what it takes, its
+/// default and what it does, from the font reader's table.
+fn font_settings() -> String {
+    let mut out = header("Font settings", "`stitchcraft_svg::font::KEYS`");
+    out.push_str(
+        "A font in Ink/Stitch's format keeps its settings in `font.json`, in the font's folder \
+         ([fonts](../../design/fonts.md#the-reader)). StitchCraft reads each key below as Ink/Stitch's lettering \
+         reads it, at Ink/Stitch's default where the file has none. Lengths are in the glyph files' pixels, 1/96 \
+         inch, and `size` in millimetres. A value of another type keeps the default, and \
+         [`SC-W1102`](diagnostics.md#sc-w1102) names it.\n\n| Key | Takes | Default | What it does |\n|---|---|---|---|\n",
+    );
+    let defaults = stitchcraft_svg::font::Settings::default();
+    for key in stitchcraft_svg::font::KEYS {
+        let default = stitchcraft_svg::font::shown(&(key.value)(&defaults));
+        let _ = writeln!(out, "| `{}` | {} | `{}` | {} |", key.name, key.takes, default.replace('|', "\\|"), key.does);
     }
     out
 }

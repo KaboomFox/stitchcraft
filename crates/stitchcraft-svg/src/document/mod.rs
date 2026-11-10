@@ -91,7 +91,7 @@ mod clip;
 mod clone;
 mod gradient;
 mod guides;
-mod root;
+pub(crate) mod root;
 
 use clip::Link;
 use clone::{Applied, Frame};
@@ -135,16 +135,32 @@ pub fn read(bytes: &[u8], budget: &Budget) -> Result<Svg, Diagnostic> {
 /// sews in the order automatic digitizing chooses (`REQ-AUTO-011`). Fails as [`read`] does.
 pub fn read_with(bytes: &[u8], budget: &Budget, reading: Reading) -> Result<Svg, Diagnostic> {
     let text = text::decode(bytes)?;
-    text::check_entities(&text)?;
-    // A DTD (`<!DOCTYPE svg PUBLIC …>`, common in older files) is allowed, with the entities
-    // `check_entities` lets through; roxmltree never fetches external DTDs.
+    read_text(&text, budget, &mut budget.meter(), reading)
+}
+
+/// The design in the SVG file whose text is `text`, read as [`read_with`] reads it, charging `meter`, which
+/// may have been charged before: a font's glyphs are read one after another within one budget
+/// ([`crate::font`]). Fails as [`read`] does, with `SC-E0004` when `meter` runs out.
+pub(crate) fn read_text(text: &str, budget: &Budget, meter: &mut Meter, reading: Reading) -> Result<Svg, Diagnostic> {
+    text::check_entities(text)?;
+    let doc = parse(text)?;
+    let mut reader = Reader::new(budget, reading);
+    reader.meter = meter.clone();
+    let read = reader.read(&doc);
+    *meter = reader.meter;
+    let Svg { design, warnings } = read?;
+    Ok(Svg { design: design.read_as(reading), warnings })
+}
+
+/// The XML tree of the SVG text `text`, within the reader's node limit. A DTD (`<!DOCTYPE svg PUBLIC …>`,
+/// common in older files) is allowed, with the entities [`text::check_entities`] lets through; roxmltree
+/// never fetches external DTDs.
+pub(crate) fn parse(text: &str) -> Result<Document<'_>, Diagnostic> {
     let options = ParsingOptions { allow_dtd: true, nodes_limit: MAX_NODES, ..ParsingOptions::default() };
-    let doc = Document::parse_with_options(&text, options).map_err(|e| match e {
+    Document::parse_with_options(text, options).map_err(|e| match e {
         roxmltree::Error::NodesLimitReached => unreadable(format!("The file has more than {MAX_NODES} XML nodes, more than StitchCraft reads.")),
         e => unreadable(format!("The file is not well-formed XML: {e}.")),
-    })?;
-    let Svg { design, warnings } = Reader::new(budget, reading).read(&doc)?;
-    Ok(Svg { design: design.read_as(reading), warnings })
+    })
 }
 
 /// What an element's children are drawn with.
@@ -292,7 +308,7 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         }
     }
 
-    fn read(mut self, doc: &'a Document<'input>) -> Result<Svg, Diagnostic> {
+    fn read(&mut self, doc: &'a Document<'input>) -> Result<Svg, Diagnostic> {
         let root = doc.root_element();
         let (tag, ns) = (root.tag_name().name(), root.tag_name().namespace());
         if tag != "svg" {
@@ -335,8 +351,8 @@ impl<'b, 'a, 'input> Reader<'b, 'a, 'input> {
         if let Some(message) = self.version.note(self.updated) {
             self.warnings.insert(0, self.diagnostic(Code::SvgInkStitchUpdated, None, message, None));
         }
-        let design = Design::new(self.elements, self.settings.settings)?;
-        Ok(Svg { design, warnings: self.warnings })
+        let design = Design::new(std::mem::take(&mut self.elements), self.settings.settings)?;
+        Ok(Svg { design, warnings: std::mem::take(&mut self.warnings) })
     }
 
     /// Draws `nodes` in document order, the elements under the one `top` names, which are drawn in `context`:

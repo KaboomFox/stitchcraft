@@ -1,6 +1,130 @@
 # The public API of stitchcraft-svg, as `cargo xtask api` lists it (cargo-public-api 0.52.0, -sss).
 # Generated: do not edit. A change here is a change other code can see; say why in the pull request.
 pub mod stitchcraft_svg
+pub mod stitchcraft_svg::font
+pub mod stitchcraft_svg::font::licence
+pub enum stitchcraft_svg::font::licence::Licence
+pub stitchcraft_svg::font::licence::Licence::CcBy
+pub stitchcraft_svg::font::licence::Licence::CcBySa
+pub stitchcraft_svg::font::licence::Licence::Gpl
+pub stitchcraft_svg::font::licence::Licence::NoDerivatives
+pub stitchcraft_svg::font::licence::Licence::NonCommercial
+pub stitchcraft_svg::font::licence::Licence::Ofl
+pub stitchcraft_svg::font::licence::Licence::Other
+pub stitchcraft_svg::font::licence::Licence::PublicDomain
+impl stitchcraft_svg::font::licence::Licence
+pub const stitchcraft_svg::font::licence::Licence::TAKEN: [stitchcraft_svg::font::licence::Licence; 4]
+pub fn stitchcraft_svg::font::licence::Licence::name(self) -> &'static str
+pub fn stitchcraft_svg::font::licence::Licence::of(&str) -> stitchcraft_svg::font::licence::Licence
+pub fn stitchcraft_svg::font::licence::Licence::taken(self) -> bool
+pub fn stitchcraft_svg::font::licence::is_licence_file(&str) -> bool
+pub enum stitchcraft_svg::font::Direction
+pub stitchcraft_svg::font::Direction::BottomToTop
+pub stitchcraft_svg::font::Direction::LeftToRight
+pub stitchcraft_svg::font::Direction::RightToLeft
+pub stitchcraft_svg::font::Direction::TopToBottom
+impl stitchcraft_svg::font::Direction
+pub const stitchcraft_svg::font::Direction::ALL: [stitchcraft_svg::font::Direction; 4]
+pub const fn stitchcraft_svg::font::Direction::arrow(self) -> &'static str
+pub const fn stitchcraft_svg::font::Direction::id(self) -> &'static str
+pub fn stitchcraft_svg::font::Direction::named(&str) -> core::option::Option<stitchcraft_svg::font::Direction>
+pub const fn stitchcraft_svg::font::Direction::reversed(self) -> stitchcraft_svg::font::Direction
+pub enum stitchcraft_svg::font::LetterCase
+pub stitchcraft_svg::font::LetterCase::AsTyped
+pub stitchcraft_svg::font::LetterCase::Lower
+pub stitchcraft_svg::font::LetterCase::Upper
+pub enum stitchcraft_svg::font::Licence
+pub stitchcraft_svg::font::Licence::CcBy
+pub stitchcraft_svg::font::Licence::CcBySa
+pub stitchcraft_svg::font::Licence::Gpl
+pub stitchcraft_svg::font::Licence::NoDerivatives
+pub stitchcraft_svg::font::Licence::NonCommercial
+pub stitchcraft_svg::font::Licence::Ofl
+pub stitchcraft_svg::font::Licence::Other
+pub stitchcraft_svg::font::Licence::PublicDomain
+impl stitchcraft_svg::font::licence::Licence
+pub const stitchcraft_svg::font::licence::Licence::TAKEN: [stitchcraft_svg::font::licence::Licence; 4]
+pub fn stitchcraft_svg::font::licence::Licence::name(self) -> &'static str
+pub fn stitchcraft_svg::font::licence::Licence::of(&str) -> stitchcraft_svg::font::licence::Licence
+pub fn stitchcraft_svg::font::licence::Licence::taken(self) -> bool
+pub enum stitchcraft_svg::font::TextDirection
+pub stitchcraft_svg::font::TextDirection::LeftToRight
+pub stitchcraft_svg::font::TextDirection::RightToLeft
+pub struct stitchcraft_svg::font::Cut
+pub stitchcraft_svg::font::Cut::design: core::option::Option<alloc::string::String>
+pub stitchcraft_svg::font::Cut::label: alloc::string::String
+pub struct stitchcraft_svg::font::Font
+pub stitchcraft_svg::font::Font::folder: alloc::string::String
+pub stitchcraft_svg::font::Font::licence: core::option::Option<stitchcraft_svg::font::LicenceFile>
+pub stitchcraft_svg::font::Font::settings: stitchcraft_svg::font::Settings
+pub stitchcraft_svg::font::Font::variants: alloc::vec::Vec<stitchcraft_svg::font::Variant>
+pub stitchcraft_svg::font::Font::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
+impl stitchcraft_svg::font::Font
+pub fn stitchcraft_svg::font::Font::advance_mm(&self, &stitchcraft_svg::font::Glyph) -> f64
+pub fn stitchcraft_svg::font::Font::default_variant(&self) -> core::option::Option<&stitchcraft_svg::font::Variant>
+pub fn stitchcraft_svg::font::Font::heights_mm(&self) -> (f64, f64)
+pub fn stitchcraft_svg::font::Font::kerning_mm(&self, &str, &str) -> f64
+pub fn stitchcraft_svg::font::Font::leading_mm(&self) -> f64
+pub fn stitchcraft_svg::font::Font::space_mm(&self) -> f64
+pub fn stitchcraft_svg::font::Font::variant(&self, stitchcraft_svg::font::Direction) -> core::option::Option<&stitchcraft_svg::font::Variant>
+pub struct stitchcraft_svg::font::Glyph
+pub stitchcraft_svg::font::Glyph::baseline: f64
+pub stitchcraft_svg::font::Glyph::design: stitchcraft_engine::design::Design
+pub stitchcraft_svg::font::Glyph::file: alloc::string::String
+pub stitchcraft_svg::font::Glyph::label: alloc::string::String
+pub stitchcraft_svg::font::Glyph::left: f64
+pub stitchcraft_svg::font::Glyph::name: alloc::string::String
+pub stitchcraft_svg::font::Glyph::warnings: alloc::vec::Vec<stitchcraft_core::diag::Diagnostic>
+pub stitchcraft_svg::font::Glyph::width: f64
+pub struct stitchcraft_svg::font::Key
+pub stitchcraft_svg::font::Key::does: &'static str
+pub stitchcraft_svg::font::Key::name: &'static str
+pub stitchcraft_svg::font::Key::takes: &'static str
+pub stitchcraft_svg::font::Key::value: fn(&stitchcraft_svg::font::Settings) -> serde_json::value::Value
+pub struct stitchcraft_svg::font::LicenceFile
+pub stitchcraft_svg::font::LicenceFile::licence: stitchcraft_svg::font::licence::Licence
+pub stitchcraft_svg::font::LicenceFile::path: alloc::string::String
+pub stitchcraft_svg::font::LicenceFile::text: alloc::string::String
+pub struct stitchcraft_svg::font::Settings
+pub stitchcraft_svg::font::Settings::auto_satin: bool
+pub stitchcraft_svg::font::Settings::combine_at_sort_indices: alloc::vec::Vec<i64>
+pub stitchcraft_svg::font::Settings::default_glyph: alloc::string::String
+pub stitchcraft_svg::font::Settings::default_variant: stitchcraft_svg::font::Direction
+pub stitchcraft_svg::font::Settings::description: alloc::string::String
+pub stitchcraft_svg::font::Settings::descriptions: alloc::collections::btree::map::BTreeMap<alloc::string::String, alloc::string::String>
+pub stitchcraft_svg::font::Settings::font_license: alloc::string::String
+pub stitchcraft_svg::font::Settings::glyphs: alloc::vec::Vec<alloc::string::String>
+pub stitchcraft_svg::font::Settings::horiz_adv_x: alloc::collections::btree::map::BTreeMap<alloc::string::String, f64>
+pub stitchcraft_svg::font::Settings::horiz_adv_x_default: core::option::Option<f64>
+pub stitchcraft_svg::font::Settings::horiz_adv_x_space: f64
+pub stitchcraft_svg::font::Settings::kerning_pairs: alloc::collections::btree::map::BTreeMap<alloc::string::String, f64>
+pub stitchcraft_svg::font::Settings::keywords: alloc::vec::Vec<alloc::string::String>
+pub stitchcraft_svg::font::Settings::leading: f64
+pub stitchcraft_svg::font::Settings::letter_case: stitchcraft_svg::font::LetterCase
+pub stitchcraft_svg::font::Settings::max_scale: f64
+pub stitchcraft_svg::font::Settings::min_scale: f64
+pub stitchcraft_svg::font::Settings::name: alloc::string::String
+pub stitchcraft_svg::font::Settings::original_font: alloc::string::String
+pub stitchcraft_svg::font::Settings::original_font_url: alloc::string::String
+pub stitchcraft_svg::font::Settings::reversible: bool
+pub stitchcraft_svg::font::Settings::scale_cross_stitch_pattern: bool
+pub stitchcraft_svg::font::Settings::size: f64
+pub stitchcraft_svg::font::Settings::sortable: bool
+pub stitchcraft_svg::font::Settings::text_direction: stitchcraft_svg::font::TextDirection
+pub stitchcraft_svg::font::Settings::units_per_em: core::option::Option<f64>
+impl core::default::Default for stitchcraft_svg::font::Settings
+pub fn stitchcraft_svg::font::Settings::default() -> Self
+pub struct stitchcraft_svg::font::Variant
+pub stitchcraft_svg::font::Variant::direction: stitchcraft_svg::font::Direction
+pub stitchcraft_svg::font::Variant::files: alloc::vec::Vec<alloc::string::String>
+pub stitchcraft_svg::font::Variant::glyphs: alloc::collections::btree::map::BTreeMap<alloc::string::String, stitchcraft_svg::font::Glyph>
+pub const stitchcraft_svg::font::DESCRIPTION_IN: &str
+pub const stitchcraft_svg::font::KEYS: [stitchcraft_svg::font::Key; 25]
+pub const stitchcraft_svg::font::PREFIX: &str
+pub const stitchcraft_svg::font::SETTINGS: &str
+pub fn stitchcraft_svg::font::each_glyph(&[u8], &stitchcraft_core::budget::Budget, &dyn core::ops::function::Fn(usize) -> bool, &mut dyn core::ops::function::FnMut(usize, stitchcraft_svg::font::Cut)) -> core::result::Result<(), stitchcraft_core::diag::Diagnostic>
+pub fn stitchcraft_svg::font::read(&str, &[(&str, &[u8])], &stitchcraft_core::budget::Budget) -> core::result::Result<stitchcraft_svg::font::Font, stitchcraft_core::diag::Diagnostic>
+pub fn stitchcraft_svg::font::shown(&serde_json::value::Value) -> alloc::string::String
 pub mod stitchcraft_svg::inkstitch
 pub enum stitchcraft_svg::inkstitch::Does
 pub stitchcraft_svg::inkstitch::Does::IgnoreLayer
