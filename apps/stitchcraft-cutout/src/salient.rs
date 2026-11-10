@@ -239,4 +239,25 @@ mod tests {
             Some("Give the subject's box with --subject-box X0,Y0,X1,Y1, in the picture's pixels.")
         );
     }
+
+    #[test]
+    fn req_cli_014_a_piece_at_a_half_is_found_and_the_first_of_2_equal_pieces_is_kept() {
+        let mut work = Work::new(Budget::DEFAULT);
+        // 3 values of exactly a half in a row are more of the map than 1 value of 1 alone.
+        let halves = map(|x, y| {
+            if y == 10 && (10..13).contains(&x) {
+                0.5
+            } else if (x, y) == (200, 200) {
+                1.0
+            } else {
+                0.0
+            }
+        });
+        let found = subject_box(&halves, 320, 320, &mut work).unwrap().unwrap();
+        assert_eq!(found, PixelBox { x0: 10.0, y0: 10.0, x1: 13.0, y1: 11.0 });
+        // 2 pieces with as much of the map each: the first met is kept.
+        let equal = map(|x, y| if (x, y) == (10, 10) || (x, y) == (200, 200) { 1.0 } else { 0.0 });
+        let found = subject_box(&equal, 320, 320, &mut work).unwrap().unwrap();
+        assert_eq!(found, PixelBox { x0: 10.0, y0: 10.0, x1: 11.0, y1: 11.0 });
+    }
 }

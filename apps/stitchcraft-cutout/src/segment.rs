@@ -345,4 +345,14 @@ mod tests {
             assert_eq!(at(channel, 0, 512), 0.0, "padding, channel {channel}");
         }
     }
+
+    #[test]
+    fn the_alpha_charges_a_unit_for_each_value_of_the_square_and_each_pixel_of_the_picture() {
+        let side = usize::try_from(LOW).unwrap();
+        let low = LowRes::new(vec![0.0; side * side], 0.5).unwrap();
+        let mut work = Work::new(Budget::DEFAULT);
+        let before = work.left();
+        alpha(&low, &Frame::of(400, 300), &mut work).unwrap();
+        assert_eq!(before - work.left(), 1024 * 1024 + 400 * 300);
+    }
 }

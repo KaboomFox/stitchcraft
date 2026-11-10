@@ -11,7 +11,7 @@ stitch plan dog.jpg -o dog.pes --subject --cutout dog-cutout.png
 `stitch` finds the picture's main subject, makes everything else transparent and crops the picture to what
 it kept. VectorCraft's command line then traces the cut-out as it traces any picture
 ([from a picture to a machine file](../tutorials/picture-to-machine-file.md#from-the-command-line)), and
-`--size` and the hoop fit the subject, not the whole photo. `stitch export` takes the same options.
+`--size` and the hoop fit the subject. `stitch export` takes the same options.
 `SC-I1206` says which box the subject was found in, how much of the picture was kept and the cut-out's size.
 `--cutout` writes the cut-out as a PNG file, so that you can see what was kept before you sew.
 
@@ -24,7 +24,7 @@ The cut-out runs 3 models on your computer, 49 MB together. `stitch` fetches the
 `--subject`, and [install](../install.md#the-subject-cut-outs-models) says where it keeps them. Your picture
 never leaves your computer. A cut-out takes some 5 seconds for a photo.
 
-## When the cut-out is wrong
+## Correcting a cut-out
 
 Open the file `--cutout` wrote. Every option below takes pixels of the picture as its file stores it,
 counted from the left and from the top, and an image viewer shows them under the pointer.
@@ -50,7 +50,7 @@ stitch cutout dog.jpg -o dog-cutout.png
 
 Place `dog-cutout.png` in VectorCraft where you would place the photo, and trace it as the
 [tutorial](../tutorials/picture-to-machine-file.md) does. A picture whose background another program made
-transparent needs no cut-out: it traces as its subject already.
+transparent traces as its subject already, without a cut-out.
 
 ## What can stop it
 

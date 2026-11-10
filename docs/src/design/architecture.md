@@ -51,7 +51,7 @@ tools: stitchcraft-xtask (`xtask/`, run as `cargo xtask`)
 | `stitchcraft-vectorcraft` | L3 | `.vectorcraft` → `Design` (commands in names included), effect records ↔ `ParamSet`, plug-in JSON objects | contain stitch logic |
 | `stitchcraft-testkit` | test | fixtures, `proptest` strategies (from the registry), invariant assertions | be a normal dependency |
 | `stitchcraft-cli` | app | the `stitch` command; all filesystem access, and the one program StitchCraft starts, VectorCraft's command line, which traces a picture ([ADR-0015](adr/0015-pictures-traced-by-vectorcraft.md)) | contain engine logic |
-| `stitchcraft-cutout` | app library | the subject cut-out that `stitch` runs before a photo is traced: reading the photo, running the pinned models with tract, and the cut-out itself ([ADR-0019](adr/0019-subject-cut-out-before-tracing.md)). `image` and `tract-onnx` are allowed here alone | be a dependency of anything but `stitchcraft-cli`; run a model with a random operator |
+| `stitchcraft-cutout` | app library | the subject cut-out that `stitch` runs before a photo is traced. It reads the photo and runs the pinned models with tract ([ADR-0019](adr/0019-subject-cut-out-before-tracing.md)). `image` and `tract-onnx` are allowed here alone | be a dependency of anything but `stitchcraft-cli`; run a model with a random operator |
 | `stitchcraft-vc-plugin` | app | VectorCraft ABI v1 shim + plug-in manifests | contain engine logic; `unsafe` outside `abi.rs` |
 | `stitchcraft-xtask` | tools | gates (`ci`, `layers`, `docs`, `cleanroom`, …), generators, compatibility runs; works from its own folder, on StitchCraft's packages only ([ADR-0011](adr/0011-movable-into-vectorcraft.md)) | ship to users |
 
@@ -169,9 +169,10 @@ A future in-tree VectorCraft crate would be a fifth adapter calling the same fun
 
 Kept minimal: `stitchcraft-engine/experimental` exposes generators whose status is `experimental`
 in the registry (they appear in docs with a badge); `stitchcraft-formats/<format>` flags exist only if
-a format pulls a heavy dependency (none planned). `stitchcraft-cli/cutout`, on by default, builds the subject
-cut-out in through `stitchcraft-cutout/models`, and [image to embroidery](image-to-embroidery.md#subject-cut-out)
-says what a build without it answers. No flag may change the output of a stable generator.
+a format pulls a heavy dependency (none planned). No flag may change the output of a stable generator.
+
+`stitchcraft-cli/cutout`, on by default, builds the subject cut-out in through `stitchcraft-cutout/models`.
+[Image to embroidery](image-to-embroidery.md#subject-cut-out) says what a build without it answers.
 
 ## WebAssembly constraints
 

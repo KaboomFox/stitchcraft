@@ -210,3 +210,21 @@ fn pins_that_dont_read_are_a_bug_of_the_repositorys() {
     assert!(first.to_string_lossy().starts_with(&prefix) && first.to_string_lossy().ends_with(".partial"), "{}", first.display());
     assert_ne!(first, second);
 }
+
+#[test]
+fn req_cli_016_a_sum_is_sha256_in_lower_case_hexadecimal() {
+    assert_eq!(sha256(b"abc"), "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+}
+
+#[test]
+fn req_cli_016_the_folder_is_read_from_the_environment() {
+    assert_eq!(folder(), folder_from(&|name| std::env::var_os(name)));
+}
+
+#[test]
+fn diag_sc_e1201_what_curl_said_of_a_file_it_cant_fetch_is_kept() {
+    let dir = TempDir::new("cutout-pins-curl-said");
+    let said = fetch(&address(&dir.join("nowhere.onnx")), &dir.join("fetched.onnx")).unwrap_err();
+    // curl's own words, which start with its name, and not its exit status alone.
+    assert!(said.contains("(curl: ("), "{said}");
+}

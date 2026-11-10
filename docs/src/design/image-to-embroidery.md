@@ -730,8 +730,8 @@ It is off by default, and a picture given without it is traced as [above](#pictu
    squeezed to that square by Lanczos's filter and normalized as rembg normalizes it. The map is stretched
    to run from 0 to 1, and its values of a half or more fall into pieces of pixels that touch, corners
    included. The box is the one round the piece with the most of the map in it, scaled back to the picture.
-3. MobileSAM cuts the subject out of the box, its input and output prepared as SAM's own code prepares
-   them. Its encoder takes the picture once, its longer side scaled to 1,024 px, each side rounded to a whole
+3. MobileSAM cuts the subject out of the box, with input and output prepared as SAM's own code prepares
+   them. The encoder takes the picture once, the longer side scaled to 1,024 px, each side rounded to a whole
    pixel, normalized and padded with zeros to a square. Its decoder takes the points of `--subject-point`,
    labelled 1, and of `--not-subject`, labelled 0, then the box's 2 corners, labelled 2 and 3, each scaled
    as the picture's side along it is. It gives a map of 256 × 256 logits across the square, which is scaled
@@ -754,7 +754,7 @@ it came from, how much of the picture it kept and its size (`SC-I1206`), and the
 it, or when MobileSAM keeps less than the subject. `--not-subject X,Y` marks a point of what isn't the
 subject, and `--subject-point X,Y` a point of what is, each as often as needed and in the picture's pixels.
 The decoder takes the points with the box, U²-Net-p's when the user gives none, since a point without a box
-can lose much of the subject. A box with no area or reaching past the picture, a point outside it, and any
+can lose much of the subject. A box without area or one that extends past the picture, a point outside it, and any
 of these options or `--cutout` without `--subject` are usage errors, and so is `--subject` for a design that
 isn't a picture. `--cutout FILE` writes the cut-out beside the machine file, with the other files asked for,
 all or none, so that the user can see what was kept.
@@ -782,8 +782,8 @@ authors' own files, in the workflow `models.yml`. Its build job exports MobileSA
 beside the pins, `export.py`, from the checkpoint in MobileSAM's repository at a pinned commit, with
 MobileSAM's own code and PyTorch's exporter, in the packages `requirements.txt` pins by hash. It exports
 twice, and the 2 exports must agree. It fetches U²-Net-p's file from rembg's release, and stops unless each
-file has its pinned size and SHA-256. The owner publishes the release: she starts the workflow by hand on
-`main` and types the release's tag, and no other run publishes. A release published is never replaced, so a
+file has its pinned size and SHA-256. The owner publishes the release by starting the workflow by hand on
+`main` and typing the release's tag, and no other run publishes. A release published is never replaced, so a
 new set of models takes a new tag. (Amended 2026-11-09, M13.14.) U²-Net-p's author publishes its checkpoint on
 Google Drive and Baidu alone, so its file is rembg's conversion of it, as rembg's own release publishes it,
 the file M13.13 measured: rembg is under the MIT licence, and the weights under the Apache-2.0 licence, as
@@ -795,7 +795,7 @@ each whole and checks its size and SHA-256 before tract reads the same bytes. A 
 fetched again into a temporary file beside it and renamed into place only once it matches. When a file can't
 be fetched or still differs, `SC-E1201` names each file's address, size and SHA-256 and the folder it belongs
 in, and `stitch` writes the report alone. tract would seed a random operator from the computer's own
-randomness, so a model that has one is refused before it runs (`SC-E1205`), and one tract can't run is
+randomness, so a model that has one is refused before it runs (`SC-E1205`). A model tract can't run is
 `SC-E1204`. NOTICE names the models and their licences.
 
 **Built in, or left out.** The cut-out is `stitch`'s `cutout` feature, on by default, which brings tract and
@@ -805,7 +805,7 @@ with `SC-E1207`, which says the build leaves the cut-out out. The WASI build tha
 and with `getrandom`'s JavaScript backend chosen (`ci/cross.sh`). It runs tract-core's and tract-linalg's
 tests there, and no model. The golden files never cut a subject out, and without the feature that build
 doesn't depend on tract building for WASI or on `getrandom` there. In the release build for Linux x86_64, `stitch` is
-33.1 MB with the cut-out and 6.6 MB without it, or 28.3 MB and 5.8 MB once stripped (2026-11-10). The owner
+33.1 MB with the cut-out and 6.7 MB without it, or 28.3 MB and 5.8 MB once stripped (2026-11-10). The owner
 accepted the larger program.
 
 **Replays.** The models run in `stitch` alone, and their results may differ in their last bits from one

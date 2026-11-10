@@ -1,10 +1,10 @@
 # stitchcraft-cutout
 
-The subject cut-out of `stitch plan --subject` and `stitch cutout`: a photo's subject cut out before
-VectorCraft's command line traces it, so that its background isn't sewn ([ADR-0019](../../docs/src/design/adr/0019-subject-cut-out-before-tracing.md),
+This crate is the subject cut-out of `stitch plan --subject` and `stitch cutout`. It cuts a photo's subject out
+before VectorCraft's command line traces it, and the background is left unsewn ([ADR-0019](../../docs/src/design/adr/0019-subject-cut-out-before-tracing.md),
 [image to embroidery](../../docs/src/design/image-to-embroidery.md#subject-cut-out)).
 
-## What it does
+## Steps
 
 1. It decodes the picture, a PNG or JPEG file, as its file stores the pixels (`picture`).
 2. It finds the subject's box, the one `--subject-box` gives or else the one round the piece of U²-Net-p's
@@ -15,18 +15,19 @@ VectorCraft's command line traces it, so that its background isn't sewn ([ADR-00
    as a PNG file (`cut`).
 
 tract runs the 3 models from their ONNX files, on one thread (`run`). [`cut_out`](src/lib.rs) does every
-step but the runs, which it asks of a `Models`: the tests give it the outputs the models gave for the test
-photos, saved as fixtures, or stand-ins, tiny models with the real ones' inputs and outputs.
+step but the runs, which it asks of a `Models`. Some tests give it the models' outputs
+for the test photos, saved as fixtures. Others give it stand-ins, tiny models with the real ones' inputs and
+outputs.
 
 ## Invariants
 
 - **Only `stitch` depends on it.** It is a library of the apps' layer (`Class::AppLibrary` in
-  `xtask/src/layers.rs`): the library crates of layers L0 to L3 run no model and read no picture, and
+  `xtask/src/layers.rs`): the library crates of layers L0 to L3 don't run models or read pictures, and
   `image` and `tract-onnx` are allowed here alone. It isn't built for the web.
 - **Never crashing.** Every loop over the picture charges the budget (`work`), and every failure is a coded
   diagnostic, `SC-E1201` to `SC-E1205`, or `SC-E0004` when the budget runs out. A cut-out made says what it
   kept, `SC-I1206`.
-- **No randomness.** A model with a random operator is refused before tract reads it (`SC-E1205`), so that
+- **Random operators refused.** A model with a random operator is refused before tract reads it (`SC-E1205`), so that
   `deny.toml`'s exception for `tract-onnx-opl`'s `rand` and `getrandom` stays unused.
 - **Checked models.** A model is read whole and its size and SHA-256 compared with its pin before tract reads
   the same bytes (`pins`).
@@ -72,16 +73,16 @@ texts of `models/release/`, which `release.py` checks against the pins.
 ## Features
 
 `models`, on by default, is the cut-out itself: `image`, tract and the steps that use them. Without it the
-crate holds the marks, the pins and the budget, which `stitch`'s grammar and bundles read, so that `stitch`
+crate is the marks, the pins and the budget, which `stitch`'s grammar and bundles read, so that `stitch`
 builds without the cut-out (its `cutout` feature), as the WASI build that makes the golden files does.
 
 ## Tests
 
-- `src/**`: each step's cases, the runner on the stand-ins, the pins with curl fetching from the disk.
+- `src/**`: each step's cases, and the runner on the stand-ins. The pins' cases fetch with curl from the disk.
 - `tests/photos.rs`: the steps on the owner's 2 photos of her dog, from the models' outputs saved as
-  fixtures, against masks checked by hand (`REQ-CLI-019`).
-- `tests/models.rs`: the models themselves, ignored as "models only" outside the models' job
-  (`.github/workflows/models.yml`), which takes them from the release or builds them. One picture is drawn in code, a red disc on grey
+  fixtures. Masks checked by hand score them (`REQ-CLI-019`).
+- `tests/models.rs`: the models themselves. Its cases are ignored as "models only" outside the models' job
+  (`.github/workflows/models.yml`), which takes the models from the release or builds them. One picture is drawn in code, a red disc on grey
   stripes that touches a blue square, whose masks are exact.
 
 The fixtures are in `conformance/fixtures/cutout/`, each with its row in that folder's index.
@@ -91,7 +92,7 @@ The fixtures are in `conformance/fixtures/cutout/`, each with its row in that fo
 | Crate | Why |
 |---|---|
 | `stitchcraft-core` | diagnostics, the budget, deterministic maths |
-| `image` (jpeg, png) | decoding the picture, resizing it for the models, encoding the cut-out |
+| `image` (jpeg, png) | decoding the picture and resizing it for the models, and encoding the cut-out |
 | `tract-onnx` (no default features) | running the models from their ONNX files |
 | `toml`, `serde` | reading the pins |
 | `sha2` | checking each model against its pin |

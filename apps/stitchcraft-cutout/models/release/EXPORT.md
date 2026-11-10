@@ -2,7 +2,7 @@
 
 <!-- build: release.py puts the release, the run that built it, its tools and the files' sums here -->
 
-## Where each file comes from
+## Sources
 
 **MobileSAM.** Its authors' repository, https://github.com/ChaoningZhang/MobileSAM, at commit
 `f706ad9c4eb7f219c00d9050e46328518ffb65d2` (2026-05-05). Its checkpoint `weights/mobile_sam.pt` is 40,728,226
@@ -11,15 +11,15 @@ License 2.0, is `LICENSE-MobileSAM.txt` here.
 
 **U²-Net-p.** Its author's repository, https://github.com/xuebinqin/U-2-Net at commit `ac7e1c8`, gives the
 checkpoint `u2netp.pth` (4.7 MB) on Google Drive (file `1rbSTGKAE-MTxBYHd-51l2hMOQPT_7EPy`) and on Baidu Pan
-only. The repository holds no checkpoint, and its `setup_model_weights.py` fetches others from Google Drive.
-Neither host could be reached where the pins were set, and the owner chose rembg's conversion instead, which
-rembg publishes as a release asset and its README (commit `991927b`) lists as u2netp's download, with
+only, and the repository itself doesn't contain one: its `setup_model_weights.py` fetches others from Google Drive.
+The machine that set the pins couldn't reach either host, so the owner chose rembg's conversion. rembg
+publishes it as a release asset, and its README (commit `991927b`) lists it as u2netp's download, with
 U²-Net as its source. Each build fetches it with curl from
 https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2netp.onnx and releases it unchanged. It is
 the file StitchCraft's spike M13.13 measured. U²-Net's `LICENSE`, the Apache License 2.0, is
 `LICENSE-U-2-Net.txt` here, and rembg's `LICENSE.txt`, the MIT License, is `LICENSE-rembg.txt`.
 
-## How the files are built
+## The build
 
 The `build` job of StitchCraft's workflow `.github/workflows/models.yml` makes the release's folder on one of
 GitHub's runners. It checks MobileSAM's repository out at the commit above, and installs `requirements.txt`
@@ -39,7 +39,7 @@ venv/bin/python -I release.py assemble release notes.md
 the release when StitchCraft's owner asks it to, and it never replaces a release.
 
 `requirements.txt` pins every package `export.py` runs with, by version and the hashes of its wheels for
-CPython 3.13 on Linux x86_64. torch is PyPI's Linux build, which carries CUDA's libraries and computes on the
+CPython 3.13 on Linux x86_64. torch is PyPI's Linux build, which includes CUDA's libraries and computes on the
 CPU of a runner without a GPU. The table above names the versions this build ran with.
 
 ## What `export.py` does
@@ -82,10 +82,10 @@ file differs from its pin.
 
    M13.13 measured 0.985 and 0.988 from U²-Net-p's box, and 0.988 with the point on the tyre. U²-Net-p
    alone keeps the tyre behind the running dog, 19.8 % of the dog's area, and these cut-outs leave it out.
-5. **M13.13's files.** M13.13 measured a third-party export of MobileSAM, whose origin isn't known. Its
-   decoder holds the same weights as this one and approximates GELU with tanh. Its encoder has the same
+5. **M13.13's files.** M13.13 measured a third-party export of MobileSAM, of unknown origin. Its
+   decoder has this one's weights and approximates GELU with tanh. Its encoder has the same
    shapes and other weights, the sum of their magnitudes 1,106,155.6 against the checkpoint's 1,108,688.5,
-   and its embedding of the running photo differs from this export's by up to 0.167. Hence the 0.001
+   and its embedding of the running photo differs from this export's by up to 0.167. That explains the 0.001
    between 0.987 and 0.988.
 6. **U²-Net-p** is the file M13.13 measured, by its SHA-256. Run by tract, it gives the boxes M13.13's
    tract program found: 352.5,0,881.25,1190 on turf and 161.25,223.25,742.5,1289.27 running.

@@ -851,3 +851,15 @@ file = "crates/stitchcraft-vectorcraft/src/gradient.rs"
 mutant = "replace < with <= in turns"
 line = "found.into_iter().filter(|t| *t > 0.0 && *t < 1.0)"
 why = "a turn at t = 1 adds the curve's end, which the box holds already: de Casteljau's steps at 1 give the last control point's coordinates exactly"
+
+[[equivalent]]
+file = "apps/stitchcraft-cli/src/subject.rs"
+mutant = "replace fetched -> Result<Provided, Diagnostic> with Ok(Default::default())"
+line = "Err(left_out())"
+why = "this fetched is compiled only without the cutout feature, which the mutants' build has on: the models workflow tests stitch without default features, and expects its SC-E1207"
+
+[[equivalent]]
+file = "apps/stitchcraft-cli/src/subject.rs"
+mutant = "replace cut -> Result<Subject, Stopped> with Ok(Default::default())"
+line = "Err(Stopped::Said(left_out()))"
+why = "this cut is compiled only without the cutout feature, which the mutants' build has on: the models workflow tests stitch without default features, and expects its SC-E1207"
