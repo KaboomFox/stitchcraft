@@ -318,9 +318,8 @@ mod tests {
                 &[(0.0, 0.0), (8.0, 0.0), (8.0, 0.9), (4.45, 0.9), (4.45, 14.5), (3.55, 14.5), (3.55, 0.9), (0.0, 0.9)].map(|(x, y)| (flip * x, y)),
                 &[],
             );
-            let Made::Columns(sewn) = columns(&t, Mm::new(1.0).unwrap(), &AutoParams::defaults(), &[], &mut Budget::DEFAULT.meter()).unwrap() else {
-                panic!("no columns")
-            };
+            let made = columns(&t, Mm::new(1.0).unwrap(), &AutoParams::defaults(), &[], &mut Budget::DEFAULT.meter()).unwrap();
+            let Made::Columns(sewn) = made else { panic!("no columns") };
             assert!(sewn.len() == 2 && sewn.iter().all(|s| matches!(s, Sewn::Running { .. })), "{flip}: {sewn:?}");
         }
     }
