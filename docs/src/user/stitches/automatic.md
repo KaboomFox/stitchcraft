@@ -119,7 +119,8 @@ stitches round a lighter grey patch that bites into its side, and that stitch cr
 the [roadmap](../../plan/roadmap.md) removes it, and the like stitches of the other traced dogs
 ([image to embroidery](../../design/image-to-embroidery.md#sewing-order) has their numbers). The thin
 straight lines are jumps between patches of one colour, which the reference machine leaves for you to cut by
-hand.
+hand, as it leaves the pear's. M13.17 runs the thread under the patches sewn later instead, where they cover
+it.
 
 ## How it chooses the stitches
 

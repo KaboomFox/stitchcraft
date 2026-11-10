@@ -16,7 +16,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - Every dog's largest bare patch is under 1 mm², 0.92 mm² at most. The case lists the 3 stitches that
     still show where they should not, each with its cause. It fails on a stitch it doesn't list, and on a
     listed one that is gone. M13.16 removes them. The dogs' 102 to 131 jump threads are recorded as the
-    design's limit.
+    design's limit, and the roadmap gains M13.17, which runs the thread under shapes sewn later instead.
   - 2 fixes came from the dogs (Fixed, below): a column's width is measured inside its own outline, and a
     rail cuts across slivers narrower than a thread. Pieces of the dogs are cases of the debug suite.
   - The automatic digitizing page shows the running dog: the cut-out, its trace and its stitches. A picture
