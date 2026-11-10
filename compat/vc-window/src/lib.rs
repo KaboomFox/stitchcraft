@@ -44,6 +44,11 @@ pub const FINDINGS: &str = "findings.jsonl";
 /// The variable that names the job of `tests/shots.rs`: the `vectorcraft-ui` shots to take, as
 /// `cargo xtask shots --vectorcraft` writes them.
 pub const SHOTS: &str = "STITCHCRAFT_SHOTS";
+/// VectorCraft's variable that names the folder it keeps its preferences and installed plug-ins in, a
+/// profile (its `docs/control-protocol.md`).
+pub const PROFILE: &str = "VECTORCRAFT_CONFIG_DIR";
+/// VectorCraft's variable that has it keep no preferences (its `docs/development.md`).
+const NO_PREFS: &str = "VECTORCRAFT_NO_PREFS";
 
 /// How long the app may take to show its window and open the file. Mesa's software renderer builds its
 /// shaders first.
@@ -68,18 +73,30 @@ pub struct Window {
 
 impl Window {
     /// Starts the app with `file` open, its log in `<name>.log`, and waits until its window shows the file.
+    /// The app has no preferences, so every run starts as a new user's, and writes nothing outside the run.
     pub fn open(file: &Path, name: &str) -> Result<Window, String> {
+        Window::open_with(file, name, None)
+    }
+
+    /// [`Window::open`], with the app's preferences in `profile` when there is one: a folder of the run's
+    /// own ([`PROFILE`]). VectorCraft installs again the plug-ins its profile keeps, which is how its app
+    /// comes to a module that asks for a heavy budget. From 0.23 the app installs such a module from a
+    /// request only once a person has approved it in its window, and VectorCraft's command line, started
+    /// with `--allow-plugin-grants`, installs it into a profile (`xtask/src/shots/vectorcraft.rs`).
+    pub fn open_with(file: &Path, name: &str, profile: Option<&Path>) -> Result<Window, String> {
         let app = std::env::var_os(APP).map(PathBuf::from).ok_or(format!("{APP} names no app: `cargo xtask compat window` sets it"))?;
         let log = out()?.join(format!("{name}.log"));
         let written = File::create(&log).map_err(|e| format!("{}: {e}", log.display()))?;
         let also = written.try_clone().map_err(|e| format!("{}: {e}", log.display()))?;
         let port = free_port()?;
-        let child = Command::new(&app)
-            .arg("--control")
-            .arg(port.to_string())
-            .arg(file)
-            // Without preferences, every run starts as a new user's, and writes nothing outside the run.
-            .env("VECTORCRAFT_NO_PREFS", "1")
+        let mut command = Command::new(&app);
+        command.arg("--control").arg(port.to_string()).arg(file);
+        match profile {
+            // VectorCraft keeps no preferences while the other variable is set, whatever folder this one names.
+            Some(profile) => command.env(PROFILE, profile).env_remove(NO_PREFS),
+            None => command.env(NO_PREFS, "1"),
+        };
+        let child = command
             // OpenGL, which Mesa draws in software (llvmpipe) wherever there is no GPU. The app would take
             // Mesa's Vulkan renderer first where it is installed, and the pixels would depend on that.
             .env("WGPU_BACKEND", "gl")
@@ -148,28 +165,6 @@ impl Window {
             }
             std::thread::sleep(POLL);
         }
-    }
-
-    /// Fits the document's artboard in the window again, once 2 inspections in a row show the canvas in
-    /// one place. VectorCraft fits a document's view to the canvas of the first frame that shows it, and
-    /// that frame's canvas can be a little larger or smaller than the canvas the window settles at. Two
-    /// starts of the app then open one document at zooms a hair apart, and every pixel of the drawing
-    /// moves (`docs/src/design/docs-pipeline.md`).
-    pub fn fit_again(&mut self) -> Result<(), String> {
-        let started = Instant::now();
-        let mut before = Value::Null;
-        loop {
-            let canvas = self.inspect()?.get("canvasRect").cloned().unwrap_or(Value::Null);
-            if !canvas.is_null() && canvas == before {
-                break;
-            }
-            if started.elapsed() > START {
-                return Err(self.failed(&format!("waited {START:?} for the canvas to stay in one place; it was at {canvas}")));
-            }
-            before = canvas;
-            std::thread::sleep(POLL);
-        }
-        self.call("engine.execute", json!({"command": "view.fitArtboard", "params": {}})).map(|_| ())
     }
 
     /// Whether `ui.inspect` shows what `done` looks for within `wait`.

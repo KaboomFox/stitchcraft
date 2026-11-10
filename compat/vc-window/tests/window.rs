@@ -44,13 +44,13 @@ fn described(above: Difference, below: usize, bar: u32) -> String {
 }
 
 /// A start of the app with the badge open, recorded as `name`: its screenshot, what `ui.inspect` shows
-/// then, the status bar's first row, and how long the start took until the screenshot. The view is
-/// fitted again once the canvas has settled, so that each start draws the badge at one zoom. The app
-/// quits on the way out.
+/// then, the status bar's first row, and how long the start took until the screenshot. From 0.23
+/// VectorCraft's opening fit follows the canvas while the window settles, so each start draws the badge at
+/// one zoom. An earlier release opens it at one of 2 zooms a hair apart, for which the probe fitted the
+/// artboard again (`docs/src/design/docs-pipeline.md`). The app quits on the way out.
 fn start(name: &str) -> Result<(Pixels, Value, u32, Duration), String> {
     let started = Instant::now();
     let mut window = Window::open(&fixture(BADGE)?, name)?;
-    window.fit_again()?;
     let shot = window.screenshot(name)?;
     let took = started.elapsed();
     let bar = window.below_canvas(&shot)?;

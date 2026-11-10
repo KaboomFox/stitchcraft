@@ -52,7 +52,7 @@ fn hello_returns_the_geometry_unchanged() {
     let plugin = registry::install_bytes(&plugin_bytes()).unwrap();
     let bounds = Rect::new(10.0, 20.0, 110.0, 70.0);
     let path = shapes::rectangle(bounds);
-    let out = effect::apply(plugin.id(), &json!({}), &path, bounds, FillRule::NonZero, Paints::default());
+    let out = effect::apply(plugin.id(), &json!({}), &path, bounds, FillRule::NonZero, Paints::default(), None);
     assert_eq!(out.as_ref(), Some(&path), "last error: {:?}", effect::last_error(plugin.id()));
 }
 
@@ -187,7 +187,7 @@ fn each_family_sews_an_object_in_vectorcraft() {
     let rails = lines(&[&[(0.0, 0.0), (60.0, 0.0)], &[(0.0, 20.0), (60.0, 20.0)]]);
     for (family, path) in [("stroke", &square), ("satin", &rails), ("fill", &square)] {
         let plugin = registry::install_bytes(&module(family)).unwrap();
-        let out = effect::apply(plugin.id(), &json!({}), path, bounds, FillRule::NonZero, Paints::default());
+        let out = effect::apply(plugin.id(), &json!({}), path, bounds, FillRule::NonZero, Paints::default(), None);
         let out = out.unwrap_or_else(|| panic!("{family}: {:?}", effect::last_error(plugin.id())));
         assert!(!out.subpaths.is_empty(), "{family} sews stitches");
         assert!(out.subpaths.iter().all(|subpath| subpath.closed == (family == "fill")), "{family}");
@@ -208,12 +208,12 @@ fn each_family_sews_an_object_that_has_fills_and_strokes() {
     let art = Appearance::default_art();
     for (family, path) in [("stroke", &square), ("satin", &rails), ("fill", &square)] {
         let plugin = registry::install_bytes(&module(family)).unwrap();
-        let unpainted = effect::apply(plugin.id(), &json!({}), path, bounds, FillRule::NonZero, Paints::default());
+        let unpainted = effect::apply(plugin.id(), &json!({}), path, bounds, FillRule::NonZero, Paints::default(), None);
         assert!(unpainted.is_some(), "{family}: {:?}", effect::last_error(plugin.id()));
-        let painted = effect::apply(plugin.id(), &json!({}), path, bounds, FillRule::NonZero, Paints { appearance: Some(&art), item: None });
+        let painted = effect::apply(plugin.id(), &json!({}), path, bounds, FillRule::NonZero, Paints { appearance: Some(&art), item: None }, None);
         assert_eq!(painted, unpainted, "{family}: {:?}", effect::last_error(plugin.id()));
         for item in [Some(0), Some(1)] {
-            let on_a_paint = effect::apply(plugin.id(), &json!({}), path, bounds, FillRule::NonZero, Paints { appearance: Some(&art), item });
+            let on_a_paint = effect::apply(plugin.id(), &json!({}), path, bounds, FillRule::NonZero, Paints { appearance: Some(&art), item }, None);
             let error = effect::last_error(plugin.id()).unwrap_or_default();
             assert!(
                 on_a_paint.is_none() && error.contains("info SC-I0810: This effect is on one of the object's fills or strokes"),
@@ -234,7 +234,7 @@ fn req_vc_010_a_satin_column_drawn_as_one_path_and_a_zigzag_show_their_stitches_
         for mm in [1.5, 3.0, 5.0] {
             let mut art = Appearance::default_art();
             art.stroke_mut().unwrap().width = mm * 72.0 / 25.4;
-            let out = effect::apply(plugin.id(), &set, &line, bounds, FillRule::NonZero, Paints { appearance: Some(&art), item: None });
+            let out = effect::apply(plugin.id(), &set, &line, bounds, FillRule::NonZero, Paints { appearance: Some(&art), item: None }, None);
             let out = out.unwrap_or_else(|| panic!("{family} {mm} mm: {:?}", effect::last_error(plugin.id())));
             let ys = || out.subpaths.iter().flat_map(|subpath| &subpath.anchors).map(|anchor| anchor.p.y);
             let across = (ys().fold(f64::NEG_INFINITY, f64::max) - ys().fold(f64::INFINITY, f64::min)) * 25.4 / 72.0;
@@ -251,7 +251,7 @@ fn what_an_effect_cannot_show_is_its_last_error() {
     let plugin = registry::install_bytes(&module("satin")).unwrap();
     let bounds = Rect::new(0.0, 0.0, 20.0, 20.0);
     let line = lines(&[&[(0.0, 0.0), (60.0, 10.0)]]);
-    assert_eq!(effect::apply(plugin.id(), &json!({}), &line, bounds, FillRule::NonZero, Paints::default()), None);
+    assert_eq!(effect::apply(plugin.id(), &json!({}), &line, bounds, FillRule::NonZero, Paints::default(), None), None);
     // VectorCraft words it as the plug-in's failure: `plug-in failed: info SC-I0810: …`.
     let error = effect::last_error(plugin.id()).unwrap_or_default();
     assert!(error.contains("info SC-I0810: This satin column is drawn as one path"), "{error}");

@@ -44,7 +44,8 @@ File references below are to the first unless a version is named. The
   **fuel 50 M instructions + 4,000 per input byte**; wall clock 60 s per filter run and **5 s per
   live-effect run** (`crates/plugins/src/effect.rs`), with a fresh instance for each call. An export gets
   10 G instructions and 300 s (0.14). From 0.17 a filter that declares `"budget": "heavy"` gets 1 G and
-  300 s, once the user allows it at install, and runs in the background. From 0.18 a run pays nothing for
+  300 s, once the user allows it at install, and runs in the background. From 0.23 only a person allows
+  it: with OK in the app's dialog, or by starting the command line with `--allow-plugin-grants`. From 0.18 a run pays nothing for
   compiling the functions it calls, which wasmi does at each one's first call. Before, a first run paid,
   and could stop with most of its budget left when the 20 M-instruction slice it was in ran out while a
   function compiled. From M13.2 on, the gate's Level B found 0.17.0's command line stopping the PES

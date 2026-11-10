@@ -236,7 +236,9 @@ mod tests {
     #[test]
     fn the_names_are_the_probe_s() {
         let probe = util::read(&util::root().join(PROBE).join("src/lib.rs")).unwrap();
-        for (name, value) in [("APP", APP_VAR), ("OUT", OUT_VAR), ("SHOTS", SHOTS_VAR), ("FINDINGS", FINDINGS)] {
+        // The profile's variable is VectorCraft's, which the shots' job and the probe both name.
+        let profile = compat::scenario::PROFILE;
+        for (name, value) in [("APP", APP_VAR), ("OUT", OUT_VAR), ("SHOTS", SHOTS_VAR), ("FINDINGS", FINDINGS), ("PROFILE", profile)] {
             assert!(probe.contains(&format!("pub const {name}: &str = \"{value}\";")), "the probe's {name} is not {value}");
         }
     }
