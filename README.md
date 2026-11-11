@@ -47,6 +47,12 @@ stitch plan design.svg -o design.pes --preview design.png
 The [user guide](https://kaboomfox.github.io/stitchcraft/dev/user/) has tutorials, how-to guides and a
 page for each stitch type.
 
+## Browser build
+
+Run StitchCraft inside VectorCraft on the web with the [browser build](web/README.md).
+The Web workflow publishes the editor and embroidery plug-ins to GitHub Pages, with a preview link
+for each trusted pull request.
+
 ## Read more
 
 | | |

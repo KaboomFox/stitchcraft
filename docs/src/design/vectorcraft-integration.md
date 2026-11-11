@@ -914,3 +914,10 @@ engine must stay host-agnostic.
 
 VectorCraft's conventions are mostly excellent and we follow them; where they drift we improve them.
 See [ADR-0009](adr/0009-adopt-vectorcraft-conventions.md) for the audit.
+
+## Browser distribution
+
+The web build (`web/README.md`) bundles a pinned VectorCraft web editor with the plug-ins.
+It installs the light modules through the documented page command API, without changing VectorCraft
+internals. Heavy filters retain the host's approval prompt. The build and browser acceptance cases
+live in `web/`; GitHub Pages serves static files and keeps each pull request preview in its own folder.
