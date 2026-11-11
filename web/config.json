@@ -1,0 +1,6 @@
+{
+  "vectorcraftRepository": "https://github.com/storytold/vectorcraft.git",
+  "vectorcraftRevision": "7f3a046b184661e8e9386acf3706f9a1eeb1d1c6",
+  "plugins": ["stroke", "satin", "fill", "auto", "pes", "dst", "settings", "testsheet", "tartan"],
+  "optionalPlugins": ["stroke-to-satin", "route-satins", "route-runs"]
+}

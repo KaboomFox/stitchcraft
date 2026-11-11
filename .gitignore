@@ -11,3 +11,7 @@
 # stitchcraft/ (ADR-0011), our docs' plan/ would be left out with them; this rule, nearer, keeps it. The
 # compatibility gate's move job checks that VectorCraft's git keeps every file of ours.
 !/docs/src/plan/
+
+/web/node_modules/
+
+__pycache__/
