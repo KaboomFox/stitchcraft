@@ -26,6 +26,8 @@ class PublishTest(unittest.TestCase):
             previous = Path.cwd()
             try:
                 os.chdir(repo)
+                publisher.publish('pr/1', None)
+                self.assertFalse(publisher.git('ls-remote', '--heads', 'origin', cwd=repo).stdout.strip())
                 original_git = publisher.git
                 raced = False
 

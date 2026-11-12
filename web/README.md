@@ -7,7 +7,7 @@ Save the editable design before closing the tab.
 
 ## Build and check
 
-Install Python 3, the Rust toolchain in `rust-toolchain.toml`, its
+Install Python 3.11 or newer, the Rust toolchain in `rust-toolchain.toml`, its
 `wasm32-unknown-unknown` target, and Trunk 0.22.1. Then run from the repository root:
 
 ```sh
@@ -23,6 +23,7 @@ node web/smoke.mjs http://127.0.0.1:8766/
 `target/`, or accepts an existing matching checkout through `VECTORCRAFT_DIR`.
 It does not modify VectorCraft's source. Trunk uses relative asset URLs, so the
 same files work at `/app/` and `/pr/123/`. `?webgl` forces WebGL2 if WebGPU fails.
+The pinned editor is about 97 MB before transfer compression, so the first load can take time.
 
 The loader uses VectorCraft's documented `window.vectorcraft.execute` API to
 install the light plug-ins on each page load. A failure stays visible. Heavy

@@ -29,6 +29,7 @@ try {
   assert.match(pes.subarray(0, 8).toString(), /^#PES/);
   assert.ok(dst.length > 512, 'DST contains stitches beyond its header');
   assert.equal(dst.subarray(0, 3).toString(), 'LA:');
+  assert.ok(Number(dst.subarray(0, 512).toString().match(/ST:\s*(\d+)/)?.[1]) > 0, 'DST records actual stitches');
   await page.screenshot({path: new URL('../target/web-smoke.png', import.meta.url).pathname});
   assert.deepEqual(failures, [], 'no browser errors or missing assets');
   console.log(`PASS ${url.href}: ${installed.length} plug-ins; PES ${pes.length} bytes, DST ${dst.length} bytes`);

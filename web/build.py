@@ -1,13 +1,21 @@
 #!/usr/bin/env python3
 """Build pinned VectorCraft and StitchCraft modules into one relocatable static site."""
+import argparse
 import json
 import os
 from pathlib import Path
 import shutil
 import subprocess
+import tomllib
+
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--prepare', action='store_true', help='check out the pinned editor without building')
+args = parser.parse_args()
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = json.loads((ROOT / 'web/config.json').read_text())
+# VectorCraft has no toolchain file; keep its build on StitchCraft's reviewed compiler too.
+os.environ['RUSTUP_TOOLCHAIN'] = tomllib.loads((ROOT / 'rust-toolchain.toml').read_text())['toolchain']['channel']
 VC = Path(os.environ.get('VECTORCRAFT_DIR', ROOT / 'target/vectorcraft-web'))
 OUT = ROOT / 'target/web'
 
@@ -22,9 +30,12 @@ if not VC.exists():
 revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=VC, text=True).strip()
 if revision != CONFIG['vectorcraftRevision']:
     raise SystemExit(f'VectorCraft must be at {CONFIG["vectorcraftRevision"]}, got {revision}')
+if args.prepare:
+    raise SystemExit(0)
 run('trunk', 'build', '--release', '--locked', cwd=VC / 'apps/vectorcraft-web')
 shutil.rmtree(OUT, ignore_errors=True)
 shutil.copytree(VC / 'dist/web', OUT)
+(OUT / '.trunk-lock').unlink(missing_ok=True)
 (OUT / 'plugins').mkdir()
 for feature in CONFIG['plugins'] + CONFIG['optionalPlugins']:
     run('cargo', 'build', '--locked', '--release', '--target', 'wasm32-unknown-unknown',
