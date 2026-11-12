@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Build pinned VectorCraft and StitchCraft modules into one relocatable static site."""
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -42,12 +43,16 @@ for feature in CONFIG['plugins'] + CONFIG['optionalPlugins']:
         '-p', 'stitchcraft-vc-plugin', '--no-default-features', '--features', feature)
     shutil.copyfile(ROOT / 'target/wasm32-unknown-unknown/release/stitchcraft_vc_plugin.wasm',
                     OUT / 'plugins' / f'{feature}.wasm')
-for name in ['loader.mjs', 'boot.mjs']:
+for name in ['loader.mjs', 'boot.mjs', 'starter.mjs']:
     shutil.copyfile(ROOT / 'web' / name, OUT / name)
+shutil.copytree(ROOT / 'web/templates', OUT / 'templates')
 (OUT / 'plugins.json').write_text(json.dumps(CONFIG))
 html = (OUT / 'index.html').read_text()
 html = html.replace('<title>VectorCraft</title>', '<title>StitchCraft + VectorCraft</title>')
-html = html.replace('</body>', '<script type="module" src="./boot.mjs"></script>\n</body>')
+# Version the shell and its imports together so an updated preview cannot mix cached modules.
+version = hashlib.sha256(b''.join((ROOT / 'web' / name).read_bytes() for name in
+    ['boot.mjs', 'loader.mjs', 'starter.mjs', 'templates/alpine-night.vctemplate'])).hexdigest()[:16]
+html = html.replace('</body>', f'<script type="module" src="./boot.mjs?v={version}"></script>\n</body>')
 (OUT / 'index.html').write_text(html)
 (OUT / '.nojekyll').touch()
 for name in ['LICENSE-MIT', 'LICENSE-APACHE', 'NOTICE']:

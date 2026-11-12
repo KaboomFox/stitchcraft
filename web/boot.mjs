@@ -1,4 +1,6 @@
-import {installPlugins} from './loader.mjs';
+const version = new URL(import.meta.url).search;
+const {installPlugins} = await import(`./loader.mjs${version}`);
+const {openStarter} = await import(`./starter.mjs${version}`);
 
 const panel = document.createElement('details');
 panel.open = true;
@@ -7,7 +9,7 @@ const summary = document.createElement('summary');
 summary.textContent = 'Starting StitchCraft…';
 panel.append(summary);
 const help = document.createElement('p');
-help.textContent = 'Draw or open your vector artwork. Use Effect → Plug-ins for stitch settings, then File → Export for PES or DST. Save your design before closing this tab.';
+help.textContent = 'The Alpine Night starter uses StitchCraft Auto. Select a shape and edit its effect in Appearance. File → Export → Export As… downloads PES or DST. Save your editable design before closing this tab.';
 panel.append(help);
 document.body.append(panel);
 
@@ -21,7 +23,22 @@ window.stitchcraftReady = (async () => {
   if (!response.ok) throw new Error(`Plug-in list: HTTP ${response.status}`);
   const config = await response.json();
   const installed = await installPlugins(window.vectorcraft, config.plugins, fetch, text => {summary.textContent = text;});
-  summary.textContent = 'StitchCraft ready · Help';
+  const starter = document.createElement('button');
+  starter.textContent = 'Open Alpine Night starter patch';
+  starter.onclick = async () => {
+    starter.disabled = true;
+    try { await openStarter(window.vectorcraft); }
+    catch (error) { help.textContent = error.message; panel.open = true; }
+    finally { starter.disabled = false; }
+  };
+  const download = document.createElement('a');
+  download.href = `./templates/alpine-night.vctemplate${version}`;
+  download.download = 'Alpine Night.vctemplate';
+  download.textContent = 'Download reusable template';
+  download.style.cssText = 'display:block;color:#a9dcff;margin:8px 0';
+  panel.append(starter, download);
+  await openStarter(window.vectorcraft, {onlyIfEmpty: true});
+  summary.textContent = 'StitchCraft ready · Starter & help';
   const optional = document.createElement('p');
   optional.textContent = 'Optional heavy filters (download, then open in VectorCraft to approve): ';
   for (const name of config.optionalPlugins) {
@@ -37,7 +54,7 @@ window.stitchcraftReady = (async () => {
   return installed;
 })();
 window.stitchcraftReady.catch(error => {
-  summary.textContent = 'Embroidery tools failed to load';
+  summary.textContent = 'StitchCraft could not finish loading';
   help.textContent = error.message;
   const reload = document.createElement('button');
   reload.textContent = 'Reload';

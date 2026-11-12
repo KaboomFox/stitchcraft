@@ -25,8 +25,9 @@ def publish(destination, source):
         work = Path(folder)
         git('init', cwd=work)
         git('remote', 'add', 'origin', remote, cwd=work)
-        # actions/checkout's scoped auth header is local to its checkout.
-        config = git('config', '--local', '--get-regexp', r'http\..*\.extraheader', cwd=repository, check=False)
+        # Checkout v7 keeps its scoped header behind includeIf. Resolve it in the
+        # source checkout before copying the header to this temporary repository.
+        config = git('config', '--local', '--includes', '--get-regexp', r'http\..*\.extraheader', cwd=repository, check=False)
         for line in config.stdout.splitlines():
             key, value = line.split(' ', 1)
             git('config', '--local', key, value, cwd=work)
