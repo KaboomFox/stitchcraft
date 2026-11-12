@@ -21,6 +21,9 @@ class PublishTest(unittest.TestCase):
             repo.mkdir()
             publisher.git('init', cwd=repo)
             publisher.git('remote', 'add', 'origin', str(remote), cwd=repo)
+            credentials = root / 'test-credentials.config'
+            credentials.write_text('[http "https://github.com/"]\n    extraheader = TEST-ONLY\n')
+            publisher.git('config', '--local', f'includeIf.gitdir:{repo}/.git.path', str(credentials), cwd=repo)
             site.mkdir()
             (site / 'index.html').write_text('first')
             previous = Path.cwd()
@@ -33,6 +36,9 @@ class PublishTest(unittest.TestCase):
 
                 def concurrent_git(*args, **kwargs):
                     nonlocal raced
+                    if args[0] == 'push':
+                        header = original_git('config', '--local', '--get', 'http.https://github.com/.extraheader', cwd=kwargs['cwd'], check=False)
+                        self.assertEqual(header.stdout.strip(), 'TEST-ONLY', 'checkout v7 included credential must reach the publishing checkout')
                     if args[0] == 'push' and not raced:
                         raced = True
                         publisher.publish('pr/99', str(site))

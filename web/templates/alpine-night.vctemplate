@@ -1,0 +1,1958 @@
+{
+  "format": "vectorcraft",
+  "version": 4,
+  "generator": "VectorCraft 0.24.0",
+  "pdfCompatible": true,
+  "pdf": {
+    "mime": "application/pdf",
+    "blob": [
+      0,
+      19601
+    ]
+  },
+  "document": {
+    "version": 3,
+    "title": "Alpine Night.svg",
+    "template": true,
+    "units": "Millimeters",
+    "rulers": "artboard",
+    "color_mode": "Rgb",
+    "artboards": [
+      {
+        "id": 1,
+        "name": "Artboard 1",
+        "rect": {
+          "x0": 0.0,
+          "y0": 0.0,
+          "x1": 170.07873916625977,
+          "y1": 170.07873916625977
+        },
+        "show_center_mark": false,
+        "show_cross_hairs": false
+      }
+    ],
+    "layers": [
+      {
+        "id": 12,
+        "name": "Alpine-Night-patch",
+        "kind": {
+          "type": "layer",
+          "color": {
+            "Preset": 0
+          },
+          "template": false,
+          "printable": true,
+          "children": [
+            {
+              "id": 2,
+              "name": "Golden-border",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.9019608,
+                        "g": 0.6784314,
+                        "b": 0.28627452
+                      }
+                    }
+                  }
+                ],
+                "effects": [
+                  {
+                    "id": "plugin.dev.stitchcraft.auto",
+                    "params": {
+                      "auto_ignore_background": true,
+                      "auto_max_satin_width_mm": 7.0,
+                      "auto_min_area_mm2": 1.0,
+                      "auto_min_triple_run_width_mm": 0.5,
+                      "auto_overlap_mm": 0.4,
+                      "preview_level": "auto"
+                    },
+                    "visible": true
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            155.90551123023033,
+                            85.03936976194382
+                          ],
+                          "in": [
+                            155.90551123023033,
+                            45.90108054965757
+                          ],
+                          "out": [
+                            155.90551123023033,
+                            124.17765897423006
+                          ],
+                          "kind": "Smooth"
+                        },
+                        {
+                          "p": [
+                            85.03936976194382,
+                            155.90551123023033
+                          ],
+                          "in": [
+                            124.17765897423006,
+                            155.90551123023033
+                          ],
+                          "out": [
+                            45.90108054965757,
+                            155.90551123023033
+                          ],
+                          "kind": "Smooth"
+                        },
+                        {
+                          "p": [
+                            14.173228293657303,
+                            85.03936976194382
+                          ],
+                          "in": [
+                            14.173228293657303,
+                            124.17765897423006
+                          ],
+                          "out": [
+                            14.173228293657303,
+                            45.90108054965757
+                          ],
+                          "kind": "Smooth"
+                        },
+                        {
+                          "p": [
+                            85.03936976194382,
+                            14.173228293657303
+                          ],
+                          "in": [
+                            45.90108054965757,
+                            14.173228293657303
+                          ],
+                          "out": [
+                            124.17765897423006,
+                            14.173228293657303
+                          ],
+                          "kind": "Smooth"
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 3,
+              "name": "Night-sky",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.08627451,
+                        "g": 0.23137255,
+                        "b": 0.3019608
+                      }
+                    }
+                  }
+                ],
+                "effects": [
+                  {
+                    "id": "plugin.dev.stitchcraft.auto",
+                    "params": {
+                      "auto_ignore_background": true,
+                      "auto_max_satin_width_mm": 7.0,
+                      "auto_min_area_mm2": 1.0,
+                      "auto_min_triple_run_width_mm": 0.5,
+                      "auto_overlap_mm": 0.4,
+                      "preview_level": "auto"
+                    },
+                    "visible": true
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            150.2362199127674,
+                            85.03936976194382
+                          ],
+                          "in": [
+                            150.2362199127674,
+                            49.032143686640474
+                          ],
+                          "out": [
+                            150.2362199127674,
+                            121.04659583724718
+                          ],
+                          "kind": "Smooth"
+                        },
+                        {
+                          "p": [
+                            85.03936976194382,
+                            150.2362199127674
+                          ],
+                          "in": [
+                            121.04659583724718,
+                            150.2362199127674
+                          ],
+                          "out": [
+                            49.032143686640474,
+                            150.2362199127674
+                          ],
+                          "kind": "Smooth"
+                        },
+                        {
+                          "p": [
+                            19.842519611120224,
+                            85.03936976194382
+                          ],
+                          "in": [
+                            19.842519611120224,
+                            121.04659583724718
+                          ],
+                          "out": [
+                            19.842519611120224,
+                            49.032143686640474
+                          ],
+                          "kind": "Smooth"
+                        },
+                        {
+                          "p": [
+                            85.03936976194382,
+                            19.842519611120224
+                          ],
+                          "in": [
+                            49.032143686640474,
+                            19.842519611120224
+                          ],
+                          "out": [
+                            121.04659583724718,
+                            19.842519611120224
+                          ],
+                          "kind": "Smooth"
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 4,
+              "name": "Moon",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.95686275,
+                        "g": 0.9098039,
+                        "b": 0.7882353
+                      }
+                    }
+                  }
+                ],
+                "effects": [
+                  {
+                    "id": "plugin.dev.stitchcraft.auto",
+                    "params": {
+                      "auto_ignore_background": true,
+                      "auto_max_satin_width_mm": 7.0,
+                      "auto_min_area_mm2": 1.0,
+                      "auto_min_triple_run_width_mm": 0.5,
+                      "auto_overlap_mm": 0.4,
+                      "preview_level": "auto"
+                    },
+                    "visible": true
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            118.11023578047752,
+                            51.96850374341011
+                          ],
+                          "in": [
+                            118.11023578047752,
+                            45.70637746944431
+                          ],
+                          "out": [
+                            118.11023578047752,
+                            58.23063001737591
+                          ],
+                          "kind": "Smooth"
+                        },
+                        {
+                          "p": [
+                            106.77165314555168,
+                            63.30708637833595
+                          ],
+                          "in": [
+                            113.03377941951747,
+                            63.30708637833595
+                          ],
+                          "out": [
+                            100.50952687158589,
+                            63.30708637833595
+                          ],
+                          "kind": "Smooth"
+                        },
+                        {
+                          "p": [
+                            95.43307051062584,
+                            51.96850374341011
+                          ],
+                          "in": [
+                            95.43307051062584,
+                            58.23063001737591
+                          ],
+                          "out": [
+                            95.43307051062584,
+                            45.70637746944431
+                          ],
+                          "kind": "Smooth"
+                        },
+                        {
+                          "p": [
+                            106.77165314555168,
+                            40.62992110848427
+                          ],
+                          "in": [
+                            100.50952687158589,
+                            40.62992110848427
+                          ],
+                          "out": [
+                            113.03377941951747,
+                            40.62992110848427
+                          ],
+                          "kind": "Smooth"
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 5,
+              "name": "North-star",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.9019608,
+                        "g": 0.6784314,
+                        "b": 0.28627452
+                      }
+                    }
+                  }
+                ],
+                "effects": [
+                  {
+                    "id": "plugin.dev.stitchcraft.auto",
+                    "params": {
+                      "auto_ignore_background": true,
+                      "auto_max_satin_width_mm": 7.0,
+                      "auto_min_area_mm2": 1.0,
+                      "auto_min_triple_run_width_mm": 0.5,
+                      "auto_overlap_mm": 0.4,
+                      "preview_level": "auto"
+                    },
+                    "visible": true
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            61.41732260584831,
+                            35.90551167726517
+                          ]
+                        },
+                        {
+                          "p": [
+                            63.30708637833595,
+                            41.57480299472809
+                          ]
+                        },
+                        {
+                          "p": [
+                            68.97637769579887,
+                            43.46456676721573
+                          ]
+                        },
+                        {
+                          "p": [
+                            63.30708637833595,
+                            45.35433053970337
+                          ]
+                        },
+                        {
+                          "p": [
+                            61.41732260584831,
+                            51.02362185716629
+                          ]
+                        },
+                        {
+                          "p": [
+                            59.52755883336067,
+                            45.35433053970337
+                          ]
+                        },
+                        {
+                          "p": [
+                            53.85826751589775,
+                            43.46456676721573
+                          ]
+                        },
+                        {
+                          "p": [
+                            59.52755883336067,
+                            41.57480299472809
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 6,
+              "name": "Small-star",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.95686275,
+                        "g": 0.9098039,
+                        "b": 0.7882353
+                      }
+                    }
+                  }
+                ],
+                "effects": [
+                  {
+                    "id": "plugin.dev.stitchcraft.auto",
+                    "params": {
+                      "auto_ignore_background": true,
+                      "auto_max_satin_width_mm": 7.0,
+                      "auto_min_area_mm2": 1.0,
+                      "auto_min_triple_run_width_mm": 0.5,
+                      "auto_overlap_mm": 0.4,
+                      "preview_level": "auto"
+                    },
+                    "visible": true
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            85.98425164818764,
+                            26.456692814826965
+                          ]
+                        },
+                        {
+                          "p": [
+                            87.87401542067528,
+                            30.236220359802246
+                          ]
+                        },
+                        {
+                          "p": [
+                            91.65354296565056,
+                            32.12598413228989
+                          ]
+                        },
+                        {
+                          "p": [
+                            87.87401542067528,
+                            34.01574790477753
+                          ]
+                        },
+                        {
+                          "p": [
+                            85.98425164818764,
+                            37.79527544975281
+                          ]
+                        },
+                        {
+                          "p": [
+                            84.0944878757,
+                            34.01574790477753
+                          ]
+                        },
+                        {
+                          "p": [
+                            80.31496033072472,
+                            32.12598413228989
+                          ]
+                        },
+                        {
+                          "p": [
+                            84.0944878757,
+                            30.236220359802246
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 7,
+              "name": "Far-ridge",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.28627452,
+                        "g": 0.54901963,
+                        "b": 0.5411765
+                      }
+                    }
+                  }
+                ],
+                "effects": [
+                  {
+                    "id": "plugin.dev.stitchcraft.auto",
+                    "params": {
+                      "auto_ignore_background": true,
+                      "auto_max_satin_width_mm": 7.0,
+                      "auto_min_area_mm2": 1.0,
+                      "auto_min_triple_run_width_mm": 0.5,
+                      "auto_overlap_mm": 0.4,
+                      "preview_level": "auto"
+                    },
+                    "visible": true
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            33.07086601853371,
+                            106.77165314555168
+                          ]
+                        },
+                        {
+                          "p": [
+                            68.97637769579887,
+                            60.47244071960449
+                          ]
+                        },
+                        {
+                          "p": [
+                            105.82677125930786,
+                            106.77165314555168
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 8,
+              "name": "Far-snowcap",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.95686275,
+                        "g": 0.9098039,
+                        "b": 0.7882353
+                      }
+                    }
+                  }
+                ],
+                "effects": [
+                  {
+                    "id": "plugin.dev.stitchcraft.auto",
+                    "params": {
+                      "auto_ignore_background": true,
+                      "auto_max_satin_width_mm": 7.0,
+                      "auto_min_area_mm2": 1.0,
+                      "auto_min_triple_run_width_mm": 0.5,
+                      "auto_overlap_mm": 0.4,
+                      "preview_level": "auto"
+                    },
+                    "visible": true
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            55.74803128838539,
+                            77.48031467199326
+                          ]
+                        },
+                        {
+                          "p": [
+                            68.97637769579887,
+                            60.47244071960449
+                          ]
+                        },
+                        {
+                          "p": [
+                            83.14960598945618,
+                            78.42519655823708
+                          ]
+                        },
+                        {
+                          "p": [
+                            72.75590524077415,
+                            74.6456690132618
+                          ]
+                        },
+                        {
+                          "p": [
+                            67.08661392331123,
+                            79.3700784444809
+                          ]
+                        },
+                        {
+                          "p": [
+                            63.30708637833595,
+                            74.6456690132618
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 9,
+              "name": "Near-ridge",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.9019608,
+                        "g": 0.6784314,
+                        "b": 0.28627452
+                      }
+                    }
+                  }
+                ],
+                "effects": [
+                  {
+                    "id": "plugin.dev.stitchcraft.auto",
+                    "params": {
+                      "auto_ignore_background": true,
+                      "auto_max_satin_width_mm": 7.0,
+                      "auto_min_area_mm2": 1.0,
+                      "auto_min_triple_run_width_mm": 0.5,
+                      "auto_overlap_mm": 0.4,
+                      "preview_level": "auto"
+                    },
+                    "visible": true
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            65.1968501508236,
+                            119.99999955296516
+                          ]
+                        },
+                        {
+                          "p": [
+                            104.88188937306404,
+                            73.70078712701797
+                          ]
+                        },
+                        {
+                          "p": [
+                            137.00787350535393,
+                            119.99999955296516
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 10,
+              "name": "Near-snowcap",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.95686275,
+                        "g": 0.9098039,
+                        "b": 0.7882353
+                      }
+                    }
+                  }
+                ],
+                "effects": [
+                  {
+                    "id": "plugin.dev.stitchcraft.auto",
+                    "params": {
+                      "auto_ignore_background": true,
+                      "auto_max_satin_width_mm": 7.0,
+                      "auto_min_area_mm2": 1.0,
+                      "auto_min_triple_run_width_mm": 0.5,
+                      "auto_overlap_mm": 0.4,
+                      "preview_level": "auto"
+                    },
+                    "visible": true
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            90.70866107940674,
+                            90.70866107940674
+                          ]
+                        },
+                        {
+                          "p": [
+                            104.88188937306404,
+                            73.70078712701797
+                          ]
+                        },
+                        {
+                          "p": [
+                            117.1653538942337,
+                            91.65354296565056
+                          ]
+                        },
+                        {
+                          "p": [
+                            107.7165350317955,
+                            86.92913353443146
+                          ]
+                        },
+                        {
+                          "p": [
+                            102.04724371433258,
+                            92.59842485189438
+                          ]
+                        },
+                        {
+                          "p": [
+                            98.2677161693573,
+                            87.87401542067528
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "id": 11,
+              "name": "Lake",
+              "appearance": {
+                "items": [
+                  {
+                    "kind": "fill",
+                    "paint": {
+                      "type": "solid",
+                      "color": {
+                        "model": "rgb",
+                        "r": 0.28627452,
+                        "g": 0.54901963,
+                        "b": 0.5411765
+                      }
+                    }
+                  }
+                ],
+                "effects": [
+                  {
+                    "id": "plugin.dev.stitchcraft.auto",
+                    "params": {
+                      "auto_ignore_background": true,
+                      "auto_max_satin_width_mm": 7.0,
+                      "auto_min_area_mm2": 1.0,
+                      "auto_min_triple_run_width_mm": 0.5,
+                      "auto_overlap_mm": 0.4,
+                      "preview_level": "auto"
+                    },
+                    "visible": true
+                  }
+                ]
+              },
+              "kind": {
+                "type": "path",
+                "path": {
+                  "subpaths": [
+                    {
+                      "anchors": [
+                        {
+                          "p": [
+                            41.57480299472809,
+                            124.72440898418427
+                          ],
+                          "in": [
+                            70.55118083953857,
+                            146.1417317390442
+                          ]
+                        },
+                        {
+                          "p": [
+                            128.50393652915955,
+                            124.72440898418427
+                          ],
+                          "out": [
+                            99.52755868434906,
+                            146.1417317390442
+                          ]
+                        }
+                      ],
+                      "closed": true
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "swatches": [
+      {
+        "name": "[None]",
+        "paint": {
+          "type": "none"
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "White",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 1.0,
+            "g": 1.0,
+            "b": 1.0
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Black",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.0,
+            "g": 0.0,
+            "b": 0.0
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Red",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.92941177,
+            "g": 0.10980392,
+            "b": 0.14117648
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Orange Red",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.94509804,
+            "g": 0.3529412,
+            "b": 0.14117648
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Orange",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.96862745,
+            "g": 0.5764706,
+            "b": 0.11764706
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Amber",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.9843137,
+            "g": 0.6901961,
+            "b": 0.23137255
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Yellow",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.9882353,
+            "g": 0.93333334,
+            "b": 0.12941177
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Yellow Green",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.8509804,
+            "g": 0.8784314,
+            "b": 0.12941177
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Lime",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.54901963,
+            "g": 0.7764706,
+            "b": 0.24705882
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Green",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.22352941,
+            "g": 0.70980394,
+            "b": 0.2901961
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Emerald",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.0,
+            "g": 0.57254905,
+            "b": 0.27058825
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Teal",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.0,
+            "g": 0.40784314,
+            "b": 0.21568628
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Aqua",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.13333334,
+            "g": 0.70980394,
+            "b": 0.4509804
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Cyan Green",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.0,
+            "g": 0.6627451,
+            "b": 0.6156863
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Cyan",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.16078432,
+            "g": 0.67058825,
+            "b": 0.8862745
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Azure",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.0,
+            "g": 0.44313726,
+            "b": 0.7372549
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Blue",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.18039216,
+            "g": 0.19215687,
+            "b": 0.57254905
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Indigo",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.105882354,
+            "g": 0.078431375,
+            "b": 0.39215687
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Violet",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.4,
+            "g": 0.1764706,
+            "b": 0.5686275
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Purple",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.5764706,
+            "g": 0.15294118,
+            "b": 0.56078434
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Magenta",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.61960787,
+            "g": 0.0,
+            "b": 0.3647059
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Rose",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.83137256,
+            "g": 0.078431375,
+            "b": 0.3529412
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Pink",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.92941177,
+            "g": 0.11764706,
+            "b": 0.4745098
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Brown",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.78039217,
+            "g": 0.69803923,
+            "b": 0.6
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Tan",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.6,
+            "g": 0.5254902,
+            "b": 0.45882353
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Coffee",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.4509804,
+            "g": 0.3882353,
+            "b": 0.34117648
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Chocolate",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.3254902,
+            "g": 0.2784314,
+            "b": 0.25490198
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Sand",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.7764706,
+            "g": 0.6117647,
+            "b": 0.42745098
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Copper",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.6509804,
+            "g": 0.4862745,
+            "b": 0.32156864
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Rust",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.54901963,
+            "g": 0.38431373,
+            "b": 0.22352941
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Walnut",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.45882353,
+            "g": 0.29803923,
+            "b": 0.14117648
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Espresso",
+        "paint": {
+          "type": "solid",
+          "color": {
+            "model": "rgb",
+            "r": 0.3764706,
+            "g": 0.21960784,
+            "b": 0.07450981
+          }
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "White, Black",
+        "paint": {
+          "type": "gradient",
+          "gradient": {
+            "kind": "Linear",
+            "stops": [
+              {
+                "offset": 0.0,
+                "color": {
+                  "model": "rgb",
+                  "r": 1.0,
+                  "g": 1.0,
+                  "b": 1.0
+                },
+                "opacity": 1.0,
+                "midpoint": 0.5
+              },
+              {
+                "offset": 1.0,
+                "color": {
+                  "model": "rgb",
+                  "r": 0.0,
+                  "g": 0.0,
+                  "b": 0.0
+                },
+                "opacity": 1.0,
+                "midpoint": 0.5
+              }
+            ]
+          },
+          "angle": 0.0
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Radial White, Black",
+        "paint": {
+          "type": "gradient",
+          "gradient": {
+            "kind": "Radial",
+            "stops": [
+              {
+                "offset": 0.0,
+                "color": {
+                  "model": "rgb",
+                  "r": 1.0,
+                  "g": 1.0,
+                  "b": 1.0
+                },
+                "opacity": 1.0,
+                "midpoint": 0.5
+              },
+              {
+                "offset": 1.0,
+                "color": {
+                  "model": "rgb",
+                  "r": 0.0,
+                  "g": 0.0,
+                  "b": 0.0
+                },
+                "opacity": 1.0,
+                "midpoint": 0.5
+              }
+            ]
+          },
+          "angle": 0.0
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Sunset",
+        "paint": {
+          "type": "gradient",
+          "gradient": {
+            "kind": "Linear",
+            "stops": [
+              {
+                "offset": 0.0,
+                "color": {
+                  "model": "rgb",
+                  "r": 0.9843137,
+                  "g": 0.6901961,
+                  "b": 0.23137255
+                },
+                "opacity": 1.0,
+                "midpoint": 0.5
+              },
+              {
+                "offset": 1.0,
+                "color": {
+                  "model": "rgb",
+                  "r": 0.83137256,
+                  "g": 0.078431375,
+                  "b": 0.3529412
+                },
+                "opacity": 1.0,
+                "midpoint": 0.5
+              }
+            ]
+          },
+          "angle": 0.0
+        },
+        "global": false,
+        "spot": false
+      },
+      {
+        "name": "Ocean",
+        "paint": {
+          "type": "gradient",
+          "gradient": {
+            "kind": "Linear",
+            "stops": [
+              {
+                "offset": 0.0,
+                "color": {
+                  "model": "rgb",
+                  "r": 0.16078432,
+                  "g": 0.67058825,
+                  "b": 0.8862745
+                },
+                "opacity": 1.0,
+                "midpoint": 0.5
+              },
+              {
+                "offset": 1.0,
+                "color": {
+                  "model": "rgb",
+                  "r": 0.18039216,
+                  "g": 0.19215687,
+                  "b": 0.57254905
+                },
+                "opacity": 1.0,
+                "midpoint": 0.5
+              }
+            ]
+          },
+          "angle": 0.0
+        },
+        "global": false,
+        "spot": false
+      }
+    ],
+    "swatch_groups": [
+      {
+        "name": "Grays",
+        "swatches": [
+          {
+            "name": "K=90",
+            "paint": {
+              "type": "solid",
+              "color": {
+                "model": "gray",
+                "k": 0.9
+              }
+            },
+            "global": false,
+            "spot": false
+          },
+          {
+            "name": "K=80",
+            "paint": {
+              "type": "solid",
+              "color": {
+                "model": "gray",
+                "k": 0.8
+              }
+            },
+            "global": false,
+            "spot": false
+          },
+          {
+            "name": "K=70",
+            "paint": {
+              "type": "solid",
+              "color": {
+                "model": "gray",
+                "k": 0.7
+              }
+            },
+            "global": false,
+            "spot": false
+          },
+          {
+            "name": "K=60",
+            "paint": {
+              "type": "solid",
+              "color": {
+                "model": "gray",
+                "k": 0.6
+              }
+            },
+            "global": false,
+            "spot": false
+          },
+          {
+            "name": "K=50",
+            "paint": {
+              "type": "solid",
+              "color": {
+                "model": "gray",
+                "k": 0.5
+              }
+            },
+            "global": false,
+            "spot": false
+          },
+          {
+            "name": "K=40",
+            "paint": {
+              "type": "solid",
+              "color": {
+                "model": "gray",
+                "k": 0.4
+              }
+            },
+            "global": false,
+            "spot": false
+          },
+          {
+            "name": "K=30",
+            "paint": {
+              "type": "solid",
+              "color": {
+                "model": "gray",
+                "k": 0.3
+              }
+            },
+            "global": false,
+            "spot": false
+          },
+          {
+            "name": "K=20",
+            "paint": {
+              "type": "solid",
+              "color": {
+                "model": "gray",
+                "k": 0.2
+              }
+            },
+            "global": false,
+            "spot": false
+          },
+          {
+            "name": "K=10",
+            "paint": {
+              "type": "solid",
+              "color": {
+                "model": "gray",
+                "k": 0.1
+              }
+            },
+            "global": false,
+            "spot": false
+          }
+        ]
+      },
+      {
+        "name": "Brights",
+        "swatches": [
+          {
+            "name": "Bright Red",
+            "paint": {
+              "type": "solid",
+              "color": {
+                "model": "rgb",
+                "r": 1.0,
+                "g": 0.11372549,
+                "b": 0.14509805
+              }
+            },
+            "global": false,
+            "spot": false
+          },
+          {
+            "name": "Bright Yellow",
+            "paint": {
+              "type": "solid",
+              "color": {
+                "model": "rgb",
+                "r": 1.0,
+                "g": 0.9019608,
+                "b": 0.0
+              }
+            },
+            "global": false,
+            "spot": false
+          },
+          {
+            "name": "Bright Green",
+            "paint": {
+              "type": "solid",
+              "color": {
+                "model": "rgb",
+                "r": 0.0,
+                "g": 0.9019608,
+                "b": 0.4627451
+              }
+            },
+            "global": false,
+            "spot": false
+          },
+          {
+            "name": "Bright Blue",
+            "paint": {
+              "type": "solid",
+              "color": {
+                "model": "rgb",
+                "r": 0.16078432,
+                "g": 0.4745098,
+                "b": 1.0
+              }
+            },
+            "global": false,
+            "spot": false
+          },
+          {
+            "name": "Bright Violet",
+            "paint": {
+              "type": "solid",
+              "color": {
+                "model": "rgb",
+                "r": 0.8352941,
+                "g": 0.0,
+                "b": 0.9764706
+              }
+            },
+            "global": false,
+            "spot": false
+          }
+        ]
+      }
+    ],
+    "graphic_styles": [
+      {
+        "name": "Default Graphic Style",
+        "appearance": {
+          "items": [
+            {
+              "kind": "fill",
+              "paint": {
+                "type": "solid",
+                "color": {
+                  "model": "rgb",
+                  "r": 1.0,
+                  "g": 1.0,
+                  "b": 1.0
+                }
+              }
+            },
+            {
+              "kind": "stroke",
+              "paint": {
+                "type": "solid",
+                "color": {
+                  "model": "rgb",
+                  "r": 0.0,
+                  "g": 0.0,
+                  "b": 0.0
+                }
+              },
+              "width": 1.0
+            }
+          ]
+        },
+        "id": 1,
+        "unit_box": true
+      },
+      {
+        "name": "Black Outline",
+        "appearance": {
+          "items": [
+            {
+              "kind": "fill",
+              "paint": {
+                "type": "none"
+              }
+            },
+            {
+              "kind": "stroke",
+              "paint": {
+                "type": "solid",
+                "color": {
+                  "model": "rgb",
+                  "r": 0.0,
+                  "g": 0.0,
+                  "b": 0.0
+                }
+              },
+              "width": 1.0
+            }
+          ]
+        },
+        "id": 2,
+        "unit_box": true
+      },
+      {
+        "name": "Heavy Ink",
+        "appearance": {
+          "items": [
+            {
+              "kind": "fill",
+              "paint": {
+                "type": "solid",
+                "color": {
+                  "model": "rgb",
+                  "r": 0.105882354,
+                  "g": 0.078431375,
+                  "b": 0.39215687
+                }
+              }
+            },
+            {
+              "kind": "stroke",
+              "paint": {
+                "type": "solid",
+                "color": {
+                  "model": "rgb",
+                  "r": 0.0,
+                  "g": 0.0,
+                  "b": 0.0
+                }
+              },
+              "width": 4.0
+            }
+          ]
+        },
+        "id": 3,
+        "unit_box": true
+      },
+      {
+        "name": "Sunshine",
+        "appearance": {
+          "items": [
+            {
+              "kind": "fill",
+              "paint": {
+                "type": "solid",
+                "color": {
+                  "model": "rgb",
+                  "r": 0.9843137,
+                  "g": 0.6901961,
+                  "b": 0.23137255
+                }
+              }
+            },
+            {
+              "kind": "stroke",
+              "paint": {
+                "type": "solid",
+                "color": {
+                  "model": "rgb",
+                  "r": 0.94509804,
+                  "g": 0.3529412,
+                  "b": 0.14117648
+                }
+              },
+              "width": 2.0
+            }
+          ]
+        },
+        "id": 4,
+        "unit_box": true
+      }
+    ],
+    "symbols": [],
+    "guides": [],
+    "grid": {
+      "spacing": 72.0,
+      "subdivisions": 8
+    },
+    "raster_effects_ppi": 72.0,
+    "images": {},
+    "next_id": 13
+  },
+  "images": {}
+}
+ VCBLOBS %PDF-1.7
+%€€€€
+
+1 0 obj
+<</Type/Pages/Count 1/Kids[3 0 R]>>
+endobj
+2 0 obj
+<</ProcSet[/PDF/Text/ImageC/ImageB]>>
+endobj
+3 0 obj
+<</Type/Page/Resources 2 0 R/MediaBox[0 0 170.07874 170.07874]/BleedBox[0 0 170.07874 170.07874]/TrimBox[0 0 170.07874 170.07874]/Parent 1 0 R/Contents 4 0 R>>
+endobj
+4 0 obj
+<</Length 17732/Filter/FlateDecode>>
+stream
+xœ­}K²ì*²e?G(L¡aÔYÕkWóo”­;ˆ0»;Ù:6î($ğïÂùŸÏúY>ËçáŸõ^Êr×ûøü×÷³”gYŸk©Ÿ¥\w=öõø,e«×vçöùÿ÷³g¹¶íSÏ²ìÛçËsÿÔZ®ûù´Ïz^eynv<»;Öúâ¸ÙñbÑşõßf²’è:Íu;ïÏ³•í:LT·ûrç<Hî¥zÄÀ#Øng%—ã!Û£Ô¥~³ÜÏe¢ıF»^ñlu[9Í¶ºc`!®G©+yT½£¬õş<OÙî4G¹ûLö‹ÓÖª‘E0]ò8+™îeêg]¶rU=ê^seO]œgã<õtGg"¶{9–Mln=íVãş¬ËU–]T[yŒ¹@í™8d+uÓky³ë­|«,›X¯eßA÷”}ëµ`i¡çğßÊSñ»®²-úo>â½–ıÀ|OÙñÆ2İ?ëº•S/y)›÷¦Ï¿–z=$9õß<Ä—‹]\–|Z®óù¬ëY®ƒOx<e½Á_Ë3Ï©¹ôÄo.ä>åÚr¾ËúY×Z®Ê·zÜåZ0¢–ç¨9“&zø›&&b|—uÁ(ì0=òYÏº­å:ø’Ñ£çÑç:îrbñ`*ı¦71>Ë>0Úw2ŞËyõQNí©ã(Ë±²Çk“ÕS“íú]o>â½—óÆ#åxôĞk9Ÿë³nwÙn=öV–³²çÒJÀl»æ¯›ûÍG¼W''	‹ı)x¢§<_ãÿ]Ÿu_Êæ‹¹4•æÄ„ŒÁfyÄh_Éø.[İ>ëMa¶ßå^Ùuí¹°æ÷E«ì‡Xße{Dw<|×ûQãĞ¿§8e?Ñs–]“-­jÌ›x‹Cpüæ_ctKÁÑ³gÎÚ~øˆ·~x¼ˆoşªø•-y¼	Ï†]¯—Õ~Øµ?—>Ş7¿D|™–_Ë¯å÷ŒïÛ&&b«õëí›k'ÖRËõëÍSa9xM¶>â­}ûä›k>ö@Ë}ûÄ³­Gî¥öÃG¼µµ¹¿¹Scç¶ØÌ±·=Õ†!)?^LÈÖâGÂè›’%$ØZzHy£¦¼j±•´éùMY²±…¸éé™jÊ×öÃEœ)ßCÜS|‡8o!áCà{¦­Z%´™ÙZ%…Šú¦º	õÓR%…Šj©¶Bµ>â-Mšõ›j2ÔfKUªU³­O*ßöÃF¬¥ıÃø†n·¦o¡ûÃğLXn6Ú0¶­¦Ë7L&-L•°\4$Ÿm›6³ W™Uae}Ãj
+#ª…]f–æ¹î°ÃÚÌ‚\e†Iø/¾6`˜„š†‹QFc›y€­-VÛ¯ß0GÃ:ma°†ıÚÂ¤·M,È4hÄäû©+tµ ¥¯•bÒœãÍ€<×rğƒêç~?÷]*× :n~Šø¹˜‡+^ÈÄlÁeëßæû¹²Õ½¿zv¬^1×^|¼‰¹eƒ°Õ:ú~î¥T~	¯tè[Å:º±’ïa¥½YéÂ	½è¿Ÿë.;?„4:¨;rÍßK¹cØo`zİåX®Ü£ßÏù¼÷ı÷¹öRë¸E1%Olâ‰Ùe9ï+ßÏµ”›KÏ'·ZÌU“rgâA¶K¹¡,¿Ÿó.'ìÖrèØùp‚˜æpJÉ‰˜‚×dö÷så :³@FÇú<ƒÌÆ,{¤úÄƒlrP…7‡)S} µÂ‚Hıâµ‘h¢'ËUş‡µá÷sÔrPQÓ¡¹âÇ§*Ä$¯©-'`
+T?RŞßÏq¼öPËhSj¤æÆ4Ç Û'dzêëÚÚø~­TØ>aH ã e¶¦9÷Á™x­¥º­£ïçXÊJ»“–ÏgÊw˜¦fá³ÛxšçRV(z›rßÏoyu3ìæ0ä0„©7± W0¶±ñùıìgY·³Û•Ÿı(7¾]šû]V8XiN<Èö,+´£­ÔïgßÊs"LatìğÊÒZÆ<ÛhPO<Èv+7„-Ôïg_¸ÂxG{…”ö=¦ÁÆJ`bA®`RÓ<ı~¶ªoî:ˆÎôH0¶^ú,°HhÛ¦ßÏvÉè
+÷¶NzPœgœ¬‰Ù^å„>±YúılG¹ >Â£CÇ
+qšNæÁêK¿pâA¶àRÓ(ı~¶­<á„¢ã€‘n*¦Á"NGvbA®`ò¤MúılVmá36D±äÑK`X¢éxO<Èv-ğ#l‘~Ádë.şg}Ê*‚ œeïQ‚7²…(NºNµÜ‘QX>M,rğ©"¤ñf@{°R…úı¬w¹`ùFìÄ^©ÚÂ=óæA¶w¹`…Øı~ÖKÎG„{Ğ±rDF„î²àSeÌèÍ‚\¯rõ B8T§B
+±G¯®²ò·d|ëÅ@ñ~R›d¹]OÆÑ>ëQîuãleß17Ò›ãv+'o'£}h:úçpàQîåã…#¹Â§„ê Ãó¨•ü¬{yê>„-1Ã5Ä5_ôæxO›äxœw†OÁñ^ÅÛ}‘›a0»â0U;½LÕ‘½f{çóÕ01ı
+·°RóÚHío@6j›èó†u©¯|¯aŸæG°yšÉæi{“ÇG¾D `”–mÓ\&6MsÙ2m},Äú„U©SÃ.Í¥l³4—º­Ò6‘Çf¹ï0(µ±÷-lÒÜo6IsCÚ"m}lj<ƒlI‰Ÿcs4ƒ­Ñ”6FÛDÒg¿Ã´Œ¼ÂMfC4ä›Ñ6‘§„\Ã„”(ßÂMk4E°MĞ6‘‡_0 ­qÛŸ©l€¦¦HßäMÚfãÑš±†õ™Ëægj4[Ÿm¢O­¸†å(¾6=S±ÚòLÍ+Ã³MÔ¡¼à3ÊÒ¨{Xi ØèLÁ6g›èÃÊ¸Ï0mÕ08ÓR±Å™¦ŒÎ6Ñ§9¶¢,·çk3-*›irÙØloò0Új+Qæ~†¡™†ŸíÌ´mf¶‰>¬ËM¨ ı'LÕŒÒ„õDm¢3øÊ?¾~KZÒş©iiûU´‰<¬õı¯!¿b=âm§Áï¯‘¿V›èÃ§XöX1rê+"ı¯˜t\¼¢ÚDÎÏKZNÚqÅ¢÷ÉK:İ+/ùö¦m?bÓ}cyS¥“çM—^ 7e›èíGîOˆù»Çû>=QË…tU-7Ú›<\İ}·à’S~o!˜º·,Á•î´[{“‡G~>!Y<€!&ÑÙ½zJÖîóKğ¶‰<âp%üä€#áŞcş=8!åĞ&úp L"õÍˆP’HAõ(ŠX›è‰a8‡:ôÛC5VuË‰ø‰ƒ=Ò±íMá"Æœ¨å¿= D-Ş#NÒòCHŠV@›è#ªÅĞEàà½ÑĞè1Ù!=p&;¥Mä|cjƒ¦’Â„ôÎi
+õ L¥á“)Õ&úˆ†%÷Í0¢Œµg¤-×ã2õÚ‹8Â˜.rE\ášxDFB“ŞÓûy[™ÜáïS`˜Ñ‰ŸeÀ6~_Dtã÷¿é#*|Ä'øö¸±^qÆ•ãDà9>Ñ‹<b×ŒÊq‘(ĞÎ¸–ÈŒ{‘D€<Ñ›>bì—r;+€¨†jÔÇBÎX¾ú›AæğTÚlÎb ¤áİ”i…Øm™xˆí8±ÈR!
+Î¹`yy×÷DHˆ…Ì•„Ü˜xdÎ!7	/çˆ,¯1oâ+2;–nƒL-wHX'´ c$BÃO	Y¨ÀƒLfAM¤ã¸@ÈùŒ¤ˆØB*Š‰G¦Şî;´•“…Ğ6VGçH}å@Hê³‰Eæ	¡2¤S¿q	µ™1™T«µI½;ñˆÔ&"HÖıNÇJÙS¹g)µÄ˜Ò<˜xd6ö¬"šVHÆ»ÒL‰ˆXÚ1Ìï«©o†ŞÂZÊà\šS¾K{ëÍ"rİ$ÚæsŠş<Ò¨Ë@bZ}jL³pâ‘éùC\6¡Ôë3ÃiF`4í×‰G"
+êv¢AË“friÓŒv7Íì‰EB ÂRhß<Lùˆ&§©áæô^­°·mEƒLî-{§GñtY&	0¹H¤à|8F£Ç)bøéX½9$ &lFãw–;}·Ì%¤sÙ†ôş^¼c«ÑX£ëLÿ22éFJ$Ô‘>QFçvcÀ¢júÀ™˜I'9R7İ‹~óè°¨=ÌG#¹, Qi¤îÌ3ÍÔ]ı7‡ÄpÙßW$Ìé¬ˆ(dÂ«‡œë1‰7„w˜‘BÊáEè#Ós=6â^¼yP¹D“FõõM¦‡’CçÅ"Q}õ‹Ò D…²YRÖs5)/ÚcQo	@\j˜•–¬òÊm‰)‡ÛCfo,y‡iÈÎ5sr™‘;'œ{hïÍ£C;ea~_ØOƒA;:TöIàG3ş80hÿúïıŸıïıÏ? X¡UW W÷u¿·óü@ø×
+ëñ”Âz<¥^ŒÑîÚ‡çRıD‡·>vÕøÔoÚš`Â8ë.àÊñ”k½?ÏZ.™çRV—×ro}šƒÓ¬=xÛk­ä"A÷Ğğzò8û”ûº`.KŸfå4Ru/Át[.2Y©ê öıóÔ²jAj<+:¶ìÀÄ4kÈ•GJ§ı$­ ã.Ìúeµë…!H˜.iñ&×Z9‘o&!EøS`s*JËÃX²;P	ˆlÌ!	øZSs¿ùof²Àiï«,+xße×Æ>.ú=è9ıı1p­G9ı:Ş|Äœğ“ZiG©à´.e_õs±1‘äÁ
+[s6ğ¾}¡™X¥¬F¡UÉxçë´Â#–t/‡RCœ
+9­¥œ²+^\R¯¢‚Ö çîc-µ•©®«lVcèš\aÑ™Xoe…‡ F2¥œ jÁÀ—Ir¬
+ÀöÏØÊµ¢ç2Øeæ#ŞàäŒñ•µÔyNh™€OÙß¸Ùµ,;^}-Uã›L¢Zª“¡û&kó.òõôI B#û¹­İ‘ÎÅlúŠŸ0â–}Ğ€zl˜x€É^eO£ó$ÜÆ°ã"ë»m1ÿÈG¼a¶â÷^e·á¹—…Ğ]ü:á2÷rÂİ²\zî³œ|mW¹”.œøˆ÷^æƒá(	)»”‡©õ¥<¯Â„@@œvnMÎæLĞ›x‹Cpüæ_ctKÁÑ³á[zÖöÃG~ƒ~y¼‰oşªø•-y¼	Ï†ï·Õ~øˆ·¾X|Áo~ø:-¿X|AÏF¤ƒ¾rûá#ŞZi±ò¾¹ŠbUÙ©ƒ¸óÊóld^í‡O8”Ø ±aìş"ºãİ`¿”0 í˜iªMÕ~Ø„Œ}ûü›{6öpË}ûÜ“'*YĞ~ø„Óqâé›²&dOKyòÉ³ZDÖ~ØˆµdhÈÔ¯åcHË–4$ª§‚P²Ôm?\ÄYb?ÔÀ7ezÈøb?´€'cèJš¢ı°Q°EÚ*´×75Qh¦–Ú*´—'cœP®ığoiÙĞºßÔ ¡Q[jÙĞº˜jiæöÃG¼e„©ğÅv@Ó ,…–Öƒ‰öÃ„Ñ7™2aÙ|ÃP	»¥…)–&"‰lŸ6ó [Ù]a†}mU…ÕÂì
++LÓğ5ÈNk3r•&ã7,À0[Øˆa2jŠeT¶™‡£®0hÃ¾íW›¯Ü”ö­¦!ØZp›YŒW3ağú2‚œcØA¨ar	˜kLófáøõ4‚ñ÷s×²¿‡†uëcèª|'Úñƒü>ßÏ}–•=¿}t,Iñ}0!ú‚²=¾†×Ò÷s¯…Ïê…‚64m®$LkíÍ€,×ò0$®uÿı\µÔeXÔè¸ô²Ç$Üà±1&Ì­ÔR¡q¼Q¿Ÿë,÷6ìAtĞ”ÍmŠi€»É<ñ Û³ÜÜ“’-ßÏµ•›"Éb'—ZHÌÃWÂgâA¶_)¿ŸS%%:N¦ZBb=C^N<˜UCìIşıœW©Ğß!›ÑqQ…øÆ<>I!	?ñ ÛK0+¦n+“Ï¹—J<­Õ¦!×PH§WEŠz–ÈÚÄx¥‚Ä4Ô¡C'‘ùä’”Rgr–gt¬¯Q³Ü£ÎŸ88A{#`o+äû9®DrÒÀ@xy˜´A0M 0S&d‹ä‚àŸØ5ßÏ±k©„M„æüÒlÂ<´~Â²šxí^n°‚­÷ıøEµ›qèXp"/-=ÌCƒ)ŒÁ‰ÙB™ËCÀÄ#‹9,ÏÏW½Æ)æŸöëÄƒ ‚§¬$’ûıìWyÂ|§\Ú/íÜ´§11¤arO<Èö*O˜Ü‚ç"¶|vû'dSº ˜&Az	²E¬|OëõûÁ/v—1ñ8Ê'¯óĞ	ÇfâA¶{YèÉpı~öµlH†… şyæñ!Fùb²]ËÆŸ(£õûÙ
+¿íôCéb(…ô'Î€Éæê÷³İåT	OÄY:³˜'\PÁHß<Èö–T·©*ÈpÍá\3³ş7æ¡.úÄ#€C{š©ßÏv–mËX ’CÌÀf°€“ìC<áÍ€,Ï‚­mó”h):N¸øl{9áÛDhƒ“lCğãÍÁx©Ävé<âWhAvì$Â5b1œeˆÖL,ÈL®´H‰[	6uh™<*{ôˆÓ¬C€iâa¸Ø
+_İö¨m‡âj”~ÛBÅ“Ñ.Ì‚/—ñ°‰C€Ú+ŒQÂî°£"ğ†6’µ™ÃßQcèîMoÜî6DÉD®´>µÇÉïÆ7µù×(ùmkF1Á{¦‡91ÁÕã or3DœÚÆ'Bî÷ 1¬€óŠ¯}Ó›cp æ5FÈtíd¹¾fàŒoú|Æ09ı·°ZóGÚhí/A6k{“çK[Ó_ùs5¿‚­ÕüJ6VÛ›<?2	hIyÈPÍE";5×ÍÔö&ÎE¸‡…©ır¯a£æB¶‰šİ&j›èc¯ 3+ãÒûú
+û4÷›ÍÓÜ¶NÛDŸ›z»ÒâçÓ4ä‚Ó”¶KÛD²g‹R"r›4¥—MÒ”n¶HÛDr;Â–”$ßÃMkc4e°mÑ6‘‡GÌHiœëC4íĞÔ¶CÛDÚæTN’ş­’ĞÔX¶AS¥Ùm}ªÅ°¥Á×Ëæg*Ö¨•æµõÙŞÔ¡»—f£í
+Ë3õ¿Ï4lw¶‰>ŒŒµ†Å(‹èÜÃèLCÅ6gZ269ÛDÖ@¶2eºÅ+{3-*››irÙÚl}˜mHgËN”y„«°¥M?[šiÚĞl}Ø—€°Š‘Œá§ÆÀ´QÍ(XOÔ&ú0„«Õ•Õ.ƒBÂşyş±imûe´‰>,vÌ©òWìV¿?Hºş`m¢·kA ¯¼ sE‘î‰Mú/^Tm¢èˆU-o­^¶éEyU§—åUßŞÔá§İGl»ol$o«ôõ¼íÒô¶l½J‹†olvoıtJ-Òiµèh½_,I/9éø’Né;[z¥sméÖŞäáŸ_—Å«b	 I|¦‹oñš1 ‹ßö&0Âº‡üWÌãØCÀg(Â
+ cÒm"pÇö„ŠRhfÛCeÈÄ**c*Vam¢¸Ìò„U 	Xh©ÉŒíXfìÇj¶Mô?”™(Õm=(ëùPÙ
+hoâpV'+ä†…¬Œ#“’A4)m"w †‘Í¤oX>2ƒz,OVRöÉŠj¹†0İlÈ%äÕ†Z9ÊëAIzm¢P¯æ  ¬ĞàMDp498Š™3¼è# {ïş‘Š×#DÆpãGF7^Â‹<âÄ| ~b[àñ’ÃBÏ¡èøH#uÄ²Wb%•|´‡« <ˆ\$ö0r½é#èìV±óW_¦éèä:¶'”ëüÍ!3ç›Í‰£ï¦tÉr»…Ó–ûqâ‘Iì0	§b€3ô¶O2ÄB8˜)6&™†ÆU²Ë©#	§tuSxÙNá6qÈ´QˆW'º€q•üL<åkøì)€_2Åu_¡œ˜ÃZ·ÏĞAj.¤š˜xdRb@Êê›aŒĞFèHu¡ÔgDÒ>»uª“Ÿû“Z3£2©U#n“j÷Í"óÛšßéZ˜'VíAJİ1¦4&™ª½ÅEĞG³ÂÉxW)K+fâ‘Ùe0’-å¤8P¤6–2:—ÖTÄïÒÜšxdB¼Š‹òá†U—±Ä4û"Ú˜váÄ#søøÍ2=°¬ÚE|¦}±Ñ4`'	;°k„®¢°a'gœ6éˆä¦¥=ñH¤<‹x\kôUN‹?âÎéL<Ü7B£!):¼GÏ#càéšD”<}—‰GâQği8ˆFg…—sÀ>=(GôÓÃzsèğyYfªÄAxq™ZH7/’éN<ñ³a@¥ténf"$ıQgJÒ_X$Dé T†AUgw‹3i“~s¤uÒ±x$¢
+]2&v¥û)¦ôï#	•€‰GÇ€)À˜h¤»"Ì	±ŒCDÊ,[S°Bg¤œ‹pH¦ï2^	¾¨L<i·Üa]0ğÌ¸M&3°ãld~&¨àp_Êz:º”YÑŒ>EŞ4¢SoÁx„hËš°Lßf€,¼=‚öæÑÑ–wX›}2N×1›Ç‹ttô½ytlh“óûÂ› S£`@Íxä›Å¿„}ÎPX _Ÿå©Ëş|KØös'v\˜¡UTAÇ}1Z´
+ç´âåìğéü(îzËšxH[¼‚È+œ	Â6ôx­øìh`ÆI¸çm#¾ÏË'µeW\<s^e“>Yï¢ıV„0ù',´Ğ9ˆçU›,T†Çv~ÎZV…­×‹rùÄ™‚ø±ÇÅYO—ÊY¤	Sš*
+GÖ$‹ª=ÁJ¯€´¯~Ô«ìÏÆioyóÛCO%G©p|åZËªU·î<Gs­åÆ}=ğl×§=Ş,ÄçŠ.2Q×uÅñV²~ì´£Và^6lvØÕl¿ˆçZV„m·²ÊPYjyn†]ıØ,4°kí¯r0A½xÈ®~Ê²Röê85Ìdx%×VŸ¦»Ë1º—SˆeÌÃY$òßÂXVˆ]®rŸ¬²°è€:êE¦‚y„¶OÓ½XˆkÒ€	¸óŞÇ°I.9¯§y±×³\ç¿W^~hüvPOıóhËğB^,Â	ÂêôÇÑÅAp¿zvlx­ùq0[äç{ó[ƒòB[œ¹s¡°' r%ašm–Ú›…¸.´A¼æé¯>»ô>—ëS¥HsÉc’sÜoöX±:½=¿Ÿ§²jî=´)GbsbÄøc÷¾éÉç×#ßÏCyO!6ôO
+Ì°u!ó&'ÃK'z$ëxÔ•?[’MŠätà¯¤‚Dá›œO&³DÖÙY©Äsò)1Cİ»Ä~Ó›ãß$Å!ñÖ
+hÃˆ­	 ŠB­¼Éƒ¡0í#pgä°”›Aÿ>AÌ7çnd µ£ß ›€Æ#t7“ñpğÈèã-Â¬‘ì÷Œ#\Ä›û;w9ò->œá$¢àMú&…N k%gÀ¹PpÄŒŸ×øóÄ^‡XÉğ%hÊy¥‡Ï–y%ÃcÑói¥ƒ?!QoúØ+xâPÂŞM;ûíØÊÎ#ˆŞ˜‚rîÅ ¶4ä¦üÁ[Z‹ÌË…cÚê˜C:øÍ"ÅÏ±‘‰Ì-‹¨#ÏÕYˆÁgy)‡iRút)*Qæd¥ö²X?yØñÑÙÉÛc)‡¢.È˜$Ú‡”êi|FØ’ŠåX5KŠ[)NÚdà‘*HDàòM5cR‘\râ˜çÅ#ô%t®ñ7ujü"ëÜşƒ¥’‡7òb ^–ú4ßTşñêÓ<èßFöCÿv/a„à˜*‘¥[çGåpØé‹H†N_e#ƒ4•ö5Öú7Í)¯å0·r©‡=–{aâV—¥¶¤MP,)ï¹´sS†õ˜»vâ‘6èF.>x)3Õ¢!ÍØaç¦d™¤±|Ôn6êñûCù†ÅòÍ&yÊ¿‰Ešõ!ƒíÀV¶í®AHaû)¥_Òù€#Eñ}9(öXºs¾œœĞ%”SHñæ)æ¦™Š¹Î@vlò‹;ÉOGœb~Î¨…â
+—.ŸÍÅà¢GéLM—ˆvD¢RµãS"âí6vlLbtŠ¹M‚ÇÏüãÊ¾3ŸRö°ÛÇ^šz°ÆÄ{µ=¾MôL½8$Çı,]s˜Ûããˆã@ñı‹â¯;ÇñÿéWıõVÄñ¬·Ö)³šø
+ÚŒDÀÖ:^)’®•çi¹ù&wÚOZªp6®{9ÀncşHŸÛ1h$Ä«‰aä_ZÎ @fé@TŞy×zp9¯å/r?!  fN^’Ú-ÛµªúëñsÛãõ„;¬&<’qƒTFî‡¹ê§,•í‡9®k/ÛæG;½Ÿq=/Rğ˜İµ³VÛmhïÔŠ}üÜæx=#òv|&ÂÊk©
+ëíY°;.ÏÁPîxf×tèùŒµÜÚª¨ÈƒïG´ÛĞŞ„SÏñs;J*^Gñß	R@¦ªĞ('‚aŒ—ëî“u|ˆ‘ù>RûùX’g¹v»f´ÜnC[^Y?·9^Ï‡è'Ÿsş‚–\@ÌïF[É’ë`:€ü€œOx2šHn¾»\ø&j·Ş6sÿ¯qªvuİ~ˆèsgDjœĞÆ&AºÍEÇ¬Jš9m/^>¸ú¦n·lcîBŸÛGDø5‰eÍp$æ>ï­å²9ú†ñû3<ò‹Ïx—V
+(¸ eZ¸İ²ø}<~n{¼ ¨‡ÀÄİ ªí×‹‡İNø4
+õˆr›_ã‹ÜkŞry<(ƒ¬œlBa8ÜÆ^ã?·=^kõU0‚d°F(ÔâG¤E¸8ì]qqF!ÙŞô~Æç1Wá^ª<¥¬İvMp~·b¬äŒÿÌ(¤3àXÈFññ²ÕmUA‚XQÈ¾Ü’Õ@@À²Œ×Î¢Kn·¡}h”ãç6Çë	±?1‚²Ã,û]vÕçc¿m0bÔÂ#[öô5Bô.•¶ñ…˜C4[oª<G=·9\O¸‘@õ˜{Ú‘Õ5èhµoŠ‚†#=È/j²[Êêñ„Ú™k…ìæJßGÏíĞÇP°zÛ §ªT^Œ5]0Ñs“ ùÆñ*šö"ÿO¤*D>oÂÔşfğ<eVÍmo=6/É j.s˜Û}†÷4P|ÿ¢økÆÎ±?ã?ÿª¿ŞŠ~5+¤F½ŠHSğ‡°O³Ñ;Ò›.ÿ'h¯eÑ…)/zrT!$ñ¶¯w¹°ùÕnC[•®úø¹Ø‚
+/ŠÏ¤d}İKšâ,½Ì
+µC6 fĞbÔ¡©7=9Â¹¾HAäo­eÃvP»íWúø¹ÍñÂgáaøLä¸‹ÃQV•MÜËºTâòxbò{Qû	1 Ã}Š÷~h·¡MÛ2G¿[«‡ÃîÃŸ}Ê!Ğ}w™Àí+J$¢Öøé:¹s¬Y†ºQ 'Ûmh«¼U?·£;(. ¾íV•À¾6Oì>å@²­œü@¿˜£¶/z¢Ÿrn«0-°V‚àPÀG3&èñsÛãU'òÜã‘ø‘YŞbğ<,À£é*ñ×y$÷[„°%£ñ¨ËdŒyº	läø¹íñz‹Ğ•ÄEwª¤rª I¬`ÇGD4Ä3ú»ô^†Ëe
+Š‡J¼…Û\D c.%ŸÛ1^kñ¹6 G­€şÄâEôyƒ©é*€×ààÅ9ĞûYƒPÕÉ¶–..š‰v¥Th9~n{¼‘U<ÎÈ2áŸ 
+DH%¶ïågôe§·P\×¬¾‹"	¨Yµ[¶Š0~n{¼„bõÆB* +ĞLÔ£\€ş]å(VBô,hñ¦öK
+†åê]6@ÕnC{g`³ŸÛÿo¨øŒì, © ô³ó¿ëŠE‰pŞƒL€_0ê¶h·l/”ş6¯?MPza†µÉîY³İ†¶š1úİâXù^'@2›où¸—r0‡¬«?³)àT=·ãŠë*)W|Î (¦‡u±M´óåyüÜöxq< õ`	KîFÆ'Ú-Û»oóˆñsÛãí(áÒÁÖ÷sÃŒØ£İ†¶+>çø¹ÍñâHë…è£²®?›-› ÓÈôè¹­ár“îkÇ“£Ü÷s+¨ãvËvÜËãç¶ÇÛñÂ0ø„{©×í6´wšC}üÜæx™ù×uĞùV½$h·¡›·ãç6Ç‹#’WµçpåA¾[í–í»Ü|­1~n{¼Œ}8;×ã8ë}–ùµ[¶ãâóø¹íñâ¸¬ìÛñıÜ¨T¼F»íUQ”?·9^1Ld¥±ÑèßÀÂÑnÑ¾¸MãçvŒ—Çp#¥¯ÊÜ¨ë¬fË&2Rö8znk¸Øí˜ È3.T2Ü£İ†¶nVíãç6ÇËã¬€ƒáíB‚vg»õ¶üKÿŸ‘#8ä×Õ»QeŞ¨J¼F»e{³ûãç¶Ç;.ĞÂs\2pæÏh·¡-ë¨ŸÛ/ğ%ïÃuØ*Â¼:EµŞÖ)>~nG¶Siğ^é!àÂ£©:ëí£Tòø¹íñFá.øú6	o7[6Ïrª¸†GÏm×i(àAï«TŞN;ùZ£İ†6’ãm?·9^ÁF<Ô<Ô.?£İ²-åÁ£ÿÕôh±CáRxG´´P´ø‰vËöÍ0`‹áSÓ£u0f®6ºŠ{9Î=ÚmhË5ìãçv¸ŠÀ® ZéS.YÀÑÚn·¡­¢æ}üÜæxÅD‘I¬Ø\4G9k¶[´ïÇ.·ÇÏí/ÿU ª}Ü)·[¶WˆñsÛãÁQ…Ø±<2* ¤i:ılBµaôÜ«- ÙŞñ5TR$ä>¢İ²šã\&?·=^GaÔÃaÂ©^¥î5Ú-ÛÔ-‡OM?h–º;ÉVQ±w‹vÚªØØÇÏíH²%‹ßt”‹¸£Šã+W´ÛĞÌ¶ŸÛÓœOy0ÇYvæ+P2ÑlÑ„ÕÌÓ¡=·=\ü/ª(ÆÎeóğ „Û-Û§Ó~1~n{¼Î›Ö=„êW,úêfšÊáõÑsÛ ı£RàİÓ³ƒOuªvËöU*#š1~n{<8ŞLÇ#XÂC@ğWk¶[¶QM›¥{<~n{¼8®÷M§’Ğüg-ªÎ«F6•Kè£ç6‡ë03õ)'7>kyÖ#ÚmhkÑ†ñs›ãÅq¹o¾,áÕF¨ÑvX¡‚B‘ ŸÛ1ŞWélä€ÒÕßÏ£Cfn·¡}0ÍØÇÏmG TT×ƒ	g§1êvÚJâõñs›ãÅV/~œ fÃ¸ÉóªŒP@ËÑsÛÃuÜ»ŞdUlEğİnÙàLŒŸÛ/(kŒS+¾å+·ÛĞÎªRûo‹cu_~ÿAÜ™Á1rÛWl ÌÃ§¦G‹İÆ²* ^?ˆà­Û-Û¸¤KDÃ§¦Gëô=aVÈxáƒ“aÑl½¹3Ø×GÏí<)/<ÕsÑ32ö<¢İ†¶Š²öñs›ãuƒÊº?7¼sz¬núägÅx!jbôÜÖp±Ãa‰ÑqÅí–mxí”T?·=^%pÙÅSéëUÎ‘»ŞÛt<ûğ©ÉÑà‡ß28çä‡w7qºY‰²h9zn{¸ø±0,0…ÿ±6œ{Zö<O¹6ÍÜN
+]UVQ¯lépAœ½C5¤Cì=*a6ıt`L KçpuñÛèi¯¹¢Ÿ¸.”|Úè±7ªOêiCÌo°¢ŸÓˆ1r]ë²Óq÷¥=¸­Ú=mèLw94ıt˜FÌ](ôµ ›!ü>#’G?ö¨ğä@ôÓA1^P@`S¹ÅQüË=mèñıLI3·û…M85Ê™ ÓRƒ‘½gOzß±D?¦Q±Ü]Nºôb\‡öêQÈ{ úé #Ù Ü*|{tq@ô´WªíD?¤ùO$=÷²#ÆP}ô†\:è •nü4º‹¸ãà(}_äL’àè¯0¢ sÊ70¬{„·xzîfZ3 öf`ØæEOPœd@6îšP @€P„G‡n>u	&\AFª½ÉÉ˜³ı§êe Z ¨‰jt"A¦–	æÃØã}/âÀ£8JÃ½sÁ×B\C¥Ú.hñíÊßw!ÎÁ#Šº©ãMî&¬Õ{sDP …C\]ãÆI™ÈE"x‰o‚ë„*{Ñûqñ~çá’D@XÑ<´wÒ¹xwT| wÜ{ øşEñÇ„b8ü¦ï_¿é¯w¢·8¼÷ï_ïıÏ¦GìËâûÏËâ5¥E8¬Úï«ö¯Eï]Ò÷Õ÷¯}õ×¾tQ”¾÷¿íı?DGÏü@‘İŸC:ºØĞ¶;âÊÆ0áÍXJ}¾éï¼N 8À`Ï#Nl<b[±¼4.ØŞÄä¶ñjI}ÆôCº—èo¥O‚çC¼«T:ìozr„YÈW]ÎWCç{û*Ò
+ßñ¢8Ë©cÂGä~D¾’“oŠ1Ñëõ(H1“B''ê&8Pdù=Ğ;©Í –#3HHé ²"˜k9î‹1OgÍ°º«UÒ›ÜßäÄµ;‡`¶y0àÇÈŸŒß\¯pUxï,‹joÄ^„Œ×!V¢§ãó#[êøêR€»âR†]ˆ¾¨ıApYÆ3ÜÈ¸$ã‘«*ùÜ4Á@ ,Í'ÌÅ‹xÓIát3" ÆmL1¢t²§­¬Ç‹Ø¸"¨póMX*—â¯Îj ÷ô¤ëB‰€ù;|ÑóQXƒ¿‹ú~è2ŞaŠŞE,N¯3 	 –:É¡#÷¾¾PEl1şŞgß6’Ó‰uĞ’‚<hP“JÏÜ²O¬gJ¡C/Â†m•¼‘èã–;”ñÉÃü ”&›ªâïºe ’ÃF—¤¥4»‘šì€zdø[ñ}.ßÊncÅI%¦pğ«)Eyû;"&®“{¹àœí­sùÊşí¼s«êõûºx\Ê×!¼ØK×F¼éıˆ›¶e –.Î^?®	/wìÒÈ¡X˜¿#˜âEìç$G
+[éS¯OÚè¤F“¿mì4ÍíNnµ„£Š ˆœ<æ«"+ïõŒ‹İãÙ
+Ó¸/µMÔ±šfñ~ø€X½8_ê_¼:åpa`6zoj?âo7BîÎK>@ àxV"ÕÊG~	äÅÚDï}ì¼h;’†B$D(Ôyi÷¼Ğ(˜qgvVUˆŞôä
+^ ,ˆª§ñ*TÅËÔ©î¥ã„\äŠ\¿É½d Úmt@°ª¡hmM!X€İ¡+‚OÚJ˜Q6û‹ŞÆÑ±
+§ ïªä«öÅA¬Ì4ˆ˜‘ª\…¦Şô~Æ]%Cı2ÿeü^WªfQ7H®<•‡xÓ½PO&Ağ>#Š]qg˜|z˜j:M=şhF>ó‹ŞÏˆ|	('Áb¹(Äd•ÌG@¶rä[0£¬¸}â!ø+¡ùŒûC
+ßö ƒO_Â¥ü°:1¡ */r¯oÍBÃgØi´ÙÎ] ò*Ïëµ¡hÂS,Îj? Ô÷É*ï
+äpDˆ%]ª+íú¨Îÿp:[Ù<'tù$!ÏøÊPo”0„x¼Ğã¾È^›^‰Ğà4Àã	Y¨WQYÌ‡¥«Ú›:ìj¯uV‹´¥”‘ 5Š›
+ j¿@"V hç7~Ñ\˜)üàÀK6ş04ì½‚HsFÖ0úÜˆ| (h¨_•1„:KóĞô"Àßè«Æ#ôÆV ôO
+JE¬m_İøcCÂwhûnrF·z?#ªh@Ìûdâ_‘Ö¸^jüÊUN‰¦S¶/bƒè9\Äñù`1S@™$äÎXg#{YoòPº P]SÈ%\)ğ?ê£)+-³¥µ(* Õior'aá ÔÔÉ}Ìƒ1´‡PgÁœv¦*pÅ‹˜‡÷+!‰Ÿ{Â&ã†i®$=³<¡D‰ãlÜ5#y XP[µpi-ò}©v$è9Ş˜.Dætnwj?0N¯9ø&\Ğ'Œrú…º›³¡šL;.¦ÚˆÎ2òêş¸8x‡—«ê›8)M©{O@ÓåÓÆ~Óûù¸ñ`<2Ÿ8 ãa:û0&9Ã£Ï«ªIoú@»À?—;ÅgtÅñ%`axõPêŒpFVªláEîˆ«ÒI £¨İ‡XA•`Å¢¨× {•W¶7µ‘BÀ a|l>wT\…wñ6XUlÅ|»æ£T{Ñ§!Ç)pˆ–Ç5€ğ¥ieì“ôÆ;„•Y0¡¥Ú@h«ÚÂ ,¿yÈMÓInKÓÔ~>YM*mD‰Äˆßi	ÅrkÑ©§óîä8wn>p³|Åfp`àôzN°½'ìô~ÂQ0Pø|âÅJq†‡ØÓ…ümÌpû£Z
+ôÖ$·¤0LJèŠ2Û„
+ÊYçxMh”Ş@nƒußHÀ·åy2hÆ‚ğHk"â0a¸gŞê%rHÁp0Ô/Ëº¦›ê1u>!†{Â<u–ä¡ñ–@a›ˆ'.Óag@‰IµÃ‰Ğ€8„ûÓÉÃ¢ÁŞáC³QÀ%Óª\¤ÈÇïšĞ7Eô7Œ Pø<!€È€æ:–É{¤İ2 HáÂXXÔ~Âk×(ŞÂóY~Bİ#ô×Oè²OWL8Ğû	áfc«À´ŒveF„¦î­b‚ªŸÈè€f”Kñ¢ãz1¿3N,Ã Æ‡3Phs¼gŒf’G”·`# ÄïŒò¬Ÿ„ø‘š!·Åz…©^Ô|@ÀÕYÙŒ$xì¸ ùH œKÙ‰-ähµuäv¤şOÔPIñc:SG;„gü§@8¢r7!ÌJõ6vÔ8ütä=³ Â2an~D ³#IòÓÑ±ÌAÒ”U=ˆåâÉì°
+³èÆ?·íÈ,'‚ÎwÂï8tà8ütäYÙŠ{ÏôÈ:ÈĞzÌÀ9&ÉOG‡>²ğ³à?²¢m~ÌÀ;&ÉOG‡@²ôQBUäÀ@=vŠ¹µx—¥,Ì
+<P¯&aC‡pÉOG !XåR« õòP'&2:ûhŠ¹=`!8«µc!ÁÛ™~Š¹İÑ@Q$«
+0äĞú1F¿[FBáñHHPÃ©J(dvö1(ævÇB>SÏ…dU"@™†?ÁÔìhÈGG'	p9tHmuŠ¹xHV)[;E‡ëL@äĞ!d§˜ÛˆDiµ+!â	ï91‘Ù(È ˜Û	ÔyuT¤
+2­™ƒŠ¹İq‘ Z„KT¬`äĞ²ŸÛ<Ju%2¥–Hhdv2(ævÇF>8³wl$X R]‚#³#ĞA1·;:òp÷êèH”øA9òÄGBDvŠ¹ÉFÄÓ’`Ñ½)<d=·	âºv|$ŠA¡DD$£#‘¦˜ÛBòÁáÂ£#$Á!±„HÂDvŠ¹IÀg}5cy¨µâ²³ IBEvŠ¹(I¼–: $Y´êp’ÙÈÈ ˜Û)‰³ŠÀRRÕ·j‡JfG`#ƒbnw¬$N9`IÖÌ?;X²·uÆ<‡OÍ€Kâì!~Uà%×…ÛÀdvD2(ævÇLVTğ~:h,P~#Q“Ù8É ˜Û8	rn8¹ò^¨û³C`ÉN1·ó6c€),)Hw&zrè\²SÌí€Oâ¬è~'|—¬Ë“øÉl`2ÆÏíPâ€, ¸ äı‰®™Š¹İ!”8–»mB¹nğ7²£:ÆS3@”€$àzÃ Q‚A	£Ì NÅÜî@J(v\=Ú”¸Ã—Çw ¥{8iš¹=)‘ja”¸ÔƒÄ„Q=BM&ÉÔ%³ã0	¦*™?@(‡ŸîD?¡$ğá¡Ü R×B™=˜L¢Ÿ¡D2ç®#„rC•ó}„PfO &“è§£C(‘F¿Gåv2à? (‡'s’fn~ù1\<Ôñ“¸á÷Åvüdö/™4s»ã'‰ 9Gü$
+‚àBÜŸÌ€K&ÑOGÇOÂ¹9êˆŸÜnBüäĞ#¸ä@ôÓøI¸QÇŸä1ö|rè14%iæ¶Á“LãJâEÙ]±E #zÚĞs•[‘Í úé0rÀ¼æÛw·(¹‰VZ·K`åàŸ~;¿’¥Z³Hfq€O=ªZ<ıtFÑ>‡?„€>T³§=(óæ&iæ¶)"¥§{ruU˜<¸G8n¿Š%.§
+’Ÿ q Ú\PĞu0pÔ£§½zİi#ÑOiœ½ÀEÛëÊ°BÜ3³gOzP£6R,$úé0#ø%·†âe1 êvOz‹pvCD?¦Ql'ÃXµU5@x3³zÚ«ä6ıtÆH^­ªk`¬Ì^ô´Wsûè§ƒ4b &x…bŒkâİÑz*ñPÉO‡IlE ’…g¥Ñ‘æ¥ÍêiCÒı‚fŠfn›BlQB„oÇ0í=íÕ“µ#‚è§#
+B!Çµ/†ÀµıÎìiCp!.!¢ŸÓ(º‰â‡0ÖuãŠåÜÓ†Ügãj}"úé0ã„º}ĞµFˆ¬GO{õ¨²Ä@ôÓAŒáÄÓn×»àöêPy‰ä§#êI\º»~E†W1Ä-{ÚĞS]d"‰~:Lã²ÏCËXw4ƒ*-EOë=+ÎÚ¸˜hævPü‡®IÁyp%(Pâ/{Æ?¶‡.y\èŠypß\yäÀXyĞËG­ß’xÒò@DíôŠ‘(C:şQÄzà¡"ˆVqQğ =NÙÊËÅ*ÍU‚«gã¢kçVfb‹ÉC×IÚ'?Dã°#b'7#>®~½YõŠi;‡£Ãi€! #&Î“ñ^„S¤RÈ=:2q#ßÀ##³oÒÁ7Ğ³¢9`¥¾l°%Âšy9°à×
+!Ú&ñ´Èˆ£Ø€¾.P¥„`Š;&ûÊè¨Êö‹Cğh¾Òü9k\kØİ÷ï_÷÷ŠØı[|ÿşOg'†…óısáü¹ôb¹ö5şı{ÿ½Orsåüş½#ÿŞÕ®,ß¥Ç÷Oéñ§üqtÄÊP)¢wø¼oT$ˆ£2ì—&ÛdºBg#ñÄb¨Pf Ê»ÃëÁVÑ7V¡Ò8ıµTÂ¶Şò9wùqˆU¿U—¥Ğ„À!M]eêªòºœù‹ƒ˜¢2?#tº(g•Î¨[d½{Å\ƒ' e<Ù¼û¾Ì‘…˜^:ÀÔ¸ª04³ûIuÏ]+uÕ	Ìëùâz a]D‰µåu˜‹Â»Î|  Ï5…²rşüß»HL<â[òŒ%â03NAè|¹¿/îÙ8ùøæ‚’\Dñø/±TOÒ U¤eì‹Œå'Gào\«¢ŒÚºİ9Ä£Âµ‰Ò¸ÿPr #|ñ¼‹Aø|Ì^,•c…²s¸›ûÀşøàü(×®å¯Ø&ÍY±®tE›×ÿB FÅQıxVÖÿÁ*±•èşö¦CÈC.D”¼úñ[NGƒh˜£ÂNŞÇÍ®,ğ·F¼xÄšªX1¸Xº
++ãz„N°pajC ŒÇ×±ûı¼XHú¡V³/6C¤™¢CV5&íˆ;ìp;„ÅÍ_xX<>ªYË²@=«•Õÿ”cY°[X½Ø„Xî|6_Ê6rA}£gzúeiÌÕéĞW}tBpuÎ¢ˆîÄ#W?V"RÊûZxs)*+qU„p~Øl(É‰ª{óˆ§…ß"åÓá…"[ç9˜D¹	 /âàéz{e½YÄÀƒƒÆÉdÜÃAÁâÛmq9‹ÊfìgîÕGó
+ñæ¡‡Å)(Š0åî„Ä-±P9™]#(”ıÂÄ>6üâ;ğìŠDL>-ŠÑàš AÒ…Çõ°«a^_w÷b‘‹÷®‡…´ã˜M<öp=x‚Èi{” Ñ¼¾1ìÅ#–ïiaĞË&~²B–²&p¦RO½®ObâxØ…4"Ñ`ü¦¦òä¦eÇiÛÂ‰BÌª:rˆ=‰„lœ,lÜ&¹C+?‰pëªö&…1•—{¾8ü¥ƒI¹dgpìÍ‡¬æ“Æuw˜–Š÷+·™G<ê‰¼2	ëã˜ò^–±lÕş òÔÂDõŠP°Í,ıà‰ôÚÃÃªÍDQè &5'Ö+xñÈ-‹¢<ˆÿ°t‡|Ñ\ÈKªø¬ºÅ‹ªÅ´ÉÄ ì¹0lr½€‡øT<jØ¬B@àh‹ŠG '¥+åÛÌ Ÿ{b%Ø‚Ï		¥/ÜîãxzîRP>¨â+‡À“È”\Y4È¤áœeJ#€Ç ½ÅYi{¾ÿæŠS¤,iÌ…lPy£Eƒ2VÄsBê`…DO‚c¤	%xZ˜…mn
+å¬%8¥ï*ëôù0ˆpÂ˜Vto/TDÜÏ .t³½7\‹pqJ+ŞCUªIb3F…á­¢S×<·ëÛq‘“òeRû©0”ËÔ !Míï«ó ´ğc×hË#ßfz#@pkHü.‘ã.Šk2q
+™èªIÎ©WÃoéMÁT	?…kD‡vu=.\ÙV|(nvªµ³ìğ±H’@/8}¸€+ŞëYu—ŞÂbyÍ™B@ÍBòƒ¯¼P…6ß¤nÔÁ¯²w‡ºş+§ÌÎ p0<@/,~'¤¼+QíğK1%_ä‹>²
+»„Ãm,=…EPaÚäğh¤äVÑW€o¢7ğ…xHáx¶d9¬Vù”D˜¨ï÷y|lvá¿E±Òìr®êƒ§+óN?™‚r'ÀÀ!1D"‰7	O¿C~xh‡ód#|Mšâ1qôQá	¶<¡SDØ“QË^:Y§½$"‹–&rï²ApºvŠ,M¤ITšğÈ½#`YŸ4¤µ„iAÁ²B8	Ì"¸4Ú p7¤hE»30k“{H±£ƒ{Ü€ôÁ‚Ò€>½æL/y	.L‰*å$¹.Ê!±@æË®ÍB\&IÜ-Ììöp #Y§Š¤aüı³OvLvPğ“ãØÁ*Ã N»¢ mjD¸d˜3ïî¬zpQ
+h~ˆhO~azŠ8¾ƒ+½_„sÏIİîâ“ãR¸’ĞãyZ
+¨œi–`Ö8ÊŸxæ`M8iÂâ€nAqˆî¯=>´ªI Á9)7Ô‹A¼N o\	Ãw„ê$®£„¸­SåÂ„ùÈØà‹>â9@^"nèC‰ƒ®&qbÀ” ÂâÄ&öåÇ/}²K'AY‹JóC6"æF$3KÂÛ-Tm…\0:°DÈ2œ™G52pİE0ND^º KãppDzüxZ<ˆ*VBÅ@ ïeV³²*ÿ…hÇb¬ˆ¯iàö<×"¢´z	 ¸ñ !®“ \İö'Ã¹pïw5w¡•xŞÈÃ¨J… O¯Fµ+×™sZâ/-Fp $z±øÄ„¢¨-ôJœK>âgï,"ZÌÓ¥[ÄÅÚ¨-…3 İÓÂtÀÒâVpT$Ã¼~/ÿ‘2úÊ§‚Ê$Æ¹ÈèiC®iè§Ã4øÁb+›’ó1ÈšÕØù›.BAÂ šçA…ƒ£í‡xãÊ@Œª¬”ç01 G;,Ø5ß¨ç†ô¹2˜m½5›|ˆ‰O‹Áù|^"†ˆA[;âfa'‚KPÃ-2²•%ãÔ#›íà)´	O™û0¼pÀa>¢ÇË³­à¥ôg>!™l&§8ƒqğ±#¹YŠÏ´£^|½1›–ò›O¬]Ü-(NÚX¤ CÔ%ª´¡üz …<Û…ßÕég>™šá¸ó¹a|İŸuÇ2I1…ÉªCœ]»=•vÊ›IÈGÜc(6tŸqR\lpL¾<{)ˆühÊè¹Xïü]ªƒ®
+üéˆ;‰¶æ•k¬é‰8àÍÂjã‘ŸC1±Ø8ô¦¬ø#èêYÜ1°ûT—§AI"_â³“0Š4Ë&¦>BñfA®°sôóôf™#ºØë¬uc	vÌ±2ıÎy¸=9ëı<ä¾_\\ûáËş,è8ÌVÕ°±í6ÏC´ä›‡1²"×9Æ(`Oë¢Øšx¨º=ò0¶“bÉ¿™o;Ì_ÄÚ(˜¿™1¤}x+£qmq|!Õ5à"Ş¿êùÜÃ[Á<Xüù'º8É«ÉÅübÍº‚¢å}5±Ö9¬·‰‡qg¸Ö4V>âT`.lV%R"—>>]ÃŞ˜x…ó±±SYÖÀ©Ø„<q~Û³àUçN8±ƒóª!VxT–Rhğt%åLÈl×æw©“‘ƒQ*ü5–ƒºŒ°8ìe æà¯19q SØ0k
+n!‡‘š2™g'ù{Cló<ç>Hö‰ÙÂÁéº†ÇûQ%ÕÏßKÏ=ƒÌ|LãÃä#p=adn¡¿¨ï~^ƒŞCÜ®16SjÏ72ÔúNmşeqíóèŠšw¼bç§.?k=u?ñ [pÁ³Ù ùÆ½œi[ Õşºùyğ°i¡L<Èö,”ÿ†¸Œ0­‡Ù¨GçèÑ-ÑOi|3_ÌE‹ÛÑ~"õDª=§Î°%ÍÜ6…ŒÆÿû=î"
+endstream
+endobj
+5 0 obj
+<</Title(Alpine Night.svg)/Creator(VectorCraft)/Producer(VectorCraft)>>
+endobj
+6 0 obj
+<</Length 950/Type/Metadata/Subtype/XML>>
+stream
+<?xpacket begin="ï»¿" id="W5M0MpCehiHzreSzNTczkc9d"?><x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="xmp-writer"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"><rdf:Description rdf:about="" xmlns:dc="http://purl.org/dc/elements/1.1/"  xmlns:xmp="http://ns.adobe.com/xap/1.0/"  xmlns:xmpMM="http://ns.adobe.com/xap/1.0/mm/"  xmlns:xmpTPg="http://ns.adobe.com/xap/1.0/t/pg/"  xmlns:pdf="http://ns.adobe.com/pdf/1.3/" ><dc:title><rdf:Alt><rdf:li xml:lang="x-default">Alpine Night.svg</rdf:li></rdf:Alt></dc:title><xmp:CreatorTool>VectorCraft</xmp:CreatorTool><pdf:Producer>VectorCraft</pdf:Producer><xmpTPg:NPages>1</xmpTPg:NPages><dc:format>application/pdf</dc:format><xmpMM:InstanceID>6KUK9rrMJ/KHWrMf6T3NdA==</xmpMM:InstanceID><xmpMM:DocumentID>6KUK9rrMJ/KHWrMf6T3NdA==</xmpMM:DocumentID><xmpMM:RenditionClass>default</xmpMM:RenditionClass><pdf:PDFVersion>1.7</pdf:PDFVersion></rdf:Description></rdf:RDF></x:xmpmeta><?xpacket end="r"?>
+endstream
+endobj
+7 0 obj
+<</ViewerPreferences<</DisplayDocTitle true>>/Type/Catalog/Pages 1 0 R/Metadata 6 0 R>>
+endobj
+xref
+0 8
+0000000000 65535 f
+0000000016 00000 n
+0000000067 00000 n
+0000000120 00000 n
+0000000295 00000 n
+0000018097 00000 n
+0000018184 00000 n
+0000019209 00000 n
+trailer
+<</Size 8/Root 7 0 R/Info 5 0 R/ID[(6KUK9rrMJ/KHWrMf6T3NdA==)(6KUK9rrMJ/KHWrMf6T3NdA==)]>>
+startxref
+19312
+%%EOF
