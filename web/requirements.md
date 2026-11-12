@@ -18,3 +18,9 @@ The web bundle must satisfy these cases before it is deployed:
 - The starter exports a DST file containing stitches.
 - The preview comment embeds actual screenshots of the starter and both settings dialogs.
 - Publication reads the credential includes used by checkout v7.
+
+- Permanent documentation links to the published browser demo.
+- A PR preview opens its own documentation with its matching demo nested beneath it.
+- The demo’s Documentation link returns to the same PR preview.
+- Replacing a preview removes stale app files from its former root.
+- Updating the permanent docs or landing page preserves PR previews.

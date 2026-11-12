@@ -14,11 +14,15 @@ def git(*args, cwd, check=True):
 
 
 def publish(destination, source):
-    if not re.fullmatch(r'app|pr/[1-9][0-9]*', destination):
-        raise ValueError('Destination must be app or pr/<positive number>')
+    if not re.fullmatch(r'app|dev|site-root|pr/[1-9][0-9]*', destination):
+        raise ValueError('Destination must be app, dev, site-root or pr/<positive number>')
     source = Path(source).resolve() if source else None
     if source and not (source / 'index.html').is_file():
         raise ValueError('The built site must contain index.html')
+    if source is None and not destination.startswith('pr/'):
+        raise ValueError('Only PR previews can be removed')
+    if destination == 'site-root' and any(p.name not in {'index.html', '404.html', '.nojekyll'} or not p.is_file() for p in source.iterdir()):
+        raise ValueError('Site root accepts only index.html, 404.html and .nojekyll')
     repository = Path.cwd()
     remote = git('remote', 'get-url', 'origin', cwd=repository).stdout.strip()
     with tempfile.TemporaryDirectory(prefix='stitchcraft-pages-') as folder:
@@ -43,10 +47,15 @@ def publish(destination, source):
                 git('clean', '-fdx', cwd=work)
             elif attempt == 0:
                 git('checkout', '--orphan', 'pages', cwd=work)
-            target = work / destination
-            shutil.rmtree(target, ignore_errors=True)
-            if source:
-                shutil.copytree(source, target)
+            if destination == 'site-root':
+                # Refresh landing files without replacing docs, releases or previews.
+                for path in source.iterdir():
+                    shutil.copyfile(path, work / path.name)
+            else:
+                target = work / destination
+                shutil.rmtree(target, ignore_errors=True)
+                if source:
+                    shutil.copytree(source, target)
             (work / '.nojekyll').touch()
             git('add', '-A', cwd=work)
             if not git('status', '--porcelain', cwd=work).stdout.strip():

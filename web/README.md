@@ -12,7 +12,7 @@ Install Python 3.11 or newer, the Rust toolchain in `rust-toolchain.toml`, its
 
 ```sh
 python3 web/build.py
-node --test web/loader.test.mjs
+node --test web/*.test.mjs
 python3 -m http.server 8766 --directory target/web
 # In a second terminal, after installing web/package-lock.json dependencies:
 cd web && npm ci && npx playwright install chromium && cd ..
@@ -22,7 +22,7 @@ node web/smoke.mjs http://127.0.0.1:8766/
 `web/config.json` pins the VectorCraft source revision. The build clones it under
 `target/`, or accepts an existing matching checkout through `VECTORCRAFT_DIR`.
 It does not modify VectorCraft's source. Trunk uses relative asset URLs, so the
-same files work at `/app/` and `/pr/123/`. `?webgl` forces WebGL2 if WebGPU fails.
+same files work at `/app/` and `/pr/123/demo/`. `?webgl` forces WebGL2 if WebGPU fails.
 The pinned editor is about 97 MB before transfer compression, so the first load can take time.
 
 The loader uses VectorCraft's documented `window.vectorcraft.execute` API to
@@ -33,19 +33,25 @@ VectorCraft's web build runs them on the main thread. The app runs on an ordinar
 
 ## GitHub Pages and previews
 
-The Web workflow builds on pushes to `main` and trusted, same-repository PRs.
-It publishes the app at `/app/` and previews at `/pr/<number>/`.
-The workflow adds the preview URL to a PR comment. Closing a PR removes its preview. Fork PRs build and test with read-only credentials.
+The Docs and demo workflow builds the editor and the book from the same revision.
+A PR preview opens its documentation at `/pr/<number>/`. The demo link opens
+`/pr/<number>/demo/`, which contains that PR's app and screenshots. Its Documentation
+link returns to the same preview. Closing the PR removes the whole preview folder.
+Fork PRs build and test with read-only credentials.
 
-Enable Actions in the fork. In Settings → Pages, choose **Deploy from a branch**,
-`gh-pages`, `/ (root)`. The existing documentation remains at `/dev/`. The app
-publisher preserves it and all other previews. The site root remains the docs
-landing page. The site uses the repository’s github.io address.
+The permanent docs at `/dev/` link to the published app at `/app/` through a small
+launcher page. Versioned books use that app too. The existing docs workflow publishes
+the permanent book and site landing page. Main pushes in the Docs and demo workflow
+publish the app.
 
-Publishing writes only generated files to `gh-pages`. Push conflicts are retried
-from the latest branch so simultaneous documentation and app deployments preserve
-each other's files. The PR preview uses the PR head revision, recorded in the
-comment.
+Enable Actions and set Pages to **Deploy from a branch**, `gh-pages`, `/ (root)`.
+The publisher preserves other previews and permanent pages when updating one folder.
+It retries push conflicts from the latest branch.
+
+Install the pinned mdBook version from `.github/actions/tools/action.yml` to build
+combined previews locally. Run `python3 web/site.py --base-path /stitchcraft/pr/1/`
+after the web build, then serve `target/site`. `node web/docs-smoke.mjs URL` follows
+the docs link into the demo and back. `node web/smoke.mjs URL/demo/` tests embroidery.
 
 ## Starter patch and preview pictures
 
@@ -60,5 +66,5 @@ To regenerate the native template from it, serve the built app and run
 
 The browser check captures the starter patch and the StitchCraft Auto dialog.
 It also captures Design Settings, then checks that the patch exports stitches.
-These PNGs are published under `screenshots/` and embedded in the preview comment.
+The preview comment embeds these PNGs from its demo’s `screenshots/` folder.
 Each image URL includes the commit SHA to refresh GitHub's image cache.

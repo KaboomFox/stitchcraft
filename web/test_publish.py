@@ -59,6 +59,8 @@ class PublishTest(unittest.TestCase):
                 (site / 'index.html').write_text('second')
                 publisher.publish('pr/2', str(site))
                 publisher.publish('app', str(site))
+                publisher.publish('dev', str(site))
+                publisher.publish('site-root', str(site))
                 publisher.publish('pr/1', None)
                 publisher.git('fetch', 'origin', 'gh-pages', cwd=repo)
                 tree = publisher.git('ls-tree', '-r', '--name-only', 'FETCH_HEAD', cwd=repo).stdout
@@ -67,6 +69,10 @@ class PublishTest(unittest.TestCase):
                 self.assertIn('pr/99/index.html', tree)
                 self.assertIn('app/index.html', tree)
                 self.assertIn('dev/index.html', tree)
+                self.assertIn('index.html', tree)
+                self.assertEqual(publisher.git('show', 'FETCH_HEAD:dev/index.html', cwd=repo).stdout, 'second')
+                with self.assertRaises(ValueError):
+                    publisher.publish('dev', None)
                 self.assertIn('.nojekyll', tree)
                 # A repeated cleanup is a no-op, and traversal is refused.
                 publisher.publish('pr/1', None)

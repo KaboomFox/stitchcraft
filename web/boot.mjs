@@ -11,6 +11,11 @@ panel.append(summary);
 const help = document.createElement('p');
 help.textContent = 'The Alpine Night starter uses StitchCraft Auto. Select a shape and edit its effect in Appearance. File → Export → Export As… downloads PES or DST. Save your editable design before closing this tab.';
 panel.append(help);
+const docs = document.createElement('a');
+docs.href = new URL('../index.html', import.meta.url).href;
+docs.textContent = 'Documentation';
+docs.style.cssText = 'display:block;color:#a9dcff;margin:8px 0';
+panel.append(docs);
 document.body.append(panel);
 
 window.stitchcraftReady = (async () => {
