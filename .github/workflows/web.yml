@@ -1,4 +1,4 @@
-name: Web
+name: Docs and demo
 on:
   push:
     branches: [main]
@@ -43,26 +43,35 @@ jobs:
           sudo install trunk /usr/local/bin/trunk
       - name: Build editor and embroidery plug-ins
         run: python3 web/build.py
-      - name: Browser checks
+      - uses: ./.github/actions/tools
+        with:
+          tools: mdbook
+      - name: Browser and docs preview checks
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           npm ci --prefix web
           cd web && npx playwright install --with-deps chromium && cd ..
           node --test web/*.test.mjs
           python3 -m unittest discover -s web -p 'test_*.py'
-          mkdir -p target/serve/pr/123
+          mkdir -p target/serve
           cp -a target/web/. target/serve/
-          cp -a target/web/. target/serve/pr/123/
           python3 -m http.server 8766 --directory target/serve > /tmp/web-server.log 2>&1 &
           for attempt in {1..30}; do
-            if curl -fsS http://127.0.0.1:8766/pr/123/ -o /dev/null; then break; fi
+            if curl -fsS http://127.0.0.1:8766/ -o /dev/null; then break; fi
             sleep 1
           done
           node web/smoke.mjs http://127.0.0.1:8766/
-          node web/smoke.mjs http://127.0.0.1:8766/pr/123/
+          if [ -n "$PR_NUMBER" ]; then dest="pr/$PR_NUMBER"; else dest=dev; fi
+          python3 web/site.py --base-path "/${GITHUB_REPOSITORY#*/}/${dest}/"
+          mkdir -p target/serve/pr/123
+          cp -a target/site/. target/serve/pr/123/
+          node web/docs-smoke.mjs http://127.0.0.1:8766/pr/123/
+          node web/smoke.mjs http://127.0.0.1:8766/pr/123/demo/ target/site/demo/screenshots
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: web
-          path: target/web
+          name: site
+          path: target/site
           retention-days: 7
 
   publish:
@@ -79,15 +88,21 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
-          name: web
-          path: target/web
+          name: site
+          path: target/site
       - name: Publish app or preview
         id: publish
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          if [ -n "$PR_NUMBER" ]; then dest="pr/$PR_NUMBER"; else dest=app; fi
-          python3 .github/scripts/publish-web.py "$dest" target/web
+          if [ -n "$PR_NUMBER" ]; then
+            dest="pr/$PR_NUMBER"
+            source=target/site
+          else
+            dest=app
+            source=target/site/demo
+          fi
+          python3 .github/scripts/publish-web.py "$dest" "$source"
           owner="${GITHUB_REPOSITORY_OWNER,,}"
           echo "url=https://${owner}.github.io/${GITHUB_REPOSITORY#*/}/${dest}/" >> "$GITHUB_OUTPUT"
       - name: Preview link

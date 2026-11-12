@@ -1,13 +1,15 @@
 // Shared by the workflow and local preview publication.
 module.exports = function previewComment(url, sha) {
   const base = url.endsWith('/') ? url : `${url}/`;
-  const image = (name, label) => `![${label}](${base}screenshots/${name}.png?v=${sha})`;
+  const demo = `${base}demo/`;
+  const image = (name, label) => `![${label}](${demo}screenshots/${name}.png?v=${sha})`;
   return [
     '<!-- stitchcraft-web-preview -->',
-    `**WASM preview:** ${base}`,
+    `**Docs preview:** ${base}`,
+    `**Browser demo:** ${demo}`,
     '',
-    `Built from ${sha}. Opens the Alpine Night starter patch in an empty session.`,
-    `[Download the VectorCraft template](${base}templates/alpine-night.vctemplate)`,
+    `Built from ${sha}. The demo opens the Alpine Night starter patch in an empty session.`,
+    `[Download the VectorCraft template](${demo}templates/alpine-night.vctemplate)`,
     '',
     'Screenshots captured in Chromium from this build:',
     '',

@@ -15,6 +15,11 @@ How it is built:
 - **Its docs cannot drift.** Reference pages and pictures are generated from the code and regenerated on
   every pull request.
 
+## Try it in your browser
+
+[Open the browser demo](demo/index.html) with the Alpine Night starter patch, or read the
+[browser demo guide](browser-demo.md).
+
 ## Where to go
 
 - **Embroidering?** Start with the [user guide](user/) and [embroidery basics](user/explanation/embroidery-basics.md).

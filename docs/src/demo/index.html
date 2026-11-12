@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Open the StitchCraft browser demo</title>
+</head>
+<body>
+  <p>Opening StitchCraft in VectorCraft…</p>
+  <button id="open-demo">Open the browser demo</button>
+  <noscript>The browser demo needs JavaScript to run its WebAssembly editor.</noscript>
+  <script>
+    // Permanent and versioned books share /app/. PR bundles replace this launcher with their own app.
+    const demo = new URL('../../app/', location.href);
+    demo.search = location.search;
+    const openDemo = () => location.replace(demo);
+    document.getElementById('open-demo').addEventListener('click', openDemo);
+    openDemo();
+  </script>
+</body>
+</html>
