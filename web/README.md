@@ -66,5 +66,5 @@ To regenerate the native template from it, serve the built app and run
 
 The browser check captures the starter patch and the StitchCraft Auto dialog.
 It also captures Design Settings, then checks that the patch exports stitches.
-The preview comment embeds these PNGs from its demo’s `screenshots/` folder.
+The preview comment embeds these PNG images from its demo’s `screenshots/` folder.
 Each image URL includes the commit SHA to refresh GitHub's image cache.
