@@ -26,6 +26,8 @@ jobs:
       - run: |
           rustup toolchain install --profile minimal
           rustup target add wasm32-unknown-unknown
+      - name: Check out pinned VectorCraft before computing the build cache key
+        run: python3 web/build.py --prepare
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           workspaces: |
@@ -48,12 +50,14 @@ jobs:
           node --test web/loader.test.mjs
           python3 -m unittest discover -s web -p 'test_*.py'
           mkdir -p target/serve/pr/123
+          cp -a target/web/. target/serve/
           cp -a target/web/. target/serve/pr/123/
           python3 -m http.server 8766 --directory target/serve > /tmp/web-server.log 2>&1 &
           for attempt in {1..30}; do
             if curl -fsS http://127.0.0.1:8766/pr/123/ -o /dev/null; then break; fi
             sleep 1
           done
+          node web/smoke.mjs http://127.0.0.1:8766/
           node web/smoke.mjs http://127.0.0.1:8766/pr/123/
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

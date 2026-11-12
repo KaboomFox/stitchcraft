@@ -34,6 +34,8 @@ def publish(destination, source):
         git('config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com', cwd=work)
         for attempt in range(5):
             found = git('ls-remote', '--heads', 'origin', 'gh-pages', cwd=work).stdout.strip()
+            if not found and source is None:
+                return  # Closing a PR that never published must not create a Pages branch.
             if found:
                 git('fetch', '--depth=1', 'origin', 'gh-pages', cwd=work)
                 git('checkout', '-B', 'pages', 'FETCH_HEAD', cwd=work)
