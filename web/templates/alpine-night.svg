@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="60mm" height="60mm" viewBox="0 0 180 180">
+  <title>Alpine Night — starter embroidery patch</title>
+  <g id="Alpine-Night-patch">
+    <circle id="Golden-border" cx="90" cy="90" r="75" fill="#e6ad49"/>
+    <circle id="Night-sky" cx="90" cy="90" r="69" fill="#163b4d"/>
+    <circle id="Moon" cx="113" cy="55" r="12" fill="#f4e8c9"/>
+    <path id="North-star" d="M65 38 L67 44 L73 46 L67 48 L65 54 L63 48 L57 46 L63 44 Z" fill="#e6ad49"/>
+    <path id="Small-star" d="M91 28 L93 32 L97 34 L93 36 L91 40 L89 36 L85 34 L89 32 Z" fill="#f4e8c9"/>
+    <path id="Far-ridge" d="M35 113 L73 64 L112 113 Z" fill="#498c8a"/>
+    <path id="Far-snowcap" d="M59 82 L73 64 L88 83 L77 79 L71 84 L67 79 Z" fill="#f4e8c9"/>
+    <path id="Near-ridge" d="M69 127 L111 78 L145 127 Z" fill="#e6ad49"/>
+    <path id="Near-snowcap" d="M96 96 L111 78 L124 97 L114 92 L108 98 L104 93 Z" fill="#f4e8c9"/>
+    <path id="Lake" d="M44 132 L136 132 Q90 166 44 132 Z" fill="#498c8a"/>
+  </g>
+</svg>

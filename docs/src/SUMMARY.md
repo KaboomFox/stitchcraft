@@ -4,6 +4,7 @@
 
 # User guide
 
+- [Browser demo](browser-demo.md)
 - [User guide](user/README.md)
   - [Install](user/install.md)
   - [Your first sew-out on a Brother](user/tutorials/first-sew-out.md)

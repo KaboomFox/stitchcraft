@@ -285,6 +285,9 @@ per `stitch` shot of each sheet, so a new sheet gets its picture by declaring a 
 
 ## Publishing
 
+- Pull requests also build a complete docs preview with the browser demo beneath `demo/`. The
+  permanent book’s demo link opens the published app. `web/site.py` combines a PR’s book and app,
+  and the preview comment links to both.
 - Push to `main` → build and publish to `/dev/` on GitHub Pages. The book is built with `site-url` set
   to where it is published, and its 404 page answers for every address of the site that has no page.
 - Tag `vX.Y.Z` → publish to `/vX.Y/` and point `/latest/` at it. Older versions stay online.

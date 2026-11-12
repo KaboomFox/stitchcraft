@@ -1,0 +1,2 @@
+# VectorCraft templates include a PDF preview with byte offsets and CRLF records.
+web/templates/*.vctemplate binary
