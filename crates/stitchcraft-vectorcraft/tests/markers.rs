@@ -9,7 +9,10 @@ mod common;
 
 use common::{RED, document, ids, read_ok, said, square};
 use stitchcraft_core::{Budget, Code, Point};
-use stitchcraft_engine::design::{Hints, Path, Reading, Segment, Subpath};
+use stitchcraft_engine::design::{DesignSettings, Hints, Path, Reading, Segment, Subpath};
+use stitchcraft_engine::generate::generate;
+use stitchcraft_engine::generators::Neighbours;
+use stitchcraft_plan::profiles::REFERENCE;
 use stitchcraft_vectorcraft::read_with;
 
 const IGNORED: Code = Code::VcObjectIgnored;
@@ -338,7 +341,7 @@ fn req_vc_009_guide_and_anchor_markers_steer_the_ripple_stitches_grouped_with_th
              {noun} marker in its group comes first."
         )
     };
-    assert_eq!(read.warnings[0].message, unused("guide", "the line the ripple stitches grouped with it follow"));
+    assert_eq!(read.warnings[0].message, unused("guide", "the line the ripple stitches and guided fills grouped with it follow"));
     assert_eq!(read.warnings[1].message, unused("anchor", "the line across the ripple stitches grouped with it"));
     let hints = &read.design.elements()[0].hints;
     let guide = hints.guide.as_ref().unwrap();
@@ -353,4 +356,38 @@ fn req_vc_009_guide_and_anchor_markers_steer_the_ripple_stitches_grouped_with_th
     let guide = read.design.elements()[0].hints.guide.clone().unwrap();
     assert_eq!(guide.path, Path { subpaths: vec![in_mm(&[(0.0, 0.0), (72.0, 0.0)]), in_mm(&[(0.0, 36.0), (72.0, 36.0)])] });
     assert_eq!(said(&read), []);
+}
+
+#[test]
+fn req_vc_023_a_guide_marker_gives_the_guided_fills_grouped_with_it_the_line_their_rows_copy() {
+    // The same stitch:guide marker as a ripple stitch's: a guided fill copies its first subpath, here a
+    // compound path's first, and sews its rows along it, without SC-W0331's tatami fill.
+    let rails = format!(
+        r#"{{"id": 6, "kind": {{"type": "compound", "children": [{}, {}]}}}}"#,
+        polyline(7, &[(0.0, 50.0), (36.0, 40.0), (72.0, 50.0)]),
+        polyline(8, &[(0.0, 80.0), (72.0, 80.0)])
+    );
+    let guided = r#"{"items": [{"kind": "fill", "paint": {"type": "solid", "color": {"model": "rgb", "r": 1, "g": 0, "b": 0}}}],
+        "effects": [{"id": "plugin.dev.stitchcraft.fill", "params": {"fill_method": "guided_fill"}}]}"#;
+    let objects = [square(2, 18.0, 0.0, guided), named(&rails, "stitch:guide")];
+    let read = read_ok(&document(4, &format!(r#"{{"id": 3, "kind": {{"type": "group", "children": [{}]}}}}"#, objects.join(","))));
+    assert_eq!((ids(&read), said(&read)), (vec!["vc:2:fill"], vec![]));
+    let element = &read.design.elements()[0];
+    let guide = element.hints.guide.as_ref().unwrap();
+    let drawn: Vec<Point> = Path { subpaths: vec![guide.path.subpaths[0].clone()] }.points().collect();
+    let expected: Vec<Point> = Path { subpaths: vec![in_mm(&[(0.0, 50.0), (36.0, 40.0), (72.0, 50.0)])] }.points().collect();
+    assert!(drawn.len() == 3 && drawn.iter().zip(&expected).all(|(a, b)| a.distance(*b) < 1e-12), "{drawn:?}");
+    let generation = generate(element, &DesignSettings::default(), REFERENCE, &Neighbours::default(), &Budget::DEFAULT);
+    let codes: Vec<Code> = generation.diagnostics.iter().map(|d| d.code).collect();
+    assert!(!codes.contains(&Code::FillGuidedNoGuide), "{codes:?}");
+    // Its rows bend with the guide, up to its peak in the square's middle and down again: their stitches slant
+    // by 15.5° one way and the other, where a tatami fill at the angle of the guide's ends would sew level rows.
+    let groups = generation.generated.unwrap().groups;
+    let slant =
+        |a: Point, b: Point| stitchcraft_core::math::to_degrees(stitchcraft_core::math::atan2(b.y() - a.y(), b.x() - a.x())).rem_euclid(180.0);
+    let count = |angle: f64| {
+        groups.iter().flat_map(|group| group.windows(2)).filter(|w| w[0].distance(w[1]) > 1.0 && (slant(w[0], w[1]) - angle).abs() < 1.0).count()
+    };
+    let up = stitchcraft_core::math::to_degrees(stitchcraft_core::math::atan2(10.0, 36.0));
+    assert!(count(up) > 20 && count(180.0 - up) > 20, "{} and {}", count(up), count(180.0 - up));
 }

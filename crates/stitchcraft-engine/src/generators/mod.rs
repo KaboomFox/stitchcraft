@@ -36,6 +36,7 @@ pub mod circular;
 pub mod contour;
 pub mod cross;
 pub mod gradient;
+pub mod guided;
 pub mod manual;
 pub mod meander;
 mod next;

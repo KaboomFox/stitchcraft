@@ -479,10 +479,11 @@ mod tests {
         assert_eq!(verdicts.iter().map(Verdict::name).collect::<Vec<_>>(), ["agrees", "excused", "known", "differs", "listed", "failed"]);
     }
 
-    /// A glyph file of 2 glyphs: a running stitch and a guided fill.
+    /// A glyph file of 2 glyphs: a running stitch, and a guided fill whose strategy, parallel offset, is still to
+    /// come.
     pub(super) const GLYPHS: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" xmlns:inkstitch="http://inkstitch.org/namespace" width="20mm" height="20mm" viewBox="0 0 20 20">
   <g inkscape:groupmode="layer" inkscape:label="GlyphLayer-l" style="display:none"><path d="M2 2 L18 2" style="fill:none;stroke:#000000;stroke-width:0.26" inkstitch:running_stitch_length_mm="2" inkstitch:bean_stitch_repeats="0"/></g>
-  <g inkscape:groupmode="layer" inkscape:label="GlyphLayer-x" style="display:none"><path d="M2 2 H18 V18 H2 Z" style="fill:#ed171f" inkstitch:fill_method="guided_fill"/></g>
+  <g inkscape:groupmode="layer" inkscape:label="GlyphLayer-x" style="display:none"><path d="M2 2 H18 V18 H2 Z" style="fill:#ed171f" inkstitch:fill_method="guided_fill" inkstitch:guided_fill_strategy="1"/></g>
 </svg>"#;
 
     /// The design of the `index`-th glyph of the glyph file `text`.

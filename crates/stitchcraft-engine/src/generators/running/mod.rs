@@ -192,6 +192,56 @@ pub(crate) fn along_line_varied(
     along_pattern(points, (&[length], tolerance, min_stitch), jitter, (rng, piece), meter)
 }
 
+/// The running stitch along a guided fill's row, the polyline `points`, its corners where Ink/Stitch's running
+/// stitch takes them ([`stroke::polyline_wide`]), in stitches of `length` (at least twice `min_stitch`, see
+/// [`raised`]) within `tolerance` of the row (`crate::generators::guided`). With `jitter`, at random lengths
+/// from streams of `rng` that `piece` and the span's place key, as [`along_line_varied`] sews them. Otherwise
+/// spread evenly between the corners, or with `in_step` in whole stitches from the row's start, measured
+/// along it, the last one whatever is left: the stitches don't start again at a corner, which is a needle
+/// point of its own, so neighbouring rows started a stagger apart keep it round their corners. Then, as along
+/// any running stitch, a needle point nearer the one before than `min_stitch` is left out, the end and the
+/// corners kept first, and a stitch that strays from the row by more than `tolerance` is split at the row's
+/// point farthest from it. A row too small for a stitch of `min_stitch` is sewn as its ends. Every point
+/// costs work from `meter`, and every needle point a stitch.
+pub(crate) fn along_row(
+    points: &[Point],
+    (length, tolerance, min_stitch): (f64, f64, f64),
+    jitter: Option<f64>,
+    (rng, piece): (&SplitMix64, usize),
+    in_step: bool,
+    meter: &mut Meter,
+) -> Result<Vec<Point>, Exhausted> {
+    let line = stroke::polyline_wide(points, 2.0 * tolerance);
+    let (Some(&first), Some(&last)) = (line.points.first(), line.points.last()) else { return Ok(Vec::new()) };
+    let along = Along::new(&line.points, meter)?;
+    if jitter.is_some() || !in_step {
+        let mut lengths = Lengths { pattern: vec![length], next: 0, random: jitter.map(|jitter| Random::new(jitter, rng)) };
+        return Ok(stitch_piece(&along, (&line.corners, piece), &mut lengths, min_stitch, tolerance, meter)?.unwrap_or_else(|| vec![first, last]));
+    }
+    let total = along.length();
+    let longest = length.max(2.0 * min_stitch);
+    let mut needles = vec![along.vertex(0)];
+    let mut corners = line.corners.iter().map(|&corner| Needle { corner: true, ..along.vertex(corner) }).peekable();
+    let mut step = 1_u32;
+    loop {
+        meter.charge(1)?;
+        let at = f64::from(step) * longest;
+        while let Some(corner) = corners.next_if(|corner| corner.at < at) {
+            needles.push(corner);
+        }
+        if !at_least(total, at) {
+            break;
+        }
+        needles.push(along.needle(at));
+        step = step.saturating_add(1);
+    }
+    needles.push(along.vertex(line.points.len().saturating_sub(1)));
+    made(meter, needles.len())?;
+    let Some(needles) = space(needles, &along, min_stitch, longest, meter)? else { return Ok(vec![first, last]) };
+    let needles = follow(needles, &along, tolerance, min_stitch, longest, meter)?;
+    Ok(needles.into_iter().map(|needle| needle.point).collect())
+}
+
 /// [`along_line_varied`] in stitches of the lengths of `pattern`, taken in turn from the line's start: a
 /// ripple stitch's lines and the straight runs that join them (`crate::generators::ripple`).
 pub(crate) fn along_pattern(

@@ -14,6 +14,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "guided_fill",
           "linear_gradient_fill",
           "tartan_fill"
         ],
@@ -255,6 +256,7 @@
               "contour_fill",
               "meander_fill",
               "circular_fill",
+              "guided_fill",
               "tartan_fill"
             ],
             "group": "Repeats",
@@ -628,6 +630,7 @@
           "tatami_fill",
           "contour_fill",
           "circular_fill",
+          "guided_fill",
           "linear_gradient_fill"
         ],
         "group": "Running stitch",
@@ -687,6 +690,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "guided_fill",
           "linear_gradient_fill",
           "tartan_fill",
           "cross_stitch"
@@ -754,7 +758,7 @@
     },
     "fill_method": {
       "default": "tatami_fill",
-      "description": "The stitch the area is filled with. A tatami fill sews rows of running stitches across it, a contour fill rings that follow its outline inward, a meander fill one line that wanders through a tiling, a circular fill a spiral round its middle, a linear gradient fill rows in the colours of its linear gradient, and a tartan fill a plaid of rows in the colours of its sett. A fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without underlay (`SC-W0314`). The other methods arrive in later versions; until then an element set to one is skipped (`SC-W0011`).",
+      "description": "The stitch the area is filled with. A tatami fill sews rows of running stitches across it, a contour fill rings that follow its outline inward, a meander fill one line that wanders through a tiling, a circular fill a spiral round its middle, a guided fill rows that follow a guide line, a linear gradient fill rows in the colours of its linear gradient, and a tartan fill a plaid of rows in the colours of its sett. A fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without underlay (`SC-W0314`). A guided fill's strategies that offset its guide arrive in a later version, and until then an element set to one is skipped (`SC-W0011`).",
       "enum": [
         "tatami_fill",
         "circular_fill",
@@ -796,6 +800,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "guided_fill",
           "linear_gradient_fill",
           "tartan_fill"
         ],
@@ -823,6 +828,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "guided_fill",
           "linear_gradient_fill",
           "tartan_fill"
         ],
@@ -845,6 +851,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "guided_fill",
           "linear_gradient_fill",
           "tartan_fill"
         ],
@@ -870,6 +877,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "guided_fill",
           "linear_gradient_fill",
           "tartan_fill"
         ],
@@ -895,6 +903,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "guided_fill",
           "linear_gradient_fill",
           "tartan_fill"
         ],
@@ -915,6 +924,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "guided_fill",
           "linear_gradient_fill",
           "tartan_fill"
         ],
@@ -1010,6 +1020,49 @@
         "origin": "inkstitch",
         "stability": "stable",
         "unit": "mm"
+      }
+    },
+    "guided_fill_angle": {
+      "default": null,
+      "description": "The direction the guide's copies move in, in degrees clockwise from horizontal as the drawing shows it. Empty, they move square to the line between the guide's ends. A direction near the guide's own brings the rows closer together than the row spacing, and the copies then reach only as far as the guide is long.",
+      "title": "Copy angle",
+      "type": [
+        "number",
+        "null"
+      ],
+      "x-stitchcraft": {
+        "applies_to": [
+          "guided_fill"
+        ],
+        "group": "Guided fill",
+        "origin": "inkstitch",
+        "stability": "stable",
+        "unit": "°",
+        "visible_when": {
+          "any_of": [
+            "0"
+          ],
+          "key": "guided_fill_strategy"
+        }
+      }
+    },
+    "guided_fill_strategy": {
+      "default": "0",
+      "description": "How the rows follow the guide. Copy moves copies of the guide across the fill, a row spacing apart. Ink/Stitch's parallel offset and buffer arrive in a later version, and until then a fill set to one is skipped (`SC-W0011`).",
+      "enum": [
+        "0",
+        "1",
+        "2"
+      ],
+      "title": "Strategy",
+      "type": "string",
+      "x-stitchcraft": {
+        "applies_to": [
+          "guided_fill"
+        ],
+        "group": "Guided fill",
+        "origin": "inkstitch",
+        "stability": "stable"
       }
     },
     "herringbone_width_mm": {
@@ -1320,6 +1373,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "guided_fill",
           "linear_gradient_fill",
           "tartan_fill"
         ],
@@ -1682,6 +1736,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "guided_fill",
           "linear_gradient_fill"
         ],
         "group": "Random variation",
@@ -1752,6 +1807,7 @@
           "tatami_fill",
           "contour_fill",
           "circular_fill",
+          "guided_fill",
           "linear_gradient_fill"
         ],
         "group": "Running stitch",
@@ -1970,6 +2026,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "guided_fill",
           "linear_gradient_fill",
           "tartan_fill"
         ],
@@ -2021,6 +2078,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "guided_fill",
           "linear_gradient_fill",
           "tartan_fill"
         ],
@@ -2069,6 +2127,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "guided_fill",
           "linear_gradient_fill",
           "tartan_fill"
         ],
@@ -2268,6 +2327,7 @@
         "applies_to": [
           "tatami_fill",
           "circular_fill",
+          "guided_fill",
           "linear_gradient_fill",
           "tartan_fill"
         ],
@@ -2302,7 +2362,8 @@
       "x-stitchcraft": {
         "applies_to": [
           "contour_fill",
-          "meander_fill"
+          "meander_fill",
+          "guided_fill"
         ],
         "group": "Path",
         "origin": "inkstitch",
@@ -2388,6 +2449,7 @@
               "contour_fill",
               "meander_fill",
               "circular_fill",
+              "guided_fill",
               "linear_gradient_fill",
               "tartan_fill"
             ],
@@ -2411,6 +2473,24 @@
           "zigzag"
         ],
         "group": "Start and end",
+        "origin": "inkstitch",
+        "stability": "stable"
+      }
+    },
+    "stitch_position_method": {
+      "default": "flexible",
+      "description": "Where the needle points lie along each row. Flexible spreads a row's stitches evenly between its corners. Flexible (stagger) sews whole stitches of the longest stitch from where the row's stagger starts it, round its corners, and the last one shorter, so that the rows' needle points keep their stagger.",
+      "enum": [
+        "flexible",
+        "flexible_stagger"
+      ],
+      "title": "Stitch positions",
+      "type": "string",
+      "x-stitchcraft": {
+        "applies_to": [
+          "guided_fill"
+        ],
+        "group": "Guided fill",
         "origin": "inkstitch",
         "stability": "stable"
       }
@@ -2606,6 +2686,7 @@
           "contour_fill",
           "meander_fill",
           "circular_fill",
+          "guided_fill",
           "linear_gradient_fill",
           "tartan_fill"
         ],
@@ -2633,7 +2714,8 @@
       "x-stitchcraft": {
         "applies_to": [
           "tatami_fill",
-          "circular_fill"
+          "circular_fill",
+          "guided_fill"
         ],
         "group": "Travel",
         "origin": "inkstitch",
@@ -3056,6 +3138,15 @@
         ],
         "name": "CrossParams",
         "title": "Cross parameters"
+      },
+      {
+        "keys": [
+          "guided_fill_strategy",
+          "guided_fill_angle",
+          "stitch_position_method"
+        ],
+        "name": "GuidedParams",
+        "title": "Guided parameters"
       },
       {
         "keys": [
