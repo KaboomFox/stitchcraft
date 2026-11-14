@@ -115,6 +115,9 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0906`](#sc-w0906) | Warning | Background left out |
 | [`SC-I0907`](#sc-i0907) | Info | Elements sewn in an order of their own |
 | [`SC-I0908`](#sc-i0908) | Info | Layers flattened |
+| [`SC-I0909`](#sc-i0909) | Info | Base layer sewn under the design |
+| [`SC-W0910`](#sc-w0910) | Warning | Base layer left out |
+| [`SC-I0911`](#sc-i0911) | Info | Base layer turned off |
 | [`SC-E1001`](#sc-e1001) | Error | Nothing to route |
 | [`SC-I1002`](#sc-i1002) | Info | Element left out of the route |
 | [`SC-W1003`](#sc-w1003) | Warning | Piece of a routed satin column may sew otherwise |
@@ -1464,7 +1467,7 @@ The message gives the line's width. Check the line's stroke width.
 
 **Info** — Areas reach under the shapes sewn after them
 
-`--auto` makes each automatic area reach its overlap, 0.4 mm unless it sets another
+`--auto` makes each automatic area reach its overlap, 1 mm unless it sets another
 (`auto_overlap_mm`), under the shapes sewn after it, from where it touches them. The thread pulls
 stitches in from the edges of their shape, and without the overlap fabric shows between shapes that
 only meet. Where an area sewn after it covers part of it, as the details on an area digitized whole
@@ -1553,6 +1556,49 @@ part that shows can't be found is sewn as it is drawn, in its place, or left out
 background; one whose holes can't be found keeps them open; one that can't be moved keeps its place;
 and one whose region can't be given is sewn as it is drawn. To sew a shape as it is drawn, give it
 settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it.
+
+## SC-I0909
+
+**Info** — Base layer sewn under the design
+
+`--auto` sews one base layer under the whole design before anything else, so that fabric of any
+colour shows less where 2 shapes leave a slit between them. Its shape is what the automatic shapes
+paint together, with the slits narrower than a thread closed, offset by -0.4 mm, which is inwards,
+unless the design sets another offset (`auto_base_offset_mm`). It is an open fill of stitches 3 mm
+long in 3 directions (`auto_base_stitch_length_mm`), in the thread that paints the largest area, and
+every stitch of it is underlay. The fills on it sew no underlay of their own. A piece of it that has
+no room for a row of those stitches is left out, as under a satin column that stands alone, which
+sews the underlay of its width.
+
+The message gives its area, how many pieces it has and its thread. A design that is nowhere wide
+enough for one has none, and the message says so. A design whose shapes all sew as lines and
+columns has none either, and nothing is said. To sew the design without a base layer, turn
+`auto_base_layer` off: each fill then sews the underlay of its settings (SC-I0911).
+
+Where thin shapes meet, the top thread can leave a sliver bare, and the base layer's thread shows
+there in place of the fabric. The check that StitchCraft's test pictures pass allows a sliver of up
+to 0.4 mm² with the base layer under it (`auto_base_sliver_mm2`), and up to 0.5 % of the design left
+to the base layer in all (`auto_base_bare_percent`). A larger gap fails it.
+
+## SC-W0910
+
+**Warning** — Base layer left out
+
+`--auto` could not find the shape of the design's base layer within the work budget, so the design
+sews without one, and every fill sews the underlay of its settings. On dark fabric the slits between
+shapes then show the fabric. Raise the work budget, or simplify the picture: fewer colours and less
+detail in VectorCraft's Image Trace give fewer shapes.
+
+## SC-I0911
+
+**Info** — Base layer turned off
+
+`--auto` sews no base layer, because the design's lowest automatic shape turns `auto_base_layer`
+off. Each fill sews the underlay of its settings, and nothing lies under a place that the top thread
+leaves bare between 2 shapes. On fabric of another colour than the design, the fabric may show
+there. With the base layer, its thread shows in such a place (SC-I0909). This is information and no
+warning, because the design sews as its settings ask. To sew the base layer, turn `auto_base_layer`
+on, or leave it unset.
 
 ## SC-E1001
 

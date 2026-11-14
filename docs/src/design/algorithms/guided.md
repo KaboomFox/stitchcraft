@@ -113,7 +113,8 @@ a part but the cut keeps none of them, and where no copy meets the part at all, 
 (`DEV-FILL-034`).
 The tatami fill's rows lie the guided fill's row spacing apart, in its longest stitch with its staggers and
 `skip_last`. It has no end spacing, random lengths, pull compensation or rows that fill gaps, which
-Ink/Stitch's fallback doesn't pass on. `SC-W0332` counts those parts, and `SC-W0305` those too thin for the
+Ink/Stitch's fallback doesn't pass on. It doesn't keep the turns between its rows as stitches either:
+`turn_stitches` is a tatami fill's own setting ([tatami fill](fills.md)). `SC-W0332` counts those parts, and `SC-W0305` those too thin for the
 tatami rows too, which are sewn round their outline.
 
 ## Preview

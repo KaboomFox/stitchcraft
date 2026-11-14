@@ -5,6 +5,33 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.16: a design digitized automatically covers the fabric, whatever its colour (`REQ-AUTO-027` to
+  `REQ-AUTO-029`, `REQ-FILL-TAT-014`, `REQ-RND-003`).
+  - One base layer sews first under the whole design: an open fill in 3 directions with the parameters of
+    Ink/Stitch's Knockdown Fill, 0.4 mm inside the design's outline, in the thread that paints the most,
+    every stitch of it underlay. The fills on it sew no underlay of their own (`SC-I0909`, `SC-W0910`, and
+    the settings `auto_base_layer`, `auto_base_stitch_length_mm`, `auto_base_offset_mm` and
+    `auto_base_keep_holes`).
+  - Neighbours overlap by 1 mm where they overlapped by 0.4 mm (`auto_overlap_mm`'s default). A satin
+    column sews that far past a rail that a shape sewn after it runs along, and 0.4 mm past any other
+    (`auto_pull_compensation_mm`, new). A column's end under another column reaches its pull compensation.
+  - With `turn_stitches` on, a tatami fill keeps the turns between its rows as stitches. Automatic fills
+    turn it on, and each of their rows then has a needle point at the outline.
+  - `stitchcraft_testkit::fabric::cover` measures what shows. No fabric shows inside a design, counting the
+    base layer: a gap in the top thread passes only as a sliver, at most 0.4 mm² with the base layer under
+    it or in the 0.4 mm along the design's outline that the base layer leaves, and the top thread leaves at
+    most 0.5 % of the design bare. Both limits
+    are settings (`auto_base_sliver_mm2`, `auto_base_bare_percent`), by which nothing sews differently. A
+    design that turns the base layer off is held to no gap and 0.15 %, and is told that fabric may show
+    (`SC-I0911`).
+  - The test pictures and the traced pear don't leave a gap. The 4 traced dogs leave 19 slivers of 0.09 to
+    0.335 mm², 3 of them reaching into the 0.4 mm along the outline that the base layer leaves, and 0.07 to
+    0.35 % of their designs bare, where they left 44 gaps
+    and 0.28 to 0.77 %. The base layer adds 675 to 1,027 stitches to a dog, which is 5 to 11 %. The pear sews 80 fewer.
+  - A preview is drawn on fabric of any colour (`Settings::on` of the renderer, and the `fabric` key of a
+    docs shot). The automatic digitizing page shows the pear and the running dog on black fabric beside
+    cream.
+  - The roadmap's order after this step is M13.21, which stitch a shape gets, then M13.20 and M13.17.
 - M10.9: guided fill with its guide copied (`REQ-FILL-GDD-001` to `REQ-FILL-GDD-008`, `REQ-SVG-015`,
   `REQ-VC-023`). `fill_method` `guided_fill` sews Ink/Stitch's guided fill with its default strategy, which
   copies the guide, where it was skipped with `SC-W0011`.
@@ -2796,6 +2823,14 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed the 4 sheets `conformance/golden/testsheets/TS-13A.pes` to `TS-13D.pes` (M13.16, a design covers
+  the fabric). The digitized half of each sews a base layer first, and its neighbours overlap by
+  1 mm. Its fills sew without an underlay of their own, and they turn from row to row in a stitch at the
+  outline. The plans sew
+  25,969, 15,768, 11,273 and 27,601 stitches. The digitized halves of TS-13A, C and D change thread once
+  more, since the base layer sews in the thread that paints the most. The digitized half of TS-13B leaves
+  44 jump threads on the PE800, 19 of them sewn down, where it left 37 and 16: the base layer has a piece
+  under each letter wide enough for one.
 - Changed `conformance/golden/testsheets/TS-13B.pes` (M13.15, a column's width measured inside its own
   outline). The digitized word 4 mm tall sews the 2 outer legs of its M as satin columns instead of triple
   runs: 0.81 mm wide on average, they are 1.05 mm wide inside their own outlines where the M's middle

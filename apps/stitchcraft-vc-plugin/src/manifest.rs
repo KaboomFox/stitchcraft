@@ -24,7 +24,9 @@
 //! another's value. A choice leaves out the options whose stitches a text spells out, such as the custom
 //! locks, since the dialog doesn't hold that text, and the methods StitchCraft sews as another: Ink/Stitch's
 //! legacy fill, sewn as a tatami fill (`REQ-FILL-005`). `satin_column` is set by the effect itself, by which
-//! family it is ([`SATIN_COLUMN`]).
+//! family it is ([`SATIN_COLUMN`]). `turn_stitches`, StitchCraft's own switch that automatic digitizing sets on
+//! its fills, is left out ([`TURN_STITCHES`]): the fill's dialog holds the 64 parameters that every VectorCraft
+//! release takes without it, and a fill sewn by its own settings keeps the switch off.
 //!
 //! **Order.** The dialog lists parameters in the manifest's order, which is the registry's within each
 //! group. The group with the family's method comes first, then the groups only the family uses, then
@@ -63,6 +65,7 @@ use stitchcraft_engine::common::CommonParams;
 use stitchcraft_engine::generate::sewn_as;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::generators::tartan::SETT;
+use stitchcraft_engine::generators::tatami::TURN_STITCHES;
 use stitchcraft_engine::registry::PARAMETERS;
 use stitchcraft_params::{Empty, Family, Kind, ParamGroup, ParamSpec, StitchType, Value as Parsed, find_for};
 use stitchcraft_plan::FormatId;
@@ -447,7 +450,8 @@ fn params_of(registry: &[&ParamGroup], family: Family) -> Vec<(&'static str, Par
     groups.sort_by_key(|group| place(group, family, default));
     let mut params: Vec<(&'static str, Param)> = Vec::new();
     for group in groups {
-        for spec in group.specs.iter().filter(|spec| spec.key != SATIN_COLUMN && spec.applies_to.iter().any(|t| t.family() == family)) {
+        let declared = |spec: &&ParamSpec| ![SATIN_COLUMN, TURN_STITCHES].contains(&spec.key) && spec.applies_to.iter().any(|t| t.family() == family);
+        for spec in group.specs.iter().filter(declared) {
             let spec = spec.in_family(family);
             let Some(schema) = schema(&spec, group.specs) else { continue };
             // The method comes first, so the rows of some methods only can say which.

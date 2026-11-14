@@ -55,7 +55,7 @@ fn layered(region: &Region, top: &Layer, underlay: &[Layer], needle: Option<Poin
 
 /// A fill of `top` rows after `underlay`, neither grown nor shrunk.
 fn fill_of(top: Layer, underlay: &[Layer]) -> Fill {
-    Fill { top, expand: 0.0, underlay: underlay.to_vec(), inset: 0.0, force_locks: false }
+    Fill { top, expand: 0.0, underlay: underlay.to_vec(), inset: 0.0, force_locks: false, turns: false }
 }
 
 /// The runs of `fill` over `region`, which says nothing about it.
