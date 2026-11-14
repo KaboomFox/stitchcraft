@@ -149,7 +149,9 @@ The other texts, seeds, and settings left empty to take another's value keep the
 today they are the custom locks' steps, `random_seed`, a fill underlay's angles, and a satin's zigzag underlay
 insets and its shortest random split. A choice leaves out the options that a text spells out, which are the
 custom locks, and `fill_method` leaves out Ink/Stitch's legacy fill, which StitchCraft sews as a tatami fill
-(`REQ-FILL-005`). `satin_column` belongs to the effect, which sets it from its family. The dialog opens with
+(`REQ-FILL-005`). `satin_column` belongs to the effect, which sets it from its family. `turn_stitches`, the switch that
+automatic digitizing sets on its own fills, is left out of the fill's dialog, which holds 64 parameters
+without it. The dialog opens with
 the group that declares the family's method. The groups only the family uses, for its default method, come
 next, then those it shares with the other families, then those of its other methods, such as the zigzag
 stroke's. The settings every element shares come last, as in Ink/Stitch's dialogs.

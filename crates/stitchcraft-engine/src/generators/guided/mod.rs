@@ -228,7 +228,7 @@ pub fn top_path(region: &Region, guided: &Guided, rng: &SplitMix64, meter: &mut 
         for piece in &pieces(polygon, guided.expand, &mut Vec::new(), meter)?.0 {
             let rings = Rings::new(piece, meter)?;
             let Some(lines) = rows_of(piece, &rings, guided, &guide, rng, meter)? else {
-                let fallback = Fill { top: guide.fallback(guided), expand: 0.0, underlay: Vec::new(), inset: 0.0, force_locks: false };
+                let fallback = Fill { top: guide.fallback(guided), expand: 0.0, underlay: Vec::new(), inset: 0.0, force_locks: false, turns: false };
                 segments.extend(top_rows(&Region { parts: vec![piece.clone()] }, &fallback, meter)?);
                 continue;
             };

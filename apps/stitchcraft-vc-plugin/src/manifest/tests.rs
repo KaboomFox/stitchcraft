@@ -67,7 +67,19 @@ fn req_vc_016_the_auto_effect_s_dialog_holds_the_rules_settings_and_its_preview_
     assert_eq!(validate(&text(&manifest)), Ok(()));
     assert_eq!((manifest.id.as_str(), manifest.kind), ("dev.stitchcraft.auto", "effect"));
     let keys: Vec<&str> = manifest.params.iter().map(|(key, _)| *key).collect();
-    assert_eq!(keys, [MAX_SATIN_WIDTH, MIN_TRIPLE_RUN_WIDTH, OVERLAP, MIN_AREA, IGNORE_BACKGROUND, PREVIEW_LEVEL]);
+    let (pull, base) = (
+        "auto_pull_compensation_mm",
+        [
+            "auto_base_layer",
+            "auto_base_stitch_length_mm",
+            "auto_base_offset_mm",
+            "auto_base_keep_holes",
+            "auto_base_sliver_mm2",
+            "auto_base_bare_percent",
+        ],
+    );
+    let rules = [MAX_SATIN_WIDTH, MIN_TRIPLE_RUN_WIDTH, OVERLAP, pull, MIN_AREA, IGNORE_BACKGROUND];
+    assert_eq!(keys, [&rules[..], &base[..], &[PREVIEW_LEVEL]].concat());
     // Each setting's row has the registry's label, unit, section, help and page, and always shows: the
     // dialog has no method.
     for (key, param) in manifest.params.iter().filter(|(key, _)| *key != PREVIEW_LEVEL) {
@@ -163,8 +175,10 @@ fn req_vc_021_the_fill_dialog_holds_a_tartan_s_sett_as_text_after_its_method() {
     assert_eq!(texts(&fill), 1);
     assert_eq!((texts(&family(Family::Stroke)), texts(&family(Family::Satin))), (0, 0));
     // From M10.9 all 64 that every release VectorCraft's gate tests takes, the guided fill's stitch positions the
-    // last: a setting more needs room made for it.
-    assert!(keys.len() <= limits::MAX_PARAMS, "{}", keys.len());
+    // last: a setting more needs room made for it. M13.16's `turn_stitches`, which automatic digitizing sets on
+    // its own fills, is the one left out.
+    assert_eq!(keys.len(), limits::MAX_PARAMS);
+    assert!(!keys.contains(&"turn_stitches") && stitchcraft_params::find(PARAMETERS, "turn_stitches").is_some());
     validate(&serde_json::to_vec(&fill).unwrap()).unwrap();
 }
 

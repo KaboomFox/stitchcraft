@@ -122,7 +122,7 @@ fn rows(spacing: f64, length: f64) -> Layer {
 fn tatami((width, height): (f64, f64), top: Layer, underlay: &[Layer], meter: &mut Meter) -> Result<Stitched, Exhausted> {
     let rectangle = rings(&[&[(0.0, 0.0), (width, 0.0), (width, height), (0.0, height), (0.0, 0.0)]]);
     let region = build(&rectangle, FillRule::EvenOdd, &mut Budget::DEFAULT.meter()).unwrap().region;
-    let fill = Fill { top, expand: 0.0, underlay: underlay.to_vec(), inset: 0.0, force_locks: false };
+    let fill = Fill { top, expand: 0.0, underlay: underlay.to_vec(), inset: 0.0, force_locks: false, turns: false };
     tatami_fill(&region, &fill, None, None, &mut SplitMix64::new(1), meter)
 }
 
