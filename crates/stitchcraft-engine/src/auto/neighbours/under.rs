@@ -181,7 +181,7 @@ fn widened(shapes: &mut Shapes, index: usize, overlap: f64, meter: &mut Meter) -
 /// Whether the shapes `beside` cover more than half the length of `rail`, with `meter`'s work: the rail is
 /// looked at in the middle of each stretch of it no longer than [`RAIL_STEP`], for a unit of work and one for
 /// each shape.
-fn runs_along(rail: &[Point], beside: &[Polygon], meter: &mut Meter) -> Result<bool, Exhausted> {
+pub(super) fn runs_along(rail: &[Point], beside: &[Polygon], meter: &mut Meter) -> Result<bool, Exhausted> {
     let (mut within, mut whole) = (0.0, 0.0);
     for pair in rail.windows(2) {
         let [from, to] = pair else { continue };

@@ -398,6 +398,10 @@ fn req_fill_tat_014_a_needle_point_too_near_a_turn_is_left_out_for_it() {
     // So does the second point of the turn before, which a row 0.2 mm long leaves near the next turn.
     let short = turns_kept(&[(0.0, 0.0), (10.0, 0.0), (10.0, 0.25), (9.8, 0.25), (9.8, 0.5), (20.0, 0.5)]);
     assert!(is(&short, &[(0.0, 0.0), (10.0, -0.025), (10.0, 0.275), (9.8, 0.225), (9.8, 0.525), (20.0, 0.5)]), "{short:?}");
+    // And so after a third turn, with 2 rows 0.2 mm long one after the other, as at a fill's pointed end.
+    let tip = turns_kept(&[(0.0, 0.0), (10.0, 0.0), (10.0, 0.25), (9.8, 0.25), (9.8, 0.5), (10.0, 0.5), (10.0, 0.75), (0.0, 0.75)]);
+    let kept = [(0.0, 0.0), (10.0, -0.025), (10.0, 0.275), (9.8, 0.225), (9.8, 0.525), (10.0, 0.475), (10.0, 0.775), (0.0, 0.75)];
+    assert!(is(&tip, &kept), "{tip:?}");
 }
 
 #[test]
