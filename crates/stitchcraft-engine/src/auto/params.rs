@@ -103,8 +103,9 @@ params! {
             origin Origin::StitchCraft, stability Stability::Experimental;
 
         /// How far outside the design's outer shape the base layer's edge lies: inside it when negative, so
-        /// that no base stitch shows beside a shape once the thread has pulled the shape's edge in.
-        auto_base_offset_mm: Length = "-0.6", label "Base layer's offset", range (-3.0, 3.0),
+        /// that no base stitch shows beside a shape once the thread has pulled the shape's edge in. By
+        /// default it lies as far inside as a satin column's pull compensation reaches outside.
+        auto_base_offset_mm: Length = "-0.4", label "Base layer's offset", range (-3.0, 3.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
 
         /// Whether the base layer keeps the holes of the design's outer shape. Off, it sews across them.

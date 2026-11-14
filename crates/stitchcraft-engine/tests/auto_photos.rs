@@ -153,9 +153,9 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
 /// that sews as a running stitch, which is as wide as its thread and can't reach under a neighbour.
 const SLIVERS: [(&str, usize, usize, f64, f64); 4] = [
     ("dog-on-turf-6", 4, 2, 20.0, 204.0),
-    ("dog-on-turf-9", 10, 2, 34.0, 346.0),
+    ("dog-on-turf-9", 10, 1, 34.0, 346.0),
     ("dog-running-6", 3, 0, 26.0, 107.0),
-    ("dog-running-9", 2, 1, 14.0, 73.0),
+    ("dog-running-9", 2, 0, 14.0, 73.0),
 ];
 
 #[test]

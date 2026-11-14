@@ -23,6 +23,21 @@
         "unit": "°"
       }
     },
+    "auto_base_bare_percent": {
+      "default": 0.5,
+      "description": "The most of the design's area that the top thread may leave bare over the base layer, the slivers and the places narrower than a thread together. Nothing sews differently by this value. It is the other limit of the check of a design's cover. A design without a base layer is held to 0.15 % and to no gap at all.",
+      "maximum": 5.0,
+      "minimum": 0.0,
+      "title": "Most left to the base layer",
+      "type": "number",
+      "x-stitchcraft": {
+        "automatic": true,
+        "group": "Base layer",
+        "origin": "stitchcraft",
+        "stability": "experimental",
+        "unit": "%"
+      }
+    },
     "auto_base_keep_holes": {
       "default": true,
       "description": "Whether the base layer keeps the holes of the design's outer shape. Off, it sews across them.",
@@ -48,8 +63,8 @@
       }
     },
     "auto_base_offset_mm": {
-      "default": -0.6,
-      "description": "How far outside the design's outer shape the base layer's edge lies: inside it when negative, so that no base stitch shows beside a shape once the thread has pulled the shape's edge in.",
+      "default": -0.4,
+      "description": "How far outside the design's outer shape the base layer's edge lies: inside it when negative, so that no base stitch shows beside a shape once the thread has pulled the shape's edge in. By default it lies as far inside as a satin column's pull compensation reaches outside.",
       "maximum": 3.0,
       "minimum": -3.0,
       "title": "Base layer's offset",
@@ -60,6 +75,21 @@
         "origin": "stitchcraft",
         "stability": "experimental",
         "unit": "mm"
+      }
+    },
+    "auto_base_sliver_mm2": {
+      "default": 0.4,
+      "description": "The largest gap in the top thread that is left to the base layer: a sliver. Where thin shapes meet, the top thread can leave a place this small bare, and the base layer's thread shows there in place of the fabric. Nothing sews differently by this value. It is a limit of the check of a design's cover: a larger gap fails the check, and so does a gap with no base layer under it.",
+      "maximum": 2.0,
+      "minimum": 0.0,
+      "title": "Largest sliver",
+      "type": "number",
+      "x-stitchcraft": {
+        "automatic": true,
+        "group": "Base layer",
+        "origin": "stitchcraft",
+        "stability": "experimental",
+        "unit": "mm²"
       }
     },
     "auto_base_stitch_length_mm": {
@@ -3058,7 +3088,9 @@
           "auto_base_layer",
           "auto_base_stitch_length_mm",
           "auto_base_offset_mm",
-          "auto_base_keep_holes"
+          "auto_base_keep_holes",
+          "auto_base_sliver_mm2",
+          "auto_base_bare_percent"
         ],
         "name": "AutoParams",
         "title": "Auto parameters"

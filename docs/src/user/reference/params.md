@@ -64,16 +64,18 @@ numbers, `true`/`false`, strings and arrays instead, and `null` for an empty val
 | [Cross parameters](params/cross.md) | 8 | Cross stitch |
 | [Tartan parameters](params/tartan.md) | 5 | Tartan fill |
 | [Path fill parameters](params/path-fill.md) | 3 | Contour fill, Meander fill, Circular fill |
-| [Auto parameters](params/auto.md) | 10 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
+| [Auto parameters](params/auto.md) | 12 | automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type |
 
 ## Every parameter
 
 | Key | Label | Group |
 |---|---|---|
 | [`angle`](params/tatami.md#angle) | Angle | Tatami parameters |
+| [`auto_base_bare_percent`](params/auto.md#auto_base_bare_percent) | Most left to the base layer | Auto parameters |
 | [`auto_base_keep_holes`](params/auto.md#auto_base_keep_holes) | Base layer keeps holes | Auto parameters |
 | [`auto_base_layer`](params/auto.md#auto_base_layer) | Base layer | Auto parameters |
 | [`auto_base_offset_mm`](params/auto.md#auto_base_offset_mm) | Base layer's offset | Auto parameters |
+| [`auto_base_sliver_mm2`](params/auto.md#auto_base_sliver_mm2) | Largest sliver | Auto parameters |
 | [`auto_base_stitch_length_mm`](params/auto.md#auto_base_stitch_length_mm) | Base layer's stitch length | Auto parameters |
 | [`auto_ignore_background`](params/auto.md#auto_ignore_background) | Leave out the background | Auto parameters |
 | [`auto_max_satin_width_mm`](params/auto.md#auto_max_satin_width_mm) | Widest satin column | Auto parameters |

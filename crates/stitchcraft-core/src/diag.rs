@@ -1167,7 +1167,7 @@ registry! {
 
     /// `--auto` sews one base layer under the whole design before anything else, so that fabric of any
     /// colour shows less where 2 shapes leave a slit between them. Its shape is what the automatic shapes
-    /// paint together, with the slits narrower than a thread closed, offset by -0.6 mm, which is inwards,
+    /// paint together, with the slits narrower than a thread closed, offset by -0.4 mm, which is inwards,
     /// unless the design sets another offset (`auto_base_offset_mm`). It is an open fill of stitches 3 mm
     /// long in 3 directions (`auto_base_stitch_length_mm`), in the thread that paints the largest area, and
     /// every stitch of it is underlay. The fills on it sew no underlay of their own. A piece of it that has

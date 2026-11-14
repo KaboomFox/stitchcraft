@@ -310,8 +310,8 @@ fn a_cover_faults_each_gap_that_is_no_sliver_and_a_bare_share_over_its_limit() {
         shapes: Vec::new(),
     };
     // A gap of 0.4 mm² over the base layer is a sliver, and one a pixel larger is not. A gap with a place the
-    // base layer isn't under is one in the rim, 0.6 mm and a pixel wide, and not further inside.
-    let slivers = cover(&[(0.4025, 0.0), (0.4, 0.0), (0.3, 0.65), (0.2, 0.66), (0.1, f64::INFINITY), (0.0025, 0.0)], 2.0, 900.0);
+    // base layer isn't under is one in the rim, 0.4 mm and a pixel wide, and not further inside.
+    let slivers = cover(&[(0.4025, 0.0), (0.4, 0.0), (0.3, 0.45), (0.2, 0.46), (0.1, f64::INFINITY), (0.0025, 0.0)], 2.0, 900.0);
     assert_eq!((slivers.slivers(&rules), slivers.at_the_rim(&rules)), (vec![0.4, 0.3, 0.0025], 1));
     assert_eq!(
         slivers.faults(&rules),

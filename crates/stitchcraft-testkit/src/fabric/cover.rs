@@ -17,7 +17,7 @@
 //! [`super::unsewn`] covers it. **A gap** is a place where a disc [`GAP`] across fits on bare pixels, and places that touch at a side
 //! or a corner are one gap. **The base layer lies under** a place inside the shape that one of its pieces
 //! fills (`REQ-AUTO-028`). **The rim** is the band of the design that the base layer's offset leaves along
-//! the design's outline, 0.6 mm wide by default: the base layer can't lie there. **A sliver** is a gap no
+//! the design's outline, 0.4 mm wide by default: the base layer can't lie there. **A sliver** is a gap no
 //! larger than the setting `auto_base_sliver_mm2` whose every place has the base layer under it or lies in
 //! the rim. Over the base layer its thread shows in place of the fabric, and in the rim a sliver reads as
 //! the outline. Fabric shows in every other gap, and a design passes with none ([`Cover::faults`]). **Open** is what of the design within its edge no thread at all covers: the underlays, the base
