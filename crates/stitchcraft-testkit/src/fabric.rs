@@ -45,7 +45,7 @@ pub use crate::metrics::{PIXEL, THREAD};
 use crate::stitches::{JumpThread, jump_threads};
 
 mod cover;
-pub use cover::{BARE, Cover, GAP, cover, painted};
+pub use cover::{BARE, Cover, FAR, GAP, cover, painted};
 
 /// How long a stretch of a stitch, in millimetres, may lie where the picture has another colour before the
 /// stitch is astray: past a satin column's rail by its pull compensation, 0.4 mm, and twice that.

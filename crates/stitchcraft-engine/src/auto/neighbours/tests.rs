@@ -462,3 +462,71 @@ fn a_column_whose_neighbours_need_more_work_than_the_budget_keeps_its_pull_compe
         assert!(said.message.ends_with("so it sews its pull compensation past both rails."), "{work}: {}", said.message);
     }
 }
+
+/// A satin column 3 mm wide with settings of its own, its rails from x = 2 to 8 at y = 4 and y = 7, as
+/// automatic digitizing makes one with an overlap of 1 mm: of the part `part` of its shape, or a line's.
+fn column_made(part: Option<Polygon>) -> Sewn {
+    let rail = |y: f64| Subpath { start: p(2.0, y), segments: vec![Segment::Line(p(8.0, y))], closed: false };
+    let shape = Shape::stroke(Path { subpaths: vec![rail(4.0), rail(7.0)] });
+    let element = Element { shape, params: [("satin_column", "true")].into_iter().collect(), ..filled("column", &[]) };
+    Sewn { element, area: None, automatic: true, reach: Some(1.0), shape: 0, part }
+}
+
+/// What `said` says of columns that sew past a rail.
+fn past_a_rail(said: &[Diagnostic]) -> Vec<&str> {
+    said.iter().map(|said| said.message.as_str()).filter(|message| message.contains("past a rail")).collect()
+}
+
+#[test]
+fn a_parts_column_covered_whole_sews_nothing_and_is_not_said_to_sew_past_a_rail() {
+    let strip = square((2.0, 4.0), (8.0, 7.0));
+    let sewn = |to: (f64, f64)| vec![column_made(Some(strip.clone())), area("cover", (0.0, 0.0), to)];
+    let ids = |elements: &[Element]| elements.iter().map(|element| element.id.to_string()).collect::<Vec<_>>();
+    // An area sewn after the column covers its rail at y = 4 and not the one at y = 7: the column sews, and
+    // 1 mm past the rail the area runs along.
+    let (elements, said) = reached(sewn((10.0, 5.0)), &Budget::DEFAULT);
+    assert_eq!(ids(&elements), ["column", "cover"], "{said:?}");
+    assert_eq!(past_a_rail(&said), ["1 satin column sews 1 mm past a rail, under the shape sewn after it there."]);
+    // The area covers the column whole: it is left out, and no rail of it is counted.
+    let (elements, said) = reached(sewn((10.0, 10.0)), &Budget::DEFAULT);
+    assert_eq!(ids(&elements), ["cover"], "{said:?}");
+    assert_eq!(past_a_rail(&said), Vec::<&str>::new());
+}
+
+#[test]
+fn a_line_sewn_after_a_column_along_its_rail_is_no_shape_beside_it() {
+    // A line 2 mm wide along the column's rail at y = 7, sewn after the column: it goes over the column, so
+    // the column keeps its pull compensation past that rail.
+    let along = Subpath { start: p(2.0, 7.0), segments: vec![Segment::Line(p(8.0, 7.0))], closed: false };
+    let shape = Shape::Stroke { path: Path { subpaths: vec![along] }, width: Mm::new(2.0).unwrap(), join: Join::Round, cap: Cap::Round };
+    let line = Sewn { element: Element { shape, ..filled("line", &[]) }, area: None, automatic: true, reach: None, shape: 1, part: None };
+    let (elements, said) = reached(vec![column_made(None), line], &Budget::DEFAULT);
+    assert_eq!(past_a_rail(&said), Vec::<&str>::new());
+    assert_eq!(elements[0].params.get("pull_compensation_mm"), None, "{:?}", elements[0].params);
+    // An area there is one: the column sews 1 mm past the rail it runs along.
+    let (_, said) = reached(vec![column_made(None), area("beside", (2.0, 7.0), (8.0, 12.0))], &Budget::DEFAULT);
+    assert_eq!(past_a_rail(&said), ["1 satin column sews 1 mm past a rail, under the shape sewn after it there."]);
+}
+
+#[test]
+fn a_rail_is_run_along_where_shapes_cover_more_than_half_of_its_length() {
+    let meter = || Budget::DEFAULT.meter();
+    let rail = [p(0.0, 0.0), p(0.0, 30.0)];
+    let band = |from: f64, to: f64| square((-1.0, from), (1.0, to));
+    // The rail is looked at every 0.5 mm, from 0.25 mm on. 2 shapes away from its middle cover 18 and 16 of
+    // those 60 places, 17 mm of its 30 mm.
+    assert!(under::runs_along(&rail, &[band(0.0, 8.9), band(19.1, 26.9)], &mut meter()).unwrap());
+    // 18 and 12 places are 15 mm, half the rail and not more.
+    assert!(!under::runs_along(&rail, &[band(0.0, 8.9), band(19.1, 25.1)], &mut meter()).unwrap());
+    assert!(!under::runs_along(&[p(0.0, 0.0), p(0.0, 2.0)], &[band(-1.0, 1.0)], &mut meter()).unwrap());
+    // No shape runs along a rail with none beside it, and none along a rail of no length.
+    assert!(!under::runs_along(&rail, &[], &mut meter()).unwrap());
+    assert!(!under::runs_along(&[p(0.0, 0.0), p(0.0, 0.0)], &[band(-1.0, 1.0)], &mut meter()).unwrap());
+    // A rail 1 mm long is looked at in 2 places, each for a unit of work and one for each shape.
+    let least = |shapes: &[Polygon]| {
+        let enough =
+            |work: &u64| under::runs_along(&[p(0.0, 0.0), p(0.0, 1.0)], shapes, &mut Budget { max_work: *work, ..Budget::DEFAULT }.meter()).is_ok();
+        (0..20).find(enough)
+    };
+    assert_eq!((least(&[]), least(&[band(0.0, 1.0)]), least(&[band(0.0, 1.0), band(5.0, 6.0)])), (Some(2), Some(4), Some(6)));
+}
