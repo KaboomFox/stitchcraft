@@ -273,7 +273,7 @@ fn req_gen_004_each_element_is_given_what_the_ones_before_it_left() {
             line("a", (0.0, 0.0), 100.0, &RED, &[]),
             line("b", (0.0, 5.0), 100.0, &RED, &[]),
             line("c", (0.0, 10.0), 100.0, &RED, &[]),
-            fill("d", &[&[(0.0, 15.0), (10.0, 15.0), (10.0, 20.0)]], &RED, &[("fill_method", "guided_fill")]),
+            fill("d", &[&[(0.0, 15.0), (10.0, 15.0), (10.0, 20.0)]], &RED, &[("fill_method", "guided_fill"), ("guided_fill_strategy", "1")]),
         ];
         let design = Design::new(elements, DesignSettings::default()).unwrap();
         plan(&design, REFERENCE, &Budget { max_stitches: stitches, ..Budget::DEFAULT })

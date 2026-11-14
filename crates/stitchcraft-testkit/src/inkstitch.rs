@@ -66,6 +66,7 @@ use stitchcraft_core::{Point, Rect};
 #[cfg(test)]
 use stitchcraft_engine::design::Clip;
 use stitchcraft_engine::design::{Cap, DesignSettings, Element, FillRule, Hints, Join, Path, SETTINGS, Segment, Shape, Turn};
+use stitchcraft_engine::generators::tatami::TURN_STITCHES;
 use stitchcraft_engine::registry::PARAMETERS;
 use stitchcraft_engine::testsheets::Cloned;
 use stitchcraft_params::{Origin, ParamGroup, ParamSpec};
@@ -337,9 +338,6 @@ fn parameters(element: &Element, registry: &[&ParamGroup]) -> Result<String, Str
     }
     Ok(out)
 }
-
-/// The switch that keeps a fill's turns as stitches, which a file leaves out: Ink/Stitch keeps them without it.
-const TURN_STITCHES: &str = "turn_stitches";
 
 /// Whether `spec` is a setting of StitchCraft's own that a stitch type reads, which Ink/Stitch passes over
 /// and sews otherwise.

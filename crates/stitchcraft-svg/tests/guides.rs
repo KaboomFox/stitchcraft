@@ -1,5 +1,5 @@
-//! `REQ-RIP-012` to `REQ-RIP-014` and `REQ-SVG-003`: Ink/Stitch's guide lines and anchor lines, read for the
-//! shapes grouped with them, as Ink/Stitch at `d59c9ab` finds them (`src/document/guides.rs`).
+//! `REQ-RIP-012` to `REQ-RIP-014`, `REQ-SVG-003` and `REQ-SVG-015`: Ink/Stitch's guide lines and anchor lines,
+//! read for the shapes grouped with them, as Ink/Stitch at `d59c9ab` finds them (`src/document/guides.rs`).
 
 // Test code may unwrap, index and panic (clippy.toml allows the first 2 in tests).
 #![allow(clippy::unwrap_used, clippy::indexing_slicing, clippy::panic)]
@@ -95,6 +95,30 @@ fn req_rip_013_a_satin_guide_comes_before_a_guide_line_and_an_anchor_line_is_nev
         ripple("ripple")
     )));
     assert_eq!(steered(&file)[0].1.as_ref().map(|guide| &guide.path), Some(&Path { subpaths: vec![line(&[(0.0, 0.0), (0.0, 20.0)])] }));
+}
+
+#[test]
+fn req_svg_015_a_fill_s_guide_line_is_the_first_that_is_no_satin_column() {
+    // A shape both filled and stroked: its stroke takes the satin guide, as a ripple stitch does, and its fill
+    // the first guide line that is not one, as Ink/Stitch's fill looks only at those.
+    let filled = r#"<path id="leaf" d="M 0 0 H 9 V 9 H 0 Z" style="fill:red;stroke:blue" inkstitch:fill_method="guided_fill" inkstitch:stroke_method="ripple_stitch"/>"#;
+    let file = svg(drawing(&format!(
+        "<g>{}{}{}{filled}</g>",
+        helper("satin", "guide-line", "M 0 0 L 20 0 M 0 4 L 20 4", "", r#"inkstitch:satin_column="True""#),
+        helper("first", "guide-line", "M 0 0 L 0 20", "", ""),
+        helper("second", "guide-line", "M 0 0 L 20 0", "", ""),
+    )));
+    let paths: Vec<(&str, Option<Path>)> = steered(&file).into_iter().map(|(id, guide, _)| (id, guide.map(|guide| guide.path))).collect();
+    let rails = Path { subpaths: vec![line(&[(0.0, 0.0), (20.0, 0.0)]), line(&[(0.0, 4.0), (20.0, 4.0)])] };
+    let first = Path { subpaths: vec![line(&[(0.0, 0.0), (0.0, 20.0)])] };
+    assert_eq!(paths, [("svg:leaf:fill", Some(first)), ("svg:leaf:stroke", Some(rails.clone()))]);
+    // With a satin guide alone, the fill has none, and sews as a tatami fill (`SC-W0331`).
+    let file = svg(drawing(&format!(
+        "<g>{}{filled}</g>",
+        helper("satin", "guide-line", "M 0 0 L 20 0 M 0 4 L 20 4", "", r#"inkstitch:satin_column="True""#)
+    )));
+    let paths: Vec<(&str, Option<Path>)> = steered(&file).into_iter().map(|(id, guide, _)| (id, guide.map(|guide| guide.path))).collect();
+    assert_eq!(paths, [("svg:leaf:fill", None), ("svg:leaf:stroke", Some(rails))]);
 }
 
 #[test]

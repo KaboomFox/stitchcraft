@@ -281,6 +281,7 @@ fn property(spec: &ParamSpec, specs: &[ParamSpec]) -> Result<Json, String> {
             json!({"type": if empty == Empty::Never { json!("number") } else { json!(["number", "null"]) }, "minimum": min, "maximum": max})
         }
         Kind::Angle => json!({"type": "number"}),
+        Kind::OptionalAngle => json!({"type": ["number", "null"]}),
         Kind::BoundedAngle { min, max } | Kind::Percent { min, max } | Kind::Number { min, max } | Kind::Area { min, max } => {
             json!({"type": "number", "minimum": min, "maximum": max})
         }
@@ -363,8 +364,13 @@ fn unwrapped(markdown: &str) -> String {
 fn json_value(value: &Value) -> Json {
     match value {
         Value::Length(Some(mm)) => json!(mm.get()),
-        Value::Length(None) | Value::Seed(None) | Value::LengthPair(None) | Value::PercentPair(None) | Value::Angles(None) => Json::Null,
-        Value::Angle(v) | Value::Percent(v) | Value::Number(v) | Value::Area(v) => json!(v),
+        Value::Length(None)
+        | Value::OptionalAngle(None)
+        | Value::Seed(None)
+        | Value::LengthPair(None)
+        | Value::PercentPair(None)
+        | Value::Angles(None) => Json::Null,
+        Value::Angle(v) | Value::OptionalAngle(Some(v)) | Value::Percent(v) | Value::Number(v) | Value::Area(v) => json!(v),
         Value::Count(n) => json!(n),
         Value::Toggle(on) => json!(on),
         Value::Choice(id) => json!(id),
