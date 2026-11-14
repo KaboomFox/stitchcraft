@@ -13,12 +13,10 @@
 
 use std::sync::OnceLock;
 
-use stitchcraft_core::Budget;
-use stitchcraft_engine::auto;
-use stitchcraft_engine::design::{Design, Element, Shape};
+use stitchcraft_engine::design::Design;
 use stitchcraft_plan::StitchPlan;
 use stitchcraft_testkit::designs::{in_place, rules};
-use stitchcraft_testkit::fabric::{self, BARE, GAP};
+use stitchcraft_testkit::fabric::{self, GAP};
 use stitchcraft_testkit::pictures;
 
 /// Each traced dog by name, digitized automatically and planned in place, once for all the cases.
@@ -147,102 +145,38 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
     assert_eq!(apart, recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps)));
 }
 
-/// A gap a traced dog still leaves, until the roadmap step that closes it, as [`Astray`] lists a stitch.
-/// Only a gap beside a thin strand may be listed: a line of fur that sews as a running stitch, or as a satin
-/// column narrower than 1 mm. The overlap of `REQ-AUTO-029` can't close it: a running stitch is as wide as
-/// its thread, and such a column hardly wider.
-struct Gap {
-    /// The dog, by the name `stitchcraft_testkit::pictures::dogs` gives it.
-    dog: &'static str,
-    /// The 2 elements nearest the gap's middle, the nearer first, the base layer aside.
-    beside: [&'static str; 2],
-    /// The middle of the box round the gap, in millimetres, to a tenth.
-    at: (f64, f64),
-    /// The roadmap step that closes it (`docs/src/plan/roadmap.md`).
-    step: &'static str,
-}
-
-/// Every gap of the dogs that M13.18 is left to close, by merging thin lines into their neighbours: what
-/// M13.16's base layer and overlap leave of the 44 gaps the dogs had before it. 17 have a running stitch
-/// among their 2 nearest elements. The first of the dog on turf in 6 threads and the last of the running dog
-/// in 6 lie between 2 satin columns under 1 mm wide.
-const GAPS: [Gap; 19] = [
-    Gap { dog: "dog-on-turf-6", beside: ["vc:83:fill#5", "vc:83:fill#3"], at: (47.5, 14.2), step: "M13.18" },
-    Gap { dog: "dog-on-turf-6", beside: ["vc:84:fill#2", "vc:62:fill#3"], at: (48.8, 24.7), step: "M13.18" },
-    Gap { dog: "dog-on-turf-6", beside: ["vc:88:fill", "vc:8:fill"], at: (41.1, 43.3), step: "M13.18" },
-    Gap { dog: "dog-on-turf-6", beside: ["vc:68:fill#3", "vc:101:fill"], at: (52.5, 73.2), step: "M13.18" },
-    Gap { dog: "dog-on-turf-9", beside: ["vc:70:fill", "vc:82:fill"], at: (45.1, 19.5), step: "M13.18" },
-    Gap { dog: "dog-on-turf-9", beside: ["vc:83:fill", "vc:27:fill#4"], at: (48.3, 20.8), step: "M13.18" },
-    Gap { dog: "dog-on-turf-9", beside: ["vc:101:fill", "vc:83:fill"], at: (47.1, 21.4), step: "M13.18" },
-    Gap { dog: "dog-on-turf-9", beside: ["vc:83:fill", "vc:27:fill#4"], at: (48.4, 21.7), step: "M13.18" },
-    Gap { dog: "dog-on-turf-9", beside: ["vc:29:fill", "vc:83:fill"], at: (50.4, 23.1), step: "M13.18" },
-    Gap { dog: "dog-on-turf-9", beside: ["vc:31:fill#7", "vc:6:fill#2"], at: (61.5, 41.1), step: "M13.18" },
-    Gap { dog: "dog-on-turf-9", beside: ["vc:117:fill#2", "vc:31:fill"], at: (62.3, 41.6), step: "M13.18" },
-    Gap { dog: "dog-on-turf-9", beside: ["vc:87:fill#2", "vc:35:fill"], at: (54.9, 43.9), step: "M13.18" },
-    Gap { dog: "dog-on-turf-9", beside: ["vc:40:fill", "vc:6:fill#4"], at: (61.0, 46.1), step: "M13.18" },
-    Gap { dog: "dog-on-turf-9", beside: ["vc:92:fill#2", "vc:46:fill"], at: (52.6, 63.3), step: "M13.18" },
-    Gap { dog: "dog-running-6", beside: ["vc:4:fill", "vc:26:fill#5"], at: (38.7, 23.9), step: "M13.18" },
-    Gap { dog: "dog-running-6", beside: ["vc:71:fill#2", "vc:37:fill#3"], at: (31.0, 51.6), step: "M13.18" },
-    Gap { dog: "dog-running-6", beside: ["vc:46:fill", "vc:78:fill"], at: (56.9, 71.9), step: "M13.18" },
-    Gap { dog: "dog-running-9", beside: ["vc:43:fill#3", "vc:74:fill#3"], at: (49.1, 58.4), step: "M13.18" },
-    Gap { dog: "dog-running-9", beside: ["vc:80:fill", "vc:77:fill"], at: (39.9, 69.7), step: "M13.18" },
+/// What the top thread of each traced dog leaves to the base layer, as measured: how many slivers, how many
+/// of them lie at the rim, where the base layer's offset leaves no base layer along the design's outline, the
+/// largest in hundredths of a square millimetre, and the share of the design left bare in thousandths of a
+/// percent. The case fails when a number changes, so that a dog whose slivers grow shows here before it
+/// reaches a limit, and one that loses a sliver gets its row changed. Most slivers lie beside a line of fur
+/// that sews as a running stitch, which is as wide as its thread and can't reach under a neighbour.
+const SLIVERS: [(&str, usize, usize, f64, f64); 4] = [
+    ("dog-on-turf-6", 4, 2, 20.0, 204.0),
+    ("dog-on-turf-9", 10, 2, 34.0, 346.0),
+    ("dog-running-6", 3, 0, 26.0, 107.0),
+    ("dog-running-9", 2, 1, 14.0, 73.0),
 ];
-
-/// The dogs that leave more of their design bare than [`BARE`] until M13.18, each with the share it leaves
-/// as measured, which is its limit: the owner's exception for the dog on turf in 9 threads (2026-11-10),
-/// and the dog on turf in 6, which is over since a column's end reaches no further than its pull
-/// compensation under the column it ends under.
-const BARE_OVER: [(&str, f64); 2] = [("dog-on-turf-6", 0.002_04), ("dog-on-turf-9", 0.003_46)];
-
-/// Whether `element` sews as a thin strand: a running stitch, or a satin column narrower than 1 mm.
-fn thin(element: &Element) -> bool {
-    match &element.shape {
-        Shape::Stroke { width, .. } => element.params.get("satin_column") != Some("true") || width.get() < 1.0,
-        Shape::Fill { .. } => false,
-    }
-}
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
-fn req_auto_027_digitized_dogs_leave_no_gap_a_thread_wide_but_as_listed_and_little_bare() {
-    let tenths = |value: f64| (value * 10.0).round();
-    let mut found = Vec::new();
+fn req_auto_027_digitized_dogs_show_no_fabric_and_leave_the_slivers_recorded() {
+    let rules = rules();
+    let (mut faults, mut found) = (Vec::new(), Vec::new());
     for (name, design, plan) in planned() {
         let cover = fabric::cover(design, plan, GAP);
-        // Each gap by the middle of its box, as found and as listed.
-        let mut gaps: Vec<(f64, f64)> = cover.places.iter().map(|(place, _, _)| (tenths(place.center().x()), tenths(place.center().y()))).collect();
-        let mut listed: Vec<(f64, f64)> = GAPS.iter().filter(|gap| gap.dog == name).map(|gap| (tenths(gap.at.0), tenths(gap.at.1))).collect();
-        gaps.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        listed.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        // A dog over the limit has its measured share for a limit, and must still be over the limit.
-        let over = BARE_OVER.iter().find(|(dog, _)| dog == name).map(|(_, share)| *share);
-        let within = match over {
-            Some(share) => cover.bare_share() > BARE && cover.bare_share() <= share + 5e-6,
-            None => cover.bare_share() <= BARE,
-        };
-        if gaps != listed || !within {
-            found.push(format!(
-                "{name}: gaps at {gaps:?}, listed at {listed:?}, of {:.2} mm², the largest {:.3} mm²; bare {:.2} of {:.0} mm², {:.3} %, its limit {:.3} %, most in {:?}",
-                cover.in_gaps,
-                cover.largest,
-                cover.bare,
-                cover.design,
-                100.0 * cover.bare_share(),
-                100.0 * over.unwrap_or(BARE),
-                cover.shapes.iter().take(3).collect::<Vec<_>>()
-            ));
-        }
-        // Each listed gap lies beside a thin strand: one of the 2 elements it names sews as one.
-        let (elements, _) = auto::digitized(design, &Budget::DEFAULT);
-        for gap in GAPS.iter().filter(|gap| gap.dog == name) {
-            let beside: Vec<&Element> = gap.beside.iter().filter_map(|id| elements.iter().find(|element| element.id.as_str() == *id)).collect();
-            assert!(
-                gap.step == "M13.18" && beside.len() == 2 && beside.iter().any(|element| thin(element)),
-                "{name}: the gap at {:?} beside {:?}",
-                gap.at,
-                gap.beside
-            );
-        }
+        // No fabric shows: each gap is a sliver, and all that is bare is within the limit of a design with a
+        // base layer.
+        assert!(cover.base > 0.0, "{name} has no base layer");
+        faults.extend(cover.faults(&rules).into_iter().map(|fault| format!("{name}: {fault}")));
+        let slivers = cover.slivers(&rules);
+        let largest = slivers.first().copied().unwrap_or(0.0);
+        found.push((name.clone(), slivers.len(), cover.at_the_rim(&rules), hundredths(largest), (cover.bare_share() * 100_000.0).round()));
+        println!(
+            "{name}: slivers {slivers:?}, beyond {:?}, bare {:.2} of {:.0} mm², open {:.2} mm²",
+            cover.beyond, cover.bare, cover.design, cover.open
+        );
     }
-    assert!(found.is_empty(), "{found:#?}");
+    assert!(faults.is_empty(), "{faults:#?}");
+    assert_eq!(found, SLIVERS.map(|(name, slivers, rim, largest, share)| (name.to_string(), slivers, rim, largest, share)));
 }

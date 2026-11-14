@@ -2,7 +2,8 @@
 //! as any other (`docs/src/design/params.md`), which no stitch type reads.
 //!
 //! Each rule goes by a value: the widest satin column, the narrowest triple run, the overlap, a column's pull
-//! compensation, the smallest area, a switch that leaves the background out, and the base layer's settings (`docs/src/design/image-to-embroidery.md` ›
+//! compensation, the smallest area, a switch that leaves the background out, the base layer's settings, and the 2 limits of what
+//! the top thread may leave to the base layer (`docs/src/design/image-to-embroidery.md` ›
 //! Settings). MC-8 confirms the values on the machine or changes them, and a picture can need others, so
 //! each is a parameter of the shape it digitizes, read when the shape is digitized ([`AutoParams`]). A
 //! shape that sets none takes the defaults, as every shape does with `--auto`, and the requirements give
@@ -109,6 +110,20 @@ params! {
         /// Whether the base layer keeps the holes of the design's outer shape. Off, it sews across them.
         auto_base_keep_holes: Toggle = "true", label "Base layer keeps holes",
             origin Origin::StitchCraft, stability Stability::Experimental;
+
+        /// The largest gap in the top thread that is left to the base layer: a sliver. Where thin shapes
+        /// meet, the top thread can leave a place this small bare, and the base layer's thread shows there
+        /// in place of the fabric. Nothing sews differently by this value. It is a limit of the check of a
+        /// design's cover: a larger gap fails the check, and so does a gap with no base layer under it.
+        auto_base_sliver_mm2: Area = "0.4", label "Largest sliver", range (0.0, 2.0),
+            origin Origin::StitchCraft, stability Stability::Experimental;
+
+        /// The most of the design's area that the top thread may leave bare over the base layer, the
+        /// slivers and the places narrower than a thread together. Nothing sews differently by this value.
+        /// It is the other limit of the check of a design's cover. A design without a base layer is held to
+        /// 0.15 % and to no gap at all.
+        auto_base_bare_percent: Percent = "0.5", label "Most left to the base layer", range (0.0, 5.0),
+            origin Origin::StitchCraft, stability Stability::Experimental;
     }
 }
 
@@ -127,7 +142,8 @@ mod tests {
     #[test]
     fn each_key_names_a_setting_in_the_order_they_are_declared() {
         let keys: Vec<&str> = AutoParams::SPECS.iter().map(|spec| spec.key).collect();
-        let base = ["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_offset_mm", "auto_base_keep_holes"];
+        let cover = ["auto_base_sliver_mm2", "auto_base_bare_percent"];
+        let base = [&["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_offset_mm", "auto_base_keep_holes"], &cover[..]].concat();
         let neighbours = [OVERLAP, "auto_pull_compensation_mm", MIN_AREA, IGNORE_BACKGROUND];
         assert_eq!(keys, [&[MAX_SATIN_WIDTH, MIN_TRIPLE_RUN_WIDTH], &neighbours[..], &base[..]].concat());
     }

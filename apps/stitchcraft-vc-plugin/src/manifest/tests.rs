@@ -67,8 +67,17 @@ fn req_vc_016_the_auto_effect_s_dialog_holds_the_rules_settings_and_its_preview_
     assert_eq!(validate(&text(&manifest)), Ok(()));
     assert_eq!((manifest.id.as_str(), manifest.kind), ("dev.stitchcraft.auto", "effect"));
     let keys: Vec<&str> = manifest.params.iter().map(|(key, _)| *key).collect();
-    let (pull, base) =
-        ("auto_pull_compensation_mm", ["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_offset_mm", "auto_base_keep_holes"]);
+    let (pull, base) = (
+        "auto_pull_compensation_mm",
+        [
+            "auto_base_layer",
+            "auto_base_stitch_length_mm",
+            "auto_base_offset_mm",
+            "auto_base_keep_holes",
+            "auto_base_sliver_mm2",
+            "auto_base_bare_percent",
+        ],
+    );
     let rules = [MAX_SATIN_WIDTH, MIN_TRIPLE_RUN_WIDTH, OVERLAP, pull, MIN_AREA, IGNORE_BACKGROUND];
     assert_eq!(keys, [&rules[..], &base[..], &[PREVIEW_LEVEL]].concat());
     // Each setting's row has the registry's label, unit, section, help and page, and always shows: the

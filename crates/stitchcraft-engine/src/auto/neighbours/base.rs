@@ -1,4 +1,5 @@
-//! The base layer: one underlay under the whole design (`REQ-AUTO-028`), said with `SC-I0909`.
+//! The base layer: one underlay under the whole design (`REQ-AUTO-028`), said with `SC-I0909`, and with
+//! `SC-I0911` of a design that turns it off.
 //!
 //! The fabric's colour isn't the design's to choose, and on dark fabric a slit between 2 shapes shows as a
 //! dark line. So a design digitized automatically first sews one open fill under everything, in one thread,
@@ -87,6 +88,14 @@ pub(super) fn laid(shapes: &mut Shapes, rules: &AutoParams, taken: &mut Labels, 
             }
         }
     }
+}
+
+/// What is said of a design that turns its base layer off (`SC-I0911`): fabric may show where the top thread
+/// leaves a place bare, since nothing lies under it.
+pub(in crate::auto) fn off() -> Diagnostic {
+    let message =
+        "The base layer is off, so nothing lies under a place that the top thread leaves bare between 2 shapes, and the fabric may show there.";
+    Diagnostic::new(Code::AutoBaseOff, message).with_fix(Fix::Hint("To sew a base layer under the design, turn `auto_base_layer` on.".to_string()))
 }
 
 /// The pieces of the base layer under the automatic elements of `shapes` and their area, with `meter`'s

@@ -462,15 +462,13 @@ from falling back, and MC-8 tells whether 0.4 mm is the pull on the machine.
 
 ## Covering the fabric
 
-M13.16 of the [roadmap](../plan/roadmap.md) builds what this section says. Until then its requirements are
-planned (`REQ-AUTO-027` to `REQ-AUTO-029`, `REQ-RND-003`), and their cases fail.
-
 The fabric's colour can't be chosen. It may be black, so a design has to cover the fabric by itself. The
 measure of bare fabric ([Sewing order](#sewing-order), `REQ-AUTO-025`) passes a patch under 1 mm², and its
 disc needs 0.45 mm of bare fabric on the grid, so a sliver 0.4 mm wide between 2 shapes passes too. On the
-traced dog such slivers lie between strands of fur and beside the nose, and on dark fabric each is a dark
-line. So the measure gets stricter, and 2 things are built to meet it: one underlay under the whole design,
-and a wider overlap between neighbours.
+traced dog such slivers lay between strands of fur and beside the nose, and on dark fabric each was a dark
+line. M13.16 of the [roadmap](../plan/roadmap.md) made the measure stricter, and built one underlay under
+the whole design and a wider overlap between neighbours to meet it (`REQ-AUTO-027` to `REQ-AUTO-029`,
+`REQ-RND-003`).
 
 ### The stricter measure
 
@@ -485,9 +483,27 @@ and a wider overlap between neighbours.
 - **A gap** is a place where a disc 0.35 mm across fits on bare places, 7 pixels of the grid. A strip of
   fabric 0.4 mm wide holds 7 or 8 pixels by where it lies, so this disc fits in every such strip, and the
   9 pixels of the older measure's disc fit in none.
+- **The base layer lies under** a place inside the shape that one of its pieces fills
+  ([below](#one-underlay-under-the-whole-design)).
+- **The rim** is the band along the design's outline that the base layer's offset leaves without a base
+  layer, 0.6 mm wide by default. A part of the design narrower than twice that is all rim.
+- **A sliver** is a gap no larger than `auto_base_sliver_mm2`, 0.4 mm², whose every place has the base
+  layer under it or lies in the rim. Over the base layer its thread shows in place of the fabric. In the
+  rim a sliver lies at the outline and reads as part of it.
 
-A picture passes with no gap and with no more than 0.15 % of its design bare. Measured on 2026-11-10 at
-`8b8b23bd`, before anything is built:
+A picture passes when no fabric shows inside its design, counting the base layer:
+
+- Every gap is a sliver. Fabric shows in a larger gap, and in one with a place further inside than the rim
+  that the base layer isn't under.
+- With a base layer, the top stitches leave no more than `auto_base_bare_percent`, 0.5 %, of the design
+  bare: the slivers and the places narrower than a thread together.
+
+A design without a base layer has nothing under a gap. It passes with no gap at all and with no more than
+0.15 % of its design bare, twice what a picture without gaps leaves. A design that turns `auto_base_layer`
+off is told that fabric may show (`SC-I0911`). `Cover::faults` gives the verdict, by the settings of the
+design.
+
+Measured on 2026-11-10 at `8b8b23bd`, before the step, when a picture passed with no gap and 0.15 % bare:
 
 | Picture, digitized | Design | Bare | Share bare | Gaps |
 |---|---:|---:|---:|---:|
@@ -498,15 +514,34 @@ A picture passes with no gap and with no more than 0.15 % of its design bare. Me
 | Traced running dog, 9 threads | 1,944 mm² | 6.26 mm² | 0.322 % | 8 |
 | Stripes, 3 abutting | 1,800 mm² | 5.91 mm² | 0.328 % | 0 |
 
-The pear passes today. The other test pictures and the dogs' paw and ear pass too, and the stripes fail on
-their bare share alone. Of the red stripe's 160 rows only 93 have a needle point on its outer side, and the
-others turn 0.8 or 1 mm short of it, which leaves notches narrower than a thread along the 2 outer sides.
-Why they turn short isn't found yet, and M13.16 reproduces it before it fixes it. The whole dogs are cases
-of `tests/auto_photos.rs`, in the release build, and the rest are cases of `tests/auto_cover.rs`.
+The stripes failed on their bare share alone. Of the red stripe's 160 rows only 93 had a needle point on
+its outer side, and the others turned 0.8 or 1 mm short of it, which left notches narrower than a thread
+along the 2 outer sides. A turn between 2 rows was a stitch shorter than the machine's shortest and was
+dropped. Automatic fills now keep their turns as stitches
+([tatami fill](algorithms/fills.md), `REQ-FILL-TAT-014`).
 
-A gap between 2 thin lines of fur that sew as running stitches side by side can't close by an overlap, since
-a running stitch is as wide as its thread. M13.18 merges such lines. Until then `tests/auto_photos.rs` may
-list such a gap with its 2 lines, and the case fails on any other gap and on a listed one that is gone.
+As built, measured on 2026-11-14:
+
+| Picture, digitized | Bare | Share bare | Slivers | Of them at the rim | Largest sliver |
+|---|---:|---:|---:|---:|---:|
+| Traced pear | 0.03 mm² | 0.001 % | 0 | 0 | |
+| Traced dog on turf, 6 threads | 3.35 mm² | 0.204 % | 4 | 2 | 0.20 mm² |
+| Traced dog on turf, 9 threads | 5.67 mm² | 0.346 % | 10 | 2 | 0.335 mm² |
+| Traced running dog, 6 threads | 2.08 mm² | 0.107 % | 3 | 0 | 0.26 mm² |
+| Traced running dog, 9 threads | 1.41 mm² | 0.073 % | 2 | 1 | 0.135 mm² |
+
+No fabric shows on any of them. The test pictures, the stripes among them, and the dogs' pieces leave no
+gap. They are cases of `tests/auto_cover.rs`, and the whole dogs are cases of `tests/auto_photos.rs`, in
+the release build. That file records each dog's row of this table, and its case fails when a number
+changes, so a dog whose slivers grow shows before it reaches a limit.
+
+The dogs' 19 slivers lie beside thin strands of fur. A strand that sews as a running stitch is as wide as
+its thread and can't reach under a neighbour, so the overlap can't close the fabric beside it. A thin
+column's end sewn further under its neighbour closed 4 of them and laid 19 more stitches astray, so it
+isn't built ([below](#neighbours-that-overlap)). The owner decided on 2026-11-14 that a gap this small is
+the base layer's to hide. Both limits are StitchCraft's own, set from the dogs: their slivers are 0.09 to
+0.335 mm², and the dog on turf in 9 threads leaves the most bare. They are settings
+([Settings](#settings)), and MC-8 confirms them on black fabric or changes them.
 
 ### One underlay under the whole design
 
@@ -565,7 +600,7 @@ StitchCraft's base layer (`REQ-AUTO-028`) is that fill, made by automatic digiti
 3. **Offset and holes.** The shape is offset by `auto_base_offset_mm`, −0.6 mm, with round joins. Ink/Stitch's
    join styles differ only at the corners an offset makes, and a setting can follow when one is asked for.
    Its holes are kept unless `auto_base_keep_holes` is off. A piece smaller than the smallest area is left
-   out. A part of the design narrower than twice the inset has no base layer. It sews as a line or a
+   out, and so is one with no room for a row of the base layer's stitches. A part of the design narrower than twice the inset has no base layer. It sews as a line or a
    column, and a column still sews the underlay of its width, which shapes its edges.
 4. **Stitches.** Each piece is a tatami fill with the parameters Ink/Stitch's tool writes, at the stitch
    length `auto_base_stitch_length_mm`, 3 mm. StitchCraft's tatami fill has each of them, so no stitch code
@@ -573,17 +608,19 @@ StitchCraft's base layer (`REQ-AUTO-028`) is that fill, made by automatic digiti
 5. **Underlay all through.** Every stitch of the base layer has the underlay's role, its top rows too. The
    measures go by a stitch's role. They take a row that has the top's role for cover, and they don't find it
    astray where it shows.
-6. **Thread.** By default it is the thread that paints the largest area of the picture, the one painted
-   first of 2 as large (`auto_base_thread`, which can name a colour instead). On the pear and on each of the
-   4 dogs that thread is also the first one sewn today, and the base layer doesn't add a thread change
-   there.
+6. **Thread.** It is the thread that paints the largest area of the picture, the one painted first of 2
+   as large. On the pear, the dogs and the badges that thread is also the first one sewn, and the base
+   layer adds no thread change. The digitized halves of TS-13A, C and D start in another thread and change
+   thread once more.
 7. **Order.** It is the element `stitchcraft:base`, its pieces after the first named `#2` and so on. It sews
    before every automatic element, at the place of the first one, and the order of
    [Sewing order](#sewing-order) leaves it there.
 8. **The fills on it** sew no underlay of their own: digitizing turns their `fill_underlay` off. On the
    running dog in 9 threads the fills' own underlays are 601 of today's 11,996 stitches.
 9. **Said.** `SC-I0909` says the base layer's area, pieces and thread. A base layer whose shape needs more
-   work than the budget allows is left out with `SC-W0910`, and every fill then keeps its underlay.
+   work than the budget allows is left out with `SC-W0910`, and every fill then keeps its underlay. A
+   design that turns the base layer off is told that fabric may show (`SC-I0911`). That is information and
+   no warning, since the design sews as its settings ask.
 
 What it costs on the running dog in 9 threads, by Ink/Stitch's counts above, and how much of a gap its 3
 directions of thread 0.4 mm wide would hide:
@@ -596,15 +633,28 @@ directions of thread 0.4 mm wide would hide:
 
 The plan has no sewing speed, and 600 stitches a minute is an assumption. A base layer this open doesn't
 cover a gap. It puts thread of one colour under it, which shows less than black fabric does. The overlap is
-what covers the gaps.
+what covers the gaps, and a sliver is what it leaves to the base layer.
+
+As built, at the default stitch length of 3 mm, against the same picture with the base layer off, whose
+fills sew their own underlays:
+
+| Picture, digitized | Base layer's stitches | Stitches with it | Without it | More | At 600 stitches a minute |
+|---|---:|---:|---:|---:|---:|
+| Traced pear | 1,126 | 5,126 | 5,236 | 110 fewer, 2.1 % | 0.2 minutes less |
+| Traced dog on turf, 6 threads | 1,164 | 10,812 | 9,823 | 989 more, 10.1 % | 1.6 minutes |
+| Traced dog on turf, 9 threads | 1,133 | 11,469 | 10,548 | 921 more, 8.7 % | 1.5 minutes |
+| Traced running dog, 6 threads | 1,287 | 12,182 | 11,408 | 774 more, 6.8 % | 1.3 minutes |
+| Traced running dog, 9 threads | 1,278 | 13,204 | 12,565 | 639 more, 5.1 % | 1.1 minutes |
+
+The pear's 3 large fills sew fewer stitches on one base layer than with an underlay each.
 
 ### Neighbours that overlap
 
 Digitizing guides extend the colour sewn first under its neighbour by 1 to 1.5 mm on large areas and about
 1 mm on small ones. mySewnet's manual says that compensation doesn't prevent gaps between neighbours, and
-that overlap does. The owner brought both to this step on 2026-11-09. Today an area reaches 0.4 mm under the
-shapes sewn after it, and a satin column sews 0.4 mm past both rails, whatever lies beside it
-([Neighbours](#neighbours), `REQ-AUTO-007`). `REQ-AUTO-029` changes 3 things:
+that overlap does. The owner brought both to this step on 2026-11-09. Before it an area reached 0.4 mm under the
+shapes sewn after it, and a satin column sewed 0.4 mm past both rails, whatever lay beside it
+([Neighbours](#neighbours)). `REQ-AUTO-029` changed 3 things:
 
 1. **`auto_overlap_mm` is 1 mm.** An area reaches that far under each shape sewn after it, from where it
    touches it and no further than that shape, as today.
@@ -618,8 +668,14 @@ shapes sewn after it, and a satin column sews 0.4 mm past both rails, whatever l
 An area is cut away under a shape sewn after it that covers part of it, the overlap inside that shape's
 edge. A shape narrower than twice the overlap then lies on the area whole.
 
-The setting as it is today bounds what this can do. Raised, it also widens every satin column on both sides,
-which lays stitches astray, so these are not the numbers the step will measure:
+A column's end under another column stays as long as it was: it reaches its pull compensation under that
+column, not the overlap. Sewn 1 mm longer, the ends of thin columns laid 19 more stitches astray on the
+dogs, and the end of a column 4.4 mm wide skewed its last stitches and left 3.2 mm² bare (the piece
+`blaze` of `tests/auto_cover.rs`). The owner decided on 2026-11-14 to leave the small gaps at such ends
+to the base layer.
+
+Measured before the step, the setting as it then was bounded what the overlap could do. Raised, it also
+widened every satin column on both sides, which laid stitches astray, so these are not the step's numbers:
 
 | Picture, digitized | 0.4 mm, today | 1 mm | 1.5 mm |
 |---|---|---|---|
@@ -629,9 +685,8 @@ which lays stitches astray, so these are not the numbers the step will measure:
 | Traced running dog, 6 threads | 7 gaps, 0.275 % | 3 gaps, 0.215 % | no gap, 0.057 % |
 | Traced running dog, 9 threads | 8 gaps, 0.322 % | one gap, 0.070 % | no gap, 0.041 % |
 
-At 1 mm the pictures sew 2.2 to 4.7 % more stitches, and at 1.5 mm 3.9 to 9.5 % more. At 1 mm one gap of
-the running dog in 6 threads is new, 2.0 mm² at (40.9, 42.4). Its cause isn't found yet, and the step
-reproduces it first.
+At 1 mm the pictures sewed 2.2 to 4.7 % more stitches, and at 1.5 mm 3.9 to 9.5 % more. At 1 mm one gap of
+the running dog in 6 threads was new, 2.0 mm² at (40.9, 42.4): the skewed end of the blaze's column.
 
 ### On black fabric
 
@@ -645,23 +700,14 @@ on 2026-11-10 and no fixture yet, loses its black tail and chest and the top of 
 black thread on black fabric, with nothing to outline it. The measures here don't read that, and it isn't in a step
 yet. The same trace fails the older measure, with a bare patch of 1.74 mm² in the glasses.
 
-### Settings and open decisions
+### Settings of the cover
 
-| Setting | Key | Proposed default | Rules |
-|---|---|---|---|
-| Base layer | `auto_base_layer` | on | whether the design sews one |
-| Base layer's thread | `auto_base_thread` | the thread that paints the most | the base layer's thread |
-| Base layer's stitch length | `auto_base_stitch_length_mm` | 3 mm | its rows' stitches and their spacing |
-| Base layer's offset | `auto_base_offset_mm` | −0.6 mm | how far inside the outer shape it lies |
-| Base layer's holes | `auto_base_keep_holes` | on | whether the outer shape keeps its holes |
-| Overlap | `auto_overlap_mm` | 1 mm, from 0.4 mm | an area or a column reaching under the shapes sewn after it |
-| Pull compensation | `auto_pull_compensation_mm` | 0.4 mm | a satin column's rail with no shape sewn after it beside it |
-
-The inset of 0.6 mm is the pull that the overlap was first set for, 0.4 mm, and half a thread, so that a
-base layer's stitch stays under a fill's edge once the thread has pulled it in. The thread, the
-stitch length, the offset and the overlap are the owner's to decide before M13.16 builds them, and MC-8 sews the dog on
-dark fabric to confirm them. A dark base layer under a white fill may show through it, which only a sew-out
-tells.
+The base layer's 4 settings, the 2 limits of the measure, the overlap and the pull compensation are rows
+of the [Settings](#settings) table. The inset of 0.6 mm is the pull that the overlap was first set for,
+0.4 mm, and half a thread, so that a base layer's stitch stays under a fill's edge once the thread has
+pulled it in. The defaults are StitchCraft's own, and MC-8 sews the dog on black fabric with the base
+layer on and off to confirm them ([machine testing](../plan/machine-testing.md)). A dark base layer under a white fill may show through
+it, which only a sew-out tells.
 
 ## Sewing order
 
@@ -811,10 +857,12 @@ The rules' values are StitchCraft's own parameters, registered as any other
 | Pull compensation | `auto_pull_compensation_mm` | 0.4 mm | a satin column past a rail with no shape sewn after it beside it, and its end under another column |
 | Smallest area | `auto_min_area_mm2` | 1 mm² | specks, the narrow parts too small to cut from a broad part, and what details may leave of a hole they fill |
 | Leave out the background | `auto_ignore_background` | on | the background, read of the lowest shape |
-| Base layer | `auto_base_layer` | on | whether the design sews one, read of the lowest shape whose settings read, as the 3 below are |
+| Base layer | `auto_base_layer` | on | whether the design sews one, read of the lowest shape whose settings read, as the 5 below are |
 | Base layer's stitch length | `auto_base_stitch_length_mm` | 3 mm | its rows' stitches and their spacing |
 | Base layer's offset | `auto_base_offset_mm` | −0.6 mm | how far inside the design's outer shape it lies |
 | Base layer keeps holes | `auto_base_keep_holes` | on | whether the outer shape keeps its holes |
+| Largest sliver | `auto_base_sliver_mm2` | 0.4 mm² | the largest gap in the top thread that is left to the base layer: a limit of the [measure](#the-stricter-measure), by which nothing sews differently |
+| Most left to the base layer | `auto_base_bare_percent` | 0.5 % | the most of the design that the top thread may leave bare over a base layer, the measure's other limit |
 
 The defaults are the values on this page, and MC-8 confirms or changes them. A shape that sets none of the
 settings takes the defaults, and an automatic shape with a setting that doesn't read sews nothing

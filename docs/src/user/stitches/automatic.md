@@ -69,6 +69,12 @@ roadmap.
 ![The traced pear digitized automatically. Its 3 greens sew as tatami fills, with satin columns at the narrow ends of the olive and dark olive bands. Its stem sews as 2 satin columns side by side, olive and dark olive, and the light grey square is left out. Thin threads run straight from the stem to the bands' ends, 4 jumps that the machine doesn't cut.](../../images/generated/auto-pear.png)
 <!-- /shot -->
 
+**Digitized, on black fabric**
+
+<!-- shot: auto-pear-black -->
+![The traced pear digitized automatically, as it sews on black fabric: the same stitches as on unbleached cotton. No black shows inside the pear, between its 3 greens or along its stem.](../../images/generated/auto-pear-black.png)
+<!-- /shot -->
+
 The photo is drawn in code for these pages. `stitch plan` traced it 90 mm across with VectorCraft 0.19.0, into
 `docs/fixtures/traced-pear.vectorcraft`. The pear's shading became 3 bands of green, and the backdrop the
 4th colour, which is left out as the picture's background. The thread of each darker band sews a side of
@@ -111,10 +117,17 @@ each out, as `--subject` will from M13.14.
 ![The traced running dog digitized automatically. Its broad patches sew as tatami fills, and its strands of fur as satin columns and triple runs between them, in black, greys, white, tan and dark brown. Thin threads run straight between patches of one colour, jumps that the machine doesn't cut.](../../images/generated/auto-dog.png)
 <!-- /shot -->
 
+**Digitized, on black fabric**
+
+<!-- shot: auto-dog-black -->
+![The traced running dog digitized automatically, as it sews on black fabric: the same stitches as on unbleached cotton. Its white face and chest and its tan legs stand out, and its black patches merge with the fabric. Black shows through in a few slits a thread wide beside the thinnest lines of fur.](../../images/generated/auto-dog-black.png)
+<!-- /shot -->
+
 `stitch plan` traced the cut-out 100 mm tall with VectorCraft 0.22.0, into
 `docs/fixtures/traced-dog-running-9.vectorcraft`. The fur's shading became flat patches in 9 threads, which
 digitize as fills, satin columns and triple runs by their width. The fabric is covered where the dog has a
-colour. One stitch still lies where it shouldn't. A satin column of the dog's dark grey fur fans its
+colour, on black fabric as on cream ([covering the fabric](#covering-the-fabric)). One stitch still lies
+where it shouldn't. A satin column of the dog's dark grey fur fans its
 stitches round a lighter grey patch that bites into its side, and that stitch crosses the patch. M13.18 of
 the [roadmap](../../plan/roadmap.md) removes it, and the like stitches of the other traced dogs
 ([image to embroidery](../../design/image-to-embroidery.md#sewing-order) has their numbers). The thin
@@ -181,7 +194,7 @@ balloon on a string 0.8 mm wide, each one area.
 ### Neighbours
 
 The shapes of a traced picture meet, and sewn without `--auto` they sew badly there. Digitizing mends that
-in 4 steps:
+in 5 steps:
 
 1. **The background.** The lowest shape, when it covers the whole picture with the other shapes drawn
    on it, is the background, the fabric's own colour, and is left out (`SC-W0906`, and
@@ -196,9 +209,12 @@ in 4 steps:
 3. **Specks.** A shape or a part of one smaller than 1 mm² would sew a knot. It is merged into the shape
    it shares the longest edge with (`SC-I0905`, `auto_min_area_mm2`).
 4. **Overlaps.** The thread pulls stitches in from the edges of their shape, so shapes that only meet show
-   fabric between them once sewn. Each area reaches 0.4 mm under the shapes sewn after it that it
+   fabric between them once sewn. Each area reaches 1 mm under the shapes sewn after it that it
    touches (`SC-I0904`, `auto_overlap_mm`). An area filled whole under its details is cut away under them,
-   0.4 mm inside their edges, so that each place sews once.
+   1 mm inside their edges, so that each place sews once. A satin column sews 1 mm past a side that a
+   shape sewn after it runs along, and 0.4 mm past any other side (`auto_pull_compensation_mm`).
+5. **The base layer.** One open underlay sews first under the whole design
+   ([covering the fabric](#covering-the-fabric)).
 
 The pictures are drawn from `docs/fixtures/traced-badge.svg`, a badge traced on white with its colours
 abutting. Without `--auto`, the white round the badge sews too, and each colour sews up to the next with no
@@ -215,6 +231,28 @@ overlap.
 <!-- shot: auto-badge -->
 ![The same badge digitized automatically. Its white background is left out, and each colour sews under the edges of the colours sewn on it.](../../images/generated/auto-badge.png)
 <!-- /shot -->
+
+### Covering the fabric
+
+You can't choose the colour of the fabric a design is sewn on, and on black fabric every place the thread
+leaves bare is a dark spot. So a design digitized automatically sews one base layer first, under all of
+it: an open fill of stitches 3 mm long in 3 directions, in the thread that the picture has the most of. It
+lies 0.6 mm inside the design's outline, so that it doesn't show beside the edge. The fills sewn on it
+sew no underlay of their own (`SC-I0909`).
+
+With the base layer and the overlap of 1 mm, no fabric shows inside the pear or the traced dogs. Where
+thin lines of fur meet, the top thread still leaves a sliver here and there, and the base layer's thread
+shows in it in place of the fabric. The running dog above has 2 slivers, each under 0.14 mm², in
+1,944 mm² of design. The base layer adds 639 stitches to that dog, about a minute of sewing, and the pear
+sews 110 stitches fewer with it than with an underlay under each fill.
+
+To sew without the base layer, turn `auto_base_layer` off. Each fill then sews its own underlay, and
+StitchCraft says that fabric may show between shapes (`SC-I0911`). The
+[settings](../reference/params/auto.md) also set the base layer's stitch length and offset, and whether
+it keeps the design's holes. 2 more are limits that StitchCraft's own checks hold a design to, and
+nothing sews differently by them: the largest sliver, 0.4 mm², and the most the top thread may leave to
+the base layer, 0.5 % of the design. The reference machine hasn't sewn a base layer yet, and
+[MC-8](../../plan/machine-testing.md) sews the dog on black fabric with it and without.
 
 ### Sewing order
 
@@ -237,7 +275,7 @@ Each satin column digitizing makes has the underlay of its width, and 0.4 mm of 
 | 2 to 4 mm | Contour |
 | Above 4 mm | Contour and zigzag |
 
-Fills keep a tatami fill's defaults, their underlay included. These are starting values, which the next
+Fills keep a tatami fill's defaults, but sew no underlay of their own on the base layer, and turn from row to row in a stitch at the outline. These are starting values, which the next
 sew-out at the machine checkpoint confirms or changes.
 
 ### Settings

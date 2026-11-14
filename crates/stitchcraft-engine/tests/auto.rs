@@ -286,7 +286,9 @@ fn diag_sc_i0901_counts_the_shapes_digitized_by_their_stitches() {
     let column = automatic(drawn("column", &[(0.0, 30.0), (20.0, 30.0)], 3.0));
     let wide = automatic(drawn("wide", &[(0.0, 45.0), (20.0, 45.0)], 10.0));
     let set = drawn("set", &[(0.0, 60.0), (20.0, 60.0)], 3.0);
-    let said = messages(&planned(unbased(vec![area, thin, column.clone(), wide, set])));
+    // The design sews no base layer, which is said too (SC-I0911).
+    let said: Vec<String> =
+        messages(&planned(unbased(vec![area, thin, column.clone(), wide, set]))).into_iter().filter(|said| said.contains("SC-I0901")).collect();
     assert_eq!(said, ["info SC-I0901: 4 shapes are digitized automatically: 1 sews as a running stitch, 1 as a satin column and 2 as tatami fills."]);
     assert_eq!(messages(&planned(vec![column])), ["info SC-I0901: 1 shape is digitized automatically: it sews as a satin column."]);
     let two = (0..2).map(|i| automatic(drawn(&format!("c{i}"), &[(0.0, f64::from(i) * 10.0), (20.0, f64::from(i) * 10.0)], 3.0))).collect();
