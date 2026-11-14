@@ -11,7 +11,7 @@ use stitchcraft_core::{Budget, Code, Diagnostic, Point};
 use stitchcraft_engine::auto;
 use stitchcraft_engine::design::{Design, DesignSettings, Element};
 use stitchcraft_plan::{Role, SewnStitch, StitchPlan, Thread};
-use stitchcraft_testkit::designs::{BLUE, RED, automatic, fill, in_place};
+use stitchcraft_testkit::designs::{BLUE, RED, automatic, fill, in_place, rules, unbased};
 use stitchcraft_testkit::fabric::{self, BARE, GAP};
 use stitchcraft_testkit::pictures::{self, Trace};
 
@@ -94,25 +94,103 @@ fn pictures() -> Vec<(String, Design)> {
 }
 
 #[test]
-fn req_auto_027_digitized_pictures_leave_no_gap_a_thread_wide_and_little_bare() {
+fn req_auto_027_digitized_pictures_show_no_fabric_and_leave_little_to_the_base_layer() {
     let mut found = Vec::new();
     for (name, design) in pictures() {
         let cover = fabric::cover(&design, &plan(&design), GAP);
-        if cover.gaps > 0 || cover.bare_share() > BARE {
-            found.push(format!(
-                "{name}: {} gaps of {:.2} mm², the largest {:.3} mm² at {:?}; bare {:.2} of {:.0} mm², {:.3} %, most in {:?}",
-                cover.gaps,
-                cover.in_gaps,
-                cover.largest,
-                cover.at,
-                cover.bare,
-                cover.design,
-                100.0 * cover.bare_share(),
-                cover.shapes.first()
-            ));
+        let faults = cover.faults(&rules());
+        if !faults.is_empty() {
+            found.push(format!("{name}: {faults:?}, most bare in {:?}", cover.shapes.first()));
         }
     }
     assert!(found.is_empty(), "{found:#?}");
+}
+
+/// A white square beside a black one with a red patch `wide` by `tall` drawn on the white one, and the plan of
+/// the 2 squares alone, the white one with a hole where the patch is: a plan whose top thread leaves the
+/// patch bare. The base layer sews across the hole (`auto_base_keep_holes` off), and with `based` off the
+/// design turns the base layer off. The design as drawn, the plan, and what is said of the base layer.
+fn patched((wide, tall): (f64, f64), based: bool) -> (Design, StitchPlan, Vec<String>) {
+    let white = Thread::new(stitchcraft_plan::Rgb::new(240, 240, 240));
+    let black = Thread::new(stitchcraft_plan::Rgb::new(0, 0, 0));
+    let across = [("auto_base_keep_holes", "false")];
+    let hole = [(5.0, 5.0), (5.0, 5.0 + tall), (5.0 + wide, 5.0 + tall), (5.0 + wide, 5.0)];
+    let holed = fill("blaze", &[&[(0.0, 0.0), (12.0, 0.0), (12.0, 12.0), (0.0, 12.0)], &hole], &white, &across);
+    let nose = || rect("nose", (12.0, 2.0), (8.0, 8.0), &black);
+    let drawn = vec![with(rect("blaze", (0.0, 0.0), (12.0, 12.0), &white), &across), nose(), rect("patch", (5.0, 5.0), (wide, tall), &RED)];
+    let made = |elements: Vec<Element>| {
+        let elements: Vec<Element> = elements.into_iter().map(automatic).collect();
+        Design::new(if based { elements } else { unbased(elements) }, DesignSettings::default()).unwrap()
+    };
+    let outcome = in_place(&made(vec![holed, nose()]));
+    let said = outcome.diagnostics.iter().filter(|d| [Code::AutoBase, Code::AutoBaseOff].contains(&d.code)).map(Diagnostic::to_string).collect();
+    (made(drawn), outcome.plan.unwrap(), said)
+}
+
+#[test]
+fn req_auto_027_a_gap_larger_than_a_sliver_shows_fabric_over_the_base_layer_too() {
+    // The top thread leaves 0.59 mm² of a patch 2 by 1.5 mm bare: over the base layer, and larger than a
+    // sliver of 0.4 mm², so the design doesn't cover, though it leaves less bare than 0.5 %.
+    let (design, plan, said) = patched((2.0, 1.5), true);
+    let cover = fabric::cover(&design, &plan, GAP);
+    assert_eq!(said, ["info SC-I0909: A base layer of 171.32 mm² in 1 piece sews first under the design, in the thread #f0f0f0."]);
+    assert_eq!((cover.gaps, cover.beyond.as_slice(), cover.slivers(&rules())), (1, &[0.0][..], Vec::new()), "{cover:?}");
+    assert!((cover.largest - 0.5925).abs() < 1e-9 && cover.bare_share() < cover.limit(&rules()), "{cover:?}");
+    assert_eq!(cover.limit(&rules()), 0.005);
+    assert_eq!(cover.faults(&rules()), ["a gap of 0.593 mm² at (6.0, 5.8) in patch: larger than a sliver of 0.4 mm²"]);
+}
+
+#[test]
+fn req_auto_027_a_sliver_over_the_base_layer_is_left_to_it() {
+    // The top thread leaves 0.24 mm² of a patch 1.7 by 1.4 mm bare, with the base layer under all of it: a
+    // sliver, which shows the base layer's thread.
+    let (design, plan, _) = patched((1.7, 1.4), true);
+    let cover = fabric::cover(&design, &plan, GAP);
+    assert_eq!((cover.gaps, cover.beyond.as_slice(), cover.at_the_rim(&rules())), (1, &[0.0][..], 0), "{cover:?}");
+    assert!(cover.base > 0.0 && cover.slivers(&rules()).iter().all(|sliver| (sliver - 0.2425).abs() < 1e-9), "{cover:?}");
+    assert_eq!((cover.slivers(&rules()).len(), cover.faults(&rules())), (1, Vec::<String>::new()));
+    // A design whose settings allow a sliver of 0.2 mm² only doesn't pass it.
+    let mut stricter = rules();
+    stricter.auto_base_sliver_mm2 = 0.2;
+    assert_eq!(cover.faults(&stricter), ["a gap of 0.243 mm² at (5.9, 5.7) in patch: larger than a sliver of 0.2 mm²"]);
+}
+
+#[test]
+fn req_auto_027_without_the_base_layer_a_sliver_shows_fabric_and_that_is_said() {
+    // The same sliver with the base layer off: nothing lies under it, so fabric shows, and the design was
+    // told that it may (SC-I0911). The bare share, 0.144 %, is within the 0.15 % of a design without one.
+    let (design, plan, said) = patched((1.7, 1.4), false);
+    let cover = fabric::cover(&design, &plan, GAP);
+    assert_eq!((cover.gaps, cover.beyond.as_slice(), cover.base, cover.limit(&rules())), (1, &[f64::INFINITY][..], 0.0, BARE), "{cover:?}");
+    assert!(cover.slivers(&rules()).is_empty() && cover.bare_share() < BARE, "{cover:?}");
+    assert_eq!(cover.faults(&rules()), ["a gap of 0.243 mm² at (5.9, 5.7) in patch: no base layer under all of it"]);
+    let off = "info SC-I0911: The base layer is off, so nothing lies under a place that the top thread leaves bare between 2 shapes, and the fabric may show there.";
+    assert_eq!(said, [off]);
+}
+
+#[test]
+fn diag_sc_i0911_a_design_that_turns_the_base_layer_off_is_told_that_fabric_may_show() {
+    let squares = || vec![automatic(rect("red", (0.0, 0.0), (20.0, 20.0), &RED)), automatic(rect("blue", (20.0, 0.0), (20.0, 20.0), &BLUE))];
+    let said = |elements: Vec<Element>| {
+        let design = Design::new(elements, DesignSettings::default()).unwrap();
+        let (_, said) = auto::digitized(&design, &Budget::DEFAULT);
+        said.into_iter().filter(|d| [Code::AutoBase, Code::AutoBaseOff].contains(&d.code)).collect::<Vec<Diagnostic>>()
+    };
+    let off = said(unbased(squares()));
+    assert_eq!(
+        off.iter().map(Diagnostic::to_string).collect::<Vec<_>>(),
+        [
+            "info SC-I0911: The base layer is off, so nothing lies under a place that the top thread leaves bare between 2 shapes, and the fabric may show there."
+        ]
+    );
+    assert!(format!("{:?}", off[0].fix).contains("To sew a base layer under the design, turn `auto_base_layer` on."), "{:?}", off[0].fix);
+    assert_eq!((Code::AutoBaseOff.id(), off[0].element.as_ref()), ("SC-I0911", None));
+    // With the base layer on, the base layer is said and this isn't.
+    assert_eq!(said(squares()).iter().map(|d| d.code).collect::<Vec<_>>(), [Code::AutoBase]);
+    // The design goes by its lowest shape: the second shape's setting turns nothing off.
+    let mut second = squares();
+    second[1].params.set("auto_base_layer", "false");
+    assert_eq!(said(second).iter().map(|d| d.code).collect::<Vec<_>>(), [Code::AutoBase]);
 }
 
 #[test]

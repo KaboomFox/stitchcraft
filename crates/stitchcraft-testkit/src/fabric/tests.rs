@@ -288,3 +288,54 @@ fn a_slit_narrower_than_a_thread_is_the_designs_and_an_underlay_leaves_fabric_ba
     assert_eq!((under.gaps, under.open_gaps), (2, 1), "{under:?}");
     assert_eq!(Cover { design: 0.0, ..under }.bare_share(), 0.0);
 }
+
+#[test]
+fn a_cover_faults_each_gap_that_is_no_sliver_and_a_bare_share_over_its_limit() {
+    let rules = crate::designs::rules();
+    // A design of 1,000 mm² with `gaps`, each its area and how far inside the outline its farthest place
+    // without the base layer lies, `bare` mm² bare, and `base` mm² over the base layer.
+    let cover = |gaps: &[(f64, f64)], bare: f64, base: f64| Cover {
+        design: 1000.0,
+        slits: 0.0,
+        bare,
+        gaps: gaps.len(),
+        in_gaps: gaps.iter().map(|gap| gap.0).sum(),
+        largest: gaps.iter().map(|gap| gap.0).fold(0.0, f64::max),
+        at: None,
+        open: 0.0,
+        open_gaps: 0,
+        places: gaps.iter().map(|gap| (Rect::around([p(1.0, 2.0), p(2.0, 4.0)]).unwrap(), gap.0, "fur".to_string())).collect(),
+        beyond: gaps.iter().map(|gap| gap.1).collect(),
+        base,
+        shapes: Vec::new(),
+    };
+    // A gap of 0.4 mm² over the base layer is a sliver, and one a pixel larger is not. A gap with a place the
+    // base layer isn't under is one in the rim, 0.6 mm and a pixel wide, and not further inside.
+    let slivers = cover(&[(0.4025, 0.0), (0.4, 0.0), (0.3, 0.65), (0.2, 0.66), (0.1, f64::INFINITY), (0.0025, 0.0)], 2.0, 900.0);
+    assert_eq!((slivers.slivers(&rules), slivers.at_the_rim(&rules)), (vec![0.4, 0.3, 0.0025], 1));
+    assert_eq!(
+        slivers.faults(&rules),
+        [
+            "a gap of 0.403 mm² at (1.5, 3.0) in fur: larger than a sliver of 0.4 mm²",
+            "a gap of 0.200 mm² at (1.5, 3.0) in fur: no base layer under all of it",
+            "a gap of 0.100 mm² at (1.5, 3.0) in fur: no base layer under all of it"
+        ]
+    );
+    // A base layer that lies outside the design's outline leaves no rim but the pixel.
+    let mut outside = crate::designs::rules();
+    outside.auto_base_offset_mm = stitchcraft_core::Mm::new(0.5).unwrap();
+    assert_eq!((cover(&[(0.3, 0.05)], 0.0, 900.0).slivers(&outside), cover(&[(0.3, 0.06)], 0.0, 900.0).slivers(&outside)), (vec![0.3], Vec::new()));
+    // Over the base layer the top thread may leave 0.5 % of the design bare, and no more.
+    assert_eq!((cover(&[], 5.0, 900.0).limit(&rules), cover(&[], 5.0, 900.0).faults(&rules)), (0.005, Vec::new()));
+    assert_eq!(cover(&[], 5.01, 900.0).faults(&rules), ["0.501 % of the design bare, 5.01 of 1000 mm², over 0.500 %"]);
+    // A design without a base layer may leave 0.15 % bare, and a sliver fails it, in the rim too.
+    assert_eq!((cover(&[], 1.5, 0.0).limit(&rules), cover(&[], 1.5, 0.0).faults(&rules)), (BARE, Vec::new()));
+    assert_eq!(cover(&[], 1.51, 0.0).faults(&rules), ["0.151 % of the design bare, 1.51 of 1000 mm², over 0.150 %"]);
+    let bare = cover(&[(0.1, 0.3)], 0.0, 0.0);
+    assert_eq!(
+        (bare.faults(&rules), bare.at_the_rim(&rules)),
+        (vec!["a gap of 0.100 mm² at (1.5, 3.0) in fur: no base layer under all of it".to_string()], 0)
+    );
+    // A design that paints nothing has no share bare.
+    assert_eq!(Cover { design: 0.0, ..cover(&[], 0.0, 0.0) }.faults(&rules), Vec::<String>::new());
+}

@@ -128,6 +128,12 @@ changes them:
 - Sew the dog on black fabric twice, as planned and with the base layer off. The Auto effect's dialog in
   VectorCraft turns it off (`auto_base_layer`), and each fill then sews its own underlay.
 - On black, does fabric show between patches, with the base layer and without it?
+- The top thread of this dog leaves 2 slivers, 0.135 and 0.12 mm², and 0.073 % of the design bare. The
+  measure passes a sliver of up to 0.4 mm² over the base layer or at the design's outline, and 0.5 % bare
+  in all (`auto_base_sliver_mm2`, `auto_base_bare_percent`). Both limits are StitchCraft's own, set from
+  the 4 traced dogs. With the base layer on, can a sliver be found by eye, and does the base layer's
+  thread hide it? The dog on turf in 9 threads has the most, 10 slivers up to 0.335 mm²: sew it on black
+  too when the first dog leaves the question open.
 - Does the base layer's thread show beside a patch's edge, or through a lighter fill sewn over it?
 - Which dog lies flatter and softer, and which puckers less?
 - Does the overlap of 1 mm show as a ridge where 2 patches meet?

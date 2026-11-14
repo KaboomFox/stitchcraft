@@ -76,7 +76,14 @@ fn req_auto_020_the_rules_settings_are_stitchcraft_s_own_and_no_stitch_type_read
     let defaults: Vec<(&str, &str)> = AutoParams::SPECS.iter().map(|spec| (spec.key, spec.default)).collect();
     let widths = [(MAX_SATIN_WIDTH, "7"), (MIN_TRIPLE_RUN_WIDTH, "0.5")];
     let neighbours = [(OVERLAP, "1"), (PULL, "0.4"), (MIN_AREA, "1"), (IGNORE_BACKGROUND, "true")];
-    let base = [("auto_base_layer", "true"), ("auto_base_stitch_length_mm", "3"), ("auto_base_offset_mm", "-0.6"), ("auto_base_keep_holes", "true")];
+    let base = [
+        ("auto_base_layer", "true"),
+        ("auto_base_stitch_length_mm", "3"),
+        ("auto_base_offset_mm", "-0.6"),
+        ("auto_base_keep_holes", "true"),
+        ("auto_base_sliver_mm2", "0.4"),
+        ("auto_base_bare_percent", "0.5"),
+    ];
     assert_eq!(defaults, [&widths[..], &neighbours[..], &base[..]].concat());
     for spec in AutoParams::SPECS {
         assert_eq!((spec.origin, spec.stability), (Origin::StitchCraft, Stability::Experimental), "{}", spec.key);

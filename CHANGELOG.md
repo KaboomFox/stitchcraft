@@ -5,11 +5,32 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
-- M13.16, specified: a design covers the fabric (`REQ-AUTO-027` to `REQ-AUTO-029` and `REQ-RND-003`,
-  planned, with failing cases). The design page says how one underlay sews under the whole design, as
-  Ink/Stitch's Knockdown Fill makes it, and how neighbours overlap by 1 mm.
-  `stitchcraft_testkit::fabric::cover` measures gaps a thread wide. The roadmap's M13.16 is now this step.
-  The moves astray go to M13.17, and the shapes that sew the wrong way to the new M13.18.
+- M13.16: a design digitized automatically covers the fabric, whatever its colour (`REQ-AUTO-027` to
+  `REQ-AUTO-029`, `REQ-FILL-TAT-014`, `REQ-RND-003`).
+  - One base layer sews first under the whole design: an open fill in 3 directions with the parameters of
+    Ink/Stitch's Knockdown Fill, 0.6 mm inside the design's outline, in the thread that paints the most,
+    every stitch of it underlay. The fills on it sew no underlay of their own (`SC-I0909`, `SC-W0910`, and
+    the settings `auto_base_layer`, `auto_base_stitch_length_mm`, `auto_base_offset_mm` and
+    `auto_base_keep_holes`).
+  - Neighbours overlap by 1 mm where they overlapped by 0.4 mm (`auto_overlap_mm`'s default). A satin
+    column sews that far past a rail that a shape sewn after it runs along, and 0.4 mm past any other
+    (`auto_pull_compensation_mm`, new). A column's end under another column reaches its pull compensation.
+  - A tatami fill can keep the turns between its rows as stitches (`turn_stitches`, off by default), and
+    automatic fills do, so that every row reaches the outline.
+  - `stitchcraft_testkit::fabric::cover` measures what shows. No fabric shows inside a design, counting the
+    base layer: a gap in the top thread passes only as a sliver, at most 0.4 mm² with the base layer under
+    it or at the design's outline, and the top thread leaves at most 0.5 % of the design bare. Both limits
+    are settings (`auto_base_sliver_mm2`, `auto_base_bare_percent`), by which nothing sews differently. A
+    design that turns the base layer off is held to no gap and 0.15 %, and is told that fabric may show
+    (`SC-I0911`).
+  - The test pictures and the traced pear leave no gap. The 4 traced dogs leave 19 slivers of 0.09 to
+    0.335 mm², 5 of them at the outline, and 0.07 to 0.35 % of their designs bare, where they left 44 gaps
+    and 0.28 to 0.77 %. The base layer adds 639 to 989 stitches to a dog, 5 to 10 %, and the pear sews 110
+    fewer.
+  - A preview is drawn on fabric of any colour (`Settings::on` of the renderer, and the `fabric` key of a
+    docs shot). The automatic digitizing page shows the pear and the running dog on black fabric beside
+    cream.
+  - The roadmap's order after this step is M13.21, which stitch a shape gets, then M13.20 and M13.17.
 - M13.15: the owner's dog photos as test pictures (`REQ-AUTO-025`, `REQ-AUTO-026`). Louise Fox's 2 photos of
   her dog, each cut out by a mask checked by hand, are docs fixtures, with the 4 documents VectorCraft 0.22.0
   traced from them 100 mm tall in 6 and in 9 threads (`docs/fixtures/README.md` › The traced dogs). A test

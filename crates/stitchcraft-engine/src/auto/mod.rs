@@ -334,7 +334,10 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     }
     diagnostics.extend(layers.said);
     // The design goes by its lowest automatic shape's settings of the base layer.
-    let base = rules.iter().flatten().next().filter(|rules| rules.auto_base_layer);
+    let lowest = rules.iter().flatten().next();
+    let base = lowest.filter(|rules| rules.auto_base_layer);
+    // A design that turns the base layer off is told that fabric may show (`SC-I0911`).
+    diagnostics.extend(lowest.filter(|rules| !rules.auto_base_layer).map(|_| neighbours::base_off()));
     let beside = neighbours::beside(sewn, &design.settings, budget, design.sort_colours, base.map(|rules| (rules, &mut taken)));
     diagnostics.extend(beside.said);
     // Of the shapes digitized, those that sew: the areas sewn after one may cover it whole.
@@ -838,7 +841,11 @@ mod tests {
             (Code::AutoSpeck, &[MIN_AREA]),
             (Code::AutoBackground, &[IGNORE_BACKGROUND]),
             (Code::AutoLayers, &[MAX_SATIN_WIDTH]),
-            (Code::AutoBase, &["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_offset_mm"]),
+            (
+                Code::AutoBase,
+                &["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_offset_mm", "auto_base_sliver_mm2", "auto_base_bare_percent"],
+            ),
+            (Code::AutoBaseOff, &["auto_base_layer"]),
         ];
         for (code, keys) in explained {
             let text = code.explanation();
