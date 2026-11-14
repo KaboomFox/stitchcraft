@@ -164,7 +164,7 @@ fn req_auto_003_a_line_whose_columns_need_more_work_to_name_than_is_left_is_left
     // says so with codes of its own (REQ-AUTO-012).
     let with_work = |extra: u64| {
         let (elements, said) = digitized(&design, &Budget { max_work: work + extra, ..Budget::DEFAULT });
-        let digitizing = said.iter().filter(|d| ![Code::AutoUnder, Code::AutoOrder].contains(&d.code)).map(ToString::to_string);
+        let digitizing = said.iter().filter(|d| ![Code::AutoUnder, Code::AutoOrder, Code::AutoRule].contains(&d.code)).map(ToString::to_string);
         (elements.iter().map(|e| e.id.to_string()).collect::<Vec<_>>(), digitizing.collect::<Vec<_>>())
     };
     let ids = |ids: &[&str]| ids.iter().map(ToString::to_string).collect::<Vec<_>>();

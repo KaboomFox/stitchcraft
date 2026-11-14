@@ -72,6 +72,12 @@ Options:
       --sort-colours
           Sew the shapes with settings in the order StitchCraft chooses too, as --auto sews the shapes it digitizes: shapes that overlap keep their paint order, and each thread then sews as long as it can, the nearest shape next (docs/src/design/image-to-embroidery.md)
 
+      --style <STYLE>
+          The style of automatic digitizing: a named set of its rules' settings, set on every shape digitized automatically that doesn't set them itself. `logo` suits flat art drawn in strokes, and `photo` a traced photo (docs/src/user/reference/auto-rules.md)
+
+      --set <KEY=VALUE>
+          Set a setting of automatic digitizing's rules, as KEY=VALUE, on every shape digitized automatically that doesn't set it itself, such as auto_min_slenderness=4. A setting given here goes before the style's (docs/src/user/reference/params/auto.md)
+
       --vectorcraft-cli <PROGRAM>
           VectorCraft's command line, which traces a picture; by default `vectorcraft-cli` on the PATH
 
@@ -285,6 +291,12 @@ Options:
 
       --sort-colours
           Sew the shapes with settings in the order StitchCraft chooses too, as --auto sews the shapes it digitizes: shapes that overlap keep their paint order, and each thread then sews as long as it can, the nearest shape next (docs/src/design/image-to-embroidery.md)
+
+      --style <STYLE>
+          The style of automatic digitizing: a named set of its rules' settings, set on every shape digitized automatically that doesn't set them itself. `logo` suits flat art drawn in strokes, and `photo` a traced photo (docs/src/user/reference/auto-rules.md)
+
+      --set <KEY=VALUE>
+          Set a setting of automatic digitizing's rules, as KEY=VALUE, on every shape digitized automatically that doesn't set it itself, such as auto_min_slenderness=4. A setting given here goes before the style's (docs/src/user/reference/params/auto.md)
 
   -h, --help
           Print help (see a summary with '-h')

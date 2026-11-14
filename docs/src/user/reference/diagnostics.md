@@ -118,6 +118,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-I0909`](#sc-i0909) | Info | Base layer sewn under the design |
 | [`SC-W0910`](#sc-w0910) | Warning | Base layer left out |
 | [`SC-I0911`](#sc-i0911) | Info | Base layer turned off |
+| [`SC-I0912`](#sc-i0912) | Info | Rule that chose a shape's stitches |
 | [`SC-E1001`](#sc-e1001) | Error | Nothing to route |
 | [`SC-I1002`](#sc-i1002) | Info | Element left out of the route |
 | [`SC-W1003`](#sc-w1003) | Warning | Piece of a routed satin column may sew otherwise |
@@ -1428,7 +1429,8 @@ narrowest triple run 0.5 mm, unless the shape sets others (`auto_max_satin_width
 `auto_min_triple_run_width_mm`). A line whose every part a satin column cannot follow is filled too
 (`SC-I0902`), and counted as a fill. An area whose every part runs is counted as a running stitch, one
 none of which is filled and one of whose parts sews a satin column as satin columns, and any other as a
-fill.
+fill. A narrower part is filled too when it is compact, a blob short for its width, or uneven, a
+branching patch whose width varies. Each shape says which rule chose its stitches (`SC-I0912`).
 
 The message counts the shapes that sew by the stitches they sew as: an area that the areas sewn after
 it cover whole sews nothing (`SC-I0904`), and isn't counted. To sew a shape another way, give it
@@ -1447,7 +1449,8 @@ column's edges would fold over themselves, or that is shorter than a CSS pixel, 
 line's round or square cap draws. The area it paints is filled instead, as a wider line is. A part of
 an area doesn't make columns where the triangles round one of its centre lines don't make a column
 with 2 sides, or where one of its columns, drawn with its rails and rungs, would be read back
-otherwise. It stays in the area's fill.
+otherwise, or when a column would sew a stitch between its rails longer than the widest satin column,
+as at the corners of a square ring: such a stitch lies loose. The part stays in the area's fill.
 
 The message says which. To sew it as satin columns, draw the line with gentler turns or narrower, or
 the part with smoother edges, or draw the columns with 2 rails each and give them settings.
@@ -1542,13 +1545,13 @@ allows. To keep shapes in their paint order among themselves, give them settings
 `--auto` flattens the layers of a traced picture before it digitizes them. Each automatic area sews
 only what shows of it: the automatic areas drawn over it are taken from it, a hairline that rounding
 leaves along their edges shows nothing, and one they cover whole sews nothing (SC-I0904). An automatic
-area wider than a satin column somewhere, 7 mm unless it sets
-another (`auto_max_satin_width_mm`), is digitized whole under its details, the automatic areas that
-fill its holes: its stitches are chosen with those holes closed, it sews before its details, and it
+area that is filled (wider than a satin column somewhere, or compact, or uneven: `SC-I0912`) is
+digitized whole under its details, the automatic areas that fill its holes: its stitches are chosen
+with those holes closed, it sews before its details, and it
 is cut away under them, its overlap inside their edges. So a picture traced with its colours stacked
 sews as one traced with its colours abutting, and a broad area with details on it is one fill, not
-narrow columns between the details. An area no wider than a satin column everywhere, such as a letter
-or an outline, keeps its holes, and the shapes in them sew beside it.
+narrow columns between the details. An area that sews as satin columns, such as a letter or an
+outline, keeps its holes, and the shapes in them sew beside it.
 
 The message counts the areas that sew only what shows of them and those digitized whole under their
 details. It also names an area whose layers need more work to find than the budget allows: one whose
@@ -1599,6 +1602,20 @@ leaves bare between 2 shapes. On fabric of another colour than the design, the f
 there. With the base layer, its thread shows in such a place (SC-I0909). This is information and no
 warning, because the design sews as its settings ask. To sew the base layer, turn `auto_base_layer`
 on, or leave it unset.
+
+## SC-I0912
+
+**Info** — Rule that chose a shape's stitches
+
+`--auto` chooses the stitches of each part of a shape from the part's geometry, by the first rule
+of one table that the part matches. The message names that rule for each part, with the measures
+that decided it: the part's width along its centre lines, its slenderness (its area over its width
+squared), how much its width varies along those lines, and how many of them it has. A shape of many
+parts gives the measures of its first 6 and counts the rest by rule.
+
+To sew the shape another way, set `auto_stitch` on it to `run`, `satin` or `fill`: in VectorCraft,
+in the dialog of StitchCraft's Auto effect. For the whole design, lean the rules with `auto_prefer`,
+turn `auto_fill_uneven` off, or set a bound itself with `stitch plan --set`.
 
 ## SC-E1001
 

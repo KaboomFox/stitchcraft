@@ -40,18 +40,15 @@
 
 use stitchcraft_core::{Code, Diagnostic, ElementId, Exhausted, Fix, Meter, Mm, Point};
 
-use super::narrow::{Edges, farthest, piece, widest, width};
+use super::narrow::{Edges, farthest, piece, spread, widest, width};
+use super::rules::{Bounds, Breadth, Measures, RuleId, choose, fills};
 use super::{AutoParams, at_most};
 use crate::design::Path;
 use crate::generators::mm;
 use crate::generators::satin::drawn;
 use crate::normalize::region::Polygon;
 use crate::normalize::strips::{self, Column, Line};
-
-/// How long, at the least, a part's line is for a column, as a share of the part's width along it: a part
-/// whose every line is shorter is a dot, which stays in the fill. Of a disc or a square, which tie, the lines
-/// are 0.4 times as long as it is wide, and of a rectangle 3 mm wide, half as long from 3.5 mm long.
-pub(super) const DOT: f64 = 0.5;
+use crate::normalize::stroke::distance_to_segment;
 
 /// A part sewn as columns, and its columns.
 #[derive(Clone, Debug, PartialEq)]
@@ -74,26 +71,98 @@ pub(super) enum Sewn {
 
 /// What becomes of a part no wider than a satin column.
 pub(super) enum Made {
-    /// It sews as these columns.
-    Columns(Vec<Sewn>),
-    /// It has no line, a dot, and stays in the fill.
-    Dot,
-    /// Its columns can't be drawn, and it stays in the fill.
+    /// It sews as these columns, by this rule, a column's or its shape's own, with these measures.
+    Columns {
+        /// The columns, in the order they are sewn.
+        sewn: Vec<Sewn>,
+        /// The rule.
+        rule: RuleId,
+        /// What was measured of the part.
+        measures: Measures,
+    },
+    /// It stays in the fill by this rule, compact or uneven, with these measures: none for a part without a
+    /// centre line, which is compact.
+    Filled(RuleId, Option<Measures>),
+    /// One of its columns would sew a stitch this long between its rails, in millimetres, longer than the
+    /// widest satin column: it is refused, and stays in the fill.
+    Long(f64, Measures),
+    /// Its columns can't be drawn: it is refused, and stays in the fill.
     Unmade,
     /// Its triangulation lost its shape, a bug, and it stays in the fill.
     Broken,
 }
 
-/// The columns of `part`, an area's whose narrowest satin stroke is `narrowest` and whose settings of the
-/// rules are `rules`, cut from a broad part along `cuts` (`auto::split`), with `meter`'s work.
-pub(super) fn columns(part: &Polygon, narrowest: Mm, rules: &AutoParams, cuts: &[[Point; 2]], meter: &mut Meter) -> Result<Made, Exhausted> {
+/// What is measured of `part`, no wider than a satin column, whose columns are `found` and whose edges
+/// `edges` holds, with `meter`'s work: its area, its width along its columns' lines and how much it varies,
+/// and how many lines it has. `None` for lines of no length or no width.
+fn measured(part: &Polygon, found: &[Column], edges: &Edges, meter: &mut Meter) -> Result<Option<Measures>, Exhausted> {
+    let lines: Vec<Line> = found.iter().map(|column| column.line.clone()).collect();
+    let spread = spread(edges, &lines, meter)?.filter(|spread| spread.mean.get() > 0.0);
+    Ok(spread.map(|spread| Measures {
+        area: part.area(),
+        breadth: Breadth::Medium,
+        width: spread.mean.get(),
+        unevenness: spread.deviation / spread.mean.get(),
+        lines: found.len(),
+    }))
+}
+
+/// The rule by which the rules fill `part`, of an area held to `bounds`, with `meter`'s work: an area, a
+/// compact part, an uneven one, any part of a shape that asks to be filled, or a part whose columns are
+/// refused for a stitch too long. `None` for a part that sews along its middle, and for one whose breadth or
+/// columns can't be found, whose stitches say what failed. The layers close a filled part's holes under what
+/// fills them (`REQ-AUTO-033`).
+pub(in crate::auto) fn filled(part: &Polygon, bounds: &Bounds, meter: &mut Meter) -> Result<Option<RuleId>, Exhausted> {
+    let Some(breadth) = bounds.breadth_of(part, meter)? else { return Ok(None) };
+    let unmeasured = Measures::of_breadth(part.area(), breadth);
+    let as_filled = |rule: RuleId| fills(rule, bounds).then_some(rule);
+    if breadth != Breadth::Medium {
+        return Ok(as_filled(choose(&unmeasured, bounds)));
+    }
+    let Ok(Some(found)) = strips::columns(part, piece(part), &[], bounds.narrowest.get(), meter)? else { return Ok(None) };
+    let edges = Edges::of(part, piece(part), meter)?;
+    // A part without a centre line of any length is a dot, which is compact.
+    let measures = measured(part, &found, &edges, meter)?.unwrap_or(unmeasured);
+    if let Some(rule) = as_filled(choose(&measures, bounds)) {
+        return Ok(Some(rule));
+    }
+    Ok(too_long(&found, bounds, meter)?.map(|_| RuleId::Refused))
+}
+
+/// The longest stitch that one of the columns `found` would sew between its rails, in millimetres, when
+/// that is longer than the widest satin column of `bounds` ([`longest_stitch`]), with `meter`'s work: the
+/// first such column's.
+fn too_long(found: &[Column], bounds: &Bounds, meter: &mut Meter) -> Result<Option<f64>, Exhausted> {
+    for column in found {
+        let stitch = longest_stitch(&column.rails, &column.rungs, meter)?;
+        if bounds.too_long(stitch) {
+            return Ok(Some(stitch));
+        }
+    }
+    Ok(None)
+}
+
+/// The columns of `part`, an area's held to `bounds` whose settings of the rules are `rules`, cut from a
+/// broad part along `cuts` (`auto::split`), with `meter`'s work: none when the rules fill it, as a compact
+/// or an uneven part, or refuse its columns.
+pub(super) fn columns(part: &Polygon, bounds: &Bounds, rules: &AutoParams, cuts: &[[Point; 2]], meter: &mut Meter) -> Result<Made, Exhausted> {
+    let narrowest = bounds.narrowest;
     let found = match strips::columns(part, piece(part), cuts, narrowest.get(), meter)? {
         Err(_) => return Ok(Made::Broken),
         Ok(None) => return Ok(Made::Unmade),
-        Ok(Some(found)) if found.is_empty() => return Ok(Made::Dot),
         Ok(Some(found)) => found,
     };
     let edges = Edges::of(part, piece(part), meter)?;
+    // A part without a centre line of any length is a dot, which has no way to run: it is compact.
+    let Some(measures) = measured(part, &found, &edges, meter)? else { return Ok(Made::Filled(RuleId::Compact, None)) };
+    let rule = choose(&measures, bounds);
+    if fills(rule, bounds) {
+        return Ok(Made::Filled(rule, Some(measures)));
+    }
+    // A satin stitch longer than the widest satin column lies loose: the part is filled instead.
+    if let Some(stitch) = too_long(&found, bounds, meter)? {
+        return Ok(Made::Long(stitch, measures));
+    }
     let mut widths = Vec::with_capacity(found.len());
     for column in &found {
         let Some(average) = width(&edges, std::slice::from_ref(&column.line), meter)? else { return Ok(Made::Unmade) };
@@ -101,9 +170,6 @@ pub(super) fn columns(part: &Polygon, narrowest: Mm, rules: &AutoParams, cuts: &
         let outline = column.outline();
         let own = Edges::of(&outline, piece(part), meter)?;
         widths.push(Width { average, widest: widest(&own, &column.line, meter)?, farthest: farthest(&column.line, &outline, meter)? });
-    }
-    if found.iter().zip(&widths).all(|(column, width)| column.walked.length() < DOT * width.average.get()) {
-        return Ok(Made::Dot);
     }
     let mut sewn = Vec::with_capacity(found.len());
     for (index, column) in ordered(&found, meter)? {
@@ -120,7 +186,78 @@ pub(super) fn columns(part: &Polygon, narrowest: Mm, rules: &AutoParams, cuts: &
         let Ok(drawn) = drawn::from_rails(column.rails, column.rungs, push, meter)? else { return Ok(Made::Unmade) };
         sewn.push(Sewn::Satin { path: drawn.path(), width, push });
     }
-    Ok(Made::Columns(sewn))
+    Ok(Made::Columns { sewn, rule, measures })
+}
+
+/// The longest stitch a satin column with these `rails`, both from its start, and `rungs`, each the point it
+/// pairs on the first rail and then on the second, sews between its rails, in millimetres, with `meter`'s
+/// work. A satin column's stitches cross it between the points that lie as far along its 2 rails, as shares
+/// of their lengths from one rung to the next, so the longest lies between 2 such points, at a corner of
+/// one rail or the other. The rails' starts pair up, and so do their ends. A unit of work for each corner
+/// and rung, times the rails' corners.
+fn longest_stitch(rails: &[Vec<Point>; 2], rungs: &[[Point; 2]], meter: &mut Meter) -> Result<f64, Exhausted> {
+    let [first, second] = rails;
+    let (along_first, along_second) = (lengths(first), lengths(second));
+    let (Some(&end_first), Some(&end_second)) = (along_first.last(), along_second.last()) else { return Ok(0.0) };
+    let corners = u64::try_from(first.len() + second.len()).unwrap_or(u64::MAX);
+    // Where each section starts and ends on each rail: at the rails' starts, at each rung in order, and at
+    // their ends.
+    let mut cuts = vec![[0.0, 0.0]];
+    for [a, b] in rungs {
+        meter.charge(corners)?;
+        let last = cuts.last().copied().unwrap_or([0.0, 0.0]);
+        cuts.push([position(first, &along_first, *a).max(last[0]), position(second, &along_second, *b).max(last[1])]);
+    }
+    cuts.push([end_first, end_second]);
+    let mut longest = 0.0_f64;
+    for (from, to) in cuts.iter().zip(cuts.iter().skip(1)) {
+        // The shares of the section at which one rail or the other turns a corner, and its 2 ends.
+        let share = |along: &[f64], rail: usize| -> Vec<f64> {
+            let (start, end) = (from[rail], to[rail]);
+            along.iter().filter(|at| end > start && **at > start && **at < end).map(|at| (at - start) / (end - start)).collect()
+        };
+        let shares = [vec![0.0, 1.0], share(&along_first, 0), share(&along_second, 1)].concat();
+        for t in shares {
+            meter.charge(1)?;
+            let (a, b) =
+                (point_at(first, &along_first, from[0] + t * (to[0] - from[0])), point_at(second, &along_second, from[1] + t * (to[1] - from[1])));
+            longest = longest.max(a.zip(b).map_or(0.0, |(a, b)| a.distance(b)));
+        }
+    }
+    Ok(longest)
+}
+
+/// How far along `rail` each of its points lies, in millimetres.
+fn lengths(rail: &[Point]) -> Vec<f64> {
+    let mut along = Vec::with_capacity(rail.len());
+    let mut length = 0.0;
+    for (i, p) in rail.iter().enumerate() {
+        length += i.checked_sub(1).and_then(|before| rail.get(before)).map_or(0.0, |before| before.distance(*p));
+        along.push(length);
+    }
+    along
+}
+
+/// How far along `rail`, whose points lie `along` it, its point nearest `p` lies.
+fn position(rail: &[Point], along: &[f64], p: Point) -> f64 {
+    let mut best = (f64::INFINITY, 0.0);
+    for ((a, b), start) in rail.iter().zip(rail.iter().skip(1)).zip(along) {
+        let distance = distance_to_segment(p, *a, *b);
+        if distance < best.0 {
+            // The nearest point of the piece from a to b lies as far from a as p is, less its distance off the piece.
+            let from_a = (a.distance(p) * a.distance(p) - distance * distance).max(0.0).sqrt().min(a.distance(*b));
+            best = (distance, start + from_a);
+        }
+    }
+    best.1
+}
+
+/// The point `at` millimetres along `rail`, whose points lie `along` it: its last point from its length on.
+fn point_at(rail: &[Point], along: &[f64], at: f64) -> Option<Point> {
+    let next = along.partition_point(|length| *length < at).min(rail.len().saturating_sub(1));
+    let (Some(to), Some(end)) = (rail.get(next), along.get(next)) else { return None };
+    let Some((from, start)) = next.checked_sub(1).and_then(|before| rail.get(before).zip(along.get(before))) else { return Some(*to) };
+    Some(if end > start { from.lerp(*to, ((at - start) / (end - start)).clamp(0.0, 1.0)) } else { *to })
 }
 
 /// A column's width along its line.
@@ -218,17 +355,32 @@ fn end_nearer(column: &Column, here: Point) -> bool {
     points.first().zip(points.last()).is_some_and(|(start, end)| end.distance(here) < start.distance(here))
 }
 
-/// `SC-I0902` for a part of the automatic area `id` no wider than its widest satin column by `rules`, whose
-/// satin columns can't be drawn: it stays in the area's fill.
-pub(super) fn unmade(id: &ElementId, rules: &AutoParams) -> Diagnostic {
+/// `SC-I0902` for a part of the automatic area `id`, held to `bounds`, that is no wider than its widest
+/// satin column and whose satin columns can't be drawn: it stays in the area's fill.
+pub(super) fn unmade(id: &ElementId, bounds: &Bounds) -> Diagnostic {
     let message = format!(
         "A part of this area is no wider than a satin column, {} mm, but no satin columns can be drawn along it between its edges, so it is \
          filled.",
-        mm(rules.auto_max_satin_width_mm.get())
+        mm(bounds.max_satin.get())
     );
     Diagnostic::new(Code::AutoSatinFilled, message).with_element(id.clone()).with_fix(Fix::Hint(
         "To sew it as satin columns, draw it with smoother edges, or draw the columns with 2 rails and give them settings.".to_string(),
     ))
+}
+
+/// `SC-I0902` for a part of the automatic area `id`, held to `bounds`, one of whose satin columns would sew a
+/// stitch `stitch` millimetres long between its rails, longer than the widest satin column: it stays in the
+/// area's fill.
+pub(super) fn long(id: &ElementId, stitch: f64, bounds: &Bounds) -> Diagnostic {
+    let message = format!(
+        "A satin column along a part of this area would sew a stitch {} mm long between its rails, longer than the widest satin column, {} \
+         mm, and such a stitch lies loose, so the part is filled.",
+        mm(stitch),
+        mm(bounds.max_satin.get())
+    );
+    Diagnostic::new(Code::AutoSatinFilled, message)
+        .with_element(id.clone())
+        .with_fix(Fix::Hint("To sew it as satin columns, draw the columns with 2 rails each and give them settings.".to_string()))
 }
 
 #[cfg(test)]
@@ -263,6 +415,12 @@ mod tests {
         (found, order)
     }
 
+    /// The bounds of a shape with the rules' defaults in a design whose narrowest satin stroke is `narrowest`
+    /// millimetres.
+    fn bounds(narrowest: f64) -> Bounds {
+        Bounds::of(&AutoParams::defaults(), Mm::new(narrowest).unwrap())
+    }
+
     /// Where `column`'s centre line starts and ends.
     fn ends(column: &Column) -> (Point, Point) {
         (column.line.points[0], *column.line.points.last().unwrap())
@@ -272,12 +430,11 @@ mod tests {
     fn req_auto_016_a_column_no_wider_than_the_narrowest_satin_stroke_runs() {
         // A band 1.5 mm wide is one column: a satin column where the narrowest satin stroke is 1 mm, and a
         // running stitch along its line, as wide as the band, where it is 2 mm.
-        let made =
-            |narrowest: f64| columns(&band(1.5), Mm::new(narrowest).unwrap(), &AutoParams::defaults(), &[], &mut Budget::DEFAULT.meter()).unwrap();
-        let Made::Columns(sewn) = made(1.0) else { panic!("no columns") };
+        let made = |narrowest: f64| columns(&band(1.5), &bounds(narrowest), &AutoParams::defaults(), &[], &mut Budget::DEFAULT.meter()).unwrap();
+        let Made::Columns { sewn, .. } = made(1.0) else { panic!("no columns") };
         let [Sewn::Satin { width, push, .. }] = sewn.as_slice() else { panic!("{sewn:?}") };
         assert!((width.get() - 1.5).abs() < 1e-6 && *push == [0.0, 0.0], "{width:?} {push:?}");
-        let Made::Columns(sewn) = made(2.0) else { panic!("no columns") };
+        let Made::Columns { sewn, .. } = made(2.0) else { panic!("no columns") };
         let [Sewn::Running { width, line }] = sewn.as_slice() else { panic!("{sewn:?}") };
         assert!((width.get() - 1.5).abs() < 1e-6 && line.points.iter().all(|q| (q.y() - 0.75).abs() < 1e-9), "{width:?} {line:?}");
     }
@@ -289,12 +446,11 @@ mod tests {
         // head's sides bare. Where the narrowest satin stroke is 1 mm, it is one satin column, and where that
         // stroke is 2 mm, it runs.
         let strand = part(&[(0.0, -0.3), (6.0, -0.3), (7.0, -0.7), (10.0, -0.7), (10.0, 0.7), (7.0, 0.7), (6.0, 0.3), (0.0, 0.3)], &[]);
-        let made =
-            |narrowest: f64| columns(&strand, Mm::new(narrowest).unwrap(), &AutoParams::defaults(), &[], &mut Budget::DEFAULT.meter()).unwrap();
-        let Made::Columns(sewn) = made(1.0) else { panic!("no columns") };
+        let made = |narrowest: f64| columns(&strand, &bounds(narrowest), &AutoParams::defaults(), &[], &mut Budget::DEFAULT.meter()).unwrap();
+        let Made::Columns { sewn, .. } = made(1.0) else { panic!("no columns") };
         let [Sewn::Satin { width, .. }] = sewn.as_slice() else { panic!("{sewn:?}") };
         assert!(width.get() < 1.0, "{width:?}");
-        let Made::Columns(sewn) = made(2.0) else { panic!("no columns") };
+        let Made::Columns { sewn, .. } = made(2.0) else { panic!("no columns") };
         assert!(matches!(sewn.as_slice(), [Sewn::Running { .. }]), "{sewn:?}");
     }
 
@@ -320,8 +476,8 @@ mod tests {
                 &[(0.0, 0.0), (8.0, 0.0), (8.0, 0.9), (4.45, 0.9), (4.45, 14.5), (3.55, 14.5), (3.55, 0.9), (0.0, 0.9)].map(|(x, y)| (flip * x, y)),
                 &[],
             );
-            let made = columns(&t, Mm::new(1.0).unwrap(), &AutoParams::defaults(), &[], &mut Budget::DEFAULT.meter()).unwrap();
-            let Made::Columns(sewn) = made else { panic!("no columns") };
+            let made = columns(&t, &bounds(1.0), &AutoParams::defaults(), &[], &mut Budget::DEFAULT.meter()).unwrap();
+            let Made::Columns { sewn, .. } = made else { panic!("no columns") };
             assert!(sewn.len() == 2 && sewn.iter().all(|s| matches!(s, Sewn::Running { .. })), "{flip}: {sewn:?}");
         }
     }
@@ -469,9 +625,136 @@ mod tests {
     }
 
     #[test]
+    fn req_auto_035_a_column_s_longest_stitch_lies_between_the_points_as_far_along_its_rails() {
+        let p = |x: f64, y: f64| Point::new(x, y).unwrap();
+        let longest = |first: &[(f64, f64)], second: &[(f64, f64)], rungs: &[[(f64, f64); 2]]| {
+            let rails = [first.iter().map(|&(x, y)| p(x, y)).collect(), second.iter().map(|&(x, y)| p(x, y)).collect()];
+            let rungs: Vec<[Point; 2]> = rungs.iter().map(|rung| rung.map(|(x, y)| p(x, y))).collect();
+            longest_stitch(&rails, &rungs, &mut Budget::DEFAULT.meter()).unwrap()
+        };
+        let near = |found: f64, length: f64| (found - length).abs() < 1e-9;
+        // Rails 3 mm apart: 3 mm. Rails that part from 2 mm to 6 mm: 6 mm, at their ends.
+        assert!(near(longest(&[(0.0, 0.0), (10.0, 0.0)], &[(0.0, 3.0), (10.0, 3.0)], &[]), 3.0));
+        assert!(near(longest(&[(0.0, 0.0), (10.0, 0.0)], &[(0.0, 2.0), (10.0, 6.0)], &[]), 6.0));
+        // A rail with a corner 8 mm from the other rail's middle, halfway along both: 8 mm, at the corner. With
+        // the corner a quarter of the way along its rail, the stitch from it reaches the other rail a quarter of
+        // the way along that one.
+        assert!(near(longest(&[(0.0, 0.0), (10.0, 0.0)], &[(0.0, 3.0), (5.0, 8.0), (10.0, 3.0)], &[]), 8.0));
+        let quarter = longest(&[(0.0, 0.0), (10.0, 0.0), (20.0, 0.0)], &[(0.0, 1.0), (5.0, 9.0), (20.0, 1.0)], &[]);
+        let along = 26.433_981_132_056_6_f64;
+        let reached = 20.0 * (89.0_f64.sqrt() / along);
+        assert!(near(quarter, math::hypot(5.0 - reached, 9.0)), "{quarter}");
+        // A rung pairs a point 2 mm along one rail with one 8 mm along the other: the stitch there is as
+        // long as the rung, and the sections before and after it sew no longer one.
+        assert!(near(longest(&[(0.0, 0.0), (10.0, 0.0)], &[(0.0, 3.0), (10.0, 3.0)], &[[(2.0, 0.0), (8.0, 3.0)]]), math::hypot(6.0, 3.0)));
+        // A rung that lies before the one before it pairs no point behind that one's.
+        let back = longest(&[(0.0, 0.0), (10.0, 0.0)], &[(0.0, 3.0), (10.0, 3.0)], &[[(6.0, 0.0), (6.0, 3.0)], [(2.0, 0.0), (2.0, 3.0)]]);
+        assert!(near(back, 3.0), "{back}");
+        // Rails of one point each sew from one to the other, and a column without rails sews nothing.
+        assert!(near(longest(&[(0.0, 0.0)], &[(0.0, 3.0)], &[]), 3.0));
+        assert_eq!(longest(&[], &[], &[]), 0.0);
+        // Where a rail's point lies, and the point that far along it: past its length, its last point.
+        let rail = [p(0.0, 0.0), p(4.0, 0.0), p(4.0, 3.0)];
+        let lengths = lengths(&rail);
+        assert_eq!(lengths, [0.0, 4.0, 7.0]);
+        let at = |q: Point| position(&rail, &lengths, q);
+        assert!(near(at(p(1.0, 2.0)), 1.0) && near(at(p(6.0, 1.0)), 5.0) && near(at(p(-3.0, 0.0)), 0.0) && near(at(p(9.0, 9.0)), 7.0));
+        assert_eq!(
+            [point_at(&rail, &lengths, 2.0), point_at(&rail, &lengths, 5.5), point_at(&rail, &lengths, 9.0)],
+            [Some(p(2.0, 0.0)), Some(p(4.0, 1.5)), Some(p(4.0, 3.0))]
+        );
+        assert_eq!([point_at(&rail, &lengths, 0.0), point_at(&[], &[], 1.0)], [Some(p(0.0, 0.0)), None]);
+        // A point repeated has no length between its copies.
+        let doubled = [p(0.0, 0.0), p(0.0, 0.0), p(2.0, 0.0)];
+        assert_eq!(point_at(&doubled, &super::lengths(&doubled), 0.0), Some(p(0.0, 0.0)));
+    }
+
+    #[test]
+    fn req_auto_035_measuring_a_column_s_longest_stitch_is_the_part_s_work() {
+        // Each rung and each corner costs work: with too little, the measuring stops.
+        let p = |x: f64, y: f64| Point::new(x, y).unwrap();
+        let rails = [vec![p(0.0, 0.0), p(5.0, 0.0), p(10.0, 0.0)], vec![p(0.0, 3.0), p(10.0, 3.0)]];
+        let rungs = [[p(5.0, 0.0), p(5.0, 3.0)]];
+        let with = |work: u64| longest_stitch(&rails, &rungs, &mut Budget { max_work: work, ..Budget::DEFAULT }.meter());
+        let least = (0..64).find(|work| with(*work).is_ok()).unwrap();
+        assert_eq!(with(least), Ok(3.0));
+        assert!((0..least).all(|work| with(work) == Err(Exhausted::Work)) && least > 5, "{least}");
+    }
+
+    #[test]
+    fn req_auto_033_the_layers_ask_whether_the_rules_fill_a_part() {
+        let filled = |part: &Polygon, set: &[(&str, &str)]| {
+            let rules = AutoParams::from_set(&set.iter().copied().collect()).unwrap().params;
+            filled(part, &Bounds::of(&rules, Mm::new(1.0).unwrap()), &mut Budget::DEFAULT.meter()).unwrap()
+        };
+        // A square 10 mm across is an area, a blob 4.5 by 3 mm compact, and a band 3 mm wide a column: the
+        // first 2 are filled.
+        let square = part(&[(0.0, 0.0), (10.0, 0.0), (10.0, 10.0), (0.0, 10.0)], &[]);
+        let blob = part(&[(0.0, 0.0), (4.5, 0.0), (4.5, 3.0), (0.0, 3.0)], &[]);
+        assert_eq!([filled(&square, &[]), filled(&blob, &[]), filled(&band(3.0), &[])], [Some(RuleId::Area), Some(RuleId::Compact), None]);
+        // A strip 0.6 mm wide is a line, and a disc 1.5 mm across, without a centre line, is compact.
+        let dot: Vec<(f64, f64)> = arc(0.75, 8, 0.0, std::f64::consts::TAU).into_iter().take(8).collect();
+        assert_eq!([filled(&band(0.6), &[]), filled(&part(&dot, &[]), &[])], [None, Some(RuleId::Compact)]);
+        // A T of a thick and a thin stroke is uneven, unless its shape fills no uneven part.
+        let t = part(&[(0.0, 0.0), (20.0, 0.0), (20.0, 4.0), (10.75, 4.0), (10.75, 16.0), (9.25, 16.0), (9.25, 4.0), (0.0, 4.0)], &[]);
+        assert_eq!([filled(&t, &[]), filled(&t, &[("auto_fill_uneven", "false")])], [Some(RuleId::Uneven), None]);
+        // A band of a shape that asks to be filled is, and of one that asks for satin columns isn't, compact
+        // though it is.
+        assert_eq!([filled(&band(3.0), &[("auto_stitch", "fill")]), filled(&blob, &[("auto_stitch", "satin")])], [Some(RuleId::Asked), None]);
+        // A square with a round hole, whose column would sew too long a stitch at its corners, is refused, and
+        // filled so.
+        let hole: Vec<(f64, f64)> = arc(4.0, 48, 0.0, -std::f64::consts::TAU).into_iter().take(48).collect();
+        let ring = part(&[(-8.0, -8.0), (8.0, -8.0), (8.0, 8.0), (-8.0, 8.0)], &[&hole]);
+        assert_eq!(filled(&ring, &[]), Some(RuleId::Refused));
+        // A ring whose hole touches its outline makes no column, and isn't said to be filled: it keeps its hole.
+        let touching: Vec<(f64, f64)> = arc(2.0, 16, 0.0, -std::f64::consts::TAU).into_iter().take(16).map(|(x, y)| (x + 2.0, y)).collect();
+        let outer: Vec<(f64, f64)> = arc(4.0, 32, 0.0, std::f64::consts::TAU).into_iter().take(32).collect();
+        assert_eq!(filled(&part(&outer, &[&touching]), &[]), None);
+    }
+
+    #[test]
+    fn req_auto_031_a_part_s_columns_say_which_rule_it_sews_by_and_what_was_measured() {
+        let made = |part: &Polygon, set: &[(&str, &str)]| {
+            let rules = AutoParams::from_set(&set.iter().copied().collect()).unwrap().params;
+            columns(part, &Bounds::of(&rules, Mm::new(1.0).unwrap()), &rules, &[], &mut Budget::DEFAULT.meter()).unwrap()
+        };
+        // A band 3 by 20 mm: a column, 3 mm wide, of one line, 6.7 times its width squared.
+        let Made::Columns { sewn, rule, measures } = made(&band(3.0), &[]) else { panic!("no columns") };
+        assert_eq!((sewn.len(), rule, measures.lines, measures.breadth), (1, RuleId::Column, 1, Breadth::Medium));
+        assert!(
+            (measures.width - 3.0).abs() < 1e-6 && (measures.slenderness() - 60.0 / 9.0).abs() < 1e-4 && measures.unevenness < 1e-6,
+            "{measures:?}"
+        );
+        // A blob 4.5 by 3 mm: compact, and a column when its shape asks for satin columns.
+        let blob = part(&[(0.0, 0.0), (4.5, 0.0), (4.5, 3.0), (0.0, 3.0)], &[]);
+        let Made::Filled(RuleId::Compact, Some(measures)) = made(&blob, &[]) else { panic!("not compact") };
+        assert!((measures.area - 13.5).abs() < 1e-9 && measures.slenderness() < 3.0, "{measures:?}");
+        let Made::Columns { rule: RuleId::Asked, .. } = made(&blob, &[("auto_stitch", "satin")]) else { panic!("not as asked") };
+        // A dot is compact.
+        let dot: Vec<(f64, f64)> = arc(0.75, 8, 0.0, std::f64::consts::TAU).into_iter().take(8).collect();
+        assert!(matches!(made(&part(&dot, &[]), &[]), Made::Filled(RuleId::Compact, _)));
+        // A square with a round hole: its column's longest stitch, with what was measured of it.
+        let hole: Vec<(f64, f64)> = arc(4.0, 48, 0.0, -std::f64::consts::TAU).into_iter().take(48).collect();
+        let ring = part(&[(-8.0, -8.0), (8.0, -8.0), (8.0, 8.0), (-8.0, 8.0)], &[&hole]);
+        let Made::Long(stitch, measures) = made(&ring, &[]) else { panic!("not refused") };
+        assert!((stitch - 7.314).abs() < 0.001 && (measures.width - 4.5).abs() < 0.1, "{stitch} {measures:?}");
+        let said = long(&ElementId::new("ring").unwrap(), stitch, &bounds(1.0));
+        assert_eq!(
+            said.to_string(),
+            "info SC-I0902: A satin column along a part of this area would sew a stitch 7.31 mm long between its rails, longer than the widest \
+             satin column, 7 mm, and such a stitch lies loose, so the part is filled."
+        );
+        assert_eq!((said.code, said.element.as_ref().map(|id| id.as_str())), (Code::AutoSatinFilled, Some("ring")));
+        // With a widest satin column of 5 mm, a ring 12 mm across, whose longest stitch is 5.49 mm, is refused too.
+        let small: Vec<(f64, f64)> = arc(3.0, 48, 0.0, -std::f64::consts::TAU).into_iter().take(48).collect();
+        let ring = part(&[(-6.0, -6.0), (6.0, -6.0), (6.0, 6.0), (-6.0, 6.0)], &[&small]);
+        assert!(matches!(made(&ring, &[]), Made::Columns { .. }) && matches!(made(&ring, &[("auto_max_satin_width_mm", "5")]), Made::Long(..)));
+    }
+
+    #[test]
     fn a_part_no_satin_column_can_be_drawn_along_is_said_to_stay_filled() {
         let id = ElementId::new("letters").unwrap();
-        let said = unmade(&id, &AutoParams::defaults());
+        let said = unmade(&id, &bounds(1.0));
         assert_eq!((said.code, said.element.as_ref()), (Code::AutoSatinFilled, Some(&id)));
         assert_eq!(
             said.to_string(),

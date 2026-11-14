@@ -63,31 +63,23 @@ struct Astray {
     step: &'static str,
 }
 
-/// Why a stitch of a column that sews past a rail shows.
-const RAIL: &str = "A satin column sews 1 mm past a rail, under the shape sewn after it that runs along more than half of that rail (REQ-AUTO-029). Where that shape ends the column's stitches still reach 1 mm past the rail, and this one shows on the colour beside it.";
+/// Why a row of a fill shows on another colour.
+const ROW: &str = "A row of an automatic fill shows on another colour for 1 mm or more. 6 of the 20 such stitches were traced when they were listed, on the dog on turf in 9 threads and in the running dog's ear in 6. 5 lie along a line of fur of another colour, which sews on the fill or which the fill reaches under (REQ-AUTO-007, REQ-AUTO-033): the line sews as wide as its thread, and the row shows beside it. One lies under the edge of a column sewn after the fill, beyond the shapes as drawn. The other 14 were not each traced.";
 
 /// Every stitch of the dogs astray today. The case fails when another stitch is astray, and when one of these
-/// no longer is, so the list shrinks as each is fixed: M13.17 and M13.18 empty it. M13.16's overlap of 1 mm
-/// added the 3 stitches of columns that sew past a rail, and its base layer the one that shows in a gap.
-const ASTRAY: [Astray; 7] = [
-    Astray {
-        dog: "dog-on-turf-6",
-        element: "stitchcraft:base",
-        stitch: [(40.5, 44.17), (42.0, 41.57)],
-        length: 3.0,
-        cause: "A stitch of the base layer shows in the gap between 2 lines of fur sewn as running stitches, at (41.1, 43.3). The base layer is there to lie under such a gap, and the measure counts an underlay stitch wherever it shows.",
-        step: "M13.18",
-    },
-    Astray { dog: "dog-on-turf-6", element: "vc:67:fill#3", stitch: [(49.59, 64.05), (49.02, 63.11)], length: 1.1, cause: RAIL, step: "M13.18" },
-    Astray {
-        dog: "dog-on-turf-6",
-        element: "vc:9:fill#18",
-        stitch: [(50.51, 64.73), (56.47, 69.9)],
-        length: 7.89,
-        cause: "A satin column of dark grey fur fans its stitches round a black shape that bites into its side, and this one crosses the black shape's corner.",
-        step: "M13.18",
-    },
-    Astray { dog: "dog-on-turf-9", element: "vc:74:fill#9", stitch: [(39.02, 63.83), (39.49, 61.25)], length: 2.63, cause: RAIL, step: "M13.18" },
+/// no longer is, so the list shrinks as each is fixed: M13.17 and M13.18 empty it. M13.21 fills the dogs'
+/// ragged patches, which sewed as columns: the 2 satin stitches that fanned across a shape biting into their
+/// column, 7.89 and 4.72 mm long, are gone, and so are the 3 of columns that sewed past a rail and the one
+/// of the base layer in a gap. The rows of those fills that show beside a thin line took their place: 20
+/// stitches, the longest 4 mm, a fill's stitch length.
+const ASTRAY: [Astray; 21] = [
+    Astray { dog: "dog-on-turf-6", element: "vc:68:fill", stitch: [(52.8, 75.77), (51.05, 75.75)], length: 1.75, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-on-turf-6", element: "vc:79:fill", stitch: [(39.02, 52.25), (40.26, 52.52)], length: 1.27, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-on-turf-6", element: "vc:97:fill", stitch: [(39.0, 61.75), (41.96, 61.74)], length: 2.96, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-on-turf-9", element: "vc:11:fill", stitch: [(46.0, 43.5), (50.0, 43.5)], length: 4.0, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-on-turf-9", element: "vc:18:fill", stitch: [(49.0, 43.25), (45.36, 43.25)], length: 3.64, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-on-turf-9", element: "vc:76:fill", stitch: [(48.2, 74.0), (52.0, 74.0)], length: 3.8, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-on-turf-9", element: "vc:78:fill", stitch: [(43.0, 74.75), (46.53, 74.77)], length: 3.53, cause: ROW, step: "M13.18" },
     Astray {
         dog: "dog-on-turf-9",
         element: "vc:83:fill",
@@ -96,16 +88,61 @@ const ASTRAY: [Astray; 7] = [
         cause: "A narrow part sews 2 lines as one running stitch. The needle goes straight from the end of one to the start of the next, across another colour, and the move, shorter than the 3 mm collapse length, is a stitch.",
         step: "M13.17",
     },
-    Astray { dog: "dog-running-9", element: "vc:40:fill#3", stitch: [(60.34, 51.61), (59.54, 50.81)], length: 1.14, cause: RAIL, step: "M13.18" },
-    Astray {
-        dog: "dog-running-9",
-        element: "vc:27:fill",
-        stitch: [(33.11, 14.46), (37.32, 12.31)],
-        length: 4.72,
-        cause: "A satin column of dark grey fur fans its stitches round a lighter grey shape that bites into its side, and this one crosses that shape.",
-        step: "M13.18",
-    },
+    Astray { dog: "dog-on-turf-9", element: "vc:110:fill", stitch: [(41.22, 79.5), (39.6, 79.5)], length: 1.61, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-running-6", element: "vc:23:fill", stitch: [(57.0, 71.25), (61.0, 71.25)], length: 4.0, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-running-6", element: "vc:23:fill", stitch: [(60.0, 71.0), (56.0, 71.0)], length: 4.0, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-running-6", element: "vc:61:fill", stitch: [(56.0, 32.02), (54.27, 31.98)], length: 1.73, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-running-6", element: "vc:50:fill", stitch: [(35.13, 23.98), (32.0, 24.0)], length: 3.13, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-running-6", element: "vc:81:fill", stitch: [(46.47, 20.25), (45.0, 20.25)], length: 1.47, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-running-6", element: "vc:81:fill", stitch: [(44.07, 21.0), (48.0, 21.0)], length: 3.93, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-running-6", element: "vc:89:fill", stitch: [(56.75, 55.5), (54.6, 55.49)], length: 2.15, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-running-9", element: "vc:57:fill", stitch: [(32.0, 24.0), (36.0, 24.0)], length: 4.0, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-running-9", element: "vc:111:fill", stitch: [(48.48, 54.56), (48.66, 53.23)], length: 1.35, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-running-9", element: "vc:110:fill", stitch: [(42.06, 43.0), (44.22, 42.75)], length: 2.18, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-running-9", element: "vc:120:fill", stitch: [(54.55, 56.02), (52.0, 56.0)], length: 2.55, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-running-9", element: "vc:120:fill", stitch: [(49.0, 58.25), (50.6, 58.46)], length: 1.61, cause: ROW, step: "M13.18" },
 ];
+
+/// How each traced dog's shapes sew, as `SC-I0901` counts them: as running stitches, as satin columns and as
+/// tatami fills. Before M13.21, width alone chose, and the dogs sewed 64, 73, 59 and 79 shapes as satin
+/// columns and 4, 3, 6 and 7 as fills.
+const SEWN: [(&str, [usize; 3]); 4] =
+    [("dog-on-turf-6", [25, 27, 45]), ("dog-on-turf-9", [35, 31, 49]), ("dog-running-6", [15, 21, 47]), ("dog-running-9", [18, 29, 60])];
+
+#[test]
+#[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
+fn req_auto_032_a_traced_animal_sews_mostly_as_fills_and_no_satin_stitch_too_long() {
+    use stitchcraft_core::{Budget, Code};
+    use stitchcraft_engine::auto::{LONGEST_SATIN_STITCH, digitized};
+    use stitchcraft_engine::design::Shape;
+    use stitchcraft_engine::generators::satin::SATIN_COLUMN;
+    use stitchcraft_plan::Role;
+
+    let limit = LONGEST_SATIN_STITCH + 2.0 * rules().auto_pull_compensation_mm.get();
+    let (mut found, mut longest) = (Vec::new(), Vec::new());
+    for (name, design, plan) in planned() {
+        // The shapes by the stitches they sew as, read from what is said of them.
+        let (elements, said) = digitized(design, &Budget::DEFAULT);
+        let counted = said.iter().find(|said| said.code == Code::AutoDigitized).unwrap().message.clone();
+        let count = |stitches: &str| {
+            let before = counted.split(stitches).next().filter(|before| before.len() < counted.len()).unwrap_or("0 ");
+            before.split_whitespace().rev().find_map(|word| word.parse::<usize>().ok()).unwrap_or(0)
+        };
+        found.push((name.as_str(), [count("running stitch"), count("satin column"), count("tatami fill")]));
+        // The longest top stitch of an element sewn as a satin column.
+        let satin = |id: &str| {
+            elements.iter().any(|e| e.id.as_str() == id && matches!(e.shape, Shape::Stroke { .. }) && e.params.get(SATIN_COLUMN) == Some("true"))
+        };
+        let stitches = plan.sewn_stitches().into_iter().filter(|stitch| stitch.role == Role::Top && stitch.from_role == Role::Top);
+        let of_satin = stitches.filter(|stitch| {
+            let element = plan.blocks[stitch.block].stitches[stitch.index].origin.element.and_then(|element| plan.element(element));
+            element.is_some_and(|id| satin(id.as_str()))
+        });
+        longest.push((name.as_str(), of_satin.map(|stitch| stitch.from.distance(stitch.to)).fold(0.0, f64::max)));
+    }
+    assert_eq!(found, SEWN);
+    assert!(longest.iter().all(|(_, length)| *length > 3.0 && *length <= limit), "{longest:?}");
+}
 
 /// `value` to a hundredth, as a whole number of hundredths.
 fn hundredths(value: f64) -> f64 {
@@ -141,7 +178,7 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
     assert_eq!(found, listed, "the stitches astray, as found and as listed in ASTRAY");
     // The moves sewn on from one element to the next, and the jump threads the PE800 leaves, are as the design
     // page records them (image-to-embroidery.md › Sewing order).
-    let recorded = [("dog-on-turf-6", 6, 113), ("dog-on-turf-9", 3, 130), ("dog-running-6", 3, 100), ("dog-running-9", 10, 116)];
+    let recorded = [("dog-on-turf-6", 7, 71), ("dog-on-turf-9", 8, 73), ("dog-running-6", 4, 64), ("dog-running-9", 7, 84)];
     assert_eq!(apart, recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps)));
 }
 
@@ -151,12 +188,8 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
 /// percent. The case fails when a number changes, so that a dog whose slivers grow shows here before it
 /// reaches a limit, and one that loses a sliver gets its row changed. Most slivers lie beside a line of fur
 /// that sews as a running stitch, which is as wide as its thread and can't reach under a neighbour.
-const SLIVERS: [(&str, usize, usize, f64, f64); 4] = [
-    ("dog-on-turf-6", 4, 2, 20.0, 204.0),
-    ("dog-on-turf-9", 10, 1, 34.0, 346.0),
-    ("dog-running-6", 3, 0, 26.0, 107.0),
-    ("dog-running-9", 2, 0, 14.0, 73.0),
-];
+const SLIVERS: [(&str, usize, usize, f64, f64); 4] =
+    [("dog-on-turf-6", 0, 0, 0.0, 20.0), ("dog-on-turf-9", 1, 0, 17.0, 97.0), ("dog-running-6", 1, 0, 26.0, 26.0), ("dog-running-9", 0, 0, 0.0, 1.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]

@@ -129,41 +129,43 @@ fn patched((wide, tall): (f64, f64), based: bool) -> (Design, StitchPlan, Vec<St
 
 #[test]
 fn req_auto_027_a_gap_larger_than_a_sliver_shows_fabric_over_the_base_layer_too() {
-    // The top thread leaves 0.59 mm² of a patch 2 by 1.5 mm bare: over the base layer, and larger than a
+    // The top thread leaves 0.45 mm² of a patch 1.2 by 1 mm bare: over the base layer, and larger than a
     // sliver of 0.4 mm², so the design doesn't cover, though it leaves less bare than 0.5 %.
-    let (design, plan, said) = patched((2.0, 1.5), true);
+    let (design, plan, said) = patched((1.2, 1.0), true);
     let cover = fabric::cover(&design, &plan, GAP);
     assert_eq!(said, ["info SC-I0909: A base layer of 183.2 mm² in 1 piece sews first under the design, in the thread #f0f0f0."]);
     assert_eq!((cover.gaps, cover.beyond.as_slice(), cover.slivers(&rules())), (1, &[0.0][..], Vec::new()), "{cover:?}");
-    assert!((cover.largest - 0.5925).abs() < 1e-9 && cover.bare_share() < cover.limit(&rules()), "{cover:?}");
+    assert!((cover.largest - 0.45).abs() < 1e-9 && cover.bare_share() < cover.limit(&rules()), "{cover:?}");
     assert_eq!(cover.limit(&rules()), 0.005);
-    assert_eq!(cover.faults(&rules()), ["a gap of 0.593 mm² at (6.0, 5.8) in patch: larger than a sliver of 0.4 mm²"]);
+    assert_eq!(cover.faults(&rules()), ["a gap of 0.450 mm² at (5.6, 5.5) in patch: larger than a sliver of 0.4 mm²"]);
 }
 
 #[test]
 fn req_auto_027_a_sliver_over_the_base_layer_is_left_to_it() {
-    // The top thread leaves 0.24 mm² of a patch 1.7 by 1.4 mm bare, with the base layer under all of it: a
+    // The top thread leaves 0.29 mm² of a patch 1.3 by 1.1 mm bare, with the base layer under all of it: a
     // sliver, which shows the base layer's thread.
-    let (design, plan, _) = patched((1.7, 1.4), true);
+    let (design, plan, _) = patched((1.3, 1.1), true);
     let cover = fabric::cover(&design, &plan, GAP);
     assert_eq!((cover.gaps, cover.beyond.as_slice(), cover.at_the_rim(&rules())), (1, &[0.0][..], 0), "{cover:?}");
-    assert!(cover.base > 0.0 && cover.slivers(&rules()).iter().all(|sliver| (sliver - 0.2425).abs() < 1e-9), "{cover:?}");
+    assert!(cover.base > 0.0 && cover.slivers(&rules()).iter().all(|sliver| (sliver - 0.285).abs() < 1e-9), "{cover:?}");
     assert_eq!((cover.slivers(&rules()).len(), cover.faults(&rules())), (1, Vec::<String>::new()));
     // A design whose settings allow a sliver of 0.2 mm² only doesn't pass it.
     let mut stricter = rules();
     stricter.auto_base_sliver_mm2 = 0.2;
-    assert_eq!(cover.faults(&stricter), ["a gap of 0.243 mm² at (5.9, 5.7) in patch: larger than a sliver of 0.2 mm²"]);
+    assert_eq!(cover.faults(&stricter), ["a gap of 0.285 mm² at (5.7, 5.6) in patch: larger than a sliver of 0.2 mm²"]);
 }
 
 #[test]
 fn req_auto_027_without_the_base_layer_a_sliver_shows_fabric_and_that_is_said() {
     // The same sliver with the base layer off: nothing lies under it, so fabric shows, and the design was
-    // told that it may (SC-I0911). The bare share, 0.144 %, is within the 0.15 % of a design without one.
-    let (design, plan, said) = patched((1.7, 1.4), false);
+    // told that it may (SC-I0911). The bare share, 0.152 %, is over the 0.15 % of a design without one too.
+    let (design, plan, said) = patched((1.3, 1.1), false);
     let cover = fabric::cover(&design, &plan, GAP);
     assert_eq!((cover.gaps, cover.beyond.as_slice(), cover.base, cover.limit(&rules())), (1, &[f64::INFINITY][..], 0.0, BARE), "{cover:?}");
-    assert!(cover.slivers(&rules()).is_empty() && cover.bare_share() < BARE, "{cover:?}");
-    assert_eq!(cover.faults(&rules()), ["a gap of 0.243 mm² at (5.9, 5.7) in patch: no base layer under all of it"]);
+    assert!(cover.slivers(&rules()).is_empty() && cover.bare_share() > BARE && cover.bare_share() < 0.5 / 100.0, "{cover:?}");
+    let faults =
+        ["a gap of 0.285 mm² at (5.7, 5.6) in patch: no base layer under all of it", "0.152 % of the design bare, 0.32 of 207 mm², over 0.150 %"];
+    assert_eq!(cover.faults(&rules()), faults);
     let off = "info SC-I0911: The base layer is off, so nothing lies under a place that the top thread leaves bare between 2 shapes, and the fabric may show there.";
     assert_eq!(said, [off]);
 }

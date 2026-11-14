@@ -85,14 +85,15 @@ fn req_auto_016_a_round_dot_stays_in_the_fill_wherever_it_lies() {
 }
 
 #[test]
-fn req_auto_016_a_square_is_a_dot_and_a_rectangle_a_little_longer_a_column() {
-    // A square 3 mm wide: its lines are 0.4 times as long as it is wide, and it is a dot, filled. A rectangle
-    // as wide and 3.5 mm long: its line is more than half as long as it is wide, and it is a satin column.
+fn req_auto_031_a_rectangle_is_a_column_from_3_times_its_width() {
+    // A square 3 mm wide is compact, and filled, and so is a rectangle as wide and 8.9 mm long, whose area is
+    // less than 3 times its width squared. One 9 mm long is exactly that, and one 9.5 mm long more: each is a
+    // satin column, wherever it lies.
     for (x, y) in [(0.0, 0.0), (10.3, 7.1), (-4.6, 21.9)] {
-        let square = made(&shape("square", &rectangle((x, y), (x + 3.0, y + 3.0))));
-        assert_eq!(square.stitches, Some(Stitches::Fill), "a square at ({x}, {y}): {:?}", square.elements);
-        let longer = made(&shape("rectangle", &rectangle((x, y), (x + 3.5, y + 3.0))));
-        assert_eq!(longer.stitches, Some(Stitches::Satin), "a rectangle at ({x}, {y}): {:?}", longer.elements);
+        for (long, stitches) in [(3.0, Stitches::Fill), (8.9, Stitches::Fill), (9.0, Stitches::Satin), (9.5, Stitches::Satin)] {
+            let rectangle = made(&shape("rectangle", &rectangle((x, y), (x + long, y + 3.0))));
+            assert_eq!(rectangle.stitches, Some(stitches), "{long} mm long at ({x}, {y}): {:?}", rectangle.elements);
+        }
     }
 }
 
@@ -180,8 +181,10 @@ fn req_auto_016_a_v_sews_as_2_columns_one_ending_under_the_other() {
 fn req_auto_016_a_column_too_narrow_for_satin_runs_along_its_line() {
     // A T whose bar is 4 mm wide and whose stem is 1.5 mm wide, in a design whose narrowest satin stroke is
     // 2 mm: the stem's column runs along its line as a triple run, as a stroke that narrow would, and the
-    // bar's sews as a satin column.
-    let t = shape("t", &[(0.0, 0.0), (20.0, 0.0), (20.0, 4.0), (10.75, 4.0), (10.75, 16.0), (9.25, 16.0), (9.25, 4.0), (0.0, 4.0)]);
+    // bar's sews as a satin column. Its 2 strokes are each even and unlike each other, so the T keeps its
+    // columns only with `auto_fill_uneven` off: left on, the rules fill the bar and run the stem.
+    let outline = [(0.0, 0.0), (20.0, 0.0), (20.0, 4.0), (10.75, 4.0), (10.75, 16.0), (9.25, 16.0), (9.25, 4.0), (0.0, 4.0)];
+    let t = fill("t", &[&outline], &RED, &[("auto_fill_uneven", "false")]);
     let settings = DesignSettings { min_satin_stroke_width: Mm::new(2.0).unwrap(), ..DesignSettings::default() };
     let out = digitize(&automatic(t), &settings, &mut Budget::DEFAULT.meter()).unwrap();
     assert_eq!(out.stitches, Some(Stitches::Satin));
