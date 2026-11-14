@@ -4,6 +4,8 @@ use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use stitchcraft_core::Mm;
+use stitchcraft_engine::auto::AutoParams;
+use stitchcraft_engine::auto::rules::{PRESETS, Preset};
 use stitchcraft_engine::design::Reading;
 use stitchcraft_plan::FormatId;
 use stitchcraft_render::{Settings, Style};
@@ -144,6 +146,48 @@ pub struct ReadingArgs {
     /// the nearest shape next (docs/src/design/image-to-embroidery.md).
     #[arg(long)]
     pub sort_colours: bool,
+    /// The style of automatic digitizing: a named set of its rules' settings, set on every shape digitized
+    /// automatically that doesn't set them itself. `logo` suits flat art drawn in strokes, and `photo` a
+    /// traced photo (docs/src/user/reference/auto-rules.md).
+    #[arg(long, value_parser = style)]
+    pub style: Option<&'static Preset>,
+    /// Set a setting of automatic digitizing's rules, as KEY=VALUE, on every shape digitized automatically
+    /// that doesn't set it itself, such as auto_min_slenderness=4. A setting given here goes before the
+    /// style's (docs/src/user/reference/params/auto.md).
+    #[arg(long = "set", value_name = "KEY=VALUE", value_parser = rule)]
+    pub set: Vec<(String, String)>,
+}
+
+impl ReadingArgs {
+    /// The settings of automatic digitizing's rules that the options set on every automatic shape, each
+    /// key once: those of `--set`, the last of a key given twice, then the style's for the keys not set.
+    pub fn rules(&self) -> Vec<(String, String)> {
+        let mut rules: Vec<(String, String)> = Vec::new();
+        let styled = self.style.iter().flat_map(|preset| preset.values).map(|(key, value)| (key.to_string(), value.to_string()));
+        for (key, value) in self.set.iter().rev().cloned().chain(styled) {
+            if rules.iter().all(|(set, _)| *set != key) {
+                rules.push((key, value));
+            }
+        }
+        rules
+    }
+}
+
+/// The style called `name`, as `--style` takes it.
+fn style(name: &str) -> Result<&'static Preset, String> {
+    let known = || PRESETS.iter().map(|preset| preset.name).collect::<Vec<_>>().join(", ");
+    PRESETS.iter().find(|preset| preset.name == name).ok_or_else(|| format!("`{name}` isn't a style: the styles are {}", known()))
+}
+
+/// A setting of automatic digitizing's rules and its value, as `--set` takes them: KEY=VALUE, the key one
+/// of the rules' settings. The value is read when a shape is digitized, as a shape's own is.
+fn rule(text: &str) -> Result<(String, String), String> {
+    let (key, value) = text.split_once('=').ok_or_else(|| format!("`{text}` isn't KEY=VALUE"))?;
+    let (key, value) = (key.trim(), value.trim());
+    if AutoParams::SPECS.iter().all(|spec| spec.key != key) {
+        return Err(format!("`{key}` isn't a setting of automatic digitizing's rules (see docs/src/user/reference/params/auto.md)"));
+    }
+    Ok((key.to_string(), value.to_string()))
 }
 
 impl From<&ReadingArgs> for Reading {
@@ -160,7 +204,7 @@ pub struct BugReportArgs {
     pub design: Option<PathBuf>,
     /// Replay this bundle instead: plan its design again, with the profile and format it names, and say
     /// whether everything comes out the same.
-    #[arg(long, conflicts_with_all = ["design", "output", "profile", "format", "says", "auto", "sort_colours"])]
+    #[arg(long, conflicts_with_all = ["design", "output", "profile", "format", "says", "auto", "sort_colours", "style", "set"])]
     pub replay: Option<PathBuf>,
     /// The bundle to write; by default next to the design, as DESIGN.bug-report.json.
     #[arg(long, short)]

@@ -74,6 +74,8 @@ pub struct Run<'a> {
     pub source: Source,
     /// How it is read: with `--auto` and `--sort-colours`, or not.
     pub reading: Reading,
+    /// The settings of automatic digitizing's rules set on every automatic shape (`--style`, `--set`).
+    pub rules: &'a [(String, String)],
     /// The design name machines show, which the machine file's label holds ([`design_name`]).
     pub name: &'a str,
     /// The design file's bytes.
@@ -133,6 +135,11 @@ struct Bundle {
     /// (`--sort-colours`). Bundles of runs without it, and those written before it was recorded, have none.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     sort_colours: bool,
+    /// The settings of automatic digitizing's rules that the run set on every automatic shape (`--style`,
+    /// `--set`), each a key and its value. Bundles of runs without them, and those written before they were
+    /// recorded, have none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    rules: Vec<(String, String)>,
     /// The design.
     design: DesignRecord,
     /// What came of it.
@@ -248,8 +255,18 @@ fn after_panic(command: &Command, message: &str) -> Outcome {
     {
         let source = Source::of(&args.design);
         let profile = machine_for(asked, source, &design);
-        let reading = Reading::from(&args.reading);
-        let run = Run { design_path: &args.design, source, reading, name: design_name(&args.design), design: &design, profile, format, says: None };
+        let (reading, rules) = (Reading::from(&args.reading), args.reading.rules());
+        let run = Run {
+            design_path: &args.design,
+            source,
+            reading,
+            rules: &rules,
+            name: design_name(&args.design),
+            design: &design,
+            profile,
+            format,
+            says: None,
+        };
         return beside(&args.output, &run, Err((message, Phase::Plan)), stopped);
     }
     Outcome { stderr: said + &format!("Please report it at {ISSUES}, with the command you ran and the files it read.\n"), ..stopped }
@@ -288,10 +305,20 @@ fn make(args: &BugReportArgs, design_path: &Path) -> Outcome {
         }
     };
     let source = Source::of(design_path);
-    let reading = Reading::from(&args.reading);
+    let (reading, rules) = (Reading::from(&args.reading), args.reading.rules());
     let profile = machine_for(asked, source, &design);
     let format = args.format.map_or(profile.format, FormatId::from);
-    let run = Run { design_path, source, reading, name: design_name(design_path), design: &design, profile, format, says: args.says.clone() };
+    let run = Run {
+        design_path,
+        source,
+        reading,
+        rules: &rules,
+        name: design_name(design_path),
+        design: &design,
+        profile,
+        format,
+        says: args.says.clone(),
+    };
     let bundle = bundle(&run, borrowed(&guarded_sew(&run, Phase::Plan)));
     if let Err(e) = write(&path, &bundle) {
         return Outcome { stdout: String::new(), stderr: format!("stitch: cannot write {}: {e}\n", path.display()), status: Status::Io };
@@ -318,7 +345,7 @@ fn describe(out: &mut String, record: &Record) {
 /// Plans `run`'s design as `stitch plan` does, and draws its picture too when the run being reproduced got
 /// as far as `phase` [`Phase::Picture`], or the message of the panic that stopped it and where it came.
 fn guarded_sew(run: &Run, phase: Phase) -> Result<Sewn, (String, Phase)> {
-    let sewn = catch_unwind(|| sew(run.source, run.design, run.reading, run.profile, run.format, run.name))
+    let sewn = catch_unwind(|| sew(run.source, run.design, (run.reading, run.rules), run.profile, run.format, run.name))
         .map_err(|payload| (panic_message(payload.as_ref()), Phase::Plan))?;
     if let (Phase::Picture, Some(back)) = (phase, &sewn.back) {
         // What the picture comes to is the run's, which the bundle does not record: only whether it panics.
@@ -355,6 +382,7 @@ fn bundle(run: &Run, sewn: Result<&Sewn, (&str, Phase)>) -> Bundle {
         format: run.format.extension().to_string(),
         auto: run.reading.auto,
         sort_colours: run.reading.sort_colours,
+        rules: run.rules.to_vec(),
         design: DesignRecord {
             file,
             name: Some(run.name.to_string()),
@@ -430,7 +458,17 @@ fn replay(path: &Path) -> Outcome {
     let design_path = PathBuf::from(&then.design.file);
     let name = then.design.name.clone().unwrap_or_else(|| design_name(&design_path).to_string());
     let reading = Reading { auto: then.auto, sort_colours: then.sort_colours };
-    let run = Run { design_path: &design_path, source, reading, name: &name, design: &design, profile, format, says: then.says.clone() };
+    let run = Run {
+        design_path: &design_path,
+        source,
+        reading,
+        rules: &then.rules,
+        name: &name,
+        design: &design,
+        profile,
+        format,
+        says: then.says.clone(),
+    };
     let phase = then.result.phase.unwrap_or(Phase::Plan);
     let now = bundle(&run, borrowed(&guarded_sew(&run, phase)));
     let mut out = String::new();

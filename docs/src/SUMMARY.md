@@ -45,6 +45,7 @@
     - [File formats](user/reference/formats.md)
     - [Test sheets](user/reference/test-sheets.md)
     - [Diagnostic codes](user/reference/diagnostics.md)
+    - [Automatic digitizing's rules](user/reference/auto-rules.md)
     - [Font settings](user/reference/font-settings.md)
     - [Parameters](user/reference/params.md)
       - [Common parameters](user/reference/params/common.md)

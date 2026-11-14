@@ -10,6 +10,8 @@ use clap::CommandFactory;
 use stitchcraft_cli::cli::Cli;
 use stitchcraft_cli::commands::{counts, trims_unmade};
 use stitchcraft_core::{Code, Severity};
+use stitchcraft_engine::auto::rules::{LEAN, PRESETS, RULES, filled};
+use stitchcraft_engine::auto::{ADVANCED, AutoParams};
 use stitchcraft_engine::testsheets::SHEETS;
 use stitchcraft_plan::profiles::BUILTIN;
 use stitchcraft_plan::{FormatId, TrimSupport};
@@ -21,7 +23,8 @@ const REFERENCE: &str = "docs/src/user/reference";
 
 /// Each page, by its file name in the reference directory, with the function that writes it.
 type Writer = fn() -> Result<String, String>;
-const PAGES: [(&str, Writer); 7] = [
+const PAGES: [(&str, Writer); 8] = [
+    ("auto-rules.md", || Ok(auto_rules())),
     ("profiles.md", || Ok(profiles())),
     ("formats.md", || Ok(formats())),
     ("test-sheets.md", test_sheets),
@@ -83,6 +86,42 @@ fn profiles() -> String {
         let _ = writeln!(out, "| Trims | {trims} |");
         let _ = writeln!(out, "| Thread palette | {} |", p.palette.palette().name);
         let _ = writeln!(out, "\n**Evidence.** {}", p.evidence);
+    }
+    out
+}
+
+/// The rules that choose an automatic shape's stitches, the styles and the settings by tier, from the
+/// rules' table and the registry of their settings.
+fn auto_rules() -> String {
+    let mut out = header("Automatic digitizing's rules", "`RULES` and `PRESETS` in `stitchcraft-engine`'s `auto::rules`, and `AutoParams`");
+    out.push_str(
+        "Automatic digitizing chooses the stitches of each part of a shape by the first of these rules that the part matches. Why each \
+         rule is there, and how a part is measured, is in [which stitch a shape gets](../../design/image-to-embroidery.md#which-stitch-a-shape-gets). \
+         The values are the defaults of the [settings](params/auto.md) that set them.\n\n| Rule | The part is | Sewn as | Settings |\n|---|---|---|---|\n",
+    );
+    let links = |keys: &[&str]| keys.iter().map(|key| format!("[`{key}`](params/auto.md#{key})")).collect::<Vec<_>>().join(", ");
+    for rule in RULES {
+        let _ = writeln!(out, "| {} (`{}`) | {} | {} | {} |", rule.label, rule.id.key(), filled(rule.is), filled(rule.sewn), links(rule.bounds));
+    }
+    let _ = write!(
+        out,
+        "\n`SC-I0912` names the rule each part of a shape sewed by, with the word in brackets above.\n\n## Styles\n\n\
+         `stitch plan --style` sets a named set of values on every shape digitized automatically that doesn't set them itself. \
+         `auto_prefer` moves 3 bounds together by a factor of {LEAN}.\n\n| Style | For | Sets |\n|---|---|---|\n"
+    );
+    for preset in PRESETS {
+        let sets: Vec<String> = preset.values.iter().map(|(key, value)| format!("[`{key}`](params/auto.md#{key}) to `{value}`")).collect();
+        let _ = writeln!(out, "| `{}` | {} | {} |", preset.name, preset.help, sets.join(", "));
+    }
+    out.push_str(
+        "\n## Where each setting is set\n\nA shape's settings are those of VectorCraft's Auto effect on it, or on the group or the layer it is in. \
+         `stitch plan --set KEY=VALUE` sets one on every automatic shape that doesn't set it. The advanced settings are the rules' bounds, \
+         which the Auto effect's dialog leaves out.\n\n| Setting | Default | In the Auto effect's dialog |\n|---|---|---|\n",
+    );
+    for spec in AutoParams::SPECS {
+        let default = format!("{} {}", spec.default, spec.kind.unit());
+        let shown = if spec.group == ADVANCED { "no: advanced" } else { "yes" };
+        let _ = writeln!(out, "| [`{}`](params/auto.md#{}) | {} | {shown} |", spec.key, spec.key, default.trim_end());
     }
     out
 }

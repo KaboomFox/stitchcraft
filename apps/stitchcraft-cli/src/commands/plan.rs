@@ -122,8 +122,15 @@ impl Sewn {
 
 /// The design file `design`, of the kind `source`, read as `reading` asks, planned for `profile` and written in
 /// `format`, with `name` as the design name machines show, and the file read back.
-pub fn sew(source: Source, design: &[u8], reading: Reading, profile: &MachineProfile, format: FormatId, name: &str) -> Sewn {
-    let (design, warnings) = match source.read(design, reading) {
+pub fn sew(
+    source: Source,
+    design: &[u8],
+    (reading, rules): (Reading, &[(String, String)]),
+    profile: &MachineProfile,
+    format: FormatId,
+    name: &str,
+) -> Sewn {
+    let (design, warnings) = match source.read(design, reading).map(|(design, warnings)| (design.automatic_with(rules), warnings)) {
         Ok(read) => read,
         Err(unreadable) => return Sewn { diagnostics: vec![unreadable], plan: None, file: None, back: None },
     };
@@ -203,7 +210,18 @@ pub fn run(args: &PlanArgs) -> Outcome {
         (Source::of(&args.design), bytes, reading)
     };
     let profile = machine_for(asked, source, &design);
-    let run = Run { design_path: &args.design, source, reading, name: design_name(&args.design), design: &design, profile, format, says: None };
+    let rules = args.reading.rules();
+    let run = Run {
+        design_path: &args.design,
+        source,
+        reading,
+        rules: &rules,
+        name: design_name(&args.design),
+        design: &design,
+        profile,
+        format,
+        says: None,
+    };
     // A panic is a bug in StitchCraft: with the design's bytes in hand, and where it came, a bundle can
     // reproduce it (`REQ-CLI-002`).
     let phase = Cell::new(Phase::Plan);
@@ -230,7 +248,7 @@ fn traced(args: &PlanArgs, profile: &MachineProfile, bytes: &[u8]) -> Result<Vec
 /// `stitch plan` once the design is read: planned and, unless StitchCraft found a bug in itself, written.
 /// `phase` follows where it is, for a bundle.
 fn planned(args: &PlanArgs, run: &Run, phase: &Cell<Phase>) -> Outcome {
-    let sewn = sew(run.source, run.design, run.reading, run.profile, run.format, run.name);
+    let sewn = sew(run.source, run.design, (run.reading, run.rules), run.profile, run.format, run.name);
     if sewn.found_a_bug() {
         let refused = refuse(args, run.profile, &sewn.diagnostics);
         return bug_report::beside(&args.output, run, Ok(&sewn), refused);
@@ -456,11 +474,62 @@ mod tests {
         let (auto, plain) = (dir.join("auto.pes"), dir.join("plain.pes"));
         let out = run(&PlanArgs { reading: ReadingArgs { auto: true, ..ReadingArgs::default() }, ..args(design.clone(), auto.clone()) });
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
-        assert_eq!(out.stderr, "info SC-I0901: 1 shape is digitized automatically: it sews as a satin column.\n");
+        let rule = "info SC-I0912 (svg:line:stroke): This shape sews by the rule column (3 mm wide).\n";
+        assert_eq!(out.stderr, format!("info SC-I0901: 1 shape is digitized automatically: it sews as a satin column.\n{rule}"));
         // Without the switch, the line runs, as it did before.
         let out = run(&args(design, plain.clone()));
         assert_eq!((out.status, out.stderr.as_str()), (Status::Done, ""));
         assert_ne!(std::fs::read(auto).unwrap(), std::fs::read(plain).unwrap());
+    }
+
+    /// A T of a stroke 4 mm wide and one 1.5 mm wide, without settings: uneven, to automatic digitizing's rules.
+    const THICK_AND_THIN: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" width="30mm" height="30mm" viewBox="0 0 30 30"><path id="t" d="M0,0 H20 V4 H10.75 V16 H9.25 V4 H0 Z" fill="red"/></svg>"#;
+
+    #[test]
+    fn req_auto_030_stitch_plan_sets_the_rules_settings_and_a_style_on_every_automatic_shape() {
+        use clap::Parser;
+
+        use crate::cli::{Cli, Command};
+
+        let dir = TempDir::new("plan-rules");
+        let (design, output) = (dir.join("t.svg"), dir.join("t.pes"));
+        std::fs::write(&design, THICK_AND_THIN).unwrap();
+        let parsed = |options: &[&str]| {
+            let (design, output) = (design.to_str().unwrap(), output.to_str().unwrap());
+            Cli::try_parse_from(["stitch", "plan", design, "-o", output, "--auto"].into_iter().chain(options.iter().copied()))
+        };
+        // What the shape says of its rule, planned with these options.
+        let said = |options: &[&str]| {
+            let Command::Plan(args) = parsed(options).unwrap().command else { panic!("not a plan") };
+            let out = run(&args);
+            assert_eq!(out.status, Status::Done, "{options:?}: {}", out.stderr);
+            out.stderr.lines().find(|line| line.contains("SC-I0912")).unwrap().to_string()
+        };
+        // By default the T is uneven, and filled. The logo style keeps its 2 columns, and so does the switch
+        // alone. The photo style is the defaults.
+        assert!(said(&[]).starts_with("info SC-I0912 (svg:t:fill): This shape sews by the rule uneven ("), "{}", said(&[]));
+        assert!(said(&["--style", "logo"]).contains("the rule column ("));
+        assert!(said(&["--set", "auto_fill_uneven=false"]).contains("the rule column ("));
+        assert!(said(&["--style", "photo"]).contains("the rule uneven ("));
+        // A setting given goes before the style's, and the last of a key given twice counts.
+        assert!(said(&["--style", "logo", "--set", "auto_fill_uneven=true", "--set", "auto_prefer=balanced"]).contains("the rule uneven ("));
+        assert!(said(&["--set", "auto_fill_uneven=true", "--set", " auto_fill_uneven = false "]).contains("the rule column ("));
+        // An advanced setting, which no dialog shows: with a bound of 0.5 the T's width varies within it.
+        assert!(said(&["--set", "auto_max_unevenness=0.5"]).contains("the rule column ("));
+        // A key that is no setting of the rules, a setting without a value and a style unknown are refused
+        // before anything is read.
+        let refused = |options: &[&str]| parsed(options).unwrap_err().to_string();
+        assert!(
+            refused(&["--set", "angle=45"]).contains("`angle` isn't a setting of automatic digitizing's rules"),
+            "{}",
+            refused(&["--set", "angle=45"])
+        );
+        assert!(refused(&["--set", "auto_prefer"]).contains("`auto_prefer` isn't KEY=VALUE"));
+        assert!(refused(&["--style", "fur"]).contains("`fur` isn't a style: the styles are logo, photo"));
+        // A value that doesn't read is said as a shape's own is, and the shape sews nothing (SC-E0101).
+        let Command::Plan(args) = parsed(&["--set", "auto_prefer=sideways"]).unwrap().command else { panic!("not a plan") };
+        let out = run(&args);
+        assert!(out.status == Status::DesignErrors && out.stderr.contains("SC-E0101"), "{}", out.stderr);
     }
 
     /// Red, blue and red squares 10 mm apart, without settings: tatami fills, as Ink/Stitch sews them.
@@ -659,8 +728,14 @@ mod tests {
         let (output, preview) = (dir.join("picture.dst"), dir.join("picture.png"));
         let out = run(&PlanArgs { preview: Some(preview.clone()), ..args(fixture("strokes.svg"), output) });
         assert_eq!(out.status, Status::Done, "{}", out.stderr);
-        let sewn =
-            sew(Source::Svg, &std::fs::read(fixture("strokes.svg")).unwrap(), Reading::default(), profiles::REFERENCE, FormatId::Dst, "picture");
+        let sewn = sew(
+            Source::Svg,
+            &std::fs::read(fixture("strokes.svg")).unwrap(),
+            (Reading::default(), &[]),
+            profiles::REFERENCE,
+            FormatId::Dst,
+            "picture",
+        );
         let drawn = std::fs::read(&preview).unwrap();
         let (back, plan) = (sewn.back.as_ref().unwrap(), sewn.plan.as_ref().unwrap());
         assert_eq!(drawn, picture(back, profiles::REFERENCE.trims).unwrap().png);
@@ -706,13 +781,13 @@ mod tests {
         // the rest (`REQ-GEN-002`), as it does for a fill of 2,000 spikes after 12 s.
         let (output, preview, report) = (dir.join("left-out.pes"), dir.join("left-out.png"), dir.join("left-out.json"));
         let design = std::fs::read(fixture("strokes.svg")).unwrap();
-        let mut sewn = sew(Source::Svg, &design, Reading::default(), profiles::REFERENCE, FormatId::PesV1, "strokes");
+        let mut sewn = sew(Source::Svg, &design, (Reading::default(), &[]), profiles::REFERENCE, FormatId::PesV1, "strokes");
         let fill = ElementId::new("svg:patch:fill").unwrap();
         sewn.diagnostics.push(Budget::DEFAULT.meter().charge(u64::MAX).unwrap_err().diagnostic(&Budget::DEFAULT, Some(fill)));
         assert!(sewn.plan.is_some() && sewn.file.is_some());
         let asked = PlanArgs { preview: Some(preview.clone()), report: Some(report.clone()), ..args(fixture("strokes.svg"), output.clone()) };
         let (path, reading, profile, format) = (fixture("strokes.svg"), Reading::default(), profiles::REFERENCE, FormatId::PesV1);
-        let run = Run { design_path: &path, source: Source::Svg, reading, name: "strokes", design: &design, profile, format, says: None };
+        let run = Run { design_path: &path, source: Source::Svg, reading, rules: &[], name: "strokes", design: &design, profile, format, says: None };
         let out = written(&asked, &run, sewn, &Cell::new(Phase::Plan));
         assert_eq!(out.status, Status::DesignErrors);
         assert!(out.stderr.contains("\nerror SC-E0004 (svg:patch:fill): ") && out.stderr.ends_with("nothing was written\n"), "{}", out.stderr);
@@ -746,7 +821,7 @@ mod tests {
             .map(|i| format!(r#"<path d="M 0 {} H 10" stroke="{}" fill="none"/>"#, f64::from(i) * 0.5, if i % 2 == 0 { "red" } else { "blue" }))
             .collect();
         let svg = format!(r#"<svg xmlns="http://www.w3.org/2000/svg" width="20mm" height="140mm" viewBox="0 0 20 140">{lines}</svg>"#);
-        let sewn = |format| sew(Source::Svg, svg.as_bytes(), Reading::default(), REFERENCE, format, "many");
+        let sewn = |format| sew(Source::Svg, svg.as_bytes(), (Reading::default(), &[]), REFERENCE, format, "many");
         let errors = |sewn: &Sewn| sewn.diagnostics.iter().filter(|d| d.severity() == Severity::Error).map(ToString::to_string).collect::<Vec<_>>();
         let pes = sewn(FormatId::PesV1);
         assert_eq!(errors(&pes), ["error SC-E0601: The design has 256 colour changes and stops, but PES v1 records at most 255."]);

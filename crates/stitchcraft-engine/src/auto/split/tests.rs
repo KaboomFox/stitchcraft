@@ -30,9 +30,13 @@ fn cut_of(points: &[(f64, f64)], part: &Polygon) -> (Vec<Point>, Vec<[Point; 2]>
 /// 1 mm apart along the tab.
 const TAB: [(f64, f64); 7] = [(21.0, 8.5), (32.0, 8.5), (32.0, 11.5), (20.0, 11.5), (19.4, 10.6), (19.6, 9.2), (20.4, 8.7)];
 
+/// The widest satin column by default, in millimetres: the disc these parts are opened with, which is also
+/// the narrowest piece that stays in their fill here, so that every narrow piece leaves it.
+const WIDEST: f64 = 7.0;
+
 /// `part` split, with the default budget.
 fn split_of(part: &Polygon) -> Split {
-    split(part, &AutoParams::defaults(), &mut Budget::DEFAULT.meter()).unwrap().unwrap()
+    split(part, WIDEST, WIDEST, 1.0, &mut Budget::DEFAULT.meter()).unwrap().unwrap()
 }
 
 /// The narrow parts of `split`.
@@ -232,8 +236,7 @@ fn req_auto_020_a_narrow_part_reaching_exactly_the_smallest_area_past_the_broad_
     // smaller area is a speck; with anything larger, it stays in the fill.
     let whole = square_with_tab(6.0);
     let mut meter = Budget::DEFAULT.meter();
-    let defaults = AutoParams::defaults();
-    let radius = narrow::half(defaults.auto_max_satin_width_mm);
+    let radius = narrow::half(WIDEST);
     let buffered = |parts: &[Polygon], by: f64, meter: &mut Meter| ops::buffered(parts, by, meter).unwrap().unwrap();
     let shrunk = buffered(std::slice::from_ref(&whole), -radius, &mut meter);
     let broad = ops::intersection(&buffered(&shrunk, radius, &mut meter), std::slice::from_ref(&whole), &mut meter).unwrap().unwrap();
@@ -242,10 +245,7 @@ fn req_auto_020_a_narrow_part_reaching_exactly_the_smallest_area_past_the_broad_
     let reach = buffered(&shrunk, 2.0 * radius, &mut meter);
     let beyond = area_of(&ops::difference(std::slice::from_ref(tab), &reach, &mut meter).unwrap().unwrap());
     assert!(beyond > 1.0 && beyond < tab.area(), "{beyond} of {}", tab.area());
-    let split_with = |smallest: f64| {
-        let rules = AutoParams { auto_min_area_mm2: smallest, ..defaults.clone() };
-        split(&whole, &rules, &mut Budget::DEFAULT.meter()).unwrap().unwrap()
-    };
+    let split_with = |smallest: f64| split(&whole, WIDEST, WIDEST, smallest, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
     assert_eq!(split_with(beyond).narrow.len(), 1);
     assert!(split_with(beyond.next_up()).narrow.is_empty());
 }
@@ -279,4 +279,83 @@ fn req_auto_019_a_chord_along_the_outline_from_a_corner_of_the_part_crosses_noth
     // A ring's edge across the chord crosses it.
     let across = [p(10.0, 0.0), p(10.0, 3.0), p(5.0, -2.0), p(0.0, 3.0), p(0.0, 0.0)];
     assert!(!crosses_nothing(&across, &part, &mut meter).unwrap());
+}
+
+#[test]
+fn req_auto_034_the_fill_goes_on_as_far_as_a_narrower_disc_fits() {
+    // A body 12 mm square with an arm 24 mm long along its bottom. Opened with a disc 7 mm across alone, an
+    // arm 6 mm wide leaves the fill. With the fill going on as far as a disc 4 mm across fits, it stays, and
+    // an arm 3 mm wide leaves, cut where it meets the body.
+    let armed = |wide: f64| part(&[(0.0, 0.0), (12.0, 0.0), (12.0, 12.0), (36.0, 12.0), (36.0, 12.0 + wide), (0.0, 12.0 + wide)], &[]);
+    let split_at = |part: &Polygon, keep: f64| split(part, WIDEST, keep, 1.0, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    let wide = armed(6.0);
+    assert_eq!(split_at(&wide, WIDEST).narrow.len(), 1);
+    let kept = split_at(&wide, 4.0);
+    assert!(kept.narrow.is_empty() && kept.fill == [wide], "{kept:?}");
+    let narrow = split_at(&armed(3.0), 4.0);
+    let [arm] = narrow.narrow.as_slice() else { panic!("{:?}", narrow.narrow) };
+    assert!((arm.part.area() - 72.0).abs() < 3.0 && arm.cuts.len() == 1, "{} {:?}", arm.part.area(), arm.cuts);
+    assert!((area_of(&narrow.fill) + arm.part.area() - armed(3.0).area()).abs() < 1e-6);
+    // A piece of what the narrower disc leaves that meets no broad part isn't the fill's: a lobe 5 mm wide
+    // on a neck 2 mm wide leaves the fill with its neck.
+    let lobed = part(
+        &[
+            (0.0, 0.0),
+            (12.0, 0.0),
+            (12.0, 5.0),
+            (16.0, 5.0),
+            (16.0, 3.5),
+            (26.0, 3.5),
+            (26.0, 8.5),
+            (16.0, 8.5),
+            (16.0, 7.0),
+            (12.0, 7.0),
+            (12.0, 12.0),
+            (0.0, 12.0),
+        ],
+        &[],
+    );
+    let found = split_at(&lobed, 4.0);
+    let [lobe] = found.narrow.as_slice() else { panic!("{:?}", found.narrow) };
+    assert!(lobe.part.area() > 50.0 && found.fill.len() == 1, "{}", lobe.part.area());
+}
+
+#[test]
+fn req_auto_032_an_uneven_part_s_bridge_stays_in_its_fill_and_its_tail_leaves() {
+    // 2 blobs 3 mm square joined by a bridge 0.6 mm wide and 6 mm long, one with a tail 0.6 mm wide and 8 mm
+    // long. Opened with a disc 1 mm across, the bridge and the tail are both narrow pieces. The bridge meets
+    // both blobs, and stays in the fill, which is then one part. The tail meets one, and leaves.
+    let dumbbell = |tail: bool| {
+        let mut outline = vec![
+            (0.0, 0.0),
+            (3.0, 0.0),
+            (3.0, 1.2),
+            (9.0, 1.2),
+            (9.0, 0.0),
+            (12.0, 0.0),
+            (12.0, 3.0),
+            (9.0, 3.0),
+            (9.0, 1.8),
+            (3.0, 1.8),
+            (3.0, 3.0),
+        ];
+        outline.extend(if tail { vec![(1.8, 3.0), (1.8, 11.0), (1.2, 11.0), (1.2, 3.0)] } else { Vec::new() });
+        outline.push((0.0, 3.0));
+        part(&outline, &[])
+    };
+    let tails_of = |part: &Polygon| tails(part, 1.0, 1.0, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    // Split as an area's part is, both pieces leave, and the fill is 2 blobs.
+    let both = split(&dumbbell(true), 1.0, 1.0, 1.0, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    assert_eq!((both.narrow.len(), both.fill.len()), (2, 2));
+    let found = tails_of(&dumbbell(true));
+    let [tail] = found.narrow.as_slice() else { panic!("{:?}", found.narrow) };
+    assert!((tail.part.area() - 4.8).abs() < 0.5 && tail.part.outline.iter().all(|q| q.y() > 2.0), "{:?}", tail.part);
+    assert!(found.fill.len() == 1 && (area_of(&found.fill) + tail.part.area() - dumbbell(true).area()).abs() < 1e-6, "{:?}", found.fill);
+    // With no tail, the part is its own fill, whole.
+    let bridged = tails_of(&dumbbell(false));
+    assert!(bridged.narrow.is_empty() && bridged.fill == [dumbbell(false)], "{bridged:?}");
+    // A blob with a tail and no bridge has a fill of one part, and is split as any part is.
+    let blob = part(&[(0.0, 0.0), (3.0, 0.0), (3.0, 3.0), (1.8, 3.0), (1.8, 11.0), (1.2, 11.0), (1.2, 3.0), (0.0, 3.0)], &[]);
+    assert_eq!(tails_of(&blob), split(&blob, 1.0, 1.0, 1.0, &mut Budget::DEFAULT.meter()).unwrap().unwrap());
+    assert_eq!(tails_of(&blob).narrow.len(), 1);
 }
