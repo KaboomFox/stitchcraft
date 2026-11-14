@@ -1044,7 +1044,7 @@ style = "realistic"
 fabric = "#000000"
 scale = 4.5
 allow = ["SC-I0901", "SC-I0902", "SC-I0904", "SC-I0907", "SC-I0908", "SC-W0208", "SC-I0504", "SC-I0909"]
-alt = "The traced running dog digitized automatically, as it sews on black fabric: the same stitches as on unbleached cotton. Its white face and chest and its tan legs stand out, and its black patches merge with the fabric. Black shows through in a few slits a thread wide beside the thinnest lines of fur."
+alt = "The traced running dog digitized automatically, as it sews on black fabric: the same stitches as on unbleached cotton. Its white face and chest and its tan legs stand out, and its black patches merge with the fabric. No black fabric shows between its patches."
 
 [[shot]]
 id = "auto-widths-drawn"

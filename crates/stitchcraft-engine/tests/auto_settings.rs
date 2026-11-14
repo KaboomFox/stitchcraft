@@ -79,7 +79,7 @@ fn req_auto_020_the_rules_settings_are_stitchcraft_s_own_and_no_stitch_type_read
     let base = [
         ("auto_base_layer", "true"),
         ("auto_base_stitch_length_mm", "3"),
-        ("auto_base_offset_mm", "-0.6"),
+        ("auto_base_offset_mm", "-0.4"),
         ("auto_base_keep_holes", "true"),
         ("auto_base_sliver_mm2", "0.4"),
         ("auto_base_bare_percent", "0.5"),
@@ -95,7 +95,7 @@ fn req_auto_020_the_rules_settings_are_stitchcraft_s_own_and_no_stitch_type_read
     assert_eq!((read.auto_max_satin_width_mm, read.auto_min_triple_run_width_mm), (Mm::new(7.0).unwrap(), Mm::new(0.5).unwrap()));
     assert_eq!((read.auto_overlap_mm.get(), read.auto_min_area_mm2, read.auto_ignore_background), (1.0, 1.0, true));
     assert_eq!((read.auto_pull_compensation_mm.get(), read.auto_base_layer, read.auto_base_keep_holes), (0.4, true, true));
-    assert_eq!((read.auto_base_stitch_length_mm.get(), read.auto_base_offset_mm.get()), (3.0, -0.6));
+    assert_eq!((read.auto_base_stitch_length_mm.get(), read.auto_base_offset_mm.get()), (3.0, -0.4));
 }
 
 #[test]

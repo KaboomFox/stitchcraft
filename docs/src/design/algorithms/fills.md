@@ -248,7 +248,7 @@ Each part's segments are sewn once each, in the order Ink/Stitch routes them
 
    `turn_stitches`, StitchCraft's own switch, keeps the handover on such a machine (`REQ-FILL-TAT-014`).
    A turn is a stitch shorter than the shortest stitch between 2 stitches that run opposite ways. Its 2
-   needle points move apart along the edge, each by half of what the turn falls short, and the turn is
+   needle points move apart along the edge, each by half of the length the turn lacks, and the turn is
    then as long as the shortest stitch: 0.3 mm for rows 0.25 mm apart, each point 0.025 mm off its row.
    A row's last needle point nearer the turn than the shortest stitch is left out for it. The switch is
    off by default, so a fill with settings sews as before. Automatic digitizing turns it on for its

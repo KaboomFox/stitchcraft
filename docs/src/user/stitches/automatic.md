@@ -120,7 +120,7 @@ each out, as `--subject` will from M13.14.
 **Digitized, on black fabric**
 
 <!-- shot: auto-dog-black -->
-![The traced running dog digitized automatically, as it sews on black fabric: the same stitches as on unbleached cotton. Its white face and chest and its tan legs stand out, and its black patches merge with the fabric. Black shows through in a few slits a thread wide beside the thinnest lines of fur.](../../images/generated/auto-dog-black.png)
+![The traced running dog digitized automatically, as it sews on black fabric: the same stitches as on unbleached cotton. Its white face and chest and its tan legs stand out, and its black patches merge with the fabric. No black fabric shows between its patches.](../../images/generated/auto-dog-black.png)
 <!-- /shot -->
 
 `stitch plan` traced the cut-out 100 mm tall with VectorCraft 0.22.0, into
@@ -237,14 +237,15 @@ overlap.
 You can't choose the colour of the fabric a design is sewn on, and on black fabric every place the thread
 leaves bare is a dark spot. So a design digitized automatically sews one base layer first, under all of
 it: an open fill of stitches 3 mm long in 3 directions, in the thread that the picture has the most of. It
-lies 0.6 mm inside the design's outline, so that it doesn't show beside the edge. The fills sewn on it
+lies 0.4 mm inside the design's outline, so that it doesn't show beside the edge. The fills sewn on it
 sew no underlay of their own (`SC-I0909`).
 
-With the base layer and the overlap of 1 mm, no fabric shows inside the pear or the traced dogs. Where
+With the base layer and the overlap of 1 mm, the pear and the traced dogs cover the fabric inside their
+outlines. Where
 thin lines of fur meet, the top thread still leaves a sliver here and there, and the base layer's thread
 shows in it in place of the fabric. The running dog above has 2 slivers, each under 0.14 mm², in
-1,944 mm² of design. The base layer adds 639 stitches to that dog, about a minute of sewing, and the pear
-sews 110 stitches fewer with it than with an underlay under each fill.
+1,944 mm² of design. The base layer adds 675 stitches to that dog, about a minute of sewing. The pear
+sews 80 stitches fewer with it than with an underlay under each fill.
 
 To sew without the base layer, turn `auto_base_layer` off. Each fill then sews its own underlay, and
 StitchCraft says that fabric may show between shapes (`SC-I0911`). The

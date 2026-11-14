@@ -56,7 +56,7 @@ what shows of it, and a broad area is filled whole under the details on it, so a
 colours stacked sews as one traced with them abutting. A disc or a square no wider than a satin column is a
 dot, which stays in the fill. TS-13D sews an emblem and a button traced both ways. The owner's dog, cut out
 of her 2 photos and traced, is a test picture whose cases CI runs in the release build, and the 3 stitches it
-still lays astray are listed for M13.17 and M13.18 and its jump threads for M13.17 (M13.15). A design digitized automatically covers fabric of any colour: one base layer sews first under all of it, neighbours overlap by 1 mm, a fill's rows turn in stitches at its outline, and the top thread leaves only slivers of at most 0.4 mm² to the base layer (M13.16). Contour fills are sewn
+still lays astray are listed for M13.17 and M13.18 and its jump threads for M13.17 (M13.15). A design digitized automatically covers fabric of any colour (M13.16). One base layer sews first under all of it, and neighbours overlap by 1 mm. What the top thread still leaves bare is slivers of at most 0.4 mm², with the base layer under them. Contour fills are sewn
 as Ink/Stitch sews them, inner to outer or in a spiral or double spiral, and TS-11B samples them for MC-6
 (M7.7). A meander fill wanders through the sides of a tiling made in code, and TS-11C samples its 7 tiles
 (M7.8). A circular fill sews a spiral round each part's middle, its pieces routed as a tatami fill's rows,

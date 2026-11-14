@@ -170,7 +170,10 @@ Rules every generator follows:
   stitches as lock. The jumps between groups are travel. Previews draw the lock stitches apart. A
   generator hands assembly its needle points without roles, so an element's underlay, and the running
   stitches between its rows, are tagged top as well, until generators tag their own. From M10.15 the
-  stitches of a run's underlays are tagged underlay ([underlays first](#underlays-first)).
+  stitches of a run's underlays are tagged underlay ([underlays first](#underlays-first)). Every stitch
+  of a design's base layer is tagged underlay too, its top rows among them
+  ([covering the fabric](image-to-embroidery.md#one-underlay-under-the-whole-design)). Planning names what
+  a base layer's piece generated `Layer::Base`. Assembly tags that layer underlay.
 
 Generators are listed in [algorithms](algorithms/).
 

@@ -129,12 +129,18 @@ changes them:
   VectorCraft turns it off (`auto_base_layer`), and each fill then sews its own underlay.
 - On black, does fabric show between patches, with the base layer and without it?
 - The top thread of this dog leaves 2 slivers, 0.135 and 0.12 mm², and 0.073 % of the design bare. The
-  measure passes a sliver of up to 0.4 mm² over the base layer or at the design's outline, and 0.5 % bare
+  measure passes slivers up to 0.4 mm² over the base layer or within 0.4 mm of the design's outline, and 0.5 % bare
   in all (`auto_base_sliver_mm2`, `auto_base_bare_percent`). Both limits are StitchCraft's own, set from
   the 4 traced dogs. With the base layer on, can a sliver be found by eye, and does the base layer's
   thread hide it? The dog on turf in 9 threads has the most, 10 slivers up to 0.335 mm²: sew it on black
   too when the first dog leaves the question open.
-- Does the base layer's thread show beside a patch's edge, or through a lighter fill sewn over it?
+- Does the base layer's thread show beside a patch's edge, or through a lighter fill sewn over it? The
+  base layer lies 0.4 mm inside the design's outline, a value of StitchCraft's own, and the measure doesn't
+  model how far real thread pulls an edge in. By the measure, 0.23 mm² of base thread lies uncovered
+  within 0.4 mm of this dog's outline on another colour, the nearest 0.18 mm from it, against 0.02 mm²
+  with the base layer 0.6 mm inside. The dog on turf in 9 threads has the most, 0.70 mm² against 0.07 mm²
+  ([the numbers](../design/image-to-embroidery.md#settings-of-the-cover)). Look along the outline on
+  black fabric. Where base thread shows there, sew again with `auto_base_offset_mm` at −0.6 mm.
 - Which dog lies flatter and softer, and which puckers less?
 - Does the overlap of 1 mm show as a ridge where 2 patches meet?
 - Do the fills' edges sew cleanly where the rows turn, or does the thread pile up or break there?

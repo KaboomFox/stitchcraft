@@ -435,7 +435,7 @@ fn req_auto_004_parts_too_small_to_sew_are_named() {
         [
             "info SC-I0901: 1 shape is digitized automatically: it sews as a tatami fill.",
             "info SC-I0905: A part of this area, of 0.1 mm², is too small to sew and shares no edge with an automatic area, so it is left out.",
-            "info SC-I0909: A base layer of 165.44 mm² in 1 piece sews first under the design, in the thread #c80000."
+            "info SC-I0909: A base layer of 176.64 mm² in 1 piece sews first under the design, in the thread #c80000."
         ]
     );
 }

@@ -315,7 +315,7 @@ After sewing, check:
 
 ## TS-13A — Pictures digitized automatically: neighbours and sewing order
 
-126.0 × 167.8 mm · 25880 stitches, 36 jumps, 35 trims, 21 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+126.0 × 167.8 mm · 25969 stitches, 36 jumps, 35 trims, 21 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -330,7 +330,7 @@ After sewing, check:
 - The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Top row, left to right: a badge traced abutting and one traced stacked, each 40 mm across, and a blue disc with 7 red specks round it. Bottom row: 3 badges drawn badge by badge, and a gold square with a blue bar beside it.
 - The bottom half changes thread 16 times and jumps 15 times, the top half 4 and 21 times. The base layer's thread and pieces are among the top half's. How long does each half take?
 - Does fabric show between colours, on either half? On the top half, each area reaches 1 mm under the next: does that cover the gap, or show as a ridge?
-- On the top half, a base layer sews first under all the shapes, in the red that paints the most of them: an open fill in 3 directions, 0.6 mm inside the shapes' outer edges, and the fills on it sew no underlay of their own. Does it show beside a shape's edge, or through the gold and the blue? Do the fills on it lie as flat as those of the bottom half, which sew their own underlays?
+- On the top half, a base layer sews first under all the shapes, in the red that paints the most of them: an open fill in 3 directions, 0.4 mm inside the shapes' outer edges, and the fills on it sew no underlay of their own. Does it show beside a shape's edge, or through the gold and the blue? Do the fills on it lie as flat as those of the bottom half, which sew their own underlays?
 - On the top half, the stacked badge sews only what shows of each colour, as the abutting badge beside it does: the red disc whole, cut away under the square, and the blue square's ring round the gold disc. Does it sew as flat as the abutting badge? On the bottom half, it sews its lower colours whole, under the upper ones.
 - On the bottom half, each speck round the disc sews a red knot. On the top half, the 6 specks that touch the disc are blue, part of it, and the one apart is left out. Does the disc's edge show where they were?
 - The blue bar meets the gold square along the top half of its side, and runs on 0.5 mm from it below. On the top half, the bar, sewn first, reaches under the square only where they meet. Does the fabric that shows below read as a gap drawn there?
@@ -339,7 +339,7 @@ After sewing, check:
 
 ## TS-13B — Pictures digitized automatically: letters and lines traced as areas
 
-110.6 × 148.4 mm · 15480 stitches, 61 jumps, 60 trims, 16 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+110.6 × 148.4 mm · 15768 stitches, 63 jumps, 62 trims, 16 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -352,10 +352,10 @@ Threads: Black, Red, Blue, Deep Gold, Black, Red, Blue, Deep Gold, Black, Red, B
 After sewing, check:
 
 - The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left: the word MATCH in block letters 15, 10, 6 and 4 mm tall, top to bottom, each letter traced as an area. Right: 3 windows, top to bottom, whose black lines, traced as areas, are 0.3, 0.6 and 0.9 mm wide. One line runs down each window, and a branch runs across to its right side from it.
-- The bottom half changes thread 12 times and jumps 16 times, the top half 4 and 45 times. A letter filled sews in one piece, and digitized it is columns and lines with jumps between them. How long does each half take?
+- The bottom half changes thread 12 times and jumps 16 times, the top half 4 and 47 times. A letter filled sews in one piece, and digitized it is columns and lines with jumps between them. How long does each half take?
 - Which is the smallest word that reads, on each half?
 - On the top half, the letters from 6 mm tall sew as satin columns between their own edges, and the 4 mm ones as triple runs along their middles. Do the columns' stitches lie square to their strokes, round the C's bend and the A's hole?
-- Where a column ends under another, as the T's stem does under its bar, 0.4 mm longer, or 1 mm when the column is up to 2 mm wide, does fabric show there, or a ridge? Does a crossbar sewn as a column of its own, as the H's is, read as one stroke with its stems? The M's and the A's feet should end flat along the baseline, and the C's ends round.
+- Where a column ends under another, 0.4 mm longer, as the T's stem does under its bar, does fabric show there, or a ridge? Does a crossbar sewn as a column of its own, as the H's is, read as one stroke with its stems? The M's and the A's feet should end flat along the baseline, and the C's ends round.
 - Do the underlays hold the columns up? With 0.4 mm of pull compensation, do they sew as wide as drawn? Measure the 15 mm T's stem, drawn 2.7 mm wide.
 - Where the M's strokes meet at sharp angles, its stitches lean along the columns (SC-W0208). Do they show?
 - On the top half, each window's lines sew along their middles after the areas beside them, which reach under them: a single run at 0.3 mm, and a triple run at 0.6 and 0.9 mm. Does each line reach as far as it is drawn? Do the triple runs look as wide as their lines, and the single run not too thin? Does fabric show along a line, or a gap or a knot where the branch ends at the line it meets?
@@ -363,7 +363,7 @@ After sewing, check:
 
 ## TS-13C — Pictures digitized automatically: lines, and shapes in parts
 
-111.4 × 107.6 mm · 11229 stitches, 28 jumps, 27 trims, 10 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+111.4 × 107.6 mm · 11273 stitches, 28 jumps, 27 trims, 10 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -386,7 +386,7 @@ After sewing, check:
 
 ## TS-13D — Pictures digitized automatically: pictures traced in layers
 
-115.0 × 108.4 mm · 27559 stitches, 33 jumps, 32 trims, 22 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+115.0 × 108.4 mm · 27601 stitches, 33 jumps, 32 trims, 22 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 

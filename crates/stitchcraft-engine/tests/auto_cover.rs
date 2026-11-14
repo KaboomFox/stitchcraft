@@ -18,7 +18,7 @@ use stitchcraft_testkit::pictures::{self, Trace};
 /// The base layer's element.
 const BASE: &str = "stitchcraft:base";
 /// How far the base layer lies inside the design's outer shape by default, in millimetres.
-const INSET: f64 = 0.6;
+const INSET: f64 = 0.4;
 /// The overlap by default, in millimetres.
 const OVERLAP: f64 = 1.0;
 
@@ -133,7 +133,7 @@ fn req_auto_027_a_gap_larger_than_a_sliver_shows_fabric_over_the_base_layer_too(
     // sliver of 0.4 mm², so the design doesn't cover, though it leaves less bare than 0.5 %.
     let (design, plan, said) = patched((2.0, 1.5), true);
     let cover = fabric::cover(&design, &plan, GAP);
-    assert_eq!(said, ["info SC-I0909: A base layer of 171.32 mm² in 1 piece sews first under the design, in the thread #f0f0f0."]);
+    assert_eq!(said, ["info SC-I0909: A base layer of 183.2 mm² in 1 piece sews first under the design, in the thread #f0f0f0."]);
     assert_eq!((cover.gaps, cover.beyond.as_slice(), cover.slivers(&rules())), (1, &[0.0][..], Vec::new()), "{cover:?}");
     assert!((cover.largest - 0.5925).abs() < 1e-9 && cover.bare_share() < cover.limit(&rules()), "{cover:?}");
     assert_eq!(cover.limit(&rules()), 0.005);
@@ -225,7 +225,7 @@ fn req_auto_028_one_base_layer_sews_first_under_the_designs_outer_shape() {
     let last = base.iter().map(|(at, _)| *at).max().unwrap();
     let first = ["red", "blue"].iter().flat_map(|id| stitches(&plan, id)).map(|(at, _)| at).min().unwrap();
     assert!(last < first, "the base layer's last stitch is the plan's {last}th, and a shape's first its {first}th");
-    // It lies inside the outer shape by 0.6 mm and reaches that far on every side: its rows end on its
+    // It lies inside the outer shape by 0.4 mm and reaches that far on every side: its rows end on its
     // outline, level ones on the left and right sides and those at 60° on all 4.
     let [left, right, top, bottom] = span(&base);
     for (side, at, wanted) in [("left", left, INSET), ("right", right, 50.0 - INSET), ("top", top, INSET), ("bottom", bottom, 20.0 - INSET)] {
@@ -263,14 +263,14 @@ fn req_auto_028_one_base_layer_sews_first_under_the_designs_outer_shape() {
 
 #[test]
 fn req_auto_028_the_base_layer_keeps_a_hole_and_leaves_a_part_narrower_than_twice_its_inset() {
-    // A square 30 mm a side with a hole 6 mm a side, and a strip 1 mm wide and 10 mm long from its right
+    // A square 30 mm a side with a hole 6 mm a side, and a strip 0.7 mm wide and 10 mm long from its right
     // side: Ink/Stitch's knockdown at an offset of -1 mm grows such a hole to 8 mm.
     let ring: [&[(f64, f64)]; 2] = [&[(0.0, 0.0), (30.0, 0.0), (30.0, 30.0), (0.0, 30.0)], &[(12.0, 12.0), (12.0, 18.0), (18.0, 18.0), (18.0, 12.0)]];
-    let holed = design(vec![fill("holed", &ring, &RED, &[]), rect("strip", (30.0, 14.5), (10.0, 1.0), &RED)]);
+    let holed = design(vec![fill("holed", &ring, &RED, &[]), rect("strip", (30.0, 14.65), (10.0, 0.7), &RED)]);
     let plan = plan(&holed);
     let base = stitches(&plan, BASE);
     assert!(!base.is_empty(), "the plan has no element {BASE}: {:?}", plan.elements);
-    // The base layer's rows end 0.6 mm from the hole. The offset rounds the hole's corners, and the stitches
+    // The base layer's rows end 0.4 mm from the hole. The offset rounds the hole's corners, and the stitches
     // that travel along the hole's edge between rows stray up to 0.2 mm from it, a fill's travel tolerance,
     // so no base stitch comes nearer the hole than 0.4 mm, neither its ends nor its middle.
     let apart = |at: f64| (12.0 - at).max(at - 18.0).max(0.0);
@@ -281,12 +281,12 @@ fn req_auto_028_the_base_layer_keeps_a_hole_and_leaves_a_part_narrower_than_twic
         .map(|(_, stitch)| [stitch.from, stitch.to])
         .collect();
     assert!(nearer.is_empty(), "{nearer:?}");
-    // The strip is narrower than twice the inset, so no base stitch lies on it, and the base layer ends 0.6
+    // The strip is narrower than twice the inset, so no base stitch lies on it, and the base layer ends 0.4
     // mm inside the square's sides. Where the strip leaves the right side the edge bulges towards it: the
-    // outer shape, grown by 0.2 mm, is 1.4 mm wide there, and the place 0.8 mm from both of its corners at
-    // x = 30.2 lies 0.387 mm to their left, the root of 0.8² − 0.7².
+    // outer shape, grown by 0.2 mm, is 1.1 mm wide there, and the place 0.6 mm from both of its corners at
+    // x = 30.2 lies 0.24 mm to their left, the root of 0.6² − 0.55².
     let [left, right, top, bottom] = span(&base);
-    let bulge = 30.2 - 0.387;
+    let bulge = 30.2 - 0.24;
     assert!((left - INSET).abs() < 0.05 && (right - bulge).abs() < 0.05, "{left} to {right}");
     let past = |p: Point| p.x() > 30.0 - INSET + 0.05 && (p.y() - 15.0).abs() > 0.7;
     assert!(base.iter().all(|(_, stitch)| !past(stitch.from) && !past(stitch.to)), "{left} to {right}");
@@ -329,12 +329,12 @@ fn req_auto_029_a_satin_column_reaches_1_mm_under_the_neighbour_sewn_after_it_an
 #[test]
 fn diag_sc_i0909_says_the_base_layers_area_pieces_and_thread() {
     let work = Budget::DEFAULT.max_work;
-    // 2 squares 20 mm a side, 10 mm apart: 2 pieces 18.8 mm a side, in red, which paints as much as blue and
+    // 2 squares 20 mm a side, 10 mm apart: 2 pieces 19.2 mm a side, in red, which paints as much as blue and
     // is drawn first.
     let apart = design(vec![rect("red", (0.0, 0.0), (20.0, 20.0), &RED), rect("blue", (30.0, 0.0), (20.0, 20.0), &BLUE)]);
     let (base, said, underlays) = based(&apart, work, Code::AutoBase);
     assert_eq!(base, [BASE, "stitchcraft:base#2"]);
-    assert_eq!(said, ["info SC-I0909: A base layer of 706.88 mm² in 2 pieces sews first under the design, in the thread #c80000."]);
+    assert_eq!(said, ["info SC-I0909: A base layer of 737.28 mm² in 2 pieces sews first under the design, in the thread #c80000."]);
     assert_eq!(underlays, [Some("false".to_string()), Some("false".to_string())]);
     let (_, diagnostics) = auto::digitized(&apart, &Budget::DEFAULT);
     let hint = diagnostics.iter().find(|d| d.code == Code::AutoBase).unwrap();
@@ -344,10 +344,10 @@ fn diag_sc_i0909_says_the_base_layers_area_pieces_and_thread() {
     let one = design(vec![rect("red", (0.0, 0.0), (20.0, 20.0), &RED)]);
     assert_eq!(
         based(&one, work, Code::AutoBase).1,
-        ["info SC-I0909: A base layer of 353.44 mm² in 1 piece sews first under the design, in the thread #c80000."]
+        ["info SC-I0909: A base layer of 368.64 mm² in 1 piece sews first under the design, in the thread #c80000."]
     );
-    // A square 2 mm a side sews as a dot, filled. 0.6 mm inside its sides nothing is left that is as large
-    // as the smallest area: it has no base layer, that is said, and it keeps the underlay of its settings.
+    // A square 2 mm a side sews as a dot, filled. 0.4 mm inside its sides a piece 1.2 mm a side is left, with
+    // no room for a row: it has no base layer, that is said, and it keeps the underlay of its settings.
     let dot = design(vec![rect("dot", (0.0, 0.0), (2.0, 2.0), &RED)]);
     let (base, said, underlays) = based(&dot, work, Code::AutoBase);
     let none =
@@ -410,13 +410,13 @@ fn req_auto_028_the_base_layer_goes_by_the_settings_of_the_lowest_shape() {
         let said = said[0].strip_prefix("info SC-I0909: A base layer of ").unwrap();
         said.split(' ').next().unwrap().parse().unwrap()
     };
-    // 40 by 30 mm with a hole 6 mm a side. The outer shape is grown by 0.2 mm and then moved in by 0.8 mm,
-    // which leaves 38.8 by 28.8 mm and a hole 7.2 mm a side with corners rounded at 0.8 mm. Without the
+    // 40 by 30 mm with a hole 6 mm a side. The outer shape is grown by 0.2 mm and then moved in by 0.6 mm,
+    // which leaves 39.2 by 29.2 mm and a hole 6.8 mm a side with corners rounded at 0.6 mm. Without the
     // hole, the whole rectangle.
     let rounded = |radius: f64| (4.0 - std::f64::consts::PI) * radius * radius;
-    assert!((area(&[]) - (38.8 * 28.8 - 7.2 * 7.2 + rounded(0.8))).abs() < 0.02, "{}", area(&[]));
+    assert!((area(&[]) - (39.2 * 29.2 - 6.8 * 6.8 + rounded(0.6))).abs() < 0.02, "{}", area(&[]));
     let whole = area(&[("auto_base_keep_holes", "false")]);
-    assert!((whole - 38.8 * 28.8).abs() < 0.01, "{whole}");
+    assert!((whole - 39.2 * 29.2).abs() < 0.01, "{whole}");
     // An offset of -1 mm lies 1 mm inside, and one of 0.5 mm that far outside, its corners rounded.
     let inside = area(&[("auto_base_offset_mm", "-1")]);
     assert!((inside - (38.0 * 28.0 - 8.0 * 8.0 + rounded(1.2))).abs() < 0.02, "{inside}");
@@ -439,23 +439,23 @@ fn req_auto_028_the_base_layer_goes_by_the_settings_of_the_lowest_shape() {
 #[test]
 fn req_auto_028_a_piece_with_no_room_for_a_row_and_a_design_of_columns_have_no_base_layer() {
     let work = Budget::DEFAULT.max_work;
-    // A square 20 mm a side, and 2 small ones apart from it that sew as dots, filled. The one 3.7 mm a side
+    // A square 20 mm a side, and 2 small ones apart from it that sew as dots, filled. The one 3.3 mm a side
     // leaves a piece 2.5 mm a side, on which a disc as wide as the row spacing, 2.6 mm, doesn't fit: it is
-    // left out. The one 3.9 mm a side leaves a piece 2.7 mm a side, which sews.
+    // left out. The one 3.5 mm a side leaves a piece 2.7 mm a side, which sews.
     let dots = design(vec![
         rect("big", (0.0, 0.0), (20.0, 20.0), &RED),
-        rect("small", (30.0, 0.0), (3.7, 3.7), &RED),
-        rect("larger", (40.0, 0.0), (3.9, 3.9), &RED),
+        rect("small", (30.0, 0.0), (3.3, 3.3), &RED),
+        rect("larger", (40.0, 0.0), (3.5, 3.5), &RED),
     ]);
     let (base, said, _) = based(&dots, work, Code::AutoBase);
     assert_eq!(base, [BASE, "stitchcraft:base#2"]);
-    assert_eq!(said, ["info SC-I0909: A base layer of 360.73 mm² in 2 pieces sews first under the design, in the thread #c80000."]);
+    assert_eq!(said, ["info SC-I0909: A base layer of 375.93 mm² in 2 pieces sews first under the design, in the thread #c80000."]);
     let (elements, _) = auto::digitized(&dots, &Budget::DEFAULT);
     let second = elements.iter().find(|element| element.id.as_str() == "stitchcraft:base#2").unwrap();
     let xs: Vec<f64> = second.shape.path().points().map(|point| point.x()).collect();
-    assert!(xs.iter().all(|x| (40.6 - 1e-6..=43.3 + 1e-6).contains(x)), "{xs:?}");
+    assert!(xs.iter().all(|x| (40.4 - 1e-6..=43.1 + 1e-6).contains(x)), "{xs:?}");
     // A band 3 mm wide alone sews as a satin column with the underlay of its width: no base layer, and
-    // nothing is said of one. Beside a square it is part of the design's outer shape, but its piece, 1.8 mm
+    // nothing is said of one. Beside a square it is part of the design's outer shape, but its piece, 2.2 mm
     // wide, has no room for a row.
     let band = || rect("band", (0.0, 30.0), (30.0, 3.0), &RED);
     assert_eq!(based(&design(vec![band()]), work, Code::AutoBase), (Vec::new(), Vec::new(), vec![None]));

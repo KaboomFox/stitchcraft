@@ -117,10 +117,11 @@ Ink/Stitch's Knockdown Fill do. Shorter stitches hide more of the fabric and sew
 ### `auto_base_offset_mm`
 
 **Base layer's offset.** How far outside the design's outer shape the base layer's edge lies: inside it when negative, so
-that no base stitch shows beside a shape once the thread has pulled the shape's edge in.
+that no base stitch shows beside a shape once the thread has pulled the shape's edge in. By
+default it lies as far inside as a satin column's pull compensation reaches outside.
 
 - **Accepts:** a length from -3 to 3 mm
-- **Default:** `-0.6`
+- **Default:** `-0.4`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 
@@ -130,5 +131,29 @@ that no base stitch shows beside a shape once the thread has pulled the shape's 
 
 - **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
 - **Default:** `true`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_base_sliver_mm2`
+
+**Largest sliver.** The largest gap in the top thread that is left to the base layer: a sliver. Where thin shapes
+meet, the top thread can leave a place this small bare, and the base layer's thread shows there
+in place of the fabric. Nothing sews differently by this value. It is a limit of the check of a
+design's cover: a larger gap fails the check, and so does a gap with no base layer under it.
+
+- **Accepts:** an area from 0 to 2 mm²
+- **Default:** `0.4`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_base_bare_percent`
+
+**Most left to the base layer.** The most of the design's area that the top thread may leave bare over the base layer, the
+slivers and the places narrower than a thread together. Nothing sews differently by this value.
+It is the other limit of the check of a design's cover. A design without a base layer is held to
+0.15 % and to no gap at all.
+
+- **Accepts:** a percentage from 0 to 5
+- **Default:** `0.5`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
