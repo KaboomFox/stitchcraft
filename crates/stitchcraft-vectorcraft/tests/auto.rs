@@ -130,7 +130,7 @@ fn req_auto_005_what_an_automatic_stroke_sewn_across_does_not_follow_is_named() 
 fn req_auto_003_a_line_traced_in_vectorcraft_sews_as_wide_and_as_long_as_drawn() {
     // As Image Trace's Create Strokes draws a line: a stroked centre line with round caps, in the group of
     // the trace. It is 50 points long and 2.5 mm wide, and sews as wide once the thread pulls it in: its
-    // stitches reach the overlap past each edge (REQ-AUTO-018).
+    // stitches reach its pull compensation past each edge, where no shape lies beside it (REQ-AUTO-029).
     let traced = group(9, &appearance(&[], &[]), &[line(2, "", &appearance(&[stroke(2.5, r#", "cap": "Round""#)], &[]))]);
     let read = read(&document(4, &traced), true);
     let origin = Point::new(0.0, 0.0).unwrap();
@@ -141,8 +141,8 @@ fn req_auto_003_a_line_traced_in_vectorcraft_sews_as_wide_and_as_long_as_drawn()
     let (left, right) = extent(points.iter().map(|q| q.x()).collect());
     let (top, bottom) = extent(points.iter().map(|q| q.y()).collect());
     let length = 50.0 * MM_PER_POINT;
-    let overlap = auto::rules(&stitchcraft_params::ParamSet::new()).unwrap().auto_overlap_mm.get();
-    assert!((top + 1.25 + overlap).abs() < 0.05 && (bottom - 1.25 - overlap).abs() < 0.05, "as wide as drawn: {top} to {bottom}");
+    let pull = auto::rules(&stitchcraft_params::ParamSet::new()).unwrap().auto_pull_compensation_mm.get();
+    assert!((top + 1.25 + pull).abs() < 0.05 && (bottom - 1.25 - pull).abs() < 0.05, "as wide as drawn: {top} to {bottom}");
     assert!((left + 1.25).abs() < 0.05 && (right - length - 1.25).abs() < 0.05, "caps included: {left} to {right}");
     assert_eq!(read.warnings.len(), 0, "{:?}", read.warnings);
     let said: Vec<String> = outcome.diagnostics.iter().map(ToString::to_string).collect();
@@ -171,11 +171,12 @@ fn req_vc_016_the_auto_effect_makes_what_it_reaches_automatic_with_its_settings(
         assert_eq!(common::params(element(&read, "vc:2:stroke")), [("auto_max_satin_width_mm", "4")]);
         assert_eq!(common::params(element(&read, "vc:6:fill")), [("auto_overlap_mm", "0.6")]);
     }
-    // A line 5 mm wide sews as a satin column, and with the effect's widest satin column of 4 mm it fills.
+    // A line 5 mm wide sews as a satin column, and with the effect's widest satin column of 4 mm it fills,
+    // on a base layer, which is left out here.
     let wide = |effects: &[(&str, &str)]| {
         let read = read(&document(4, &line(2, "", &effected(&[stroke(5.0, "")], effects))), true);
         let (elements, _) = auto::digitized(&read.design, &Budget::DEFAULT);
-        elements.iter().map(|e| matches!(e.shape, Shape::Fill { .. })).collect::<Vec<_>>()
+        elements.iter().filter(|e| !e.id.as_str().starts_with("stitchcraft:base")).map(|e| matches!(e.shape, Shape::Fill { .. })).collect::<Vec<_>>()
     };
     assert_eq!((wide(&[]), wide(&[("auto", settings)])), (vec![false], vec![true]));
 }
