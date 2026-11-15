@@ -125,6 +125,20 @@ class BuildTest(unittest.TestCase):
             table = build.sizes(app)
             self.assertIn('| **all files** |', table)
 
+    def test_a_change_to_the_drawing_or_its_finished_example_names_another_build(self):
+        hashed = [*build.SCRIPTS, 'start.mjs', 'templates/alpine-night.svg', 'templates/alpine-night.vctemplate']
+        with tempfile.TemporaryDirectory() as temp:
+            folder = Path(temp)
+            (folder / 'templates').mkdir()
+            for name in hashed:
+                (folder / name).write_bytes((WEB / name).read_bytes())
+            self.assertEqual(build.version(folder), build.version(WEB))
+            for name in hashed:
+                kept = (folder / name).read_bytes()
+                (folder / name).write_bytes(kept + b' ')
+                self.assertNotEqual(build.version(folder), build.version(WEB), name)
+                (folder / name).write_bytes(kept)
+
     def test_a_file_github_would_refuse_fails_the_build(self):
         with tempfile.TemporaryDirectory() as folder:
             (Path(folder) / 'small.bin').write_bytes(b'x' * 1000 * 1000)
