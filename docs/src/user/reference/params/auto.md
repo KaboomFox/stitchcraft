@@ -195,6 +195,21 @@ a leaf and a tapering stroke sew well as one column.
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 
+### `auto_max_reach`
+
+**Farthest a column reaches from its line.** How far a part reaches from one of its centre lines on both sides of the line, at the most, for
+it to sew as satin columns: the distance, divided by the radius of the widest circle that fits
+inside the part centred on its lines. A column's edges lie as far from its line as that circle
+reaches, so it measures 1, on one side or the other. A star measures 1.6 to 2.6: its centre line
+runs from one point to another, and its other points lie far from the line on both sides. One
+column along that line would sew them as bumps, so a part that reaches farther is filled. A
+sharp corner reaches far on one side only, and stays a column.
+
+- **Accepts:** a number from 1 to 20
+- **Default:** `1.4`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
 ### `auto_min_fill_width_mm`
 
 **Narrowest piece of a fill.** The narrowest piece of an area that stays in its fill. A piece narrower than this leaves the
@@ -214,6 +229,19 @@ when it shares none.
 
 - **Accepts:** an area from 0 to 10 mm²
 - **Default:** `1`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_fill_outline`
+
+**Outline round fills.** Whether each fill that automatic digitizing makes sews an outline: a running stitch round its
+edge, after its rows, in its own thread. The outline draws the edge of a small shape as one
+line, where the ends of its rows would leave its points blunt. It sews only where the edge
+shows: not where a shape sewn after the fill covers the edge. The design goes by the setting of
+its lowest automatic shape.
+
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
+- **Default:** `false`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 
