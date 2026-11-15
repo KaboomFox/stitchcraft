@@ -11,6 +11,7 @@ pub mod stitchcraft_engine::auto
 pub mod stitchcraft_engine::auto::rules
 pub enum stitchcraft_engine::auto::rules::RuleId
 pub stitchcraft_engine::auto::rules::RuleId::Area
+pub stitchcraft_engine::auto::rules::RuleId::Arms
 pub stitchcraft_engine::auto::rules::RuleId::Asked
 pub stitchcraft_engine::auto::rules::RuleId::Column
 pub stitchcraft_engine::auto::rules::RuleId::Compact
@@ -32,7 +33,7 @@ pub stitchcraft_engine::auto::rules::Rule::label: &'static str
 pub stitchcraft_engine::auto::rules::Rule::sewn: &'static str
 pub const stitchcraft_engine::auto::rules::LEAN: f64
 pub const stitchcraft_engine::auto::rules::PRESETS: [stitchcraft_engine::auto::rules::Preset; 2]
-pub const stitchcraft_engine::auto::rules::RULES: [stitchcraft_engine::auto::rules::Rule; 8]
+pub const stitchcraft_engine::auto::rules::RULES: [stitchcraft_engine::auto::rules::Rule; 9]
 pub fn stitchcraft_engine::auto::rules::filled(&str) -> alloc::string::String
 pub enum stitchcraft_engine::auto::Stitches
 pub stitchcraft_engine::auto::Stitches::Fill
@@ -50,8 +51,10 @@ pub stitchcraft_engine::auto::AutoParams::auto_base_offset_mm: <stitchcraft_para
 pub stitchcraft_engine::auto::AutoParams::auto_base_sliver_mm2: <stitchcraft_params::kinds::Area as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_base_stitch_length_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_fill_angle: <stitchcraft_params::kinds::Angle as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_fill_outline: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_fill_uneven: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_ignore_background: <stitchcraft_params::kinds::Toggle as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_max_reach: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_max_satin_width_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_max_unevenness: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_min_area_mm2: <stitchcraft_params::kinds::Area as stitchcraft_params::kinds::ParamKind>::Value
@@ -75,15 +78,18 @@ pub stitchcraft_engine::auto::Digitized::stitches: core::option::Option<stitchcr
 pub const stitchcraft_engine::auto::ADVANCED: &str
 pub const stitchcraft_engine::auto::CONTOUR_FROM: stitchcraft_core::units::Mm
 pub const stitchcraft_engine::auto::FILL_ANGLE: &str
+pub const stitchcraft_engine::auto::FILL_OUTLINE: &str
 pub const stitchcraft_engine::auto::FILL_UNEVEN: &str
 pub const stitchcraft_engine::auto::IGNORE_BACKGROUND: &str
 pub const stitchcraft_engine::auto::LONGEST_SATIN_STITCH: f64
+pub const stitchcraft_engine::auto::MAX_REACH: &str
 pub const stitchcraft_engine::auto::MAX_SATIN_WIDTH: &str
 pub const stitchcraft_engine::auto::MAX_UNEVENNESS: &str
 pub const stitchcraft_engine::auto::MIN_AREA: &str
 pub const stitchcraft_engine::auto::MIN_FILL_WIDTH: &str
 pub const stitchcraft_engine::auto::MIN_SLENDERNESS: &str
 pub const stitchcraft_engine::auto::MIN_TRIPLE_RUN_WIDTH: &str
+pub const stitchcraft_engine::auto::OUTLINE_WIDTH: stitchcraft_core::units::Mm
 pub const stitchcraft_engine::auto::OVERLAP: &str
 pub const stitchcraft_engine::auto::PREFER: &str
 pub const stitchcraft_engine::auto::STITCH: &str

@@ -39,8 +39,8 @@
 //!
 //! **The Auto effect** (`REQ-VC-016`). Its manifest declares the settings of automatic digitizing's rules,
 //! the registry's automatic groups, which no stitch type has, in their order, and then `preview_level`
-//! ([`auto`]). Their rows show always: the dialog has no method. The advanced settings, the rules' bounds
-//! and the 2 limits of the cover's check, are left out: with them the dialog was 903 px tall in a window of
+//! ([`auto`]). Their rows show always: the dialog has no method. The advanced settings, the rules' bounds,
+//! the outline's switch and the 2 limits of the cover's check, are left out: with them the dialog was 903 px tall in a window of
 //! 900, and a bound is set for a whole design, on the command line.
 //!
 //! **How the dialog shows them.** Each parameter comes with its label, unit, section, help and help page,
