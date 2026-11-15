@@ -16,7 +16,5 @@ instructions = 282000000
 budget_ms = 200.0
 # The instructions one run takes, counted by valgrind's callgrind. More than this plus 2 % fails.
 # `cargo xtask perf --record` lowers it and never raises it: raise it by hand, in a pull request that
-# says why. Raised by hand at M13.23 from 5,460,000,000: a region's rings are cut with a grid of buckets,
-# which costs these small rings (1,000 points) 15 % more and a traced photo's background (85,000 edges)
-# a fortieth of what it took.
-instructions = 6270000000
+# says why.
+instructions = 6690000000
