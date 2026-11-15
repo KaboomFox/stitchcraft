@@ -182,6 +182,7 @@ Options:
           Possible values:
           - realistic: The finished embroidery on fabric, with the jump threads the machine leaves for you to cut
           - simple:    Every stitch, needle hole, move, trim and stop, for checking a design
+          - thickness: How thick the design sews: grey thread, yellow from 2 fills of it over one spot, orange from 3 and red from 6
           
           [default: realistic]
 

@@ -17,8 +17,11 @@ fn near(a: f64, b: f64) -> bool {
     (a - b).abs() < 1e-9
 }
 
-/// A plan of one block: each list of points is an element's stitches in a role, sewn on from the last.
-fn plan(parts: &[(&str, Role, &[(f64, f64)])]) -> StitchPlan {
+/// An element's id, the role of its stitches, and their needle points.
+type Part<'a> = (&'a str, Role, &'a [(f64, f64)]);
+
+/// A plan of one block: each part is an element's stitches in a role, sewn on from the last.
+fn plan(parts: &[Part]) -> StitchPlan {
     let mut builder = PlanBuilder::new(Thread::new(Rgb::new(0, 0, 0)));
     for (id, role, points) in parts {
         let element = builder.element(ElementId::new(*id).unwrap()).unwrap();
@@ -167,7 +170,7 @@ fn req_auto_061_the_pieces_are_counted_and_the_first_of_the_largest_is_named() {
     let first = Rect::around([p(1.1, 2.1), p(1.9, 2.9)]);
     let second = Rect::around([p(2.3, 3.3), p(3.1, 4.3)]);
     let over = |cells: &[usize]| drawn(12, 12, cells).over(Measure::Fills, 3.0, &mut meter()).unwrap();
-    let both = over(&[small.clone(), large.clone()].concat());
+    let both = over(&[small.clone(), large].concat());
     assert!(both.pieces == 2 && near(both.area, 55.0 * CELL * CELL) && near(both.largest, 30.0 * CELL * CELL), "{both:?}");
     assert!(boxes(both.at, second), "{both:?}");
     // A larger piece found first stays the largest, and of 2 as large the first is named.
@@ -293,7 +296,7 @@ fn measuring_stops_when_the_work_runs_out() {
     };
     // 7 stitches, the cells 3 times over, and a step for each tenth of a millimetre begun.
     let cells = (50 + 1 + 2 * MARGIN) * (6 + 1 + 2 * MARGIN);
-    let steps: usize = plan.sewn_stitches().iter().map(|stitch| (stitch.length() / 0.1).ceil() as usize).sum();
+    let steps: usize = plan.sewn_stitches().iter().map(|stitch| index((stitch.length() / 0.1).ceil())).sum();
     assert!((412..=415).contains(&steps));
     assert_eq!(needed(&|meter| Thickness::of(&plan, meter).is_ok()), (7 + 3 * cells + steps) as u64);
     let thickness = measured(&plan);

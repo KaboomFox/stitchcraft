@@ -54,3 +54,7 @@ A shape's settings are those of VectorCraft's Auto effect on it, or on the group
 | [`auto_fill_outline`](params/auto.md#auto_fill_outline) | false | no: advanced |
 | [`auto_base_sliver_mm2`](params/auto.md#auto_base_sliver_mm2) | 0.4 mm² | no: advanced |
 | [`auto_base_bare_percent`](params/auto.md#auto_base_bare_percent) | 0.5 % | no: advanced |
+| [`auto_thick_warn_fills`](params/auto.md#auto_thick_warn_fills) | 3 | no: advanced |
+| [`auto_thick_fail_fills`](params/auto.md#auto_thick_fail_fills) | 6 | no: advanced |
+| [`auto_thick_warn_points`](params/auto.md#auto_thick_warn_points) | 15 | no: advanced |
+| [`auto_thick_fail_points`](params/auto.md#auto_thick_fail_points) | 30 | no: advanced |

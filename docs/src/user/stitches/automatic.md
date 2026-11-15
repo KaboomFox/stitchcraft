@@ -302,6 +302,30 @@ nothing sews differently by them: the largest sliver, 0.4 mm², and the most the
 the base layer, 0.5 % of the design. The reference machine hasn't sewn a base layer yet, and
 [MC-8](../../plan/machine-testing.md) sews the dog on black fabric with it and without.
 
+### How thick it sews
+
+Shapes that overlap put thread on thread, and a needle that has to go through too much of it deflects
+and shreds or breaks the thread. StitchCraft measures every design it digitizes: how many fills of thread
+lie over each spot, and how many times the needle goes down in each square millimetre. One fill is what
+a tatami fill lays by default. When a place of 1 mm² or more has 3 fills or more, or 15 needle points or
+more, `stitch plan` warns (`SC-W0913`) and still writes the file. The warning names the thickest spot and
+the shapes stacked there.
+
+<!-- shot: auto-dog-thickness -->
+![How thick the traced running dog sews, as a heat map on white. Most of the dog is grey, under 2 fills of thread. Yellow bands, 2 fills or more, run along the edges where 2 patches overlap. Orange patches, 3 fills or more, lie where several small patches meet, most of them on its chest, its face and its legs, and a few red dots, 6 fills or more, sit inside them.](../../images/generated/auto-dog-thickness.png)
+<!-- /shot -->
+
+`stitch preview dog.pes --style thickness -o thick.png` draws this picture of any machine file. Grey is
+thread under 2 fills, yellow is 2 or more, orange 3 or more and red 6 or more. On the dog above, 510 mm²
+of 1,944 mm² is orange or red, mostly where several small patches meet, and its thickest spot has 7.6
+fills.
+
+The limits are starting values for a 75/11 needle and 40-weight polyester thread. They come from the
+public advice of machine and software makers, who disagree. The reference machine hasn't sewn a design
+to confirm them yet. Until [MC-8](../../plan/machine-testing.md) has, sew a test piece of the
+thickest part before a whole design, slowly, and listen for the needle thumping. The
+[settings](../reference/params/auto.md) `auto_thick_warn_fills` and the 3 beside it move the limits.
+
 ### Sewing order
 
 The shapes sew in an order StitchCraft chooses. 5 rules decide it, each where the rules before it leave a

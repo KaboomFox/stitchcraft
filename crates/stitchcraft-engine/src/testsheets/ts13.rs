@@ -22,7 +22,8 @@
 //! its pictures: which shapes it digitized, what it did with the specks and the stacked badge, and so on.
 
 use stitchcraft_core::Code::{
-    self, AutoBase, AutoDigitized, AutoLayers, AutoOrder, AutoSatinFilled, AutoSpeck, AutoUnder, FillPartsApart, SatinStitchesLean, StitchesMerged,
+    self, AutoBase, AutoDigitized, AutoLayers, AutoOrder, AutoSatinFilled, AutoSpeck, AutoThick, AutoUnder, FillPartsApart, SatinStitchesLean,
+    StitchesMerged,
 };
 
 use super::designed::Drawing;
@@ -33,8 +34,9 @@ use super::sketch::SheetError;
 /// which sews what shows of it, and the badges' red discs, digitized whole under the shapes in their holes;
 /// each speck round the disc, 6 merged into it and 1 left out; the order; the areas that reach under others
 /// and the red discs cut away under the shapes on them; the base layer; the specks in paint order, sewn in parts; and the
-/// needle points left out where rows end close together.
-pub(super) const NEIGHBOURS_SAY: [Code; 14] = [
+/// needle points left out where rows end close together; and where the design sews thick (`SC-W0913`), which
+/// each sheet is told last.
+pub(super) const NEIGHBOURS_SAY: [Code; 15] = [
     AutoDigitized,
     AutoLayers,
     AutoSpeck,
@@ -49,12 +51,13 @@ pub(super) const NEIGHBOURS_SAY: [Code; 14] = [
     AutoBase,
     FillPartsApart,
     StitchesMerged,
+    AutoThick,
 ];
 
 /// What the engine says of TS-13B, in order: how many shapes it digitized, the order, the areas that reach
 /// under others, the base layer, the stitches that lean where the M's strokes meet at sharp angles, and the needle points
 /// left out.
-pub(super) const LETTERS_SAY: [Code; 11] = [
+pub(super) const LETTERS_SAY: [Code; 12] = [
     AutoDigitized,
     AutoOrder,
     AutoUnder,
@@ -66,12 +69,13 @@ pub(super) const LETTERS_SAY: [Code; 11] = [
     SatinStitchesLean,
     SatinStitchesLean,
     StitchesMerged,
+    AutoThick,
 ];
 
 /// What the engine says of TS-13C, in order: how many shapes it digitized, the pupils and hairs that no
 /// satin column can follow, filled; the face, digitized whole under the eyes in its holes; the order; the
 /// areas that reach under others; the base layer; the eyes, sewn in parts in both halves; and the needle points left out.
-pub(super) const LINES_AND_PARTS_SAY: [Code; 13] = [
+pub(super) const LINES_AND_PARTS_SAY: [Code; 14] = [
     AutoDigitized,
     AutoSatinFilled,
     AutoSatinFilled,
@@ -85,13 +89,14 @@ pub(super) const LINES_AND_PARTS_SAY: [Code; 13] = [
     FillPartsApart,
     FillPartsApart,
     StitchesMerged,
+    AutoThick,
 ];
 
 /// What the engine says of TS-13D, in order: how many shapes it digitized; the white round each emblem, a
 /// square ring along which no satin column can be drawn, filled; the areas that sew only what shows of them
 /// and those digitized whole under their details; the order; the areas that reach under others and those
 /// cut away under their details; and the base layer.
-pub(super) const LAYERS_SAY: [Code; 7] = [AutoDigitized, AutoSatinFilled, AutoSatinFilled, AutoLayers, AutoOrder, AutoUnder, AutoBase];
+pub(super) const LAYERS_SAY: [Code; 8] = [AutoDigitized, AutoSatinFilled, AutoSatinFilled, AutoLayers, AutoOrder, AutoUnder, AutoBase, AutoThick];
 
 /// The check of every TS-13 sheet that asks where a jump thread is sewn down: the reference machine cuts
 /// none (MC-1), and the sheets sew their pictures as the engine plans any design.

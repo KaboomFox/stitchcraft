@@ -120,6 +120,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-W0910`](#sc-w0910) | Warning | Base layer left out |
 | [`SC-I0911`](#sc-i0911) | Info | Base layer turned off |
 | [`SC-I0912`](#sc-i0912) | Info | Rule that chose a shape's stitches |
+| [`SC-W0913`](#sc-w0913) | Warning | Design sews thick |
 | [`SC-E1001`](#sc-e1001) | Error | Nothing to route |
 | [`SC-I1002`](#sc-i1002) | Info | Element left out of the route |
 | [`SC-W1003`](#sc-w1003) | Warning | Piece of a routed satin column may sew otherwise |
@@ -1643,6 +1644,29 @@ parts gives the measures of its first 3 and counts the rest by rule.
 To sew the shape another way, set `auto_stitch` on it to `run`, `satin` or `fill`: in VectorCraft,
 in the dialog of StitchCraft's Auto effect. For the whole design, lean the rules with `auto_prefer`,
 turn `auto_fill_uneven` off, or set a bound itself with `stitch plan --set`.
+
+## SC-W0913
+
+**Warning** — Design sews thick
+
+A design digitized with `--auto` puts thread on thread. Each area reaches under the shapes sewn
+after it, and a base layer lies under all of them. An outline lies on a fill's edge. Where too much
+thread lies over one spot, a needle deflects and the thread shreds or breaks. Planning measures the
+design in 2 ways, in the window of 1 mm² round each spot. The first is the thread, in fills: the
+length of thread over the spot, as a share of what a fill with rows 0.4 mm apart lays. The second is
+the needle points in a square millimetre, the locks left out. The warning is given when a place of
+1 mm² or more has 3 fills or more (`auto_thick_warn_fills`), or 15 needle points or more to a
+square millimetre (`auto_thick_warn_points`). The message gives the most of each measure and where,
+from the design's centre, the shapes whose thread is stacked there, and the area at each limit
+and at the failing limits, 6 fills (`auto_thick_fail_fills`) and 30 needle points
+(`auto_thick_fail_points`).
+
+The design is written all the same. The limits are starting values for a 75/11 needle and
+40-weight polyester thread, from the public advice of machine and software makers, and no sew-out
+has confirmed them yet: sew a test piece of the thickest part before the whole design.
+`stitch preview --style thickness` draws where the thread is thick. A design too large to measure,
+or one whose measuring needs more work than the budget allows, gets this warning too, and its
+message says that the design was not measured.
 
 ## SC-E1001
 

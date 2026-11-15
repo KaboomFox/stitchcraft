@@ -183,6 +183,30 @@ changes them:
 - Does the overlap of 1 mm show as a ridge where 2 patches meet?
 - Do the fills' edges sew cleanly where the rows turn, or does the thread pile up or break there?
 
+M13.29 measures how thick a design sews and changes nothing that sews
+([how thick a design sews](../design/image-to-embroidery.md#how-thick-a-design-sews)). Its limits, 3 and
+6 fills of thread over one spot and 15 and 30 needle points per mm², are starting values from public
+advice, which no sew-out has confirmed. MC-8 confirms them or changes them with a ladder of squares. The ladder is not
+drawn as a test sheet yet: M13.30 draws it, and until then it is drawn in VectorCraft as plain fills.
+
+- **Top row:** squares 15 mm a side of 1, 2, 3, 4, 5 and 6 fills on each other, each fill with the default
+  rows of 0.25 mm and stitches of 3 mm, its angle turned 30° from the one under it, over one base layer.
+  They measure 1 to 6 fills.
+- **Middle row:** the same squares with a satin outline 2.5 mm wide on top.
+- **Bottom row:** one fill cut into patches 1.5, 2 and 3 mm across that reach 1 mm under each other, as
+  automatic digitizing cuts a traced photo.
+- **A fourth row, when time allows:** the top row with rows 0.4 mm apart, the fill that the sources
+  call standard, which measures 0.6 to 3.8 fills.
+- Sew on medium cotton twill with one layer of medium cut-away, a 75/11 needle and 40-weight polyester,
+  at the PE800's usual speed. Sew it again on a knit T-shirt when time allows: the limit should be lower
+  there.
+- For each square, count the thread breaks and the places where the thread shreds. Listen for a thumping
+  needle. Look at the needle for a bend or a burr, and at the fabric round the square for puckers. Bend
+  the square, and measure how thick it is with calipers.
+- The first square that breaks thread or thumps sets the failing limit, and the square before it, less
+  one, sets the warning. Then sew the running dog in 9 threads, whose thickest spot has 7.6 fills, and
+  compare where it gives trouble with its heat map (`stitch preview --style thickness`).
+
 ## Report template
 
 The GitHub issue form *Sew-out report* asks for these fields; this is the same template for notes kept

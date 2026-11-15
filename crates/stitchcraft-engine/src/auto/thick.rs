@@ -33,7 +33,8 @@ pub(crate) fn limits(rules: &AutoParams) -> Limits {
 /// plan within its limits.
 pub(crate) fn said(plan: &StitchPlan, limits: &Limits, budget: &Budget) -> Option<Diagnostic> {
     let mut meter = budget.meter();
-    let measured = Thickness::of(plan, &mut meter).and_then(|thickness| thickness.map(|thickness| thickness.report(plan, limits, &mut meter)).transpose());
+    let measured =
+        Thickness::of(plan, &mut meter).and_then(|thickness| thickness.map(|thickness| thickness.report(plan, limits, &mut meter)).transpose());
     let message = match measured {
         Ok(Some(report)) if report.warns() => message(plan, &report, limits),
         Ok(_) => return None,
@@ -48,7 +49,8 @@ pub(crate) fn said(plan: &StitchPlan, limits: &Limits, budget: &Budget) -> Optio
 /// and y down, as the plan has it.
 fn message(plan: &StitchPlan, report: &Report, limits: &Limits) -> String {
     let place = |spot: &Spot| format!("({:.1}, {:.1}) mm from the design's centre", spot.at.x(), spot.at.y());
-    let areas = |over: &Over, failing: &Over| format!("{:.1} mm² in {}", over.area, places(over.pieces)) + &format!(", {:.1} mm² of it", failing.area);
+    let areas =
+        |over: &Over, failing: &Over| format!("{:.1} mm² in {}", over.area, places(over.pieces)) + &format!(", {:.1} mm² of it", failing.area);
     format!(
         "The design sews thick. Thread: up to {:.1} fills over one spot, at {}, where {} are stacked. At {} fills or more: {} at {} or more. Needle points: up to {:.0} in a square millimetre, at {}. At {} or more: {} at {} or more.",
         report.fills.value,
@@ -76,7 +78,10 @@ fn stacked(plan: &StitchPlan, stack: &[Layer]) -> String {
     let mut layers: Vec<&Layer> = stack.iter().collect();
     layers.sort_by(|a, b| (b.top + b.under).total_cmp(&(a.top + a.under)));
     let name = |layer: &&Layer| {
-        let id = layer.element.and_then(|element| plan.elements.get(element.index())).map_or_else(|| "stitches of no shape".to_string(), |id| format!("`{id}`"));
+        let id = layer
+            .element
+            .and_then(|element| plan.elements.get(element.index()))
+            .map_or_else(|| "stitches of no shape".to_string(), |id| format!("`{id}`"));
         let thread = plan.blocks.get(layer.block).map(|block| block.thread.color.to_string()).unwrap_or_default();
         format!("{id} in {thread} with {:.1}", layer.top + layer.under)
     };
@@ -116,7 +121,8 @@ mod tests {
         // A fill is one whose rows lie as far apart as a fill's by default.
         let spacing = crate::generators::tatami::TatamiParams::SPECS.iter().find(|spec| spec.key == "row_spacing_mm").unwrap();
         assert_eq!(spacing.default.parse(), Ok(stitchcraft_plan::thickness::ROWS));
-        let set = [("auto_thick_warn_fills", "2.5"), ("auto_thick_fail_fills", "4"), ("auto_thick_warn_points", "7"), ("auto_thick_fail_points", "9")];
+        let set =
+            [("auto_thick_warn_fills", "2.5"), ("auto_thick_fail_fills", "4"), ("auto_thick_warn_points", "7"), ("auto_thick_fail_points", "9")];
         let rules = AutoParams::from_set(&set.into_iter().collect()).unwrap().params;
         assert_eq!(limits(&rules), Limits { warn_fills: 2.5, fail_fills: 4.0, warn_points: 7.0, fail_points: 9.0 });
     }

@@ -67,6 +67,11 @@ PES file shows the jump threads its plan does.
 | Lock stitch | (like any stitch) | Orange ring |
 | Trim, stop | Nothing | Red cross, blue square |
 
+A third style, `thickness`, draws no stitch. It colours each pixel by how many fills of thread lie over
+the spot under it, measured on the scene's stitches (`REQ-RND-004`,
+[how thick a design sews](image-to-embroidery.md#how-thick-a-design-sews)). The picture has the size of
+the other 2 at the same scale.
+
 Everything is drawn in sewing order, so later stitches lie on earlier ones as they do on the fabric. The
 realistic style draws loose jump threads because they *are* on the fabric when the hoop comes off the
 machine; a design whose machine trims shows its cuts, which is what test sheet TS-02 is about.
