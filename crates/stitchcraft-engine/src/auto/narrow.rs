@@ -141,7 +141,7 @@ fn sort(
             let edges = Edges::of(&part, piece(&part), meter)?;
             match width(&edges, &lines, meter)? {
                 Some(width) => {
-                    let measures = Measures { width: width.get(), lines: lines.len(), ..Measures::of_breadth(part.area(), Breadth::Narrow) };
+                    let measures = Measures { width: width.get(), ..Measures::of_breadth(part.area(), Breadth::Narrow) };
                     sorted.fired.push(fired(rule, Some(measures)));
                     sorted.along.push(Along::Narrow(Narrow { part, lines, width }));
                 }
@@ -791,6 +791,15 @@ mod tests {
         assert_eq!((even.mean.get(), even.deviation), (3.0, 0.0));
         let dot = Line { points: vec![p(5.0, 1.5)], closed: false };
         assert_eq!(spread(&edges, &[dot], &mut meter).unwrap(), None);
+        // A line of one piece that leads into a tip has no other piece, so that one is measured: from the
+        // tip of a triangle its width runs straight from nothing.
+        let triangle = outline(&[(0.0, 0.0), (20.0, -2.0), (20.0, 2.0)]);
+        let edges = Edges::of(&triangle, 0.5, &mut meter).unwrap();
+        let from_the_tip = Line { points: vec![p(0.0, 0.0), p(10.0, 0.0)], closed: false };
+        let widest = 2.0 * edges.nearest(p(10.0, 0.0), &mut meter).unwrap();
+        let tapering = spread(&edges, &[from_the_tip], &mut meter).unwrap().unwrap();
+        assert!(widest > 1.9 && (tapering.mean.get() - widest / 2.0).abs() < 1e-9, "{tapering:?} {widest}");
+        assert!((tapering.deviation - widest / 12.0_f64.sqrt()).abs() < 1e-9, "{tapering:?} {widest}");
     }
 
     #[test]

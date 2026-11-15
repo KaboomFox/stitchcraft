@@ -385,12 +385,6 @@ why = "the quick test then answers only where a part's area equals the bound exa
 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/auto/narrow.rs"
-mutant = "replace > with >= in width"
-line = "Ok(if length > 0.0 { Mm::new(sum / length).ok() } else { None })"
-why = "lines of no length have a sum of 0 too, and 0 over 0 is not a number, which Mm::new refuses: the width is None either way"
-
-[[equivalent]]
-file = "crates/stitchcraft-engine/src/auto/narrow.rs"
 mutant = "replace < with <= in Edges::of"
 line = "while k < pieces {"
 why = "the extra piece runs from the edge's end to its end, since Point::lerp holds its fraction to 1: a point the edge's last piece ends at already, so every distance found is the same, and only the work charged grows"
@@ -439,9 +433,9 @@ why = "the sine is as high either side of a quarter turn, so the string's top is
 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/auto/columns.rs"
-mutant = "replace < with <= in columns"
-line = "if found.iter().zip(&widths).all(|(column, width)| column.walked.length() < DOT * width.average.get()) {"
-why = "only a part whose every line is at most half as long as it is wide, one exactly half, tells the 2 apart, and no case can aim at that: a line runs through the centres of the part's triangles and the width averages the circles centred on it, so the 2 meet exactly only by a coincidence of rounding. The parts near the bound fall well to either side of it: a disc's or a square's lines are 0.4 times as long as it is wide, and a rectangle's, once its corners don't tie, more than 0.75 times"
+mutant = "replace < with <= in point_at"
+line = "let next = along.partition_point(|length| *length < at).min(rail.len().saturating_sub(1));"
+why = "only a length that is exactly a corner's tells the 2 apart, and it gives that corner either way: the end of the piece before it, or the start of the piece after it"
 
 [[equivalent]]
 file = "crates/stitchcraft-engine/src/auto/neighbours/under.rs"

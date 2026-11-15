@@ -309,7 +309,7 @@ pub fn printable(text: &str) -> String {
 const RULES_SHOWN: usize = 3;
 
 /// Diagnostics as people read them: each one's headline ([`Diagnostic::headline`]), then its fix indented.
-/// The rules that more than [`RULES_SHOWN`] shapes sewed by (`SC-I0912`) are counted in one line, where the
+/// The rules that more than `RULES_SHOWN` shapes sewed by (`SC-I0912`) are counted in one line, where the
 /// first of them was said: a report lists each.
 pub fn render_diagnostics(diagnostics: &[Diagnostic]) -> String {
     let rules = diagnostics.iter().filter(|d| d.code == Code::AutoRule).count();
