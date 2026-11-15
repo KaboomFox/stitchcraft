@@ -33,6 +33,9 @@ through every stitch type. Among its shapes are points and lines of no length, r
 and self-touching shapes, rings twice over, rails that cross, a square near the edge of where a design may
 lie, and a path of 10⁶ points. Its `random` strategy draws paths on a coarse grid, where points coincide and lie in line often.
 
+**Since M6.15:** the example `sheet` measures the standard pictures of the before and after sheet with
+the `fabric` module. It draws each one too, for `web/sheet.py` (`docs/src/design/before-after-sheet.md`).
+
 **Status:** grows with the milestones M1 to M5, M7 and M13. Design: `docs/src/design/conformance.md`.
 
 Tests may unwrap and panic; this crate opts out of the no-panic lints at its root.

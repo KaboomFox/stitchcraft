@@ -19,6 +19,15 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     dog on turf in 6 threads sews 2 shapes more as fills, and the running dog in 9 threads 1. Their jump
     threads fall from 77 to 71 and from 95 to 93. 19 of the dogs' stitches are astray, where 17 were. In
     both running dogs a row of the largest blob, which is a fill now, lies beside a line of fur.
+- M6.15: a before and after sheet on every pull request. A page in the preview shows the standard pictures
+  as the pull request sews them beside main's. Its table has the numbers the cases measure, from the
+  stitches and thread changes to the bare share, and each number that got worse is marked. The preview's
+  comment lists the worst and links to the sheet. Main's own sheet is published at `/sheet/`.
+  - The run also checks in Chromium that the editor's exporters write the PES and DST files `stitch` writes
+    of the same document, byte for byte, for the starter drawing. A traced dog is tried too, and
+    VectorCraft 0.24.1 stops its export when the plug-in's instruction budget runs out. The sheet
+    reports that, and no dog's files are compared until the export finishes.
+  - It times the Auto effect on the traced dog in the editor and takes a picture of the result.
 - M6.16: a fill's preview in VectorCraft reads as solid (`REQ-VC-024`). A live effect's geometry is painted
   with the object's own fill, and a fill's preview was thin ribbons along its stitches, rows or outline,
   so a large fill looked emptier with the effect than without. A fill now comes back as its own shape,
@@ -2079,6 +2088,22 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- M13.23: pictures that planned nothing. `stitch plan` of 2 photos in 6 colours at 100 mm stopped with
+  `SC-E0004`, and of a third with `SC-E0009`. It didn't write a file for any of them.
+  - The work budget ran out on each photo's background, one area of some 7,000 anchors. Automatic
+    digitizing shrinks an area by half a satin column's width to find its narrow parts. The raw outline of
+    the area shrunk is 85,000 short edges that lie many times over each other. Cutting it sought each
+    edge's corners and crossings through everything in the edge's span along x, which took 950 million
+    units against the budget of 500 million. They are now sought in a grid of buckets over the rings'
+    bounds (`REQ-FILL-006`). The points found are the same, so no design that planned before changes. The
+    budget is unchanged, and the work charged for a region is not what it was.
+  - In the third photo, a narrow piece of an area was cut square along a chord that started 2.5e-10 mm
+    before a corner of the piece and crossed the edge after that corner. The piece had no triangulation.
+    A chord that crosses one of the piece's own edges anywhere is now left out (`REQ-AUTO-019`), and the
+    piece keeps the arc it had there.
+  - The goose now sews 35,637 stitches, the castle 27,142 and the cat 23,627.
+  - The record of `cargo xtask perf` for 300 insets of a region of 1,000 points is raised from 5.46 to
+    6.69 billion instructions, as CI counts them. The buckets cost such small rings up to 22 % more.
 - M13.14: the encoder's export differs by machine, and the models' workflow no longer fails by chance.
   MobileSAM's encoder is exported with its pinned size on every runner and with one of 2 SHA-256 sums:
   the run on `main` at `ecdaaeb9` gave the other one and failed, where the pull request's last run had
