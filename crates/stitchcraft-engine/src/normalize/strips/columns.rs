@@ -46,7 +46,9 @@
 //!    other way.
 //! 5. **Its rails** are the outline on either side between its ends, both from the line's start. A ring's
 //!    are its 2 rings, both the same way round, started at a rung whose second point is the inner ring's
-//!    point nearest its first, so that a satin column starts them together (`DEV-SAT-009`).
+//!    point nearest its first, so that a satin column starts them together (`DEV-SAT-009`). An open
+//!    column's rail cuts across a sliver of the outline narrower than a thread at its base ([`unslivered`]),
+//!    which a satin column's pairs would follow out and back.
 //! 6. **Its rungs.** A triangle with one edge on a rail has a corner on the other, and a rung runs from that
 //!    corner across the column, at a right angle to the column's way there, to the edge: where it meets it,
 //!    or else to the edge's nearer end. The column's way is the mean of its 2 rails' ways, the corner's
@@ -82,6 +84,15 @@ const SQUARE: f64 = 0.342_020_143_325_668_7;
 /// How far, in millimetres, a point may lie off the line through the points before it and still be on a
 /// straight edge of the outline: the points added along an edge lie on it to within the region's grid.
 const STRAIGHT: f64 = 1e-6;
+
+/// How wide at its base a sliver of the outline may be, in millimetres, for a rail to cut across it rather
+/// than run out along it and back ([`unslivered`]): a thread's width, which no stitch across the column fits
+/// into.
+const SLIVER: f64 = 0.4;
+
+/// How many of a rail's points a sliver may have between the 2 at its base: it bounds the work of looking for
+/// one.
+const SLIVER_POINTS: usize = 64;
 
 /// A satin column along one of a part's centre lines, between the part's own outlines.
 #[derive(Clone, Debug, PartialEq)]
@@ -148,6 +159,20 @@ impl Column {
             under: [self.under[1], self.under[0]],
             ring: None,
         }
+    }
+
+    /// Its own outline: along its rails, and across its ends from one rail's end to the other's, where it ends
+    /// at a point, along an edge of its part or at a chord under another column. A ring's are its outer rail and
+    /// its inner one, a hole. The column's triangles fill it, and another column's triangles lie beyond it.
+    pub(crate) fn outline(&self) -> Polygon {
+        let [one, other] = &self.rails;
+        if self.closed {
+            return Polygon { outline: one.clone(), holes: vec![other.clone()] };
+        }
+        let mut ring = one.clone();
+        ring.extend(other.iter().rev().copied());
+        ring.extend(one.first().copied());
+        Polygon { outline: ring, holes: Vec::new() }
     }
 
     /// A ring started at the rung nearest `near` at which it can start, with `meter`'s work; an open column
@@ -558,6 +583,8 @@ fn strip(
     let place = Place { skeleton, owner, line, outline, ring, cuts };
     let (Some(a), Some(b)) = (place.range(&start, meter)?, place.range(&finish, meter)?) else { return Ok(None) };
     let Some(rails) = rails(ring, a, b) else { return Ok(None) };
+    let [one, other] = rails;
+    let rails = [unslivered(points, &one, meter)?, unslivered(points, &other, meter)?];
     let candidates = rungs(skeleton, owner, line, &rails, meter)?;
     let lengths = rails.each_ref().map(|rail| length(points, rail));
     let rungs = ordered(candidates, lengths);
@@ -766,6 +793,41 @@ fn rails(ring: &[usize], (a0, a1): (usize, usize), (b0, b1): (usize, usize)) -> 
     let mut second: Vec<usize> = (b1..=n).filter_map(at).collect();
     second.reverse();
     Some([first, second])
+}
+
+/// The rail through `points`' points `rail`, without the slivers it runs out along and back: where its point
+/// `j` comes back to within [`SLIVER`] of its point `i`, and a point between lies farther from the line
+/// between them than they lie apart, it runs straight from `i` to `j`. Such a sliver is a tooth of a traced
+/// outline, narrower than a thread at its base and deeper than it is wide, as between a notch and the edge
+/// beside it. A satin column places its pairs along each rail as Ink/Stitch does, each the zigzag spacing
+/// across the column from the one before, and moves a pair that lands off that by scaling its step. Along a
+/// rail that runs back, the step grows past the sliver to the next rung, and one stitch spans the whole
+/// piece of rail between: the paw of the traced dog on turf left a wedge of 1.8 mm² bare beside a sliver
+/// 0.3 mm wide at its base and 0.5 mm long. A unit of `meter`'s work for each point looked at.
+fn unslivered(points: &[Point], rail: &[usize], meter: &mut Meter) -> Result<Vec<usize>, Exhausted> {
+    let point = |k: usize| rail.get(k).and_then(|&i| points.get(i)).copied();
+    let mut kept = Vec::with_capacity(rail.len());
+    let mut i = 0;
+    while i < rail.len() {
+        kept.extend(rail.get(i).copied());
+        let Some(from) = point(i) else { break };
+        // The farthest point at most SLIVER from this one that a sliver deeper than its base reaches back to.
+        let mut back = None;
+        for j in (i + 2..rail.len()).take(SLIVER_POINTS) {
+            meter.charge(u64::try_from(j - i).unwrap_or(u64::MAX))?;
+            let Some(to) = point(j) else { break };
+            let base = from.distance(to);
+            if base > SLIVER || base <= 0.0 {
+                continue;
+            }
+            let deep = (i + 1..j).filter_map(point).any(|between| distance_to_segment(between, from, to) > base);
+            if deep {
+                back = Some(j);
+            }
+        }
+        i = back.unwrap_or(i + 1);
+    }
+    Ok(kept)
 }
 
 /// The column of the closed `line`, through the points of `found`, with the outline `outline`: its outer

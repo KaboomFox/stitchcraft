@@ -19,7 +19,7 @@ use stitchcraft_engine::normalize::region;
 use stitchcraft_engine::normalize::satin::{Pairing, Shape as Read, recognize};
 use stitchcraft_engine::testsheets::find;
 use stitchcraft_plan::{Role, StitchKind};
-use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, messages, planned, polylines, rules, widened};
+use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, messages, planned, polylines, rules, unbased, widened};
 
 /// What the automatic `element` sews as, in a design with the default settings.
 fn made(element: &Element) -> Digitized {
@@ -85,14 +85,15 @@ fn req_auto_016_a_round_dot_stays_in_the_fill_wherever_it_lies() {
 }
 
 #[test]
-fn req_auto_016_a_square_is_a_dot_and_a_rectangle_a_little_longer_a_column() {
-    // A square 3 mm wide: its lines are 0.4 times as long as it is wide, and it is a dot, filled. A rectangle
-    // as wide and 3.5 mm long: its line is more than half as long as it is wide, and it is a satin column.
+fn req_auto_031_a_rectangle_is_a_column_from_3_times_its_width() {
+    // A square 3 mm wide is compact, and filled, and so is a rectangle as wide and 8.9 mm long, whose area is
+    // less than 3 times its width squared. One 9 mm long is exactly that, and one 9.5 mm long more: each is a
+    // satin column, wherever it lies.
     for (x, y) in [(0.0, 0.0), (10.3, 7.1), (-4.6, 21.9)] {
-        let square = made(&shape("square", &rectangle((x, y), (x + 3.0, y + 3.0))));
-        assert_eq!(square.stitches, Some(Stitches::Fill), "a square at ({x}, {y}): {:?}", square.elements);
-        let longer = made(&shape("rectangle", &rectangle((x, y), (x + 3.5, y + 3.0))));
-        assert_eq!(longer.stitches, Some(Stitches::Satin), "a rectangle at ({x}, {y}): {:?}", longer.elements);
+        for (long, stitches) in [(3.0, Stitches::Fill), (8.9, Stitches::Fill), (9.0, Stitches::Satin), (9.5, Stitches::Satin)] {
+            let rectangle = made(&shape("rectangle", &rectangle((x, y), (x + long, y + 3.0))));
+            assert_eq!(rectangle.stitches, Some(stitches), "{long} mm long at ({x}, {y}): {:?}", rectangle.elements);
+        }
     }
 }
 
@@ -137,17 +138,24 @@ fn req_auto_016_the_bound_is_the_widest_satin_column_to_the_micrometre() {
 fn req_auto_016_a_column_that_ends_under_another_sews_first_and_reaches_under_it() {
     // A T: a bar 3 mm wide, and a stem 3 mm wide below it. The stem's column ends under the bar's: it sews
     // first, as `t`, and is 0.4 mm longer at that end by its push compensation; the bar's sews after it.
-    let t = shape("t", &[(0.0, 0.0), (20.0, 0.0), (20.0, 3.0), (11.5, 3.0), (11.5, 15.0), (8.5, 15.0), (8.5, 3.0), (0.0, 3.0)]);
-    let out = made(&t);
+    let t = |stem: f64| {
+        let (left, right) = (10.0 - stem / 2.0, 10.0 + stem / 2.0);
+        shape("t", &[(0.0, 0.0), (20.0, 0.0), (20.0, 3.0), (right, 3.0), (right, 15.0), (left, 15.0), (left, 3.0), (0.0, 3.0)])
+    };
+    let out = made(&t(3.0));
     let ids: Vec<&str> = out.elements.iter().map(|e| e.id.as_str()).collect();
     assert_eq!(ids, ["t", "t#2"]);
     let (stem, bar) = (&out.elements[0], &out.elements[1]);
     let (stem_rails, _) = read(stem);
     assert!(stem_rails.iter().flatten().all(|q| q.y() >= 3.0 - 1e-9), "{stem_rails:?}");
-    let under = format!("{}", -rules().auto_overlap_mm.get());
+    let under = format!("{}", -rules().auto_pull_compensation_mm.get());
     let push = setting(stem, PUSH_COMPENSATION).unwrap();
     assert!(push == format!("{under} 0") || push == format!("0 {under}"), "{push}");
     assert_eq!(setting(bar, PUSH_COMPENSATION), None);
+    // A narrow stem is longer by its pull compensation too, not by the overlap of 1 mm (REQ-AUTO-029).
+    let narrow = made(&t(1.5));
+    let push = setting(&narrow.elements[0], PUSH_COMPENSATION).unwrap();
+    assert!(push == format!("{under} 0") || push == format!("0 {under}"), "{push}");
     // The stem's end under the bar is the bar's side, from the stem's one side to its other.
     let ends: Vec<Point> = stem_rails.iter().flat_map(|rail| [rail[0], *rail.last().unwrap()]).filter(|q| q.y() < 3.0 + 1e-9).collect();
     assert_eq!(ends.len(), 2, "{stem_rails:?}");
@@ -162,7 +170,7 @@ fn req_auto_016_a_v_sews_as_2_columns_one_ending_under_the_other() {
     let out = made(&v);
     assert_eq!(out.stitches, Some(Stitches::Satin));
     let [first, second] = out.elements.as_slice() else { panic!("{:?}", out.elements) };
-    let under = format!("{}", -rules().auto_overlap_mm.get());
+    let under = format!("{}", -rules().auto_pull_compensation_mm.get());
     let push = setting(first, PUSH_COMPENSATION).unwrap();
     assert!(push == format!("{under} 0") || push == format!("0 {under}"), "{push}");
     assert_eq!((setting(first, SATIN_COLUMN), setting(second, SATIN_COLUMN)), (Some("true"), Some("true")));
@@ -173,8 +181,10 @@ fn req_auto_016_a_v_sews_as_2_columns_one_ending_under_the_other() {
 fn req_auto_016_a_column_too_narrow_for_satin_runs_along_its_line() {
     // A T whose bar is 4 mm wide and whose stem is 1.5 mm wide, in a design whose narrowest satin stroke is
     // 2 mm: the stem's column runs along its line as a triple run, as a stroke that narrow would, and the
-    // bar's sews as a satin column.
-    let t = shape("t", &[(0.0, 0.0), (20.0, 0.0), (20.0, 4.0), (10.75, 4.0), (10.75, 16.0), (9.25, 16.0), (9.25, 4.0), (0.0, 4.0)]);
+    // bar's sews as a satin column. Its 2 strokes are each even and unlike each other, so the T keeps its
+    // columns only with `auto_fill_uneven` off: left on, the rules fill the bar and run the stem.
+    let outline = [(0.0, 0.0), (20.0, 0.0), (20.0, 4.0), (10.75, 4.0), (10.75, 16.0), (9.25, 16.0), (9.25, 4.0), (0.0, 4.0)];
+    let t = fill("t", &[&outline], &RED, &[("auto_fill_uneven", "false")]);
     let settings = DesignSettings { min_satin_stroke_width: Mm::new(2.0).unwrap(), ..DesignSettings::default() };
     let out = digitize(&automatic(t), &settings, &mut Budget::DEFAULT.meter()).unwrap();
     assert_eq!(out.stitches, Some(Stitches::Satin));
@@ -204,12 +214,12 @@ fn req_auto_016_a_letters_legs_sew_alike() {
 #[test]
 fn req_auto_016_the_areas_sewn_before_a_column_reach_under_it() {
     // 2 red squares, and a blue band 3 mm wide between them, as a trace whose colours abut draws them. The
-    // band sews as a satin column, after both squares, which it borders, and each square reaches 0.4 mm
-    // under it.
+    // band sews as a satin column, after both squares, which it borders, and each square reaches the
+    // overlap, 1 mm, under it.
     let red = |id: &str, from: (f64, f64), to: (f64, f64)| automatic(shape(id, &rectangle(from, to)));
     let blue = automatic(fill("band", &[&rectangle((10.0, 0.0), (13.0, 10.0))], &BLUE, &[]));
     let design = stitchcraft_engine::design::Design::new(
-        vec![red("left", (0.0, 0.0), (10.0, 10.0)), blue, red("right", (13.0, 0.0), (23.0, 10.0))],
+        unbased(vec![red("left", (0.0, 0.0), (10.0, 10.0)), blue, red("right", (13.0, 0.0), (23.0, 10.0))]),
         DesignSettings::default(),
     )
     .unwrap();
@@ -217,7 +227,7 @@ fn req_auto_016_the_areas_sewn_before_a_column_reach_under_it() {
     let ids: Vec<&str> = out.iter().map(|e| e.id.as_str()).collect();
     assert_eq!(ids, ["left", "right", "band"]);
     assert_eq!(setting(&out[2], SATIN_COLUMN), Some("true"));
-    assert!((area(&out[0]) - 104.0).abs() < 0.05 && (area(&out[1]) - 104.0).abs() < 0.05, "{} {}", area(&out[0]), area(&out[1]));
+    assert!((area(&out[0]) - 110.0).abs() < 0.12 && (area(&out[1]) - 110.0).abs() < 0.12, "{} {}", area(&out[0]), area(&out[1]));
 }
 
 #[test]
@@ -275,9 +285,8 @@ fn req_auto_018_a_column_has_the_underlay_and_settings_of_its_width() {
             assert_eq!(made.stitches, Some(Stitches::Satin), "{width} mm");
             let column = &made.elements[0];
             assert_eq!(underlays(column), expected, "{width} mm: {}", column.id);
-            // Pull compensation of the overlap an area reaches under its neighbours with, and no end near the
-            // next shape.
-            assert_eq!(setting(column, PULL_COMPENSATION), Some(rules().auto_overlap_mm.get().to_string().as_str()));
+            // The rules' pull compensation, and no end near the next shape.
+            assert_eq!(setting(column, PULL_COMPENSATION), Some(rules().auto_pull_compensation_mm.get().to_string().as_str()));
             assert_eq!(setting(column, END_AT_NEAREST_POINT), Some("false"));
         }
     }

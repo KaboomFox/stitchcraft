@@ -60,6 +60,13 @@ and ends where it is drawn, and a start or end command works at its connector's 
 and commands each update changed. A file with Ink/Stitch's content and no version, which Ink/Stitch asks its user about,
 and one from a newer Ink/Stitch are read as they are, with `SC-W0802`.
 
+Since M14.1 `font::read` reads an embroidery font in Ink/Stitch's format from the files of its folder
+(`src/font/`, `REQ-FONT-002` to `REQ-FONT-007`). It reads the font's `font.json` and licence file, and the
+glyph files of each direction. Each glyph is a design of its own, with its box and its file's baseline.
+One meter of the budget counts the whole font. `SC-E1101` refuses a font it can't read, and `SC-W1102` to
+`SC-I1105` name what it reads otherwise than written, as Ink/Stitch's lettering reads it. The glyph
+differential cuts its glyphs with the same code (`font::each_glyph`).
+
 Style sheets set properties as in a viewer (`src/sheet.rs`, `REQ-SVG-006`). Their rules with element,
 class and id selectors, the ones Illustrator and CorelDRAW write, are read, in the order of CSS's cascade.
 One `SC-W0802` names the other selectors and the at-rules.
@@ -92,4 +99,5 @@ Design: `docs/src/design/data-model.md` (the `Design`), `docs/src/design/archite
 `stitchcraft-core`, `stitchcraft-params`, `stitchcraft-plan`, `stitchcraft-engine`; `roxmltree` (the XML
 tree) and `svgtypes` (SVG's micro-syntaxes), the versions in VectorCraft's lockfile. Only this crate
 reads them, but for the engine, which reads a custom lock's path with `svgtypes`' path-data parser
-(`cargo xtask layers`).
+(`cargo xtask layers`). A font's `font.json` is read with `serde_json`, and its glyph names are put in
+Unicode's NFC with `unicode-normalization`, the version in VectorCraft's lockfile.

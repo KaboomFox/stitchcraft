@@ -5,6 +5,95 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M6.13: the browser demo and pull-request previews, from crowecawcaw's pull request #260. The project's site
+  runs VectorCraft's web editor with StitchCraft's plug-ins at `/app/`. It opens a starter patch, Alpine
+  Night, whose shapes have the Auto effect, and exports PES and DST from the page.
+  - A pull request from a branch of the repository gets a preview at `/pr/<number>/`, with its book and its
+    own plug-ins, and a comment that shows pictures of the demo. A fork's pull request is built and checked,
+    and nothing of it is published.
+  - One script now publishes every folder of the Pages site, the book's too, and keeps the branch to one
+    commit. The editor is built from VectorCraft 0.24.1, which `compat/vectorcraft.toml` records.
+- M13.21: automatic digitizing chooses the stitches of each part of a shape from the part's geometry, by
+  the first rule of one table that it matches (`REQ-AUTO-030` to `REQ-AUTO-036`,
+  `stitchcraft_engine::auto::rules`). Width alone chose before.
+  - A compact part, short for its width, is filled: one whose area is less than 3 times its width squared.
+    A blob as wide as a satin column sewed as a column bent into its corners. A rectangle 3 mm wide is now a
+    column from 9 mm long, where it was one from 3.5 mm.
+  - An uneven part is filled too: one of several centre lines whose width varies along them by more than
+    0.3 of itself, as a ragged patch of a traced photo does. Its tails narrower than the narrowest satin
+    stroke leave the fill as lines, and a narrow piece that joins 2 parts of the fill stays in it.
+  - A part that is filled is filled whole under the shapes that fill its holes, as only an area wider than
+    7 mm was. A dog's nose sews as one fill with the nostrils on it.
+  - The fill of an area goes on from its broad parts as far as a disc 4 mm across fits. A piece up to 7 mm
+    wide left the fill before, as a satin column.
+  - No satin column of a part sews a stitch longer than 7 mm between its rails. A part whose column would is
+    filled, and `SC-I0902` gives the stitch's length. `auto_max_satin_width_mm` no longer takes a value
+    above 7 mm: a higher one is read as 7 mm, with `SC-W0102`.
+  - `SC-I0912` (new) says, for each automatic shape, which rule each of its parts sewed by and the measures
+    that decided it. `stitch plan` counts them in one line when more than 3 shapes say one, and its report
+    lists each.
+  - New settings, in 3 tiers. A shape names its stitch with `auto_stitch`. For a whole design,
+    `auto_prefer` leans the rules, `auto_fill_uneven` turns the filling of uneven parts off and
+    `auto_fill_angle` turns its fills. The bounds are advanced settings: `auto_min_slenderness`, `auto_max_unevenness` and
+    `auto_min_fill_width_mm`, beside the widest satin column, the narrowest triple run and the smallest
+    area. `stitch plan --set KEY=VALUE` sets a setting on every shape digitized automatically, and
+    `--style logo` or `--style photo` a named set of them. A bug-report bundle records them.
+  - The Auto effect's dialog in VectorCraft shows the first 2 tiers, 12 rows where it had 13 and was 3 px
+    taller than its window. The bounds, and the 2 limits of the cover's measure, have no row.
+  - The page [automatic digitizing's rules](docs/src/user/reference/auto-rules.md) is generated from the
+    table, the styles and the settings.
+  - Golden changed: `TS-13A.pes` and `TS-13C.pes`. On TS-13A the blue squares of the 2 big badges are
+    filled, since their column sewed stitches of 8.05 mm at its corners. On TS-13C a star's points are
+    filled up to their tips.
+  - On the 4 traced dogs, 37 to 50 shapes that sewed as satin columns sew as fills. They jump 82, 94, 81
+    and 112 times where they jumped 124, 143, 113 and 135 times, leave 2 slivers where they left 19, and
+    0.001 to 0.097 % of their designs bare where they left 0.07 to 0.35 %. Their satin stitches that lean
+    along a column (`SC-W0208`) fell from 26 to 34 each to 4 to 8. They change thread 12, 22, 16 and 28
+    times where they changed 10, 12, 12 and 18 times, since a line sews after the fill it borders, and
+    lay 21 stitches astray where they laid 7, the longest 4 mm where it was 7.89 mm.
+- M13.14: the subject cut-out, as ADR-0019 decided (`REQ-CLI-014` to `REQ-CLI-019`). With `--subject`,
+  `stitch plan` and `stitch export` cut a photo's subject out before VectorCraft traces it, and the background
+  is left unsewn. The option is off by default, and every other design sews as before.
+  - U²-Net-p finds the subject's box, and MobileSAM cuts the subject out inside it. `--subject-box`,
+    `--subject-point` and `--not-subject` correct a cut-out, and `--cutout FILE` writes it. `stitch cutout`
+    writes it alone, to place in VectorCraft. On the owner's 2 photos of her dog the cut-out keeps the dog
+    at an IoU of 0.985 and 0.987.
+  - tract runs the 3 models in a new crate, `stitchcraft-cutout`, which only `stitch` depends on. `stitch`
+    fetches them on first use, 49 MB, and checks each against its pinned SHA-256 before each use. GitHub
+    Actions builds the release that publishes them from their authors' own files, and the owner publishes
+    it by starting the `models` workflow by hand.
+  - New diagnostics, `SC-E1201` to `SC-E1205`, `SC-I1206` and `SC-E1207`. A bug-report bundle records the
+    cut-out, and replays without the models.
+  - The cut-out is `stitch`'s `cutout` feature, on by default. The release `stitch` for Linux is 33.3 MB
+    with it and 6.8 MB without it.
+  - A how-to, Cut a photo's subject out, and the models' place in the install page.
+- M13.16: a design digitized automatically covers the fabric, whatever its colour (`REQ-AUTO-027` to
+  `REQ-AUTO-029`, `REQ-FILL-TAT-014`, `REQ-RND-003`).
+  - One base layer sews first under the whole design: an open fill in 3 directions with the parameters of
+    Ink/Stitch's Knockdown Fill, 0.4 mm inside the design's outline, in the thread that paints the most,
+    every stitch of it underlay. The fills on it sew no underlay of their own (`SC-I0909`, `SC-W0910`, and
+    the settings `auto_base_layer`, `auto_base_stitch_length_mm`, `auto_base_offset_mm` and
+    `auto_base_keep_holes`).
+  - Neighbours overlap by 1 mm where they overlapped by 0.4 mm (`auto_overlap_mm`'s default). A satin
+    column sews that far past a rail that a shape sewn after it runs along, and 0.4 mm past any other
+    (`auto_pull_compensation_mm`, new). A column's end under another column reaches its pull compensation.
+  - With `turn_stitches` on, a tatami fill keeps the turns between its rows as stitches. Automatic fills
+    turn it on, and each of their rows then has a needle point at the outline.
+  - `stitchcraft_testkit::fabric::cover` measures what shows. No fabric shows inside a design, counting the
+    base layer: a gap in the top thread passes only as a sliver, at most 0.4 mm² with the base layer under
+    it or in the 0.4 mm along the design's outline that the base layer leaves, and the top thread leaves at
+    most 0.5 % of the design bare. Both limits
+    are settings (`auto_base_sliver_mm2`, `auto_base_bare_percent`), by which nothing sews differently. A
+    design that turns the base layer off is held to no gap and 0.15 %, and is told that fabric may show
+    (`SC-I0911`).
+  - The test pictures and the traced pear don't leave a gap. The 4 traced dogs leave 19 slivers of 0.09 to
+    0.335 mm², 3 of them reaching into the 0.4 mm along the outline that the base layer leaves, and 0.07 to
+    0.35 % of their designs bare, where they left 44 gaps
+    and 0.28 to 0.77 %. The base layer adds 675 to 1,027 stitches to a dog, which is 5 to 11 %. The pear sews 80 fewer.
+  - A preview is drawn on fabric of any colour (`Settings::on` of the renderer, and the `fabric` key of a
+    docs shot). The automatic digitizing page shows the pear and the running dog on black fabric beside
+    cream.
+  - The roadmap's order after this step is M13.21, which stitch a shape gets, then M13.20 and M13.17.
 - M10.9: guided fill with its guide copied (`REQ-FILL-GDD-001` to `REQ-FILL-GDD-008`, `REQ-SVG-015`,
   `REQ-VC-023`). `fill_method` `guided_fill` sews Ink/Stitch's guided fill with its default strategy, which
   copies the guide, where it was skipped with `SC-W0011`.
@@ -33,6 +122,44 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     (`DEV-FILL-034`). A user page has pictures of guided fills.
   - Golden changed: `TS-17B.pes`, for the guided leaf below M10.12's gradients. With the leaf after it, the
     third gradient's last colour ends on its square's side nearest the leaf, and so starts on the other.
+- M13.15: the owner's dog photos as test pictures (`REQ-AUTO-025`, `REQ-AUTO-026`). KaboomFox's 2 photos of
+  her dog, each cut out by a mask checked by hand, are docs fixtures, with the 4 documents VectorCraft 0.22.0
+  traced from them 100 mm tall in 6 and in 9 threads (`docs/fixtures/README.md` › The traced dogs). A test
+  keeps each cut-out's hash.
+  - The engine's cases digitize each dog and measure what shows (`tests/auto_photos.rs`). They take too long
+    in the tests' debug build, so CI's `perf` job runs them in the release build. The conformance runner
+    reports such a case as run there, and `conformance --check` checks that a step of `ci.yml` runs its file
+    in the release build (`docs/src/design/conformance.md` › Cases in the release build).
+  - Every dog's largest bare patch is under 1 mm², 0.92 mm² at most. The case lists the 3 stitches that
+    still show where they should not, each with its cause. It fails on a stitch it doesn't list, and on a
+    listed one that is gone. M13.16 removes them. The dogs' 102 to 131 jump threads are recorded as the
+    design's limit, and the roadmap gains M13.17, which runs the thread under shapes sewn later instead.
+  - 2 fixes came from the dogs (Fixed, below): a column's width is measured inside its own outline, and a
+    rail cuts across slivers narrower than a thread. Pieces of the dogs are cases of the debug suite.
+  - The automatic digitizing page shows the running dog: the cut-out, its trace and its stitches. A picture
+    shot draws a PNG fixture on white.
+- M14.1, a spike: ADR-0020 decides where StitchCraft's embroidery fonts live and which licences they may be
+  under, and the reader of Ink/Stitch's font format is built (`REQ-FONT-002` to `REQ-FONT-008`). The owner
+  accepted the decision on 2026-11-08, and creates the font repository before M14.2 pins it.
+  - The fonts will be kept in `KaboomFox/stitchcraft-fonts`. This repository will pin them by a commit
+    and the SHA-256 of its archive, as it pins the corpus. They will be StitchCraft's own fonts and
+    Ink/Stitch's fonts under the OFL, CC0, CC BY or CC BY-SA, each with its licence file and a row of the
+    repository's manifest. `stitch` will find them in the folders it reads, and the VectorCraft plug-in
+    will build in those a list names.
+  - Of the 131 fonts the corpus takes, 7 rest on a permission their originals' authors gave for Ink/Stitch
+    alone, and stay out until their authors allow more. A person reads 10 more before they join.
+  - `stitchcraft_svg::font::read` reads a font from the files of its folder. It reads `font.json`, each key
+    Ink/Stitch reads at Ink/Stitch's default, and the glyph files of each direction. Each glyph is a design
+    of its own, with the box and the baseline lettering places it by. The user's guide lists the keys on a
+    new page, Font settings.
+  - Read on 8 November 2026, the reader and Ink/Stitch's lettering find the same 21,502 glyphs in the 142
+    fonts of the corpus's commit. 21,132 have the same box and baseline within a micrometre. The other 370
+    differ where StitchCraft centres a viewBox of another shape than its page, or takes a folder's files by
+    their names.
+  - A case reads Ink/Stitch Small Font from the corpus and plans each of its 187 glyphs. CI fetches the
+    corpus into every job that runs `cargo xtask ci`.
+  - New codes: `SC-E1101`, `SC-W1102`, `SC-W1103`, `SC-W1104` and `SC-I1105`. The glyph differential cuts
+    its glyphs with the reader's code, and xtask no longer reads XML itself.
 - M13.13, a spike: ADR-0019 decides to cut a photo's subject out before VectorCraft traces it, as an
   option off by default. The owner accepted it on 2026-11-08, and M13.14 builds it.
   - `--subject` on `stitch plan` and `stitch export` is to make the picture's background transparent and
@@ -1890,6 +2017,27 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- M13.14: the encoder's export differs by machine, and the models' workflow no longer fails by chance.
+  MobileSAM's encoder is exported with its pinned size on every runner and with one of 2 SHA-256 sums:
+  the run on `main` at `ecdaaeb9` gave the other one and failed, where the pull request's last run had
+  passed. For the encoder's other sum the build now warns, with the runner's image and processor, and the
+  models' job compares that encoder's outputs with the saved ones. Only pinned files are released. When
+  the publishing run's encoder has the other sum, the owner names a finished run in the new input
+  `encoder_run`. The workflow takes that run's encoder once it matches the pin.
+- Automatic digitizing: a column that is narrow on average sews as a satin column when it is wider than the
+  narrowest satin stroke somewhere along its line, or reaches farther than that from its line. Both are
+  measured inside the column's own outline (`REQ-AUTO-016`). The owner's traced dog left 38 to 81 patches of
+  fabric bare, 2 to 3.6 % of the dog, the largest 2.4 to 7.4 mm². Strands of fur that widened at an end ran
+  as lines beside other lines, and so did small blobs. So did a column whose line ran along one side of a
+  bump 1.4 mm across, though the bump's triangles were the column's. Measured inside the part, the circle
+  where 2 strokes meet depends on where the junction's triangle has its corners, and a T in strokes 0.9 mm
+  wide sewed its bar as a satin column one way round and as a triple run mirrored. On TS-13B, the outer legs
+  of the M 4 mm tall sew as satin columns, and the traced pear's stem sews its olive side as one too.
+- Automatic digitizing: an open column's rail cuts straight across the base of each of the outline's slivers
+  narrower than a thread there (`REQ-AUTO-016`). The satin's pairs followed the rail up a sliver, the next
+  step grew past it, and one stitch spanned 2.3 mm of rail, so the traced dog's paw left a wedge of 1.8 mm²
+  bare. The traced pear sews 4,810 stitches, 9 more with its stem's satin column, and its longest stretch
+  astray is 0.95 mm, from 0.70 mm.
 - Automatic digitizing: a narrow part cut from a broad one ends along its cut, its column no longer fanning
   into a corner of the cut (`REQ-AUTO-016`, `REQ-AUTO-019`). The traced pear in the docs left a wedge of
   fabric 4.6 mm² bare at its left edge, where its olive band's narrow end met the pale green. The column's
@@ -2744,6 +2892,19 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   shortens a value nor refuses the file.
 
 ### Golden files
+- Changed the 4 sheets `conformance/golden/testsheets/TS-13A.pes` to `TS-13D.pes` (M13.16, a design covers
+  the fabric). The digitized half of each sews a base layer first, and its neighbours overlap by
+  1 mm. Its fills sew without an underlay of their own, and they turn from row to row in a stitch at the
+  outline. The plans sew
+  25,969, 15,768, 11,273 and 27,601 stitches. The digitized halves of TS-13A, C and D change thread once
+  more, since the base layer sews in the thread that paints the most. The digitized half of TS-13B leaves
+  44 jump threads on the PE800, 19 of them sewn down, where it left 37 and 16: the base layer has a piece
+  under each letter wide enough for one.
+- Changed `conformance/golden/testsheets/TS-13B.pes` (M13.15, a column's width measured inside its own
+  outline). The digitized word 4 mm tall sews the 2 outer legs of its M as satin columns instead of triple
+  runs: 0.81 mm wide on average, they are 1.05 mm wide inside their own outlines where the M's middle
+  strokes meet them. The plan sews 14,460 stitches, 39 more, with 57 jumps and 56 trims as before, and its
+  digitized half leaves 37 jump threads on the PE800, 16 of them sewn down, one more.
 - Changed `conformance/golden/testsheets/TS-17B.pes` (M10.12). The sheet gains a third row of 3 linear
   gradients 40 mm square below its tartans. They sew in 7 colour blocks, a trim after each. The plan
   spans 130 × 130 mm and sews 45,390 stitches with 35 jumps, 7,395 and 7 more. The 5 tartans and the

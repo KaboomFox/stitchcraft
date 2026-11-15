@@ -25,6 +25,13 @@ harness = false
 [lints]
 workspace = true
 
+[features]
+default = ["cutout"]
+# The subject cut-out of `--subject` and `stitch cutout` (ADR-0019): photos decoded and the models run, which
+# brings tract and `image` into `stitch`. A build without it, such as the WASI one that makes the golden
+# files, says so with SC-E1207 when asked for a cut-out.
+cutout = ["stitchcraft-cutout/models"]
+
 [dependencies]
 clap = { workspace = true }
 # Bug-report bundles are JSON (`commands::bug_report`).
@@ -32,6 +39,8 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
 stitchcraft-core = { workspace = true }
+# The subject cut-out of `--subject` and `stitch cutout`, which only `stitch` depends on (ADR-0019).
+stitchcraft-cutout = { workspace = true }
 stitchcraft-engine = { workspace = true }
 stitchcraft-formats = { workspace = true }
 stitchcraft-plan = { workspace = true }
@@ -40,4 +49,6 @@ stitchcraft-svg = { workspace = true }
 stitchcraft-vectorcraft = { workspace = true }
 
 [dev-dependencies]
+# The cut-out's tests draw pictures and read the cut-outs back.
+image = { workspace = true }
 stitchcraft-testkit = { workspace = true }

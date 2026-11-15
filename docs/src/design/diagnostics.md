@@ -1,6 +1,6 @@
 # Diagnostics
 
-<!-- implements: crates/stitchcraft-core/src/diag.rs, crates/stitchcraft-core/src/text.rs, apps/stitchcraft-cli/src/commands/explain.rs -->
+<!-- implements: crates/stitchcraft-core/src/diag.rs, crates/stitchcraft-core/src/diag/registry.rs, crates/stitchcraft-core/src/text.rs, apps/stitchcraft-cli/src/commands/explain.rs -->
 
 A diagnostic is a problem with the user's design or input, explained in the user's terms, with a
 stable code. Diagnostics are values: the engine collects them and keeps planning whatever it can.
@@ -36,12 +36,14 @@ probably not what you want) or `I` (info) + four digits grouped by area:
 | 0800–0899 | Hosts (SVG, VectorCraft) |
 | 0900 to 0999 | Automatic digitizing ([image to embroidery](image-to-embroidery.md)) |
 | 1000 to 1099 | Routing ([routing tools](routing.md)) |
+| 1100 to 1199 | Fonts and lettering ([fonts](fonts.md#the-reader)) |
+| 1200 to 1299 | Subject cut-out ([image to embroidery](image-to-embroidery.md#subject-cut-out)) |
 
 Codes are never reused. A retired code keeps its page with "retired in vX".
 
 ## The registry
 
-All codes live in one table in `stitchcraft-core`: the `registry!` block in `src/diag.rs`, which
+The codes are one table in `stitchcraft-core`, the `registry!` block in `src/diag/registry.rs`, which
 defines the `Code` enum. Each entry is one line — variant, id, severity, title — and its doc comment is
 the long explanation (Markdown: what it means, why it matters for the sew-out, how to fix it), so the
 text users read is also the code's rustdoc. Tests reject an entry whose id is malformed or duplicated,
@@ -198,7 +200,23 @@ another.
 | `SC-W0906` | Warning | Background left out (the lowest shape, an automatic area that covers the whole design under the other shapes, unless it switches `auto_ignore_background` off; what shows of it inside the picture is sewn) | M13 |
 | `SC-I0907` | Info | Elements sewn in an order of their own (automatic elements, and with `--sort-colours` every element, sewn in the order StitchCraft chooses, with the thread changes of each order; an element or an order that needs more work than the budget allows keeps paint order) | M13 |
 | `SC-I0908` | Info | Layers flattened (each automatic area sews what shows of it under the automatic areas drawn over it, and an area wider than a satin column somewhere is digitized whole under the areas that fill its holes, which sew after it) | M13 |
+| `SC-I0909` | Info | Base layer sewn under the design (one underlay under the outer shape of the automatic shapes, with its area, pieces and thread) | M13 |
+| `SC-W0910` | Warning | Base layer left out (its shape needs more work than the budget allows, and every fill sews the underlay of its settings) | M13 |
+| `SC-I0911` | Info | Base layer turned off (the design's lowest automatic shape turns `auto_base_layer` off, so nothing lies under a place the top thread leaves bare, and fabric may show there) | M13 |
+| `SC-I0912` | Info | Rule that chose a shape's stitches (for each part of an automatic shape, the rule of the table it sewed by and the measures that decided it) | M13 |
 | `SC-E1001` | Error | Nothing to route (no element the tool can take among those given, a satin column for Auto-Route Satin Columns or a stroke for Auto-Route Running Stitch: they stay as they were) | M10 |
 | `SC-I1002` | Info | Element left out of the route (a fill, a shape digitized automatically, settings that don't read, rails that can't be made, no length, a stroke whose first subpath ends where it starts, or a satin column among running stitches: kept as it is) | M10 |
 | `SC-W1003` | Warning | Piece of a routed satin column may sew otherwise (read back, it has other rails or pairs other points: it is kept) | M10 |
 | `SC-W1004` | Warning | Too many lines to cut where they cross (more than 1,000 lines routed as running stitches: none is cut by another, as with Add nodes at intersections off) | M10 |
+| `SC-E1101` | Error | Font could not be read (a `font.json` that is missing or isn't an object of settings, or glyph files that are missing or aren't SVG StitchCraft reads: nothing of the font is sewn) | M14 |
+| `SC-W1102` | Warning | Font setting not read, its default kept (a value in `font.json` of another type than its key takes, which keeps Ink/Stitch's default, or an entry of a list or a table of another type, which is left out) | M14 |
+| `SC-W1103` | Warning | Font file not read (a glyph file compressed with xz, as in Ink/Stitch's packages: its glyphs are left out) | M14 |
+| `SC-W1104` | Warning | Glyph left out (a glyph whose paths give it no box, or every glyph of a file whose baseline guide doesn't give a place, as Ink/Stitch's lettering leaves them out) | M14 |
+| `SC-I1105` | Info | Font read as Ink/Stitch reads it (a key the format doesn't have, a glyph drawn twice in a direction, of which the later counts, a file without a baseline guide, or a font without glyphs for its `default_variant`, which sews its first direction) | M14 |
+| `SC-E1201` | Error | Subject cut-out's models not ready (a model that couldn't be fetched, or isn't the file pinned: the message names every file and the folder they belong in) | M13 |
+| `SC-E1202` | Error | No subject found to cut out (no part of U²-Net-p's map reaches a half and no box is given, or MobileSAM didn't keep a pixel) | M13 |
+| `SC-E1203` | Error | Picture could not be read for the cut-out (not a PNG or JPEG file it reads, or larger than its limits) | M13 |
+| `SC-E1204` | Error | Cut-out model could not be run (tract refused a model that matches its pin) | M13 |
+| `SC-E1205` | Error | Cut-out model has a random operator (refused before it runs, as tract would seed it from the computer) | M13 |
+| `SC-I1206` | Info | Subject cut out (the box it came from, the share of the picture kept and the cut-out's size) | M13 |
+| `SC-E1207` | Error | Subject cut-out left out of this build (a `stitch` built without its `cutout` feature) | M13 |

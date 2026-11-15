@@ -99,7 +99,7 @@ release takes:
 | `<ns>.stroke` | live effect | running, bean, manual (P1), zigzag (M7.2), ripple (M10.8) | `stroke_method` choice selects the variant |
 | `<ns>.satin` | live effect | satin (P1), E (M7.3), S (M7.4), zigzag (M7.5) | rails and rungs from the object's compound path |
 | `<ns>.fill` | live effect | tatami (P1); contour, meander, circular (P2) | `fill_method` choice |
-| `<ns>.auto` | live effect | the stitches automatic digitizing chooses by width (M13.7) | on a group, previews each path inside ([image to embroidery](image-to-embroidery.md)) |
+| `<ns>.auto` | live effect | the stitches automatic digitizing chooses by its rules (M13.7, M13.21) | on a group, previews each path inside ([image to embroidery](image-to-embroidery.md)) |
 | `<ns>.pes`, `<ns>.dst` | exporter (VectorCraft 0.14) | every family | File › Export › Export As writes the same machine file as `stitch export` (M6.9, [below](#exporters-file--export-writes-pes-and-dst)) |
 | `<ns>.settings` | filter (VectorCraft 0.16) | none | keeps the design settings and the machine with the document (M6.11, [below](#design-settings-and-machine-kept-with-the-document)) |
 | `<ns>.stroke-to-satin` | heavy filter (VectorCraft 0.17) | satin | makes each selected line into a satin column drawn with its rails and rungs (M6.12, [below](#tools-stroke-to-satin-and-test-sheet)) |
@@ -149,7 +149,10 @@ The other texts, seeds, and settings left empty to take another's value keep the
 today they are the custom locks' steps, `random_seed`, a fill underlay's angles, and a satin's zigzag underlay
 insets and its shortest random split. A choice leaves out the options that a text spells out, which are the
 custom locks, and `fill_method` leaves out Ink/Stitch's legacy fill, which StitchCraft sews as a tatami fill
-(`REQ-FILL-005`). `satin_column` belongs to the effect, which sets it from its family. The dialog opens with
+(`REQ-FILL-005`). `satin_column` belongs to the effect, which sets it from its family. `turn_stitches`, the switch that
+automatic digitizing sets on its own fills, is left out of the fill's dialog, which holds 64 parameters
+without it. The Auto effect's dialog leaves out the settings of the registry's Advanced group, which are
+the bounds of the rules and the 2 limits of the cover's measure (M13.21). The dialog opens with
 the group that declares the family's method. The groups only the family uses, for its default method, come
 next, then those it shares with the other families, then those of its other methods, such as the zigzag
 stroke's. The settings every element shares come last, as in Ink/Stitch's dialogs.
@@ -722,7 +725,7 @@ shape. Its visible fills are filled, in the appearance's order, and its visible 
 stitch each. Since M13.1, read with `--auto` (`stitchcraft_vectorcraft::read_with`), the elements of an
 object are automatic instead when neither it nor a group or layer around it has a StitchCraft effect
 ([image to embroidery](image-to-embroidery.md), `REQ-AUTO-001`). StitchCraft then chooses their stitches by
-their width. Since M13.7 StitchCraft's Auto effect makes them automatic without the switch (`REQ-VC-016`).
+its rules. Since M13.7 StitchCraft's Auto effect makes them automatic without the switch (`REQ-VC-016`).
 It is read where a stitch effect is read, on the object or on a group or a layer around it, the nearest
 first, and its parameters are the object's settings of the rules. A stitch effect says how an object sews,
 so an Auto effect beside one on the same object or group isn't used, and `SC-W0807` says so. Read with `--sort-colours`, the objects with effects sew in the order StitchCraft chooses too
@@ -914,3 +917,77 @@ engine must stay host-agnostic.
 
 VectorCraft's conventions are mostly excellent and we follow them; where they drift we improve them.
 See [ADR-0009](adr/0009-adopt-vectorcraft-conventions.md) for the audit.
+
+## Browser distribution
+
+M6.13 publishes VectorCraft's web editor with StitchCraft's plug-ins on the project's Pages site. The work
+came from crowecawcaw's pull request #260. [Try StitchCraft in your browser](../browser-demo.md) says what
+a visitor sees, `web/README.md` how to build it, and the [docs pipeline](docs-pipeline.md#publishing) how
+it is published.
+
+### The editor and its release
+
+`web/build.py` builds the editor with Trunk from VectorCraft's source at a release, and doesn't change
+it. It writes 2 folders. The app is the editor with the plug-ins, and the demo folder is the plug-ins, the
+loader and the starter patch without the editor.
+
+`compat/vectorcraft.toml` records the release beside the gate's pins, as a tag and the commit the tag
+names, and the build stops when the tag names another commit. The release is newer than the stable
+track's: the loader calls `uiInspect` and `docInspect`, which VectorCraft's page has from 0.24. A test fails
+when the demo's release is older than the stable track's. Once the stable track pins that release, both name it.
+
+The loader touches VectorCraft only through the calls its page offers as `window.vectorcraft`. VectorCraft
+documents them in its `docs/control-protocol.md`, under "In the browser". The loader installs each light
+module with `plugin.install` and opens the starter patch with `document.open`. It doesn't install the heavy
+filters, which VectorCraft installs only once a person allows it, and the page offers them as files.
+
+Trunk runs without the network. The workflow installs Trunk and the 2 tools Trunk would otherwise download,
+wasm-bindgen and wasm-opt, each checked against a checksum kept in the repository
+(`.github/actions/tools/action.yml`).
+
+### Licences
+
+VectorCraft's code is licensed MIT OR Apache-2.0, which allows publishing a build of it with its licence
+texts and notice. The app has them as `VectorCraft-*.txt`, beside StitchCraft's own.
+
+The ArtCraft name and logos are not under that licence. VectorCraft's `docs/brand/LICENSE-brand.txt` says
+that a published work derived from VectorCraft carries none of the marks and doesn't present itself as an
+ArtCraft product, and that it may say in plain text what it is based on. What was checked, by reading
+VectorCraft at the recorded commit on 2026-11-15:
+
+- No Rust source, manifest or page of VectorCraft names a file of `docs/brand/`, but a test of its `xtask`.
+  The editor's build doesn't embed a logo.
+- The editor's own text names ArtCraft: the Help menu and the home screen link to its website and its
+  community, and the About dialog says "Part of ArtCraft". The build leaves that text in, because it doesn't
+  change the source. The text says who makes VectorCraft. The owner read the brand licence and decided on
+  2026-11-14 that the text stays: the editor is VectorCraft's own, unchanged, and StitchCraft is a plug-in
+  for it.
+- What the build adds says "StitchCraft in VectorCraft" in plain text: the page's title, the panel and the
+  book. The panel says that the build is unofficial and made by the StitchCraft project.
+
+A preview doesn't contain the editor. Of VectorCraft it publishes only pictures of the editor's window.
+
+### Sizes on the site
+
+The editor is published once, at `/app/`, and a preview contains what its pull request can change. The
+Pages branch is one commit. The [docs pipeline](docs-pipeline.md#one-publisher-and-a-branch-of-one-commit)
+says how both are kept.
+
+The first build measured them on 2026-11-15, for VectorCraft v0.24.1. The `web` workflow's build job prints
+the table of every build, in the step that lists the site's files as stored and as sent.
+
+| Folder | What it contains | Bytes | Bytes sent, gzip -6 |
+|---|---|---:|---:|
+| `/app/` | The editor and the plug-ins | 116,987,438 | 40,752,318 |
+| `/app/`, the editor's module alone | `vectorcraft-web-*_bg.wasm` | 97,474,876 | 34,249,458 |
+| A preview's `demo/` | The plug-ins, the loader, the starter patch | 18,869,636 | 6,291,317 |
+
+The preview of pull request 266, its book with its `demo/` and the 3 pictures, took 40.6 MB of the branch.
+The editor's module is 5 times the size of a preview's `demo/`, and no preview contains it.
+
+### The starter patch
+
+A session without a document opens Alpine Night from `web/templates/alpine-night.vctemplate`, a template in
+VectorCraft's own format, in a new document. VectorCraft wrote it from the SVG beside it, with the Auto
+effect on each shape, and `web/generate-template.mjs` writes it again. `docs/fixtures/README.md` records
+the art's author and licence.

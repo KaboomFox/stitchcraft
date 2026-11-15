@@ -61,25 +61,40 @@ fn req_vc_011_each_exporter_s_manifest_is_one_vectorcraft_accepts() {
 
 #[test]
 fn req_vc_016_the_auto_effect_s_dialog_holds_the_rules_settings_and_its_preview_levels() {
-    use stitchcraft_engine::auto::{IGNORE_BACKGROUND, MAX_SATIN_WIDTH, MIN_AREA, MIN_TRIPLE_RUN_WIDTH, OVERLAP};
+    use stitchcraft_engine::auto::{ADVANCED, AutoParams, FILL_ANGLE, FILL_UNEVEN, IGNORE_BACKGROUND, MIN_AREA, OVERLAP, PREFER, STITCH};
 
     let manifest = auto();
     assert_eq!(validate(&text(&manifest)), Ok(()));
     assert_eq!((manifest.id.as_str(), manifest.kind), ("dev.stitchcraft.auto", "effect"));
     let keys: Vec<&str> = manifest.params.iter().map(|(key, _)| *key).collect();
-    assert_eq!(keys, [MAX_SATIN_WIDTH, MIN_TRIPLE_RUN_WIDTH, OVERLAP, MIN_AREA, IGNORE_BACKGROUND, PREVIEW_LEVEL]);
+    let shape = [STITCH, PREFER, FILL_UNEVEN, FILL_ANGLE];
+    let neighbours = [OVERLAP, "auto_pull_compensation_mm", IGNORE_BACKGROUND];
+    let base = ["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_offset_mm", "auto_base_keep_holes"];
+    assert_eq!(keys, [&shape[..], &neighbours[..], &base[..], &[PREVIEW_LEVEL]].concat());
+    // The advanced settings, the rules' bounds and the 2 limits of the cover's check, have no row: the dialog
+    // holds 12 rows, one fewer than the 13 that made it 3 px taller than its window.
+    let advanced: Vec<&str> = AutoParams::SPECS.iter().filter(|spec| spec.group == ADVANCED).map(|spec| spec.key).collect();
+    assert_eq!(advanced.len(), 8);
+    assert!(advanced.contains(&MIN_AREA) && advanced.iter().all(|key| !keys.contains(key)), "{advanced:?}");
+    assert_eq!(keys.len() + advanced.len(), AutoParams::SPECS.len() + 1);
     // Each setting's row has the registry's label, unit, section, help and page, and always shows: the
     // dialog has no method.
     for (key, param) in manifest.params.iter().filter(|(key, _)| *key != PREVIEW_LEVEL) {
         let spec = stitchcraft_params::find(PARAMETERS, key).unwrap();
         assert_eq!((param.ui.label, param.ui.group, param.ui.unit), (Some(spec.label), Some(spec.group), dialog::unit(spec.kind)), "{key}");
-        assert_eq!(param.ui.help, dialog::help(&spec.help()), "{key}");
+        // A choice's help goes on to say what its options mean, which the drop-down list does not show.
+        let (help, plain) = (param.ui.help.clone().unwrap(), dialog::help(&spec.help()).unwrap());
+        let choice = matches!(spec.kind, Kind::Choice { .. });
+        let rest = help.strip_prefix(&plain).unwrap();
+        assert_eq!((rest.starts_with("\n\nOne of "), rest.is_empty()), (choice, !choice), "{key}: {help}");
         assert_eq!(param.ui.help_url, Some(dialog::page(&format!("user/reference/params/auto.html#{key}"))), "{key}");
         assert!(param.ui.visible_when.is_empty(), "{key}");
     }
-    // The smallest area is a number of square millimetres in its range, the preview a choice of 3 levels.
-    let area = schemas(&manifest.params).into_iter().find(|(key, _)| *key == MIN_AREA);
-    assert_eq!(area, Some((MIN_AREA, Schema::Number { min: 0.0, max: 10.0, default: 1.0 })));
+    // The overlap is a number of millimetres in its range, the stitch a choice, the preview a choice of 3 levels.
+    let schema = |key: &str| schemas(&manifest.params).into_iter().find(|(k, _)| *k == key);
+    assert_eq!(schema(OVERLAP), Some((OVERLAP, Schema::Number { min: 0.0, max: 2.0, default: 1.0 })));
+    assert_eq!(schema(STITCH), Some((STITCH, Schema::Choice { options: vec!["auto", "run", "satin", "fill"], default: "auto" })));
+    assert_eq!(schema(PREFER), Some((PREFER, Schema::Choice { options: vec!["satin", "balanced", "fill"], default: "balanced" })));
     let preview = schemas(&manifest.params).pop();
     assert_eq!(preview, Some((PREVIEW_LEVEL, Schema::Choice { options: vec!["auto", "exact", "outline"], default: "auto" })));
     // A record of the defaults reads as no settings at all.
@@ -163,8 +178,10 @@ fn req_vc_021_the_fill_dialog_holds_a_tartan_s_sett_as_text_after_its_method() {
     assert_eq!(texts(&fill), 1);
     assert_eq!((texts(&family(Family::Stroke)), texts(&family(Family::Satin))), (0, 0));
     // From M10.9 all 64 that every release VectorCraft's gate tests takes, the guided fill's stitch positions the
-    // last: a setting more needs room made for it.
-    assert!(keys.len() <= limits::MAX_PARAMS, "{}", keys.len());
+    // last: a setting more needs room made for it. M13.16's `turn_stitches`, which automatic digitizing sets on
+    // its own fills, is the one left out.
+    assert_eq!(keys.len(), limits::MAX_PARAMS);
+    assert!(!keys.contains(&"turn_stitches") && stitchcraft_params::find(PARAMETERS, "turn_stitches").is_some());
     validate(&serde_json::to_vec(&fill).unwrap()).unwrap();
 }
 

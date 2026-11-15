@@ -30,7 +30,7 @@ mod travel;
 mod underpath;
 
 use stitchcraft_core::Mm;
-use stitchcraft_params::{Origin, StitchType, normalized_angle, params};
+use stitchcraft_params::{Origin, Stability, StitchType, normalized_angle, params};
 
 use crate::generators::running::RunningParams;
 use crate::generators::tatami::rows::Grid;
@@ -42,6 +42,10 @@ const TATAMI: &[StitchType] = &[StitchType::TatamiFill];
 
 /// The key of the angle of a fill's rows ([`TatamiParams::angle`]), which an SVG file's clone turns with it.
 pub const ANGLE: &str = "angle";
+
+/// The key of the switch that keeps the turns between rows as stitches ([`TatamiParams::turn_stitches`]),
+/// which automatic digitizing sets on its fills and a host's dialog may leave out.
+pub const TURN_STITCHES: &str = "turn_stitches";
 
 /// The stitch types whose rows the end spacing spaces: a tatami fill's own, and a circular fill's circles.
 const ROUTED: &[StitchType] = &[StitchType::TatamiFill, StitchType::CircularFill];
@@ -141,6 +145,14 @@ params! {
         /// lies close to the start of the next, and leaving it out lowers the stitch count and the density
         /// along the fill's edge.
         skip_last: Toggle = "false", label "Skip last stitch", applies SKIPPED;
+
+        /// Keep the turn between 2 rows as a stitch where the rows lie closer together than the shortest
+        /// stitch: the turn's 2 needle points move apart along it until the stitch between them is the
+        /// shortest stitch. Off, the second of them is left out, as any needle point too near the one before
+        /// it is, and every second row then starts up to a stitch inside the outline, which leaves a notch
+        /// in the fill's edge there. Automatic digitizing turns it on for its fills.
+        turn_stitches: Toggle = "false", label "Keep turn stitches", applies TATAMI,
+            origin Origin::StitchCraft, stability Stability::Experimental;
     }
 
     "Travel" {
@@ -209,6 +221,7 @@ impl TatamiParams {
     pub fn fill(&self, longest: Mm, running: &RunningParams, travel: Travel, pull: Pull, force_locks: bool) -> Fill {
         let gap_rows = usize::try_from(self.gap_fill_rows.div_ceil(2) * 2).unwrap_or(usize::MAX);
         Fill {
+            turns: self.turn_stitches,
             top: Layer { stitching: self.stitching(longest, running), travel, pull, gap_rows },
             expand: self.expand_mm.get(),
             underlay: self.underlay(longest, travel),

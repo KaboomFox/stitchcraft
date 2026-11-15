@@ -12,8 +12,8 @@
 //! ([`sheet`]), so that a case can measure what a sheet sews against what it draws. A sheet's machine file
 //! has its origin at the middle of its stitches, which moves every stitch by the same amount.
 //!
-//! So is the pear the docs show ([`pear`]), a photo that VectorCraft traced into shapes, whose ragged edges
-//! no picture drawn in code has.
+//! So are the pear the docs show ([`pear`]) and the owner's dog ([`dogs`]), photos that VectorCraft traced
+//! into shapes, whose ragged edges no picture drawn in code has.
 
 use stitchcraft_core::Budget;
 use stitchcraft_engine::design::{Design, Reading};
@@ -79,9 +79,34 @@ pub fn sheet(id: &str) -> (Design, StitchPlan) {
 /// The photo of a pear that the docs show, traced 90 mm across into 4 of the reference machine's threads by
 /// VectorCraft 0.19.0 (`docs/fixtures/traced-pear.vectorcraft`): a light grey square, the picture's
 /// background, and on it the pear in 3 greens, read as `--auto` reads it, every shape automatic.
-#[allow(clippy::disallowed_methods)] // a test reads the docs' fixture from the repository
 pub fn pear() -> Design {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/fixtures/traced-pear.vectorcraft");
+    traced("traced-pear.vectorcraft")
+}
+
+/// The owner's 2 photos of her dog, each cut out by a mask checked by hand and traced 100 mm tall by
+/// VectorCraft 0.22.0 in 6 and in 9 of the reference machine's threads (`docs/fixtures/README.md` › The
+/// traced dogs), by the names the cases give them. The background is transparent and traces into no shape,
+/// so every shape is the dog's.
+pub fn dogs() -> Vec<(String, Design)> {
+    ["dog-on-turf-6", "dog-on-turf-9", "dog-running-6", "dog-running-9"]
+        .into_iter()
+        .map(|name| (name.to_string(), traced(&format!("traced-{name}.vectorcraft"))))
+        .collect()
+}
+
+/// The shapes `ids` of the traced dog `name` ([`dogs`]) alone, in their paint order: a piece of the picture
+/// that a case digitizes in the tests' debug build, where a whole dog takes too long.
+pub fn dog_shapes(name: &str, ids: &[&str]) -> Design {
+    let dog = traced(&format!("traced-{name}.vectorcraft"));
+    let shapes = dog.elements().iter().filter(|element| ids.contains(&element.id.to_string().as_str())).cloned().collect();
+    Design::new(shapes, dog.settings).unwrap()
+}
+
+/// The VectorCraft document `fixture` of the docs' fixtures, read as `--auto` reads it, every shape
+/// automatic.
+#[allow(clippy::disallowed_methods)] // a test reads the docs' fixture from the repository
+fn traced(fixture: &str) -> Design {
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../docs/fixtures").join(fixture);
     let bytes = std::fs::read(path).unwrap();
     stitchcraft_vectorcraft::read_with(&bytes, &Budget::DEFAULT, Reading { auto: true, ..Reading::default() }).unwrap().design
 }
