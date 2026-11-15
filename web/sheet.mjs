@@ -2,6 +2,8 @@
 // after sheet reports them (docs/src/design/before-after-sheet.md, The browser's checks):
 //
 // - the editor's exporters write the machine files `stitch` writes of the same document, byte for byte;
+// - the panel's exports, which run the exporters' modules in a worker, write those files and draw the
+//   picture `stitch` draws, also of the traced photos that the editor's own export is stopped on;
 // - how long StitchCraft's Auto effect takes on a traced photo, on the page's main thread;
 // - what a person sees: the traced photo in the editor with its stitches drawn.
 //
@@ -24,6 +26,12 @@ const DESIGNS = [
   {design: 'dog-on-turf-6', file: 'docs/fixtures/traced-dog-on-turf-6.vectorcraft', name: 'dog-on-turf-6.vectorcraft'},
 ];
 const TIMED = DESIGNS[1];
+// The other traced photos, which the panel alone exports: the editor's own export is stopped on each, half
+// a minute a file, and the first photo shows that already.
+const PANEL_ONLY = ['dog-on-turf-9', 'dog-running-6', 'dog-running-9']
+  .map(design => ({design, file: `docs/fixtures/traced-${design}.vectorcraft`, name: `${design}.vectorcraft`}));
+// The most one of the panel's exports may take, in milliseconds. They take 2 to 4 seconds on a laptop.
+const PANEL_LIMIT_MS = 60000;
 const RUNS = 3;
 // The most the middle of the 3 runs may take, in milliseconds, or null while none is set
 // (docs/src/design/before-after-sheet.md, The time's limit, says where the numbers come from). The export
@@ -86,8 +94,59 @@ try {
     }, format);
     return refused === undefined ? {bytes: Buffer.from(dataBase64, 'base64'), ms} : {refused, ms};
   };
+  // What the panel's button for `what` makes of the document in front, with StitchCraft's engine in a worker:
+  // the file's name and bytes, the document it was made of, and how long the engine took, or the refusal.
+  const made = async what => {
+    const out = await page.evaluate(async what => {
+      // Chunking avoids overflowing the JavaScript argument stack on a large file.
+      const base64 = bytes => {
+        let binary = '';
+        for (let i = 0; i < bytes.length; i += 8192) binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+        return btoa(binary);
+      };
+      try {
+        const {name, bytes, document, ms} = await window.stitchcraftMake(what);
+        return {name, ms, dataBase64: base64(bytes), documentBase64: base64(document)};
+      } catch (error) {
+        return {refused: String(error.message)};
+      }
+    }, what);
+    return out.refused === undefined
+      ? {name: out.name, ms: out.ms, bytes: Buffer.from(out.dataBase64, 'base64'), document: Buffer.from(out.documentBase64, 'base64')}
+      : out;
+  };
+  // The panel's 2 machine files and its picture of the document in front, each against what `stitch` makes
+  // of the document the panel took from the editor, under the name the panel gave it. The panel's exports
+  // have no budget, so a refusal is a fault, and so is a file that differs or takes too long.
+  const panel = async design => {
+    const folder = join(work, 'parity', design, 'panel');
+    await mkdir(folder, {recursive: true});
+    const row = {};
+    for (const [what, extra] of [['pes', []], ['dst', []], ['picture', ['--preview']]]) {
+      const out = await made(what);
+      if (out.refused !== undefined) {
+        faults.push(`${design}, the panel's ${what}: ${out.refused.slice(0, 600)}`);
+        row[what] = {refused: out.refused.slice(0, 300)};
+        continue;
+      }
+      // `stitch` names the design by its file, so the document is written under the name the panel chose.
+      const stem = out.name.replace(/\.[a-z]+$/, '');
+      const document = join(folder, `${stem}.vectorcraft`);
+      await writeFile(document, out.document);
+      await writeFile(join(folder, `panel.${out.name.split('.').pop()}`), out.bytes);
+      const machine = join(folder, `${stem}.${what === 'picture' ? 'pes' : what}`);
+      const ran = spawnSync(stitch, ['plan', document, '--output', machine, ...extra.flatMap(option => [option, join(folder, out.name)])], {encoding: 'utf8'});
+      const differs = ran.status === 0
+        ? difference(`${design}, the panel's ${what}`, out.bytes, await readFile(what === 'picture' ? join(folder, out.name) : machine))
+        : `${design}, the panel's ${what}: stitch plan ended with ${ran.status ?? ran.error?.message}: ${ran.stderr.trim().slice(0, 1200)}`;
+      if (differs) faults.push(differs);
+      if (out.ms > PANEL_LIMIT_MS) faults.push(`${design}, the panel's ${what} took ${Math.round(out.ms)} ms, above the limit of ${PANEL_LIMIT_MS} ms`);
+      row[what] = {bytes: out.bytes.length, same: !differs, ms: Math.round(out.ms)};
+    }
+    return row;
+  };
   // The 2 machine files of the document in front, from the editor and from `stitch`, which reads the
-  // document as the editor saves it, under the name the editor gave its exporter.
+  // document as the editor saves it, under the name the editor gave its exporter. Then the panel's.
   const compared = async design => {
     const files = {pes: await exported('pes'), dst: await exported('dst')};
     const saved = await exported('vectorcraft');
@@ -118,6 +177,7 @@ try {
       if (differs) faults.push(differs);
       row[format] = {bytes: files[format].bytes.length, same: !differs};
     }
+    row.panel = await panel(design);
     results.parity.push(row);
     return files.pes;
   };
@@ -140,6 +200,13 @@ try {
   results.speed = {design: TIMED.design, shapes: runs[0].shapes, runs, limit_ms: LIMIT_MS,
     middle_ms: {turn: middle(runs.map(run => run.turn_ms)), export: middle(runs.map(run => run.export_ms).filter(Number.isFinite)) ?? null}};
   faults.push(...overLimit(runs, LIMIT_MS));
+  // The other traced photos, each with the Auto effect, exported by the panel alone.
+  for (const photo of PANEL_ONLY) {
+    const turn = await turned(photo);
+    assert.ok(turn.shapes > 0, `${photo.design} has shapes`);
+    results.parity.push({design: photo.design, panel: await panel(photo.design)});
+    console.log(`${photo.design}, the panel: ${JSON.stringify(results.parity.at(-1).panel)}`);
+  }
 
   // What a person sees: the photo's shapes with their stitches drawn, the demo's panel folded away.
   await page.evaluate(async () => {

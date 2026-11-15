@@ -108,6 +108,20 @@ class CommentTest(unittest.TestCase):
         self.assertEqual(said[1], 'The editor did not export dog, so nothing was compared: plug-in exceeded its instruction budget.')
         self.assertIn('took 4.0 s until the editor had drawn them, but for 3 it left undrawn, and its PES export was refused:', said[2])
 
+    def test_the_panel_s_exports_are_said_with_their_times_and_each_that_differs_or_was_refused(self):
+        made = lambda ms, **more: {'same': True, 'ms': ms, **more}
+        dog = {'design': 'dog', 'panel': {'pes': made(3400), 'dst': made(2900), 'picture': made(5200)}}
+        pear = {'design': 'pear', **SAME, 'panel': {'pes': made(900), 'dst': made(1100), 'picture': made(1500)}}
+        said = sheet.panel_lines([{'design': 'alpine-night', **SAME}, dog, pear])
+        self.assertEqual(said, ['The panel\'s exports, StitchCraft\'s engine in the page, wrote the PES and DST files and drew the picture `stitch` '
+                                'makes, byte for byte, of dog, pear: PES 0.9 s to 3.4 s, DST 1.1 s to 2.9 s, the picture 1.5 s to 5.2 s.'])
+        self.assertIn(said[0], sheet.browser_lines({'parity': [dog, pear]}))
+        self.assertEqual(sheet.panel_lines([{'design': 'alpine-night', **SAME}]), [])
+        bad = {'design': 'cat', 'panel': {'pes': {'same': False, 'ms': 1}, 'dst': {'refused': 'error SC-E0010: nothing'}, 'picture': made(7)}}
+        self.assertEqual(sheet.panel_lines([bad]), ['The panel\'s PES of cat is not the one `stitch` makes.',
+                                                    'The panel did not make DST of cat: error SC-E0010: nothing.'])
+        self.assertEqual(len(sheet.panel_lines([dog, bad])), 3)
+
     def test_without_main_s_sheet_the_comment_says_so_and_lists_nothing(self):
         lines = sheet.comment([], 10, None, [], BROWSER)
         self.assertIn('Main has published no sheet to compare with yet.', lines[2])

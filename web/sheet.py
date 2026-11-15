@@ -189,6 +189,7 @@ def browser_lines(browser):
         refused = sorted({design[kind]['refused'] for kind in ('pes', 'dst') if (design.get(kind) or {}).get('refused')})
         if refused:
             said.append(f'The editor did not export {design["design"]}, so nothing was compared: {"; ".join(refused)}.')
+    said.extend(panel_lines(parity))
     speed = browser.get('speed')
     if speed and speed.get('runs'):
         turns = sorted(run['turn_ms'] for run in speed['runs'])
@@ -202,6 +203,33 @@ def browser_lines(browser):
                     f'{seconds(turns[len(turns) // 2])}{within("turn")} until the editor had drawn them'
                     f'{f", but for {left} it left undrawn" if left else ""}, and {export}: '
                     f'the middle of {len(turns)} runs in Chromium drawing in software.')
+    return said
+
+
+PANEL = (('pes', 'PES'), ('dst', 'DST'), ('picture', 'the picture'))
+
+
+def panel_lines(parity):
+    """What the panel's own exports showed: the designs whose files and picture are `stitch`'s, the times, and each that is not."""
+    made = [design for design in parity if design.get('panel')]
+    if not made:
+        return []
+    said = []
+    same = [design['design'] for design in made if all((design['panel'].get(kind) or {}).get('same') for kind, _ in PANEL)]
+    if same:
+        times = []
+        for kind, label in PANEL:
+            took = sorted(design['panel'][kind]['ms'] for design in made if design['design'] in same)
+            times.append(f'{label} {seconds(took[0])} to {seconds(took[-1])}')
+        said.append('The panel\'s exports, StitchCraft\'s engine in the page, wrote the PES and DST files and drew the picture `stitch` makes, '
+                    f'byte for byte, of {", ".join(same)}: {", ".join(times)}.')
+    for design in made:
+        for kind, label in PANEL:
+            result = design['panel'].get(kind) or {}
+            if result.get('refused'):
+                said.append(f'The panel did not make {label} of {design["design"]}: {result["refused"]}.')
+            elif not result.get('same'):
+                said.append(f'The panel\'s {label} of {design["design"]} is not the one `stitch` makes.')
     return said
 
 
