@@ -148,6 +148,7 @@ another.
 | `SC-W0330` | Warning | Gradient stop within 2 rows of the blend before; passed over | M10 |
 | `SC-W0331` | Warning | Guided fill without a guide line; sewn as a tatami fill (also for a guide of no length, or a copied one that starts and ends at one point, with the fill's own settings, as Ink/Stitch sews one without a guide) | M10 |
 | `SC-W0332` | Warning | Guided fill's rows along its guide meet no part; sewn as a tatami fill (that part, at the angle of the guide's ends, the fallback Ink/Stitch has for a part its rows meet and the cut leaves empty, while it stops with an error where copies or offset curves miss the part, `DEV-FILL-034`) | M10 |
+| `SC-W0333` | Warning | Guided fill's rows apart, the needle jumps between them (rows that only meet a hole's edge, with no row from that hole to the outline, as Ink/Stitch sews the rows it can't join on their own) | M10 |
 | `SC-W0401` | Warning | Path too small for the shortest stitch; skipped | M3 |
 | `SC-W0402` | Warning | Stitch length below twice the shortest stitch; raised to it, so even spacing never sews a stitch shorter than the shortest | M3 |
 | `SC-W0403` | Warning | Hand-placed stitch shorter than the shortest stitch; point left out | M3 |

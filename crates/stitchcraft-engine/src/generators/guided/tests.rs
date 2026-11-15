@@ -282,7 +282,10 @@ fn diag_sc_w0332_a_missed_part_s_tatami_rows_run_along_the_line_between_the_guid
 #[test]
 fn diag_sc_w0332_says_how_many_parts_no_copy_meets() {
     let tally = |pieces, missed, outlined| {
-        Tally { pieces, missed, outlined, unjoined: false, strategy: Some(Strategy::Copy) }.said().map(|d| (d.code, d.message)).collect::<Vec<_>>()
+        Tally { pieces, missed, outlined, apart: false, unjoined: false, strategy: Some(Strategy::Copy) }
+            .said()
+            .map(|d| (d.code, d.message))
+            .collect::<Vec<_>>()
     };
     assert_eq!(tally(3, 0, 0), []);
     let one = "No copy of this guided fill's guide meets 1 of its parts, so that part is sewn as a tatami fill at the angle of the line \
@@ -560,16 +563,19 @@ fn the_strategies_read_by_ink_stitch_s_numbers_and_say_what_their_rows_miss() {
         STRATEGIES.iter().map(|option| (option.id, option.label, option.offered)).collect::<Vec<_>>(),
         [("0", "Copy", true), ("1", "Parallel offset", true), ("2", "Buffer", true)]
     );
-    let said =
-        |strategy, unjoined| Tally { pieces: 2, missed: 1, outlined: 0, unjoined, strategy }.said().map(|d| (d.code, d.message)).collect::<Vec<_>>();
+    let said = |strategy, unjoined| {
+        Tally { pieces: 2, missed: 1, outlined: 0, apart: unjoined, unjoined, strategy }.said().map(|d| (d.code, d.message)).collect::<Vec<_>>()
+    };
     let rest = "1 of its parts, so that part is sewn as a tatami fill at the angle of the line between the guide's ends.";
     assert_eq!(said(None, false), [(Code::FillGuidedMissed, format!("No copy of this guided fill's guide meets {rest}"))]);
     assert_eq!(said(Some(Strategy::Offset), false), [(Code::FillGuidedMissed, format!("No offset curve of this guided fill's guide meets {rest}"))]);
     let rings = said(Some(Strategy::Buffer), true);
     assert_eq!(rings[0], (Code::FillGuidedMissed, format!("No ring round this guided fill's guide leaves a row in {rest}")));
-    assert_eq!(rings[1].0, Code::InternalCheckFailed);
-    assert!(rings[1].1.starts_with("The edges of a ring round this guided fill's guide didn't join into rings"), "{}", rings[1].1);
-    assert_eq!(rings.len(), 2);
+    // With a jump between rows and a ring whose edges didn't join, each is said after it.
+    assert_eq!(rings[1].0, Code::FillGuidedApart);
+    assert_eq!(rings[2].0, Code::InternalCheckFailed);
+    assert!(rings[2].1.starts_with("The edges of a ring round this guided fill's guide didn't join into rings"), "{}", rings[2].1);
+    assert_eq!(rings.len(), 3);
     // A strip between the rows of each strategy falls back to a tatami fill, and each says so in its words:
     // 1.3 to 1.7 mm below the guide, between the offset curves 1 and 2 mm from it, and 1.6 to 1.9 mm below it,
     // between the rings 1.5 and 2.5 mm from it.
@@ -605,4 +611,34 @@ fn each_strategy_runs_out_of_a_budget_of_less_work_than_it_takes() {
     let work = [spends(|meter| sewn(&buffer, meter), 53), spends(|meter| shown(&buffer, meter), 211)];
     let offsets = [spends(|meter| sewn(&offset, meter), 2_003), spends(|meter| shown(&offset, meter), 9_001)];
     assert!(work.iter().chain(&offsets).all(|work| *work > 5_000), "{work:?} {offsets:?}");
+}
+
+#[test]
+fn diag_sc_w0333_rows_that_only_meet_a_hole_are_sewn_after_a_jump() {
+    use crate::design::{FillRule, Segment as Seg};
+    use crate::normalize::region;
+    // A shape that the degenerate corpus drew (`tests/degenerate.rs`), buffered round its own outline, which
+    // is its anchor line too. Its second part has a hole 0.008 mm wide. No ring round the guide meets that
+    // part's outline, so its own rings take the rows' place, and the anchor line cuts them at every corner.
+    // The pieces along the hole are joined to nothing that meets the outline: the needle jumps to them.
+    let hook =
+        Subpath { start: p(4.0, 0.0), segments: vec![Seg::Line(p(2.0, 0.0)), Seg::Cubic(p(0.0, 2.0), p(4.0, 10.0), p(2.0, 2.0))], closed: false };
+    let loops = Subpath {
+        start: p(6.0, 0.0),
+        segments: vec![Seg::Line(p(2.0, 4.0)), Seg::Cubic(p(0.0, 2.0), p(4.0, 2.0), p(2.0, 8.0)), Seg::Line(p(6.0, 2.0))],
+        closed: true,
+    };
+    let path = Path { subpaths: vec![hook, loops] };
+    let shape = region::build_clipped(&path, FillRule::NonZero, &[], &mut Budget::DEFAULT.meter()).unwrap().region;
+    assert_eq!(shape.parts.iter().map(|part| part.holes.len()).collect::<Vec<_>>(), [0, 1]);
+    let buffer = Guided { strategy: Strategy::Buffer, guide: Some(path.clone()), anchor: Some(path), ..guided(&[(0.0, 0.0)], 1.0) };
+    let sewn = guided_fill(&shape, &buffer, None, None, &mut SplitMix64::new(7), &mut Budget::DEFAULT.meter()).unwrap();
+    assert_eq!(codes(&sewn), [Code::FillGuidedApart]);
+    assert_eq!(sewn.warnings[0].message, "The needle finds no way between some rows of this guided fill, so it jumps between them.");
+    assert_eq!(sewn.runs.len(), 3, "one part in one go, the other in 2");
+    // Rows that cross a hole and not the outline are no such rows: they are joined into the rings round them.
+    // Here the offset curves round a closed guide inside a frame's hole, off its middle, sew in one go.
+    let ring = [(4.6, 1.6), (5.6, 1.6), (5.6, 2.6), (4.6, 2.6), (4.6, 1.6)];
+    let sewn = sew(&crate::generators::tatami::fixture::frame(), &Guided { strategy: Strategy::Offset, ..guided(&ring, 0.25) });
+    assert_eq!((sewn.runs.len(), codes(&sewn)), (1, vec![]));
 }

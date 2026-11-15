@@ -58,6 +58,7 @@ pub stitchcraft_core::diag::Code::FillCrossTooFine
 pub stitchcraft_core::diag::Code::FillExpandShrinksAway
 pub stitchcraft_core::diag::Code::FillGradientNone
 pub stitchcraft_core::diag::Code::FillGradientStopPassedOver
+pub stitchcraft_core::diag::Code::FillGuidedApart
 pub stitchcraft_core::diag::Code::FillGuidedMissed
 pub stitchcraft_core::diag::Code::FillGuidedNoGuide
 pub stitchcraft_core::diag::Code::FillLegacyAsTatami
@@ -328,6 +329,7 @@ pub stitchcraft_core::Code::FillCrossTooFine
 pub stitchcraft_core::Code::FillExpandShrinksAway
 pub stitchcraft_core::Code::FillGradientNone
 pub stitchcraft_core::Code::FillGradientStopPassedOver
+pub stitchcraft_core::Code::FillGuidedApart
 pub stitchcraft_core::Code::FillGuidedMissed
 pub stitchcraft_core::Code::FillGuidedNoGuide
 pub stitchcraft_core::Code::FillLegacyAsTatami

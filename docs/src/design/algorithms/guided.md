@@ -229,6 +229,12 @@ From line to line the needle goes as a tatami fill's does, under the lines not s
 on. The lines it follows under them are turned from `guided_fill_angle`, or from 0 when it is empty, as
 Ink/Stitch turns them.
 
+The route joins lines by the rings their ends lie on. Lines that end on a hole's ring alone, when no line
+runs from that hole to the outline, can't be joined to the rest, and the needle jumps to them. `SC-W0333`
+says so. Ink/Stitch sews the rows it can't join on their own too, with a jump between. Rows that cross a
+hole are joined into the rings round them first, so only odd shapes sew this way: the degenerate corpus
+found a part with a hole 0.008 mm wide whose own rings were its rows.
+
 With `bean_stitch_repeats`, the stitches shorter than the shortest stitch are left out first, so that each
 stitch the bean stitch sews back over is one the machine sews. Then each stitch of the lines is sewn back and
 forth, and the travel between them is not.

@@ -21,7 +21,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - The fill dialog offers the 3 strategies and holds 65 settings. VectorCraft takes up to 256 in groups
     from 0.14, where the fill effect installs, and the manifest check follows that rule.
   - `SC-W0011` is retired: every stitch type is sewn. `SC-W0331` and `SC-W0332` speak of each strategy's
-    rows.
+    rows. New code: `SC-W0333`, for rows the needle finds no way between and jumps to. New deviation:
+    `DEV-FILL-036`.
   - TS-17B gains a fan in yellow, offset from an arc, and an egg in flesh pink, buffered round a line with
     an anchor line, beside its leaf. Golden changed: `ts-17b`, for the 2 new samples.
 - M6.14: the browser demo starts from the drawing. An empty session opens Alpine Night as a plain drawing,
