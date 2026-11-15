@@ -99,7 +99,7 @@ release takes:
 | `<ns>.stroke` | live effect | running, bean, manual (P1), zigzag (M7.2), ripple (M10.8) | `stroke_method` choice selects the variant |
 | `<ns>.satin` | live effect | satin (P1), E (M7.3), S (M7.4), zigzag (M7.5) | rails and rungs from the object's compound path |
 | `<ns>.fill` | live effect | tatami (P1); contour, meander, circular (P2) | `fill_method` choice |
-| `<ns>.auto` | live effect | the stitches automatic digitizing chooses by width (M13.7) | on a group, previews each path inside ([image to embroidery](image-to-embroidery.md)) |
+| `<ns>.auto` | live effect | the stitches automatic digitizing chooses by its rules (M13.7, M13.21) | on a group, previews each path inside ([image to embroidery](image-to-embroidery.md)) |
 | `<ns>.pes`, `<ns>.dst` | exporter (VectorCraft 0.14) | every family | File › Export › Export As writes the same machine file as `stitch export` (M6.9, [below](#exporters-file--export-writes-pes-and-dst)) |
 | `<ns>.settings` | filter (VectorCraft 0.16) | none | keeps the design settings and the machine with the document (M6.11, [below](#design-settings-and-machine-kept-with-the-document)) |
 | `<ns>.stroke-to-satin` | heavy filter (VectorCraft 0.17) | satin | makes each selected line into a satin column drawn with its rails and rungs (M6.12, [below](#tools-stroke-to-satin-and-test-sheet)) |
@@ -151,7 +151,8 @@ insets and its shortest random split. A choice leaves out the options that a tex
 custom locks, and `fill_method` leaves out Ink/Stitch's legacy fill, which StitchCraft sews as a tatami fill
 (`REQ-FILL-005`). `satin_column` belongs to the effect, which sets it from its family. `turn_stitches`, the switch that
 automatic digitizing sets on its own fills, is left out of the fill's dialog, which holds 64 parameters
-without it. The dialog opens with
+without it. The Auto effect's dialog leaves out the settings of the registry's Advanced group, which are
+the bounds of the rules and the 2 limits of the cover's measure (M13.21). The dialog opens with
 the group that declares the family's method. The groups only the family uses, for its default method, come
 next, then those it shares with the other families, then those of its other methods, such as the zigzag
 stroke's. The settings every element shares come last, as in Ink/Stitch's dialogs.
@@ -724,7 +725,7 @@ shape. Its visible fills are filled, in the appearance's order, and its visible 
 stitch each. Since M13.1, read with `--auto` (`stitchcraft_vectorcraft::read_with`), the elements of an
 object are automatic instead when neither it nor a group or layer around it has a StitchCraft effect
 ([image to embroidery](image-to-embroidery.md), `REQ-AUTO-001`). StitchCraft then chooses their stitches by
-their width. Since M13.7 StitchCraft's Auto effect makes them automatic without the switch (`REQ-VC-016`).
+its rules. Since M13.7 StitchCraft's Auto effect makes them automatic without the switch (`REQ-VC-016`).
 It is read where a stitch effect is read, on the object or on a group or a layer around it, the nearest
 first, and its parameters are the object's settings of the rules. A stitch effect says how an object sews,
 so an Auto effect beside one on the same object or group isn't used, and `SC-W0807` says so. Read with `--sort-colours`, the objects with effects sew in the order StitchCraft chooses too

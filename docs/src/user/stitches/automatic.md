@@ -66,7 +66,7 @@ roadmap.
 **Digitized**
 
 <!-- shot: auto-pear -->
-![The traced pear digitized automatically. Its 3 greens sew as tatami fills, with satin columns at the narrow ends of the olive and dark olive bands. Its stem sews as 2 satin columns side by side, olive and dark olive, and the light grey square is left out. Thin threads run straight from the stem to the bands' ends, 4 jumps that the machine doesn't cut.](../../images/generated/auto-pear.png)
+![The traced pear digitized automatically. Its 3 greens sew as tatami fills, whole to the narrow ends of the olive and dark olive bands. Its stem sews as 2 satin columns side by side, olive and dark olive, and the light grey square is left out. Thin threads run straight from the stem to the bands, 2 jumps that the machine doesn't cut.](../../images/generated/auto-pear.png)
 <!-- /shot -->
 
 **Digitized, on black fabric**
@@ -114,7 +114,7 @@ each out, as `--subject` will from M13.14.
 **Digitized**
 
 <!-- shot: auto-dog -->
-![The traced running dog digitized automatically. Its broad patches sew as tatami fills, and its strands of fur as satin columns and triple runs between them, in black, greys, white, tan and dark brown. Thin threads run straight between patches of one colour, jumps that the machine doesn't cut.](../../images/generated/auto-dog.png)
+![The traced running dog digitized automatically. Its patches sew as tatami fills, the broad and the ragged alike, and its thin strands of fur as satin columns and triple runs between them, in black, greys, white, tan and dark brown. Thin threads run straight between patches of one colour, jumps that the machine doesn't cut.](../../images/generated/auto-dog.png)
 <!-- /shot -->
 
 **Digitized, on black fabric**
@@ -278,9 +278,9 @@ sew no underlay of their own (`SC-I0909`).
 With the base layer and the overlap of 1 mm, the pear and the traced dogs cover the fabric inside their
 outlines. Where
 thin lines of fur meet, the top thread still leaves a sliver here and there, and the base layer's thread
-shows in it in place of the fabric. The running dog above has 2 slivers, each under 0.14 mm², in
-1,944 mm² of design. The base layer adds 675 stitches to that dog, about a minute of sewing. The pear
-sews 80 stitches fewer with it than with an underlay under each fill.
+shows in it in place of the fabric. The running dog above has none in
+1,944 mm² of design, and the same dog in 6 threads has 1, of 0.26 mm². With the base layer that dog sews
+2,112 stitches fewer than with an underlay under each fill, and the pear 199 fewer.
 
 To sew without the base layer, turn `auto_base_layer` off. Each fill then sews its own underlay, and
 StitchCraft says that fabric may show between shapes (`SC-I0911`). The
