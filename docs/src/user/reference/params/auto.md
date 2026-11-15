@@ -58,6 +58,19 @@ it. One angle for the whole design lets a small filled part lie flat beside the 
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 
+### `auto_fill_outline`
+
+**Outline round fills.** Whether each fill that automatic digitizing makes sews an outline: a running stitch round its
+edge, after its rows, in its own thread. The outline draws the edge of a small shape as one
+line, where the ends of its rows would leave its points blunt. It sews only where the edge
+shows: not where a shape sewn after the fill covers the edge. The design goes by the setting of
+its lowest automatic shape.
+
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
+- **Default:** `true`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
 ## Neighbours
 
 ### `auto_overlap_mm`
@@ -121,17 +134,6 @@ Ink/Stitch's Knockdown Fill do. Shorter stitches hide more of the fabric and sew
 
 - **Accepts:** a length from 1 to 6 mm
 - **Default:** `3`
-- **Ink/Stitch:** none; this is StitchCraft's own
-- **Experimental:** designs that use it may stitch differently in a later version
-
-### `auto_base_offset_mm`
-
-**Base layer's offset.** How far outside the design's outer shape the base layer's edge lies: inside it when negative, so
-that no base stitch shows beside a shape once the thread has pulled the shape's edge in. By
-default it lies as far inside as a satin column's pull compensation reaches outside.
-
-- **Accepts:** a length from -3 to 3 mm
-- **Default:** `-0.4`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 
@@ -232,16 +234,14 @@ when it shares none.
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 
-### `auto_fill_outline`
+### `auto_base_offset_mm`
 
-**Outline round fills.** Whether each fill that automatic digitizing makes sews an outline: a running stitch round its
-edge, after its rows, in its own thread. The outline draws the edge of a small shape as one
-line, where the ends of its rows would leave its points blunt. It sews only where the edge
-shows: not where a shape sewn after the fill covers the edge. The design goes by the setting of
-its lowest automatic shape.
+**Base layer's offset.** How far outside the design's outer shape the base layer's edge lies: inside it when negative, so
+that no base stitch shows beside a shape once the thread has pulled the shape's edge in. By
+default it lies as far inside as a satin column's pull compensation reaches outside.
 
-- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
-- **Default:** `false`
+- **Accepts:** a length from -3 to 3 mm
+- **Default:** `-0.4`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 

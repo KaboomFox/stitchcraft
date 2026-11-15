@@ -1086,7 +1086,9 @@ Fewer thread changes leave more jump threads. The machine cuts the thread at a c
 so a thread that sews once jumps where it changed before. The dogs jump 84, 91, 79 and 108 times, where
 they jumped 82, 94, 81 and 112 times, and leave 77, 78, 70 and 95 jump threads to cut by hand, where they
 left 71, 73, 64 and 84. Since M13.27 filled 5 of their blobs they jump 79, 91, 79 and 106 times, and leave
-71, 78, 70 and 93 jump threads. The traced pear and the test pictures change thread once for each thread after
+71, 78, 70 and 93 jump threads. With an outline after each fill (M13.28,
+[an outline round a fill](#an-outline-round-a-fill)) they jump 84, 97, 82 and 109 times, and leave 76, 84,
+73 and 96. The traced pear and the test pictures change thread once for each thread after
 the first, as they did. The digitized halves of the TS-13 sheets change thread 2, 4, 4 and 6 times, where
 they changed 5, 4, 5 and 8 times. TS-13B's black sews twice: its base layer and letters first, and the
 lines of its windows after the fills they border. The search keeps 87 to 3,584 rows of batches on the
@@ -1113,19 +1115,20 @@ leaves are counted apart.
 | Emblem, abutting or stacked | 0 | 0.35 mm | 0 | 2 |
 | Button, abutting or stacked | 0 | 0.40 mm | 6 | 0 |
 | Traced pear | 0 | 0.44 mm | 0 | 2 |
-| Traced dog on turf, 6 threads | 0 | 1.33 mm | 5 | 71 |
-| Traced dog on turf, 9 threads | 0 | 3.15 mm | 11 | 78 |
-| Traced running dog, 6 threads | 0.18 mm² | 2.14 mm | 3 | 70 |
-| Traced running dog, 9 threads | 0 | 1.86 mm | 4 | 93 |
+| Traced dog on turf, 6 threads | 0 | 1.33 mm | 5 | 76 |
+| Traced dog on turf, 9 threads | 0 | 3.00 mm | 10 | 84 |
+| Traced running dog, 6 threads | 0.18 mm² | 1.95 mm | 3 | 73 |
+| Traced running dog, 9 threads | 0 | 1.86 mm | 7 | 96 |
 
 The button's 7 dots sew on from one to the next, each move 2.7 mm long across its yellow. The pear leaves 2
 jump threads, where it left 4: the narrow ends of its olive and dark olive bands are uneven, and sew as
 fills with their bands (M13.21). `tests/auto_fabric.rs` keeps the moves and the jump threads as measured.
 
 The owner's dog, traced from her 2 photos in 6 and in 9 threads (M13.15, `docs/fixtures/README.md` › The
-traced dogs), lays 19 stitches astray: 2 and 5 on the dog on turf in 6 and in 9 threads, and 8 and 4 on the
+traced dogs), lays 14 stitches astray: 2 and 5 on the dog on turf in 6 and in 9 threads, and 5 and 2 on the
 running dog. 2 are straight moves, 2.25 and 2.1 mm long, each between 2 lines of one narrow part, which is
-a stitch because it is shorter than the collapse length. The other 17 are rows of fills, each up to 4 mm
+a stitch because it is shorter than the collapse length. 2 are stitches of outlines, 2.34 and 2.24 mm
+long, each along the edge of a thin, ragged fill. The other 10 are rows of fills, each up to 4 mm
 long, a fill's stitch. M13.21, which fills where columns sewed, brought 20 of them. Of the 6 that were traced
 then, 5 lay along a line of fur of another colour that sews on the fill or that the fill reaches under.
 The line sews as wide as its thread, and the row shows beside it. The sixth lay under the edge of a column
@@ -1133,13 +1136,15 @@ sewn after its fill. M13.22's order took 8 of the 20 away and brought 4 others, 
 now sew in another order. M13.27 fills 5 blobs of fur that sewed as columns
 ([which stitch a shape gets](#which-stitch-a-shape-gets)). A row of the largest shows beside a line of fur
 in both running dogs, the second move crosses a blob that a column covered before, and one row of the
-running dog in 9 threads no longer shows: 19 stitches where there were 17. Before
+running dog in 9 threads no longer shows: 19 stitches where there were 17. M13.28 sews an outline after
+each fill, and the fills end elsewhere. 8 of the rows no longer show and one other does, and the 2
+stitches of outlines came: 14 stitches. Which neighbour hid each of the 8 rows was not traced. Before
 M13.21 the dogs laid 7 stitches astray. 2 of them were satin stitches 7.89 and 4.72 mm long that fanned
 across a shape biting into their column, and M13.21 removed those. `tests/auto_photos.rs` lists each stitch,
 with where it lies and why, and its case fails on any other stitch astray and on any listed one that no
 longer is. Of the [roadmap](../plan/roadmap.md)'s steps, M13.17 removes the move and M13.18 the rows, by
 merging the thin lines into their neighbours. The dogs' moves astray are moves from one element to the next,
-as the button's are. Their jump threads, 70 to 93, are the design's limit as it stands: each thread sews
+as the button's are. Their jump threads, 73 to 96, are the design's limit as it stands: each thread sews
 its shapes one after another and jumps between those that don't touch, and the PE800 cuts no jump. M13.17
 runs the thread under the shapes sewn later instead, which cover it. Each dog takes
 too long to digitize and measure in the tests' debug build, so CI's `perf` job runs these cases in the
