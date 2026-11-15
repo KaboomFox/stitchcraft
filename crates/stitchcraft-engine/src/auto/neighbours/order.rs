@@ -70,6 +70,8 @@ mod fewest;
 pub(super) struct Moving {
     /// Whether it may: an automatic element, or any element of a design that asks for every element ordered.
     pub(super) free: bool,
+    /// Whether automatic digitizing made it: the base layer sews before the first such element.
+    pub(super) made: bool,
     /// The place in the design of the shape it is a part of: the parts of a shape sewn as several elements,
     /// such as a line's satin columns, keep their order, so that a trim or a stop after the shape still comes
     /// after its last part.
@@ -78,8 +80,8 @@ pub(super) struct Moving {
 
 /// `shapes` put in the order they sew in, each element moving round the others as `moving` says, and what
 /// is said of it: `SC-I0907` when the order isn't paint order, and for each element left in paint order.
-/// `under` is the thread of the base layer, which sews before them and is sewing when they start, if there
-/// is one.
+/// `under` is the thread of the base layer, if there is one: it sews before the first element that automatic
+/// digitizing made, and is sewing when that element's run starts.
 pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget, under: Option<Rgb>) -> Vec<Diagnostic> {
     let live: Vec<usize> = (0..shapes.len()).filter(|&index| !shapes.left_out(index)).collect();
     if !live.iter().any(|&index| moving.get(index).is_some_and(|moving| moving.free)) {
@@ -88,7 +90,7 @@ pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget, u
     let reaches: Vec<Option<Envelope>> = (0..shapes.len()).map(|index| reach(shapes, index)).collect();
     let facts: Vec<Facts> = shapes.elements.iter().zip(reaches).map(|(element, reach)| Facts::of(element, reach)).collect();
     let (graph, kept) = (Graph::new(shapes.len()), BTreeSet::new());
-    let mut order = Order { facts: &facts, moving, graph, borders: Vec::new(), wished: Vec::new(), kept, unsought: None };
+    let mut order = Order { facts: &facts, moving, graph, borders: Vec::new(), wished: Vec::new(), kept, unsought: None, under };
     let stop = |index: usize| facts.get(index).is_some_and(|facts| facts.stop);
     let mut said = Vec::new();
     for run in runs(&live, stop) {
@@ -96,7 +98,7 @@ pub(super) fn ordered(shapes: &mut Shapes, moving: &[Moving], budget: &Budget, u
     }
     // Nothing moves across an element whose neighbours needed more work than the budget allows either.
     let runs = runs(&live, |index| stop(index) || order.kept.contains(&index));
-    let mut sewing = Sewing { thread: under, ..Sewing::default() };
+    let mut sewing = Sewing::default();
     let spent = order.sew(&runs, &mut sewing, budget).is_err();
     said.extend(order.unsought.and_then(|index| shapes.id(index)).map(|id| unsought(budget.max_work, id)));
     // What wasn't placed sews in paint order after the rest: what the work left, and so no element is lost.
@@ -206,6 +208,9 @@ struct Order<'o> {
     /// The first element of the run that finding the fewest thread changes needed more work for than the
     /// budget allows, if any.
     unsought: Option<usize>,
+    /// The thread of the base layer, until the run of the first element that automatic digitizing made
+    /// starts.
+    under: Option<Rgb>,
 }
 
 /// How a shape lies beside one drawn before it.
@@ -295,6 +300,13 @@ impl Order<'_> {
         }
         let mut seeking = Some(budget.meter());
         for run in runs {
+            // The base layer sews before the first element that automatic digitizing made, so its thread is
+            // sewing when that element's run starts. Where elements with settings of the same run sew before
+            // that element, the base layer sews between them and it, and may change thread once more than
+            // the batches found count.
+            if run.iter().any(|&index| self.moving.get(index).is_some_and(|moving| moving.made)) {
+                sewing.thread = self.under.take().or(sewing.thread);
+            }
             let at = |place: usize| run.get(place).copied();
             match seeking.as_mut().map(|meter| fewest::fewest(&self.sought(run, sewing.thread), meter)) {
                 Some(Ok(found)) => {

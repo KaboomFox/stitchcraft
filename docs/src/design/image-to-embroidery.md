@@ -852,7 +852,7 @@ Automatic elements sew in an order StitchCraft chooses (`stitchcraft_engine::aut
 M13.3). The order is chosen after specks are merged, so that a speck merged into an area is no element of
 its own, and before areas reach under their neighbours, which follows it. VectorCraft's Auto Grouping
 draws each shape together with the shapes inside it. Sewn in paint order, a picture traced with it changes
-thread at nearly every shape, and each change is a stop to rethread a home machine. The order comes from 4
+thread at nearly every shape, and each change is a stop to rethread a home machine. The order comes from 5
 rules.
 
 1. **What overlaps keeps its paint order** (`REQ-AUTO-010`). Of 2 shapes whose paint overlaps, the lower
@@ -863,25 +863,46 @@ rules.
    abutting paths do, may sew in either order. Rounding leaves a sliver no wider than twice the shapes'
    tolerance between edges drawn as one, and shapes overlap only where their overlap is wider. Where 2 lines
    0.1 mm wide cross, they overlap.
-2. **A line after the fill it borders.** A satin column or a line that touches a fill without overlapping
-   it sews after the fill and covers its edge, and the fill reaches under a column
-   ([Neighbours](#neighbours)). Rule 1 comes first. A line that rule 1 already sews before the fill, through
-   the shapes it overlaps, keeps its place.
-3. **Few thread changes.** The next element has the thread that is sewing, as long as an element of that
-   thread is free to sew: every element that must sew before it has. Otherwise the thread changes to that
-   of the first free element in paint order. Threads are the same when their colours are, as plan assembly
+2. **A line after the fill it borders.** A line that touches a fill without overlapping it sews after the
+   fill and covers its edge. A running stitch is as wide as its thread. It can't reach under the fill, and a
+   fill sewn after it lays the ends of its rows on it. Rule 1 comes first. A line that rule 1 already sews
+   before the fill, through the shapes it overlaps, keeps its place.
+3. **The fewest thread changes** (`REQ-AUTO-037`, M13.22). Within rules 1 and 2 the elements sew in
+   batches of one thread. Once a thread is sewing, every element of it that is free to sew does, and those
+   they free: an element is free when every element that must sew before it has. Sewing more of a thread
+   now never costs a change later, so an order is a row of batches, and the row that changes thread least
+   is searched for. The base layer sews before the first automatic element, so its thread is sewing when
+   that element's run starts. Threads are the same when their colours are, as plan assembly
    counts thread changes. A PES file gives different colours different palette entries while they last
    (`REQ-THREAD-002`), so 2 colours are one thread to the machine only past the palette's 64 entries. An
    element sewn in several threads (M10.5), as a tartan fill is and a gradient fill will be, moves as one.
-   Its colours stay together, in the order its generator sews them. It has the thread sewing when the thread it
-   starts in is, and leaves the thread it ends in sewing (`REQ-AUTO-024`). Its threads are read before it is
-   generated, from its shape and settings.
-4. **The nearest next.** Of the free elements of that thread, the next is the one whose box lies nearest
+   Its colours stay together, in the order its generator sews them. It is a batch of its own, which costs a
+   change when the thread it starts in isn't sewing, and the batch of the thread it ends in follows it
+   (`REQ-AUTO-024`). Its threads are read before it is generated, from its shape and settings.
+4. **A satin column after the fill it borders, where that costs no thread change.** A satin column that
+   automatic digitizing made covers the fill's edge when it sews after the fill. Sewn first, it reaches
+   its overlap under the fill ([Neighbours](#neighbours)), so the fabric is covered either way. Of the
+   rows with the fewest changes, the search takes the one in which fewer columns sew before a fill they
+   border. A column then waits for a later batch of its thread when the row has one after the fill. A
+   satin column with settings goes by rule 2.
+5. **The nearest next.** Of the free elements of a batch, the next is the one whose box lies nearest
    the box of the element sewn last. On a tie it is the one whose box's centre lies nearest, and then the
    one drawn first. Each element then starts and ends at its points nearest its neighbours
    (`REQ-GEN-003`).
 
-`tests/auto_order.rs` checks rules 1 to 3 together on random designs of squares and lines, wherever the
+**The search** (`stitchcraft_engine::auto::neighbours::order::fewest`). Finding the fewest thread changes
+under rules of what sews before what is hard in general, and a design has few threads. The search keeps
+rows of batches as far as they go, each with the elements it has sewn and the thread it leaves sewing. It
+goes on from the row with the fewest changes so far and still needed, one for each thread that has
+elements left. Its first whole row then has the fewest changes of any order. Of 2 rows that sew the same
+elements and leave the same thread sewing, it keeps the one with fewer changes, then the one with fewer
+columns before their fills, then the one found first. It tries the threads of the free elements in paint
+order, so a design sews the same on every run. Each run of elements that nothing moves across is searched
+on its own, and starts in the thread the run before it left. Where elements with settings of a run sew
+before its first automatic element, the base layer sews between them and it, which the search doesn't
+count. `order/fewest/tests.rs` compares the search with every order of 300 small runs drawn at random.
+
+`tests/auto_order.rs` checks rules 1 to 4 together on random designs of squares and lines, wherever the
 shapes fall.
 
 Elements with settings keep their order among themselves, and automatic elements move round them within
@@ -911,9 +932,14 @@ shape's paint only when the shape is near an element that moves.
 shapes drawn after it. It costs a unit for each of them, and the work of those near it. One that needs
 more keeps its place in paint order as an element with a stop after it does: nothing moves across it.
 An element after it that one before it frees still waits its turn after it, and each element sews once. A
-shape whose paint can't be found within the budget keeps its place beside the shapes near it. Choosing the
-order has the budget once more, and costs a unit for each free element looked at each time an element is
-placed. An order that needs more sews the elements not placed by then in paint order, after the others.
+shape whose paint can't be found within the budget keeps its place beside the shapes near it. Finding the
+rows of batches has the budget once for the whole design. It costs a unit for each element looked at and
+1,000 for each row kept, so the default budget keeps 500,000 rows at most. From the run that needs more
+on, the elements sew as they did before M13.22. Each thread sews while an element of it is free, then the
+thread of the first free element in paint order, and every satin column sews after the fills it borders.
+Placing the elements has the budget once more, and costs a unit for each free element looked at each time
+an element is placed. An order that needs more sews the elements not placed by then in paint order, after
+the others.
 `SC-I0907` says each. `SC-I0904` says it of a satin column instead, whose area the areas sewn before it
 then don't reach under either. A fill's generator needs the work of its region too, and says it of a fill
 (`SC-E0004`).
@@ -1298,14 +1324,16 @@ area kept wrongly and 3 % lost.
   fabric or a ridge shows once the thread pulls in, and how small a word still reads.
 - The same cases count the jump threads each half leaves on the PE800, snipped at each thread change and
   stop, and how many a later stitch of their colour sews down (`stitchcraft_testkit::stitches`). Digitized,
-  the letters sew as columns with a jump between each 2:
+  the letters sew as columns with a jump between each 2. A thread that sews once jumps between its shapes
+  where it changed before M13.22, and the PE800 cuts at a thread change and not at a jump, so the digitized
+  halves of TS-13A, TS-13C and TS-13D leave 3, 1 and 2 jump threads more:
 
   | Sheet | As drawn: jump threads | sewn down | Digitized: jump threads | sewn down |
   |---|---:|---:|---:|---:|
-  | TS-13A | 8 | 0 | 15 | 2 |
+  | TS-13A | 8 | 0 | 18 | 9 |
   | TS-13B | 6 | 0 | 44 | 19 |
-  | TS-13C | 9 | 4 | 12 | 5 |
-  | TS-13D | 1 | 0 | 13 | 3 |
+  | TS-13C | 9 | 4 | 13 | 5 |
+  | TS-13D | 1 | 0 | 15 | 4 |
 
 - Ink/Stitch sews the TS-13 sheets too, every night ([conformance](conformance.md#l3--inkstitch-differential-nightly),
   `REQ-AUTO-021`). Ink/Stitch can't choose a picture's stitches, but it can sew what StitchCraft chose:

@@ -78,7 +78,8 @@ fn req_auto_026_digitized_pictures_lay_no_thread_that_shows_where_it_should_not(
     assert!(shown.is_empty(), "{shown:#?}");
     // The moves sewn on from one element to the next, and the jump threads that the PE800 leaves, are as the
     // design page records them (image-to-embroidery.md › Sewing order): the button's dots sew on from one to
-    // the next across its yellow, and the pear's stem leaves 2 jump threads.
+    // the next across its yellow, the pear's stem leaves 2 jump threads, and the ear one, between 2 shapes of
+    // a thread that sews once (REQ-AUTO-037).
     let recorded = [
         ("stripes", 0, 0),
         ("badge-abutting", 0, 0),
@@ -92,7 +93,7 @@ fn req_auto_026_digitized_pictures_lay_no_thread_that_shows_where_it_should_not(
         ("strand", 0, 0),
         ("pear", 0, 2),
         ("paw", 0, 0),
-        ("ear", 1, 0),
+        ("ear", 1, 1),
     ];
     assert_eq!(apart, recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps)));
 }
