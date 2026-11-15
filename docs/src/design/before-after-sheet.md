@@ -74,6 +74,15 @@ that differs and what each program has there. The workflow keeps both programs' 
 VectorCraft stops an exporter that runs more instructions than it allows an export. The editor then
 doesn't write a file, and there is nothing to compare. The sheet and the comment say so, and the run goes on. Any
 other refusal fails the run.
+
+**The panel's exports.** The demo's panel exports with StitchCraft's engine in a worker, which no budget
+stops ([an export that finishes](vectorcraft-integration.md#an-export-that-finishes)). For the starter
+drawing and each of the 4 traced dogs with the Auto effect, the script has the panel make the PES file,
+the DST file and the picture of the stitches. It writes the document the panel took from the editor to a
+file, and `stitch plan` makes the same 3 of it under the same name. Each must be the same byte for byte.
+Here a refusal fails the run, as does a file that differs or an export that takes more than 60 seconds.
+The sheet and the comment give the range of the times.
+
 The `stitch` compared is built without link-time optimization, which saves minutes
 ([determinism](determinism.md) is why its files are those of the published build).
 
@@ -101,8 +110,9 @@ several times slower fails.
 The export has no limit yet. VectorCraft 0.24.1 stopped the dog's PES and DST exports after 27 s for
 the instruction budget it gives an export
 ([exporters](vectorcraft-integration.md#exporters-file--export-writes-pes-and-dst)). `stitch` plans the
-same document. So the sheet reports that a traced dog doesn't export from the editor, and the files are
-compared for the starter drawing alone until it does.
+same document. So the sheet reports that a traced dog doesn't export with the editor's File › Export, whose
+files are compared for the starter drawing alone until it does. The dogs' files are compared as the panel
+writes them.
 
 ## The time the sheet adds
 

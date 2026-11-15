@@ -31,7 +31,7 @@ OUT = ROOT / 'target/web'
 # offers them as downloads. The browser check installs every other module, so a wrong entry fails it.
 HEAVY = ('stroke-to-satin', 'route-satins', 'route-runs')
 # The scripts a preview brings with it. `start.mjs` belongs to the editor's page alone.
-SCRIPTS = ('boot.mjs', 'loader.mjs', 'starter.mjs')
+SCRIPTS = ('boot.mjs', 'loader.mjs', 'starter.mjs', 'exports.mjs', 'engine.mjs', 'engine-worker.mjs')
 TITLE = 'StitchCraft in VectorCraft'
 # GitHub refuses a push that holds a file of 100 MB or more, so the publisher could never publish one.
 LARGEST_FILE = 100 * 1000 * 1000
@@ -120,9 +120,20 @@ def run(*args, cwd=ROOT, **more):
     return subprocess.run(args, cwd=cwd, check=True, **more)
 
 
+def whole(folder):
+    """Whether `folder` is the top of a git checkout of its own."""
+    top = subprocess.run(('git', 'rev-parse', '--show-toplevel'), cwd=folder, text=True, capture_output=True, check=False)
+    return top.returncode == 0 and Path(top.stdout.strip()).resolve() == folder.resolve()
+
+
 def checkout(folder):
     """VectorCraft's source at the pinned commit, never changed. A tag that names another commit fails."""
     repository, tag, revision = pin()
+    # The build cache's cleaning, after a cache of another Cargo.lock is restored, empties every folder under
+    # `target/` of what it doesn't know, this checkout's files and most of its `.git` included. What is left
+    # is no checkout: git then answers for the repository around it.
+    if folder.exists() and not whole(folder):
+        shutil.rmtree(folder)
     if not folder.exists():
         run('git', 'clone', '--depth', '1', '--branch', tag, repository, str(folder))
     found = run('git', 'rev-parse', 'HEAD', cwd=folder, text=True, capture_output=True).stdout.strip()

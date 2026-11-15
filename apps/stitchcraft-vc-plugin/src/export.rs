@@ -30,6 +30,13 @@
 //! that needs more with its own error, `plug-in exceeded its instruction budget`. `stitch export` writes
 //! that design. The contract tests measure what a fill of the reference hoop's whole field takes
 //! (`compat/vc-contract`).
+//!
+//! **The picture.** VectorCraft stops the export of a traced photo, which needs about 5 times the
+//! instructions an export is allowed. So the browser demo's page runs this module itself, where nothing
+//! counts instructions, and it also asks for what `stitch export --preview` draws: with [`PICTURE`] as the
+//! `mode` of its `_context`, the exporter answers the picture of the file read back, a PNG, in place of the
+//! file. VectorCraft's own mode is `export`, so File › Export never gets a picture
+//! (`docs/src/design/vectorcraft-integration.md`, An export that finishes).
 
 use serde::{Deserialize, Serialize};
 use stitchcraft_core::{Budget, Code, Diagnostic, Severity};
@@ -38,7 +45,8 @@ use stitchcraft_engine::design::{DesignSettings, Reading};
 use stitchcraft_formats::{Encoded, read_back};
 use stitchcraft_params::find;
 use stitchcraft_plan::profiles::{self, BUILTIN, REFERENCE};
-use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan};
+use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan, TrimSupport};
+use stitchcraft_render::{Settings, Style};
 use stitchcraft_vectorcraft::base64;
 
 use crate::dialog::own;
@@ -54,6 +62,10 @@ pub use stitchcraft_vectorcraft::settings::PROFILE;
 /// The option of an exporter's [`PROFILE`] that plans the document for the machine it keeps, which the
 /// Design Settings filter sets, or for the reference machine when it keeps none (`REQ-VC-013`).
 pub const DOCUMENT: &str = "document";
+/// The `mode` of an export's `_context` that asks for the picture `stitch export --preview` draws of the
+/// file, in place of the file. VectorCraft's own exports say `export`, and the browser demo's page says this
+/// one when it runs the module itself.
+pub const PICTURE: &str = "picture";
 /// The most warnings VectorCraft shows of an export (`MAX_WARNINGS` in its `crates/plugins/src/export.rs`).
 pub const MAX_WARNINGS: usize = 100;
 
@@ -116,6 +128,9 @@ struct Context {
     /// Its name, without the extension: the document's when the export is given no path.
     #[serde(default)]
     name: String,
+    /// What is asked for: VectorCraft's `export`, the file, or [`PICTURE`].
+    #[serde(default)]
+    mode: String,
 }
 
 /// What an exporter returns: the file in base64, and what the export left out or changed.
@@ -142,23 +157,33 @@ pub fn export(format: FormatId, input: &[u8], params: &[u8]) -> Result<Vec<u8>, 
         None | Some(DOCUMENT) => None,
         Some(id) => Some(profiles::find(id).ok_or(RunError::BadInput)?),
     };
-    let out = match sewn(format, input, Reading { auto: params.auto, ..Reading::default() }, asked, &params.context.name) {
+    let wanted = Wanted { name: &params.context.name, picture: params.context.mode == PICTURE };
+    let out = match sewn(format, input, Reading { auto: params.auto, ..Reading::default() }, asked, wanted) {
         Ok((file, said)) => serde_json::to_vec(&Exported { data_base64: base64(&file), warnings: warnings(&said) }),
         Err(said) => serde_json::to_vec(&Declined { error: decline(&said) }),
     };
     out.map_err(|_| RunError::Encode)
 }
 
-/// The file of `format`, named `name`, that `stitch export` writes of the document `input`, read as
-/// `reading` asks and planned for the machine `asked`, or else the one the document keeps, or else the
-/// reference machine, with everything said; or everything said, which then holds an error and leaves the
-/// file unwritten.
+/// What an export is asked for: the file under its name, or the picture of that file.
+#[derive(Clone, Copy)]
+struct Wanted<'a> {
+    /// The design's name in the file.
+    name: &'a str,
+    /// Whether the picture `stitch export --preview` draws is wanted in place of the file ([`PICTURE`]).
+    picture: bool,
+}
+
+/// The file of `format` that `stitch export` writes of the document `input`, read as `reading` asks and
+/// planned for the machine `asked`, or else the one the document keeps, or else the reference machine, or
+/// the picture of that file, as `wanted` says, with everything said; or everything said, which then holds
+/// an error and leaves the file unwritten.
 fn sewn(
     format: FormatId,
     input: &[u8],
     reading: Reading,
     asked: Option<&'static MachineProfile>,
-    name: &str,
+    wanted: Wanted<'_>,
 ) -> Result<(Vec<u8>, Vec<Diagnostic>), Vec<Diagnostic>> {
     let read = stitchcraft_vectorcraft::read_with(input, &Budget::DEFAULT, reading).map_err(|unread| vec![unread])?;
     let profile = asked.or(read.machine).unwrap_or(REFERENCE);
@@ -167,13 +192,21 @@ fn sewn(
     let mut said = read.warnings;
     said.extend(outcome.diagnostics);
     let Some(plan) = outcome.plan else { return Err(with_an_error(said)) };
-    written(&plan, format, name, said)
+    written(&plan, format, wanted.name, said, wanted.picture.then_some(profile.trims))
 }
 
 /// The file of `format`, named `name`, that `plan` is written as, every thread of it, those of an element
 /// sewn in several among them (`REQ-THREAD-003`), and read back, with `said` and what writing it says; or
-/// everything said, which then holds an error and leaves the file unwritten.
-fn written(plan: &StitchPlan, format: FormatId, name: &str, mut said: Vec<Diagnostic>) -> Result<(Vec<u8>, Vec<Diagnostic>), Vec<Diagnostic>> {
+/// everything said, which then holds an error and leaves the file unwritten. With `picture`, how the
+/// machine cuts, the file read back is drawn as `stitch export --preview` draws it, and the picture, a PNG,
+/// is given in the file's place.
+fn written(
+    plan: &StitchPlan,
+    format: FormatId,
+    name: &str,
+    mut said: Vec<Diagnostic>,
+    picture: Option<TrimSupport>,
+) -> Result<(Vec<u8>, Vec<Diagnostic>), Vec<Diagnostic>> {
     let file = match stitchcraft_formats::encode(plan, format, name) {
         Ok(Encoded { bytes, notes }) => {
             said.extend(notes);
@@ -184,10 +217,24 @@ fn written(plan: &StitchPlan, format: FormatId, name: &str, mut said: Vec<Diagno
             return Err(said);
         }
     };
-    if let Err(bug) = read_back(&file, plan) {
-        said.push(bug);
-    }
-    if said.iter().any(is_error) { Err(said) } else { Ok((file, said)) }
+    // The picture is of the file read back, so a file that can't be read back has none.
+    let out = match read_back(&file, plan).and_then(|back| picture.map(|trims| drawn(&back, trims)).transpose()) {
+        Ok(png) => png.unwrap_or(file),
+        Err(bug) => {
+            said.push(bug);
+            file
+        }
+    };
+    if said.iter().any(is_error) { Err(said) } else { Ok((out, said)) }
+}
+
+/// The picture `stitch export --preview` draws of the file read back, `back`, on a machine that cuts as
+/// `trims` says: the realistic style at the default scale, as a PNG file (`picture` in
+/// `apps/stitchcraft-cli/src/commands/plan.rs`).
+fn drawn(back: &StitchPlan, trims: TrimSupport) -> Result<Vec<u8>, Diagnostic> {
+    let settings = Settings::new(Style::Realistic, Settings::DEFAULT_SCALE)
+        .ok_or(Diagnostic::new(Code::InternalCheckFailed, "The picture's default settings are out of range."))?;
+    stitchcraft_render::preview(back, trims, settings, &mut Budget::DEFAULT.meter()).map(|image| image.png).map_err(|e| e.diagnostic())
 }
 
 /// `said`, which came with no plan, with an error that says so when none of it does: the engine always
@@ -321,6 +368,41 @@ mod tests {
         assert_ne!(file(&auto).0, file(&plain).0);
     }
 
+    /// The parameters of a run that asks for the picture of the file named `name`, with `set`.
+    fn picture_params(name: &str, set: &Value) -> Vec<u8> {
+        let mut params = set.clone();
+        params["_context"] = json!({"mode": PICTURE, "extension": "pes", "name": name});
+        serde_json::to_vec(&params).unwrap()
+    }
+
+    #[test]
+    fn req_vc_025_an_exporter_asked_for_the_picture_answers_what_stitch_export_preview_draws() {
+        for format in FormatId::ALL {
+            let (bytes, said) = stitch_export(PATCH, Reading::default(), REFERENCE, *format, "patch");
+            // As `stitch export --preview` draws it: the file read back, in the realistic style at the default scale.
+            let read = stitchcraft_vectorcraft::read_with(PATCH, &Budget::DEFAULT, Reading::default()).unwrap();
+            let plan = stitchcraft_engine::plan(&read.design, &REFERENCE.writing(*format), &Budget::DEFAULT).plan.unwrap();
+            let settings = Settings::new(Style::Realistic, Settings::DEFAULT_SCALE).unwrap();
+            let image =
+                stitchcraft_render::preview(&read_back(&bytes, &plan).unwrap(), REFERENCE.trims, settings, &mut Budget::DEFAULT.meter()).unwrap();
+            assert!(image.png.starts_with(b"\x89PNG\r\n\x1a\n"), "{format:?}");
+            // The picture comes in the file's place, with what the export says.
+            assert_eq!(file(&exported(*format, PATCH, &picture_params("patch", &json!({})))), (base64(&image.png), said.clone()), "{format:?}");
+            // VectorCraft's own mode, and a run that names none, give the file.
+            assert_eq!(file(&exported(*format, PATCH, &params("patch", &json!({})))).0, base64(&bytes), "{format:?}");
+            let unnamed = serde_json::to_vec(&json!({"_context": {"name": "patch"}})).unwrap();
+            assert_eq!(file(&exported(*format, PATCH, &unnamed)).0, base64(&bytes), "{format:?}");
+        }
+    }
+
+    #[test]
+    fn req_vc_025_a_design_that_writes_no_file_has_no_picture() {
+        // The patch doesn't fit the small hoop, so nothing is written, and nothing is drawn.
+        let small = exported(FormatId::PesV1, PATCH, &picture_params("patch", &json!({ PROFILE: BROTHER_PE800_SMALL.id })));
+        assert!(small.get("dataBase64").is_none(), "{small}");
+        assert!(small["error"].as_str().is_some_and(|error| error.starts_with("error SC-E0701: ")), "{small}");
+    }
+
     #[test]
     fn the_options_help_says_what_they_do_with_the_widths_auto_goes_by() {
         let options = options();
@@ -400,20 +482,20 @@ mod tests {
         // exporter writes the plan a document of one would give.
         let plan = crate::testing::three_threads_plan();
         for format in FormatId::ALL {
-            let (bytes, said) = written(&plan, *format, "gradient", Vec::new()).unwrap();
+            let (bytes, said) = written(&plan, *format, "gradient", Vec::new(), None).unwrap();
             assert_eq!(said, Vec::new(), "{format:?}");
             let back = stitchcraft_formats::decode(&bytes).unwrap().plan;
             assert_eq!((back.blocks.len(), back.stats().color_changes, back.stats().stops), (3, 2, 0), "{format:?}");
         }
         // A PES file names each thread by a Brother colour of its own.
-        let (pes, _) = written(&plan, FormatId::PesV1, "gradient", Vec::new()).unwrap();
+        let (pes, _) = written(&plan, FormatId::PesV1, "gradient", Vec::new(), None).unwrap();
         let threads: Vec<_> = stitchcraft_formats::decode(&pes).unwrap().plan.blocks.iter().map(|block| block.thread.color).collect();
         assert!(threads[0] != threads[1] && threads[1] != threads[2] && threads[0] != threads[2], "{threads:?}");
         // What was said before goes on, and an error leaves the file unwritten.
         let said = vec![Diagnostic::new(Code::FillPartsApart, "In parts.")];
-        assert_eq!(written(&plan, FormatId::Dst, "gradient", said.clone()).map(|(_, said)| said), Ok(said));
+        assert_eq!(written(&plan, FormatId::Dst, "gradient", said.clone(), None).map(|(_, said)| said), Ok(said));
         let error = vec![Diagnostic::new(Code::NothingToStitch, "Nothing.")];
-        assert_eq!(written(&plan, FormatId::Dst, "gradient", error.clone()), Err(error));
+        assert_eq!(written(&plan, FormatId::Dst, "gradient", error.clone(), None), Err(error));
     }
 
     #[test]

@@ -60,7 +60,9 @@ install `stitchcraft-route-satins.wasm` and `stitchcraft-route-runs.wasm` the sa
 keeps it and installs it again when it starts. The effects are under **Effect › Plug-ins**, the formats in **File ›
 Export › Export As**, and the filters under **Object › Plug-ins**. In VectorCraft on the web, open each
 file with **File › Open** instead, once each time VectorCraft is opened. [Embroider a VectorCraft
-design](how-to/embroider-a-vectorcraft-design.md) shows how to use them.
+design](how-to/embroider-a-vectorcraft-design.md) shows how to use them. Keep the `stitch` program at hand
+too: VectorCraft stops the export of a design as large as a traced photo, and `stitch export` writes it
+([when VectorCraft stops the export](how-to/embroider-a-vectorcraft-design.md#when-vectorcraft-stops-the-export)).
 
 From VectorCraft 0.23, only a person allows those 3 filters. In the app nothing changes for you: VectorCraft
 shows a question about installing the filter, "which asks for a heavy budget", and you choose **OK**. From
