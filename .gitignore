@@ -13,3 +13,6 @@
 # of ours.
 !/docs/src/plan/
 !/apps/stitchcraft-cli/src/commands/plan/
+# The browser demo's checks install Playwright here, and its Python tests leave their caches (web/README.md).
+/web/node_modules/
+__pycache__/
