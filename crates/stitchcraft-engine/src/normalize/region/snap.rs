@@ -21,6 +21,12 @@
 //! iterated form). Every edge then runs from grid point to grid point and meets the others only at its
 //! ends, so the faces' winding numbers add up.
 //!
+//! **What is searched.** Bending an edge needs the hot points near it, and the check needs the edges that
+//! may cross it. Both are sought in [`Buckets`]: the rings' bounds cut into about as many boxes as there
+//! are points, each edge looking only in the boxes it passes. An area shrunk or grown is cut from a raw
+//! outline that lies many times over itself: tens of thousands of short edges, of which hundreds share any
+//! span along x. Searched by x alone, a traced photo's background took more than the work budget.
+//!
 //! What it does to a drawing: points that rounding left a hair apart almost always round to the same grid
 //! point, so their shapes share the point, and a gap or an overlap that narrow closes. 2 points a hair apart
 //! on either side of a cell's edge stay a cell apart, as they would on Ink/Stitch's grid. Nothing moves by
@@ -117,8 +123,8 @@ fn crosses(a: Node, b: Node, c: Node, d: Node) -> bool {
 /// The rings, each a closed list of grid points (its first repeated at its end), bent through every hot
 /// point whose cell they pass through until no 2 of their edges cross: each ring's points in the order it
 /// runs through them, its own corners among them. `Unjoined` should the edges not settle in [`ROUNDS`]
-/// rounds, a bug. One unit of `meter` for each edge bent and each hot point tested against it, and each
-/// pair of edges whose spans along x overlap.
+/// rounds, a bug. One unit of `meter` for each hot point and each edge put in a bucket, each bucket an edge
+/// looks in, each hot point tested against an edge, and each pair of edges tested for a crossing.
 pub(crate) fn round(rings: &[Vec<Node>], meter: &mut Meter) -> Result<Result<Rounded, Unjoined>, Exhausted> {
     settle(rings, ROUNDS, meter)
 }
@@ -159,12 +165,130 @@ impl Hot {
         self.0.sort();
         self.0.dedup();
     }
+}
 
-    /// The points whose x lies from `least` to `most`, in order.
-    fn across(&self, least: i64, most: i64) -> &[Node] {
-        let start = self.0.partition_point(|n| n.x < least);
-        let end = start + self.0.get(start..).map_or(0, |rest| rest.partition_point(|n| n.x <= most));
-        self.0.get(start..end).unwrap_or_default()
+/// How many buckets each way a grid for `count` points or edges has: the whole part of its square root, so
+/// that there are no more buckets than things to put in them, and 1 at least.
+fn side_for(count: usize) -> usize {
+    count.isqrt().max(1)
+}
+
+/// A grid of buckets over the bounds of some grid points, `side` each way: the box of points a bucket
+/// holds is as wide and as high as the bounds' `side`th part, rounded up. A point belongs to one bucket,
+/// and one beyond the bounds to the nearest. A bucket's number is its column's times `side`, and its row's.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct Buckets {
+    /// The least x and y of the points.
+    least: Node,
+    /// How wide and how high a bucket's box is, in half cells: 1 at least.
+    width: i64,
+    height: i64,
+    /// How many columns, and how many rows: 1 at least.
+    side: i64,
+}
+
+impl Buckets {
+    /// Over the bounds of `nodes`, `side` buckets each way (1 for none).
+    fn over(nodes: impl Iterator<Item = Node> + Clone, side: usize) -> Buckets {
+        let side = i64::try_from(side).unwrap_or(i64::MAX).max(1);
+        let span = |of: fn(Node) -> i64| {
+            let (least, most) = (nodes.clone().map(of).min().unwrap_or(0), nodes.clone().map(of).max().unwrap_or(0));
+            (least, (most - least) / side + 1)
+        };
+        let ((left, width), (bottom, height)) = (span(|n| n.x), span(|n| n.y));
+        Buckets { least: Node { x: left, y: bottom }, width, height, side }
+    }
+
+    /// How many buckets there are.
+    fn count(&self) -> usize {
+        usize::try_from(self.side * self.side).unwrap_or(usize::MAX)
+    }
+
+    /// The column of the points at `x`.
+    fn column(&self, x: i64) -> i64 {
+        ((x - self.least.x) / self.width).clamp(0, self.side - 1)
+    }
+
+    /// The row of the points at `y`.
+    fn row(&self, y: i64) -> i64 {
+        ((y - self.least.y) / self.height).clamp(0, self.side - 1)
+    }
+
+    /// The number of the bucket `node` belongs to.
+    fn of(&self, node: Node) -> usize {
+        usize::try_from(self.column(node.x) * self.side + self.row(node.y)).unwrap_or(0)
+    }
+
+    /// Gives `visit` the number of every bucket that may hold a point whose cell the segment from `a` to
+    /// `b` passes through, each once, in order: so of every bucket the segment itself passes through too.
+    /// In each column the segment's stretch that lies within a half cell of the column's points is taken,
+    /// and the rows from a half cell below its lowest point to a half cell above its highest.
+    fn along(&self, a: Node, b: Node, mut visit: impl FnMut(usize) -> Result<(), Exhausted>) -> Result<(), Exhausted> {
+        let (a, b) = (a.min(b), a.max(b));
+        let (first, last) = (self.column(a.x), self.column(b.x));
+        for column in first..=last {
+            // A column after the segment's first starts after the segment does, and one before its last
+            // ends before it does.
+            let left = self.least.x + column * self.width;
+            let from = if column == first { a.x } else { left - 1 };
+            let to = if column == last { b.x } else { left + self.width };
+            let ((low, _), (_, high)) = if a.y <= b.y { (height(a, b, from), height(a, b, to)) } else { (height(a, b, to), height(a, b, from)) };
+            for row in self.row(low - 1)..=self.row(high + 1) {
+                visit(usize::try_from(column * self.side + row).unwrap_or(0))?;
+            }
+        }
+        Ok(())
+    }
+}
+
+/// How high the segment from `a` to `b`, `a` the lesser, is at `x`, which lies between their x: in whole
+/// half cells, rounded down and rounded up. An upright segment's lowest and highest points. Exact.
+fn height(a: Node, b: Node, x: i64) -> (i64, i64) {
+    let run = i128::from(b.x) - i128::from(a.x);
+    if run == 0 {
+        return (a.y, b.y);
+    }
+    let rise = (i128::from(b.y) - i128::from(a.y)) * (i128::from(x) - i128::from(a.x));
+    // The rise at `x` is no more than the segment's own, so it is a coordinate's size.
+    let down = a.y + i64::try_from(rise.div_euclid(run)).unwrap_or(0);
+    (down, down + i64::from(rise.rem_euclid(run) != 0))
+}
+
+/// The hot points by the bucket each belongs to, for the edges to look near themselves.
+#[derive(Debug)]
+struct Near {
+    buckets: Buckets,
+    /// The points, in order of their buckets and then their own.
+    nodes: Vec<Node>,
+    /// Where each bucket's points start in `nodes`, and after the last where they end.
+    starts: Vec<usize>,
+}
+
+impl Near {
+    /// The points of `hot` in a grid of `side` buckets each way. One unit of `meter` for each point.
+    fn of(hot: &Hot, side: usize, meter: &mut Meter) -> Result<Near, Exhausted> {
+        meter.charge(hot.0.len() as u64)?;
+        let buckets = Buckets::over(hot.0.iter().copied(), side);
+        let mut keyed: Vec<(usize, Node)> = hot.0.iter().map(|&node| (buckets.of(node), node)).collect();
+        keyed.sort_unstable();
+        let mut starts = vec![0; buckets.count() + 1];
+        for &(bucket, _) in &keyed {
+            if let Some(start) = starts.get_mut(bucket + 1) {
+                *start += 1;
+            }
+        }
+        let mut before = 0;
+        for start in &mut starts {
+            before += *start;
+            *start = before;
+        }
+        Ok(Near { buckets, nodes: keyed.into_iter().map(|(_, node)| node).collect(), starts })
+    }
+
+    /// The points of the bucket numbered `bucket`.
+    fn held(&self, bucket: usize) -> &[Node] {
+        let ends = self.starts.get(bucket).zip(self.starts.get(bucket + 1));
+        ends.and_then(|(&start, &end)| self.nodes.get(start..end)).unwrap_or_default()
     }
 }
 
@@ -174,7 +298,8 @@ fn settle(rings: &[Vec<Node>], rounds: usize, meter: &mut Meter) -> Result<Resul
     let mut paths = rings.to_vec();
     // Each round bends the edges, or, once none can be bent further, makes hot the cells where they cross.
     for _ in 0..rounds {
-        let Bent::None(edges) = bend(&mut paths, &hot, meter)? else { continue };
+        let near = Near::of(&hot, side_for(hot.0.len()), meter)?;
+        let Bent::None(edges) = bend(&mut paths, &near, meter)? else { continue };
         let crossing = crossings(&edges, meter)?;
         if crossing.is_empty() {
             return Ok(Ok(Rounded { paths, hot: hot.0 }));
@@ -202,9 +327,9 @@ enum Bent {
 }
 
 /// Bends each edge of `paths` that passes through the cell of a hot point other than its ends through
-/// that point, the points in order along the edge. One unit of `meter` for each edge and each hot point
-/// tested against it.
-fn bend(paths: &mut [Vec<Node>], hot: &Hot, meter: &mut Meter) -> Result<Bent, Exhausted> {
+/// that point, the points in order along the edge: `near` holds the hot points. One unit of `meter` for
+/// each edge, each bucket it looks in and each hot point tested against it.
+fn bend(paths: &mut [Vec<Node>], near: &Near, meter: &mut Meter) -> Result<Bent, Exhausted> {
     // Each edge, from its least end, with where it is drawn: an edge drawn several times, either way, is
     // worked out once. Sorted, the edges drawn alike lie side by side.
     let mut edges: Vec<((Node, Node), usize, usize)> = Vec::with_capacity(paths.iter().map(Vec::len).sum());
@@ -223,7 +348,7 @@ fn bend(paths: &mut [Vec<Node>], hot: &Hot, meter: &mut Meter) -> Result<Bent, E
     while let Some(&(key, ..)) = edges.get(edge) {
         meter.charge(1)?;
         let start = points.len();
-        through(key.0, key.1, hot, meter, &mut points)?;
+        through(key.0, key.1, near, meter, &mut points)?;
         let alike = edges.get(edge..).map_or(0, |rest| rest.iter().take_while(|(k, ..)| *k == key).count());
         if points.len() > start {
             bends.extend(edges.get(edge..edge + alike).into_iter().flatten().map(|&(_, p, i)| (p, i, start, points.len())));
@@ -266,29 +391,64 @@ fn bend(paths: &mut [Vec<Node>], hot: &Hot, meter: &mut Meter) -> Result<Bent, E
 }
 
 /// The hot points other than `a` and `b` whose cells the segment from `a` to `b` passes through, in order
-/// from `a`, added to `points`. Every such point lies strictly between the ends along the segment, each
-/// cell further along than the one before, so the order of their distances along it is the order the
-/// segment runs through them. A cell can meet the segment only when its point lies within the segment's
-/// bounds, its sides being a half cell from it and the segment's ends grid points. One unit of `meter` for
-/// each hot point tested.
-fn through(a: Node, b: Node, hot: &Hot, meter: &mut Meter, points: &mut Vec<Node>) -> Result<(), Exhausted> {
+/// from `a`, added to `points`: `near` holds the hot points. Every such point lies strictly between the
+/// ends along the segment, each cell further along than the one before, so the order of their distances
+/// along it is the order the segment runs through them. A cell can meet the segment only when its point
+/// lies within the segment's bounds, its sides being a half cell from it and the segment's ends grid
+/// points. One unit of `meter` for each bucket looked in and each hot point tested.
+fn through(a: Node, b: Node, near: &Near, meter: &mut Meter, points: &mut Vec<Node>) -> Result<(), Exhausted> {
     let (bottom, top) = (a.y.min(b.y), a.y.max(b.y));
     let start = points.len();
-    let across = hot.across(a.x.min(b.x), a.x.max(b.x));
-    meter.charge(across.len() as u64)?;
-    points.extend(across.iter().copied().filter(|&c| c != a && c != b && (bottom..=top).contains(&c.y) && touches(a, b, c)));
-    points.get_mut(start..).into_iter().for_each(|found| found.sort_by_key(|&c| along(a, b, c)));
+    near.buckets.along(a, b, |bucket| {
+        let held = near.held(bucket);
+        meter.charge(1 + held.len() as u64)?;
+        points.extend(held.iter().copied().filter(|&c| c != a && c != b && (bottom..=top).contains(&c.y) && touches(a, b, c)));
+        Ok(())
+    })?;
+    points.get_mut(start..).into_iter().for_each(|found| found.sort_by_key(|&c| (along(a, b, c), c)));
     Ok(())
 }
 
-/// The pairs of `edges` that cross, each once, as the ends of both: the edges of the paths, each once,
-/// from its least end, in order of their least ends ([`Bent::None`]). One unit of `meter` for each pair of
-/// edges whose spans along x overlap.
+/// The pairs of `edges` that cross, each once, as the ends of both, in the edges' order: the edges of the
+/// paths, each once, from its least end, in order of their least ends ([`Bent::None`]). The edges are put
+/// in the buckets they pass through, and those sharing a bucket are tested. One unit of `meter` for each
+/// bucket an edge is put in, and each pair of edges tested.
 fn crossings(edges: &[(Node, Node)], meter: &mut Meter) -> Result<Vec<[Node; 4]>, Exhausted> {
-    let mut found = Vec::new();
+    // Long edges pass through many buckets. Should the edges take more room than 4 buckets each, the
+    // buckets are made larger, down to 1 that holds every edge once: memory stays in step with the edges.
+    let mut side = side_for(edges.len());
+    while side > 1 {
+        if let Some(found) = crossings_in(edges, side, meter)? {
+            return Ok(found);
+        }
+        side /= 2;
+    }
+    Ok(crossings_in(edges, 1, meter)?.unwrap_or_default())
+}
+
+/// [`crossings`] with `side` buckets each way: `None` should the edges be put in more than 4 buckets each,
+/// taken together. In a bucket the edges lie in their order, so an edge is tested against those after it
+/// that start before it ends along x, as all the edges are in 1 bucket.
+fn crossings_in(edges: &[(Node, Node)], side: usize, meter: &mut Meter) -> Result<Option<Vec<[Node; 4]>>, Exhausted> {
+    let buckets = Buckets::over(edges.iter().flat_map(|&(a, b)| [a, b]), side);
+    let most = 4 * edges.len();
+    let mut put: Vec<(usize, usize)> = Vec::new();
     for (k, &(a, b)) in edges.iter().enumerate().filter(|(_, (a, b))| a != b) {
-        for &(c, d) in edges.iter().skip(k + 1).filter(|(c, d)| c != d) {
-            if c.x > b.x {
+        buckets.along(a, b, |bucket| {
+            put.push((bucket, k));
+            meter.charge(1)
+        })?;
+        if put.len() > most {
+            return Ok(None);
+        }
+    }
+    put.sort_unstable();
+    let mut found = Vec::new();
+    for (at, &(bucket, k)) in put.iter().enumerate() {
+        let Some(&(a, b)) = edges.get(k) else { continue };
+        for &(other, later) in put.iter().skip(at + 1) {
+            let Some(&(c, d)) = edges.get(later) else { continue };
+            if other != bucket || c.x > b.x {
                 break;
             }
             meter.charge(1)?;
@@ -297,7 +457,10 @@ fn crossings(edges: &[(Node, Node)], meter: &mut Meter) -> Result<Vec<[Node; 4]>
             }
         }
     }
-    Ok(found)
+    // Edges that share several buckets were tested in each.
+    found.sort_unstable();
+    found.dedup();
+    Ok(Some(found))
 }
 
 /// The hot point for the crossing of the edges from `a` to `b` and from `c` to `d`, which floating point
@@ -430,18 +593,136 @@ mod tests {
     }
 
     #[test]
-    fn hot_points_are_kept_once_in_order_and_found_by_their_x() {
+    fn hot_points_are_kept_once_in_order() {
         let mut hot = Hot::of([n(4, 2), n(0, 0), n(2, 6), n(4, -2), n(2, 6), n(8, 0)]);
         assert_eq!(hot.0, [n(0, 0), n(2, 6), n(4, -2), n(4, 2), n(8, 0)], "in order of x, then y, each once");
         hot.extend([n(6, 4), n(2, 6), n(-2, 0), n(6, 4)]);
         assert_eq!(hot.0, [n(-2, 0), n(0, 0), n(2, 6), n(4, -2), n(4, 2), n(6, 4), n(8, 0)], "the crossings' points join in their places, once");
-        // From the least x to the greatest, both included.
-        assert_eq!(hot.across(2, 4), [n(2, 6), n(4, -2), n(4, 2)]);
-        assert_eq!(hot.across(4, 4), [n(4, -2), n(4, 2)], "an upright segment's");
-        assert_eq!(hot.across(-8, 0), [n(-2, 0), n(0, 0)]);
-        assert_eq!(hot.across(8, 20), [n(8, 0)]);
-        assert_eq!(hot.across(-8, 20), hot.0);
-        assert!(hot.across(1, 1).is_empty() && hot.across(10, 20).is_empty() && hot.across(-8, -4).is_empty());
+    }
+
+    /// The hot points `hot` in a grid of `side` buckets each way.
+    fn near(hot: &Hot, side: usize) -> Near {
+        Near::of(hot, side, &mut Budget::DEFAULT.meter()).unwrap()
+    }
+
+    /// The work `run` spends.
+    fn spent<T>(run: impl FnOnce(&mut Meter) -> T) -> (T, u64) {
+        let mut meter = Budget::DEFAULT.meter();
+        let made = run(&mut meter);
+        (made, Budget::DEFAULT.max_work - meter.work_left())
+    }
+
+    /// The grid points from (0, 0) to (10, 10) half cells, 36 of them.
+    fn lattice() -> Vec<Node> {
+        (0..6).flat_map(|i| (0..6).map(move |j| n(2 * i, 2 * j))).collect()
+    }
+
+    #[test]
+    fn a_grid_has_a_bucket_each_way_for_the_square_root_of_what_it_holds() {
+        assert_eq!([0, 1, 3, 4, 15, 16, 84_979].map(side_for), [1, 1, 1, 2, 3, 4, 291]);
+    }
+
+    #[test]
+    fn buckets_cut_the_points_bounds_into_boxes_and_each_point_has_one() {
+        // From (-4, 10) to (16, 14): 3 columns 7 half cells wide, and 3 rows 2 high.
+        let buckets = Buckets::over([n(-4, 14), n(16, 10), n(2, 12)].into_iter(), 3);
+        assert_eq!(buckets, Buckets { least: n(-4, 10), width: 7, height: 2, side: 3 });
+        assert_eq!(buckets.count(), 9);
+        assert_eq!([-4, 2, 4, 9, 10, 16].map(|x| buckets.column(x)), [0, 0, 1, 1, 2, 2]);
+        assert_eq!([10, 11, 12, 13, 14].map(|y| buckets.row(y)), [0, 0, 1, 1, 2]);
+        // Beyond the bounds: the nearest.
+        assert_eq!([buckets.column(-20), buckets.column(40), buckets.row(0), buckets.row(40)], [0, 2, 0, 2]);
+        assert_eq!([n(-4, 10), n(-4, 14), n(4, 12), n(16, 10), n(16, 14)].map(|q| buckets.of(q)), [0, 2, 4, 6, 8]);
+        // No points, or no buckets asked for: 1 bucket, a half cell wide.
+        let none = Buckets::over(std::iter::empty(), 0);
+        assert_eq!(none, Buckets { least: n(0, 0), width: 1, height: 1, side: 1 });
+        assert_eq!((none.count(), none.of(n(6, -6))), (1, 0));
+    }
+
+    #[test]
+    fn a_segment_s_height_at_an_x_is_exact_rounded_down_and_up() {
+        // From (0, 0) to (6, 4): a third of the way up at 2, and a sixth at 1. Down the same way.
+        assert_eq!([0, 1, 2, 3, 6].map(|x| height(n(0, 0), n(6, 4), x)), [(0, 0), (0, 1), (1, 2), (2, 2), (4, 4)]);
+        assert_eq!([0, 1, 3, 6].map(|x| height(n(0, 4), n(6, 0), x)), [(4, 4), (3, 4), (2, 2), (0, 0)]);
+        assert_eq!(height(n(-6, -4), n(0, 0), -5), (-4, -3));
+        // An upright segment: its ends.
+        assert_eq!(height(n(2, -4), n(2, 8), 2), (-4, 8));
+    }
+
+    /// The buckets `buckets` gives a segment from `a` to `b`.
+    fn passed(buckets: &Buckets, a: Node, b: Node) -> Vec<usize> {
+        let mut seen = Vec::new();
+        buckets
+            .along(a, b, |bucket| {
+                seen.push(bucket);
+                Ok(())
+            })
+            .unwrap();
+        seen
+    }
+
+    #[test]
+    fn a_segment_looks_in_the_buckets_within_a_half_cell_of_it() {
+        // 4 columns and 4 rows, each 5 half cells: bucket 4 c + r holds x from 5 c and y from 5 r.
+        let buckets = Buckets::over([n(0, 0), n(18, 18)].into_iter(), 4);
+        assert_eq!((buckets.width, buckets.height), (5, 5));
+        // Level along the middle of a row: that row, either way it is drawn.
+        assert_eq!(passed(&buckets, n(0, 2), n(18, 2)), [0, 4, 8, 12]);
+        assert_eq!(passed(&buckets, n(18, 2), n(0, 2)), [0, 4, 8, 12]);
+        // Level, a half cell under the next row: both rows. A cell above the row before: its own only.
+        assert_eq!(passed(&buckets, n(6, 4), n(8, 4)), [4, 5]);
+        assert_eq!(passed(&buckets, n(6, 6), n(8, 6)), [5]);
+        // Upright in a column's middle: that column. Ending a half cell from the next row's points: that row too.
+        assert_eq!(passed(&buckets, n(12, 6), n(12, 12)), [9, 10]);
+        assert_eq!(passed(&buckets, n(12, 6), n(12, 14)), [9, 10, 11]);
+        // Rising across the grid: each column's rows from where it enters, a half cell early, to where it
+        // leaves. Falling: the same rows from the other side.
+        assert_eq!(passed(&buckets, n(0, 0), n(18, 18)), [0, 1, 4, 5, 6, 9, 10, 11, 14, 15]);
+        assert_eq!(passed(&buckets, n(0, 18), n(18, 0)), [2, 3, 5, 6, 7, 8, 9, 10, 12, 13]);
+        // It stops as soon as it is told to.
+        let mut seen = 0;
+        let stopped = buckets.along(n(0, 0), n(18, 18), |_| {
+            seen += 1;
+            if seen < 3 { Ok(()) } else { Err(Exhausted::Work) }
+        });
+        assert_eq!((stopped, seen), (Err(Exhausted::Work), 3));
+    }
+
+    #[test]
+    fn hot_points_are_held_by_bucket_in_order() {
+        let hot = Hot::of([n(8, 8), n(0, 0), n(2, 0), n(0, 2), n(6, 2), n(8, 0)]);
+        // 2 buckets each way, 5 half cells: (0, 0), (0, 2), (2, 0) in the first, none above it, then (6, 2)
+        // and (8, 0), then (8, 8).
+        let (near, work) = spent(|meter| Near::of(&hot, 2, meter).unwrap());
+        assert_eq!(work, 6, "a unit for each point");
+        assert_eq!(near.starts, [0, 3, 3, 5, 6]);
+        assert_eq!(near.held(0), [n(0, 0), n(0, 2), n(2, 0)]);
+        assert!(near.held(1).is_empty());
+        assert_eq!(near.held(2), [n(6, 2), n(8, 0)]);
+        assert_eq!(near.held(3), [n(8, 8)]);
+        assert!(near.held(4).is_empty(), "past the last bucket");
+        // Out of work before the first point.
+        assert_eq!(Near::of(&hot, 2, &mut Budget { max_work: 5, ..Budget::DEFAULT }.meter()).unwrap_err(), Exhausted::Work);
+    }
+
+    #[test]
+    fn however_many_buckets_an_edge_is_bent_through_the_same_hot_points() {
+        // Every segment between 2 of 36 grid points, all of them hot, with 1 to 7 buckets each way, a
+        // bucket down to a point's own cell: the points every hot point tested one by one gives.
+        let nodes = lattice();
+        let hot = Hot::of(nodes.iter().copied());
+        for side in 1..=7 {
+            let near = near(&hot, side);
+            for (k, &a) in nodes.iter().enumerate() {
+                for &b in nodes.iter().skip(k + 1) {
+                    let mut expected: Vec<Node> = nodes.iter().copied().filter(|&c| c != a && c != b && touches(a, b, c)).collect();
+                    expected.sort_by_key(|&c| along(a, b, c));
+                    let mut found = Vec::new();
+                    through(a, b, &near, &mut Budget::DEFAULT.meter(), &mut found).unwrap();
+                    assert_eq!(found, expected, "{side} buckets each way, {a:?} to {b:?}");
+                }
+            }
+        }
     }
 
     #[test]
@@ -452,15 +733,17 @@ mod tests {
         let hot = Hot::of([n(0, 0), n(20, 10), n(10, 6), n(6, 2), n(6, 6), n(14, 4), n(10, 4)]);
         let through = |a, b, hot: &Hot, meter: &mut Meter| {
             let mut points = Vec::new();
-            super::through(a, b, hot, meter, &mut points).unwrap();
+            super::through(a, b, &near(hot, 2), meter, &mut points).unwrap();
             points
         };
         assert_eq!(through(n(0, 0), n(20, 10), &hot, &mut meter), [n(6, 2), n(10, 4), n(10, 6)]);
+        // 2 buckets each way: the edge looks in all 4, which hold the 7 points.
+        assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 4 + 7);
         // Out and back: bent the same both ways.
         let mut paths = vec![vec![n(0, 0), n(20, 10), n(0, 0)]];
-        assert_eq!(bend(&mut paths, &hot, &mut meter).unwrap(), Bent::Some);
+        assert_eq!(bend(&mut paths, &near(&hot, 2), &mut meter).unwrap(), Bent::Some);
         assert_eq!(paths[0], [n(0, 0), n(6, 2), n(10, 4), n(10, 6), n(20, 10), n(10, 6), n(10, 4), n(6, 2), n(0, 0)]);
-        assert!(matches!(bend(&mut paths, &hot, &mut meter).unwrap(), Bent::None(_)), "bent through every one already");
+        assert!(matches!(bend(&mut paths, &near(&hot, 2), &mut meter).unwrap(), Bent::None(_)), "bent through every one already");
         // The same turned upside down and moved: running downhill, the edge reaches (-10, 26) before
         // (-10, 24), the other way round from the points' own order.
         let hot = Hot::of([n(-20, 30), n(0, 20), n(-10, 24), n(-14, 28), n(-14, 24), n(-6, 26), n(-10, 26)]);
@@ -474,19 +757,111 @@ mod tests {
         let mut paths = vec![vec![n(0, 0), n(8, 0), n(8, 8), n(0, 8), n(0, 0)], vec![n(8, 0), n(16, 0), n(16, 8), n(8, 8), n(8, 0)]];
         let hot = Hot::of(paths.iter().flatten().copied().chain([n(8, 4), n(4, 0)]));
         let mut meter = Budget::DEFAULT.meter();
-        assert_eq!(bend(&mut paths, &hot, &mut meter).unwrap(), Bent::Some);
+        assert_eq!(bend(&mut paths, &near(&hot, 3), &mut meter).unwrap(), Bent::Some);
         assert_eq!(paths[0], [n(0, 0), n(4, 0), n(8, 0), n(8, 4), n(8, 8), n(0, 8), n(0, 0)]);
         assert_eq!(paths[1], [n(8, 0), n(16, 0), n(16, 8), n(8, 8), n(8, 4), n(8, 0)]);
     }
 
+    /// Every pair of `edges` that crosses, each tested against each.
+    fn crossing_pairs(edges: &[(Node, Node)]) -> Vec<[Node; 4]> {
+        let mut found = Vec::new();
+        for (k, &(a, b)) in edges.iter().enumerate() {
+            found.extend(edges.iter().skip(k + 1).filter(|&&(c, d)| crosses(a, b, c, d)).map(|&(c, d)| [a, b, c, d]));
+        }
+        found
+    }
+
     #[test]
-    fn crossings_are_sought_among_the_edges_side_by_side_along_x() {
+    fn crossings_are_sought_among_the_edges_that_share_a_bucket() {
         // The bow tie's sides, from their least ends, and an edge to the right of both: one pair of edges
-        // overlaps along x, and crosses. An edge of no length crosses nothing.
+        // overlaps along x, and crosses. An edge of no length crosses nothing, and is put in no bucket.
         let edges = [(n(0, 0), n(4, 4)), (n(0, 4), n(4, 0)), (n(2, 2), n(2, 2)), (n(6, 0), n(8, 2))];
+        let (found, work) = spent(|meter| crossings(&edges, meter).unwrap());
+        assert_eq!(found, [[n(0, 0), n(4, 4), n(0, 4), n(4, 0)]]);
+        // 4 edges: 2 buckets each way, 5 half cells wide and 3 high. The sides are put in the first column's
+        // 2 and the third edge in the second column's 2: 6, and the sides are tested in both of theirs.
+        assert_eq!(work, 6 + 2);
+        // In 1 bucket: each edge put once, and the sides tested once. The third edge starts after both end.
+        let (found, work) = spent(|meter| crossings_in(&edges, 1, meter).unwrap());
+        assert_eq!((found, work), (Some(vec![[n(0, 0), n(4, 4), n(0, 4), n(4, 0)]]), 3 + 1));
+        // 2 level edges one after the other along x, in 1 bucket: the first is not tested against the second.
+        let apart = [(n(0, 0), n(4, 0)), (n(6, 0), n(8, 0))];
+        assert_eq!(spent(|meter| crossings_in(&apart, 1, meter).unwrap()), (Some(vec![]), 2));
+        // Meeting end to end, they are.
+        let meeting = [(n(0, 0), n(4, 0)), (n(4, 0), n(8, 0))];
+        assert_eq!(spent(|meter| crossings_in(&meeting, 1, meter).unwrap()), (Some(vec![]), 3));
+    }
+
+    #[test]
+    fn however_many_buckets_the_same_edges_cross() {
+        // Every segment between 2 of 16 grid points, 120 of them, in order: 1 to 3 buckets each way hold
+        // them in no more than 4 each, and give the pairs that testing each against each does, once each.
+        let nodes: Vec<Node> = (0..4).flat_map(|i| (0..4).map(move |j| n(6 * i + 2 * j, 4 * j))).collect();
+        let mut edges: Vec<(Node, Node)> = Vec::new();
+        for (k, &a) in nodes.iter().enumerate() {
+            edges.extend(nodes.iter().skip(k + 1).map(|&b| (a.min(b), a.max(b))));
+        }
+        edges.sort_unstable();
+        let expected = crossing_pairs(&edges);
+        assert!(expected.len() > 500, "{}", expected.len());
         let mut meter = Budget::DEFAULT.meter();
-        assert_eq!(crossings(&edges, &mut meter).unwrap(), [[n(0, 0), n(4, 4), n(0, 4), n(4, 0)]]);
-        assert_eq!(Budget::DEFAULT.max_work - meter.work_left(), 1);
+        for side in 1..=3 {
+            assert_eq!(crossings_in(&edges, side, &mut meter).unwrap().as_ref(), Some(&expected), "{side} buckets each way");
+        }
+        assert_eq!(crossings(&edges, &mut meter).unwrap(), expected);
+    }
+
+    #[test]
+    fn edges_too_long_for_their_buckets_are_put_in_larger_ones() {
+        // 16 edges fanned out from one corner across the bounds and 4 short ones: 20 edges, so 4 buckets each
+        // way at first.
+        let mut edges: Vec<(Node, Node)> = (0..16).map(|k| (n(0, 0), n(64, 4 * k))).collect();
+        edges.extend((0..4).map(|k| (n(60, 16 * k), n(64, 16 * k + 2))));
+        edges.sort_unstable();
+        let expected = crossing_pairs(&edges);
+        let work_in = |side| spent(|meter| crossings_in(&edges, side, meter).unwrap());
+        let ((four, four_work), (two, two_work), (one, one_work)) = (work_in(4), work_in(2), work_in(1));
+        // In 4 each way they take more than 4 buckets each, and the search stops as soon as they do.
+        assert_eq!((four, four_work), (None, 86));
+        assert_eq!((two.as_ref(), one.as_ref()), (Some(&expected), Some(&expected)));
+        assert_eq!((two_work, one_work), (363, 210));
+        // So the search goes on with 2 each way, and need not go on to 1.
+        assert_eq!(spent(|meter| crossings(&edges, meter).unwrap()), (expected, four_work + two_work));
+        // Any less work than that runs out, in the first search or in the second.
+        for work in 0..four_work + two_work {
+            let short = Budget { max_work: work, ..Budget::DEFAULT };
+            assert_eq!(crossings(&edges, &mut short.meter()).unwrap_err(), Exhausted::Work, "{work}");
+        }
+        // 2 edges have 1 bucket from the first: 2 units to put them in it, and 1 to test them.
+        let two = [edges[0], edges[1]];
+        assert_eq!(spent(|meter| crossings(&two, meter).unwrap()), (vec![], 3));
+        for work in 0..3 {
+            assert_eq!(crossings(&two, &mut Budget { max_work: work, ..Budget::DEFAULT }.meter()).unwrap_err(), Exhausted::Work, "{work}");
+        }
+    }
+
+    #[test]
+    fn rounding_runs_out_of_work_at_every_step_short_of_what_it_takes() {
+        // 2 squares over each other's corners and the bow tie: edges to bend, and crossings to find.
+        let square = |x: i64, y: i64| vec![n(x, y), n(x + 8, y), n(x + 8, y + 8), n(x, y + 8), n(x, y)];
+        let rings = [square(0, 0), square(4, 4), bow_tie()];
+        let (rounded, work) = spent(|meter| round(&rings, meter).unwrap());
+        assert!(rounded.is_ok() && work > 100, "{work}");
+        for short in 0..work {
+            assert_eq!(round(&rings, &mut Budget { max_work: short, ..Budget::DEFAULT }.meter()).unwrap_err(), Exhausted::Work, "{short}");
+        }
+    }
+
+    #[test]
+    fn edges_fit_their_buckets_while_they_take_no_more_than_4_each() {
+        // 2 level edges with 4 buckets each way, 4 half cells wide and 3 high: each edge is put in the 4
+        // of its row, 8 in all, which is 4 each.
+        let edges = [(n(0, 0), n(12, 0)), (n(0, 10), n(12, 10))];
+        assert_eq!(spent(|meter| crossings_in(&edges, 4, meter).unwrap()), (Some(vec![]), 8));
+        // 2 shorter ones, the buckets 3 half cells each way: 3 columns, and the upper edge lies a half cell
+        // from the points of 2 rows. 9 in all, 1 too many.
+        let edges = [(n(0, 0), n(8, 0)), (n(0, 8), n(8, 8))];
+        assert_eq!(spent(|meter| crossings_in(&edges, 4, meter).unwrap()), (None, 9));
     }
 
     #[test]
