@@ -93,16 +93,17 @@ pub(super) fn rows(
         let by = k as f64 * guided.spacing;
         let by = if by == 0.0 { ROW_0 } else { by } + guided.spacing / 2.0;
         let curves = line_curves(lines, by, meter)?;
-        let parts = area(&curves, |w| w <= -1, meter)?.parts;
-        *unjoined |= parts.is_err();
-        let Ok(parts) = parts else { break };
-        let start = curves.first().and_then(|curve| curve.first()).copied();
+        // On one line, which every row runs: no design is known to take its `else`.
+        #[rustfmt::skip]
+        let Ok(parts) = area(&curves, |w| w <= -1, meter)?.parts else { *unjoined = true; break };
+        // A guide with a line of some length has a curve round it.
+        let Some(start) = curves.first().and_then(|curve| curve.first()).copied() else { break };
         let mut met = false;
         let mut found = Vec::new();
         for ring in parts.into_iter().flat_map(|part| std::iter::once(part.outline).chain(part.holes)) {
             met |= bounds.met_by(&ring, meter)?;
             if meets(&ring, rings, meter)? {
-                found.push(start.map_or_else(|| ring.clone(), |start| started_nearest(&ring, start)));
+                found.push(started_nearest(&ring, start));
             }
         }
         if !met {
@@ -217,11 +218,13 @@ mod tests {
         let curves = line_curves(&[turned], 1.0, meter).unwrap();
         assert_eq!((xy(&curves[0][..1]), xy(&curves[1][..1])), (vec![(0.0, -1.0)], vec![(1.0, 1.0)]));
         assert_eq!(line_curves(&[square], 1.0, meter).unwrap(), curves);
-        // A closed line of no area is taken as it runs.
-        let flat = vec![p(0.0, 0.0), p(4.0, 0.0), p(2.0, 0.0), p(2.0, 3.0), p(2.0, 0.0), p(0.0, 0.0)];
+        // A closed line of no area is taken as it runs. Out along x and back, then out along y and back, its
+        // first curve starts between the 2 arms, and drawn the other way it starts elsewhere.
+        let flat = vec![p(0.0, 0.0), p(4.0, 0.0), p(0.0, 0.0), p(0.0, 3.0), p(0.0, 0.0)];
         let there = line_curves(std::slice::from_ref(&flat), 1.0, meter).unwrap();
+        assert_eq!(xy(&there[0][..1]), [(1.0, 1.0)]);
         let back = line_curves(&[flat.iter().rev().copied().collect()], 1.0, meter).unwrap();
-        assert_ne!(there.first().map(|curve| xy(curve)), back.first().map(|curve| xy(curve)));
+        assert_ne!(xy(&back[0][..1]), [(1.0, 1.0)]);
     }
 
     #[test]

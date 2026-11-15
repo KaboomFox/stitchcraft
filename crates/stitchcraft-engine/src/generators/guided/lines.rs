@@ -265,6 +265,12 @@ mod tests {
             sewn(std::slice::from_ref(&within), &offset, &at_start),
             [vec![(3.0, 1.0), (5.0, 1.0), (7.0, 1.0), (7.0, 3.0), (5.0, 3.0), (3.0, 3.0), (3.0, 1.0)]]
         );
+        // That ring is its first point and then its stitches, which start with that point, and no more.
+        let meter = &mut Budget::DEFAULT.meter();
+        let guide = [vec![p(4.0, 2.0), p(6.0, 2.0)]];
+        let with = Lines { guide: &guide, anchor: &at_start };
+        let once = super::anchored(&within, 0, &offset, &with, &SplitMix64::new(7), meter).unwrap().unwrap();
+        assert_eq!(xy(&once), [(3.0, 1.0), (3.0, 1.0), (5.0, 1.0), (7.0, 1.0), (7.0, 3.0), (5.0, 3.0), (3.0, 3.0), (3.0, 1.0)]);
         // A row of no point sews nothing.
         assert!(sewn(&[Vec::new()], &offset, &anchor).is_empty());
         // A row that crosses itself is no ring: it is stitched from its start, whatever the anchor line.

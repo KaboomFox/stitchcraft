@@ -127,8 +127,9 @@ fn stretches(line: &[Point], rings: &Rings<'_>, meter: &mut Meter) -> Result<Vec
         let mut met = Vec::new();
         rings.meeting(p, q, meter, |edge| match hit(p, q, edge.a, edge.b) {
             Hit::Cross(x) | Hit::Touch(x) => met.push(start + p.distance(x)),
-            Hit::Overlap(x, y) => met.extend([start + p.distance(x), start + p.distance(y)]),
-            Hit::Apart => {}
+            // A side along an edge starts and stops there at an end of its own, which the side before or
+            // after it touches the edge at, or at the edge's end, which the next edge meets it at.
+            Hit::Overlap(..) | Hit::Apart => {}
         })?;
         met.sort_by(f64::total_cmp);
         cuts.extend(met);
