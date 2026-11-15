@@ -22,6 +22,8 @@ fn path(points: &[(f64, f64)]) -> Path {
 fn guided(guide: &[(f64, f64)], spacing: f64) -> Guided {
     Guided {
         guide: Some(path(guide)),
+        anchor: None,
+        strategy: Strategy::Copy,
         spacing,
         angle: None,
         smoothness: 0.0,
@@ -55,7 +57,7 @@ fn rows(piece: &Polygon, guided: &Guided) -> Vec<Vec<Point>> {
     let meter = &mut Budget::DEFAULT.meter();
     let rings = Rings::new(piece, meter).unwrap();
     let guide = guide_of(guided, meter).unwrap().unwrap();
-    copies::rows(piece, &rings, &guide.line, guided, meter).unwrap()
+    copies::rows(piece, &rings, &guide.lines[0], guided, meter).unwrap()
 }
 
 /// The y of each of `rows`, which must be level.
@@ -67,6 +69,13 @@ fn levels(rows: &[Vec<Point>]) -> Vec<f64> {
             (y * 1e9).round() / 1e9
         })
         .collect()
+}
+
+/// The needle points of `copy`, the `i`-th row taken: smoothed, then stitched with its stagger counted from
+/// its number, as a copy's are.
+fn stitched_row(copy: &[Point], i: usize, guided: &Guided, rng: &SplitMix64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+    #[allow(clippy::cast_precision_loss)]
+    stitched::stitched(&stitched::smoothed(copy, guided, meter)?, i as f64, i, guided, rng, meter)
 }
 
 fn sew(piece: &Polygon, guided: &Guided) -> Stitched {
@@ -151,7 +160,7 @@ fn req_fill_gdd_004_rows_are_taken_by_their_first_points_along_the_diagonal_of_t
 fn needles(i: usize, stitching: RowStitching) -> Vec<f64> {
     let meter = &mut Budget::DEFAULT.meter();
     let guided = Guided { stitching, ..guided(&[(0.0, 0.0), (1.0, 0.0)], 1.0) };
-    let row = stitched::row(&[p(0.0, 0.0), p(20.0, 0.0)], i, &guided, &SplitMix64::new(7), meter).unwrap();
+    let row = stitched_row(&[p(0.0, 0.0), p(20.0, 0.0)], i, &guided, &SplitMix64::new(7), meter).unwrap();
     assert!(row.iter().all(|q| q.y() == 0.0), "{row:?}");
     row.iter().map(|q| (q.x() * 1e9).round() / 1e9).collect()
 }
@@ -184,11 +193,11 @@ fn req_fill_gdd_005_a_row_is_smoothed_before_it_is_stitched() {
     let meter = &mut Budget::DEFAULT.meter();
     let smooth = Guided { smoothness: 1.0, ..guided(&[(0.0, 0.0), (1.0, 0.0)], 1.0) };
     let copy = [p(0.0, 0.0), p(10.0, 0.0), p(10.0, 1.0), p(0.0, 1.0)];
-    let row = stitched::row(&copy, 0, &smooth, &SplitMix64::new(7), meter).unwrap();
+    let row = stitched_row(&copy, 0, &smooth, &SplitMix64::new(7), meter).unwrap();
     assert!(row.iter().all(|q| q.distance(p(10.0, 0.0)) > 0.2), "{row:?}");
-    let sharp = stitched::row(&copy, 0, &guided(&[(0.0, 0.0), (1.0, 0.0)], 1.0), &SplitMix64::new(7), meter).unwrap();
+    let sharp = stitched_row(&copy, 0, &guided(&[(0.0, 0.0), (1.0, 0.0)], 1.0), &SplitMix64::new(7), meter).unwrap();
     assert!(sharp.contains(&p(10.0, 0.0)), "{sharp:?}");
-    assert!(stitched::row(&[], 0, &smooth, &SplitMix64::new(7), meter).unwrap().is_empty());
+    assert!(stitched_row(&[], 0, &smooth, &SplitMix64::new(7), meter).unwrap().is_empty());
 }
 
 #[test]
@@ -272,7 +281,7 @@ fn diag_sc_w0332_a_missed_part_s_tatami_rows_run_along_the_line_between_the_guid
 
 #[test]
 fn diag_sc_w0332_says_how_many_parts_no_copy_meets() {
-    let tally = |pieces, missed, outlined| Tally { pieces, missed, outlined }.said().map(|d| (d.code, d.message)).collect::<Vec<_>>();
+    let tally = |pieces, missed, outlined| Tally { pieces, missed, outlined, unjoined: false, strategy: Some(Strategy::Copy) }.said().map(|d| (d.code, d.message)).collect::<Vec<_>>();
     assert_eq!(tally(3, 0, 0), []);
     let one = "No copy of this guided fill's guide meets 1 of its parts, so that part is sewn as a tatami fill at the angle of the line \
                between the guide's ends.";

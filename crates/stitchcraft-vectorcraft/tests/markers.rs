@@ -342,11 +342,11 @@ fn req_vc_009_guide_and_anchor_markers_steer_the_ripple_stitches_grouped_with_th
         )
     };
     assert_eq!(read.warnings[0].message, unused("guide", "the line the ripple stitches and guided fills grouped with it follow"));
-    assert_eq!(read.warnings[1].message, unused("anchor", "the line across the ripple stitches grouped with it"));
+    assert_eq!(read.warnings[1].message, unused("anchor", "the line across the ripple stitches and guided fills grouped with it"));
     let hints = &read.design.elements()[0].hints;
     let guide = hints.guide.as_ref().unwrap();
     assert_eq!(guide.path, Path { subpaths: vec![in_mm(&[(0.0, 0.0), (0.0, 72.0)])] });
-    let anchor = hints.anchor.unwrap();
+    let anchor = hints.anchor_ends().unwrap();
     assert!(anchor[0].distance(in_mm(&[(10.0, 0.0)]).start) < 1e-12 && anchor[1].distance(in_mm(&[(20.0, 36.0)]).start) < 1e-12, "{anchor:?}");
     // The rails alone: a satin guide of 2 subpaths.
     let read = read_ok(&document(

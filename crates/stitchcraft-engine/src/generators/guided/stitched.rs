@@ -48,14 +48,6 @@ pub struct RowStitching {
     pub position: Position,
 }
 
-/// The needle points of `copy`, the `i`-th row taken, stitched as `guided` says, its random lengths, when
-/// they vary, drawn from the stream of `rng` its place keys: smoothed ([`smoothed`]), then stitched with
-/// its stagger counted from its place ([`stitched`]). Costs as the smoothing and the running stitch do.
-pub(super) fn row(copy: &[Point], i: usize, guided: &Guided, rng: &SplitMix64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
-    #[allow(clippy::cast_precision_loss)] // Row counts are far below 2⁵².
-    stitched(&smoothed(copy, guided, meter)?, i as f64, i, guided, rng, meter)
-}
-
 /// `line` smoothed by `smoothness_mm`, as a contour fill's path is; as it is without.
 pub(super) fn smoothed(line: &[Point], guided: &Guided, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
     if guided.smoothness > 0.0 { smooth(line, guided.smoothness, guided.travel.min_stitch, meter) } else { Ok(line.to_vec()) }

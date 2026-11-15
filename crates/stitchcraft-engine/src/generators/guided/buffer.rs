@@ -177,7 +177,7 @@ mod tests {
         assert_eq!(xy(&along[0][..2]), [(10.0, 1.0), (10.098017, 0.995185)]);
         assert!(signed_area(&along[0]) < 0.0);
         let bent = buffered(&[vec![p(0.0, 0.0), p(3.0, 2.0), p(6.0, -2.0), p(9.0, 0.0)]], 2.0);
-        assert_eq!(xy(&bent[0][..1]), [(1.890599, 3.664101)]);
+        assert_eq!(xy(&bent[0][..1]), [(1.8906, 3.664101)]);
         // A closed line: an outline and a hole, the hole running the other way.
         let square = vec![p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0), p(0.0, 0.0)];
         let ring = buffered(&[square], 1.0);
@@ -196,9 +196,13 @@ mod tests {
         // shapely normalizes MULTILINESTRING ((10 0, 0 0), (0 5, 5 5.00001, 10 5)).
         let lines = prepared(vec![vec![p(10.0, 0.0), p(0.0, 0.0)], vec![p(0.0, 5.0), p(5.0, 5.000_000_01), p(10.0, 5.0)]], meter).unwrap();
         assert_eq!(lines.iter().map(|line| xy(line)).collect::<Vec<_>>(), [vec![(0.0, 5.0), (10.0, 5.0)], vec![(0.0, 0.0), (10.0, 0.0)]]);
-        // A closed line keeps its start, its sides compared inward from both ends.
+        // A closed line keeps its start, its sides compared inward from both ends: as shapely normalizes
+        // LINESTRING (0 0, 10 0, 10 10, 0 10, 0 0) to run (0 0, 0 10, 10 10, 10 0, 0 0).
         let closed = [p(0.0, 0.0), p(0.0, 10.0), p(10.0, 10.0), p(10.0, 0.0), p(0.0, 0.0)];
-        assert!(lesser_from_end(&closed));
+        assert!(!lesser_from_end(&closed));
+        let turned: Vec<Point> = closed.iter().rev().copied().collect();
+        assert!(lesser_from_end(&turned));
+        assert_eq!(prepared(vec![turned], meter).unwrap(), [closed.to_vec()]);
         assert!(!lesser_from_end(&[p(0.0, 0.0), p(1.0, 1.0), p(0.0, 0.0)]));
         assert_eq!(compared(&closed, &closed[..2]), Ordering::Greater);
     }

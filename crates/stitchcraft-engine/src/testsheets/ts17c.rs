@@ -558,7 +558,7 @@ mod tests {
         );
         // The diamond's anchor line runs across its middle, and the zigzag is cut to a circle of radius 5.5 about
         // (96, 169).
-        let anchors: Vec<Option<[Point; 2]>> = guided.iter().map(|ripple| ripple.hints.anchor).collect();
+        let anchors: Vec<Option<[Point; 2]>> = guided.iter().map(|ripple| ripple.hints.anchor_ends()).collect();
         assert_eq!(anchors, [None, None, None, Some([Point::new(72.0, 169.0).unwrap(), Point::new(76.0, 169.0).unwrap()]), None]);
         let clips: Vec<usize> = guided.iter().map(|ripple| ripple.clips.len()).collect();
         assert_eq!(clips, [0, 0, 0, 0, 1]);

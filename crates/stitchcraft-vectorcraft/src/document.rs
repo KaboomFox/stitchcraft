@@ -536,7 +536,7 @@ impl Reader {
                 Marker::Start => ("where the shapes grouped with it start", "start"),
                 Marker::Target => ("the point the shapes grouped with it aim at", "target"),
                 Marker::Guide => ("the line the ripple stitches and guided fills grouped with it follow", "guide"),
-                Marker::Anchor => ("the line across the ripple stitches grouped with it", "anchor"),
+                Marker::Anchor => ("the line across the ripple stitches and guided fills grouped with it", "anchor"),
                 Marker::Origin => ("", "origin"),
                 Marker::StopPosition => ("", "stop-position"),
                 Marker::RouteStart => ("", "route-start"),
@@ -672,7 +672,7 @@ impl Reader {
             end: hints.end.or(around.hints.end),
             target: hints.target.or(around.hints.target),
             guide: hints.guide.or_else(|| around.hints.guide.clone()),
-            anchor: hints.anchor.or(around.hints.anchor),
+            anchor: hints.anchor.or_else(|| around.hints.anchor.clone()),
         };
         let placed = !markers.is_empty();
         let markers: Rc<[&'a Node]> = if markers.is_empty() { Rc::clone(&around.markers) } else { markers.into() };
@@ -733,8 +733,9 @@ impl Reader {
     /// satin columns it holds start or end, or the point its ripple stitches and circular fills aim at, the
     /// middle of its anchors ([`geometry::middle`]). A guide gives the line its ripple stitches' copies follow,
     /// its path, a satin guide where it has several subpaths, and the line its guided fills copy, its first
-    /// subpath, and an anchor the start and end of its first subpath (`REQ-RIP-012` to `REQ-RIP-014`,
-    /// `REQ-VC-023`). Each such marker is used.
+    /// subpath, and an anchor its path, whose first subpath's start and end place a ripple's copies and which
+    /// starts a guided fill's closed rows where it crosses them (`REQ-RIP-012` to `REQ-RIP-014`, `REQ-VC-023`,
+    /// `REQ-FILL-GDD-012`). Each such marker is used.
     fn markers<'a>(&mut self, kind: &'a Kind) -> Result<(Hints, Vec<&'a Node>), Diagnostic> {
         let (mut hints, mut used) = (Hints::default(), Vec::new());
         for child in &kind.children {
@@ -765,10 +766,11 @@ impl Reader {
             let found = match marked {
                 Marker::Guide | Marker::Anchor => {
                     let Ok(path) = geometry::path(&data, &mut self.meter).map_err(|_| exhausted())? else { continue };
-                    let Some(first) = path.subpaths.first() else { continue };
-                    let end = if first.closed { first.start } else { first.segments.last().map_or(first.start, |segment| segment.end()) };
+                    if path.subpaths.is_empty() {
+                        continue;
+                    }
                     if marked == Marker::Anchor {
-                        hints.anchor = Some([first.start, end]);
+                        hints.anchor = Some(path);
                     } else {
                         let (_, join, _) = stroke_style(None, None, None, None);
                         hints.guide = Some(Guide { path, width: Mm::ZERO, join, params: ParamSet::new() });
