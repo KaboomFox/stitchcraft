@@ -5,6 +5,11 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M6.14: the browser demo starts from the drawing. An empty session opens Alpine Night as a plain drawing,
+  and the panel's first button, **Turn the drawing into stitches**, gives each shape the Auto effect. The
+  panel says how to do the same in the menus and how to export, and a lesser button opens the finished
+  example. The preview's comment shows the drawing as it opens and after the button, and the Auto effect's
+  dialog.
 - M6.13: the browser demo and pull-request previews, from crowecawcaw's pull request #260. The project's site
   runs VectorCraft's web editor with StitchCraft's plug-ins at `/app/`. It opens a starter patch, Alpine
   Night, whose shapes have the Auto effect, and exports PES and DST from the page.
