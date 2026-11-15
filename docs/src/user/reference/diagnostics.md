@@ -10,7 +10,7 @@ Every problem StitchCraft reports has a code. `E` codes are errors (nothing is w
 | [`SC-E0005`](#sc-e0005) | Error | Preview too large |
 | [`SC-E0009`](#sc-e0009) | Error | Internal check failed |
 | [`SC-E0010`](#sc-e0010) | Error | Nothing to stitch |
-| [`SC-W0011`](#sc-w0011) | Warning | Stitch type not sewn yet; element skipped |
+| [`SC-W0011`](#sc-w0011) | Warning | Stitch type not sewn yet; element skipped (retired) |
 | [`SC-E0012`](#sc-e0012) | Error | Bug-report bundle could not be replayed |
 | [`SC-W0013`](#sc-w0013) | Warning | Element outside its clip paths; left out |
 | [`SC-E0101`](#sc-e0101) | Error | Parameter has the wrong type or an unknown choice |
@@ -185,7 +185,7 @@ Add an element with an embroidery stitch type, or fix the errors reported for th
 
 ## SC-W0011
 
-**Warning** — Stitch type not sewn yet; element skipped
+**Warning** — Stitch type not sewn yet; element skipped (retired)
 
 The element's stitch type is one this version of StitchCraft does not sew yet, so the element was
 skipped; the rest of the design is planned. Running and manual stitches are sewn from milestone M3,
@@ -195,6 +195,10 @@ is sewn as a tatami fill (`SC-W0314`).
 
 The message names the stitch type. Choose one StitchCraft sews, or sew the element with another
 tool for now.
+
+Retired in M10.10, which sews the guided fill's parallel offset and buffer strategies, the last
+that were skipped: StitchCraft sews every stitch type, and no longer gives this code. Plan the
+file again with this StitchCraft to sew the element.
 
 ## SC-E0012
 
