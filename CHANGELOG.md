@@ -14,7 +14,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   - `auto_fill_outline`, an advanced setting of the design, off by default, sews a running stitch round
     each fill's edge where the edge shows, after the fill and in its thread. On the demo's badge it adds
     111 stitches and no jump. On a traced dog it adds 759 stitches and 23 jumps.
-  - Golden files: none changed. The recorded numbers of the traced dogs in `tests/auto_photos.rs` moved. The
+  - Golden files: none changed. The docs' 2 pictures of the running dog are drawn again, with its 2 blobs
+    filled. The recorded numbers of the traced dogs in `tests/auto_photos.rs` moved. The
     dog on turf in 6 threads sews 2 shapes more as fills, and the running dog in 9 threads 1. Their jump
     threads fall from 77 to 71 and from 95 to 93. 19 of the dogs' stitches are astray, where 17 were. In
     both running dogs a row of the largest blob, which is a fill now, lies beside a line of fur.

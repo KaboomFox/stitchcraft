@@ -820,11 +820,8 @@ mod tests {
         for (points, inner) in [(4, 0.3536), (5, 0.382), (6, 0.5)] {
             for across in [3.0, 4.0, 5.33, 8.0, 12.0] {
                 let star = star(points, across / 2.0, inner * across / 2.0);
-                let by = match made(&star, &[]) {
-                    Made::Filled(rule, _) => Some(rule),
-                    _ => None,
-                };
-                assert!(matches!(by, Some(RuleId::Arms | RuleId::Uneven)), "{points} points, {across} mm: {by:?}");
+                let filled = matches!(made(&star, &[]), Made::Filled(RuleId::Arms | RuleId::Uneven, _));
+                assert!(filled, "{points} points, {across} mm");
             }
         }
         // A cross of 2 bars keeps a column along each bar and each arm, a leaf its one column, and so does a
