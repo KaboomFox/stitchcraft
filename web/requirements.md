@@ -26,4 +26,7 @@ Each case names its check. `web.yml` runs them all before anything is published.
 | Without a sheet of main's, a pull request's sheet shows its own pictures and says so | `test_sheet.py` |
 | The editor in Chromium and `stitch` write the same PES and DST files of a document, and a difference names its first byte | `sheet.mjs`, `parity.test.mjs` |
 | The Auto effect's time fails the run only above a limit that is set | `sheet.mjs`, `parity.test.mjs` |
+| The panel's Export PES, Export DST and Show the real stitches make a file and a picture of the drawing, and say how long the engine worked | `smoke.mjs`, `exports.test.mjs` |
+| The exporter's module, run by the page, writes a traced photo that VectorCraft's export is stopped on | `engine.test.mjs` |
+| The panel's PES, DST and picture of the starter drawing and the 4 traced dogs are `stitch`'s, byte for byte | `sheet.mjs`, `test_sheet.py` |
 | The comment's sheet section is the build's lines with the sheet's address | `preview-comment.test.mjs` |

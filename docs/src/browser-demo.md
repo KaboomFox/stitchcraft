@@ -20,7 +20,17 @@ keeps it, and the panel starts closed.
    the editor draws the stitches.
 2. Select a shape and change its effect in the Appearance panel.
 3. Set the machine and the hoop in **Object › Plug-ins › StitchCraft Design Settings**.
-4. Write a machine file, in PES or DST, with **File › Export › Export As…**.
+4. Write a machine file with **Export PES** or **Export DST** in the panel. The browser saves it to your
+   downloads.
+5. Press **Show the real stitches** to see the picture of what that file sews. **Close the picture**
+   brings the editor back.
+
+The panel's exports run StitchCraft's own engine in the page, beside the editor. While it works, the
+panel says for how long, and you can go on using the editor. A small design takes about a second, and a traced
+photo a few seconds. Afterwards the panel says the file's size and lists what the export said about the
+design. **File › Export › Export As…** writes the same files for a small design. It stops a large one,
+such as a traced photo with the Auto effect, with "plug-in exceeded its instruction budget": VectorCraft
+lets an export do only so much work. Use the panel's buttons then.
 
 The button does what the menus do. To do the first step by hand, choose **Select › All**, then
 **Effect › Plug-ins › StitchCraft Auto**, and confirm the dialog. The other entries of that menu give a

@@ -32,6 +32,7 @@ Checked against VectorCraft's `docs/plugins.md` and its history, in the 0.18.0 r
 | [P7](#p7-preserve-foreign-svg-attributes), foreign SVG attributes | Adopted | 0.17.0 | [#3758](https://github.com/storytold/vectorcraft/pull/3758) |
 | [P8](#p8-effects-and-stroke-style-in-filter-objects), effects and stroke style in filters | Adopted | 0.15.0 | [#3174](https://github.com/storytold/vectorcraft/pull/3174) |
 | [P9](#p9-type-as-glyph-outlines), type as glyph outlines | Proposed by StitchCraft, not yet raised upstream | | |
+| [P10](#p10-an-export-budget-that-fits-a-traced-photo), an export budget that fits a traced photo | Proposed by StitchCraft, not yet raised upstream | | |
 
 The plug-in classes this RFC was for, and what VectorCraft serves of them now:
 
@@ -40,7 +41,7 @@ The plug-in classes this RFC was for, and what VectorCraft serves of them now:
 | Output generators for embroidery (PES/DST), plotters (HPGL), laser cutters (G-code) and cutting machines | Exporters write their own formats (P1) |
 | Generators with many settings (halftones, hatching, embroidery, pattern fills) | Up to 256 parameters, labelled, in groups, with help and conditions (P2) |
 | Previews of things that are not the object's geometry (stitches, toolpaths, cut order) | Still only by replacing geometry, at JSON's cost for every point (P3, in review) |
-| Heavy but legitimate computation (routing, packing, simulation) | Heavy filters (P4), and an export's own budget. A live effect still has a light run's budget |
+| Heavy but legitimate computation (routing, packing, simulation) | Heavy filters (P4), and an export's own budget, which a traced photo needs 5 to 6 times over (P10). A live effect still has a light run's budget |
 | Plug-ins with document-wide settings (machine profile, plotter pens) | Data kept with the document (P5) |
 | Tools that set up objects for a live effect (a satin column from a line, a test sheet) | Filters read and return effect records and a stroke's style (P8) |
 | Plug-ins that work on text (lettering, engraving, cutting type) | Filters and live effects receive paths alone, and an exporter only a type object's text and its font's name (P9) |
@@ -146,6 +147,31 @@ Nothing in VectorCraft's plans covers it, at `3f8d7a0` (2026-10-25). Its `docs/p
 the selected paths and compound paths alone, and a live effect one object's geometry. An exporter is given the
 document's JSON, where a type object is its text and a font's name. The plug-ins still missing in G17 of its
 `docs/gaps.md` are tool and panel plug-ins, importers and a plug-in directory. Its roadmaps leave type out.
+
+### P10: An export budget that fits a traced photo
+
+An export may run 10 billion instructions and 4,000 more for each byte of the document. A photo traced
+into 6 or 9 colours 100 mm tall, each shape digitized by width, needs 51 to 69 billion in an embroidery
+exporter, for documents of 236 to 265 KB that are allowed 11 billion
+([the measurements](vectorcraft-integration.md#an-export-that-finishes)). VectorCraft stops the export
+after 6 seconds on the desktop and after 27 in the browser, and the user reads `plug-in exceeded its
+instruction budget` with no file. The same module, run by a browser without a count, writes the file in 2
+to 4 seconds. The proposal has 4 parts:
+
+- An exporter declares `"budget": "heavy"`, allowed once at install as a heavy filter is. A heavy export
+  may run 100 billion instructions and the same amount for each byte, which is 1.5 times the largest
+  design measured. The 300 seconds stay as they are and bound the time.
+- A heavy export runs off the UI thread, with its progress shown and a way to cancel it. VectorCraft's
+  interpreter ran 51 billion instructions in 20 seconds natively. In the browser, where the interpreter
+  is itself WebAssembly, it ran 11 billion in 27 seconds, so 51 billion would take about 2 minutes there.
+- An export's `_context` names the instructions it may run, as `fuel`. A plug-in that knows its own cost
+  can then decline with a message of its own before the work, where it is stopped part way today.
+- The error for a stopped export says which limit stopped it and names the plug-in, so that the plug-in's
+  documentation can say what to do next.
+
+A browser host could go further and run an exporter's module with the browser's own compiler in a
+worker, since an exporter has no imports and changes nothing in the document. The time limit alone would
+then bound it. StitchCraft's browser demo does this beside the editor for its own exporters.
 
 ## Security and determinism
 
