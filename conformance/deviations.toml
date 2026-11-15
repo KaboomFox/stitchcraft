@@ -509,16 +509,16 @@ requirements = ["REQ-FILL-GRD-005"]
 [[deviation]]
 id = "DEV-FILL-033"
 area = "fill/guided"
-summary = "A guided fill with staggers of 0 counts them as 1, so every row starts at its first point. Ink/Stitch divides by the staggers to place each row's stagger, and stops with a division by zero."
-reason = "A setting a file can hold sews something rather than nothing, and 1 is the count that staggers no row, as 0 asks. Ink/Stitch's own guard sets 1 for 0 and then divides by the setting it read, read at d59c9ab (lib/stitches/guided_fill.py: _apply_stagger)."
+summary = "A guided fill with staggers of 0 counts them as 1, so every row starts at its first point. Ink/Stitch divides by the staggers to place each row's stagger, and stops with a division by zero, with its copy and parallel offset strategies. With its buffer strategy it counts them as 1 too."
+reason = "A setting a file can hold sews something rather than nothing, and 1 is the count that staggers no row, as 0 asks. Ink/Stitch's own guard sets 1 for 0, then divides by the setting it read for a copy or an offset curve and by the guarded count for a buffer's ring, read at d59c9ab (lib/stitches/guided_fill.py: _apply_stagger)."
 requirements = ["REQ-FILL-GDD-005"]
 
 [[deviation]]
 id = "DEV-FILL-034"
 area = "fill/guided"
-summary = "A guide line that starts and ends at one point once it is made one line sews the fill as a tatami fill with its own settings, with SC-W0331. Ink/Stitch stops with an error on a guide of no length, and on a figure of 8 drawn from its crossing, whose repair gives the line between its ends. It dissolves a guide that runs back along itself into the stretches it covers, and copies those, where StitchCraft takes the line between its ends, which here has no length. A part that no copy of the guide meets sews as a tatami fill at the angle of the guide's ends, with SC-W0332, the fallback Ink/Stitch has for a part its copies leave no line in. Where no copy meets the part at all, Ink/Stitch stops with an error before that: it sorts the rows by a line across the box round their first points, and with no rows the box has no corners."
-reason = "An error loses the whole design, and a tatami fill with the element's settings is what Ink/Stitch sews without a guide. The way a dissolved guide runs is the order GEOS gives its pieces, which no documentation fixes, and that way turns the copies. Ink/Stitch was run as a black box at d59c9ab: a guide from (20, 40) to itself, and a figure of 8 drawn from its crossing, end in an IndexError (lib/stitches/guided_fill.py: extend_line), and a guide drawn from (20, 40) to (30, 40) and back sews rows level with it. A strip 20 mm long and 1 mm high, 2.8 mm below a level guide, with rows 2 mm apart, ends in a FloatingPointError (lib/stitches/guided_fill.py: _sort_segments), as do Barstitch cloudy's Œ, î and ï, each with a part that SC-W0332 names."
-requirements = ["REQ-FILL-GDD-001", "REQ-FILL-GDD-002"]
+summary = "A guide line that starts and ends at one point once it is made one line sews the fill as a tatami fill with its own settings, with SC-W0331. Ink/Stitch stops with an error on a guide of no length, and on a figure of 8 drawn from its crossing, whose repair gives the line between its ends. It dissolves a guide that runs back along itself into the stretches it covers, and copies those, where StitchCraft takes the line between its ends, which here has no length. A part that no copy of the guide meets sews as a tatami fill at the angle of the guide's ends, with SC-W0332, the fallback Ink/Stitch has for a part its copies leave no line in. Where no copy or offset curve meets the part at all, Ink/Stitch stops with an error before that: it sorts the rows by a line across the box round their first points, and with no rows the box has no corners. A buffer's rows aren't sorted, and Ink/Stitch falls back there as StitchCraft does. With the parallel offset strategy, a guide whose points all lie at one place sews the tatami fill with SC-W0331 too, where Ink/Stitch stops with an error."
+reason = "An error loses the whole design, and a tatami fill with the element's settings is what Ink/Stitch sews without a guide. The way a dissolved guide runs is the order GEOS gives its pieces, which no documentation fixes, and that way turns the copies. Ink/Stitch was run as a black box at d59c9ab: a guide from (20, 40) to itself, and a figure of 8 drawn from its crossing, end in an IndexError (lib/stitches/guided_fill.py: extend_line), and a guide drawn from (20, 40) to (30, 40) and back sews rows level with it. A strip 20 mm long and 1 mm high, 2.8 mm below a level guide, with rows 2 mm apart, ends in a FloatingPointError (lib/stitches/guided_fill.py: _sort_segments), as do Barstitch cloudy's Œ, î and ï, each with a part that SC-W0332 names. The same strip ends in the same error with guided_fill_strategy 1 and sews a tatami fill with 2, and a guide from (20, 20) to itself with strategy 1 ends in a TopologicalError (lib/stitches/guided_fill.py: prepare_offset_guide)."
+requirements = ["REQ-FILL-GDD-001", "REQ-FILL-GDD-002", "REQ-FILL-GDD-009"]
 
 [[deviation]]
 id = "DEV-FILL-035"
@@ -526,6 +526,13 @@ area = "fill/guided"
 summary = "The guide's lengthened ends lie where its line between its ends takes them. Ink/Stitch moves each by up to 0.01 px along x and y at random, to steer clear of a bug of its geometry library, so its copies' ends differ from run to run by that much."
 reason = "StitchCraft is deterministic (docs/src/design/determinism.md), and the lengthened ends lie outside the part, where no row is sewn: the lines inside it move by far less than a stitch's tolerance. Read at d59c9ab (lib/stitches/guided_fill.py: extend_line)."
 requirements = ["REQ-FILL-GDD-002"]
+
+[[deviation]]
+id = "DEV-FILL-036"
+area = "fill/guided"
+summary = "With the buffer strategy, a subpath of the guide whose points all lie at one place is left out, and a guide of such subpaths alone sews the fill as a tatami fill with its own settings, with SC-W0331. Ink/Stitch sews rings round each such dot."
+reason = "A guide is a line, and a dot among the guides of a design is more often a stray click than a middle meant for rings, which SC-W0331 then names. A circular fill sews rings round a point that a design marks (REQ-FILL-CIR-008). Ink/Stitch was run as a black box at d59c9ab: a square with a guide from (20, 20) to itself and guided_fill_strategy 2 sews rings round that point."
+requirements = ["REQ-FILL-GDD-010"]
 
 [[deviation]]
 id = "DEV-SVG-001"

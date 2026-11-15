@@ -18,9 +18,9 @@
 //! next element's shape and settings alone.
 //!
 //! An element that cannot be sewn is skipped, with a diagnostic that says why, and the rest of the design
-//! still plans (`REQ-GEN-002`): a stitch type StitchCraft does not sew yet (`SC-W0011`), parameters it
-//! cannot read (`SC-E0101`), a satin column with no rails (`SC-E0201`), or its work budget spent
-//! (`SC-E0004`). Each element has the budget's work to itself, so one that runs out costs nothing but
+//! still plans (`REQ-GEN-002`): parameters it cannot read (`SC-E0101`), a satin column with no rails
+//! (`SC-E0201`), or its work budget spent (`SC-E0004`). Every stitch type is sewn, so `SC-W0011`, which
+//! named one that wasn't yet, is retired. Each element has the budget's work to itself, so one that runs out costs nothing but
 //! itself. A fill whose `fill` setting is off sews nothing, and nothing is said of it (`REQ-FILL-003`).
 //! Another fill's area is built first ([`crate::normalize::region`]), so what is left out of it is said
 //! even when its settings cannot be used, and its `fill_method` then picks the generator: a tatami fill
@@ -116,8 +116,7 @@ params! {
         /// tiling, a circular fill a spiral round its middle, a guided fill rows that follow a guide line, a
         /// linear gradient fill rows in the colours of its linear gradient, and a tartan fill a plaid of rows
         /// in the colours of its sett. A fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without
-        /// underlay (`SC-W0314`). A guided fill's strategies that offset its guide arrive in a later version,
-        /// and until then an element set to one is skipped (`SC-W0011`).
+        /// underlay (`SC-W0314`).
         fill_method: Choice = "tatami_fill", label "Fill method", choices FILL_METHODS;
     }
 }
@@ -586,8 +585,8 @@ enum FillMethod {
 }
 
 impl FillMethod {
-    /// The settings of the fill `sewing` describes; `None` when they cannot be read, or when its fill method
-    /// is not sewn yet (`SC-W0011`), which `diagnostics` says.
+    /// The settings of the fill `sewing` describes; `None` when they cannot be read, which `diagnostics`
+    /// says.
     fn read(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Option<FillMethod> {
         match sewing.stitch_type {
             StitchType::ContourFill => contour_settings(sewing, diagnostics).map(FillMethod::Contour),
@@ -761,29 +760,20 @@ fn circular_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Opti
     })
 }
 
-/// The guided fill `sewing` describes, its settings read as a guided fill reads them: copies of its design's
-/// guide line the row spacing apart, over each part grown by `expand_mm`, after the tatami fill's underlay,
-/// stitched in its longest stitch within the running stitch's tolerance, its needle travelling in the
+/// The guided fill `sewing` describes, its settings read as a guided fill reads them: rows that follow its
+/// design's guide line as its strategy says, the row spacing apart, started where its anchor line says,
+/// over each part grown by `expand_mm`, after the tatami fill's underlay, stitched in its longest stitch within the running stitch's tolerance, its needle travelling in the
 /// running stitch's length and tolerance between them, routed as a tatami fill's rows are. With it, the
 /// tatami fill it sews without a guide it can use, the element's settings read as a tatami fill's, as
 /// Ink/Stitch sews a guided fill without a guide, and what that reading says that this one doesn't. `None`
-/// when they cannot be read, or when its strategy is not sewn yet (`SC-W0011`), which `diagnostics` says.
+/// when they cannot be read, which `diagnostics` says.
 /// Its longest stitch, its underlay's, and its running stitch's length are raised as a tatami fill's are.
 fn guided_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Option<Guided> {
-    // A strategy not sewn yet skips the element before its other settings are read.
-    let own = sewing.read(GuidedParams::from_set_as, diagnostics)?;
-    if own.guided_fill_strategy != guided::COPY {
-        let id = own.guided_fill_strategy;
-        let name = guided::STRATEGIES.iter().find(|strategy| strategy.id == id).map_or(id, |strategy| strategy.label).to_lowercase();
-        diagnostics.push(not_yet(&format!(
-            "This element's fill method, `guided_fill`, with its strategy `{id}` ({name}), is not sewn by this version of StitchCraft yet"
-        )));
-        return None;
-    }
+    let own = sewing.read(GuidedParams::from_set_as, diagnostics);
     let tatami = sewing.read(TatamiParams::from_set_as, diagnostics);
     let running = sewing.read(RunningParams::from_set_as, diagnostics);
     let path = sewing.read(PathFillParams::from_set_as, diagnostics);
-    let (Some(mut tatami), Some(running), Some(path), Some(shared)) = (tatami, running, path, sewing.shared) else {
+    let (Some(own), Some(mut tatami), Some(running), Some(path), Some(shared)) = (own, tatami, running, path, sewing.shared) else {
         return None;
     };
     let (longest, travel) = fill_lengths(&mut tatami, &running, shared, diagnostics)?;
@@ -802,6 +792,8 @@ fn guided_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Option
     };
     Some(Guided {
         guide: sewing.hints.guide.as_ref().map(|guide| guide.path.clone()),
+        anchor: sewing.hints.anchor.clone(),
+        strategy: own.strategy(),
         spacing: tatami.row_spacing_mm.get(),
         angle: own.guided_fill_angle,
         smoothness: path.smoothness_mm.get(),
@@ -899,7 +891,8 @@ fn gradient_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Opti
 }
 
 /// The tatami fill `sewing` describes, its settings read as its stitch type reads them; `None` when they
-/// cannot be read, or when its fill method is not sewn yet (`SC-W0011`), which `diagnostics` says. A fill
+/// cannot be read, which `diagnostics` says. Every other fill method reads its own settings, so one that
+/// comes here is a bug (`SC-E0009`), and it is skipped rather than sewn as a tatami fill. A fill
 /// set to Ink/Stitch's legacy fill takes what Ink/Stitch's does: no underlay, pull compensation, random
 /// stitch lengths or gap-filling rows, whatever its settings say (`REQ-FILL-005`). A longest stitch, the
 /// rows' or the underlay's, shorter than twice the shortest stitch is raised to it (`SC-W0402`).
@@ -916,7 +909,11 @@ fn fill_settings(sewing: &Sewing, diagnostics: &mut Vec<Diagnostic>) -> Option<F
     }
     if sewing.stitch_type != StitchType::TatamiFill {
         let method = sewing.stitch_type.id();
-        diagnostics.push(not_yet(&format!("This element's fill method, `{method}`, is not sewn by this version of StitchCraft yet")));
+        let message = format!(
+            "This element's fill method, `{method}`, was read as a tatami fill's settings, so it is skipped. This is a bug in StitchCraft: please \
+             report it with the design."
+        );
+        diagnostics.push(Diagnostic::new(Code::InternalCheckFailed, message));
         return None;
     }
     let (longest, travel) = fill_lengths(&mut tatami, &running, shared, diagnostics)?;
@@ -1084,7 +1081,7 @@ fn ripple(
         jump: shared.jump,
         target: sewing.hints.target,
         guide,
-        anchor: sewing.hints.anchor,
+        anchor: sewing.hints.anchor_ends(),
         clips: clips.to_vec(),
     };
     Ok(Some(ripple_stitch(path, &ripple, rng, meter)?))
@@ -1100,9 +1097,8 @@ fn ripple(
 /// type is known, an
 /// element offers what Ink/Stitch's would, even of a method StitchCraft does not sew yet (ADR 0014): a
 /// stroke of any method its first point, as Ink/Stitch's strokes all do, and a satin column of any method
-/// its rails. A fill of a method StitchCraft does not sew offers nothing, since what it would offer is not
-/// known, and nor does a guided fill of a strategy it doesn't sew. Neither does an element whose shape cannot be read, or the settings its offer depends on: those
-/// that choose its stitch type, and a satin column's. They are read as its stitch type reads them. A fill
+/// its rails. Every fill method is sewn. An element offers nothing when its shape cannot be read, or the
+/// settings its offer depends on: those that choose its stitch type, and a satin column's. They are read as its stitch type reads them. A fill
 /// of any method, or a satin column, with a start position offers that, where it starts (`REQ-GEN-001`). A
 /// fill cut to its clips offers what they leave of its area, a stroke the first point of the first piece
 /// they leave, and either offers nothing when they leave nothing; a satin column is sewn whole
@@ -1115,20 +1111,6 @@ pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -
         return Some(Approach::Point(start));
     }
     let (path, width, join) = match &element.shape {
-        Shape::Fill { .. }
-            if !matches!(
-                stitch_type,
-                StitchType::TatamiFill
-                    | StitchType::ContourFill
-                    | StitchType::MeanderFill
-                    | StitchType::CircularFill
-                    | StitchType::CrossStitch
-                    | StitchType::LinearGradientFill
-                    | StitchType::TartanFill
-            ) && !(stitch_type == StitchType::GuidedFill && copied(&element.params)) =>
-        {
-            return None;
-        }
         Shape::Fill { path, rule, .. } => {
             let parts = region::build_clipped(path, *rule, &element.clips, &mut budget.meter()).ok()?.region.parts;
             return (!parts.is_empty()).then_some(Approach::Area(parts));
@@ -1146,12 +1128,6 @@ pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -
         return Some(Approach::Shape(satin::sewn_rails(&rails, &params, meter).ok()?.into()));
     }
     satin::first_point(&rails, &params, meter).ok()?.map(Approach::Point)
-}
-
-/// Whether `set`, a guided fill's, copies its guide, the one strategy sewn so far (`REQ-FILL-GDD-001`). Read
-/// alone, as the guided fill reads it, which says what is wrong with it.
-fn copied(set: &ParamSet) -> bool {
-    setting::<Choice>(set, GuidedParams::SPECS, guided::STRATEGY, &mut Vec::new()) == Some(guided::COPY)
 }
 
 /// The stitch type that sews `element` in a design with `settings`, as [`generate`] picks it. `None` if a
@@ -1180,11 +1156,6 @@ fn kept<T>(read: Result<Validated<T>, Vec<Diagnostic>>, diagnostics: &mut Vec<Di
             None
         }
     }
-}
-
-/// `SC-W0011`: `why` the element is not sewn.
-fn not_yet(why: &str) -> Diagnostic {
-    Diagnostic::new(Code::StitchTypeNotYet, format!("{why}, so it is skipped."))
 }
 
 #[cfg(test)]

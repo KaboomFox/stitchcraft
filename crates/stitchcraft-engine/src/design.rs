@@ -301,7 +301,8 @@ impl Clip {
 /// element after it offers, for the stitch types that use them (`REQ-GEN-001`, [`crate::generate`]). A
 /// circular fill's spirals turn round its target point (`REQ-FILL-CIR-008`), and a ripple stitch's lines
 /// shrink towards it (`REQ-RIP-002`). A ripple stitch's copies follow its guide line, set across it as its
-/// anchor line says (`REQ-RIP-012` to `REQ-RIP-014`).
+/// anchor line says (`REQ-RIP-012` to `REQ-RIP-014`). A guided fill's rows follow its guide line, and those
+/// that close start where its anchor line crosses them (`REQ-FILL-GDD-012`).
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Hints {
     /// Where it starts.
@@ -312,16 +313,25 @@ pub struct Hints {
     pub target: Option<Point>,
     /// The line its copies follow.
     pub guide: Option<Guide>,
-    /// The line across it that says where a copy's ends lie between a satin guide's rails: the start and
-    /// the end of the marker's first subpath.
-    pub anchor: Option<[Point; 2]>,
+    /// The anchor line, as the design draws it, every subpath of it. The start and the end of its first
+    /// subpath say where a ripple stitch's copy's ends lie between a satin guide's rails
+    /// ([`Hints::anchor_ends`]), and a guided fill's closed rows start where any of it crosses them.
+    pub anchor: Option<Path>,
 }
 
 impl Hints {
-    /// Each point it has: its positions, its guide line's points and its anchor line's ends.
+    /// Each point it has: its positions, and its guide line's and its anchor line's points.
     pub fn points(&self) -> impl Iterator<Item = Point> + '_ {
         let guide = self.guide.iter().flat_map(|guide| guide.path.points());
-        [self.start, self.end, self.target].into_iter().flatten().chain(guide).chain(self.anchor.into_iter().flatten())
+        [self.start, self.end, self.target].into_iter().flatten().chain(guide).chain(self.anchor.iter().flat_map(Path::points))
+    }
+
+    /// The start and the end of its anchor line's first subpath, which is its start again where it closes:
+    /// what a ripple stitch reads of it. `None` without an anchor line, or with one of no subpath.
+    pub fn anchor_ends(&self) -> Option<[Point; 2]> {
+        let first = self.anchor.as_ref()?.subpaths.first()?;
+        let end = if first.closed { first.start } else { first.segments.last().map_or(first.start, |segment| segment.end()) };
+        Some([first.start, end])
     }
 
     /// The same hints, each point moved by `f`, or `f`'s error.
@@ -330,8 +340,8 @@ impl Hints {
             Some(guide) => Some(Guide { path: guide.path.map(&f)?, ..guide.clone() }),
             None => None,
         };
-        let anchor = match self.anchor {
-            Some([from, to]) => Some([f(from)?, f(to)?]),
+        let anchor = match &self.anchor {
+            Some(anchor) => Some(anchor.map(&f)?),
             None => None,
         };
         Ok(Hints {
@@ -670,7 +680,7 @@ mod tests {
         // A guide keeps its width, its join and its settings.
         let guide = Guide { path: line(p(0.0, 1.0), p(2.0, 3.0)), width: Mm::new(1.0).unwrap(), join: Join::Round, params: ParamSet::new() };
         let (start, end, target) = (Some(p(1.0, 1.0)), Some(p(4.0, 1.0)), Some(p(2.0, 2.0)));
-        let hints = Hints { start, end, target, guide: Some(guide.clone()), anchor: Some([p(0.0, 0.0), p(1.0, 1.0)]) };
+        let hints = Hints { start, end, target, guide: Some(guide.clone()), anchor: Some(line(p(0.0, 0.0), p(1.0, 1.0))) };
         let clips = vec![Clip::of(line(p(0.0, 0.0), p(1.0, 2.0)), FillRule::EvenOdd)];
         let fill =
             Element { shape: Shape::Fill { path: quad, rule: FillRule::EvenOdd, gradient: None }, hints, clips, ..element("q", Path::default()) };
@@ -686,7 +696,8 @@ mod tests {
         assert!(points(&moved).iter().zip(points(&design)).all(|(a, b)| (a.x(), a.y()) == (b.x() + 3.0, b.y() - 2.0)));
         let (start, end, target) = (Some(p(4.0, -1.0)), Some(p(7.0, -1.0)), Some(p(5.0, 0.0)));
         let guide = Some(Guide { path: line(p(3.0, -1.0), p(5.0, 1.0)), ..guide });
-        assert_eq!(moved.elements()[1].hints, Hints { start, end, target, guide, anchor: Some([p(3.0, -2.0), p(4.0, -1.0)]) });
+        assert_eq!(moved.elements()[1].hints, Hints { start, end, target, guide, anchor: Some(line(p(3.0, -2.0), p(4.0, -1.0))) });
+        assert_eq!(moved.elements()[1].hints.anchor_ends(), Some([p(3.0, -2.0), p(4.0, -1.0)]));
         assert_eq!(moved.elements()[1].clips, [Clip::of(line(p(3.0, -2.0), p(4.0, 0.0)), FillRule::EvenOdd)]);
         assert_eq!((moved.settings.origin, moved.settings.stop_position), (Some(p(8.0, 3.0)), Some(p(2.0, -2.0))));
         // Each element as it was but for its points: its id, kind of shape, thread and settings.
@@ -711,7 +722,7 @@ mod tests {
             Hints { start: Some(p(0.0, WORKING_LIMIT_MM + 1.0)), ..Hints::default() },
             Hints { end: Some(p(0.0, WORKING_LIMIT_MM + 1.0)), ..Hints::default() },
             Hints { target: Some(p(0.0, WORKING_LIMIT_MM + 1.0)), ..Hints::default() },
-            Hints { anchor: Some([p(0.0, 0.0), p(0.0, WORKING_LIMIT_MM + 1.0)]), ..Hints::default() },
+            Hints { anchor: Some(line(p(0.0, 0.0), p(0.0, WORKING_LIMIT_MM + 1.0))), ..Hints::default() },
             Hints {
                 guide: Some(Guide {
                     path: line(p(0.0, 0.0), p(0.0, WORKING_LIMIT_MM + 1.0)),

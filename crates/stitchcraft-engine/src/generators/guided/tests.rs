@@ -19,9 +19,11 @@ fn path(points: &[(f64, f64)]) -> Path {
 
 /// A guided fill along the polyline `guide`, its copies `spacing` apart, in stitches of 3 mm staggered over 4
 /// rows, with no underlay and no tatami fill to fall back to.
-fn guided(guide: &[(f64, f64)], spacing: f64) -> Guided {
+pub(super) fn guided(guide: &[(f64, f64)], spacing: f64) -> Guided {
     Guided {
         guide: Some(path(guide)),
+        anchor: None,
+        strategy: Strategy::Copy,
         spacing,
         angle: None,
         smoothness: 0.0,
@@ -55,7 +57,7 @@ fn rows(piece: &Polygon, guided: &Guided) -> Vec<Vec<Point>> {
     let meter = &mut Budget::DEFAULT.meter();
     let rings = Rings::new(piece, meter).unwrap();
     let guide = guide_of(guided, meter).unwrap().unwrap();
-    copies::rows(piece, &rings, &guide.line, guided, meter).unwrap()
+    copies::rows(piece, &rings, &guide.lines[0], guided, meter).unwrap()
 }
 
 /// The y of each of `rows`, which must be level.
@@ -67,6 +69,13 @@ fn levels(rows: &[Vec<Point>]) -> Vec<f64> {
             (y * 1e9).round() / 1e9
         })
         .collect()
+}
+
+/// The needle points of `copy`, the `i`-th row taken: smoothed, then stitched with its stagger counted from
+/// its number, as a copy's are.
+fn stitched_row(copy: &[Point], i: usize, guided: &Guided, rng: &SplitMix64, meter: &mut Meter) -> Result<Vec<Point>, Exhausted> {
+    #[allow(clippy::cast_precision_loss)]
+    stitched::stitched(&stitched::smoothed(copy, guided, meter)?, i as f64, i, guided, rng, meter)
 }
 
 fn sew(piece: &Polygon, guided: &Guided) -> Stitched {
@@ -151,7 +160,7 @@ fn req_fill_gdd_004_rows_are_taken_by_their_first_points_along_the_diagonal_of_t
 fn needles(i: usize, stitching: RowStitching) -> Vec<f64> {
     let meter = &mut Budget::DEFAULT.meter();
     let guided = Guided { stitching, ..guided(&[(0.0, 0.0), (1.0, 0.0)], 1.0) };
-    let row = stitched::row(&[p(0.0, 0.0), p(20.0, 0.0)], i, &guided, &SplitMix64::new(7), meter).unwrap();
+    let row = stitched_row(&[p(0.0, 0.0), p(20.0, 0.0)], i, &guided, &SplitMix64::new(7), meter).unwrap();
     assert!(row.iter().all(|q| q.y() == 0.0), "{row:?}");
     row.iter().map(|q| (q.x() * 1e9).round() / 1e9).collect()
 }
@@ -184,11 +193,11 @@ fn req_fill_gdd_005_a_row_is_smoothed_before_it_is_stitched() {
     let meter = &mut Budget::DEFAULT.meter();
     let smooth = Guided { smoothness: 1.0, ..guided(&[(0.0, 0.0), (1.0, 0.0)], 1.0) };
     let copy = [p(0.0, 0.0), p(10.0, 0.0), p(10.0, 1.0), p(0.0, 1.0)];
-    let row = stitched::row(&copy, 0, &smooth, &SplitMix64::new(7), meter).unwrap();
+    let row = stitched_row(&copy, 0, &smooth, &SplitMix64::new(7), meter).unwrap();
     assert!(row.iter().all(|q| q.distance(p(10.0, 0.0)) > 0.2), "{row:?}");
-    let sharp = stitched::row(&copy, 0, &guided(&[(0.0, 0.0), (1.0, 0.0)], 1.0), &SplitMix64::new(7), meter).unwrap();
+    let sharp = stitched_row(&copy, 0, &guided(&[(0.0, 0.0), (1.0, 0.0)], 1.0), &SplitMix64::new(7), meter).unwrap();
     assert!(sharp.contains(&p(10.0, 0.0)), "{sharp:?}");
-    assert!(stitched::row(&[], 0, &smooth, &SplitMix64::new(7), meter).unwrap().is_empty());
+    assert!(stitched_row(&[], 0, &smooth, &SplitMix64::new(7), meter).unwrap().is_empty());
 }
 
 #[test]
@@ -272,7 +281,12 @@ fn diag_sc_w0332_a_missed_part_s_tatami_rows_run_along_the_line_between_the_guid
 
 #[test]
 fn diag_sc_w0332_says_how_many_parts_no_copy_meets() {
-    let tally = |pieces, missed, outlined| Tally { pieces, missed, outlined }.said().map(|d| (d.code, d.message)).collect::<Vec<_>>();
+    let tally = |pieces, missed, outlined| {
+        Tally { pieces, missed, outlined, apart: false, unjoined: false, strategy: Some(Strategy::Copy) }
+            .said()
+            .map(|d| (d.code, d.message))
+            .collect::<Vec<_>>()
+    };
     assert_eq!(tally(3, 0, 0), []);
     let one = "No copy of this guided fill's guide meets 1 of its parts, so that part is sewn as a tatami fill at the angle of the line \
                between the guide's ends.";
@@ -355,4 +369,276 @@ fn a_guide_s_angle_is_that_of_the_line_between_its_ends_counter_clockwise_as_dra
     assert!((angle(&[(2.0, 3.0), (9.0, 9.0), (5.0, 0.0)]) - 45.0).abs() < 1e-9);
     // Down the page to the right: -45°.
     assert!((angle(&[(2.0, 3.0), (5.0, 6.0)]) + 45.0).abs() < 1e-9);
+}
+
+/// A guided fill of rings round the line from (4, 2) to (6, 2), half a millimetre apart, with `anchor`.
+fn buffered(anchor: Option<Path>) -> Guided {
+    Guided { strategy: Strategy::Buffer, anchor, ..guided(&[(4.0, 2.0), (6.0, 2.0)], 0.5) }
+}
+
+/// The length of the line through `points`.
+fn length(points: &[Point]) -> f64 {
+    points.windows(2).map(|w| w[0].distance(w[1])).sum()
+}
+
+#[test]
+fn req_fill_gdd_011_rings_inside_a_part_are_joined_into_the_row_round_them() {
+    let meter = &mut Budget::DEFAULT.meter();
+    let piece = rectangle(4.0);
+    let rings = Rings::new(&piece, meter).unwrap();
+    let guided = buffered(None);
+    let guide = guide_of(&guided, meter).unwrap().unwrap();
+    // Rings 0.25, 0.75, 1.25 and 1.75 mm round a level guide along the middle of a part 4 mm high lie inside it,
+    // and the 5 from 2.25 to 4.25 mm cross its long sides.
+    let rows = buffer::rows(&piece, &rings, &guide.lines, &guided, &mut false, meter).unwrap();
+    assert_eq!(rows.len(), 9);
+    let inside = |row: &Vec<Point>| row.iter().all(|q| q.y() > 0.0 && q.y() < 4.0);
+    assert_eq!(rows.iter().map(inside).collect::<Vec<_>>(), [true, true, true, true, false, false, false, false, false]);
+    // Joined, the 4 are part of the first ring that crosses the outline. Each join opens both rings for a row
+    // spacing and adds 2 steps of about that length between them, so the whole is about as long as its rings.
+    let joined = join::joined(&piece, &rings, rows.clone(), (0.5, 3.0, false), meter).unwrap();
+    assert_eq!(joined.len(), 5);
+    assert_eq!(joined[1..], rows[5..]);
+    let whole: f64 = rows[..5].iter().map(|row| length(row)).sum();
+    let spliced = length(&joined[0]);
+    assert!((spliced - whole).abs() < 0.5, "{spliced} of {whole}");
+    for ring in &rows[..4] {
+        // Each ring's points are in the joined row, but those of the row spacing it was opened for.
+        let kept = ring.iter().filter(|q| joined[0].contains(q)).count();
+        assert!(kept + 6 >= ring.len(), "{kept} of {}", ring.len());
+    }
+    // So the fill sews in one go, without a word.
+    let sewn = sew(&piece, &guided);
+    assert_eq!((sewn.runs.len(), codes(&sewn)), (1, vec![]));
+    // Without a row that closes inside, the rows stay as they are.
+    let crossing = rows[4..].to_vec();
+    assert_eq!(join::joined(&piece, &rings, crossing.clone(), (0.5, 3.0, false), meter).unwrap(), crossing);
+}
+
+#[test]
+fn req_fill_gdd_012_a_closed_row_starts_where_the_anchor_line_crosses_it() {
+    let meter = &mut Budget::DEFAULT.meter();
+    let piece = rectangle(4.0);
+    let rings = Rings::new(&piece, meter).unwrap();
+    // The anchor line goes up from the guide's middle, across every ring: where it crosses the 4 rings inside
+    // the part, each starts, so each crossing is a needle point.
+    // The first ring lies a ten-thousandth of a CSS pixel farther out than a quarter of a millimetre.
+    let crossings = [p(5.0, 1.75 - offset::ROW_0), p(5.0, 1.25), p(5.0, 0.75), p(5.0, 0.25)];
+    let needles = |guided: &Guided, meter: &mut Meter| {
+        let guide = guide_of(guided, meter).unwrap().unwrap();
+        let lines = rows_of(&piece, &rings, guided, &guide, &SplitMix64::new(7), &mut false, meter).unwrap().unwrap();
+        crossings.map(|at| lines.iter().flatten().any(|q| q.distance(at) < 1e-9))
+    };
+    assert_eq!(needles(&buffered(Some(path(&[(5.0, 2.0), (5.0, -1.0)]))), meter), [true; 4]);
+    // Without it, each ring starts beside the place it was joined at, and its needle points fall where they may.
+    assert!(needles(&buffered(None), meter).contains(&false));
+    // An anchor line that crosses no ring changes nothing.
+    let aside = buffered(Some(path(&[(20.0, 0.0), (21.0, 0.0)])));
+    let lines = |guided: &Guided, meter: &mut Meter| {
+        let guide = guide_of(guided, meter).unwrap().unwrap();
+        rows_of(&piece, &rings, guided, &guide, &SplitMix64::new(7), &mut false, meter).unwrap().unwrap()
+    };
+    assert_ne!(lines(&aside, meter), lines(&buffered(Some(path(&[(5.0, 2.0), (5.0, -1.0)]))), meter));
+}
+
+/// How far `q` lies from the line through `line`.
+fn away(q: Point, line: &[(f64, f64)]) -> f64 {
+    line.windows(2)
+        .map(|side| {
+            let (a, b) = (p(side[0].0, side[0].1), p(side[1].0, side[1].1));
+            let t = (((q.x() - a.x()) * (b.x() - a.x()) + (q.y() - a.y()) * (b.y() - a.y())) / (a.distance(b) * a.distance(b))).clamp(0.0, 1.0);
+            q.distance(a.lerp(b, t))
+        })
+        .fold(f64::INFINITY, f64::min)
+}
+
+/// The rows the parallel offset of `guide` gives over a rectangle 10 mm wide and 4 mm high, `spacing` apart.
+fn offsets(guide: &Guided) -> Vec<Vec<Point>> {
+    let meter = &mut Budget::DEFAULT.meter();
+    let piece = rectangle(4.0);
+    let rings = Rings::new(&piece, meter).unwrap();
+    let line = guide_of(guide, meter).unwrap().unwrap();
+    offset::rows(&piece, &rings, &line.lines[0], guide, meter).unwrap()
+}
+
+#[test]
+fn req_fill_gdd_009_parallel_offset_s_rows_lie_whole_row_spacings_from_the_guide() {
+    // A guide bent above the rectangle's top side, from (-1, -1) over (5, 1) to (11, -1): it is offset as
+    // drawn, not opened, and lengthened level at both ends.
+    let bent = [(-1.0, -1.0), (5.0, 1.0), (11.0, -1.0)];
+    let offset = Guided { strategy: Strategy::Offset, ..guided(&bent, 0.5) };
+    let line = guide_of(&offset, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    assert_eq!(line.lines, [bent.map(|(x, y)| p(x, y)).to_vec()]);
+    let rows = offsets(&offset);
+    // It meets the piece, so the rows start from it: row 0, a ten-thousandth of a CSS pixel off it, and on
+    // down as the drawing shows them to row 8, the last that meets the piece, then row -1 above it.
+    let lengthened = [(-100.0, -1.0), (-1.0, -1.0), (5.0, 1.0), (11.0, -1.0), (100.0, -1.0)];
+    let numbers: Vec<f64> = rows.iter().map(|row| (away(row[1], &lengthened) / 0.5).round() * if row[1].y() < -1.0 { -1.0 } else { 1.0 }).collect();
+    assert_eq!(numbers, [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, -1.0]);
+    assert!((away(rows[0][1], &lengthened) - offset::ROW_0).abs() < 1e-12, "{}", away(rows[0][1], &lengthened));
+    // Every point of every row lies its row's distance from the guide, round the bend too, where a copy
+    // moved straight down would lie nearer.
+    for (row, number) in rows.iter().zip(&numbers).skip(1) {
+        assert!(row.len() > 4, "{row:?}");
+        for q in row.iter().filter(|q| q.x().abs() < 20.0) {
+            assert!((away(*q, &lengthened) - number.abs() * 0.5).abs() < 1e-9, "{q:?} of row {number}");
+        }
+    }
+    let copied = Guided { strategy: Strategy::Copy, ..offset.clone() };
+    let copies = rows_of_guide(&copied);
+    assert!(copies.iter().flatten().any(|q| (0.0..10.0).contains(&q.x()) && (away(*q, &lengthened) / 0.5).fract() > 0.02));
+    // The copy angle moves copies alone.
+    assert_eq!(offsets(&Guided { angle: Some(45.0), ..offset.clone() }), rows);
+    // A guide of no length gives no line to offset.
+    let dot = Guided { guide: Some(path(&[(5.0, 5.0), (5.0, 5.0)])), ..offset };
+    assert!(guide_of(&dot, &mut Budget::DEFAULT.meter()).unwrap().is_none());
+}
+
+/// The rows a copied `guide` gives over the rectangle.
+fn rows_of_guide(guide: &Guided) -> Vec<Vec<Point>> {
+    rows(&rectangle(4.0), guide)
+}
+
+#[test]
+fn req_fill_gdd_009_a_closed_guide_is_offset_as_a_ring_inward_and_outward() {
+    // A square ring 2 mm a side inside the rectangle, drawn closed: rows 0 and 1 inside it, where row 2
+    // would be a point, and rows -1 to -4 round it, the last 2 across the rectangle's long sides.
+    let ring = [(4.0, 1.0), (6.0, 1.0), (6.0, 3.0), (4.0, 3.0), (4.0, 1.0)];
+    let offset = Guided { strategy: Strategy::Offset, ..guided(&ring, 0.5) };
+    let rows = offsets(&offset);
+    let reach: Vec<f64> = rows.iter().map(|row| row.iter().map(|q| (q.y() - 2.0).abs()).fold(0.0, f64::max)).collect();
+    let rounded: Vec<f64> = reach.iter().map(|r| (r * 2.0).round() / 2.0).collect();
+    assert_eq!(rounded, [1.0, 0.5, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]);
+    // Shrunk, it closes. Grown, it starts and ends at the ring's first point moved off its 2 sides.
+    assert_eq!(rows[1], [p(4.5, 1.5), p(5.5, 1.5), p(5.5, 2.5), p(4.5, 2.5), p(4.5, 1.5)]);
+    assert_eq!((rows[2][0], rows[2][rows[2].len() - 1]), (p(4.0, 0.5), p(3.5, 1.0)));
+    // The rings inside the piece are joined, and the fill sews in one go.
+    let sewn = sew(&rectangle(4.0), &offset);
+    assert_eq!((sewn.runs.len(), codes(&sewn)), (1, vec![]));
+    // A closed guide that crosses itself is no ring. Its ends are one point, so it isn't lengthened, and made
+    // one line it keeps one loop, here the triangle left of its crossing at (5, 2), which row 0 follows.
+    let eight = [(4.0, 1.0), (6.0, 3.0), (6.0, 1.0), (4.0, 3.0), (4.0, 1.0)];
+    let crossed = offsets(&Guided { strategy: Strategy::Offset, ..guided(&eight, 0.5) });
+    let corners: Vec<(f64, f64)> = crossed[0].iter().map(|q| ((q.x() * 1e3).round() / 1e3, (q.y() * 1e3).round() / 1e3)).collect();
+    assert_eq!(corners, [(4.0, 1.0), (5.0, 2.0), (4.0, 3.0), (4.0, 1.0)]);
+}
+
+#[test]
+fn req_fill_gdd_010_a_buffered_guide_is_every_subpath_with_some_length() {
+    let meter = &mut Budget::DEFAULT.meter();
+    let line = |from: (f64, f64), to: (f64, f64)| Subpath { start: p(from.0, from.1), segments: vec![Drawn::Line(p(to.0, to.1))], closed: false };
+    let two = Path { subpaths: vec![line((6.0, 1.0), (4.0, 1.0)), line((5.0, 5.0), (5.0, 5.0)), line((4.0, 3.0), (6.0, 3.0))] };
+    let buffer = Guided { strategy: Strategy::Buffer, guide: Some(two.clone()), anchor: Some(two), ..guided(&[(0.0, 0.0)], 0.5) };
+    // The 2 lines, each from its lesser end and the greater first, without the dot, and the anchor line's
+    // subpaths as they are. The angle is the first subpath's, as drawn: right to left.
+    let guide = guide_of(&buffer, meter).unwrap().unwrap();
+    assert_eq!(guide.lines, [vec![p(4.0, 3.0), p(6.0, 3.0)], vec![p(4.0, 1.0), p(6.0, 1.0)]]);
+    assert_eq!(guide.anchor, [vec![p(6.0, 1.0), p(4.0, 1.0)], vec![p(5.0, 5.0)], vec![p(4.0, 3.0), p(6.0, 3.0)]]);
+    assert_eq!(guide.angle, 180.0);
+    // The other strategies take the first subpath alone.
+    let first = guide_of(&Guided { strategy: Strategy::Offset, ..buffer.clone() }, meter).unwrap().unwrap();
+    assert_eq!(first.lines, [vec![p(6.0, 1.0), p(4.0, 1.0)]]);
+    // Dots alone are no guide, and neither is a path of no subpath.
+    let dots = Guided { guide: Some(Path { subpaths: vec![line((5.0, 5.0), (5.0, 5.0))] }), ..buffer.clone() };
+    assert!(guide_of(&dots, meter).unwrap().is_none());
+    assert!(guide_of(&Guided { guide: Some(Path { subpaths: Vec::new() }), ..buffer.clone() }, meter).unwrap().is_none());
+    let sewn = sew(&rectangle(4.0), &Guided { plain: Plain { fill: Some(plain()), said: Vec::new() }, ..dots });
+    assert_eq!(codes(&sewn), [Code::FillGuidedNoGuide]);
+    assert_eq!(sewn.warnings[0].message, "This guided fill's guide line has no length, so the fill is sewn as a tatami fill with its own settings.");
+    // The rings round the 2 lines are apart for the first 2 rows and one from the third: 2, 2, 1, and so on.
+    let piece = rectangle(4.0);
+    let rings = Rings::new(&piece, meter).unwrap();
+    let rows = buffer::rows(&piece, &rings, &guide.lines, &buffer, &mut false, meter).unwrap();
+    let starts: Vec<(f64, f64)> = rows.iter().take(5).map(|row| (row[0].x(), (row[0].y() * 1e3).round() / 1e3)).collect();
+    assert_eq!(starts, [(6.0, 3.25), (6.0, 1.25), (6.0, 3.75), (6.0, 1.75), (6.0, 4.25)]);
+}
+
+#[test]
+fn the_strategies_read_by_ink_stitch_s_numbers_and_say_what_their_rows_miss() {
+    let read = |id: &str| {
+        GuidedParams::from_set_as(&[("guided_fill_strategy", id)].into_iter().collect(), StitchType::GuidedFill).unwrap().params.strategy()
+    };
+    assert_eq!((read("0"), read("1"), read("2")), (Strategy::Copy, Strategy::Offset, Strategy::Buffer));
+    assert_eq!(
+        STRATEGIES.iter().map(|option| (option.id, option.label, option.offered)).collect::<Vec<_>>(),
+        [("0", "Copy", true), ("1", "Parallel offset", true), ("2", "Buffer", true)]
+    );
+    let said = |strategy, unjoined| {
+        Tally { pieces: 2, missed: 1, outlined: 0, apart: unjoined, unjoined, strategy }.said().map(|d| (d.code, d.message)).collect::<Vec<_>>()
+    };
+    let rest = "1 of its parts, so that part is sewn as a tatami fill at the angle of the line between the guide's ends.";
+    assert_eq!(said(None, false), [(Code::FillGuidedMissed, format!("No copy of this guided fill's guide meets {rest}"))]);
+    assert_eq!(said(Some(Strategy::Offset), false), [(Code::FillGuidedMissed, format!("No offset curve of this guided fill's guide meets {rest}"))]);
+    let rings = said(Some(Strategy::Buffer), true);
+    assert_eq!(rings[0], (Code::FillGuidedMissed, format!("No ring round this guided fill's guide leaves a row in {rest}")));
+    // With a jump between rows and a ring whose edges didn't join, each is said after it.
+    assert_eq!(rings[1].0, Code::FillGuidedApart);
+    assert_eq!(rings[2].0, Code::InternalCheckFailed);
+    assert!(rings[2].1.starts_with("The edges of a ring round this guided fill's guide didn't join into rings"), "{}", rings[2].1);
+    assert_eq!(rings.len(), 3);
+    // A strip between the rows of each strategy falls back to a tatami fill, and each says so in its words:
+    // 1.3 to 1.7 mm below the guide, between the offset curves 1 and 2 mm from it, and 1.6 to 1.9 mm below it,
+    // between the rings 1.5 and 2.5 mm from it.
+    let strip = |from: f64, to: f64| Polygon { outline: vec![p(0.0, from), p(0.0, to), p(10.0, to), p(10.0, from), p(0.0, from)], holes: Vec::new() };
+    let cases = [
+        (Strategy::Offset, strip(0.3, 0.7), "No offset curve of this guided fill's guide meets it"),
+        (Strategy::Buffer, strip(0.6, 0.9), "No ring round this guided fill's guide leaves a row in it"),
+    ];
+    for (strategy, strip, words) in cases {
+        let sewn = sew(&strip, &Guided { strategy, ..guided(&[(0.0, -1.0), (10.0, -1.0)], 1.0) });
+        assert_eq!(codes(&sewn), [Code::FillGuidedMissed, Code::FillTooThin], "{strategy:?}");
+        assert!(sewn.warnings[0].message.starts_with(words), "{}", sewn.warnings[0].message);
+    }
+}
+
+/// Whether `ask` runs out of each of the budgets from 0 up to the work it takes, `step` apart, and that work.
+fn spends(ask: impl Fn(&mut Meter) -> Result<(), Exhausted>, step: usize) -> u64 {
+    let mut meter = Budget::DEFAULT.meter();
+    ask(&mut meter).unwrap();
+    let work = Budget::DEFAULT.max_work - meter.work_left();
+    assert!((0..work).step_by(step).all(|less| ask(&mut Budget { max_stitches: u32::MAX, max_work: less }.meter()).is_err()), "{work}");
+    work
+}
+
+#[test]
+fn each_strategy_runs_out_of_a_budget_of_less_work_than_it_takes() {
+    let region = Region { parts: vec![rectangle(4.0)] };
+    let anchor = Some(path(&[(5.0, 2.0), (5.0, -1.0)]));
+    let buffer = Guided { strategy: Strategy::Buffer, anchor, smoothness: 0.2, ..guided(&[(4.0, 2.0), (6.0, 2.0)], 1.5) };
+    let offset = Guided { strategy: Strategy::Offset, ..guided(&[(4.0, 1.0), (6.0, 1.0), (6.0, 3.0), (4.0, 3.0), (4.0, 1.0)], 1.5) };
+    let sewn = |guided: &Guided, meter: &mut Meter| guided_fill(&region, guided, None, None, &mut SplitMix64::new(7), meter).map(|_| ());
+    let shown = |guided: &Guided, meter: &mut Meter| top_path(&region, guided, &SplitMix64::new(7), meter).map(|_| ());
+    let work = [spends(|meter| sewn(&buffer, meter), 53), spends(|meter| shown(&buffer, meter), 211)];
+    let offsets = [spends(|meter| sewn(&offset, meter), 2_003), spends(|meter| shown(&offset, meter), 9_001)];
+    assert!(work.iter().chain(&offsets).all(|work| *work > 5_000), "{work:?} {offsets:?}");
+}
+
+#[test]
+fn diag_sc_w0333_rows_that_only_meet_a_hole_are_sewn_after_a_jump() {
+    use crate::design::{FillRule, Segment as Seg};
+    use crate::normalize::region;
+    // A shape that the degenerate corpus drew (`tests/degenerate.rs`), buffered round its own outline, which
+    // is its anchor line too. Its second part has a hole 0.008 mm wide. No ring round the guide meets that
+    // part's outline, so its own rings take the rows' place, and the anchor line cuts them at every corner.
+    // The pieces along the hole are joined to nothing that meets the outline: the needle jumps to them.
+    let hook =
+        Subpath { start: p(4.0, 0.0), segments: vec![Seg::Line(p(2.0, 0.0)), Seg::Cubic(p(0.0, 2.0), p(4.0, 10.0), p(2.0, 2.0))], closed: false };
+    let loops = Subpath {
+        start: p(6.0, 0.0),
+        segments: vec![Seg::Line(p(2.0, 4.0)), Seg::Cubic(p(0.0, 2.0), p(4.0, 2.0), p(2.0, 8.0)), Seg::Line(p(6.0, 2.0))],
+        closed: true,
+    };
+    let path = Path { subpaths: vec![hook, loops] };
+    let shape = region::build_clipped(&path, FillRule::NonZero, &[], &mut Budget::DEFAULT.meter()).unwrap().region;
+    assert_eq!(shape.parts.iter().map(|part| part.holes.len()).collect::<Vec<_>>(), [0, 1]);
+    let buffer = Guided { strategy: Strategy::Buffer, guide: Some(path.clone()), anchor: Some(path), ..guided(&[(0.0, 0.0)], 1.0) };
+    let sewn = guided_fill(&shape, &buffer, None, None, &mut SplitMix64::new(7), &mut Budget::DEFAULT.meter()).unwrap();
+    assert_eq!(codes(&sewn), [Code::FillGuidedApart]);
+    assert_eq!(sewn.warnings[0].message, "The needle finds no way between some rows of this guided fill, so it jumps between them.");
+    assert_eq!(sewn.runs.len(), 3, "one part in one go, the other in 2");
+    // Rows that cross a hole and not the outline are no such rows: they are joined into the rings round them.
+    // Here the offset curves round a closed guide inside a frame's hole, off its middle, sew in one go.
+    let ring = [(4.6, 1.6), (5.6, 1.6), (5.6, 2.6), (4.6, 2.6), (4.6, 1.6)];
+    let sewn = sew(&crate::generators::tatami::fixture::frame(), &Guided { strategy: Strategy::Offset, ..guided(&ring, 0.25) });
+    assert_eq!((sewn.runs.len(), codes(&sewn)), (1, vec![]));
 }

@@ -12,8 +12,9 @@
 //!   a line, or as a satin column where it is one or has several subpaths.
 //! - **The guide line** of a fill is the first that is not a satin column, as Ink/Stitch's fill looks only
 //!   at those (`REQ-SVG-015`). A guided fill copies its first subpath.
-//! - **The anchor line** is the first anchor that is not a satin column: the start and the end of its first
-//!   subpath, which set where a satin guide places each copy's ends.
+//! - **The anchor line** is the first anchor that is not a satin column, its whole path. The start and the
+//!   end of its first subpath set where a satin guide places each copy's ends, and a guided fill's rows
+//!   that close start where any of its subpaths crosses them (`REQ-FILL-GDD-012`).
 //!
 //! A helper steers its shapes even when `display: none` hides it, as Ink/Stitch at `d59c9ab` follows a
 //! hidden guide line, run as a black box. A group's children are looked at once, to find whether any is a
@@ -71,9 +72,9 @@ impl<'a, 'input> Reader<'_, 'a, 'input> {
             let label = child.attribute("id").unwrap_or(child.tag_name().name()).to_string();
             let Some(drawn) = self.helper_path(child, geometry, &label, map)? else { continue };
             if helper == Helper::AnchorLine {
-                let Some(first) = drawn.0.subpaths.first() else { continue };
-                let end = if first.closed { first.start } else { first.segments.last().map_or(first.start, |segment| segment.end()) };
-                anchor = Some([first.start, end]);
+                if !drawn.0.subpaths.is_empty() {
+                    anchor = Some(drawn.0);
+                }
                 continue;
             }
             let params: ParamSet = child.attributes().filter(|a| a.namespace() == Some(INKSTITCH_NS)).map(|a| (a.name(), a.value())).collect();
