@@ -166,7 +166,12 @@ as well as the code:
    MobileSAM's 2 files once from its authors' checkpoint, and a StitchCraft release, `cutout-models-1`,
    publishes the 3 as assets with their licences. GitHub Actions builds the release from the authors' own
    files, in a workflow that stops unless each file matches its pin, and the owner publishes it by starting
-   that workflow by hand. (Amended 2026-11-09, M13.14.) U²-Net-p's author publishes its checkpoint on Google Drive
+   that workflow by hand. (Amended 2026-11-09, M13.14.) The bytes of an export depend on the machine that runs
+   it: the encoder exported on the machine that first set the pins has the runner's size and another SHA-256.
+   The release is built on GitHub's runner, so the pins are the sums of the files the workflow's runner image
+   exports, `ubuntu-24.04` at version 20261101.360.1 when they were set. A runner whose export differs from
+   a pin stops the build, and the publish job runs only after a build that passed. So a changed runner shows
+   as a refused publish, and never as a silently different file. (Amended 2026-11-15, M13.14.) U²-Net-p's author publishes its checkpoint on Google Drive
    and Baidu alone, so its file is rembg's conversion of that checkpoint to ONNX, as rembg's own release
    publishes it, the file M13.13 measured. rembg is under the MIT licence, and the weights are under the
    Apache-2.0 licence, as the author wrote in issue 208. (Amended 2026-11-08, M13.14.) On

@@ -58,10 +58,20 @@ CPU of a runner without a GPU. The table above names the versions this build ran
 
 ## The checks
 
-The pins were set on 2026-11-08 from an export made by hand with this `export.py` and this
-`requirements.txt`, on Linux x86_64 (an Intel Xeon at 2.1 GHz, 2 cores) with CPython 3.13.18. These checks
-were made on its files. They hold for every build's files, which are the same bytes: a build stops when a
-file differs from its pin.
+The bytes of an export depend on the machine that runs it. GitHub's runner builds the release, so the pins
+are the sums of the runner's files. They were set on 2026-11-15 from the build job's exports on the runner
+image `ubuntu-24.04`, version 20261101.360.1. That image gave the same bytes in every build so far, and twice
+within each. The table above names the image this build ran on. A build stops when a file differs from its
+pin, and the publish job runs only after a build that passed. So a runner that exports other bytes shows as
+a refused publish, and never as a different file under the same name.
+
+The first export was made by hand on 2026-11-08 with this `export.py` and this `requirements.txt`, on Linux
+x86_64 (an Intel Xeon at 2.1 GHz, 2 cores) with CPython 3.13.18. Its decoder is the runner's, byte for byte.
+Its encoder has the runner's size, 27,969,741 bytes, and another SHA-256,
+`047b16d8c829fb9f313acb9943bafd4d9f98b7fbd8f3d19149f221cfeefe0327`. The checks below were made on that
+export's files. Every build makes checks 1 and 3 again on its own files, and the models' job of the same
+workflow runs the release's files with tract against the outputs saved from the first export, within the
+bounds `conformance/fixtures/README.md` gives.
 
 1. **Against PyTorch.** Each file, run by onnxruntime on fixed inputs, against PyTorch's own result: the
    encoder within 9.5e-07, the decoder's `low_res_masks` within 1.3e-05, `iou_predictions` within 1.8e-07

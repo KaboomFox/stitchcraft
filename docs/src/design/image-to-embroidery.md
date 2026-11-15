@@ -781,7 +781,7 @@ licences, a notice and the record of how they were made. GitHub Actions builds t
 authors' own files, in the workflow `models.yml`. Its build job exports MobileSAM's 2 files with the script
 beside the pins, `export.py`, from the checkpoint in MobileSAM's repository at a pinned commit, with
 MobileSAM's own code and PyTorch's exporter, in the packages `requirements.txt` pins by hash. It exports
-twice, and the 2 exports must agree. It fetches U²-Net-p's file from rembg's release, and stops unless each
+twice, and the 2 exports must agree. The pins are the sums of the runner's exports, as ADR-0019's decision 5 says. It fetches U²-Net-p's file from rembg's release, and stops unless each
 file has its pinned size and SHA-256. The owner publishes the release by starting the workflow by hand on
 `main` and typing the release's tag, and no other run publishes. A release published is never replaced, so a
 new set of models takes a new tag. (Amended 2026-11-09, M13.14.) U²-Net-p's author publishes its checkpoint on
