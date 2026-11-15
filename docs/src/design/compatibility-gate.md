@@ -38,7 +38,9 @@ checks:
 3. Live effects run through `vectorcraft_plugins::effect::apply` on fixture geometry, finish within the
    host's limits, and return the expected preview geometry: paths of stitches for strokes and satin
    columns and closed ribbons for fills. When an effect can't show stitches, its last error says why.
-   Which level a shape shows, and the geometry of each, the plug-in's native tests check.
+   Which level a shape shows, and the geometry of each, the plug-in's native tests check. From VectorCraft
+   0.23 `apply` also takes the document, where the host looks up the swatches a painted preview names.
+   StitchCraft's previews are paths alone, so the tests give it none.
 4. Filters run and return valid objects. Exporters run through `vectorcraft_plugins::export::run` on
    documents written for the test, return a file of their format, with the export's warnings, plan for
    the machine their dialog names, and decline with the first error when there is one (`REQ-VC-011`).
@@ -86,7 +88,11 @@ scenario draws each object it gives an effect before it gives another the same f
 nothing: an exporter is given the document's JSON. An export that must fail names the code of the error it
 says, with `fails`. VectorCraft stops a run at a step that fails, so that export ends its run, and no check
 names its file. A run installs a module whose manifest sets a heavy budget, Stroke to Satin's, with
-`allowHeavy`, as the user allows it. A step's parameter written `{ stitchcraft = "…" }` is replaced by what
+`allowHeavy`, as the user allows it. From VectorCraft 0.23 a request's `allowHeavy` counts only in a session
+that its command line was started in with `--allow-plugin-grants`, so such a run starts with that option
+when the command line's help names it. Every run has `VECTORCRAFT_NO_PREFS` set, which leaves VectorCraft
+without preferences and without the folder it keeps installed plug-ins in. So a run starts with the modules
+it installs alone, and leaves none in the VectorCraft of whoever runs the gate. A step's parameter written `{ stitchcraft = "…" }` is replaced by what
 StitchCraft makes of the name, the threads `stitch palette` writes or a test picture drawn flat as a PNG, so
 that what VectorCraft traces is StitchCraft's own. A run can be `stitch plan` with its arguments instead,
 which traces a picture with the `vectorcraft-cli` under test. It runs in the gate's own process, its files in

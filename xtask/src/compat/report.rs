@@ -157,7 +157,10 @@ fn render(supported: &Supported, pins: &toml::Table) -> String {
     let _ = write!(
         out,
         "\nThe plug-ins speak VectorCraft's plug-in ABI v1. Pull requests are checked against VectorCraft {stable}, the \
-         release the gate pins in `{PINS}`.\n"
+         release the gate pins in `{PINS}`.\n\n\
+         From VectorCraft 0.23, a filter that asks for a heavy budget is installed only once a person allows it. \
+         Up to 0.22 a script could allow it too. [Install StitchCraft](../install.md#the-vectorcraft-plug-ins) says \
+         how.\n"
     );
     out
 }

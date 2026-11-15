@@ -173,10 +173,15 @@ to the pixel. The screenshots of two starts of the app match there too, and so d
 runners, in all but a few runs. In 3 of the 97 runs from 1 to 3 November 2026, and in 1 on 8 November,
 the second start differed from the first in 19,159 pixels above the status bar, the same number each
 time. The run on 8 November showed why: `ui.inspect` gave the 2 starts the same canvas and the same middle
-of the view, at zooms of 4.9812 and 4.9883. VectorCraft fits a document's view to the canvas of the first
-frame that shows it, and that canvas can still change by a pixel as the window settles. So the probe
-waits until 2 inspections in a row show the canvas in one place, and then fits the artboard again
-(View › Fit Artboard in Window) before each start's screenshot. The notice gives each start's time to its
+of the view, at zooms of 4.9812 and 4.9883. Up to 0.22 VectorCraft fitted a document's view to the canvas
+of the first frame that showed it, and that canvas can still change by a pixel as the window settles. For
+those releases the probe waited until 2 inspections in a row showed the canvas in one place, and then
+fitted the artboard again (View › Fit Artboard in Window) before each start's screenshot. From 0.23
+VectorCraft's opening fit follows the canvas until the view moves or the user acts (its
+`canvas::opening_fit_follows`), so the probe takes each start's screenshot as the window opens. On
+9 November 2026, under Xvfb and llvmpipe as in CI, 24 starts of 0.23.0 gave one picture above the status
+bar, at a zoom of 4.9883. Taken the same way, 16 starts of 0.22.0 gave 2 pictures: 14 at a zoom of 4.9812
+and 2 at 4.9883. The notice gives each start's time to its
 screenshot and the fingerprint of its pixels there, and a failure says where they differ and what
 `ui.inspect` shows differently. The status bar
 differs, since it shows the frame timings ("render 4.4 ms · ui 1.4 ms · 24 fps"), which change with every
@@ -197,7 +202,13 @@ that `cargo xtask shots --vectorcraft` lists in a job file, in the same desktop.
 person would use the app. AT-SPI's press opens the menu bar's title and each row of the shot's path,
 then the row of the family's effect, and the dialog is the largest element named after the plug-in. The
 window opens the document it starts with. The control channel installs the modules, which a person does
-with file dialogs. It also selects everything and sizes the window, and it reads the app's state. A
+with file dialogs, all but a module that asks for a heavy budget. From 0.23 VectorCraft's app installs
+such a module only once a person has chosen OK in its window, which no request can do. So
+`vectorcraft-cli`, started with `--allow-plugin-grants`, installs the module into a profile first: a
+folder that `VECTORCRAFT_CONFIG_DIR` names, for that shot alone. The window starts with the profile, and
+VectorCraft installs again the plug-ins a profile keeps. On 9 November 2026, 3 starts of 0.23.0 with a
+new profile each showed the pixels of a start without preferences. The control channel also selects
+everything and sizes the window, and it reads the app's state. A
 menus' picture is cropped to the title and the rows that opened, with 10 pixels around them for the
 menus' frames. A dialog's picture is cropped to the dialog.
 

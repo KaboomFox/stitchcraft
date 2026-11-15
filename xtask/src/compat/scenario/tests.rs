@@ -196,7 +196,7 @@ fn an_export_that_fails_is_its_run_s_last_step_and_writes_no_file_to_check() {
         "#,
     );
     assert_eq!(problems(&failing, &modules(), &std::collections::BTreeSet::new()), Vec::<String>::new());
-    let args = arguments(&failing.run[0], Path::new("/plugins"), Path::new("/out")).unwrap();
+    let args = arguments(&failing.run[0], Path::new("/plugins"), Path::new("/out"), false).unwrap();
     let pes = Path::new("/out").join("a.pes").to_string_lossy().into_owned();
     assert_eq!(args[args.len() - 2..], ["--export".to_string(), pes]);
 }
@@ -216,7 +216,7 @@ fn a_run_is_one_command_line_that_asks_each_module_for_its_last_error_after_each
         ]
         "##,
     );
-    let args = arguments(&s.run[0], Path::new("/plugins"), Path::new("/out")).unwrap();
+    let args = arguments(&s.run[0], Path::new("/plugins"), Path::new("/out"), false).unwrap();
     // A file's path is the platform's, with `\` before the file's name on Windows.
     let at = |dir: &str, file: &str| Path::new(dir).join(file).to_string_lossy().into_owned();
     let (opened, exported, saved) = (at("/out", "in.vectorcraft"), at("/out", "out.png"), at("/out", "out.vectorcraft"));
@@ -259,12 +259,17 @@ fn req_vc_014_a_heavy_filter_is_installed_as_the_user_allows_it() {
         steps = [{ cmd = "plugin.run", params = { id = "dev.stitchcraft.stroke-to-satin" } }]
         "#,
     );
-    let args = arguments(&s.run[0], Path::new("/plugins"), Path::new("/out")).unwrap();
+    let args = arguments(&s.run[0], Path::new("/plugins"), Path::new("/out"), false).unwrap();
     let at = |file: &str| Path::new("/plugins").join(file).to_string_lossy().into_owned();
     let installs: Vec<&String> = args.iter().filter(|arg| arg.contains("\"path\":")).collect();
     let (satin, heavy) =
         (json!({ "path": at("satin.wasm") }).to_string(), json!({ "allowHeavy": true, "path": at("stroke-to-satin.wasm") }).to_string());
     assert_eq!(installs, [&satin, &heavy]);
+    // VectorCraft 0.23 takes `allowHeavy` only in a run started with its option, which comes before the
+    // steps. The other arguments stay as they are.
+    let with_grants = arguments(&s.run[0], Path::new("/plugins"), Path::new("/out"), true).unwrap();
+    assert_eq!(with_grants.get(..2), Some(&["run".to_string(), "--allow-plugin-grants".to_string()][..]));
+    assert_eq!((args.first(), args.get(1..)), (with_grants.first(), with_grants.get(2..)));
 }
 
 #[test]
@@ -276,7 +281,7 @@ fn an_exporter_is_installed_and_asked_nothing_after_a_drawing_and_a_machine_file
         steps = [{ apply = "fill" }, { export = "a.pes" }, { export = "a.png" }]
         "#,
     );
-    let args = arguments(&s.run[0], Path::new("/plugins"), Path::new("/out")).unwrap();
+    let args = arguments(&s.run[0], Path::new("/plugins"), Path::new("/out"), false).unwrap();
     let asked: Vec<&String> = args.iter().filter(|arg| arg.contains("\"id\":")).collect();
     assert_eq!(asked, [r#"{"id":"dev.stitchcraft.fill"}"#]);
     // A machine file is written from the document's JSON, so the fill is drawn by the PNG alone.
@@ -488,12 +493,29 @@ fn toml_parameters_become_json() {
 /// effect to object 2, has each module's last error be what the file `error` beside it says, and exports
 /// the file `doc` beside it names for a `.vectorcraft` file and an empty file for any other, but for a file
 /// named `fail` and an extension, whose export fails as VectorCraft says an exporter's error.
+///
+/// Its help is the file `help` beside it. When that names `--allow-plugin-grants`, it takes the option, and
+/// takes `allowHeavy` only in a run started with it, as VectorCraft does from 0.23. Otherwise it refuses the
+/// option as unknown. It runs only without preferences or with a profile, and writes which to the file
+/// `prefs` beside it, its arguments to `args`, and each module it installs into a profile to the profile's
+/// `installed`.
 #[cfg(unix)]
 const STUB: &str = r#"#!/bin/sh
 here=$(dirname "$0")
+if [ "$1" = --help ]; then cat "$here/help"; exit 0; fi
+printf '%s\n' "$*" > "$here/args"
+printf '%s\n' "${VECTORCRAFT_NO_PREFS:-}|${VECTORCRAFT_CONFIG_DIR:-}" > "$here/prefs"
+if [ "${VECTORCRAFT_NO_PREFS:-}" != 1 ] && [ -z "${VECTORCRAFT_CONFIG_DIR:-}" ]; then
+  echo "vectorcraft-cli: started with the user's preferences" >&2; exit 3
+fi
+named=no; grants=no
+if grep -q -- --allow-plugin-grants "$here/help"; then named=yes; fi
 shift
 while [ $# -gt 0 ]; do
   case "$1" in
+    --allow-plugin-grants)
+      if [ $named = no ]; then echo "vectorcraft-cli: unknown run option $1" >&2; exit 2; fi
+      grants=yes; shift ;;
     --in) echo '{"step":"open","result":{}}'; shift 2 ;;
     --commands) cat > /dev/null; echo '{"step":"cmd","result":{}}'; shift 2 ;;
     --export)
@@ -506,7 +528,16 @@ while [ $# -gt 0 ]; do
     --cmd)
       case "$2" in
         plugin.install)
-          case "$4" in *pes.wasm*|*dst.wasm*) kind=exporter ;; *) kind=effect ;; esac
+          case "$4" in
+            *allowHeavy*)
+              if [ $named = yes ] && [ $grants = no ]; then
+                echo "vectorcraft-cli: step 0 (plugin.install): allowHeavy takes effect only in a session started with --allow-plugin-grants" >&2; exit 1
+              fi
+              kind=filter ;;
+            *pes.wasm*|*dst.wasm*) kind=exporter ;;
+            *) kind=effect ;;
+          esac
+          if [ -n "${VECTORCRAFT_CONFIG_DIR:-}" ]; then printf '%s\n' "$4" >> "$VECTORCRAFT_CONFIG_DIR/installed"; fi
           echo "{\"step\":\"cmd\",\"result\":{\"kind\":\"$kind\"}}" ;;
         plugin.list) echo '{"step":"cmd","result":{"plugins":[{"id":"dev.stitchcraft.fill","kind":"effect"}]}}' ;;
         plugin.info) echo "{\"step\":\"cmd\",\"result\":{\"lastError\":$(cat "$here/error")}}" ;;
@@ -524,8 +555,19 @@ done
 /// module's last error.
 #[cfg(unix)]
 fn stub(dir: &Path, error: &str) -> PathBuf {
+    stub_saying(dir, error, "")
+}
+
+/// What VectorCraft 0.23's command line says of `run` in its help, which names the option.
+#[cfg(unix)]
+const HELP_0_23: &str = "  vectorcraft-cli run [--in FILE] [--cmd ID [--params JSON]]... [--export FILE]... [--allow-plugin-grants]\n";
+
+/// [`stub`], with `help` as what the stand-in says of itself.
+#[cfg(unix)]
+fn stub_saying(dir: &Path, error: &str, help: &str) -> PathBuf {
     use std::os::unix::fs::PermissionsExt;
     std::fs::create_dir_all(dir).unwrap();
+    std::fs::write(dir.join("help"), help).unwrap();
     let doc = util::root().join("conformance/fixtures/vectorcraft/patch.vectorcraft");
     std::fs::write(dir.join("doc"), doc.to_string_lossy().as_bytes()).unwrap();
     std::fs::write(dir.join("error"), error).unwrap();
@@ -638,4 +680,49 @@ fn a_scenario_runs_and_its_checks_say_what_fails() {
     assert_eq!(failures.len(), 1, "{failures:?}");
     let start = "run 1: `stitch plan badge.png -o missing/badge.pes --traced traced.vectorcraft` ended with Io: stitch: cannot write ";
     assert!(failures[0].starts_with(start) && failures[0].ends_with("nothing was written"), "{failures:?}");
+}
+
+#[cfg(unix)]
+#[test]
+fn req_vc_014_a_run_asks_for_a_heavy_module_as_its_command_line_takes_the_request() {
+    let dir = util::root().join("target/xtask-tests/scenario-grants");
+    let started = |case: &str, help: &str, modules: &[&str]| {
+        let cli = stub_saying(&dir.join(case), "null", help);
+        let run = Run { plugins: modules.iter().map(|module| (*module).to_string()).collect(), ..Run::default() };
+        draw(&run, &cli, Path::new("/plugins"), &dir.join(case).join("out")).unwrap();
+        let read = |file: &str| std::fs::read_to_string(dir.join(case).join(file)).unwrap();
+        (read("args"), read("prefs"))
+    };
+    // VectorCraft 0.23 takes `allowHeavy` only in a run started with the option, which its help names. The
+    // stand-in refuses the heavy module otherwise.
+    let (args, prefs) = started("heavy-0.23", HELP_0_23, &["satin", "stroke-to-satin"]);
+    assert!(args.starts_with("run --allow-plugin-grants --cmd plugin.install "), "{args}");
+    // A run has no preferences, so no folder of plug-ins that the next run would start with.
+    assert_eq!(prefs, "1|\n");
+    // A run that installs no heavy module starts as it always did.
+    assert!(!started("light-0.23", HELP_0_23, &["satin"]).0.contains(GRANTS));
+    // VectorCraft 0.22 has no such option: the stand-in refuses it as unknown, and takes `allowHeavy`.
+    assert!(!started("heavy-0.22", "", &["satin", "stroke-to-satin"]).0.contains(GRANTS));
+    let takes = |case: &str| takes_grants(&dir.join(case).join("vectorcraft-cli"));
+    assert_eq!((takes("heavy-0.23"), takes("heavy-0.22")), (Ok(true), Ok(false)));
+    let missing = takes("none").unwrap_err();
+    assert!(missing.contains("vectorcraft-cli"), "{missing}");
+}
+
+#[cfg(unix)]
+#[test]
+fn req_vc_014_a_heavy_module_is_installed_into_a_profile_the_app_starts_with() {
+    let dir = util::root().join("target/xtask-tests/scenario-profile");
+    let _ = std::fs::remove_dir_all(&dir);
+    let cli = stub_saying(&dir, "null", HELP_0_23);
+    let profile = dir.join("profile");
+    install_into(&profile, &["stroke-to-satin".to_string()], &cli, Path::new("/plugins"), &dir.join("install")).unwrap();
+    // The stand-in keeps what it installs in the folder its profile is, as VectorCraft does.
+    let heavy = json!({ "allowHeavy": true, "path": Path::new("/plugins").join("stroke-to-satin.wasm").to_string_lossy() }).to_string();
+    assert_eq!(std::fs::read_to_string(profile.join("installed")).unwrap(), format!("{heavy}\n"));
+    let read = |file: &str| std::fs::read_to_string(dir.join(file)).unwrap();
+    assert_eq!(read("prefs"), format!("|{}\n", profile.display()));
+    assert!(read("args").starts_with("run --allow-plugin-grants --cmd plugin.install "), "{}", read("args"));
+    // What the command line said is kept beside the profile, for whoever reads a shot's failure.
+    assert!(dir.join("install/run-1.out").is_file());
 }
