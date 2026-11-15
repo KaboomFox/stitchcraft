@@ -861,7 +861,7 @@
     },
     "fill_method": {
       "default": "tatami_fill",
-      "description": "The stitch the area is filled with. A tatami fill sews rows of running stitches across it, a contour fill rings that follow its outline inward, a meander fill one line that wanders through a tiling, a circular fill a spiral round its middle, a guided fill rows that follow a guide line, a linear gradient fill rows in the colours of its linear gradient, and a tartan fill a plaid of rows in the colours of its sett. A fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without underlay (`SC-W0314`). A guided fill's strategies that offset its guide arrive in a later version, and until then an element set to one is skipped (`SC-W0011`).",
+      "description": "The stitch the area is filled with. A tatami fill sews rows of running stitches across it, a contour fill rings that follow its outline inward, a meander fill one line that wanders through a tiling, a circular fill a spiral round its middle, a guided fill rows that follow a guide line, a linear gradient fill rows in the colours of its linear gradient, and a tartan fill a plaid of rows in the colours of its sett. A fill set to Ink/Stitch's legacy fill is sewn as a tatami fill without underlay (`SC-W0314`).",
       "enum": [
         "tatami_fill",
         "circular_fill",
@@ -1151,7 +1151,7 @@
     },
     "guided_fill_strategy": {
       "default": "0",
-      "description": "How the rows follow the guide. Copy moves copies of the guide across the fill, a row spacing apart. Ink/Stitch's parallel offset and buffer arrive in a later version, and until then a fill set to one is skipped (`SC-W0011`).",
+      "description": "How the rows follow the guide. Copy moves copies of the guide across the fill, a row spacing apart. Parallel offset sews the guide's offset curves, which keep the row spacing round every bend. Buffer sews rings round the guide, every subpath of it, like the rings of a tree.",
       "enum": [
         "0",
         "1",

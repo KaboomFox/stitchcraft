@@ -267,20 +267,20 @@ fn req_gen_004_an_element_spends_a_stitch_for_each_needle_point_it_gives() {
 
 #[test]
 fn req_gen_004_each_element_is_given_what_the_ones_before_it_left() {
-    // 3 lines of 41 needle points, and a stitch type not sewn yet after them, which only says so.
+    // 3 lines of 41 needle points, and a fill whose method can't be read after them, which only says so.
     let design = |stitches: u32| {
         let elements = vec![
             line("a", (0.0, 0.0), 100.0, &RED, &[]),
             line("b", (0.0, 5.0), 100.0, &RED, &[]),
             line("c", (0.0, 10.0), 100.0, &RED, &[]),
-            fill("d", &[&[(0.0, 15.0), (10.0, 15.0), (10.0, 20.0)]], &RED, &[("fill_method", "guided_fill"), ("guided_fill_strategy", "1")]),
+            fill("d", &[&[(0.0, 15.0), (10.0, 15.0), (10.0, 20.0)]], &RED, &[("fill_method", "sparkle_fill")]),
         ];
         let design = Design::new(elements, DesignSettings::default()).unwrap();
         plan(&design, REFERENCE, &Budget { max_stitches: stitches, ..Budget::DEFAULT })
     };
     let whole = design(Budget::DEFAULT.max_stitches);
     assert!(whole.plan.is_some());
-    assert_eq!(whole.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>(), [Code::StitchTypeNotYet]);
+    assert_eq!(whole.diagnostics.iter().map(|d| d.code).collect::<Vec<_>>(), [Code::ParamInvalid]);
     // 100 stitches: a and b leave 18, too few for c. Planning stops there, before d is looked at.
     let short = design(100);
     assert_eq!(short.plan, None);

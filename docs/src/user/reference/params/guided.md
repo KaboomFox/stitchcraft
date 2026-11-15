@@ -2,10 +2,11 @@
 
 # Guided parameters
 
-Guided fill: rows that follow a guide line drawn with the fill, copied across its area. The guide is a
+Guided fill: rows that follow a guide line drawn with the fill, across its area. The guide is a
 line grouped with the fill and marked as one: Ink/Stitch's guide-line marker on a stroke in an SVG
 file, or a path named `stitch:guide` in a VectorCraft document. A fill without one sews as a tatami
-fill (`SC-W0331`).
+fill (`SC-W0331`). An anchor line, marked with Ink/Stitch's anchor-line marker or named
+`stitch:anchor`, says where the rows that close start.
 
 Applies to Guided fill.
 
@@ -14,10 +15,10 @@ Applies to Guided fill.
 ### `guided_fill_strategy`
 
 **Strategy.** How the rows follow the guide. Copy moves copies of the guide across the fill, a row spacing
-apart. Ink/Stitch's parallel offset and buffer arrive in a later version, and until then a fill set
-to one is skipped (`SC-W0011`).
+apart. Parallel offset sews the guide's offset curves, which keep the row spacing round every
+bend. Buffer sews rings round the guide, every subpath of it, like the rings of a tree.
 
-- **Accepts:** one of `0` (Copy), or one of the 2 other values kept for designs that name them, read as the help above says: `1`, `2`
+- **Accepts:** one of `0` (Copy), `1` (Parallel offset), `2` (Buffer)
 - **Default:** `0`
 - **Ink/Stitch:** same key, meaning and default
 

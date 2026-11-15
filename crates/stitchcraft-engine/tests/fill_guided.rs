@@ -1,5 +1,5 @@
-//! A guided fill (milestone M10.9, `REQ-FILL-GDD-001` to `REQ-FILL-GDD-007`) in a plan: its settings read, its
-//! underlay before its rows, and what it sews without a guide. Where the copies lie, how they are staggered
+//! A guided fill (milestones M10.9 and M10.10, `REQ-FILL-GDD-001` to `REQ-FILL-GDD-010`) in a plan: its
+//! settings read, its underlay before its rows, each strategy's rows, and what it sews without a guide. Where the copies lie, how they are staggered
 //! and cut, and what the fallbacks say are tested in the generator's modules (`generators::guided`).
 
 // Test code may unwrap, index and panic (clippy.toml allows the first 2 in tests).
@@ -109,16 +109,89 @@ fn req_fill_gdd_001_without_a_guide_line_the_fill_sews_its_own_tatami_fill() {
     assert_eq!(codes(&clamped).iter().filter(|code| **code == Code::ParamClamped).count(), 1, "{:?}", messages(&clamped));
 }
 
-#[test]
-fn req_fill_gdd_001_a_strategy_not_sewn_yet_is_named_and_skipped() {
-    for (id, name) in [("1", "parallel offset"), ("2", "buffer")] {
-        let outcome = planned(vec![guided(Some(&SLANT), &[("guided_fill_strategy", id)]), line("after", (0.0, 30.0), 10.0, &RED, &[])]);
-        assert_eq!(
-            messages(&outcome),
-            [format!(
-                "warning SC-W0011: This element's fill method, `guided_fill`, with its strategy `{id}` ({name}), is not sewn by this version of \
-                 StitchCraft yet, so it is skipped."
-            )]
-        );
-    }
+/// How far `q` lies from the line through `line`.
+fn away(q: Point, line: &[(f64, f64)]) -> f64 {
+    line.windows(2)
+        .map(|side| {
+            let (ax, ay, bx, by) = (side[0].0, side[0].1, side[1].0, side[1].1);
+            let along = ((q.x() - ax) * (bx - ax) + (q.y() - ay) * (by - ay)) / ((bx - ax).powi(2) + (by - ay).powi(2));
+            let t = along.clamp(0.0, 1.0);
+            (q.x() - ax - t * (bx - ax)).hypot(q.y() - ay - t * (by - ay))
+        })
+        .fold(f64::INFINITY, f64::min)
 }
+
+/// The share of `points` that lie within 0.03 mm of `first` plus a whole number of millimetres from `line`.
+fn on_rows(points: &[Point], line: &[(f64, f64)], first: f64) -> f64 {
+    let on = points.iter().filter(|q| ((away(**q, line) - first).rem_euclid(1.0) - 0.5).abs() > 0.47).count();
+    on as f64 / points.len() as f64
+}
+
+#[test]
+fn req_fill_gdd_001_each_strategy_sews_its_rows_without_a_word() {
+    let mut sewn_by = Vec::new();
+    for id in ["0", "1", "2"] {
+        let outcome = planned(vec![guided(Some(&SLANT), &[("guided_fill_strategy", id)])]);
+        assert_eq!(codes(&outcome), [], "{id}: {:?}", messages(&outcome));
+        let top = sewn(&outcome, Role::Top);
+        assert!(thread(&top) > 1_500.0, "{id}: {} mm", thread(&top));
+        sewn_by.push(top);
+    }
+    // A straight guide's offset curves are its copies, but for the ten-thousandth of a CSS pixel that row 0
+    // lies off it, and a buffer's rings lie half a row spacing from both.
+    assert!(sewn_by[0].len().abs_diff(sewn_by[1].len()) < 20, "{} and {}", sewn_by[0].len(), sewn_by[1].len());
+    assert_ne!(sewn_by[1], sewn_by[2]);
+    // A strategy that isn't one is refused, as any setting that can't be read.
+    let outcome = planned(vec![guided(Some(&SLANT), &[("guided_fill_strategy", "3")]), line("after", (0.0, 30.0), 10.0, &RED, &[])]);
+    assert_eq!(codes(&outcome), [Code::ParamInvalid]);
+}
+
+/// A square ring 4 mm a side in the middle of the square, drawn closed.
+const RING: [(f64, f64); 5] = [(8.0, 8.0), (12.0, 8.0), (12.0, 12.0), (8.0, 12.0), (8.0, 8.0)];
+/// Rows 1 mm apart, without underlay.
+const APART: [(&str, &str); 2] = [("row_spacing_mm", "1"), ("fill_underlay", "false")];
+
+#[test]
+fn req_fill_gdd_009_parallel_offset_s_rows_keep_their_distance_from_the_guide() {
+    // Round a closed guide, each row lies a whole number of row spacings from it, inside it and outside, round
+    // its corners too. Copies of it, opened and moved across the square, don't.
+    let strategy = |id: &'static str| [APART[0], APART[1], ("guided_fill_strategy", id)];
+    let offset = planned(vec![guided(Some(&RING), &strategy("1"))]);
+    assert_eq!(codes(&offset), [], "{:?}", messages(&offset));
+    let rows = sewn(&offset, Role::Top);
+    let copied = sewn(&planned(vec![guided(Some(&RING), &strategy("0"))]), Role::Top);
+    // The needle's travel between the rows lies where it may, so not every needle point is on a row.
+    assert!(rows.len() > 150 && on_rows(&rows, &RING, 0.0) > 0.6, "{} of {}", on_rows(&rows, &RING, 0.0), rows.len());
+    assert!(on_rows(&copied, &RING, 0.0) < 0.3, "{}", on_rows(&copied, &RING, 0.0));
+    // The rings inside the square are joined into the rows that leave it: one run, without a jump after the
+    // one that reaches the fill.
+    let jumps = offset.plan.as_ref().unwrap().stitches().filter(|s| s.kind == StitchKind::Jump).count();
+    assert_eq!(jumps, 1);
+}
+
+#[test]
+fn req_fill_gdd_010_a_buffer_s_rows_are_rings_half_a_row_spacing_and_whole_ones_from_the_guide() {
+    // Round a short line inside the square, and round 2 of them, every subpath of the guide.
+    let dash = [(8.0, 10.0), (12.0, 10.0)];
+    let buffered = [APART[0], APART[1], ("guided_fill_strategy", "2")];
+    let outcome = planned(vec![guided(Some(&dash), &buffered)]);
+    assert_eq!(codes(&outcome), [], "{:?}", messages(&outcome));
+    let rings = sewn(&outcome, Role::Top);
+    assert!(rings.len() > 150 && on_rows(&rings, &dash, 0.5) > 0.5, "{} of {}", on_rows(&rings, &dash, 0.5), rings.len());
+    assert!(on_rows(&rings, &dash, 0.0) < 0.3, "{}", on_rows(&rings, &dash, 0.0));
+    let jumps = outcome.plan.as_ref().unwrap().stitches().filter(|s| s.kind == StitchKind::Jump).count();
+    assert_eq!(jumps, 1);
+    let mut two = guided(Some(&dash), &buffered);
+    let second = [(8.0, 15.0), (12.0, 15.0)];
+    two.hints.guide.as_mut().unwrap().path = polylines(&[&dash, &second]);
+    let both = sewn(&planned(vec![two]), Role::Top);
+    let nearer = |q: &Point| away(*q, &dash).min(away(*q, &second));
+    let on = both.iter().filter(|q| ((nearer(q) - 0.5).rem_euclid(1.0) - 0.5).abs() > 0.47).count();
+    assert!(on * 2 > both.len(), "{on} of {}", both.len());
+    // The copy and parallel offset strategies follow the first subpath alone.
+    let mut first_only = guided(Some(&dash), &[APART[0], APART[1], ("guided_fill_strategy", "1")]);
+    let one = sewn(&planned(vec![first_only.clone()]), Role::Top);
+    first_only.hints.guide.as_mut().unwrap().path = polylines(&[&dash, &second]);
+    assert_eq!(sewn(&planned(vec![first_only]), Role::Top), one);
+}
+

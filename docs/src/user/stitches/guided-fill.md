@@ -77,11 +77,17 @@ guide, without underlay and with rows 1 mm apart. The copies crowd towards the f
 curves keep their spacing:
 
 <!-- shot: guided-offset -->
+| Copy | Parallel offset |
+|:-:|:-:|
+| ![A blue fan, a band 20 mm wide between 2 arcs, sewn without underlay as a guided fill along an arc between them, its rows 1 mm apart, Copy](../../images/generated/guided-offset-1.png) | ![A blue fan, a band 20 mm wide between 2 arcs, sewn without underlay as a guided fill along an arc between them, its rows 1 mm apart, Parallel offset](../../images/generated/guided-offset-2.png) |
 <!-- /shot -->
 
 And the egg of `docs/fixtures/guided-egg.svg`, whose guide is a short line inside it, as a buffer:
 
 <!-- shot: guided-buffer -->
+| Buffer |
+|:-:|
+| ![A blue egg 37 mm wide sewn without underlay as a guided fill round a short line inside it, its rows rings round the line, 1 mm apart, each joined to the next, Buffer](../../images/generated/guided-buffer-1.png) |
 <!-- /shot -->
 
 A ring that closes inside the fill has no end on the outline for the needle to reach it by. Each such ring
@@ -101,6 +107,9 @@ it, so the rings' needle points line up along it. Draw it from the guide outward
 The egg of `docs/fixtures/guided-anchor.svg` has an anchor line from its guide to its top right:
 
 <!-- shot: guided-anchor -->
+| Buffer with an anchor line |
+|:-:|
+| ![A blue egg 37 mm wide sewn without underlay as a guided fill round a short line inside it, its rows rings round the line, 1 mm apart, each started where an anchor line from the guide to the egg's top right crosses it, Buffer with an anchor line](../../images/generated/guided-anchor-1.png) |
 <!-- /shot -->
 
 A buffer's rings don't stagger by their order. Each ring's stagger counts the row spacings it lies from the
