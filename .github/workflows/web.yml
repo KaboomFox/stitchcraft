@@ -78,10 +78,15 @@ jobs:
         run: |
           npm ci --prefix web
           (cd web && npx playwright install --with-deps chromium)
-          mkdir -p target/serve/pr
-          cp -a target/web/app target/serve/app
-          cp -a target/site target/serve/pr/123
-          python3 -I -m http.server 8766 --directory target/serve > "$RUNNER_TEMP/web-server.log" 2>&1 &
+          # The folder served is made new, outside `target`: the build cache brings `target` back from an
+          # earlier run, and `cp -a` into a folder that is already there copies beside the page, not over it.
+          serve="$RUNNER_TEMP/serve"
+          rm -rf "$serve"
+          mkdir -p "$serve/pr"
+          cp -a target/web/app "$serve/app"
+          cp -a target/site "$serve/pr/123"
+          test -f "$serve/app/index.html" && test -f "$serve/pr/123/index.html"
+          python3 -I -m http.server 8766 --directory "$serve" > "$RUNNER_TEMP/web-server.log" 2>&1 &
           for attempt in {1..30}; do
             if curl -fsS http://127.0.0.1:8766/app/ -o /dev/null; then break; fi
             sleep 1

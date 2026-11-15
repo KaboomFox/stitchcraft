@@ -22,6 +22,8 @@ try {
   page.on('console', message => said.push(`${message.type()}: ${message.text()}`.slice(0, 400)));
   page.on('requestfailed', request => failures.push(`${request.failure()?.errorText} ${request.url()}`));
   await page.goto(url.href, {waitUntil: 'domcontentloaded', timeout: 60000});
+  // Anything else served at the address, a folder's listing say, fails at once and by name.
+  assert.ok(await page.locator('#vectorcraft_canvas').count(), `${url.href} is not the editor's page`);
   try {
     await page.waitForFunction(() => Boolean(window.stitchcraftReady), null, {timeout: 180000});
   } catch (error) {
