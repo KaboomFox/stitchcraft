@@ -200,14 +200,6 @@ try {
   results.speed = {design: TIMED.design, shapes: runs[0].shapes, runs, limit_ms: LIMIT_MS,
     middle_ms: {turn: middle(runs.map(run => run.turn_ms)), export: middle(runs.map(run => run.export_ms).filter(Number.isFinite)) ?? null}};
   faults.push(...overLimit(runs, LIMIT_MS));
-  // The other traced photos, each with the Auto effect, exported by the panel alone.
-  for (const photo of PANEL_ONLY) {
-    const turn = await turned(photo);
-    assert.ok(turn.shapes > 0, `${photo.design} has shapes`);
-    results.parity.push({design: photo.design, panel: await panel(photo.design)});
-    console.log(`${photo.design}, the panel: ${JSON.stringify(results.parity.at(-1).panel)}`);
-  }
-
   // What a person sees: the photo's shapes with their stitches drawn, the demo's panel folded away.
   await page.evaluate(async () => {
     for (const panel of document.querySelectorAll('details')) panel.open = false;
@@ -216,6 +208,14 @@ try {
   await mkdir(join(work, 'after'), {recursive: true});
   await page.screenshot({path: join(work, 'after', 'editor.png')});
   results.editor = 'editor.png';
+  // The other traced photos, each with the Auto effect, exported by the panel alone. They come after the picture, which
+  // stays the first photo's, as main's is.
+  for (const photo of PANEL_ONLY) {
+    const turn = await turned(photo);
+    assert.ok(turn.shapes > 0, `${photo.design} has shapes`);
+    results.parity.push({design: photo.design, panel: await panel(photo.design)});
+    console.log(`${photo.design}, the panel: ${JSON.stringify(results.parity.at(-1).panel)}`);
+  }
   if (failures.length) faults.push(`the page threw: ${failures.join('; ').slice(0, 1200)}`);
 } finally {
   await browser.close();
