@@ -19,7 +19,7 @@ fn path(points: &[(f64, f64)]) -> Path {
 
 /// A guided fill along the polyline `guide`, its copies `spacing` apart, in stitches of 3 mm staggered over 4
 /// rows, with no underlay and no tatami fill to fall back to.
-fn guided(guide: &[(f64, f64)], spacing: f64) -> Guided {
+pub(super) fn guided(guide: &[(f64, f64)], spacing: f64) -> Guided {
     Guided {
         guide: Some(path(guide)),
         anchor: None,
@@ -434,4 +434,173 @@ fn req_fill_gdd_012_a_closed_row_starts_where_the_anchor_line_crosses_it() {
         rows_of(&piece, &rings, guided, &guide, &SplitMix64::new(7), &mut false, meter).unwrap().unwrap()
     };
     assert_ne!(lines(&aside, meter), lines(&buffered(Some(path(&[(5.0, 2.0), (5.0, -1.0)]))), meter));
+}
+
+/// How far `q` lies from the line through `line`.
+fn away(q: Point, line: &[(f64, f64)]) -> f64 {
+    line.windows(2)
+        .map(|side| {
+            let (a, b) = (p(side[0].0, side[0].1), p(side[1].0, side[1].1));
+            let t = (((q.x() - a.x()) * (b.x() - a.x()) + (q.y() - a.y()) * (b.y() - a.y())) / a.distance(b).powi(2)).clamp(0.0, 1.0);
+            q.distance(a.lerp(b, t))
+        })
+        .fold(f64::INFINITY, f64::min)
+}
+
+/// The rows the parallel offset of `guide` gives over a rectangle 10 mm wide and 4 mm high, `spacing` apart.
+fn offsets(guide: &Guided) -> Vec<Vec<Point>> {
+    let meter = &mut Budget::DEFAULT.meter();
+    let piece = rectangle(4.0);
+    let rings = Rings::new(&piece, meter).unwrap();
+    let line = guide_of(guide, meter).unwrap().unwrap();
+    offset::rows(&piece, &rings, &line.lines[0], guide, meter).unwrap()
+}
+
+#[test]
+fn req_fill_gdd_009_parallel_offset_s_rows_lie_whole_row_spacings_from_the_guide() {
+    // A guide bent above the rectangle's top side, from (-1, -1) over (5, 1) to (11, -1): it is offset as
+    // drawn, not opened, and lengthened level at both ends.
+    let bent = [(-1.0, -1.0), (5.0, 1.0), (11.0, -1.0)];
+    let offset = Guided { strategy: Strategy::Offset, ..guided(&bent, 0.5) };
+    let line = guide_of(&offset, &mut Budget::DEFAULT.meter()).unwrap().unwrap();
+    assert_eq!(line.lines, [bent.map(|(x, y)| p(x, y)).to_vec()]);
+    let rows = offsets(&offset);
+    // It meets the piece, so the rows start from it: row 0, a ten-thousandth of a CSS pixel off it, and on
+    // down as the drawing shows them to row 8, the last that meets the piece, then row -1 above it.
+    let lengthened = [(-100.0, -1.0), (-1.0, -1.0), (5.0, 1.0), (11.0, -1.0), (100.0, -1.0)];
+    let numbers: Vec<f64> = rows.iter().map(|row| (away(row[1], &lengthened) / 0.5).round() * if row[1].y() < -1.0 { -1.0 } else { 1.0 }).collect();
+    assert_eq!(numbers, [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, -1.0]);
+    assert!((away(rows[0][1], &lengthened) - offset::ROW_0).abs() < 1e-12, "{}", away(rows[0][1], &lengthened));
+    // Every point of every row lies its row's distance from the guide, round the bend too, where a copy
+    // moved straight down would lie nearer.
+    for (row, number) in rows.iter().zip(&numbers).skip(1) {
+        assert!(row.len() > 4, "{row:?}");
+        for q in row.iter().filter(|q| q.x().abs() < 20.0) {
+            assert!((away(*q, &lengthened) - number.abs() * 0.5).abs() < 1e-9, "{q:?} of row {number}");
+        }
+    }
+    let copied = Guided { strategy: Strategy::Copy, ..offset.clone() };
+    let copies = rows_of_guide(&copied);
+    assert!(copies.iter().flatten().any(|q| (0.0..10.0).contains(&q.x()) && (away(*q, &lengthened) / 0.5).fract() > 0.02));
+    // The copy angle moves copies alone.
+    assert_eq!(offsets(&Guided { angle: Some(45.0), ..offset.clone() }), rows);
+    // A guide of no length gives no line to offset.
+    let dot = Guided { guide: Some(path(&[(5.0, 5.0), (5.0, 5.0)])), ..offset };
+    assert!(guide_of(&dot, &mut Budget::DEFAULT.meter()).unwrap().is_none());
+}
+
+/// The rows a copied `guide` gives over the rectangle.
+fn rows_of_guide(guide: &Guided) -> Vec<Vec<Point>> {
+    rows(&rectangle(4.0), guide)
+}
+
+#[test]
+fn req_fill_gdd_009_a_closed_guide_is_offset_as_a_ring_inward_and_outward() {
+    // A square ring 2 mm a side inside the rectangle, drawn closed: rows 0 and 1 inside it, where row 2
+    // would be a point, and rows -1 to -4 round it, the last 2 across the rectangle's long sides.
+    let ring = [(4.0, 1.0), (6.0, 1.0), (6.0, 3.0), (4.0, 3.0), (4.0, 1.0)];
+    let offset = Guided { strategy: Strategy::Offset, ..guided(&ring, 0.5) };
+    let rows = offsets(&offset);
+    let reach: Vec<f64> = rows.iter().map(|row| row.iter().map(|q| (q.y() - 2.0).abs()).fold(0.0, f64::max)).collect();
+    let rounded: Vec<f64> = reach.iter().map(|r| (r * 2.0).round() / 2.0).collect();
+    assert_eq!(rounded, [1.0, 0.5, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0]);
+    // Shrunk, it closes. Grown, it starts and ends at the ring's first point moved off its 2 sides.
+    assert_eq!(rows[1], [p(4.5, 1.5), p(5.5, 1.5), p(5.5, 2.5), p(4.5, 2.5), p(4.5, 1.5)]);
+    assert_eq!((rows[2][0], rows[2][rows[2].len() - 1]), (p(4.0, 0.5), p(3.5, 1.0)));
+    // The rings inside the piece are joined, and the fill sews in one go.
+    let sewn = sew(&rectangle(4.0), &offset);
+    assert_eq!((sewn.runs.len(), codes(&sewn)), (1, vec![]));
+    // A closed guide that crosses itself is no ring. Its ends are one point, so it isn't lengthened, and made
+    // one line it keeps one loop, here the triangle left of its crossing at (5, 2), which row 0 follows.
+    let eight = [(4.0, 1.0), (6.0, 3.0), (6.0, 1.0), (4.0, 3.0), (4.0, 1.0)];
+    let crossed = offsets(&Guided { strategy: Strategy::Offset, ..guided(&eight, 0.5) });
+    let corners: Vec<(f64, f64)> = crossed[0].iter().map(|q| ((q.x() * 1e3).round() / 1e3, (q.y() * 1e3).round() / 1e3)).collect();
+    assert_eq!(corners, [(4.0, 1.0), (5.0, 2.0), (4.0, 3.0), (4.0, 1.0)]);
+}
+
+#[test]
+fn req_fill_gdd_010_a_buffered_guide_is_every_subpath_with_some_length() {
+    let meter = &mut Budget::DEFAULT.meter();
+    let line = |from: (f64, f64), to: (f64, f64)| Subpath { start: p(from.0, from.1), segments: vec![Drawn::Line(p(to.0, to.1))], closed: false };
+    let two = Path { subpaths: vec![line((6.0, 1.0), (4.0, 1.0)), line((5.0, 5.0), (5.0, 5.0)), line((4.0, 3.0), (6.0, 3.0))] };
+    let buffer = Guided { strategy: Strategy::Buffer, guide: Some(two.clone()), anchor: Some(two.clone()), ..guided(&[(0.0, 0.0)], 0.5) };
+    // The 2 lines, each from its lesser end and the greater first, without the dot, and the anchor line's
+    // subpaths as they are. The angle is the first subpath's, as drawn: right to left.
+    let guide = guide_of(&buffer, meter).unwrap().unwrap();
+    assert_eq!(guide.lines, [vec![p(4.0, 3.0), p(6.0, 3.0)], vec![p(4.0, 1.0), p(6.0, 1.0)]]);
+    assert_eq!(guide.anchor, [vec![p(6.0, 1.0), p(4.0, 1.0)], vec![p(5.0, 5.0)], vec![p(4.0, 3.0), p(6.0, 3.0)]]);
+    assert_eq!(guide.angle, 180.0);
+    // The other strategies take the first subpath alone.
+    let first = guide_of(&Guided { strategy: Strategy::Offset, ..buffer.clone() }, meter).unwrap().unwrap();
+    assert_eq!(first.lines, [vec![p(6.0, 1.0), p(4.0, 1.0)]]);
+    // Dots alone are no guide, and neither is a path of no subpath.
+    let dots = Guided { guide: Some(Path { subpaths: vec![line((5.0, 5.0), (5.0, 5.0))] }), ..buffer.clone() };
+    assert!(guide_of(&dots, meter).unwrap().is_none());
+    assert!(guide_of(&Guided { guide: Some(Path { subpaths: Vec::new() }), ..buffer.clone() }, meter).unwrap().is_none());
+    let sewn = sew(&rectangle(4.0), &Guided { plain: Plain { fill: Some(plain()), said: Vec::new() }, ..dots });
+    assert_eq!(codes(&sewn), [Code::FillGuidedNoGuide]);
+    assert_eq!(sewn.warnings[0].message, "This guided fill's guide line has no length, so the fill is sewn as a tatami fill with its own settings.");
+    // The rings round the 2 lines are apart for the first 2 rows and one from the third: 2, 2, 1, and so on.
+    let piece = rectangle(4.0);
+    let rings = Rings::new(&piece, meter).unwrap();
+    let rows = buffer::rows(&piece, &rings, &guide.lines, &buffer, &mut false, meter).unwrap();
+    let starts: Vec<(f64, f64)> = rows.iter().take(5).map(|row| (row[0].x(), (row[0].y() * 1e3).round() / 1e3)).collect();
+    assert_eq!(starts, [(6.0, 3.25), (6.0, 1.25), (6.0, 3.75), (6.0, 1.75), (6.0, 4.25)]);
+}
+
+#[test]
+fn the_strategies_read_by_ink_stitch_s_numbers_and_say_what_their_rows_miss() {
+    let read = |id: &str| GuidedParams::from_set_as(&[("guided_fill_strategy", id)].into_iter().collect(), StitchType::GuidedFill).unwrap().params.strategy();
+    assert_eq!((read("0"), read("1"), read("2")), (Strategy::Copy, Strategy::Offset, Strategy::Buffer));
+    assert_eq!(STRATEGIES.iter().map(|option| (option.id, option.label, option.offered)).collect::<Vec<_>>(), [
+        ("0", "Copy", true),
+        ("1", "Parallel offset", true),
+        ("2", "Buffer", true)
+    ]);
+    let said = |strategy, unjoined| {
+        Tally { pieces: 2, missed: 1, outlined: 0, unjoined, strategy }.said().map(|d| (d.code, d.message)).collect::<Vec<_>>()
+    };
+    let rest = "1 of its parts, so that part is sewn as a tatami fill at the angle of the line between the guide's ends.";
+    assert_eq!(said(None, false), [(Code::FillGuidedMissed, format!("No copy of this guided fill's guide meets {rest}"))]);
+    assert_eq!(said(Some(Strategy::Offset), false), [(Code::FillGuidedMissed, format!("No offset curve of this guided fill's guide meets {rest}"))]);
+    let rings = said(Some(Strategy::Buffer), true);
+    assert_eq!(rings[0], (Code::FillGuidedMissed, format!("No ring round this guided fill's guide leaves a row in {rest}")));
+    assert_eq!(rings[1].0, Code::InternalCheckFailed);
+    assert!(rings[1].1.starts_with("The edges of a ring round this guided fill's guide didn't join into rings"), "{}", rings[1].1);
+    assert_eq!(rings.len(), 2);
+    // A strip between the rows of each strategy falls back to a tatami fill, and each says so in its words:
+    // 1.3 to 1.7 mm below the guide, between the offset curves 1 and 2 mm from it, and 1.6 to 1.9 mm below it,
+    // between the rings 1.5 and 2.5 mm from it.
+    let strip = |from: f64, to: f64| Polygon { outline: vec![p(0.0, from), p(0.0, to), p(10.0, to), p(10.0, from), p(0.0, from)], holes: Vec::new() };
+    let cases = [
+        (Strategy::Offset, strip(0.3, 0.7), "No offset curve of this guided fill's guide meets it"),
+        (Strategy::Buffer, strip(0.6, 0.9), "No ring round this guided fill's guide leaves a row in it"),
+    ];
+    for (strategy, strip, words) in cases {
+        let sewn = sew(&strip, &Guided { strategy, ..guided(&[(0.0, -1.0), (10.0, -1.0)], 1.0) });
+        assert_eq!(codes(&sewn), [Code::FillGuidedMissed, Code::FillTooThin], "{strategy:?}");
+        assert!(sewn.warnings[0].message.starts_with(words), "{}", sewn.warnings[0].message);
+    }
+}
+
+/// Whether `ask` runs out of each of the budgets from 0 up to the work it takes, `step` apart, and that work.
+fn spends(ask: impl Fn(&mut Meter) -> Result<(), Exhausted>, step: usize) -> u64 {
+    let mut meter = Budget::DEFAULT.meter();
+    ask(&mut meter).unwrap();
+    let work = Budget::DEFAULT.max_work - meter.work_left();
+    assert!((0..work).step_by(step).all(|less| ask(&mut Budget { max_stitches: u32::MAX, max_work: less }.meter()).is_err()), "{work}");
+    work
+}
+
+#[test]
+fn each_strategy_runs_out_of_a_budget_of_less_work_than_it_takes() {
+    let region = Region { parts: vec![rectangle(4.0)] };
+    let anchor = Some(path(&[(5.0, 2.0), (5.0, -1.0)]));
+    let buffer = Guided { strategy: Strategy::Buffer, anchor, smoothness: 0.2, ..guided(&[(4.0, 2.0), (6.0, 2.0)], 1.5) };
+    let offset = Guided { strategy: Strategy::Offset, ..guided(&[(4.0, 1.0), (6.0, 1.0), (6.0, 3.0), (4.0, 3.0), (4.0, 1.0)], 1.5) };
+    let sewn = |guided: &Guided, meter: &mut Meter| guided_fill(&region, guided, None, None, &mut SplitMix64::new(7), meter).map(|_| ());
+    let shown = |guided: &Guided, meter: &mut Meter| top_path(&region, guided, &SplitMix64::new(7), meter).map(|_| ());
+    let work = [spends(|meter| sewn(&buffer, meter), 53), spends(|meter| shown(&buffer, meter), 211)];
+    let offsets = [spends(|meter| sewn(&offset, meter), 2_003), spends(|meter| shown(&offset, meter), 9_001)];
+    assert!(work.iter().chain(&offsets).all(|work| *work > 5_000), "{work:?} {offsets:?}");
 }

@@ -272,8 +272,9 @@ fn ring_into_row(rings: &Rings<'_>, ring: &[Point], row: &[Point], spacing: f64,
         return Ok(None);
     }
     let parts: Vec<&[Point]> = parts.iter().map(Vec::as_slice).collect();
-    let ring = closed_up(ring);
-    let around = Along::new(&ring, meter)?;
+    // A ring already joined into a row is a line: the walk goes along it as it is, and it is closed where it
+    // is opened.
+    let around = Along::new(ring, meter)?;
     let along = Along::new(row, meter)?;
     let within = 1.5 * spacing;
     let mut offset = 0.0;
@@ -285,7 +286,7 @@ fn ring_into_row(rings: &Rings<'_>, ring: &[Point], row: &[Point], spacing: f64,
             let at = along.project(p3, meter)?.min(along.project(p4, meter)?);
             let before = sub(&along, 0.0, at);
             let after = sub(&along, at + spacing, along.length());
-            let opened = rolled(&ring, around.project(p1, meter)?, meter)?;
+            let opened = rolled(&closed_up(ring), around.project(p1, meter)?, meter)?;
             let opened_along = Along::new(&opened, meter)?;
             let mut middle = sub(&opened_along, spacing, opened_along.length());
             let joined = [before.as_slice(), &middle, &after].concat();
