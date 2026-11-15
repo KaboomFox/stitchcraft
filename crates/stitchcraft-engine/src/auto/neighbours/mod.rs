@@ -125,7 +125,8 @@ pub(super) struct Sewn {
 /// design has given out, the base layer sews before the first element that automatic digitizing made
 /// (`base`, `REQ-AUTO-028`).
 pub(super) fn beside(sewn: Vec<Sewn>, settings: &DesignSettings, budget: &Budget, sorted: bool, base: Option<(&AutoParams, &mut Labels)>) -> Beside {
-    let moving: Vec<order::Moving> = sewn.iter().map(|sewn| order::Moving { free: sorted || sewn.automatic, made: sewn.automatic, shape: sewn.shape }).collect();
+    let moving: Vec<order::Moving> =
+        sewn.iter().map(|sewn| order::Moving { free: sorted || sewn.automatic, made: sewn.automatic, shape: sewn.shape }).collect();
     let made: BTreeSet<ElementId> = sewn.iter().filter(|sewn| sewn.automatic).map(|sewn| sewn.element.id.clone()).collect();
     let mut shapes = Shapes::new(sewn, settings, budget);
     let mut said = specks::merged(&mut shapes, budget);

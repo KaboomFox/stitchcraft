@@ -234,7 +234,14 @@ impl<'r> Search<'r> {
     /// Sews `step` by `before` after the elements `done`, `sewing` the thread sewing, and gives the batches
     /// it sews, or `None` when it sews nothing: a thread with no free element, or an element that isn't
     /// free.
-    fn step(&self, before: &[Vec<usize>], done: &mut Done, sewing: &mut Thread, step: Move, meter: &mut Meter) -> Result<Option<Vec<Vec<usize>>>, Exhausted> {
+    fn step(
+        &self,
+        before: &[Vec<usize>],
+        done: &mut Done,
+        sewing: &mut Thread,
+        step: Move,
+        meter: &mut Meter,
+    ) -> Result<Option<Vec<Vec<usize>>>, Exhausted> {
         match step {
             Move::Thread(thread) => {
                 *sewing = thread;

@@ -163,7 +163,8 @@ fn an_element_waits_for_another_itself_or_through_those_between() {
 
 #[test]
 fn the_search_counts_what_is_left_and_what_is_missed() {
-    let several = Run { threads: vec![[RED; 2], [BLUE; 2], [RED, BLUE], [GREEN; 2], [BLUE; 2]], ..run(&[RED; 5], &[(0, 1)], &[(1, 0), (3, 0), (4, 3)]) };
+    let several =
+        Run { threads: vec![[RED; 2], [BLUE; 2], [RED, BLUE], [GREEN; 2], [BLUE; 2]], ..run(&[RED; 5], &[(0, 1)], &[(1, 0), (3, 0), (4, 3)]) };
     let search = Search::new(&several);
     let meter = || Budget::DEFAULT.meter();
     assert_eq!(search.plain, BTreeMap::from([(RED, vec![0]), (BLUE, vec![1, 4]), (GREEN, vec![3])]));
@@ -215,23 +216,24 @@ fn req_auto_037_no_order_of_a_small_run_changes_thread_less_than_the_one_found()
     // them: the batches found sew each element once, keep every rule and every wish granted, and change
     // thread as seldom as the best of every order the rules allow.
     let mut rng = stitchcraft_core::rng::SplitMix64::new(1322);
-    let mut draw = |below: u64| (rng.next_u64() % below) as usize;
+    let mut draw = |below: usize| usize::try_from(rng.next_u64() % u64::try_from(below).unwrap()).unwrap();
     let mut held_back = 0;
     for case in 0..300 {
         let count = 2 + draw(6);
         let thread = |index: usize| [RED, BLUE, GREEN][index];
-        let threads: Vec<[Thread; 2]> = (0..count).map(|_| if draw(8) == 0 { [thread(draw(3)), thread(draw(3))] } else { [thread(draw(3)); 2] }).collect();
+        let threads: Vec<[Thread; 2]> =
+            (0..count).map(|_| if draw(8) == 0 { [thread(draw(3)), thread(draw(3))] } else { [thread(draw(3)); 2] }).collect();
         // The elements wait only for those before them in an order drawn for the run, so none waits for
         // itself.
         let mut places: Vec<usize> = (0..count).collect();
-        (1..count).rev().for_each(|last| places.swap(last, draw(last as u64 + 1)));
+        (1..count).rev().for_each(|last| places.swap(last, draw(last + 1)));
         let pairs: Vec<(usize, usize)> = (0..count).flat_map(|first| (first + 1..count).map(move |then| (first, then))).collect();
         let mut before = vec![Vec::new(); count];
         let mut wished = Vec::new();
         for (first, then) in pairs {
             match draw(6) {
                 0 | 1 => before[places[then]].push(places[first]),
-                2 => wished.push((places[draw(count as u64)], places[then])),
+                2 => wished.push((places[draw(count)], places[then])),
                 _ => {}
             }
         }
