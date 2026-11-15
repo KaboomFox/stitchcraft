@@ -1172,9 +1172,9 @@ registry! {
     /// `--auto` flattens the layers of a traced picture before it digitizes them. Each automatic area sews
     /// only what shows of it: the automatic areas drawn over it are taken from it, a hairline that rounding
     /// leaves along their edges shows nothing, and one they cover whole sews nothing (SC-I0904). An automatic
-    /// area that is filled (wider than a satin column somewhere, or compact, or uneven: `SC-I0912`) is
-    /// digitized whole under its details, the automatic areas that fill its holes: its stitches are chosen
-    /// with those holes closed, it sews before its details, and it
+    /// area that is filled (wider than a satin column somewhere, 7 mm unless `auto_max_satin_width_mm` says
+    /// another, or compact, or uneven: `SC-I0912`) is digitized whole under its details, the automatic areas
+    /// that fill its holes: its stitches are chosen with those holes closed, it sews before its details, and it
     /// is cut away under them, its overlap inside their edges. So a picture traced with its colours stacked
     /// sews as one traced with its colours abutting, and a broad area with details on it is one fill, not
     /// narrow columns between the details. An area that sews as satin columns, such as a letter or an
@@ -1226,7 +1226,7 @@ registry! {
     /// of one table that the part matches. The message names that rule for each part, with the measures
     /// that decided it: the part's width along its centre lines, its slenderness (its area over its width
     /// squared), how much its width varies along those lines, and how many of them it has. A shape of many
-    /// parts gives the measures of its first 6 and counts the rest by rule.
+    /// parts gives the measures of its first 3 and counts the rest by rule.
     ///
     /// To sew the shape another way, set `auto_stitch` on it to `run`, `satin` or `fill`: in VectorCraft,
     /// in the dialog of StitchCraft's Auto effect. For the whole design, lean the rules with `auto_prefer`,

@@ -192,16 +192,23 @@ fn diag_sc_i0912_names_each_part_s_rule_and_the_measures_that_decided_it() {
     .map(|fired| fired.text());
     let uneven = "uneven (2 mm wide, slenderness 10.0, width varying by 0.40, 3 centre lines)";
     assert_eq!(texts, ["speck (0.75 mm²)", "line (0.6 mm wide)", "column (3 mm wide)", "area", "refused", uneven]);
-    // Several parts are numbered, the first 6 with their measures, and the rest counted by rule in the table's
+    // Several parts are numbered, the first 3 with their measures, and the rest counted by rule in the table's
     // order.
     let line = fired(RuleId::Line, None);
     let two = said(&id, &[fired(RuleId::Area, None), line]).unwrap();
     assert_eq!(two.message, "This shape's 2 parts sew by these rules, part 1: area, part 2: line.");
-    let six = said(&id, &[line; 6]).unwrap();
-    assert!(six.message.starts_with("This shape's 6 parts sew by these rules, part 1: line, ") && six.message.ends_with("part 6: line."), "{six}");
-    let mut many = vec![line; 7];
+    let three = said(&id, &[line; 3]).unwrap();
+    assert_eq!(three.message, "This shape's 3 parts sew by these rules, part 1: line, part 2: line, part 3: line.");
+    let mut many = vec![line; 4];
     many.extend([fired(RuleId::Column, None), fired(RuleId::Speck, None), fired(RuleId::Column, None)]);
     let many = said(&id, &many).unwrap();
-    assert!(many.message.starts_with("This shape's 10 parts sew by these rules, part 1: line, "), "{many}");
-    assert!(many.message.ends_with("part 6: line, and 4 more: 1 speck, 1 line, 2 column."), "{many}");
+    assert!(many.message.starts_with("This shape's 7 parts sew by these rules, part 1: line, "), "{many}");
+    assert!(many.message.ends_with("part 3: line, and 4 more: 1 speck, 1 line, 2 column."), "{many}");
+    // VectorCraft shows 500 characters of an export's warning, and cuts a longer one without saying so: the
+    // longest notice, of 3 measured parts and the rest counted under every rule, fits them with its code and
+    // a long id before it.
+    let mut most = vec![fired(RuleId::Uneven, Some(part(1234.5678, 6.999, 4.999, 12))); 3];
+    most.extend(RULES.iter().flat_map(|rule| [fired(rule.id, None); 99]));
+    let longest = said(&ElementId::new("a-layer-of-a-long-name:1234:fill").unwrap(), &most).unwrap().one_line();
+    assert!(longest.ends_with(", 99 column, 99 refused.") && longest.chars().count() <= 500, "{}: {longest}", longest.chars().count());
 }
