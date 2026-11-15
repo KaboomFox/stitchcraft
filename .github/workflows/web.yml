@@ -1,0 +1,175 @@
+# The browser demo: VectorCraft's web editor with StitchCraft's plug-ins, on GitHub Pages
+# (docs/src/design/vectorcraft-integration.md, Browser distribution; web/README.md).
+#
+# `build` runs for every pull request and every push to main, with read-only credentials. It builds the editor
+# from the release compat/vectorcraft.toml pins and the plug-ins from this revision, runs the demo in Chromium,
+# and keeps 2 folders: the pull request's preview (its book and its demo folder, without the editor) and the app.
+#
+# `publish` writes to the Pages branch, so it runs only for a push to main, which publishes /app/, and for a
+# pull request from a branch of this repository whose author is its owner, a member or a collaborator, which
+# publishes /pr/<number>/ and says so in a comment. A fork's pull request is built and checked, and nothing of
+# it is published. `cleanup` removes a preview when its pull request closes.
+#
+# Both jobs write through .github/scripts/publish-web.py, as docs.yml does for the book, so no run loses
+# another's folder (docs/src/design/docs-pipeline.md, Publishing).
+name: web
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A newer push replaces a pull request's run, and closing it stops a run that would publish after the cleanup.
+concurrency:
+  group: web-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+
+jobs:
+  build:
+    name: build (the editor, the plug-ins, the demo in Chromium)
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-24.04
+    # The editor's first build takes most of an hour, and later ones start from the cache.
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Pinned toolchain, and the wasm target the editor and the plug-ins build for
+        run: |
+          rustup toolchain install --profile minimal
+          rustup target add wasm32-unknown-unknown
+      - name: VectorCraft's source at the pinned release, before the cache's key is made from it
+        run: python3 -I web/build.py --prepare
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: |
+            . -> target
+            target/vectorcraft-web -> target
+      - uses: ./.github/actions/tools
+        with:
+          tools: trunk,wasm-bindgen,wasm-opt,mdbook
+      - name: Build the editor and the plug-ins
+        run: python3 -I web/build.py
+      - name: What the site would hold, as stored and as sent
+        run: python3 -I web/build.py --sizes | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: The scripts' and the publisher's own tests
+        run: |
+          node --test web/*.test.mjs
+          python3 -I -m unittest discover -s web -p 'test_*.py'
+      - name: The preview's folder, the book with the demo folder
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          if [ -n "$PR_NUMBER" ]; then dest="pr/$PR_NUMBER"; else dest=dev; fi
+          python3 -I web/site.py --base-path "/${GITHUB_REPOSITORY#*/}/${dest}/"
+      # The checks run on a copy of the site's layout: the editor at /app/, a preview at /pr/123/.
+      - name: The demo in Chromium, on its own and from a preview
+        run: |
+          npm ci --prefix web
+          (cd web && npx playwright install --with-deps chromium)
+          # The folder served is made new, outside `target`: the build cache brings `target` back from an
+          # earlier run, and `cp -a` into a folder that is already there copies beside the page, not over it.
+          serve="$RUNNER_TEMP/serve"
+          rm -rf "$serve"
+          mkdir -p "$serve/pr"
+          cp -a target/web/app "$serve/app"
+          cp -a target/site "$serve/pr/123"
+          test -f "$serve/app/index.html" && test -f "$serve/pr/123/index.html"
+          python3 -I -m http.server 8766 --directory "$serve" > "$RUNNER_TEMP/web-server.log" 2>&1 &
+          for attempt in {1..30}; do
+            if curl -fsS http://127.0.0.1:8766/app/ -o /dev/null; then break; fi
+            sleep 1
+          done
+          node web/smoke.mjs http://127.0.0.1:8766/app/ "$RUNNER_TEMP/app-screenshots"
+          node web/docs-smoke.mjs http://127.0.0.1:8766/pr/123/
+          node web/smoke.mjs 'http://127.0.0.1:8766/app/?preview=123' target/site/demo/screenshots
+          du -sb target/site target/site/demo target/web/app | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: preview
+          path: target/site
+          include-hidden-files: true
+          retention-days: 7
+      - if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: app
+          path: target/web/app
+          include-hidden-files: true
+          retention-days: 7
+
+  publish:
+    name: publish (main → /app/, a trusted pull request → /pr/<number>/)
+    needs: build
+    if: >-
+      (github.event_name != 'pull_request' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.head.repo.full_name == github.repository &&
+       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: ${{ github.event_name == 'pull_request' && 'preview' || 'app' }}
+          path: target/publish
+      - name: Publish the app or the preview
+        id: publish
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          if [ -n "$PR_NUMBER" ]; then dest="pr/$PR_NUMBER"; else dest=app; fi
+          python3 -I .github/scripts/publish-web.py "$dest" target/publish
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          echo "url=https://${owner}.github.io/${GITHUB_REPOSITORY#*/}/${dest}/" >> "$GITHUB_OUTPUT"
+      - name: Say where the preview is, in the pull request's one comment
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          PREVIEW_URL: ${{ steps.publish.outputs.url }}
+        with:
+          script: |
+            const comment = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/preview-comment.cjs`);
+            const body = comment(process.env.PREVIEW_URL, context.payload.pull_request.head.sha);
+            await comment.post({github, context, body});
+
+  cleanup:
+    name: cleanup (a closed pull request's preview)
+    if: >-
+      github.event_name == 'pull_request' && github.event.action == 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.pull_request.author_association)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      # The pull request's last commit, which GitHub keeps after its branch is deleted.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Remove the preview
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: python3 -I .github/scripts/publish-web.py "pr/$PR_NUMBER"
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const comment = require(`${process.env.GITHUB_WORKSPACE}/.github/scripts/preview-comment.cjs`);
+            await comment.post({github, context, body: comment.removed, create: false});

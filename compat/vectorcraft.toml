@@ -9,6 +9,15 @@ tag = "v0.22.0"
 # window`). A new tag needs its own, which the release lists in its `SHA256SUMS.txt`.
 linux-x86_64-sha256 = "6e812a92caec4dba23fd74734fa20a327886ef20427b55f2f887fe9334a0933f"
 
+# The release whose source the browser demo's editor is built from (`web/build.py`,
+# docs/src/design/vectorcraft-integration.md › Browser distribution), and the commit its tag names. It is
+# newer than the stable track's while that release lacks the page calls the demo uses (`uiInspect` and
+# `docInspect`, from 0.24). It is never older (`web/test_site.py`), and once the stable track reaches it, both
+# name the same release.
+[web]
+tag = "v0.24.1"
+revision = "f4922aa7ac99a4f6d56fc68a83a44945207ec610"
+
 [tracks.prerelease]
 # None newer than stable (VectorCraft's release workflow supports SemVer pre-releases such as 0.8.0-rc.1).
 tag = ""
