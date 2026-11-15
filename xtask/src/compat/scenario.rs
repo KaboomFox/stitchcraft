@@ -50,7 +50,18 @@
 //!
 //! **Why a heavy module is allowed.** VectorCraft 0.17 installs a filter that asks for a heavy budget only
 //! once the user allows it, with `allowHeavy: true`, which a run passes for each heavy module it installs
-//! (Stroke to Satin's, `super::heavy`).
+//! (Stroke to Satin's, `super::heavy`). VectorCraft 0.23 takes `allowHeavy` from a request only in a session
+//! its command line was started in with `--allow-plugin-grants` ([`GRANTS`]): a request alone can't say that
+//! a person agreed. Whoever starts the gate is that person, so a run that installs a heavy module starts with
+//! the option when the command line's help names it. An earlier command line refuses the option as unknown
+//! ([`takes_grants`]).
+//!
+//! **Why a run has no preferences.** VectorCraft's command line keeps each module it installs in the
+//! `Plug-ins` folder beside the user's preferences, and installs it again at its next start. A run would
+//! then start with the modules of the runs before it, on a contributor's computer those of their own
+//! VectorCraft too, and VectorCraft 0.23 refuses a module built since then under an id it holds. With
+//! [`NO_PREFS`] set there is no such folder, so each run starts with what it installs and leaves nothing
+//! behind. The docs' shots keep a heavy module in a profile of their own instead ([`install_into`]).
 //!
 //! A file is sewn as `stitch plan` sews it without `--profile`, for the machine it keeps or else the
 //! reference machine, into a PES file ([`stitchcraft_cli::commands::plan::sew`]). Comparing two is comparing
@@ -84,7 +95,7 @@ use stitchcraft_plan::{FormatId, StitchKind};
 use stitchcraft_vc_plugin::testsheet;
 use stitchcraft_vectorcraft::{EXTENSIONS, effect_id, effect_name, param_text, plugin_id};
 
-use super::{install, kind};
+use super::{heavy, install, kind};
 use crate::util;
 
 /// Where the scenarios are.
@@ -95,6 +106,15 @@ const EDGE: f64 = 0.1;
 /// How often a run of `vectorcraft-cli` is looked at, and how many looks it gets before it counts as hung:
 /// 10 minutes. Counted in looks, as budgets are counted in work, not read from a clock.
 const LOOK: Duration = Duration::from_millis(50);
+/// The option of `vectorcraft-cli run` that lets a request's `allowHeavy` take effect, from VectorCraft 0.23
+/// (its `docs/plugins.md`).
+const GRANTS: &str = "--allow-plugin-grants";
+/// The variable that has VectorCraft keep no preferences, and so no folder of installed plug-ins (its
+/// `docs/development.md`).
+const NO_PREFS: &str = "VECTORCRAFT_NO_PREFS";
+/// The variable that names the folder VectorCraft keeps its preferences and installed plug-ins in, a profile
+/// (its `docs/control-protocol.md`).
+pub(crate) const PROFILE: &str = "VECTORCRAFT_CONFIG_DIR";
 const LOOKS: u32 = 12_000;
 /// The design name the machine files compared are written with, so that only the stitches differ.
 const NAME: &str = "compat";
@@ -535,13 +555,16 @@ fn stitch_once(run: &Run, number: usize, cli: &Path, out: &Path) -> Result<(), S
     }
 }
 
-/// The arguments of `vectorcraft-cli` for `run`: open the file it names in `out`, install the modules it
-/// names from `plugins`, and run its steps with exports into `out`, each module asked for its last error
-/// after each export that draws.
-fn arguments(run: &Run, plugins: &Path, out: &Path) -> Result<Vec<String>, String> {
+/// The arguments of `vectorcraft-cli` for `run`: [`GRANTS`] when `grants` says so, open the file it names in
+/// `out`, install the modules it names from `plugins`, and run its steps with exports into `out`, each
+/// module asked for its last error after each export that draws.
+fn arguments(run: &Run, plugins: &Path, out: &Path, grants: bool) -> Result<Vec<String>, String> {
     let path = |dir: &Path, file: &str| dir.join(file).to_string_lossy().into_owned();
     let command = |id: &str, params: Value| ["--cmd".to_string(), id.to_string(), "--params".to_string(), params.to_string()];
     let mut args = vec!["run".to_string()];
+    if grants {
+        args.push(GRANTS.to_string());
+    }
     if let Some(open) = &run.open {
         args.extend(["--in".to_string(), path(out, open)]);
     }
@@ -601,7 +624,7 @@ pub fn run(scenario: &Scenario, cli: &Path, plugins: &Path, out: &Path) -> Vec<S
             std::fs::write(out.join(file), bytes).map_err(|e| format!("run {number}: {file}: {e}"))
         });
         let ran_once = made.and_then(|()| {
-            if run.stitch.is_empty() { run_once(run, number, cli, plugins, out, &mut ran) } else { stitch_once(run, number, cli, out) }
+            if run.stitch.is_empty() { run_once(run, number, cli, plugins, out, &mut ran, None) } else { stitch_once(run, number, cli, out) }
         });
         if let Err(failure) = ran_once {
             return vec![failure];
@@ -614,14 +637,36 @@ pub fn run(scenario: &Scenario, cli: &Path, plugins: &Path, out: &Path) -> Vec<S
 /// `plugins`, as a scenario's run is made and checked: the docs' VectorCraft shots draw their documents so.
 pub(crate) fn draw(run: &Run, cli: &Path, plugins: &Path, out: &Path) -> Result<(), String> {
     std::fs::create_dir_all(out).map_err(|e| format!("{}: {e}", util::rel(out)))?;
-    run_once(run, 1, cli, plugins, out, &mut Ran::default())
+    run_once(run, 1, cli, plugins, out, &mut Ran::default(), None)
+}
+
+/// Installs `modules`, from `plugins`, into `profile`: a folder of VectorCraft's preferences ([`PROFILE`]),
+/// which this makes. The `vectorcraft-cli` at `cli` installs each as a run installs it, and what it said is
+/// kept in `out`. VectorCraft keeps a module it installs in its profile and installs it again whenever it
+/// starts with that profile, its app too. So the app shows a heavy module, which the app of VectorCraft 0.23
+/// installs from a request only once a person has approved it in its window.
+pub(crate) fn install_into(profile: &Path, modules: &[String], cli: &Path, plugins: &Path, out: &Path) -> Result<(), String> {
+    for dir in [profile, out] {
+        std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", util::rel(dir)))?;
+    }
+    let run = Run { plugins: modules.to_vec(), ..Run::default() };
+    run_once(&run, 1, cli, plugins, out, &mut Ran::default(), Some(profile))
+}
+
+/// Whether the `vectorcraft-cli` at `cli` takes [`GRANTS`], which its help says: VectorCraft has the option
+/// from 0.23, and an earlier command line refuses it as unknown and takes `allowHeavy` from any request.
+fn takes_grants(cli: &Path) -> Result<bool, String> {
+    let help = util::output(Command::new(cli).arg("--help")).map_err(|e| format!("{}: {e}", cli.display()))?;
+    Ok(String::from_utf8_lossy(&help.stdout).contains(GRANTS))
 }
 
 /// One run: `vectorcraft-cli` and what its results say, and its last step's error when it must fail. Its
-/// exports' effects go to `ran`.
-fn run_once(run: &Run, number: usize, cli: &Path, plugins: &Path, out: &Path, ran: &mut Ran) -> Result<(), String> {
-    let args = arguments(run, plugins, out)?;
-    let (results, failed) = launch(cli, &args, &out.join(format!("run-{number}")))?;
+/// exports' effects go to `ran`. It keeps its preferences and plug-ins in `profile`, or has none.
+fn run_once(run: &Run, number: usize, cli: &Path, plugins: &Path, out: &Path, ran: &mut Ran, profile: Option<&Path>) -> Result<(), String> {
+    // Only a run that installs a heavy module asks for the option, and only of a command line that has it.
+    let grants = run.plugins.iter().any(|module| heavy(module)) && takes_grants(cli).map_err(|e| format!("run {number}: {e}"))?;
+    let args = arguments(run, plugins, out, grants)?;
+    let (results, failed) = launch(cli, &args, &out.join(format!("run-{number}")), profile)?;
     let failing = run.steps.last().and_then(|step| Some((step.export.as_deref()?, step.fails.as_deref()?)));
     match (failed, failing) {
         (Some(failure), None) => return Err(format!("run {number}: {failure}")),
@@ -696,12 +741,19 @@ fn run_once(run: &Run, number: usize, cli: &Path, plugins: &Path, out: &Path, ra
 
 /// Runs `cli` with `args`, its output in files named `stem` with `.out` and `.err`, and returns the JSON
 /// results it printed, one a line, and when its exit status is a failure, that status with the end of what
-/// it wrote to stderr. It fails when `cli` doesn't start or its time runs out.
-fn launch(cli: &Path, args: &[String], stem: &Path) -> Result<(Vec<Value>, Option<String>), String> {
+/// it wrote to stderr. It fails when `cli` doesn't start or its time runs out. `cli` keeps its preferences
+/// and the plug-ins it installs in `profile`, and without one it has no preferences ([`NO_PREFS`]).
+fn launch(cli: &Path, args: &[String], stem: &Path, profile: Option<&Path>) -> Result<(Vec<Value>, Option<String>), String> {
     let (out_path, err_path) = (stem.with_extension("out"), stem.with_extension("err"));
     let file = |path: &Path| std::fs::File::create(path).map_err(|e| format!("{}: {e}", util::rel(path)));
-    let mut child = util::spawn(Command::new(cli).args(args).stdin(Stdio::null()).stdout(file(&out_path)?).stderr(file(&err_path)?))
-        .map_err(|e| format!("{}: {e}", cli.display()))?;
+    let mut command = Command::new(cli);
+    command.args(args).stdin(Stdio::null()).stdout(file(&out_path)?).stderr(file(&err_path)?);
+    match profile {
+        // VectorCraft keeps no preferences while the other variable is set, whatever folder this one names.
+        Some(profile) => command.env(PROFILE, profile).env_remove(NO_PREFS),
+        None => command.env(NO_PREFS, "1"),
+    };
+    let mut child = util::spawn(&mut command).map_err(|e| format!("{}: {e}", cli.display()))?;
     let mut looks = 0;
     let status = loop {
         match child.try_wait().map_err(|e| format!("{}: {e}", cli.display()))? {

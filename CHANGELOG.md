@@ -1853,6 +1853,21 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   codes) and the first-sew-out tutorial with real output.
 
 ### Changed
+- compat: the plug-ins and the compatibility gate work with VectorCraft 0.24.1, which the gate now pins
+  (0.22.0 before). VectorCraft 0.23.0 and 0.24.0 came out in between and never ran through the gate, so
+  `compat/supported.toml` has no row for them.
+  - From VectorCraft 0.23 a filter with a heavy budget, such as Stroke to Satin, is installed only
+    once a person allows it: with **OK** in the app, or by starting `vectorcraft-cli` with
+    `--allow-plugin-grants`. The install page says how. The gate's runs that install such a filter start
+    with that option when the command line has it.
+  - Each of the gate's runs of `vectorcraft-cli` has `VECTORCRAFT_NO_PREFS` set. It doesn't keep plug-ins
+    for the next run, or leave any in the VectorCraft of whoever runs the gate.
+  - The docs' pictures of VectorCraft's window get Stroke to Satin from a profile that `vectorcraft-cli`
+    installed it into, since the app takes it from no request.
+  - The window probe no longer fits the artboard again before a screenshot: from 0.23 VectorCraft's opening
+    fit follows the canvas while the window settles.
+  - The contract tests build against 0.23's `effect::apply`, which takes the document, and 0.24's paints,
+    which can name the stage.
 - M13.22: automatic digitizing sews the elements in the order that changes thread least (`REQ-AUTO-037`,
   `stitchcraft_engine::auto::neighbours::order`). Each change is a rethread by hand on a machine with one
   needle.
