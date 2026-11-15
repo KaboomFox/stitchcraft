@@ -751,6 +751,10 @@ running stitch, and each step between turns another, as for the contour fill's s
 - **No piece**: a part that lies between 2 turns of the spiral sews a running stitch round its outline
   from the outline's start. Ink/Stitch's falls back to the same, and `SC-W0305` says so.
 
+The route joins pieces by the rings their ends lie on. Should no piece join 2 such rings, the needle
+jumps, which for a circular fill is a bug (`SC-E0009`). A guided fill's rows can lie so, and it says
+`SC-W0333` instead ([guided fill](guided.md#sewing-the-lines)).
+
 A part that lies within its row spacing of its middle is too small for the spiral. It is sewn as one
 circle with a radius of the row spacing round its middle, from the circle's right-hand point, as Ink/Stitch
 sews it. `SC-W0318` says so, as the circle may stick out of so small a part.

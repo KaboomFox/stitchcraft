@@ -154,7 +154,7 @@ pub(super) fn segmentized(line: &[Point], longest: f64, meter: &mut Meter) -> Re
         let (p, q) = (side[0], side[1]);
         let length = p.distance(q);
         #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)] // A count of parts held to the meter.
-        let parts = if longest > 0.0 && length > longest { (length / longest).ceil() as u64 } else { 1 };
+        let parts = if longest > 0.0 { (length / longest).ceil().max(1.0) as u64 } else { 1 };
         for k in 1..parts {
             meter.charge(1)?;
             #[allow(clippy::cast_precision_loss)] // Counts far below 2⁵².
@@ -195,6 +195,9 @@ mod tests {
     fn a_line_is_closed_and_a_ring_turned_counter_clockwise_keeps_its_start() {
         let open = [p(0.0, 0.0), p(4.0, 0.0), p(4.0, 4.0)];
         assert!(!closed(&open) && !closed(&open[..1]));
+        // 2 points at one place close nothing, and a ring of no area doesn't run counter-clockwise.
+        assert!(!closed(&[p(1.0, 1.0), p(1.0, 1.0)]));
+        assert!(!counter_clockwise(&[p(0.0, 0.0), p(4.0, 0.0), p(0.0, 0.0)]));
         let ring = closed_up(&open);
         assert_eq!(xy(&ring), [(0.0, 0.0), (4.0, 0.0), (4.0, 4.0), (0.0, 0.0)]);
         assert_eq!(closed_up(&ring), ring);
@@ -225,6 +228,14 @@ mod tests {
         // Its ends on the edge and its middle inside, but crossing the edge on the way: a corner cut off.
         let corner = [p(0.0, 3.0), p(2.0, 5.0), p(4.0, 3.0)];
         assert!(!covered(&rings, &corner, meter).unwrap());
+        // Round a hole 2 mm square from x = 4 to 6: a side across the hole from edge to edge has its ends on
+        // the edge and its middle in the hole, and a side from left of the hole to right of it has its ends and
+        // its middle covered, and crosses the hole's left edge.
+        let frame = crate::generators::tatami::fixture::frame();
+        let holed = Rings::new(&frame, meter).unwrap();
+        assert!(!covered(&holed, &[p(4.0, 2.0), p(6.0, 2.0)], meter).unwrap());
+        assert!(!covered(&holed, &[p(3.0, 2.0), p(9.0, 2.0)], meter).unwrap());
+        assert!(covered(&holed, &[p(1.0, 2.0), p(3.0, 2.0)], meter).unwrap());
     }
 
     #[test]
@@ -242,6 +253,12 @@ mod tests {
         let parts: Vec<_> = inside(&line, &rings, meter).unwrap().iter().map(|part| xy(part)).collect();
         assert_eq!(parts, [vec![(1.0, 2.0), (3.0, 2.0), (3.0, 4.0)], vec![(5.0, 4.0), (5.0, 2.0), (10.0, 2.0)]]);
         assert!(inside(&[p(-1.0, -1.0), p(-1.0, 5.0)], &rings, meter).unwrap().is_empty());
+        // Down to the bottom side, along it and up again: cut where it reaches the side and where it leaves it,
+        // each corner met once, and every stretch covered.
+        let along = [p(5.0, 2.0), p(5.0, 4.0), p(8.0, 4.0), p(8.0, 2.0)];
+        let parts: Vec<_> = inside(&along, &rings, meter).unwrap().iter().map(|part| xy(part)).collect();
+        assert_eq!(parts, [vec![(5.0, 2.0), (5.0, 4.0)], vec![(5.0, 4.0), (8.0, 4.0)], vec![(8.0, 4.0), (8.0, 2.0)]]);
+        assert_eq!(outside(&along, &rings, meter).unwrap(), None);
     }
 
     #[test]
@@ -252,5 +269,10 @@ mod tests {
         assert_eq!(xy(&segmentized(&line, 1.4, meter).unwrap()), [(0.0, 0.0), (1.0, 0.0), (2.0, 0.0), (3.0, 0.0), (3.0, 1.0)]);
         assert_eq!(xy(&segmentized(&line, 5.0, meter).unwrap()), xy(&line));
         assert!(segmentized(&[], 1.0, meter).unwrap().is_empty());
+        // A longest stitch of 0 cuts nothing, at the cost of its points alone.
+        assert_eq!(xy(&segmentized(&line, 0.0, &mut Budget { max_stitches: 1, max_work: 10 }.meter()).unwrap()), xy(&line));
+        // A side just as long as the longest stitch stays whole, and one a hair longer is cut in 2.
+        assert_eq!(segmentized(&line, 3.0, meter).unwrap().len(), 3);
+        assert_eq!(segmentized(&line, 2.999, meter).unwrap().len(), 4);
     }
 }

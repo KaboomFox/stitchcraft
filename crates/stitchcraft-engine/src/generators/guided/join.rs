@@ -37,7 +37,7 @@ use stitchcraft_core::units::MM_PER_SVG_PX;
 use stitchcraft_core::{Exhausted, Meter, Point};
 
 use super::closed::{closed, closed_up, covered, inside, made_counter_clockwise, outside, rolled, segmentized};
-use super::copies::{Bounds, meets};
+use super::copies::meets;
 use super::line::simple;
 use crate::generators::tatami::rings::Rings;
 use crate::normalize::along::Along;
@@ -106,10 +106,11 @@ pub(super) fn joined(
         for ring in waiting {
             pass.ring_into_rows(rings, ring, &mut outline_rows, spacing, meter)?;
         }
-        pass.removed.sort_unstable_by(|a, b| b.cmp(a));
+        // From the last, so that the rows before each keep their numbers.
+        pass.removed.sort_unstable();
         pass.removed.dedup();
-        for i in pass.removed {
-            if i < outline_rows.len() {
+        for i in pass.removed.into_iter().rev() {
+            if outline_rows.get(i).is_some() {
                 outline_rows.remove(i);
             }
         }
@@ -146,18 +147,15 @@ fn meets_outline(row: &[Point], rings: &Rings<'_>, meter: &mut Meter) -> Result<
     Ok(false)
 }
 
-/// For each of the closed `rings`, smallest first, the first larger one that covers it, if any. A ring whose
-/// box doesn't lie in another's isn't covered by it.
+/// For each of the closed `rings`, smallest first, the first larger one that covers it, if any.
 fn coverers(rings: &[Vec<Point>], meter: &mut Meter) -> Result<Vec<Option<usize>>, Exhausted> {
     let polygons: Vec<Polygon> = rings.iter().map(|ring| Polygon { outline: ring.clone(), holes: Vec::new() }).collect();
-    let boxes: Vec<Bounds> = rings.iter().map(|ring| Bounds::of(ring)).collect();
     let mut found = Vec::with_capacity(rings.len());
     for (i, ring) in rings.iter().enumerate() {
         let mut outer = None;
         for (j, polygon) in polygons.iter().enumerate().skip(i + 1) {
             meter.charge(1)?;
-            let (Some(inner_box), Some(outer_box)) = (boxes.get(i), boxes.get(j)) else { continue };
-            if outer_box.holds_box(inner_box) && covered(&Rings::new(polygon, meter)?, ring, meter)? {
+            if covered(&Rings::new(polygon, meter)?, ring, meter)? {
                 outer = Some(j);
                 break;
             }
@@ -246,11 +244,8 @@ impl Pass {
                     }
                 }
                 Some(at) => {
-                    let starts_inside = match row.first() {
-                        Some(&p) => rings.inside(p, meter)?,
-                        None => false,
-                    };
-                    let first = if starts_inside {
+                    let Some(&start) = row.first() else { continue };
+                    let first = if rings.inside(start, meter)? {
                         let Some(joined) = ring_into_row(rings, &ring, &row, spacing, meter)? else { continue };
                         joined
                     } else {

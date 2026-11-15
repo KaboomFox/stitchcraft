@@ -32,7 +32,6 @@ use super::offset::ROW_0;
 use crate::generators::tatami::rings::Rings;
 use crate::normalize::near::nearest_pair;
 use crate::normalize::offset::line_curves;
-use crate::normalize::region::geom::{Hit, hit};
 use crate::normalize::region::{Polygon, area};
 use crate::normalize::simplify::simplify;
 
@@ -59,7 +58,7 @@ pub(super) fn prepared(subpaths: Vec<Vec<Point>>, meter: &mut Meter) -> Result<V
 /// Whether `line` runs from its greater end, as GEOS tells it: its points compared from both ends inward, x
 /// then y, the first pair that differs deciding.
 fn lesser_from_end(line: &[Point]) -> bool {
-    line.iter().zip(line.iter().rev()).take(line.len() / 2).find(|(a, b)| a != b).is_some_and(|(a, b)| coordinate(*a, *b) == Ordering::Greater)
+    line.iter().zip(line.iter().rev()).find(|(a, b)| a != b).is_some_and(|(a, b)| coordinate(*a, *b) == Ordering::Greater)
 }
 
 /// 2 points compared x first, then y.
@@ -94,10 +93,9 @@ pub(super) fn rows(
         let by = k as f64 * guided.spacing;
         let by = if by == 0.0 { ROW_0 } else { by } + guided.spacing / 2.0;
         let curves = line_curves(lines, by, meter)?;
-        let Ok(parts) = area(&curves, |w| w <= -1, meter)?.parts else {
-            *unjoined = true;
-            break;
-        };
+        let parts = area(&curves, |w| w <= -1, meter)?.parts;
+        *unjoined |= parts.is_err();
+        let Ok(parts) = parts else { break };
         let start = curves.first().and_then(|curve| curve.first()).copied();
         let mut met = false;
         let mut found = Vec::new();
@@ -117,26 +115,17 @@ pub(super) fn rows(
 }
 
 /// How far the guide `lines` lies from `piece`, whose rings are `rings`: 0 where a point of it lies in the
-/// piece or on its edge, or a side of it meets the edge, and otherwise the distance between their nearest
-/// points. Costs as [`Rings::covers`] and [`Rings::meeting`] do, and a unit of `meter`'s work for each pair
-/// of sides measured.
+/// piece or on its edge, and otherwise the distance between their nearest points, which is 0 where a side
+/// of it crosses the edge. Costs as [`Rings::covers`] does, and a unit of `meter`'s work for each pair of
+/// sides measured.
 fn distance(piece: &Polygon, rings: &Rings<'_>, lines: &[Vec<Point>], meter: &mut Meter) -> Result<f64, Exhausted> {
-    for line in lines {
-        if let Some(&p) = line.first()
-            && rings.covers(p, meter)?
-        {
+    for &p in lines.iter().flatten() {
+        meter.charge(1)?;
+        if rings.covers(p, meter)? {
             return Ok(0.0);
         }
-        for side in line.windows(2) {
-            meter.charge(1)?;
-            let (p, q) = (side[0], side[1]);
-            let mut met = false;
-            rings.meeting(p, q, meter, |edge| met |= hit(p, q, edge.a, edge.b) != Hit::Apart)?;
-            if met || rings.covers(q, meter)? {
-                return Ok(0.0);
-            }
-        }
     }
+    // Lines that cross lie no way apart.
     let guide: Vec<&[Point]> = lines.iter().map(Vec::as_slice).collect();
     let edge: Vec<&[Point]> = piece.rings().collect();
     Ok(nearest_pair(&guide, &edge, meter)?.map_or(0.0, |(a, b)| a.distance(b)))
@@ -208,6 +197,54 @@ mod tests {
         assert_eq!(prepared(vec![turned], meter).unwrap(), [closed.to_vec()]);
         assert!(!lesser_from_end(&[p(0.0, 0.0), p(1.0, 1.0), p(0.0, 0.0)]));
         assert_eq!(compared(&closed, &closed[..2]), Ordering::Greater);
+    }
+
+    #[test]
+    fn req_fill_gdd_010_the_raw_curves_round_a_closed_line_are_its_2_sides_whichever_way_it_runs() {
+        let meter = &mut Budget::DEFAULT.meter();
+        // An open line has one curve round it, a closed one 2, and a line of one point none.
+        let open = vec![p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0)];
+        let square = vec![p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0), p(0.0, 0.0)];
+        let turned: Vec<Point> = square.iter().rev().copied().collect();
+        let count = |lines: &[Vec<Point>], meter: &mut Meter| line_curves(lines, 1.0, meter).unwrap().len();
+        assert_eq!((count(&[open], meter), count(&[square.clone()], meter), count(&[vec![p(5.0, 5.0)]], meter)), (1, 2, 0));
+        // A triangle closes with 4 points, the fewest, and a line there and back with 3 is open.
+        assert_eq!(count(&[vec![p(0.0, 0.0), p(4.0, 0.0), p(0.0, 4.0), p(0.0, 0.0)]], meter), 2);
+        assert_eq!(count(&[vec![p(0.0, 0.0), p(4.0, 0.0), p(0.0, 0.0)]], meter), 1);
+        // The outer side starts from the square's first point moved off its first side, as the square runs
+        // clockwise with y up, and the inner one from its first corner moved inward. The same for the square
+        // drawn the other way.
+        let curves = line_curves(&[turned], 1.0, meter).unwrap();
+        assert_eq!((xy(&curves[0][..1]), xy(&curves[1][..1])), (vec![(0.0, -1.0)], vec![(1.0, 1.0)]));
+        assert_eq!(line_curves(&[square], 1.0, meter).unwrap(), curves);
+        // A closed line of no area is taken as it runs.
+        let flat = vec![p(0.0, 0.0), p(4.0, 0.0), p(2.0, 0.0), p(2.0, 3.0), p(2.0, 0.0), p(0.0, 0.0)];
+        let there = line_curves(&[flat.clone()], 1.0, meter).unwrap();
+        let back = line_curves(&[flat.iter().rev().copied().collect()], 1.0, meter).unwrap();
+        assert_ne!(there.first().map(|curve| xy(curve)), back.first().map(|curve| xy(curve)));
+    }
+
+    #[test]
+    fn req_fill_gdd_010_the_first_row_lies_the_whole_spacings_the_guide_is_away() {
+        let meter = &mut Budget::DEFAULT.meter();
+        let part = crate::generators::tatami::fixture::rectangle(4.0);
+        let rings = Rings::new(&part, meter).unwrap();
+        // A guide 3 mm above the part, with rows 0.5 mm apart: the rings start 6 spacings out, at 3.25 mm, and
+        // the first row starts where the curve round the guide does, at its end moved 3.25 mm off it.
+        let lines = [vec![p(0.0, -3.0), p(10.0, -3.0)]];
+        let guided = Guided { strategy: super::super::Strategy::Buffer, ..crate::generators::guided::tests::guided(&[(0.0, 0.0)], 0.5) };
+        let rows = rows(&part, &rings, &lines, &guided, &mut false, meter).unwrap();
+        assert_eq!(xy(&rows[0][..1]), [(10.0, 0.25)]);
+        assert_eq!(xy(&rows[1][..1]), [(10.0, 0.75)]);
+    }
+
+    #[test]
+    fn req_fill_gdd_010_the_guide_is_simplified_within_a_ten_thousandth_of_a_css_pixel() {
+        let meter = &mut Budget::DEFAULT.meter();
+        // 0.0000265 mm: a point 0.00002 mm off the line between its neighbours is left out, and one 0.00004 mm
+        // off it stays.
+        let mut bent = |by: f64| prepared(vec![vec![p(0.0, 5.0), p(5.0, 5.0 + by), p(10.0, 5.0)]], meter).unwrap().concat().len();
+        assert_eq!((bent(0.000_02), bent(0.000_04)), (2, 3));
     }
 
     #[test]
