@@ -123,6 +123,10 @@ def run(*args, cwd=ROOT, **more):
 def checkout(folder):
     """VectorCraft's source at the pinned commit, never changed. A tag that names another commit fails."""
     repository, tag, revision = pin()
+    # The build cache's cleaning, after a cache of another Cargo.lock is restored, empties every folder under
+    # `target/` of what it doesn't know, this checkout's `.git` included. What is left is no checkout.
+    if folder.exists() and not (folder / '.git').exists():
+        shutil.rmtree(folder)
     if not folder.exists():
         run('git', 'clone', '--depth', '1', '--branch', tag, repository, str(folder))
     found = run('git', 'rev-parse', 'HEAD', cwd=folder, text=True, capture_output=True).stdout.strip()

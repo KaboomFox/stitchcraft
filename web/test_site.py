@@ -2,6 +2,7 @@
 is why it is published once (web/site.py). A pin that drifts from the gate's is caught here too."""
 import importlib.util
 from pathlib import Path
+import subprocess
 import tempfile
 import tomllib
 import unittest
@@ -75,6 +76,27 @@ class BuildTest(unittest.TestCase):
         # When the stable track reaches this release, both must name it: set [web] to the stable tag and its
         # commit in the pull request that moves the stable pin.
         self.assertGreaterEqual(number(tag), number(pins['tracks']['stable']['tag']))
+
+    def test_a_checkout_the_cache_s_cleaning_emptied_is_cloned_again(self):
+        _, tag, revision = build.pin()
+        calls = []
+
+        def ran(*args, cwd=None, **more):
+            calls.append(args[:2])
+            if args[1] == 'clone':
+                (Path(args[-1]) / '.git').mkdir(parents=True)
+            return subprocess.CompletedProcess(args, 0, stdout=f'{revision}\n')
+
+        with tempfile.TemporaryDirectory() as temp, unittest.mock.patch.object(build, 'run', ran):
+            folder = Path(temp) / 'vectorcraft-web'
+            (folder / 'crates').mkdir(parents=True)
+            (folder / 'crates' / 'left.rs').write_text('left by the cleaning')
+            build.checkout(folder)
+            self.assertEqual(calls, [('git', 'clone'), ('git', 'rev-parse')])
+            self.assertFalse((folder / 'crates').exists())
+            # A whole checkout is kept as it is.
+            build.checkout(folder)
+            self.assertEqual(calls[2:], [('git', 'rev-parse')])
 
     def test_the_editor_s_page_gets_our_title_and_start_script_or_the_build_fails(self):
         html = '<head><title>VectorCraft</title></head><body><canvas></canvas></body>'
