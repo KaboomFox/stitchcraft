@@ -10,16 +10,17 @@ function demoSection(base, sha) {
   return [
     `**Browser demo:** ${demo}`,
     '',
-    'It opens the Alpine Night starter patch in the editor that main published, with this pull request\'s plug-ins.',
-    `[Download the starter as a VectorCraft template](${demo}templates/alpine-night.vctemplate)`,
+    'It opens Alpine Night as a plain drawing in the editor that main published, with this pull request\'s plug-ins.',
+    'The panel\'s button turns the drawing into stitches.',
+    `[Download the finished example as a VectorCraft template](${demo}templates/alpine-night.vctemplate)`,
     '',
     'Chromium took these pictures of this build:',
     '',
-    image('starter-patch', 'The Alpine Night starter patch in VectorCraft'),
+    image('plain-drawing', 'Alpine Night as it opens, a plain drawing'),
+    '',
+    image('stitched-drawing', 'The drawing after the panel\'s button, in stitches'),
     '',
     image('stitch-settings', 'The settings of StitchCraft\'s Auto effect'),
-    '',
-    image('design-settings', 'StitchCraft\'s machine and design settings'),
   ];
 }
 

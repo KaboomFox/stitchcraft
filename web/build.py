@@ -6,7 +6,7 @@ one build, or a preview's plug-ins would not be the ones its checks ran
 (docs/src/design/vectorcraft-integration.md, Browser distribution).
 
 - `target/web/demo` holds what a pull request changes: the plug-ins' modules, the loader's scripts, the
-  starter patch and StitchCraft's licence texts. A preview publishes this folder.
+  starter drawing, its finished example and StitchCraft's licence texts. A preview publishes this folder.
 - `target/web/app` holds the editor with a copy of that folder's files. Main publishes it as `/app/`.
 
 Nothing here is downloaded but VectorCraft's source, at the commit `compat/vectorcraft.toml` records. Trunk
@@ -53,9 +53,9 @@ def modules(manifest=ROOT / 'apps/stitchcraft-vc-plugin/Cargo.toml'):
 
 
 def version(folder):
-    """A name for this build of the scripts and the starter, so a browser never mixes 2 builds' files."""
+    """A name for this build of the scripts, the drawing and its finished example, so a browser never mixes 2 builds' files."""
     digest = hashlib.sha256()
-    for name in (*SCRIPTS, 'start.mjs', 'templates/alpine-night.vctemplate'):
+    for name in (*SCRIPTS, 'start.mjs', 'templates/alpine-night.svg', 'templates/alpine-night.vctemplate'):
         digest.update((folder / name).read_bytes())
     return digest.hexdigest()[:16]
 
