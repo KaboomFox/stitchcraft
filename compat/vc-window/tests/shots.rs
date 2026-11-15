@@ -7,7 +7,9 @@
 //! so `cargo xtask compat window`, which runs every test of the crate, passes it by. For each shot:
 //!
 //! 1. The window opens the document `vectorcraft-cli` drew for the shot. The control channel installs the
-//!    modules and selects everything, which a person does with file dialogs and clicks on the drawing. For
+//!    modules and selects everything, which a person does with file dialogs and clicks on the drawing. A
+//!    module that asks for a heavy budget is in the profile the window starts with instead, which the job
+//!    names: from 0.23 VectorCraft's app installs one from a request only once a person has approved it. For
 //!    a dialog it makes the window the size the job gives: a plug-in's dialog doesn't scroll, and fill's
 //!    and satin's are taller than the window at the size it opens.
 //! 2. xa11y presses the menu bar's title and each row of the shot's menu path, as AT-SPI's press does for a
@@ -73,8 +75,10 @@ fn vectorcraft_ui_shots() {
 fn take(shot: &Value) -> Result<(), String> {
     let text = |key: &str| shot.get(key).and_then(Value::as_str).ok_or(format!("the job's shot has no `{key}`"));
     let id = text("id")?;
-    let mut window = Window::open(Path::new(text("document")?), id)?;
-    // Each module as the job installs it: its file, and `allowHeavy` for one that asks for a heavy budget.
+    // The profile holds the shot's modules that ask for a heavy budget, which the app installs as it starts.
+    let profile = shot.get("profile").and_then(Value::as_str).map(Path::new);
+    let mut window = Window::open_with(Path::new(text("document")?), id, profile)?;
+    // Each other module as the job installs it: its file.
     for install in shot.get("plugins").and_then(Value::as_array).into_iter().flatten() {
         window.call("engine.execute", json!({"command": "plugin.install", "params": install}))?;
     }
