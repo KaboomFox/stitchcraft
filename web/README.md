@@ -31,11 +31,13 @@ python3 -m unittest discover -s web -p 'test_*.py'
 The build clones VectorCraft under `target/`, or uses the checkout `VECTORCRAFT_DIR` names when it is at
 the recorded commit. It never changes VectorCraft's source. The editor's build takes most of an hour.
 
-The browser checks need the site's layout, with the editor at `/app/`:
+The browser checks need the site's layout, with the editor at `/app/`. Make the served folder new each
+time: `cp -a` into a folder that is already there copies beside the page, and the check then finds a
+folder's listing where the editor should be.
 
 ```sh
 npm ci --prefix web && (cd web && npx playwright install chromium)
-mkdir -p target/serve && cp -a target/web/app target/serve/app
+rm -rf target/serve && mkdir -p target/serve && cp -a target/web/app target/serve/app
 python3 -m http.server 8766 --directory target/serve &
 node web/smoke.mjs http://127.0.0.1:8766/app/
 ```
@@ -45,7 +47,7 @@ and open the editor through it:
 
 ```sh
 python3 web/site.py --base-path /stitchcraft/pr/123/
-mkdir -p target/serve/pr && cp -a target/site target/serve/pr/123
+rm -rf target/serve/pr && mkdir -p target/serve/pr && cp -a target/site target/serve/pr/123
 node web/docs-smoke.mjs http://127.0.0.1:8766/pr/123/
 node web/smoke.mjs 'http://127.0.0.1:8766/app/?preview=123'
 ```
