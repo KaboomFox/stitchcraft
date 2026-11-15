@@ -5,6 +5,14 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M6.13: the browser demo and pull-request previews, from crowecawcaw's pull request #260. The project's site
+  runs VectorCraft's web editor with StitchCraft's plug-ins at `/app/`. It opens a starter patch, Alpine
+  Night, whose shapes have the Auto effect, and exports PES and DST from the page.
+  - A pull request from a branch of the repository gets a preview at `/pr/<number>/`, with its book and its
+    own plug-ins, and a comment that shows pictures of the demo. A fork's pull request is built and checked,
+    and nothing of it is published.
+  - One script now publishes every folder of the Pages site, the book's too, and keeps the branch to one
+    commit. The editor is built from VectorCraft 0.24.1, which `compat/vectorcraft.toml` records.
 - M13.14: the subject cut-out, as ADR-0019 decided (`REQ-CLI-014` to `REQ-CLI-019`). With `--subject`,
   `stitch plan` and `stitch export` cut a photo's subject out before VectorCraft traces it, and the background
   is left unsewn. The option is off by default, and every other design sews as before.

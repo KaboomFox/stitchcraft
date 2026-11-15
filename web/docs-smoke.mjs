@@ -1,9 +1,13 @@
+// Why this file exists: the book's link to the demo and the demo's link back are addresses that only hold on
+// the published site's layout. This check follows them on a copy of that layout.
 // Follow the reader's route from PR docs into that PR's demo and back.
 import {chromium} from '@playwright/test';
 import assert from 'node:assert/strict';
 
 const root = new URL(process.argv[2]);
-const permanent = process.argv[3] === 'permanent';
+// The editor is at /app/ on the site: 2 folders above a preview's book (/pr/123/), 1 above a permanent one.
+const preview = root.pathname.match(/\/pr\/([1-9][0-9]*)\/$/);
+const app = new URL(preview ? '../../app/' : '../app/', root);
 const browser = await chromium.launch({channel: 'chromium', args: ['--no-sandbox', '--enable-unsafe-swiftshader']});
 try {
   const page = await browser.newPage({viewport: {width: 1440, height: 1000}});
@@ -16,7 +20,11 @@ try {
   await launch.click();
   await page.waitForFunction(() => Boolean(window.stitchcraftReady), null, {timeout: 180000});
   await page.evaluate(() => window.stitchcraftReady);
-  assert.equal(new URL(page.url()).pathname, permanent ? new URL('../app/', root).pathname : demo.pathname, 'docs open the correct demo');
+  const opened = new URL(page.url());
+  assert.equal(opened.pathname, app.pathname, 'the book opens the one published editor');
+  assert.equal(opened.searchParams.get('preview'), preview ? preview[1] : null, 'a preview names itself to the editor');
+  const loader = await page.evaluate(() => performance.getEntriesByType('resource').map(entry => entry.name).find(name => name.includes('/boot.mjs')));
+  assert.equal(new URL(loader).pathname, new URL('boot.mjs', preview ? demo : app).pathname, 'the loader is the preview\'s own');
   const ui = await page.evaluate(() => vectorcraft.uiInspect());
   assert.equal(ui.documents.length, 1, 'starter opens from the documentation link');
   await page.getByText('StitchCraft ready · Starter & help', {exact: true}).click();

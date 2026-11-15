@@ -1,3 +1,5 @@
+// Why this file exists: the starter patch is kept in VectorCraft's own template format, which only
+// VectorCraft writes. This script has the built demo write it again from the SVG beside it.
 // Regenerate the native starter from our original SVG through VectorCraft's public API.
 import {chromium} from '@playwright/test';
 import {readFile, writeFile} from 'node:fs/promises';
@@ -5,7 +7,7 @@ const svg = await readFile(new URL('./templates/alpine-night.svg', import.meta.u
 const browser = await chromium.launch({channel: 'chromium', args: ['--no-sandbox', '--enable-unsafe-swiftshader']});
 try {
   const page = await browser.newPage({viewport: {width: 1440, height: 1000}});
-  await page.goto(process.argv[2] || 'http://127.0.0.1:8766/pr/1/?webgl');
+  await page.goto(process.argv[2] || 'http://127.0.0.1:8766/app/?webgl');
   await page.waitForFunction(() => Boolean(window.stitchcraftReady));
   await page.evaluate(() => window.stitchcraftReady);
   const result = await page.evaluate(async dataBase64 => {

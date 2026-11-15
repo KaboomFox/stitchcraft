@@ -919,11 +919,61 @@ See [ADR-0009](adr/0009-adopt-vectorcraft-conventions.md) for the audit.
 
 ## Browser distribution
 
-The web build (`web/README.md`) bundles a pinned VectorCraft web editor with the plug-ins.
-It installs the light modules through the documented page command API, without changing VectorCraft
-internals. Heavy filters retain the host's approval prompt. The build and browser acceptance cases
-live in `web/`. GitHub Pages serves static files and keeps each pull request preview in its own folder.
+M6.13 publishes VectorCraft's web editor with StitchCraft's plug-ins on the project's Pages site. The work
+came from crowecawcaw's pull request #260. [Try StitchCraft in your browser](../browser-demo.md) says what
+a visitor sees, `web/README.md` how to build it, and the [docs pipeline](docs-pipeline.md#publishing) how
+it is published.
 
-An empty browser session opens the native template in `web/templates/`. Its source SVG and generator
-are kept beside the web loader. Browser tests capture the patch and its settings dialogs for the PR
-preview comment. The template opens in a new document when chosen from Starter & help.
+### The editor and its release
+
+`web/build.py` builds the editor with Trunk from VectorCraft's source at a release, and doesn't change
+it. It writes 2 folders. The app is the editor with the plug-ins, and the demo folder is the plug-ins, the
+loader and the starter patch without the editor.
+
+`compat/vectorcraft.toml` records the release beside the gate's pins, as a tag and the commit the tag
+names, and the build stops when the tag names another commit. The release is newer than the stable
+track's: the loader calls `uiInspect` and `docInspect`, which VectorCraft's page has from 0.24. A test fails
+when the demo's release is older than the stable track's. Once the stable track pins that release, both name it.
+
+The loader touches VectorCraft only through the calls its page offers as `window.vectorcraft`. VectorCraft
+documents them in its `docs/control-protocol.md`, under "In the browser". The loader installs each light
+module with `plugin.install` and opens the starter patch with `document.open`. It doesn't install the heavy
+filters, which VectorCraft installs only once a person allows it, and the page offers them as files.
+
+Trunk runs without the network. The workflow installs Trunk and the 2 tools Trunk would otherwise download,
+wasm-bindgen and wasm-opt, each checked against a checksum kept in the repository
+(`.github/actions/tools/action.yml`).
+
+### Licences
+
+VectorCraft's code is licensed MIT OR Apache-2.0, which allows publishing a build of it with its licence
+texts and notice. The app has them as `VectorCraft-*.txt`, beside StitchCraft's own.
+
+The ArtCraft name and logos are not under that licence. VectorCraft's `docs/brand/LICENSE-brand.txt` says
+that a published work derived from VectorCraft carries none of the marks and doesn't present itself as an
+ArtCraft product, and that it may say in plain text what it is based on. What was checked, by reading
+VectorCraft at the recorded commit on 2026-11-15:
+
+- No Rust source, manifest or page of VectorCraft names a file of `docs/brand/`, but a test of its `xtask`.
+  The editor's build doesn't embed a logo.
+- The editor's own text names ArtCraft: the Help menu and the home screen link to its website and its
+  community, and the About dialog says "Part of ArtCraft". The build leaves that text in, because it doesn't
+  change the source. The text says who makes VectorCraft. Whether it may stay in a build this project publishes is
+  the owner's reading of the brand licence, to settle before the first push to `main` publishes `/app/`.
+- What the build adds says "StitchCraft in VectorCraft" in plain text: the page's title, the panel and the
+  book. The panel says that the build is unofficial and made by the StitchCraft project.
+
+A preview doesn't contain the editor. Of VectorCraft it publishes only pictures of the editor's window.
+
+### Sizes on the site
+
+The editor is published once, at `/app/`, and a preview contains what its pull request can change. The
+Pages branch is one commit. The [docs pipeline](docs-pipeline.md#one-publisher-and-a-branch-of-one-commit)
+says how both are kept.
+
+### The starter patch
+
+A session without a document opens Alpine Night from `web/templates/alpine-night.vctemplate`, a template in
+VectorCraft's own format, in a new document. VectorCraft wrote it from the SVG beside it, with the Auto
+effect on each shape, and `web/generate-template.mjs` writes it again. `docs/fixtures/README.md` records
+the art's author and licence.

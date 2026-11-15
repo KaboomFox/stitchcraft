@@ -1,3 +1,7 @@
+// Why this file exists: the editor knows nothing of StitchCraft. This script, which web/start.mjs loads into
+// the editor's page, installs the plug-ins, opens the starter patch and shows a small panel of help. Every
+// file it names is beside it, so a preview's copy uses that preview's plug-ins and starter
+// (docs/src/design/vectorcraft-integration.md, Browser distribution).
 const version = new URL(import.meta.url).search;
 const {installPlugins} = await import(`./loader.mjs${version}`);
 const {openStarter} = await import(`./starter.mjs${version}`);
@@ -9,6 +13,9 @@ const summary = document.createElement('summary');
 summary.textContent = 'Starting StitchCraft…';
 panel.append(summary);
 const help = document.createElement('p');
+const about = document.createElement('p');
+about.textContent = 'An unofficial build of VectorCraft with StitchCraft\'s plug-ins, made by the StitchCraft project and not by VectorCraft\'s makers.';
+panel.append(about);
 help.textContent = 'The Alpine Night starter uses StitchCraft Auto. Select a shape and edit its effect in Appearance. File → Export → Export As… downloads PES or DST. Save your editable design before closing this tab.';
 panel.append(help);
 const docs = document.createElement('a');
@@ -27,6 +34,17 @@ window.stitchcraftReady = (async () => {
   const response = await fetch(new URL('./plugins.json', import.meta.url));
   if (!response.ok) throw new Error(`Plug-in list: HTTP ${response.status}`);
   const config = await response.json();
+  // A preview runs in the editor main published. When its pull request moves the pin, the editor it was
+  // checked with is another one, and the panel says so.
+  if (new URL('./', import.meta.url).href !== new URL('./', location.href).href) {
+    const own = await fetch(new URL('./plugins.json', location.href), {cache: 'no-store'});
+    const editor = own.ok ? (await own.json()).vectorcraft : undefined;
+    if (editor?.revision !== config.vectorcraft?.revision) {
+      const differs = document.createElement('p');
+      differs.textContent = `This preview was checked with VectorCraft ${config.vectorcraft?.tag}. The editor here is ${editor?.tag ?? 'another build'}.`;
+      panel.append(differs);
+    }
+  }
   const installed = await installPlugins(window.vectorcraft, config.plugins, fetch, text => {summary.textContent = text;});
   const starter = document.createElement('button');
   starter.textContent = 'Open Alpine Night starter patch';
@@ -37,7 +55,7 @@ window.stitchcraftReady = (async () => {
     finally { starter.disabled = false; }
   };
   const download = document.createElement('a');
-  download.href = `./templates/alpine-night.vctemplate${version}`;
+  download.href = new URL(`./templates/alpine-night.vctemplate${version}`, import.meta.url).href;
   download.download = 'Alpine Night.vctemplate';
   download.textContent = 'Download reusable template';
   download.style.cssText = 'display:block;color:#a9dcff;margin:8px 0';
@@ -48,7 +66,7 @@ window.stitchcraftReady = (async () => {
   optional.textContent = 'Optional heavy filters (download, then open in VectorCraft to approve): ';
   for (const name of config.optionalPlugins) {
     const link = document.createElement('a');
-    link.href = `./plugins/${name}.wasm`;
+    link.href = new URL(`./plugins/${name}.wasm`, import.meta.url).href;
     link.download = `${name}.wasm`;
     link.textContent = name.replaceAll('-', ' ');
     link.style.color = '#a9dcff';

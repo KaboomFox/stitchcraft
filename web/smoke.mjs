@@ -1,12 +1,14 @@
+// Why this file exists: only a browser shows that the editor starts, takes the plug-ins and exports stitches.
+// This check runs the built demo in Chromium and takes the 3 pictures a preview's comment shows.
 // Exercise the actual WASM editor and embroidery exporters from a nested static URL.
 import {chromium} from '@playwright/test';
 import assert from 'node:assert/strict';
-import {mkdir} from 'node:fs/promises';
+import {mkdir, readFile} from 'node:fs/promises';
 import {join} from 'node:path';
-const screenshots = process.argv[3] || new URL('../target/web/screenshots', import.meta.url).pathname;
+const screenshots = process.argv[3] || new URL('../target/web/demo/screenshots', import.meta.url).pathname;
 await mkdir(screenshots, {recursive: true});
 
-const url = new URL(process.argv[2] || 'http://127.0.0.1:8766/');
+const url = new URL(process.argv[2] || 'http://127.0.0.1:8766/app/');
 url.searchParams.set('webgl', '');
 const browser = await chromium.launch({channel: 'chromium', args: ['--no-sandbox', '--enable-unsafe-swiftshader']});
 try {
@@ -17,7 +19,11 @@ try {
   await page.goto(url.href, {waitUntil: 'domcontentloaded', timeout: 60000});
   await page.waitForFunction(() => Boolean(window.stitchcraftReady), null, {timeout: 180000});
   const installed = await page.evaluate(() => window.stitchcraftReady);
-  assert.equal(installed.length, 9);
+  // Every module the build lists as light installs, so a heavy one listed as light fails here.
+  const listed = JSON.parse(await readFile(new URL('../target/web/demo/plugins.json', import.meta.url)));
+  assert.equal(installed.length, listed.plugins.length);
+  assert.ok(listed.plugins.length >= 9, 'the stitch effects, exporters and light filters');
+  assert.equal(await page.title(), 'StitchCraft in VectorCraft');
   const starter = await page.evaluate(async () => ({ui: await vectorcraft.uiInspect(), doc: await vectorcraft.docInspect()}));
   assert.equal(starter.ui.documents.length, 1, 'empty session opens the starter');
   assert.ok(JSON.stringify(starter.doc).includes('Alpine'), 'starter art is present');

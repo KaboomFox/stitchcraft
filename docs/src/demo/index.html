@@ -1,21 +1,30 @@
 <!doctype html>
+<!-- Why this file exists: the book links to the browser demo, and the editor is published once, at /app/ on
+     the site, for every book. This page, which mdBook copies into each book as demo/index.html, sends the
+     reader there. In a pull request's preview (/pr/<number>/) it names the preview, whose plug-ins the
+     editor then loads from the folder beside this page (docs/src/design/docs-pipeline.md, Publishing). -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Open the StitchCraft browser demo</title>
+  <title>StitchCraft in VectorCraft</title>
 </head>
 <body>
-  <p>Opening StitchCraft in VectorCraft…</p>
-  <button id="open-demo">Open the browser demo</button>
+  <p id="state">Opening StitchCraft in VectorCraft…</p>
   <noscript>The browser demo needs JavaScript to run its WebAssembly editor.</noscript>
-  <script>
-    // Permanent and versioned books share /app/. PR bundles replace this launcher with their own app.
-    const demo = new URL('../../app/', location.href);
-    demo.search = location.search;
-    const openDemo = () => location.replace(demo);
-    document.getElementById('open-demo').addEventListener('click', openDemo);
-    openDemo();
+  <script type="module">
+    const preview = location.pathname.match(/\/pr\/([1-9][0-9]*)\/demo\/(index\.html)?$/);
+    const app = new URL(preview ? '../../../app/' : '../../app/', location.href);
+    app.search = location.search;
+    if (preview) app.searchParams.set('preview', preview[1]);
+    const state = document.getElementById('state');
+    try {
+      const published = await fetch(new URL('plugins.json', app), {method: 'HEAD', cache: 'no-store'});
+      if (published.ok) location.replace(app);
+      else state.textContent = 'The editor is published when a change reaches the main branch, and it is not there yet.';
+    } catch {
+      state.textContent = 'The editor could not be reached. Check the connection and load this page again.';
+    }
   </script>
 </body>
 </html>

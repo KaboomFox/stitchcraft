@@ -1,26 +1,19 @@
-# Browser acceptance cases
+# The browser demo's acceptance cases
 
-The web bundle must satisfy these cases before it is deployed:
+Each case names its check. `web.yml` runs them all before anything is published.
 
-- VectorCraft loads from both the site root and a nested PR directory, without requests to missing assets.
-- Every bundled light StitchCraft plug-in installs through the page command API. A failed install is visible and offers a reload.
-- A rectangle with a StitchCraft fill effect exports as nonempty PES and DST files in the browser.
-- A failed module download never reports the embroidery tools as ready.
-- Heavy filters are available as downloads. Opening one uses VectorCraft's own approval dialog.
-- Publishing one PR preserves other PRs and the documentation. Closing it removes only that preview.
-
-`node --test web/loader.test.mjs` checks the loader's success and failure paths.
-`node web/smoke.mjs URL` checks the real WASM app, plug-ins and embroidery exports.
-
-- An empty session opens the native starter template with its embroidery effects.
-- Existing documents, pending opens and recovery dialogs prevent automatic opening.
-- Opening the starter again creates a new document.
-- The starter exports a DST file containing stitches.
-- The preview comment embeds actual screenshots of the starter and both settings dialogs.
-- Publication reads the credential includes used by checkout v7.
-
-- Permanent documentation links to the published browser demo.
-- A PR preview opens its own documentation with its matching demo nested beneath it.
-- The demo’s Documentation link returns to the same PR preview.
-- Replacing a preview removes stale app files from its former root.
-- Updating the permanent docs or landing page preserves PR previews.
+| Case | Check |
+|---|---|
+| The editor starts from `/app/` and from a preview, and asks for no file that is missing | `smoke.mjs` |
+| Each light plug-in installs through the page's calls, and a heavy one is offered as a file | `smoke.mjs` |
+| A download that fails, or a module VectorCraft refuses, is never reported as installed | `loader.test.mjs` |
+| A session without a document opens the starter patch | `smoke.mjs`, `starter.test.mjs` |
+| A document, a file being opened or a recovery dialog stops the starter from opening by itself | `starter.test.mjs` |
+| The starter patch and a filled rectangle export to PES and DST with stitches | `smoke.mjs` |
+| The book's link opens the editor, a preview's with that preview's loader, and the panel links back | `docs-smoke.mjs` |
+| Only a pull request's number names a preview to the editor | `start.test.mjs` |
+| A preview contains its book and its plug-ins, and not the editor | `test_site.py` |
+| The demo's release is recorded beside the gate's and is never older | `test_site.py` |
+| Publishing one folder keeps every other, also when 2 runs push at the same moment | `test_publish.py` |
+| Closing a pull request removes its preview alone, and the branch is one commit afterwards | `test_publish.py` |
+| The comment names the book and the demo, and shows the pictures of the build | `preview-comment.test.mjs` |
