@@ -1,4 +1,4 @@
-//! Which stitch a shape gets (`REQ-AUTO-030` to `REQ-AUTO-036`): automatic digitizing chooses the stitches of
+//! Which stitch a shape gets (`REQ-AUTO-030` to `REQ-AUTO-036`, `REQ-AUTO-050`): automatic digitizing chooses the stitches of
 //! each part of a shape from the part's geometry, by the first rule of one table that it matches
 //! (`auto::rules`), and each shape says which rule that was (`SC-I0912`).
 //!
@@ -264,6 +264,78 @@ fn req_auto_032_even_strokes_a_taper_a_leaf_and_a_ring_sew_as_columns() {
         (kinds(&ring.elements), rule(&ring)),
         (vec!["satin"], "column (2 mm wide, slenderness 12.6, width varying by 0.00, 1 centre line)".to_string())
     );
+}
+
+/// A star of `points` points round the origin, `across` millimetres from a point to the middle and on as far,
+/// its corners between the points `inner` of the way out, the first point straight up.
+fn star(points: u32, across: f64, inner: f64) -> Vec<(f64, f64)> {
+    (0..2 * points)
+        .map(|i| {
+            let (sin, cos) = sin_cos(std::f64::consts::PI * f64::from(i) / f64::from(points));
+            let r = if i % 2 == 0 { across / 2.0 } else { inner * across / 2.0 };
+            (r * sin, -r * cos)
+        })
+        .collect()
+}
+
+#[test]
+fn req_auto_050_a_small_star_is_filled() {
+    // The star of the browser demo's badge, 5.33 mm across with 4 points: its centre lines keep one of its 2
+    // axes, and it reaches 2.6 times as far from that line, on both sides, as its widest circle. It is filled.
+    let badge = star(4, 16.0 / 3.0, 8.0_f64.sqrt() / 8.0);
+    let out = made(&shape("star", &badge, &[]));
+    assert_eq!((kinds(&out.elements), rule(&out).as_str()), (vec!["fill"], "arms (0.97 mm wide, reaching 2.60 times as far as its widest circle)"));
+    // As it sewed before the rule, which a bound no star reaches gives back: one satin column along one axis.
+    let before = made(&shape("star", &badge, &[("auto_max_reach", "20")]));
+    let column = "column (0.97 mm wide, slenderness 7.5, width varying by 0.40, 1 centre line)";
+    assert_eq!((kinds(&before.elements), rule(&before).as_str()), (vec!["satin"], column));
+    // A shape that asks for satin columns keeps them.
+    assert_eq!(kinds(&made(&shape("star", &badge, &[("auto_stitch", "satin")])).elements), ["satin"]);
+    // Stars of 4, 5 and 6 points from 3 to 12 mm across sew no satin column: each has arms, or keeps 2 centre
+    // lines and is uneven, whose tails may leave the fill as lines.
+    for (points, inner) in [(4, 0.3536), (5, 0.382), (6, 0.5)] {
+        for across in [3.0, 4.0, 5.33, 8.0, 12.0] {
+            let out = made(&shape("star", &star(points, across, inner), &[]));
+            let (said, kinds) = (rule(&out), kinds(&out.elements));
+            assert!(kinds[0] == "fill" && !kinds.contains(&"satin"), "{points} points, {across} mm: {kinds:?}, {said}");
+            assert!(said.starts_with("arms (") || said.contains("uneven ("), "{points} points, {across} mm: {said}");
+        }
+    }
+}
+
+#[test]
+fn req_auto_050_a_cross_and_a_sharp_corner_have_no_arms() {
+    // A cross of 2 bars 2 mm wide, 6 mm across: its arms end square, so each is a centre line of its own,
+    // and it sews as 4 columns.
+    let cross = [(2.0, 0.0), (4.0, 0.0), (4.0, 2.0), (6.0, 2.0), (6.0, 4.0), (4.0, 4.0), (4.0, 6.0), (2.0, 6.0), (2.0, 4.0), (0.0, 4.0), (0.0, 2.0), (2.0, 2.0)];
+    let out = made(&shape("cross", &cross, &[]));
+    assert_eq!(kinds(&out.elements), ["satin"; 4]);
+    assert!(rule(&out).starts_with("column (") && rule(&out).ends_with("4 centre lines)"), "{}", rule(&out));
+    // A letter V 5.7 mm tall in strokes 1.2 mm wide: its corner lies far from its line on one side only.
+    let v = [(-2.07, -5.7), (-0.8, -5.7), (0.0, -3.51), (0.8, -5.7), (2.07, -5.7), (0.0, 0.0)];
+    let out = made(&shape("v", &v, &[]));
+    assert!(kinds(&out.elements).iter().all(|kind| *kind == "satin") && rule(&out).starts_with("column ("), "{}", rule(&out));
+    // A kite 3 by 8 mm tapers to both ends, and reaches as far as its widest circle: one column.
+    let out = made(&shape("kite", &[(0.0, -4.0), (1.5, 0.0), (0.0, 4.0), (-1.5, 0.0)], &[]));
+    assert_eq!(kinds(&out.elements), ["satin"]);
+}
+
+#[test]
+fn req_auto_050_unlike_subjects_have_arms() {
+    // A drawn star, a drawn sparkle with 2 long points and 2 short ones, and blobs of fur of 2 traced dogs:
+    // the rule asks how far a part lies from its centre line, not what it shows.
+    let sparkle = [(0.0, -4.0), (0.48, -0.48), (2.0, 0.0), (0.48, 0.48), (0.0, 4.0), (-0.48, 0.48), (-2.0, 0.0), (-0.48, -0.48)];
+    let drawn = Design::new(
+        vec![automatic(shape("star", &star(5, 6.0, 0.382), &[])), automatic(fill("sparkle", &[&at(&sparkle, (20.0, 0.0))], &BLUE, &[]))],
+        DesignSettings::default(),
+    );
+    let subjects = [
+        ("a drawn star and a sparkle", fired(&drawn.unwrap())),
+        ("fur of the running dog", fired(&pictures::dog_shapes("dog-running-9", &["vc:60:fill"]))),
+        ("fur of the dog on turf", fired(&pictures::dog_shapes("dog-on-turf-6", &["vc:87:fill", "vc:99:fill"]))),
+    ];
+    let arms: Vec<(&str, usize)> = subjects.iter().map(|(name, fired)| (*name, fired.get("arms").copied().unwrap_or(0))).collect();
+    assert_eq!(arms, [("a drawn star and a sparkle", 2), ("fur of the running dog", 1), ("fur of the dog on turf", 2)]);
 }
 
 #[test]

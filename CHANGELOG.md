@@ -5,6 +5,19 @@ All notable changes are listed here, newest first. Golden-file changes must be l
 ## Unreleased
 
 ### Added
+- M13.27: small pointed shapes, and an outline round a fill (`REQ-AUTO-050`, `REQ-AUTO-051`).
+  - A part with arms is filled. A star of 4 points 5 mm across sewed as one satin column along one of its
+    2 axes, with its other points as bumps. A part that lies more than 1.4 times as far from a centre line,
+    on both sides of it, as its widest circle reaches now sews by the new rule `arms`, after `uneven` and
+    before `column`. The bound is the advanced setting `auto_max_reach`. A letter V, a cross with square
+    arms, a leaf and the letters of a patch keep their columns.
+  - `auto_fill_outline`, an advanced setting of the design, off by default, sews a running stitch round
+    each fill's edge where the edge shows, after the fill and in its thread. On the demo's badge it adds
+    111 stitches and no jump. On a traced dog it adds 759 stitches and 23 jumps.
+  - Golden files: none changed. The recorded numbers of the traced dogs in `tests/auto_photos.rs` moved. The
+    dog on turf in 6 threads sews 2 shapes more as fills, and the running dog in 9 threads 1. Their jump
+    threads fall from 77 to 71 and from 95 to 93. The dogs lay 19 stitches astray where they laid 17: a row
+    of the largest blob now filled shows beside a line of fur in both running dogs.
 - M6.14: the browser demo starts from the drawing. An empty session opens Alpine Night as a plain drawing,
   and the panel's first button, **Turn the drawing into stitches**, gives each shape the Auto effect. The
   panel says how to do the same in the menus and how to export, and a lesser button opens the finished

@@ -67,16 +67,21 @@ struct Astray {
 /// Why a row of a fill shows on another colour.
 const ROW: &str = "A row of an automatic fill shows on another colour for 1 mm or more. 6 of the 20 such stitches that M13.21 listed were traced, on the dog on turf in 9 threads and in the running dog's ear in 6. 5 lay along a line of fur of another colour, which sews on the fill or which the fill reaches under (REQ-AUTO-007, REQ-AUTO-033): the line sews as wide as its thread, and the row shows beside it. One lay under the edge of a column sewn after the fill, beyond the shapes as drawn. The order with the fewest thread changes (REQ-AUTO-037) took 8 of the 20 away and brought 4, where a fill now reaches under another neighbour: 16 are left, and those not among the 6 were not each traced.";
 
+/// Why a stitch between 2 lines of one part shows on another colour.
+const LINES: &str = "A narrow part sews 2 lines as one running stitch. The needle goes straight from the end of one to the start of the next, across another colour, and the move, shorter than the 3 mm collapse length, is a stitch.";
+
 /// Every stitch of the dogs astray today. The case fails when another stitch is astray, and when one of these
 /// no longer is, so the list shrinks as each is fixed: M13.17 and M13.18 empty it. M13.21 fills the dogs'
 /// ragged patches, which sewed as columns: the 2 satin stitches that fanned across a shape biting into their
 /// column, 7.89 and 4.72 mm long, are gone, and so are the 3 of columns that sewed past a rail and the one
 /// of the base layer in a gap. The rows of those fills that show beside a thin line took their place: 20
 /// stitches, the longest 4 mm, a fill's stitch length. M13.22's order, in which some columns sew before the fills
-/// beside them, leaves 16 of them: 8 fewer, and 4 others.
-const ASTRAY: [Astray; 17] = [
+/// beside them, leaves 16 of them: 8 fewer, and 4 others. M13.27 fills 5 blobs of fur that sewed as columns, each
+/// with arms that no centre line follows: a row of the largest, the same blob in both running dogs, shows beside
+/// a line of fur, and a line's move crosses another, where a row of the running dog in 9 threads no longer shows.
+const ASTRAY: [Astray; 19] = [
     Astray { dog: "dog-on-turf-6", element: "vc:25:fill", stitch: [(45.08, 74.27), (49.0, 74.25)], length: 3.92, cause: ROW, step: "M13.18" },
-    Astray { dog: "dog-on-turf-6", element: "vc:97:fill", stitch: [(39.0, 61.75), (41.96, 61.74)], length: 2.96, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-on-turf-6", element: "vc:97:fill", stitch: [(41.96, 61.75), (39.0, 61.75)], length: 2.96, cause: ROW, step: "M13.18" },
     Astray { dog: "dog-on-turf-9", element: "vc:76:fill", stitch: [(47.75, 67.02), (46.52, 67.0)], length: 1.23, cause: ROW, step: "M13.18" },
     Astray { dog: "dog-on-turf-9", element: "vc:11:fill", stitch: [(46.0, 43.5), (50.0, 43.5)], length: 4.0, cause: ROW, step: "M13.18" },
     Astray { dog: "dog-on-turf-9", element: "vc:18:fill", stitch: [(49.0, 43.25), (45.36, 43.25)], length: 3.64, cause: ROW, step: "M13.18" },
@@ -86,7 +91,7 @@ const ASTRAY: [Astray; 17] = [
         element: "vc:83:fill",
         stitch: [(50.08, 23.05), (48.93, 21.12)],
         length: 2.25,
-        cause: "A narrow part sews 2 lines as one running stitch. The needle goes straight from the end of one to the start of the next, across another colour, and the move, shorter than the 3 mm collapse length, is a stitch.",
+        cause: LINES,
         step: "M13.17",
     },
     Astray { dog: "dog-running-6", element: "vc:23:fill", stitch: [(57.0, 71.25), (61.0, 71.25)], length: 4.0, cause: ROW, step: "M13.18" },
@@ -96,16 +101,19 @@ const ASTRAY: [Astray; 17] = [
     Astray { dog: "dog-running-6", element: "vc:81:fill", stitch: [(46.47, 20.25), (45.0, 20.25)], length: 1.47, cause: ROW, step: "M13.18" },
     Astray { dog: "dog-running-6", element: "vc:81:fill", stitch: [(44.07, 21.0), (48.0, 21.0)], length: 3.93, cause: ROW, step: "M13.18" },
     Astray { dog: "dog-running-6", element: "vc:89:fill", stitch: [(56.75, 55.5), (54.6, 55.49)], length: 2.15, cause: ROW, step: "M13.18" },
-    Astray { dog: "dog-running-9", element: "vc:49:fill", stitch: [(56.75, 55.5), (54.0, 55.5)], length: 2.75, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-running-6", element: "vc:92:fill", stitch: [(60.0, 74.0), (63.53, 74.02)], length: 3.53, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-running-9", element: "vc:52:fill", stitch: [(63.69, 74.0), (60.0, 74.0)], length: 3.69, cause: ROW, step: "M13.18" },
     Astray { dog: "dog-running-9", element: "vc:68:fill", stitch: [(54.03, 44.25), (55.31, 44.25)], length: 1.28, cause: ROW, step: "M13.18" },
     Astray { dog: "dog-running-9", element: "vc:57:fill", stitch: [(32.0, 24.0), (36.0, 24.0)], length: 4.0, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-running-9", element: "vc:33:fill#2", stitch: [(55.64, 34.0), (54.3, 32.39)], length: 2.1, cause: LINES, step: "M13.17" },
 ];
 
 /// How each traced dog's shapes sew, as `SC-I0901` counts them: as running stitches, as satin columns and as
 /// tatami fills. Before M13.21, width alone chose, and the dogs sewed 64, 73, 59 and 79 shapes as satin
-/// columns and 4, 3, 6 and 7 as fills.
+/// columns and 4, 3, 6 and 7 as fills. M13.27 fills 2 shapes with arms of the dog on turf in 6 threads, and one of
+/// the running dog in 9.
 const SEWN: [(&str, [usize; 3]); 4] =
-    [("dog-on-turf-6", [25, 27, 45]), ("dog-on-turf-9", [35, 31, 49]), ("dog-running-6", [15, 21, 47]), ("dog-running-9", [18, 29, 60])];
+    [("dog-on-turf-6", [25, 25, 47]), ("dog-on-turf-9", [35, 31, 49]), ("dog-running-6", [15, 21, 47]), ("dog-running-9", [18, 28, 61])];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
@@ -176,7 +184,7 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
     assert_eq!(found, listed, "the stitches astray, as found and as listed in ASTRAY");
     // The moves sewn on from one element to the next, and the jump threads the PE800 leaves, are as the design
     // page records them (image-to-embroidery.md › Sewing order).
-    let recorded = [("dog-on-turf-6", 7, 77), ("dog-on-turf-9", 11, 78), ("dog-running-6", 3, 70), ("dog-running-9", 5, 95)];
+    let recorded = [("dog-on-turf-6", 5, 71), ("dog-on-turf-9", 11, 78), ("dog-running-6", 3, 70), ("dog-running-9", 4, 93)];
     assert_eq!(apart, recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps)));
 }
 
@@ -187,7 +195,7 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
 /// reaches a limit, and one that loses a sliver gets its row changed. Most slivers lie beside a line of fur
 /// that sews as a running stitch, which is as wide as its thread and can't reach under a neighbour.
 const SLIVERS: [(&str, usize, usize, f64, f64); 4] =
-    [("dog-on-turf-6", 0, 0, 0.0, 18.0), ("dog-on-turf-9", 0, 0, 0.0, 81.0), ("dog-running-6", 1, 0, 26.0, 25.0), ("dog-running-9", 0, 0, 0.0, 1.0)];
+    [("dog-on-turf-6", 0, 0, 0.0, 25.0), ("dog-on-turf-9", 0, 0, 0.0, 81.0), ("dog-running-6", 1, 0, 26.0, 25.0), ("dog-running-9", 0, 0, 0.0, 0.0)];
 
 #[test]
 #[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]

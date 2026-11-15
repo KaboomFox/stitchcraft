@@ -847,6 +847,47 @@ mod tests {
     }
 
     #[test]
+    fn req_auto_051_an_outline_is_a_running_stitch_after_its_fill_in_the_fill_s_thread() {
+        let p = |x: f64, y: f64| Point::new(x, y).unwrap();
+        let ring = Line { points: vec![p(0.0, 0.0), p(10.0, 0.0), p(10.0, 10.0), p(0.0, 10.0)], closed: true };
+        let side = Line { points: vec![p(20.0, 0.0), p(30.0, 0.0)], closed: false };
+        let square = Polygon { outline: vec![p(0.0, 0.0), p(0.0, 10.0), p(10.0, 10.0), p(10.0, 0.0), p(0.0, 0.0)], holes: Vec::new() };
+        let fill = |id: &str, settings: &[(&str, &str)]| Element {
+            id: ElementId::new(id).unwrap(),
+            name: None,
+            shape: Shape::Fill { path: outline(std::slice::from_ref(&square)), rule: FillRule::NonZero, gradient: None },
+            thread: stitchcraft_plan::Thread::new(stitchcraft_plan::Rgb::new(200, 30, 30)),
+            params: settings.iter().copied().collect(),
+            automatic: false,
+            hints: Hints::default(),
+            clips: Vec::new(),
+        };
+        let settings = [(TURN_STITCHES, "true"), (ANGLE, "30"), (OVERLAP, "0.5"), (TRIM_AFTER, "true")];
+        let mut elements = vec![fill("a", &settings), fill("b", &[])];
+        let mut taken = Labels::default();
+        let mut meter = Budget::DEFAULT.meter();
+        let (a, b) = (elements[0].id.clone(), elements[1].id.clone());
+        outline_after(&mut elements, &a, &[ring, side.clone()], &mut taken, &mut meter);
+        let ids: Vec<&str> = elements.iter().map(|element| element.id.as_str()).collect();
+        assert_eq!(ids, ["a", "a#2", "b"]);
+        // The outline is a line a thread wide along both lines, in the fill's thread, with the fill's settings
+        // but a fill's own, and the trim after the fill follows it now.
+        let (filled, outline) = (&elements[0], &elements[1]);
+        let Shape::Stroke { path, width, .. } = &outline.shape else { panic!("{:?}", outline.shape) };
+        assert_eq!((path.subpaths.len(), path.subpaths[0].closed, path.subpaths[1].closed, *width), (2, true, false, OUTLINE_WIDTH));
+        assert_eq!((outline.thread.clone(), outline.automatic, OUTLINE_WIDTH.get()), (filled.thread.clone(), false, 0.4));
+        assert_eq!(outline.params.iter().collect::<Vec<_>>(), [(OVERLAP, "0.5"), (TRIM_AFTER, "true")]);
+        assert_eq!(filled.params.iter().collect::<Vec<_>>(), [(ANGLE, "30"), (OVERLAP, "0.5"), (TURN_STITCHES, "true")]);
+        // A name another element has steps aside, and a fill that no longer sews has no outline.
+        outline_after(&mut elements, &a, std::slice::from_ref(&side), &mut taken, &mut meter);
+        assert_eq!(elements[1].id.as_str(), "a#2~2");
+        let gone = ElementId::new("gone").unwrap();
+        outline_after(&mut elements, &gone, std::slice::from_ref(&side), &mut taken, &mut meter);
+        outline_after(&mut elements, &b, &[side], &mut taken, &mut Budget { max_work: 0, ..Budget::DEFAULT }.meter());
+        assert_eq!(elements.iter().map(|element| element.id.as_str()).collect::<Vec<_>>(), ["a", "a#2~2", "a#2", "b", "b#2"]);
+    }
+
+    #[test]
     fn a_fill_is_given_the_outline_of_its_area_or_else_its_rings() {
         let p = |x: f64, y: f64| Point::new(x, y).unwrap();
         let triangle = |points: [(f64, f64); 3]| {

@@ -113,8 +113,18 @@ them. Do they sew as cleanly as the triple runs beside them, and does the M keep
 
 MC-8 also sews one of the owner's traced dogs, `docs/fixtures/traced-dog-running-9.vectorcraft`, 100 mm
 tall: `stitch plan docs/fixtures/traced-dog-running-9.vectorcraft --auto -o dog.pes`. Does the fur read as
-fur, the face and the eyes as hers, and do its 95 jump threads, which the PE800 doesn't cut, take long to
+fur, the face and the eyes as hers, and do its 93 jump threads, which the PE800 doesn't cut, take long to
 snip (M13.17)? 3 rows of its fills show beside thin lines of fur of another colour (M13.18): do they show?
+
+M13.27 changed what the dog sews: 2 blobs of its fur that sewed as satin columns are fills now, as a small
+star is ([which stitch a shape gets](../design/image-to-embroidery.md#which-stitch-a-shape-gets)). Write
+the dog again before sewing. MC-8 also sews the demo's badge, `web/templates/alpine-night.svg`, twice:
+`stitch plan web/templates/alpine-night.svg --auto -o badge.pes`, and the same with
+`--set auto_fill_outline=true`.
+
+- Do the 2 stars, 5.3 and 4 mm across, read as stars of 4 points when they are filled?
+- With the outline, are the stars' points sharper, and does the run round the moon and the mountains sit on
+  the fill's edge or beside it?
 
 M13.22 changed the order that the digitized halves of TS-13A, TS-13C and TS-13D sew in, and the dog's:
 write them again before sewing. The elements now sew in the order that changes thread least
@@ -156,7 +166,7 @@ changes them:
 - Sew the dog on black fabric twice, as planned and with the base layer off. The Auto effect's dialog in
   VectorCraft turns it off (`auto_base_layer`), and each fill then sews its own underlay.
 - On black, does fabric show between patches, with the base layer and without it?
-- Since M13.21 the top thread of this dog has 0 slivers, and leaves 0.001 % of the design bare. The
+- Since M13.21 the top thread of this dog has 0 slivers, and leaves less than 0.001 % of the design bare. The
   measure passes slivers up to 0.4 mm² over the base layer or within 0.4 mm of the design's outline, and 0.5 % bare
   in all (`auto_base_sliver_mm2`, `auto_base_bare_percent`). Both limits are StitchCraft's own, set from
   the 4 traced dogs. With the base layer on, can a sliver be found by eye, and does the base layer's
