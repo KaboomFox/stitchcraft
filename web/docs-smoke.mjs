@@ -27,7 +27,8 @@ try {
   assert.equal(new URL(loader).pathname, new URL('boot.mjs', preview ? demo : app).pathname, 'the loader is the preview\'s own');
   const ui = await page.evaluate(() => vectorcraft.uiInspect());
   assert.equal(ui.documents.length, 1, 'starter opens from the documentation link');
-  await page.getByText('StitchCraft ready · Starter & help', {exact: true}).click();
+  // The panel is open over the plain drawing, with its link in reach.
+  await page.getByText('StitchCraft ready · Start here', {exact: true}).waitFor();
   await page.getByRole('link', {name: 'Documentation', exact: true}).click();
   await page.waitForURL(url => url.href === root.href || url.href === new URL('index.html', root).href);
   await page.getByRole('link', {name: 'Open the browser demo', exact: true}).waitFor();

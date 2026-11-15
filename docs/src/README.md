@@ -17,7 +17,7 @@ How it is built:
 
 ## Try it in your browser
 
-[Open the browser demo](demo/index.html) with the Alpine Night starter patch, or read the
+[Open the browser demo](demo/index.html) with the Alpine Night drawing to turn into stitches, or read the
 [browser demo guide](browser-demo.md).
 
 ## Where to go

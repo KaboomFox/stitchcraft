@@ -1129,7 +1129,7 @@ fixture = "docs/fixtures/widths.svg"
 auto = true
 style = "realistic"
 scale = 10.0
-allow = ["SC-I0901", "SC-I0912", "SC-I0909"]
+allow = ["SC-I0901", "SC-I0912", "SC-I0907", "SC-I0504", "SC-I0909"]
 alt = "The same shapes digitized automatically. The line runs along its middle, tripled, and the C sews as a satin column between its edges. The disc sews as a tatami fill."
 
 [[shot]]
