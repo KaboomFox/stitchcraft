@@ -14,8 +14,8 @@ Design ──▶ 0 auto ──▶ 1 normalize ──▶ 2 validate ──▶ 3 g
 ## 0. Automatic digitizing
 
 Since M13.1, before anything else, each element the host marked automatic, a shape without settings read
-with `--auto`, becomes the ordinary elements its width calls for, with the settings that say so
-(`stitchcraft_engine::auto::digitized`, [image to embroidery](image-to-embroidery.md#stitch-types-by-width)).
+with `--auto`, becomes the ordinary elements its geometry calls for, with the settings that say so
+(`stitchcraft_engine::auto::digitized`, [image to embroidery](image-to-embroidery.md#which-stitch-a-shape-gets)).
 
 - An area is sewn as it is, apart from its narrow parts: each becomes a running stitch along its centre
   line (M13.4), or, no wider than a satin column, satin columns along its centre lines (M13.5), and the

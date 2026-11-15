@@ -146,12 +146,12 @@ the columns meet at its junctions. Where the strokes are even, as a letter's are
 Where the width swells and shrinks, each column fans at its ends and the outline sews scalloped. A part of
 one line isn't held to its evenness: a leaf and a tapering stroke narrow smoothly, and one satin column
 sews each well. A piece of an uneven part that is narrower than the narrowest satin stroke leaves the
-fill, cut as a narrow part of a broad one is ([Shapes in parts](#shapes-in-parts)), and sews as a line.
+fill, cut as a narrow part of a broad one is ([Shapes in parts](#stitch-types-by-width)), and sews as a line.
 The measure is of the whole part, so a letter of a thick and a thin stroke is uneven too, though each
 stroke is even. A design drawn in such strokes turns the rule off, which the `logo` style does.
 
 **Holes** (`REQ-AUTO-033`). A part that is filled is filled whole under the areas that fill its holes, and
-they sew on it ([Layers](#layers)). A dog's nose sews as one fill with the nostrils on it, where it sewed
+they sew on it ([Layers](#neighbours)). A dog's nose sews as one fill with the nostrils on it, where it sewed
 as 4 columns round them. A hole that nothing fills is left open, and a part sewn as columns keeps its holes,
 as a ring or a letter's counter does.
 
@@ -747,15 +747,17 @@ what covers the gaps, and a sliver is what it leaves to the base layer.
 As built, at the default stitch length of 3 mm, against the same picture with the base layer off, whose
 fills sew their own underlays:
 
-| Picture, digitized | Base layer's stitches | Stitches with it | Without it | More | At 600 stitches a minute |
+| Picture, digitized | Base layer's stitches | Stitches with it | Without it | Difference | At 600 stitches a minute |
 |---|---:|---:|---:|---:|---:|
-| Traced pear | 1,156 | 5,156 | 5,236 | 80 fewer, 1.5 % | 0.1 minutes less |
-| Traced dog on turf, 6 threads | 1,201 | 10,850 | 9,823 | 1,027 more, 10.5 % | 1.7 minutes |
-| Traced dog on turf, 9 threads | 1,188 | 11,524 | 10,548 | 976 more, 9.3 % | 1.6 minutes |
-| Traced running dog, 6 threads | 1,322 | 12,217 | 11,408 | 809 more, 7.1 % | 1.3 minutes |
-| Traced running dog, 9 threads | 1,313 | 13,240 | 12,565 | 675 more, 5.4 % | 1.1 minutes |
+| Traced pear | 1,156 | 5,096 | 5,295 | 199 fewer, 3.8 % | 0.3 minutes less |
+| Traced dog on turf, 6 threads | 1,201 | 10,463 | 11,921 | 1,458 fewer, 12.2 % | 2.4 minutes less |
+| Traced dog on turf, 9 threads | 1,188 | 11,185 | 12,850 | 1,665 fewer, 13.0 % | 2.8 minutes less |
+| Traced running dog, 6 threads | 1,322 | 11,297 | 13,015 | 1,718 fewer, 13.2 % | 2.9 minutes less |
+| Traced running dog, 9 threads | 1,313 | 13,071 | 15,183 | 2,112 fewer, 13.9 % | 3.5 minutes less |
 
-The pear's 3 large fills sew fewer stitches on one base layer than with an underlay each.
+Every picture sews fewer stitches on one base layer than with an underlay under each fill. Before M13.21
+the dogs sewed 675 to 1,027 more with it: most of their patches were satin columns then, which sew an underlay
+with or without the base layer.
 
 ### Neighbours that overlap
 

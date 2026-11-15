@@ -1034,7 +1034,7 @@ auto = true
 style = "realistic"
 scale = 5.0
 allow = ["SC-I0901", "SC-I0912", "SC-W0906", "SC-I0907", "SC-I0904", "SC-W0208", "SC-I0504", "SC-I0909"]
-alt = "The traced pear digitized automatically. Its 3 greens sew as tatami fills, with satin columns at the narrow ends of the olive and dark olive bands. Its stem sews as 2 satin columns side by side, olive and dark olive, and the light grey square is left out. Thin threads run straight from the stem to the bands' ends, 4 jumps that the machine doesn't cut."
+alt = "The traced pear digitized automatically. Its 3 greens sew as tatami fills, whole to the narrow ends of the olive and dark olive bands. Its stem sews as 2 satin columns side by side, olive and dark olive, and the light grey square is left out. Thin threads run straight from the stem to the bands, 2 jumps that the machine doesn't cut."
 
 [[shot]]
 id = "auto-pear-black"
@@ -1068,7 +1068,7 @@ auto = true
 style = "realistic"
 scale = 4.5
 allow = ["SC-I0901", "SC-I0912", "SC-I0902", "SC-I0904", "SC-I0907", "SC-I0908", "SC-W0208", "SC-I0504", "SC-I0909"]
-alt = "The traced running dog digitized automatically. Its broad patches sew as tatami fills, and its strands of fur as satin columns and triple runs between them, in black, greys, white, tan and dark brown. Thin threads run straight between patches of one colour, jumps that the machine doesn't cut."
+alt = "The traced running dog digitized automatically. Its patches sew as tatami fills, the broad and the ragged alike, and its thin strands of fur as satin columns and triple runs between them, in black, greys, white, tan and dark brown. Thin threads run straight between patches of one colour, jumps that the machine doesn't cut."
 
 [[shot]]
 id = "auto-dog-black"
@@ -1112,7 +1112,7 @@ fixture = "docs/fixtures/rules.svg"
 auto = true
 style = "realistic"
 scale = 10.0
-allow = ["SC-I0901", "SC-I0912", "SC-I0907", "SC-I0904", "SC-I0908", "SC-I0909"]
+allow = ["SC-I0901", "SC-I0912", "SC-I0907", "SC-I0904", "SC-I0908", "SC-I0909", "SC-I0504"]
 alt = "The same shapes digitized automatically. The blob sews as a small tatami fill, and so does the letter T, bar and stem. The blob with tails sews as a fill with a triple run along each tail. The nose sews as one fill with the 2 nostrils sewn on it. The leaf sews as one satin column from tip to tip."
 
 [[shot]]
