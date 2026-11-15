@@ -214,7 +214,7 @@ fn longest_stitch(rails: &[Vec<Point>; 2], rungs: &[[Point; 2]], meter: &mut Met
         // The shares of the section at which one rail or the other turns a corner, and its 2 ends.
         let share = |along: &[f64], rail: usize| -> Vec<f64> {
             let (start, end) = (from[rail], to[rail]);
-            along.iter().filter(|at| end > start && **at > start && **at < end).map(|at| (at - start) / (end - start)).collect()
+            along.iter().filter(|at| **at > start && **at < end).map(|at| (at - start) / (end - start)).collect()
         };
         let shares = [vec![0.0, 1.0], share(&along_first, 0), share(&along_second, 1)].concat();
         for t in shares {
@@ -257,7 +257,9 @@ fn point_at(rail: &[Point], along: &[f64], at: f64) -> Option<Point> {
     let next = along.partition_point(|length| *length < at).min(rail.len().saturating_sub(1));
     let (Some(to), Some(end)) = (rail.get(next), along.get(next)) else { return None };
     let Some((from, start)) = next.checked_sub(1).and_then(|before| rail.get(before).zip(along.get(before))) else { return Some(*to) };
-    Some(if end > start { from.lerp(*to, ((at - start) / (end - start)).clamp(0.0, 1.0)) } else { *to })
+    // The point before lies less far along than `at`. A piece of no length is then the rail's last, with `at`
+    // past its end: the fraction is infinite, and held to 1.
+    Some(from.lerp(*to, ((at - start) / (end - start)).clamp(0.0, 1.0)))
 }
 
 /// A column's width along its line.
@@ -664,9 +666,32 @@ mod tests {
             [Some(p(2.0, 0.0)), Some(p(4.0, 1.5)), Some(p(4.0, 3.0))]
         );
         assert_eq!([point_at(&rail, &lengths, 0.0), point_at(&[], &[], 1.0)], [Some(p(0.0, 0.0)), None]);
+        // A point as near 2 pieces of a rail lies where the first of them has it: 5 mm along a rail that
+        // comes back past it 17 mm along.
+        let there_and_back = [p(0.0, 0.0), p(10.0, 0.0), p(10.0, 2.0), p(0.0, 2.0)];
+        assert_eq!(position(&there_and_back, &super::lengths(&there_and_back), p(5.0, 1.0)), 5.0);
         // A point repeated has no length between its copies.
         let doubled = [p(0.0, 0.0), p(0.0, 0.0), p(2.0, 0.0)];
         assert_eq!(point_at(&doubled, &super::lengths(&doubled), 0.0), Some(p(0.0, 0.0)));
+        let ended_twice = [p(0.0, 0.0), p(2.0, 0.0), p(2.0, 0.0)];
+        assert_eq!(point_at(&ended_twice, &super::lengths(&ended_twice), 5.0), Some(p(2.0, 0.0)));
+    }
+
+    #[test]
+    fn req_auto_031_a_part_whose_lines_have_no_width_has_no_measures() {
+        // A band's column with its centre line moved onto the band's edge: no circle fits on it, so the part
+        // has no width to be slender or uneven by.
+        let band = band(3.0);
+        let mut meter = Budget::DEFAULT.meter();
+        let edges = Edges::of(&band, piece(&band), &mut meter).unwrap();
+        let (found, _) = sewn(&band);
+        assert!(measured(&band, &found, &edges, &mut meter).unwrap().is_some_and(|measures| measures.width > 2.9));
+        let edge = Line { points: [2.0, 10.0, 18.0].map(|x| Point::new(x, 0.0).unwrap()).to_vec(), closed: false };
+        let mut on_the_edge = found;
+        for column in &mut on_the_edge {
+            column.line = edge.clone();
+        }
+        assert_eq!(measured(&band, &on_the_edge, &edges, &mut meter), Ok(None));
     }
 
     #[test]
@@ -678,7 +703,10 @@ mod tests {
         let with = |work: u64| longest_stitch(&rails, &rungs, &mut Budget { max_work: work, ..Budget::DEFAULT }.meter());
         let least = (0..64).find(|work| with(*work).is_ok()).unwrap();
         assert_eq!(with(least), Ok(3.0));
-        assert!((0..least).all(|work| with(work) == Err(Exhausted::Work)) && least > 5, "{least}");
+        assert!((0..least).all(|work| with(work) == Err(Exhausted::Work)), "{least}");
+        // The rung costs the rails' 5 corners, and each of the 2 sections it makes its 2 ends. The corner the
+        // rung lies at is an end of both sections, and is measured as an end alone.
+        assert_eq!(least, 9);
     }
 
     #[test]

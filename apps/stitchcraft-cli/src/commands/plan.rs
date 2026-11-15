@@ -514,6 +514,11 @@ mod tests {
         // A setting given goes before the style's, and the last of a key given twice counts.
         assert!(said(&["--style", "logo", "--set", "auto_fill_uneven=true", "--set", "auto_prefer=balanced"]).contains("the rule uneven ("));
         assert!(said(&["--set", "auto_fill_uneven=true", "--set", " auto_fill_uneven = false "]).contains("the rule column ("));
+        // Each key is set once: the settings given, the last of a key first, then the style's others.
+        let given = ["--style", "logo", "--set", "auto_fill_uneven=true", "--set", "auto_max_unevenness=0.5", "--set", "auto_fill_uneven=false"];
+        let Command::Plan(args) = parsed(&given).unwrap().command else { panic!("not a plan") };
+        let set = |key: &str, value: &str| (key.to_string(), value.to_string());
+        assert_eq!(args.reading.rules(), [set("auto_fill_uneven", "false"), set("auto_max_unevenness", "0.5"), set("auto_prefer", "satin")]);
         // An advanced setting, which no dialog shows: with a bound of 0.5 the T's width varies within it.
         assert!(said(&["--set", "auto_max_unevenness=0.5"]).contains("the rule column ("));
         // A key that is no setting of the rules, a setting without a value and a style unknown are refused

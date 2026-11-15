@@ -354,6 +354,13 @@ fn req_auto_032_an_uneven_part_s_bridge_stays_in_its_fill_and_its_tail_leaves() 
     // With no tail, the part is its own fill, whole.
     let bridged = tails_of(&dumbbell(false));
     assert!(bridged.narrow.is_empty() && bridged.fill == [dumbbell(false)], "{bridged:?}");
+    // 3 blobs in a row joined by 2 bridges: both bridges stay, and the part is its own fill.
+    let row = [(3.0, 1.2), (9.0, 1.2), (9.0, 0.0), (12.0, 0.0), (12.0, 1.2), (18.0, 1.2), (18.0, 0.0), (21.0, 0.0), (21.0, 3.0), (18.0, 3.0)];
+    let back = [(18.0, 1.8), (12.0, 1.8), (12.0, 3.0), (9.0, 3.0), (9.0, 1.8), (3.0, 1.8), (3.0, 3.0), (0.0, 3.0)];
+    let three = part(&[&[(0.0, 0.0), (3.0, 0.0)][..], &row, &back].concat(), &[]);
+    assert_eq!(split(&three, 1.0, 1.0, 1.0, &mut Budget::DEFAULT.meter()).unwrap().unwrap().fill.len(), 3);
+    let joined = tails_of(&three);
+    assert!(joined.narrow.is_empty() && joined.fill == [three], "{joined:?}");
     // A blob with a tail and no bridge has a fill of one part, and is split as any part is.
     let blob = part(&[(0.0, 0.0), (3.0, 0.0), (3.0, 3.0), (1.8, 3.0), (1.8, 11.0), (1.2, 11.0), (1.2, 3.0), (0.0, 3.0)], &[]);
     assert_eq!(tails_of(&blob), split(&blob, 1.0, 1.0, 1.0, &mut Budget::DEFAULT.meter()).unwrap().unwrap());

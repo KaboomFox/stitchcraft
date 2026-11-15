@@ -192,6 +192,8 @@ fn diag_sc_i0912_names_each_part_s_rule_and_the_measures_that_decided_it() {
     .map(|fired| fired.text());
     let uneven = "uneven (2 mm wide, slenderness 10.0, width varying by 0.40, 3 centre lines)";
     assert_eq!(texts, ["speck (0.75 mm²)", "line (0.6 mm wide)", "column (3 mm wide)", "area", "refused", uneven]);
+    // A part measured by its breadth alone has no width to give.
+    assert_eq!(fired(RuleId::Area, Some(Measures::of_breadth(50.0, Breadth::Broad))).text(), "area");
     // Several parts are numbered, the first 3 with their measures, and the rest counted by rule in the table's
     // order.
     let line = fired(RuleId::Line, None);
