@@ -25,7 +25,9 @@
 //!   that the wedge before the chord goes to the fill, or from end to end, which takes in the lens between
 //!   the arc and the chord. Across a tapering point, the shortest chord would lie square to one side only,
 //!   and the column's stitches would fan out from its end. A chord that would cross the outline of the piece
-//!   or of the part is left out, and the arc stays.
+//!   or of the part is left out, and the arc stays. That holds a hair from the chord's end too: where an arc
+//!   ends just before a corner of the piece, the chord can leave between the 2, across the edge after the
+//!   corner, and the piece would have no triangulation.
 //! - **The fill** is the part without its narrow parts, and is the part itself when it has none.
 //!
 //! Every step costs a unit of work, and the buffer and the region code cost theirs.
@@ -260,14 +262,17 @@ fn crossing(level: f64, depth: &impl Fn(Point) -> f64, edges: impl Iterator<Item
 
 /// Whether the chord that closes `ring`, from its last point back to its first, crosses none of `ring`'s other
 /// edges and none of `part`'s, with `meter`'s work. Its ends lie on the part's outline, so only the chord
-/// between a hundredth of its length from each end is tried against the part's.
+/// between a hundredth of its length from each end is tried against the part's. Of the ring's own edges,
+/// which the chord's ends are corners of, one that crosses the chord anywhere inside both counts too: a
+/// corner of the ring can lie a hair from the chord's end, and the edge after it across the chord there.
 fn crosses_nothing(ring: &[Point], part: &Polygon, meter: &mut Meter) -> Result<bool, Exhausted> {
     let (Some(&from), Some(&to)) = (ring.last(), ring.first()) else { return Ok(false) };
     let inner = (from.lerp(to, 0.01), from.lerp(to, 0.99));
-    for (u, v) in ring.windows(2).map(|w| (w[0], w[1])).chain(part.rings().flat_map(segments)) {
+    let own = ring.windows(2).map(|w| (w[0], w[1], true));
+    for (u, v, own) in own.chain(part.rings().flat_map(segments).map(|(u, v)| (u, v, false))) {
         meter.charge(1)?;
         let shares = [u, v].contains(&from) || [u, v].contains(&to);
-        if !shares && geom::hit(inner.0, inner.1, u, v) != Hit::Apart {
+        if !shares && (geom::hit(inner.0, inner.1, u, v) != Hit::Apart || (own && matches!(geom::hit(from, to, u, v), Hit::Cross(_)))) {
             return Ok(false);
         }
     }

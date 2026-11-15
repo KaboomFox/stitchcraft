@@ -6,7 +6,7 @@
 //! satin columns or towards fills, fills its uneven parts or not, and gives its fills one angle, beside
 //! the overlap, the pull compensation, the background and the base layer. The bounds themselves are the
 //! advanced settings ([`ADVANCED`]): the widest satin column, the narrowest triple run, the least slenderness,
-//! the most a width varies, the narrowest piece of a fill, the smallest area, and the 2 limits of what the top
+//! the most a width varies, the farthest a column reaches from its line, the narrowest piece of a fill, the smallest area, and the 2 limits of what the top
 //! thread may leave to the base layer. MC-8 confirms the values on the machine or changes them, and a picture
 //! can need others, so each is a parameter of the shape it digitizes, read when the shape is digitized
 //! ([`AutoParams`]). A shape that sets none takes the defaults, as every shape does with `--auto`, and the
@@ -28,6 +28,8 @@ pub const STITCH: &str = "auto_stitch";
 pub const PREFER: &str = "auto_prefer";
 /// The key of the switch that fills uneven parts.
 pub const FILL_UNEVEN: &str = "auto_fill_uneven";
+/// The key of the switch that sews an outline round each fill.
+pub const FILL_OUTLINE: &str = "auto_fill_outline";
 /// The key of the fills' angle.
 pub const FILL_ANGLE: &str = "auto_fill_angle";
 /// The key of the widest satin column.
@@ -38,6 +40,8 @@ pub const MIN_TRIPLE_RUN_WIDTH: &str = "auto_min_triple_run_width_mm";
 pub const MIN_SLENDERNESS: &str = "auto_min_slenderness";
 /// The key of the most a column's width varies.
 pub const MAX_UNEVENNESS: &str = "auto_max_unevenness";
+/// The key of the farthest a column reaches from its centre line.
+pub const MAX_REACH: &str = "auto_max_reach";
 /// The key of the narrowest piece that stays in a fill.
 pub const MIN_FILL_WIDTH: &str = "auto_min_fill_width_mm";
 /// The key of the overlap.
@@ -176,6 +180,16 @@ params! {
         auto_max_unevenness: Number = "0.3", label "Most a column's width varies", range (0.0, 5.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
 
+        /// How far a part reaches from one of its centre lines on both sides of the line, at the most, for
+        /// it to sew as satin columns: the distance, divided by the radius of the widest circle that fits
+        /// inside the part centred on its lines. A column's edges lie as far from its line as that circle
+        /// reaches, so it measures 1, on one side or the other. A star measures 1.6 to 2.6: its centre line
+        /// runs from one point to another, and its other points lie far from the line on both sides. One
+        /// column along that line would sew them as bumps, so a part that reaches farther is filled. A
+        /// sharp corner reaches far on one side only, and stays a column.
+        auto_max_reach: Number = "1.4", label "Farthest a column reaches from its line", range (1.0, 20.0),
+            origin Origin::StitchCraft, stability Stability::Experimental;
+
         /// The narrowest piece of an area that stays in its fill. A piece narrower than this leaves the
         /// fill of an area wider than a satin column and sews by the rules, as a line or as columns. A
         /// piece as wide or wider stays, so that a wing 6 mm wide isn't cut from the fill of its body.
@@ -187,6 +201,14 @@ params! {
         /// knot: it is merged into the area beside it that it shares the longest edge with, or left out
         /// when it shares none.
         auto_min_area_mm2: Area = "1", label "Smallest area", range (0.0, 10.0),
+            origin Origin::StitchCraft, stability Stability::Experimental;
+
+        /// Whether each fill that automatic digitizing makes sews an outline: a running stitch round its
+        /// edge, after its rows, in its own thread. The outline draws the edge of a small shape as one
+        /// line, where the ends of its rows would leave its points blunt. It sews only where the edge
+        /// shows: not where a shape sewn after the fill covers the edge. The design goes by the setting of
+        /// its lowest automatic shape.
+        auto_fill_outline: Toggle = "false", label "Outline round fills",
             origin Origin::StitchCraft, stability Stability::Experimental;
 
         /// The largest gap in the top thread that is left to the base layer: a sliver. Where thin shapes
@@ -223,8 +245,8 @@ mod tests {
         let shape = [STITCH, PREFER, FILL_UNEVEN, FILL_ANGLE];
         let neighbours = [OVERLAP, "auto_pull_compensation_mm", IGNORE_BACKGROUND];
         let base = ["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_offset_mm", "auto_base_keep_holes"];
-        let bounds = [MAX_SATIN_WIDTH, MIN_TRIPLE_RUN_WIDTH, MIN_SLENDERNESS, MAX_UNEVENNESS, MIN_FILL_WIDTH, MIN_AREA];
-        let cover = ["auto_base_sliver_mm2", "auto_base_bare_percent"];
+        let bounds = [MAX_SATIN_WIDTH, MIN_TRIPLE_RUN_WIDTH, MIN_SLENDERNESS, MAX_UNEVENNESS, MAX_REACH, MIN_FILL_WIDTH, MIN_AREA];
+        let cover = [FILL_OUTLINE, "auto_base_sliver_mm2", "auto_base_bare_percent"];
         assert_eq!(keys, [&shape[..], &neighbours[..], &base[..], &bounds[..], &cover[..]].concat());
         // The bounds, and the 2 limits of the cover's check, are the advanced settings, which no dialog shows.
         let advanced: Vec<&str> = AutoParams::SPECS.iter().filter(|spec| spec.group == ADVANCED).map(|spec| spec.key).collect();

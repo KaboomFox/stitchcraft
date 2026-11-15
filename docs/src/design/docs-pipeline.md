@@ -303,6 +303,8 @@ per `stitch` shot of each sheet, so a new sheet gets its picture by declaring a 
 - Push to `main` → the browser demo's workflow, `web.yml`, publishes the editor with the plug-ins to
   `/app/` ([browser distribution](vectorcraft-integration.md#browser-distribution)).
 - A pull request from a branch of the repository → `web.yml` publishes its preview to `/pr/<number>/`.
+- Push to `main` → `web.yml` also publishes main's own [before and after sheet](before-after-sheet.md) to
+  `/sheet/`. A pull request's sheet is the folder `sheet/` of its preview.
 
 ### One publisher, and a branch of one commit
 

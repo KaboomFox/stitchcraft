@@ -12,6 +12,7 @@ Automatic digitizing chooses the stitches of each part of a shape by the first o
 | Area (`area`) | wider than 7 mm somewhere | a tatami fill. A piece of it narrower than 4 mm leaves the fill when the rules below make it a line or a column | [`auto_max_satin_width_mm`](params/auto.md#auto_max_satin_width_mm), [`auto_min_fill_width_mm`](params/auto.md#auto_min_fill_width_mm) |
 | Compact (`compact`) | smaller in area than 3 times its width squared | a tatami fill | [`auto_min_slenderness`](params/auto.md#auto_min_slenderness), [`auto_prefer`](params/auto.md#auto_prefer) |
 | Uneven (`uneven`) | of several centre lines, with a width that varies along them by more than 0.3 of itself | a tatami fill. A piece of it narrower than the narrowest satin stroke leaves the fill as a line | [`auto_max_unevenness`](params/auto.md#auto_max_unevenness), [`auto_fill_uneven`](params/auto.md#auto_fill_uneven), [`auto_prefer`](params/auto.md#auto_prefer) |
+| Arms (`arms`) | reaching from one of its centre lines, on both sides of it, more than 1.4 times as far as the widest circle that fits inside it on its lines | a tatami fill | [`auto_max_reach`](params/auto.md#auto_max_reach) |
 | Column (`column`) | anything else | satin columns along its centre lines |  |
 | Refused (`refused`) | a column that can't be drawn, or that would sew a stitch longer than 7 mm between its rails | a tatami fill | [`auto_max_satin_width_mm`](params/auto.md#auto_max_satin_width_mm) |
 
@@ -47,7 +48,9 @@ A shape's settings are those of VectorCraft's Auto effect on it, or on the group
 | [`auto_min_triple_run_width_mm`](params/auto.md#auto_min_triple_run_width_mm) | 0.5 mm | no: advanced |
 | [`auto_min_slenderness`](params/auto.md#auto_min_slenderness) | 3 | no: advanced |
 | [`auto_max_unevenness`](params/auto.md#auto_max_unevenness) | 0.3 | no: advanced |
+| [`auto_max_reach`](params/auto.md#auto_max_reach) | 1.4 | no: advanced |
 | [`auto_min_fill_width_mm`](params/auto.md#auto_min_fill_width_mm) | 4 mm | no: advanced |
 | [`auto_min_area_mm2`](params/auto.md#auto_min_area_mm2) | 1 mm² | no: advanced |
+| [`auto_fill_outline`](params/auto.md#auto_fill_outline) | false | no: advanced |
 | [`auto_base_sliver_mm2`](params/auto.md#auto_base_sliver_mm2) | 0.4 mm² | no: advanced |
 | [`auto_base_bare_percent`](params/auto.md#auto_base_bare_percent) | 0.5 % | no: advanced |

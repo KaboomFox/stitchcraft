@@ -43,7 +43,7 @@ use super::split;
 use super::{AutoParams, no_area};
 use crate::normalize::region::Polygon;
 use crate::normalize::region::ops::{self, area_of};
-use crate::normalize::strips::{self, Line};
+use crate::normalize::strips::{self, Column, Line};
 use crate::normalize::stroke::{distance_to_segment, segments};
 
 /// The shortest piece a narrow part's edges are cut into for its triangulation, in millimetres: a part
@@ -378,6 +378,26 @@ pub(super) fn farthest(line: &Line, outline: &Polygon, meter: &mut Meter) -> Res
         }
     }
     Ok(farthest)
+}
+
+/// How far a part whose edges `edges` holds reaches from one of the centre lines of `columns`, its columns, on
+/// both sides of the line, in radii of the widest circle that fits inside the part centred on its lines, with
+/// `meter`'s work. A column's 2 rails are the part's outline on either side of its line. Each lies as far from
+/// the line as its farthest corner beside the line ([`farthest`]), and the column reaches on both sides as far
+/// as the nearer of its rails does. The part reaches as far as the column of its that reaches farthest. A
+/// column's rails lie beside its line where the widest circle on the line touches them, so a column measures
+/// 1, however its width tapers. A star measures more: its line runs from one point to another, and the points
+/// that the line leaves out lie on both rails, far from it. The corner of a sharp turn lies on one rail only,
+/// and the other rail keeps the turn a column. 0 for lines without a point between their ends, which no circle
+/// is centred on.
+pub(super) fn reach(edges: &Edges, columns: &[Column], meter: &mut Meter) -> Result<f64, Exhausted> {
+    let (mut circle, mut beside) = (0.0_f64, 0.0_f64);
+    for column in columns {
+        circle = circle.max(widest(edges, &column.line, meter)?);
+        let [one, other] = column.rails.clone().map(|rail| Polygon { outline: rail, holes: Vec::new() });
+        beside = beside.max(farthest(&column.line, &one, meter)?.min(farthest(&column.line, &other, meter)?));
+    }
+    Ok(if circle > 0.0 { 2.0 * beside / circle } else { 0.0 })
 }
 
 /// How much nearer than an end of a line its nearest point to a corner may be, in millimetres, and the end
@@ -800,6 +820,71 @@ mod tests {
         let tapering = spread(&edges, &[from_the_tip], &mut meter).unwrap().unwrap();
         assert!(widest > 1.9 && (tapering.mean.get() - widest / 2.0).abs() < 1e-9, "{tapering:?} {widest}");
         assert!((tapering.deviation - widest / 12.0_f64.sqrt()).abs() < 1e-9, "{tapering:?} {widest}");
+    }
+
+    /// A star of `points` points round the origin, its points `outer` millimetres out and the corners between
+    /// them `inner`, the first point straight up.
+    fn star(points: usize, outer: f64, inner: f64) -> Polygon {
+        let corners: Vec<(f64, f64)> = (0..2 * points)
+            .map(|i| {
+                let (sin, cos) = sin_cos(std::f64::consts::PI * i as f64 / points as f64);
+                let r = if i % 2 == 0 { outer } else { inner };
+                (r * sin, -r * cos)
+            })
+            .collect();
+        outline(&corners)
+    }
+
+    /// How far `part` reaches from its columns' lines on both sides, and its columns.
+    fn reach_of(part: &Polygon) -> (f64, Vec<Column>) {
+        let mut meter = Budget::DEFAULT.meter();
+        let columns = strips::columns(part, piece(part), &[], 1.0, &mut meter).unwrap().unwrap().unwrap();
+        let edges = Edges::of(part, piece(part), &mut meter).unwrap();
+        (reach(&edges, &columns, &mut meter).unwrap(), columns)
+    }
+
+    #[test]
+    fn req_auto_050_a_part_reaches_as_far_as_the_nearer_rail_of_a_column_lies_from_its_line() {
+        // A band 3 by 20 mm, and a leaf: each rail lies as far from the line as the widest circle reaches.
+        let band = outline(&[(0.0, 0.0), (20.0, 0.0), (20.0, 3.0), (0.0, 3.0)]);
+        let (reached, columns) = reach_of(&band);
+        assert!((reached - 1.0).abs() < 1e-6 && columns.len() == 1, "{reached}");
+        // The star of a badge, 5.33 mm across with 4 points: its one line runs from a point to the point
+        // opposite, 5.8 mm, and the 2 other points lie 2.45 mm from it, one on each rail, where the widest
+        // circle on the line is 1.88 mm across.
+        let badge = star(4, 8.0 / 3.0, 8.0_f64.sqrt() / 3.0);
+        let (reached, columns) = reach_of(&badge);
+        assert!((reached - 2.604).abs() < 0.01 && columns.len() == 1, "{reached}");
+        // A star of 6 points whose centre lines keep one line reaches 1.61 times as far at any size, and one
+        // of 5 points 1.97 to 2.62 times, by which of its points its line runs between. Where the corners round
+        // a star's middle tie otherwise, it keeps 2 lines, and is uneven.
+        let mut one_line = 0;
+        for (points, inner, least, most) in [(5, 0.382, 1.96, 2.63), (6, 0.5, 1.61, 1.62)] {
+            for outer in [2.0, 2.665, 4.0, 6.0] {
+                let (reached, columns) = reach_of(&star(points, outer, inner * outer));
+                if columns.len() == 1 {
+                    one_line += 1;
+                    assert!(reached > least && reached < most, "{points} points, {outer} mm: {reached}");
+                }
+            }
+        }
+        assert!(one_line >= 6, "{one_line}");
+        // A letter V 5.7 mm tall in strokes 1.2 mm wide: its corner lies far from its line on one rail only.
+        let v = outline(&[(-2.07, -5.7), (-0.8, -5.7), (0.0, -3.51), (0.8, -5.7), (2.07, -5.7), (0.0, 0.0)]);
+        let (reached, _) = reach_of(&v);
+        assert!(reached < 1.0, "{reached}");
+        // Lines without a point between their ends hold no circle: such a part reaches nowhere.
+        let mut ends_only = columns;
+        for column in &mut ends_only {
+            column.line.points.truncate(2);
+        }
+        let mut meter = Budget::DEFAULT.meter();
+        let edges = Edges::of(&star(6, 6.0, 3.0), 1.0, &mut meter).unwrap();
+        assert_eq!(reach(&edges, &ends_only, &mut meter), Ok(0.0));
+        // Measuring costs work, the part's.
+        let with = |work: u64| reach(&edges, &reach_of(&badge).1, &mut Budget { max_work: work, ..Budget::DEFAULT }.meter());
+        let least = (0..100_000).find(|work| with(*work).is_ok()).unwrap();
+        assert!(least > 0 && (0..least).step_by(7).all(|work| with(work) == Err(Exhausted::Work)), "{least}");
     }
 
     #[test]
