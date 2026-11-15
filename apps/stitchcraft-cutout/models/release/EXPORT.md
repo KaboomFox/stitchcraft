@@ -5,9 +5,9 @@
 ## Sources
 
 **MobileSAM.** Its authors' repository, https://github.com/ChaoningZhang/MobileSAM, at commit
-`f706ad9c4eb7f219c00d9050e46328518ffb65d2` (2026-05-05). Its checkpoint `weights/mobile_sam.pt` is 40,728,226
-bytes, SHA-256 `6dbb90523a35330fedd7f1d3dfc66f995213d81b29a5ca8108dbcdd4e37d6c2f`. Its `LICENSE`, the Apache
-License 2.0, is `LICENSE-MobileSAM.txt` here.
+`f706ad9c4eb7f219c00d9050e46328518ffb65d2` (2026-05-05). The checkpoint `weights/mobile_sam.pt` is 40,728,226
+bytes, SHA-256 `6dbb90523a35330fedd7f1d3dfc66f995213d81b29a5ca8108dbcdd4e37d6c2f`. MobileSAM's `LICENSE`, the
+Apache License 2.0, is `LICENSE-MobileSAM.txt` here.
 
 **U²-Net-p.** Its author's repository, https://github.com/xuebinqin/U-2-Net at commit `ac7e1c8`, gives the
 checkpoint `u2netp.pth` (4.7 MB) on Google Drive (file `1rbSTGKAE-MTxBYHd-51l2hMOQPT_7EPy`) and on Baidu Pan
@@ -58,7 +58,7 @@ CPU of a runner without a GPU. The table above names the versions this build ran
 
 ## The checks
 
-The bytes of an export depend on the machine that runs it. GitHub's runner builds the release, so the pins
+The bytes of an export depend on the machine that runs it. GitHub's runner builds the release, and the pins
 are the sums of the runner's files. They were set on 2026-11-15 from the build job's exports on the runner
 image `ubuntu-24.04`, version 20261101.360.1. That image gave the same bytes in every build so far, and twice
 within each. The table above names the image this build ran on. A build stops when a file differs from its

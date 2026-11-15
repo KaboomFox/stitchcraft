@@ -43,7 +43,7 @@ Codes are never reused. A retired code keeps its page with "retired in vX".
 
 ## The registry
 
-All codes live in one table in `stitchcraft-core`: the `registry!` block in `src/diag/registry.rs`, which
+The codes are one table in `stitchcraft-core`, the `registry!` block in `src/diag/registry.rs`, which
 defines the `Code` enum. Each entry is one line — variant, id, severity, title — and its doc comment is
 the long explanation (Markdown: what it means, why it matters for the sew-out, how to fix it), so the
 text users read is also the code's rustdoc. Tests reject an entry whose id is malformed or duplicated,

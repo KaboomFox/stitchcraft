@@ -18,8 +18,8 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     it by starting the `models` workflow by hand.
   - New diagnostics, `SC-E1201` to `SC-E1205`, `SC-I1206` and `SC-E1207`. A bug-report bundle records the
     cut-out, and replays without the models.
-  - The cut-out is `stitch`'s `cutout` feature, on by default. The release `stitch` for Linux is 33.1 MB
-    with it and 6.7 MB without it.
+  - The cut-out is `stitch`'s `cutout` feature, on by default. The release `stitch` for Linux is 33.3 MB
+    with it and 6.8 MB without it.
   - A how-to, Cut a photo's subject out, and the models' place in the install page.
 - M13.16: a design digitized automatically covers the fabric, whatever its colour (`REQ-AUTO-027` to
   `REQ-AUTO-029`, `REQ-FILL-TAT-014`, `REQ-RND-003`).
