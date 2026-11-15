@@ -10,8 +10,8 @@ pub fn stitchcraft_engine::assemble::assemble(&[(&stitchcraft_engine::design::El
 pub mod stitchcraft_engine::auto
 pub mod stitchcraft_engine::auto::rules
 pub enum stitchcraft_engine::auto::rules::RuleId
-pub stitchcraft_engine::auto::rules::RuleId::Arms
 pub stitchcraft_engine::auto::rules::RuleId::Area
+pub stitchcraft_engine::auto::rules::RuleId::Arms
 pub stitchcraft_engine::auto::rules::RuleId::Asked
 pub stitchcraft_engine::auto::rules::RuleId::Column
 pub stitchcraft_engine::auto::rules::RuleId::Compact
