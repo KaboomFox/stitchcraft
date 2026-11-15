@@ -46,8 +46,19 @@ fn req_fill_gdd_011_a_ring_goes_into_the_ring_round_it_where_2_points_a_spacing_
     let mut at = |gap: f64| ring_into_ring(&inner, &square(4.0 - gap, 1.5 - gap, 6.0 + gap, 2.5 + gap), (0.5, 3.0, false), meter).unwrap();
     assert_eq!(at(1.26), None);
     assert!(at(1.24).is_some());
-    // A ring shorter than a row spacing has no 2 points to take.
+    // A ring shorter than a row spacing has no 2 points to take, nor has one just a row spacing long.
     assert_eq!(ring_into_ring(&square(5.0, 2.0, 5.1, 2.1), &outer, (0.5, 3.0, false), meter).unwrap(), None);
+    assert_eq!(ring_into_ring(&square(5.0, 2.0, 5.125, 2.125), &outer, (0.5, 3.0, false), meter).unwrap(), None);
+    assert!(ring_into_ring(&square(5.0, 2.0, 5.25, 2.25), &outer, (0.5, 3.0, false), meter).unwrap().is_some());
+    // Each of the 2 points must lie nearer than 2½ row spacings. Here the first lies just 1.25 mm from the
+    // outer ring, below its top side and 0.75 and 1 mm from a step in it, and the second nearer: the rings
+    // are joined from the walk's next step. The other way round, with the second point just 1.25 mm away, no
+    // step of the walk finds a place.
+    let stepped =
+        |step: f64, left: f64, right: f64| vec![p(0.0, left), p(step, left), p(step, right), p(10.0, right), p(10.0, 6.0), p(0.0, 6.0), p(0.0, left)];
+    let first_at_the_limit = ring_into_ring(&inner, &stepped(4.75, 0.25, 0.5), (0.5, 3.0, false), meter).unwrap().unwrap();
+    assert!((first_at_the_limit[0].x() - (4.5 + STEP)).abs() < 1e-9 && first_at_the_limit[0].y() == 0.5, "{:?}", first_at_the_limit[0]);
+    assert_eq!(ring_into_ring(&inner, &stepped(3.75, 0.5, 0.25), (0.5, 3.0, false), meter).unwrap(), None);
     // The walk goes on a CSS pixel at a time until both points are near: here from the second step, the first
     // lying 1.5 mm from a ring that is near the inner one's right half alone.
     let beside = square(5.5, 1.0, 6.5, 3.0);
@@ -83,6 +94,16 @@ fn req_fill_gdd_011_a_ring_goes_into_a_row_that_is_opened_a_row_spacing_long() {
     assert_eq!(ring_into_row(&rings, &square(3.5, 0.1, 6.5, 3.0), &[p(-1.0, -0.25), p(11.0, -0.25)], 0.5, meter).unwrap(), None);
     // A ring shorter than a row spacing has no 2 points to take.
     assert_eq!(ring_into_row(&rings, &square(5.0, 0.8, 5.1, 0.9), &row, 0.5, meter).unwrap(), None);
+    // Each of the 2 points must lie nearer than 1½ row spacings, here 3.75 mm with rows 2.5 mm apart. A row
+    // with a step in it lies just that far from the ring's first point and nearer its second: the ring goes
+    // in from the walk's next step. With the second point just that far, it finds no place.
+    let wide = Polygon { outline: square(0.0, 0.0, 40.0, 40.0), holes: Vec::new() };
+    let wide_rings = Rings::new(&wide, meter).unwrap();
+    let big = square(10.0, 10.0, 20.0, 20.0);
+    let stepped = |step: f64, left: f64, right: f64| [p(0.0, left), p(step, left), p(step, right), p(40.0, right)];
+    let first_at_the_limit = ring_into_row(&wide_rings, &big, &stepped(12.25, 6.25, 7.0), 2.5, meter).unwrap().unwrap();
+    assert!(first_at_the_limit.iter().any(|q| (q.x() - (10.0 + STEP)).abs() < 1e-9 && q.y() == 10.0), "{:?}", xy(&first_at_the_limit));
+    assert_eq!(ring_into_row(&wide_rings, &big, &stepped(10.25, 7.0, 6.25), 2.5, meter).unwrap(), None);
 }
 
 #[test]
@@ -158,7 +179,9 @@ fn req_fill_gdd_011_a_ring_beside_a_hole_is_joined_on_into_the_next_row() {
         let mut rows = vec![vec![p(x, -0.5), p(x, 4.5)]];
         pass(&mut rows, Vec::new()).unjoined.len()
     };
-    assert_eq!((aside(2.5 - 2.0 * NEAR), aside(2.5 - NEAR / 2.0)), (1, 0));
+    // The ring's left side is at x = 3: a row 0.5005 mm from it is too far, and one 0.5001 mm from it is near, a
+    // thousandth of a CSS pixel being 0.00026 mm.
+    assert_eq!((aside(2.4995), aside(2.4999)), (1, 0));
 }
 
 #[test]
@@ -178,6 +201,15 @@ fn req_fill_gdd_011_the_rows_are_sorted_out_and_joined() {
     assert_eq!(all.len(), 2);
     assert!(all[0].len() > 2 && all[0].contains(&p(8.0, 2.5)), "{:?}", xy(&all[0]));
     assert_eq!(xy(&all[1]), [(3.0, 6.0), (1.0, 6.0), (1.0, 1.0), (5.0, 1.0), (5.0, 6.0), (3.0, 6.0)]);
+    // A row that starts inside the piece and doesn't close stays as it is, whatever lies outside.
+    let hook = vec![p(2.0, 1.0), p(2.0, 6.0), p(4.0, 6.0), p(4.0, 2.0)];
+    let kept = joined(&piece, &rings, vec![hook.clone(), ring.clone()], with, meter).unwrap();
+    assert_eq!(kept.len(), 1);
+    assert_eq!(kept[0].first(), hook.first());
+    // 2 rings side by side, neither round the other: each goes into the row.
+    let apart = joined(&piece, &rings, vec![level(1.0), square(1.0, 1.5, 3.0, 2.5), ring.clone()], with, meter).unwrap();
+    assert_eq!(apart.len(), 1);
+    assert!(apart[0].contains(&p(3.0, 2.5)) && apart[0].contains(&p(8.0, 2.5)), "{:?}", xy(&apart[0]));
     // A ring inside another goes into it first, smallest first, and then both into the row.
     let nested = vec![level(1.0), square(5.5, 1.5, 8.5, 3.0), square(6.0, 2.0, 8.0, 2.5)];
     let one = joined(&piece, &rings, nested.clone(), with, meter).unwrap();

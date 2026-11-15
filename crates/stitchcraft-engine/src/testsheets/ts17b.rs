@@ -255,6 +255,36 @@ mod tests {
     }
 
     #[test]
+    fn ts17b_s_fan_and_egg_sew_inside_their_shapes_round_their_guides() {
+        let plan = crate::testsheets::find("TS-17B").unwrap().plan().unwrap();
+        let sewn =
+            |block: usize| -> Vec<Point> { plan.blocks[block].stitches.iter().filter(|s| s.kind == StitchKind::Normal).map(|s| s.at).collect() };
+        // The plan lies about the hoop's middle, so each sample is placed by the box round its own stitches.
+        let span = |points: &[Point], of: fn(&Point) -> f64| {
+            points.iter().map(of).fold((f64::INFINITY, f64::NEG_INFINITY), |(least, most), v| (least.min(v), most.max(v)))
+        };
+        // The fan: a band from 10 to 30 mm round a middle 7.66 mm below its lowest corners, 40° to each side
+        // of straight up. Its rows are arcs round that middle, so most stitches keep their distance from it.
+        let fan = sewn(36);
+        let ((left, right), (top, bottom)) = (span(&fan, |q| q.x()), span(&fan, |q| q.y()));
+        assert!((right - left - 38.56).abs() < 0.5 && (bottom - top - 22.34).abs() < 0.5, "{} by {}", right - left, bottom - top);
+        let middle = Point::new((left + right) / 2.0, bottom + 7.66).unwrap();
+        let far = fan.iter().map(|q| q.distance(middle)).fold(0.0, f64::max);
+        let near = fan.iter().map(|q| q.distance(middle)).fold(f64::INFINITY, f64::min);
+        assert!(fan.len() > 800 && near > 9.6 && far < 30.4, "{} from {near} to {far}", fan.len());
+        let round = fan.windows(2).filter(|w| w[0].distance(w[1]) > 1.5 && (w[0].distance(middle) - w[1].distance(middle)).abs() < 0.1).count();
+        assert!(round * 2 > fan.len(), "{round} of {}", fan.len());
+        // The egg: 18.5 mm to each side of its middle and 15.5 mm above and below it, filled to its edge and
+        // no further, as an ellipse is.
+        let egg = sewn(37);
+        let ((left, right), (top, bottom)) = (span(&egg, |q| q.x()), span(&egg, |q| q.y()));
+        assert!((right - left - 37.0).abs() < 0.5 && (bottom - top - 31.0).abs() < 0.5, "{} by {}", right - left, bottom - top);
+        let (cx, cy) = ((left + right) / 2.0, (top + bottom) / 2.0);
+        let out = |q: &Point| ((q.x() - cx) / 18.5) * ((q.x() - cx) / 18.5) + ((q.y() - cy) / 15.5) * ((q.y() - cy) / 15.5);
+        assert!(egg.len() > 1_000 && egg.iter().all(|q| out(q) < 1.03), "{}", egg.len());
+    }
+
+    #[test]
     fn ts17b_sews_each_sample_s_underlay_then_each_colour_once() {
         let plan = crate::testsheets::find("TS-17B").unwrap().plan().unwrap();
         // Each colour block's sample and thread.

@@ -258,6 +258,15 @@ mod tests {
             sewn(std::slice::from_ref(&within), &offset, &anchor),
             [vec![(4.0, 1.0), (7.0, 1.0), (7.0, 3.0), (5.0, 3.0), (3.0, 3.0), (3.0, 1.0), (4.0, 1.0)]]
         );
+        // An anchor line that ends on the ring's first point meets its first side and its last there: one
+        // crossing, and the ring is stitched once round from it.
+        let at_start = [vec![p(2.5, 0.5), p(3.0, 1.0)]];
+        assert_eq!(
+            sewn(std::slice::from_ref(&within), &offset, &at_start),
+            [vec![(3.0, 1.0), (5.0, 1.0), (7.0, 1.0), (7.0, 3.0), (5.0, 3.0), (3.0, 3.0), (3.0, 1.0)]]
+        );
+        // A row of no point sews nothing.
+        assert!(sewn(&[Vec::new()], &offset, &anchor).is_empty());
         // A row that crosses itself is no ring: it is stitched from its start, whatever the anchor line.
         let eight = vec![p(3.0, 1.0), p(7.0, 3.0), p(7.0, 1.0), p(3.0, 3.0), p(3.0, 1.0)];
         assert_eq!(sewn(std::slice::from_ref(&eight), &offset, &anchor), sewn(std::slice::from_ref(&eight), &offset, &[]));

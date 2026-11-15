@@ -213,11 +213,6 @@ impl Bounds {
         Ok(points.first().is_some_and(|&p| self.holds(p)))
     }
 
-    /// Whether `other` lies in the box, its edges included.
-    pub(super) fn holds_box(&self, other: &Bounds) -> bool {
-        self.min[0] <= other.min[0] && self.min[1] <= other.min[1] && other.max[0] <= self.max[0] && other.max[1] <= self.max[1]
-    }
-
     /// Whether `p` lies in the box or on its edges.
     fn holds(&self, p: Point) -> bool {
         at_least(p.x(), self.min[0]) && at_least(self.max[0], p.x()) && at_least(p.y(), self.min[1]) && at_least(self.max[1], p.y())

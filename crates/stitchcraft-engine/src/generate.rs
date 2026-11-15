@@ -1097,9 +1097,8 @@ fn ripple(
 /// type is known, an
 /// element offers what Ink/Stitch's would, even of a method StitchCraft does not sew yet (ADR 0014): a
 /// stroke of any method its first point, as Ink/Stitch's strokes all do, and a satin column of any method
-/// its rails. A fill of a method StitchCraft does not sew offers nothing, since what it would offer is not
-/// known. Neither does an element whose shape cannot be read, or the settings its offer depends on: those
-/// that choose its stitch type, and a satin column's. They are read as its stitch type reads them. A fill
+/// its rails. Every fill method is sewn. An element offers nothing when its shape cannot be read, or the
+/// settings its offer depends on: those that choose its stitch type, and a satin column's. They are read as its stitch type reads them. A fill
 /// of any method, or a satin column, with a start position offers that, where it starts (`REQ-GEN-001`). A
 /// fill cut to its clips offers what they leave of its area, a stroke the first point of the first piece
 /// they leave, and either offers nothing when they leave nothing; a satin column is sewn whole
@@ -1112,21 +1111,6 @@ pub fn approach(element: &Element, settings: &DesignSettings, budget: &Budget) -
         return Some(Approach::Point(start));
     }
     let (path, width, join) = match &element.shape {
-        Shape::Fill { .. }
-            if !matches!(
-                stitch_type,
-                StitchType::TatamiFill
-                    | StitchType::ContourFill
-                    | StitchType::MeanderFill
-                    | StitchType::CircularFill
-                    | StitchType::CrossStitch
-                    | StitchType::LinearGradientFill
-                    | StitchType::TartanFill
-                    | StitchType::GuidedFill
-            ) =>
-        {
-            return None;
-        }
         Shape::Fill { path, rule, .. } => {
             let parts = region::build_clipped(path, *rule, &element.clips, &mut budget.meter()).ok()?.region.parts;
             return (!parts.is_empty()).then_some(Approach::Area(parts));
