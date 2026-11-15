@@ -113,7 +113,7 @@ fn a_vectorcraft_shot_is_declared_with_its_kind_s_fields() {
 #[test]
 fn the_window_s_job_names_the_dialog_s_row_and_its_parameters_from_the_manifest() {
     let ui = shot(UI, "plugins = [\"fill\"]\nmenu = [\"Effect\", \"Plug-ins\"]\ndialog = \"fill\"");
-    let entry = job(&ui, Path::new("/out/probe.vectorcraft"), Path::new("/modules"), Path::new("/out/probe.png")).unwrap();
+    let entry = job(&ui, Path::new("/out/probe.vectorcraft"), Path::new("/modules"), Path::new("/out/probe.png"), None).unwrap();
     let manifest = stitchcraft_vc_plugin::manifest::family(Family::Fill);
     assert_eq!(entry["dialog"]["row"], json!(manifest.name));
     let params = entry["dialog"]["params"].as_array().unwrap();
@@ -131,18 +131,35 @@ fn the_window_s_job_names_the_dialog_s_row_and_its_parameters_from_the_manifest(
     assert_eq!(entry["plugins"], json!([{ "path": Path::new("/modules").join("fill.wasm").to_string_lossy() }]));
     // A menu's picture has no dialog, and the window keeps its size.
     let menu = shot(UI, "plugins = [\"fill\"]\nmenu = [\"Effect\", \"Plug-ins\"]");
-    let entry = job(&menu, Path::new("/d"), Path::new("/m"), Path::new("/p")).unwrap();
-    assert_eq!((&entry["dialog"], &entry["window"]), (&Value::Null, &Value::Null));
+    let entry = job(&menu, Path::new("/d"), Path::new("/m"), Path::new("/p"), None).unwrap();
+    assert_eq!((&entry["dialog"], &entry["window"], &entry["profile"]), (&Value::Null, &Value::Null, &Value::Null));
 }
 
 #[test]
-fn the_window_s_job_installs_a_heavy_module_as_a_person_allows_it() {
-    // VectorCraft refuses to install Stroke to Satin, which asks for a heavy budget, without `allowHeavy`,
-    // and the window took no picture of its menu.
+fn the_window_starts_with_a_profile_that_holds_a_shot_s_heavy_module() {
+    // The app of VectorCraft 0.23 refuses Stroke to Satin, which asks for a heavy budget, from a request,
+    // with `allowHeavy` too, and the window took no picture of its menu. The module is in the profile the
+    // window starts with, and the window installs the others itself.
     let menu = shot(UI, "plugins = [\"satin\", \"stroke-to-satin\"]\nmenu = [\"Object\", \"Plug-ins\"]");
-    let entry = job(&menu, Path::new("/d"), Path::new("/m"), Path::new("/p")).unwrap();
+    let held = Path::new("/d").join("profile");
+    let entry = job(&menu, Path::new("/d"), Path::new("/m"), Path::new("/p"), Some(&held)).unwrap();
     let at = |module: &str| Path::new("/m").join(format!("{module}.wasm")).to_string_lossy().into_owned();
-    assert_eq!(entry["plugins"], json!([{ "path": at("satin") }, { "path": at("stroke-to-satin"), "allowHeavy": true }]));
+    assert_eq!(entry["plugins"], json!([{ "path": at("satin") }]));
+    assert_eq!(entry["profile"], json!(held.to_string_lossy()));
+}
+
+#[test]
+fn only_a_shot_with_a_heavy_module_gets_a_profile() {
+    let dir = util::root().join("target/xtask-tests/shots-profile");
+    let _ = std::fs::remove_dir_all(&dir);
+    let cli = Path::new("/no/such/vectorcraft-cli");
+    let light = shot(UI, "plugins = [\"fill\"]\nmenu = [\"Effect\", \"Plug-ins\"]");
+    assert_eq!(profile(&light, cli, Path::new("/m"), &dir), Ok(None));
+    assert!(!dir.exists(), "a shot without a heavy module leaves no folder");
+    // A heavy module's profile is made by VectorCraft's command line: without one, the shot says so.
+    let heavy = shot(UI, "plugins = [\"satin\", \"stroke-to-satin\"]\nmenu = [\"Object\", \"Plug-ins\"]");
+    let said = profile(&heavy, cli, Path::new("/m"), &dir).unwrap_err();
+    assert!(said.contains("/no/such/vectorcraft-cli"), "{said}");
 }
 
 #[test]
