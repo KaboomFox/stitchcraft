@@ -31,7 +31,7 @@ OUT = ROOT / 'target/web'
 # offers them as downloads. The browser check installs every other module, so a wrong entry fails it.
 HEAVY = ('stroke-to-satin', 'route-satins', 'route-runs')
 # The scripts a preview brings with it. `start.mjs` belongs to the editor's page alone.
-SCRIPTS = ('boot.mjs', 'loader.mjs', 'starter.mjs')
+SCRIPTS = ('boot.mjs', 'loader.mjs', 'starter.mjs', 'exports.mjs', 'engine.mjs', 'engine-worker.mjs')
 TITLE = 'StitchCraft in VectorCraft'
 # GitHub refuses a push that holds a file of 100 MB or more, so the publisher could never publish one.
 LARGEST_FILE = 100 * 1000 * 1000
