@@ -292,14 +292,24 @@ the base layer, 0.5 % of the design. The reference machine hasn't sewn a base la
 
 ### Sewing order
 
-The shapes sew in an order StitchCraft chooses. 4 rules decide it, each where the rules before it leave a
+The shapes sew in an order StitchCraft chooses. 5 rules decide it, each where the rules before it leave a
 choice:
 
 1. Of 2 shapes that overlap, the lower sews first, as drawn.
-2. A column or a line sews after a fill it borders, and covers its edge.
-3. The thread stays the same as long as a shape of that thread may sew next. The machine then changes
-   thread as seldom as it can.
-4. Of those shapes, the nearest sews next.
+2. A running line sews after a fill it borders, and covers its edge.
+3. The thread changes as seldom as rules 1 and 2 allow. On a machine with one needle, each change is a
+   rethread by hand. Each thread sews every shape it can before the next thread starts, and StitchCraft
+   searches for the row of threads with the fewest changes.
+4. A satin column sews after a fill it borders where that costs no thread change. Where it sews first, it
+   reaches 1 mm under the fill.
+5. Of the shapes a thread may sew, the nearest sews next.
+
+One thread or another comes back where the rules need it. Dark outlines sew after the light fills they
+border, and a dark fill under those sews before them. A picture in 6 threads changes thread 5 times at
+least. Traced from a photo in 6 threads, a dog changes thread 8 times, and in 9 threads 12 times.
+Fewer thread changes leave more jump threads to cut, because the machine cuts the thread at a change and
+not at a jump. `stitch plan` says how often the thread changes, and `SC-I0907` compares the order with
+paint order.
 
 ### Settings by width
 

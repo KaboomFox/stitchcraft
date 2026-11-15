@@ -177,10 +177,10 @@ mod tests {
         // Each sheet's size, its conformance case's to the micrometre, and its stitches: what MC-8 sews, which
         // changes with any change to what a picture sews.
         for (id, size, stitches) in [
-            ("TS-13A", [126.001, 167.75], 25_878),
+            ("TS-13A", [126.001, 167.75], 25_731),
             ("TS-13B", [110.597, 148.4], 15_768),
-            ("TS-13C", [111.397, 107.5], 11_326),
-            ("TS-13D", [115.0, 108.386], 27_601),
+            ("TS-13C", [111.397, 107.5], 11_323),
+            ("TS-13D", [115.0, 108.386], 27_599),
         ] {
             let plan = find(id).unwrap().plan().unwrap();
             let bounds = plan.bounds().unwrap();
@@ -254,11 +254,11 @@ mod tests {
             let [(a, b), (c, d)] = halves(&plan);
             let said = format!("The bottom half changes thread {a} times and jumps {b} times, the top half {c} and {d} times.");
             assert!(sheet.checks.iter().any(|check| check.contains(&said)), "{id}: {said}");
-            // Digitized, no sheet changes thread more often but TS-13C: its base layer sews in the thread
-            // that paints the most, and the shapes on it start in the thread the half as drawn ends with. A
-            // letter digitized is columns, with jumps between them, where a letter filled sews in one piece:
-            // TS-13B jumps more than twice as often digitized.
-            assert_eq!(c > a, id == "TS-13C", "{id}: {said}");
+            // Digitized, no sheet changes thread more often: the shapes start in the base layer's thread,
+            // and each thread sews once but TS-13B's black, whose lines sew after the fills they border
+            // (REQ-AUTO-037). A letter digitized is columns, with jumps between them, where a letter filled
+            // sews in one piece: TS-13B jumps more than twice as often digitized.
+            assert!(c <= a, "{id}: {said}");
             assert_eq!(d > 2 * b, id == "TS-13B", "{id}: {said}");
         }
     }
