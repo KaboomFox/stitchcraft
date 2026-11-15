@@ -188,11 +188,11 @@ satin columns.
 
 A small star is filled too. Its centre line runs from one point to the point opposite, and one satin
 column along that line would sew the other points as bumps on its sides. StitchCraft measures how far a
-shape lies from its centre line on both sides, and fills one that reaches much farther than a column
+shape lies from its centre line on both sides, and fills one that lies much farther out than a column
 does. A cross with square arms sews a column along each arm, and a letter V keeps its columns: its corner
 lies on one side only.
 
-A fill can sew an outline, a running stitch round its edge after its rows, in its own thread. The outline
+A fill can sew an outline: a running stitch round its edge in its own thread, sewn after its rows. The outline
 draws the points of a small shape, which the ends of a fill's rows leave blunt. It is off unless you ask,
 since on a traced photo each piece of edge is a jump thread to cut:
 `stitch plan badge.svg --auto -o badge.pes --set auto_fill_outline=true`. It sews only where the edge

@@ -123,8 +123,8 @@ the dog again before sewing. MC-8 also sews the demo's badge, `web/templates/alp
 `--set auto_fill_outline=true`.
 
 - Do the 2 stars, 5.3 and 4 mm across, read as stars of 4 points when they are filled?
-- With the outline, are the stars' points sharper, and does the run round the moon and the mountains sit on
-  the fill's edge or beside it?
+- With the outline, are the stars' points sharper, and is the run round the moon and the mountains on the
+  fill's edge or beside it?
 
 M13.22 changed the order that the digitized halves of TS-13A, TS-13C and TS-13D sew in, and the dog's:
 write them again before sewing. The elements now sew in the order that changes thread least

@@ -69,13 +69,13 @@ use stitchcraft_params::{Family, StitchType, Validated};
 
 use super::{AutoParams, Style, outline, painted};
 use crate::design::{DesignSettings, Element, FillRule, Path, Shape};
-use crate::normalize::strips::Line;
 use crate::generate::{stitch_type_of, trim_or_stop_left_out};
 use crate::generators::pull::PULL_COMPENSATION;
 use crate::generators::satin::{self, SatinParams};
 use crate::normalize::region::geom::{self, Envelope};
 use crate::normalize::region::ops::{self, Parts};
 use crate::normalize::region::{self, Polygon};
+use crate::normalize::strips::Line;
 use crate::normalize::stroke;
 
 /// Whether an automatic area, or a part or a piece of one, `area` square millimetres large is a speck:

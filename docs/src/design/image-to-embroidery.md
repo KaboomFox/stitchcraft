@@ -125,9 +125,9 @@ running dog, 62 of 107 shapes sewed so.
 - **Lines.** How many centre lines the part has. A part of one line has no branch.
 - **Reach.** How far the part lies from one of its centre lines on both sides of the line, in radii of the
   widest circle that fits inside it centred on its lines. A column has 2 rails, the part's outline on either
-  side of its line. Each rail lies as far from the line as its farthest corner beside the line. The column
-  reaches as far as the nearer of its rails, and the part as far as its column that reaches farthest. A
-  column measures 1 however its width tapers, and a star 1.6 to 2.6.
+  side of its line. Each rail is measured by its farthest corner beside the line, and a column by the
+  nearer of its rails. A part measures what its farthest column does. However its width tapers, a column
+  measures 1, and a star measures 1.6 to 2.6.
 
 ### The rules
 
@@ -158,18 +158,18 @@ stroke is even. A design drawn in such strokes turns the rule off, which the `lo
 **A part with arms is filled** (`REQ-AUTO-050`, M13.27). A star of 4 points 5 mm across has 2 axes, and
 its centre lines keep one of them. The points of the other axis are short for the star's middle, so they
 are left out of the lines as bumps, as the corner of a sharp turn is
-([strips, junctions and ends](algorithms/centre-lines.md#strips-junctions-and-ends)). Such a star counted
+([centre lines](algorithms/centre-lines.md#strips-junctions-and-ends)). Such a star counted
 one line, 0.97 mm wide and 7.5 times as slender, which is neither compact nor uneven. It sewed as one satin
-column from point to point, with its 2 other points as bumps on the column's sides. The reach tells such a
-part from a column: the points left out lie on both rails, far from the line, where a column's rails lie
-no farther than its widest circle reaches. A part that reaches more than 1.4 times as far is filled. The
-corner of a sharp turn lies on one rail only, so a letter V measures under 1 and keeps its columns. The
-rule comes after the uneven one, so a part that was filled before is filled by the same rule as before,
+column from point to point, with its 2 other points as bumps on the column's sides. This measure tells
+such a part from a column. The points left out lie on both rails, far from the line. A column's rails lie
+no farther from its line than the radius of its widest circle. A part that measures more than 1.4 is
+filled. The corner of a sharp turn lies on one rail only. A letter V measures under 1, and keeps its
+columns. The rule comes after the uneven one, so a part that was filled before is filled by the same rule as before,
 and only columns moved.
 
 2 other measures were tried first. Counting the points left out as centre lines makes a star uneven, but a
-letter V 4 mm tall varies by 0.29 of its width, 0.01 under that rule's bound. The reach on one side alone,
-like the longest stitch for the line's length, measures a sharp corner as it measures a star's point. The
+letter V 4 mm tall varies by 0.29 of its width, 0.01 under that rule's bound. Measured on one side alone,
+or as the longest stitch for the line's length, a sharp corner counts as a star's point does. The
 rule has 2 limits. A star of 3 points measures 0.87, since its third point lies on one rail as a corner
 does, and stays a column. A star nowhere wider than the narrowest satin stroke is a line before its
 columns are looked for.
@@ -213,8 +213,8 @@ to 1.5 mm, and split a satin stitch at 7 mm to keep its look. The least slendern
 varies and the narrowest piece of a fill are StitchCraft's own. Their values come from measurements of 9
 pictures, which are 2 traced dogs, 2 traced photos, a pear, 3 emblems and a lettered patch, whose letters all kept
 their columns.
-Between a slenderness of 2 and 4 the running dog's result moves by 7 shapes of 107. The farthest reach,
-1.4, lies between what was measured on 2026-11-15. Drawn bands, leaves, crosses and letters measure at
+Between a slenderness of 2 and 4 the running dog's result moves by 7 shapes of 107. The bound of a
+part with arms, 1.4, lies between what was measured on 2026-11-15. Drawn bands, leaves, crosses and letters measure at
 most 1.0, the lettered patch's letters at most 1.19, and the dogs' parts that sew as columns at most 1.23.
 Drawn stars of 4, 5 and 6 points measure 1.61 to 2.62, and 5 blobs of the dogs' fur 1.51 to 2.11. MC-8 confirms the
 defaults or changes them.
@@ -609,14 +609,14 @@ from falling back, and MC-8 tells whether 0.4 mm is the pull on the machine.
 
 A tatami fill's rows end at its edge, and the thread pulls each row's end in. On a small shape with points,
 such as a star 5 mm across, the ends of the rows are most of what shows, and the points sew blunt. A
-digitizer runs a stitch round such a shape after filling it, which draws the edge as one line. A design
-asks for that with `auto_fill_outline` (M13.27, `REQ-AUTO-051`), read of its lowest automatic shape as the
-base layer's settings are.
+digitizer runs a stitch round such a shape after filling it, which draws the edge as one line.
+`auto_fill_outline` turns that on for a design (M13.27, `REQ-AUTO-051`), read of its lowest automatic
+shape as the base layer's settings are.
 
 Each automatic area then sews a running stitch along its edge, in its own thread, in an element of its own
 straight after the area, named after it with `#2`. The edge is the area's as the layers and the specks
 leave it, before the area reaches under its neighbours: what shows of it. Where a shape sewn after the area
-touches the edge, the area reaches the overlap under that shape, and a run along the edge would lie under
+touches the edge, the area lies under that shape by the overlap, and a run along the edge would lie under
 that shape's stitches and thicken them. So the outline leaves out the edge within `auto::TOUCHING` of each
 shape sewn after the area, and of each other element of the area's own shape, whose columns and lines are
 the same shape going on. A line digitized from a stroke goes over an area, and hides no edge. The edge is
@@ -633,8 +633,8 @@ The setting is off by default, for what it costs, measured on 2026-11-15:
 | Dog on turf, 6 threads | 10420 to 11031 | 79 to 101 | 8 |
 | Running dog, 6 threads | 11330 to 12089 | 79 to 102 | 8 |
 
-An outline sews in its fill's thread straight after the fill, so it changes no thread. On the badge the
-needle reaches each outline from where its fill ends without a jump. A traced photo's areas have edges in
+An outline sews in its fill's thread straight after the fill, and doesn't change the thread. On the badge
+the needle sews on from where each fill ends to its outline without a jump. A traced photo's areas have edges in
 many pieces between their neighbours, and each piece is a jump, which a machine with one needle leaves as
 a thread to cut by hand. So a badge or a logo gains by it and a photo doesn't. It is an advanced setting:
 the Auto effect's dialog holds 12 rows in its window, and a thirteenth doesn't fit ([Settings](#settings)).

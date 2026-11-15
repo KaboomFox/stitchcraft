@@ -58,9 +58,9 @@ pub(super) fn outlines(shapes: &mut Shapes, budget: &Budget) -> (Vec<(ElementId,
 fn shown(shapes: &mut Shapes, index: usize, region: &[Polygon], meter: &mut Meter) -> Result<Vec<Line>, Failed> {
     let Some(bounds) = envelope(region) else { return Ok(Vec::new()) };
     let mut covering = Vec::new();
-    for other in (0..shapes.len()).filter(|&other| other != index) {
+    for other in 0..shapes.len() {
         meter.charge(1)?;
-        let own = shapes.of_shape.get(other) == shapes.of_shape.get(index);
+        let own = other != index && shapes.of_shape.get(other) == shapes.of_shape.get(index);
         let covers = (other > index || own) && shapes.kind(other) != Some(Kind::Line);
         if !covers || !shapes.bounds(other).is_some_and(|theirs| near(&bounds, TOUCHING, &theirs)) {
             continue;
@@ -161,9 +161,11 @@ mod tests {
         Sewn { element: filled(id, &[part]), area: Some(AutoParams::defaults()), automatic: true, reach: None, shape, part: None }
     }
 
-    /// The outlines of `sewn`, by area, each line's length to the micrometre and whether it closes, found
-    /// with `budget`, and how much was said.
-    fn outlined(sewn: Vec<Sewn>, budget: &Budget) -> (Vec<(String, Vec<(f64, bool)>)>, usize) {
+    /// An area's id, and each line of its outline: its length to the micrometre, and whether it closes.
+    type Outlined = (String, Vec<(f64, bool)>);
+
+    /// The outlines of `sewn`, by area, found with `budget`, and how much was said.
+    fn outlined(sewn: Vec<Sewn>, budget: &Budget) -> (Vec<Outlined>, usize) {
         let mut shapes = Shapes::new(sewn, &DesignSettings::default(), &Budget::DEFAULT);
         let (found, said) = outlines(&mut shapes, budget);
         assert!(said.iter().all(|said| said.code == Code::AutoUnder && said.message.ends_with("so it sews no outline.")), "{said:?}");
@@ -172,13 +174,13 @@ mod tests {
     }
 
     /// [`outlined`] with the default budget, of which nothing is said.
-    fn outlines_of(sewn: Vec<Sewn>) -> Vec<(String, Vec<(f64, bool)>)> {
+    fn outlines_of(sewn: Vec<Sewn>) -> Vec<Outlined> {
         let (found, said) = outlined(sewn, &Budget::DEFAULT);
         assert_eq!(said, 0);
         found
     }
 
-    fn one(id: &str, length: f64, closed: bool) -> (String, Vec<(f64, bool)>) {
+    fn one(id: &str, length: f64, closed: bool) -> Outlined {
         (id.to_string(), vec![(length, closed)])
     }
 
@@ -196,16 +198,17 @@ mod tests {
         let pair = outlines_of(vec![area("a", left.clone(), 0), area("b", right.clone(), 1)]);
         assert_eq!(pair, [one("a", 30.0, false), one("b", 40.0, true)]);
         // 2 elements of one shape leave the edge between them out both: the shape goes on across it.
-        let own = outlines_of(vec![area("a", left.clone(), 0), area("b", right.clone(), 0)]);
+        let own = outlines_of(vec![area("a", left.clone(), 0), area("b", right, 0)]);
         assert_eq!(own, [one("a", 30.0, false), one("b", 30.0, false)]);
-        // A line that starts where the ring does isn't cut there: a square that covers 2 mm of the first
-        // side's middle leaves one line of 38 mm, from one of its sides round to the other.
-        let notch = square((-1.0, 4.0), (1.0, 6.0));
+        // A line that starts where the ring does isn't cut there: a square that covers 0.8 mm of the first
+        // side's middle hides the 2 pieces of 0.5 mm whose middles it holds, and leaves one line of 39 mm, from
+        // one of its sides round to the other.
+        let notch = square((-1.0, 4.6), (1.0, 5.4));
         let mut shapes = Shapes::new(vec![area("a", left.clone(), 0), area("n", notch, 1)], &DesignSettings::default(), &Budget::DEFAULT);
         let (found, _) = outlines(&mut shapes, &Budget::DEFAULT);
         let line = &found[0].1[0];
-        assert_eq!((found[0].1.len(), line.closed, line.points.first(), line.points.last()), (1, false, Some(&p(0.0, 6.0)), Some(&p(0.0, 4.0))));
-        assert!((line.length() - 38.0).abs() < 1e-9 && line.points.len() == 6, "{line:?}");
+        assert_eq!((found[0].1.len(), line.closed, line.points.first(), line.points.last()), (1, false, Some(&p(0.0, 5.5)), Some(&p(0.0, 4.5))));
+        assert!((line.length() - 39.0).abs() < 1e-9 && line.points.len() == 6, "{line:?}");
         // A shape far from it covers none of it, and neither does a line digitized from a stroke, which
         // goes over the area.
         let far = square((50.0, 50.0), (60.0, 60.0));
@@ -229,13 +232,15 @@ mod tests {
         // doesn't: the area has no outline.
         assert_eq!(outlines_of(vec![area("a", square((0.0, 0.0), (1.0, 1.0)), 0)]), [one("a", 4.0, true)]);
         assert_eq!(outlines_of(vec![area("a", square((0.0, 0.0), (0.7, 0.7)), 0)]), []);
+        // A ring exactly 3 mm long sews.
+        assert_eq!(outlines_of(vec![area("a", square((0.0, 0.0), (0.75, 0.75)), 0)]), [one("a", 3.0, true)]);
         // A square 2.5 mm across in the mouth of a U sewn after it shows one side: 2.5 mm, left out.
         let u = Polygon {
             outline: vec![p(-5.0, -5.0), p(-5.0, 2.5), p(0.0, 2.5), p(0.0, 0.0), p(2.5, 0.0), p(2.5, 2.5), p(7.5, 2.5), p(7.5, -5.0), p(-5.0, -5.0)],
             holes: Vec::new(),
         };
         let small = square((0.0, 0.0), (2.5, 2.5));
-        assert_eq!(outlines_of(vec![area("a", small.clone(), 0), area("u", u.clone(), 1)]).iter().map(|(id, _)| id.as_str()).collect::<Vec<_>>(), ["u"]);
+        assert_eq!(outlines_of(vec![area("a", small, 0), area("u", u.clone(), 1)]).iter().map(|(id, _)| id.as_str()).collect::<Vec<_>>(), ["u"]);
         // In a mouth 3 mm wide the side of 3 mm sews.
         let wide = Polygon { outline: u.outline.iter().map(|q| if q.x() == 2.5 { p(3.0, q.y()) } else { *q }).collect(), holes: Vec::new() };
         let found = outlines_of(vec![area("a", square((0.0, 0.0), (3.0, 2.5)), 0), area("u", wide, 1)]);

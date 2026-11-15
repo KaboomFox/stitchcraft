@@ -152,7 +152,8 @@ custom locks, and `fill_method` leaves out Ink/Stitch's legacy fill, which Stitc
 (`REQ-FILL-005`). `satin_column` belongs to the effect, which sets it from its family. `turn_stitches`, the switch that
 automatic digitizing sets on its own fills, is left out of the fill's dialog, which holds 64 parameters
 without it. The Auto effect's dialog leaves out the settings of the registry's Advanced group, which are
-the bounds of the rules and the 2 limits of the cover's measure (M13.21). The dialog opens with
+the bounds of the rules and the 2 limits of the cover's measure (M13.21), and the switch that sews an
+outline round each fill (M13.27). The dialog opens with
 the group that declares the family's method. The groups only the family uses, for its default method, come
 next, then those it shares with the other families, then those of its other methods, such as the zigzag
 stroke's. The settings every element shares come last, as in Ink/Stitch's dialogs.
