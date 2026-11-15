@@ -1173,8 +1173,8 @@ macro_rules! codes {
         /// turn `auto_fill_uneven` off, or set a bound itself with `stitch plan --set`.
         AutoRule = "SC-I0912", Info, "Rule that chose a shape's stitches";
 
-        /// A design digitized with `--auto` puts thread on thread: each area reaches under the shapes sewn
-        /// after it, a base layer lies under all of them, and an outline lies on a fill's edge. Where too much
+        /// A design digitized with `--auto` puts thread on thread. Each area reaches under the shapes sewn
+        /// after it, and a base layer lies under all of them. An outline lies on a fill's edge. Where too much
         /// thread lies over one spot, a needle deflects and the thread shreds or breaks. Planning measures the
         /// design in 2 ways, in the window of 1 mm² round each spot. The first is the thread, in fills: the
         /// length of thread over the spot, as a share of what a fill with rows 0.4 mm apart lays. The second is

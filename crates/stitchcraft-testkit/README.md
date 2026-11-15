@@ -36,6 +36,10 @@ lie, and a path of 10⁶ points. Its `random` strategy draws paths on a coarse g
 **Since M6.15:** the example `sheet` measures the standard pictures of the before and after sheet with
 the `fabric` module. It draws each one too, for `web/sheet.py` (`docs/src/design/before-after-sheet.md`).
 
+**Since M13.29:** `fabric::thickness` reads how thick a plan sews from the plan's own measure
+(`stitchcraft_plan::thickness`), which gives the grid's pixel and the thread's width to `metrics` too. The
+example `sheet` writes the thickest spot, the area at 3 fills or more and the most needle points.
+
 **Status:** grows with the milestones M1 to M5, M7 and M13. Design: `docs/src/design/conformance.md`.
 
 Tests may unwrap and panic; this crate opts out of the no-panic lints at its root.

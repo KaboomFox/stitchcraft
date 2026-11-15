@@ -365,6 +365,9 @@ pub enum PreviewStyle {
     Realistic,
     /// Every stitch, needle hole, move, trim and stop, for checking a design.
     Simple,
+    /// How thick the design sews: grey thread, yellow from 2 fills of it over one spot, orange from 3 and
+    /// red from 6.
+    Thickness,
 }
 
 impl From<PreviewStyle> for Style {
@@ -372,6 +375,7 @@ impl From<PreviewStyle> for Style {
         match style {
             PreviewStyle::Realistic => Style::Realistic,
             PreviewStyle::Simple => Style::Simple,
+            PreviewStyle::Thickness => Style::Thickness,
         }
     }
 }

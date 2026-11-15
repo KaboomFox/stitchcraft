@@ -65,6 +65,10 @@ pub stitchcraft_engine::auto::AutoParams::auto_overlap_mm: <stitchcraft_params::
 pub stitchcraft_engine::auto::AutoParams::auto_prefer: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_pull_compensation_mm: <stitchcraft_params::kinds::Length as stitchcraft_params::kinds::ParamKind>::Value
 pub stitchcraft_engine::auto::AutoParams::auto_stitch: <stitchcraft_params::kinds::Choice as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_thick_fail_fills: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_thick_fail_points: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_thick_warn_fills: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
+pub stitchcraft_engine::auto::AutoParams::auto_thick_warn_points: <stitchcraft_params::kinds::Number as stitchcraft_params::kinds::ParamKind>::Value
 impl stitchcraft_engine::auto::AutoParams
 pub const stitchcraft_engine::auto::AutoParams::GROUP: stitchcraft_params::spec::ParamGroup
 pub const stitchcraft_engine::auto::AutoParams::SPECS: &'static [stitchcraft_params::spec::ParamSpec]

@@ -248,6 +248,15 @@ rationale = "The fabric's colour can't be chosen and may be black. Fabric that s
 milestone = "M13"
 status = "active"
 
+[[req]]
+id = "REQ-RND-004"
+area = "render"
+level = "L2"
+statement = "The thickness style draws how thick a design sews (REQ-AUTO-060): each pixel has the colour of the step that the thread over the spot under its middle belongs to, measured on the stitches as the machine sews them, on its grid. Thread under 2 fills is grey, 2 fills or more yellow, 3 or more orange and 6 or more red, by the default limits. Where no thread lies the fabric shows, in the style's white or the colour the settings name. The picture has the size of the other styles' pictures of the same design at the same scale. `stitch preview --style thickness` draws it of any machine file, and a docs shot names it with `style = \"thickness\"`."
+rationale = "A number says how thick the thickest spot is, and only a picture shows which patches of a traced photo pile up. Drawn at the size of the realistic preview, the 2 can be laid side by side."
+milestone = "M13"
+status = "active"
+
 # ── Parameters ─────────────────────────────────────────────────────────────────────────────────────
 
 [[req]]
@@ -2945,6 +2954,33 @@ area = "auto"
 level = "L2"
 statement = "A design whose lowest automatic shape turns `auto_fill_outline` on sews an outline round each automatic area: a running stitch along the area's edge, in the area's thread, in an element of its own that sews straight after the area, named after it with `#2`, which takes over a trim or a stop after the area. The edge is that of the area as the layers and the specks leave it (REQ-AUTO-023, REQ-AUTO-008), before it reaches under its neighbours (REQ-AUTO-007). The outline leaves out the edge within `auto::TOUCHING` of each shape sewn after the area, but for a line digitized from a stroke, and of each other element of the area's own shape: the edge is cut into pieces no longer than 0.5 mm, a piece shows when its middle lies in none of those shapes, the pieces that show in a row are one line, a ring when all of it shows, and a line shorter than 3 mm is left out. An area whose outline needs more work than its budget allows sews none, and says so with SC-I0904. The setting is off by default, and an advanced one: the Auto effect's dialog has no row for it."
 rationale = "The owner expected a small shape to be outlined and filled in. A fill's rows end at its edge, and on a star 5 mm across the ends of the rows are most of what shows: an outline draws its points. Under a shape sewn later the area reaches 1 mm (REQ-AUTO-007), so a run along that edge would lie under the later shape's stitches. Measured on 2026-11-15: on the demo's badge the outlines add 111 stitches to 5443, no jump and no thread change, and on 2 traced dogs 759 and 611 stitches to 11330 and 10420, and 23 and 22 jumps to 79, each a thread to cut by hand. So it is off unless a design asks, and the dialog, which holds 12 rows in a window of 900 px, gets no thirteenth."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-060"
+area = "auto"
+level = "L1"
+statement = "How thick a plan sews is measured in 2 ways on square cells 0.2 mm wide, each value a sum over the window of 5 by 5 cells, 1 mm², round a cell (`stitchcraft_plan::thickness`). Thread, in fills: every stitch of every role is a ribbon 0.4 mm wide, shared among 4 lanes across its width, and a window's thread is its length times 0.25 mm over the window's area, so that a fill with rows 0.25 mm apart, the default of `row_spacing_mm`, measures 1. Needle points per mm²: each stitch's needle point counts once, but for a lock's. A square of rows laid by hand a thread apart, sewn 1, 2, 3 and 6 times, measures 0.625 of a fill for each layer, to a nanometre, further than half a window inside it. A square 15 mm a side that the engine fills 1, 2, 3 and 6 times, the angle turned 30° each time, measures 0.9 to 1 fill for each layer at the least, and 0.98 to 1.06 on average, 2 mm and more inside it."
+rationale = "The owner's worry of 2026-11-15: after several colours the overlaps may be too thick for the needle of a Brother PE800. Nothing measured thickness: the bare-fabric measure counts covered pixels and can't tell 1 layer from 6. The sources count objects on each other, so the unit is one fill as StitchCraft sews it. In layers of thread such a fill is 1.6, since its rows lie 0.25 mm apart and a thread is 0.4 mm wide. The engine's fills measure up to 6 % more than their rows, because the needle travels under them, and 10 % less in a window where the rows are fitted to the shape."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-061"
+area = "auto"
+level = "L1"
+statement = "What of a plan is over a limit is the cells whose value is the limit or more, in pieces: cells that touch at a side or a corner are one piece, and a piece counts from 25 cells, 1 mm². The measure gives the count of such pieces, their area together, and the largest with the box round it. The thickest spot is the middle of the cell with the largest value. The limits are 3 fills of thread for the warning and 6 for failing, and 15 and 30 needle points per mm² (`Limits::DEFAULT`). A failing limit under its warning's reads as the warning's."
+rationale = "3 rows that cross in a point are no fault, so a place has to be 1 mm² to count. 3 fills on each other is what Brother's troubleshooting names as a fault of the design, and 6 layers is where Embrilliance's density map turns red. No source gives a number of needle points: measured on 2026-11-15, the row ends of one fill lie 5 to a square millimetre along its edge, so 15 and 30 are what the edges of 3 and 6 fills on each other make. All 4 are starting values that a sew-out has to confirm (MC-8)."
+milestone = "M13"
+status = "active"
+
+[[req]]
+id = "REQ-AUTO-062"
+area = "auto"
+level = "L2"
+statement = "A design with an automatic shape is measured once its plan is finished, with the work budget once more, against the limits its lowest automatic shape sets: `auto_thick_warn_fills`, `auto_thick_fail_fills`, `auto_thick_warn_points` and `auto_thick_fail_points`, advanced settings that no dialog shows. When a piece is at a warning's limit or over it, planning says SC-W0913 once and the plan is written all the same. The message gives the most of each measure and where, from the design's centre, the 3 shapes with the most thread in the window of the thickest spot, each with its thread and its fills, and the area at each warning's limit and at each failing limit. 2 fills of rows 0.25 mm apart on each other measure 2 and are never told. A design whose plan is larger than 500 mm, or whose measuring needs more work than the budget allows, is told SC-W0913 with a message that it was not measured. A design without an automatic shape is not measured."
+rationale = "A design over the limits may sew well, and one under them may not: the limits are starting values, so nothing is refused until a sew-out shows where a design fails. The warning has to say where, since a traced photo has hundreds of shapes. A design drawn by hand stacks thread on purpose, and its author chose every layer."
 milestone = "M13"
 status = "active"
 

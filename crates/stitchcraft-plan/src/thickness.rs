@@ -287,14 +287,19 @@ impl Thickness {
     /// step of half a cell along it, and 3 for each cell. A plan whose grid would have more than
     /// [`MAX_CELLS`] is not measured, as one whose measuring runs out of work.
     pub fn of(plan: &StitchPlan, meter: &mut Meter) -> Result<Option<Thickness>, Exhausted> {
-        let sewn = plan.sewn_stitches();
+        Thickness::of_stitches(&plan.sewn_stitches(), meter)
+    }
+
+    /// The thickness of the stitches `sewn`, as [`Thickness::of`] measures a plan's: for a picture of what a
+    /// machine file sews, whose stitches are read from the file.
+    pub fn of_stitches(sewn: &[SewnStitch], meter: &mut Meter) -> Result<Option<Thickness>, Exhausted> {
         meter.charge(units(sewn.len()))?;
         let Some(bounds) = Rect::around(sewn.iter().flat_map(|stitch| [stitch.from, stitch.to])) else { return Ok(None) };
         let grid = Grid::round(bounds).ok_or(Exhausted::Work)?;
         let cells = grid.columns * grid.rows;
         meter.charge(units(cells).saturating_mul(3))?;
         let (mut thread, mut holes) = (vec![0.0; cells], vec![0.0; cells]);
-        for stitch in &sewn {
+        for stitch in sewn {
             laid(&grid, stitch, meter, |at, length| thread.iter_mut().skip(at).take(1).for_each(|cell| *cell += length))?;
             let hole = grid.holding(stitch.to.x(), stitch.to.y()).filter(|_| !stitch.is_lock());
             holes.iter_mut().skip(hole.unwrap_or(cells)).take(1).for_each(|cell| *cell += 1.0);

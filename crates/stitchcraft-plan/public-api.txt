@@ -168,6 +168,66 @@ pub static stitchcraft_plan::profiles::BROTHER_PE800_SMALL: stitchcraft_plan::pr
 pub static stitchcraft_plan::profiles::BUILTIN: &[&stitchcraft_plan::profile::MachineProfile]
 pub static stitchcraft_plan::profiles::REFERENCE: &stitchcraft_plan::profile::MachineProfile
 pub fn stitchcraft_plan::profiles::find(&str) -> core::option::Option<&'static stitchcraft_plan::profile::MachineProfile>
+pub mod stitchcraft_plan::thickness
+pub enum stitchcraft_plan::thickness::Measure
+pub stitchcraft_plan::thickness::Measure::Fills
+pub stitchcraft_plan::thickness::Measure::Points
+pub enum stitchcraft_plan::thickness::Step
+pub stitchcraft_plan::thickness::Step::Bare
+pub stitchcraft_plan::thickness::Step::Doubled
+pub stitchcraft_plan::thickness::Step::Failing
+pub stitchcraft_plan::thickness::Step::Ordinary
+pub stitchcraft_plan::thickness::Step::Thick
+pub struct stitchcraft_plan::thickness::Layer
+pub stitchcraft_plan::thickness::Layer::block: usize
+pub stitchcraft_plan::thickness::Layer::element: core::option::Option<stitchcraft_plan::plan::ElementRef>
+pub stitchcraft_plan::thickness::Layer::top: f64
+pub stitchcraft_plan::thickness::Layer::under: f64
+pub struct stitchcraft_plan::thickness::Limits
+pub stitchcraft_plan::thickness::Limits::fail_fills: f64
+pub stitchcraft_plan::thickness::Limits::fail_points: f64
+pub stitchcraft_plan::thickness::Limits::warn_fills: f64
+pub stitchcraft_plan::thickness::Limits::warn_points: f64
+impl stitchcraft_plan::thickness::Limits
+pub const stitchcraft_plan::thickness::Limits::DEFAULT: stitchcraft_plan::thickness::Limits
+pub fn stitchcraft_plan::thickness::Limits::step(&self, f64) -> stitchcraft_plan::thickness::Step
+pub struct stitchcraft_plan::thickness::Over
+pub stitchcraft_plan::thickness::Over::area: f64
+pub stitchcraft_plan::thickness::Over::at: core::option::Option<stitchcraft_core::rect::Rect>
+pub stitchcraft_plan::thickness::Over::largest: f64
+pub stitchcraft_plan::thickness::Over::pieces: usize
+pub struct stitchcraft_plan::thickness::Report
+pub stitchcraft_plan::thickness::Report::dense: stitchcraft_plan::thickness::Over
+pub stitchcraft_plan::thickness::Report::failing: stitchcraft_plan::thickness::Over
+pub stitchcraft_plan::thickness::Report::fills: stitchcraft_plan::thickness::Spot
+pub stitchcraft_plan::thickness::Report::pierced: stitchcraft_plan::thickness::Over
+pub stitchcraft_plan::thickness::Report::points: stitchcraft_plan::thickness::Spot
+pub stitchcraft_plan::thickness::Report::stack: alloc::vec::Vec<stitchcraft_plan::thickness::Layer>
+pub stitchcraft_plan::thickness::Report::thick: stitchcraft_plan::thickness::Over
+impl stitchcraft_plan::thickness::Report
+pub fn stitchcraft_plan::thickness::Report::warns(&self) -> bool
+pub struct stitchcraft_plan::thickness::Spot
+pub stitchcraft_plan::thickness::Spot::at: stitchcraft_core::units::Point
+pub stitchcraft_plan::thickness::Spot::value: f64
+pub struct stitchcraft_plan::thickness::Thickness
+impl stitchcraft_plan::thickness::Thickness
+pub fn stitchcraft_plan::thickness::Thickness::at(&self, stitchcraft_plan::thickness::Measure, stitchcraft_core::units::Point) -> f64
+pub fn stitchcraft_plan::thickness::Thickness::most(&self, stitchcraft_plan::thickness::Measure) -> stitchcraft_plan::thickness::Spot
+pub fn stitchcraft_plan::thickness::Thickness::of(&stitchcraft_plan::plan::StitchPlan, &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::option::Option<stitchcraft_plan::thickness::Thickness>, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_plan::thickness::Thickness::of_stitches(&[stitchcraft_plan::plan::SewnStitch], &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::option::Option<stitchcraft_plan::thickness::Thickness>, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_plan::thickness::Thickness::over(&self, stitchcraft_plan::thickness::Measure, f64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_plan::thickness::Over, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_plan::thickness::Thickness::report(&self, &stitchcraft_plan::plan::StitchPlan, &stitchcraft_plan::thickness::Limits, &mut stitchcraft_core::budget::Meter) -> core::result::Result<stitchcraft_plan::thickness::Report, stitchcraft_core::budget::Exhausted>
+pub fn stitchcraft_plan::thickness::Thickness::size(&self) -> (usize, usize)
+pub fn stitchcraft_plan::thickness::Thickness::stack(&self, &stitchcraft_plan::plan::StitchPlan, stitchcraft_core::units::Point, &mut stitchcraft_core::budget::Meter) -> core::result::Result<alloc::vec::Vec<stitchcraft_plan::thickness::Layer>, stitchcraft_core::budget::Exhausted>
+pub const stitchcraft_plan::thickness::CELL: f64
+pub const stitchcraft_plan::thickness::MARGIN: usize
+pub const stitchcraft_plan::thickness::MAX_CELLS: usize
+pub const stitchcraft_plan::thickness::ORDINARY: f64
+pub const stitchcraft_plan::thickness::PIECE: f64
+pub const stitchcraft_plan::thickness::PIXEL: f64
+pub const stitchcraft_plan::thickness::ROWS: f64
+pub const stitchcraft_plan::thickness::THREAD: f64
+pub const stitchcraft_plan::thickness::WINDOW: f64
 pub mod stitchcraft_plan::thread
 pub struct stitchcraft_plan::thread::Rgb
 pub stitchcraft_plan::thread::Rgb::b: u8
