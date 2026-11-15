@@ -1,0 +1,1298 @@
+//! The registry of every diagnostic code: the one table that ids, severities, titles and explanations come
+//! from ([the diagnostics model](super)).
+//!
+//! The table is a file of its own because it grows with every diagnostic, a few lines of explanation at a
+//! time, while the model beside it rarely changes. An entry is added here, in the order of its code, and
+//! nowhere else (`docs/src/contributing/playbook-new-diagnostic.md`). The table is a macro's body, which
+//! hands its entries to the macro the model names, so that `Code` is still declared in the model's module
+//! and its path stays `diag::Code` for every crate that names it.
+
+/// Gives the table's entries to the macro `$registry`.
+macro_rules! codes {
+    ($registry:ident) => {
+        $registry! {
+        /// A budget limits how much work StitchCraft may spend on one element, and how many stitches one
+        /// design may have, so that no input can make it run for hours or run out of memory — on the
+        /// command line or inside VectorCraft's live preview.
+        ///
+        /// When planning, an element that needs more work than its budget was skipped and the rest of the
+        /// design was planned: simplify the element (fewer nodes, wider spacing, a smaller area) or split it
+        /// into several elements. A design that needs more stitches than its limit was not planned, and the
+        /// message names the element where it ran out: widen the spacing of its largest elements, lower their
+        /// repeats or bean stitch, or split the design into several files. When reading a file or drawing a
+        /// preview, nothing was produced: simplify the drawing, or split it into several files.
+        BudgetExhausted = "SC-E0004", Error, "Budget exhausted";
+
+        /// Preview images have a size limit, so that drawing one never runs out of memory. At the scale
+        /// asked for, this design's preview would be larger, so no image was written.
+        ///
+        /// Use a smaller scale: the message says the largest that fits. A design that runs more than 10
+        /// metres from the hoop centre cannot be previewed at any scale.
+        PreviewTooLarge = "SC-E0005", Error, "Preview too large";
+
+        /// StitchCraft checks every stitch plan against its own rules before writing a machine file. One of
+        /// those checks failed, which means StitchCraft has a bug: the file was not written, so nothing
+        /// wrong reaches your machine. `stitch plan` writes a bug-report bundle instead, next to the file it
+        /// was asked for. An export in VectorCraft writes nothing, and `stitch bug-report` of the saved
+        /// document writes the bundle.
+        ///
+        /// Please attach the bundle to an issue; the message names the rule that failed. The bundle holds
+        /// your design, so that the bug can be reproduced.
+        InternalCheckFailed = "SC-E0009", Error, "Internal check failed";
+
+        /// The design has no stitches: it is empty, or every element was skipped (see the other messages).
+        /// StitchCraft never writes an empty machine file, because some machines refuse or mishandle them.
+        ///
+        /// Add an element with an embroidery stitch type, or fix the errors reported for the elements.
+        NothingToStitch = "SC-E0010", Error, "Nothing to stitch";
+
+        /// The element's stitch type is one this version of StitchCraft does not sew yet, so the element was
+        /// skipped; the rest of the design is planned. Running and manual stitches are sewn from milestone M3,
+        /// satin columns from M4, tatami fills from M5, and zigzag strokes and the other satin methods from M7.
+        /// The other stitch types follow (`docs/src/plan/roadmap.md`), but for Ink/Stitch's legacy fill, which
+        /// is sewn as a tatami fill (`SC-W0314`).
+        ///
+        /// The message names the stitch type. Choose one StitchCraft sews, or sew the element with another
+        /// tool for now.
+        StitchTypeNotYet = "SC-W0011", Warning, "Stitch type not sewn yet; element skipped";
+
+        /// `stitch bug-report --replay` was given a file that is not a bug-report bundle it can replay: not
+        /// JSON, not a bundle, a bundle format newer than this StitchCraft, or one that names a profile or a
+        /// format this StitchCraft does not have. Nothing was replayed.
+        ///
+        /// The message says what is wrong. A bundle written by a newer StitchCraft needs that version or a
+        /// later one; a bundle changed by hand, or by an email program, needs the original file.
+        BundleUnreadable = "SC-E0012", Error, "Bug-report bundle could not be replayed";
+
+        /// The element is cut to clip paths, its own or those of the groups round it, or to the clipping objects
+        /// of the VectorCraft clip groups round it, and they leave nothing of it: it lies wholly outside them,
+        /// they don't overlap one another, or one of them has no area, such as an empty clip path, one of text
+        /// alone, or a clipping object StitchCraft doesn't read (`SC-W0807`). A viewer shows nothing of it, so it
+        /// sews nothing (`REQ-GEN-005`), and a trim or stop after it is left out (`SC-W0505`). Ink/Stitch sews
+        /// nothing of an element outside its clip path too, but sews an element whose clip path has no area whole
+        /// (`DEV-SVG-019`).
+        ///
+        /// Move the element or what clips it, or delete the element if it is hidden on purpose.
+        ClippedAway = "SC-W0013", Warning, "Element outside its clip paths; left out";
+
+        /// A parameter's value could not be understood: a number where a word was expected, a choice that
+        /// is not one of the parameter's options, or a list with the wrong number of values. The element was
+        /// not stitched: guessing could sew something you did not ask for.
+        ///
+        /// The message names the parameter, the value and what the parameter accepts. The parameter
+        /// reference lists every parameter with its accepted values.
+        ParamInvalid = "SC-E0101", Error, "Parameter has the wrong type or an unknown choice";
+
+        /// A parameter's value is outside the range StitchCraft accepts, so the nearest allowed value was
+        /// used, and the element was stitched with it. Values outside the range are impossible (a negative
+        /// length) or beyond what machines sew reliably.
+        ///
+        /// The message names the parameter, your value and the range. Change the value to remove the
+        /// warning.
+        ParamClamped = "SC-W0102", Warning, "Parameter clamped to its allowed range";
+
+        /// The design carries a parameter StitchCraft does not know: one from a newer version of StitchCraft
+        /// or Ink/Stitch, or one for a stitch type StitchCraft does not support yet. It was kept, so saving
+        /// the design does not lose it, but it does not change the stitches. A fill set to Ink/Stitch's legacy
+        /// fill, which StitchCraft sews as a tatami fill (`SC-W0314`), names its `flip` and `reverse` so, though
+        /// a ripple stitch reads a `reverse` of its own.
+        ///
+        /// The Ink/Stitch compatibility page says when each Ink/Stitch parameter is supported.
+        ParamUnknown = "SC-W0105", Warning, "Unknown parameter preserved but ignored";
+
+        /// An SVG node's fill and its stroke read the same settings, and some keys mean different things to
+        /// each: a zigzag stroke keeps 2 spacings in `zigzag_spacing_mm`, where a meander fill reads one. A
+        /// value this element can't read but the node's other stitch type can is that one's, so this element
+        /// sews with its own default, as Ink/Stitch does.
+        ///
+        /// The message names the key and the value. To give this element a value of its own, set it on a
+        /// node of its own.
+        ParamForOtherFamily = "SC-I0106", Info, "Value only the node's other stitch type reads; default used here";
+
+        /// A satin column's path has no subpath longer than a point, so it has no rails to sew between. The
+        /// element was not stitched.
+        ///
+        /// Draw the column as two rails, its edges, with rungs across both.
+        SatinWithoutRails = "SC-E0201", Error, "Satin column has no rails";
+
+        /// Where the subpaths of a satin column meet does not say which two are its rails, so the two
+        /// longest were taken as the rails. The rule is Ink/Stitch's: with one rung, the rails are the two
+        /// subpaths that meet only one other, and with more rungs, the two that meet more than two others.
+        /// With exactly two rungs across two rails, each of the four meets two others, as the strokes of a
+        /// `#` do, and the rule cannot tell rails from rungs.
+        ///
+        /// The message names the two subpaths taken, numbered from 1 in the order the path draws them. If
+        /// they are not the rails, use three rungs or more, each crossing both rails once.
+        SatinRailsByLength = "SC-W0202", Warning, "Satin rails taken as the two longest subpaths";
+
+        /// A rung of a satin column misses one of the rails, or both. It still says which points go together:
+        /// where it misses a rail, the point of that rail nearest the rung is used, as in Ink/Stitch.
+        ///
+        /// The message names the rung, numbered from 1 in the order the path draws it. Extend it across both
+        /// rails, so that where it joins them is what you drew.
+        SatinRungDangling = "SC-W0203", Warning, "Satin rung does not cross both rails";
+
+        /// A subpath of a satin column is one point, a stray node, so it is neither a rail nor a rung. It was
+        /// left out.
+        ///
+        /// The message names the subpath, numbered from 1 in the order the path draws it. Delete the node, or
+        /// if it was meant as a rung, draw the rung across both rails.
+        SatinSubpathPoint = "SC-W0205", Warning, "Satin subpath is one point; left out";
+
+        /// A satin column's contour underlay stops short of the column's start and end by its inset, but a side
+        /// of it is so short that this would leave less than half a CSS pixel (0.13 mm), so that side runs to
+        /// the column's ends, as in Ink/Stitch.
+        ///
+        /// The message gives the insets at each end. Lower `contour_underlay_inset_mm`, or turn the contour
+        /// underlay off for so short a column.
+        SatinContourTooShort = "SC-W0206", Warning, "Satin contour underlay too short for its insets; it keeps its length";
+
+        /// A rung of a satin column crosses a rail more than once, so it does not say which point of one rail
+        /// goes with which point of the other, and it was left out. The column is sewn without it.
+        ///
+        /// The message names the subpath, numbered from 1 in the order the path draws it. Redraw the rung as a
+        /// straight line across both rails.
+        SatinRungAmbiguous = "SC-W0207", Warning, "Satin rung crosses a rail more than once; left out";
+
+        /// The stitches of a satin column lean more than 45° from square to the column, to a tenth of a degree:
+        /// they go further along it than across it. The column runs halfway between its 2 rails. Without rungs,
+        /// or with too few, a column's stitches follow its rails' lengths alone, and where one rail runs on ahead
+        /// of the other they lean. Every satin method says so, at the middle of each stretch of stitches that
+        /// lean. Ink/Stitch does not.
+        ///
+        /// The message gives how many stitches lean and the most any of them leans. Add a rung across the
+        /// column at the place named, square to it, and the stitches follow it.
+        SatinStitchesLean = "SC-W0208", Warning, "Satin stitches lean more than 45° from square to the column; add a rung here";
+
+        /// A top stitch of a satin column is longer than 12 mm, as the column sews it. A stitch that long floats
+        /// loose over the fabric, where it snags and sags. Every satin method says so once, at the middle of its
+        /// longest top stitch, and its underlays and travel do not count. Ink/Stitch does not say so.
+        ///
+        /// The message gives the stitch's length. Set `max_stitch_length_mm` to split long stitches, make the
+        /// column narrower, or sew the shape as a fill. Finalize splits a stitch longer than the machine's
+        /// longest stitch anyway (`SC-I0703`).
+        SatinStitchLong = "SC-W0209", Warning, "Satin stitch longer than 12 mm; it may snag";
+
+        /// A satin column's path draws no rungs, so its rails' nodes pair up instead, as in Ink/Stitch: the
+        /// 2nd node of one rail with the 2nd of the other, and on in order. Its rails have different numbers
+        /// of nodes, so the rail with more has nodes that pair with none, and between them the stitches
+        /// follow the rails' lengths alone.
+        ///
+        /// The message gives both counts. Add rungs across the column, or give both rails the same number of
+        /// nodes.
+        SatinNodesUnequal = "SC-W0210", Warning, "Satin rails without rungs have different numbers of nodes";
+
+        /// A satin column's push compensation, taken off a rail at the column's start and end, would leave less
+        /// than half a CSS pixel (0.13 mm) of it, so that rail keeps its length, as in Ink/Stitch. A negative
+        /// value at the other end still lengthens it.
+        ///
+        /// The message gives the push compensation at each end. Lower `push_compensation_mm`, or lengthen the
+        /// column.
+        SatinPushTooLong = "SC-W0211", Warning, "Satin push compensation too long for a rail; that rail keeps its length";
+
+        /// A satin column is drawn as one path, its centre line, and its stroke is no wider than the design's
+        /// `min_satin_stroke_width_mm` (1 mm unless the design sets it). A column that narrow is sewn as a
+        /// stroke, by the element's stroke settings, as in Ink/Stitch: a running stitch unless they say
+        /// otherwise.
+        ///
+        /// The message gives the stroke's width and the limit. Widen the stroke to sew a satin column, or draw
+        /// the column with 2 rails.
+        SatinTooNarrow = "SC-W0212", Warning, "Satin column drawn as one path too narrow; sewn as a stroke";
+
+        /// A satin column drawn as one path, its centre line, is made into rails by offsetting the line by half
+        /// the stroke's width to each side. Where the line crosses itself or comes back near itself, the
+        /// offsets split into several curves, and the line is cut in half, and the halves again, at most 20
+        /// times. Parts whose offsets still split are left out, and so are parts that turn so tightly that an
+        /// offset vanishes. Ink/Stitch leaves out the same parts without a word. The rest of the column is sewn.
+        ///
+        /// The message says how many parts were left out. Draw the column with 2 rails where its line crosses
+        /// itself or turns more tightly than the column is wide, or make the stroke narrower.
+        SatinCentreLinePartsLeftOut = "SC-W0213", Warning, "Parts of a satin column drawn as one path left out";
+
+        /// A satin column drawn as one path, its centre line, could not be made into rails. Its offsets split
+        /// however it is cut, an offset vanishes because the stroke is wider than the line's turns allow, or
+        /// the line is shorter than a CSS pixel. The column is not sewn.
+        ///
+        /// Draw the column with 2 rails, or make the stroke narrower.
+        SatinCentreLineFailed = "SC-E0214", Error, "Satin column drawn as one path could not be made into rails";
+
+        /// A satin column is so small that every needle point of it lies within the shortest stitch of its
+        /// first: a speck of a column, a few tenths of a millimetre across. Any stitch it could sew would be
+        /// shorter than the machine sews well, would hammer one spot of the fabric and could break the thread,
+        /// so it is left out, as a stroke that small is (`SC-W0401`). Ink/Stitch sews such a column. A zigzag
+        /// satin 0.1 mm long or less is left out too, its underlays with it: its zigzag has one point and no
+        /// stitch across. Ink/Stitch sews its underlays alone.
+        ///
+        /// The message gives the shortest stitch, or says the column is too short for a stitch across. Draw the
+        /// column larger, or delete it if it is a stray.
+        SatinTooSmall = "SC-W0215", Warning, "Satin column too small for the shortest stitch; left out";
+        /// A satin column's rungs, or its push compensation, leave each of its sections with no length on one of
+        /// its rails, so no stitch goes across it and the column is not sewn. A rung from the first rail's
+        /// start to the second rail's end does this, and so does push compensation that takes off the parts of
+        /// a short column's rails where its rungs meet them. Ink/Stitch says such a column cannot be stitched.
+        ///
+        /// Move the rungs so that each meets both rails away from their ends, or lower `push_compensation_mm`.
+        SatinNoSection = "SC-E0216", Error, "Satin column has no section to sew";
+
+        /// A satin column is cut to clip paths, its own or those of the groups round it, or to the clipping
+        /// objects of the VectorCraft clip groups round it, which StitchCraft doesn't apply to a satin column: it
+        /// is sewn whole, as Ink/Stitch sews it, where a viewer shows only what lies inside them (`REQ-GEN-005`).
+        ///
+        /// Draw the column as far as it should sew, or make it a fill if it should take the clip's shape.
+        SatinClipNotApplied = "SC-W0217", Warning, "Satin column is clipped; sewn whole";
+
+        /// A fill is sewn in rows of stitches across each part of its area. A part of 0.21 mm² or less (3
+        /// square CSS pixels), a speck about half a millimetre across, is too small for a row, so it is left
+        /// out, as Ink/Stitch leaves it out. Where every part is that small, the fill sews nothing. So does a
+        /// fill that bounds no area at all: subpaths that are lines or points, or that its fill rule leaves
+        /// empty, such as 2 copies of one square under the even-odd rule.
+        ///
+        /// The message counts the parts left out and is placed at the first. Draw them larger, or sew them as a
+        /// running stitch.
+        FillPartsTooSmall = "SC-W0303", Warning, "Parts of a fill too small to sew left out";
+
+        /// This fill covers less than 1.4 mm² (20 square CSS pixels). Rows of stitches packed into so small an
+        /// area pile up, and a running stitch round it or a satin column across it usually sews it better.
+        /// Ink/Stitch gives the same advice. The fill is kept as drawn.
+        FillSmall = "SC-W0304", Warning, "Fill smaller than 1.4 mm²";
+
+        /// A fill is sewn in rows of stitches the row spacing apart, and a part of it so thin that no row
+        /// crosses it gets none. Such a part is sewn as a running stitch round its outline instead, as
+        /// Ink/Stitch sews it.
+        ///
+        /// The message counts the parts. Make them wider, set a smaller `row_spacing_mm`, or sew them as a
+        /// stroke or a satin column.
+        FillTooThin = "SC-W0305", Warning, "Fill part too thin for rows; sewn round its outline";
+
+        /// A fill's fill rule says which parts of it are filled where its subpaths lie inside each other or
+        /// overlap. Under the rule `nonzero`, SVG's default, a part that the subpaths wind round twice the same
+        /// way is filled; the even-odd rule leaves it empty. StitchCraft fills it, as the drawing shows it.
+        /// Ink/Stitch takes every subpath but the largest as a hole, whatever the fill rule. Where such a part
+        /// lies inside the fill, away from its edge, the same file leaves it empty in Ink/Stitch.
+        ///
+        /// To leave the part empty in both, set the fill rule to even-odd, or draw the inner subpath the other
+        /// way round.
+        FillRuleNotEvenOdd = "SC-I0306", Info, "Nonzero fill rule fills a part inside that the even-odd rule leaves empty";
+
+        /// A fill whose area falls into separate parts, such as one drawn as several shapes side by side, or
+        /// an outline that crosses itself, is sewn one part after another: each part's rows on their own, then
+        /// the next part's. Where the next part starts far off, the needle jumps to it, and the plan may trim;
+        /// where it starts near, as the halves of a bow tie do, the needle sews straight on. Ink/Stitch warns
+        /// about such fills too.
+        ///
+        /// To choose the order the parts are sewn in, break the fill apart into one element for each part.
+        FillPartsApart = "SC-W0307", Warning, "Fill in parts that are apart; each sewn on its own";
+
+        /// A fill's underlay is sewn in rows `fill_underlay_row_spacing_mm` apart, 3 times the row spacing
+        /// unless set. On a part so thin across those rows that none crosses it, that layer of underlay is
+        /// sewn as a running stitch round the part's outline instead, as Ink/Stitch sews it, and the top rows
+        /// are sewn over it as usual.
+        ///
+        /// The message counts the layers, and each part has one for each underlay angle. To sew the underlay
+        /// in rows, set a smaller `fill_underlay_row_spacing_mm` or another `fill_underlay_angle`. To sew no
+        /// underlay, turn `fill_underlay` off.
+        FillUnderlayTooThin = "SC-I0308", Info, "Fill underlay too thin for rows; sewn round the outline";
+
+        /// A fill's top rows are sewn on each part grown by `expand_mm`, or shrunk where it is negative. A part
+        /// too thin for that much shrinking, which wears it away entirely, is sewn at its own size instead, as
+        /// Ink/Stitch sews it, and Ink/Stitch warns of it too.
+        ///
+        /// The message counts the parts. Make `expand_mm` nearer 0.
+        FillExpandShrinksAway = "SC-W0309", Warning, "Fill's expand shrinks a part away; sewn at its own size";
+
+        /// A fill's underlay is sewn on each part shrunk by `fill_underlay_inset_mm`. A part too thin for that
+        /// much shrinking, which wears it away entirely, has its underlay sewn over all of it instead, as
+        /// Ink/Stitch sews it, and Ink/Stitch warns of it too.
+        ///
+        /// The message counts the parts. Set a smaller `fill_underlay_inset_mm`, or turn `fill_underlay` off.
+        FillUnderlayInsetShrinksAway = "SC-W0310", Warning, "Fill's underlay inset shrinks a part away; underlay over all of it";
+
+        /// A contour fill sews rings that follow the shape's outline inward, a row spacing apart. Some of its
+        /// rings are not sewn, and fabric shows where they lie. Inner to outer, the default strategy, leaves out
+        /// a ring that no point of the ring round it comes within 2.05 row spacings of, where the shape narrows
+        /// or rings lie far apart at a mitred corner. A spiral follows one chain of rings inward, and leaves out
+        /// the rings off it: the other side where the shape parts, and usually the rings round a hole. Ink/Stitch
+        /// leaves out the same rings without a word.
+        ///
+        /// The message counts the rings left out. Sew the shape with inner to outer, or draw its parts as
+        /// shapes of their own; a round `join_style` keeps the rings a row spacing apart at corners.
+        FillContourRingsLeftOut = "SC-W0311", Warning, "Contour fill leaves out rings it does not reach";
+
+        /// A fill's rows reach past its edge by its pull compensation, which makes up for the thread pulling
+        /// the fabric in. Ink/Stitch reads a fill's `pull_compensation_mm` or `pull_compensation_percent` below
+        /// 0 as 0, so that the rows reach the edge and no less, and so does StitchCraft. A satin column reads
+        /// the same settings below 0 as narrower.
+        ///
+        /// The message names the settings. Set them to 0 or more; to keep the rows inside the edge, use a
+        /// negative `expand_mm`.
+        FillPullCompensationNegative = "SC-W0312", Warning, "Fill's pull compensation below 0; read as 0";
+
+        /// Two subpaths of a fill run along each other at its edge, around a part that its fill rule leaves
+        /// empty. A notch drawn as a hole whose sides lie on the outline is one, and a shape drawn twice is
+        /// another. StitchCraft leaves the part empty, as the drawing shows it. Ink/Stitch repairs such a shape
+        /// by merging each stretch drawn twice into one, which fills the part, and the same file then sews it
+        /// filled in Ink/Stitch.
+        ///
+        /// To sew it alike in both, draw the outline round the empty part instead of a subpath along it.
+        FillStretchDrawnTwice = "SC-I0313", Info, "Fill drawn twice along its edge; Ink/Stitch fills the part left empty";
+
+        /// Ink/Stitch's legacy fill is its first fill method, which it keeps for its older files: it gives the
+        /// method to a fill whose `auto_fill` is off. StitchCraft does not sew it, and sews such a fill as a
+        /// tatami fill with the same settings and no underlay, as legacy fill sews none. Nor does it take pull
+        /// compensation, random stitch lengths or gap-filling rows, which legacy fill has no use for. Its rows and their
+        /// needle points are a tatami fill's, as in Ink/Stitch. Ink/Stitch sews a legacy fill's rows in
+        /// stretches that join, each on its own and back and forth; its `flip` starts the rows from the other
+        /// side, and its `reverse` sews the fill backwards. A tatami fill routes its rows and joins them with
+        /// travel stitches, and StitchCraft keeps `flip` and `reverse` without reading them (`SC-W0105`).
+        ///
+        /// To sew the fill alike in both, set its fill method to tatami fill and turn `fill_underlay` off.
+        FillLegacyAsTatami = "SC-W0314", Warning, "Legacy fill sewn as a tatami fill without underlay";
+
+        /// A contour fill's spiral turns from each ring to the next inside it. A part too narrow for a turn,
+        /// with one ring for the single spiral or 2 or fewer for the double, is sewn inner to outer instead,
+        /// round its rings. Ink/Stitch fails on such a part or sews nothing of it, as its version decides.
+        ///
+        /// The message counts the parts. To sew them in a spiral, widen them to more than 2 row spacings for the
+        /// single spiral, or 4 for the double, or make `row_spacing_mm` smaller.
+        FillContourSpiralTooShort = "SC-I0315", Info, "Contour fill's part too narrow for its spiral; sewn inner to outer";
+
+        /// The meander fill's pattern names one of Ink/Stitch's tiles. Those are drawings that ship with
+        /// Ink/Stitch, which StitchCraft doesn't copy, so the fill wanders through StitchCraft's default tile,
+        /// the honeycomb, instead.
+        ///
+        /// Choose one of StitchCraft's tiles for `meander_pattern` to remove the warning.
+        FillMeanderTileNotOurs = "SC-W0316", Warning, "Meander pattern is one of Ink/Stitch's tiles; sewn with StitchCraft's default tile";
+
+        /// A part of a meander fill is too small for any line of its tile, or none of its lines join up, so it
+        /// has nothing to wander through. It is sewn as a running stitch round its outline. Ink/Stitch stops
+        /// the whole fill with an error there.
+        ///
+        /// The message counts the parts. Make `meander_scale_percent` smaller to fit the tile into them.
+        FillMeanderTooSmall = "SC-W0317", Warning, "Meander fill part too small for its tile; sewn round its outline";
+
+        /// A part of a circular fill lies within its row spacing of its middle, too small for a spiral, so it is
+        /// sewn as one circle with a radius of the row spacing round its middle, as Ink/Stitch sews it. The
+        /// circle may reach past the part.
+        ///
+        /// The message counts the parts. Make `row_spacing_mm` smaller for a spiral, or sew so small a part as a
+        /// running stitch or a satin column.
+        FillCircularTooSmall = "SC-W0318", Warning, "Circular fill part within its row spacing of its middle; sewn as one circle";
+
+        /// A cross stitch fill sews a cross in each cell of its grid that it covers enough of: `fill_coverage`
+        /// percent of the cell or more, once the fill is grown by `expand_mm`. A part that covers no cell so
+        /// much sews nothing, as in Ink/Stitch, which warns of it too. Such a part is smaller or narrower than a
+        /// cell, or lies across the grid's lines so that no cell holds enough of it.
+        ///
+        /// The message counts the parts. Make `pattern_size_mm` smaller, lower `fill_coverage`, raise
+        /// `expand_mm`, or move the grid with `cross_offset_mm`.
+        FillCrossNoCell = "SC-W0319", Warning, "Cross stitch part covers no cell of its grid enough; sews nothing";
+
+        /// Each half of a cross's 2 diagonals takes `cross_thread_count` passes of the thread. The needle goes
+        /// out from the cross's middle and back again, so the passes come in pairs, and the count is an even
+        /// number. An odd count sews the even count below it, as in Ink/Stitch, and 1 sews 2. Ink/Stitch sews
+        /// a stitch from a corner of each cell to its middle for 1, and no cross.
+        ///
+        /// The message gives the count set and the count sewn. Set an even number.
+        FillCrossThreadsOdd = "SC-W0320", Warning, "Cross stitch with an odd thread count; an even count sewn";
+
+        /// A cross's shortest stitches run from its corners to its middle, half its diagonal long. On a grid
+        /// this fine they are shorter than the shortest stitch the machine sews well, so needle points of the
+        /// crosses are left out where they lie too near the one before, and the crosses lose their shape.
+        ///
+        /// The message gives the cells' size, the stitch's length and the shortest stitch. Make
+        /// `pattern_size_mm` larger.
+        FillCrossTooFine = "SC-W0321", Warning, "Cross stitch grid too fine for the shortest stitch; needle points left out";
+
+        /// A half cross sews each stitch of its rows an odd number of times: along the stitch, and then back
+        /// and forth over it, as bean stitch does. An even `cross_thread_count` sews the odd count above it, as
+        /// in Ink/Stitch, whose own help for the count says that half crosses take an odd one.
+        ///
+        /// The message gives the count set and the count sewn. Set an odd number.
+        FillCrossThreadsEven = "SC-W0322", Warning, "Half cross with an even thread count; the odd count above sewn";
+
+        /// A tartan fill's sett is its `tartan` setting, an object of JSON as Ink/Stitch's tartan editor saves
+        /// it, whose `palette` gives the stripes: a palette code, a threadcount of colour letters or the
+        /// threadcount the Scottish Register of Tartans' search gives. This one can't be read: it isn't JSON, it
+        /// has no `palette`, a number in it isn't one, its `scale` isn't above 0, its code has more than one `|`,
+        /// a stripe's width or count isn't a number, or letters of a register's threadcount have no count. The
+        /// element is skipped.
+        ///
+        /// The message says what is wrong. Set the sett again with VectorCraft's StitchCraft Tartan filter or
+        /// Ink/Stitch's tartan editor, or write its palette code as a colour in brackets and a width for each
+        /// stripe.
+        FillTartanSettUnreadable = "SC-E0323", Error, "Tartan fill's sett can't be read; skipped";
+
+        /// Retired in M10.7, which sews tartans' herringbones: StitchCraft no longer gives this code. Before
+        /// M10.7, a tartan whose `herringbone_width_mm` was above 0 sewed straight rows, as a tartan with a width
+        /// of 0 sews them, and this warning said so.
+        ///
+        /// Plan the file again with this StitchCraft to sew the herringbone.
+        FillTartanHerringboneNotYet = "SC-W0324", Warning, "Tartan's herringbone sewn as straight rows (retired)";
+
+        /// A tartan fill without a sett sews Ink/Stitch's default one, as Ink/Stitch does: stripes 5 mm wide of a
+        /// thread almost black, with 5 mm left unsewn between them. VectorCraft's fill dialog holds no sett
+        /// before M10.7, so a tartan fill made there sews this one.
+        ///
+        /// Set the sett with Ink/Stitch's tartan editor, and sew the file it saves.
+        FillTartanNoSett = "SC-W0325", Warning, "Tartan fill without a sett; Ink/Stitch's default sett sewn";
+
+        /// Every stripe of this sett is left unsewn: each is marked `?`, has a colour that can't be read, or has
+        /// no width, so neither the warp nor the weft has a stripe to sew. Only the fill's underlay is sewn, as
+        /// in Ink/Stitch.
+        ///
+        /// Give a stripe a colour and a width.
+        FillTartanNoStripe = "SC-W0326", Warning, "Tartan sett with no stripe to sew; only the underlay sewn";
+
+        /// The rows cross a tartan's narrowest stripe sewn as a fill in stretches shorter than the shortest
+        /// stitch the machine sews well: a warp stripe in its width over the cosine of the rows' angle to the
+        /// stripes, and a weft stripe over its sine. Needle points too near the one before are left out, so the
+        /// stripe's rows lose stitches and it can look thin.
+        ///
+        /// The message gives the stripe's width, the stretch and the shortest stitch. Widen the stripe, raise
+        /// the sett's `scale`, or raise its `min_stripe_width` so that the stripe sews as a run.
+        FillTartanTooFine = "SC-W0327", Warning, "Tartan sett too fine for the shortest stitch; needle points left out";
+
+        /// A stripe's colour is `#` and 3 or 6 hexadecimal digits or a colour name of SVG, in a palette code, and
+        /// the letters of one of the Scottish Register of Tartans' shades, or of a colour of its own palette, in a
+        /// threadcount. This sett names a colour that is none of these, and its stripes are left unsewn, as
+        /// Ink/Stitch leaves them.
+        ///
+        /// The message names the colours. Write each as `#` and 6 hexadecimal digits, or as the register's
+        /// letters.
+        FillTartanColourUnreadable = "SC-W0328", Warning, "Tartan stripe's colour can't be read; left out";
+
+        /// A linear gradient fill sews the colours of the linear gradient its shape is painted with. This shape is
+        /// painted with a plain colour, a gradient of one colour, or a gradient that isn't linear, so its own colour
+        /// fades out along the fill's `angle`, its rows thinning out to none, as Ink/Stitch sews it.
+        ///
+        /// Paint the shape with a linear gradient, or choose another fill method.
+        FillGradientNone = "SC-W0329", Warning, "Linear gradient fill without a linear gradient; its colour fades out";
+
+        /// Between 2 stops of a gradient, the rows go to their 2 colours in a fixed pattern, which takes 3 rows or
+        /// more. This stop lies within 2 rows of where the blend before it ends, so no blend starts at it. The next
+        /// blend starts a row later and blends from the colour before the stop, and the row between is left out,
+        /// as Ink/Stitch sews it. A gradient whose start and end are one point puts all its stops at one row.
+        ///
+        /// The message names the stops. Move them at least 3 row spacings apart.
+        FillGradientStopPassedOver = "SC-W0330", Warning, "Gradient stop within 2 rows of the blend before; passed over";
+        /// A guided fill's rows are copies of its guide line, a line grouped with the fill and marked as one:
+        /// a stroke with Ink/Stitch's guide-line marker in an SVG file, or a path named `stitch:guide` in a
+        /// VectorCraft document. This fill has none, or its guide starts and ends at one point once it is made
+        /// one line, so it is sewn as a tatami fill with its own settings, its angle and the rest, as Ink/Stitch
+        /// sews a guided fill without a guide. A satin column marked as a guide guides a ripple stitch, not a
+        /// fill. VectorCraft's live preview shows no marker to the fill effect, so it sews the tatami fill, and
+        /// `stitch export` sews the rows.
+        ///
+        /// Group a line marked as a guide with the fill, drawn the way its rows should run.
+        FillGuidedNoGuide = "SC-W0331", Warning, "Guided fill without a guide line; sewn as a tatami fill";
+
+        /// No copy of this guided fill's guide line meets a part of the fill, so that part is sewn as a tatami
+        /// fill whose rows run at the angle of the line between the guide's ends, as Ink/Stitch falls back to
+        /// one where its copies leave no line in a part. Where no copy meets the part at all, Ink/Stitch stops
+        /// with an error instead. The copies move a row spacing at a time square to that line, or at `guided_fill_angle`, from
+        /// the copy nearest the part outward, while they meet the part's bounds. A copy angle near the guide's
+        /// own direction moves them along the guide, past a small part, and a guide far from a part can place
+        /// its nearest copy beyond it.
+        ///
+        /// The message counts the parts. Draw the guide across the fill, or clear `guided_fill_angle`.
+        FillGuidedMissed = "SC-W0332", Warning, "Guided fill's copies of its guide meet no part; sewn as a tatami fill";
+
+        /// A part of a stroke is too small for the shortest stitch the machine sews well, so it was left out:
+        /// one stitch that short would hammer one spot of the fabric and could break the thread. The part is
+        /// a single point (a stray node), shorter than the shortest stitch, or longer but curled up so that
+        /// all of it lies within the shortest stitch of its ends: a tiny closed loop, say.
+        ///
+        /// The message gives the part's length and the shortest stitch. Enlarge the part, join it to its
+        /// neighbour, or delete it if it is a stray.
+        StrokeTooSmall = "SC-W0401", Warning, "Path too small for the shortest stitch; skipped";
+
+        /// A running stitch's length, a stroke's or that of one of a satin column's underlays, is shorter than
+        /// twice the shortest stitch, so it was lengthened to twice the shortest stitch. Stitches are spread
+        /// evenly between corners; at half the length or more, every stitch then stays at or above the
+        /// shortest stitch, whatever the distance between corners.
+        ///
+        /// The message names the parameter and gives both lengths. Use a longer stitch length, or a shorter
+        /// minimum if your machine sews shorter stitches well.
+        StitchLengthRaised = "SC-W0402", Warning, "Stitch length below twice the shortest stitch; raised";
+
+        /// Hand-placed stitches (manual stitch) shorter than the shortest stitch the machine sews well: the
+        /// needle point that made each one too short was left out, so the stitch before it runs on to the
+        /// next point. A part's last point is always kept; the one before it goes instead.
+        ///
+        /// The message gives how many and the shortest of them. Move the nodes apart, or delete the extra
+        /// ones.
+        HandStitchTooShort = "SC-W0403", Warning, "Hand-placed stitch shorter than the shortest stitch; point left out";
+
+        /// Hand-placed stitches (manual stitch) sewn longer than `max_stitch_length_mm`. A stitch longer than
+        /// that is split into equal parts no longer than it, but never into parts shorter than the shortest
+        /// stitch the machine sews well, which here took fewer parts: a shorter stitch would hammer one spot and
+        /// could break the thread. Ink/Stitch splits such a stitch into the fewest parts no longer than the
+        /// setting, however short they are.
+        ///
+        /// The message gives how many stitches are longer and the longest of them. Set `max_stitch_length_mm`
+        /// to at least twice the shortest stitch: every split then leaves parts long enough.
+        HandStitchKeptLong = "SC-W0404", Warning, "Hand-placed stitch longer than max_stitch_length_mm; kept for the shortest stitch";
+
+        /// A zigzag stroke's stitches shorter than the shortest stitch the machine sews well, across a zigzag
+        /// too narrow for its spacing. Finishing leaves out a needle point of each such stitch, as it leaves out
+        /// any point that near the one before it (`SC-I0504`), so the zigzag sews narrower there. Where every
+        /// stitch is that short, every other point goes, and the zigzag sews as a line along one side.
+        /// Ink/Stitch's shortest stitch is 0.1 mm by default, and it sews such a zigzag as it is.
+        ///
+        /// The message gives how many stitches are that short and the shortest. On a straight path, a stitch
+        /// across a zigzag `w` wide at a spacing `s` is √(w² + (s/2)²) long. Make the zigzag wider, the stroke
+        /// or its pull compensation, or space it out, until that is at least the shortest stitch.
+        ZigzagTooNarrow = "SC-W0405", Warning, "Zigzag stitch shorter than the shortest stitch; the zigzag sews narrower";
+
+        /// A ripple stitch sets something StitchCraft doesn't apply to it, so it sews without it. A ripple along a
+        /// column, a stroke of 2 lines or more drawn as a satin column's rails and rungs, reads its rails without
+        /// the satin column's `push_compensation_mm`, which Ink/Stitch applies to it though its settings window
+        /// doesn't show it for a ripple.
+        ///
+        /// The message says what is not applied. Draw the rails as long as the ripple should run, and leave push
+        /// compensation at 0.
+        RippleNotSewnYet = "SC-W0406", Warning, "Ripple stitch setting not applied; sewn without it";
+
+        /// `min_line_dist_mm` gives a ripple stitch more than 1,000 lines, so it sews 1,000, or 999 to keep the
+        /// count's parity, odd or even, as `line_count` has it. The count is the shortest distance from the
+        /// stroke's line to its target point, or across its column, or the length of its guide, divided by
+        /// `min_line_dist_mm`, and a very short distance between the lines on a large shape gives thousands of
+        /// lines that sew into a solid patch. A guide that places a copy at each of its points or rungs
+        /// (`render_at_rungs`), or wherever the copies clear each other (`adaptive`), places at most 1,000 too.
+        ///
+        /// The message gives the count asked for and the count sewn. Set a larger `min_line_dist_mm`, or place
+        /// the copies by `line_count`.
+        RippleLinesCut = "SC-W0407", Warning, "Ripple stitch of more than 1,000 lines; cut to 1,000";
+
+        /// A ripple stitch's `skip_start` and `skip_end` together leave out as many lines as it has, or more, so
+        /// they would leave none to sew. No line is left out, as Ink/Stitch does.
+        ///
+        /// The message gives both settings and the number of lines. Lower `skip_start` or `skip_end`, or give
+        /// the ripple more lines.
+        RippleSkipsAll = "SC-W0408", Warning, "Ripple stitch's skips would leave out every line; every line sewn";
+
+        /// A ripple stitch's guide line can't place its copies, so the ripple sews without it, towards its
+        /// target point or spiralling in to it, as it would with no guide. The guide has no length, its satin
+        /// column has no rails to place copies between, its middle has no length or its first pair of points no
+        /// width, or it is too short for a pair, or its settings don't read. Ink/Stitch at `d59c9ab`, run as a
+        /// black box, stacks the copies of a guide line of no length on its point, and stops with an error where
+        /// they are placed by hand (`DEV-RIP-004`). An anchor line whose ends are one point is left out the same
+        /// way, and the copies' ends are the line's own.
+        ///
+        /// The message says what is wrong with the guide. Draw the guide as a line with length, or as a satin
+        /// column of 2 rails, grouped with the ripple, and the anchor line across the ripple's line.
+        RippleGuideUnusable = "SC-W0409", Warning, "Ripple stitch's guide can't place its copies; sewn without it";
+
+        /// A lock stitch would have been shorter than 0.2 mm, the shortest stitch a lock may have. The needle
+        /// would go back into the hole it just left, which can cut the thread and does not lock it. Each such
+        /// step of a lock made of steps (back and forth, or a custom lock written as numbers) was lengthened
+        /// to 0.2 mm, and a drawn lock was enlarged until its shortest stitch is 0.2 mm long. A lock of steps
+        /// follows the stitching. Where a sharp turn would fold it onto itself, it was sewn straight along the
+        /// first (or last) stitch.
+        ///
+        /// The message says which lock, and by how much. Set a larger lock size (`lock_start_scale_mm`,
+        /// `lock_end_scale_mm`) or scale (`lock_start_scale_percent`, `lock_end_scale_percent`), or write
+        /// longer custom steps.
+        LockStitchLengthened = "SC-W0502", Warning, "Lock stitch shorter than 0.2 mm; lengthened";
+
+        /// The lock is set to custom, but its shape cannot be sewn as written. A custom lock is numbers
+        /// separated by spaces, the steps the needle takes along the stitching in sizes of
+        /// `lock_*_scale_mm`, or an SVG path that draws it in millimetres, at `lock_*_scale_percent`. Parts
+        /// that are not numbers, steps of 0 and steps longer than 10 m are left out, and if no step is left,
+        /// the half stitch is sewn instead. A path is read up to an error in it, and a node where the node
+        /// before it is is left out. The half stitch is sewn instead of a path of fewer than 3 nodes or more
+        /// than 100, one whose last segment, which gives its direction, has no length, one that reaches
+        /// farther than 10 m, one with no stitch to sew, and one with a stitch shorter than 0.2 mm even at
+        /// 500 %.
+        ///
+        /// The message says what was wrong. Write the lock as numbers, such as `1 -1 1 -1`, or as a path of
+        /// at least 3 nodes, such as `M 0,0 L 0,1 L 1,1 L 1,0 L 2,0`, or choose another lock shape.
+        CustomLockUnusable = "SC-W0503", Warning, "Custom lock cannot be sewn as written";
+
+        /// Needle points less than the shortest stitch from a needle point next to them were left out, so the
+        /// stitch before each runs on to the next and none is shorter than the machine sews well. This happens
+        /// where one element's stitching runs straight on into the next and they nearly touch: the stitch
+        /// between them is whatever is left of the gap. A point that stays, such as a lock point or the last
+        /// point before a jump, trim or stop, leaves out the points before it that it is too near, and a stitch
+        /// into or out of a lock point may be as short as 0.2 mm. Where small elements are sewn over each other,
+        /// a point that stays can go too, when it comes within the shortest stitch of another that stays.
+        /// Nothing visible changes, but across a zigzag too narrow for the shortest stitch, which `SC-W0405`
+        /// names.
+        ///
+        /// The message gives how many points were left out and the shortest stitches that applied to them.
+        /// Nothing needs doing. If the count is large, check for elements drawn on top of each other.
+        StitchesMerged = "SC-I0504", Info, "Stitches shorter than the shortest stitch merged";
+        /// The element is set to trim or stop after it (`trim_after`, `stop_after`, or Ink/Stitch's trim and
+        /// stop commands), but it sews no stitch, so there is no place for the trim or the stop: it is left
+        /// out, as Ink/Stitch leaves it out. Another message says why the element sews nothing, such as an
+        /// automatic area that the areas sewn after it cover whole (`SC-I0904`).
+        ///
+        /// Make the element sew, or set the trim or stop on the element before it.
+        TrimOrStopLeftOut = "SC-W0505", Warning, "Trim or stop after an element that sews nothing; left out";
+
+        /// The element sets `underlays_first`, but its setting joins no run, so it sews its underlay just before
+        /// its top stitches, as it does without the setting. A run is 2 or more elements next to each other in
+        /// sewing order that set it and sew in one thread, with no trim or stop between them. The run sews all
+        /// their underlays first, then their top stitches. This element is alone: the elements next to it don't
+        /// set it, or sew in another thread, or a trim or a stop parts them. An element sewn in several threads
+        /// is in no run either.
+        ///
+        /// The message says which. Set `underlays_first` on the elements that cross or overlap this one too,
+        /// give them its thread, or move the trim or the stop between them. Nothing needs doing if the element
+        /// should sew as it does.
+        UnderlaysFirstAlone = "SC-I0506", Info, "Underlays first joins no run; the element sews as without it";
+
+        /// The file format can record only a limited number of colour changes and stops (PES: 255). This
+        /// design has more, so the file was not written.
+        ///
+        /// Merge elements that use the same thread so they sew in one block, or remove stops.
+        TooManyColorChanges = "SC-E0601", Error, "Too many colour changes for the file format";
+
+        /// The design's coordinates or stitch data do not fit the fields of this file format, so the file
+        /// was not written. Within a real hoop this does not happen; it points at a design that is far
+        /// larger than any hoop, or at stray objects far from the rest of the design.
+        ///
+        /// Check the design's size and remove stray objects.
+        TooLargeForFormat = "SC-E0602", Error, "Design too large for the file format";
+
+        /// The machine file could not be read: it is not in the format its name or first bytes suggest, it
+        /// ends early, or a record in it makes no sense. StitchCraft reads every file as if it could be
+        /// damaged or hostile, so a bad file is reported, never half-read in silence.
+        ///
+        /// The message says where reading stopped. If the machine sews the file, it may be a format variant
+        /// StitchCraft does not know yet: please report it with the file.
+        UnreadableFile = "SC-E0603", Error, "Machine file could not be read";
+
+        /// The file stores no thread colours (DST files never do: they only say where the machine pauses for
+        /// the next thread), so every thread has a black placeholder colour in previews. A PES file converted
+        /// from this one names each thread by the Brother colour nearest black that is still free (Black, Dark
+        /// Gray, Dark Brown and so on), which says nothing of the threads the design needs.
+        ///
+        /// The stitches are not affected. Load the threads the design needs, in the order the design's
+        /// author gives; StitchCraft cannot know them.
+        ThreadColorsUnknown = "SC-W0604", Warning, "Thread colours unknown";
+
+        /// DST has no trim command: machines cut the thread when they meet three or more jump records in a
+        /// row (a machine setting; three is the common one), and a jump longer than 24.2 mm takes three or
+        /// more records. So the thread will be cut before such a jump, although the plan does not trim there.
+        /// With a tie-off before the jump the cut is usually welcome: there is no jump thread to clip by hand.
+        ///
+        /// Nothing to do. Where an element's ties are off, turn them on so its stitching holds when it is
+        /// cut, or sew a PES file, where only trims cut. A machine set to another number of jump records cuts
+        /// before other jumps: see its DST setting.
+        JumpsCutInDst = "SC-I0605", Info, "Long jumps cut in DST";
+
+        /// A PES file names each thread by a colour of the Brother palette, which has 61 thread colours.
+        /// StitchCraft gives each different thread a colour of its own, the nearest one still free, so the
+        /// machine asks for each thread change. A design with more different threads than that has some
+        /// share a colour, and the machine shows that colour for each of them: at a change between 2 of them it
+        /// shows the thread already in the machine, as for a stop.
+        ///
+        /// Load the threads in the order the report lists them, rather than by the colours the machine shows.
+        /// Or use fewer different threads: merge those of nearly the same colour.
+        ThreadsShareColor = "SC-W0606", Warning, "Threads share a Brother colour";
+
+        /// The design is wider or taller than the machine's hoop, so the machine cannot sew it in one
+        /// hooping (most machines refuse the file). A design that fits the hoop can still reach past its edge
+        /// where it is placed: its origin, which goes to the hoop's centre, can lie far from its middle, and
+        /// its stop position, where the frame goes before each stop, can lie outside the hoop.
+        ///
+        /// If the message says the design fits when turned 90 degrees, rotate it, or have the machine file
+        /// turn it: Ink/Stitch's rotate on export, or Turn on export in StitchCraft's Design Settings filter.
+        /// Otherwise scale it down, or split it into parts that are sewn in separate hoopings. Where it reaches
+        /// past the edge from where it is placed, move its origin nearer its middle, or its stop position nearer
+        /// the design.
+        OutsideHoop = "SC-E0701", Error, "Design does not fit the hoop";
+
+        /// The design fits the hoop but is larger than the profile's comfort zone: the area where this
+        /// machine and hoop sew most accurately. Near the hoop's edge fabric is held less firmly, so large
+        /// designs pucker and shift more.
+        ///
+        /// The file was written. Rotate the design if the message says that brings it inside the comfort
+        /// zone, use a firmer stabilizer, or scale the design down.
+        OutsideComfortZone = "SC-W0702", Warning, "Design is larger than the comfort zone";
+
+        /// Stitches longer than the machine's longest stitch were split into equal parts, each no longer than
+        /// it: a long stitch placed by hand, say, or a custom lock's long step. A long loose stitch snags and
+        /// sags; the machine may refuse it.
+        ///
+        /// To choose where the needle goes down instead, add nodes (manual stitch) or set
+        /// `max_stitch_length_mm`.
+        StitchesSplit = "SC-I0703", Info, "Stitches longer than the machine's longest stitch; split";
+
+        /// The SVG file could not be read: it is not well-formed XML, its root is not an `<svg>` element,
+        /// its size or viewBox does not read or makes no sense, or it is larger than StitchCraft reads, its
+        /// style sheets included. Nothing was stitched.
+        ///
+        /// The message says what is wrong and, for XML errors, where. Open the file in a vector editor and
+        /// save it again as plain SVG.
+        SvgUnreadable = "SC-E0801", Error, "SVG could not be read";
+
+        /// Part of the SVG uses a feature that StitchCraft does not stitch, so that part is left out or
+        /// simplified: text that is not converted to paths, raster images, nested `<svg>` elements, style sheet
+        /// rules with selectors StitchCraft does not read, or a gradient or pattern used as a colour. Values that
+        /// do not read are named too. A colour that does not read is ignored, as a viewer ignores it, and one of
+        /// Ink/Stitch's design settings keeps its default. A line that `--auto` sews across its width, as a satin
+        /// column or a fill, is as wide as its transforms stretch it on average, so a transform that stretches it
+        /// more one way than the other, and draws it wider one way, is named too.
+        ///
+        /// So is what StitchCraft does not apply of an Ink/Stitch file: the settings of a group, which Ink/Stitch
+        /// doesn't read either, those of its early versions (`embroider_` attributes), a turn on export
+        /// (`rotate_on_export`) that is not a number, and the updates Ink/Stitch would make to a file with its
+        /// settings and no file version, or from a newer Ink/Stitch, which is read as it is. Of its commands, one
+        /// on an object that is not stitched is named, and so is a start, end, target, origin or stop position
+        /// command whose place doesn't read, an `ignore_layer` command in no layer, a command on a shape digitized
+        /// automatically (`--auto`), which places where its parts start and end, and a start, end or target
+        /// command on a clone (`<use>`), which Ink/Stitch applies to shapes alone. Of a clone, its Ink/Stitch
+        /// settings that change nothing are named, an `angle` that is not an angle, and its angle settings on a
+        /// shape digitized automatically; a clone inside more than 16 others is left out. Of clip paths, which cut
+        /// the shapes they clip, what isn't applied is named: text in one, which adds nothing to it, a clip path
+        /// on a clip path's shape, one that isn't a reference, such as a CSS shape, clip paths that name each
+        /// other in a loop, `objectBoundingBox` units on a group, groups in a clip path more than 16 deep, and the
+        /// root's.
+        ///
+        /// The message names the element and what was done. Convert text to paths in the editor (in Inkscape:
+        /// Path › Object to Path), and give shapes plain colours.
+        SvgFeatureIgnored = "SC-W0802", Warning, "SVG feature ignored";
+
+        /// An object or a layer is left out because the file asks for it: an Ink/Stitch "ignore object" or
+        /// "ignore layer" command, the object's Ink/Stitch setting `ignore_object`, or a clone's setting `clone`
+        /// turned off. Designs keep templates, placement lines and notes this way, in the drawing but out of the
+        /// sew-out, and Ink/Stitch leaves them out too.
+        ///
+        /// The message names what was left out and why. To stitch it, delete the command's symbol, or turn the
+        /// setting off in Ink/Stitch's parameters.
+        SvgObjectIgnored = "SC-I0805", Info, "Object left out, as the file asks";
+
+        /// The SVG file was saved by an older Ink/Stitch, and is read as Ink/Stitch updates such a file when it
+        /// opens it, so that it sews as it did: a default or a setting whose meaning has changed since is
+        /// written into the shapes that relied on it. Ink/Stitch numbers the files it saves. Before its file
+        /// version 4, a fill's stitches were 3 mm long unless it set another length, where they are 4 mm now,
+        /// and a fill with `auto_fill` off was a legacy fill; before version 3, a zigzag stroke's pull
+        /// compensation was shared by its 2 sides, and a satin column started and ended where it was drawn;
+        /// before version 2, a polyline whose style set a stroke was sewn as a manual stitch, with a needle
+        /// point at each of its points. A shape digitized automatically (`--auto`) sews by StitchCraft's rules
+        /// instead.
+        ///
+        /// The message gives the file's version, and how many shapes were updated and how. Nothing needs doing:
+        /// the design sews as Ink/Stitch sews it. To sew a shape otherwise, change the setting the message
+        /// names in Ink/Stitch.
+        SvgInkStitchUpdated = "SC-I0818", Info, "Ink/Stitch file from an older version, read as Ink/Stitch updates it";
+
+        /// The file gives the design 2 origins, or 2 stop positions where the design has a stop: Ink/Stitch's
+        /// `origin` or `stop_position` command more than once, or more than one object named `stitch:origin` or
+        /// `stitch:stop-position` in a VectorCraft document. Which one counts isn't known, so no machine file is
+        /// written, as Ink/Stitch writes none (`REQ-ASM-005`). 2 stop positions in a design without a stop
+        /// change nothing.
+        ///
+        /// The message names the command or marker and counts them. Delete or rename all but one.
+        OriginOrStopPositionTwice = "SC-E0819", Error, "More than one origin or stop position";
+
+        /// StitchCraft's Auto-Route Satin Columns, a filter in VectorCraft, routes the selected paths whose own
+        /// StitchCraft effects make them satin columns, with the paths among them whose own effects make them
+        /// strokes, which show where the needle may travel. Its Auto-Route Running Stitch routes the selected
+        /// paths whose own effects make them strokes. A path sewn by a group's effect, or by none, is left as it
+        /// is. The route runs between the objects named `stitch:route-start` and `stitch:route-end` selected with
+        /// the paths. It changed nothing, because nothing was selected, because no selected path has an effect of
+        /// its own that the filter routes, or because 2 markers of a kind were selected, and which one counts isn't
+        /// known, as Ink/Stitch's Auto-Route Satin Columns stops at 2 `autoroute_start` or `autoroute_end`
+        /// commands.
+        ///
+        /// The message says which. Select the satin columns or the running stitches to route, and put
+        /// StitchCraft's Satin or Stroke effect on the paths themselves rather than on their group. Keep one start
+        /// marker and one end marker in the selection.
+        VcNotRouted = "SC-E0820", Error, "VectorCraft selection not routed";
+
+        /// StitchCraft Tartan, a filter in VectorCraft, sets the sett of the selected paths' tartan fills from a
+        /// code: a palette code, a threadcount of colour letters, or the threadcount the Scottish Register of
+        /// Tartans' search gives. A path takes the sett when its own first StitchCraft effect is the fill effect,
+        /// or when it has none, and the filter then gives it the fill effect. It changed nothing: nothing was
+        /// selected, no selected path takes a sett, or the code can't be read, names letters the register uses
+        /// for no colour, which the fill would leave unsewn, gives no stripe, or makes a setting longer than the
+        /// fill's Sett holds.
+        ///
+        /// The message says which. Select the paths to sew as a tartan, and write each stripe as a colour in
+        /// brackets and its width, or as the register's colour letters and a count of threads.
+        VcSettNotSet = "SC-E0821", Error, "VectorCraft tartan's sett not set";
+
+        /// An element's geometry cannot be used: its path data or its list of points has an error (the path is
+        /// stitched up to the error, as SVG viewers draw it), its transform is not valid (it is skipped with
+        /// everything inside it), it draws nothing, or it lies more than 10 metres from the document's origin,
+        /// beyond what machine files can record (it is skipped). A stroke width, join or miter limit that does
+        /// not read is named as well, and ignored as a viewer ignores it, and so is an empty width, height or
+        /// viewBox of the drawing, or an aspect ratio that does not read, and a symbol's viewBox, aspect ratio
+        /// or size that a clone gives it. A stroke too wide to measure is skipped, and so is a clone that shows
+        /// itself, directly or through other clones, as viewers skip it, and a symbol shown in a viewport of no
+        /// area. A clone whose source's place doesn't read is drawn, but the angles of its fills don't turn with
+        /// it.
+        ///
+        /// The message names the element. Check its path data, points and transform, or remove stray objects
+        /// far from the design.
+        SvgGeometryUnusable = "SC-W0804", Warning, "Element geometry invalid or out of range";
+
+        /// The `.vectorcraft` file comes from a newer VectorCraft: its format version is newer than the newest
+        /// StitchCraft reads. StitchCraft reads it as that version, usually all of a design's paths and paints,
+        /// where older versions of VectorCraft refuse the file.
+        ///
+        /// The message gives the file's format version and the newest StitchCraft reads. Compare the stitches
+        /// with the drawing, or save a copy in that format from the newer VectorCraft: File › Save a Copy, then
+        /// the Version in VectorCraft Options.
+        VcNewerFormat = "SC-W0803", Warning, "VectorCraft file from a newer format version; read best-effort";
+
+        /// The `.vectorcraft` file could not be read: it is not a VectorCraft document (its JSON does not
+        /// read, it names another format, or it holds no document), the data VectorCraft keeps after its JSON
+        /// is damaged, it unpacks to more JSON than StitchCraft reads, or its objects' names, settings or paths,
+        /// copied into each fill and stroke made of them, come to more than StitchCraft holds. Nothing was
+        /// stitched.
+        ///
+        /// A StitchCraft live effect or filter gives this message when what VectorCraft passes it does not read
+        /// as VectorCraft's plug-in ABI v1 says, which a VectorCraft with another plug-in ABI would do. The
+        /// effect leaves the object as it is, and the filter changes nothing.
+        ///
+        /// The message says what is wrong and, for JSON errors, where. Open the file in VectorCraft and save it
+        /// again. For a plug-in, install the StitchCraft plug-ins made for that version of VectorCraft.
+        VcUnreadable = "SC-E0806", Error, "VectorCraft file could not be read";
+
+        /// Part of the VectorCraft document is not stitched: text, images, symbols, objects VectorCraft computes as
+        /// it draws them (blends, envelopes, meshes, repeats, placed documents and Intertwine objects), a kind of
+        /// object StitchCraft does not read, opacity masks, VectorCraft's own effects, a brush's art, a StitchCraft
+        /// effect it cannot use, such as an Auto effect beside a stitch effect, which says how the object sews, or
+        /// a group's or a layer's own fills and strokes. A clip group cuts what it holds to its clipping object:
+        /// text, an image, a placed document, a live object or a kind StitchCraft does not read there adds nothing
+        /// to the clip, which is said too. So is a clipping object that StitchCraft effects reach: VectorCraft
+        /// clips the preview to the stitches they draw of it, and what sews is cut to it as it is drawn. A gradient
+        /// is sewn in its first colour, and a pattern, or a colour that does not read, in black. An object that
+        /// StitchCraft effects reach from more than one level, its own and a group's around it, or 2 groups', sews
+        /// as the nearest say: VectorCraft runs each on the stitches the one before drew, which no machine sews. A
+        /// start or end marker, an object named `stitch:start` or `stitch:end`, is never stitched: the shapes
+        /// grouped with it start or end there, and a marker they don't use is said, a second one of its kind in a
+        /// group or one with no point that reads, as are those beside a shape digitized automatically, which places
+        /// where its parts start and end. So is an origin or stop position marker, `stitch:origin` or
+        /// `stitch:stop-position`, with no point that reads. A name that begins with `stitch:` and names no marker
+        /// StitchCraft reads is said too, as is a group or a layer named as a marker, which only a shape can be:
+        /// the name is ignored. A satin column, a zigzag or a fill made of a stroke is as wide as the stroke all
+        /// along and centred on its path, so a stroke aligned inside or outside a closed path is said, as is a
+        /// width profile, and round or square caps where the stitches end at the path's end.
+        ///
+        /// The message names the object and what was done. In VectorCraft, Type › Create Outlines makes paths
+        /// of text, and Object › Expand of blends, envelopes, repeats and placed documents. Break Link to Symbol
+        /// makes paths of a symbol, and Object › Expand Appearance of what effects and brushes draw.
+        VcFeatureIgnored = "SC-W0807", Warning, "VectorCraft object or feature not stitched";
+
+        /// An object's geometry cannot be used, and the object, or the stroke, is left out: a coordinate or a
+        /// stroke's width is not a number, the object draws nothing, or it lies more than 10 metres from the
+        /// document's origin, beyond what machine files can record. A StitchCraft stroke or satin effect takes
+        /// a width that is not a number as 0. Such a path in a clip group's clipping object adds nothing to the
+        /// clip. A StitchCraft live effect leaves such an object as it is, with this message as the plug-in's
+        /// last error.
+        ///
+        /// The message names the object. Check its anchors, or remove stray objects far from the design.
+        VcGeometryUnusable = "SC-W0808", Warning, "VectorCraft geometry unusable";
+
+        /// A layer or a guide is left out because VectorCraft does not print it: a template layer, a layer
+        /// whose Print option is off, or a guide. VectorCraft shows them, dimmed or as guides, and keeps them
+        /// out of what it prints and exports; StitchCraft keeps them out of the sew-out.
+        ///
+        /// The message names the layer or the guide. To stitch a layer, turn its Template option off, or its
+        /// Print option on, in VectorCraft's Layer Options.
+        VcNotPrinted = "SC-I0809", Info, "VectorCraft layer or guide left out, as it does not print";
+
+        /// A StitchCraft live effect draws the object it is applied to as its stitches, or as much of them as its
+        /// preview level shows. It leaves the object as it is when it cannot show them, and VectorCraft shows this
+        /// message as the plug-in's last error. The object sews no stitch, or its preview level needs more work
+        /// than VectorCraft lets a live effect do. Or it is as wide as its stroke, a satin column drawn as one
+        /// path or a zigzag stroke, and VectorCraft gives the effect no stroke: before 0.14, for an object without
+        /// one, or where the stroke is a group's. The Auto effect sews an object by its fill and its stroke, and
+        /// leaves it as it is when VectorCraft gives it neither. Or the effect sits on one of the object's fills
+        /// or strokes, which `stitch export` doesn't use. When another message says why an object sews no stitch,
+        /// the effect shows that message instead.
+        ///
+        /// The message says which. A satin column drawn as one path, and a zigzag stroke, sew as wide as the
+        /// stroke that paints them when exported with `stitch export`. To see their stitches in VectorCraft, give
+        /// the object a stroke as wide as they are, or draw a satin column's 2 rails and join them with Object ›
+        /// Compound Path › Make. Apply StitchCraft's effects to the object itself, not to one of its fills or
+        /// strokes. For a preview that needs more work, the hint names a cheaper level to set the effect's
+        /// `preview_level` to.
+        VcEffectUnchanged = "SC-I0810", Info, "VectorCraft live effect leaves the object as it is";
+
+        /// An object or a layer is left out because its name asks for it: the name is `stitch:ignore`, alone
+        /// or followed by white space and a note, in any mix of upper and lower case. Designs keep placement
+        /// lines, templates and notes this way, in the drawing but out of the sew-out, as Ink/Stitch's ignore
+        /// commands keep them. Everything in a group or a layer so named is left out with it.
+        ///
+        /// The message names what was left out. To stitch it, rename it in VectorCraft's Layers panel.
+        VcObjectIgnored = "SC-I0811", Info, "VectorCraft object left out, as its name asks";
+
+        /// A design setting that StitchCraft's Design Settings filter keeps with a VectorCraft document does not
+        /// read: a length that is not a number of 0 or more, or a machine this StitchCraft doesn't have, as a
+        /// document from a newer one may name. The setting keeps its default, and the design is planned for
+        /// the machine `--profile` or the export names, or else for the reference machine, the Brother PE800's
+        /// 5 × 7 in hoop.
+        ///
+        /// The message names the setting and what it holds. To set it again, choose Object › Plug-ins ›
+        /// StitchCraft Design Settings in VectorCraft, which keeps every setting anew.
+        VcSettingIgnored = "SC-W0812", Warning, "VectorCraft design setting ignored";
+
+        /// A StitchCraft filter needs what the VectorCraft that ran it doesn't give a filter, so it declined to
+        /// run, and nothing changed. StitchCraft Design Settings keeps a document's design settings and machine
+        /// as data VectorCraft keeps with a document for a filter, from 0.16. Stroke to Satin and Test Sheet
+        /// give the objects they make StitchCraft's effects, as effect records VectorCraft keeps from 0.15.
+        /// Test Sheet tells such a VectorCraft by what it gives every filter from 0.16, since a 0.15 with
+        /// nothing selected looks as 0.14 does.
+        ///
+        /// The message names the version the filter needs. Update VectorCraft to it or later. Until then, the
+        /// export's Machine option and `stitch export --profile` name the machine, the design settings keep
+        /// their defaults, a satin column is drawn with its 2 rails and joined with Make Compound Path, and
+        /// `stitch testsheet` makes the test sheets.
+        VcTooOld = "SC-E0813", Error, "VectorCraft too old for the filter";
+
+        /// StitchCraft's Stroke to Satin filter makes each selected line into a satin column drawn with rails
+        /// and rungs, which sews as the line does with the satin effect. It changed nothing, because nothing was
+        /// selected, or one of the lines can't be made so: its path has no stroke to take the column's width
+        /// from, or can't be used, its rails can't be made or would leave parts of it out, as `SC-E0214` and
+        /// `SC-W0213` say of a satin column drawn as one path, or the column would be read back with other rails
+        /// or rungs, as one whose rails cross each other is, or would need a rung across an end that its satin
+        /// effect's push compensation lengthens, which would sew what that adds apart.
+        ///
+        /// The message names the object. Select the lines, give the path a stroke as wide as the column, draw
+        /// that column with its 2 rails, set the satin effect's push compensation to 0 or more at one end, or
+        /// leave the object out of the selection.
+        VcNotConverted = "SC-E0814", Error, "VectorCraft line not made into a satin column";
+
+        /// `stitch plan` and `stitch export` trace a picture, a PNG or JPEG file, with VectorCraft's command
+        /// line, `vectorcraft-cli`, which VectorCraft publishes with each release. It could not be started: it
+        /// isn't on the `PATH`, or the program `--vectorcraft-cli` names isn't there or can't be run. Nothing was
+        /// written but the report.
+        ///
+        /// The message names the program and why it didn't start. Install VectorCraft's command line from
+        /// VectorCraft's releases, and put it on the `PATH` or name it with `--vectorcraft-cli`. Or trace the
+        /// picture with Image Trace in VectorCraft, as the tutorial "From a picture to a machine file" does, and
+        /// plan the document you save.
+        VcCliNotStarted = "SC-E0815", Error, "VectorCraft's command line could not be started";
+
+        /// VectorCraft's command line ran to trace a picture for `stitch plan` or `stitch export`, and it failed
+        /// or saved no document. Nothing was written but the report.
+        ///
+        /// The message ends with what VectorCraft said. It fails on a file it can't read as a picture, such as a
+        /// file named `.png` that holds something else. It fails too when it is a version without the commands
+        /// StitchCraft traces with: the user guide lists the versions the compatibility gate passed. Check that
+        /// VectorCraft places the picture, or trace it with Image Trace in VectorCraft and plan the document you
+        /// save.
+        VcTraceFailed = "SC-E0816", Error, "VectorCraft could not trace the picture";
+
+        /// StitchCraft's Test Sheet filter draws a sheet in the middle of an artboard, the one under the
+        /// selection or else the first. It drew nothing, because there parts of the sheet would lie more than
+        /// 10 m from the document's origin, farther than StitchCraft stitches: a machine file can't record a
+        /// position past it, and the reader leaves objects there out (`SC-W0808`).
+        ///
+        /// The message names the sheet. Select an object on an artboard nearer the origin, or move the artboard
+        /// nearer it, and draw the sheet again.
+        VcSheetNotDrawn = "SC-E0817", Error, "VectorCraft test sheet not drawn";
+
+        /// `--auto`, or StitchCraft's Auto effect in VectorCraft, digitized the design's shapes that have no
+        /// settings: StitchCraft chose each one's stitches by its width, measured to the micrometre. An area is a
+        /// tatami fill; a part of it narrower than the design's narrowest satin stroke
+        /// (`min_satin_stroke_width_mm`, 1 mm unless the design sets it) everywhere is a running stitch along its
+        /// centre line, and a part nowhere wider than the widest satin column sews satin columns along its centre
+        /// lines. A line no wider than that narrowest stroke is a running stitch, a line up to the widest satin
+        /// column a satin column as wide as the line, and a wider line a tatami fill of the area it paints. A
+        /// running stitch is tripled from the narrowest triple run. The widest satin column is 7 mm and the
+        /// narrowest triple run 0.5 mm, unless the shape sets others (`auto_max_satin_width_mm`,
+        /// `auto_min_triple_run_width_mm`). A line whose every part a satin column cannot follow is filled too
+        /// (`SC-I0902`), and counted as a fill. An area whose every part runs is counted as a running stitch, one
+        /// none of which is filled and one of whose parts sews a satin column as satin columns, and any other as a
+        /// fill.
+        ///
+        /// The message counts the shapes that sew by the stitches they sew as: an area that the areas sewn after
+        /// it cover whole sews nothing (`SC-I0904`), and isn't counted. To sew a shape another way, give it
+        /// settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it. A shape with settings
+        /// is not digitized automatically.
+        AutoDigitized = "SC-I0901", Info, "Shapes digitized automatically";
+
+        /// `--auto` sews a line up to the widest satin column as a satin column along its path, and a part of an
+        /// area nowhere wider than that as satin columns along its centre lines, but it can't make a satin column
+        /// of this one. The widest satin column is 7 mm unless the shape sets another (`auto_max_satin_width_mm`).
+        /// A column cannot follow a part of a line that turns more tightly than the line is wide, so the
+        /// column's edges would fold over themselves, or that is shorter than a CSS pixel, or that is a dot the
+        /// line's round or square cap draws. The area it paints is filled instead, as a wider line is. A part of
+        /// an area doesn't make columns where the triangles round one of its centre lines don't make a column
+        /// with 2 sides, or where one of its columns, drawn with its rails and rungs, would be read back
+        /// otherwise. It stays in the area's fill.
+        ///
+        /// The message says which. To sew it as satin columns, draw the line with gentler turns or narrower, or
+        /// the part with smoother edges, or draw the columns with 2 rails each and give them settings.
+        AutoSatinFilled = "SC-I0902", Info, "Satin column can't be made; filled";
+
+        /// `--auto` fills the area a line paints when the line is wider than the widest satin column, 7 mm unless
+        /// it sets another (`auto_max_satin_width_mm`), or when a satin column cannot follow it, and the area this
+        /// line paints would reach more than 10 metres from the design's origin, beyond what machine files can
+        /// record. It is left out. A stroke that wide is usually a mistake in the file.
+        ///
+        /// The message gives the line's width. Check the line's stroke width.
+        AutoAreaTooLarge = "SC-W0903", Warning, "Line too wide to fill; left out";
+
+        /// `--auto` makes each automatic area reach its overlap, 1 mm unless it sets another
+        /// (`auto_overlap_mm`), under the shapes sewn after it, from where it touches them. The thread pulls
+        /// stitches in from the edges of their shape, and without the overlap fabric shows between shapes that
+        /// only meet. Where an area sewn after it covers part of it, as the details on an area digitized whole
+        /// under them do (SC-I0908), the covered part is cut away, its overlap inside the covering area's edge,
+        /// and sewn once. The running stitch or the satin column along a narrow part of an area covers that part
+        /// as an area does: the areas of other shapes sewn before it are cut away under it, and when the shapes
+        /// sewn after it cover the part whole it sews nothing. A satin column or a line digitized from a stroke
+        /// and sewn after an area goes over it, and the area is sewn whole under it.
+        ///
+        /// The message counts the areas that reach under others and those cut away. An area that the areas drawn
+        /// or sewn after it cover whole sews nothing, and the message names it, as it does a narrow part's line.
+        /// It also
+        /// names an area whose neighbours need more work to find than the budget allows it, which neither reaches
+        /// under them nor is cut away, and a satin column whose area needs more, which the areas before it don't
+        /// reach under, and which keeps its place in paint order beside the shapes near it. To sew a shape as it
+        /// is drawn, give it settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it.
+        AutoUnder = "SC-I0904", Info, "Areas reach under the shapes sewn after them";
+
+        /// `--auto` takes an automatic area smaller than its smallest area, 1 mm² unless it sets another
+        /// (`auto_min_area_mm2`), or a part of one that small, for a speck the trace left. It is too small to
+        /// sew, and would sew a knot. It is merged into the automatic area it shares the longest edge with,
+        /// which may be the rest of its own area, and no hole shows where it was. A speck that shares no edge
+        /// with an automatic area is left out.
+        ///
+        /// The message gives the speck's area and says where it went: into a neighbour, back to the rest of its
+        /// area, or nowhere, as when finding its neighbours needs more work than the budget allows it. To sew it
+        /// as it is, give it settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it. A
+        /// larger Noise in VectorCraft's Image Trace leaves such specks out of the trace.
+        AutoSpeck = "SC-I0905", Info, "Speck merged into a neighbour";
+
+        /// `--auto` takes the lowest shape of the design for the picture's background when it is an automatic
+        /// area, a shape on another path than its own is drawn on it, and it covers the whole design to within
+        /// 0.5 mm of each side, its holes aside, and the notches aside that the shapes drawn on it fill where
+        /// they touch the picture's edge. It is left out, unless it switches `auto_ignore_background` off, but
+        /// for what shows of it inside the picture once the layers are flattened (SC-I0908): its parts that come
+        /// no nearer than 0.5 mm to the design's sides, such as a white disc on a badge traced with its colours
+        /// stacked, which sew, and which the message counts. A background is usually the fabric's own colour, and
+        /// sewing it doubles the stitches and stiffens the design. A background that needs more work to find than
+        /// the budget allows is sewn, and the message says so.
+        ///
+        /// To sew it, give it settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it.
+        /// Ignore White in VectorCraft's Image Trace leaves a white background out of the trace.
+        AutoBackground = "SC-W0906", Warning, "Background left out";
+
+        /// `--auto` sews the automatic elements in an order of its own, and `--sort-colours` every element.
+        /// Shapes that overlap as drawn keep their paint order, the lower one first, and a satin column or a
+        /// line that borders a fill sews after it, over its edge. Within those rules each thread sews as long
+        /// as an element of it is free to sew, and the next element is the nearest. Elements with settings keep
+        /// their order among themselves unless `--sort-colours` is given, and nothing moves across a stop.
+        ///
+        /// The message says how many thread changes the order has, and how many paint order has. It also names
+        /// an element whose neighbours need more work to find than the budget allows, which keeps its place in
+        /// paint order as an element with a stop after it does, and a line whose paint can't be found, which
+        /// keeps its place beside the shapes near it. SC-I0904 names a satin column whose paint can't be found.
+        /// And it names the elements left in paint order when choosing the order needs more work than the budget
+        /// allows. To keep shapes in their paint order among themselves, give them settings and leave
+        /// `--sort-colours` off: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to each.
+        AutoOrder = "SC-I0907", Info, "Elements sewn in an order of their own";
+
+        /// `--auto` flattens the layers of a traced picture before it digitizes them. Each automatic area sews
+        /// only what shows of it: the automatic areas drawn over it are taken from it, a hairline that rounding
+        /// leaves along their edges shows nothing, and one they cover whole sews nothing (SC-I0904). An automatic
+        /// area wider than a satin column somewhere, 7 mm unless it sets
+        /// another (`auto_max_satin_width_mm`), is digitized whole under its details, the automatic areas that
+        /// fill its holes: its stitches are chosen with those holes closed, it sews before its details, and it
+        /// is cut away under them, its overlap inside their edges. So a picture traced with its colours stacked
+        /// sews as one traced with its colours abutting, and a broad area with details on it is one fill, not
+        /// narrow columns between the details. An area no wider than a satin column everywhere, such as a letter
+        /// or an outline, keeps its holes, and the shapes in them sew beside it.
+        ///
+        /// The message counts the areas that sew only what shows of them and those digitized whole under their
+        /// details. It also names an area whose layers need more work to find than the budget allows: one whose
+        /// part that shows can't be found is sewn as it is drawn, in its place, or left out whole when it is the
+        /// background; one whose holes can't be found keeps them open; one that can't be moved keeps its place;
+        /// and one whose region can't be given is sewn as it is drawn. To sew a shape as it is drawn, give it
+        /// settings: in VectorCraft, apply StitchCraft's Fill, Stroke or Satin effect to it.
+        AutoLayers = "SC-I0908", Info, "Layers flattened";
+
+        /// `--auto` sews one base layer under the whole design before anything else, so that fabric of any
+        /// colour shows less where 2 shapes leave a slit between them. Its shape is what the automatic shapes
+        /// paint together, with the slits narrower than a thread closed, offset by -0.4 mm, which is inwards,
+        /// unless the design sets another offset (`auto_base_offset_mm`). It is an open fill of stitches 3 mm
+        /// long in 3 directions (`auto_base_stitch_length_mm`), in the thread that paints the largest area, and
+        /// every stitch of it is underlay. The fills on it sew no underlay of their own. A piece of it that has
+        /// no room for a row of those stitches is left out, as under a satin column that stands alone, which
+        /// sews the underlay of its width.
+        ///
+        /// The message gives its area, how many pieces it has and its thread. A design that is nowhere wide
+        /// enough for one has none, and the message says so. A design whose shapes all sew as lines and
+        /// columns has none either, and nothing is said. To sew the design without a base layer, turn
+        /// `auto_base_layer` off: each fill then sews the underlay of its settings (SC-I0911).
+        ///
+        /// Where thin shapes meet, the top thread can leave a sliver bare, and the base layer's thread shows
+        /// there in place of the fabric. The check that StitchCraft's test pictures pass allows a sliver of up
+        /// to 0.4 mm² with the base layer under it (`auto_base_sliver_mm2`), and up to 0.5 % of the design left
+        /// to the base layer in all (`auto_base_bare_percent`). A larger gap fails it.
+        AutoBase = "SC-I0909", Info, "Base layer sewn under the design";
+
+        /// `--auto` could not find the shape of the design's base layer within the work budget, so the design
+        /// sews without one, and every fill sews the underlay of its settings. On dark fabric the slits between
+        /// shapes then show the fabric. Raise the work budget, or simplify the picture: fewer colours and less
+        /// detail in VectorCraft's Image Trace give fewer shapes.
+        AutoBaseLeftOut = "SC-W0910", Warning, "Base layer left out";
+
+        /// `--auto` sews no base layer, because the design's lowest automatic shape turns `auto_base_layer`
+        /// off. Each fill sews the underlay of its settings, and nothing lies under a place that the top thread
+        /// leaves bare between 2 shapes. On fabric of another colour than the design, the fabric may show
+        /// there. With the base layer, its thread shows in such a place (SC-I0909). This is information and no
+        /// warning, because the design sews as its settings ask. To sew the base layer, turn `auto_base_layer`
+        /// on, or leave it unset.
+        AutoBaseOff = "SC-I0911", Info, "Base layer turned off";
+
+        /// Routing joins satin columns, and the running stitches among them, into one route, as Ink/Stitch's
+        /// Auto-Route Satin Columns does: StitchCraft Auto-Route Satin Columns in VectorCraft, and lettering in a
+        /// font whose `auto_satin` is on. It joins running stitches alone as Ink/Stitch's Auto-Route Running
+        /// Stitch does, in StitchCraft Auto-Route Running Stitch. It routed nothing, because none of the elements
+        /// it was given is one the tool can route (`SC-I1002`). Routing satin columns, they are fills, strokes
+        /// alone, or columns left out of the route. Routing running stitches, they are fills, satin columns, or
+        /// strokes left out of the route. Nothing changed.
+        ///
+        /// The message names the tool and counts the elements given. Give the satin columns to route, with the
+        /// running stitches among them that show where the needle may travel, or the running stitches.
+        RouteNothing = "SC-E1001", Error, "Nothing to route";
+
+        /// Routing takes satin columns, and the strokes among them, which show where the needle may travel, or
+        /// running stitches alone. This element is kept as it is, in its place: it is a fill, a shape digitized
+        /// automatically, an element whose settings don't read, a satin column whose rails can't be made, a
+        /// column or a stroke of no length, or a stroke whose first subpath ends where it starts, which shows no
+        /// way between 2 places. Routing running stitches, it is also a satin column, which that tool doesn't
+        /// take. Ink/Stitch's tools leave a fill as it is too, and Auto-Route Satin Columns an element of no
+        /// length.
+        ///
+        /// The message says why. Nothing needs doing unless the element was meant to be routed: then give it
+        /// settings that read, draw it as a satin column or as a stroke, as the tool takes it, or open the
+        /// stroke's first subpath.
+        RouteLeftOut = "SC-I1002", Info, "Element left out of the route";
+
+        /// Routing cuts each satin column into pieces along its centre line, each drawn with its share of the
+        /// column's rails and rungs and a rung more at an end where it needs one, so that it sews the pairs the
+        /// column sews along it. This piece, read back as any satin column is, has other rails or pairs other
+        /// points: the column's rails cross each other there, or a rung crosses a rail twice. It is kept in the
+        /// route, and may sew otherwise than the column did there.
+        ///
+        /// The message names the column. Draw the column with rails that don't cross and rungs that cross each
+        /// rail once, with more rungs where it turns sharply.
+        RoutePieceReadOtherwise = "SC-W1003", Warning, "Piece of a routed satin column may sew otherwise";
+
+        /// Routing running stitches cuts each line where it crosses or touches another, and where 2 pass within
+        /// 50 CSS pixels (13.2 mm) of each other, at their nearest points, so that the route can turn there. That
+        /// compares every pair of lines, so it is done for at most 1,000 lines, each subpath a line and each part
+        /// of one that crosses itself another. These are more, so no line is cut by another: they are routed as
+        /// drawn, each cut only where it crosses itself, as with Ink/Stitch's Add nodes at intersections off.
+        /// The route joins lines that meet only at points they share, and jumps between the others.
+        ///
+        /// The message counts the lines. Route fewer running stitches at a time, or turn Add nodes at
+        /// intersections off and draw a node of both lines wherever 2 meet.
+        RouteTooManyLines = "SC-W1004", Warning, "Too many lines to cut where they cross";
+
+        /// A font in Ink/Stitch's format is a folder. Its `font.json` gives the font's settings, and a glyph file
+        /// for each direction it sews in, such as `ltr.svg`, or a folder of them, draws its glyphs. This font
+        /// wasn't read: its `font.json` is missing, compressed, or doesn't hold an object of settings, it has no
+        /// glyph file StitchCraft reads, or a glyph file isn't SVG that StitchCraft reads. Nothing of it can be
+        /// sewn.
+        ///
+        /// The message names the file and says what is wrong with it. Ink/Stitch's Font Management › Generate
+        /// JSON writes a `font.json`. A glyph file opened in Inkscape and saved again as Inkscape SVG reads.
+        FontUnreadable = "SC-E1101", Error, "Font could not be read";
+
+        /// A setting in the font's `font.json` has a value of another type than the setting takes, such as a
+        /// text where it takes a number, or a word it doesn't take. The setting keeps Ink/Stitch's default, and
+        /// the rest of the font is read. An entry of a list or a table that isn't of its type, such as a kerning
+        /// pair whose value is a text, is left out, and the others are read.
+        ///
+        /// The message names the setting, what it takes and what the file gives. The font settings page of the
+        /// user's guide lists what each setting takes. Correct the value in `font.json`, or write the file again
+        /// with Ink/Stitch's Font Management › Edit JSON.
+        FontSettingDefault = "SC-W1102", Warning, "Font setting not read, its default kept";
+
+        /// A glyph file of the font is compressed with xz, as Ink/Stitch's own packages ship their fonts.
+        /// StitchCraft reads glyph files of plain SVG, so the glyphs drawn in this one are left out. The font's
+        /// other glyph files are read.
+        ///
+        /// The message names the file. Unpack it with `xz --decompress`: the fonts in Ink/Stitch's source
+        /// repository are plain SVG.
+        FontFileSkipped = "SC-W1103", Warning, "Font file not read";
+
+        /// A glyph of the font is left out, as Ink/Stitch's lettering leaves it out. Lettering places each glyph
+        /// by its box, the space its paths take across, and this glyph has none: its layer has no path, or a path
+        /// in it draws nothing, such as one of empty path data. Or its file's baseline guide doesn't give a
+        /// place, and every glyph of the file is left out. Text that needs the glyph sews the font's default
+        /// glyph in its place.
+        ///
+        /// The message names the glyph or the file. Draw the glyph with paths and delete the paths in its layer
+        /// that draw nothing, or place the baseline guide again in Inkscape.
+        GlyphLeftOut = "SC-W1104", Warning, "Glyph left out";
+
+        /// The font was read as Ink/Stitch's lettering reads it, in a way its author may not expect. A key of
+        /// `font.json` that the format doesn't have changes nothing. Of 2 glyphs of one name in a direction, the
+        /// later counts. A glyph file without a guide labelled `baseline` puts its glyphs' baseline at the page's
+        /// top. A font without a glyph file for its `default_variant` sews its first direction by default.
+        ///
+        /// The message says which. Nothing needs doing when the font sews as wanted. Otherwise correct the key,
+        /// delete or rename the glyph drawn twice, add the baseline guide, or set `default_variant` to a
+        /// direction the font has.
+        FontReadAsInkStitch = "SC-I1105", Info, "Font read as Ink/Stitch reads it";
+
+        /// `--subject` and `stitch cutout` cut a picture's subject out with 3 models, which `stitch` fetches with
+        /// curl on first use into the folder `STITCHCRAFT_MODELS` names, or else `stitchcraft/models` in your
+        /// cache folder, and checks before each use. A file couldn't be fetched, or isn't the one pinned. Nothing
+        /// was written but the report.
+        ///
+        /// The message says why, and names each file's address, size and SHA-256 and the folder. Offline, fetch
+        /// the files elsewhere and put them in the folder. Without `--subject`, the picture plans as before.
+        CutoutModelsNotReady = "SC-E1201", Error, "Subject cut-out's models not ready";
+
+        /// `--subject` cuts a picture's subject out of a box: the one `--subject-box` gives, or else the one
+        /// U²-Net-p finds round the main subject. U²-Net-p found none, as no part of its map reaches a half, or
+        /// MobileSAM kept no pixel. Nothing was written but the report.
+        ///
+        /// Give the subject's box with `--subject-box X0,Y0,X1,Y1`, in the picture's pixels, and mark a point of
+        /// the subject with `--subject-point X,Y` if nothing is kept still.
+        CutoutNoSubject = "SC-E1202", Error, "No subject found to cut out";
+
+        /// `--subject` and `stitch cutout` decode the picture themselves. It isn't a PNG or JPEG file the cut-out
+        /// reads, or it is more than 16,384 px on a side or 50 megapixels in all. Nothing was written but the
+        /// report.
+        ///
+        /// The message says why. Give a PNG or JPEG file within those sizes, or plan the picture without
+        /// `--subject`.
+        CutoutPictureUnreadable = "SC-E1203", Error, "Picture could not be read for the cut-out";
+
+        /// The cut-out's models are checked against their pins before each use, so a model `stitch` can't run
+        /// is no file changed in the folder: tract, which runs the models, refused it on this computer. Nothing
+        /// was written but the report.
+        ///
+        /// The message ends with what tract said. Please report it at StitchCraft's issues with the message.
+        /// Without `--subject`, the picture plans as before.
+        CutoutModelUnrunnable = "SC-E1204", Error, "Cut-out model could not be run";
+
+        /// tract seeds a model's random operator from the computer's own randomness when the model gives no
+        /// seed, so a model with one would cut a picture out otherwise on each run. The pinned models have none,
+        /// and `stitch` refuses any model that has one, before it runs. Nothing was written but the report.
+        ///
+        /// The message names the model and the operator. It can't come from the pinned files: please report it.
+        CutoutModelRandom = "SC-E1205", Error, "Cut-out model has a random operator";
+
+        /// `--subject` cut the picture's subject out before VectorCraft traced it, or `stitch cutout` cut it out:
+        /// MobileSAM kept the pixels of an alpha of 128 or more, which Image Trace keeps, and the picture was
+        /// cropped to them, everything else transparent.
+        ///
+        /// The message gives the box the subject was cut out of, which `--subject-box` gave or U²-Net-p found,
+        /// how much of the picture is kept, and the cut-out's size. To correct it, give another box, or mark
+        /// points with `--subject-point` and `--not-subject`. `--cutout FILE` writes the cut-out to look at.
+        CutoutMade = "SC-I1206", Info, "Subject cut out";
+
+        /// A build of `stitch` may leave the subject cut-out out, and its models and tract with it: its `cutout`
+        /// feature, on by default. This `stitch` was built without it, as the WASI build that makes StitchCraft's
+        /// golden files is, so `--subject` and `stitch cutout` can't run. Nothing was written but the report.
+        ///
+        /// Plan the picture without `--subject`, or use a `stitch` built with its default features.
+        CutoutLeftOut = "SC-E1207", Error, "Subject cut-out left out of this build";
+        }
+    };
+}
