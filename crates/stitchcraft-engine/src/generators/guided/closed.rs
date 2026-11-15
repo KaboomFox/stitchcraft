@@ -260,6 +260,11 @@ mod tests {
         let parts: Vec<_> = inside(&along, &rings, meter).unwrap().iter().map(|part| xy(part)).collect();
         assert_eq!(parts, [vec![(5.0, 2.0), (5.0, 4.0)], vec![(5.0, 4.0), (8.0, 4.0)], vec![(8.0, 4.0), (8.0, 2.0)]]);
         assert_eq!(outside(&along, &rings, meter).unwrap(), None);
+        // A corner that touches the bottom side from inside is met by both its sides, at one place: 2 cuts with
+        // no stretch between them.
+        let touching = [p(1.0, 2.0), p(3.0, 4.0), p(5.0, 2.0)];
+        let parts: Vec<_> = inside(&touching, &rings, meter).unwrap().iter().map(|part| xy(part)).collect();
+        assert_eq!(parts, [vec![(1.0, 2.0), (3.0, 4.0)], vec![(3.0, 4.0), (5.0, 2.0)]]);
     }
 
     #[test]
