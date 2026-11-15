@@ -8,20 +8,35 @@ makers neither publish it nor support it.
 
 ## What opens
 
-A session without a document opens the starter patch, Alpine Night: a round mountain badge 50 mm wide on an
-artboard of 60 mm. Each of its shapes has StitchCraft's Auto effect, and the editor shows the stitches.
+A session without a document opens Alpine Night as a plain drawing: a round mountain badge 50 mm wide on an
+artboard of 60 mm. None of its shapes has a stitch effect yet. Turning them into stitches is yours to do.
 
-## What to try
+The **Start here** panel is open at the lower right of the page. A session that has a document of its own
+keeps it, and the panel starts closed.
 
-- Select a shape and change its Auto effect in the Appearance panel.
-- Give a shape another stitch type from **Effect › Plug-ins**.
-- Set the machine and the hoop in **Object › Plug-ins › StitchCraft Design Settings**.
-- Write a machine file, in PES or DST, with **File › Export › Export As…**.
+## From the drawing to a machine file
 
-The **Starter & help** panel is at the lower right of the page. It opens another copy of the patch, or
-downloads the patch as a VectorCraft template. Its **Documentation** link comes back to these pages.
+1. Press **Turn the drawing into stitches** in the panel. Each shape gets StitchCraft's Auto effect, and
+   the editor draws the stitches.
+2. Select a shape and change its effect in the Appearance panel.
+3. Set the machine and the hoop in **Object › Plug-ins › StitchCraft Design Settings**.
+4. Write a machine file, in PES or DST, with **File › Export › Export As…**.
 
-Save your design to a file before you close the tab.
+The button does what the menus do. To do the first step by hand, choose **Select › All**, then
+**Effect › Plug-ins › StitchCraft Auto**, and confirm the dialog. The other entries of that menu give a
+shape another stitch type.
+
+The button works on the document in front, a drawing of your own included. A shape that has a StitchCraft
+effect keeps it, and pressing the button again doesn't change the drawing.
+
+## The finished example
+
+**Open the finished example** in the panel opens the same badge with the Auto effect on every shape, in a
+new document. **Download the finished example as a template** saves it as a VectorCraft template. The
+panel's **Documentation** link comes back to these pages.
+
+Save your design to a file before you close the tab. The plain drawing comes from an SVG file: choose
+VectorCraft's own format when you save, which keeps each shape's effect.
 
 ## Loading and limits
 
@@ -37,4 +52,4 @@ Save your design to a file before you close the tab.
 ## In a pull request's preview
 
 A pull request from a branch of the repository gets its own copy of these pages. The link above then opens
-the same editor with that pull request's plug-ins and starter patch.
+the same editor with that pull request's plug-ins and starter drawing.
