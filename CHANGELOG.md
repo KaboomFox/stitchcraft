@@ -1874,7 +1874,7 @@ All notable changes are listed here, newest first. Golden-file changes must be l
     to 6 jumps, where they brought 19 to 30. They add about a tenth to its stitches, and no thread change.
   - Golden files: TS-13A to TS-13D changed, since the digitized half of each sews its fills' outlines.
     TS-13A is 0.23 mm taller and TS-13C 0.25 mm, by an outline along the lowest edge. TS-13D says
-    `SC-I0002` too, for the needle points left out where an outline starts at its fill's last stitch. The
+    `SC-I0504` too, for the needle points left out where an outline starts at its fill's last stitch. The
     recorded numbers of `tests/auto_fabric.rs` and `tests/auto_photos.rs` moved with the outlines.
 - compat: the plug-ins and the compatibility gate work with VectorCraft 0.24.1, which the gate now pins
   (0.22.0 before). VectorCraft 0.23.0 and 0.24.0 came out in between and never ran through the gate, so

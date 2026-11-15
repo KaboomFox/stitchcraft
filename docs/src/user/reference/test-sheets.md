@@ -315,7 +315,7 @@ After sewing, check:
 
 ## TS-13A — Pictures digitized automatically: neighbours and sewing order
 
-126.0 × 167.8 mm · 25731 stitches, 36 jumps, 35 trims, 19 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+126.0 × 168.0 mm · 26105 stitches, 36 jumps, 35 trims, 19 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -339,7 +339,7 @@ After sewing, check:
 
 ## TS-13B — Pictures digitized automatically: letters and lines traced as areas
 
-110.6 × 148.4 mm · 15768 stitches, 63 jumps, 62 trims, 16 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+110.6 × 148.4 mm · 15935 stitches, 65 jumps, 64 trims, 16 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -363,7 +363,7 @@ After sewing, check:
 
 ## TS-13C — Pictures digitized automatically: lines, and shapes in parts
 
-111.4 × 107.6 mm · 11323 stitches, 32 jumps, 31 trims, 9 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+111.4 × 107.8 mm · 11486 stitches, 32 jumps, 31 trims, 9 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
@@ -386,7 +386,7 @@ After sewing, check:
 
 ## TS-13D — Pictures digitized automatically: pictures traced in layers
 
-115.0 × 108.4 mm · 27599 stitches, 33 jumps, 32 trims, 20 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
+115.0 × 108.4 mm · 27988 stitches, 35 jumps, 34 trims, 20 colour changes, 1 stop · trims: the machine makes none of them: cut the jump threads by hand
 
 Hoop: the Brother PE800 with its 5 × 7 in hoop, profile [`brother-pe800-5x7`](profiles.md#brother-pe800-5x7).
 
