@@ -67,10 +67,12 @@ pub stitchcraft_vectorcraft::VectorCraft::warnings: alloc::vec::Vec<stitchcraft_
 pub const stitchcraft_vectorcraft::AUTO: &str
 pub const stitchcraft_vectorcraft::EXTENSIONS: &[&str]
 pub const stitchcraft_vectorcraft::FORMAT: u64
+pub const stitchcraft_vectorcraft::LINE_SIDES: u64
 pub const stitchcraft_vectorcraft::MAX_BYTES: usize
 pub const stitchcraft_vectorcraft::PLUGIN_NAMESPACE: &str
 pub const stitchcraft_vectorcraft::PREVIEW_LEVEL: &str
 pub const stitchcraft_vectorcraft::RIBBON_MM: f64
+pub const stitchcraft_vectorcraft::SIDES_PER_UNIT: u64
 pub fn stitchcraft_vectorcraft::base64(&[u8]) -> alloc::string::String
 pub fn stitchcraft_vectorcraft::effect_drawn(&[alloc::vec::Vec<stitchcraft_core::units::Point>], bool) -> core::option::Option<alloc::vec::Vec<u8>>
 pub fn stitchcraft_vectorcraft::effect_error(&stitchcraft_core::diag::Diagnostic) -> alloc::vec::Vec<u8>
@@ -79,6 +81,7 @@ pub fn stitchcraft_vectorcraft::effect_lines<'a>(impl core::iter::traits::collec
 pub fn stitchcraft_vectorcraft::effect_name(&str) -> core::option::Option<&str>
 pub fn stitchcraft_vectorcraft::effect_output(stitchcraft_params::stitch_type::Family, &[alloc::vec::Vec<stitchcraft_core::units::Point>]) -> core::option::Option<alloc::vec::Vec<u8>>
 pub fn stitchcraft_vectorcraft::effect_ribbons(impl core::iter::traits::collect::IntoIterator<Item = (stitchcraft_core::units::Point, stitchcraft_core::units::Point)>) -> core::option::Option<alloc::vec::Vec<u8>>
+pub fn stitchcraft_vectorcraft::effect_solid(&[&[stitchcraft_core::units::Point]], stitchcraft_engine::design::FillRule, impl core::iter::traits::collect::IntoIterator<Item = (stitchcraft_core::units::Point, stitchcraft_core::units::Point)>, f64, &mut stitchcraft_core::budget::Meter) -> core::result::Result<core::option::Option<alloc::vec::Vec<u8>>, stitchcraft_core::budget::Exhausted>
 pub fn stitchcraft_vectorcraft::machine(&[u8], &stitchcraft_core::budget::Budget) -> core::option::Option<&'static stitchcraft_plan::profile::MachineProfile>
 pub fn stitchcraft_vectorcraft::param_text(&serde_json::value::Value) -> core::option::Option<alloc::string::String>
 pub fn stitchcraft_vectorcraft::plugin_id(&str) -> alloc::string::String

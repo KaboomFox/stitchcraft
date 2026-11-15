@@ -1340,4 +1340,4 @@ steps = [
   { cmd = "object.align", params = { horizontal = "center" } },
   { cmd = "object.align", params = { vertical = "center" } },
 ]
-alt = "The patch in VectorCraft's canvas, as the plug-ins' previews show it. Rows at 45 degrees fill the blue disc, and a white star of running stitch lies on it, inside a gold satin border."
+alt = "The patch in VectorCraft's canvas, as the plug-ins' previews show it. The blue disc is solid, with hairlines at 45 degrees along its rows, and a white star of running stitch lies on it, inside a gold satin border."
