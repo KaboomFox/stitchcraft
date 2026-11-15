@@ -939,7 +939,7 @@ test fails when the demo's release is older than the stable track's.
 
 The loader touches VectorCraft only through the calls its page offers as `window.vectorcraft`. VectorCraft
 documents them in its `docs/control-protocol.md`, under "In the browser". The loader installs each light
-module with `plugin.install` and opens the starter patch with `document.open`. It doesn't install the heavy
+module with `plugin.install` and opens the starter drawing with `document.open`. It doesn't install the heavy
 filters, which VectorCraft installs only once a person allows it, and the page offers them as files.
 
 Trunk runs without the network. The workflow installs Trunk and the 2 tools Trunk would otherwise download,
@@ -986,9 +986,26 @@ the table of every build, in the step that lists the site's files as stored and 
 The preview of pull request 266, its book with its `demo/` and the 3 pictures, took 40.6 MB of the branch.
 The editor's module is 5 times the size of a preview's `demo/`, and no preview contains it.
 
-### The starter patch
+### The starter drawing
 
-A session without a document opens Alpine Night from `web/templates/alpine-night.vctemplate`, a template in
-VectorCraft's own format, in a new document. VectorCraft wrote it from the SVG beside it, with the Auto
-effect on each shape, and `web/generate-template.mjs` writes it again. `docs/fixtures/README.md` records
+From M6.14 a session without a document opens Alpine Night from `web/templates/alpine-night.svg`, in a new
+document: the plain drawing, without a StitchCraft effect. M6.13 opened the finished design. The owner
+tried it on 2026-11-14 and had expected to turn the drawing into stitches herself.
+
+The loader opens the SVG and not a second template without effects. VectorCraft made the finished example
+by opening this SVG and applying the effect, and one file of the art can't drift from another. The browser
+check fails when VectorCraft answers the SVG with a warning.
+
+The panel's first button turns the document in front into stitches. It selects everything with `select.all`
+and reads each shape's effects from `effect.list`. Then `effect.apply` gives the Auto effect to the shapes
+that don't have a StitchCraft effect, and a shape with one keeps it. VectorCraft's list of commands
+documents each call.
+
+A lesser button opens the finished example in a new document, from
+`web/templates/alpine-night.vctemplate`, a template in VectorCraft's own format. VectorCraft wrote it from
+the SVG, with the Auto effect on each shape, and `web/generate-template.mjs` writes it again.
+
+The browser check takes its pictures along that path. The first 2 show the drawing as it opens and after
+the button, and the last shows the Auto effect's dialog. It opens the design settings' dialog too, without a picture. M6.13
+showed that dialog, which is not on this path, and every preview keeps each picture on the Pages branch. `docs/fixtures/README.md` records
 the art's author and licence.

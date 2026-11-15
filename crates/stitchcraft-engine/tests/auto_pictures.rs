@@ -15,7 +15,7 @@ use stitchcraft_engine::design::{Design, DesignSettings, Element, Shape};
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::normalize::region;
 use stitchcraft_plan::{Rgb, StitchPlan};
-use stitchcraft_testkit::designs::{messages, planned, rules, unbased};
+use stitchcraft_testkit::designs::{in_place, messages, planned, rules, unbased};
 use stitchcraft_testkit::metrics::edge_coverage;
 use stitchcraft_testkit::pictures::{self, Picture, Trace};
 
@@ -188,4 +188,38 @@ fn req_auto_023_a_buttons_middle_is_one_fill_under_its_dots_inside_an_outline() 
         assert!(!rim.is_empty() && rim.iter().all(|&at| satin(&elements[at])), "{trace:?}: {ids:?}");
     }
     alike(pictures::button, 0.02);
+}
+
+/// How often each test picture and the traced pear change thread, digitized: as sewn, and one less than
+/// their threads, which no order betters.
+const CHANGES: [(&str, usize, usize); 10] = [
+    ("stripes", 2, 2),
+    ("badge-abutting", 2, 2),
+    ("badge-stacked", 2, 2),
+    ("badges-abutting", 2, 2),
+    ("badges-stacked", 2, 2),
+    ("emblem-abutting", 3, 3),
+    ("button-abutting", 2, 2),
+    ("emblem-stacked", 3, 3),
+    ("button-stacked", 2, 2),
+    ("pear", 2, 2),
+];
+
+#[test]
+fn req_auto_037_the_test_pictures_and_the_pear_change_thread_once_for_each_thread_after_the_first() {
+    let mut designs: Vec<(String, Design)> = pictures::all()
+        .into_iter()
+        .chain([Trace::Abutting, Trace::Stacked].into_iter().flat_map(|trace| [pictures::emblem(trace), pictures::button(trace)]))
+        .map(|picture| (picture.name, Design::new(picture.elements, DesignSettings::default()).unwrap()))
+        .collect();
+    designs.push(("pear".to_string(), pictures::pear()));
+    let found: Vec<(String, usize, usize)> = designs
+        .into_iter()
+        .map(|(name, design)| {
+            let plan = in_place(&design).plan.unwrap();
+            let threads: std::collections::BTreeSet<Rgb> = plan.blocks.iter().map(|block| block.thread.color).collect();
+            (name, plan.stats().color_changes, threads.len() - 1)
+        })
+        .collect();
+    assert_eq!(found, CHANGES.map(|(name, changes, floor)| (name.to_string(), changes, floor)));
 }

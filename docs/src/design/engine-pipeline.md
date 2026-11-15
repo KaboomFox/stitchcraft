@@ -33,7 +33,7 @@ budget's work to itself, naming its parts included, and one that needs more is l
 width says is sewn otherwise or left out with a warning.
 
 The digitized elements are then sewn as neighbours, in an order of their own. What overlaps keeps its
-paint order, and a line sews after the fill it borders. Then each thread sews as long as it can, the
+paint order, and a line sews after the fill it borders. Then the thread changes as seldom as it can, the
 nearest element next ([image to embroidery](image-to-embroidery.md#sewing-order), `SC-I0907`). Elements
 with settings keep their order among themselves, unless `--sort-colours` is given. The switch brings a
 design without automatic elements through this stage too. An element sewn in several threads moves as one,

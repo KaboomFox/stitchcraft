@@ -1,11 +1,14 @@
 // Why this file exists: only a browser shows that the editor starts, takes the plug-ins and exports stitches.
-// This check runs the built demo in Chromium and takes the 3 pictures a preview's comment shows.
-// Exercise the actual WASM editor and embroidery exporters from a nested static URL.
+// This check runs the built demo in Chromium as a visitor meets it: the plain drawing opens, the panel's
+// button turns it into stitches, and the finished example opens beside it. It takes the 3 pictures a
+// preview's comment shows.
 import {chromium} from '@playwright/test';
 import assert from 'node:assert/strict';
-import {mkdir, readFile} from 'node:fs/promises';
+import {mkdir, readFile, rm} from 'node:fs/promises';
 import {join} from 'node:path';
 const screenshots = process.argv[3] || new URL('../target/web/demo/screenshots', import.meta.url).pathname;
+// The folder is made new: a build cache can bring `target` back with an earlier build's pictures in it.
+await rm(screenshots, {recursive: true, force: true});
 await mkdir(screenshots, {recursive: true});
 
 const url = new URL(process.argv[2] || 'http://127.0.0.1:8766/app/');
@@ -44,11 +47,48 @@ try {
   assert.equal(installed.length, listed.plugins.length);
   assert.ok(listed.plugins.length >= 9, 'the stitch effects, exporters and light filters');
   assert.equal(await page.title(), 'StitchCraft in VectorCraft');
-  const starter = await page.evaluate(async () => ({ui: await vectorcraft.uiInspect(), doc: await vectorcraft.docInspect()}));
+  const starter = await page.evaluate(async () => ({ui: await vectorcraft.uiInspect(), doc: await vectorcraft.docInspect(), opened: window.stitchcraftStarter}));
   assert.equal(starter.ui.documents.length, 1, 'empty session opens the starter');
   assert.ok(JSON.stringify(starter.doc).includes('Alpine'), 'starter art is present');
-  await page.evaluate(() => vectorcraft.execute('select.none', {}));
-  await page.screenshot({path: join(screenshots, 'starter-patch.png')});
+  // What VectorCraft said of the SVG it opened: a warning names something that did not come in as drawn.
+  console.log(`The plain drawing opened as ${JSON.stringify(starter.opened).slice(0, 600)}`);
+  assert.deepEqual(starter.opened?.warnings ?? [], [], 'the SVG opens without a warning');
+  // The drawing's shapes as `effect.list` reports them, and how many of them have the Auto effect once.
+  const shapes = () => page.evaluate(async () => {
+    await vectorcraft.execute('select.all', {});
+    const {applied} = await vectorcraft.execute('effect.list', {});
+    await vectorcraft.execute('select.none', {});
+    const all = shape => [...shape.effects, ...shape.items.flatMap(item => item.effects)];
+    return {
+      count: applied.length,
+      stitchcraft: applied.filter(shape => all(shape).some(effect => effect.id.startsWith('plugin.dev.stitchcraft.'))).length,
+      autoOnce: applied.filter(shape => all(shape).length === 1 && shape.effects[0]?.id === 'plugin.dev.stitchcraft.auto').length,
+    };
+  });
+  // The stitches a DST file of the document in front records, or the reason the editor gave for writing none.
+  const stitches = () => page.evaluate(() => vectorcraft.execute('document.export', {format: 'dst'}))
+    .then(file => Number(Buffer.from(file.dataBase64, 'base64').subarray(0, 512).toString().match(/ST:\s*(\d+)/)?.[1]), error => error.message);
+  const drawn = (await readFile(new URL('./templates/alpine-night.svg', import.meta.url), 'utf8')).match(/ fill="/g).length;
+  assert.deepEqual(await shapes(), {count: drawn, stitchcraft: 0, autoOnce: 0}, 'the starter is the plain drawing, each shape without a StitchCraft effect');
+  console.log(`The plain drawing, ${drawn} shapes, exports to DST as: ${await stitches()}`);
+  assert.equal(await page.locator('details').evaluate(panel => panel.open), true, 'the panel is open over the plain drawing');
+  await page.screenshot({path: join(screenshots, 'plain-drawing.png')});
+  const turn = page.getByRole('button', {name: 'Turn the drawing into stitches', exact: true});
+  await turn.click();
+  await page.getByText(`${drawn} of ${drawn} shapes now have StitchCraft Auto.`, {exact: false}).waitFor();
+  assert.deepEqual(await shapes(), {count: drawn, stitchcraft: drawn, autoOnce: drawn}, 'after the button every shape has the Auto effect');
+  const sewn = await stitches();
+  assert.ok(sewn > 0, `the drawing exports actual stitches after the button: ${sewn}`);
+  // VectorCraft draws a shape plain while its effect waits for time on screen, so the picture is taken once
+  // the editor has been asked to draw the ones it left, and the log says how many it still leaves.
+  const waiting = () => page.evaluate(async () => (await vectorcraft.execute('effect.deferredStatus', {})).effects.length);
+  const left = await waiting();
+  if (left) await page.evaluate(() => vectorcraft.execute('effect.refreshDeferred', {})).catch(error => console.log(`Refresh: ${error.message}`));
+  console.log(`Effects the editor had not drawn after the button: ${left}, and after a refresh: ${left && await waiting()}`);
+  await page.screenshot({path: join(screenshots, 'stitched-drawing.png')});
+  await turn.click();
+  await page.getByText(`All ${drawn} shapes have a StitchCraft effect already.`, {exact: true}).waitFor();
+  assert.deepEqual(await shapes(), {count: drawn, stitchcraft: drawn, autoOnce: drawn}, 'a second press adds no effect');
   await page.evaluate(async () => {
     await vectorcraft.execute('select.all', {});
     await vectorcraft.execute('effect.dialog', {effect: 'plugin.dev.stitchcraft.auto', index: 0, item: null});
@@ -62,15 +102,14 @@ try {
   });
   const settings = await page.evaluate(() => vectorcraft.uiInspect());
   assert.equal(settings.ui?.dialog?.kind, 'plugin', 'actual Design Settings dialog is open');
-  await page.screenshot({path: join(screenshots, 'design-settings.png')});
   await page.evaluate(() => vectorcraft.request('ui.dialog.cancel'));
-  const starterExport = await page.evaluate(() => vectorcraft.execute('document.export', {format: 'dst'}));
-  const starterDst = Buffer.from(starterExport.dataBase64, 'base64');
-  assert.ok(Number(starterDst.subarray(0, 512).toString().match(/ST:\s*(\d+)/)?.[1]) > 0, 'starter exports actual stitches');
-  await page.getByText('StitchCraft ready · Starter & help', {exact: true}).click();
-  await page.getByRole('button', {name: 'Open Alpine Night starter patch', exact: true}).click();
+  await page.getByRole('button', {name: 'Open the finished example', exact: true}).click();
   await page.waitForFunction(async () => (await vectorcraft.uiInspect()).documents.length === 2);
-  await page.getByText('StitchCraft ready · Starter & help', {exact: true}).click();
+  await page.getByText('The finished example is in a new tab of the editor.', {exact: false}).waitFor();
+  assert.deepEqual(await shapes(), {count: drawn, stitchcraft: drawn, autoOnce: drawn}, 'the finished example has the Auto effect on every shape');
+  const finished = await stitches();
+  assert.ok(finished > 0, `the finished example exports actual stitches: ${finished}`);
+  console.log(`After the button the drawing exports ${sewn} stitches, and the finished example ${finished}`);
   const exports = await page.evaluate(async () => {
     const api = window.vectorcraft;
     await api.execute('file.new', {width: 100, height: 100});
