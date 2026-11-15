@@ -70,6 +70,9 @@ const ROW: &str = "A row of an automatic fill shows on another colour for 1 mm o
 /// Why a stitch between 2 lines of one part shows on another colour.
 const LINES: &str = "A narrow part sews 2 lines as one running stitch. The needle goes straight from the end of one to the start of the next, across another colour, and the move, shorter than the 3 mm collapse length, is a stitch.";
 
+/// Why a stitch of an outline shows on another colour.
+const OUTLINE: &str = "A stitch of a fill's outline (REQ-AUTO-051) shows on another colour for 1 mm or more. The outline is one ring round its fill, and the stitch lies along it, its ends within 0.15 mm of the ring. The fill is a thin, ragged shape of a traced photo beside others of its kind. What lies beside the ring there was not traced.";
+
 /// Every stitch of the dogs astray today. The case fails when another stitch is astray, and when one of these
 /// no longer is, so the list shrinks as each is fixed: M13.17 and M13.18 empty it. M13.21 fills the dogs'
 /// ragged patches, which sewed as columns: the 2 satin stitches that fanned across a shape biting into their
@@ -79,9 +82,12 @@ const LINES: &str = "A narrow part sews 2 lines as one running stitch. The needl
 /// beside them, leaves 16 of them: 8 fewer, and 4 others. M13.27 fills 5 blobs of fur that sewed as columns, each
 /// with arms that no centre line follows: a row of the largest, the same blob in both running dogs, shows beside
 /// a line of fur, and a line's move crosses another, where a row of the running dog in 9 threads no longer shows.
-const ASTRAY: [Astray; 19] = [
-    Astray { dog: "dog-on-turf-6", element: "vc:25:fill", stitch: [(45.08, 74.27), (49.0, 74.25)], length: 3.92, cause: ROW, step: "M13.18" },
-    Astray { dog: "dog-on-turf-6", element: "vc:97:fill", stitch: [(41.96, 61.75), (39.0, 61.75)], length: 2.96, cause: ROW, step: "M13.18" },
+/// M13.28 sews an outline after each fill (REQ-AUTO-051), so that the fills end elsewhere: 8 rows no longer show
+/// and one other does, 2 rows are sewn the other way, and 2 stitches of outlines show beside their fills: 14
+/// stitches. Which neighbour hid each of the 8 rows was not traced.
+const ASTRAY: [Astray; 14] = [
+    Astray { dog: "dog-on-turf-6", element: "vc:71:fill#2", stitch: [(51.96, 22.56), (51.83, 24.9)], length: 2.34, cause: OUTLINE, step: "M13.18" },
+    Astray { dog: "dog-on-turf-6", element: "vc:97:fill", stitch: [(39.0, 61.75), (41.96, 61.74)], length: 2.96, cause: ROW, step: "M13.18" },
     Astray { dog: "dog-on-turf-9", element: "vc:76:fill", stitch: [(47.75, 67.02), (46.52, 67.0)], length: 1.23, cause: ROW, step: "M13.18" },
     Astray { dog: "dog-on-turf-9", element: "vc:11:fill", stitch: [(46.0, 43.5), (50.0, 43.5)], length: 4.0, cause: ROW, step: "M13.18" },
     Astray { dog: "dog-on-turf-9", element: "vc:18:fill", stitch: [(49.0, 43.25), (45.36, 43.25)], length: 3.64, cause: ROW, step: "M13.18" },
@@ -89,15 +95,10 @@ const ASTRAY: [Astray; 19] = [
     Astray { dog: "dog-on-turf-9", element: "vc:83:fill", stitch: [(50.08, 23.05), (48.93, 21.12)], length: 2.25, cause: LINES, step: "M13.17" },
     Astray { dog: "dog-running-6", element: "vc:23:fill", stitch: [(57.0, 71.25), (61.0, 71.25)], length: 4.0, cause: ROW, step: "M13.18" },
     Astray { dog: "dog-running-6", element: "vc:23:fill", stitch: [(60.0, 71.0), (56.0, 71.0)], length: 4.0, cause: ROW, step: "M13.18" },
-    Astray { dog: "dog-running-6", element: "vc:61:fill", stitch: [(56.0, 32.02), (54.27, 31.98)], length: 1.73, cause: ROW, step: "M13.18" },
-    Astray { dog: "dog-running-6", element: "vc:50:fill", stitch: [(35.13, 23.98), (32.0, 24.0)], length: 3.13, cause: ROW, step: "M13.18" },
-    Astray { dog: "dog-running-6", element: "vc:81:fill", stitch: [(46.47, 20.25), (45.0, 20.25)], length: 1.47, cause: ROW, step: "M13.18" },
-    Astray { dog: "dog-running-6", element: "vc:81:fill", stitch: [(44.07, 21.0), (48.0, 21.0)], length: 3.93, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-running-6", element: "vc:26:fill#2", stitch: [(38.98, 4.59), (41.19, 4.89)], length: 2.24, cause: OUTLINE, step: "M13.18" },
+    Astray { dog: "dog-running-6", element: "vc:81:fill", stitch: [(45.0, 20.25), (46.47, 20.25)], length: 1.47, cause: ROW, step: "M13.18" },
     Astray { dog: "dog-running-6", element: "vc:89:fill", stitch: [(56.75, 55.5), (54.6, 55.49)], length: 2.15, cause: ROW, step: "M13.18" },
-    Astray { dog: "dog-running-6", element: "vc:92:fill", stitch: [(60.0, 74.0), (63.53, 74.02)], length: 3.53, cause: ROW, step: "M13.18" },
-    Astray { dog: "dog-running-9", element: "vc:52:fill", stitch: [(63.69, 74.0), (60.0, 74.0)], length: 3.69, cause: ROW, step: "M13.18" },
-    Astray { dog: "dog-running-9", element: "vc:68:fill", stitch: [(54.03, 44.25), (55.31, 44.25)], length: 1.28, cause: ROW, step: "M13.18" },
-    Astray { dog: "dog-running-9", element: "vc:57:fill", stitch: [(32.0, 24.0), (36.0, 24.0)], length: 4.0, cause: ROW, step: "M13.18" },
+    Astray { dog: "dog-running-9", element: "vc:49:fill", stitch: [(56.75, 55.5), (54.0, 55.5)], length: 2.75, cause: ROW, step: "M13.18" },
     Astray { dog: "dog-running-9", element: "vc:33:fill#2", stitch: [(55.64, 34.0), (54.3, 32.39)], length: 2.1, cause: LINES, step: "M13.17" },
 ];
 
@@ -177,7 +178,9 @@ fn req_auto_026_digitized_dogs_lay_no_thread_that_shows_where_it_should_not_but_
     assert_eq!(found, listed, "the stitches astray, as found and as listed in ASTRAY");
     // The moves sewn on from one element to the next, and the jump threads the PE800 leaves, are as the design
     // page records them (image-to-embroidery.md › Sewing order).
-    let recorded = [("dog-on-turf-6", 5, 71), ("dog-on-turf-9", 11, 78), ("dog-running-6", 3, 70), ("dog-running-9", 4, 93)];
+    // With an outline after each fill (M13.28) the dogs leave 5, 6, 3 and 3 jump threads more than the 71, 78, 70
+    // and 93 they left.
+    let recorded = [("dog-on-turf-6", 5, 76), ("dog-on-turf-9", 10, 84), ("dog-running-6", 3, 73), ("dog-running-9", 7, 96)];
     assert_eq!(apart, recorded.map(|(name, moves, jumps)| (name.to_string(), moves, jumps)));
 }
 

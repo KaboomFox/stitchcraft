@@ -14,7 +14,7 @@ use stitchcraft_engine::design::{Cap, Design, DesignSettings, Element, FillRule,
 use stitchcraft_engine::normalize::region;
 use stitchcraft_engine::normalize::stroke::SHAPE_TOLERANCE;
 use stitchcraft_params::ParamSet;
-use stitchcraft_testkit::designs::{RED, along, automatic, capped, fill, messages, p, planned, polylines, rules, unbased, widened};
+use stitchcraft_testkit::designs::{RED, along, automatic, capped, fill, messages, outlined, p, planned, polylines, rules, unbased, widened};
 
 /// The needle points the design sews, in order.
 fn needle_points(outcome: &PlanOutcome) -> Vec<Point> {
@@ -54,7 +54,7 @@ fn as_satin(element: Element, width: f64) -> Element {
 
 /// The ordinary elements the automatic `element` sews as, in a design with the default settings.
 fn made(element: &Element) -> Vec<Element> {
-    digitize(&automatic(element.clone()), &DesignSettings::default(), &mut Budget::DEFAULT.meter()).unwrap().elements
+    digitize(&outlined(element.clone()), &DesignSettings::default(), &mut Budget::DEFAULT.meter()).unwrap().elements
 }
 
 /// `element`, a stroke, turning its corners with `join`.

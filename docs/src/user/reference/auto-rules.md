@@ -37,12 +37,12 @@ A shape's settings are those of VectorCraft's Auto effect on it, or on the group
 | [`auto_prefer`](params/auto.md#auto_prefer) | balanced | yes |
 | [`auto_fill_uneven`](params/auto.md#auto_fill_uneven) | true | yes |
 | [`auto_fill_angle`](params/auto.md#auto_fill_angle) | 0 ° | yes |
+| [`auto_fill_outline`](params/auto.md#auto_fill_outline) | true | yes |
 | [`auto_overlap_mm`](params/auto.md#auto_overlap_mm) | 1 mm | yes |
 | [`auto_pull_compensation_mm`](params/auto.md#auto_pull_compensation_mm) | 0.4 mm | yes |
 | [`auto_ignore_background`](params/auto.md#auto_ignore_background) | true | yes |
 | [`auto_base_layer`](params/auto.md#auto_base_layer) | true | yes |
 | [`auto_base_stitch_length_mm`](params/auto.md#auto_base_stitch_length_mm) | 3 mm | yes |
-| [`auto_base_offset_mm`](params/auto.md#auto_base_offset_mm) | -0.4 mm | yes |
 | [`auto_base_keep_holes`](params/auto.md#auto_base_keep_holes) | true | yes |
 | [`auto_max_satin_width_mm`](params/auto.md#auto_max_satin_width_mm) | 7 mm | no: advanced |
 | [`auto_min_triple_run_width_mm`](params/auto.md#auto_min_triple_run_width_mm) | 0.5 mm | no: advanced |
@@ -51,7 +51,7 @@ A shape's settings are those of VectorCraft's Auto effect on it, or on the group
 | [`auto_max_reach`](params/auto.md#auto_max_reach) | 1.4 | no: advanced |
 | [`auto_min_fill_width_mm`](params/auto.md#auto_min_fill_width_mm) | 4 mm | no: advanced |
 | [`auto_min_area_mm2`](params/auto.md#auto_min_area_mm2) | 1 mm² | no: advanced |
-| [`auto_fill_outline`](params/auto.md#auto_fill_outline) | false | no: advanced |
+| [`auto_base_offset_mm`](params/auto.md#auto_base_offset_mm) | -0.4 mm | no: advanced |
 | [`auto_base_sliver_mm2`](params/auto.md#auto_base_sliver_mm2) | 0.4 mm² | no: advanced |
 | [`auto_base_bare_percent`](params/auto.md#auto_base_bare_percent) | 0.5 % | no: advanced |
 | [`auto_thick_warn_fills`](params/auto.md#auto_thick_warn_fills) | 3 | no: advanced |

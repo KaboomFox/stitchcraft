@@ -1005,7 +1005,7 @@ fixture = "docs/fixtures/traced-badge.svg"
 auto = true
 style = "realistic"
 scale = 6.0
-allow = ["SC-I0901", "SC-I0912", "SC-W0906", "SC-I0907", "SC-I0904", "SC-I0908", "SC-I0909", "SC-W0913"]
+allow = ["SC-I0901", "SC-I0912", "SC-W0906", "SC-I0907", "SC-I0904", "SC-I0908", "SC-I0909", "SC-I0504", "SC-W0913"]
 alt = "The traced badge digitized automatically. A red disc with a blue square on it and a gold disc in the middle sew as tatami fills, with no white round them."
 
 
@@ -1016,7 +1016,7 @@ fixture = "docs/fixtures/traced-badge.svg"
 auto = true
 style = "realistic"
 scale = 6.0
-allow = ["SC-I0901", "SC-I0912", "SC-W0906", "SC-I0907", "SC-I0904", "SC-I0908", "SC-I0909", "SC-W0913"]
+allow = ["SC-I0901", "SC-I0912", "SC-W0906", "SC-I0907", "SC-I0904", "SC-I0908", "SC-I0909", "SC-I0504", "SC-W0913"]
 alt = "The same badge digitized automatically. Its white background is left out, and each colour sews under the edges of the colours sewn on it."
 
 [[shot]]
@@ -1044,7 +1044,7 @@ fixture = "docs/fixtures/emblem.svg"
 auto = true
 style = "realistic"
 scale = 6.0
-allow = ["SC-I0901", "SC-I0912", "SC-W0906", "SC-I0908", "SC-I0904", "SC-I0909", "SC-W0913"]
+allow = ["SC-I0901", "SC-I0912", "SC-W0906", "SC-I0908", "SC-I0904", "SC-I0909", "SC-I0504", "SC-W0913"]
 alt = "The emblem digitized automatically. The navy square, the white disc and the red star sew as tatami fills, and the gold bars as satin columns. The white round the square is left out."
 
 [[shot]]
@@ -1173,7 +1173,7 @@ fixture = "docs/fixtures/parts.svg"
 auto = true
 style = "realistic"
 scale = 8.0
-allow = ["SC-I0901", "SC-I0912", "SC-I0904", "SC-I0909", "SC-W0913"]
+allow = ["SC-I0901", "SC-I0912", "SC-I0904", "SC-I0909", "SC-I0504", "SC-W0913"]
 alt = "The same shapes digitized automatically. The lollipop's disc and the balloon sew as tatami fills. The stick sews as a satin column and the string as a triple run, each into its fill."
 [[shot]]
 id = "badge-simple"
