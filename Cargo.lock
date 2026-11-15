@@ -1295,6 +1295,7 @@ dependencies = [
  "stitchcraft-formats",
  "stitchcraft-params",
  "stitchcraft-plan",
+ "stitchcraft-render",
  "stitchcraft-vectorcraft",
 ]
 

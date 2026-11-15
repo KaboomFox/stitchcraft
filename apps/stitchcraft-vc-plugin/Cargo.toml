@@ -43,4 +43,5 @@ stitchcraft-params = { workspace = true }
 stitchcraft-plan = { workspace = true }
 stitchcraft-engine = { workspace = true }
 stitchcraft-formats = { workspace = true }
+stitchcraft-render = { workspace = true }
 stitchcraft-vectorcraft = { workspace = true }
