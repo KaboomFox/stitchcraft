@@ -1,6 +1,6 @@
 # Diagnostics
 
-<!-- implements: crates/stitchcraft-core/src/diag.rs, crates/stitchcraft-core/src/text.rs, apps/stitchcraft-cli/src/commands/explain.rs -->
+<!-- implements: crates/stitchcraft-core/src/diag.rs, crates/stitchcraft-core/src/diag/registry.rs, crates/stitchcraft-core/src/text.rs, apps/stitchcraft-cli/src/commands/explain.rs -->
 
 A diagnostic is a problem with the user's design or input, explained in the user's terms, with a
 stable code. Diagnostics are values: the engine collects them and keeps planning whatever it can.
@@ -37,12 +37,13 @@ probably not what you want) or `I` (info) + four digits grouped by area:
 | 0900 to 0999 | Automatic digitizing ([image to embroidery](image-to-embroidery.md)) |
 | 1000 to 1099 | Routing ([routing tools](routing.md)) |
 | 1100 to 1199 | Fonts and lettering ([fonts](fonts.md#the-reader)) |
+| 1200 to 1299 | Subject cut-out ([image to embroidery](image-to-embroidery.md#subject-cut-out)) |
 
 Codes are never reused. A retired code keeps its page with "retired in vX".
 
 ## The registry
 
-All codes live in one table in `stitchcraft-core`: the `registry!` block in `src/diag.rs`, which
+The codes are one table in `stitchcraft-core`, the `registry!` block in `src/diag/registry.rs`, which
 defines the `Code` enum. Each entry is one line — variant, id, severity, title — and its doc comment is
 the long explanation (Markdown: what it means, why it matters for the sew-out, how to fix it), so the
 text users read is also the code's rustdoc. Tests reject an entry whose id is malformed or duplicated,
@@ -212,3 +213,10 @@ another.
 | `SC-W1103` | Warning | Font file not read (a glyph file compressed with xz, as in Ink/Stitch's packages: its glyphs are left out) | M14 |
 | `SC-W1104` | Warning | Glyph left out (a glyph whose paths give it no box, or every glyph of a file whose baseline guide doesn't give a place, as Ink/Stitch's lettering leaves them out) | M14 |
 | `SC-I1105` | Info | Font read as Ink/Stitch reads it (a key the format doesn't have, a glyph drawn twice in a direction, of which the later counts, a file without a baseline guide, or a font without glyphs for its `default_variant`, which sews its first direction) | M14 |
+| `SC-E1201` | Error | Subject cut-out's models not ready (a model that couldn't be fetched, or isn't the file pinned: the message names every file and the folder they belong in) | M13 |
+| `SC-E1202` | Error | No subject found to cut out (no part of U²-Net-p's map reaches a half and no box is given, or MobileSAM didn't keep a pixel) | M13 |
+| `SC-E1203` | Error | Picture could not be read for the cut-out (not a PNG or JPEG file it reads, or larger than its limits) | M13 |
+| `SC-E1204` | Error | Cut-out model could not be run (tract refused a model that matches its pin) | M13 |
+| `SC-E1205` | Error | Cut-out model has a random operator (refused before it runs, as tract would seed it from the computer) | M13 |
+| `SC-I1206` | Info | Subject cut out (the box it came from, the share of the picture kept and the cut-out's size) | M13 |
+| `SC-E1207` | Error | Subject cut-out left out of this build (a `stitch` built without its `cutout` feature) | M13 |

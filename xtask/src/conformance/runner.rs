@@ -9,7 +9,7 @@ use stitchcraft_engine::testsheets;
 use stitchcraft_plan::{FormatId, MachineProfile, StitchPlan, invariants, profiles};
 use stitchcraft_render::{Settings, Style};
 
-use super::cases::{DataCase, RELEASE_ONLY, RustCase, SheetExpect, Spec, Subject};
+use super::cases::{DataCase, MODELS_ONLY, RELEASE_ONLY, RustCase, SheetExpect, Spec, Subject};
 use super::{centre_lines, differential, font, fonts, oracle, routing};
 use crate::util;
 
@@ -277,18 +277,20 @@ fn verdicts(stdout: &str) -> BTreeMap<&str, Vec<Verdict<'_>>> {
 }
 
 /// How a case went from the verdicts of its runs, `runs`, or `None` when no test of its name ran: its
-/// failures, and where it runs instead when the debug build leaves it out as release only
-/// ([`RELEASE_ONLY`]). Ignored for any other reason, it fails: no case may hide behind `#[ignore]`.
+/// failures, and where it runs instead when it is ignored as models only ([`MODELS_ONLY`]), or in the debug
+/// build as release only ([`RELEASE_ONLY`]). Ignored for any other reason, it fails: no case may hide behind
+/// `#[ignore]`.
 fn judged(runs: Option<&[Verdict<'_>]>) -> (Vec<String>, Option<String>) {
     let Some(runs) = runs else { return (vec!["did not run (is it a #[test]? does it compile?)".to_string()], None) };
     if runs.contains(&Verdict::Failed) {
         return (vec!["the test failed (run `cargo test` for details)".to_string()], None);
     }
     let reasons: Vec<&str> = runs.iter().filter_map(|verdict| if let Verdict::Ignored(reason) = verdict { Some(*reason) } else { None }).collect();
-    match reasons.iter().find(|reason| !reason.starts_with(RELEASE_ONLY)) {
+    match reasons.iter().find(|reason| !reason.starts_with(MODELS_ONLY) && !reason.starts_with(RELEASE_ONLY)) {
         Some(reason) => {
             let why = if reason.is_empty() { String::new() } else { format!(" (\"{reason}\")") };
-            let failure = format!("it is ignored{why}: a case may be ignored only in the debug build, as \"{RELEASE_ONLY}…\"");
+            let failure =
+                format!("it is ignored{why}: a case may be ignored only as \"{MODELS_ONLY}…\", or in the debug build as \"{RELEASE_ONLY}…\"");
             (vec![failure], None)
         }
         None if runs.contains(&Verdict::Passed) => (Vec::new(), None),
@@ -333,6 +335,25 @@ test diag_sc_e0701_too_wide ... ignored
     }
 
     #[test]
+    fn a_case_ignored_as_models_only_runs_in_the_models_job_and_any_other_ignored_case_fails() {
+        let models = Verdict::Ignored("models only: the models job runs tests/models.rs");
+        assert_eq!(judged(Some(&[Verdict::Passed])), (Vec::new(), None));
+        assert_eq!(judged(Some(&[models])), (Vec::new(), Some("models only: the models job runs tests/models.rs".to_string())));
+        // Passed in one test binary, it passed, whatever another left out.
+        assert_eq!(judged(Some(&[models, Verdict::Passed])), (Vec::new(), None));
+        assert_eq!(judged(Some(&[Verdict::Passed, Verdict::Failed])).0, ["the test failed (run `cargo test` for details)"]);
+        assert_eq!(judged(Some(&[models, Verdict::Failed])).0, ["the test failed (run `cargo test` for details)"]);
+        let (failures, skipped) = judged(Some(&[Verdict::Ignored("too slow")]));
+        assert_eq!(
+            failures,
+            ["it is ignored (\"too slow\"): a case may be ignored only as \"models only: …\", or in the debug build as \"release only: …\""]
+        );
+        assert_eq!(skipped, None);
+        let (failures, _) = judged(Some(&[models, Verdict::Ignored("")]));
+        assert_eq!(failures, ["it is ignored: a case may be ignored only as \"models only: …\", or in the debug build as \"release only: …\""]);
+    }
+
+    #[test]
     fn a_case_ignored_as_release_only_runs_elsewhere_and_any_other_ignored_case_fails() {
         let release = Verdict::Ignored("release only: CI's perf job runs tests/auto_photos.rs");
         assert_eq!(judged(Some(&[Verdict::Passed])), (Vec::new(), None));
@@ -342,10 +363,13 @@ test diag_sc_e0701_too_wide ... ignored
         assert_eq!(judged(Some(&[Verdict::Passed, Verdict::Failed])).0, ["the test failed (run `cargo test` for details)"]);
         assert_eq!(judged(Some(&[release, Verdict::Failed])).0, ["the test failed (run `cargo test` for details)"]);
         let (failures, skipped) = judged(Some(&[Verdict::Ignored("too slow")]));
-        assert_eq!(failures, ["it is ignored (\"too slow\"): a case may be ignored only in the debug build, as \"release only: …\""]);
+        assert_eq!(
+            failures,
+            ["it is ignored (\"too slow\"): a case may be ignored only as \"models only: …\", or in the debug build as \"release only: …\""]
+        );
         assert_eq!(skipped, None);
         let (failures, _) = judged(Some(&[release, Verdict::Ignored("")]));
-        assert_eq!(failures, ["it is ignored: a case may be ignored only in the debug build, as \"release only: …\""]);
+        assert_eq!(failures, ["it is ignored: a case may be ignored only as \"models only: …\", or in the debug build as \"release only: …\""]);
         assert_eq!(judged(None).0, ["did not run (is it a #[test]? does it compile?)"]);
     }
 }
