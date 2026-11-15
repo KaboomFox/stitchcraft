@@ -10,10 +10,10 @@ distribution, and the publishing in `docs/src/design/docs-pipeline.md`. The acce
 | `build.py` | builds the editor from the release `compat/vectorcraft.toml` records, and each plug-in module |
 | `site.py` | puts a pull request's preview together: its book with the demo folder |
 | `start.mjs` | runs on the editor's page and chooses the loader: the app's own, or a preview's |
-| `boot.mjs`, `loader.mjs`, `starter.mjs` | install the plug-ins, open the starter patch and show the help panel |
+| `boot.mjs`, `loader.mjs`, `starter.mjs` | install the plug-ins, open the plain drawing and show the panel whose button turns it into stitches |
 | `smoke.mjs`, `docs-smoke.mjs` | run the built demo in Chromium |
-| `generate-template.mjs` | has the demo write the starter's template again from its SVG |
-| `templates/` | the starter patch, Alpine Night, as an SVG and as VectorCraft's template |
+| `generate-template.mjs` | has the demo write the finished example's template again from the SVG |
+| `templates/` | Alpine Night: the SVG an empty session opens, and the finished example as VectorCraft's template |
 
 ## Build and check
 
@@ -55,8 +55,10 @@ node web/smoke.mjs 'http://127.0.0.1:8766/app/?preview=123'
 ## The preview's comment
 
 The workflow writes one comment on a pull request, which names the preview and shows the pictures
-`smoke.mjs` took. Each picture's address ends with the commit, because GitHub keeps a copy of a picture by
-its address. `.github/scripts/preview-comment.cjs` makes the comment from sections.
+`smoke.mjs` took. The first 2 show the drawing as it opens and after the panel's button, and the last shows
+the Auto effect's dialog. `smoke.mjs` makes its folder of pictures new each time it runs. Each picture's
+address ends with the commit, because GitHub keeps a copy of a picture by its address.
+`.github/scripts/preview-comment.cjs` makes the comment from sections.
 
 ## The Pages site
 

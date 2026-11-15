@@ -50,7 +50,7 @@ page for each stitch type.
 ## Try it in a browser
 
 The [browser demo](docs/src/browser-demo.md) runs StitchCraft inside VectorCraft's web editor, with a
-starter patch to change and export. [`web/README.md`](web/README.md) says how it is built.
+drawing to turn into stitches and export. [`web/README.md`](web/README.md) says how it is built.
 
 ## Read more
 
