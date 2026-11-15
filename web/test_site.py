@@ -84,17 +84,22 @@ class BuildTest(unittest.TestCase):
         def ran(*args, cwd=None, **more):
             calls.append(args[:2])
             if args[1] == 'clone':
-                (Path(args[-1]) / '.git').mkdir(parents=True)
+                subprocess.run(('git', 'init', '-q', args[-1]), check=True)
             return subprocess.CompletedProcess(args, 0, stdout=f'{revision}\n')
 
         with tempfile.TemporaryDirectory() as temp, unittest.mock.patch.object(build, 'run', ran):
-            folder = Path(temp) / 'vectorcraft-web'
-            (folder / 'crates').mkdir(parents=True)
-            (folder / 'crates' / 'left.rs').write_text('left by the cleaning')
+            # The folder around is a repository, as the one around the editor's checkout is.
+            subprocess.run(('git', 'init', '-q', temp), check=True)
+            folder = Path(temp) / 'target' / 'vectorcraft-web'
+            # The cleaning leaves folders, an empty `.git` among them.
+            (folder / '.git').mkdir(parents=True)
+            (folder / 'crates').mkdir()
+            self.assertFalse(build.whole(folder))
             build.checkout(folder)
             self.assertEqual(calls, [('git', 'clone'), ('git', 'rev-parse')])
             self.assertFalse((folder / 'crates').exists())
             # A whole checkout is kept as it is.
+            self.assertTrue(build.whole(folder))
             build.checkout(folder)
             self.assertEqual(calls[2:], [('git', 'rev-parse')])
 
