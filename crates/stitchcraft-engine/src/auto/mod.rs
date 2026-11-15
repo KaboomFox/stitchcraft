@@ -85,7 +85,7 @@ mod split;
 pub use neighbours::TOUCHING;
 use neighbours::{Background, Sewn, no_area, parts_of, speck};
 pub use params::{
-    ADVANCED, AutoParams, FILL_ANGLE, FILL_UNEVEN, IGNORE_BACKGROUND, LONGEST_SATIN_STITCH, MAX_REACH, MAX_SATIN_WIDTH, MAX_UNEVENNESS, MIN_AREA,
+    ADVANCED, AutoParams, FILL_ANGLE, FILL_OUTLINE, FILL_UNEVEN, IGNORE_BACKGROUND, LONGEST_SATIN_STITCH, MAX_REACH, MAX_SATIN_WIDTH, MAX_UNEVENNESS, MIN_AREA,
     MIN_FILL_WIDTH, MIN_SLENDERNESS, MIN_TRIPLE_RUN_WIDTH, OVERLAP, PREFER, STITCH,
 };
 use rules::{Asked, Bounds, Fired, Measures, RuleId};
@@ -115,6 +115,9 @@ pub const CONTOUR_FROM: Mm = Mm::from_tenths(20);
 /// The widest automatic satin column with a contour underlay alone: a wider one has a zigzag over its
 /// contour. MC-8 confirms or changes it.
 pub const ZIGZAG_ABOVE: Mm = Mm::from_tenths(40);
+
+/// The width of the line an outline round a fill is drawn as (`REQ-AUTO-051`): a thread's.
+pub const OUTLINE_WIDTH: Mm = Mm::from_tenths(4);
 
 /// Room left in an id made for a column of a stroke of several subpaths, for the `~2` a clash adds
 /// ([`Labels::claim`]).
@@ -351,8 +354,12 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     let base = lowest.filter(|rules| rules.auto_base_layer);
     // A design that turns the base layer off is told that fabric may show (`SC-I0911`).
     diagnostics.extend(lowest.filter(|rules| !rules.auto_base_layer).map(|_| neighbours::base_off()));
-    let beside = neighbours::beside(sewn, &design.settings, budget, design.sort_colours, base.map(|rules| (rules, &mut taken)));
-    diagnostics.extend(beside.said);
+    let outlined = lowest.is_some_and(|rules| rules.auto_fill_outline);
+    let mut beside = neighbours::beside(sewn, &design.settings, budget, design.sort_colours, base.map(|rules| (rules, &mut taken)), outlined);
+    diagnostics.extend(std::mem::take(&mut beside.said));
+    for (id, lines) in std::mem::take(&mut beside.outlines) {
+        outline_after(&mut beside.elements, &id, &lines, &mut taken, &mut budget.meter());
+    }
     // Of the shapes digitized, those that sew: the areas sewn after one may cover it whole.
     let mut counts = Counts::default();
     for (_, stitches) in digitized.into_iter().filter(|(index, _)| beside.sewing.contains(index)) {
@@ -360,6 +367,26 @@ pub(crate) fn sewing<'d>(design: &'d Design, budget: &Budget) -> Sewing<'d> {
     }
     diagnostics.splice(0..0, counts.said());
     Sewing { elements: Cow::Owned(beside.elements), diagnostics, base: beside.base }
+}
+
+/// Adds the outline of the fill `id` among `elements` after it, when it still sews: a running stitch along
+/// `lines` in the fill's thread, named after the fill with `#2`, or the next name free among `taken`, found
+/// with `meter`'s work. It has the fill's settings but those of a fill, and takes over a trim or a stop
+/// after the fill, which follows the last element of a shape.
+fn outline_after(elements: &mut Vec<Element>, id: &ElementId, lines: &[Line], taken: &mut Labels, meter: &mut Meter) {
+    let Some(at) = elements.iter().position(|element| element.id == *id) else { return };
+    let Some(fill) = elements.get_mut(at) else { return };
+    let path = Path { subpaths: lines.iter().filter_map(subpath).collect() };
+    // A name that fits by construction ([`numbered`]); an outline without one is left out.
+    let named = numbered(id, 2).and_then(|name| taken.claim(name.as_str().to_string(), meter).ok()).and_then(|name| ElementId::new(name).ok());
+    let Some(name) = named else { return };
+    let (rest, after) = split_after(&fill.params);
+    fill.params = rest.clone();
+    let params = rest.iter().filter(|(key, _)| ![TURN_STITCHES, ANGLE].contains(key)).collect();
+    let shape = Shape::Stroke { path, width: OUTLINE_WIDTH, join: Join::Round, cap: Cap::Round };
+    let mut outline = [part(fill, name, shape, params)];
+    keep_after(&mut outline, &after);
+    elements.splice(at + 1..at + 1, outline);
 }
 
 /// `element` as automatic digitizing made it, a fill with its turns kept as stitches (`turn_stitches`,

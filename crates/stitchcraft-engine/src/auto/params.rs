@@ -28,6 +28,8 @@ pub const STITCH: &str = "auto_stitch";
 pub const PREFER: &str = "auto_prefer";
 /// The key of the switch that fills uneven parts.
 pub const FILL_UNEVEN: &str = "auto_fill_uneven";
+/// The key of the switch that sews an outline round each fill.
+pub const FILL_OUTLINE: &str = "auto_fill_outline";
 /// The key of the fills' angle.
 pub const FILL_ANGLE: &str = "auto_fill_angle";
 /// The key of the widest satin column.
@@ -201,6 +203,14 @@ params! {
         auto_min_area_mm2: Area = "1", label "Smallest area", range (0.0, 10.0),
             origin Origin::StitchCraft, stability Stability::Experimental;
 
+        /// Whether each fill that automatic digitizing makes sews an outline: a running stitch round its
+        /// edge, after its rows, in its own thread. The outline draws the edge of a small shape as one
+        /// line, where the ends of its rows would leave its points blunt. It sews only where the edge
+        /// shows: not where a shape sewn after the fill covers the edge. The design goes by the setting of
+        /// its lowest automatic shape.
+        auto_fill_outline: Toggle = "false", label "Outline round fills",
+            origin Origin::StitchCraft, stability Stability::Experimental;
+
         /// The largest gap in the top thread that is left to the base layer: a sliver. Where thin shapes
         /// meet, the top thread can leave a place this small bare, and the base layer's thread shows there
         /// in place of the fabric. Nothing sews differently by this value. It is a limit of the check of a
@@ -236,7 +246,7 @@ mod tests {
         let neighbours = [OVERLAP, "auto_pull_compensation_mm", IGNORE_BACKGROUND];
         let base = ["auto_base_layer", "auto_base_stitch_length_mm", "auto_base_offset_mm", "auto_base_keep_holes"];
         let bounds = [MAX_SATIN_WIDTH, MIN_TRIPLE_RUN_WIDTH, MIN_SLENDERNESS, MAX_UNEVENNESS, MAX_REACH, MIN_FILL_WIDTH, MIN_AREA];
-        let cover = ["auto_base_sliver_mm2", "auto_base_bare_percent"];
+        let cover = [FILL_OUTLINE, "auto_base_sliver_mm2", "auto_base_bare_percent"];
         assert_eq!(keys, [&shape[..], &neighbours[..], &base[..], &bounds[..], &cover[..]].concat());
         // The bounds, and the 2 limits of the cover's check, are the advanced settings, which no dialog shows.
         let advanced: Vec<&str> = AutoParams::SPECS.iter().filter(|spec| spec.group == ADVANCED).map(|spec| spec.key).collect();

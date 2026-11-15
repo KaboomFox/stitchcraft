@@ -55,6 +55,7 @@ mod base;
 pub(super) use base::off as base_off;
 mod layers;
 mod order;
+mod outline;
 mod specks;
 mod under;
 
@@ -68,6 +69,7 @@ use stitchcraft_params::{Family, StitchType, Validated};
 
 use super::{AutoParams, Style, outline, painted};
 use crate::design::{DesignSettings, Element, FillRule, Path, Shape};
+use crate::normalize::strips::Line;
 use crate::generate::{stitch_type_of, trim_or_stop_left_out};
 use crate::generators::pull::PULL_COMPENSATION;
 use crate::generators::satin::{self, SatinParams};
@@ -123,8 +125,16 @@ pub(super) struct Sewn {
 /// `sorted` and only the automatic ones otherwise, and its areas reaching under the shapes sewn after
 /// them; and what is said of them. With `base`, the settings the design's base layer goes by and the ids the
 /// design has given out, the base layer sews before the first element that automatic digitizing made
-/// (`base`, `REQ-AUTO-028`).
-pub(super) fn beside(sewn: Vec<Sewn>, settings: &DesignSettings, budget: &Budget, sorted: bool, base: Option<(&AutoParams, &mut Labels)>) -> Beside {
+/// (`base`, `REQ-AUTO-028`). With `outlined`, each area's outline is found where its edge shows (`outline`,
+/// `REQ-AUTO-051`).
+pub(super) fn beside(
+    sewn: Vec<Sewn>,
+    settings: &DesignSettings,
+    budget: &Budget,
+    sorted: bool,
+    base: Option<(&AutoParams, &mut Labels)>,
+    outlined: bool,
+) -> Beside {
     let moving: Vec<order::Moving> =
         sewn.iter().map(|sewn| order::Moving { free: sorted || sewn.automatic, made: sewn.automatic, shape: sewn.shape }).collect();
     let made: BTreeSet<ElementId> = sewn.iter().filter(|sewn| sewn.automatic).map(|sewn| sewn.element.id.clone()).collect();
@@ -136,6 +146,10 @@ pub(super) fn beside(sewn: Vec<Sewn>, settings: &DesignSettings, budget: &Budget
     // The base layer's thread is sewing when the elements that automatic digitizing made start.
     let under = laid.pieces.first().map(|piece| piece.thread.color);
     said.extend(order::ordered(&mut shapes, &moving, budget, under));
+    // An area's edge shows where no shape sewn after it covers it: found in the order they sew, before any
+    // area reaches under another.
+    let (outlines, unfound) = if outlined { outline::outlines(&mut shapes, budget) } else { Default::default() };
+    said.extend(unfound);
     said.extend(under::reached(&mut shapes, budget));
     said.append(&mut shapes.said);
     said.extend(shapes.unplaced());
@@ -146,7 +160,7 @@ pub(super) fn beside(sewn: Vec<Sewn>, settings: &DesignSettings, budget: &Budget
     // The order leaves the base layer before the first element that automatic digitizing made.
     let first = elements.iter().position(|element| made.contains(&element.id)).unwrap_or(elements.len());
     elements.splice(first..first, laid.pieces);
-    Beside { elements, said, sewing, base }
+    Beside { elements, said, sewing, base, outlines }
 }
 
 /// What the neighbours make of the elements ([`beside`]).
@@ -159,6 +173,9 @@ pub(super) struct Beside {
     pub(super) sewing: BTreeSet<usize>,
     /// The ids of the base layer's pieces among the elements.
     pub(super) base: Vec<ElementId>,
+    /// For each automatic area whose edge shows, when the design asks for outlines, its id and the lines of
+    /// its outline. An area left out since is still listed.
+    pub(super) outlines: Vec<(ElementId, Vec<Line>)>,
 }
 
 /// What a shape paints, to the order and to an automatic area sewn before it.
