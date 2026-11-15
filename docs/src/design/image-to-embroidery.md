@@ -205,12 +205,12 @@ numbers):
 | Running, 9 threads | 79 to 29 | 7 to 60 | 135 to 112 | 18 to 28 | 2 to 0 | 0.073 to 0.001 % |
 
 The satin stitches that lean along their column (`SC-W0208`), which a fan sews, fell from 26 to 34 a dog to
-4 to 8. The thread changes rose, and each is a rethread by hand on a machine with one needle. A column or a
-line sews after the fill it borders ([Sewing order](#sewing-order)), so a design of many small fills sews
-its fills first and its lines after, colour by colour, twice over. With `auto_fill_uneven` off the dogs
-change thread 10, 12, 13 and 19 times and jump 118, 143, 109 and 136 times. The switch trades thread
-changes for jump threads. M13.22 searches for the order that changes thread least, and the dogs change
-thread 8, 12, 8 and 12 times ([Sewing order](#sewing-order)).
+4 to 8. The thread changes rose with M13.21, and each is a rethread by hand on a machine with one needle.
+A design of many small fills has many lines, each of which sews after the fills it borders. M13.22
+searches for the order that changes thread least, and the dogs change thread 8, 12, 8 and 12 times
+([Sewing order](#sewing-order)). With `auto_fill_uneven` off they change thread 6, 9, 7 and 10 times and
+jump 113, 135, 105 and 132 times, where they jump 84, 91, 79 and 108 times as planned. The switch trades
+thread changes for jump threads.
 
 ## Stitch types by width
 
@@ -1027,8 +1027,8 @@ because it is shorter than the collapse length. The other 16 are rows of fills, 
 fill's stitch. M13.21, which fills where columns sewed, brought 20 of them. Of the 6 that were traced
 then, 5 lay along a line of fur of another colour that sews on the fill or that the fill reaches under.
 The line sews as wide as its thread, and the row shows beside it. The sixth lay under the edge of a column
-sewn after its fill. M13.22's order took 8 of the 20 away and brought 4 others, where a fill now reaches
-under another neighbour. Before
+sewn after its fill. M13.22's order took 8 of the 20 away and brought 4 others, beside neighbours that
+now sew in another order. Before
 M13.21 the dogs laid 7 stitches astray. 2 of them were satin stitches 7.89 and 4.72 mm long that fanned
 across a shape biting into their column, and M13.21 removed those. `tests/auto_photos.rs` lists each stitch,
 with where it lies and why, and its case fails on any other stitch astray and on any listed one that no

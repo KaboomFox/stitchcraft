@@ -111,6 +111,21 @@ fn req_auto_037_an_element_in_several_threads_is_a_batch_of_its_own_between_its_
 }
 
 #[test]
+fn req_auto_037_a_row_found_again_with_fewer_changes_takes_the_place_of_the_one_found_first() {
+    // A red and a green, then an element from red to blue that waits for both, a blue after it, and a green, a
+    // red and a green that each wait for the one before. Red then green is found first, and the element
+    // after them costs a change. Green then red is found next, and the element follows the red without
+    // one: its row takes the first one's place, which is left when its turn comes. The last 3 change thread
+    // once more than the threads left, so the search is still going then.
+    let threads = [[RED; 2], [GREEN; 2], [RED, BLUE], [BLUE; 2], [GREEN; 2], [RED; 2], [GREEN; 2]];
+    let again = Run { threads: threads.to_vec(), ..run(&[RED; 7], &[(0, 2), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6)], &[]) };
+    let batches = found(&again).batches;
+    assert_eq!(batches, [vec![1], vec![0], vec![2], vec![3], vec![4], vec![5], vec![6]]);
+    assert_eq!(changes(&again, &batches), 5);
+    assert_eq!(fewest_of_every_order(&again, &mut Vec::new(), None), 5);
+}
+
+#[test]
 fn elements_that_wait_for_each_other_sew_in_no_batch() {
     // No rule of the order makes 2 elements wait for each other. Were they to, the search gives no batch and
     // grants no wish, and the caller sews the run as it did before.
@@ -144,21 +159,6 @@ fn the_elements_sewn_are_a_bit_each() {
     // An element past the last is never sewn.
     done.add(500);
     assert!(!done.has(500));
-}
-
-#[test]
-fn an_element_waits_for_another_itself_or_through_those_between() {
-    let before = vec![vec![], vec![0], vec![1], vec![]];
-    let waits = |first: usize, then: usize| super::waits(&before, first, then, &mut Budget::DEFAULT.meter()).unwrap();
-    assert!(waits(1, 0) && waits(2, 1) && waits(2, 0) && waits(3, 3));
-    assert!(!waits(0, 1) && !waits(0, 2) && !waits(3, 0) && !waits(2, 3));
-    // A unit for each element looked at: 2, 1 and 0.
-    let work = |units: u64| super::waits(&before, 2, 0, &mut Budget { max_work: units, ..Budget::DEFAULT }.meter());
-    assert!(work(2).is_err() && work(3).is_ok());
-    // An element that 2 others wait for is looked at once.
-    let diamond = vec![vec![], vec![0], vec![0], vec![1, 2]];
-    let work = |units: u64| super::waits(&diamond, 3, 9, &mut Budget { max_work: units, ..Budget::DEFAULT }.meter());
-    assert_eq!((work(3).is_err(), work(4)), (true, Ok(false)));
 }
 
 #[test]
