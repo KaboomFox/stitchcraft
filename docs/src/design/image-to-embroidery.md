@@ -1095,7 +1095,7 @@ with `SC-E1207`, which says the build leaves the cut-out out. The WASI build tha
 and with `getrandom`'s JavaScript backend chosen (`ci/cross.sh`). It runs tract-core's and tract-linalg's
 tests there, and no model. The golden files never cut a subject out, and without the feature that build
 doesn't depend on tract building for WASI or on `getrandom` there. In the release build for Linux x86_64, `stitch` is
-33.1 MB with the cut-out and 6.7 MB without it, or 28.3 MB and 5.8 MB once stripped (2026-11-10). The owner
+33.3 MB with the cut-out and 6.8 MB without it, or 28.5 MB and 6.0 MB once stripped (2026-11-15). The owner
 accepted the larger program.
 
 **Replays.** The models run in `stitch` alone, and their results may differ in their last bits from one

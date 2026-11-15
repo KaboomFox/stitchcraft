@@ -79,16 +79,17 @@ macro_rules! registry {
             }
 
             /// The explanation as written in the registry (each line keeps its leading space).
-            pub(super) const fn raw_explanation(self) -> &'static str {
+            const fn raw_explanation(self) -> &'static str {
                 match self { $(Code::$name => concat!($($doc, "\n"),+),)+ }
             }
         }
     };
 }
 
+#[macro_use]
 mod registry;
 
-pub use registry::Code;
+codes!(registry);
 
 impl Code {
     /// The explanation as Markdown paragraphs, for `stitch explain` and the diagnostics index.
