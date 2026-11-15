@@ -4,16 +4,16 @@
 repository = "https://github.com/storytold/vectorcraft"
 
 [tracks.stable]
-tag = "v0.22.0"
+tag = "v0.24.1"
 # The SHA-256 of the release's Linux x86_64 archive, whose app the window probe runs (`cargo xtask compat
 # window`). A new tag needs its own, which the release lists in its `SHA256SUMS.txt`.
-linux-x86_64-sha256 = "6e812a92caec4dba23fd74734fa20a327886ef20427b55f2f887fe9334a0933f"
+linux-x86_64-sha256 = "a090514252fde145495ac6fc65d6ff1311d698998e57ba434d5d0896c3d1fbfa"
 
 # The release whose source the browser demo's editor is built from (`web/build.py`,
 # docs/src/design/vectorcraft-integration.md › Browser distribution), and the commit its tag names. It is
-# newer than the stable track's while that release lacks the page calls the demo uses (`uiInspect` and
-# `docInspect`, from 0.24). It is never older (`web/test_site.py`), and once the stable track reaches it, both
-# name the same release.
+# the stable track's release wherever that one has the page calls the demo uses (`uiInspect` and
+# `docInspect`, from 0.24), and a newer one otherwise. It is never older (`web/test_site.py`), and once the
+# stable track reaches it, both name the same release.
 [web]
 tag = "v0.24.1"
 revision = "f4922aa7ac99a4f6d56fc68a83a44945207ec610"

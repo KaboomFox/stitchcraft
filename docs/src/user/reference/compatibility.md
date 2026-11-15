@@ -6,6 +6,7 @@ The VectorCraft releases the StitchCraft plug-ins work with. Each passed both le
 
 | VectorCraft | Track | Passed the gate |
 |---|---|---|
+| 0.24.1 | stable | 2026-11-15 |
 | 0.22.0 | stable | 2026-11-08 |
 | 0.21.0 | stable | 2026-11-04 |
 | 0.20.0 | stable | 2026-11-02 |
@@ -16,4 +17,6 @@ The VectorCraft releases the StitchCraft plug-ins work with. Each passed both le
 | 0.13.1 | stable | 2026-10-18 |
 | 0.12.0 | stable | 2026-10-18 |
 
-The plug-ins speak VectorCraft's plug-in ABI v1. Pull requests are checked against VectorCraft 0.22.0, the release the gate pins in `compat/vectorcraft.toml`.
+The plug-ins speak VectorCraft's plug-in ABI v1. Pull requests are checked against VectorCraft 0.24.1, the release the gate pins in `compat/vectorcraft.toml`.
+
+From VectorCraft 0.23, a filter that asks for a heavy budget is installed only once a person allows it. Up to 0.22 a script could allow it too. [Install StitchCraft](../install.md#the-vectorcraft-plug-ins) says how. The gate ran on neither 0.23.0 nor 0.24.0, so the table has no row for them.
