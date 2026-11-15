@@ -100,7 +100,7 @@ release takes:
 | `<ns>.stroke` | live effect | running, bean, manual (P1), zigzag (M7.2), ripple (M10.8) | `stroke_method` choice selects the variant |
 | `<ns>.satin` | live effect | satin (P1), E (M7.3), S (M7.4), zigzag (M7.5) | rails and rungs from the object's compound path |
 | `<ns>.fill` | live effect | tatami (P1); contour, meander, circular (P2) | `fill_method` choice |
-| `<ns>.auto` | live effect | the stitches automatic digitizing chooses by width (M13.7) | on a group, previews each path inside ([image to embroidery](image-to-embroidery.md)) |
+| `<ns>.auto` | live effect | the stitches automatic digitizing chooses by its rules (M13.7, M13.21) | on a group, previews each path inside ([image to embroidery](image-to-embroidery.md)) |
 | `<ns>.pes`, `<ns>.dst` | exporter (VectorCraft 0.14) | every family | File › Export › Export As writes the same machine file as `stitch export` (M6.9, [below](#exporters-file--export-writes-pes-and-dst)) |
 | `<ns>.settings` | filter (VectorCraft 0.16) | none | keeps the design settings and the machine with the document (M6.11, [below](#design-settings-and-machine-kept-with-the-document)) |
 | `<ns>.stroke-to-satin` | heavy filter (VectorCraft 0.17) | satin | makes each selected line into a satin column drawn with its rails and rungs (M6.12, [below](#tools-stroke-to-satin-and-test-sheet)) |
@@ -150,7 +150,10 @@ The other texts, seeds, and settings left empty to take another's value keep the
 today they are the custom locks' steps, `random_seed`, a fill underlay's angles, and a satin's zigzag underlay
 insets and its shortest random split. A choice leaves out the options that a text spells out, which are the
 custom locks, and `fill_method` leaves out Ink/Stitch's legacy fill, which StitchCraft sews as a tatami fill
-(`REQ-FILL-005`). `satin_column` belongs to the effect, which sets it from its family. The dialog opens with
+(`REQ-FILL-005`). `satin_column` belongs to the effect, which sets it from its family. `turn_stitches`, the switch that
+automatic digitizing sets on its own fills, is left out of the fill's dialog, which holds 64 parameters
+without it. The Auto effect's dialog leaves out the settings of the registry's Advanced group, which are
+the bounds of the rules and the 2 limits of the cover's measure (M13.21). The dialog opens with
 the group that declares the family's method. The groups only the family uses, for its default method, come
 next, then those it shares with the other families, then those of its other methods, such as the zigzag
 stroke's. The settings every element shares come last, as in Ink/Stitch's dialogs.
@@ -167,8 +170,9 @@ and chose both of the ways open to it (`REQ-VC-021`):
   live effect is given only the settings its manifest declares, and VectorCraft drops a record's other keys
   before it runs the effect. So without this row no preview could sew a sett of its own, whatever wrote it.
   The row also shows the sett an Ink/Stitch file brought, and takes one pasted in. With it the fill dialog
-  has 63 parameters, within the 64 its manifest is checked against, and it is the only text a dialog
-  declares (`manifest::TEXTS`).
+  had 63 parameters, within the 64 its manifest is checked against, and it is the only text a dialog
+  declares (`manifest::TEXTS`). From M10.9 the guided fill's stitch positions make 64. A setting more needs
+  room made for it.
 - **StitchCraft Tartan, a light filter**, writes the row from what a person has, a palette code or a
   threadcount in the register's colour letters, with the width of a thread, the sett's turn, its scale, how
   far it is moved and the width up to which a stripe sews as a run
@@ -192,9 +196,12 @@ whole shape.
 manifest with one whole. So from M10.7 the fill effect installs from VectorCraft 0.14, as the exporters
 do. Those 2 releases don't export a machine file either, so a fill made there was only ever a preview.
 
-The Test Sheet filter draws TS-17B from M10.7, each tartan's sett in its fill effect's record as the
+The Test Sheet filter drew TS-17B from M10.7, each tartan's sett in its fill effect's record as the
 row's text, and from M10.12 each of its gradients as a gradient paint
-([below](#a-gradients-geometry)).
+([below](#a-gradients-geometry)). From M10.9 the sheet's guided leaf copies a guide line. Drawn into a
+document, the guide would be a `stitch:guide` marker grouped with the leaf, and a filter doesn't make groups.
+Only `stitch testsheet` draws TS-17B now. The filter still draws a linear gradient fill with its gradient
+paint, though no sheet it draws has one.
 
 **How the dialog shows them** (`REQ-VC-012`, M6.10). From 0.14 a parameter can say how the dialog shows
 it, and the plug-in says all of it from the registry (`apps/stitchcraft-vc-plugin/src/dialog.rs`):
@@ -456,7 +463,7 @@ the filter stops with `SC-E0004` before VectorCraft would. A VectorCraft before 
 filter, which almost every curved line outruns, and stops it with its own error.
 
 **Test Sheet** (`REQ-VC-015`, `apps/stitchcraft-vc-plugin/src/testsheet.rs`) draws one of the sheets
-drawn as designs, TS-02B to TS-09, TS-11A, TS-11B, the TS-13 sheets, TS-17A and TS-17B, into the document: the
+drawn as designs, TS-02B to TS-09, TS-11A, TS-11B, the TS-13 sheets and TS-17A, into the document: the
 sheet's design moved by whole millimetres so that its middle is nearest the middle of the artboard
 `_context` names (`Design::moved`). TS-17A moves by whole multiples of 6 mm, which keep its crosses' cells on
 the canvas's grids of 2 and 3 mm (`TestSheet::step`). The turned square's grid starts at the square's
@@ -481,8 +488,8 @@ The contract test `req_vc_015_each_test_sheet_draws_into_a_document_that_exports
 draws each sheet into a new document in VectorCraft 0.17.0's and 0.18.0's hosts alike, and exports it with
 the PES exporter (2026-10-29). Drawing takes 14 to 25 million instructions, at most half of a light filter's run.
 Exporting takes 23 million to 1.6 billion, at most 17 % of an export's, the most for the fills of TS-07,
-TS-08 and TS-09. TS-17B joined the sheets drawn in M10.7, after that measure, and the test prints its costs
-with the others'.
+TS-08 and TS-09. TS-17B joined the sheets drawn in M10.7, after that measure, and left them in M10.9. The
+test prints each sheet's costs.
 
 ### Tools: the routing filters
 
@@ -640,7 +647,7 @@ note can follow it:
 | `stitch:ignore` | `ignore_object`, `ignore_layer` | Leaves the object or the layer out with everything in it, and lists it with `SC-I0811` |
 | `stitch:start`, `stitch:end` | `starting_point`, `ending_point` | Gives the shapes of the group or layer it is in, and of the groups inside it, their start or end position: the centre of the box round its anchors. Their fills and satin columns start or end there (`REQ-GEN-001`). The marker is left out of the stitches. The first marker of each kind that shows counts, a group's own before those of the groups round it. `SC-W0807` names another, one with no anchor that reads, and the markers of a shape digitized automatically, which places its own. A group or a layer is never a marker: `SC-W0807` names it, and what it holds is read as under any other name |
 | `stitch:target` | `target_point` | From M10.8, gives the shapes of the group or layer it is in, and of the groups inside it, the point they aim at: the centre of the box round its anchors. Their ripple stitches shrink or spiral to it (`REQ-RIP-002`), and their circular fills turn round it (`REQ-FILL-CIR-008`). It is read as the start and end markers are, and `SC-W0807` names the same ones |
-| `stitch:guide`, `stitch:anchor` | Ink/Stitch's guide-line and anchor-line markers, which mark paths rather than tie commands | From M10.11, gives the shapes of the group or layer it is in, and of the groups inside it, the line their ripple stitches' copies follow, or the line across those copies whose ends lie on a satin guide's pairs (`REQ-RIP-012` to `REQ-RIP-014`). The marked path is the guide, and one of several subpaths, or a compound path, is a satin guide, its rails read with a satin column's defaults but for the ripple's `reverse_rails` and `swap_satin_rails`. Only the start and the end of an anchor's first subpath count. The marker is left out of the stitches. It is read as the start and end markers are, and `SC-W0807` names the same ones |
+| `stitch:guide`, `stitch:anchor` | Ink/Stitch's guide-line and anchor-line markers, which mark paths rather than tie commands | From M10.11, gives the shapes of the group or layer it is in, and of the groups inside it, the line their ripple stitches' copies follow, or the line across those copies whose ends lie on a satin guide's pairs (`REQ-RIP-012` to `REQ-RIP-014`). The marked path is the guide, and one of several subpaths, or a compound path, is a satin guide, its rails read with a satin column's defaults but for the ripple's `reverse_rails` and `swap_satin_rails`. From M10.9 a guide also gives their guided fills the line their rows copy, its first subpath (`REQ-VC-023`). In Ink/Stitch too, one guide line steers both. Only the start and the end of an anchor's first subpath count. The marker is left out of the stitches. It is read as the start and end markers are, and `SC-W0807` names the same ones |
 | `stitch:origin`, `stitch:stop-position` | `origin`, `stop_position` | Gives the design its origin, which goes to the hoop's centre, or the stop position the frame moves to before each stop (`REQ-ASM-005`): the centre of the box round its anchors, wherever the marker is (M8.8). The marker is left out of the stitches. 2 origins, or 2 stop positions in a design with a stop, are an error (`SC-E0819`), as Ink/Stitch doesn't write a file with 2 such commands. `SC-W0807` names a marker with no anchor that reads, which places nothing, and a group or a layer of either name, which is never a marker |
 | `stitch:route-start`, `stitch:route-end` | `autoroute_start`, `autoroute_end` | From M10.4, marks where the routing filters start and end a route, at the centre of the box round its anchors, when it is selected with the paths they route. The filters delete it with the paths ([routing filters](#tools-the-routing-filters)). `stitch export` leaves it out of the stitches. Before M10.4 the reader reads the name as the row below says |
 | Any other word after `stitch:` | | Ignores the name, and `SC-W0807` names the object, in case the word is a misspelt marker |
@@ -649,9 +656,10 @@ Hiding an object leaves it out too, without a word, and a name on a hidden objec
 effect is given its object's geometry, with its fills and strokes from VectorCraft 0.14 (VectorCraft's
 `docs/plugins.md`, Input), never its name. So
 VectorCraft's preview still shows the stitches of an object these names leave out, a marker included,
-when it has a StitchCraft effect or is in a group that has one. `stitch export` leaves them out. The RFC's
-sixth proposal, still open in that part, would let a live effect read the markers beside its object, so
-its preview could start and end at them.
+when it has a StitchCraft effect or is in a group that has one. `stitch export` leaves them out. A guided
+fill's preview doesn't see the guide beside its object. It sews the tatami fill `SC-W0331` names, and
+`stitch export` sews the rows along the guide. The RFC's sixth proposal, still open in that part, would let a live
+effect read the markers beside its object, so its preview could start and end at them.
 
 ### Reading `.vectorcraft` files (`stitchcraft-vectorcraft`)
 
@@ -718,7 +726,7 @@ shape. Its visible fills are filled, in the appearance's order, and its visible 
 stitch each. Since M13.1, read with `--auto` (`stitchcraft_vectorcraft::read_with`), the elements of an
 object are automatic instead when neither it nor a group or layer around it has a StitchCraft effect
 ([image to embroidery](image-to-embroidery.md), `REQ-AUTO-001`). StitchCraft then chooses their stitches by
-their width. Since M13.7 StitchCraft's Auto effect makes them automatic without the switch (`REQ-VC-016`).
+its rules. Since M13.7 StitchCraft's Auto effect makes them automatic without the switch (`REQ-VC-016`).
 It is read where a stitch effect is read, on the object or on a group or a layer around it, the nearest
 first, and its parameters are the object's settings of the rules. A stitch effect says how an object sews,
 so an Auto effect beside one on the same object or group isn't used, and `SC-W0807` says so. Read with `--sort-colours`, the objects with effects sew in the order StitchCraft chooses too
@@ -910,3 +918,77 @@ engine must stay host-agnostic.
 
 VectorCraft's conventions are mostly excellent and we follow them; where they drift we improve them.
 See [ADR-0009](adr/0009-adopt-vectorcraft-conventions.md) for the audit.
+
+## Browser distribution
+
+M6.13 publishes VectorCraft's web editor with StitchCraft's plug-ins on the project's Pages site. The work
+came from crowecawcaw's pull request #260. [Try StitchCraft in your browser](../browser-demo.md) says what
+a visitor sees, `web/README.md` how to build it, and the [docs pipeline](docs-pipeline.md#publishing) how
+it is published.
+
+### The editor and its release
+
+`web/build.py` builds the editor with Trunk from VectorCraft's source at a release, and doesn't change
+it. It writes 2 folders. The app is the editor with the plug-ins, and the demo folder is the plug-ins, the
+loader and the starter patch without the editor.
+
+`compat/vectorcraft.toml` records the release beside the gate's pins, as a tag and the commit the tag
+names, and the build stops when the tag names another commit. The release is newer than the stable
+track's: the loader calls `uiInspect` and `docInspect`, which VectorCraft's page has from 0.24. A test fails
+when the demo's release is older than the stable track's. Once the stable track pins that release, both name it.
+
+The loader touches VectorCraft only through the calls its page offers as `window.vectorcraft`. VectorCraft
+documents them in its `docs/control-protocol.md`, under "In the browser". The loader installs each light
+module with `plugin.install` and opens the starter patch with `document.open`. It doesn't install the heavy
+filters, which VectorCraft installs only once a person allows it, and the page offers them as files.
+
+Trunk runs without the network. The workflow installs Trunk and the 2 tools Trunk would otherwise download,
+wasm-bindgen and wasm-opt, each checked against a checksum kept in the repository
+(`.github/actions/tools/action.yml`).
+
+### Licences
+
+VectorCraft's code is licensed MIT OR Apache-2.0, which allows publishing a build of it with its licence
+texts and notice. The app has them as `VectorCraft-*.txt`, beside StitchCraft's own.
+
+The ArtCraft name and logos are not under that licence. VectorCraft's `docs/brand/LICENSE-brand.txt` says
+that a published work derived from VectorCraft carries none of the marks and doesn't present itself as an
+ArtCraft product, and that it may say in plain text what it is based on. What was checked, by reading
+VectorCraft at the recorded commit on 2026-11-15:
+
+- No Rust source, manifest or page of VectorCraft names a file of `docs/brand/`, but a test of its `xtask`.
+  The editor's build doesn't embed a logo.
+- The editor's own text names ArtCraft: the Help menu and the home screen link to its website and its
+  community, and the About dialog says "Part of ArtCraft". The build leaves that text in, because it doesn't
+  change the source. The text says who makes VectorCraft. The owner read the brand licence and decided on
+  2026-11-14 that the text stays: the editor is VectorCraft's own, unchanged, and StitchCraft is a plug-in
+  for it.
+- What the build adds says "StitchCraft in VectorCraft" in plain text: the page's title, the panel and the
+  book. The panel says that the build is unofficial and made by the StitchCraft project.
+
+A preview doesn't contain the editor. Of VectorCraft it publishes only pictures of the editor's window.
+
+### Sizes on the site
+
+The editor is published once, at `/app/`, and a preview contains what its pull request can change. The
+Pages branch is one commit. The [docs pipeline](docs-pipeline.md#one-publisher-and-a-branch-of-one-commit)
+says how both are kept.
+
+The first build measured them on 2026-11-15, for VectorCraft v0.24.1. The `web` workflow's build job prints
+the table of every build, in the step that lists the site's files as stored and as sent.
+
+| Folder | What it contains | Bytes | Bytes sent, gzip -6 |
+|---|---|---:|---:|
+| `/app/` | The editor and the plug-ins | 116,987,438 | 40,752,318 |
+| `/app/`, the editor's module alone | `vectorcraft-web-*_bg.wasm` | 97,474,876 | 34,249,458 |
+| A preview's `demo/` | The plug-ins, the loader, the starter patch | 18,869,636 | 6,291,317 |
+
+The preview of pull request 266, its book with its `demo/` and the 3 pictures, took 40.6 MB of the branch.
+The editor's module is 5 times the size of a preview's `demo/`, and no preview contains it.
+
+### The starter patch
+
+A session without a document opens Alpine Night from `web/templates/alpine-night.vctemplate`, a template in
+VectorCraft's own format, in a new document. VectorCraft wrote it from the SVG beside it, with the Auto
+effect on each shape, and `web/generate-template.mjs` writes it again. `docs/fixtures/README.md` records
+the art's author and licence.

@@ -316,7 +316,8 @@ mod tests {
         });
         let (bytes, said) = stitch_export(&input, Reading { auto: true, ..Reading::default() }, REFERENCE, FormatId::PesV1, "line");
         assert_eq!(file(&auto), (base64(&bytes), said));
-        assert_eq!(file(&auto).1, ["info SC-I0901: 1 shape is digitized automatically: it sews as a satin column."]);
+        let rule = "info SC-I0912 (vc:2:stroke): This shape sews by the rule column (3 mm wide).";
+        assert_eq!(file(&auto).1, ["info SC-I0901: 1 shape is digitized automatically: it sews as a satin column.", rule]);
         assert_ne!(file(&auto).0, file(&plain).0);
     }
 

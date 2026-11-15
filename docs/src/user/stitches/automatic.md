@@ -1,7 +1,7 @@
 # Automatic digitizing
 
 Automatic digitizing makes a machine file from a picture without a setting on any of its shapes. StitchCraft
-chooses the stitches of each shape by its width and mends the places where shapes meet. It also orders the
+chooses the stitches of each shape from its shape and mends the places where shapes meet. It also orders the
 sewing for few colour changes. It is made for 2 kinds of picture:
 
 - [Flat-colour art](#flat-colour-art), such as logos, badges, clip art and drawings. Its colours are solid
@@ -66,7 +66,13 @@ roadmap.
 **Digitized**
 
 <!-- shot: auto-pear -->
-![The traced pear digitized automatically. Its 3 greens sew as tatami fills, with satin columns at the narrow ends of the olive and dark olive bands. Its stem sews as a satin column and a running stitch, and the light grey square is left out. Thin threads run straight from the stem to the bands' ends, 4 jumps that the machine doesn't cut.](../../images/generated/auto-pear.png)
+![The traced pear digitized automatically. Its 3 greens sew as tatami fills, whole to the narrow ends of the olive and dark olive bands. Its stem sews as 2 satin columns side by side, olive and dark olive, and the light grey square is left out. Thin threads run straight from the stem to the bands, 2 jumps that the machine doesn't cut.](../../images/generated/auto-pear.png)
+<!-- /shot -->
+
+**Digitized, on black fabric**
+
+<!-- shot: auto-pear-black -->
+![The traced pear digitized automatically, as it sews on black fabric: the same stitches as on unbleached cotton. No black shows inside the pear, between its 3 greens or along its stem.](../../images/generated/auto-pear-black.png)
 <!-- /shot -->
 
 The photo is drawn in code for these pages. `stitch plan` traced it 90 mm across with VectorCraft 0.19.0, into
@@ -83,6 +89,54 @@ To digitize a photo:
   Auto effect
   ([from a picture to a machine file](../tutorials/picture-to-machine-file.md#2-trace-the-picture-in-those-threads)).
 
+## A photo with its background removed
+
+A photo's background, such as the turf a dog stands on, traces into shapes of its own, which sew too. To sew
+the subject alone, remove the background first, in any program that makes it transparent, and save the
+photo as a PNG file. Image Trace leaves transparent pixels out. The photo then traces into its subject's
+shapes alone ([subject cut-out](../../design/image-to-embroidery.md#subject-cut-out)).
+Then `stitch plan dog.png --colours 9 --size 100 -o dog.pes`, or Image Trace in VectorCraft, traces and
+digitizes it as any photo. The owner's photos of her dog were made that way. A mask checked by hand cut
+each out, as `--subject` will from M13.14.
+
+**The photo, cut out**
+
+<!-- shot: auto-dog-photo -->
+![The owner's photo of her dog running towards the camera, cut out of its background: a tricolour dog, black, white and tan, its mouth open and its ears flying, on white.](../../images/generated/auto-dog-photo.png)
+<!-- /shot -->
+
+**Traced in 9 threads**
+
+<!-- shot: auto-dog-traced -->
+![The running dog traced in 9 of the machine's threads, in flat patches. Its back and ears are black and grey, and its face and chest white. Its legs and cheeks are tan, and its mouth dark brown. The patches' edges are ragged where the fur's shading crossed from one thread to the next.](../../images/generated/auto-dog-traced.png)
+<!-- /shot -->
+
+**Digitized**
+
+<!-- shot: auto-dog -->
+![The traced running dog digitized automatically. Its patches sew as tatami fills, the broad and the ragged alike, and its thin strands of fur as satin columns and triple runs between them, in black, greys, white, tan and dark brown. Thin threads run straight between patches of one colour, jumps that the machine doesn't cut.](../../images/generated/auto-dog.png)
+<!-- /shot -->
+
+**Digitized, on black fabric**
+
+<!-- shot: auto-dog-black -->
+![The traced running dog digitized automatically, as it sews on black fabric: the same stitches as on unbleached cotton. Its white face and chest and its tan legs stand out, and its black patches merge with the fabric. No black fabric shows between its patches.](../../images/generated/auto-dog-black.png)
+<!-- /shot -->
+
+`stitch plan` traced the cut-out 100 mm tall with VectorCraft 0.22.0, into
+`docs/fixtures/traced-dog-running-9.vectorcraft`. The fur's shading became flat patches in 9 threads, which
+digitize as fills, satin columns and triple runs by their shape ([stitches by shape](#stitches-by-shape)).
+Its ragged patches sew as flat fills, and its nose as one fill with the nostrils on it. The fabric is covered where the dog has a
+colour, on black fabric as on cream ([covering the fabric](#covering-the-fabric)). 5 stitches still lie
+where they shouldn't: rows of a fill that show beside a thin line of fur of another colour, each 1.3 to
+4 mm long. M13.18 of the [roadmap](../../plan/roadmap.md) removes them, and the like stitches of the other
+traced dogs ([image to embroidery](../../design/image-to-embroidery.md#sewing-order) has their numbers).
+The thin straight lines are jumps between patches of one colour, which the reference machine leaves for you
+to cut by hand, as it leaves the pear's. M13.17 runs the thread under the patches sewn later instead, where
+they cover it. The dog changes thread 28 times in its 9 threads, since a line sews after the fill it
+borders: with **Fill uneven parts** off it changes 19 times and jumps more often
+([what it costs](../../design/image-to-embroidery.md#what-it-costs)).
+
 ## How it chooses the stitches
 
 Automatic digitizing chooses the stitches of each shape without settings. A shape with settings sews as they
@@ -90,21 +144,54 @@ say. The pictures below show shapes as they are drawn, and then digitized automa
 each of those shapes sews as one [tatami fill](tatami-fill.md), whatever its width.
 [Image to embroidery](../../design/image-to-embroidery.md) gives every rule in full.
 
+### Stitches by shape
+
+Each part of a shape sews by the first rule that it matches. The rules go by the part's shape alone,
+never by what the picture shows: a flower and a dog sew by the same rules. The
+[rules' reference](../reference/auto-rules.md) has the table with each bound's value, and
+[image to embroidery](../../design/image-to-embroidery.md#which-stitch-a-shape-gets) says why each rule
+is there.
+
+- **A line.** A part nowhere wider than the design's narrowest satin stroke runs along its middle, as a
+  triple run when it is wide enough to show.
+- **An area.** A part wider than the widest satin column somewhere is a tatami fill.
+- **A blob.** A part no wider than a satin column, and short for its width, is a small tatami fill. A
+  column along its middle would sew its stitches into a fan round a point. The smallest blob is a dot.
+- **A ragged patch.** A part that branches, and whose width swells and shrinks along its branches, is a
+  tatami fill too. Sewn as a column along each branch, its edge would be scalloped. Its thin tails leave
+  the fill and run.
+- **A column.** Any other part sews as satin columns between its own edges, as a letter, a leaf, a ring and a
+  tapering stroke do.
+
+A satin stitch longer than 7 mm lies loose, so a part whose column would sew one is filled instead. A part
+that is filled is filled whole under the shapes that fill its holes, and they sew on it.
+
+The pictures are drawn from `docs/fixtures/rules.svg`. Its 5 shapes are a blob, a letter T of a thick and a
+thin stroke, a blob with 2 tails, a nose with 2 nostrils and a leaf.
+
+**As drawn**
+
+<!-- shot: auto-rules-drawn -->
+![5 shapes as drawn, in flat colours in a row on white. From the left: a red blob 4.5 mm wide and 3 mm tall, a blue letter T with a bar 4 mm thick and a stem 1.5 mm thick, a red blob with 2 thin tails, a black oval nose with 2 gold nostrils, and a blue leaf 12 mm long with pointed tips.](../../images/generated/auto-rules-drawn.png)
+<!-- /shot -->
+
+**Digitized**
+
+<!-- shot: auto-rules -->
+![The same shapes digitized automatically. The blob sews as a small tatami fill, and so does the letter T, bar and stem. The blob with tails sews as a fill with a triple run along each tail. The nose sews as one fill with the 2 nostrils sewn on it. The leaf sews as one satin column from tip to tip.](../../images/generated/auto-rules.png)
+<!-- /shot -->
+
+The T shows the rule's limit. Each of its strokes is even, but they are unlike each other, so the letter as
+a whole counts as ragged and is filled. For art drawn in strokes of changing thickness, turn **Fill uneven
+parts** off, or use the `logo` style ([changing the choice](#changing-the-choice)), and the T sews as 2
+satin columns.
+
 ### Stitches by width
 
-A shape's width at a place is the diameter of the largest circle that fits inside it there:
-
-| Width | Sewn as |
-|---|---|
-| Up to the design's narrowest satin stroke, `min_satin_stroke_width_mm`, 1 mm unless the design sets it | A running stitch along the middle, tripled from 0.5 mm wide (`auto_min_triple_run_width_mm`) |
-| Wider, up to the widest satin column, 7 mm (`auto_max_satin_width_mm`) | Satin columns between the shape's own edges |
-| Wider | A tatami fill |
-
-A small disc or square, no wider than a satin column, is a dot with no length for a column to run along,
-and sews as a tatami fill too. A rectangle 3 mm wide sews as a satin column once it is 3.5 mm long.
-
-A stroke is a line as wide as it is drawn, and its width chooses its stitches the same way: one as wide
-as a satin column sews as a [satin column drawn as one path](satin-column.md#drawn-as-one-path). The
+A line, a column and an area differ by their width. A shape's width at a place is the diameter of the
+largest circle that fits inside it there. A stroke is a line as wide as it is drawn, and its width chooses
+its stitches: one as wide as a satin column sews as a
+[satin column drawn as one path](satin-column.md#drawn-as-one-path). The
 pictures are drawn from `docs/fixtures/widths.svg`, a line 0.6 mm wide, a letter C 3 mm wide and a disc
 16 mm across, each traced as an area.
 
@@ -142,7 +229,7 @@ balloon on a string 0.8 mm wide, each one area.
 ### Neighbours
 
 The shapes of a traced picture meet, and sewn without `--auto` they sew badly there. Digitizing mends that
-in 4 steps:
+in 5 steps:
 
 1. **The background.** The lowest shape, when it covers the whole picture with the other shapes drawn
    on it, is the background, the fabric's own colour, and is left out (`SC-W0906`, and
@@ -157,9 +244,12 @@ in 4 steps:
 3. **Specks.** A shape or a part of one smaller than 1 mm² would sew a knot. It is merged into the shape
    it shares the longest edge with (`SC-I0905`, `auto_min_area_mm2`).
 4. **Overlaps.** The thread pulls stitches in from the edges of their shape, so shapes that only meet show
-   fabric between them once sewn. Each area reaches 0.4 mm under the shapes sewn after it that it
+   fabric between them once sewn. Each area reaches 1 mm under the shapes sewn after it that it
    touches (`SC-I0904`, `auto_overlap_mm`). An area filled whole under its details is cut away under them,
-   0.4 mm inside their edges, so that each place sews once.
+   1 mm inside their edges, so that each place sews once. A satin column sews 1 mm past a side that a
+   shape sewn after it runs along, and 0.4 mm past any other side (`auto_pull_compensation_mm`).
+5. **The base layer.** One open underlay sews first under the whole design
+   ([covering the fabric](#covering-the-fabric)).
 
 The pictures are drawn from `docs/fixtures/traced-badge.svg`, a badge traced on white with its colours
 abutting. Without `--auto`, the white round the badge sews too, and each colour sews up to the next with no
@@ -176,6 +266,29 @@ overlap.
 <!-- shot: auto-badge -->
 ![The same badge digitized automatically. Its white background is left out, and each colour sews under the edges of the colours sewn on it.](../../images/generated/auto-badge.png)
 <!-- /shot -->
+
+### Covering the fabric
+
+You can't choose the colour of the fabric a design is sewn on, and on black fabric every place the thread
+leaves bare is a dark spot. So a design digitized automatically sews one base layer first, under all of
+it: an open fill of stitches 3 mm long in 3 directions, in the thread that the picture has the most of. It
+lies 0.4 mm inside the design's outline, so that it doesn't show beside the edge. The fills sewn on it
+sew no underlay of their own (`SC-I0909`).
+
+With the base layer and the overlap of 1 mm, the pear and the traced dogs cover the fabric inside their
+outlines. Where
+thin lines of fur meet, the top thread still leaves a sliver here and there, and the base layer's thread
+shows in it in place of the fabric. The running dog above has none in
+1,944 mm² of design, and the same dog in 6 threads has 1, of 0.26 mm². With the base layer that dog sews
+2,112 stitches fewer than with an underlay under each fill, and the pear 199 fewer.
+
+To sew without the base layer, turn `auto_base_layer` off. Each fill then sews its own underlay, and
+StitchCraft says that fabric may show between shapes (`SC-I0911`). The
+[settings](../reference/params/auto.md) also set the base layer's stitch length and offset, and whether
+it keeps the design's holes. 2 more are limits that StitchCraft's own checks hold a design to, and
+nothing sews differently by them: the largest sliver, 0.4 mm², and the most the top thread may leave to
+the base layer, 0.5 % of the design. The reference machine hasn't sewn a base layer yet, and
+[MC-8](../../plan/machine-testing.md) sews the dog on black fabric with it and without.
 
 ### Sewing order
 
@@ -198,8 +311,27 @@ Each satin column digitizing makes has the underlay of its width, and 0.4 mm of 
 | 2 to 4 mm | Contour |
 | Above 4 mm | Contour and zigzag |
 
-Fills keep a tatami fill's defaults, their underlay included. These are starting values, which the next
+Fills keep a tatami fill's defaults, but sew no underlay of their own on the base layer, and turn from row to row in a stitch at the outline. These are starting values, which the next
 sew-out at the machine checkpoint confirms or changes.
+
+### Changing the choice
+
+Each shape says which rule chose its stitches, with the numbers that decided it (`SC-I0912`, in the report
+of `stitch plan --report`). The settings that change the choice come in 3 tiers:
+
+- **For a shape**, **Stitch** (`auto_stitch`) names its stitch: a running stitch, satin columns or a tatami
+  fill. A part that can't sew so goes by the rules.
+- **For a design**, **Satin or fill** (`auto_prefer`) leans the rules towards satin columns or towards
+  fills, **Fill uneven parts** (`auto_fill_uneven`) turns the filling of ragged patches off, and **Fill
+  angle** (`auto_fill_angle`) turns every fill's rows. In VectorCraft, apply StitchCraft's Auto effect to
+  the layer or the group, and set them in its dialog.
+- **Advanced**, each rule's bound is a setting too, such as the least slenderness of a column. No dialog
+  shows these. On the command line, `--set` sets one on every shape digitized automatically:
+  `stitch plan photo.jpg -o photo.pes --set auto_min_slenderness=4`.
+
+A style is a named set of these settings. `stitch plan --style logo` suits flat art drawn in strokes: it
+prefers satin columns and fills no uneven part. `--style photo` is the defaults. The
+[rules' reference](../reference/auto-rules.md) lists what each style sets, and every setting with its tier.
 
 ### Settings
 

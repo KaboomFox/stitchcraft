@@ -65,7 +65,7 @@ fn req_vc_015_each_sheet_drawn_sews_as_its_design_moved_to_the_artboard() {
         drawn_sheets,
         [
             "TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D",
-            "TS-17A", "TS-17B"
+            "TS-17A"
         ]
     );
     // The sheets draw both.
@@ -130,8 +130,13 @@ fn req_vc_015_a_record_holds_each_setting_as_its_dialog_row_takes_it() {
     );
     // An automatic shape's settings of the rules are the Auto effect's, which declares no stitch's.
     let auto = declared().into_iter().find(|(each, _)| *each == Module::Auto).unwrap().1;
-    let rules = record_params(Module::Auto, &set(&[("auto_min_area_mm2", "2.5"), ("auto_ignore_background", "false")]), &auto).unwrap();
-    assert_eq!(Value::Object(rules), json!({"auto_ignore_background": false, "auto_min_area_mm2": 2.5}));
+    let rules = record_params(Module::Auto, &set(&[("auto_overlap_mm", "0.5"), ("auto_ignore_background", "false")]), &auto).unwrap();
+    assert_eq!(Value::Object(rules), json!({"auto_ignore_background": false, "auto_overlap_mm": 0.5}));
+    // A bound of the rules has no row in the dialog, so a sheet cannot record it.
+    assert_eq!(
+        record_params(Module::Auto, &set(&[("auto_min_area_mm2", "2.5")]), &auto),
+        Err("its setting `auto_min_area_mm2 = 2.5` is no setting of its auto effect's record".to_string())
+    );
     assert_eq!(
         record_params(Module::Auto, &set(&[("row_spacing_mm", "0.3")]), &auto),
         Err("its setting `row_spacing_mm = 0.3` is no setting of its auto effect's record".to_string())
@@ -186,8 +191,7 @@ fn req_vc_015_the_filter_s_manifest_offers_the_sheets_drawn_as_designs() {
     assert_eq!((manifest.id.as_str(), manifest.kind, manifest.budget), ("dev.stitchcraft.testsheet", "filter", BudgetClass::Light));
     let [(SHEET, sheet)] = manifest.params.as_slice() else { panic!("{:?}", manifest.params) };
     let ids = vec![
-        "TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D",
-        "TS-17A", "TS-17B",
+        "TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D", "TS-17A",
     ];
     assert_eq!(sheet.schema, Schema::Choice { options: ids, default: "TS-02B" });
     // Its help names what each sheet tests, from the sheets themselves.

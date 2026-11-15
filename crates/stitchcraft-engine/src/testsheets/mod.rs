@@ -91,9 +91,9 @@ enum Drawn {
     /// a document would sew otherwise, and only `stitch testsheet` writes it.
     DesignedById(fn() -> Result<Drawing, SheetError>, &'static [Code]),
     /// As [`Drawn::Designed`], but the design holds what an Ink/Stitch file gives its elements, which a host
-    /// would draw as objects of their own: start and end positions, clips, and the design's origin and stop
-    /// position, or keep with the document: its turn on export ([`TestSheet::uses_file_features`]), as TS-16's
-    /// does. Only `stitch testsheet` and the differential's SVG file draw it.
+    /// would draw as objects of their own: start and end positions, clips, guide lines, and the design's origin
+    /// and stop position, or keep with the document: its turn on export ([`TestSheet::uses_file_features`]), as
+    /// TS-16's does and TS-17B's guided leaf. Only `stitch testsheet` and the differential's SVG file draw it.
     FromFile(fn() -> Result<Drawing, SheetError>, &'static [Code]),
     /// As [`Drawn::Designed`], but part of it is routed (`crate::route`), into pieces cut at points along its
     /// columns that a document's points hold only to within a unit in their last place. Drawn into a
@@ -138,9 +138,9 @@ impl TestSheet {
     /// stop position ([`DesignSettings::origin`], [`DesignSettings::stop_position`]), which it would draw as
     /// markers; or its turn on export ([`DesignSettings::rotate_on_export`]), which the Design Settings filter
     /// would keep. VectorCraft's Test Sheet filter draws and keeps none of them. The sheets that do, TS-16,
-    /// drawn from a file, and TS-17C, whose ripple aims at a target point and which is routed, are sheets
-    /// [`TestSheet::drawable`] leaves out, as the tests check. A tartan's sett isn't one: VectorCraft's fill
-    /// dialog holds it from M10.7.
+    /// drawn from a file, TS-17B, whose guided leaf copies a guide line, a marker grouped with the leaf, and
+    /// TS-17C, whose ripple aims at a target point and which is routed, are sheets [`TestSheet::drawable`]
+    /// leaves out, as the tests check. A tartan's sett isn't one: VectorCraft's fill dialog holds it from M10.7.
     ///
     /// [`Element::hints`]: crate::design::Element::hints
     /// [`Element::clips`]: crate::design::Element::clips
@@ -423,9 +423,10 @@ pub static SHEETS: &[TestSheet] = &[
         title: "Pictures digitized automatically: neighbours and sewing order",
         checks: &[
             "The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Top row, left to right: a badge traced abutting and one traced stacked, each 40 mm across, and a blue disc with 7 red specks round it. Bottom row: 3 badges drawn badge by badge, and a gold square with a blue bar beside it.",
-            "The bottom half changes thread 16 times and jumps 15 times, the top half 3 and 16 times. How long does each half take?",
-            "Does fabric show between colours, on either half? On the top half, each area reaches 0.4 mm under the next: does that cover the gap, or show as a ridge?",
-            "On the top half, the stacked badge sews only what shows of each colour, as the abutting badge beside it does: the red disc whole, cut away under the square, and the blue square's ring round the gold disc. Does it sew as flat as the abutting badge? On the bottom half, it sews its lower colours whole, under the upper ones.",
+            "The bottom half changes thread 16 times and jumps 15 times, the top half 5 and 21 times. The base layer's thread and pieces are among the top half's. How long does each half take?",
+            "Does fabric show between colours, on either half? On the top half, each area reaches 1 mm under the next: does that cover the gap, or show as a ridge?",
+            "On the top half, a base layer sews first under all the shapes, in the red that paints the most of them: an open fill in 3 directions, 0.4 mm inside the shapes' outer edges, and the fills on it sew no underlay of their own. Does it show beside a shape's edge, or through the gold and the blue? Do the fills on it lie as flat as those of the bottom half, which sew their own underlays?",
+            "On the top half, the stacked badge sews only what shows of each colour, as the abutting badge beside it does: the red disc whole, cut away under the square, and the blue square whole, cut away under the gold disc. A satin column round the gold disc would sew stitches of 7.3 mm at the square's corners, longer than a satin stitch may be, so both badges' squares are filled. Does it sew as flat as the abutting badge? On the bottom half, it sews its lower colours whole, under the upper ones.",
             "On the bottom half, each speck round the disc sews a red knot. On the top half, the 6 specks that touch the disc are blue, part of it, and the one apart is left out. Does the disc's edge show where they were?",
             "The blue bar meets the gold square along the top half of its side, and runs on 0.5 mm from it below. On the top half, the bar, sewn first, reaches under the square only where they meet. Does the fabric that shows below read as a gap drawn there?",
             "Does any shape cover one drawn over it? The order must never let that happen.",
@@ -439,13 +440,13 @@ pub static SHEETS: &[TestSheet] = &[
         title: "Pictures digitized automatically: letters and lines traced as areas",
         checks: &[
             "The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left: the word MATCH in block letters 15, 10, 6 and 4 mm tall, top to bottom, each letter traced as an area. Right: 3 windows, top to bottom, whose black lines, traced as areas, are 0.3, 0.6 and 0.9 mm wide. One line runs down each window, and a branch runs across to its right side from it.",
-            "The bottom half changes thread 12 times and jumps 16 times, the top half 4 and 41 times. A letter filled sews in one piece, and digitized it is columns and lines with jumps between them. How long does each half take?",
+            "The bottom half changes thread 12 times and jumps 16 times, the top half 4 and 47 times. A letter filled sews in one piece, and digitized it is columns and lines with jumps between them. How long does each half take?",
             "Which is the smallest word that reads, on each half?",
             "On the top half, the letters from 6 mm tall sew as satin columns between their own edges, and the 4 mm ones as triple runs along their middles. Do the columns' stitches lie square to their strokes, round the C's bend and the A's hole?",
             "Where a column ends under another, 0.4 mm longer, as the T's stem does under its bar, does fabric show there, or a ridge? Does a crossbar sewn as a column of its own, as the H's is, read as one stroke with its stems? The M's and the A's feet should end flat along the baseline, and the C's ends round.",
             "Do the underlays hold the columns up? With 0.4 mm of pull compensation, do they sew as wide as drawn? Measure the 15 mm T's stem, drawn 2.7 mm wide.",
             "Where the M's strokes meet at sharp angles, its stitches lean along the columns (SC-W0208). Do they show?",
-            "On the top half, each window's lines sew along their middles after the areas beside them, which reach 0.4 mm under them: a single run at 0.3 mm, and a triple run at 0.6 and 0.9 mm. Does each line reach as far as it is drawn? Do the triple runs look as wide as their lines, and the single run not too thin? Does fabric show along a line, or a gap or a knot where the branch ends at the line it meets?",
+            "On the top half, each window's lines sew along their middles after the areas beside them, which reach under them: a single run at 0.3 mm, and a triple run at 0.6 and 0.9 mm. Does each line reach as far as it is drawn? Do the triple runs look as wide as their lines, and the single run not too thin? Does fabric show along a line, or a gap or a knot where the branch ends at the line it meets?",
             ts13::JUMP_THREADS,
         ],
         profile: REFERENCE,
@@ -456,7 +457,7 @@ pub static SHEETS: &[TestSheet] = &[
         title: "Pictures digitized automatically: lines, and shapes in parts",
         checks: &[
             "The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left to right: a face drawn with black lines, a star, and a balloon on its string.",
-            "The bottom half changes thread 4 times and jumps 14 times, the top half 4 and 11 times. How long does each half take?",
+            "The bottom half changes thread 4 times and jumps 14 times, the top half 5 and 18 times. The base layer's thread and pieces are among the top half's. How long does each half take?",
             "The face's outline is 4 mm wide, its eyes' 2 mm and its brows' 1 mm. On the top half, the outlines sew as satin columns and the brows as triple runs. Do the columns cover the edges of the pink and white areas beside them? Do the triple runs look as wide as the brows are drawn?",
             "The smile is 2 mm wide with round caps, and on the top half its column ends square, 1 mm past each end of its line, where the round cap ends. How far does its corner show past the round end?",
             "The pupils are small rings, and the 3 hairs hairpins, which turn more tightly than they are wide: the top half fills them. How solid do they sew beside the columns round them?",
@@ -472,9 +473,9 @@ pub static SHEETS: &[TestSheet] = &[
         title: "Pictures digitized automatically: pictures traced in layers",
         checks: &[
             "The top half is digitized automatically, and the bottom half is the same shapes sewn as drawn, in paint order. The bottom half sews first, and the machine stops between them. Left to right: an emblem traced abutting and the same emblem traced stacked, each 42 mm wide, a navy square with a white disc, a red star on the disc and 3 gold bars, on white; and a button traced abutting above the same button traced stacked, a yellow disc 19 mm across with 7 orange dots, in a black rim.",
-            "The bottom half changes thread 13 times and jumps 12 times, the top half 7 and 18 times. How long does each half take?",
+            "The bottom half changes thread 13 times and jumps 12 times, the top half 8 and 21 times. The base layer's thread and pieces are among the top half's. How long does each half take?",
             "On the bottom half, the stacked emblem sews each colour whole under the colours drawn over it, the white under everything. How stiff is it beside the abutting one? On the top half, it sews only what shows of each colour: does it sew as the abutting emblem beside it?",
-            "On the top half, each navy square is one fill under the white disc and the bars, which sew after it, cut away 0.4 mm inside their edges. The white round each star, narrower than a satin column there, is a satin column round it. On the bottom half, the abutting emblem's navy sews round the disc and between the bars as drawn. Which sews better between the bars? Does fabric or a ridge show round the bars, the disc and the star?",
+            "On the top half, each navy square is one fill under the white disc and the bars, which sew after it, cut away 1 mm inside their edges. The white round each star, narrower than a satin column there, is a satin column round it. On the bottom half, the abutting emblem's navy sews round the disc and between the bars as drawn. Which sews better between the bars? Does fabric or a ridge show round the bars, the disc and the star?",
             "On the top half, the gold bars sew as satin columns, 2.1 mm tall as drawn. Do they keep their height, and do their ends stay square?",
             "On the top half, each button's yellow is one fill under the dots, which sew after it, and its black rim a satin column round it. On the bottom half, the abutting button's yellow sews round the dots as drawn. Which sews better between the dots? Does the rim cover the yellow's edge?",
             ts13::JUMP_THREADS,
@@ -529,10 +530,11 @@ pub static SHEETS: &[TestSheet] = &[
             "Do the runs lie flat along the middles of their stripes, on top of the fills, and do they show as lines of their own colour?",
             "Where the rows of one colour are joined along a stripe's edge, does the join show?",
             "Seen from a step away, does each gradient's colour change smoothly, with no step where one stop's rows give way to the next's? Where the transparent stop lies, do tangerine's rows and blue's thin out evenly to bare fabric?",
+            "Fourth row, on the left: a leaf from its bottom left tip to its top right one, sewn as a guided fill in emerald green over its underlay, trimmed after. Its rows are copies of an S-shaped line from tip to tip, 0.25 mm apart. Do the rows bend with the S, and do they keep their spacing round its bends? Where do they crowd or open up?",
             "How many times does the thread change, and how long does the sheet take? Each tartan sews its underlay in its own thread, then each colour once. Each gradient sews its underlay in its first colour, then each colour once.",
         ],
         profile: REFERENCE,
-        drawn: Drawn::Designed(ts17b::samples, &[]),
+        drawn: Drawn::FromFile(ts17b::samples, &[]),
     },
     TestSheet {
         id: "TS-17C",
@@ -596,14 +598,14 @@ mod tests {
         // The TS-13 sheets' shapes are digitized automatically, and no other sheet's are.
         let digitized: Vec<&str> = SHEETS.iter().filter(|sheet| sheet.digitized()).map(|sheet| sheet.id).collect();
         assert_eq!(digitized, ["TS-13A", "TS-13B", "TS-13C", "TS-13D"]);
-        // TS-16 places and clips its elements, as an Ink/Stitch file does, and it alone is drawn from a file.
-        // TS-17C aims a ripple at a target point, and is routed. A host draws neither. TS-17B's tartans set
-        // setts, which VectorCraft's fill dialog holds from M10.7.
+        // TS-16 places and clips its elements, as an Ink/Stitch file does, and TS-17B's leaf copies a guide: both
+        // are drawn from a file. TS-17C aims a ripple at a target point, and is routed. A host draws none of
+        // them. TS-17B's tartans set setts, which VectorCraft's fill dialog holds from M10.7.
         let filed: Vec<&str> = SHEETS.iter().filter(|sheet| sheet.uses_file_features()).map(|sheet| sheet.id).collect();
-        assert_eq!(filed, ["TS-16", "TS-17C"]);
+        assert_eq!(filed, ["TS-16", "TS-17B", "TS-17C"]);
         assert!(SHEETS.iter().filter(|sheet| sheet.uses_file_features()).all(|sheet| !sheet.drawable()));
         let from_file: Vec<&str> = SHEETS.iter().filter(|sheet| matches!(sheet.drawn, Drawn::FromFile(..))).map(|sheet| sheet.id).collect();
-        assert_eq!(from_file, ["TS-16"]);
+        assert_eq!(from_file, ["TS-16", "TS-17B"]);
     }
 
     #[test]
@@ -633,7 +635,7 @@ mod tests {
             drawable,
             [
                 "TS-02B", "TS-03", "TS-04", "TS-05", "TS-06", "TS-07", "TS-08", "TS-09", "TS-11A", "TS-11B", "TS-13A", "TS-13B", "TS-13C", "TS-13D",
-                "TS-17A", "TS-17B"
+                "TS-17A"
             ]
         );
     }
@@ -686,8 +688,8 @@ mod tests {
         // origin, so above it once turned, their locks inside the 30 mm.
         assert_eq!(about("TS-16"), [110.0, 117.248737342, -5.0, 28.624368671]);
         // TS-17B's tartans and gradients 40 mm square, 3 to a row 45 mm apart, in 3 rows: the runs reach the
-        // squares' sides.
-        assert_eq!(about("TS-17B"), [130.0, 130.0, 0.0, 0.0]);
+        // squares' sides. Its guided leaf's lowest row ends 0.02 mm above its bottom tip, at y = 172.
+        assert_eq!(about("TS-17B"), [130.0, 171.981933683, 0.0, 0.0]);
         // Each TS-10 frame is its hoop's whole field, as its title and checks say, and fits no smaller hoop.
         let hoops = [("ts-10a", "4 × 4 in", &BROTHER_PE800_4X4), ("TS-10B", "5 × 7 in", REFERENCE), ("TS-10C", "small", &BROTHER_PE800_SMALL)];
         for (id, hoop, profile) in hoops {

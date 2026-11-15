@@ -83,7 +83,7 @@ pub fn assemble(elements: &[(&Element, Generated)], settings: &DesignSettings, m
                 reference
             }
         };
-        let role = if generated.layer == Layer::Underlay { Role::Underlay } else { Role::Top };
+        let role = if matches!(generated.layer, Layer::Underlay | Layer::Base) { Role::Underlay } else { Role::Top };
         for (index, group) in groups.iter().enumerate() {
             assembly.join(Group { element, generated, stitches: group.stitches, thread: group.thread, reference, role }, meter)?;
             // The trim after the element's last group is `after`'s, with its stop.

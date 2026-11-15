@@ -33,6 +33,23 @@ Entries are added here when a data table is derived from a third-party source.
   Register of Tartans, "Tartan Register colours". Re-used free of charge, as the register's copyright terms
   allow for its website's material (https://www.tartanregister.gov.uk/copyright).
 
+Third-party models
+------------------
+The subject cut-out (`stitch plan --subject`, `stitch cutout`; apps/stitchcraft-cutout) runs 2 models that
+it fetches on first use from StitchCraft's release cutout-models-1, which publishes them with their licences,
+a notice of their own and their export record. The repository holds only their pins
+(apps/stitchcraft-cutout/models/models.toml), and no part of either model.
+
+- U²-Net-p, the small model of U²-Net, by Xuebin Qin, Zichen Zhang, Chenyang Huang, Masood Dehghan, Osmar
+  Zaiane and Martin Jagersand (https://github.com/xuebinqin/U-2-Net), under the Apache License 2.0, which its
+  repository is under and which its author applies to its models (its issue 208). The file is rembg's ONNX
+  conversion of the author's checkpoint (https://github.com/danielgatis/rembg, MIT License, Copyright (c)
+  2020 Daniel Gatis), as rembg publishes it.
+- MobileSAM, by Chaoning Zhang, Dongshen Han, Yu Qiao, Jung Uk Kim, Sung-Ho Bae, Seungkyu Lee and Choong Seon
+  Hong (https://github.com/ChaoningZhang/MobileSAM), distilled from Meta AI's Segment Anything, under the
+  Apache License 2.0, which covers its weights. StitchCraft exported its encoder and its decoder to ONNX
+  from the checkpoint in its repository, with apps/stitchcraft-cutout/models/export.py.
+
 Third-party files
 -----------------
 - Prose-lint rules (.vale/styles/ai-tells/): vale-ai-tells v1.37.0 by Tony Burns

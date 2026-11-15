@@ -211,3 +211,41 @@ measures = ["stitches"]
 deviation = "DEV-FILL-030"
 fonts = ["colorful"]
 glyphs = ["F"]
+
+# Barstitch cloudy cuts its guided fills to each letter with a clip path. GEOS's overlay starts each cut
+# outline elsewhere than StitchCraft's cut does, and where outlines start decides where a fill ends before the
+# next one. The colours then end and start elsewhere, and the trims and jumps between them differ. With each
+# fill's path replaced by the area Ink/Stitch sews of it, its rings started where Ink/Stitch's start, each
+# glyph whose trims or jumps differed by more than 1 sews Ink/Stitch's within 1 in StitchCraft. In Õ and 7 a
+# fill then ends less than 0.1 mm from where the next element starts, as in Ink/Stitch, and one file rounds
+# that step away where the other keeps it as a jump.
+[[excuse]]
+measures = ["trims", "jumps"]
+deviation = "DEV-FILL-005"
+fonts = ["barstitch_cloudy"]
+
+# Barstitch cloudy's ë: its clip path has a transform of its own, which a viewer applies and Ink/Stitch leaves
+# out, so StitchCraft cuts its fills 0.97 mm further left than Ink/Stitch does. Cut as Ink/Stitch cuts them,
+# its fills sew 62.6 × 96.4 mm in both programs, and the threads overlap by 0.96.
+[[excuse]]
+measures = ["size", "overlap"]
+deviation = "DEV-SVG-017"
+fonts = ["barstitch_cloudy"]
+glyphs = ["ë"]
+
+# Barstitch cloudy's rows are running stitches along each copy of a guide, and an outline in running stitch
+# round each letter sets the bounds the 2 files are aligned by, so the threads lie a little apart. In M10.9's
+# run 10 glyphs overlap by 0.71 to 0.90 so, each program's thread within 0.3 mm of the other's.
+[[excuse]]
+measures = ["overlap"]
+deviation = "DEV-RUN-002"
+fonts = ["barstitch_cloudy"]
+within_mm = 0.3
+
+# Barstitch cloudy's Œ, î and ï each have a part that no copy of its guide meets (SC-W0332). Ink/Stitch stops
+# with an error as it sorts that part's rows, of which there are none, and writes no file.
+[[excuse]]
+measures = ["sewn"]
+deviation = "DEV-FILL-034"
+fonts = ["barstitch_cloudy"]
+codes = ["SC-W0332"]

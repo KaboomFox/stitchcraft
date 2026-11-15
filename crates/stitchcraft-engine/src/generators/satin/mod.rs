@@ -48,7 +48,6 @@ pub(crate) use crate::generators::satin::column::Section;
 pub(crate) use crate::generators::satin::column::{first_point, sewn_rails};
 use crate::generators::satin::compensation::Processor;
 use crate::generators::satin::ends::Guides;
-pub(crate) use crate::generators::satin::lie::LONG_STITCH;
 use crate::generators::satin::pairs::Pair;
 use crate::generators::satin::split::Splitter;
 use crate::generators::satin::underlay::Peaks;
@@ -490,7 +489,7 @@ impl Column {
         }
         // Its top stitches alone have no centre walk before them, and run from the rails' starts.
         let (layers, mut top, odd, hints) = match layer {
-            Layer::Whole => (self.layers.clone(), self.top.clone(), self.odd, hints.clone()),
+            Layer::Whole | Layer::Base => (self.layers.clone(), self.top.clone(), self.odd, hints.clone()),
             Layer::Underlay => (self.layers.clone(), Vec::new(), self.odd, Hints { end: None, ..hints.clone() }),
             Layer::Top => (Vec::new(), self.top.clone(), false, Hints { start: None, ..hints.clone() }),
         };

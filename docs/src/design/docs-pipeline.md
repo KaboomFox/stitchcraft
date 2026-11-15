@@ -47,8 +47,8 @@ docs check, whatever its file name.
 
 | Kind | Made by | Compared by | Notes |
 |---|---|---|---|
-| `stitch` | `stitchcraft-render` ([rendering](rendering.md)) from a test sheet, or from a design the engine plans, an SVG file or a VectorCraft document | **exact bytes** (rendering is deterministic) | Stitch-type illustrations, parameter comparisons, diagnostics examples |
-| `picture` | xtask (`xtask/src/shots/picture.rs`): a design's areas filled flat in their colours, or a photo drawn in code | **exact bytes** | The pictures [automatic digitizing](../user/stitches/automatic.md) starts from |
+| `stitch` | `stitchcraft-render` ([rendering](rendering.md)) from a test sheet, or from a design the engine plans, an SVG file or a VectorCraft document | **exact bytes** (rendering is deterministic) | Stitch-type illustrations, parameter comparisons, diagnostics examples. `fabric = "#000000"` draws one on fabric of that colour instead of the style's own (`REQ-RND-003`) |
+| `picture` | xtask (`xtask/src/shots/picture.rs`) fills a design's areas flat in their colours. It draws a PNG file on white too, and the pear's photo in code | **exact bytes** | The pictures [automatic digitizing](../user/stitches/automatic.md) starts from |
 | `vectorcraft-render` | `vectorcraft-cli` of the pinned stable release, with the plug-in's modules installed: the canvas after the shot's `steps`, exported as PNG at `scale` pixels per point | perceptual tolerance (≤ 0.2 % of pixels differing by more than 8/255 in a channel, and ≤ 8 of them in any square of 16 pixels a side) | How the previews look in VectorCraft's canvas, without its window |
 | `vectorcraft-ui` | VectorCraft's window, of the same release, with the document `vectorcraft-cli` drew. The shot's menu path and the family's row are pressed through the accessibility tree, and the screenshot is cropped to the menus or the dialog | the same tolerance | Menus and dialogs, in a desktop without a screen ([VectorCraft's window in CI](#vectorcrafts-window-in-ci)) |
 | `photo` | a person, of a real sew-out | presence + metadata record (machine, fabric, commit, checkpoint) | Never regenerated; listed with their sew-out report |
@@ -87,7 +87,9 @@ alt = "The pear photo traced in 4 of the machine's threads…"
 
 With a `fixture`, each area of the design is filled in its thread's colour, the lowest first, as a drawing
 program shows it. The areas are filled 4 times larger without anti-aliasing, and each block of 4 × 4 pixels
-is then averaged into one, so that the white under 2 areas doesn't show along the edge they share. With
+is then averaged into one, so that the white under 2 areas doesn't show along the edge they share. A
+`fixture` that is a PNG file is drawn at its own pixels, on white, as a drawing program shows a picture with
+a transparent background. The owner's dog, cut out of her photo, is drawn so. With
 `picture = "pear"` in place of a `fixture`, the picture is a photo xtask draws in code, with soft shading and
 a little grain, so that the docs show a photo with no licence to keep. VectorCraft traced that photo once
 into `docs/fixtures/traced-pear.vectorcraft`, which the shots plan without VectorCraft. A test keeps the hash
@@ -298,6 +300,45 @@ per `stitch` shot of each sheet, so a new sheet gets its picture by declaring a 
   to where it is published, and its 404 page answers for every address of the site that has no page.
 - Tag `vX.Y.Z` → publish to `/vX.Y/` and point `/latest/` at it. Older versions stay online.
 - Every page shows the version it documents and links to the same page in `/dev/`.
+- Push to `main` → the browser demo's workflow, `web.yml`, publishes the editor with the plug-ins to
+  `/app/` ([browser distribution](vectorcraft-integration.md#browser-distribution)).
+- A pull request from a branch of the repository → `web.yml` publishes its preview to `/pr/<number>/`.
+
+### One publisher, and a branch of one commit
+
+The site is the `gh-pages` branch. `docs.yml` writes the book to it, and `web.yml` the demo and the previews. Runs of both can end at the
+same moment. Each writes through
+`.github/scripts/publish-web.py`, which does 2 things.
+
+- It replaces the one folder it is given on the branch's newest state, and pushes only if the branch is
+  still at that state. When another run pushed first, GitHub refuses the push, and the script starts again
+  from that run's state. A run never removes another run's folder, and a race costs one more attempt. `web/test_publish.py` checks it with 2 publishers and a repository on disk. The second one pushes in
+  the middle of the first one's push, and both folders are there afterwards.
+- It writes the branch as one commit without a parent. The editor and the plug-ins are binary files that
+  change from push to push, and a branch that kept each version would grow by their size every time
+  ([sizes on the site](vectorcraft-integration.md#sizes-on-the-site)).
+
+### Who may publish
+
+A job that writes to the branch runs for a push to `main` or a release's tag. It also runs for a pull
+request from a branch of this repository, when the author is its owner, a member or a collaborator. A pull request
+from a fork is built and checked with read-only credentials, and nothing of it is published. Each workflow
+starts with `contents: read`, and its publishing and cleanup jobs ask for write access.
+
+### A pull request's preview
+
+`web/site.py` builds the pull request's book for `/pr/<number>/` and puts the demo folder under its
+`demo/`. That folder contains the plug-ins' modules, the loader's scripts, the starter patch and the pictures
+the browser check took. It doesn't contain the editor. The book's `demo/` page opens the editor at `/app/` and names
+the preview, and the editor runs that folder's loader, which installs that folder's plug-ins. Before the
+first push to `main` publishes `/app/`, the page says that the editor is not there yet.
+
+The workflow says where the preview is in one comment on the pull request, which each push rewrites. It
+removes the folder when the pull request closes.
+
+A preview is one folder, which the build job hands to the publisher whole, and the comment is made of
+sections (`.github/scripts/preview-comment.cjs`). A later step, which shows a pull request's pictures beside
+those of `main`, adds a folder to the preview and a section to the comment.
 
 ## Writing rules
 

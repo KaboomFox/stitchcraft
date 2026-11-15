@@ -19,7 +19,7 @@ use stitchcraft_engine::auto::{TOUCHING, digitized};
 use stitchcraft_engine::design::{Design, DesignSettings, Element, Shape};
 use stitchcraft_engine::normalize::region;
 use stitchcraft_plan::Thread;
-use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, polylines, rules, widened};
+use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, polylines, rules, unbased, widened};
 use stitchcraft_testkit::pictures::GOLD;
 
 /// An automatic square `id`, `size` millimetres wide, from `(x, y)`, sewn with `thread`.
@@ -48,7 +48,7 @@ fn stopping(element: Element) -> Element {
 /// The ids of `elements` in the order they sew, in a design with the default settings that asks for every
 /// element ordered when `sort_colours` says so, and what is said of them with `code`.
 fn order_of(elements: Vec<Element>, sort_colours: bool, code: Code) -> (Vec<String>, Vec<String>) {
-    let mut design = Design::new(elements, DesignSettings::default()).unwrap();
+    let mut design = Design::new(unbased(elements), DesignSettings::default()).unwrap();
     design.sort_colours = sort_colours;
     let (out, said) = digitized(&design, &Budget::DEFAULT);
     (out.iter().map(|element| element.id.as_str().to_string()).collect(), messages(&said, code))
@@ -478,7 +478,7 @@ proptest! {
         for (shape, flattened) in shapes.iter_mut().zip(flattened) {
             shape.flattened = flattened;
         }
-        let design = Design::new(shapes.iter().map(|shape| shape.element.clone()).collect(), DesignSettings::default()).unwrap();
+        let design = Design::new(unbased(shapes.iter().map(|shape| shape.element.clone()).collect()), DesignSettings::default()).unwrap();
         let (out, said) = digitized(&design, &Budget::DEFAULT);
         // The shapes in the order their elements sew, each by its place in the design: a shape sewn as
         // several elements, such as a square flattened into an L and sewn as 2 columns, names the second and

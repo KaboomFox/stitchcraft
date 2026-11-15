@@ -1,0 +1,38 @@
+[package]
+name = "stitchcraft-cutout"
+description = "The subject cut-out of `stitch plan --subject`: a photo's subject cut out by MobileSAM, run by tract"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[features]
+default = ["models"]
+# The cut-out itself: photos decoded by `image` and the models run by tract. Without it the crate holds the
+# marks, the pins and the budget, which `stitch`'s grammar and bundles read (`stitch`'s `cutout` feature).
+models = ["dep:image", "dep:tract-onnx"]
+
+[dependencies]
+image = { workspace = true, optional = true }
+serde = { workspace = true }
+sha2 = { workspace = true }
+stitchcraft-core = { workspace = true }
+toml = { workspace = true }
+tract-onnx = { workspace = true, optional = true }
+
+[dev-dependencies]
+stitchcraft-testkit = { workspace = true }
+
+# The tests of the steps and of the models need the cut-out itself.
+[[test]]
+name = "photos"
+required-features = ["models"]
+
+[[test]]
+name = "models"
+required-features = ["models"]

@@ -21,7 +21,8 @@ they are published.
 
 `compat/vectorcraft.toml` records the versions currently pinned per track (the branch for branch tracks,
 and the SHA-256 of the stable release's Linux archive), so that pull requests are checked against a fixed
-release and every change of pin is a reviewable PR.
+release and every change of pin is a reviewable PR. The file also records the release the browser demo's
+editor is built from ([browser distribution](vectorcraft-integration.md#browser-distribution)).
 
 ## Two levels of test
 

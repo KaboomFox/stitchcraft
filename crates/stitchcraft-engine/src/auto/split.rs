@@ -33,7 +33,7 @@
 use stitchcraft_core::{Exhausted, Meter, Point, math};
 
 use super::narrow::{self, Edges};
-use super::{AutoParams, speck};
+use super::speck;
 use crate::normalize::region::Polygon;
 use crate::normalize::region::geom::{self, Hit};
 use crate::normalize::region::ops::{self, area_of};
@@ -64,16 +64,34 @@ pub(super) struct Piece {
     pub(super) cuts: Vec<[Point; 2]>,
 }
 
-/// `part` split into its broad and its narrow parts by its area's settings of the rules, `rules`, with
-/// `meter`'s work; `None` when a region's edges can't be joined into rings, a bug.
-pub(super) fn split(part: &Polygon, rules: &AutoParams, meter: &mut Meter) -> Result<Option<Split>, Exhausted> {
+/// `part` split into its fill and the narrow pieces that leave it, with `meter`'s work: its broad parts are
+/// what an opening with a disc `broad` millimetres wide leaves of it, and its fill goes on from them as far
+/// as a disc `keep` millimetres wide fits, when that is narrower. A piece smaller than `smallest` square
+/// millimetres stays in the fill. `None` when a region's edges can't be joined into rings, a bug.
+pub(super) fn split(part: &Polygon, broad: f64, keep: f64, smallest: f64, meter: &mut Meter) -> Result<Option<Split>, Exhausted> {
     let whole = std::slice::from_ref(part);
-    let (radius, smallest) = (narrow::half(rules.auto_max_satin_width_mm), rules.auto_min_area_mm2);
+    let radius = narrow::half(broad);
     let Ok(shrunk) = ops::buffered(whole, -radius, meter)? else { return Ok(None) };
-    let Ok(opened) = ops::buffered(&shrunk, radius, meter)? else { return Ok(None) };
-    let Ok(broad) = ops::intersection(&opened, whole, meter)? else { return Ok(None) };
-    let Ok(rest) = ops::difference(whole, &broad, meter)? else { return Ok(None) };
-    let Ok(reach) = ops::buffered(&shrunk, 2.0 * radius, meter)? else { return Ok(None) };
+    // The fill, and how far a piece must reach beyond it to leave it: the broad parts grown by the disc's
+    // radius, or what the narrower disc leaves of the part where that holds a broad part, grown by its own.
+    // A broad part lies round each piece of the part shrunk by the wider disc's radius, so what the narrower
+    // disc leaves holds a broad part where it holds a point of such a piece.
+    let (fill, reach) = if keep < broad {
+        let inner = narrow::half(keep);
+        let Ok(within) = ops::buffered(whole, -inner, meter)? else { return Ok(None) };
+        let Ok(opened) = ops::buffered(&within, inner, meter)? else { return Ok(None) };
+        let Ok(mut fill) = ops::intersection(&opened, whole, meter)? else { return Ok(None) };
+        meter.charge(u64::try_from(fill.len().saturating_mul(shrunk.len())).unwrap_or(u64::MAX))?;
+        fill.retain(|piece| shrunk.iter().any(|broad| broad.outline.first().is_some_and(|&q| piece.covers(q))));
+        let Ok(reach) = ops::buffered(&fill, inner, meter)? else { return Ok(None) };
+        (fill, reach)
+    } else {
+        let Ok(opened) = ops::buffered(&shrunk, radius, meter)? else { return Ok(None) };
+        let Ok(wide) = ops::intersection(&opened, whole, meter)? else { return Ok(None) };
+        let Ok(reach) = ops::buffered(&shrunk, 2.0 * radius, meter)? else { return Ok(None) };
+        (wide, reach)
+    };
+    let Ok(rest) = ops::difference(whole, &fill, meter)? else { return Ok(None) };
     let edges = Edges::of(part, narrow::piece(part), meter)?;
     let mut pieces = Vec::new();
     for piece in rest {
@@ -93,6 +111,43 @@ pub(super) fn split(part: &Polygon, rules: &AutoParams, meter: &mut Meter) -> Re
     let parts: Vec<Polygon> = pieces.iter().map(|piece| piece.part.clone()).collect();
     let Ok(fill) = ops::difference(whole, &parts, meter)? else { return Ok(None) };
     Ok(Some(Split { fill, narrow: pieces }))
+}
+
+/// `part`, an uneven one, split into its fill and its tails, with `meter`'s work: the pieces narrower than
+/// `width` millimetres that [`split`] finds with a disc that wide, but for a bridge, a piece that meets 2
+/// parts of the fill or more, which stays in it. Sewn as a line, a bridge would leave the fill in parts
+/// (`SC-W0307`), and the needle would cross from one to the next over whatever lies between: the traced dogs'
+/// fills fell into parts 2 to 6 times each. `None` when a region's edges can't be joined into rings, a bug.
+pub(super) fn tails(part: &Polygon, width: f64, smallest: f64, meter: &mut Meter) -> Result<Option<Split>, Exhausted> {
+    let Some(found) = split(part, width, width, smallest, meter)? else { return Ok(None) };
+    if found.fill.len() < 2 {
+        return Ok(Some(found));
+    }
+    let mut fills = Vec::with_capacity(found.fill.len());
+    for fill in &found.fill {
+        fills.push(Edges::of(fill, narrow::piece(fill), meter)?);
+    }
+    let mut tails = Vec::with_capacity(found.narrow.len());
+    for piece in found.narrow {
+        // How many parts of the fill a point of the piece's outline lies on.
+        let mut met = 0_usize;
+        for fill in &fills {
+            let mut meets = false;
+            for &q in &piece.part.outline {
+                meets = meets || fill.nearest(q, meter)? <= ON;
+            }
+            met += usize::from(meets);
+        }
+        if met < 2 {
+            tails.push(piece);
+        }
+    }
+    if tails.is_empty() {
+        return Ok(Some(Split { fill: vec![part.clone()], narrow: tails }));
+    }
+    let parts: Vec<Polygon> = tails.iter().map(|tail| tail.part.clone()).collect();
+    let Ok(fill) = ops::difference(std::slice::from_ref(part), &parts, meter)? else { return Ok(None) };
+    Ok(Some(Split { fill, narrow: tails }))
 }
 
 /// `piece`, a narrow part of `part`, whose outline `edges` holds, cut square where it meets the broad

@@ -42,11 +42,14 @@ params! {
 /// circular fill's spiral round its middle.
 pub const PATH_FILLS: &[StitchType] = &[StitchType::ContourFill, StitchType::MeanderFill, StitchType::CircularFill];
 
-/// The path fills whose path can be smoothed: a circular fill's spiral cannot, as in Ink/Stitch.
-const SMOOTHED: &[StitchType] = &[StitchType::ContourFill, StitchType::MeanderFill];
+/// The fills whose path can be smoothed: the path fills' but a circular fill's spiral, as in Ink/Stitch, and a
+/// guided fill's copies of its guide.
+const SMOOTHED: &[StitchType] = &[StitchType::ContourFill, StitchType::MeanderFill, StitchType::GuidedFill];
 
-/// The fills whose stitches bean stitch sews back and forth: the path fills', and a tartan fill's runs.
-const BEANED: &[StitchType] = &[StitchType::ContourFill, StitchType::MeanderFill, StitchType::CircularFill, StitchType::TartanFill];
+/// The fills whose stitches bean stitch sews back and forth: the path fills', a guided fill's rows, and a
+/// tartan fill's runs.
+const BEANED: &[StitchType] =
+    &[StitchType::ContourFill, StitchType::MeanderFill, StitchType::CircularFill, StitchType::GuidedFill, StitchType::TartanFill];
 
 params! {
     /// A fill sewn as a path, a contour, meander or circular fill's: how the path is smoothed, and its

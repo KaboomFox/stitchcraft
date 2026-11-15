@@ -239,6 +239,7 @@ Metrics are defined once in `stitchcraft-testkit::metrics` so every case measure
 | Furrows | Longest run of rows whose needle points align within 0.1 mm |
 | Topology | Holes and components of the region vs. of the stitched area |
 | Bare fabric | The design painted at 0.05 mm as a viewer paints it, its background left out: the largest patch the top stitches leave bare, once opened with a disc as wide as the thread (`stitchcraft_testkit::fabric`) |
+| Cover | The same painting, read more strictly: the gaps a thread wide that the top stitches leave inside the design, and the share of the design they leave bare (`stitchcraft_testkit::fabric::cover`, `REQ-AUTO-027`) |
 | Thread astray | The longest stretch of a stitch that shows on another colour or on bare fabric, or of an underlay or travel stitch that shows at all. Moves between elements and jump threads are counted apart |
 
 Coverage is defined since M5.9 and edge coverage since M13.2, and the other metrics arrive with the cases that
@@ -345,7 +346,9 @@ of 2 stops and of 3, one of them transparent, each at a slant of its own. The `g
 of no length, one that a `gradientTransform` turns, a fill in 2 parts that stops at its end, and a fill without a
 gradient (`REQ-FILL-GRD-009`). Their gradients placed in the shape's box and by the gradient their `href`
 names, and stops that all lie before the fill's first row, sew otherwise in Ink/Stitch, as the ledger explains
-(`DEV-SVG-027`, `DEV-FILL-032`). The `ts17c-ripple-` cases check each of TS-17C's
+(`DEV-SVG-027`, `DEV-FILL-032`). The `inkstitch-ts17b-guided` case judges TS-17B's guided
+leaf alone, its rows copies of an S-shaped guide from tip to tip over its underlay (`REQ-FILL-GDD-008`).
+The `ts17c-ripple-` cases check each of TS-17C's
 ripple stitches on its own, the one along a column and the 2 that shrink to a target point (`REQ-RIP-011`).
 The `ts17c-guided-` cases check its guided ripples so (`REQ-RIP-019`). A wave and a zigzag cut to a circle
 follow guide lines. A circle and a diamond stand between satin guides' rails, the diamond at its guide's
@@ -437,6 +440,56 @@ test`, then writes `target/conformance/`:
 It fails when a case fails or an active requirement has no passing case. `--filter <text>` runs only the
 cases whose id, test name or requirements contain the text (and skips the "every active requirement"
 rule, since the run is partial). `cargo xtask ci` runs the whole suite; the docs workflow runs `--check`.
+
+### Cases in the release build
+
+A case may be too slow for the tests' debug build, as the owner's traced dogs are. Each dog is about a
+hundred shapes, and takes some 45 to 70 s there to digitize and measure, against some 6 s in the release
+build. Such a
+case is ignored in the debug build alone, with a reason of a fixed form that says where it runs, and a step
+of CI runs its test file in the release build:
+
+```rust
+#[test]
+#[cfg_attr(debug_assertions, ignore = "release only: CI's perf job runs tests/auto_photos.rs")]
+fn req_auto_025_digitized_dogs_leave_no_patch_of_fabric_bare() { … }
+```
+
+The runner, which runs the debug build, lists such a case as skipped with its reason (⏭ in the report),
+and CI doesn't fail on it as on a missing tool: the release step runs it. A case ignored any other way
+fails, so that no case hides behind `#[ignore]`. `--check` finds each release-only case by its attribute.
+Its file must be a test target of its own, `<package>/tests/<target>.rs`, and a line of
+`.github/workflows/ci.yml` must run `cargo test --release … -p <package> --test <target>`. A case ignored
+as release only in every build fails `--check` too, as the release build would leave it out as well. Each
+requirement still needs a case that runs in the debug build.
+
+### Cases with the models
+
+The subject cut-out's models are 49 MB, which StitchCraft's release `cutout-models-1` publishes
+([image to embroidery](image-to-embroidery.md#subject-cut-out)), so the cases that run them need them
+fetched. Such a case is ignored in every build, with a reason of a fixed form that says where it runs:
+
+```rust
+#[test]
+#[ignore = "models only: the models job runs tests/models.rs"]
+fn req_cli_019_the_cut_out_from_u2netps_box_keeps_each_dog_within_the_bounds() { … }
+```
+
+The models' job, in `.github/workflows/models.yml`, runs each file that holds such cases with `--ignored`,
+with the models in the folder `STITCHCRAFT_MODELS` names. When the release exists, the job leaves that folder
+empty, and the cases fetch the models from the release as `stitch` does. Until the owner has published it,
+the job puts there the files the workflow's build job has just made from the authors' own, and its summary
+says which of the 2 sources it used. From either, a file must match its pin before tract reads it. A build's encoder may have the other of its
+2 sums (ADR-0019, decision 5). The cases then check it against that sum and compare its outputs with the
+fixtures, and the job leaves `stitch plan --subject` end to end out with a warning. The runner lists a
+models-only case as skipped with its reason (⏭ in the report), and CI doesn't fail on it as on a missing
+tool: the models' job runs it. A case ignored for any other reason fails, so that no case hides behind
+`#[ignore]`. `--check` finds each models-only case by its attribute: its file must be a test target of its
+own, `<package>/tests/<target>.rs`, and a line of `models.yml` must run
+`cargo test … -p <package> --test <target>` with `--ignored`. `stitch`'s `tests/picture.rs` has a harness of its own, which prints the same reason
+for its models-only case, so that case has no attribute for `--check` to find. Each requirement still needs a case that runs everywhere. `REQ-CLI-019`'s is
+the cut-out of each photo from the models' outputs saved as fixtures, which the models' job checks tract
+still gives.
 
 `cargo xtask conformance --bless <case>` rewrites a data case's golden files. CI refuses a pull request
 that changes files under `conformance/golden/` unless it carries the `golden-change` label and a line in

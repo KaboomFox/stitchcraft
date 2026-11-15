@@ -1,0 +1,36 @@
+StitchCraft's subject cut-out models, release cutout-models-1
+=============================================================
+
+These are the 3 models that StitchCraft's `stitch plan --subject` and `stitch cutout` run to cut a photo's
+subject out before VectorCraft traces it (https://github.com/KaboomFox/stitchcraft, ADR-0019). StitchCraft's
+own code is under the MIT License or the Apache License, Version 2.0, at your option. These files are their
+authors' models, under the licences below, and StitchCraft didn't train or change them.
+
+u2netp.onnx
+-----------
+U²-Net-p, the small model of U²-Net, by Xuebin Qin, Zichen Zhang, Chenyang Huang, Masood Dehghan, Osmar
+Zaiane and Martin Jagersand ("U2-Net: Going Deeper with Nested U-Structure for Salient Object Detection",
+Pattern Recognition 106, 107404, 2020), https://github.com/xuebinqin/U-2-Net.
+
+Licence: the Apache License, Version 2.0 (LICENSE-U-2-Net.txt). U²-Net's repository is under it, and its
+author wrote in its issue 208, in May 2021, that "all the released codes and models in this repo follow the
+same license currently". The model was trained on the DUTS dataset.
+
+This file is rembg's conversion of the author's checkpoint, u2netp.pth, to ONNX, as rembg publishes it at
+https://github.com/danielgatis/rembg/releases/download/v0.0.0/u2netp.onnx. rembg is Copyright (c) 2020
+Daniel Gatis, under the MIT License (LICENSE-rembg.txt). The author publishes the checkpoint itself on
+Google Drive and Baidu only. The file is released here as rembg publishes it.
+
+mobilesam-encoder.onnx and mobilesam-decoder.onnx
+-------------------------------------------------
+MobileSAM, by Chaoning Zhang, Dongshen Han, Yu Qiao, Jung Uk Kim, Sung-Ho Bae, Seungkyu Lee and Choong Seon
+Hong ("Faster Segment Anything: Towards Lightweight SAM for Mobile Applications", arXiv:2306.14289, 2023),
+https://github.com/ChaoningZhang/MobileSAM. MobileSAM was distilled from Segment Anything, by Alexander
+Kirillov and others at Meta AI, and keeps its prompt encoder and mask decoder.
+
+Licence: the Apache License, Version 2.0 (LICENSE-MobileSAM.txt), which MobileSAM's repository is under,
+its weights, weights/mobile_sam.pt, among it.
+
+StitchCraft exported both files from that checkpoint, at the repository's commit f706ad9, with MobileSAM's
+own code and PyTorch's ONNX exporter (export.py, EXPORT.md): the image encoder, and the prompt encoder and
+mask decoder as MobileSAM's SamOnnxModel puts them together. Their weights are the checkpoint's.
