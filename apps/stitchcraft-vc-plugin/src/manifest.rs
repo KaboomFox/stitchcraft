@@ -24,7 +24,9 @@
 //! another's value. A choice leaves out the options whose stitches a text spells out, such as the custom
 //! locks, since the dialog doesn't hold that text, and the methods StitchCraft sews as another: Ink/Stitch's
 //! legacy fill, sewn as a tatami fill (`REQ-FILL-005`). `satin_column` is set by the effect itself, by which
-//! family it is ([`SATIN_COLUMN`]).
+//! family it is ([`SATIN_COLUMN`]). `turn_stitches`, StitchCraft's own switch that automatic digitizing sets on
+//! its fills, is left out ([`TURN_STITCHES`]): the fill's dialog holds the 64 parameters that every VectorCraft
+//! release takes without it, and a fill sewn by its own settings keeps the switch off.
 //!
 //! **Order.** The dialog lists parameters in the manifest's order, which is the registry's within each
 //! group. The group with the family's method comes first, then the groups only the family uses, then
@@ -37,7 +39,9 @@
 //!
 //! **The Auto effect** (`REQ-VC-016`). Its manifest declares the settings of automatic digitizing's rules,
 //! the registry's automatic groups, which no stitch type has, in their order, and then `preview_level`
-//! ([`auto`]). Their rows show always: the dialog has no method.
+//! ([`auto`]). Their rows show always: the dialog has no method. The advanced settings, the rules' bounds
+//! and the 2 limits of the cover's check, are left out: with them the dialog was 903 px tall in a window of
+//! 900, and a bound is set for a whole design, on the command line.
 //!
 //! **How the dialog shows them.** Each parameter comes with its label, unit, section, help and help page,
 //! and the values of the parameters before it that show it, which VectorCraft reads from 0.14 and earlier
@@ -59,10 +63,12 @@ use serde::ser::{SerializeMap, Serializer};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use stitchcraft_core::Mm;
+use stitchcraft_engine::auto::ADVANCED;
 use stitchcraft_engine::common::CommonParams;
 use stitchcraft_engine::generate::sewn_as;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::generators::tartan::SETT;
+use stitchcraft_engine::generators::tatami::TURN_STITCHES;
 use stitchcraft_engine::registry::PARAMETERS;
 use stitchcraft_params::{Empty, Family, Kind, ParamGroup, ParamSpec, StitchType, Value as Parsed, find_for};
 use stitchcraft_plan::FormatId;
@@ -285,11 +291,12 @@ pub fn auto() -> Manifest {
 }
 
 /// The parameters of `registry` that the Auto effect's manifest declares: the settings of automatic
-/// digitizing, in the registry's order, each as the dialog shows it.
+/// digitizing but for the advanced ones ([`ADVANCED`]), in the registry's order, each as the dialog shows it.
 fn automatic(registry: &[&ParamGroup]) -> Vec<(&'static str, Param)> {
     let mut params: Vec<(&'static str, Param)> = Vec::new();
     for group in registry.iter().filter(|group| group.automatic()) {
-        for spec in group.specs {
+        // The advanced settings are the rules' bounds, which a document or `stitch plan --set` sets.
+        for spec in group.specs.iter().filter(|spec| spec.group != ADVANCED) {
             let Some(schema) = schema(spec, group.specs) else { continue };
             if let Some(ui) = registry_ui(spec, &schema, group, None, &params) {
                 params.push((spec.key, Param { schema, ui }));
@@ -447,7 +454,8 @@ fn params_of(registry: &[&ParamGroup], family: Family) -> Vec<(&'static str, Par
     groups.sort_by_key(|group| place(group, family, default));
     let mut params: Vec<(&'static str, Param)> = Vec::new();
     for group in groups {
-        for spec in group.specs.iter().filter(|spec| spec.key != SATIN_COLUMN && spec.applies_to.iter().any(|t| t.family() == family)) {
+        let declared = |spec: &&ParamSpec| ![SATIN_COLUMN, TURN_STITCHES].contains(&spec.key) && spec.applies_to.iter().any(|t| t.family() == family);
+        for spec in group.specs.iter().filter(declared) {
             let spec = spec.in_family(family);
             let Some(schema) = schema(&spec, group.specs) else { continue };
             // The method comes first, so the rows of some methods only can say which.
@@ -482,7 +490,7 @@ fn place(group: &ParamGroup, family: Family, default: Option<StitchType>) -> u8 
 /// one value of VectorCraft's kinds means what it means. A text is declared when the dialogs hold it
 /// ([`TEXTS`]). A choice leaves out each option that a text among `siblings` is shown for alone: the text
 /// spells out that option's stitches. A method parameter leaves out the methods StitchCraft sews as another
-/// ([`sewn_as`]).
+/// ([`sewn_as`]). A choice left with fewer than 2 options is not declared.
 pub fn schema(spec: &ParamSpec, siblings: &[ParamSpec]) -> Option<Schema> {
     let number = |min: f64, max: f64, default: f64| Some(Schema::Number { min, max, default });
     let default = spec.kind.parse(spec.default).map(|(value, _)| value)?;
@@ -513,9 +521,10 @@ pub fn schema(spec: &ParamSpec, siblings: &[ParamSpec]) -> Option<Schema> {
             let family = Family::ALL.iter().copied().find(|family| family.method_param() == spec.key);
             let other = |option: &str| family.and_then(|family| StitchType::from_id(family, option)).is_some_and(|t| sewn_as(t) != t);
             // Only the options offered: a design that names one kept for it still reads, but a dialog
-            // doesn't offer it.
+            // doesn't offer it. With 1 option left there is nothing to choose, and the setting keeps its
+            // default: a guided fill's strategy offers copying alone until M10.10.
             let options: Vec<&'static str> = options.iter().filter(|o| o.offered).map(|o| o.id).filter(|o| !spelled(o) && !other(o)).collect();
-            options.contains(&id).then_some(Schema::Choice { options, default: id })
+            (options.len() > 1 && options.contains(&id)).then_some(Schema::Choice { options, default: id })
         }
         (Kind::LengthList { min, max }, Parsed::Lengths(lengths)) => match lengths.as_slice() {
             [length] => number(min, max, length.get()),

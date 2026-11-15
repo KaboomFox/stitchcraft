@@ -13,7 +13,7 @@ use stitchcraft_engine::generators::passes::BEAN_STITCH_REPEATS;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::normalize::region;
 use stitchcraft_engine::normalize::satin::{Shape as Read, recognize};
-use stitchcraft_testkit::designs::{RED, automatic, fill};
+use stitchcraft_testkit::designs::{RED, automatic, fill, unbased};
 
 /// What the automatic `element` sews as, in a design with the default settings.
 fn made(element: &Element) -> Digitized {
@@ -49,6 +49,10 @@ fn flag(width: f64) -> Element {
     shape("flag", &[(0.0, 0.0), (20.0, 0.0), (20.0, low), (32.0, low), (32.0, high), (20.0, high), (20.0, 20.0), (0.0, 20.0)])
 }
 
+/// The settings of a shape whose points sew as they did when width alone chose the stitch: each narrow piece
+/// leaves the fill up to the widest satin column, and sews as satin columns though it is compact.
+const POINTS: [(&str, &str); 2] = [("auto_min_fill_width_mm", "7"), ("auto_stitch", "satin")];
+
 #[test]
 fn req_auto_019_a_shapes_narrow_part_sews_as_a_column_over_the_fill_of_its_broad_part() {
     // A square with a tab 3 mm wide: the square is filled, and keeps the shape's name, and the tab sews after
@@ -82,13 +86,12 @@ fn req_auto_019_a_narrow_part_too_narrow_for_satin_runs_along_its_centre_line() 
 
 #[test]
 fn req_auto_019_the_fill_reaches_under_the_columns_sewn_over_it() {
-    // Digitized with its neighbours, the square reaches 0.4 mm under the tab's column, 3 mm wide: 1.2 mm²
-    // more.
-    let design = Design::new(vec![automatic(flag(3.0))], DesignSettings::default()).unwrap();
+    // Digitized with its neighbours, the square reaches 1 mm under the tab's column, 3 mm wide: 3 mm² more.
+    let design = Design::new(unbased(vec![automatic(flag(3.0))]), DesignSettings::default()).unwrap();
     let (out, _) = digitized(&design, &Budget::DEFAULT);
     let ids: Vec<&str> = out.iter().map(|e| e.id.as_str()).collect();
     assert_eq!(ids, ["flag", "flag#2"]);
-    assert!((area(&out[0]) - 401.2).abs() < 0.1, "{}", area(&out[0]));
+    assert!((area(&out[0]) - 403.0).abs() < 0.15, "{}", area(&out[0]));
 }
 
 #[test]
@@ -112,9 +115,10 @@ fn req_auto_019_splitting_a_part_is_the_areas_work() {
 
 #[test]
 fn req_auto_019_a_tapering_narrow_part_ends_flat_along_its_cut() {
-    // A star of 5 points, 30 mm across, its middle broad: the middle is filled, and each point sews as a
-    // satin column from its tip to its cut, where its rails end at the cut's 2 ends, 6.6 mm apart, not at a
-    // point.
+    // A star of 5 points, 30 mm across, its middle broad, whose narrow pieces leave its fill up to 7 mm wide
+    // and sew as satin columns, as it asks: the middle is filled, and each point sews as a satin column from
+    // its tip to its cut, where its rails end at the cut's 2 ends, 6.6 mm apart, not at a point. By default
+    // the fill keeps the points as far as a disc 4 mm across fits, and their tips too, which are compact.
     let star: Vec<(f64, f64)> = (0..10)
         .map(|i| {
             let r = if i % 2 == 0 { 15.0 } else { 6.0 };
@@ -122,7 +126,7 @@ fn req_auto_019_a_tapering_narrow_part_ends_flat_along_its_cut() {
             (r * cos, r * sin)
         })
         .collect();
-    let out = made(&shape("star", &star));
+    let out = made(&fill("star", &[&star], &RED, &POINTS));
     let [fill, points @ ..] = out.elements.as_slice() else { panic!("{:?}", out.elements) };
     assert!(matches!(fill.shape, Shape::Fill { .. }) && points.len() == 5, "{:?}", out.elements);
     for point in points {
@@ -136,13 +140,15 @@ fn req_auto_019_a_tapering_narrow_part_ends_flat_along_its_cut() {
 #[test]
 fn req_auto_019_a_point_ends_flat_along_its_cut_however_sharp_its_tip() {
     // A square 20 mm a side with a point on its right side, 12 mm across where it leaves the square, its tip
-    // from 30° to 45°: the square is filled, and the point sews as a satin column from its tip to its cut,
-    // where its rails end at the cut's 2 ends, more than 6 mm apart. With a tip of 45°, the column's line ran
+    // from 30° to 45°, whose narrow pieces leave its fill up to 7 mm wide and sew as satin columns, as it asks:
+    // the square is filled, and the point sews as a satin column from its tip to its cut, where its rails end
+    // at the cut's 2 ends, more than 6 mm apart. With a tip of 45°, the column's line ran
     // into a corner of the cut, and the column sewed its stitches into a fan there that left a wedge bare.
     for apex in [30.0_f64, 36.0, 40.0, 45.0] {
         let (sin, cos) = sin_cos((apex / 2.0).to_radians());
         let tip = 20.0 + 6.0 * cos / sin;
-        let out = made(&shape("point", &[(0.0, 0.0), (20.0, 0.0), (20.0, 4.0), (tip, 10.0), (20.0, 16.0), (20.0, 20.0), (0.0, 20.0)]));
+        let out =
+            made(&fill("point", &[&[(0.0, 0.0), (20.0, 0.0), (20.0, 4.0), (tip, 10.0), (20.0, 16.0), (20.0, 20.0), (0.0, 20.0)]], &RED, &POINTS));
         let [fill, column] = out.elements.as_slice() else { panic!("{apex}: {:?}", out.elements) };
         assert!(matches!(fill.shape, Shape::Fill { .. }), "{apex}: {:?}", fill.shape);
         let [one, other] = rails(column);

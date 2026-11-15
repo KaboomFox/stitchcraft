@@ -9,6 +9,7 @@ conformance suite checks.
 | [Strokes](strokes.md) | running, bean, manual, random-length, zigzag stroke, ripple |
 | [Satin](satin.md) | satin column, E-stitch, S-stitch, zigzag satin, underlays |
 | [Fills](fills.md) | tatami, contour, meander, circular, guided, linear gradient, tartan |
+| [Guided fill](guided.md) | rows that copy a guide line drawn with the fill across it, cut by it and routed as a tatami fill's rows |
 | [Tartan fill](tartan.md) | a plaid of warp and weft, each colour's rows in its own thread, its narrow stripes as runs |
 | [Cross stitch](cross-stitch.md) | simple, upright, dense upright, double, Smyrna and half crosses on a grid, each plain or flipped, and the turned grid |
 | [Lock stitches](locks.md) | the tie-in and tie-off at the ends of an element's stitching |

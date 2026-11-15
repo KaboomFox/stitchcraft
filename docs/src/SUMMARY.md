@@ -4,6 +4,7 @@
 
 # User guide
 
+- [Browser demo](browser-demo.md)
 - [User guide](user/README.md)
   - [Install](user/install.md)
   - [Your first sew-out on a Brother](user/tutorials/first-sew-out.md)
@@ -19,6 +20,7 @@
     - [Route satin columns](user/how-to/route-satin-columns.md)
     - [Route running stitches](user/how-to/route-running-stitches.md)
     - [Sew underlays first](user/how-to/sew-underlays-first.md)
+        - [Cut a photo's subject out](user/how-to/cut-out-a-photos-subject.md)
     - [Report a bug](user/how-to/report-a-bug.md)
   - [Stitch types](user/stitches/README.md)
     - [Running stitch](user/stitches/running.md)
@@ -32,6 +34,7 @@
     - [Contour fill](user/stitches/contour-fill.md)
     - [Meander fill](user/stitches/meander-fill.md)
     - [Circular fill](user/stitches/circular-fill.md)
+    - [Guided fill](user/stitches/guided-fill.md)
     - [Tartan fill](user/stitches/tartan-fill.md)
     - [Linear gradient fill](user/stitches/linear-gradient-fill.md)
     - [Cross stitch](user/stitches/cross-stitch.md)
@@ -44,6 +47,7 @@
     - [File formats](user/reference/formats.md)
     - [Test sheets](user/reference/test-sheets.md)
     - [Diagnostic codes](user/reference/diagnostics.md)
+    - [Automatic digitizing's rules](user/reference/auto-rules.md)
     - [Font settings](user/reference/font-settings.md)
     - [Parameters](user/reference/params.md)
       - [Common parameters](user/reference/params/common.md)
@@ -58,6 +62,7 @@
       - [Tatami fill](user/reference/params/tatami.md)
       - [Contour fill](user/reference/params/contour.md)
       - [Meander fill](user/reference/params/meander.md)
+      - [Guided fill](user/reference/params/guided.md)
       - [Cross stitch](user/reference/params/cross.md)
       - [Tartan fill](user/reference/params/tartan.md)
       - [Path fills](user/reference/params/path-fill.md)
@@ -80,6 +85,7 @@
     - [Satin](design/algorithms/satin.md)
       - [Offset curves](design/algorithms/offset.md)
     - [Fills](design/algorithms/fills.md)
+      - [Guided fill](design/algorithms/guided.md)
       - [Tartan fill](design/algorithms/tartan.md)
       - [Linear gradient fill](design/algorithms/gradient.md)
       - [Cross stitch](design/algorithms/cross-stitch.md)

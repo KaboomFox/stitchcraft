@@ -942,7 +942,7 @@ pub(crate) fn sewn(bytes: &[u8]) -> Result<Vec<u8>, String> {
 /// errors that stop it.
 fn stitch_export(bytes: &[u8], format: FormatId, name: &str) -> Result<(Vec<u8>, Vec<Diagnostic>), String> {
     let profile = machine_for(None, Source::VectorCraft, bytes);
-    let sewn = sew(Source::VectorCraft, bytes, Reading::default(), profile, format, name);
+    let sewn = sew(Source::VectorCraft, bytes, (Reading::default(), &[]), profile, format, name);
     let errors: Vec<String> = sewn.diagnostics.iter().filter(|d| d.severity() == Severity::Error).map(ToString::to_string).collect();
     match sewn.file {
         Some(file) if errors.is_empty() => Ok((file, sewn.diagnostics)),

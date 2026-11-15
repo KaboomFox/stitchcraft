@@ -233,3 +233,109 @@ fn an_underlay_stitch_is_astray_wherever_it_shows() {
     let hidden = astray(&red, &blocks(vec![(&RED, [under, top].concat())], &["red"]));
     assert!(hidden.stitches.is_empty() && hidden.moves.is_empty(), "{hidden:?}");
 }
+
+#[test]
+fn a_strip_of_bare_fabric_a_thread_wide_is_a_gap_and_no_patch() {
+    let square = design(vec![square("square", (0.0, 0.0), 10.0, &RED)]);
+    let whole = cover(&square, &plan(&[(&RED, rows(0.0, 10.0, 0.0, 10.0))]), GAP);
+    assert_eq!((whole.gaps, whole.open_gaps, whole.bare, whole.open, whole.slits, whole.at), (0, 0, 0.0, 0.0, 0.0, None));
+    assert!((whole.design - 100.0).abs() < 0.5 && whole.bare_share() == 0.0 && whole.shapes.is_empty(), "{whole:?}");
+    // Rows up to y = 4.75 and from y = 5.55: their threads' edges lie 0.4 mm apart, a strip of 8 pixels.
+    let mut split = rows(0.0, 10.0, 0.0, 4.75);
+    split.push(None);
+    split.extend(rows(0.0, 10.0, 5.55, 10.05));
+    let split = plan(&[(&RED, split)]);
+    assert_eq!(unsewn(&square, &split).patches, 0);
+    let strip = cover(&square, &split, GAP);
+    assert_eq!((strip.gaps, strip.open_gaps), (1, 1), "{strip:?}");
+    // Of the strip's 10 mm, the design's edge takes 0.2 mm at each end.
+    assert!((strip.bare - 3.84).abs() < 0.01 && (strip.in_gaps - 3.84).abs() < 0.1 && strip.largest == strip.in_gaps, "{strip:?}");
+    assert!((strip.bare_share() - 0.0384).abs() < 0.001 && strip.open == strip.bare, "{strip:?}");
+    assert_eq!(strip.shapes, vec![("square".to_string(), strip.bare)]);
+    let at = strip.at.unwrap();
+    assert!((at.min().y() - 4.975).abs() < 0.001 && (at.max().y() - 5.325).abs() < 0.001, "{at:?}");
+    // A disc a thread across, 9 pixels, doesn't fit in the strip, and the strip is no gap that wide.
+    assert_eq!(cover(&square, &split, THREAD).gaps, 0);
+    // One row less, the strip is 0.65 mm wide, and a gap by either disc.
+    let mut wider = rows(0.0, 10.0, 0.0, 4.5);
+    wider.push(None);
+    wider.extend(rows(0.0, 10.0, 5.55, 10.05));
+    assert_eq!(cover(&square, &plan(&[(&RED, wider)]), THREAD).gaps, 1);
+}
+
+#[test]
+fn a_slit_narrower_than_a_thread_is_the_designs_and_an_underlay_leaves_fabric_bare_but_not_open() {
+    let pair = |apart: f64| design(vec![square("a", (0.0, 0.0), 10.0, &RED), square("b", (10.0 + apart, 0.0), 12.0, &BLUE)]);
+    let nothing = blocks(Vec::new(), &["a", "b"]);
+    // 0.3 mm apart, the slit between the squares, 10 mm long, is the design's, and 1 mm apart it is fabric.
+    let near = cover(&pair(0.3), &nothing, GAP);
+    assert!((near.slits - 3.0).abs() < 0.2 && (near.design - 247.0).abs() < 1.0, "{near:?}");
+    // Nothing is sewn: all of the design is bare but its edge, 0.2 mm along an outline of 68.6 mm.
+    assert!((near.bare - (247.0 - 0.2 * 68.6)).abs() < 1.0 && near.open == near.bare && near.gaps == 1, "{near:?}");
+    assert_eq!(near.shapes.iter().map(|(id, _)| id.as_str()).collect::<Vec<_>>(), ["b", "a", "between shapes"]);
+    let far = cover(&pair(1.0), &nothing, GAP);
+    assert!(far.slits == 0.0 && (far.design - 244.0).abs() < 1.0 && far.gaps == 2, "{far:?}");
+    // The picture paints more blue than red. Of 2 colours as large, the one painted first comes first.
+    let colours = |design: &Design| painted(design, &nothing).into_iter().map(|(colour, _)| colour).collect::<Vec<_>>();
+    assert_eq!(colours(&pair(1.0)), [BLUE.color, RED.color]);
+    let even = design(vec![square("a", (0.0, 0.0), 10.0, &RED), square("b", (11.0, 0.0), 10.0, &BLUE)]);
+    assert_eq!(colours(&even), [RED.color, BLUE.color]);
+    assert!((painted(&even, &nothing)[0].1 - 100.0).abs() < 0.5);
+    // An underlay's rows cover the red square: no top stitch does, so it is bare, and nothing of it is open.
+    let rows: Vec<(f64, f64)> = rows(0.0, 10.0, 0.0, 10.0).into_iter().flatten().collect();
+    let under = cover(&even, &blocks(vec![(&RED, sewn(&rows, 0, Role::Underlay))], &["a", "b"]), GAP);
+    assert!((under.bare - 2.0 * 9.6 * 9.6).abs() < 0.5 && (under.open - 9.6 * 9.6).abs() < 0.5, "{under:?}");
+    assert_eq!((under.gaps, under.open_gaps), (2, 1), "{under:?}");
+    assert_eq!(Cover { design: 0.0, ..under }.bare_share(), 0.0);
+}
+
+#[test]
+fn a_cover_faults_each_gap_that_is_no_sliver_and_a_bare_share_over_its_limit() {
+    let rules = crate::designs::rules();
+    // A design of 1,000 mm² with `gaps`, each its area and how far inside the outline its farthest place
+    // without the base layer lies, `bare` mm² bare, and `base` mm² over the base layer.
+    let cover = |gaps: &[(f64, f64)], bare: f64, base: f64| Cover {
+        design: 1000.0,
+        slits: 0.0,
+        bare,
+        gaps: gaps.len(),
+        in_gaps: gaps.iter().map(|gap| gap.0).sum(),
+        largest: gaps.iter().map(|gap| gap.0).fold(0.0, f64::max),
+        at: None,
+        open: 0.0,
+        open_gaps: 0,
+        places: gaps.iter().map(|gap| (Rect::around([p(1.0, 2.0), p(2.0, 4.0)]).unwrap(), gap.0, "fur".to_string())).collect(),
+        beyond: gaps.iter().map(|gap| gap.1).collect(),
+        base,
+        shapes: Vec::new(),
+    };
+    // A gap of 0.4 mm² over the base layer is a sliver, and one a pixel larger is not. A gap with a place the
+    // base layer isn't under is one in the rim, 0.4 mm and a pixel wide, and not further inside.
+    let slivers = cover(&[(0.4025, 0.0), (0.4, 0.0), (0.3, 0.45), (0.2, 0.46), (0.1, f64::INFINITY), (0.0025, 0.0)], 2.0, 900.0);
+    assert_eq!((slivers.slivers(&rules), slivers.at_the_rim(&rules)), (vec![0.4, 0.3, 0.0025], 1));
+    assert_eq!(
+        slivers.faults(&rules),
+        [
+            "a gap of 0.403 mm² at (1.5, 3.0) in fur: larger than a sliver of 0.4 mm²",
+            "a gap of 0.200 mm² at (1.5, 3.0) in fur: no base layer under all of it",
+            "a gap of 0.100 mm² at (1.5, 3.0) in fur: no base layer under all of it"
+        ]
+    );
+    // A base layer that lies outside the design's outline leaves no rim but the pixel.
+    let mut outside = crate::designs::rules();
+    outside.auto_base_offset_mm = stitchcraft_core::Mm::new(0.5).unwrap();
+    assert_eq!((cover(&[(0.3, 0.05)], 0.0, 900.0).slivers(&outside), cover(&[(0.3, 0.06)], 0.0, 900.0).slivers(&outside)), (vec![0.3], Vec::new()));
+    // Over the base layer the top thread may leave 0.5 % of the design bare, and no more.
+    assert_eq!((cover(&[], 5.0, 900.0).limit(&rules), cover(&[], 5.0, 900.0).faults(&rules)), (0.005, Vec::new()));
+    assert_eq!(cover(&[], 5.01, 900.0).faults(&rules), ["0.501 % of the design bare, 5.01 of 1000 mm², over 0.500 %"]);
+    // A design without a base layer may leave 0.15 % bare, and a sliver fails it, in the rim too.
+    assert_eq!((cover(&[], 1.5, 0.0).limit(&rules), cover(&[], 1.5, 0.0).faults(&rules)), (BARE, Vec::new()));
+    assert_eq!(cover(&[], 1.51, 0.0).faults(&rules), ["0.151 % of the design bare, 1.51 of 1000 mm², over 0.150 %"]);
+    let bare = cover(&[(0.1, 0.3)], 0.0, 0.0);
+    assert_eq!(
+        (bare.faults(&rules), bare.at_the_rim(&rules)),
+        (vec!["a gap of 0.100 mm² at (1.5, 3.0) in fur: no base layer under all of it".to_string()], 0)
+    );
+    // A design that paints nothing has no share bare.
+    assert_eq!(Cover { design: 0.0, ..cover(&[], 0.0, 0.0) }.faults(&rules), Vec::<String>::new());
+}

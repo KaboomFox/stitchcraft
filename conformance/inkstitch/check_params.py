@@ -92,10 +92,7 @@ SAME_FALLBACK = {
 }
 
 # Conditions the data file leaves out on purpose, with the reason. Everything else must match.
-OMITTED = {
-    ("fill", "guided_fill_angle", "0"): "the guided fill strategy's first option (copy): a dropdown index, "
-    "recorded when guided fill lands",
-}
+OMITTED: dict[tuple[str, str, str], str] = {}
 
 
 def literal(node):

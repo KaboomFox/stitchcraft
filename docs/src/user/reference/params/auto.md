@@ -3,24 +3,159 @@
 # Auto parameters
 
 Automatic digitizing: the settings of the rules that choose the stitches of a shape without settings
-by its width. Each rule goes by the settings of the shape it digitizes, and a shape that sets none
+from its geometry. Each rule goes by the settings of the shape it digitizes, and a shape that sets none
 takes the defaults, as every shape does with `--auto`. The machine checkpoint MC-8 confirms the
-defaults or changes them.
+defaults or changes them. The settings of the last section, Advanced, are the rules' bounds: no dialog
+shows them, and `stitch plan --set` sets them.
 
 Applies to automatic elements, the shapes whose stitches StitchCraft chooses by their width, before they are sewn as any stitch type.
 
-## Stitches by width
+## Stitches by shape
+
+### `auto_stitch`
+
+**Stitch.** The stitch the shape sews as. Left at `auto`, each part of it sews by the first rule that it
+matches, from its geometry. `run` sews every part as a running stitch along its centre lines,
+`satin` sews each part no wider than the widest satin column as satin columns along them, and
+`fill` fills the shape whole. A part that can't sew as asked goes by the rules: a speck, a part
+without a centre line, and for `satin` a part too narrow or too wide for a column.
+
+- **Accepts:** one of `auto` (Chosen by the rules), `run` (Running stitch), `satin` (Satin columns), `fill` (Tatami fill)
+- **Default:** `auto`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_prefer`
+
+**Satin or fill.** Which way the rules lean where a part could sew as satin columns or as a fill. `satin` moves 3
+bounds together by half, so that more parts sew as columns: the least slenderness is divided by
+1.5, and the most a width varies and the narrowest piece that stays in a fill are multiplied by
+it. `fill` moves them the other way, and `balanced` leaves them as they are set.
+
+- **Accepts:** one of `satin` (Prefer satin columns), `balanced` (Balanced), `fill` (Prefer fills)
+- **Default:** `balanced`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_fill_uneven`
+
+**Fill uneven parts.** Whether a part of several centre lines whose width varies along them is filled. On, such a part
+is a tatami fill: the ragged patches of a traced photo sew flat. Off, it sews a satin column
+along each line, as a drawing made of strokes of changing width may want.
+
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
+- **Default:** `true`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_fill_angle`
+
+**Fill angle.** The angle of the rows of every fill that automatic digitizing makes, as a fill's `angle` gives
+it. One angle for the whole design lets a small filled part lie flat beside the fills round it.
+
+- **Accepts:** an angle in degrees
+- **Default:** `0`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+## Neighbours
+
+### `auto_overlap_mm`
+
+**Overlap.** How far an area reaches under each shape sewn after it that it touches, and how far inside the
+edge of an area, or of a part sewn as a line or a column, that is sewn after it and covers it the
+area is cut away. The thread pulls stitches in
+from the edges of their shape, and without the overlap fabric shows between shapes that only
+meet. A satin column reaches as far past a rail that a shape sewn after it runs along.
+
+- **Accepts:** a length from 0 to 2 mm
+- **Default:** `1`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_pull_compensation_mm`
+
+**Pull compensation.** How far a satin column sews past a rail with no shape sewn after the column beside it: its pull
+compensation there. The thread pulls a column in from its rails, and a column that sews this far
+past them is as wide as drawn. Along a rail where a shape sewn after the column runs for more
+than half the rail's length, the column sews past the rail by the overlap instead.
+
+- **Accepts:** a length from 0 to 2 mm
+- **Default:** `0.4`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_ignore_background`
+
+**Leave out the background.** Whether the lowest shape is left out when it is the picture's background: an area under the
+other shapes that covers the whole design. A background is usually the fabric's own colour, and
+sewing it doubles the stitches and stiffens the design. What shows of it inside the picture sews
+still, as a white disc on a badge traced with its colours stacked does. Off, all of it that shows
+sews, as of any area.
+
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
+- **Default:** `true`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+## Base layer
+
+### `auto_base_layer`
+
+**Base layer.** Whether one base layer sews first under the whole design: an open fill in 3 directions under
+what the automatic shapes paint together, every stitch of it underlay. On fabric of another
+colour than the design, thread of one colour then lies under a slit between 2 shapes. The fills
+on it sew no underlay of their own. Off, each fill sews the underlay of its settings. The design
+goes by the settings its lowest automatic shape has for the base layer.
+
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
+- **Default:** `true`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_base_stitch_length_mm`
+
+**Base layer's stitch length.** How long the base layer's stitches are. Its rows lie this length times 0.866 apart, in 3
+directions, so that its needle points make triangles with sides this long, as the stitches of
+Ink/Stitch's Knockdown Fill do. Shorter stitches hide more of the fabric and sew longer.
+
+- **Accepts:** a length from 1 to 6 mm
+- **Default:** `3`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_base_offset_mm`
+
+**Base layer's offset.** How far outside the design's outer shape the base layer's edge lies: inside it when negative, so
+that no base stitch shows beside a shape once the thread has pulled the shape's edge in. By
+default it lies as far inside as a satin column's pull compensation reaches outside.
+
+- **Accepts:** a length from -3 to 3 mm
+- **Default:** `-0.4`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_base_keep_holes`
+
+**Base layer keeps holes.** Whether the base layer keeps the holes of the design's outer shape. Off, it sews across them.
+
+- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
+- **Default:** `true`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+## Advanced
 
 ### `auto_max_satin_width_mm`
 
-**Widest satin column.** The widest a line or a part of an area sews as a satin column: satin stitches any longer lie
-loose. A line up to this wide is a satin column as wide as the line, and a wider one fills the
-area it paints. A part of an area no wider than this everywhere sews as satin columns between its
-outlines, and a part wider somewhere is filled, with its narrow parts sewn over the fill as lines
-and columns. As a traced picture's layers are flattened, an area wider than this somewhere is filled
-whole under the areas that fill its holes, and one no wider keeps its holes.
+**Widest satin column.** The widest a line or a part of an area sews as a satin column, and the longest stitch such a
+column sews between its rails: satin stitches any longer lie loose. A line up to this wide is a
+satin column as wide as the line, and a wider one fills the area it paints. A part of an area
+wider than this somewhere is filled. As a traced picture's layers are flattened, an area that
+is filled is filled whole under the areas that fill its holes. The value is the machine's
+longest satin stitch, so a shape may set it lower and never higher.
 
-- **Accepts:** a length from 1 to 12 mm
+- **Accepts:** a length from 1 to 7 mm
 - **Default:** `7`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
@@ -37,18 +172,37 @@ circles that fit inside it along its centre line.
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 
-## Neighbours
+### `auto_min_slenderness`
 
-### `auto_overlap_mm`
+**Least slenderness of a column.** How long for its width a part is, at the least, to sew as satin columns: its area divided by
+its width squared. A part less slender is compact, a blob with no way to run, and is filled. A
+rectangle is as slender as it is long for its width, and a disc measures 0.8.
 
-**Overlap.** How far an area reaches under each shape sewn after it that it touches, and how far inside the
-edge of an area, or of a part sewn as a line or a column, that is sewn after it and covers it the
-area is cut away. The thread pulls stitches in
-from the edges of their shape, and without the overlap fabric shows between shapes that only
-meet. A satin column reaches as far past its rails, by its pull compensation.
+- **Accepts:** a number from 0 to 20
+- **Default:** `3`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
 
-- **Accepts:** a length from 0 to 2 mm
-- **Default:** `0.4`
+### `auto_max_unevenness`
+
+**Most a column's width varies.** How much the width of a part of several centre lines varies along them, at the most, for it to
+sew as satin columns: the standard deviation of its width divided by its width. A part more
+uneven is filled, unless `auto_fill_uneven` is off. A part of one centre line isn't held to it:
+a leaf and a tapering stroke sew well as one column.
+
+- **Accepts:** a number from 0 to 5
+- **Default:** `0.3`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_min_fill_width_mm`
+
+**Narrowest piece of a fill.** The narrowest piece of an area that stays in its fill. A piece narrower than this leaves the
+fill of an area wider than a satin column and sews by the rules, as a line or as columns. A
+piece as wide or wider stays, so that a wing 6 mm wide isn't cut from the fill of its body.
+
+- **Accepts:** a length from 1 to 7 mm
+- **Default:** `4`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 
@@ -63,15 +217,26 @@ when it shares none.
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version
 
-### `auto_ignore_background`
+### `auto_base_sliver_mm2`
 
-**Leave out the background.** Whether the lowest shape is left out when it is the picture's background: an area under the
-other shapes that covers the whole design. A background is usually the fabric's own colour, and
-sewing it doubles the stitches and stiffens the design. What shows of it inside the picture sews
-still, as a white disc on a badge traced with its colours stacked does. Off, all of it that shows
-sews, as of any area.
+**Largest sliver.** The largest gap in the top thread that is left to the base layer: a sliver. Where thin shapes
+meet, the top thread can leave a place this small bare, and the base layer's thread shows there
+in place of the fabric. Nothing sews differently by this value. It is a limit of the check of a
+design's cover: a larger gap fails the check, and so does a gap with no base layer under it.
 
-- **Accepts:** true or false, in any case, or yes, y, t or 1 for true and no, n, f, 0 or off for false
-- **Default:** `true`
+- **Accepts:** an area from 0 to 2 mm²
+- **Default:** `0.4`
+- **Ink/Stitch:** none; this is StitchCraft's own
+- **Experimental:** designs that use it may stitch differently in a later version
+
+### `auto_base_bare_percent`
+
+**Most left to the base layer.** The most of the design's area that the top thread may leave bare over the base layer, the
+slivers and the places narrower than a thread together. Nothing sews differently by this value.
+It is the other limit of the check of a design's cover. A design without a base layer is held to
+0.15 % and to no gap at all.
+
+- **Accepts:** a percentage from 0 to 5
+- **Default:** `0.5`
 - **Ink/Stitch:** none; this is StitchCraft's own
 - **Experimental:** designs that use it may stitch differently in a later version

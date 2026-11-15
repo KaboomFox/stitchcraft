@@ -122,7 +122,7 @@ fn rows(spacing: f64, length: f64) -> Layer {
 fn tatami((width, height): (f64, f64), top: Layer, underlay: &[Layer], meter: &mut Meter) -> Result<Stitched, Exhausted> {
     let rectangle = rings(&[&[(0.0, 0.0), (width, 0.0), (width, height), (0.0, height), (0.0, 0.0)]]);
     let region = build(&rectangle, FillRule::EvenOdd, &mut Budget::DEFAULT.meter()).unwrap().region;
-    let fill = Fill { top, expand: 0.0, underlay: underlay.to_vec(), inset: 0.0, force_locks: false };
+    let fill = Fill { top, expand: 0.0, underlay: underlay.to_vec(), inset: 0.0, force_locks: false, turns: false };
     tatami_fill(&region, &fill, None, None, &mut SplitMix64::new(1), meter)
 }
 
@@ -273,7 +273,7 @@ fn req_gen_004_each_element_is_given_what_the_ones_before_it_left() {
             line("a", (0.0, 0.0), 100.0, &RED, &[]),
             line("b", (0.0, 5.0), 100.0, &RED, &[]),
             line("c", (0.0, 10.0), 100.0, &RED, &[]),
-            fill("d", &[&[(0.0, 15.0), (10.0, 15.0), (10.0, 20.0)]], &RED, &[("fill_method", "guided_fill")]),
+            fill("d", &[&[(0.0, 15.0), (10.0, 15.0), (10.0, 20.0)]], &RED, &[("fill_method", "guided_fill"), ("guided_fill_strategy", "1")]),
         ];
         let design = Design::new(elements, DesignSettings::default()).unwrap();
         plan(&design, REFERENCE, &Budget { max_stitches: stitches, ..Budget::DEFAULT })

@@ -223,7 +223,8 @@ impl Drawing {
     /// A guide line for the last element drawn so far, as Ink/Stitch's guide-line marker on a path grouped with
     /// it gives it: `subpaths`, a stroke `width` mm wide, with the Ink/Stitch `params`. Its ripple stitch's
     /// copies follow it (`REQ-RIP-012`), or lie between its rails when it is a satin column or has several
-    /// subpaths (`REQ-RIP-013`). None before the first.
+    /// subpaths (`REQ-RIP-013`), and its guided fill's rows copy its first subpath (`REQ-FILL-GDD-002`). None
+    /// before the first.
     pub fn guide(&mut self, subpaths: Vec<Subpath>, width: f64, params: &[(&str, &str)]) -> Result<(), SheetError> {
         if let Some(last) = self.elements.last_mut() {
             let params = params.iter().copied().collect();
@@ -273,11 +274,12 @@ impl Drawing {
     }
 
     /// The sheet planned for the reference machine, which says exactly the diagnostics of `codes`, in their
-    /// order; otherwise what the engine said about it.
+    /// order; otherwise what the engine said about it. The rule that each automatic shape sewed by
+    /// (`SC-I0912`) is said of every such shape of every sheet, and isn't among the codes.
     pub fn plan_saying(self, codes: &[Code]) -> Result<StitchPlan, SheetError> {
         let design = self.design()?;
         let outcome = crate::plan(&design, REFERENCE, &Budget::DEFAULT);
-        let said: Vec<Code> = outcome.diagnostics.iter().map(|d| d.code).collect();
+        let said: Vec<Code> = outcome.diagnostics.iter().map(|d| d.code).filter(|code| *code != Code::AutoRule).collect();
         match outcome.plan {
             Some(plan) if said == codes => Ok(plan),
             _ => Err(SheetError::Said(outcome.diagnostics.iter().map(ToString::to_string).collect::<Vec<_>>().join(" "))),

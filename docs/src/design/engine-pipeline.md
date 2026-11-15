@@ -1,6 +1,6 @@
 # Engine pipeline
 
-<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/generate/**, crates/stitchcraft-engine/src/generators/next.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, crates/stitchcraft-engine/src/underlays_first.rs, crates/stitchcraft-engine/src/underlays_first/**, apps/stitchcraft-cli/src/commands/plan.rs -->
+<!-- implements: crates/stitchcraft-engine/src/normalize/mod.rs, crates/stitchcraft-engine/src/generate.rs, crates/stitchcraft-engine/src/generate/**, crates/stitchcraft-engine/src/generators/next.rs, crates/stitchcraft-engine/src/assemble.rs, crates/stitchcraft-engine/src/finalize.rs, crates/stitchcraft-engine/src/thin.rs, crates/stitchcraft-engine/src/pipeline.rs, crates/stitchcraft-engine/src/underlays_first.rs, crates/stitchcraft-engine/src/underlays_first/**, apps/stitchcraft-cli/src/commands/plan.rs, apps/stitchcraft-cli/src/commands/plan/** -->
 
 From a `Design` to a checked `StitchPlan`. Each stage is a module in `stitchcraft-engine` with its
 own tests; stages communicate only through the types in the [data model](data-model.md).
@@ -14,8 +14,8 @@ Design ──▶ 0 auto ──▶ 1 normalize ──▶ 2 validate ──▶ 3 g
 ## 0. Automatic digitizing
 
 Since M13.1, before anything else, each element the host marked automatic, a shape without settings read
-with `--auto`, becomes the ordinary elements its width calls for, with the settings that say so
-(`stitchcraft_engine::auto::digitized`, [image to embroidery](image-to-embroidery.md#stitch-types-by-width)).
+with `--auto`, becomes the ordinary elements its geometry calls for, with the settings that say so
+(`stitchcraft_engine::auto::digitized`, [image to embroidery](image-to-embroidery.md#which-stitch-a-shape-gets)).
 
 - An area is sewn as it is, apart from its narrow parts: each becomes a running stitch along its centre
   line (M13.4), or, no wider than a satin column, satin columns along its centre lines (M13.5), and the
@@ -118,13 +118,19 @@ underlay, reading the running stitch's tolerance and random lengths for its path
 and sews one path through it after the same underlay ([fills](algorithms/fills.md#meander-fill)). A
 circular fill, sewn from M7.9, sews a spiral round the middle of each part after that underlay too, and
 routes the spiral's pieces as a tatami fill routes its rows ([fills](algorithms/fills.md#circular-fill)).
+A guided fill, sewn from M10.9, copies its guide line across each part after that underlay, and routes the
+lines its copies leave inside the part as the circular fill routes its pieces
+([guided fill](algorithms/guided.md)). Its strategy is read first: until M10.10 one that offsets the guide
+skips the element, and its other settings are not read. Without a guide it can use, it sews the tatami fill
+its settings make, which the generate step reads too, saying only what reading them as a guided fill's
+didn't. A guided fill offers the element before it its area, as a tatami fill does.
 A cross stitch fill, sewn from M10.1, sews a cross in each cell of a grid that each part covers enough of,
 with no underlay, the crosses that meet in one run. From M10.2 it sews each of Ink/Stitch's 12 methods, its
 half crosses in rows routed as a tatami fill's ([cross stitch](algorithms/cross-stitch.md)). A ripple
 stitch, sewn from M10.8, sews lines along a column or towards a target point as one running stitch, and
 from M10.11 copies along a guide, a grid across them, and the pieces its clips leave, routed
 ([ripple stitch](algorithms/strokes.md#ripple-stitch-m108-m1011)). Every stroke method is then sewn. The
-other fill methods are skipped with `SC-W0011` until their milestones. An element whose parameters are
+linear gradient fill is skipped with `SC-W0011` until its milestone. An element whose parameters are
 wrong (`SC-E0101`) is skipped too, and the rest of the design still plans.
 
 Each element is generated with the shortest stitch for it: the larger of the machine's (the profile's
@@ -170,7 +176,10 @@ Rules every generator follows:
   stitches as lock. The jumps between groups are travel. Previews draw the lock stitches apart. A
   generator hands assembly its needle points without roles, so an element's underlay, and the running
   stitches between its rows, are tagged top as well, until generators tag their own. From M10.15 the
-  stitches of a run's underlays are tagged underlay ([underlays first](#underlays-first)).
+  stitches of a run's underlays are tagged underlay ([underlays first](#underlays-first)). Every stitch
+  of a design's base layer is tagged underlay too, its top rows among them
+  ([covering the fabric](image-to-embroidery.md#one-underlay-under-the-whole-design)). Planning names what
+  a base layer's piece generated `Layer::Base`. Assembly tags that layer underlay.
 
 Generators are listed in [algorithms](algorithms/).
 
@@ -209,8 +218,9 @@ default, and StitchCraft's own. Ink/Stitch has no such order.
 - **What is read first.** Each element's toggle, trim, stop and threads are read from its settings alone,
   before any element is generated. So are whether its settings read, by the registry's declarations of
   what its stitch type reads, and whether it has an underlay. A satin column has one with one of its 3
-  underlays on. A tatami, contour, meander, circular or tartan fill has one with `fill_underlay` on, unless
-  it is set to Ink/Stitch's legacy fill or not to be sewn. A tartan with an underlay sews it in its own
+  underlays on. A tatami, contour, meander, circular, guided or tartan fill has one with `fill_underlay` on,
+  unless it is set to Ink/Stitch's legacy fill or not to be sewn, or a guided fill's strategy is not sewn
+  yet. A tartan with an underlay sews it in its own
   thread before its stripes' colours, and so joins no run unless its sett sews no stripe.
 - **2 passes.** A run sews the underlays of its elements that have one, in their order, then the top
   stitches of every element in the same order (`REQ-ASM-009`). An element without underlay, such as a
@@ -452,4 +462,5 @@ It writes a bug-report bundle that reproduces the failure (`REQ-CLI-002`). The c
 | Preview PNG | `stitchcraft-render`, from the *quantized* plan (`REQ-RND-001`), cut where the profile's machine cuts the thread ([rendering](rendering.md)) |
 | Report JSON | The CLI's, with the counts and size of the machine file read back as a machine reads it, its SHA-256, the threads and the diagnostics |
 | Traced document | Of a picture, the document VectorCraft's command line traced it into, which `stitch plan --traced` writes ([image to embroidery](image-to-embroidery.md#pictures-from-the-command-line)) |
+| Cut-out | Of a picture planned with `--subject`, the picture cropped to its subject on a transparent ground, which `stitch plan --cutout` writes ([image to embroidery](image-to-embroidery.md#subject-cut-out)) |
 | Plug-in preview geometry | `stitchcraft-vc-plugin`, from one element's groups whatever their threads, its top rows or its path, by the preview's level ([integration](vectorcraft-integration.md#live-effect-previews-within-v1-budgets)) |
