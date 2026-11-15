@@ -58,20 +58,34 @@ CPU of a runner without a GPU. The table above names the versions this build ran
 
 ## The checks
 
-The bytes of an export depend on the machine that runs it. GitHub's runner builds the release, and the pins
-are the sums of the runner's files. They were set on 2026-11-15 from the build job's exports on the runner
-image `ubuntu-24.04`, version 20261101.360.1. That image gave the same bytes in every build so far, and twice
-within each. The table above names the image this build ran on. A build stops when a file differs from its
-pin, and the publish job runs only after a build that passed. So a runner that exports other bytes shows as
-a refused publish, and never as a different file under the same name.
+The decoder's export has the same bytes on every machine that has made it. The encoder's export is
+27,969,741 bytes on each of them, and 2 SHA-256 sums have been seen:
+
+| SHA-256 | Where | When |
+|---|---|---|
+| `047b16d8c829fb9f313acb9943bafd4d9f98b7fbd8f3d19149f221cfeefe0327` | The first export, made by hand, and GitHub's runner image `ubuntu-24.04` at version 20261111.127.1 | 2026-11-08 and 2026-11-15 |
+| `71268b41f17ab47538384f408a7e1d25c7f7451f4e8f5cba31b34a047aeff7ff` | GitHub's runner image `ubuntu-24.04` at version 20261101.360.1 | 2026-11-10 |
+
+Each machine gave its sum twice within a run. Whether the image or the processor made the difference isn't
+known, because the logs don't print the runner's processor. The outputs saved in
+`conformance/fixtures/cutout/` came from the first row's export, and its sum is the pin. Those outputs
+haven't been compared with the second row's export in any run. The table above names the image this build ran on.
+
+The build stops when a file differs from its pin, and the publish job runs only after a build that passed.
+When a runner exports other bytes, the publish is refused and nothing is published. If that happens before
+the release exists:
+
+1. Read the build job's summary, which gives the new sum and the runner's image.
+2. Change the pin in a pull request. Its models' job then runs tract on the new export and compares the
+   outputs with the saved ones, each map within 0.001 and each logit within 0.01.
+3. When that job passes, add the new sum and its image to the table above, in the same pull request.
+4. Merge it, and publish again.
+
+Once the release exists its files are fixed, and the pin stays the sum of the released file.
 
 The first export was made by hand on 2026-11-08 with this `export.py` and this `requirements.txt`, on Linux
-x86_64 (an Intel Xeon at 2.1 GHz, 2 cores) with CPython 3.13.18. Its decoder is the runner's, byte for byte.
-Its encoder has the runner's size, 27,969,741 bytes, and another SHA-256,
-`047b16d8c829fb9f313acb9943bafd4d9f98b7fbd8f3d19149f221cfeefe0327`. The checks below were made on that
-export's files. Every build makes checks 1 and 3 again on its own files, and the models' job of the same
-workflow runs the release's files with tract against the outputs saved from the first export, within the
-bounds `conformance/fixtures/README.md` gives.
+x86_64 (an Intel Xeon at 2.1 GHz, 2 cores) with CPython 3.13.18. The checks below were made on its files.
+Every build makes checks 1 and 3 again on its own files.
 
 1. **Against PyTorch.** Each file, run by onnxruntime on fixed inputs, against PyTorch's own result: the
    encoder within 9.5e-07, the decoder's `low_res_masks` within 1.3e-05, `iou_predictions` within 1.8e-07
