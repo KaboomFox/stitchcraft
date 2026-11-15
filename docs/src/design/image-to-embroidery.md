@@ -627,13 +627,13 @@ cut into pieces no longer than 0.5 mm, and a piece shows when its middle lies in
 pieces that show in a row are one line, a ring where the whole edge shows. A line shorter than 3 mm is left
 out, since 2 stitches beside a neighbour's edge sew a knot.
 
-The setting is on by default since M13.28. M13.27 shipped it off, for the jumps it cost a traced photo.
+The setting is on by default since M13.28. M13.27 left it off, for the jumps it cost a traced photo.
 Shown the badge's stars with and without it, the owner said that outlines were better all along. The Auto
 effect's dialog has a row for it ([Settings](#settings)).
 
 An outline's stitches follow a round edge. A running stitch keeps to its path within its tolerance, which
 is 0.2 mm unless a shape sets it. Stitches 2.5 mm long stray 0.16 mm from a circle 9.6 mm across, so the
-badge's moon was outlined with 12 sides. An outline carries a tolerance of `auto::OUTLINE_TOLERANCE`,
+badge's moon was outlined with 12 sides. An outline has a tolerance of `auto::OUTLINE_TOLERANCE`,
 0.1 mm, unless its shape sets `running_stitch_tolerance_mm`. Its stitches are then shorter where the edge
 bends, never shorter than the machine's shortest stitch, and the moon has 18 sides.
 
@@ -1190,9 +1190,9 @@ generated from the registry.
 A design's settings are a shape's too: VectorCraft's Auto effect on a group or a layer sets them on every
 path inside it. The Auto effect's dialog held 13 rows after M13.16 and was 903 px tall in a window of 900.
 With the bounds and the 2 limits of the measure left out it holds 12. M13.28 gave the outline's switch a
-row, and the base layer's offset became an advanced setting to make room: it is a fine adjustment, matched
-to the pull compensation, that no picture so far has needed changed, where the base layer's switch, its
-stitch length and its holes each change what one sees.
+row, and the base layer's offset became an advanced setting to make room. No picture so far has needed
+that fine adjustment changed, which is matched to the pull compensation, where the base layer's switch,
+its stitch length and its holes each change what one sees.
 
 The defaults are the values on this page, and MC-8 confirms or changes them. A shape that sets none of the
 settings takes the defaults, and an automatic shape with a setting that doesn't read sews nothing

@@ -286,8 +286,11 @@ mod tests {
         found
     }
 
+    /// 2 opposite corners of a square, in millimetres.
+    type Corners = ((f64, f64), (f64, f64));
+
     /// The lines of the outline of a square 64 mm across, with a square sewn after it over each of `notches`.
-    fn notched(notches: &[((f64, f64), (f64, f64))]) -> Vec<Line> {
+    fn notched(notches: &[Corners]) -> Vec<Line> {
         let mut sewn = vec![area("a", square((0.0, 0.0), (64.0, 64.0)), 0)];
         sewn.extend(notches.iter().enumerate().map(|(at, (from, to))| area(&format!("n{at}"), square(*from, *to), at + 1)));
         let mut shapes = Shapes::new(sewn, &DesignSettings::default(), &Budget::DEFAULT);
