@@ -138,3 +138,133 @@ fn anchored(row: &[Point], i: usize, guided: &Guided, with: &Lines<'_>, rng: &Sp
     }
     Ok(Some(sewn))
 }
+
+#[cfg(test)]
+mod tests {
+    use stitchcraft_core::Budget;
+
+    use super::*;
+    use crate::generators::guided::tests::guided;
+    use crate::generators::tatami::fixture::{costs, p, rectangle};
+
+    fn xy(points: &[Point]) -> Vec<(f64, f64)> {
+        points.iter().map(|q| ((q.x() * 1e6).round() / 1e6, (q.y() * 1e6).round() / 1e6)).collect()
+    }
+
+    /// The closed square from (`x0`, `y0`) to (`x1`, `y1`), from that first corner along x first.
+    fn square(x0: f64, y0: f64, x1: f64, y1: f64) -> Vec<Point> {
+        vec![p(x0, y0), p(x1, y0), p(x1, y1), p(x0, y1), p(x0, y0)]
+    }
+
+    /// A guided fill by `strategy` with rows 1 mm apart, in stitches of 3 mm staggered over 4 rows.
+    fn fill(strategy: Strategy) -> Guided {
+        Guided { strategy, ..guided(&[(4.0, 2.0), (6.0, 2.0)], 1.0) }
+    }
+
+    /// The lines `rows` sew over a rectangle 10 mm wide and 4 mm high, with `anchor`.
+    fn sewn(rows: &[Vec<Point>], guided: &Guided, anchor: &[Vec<Point>]) -> Vec<Vec<(f64, f64)>> {
+        let meter = &mut Budget::DEFAULT.meter();
+        let piece = rectangle(4.0);
+        let rings = Rings::new(&piece, meter).unwrap();
+        let guide = [vec![p(4.0, 2.0), p(6.0, 2.0)]];
+        let with = Lines { guide: &guide, anchor };
+        lines(&piece, &rings, rows, guided, &with, &SplitMix64::new(7), meter).unwrap().iter().map(|line| xy(line)).collect()
+    }
+
+    #[test]
+    fn req_fill_gdd_012_a_buffer_s_stagger_counts_the_row_spacings_from_the_guide_rounded_half_to_even() {
+        let meter = &mut Budget::DEFAULT.meter();
+        let guide = [vec![p(4.0, 2.0), p(6.0, 2.0)]];
+        let with = Lines { guide: &guide, anchor: &[] };
+        let level = |y: f64| [p(0.0, y), p(10.0, y)];
+        let buffer = fill(Strategy::Buffer);
+        // 0.5, 1.5, 2.5 and 3.5 row spacings away count as 0, 2, 2 and 4, and 1.4 and 1.6 as 1 and 2.
+        let places: Vec<f64> = [2.5, 3.5, 4.5, 5.5, 3.4, 3.6].iter().map(|&y| place(&level(y), 7, &buffer, &with, meter).unwrap()).collect();
+        assert_eq!(places, [0.0, 2.0, 2.0, 4.0, 1.0, 2.0]);
+        // Half the row spacing, twice the count; and a row of no point lies nowhere.
+        let close = Guided { spacing: 0.5, ..buffer.clone() };
+        assert_eq!(place(&level(3.0), 7, &close, &with, meter).unwrap(), 2.0);
+        assert_eq!(place(&[], 7, &buffer, &with, meter).unwrap(), 0.0);
+        // The other strategies count the row's number.
+        for strategy in [Strategy::Copy, Strategy::Offset] {
+            assert_eq!(place(&level(4.5), 7, &fill(strategy), &with, meter).unwrap(), 7.0);
+        }
+    }
+
+    #[test]
+    fn req_fill_gdd_012_a_row_that_doesn_t_close_is_stitched_from_its_start_and_cut() {
+        // 3 level rows 16 mm long through the rectangle, each stitched from a quarter of a stitch further along
+        // than the one before, 0, 0.75 and 1.5 mm, its stitches spread evenly over the rest, and cut.
+        let level = |y: f64| vec![p(-3.0, y), p(13.0, y)];
+        let rows = sewn(&[level(3.0), level(2.0), level(1.0)], &fill(Strategy::Offset), &[]);
+        assert_eq!(rows[0], [(0.0, 3.0), (2.333333, 3.0), (5.0, 3.0), (7.666667, 3.0), (10.0, 3.0)]);
+        assert_eq!(rows[1], [(0.0, 2.0), (0.291667, 2.0), (2.833333, 2.0), (5.375, 2.0), (7.916667, 2.0), (10.0, 2.0)]);
+        assert_eq!(rows[2], [(0.0, 1.0), (1.4, 1.0), (4.3, 1.0), (7.2, 1.0), (10.0, 1.0)]);
+        // A row that starts inside the piece is stitched from there, its first point kept before its stitches.
+        // It is then closed and started at the middle of its first stretch outside the piece, (5, 6), so the
+        // side that closes it, from (8, 1) to (2, 1), is sewn too, as Ink/Stitch sews it.
+        let hook = vec![p(2.0, 1.0), p(2.0, 6.0), p(8.0, 6.0), p(8.0, 1.0)];
+        let lines = sewn(&[hook], &fill(Strategy::Offset), &[]);
+        assert_eq!(lines, [vec![(8.0, 4.0), (8.0, 3.5), (8.0, 1.0), (2.0, 1.0), (2.0, 1.0), (2.0, 3.5), (2.0, 4.0)]]);
+    }
+
+    #[test]
+    fn req_fill_gdd_012_a_closed_row_starts_on_the_anchor_line_or_outside_the_piece() {
+        // A ring that leaves the piece through its bottom side, from a start inside it: without an anchor line
+        // it starts at the middle of its stretch outside, (5, 6), and is stitched from there, each side of 6 mm
+        // in 2 stitches and each of 5 mm in 2.
+        let ring = square(2.0, 1.0, 8.0, 6.0);
+        let offset = fill(Strategy::Offset);
+        let outside = sewn(&[ring.clone()], &offset, &[]);
+        assert_eq!(outside, [vec![(2.0, 4.0), (2.0, 3.5), (2.0, 1.0), (5.0, 1.0), (8.0, 1.0), (8.0, 3.5), (8.0, 4.0)]]);
+        // An anchor line across its top side at x = 4 starts it there: the stitches count from (4, 1), which is
+        // there twice, as the row's first point and as its first stitch's start.
+        let anchor = [vec![p(4.0, 0.5), p(4.0, 1.5)]];
+        let anchored = sewn(&[ring.clone()], &offset, &anchor);
+        let from_4 = vec![(2.0, 4.0), (2.0, 3.5), (2.0, 1.0), (4.0, 1.0), (4.0, 1.0), (6.0, 1.0), (8.0, 1.0), (8.0, 3.5), (8.0, 4.0)];
+        assert_eq!(anchored, [from_4.clone()]);
+        // The next ring's stitches start a quarter of a stitch on from there.
+        let next = sewn(&[ring.clone(), ring.clone()], &offset, &anchor);
+        assert_eq!(next[0], from_4);
+        assert_eq!(next[1], [(2.0, 4.0), (2.0, 3.5), (2.0, 1.0), (4.0, 1.0), (4.75, 1.0), (6.375, 1.0), (8.0, 1.0), (8.0, 3.5), (8.0, 4.0)]);
+        // One that crosses it twice cuts it in 2, each stitched from its crossing, and one that only touches
+        // it counts too.
+        let twice = [vec![p(4.0, 0.5), p(4.0, 1.5)], vec![p(1.5, 2.5), p(2.5, 2.5)]];
+        let cut = sewn(&[ring.clone()], &offset, &twice);
+        let from_both = [(2.0, 4.0), (2.0, 2.5), (2.0, 2.5), (2.0, 2.5), (2.0, 1.0), (4.0, 1.0), (4.0, 1.0), (6.0, 1.0), (8.0, 1.0), (8.0, 3.5), (8.0, 4.0)];
+        assert_eq!(cut, [from_both.to_vec()]);
+        let touching = [vec![p(4.0, 1.0), p(4.0, 1.5)]];
+        assert_eq!(sewn(&[ring.clone()], &offset, &touching), anchored);
+        // An anchor line that misses the ring leaves it to start outside the piece.
+        let aside = [vec![p(20.0, 0.0), p(21.0, 0.0)]];
+        assert_eq!(sewn(&[ring.clone()], &offset, &aside), outside);
+        // A ring that starts outside the piece and has no anchor line is stitched from its own start.
+        let from_outside = sewn(&[square(2.0, 6.0, 8.0, 1.0)], &offset, &[]);
+        assert_eq!(from_outside, [vec![(8.0, 4.0), (8.0, 3.5), (8.0, 1.0), (5.0, 1.0), (2.0, 1.0), (2.0, 3.5), (2.0, 4.0)]]);
+        // A ring inside the piece that no anchor line meets has no stretch outside: its own points are its
+        // needle points, and with an anchor line it starts there.
+        let within = square(3.0, 1.0, 7.0, 3.0);
+        assert_eq!(sewn(&[within.clone()], &offset, &[]), [xy(&within)]);
+        assert_eq!(sewn(&[within.clone()], &offset, &aside), [xy(&within)]);
+        assert_eq!(sewn(&[within.clone()], &offset, &anchor), [vec![(4.0, 1.0), (7.0, 1.0), (7.0, 3.0), (5.0, 3.0), (3.0, 3.0), (3.0, 1.0), (4.0, 1.0)]]);
+        // A row that crosses itself is no ring: it is stitched from its start, whatever the anchor line.
+        let eight = vec![p(3.0, 1.0), p(7.0, 3.0), p(7.0, 1.0), p(3.0, 3.0), p(3.0, 1.0)];
+        assert_eq!(sewn(&[eight.clone()], &offset, &anchor), sewn(&[eight], &offset, &[]));
+    }
+
+    #[test]
+    fn stitching_and_cutting_the_rows_runs_out_of_a_budget_of_any_less_work_than_it_takes() {
+        let piece = rectangle(4.0);
+        let rings = Rings::new(&piece, &mut Budget::DEFAULT.meter()).unwrap();
+        let guide = [vec![p(4.0, 2.0), p(6.0, 2.0)]];
+        let anchor = [vec![p(4.0, 0.5), p(4.0, 1.5)], vec![p(1.5, 2.5), p(2.5, 2.5)]];
+        let rows = [square(2.0, 1.0, 8.0, 6.0), vec![p(2.0, 1.0), p(2.0, 6.0), p(8.0, 6.0), p(8.0, 1.0)], square(3.0, 1.0, 7.0, 3.0)];
+        let smooth = Guided { smoothness: 0.3, ..fill(Strategy::Buffer) };
+        let run = |anchor: &[Vec<Point>], guided: &Guided, meter: &mut Meter| {
+            let with = Lines { guide: &guide, anchor };
+            lines(&piece, &rings, &rows, guided, &with, &SplitMix64::new(7), meter).map(|_| ())
+        };
+        let work = costs(&[Box::new(|meter| run(&anchor, &smooth, meter)), Box::new(|meter| run(&[], &fill(Strategy::Offset), meter))]);
+        assert!(work[0] > work[1] && work[1] > 100, "{work:?}");
+    }
+}
