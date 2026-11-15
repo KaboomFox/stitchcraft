@@ -120,11 +120,20 @@ M13.27 changed what the dog sews: 2 blobs of its fur that sewed as satin columns
 star is ([which stitch a shape gets](../design/image-to-embroidery.md#which-stitch-a-shape-gets)). Write
 the dog again before sewing. MC-8 also sews the demo's badge, `web/templates/alpine-night.svg`, twice:
 `stitch plan web/templates/alpine-night.svg --auto -o badge.pes`, and the same with
-`--set auto_fill_outline=true`.
+`--set auto_fill_outline=false`.
 
 - Do the 2 stars, 5.3 and 4 mm across, read as stars of 4 points when they are filled?
 - With the outline, are the stars' points sharper, and is the run round the moon and the mountains on the
   fill's edge or beside it?
+
+M13.28 changed what every automatic design sews: each fill sews an outline now
+([an outline round a fill](../design/image-to-embroidery.md#an-outline-round-a-fill)). Write the badge, the
+dog and TS-13A to TS-13D again before sewing.
+
+- Does the moon's outline, 18 stitches round a circle 9.6 mm across, read as round?
+- On the dog, do the outlines sharpen the fur's edges or draw lines that the photo doesn't have?
+- An outline sews through a stretch of its edge under a later shape. Does that run show through the shape
+  that covers it, or raise it?
 
 M13.22 changed the order that the digitized halves of TS-13A, TS-13C and TS-13D sew in, and the dog's:
 write them again before sewing. The elements now sew in the order that changes thread least

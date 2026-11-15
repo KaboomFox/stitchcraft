@@ -343,7 +343,8 @@ mod tests {
 
     #[test]
     fn req_auto_052_an_outline_sews_through_a_stretch_of_25_mm_or_less_under_another_shape() {
-        let lengths = |lines: &[Line]| lines.iter().map(|line| ((line.length() * 1000.0).round(), line.closed, line.points.len())).collect::<Vec<_>>();
+        let lengths =
+            |lines: &[Line]| lines.iter().map(|line| ((line.length() * 1000.0).round(), line.closed, line.points.len())).collect::<Vec<_>>();
         let whole = [(256_000.0, true, 4)];
         // The sides of a square 64 mm across are cut into 128 pieces each. A square over 24.8 mm of the first
         // side hides 50 pieces, 25 mm: the outline sews through under it, all the way round. One piece more,

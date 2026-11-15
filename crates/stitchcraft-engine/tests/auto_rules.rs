@@ -20,7 +20,9 @@ use stitchcraft_engine::generators::passes::BEAN_STITCH_REPEATS;
 use stitchcraft_engine::generators::satin::SATIN_COLUMN;
 use stitchcraft_engine::generators::tatami::ANGLE;
 use stitchcraft_plan::Role;
-use stitchcraft_testkit::designs::{BLUE, RED, along, automatic, fill, in_place, messages, outlined, planned, polylines, rules, rules_said, unbased, widened};
+use stitchcraft_testkit::designs::{
+    BLUE, RED, along, automatic, fill, in_place, messages, outlined, planned, polylines, rules, rules_said, unbased, widened,
+};
 use stitchcraft_testkit::pictures;
 
 /// What the automatic `element` sews as, in a design with the default settings.
@@ -374,7 +376,14 @@ fn req_auto_033_a_nose_is_filled_under_its_nostrils() {
         .map(|element| (element.id.as_str(), kinds(std::slice::from_ref(element))[0], element.shape.path().subpaths.len()))
         .collect();
     // Each fill is followed by its outline, one line (`REQ-AUTO-051`).
-    let outlined = [("vc:14:fill", "fill", 1), ("vc:14:fill#2", "run", 1), ("vc:95:fill", "fill", 1), ("vc:95:fill#2", "run", 1), ("vc:96:fill", "fill", 1), ("vc:96:fill#2", "run", 1)];
+    let outlined = [
+        ("vc:14:fill", "fill", 1),
+        ("vc:14:fill#2", "run", 1),
+        ("vc:95:fill", "fill", 1),
+        ("vc:95:fill#2", "run", 1),
+        ("vc:96:fill", "fill", 1),
+        ("vc:96:fill#2", "run", 1),
+    ];
     assert_eq!(sewn, outlined);
     let rules: Vec<&str> = said.iter().filter(|said| said.code == Code::AutoRule).map(|said| said.message.as_str()).collect();
     assert!(

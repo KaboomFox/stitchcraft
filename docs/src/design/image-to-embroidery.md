@@ -613,7 +613,7 @@ from falling back, and MC-8 tells whether 0.4 mm is the pull on the machine.
 A tatami fill's rows end at its edge, and the thread pulls each row's end in. On a small shape with points,
 such as a star 5 mm across, the ends of the rows are most of what shows, and the points sew blunt. A
 digitizer runs a stitch round such a shape after filling it, which draws the edge as one line.
-`auto_fill_outline` turns that on for a design (M13.27, `REQ-AUTO-051`), read of its lowest automatic
+`auto_fill_outline` does that for a design (M13.27, `REQ-AUTO-051`), read of its lowest automatic
 shape as the base layer's settings are.
 
 Each automatic area then sews a running stitch along its edge, in its own thread, in an element of its own
@@ -627,20 +627,44 @@ cut into pieces no longer than 0.5 mm, and a piece shows when its middle lies in
 pieces that show in a row are one line, a ring where the whole edge shows. A line shorter than 3 mm is left
 out, since 2 stitches beside a neighbour's edge sew a knot.
 
-The setting is off by default, for what it costs, measured on 2026-11-15:
+The setting is on by default since M13.28. M13.27 shipped it off, for the jumps it cost a traced photo.
+Shown the badge's stars with and without it, the owner said that outlines were better all along. The Auto
+effect's dialog has a row for it ([Settings](#settings)).
+
+An outline's stitches follow a round edge. A running stitch keeps to its path within its tolerance, which
+is 0.2 mm unless a shape sets it. Stitches 2.5 mm long stray 0.16 mm from a circle 9.6 mm across, so the
+badge's moon was outlined with 12 sides. An outline carries a tolerance of `auto::OUTLINE_TOLERANCE`,
+0.1 mm, unless its shape sets `running_stitch_tolerance_mm`. Its stitches are then shorter where the edge
+bends, never shorter than the machine's shortest stitch, and the moon has 18 sides.
+
+An outline is sewn with as few jumps as its lines allow (`REQ-AUTO-052`). A traced area's edge is hidden
+wherever a neighbour sewn later touches it, often for a few millimetres, and each hidden stretch parted 2
+lines by a jump. The outline now sews through a hidden stretch of `BRIDGE`, 25 mm, or less, along the edge
+and under the shape that covers it, at a stitch for each 2.5 mm. The longest hidden stretch of a ring stays
+out, because sewing it would join nothing. Of an outline's lines, the one with an end nearest where the
+next element starts sews last and ends there. An open line is turned round for that if need be, and a ring
+starts at its corner nearest that place.
+
+What the outline costs, measured on 2026-11-15 with the setting off and on:
 
 | Picture | Stitches | Jumps | Thread changes |
 |---|---:|---:|---:|
-| Alpine Night, the demo's badge | 5443 to 5554 | 9 | 3 |
-| Lettered patch | 25340 to 25991 | 37 to 40 | 4 |
-| Dog on turf, 6 threads | 10420 to 11031 | 79 to 101 | 8 |
-| Running dog, 6 threads | 11330 to 12089 | 79 to 102 | 8 |
+| Alpine Night, the demo's badge | 5443 to 5575 | 9 | 3 |
+| Pear | 5096 to 5517 | 4 | 2 |
+| Lettered patch | 25340 to 25944 | 37 to 38 | 4 |
+| Dog on turf, 6 threads | 10420 to 11400 | 79 to 84 | 8 |
+| Dog on turf, 9 threads | 11158 to 12261 | 91 to 97 | 12 |
+| Running dog, 6 threads | 11330 to 12479 | 79 to 82 | 8 |
+| Running dog, 9 threads | 13115 to 14417 | 106 to 109 | 12 |
 
-An outline sews in its fill's thread straight after the fill, and doesn't change the thread. On the badge
-the needle sews on from where each fill ends to its outline without a jump. A traced photo's areas have edges in
-many pieces between their neighbours, and each piece is a jump, which a machine with one needle leaves as
-a thread to cut by hand. So a badge or a logo gains by it and a photo doesn't. It is an advanced setting:
-the Auto effect's dialog holds 12 rows in its window, and a thirteenth doesn't fit ([Settings](#settings)).
+An outline sews in its fill's thread straight after the fill, and doesn't change the thread. Before the 2
+wins the traced dogs' outlines brought 19 to 30 jumps each, and they bring 3 to 6 now. Sewing through every
+hidden stretch, whatever its length, brings 0 to 3, for 400 more stitches on each dog: 25 mm is where the
+stitches spent stop buying jumps. The jumps that are left come from a fill joined from 2 parts of one
+shape, whose 2 outlines each leave out the edge between the parts, from a ring and a line of one outline
+that lie far apart, and from hidden stretches longer than 25 mm. Each jump is a thread that a machine with
+one needle leaves to cut by hand, until M13.17 of the [roadmap](../plan/roadmap.md) sews those moves under
+the shapes that cover them.
 
 ## Covering the fabric
 

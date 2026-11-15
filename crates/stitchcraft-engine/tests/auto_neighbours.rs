@@ -915,7 +915,12 @@ fn req_auto_051_a_design_sews_an_outline_round_each_fill_where_its_edge_shows_un
     // 2 squares 30 mm across side by side, the red one sewn first and the blue one after it. The blue one
     // asks for no outline, and the design goes by the red one, its lowest shape.
     let squares = |outline: Option<&str>| {
-        let red = fill("red", &[&[(0.0, 0.0), (30.0, 0.0), (30.0, 30.0), (0.0, 30.0)]], &RED, &outline.map(|outline| ("auto_fill_outline", outline)).into_iter().collect::<Vec<_>>());
+        let red = fill(
+            "red",
+            &[&[(0.0, 0.0), (30.0, 0.0), (30.0, 30.0), (0.0, 30.0)]],
+            &RED,
+            &outline.map(|outline| ("auto_fill_outline", outline)).into_iter().collect::<Vec<_>>(),
+        );
         sewn(vec![outlined(red), automatic(fill("blue", &[&[(30.0, 0.0), (60.0, 0.0), (60.0, 30.0), (30.0, 30.0)]], &BLUE, &[]))])
     };
     // Asked not to, the design sews its 2 fills alone.
