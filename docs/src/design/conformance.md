@@ -479,7 +479,9 @@ The models' job, in `.github/workflows/models.yml`, runs each file that holds su
 with the models in the folder `STITCHCRAFT_MODELS` names. When the release exists, the job leaves that folder
 empty, and the cases fetch the models from the release as `stitch` does. Until the owner has published it,
 the job puts there the files the workflow's build job has just made from the authors' own, and its summary
-says which of the 2 sources it used. From either, a file must match its pin before tract reads it. The runner lists a
+says which of the 2 sources it used. From either, a file must match its pin before tract reads it. A build's encoder may have the other of its
+2 sums (ADR-0019, decision 5). The cases then check it against that sum and compare its outputs with the
+fixtures, and the job leaves `stitch plan --subject` end to end out with a warning. The runner lists a
 models-only case as skipped with its reason (⏭ in the report), and CI doesn't fail on it as on a missing
 tool: the models' job runs it. A case ignored for any other reason fails, so that no case hides behind
 `#[ignore]`. `--check` finds each models-only case by its attribute: its file must be a test target of its

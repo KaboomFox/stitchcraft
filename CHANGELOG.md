@@ -1971,6 +1971,13 @@ All notable changes are listed here, newest first. Golden-file changes must be l
   scans every text file, documents included.
 
 ### Fixed
+- M13.14: the encoder's export differs by machine, and the models' workflow no longer fails by chance.
+  MobileSAM's encoder is exported with its pinned size on every runner and with one of 2 SHA-256 sums:
+  the run on `main` at `ecdaaeb9` gave the other one and failed, where the pull request's last run had
+  passed. For the encoder's other sum the build now warns, with the runner's image and processor, and the
+  models' job compares that encoder's outputs with the saved ones. Only pinned files are released. When
+  the publishing run's encoder has the other sum, the owner names a finished run in the new input
+  `encoder_run`. The workflow takes that run's encoder once it matches the pin.
 - Automatic digitizing: a column that is narrow on average sews as a satin column when it is wider than the
   narrowest satin stroke somewhere along its line, or reaches farther than that from its line. Both are
   measured inside the column's own outline (`REQ-AUTO-016`). The owner's traced dog left 38 to 81 patches of
