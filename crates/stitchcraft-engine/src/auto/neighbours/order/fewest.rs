@@ -16,7 +16,8 @@
 //! - **Wishes.** A satin column would sew after the fill it borders, and it reaches under that fill when it
 //!   sews first, so this is a wish and no rule. Of 2 rows with as few changes, the search takes the one that
 //!   grants more wishes. Then each wish that the found row of threads allows is granted, in the order the
-//!   wishes come, and the column waits for a later batch of its thread.
+//!   wishes come, and the column waits for a later batch of its thread. The row allows a wish when it
+//!   still sews every element with it: it has the fewest changes of any, so no batch of it is then empty.
 //!
 //! Rows that are equal in both are taken in the order they are found: the threads of the free elements in
 //! paint order.
@@ -64,27 +65,12 @@ pub(super) struct Found {
 pub(super) fn fewest(run: &Run, meter: &mut Meter) -> Result<Found, Exhausted> {
     let search = Search::new(run);
     let moves = search.row(meter)?;
-    // Every wish that no rule and no wish before it forbids, at once: the search grants them all when it
-    // can, and then one playing of the row tells.
-    let mut before = run.before.clone();
-    let mut granted = Vec::new();
-    for &(first, then) in &run.wished {
-        if !waits(&before, first, then, meter)? {
-            before = with(before, first, then);
-            granted.push((first, then));
-        }
-    }
-    if let Some(batches) = search.play(&before, &moves, meter)? {
-        return Ok(Found { batches, granted });
-    }
-    // Otherwise each wish in turn, kept when the row still sews every element.
     let mut before = run.before.clone();
     let mut batches = search.play(&before, &moves, meter)?.unwrap_or_default();
-    granted.clear();
+    // Each wish in turn, kept when the row still sews every element. A wish that a rule or a wish before it
+    // forbids makes elements wait for each other, and no row sews those.
+    let mut granted = Vec::new();
     for &(first, then) in &run.wished {
-        if waits(&before, first, then, meter)? {
-            continue;
-        }
         let wished = with(before.clone(), first, then);
         if let Some(played) = search.play(&wished, &moves, meter)? {
             (before, batches) = (wished, played);
@@ -100,20 +86,6 @@ fn with(mut before: Vec<Vec<usize>>, first: usize, then: usize) -> Vec<Vec<usize
         of_then.push(first);
     }
     before
-}
-
-/// Whether `first` waits for `then` by `before`, itself or through the elements between them, so that
-/// `then` can't wait for `first`; with `meter`'s work, a unit for each element looked at.
-fn waits(before: &[Vec<usize>], first: usize, then: usize, meter: &mut Meter) -> Result<bool, Exhausted> {
-    let (mut seen, mut stack) = (BTreeSet::from([first]), vec![first]);
-    while let Some(at) = stack.pop() {
-        meter.charge(1)?;
-        if at == then {
-            return Ok(true);
-        }
-        stack.extend(before.get(at).into_iter().flatten().copied().filter(|&earlier| seen.insert(earlier)));
-    }
-    Ok(false)
 }
 
 /// The elements sewn so far, a bit for each.
